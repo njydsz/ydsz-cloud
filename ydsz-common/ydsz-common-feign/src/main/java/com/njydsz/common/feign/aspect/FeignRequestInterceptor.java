@@ -10,11 +10,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.trace.TraceIdPropagation;
-import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
-import com.njydsz.common.domain.constant.DataScopeConstants;
+import com.njydsz.common.core.constant.DataScopeConstants;
 import com.njydsz.common.feign.config.FeignProperties;
 import com.njydsz.common.safe.util.ClientIpResolver;
 import com.njydsz.common.core.context.BizContextKeys;
@@ -156,22 +154,22 @@ public class FeignRequestInterceptor implements RequestInterceptor {
     private void propagateIdentityHeaders(RequestTemplate requestTemplate,
                                            HttpServletRequest httpServletRequest,
                                            Set<String> headersToPropagate) {
-        if (headersToPropagate.contains(AuthHeaderConstants.X_SERVICE_TYPE)) {
-            setHeaderIfAbsent(requestTemplate, AuthHeaderConstants.X_SERVICE_TYPE, AuthInfoUtils.getServiceTypeCode());
+        if (headersToPropagate.contains(FeignProperties.X_SERVICE_TYPE)) {
+            setHeaderIfAbsent(requestTemplate, FeignProperties.X_SERVICE_TYPE, AuthInfoUtils.getServiceTypeCode());
         }
-        if (headersToPropagate.contains(AuthHeaderConstants.X_USER_LANGUAGE)) {
-            setHeaderIfAbsent(requestTemplate, AuthHeaderConstants.X_USER_LANGUAGE, AuthInfoUtils.getUserLanguage());
+        if (headersToPropagate.contains(FeignProperties.X_USER_LANGUAGE)) {
+            setHeaderIfAbsent(requestTemplate, FeignProperties.X_USER_LANGUAGE, AuthInfoUtils.getUserLanguage());
         }
-        if (headersToPropagate.contains(AuthHeaderConstants.X_DISTINCT_ID)) {
-            setHeaderIfAbsent(requestTemplate, AuthHeaderConstants.X_DISTINCT_ID,
-                    resolveHeader(httpServletRequest, AuthHeaderConstants.X_DISTINCT_ID));
+        if (headersToPropagate.contains(FeignProperties.X_DISTINCT_ID)) {
+            setHeaderIfAbsent(requestTemplate, FeignProperties.X_DISTINCT_ID,
+                    resolveHeader(httpServletRequest, FeignProperties.X_DISTINCT_ID));
         }
-        if (headersToPropagate.contains(AuthHeaderConstants.X_IDENTITY_TYPE)) {
-            setHeaderIfAbsent(requestTemplate, AuthHeaderConstants.X_IDENTITY_TYPE,
+        if (headersToPropagate.contains(FeignProperties.X_IDENTITY_TYPE)) {
+            setHeaderIfAbsent(requestTemplate, FeignProperties.X_IDENTITY_TYPE,
                     AuthInfoUtils.getIdentityType());
         }
-        if (headersToPropagate.contains(AuthHeaderConstants.X_ACCESS_TOKEN)) {
-            setHeaderIfAbsent(requestTemplate, AuthHeaderConstants.X_ACCESS_TOKEN, AuthInfoUtils.getAccessToken());
+        if (headersToPropagate.contains(FeignProperties.X_ACCESS_TOKEN)) {
+            setHeaderIfAbsent(requestTemplate, FeignProperties.X_ACCESS_TOKEN, AuthInfoUtils.getAccessToken());
         }
         if (headersToPropagate.contains(HeaderConstants.X_REQUEST_SOURCE)) {
             setHeaderIfAbsent(requestTemplate, HeaderConstants.X_REQUEST_SOURCE,
@@ -217,48 +215,48 @@ public class FeignRequestInterceptor implements RequestInterceptor {
      * @param headersToPropagate 允许透传的 header 白名单
      */
     private void propagateDataPermissionHeaders(RequestTemplate requestTemplate, Set<String> headersToPropagate) {
-        if (headersToPropagate.contains(DataPermissionHeaderConstants.X_DATA_SCOPE)) {
-            setHeaderIfAbsent(requestTemplate, DataPermissionHeaderConstants.X_DATA_SCOPE,
+        if (headersToPropagate.contains(FeignProperties.X_DATA_SCOPE)) {
+            setHeaderIfAbsent(requestTemplate, FeignProperties.X_DATA_SCOPE,
                     AuthInfoUtils.getDataScope());
         }
 
         String scopeCode = AuthInfoUtils.getDataScope();
-        if (headersToPropagate.contains(DataPermissionHeaderConstants.X_COMPANY_IDS)) {
+        if (headersToPropagate.contains(FeignProperties.X_COMPANY_IDS)) {
             if (DataScopeConstants.GROUP.equals(scopeCode)) {
                 Set<String> companyIdsSet = AuthInfoUtils.getHasPermissionCompanyIds();
                 if (companyIdsSet != null && !companyIdsSet.isEmpty()) {
-                    setHeaderIfAbsent(requestTemplate, DataPermissionHeaderConstants.X_COMPANY_IDS, String.join(",", companyIdsSet));
+                    setHeaderIfAbsent(requestTemplate, FeignProperties.X_COMPANY_IDS, String.join(",", companyIdsSet));
                 }
             }
         }
-        if (headersToPropagate.contains(DataPermissionHeaderConstants.X_DEPT_IDS)) {
+        if (headersToPropagate.contains(FeignProperties.X_DEPT_IDS)) {
             if (DataScopeConstants.COMPANY.equals(scopeCode) || DataScopeConstants.DEPT.equals(scopeCode)) {
                 Set<String> deptIdsSet = AuthInfoUtils.getHasPermissionDeptIds();
                 if (deptIdsSet != null && !deptIdsSet.isEmpty()) {
-                    setHeaderIfAbsent(requestTemplate, DataPermissionHeaderConstants.X_DEPT_IDS, String.join(",", deptIdsSet));
+                    setHeaderIfAbsent(requestTemplate, FeignProperties.X_DEPT_IDS, String.join(",", deptIdsSet));
                 }
             }
         }
-        if (headersToPropagate.contains(DataPermissionHeaderConstants.X_UNIQUE_ID)) {
-            setHeaderIfAbsent(requestTemplate, DataPermissionHeaderConstants.X_UNIQUE_ID, AuthInfoUtils.getUniqueId());
+        if (headersToPropagate.contains(FeignProperties.X_UNIQUE_ID)) {
+            setHeaderIfAbsent(requestTemplate, FeignProperties.X_UNIQUE_ID, AuthInfoUtils.getUniqueId());
         }
-        if (headersToPropagate.contains(DataPermissionHeaderConstants.X_TENANT_ID)) {
-            setHeaderIfAbsent(requestTemplate, DataPermissionHeaderConstants.X_TENANT_ID,
-                    resolveHeader(RequestContextUtils.getRequest(), DataPermissionHeaderConstants.X_TENANT_ID));
+        if (headersToPropagate.contains(FeignProperties.X_TENANT_ID)) {
+            setHeaderIfAbsent(requestTemplate, FeignProperties.X_TENANT_ID,
+                    resolveHeader(RequestContextUtils.getRequest(), FeignProperties.X_TENANT_ID));
         }
-        if (headersToPropagate.contains(DataPermissionHeaderConstants.X_PROJECT_IDS)) {
+        if (headersToPropagate.contains(FeignProperties.X_PROJECT_IDS)) {
             if (DataScopeConstants.PROJECT.equals(scopeCode)) {
                 Set<String> projectIdsSet = AuthInfoUtils.getHasPermissionProjectIds();
                 if (projectIdsSet != null && !projectIdsSet.isEmpty()) {
-                    setHeaderIfAbsent(requestTemplate, DataPermissionHeaderConstants.X_PROJECT_IDS, String.join(",", projectIdsSet));
+                    setHeaderIfAbsent(requestTemplate, FeignProperties.X_PROJECT_IDS, String.join(",", projectIdsSet));
                 }
             }
         }
-        if (headersToPropagate.contains(DataPermissionHeaderConstants.X_REGION_IDS)) {
+        if (headersToPropagate.contains(FeignProperties.X_REGION_IDS)) {
             if (DataScopeConstants.REGION.equals(scopeCode)) {
                 Set<String> regionIdsSet = AuthInfoUtils.getHasPermissionRegionIds();
                 if (regionIdsSet != null && !regionIdsSet.isEmpty()) {
-                    setHeaderIfAbsent(requestTemplate, DataPermissionHeaderConstants.X_REGION_IDS, String.join(",", regionIdsSet));
+                    setHeaderIfAbsent(requestTemplate, FeignProperties.X_REGION_IDS, String.join(",", regionIdsSet));
                 }
             }
         }
@@ -279,18 +277,18 @@ public class FeignRequestInterceptor implements RequestInterceptor {
      * @param headersToPropagate 允许透传的 header 白名单
      */
     private void propagateColumnPermissionHeaders(RequestTemplate requestTemplate, Set<String> headersToPropagate) {
-        if (headersToPropagate.contains(DataPermissionHeaderConstants.X_VISIBLE_COLUMNS)) {
+        if (headersToPropagate.contains(FeignProperties.X_VISIBLE_COLUMNS)) {
             Map<String, Set<String>> visible = AuthInfoUtils.getVisibleColumnsByTable();
             if (visible != null && !visible.isEmpty()) {
                 String formatted = formatTableColumnsRule(visible);
-                setHeaderIfAbsent(requestTemplate, DataPermissionHeaderConstants.X_VISIBLE_COLUMNS, formatted);
+                setHeaderIfAbsent(requestTemplate, FeignProperties.X_VISIBLE_COLUMNS, formatted);
             }
         }
-        if (headersToPropagate.contains(DataPermissionHeaderConstants.X_EDITABLE_COLUMNS)) {
+        if (headersToPropagate.contains(FeignProperties.X_EDITABLE_COLUMNS)) {
             Map<String, Set<String>> editable = AuthInfoUtils.getEditableColumnsByTable();
             if (editable != null && !editable.isEmpty()) {
                 String formatted = formatTableColumnsRule(editable);
-                setHeaderIfAbsent(requestTemplate, DataPermissionHeaderConstants.X_EDITABLE_COLUMNS, formatted);
+                setHeaderIfAbsent(requestTemplate, FeignProperties.X_EDITABLE_COLUMNS, formatted);
             }
         }
     }

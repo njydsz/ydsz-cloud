@@ -11,9 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import jakarta.validation.constraints.Min;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.core.constant.HeaderConstants;
-import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
 import com.njydsz.common.util.string.StringUtils;
 
 import feign.Logger;
@@ -76,20 +74,20 @@ import lombok.Setter;
 @ConfigurationProperties(prefix = "ydsz.feign")
 public class FeignProperties {
 
-    private static final String X_SERVICE_TYPE = AuthHeaderConstants.X_SERVICE_TYPE;
-    private static final String X_USER_LANGUAGE = AuthHeaderConstants.X_USER_LANGUAGE;
-    private static final String X_DISTINCT_ID = AuthHeaderConstants.X_DISTINCT_ID;
-    private static final String X_IDENTITY_TYPE = AuthHeaderConstants.X_IDENTITY_TYPE;
-    private static final String X_ACCESS_TOKEN = AuthHeaderConstants.X_ACCESS_TOKEN;
-    private static final String X_DATA_SCOPE = DataPermissionHeaderConstants.X_DATA_SCOPE;
-    private static final String X_COMPANY_IDS = DataPermissionHeaderConstants.X_COMPANY_IDS;
-    private static final String X_DEPT_IDS = DataPermissionHeaderConstants.X_DEPT_IDS;
-    private static final String X_UNIQUE_ID = DataPermissionHeaderConstants.X_UNIQUE_ID;
-    private static final String X_TENANT_ID = DataPermissionHeaderConstants.X_TENANT_ID;
-    private static final String X_PROJECT_IDS = DataPermissionHeaderConstants.X_PROJECT_IDS;
-    private static final String X_REGION_IDS = DataPermissionHeaderConstants.X_REGION_IDS;
-    private static final String X_VISIBLE_COLUMNS = DataPermissionHeaderConstants.X_VISIBLE_COLUMNS;
-    private static final String X_EDITABLE_COLUMNS = DataPermissionHeaderConstants.X_EDITABLE_COLUMNS;
+    public static final String X_SERVICE_TYPE = "X-Service-Type";
+    public static final String X_USER_LANGUAGE = "X-User-Language";
+    public static final String X_DISTINCT_ID = "X-Distinct-Id";
+    public static final String X_IDENTITY_TYPE = "X-Identity-Type";
+    public static final String X_ACCESS_TOKEN = "X-Access-Token";
+    public static final String X_DATA_SCOPE = "X-Data-Scope";
+    public static final String X_COMPANY_IDS = "X-Company-Ids";
+    public static final String X_DEPT_IDS = "X-Dept-Ids";
+    public static final String X_UNIQUE_ID = "X-Unique-Id";
+    public static final String X_TENANT_ID = "X-Tenant-Id";
+    public static final String X_PROJECT_IDS = "X-Project-Ids";
+    public static final String X_REGION_IDS = "X-Region-Ids";
+    public static final String X_VISIBLE_COLUMNS = "X-Visible-Columns";
+    public static final String X_EDITABLE_COLUMNS = "X-Editable-Columns";
     private static final String X_REQUEST_SOURCE = HeaderConstants.X_REQUEST_SOURCE;
     private static final String X_FORWARDED_FOR = HeaderConstants.X_FORWARDED_FOR;
 

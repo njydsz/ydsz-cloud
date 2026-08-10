@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.core.constant.HeaderConstants;
-import com.njydsz.common.domain.constant.DataScopeConstants;
+import com.njydsz.common.core.constant.DataScopeConstants;
 import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
 import com.njydsz.common.util.string.StringUtils;
 

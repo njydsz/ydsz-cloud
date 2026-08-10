@@ -6,7 +6,6 @@ import java.util.Set;
 
 import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.domain.constant.DataScopeConstants;
 
 /**
  * 认证信息快捷读取工具类。
@@ -115,8 +114,8 @@ public class AuthInfoUtils {
      * <p>决定行级权限按哪个维度（tenant/group/company/dept/user/project/region）生效。
      *
      * @return 数据范围类型编码字符串；无上下文时返回 null
-     * @see DataScopeConstants
-      */
+     * @see com.njydsz.common.domain.constant.DataScopeConstants
+     */
     public static String getDataScope() {
         AuthInfo auth = getAuthInfo();
         return auth != null ? auth.getDataScope() : null;

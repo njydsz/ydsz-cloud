@@ -241,7 +241,7 @@ public class AuthRowPermissionAspect {
         if (info == null) {
             return;
         }
-        String scopeCode = info.getScope() == null ? null : info.getScope().getCode();
+        String scopeCode = info.getScope();
         forceSet(DataPermissionHeaderConstants.X_DATA_SCOPE, scopeCode);
         forceSet(DataPermissionHeaderConstants.X_TENANT_ID, resolveTenantId(info));
         forceSet(DataPermissionHeaderConstants.X_UNIQUE_ID, resolveUserId(info));

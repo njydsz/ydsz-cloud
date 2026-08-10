@@ -675,11 +675,6 @@ public final class ValueWriter {
                         if (!first) sb.append(',');
                         first = false;
                         sb.append(field.jsonKey);
-                        // @JsonRawValue 支持：原始 JSON 值直接写入，不转义
-                        if (field.isRawValue) {
-                            sb.append(strVal);
-                            break;
-                        }
                         // 快速路径：内联字符串检查
                         int len = strVal.length();
                         boolean needsEscape = false;
@@ -978,8 +973,7 @@ public final class ValueWriter {
                 sb.append(',');
             }
             first = false;
-            // 应用前缀/后缀
-            sb.append('"').append(field.unwrapPrefix).append(nestedField.jsonName).append(field.unwrapSuffix).append("\":");
+            sb.append('"').append(nestedField.jsonName).append("\":");
             writeValueDirect(nestedValue, sb);
         }
     }

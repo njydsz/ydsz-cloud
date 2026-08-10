@@ -148,7 +148,6 @@ public class SysException extends AbstractYdszException {
      */
     public static SysException of(String key) {
         SysException exception = new SysException();
-        exception.setKey(key);
         exception.initFields(DEFAULT_CODE, key, new Object[]{});
         return exception;
     }

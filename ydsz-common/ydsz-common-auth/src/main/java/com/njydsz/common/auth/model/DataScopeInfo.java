@@ -5,7 +5,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.njydsz.common.domain.constant.DataScopeConstants;
+import com.njydsz.common.core.constant.DataScopeConstants;
 
 import lombok.Getter;
 

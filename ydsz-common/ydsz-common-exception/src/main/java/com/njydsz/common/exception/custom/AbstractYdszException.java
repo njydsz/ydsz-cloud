@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import com.njydsz.common.exception.code.IExceptionResultCode;
 import com.njydsz.common.core.code.ResultCode;
@@ -207,24 +208,10 @@ public abstract class AbstractYdszException extends RuntimeException implements 
         return code;
     }
 
-    /**
-     * 设置错误码。
-     *
-     * <p><b>谨慎使用：</b>在 {@link #getMessage()} 懒加载解析后调用本方法，
-     * 会导致 {@code code} 字段与已缓存的 message 不一致。
-     * 新代码应通过构造器或 {@code of(ExceptionCode)} 一次性完成初始化，避免 setter 修改。
-     *
     public String getKey() {
         return key;
     }
 
-    /**
-     * 设置国际化消息键。
-     *
-     * <p><b>谨慎使用：</b>在 {@link #getMessage()} 懒加载解析后调用本方法，
-     * 会导致 {@code key} 字段与已缓存的 message 不一致。
-     * 新代码应通过构造器或 {@code of(ExceptionCode)} 一次性完成初始化，避免 setter 修改。
-     *
     /**
      * 获取消息格式化参数（返回副本，防止外部修改内部状态）。
      *
