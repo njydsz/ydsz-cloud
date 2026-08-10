@@ -3,8 +3,8 @@ package com.njydsz.common.tenant.feign;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.BizContextKeys;
+import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.tenant.TenantContext;
 
@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 public class TenantContextFeignInterceptor implements RequestInterceptor {
 
     private static final String HEADER_PREFIX = "X-Tenant-";
-    private static final String HEADER_TENANT_ID = HeaderConstants.X_TENANT_ID;
+    private static final String HEADER_TENANT_ID = DataPermissionHeaderConstants.X_TENANT_ID;
 
     @Override
     public void apply(RequestTemplate template) {

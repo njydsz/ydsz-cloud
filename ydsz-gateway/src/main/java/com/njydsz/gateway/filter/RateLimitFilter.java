@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.njydsz.common.core.constant.HeaderConstants;
+import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
 import com.njydsz.common.json.YdszJson;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -185,7 +186,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
 
         String clientIp = extractClientIp(request);
         String userId = request.getHeaders().getFirst(GatewayConstants.HEADER_USER_ID);
-        String tenantId = request.getHeaders().getFirst(HeaderConstants.X_TENANT_ID);
+        String tenantId = request.getHeaders().getFirst(DataPermissionHeaderConstants.X_TENANT_ID);
 
         // P2-5: 三维度并行检查，避免嵌套 flatMap 回调地狱
         Mono<RateLimitResult> ipLimit = checkRateLimit("IP", clientIp,
