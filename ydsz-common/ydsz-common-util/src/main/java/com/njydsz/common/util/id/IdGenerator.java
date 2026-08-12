@@ -1,5 +1,7 @@
 package com.njydsz.common.util.id;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 import com.njydsz.common.util.spring.SpringContextHolder;
 
 /**
@@ -9,7 +11,14 @@ import com.njydsz.common.util.spring.SpringContextHolder;
  * 便捷的 Snowflake ID 生成入口，替代 {@code UUID.randomUUID()}。</p>
  *
  * <p>内部通过 {@link SpringContextHolder} 懒获取 {@link SnowflakeIdGenerator} Bean，
- * 容器未初始化时安全降级为 {@link java.util.UUID}。</p>
+ * 容器未初始化时安全降级为伪随机 long（{@link ThreadLocalRandom}）。</p>
+ *
+ * <p><b>降级策略：</b>
+ * <ul>
+ *   <li>ydsz.util.snowflake.fallback-to-uuid=false（默认）：降级使用 {@link ThreadLocalRandom#nextLong()}，
+ *       比特分布均匀，不会产生 B+Tree 热点</li>
+ *   <li>ydsz.util.snowflake.fallback-to-uuid=true：行为与旧版一致，使用 {@code UUID.getMostSignificantBits()}</li>
+ * </ul>
  *
  * <p><b>Spring Bean 应注入 {@link SnowflakeIdGenerator}，不应使用本类。</b></p>
  *
@@ -21,6 +30,12 @@ public final class IdGenerator {
     private IdGenerator() {
         throw new UnsupportedOperationException("Utility class");
     }
+
+    /**
+     * 是否允许降级到 UUID（bit 分布与 Snowflake 不同，可能产生索引热点）。
+     * <p>默认关闭，降级时使用 {@link ThreadLocalRandom#nextLong()} 替代。
+     */
+    private static volatile boolean fallbackToUuid = false;
 
     /** 缓存 Bean 引用以跳过多次 SpringContextHolder 查找（仅成功结果被永久缓存） */
     private static volatile SnowflakeIdGenerator cached;
@@ -38,29 +53,45 @@ public final class IdGenerator {
     private static final long FAILURE_COOLDOWN_MILLIS = 60_000L;
 
     /**
+     * 配置降级策略。
+     *
+     * @param useUuid {@code true} 时使用 {@code UUID.getMostSignificantBits()} 降级；
+     *                {@code false}（推荐）时使用 {@link ThreadLocalRandom#nextLong()} 降级
+     */
+    public static void setFallbackToUuid(boolean useUuid) {
+        fallbackToUuid = useUuid;
+    }
+
+    /**
      * 生成下一个分布式唯一 ID（字符串形式）。
      *
-     * @return Snowflake ID 字符串；容器未初始化时降级为 UUID 字符串
+     * @return Snowflake ID 字符串；容器未初始化时降级为伪随机字符串
      */
     public static String nextIdStr() {
         SnowflakeIdGenerator gen = getGenerator();
         if (gen != null) {
             return String.valueOf(gen.nextId());
         }
-        return java.util.UUID.randomUUID().toString().replace("-", "");
+        if (fallbackToUuid) {
+            return java.util.UUID.randomUUID().toString().replace("-", "");
+        }
+        return Long.toString(ThreadLocalRandom.current().nextLong());
     }
 
     /**
      * 生成下一个分布式唯一 ID（long 形式）。
      *
-     * @return Snowflake ID；容器未初始化时降级为 UUID.hashCode()
+     * @return Snowflake ID；容器未初始化时降级为伪随机 long
      */
     public static long nextId() {
         SnowflakeIdGenerator gen = getGenerator();
         if (gen != null) {
             return gen.nextId();
         }
-        return java.util.UUID.randomUUID().getMostSignificantBits() & Long.MAX_VALUE;
+        if (fallbackToUuid) {
+            return java.util.UUID.randomUUID().getMostSignificantBits() & Long.MAX_VALUE;
+        }
+        return ThreadLocalRandom.current().nextLong();
     }
 
     private static SnowflakeIdGenerator getGenerator() {

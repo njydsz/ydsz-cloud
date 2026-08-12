@@ -6,13 +6,13 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
 
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.util.security.DigestUtils;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -95,31 +95,24 @@ public class SnowflakeIdGenerator {
     private final AtomicLong state = new AtomicLong(-1L);
 
     /**
-     * 构造 Spring Bean，按以下优先级解析 workerId / datacenterId：
-     * <ol>
-     *   <li>若容器中存在 {@link WorkerIdRegistry} Bean，则由其分配 workerId（注册中心优先，适配 Redis/ZK/ETCD 等）；</li>
-     *   <li>否则若 {@code workerIdSource=CONFIG} 且显式配置了 {@code worker-id}，则使用配置值；</li>
-     *   <li>否则基于容器 hostname / 环境变量（INSTANCE_INDEX、POD_INDEX、YDSZ_SNOWFLAKE_WORKER_ID）/ 本机 IP 自动计算。</li>
-     * </ol>
+     * 构造 Spring Bean，使用 {@link WorkerIdAllocator} 自动分配 workerId。
      *
-     * <p>datacenterId 优先级：显式配置 > 自动计算（注册中心仅负责 workerId）。
+     * <p>workerId 分配策略链：PodOrdinal → IpHash → FilePersisted。
+     * 业务方可通过声明自定义 {@link WorkerIdAllocator} Bean 插入更高优先级的策略。
      *
-     * @param properties               Snowflake 配置属性
-     * @param workerIdRegistryProvider 可选的 WorkerId 注册中心（未提供时为 null）
+     * <p>datacenterId 优先级：显式配置 > 自动计算。
+     *
+     * @param properties   Snowflake 配置属性
+     * @param allocator    WorkerId 分配策略链
      */
-    public SnowflakeIdGenerator(SnowflakeProperties properties,
-                                ObjectProvider<WorkerIdRegistry> workerIdRegistryProvider) {
-        WorkerIdRegistry registry = workerIdRegistryProvider != null
-                ? workerIdRegistryProvider.getIfAvailable() : null;
+    public SnowflakeIdGenerator(SnowflakeProperties properties, WorkerIdAllocator allocator) {
         String nodeId = resolveNodeId();
 
-        if (registry != null) {
-            this.workerId = registry.acquire(nodeId);
-        } else if (properties.getWorkerIdSource() == SnowflakeProperties.WorkerIdSource.CONFIG
-                && properties.getWorkerId() != null) {
+        // workerId 分配：显式配置优先，否则使用策略链
+        if (properties.getWorkerId() != null) {
             this.workerId = properties.getWorkerId();
         } else {
-            this.workerId = computeWorkerId();
+            this.workerId = allocator.allocate(nodeId);
         }
 
         this.datacenterId = properties.getDatacenterId() != null
@@ -134,26 +127,31 @@ public class SnowflakeIdGenerator {
             throw new IllegalArgumentException(
                     String.format("datacenter Id can't be greater than %d or less than 0", MAX_DATACENTER_ID));
         }
-        log.info("SnowflakeIdGenerator initialized. Worker ID: {}, Datacenter ID: {}, registry: {}",
-                this.workerId, this.datacenterId, registry != null ? registry.type() : "none");
+        log.info("SnowflakeIdGenerator initialized. Worker ID: {}, Datacenter ID: {}, allocator: {}",
+                this.workerId, this.datacenterId, allocator.name());
     }
 
     /**
-     * 便捷构造器：使用默认配置（workerIdSource=ENVIRONMENT_VARIABLE，workerId/datacenterId 自动计算），
-     * 不接入注册中心。适用于非 Spring 托管场景（如单元测试、独立工具）。
+     * 便捷构造器：使用默认策略链（PodOrdinal → IpHash → FilePersisted）。
+     * 适用于非 Spring 托管场景（如单元测试、独立工具）。
      */
     public SnowflakeIdGenerator() {
-        this(new SnowflakeProperties(), null);
+        this(new SnowflakeProperties(), WorkerIdAllocatorChain.defaults());
     }
 
     /**
-     * 解析节点标识（用于注册中心分配 workerId）。
+     * 解析节点标识（用于 WorkerIdAllocator 策略链）。
      *
-     * <p>优先级：环境变量 HOSTNAME > INSTANCE_INDEX > POD_INDEX > 本机主机名。
+     * <p>优先级：显式配置（{@code ydsz.util.snowflake.node-id}）> 环境变量 HOSTNAME > 本机主机名。
      *
      * @return 节点标识字符串
      */
-    private static String resolveNodeId() {
+    private String resolveNodeId() {
+        // 显式配置优先
+        if (properties.getNodeId() != null && !properties.getNodeId().isEmpty()) {
+            return properties.getNodeId();
+        }
+        // 环境变量
         String nodeId = System.getenv("HOSTNAME");
         if (nodeId == null || nodeId.isEmpty()) {
             nodeId = System.getenv("INSTANCE_INDEX");
@@ -161,6 +159,7 @@ public class SnowflakeIdGenerator {
         if (nodeId == null || nodeId.isEmpty()) {
             nodeId = System.getenv("POD_INDEX");
         }
+        // fallback：本机主机名
         if (nodeId == null || nodeId.isEmpty()) {
             try {
                 nodeId = InetAddress.getLocalHost().getHostName();
@@ -207,6 +206,13 @@ public class SnowflakeIdGenerator {
 
     /**
      * 等待下一毫秒。
+     *
+     * <p>统一时钟回拨处理逻辑（合并原 resolveTimestamp 与 tilNextMillis 的双自旋路径）：
+     * <ul>
+     *   <li>≤ {@link #CLOCK_BACKWARD_TOLERANCE_MILLIS}ms：使用 {@link LockSupport#parkNanos} 挂起等待，
+     *       避免忙等消耗 CPU</li>
+     *   <li>超过最大等待时间：抛出 {@link ClockBackwardException}</li>
+     * </ul>
      */
     private long tilNextMillis(long lastTimestamp) {
         long timestamp = currentTimeRelative();
@@ -249,30 +255,36 @@ public class SnowflakeIdGenerator {
     /**
      * 处理时间戳解析（含时钟回拨容忍）。
      *
-     * <p>所有时间戳均处于相对 {@link #EPOCH} 的毫秒域内（见 {@link #currentTimeRelative()}）。
+     * <p>统一使用 {@link LockSupport#parkNanos} 等待策略，替代原来的 100ms 截止时间自旋循环，
+     * 减少 CPU 空转。所有时间戳均处于相对 {@link #EPOCH} 的毫秒域内（见 {@link #currentTimeRelative()}）。
+     *
+     * @param lastTimestamp 上一次生成 ID 时的相对时间戳
+     * @return 当前可用的相对时间戳（≥ lastTimestamp）；时钟回拨超阈值抛出 {@link ClockBackwardException}
      */
     private long resolveTimestamp(long lastTimestamp) {
         long timestamp = currentTimeRelative();
         if (timestamp < lastTimestamp) {
             long offset = lastTimestamp - timestamp;
-            if (offset <= CLOCK_BACKWARD_TOLERANCE_MILLIS) {
-                log.warn("Clock moved backwards by {} ms, waiting to recover", offset);
-                long deadlineNano = System.nanoTime() + 100_000_000L;
-                while (currentTimeRelative() < lastTimestamp) {
-                    if (System.nanoTime() > deadlineNano) {
-                        long remainingOffset = lastTimestamp - currentTimeRelative();
-                        log.error("Clock still moved backwards after waiting 100ms, remaining offset: {} ms",
-                                remainingOffset);
-                        throw new ClockBackwardException(remainingOffset, lastTimestamp, timeGen());
-                    }
-                    LockSupport.parkNanos(500_000L);
-                }
-                timestamp = currentTimeRelative();
-            } else {
+            if (offset > CLOCK_BACKWARD_TOLERANCE_MILLIS) {
                 log.error("Clock moved backwards by {} ms, exceeds tolerance {} ms",
                         offset, CLOCK_BACKWARD_TOLERANCE_MILLIS);
                 throw new ClockBackwardException(offset, lastTimestamp, timeGen());
             }
+            log.warn("Clock moved backwards by {} ms, parking {} ms to recover", offset, offset);
+            long totalWaited = 0L;
+            while (currentTimeRelative() < lastTimestamp) {
+                if (totalWaited >= CLOCK_BACKWARD_MAX_WAIT_MILLIS) {
+                    long remainingOffset = lastTimestamp - currentTimeRelative();
+                    log.error("Clock still moved backwards after waiting {} ms, remaining offset: {} ms",
+                            totalWaited, remainingOffset);
+                    throw new ClockBackwardException(remainingOffset, lastTimestamp, timeGen());
+                }
+                long parkMillis = Math.min(Math.max(lastTimestamp - currentTimeRelative(), 1L),
+                        CLOCK_BACKWARD_MAX_WAIT_MILLIS - totalWaited);
+                LockSupport.parkNanos(parkMillis * 1_000_000);
+                totalWaited += parkMillis;
+            }
+            timestamp = currentTimeRelative();
         }
         return timestamp;
     }
@@ -296,55 +308,6 @@ public class SnowflakeIdGenerator {
         return state < 0 ? -1L : state & SEQUENCE_MASK;
     }
 
-    /**
-     * 计算工作节点 ID。
-     *
-     * <p>优先级：系统属性 > 环境变量 YDSZ_SNOWFLAKE_WORKER_ID > HOSTNAME 哈希 > 本地 IP 哈希
-     *
-     * @return 计算得到的节点 ID
-     */
-    private static long computeWorkerId() {
-        String configured = System.getProperty("ydsz.snowflake.workerId",
-                System.getenv("YDSZ_SNOWFLAKE_WORKER_ID"));
-        if (configured != null && !configured.isEmpty()) {
-            try {
-                long id = Long.parseLong(configured);
-                if (id >= 0 && id <= MAX_WORKER_ID) {
-                    return id;
-                }
-                log.warn("配置的 WorkerId {} 超出范围 [0, {}]，使用自动计算", id, MAX_WORKER_ID);
-            } catch (NumberFormatException e) {
-                log.warn("配置的 WorkerId {} 格式无效，使用自动计算", configured);
-            }
-        }
-        String containerId = System.getenv("HOSTNAME");
-        if (containerId == null || containerId.isEmpty()) {
-            containerId = System.getenv("INSTANCE_INDEX");
-        }
-        if (containerId == null || containerId.isEmpty()) {
-            containerId = System.getenv("POD_INDEX");
-        }
-        if (containerId != null && !containerId.isEmpty()) {
-            String hash = DigestUtils.sha256Hex(containerId);
-            return Long.parseLong(hash.substring(0, 5), 16) % 32;
-        }
-        try {
-            String hostAddress = InetAddress.getLocalHost().getHostAddress();
-            String hash = DigestUtils.sha256Hex(hostAddress);
-            return Long.parseLong(hash.substring(0, 5), 16) % 32;
-        } catch (UnknownHostException e) {
-            log.warn("无法获取本机主机地址，使用随机 workerId。容器化环境建议配置 INSTANCE_INDEX 环境变量");
-            return ThreadLocalRandom.current().nextLong(32);
-        }
-    }
-
-    /**
-     * 计算数据中心 ID。
-     *
-     * <p>优先级：系统属性 > 环境变量 YDSZ_SNOWFLAKE_DATACENTER_ID > 主机名哈希
-     *
-     * @return 计算得到的数据中心 ID
-     */
     private static long computeDatacenterId() {
         String configured = System.getProperty("ydsz.snowflake.datacenterId",
                 System.getenv("YDSZ_SNOWFLAKE_DATACENTER_ID"));

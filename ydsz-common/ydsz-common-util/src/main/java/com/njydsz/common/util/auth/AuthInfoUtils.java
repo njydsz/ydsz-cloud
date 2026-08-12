@@ -50,11 +50,14 @@ public class AuthInfoUtils {
     /**
      * 获取当前线程的认证信息。
      *
-     * @return AuthInfo 实例；若未写入则返回 null
+     * <p>使用 {@code instanceof} 类型安全保护，避免 RequestContext 中存放了非 AuthInfo 类型时抛 ClassCastException。
+     *
+     * @return AuthInfo 实例；若未写入或类型不匹配则返回 null
      * @see RequestContext#get(String)
       */
     public static AuthInfo getAuthInfo() {
-        return AuthInfo.class.cast(RequestContext.get(BizContextKeys.KEY_AUTH_INFO));
+        Object value = RequestContext.get(BizContextKeys.KEY_AUTH_INFO);
+        return value instanceof AuthInfo auth ? auth : null;
     }
 
     /**
@@ -221,6 +224,7 @@ public class AuthInfoUtils {
      * 获取公司级认证信息。
      *
      * <p>类型转换为 YdszAuthInfo，以访问行级权限维度ID集合（companyIds/deptIds/projectIds/regionIds）。
+     * 使用 {@code instanceof} 类型安全保护，避免 ClassCastException。
      *
      * @return YdszAuthInfo；若非该类型或未写入则返回 null
      * @see YdszAuthInfo
@@ -229,7 +233,8 @@ public class AuthInfoUtils {
      *
      */
     public static YdszAuthInfo getYdszAuthInfo() {
-        return YdszAuthInfo.class.cast(RequestContext.get(BizContextKeys.KEY_AUTH_INFO));
+        Object value = RequestContext.get(BizContextKeys.KEY_AUTH_INFO);
+        return value instanceof YdszAuthInfo auth ? auth : null;
     }
 
     /**

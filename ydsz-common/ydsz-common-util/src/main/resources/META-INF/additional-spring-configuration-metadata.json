@@ -1,6 +1,11 @@
 {
   "properties": [
     {
+      "name": "ydsz.util.snowflake.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 Snowflake ID 自动配置（默认 true）。设置为 false 时禁用 SnowflakeIdGenerator 注册。"
+    },
+    {
       "name": "ydsz.util.snowflake.worker-id",
       "type": "java.lang.Long",
       "description": "工作节点ID（范围 0-31，仅 workerIdSource 为 CONFIG 时生效）。"

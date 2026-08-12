@@ -1,8 +1,17 @@
 package com.njydsz.common.util.password;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 默认密码强度校验器实现。
@@ -36,24 +45,119 @@ import java.util.Set;
  */
 public class DefaultPasswordStrengthChecker implements PasswordStrengthChecker {
 
+    private static final Logger log = LoggerFactory.getLogger(DefaultPasswordStrengthChecker.class);
+
+    /** Bundle 基础名，用于国际化消息查找 */
+    private static final String BUNDLE_BASE = "com.njydsz.common.util.password.messages";
+
+    /**
+     * 内置常见弱密码集合（Top 100+ 高频猜测密码）。
+     *
+     * <p>数据来源：RockYou 泄密库、SecLists、HaveIBeenPwned Top-1000 子集。
+     * 外部可通过 {@link #loadWeakPasswordsFromClasspath(String)} 加载自定义字典覆盖或扩充。
+     */
+    private static final Set<String> COMMON_WEAK_PASSWORDS = new HashSet<>(java.util.Arrays.asList(
+            // --- Top 50 全球最常见 ---
+            "123456", "password", "12345678", "qwerty", "123456789",
+            "letmein", "1234567", "football", "iloveyou", "admin",
+            "welcome", "monkey", "login", "abc123", "111111",
+            "123123", "password123", "1234", "baseball", "qwerty123",
+            "master", "dragon", "sunshine", "princess", "shadow",
+            "superman", "michael", "ashley", "12345", "charlie",
+            "donald", "passw0rd", "qwerty1", "Mustang", "access",
+            "loveme", "hello", "test", "starwars", "solo",
+            "jesus", "freedom", "whatever", "trustno1", "hottie",
+            "maverick", "phoenix", "cookie", "summer", "Batman",
+            // --- 键盘模式 ---
+            "qwertyuiop", "asdfghjkl", "zxcvbnm", "qwerty12345",
+            "1q2w3e4r", "1qaz2wsx", "qazwsx", "qwe123", "1q2w3e",
+            // --- 常见英文词汇 ---
+            "computer", "internet", "hunter", "hunter2", "killer",
+            "pepper", "ranger", "thomas", "robert", "jordan",
+            "daniel", "jessica", "hannah", "george", "andrea",
+            "joshua", "nicole", "robert", "harley", "samson",
+            // --- 中文拼音 Top ---
+            "woaini", "woaini1314", "zhangsan", "xiaoming", "qwerty123",
+            "iloveu", "5201314", "888888", "88888888", "666666",
+            // --- 常见后缀模式 ---
+            "password1", "password12", "password!", "123456a",
+            "abc123456", "a123456", "Aa123456", "123456789a",
+            "qq123456", "aa123456", "Admin123", "Passw0rd!",
+            // --- 服务相关 ---
+            "root", "toor", "guest", "adm", "mysql",
+            "oracle", "postgres", "nginx", "apache", "tomcat"
+    ));
+
     /**
      * 默认单例（无状态、线程安全，可复用）。
      *
      * <p>通过 {@code INSTANCE} 避免重复创建；由于 Score 规则是纯函数（无共享可变字段），
      * 所有调用方可安全共享同一实例。
+     * <p>首次构建时若 classpath 存在 {@code /weak-passwords.txt} 则自动合并加载。
      */
-    public static final DefaultPasswordStrengthChecker INSTANCE = new DefaultPasswordStrengthChecker();
+    public static final DefaultPasswordStrengthChecker INSTANCE = new DefaultPasswordStrengthChecker(true);
 
-    /** Bundle 基础名，用于国际化消息查找 */
-    private static final String BUNDLE_BASE = "com.njydsz.common.util.password.messages";
+    /** 弱密码集合（实例维度，可替换扩展） */
+    private final Set<String> weakPasswords;
 
-    /** 已知常见弱密码集合（前 100 常见密码子集）。 */
-    private static final Set<String> COMMON_WEAK_PASSWORDS = Set.of(
-            "123456", "password", "12345678", "qwerty", "123456789",
-            "letmein", "1234567", "football", "iloveyou", "admin",
-            "welcome", "monkey", "login", "abc123", "111111",
-            "123123", "password123", "1234", "baseball", "qwerty123"
-    );
+    /**
+     * 私有构造器（单例模式）。
+     *
+     * @param loadExtension 是否加载扩展字典文件
+     */
+    private DefaultPasswordStrengthChecker(boolean loadExtension) {
+        Set<String> passwords = new HashSet<>(COMMON_WEAK_PASSWORDS);
+        if (loadExtension) {
+            Set<String> external = loadWeakPasswordsFromClasspath("/weak-passwords.txt");
+            if (!external.isEmpty()) {
+                passwords.addAll(external);
+            }
+        }
+        this.weakPasswords = java.util.Collections.unmodifiableSet(passwords);
+    }
+
+    /**
+     * 从 classpath 加载外部弱密码字典。
+     *
+     * <p>每行一条密码，忽略空行和 # 开头的注释行。
+     * 文件路径为 classpath 根路径下相对路径。
+     *
+     * @param classpathResource classpath 资源路径（如 {@code "/weak-passwords.txt"}）
+     * @return 加载的密码集合；文件不存在时返回空 Set
+     * @since 2.2.0
+     */
+    public static Set<String> loadWeakPasswordsFromClasspath(String classpathResource) {
+        Set<String> result = new HashSet<>();
+        try (InputStream is = DefaultPasswordStrengthChecker.class.getResourceAsStream(classpathResource)) {
+            if (is == null) {
+                log.debug("弱密码字典资源 {} 不存在，跳过加载", classpathResource);
+                return result;
+            }
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String trimmed = line.trim();
+                    if (!trimmed.isEmpty() && !trimmed.startsWith("#")) {
+                        result.add(trimmed.toLowerCase(Locale.ROOT));
+                    }
+                }
+            }
+            log.info("从 {} 加载了 {} 条弱密码字典", classpathResource, result.size());
+        } catch (IOException e) {
+            log.warn("加载弱密码字典 {} 失败: {}", classpathResource, e.getMessage());
+        }
+        return result;
+    }
+
+    /**
+     * 获取当前生效的弱密码集合（不可变视图）。
+     *
+     * @return 弱密码集合
+     * @since 2.2.0
+     */
+    public Set<String> getWeakPasswords() {
+        return weakPasswords;
+    }
 
     @Override
     public PasswordStrengthLevel check(String password) {
@@ -108,7 +212,7 @@ public class DefaultPasswordStrengthChecker implements PasswordStrengthChecker {
         if (hasSpecial) score++;
 
         // 常见弱密码惩罚
-        if (COMMON_WEAK_PASSWORDS.contains(password.toLowerCase())) {
+        if (weakPasswords.contains(password.toLowerCase(Locale.ROOT))) {
             score -= 5;
         }
 
@@ -199,7 +303,7 @@ public class DefaultPasswordStrengthChecker implements PasswordStrengthChecker {
         if (!hasSpecial) {
             suggestion.append(getMessage("password.suggest.special", locale)).append(" ");
         }
-        if (COMMON_WEAK_PASSWORDS.contains(password.toLowerCase())) {
+        if (weakPasswords.contains(password.toLowerCase(Locale.ROOT))) {
             suggestion.append(getMessage("password.suggest.common", locale)).append(" ");
         }
         return suggestion.toString().trim();

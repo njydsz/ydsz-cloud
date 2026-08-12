@@ -19,26 +19,21 @@ import lombok.Setter;
  * ydsz:
  *   util:
  *     snowflake:
- *       worker-id: 1
- *       datacenter-id: 0
- *       worker-id-source: CONFIG
+ *       worker-id: 1         # 可选：显式指定 workerId（最高优先级）
+ *       datacenter-id: 0     # 可选：显式指定 datacenterId
+ *       node-id: pod-0       # 可选：节点标识（用于 PodOrdinal 策略）
  * }</pre>
  *
- * <p><b>配置说明：</b>
- * <ul>
- *   <li>workerId：工作节点ID，范围 0-31</li>
- *   <li>datacenterId：数据中心ID，范围 0-31</li>
- *   <li>workerIdSource：workerId 来源策略
- *     <ul>
- *       <li>ENVIRONMENT_VARIABLE：从环境变量 YDSZ_SNOWFLAKE_WORKER_ID 读取（默认）</li>
- *       <li>CONFIG：从配置文件读取</li>
- *     </ul>
- *   </li>
- * </ul>
+ * <p><b>workerId 自动分配策略链：</b>
+ * <ol>
+ *   <li>显式配置：{@code ydsz.util.snowflake.worker-id}</li>
+ *   <li>PodOrdinal：{@link PodOrdinalWorkerIdAllocator} 从 StatefulSet 主机名解析序号</li>
+ *   <li>IpHash：{@link IpHashWorkerIdAllocator} 基于本地 IPv4 地址哈希</li>
+ *   <li>FilePersisted：{@link FilePersistedWorkerIdAllocator} 基于本地文件持久化</li>
+ * </ol>
  *
  * @author ydsz-team
  * @since 1.0.0
- *
  */
 @Getter
 @Setter
@@ -46,19 +41,22 @@ import lombok.Setter;
 @ConfigurationProperties(prefix = "ydsz.util.snowflake")
 public class SnowflakeProperties {
 
-    /** WorkerId 环境变量名 */
-    public static final String WORKER_ID_ENV_VAR = "YDSZ_SNOWFLAKE_WORKER_ID";
+    /**
+     * 是否启用 Snowflake 自动配置。
+     * <p>默认 true；设置为 false 时可禁用 {@link SnowflakeIdGenerator} 的注册。
+     */
+    private boolean enabled = true;
 
     /**
-     * 工作节点ID
-     * <p>范围：0-31，仅在 workerIdSource 为 CONFIG 时生效
+     * 工作节点ID（显式配置，最高优先级）。
+     * <p>范围：0-31；不设置时由 {@link WorkerIdAllocator} 策略链自动分配。
      */
     @Min(0)
     @Max(31)
     private Long workerId;
 
     /**
-     * 数据中心ID
+     * 数据中心ID（显式配置，不设时自动计算机器名哈希取模）。
      * <p>范围：0-31
      */
     @Min(0)
@@ -66,31 +64,8 @@ public class SnowflakeProperties {
     private Long datacenterId;
 
     /**
-     * workerId 来源策略
-     * <p>默认从环境变量读取
+     * 节点标识（用于 PodOrdinal/IFilePersisted 策略）。
+     * <p>不设置时自动解析 HOSTNAME 环境变量或 InetAddress.getLocalHost()。
      */
-    private WorkerIdSource workerIdSource = WorkerIdSource.ENVIRONMENT_VARIABLE;
-
-    /**
-     * WorkerId 租约时间（毫秒）
-     * <p>仅在使用 WorkerIdRegistry（分布式注册中心）时生效。
-     * <p>租约到期前一半时间点自动续约，未续约则 WorkerId 可被其他实例抢占。
-     * <p>默认值：300000（5 分钟）
-     */
-    private long leaseMillis = 300_000L;
-
-    /**
-     * workerId 来源策略枚举
-     */
-    public enum WorkerIdSource {
-        /**
-         * 从环境变量读取 workerId
-         */
-        ENVIRONMENT_VARIABLE,
-
-        /**
-         * 从配置文件读取 workerId
-         */
-        CONFIG
-    }
+    private String nodeId;
 }

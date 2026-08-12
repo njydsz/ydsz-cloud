@@ -4,6 +4,7 @@ import java.util.Locale;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.MessageSource;
 
 import com.njydsz.common.util.auth.AuthInfoUtils;
@@ -14,21 +15,42 @@ import com.njydsz.common.util.string.StringUtils;
  * 消息工具类
  * 提供国际化消息处理的相关方法
  *
+ * <p>Spring 环境下通过 {@link MessageSourceConfiguration} 注入 {@link ObjectProvider}，
+ * 非 Spring 环境下静态方法仍可通过降级路径返回默认消息。
+ *
  * @author ydsz-team
  * @since 1.0.0
- *
  */
 public class MessageUtils {
     private static final Logger logger = LoggerFactory.getLogger(MessageUtils.class);
 
     /**
-     * 缓存的 MessageSource 实例
+     * 可选的 MessageSource 提供者（Spring 环境下由 {@link MessageSourceConfiguration} 注入）。
+     * <p>使用 {@link ObjectProvider} 而非直接引用，避免启动期缺少 MessageSource 时抛出异常。
+     */
+    private static volatile ObjectProvider<MessageSource> messageSourceProvider;
+
+    /**
+     * 缓存的 MessageSource 实例（已成功解析后缓存，避免重复 getIfAvailable）。
      *
-     * <p>避免每次 getMessage 都查询 BeanFactory，首次成功解析后缓存。
-     * volatile 保证多线程可见性。null 表示尚未解析或解析失败（不缓存"未找到"状态，
-     * 以便下次调用可重新尝试解析）。
+     * <p>volatile 保证多线程可见性。null 表示首次解析尚未完成或解析失败。
      */
     private static volatile MessageSource cachedMessageSource;
+
+    /**
+     * 注入 MessageSource 提供者（Spring 容器启动后调用）。
+     *
+     * <p>由 {@link MessageSourceConfiguration} 通过 {@code @Configuration} 注册，
+     * 将 {@code ObjectProvider<MessageSource>} 传入本类。
+     *
+     * @param provider MessageSource 提供者；允许 null（此时使用降级路径）
+     * @since 2.2.0
+     */
+    public static void setMessageSourceProvider(ObjectProvider<MessageSource> provider) {
+        messageSourceProvider = provider;
+        // 注入后清空缓存，以便首次调用重新解析（可能在 Spring 上下文就绪后 MessageSource 才可用）
+        cachedMessageSource = null;
+    }
 
     /**
      * 获得多语言内容，默认根据当前用户的 Locale 获取
@@ -153,9 +175,9 @@ public class MessageUtils {
     /**
      * 解析并缓存 MessageSource
      *
-     * <p>首次调用时通过类型安全重载 {@code getBean("messageSource", MessageSource.class)}
-     * 解析 Bean 并缓存，避免高频调用重复查询 BeanFactory。
-     * 解析失败时不缓存（返回 null），以便下次调用可重新尝试。
+     * <p>优先使用已注入的 {@link ObjectProvider}（Spring 环境下由 {@link MessageSourceConfiguration} 注入）；
+     * 若未注入则降级使用 {@link SpringContextHolder} 懒加载。
+     * 解析成功时缓存结果，解析失败时返回 null 以便下次调用可重新尝试。
      *
      * @return MessageSource 实例，未找到或上下文未初始化时返回 null
      */
@@ -165,13 +187,25 @@ public class MessageUtils {
             return messageSource;
         }
         try {
-            // 类型安全重载，避免强转；getBean 找不到时会抛 NoSuchBeanDefinitionException
-            messageSource = SpringContextHolder.getBean("messageSource", MessageSource.class);
-            // 仅缓存成功解析的实例，避免缓存"未找到"状态
-            cachedMessageSource = messageSource;
-            return messageSource;
+            // 优先使用 ObjectProvider（Spring 注入路径，更安全）
+            ObjectProvider<MessageSource> provider = messageSourceProvider;
+            if (provider != null) {
+                messageSource = provider.getIfAvailable();
+                if (messageSource != null) {
+                    cachedMessageSource = messageSource;
+                    return messageSource;
+                }
+                return null;
+            }
+            // 降级：通过 SpringContextHolder 懒加载（非 Spring 环境或未注入时使用）
+            if (SpringContextHolder.isInitialized()) {
+                messageSource = SpringContextHolder.getBean("messageSource", MessageSource.class);
+                cachedMessageSource = messageSource;
+                return messageSource;
+            }
+            return null;
         } catch (Exception e) {
-            logger.warn("MessageSource bean not found", e);
+            logger.warn("MessageSource bean not found: {}", e.getMessage());
             return null;
         }
     }

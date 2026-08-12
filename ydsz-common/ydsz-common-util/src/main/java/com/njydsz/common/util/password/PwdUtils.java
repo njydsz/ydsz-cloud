@@ -11,6 +11,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.njydsz.common.util.security.DigestUtils;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * 用户密码安全工具类（纯 JDK 实现 + Spring Security BCrypt）
  *
@@ -19,6 +21,7 @@ import com.njydsz.common.util.security.DigestUtils;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public class PwdUtils {
 
     /** BCrypt 格式正则 */
@@ -55,13 +58,68 @@ public class PwdUtils {
     }
 
     /**
-     * PBKDF2 默认迭代次数
+     * PBKDF2 默认迭代次数的配置键。
+     *
+     * <p>优先级：系统属性 > 环境变量 > 默认值（600000）。
+     * <ul>
+     *   <li>系统属性：{@code ydsz.util.password.pbkdf2.iterations}</li>
+     *   <li>环境变量：{@code YDSZ_UTIL_PASSWORD_PBKDF2_ITERATIONS}</li>
+     * </ul>
+     *
+     * <p>迭代次数存储在编码密码中（salt:iterations:hash），
+     * 验证旧密码时使用存储的迭代次数，不受默认值变化影响。
+     *
+     * @since 2.2.0
+     */
+    private static final String ITERATIONS_CONFIG_KEY = "ydsz.util.password.pbkdf2.iterations";
+    private static final String ITERATIONS_ENV_KEY = "YDSZ_UTIL_PASSWORD_PBKDF2_ITERATIONS";
+
+    /**
+     * PBKDF2 默认迭代次数。
      *
      * <p>OWASP 2023 推荐 PBKDF2-SHA256 至少 600000 次迭代。
+     * 支持通过系统属性或环境变量覆盖（详见 {@link #ITERATIONS_CONFIG_KEY}）。
      * 迭代次数存储在编码密码中（salt:iterations:hash），
      * 验证旧密码时使用存储的迭代次数，不受此值变化影响。
      */
-    private static final int DEFAULT_ITERATIONS = 600000;
+    private static final int DEFAULT_ITERATIONS = resolveDefaultIterations();
+
+    /**
+     * 解析默认迭代次数。
+     *
+     * <p>优先级：系统属性 > 环境变量 > 硬编码默认 600000。
+     * 解析失败（非数字、超出范围）时回退到 OWASP 推荐值 600000。
+     *
+     * @return 有效的迭代次数（≥ 1000）
+     */
+    private static int resolveDefaultIterations() {
+        String value = System.getProperty(ITERATIONS_CONFIG_KEY);
+        if (value == null || value.isEmpty()) {
+            value = System.getenv(ITERATIONS_ENV_KEY);
+        }
+        if (value != null && !value.isEmpty()) {
+            try {
+                int parsed = Integer.parseInt(value);
+                if (parsed >= 1000) {
+                    return parsed;
+                }
+                log.warn("配置的 PBKDF2 迭代次数 {} 过小（最低 1000），使用默认值 600000", parsed);
+            } catch (NumberFormatException e) {
+                log.warn("PBKDF2 迭代次数配置 '{}' 格式无效，使用默认值 600000", value);
+            }
+        }
+        return 600000;
+    }
+
+    /**
+     * 获取当前生效的 PBKDF2 默认迭代次数。
+     *
+     * @return 当前默认迭代次数（≥ 1000）
+     * @since 2.2.0
+     */
+    public static int getDefaultIterations() {
+        return DEFAULT_ITERATIONS;
+    }
 
     /**
      * 默认盐值长度（16 字节）

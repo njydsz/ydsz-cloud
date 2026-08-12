@@ -27,7 +27,11 @@ package com.njydsz.common.util.id;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 自 3.0.0 起替换为 {@link WorkerIdAllocator}。
+ *             新接口返回 int（0-1023 workerId 范围），通过 {@link WorkerIdAllocatorChain} 组合多策略。
+ *             如需自定义实现：实现 {@link WorkerIdAllocator} 后通过 {@link WorkerIdAllocatorChain#prepend} 插入策略链。
  */
+@Deprecated(since = "3.0.0", forRemoval = false)
 public interface WorkerIdRegistry {
 
     /**

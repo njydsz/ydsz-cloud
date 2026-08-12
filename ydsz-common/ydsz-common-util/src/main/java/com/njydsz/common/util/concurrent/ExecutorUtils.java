@@ -22,6 +22,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.alibaba.ttl.TtlCallable;
+import com.alibaba.ttl.TtlRunnable;
+import com.alibaba.ttl.threadpool.TtlExecutors;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -341,6 +345,106 @@ public class ExecutorUtils {
             return true;
         } catch (Exception | Error e) {
             return false;
+        }
+    }
+
+    // ==================== TTL 上下文透传线程池 ====================
+
+    /**
+     * 将 ExecutorService 包装为 TransmittableThreadLocal (TTL) 透传线程池。
+     *
+     * <p>适用于使用 {@link com.alibaba.ttl.TransmittableThreadLocal} 的场景（如 RequestContext、
+     * 链路 TraceId、租户 ID 等），确保父线程上下文正确传播到子线程。
+     *
+     * <p>典型用途：
+     * <pre>{@code
+     * ExecutorService rawPool = ExecutorUtils.newFixedThreadPool(10);
+     * ExecutorService ttlPool = ExecutorUtils.toTtlThreadPool(rawPool);
+     * // 或使用 builder 模式：
+     * ExecutorService ttlPool = ExecutorUtils.builder()
+     *     .corePoolSize(10).maxPoolSize(20)
+     *     .ttlEnabled(true)
+     *     .buildTtl();
+     * }</pre>
+     *
+     * <p>依赖条件：classpath 上需存在 {@code transmittable-thread-local} 库（ydsz-common-core
+     * 已声明为 optional 依赖）。
+     *
+     * @param executor 原始线程池
+     * @return TTL 透传包装的线程池；若 TTL 库不可用则返回原始线程池
+     * @since 2.2.0
+     */
+    public static ExecutorService toTtlThreadPool(ExecutorService executor) {
+        if (executor == null) {
+            return null;
+        }
+        try {
+            return TtlExecutors.getTtlExecutorService(executor);
+        } catch (NoClassDefFoundError e) {
+            log.warn("TTL 库不可用，返回原始线程池；请在 classpath 中添加 transmittable-thread-local 依赖");
+            return executor;
+        }
+    }
+
+    /**
+     * 创建固定大小 TTL 透传线程池（便捷方法）。
+     *
+     * @param nThreads 线程数
+     * @return TTL 包装的固定线程池
+     * @since 2.2.0
+     */
+    public static ExecutorService newTtlFixedThreadPool(int nThreads) {
+        return toTtlThreadPool(newFixedThreadPool(nThreads));
+    }
+
+    /**
+     * 创建固定大小 TTL 透传线程池（带线程名前缀）。
+     *
+     * @param nThreads         线程数
+     * @param threadNamePrefix 线程名前缀
+     * @return TTL 包装的固定线程池
+     * @since 2.2.0
+     */
+    public static ExecutorService newTtlFixedThreadPool(int nThreads, String threadNamePrefix) {
+        return toTtlThreadPool(newFixedThreadPool(nThreads, threadNamePrefix));
+    }
+
+    /**
+     * 包装 Runnable 为 TTL 透传任务。
+     *
+     * <p>适用于直接向非 TTL 线程池提交单个任务时手动透传上下文。
+     *
+     * @param runnable 原始 Runnable
+     * @return TTL 包装的 Runnable；若 TTL 库不可用则返回原始 Runnable
+     * @since 2.2.0
+     */
+    public static Runnable toTtlRunnable(Runnable runnable) {
+        if (runnable == null) {
+            return null;
+        }
+        try {
+            return TtlRunnable.get(runnable);
+        } catch (NoClassDefFoundError e) {
+            return runnable;
+        }
+    }
+
+    /**
+     * 包装 Callable 为 TTL 透传任务。
+     *
+     * @param callable 原始 Callable
+     * @param <T>      返回类型
+     * @return TTL 包装的 Callable；若 TTL 库不可用则返回原始 Callable
+     * @since 2.2.0
+     */
+    public static <T> Callable<T> toTtlCallable(Callable<T> callable) {
+        if (callable == null) {
+            return null;
+        }
+        try {
+            return TtlCallable.get(callable);
+        } catch (NoClassDefFoundError e) {
+            return callable;
         }
     }
 

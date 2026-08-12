@@ -1,14 +1,19 @@
 package com.njydsz.common.util.collection;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * 集合工具类
@@ -224,5 +229,215 @@ public class CollectionUtils {
             return Optional.ofNullable(list.get(list.size() - 1));
         }
         return collection.stream().reduce((first, second) -> second);
+    }
+
+    // ==================== 集合合并方法 ====================
+
+    /**
+     * 将多个集合按顺序合并为一个新 List（null 安全）。
+     *
+     * <p>所有输入集合都会被展平到同一个可变 ArrayList 中，不会修改原始集合。
+     *
+     * <p>示例：
+     * <pre>{@code
+     * concat(List.of(1, 2), List.of(3), null, List.of(4, 5))
+     * // => [1, 2, 3, 4, 5]
+     * }</pre>
+     *
+     * @param collections 待合并的集合数组（可包含 null 元素）
+     * @param <T>         元素类型
+     * @return 合并后的可变 ArrayList；所有输入为 null 时返回空 List
+     * @since 2.2.0
+     */
+    @SafeVarargs
+    public static <T> List<T> concat(Collection<? extends T>... collections) {
+        if (collections == null || collections.length == 0) {
+            return new ArrayList<>();
+        }
+        int totalSize = 0;
+        for (Collection<? extends T> coll : collections) {
+            if (coll != null) {
+                totalSize += coll.size();
+            }
+        }
+        List<T> result = new ArrayList<>(totalSize);
+        for (Collection<? extends T> coll : collections) {
+            if (coll != null) {
+                result.addAll(coll);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * 将多个 Iterable 按顺序合并为一个新 List（null 安全）。
+     *
+     * @param iterables 待合并的 Iterable 数组（可包含 null 元素）
+     * @param <T>       元素类型
+     * @return 合并后的可变 ArrayList；所有输入为 null 时返回空 List
+     * @since 2.2.0
+     */
+    @SafeVarargs
+    public static <T> List<T> concatIterables(Iterable<? extends T>... iterables) {
+        if (iterables == null || iterables.length == 0) {
+            return new ArrayList<>();
+        }
+        List<T> result = new ArrayList<>();
+        for (Iterable<? extends T> iterable : iterables) {
+            if (iterable != null) {
+                for (T item : iterable) {
+                    result.add(item);
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * 将嵌套集合（Collection<Collection<T>>）展平为一个新 List。
+     *
+     * <p>示例：
+     * <pre>{@code
+     * flatten(List.of(List.of(1, 2), List.of(3), List.of()))
+     * // => [1, 2, 3]
+     * }</pre>
+     *
+     * @param nested 嵌套集合（可包含 null 子集合）
+     * @param <T>    元素类型
+     * @return 展平后的可变 ArrayList；输入为 null 时返回空 List
+     * @since 2.2.0
+     */
+    public static <T> List<T> flatten(Collection<? extends Collection<T>> nested) {
+        if (isEmpty(nested)) {
+            return new ArrayList<>();
+        }
+        List<T> result = new ArrayList<>();
+        for (Collection<T> inner : nested) {
+            if (inner != null) {
+                result.addAll(inner);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * 将 Iterable<Iterable<T>> 展平为一个新 List。
+     *
+     * @param nested 嵌套 Iterable（可包含 null 子 Iterable）
+     * @param <T>    元素类型
+     * @return 展平后的可变 ArrayList；输入为 null 时返回空 List
+     * @since 2.2.0
+     */
+    public static <T> List<T> flattenIterables(Iterable<? extends Iterable<T>> nested) {
+        if (nested == null) {
+            return new ArrayList<>();
+        }
+        List<T> result = new ArrayList<>();
+        for (Iterable<T> inner : nested) {
+            if (inner != null) {
+                for (T item : inner) {
+                    result.add(item);
+                }
+            }
+        }
+        return result;
+    }
+
+    // ==================== 集合分片方法 ====================
+
+    /**
+     * 将集合按指定大小分片（最后一个分片可小于 batchSize）。
+     *
+     * <p>适用于批量操作场景（如 SQL 批量插入每次最多 500 条、HTTP 批量请求等）。
+     *
+     * <p>示例：
+     * <pre>{@code
+     * partition(List.of(1,2,3,4,5), 2)
+     * // => [[1, 2], [3, 4], [5]]
+     * }</pre>
+     *
+     * @param source    待分片的集合
+     * @param batchSize 每片大小（≥ 1）
+     * @param <T>       元素类型
+     * @return 分片结果 List，每个元素是一个子 List；输入为空时返回空 List
+     * @throws IllegalArgumentException batchSize < 1 时抛出
+     * @since 2.2.0
+     */
+    public static <T> List<List<T>> partition(Collection<T> source, int batchSize) {
+        if (batchSize < 1) {
+            throw new IllegalArgumentException("batchSize must be >= 1, got " + batchSize);
+        }
+        if (isEmpty(source)) {
+            return new ArrayList<>();
+        }
+        List<List<T>> result = new ArrayList<>();
+        List<T> currentBatch = new ArrayList<>(batchSize);
+        for (T item : source) {
+            currentBatch.add(item);
+            if (currentBatch.size() == batchSize) {
+                result.add(currentBatch);
+                currentBatch = new ArrayList<>(batchSize);
+            }
+        }
+        if (!currentBatch.isEmpty()) {
+            result.add(currentBatch);
+        }
+        return result;
+    }
+
+    // ==================== 集合去重方法 ====================
+
+    /**
+     * 对 List 去重，保留首次出现的元素（保持原顺序）。
+     *
+     * <p>基于 {@link LinkedHashSet} 实现，时间复杂度 O(n)。
+     *
+     * <p>示例：
+     * <pre>{@code
+     * distinct(List.of(1, 2, 2, 3, 1))
+     * // => [1, 2, 3]
+     * }</pre>
+     *
+     * @param source 待去重的 List
+     * @param <T>    元素类型（需正确实现 equals/hashCode）
+     * @return 去重后的可变 ArrayList；输入为 null 时返回空 List
+     * @since 2.2.0
+     */
+    public static <T> List<T> distinct(Collection<T> source) {
+        if (isEmpty(source)) {
+            return new ArrayList<>();
+        }
+        return new ArrayList<>(new LinkedHashSet<>(source));
+    }
+
+    /**
+     * 对 List 按指定键去重，保留首次出现的元素（保持原顺序）。
+     *
+     * <p>示例：
+     * <pre>{@code
+     * distinctBy(List.of("aa", "bb", "cc"), String::length)
+     * // => ["aa"]（保留第一个长度为 2 的元素）
+     * }</pre>
+     *
+     * @param source    待去重的集合
+     * @param keyMapper 键提取函数
+     * @param <T>       元素类型
+     * @param <K>       键类型（需正确实现 equals/hashCode）
+     * @return 去重后的可变 ArrayList；输入为 null 时返回空 List
+     * @since 2.2.0
+     */
+    public static <T, K> List<T> distinctBy(Collection<T> source, Function<? super T, ? extends K> keyMapper) {
+        Objects.requireNonNull(keyMapper, "keyMapper must not be null");
+        if (isEmpty(source)) {
+            return new ArrayList<>();
+        }
+        Set<K> seen = new LinkedHashSet<>();
+        List<T> result = new ArrayList<>();
+        for (T item : source) {
+            if (seen.add(keyMapper.apply(item))) {
+                result.add(item);
+            }
+        }
+        return result;
     }
 }

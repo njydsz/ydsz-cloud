@@ -12,6 +12,8 @@ import org.springframework.context.annotation.Configuration;
 import com.njydsz.common.util.id.SnowflakeHealthIndicator;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.id.SnowflakeProperties;
+import com.njydsz.common.util.id.WorkerIdAllocator;
+import com.njydsz.common.util.id.WorkerIdAllocatorChain;
 import com.njydsz.common.util.spring.SpringContextHolder;
 
 /**
@@ -20,6 +22,7 @@ import com.njydsz.common.util.spring.SpringContextHolder;
  * <p>注册项目级工具 Bean：
  * <ul>
  *   <li>{@link SpringContextHolder} — ApplicationContext 静态持有者</li>
+ *   <li>{@link WorkerIdAllocatorChain} — WorkerId 分配策略链（PodOrdinal → IpHash → FilePersisted）</li>
  *   <li>{@link SnowflakeHealthIndicator} — Snowflake ID 生成器健康检查（仅 actuator 在 classpath 时注册）</li>
  * </ul>
  *
@@ -28,7 +31,6 @@ import com.njydsz.common.util.spring.SpringContextHolder;
  * @author ydsz-team
  * @since 1.0.0
  */
-
 @AutoConfiguration
 @EnableConfigurationProperties({SnowflakeProperties.class})
 public class UtilAutoConfiguration {
@@ -45,6 +47,17 @@ public class UtilAutoConfiguration {
     @ConditionalOnMissingBean
     public SpringContextHolder springContextHolder() {
         return new SpringContextHolder();
+    }
+
+    /**
+     * WorkerId 分配策略链 —— PodOrdinal → IpHash → FilePersisted。
+     *
+     * <p>业务方可声明自定义 {@link WorkerIdAllocator} Bean，通过 {@link WorkerIdAllocatorChain#prepend} 插入更高优先级策略。
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public WorkerIdAllocatorChain workerIdAllocatorChain() {
+        return WorkerIdAllocatorChain.defaults();
     }
 
     /**

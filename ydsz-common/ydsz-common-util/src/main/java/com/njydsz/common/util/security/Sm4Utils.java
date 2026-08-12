@@ -4,8 +4,9 @@ import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Base64;
-import java.util.HexFormat;
 import java.util.Objects;
+
+import com.njydsz.common.util.security.HexUtils;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
@@ -57,7 +58,11 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-team
  * @since 1.5.0
+ * @deprecated 自 3.0.0 起替换为 {@link com.njydsz.common.util.security.crypto.CryptoUtils}。
+ *             新 API 支持算法路由，迁移示例：
+ *             {@code Sm4Utils.encryptGcm(text, key) → CryptoUtils.provider("SM4-GCM").encrypt(...)}
  */
+@Deprecated(since = "3.0.0", forRemoval = false)
 @Slf4j
 public final class Sm4Utils {
 
@@ -84,9 +89,6 @@ public final class Sm4Utils {
 
     /** 共享的线程安全 SecureRandom */
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
-
-    /** Hex 编码器 */
-    private static final HexFormat HEX_FORMAT = HexFormat.of();
 
     /** GCM Cipher ThreadLocal 池化 */
     private static final ThreadLocal<Cipher> GCM_CIPHER = ThreadLocal.withInitial(() -> {
@@ -125,7 +127,7 @@ public final class Sm4Utils {
         try {
             KeyGenerator kg = KeyGenerator.getInstance(ALGORITHM, BouncyCastleProvider.PROVIDER_NAME);
             kg.init(128, SECURE_RANDOM);
-            return HEX_FORMAT.formatHex(kg.generateKey().getEncoded());
+            return HexUtils.encode(kg.generateKey().getEncoded());
         } catch (Exception e) {
             throw new IllegalStateException("Failed to generate SM4 key", e);
         }
@@ -154,7 +156,7 @@ public final class Sm4Utils {
     public static String generateIvHex() {
         byte[] iv = new byte[CBC_IV_LENGTH];
         SECURE_RANDOM.nextBytes(iv);
-        return HEX_FORMAT.formatHex(iv);
+        return HexUtils.encode(iv);
     }
 
     /**
@@ -362,17 +364,18 @@ public final class Sm4Utils {
         }
     }
 
+    // hexToBytes / bytesToHex 已统一至 {@link HexUtils}，本类保留以下委派方法以向后兼容。
+
     /**
      * Hex 字符串转字节数组
      *
      * @param hex Hex 字符串（偶数长度）
      * @return 字节数组
+     * @deprecated 使用 {@link HexUtils#decode(String)} 替代
      */
+    @Deprecated
     public static byte[] hexToBytes(String hex) {
-        if (hex == null || hex.length() % 2 != 0) {
-            throw new IllegalArgumentException("Hex string must have even length");
-        }
-        return HEX_FORMAT.parseHex(hex);
+        return HexUtils.decode(hex);
     }
 
     /**
@@ -380,8 +383,10 @@ public final class Sm4Utils {
      *
      * @param bytes 字节数组
      * @return Hex 字符串
+     * @deprecated 使用 {@link HexUtils#encode(byte[])} 替代
      */
+    @Deprecated
     public static String bytesToHex(byte[] bytes) {
-        return HEX_FORMAT.formatHex(bytes);
+        return HexUtils.encode(bytes);
     }
 }

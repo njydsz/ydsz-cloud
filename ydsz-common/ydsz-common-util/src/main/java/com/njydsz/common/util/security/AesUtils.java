@@ -2,8 +2,9 @@ package com.njydsz.common.util.security;
 
 import java.security.SecureRandom;
 import java.util.Base64;
-import java.util.HexFormat;
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.njydsz.common.util.security.HexUtils;
 
 /**
  * AES 加密工具类（轻量静态工具）
@@ -39,7 +40,12 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 自 3.0.0 起替换为 {@link com.njydsz.common.util.security.crypto.CryptoUtils}。
+ *             新 API 通过 {@link com.njydsz.common.util.security.crypto.CryptoProviderRegistry} 支持算法路由，
+ *             可一键切换 AES/SM4。迁移示例：
+ *             {@code AesUtils.encrypt(text, hexKey) → CryptoUtils.encryptHex(text, hexKey)}
  */
+@Deprecated(since = "3.0.0", forRemoval = false)
 public final class AesUtils {
 
     /** AES 密钥算法类型 */
@@ -195,14 +201,18 @@ public final class AesUtils {
         return Base64.getDecoder().decode(base64Code);
     }
 
+    // bytesToHex / hexToBytes 已统一至 {@link HexUtils}，本类保留以下委派方法以向后兼容。
+
     /**
      * 字节数组转十六进制字符串
      *
      * @param bytes 字节数组
      * @return Hex 字符串
+     * @deprecated 使用 {@link HexUtils#encode(byte[])} 替代
      */
+    @Deprecated
     public static String bytesToHex(byte[] bytes) {
-        return HexFormat.of().formatHex(bytes);
+        return HexUtils.encode(bytes);
     }
 
     /**
@@ -211,11 +221,10 @@ public final class AesUtils {
      * @param hex Hex 字符串
      * @return 字节数组
      * @throws IllegalArgumentException 当 hex 为 null 或长度为奇数
+     * @deprecated 使用 {@link HexUtils#decode(String)} 替代
      */
+    @Deprecated
     public static byte[] hexToBytes(String hex) {
-        if (hex == null || hex.length() % 2 != 0) {
-            throw new IllegalArgumentException("Hex string must not be null and must have even length");
-        }
-        return HexFormat.of().parseHex(hex);
+        return HexUtils.decode(hex);
     }
 }

@@ -30,8 +30,9 @@ import org.springframework.context.ApplicationContextAware;
  * }
  * }</pre>
  *
- * <p><b>生命周期：</b>实现 {@link DisposableBean}，容器销毁时清理静态引用，
- * 避免 ClassLoader 泄漏与死上下文调用。
+ * <p><b>生命周期：</b>实现 {@link DisposableBean}，容器销毁时清理静态引用。
+ * 额外注册 JVM {@link Runtime#addShutdownHook(Thread) ShutdownHook} 兜底清理，
+ * 防止多 ClassLoader 热部署场景下 {@code destroy()} 未触发导致旧上下文泄漏。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -55,11 +56,27 @@ public class SpringContextHolder implements ApplicationContextAware, DisposableB
                             + "，新上下文: " + applicationContext);
         }
         SpringContextHolder.applicationContext = applicationContext;
+
+        // ShutdownHook 兜底：多 ClassLoader 热部署场景下，若 destroy() 未触发，
+        // JVM 退出时清理静态引用，避免 ClassLoader 泄漏。
+        // 使用 SpringContextHolder 类的 ClassLoader 加载该线程，不持有外部 ClassLoader。
+        try {
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                if (SpringContextHolder.applicationContext != null) {
+                    logger.warn("ShutdownHook 兜底清理 SpringContextHolder 静态 applicationContext 引用"
+                            + "（可能因 DisposableBean.destroy() 未触发）");
+                    SpringContextHolder.applicationContext = null;
+                }
+            }, "spring-context-holder-shutdown-hook"));
+        } catch (IllegalStateException e) {
+            // JVM 已在关闭中，忽略
+            logger.debug("JVM 已在关闭中，无法注册 ShutdownHook: {}", e.getMessage());
+        }
     }
 
     @Override
     public void destroy() {
-        logger.debug("清理 SpringContextHolder 静态 applicationContext 引用");
+        logger.debug("DisposableBean 清理 SpringContextHolder 静态 applicationContext 引用");
         applicationContext = null;
     }
 

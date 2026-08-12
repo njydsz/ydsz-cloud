@@ -86,6 +86,12 @@
             <artifactId>bcprov-jdk18on</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- Micrometer（MeteredThreadPoolExecutor 线程池指标注册） -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+            <optional>true</optional>
+        </dependency>
 
         <!-- Spring Boot AutoConfiguration -->
         <dependency>
