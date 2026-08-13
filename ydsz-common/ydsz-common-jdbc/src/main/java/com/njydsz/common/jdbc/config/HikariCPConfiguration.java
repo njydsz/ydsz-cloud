@@ -291,10 +291,8 @@ public class HikariCPConfiguration {
         snapshot.setConnectionTimeout(mxBean.getConnectionTimeout());
         snapshot.setIdleTimeout(mxBean.getIdleTimeout());
         snapshot.setMaxLifetime(mxBean.getMaxLifetime());
-        snapshot.setKeepaliveTime(mxBean.getKeepaliveTime());
         snapshot.setValidationTimeout(mxBean.getValidationTimeout());
         snapshot.setLeakDetectionThreshold(mxBean.getLeakDetectionThreshold());
-        snapshot.setConnectionTestQuery(mxBean.getConnectionTestQuery());
         snapshot.setPoolName(mxBean.getPoolName());
 
         // 依次调用所有配置器
@@ -321,9 +319,6 @@ public class HikariCPConfiguration {
         }
         if (snapshot.getMaxLifetime() != mxBean.getMaxLifetime()) {
             mxBean.setMaxLifetime(snapshot.getMaxLifetime());
-        }
-        if (snapshot.getKeepaliveTime() != mxBean.getKeepaliveTime()) {
-            mxBean.setKeepaliveTime(snapshot.getKeepaliveTime());
         }
         if (snapshot.getValidationTimeout() != mxBean.getValidationTimeout()) {
             mxBean.setValidationTimeout(snapshot.getValidationTimeout());

@@ -372,10 +372,11 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
     }
 
     /**
-     * 从扁平列表构建树形结构（指定根父 ID）。
+     * 从扁平列表构建树形结构（指定根父 ID，内部实现）。
      *
      * <p>与 {@link #buildSimple(List, Function, Function, BiConsumer, Function)} 相同，
-     * 但允许调用方指定根父 ID（如 null、"0"、"-1" 等）。
+     * 但允许指定根父 ID（如 null、"0"、"-1" 等）。当前无外部调用方，收敛为 private，
+     * 以满足方法参数不超过 5 个的编码规范；如后续出现自定义根父 ID 需求，可再升级为公开 API。
      *
      * @param flatList       扁平列表
      * @param rootParentId   根节点的父 ID 值（如 "0"、null、"-1" 等）
@@ -386,7 +387,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
      * @param <T>            节点类型
      * @return 树形结构根节点列表
      */
-    public static <T> List<T> buildSimple(
+    private static <T> List<T> buildSimple(
             List<T> flatList,
             String rootParentId,
             Function<T, String> idGetter,
