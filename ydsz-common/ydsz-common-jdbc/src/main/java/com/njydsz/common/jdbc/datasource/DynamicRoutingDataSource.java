@@ -74,9 +74,16 @@ public class DynamicRoutingDataSource extends AbstractRoutingDataSource {
                     return defaultDataSourceKey;
                 }
             }
-            // HintType.SLAVE：不干预，让负载均衡策略选择从库
             if (hint.getType() == HintType.SLAVE) {
-                log.debug("HintManager 强制路由到从库（由负载均衡策略选择）");
+                // SLAVE 语义：优先使用 holder 中已选中的从库（由 ReadWriteSplittingInterceptor
+                // 完成负载均衡后 push）；holder 为空时返回 null 由默认数据源兜底。
+                // 注意：本层不负责从库选择，负载均衡由读写分离拦截器统一处理。
+                String pushedDs = DynamicDataSourceContextHolder.peek();
+                if (pushedDs != null) {
+                    log.debug("HintManager 强制路由到从库: {}", pushedDs);
+                    return pushedDs;
+                }
+                log.debug("HintManager 强制路由到从库，但 holder 无显式从库，回退默认数据源");
                 return null;
             }
         }

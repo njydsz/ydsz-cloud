@@ -62,16 +62,31 @@ public enum DeepPaginationRisk {
     /**
      * 评估深度分页风险（使用指定阈值）。
      *
-     * <p>阈值约定：{@code rejectThreshold >= warnThreshold >= 0}。
+     * <p>阈值契约：{@code rejectThreshold >= warnThreshold >= 0}。
      * 当 {@code offset >= rejectThreshold} 返回 {@link #REJECT}，
      * 当 {@code offset >= warnThreshold} 返回 {@link #WARN}，否则返回 {@link #SAFE}。
      *
-     * @param offset         当前查询的 offset 值
-     * @param warnThreshold  警告阈值
-     * @param rejectThreshold 拒绝阈值
+     * <p>非法阈值（负数、或拒绝阈值小于警告阈值）属于配置错误，直接抛出
+     * {@link IllegalArgumentException} 快速失败，避免静默产生错误的分页策略。
+     *
+     * @param offset          当前查询的 offset 值
+     * @param warnThreshold   警告阈值（非负）
+     * @param rejectThreshold 拒绝阈值（非负，且不小于 warnThreshold）
      * @return 风险等级
+     * @throws IllegalArgumentException 当 warnThreshold / rejectThreshold 为负数，
+     *         或 rejectThreshold < warnThreshold 时
      */
     public static DeepPaginationRisk assess(long offset, long warnThreshold, long rejectThreshold) {
+        if (warnThreshold < 0L || rejectThreshold < 0L) {
+            throw new IllegalArgumentException(
+                "Thresholds must not be negative: warnThreshold=" + warnThreshold
+                + ", rejectThreshold=" + rejectThreshold);
+        }
+        if (rejectThreshold < warnThreshold) {
+            throw new IllegalArgumentException(
+                "rejectThreshold must be >= warnThreshold: warnThreshold=" + warnThreshold
+                + ", rejectThreshold=" + rejectThreshold);
+        }
         if (offset >= rejectThreshold) {
             return REJECT;
         }

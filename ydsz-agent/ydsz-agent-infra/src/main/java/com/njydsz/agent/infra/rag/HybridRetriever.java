@@ -141,6 +141,7 @@ public class HybridRetriever {
                     Integer.class);
             return count != null && count > 0;
         } catch (Exception e) {
+            log.warn("[Hybrid-Retrieval] 全文检索可用性检查失败, DB可能不可用, err={}", e.getMessage());
             return false;
         }
     }

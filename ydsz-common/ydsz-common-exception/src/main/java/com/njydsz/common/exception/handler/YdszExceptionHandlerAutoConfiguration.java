@@ -107,9 +107,10 @@ public class YdszExceptionHandlerAutoConfiguration {
     @ConditionalOnClass(name = "org.springframework.dao.DataAccessException")
     @ConditionalOnMissingBean(JdbcExceptionHandler.class)
     public JdbcExceptionHandler jdbcExceptionHandler(Environment environment,
-                                                       ObjectProvider<ExceptionMetrics> exceptionMetrics,
-                                                       ObjectProvider<ExceptionProperties> properties) {
-        return new JdbcExceptionHandler(environment, exceptionMetrics.getIfAvailable(),
+                                                     MessageSource messageSource,
+                                                     ObjectProvider<ExceptionMetrics> exceptionMetrics,
+                                                     ObjectProvider<ExceptionProperties> properties) {
+        return new JdbcExceptionHandler(environment, messageSource, exceptionMetrics.getIfAvailable(),
                 properties.getIfAvailable());
     }
 }

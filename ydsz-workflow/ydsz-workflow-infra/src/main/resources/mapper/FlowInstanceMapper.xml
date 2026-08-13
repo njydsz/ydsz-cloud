@@ -117,6 +117,9 @@
             AND tenant_id = #{tenantId}
           </if>
           <!-- P1-3: 数据权限 SQL 片段（由 DataScopeHelper.buildSqlFragment 生成） -->
+          <!-- Security: dataScopeFilter is generated internally by DataScopeHelper which uses
+               hardcoded column names (dept_id / initiator_id) and escapes all values via
+               escapeSql() (strips non-alphanumeric except -_). No user input reaches ${} directly. -->
           <if test="dataScopeFilter != null and dataScopeFilter != ''">
             AND ${dataScopeFilter}
           </if>
@@ -149,6 +152,9 @@
             AND tenant_id = #{tenantId}
           </if>
           <!-- P1-3: 数据权限 SQL 片段 -->
+          <!-- Security: dataScopeFilter is generated internally by DataScopeHelper which uses
+               hardcoded column names (dept_id / initiator_id) and escapes all values via
+               escapeSql() (strips non-alphanumeric except -_). No user input reaches ${} directly. -->
           <if test="dataScopeFilter != null and dataScopeFilter != ''">
             AND ${dataScopeFilter}
           </if>

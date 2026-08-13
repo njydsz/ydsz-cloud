@@ -357,57 +357,77 @@ public class FlowTaskCreateService {
 
     /**
      * P0-1: 审批人为空兜底处理
+     *
+     * <p>按 ext 配置的 emptyStrategy 分发到对应策略：
+     * <ul>
+     *   <li>{@code AUTO_PASS} — 自动通过并推进到下一节点</li>
+     *   <li>{@code TRANSFER_ADMIN} — 转交管理员</li>
+     *   <li>{@code ASSIGN_SPECIFIED} — 指定人员</li>
+     *   <li>其它（{@code FALLBACK}）— 回退到 resolveAssignee 逻辑</li>
+     * </ul>
      */
     private String handleEmptyAssignee(FlowRunTask task, FlowInstance instance, FlowNode node,
                                        Map<String, Object> variables) {
         Map<String, Object> extConfig = parseExtConfig(node.getExt());
         String emptyStrategy = (String) extConfig.getOrDefault("emptyStrategy", DEFAULT_EMPTY_STRATEGY);
 
-        switch (emptyStrategy) {
-            case "AUTO_PASS": {
-                task.setAssigneeType(FlowAssigneeType.USER.name());
-                task.setAssigneeId("0");
-                task.setAssigneeName("SYSTEM_AUTO_PASS");
-                task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
-                LocalDateTime now = LocalDateTime.now();
-                task.setFinishAt(now);
-                task.setDurationMs(0L);
-                taskMapper.insert(task);
-                archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
-                support.audit(task, "AUTO_PASS", null, null, "审批人为空，自动通过");
-                log.info("[Flow] 审批人为空自动通过: instanceId={} node={}",
-                        instance.getId(), node.getNodeCode());
-                advanceAfterAutoPass(instance, node, variables);
-                return task.getId();
-            }
-            case "TRANSFER_ADMIN": {
-                String adminUserId = parseLongConfig(extConfig, "adminUserId", "1");
-                task.setAssigneeType(FlowAssigneeType.USER.name());
-                task.setAssigneeId(adminUserId);
-                task.setAssigneeName("ADMIN_FALLBACK");
-                taskMapper.insert(task);
-                log.info("[Flow] 审批人为空转管理员: instanceId={} node={} adminId={}",
-                        instance.getId(), node.getNodeCode(), adminUserId);
-                return task.getId();
-            }
-            case "ASSIGN_SPECIFIED": {
-                String specifiedUserId = parseLongConfig(extConfig, "specifiedUserId", "1");
-                task.setAssigneeType(FlowAssigneeType.USER.name());
-                task.setAssigneeId(specifiedUserId);
-                task.setAssigneeName("SPECIFIED_FALLBACK");
-                taskMapper.insert(task);
-                log.info("[Flow] 审批人为空指定人员: instanceId={} node={} userId={}",
-                        instance.getId(), node.getNodeCode(), specifiedUserId);
-                return task.getId();
-            }
-            default: {
-                // FALLBACK: 回退到原有 resolveAssignee 逻辑
-                taskMapper.insert(task);
-                resolveAssignee(task, node, variables, null, instance);
-                taskMapper.updateById(task);
-                return task.getId();
-            }
-        }
+        return switch (emptyStrategy) {
+            case "AUTO_PASS" -> handleAutoPass(task, instance, node, variables);
+            case "TRANSFER_ADMIN" -> assignToFallbackUser(task, instance, node,
+                    parseLongConfig(extConfig, "adminUserId", "1"), "ADMIN_FALLBACK",
+                    "[Flow] 审批人为空转管理员: instanceId={} node={} adminId={}");
+            case "ASSIGN_SPECIFIED" -> assignToFallbackUser(task, instance, node,
+                    parseLongConfig(extConfig, "specifiedUserId", "1"), "SPECIFIED_FALLBACK",
+                    "[Flow] 审批人为空指定人员: instanceId={} node={} userId={}");
+            default -> fallbackToResolveAssignee(task, instance, node, variables);
+        };
+    }
+
+    /**
+     * AUTO_PASS 策略：标记任务为已完成（自动通过），归档并推进到下一节点。
+     */
+    private String handleAutoPass(FlowRunTask task, FlowInstance instance, FlowNode node,
+                                   Map<String, Object> variables) {
+        task.setAssigneeType(FlowAssigneeType.USER.name());
+        task.setAssigneeId("0");
+        task.setAssigneeName("SYSTEM_AUTO_PASS");
+        task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
+        LocalDateTime now = LocalDateTime.now();
+        task.setFinishAt(now);
+        task.setDurationMs(0L);
+        taskMapper.insert(task);
+        archiveService.archiveToHistory(task, FlowTaskStatus.COMPLETED);
+        support.audit(task, "AUTO_PASS", null, null, "审批人为空，自动通过");
+        log.info("[Flow] 审批人为空自动通过: instanceId={} node={}",
+                instance.getId(), node.getNodeCode());
+        advanceAfterAutoPass(instance, node, variables);
+        return task.getId();
+    }
+
+    /**
+     * 将任务分配给指定的回退用户（管理员或指定人员）。
+     *
+     * @param logMsg 日志模板（包含 3 个 {} 占位符：instanceId, nodeCode, userId）
+     */
+    private String assignToFallbackUser(FlowRunTask task, FlowInstance instance, FlowNode node,
+                                         String userId, String fallbackName, String logMsg) {
+        task.setAssigneeType(FlowAssigneeType.USER.name());
+        task.setAssigneeId(userId);
+        task.setAssigneeName(fallbackName);
+        taskMapper.insert(task);
+        log.info(logMsg, instance.getId(), node.getNodeCode(), userId);
+        return task.getId();
+    }
+
+    /**
+     * FALLBACK 策略：回退到原有 resolveAssignee 逻辑。
+     */
+    private String fallbackToResolveAssignee(FlowRunTask task, FlowInstance instance, FlowNode node,
+                                              Map<String, Object> variables) {
+        taskMapper.insert(task);
+        resolveAssignee(task, node, variables, null, instance);
+        taskMapper.updateById(task);
+        return task.getId();
     }
 
     /**

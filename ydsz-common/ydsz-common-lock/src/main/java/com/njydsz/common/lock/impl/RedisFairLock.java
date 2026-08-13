@@ -129,21 +129,6 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
             "end";
 
     /**
-     * 续期公平锁 Lua 脚本
-     * <p>仅当当前客户端是锁的持有者时才续期
-     */
-    private static final String RENEW_LOCK_LUA_SCRIPT =
-            "local lockKey = KEYS[1] " +
-            "local clientId = ARGV[1] " +
-            "local leaseTimeMs = ARGV[2] " +
-            "if redis.call('HGET', lockKey, 'owner') == clientId then " +
-            "    redis.call('PEXPIRE', lockKey, leaseTimeMs) " +
-            "    return 1 " +
-            "else " +
-            "    return 0 " +
-            "end";
-
-    /**
      * 等待队列默认过期时间（秒）
      */
     private static final long QUEUE_EXPIRE_SECONDS = 3600;
@@ -173,10 +158,6 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
      */
     private final DefaultRedisScript<Long> releaseLockScript;
     /**
-     * 续期锁脚本封装
-     */
-    private final DefaultRedisScript<Long> renewLockScript;
-    /**
      * 清理队列脚本封装
      */
     private final DefaultRedisScript<Long> cleanupQueueScript;
@@ -200,7 +181,6 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
         super(stringRedisTemplate, namespace);
         this.acquireLockScript = new DefaultRedisScript<>(ACQUIRE_LOCK_LUA_SCRIPT, Long.class);
         this.releaseLockScript = new DefaultRedisScript<>(RELEASE_LOCK_LUA_SCRIPT, Long.class);
-        this.renewLockScript = new DefaultRedisScript<>(RENEW_LOCK_LUA_SCRIPT, Long.class);
         this.cleanupQueueScript = new DefaultRedisScript<>(CLEANUP_QUEUE_LUA_SCRIPT, Long.class);
     }
 

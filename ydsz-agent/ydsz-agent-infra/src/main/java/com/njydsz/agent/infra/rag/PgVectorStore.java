@@ -171,6 +171,7 @@ public class PgVectorStore implements VectorStore {
                     "SELECT COUNT(*) FROM ydsz_agent_document_chunk", Long.class);
             return count != null ? count : 0;
         } catch (Exception e) {
+            log.warn("[VectorStore] 统计文本块数量失败, err={}", e.getMessage());
             return 0;
         }
     }
@@ -186,6 +187,7 @@ public class PgVectorStore implements VectorStore {
             jdbcTemplate.queryForObject("SELECT 1 FROM ydsz_agent_document_chunk LIMIT 1", Integer.class);
             return true;
         } catch (Exception e) {
+            log.warn("[VectorStore] 可用性检查失败, err={}", e.getMessage());
             return false;
         }
     }

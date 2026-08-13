@@ -94,21 +94,6 @@ public class RedisReentrantLock extends AbstractRedisDistributedLock {
             "end";
 
     /**
-     * 续期锁 Lua 脚本
-     * <p>仅当当前客户端持有锁时才续期，否则返回失败
-     */
-    private static final String RENEW_LOCK_LUA_SCRIPT =
-            "local key = KEYS[1] " +
-            "local clientId = ARGV[1] " +
-            "local leaseTimeMs = ARGV[2] " +
-            "if redis.call('HEXISTS', key, clientId) == 1 then " +
-            "    redis.call('PEXPIRE', key, leaseTimeMs) " +
-            "    return 1 " +
-            "else " +
-            "    return 0 " +
-            "end";
-
-    /**
      * 获取锁脚本封装
      */
     private final DefaultRedisScript<Long> acquireLockScript;
@@ -120,10 +105,6 @@ public class RedisReentrantLock extends AbstractRedisDistributedLock {
      * 获取重入计数脚本封装
      */
     private final DefaultRedisScript<Long> getHoldCountScript;
-    /**
-     * 续期锁脚本封装
-     */
-    private final DefaultRedisScript<Long> renewLockScript;
 
     /**
      * 构造可重入锁（无命名空间）
@@ -145,7 +126,6 @@ public class RedisReentrantLock extends AbstractRedisDistributedLock {
         this.acquireLockScript = new DefaultRedisScript<>(ACQUIRE_LOCK_LUA_SCRIPT, Long.class);
         this.releaseLockScript = new DefaultRedisScript<>(RELEASE_LOCK_LUA_SCRIPT, Long.class);
         this.getHoldCountScript = new DefaultRedisScript<>(GET_HOLD_COUNT_LUA_SCRIPT, Long.class);
-        this.renewLockScript = new DefaultRedisScript<>(RENEW_LOCK_LUA_SCRIPT, Long.class);
     }
 
     @Override
@@ -252,32 +232,6 @@ public class RedisReentrantLock extends AbstractRedisDistributedLock {
     }
 
     /**
-     * 续期锁，延长锁的过期时间
-     *
-     * <p>仅当当前客户端持有锁时才续期，否则返回失败。
-     *
-     * @param lockKey   锁的键
-     * @param lockValue 锁的值（客户端标识）
-     * @param leaseTime 新的租约时间
-     * @param timeUnit  时间单位
-     * @return true-续期成功，false-续期失败（锁已被释放或不属于当前客户端）
-     */
-    public boolean renewLock(String lockKey, String lockValue, long leaseTime, TimeUnit timeUnit) {
-        try {
-            Long result = stringRedisTemplate.execute(
-                    renewLockScript,
-                    Collections.singletonList(lockKey),
-                    lockValue,
-                    String.valueOf(timeUnit.toMillis(leaseTime))
-            );
-            return Long.valueOf(1L).equals(result);
-        } catch (Exception e) {
-            log.error("[ydsz-lock]续期锁异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
-            return false;
-        }
-    }
-
-    /**
      * 尝试获取锁（不等待）
      *
      * @param lockKey   锁的键
@@ -288,14 +242,7 @@ public class RedisReentrantLock extends AbstractRedisDistributedLock {
     @Override
     public String tryLock(String lockKey, long leaseTime, TimeUnit timeUnit) {
         String namespacedKey = buildNamespacedKey(lockKey);
-        String clientId = getClientId(namespacedKey);
-        String result = doAcquireLock(namespacedKey, clientId, leaseTime, timeUnit);
-        if (result == null) {
-            // 锁获取失败时清理 ThreadLocal，防止泄漏（调用方不会调用 unlock）
-            clearClientId(namespacedKey);
-            clearLeaseTime(namespacedKey);
-        }
-        return result;
+        return tryAcquireOnce(namespacedKey, leaseTime, timeUnit);
     }
 
     /**
