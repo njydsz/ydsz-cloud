@@ -249,21 +249,11 @@ public class YdszExceptionCoreAutoConfiguration {
 
         String basename = i18nProperties.getBasename();
         String[] basenameArray = basename.split(",");
-        List<String> basenameList = new ArrayList<>(8);
-        for (String bn : basenameArray) {
-            basenameList.add(bn.trim());
+        String[] basenames = new String[basenameArray.length];
+        for (int i = 0; i < basenameArray.length; i++) {
+            basenames[i] = basenameArray[i].trim();
         }
-        String i18nBaseNames = i18nProperties.getI18nBaseNames();
-        if (i18nBaseNames != null && !i18nBaseNames.isEmpty()) {
-            String[] i18nArray = i18nBaseNames.split(",");
-            for (String bn : i18nArray) {
-                String trimmed = bn.trim();
-                if (!trimmed.isEmpty()) {
-                    basenameList.add(trimmed.startsWith("classpath:") ? trimmed : "classpath:" + trimmed);
-                }
-            }
-        }
-        messageSource.setBasenames(basenameList.toArray(new String[0]));
+        messageSource.setBasenames(basenames);
 
         messageSource.setDefaultEncoding(i18nProperties.getEncoding());
         messageSource.setCacheSeconds(cacheSeconds);

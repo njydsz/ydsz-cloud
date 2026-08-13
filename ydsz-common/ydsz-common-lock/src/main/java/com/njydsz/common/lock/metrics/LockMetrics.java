@@ -228,7 +228,18 @@ public class LockMetrics {
      */
     public void bindMeterRegistry(Object meterRegistry) {
         this.micrometerCollector = new LockMicrometerCollector(
-                (MeterRegistry) meterRegistry);
+                (MeterRegistry) meterRegistry, LockKeyCategoryExtractor.DEFAULT);
+    }
+
+    /**
+     * 绑定 Micrometer MeterRegistry（带自定义类别提取器）
+     *
+     * @param meterRegistry       Micrometer MeterRegistry 实例
+     * @param categoryExtractor   锁键分类提取器
+     */
+    public void bindMeterRegistry(Object meterRegistry, LockKeyCategoryExtractor categoryExtractor) {
+        this.micrometerCollector = new LockMicrometerCollector(
+                (MeterRegistry) meterRegistry, categoryExtractor);
     }
 
     /**

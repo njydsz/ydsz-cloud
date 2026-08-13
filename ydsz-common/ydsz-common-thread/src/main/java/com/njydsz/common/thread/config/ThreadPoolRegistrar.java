@@ -24,6 +24,7 @@ import com.njydsz.common.thread.config.ThreadPoolProperties.PoolConfig;
 import com.njydsz.common.thread.config.ThreadPoolProperties.PoolType;
 import com.njydsz.common.thread.metrics.MeteredVirtualExecutorService;
 import com.njydsz.common.thread.metrics.ThreadPoolMetrics;
+import com.njydsz.common.thread.metrics.ThreadPoolTimerMetrics;
 import com.njydsz.common.thread.metrics.VirtualThreadMetrics;
 
 /**
@@ -156,6 +157,9 @@ public class ThreadPoolRegistrar implements BeanDefinitionRegistryPostProcessor,
 
     /**
      * 注册平台线程池及其指标绑定器。
+     *
+     * <p>v1.3.1 变更：新增 {@link ThreadPoolTimerMetrics} Bean 注册，
+     * 用于任务执行耗时与排队时长的指标追踪。
      */
     private void registerPlatformThreadPool(BeanDefinitionRegistry registry, String name,
                                              PoolConfig config, String beanName) {
@@ -168,7 +172,7 @@ public class ThreadPoolRegistrar implements BeanDefinitionRegistryPostProcessor,
                 .getBeanDefinition();
         registry.registerBeanDefinition(beanName, bd);
 
-        // 注册平台线程池指标 Bean
+        // 注册平台线程池核心指标 Bean
         String metricsBeanName = beanName + "Metrics";
         if (!registry.containsBeanDefinition(metricsBeanName)) {
             BeanDefinition metricsBd = BeanDefinitionBuilder
@@ -179,6 +183,18 @@ public class ThreadPoolRegistrar implements BeanDefinitionRegistryPostProcessor,
                     .setRole(BeanDefinition.ROLE_INFRASTRUCTURE)
                     .getBeanDefinition();
             registry.registerBeanDefinition(metricsBeanName, metricsBd);
+        }
+
+        // 注册平台线程池耗时指标 Bean（v1.3.1 新增）
+        String timerMetricsBeanName = beanName + "TimerMetrics";
+        if (!registry.containsBeanDefinition(timerMetricsBeanName)) {
+            BeanDefinition timerMetricsBd = BeanDefinitionBuilder
+                    .rootBeanDefinition(ThreadPoolTimerMetrics.class)
+                    .addConstructorArgValue(name)
+                    .addConstructorArgValue(config.getMetricPrefix())
+                    .setRole(BeanDefinition.ROLE_INFRASTRUCTURE)
+                    .getBeanDefinition();
+            registry.registerBeanDefinition(timerMetricsBeanName, timerMetricsBd);
         }
 
         log.info("ydsz-thread: 注册线程池 [{}] (core={}, max={}, queue={}, prefix={}, reject={}, taskDecorators={})",

@@ -95,14 +95,6 @@ public class I18nProperties {
     private String langParamName = "lang";
 
     /**
-     * 国际化资源文件基础名（备用）
-     *
-     * <p>某些场景下需要多个 basename 时使用，与 {@link #basename} 类似但优先级不同。
-     * 默认覆盖全部消息包：通用(base)、核心错误码(core)、文件存储(file)。
-     */
-    private String i18nBaseNames = "i18n/messages,i18n/core/messages,i18n/file-messages";
-
-    /**
      * 获取支持的 Locale 列表（返回副本，防止外部修改内部配置）。
      *
      * @return 支持的 Locale 标签数组（如 zh_CN / en_US）

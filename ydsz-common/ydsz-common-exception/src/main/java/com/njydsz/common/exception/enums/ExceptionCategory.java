@@ -125,15 +125,6 @@ public enum ExceptionCategory {
     }
 
     /**
-     * 判断是否为 5 大主分类之一（当前枚举仅保留主分类，始终返回 true）。
-     *
-     * @return true-是主分类
-     */
-    public boolean isPrimary() {
-        return true;
-    }
-
-    /**
      * 根据分类编码获取枚举
      *
      * <p>仅支持 A/B/C/D/E 编码（对应 5 大主分类）。

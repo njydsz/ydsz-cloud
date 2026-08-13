@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.BiConsumer;
@@ -24,6 +24,7 @@ import com.njydsz.common.cache.listener.RemovalCause;
 import com.njydsz.common.cache.listener.RemovalListener;
 import com.njydsz.common.cache.stats.CacheStats;
 import com.njydsz.common.cache.support.AsyncFunction;
+import com.njydsz.common.cache.support.CacheThreadPoolManager;
 
 /**
  * 多级缓存 — L1 本地缓存 + L2 Redis 分布式缓存
@@ -262,6 +263,8 @@ public class MultiLevelCache<K, V> implements Cache<K, V> {
     }
     // 使用分布式锁防止缓存击穿（与同步 get() 方法一致）
     if (rebuildLock != null && cacheName != null) {
+      ExecutorService asyncExecutor = CacheThreadPoolManager.getInstance()
+          .getOrCreatePool("multilevel-cache-async", 2, 8);
       return CompletableFuture.supplyAsync(
           () ->
               rebuildLock.executeWithLock(
@@ -284,7 +287,7 @@ public class MultiLevelCache<K, V> implements Cache<K, V> {
                       return null;
                     }
                   }),
-          ForkJoinPool.commonPool());
+          asyncExecutor);
     }
     return loader
         .apply(key)

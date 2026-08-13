@@ -5,20 +5,24 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Duration;
+import java.util.List;
 import java.util.Optional;
 
 import javax.sql.DataSource;
 
+import org.springframework.core.Ordered;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 从库复制延迟检测器
+ * 从库复制延迟检测器 SPI
  *
- * <p>通过 JDBC 查询数据库复制延迟，支持 MySQL 和 PostgreSQL。
+ * <p>通过 JDBC 查询数据库复制延迟，支持 MySQL、PostgreSQL、Oracle。
+ * 扩展方可通过 {@link Ordered} 接口控制检测器匹配优先级（值越小越优先）。
  *
  * <p>使用方式：
  * <pre>{@code
- * // 同步检测当前延迟
+ * // 自动检测当前延迟
  * Optional<Duration> latency = detector.detect(masterDs);
  * if (latency.isPresent() && latency.get().compareTo(threshold) > 0) {
  *     // 延迟超标，降级走主库
@@ -28,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author ydsz-team
  * @since 1.0.0
  */
-public interface SlaveLatencyDetector {
+public interface SlaveLatencyDetector extends Ordered {
 
     /**
      * 检测当前主从复制延迟
@@ -47,7 +51,19 @@ public interface SlaveLatencyDetector {
     boolean isSupported(DataSource dataSource);
 
     /**
+     * 默认优先级（最低）
+     *
+     * @return Ordered.LOWEST_PRECEDENCE
+     */
+    @Override
+    default int getOrder() {
+        return Ordered.LOWEST_PRECEDENCE;
+    }
+
+    /**
      * MySQL 实现：通过 SHOW SLAVE STATUS 获取 Seconds_Behind_Master
+     *
+     * @since 1.0.0
      */
     @Slf4j
     class MysqlLatencyDetector implements SlaveLatencyDetector {
@@ -85,20 +101,25 @@ public interface SlaveLatencyDetector {
                 return false;
             }
         }
+
+        @Override
+        public int getOrder() {
+            return 100;
+        }
     }
 
     /**
-     * PostgreSQL 实现：通过 pg_stat_replication 获取复制延迟
+     * PostgreSQL 实现：通过 pg_last_xact_replay_timestamp() 计算延迟
+     *
+     * @since 1.0.0
      */
     @Slf4j
     class PostgreSqlLatencyDetector implements SlaveLatencyDetector {
 
-        // 查询当前实例作为备库的复制延迟（需要在上游主库的 pg_stat_replication 上查询，
-        // 或者使用 pg_last_xact_replay_timestamp() 计算延迟）
         private static final String PG_LATENCY_SQL =
-                "SELECT CASE WHEN pg_is_in_recovery() " +
-                "THEN EXTRACT(EPOCH FROM (now() - pg_last_xact_replay_timestamp())) " +
-                "ELSE 0 END AS lag_seconds";
+                "SELECT CASE WHEN pg_is_in_recovery() "
+                + "THEN EXTRACT(EPOCH FROM (now() - pg_last_xact_replay_timestamp())) "
+                + "ELSE 0 END AS lag_seconds";
 
         @Override
         public Optional<Duration> detect(DataSource dataSource) {
@@ -126,43 +147,127 @@ public interface SlaveLatencyDetector {
                 return false;
             }
         }
+
+        @Override
+        public int getOrder() {
+            return 200;
+        }
     }
 
     /**
-     * 自动检测实现：根据数据源类型自动选择合适的检测器
+     * Oracle Data Guard 实现：查询 V$DATAGUARD_STATS 获取延迟
+     *
+     * @since 1.8.0
      */
     @Slf4j
-    class AutoDetectLatencyDetector implements SlaveLatencyDetector {
+    class OracleLatencyDetector implements SlaveLatencyDetector {
 
-        private final SlaveLatencyDetector mysql = new MysqlLatencyDetector();
-        private final SlaveLatencyDetector postgresql = new PostgreSqlLatencyDetector();
-        private volatile SlaveLatencyDetector delegate;
+        private static final String ORACLE_LATENCY_SQL =
+                "SELECT value FROM V$DATAGUARD_STATS WHERE name = 'apply lag'";
 
         @Override
         public Optional<Duration> detect(DataSource dataSource) {
-            if (delegate == null) {
-                delegate = detectDelegate(dataSource);
+            try (Connection conn = dataSource.getConnection();
+                 Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery(ORACLE_LATENCY_SQL)) {
+                if (rs.next()) {
+                    String lagValue = rs.getString("value");
+                    if (lagValue != null && !lagValue.isEmpty()) {
+                        return parseOracleLag(lagValue);
+                    }
+                }
+            } catch (SQLException e) {
+                log.debug("Oracle 复制延迟检测失败: {}", e.getMessage());
             }
-            if (delegate == null) {
+            return Optional.empty();
+        }
+
+        /**
+         * 解析 Oracle 延迟值字符串
+         *
+         * <p>Oracle 格式通常为 "+00 00:00:05" （日 时:分:秒）
+         *
+         * @param lagValue Oracle 延迟字符串
+         * @return 解析后的 Duration
+         */
+        private Optional<Duration> parseOracleLag(String lagValue) {
+            try {
+                // 格式: "+00 00:00:05" 或 "+00 00:00:05.234"
+                String trimmed = lagValue.trim();
+                if (trimmed.length() < 9) {
+                    return Optional.empty();
+                }
+                // 跳过符号位和日期部分，解析 HH:MM:SS
+                String[] parts = trimmed.split(" ");
+                if (parts.length < 2) {
+                    return Optional.empty();
+                }
+                String timePart = parts[1];
+                String[] timeParts = timePart.split(":");
+                if (timeParts.length != 3) {
+                    return Optional.empty();
+                }
+                int hours = Integer.parseInt(timeParts[0]);
+                int minutes = Integer.parseInt(timeParts[1]);
+                int seconds = Integer.parseInt(timeParts[2].split("\\.")[0]);
+                return Optional.of(Duration.ofHours(hours).plusMinutes(minutes).plusSeconds(seconds));
+            } catch (NumberFormatException | IndexOutOfBoundsException e) {
+                log.warn("Oracle lag 值解析失败: {}", lagValue);
                 return Optional.empty();
             }
-            return delegate.detect(dataSource);
         }
 
         @Override
         public boolean isSupported(DataSource dataSource) {
-            return detectDelegate(dataSource) != null;
+            try (Connection conn = dataSource.getConnection()) {
+                String url = conn.getMetaData().getURL();
+                return url != null && url.toLowerCase().contains("oracle");
+            } catch (SQLException e) {
+                return false;
+            }
         }
 
-        private SlaveLatencyDetector detectDelegate(DataSource dataSource) {
-            if (mysql.isSupported(dataSource)) {
-                return mysql;
+        @Override
+        public int getOrder() {
+            return 300;
+        }
+    }
+
+    /**
+     * 自动组合检测器：按 Order 排序遍历所有探测器，选择第一个支持的进行延迟检测
+     *
+     * <p>支持 SPI 扩展：通过 {@link #setDetectors(List)} 注入自定义探测器
+     *
+     * @since 1.8.0
+     */
+    @Slf4j
+    class CompositeLatencyDetector implements SlaveLatencyDetector {
+
+        private final List<SlaveLatencyDetector> detectors;
+
+        /**
+         * 构造组合探测器
+         *
+         * @param detectors 探测器列表（已按 Order 排序）
+         */
+        public CompositeLatencyDetector(List<SlaveLatencyDetector> detectors) {
+            this.detectors = detectors;
+        }
+
+        @Override
+        public Optional<Duration> detect(DataSource dataSource) {
+            for (SlaveLatencyDetector detector : detectors) {
+                if (detector.isSupported(dataSource)) {
+                    return detector.detect(dataSource);
+                }
             }
-            if (postgresql.isSupported(dataSource)) {
-                return postgresql;
-            }
-            log.warn("不支持的数据库类型，无法检测复制延迟");
-            return null;
+            log.warn("无匹配的延迟检测器，数据源: {}", dataSource.getClass().getName());
+            return Optional.empty();
+        }
+
+        @Override
+        public boolean isSupported(DataSource dataSource) {
+            return detectors.stream().anyMatch(d -> d.isSupported(dataSource));
         }
     }
 }

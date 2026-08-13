@@ -1,8 +1,6 @@
 package com.njydsz.common.thread.config;
 
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionHandler;
@@ -20,8 +18,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.njydsz.common.thread.config.ThreadPoolProperties.PoolConfig;
 import com.njydsz.common.thread.config.ThreadPoolProperties.RejectPolicy;
-import com.njydsz.common.thread.metrics.ThreadPoolTimerMetrics;
-import com.njydsz.common.thread.metrics.TimedTaskDecorator;
 
 /**
  * 线程池执行器工厂。
@@ -48,14 +44,6 @@ public class ThreadPoolExecutorFactory implements ApplicationContextAware, Initi
     private ApplicationContext applicationContext;
 
     /**
-     * 线程池名称 → 耗时指标绑定器的映射。
-     *
-     * <p>由 {@link ThreadPoolRegistrar} 在注册指标 Bean 后填充，
-     * 工厂在创建线程池时自动装配 {@link TimedTaskDecorator}。
-     */
-    private final Map<String, ThreadPoolTimerMetrics> timerMetricsMap = new ConcurrentHashMap<>();
-
-    /**
      * 注入 ApplicationContext，供 TaskDecorator 配置使用。
      *
      * <p>该方法由 Spring 容器在 Bean 初始化阶段自动回调。
@@ -72,21 +60,6 @@ public class ThreadPoolExecutorFactory implements ApplicationContextAware, Initi
         if (applicationContext == null) {
             log.warn("ydsz-thread: ThreadPoolExecutorFactory ApplicationContext 为 null，"
                     + "TaskDecorator 配置将不可用");
-        }
-    }
-
-    /**
-     * 注册耗时指标绑定器。
-     *
-     * <p>由 {@link ThreadPoolRegistrar} 调用，在创建线程池前完成注册。
-     *
-     * @param poolName     线程池配置 key
-     * @param timerMetrics 耗时指标绑定器
-     * @since 1.3.1
-     */
-    public void registerTimerMetrics(String poolName, ThreadPoolTimerMetrics timerMetrics) {
-        if (poolName != null && timerMetrics != null) {
-            timerMetricsMap.put(poolName, timerMetrics);
         }
     }
 
@@ -122,30 +95,11 @@ public class ThreadPoolExecutorFactory implements ApplicationContextAware, Initi
         executor.setAllowCoreThreadTimeOut(config.isAllowCoreThreadTimeOut());
         executor.setKeepAliveSeconds(config.getKeepAliveSeconds());
 
-        // 自动装配耗时追踪装饰器（在用户自定义 TaskDecorator 之前）
-        applyTimedDecorator(executor, name, config);
-
         // TaskDecorator 支持：跨线程传播上下文
         applyTaskDecorators(executor, name, config);
 
         executor.initialize();
         return executor;
-    }
-
-    /**
-     * 自动装配耗时追踪装饰器。
-     *
-     * <p>如果当前线程池已注册 {@link ThreadPoolTimerMetrics}，
-     * 则自动创建 {@link TimedTaskDecorator} 并设置为首要装饰器。
-     */
-    private void applyTimedDecorator(ThreadPoolTaskExecutor executor, String name, PoolConfig config) {
-        ThreadPoolTimerMetrics timerMetrics = timerMetricsMap.get(name);
-        if (timerMetrics == null) {
-            return;
-        }
-        TimedTaskDecorator timedDecorator = new TimedTaskDecorator(name, timerMetrics);
-        executor.setTaskDecorator(timedDecorator);
-        log.debug("ydsz-thread: 已为线程池 [{}] 自动装配耗时追踪装饰器", name);
     }
 
     private void applyTaskDecorators(ThreadPoolTaskExecutor executor, String name, PoolConfig config) {

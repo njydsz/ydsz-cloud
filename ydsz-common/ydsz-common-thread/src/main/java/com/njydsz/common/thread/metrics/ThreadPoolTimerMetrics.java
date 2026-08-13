@@ -1,7 +1,17 @@
 package com.njydsz.common.thread.metrics;
 
+import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.SmartInitializingSingleton;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.lang.NonNull;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -9,7 +19,6 @@ import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.binder.MeterBinder;
-import org.springframework.lang.NonNull;
 
 /**
  * 线程池任务耗时与排队时长 Micrometer 指标绑定器。
@@ -21,14 +30,17 @@ import org.springframework.lang.NonNull;
  *   <li>{@code <prefix>.slow.tasks} - 慢任务累计计数（耗时超过 {@link #slowTaskThresholdMs}）</li>
  * </ul>
  *
- * <p>设计说明：不直接引用 {@link ThreadPoolExecutor} 做生命周期绑定，
- * 而是通过 {@link TimedTaskDecorator} 在任务执行时回调 {@link #record(long, long)} 上报数据。
+ * <p>实现 {@link SmartInitializingSingleton}，在所有单例 Bean 初始化完成后自动为
+ * 匹配的 {@link ThreadPoolTaskExecutor} 安装 {@link TimedTaskDecorator}，
+ * 解决 Bean 创建时序问题。
  *
  * @author ydsz-team
  * @since 1.3.1
  * @see TimedTaskDecorator
  */
-public class ThreadPoolTimerMetrics implements MeterBinder {
+public class ThreadPoolTimerMetrics implements MeterBinder, SmartInitializingSingleton, ApplicationContextAware {
+
+    private static final Logger log = LoggerFactory.getLogger(ThreadPoolTimerMetrics.class);
 
     private static final String METRIC_EXECUTION = ".execution";
     private static final String METRIC_QUEUE_WAIT = ".queue.wait";
@@ -44,6 +56,7 @@ public class ThreadPoolTimerMetrics implements MeterBinder {
     private final Iterable<Tag> tags;
     private final long slowTaskThresholdMs;
 
+    private ApplicationContext applicationContext;
     private Timer executionTimer;
     private Timer queueWaitTimer;
     private Counter slowTaskCounter;
@@ -94,6 +107,44 @@ public class ThreadPoolTimerMetrics implements MeterBinder {
                 .tags(Tags.concat(tags, "pool.name", poolName))
                 .description("慢任务累计计数（耗时超过 " + slowTaskThresholdMs + "ms）")
                 .register(registry);
+    }
+
+    @Override
+    public void setApplicationContext(@NonNull ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
+    }
+
+    /**
+     * 所有单例初始化完成后，自动为匹配的线程池安装耗时追踪装饰器。
+     */
+    @Override
+    public void afterSingletonsInstantiated() {
+        if (applicationContext == null) {
+            return;
+        }
+        Map<String, ThreadPoolTaskExecutor> executors = applicationContext.getBeansOfType(ThreadPoolTaskExecutor.class);
+        for (Map.Entry<String, ThreadPoolTaskExecutor> entry : executors.entrySet()) {
+            String beanName = entry.getKey();
+            // 匹配：beanName 以 poolName + "Executor" 结尾
+            if (beanName.endsWith(poolName + "Executor")) {
+                installDecorator(entry.getValue());
+                return;
+            }
+        }
+        log.debug("[ThreadPoolTimerMetrics] 未找到匹配的线程池 [{}]，耗时指标不会生效", poolName);
+    }
+
+    /**
+     * 安装耗时追踪装饰器到指定的线程池。
+     */
+    private void installDecorator(ThreadPoolTaskExecutor executor) {
+        try {
+            TimedTaskDecorator decorator = new TimedTaskDecorator(poolName, this);
+            executor.setTaskDecorator(decorator);
+            log.info("[ThreadPoolTimerMetrics] 已为线程池 [{}] 安装耗时追踪装饰器", poolName);
+        } catch (Exception e) {
+            log.warn("[ThreadPoolTimerMetrics] 安装耗时追踪装饰器失败 (pool={}): {}", poolName, e.getMessage());
+        }
     }
 
     /**

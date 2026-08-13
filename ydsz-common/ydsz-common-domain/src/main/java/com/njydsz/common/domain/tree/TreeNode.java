@@ -130,11 +130,13 @@ public class TreeNode<T extends TreeNode<T, ID>, ID extends Serializable> implem
     private Integer level = ROOT_LEVEL;
 
     /**
-     * 节点路径
+     * 节点路径（由 {@link TreeBuilder#build()} 自动填充）。
      *
-     * <p>格式：从根节点到当前节点的完整路径。
-     * 例如 "/1/2/3/" 表示 id=3 的节点，其父id=2，父父id=1。
-     * 可用于快速判断节点归属关系。
+     * <p>格式：从根节点到当前节点的完整 ID 路径，如 {@code /1/2/5/}。
+     * 调用 {@link TreeBuilder#build()} 前该字段为 {@code null}；
+     * 构建完成后可根据路径快速判断节点归属关系与层级深度。
+     *
+     * @see TreeBuilder#build()
      */
     @Setter
     private String path;

@@ -1,9 +1,14 @@
 package com.njydsz.common.cache.multilevel;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.UUID;
-import java.time.Duration;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
@@ -12,6 +17,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
+
+import com.njydsz.common.cache.support.CacheThreadPoolManager;
 
 /**
  * 分布式缓存重建锁 — 防止多节点同时重建缓存
@@ -39,10 +46,22 @@ public class DistributedRebuildLock {
   private static final long DEFAULT_LOCK_TTL_SECONDS = 30;
   private static final long DEFAULT_WAIT_TIMEOUT_MS = 5000;
 
+  /** Watchdog 续期间隔（秒），默认为锁 TTL 的 1/3 */
+  private static final long WATCHDOG_RENEW_INTERVAL_DIVISOR = 3;
+
   /** Lua 脚本：原子性释放锁（仅当 lockValue 匹配时才删除） */
   private static final DefaultRedisScript<Long> UNLOCK_SCRIPT = new DefaultRedisScript<>(
       "if redis.call('get', KEYS[1]) == ARGV[1] then "
           + "return redis.call('del', KEYS[1]) "
+          + "else return 0 end",
+      Long.class);
+
+  /**
+   * Lua 脚本：原子性续期锁（仅当 lockValue 匹配且锁存在时才续期）
+   */
+  private static final DefaultRedisScript<Long> RENEW_SCRIPT = new DefaultRedisScript<>(
+      "if redis.call('get', KEYS[1]) == ARGV[1] then "
+          + "return redis.call('pexpire', KEYS[1], ARGV[2]) "
           + "else return 0 end",
       Long.class);
 
@@ -51,6 +70,12 @@ public class DistributedRebuildLock {
 
   /** 本地 fallback 锁（Redis 不可用时使用） */
   private final Lock localFallbackLock = new ReentrantLock();
+
+  /** Watchdog 调度器 */
+  private final ScheduledExecutorService watchdogScheduler;
+
+  /** 当前持有的锁（用于 watchdog 续期），key = "cacheName:lockKey", value = 锁信息 */
+  private final ConcurrentHashMap<String, LockHolder> heldLocks = new ConcurrentHashMap<>();
 
   /**
    * 创建分布式重建锁
@@ -70,6 +95,8 @@ public class DistributedRebuildLock {
   public DistributedRebuildLock(RedisTemplate<String, Object> redisTemplate, long lockTtlSeconds) {
     this.redisTemplate = redisTemplate;
     this.lockTtlSeconds = lockTtlSeconds;
+    this.watchdogScheduler = CacheThreadPoolManager.getInstance()
+        .getOrCreateScheduledPool("distributed-rebuild-lock-watchdog", 1);
   }
 
   /**
@@ -102,6 +129,8 @@ public class DistributedRebuildLock {
             .setIfAbsent(lockKey, lockValue, Duration.ofSeconds(lockTtlSeconds));
         if (Boolean.TRUE.equals(acquired)) {
           log.debug("获取分布式重建锁成功: cache={}, key={}", cacheName, key);
+          // 启动 watchdog 自动续期
+          startWatchdog(cacheName, key, lockKey, lockValue);
           return lockValue;
         }
         // 短暂等待后重试
@@ -138,7 +167,10 @@ public class DistributedRebuildLock {
     }
 
     String lockKey = LOCK_PREFIX + cacheName + ":" + key;
+    String holderKey = cacheName + ":" + key;
     try {
+      // 停止 watchdog
+      stopWatchdog(holderKey);
       redisTemplate.execute(UNLOCK_SCRIPT, Collections.singletonList(lockKey), lockToken);
       log.debug("释放分布式重建锁: cache={}, key={}", cacheName, key);
     } catch (Exception e) {
@@ -164,6 +196,60 @@ public class DistributedRebuildLock {
       return rebuildAction.get();
     } finally {
       unlock(cacheName, key, lockToken);
+    }
+  }
+
+  /**
+   * 启动 watchdog 定时续期。
+   *
+   * <p>每 {@code lockTtlSeconds / WATCHDOG_RENEW_INTERVAL_DIVISOR} 秒检查一次，
+   * 如果锁仍被当前持有者持有，则通过 Redis EXPIRE 命令续期。
+   */
+  private void startWatchdog(String cacheName, Object key, String redisKey, String lockValue) {
+    String holderKey = cacheName + ":" + key;
+    long renewIntervalMs = Math.max(1000, TimeUnit.SECONDS.toMillis(lockTtlSeconds)
+        / WATCHDOG_RENEW_INTERVAL_DIVISOR);
+    AtomicBoolean cancelled = new AtomicBoolean(false);
+
+    ScheduledFuture<?> future = watchdogScheduler.scheduleAtFixedRate(() -> {
+      if (cancelled.get()) {
+        return;
+      }
+      try {
+        Long result = redisTemplate.execute(RENEW_SCRIPT,
+            Collections.singletonList(redisKey),
+            lockValue,
+            String.valueOf(TimeUnit.SECONDS.toMillis(lockTtlSeconds)));
+        if (result == null || result != 1) {
+          log.warn("分布式锁 watchdog 续期失败，锁可能已丢失: cache={}, key={}", cacheName, key);
+          stopWatchdog(holderKey);
+        }
+      } catch (Exception e) {
+        log.warn("分布式锁 watchdog 续期异常: cache={}, key={}", cacheName, key, e);
+      }
+    }, renewIntervalMs, renewIntervalMs, TimeUnit.MILLISECONDS);
+
+    heldLocks.put(holderKey, new LockHolder(future, cancelled));
+  }
+
+  private void stopWatchdog(String holderKey) {
+    LockHolder holder = heldLocks.remove(holderKey);
+    if (holder != null) {
+      holder.cancelled.set(true);
+      holder.future.cancel(false);
+    }
+  }
+
+  /**
+   * 锁持有者信息（用于 watchdog 管理）。
+   */
+  private static class LockHolder {
+    final ScheduledFuture<?> future;
+    final AtomicBoolean cancelled;
+
+    LockHolder(ScheduledFuture<?> future, AtomicBoolean cancelled) {
+      this.future = future;
+      this.cancelled = cancelled;
     }
   }
 }

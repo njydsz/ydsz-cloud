@@ -159,7 +159,10 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
     }
 
     /**
-     * 将节点挂到父节点下（含子节点列表懒初始化与层级计算）；父节点缺失时按根节点处理（多根容错）。
+     * 将节点挂到父节点下（含子节点列表懒初始化、层级计算与路径自动填充）；
+     * 父节点缺失时按根节点处理（多根容错）。
+     *
+     * <p>路径格式：从根到当前节点的完整 ID 路径，如 {@code /1/2/5/}。
      *
      * @param node    当前节点
      * @param nodeMap ID -> 节点 索引
@@ -169,6 +172,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
         T parent = parentId == null ? null : nodeMap.get(parentId);
         if (parent == null) {
             node.setLevel(TreeNode.ROOT_LEVEL);
+            node.setPath("/" + node.getId() + "/");
             return;
         }
         List<T> children = parent.getChildren();
@@ -184,6 +188,9 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
         }
         Integer parentLevel = parent.getLevel();
         node.setLevel(parentLevel != null ? parentLevel + 1 : TreeNode.ROOT_LEVEL + 1);
+        // 自动填充路径：父路径 + 当前节点 ID
+        String parentPath = parent.getPath();
+        node.setPath((parentPath != null ? parentPath : "/") + node.getId() + "/");
     }
 
     /**
