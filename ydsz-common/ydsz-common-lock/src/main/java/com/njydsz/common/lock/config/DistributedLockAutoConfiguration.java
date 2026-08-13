@@ -233,6 +233,7 @@ public class DistributedLockAutoConfiguration {
                 optionalDependencies.notifierProvider().getIfAvailable());
         optionalDependencies.renewalServiceProvider().ifAvailable(strategy::setLockRenewalService);
         optionalDependencies.fencingTokenProvider().ifAvailable(strategy::setFencingTokenProvider);
+        optionalDependencies.waitTimePolicyProvider().ifAvailable(strategy::setLockWaitTimePolicy);
         strategy.setLockEventListener(optionalDependencies.lockEventListener());
         return strategy;
     }
@@ -470,10 +471,16 @@ public class DistributedLockAutoConfiguration {
      * @param notifierProvider       LockReleaseNotifier 提供者
      * @param fencingTokenProvider   Fencing Token 提供者
      * @param lockEventListener     锁事件监听器
+     * @param waitTimePolicyProvider 等待时间策略提供者
      */
     public record LockOptionalDependencies(
             ObjectProvider<RedisStringOps> stringOpsProvider,
             ObjectProvider<RedisTemplate<String, Object>> redisTemplateProvider,
             ObjectProvider<TaskScheduler> schedulerProvider,
             ObjectProvider<LockRenewalService> renewalServiceProvider,
-            ObjectProvider<LockRelea
+            ObjectProvider<LockReleaseNotifier> notifierProvider,
+            ObjectProvider<FencingTokenProvider> fencingTokenProvider,
+            LockEventListener lockEventListener,
+            ObjectProvider<LockWaitTimePolicy> waitTimePolicyProvider) {
+    }
+}

@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.njydsz.common.exception.enums.ExceptionCategory;
 import com.njydsz.common.exception.enums.ExceptionCode;
 
 /**
@@ -43,6 +44,18 @@ public class ErrorCodeTable {
      */
     public void registerModule(String module, String description) {
         moduleIndex.computeIfAbsent(module, k -> new ModuleEntry(module, description));
+    }
+
+    /**
+     * 注册模块元信息（含模块默认分类）。
+     *
+     * @param module         模块名（如 "core"、"user-module"）
+     * @param description    模块描述
+     * @param defaultCategory 该模块的默认异常分类（供文档/统计使用）
+     */
+    public void registerModule(String module, String description, ExceptionCategory defaultCategory) {
+        ModuleEntry entry = moduleIndex.computeIfAbsent(module, k -> new ModuleEntry(module, description));
+        entry.defaultCategory = defaultCategory;
     }
 
     /**
@@ -207,6 +220,8 @@ public class ErrorCodeTable {
         private final String description;
         /** 该模块的错误码集合（可变，启动期填充） */
         private final ConcurrentHashMap<String, CodeEntry> codes = new ConcurrentHashMap<>();
+        /** 模块默认异常分类（供文档/统计使用，可为 null 表示按 key 推断） */
+        private volatile ExceptionCategory defaultCategory;
 
         public ModuleEntry(String name, String description) {
             this.name = name;
@@ -223,6 +238,14 @@ public class ErrorCodeTable {
 
         public Map<String, CodeEntry> codes() {
             return codes;
+        }
+
+        public ExceptionCategory defaultCategory() {
+            return defaultCategory;
+        }
+
+        public void setDefaultCategory(ExceptionCategory defaultCategory) {
+            this.defaultCategory = defaultCategory;
         }
     }
 

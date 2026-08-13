@@ -9,10 +9,11 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
 
@@ -58,9 +59,9 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
   /**
    * 全局共享异步执行器（守护线程，不阻止 JVM 退出）
    *
-   * <p>使用 ForkJoinPool 的 makePool 创建守护线程池
+   * <p>使用 CacheThreadPoolManager 统一管理线程池，避免 ForkJoinPool.commonPool() 污染。
    */
-  private static volatile Executor sharedExecutor;
+  private static volatile ExecutorService sharedExecutor;
 
   /** 全局共享刷新调度器（守护线程，不阻止 JVM 退出） */
   private static volatile ScheduledExecutorService sharedRefreshScheduler;
@@ -76,12 +77,10 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
     if (sharedExecutor == null) {
       synchronized (EnhancedLoadingCache.class) {
         if (sharedExecutor == null) {
-          sharedExecutor =
-              new ForkJoinPool(
+          sharedExecutor = CacheThreadPoolManager.getInstance()
+              .getOrCreatePool("enhanced-loading-async",
                   Runtime.getRuntime().availableProcessors(),
-                  ForkJoinPool.defaultForkJoinWorkerThreadFactory,
-                  null,
-                  true);
+                  Runtime.getRuntime().availableProcessors() * 2);
         }
       }
     }
