@@ -28,6 +28,11 @@ import org.springframework.data.redis.core.RedisTemplate;
  *   <li>支持最大续期次数限制，防止业务线程卡死导致锁永不释放</li>
  * </ul>
  *
+ * <p><b>脚本预加载优化：</b>
+ * <p>续期/释放 Lua 脚本在首次使用时通过 {@code SCRIPT LOAD} 预加载到 Redis，
+ * 后续调用直接使用缓存的 SHA 摘要执行 {@code EVALSHA}，避免每次续期都传输脚本字节，
+ * 减少网络开销和 Redis 脚本编译缓存压力。
+ *
  * <p><b>使用示例：</b>
  * <pre>{@code
  * LockWatchDog watchDog = new LockWatchDog(redisTemplate);
@@ -68,6 +73,12 @@ public class LockWatchDog {
     private final int maxRenewTimes;
     private final ScheduledExecutorService scheduler;
     private final ConcurrentHashMap<String, WatchTask> activeTasks = new ConcurrentHashMap<>();
+
+    /** 续期脚本 SHA（懒加载，首次使用时预加载到 Redis） */
+    private volatile String renewScriptSha;
+
+    /** 释放脚本 SHA（懒加载，首次使用时预加载到 Redis） */
+    private volatile String releaseScriptSha;
 
     /**
      * 续期任务上下文
@@ -197,6 +208,42 @@ public class LockWatchDog {
     }
 
     /**
+     * 预加载 Lua 脚本到 Redis（首次使用时调用）
+     *
+     * <p>通过 {@code SCRIPT LOAD} 将续期和释放脚本预加载到 Redis，
+     * 后续续期操作直接使用 SHA 执行 {@code EVALSHA}，避免每次传输脚本字节。</p>
+     */
+    private void preloadScripts() {
+        if (renewScriptSha == null) {
+            synchronized (this) {
+                if (renewScriptSha == null) {
+                    try {
+                        renewScriptSha = loadScript(RENEW_LOCK_LUA);
+                        releaseScriptSha = loadScript(RELEASE_LOCK_LUA);
+                        log.debug("【LockWatchDog】脚本预加载完成 | renewSha={} | releaseSha={}",
+                                renewScriptSha, releaseScriptSha);
+                    } catch (Exception e) {
+                        log.warn("【LockWatchDog】脚本预加载失败，将降级为每请求 scriptLoad", e);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 加载单个 Lua 脚本到 Redis 并返回 SHA
+     *
+     * @param script Lua 脚本内容
+     * @return SHA 摘要
+     */
+    private String loadScript(String script) {
+        return redisTemplate.execute((RedisCallback<String>) connection -> {
+            byte[] scriptBytes = script.getBytes(StandardCharsets.UTF_8);
+            return connection.scriptingCommands().scriptLoad(scriptBytes);
+        });
+    }
+
+    /**
      * 续期锁（带次数限制检查）
      */
     private void renewLock(String lockKey, String lockValue, long leaseTimeMs) {
@@ -213,17 +260,15 @@ public class LockWatchDog {
             return;
         }
         try {
-            Boolean renewed = redisTemplate.execute((RedisCallback<Boolean>) connection -> {
-                byte[] keyBytes = lockKey.getBytes(StandardCharsets.UTF_8);
-                byte[] valueBytes = lockValue.getBytes(StandardCharsets.UTF_8);
-                byte[] leaseBytes = String.valueOf(leaseTimeMs).getBytes(StandardCharsets.UTF_8);
-                byte[] scriptBytes = RENEW_LOCK_LUA.getBytes(StandardCharsets.UTF_8);
-                String sha = connection.scriptingCommands().scriptLoad(scriptBytes);
-                Long result = connection.scriptingCommands().evalSha(sha,
-                        ReturnType.INTEGER,
-                        1, keyBytes, valueBytes, leaseBytes);
-                return Long.valueOf(1L).equals(result);
-            });
+            preloadScripts();
+            Boolean renewed;
+            if (renewScriptSha != null) {
+                // 使用预加载的 SHA 执行 EVALSHA
+                renewed = evalShaRenew(lockKey, lockValue, leaseTimeMs);
+            } else {
+                // 降级：直接执行脚本
+                renewed = evalScriptRenew(lockKey, lockValue, leaseTimeMs);
+            }
             if (Boolean.TRUE.equals(renewed)) {
                 task.renewCount++;
                 log.debug("【LockWatchDog】续期成功 | key={} | renewCount={}", lockKey, task.renewCount);
@@ -239,22 +284,80 @@ public class LockWatchDog {
     }
 
     /**
+     * 使用预加载 SHA 执行续期（正常路径）
+     */
+    private Boolean evalShaRenew(String lockKey, String lockValue, long leaseTimeMs) {
+        return redisTemplate.execute((RedisCallback<Boolean>) connection -> {
+            byte[] keyBytes = lockKey.getBytes(StandardCharsets.UTF_8);
+            byte[] valueBytes = lockValue.getBytes(StandardCharsets.UTF_8);
+            byte[] leaseBytes = String.valueOf(leaseTimeMs).getBytes(StandardCharsets.UTF_8);
+            Object result = connection.scriptingCommands().evalSha(renewScriptSha,
+                    ReturnType.INTEGER,
+                    1, keyBytes, valueBytes, leaseBytes);
+            return Long.valueOf(1L).equals(result);
+        });
+    }
+
+    /**
+     * 降级方案：直接发送脚本执行（预加载失败时）
+     */
+    private Boolean evalScriptRenew(String lockKey, String lockValue, long leaseTimeMs) {
+        return redisTemplate.execute((RedisCallback<Boolean>) connection -> {
+            byte[] keyBytes = lockKey.getBytes(StandardCharsets.UTF_8);
+            byte[] valueBytes = lockValue.getBytes(StandardCharsets.UTF_8);
+            byte[] leaseBytes = String.valueOf(leaseTimeMs).getBytes(StandardCharsets.UTF_8);
+            byte[] scriptBytes = RENEW_LOCK_LUA.getBytes(StandardCharsets.UTF_8);
+            String sha = connection.scriptingCommands().scriptLoad(scriptBytes);
+            Long result = connection.scriptingCommands().evalSha(sha,
+                    ReturnType.INTEGER,
+                    1, keyBytes, valueBytes, leaseBytes);
+            return Long.valueOf(1L).equals(result);
+        });
+    }
+
+    /**
      * 内部释放锁方法
      */
     private void releaseLockInternal(String lockKey, String lockValue) {
         try {
-            redisTemplate.execute((RedisCallback<Object>) connection -> {
-                byte[] keyBytes = lockKey.getBytes(StandardCharsets.UTF_8);
-                byte[] valueBytes = lockValue.getBytes(StandardCharsets.UTF_8);
-                byte[] scriptBytes = RELEASE_LOCK_LUA.getBytes(StandardCharsets.UTF_8);
-                String sha = connection.scriptingCommands().scriptLoad(scriptBytes);
-                connection.scriptingCommands().evalSha(sha,
-                        ReturnType.INTEGER,
-                        1, keyBytes, valueBytes);
-                return null;
-            });
+            preloadScripts();
+            if (releaseScriptSha != null) {
+                evalShaRelease(lockKey, lockValue);
+            } else {
+                evalScriptRelease(lockKey, lockValue);
+            }
         } catch (Exception e) {
             log.warn("【LockWatchDog】释放锁失败 | key={}", lockKey, e);
         }
+    }
+
+    /**
+     * 使用预加载 SHA 执行释放（正常路径）
+     */
+    private void evalShaRelease(String lockKey, String lockValue) {
+        redisTemplate.execute((RedisCallback<Object>) connection -> {
+            byte[] keyBytes = lockKey.getBytes(StandardCharsets.UTF_8);
+            byte[] valueBytes = lockValue.getBytes(StandardCharsets.UTF_8);
+            connection.scriptingCommands().evalSha(releaseScriptSha,
+                    ReturnType.INTEGER,
+                    1, keyBytes, valueBytes);
+            return null;
+        });
+    }
+
+    /**
+     * 降级方案：直接发送脚本执行释放（预加载失败时）
+     */
+    private void evalScriptRelease(String lockKey, String lockValue) {
+        redisTemplate.execute((RedisCallback<Object>) connection -> {
+            byte[] keyBytes = lockKey.getBytes(StandardCharsets.UTF_8);
+            byte[] valueBytes = lockValue.getBytes(StandardCharsets.UTF_8);
+            byte[] scriptBytes = RELEASE_LOCK_LUA.getBytes(StandardCharsets.UTF_8);
+            String sha = connection.scriptingCommands().scriptLoad(scriptBytes);
+            connection.scriptingCommands().evalSha(sha,
+                    ReturnType.INTEGER,
+                    1, keyBytes, valueBytes);
+            return null;
+        });
     }
 }

@@ -93,14 +93,11 @@ public class PageQuery extends BaseQuery {
 
     /**
      * 游标分页游标值（可选，启用 seek 模式）。
+     *
+     * <p>与 offset 分页互斥：当 cursor 非空时，业务层应按
+     * {@code WHERE id > :cursor} 模式查询，跳过 offset 扫描。
      */
     private String cursor;
-
-    /**
-     * 游标方向（默认 NEXT）。
-     */
-    @Builder.Default
-    private CursorDirection cursorDirection = CursorDirection.NEXT;
 
     // ======================== 排序操作 ========================
 
@@ -355,7 +352,6 @@ public class PageQuery extends BaseQuery {
                 ", pageSize=" + pageSize +
                 ", orderItems=" + orderItems +
                 ", cursor='" + cursor + '\'' +
-                ", cursorDirection=" + cursorDirection +
                 ", searchKey='" + getSearchKey() + '\'' +
                 '}';
     }
