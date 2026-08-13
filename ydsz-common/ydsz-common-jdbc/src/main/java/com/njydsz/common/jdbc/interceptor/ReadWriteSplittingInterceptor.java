@@ -14,8 +14,8 @@ import org.apache.ibatis.plugin.Signature;
 import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
 
-import com.baomidou.dynamic.datasource.toolkit.DynamicDataSourceContextHolder;
 import com.njydsz.common.jdbc.config.DataSourceLoadBalanceStrategy;
+import com.njydsz.common.jdbc.datasource.DynamicDataSourceContextHolder;
 import com.njydsz.common.jdbc.config.RandomLoadBalanceStrategy;
 import com.njydsz.common.jdbc.config.ReadWriteSplittingProperties;
 import com.njydsz.common.jdbc.config.RoundRobinLoadBalanceStrategy;
@@ -35,8 +35,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>INSERT/UPDATE/DELETE → 主库</li>
  * </ul>
  *
- * <p>需配合 baomidou dynamic-datasource 使用，通过 {@link DynamicDataSourceContextHolder}
- * 设置当前线程的数据源。
+ * <p>通过 {@link DynamicDataSourceContextHolder} 设置当前线程数据源路由。
  *
  * <p><b>ThreadLocal 安全保障：</b>使用 try-finally 确保 {@link DynamicDataSourceContextHolder#poll()}
  * 在请求完成后被调用，避免线程池复用场景下的数据源路由状态泄漏。

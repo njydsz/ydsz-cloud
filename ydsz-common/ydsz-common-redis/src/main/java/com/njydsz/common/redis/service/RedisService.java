@@ -33,6 +33,9 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>{@link RedisAdvancedOps} - Pipeline + Lua 脚本操作</li>
  * </ul>
  *
+ * <p>同时实现 {@link CacheProvider} 接口，为注解缓存切面提供最小化契约，
+ * 解耦切面与门面类的强依赖，便于未来替换为多级缓存实现。
+ *
  * <p><b>向后兼容：</b>所有 public 方法签名保持不变，现有调用方无需修改。
  * 新代码建议直接注入子组件以获得更清晰的依赖关系。
  *
@@ -45,13 +48,16 @@ import lombok.extern.slf4j.Slf4j;
  * // 直接注入子组件（推荐新代码使用）
  * RedisStringOps stringOps;  // 注入
  * stringOps.set("key", "value");
+ *
+ * // 注解切面通过 CacheProvider 接口注入（解耦）
+ * CacheProvider cacheProvider;  // 注入
  * }</pre>
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Slf4j
-public class RedisService implements BatchRedisOperations {
+public class RedisService implements BatchRedisOperations, CacheProvider {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final String keyPrefix;
@@ -1520,6 +1526,19 @@ public class RedisService implements BatchRedisOperations {
             log.error("【Redis】DELETE 操作失败 | key={} | error={}", key, e.getMessage());
             return false;
         }
+    }
+
+    /**
+     * 批量删除缓存（实现 {@link CacheProvider} 接口）
+     *
+     * @param keys 缓存键集合（不含前缀）
+     */
+    @Override
+    public void delete(List<String> keys) {
+        if (keys == null || keys.isEmpty()) {
+            return;
+        }
+        stringOps.del(keys);
     }
 
     // ============================ BatchRedisOperations 接口实现 =============================

@@ -24,6 +24,7 @@ import com.njydsz.common.lock.aspect.DistributedScheduledAspect;
 import com.njydsz.common.lock.aspect.IdempotentAspect;
 import com.njydsz.common.lock.aspect.RepeatSubmitAspect;
 import com.njydsz.common.lock.aspect.YdszDistributedLockAspect;
+import com.njydsz.common.lock.core.LockTemplate;
 import com.njydsz.common.lock.health.LockHealthIndicator;
 import com.njydsz.common.lock.idempotent.IdempotentStrategy;
 import com.njydsz.common.lock.idempotent.RedisIdempotentStrategy;
@@ -137,6 +138,20 @@ public class DistributedLockAutoConfiguration {
             return new DefaultLockStrategy(stringRedisTemplate, lockWatchDog, redisService, lockMetrics, scheduler, namespace);
         }
         return new DefaultLockStrategy(stringRedisTemplate, lockWatchDog, null, lockMetrics, scheduler, namespace);
+    }
+
+    /**
+     * 创建编程式锁操作模板 Bean
+     *
+     * <p>提供 {@link LockTemplate#execute} 系列方法，自动管理锁的获取与释放。
+     *
+     * @param lockStrategy 锁策略
+     * @return LockTemplate 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public LockTemplate lockTemplate(LockStrategy lockStrategy) {
+        return new LockTemplate(lockStrategy);
     }
 
     /**

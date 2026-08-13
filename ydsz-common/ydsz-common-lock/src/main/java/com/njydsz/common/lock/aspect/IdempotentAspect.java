@@ -20,6 +20,7 @@ import org.springframework.expression.spel.support.SimpleEvaluationContext;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.lock.annotation.IdempotentExempt;
 import com.njydsz.common.lock.exception.IdempotentException;
 import com.njydsz.common.lock.idempotent.IdempotentStrategy;
 import com.njydsz.common.lock.metrics.LockMetrics;
@@ -111,6 +112,13 @@ public class IdempotentAspect {
     @Around("@annotation(idempotent)")
     public Object around(ProceedingJoinPoint joinPoint, Idempotent idempotent) throws Throwable {
         Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
+
+        // 方法级 @IdempotentExempt 检查：直接放行
+        if (method.isAnnotationPresent(IdempotentExempt.class)) {
+            log.debug("[IdempotentAspect] 方法标注 @IdempotentExempt，跳过幂等检查 method={}", method.getName());
+            return joinPoint.proceed();
+        }
+
         String userKey = resolveUserKey(idempotent.key(), method, joinPoint.getArgs());
         String redisKey = buildRedisKey(userKey);
 
@@ -236,27 +244,39 @@ public class IdempotentAspect {
     private String generateAutoKey(Method method, Object[] args) {
         String className = method.getDeclaringClass().getSimpleName();
         String methodName = method.getName();
-        String argsDigest = digestArgs(args);
+        String argsDigest = digestArgs(method, args);
         return className + "#" + methodName + "#" + argsDigest;
     }
 
     /**
      * 计算参数摘要（SHA-256 前 16 字节十六进制，避免过长 key）
+     * <p>自动过滤标注 {@link IdempotentExempt} 的参数，排除分页参数/时间戳等。
      *
-     * @param args 方法参数
+     * @param method 目标方法（用于获取参数级 @IdempotentExempt 注解）
+     * @param args   方法参数
      * @return 参数摘要
      */
-    private String digestArgs(Object[] args) {
+    private String digestArgs(Method method, Object[] args) {
         if (args == null || args.length == 0) {
             return "no-args";
         }
+        java.lang.reflect.Parameter[] parameters = method.getParameters();
         try {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < args.length; i++) {
-                if (i > 0) {
+                // 过滤参数级 @IdempotentExempt 注解
+                if (i < parameters.length && parameters[i] != null
+                        && parameters[i].isAnnotationPresent(IdempotentExempt.class)) {
+                    continue;
+                }
+                if (sb.length() > 0) {
                     sb.append("|");
                 }
                 sb.append(args[i] == null ? "null" : args[i].toString());
+            }
+            // 如果全部参数都被豁免，使用 args 数量作为标识
+            if (sb.length() == 0) {
+                sb.append("all-exempt:").append(args.length);
             }
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             byte[] digest = md.digest(sb.toString().getBytes(StandardCharsets.UTF_8));
@@ -267,7 +287,13 @@ public class IdempotentAspect {
             return hex.toString();
         } catch (Exception e) {
             // 降级为 hashCode
-            return String.valueOf(Arrays.hashCode(args));
+            int activeCount = 0;
+            for (int i = 0; i < args.length && i < parameters.length; i++) {
+                if (parameters[i] == null || !parameters[i].isAnnotationPresent(IdempotentExempt.class)) {
+                    activeCount++;
+                }
+            }
+            return activeCount == 0 ? "all-exempt" : String.valueOf(Arrays.hashCode(args)) + ":" + activeCount;
         }
     }
 

@@ -43,6 +43,11 @@ import lombok.extern.slf4j.Slf4j;
 public class RedisMultiLock implements DistributedLocker {
 
 	/**
+	 * 子锁值拼接分隔符（使用不可打印 SOH 字符，避免与 lockValue 内容冲突）
+	 */
+	static final String VALUE_DELIMITER = "\u0001";
+
+	/**
 	 * WatchDog 续期调度线程池（由 Spring 管理，支持优雅停机和配置化）
 	 */
 	private final ScheduledExecutorService renewalExecutor;
@@ -121,7 +126,7 @@ public class RedisMultiLock implements DistributedLocker {
 			}
 
 			// 全部获取成功
-			String compositeValue = String.join("|", acquired);
+			String compositeValue = String.join(VALUE_DELIMITER, acquired);
 			startWatchDog(lockKey, leaseTime, timeUnit);
 			log.debug("RedisMultiLock 获取成功, key={}, lockCount={}", lockKey, locks.size());
 			return compositeValue;
@@ -169,7 +174,7 @@ public class RedisMultiLock implements DistributedLocker {
 				acquiredLockValues.put(subLockKey, lockValue);
 			}
 
-			String compositeValue = String.join("|", acquired);
+			String compositeValue = String.join(VALUE_DELIMITER, acquired);
 			startWatchDog(lockKey, leaseTime, timeUnit);
 			log.debug("RedisMultiLock 获取成功, key={}, lockCount={}", lockKey, locks.size());
 			return compositeValue;

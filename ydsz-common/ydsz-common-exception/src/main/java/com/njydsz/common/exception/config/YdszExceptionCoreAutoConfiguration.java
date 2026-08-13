@@ -29,6 +29,7 @@ import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
 
 import com.njydsz.common.exception.code.ErrorCodeTable;
 import com.njydsz.common.exception.custom.AbstractYdszException;
+import com.njydsz.common.exception.custom.MessageSourceHolder;
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;
 
@@ -40,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>合并了原有的 3 个基础配置类：
  * <ul>
- *   <li>国际化核心：{@link MessageSource}、{@link Validator}、消息解析器注入</li>
+ *   <li>国际化核心：{@link MessageSource}、{@link Validator}、消息解析器注入 {@link MessageSourceHolder}</li>
  *   <li>Web 国际化：{@link LocaleResolver}、{@link LocaleChangeInterceptor}</li>
  *   <li>异常指标：{@link ExceptionMetrics}</li>
  * </ul>
@@ -89,21 +90,37 @@ public class YdszExceptionCoreAutoConfiguration {
     // ==================== 国际化核心 ====================
 
     /**
-     * 在 Bean 初始化完成后桥接 ErrorCodeTable 与兼容门面。
+     * 在 Bean 初始化完成后，将 Spring MessageSource 注入 {@link MessageSourceHolder}，
+     * 使 {@link AbstractYdszException#getMessage()} 能自动解析 i18n 消息。
      *
-     * <p>桥接 {@link ErrorCodeTable} 与历史兼容门面（如有），
+     * <p>注入方式：通过 {@link MessageSourceHolder.MessageResolver} 函数式接口桥接，
+     * 避免异常模块对 Spring 的硬依赖。
      *
-     * <p><b>注意：</b>国际化消息解析已迁移至 Handler 层直接使用 MessageSource，
-     * 不再通过 {@link AbstractYdszException} 内部解析器注入。
+     * <p>i18n 解析策略：
+     * <ul>
+     *     <li>MessageSource 可用时：{@code getMessage()} 自动解析 i18n 文案</li>
+     *     <li>MessageSource 不可用时：{@code getMessage()} 返回原始 key（兜底）</li>
+     * </ul>
      */
     @PostConstruct
     public void injectMessageResolver() {
         MessageSource messageSource = messageSourceProvider.getIfAvailable();
         if (messageSource == null) {
-            log.warn("MessageSource 未找到，异常消息将降级为返回 i18n key");
+            log.warn("MessageSource 未找到，AbstractYdszException.getMessage() 将降级为返回 i18n key");
             return;
         }
-        log.info("异常模块已就绪 | MessageSource: {}（i18n 解析由 Handler 层处理）", messageSource.getClass().getSimpleName());
+        // 将 Spring MessageSource 桥接注入静态 Holder，实现无侵入的 i18n 解析
+        MessageSourceHolder.setResolver((key, params, defaultMsg, locale) -> {
+            try {
+                Locale resolvedLocale = locale != null ? locale : Locale.ROOT;
+                return messageSource.getMessage(key, params, defaultMsg, resolvedLocale);
+            } catch (Exception e) {
+                // MessageSource 解析失败时返回 defaultMsg（即 messageKey 本身）
+                return defaultMsg;
+            }
+        });
+        log.info("异常模块已就绪 | MessageSource 已注入 MessageSourceHolder，getMessage() 启用 i18n 解析 | 实现: {}",
+                messageSource.getClass().getSimpleName());
     }
 
     /**

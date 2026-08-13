@@ -64,7 +64,7 @@ public class SqlFirewallInnerInterceptor implements InnerInterceptor {
 
     /** TRUNCATE TABLE 正则 */
     private static final Pattern TRUNCATE_PATTERN = Pattern.compile(
-            "\\bTRUNCATE\\s+TABLE?\\b", Pattern.CASE_INSENSITIVE);
+            "\\bTRUNCATE\\s+TABLE\\b", Pattern.CASE_INSENSITIVE);
 
     /** GRANT / REVOKE 正则 */
     private static final Pattern DDL_PERMISSION_PATTERN = Pattern.compile(
@@ -172,29 +172,46 @@ public class SqlFirewallInnerInterceptor implements InnerInterceptor {
 
     /**
      * 检测 SQL 是否包含多语句（分号分隔）
+     *
+     * <p>去除字符串字面量后，若仍存在分号则判定为多语句。
+     * 末尾分号（如存储过程定义）也视为多语句特征，由调用方按场景决定放行。
+     *
+     * @param sql 原始 SQL
+     * @return true 表示检测到多语句
      */
     private boolean containsMultiStatement(String sql) {
         // 去除字符串字面量后检查分号
         String cleaned = sql.replaceAll("'(?:[^']|'')*'", "''");
-        // 去除末尾空格后检测尾部是否为分号
-        String trimmed = cleaned.trim();
-        return SEMICOLON_PATTERN.matcher(cleaned).find() && !trimmed.endsWith(";");
+        return SEMICOLON_PATTERN.matcher(cleaned).find();
     }
+
+    /** 表名白名单匹配缓存（预编译的正则，避免每次 Detection 重复编译） */
+    private volatile Pattern allowedTablesPattern = null;
 
     /**
      * 检查表是否在白名单中
+     *
+     * <p>使用 {@code \b} 边界正则匹配表名，避免 {@code contains()} 导致的前缀误匹配
+     * （如白名单 {@code user} 错误匹配到 {@code users} 表）。
      */
     private boolean isTableAllowed(String sql) {
         if (allowTables.isEmpty()) {
             return false;
         }
-        String lowerSql = sql.toLowerCase();
-        for (String table : allowTables) {
-            if (lowerSql.contains(table.toLowerCase())) {
-                return true;
+        // 懒加载预编译正则，allowTables 变更后由 setAllowTables 置 null 重新构建
+        Pattern pattern = allowedTablesPattern;
+        if (pattern == null) {
+            StringBuilder sb = new StringBuilder();
+            for (String table : allowTables) {
+                if (sb.length() > 0) {
+                    sb.append('|');
+                }
+                sb.append(Pattern.quote(table));
             }
+            pattern = Pattern.compile("\\b(" + sb + ")\\b", Pattern.CASE_INSENSITIVE);
+            allowedTablesPattern = pattern;
         }
-        return false;
+        return pattern.matcher(sql).find();
     }
 
     /**

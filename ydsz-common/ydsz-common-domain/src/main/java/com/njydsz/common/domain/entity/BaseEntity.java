@@ -15,7 +15,9 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
@@ -28,7 +30,11 @@ import lombok.experimental.SuperBuilder;
  * <p>实现 {@link EventRegistry} 接口，提供标准化的领域事件注册能力。
  * 任意类均可通过实现此接口获得事件注册能力，不必强制继承此类。
  *
- * <p><b>v1.8.0 变更：</b>实现 {@link EventRegistry} 接口，领域事件能力标准化。
+ * <p><b>equals/hashCode 语义：</b>仅以 {@code id} 参与判同（DDD 实体标准语义），
+ * 确保持久化实体在集合操作（Set/Map）中的正确行为。
+ *
+ * <p><b>v1.8.0 变更：</b>实现 {@link EventRegistry} 接口，领域事件能力标准化；
+ * equals 语义修正为仅以 id 判同。
  *
  * <p><b>v1.7.0 变更：</b>移除持久化相关字段（revision/deleted/tenantId/status），
  * 这些字段应由 {@code common-jdbc} 的 {@code MpBaseEntity} 承载，保持领域纯净。
@@ -47,7 +53,9 @@ import lombok.experimental.SuperBuilder;
  * @since 1.8.0 实现 EventRegistry 接口
  */
 @JsonClass(description = "领域实体基类，纯领域无持久化语义")
-@Data
+@Getter
+@Setter
+@EqualsAndHashCode(of = {"id"}, callSuper = false)
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PROTECTED)

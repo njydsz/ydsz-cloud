@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -21,6 +22,7 @@ import com.njydsz.common.tenant.datasource.TenantDataSourceRouter;
 import com.njydsz.common.tenant.feign.TenantContextFeignInterceptor;
 import com.njydsz.common.tenant.health.TenantHealthIndicator;
 import com.njydsz.common.tenant.interceptor.TenantInterceptorProvider;
+import com.njydsz.common.tenant.lifecycle.TenantLifecycleManager;
 import com.njydsz.common.tenant.metrics.TenantMetrics;
 import com.njydsz.common.tenant.web.TenantContextWebFilter;
 
@@ -62,12 +64,14 @@ public class TenantAutoConfiguration {
      * SPI 拦截器提供者：注册 TenantIsolationInterceptor 到 MybatisPlusInterceptor 链。
      *
      * @param properties 租户配置
+     * @param applicationContext Spring 上下文（传递给 LifecycleManagerHolder）
      * @return 拦截器提供者
      */
     @Bean
     @ConditionalOnMissingBean
     public TenantInterceptorProvider tenantInterceptorProvider(
             TenantProperties properties,
+            ApplicationContext applicationContext,
             ObjectProvider<TenantMetrics> metricsProvider) {
         log.info("多租户隔离已启用: mode={}, tenantColumn={}, superTenantId={}, systemTenantId={}",
                 properties.getMode(),
@@ -75,6 +79,8 @@ public class TenantAutoConfiguration {
                 properties.getSuperTenantId(),
                 properties.getSystemTenantId());
         SystemTenantContextRunner.init(properties.getSystemTenantId());
+        // 初始化生命周期管理器的 ApplicationContext 持有者
+        TenantLifecycleManager.LifecycleManagerHolder.init(applicationContext);
         return new TenantInterceptorProvider(properties, metricsProvider.getIfAvailable());
     }
 

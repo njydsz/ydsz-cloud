@@ -84,14 +84,14 @@ public class FallbackDistributedLock implements DistributedLocker {
     private final ConcurrentHashMap<String, String> degradedLockValues = new ConcurrentHashMap<>();
 
     /**
-     * 全局 Redis 可用状态（静态字段，所有实例共享降级状态）
+     * Redis 可用状态（实例级别，避免跨锁类型误降级扩散）
      */
-    private static final AtomicBoolean redisAvailable = new AtomicBoolean(true);
+    private final AtomicBoolean redisAvailable = new AtomicBoolean(true);
 
     /**
-     * 连续失败计数器（静态字段，所有实例共享降级状态）
+     * 连续失败计数器（实例级别，按被包装锁隔离）
      */
-    private static final AtomicInteger consecutiveFailures = new AtomicInteger(0);
+    private final AtomicInteger consecutiveFailures = new AtomicInteger(0);
 
     /**
      * 降级状态下的尝试计数器（用于定期探测 Redis 是否恢复）

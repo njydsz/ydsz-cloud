@@ -55,12 +55,6 @@
     "allDeclaredMethods": true
   },
   {
-    "name": "com.njydsz.common.exception.model.ProblemDetail",
-    "allDeclaredConstructors": true,
-    "allPublicConstructors": true,
-    "allDeclaredMethods": true
-  },
-  {
     "name": "com.njydsz.common.exception.core.ExceptionInfo",
     "allDeclaredConstructors": true,
     "allPublicConstructors": true,

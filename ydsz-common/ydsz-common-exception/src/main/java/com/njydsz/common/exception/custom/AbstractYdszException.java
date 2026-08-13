@@ -6,8 +6,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.njydsz.common.exception.code.IExceptionResultCode;
 import com.njydsz.common.core.code.ResultCode;
+import com.njydsz.common.exception.code.IExceptionResultCode;
 import com.njydsz.common.exception.core.ExceptionInfo;
 import com.njydsz.common.exception.enums.ExceptionCategory;
 import com.njydsz.common.exception.enums.ExceptionCode;
@@ -26,9 +26,9 @@ import com.njydsz.common.exception.enums.ExceptionLevel;
  *   <li><b>链路追踪</b>：自动写入 path、timestamp，便于分布式追踪</li>
  * </ul>
  *
- * <p><b>消息解析器注入：</b>由 {@code YdszExceptionCoreAutoConfiguration} 通过
- * {@link #setMessageResolver(BiFunction)} 注入国际化函数，避免硬依赖 Spring MessageSource。
- * 使用 {@link AtomicReference} 而非 volatile，提供更优的并发性能。
+ * <p><b>国际化消息解析：</b>通过 {@link MessageSourceHolder} 静态持有者获取 Spring MessageSource，
+ * 避免异常类对 Spring 上下文的硬依赖。首次调用 {@link #getMessage()} 时懒加载解析 i18n 文案，
+ * 使用 {@link AtomicReference} 实现无锁 CAS 缓存，高并发场景下无锁竞争。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -166,9 +166,9 @@ public abstract class AbstractYdszException extends RuntimeException implements 
     /**
      * 将异常自身的上下文投影为可序列化的 {@link ExceptionInfo}，供全局异常处理器输出响应体。
      *
-     * <p>内部调用 {@link #getMessage()}，会触发国际化文案的懒加载解析，
-     * 因此本方法必须在请求线程（LocaleContextHolder 已就绪）内调用，
-     * 若在异步线程中调用将按默认 Locale 解析。
+     * <p>内部调用 {@link #getMessage()}，会触发国际化文案的懒加载解析。
+     * 若 {@link MessageSourceHolder} 已注入 Spring MessageSource，则按 Locale.ROOT 解析；
+     * 若未注入，则返回 messageKey 本身。
      *
      * <p>投影字段包括：code / key / message / httpStatus / path / timestamp，
      * 以及 {@link #snapshot}（如有，透写入 details 供排查定位）。
@@ -263,20 +263,23 @@ public abstract class AbstractYdszException extends RuntimeException implements 
     }
 
     /**
-     * 获取异常消息（懒加载解析 - 无锁 CAS 实现）
+     * 获取异常消息（懒加载 i18n 解析 - 无锁 CAS 实现）
      *
-     * <p>首次调用时通过 messageKey 和 messageParams 解析国际化消息，
+     * <p>首次调用时通过 {@link MessageSourceHolder} 解析国际化消息，
      * 解析结果通过 {@link AtomicReference#compareAndSet} 原子缓存，
      * 后续调用直接返回缓存值。
      *
-     * <p>相比原 DCL synchronized 实现：
+     * <p>若 {@link MessageSourceHolder} 未注入（如非 Spring 环境），
+     * 则直接返回 messageKey 本身（兜底行为，保持向后兼容）。
+     *
+     * <p>性能优势：
      * <ul>
      *     <li>无锁设计，高并发 {@code getMessage()} 调用时不会产生锁竞争</li>
-     *     <li>CAS 失败时简单的重试即可，无需 system call</li>
+     *     <li>CAS 失败时简单重试即可，无需 system call</li>
      *     <li>对异常链打印、日志输出、JSON 序列化等多消费方友好</li>
      * </ul>
      *
-     * @return 解析后的异常消息
+     * @return 解析后的国际化消息；解析器未注入时返回 messageKey
      */
     @Override
     public String getMessage() {
@@ -287,7 +290,7 @@ public abstract class AbstractYdszException extends RuntimeException implements 
         // 懒加载解析：通过 CAS 原子写入，避免重复解析及锁等待
         String resolved;
         if (messageKey != null) {
-            resolved = messageKey;
+            resolved = MessageSourceHolder.resolve(messageKey, messageParams);
         } else {
             resolved = super.getMessage();
         }

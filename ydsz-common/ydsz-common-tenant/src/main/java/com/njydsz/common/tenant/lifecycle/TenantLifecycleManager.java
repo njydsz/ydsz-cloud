@@ -1,135 +1,188 @@
 package com.njydsz.common.tenant.lifecycle;
 
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.context.ApplicationContext;
 
 import com.njydsz.common.jdbc.exception.TenantIsolationException;
+import com.njydsz.common.tenant.config.TenantProperties;
 import com.njydsz.common.core.context.RequestContext;
 
 /**
- * 租户生命周期管理器。
+ * 租户生命周期管理器接口。
  *
- * <p>管理租户的上下线状态：
+ * <p>定义了租户状态管理的两个核心方法：
  * <ul>
- *   <li>{@link TenantStatus#ACTIVE} — 正常接受请求</li>
- *   <li>{@link TenantStatus#SUSPENDED} — 暂停，拒绝该租户所有请求（欠费/违规）</li>
- *   <li>{@link TenantStatus#OFFLINE} — 下线，数据保留但不接受请求</li>
+ *   <li>{@link #isActive(String)} — 检查租户是否活跃</li>
+ *   <li>{@link #checkCurrentTenantActive()} — 校验当前请求租户是否活跃，不活跃则抛出异常</li>
  * </ul>
  *
- * <p><b>使用示例：</b>
+ * <p>提供两种实现：
+ * <ul>
+ *   <li>{@link InMemoryTenantLifecycleManager} — 本地内存存储，适用于单实例开发环境</li>
+ *   <li>{@link RedisTenantLifecycleManager} — Redis 分布式存储，适用于多实例生产环境</li>
+ * </ul>
+ *
+ * <h3>使用方式</h3>
  * <pre>{@code
- * // 暂停租户
- * TenantLifecycleManager.suspend("tenant_001", "欠费暂停");
- *
- * // 恢复租户
- * TenantLifecycleManager.activate("tenant_001");
- *
- * // 检查状态（在 WebFilter 或拦截器中调用）
- * if (!TenantLifecycleManager.isActive("tenant_001")) {
- *     throw new TenantSuspendedException("租户已暂停");
+ * // 在 WebFilter / Interceptor 中检查租户状态
+ * if (!tenantLifecycleManager.isActive("tenant_001")) {
+ *     throw new TenantIsolationException("租户已暂停或下线");
  * }
+ *
+ * // 或在拦截器中直接校验当前租户
+ * tenantLifecycleManager.checkCurrentTenantActive();
  * }</pre>
  *
- * <p><b>实现说明：</b>当前版本使用内存 Map 存储状态，
- * 生产环境应对接 {@code ydsz_tenant} 表 + Redis 缓存。
+ * <h3>注册租户状态</h3>
+ * <pre>{@code
+ * // 新租户注册
+ * TenantLifecycleManager.register("tenant_001", TenantStatus.ACTIVE);
+ *
+ * // 欠费暂停
+ * TenantLifecycleManager.suspend("tenant_001", "欠费暂停");
+ *
+ * // 到期下线
+ * TenantLifecycleManager.offline("tenant_001");
+ *
+ * // 恢复服务
+ * TenantLifecycleManager.activate("tenant_001");
+ * }</pre>
+ *
+ * <p><b>配置说明：</b>通过 {@code ydsz.tenant.lifecycle.storage} 选择存储后端：
+ * <ul>
+ *   <li>{@code memory} — 本地内存（默认，适合单实例开发）</li>
+ *   <li>{@code redis} — Redis 共享存储（生产推荐，自动启用当 common-redis 在 classpath 时）</li>
+ * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 1.1.0
+ * @see TenantStatus
+ * @see InMemoryTenantLifecycleManager
+ * @see RedisTenantLifecycleManager
  */
-public final class TenantLifecycleManager {
+public interface TenantLifecycleManager {
 
-    private static final Map<String, TenantStatus> STATUS_MAP = new ConcurrentHashMap<>();
-    private static final Set<String> SUSPENDED_SET = ConcurrentHashMap.newKeySet();
-
-    private TenantLifecycleManager() {
-    }
+    // ========== 实例访问（静态委托方法，保持向后兼容） ==========
 
     /**
-     * 检查租户是否活跃。
+     * 获取当前 Spring 容器中的管理器实例。
      *
-     * @param tenantId 租户 ID
-     * @return true=活跃
+     * <p>通过 {@link ApplicationContext} 静态持有者延迟获取 Bean，
+     * 避免循环依赖。
+     *
+     * @return 管理器实例
      */
-    public static boolean isActive(String tenantId) {
-        if (tenantId == null) {
-            return false;
-        }
-        TenantStatus status = STATUS_MAP.get(tenantId);
-        return status == null || status == TenantStatus.ACTIVE;
+    static TenantLifecycleManager getInstance() {
+        return LifecycleManagerHolder.getInstance();
     }
 
-    /**
-     * 检查当前请求的租户是否活跃。
-     *
-     * @return true=活跃
-     * @throws TenantIsolationException 租户已暂停/下线时抛出
-     */
-    public static boolean checkCurrentTenantActive() {
+    // ========== 向后兼容的静态方法 ==========
+
+    static boolean isActive(String tenantId) {
+        return getInstance().checkIsActive(tenantId);
+    }
+
+    static boolean checkCurrentTenantActive() {
         String tenantId = RequestContext.getTenantId();
         if (tenantId == null) {
-            return true; // 无租户上下文，由 SQL 拦截器 fail-closed 处理
+            return true;
         }
-        if (SUSPENDED_SET.contains(tenantId)) {
-            throw new TenantIsolationException(
-                "租户 [" + tenantId + "] 已被暂停，拒绝执行请求。");
+        if (!getInstance().checkIsActive(tenantId)) {
+            throw new TenantIsolationException(buildSuspendedMessage(tenantId));
         }
         return true;
     }
 
+    static void activate(String tenantId) {
+        getInstance().doActivate(tenantId);
+    }
+
+    static void suspend(String tenantId, String reason) {
+        getInstance().doSuspend(tenantId, reason);
+    }
+
+    static void offline(String tenantId) {
+        getInstance().doOffline(tenantId);
+    }
+
+    static TenantStatus getStatus(String tenantId) {
+        return getInstance().doGetStatus(tenantId);
+    }
+
+    static void register(String tenantId, TenantStatus status) {
+        getInstance().doRegister(tenantId, status);
+    }
+
+    // ========== 实例方法（实现类覆盖） ==========
+
+    default boolean checkIsActive(String tenantId) {
+        if (tenantId == null) return false;
+        TenantStatus status = doGetStatus(tenantId);
+        return status == null || status == TenantStatus.ACTIVE;
+    }
+
+    void doActivate(String tenantId);
+
+    void doSuspend(String tenantId, String reason);
+
+    void doOffline(String tenantId);
+
+    TenantStatus doGetStatus(String tenantId);
+
+    void doRegister(String tenantId, TenantStatus status);
+
     /**
-     * 激活租户。
+     * 批量注册（应用启动时初始化所有租户状态）。
      *
-     * @param tenantId 租户 ID
+     * @param entries 租户 ID → 状态映射
      */
-    public static void activate(String tenantId) {
-        STATUS_MAP.put(tenantId, TenantStatus.ACTIVE);
-        SUSPENDED_SET.remove(tenantId);
+    void doRegisterAll(Map<String, TenantStatus> entries);
+
+    /**
+     * 返回是否为分布式存储后端（Redis）。
+     *
+     * @return true=分布式（多实例共享），false=本地内存
+     */
+    default boolean isDistributed() {
+        return false;
+    }
+
+    // ========== 内部工具 ==========
+
+    private static String buildSuspendedMessage(String tenantId) {
+        TenantStatus status = getInstance().doGetStatus(tenantId);
+        String statusLabel = status != null ? status.name() : "UNKNOWN";
+        return String.format("租户 [%s] 当前状态=%s，拒绝执行请求。"
+                + "如需恢复请联系管理员执行 TenantLifecycleManager.activate(\"%s\")",
+                tenantId, statusLabel, tenantId);
     }
 
     /**
-     * 暂停租户。
-     *
-     * @param tenantId 租户 ID
-     * @param reason  暂停原因
+     * Spring ApplicationContext 静态持有者（延迟获取）。
      */
-    public static void suspend(String tenantId, String reason) {
-        STATUS_MAP.put(tenantId, TenantStatus.SUSPENDED);
-        SUSPENDED_SET.add(tenantId);
-    }
+    final class LifecycleManagerHolder {
 
-    /**
-     * 下线租户。
-     *
-     * @param tenantId 租户 ID
-     */
-    public static void offline(String tenantId) {
-        STATUS_MAP.put(tenantId, TenantStatus.OFFLINE);
-        SUSPENDED_SET.add(tenantId);
-    }
+        private static volatile ApplicationContext applicationContext;
 
-    /**
-     * 获取租户状态。
-     *
-     * @param tenantId 租户 ID
-     * @return 状态，未注册返回 null
-     */
-    public static TenantStatus getStatus(String tenantId) {
-        return STATUS_MAP.get(tenantId);
-    }
+        private LifecycleManagerHolder() {
+        }
 
-    /**
-     * 注册租户状态（批量初始化用）。
-     *
-     * @param tenantId 租户 ID
-     * @param status  状态
-     */
-    public static void register(String tenantId, TenantStatus status) {
-        STATUS_MAP.put(tenantId, status);
-        if (status == TenantStatus.SUSPENDED || status == TenantStatus.OFFLINE) {
-            SUSPENDED_SET.add(tenantId);
-        } else {
-            SUSPENDED_SET.remove(tenantId);
+        static void init(ApplicationContext ctx) {
+            applicationContext = ctx;
+        }
+
+        static TenantLifecycleManager getInstance() {
+            if (applicationContext == null) {
+                // 未初始化时回退到纯内存实现（开发期兼容）
+                return InMemoryTenantLifecycleManager.INSTANCE;
+            }
+            try {
+                return applicationContext.getBean(TenantLifecycleManager.class);
+            } catch (Exception e) {
+                return InMemoryTenantLifecycleManager.INSTANCE;
+            }
         }
     }
 }
