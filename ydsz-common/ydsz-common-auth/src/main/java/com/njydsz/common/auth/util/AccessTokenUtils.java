@@ -49,7 +49,7 @@ public class AccessTokenUtils {
 
         HttpServletRequest request = RequestContextUtils.getRequest();
         if (request == null) {
-            log.debug("HttpServletRequest 为空，无法获取 Token");
+            log.warn("HttpServletRequest 为空，无法获取 Token");
             return null;
         }
 

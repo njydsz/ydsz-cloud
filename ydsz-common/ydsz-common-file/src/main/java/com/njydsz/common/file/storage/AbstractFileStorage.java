@@ -15,8 +15,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
@@ -162,6 +165,17 @@ public abstract class AbstractFileStorage implements IFileStorage {
      */
     private final ConcurrentHashMap<String, MessageDigest> chunkedMd5DigestMap =
             new ConcurrentHashMap<>();
+
+    /**
+     * 批量删除专用线程池（4 线程，IO 密集型），
+     * 避免使用 ForkJoinPool.commonPool() 影响同 JVM 内其他 parallelStream。
+     */
+    private static final ExecutorService DELETE_EXECUTOR =
+            Executors.newFixedThreadPool(4, r -> {
+                Thread t = new Thread(r, "file-batch-delete-" + System.nanoTime());
+                t.setDaemon(true);
+                return t;
+            });
 
     protected AbstractFileStorage(FileProperties fileProperties) {
         this(fileProperties, null);
@@ -515,17 +529,20 @@ public abstract class AbstractFileStorage implements IFileStorage {
         }
         ConcurrentLinkedQueue<String> successList = new ConcurrentLinkedQueue<>();
         Map<String, String> failedMap = new ConcurrentHashMap<>();
-        // P0-8: Parallel batch delete
-        objectNames.parallelStream().forEach(objectName -> {
-            try {
-                delete(bucketName, objectName);
-                successList.add(objectName);
-            } catch (Exception e) {
-                String errorMsg = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
-                failedMap.put(objectName, errorMsg);
-                log.error("batch delete failed, object={}", objectName, e);
-            }
-        });
+        // P0-8: Parallel batch delete using dedicated executor (not ForkJoinPool.commonPool)
+        List<CompletableFuture<Void>> futures = objectNames.stream()
+                .map(objectName -> CompletableFuture.runAsync(() -> {
+                    try {
+                        delete(bucketName, objectName);
+                        successList.add(objectName);
+                    } catch (Exception e) {
+                        String errorMsg = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+                        failedMap.put(objectName, errorMsg);
+                        log.error("batch delete failed, object={}", objectName, e);
+                    }
+                }, DELETE_EXECUTOR))
+                .toList();
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
         return new BatchDeleteResult(List.copyOf(successList), Map.copyOf(failedMap));
     }
 

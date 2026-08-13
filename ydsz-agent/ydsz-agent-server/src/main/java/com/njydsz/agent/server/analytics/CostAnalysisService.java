@@ -238,9 +238,9 @@ public class CostAnalysisService {
             if (model == null || model.isBlank()) {
                 return 0.001;
             }
-            for (String key : prices.keySet()) {
-                if (model.toLowerCase().contains(key)) {
-                    return prices.get(key);
+            for (Map.Entry<String, Double> entry : prices.entrySet()) {
+                if (model.toLowerCase().contains(entry.getKey())) {
+                    return entry.getValue();
                 }
             }
             // 未命中特定模型配置同样回退到兜底单价

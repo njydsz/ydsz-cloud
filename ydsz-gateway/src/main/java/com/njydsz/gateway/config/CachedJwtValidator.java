@@ -185,7 +185,7 @@ public class CachedJwtValidator {
                         String token = message.getMessage();
                         // 收到广播后本地清除（幂等操作，回环消息无副作用）
                         claimsCache.invalidate(token);
-                        log.debug("[JwtCache] 收到广播失效事件 token={}", maskToken(token));
+                        log.info("[JwtCache] 收到广播失效事件 token={}", maskToken(token));
                     })
                     .onErrorContinue((e, o) -> log.warn("[JwtCache] Redis 广播订阅异常: {}", e.getMessage()))
                     .subscribe();
@@ -297,7 +297,7 @@ public class CachedJwtValidator {
         }
         // 1. 本地立即清除
         claimsCache.invalidate(jwt);
-        log.debug("[JwtCache] Token 已从本地缓存移除 jwt={}", maskToken(jwt));
+        log.info("[JwtCache] Token 已从本地缓存移除 jwt={}", maskToken(jwt));
 
         // 2. P1: 广播到其他实例（异步，不阻塞主流程）
         broadcastInvalidation(jwt);

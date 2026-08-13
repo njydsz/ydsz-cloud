@@ -1,6 +1,5 @@
 package com.njydsz.common.jdbc.config;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -16,18 +15,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.event.EventListener;
-import org.springframework.core.annotation.AnnotationUtils;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import org.springframework.core.io.support.ResourcePatternResolver;
-import org.springframework.core.type.classreading.CachingMetadataReaderFactory;
-import org.springframework.core.type.classreading.MetadataReader;
-import org.springframework.core.type.classreading.MetadataReaderFactory;
-import org.springframework.util.ClassUtils;
 
 import com.baomidou.mybatisplus.annotation.DbType;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.Version;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
@@ -41,7 +30,6 @@ import com.njydsz.common.jdbc.handler.UpdatedByHandler;
 import com.njydsz.common.jdbc.interceptor.ColPermissionInnerInterceptor;
 import com.njydsz.common.jdbc.interceptor.CombinedFieldFillInterceptor;
 import com.njydsz.common.jdbc.interceptor.LogicalDeleteInterceptor;
-import com.njydsz.common.jdbc.interceptor.OptimisticLockInterceptor;
 import com.njydsz.common.jdbc.interceptor.RowPermissionInnerInterceptor;
 import com.njydsz.common.jdbc.interceptor.SqlFirewallInnerInterceptor;
 import com.njydsz.common.jdbc.interceptor.SqlTraceInnerInterceptor;
@@ -56,7 +44,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>配置 MyBatis Plus 的各种插件和拦截器，包括：
  * <ul>
- *   <li>乐观锁拦截器：二选一——自定义实现（BaseEntity + revision 列）或内置 OptimisticLockerInnerInterceptor（@Version 注解）</li>
+ *   <li>乐观锁拦截器：MP 内置 {@code OptimisticLockerInnerInterceptor}（配合实体 {@code @Version} 注解）</li>
  *   <li>逻辑删除拦截器（自定义实现）：自动追加 deleted 过滤条件，替代 @TableLogic 注解</li>
  *   <li>字段填充拦截器：自动填充 createdBy、createdAt、updatedBy、updatedAt</li>
  *   <li>SPI 拦截器：外部模块通过 {@link InnerInterceptorProvider} 注入（如 common-tenant 的租户隔离）</li>
@@ -66,7 +54,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>拦截器执行顺序（按添加顺序）：
  * <ol>
- *   <li>OptimisticLocker - 乐观锁（自定义 或 内置，二选一）</li>
+ *   <li>OptimisticLocker - 乐观锁（内置 @Version）</li>
  *   <li>LogicalDeleteInterceptor - 逻辑删除（SELECT/DELETE）</li>
  *   <li>FieldFillInterceptor - 字段填充</li>
  *   <li>SPI Interceptors - 外部模块通过 {@link InnerInterceptorProvider} SPI 注入（按 order 排序）</li>
@@ -81,7 +69,6 @@ import lombok.extern.slf4j.Slf4j;
  * @author ydsz-team
  * @since 1.0.0
  * @see MybatisPlusInterceptor
- * @see OptimisticLockInterceptor
  * @see LogicalDeleteInterceptor
  * @see InnerInterceptorProvider
  */
@@ -90,7 +77,6 @@ import lombok.extern.slf4j.Slf4j;
 @EnableConfigurationProperties({
     FieldFillConfiguration.class,
     DataPermissionConfiguration.class,
-    OptimisticLockConfiguration.class,
     LogicalDeleteConfiguration.class,
     PaginationProperties.class,
     SqlFirewallProperties.class,
@@ -103,7 +89,6 @@ public class MybatisPlusConfiguration {
     private final FieldFillConfiguration fieldFillConfiguration;
     private final DataPermissionConfiguration dataPermissionConfiguration;
     private final ObjectProvider<DataScopeIdExpander> dataScopeIdExpanderProvider;
-    private final OptimisticLockConfiguration optimisticLockConfiguration;
     private final LogicalDeleteConfiguration logicalDeleteConfiguration;
     private final PaginationProperties paginationProperties;
     private final SqlFirewallProperties sqlFirewallProperties;
@@ -114,7 +99,6 @@ public class MybatisPlusConfiguration {
     public MybatisPlusConfiguration(FieldFillConfiguration fieldFillConfiguration,
                                      DataPermissionConfiguration dataPermissionConfiguration,
                                      ObjectProvider<DataScopeIdExpander> dataScopeIdExpanderProvider,
-                                     OptimisticLockConfiguration optimisticLockConfiguration,
                                      LogicalDeleteConfiguration logicalDeleteConfiguration,
                                      PaginationProperties paginationProperties,
                                      SqlFirewallProperties sqlFirewallProperties,
@@ -124,7 +108,6 @@ public class MybatisPlusConfiguration {
         this.fieldFillConfiguration = fieldFillConfiguration;
         this.dataPermissionConfiguration = dataPermissionConfiguration;
         this.dataScopeIdExpanderProvider = dataScopeIdExpanderProvider;
-        this.optimisticLockConfiguration = optimisticLockConfiguration;
         this.logicalDeleteConfiguration = logicalDeleteConfiguration;
         this.paginationProperties = paginationProperties;
         this.sqlFirewallProperties = sqlFirewallProperties;
@@ -138,7 +121,7 @@ public class MybatisPlusConfiguration {
      *
      * <p>按顺序添加以下拦截器：
      * <ol>
-     *   <li>乐观锁拦截器（自定义实现，替代@Version）</li>
+     *   <li>乐观锁拦截器（MP 内置，配合实体 @Version 注解）</li>
      *   <li>逻辑删除拦截器（自定义实现，替代@TableLogic）</li>
      *   <li>字段填充拦截器（针对非实体类的更新操作）</li>
      *   <li>SPI 拦截器（外部模块通过 {@link InnerInterceptorProvider} 注入，按 order 排序）</li>
@@ -147,7 +130,6 @@ public class MybatisPlusConfiguration {
      * </ol>
      *
      * @return MybatisPlusInterceptor 实例
-     * @see OptimisticLockInterceptor
      * @see LogicalDeleteInterceptor
      * @see InnerInterceptorProvider
      * @see PaginationInnerInterceptor
@@ -157,18 +139,9 @@ public class MybatisPlusConfiguration {
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
 
-        // 1. 乐观锁拦截器
-        if (Boolean.TRUE.equals(optimisticLockConfiguration.isEnable())) {
-            OptimisticLockInterceptor optimisticLockInterceptor = new OptimisticLockInterceptor();
-            optimisticLockInterceptor.setRevisionColumn(optimisticLockConfiguration.getRevisionColumn());
-            optimisticLockInterceptor.setDefaultRevisionValue(optimisticLockConfiguration.getDefaultRevisionValue());
-            interceptor.addInnerInterceptor(optimisticLockInterceptor);
-            log.debug("MyBatis Plus: OptimisticLock interceptor (custom) enabled (revisionColumn={})",
-                    optimisticLockConfiguration.getRevisionColumn());
-        } else {
-            interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());
-            log.debug("MyBatis Plus: OptimisticLockerInnerInterceptor (built-in) enabled for @Version entities");
-        }
+        // 1. 乐观锁拦截器（MP 内置，处理实体 @Version 字段的参数映射与版本递增）
+        interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());
+        log.debug("MyBatis Plus: OptimisticLockerInnerInterceptor (built-in) enabled for @Version entities");
 
         // 2. 逻辑删除拦截器（自定义实现）
         if (Boolean.TRUE.equals(logicalDeleteConfiguration.isEnable())) {
@@ -302,63 +275,6 @@ public class MybatisPlusConfiguration {
         }
     }
 
-    /**
-     * 启动期校验：检查 OptimisticLockInterceptor 与 @Version 注解冲突
-     *
-     * @param event 应用就绪事件
-     */
-    @EventListener(ApplicationReadyEvent.class)
-    public void validateOptimisticLockConflict(ApplicationReadyEvent event) {
-        if (!Boolean.TRUE.equals(optimisticLockConfiguration.isEnable())) {
-            return;
-        }
-
-        List<String> entitiesWithVersion = new ArrayList<>();
-
-        try {
-            ResourcePatternResolver resourcePatternResolver = new PathMatchingResourcePatternResolver();
-            MetadataReaderFactory metadataReaderFactory = new CachingMetadataReaderFactory(resourcePatternResolver);
-
-            String scanPattern = "classpath*:com/njydsz/**/*.class";
-            Resource[] resources = resourcePatternResolver.getResources(scanPattern);
-
-            for (Resource resource : resources) {
-                if (resource.isReadable()) {
-                    MetadataReader metadataReader = metadataReaderFactory.getMetadataReader(resource);
-                    String className = metadataReader.getClassMetadata().getClassName();
-
-                    try {
-                        Class<?> entityClass = ClassUtils.forName(className, getClass().getClassLoader());
-
-                        if (entityClass.isAnnotationPresent(TableName.class)) {
-                            if (hasVersionAnnotation(entityClass)) {
-                                entitiesWithVersion.add(entityClass.getName());
-                            }
-                        }
-                    } catch (ClassNotFoundException | NoClassDefFoundError e) {
-                        // 忽略无法加载的类
-                    }
-                }
-            }
-        } catch (Exception e) {
-            log.warn("【MyBatis Plus 配置警告】扫描实体类时发生异常", e);
-        }
-
-        if (!entitiesWithVersion.isEmpty()) {
-            log.warn("【MyBatis Plus 配置警告】OptimisticLockInterceptor 已启用，但以下实体类使用了 @Version 注解：{}。" +
-                     "建议移除 @Version 注解，避免与自定义乐观锁拦截器冲突。", entitiesWithVersion);
-        }
-    }
-
-    private boolean hasVersionAnnotation(Class<?> entityClass) {
-        for (Field field : entityClass.getDeclaredFields()) {
-            if (AnnotationUtils.findAnnotation(field, Version.class) != null) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     // ====================================================================
     // 启动期 Banner 打印
     // ====================================================================
@@ -382,10 +298,8 @@ public class MybatisPlusConfiguration {
 
         List<FeatureLine> features = new ArrayList<>();
 
-        // 1. 乐观锁（二选一始终启用）
-        boolean customOptimisticLock = Boolean.TRUE.equals(optimisticLockConfiguration.isEnable());
-        features.add(new FeatureLine("Optimistic Lock", true,
-                customOptimisticLock ? "Custom @Revision" : "Built-in @Version"));
+        // 1. 乐观锁（MP 内置，配合实体 @Version 注解）
+        features.add(new FeatureLine("Optimistic Lock", true, "Built-in @Version"));
 
         // 2. 逻辑删除
         boolean logicalDelete = Boolean.TRUE.equals(logicalDeleteConfiguration.isEnable());

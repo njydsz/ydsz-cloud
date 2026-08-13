@@ -1,6 +1,7 @@
 package com.njydsz.common.auth.token;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -110,7 +111,7 @@ public class JwtTokenService implements TokenService {
     @Override
     public boolean validateAccessToken(String token) {
         if (tokenBlacklistService != null && tokenBlacklistService.isBlacklisted(token)) {
-            log.debug("Access token is blacklisted");
+            log.warn("Access token is blacklisted");
             return false;
         }
         return validateToken(token, TOKEN_TYPE_ACCESS);
@@ -119,7 +120,7 @@ public class JwtTokenService implements TokenService {
     @Override
     public boolean validateRefreshToken(String token) {
         if (tokenBlacklistService != null && tokenBlacklistService.isBlacklisted(token)) {
-            log.debug("Refresh token is blacklisted");
+            log.warn("Refresh token is blacklisted");
             return false;
         }
         return validateToken(token, TOKEN_TYPE_REFRESH);
@@ -161,7 +162,7 @@ public class JwtTokenService implements TokenService {
             // 颁发新 token 后将旧 refresh_token 加入黑名单，防止 refresh_token 重放攻击
             if (tokenBlacklistService != null && newAccessToken != null) {
                 tokenBlacklistService.addToBlacklist(refreshToken);
-                log.debug("旧 refresh_token 已加入黑名单，防止重放");
+                log.warn("旧 refresh_token 已加入黑名单，防止重放");
             }
             return newAccessToken;
         } finally {
@@ -182,8 +183,8 @@ public class JwtTokenService implements TokenService {
      * </ul>
      */
     private String buildToken(UserInfo userInfo, String tokenType, long expireSeconds) {
-        Date now = new Date();
-        Date expiration = new Date(now.getTime() + expireSeconds * 1000);
+        Instant now = Instant.now();
+        Instant expiration = now.plusSeconds(expireSeconds);
 
         Map<String, Object> claims = new HashMap<>();
         claims.put(CLAIM_USER_ID, userInfo.getUserId());
@@ -198,8 +199,8 @@ public class JwtTokenService implements TokenService {
                 .id(String.valueOf(snowflakeIdGenerator.nextId()))
                 .issuer(tokenProperties.getIssuer())
                 .subject(tokenProperties.getSubject())
-                .issuedAt(now)
-                .expiration(expiration);
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expiration));
 
         // P1: aud — 受众声明（可选），配置后强制校验，防止跨服务令牌重用
         String audience = tokenProperties.getAudience();

@@ -1,9 +1,7 @@
 package com.njydsz.common.exception.custom;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.springframework.http.HttpStatus;
 
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.code.ResultCode;
@@ -14,6 +12,8 @@ import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.enums.ExceptionLevel;
 
 import lombok.ToString;
+
+import org.springframework.http.HttpStatus;
 
 /**
  * 业务异常类
@@ -69,8 +69,6 @@ public class BusinessException extends AbstractYdszException {
     private static final ExceptionCategory DEFAULT_CATEGORY = ExceptionCategory.BUSINESS;
     /** 默认错误码 */
     private static final String DEFAULT_CODE = CoreExceptionCode.FAIL.getCode();
-
-    private transient ConcurrentHashMap<String, Object> dataMap;
 
     // ==================== 核心构造函数（仅限 3 个） ====================
 
@@ -176,16 +174,18 @@ public class BusinessException extends AbstractYdszException {
     /**
      * 添加附加数据（链式调用）
      *
+     * <p>统一写入基类 {@link #extData}（与 Builder 的 {@code extData(...)} 共用同一存储），
+     * 避免双轨存储导致的数据覆盖与语义混乱。
+     *
      * @param key   数据键
      * @param value 数据值
      * @return 当前异常对象
      */
     public BusinessException data(String key, Object value) {
-        if (this.dataMap == null) {
-            this.dataMap = new ConcurrentHashMap<>();
-            this.extData = this.dataMap;
+        if (this.extData == null) {
+            this.extData = new LinkedHashMap<>(2);
         }
-        this.dataMap.put(key, value);
+        this.extData.put(key, value);
         return this;
     }
 
@@ -319,6 +319,9 @@ public class BusinessException extends AbstractYdszException {
             exception.setExtData(extData);
             if (cause != null) {
                 exception.initCause(cause);
+            }
+            if (message != null) {
+                exception.setMessage(message);
             }
             return exception;
         }

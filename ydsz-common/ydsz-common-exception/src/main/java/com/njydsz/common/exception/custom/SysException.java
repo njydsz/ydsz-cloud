@@ -263,19 +263,18 @@ public class SysException extends AbstractYdszException {
         protected SysException doBuild(String code, String key, Object[] params, int httpStatus,
                                        ExceptionLevel level, ExceptionCategory category,
                                        Throwable cause, Map<String, Object> extData, String message) {
-            SysException exception;
+            SysException exception = new SysException();
+            exception.initFields(code, key, params);
             if (cause != null) {
-                exception = new SysException();
-                exception.initFields(code, key, params);
                 exception.initCause(cause);
-            } else {
-                exception = new SysException();
-                exception.initFields(code, key, params);
             }
             exception.setHttpStatus(httpStatus);
             exception.setLevel(level);
             exception.setCategory(category);
             exception.setExtData(extData);
+            if (message != null) {
+                exception.setMessage(message);
+            }
             return exception;
         }
     }
