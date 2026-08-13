@@ -14,9 +14,9 @@ import org.apache.ibatis.mapping.SqlCommandType;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
-import com.baomidou.mybatisplus.extension.parser.JsqlParserSupport;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.jdbc.monitor.SqlAstCache;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -27,7 +27,6 @@ import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
-import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.Statement;
@@ -101,7 +100,7 @@ import net.sf.jsqlparser.statement.update.Update;
 @Slf4j
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class LogicalDeleteInterceptor extends JsqlParserSupport implements InnerInterceptor {
+public class LogicalDeleteInterceptor extends CachingJsqlParserSupport implements InnerInterceptor {
 
     /**
      * 默认的删除标记字段名
@@ -277,7 +276,7 @@ public class LogicalDeleteInterceptor extends JsqlParserSupport implements Inner
         PluginUtils.MPBoundSql mpBs = mpSh.mPBoundSql();
         String originalSql = mpBs.sql();
         try {
-            Statement statement = CCJSqlParserUtil.parse(originalSql);
+            Statement statement = SqlAstCache.getInstance().parse(originalSql);
             if (!(statement instanceof Delete)) {
                 throw new IllegalStateException(
                         "Expected DELETE statement but got: " + statement.getClass().getSimpleName());

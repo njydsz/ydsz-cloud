@@ -431,6 +431,93 @@ public class RedisRateLimiter {
             "redis.call('PEXPIRE', key, windowMs + 1000) " +
             "return {1, totalCount + 1}";
 
+    /**
+     * ZSet 精确滑动窗口限流 Lua 脚本（完整版）
+     *
+     * <p>使用 ZSET 存储每个请求的唯一 member（时间戳+计数器），score 为请求时间戳。
+     * 精度达到毫秒级，限流平滑无边界突发。内存占用为 O(requestCount)。
+     *
+     * <p>逻辑：
+     * <ol>
+     *   <li>移除窗口之外的旧记录（score < now - windowMs）</li>
+     *   <li>统计当前窗口内的记录数</li>
+     *   <li>若记录数 >= limit，拒绝</li>
+     *   <li>否则添加当前请求 member 并设置过期时间</li>
+     * </ol>
+     */
+    private static final String SLIDING_WINDOW_ZSET_LUA =
+            "local key = KEYS[1] " +
+            "local now = tonumber(ARGV[1]) " +
+            "local windowMs = tonumber(ARGV[2]) " +
+            "local limit = tonumber(ARGV[3]) " +
+            "local member = ARGV[4] " +
+            "local clearBefore = now - windowMs " +
+            "redis.call('ZREMRANGEBYSCORE', key, 0, clearBefore) " +
+            "local current = redis.call('ZCARD', key) " +
+            "if current >= limit then " +
+            "  return {0, current} " +
+            "end " +
+            "redis.call('ZADD', key, now, member) " +
+            "redis.call('PEXPIRE', key, windowMs + 1000) " +
+            "return {1, current + 1}";
+
+    // ==================== P2-13: 恢复 ZSet 滑动窗口完整版 ====================
+
+    /**
+     * 滑动窗口限流（ZSet 精确版，保留用于需要毫秒级精度的场景）
+     *
+     * <p>使用 Redis ZSET 存储每个请求的唯一标记，精度达到毫秒级。
+     * 与分桶版相比精度更高但内存占用随请求量线性增长。
+     *
+     * <p>适用场景：
+     * <ul>
+     *   <li>限流阈值较低（< 1000 次/窗口）</li>
+     *   <li>需要严格滑动窗口语义、不能容忍桶边界突发的场景</li>
+     *   <li>对内存敏感度较低，对精度敏感度较高的场景</li>
+     * </ul>
+     *
+     * @param key    限流维度键
+     * @param limit  窗口内最大请求数
+     * @param window 时间窗口长度
+     * @return true=允许，false=拒绝
+     */
+    public boolean tryAcquireSlidingWindowExact(String key, int limit, Duration window) {
+        if (key == null || limit <= 0 || window == null || window.isZero() || window.isNegative()) {
+            return false;
+        }
+        try {
+            String formattedKey = formatSlidingWindowExactKey(key);
+            long now = System.currentTimeMillis();
+            long windowMs = window.toMillis();
+            // member = 时间戳-计数器，保证唯一性
+            String member = now + "-" + Thread.currentThread().getId() + "-" + System.nanoTime();
+            DefaultRedisScript<?> script = getOrCreateScript(
+                    "sliding_window_zset", SLIDING_WINDOW_ZSET_LUA, List.class);
+            Object rawResult = redisTemplate.execute(script,
+                    Collections.singletonList(formattedKey),
+                    String.valueOf(now),
+                    String.valueOf(windowMs),
+                    String.valueOf(limit),
+                    member);
+            List<Long> result = castToLongList(rawResult);
+            if (result.isEmpty()) {
+                return false;
+            }
+            return result.get(0) != null && result.get(0) == 1L;
+        } catch (Exception e) {
+            log.error("【RedisRateLimiter】ZSet 精确滑动窗口限流异常 | key={} | error={}", key, e);
+            return handleException("ZSet 精确滑动窗口限流", key, e);
+        }
+    }
+
+    private String formatSlidingWindowExactKey(String key) {
+        String prefix = redisProperties != null ? redisProperties.getKeyPrefix() : null;
+        if (prefix == null || prefix.isEmpty()) {
+            return "ratelimit:exact:" + key;
+        }
+        return prefix + ":ratelimit:exact:" + key;
+    }
+
     // ==================== P1-10: 高阶限流工具方法 ====================
 
     /**

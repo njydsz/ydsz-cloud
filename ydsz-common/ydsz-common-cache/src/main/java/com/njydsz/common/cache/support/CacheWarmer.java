@@ -15,7 +15,6 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 
 import com.njydsz.common.cache.api.Cache;
-import com.njydsz.common.cache.support.CacheThreadPoolManager;
 
 /**
  * 缓存预热器 — Spring 生命周期管理（增强版）

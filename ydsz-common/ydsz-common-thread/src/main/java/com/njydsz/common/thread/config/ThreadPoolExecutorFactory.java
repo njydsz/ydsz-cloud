@@ -1,6 +1,7 @@
 package com.njydsz.common.thread.config;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionHandler;
@@ -129,7 +130,7 @@ public class ThreadPoolExecutorFactory implements ApplicationContextAware, Initi
                     log.warn("ydsz-thread: Bean [{}] 不是 TaskDecorator 类型，跳过 (pool={})", beanName, name);
                     return null;
                 })
-                .filter(java.util.Objects::nonNull)
+                .filter(Objects::nonNull)
                 .toList();
 
         if (!decorators.isEmpty()) {

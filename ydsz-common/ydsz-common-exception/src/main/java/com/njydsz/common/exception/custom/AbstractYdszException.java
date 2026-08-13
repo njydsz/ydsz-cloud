@@ -46,7 +46,6 @@ public abstract class AbstractYdszException extends RuntimeException implements 
     protected transient Object[] params;
     /**
      * 按 Locale 缓存已解析消息，computeIfAbsent 保证并发安全且不串语言
-     * @param 2 2 参数说明
      */
     protected final ConcurrentHashMap<Locale, String> messageCache = new ConcurrentHashMap<>(2);
     /**

@@ -40,7 +40,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  * }
  * }</pre>
  *
- * <p>v1.3.0 新增：从 ydzs-cronjob 的 ThreadPoolHotUpdateListener 抽象为通用组件。
+ * <p>v1.3.0 新增：从 ydsz-cronjob 的 ThreadPoolHotUpdateListener 抽象为通用组件。
  *
  * <p>v1.3.1 变更：
  * <ul>

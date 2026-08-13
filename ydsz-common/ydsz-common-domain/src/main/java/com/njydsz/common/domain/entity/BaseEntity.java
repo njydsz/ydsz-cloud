@@ -8,7 +8,6 @@ import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -53,7 +52,6 @@ import com.njydsz.common.json.annotation.JsonIgnore;
 @JsonClass(description = "领域实体基类，纯领域无持久化语义")
 @Getter
 @Setter
-@EqualsAndHashCode(of = {"id"}, callSuper = false)
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
@@ -93,6 +91,43 @@ public abstract class BaseEntity<T extends Serializable> implements Serializable
     private transient List<Object> domainEvents = new ArrayList<>();
 
     // ======================== 实现 EventRegistry 接口 ========================
+
+    /**
+     * 基于 id 判同（DDD 实体标准语义）。
+     *
+     * <p>与 Lombok 默认 {@code @EqualsAndHashCode(of = "id")} 的区别：
+     * 当双方 id 都为 {@code null}（瞬态未持久化）时返回 {@code false}，
+     * 避免两个不同瞬态对象因 id 同为 null 被误判为 equal，
+     * 防止 Set/Map 中出现意料之外的折叠行为。
+     *
+     * <p>仅 {@code this == other} 在 id 同为 null 时仍返回 {@code true}（满足自反性）。
+     *
+     * @param o 比较对象
+     * @return id 非 null 且相等时返回 true；双方 id 为 null 时仅同一引用返回 true
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        BaseEntity<?> other = (BaseEntity<?>) o;
+        return id != null && java.util.Objects.equals(id, other.id);
+    }
+
+    /**
+     * 基于 id 计算 hashCode。
+     *
+     * <p>id 为 null 时使用类身份的常量，保证瞬态对象也能安全用于哈希容器。
+     *
+     * @return 哈希值
+     */
+    @Override
+    public int hashCode() {
+        return id != null ? java.util.Objects.hash(id) : java.util.Objects.hash(getClass());
+    }
 
     /**
      * {@inheritDoc}

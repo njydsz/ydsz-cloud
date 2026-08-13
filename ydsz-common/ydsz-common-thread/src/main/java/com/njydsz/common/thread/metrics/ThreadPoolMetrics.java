@@ -8,6 +8,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.binder.MeterBinder;
 
@@ -47,7 +48,7 @@ public class ThreadPoolMetrics implements MeterBinder {
     private final ThreadPoolTaskExecutor taskExecutor;
     private final String poolName;
     private final String metricPrefix;
-    private final Iterable<io.micrometer.core.instrument.Tag> tags;
+    private final Iterable<Tag> tags;
 
     private final AtomicReference<Counter> rejectedCounterRef = new AtomicReference<>();
 
@@ -56,7 +57,7 @@ public class ThreadPoolMetrics implements MeterBinder {
     }
 
     public ThreadPoolMetrics(ThreadPoolTaskExecutor taskExecutor, String poolName,
-                              String metricPrefix, Iterable<io.micrometer.core.instrument.Tag> tags) {
+                              String metricPrefix, Iterable<Tag> tags) {
         this.taskExecutor = taskExecutor;
         this.poolName = poolName;
         this.metricPrefix = metricPrefix != null ? metricPrefix : DEFAULT_METRIC_PREFIX;

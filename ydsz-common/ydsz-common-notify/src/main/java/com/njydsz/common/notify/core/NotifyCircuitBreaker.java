@@ -63,23 +63,23 @@ public class NotifyCircuitBreaker {
     /** HALF_OPEN 状态下的探测许可数，确保仅单个请求通过 */
     private final AtomicInteger halfOpenPermits = new AtomicInteger(0);
 
-	/**
-	 * 使用默认参数创建熔断器
-	 *
-	 * @param channel 通知渠道
-	 */
-	public NotifyCircuitBreaker(NotifyChannel channel) {
+    /**
+     * 使用默认参数创建熔断器
+     *
+     * @param channel 通知渠道
+     */
+    public NotifyCircuitBreaker(NotifyChannel channel) {
         this(channel, DEFAULT_FAILURE_THRESHOLD, DEFAULT_RECOVERY_TIMEOUT_MS);
     }
 
-	/**
-	 * 创建熔断器
-	 *
-	 * @param channel           通知渠道
-	 * @param failureThreshold  连续失败阈值
-	 * @param recoveryTimeoutMs 恢复等待时间（毫秒）
-	 */
-	public NotifyCircuitBreaker(NotifyChannel channel, int failureThreshold, long recoveryTimeoutMs) {
+    /**
+     * 创建熔断器
+     *
+     * @param channel           通知渠道
+     * @param failureThreshold  连续失败阈值
+     * @param recoveryTimeoutMs 恢复等待时间（毫秒）
+     */
+    public NotifyCircuitBreaker(NotifyChannel channel, int failureThreshold, long recoveryTimeoutMs) {
         this.channel = channel;
         this.failureThreshold = failureThreshold > 0 ? failureThreshold : DEFAULT_FAILURE_THRESHOLD;
         this.recoveryTimeoutMs = recoveryTimeoutMs > 0 ? recoveryTimeoutMs : DEFAULT_RECOVERY_TIMEOUT_MS;
@@ -115,9 +115,9 @@ public class NotifyCircuitBreaker {
         return halfOpenPermits.getAndDecrement() > 0;
     }
 
-	/**
-	 * 记录发送成功，重置连续失败计数并恢复到 CLOSED 状态
-	 */
+    /**
+     * 记录发送成功，重置连续失败计数并恢复到 CLOSED 状态
+     */
     public void recordSuccess() {
         consecutiveFailures.set(0);
         State old = stateRef.getAndSet(State.CLOSED);
@@ -126,9 +126,9 @@ public class NotifyCircuitBreaker {
         }
     }
 
-	/**
-	 * 记录发送失败，连续失败超过阈值时触发熔断
-	 */
+    /**
+     * 记录发送失败，连续失败超过阈值时触发熔断
+     */
     public void recordFailure() {
         lastFailureTime = System.currentTimeMillis();
         int failures = consecutiveFailures.incrementAndGet();
@@ -152,39 +152,39 @@ public class NotifyCircuitBreaker {
         }
     }
 
-	/**
-	 * 获取熔断器当前状态
-	 *
-	 * @return 熔断器状态
-	 */
-	public State getState() {
+    /**
+     * 获取熔断器当前状态
+     *
+     * @return 熔断器状态
+     */
+    public State getState() {
         return stateRef.get();
     }
 
-	/**
-	 * 获取连续失败次数
-	 *
-	 * @return 连续失败计数
-	 */
-	public int getConsecutiveFailures() {
+    /**
+     * 获取连续失败次数
+     *
+     * @return 连续失败计数
+     */
+    public int getConsecutiveFailures() {
         return consecutiveFailures.get();
     }
 
-	/**
-	 * 获取关联的通知渠道
-	 *
-	 * @return 通知渠道
-	 */
-	public NotifyChannel getChannel() {
+    /**
+     * 获取关联的通知渠道
+     *
+     * @return 通知渠道
+     */
+    public NotifyChannel getChannel() {
         return channel;
     }
 
-	/**
-	 * 判断熔断器是否处于非 CLOSED 状态（即熔断或半开）
-	 *
-	 * @return true 表示熔断器已开启
-	 */
-	public boolean isOpen() {
+    /**
+     * 判断熔断器是否处于非 CLOSED 状态（即熔断或半开）
+     *
+     * @return true 表示熔断器已开启
+     */
+    public boolean isOpen() {
         return stateRef.get() != State.CLOSED;
     }
 }

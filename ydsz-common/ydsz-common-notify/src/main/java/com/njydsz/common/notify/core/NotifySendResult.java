@@ -8,42 +8,42 @@ package com.njydsz.common.notify.core;
  */
 public interface NotifySendResult {
 
-	/**
-	 * 是否发送成功
-	 */
-	boolean isSuccess();
+    /**
+     * 是否发送成功
+     */
+    boolean isSuccess();
 
-	/**
-	 * 获取消息ID
-	 */
-	String getMessageId();
+    /**
+     * 获取消息ID
+     */
+    String getMessageId();
 
-	/**
-	 * 获取错误信息
-	 */
-	String getErrorMessage();
+    /**
+     * 获取错误信息
+     */
+    String getErrorMessage();
 
-	/**
-	 * 获取发送渠道
-	 */
-	String getChannel();
+    /**
+     * 获取发送渠道
+     */
+    String getChannel();
 
-	/**
-	 * 获取发送时间戳
-	 */
-	long getSendTime();
+    /**
+     * 获取发送时间戳
+     */
+    long getSendTime();
 
-	/**
-	 * 创建成功结果
-	 */
-	static NotifySendResult success(String messageId, String channel) {
-		return new DefaultNotifyResult(true, messageId, null, channel, System.currentTimeMillis());
-	}
+    /**
+     * 创建成功结果
+     */
+    static NotifySendResult success(String messageId, String channel) {
+        return new DefaultNotifyResult(true, messageId, null, channel, System.currentTimeMillis());
+    }
 
-	/**
-	 * 创建失败结果
-	 */
-	static NotifySendResult failure(String errorMessage, String channel) {
-		return new DefaultNotifyResult(false, null, errorMessage, channel, System.currentTimeMillis());
-	}
+    /**
+     * 创建失败结果
+     */
+    static NotifySendResult failure(String errorMessage, String channel) {
+        return new DefaultNotifyResult(false, null, errorMessage, channel, System.currentTimeMillis());
+    }
 }

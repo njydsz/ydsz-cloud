@@ -1,6 +1,8 @@
 package com.njydsz.common.json.provider;
 
-import java.util.Set;
+import com.njydsz.common.json.naming.PropertyNamingStrategy;
+import com.njydsz.common.json.parser.JsonParserUtil;
+import com.njydsz.common.json.provider.SerializationProvider.SerializationContext;
 
 /**
  * ThreadLocal 快照（用于单次配置序列化的线程安全保存/恢复）。
@@ -31,14 +33,15 @@ import java.util.Set;
  * @since 1.0.0
  */
 public final class ThreadLocalSnapshot {
+
     private final boolean savedWriteNulls;
     private final boolean savedPrettyPrint;
     private final String savedCircularRefStrategy;
     private final boolean savedSerializeEnumUsingOrdinal;
-    private final Set<String> savedExcludedFields;
+    private final java.util.Set<String> savedExcludedFields;
     private final String savedDateFormat;
     private final boolean savedFailOnError;
-    private final com.njydsz.common.json.naming.PropertyNamingStrategy savedNamingStrategy;
+    private final PropertyNamingStrategy savedNamingStrategy;
     private final boolean savedUseBigDecimal;
 
     /**
@@ -54,7 +57,7 @@ public final class ThreadLocalSnapshot {
         this.savedDateFormat = ctx.dateFormat;
         this.savedFailOnError = ctx.failOnError;
         this.savedNamingStrategy = FieldMetadataLoader.NAMING_STRATEGY.get();
-        this.savedUseBigDecimal = com.njydsz.common.json.parser.JsonParserUtil.isUseBigDecimal();
+        this.savedUseBigDecimal = JsonParserUtil.isUseBigDecimal();
     }
 
     /**
@@ -70,6 +73,6 @@ public final class ThreadLocalSnapshot {
         ctx.dateFormat = savedDateFormat;
         ctx.failOnError = savedFailOnError;
         FieldMetadataLoader.NAMING_STRATEGY.set(savedNamingStrategy);
-        com.njydsz.common.json.parser.JsonParserUtil.setUseBigDecimal(savedUseBigDecimal);
+        JsonParserUtil.setUseBigDecimal(savedUseBigDecimal);
     }
 }

@@ -8,11 +8,11 @@ import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 
-import com.njydsz.common.thread.metrics.ThreadPoolMetrics;
-import com.njydsz.common.thread.metrics.VirtualThreadMetrics;
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
+
+import com.njydsz.common.thread.metrics.ThreadPoolMetrics;
+import com.njydsz.common.thread.metrics.VirtualThreadMetrics;
 
 import lombok.Data;
 

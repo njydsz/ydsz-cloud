@@ -14,7 +14,6 @@ import org.apache.ibatis.mapping.SqlCommandType;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
-import com.baomidou.mybatisplus.extension.parser.JsqlParserSupport;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import com.njydsz.common.jdbc.config.DataPermissionConfiguration;
 import com.njydsz.common.jdbc.exception.TenantIsolationException;
@@ -57,7 +56,7 @@ import net.sf.jsqlparser.statement.update.Update;
  * @since 1.0.0
  */
 @Slf4j
-public class ColPermissionInnerInterceptor extends JsqlParserSupport implements InnerInterceptor {
+public class ColPermissionInnerInterceptor extends CachingJsqlParserSupport implements InnerInterceptor {
 
     /** 数据权限配置 */
     private final DataPermissionConfiguration config;

@@ -14,7 +14,7 @@
  * <p><b>v1.3.1 变更：</b>
  * <ul>
  *   <li>修复 {@link com.njydsz.common.thread.config.ThreadPoolRegistrar} 装配链路断裂</li>
- *   <li>修复 {@link com.njydsz.common.thread.config.ThreadPoolExecutorFactory} 
+ *   <li>修复 {@link com.njydsz.common.thread.config.ThreadPoolExecutorFactory}
  *       ApplicationContext 注入以启用 TaskDecorator</li>
  *   <li>虚拟线程池包装 {@link com.njydsz.common.thread.metrics.MeteredVirtualExecutorService}
  *       实现指标计数</li>

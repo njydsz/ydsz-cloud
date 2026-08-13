@@ -12,7 +12,6 @@ import org.apache.ibatis.mapping.SqlCommandType;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
-import com.baomidou.mybatisplus.extension.parser.JsqlParserSupport;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import com.njydsz.common.core.constant.DataScopeConstants;
 import com.njydsz.common.jdbc.config.DataPermissionConfiguration;
@@ -69,7 +68,7 @@ import net.sf.jsqlparser.statement.update.Update;
  * @since 1.0.0
  */
 @Slf4j
-public class RowPermissionInnerInterceptor extends JsqlParserSupport implements InnerInterceptor {
+public class RowPermissionInnerInterceptor extends CachingJsqlParserSupport implements InnerInterceptor {
 
     /** 数据权限配置 */
     private final DataPermissionConfiguration config;

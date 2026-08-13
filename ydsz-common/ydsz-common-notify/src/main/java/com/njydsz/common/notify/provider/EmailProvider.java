@@ -31,36 +31,36 @@ import com.njydsz.common.notify.core.NotifySendResult;
  */
 public interface EmailProvider {
 
-	/**
-	 * 获取提供商名称
-	 *
-	 * @return 提供商唯一标识（如 "tencent-exmail"、"aliyun-dm"、"aws-ses"）
-	 */
-	String getName();
+    /**
+     * 获取提供商名称
+     *
+     * @return 提供商唯一标识（如 "tencent-exmail"、"aliyun-dm"、"aws-ses"）
+     */
+    String getName();
 
-	/**
-	 * 发送邮件
-	 *
-	 * @param message 邮件消息
-	 * @return 发送结果
-	 */
-	NotifySendResult send(EmailMessage message);
+    /**
+     * 发送邮件
+     *
+     * @param message 邮件消息
+     * @return 发送结果
+     */
+    NotifySendResult send(EmailMessage message);
 
-	/**
-	 * 检查提供商是否可用
-	 *
-	 * @return true 表示提供商配置完整且可用
-	 */
-	boolean isAvailable();
+    /**
+     * 检查提供商是否可用
+     *
+     * @return true 表示提供商配置完整且可用
+     */
+    boolean isAvailable();
 
-	/**
-	 * 获取提供商优先级（数字越小优先级越高）
-	 *
-	 * <p>当多个提供商同时可用时，按优先级选择。
-	 *
-	 * @return 优先级
-	 */
-	default int getPriority() {
-		return 100;
-	}
+    /**
+     * 获取提供商优先级（数字越小优先级越高）
+     *
+     * <p>当多个提供商同时可用时，按优先级选择。
+     *
+     * @return 优先级
+     */
+    default int getPriority() {
+        return 100;
+    }
 }

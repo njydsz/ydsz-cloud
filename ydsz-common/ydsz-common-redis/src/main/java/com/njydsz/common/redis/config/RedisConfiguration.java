@@ -421,33 +421,37 @@ public class RedisConfiguration {
     /**
      * 注册 Redis Stream 流操作封装（XADD/XREADGROUP/消费者组等消息流场景）。
      *
-     * <p>装配条件同其它 ops Bean，无独立指标采集器。
+     * <p>指标采集器可选，缺失时降级不采集。装配条件同其它 ops Bean。
      *
      * @param redisTemplate  基础模板，不会为 null
      * @param redisProperties 全局配置，不会为 null
+     * @param metricsProvider 指标采集器供应方，可能为 null
      * @return Stream 操作封装实例
      */
     @Bean
     @ConditionalOnMissingBean(RedisStreamOps.class)
     @ConditionalOnBean(RedisTemplate.class)
     public RedisStreamOps redisStreamOps(RedisTemplate<String, Object> redisTemplate,
-                                          RedisProperties redisProperties) {
-        return new RedisStreamOps(redisTemplate, redisProperties);
+                                          RedisProperties redisProperties,
+                                          ObjectProvider<RedisMetricsCollector> metricsProvider) {
+        return new RedisStreamOps(redisTemplate, redisProperties, metricsProvider.getIfAvailable());
     }
 
     /**
      * 注册事务操作封装（MULTI/EXEC/DISCARD 命令批处理）。
      *
-     * <p>仅依赖 {@code RedisTemplate}，不涉及配置或指标。注意事务仅在非管线、同连接内有效。
+     * <p>指标采集器可选，缺失时降级不采集。注意事务仅在非管线、同连接内有效。
      *
-     * @param redisTemplate 基础模板，不会为 null
+     * @param redisTemplate  基础模板，不会为 null
+     * @param metricsProvider 指标采集器供应方，可能为 null
      * @return 事务操作封装实例
      */
     @Bean
     @ConditionalOnMissingBean(RedisTransactionOps.class)
     @ConditionalOnBean(RedisTemplate.class)
-    public RedisTransactionOps redisTransactionOps(RedisTemplate<String, Object> redisTemplate) {
-        return new RedisTransactionOps(redisTemplate);
+    public RedisTransactionOps redisTransactionOps(RedisTemplate<String, Object> redisTemplate,
+                                                    ObjectProvider<RedisMetricsCollector> metricsProvider) {
+        return new RedisTransactionOps(redisTemplate, metricsProvider.getIfAvailable());
     }
 
     /**

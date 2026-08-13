@@ -51,7 +51,6 @@ public class DualRateProfitCalculator {
     /**
      * 按混合职级加权计算
      *
-     * @param items (职级/对外费率/对内成本/投入人时) 列表
      * @return 利润测算结果
      */
     public static ProfitResult calculateBlended(List<BlendedInput> items) {

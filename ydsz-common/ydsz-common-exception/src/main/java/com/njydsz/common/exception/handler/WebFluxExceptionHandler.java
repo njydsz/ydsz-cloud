@@ -4,7 +4,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
@@ -76,6 +75,7 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
                                    ExceptionProperties properties) {
         super(environment);
         this.messageSource = messageSource;
+        setMessageSource(messageSource);
         setExceptionMetrics(environment, exceptionMetrics);
         setExceptionProperties(environment, properties);
     }
@@ -149,20 +149,15 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
                 getLogPrefix(), exchange.getRequest().getPath().value(), e.getMessage(), e);
 
         // 与 MVC 处理器行为对齐：按请求 Locale 解析 i18n 文案，原始异常消息仅保留在日志中
-        String message = messageSource.getMessage(
+        String message = resolveMessage(
                 CoreExceptionCode.ILLEGAL_ARGUMENT.getKey(), null,
-                DEFAULT_ILLEGAL_ARGUMENT_MESSAGE, LocaleContextHolder.getLocale());
-        ExceptionInfo info = new ExceptionInfo(
+                DEFAULT_ILLEGAL_ARGUMENT_MESSAGE);
+        return buildStandardErrorResponse(
                 CoreExceptionCode.ILLEGAL_ARGUMENT.getCode(),
                 CoreExceptionCode.ILLEGAL_ARGUMENT.getKey(),
                 message,
-                HttpStatus.BAD_REQUEST.value()
-        );
-        info.setPath(exchange.getRequest().getPath().value());
-        return errorResponse(
-                CoreExceptionCode.ILLEGAL_ARGUMENT.getCode(),
-                message,
-                includeExceptionInfo() ? info : null
+                HttpStatus.BAD_REQUEST.value(),
+                exchange.getRequest().getPath().value()
         );
     }
 
@@ -228,9 +223,9 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
      * @return 统一错误响应
      */
     private Object buildSystemErrorResponse(Throwable e, ServerWebExchange exchange) {
-        String message = messageSource.getMessage(
+        String message = resolveMessage(
                 CoreExceptionCode.SYSTEM_ERROR.getKey(), null,
-                DEFAULT_SYSTEM_ERROR_MESSAGE, LocaleContextHolder.getLocale());
+                DEFAULT_SYSTEM_ERROR_MESSAGE);
         ExceptionInfo info = buildExceptionInfo(e, exchange.getRequest().getPath().value(), extractTraceId(exchange));
         info.setCode(CoreExceptionCode.SYSTEM_ERROR.getCode());
         info.setMessage(message);

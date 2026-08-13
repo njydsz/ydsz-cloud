@@ -572,7 +572,7 @@ public abstract class BaseExceptionHandler {
      * 构建标准错误响应（统一 {@link ExceptionInfo} + {@link BaseResponse} 组合）。
      *
      * <p>消除各处理器中重复的"new ExceptionInfo → setPath → errorResponse"三步模板。
-     * 开发/测试环境自动填充详细信息（path + stackTrace），生产环境仅返回 code + message。
+     * 开发/测试环境自动填充详细信息（path），生产环境仅返回 code + message。
      *
      * @param code      错误码字符串
      * @param key       i18n 消息键（可为 null）
@@ -588,7 +588,6 @@ public abstract class BaseExceptionHandler {
         }
         ExceptionInfo info = new ExceptionInfo(code, key, message, httpStatus);
         info.setPath(path);
-        info.setDetails(Map.of("stackTrace", getStackTraceString(null)));
         return errorResponse(code, message, info);
     }
 

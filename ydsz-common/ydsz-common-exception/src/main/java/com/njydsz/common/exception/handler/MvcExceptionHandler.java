@@ -9,7 +9,6 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
@@ -89,6 +88,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
                                ObjectProvider<ApplicationEventPublisher> eventPublisherProvider) {
         super(environment);
         this.messageSource = messageSource;
+        setMessageSource(messageSource);
         setExceptionMetrics(environment, exceptionMetrics);
         setExceptionProperties(environment, properties);
         setEventPublisher(eventPublisherProvider.getIfAvailable());
@@ -238,20 +238,13 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
         recordMetrics(e);
         log.error("{}请求体解析异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage(), e);
 
-        String message = messageSource.getMessage("invalid.request.format", null,
-                "请求格式错误", LocaleContextHolder.getLocale());
-
-        ExceptionInfo info = new ExceptionInfo(
+        String message = resolveMessage("invalid.request.format", null, "请求格式错误");
+        return buildStandardErrorResponse(
                 CoreExceptionCode.INVALID_REQUEST_FORMAT.getCode(),
                 CoreExceptionCode.INVALID_REQUEST_FORMAT.getKey(),
                 message,
-                HttpStatus.BAD_REQUEST.value()
-        );
-        info.setPath(request.getRequestURI());
-        return errorResponse(
-                CoreExceptionCode.INVALID_REQUEST_FORMAT.getCode(),
-                message,
-                includeExceptionInfo() ? info : null
+                HttpStatus.BAD_REQUEST.value(),
+                request.getRequestURI()
         );
     }
 
@@ -266,8 +259,8 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     public BaseResponse<?> handleMissingServletRequestParameterException(
             MissingServletRequestParameterException e, HttpServletRequest request) {
         recordMetrics(e);
-        String message = messageSource.getMessage("missing.request.parameter",
-                new Object[]{e.getParameterName()}, "缺少请求参数", LocaleContextHolder.getLocale());
+        String message = resolveMessage("missing.request.parameter",
+                new Object[]{e.getParameterName()}, "缺少请求参数");
         return buildValidationErrorResponse(
                 CoreExceptionCode.ILLEGAL_ARGUMENT, message, HttpStatus.BAD_REQUEST.value(),
                 request.getRequestURI(), e);
@@ -285,9 +278,9 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
             MethodArgumentTypeMismatchException e, HttpServletRequest request) {
         recordMetrics(e);
         Class<?> requiredType = e.getRequiredType();
-        String message = messageSource.getMessage("type.mismatch",
+        String message = resolveMessage("type.mismatch",
                 new Object[]{e.getName(), requiredType != null ? requiredType.getSimpleName() : "未知"},
-                "参数类型不匹配", LocaleContextHolder.getLocale());
+                "参数类型不匹配");
         return buildValidationErrorResponse(
                 CoreExceptionCode.ILLEGAL_ARGUMENT, message, HttpStatus.BAD_REQUEST.value(),
                 request.getRequestURI(), e);
@@ -304,8 +297,8 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     public BaseResponse<?> handleMissingRequestHeaderException(
             MissingRequestHeaderException e, HttpServletRequest request) {
         recordMetrics(e);
-        String message = messageSource.getMessage("missing.request.header",
-                new Object[]{e.getHeaderName()}, "缺少请求头", LocaleContextHolder.getLocale());
+        String message = resolveMessage("missing.request.header",
+                new Object[]{e.getHeaderName()}, "缺少请求头");
         return buildValidationErrorResponse(
                 CoreExceptionCode.ILLEGAL_ARGUMENT, message, HttpStatus.BAD_REQUEST.value(),
                 request.getRequestURI(), e);
@@ -322,8 +315,8 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     public BaseResponse<?> handleHttpRequestMethodNotSupportedException(
             HttpRequestMethodNotSupportedException e, HttpServletRequest request) {
         recordMetrics(e);
-        String message = messageSource.getMessage("method.not.supported",
-                new Object[]{e.getMethod()}, "不支持的请求方法", LocaleContextHolder.getLocale());
+        String message = resolveMessage("method.not.supported",
+                new Object[]{e.getMethod()}, "不支持的请求方法");
         return buildValidationErrorResponse(
                 CoreExceptionCode.ILLEGAL_ARGUMENT, message, HttpStatus.METHOD_NOT_ALLOWED.value(),
                 request.getRequestURI(), e);
@@ -340,21 +333,14 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     public Object handleMaxUploadSizeExceededException(
             MaxUploadSizeExceededException e, HttpServletRequest request) {
         recordMetrics(e);
-        String message = messageSource.getMessage("file.size.exceeded.message", null,
-                "上传文件大小超出限制", LocaleContextHolder.getLocale());
+        String message = resolveMessage("file.size.exceeded.message", null, "上传文件大小超出限制");
         log.error("{}文件上传超限 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), message, e);
-
-        ExceptionInfo info = new ExceptionInfo(
+        return buildStandardErrorResponse(
                 CoreExceptionCode.FILE_SIZE_EXCEEDED.getCode(),
                 CoreExceptionCode.FILE_SIZE_EXCEEDED.getKey(),
                 message,
-                HttpStatus.CONTENT_TOO_LARGE.value()
-        );
-        info.setPath(request.getRequestURI());
-        return errorResponse(
-                CoreExceptionCode.FILE_SIZE_EXCEEDED.getCode(),
-                message,
-                includeExceptionInfo() ? info : null
+                HttpStatus.CONTENT_TOO_LARGE.value(),
+                request.getRequestURI()
         );
     }
 
@@ -369,21 +355,15 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     public Object handleNoHandlerFoundException(
             NoHandlerFoundException e, HttpServletRequest request) {
         recordMetrics(e);
-        String message = messageSource.getMessage("resource.not.found.detail",
-                new Object[]{request.getRequestURI()}, "资源不存在", LocaleContextHolder.getLocale());
+        String message = resolveMessage("resource.not.found.detail",
+                new Object[]{request.getRequestURI()}, "资源不存在");
         log.error("{}资源不存在 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), message, e);
-
-        ExceptionInfo info = new ExceptionInfo(
+        return buildStandardErrorResponse(
                 CoreExceptionCode.RESOURCE_NOT_FOUND.getCode(),
                 CoreExceptionCode.RESOURCE_NOT_FOUND.getKey(),
                 message,
-                HttpStatus.NOT_FOUND.value()
-        );
-        info.setPath(request.getRequestURI());
-        return errorResponse(
-                CoreExceptionCode.RESOURCE_NOT_FOUND.getCode(),
-                message,
-                includeExceptionInfo() ? info : null
+                HttpStatus.NOT_FOUND.value(),
+                request.getRequestURI()
         );
     }
 
@@ -401,20 +381,15 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
         log.error("{}非法参数异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage(), e);
 
         // 按请求 Locale 解析 i18n 文案，原始异常消息仅保留在日志中，避免泄露内部细节
-        String message = messageSource.getMessage(
+        String message = resolveMessage(
                 CoreExceptionCode.ILLEGAL_ARGUMENT.getKey(), null,
-                DEFAULT_ILLEGAL_ARGUMENT_MESSAGE, LocaleContextHolder.getLocale());
-        ExceptionInfo info = new ExceptionInfo(
+                DEFAULT_ILLEGAL_ARGUMENT_MESSAGE);
+        return buildStandardErrorResponse(
                 CoreExceptionCode.ILLEGAL_ARGUMENT.getCode(),
                 CoreExceptionCode.ILLEGAL_ARGUMENT.getKey(),
                 message,
-                HttpStatus.BAD_REQUEST.value()
-        );
-        info.setPath(request.getRequestURI());
-        return errorResponse(
-                CoreExceptionCode.ILLEGAL_ARGUMENT.getCode(),
-                message,
-                includeExceptionInfo() ? info : null
+                HttpStatus.BAD_REQUEST.value(),
+                request.getRequestURI()
         );
     }
 
@@ -434,8 +409,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
         recordMetrics(e);
         log.error("{}非法状态异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage(), e);
 
-        String message = messageSource.getMessage("system.error", null,
-                "系统异常，请联系管理员", LocaleContextHolder.getLocale());
+        String message = resolveMessage("system.error", null, "系统异常，请联系管理员");
 
         ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
         info.setCode(CoreExceptionCode.SYSTEM_ERROR.getCode());
@@ -461,8 +435,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
         recordMetrics(e);
         log.error("{}空指针异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage(), e);
 
-        String message = messageSource.getMessage("system.error", null,
-                "系统异常，请联系管理员", LocaleContextHolder.getLocale());
+        String message = resolveMessage("system.error", null, "系统异常，请联系管理员");
 
         ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
         info.setCode(CoreExceptionCode.SYSTEM_ERROR.getCode());
@@ -489,8 +462,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
                 getLogPrefix(), request.getRequestURI(), e.getClass().getName(), e.getMessage(), e);
 
         String traceId = extractTraceId(request);
-        String message = messageSource.getMessage("system.error", null,
-                "系统异常，请联系管理员", LocaleContextHolder.getLocale());
+        String message = resolveMessage("system.error", null, "系统异常，请联系管理员");
         publishExceptionEvent(e, request.getRequestURI(), traceId, message);
 
         ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), traceId);

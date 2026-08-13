@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.env.Environment;
 import org.springframework.dao.DataAccessException;
 import org.springframework.http.HttpStatus;
@@ -61,6 +60,7 @@ public class JdbcExceptionHandler extends BaseExceptionHandler {
                                ExceptionProperties properties) {
         super(environment);
         this.messageSource = messageSource;
+        setMessageSource(messageSource);
         setExceptionMetrics(environment, exceptionMetrics);
         setExceptionProperties(environment, properties);
     }
@@ -85,9 +85,9 @@ public class JdbcExceptionHandler extends BaseExceptionHandler {
         log.error("{}数据访问异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage(), e);
 
         // 通过 MessageSource 按当前请求 Locale 解析 i18n 文案，避免向客户端暴露裸 key
-        String message = messageSource.getMessage(
+        String message = resolveMessage(
                 CoreExceptionCode.DATABASE_ERROR.getKey(), null,
-                DEFAULT_DATABASE_ERROR_MESSAGE, LocaleContextHolder.getLocale());
+                DEFAULT_DATABASE_ERROR_MESSAGE);
         ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
         info.setCode(CoreExceptionCode.DATABASE_ERROR.getCode());
         info.setMessage(message);

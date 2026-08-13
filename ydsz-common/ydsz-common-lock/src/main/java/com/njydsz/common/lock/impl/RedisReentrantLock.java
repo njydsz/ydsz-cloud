@@ -38,12 +38,18 @@ public class RedisReentrantLock extends AbstractRedisDistributedLock {
     /**
      * 获取可重入锁 Lua 脚本
      * <p>如果当前客户端已持有锁则递增重入计数，否则在无其他持有时创建新锁
+     * <p>返回值：1-成功获取或重入，0-锁被其他客户端持有，-1-超过最大重入深度
      */
     private static final String ACQUIRE_LOCK_LUA_SCRIPT =
             "local key = KEYS[1] " +
             "local clientId = ARGV[1] " +
             "local leaseTimeMs = ARGV[2] " +
+            "local maxDepth = tonumber(ARGV[3]) " +
             "if redis.call('HEXISTS', key, clientId) == 1 then " +
+            "    local currentCount = tonumber(redis.call('HGET', key, clientId)) " +
+            "    if currentCount >= maxDepth then " +
+            "        return -1 " +
+            "    end " +
             "    redis.call('HINCRBY', key, clientId, 1) " +
             "    redis.call('PEXPIRE', key, leaseTimeMs) " +
             "    return 1 " +
@@ -94,6 +100,11 @@ public class RedisReentrantLock extends AbstractRedisDistributedLock {
             "end";
 
     /**
+     * 可重入锁默认最大深度（安全上限，防止无限重入导致锁无法释放）
+     */
+    private static final int DEFAULT_MAX_REENTRANCE_DEPTH = 256;
+
+    /**
      * 获取锁脚本封装
      */
     private final DefaultRedisScript<Long> acquireLockScript;
@@ -105,6 +116,11 @@ public class RedisReentrantLock extends AbstractRedisDistributedLock {
      * 获取重入计数脚本封装
      */
     private final DefaultRedisScript<Long> getHoldCountScript;
+
+    /**
+     * 最大重入深度（安全上限，防止无限重入导致锁无法释放）
+     */
+    private int maxReentranceDepth = DEFAULT_MAX_REENTRANCE_DEPTH;
 
     /**
      * 构造可重入锁（无命名空间）
@@ -128,6 +144,23 @@ public class RedisReentrantLock extends AbstractRedisDistributedLock {
         this.getHoldCountScript = new DefaultRedisScript<>(GET_HOLD_COUNT_LUA_SCRIPT, Long.class);
     }
 
+    /**
+     * 设置最大重入深度
+     *
+     * <p>超过该深度后，同一客户端再次重入时将返回 null（获取失败），
+     * 防止编程错误导致的无限重入（最终锁无法释放）。
+     * 默认值为 {@value #DEFAULT_MAX_REENTRANCE_DEPTH}。
+     *
+     * @param maxReentranceDepth 最大重入深度，须为正整数
+     * @throws IllegalArgumentException 若 maxReentranceDepth 小于 1
+     */
+    public void setMaxReentranceDepth(int maxReentranceDepth) {
+        if (maxReentranceDepth < 1) {
+            throw new IllegalArgumentException("maxReentranceDepth must be >= 1, got: " + maxReentranceDepth);
+        }
+        this.maxReentranceDepth = maxReentranceDepth;
+    }
+
     @Override
     protected LockType getLockType() {
         return LockType.REENTRANT;
@@ -141,8 +174,14 @@ public class RedisReentrantLock extends AbstractRedisDistributedLock {
                     acquireLockScript,
                     Collections.singletonList(lockKey),
                     clientId,
-                    String.valueOf(leaseTimeMs)
+                    String.valueOf(leaseTimeMs),
+                    String.valueOf(maxReentranceDepth)
             );
+            if (result != null && result == -1L) {
+                log.warn("[ydsz-lock]超过最大重入深度 | lockKey={} | clientId={} | maxDepth={}",
+                        lockKey, clientId, maxReentranceDepth);
+                return null;
+            }
             boolean acquired = Long.valueOf(1L).equals(result);
             if (acquired) {
                 log.debug("[ydsz-lock]获取可重入锁成功 | lockKey={} | clientId={}", lockKey, clientId);

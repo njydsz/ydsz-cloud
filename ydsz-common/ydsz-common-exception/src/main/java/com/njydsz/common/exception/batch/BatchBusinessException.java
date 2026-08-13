@@ -4,7 +4,9 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
@@ -215,6 +217,52 @@ public class BatchBusinessException extends BusinessException {
      */
     public List<FailureItem> getFailureItems() {
         return Collections.unmodifiableList(failureItems);
+    }
+
+    /**
+     * 按错误码聚合统计失败子项。
+     *
+     * <p>便于前端/调用方快速了解"哪种错误最多"，无需遍历全量 failureItems。
+     * 返回的 map 保持错误码首次出现的顺序（LinkedHashMap），值为该错误码的出现次数。
+     *
+     * <p>响应序列化时可通过 {@code aggregation} 字段输出，结构如：
+     * <pre>{@code
+     * "aggregation": {
+     *   "USER_NOT_FOUND": 3,
+     *   "PARAM_INVALID": 1
+     * }
+     * }</pre>
+     *
+     * @return 错误码 → 出现次数的聚合 map
+     */
+    public Map<String, Integer> getFailureAggregation() {
+        if (failureItems.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Map<String, Integer> aggregation = new LinkedHashMap<>();
+        for (FailureItem item : failureItems) {
+            aggregation.merge(item.getCode(), 1, Integer::sum);
+        }
+        return Collections.unmodifiableMap(aggregation);
+    }
+
+    /**
+     * 按错误码分组失败子项（保留子项 ID 明细）。
+     *
+     * <p>与 {@link #getFailureAggregation()} 不同，此方法返回每个错误码对应的子项 ID 列表，
+     * 供调用方精确定位哪些子项触发了同类错误。
+     *
+     * @return 错误码 → 子项 ID 列表的分组 map
+     */
+    public Map<String, List<Object>> getFailureGroupByCode() {
+        if (failureItems.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Map<String, List<Object>> group = new LinkedHashMap<>();
+        for (FailureItem item : failureItems) {
+            group.computeIfAbsent(item.getCode(), k -> new ArrayList<>()).add(item.getItemId());
+        }
+        return Collections.unmodifiableMap(group);
     }
 
     /**

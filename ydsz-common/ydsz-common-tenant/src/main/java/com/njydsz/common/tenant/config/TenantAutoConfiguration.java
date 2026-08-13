@@ -16,6 +16,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.njydsz.common.jdbc.datasource.DynamicRoutingDataSource;
 import com.njydsz.common.tenant.SystemTenantContextRunner;
+import com.njydsz.common.tenant.annotation.TenantColumnScanner;
 import com.njydsz.common.tenant.async.TenantContextTaskDecorator;
 import com.njydsz.common.tenant.datasource.TenantDataSourceFilter;
 import com.njydsz.common.tenant.datasource.TenantDataSourceRouter;
@@ -86,6 +87,40 @@ public class TenantAutoConfiguration {
         // 初始化生命周期管理器的 ApplicationContext 持有者
         TenantLifecycleManager.LifecycleManagerHolder.init(applicationContext);
         return new TenantInterceptorProvider(properties, metricsProvider.getIfAvailable());
+    }
+
+    /**
+     * {@code @TenantColumn} 注解扫描器。
+     *
+     * <p>扫描 classpath 中实体类上的 {@code @TenantColumn} + {@code @TableName} 注解，
+     * 解析 per-table 租户列名映射。
+     *
+     * <p>仅当 MyBatis-Plus 在 classpath 时注册（需要读取 {@code @TableName} 注解）。
+     *
+     * @return 注解扫描器
+     */
+    @Bean
+    @ConditionalOnClass(name = "com.baomidou.mybatisplus.annotation.TableName")
+    @ConditionalOnMissingBean
+    public TenantColumnScanner tenantColumnScanner() {
+        return new TenantColumnScanner();
+    }
+
+    /**
+     * 注解扫描结果回填处理器。
+     *
+     * <p>在 {@link TenantProperties} 初始化后，将注解扫描到的 per-table 列名映射
+     * 回填到其 tableColumnMapping Map 中（YAML 显式配置优先）。
+     *
+     * @param scanner 注解扫描器
+     * @return BeanPostProcessor
+     */
+    @Bean
+    @ConditionalOnClass(name = "com.baomidou.mybatisplus.annotation.TableName")
+    @ConditionalOnMissingBean
+    public TenantPropertiesAnnotationPopulator tenantPropertiesAnnotationPopulator(
+            TenantColumnScanner scanner) {
+        return new TenantPropertiesAnnotationPopulator(scanner);
     }
 
     /**

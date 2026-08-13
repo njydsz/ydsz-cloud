@@ -79,7 +79,6 @@ public class ExceptionMetrics {
 
     /**
      * 是否启用指标统计，使用 AtomicBoolean 保证多线程可见性和 CAS 操作安全
-     * @param true true 参数说明
      * @return 处理结果
      */
     private final AtomicBoolean enabled = new AtomicBoolean(true);
