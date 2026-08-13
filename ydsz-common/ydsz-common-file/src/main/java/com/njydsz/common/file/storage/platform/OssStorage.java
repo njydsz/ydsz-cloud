@@ -325,7 +325,7 @@ public class OssStorage extends AbstractFileStorage {
             metadata.setLastModified(ossMetadata.getLastModified() != null
                     ? LocalDateTime.ofInstant(ossMetadata.getLastModified().toInstant(), ZoneId.systemDefault())
                     : null);
-            metadata.setIsDirectory(false);
+            metadata.setDirectory(false);
             return metadata;
         } catch (Exception e) {
             log.error("[OSS] doGetMetadata failed, bucket={}, object={}, message={}",
@@ -359,7 +359,7 @@ public class OssStorage extends AbstractFileStorage {
                             ? LocalDateTime.ofInstant(summary.getLastModified().toInstant(), ZoneId.systemDefault())
                             : null);
                     om.setETag(summary.getETag());
-                    om.setIsDirectory(false);
+                    om.setDirectory(false);
                     objects.add(om);
                 }
             }

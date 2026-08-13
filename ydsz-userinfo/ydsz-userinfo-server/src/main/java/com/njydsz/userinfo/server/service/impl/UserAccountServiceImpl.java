@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.util.bean.BeanUpdateUtil;
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.dto.ChangePasswordDTO;
 import com.njydsz.userinfo.domain.dto.ResetPasswordDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
@@ -115,7 +115,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     /** 用户中心配置属性 */
     private final UserInfoProperties properties;
     /** Redis 服务（工作流缓存） */
-    private final RedisService redisService;
+    private final RedisStringOps redisStringOps;
     private final ObjectProvider<SearchIndexEventBridge> searchIndexBridgeProvider;
     /** 领域事件发布器（Outbox 模式） */
     private final UserDomainEventPublisher eventPublisher;
@@ -402,7 +402,7 @@ public class UserAccountServiceImpl implements UserAccountService {
      */
     private void evictWorkflowCacheForUser(String userId) {
         try {
-            redisService.del("userinfo:workflow:leader:" + userId);
+            redisStringOps.del("userinfo:workflow:leader:" + userId);
         } catch (Exception e) {
             log.warn("Failed to evict workflow cache for user: {}", userId);
         }

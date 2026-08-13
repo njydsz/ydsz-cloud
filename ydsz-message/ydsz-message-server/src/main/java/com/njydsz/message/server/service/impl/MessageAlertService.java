@@ -5,7 +5,6 @@ import java.util.Map;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.lock.idempotent.IdempotentStrategy;
-import com.njydsz.common.redis.service.RedisService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -38,7 +37,6 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class MessageAlertService {
 
-    private final RedisService redisService;
     private final IdempotentStrategy idempotentStrategy;
     private final RealtimeStatsService realtimeStatsService;
     private final MessageService messageService;

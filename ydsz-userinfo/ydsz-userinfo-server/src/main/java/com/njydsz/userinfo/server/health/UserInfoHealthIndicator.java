@@ -7,7 +7,7 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.entity.Role;
 import com.njydsz.userinfo.domain.entity.UserAccount;
 import com.njydsz.userinfo.infra.mapper.RoleMapper;
@@ -31,7 +31,7 @@ import org.springframework.boot.health.contributor.Health;
 @RequiredArgsConstructor
 public class UserInfoHealthIndicator extends AbstractModuleHealthIndicator {
 
-    private final RedisService redisService;
+    private final RedisStringOps redisStringOps;
     private final TokenService tokenService;
     private final UserAccountMapper userAccountMapper;
     private final RoleMapper roleMapper;
@@ -40,7 +40,7 @@ public class UserInfoHealthIndicator extends AbstractModuleHealthIndicator {
     protected void doHealthCheck(Health.Builder builder) {
         // Redis 连通性
         checkRedis(builder, () -> {
-            redisService.hasKey("ydsz:userinfo:health:probe");
+            redisStringOps.hasKey("ydsz:userinfo:health:probe");
             return "PONG";
         });
 

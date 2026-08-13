@@ -273,11 +273,11 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
      */
     private long getConcurrentCount(String tenantId) {
         try {
-            String val = redisStringOps.get(CONCURRENT_KEY_PREFIX + tenantId);
-            if (val == null || val.isEmpty()) {
+            String quotaValue = redisStringOps.get(CONCURRENT_KEY_PREFIX + tenantId);
+            if (quotaValue == null || quotaValue.isEmpty()) {
                 return 0L;
             }
-            return Long.parseLong(val);
+            return Long.parseLong(quotaValue);
         } catch (Exception e) {
             log.warn("[Quota] 获取并发计数失败, 降级放行: tenant={} reason={}",
                     tenantId, e.getMessage());
@@ -291,11 +291,11 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
     private long getDailyCount(String tenantId) {
         try {
             String key = DAILY_KEY_PREFIX + tenantId + ":" + todaySuffix();
-            String val = redisStringOps.get(key);
-            if (val == null || val.isEmpty()) {
+            String quotaValue = redisStringOps.get(key);
+            if (quotaValue == null || quotaValue.isEmpty()) {
                 return 0L;
             }
-            return Long.parseLong(val);
+            return Long.parseLong(quotaValue);
         } catch (Exception e) {
             log.warn("[Quota] 获取日执行计数失败, 降级放行: tenant={} reason={}",
                     tenantId, e.getMessage());

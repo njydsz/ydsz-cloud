@@ -94,6 +94,9 @@ public class RuleBatchController {
             return BaseResponse.error(LiteruleExceptionCode.RULE_NOT_FOUND, "规则不存在: " + ruleCode);
         }
         RuleStatus current = parseStatusSafely(def.getStatus());
+        if (current == null) {
+            return BaseResponse.error(LiteruleExceptionCode.RULE_STATUS_INVALID, "规则状态非法: " + def.getStatus());
+        }
         if (!current.canTransitionTo(RuleStatus.ARCHIVED)) {
             return BaseResponse.error(LiteruleExceptionCode.RULE_STATUS_INVALID, "当前状态 " + current.getDesc() + " 不允许删除（归档），仅 DRAFT/REVIEW/PUBLISHED/DISABLED 可删除");
         }
@@ -107,13 +110,14 @@ public class RuleBatchController {
     }
 
     /**
-     * 安全解析规则状态，无效值回退到 PUBLISHED
+     * 安全解析规则状态，无效值返回 null 而非伪装成 PUBLISHED
      */
     private RuleStatus parseStatusSafely(String status) {
         try {
             return RuleStatus.valueOf(status);
         } catch (Exception e) {
-            return RuleStatus.PUBLISHED;
+            log.warn("规则状态解析失败，status={}", status, e);
+            return null;
         }
     }
 

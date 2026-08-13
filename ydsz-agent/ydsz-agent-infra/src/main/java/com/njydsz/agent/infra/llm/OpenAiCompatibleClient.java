@@ -205,11 +205,11 @@ public class OpenAiCompatibleClient implements LlmClient {
                     .bodyToFlux(String.class)
                     .doOnNext(line -> {
                         if (line.startsWith("data: ")) {
-                            String data = line.substring(6).trim();
-                            if ("[DONE]".equals(data)) {
+                            String sseDataFragment = line.substring(6).trim();
+                            if ("[DONE]".equals(sseDataFragment)) {
                                 return;
                             }
-                            ChatChunk chunk = parseChunk(data);
+                            ChatChunk chunk = parseChunk(sseDataFragment);
                             if (chunk != null) {
                                 chunkConsumer.accept(chunk);
                             }

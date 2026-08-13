@@ -13,7 +13,7 @@
         <result column="mime_type" property="mimeType"/>
         <result column="remark" property="remark"/>
         <result column="change_type" property="changeType"/>
-        <result column="is_active" property="isActive"/>
+        <result column="is_active" property="active"/>
         <result column="status" property="status"/>
         <result column="created_by" property="createdBy"/>
         <result column="created_at" property="createdAt"/>
@@ -63,7 +63,7 @@
             mime_type = #{version.mimeType},
             remark = #{version.remark},
             change_type = #{version.changeType},
-            is_active = #{version.isActive},
+            is_active = #{version.active},
             status = #{version.status},
             updated_by = #{version.updatedBy},
             updated_at = #{version.updatedAt},

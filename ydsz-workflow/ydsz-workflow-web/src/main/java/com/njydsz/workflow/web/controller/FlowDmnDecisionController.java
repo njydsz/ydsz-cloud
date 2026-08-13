@@ -4,8 +4,11 @@ import java.util.List;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import java.util.Map;
 
+import jakarta.validation.Valid;
+
 import org.springframework.web.bind.annotation.*;
 
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.workflow.domain.entity.FlowDmnDecision;
@@ -89,8 +92,9 @@ public class FlowDmnDecisionController {
     @Idempotent(key = "ydsz:workflow:FlowDmnDecisionController:createDecision:lock", ttlSeconds = 5)
     @PostMapping("/decision")
     @Audit(module = "DMN决策", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'createDecision'")
+    @AuthApiPermission
     @Operation(summary = "创建决策表")
-    public BaseResponse<String> createDecision(@RequestBody CreateDecisionRequest request) {
+    public BaseResponse<String> createDecision(@Valid @RequestBody CreateDecisionRequest request) {
         String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         request.getDecision().setTenantId(tenantId);
         String id = dmnDecisionService.createDecision(request.getDecision(), request.getRules());
@@ -112,9 +116,10 @@ public class FlowDmnDecisionController {
     @Idempotent(key = "ydsz:workflow:FlowDmnDecisionController:updateDecision:lock", ttlSeconds = 5)
     @PutMapping("/decision/{decisionId}")
     @Audit(module = "DMN决策", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'updateDecision'")
+    @AuthApiPermission
     @Operation(summary = "更新决策表（仅草稿状态）")
     public BaseResponse<Void> updateDecision(@PathVariable String decisionId,
-                                        @RequestBody CreateDecisionRequest request) {
+                                        @Valid @RequestBody CreateDecisionRequest request) {
         request.getDecision().setTenantId(AuthContextUtils.getTenantIdOrDefault("1"));
         dmnDecisionService.updateDecision(decisionId, request.getDecision(), request.getRules());
         return BaseResponse.success();
@@ -204,7 +209,7 @@ public class FlowDmnDecisionController {
      */
     @PostMapping("/evaluate")
     @Operation(summary = "评估决策表")
-    public BaseResponse<Map<String, Object>> evaluate(@RequestBody EvaluateRequest request) {
+    public BaseResponse<Map<String, Object>> evaluate(@Valid @RequestBody EvaluateRequest request) {
         String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(dmnDecisionService.evaluate(
                 request.getDecisionCode(), request.getVariables(), tenantId));
@@ -222,7 +227,7 @@ public class FlowDmnDecisionController {
      */
     @PostMapping("/evaluateByNode")
     @Operation(summary = "根据流程+节点评估绑定的决策表")
-    public BaseResponse<Map<String, Object>> evaluateByNode(@RequestBody EvaluateByNodeRequest request) {
+    public BaseResponse<Map<String, Object>> evaluateByNode(@Valid @RequestBody EvaluateByNodeRequest request) {
         String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
         return BaseResponse.success(dmnDecisionService.evaluateByNode(
                 request.getFlowCode(), request.getNodeCode(),

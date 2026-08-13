@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.ObjectProvider;
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -76,7 +76,7 @@ public class AuthServiceImpl implements AuthService {
     /** Redis Hash 操作（用于会话信息存储） */
     private final RedisHashOps redisHashOps;
     /** Redis 基础服务（用于会话 key 过期等操作） */
-    private final RedisService redisService;
+    private final RedisStringOps redisStringOps;
     /** 密码编码器（BCrypt） */
     private final PasswordEncoder passwordEncoder;
     /** 用户中心监控指标采集器 */
@@ -205,7 +205,7 @@ public class AuthServiceImpl implements AuthService {
         sessionInfo.put("roleName", roleNames);
         sessionInfo.put("tenantId", user.getTenantId());
         redisHashOps.hMSet(accessToken, sessionInfo);
-        redisService.expire(accessToken, Duration.ofSeconds(properties.getTokenTtlSeconds()));
+        redisStringOps.expire(accessToken, Duration.ofSeconds(properties.getTokenTtlSeconds()));
 
         updateLoginSuccess(user);
 
@@ -246,7 +246,7 @@ public class AuthServiceImpl implements AuthService {
             return;
         }
         tokenBlacklistService.addToBlacklist(accessToken);
-        redisService.delete(accessToken);
+        redisStringOps.del(accessToken);
         userInfoMetrics.recordLogout();
         log.info("User logged out, token blacklisted");
     }
@@ -290,7 +290,7 @@ public class AuthServiceImpl implements AuthService {
         sessionInfo.put("roleName", userInfo.getRoleName());
         sessionInfo.put("tenantId", userInfo.getTenantId());
         redisHashOps.hMSet(newAccessToken, sessionInfo);
-        redisService.expire(newAccessToken, Duration.ofSeconds(properties.getTokenTtlSeconds()));
+        redisStringOps.expire(newAccessToken, Duration.ofSeconds(properties.getTokenTtlSeconds()));
 
         log.info("Token refreshed successfully for user: {}", userInfo.getUsername());
 

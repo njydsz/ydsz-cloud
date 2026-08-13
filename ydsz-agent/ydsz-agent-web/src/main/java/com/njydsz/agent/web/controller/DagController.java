@@ -117,7 +117,7 @@ public class DagController {
     @Audit(module = "DAG管理", type = AuditType.OPERATION, action = AuditAction.QUERY, content = "'validate'")
     @Idempotent(key = "ydsz:agent:DagController:write:lock", ttlSeconds = 5)
     @PostMapping("/validate")
-    public BaseResponse<Map<String, Object>> validate(@RequestBody DagExecutionDTO request) {
+    public BaseResponse<Map<String, Object>> validate(@Valid @RequestBody DagExecutionDTO request) {
         try {
             AgentDag dag = dslParser.parse(request.getDsl());
             return BaseResponse.success(Map.of(

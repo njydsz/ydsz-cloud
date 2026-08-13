@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,7 +51,7 @@ public class WorkflowApproverCacheService {
     /** 部门→负责人缓存 TTL（秒）：10 分钟 */
     private static final long CACHE_TTL_DEPT_LEADER = 600;
 
-    private final RedisService redisService;
+    private final RedisStringOps redisStringOps;
     private final UserAccountService userAccountService;
     private final DepartmentService departmentService;
 
@@ -70,7 +70,7 @@ public class WorkflowApproverCacheService {
 
         // 尝试从缓存获取
         try {
-            String cached = redisService.get(cacheKey, String.class);
+            String cached = redisStringOps.get(cacheKey, String.class);
             if (cached != null) {
                 List<String> result = YdszJson.fromJson(cached, java.util.List.class, String.class);
                 if (result != null) {
@@ -86,7 +86,7 @@ public class WorkflowApproverCacheService {
 
         // 写入缓存
         try {
-            redisService.set(cacheKey, YdszJson.toJson(userIds), Duration.ofSeconds(CACHE_TTL_ROLE_USERS));
+            redisStringOps.set(cacheKey, YdszJson.toJson(userIds), Duration.ofSeconds(CACHE_TTL_ROLE_USERS));
         } catch (Exception e) {
             log.warn("Workflow cache write failed for role: {}", roleCode);
         }
@@ -108,7 +108,7 @@ public class WorkflowApproverCacheService {
         String cacheKey = "userinfo:workflow:position:" + positionCode;
 
         try {
-            String cached = redisService.get(cacheKey, String.class);
+            String cached = redisStringOps.get(cacheKey, String.class);
             if (cached != null) {
                 List<String> result = YdszJson.fromJson(cached, java.util.List.class, String.class);
                 if (result != null) {
@@ -122,7 +122,7 @@ public class WorkflowApproverCacheService {
         List<String> userIds = userAccountService.listUserIdsByPositionCode(positionCode);
 
         try {
-            redisService.set(cacheKey, YdszJson.toJson(userIds), Duration.ofSeconds(CACHE_TTL_POSITION_USERS));
+            redisStringOps.set(cacheKey, YdszJson.toJson(userIds), Duration.ofSeconds(CACHE_TTL_POSITION_USERS));
         } catch (Exception e) {
             log.warn("Workflow cache write failed for position: {}", positionCode);
         }
@@ -144,7 +144,7 @@ public class WorkflowApproverCacheService {
         String cacheKey = "userinfo:workflow:leader:" + userId;
 
         try {
-            String cached = redisService.get(cacheKey, String.class);
+            String cached = redisStringOps.get(cacheKey, String.class);
             if (cached != null) {
                 // 特殊值 "__NULL__" 表示无上级
                 if ("__NULL__".equals(cached)) {
@@ -160,7 +160,7 @@ public class WorkflowApproverCacheService {
 
         try {
             // null 值使用占位符缓存，防止缓存穿透
-            redisService.set(cacheKey, leaderId != null ? leaderId : "__NULL__", Duration.ofSeconds(CACHE_TTL_LEADER));
+            redisStringOps.set(cacheKey, leaderId != null ? leaderId : "__NULL__", Duration.ofSeconds(CACHE_TTL_LEADER));
         } catch (Exception e) {
             log.warn("Workflow cache write failed for leader: {}", userId);
         }
@@ -182,7 +182,7 @@ public class WorkflowApproverCacheService {
         String cacheKey = "userinfo:workflow:deptLeader:id:" + deptId;
 
         try {
-            String cached = redisService.get(cacheKey, String.class);
+            String cached = redisStringOps.get(cacheKey, String.class);
             if (cached != null) {
                 return "__NULL__".equals(cached) ? null : cached;
             }
@@ -193,7 +193,7 @@ public class WorkflowApproverCacheService {
         String leaderId = departmentService.getDeptLeaderByDeptId(deptId);
 
         try {
-            redisService.set(cacheKey, leaderId != null ? leaderId : "__NULL__", Duration.ofSeconds(CACHE_TTL_DEPT_LEADER));
+            redisStringOps.set(cacheKey, leaderId != null ? leaderId : "__NULL__", Duration.ofSeconds(CACHE_TTL_DEPT_LEADER));
         } catch (Exception e) {
             log.warn("Workflow cache write failed for deptLeader: {}", deptId);
         }
@@ -215,7 +215,7 @@ public class WorkflowApproverCacheService {
         String cacheKey = "userinfo:workflow:deptLeader:code:" + deptCode;
 
         try {
-            String cached = redisService.get(cacheKey, String.class);
+            String cached = redisStringOps.get(cacheKey, String.class);
             if (cached != null) {
                 return "__NULL__".equals(cached) ? null : cached;
             }
@@ -226,7 +226,7 @@ public class WorkflowApproverCacheService {
         String leaderId = departmentService.getDeptLeaderByDeptCode(deptCode);
 
         try {
-            redisService.set(cacheKey, leaderId != null ? leaderId : "__NULL__", Duration.ofSeconds(CACHE_TTL_DEPT_LEADER));
+            redisStringOps.set(cacheKey, leaderId != null ? leaderId : "__NULL__", Duration.ofSeconds(CACHE_TTL_DEPT_LEADER));
         } catch (Exception e) {
             log.warn("Workflow cache write failed for deptLeader code: {}", deptCode);
         }
@@ -244,9 +244,9 @@ public class WorkflowApproverCacheService {
     public void evictRoleCache(String roleCode) {
         try {
             if (roleCode != null) {
-                redisService.del("userinfo:workflow:role:" + roleCode);
+                redisStringOps.del("userinfo:workflow:role:" + roleCode);
             } else {
-                redisService.delByPattern("userinfo:workflow:role:*");
+                redisStringOps.delByPattern("userinfo:workflow:role:*");
             }
         } catch (Exception e) {
             log.warn("Failed to evict role cache: {}", e.getMessage());
@@ -261,9 +261,9 @@ public class WorkflowApproverCacheService {
     public void evictUserCache(String userId) {
         try {
             if (userId != null) {
-                redisService.del("userinfo:workflow:leader:" + userId);
+                redisStringOps.del("userinfo:workflow:leader:" + userId);
             }
-            redisService.delByPattern("userinfo:workflow:position:*");
+            redisStringOps.delByPattern("userinfo:workflow:position:*");
         } catch (Exception e) {
             log.warn("Failed to evict user cache: {}", e.getMessage());
         }
@@ -277,9 +277,9 @@ public class WorkflowApproverCacheService {
     public void evictDeptLeaderCache(String deptId) {
         try {
             if (deptId != null) {
-                redisService.del("userinfo:workflow:deptLeader:id:" + deptId);
+                redisStringOps.del("userinfo:workflow:deptLeader:id:" + deptId);
             } else {
-                redisService.delByPattern("userinfo:workflow:deptLeader:*");
+                redisStringOps.delByPattern("userinfo:workflow:deptLeader:*");
             }
         } catch (Exception e) {
             log.warn("Failed to evict dept leader cache: {}", e.getMessage());
@@ -293,7 +293,7 @@ public class WorkflowApproverCacheService {
      */
     public void evictAllWorkflowCache() {
         try {
-            redisService.delByPattern("userinfo:workflow:*");
+            redisStringOps.delByPattern("userinfo:workflow:*");
             log.info("All workflow approver cache evicted");
         } catch (Exception e) {
             log.warn("Failed to evict all workflow cache: {}", e.getMessage());

@@ -376,7 +376,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
                         ? LocalDateTime.ofInstant(lastModified.toInstant(), ZoneId.systemDefault())
                         : null);
             }
-            metadata.setIsDirectory(false);
+            metadata.setDirectory(false);
             return metadata;
         } catch (Exception e) {
             log.error("[OBS] doGetMetadata failed, bucket={}, object={}, message={}",
@@ -420,7 +420,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
                             ? LocalDateTime.ofInstant(lastModified.toInstant(), ZoneId.systemDefault())
                             : null);
                 }
-                om.setIsDirectory(false);
+                om.setDirectory(false);
                 objects.add(om);
             }
 

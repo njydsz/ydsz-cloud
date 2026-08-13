@@ -58,5 +58,5 @@ public class FileVersion extends MpBaseEntity<String> implements Serializable {
     private String changeType;
 
     /** 是否为当前活跃版本 */
-    private Boolean isActive;
+    private Boolean active;
 }

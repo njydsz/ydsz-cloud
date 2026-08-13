@@ -17,7 +17,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.feign.assembler.NameAssembler;
 import com.njydsz.common.feign.assembler.NameAssemblerProperties;
 import com.njydsz.common.feign.assembler.NameType;
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.api.client.OrgQueryClient;
 
 import lombok.extern.slf4j.Slf4j;
@@ -59,7 +59,7 @@ public class UserInfoNameAssembler implements NameAssembler {
     private final Cache<String, String> l1Cache;
 
     /** L2: Redis 分布式缓存（可选，依赖 common-redis 存在且启用） */
-    private final RedisService redisService;
+    private final RedisStringOps redisStringOps;
 
     /**
      * 构造 UserInfoNameAssembler。
@@ -70,17 +70,17 @@ public class UserInfoNameAssembler implements NameAssembler {
      */
     public UserInfoNameAssembler(OrgQueryClient orgQueryClient,
                                  NameAssemblerProperties properties,
-                                 ObjectProvider<RedisService> redisProvider) {
+                                 ObjectProvider<RedisStringOps> redisProvider) {
         this.orgQueryClient = orgQueryClient;
         this.properties = properties;
         this.l1Cache = CacheBuilder.<String, String>newBuilder()
                 .maximumSize(properties.getCacheMaxSize())
                 .expireAfterWrite(properties.getCacheTtl().toMillis(), java.util.concurrent.TimeUnit.MILLISECONDS)
                 .build();
-        this.redisService = properties.isRedisCacheEnabled()
+        this.redisStringOps = properties.isRedisCacheEnabled()
                 ? redisProvider.getIfAvailable() : null;
-        if (properties.isRedisCacheEnabled() && this.redisService == null) {
-            log.info("NameAssembler Redis cache enabled but RedisService not available; "
+        if (properties.isRedisCacheEnabled() && this.redisStringOps == null) {
+            log.info("NameAssembler Redis cache enabled but RedisStringOps not available; "
                     + "falling back to L1 cache only");
         }
     }
@@ -140,10 +140,10 @@ public class UserInfoNameAssembler implements NameAssembler {
         }
 
         // L2: Redis 分布式缓存
-        if (redisService != null) {
+        if (redisStringOps != null) {
             String l2Key = redisCacheKey(type, id);
             try {
-                String l2Value = redisService.get(l2Key, String.class);
+                String l2Value = redisStringOps.get(l2Key, String.class);
                 if (l2Value != null) {
                     // 回填 L1 缓存（L1 TTL < L2 TTL，保证兜底新鲜度）
                     l1Cache.put(key, l2Value);
@@ -244,9 +244,9 @@ public class UserInfoNameAssembler implements NameAssembler {
         // L1
         l1Cache.remove(cacheKey(type, id));
         // L2
-        if (redisService != null) {
+        if (redisStringOps != null) {
             try {
-                redisService.del(redisCacheKey(type, id));
+                redisStringOps.del(redisCacheKey(type, id));
             } catch (Exception e) {
                 log.warn("NameAssembler L2 cache eviction failed: type={}, id={}", type, id);
             }
@@ -298,11 +298,11 @@ public class UserInfoNameAssembler implements NameAssembler {
     }
 
     private void putL2Cache(NameType type, String id, String value) {
-        if (redisService == null) {
+        if (redisStringOps == null) {
             return;
         }
         try {
-            redisService.set(redisCacheKey(type, id), value, properties.getRedisCacheTtl());
+            redisStringOps.set(redisCacheKey(type, id), value, properties.getRedisCacheTtl());
         } catch (Exception e) {
             log.warn("NameAssembler L2 cache write failed: type={}, id={}", type, id);
         }

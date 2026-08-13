@@ -3,9 +3,12 @@ package com.njydsz.workflow.web.controller.instance;
 import java.util.Map;
 
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import jakarta.validation.Valid;
+
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.IdempotentExempt;
 import com.njydsz.workflow.domain.dto.InstanceMigrationDTO;
@@ -94,7 +97,8 @@ public class FlowMigrationController {
     @Idempotent(key = "ydsz:workflow:FlowMigrationController:migrateInstances:lock", ttlSeconds = 5)
     @PostMapping("/instance/migrate")
     @Audit(module = "流程迁移", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'migrateInstances'")
-    public BaseResponse<InstanceMigrationResultDTO> migrateInstances(@RequestBody InstanceMigrationDTO dto) {
+    @AuthApiPermission
+    public BaseResponse<InstanceMigrationResultDTO> migrateInstances(@Valid @RequestBody InstanceMigrationDTO dto) {
         return BaseResponse.success(instanceMigrationService.migrate(dto));
     }
 
@@ -113,7 +117,8 @@ public class FlowMigrationController {
     @Idempotent(key = "ydsz:workflow:FlowMigrationController:previewMigration:lock", ttlSeconds = 5)
     @PostMapping("/instance/migrate/preview")
     @Audit(module = "流程迁移", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'previewMigration'")
-    public BaseResponse<InstanceMigrationResultDTO> previewMigration(@RequestBody InstanceMigrationDTO dto) {
+    @AuthApiPermission
+    public BaseResponse<InstanceMigrationResultDTO> previewMigration(@Valid @RequestBody InstanceMigrationDTO dto) {
         return BaseResponse.success(instanceMigrationService.previewMigration(dto));
     }
 

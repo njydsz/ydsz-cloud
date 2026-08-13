@@ -400,7 +400,7 @@ public class MinioStorage extends AbstractFileStorage {
             metadata.setLastModified(stat.lastModified() != null
                     ? LocalDateTime.ofInstant(stat.lastModified().toInstant(), ZoneId.systemDefault())
                     : null);
-            metadata.setIsDirectory(false);
+            metadata.setDirectory(false);
             return metadata;
         } catch (Exception e) {
             log.error("[Minio] doGetMetadata failed, bucket={}, object={}, message={}",
@@ -437,7 +437,7 @@ public class MinioStorage extends AbstractFileStorage {
                             ? LocalDateTime.ofInstant(item.lastModified().toInstant(), ZoneId.systemDefault())
                             : null);
                     om.setETag(item.etag());
-                    om.setIsDirectory(item.isDir());
+                    om.setDirectory(item.isDir());
                     objects.add(om);
                     lastKey = item.objectName();
                 } else {

@@ -12,7 +12,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.njydsz.common.auth.token.TokenService;
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.infra.mapper.RoleMapper;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
 import com.njydsz.userinfo.server.health.UserInfoHealthIndicator;
@@ -75,10 +75,10 @@ public class UserInfoConfiguration {
     @Bean
     @ConditionalOnClass(HealthIndicator.class)
     @ConditionalOnMissingBean(UserInfoHealthIndicator.class)
-    public UserInfoHealthIndicator userInfoHealthIndicator(RedisService redisService,
+    public UserInfoHealthIndicator userInfoHealthIndicator(RedisStringOps redisStringOps,
                                                             TokenService tokenService,
                                                             UserAccountMapper userAccountMapper,
                                                             RoleMapper roleMapper) {
-        return new UserInfoHealthIndicator(redisService, tokenService, userAccountMapper, roleMapper);
+        return new UserInfoHealthIndicator(redisStringOps, tokenService, userAccountMapper, roleMapper);
     }
 }

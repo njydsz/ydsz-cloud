@@ -210,7 +210,7 @@ public class ShareDomainService {
                 .granteeId(granteeId)
                 .permissionMask(permissionMask)
                 .inherited(false)
-                .isOwner(false)
+                .owner(false)
                 .revision(0)
                 .deleted(0)
                 .build();

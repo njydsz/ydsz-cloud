@@ -585,17 +585,17 @@ public class FlowMonitorDashboardController {
         }
         if (newCounts != null) {
             for (Map<String, Object> row : newCounts) {
-                String d = String.valueOf(row.get("date"));
-                if (byDate.containsKey(d)) {
-                    byDate.get(d)[0] = toLong(row.get("newCount"));
+                String dateStr = String.valueOf(row.get("date"));
+                if (byDate.containsKey(dateStr)) {
+                    byDate.get(dateStr)[0] = toLong(row.get("newCount"));
                 }
             }
         }
         if (completedCounts != null) {
             for (Map<String, Object> row : completedCounts) {
-                String d = String.valueOf(row.get("date"));
-                if (byDate.containsKey(d)) {
-                    byDate.get(d)[1] = toLong(row.get("completedCount"));
+                String dateStr = String.valueOf(row.get("date"));
+                if (byDate.containsKey(dateStr)) {
+                    byDate.get(dateStr)[1] = toLong(row.get("completedCount"));
                 }
             }
         }

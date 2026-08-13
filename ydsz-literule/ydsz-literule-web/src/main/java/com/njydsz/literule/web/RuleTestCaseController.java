@@ -100,7 +100,7 @@ public class RuleTestCaseController {
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'saveTestCase'")
     @RateLimit(resource = "literule.rule_test_case.saveTestCase", threshold = 50)
     @PostMapping("/testCases")
-    public BaseResponse<RuleTestCaseVO> saveTestCase(@RequestBody RuleTestCasePostDTO dto) {
+    public BaseResponse<RuleTestCaseVO> saveTestCase(@Valid @RequestBody RuleTestCasePostDTO dto) {
         RuleTestCaseDO testCase = LiteruleConverter.INSTANT.postDtoToEntity(dto);
         if (testCase.getId() != null) {
             ruleTestCaseMapper.updateById(testCase);

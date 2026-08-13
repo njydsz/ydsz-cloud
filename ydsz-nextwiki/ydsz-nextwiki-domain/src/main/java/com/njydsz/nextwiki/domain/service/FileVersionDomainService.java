@@ -82,7 +82,7 @@ public class FileVersionDomainService {
                 .mimeType(mimeType)
                 .remark(remark)
                 .changeType(nextVersion == 1 ? "create" : "update")
-                .isActive(true)
+                .active(true)
                 .revision(0)
                 .deleted(0)
                 .build();
@@ -143,7 +143,7 @@ public class FileVersionDomainService {
                 .mimeType(target.getMimeType())
                 .remark("回滚到版本 " + targetVersion)
                 .changeType("rollback")
-                .isActive(true)
+                .active(true)
                 .revision(0)
                 .deleted(0)
                 .build();

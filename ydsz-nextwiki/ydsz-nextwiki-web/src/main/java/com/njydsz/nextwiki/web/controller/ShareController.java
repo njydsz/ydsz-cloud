@@ -2,6 +2,8 @@ package com.njydsz.nextwiki.web.controller;
 
 import java.util.List;
 
+import jakarta.validation.Valid;
+
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -105,7 +107,7 @@ public class ShareController {
     @Operation(summary = "创建分享链接")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_CREATE)
     public BaseResponse<ShareLink> createShare(
-            @RequestBody NextwikiDTOs.CreateShareRequest request,
+            @Valid @RequestBody NextwikiDTOs.CreateShareRequest request,
             @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
         ShareLink result = shareApplicationService.createShare(

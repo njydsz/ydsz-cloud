@@ -1,6 +1,7 @@
 package com.njydsz.nextwiki.web.controller;
 
 import java.nio.file.Path;
+import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.util.Map;
 
@@ -278,7 +279,7 @@ public class WopiController {
     private void validateWopiToken(String authToken) {
         String expectedAccessToken = properties.getWopi().getAccessToken();
         if (expectedAccessToken != null && !expectedAccessToken.isEmpty()) {
-            if (authToken == null || !authToken.equals(expectedAccessToken)) {
+            if (authToken == null || !MessageDigest.isEqual(authToken.getBytes(), expectedAccessToken.getBytes())) {
                 throw new BusinessException(
                         NextwikiExceptionCode.FILE_NOT_FOUND);
             }

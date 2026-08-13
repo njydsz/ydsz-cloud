@@ -342,7 +342,7 @@ public class LocalStorage extends AbstractFileStorage {
                     Instant.ofEpochMilli(localFile.lastModified()),
                     ZoneId.systemDefault()));
             metadata.setContentType(Files.probeContentType(file));
-            metadata.setIsDirectory(localFile.isDirectory());
+            metadata.setDirectory(localFile.isDirectory());
             return metadata;
         } catch (Exception e) {
             log.error("[Local] doGetMetadata failed, object={}, message={}", objectName, e.getMessage());
@@ -404,7 +404,7 @@ public class LocalStorage extends AbstractFileStorage {
                                  Instant.ofEpochMilli(Files.getLastModifiedTime(path).toMillis()),
                                  ZoneId.systemDefault()));
                         om.setContentType(Files.probeContentType(path));
-                        om.setIsDirectory(false);
+                        om.setDirectory(false);
                         objects.add(om);
                     } catch (IOException e) {
                         log.warn("[Local] 读取文件元数据失败，跳过该文件 | path={} | error={}", path, e.getMessage());

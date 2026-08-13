@@ -148,7 +148,7 @@ public class RuleGraphController {
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'validateChainGraph'")
     @RateLimit(resource = "literule.rule_graph.validateChainGraph", threshold = 50)
     @PostMapping("/{ruleCode}/graph/validate")
-    public BaseResponse<List<RuleGraphValidator.GraphValidationIssue>> validateChainGraph(@RequestBody RuleChainGraph graph) {
+    public BaseResponse<List<RuleGraphValidator.GraphValidationIssue>> validateChainGraph(@Valid @RequestBody RuleChainGraph graph) {
         return BaseResponse.success(RuleGraphValidator.validate(graph));
     }
 

@@ -159,7 +159,7 @@ public class AiSummaryApplicationService {
         // TextRank 迭代
         double[] scores = new double[n];
         Arrays.fill(scores, 1.0);
-        double d = 0.85; // 阻尼系数
+        double dampingCoefficient = 0.85; // 阻尼系数
         for (int iter = 0; iter < 50; iter++) {
             double[] newScores = new double[n];
             for (int i = 0; i < n; i++) {
@@ -174,7 +174,7 @@ public class AiSummaryApplicationService {
                         sum += similarity[j][i] / outWeight * scores[j];
                     }
                 }
-                newScores[i] = (1 - d) + d * sum;
+                newScores[i] = (1 - dampingCoefficient) + dampingCoefficient * sum;
             }
             scores = newScores;
         }

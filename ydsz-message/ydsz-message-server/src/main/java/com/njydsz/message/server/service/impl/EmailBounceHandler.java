@@ -2,7 +2,7 @@ package com.njydsz.message.server.service.impl;
 
 import java.time.Duration;
 
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class EmailBounceHandler {
 
-    private final RedisService redisService;
+    private final RedisStringOps redisStringOps;
 
     /** 退信黑名单 Key 前缀 */
     private static final String BOUNCE_KEY_PREFIX = "email:bounce:";
@@ -42,7 +42,7 @@ public class EmailBounceHandler {
             return;
         }
         String key = BOUNCE_KEY_PREFIX + email.toLowerCase().trim();
-        redisService.set(key, bounceReason != null ? bounceReason : "unknown", Duration.ofDays(BOUNCE_TTL_DAYS));
+        redisStringOps.set(key, bounceReason != null ? bounceReason : "unknown", Duration.ofDays(BOUNCE_TTL_DAYS));
         log.warn("[Bounce] 邮件退信已记录: email={} reason={}", email, bounceReason);
     }
 
@@ -57,7 +57,7 @@ public class EmailBounceHandler {
             return false;
         }
         String key = BOUNCE_KEY_PREFIX + email.toLowerCase().trim();
-        return Boolean.TRUE.equals(redisService.hasKey(key));
+        return Boolean.TRUE.equals(redisStringOps.hasKey(key));
     }
 
     /**
@@ -67,7 +67,7 @@ public class EmailBounceHandler {
      */
     public void removeFromBounceList(String email) {
         String key = BOUNCE_KEY_PREFIX + email.toLowerCase().trim();
-        redisService.delete(key);
+        redisStringOps.del(key);
         log.info("[Bounce] 邮箱已从退信黑名单移除: email={}", email);
     }
 

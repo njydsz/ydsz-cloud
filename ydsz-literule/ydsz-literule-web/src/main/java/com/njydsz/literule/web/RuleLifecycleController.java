@@ -136,6 +136,9 @@ public class RuleLifecycleController {
         }
 
         RuleStatus current = parseStatusSafely(def.getStatus());
+        if (current == null) {
+            return BaseResponse.error(LiteruleExceptionCode.RULE_STATUS_INVALID, "规则状态非法: " + def.getStatus());
+        }
         if (!current.canTransitionTo(RuleStatus.PUBLISHED)) {
             return BaseResponse.error(LiteruleExceptionCode.RULE_STATUS_INVALID, "当前状态 " + current.getDesc() + " 不允许审批通过，仅 DRAFT/REVIEW 可审批");
         }
@@ -180,6 +183,9 @@ public class RuleLifecycleController {
         }
 
         RuleStatus current = parseStatusSafely(def.getStatus());
+        if (current == null) {
+            return BaseResponse.error(LiteruleExceptionCode.RULE_STATUS_INVALID, "规则状态非法: " + def.getStatus());
+        }
         if (!current.canTransitionTo(RuleStatus.ARCHIVED)) {
             return BaseResponse.error(LiteruleExceptionCode.RULE_STATUS_INVALID, "当前状态 " + current.getDesc() + " 不允许驳回，仅 DRAFT/REVIEW/PUBLISHED 可驳回");
         }
@@ -200,13 +206,14 @@ public class RuleLifecycleController {
     }
 
     /**
-     * 安全解析规则状态，无效值回退到 PUBLISHED
+     * 安全解析规则状态，无效值返回 null 而非伪装成 PUBLISHED
      */
     private RuleStatus parseStatusSafely(String status) {
         try {
             return RuleStatus.valueOf(status);
         } catch (Exception e) {
-            return RuleStatus.PUBLISHED;
+            log.warn("规则状态解析失败，status={}", status, e);
+            return null;
         }
     }
 

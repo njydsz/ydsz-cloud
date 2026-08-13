@@ -6,6 +6,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.validation.Valid;
+
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -106,7 +108,7 @@ public class RuleDecisionTableController {
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'saveDecisionTable'")
     @RateLimit(resource = "literule.rule_decision_table.saveDecisionTable", threshold = 50)
     @PostMapping("/decisionTables")
-    public BaseResponse<DecisionTableVO> saveDecisionTable(@RequestBody DecisionTablePostDTO dto) {
+    public BaseResponse<DecisionTableVO> saveDecisionTable(@Valid @RequestBody DecisionTablePostDTO dto) {
         DecisionTable decisionTable = LiteruleConverter.INSTANT.postDtoToEntity(dto);
         if (decisionTable.getId() != null) {
             decisionTableMapper.updateById(decisionTable);

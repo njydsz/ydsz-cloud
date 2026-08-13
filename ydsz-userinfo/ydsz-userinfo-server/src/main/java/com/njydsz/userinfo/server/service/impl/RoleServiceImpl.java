@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.util.bean.BeanUpdateUtil;
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.auth.annotation.DataScope;
 
@@ -92,7 +92,7 @@ public class RoleServiceImpl implements RoleService {
     /** 用户-角色关联 Mapper（用于删除前检查是否有用户关联） */
     private final UserRoleMapper userRoleMapper;
     /** Redis 服务 */
-    private final RedisService redisService;
+    private final RedisStringOps redisStringOps;
     /** 领域事件发布器 */
     private final UserDomainEventPublisher eventPublisher;
 
@@ -299,7 +299,7 @@ public class RoleServiceImpl implements RoleService {
 
         // 1. 尝试从缓存获取
         try {
-            String cachedJson = redisService.get(cacheKey, String.class);
+            String cachedJson = redisStringOps.get(cacheKey, String.class);
             if (cachedJson != null && !cachedJson.isBlank()) {
                 List<String> cached = YdszJson.fromJson(cachedJson, java.util.List.class, String.class);
                 if (cached != null) {
@@ -321,7 +321,7 @@ public class RoleServiceImpl implements RoleService {
         // 3. 写入缓存（异步异常不影响业务）
         try {
             String json = YdszJson.toJson(permissionIds);
-            redisService.set(cacheKey, json, Duration.ofSeconds(CACHE_TTL_ROLE_PERMISSIONS));
+            redisStringOps.set(cacheKey, json, Duration.ofSeconds(CACHE_TTL_ROLE_PERMISSIONS));
         } catch (Exception e) {
             log.warn("Failed to cache role permissions: {}", e.getMessage());
         }
@@ -341,7 +341,7 @@ public class RoleServiceImpl implements RoleService {
             return;
         }
         try {
-            redisService.del(CACHE_KEY_ROLE_PERMISSIONS_PREFIX + roleId);
+            redisStringOps.del(CACHE_KEY_ROLE_PERMISSIONS_PREFIX + roleId);
             log.debug("Role permission cache evicted: roleId={}", roleId);
         } catch (Exception e) {
             log.warn("Failed to evict role permission cache: {}", e.getMessage());

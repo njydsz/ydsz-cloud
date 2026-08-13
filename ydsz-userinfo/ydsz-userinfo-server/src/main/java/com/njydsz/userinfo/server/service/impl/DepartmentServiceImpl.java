@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.util.bean.BeanUpdateUtil;
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.json.YdszJson;
 
 import com.njydsz.userinfo.domain.dto.post.DepartmentPostDTO;
@@ -81,7 +81,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     /** 用户-部门关联 Mapper（用于删除前检查是否有人员关联） */
     private final UserDeptMapper userDeptMapper;
     /** Redis 服务 */
-    private final RedisService redisService;
+    private final RedisStringOps redisStringOps;
     /** 领域事件发布器 */
     private final UserDomainEventPublisher eventPublisher;
 
@@ -224,7 +224,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     public List<DepartmentTreeVO> tree() {
         // 1. 尝试从缓存获取
         try {
-            String cachedJson = redisService.get(CACHE_KEY_DEPT_TREE, String.class);
+            String cachedJson = redisStringOps.get(CACHE_KEY_DEPT_TREE, String.class);
             if (cachedJson != null && !cachedJson.isBlank()) {
                 List<DepartmentTreeVO> cached = YdszJson.fromJson(cachedJson, java.util.List.class, DepartmentTreeVO.class);
                 if (cached != null) {
@@ -254,7 +254,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         // 3. 写入缓存（异步异常不影响业务）
         try {
             String json = YdszJson.toJson(tree);
-            redisService.set(CACHE_KEY_DEPT_TREE, json, Duration.ofSeconds(CACHE_TTL_DEPT_TREE));
+            redisStringOps.set(CACHE_KEY_DEPT_TREE, json, Duration.ofSeconds(CACHE_TTL_DEPT_TREE));
         } catch (Exception e) {
             log.warn("Failed to cache department tree: {}", e.getMessage());
         }
@@ -269,7 +269,7 @@ public class DepartmentServiceImpl implements DepartmentService {
      */
     private void evictDeptTreeCache() {
         try {
-            redisService.del(CACHE_KEY_DEPT_TREE);
+            redisStringOps.del(CACHE_KEY_DEPT_TREE);
             log.debug("Department tree cache evicted");
         } catch (Exception e) {
             log.warn("Failed to evict department tree cache: {}", e.getMessage());

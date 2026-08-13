@@ -410,7 +410,7 @@ public class QiniuStorage extends AbstractFileStorage {
                             Instant.ofEpochMilli(fileInfo.putTime / 10000),
                             ZoneId.systemDefault())
                     : null);
-            metadata.setIsDirectory(false);
+            metadata.setDirectory(false);
             return metadata;
         } catch (QiniuException e) {
             if (e.code() == 612) {

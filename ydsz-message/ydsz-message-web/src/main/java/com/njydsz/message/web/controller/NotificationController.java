@@ -223,8 +223,8 @@ public class NotificationController {
             @RequestParam String userId,
             @RequestParam String type,
             @Valid @RequestBody RealtimePushDTO payload) {
-        Object data = payload != null ? payload.getData() : null;
-        realtimePushService.pushToUser(userId, type, data);
+        Object bizData = payload != null ? payload.getData() : null;
+        realtimePushService.pushToUser(userId, type, bizData);
         return BaseResponse.success(Map.of("success", true, "userId", userId, "type", type));
     }
 
