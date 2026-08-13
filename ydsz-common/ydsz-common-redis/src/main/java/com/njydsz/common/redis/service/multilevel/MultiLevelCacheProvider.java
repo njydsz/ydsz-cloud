@@ -186,6 +186,19 @@ public class MultiLevelCacheProvider implements CacheProvider, Closeable {
     // ==================== CacheProvider 实现 ====================
 
     /**
+     * 获取缓存值（不指定类型，返回原始对象）
+     *
+     * <p>L1 → L2 多级读取，命中 L2 时回填 L1。
+     *
+     * @param key 缓存键
+     * @return 缓存值，不存在时返回 null
+     */
+    @Override
+    public Object get(String key) {
+        return get(key, Object.class);
+    }
+
+    /**
      * 获取缓存（L1 → L2 多级读取）
      */
     @Override
@@ -209,6 +222,37 @@ public class MultiLevelCacheProvider implements CacheProvider, Closeable {
         }
 
         return null;
+    }
+
+    /**
+     * 写入缓存（不带过期时间，L2 永久存储）
+     *
+     * <p>仅写 L2（Redis 永久 Key），L1 使用默认 TTL 自然过期。
+     *
+     * @param key   缓存 key
+     * @param value 值
+     * @return true-写入成功
+     */
+    @Override
+    public boolean set(String key, Object value) {
+        boolean result = stringOps.set(key, value);
+        if (result) {
+            // 删除 L1 中的旧值，让下次读取时回填最新数据
+            invalidateL1(key);
+        }
+        return result;
+    }
+
+    /**
+     * 写入缓存（不带过期时间）
+     */
+    @Override
+    public boolean set(String key, Object value) {
+        boolean result = stringOps.set(key, value);
+        if (result) {
+            invalidateL1(key);
+        }
+        return result;
     }
 
     /**
@@ -245,9 +289,9 @@ public class MultiLevelCacheProvider implements CacheProvider, Closeable {
      */
     @Override
     public boolean delete(String key) {
-        boolean result = stringOps.del(key);
+        stringOps.del(key);
         invalidateL1(key);
-        return result;
+        return true;
     }
 
     /**

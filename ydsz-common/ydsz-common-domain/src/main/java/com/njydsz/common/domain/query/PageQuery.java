@@ -272,69 +272,42 @@ public class PageQuery extends BaseQuery {
     // ======================== 深度分页风险评估 ========================
 
     /**
-     * 缓存的深度分页风险评估结果（transient，不参与序列化）。
-     *
-     * <p>使用 {@link #assessPaginationRisk()} 首次评估后缓存结果，
-     * 避免重复调用 {@link PageConstants#calcOffset} 和 {@link DeepPaginationRisk#assess}。
-     * 同一 PageQuery 对象的 offset 在生命周期内不变，缓存安全。
-     */
-    @JsonIgnore
-    private transient DeepPaginationRisk cachedRiskAssessment;
-
-    /** 缓存评估使用的阈值（default = 0 表示使用默认值） */
-    @JsonIgnore
-    private transient long cachedWarnThreshold = 0;
-
-    @JsonIgnore
-    private transient long cachedRejectThreshold = 0;
-
-    /**
      * 评估当前分页查询的深度分页风险（使用默认阈值 10000 / 50000）。
      *
      * <p>基于 {@link #getOffsetLong()} 计算 offset，再委托 {@link DeepPaginationRisk#assess(long)} 判定。
      * 业务层 / 拦截层可据此发出告警或拒绝执行，防止慢查询拖垮数据库。
      *
-     * <p><b>缓存优化：</b>同一对象的 offset 不变，首次评估后结果被缓存。
-     * 多次调用不会重复执行 {@link PageConstants#calcOffset}。
+     * <p><b>纯函数设计：</b>评估不产生副作用、不做结果缓存。offset 计算与阈值判定开销极小，
+     * 缓存反而引入可变状态（污染 equals/hashCode、与"阈值 0 表示关闭"语义冲突），故 v1.9.0 起移除缓存。
      *
      * @return 风险等级（SAFE / WARN / REJECT）
      * @since 1.8.0
+     * @since 1.9.0 移除结果缓存，退化为纯函数
      */
     public DeepPaginationRisk assessPaginationRisk() {
-        if (cachedRiskAssessment == null || cachedWarnThreshold != 0 || cachedRejectThreshold != 0) {
-            cachedRiskAssessment = DeepPaginationRisk.assess(getOffsetLong());
-            cachedWarnThreshold = 0;
-            cachedRejectThreshold = 0;
-        }
-        return cachedRiskAssessment;
+        return DeepPaginationRisk.assess(getOffsetLong());
     }
 
     /**
      * 评估当前分页查询的深度分页风险（使用指定阈值）。
      *
-     * <p>阈值约定：{@code rejectThreshold >= warnThreshold >= 0}。典型调用：
+     * <p>阈值契约：{@code rejectThreshold >= warnThreshold >= 0}，非法阈值由
+     * {@link DeepPaginationRisk#assess(long, long, long)} 校验。典型调用：
      * <pre>{@code
      * DomainProperties.Page page = domainProperties.getPage();
      * DeepPaginationRisk risk = query.assessPaginationRisk(
      *         page.getCursorWarningThreshold(), page.getCursorRejectThreshold());
      * }</pre>
      *
-     * <p><b>缓存优化：</b>阈值相同时复用上次结果；阈值变化时重新计算。
-     *
      * @param warnThreshold   警告阈值
      * @param rejectThreshold 拒绝阈值
      * @return 风险等级（SAFE / WARN / REJECT）
+     * @throws IllegalArgumentException 当阈值非法（负数或 reject < warn）时
      * @since 1.8.0
+     * @since 1.9.0 移除结果缓存，退化为纯函数
      */
     public DeepPaginationRisk assessPaginationRisk(long warnThreshold, long rejectThreshold) {
-        if (cachedRiskAssessment == null
-                || cachedWarnThreshold != warnThreshold
-                || cachedRejectThreshold != rejectThreshold) {
-            cachedRiskAssessment = DeepPaginationRisk.assess(getOffsetLong(), warnThreshold, rejectThreshold);
-            cachedWarnThreshold = warnThreshold;
-            cachedRejectThreshold = rejectThreshold;
-        }
-        return cachedRiskAssessment;
+        return DeepPaginationRisk.assess(getOffsetLong(), warnThreshold, rejectThreshold);
     }
 
     /**

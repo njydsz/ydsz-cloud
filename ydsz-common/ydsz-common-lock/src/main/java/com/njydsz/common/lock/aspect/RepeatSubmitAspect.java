@@ -78,6 +78,18 @@ public class RepeatSubmitAspect {
                     .build();
         }
 
+        // 间隔窗口校验（用户维度 + 方法维度）：窗口内重复提交直接拒绝，不消费 Token
+        String businessKey = joinPoint.getSignature().getDeclaringTypeName()
+                + "#" + joinPoint.getSignature().getName();
+        if (!tokenService.acquireInterval(businessKey, repeatSubmit.interval())) {
+            log.warn("[ydsz-lock] [repeat-submit] 间隔窗口内重复提交 | businessKey={} | interval={}ms",
+                    businessKey, repeatSubmit.interval());
+            throw BusinessException.builder()
+                    .code(CoreExceptionCode.FAIL.getCode())
+                    .message(repeatSubmit.message())
+                    .build();
+        }
+
         boolean valid = tokenService.validateAndConsume(token);
         if (!valid) {
             log.warn("[ydsz-lock] [repeat-submit] Token 无效或已过期 | header={}, token={}", headerName, token);

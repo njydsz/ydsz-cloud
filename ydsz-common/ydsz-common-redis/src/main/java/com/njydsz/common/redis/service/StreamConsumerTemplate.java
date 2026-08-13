@@ -325,10 +325,6 @@ public class StreamConsumerTemplate implements DisposableBean {
                 // 5. 最小消费间隔
                 sleepQuietly(MIN_CONSUME_INTERVAL_MS);
 
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                log.debug("【StreamConsumer】消费线程被中断 | streamKey={}", streamKey);
-                break;
             } catch (Exception e) {
                 log.error("【StreamConsumer】消费循环异常 | streamKey={}", streamKey, e);
                 sleepQuietly(pollIntervalMs);

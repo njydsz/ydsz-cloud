@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.env.Environment;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -53,6 +54,9 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnClass(name = "org.springframework.web.server.ServerWebExchange")
 @ConditionalOnProperty(prefix = "ydsz.exception", name = "global-handler-enabled", havingValue = "true", matchIfMissing = true)
 public class WebFluxExceptionHandler extends BaseExceptionHandler {
+
+    /** 系统错误兜底文案（i18n key 解析失败时使用，避免向客户端泄露内部异常细节） */
+    private static final String DEFAULT_SYSTEM_ERROR_MESSAGE = "系统异常，请联系管理员";
 
     private final MessageSource messageSource;
 
@@ -164,13 +168,7 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
         log.error("{}非法状态异常 | 路径: {} | 消息: {}",
                 getLogPrefix(), exchange.getRequest().getPath().value(), e.getMessage(), e);
 
-        ExceptionInfo info = buildExceptionInfo(e, exchange.getRequest().getPath().value(), extractTraceId(exchange));
-        info.setCode(CoreExceptionCode.SYSTEM_ERROR.getCode());
-
-        return errorResponse(
-                CoreExceptionCode.SYSTEM_ERROR.getCode(),
-                info.getMessage(),
-                includeExceptionInfo() ? info : null);
+        return buildSystemErrorResponse(e, exchange);
     }
 
     /**
@@ -183,13 +181,7 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
         log.error("{}空指针异常 | 路径: {} | 消息: {}",
                 getLogPrefix(), exchange.getRequest().getPath().value(), e.getMessage(), e);
 
-        ExceptionInfo info = buildExceptionInfo(e, exchange.getRequest().getPath().value(), extractTraceId(exchange));
-        info.setCode(CoreExceptionCode.SYSTEM_ERROR.getCode());
-
-        return errorResponse(
-                CoreExceptionCode.SYSTEM_ERROR.getCode(),
-                info.getMessage(),
-                includeExceptionInfo() ? info : null);
+        return buildSystemErrorResponse(e, exchange);
     }
 
     /**
@@ -202,11 +194,29 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
         log.error("{}系统异常 | 路径: {} | 类型: {} | 消息: {}",
                 getLogPrefix(), exchange.getRequest().getPath().value(), e.getClass().getName(), e.getMessage(), e);
 
-        ExceptionInfo info = buildExceptionInfo(e, exchange.getRequest().getPath().value(), extractTraceId(exchange));
+        return buildSystemErrorResponse(e, exchange);
+    }
 
+    /**
+     * 构建系统级错误响应（掩码内部异常细节）。
+     *
+     * <p>与 MVC 处理器行为对齐：仅返回 i18n 的 system.error 文案，
+     * 原始异常消息仅保留在日志与堆栈详情（dev/test）中，避免生产环境信息泄露。
+     *
+     * @param e        原始异常
+     * @param exchange WebFlux 请求上下文
+     * @return 统一错误响应
+     */
+    private Object buildSystemErrorResponse(Throwable e, ServerWebExchange exchange) {
+        String message = messageSource.getMessage(
+                CoreExceptionCode.SYSTEM_ERROR.getKey(), null,
+                DEFAULT_SYSTEM_ERROR_MESSAGE, LocaleContextHolder.getLocale());
+        ExceptionInfo info = buildExceptionInfo(e, exchange.getRequest().getPath().value(), extractTraceId(exchange));
+        info.setCode(CoreExceptionCode.SYSTEM_ERROR.getCode());
+        info.setMessage(message);
         return errorResponse(
                 CoreExceptionCode.SYSTEM_ERROR.getCode(),
-                info.getMessage(),
+                message,
                 includeExceptionInfo() ? info : null);
     }
 }

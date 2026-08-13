@@ -161,6 +161,17 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
     }
 
     /**
+     * 获取锁指标收集器
+     *
+     * <p>供子类覆写 {@link #tryAcquireOnce} 时记录活跃锁数等指标。</p>
+     *
+     * @return 指标收集器实例，未设置时返回 null
+     */
+    protected LockMetrics getLockMetrics() {
+        return lockMetrics;
+    }
+
+    /**
      * 获取锁续期看门狗
      *
      * @return 看门狗实例，未设置时返回 null

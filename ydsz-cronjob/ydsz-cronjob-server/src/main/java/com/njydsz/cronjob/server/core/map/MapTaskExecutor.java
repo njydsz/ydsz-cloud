@@ -200,45 +200,100 @@ public class MapTaskExecutor {
 
         // 7. 若 processor 是 MapReduceProcessor 且有子任务，调用 reduce 汇总
         if (processor instanceof MapReduceProcessor reduceProcessor) {
-            try {
-                // 构造子任务上下文列表（从 ProcessResult 恢复 results 数据，供 reduce 读取）
-                List<MapContext> subTaskContexts = new ArrayList<>(subTasks.size());
-                for (int i = 0; i < subTasks.size(); i++) {
-                    MapTask subTask = subTasks.get(i);
-                    MapContext subContext = new MapContext();
-                    subContext.setJobId(jobId);
-                    subContext.setLogId(logId);
-                    subContext.setJobKey(jobKey);
-                    subContext.setTaskName(subTask.getTaskName());
-                    subContext.setTaskParams(subTask.getTaskParams());
-                    subContext.setRoot(false);
-                    ProcessResult r = subTaskResults.get(i);
-                    if (r != null && r.getResult() != null) {
-                        try {
-                            ObjectNode resultMap = YdszJson.parseObject(r.getResult());
-                            if (resultMap != null) {
-                                resultMap.entrySet().forEach(e ->
-                                        subContext.getResults().put(e.getKey(), e.getValue().asValue()));
-                            }
-                        } catch (Exception ignored) {
-                            subContext.getResults().put("result", r.getResult());
-                        }
-                    }
-                    subTaskContexts.add(subContext);
-                }
-                ProcessResult reduceResult = reduceProcessor.reduce(subTaskContexts, rootContext);
-                log.info("[MapTaskExecutor] reduce 完成: key={} logId={} success={}",
-                        jobKey, logId, reduceResult.isSuccess());
-                return reduceResult;
-            } catch (Exception e) {
-                log.error("[MapTaskExecutor] reduce 执行失败: key={} logId={} reason={}",
-                        jobKey, logId, e.getMessage(), e);
-                return ProcessResult.failed("reduce 执行失败: " + e.getMessage());
-            }
+            return executeReduce(reduceProcessor, subTasks, subTaskResults, rootContext, jobId, logId, jobKey);
         }
 
         // 8. 非 MapReduceProcessor：root task 成功即整体成功
         return rootResult;
+    }
+
+    /**
+     * 执行 MapReduce 汇总阶段。
+     *
+     * <p>从子任务结果中恢复 {@link MapContext} 列表（含 results 数据），
+     * 然后调用 {@link MapReduceProcessor#reduce(List, MapContext)} 汇总。
+     *
+     * @param reduceProcessor MapReduce 处理器
+     * @param subTasks        子任务列表
+     * @param subTaskResults  子任务执行结果（与 subTasks 一一对应）
+     * @param rootContext     根任务上下文
+     * @param jobId           任务 ID
+     * @param logId           日志 ID
+     * @param jobKey          任务 KEY
+     * @return reduce 结果
+     */
+    private ProcessResult executeReduce(MapReduceProcessor reduceProcessor,
+                                         List<MapTask> subTasks,
+                                         List<ProcessResult> subTaskResults,
+                                         MapContext rootContext,
+                                         String jobId, String logId, String jobKey) {
+        try {
+            List<MapContext> subTaskContexts = buildSubTaskContexts(subTasks, subTaskResults, jobId, logId, jobKey);
+            ProcessResult reduceResult = reduceProcessor.reduce(subTaskContexts, rootContext);
+            log.info("[MapTaskExecutor] reduce 完成: key={} logId={} success={}",
+                    jobKey, logId, reduceResult.isSuccess());
+            return reduceResult;
+        } catch (Exception e) {
+            log.error("[MapTaskExecutor] reduce 执行失败: key={} logId={} reason={}",
+                    jobKey, logId, e.getMessage(), e);
+            return ProcessResult.failed("reduce 执行失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 根据子任务列表和对应结果，构造 {@link MapContext} 列表供 reduce 使用。
+     *
+     * <p>每个子任务的 results 通过 JSON 反序列化恢复；若反序列化失败则将原始字符串
+     * 以 {@code "result"} 为 key 存入 results Map。
+     *
+     * @param subTasks       子任务列表
+     * @param subTaskResults 子任务结果（与 subTasks 一一对应）
+     * @param jobId          任务 ID
+     * @param logId          日志 ID
+     * @param jobKey         任务 KEY
+     * @return 子任务上下文列表
+     */
+    private List<MapContext> buildSubTaskContexts(List<MapTask> subTasks,
+                                                   List<ProcessResult> subTaskResults,
+                                                   String jobId, String logId, String jobKey) {
+        List<MapContext> contexts = new ArrayList<>(subTasks.size());
+        for (int i = 0; i < subTasks.size(); i++) {
+            MapTask subTask = subTasks.get(i);
+            MapContext subContext = new MapContext();
+            subContext.setJobId(jobId);
+            subContext.setLogId(logId);
+            subContext.setJobKey(jobKey);
+            subContext.setTaskName(subTask.getTaskName());
+            subContext.setTaskParams(subTask.getTaskParams());
+            subContext.setRoot(false);
+            populateResults(subContext, subTaskResults.get(i));
+            contexts.add(subContext);
+        }
+        return contexts;
+    }
+
+    /**
+     * 将子任务执行结果中的数据填充到 {@link MapContext#getResults()} 中。
+     *
+     * <p>优先尝试 JSON 反序列化为 ObjectNode 后逐条写入；若反序列化失败则将原始
+     * 字符串以 {@code "result"} 为 key 存入。
+     *
+     * @param context 子任务上下文（results 将被写入）
+     * @param result  子任务执行结果
+     */
+    private void populateResults(MapContext context, ProcessResult result) {
+        if (result == null || result.getResult() == null) {
+            return;
+        }
+        try {
+            ObjectNode resultMap = YdszJson.parseObject(result.getResult());
+            if (resultMap != null) {
+                resultMap.entrySet().forEach(e ->
+                        context.getResults().put(e.getKey(), e.getValue().asValue()));
+            }
+        } catch (Exception ignored) {
+            context.getResults().put("result", result.getResult());
+        }
     }
 
     /**

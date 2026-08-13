@@ -362,18 +362,7 @@ public class FlowAdvancedController {
     public BaseResponse<Map<String, Object>> urgeCooldown(@PathVariable String instanceId) {
         String userId = AuthContextUtils.getUserId();
         long cooldownSeconds = FlowUrgeLimiter.DEFAULT_COOLDOWN_SECONDS;
-        long remaining = 0;
-        try {
-            // 尝试获取剩余 TTL
-            List<Long> ttls = urgeLimiter.getCooldownSeconds(userId,
-                    List.of(Long.parseLong(instanceId)), "INSTANCE");
-            if (ttls != null && !ttls.isEmpty()) {
-                remaining = ttls.get(0);
-            }
-        } catch (NumberFormatException e) {
-            // instanceId 不是数字，返回 0
-            remaining = 0;
-        }
+        long remaining = resolveCooldownRemaining(userId, instanceId);
         boolean canUrge = remaining <= 0;
         return BaseResponse.success(Map.of(
                 "canUrge", canUrge,
@@ -381,5 +370,29 @@ public class FlowAdvancedController {
                 "cooldownSeconds", cooldownSeconds,
                 "remainingMinutes", remaining / 60
         ));
+    }
+
+    /**
+     * 解析催办剩余冷却秒数。
+     *
+     * <p>若 instanceId 非数字或限流器查询返回空，则返回 0（表示无冷却）。
+     *
+     * @param userId     当前用户 ID
+     * @param instanceId 流程实例 ID（可能非数字）
+     * @return 剩余冷却秒数
+     */
+    private long resolveCooldownRemaining(String userId, String instanceId) {
+        long instanceIdLong;
+        try {
+            instanceIdLong = Long.parseLong(instanceId);
+        } catch (NumberFormatException e) {
+            return 0;
+        }
+        List<Long> ttls = urgeLimiter.getCooldownSeconds(userId,
+                List.of(instanceIdLong), "INSTANCE");
+        if (ttls != null && !ttls.isEmpty()) {
+            return ttls.get(0);
+        }
+        return 0;
     }
 }

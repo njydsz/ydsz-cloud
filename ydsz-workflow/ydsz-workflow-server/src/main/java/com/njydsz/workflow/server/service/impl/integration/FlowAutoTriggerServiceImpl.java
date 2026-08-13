@@ -149,32 +149,55 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
 
     /**
      * 处理单条触发规则
+     *
+     * <p>通过卫语句（Guard Clause）提前返回不满足条件的触发，
+     * 成功路径保持线性流程 → 评估条件 → 启动目标流程 → 写审计日志。
      */
     private void processTrigger(FlowAutoTrigger trigger, FlowInstance instance,
                                  Map<String, Object> variables) {
-        String conditionExpression = trigger.getConditionExpression();
-
-        // 5. 评估 conditionExpression（如果为空则无条件触发）
-        boolean conditionMet = true;
-        if (StringUtils.hasText(conditionExpression)) {
-            try {
-                conditionMet = routingService.evaluateCondition(conditionExpression, variables);
-                log.info("[FlowAutoTrigger] 条件评估: triggerId={} expr={} result={}",
-                        trigger.getId(), conditionExpression, conditionMet);
-            } catch (Exception e) {
-                log.warn("[FlowAutoTrigger] 条件表达式评估失败，默认不触发: triggerId={} expr={} err={}",
-                        trigger.getId(), conditionExpression, e.getMessage());
-                conditionMet = false;
-            }
-        }
-
-        if (!conditionMet) {
-            log.debug("[FlowAutoTrigger] 条件不满足，跳过: triggerId={} targetFlowCode={}",
-                    trigger.getId(), trigger.getTargetFlowCode());
+        // Guard: 条件表达式非空时评估，不满足则跳过
+        if (StringUtils.hasText(trigger.getConditionExpression()) && !evaluateCondition(trigger, variables)) {
             return;
         }
 
-        // 6. 构建启动 DTO 并调用 WorkflowFacade.startProcess 启动目标流程
+        // 构建启动 DTO 并调用 WorkflowFacade.startProcess 启动目标流程
+        String targetInstanceId = workflowFacade.startProcess(
+                buildStartProcessDTO(trigger, instance, variables));
+
+        log.info("[FlowAutoTrigger] 自动触发流程成功: sourceFlowCode={} sourceInstanceId={} "
+                        + "targetFlowCode={} targetInstanceId={} triggerId={}",
+                instance.getFlowCode(), instance.getId(),
+                trigger.getTargetFlowCode(), targetInstanceId, trigger.getId());
+
+        // 写入审计日志
+        writeAuditLog(instance, trigger, true, "自动触发成功: " + trigger.getTargetFlowCode()
+                + " -> 实例 " + targetInstanceId);
+    }
+
+    /**
+     * 评估触发规则的条件表达式。
+     *
+     * @return true 表示条件满足或表达式为空（无条件触发）；false 表示条件不满足或评估异常
+     */
+    private boolean evaluateCondition(FlowAutoTrigger trigger, Map<String, Object> variables) {
+        String expr = trigger.getConditionExpression();
+        try {
+            boolean result = routingService.evaluateCondition(expr, variables);
+            log.info("[FlowAutoTrigger] 条件评估: triggerId={} expr={} result={}",
+                    trigger.getId(), expr, result);
+            return result;
+        } catch (Exception e) {
+            log.warn("[FlowAutoTrigger] 条件表达式评估失败，默认不触发: triggerId={} expr={} err={}",
+                    trigger.getId(), expr, e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * 构建目标流程的启动 DTO。
+     */
+    private FlowStartProcessDTO buildStartProcessDTO(FlowAutoTrigger trigger, FlowInstance instance,
+                                                       Map<String, Object> variables) {
         FlowStartProcessDTO startDto = new FlowStartProcessDTO();
         startDto.setFlowCode(trigger.getTargetFlowCode());
         startDto.setBusinessType(instance.getBusinessType());
@@ -186,27 +209,16 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
         startDto.setVariables(variables);
         startDto.setTenantId(instance.getTenantId());
         startDto.setProviderTraceId(instance.getProviderTraceId());
-
-        String targetInstanceId = workflowFacade.startProcess(startDto);
-
-        log.info("[FlowAutoTrigger] 自动触发流程成功: sourceFlowCode={} sourceInstanceId={} "
-                        + "targetFlowCode={} targetInstanceId={} triggerId={}",
-                instance.getFlowCode(), instance.getId(),
-                trigger.getTargetFlowCode(), targetInstanceId, trigger.getId());
-
-        // 7. 写入审计日志
-        writeAuditLog(instance, trigger, true, "自动触发成功: " + trigger.getTargetFlowCode()
-                + " -> 实例 " + targetInstanceId);
+        return startDto;
     }
 
     /**
      * 构建自动触发流程的标题
      */
     private String buildTriggerTitle(FlowAutoTrigger trigger, FlowInstance instance) {
-        String base = trigger.getTargetFlowCode();
-        if (StringUtils.hasText(trigger.getDescription())) {
-            base = trigger.getDescription();
-        }
+        String base = StringUtils.hasText(trigger.getDescription())
+                ? trigger.getDescription()
+                : trigger.getTargetFlowCode();
         return "[" + base + "] 由 " + instance.getFlowCode() + "(" + instance.getId() + ") 自动触发";
     }
 
@@ -216,28 +228,36 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
     private void writeAuditLog(FlowInstance instance, FlowAutoTrigger trigger,
                                 boolean success, String comment) {
         try {
-            FlowAuditLog logEntry = new FlowAuditLog();
-            logEntry.setInstanceId(instance.getId());
-            logEntry.setTaskId(null);
-            logEntry.setFlowCode(instance.getFlowCode());
-            logEntry.setBusinessType(instance.getBusinessType());
-            logEntry.setBusinessId(instance.getBusinessId());
-            logEntry.setNodeCode(null);
-            logEntry.setNodeName(null);
-            logEntry.setAction(success ? "AUTO_TRIGGER" : "AUTO_TRIGGER_FAIL");
-            logEntry.setOperatorId(null);
-            logEntry.setOperatorName("SYSTEM");
-            logEntry.setTargetId(null);
-            logEntry.setTargetName(trigger.getTargetFlowCode());
-            logEntry.setComment(comment);
-            logEntry.setOperatedAt(LocalDateTime.now());
-            logEntry.setTenantId(instance.getTenantId());
-            logEntry.setProviderTraceId(instance.getProviderTraceId());
-            auditLogMapper.insert(logEntry);
+            auditLogMapper.insert(buildAuditLogEntry(instance, trigger, success, comment));
         } catch (Exception e) {
             log.warn("[FlowAutoTrigger] 审计日志写入失败: instanceId={} triggerId={} err={}",
                     instance.getId(), trigger.getId(), e.getMessage());
         }
+    }
+
+    /**
+     * 构造审计日志实体（供 {@link #writeAuditLog} 调用）。
+     */
+    private FlowAuditLog buildAuditLogEntry(FlowInstance instance, FlowAutoTrigger trigger,
+                                             boolean success, String comment) {
+        FlowAuditLog logEntry = new FlowAuditLog();
+        logEntry.setInstanceId(instance.getId());
+        logEntry.setTaskId(null);
+        logEntry.setFlowCode(instance.getFlowCode());
+        logEntry.setBusinessType(instance.getBusinessType());
+        logEntry.setBusinessId(instance.getBusinessId());
+        logEntry.setNodeCode(null);
+        logEntry.setNodeName(null);
+        logEntry.setAction(success ? "AUTO_TRIGGER" : "AUTO_TRIGGER_FAIL");
+        logEntry.setOperatorId(null);
+        logEntry.setOperatorName("SYSTEM");
+        logEntry.setTargetId(null);
+        logEntry.setTargetName(trigger.getTargetFlowCode());
+        logEntry.setComment(comment);
+        logEntry.setOperatedAt(LocalDateTime.now());
+        logEntry.setTenantId(instance.getTenantId());
+        logEntry.setProviderTraceId(instance.getProviderTraceId());
+        return logEntry;
     }
 
     // ============================== 规则管理 ==============================

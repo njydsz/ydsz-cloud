@@ -200,10 +200,55 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
     }
 
     /**
-     * 尝试获取公平锁（不等待）
+     * 单次获取公平锁（使用调用方传入的完整键，不再重复添加命名空间）
      *
      * <p>按等待队列顺序获取锁，当前客户端在队首或锁空闲时可获取。
      * 队列 TTL 续期已合并到 Lua 脚本中，保证原子性。
+     *
+     * @param lockKey   锁的键（已含命名空间前缀）
+     * @param leaseTime 租约时间
+     * @param timeUnit  时间单位
+     * @return 锁值（客户端标识），获取失败返回 null
+     */
+    @Override
+    protected String tryAcquireOnce(String lockKey, long leaseTime, TimeUnit timeUnit) {
+        long leaseTimeMs = timeUnit.toMillis(leaseTime);
+        String clientId = getClientId(lockKey);
+        String queueKey = getQueueKey(lockKey);
+        boolean acquired = false;
+        try {
+            Long result = stringRedisTemplate.execute(
+                    acquireLockScript,
+                    Arrays.asList(lockKey, queueKey),
+                    clientId,
+                    String.valueOf(leaseTimeMs),
+                    String.valueOf(QUEUE_EXPIRE_SECONDS)
+            );
+            acquired = Long.valueOf(1L).equals(result);
+            if (acquired) {
+                log.debug("[ydsz-lock]获取公平锁成功 | lockKey={} | clientId={}", lockKey, clientId);
+                recordLeaseTime(lockKey, leaseTimeMs);
+                startWatchDog(lockKey, clientId, leaseTimeMs, LockType.FAIR);
+                if (getLockMetrics() != null) {
+                    getLockMetrics().incrementActiveLocks();
+                }
+                return clientId;
+            }
+            return null;
+        } catch (Exception e) {
+            log.error("[ydsz-lock]获取公平锁异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
+            return null;
+        } finally {
+            if (!acquired) {
+                clearClientId(lockKey);
+                clearLeaseTime(lockKey);
+                cleanupQueue(queueKey, clientId);
+            }
+        }
+    }
+
+    /**
+     * 尝试获取公平锁（不等待）
      *
      * @param lockKey   锁的键
      * @param leaseTime 租约时间
@@ -213,36 +258,7 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
     @Override
     public String tryLock(String lockKey, long leaseTime, TimeUnit timeUnit) {
         String namespacedKey = buildNamespacedKey(lockKey);
-        long leaseTimeMs = timeUnit.toMillis(leaseTime);
-        String clientId = getClientId(namespacedKey);
-        String queueKey = getQueueKey(namespacedKey);
-        boolean acquired = false;
-        try {
-            Long result = stringRedisTemplate.execute(
-                    acquireLockScript,
-                    Arrays.asList(namespacedKey, queueKey),
-                    clientId,
-                    String.valueOf(leaseTimeMs),
-                    String.valueOf(QUEUE_EXPIRE_SECONDS)
-            );
-            acquired = Long.valueOf(1L).equals(result);
-            if (acquired) {
-                log.debug("[ydsz-lock]获取公平锁成功 | lockKey={} | clientId={}", lockKey, clientId);
-                recordLeaseTime(namespacedKey, leaseTimeMs);
-                startWatchDog(namespacedKey, clientId, leaseTimeMs, LockType.FAIR);
-                return clientId;
-            }
-            return null;
-        } catch (Exception e) {
-            log.error("[ydsz-lock]获取公平锁异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
-            return null;
-        } finally {
-            if (!acquired) {
-                clearClientId(namespacedKey);
-                clearLeaseTime(namespacedKey);
-                cleanupQueue(queueKey, clientId);
-            }
-        }
+        return tryAcquireOnce(namespacedKey, leaseTime, timeUnit);
     }
 
     /**
@@ -263,7 +279,7 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
 
     @Override
     protected String doAcquireLock(String lockKey, String clientId, long leaseTime, TimeUnit timeUnit) {
-        return tryLock(lockKey, leaseTime, timeUnit);
+        return tryAcquireOnce(lockKey, leaseTime, timeUnit);
     }
 
     @Override
@@ -303,32 +319,6 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
         } catch (Exception e) {
             log.error("[ydsz-lock]获取剩余时间异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
             return -2;
-        }
-    }
-
-    /**
-     * 续期公平锁，延长锁的过期时间
-     *
-     * <p>仅当当前客户端是锁的持有者时才续期，否则返回失败。
-     *
-     * @param lockKey   锁的键
-     * @param lockValue 锁的值（客户端标识）
-     * @param leaseTime 新的租约时间
-     * @param timeUnit  时间单位
-     * @return true-续期成功，false-续期失败
-     */
-    public boolean renewLock(String lockKey, String lockValue, long leaseTime, TimeUnit timeUnit) {
-        try {
-            Long result = stringRedisTemplate.execute(
-                    renewLockScript,
-                    Collections.singletonList(lockKey),
-                    lockValue,
-                    String.valueOf(timeUnit.toMillis(leaseTime))
-            );
-            return Long.valueOf(1L).equals(result);
-        } catch (Exception e) {
-            log.error("[ydsz-lock]续期锁异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
-            return false;
         }
     }
 

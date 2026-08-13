@@ -206,14 +206,9 @@
                              STATIC_INIT, ANNOTATION_DEF, ENUM_DEF"/>
         </module>
 
-        <!-- 右大括号必须单独成行（除非后面紧跟 else/catch/finally） -->
+        <!-- 右大括号必须单独成行（除非后面紧跟 else/catch/finally），使用默认 token 集合 -->
         <module name="RightCurly">
             <property name="option" value="alone"/>
-            <property name="tokens"
-                      value="LITERAL_TRY, LITERAL_CATCH, LITERAL_FINALLY,
-                             LITERAL_IF, LITERAL_ELSE, LITERAL_DO,
-                             LITERAL_FOR, LITERAL_WHILE, METHOD_DEF,
-                             CTOR_DEF, STATIC_INIT, INSTANCE_INIT"/>
         </module>
 
         <!-- 必须使用大括号（即使只有一行语句） -->
@@ -328,9 +323,9 @@
             <property name="versionFormat" value="\S+"/>
         </module>
 
-        <!-- 公共方法必须有 Javadoc -->
+        <!-- 公共方法必须有 Javadoc（checkstyle 9.x 使用 accessModifiers 替代已移除的 scope） -->
         <module name="JavadocMethod">
-            <property name="scope" value="public"/>
+            <property name="accessModifiers" value="public"/>
             <property name="allowedAnnotations" value="Override, Test, BeforeEach, AfterEach, BeforeAll, AfterAll, Bean, MockitoBean"/>
             <property name="allowMissingParamTags" value="false"/>
             <property name="allowMissingReturnTag" value="false"/>

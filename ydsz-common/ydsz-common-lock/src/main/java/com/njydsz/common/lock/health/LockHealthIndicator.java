@@ -45,13 +45,13 @@ public class LockHealthIndicator implements HealthIndicator {
 
     @Override
     public Health health() {
-        Health.Builder builder = Health.up();
+        Health.Builder builder = new Health.Builder();
         boolean redisHealthy = checkRedisHealth(builder);
         checkWatchDogHealth(builder);
         checkMetricsHealth(builder);
 
         if (!redisHealthy) {
-            builder = Health.down();
+            builder.down();
         }
         return builder.build();
     }

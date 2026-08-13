@@ -38,6 +38,7 @@ public class RepeatSubmitTokenService {
 
     private static final String TOKEN_PREFIX = "ydsz:repeat:token:";
     private static final String TOKEN_VALUE = "1";
+    private static final String INTERVAL_PREFIX = "ydsz:repeat:interval:";
 
     private final StringRedisTemplate redisTemplate;
 
@@ -75,6 +76,35 @@ public class RepeatSubmitTokenService {
                 userId, token, ttlMillis);
 
         return token;
+    }
+
+    /**
+     * 获取防重复提交间隔窗口
+     *
+     * <p>同一用户对同一业务方法在 {@code intervalMillis} 窗口内只允许提交一次。
+     * 基于 Redis {@code SET NX PX} 原子实现，配合 {@code @RepeatSubmit(interval=...)}
+     * 在 Token 校验前拦截快速双击。用户未登录时跳过检查（无法绑定用户维度）。
+     *
+     * @param businessKey    业务方法标识（如 "类名#方法名"）
+     * @param intervalMillis 间隔窗口（毫秒）
+     * @return true-允许提交（窗口内首次），false-窗口内重复提交
+     */
+    public boolean acquireInterval(String businessKey, long intervalMillis) {
+        if (!StringUtils.hasText(businessKey) || intervalMillis <= 0) {
+            return true;
+        }
+        String userId = getCurrentUserId();
+        if (!StringUtils.hasText(userId)) {
+            return true;
+        }
+        String redisKey = INTERVAL_PREFIX + userId + ":" + businessKey;
+        try {
+            return Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(
+                    redisKey, TOKEN_VALUE, intervalMillis, TimeUnit.MILLISECONDS));
+        } catch (Exception e) {
+            log.warn("[ydsz-lock] [repeat-submit] 获取间隔窗口失败，放行 | key={} | error={}", redisKey, e.getMessage());
+            return true;
+        }
     }
 
     /**

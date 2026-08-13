@@ -219,34 +219,67 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
 
         // REJECT 退回
         if ("REJECT".equalsIgnoreCase(skipType)) {
-            String rejectTarget = targetNodeCode != null
-                    ? targetNodeCode
-                    : resolveRejectTarget(currentInstance.getDefinitionId(), currentNodeCode);
-            if (rejectTarget == null) {
-                throw SysException.builder()
-                .resultCode(BaseResultCode.BAD_REQUEST)
-                .message("error.workflow.msg_241f4a79")
-                .build();
-            }
-            FlowNode target = flowDefinitionCacheService.getNodeByCode(
-                    currentInstance.getDefinitionId(), rejectTarget);
-            if (target == null) {
-                throw SysException.builder()
-                    .resultCode(BaseResultCode.NOT_FOUND)
-                    .key("error.workflow.msg_6e66716d").params(rejectTarget)
-                    .build();
-            }
-            return List.of(target);
+            return executeRejectRollback(currentInstance, currentNodeCode, targetNodeCode);
         }
 
         // PASS 推进
+        return executePassUpdate(currentInstance, currentNode, variables);
+    }
+
+    /**
+     * REJECT 回退：解析目标节点、校验存在性，返回单元素列表。
+     *
+     * <p>显式传入 {@code targetNodeCode} 时优先按其回退；未指定时由 {@link #resolveRejectTarget} 推导。
+     * 推导不出目标或目标节点不存在时抛异常，不会静默把流程留在原地。
+     */
+    private List<FlowNode> executeRejectRollback(FlowInstance currentInstance,
+                                                  String currentNodeCode,
+                                                  String targetNodeCode) {
+        String rejectTarget = targetNodeCode != null
+                ? targetNodeCode
+                : resolveRejectTarget(currentInstance.getDefinitionId(), currentNodeCode);
+        if (rejectTarget == null) {
+            throw SysException.builder()
+                .resultCode(BaseResultCode.BAD_REQUEST)
+                .message("error.workflow.msg_241f4a79")
+                .build();
+        }
+        FlowNode target = flowDefinitionCacheService.getNodeByCode(
+                currentInstance.getDefinitionId(), rejectTarget);
+        if (target == null) {
+            throw SysException.builder()
+                .resultCode(BaseResultCode.NOT_FOUND)
+                .key("error.workflow.msg_6e66716d").params(rejectTarget)
+                .build();
+        }
+        return List.of(target);
+    }
+
+    /**
+     * PASS 推进：解析出边 + 遍历目标节点并执行 join 聚合。
+     *
+     * <p>无下游节点时返回空列表（流程结束）；有下游时交由 {@link #aggregateJoinResults}
+     * 执行网关 join 聚合逻辑。
+     */
+    private List<FlowNode> executePassUpdate(FlowInstance currentInstance,
+                                              FlowNode currentNode,
+                                              Map<String, Object> variables) {
         List<FlowSkip> skips = resolvePassSkips(currentInstance, currentNode, variables);
         if (skips.isEmpty()) {
             log.info("[Flow] 流程无下一节点，结束: instanceId={} nodeCode={}",
-                    currentInstance.getId(), currentNodeCode);
+                    currentInstance.getId(), currentNode.getNodeCode());
             return Collections.emptyList();
         }
+        return aggregateJoinResults(currentInstance, skips);
+    }
 
+    /**
+     * PASS 推进：遍历出边 skip，解析节点并执行并行网关 join 聚合。
+     *
+     * <p>跳过不存在的目标节点并告警；对于 join 节点委托 {@link #tryAggregateJoin}
+     * 执行令牌聚合逻辑，未满足聚合条件的分支不进入返回列表（静默等待）。
+     */
+    private List<FlowNode> aggregateJoinResults(FlowInstance currentInstance, List<FlowSkip> skips) {
         List<FlowNode> nextNodes = new ArrayList<>();
         for (FlowSkip skip : skips) {
             FlowNode next = flowDefinitionCacheService.getNodeByCode(
@@ -258,60 +291,76 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             }
             // P0-5 / GAP-P2 / P0-3: 网关 join 聚合 — 支持 N/M join 策略
             if (isJoinNode(next) && hasMultipleIncoming(currentInstance.getDefinitionId(), next.getNodeCode())) {
-                int incomingCount = flowDefinitionCacheService.getSkipsByNextNode(
-                        currentInstance.getDefinitionId(), next.getNodeCode()).size();
-                String instId = currentInstance.getId();
-                String joinCode = next.getNodeCode();
-                try {
-                    // P0-3: 解析节点 ext 中的 joinRequired 配置
-                    int requiredCount = parseJoinRequired(next, incomingCount);
-                    // 懒初始化：首次到达时初始化令牌
-                    if (!joinTokenService.isInitialized(instId, joinCode)) {
-                        if (requiredCount < incomingCount) {
-                            // N/M join: 部分分支到达即可聚合
-                            joinTokenService.initTokensWithRequired(
-                                    instId, joinCode, incomingCount, requiredCount);
-                            log.info("[Flow] P0-3 N/M join 初始化: instanceId={} node={} total={} required={}",
-                                    instId, joinCode, incomingCount, requiredCount);
-                        } else {
-                            joinTokenService.initTokens(instId, joinCode, incomingCount);
-                        }
-                    }
-                    // 标记本次到达
-                    boolean canJoin;
-                    if (requiredCount < incomingCount) {
-                        canJoin = joinTokenService.arriveTokenWithRequired(instId, joinCode);
-                    } else {
-                        canJoin = joinTokenService.arriveToken(instId, joinCode);
-                    }
-                    if (canJoin) {
-                        joinTokenService.clearTokens(instId, joinCode);
-                        log.info("[Flow] 并行网关 join 聚合通过: instanceId={} node={} required={}/{}",
-                                instId, joinCode, requiredCount, incomingCount);
-                    } else {
-                        log.info("[Flow] 并行网关 join 等待: instanceId={} node={} required={}/{}",
-                                instId, joinCode, requiredCount, incomingCount);
-                        continue; // 等待其他分支
-                    }
-                } catch (Exception e) {
-                    // Redis 异常降级：回退到 countPendingByNode 逻辑
-                    log.warn("[Flow] join 令牌异常，降级到 countPending: instanceId={} node={} err={}",
-                            instId, joinCode, e.getMessage());
-                    // P0-2: 降级路径增强 — 统计所有入边源节点的活跃任务数，
-                    // 避免某分支已终止（CANCELLED/FAILED）但 join 永久等待。
-                    // 只统计 PENDING/CLAIMED 状态任务，已终止分支不计入。
-                    int activeIncoming = countActiveIncomingTasks(
-                            currentInstance.getDefinitionId(), instId, joinCode);
-                    if (activeIncoming > 0) {
-                        log.info("[Flow] 并行网关 join 等待（降级）: instanceId={} node={} activeIncoming={}",
-                                instId, joinCode, activeIncoming);
-                        continue;
-                    }
+                if (!tryAggregateJoin(currentInstance, next)) {
+                    continue; // 未满足聚合条件，等待其他分支
                 }
             }
             nextNodes.add(next);
         }
         return nextNodes;
+    }
+
+    /**
+     * P0-5 / GAP-P2 / P0-3: 尝试通过 join 聚合检查。
+     *
+     * <p>通过令牌服务标记本次分支到达，判断是否满足 N/M 聚合条件。
+     * 令牌服务（Redis）异常时降级为扫描活跃任务数，避免 join 永久挂起。
+     *
+     * @return true = 已通过聚合（节点应加入结果），false = 仍在等待（跳过该节点）
+     */
+    private boolean tryAggregateJoin(FlowInstance currentInstance, FlowNode joinNode) {
+        String definitionId = currentInstance.getDefinitionId();
+        String joinCode = joinNode.getNodeCode();
+        String instId = currentInstance.getId();
+        int incomingCount = flowDefinitionCacheService.getSkipsByNextNode(definitionId, joinCode).size();
+        try {
+            // P0-3: 解析节点 ext 中的 joinRequired 配置
+            int requiredCount = parseJoinRequired(joinNode, incomingCount);
+            // 懒初始化：首次到达时初始化令牌
+            if (!joinTokenService.isInitialized(instId, joinCode)) {
+                if (requiredCount < incomingCount) {
+                    // N/M join: 部分分支到达即可聚合
+                    joinTokenService.initTokensWithRequired(
+                            instId, joinCode, incomingCount, requiredCount);
+                    log.info("[Flow] P0-3 N/M join 初始化: instanceId={} node={} total={} required={}",
+                            instId, joinCode, incomingCount, requiredCount);
+                } else {
+                    joinTokenService.initTokens(instId, joinCode, incomingCount);
+                }
+            }
+            // 标记本次到达
+            boolean canJoin;
+            if (requiredCount < incomingCount) {
+                canJoin = joinTokenService.arriveTokenWithRequired(instId, joinCode);
+            } else {
+                canJoin = joinTokenService.arriveToken(instId, joinCode);
+            }
+            if (canJoin) {
+                joinTokenService.clearTokens(instId, joinCode);
+                log.info("[Flow] 并行网关 join 聚合通过: instanceId={} node={} required={}/{}",
+                        instId, joinCode, requiredCount, incomingCount);
+                return true;
+            } else {
+                log.info("[Flow] 并行网关 join 等待: instanceId={} node={} required={}/{}",
+                        instId, joinCode, requiredCount, incomingCount);
+                return false;
+            }
+        } catch (Exception e) {
+            // Redis 异常降级：回退到 countPendingByNode 逻辑
+            log.warn("[Flow] join 令牌异常，降级到 countPending: instanceId={} node={} err={}",
+                    instId, joinCode, e.getMessage());
+            // P0-2: 降级路径增强 — 统计所有入边源节点的活跃任务数，
+            // 避免某分支已终止（CANCELLED/FAILED）但 join 永久等待。
+            // 只统计 PENDING/CLAIMED 状态任务，已终止分支不计入。
+            int activeIncoming = countActiveIncomingTasks(definitionId, instId, joinCode);
+            if (activeIncoming > 0) {
+                log.info("[Flow] 并行网关 join 等待（降级）: instanceId={} node={} activeIncoming={}",
+                        instId, joinCode, activeIncoming);
+                return false;
+            }
+            // 无活跃入边任务，视为最后一个分支，允许通过
+            return true;
+        }
     }
 
     /**
