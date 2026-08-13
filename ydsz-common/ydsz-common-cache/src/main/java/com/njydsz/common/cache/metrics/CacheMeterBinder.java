@@ -98,7 +98,7 @@ public class CacheMeterBinder implements MeterBinder {
     }
     this.cacheType = cacheType;
     // 预编译 Tags：在构造时一次性构建，避免每次 bindTo 都重复创建
-    this.precompiledTags = Tags.and(extraTags)
+    this.precompiledTags = Tags.of(extraTags)
         .and(TAG_CACHE_NAME, this.cacheName)
         .and(TAG_CACHE_TYPE, this.cacheType);
   }

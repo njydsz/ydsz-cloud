@@ -487,12 +487,38 @@ public class RedisBloomFilter implements BloomFilterService {
             h2 = h2 * 5 + 0x38495ab5;
         }
 
-        int tailStart = numBlocks * 16;
+        // 处理尾部字节，避免 fall-through
+        long[] tail = applyTail(data, numBlocks * 16, length & 15, h1, h2, c1, c2);
+        h1 = tail[0];
+        h2 = tail[1];
+
+        h1 ^= length;
+        h2 ^= length;
+        h1 += h2;
+        h2 += h1;
+        h1 = fmix64(h1);
+        h2 = fmix64(h2);
+        h1 += h2;
+        return h1;
+    }
+
+    /**
+     * 处理 MurmurHash3 64 位变体的尾部字节（不足 16 字节的剩余部分）。
+     *
+     * @param data      输入数据
+     * @param tailStart 尾部起始偏移
+     * @param remaining 剩余字节数
+     * @param h1        状态值 h1
+     * @param h2        状态值 h2
+     * @param c1        常量 c1
+     * @param c2        常量 c2
+     * @return 更新后的 [h1, h2]
+     */
+    private static long[] applyTail(byte[] data, int tailStart, int remaining,
+                                    long h1, long h2, long c1, long c2) {
         long k1 = 0;
         long k2 = 0;
-        int remaining = length & 15;
 
-        // 处理尾部字节，避免 fall-through
         if (remaining >= 15) {
             k2 ^= ((long) data[tailStart + 14] & 0xff) << 48;
         }
@@ -547,14 +573,7 @@ public class RedisBloomFilter implements BloomFilterService {
             h1 ^= k1;
         }
 
-        h1 ^= length;
-        h2 ^= length;
-        h1 += h2;
-        h2 += h1;
-        h1 = fmix64(h1);
-        h2 = fmix64(h2);
-        h1 += h2;
-        return h1;
+        return new long[]{h1, h2};
     }
 
     private static long getLongLittleEndian(byte[] data, int offset) {

@@ -137,6 +137,11 @@
             <groupId>io.github.resilience4j</groupId>
             <artifactId>resilience4j-circuitbreaker</artifactId>
         </dependency>
+        <!-- resilience4j Micrometer 指标（熔断状态可观测） -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-micrometer</artifactId>
+        </dependency>
         <!-- spring-boot-actuator (optional for HealthIndicator) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

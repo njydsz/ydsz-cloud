@@ -1,6 +1,7 @@
 package com.njydsz.common.lock.aspect;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Arrays;
@@ -11,6 +12,7 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 
+import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.lock.annotation.IdempotentExempt;
@@ -56,6 +58,16 @@ import com.njydsz.common.lock.util.LockExpressionUtils;
 @Slf4j
 @Aspect
 public class IdempotentAspect {
+
+    /**
+     * 秒转毫秒系数
+     */
+    private static final long SECONDS_TO_MILLIS = 1000L;
+
+    /**
+     * SHA-256 摘要截取字节数（16 字节 = 32 位十六进制，避免幂等键过长）
+     */
+    private static final int DIGEST_BYTES = 16;
 
     /** 幂等策略（委托实现，消除平行 Lua 脚本） */
     private final IdempotentStrategy idempotentStrategy;
@@ -258,7 +270,7 @@ public class IdempotentAspect {
     }
 
     /**
-     * 计算参数摘要（SHA-256 前 16 字节十六进制，避免过长 key）
+     * 计算参数摘要（SHA-256 前 {@value #DIGEST_BYTES} 字节十六进制，避免过长 key）
      * <p>自动过滤标注 {@link IdempotentExempt} 的参数，排除分页参数/时间戳等。
      *
      * @param method 目标方法（用于获取参数级 @IdempotentExempt 注解）
@@ -269,41 +281,84 @@ public class IdempotentAspect {
         if (args == null || args.length == 0) {
             return "no-args";
         }
-        java.lang.reflect.Parameter[] parameters = method.getParameters();
         try {
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < args.length; i++) {
-                // 过滤参数级 @IdempotentExempt 注解
-                if (i < parameters.length && parameters[i] != null
-                        && parameters[i].isAnnotationPresent(IdempotentExempt.class)) {
-                    continue;
-                }
-                if (sb.length() > 0) {
-                    sb.append("|");
-                }
-                sb.append(args[i] == null ? "null" : args[i].toString());
-            }
-            // 如果全部参数都被豁免，使用 args 数量作为标识
-            if (sb.length() == 0) {
-                sb.append("all-exempt:").append(args.length);
-            }
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            byte[] digest = md.digest(sb.toString().getBytes(StandardCharsets.UTF_8));
-            StringBuilder hex = new StringBuilder();
-            for (int i = 0; i < 16 && i < digest.length; i++) {
-                hex.append(String.format("%02x", digest[i]));
-            }
-            return hex.toString();
+            return sha256Hex(buildDigestSource(method, args));
         } catch (Exception e) {
-            // 降级为 hashCode
-            int activeCount = 0;
-            for (int i = 0; i < args.length && i < parameters.length; i++) {
-                if (parameters[i] == null || !parameters[i].isAnnotationPresent(IdempotentExempt.class)) {
-                    activeCount++;
-                }
-            }
-            return activeCount == 0 ? "all-exempt" : String.valueOf(Arrays.hashCode(args)) + ":" + activeCount;
+            return fallbackDigest(method, args);
         }
+    }
+
+    /**
+     * 构建摘要源文本：拼接未豁免参数
+     *
+     * @param method 目标方法
+     * @param args   方法参数
+     * @return 摘要源文本
+     */
+    private String buildDigestSource(Method method, Object[] args) {
+        Parameter[] parameters = method.getParameters();
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < args.length; i++) {
+            if (isExempt(parameters, i)) {
+                continue;
+            }
+            if (sb.length() > 0) {
+                sb.append("|");
+            }
+            sb.append(args[i] == null ? "null" : args[i].toString());
+        }
+        // 如果全部参数都被豁免，使用 args 数量作为标识
+        if (sb.length() == 0) {
+            sb.append("all-exempt:").append(args.length);
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 判断参数是否标注 {@link IdempotentExempt}
+     *
+     * @param parameters 方法参数列表
+     * @param index      参数下标
+     * @return true-豁免
+     */
+    private boolean isExempt(Parameter[] parameters, int index) {
+        return index < parameters.length && parameters[index] != null
+                && parameters[index].isAnnotationPresent(IdempotentExempt.class);
+    }
+
+    /**
+     * 计算 SHA-256 摘要前 {@value #DIGEST_BYTES} 字节的十六进制
+     *
+     * @param source 摘要源文本
+     * @return 十六进制摘要
+     * @throws Exception 摘要算法不可用时抛出
+     */
+    private String sha256Hex(String source) throws Exception {
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+        byte[] digest = md.digest(source.getBytes(StandardCharsets.UTF_8));
+        StringBuilder hex = new StringBuilder(digest.length * 2);
+        for (int i = 0; i < DIGEST_BYTES && i < digest.length; i++) {
+            hex.append(String.format("%02x", digest[i]));
+        }
+        return hex.toString();
+    }
+
+    /**
+     * 摘要计算异常时的降级方案（基于参数 hashCode）
+     *
+     * @param method 目标方法
+     * @param args   方法参数
+     * @return 降级摘要
+     */
+    private String fallbackDigest(Method method, Object[] args) {
+        Parameter[] parameters = method.getParameters();
+        int activeCount = 0;
+        for (int i = 0; i < args.length && i < parameters.length; i++) {
+            if (!isExempt(parameters, i)) {
+                activeCount++;
+            }
+        }
+        return activeCount == 0 ? "all-exempt" : String.valueOf(Arrays.hashCode(args)) + ":" + activeCount;
     }
 
     /**

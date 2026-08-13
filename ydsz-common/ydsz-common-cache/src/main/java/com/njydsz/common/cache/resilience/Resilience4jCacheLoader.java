@@ -132,16 +132,19 @@ public class Resilience4jCacheLoader<K, V> {
    * @return 异步加载结果
    */
   public CompletableFuture<V> loadAsync(K key) {
+    // resilience4j 2.x：decorateCompletionStage 返回延迟执行的 Supplier，需 get() 后取 CompletionStage
     return CircuitBreaker.decorateCompletionStage(
-        circuitBreaker,
-        () -> {
-          try {
-            return delegate.loadAsync(key);
-          } catch (Exception e) {
-            log.debug("CacheLoader 异步加载异常, key={}", key, e);
-            throw e instanceof RuntimeException re ? re : new RuntimeException(e);
-          }
-        }).toCompletableFuture();
+            circuitBreaker,
+            () -> {
+              try {
+                return delegate.loadAsync(key);
+              } catch (Exception e) {
+                log.debug("CacheLoader 异步加载异常, key={}", key, e);
+                throw e instanceof RuntimeException re ? re : new RuntimeException(e);
+              }
+            })
+        .get()
+        .toCompletableFuture();
   }
 
   /**
@@ -249,7 +252,7 @@ public class Resilience4jCacheLoader<K, V> {
         retry = Retry.of(circuitBreakerName + "-retry", retryConfig);
       } else {
         retry = Retry.of(circuitBreakerName + "-retry",
-            Retry.custom().maxAttempts(1).build());
+            RetryConfig.custom().maxAttempts(1).build());
       }
 
       return new Resilience4jCacheLoader<>(delegate, cb, retry);

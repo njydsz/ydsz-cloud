@@ -240,12 +240,12 @@
 
         <!-- 禁止覆盖 finalize() 方法 -->
 
-        <!-- 禁止抛出 RuntimeException / Exception / Throwable -->
+        <!-- 禁止抛出 RuntimeException / Exception（Throwable 豁免：AOP 切面方法必须 throws Throwable 以透传 joinPoint.proceed() 异常） -->
         <module name="IllegalThrows">
             <property name="illegalClassNames"
-                      value="java.lang.RuntimeException, java.lang.Exception, java.lang.Throwable"/>
+                      value="java.lang.RuntimeException, java.lang.Exception"/>
             <message key="illegal.throw"
-                     value="禁止直接抛出 RuntimeException/Exception/Throwable，请使用自定义业务异常。参考：云顶编码规范 11 章"/>
+                     value="禁止直接抛出 RuntimeException/Exception，请使用自定义业务异常。参考：云顶编码规范 11 章"/>
         </module>
 
         <!-- 禁止 new BigDecimal(double) 构造方式（精度丢失） -->
