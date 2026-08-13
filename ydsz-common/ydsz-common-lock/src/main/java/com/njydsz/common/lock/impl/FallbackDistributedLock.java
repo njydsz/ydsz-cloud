@@ -13,6 +13,7 @@ import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.lock.core.DistributedLocker;
+import com.njydsz.common.lock.core.LockDegradationCallback;
 
 
 /**
