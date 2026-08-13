@@ -3,9 +3,10 @@ package com.njydsz.common.cache.metrics;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -140,14 +141,14 @@ public class HotKeyMetrics<K> implements MeterBinder, AutoCloseable {
     if (!started.compareAndSet(false, true)) {
       return;
     }
-    scheduler = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+    scheduler = new ScheduledThreadPoolExecutor(1, new ThreadFactory() {
       @Override
       public Thread newThread(Runnable r) {
         Thread t = new Thread(r, "hotkey-metrics-snapshot");
         t.setDaemon(true);
         return t;
       }
-    });
+    }, new ThreadPoolExecutor.CallerRunsPolicy());
     scheduler.scheduleAtFixedRate(this::snapshotAndUpdate, 0, snapshotIntervalSeconds,
         TimeUnit.SECONDS);
   }

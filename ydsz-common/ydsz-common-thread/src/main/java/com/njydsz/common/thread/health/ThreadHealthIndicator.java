@@ -27,6 +27,9 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  *
  * <p>v1.3.0 变更：新增对虚拟线程池的感知，通过 Bean 类型和名称识别虚拟线程池。
  *
+ * <p>v1.3.1 修复：移除基于 {@link String#contains} 的伪存活判定，
+ * 改用 {@link ExecutorService#isShutdown()} 标准 API 检测存活状态。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -104,7 +107,7 @@ public class ThreadHealthIndicator implements HealthIndicator, ApplicationContex
         }
 
         // 2. 虚拟线程池 —— 识别条件：Name 以 Executor 结尾且类型不是 ThreadPoolTaskExecutor
-        //    仅处理 ydzz-common-thread 注册的 Bean（org.springframework包下的 ExecutorService 是内部 Bean）
+        //    仅处理 ydsz-common-thread 注册的 Bean（org.springframework 包下的 ExecutorService 是内部 Bean）
         Map<String, ExecutorService> allExecutors =
                 applicationContext.getBeansOfType(ExecutorService.class);
         for (Map.Entry<String, ExecutorService> entry : allExecutors.entrySet()) {
@@ -116,13 +119,11 @@ public class ThreadHealthIndicator implements HealthIndicator, ApplicationContex
                 continue;
             }
 
-            // 只处理 ydzz-common-thread 管理的 Bean
+            // 只处理 ydsz-common-thread 管理的 Bean
             if (!beanName.endsWith("Executor")) {
                 continue;
             }
 
-            // 跳过 ydzz-common-app 等容器内置的 ExecutorService（如 applicationTaskExecutor 已属于 ThreadPoolTaskExecutor）
-            // 此处不做严格 namespace 过滤，仅靠命名后缀区分。如确有需要可在 beanName 前统一加 ydzs 前缀
             poolCount++;
             details.put(beanName + ".type", "VIRTUAL");
             details.put(beanName + ".alive", isAlive(es));
@@ -146,15 +147,18 @@ public class ThreadHealthIndicator implements HealthIndicator, ApplicationContex
     /**
      * 判断普通 ExecutorService 是否存活。
      *
-     * <p>JDK 21 的虚拟线程执行器（{@code VirtualThread.currentThread()}）本身不提供 isShutdown 信息，
-     * 因此这里只做一个基于 toString 是否包含 "shutdown" 的近似判断。
+     * <p>使用 JDK 标准 API {@link ExecutorService#isShutdown()} 判断，
+     * 比基于 toString 字符串匹配更可靠。
+     *
+     * @param es ExecutorService 实例
+     * @return {@code true} 表示未关闭（存活），{@code false} 表示已关闭
      */
     private boolean isAlive(ExecutorService es) {
         try {
-            String s = es.toString();
-            return s == null || !s.toLowerCase().contains("shutdown");
+            return !es.isShutdown();
         } catch (Exception e) {
-            return true;
+            log.debug("判断 ExecutorService 存活状态异常: {}", e.getMessage());
+            return false;
         }
     }
 }

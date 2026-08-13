@@ -4,8 +4,9 @@ import java.io.IOException;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import java.time.LocalDateTime;
 import java.util.Map;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -108,7 +109,7 @@ public class AgentController {
     private final AgentRequestGuard requestGuard;
     /** 心跳调度器（虚拟线程工厂创建，JVM 关闭时自动停止） */
     private final ScheduledExecutorService heartbeatScheduler =
-            Executors.newScheduledThreadPool(2, Thread.ofVirtual().name("agent-exec-heartbeat-", 0).factory());
+            new ScheduledThreadPoolExecutor(2, Thread.ofVirtual().name("agent-exec-heartbeat-", 0).factory(), new ThreadPoolExecutor.CallerRunsPolicy());
 
     /**
      * 容器关闭时停止心跳调度器。

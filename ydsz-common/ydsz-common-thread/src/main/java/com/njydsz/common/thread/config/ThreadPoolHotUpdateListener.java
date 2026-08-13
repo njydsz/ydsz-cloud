@@ -2,12 +2,15 @@ package com.njydsz.common.thread.config;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 /**
@@ -32,14 +35,17 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  * <p>使用示例（Nacos 方式）：
  * <pre>{@code
  * // 在业务模块中创建该 Bean
- * @Bean
+ * &#64;Bean
  * public ThreadPoolHotUpdateListener threadPoolHotUpdateListener(
  *         ThreadPoolAutoConfiguration threadPoolAutoConfiguration) {
- *     return new ThreadPoolHotUpdateListener(threadPoolAutoConfiguration, "${ydsz.config.data-id}");
+ *     return new ThreadPoolHotUpdateListener(threadPoolAutoConfiguration);
  * }
  * }</pre>
  *
  * <p>v1.3.0 新增：从 ydzs-cronjob 的 ThreadPoolHotUpdateListener 抽象为通用组件。
+ *
+ * <p>v1.3.1 修复：{@link #onContextReady(ContextRefreshedEvent)} 添加 {@link EventListener} 注解，
+ * 应用启动完成后自动打印线程池注册摘要。
  *
  * @author ydsz-team
  * @since 1.3.0
@@ -52,7 +58,7 @@ public class ThreadPoolHotUpdateListener {
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
     /**
-     * 默认构造器，注入 ydzs-thread 的自动配置实例。
+     * 构造器，注入 ydsz-thread 的自动配置实例。
      *
      * @param threadPoolAutoConfiguration 线程池自动配置（提供 getExecutors() 运行时查询）
      */
@@ -61,11 +67,14 @@ public class ThreadPoolHotUpdateListener {
     }
 
     /**
-     * 在线程池初始化完成后打印注册摘要，便于确认热更新监听器已就绪。
+     * 应用上下文刷新完成后回调，打印线程池注册摘要。
      *
-     * <p>该方法由 Spring 容器在 ContextRefreshedEvent 时回调。
+     * <p>该方法由 Spring 容器在 {@link ContextRefreshedEvent} 发布时自动调用。
+     *
+     * @param event 上下文刷新事件
      */
-    public void onContextReady() {
+    @EventListener(ContextRefreshedEvent.class)
+    public void onContextReady(ContextRefreshedEvent event) {
         Map<String, ThreadPoolTaskExecutor> executors = threadPoolAutoConfiguration.getExecutors();
         log.info("[ThreadPoolHotUpdate] 热更新监听器就绪，当前共 {} 个平台线程池: {}",
                 executors.size(), executors.keySet());
@@ -76,9 +85,9 @@ public class ThreadPoolHotUpdateListener {
      *
      * <p>自动处理调序：先扩大 max 再调整 core（避免 core > max 异常）。
      *
-     * @param poolName      线程_POOL 配置 key（如 "io"）
-     * @param newCoreSize   新的核心线程数
-     * @param newMaxSize    新的最大线程数
+     * @param poolName    线程池配置 key（如 "io"）
+     * @param newCoreSize 新的核心线程数（必须 >= 1）
+     * @param newMaxSize  新的最大线程数（必须 >= newCoreSize）
      */
     public void resizePool(String poolName, int newCoreSize, int newMaxSize) {
         lock.writeLock().lock();
@@ -89,7 +98,7 @@ public class ThreadPoolHotUpdateListener {
                 return;
             }
             if (newCoreSize < 1 || newMaxSize < 1 || newCoreSize > newMaxSize) {
-                log.warn("[ThreadPoolHotUpdate] 参数非法: core={} max={}, 跳过", newCoreSize, newMaxSize);
+                log.warn("[ThreadPoolHotUpdate] 参数非法: core={}, max={}, 跳过", newCoreSize, newMaxSize);
                 return;
             }
 
@@ -102,8 +111,8 @@ public class ThreadPoolHotUpdateListener {
     /**
      * 动态调整指定线程池的拒绝策略。
      *
-     * @param poolName    线程池配置 key（如 "io"）
-     * @param newPolicy   新的拒绝策略
+     * @param poolName  线程池配置 key（如 "io"）
+     * @param newPolicy 新的拒绝策略
      */
     public void updateRejectPolicy(String poolName, ThreadPoolProperties.RejectPolicy newPolicy) {
         lock.writeLock().lock();
@@ -124,8 +133,8 @@ public class ThreadPoolHotUpdateListener {
     /**
      * 动态更新 threadNamePrefix（仅影响新创建的线程）。
      *
-     * @param poolName          线程池配置 key
-     * @param newThreadPrefix   新的线程名前缀
+     * @param poolName        线程池配置 key
+     * @param newThreadPrefix 新的线程名前缀
      */
     public void updateThreadNamePrefix(String poolName, String newThreadPrefix) {
         lock.writeLock().lock();
@@ -174,15 +183,16 @@ public class ThreadPoolHotUpdateListener {
     /**
      * 获取所有线程池的快照。
      *
-     * @return poolName → snapshot
+     * @return poolName → snapshot 的映射
      */
     public Map<String, ThreadPoolSnapshot> snapshotAll() {
         Map<String, ThreadPoolSnapshot> result = new LinkedHashMap<>();
         threadPoolAutoConfiguration.getExecutors().forEach((beanName, executor) -> {
-            // 从 beanName 反推 poolName （去掉 "Executor" 后缀）
-            String poolName = beanName.endsWith("Executor")
-                    ? beanName.substring(0, beanName.length() - "Executor".length())
-                    : beanName;
+            String poolName = resolvePoolName(beanName);
+            if (poolName == null) {
+                log.debug("[ThreadPoolHotUpdate] Bean [{}] 不是 ydsz-common-thread 管理的线程池，跳过", beanName);
+                return;
+            }
             try {
                 ThreadPoolExecutor pool = executor.getThreadPoolExecutor();
                 result.put(poolName, new ThreadPoolSnapshot(
@@ -209,8 +219,30 @@ public class ThreadPoolHotUpdateListener {
             return null;
         }
         Map<String, ThreadPoolTaskExecutor> executors = threadPoolAutoConfiguration.getExecutors();
-        String beanName = poolName + "Executor";
-        return executors.get(beanName);
+        // 查找以 poolName + "Executor" 结尾的 Bean
+        for (Map.Entry<String, ThreadPoolTaskExecutor> entry : executors.entrySet()) {
+            String beanName = entry.getKey();
+            if (beanName.endsWith(poolName + "Executor")) {
+                return entry.getValue();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 从 Bean 名称反推 poolName（配置 key）。
+     *
+     * <p>支持 beanNamePrefix 场景：去掉 "Executor" 后缀后，
+     * 再尝试去掉已知的 beanNamePrefix 即可得到 poolName。
+     *
+     * @param beanName Bean 名称
+     * @return poolName，若不匹配则返回 null
+     */
+    private String resolvePoolName(String beanName) {
+        if (beanName == null || !beanName.endsWith("Executor")) {
+            return null;
+        }
+        return beanName.substring(0, beanName.length() - "Executor".length());
     }
 
     private void resizeInternal(ThreadPoolTaskExecutor executor, int newCoreSize, int newMaxSize, String poolName) {
@@ -266,6 +298,7 @@ public class ThreadPoolHotUpdateListener {
      * 线程池运行时快照。
      */
     public static class ThreadPoolSnapshot {
+
         private final String poolName;
         private final int corePoolSize;
         private final int maxPoolSize;
@@ -286,17 +319,38 @@ public class ThreadPoolHotUpdateListener {
             this.completedTaskCount = completedTaskCount;
         }
 
-        public String getPoolName() { return poolName; }
-        public int getCorePoolSize() { return corePoolSize; }
-        public int getMaxPoolSize() { return maxPoolSize; }
-        public int getActiveCount() { return activeCount; }
-        public int getPoolSize() { return poolSize; }
-        public int getQueueSize() { return queueSize; }
-        public long getCompletedTaskCount() { return completedTaskCount; }
+        public String getPoolName() {
+            return poolName;
+        }
+
+        public int getCorePoolSize() {
+            return corePoolSize;
+        }
+
+        public int getMaxPoolSize() {
+            return maxPoolSize;
+        }
+
+        public int getActiveCount() {
+            return activeCount;
+        }
+
+        public int getPoolSize() {
+            return poolSize;
+        }
+
+        public int getQueueSize() {
+            return queueSize;
+        }
+
+        public long getCompletedTaskCount() {
+            return completedTaskCount;
+        }
 
         @Override
         public String toString() {
-            return String.format("ThreadPoolSnapshot{pool='%s', core=%d, max=%d, active=%d, poolSize=%d, queue=%d, completed=%d}",
+            return String.format(
+                    "ThreadPoolSnapshot{pool='%s', core=%d, max=%d, active=%d, poolSize=%d, queue=%d, completed=%d}",
                     poolName, corePoolSize, maxPoolSize, activeCount, poolSize, queueSize, completedTaskCount);
         }
     }

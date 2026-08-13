@@ -14,6 +14,7 @@ import com.njydsz.common.lock.annotation.LockType;
 import com.njydsz.common.lock.config.LockProperties;
 import com.njydsz.common.lock.core.AbstractRedisDistributedLock;
 import com.njydsz.common.lock.core.DistributedLocker;
+import com.njydsz.common.lock.core.FencingTokenProvider;
 import com.njydsz.common.lock.impl.RedisFairLock;
 import com.njydsz.common.lock.impl.RedisMultiLock;
 import com.njydsz.common.lock.impl.RedisReentrantLock;
@@ -85,6 +86,11 @@ public class DefaultLockStrategy implements LockStrategy {
      * 统一锁续期服务（可选，注入后多锁启用批量续期）
      */
     private LockRenewalService lockRenewalService;
+
+    /**
+     * Fencing Token 提供器（可选，配置后支持单调递增 token 能力）
+     */
+    private FencingTokenProvider fencingTokenProvider;
 
     /**
      * 锁实例缓存，按锁类型缓存避免重复创建
@@ -205,6 +211,18 @@ public class DefaultLockStrategy implements LockStrategy {
     }
 
     /**
+     * 设置 Fencing Token 提供器（可选）
+     *
+     * <p>配置后所创建的抽象锁实例将具备 fencing token 能力，
+     * 通过单调递增 token 解决分布式锁的安全窗口问题。</p>
+     *
+     * @param fencingTokenProvider Fencing Token 提供器
+     */
+    public void setFencingTokenProvider(FencingTokenProvider fencingTokenProvider) {
+        this.fencingTokenProvider = fencingTokenProvider;
+    }
+
+    /**
      * 创建多 Key 联锁实例
      *
      * @param locks 底层分布式锁列表（至少 2 个）
@@ -273,6 +291,9 @@ public class DefaultLockStrategy implements LockStrategy {
             }
             if (lockReleaseNotifier != null) {
                 abstractLock.setLockReleaseNotifier(lockReleaseNotifier);
+            }
+            if (fencingTokenProvider != null) {
+                abstractLock.setFencingTokenProvider(fencingTokenProvider);
             }
         }
         return lock;

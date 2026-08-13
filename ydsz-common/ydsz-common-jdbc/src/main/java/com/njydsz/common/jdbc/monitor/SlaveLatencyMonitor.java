@@ -6,8 +6,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import javax.sql.DataSource;
@@ -54,11 +55,11 @@ public class SlaveLatencyMonitor {
         this.detector = new SlaveLatencyDetector.AutoDetectLatencyDetector();
         this.latencyThreshold = config.getThreshold();
         this.failureThreshold = config.getFailureThreshold();
-        this.scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+        this.scheduler = new ScheduledThreadPoolExecutor(1, r -> {
             Thread t = new Thread(r, "slave-latency-monitor");
             t.setDaemon(true);
             return t;
-        });
+        }, new ThreadPoolExecutor.CallerRunsPolicy());
     }
 
     /**

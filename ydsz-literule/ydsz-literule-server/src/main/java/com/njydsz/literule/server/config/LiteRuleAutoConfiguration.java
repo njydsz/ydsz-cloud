@@ -3,8 +3,9 @@ package com.njydsz.literule.server.config;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.redisson.api.RedissonClient;
@@ -304,7 +305,7 @@ public class LiteRuleAutoConfiguration {
                 return t;
             }
         };
-        return Executors.newFixedThreadPool(poolSize, factory);
+        return new ThreadPoolExecutor(poolSize, poolSize, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(1024), factory, new ThreadPoolExecutor.CallerRunsPolicy());
     }
 
     /**

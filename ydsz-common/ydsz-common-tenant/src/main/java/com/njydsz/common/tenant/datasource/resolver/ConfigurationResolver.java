@@ -6,6 +6,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.tenant.config.TenantProperties;
+
 /**
  * 基于配置文件的数据源 Key 解析器。
  *
@@ -36,9 +38,9 @@ public class ConfigurationResolver implements DatasourceKeyResolver {
     private final Map<String, String> mapping;
     private final NamingConventionResolver fallback;
 
-    public ConfigurationResolver(Map<String, String> mapping,
+    public ConfigurationResolver(TenantProperties properties,
                                   NamingConventionResolver fallback) {
-        this.mapping = mapping;
+        this.mapping = properties.getDatasourceMapping();
         this.fallback = fallback;
     }
 
@@ -60,7 +62,9 @@ public class ConfigurationResolver implements DatasourceKeyResolver {
 
     @Override
     public boolean isAvailable(String tenantId) {
-        if (tenantId == null) return false;
+        if (tenantId == null) {
+            return false;
+        }
         return mapping != null && mapping.containsKey(tenantId);
     }
 }

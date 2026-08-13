@@ -15,8 +15,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.ZipEntry;
@@ -192,7 +193,7 @@ public class ConcurrentExcelWriter {
         log.info("并发写入: 总行数={}, 分片数={}, 并行度={}, 分片大小={}",
                 totalSize, chunkCount, parallelism, chunkSize);
 
-        ExecutorService executor = Executors.newFixedThreadPool(parallelism, new NamedThreadFactory("excel-writer"));
+        ExecutorService executor = new ThreadPoolExecutor(parallelism, parallelism, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(1024), new NamedThreadFactory("excel-writer"), new ThreadPoolExecutor.CallerRunsPolicy());
 
         try {
             List<CompletableFuture<ChunkResult>> futures = new ArrayList<>(chunkCount);

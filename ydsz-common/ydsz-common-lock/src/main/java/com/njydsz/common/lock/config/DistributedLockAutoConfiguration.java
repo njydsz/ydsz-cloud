@@ -200,6 +200,7 @@ public class DistributedLockAutoConfiguration {
                 namespace, lockProperties.getMultiLock(),
                 optionalDependencies.notifierProvider().getIfAvailable());
         optionalDependencies.renewalServiceProvider().ifAvailable(strategy::setLockRenewalService);
+        optionalDependencies.fencingTokenProvider().ifAvailable(strategy::setFencingTokenProvider);
         return strategy;
     }
 
@@ -211,6 +212,7 @@ public class DistributedLockAutoConfiguration {
      * @param schedulerProvider      TaskScheduler 提供者
      * @param renewalServiceProvider LockRenewalService 提供者
      * @param notifierProvider       LockReleaseNotifier 提供者
+     * @param fencingTokenProvider   Fencing Token 提供者
      * @return 可选依赖聚合
      */
     @Bean
@@ -220,9 +222,10 @@ public class DistributedLockAutoConfiguration {
             ObjectProvider<RedisTemplate<String, Object>> redisTemplateProvider,
             ObjectProvider<TaskScheduler> schedulerProvider,
             ObjectProvider<LockRenewalService> renewalServiceProvider,
-            ObjectProvider<LockReleaseNotifier> notifierProvider) {
+            ObjectProvider<LockReleaseNotifier> notifierProvider,
+            ObjectProvider<FencingTokenProvider> fencingTokenProvider) {
         return new LockOptionalDependencies(stringOpsProvider, redisTemplateProvider,
-                schedulerProvider, renewalServiceProvider, notifierProvider);
+                schedulerProvider, renewalServiceProvider, notifierProvider, fencingTokenProvider);
     }
 
     /**

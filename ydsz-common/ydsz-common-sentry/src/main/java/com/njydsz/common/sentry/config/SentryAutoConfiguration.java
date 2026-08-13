@@ -2,8 +2,9 @@ package com.njydsz.common.sentry.config;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import jakarta.annotation.PreDestroy;
@@ -162,11 +163,11 @@ public class SentryAutoConfiguration {
                                                           SentryProperties properties) {
         SystemMetricsCollector collector = new SystemMetricsCollector(metricsCollector);
         int interval = properties.getMetrics().getSystemMetricsIntervalSeconds();
-        systemMetricsScheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+        systemMetricsScheduler = new ScheduledThreadPoolExecutor(1, r -> {
             Thread t = new Thread(r, "sentry-system-metrics");
             t.setDaemon(true);
             return t;
-        });
+        }, new ThreadPoolExecutor.CallerRunsPolicy());
         systemMetricsScheduler.scheduleAtFixedRate(collector::collect, 5, interval, TimeUnit.SECONDS);
         log.info("[Sentry] 系统资源指标定时采集已启动, interval={}s", interval);
         return collector;

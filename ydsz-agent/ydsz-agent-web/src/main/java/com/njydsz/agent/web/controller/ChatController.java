@@ -6,8 +6,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -92,7 +93,7 @@ public class ChatController {
     private final AgentRequestGuard requestGuard;
     /** 心跳调度器（虚拟线程工厂创建） */
     private final ScheduledExecutorService heartbeatScheduler =
-            Executors.newScheduledThreadPool(2, Thread.ofVirtual().name("agent-heartbeat-", 0).factory());
+            new ScheduledThreadPoolExecutor(2, Thread.ofVirtual().name("agent-heartbeat-", 0).factory(), new ThreadPoolExecutor.CallerRunsPolicy());
 
     public ChatController(ChatService chatService, AgentRequestGuard requestGuard) {
         this.chatService = chatService;

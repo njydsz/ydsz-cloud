@@ -1,12 +1,21 @@
 package com.njydsz.common.exception.config;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
+
+import com.njydsz.common.exception.code.ErrorCodeTable;
+import com.njydsz.common.exception.custom.AbstractYdszException;
+import com.njydsz.common.exception.custom.MessageSourceHolder;
+import com.njydsz.common.exception.metrics.ExceptionMetrics;
+import com.njydsz.common.exception.registry.ExceptionCodeScanner;
 
 import io.micrometer.core.instrument.MeterRegistry;
+
 import jakarta.annotation.PostConstruct;
+
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -23,12 +32,6 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
-
-import com.njydsz.common.exception.code.ErrorCodeTable;
-import com.njydsz.common.exception.custom.AbstractYdszException;
-import com.njydsz.common.exception.custom.MessageSourceHolder;
-import com.njydsz.common.exception.metrics.ExceptionMetrics;
-import com.njydsz.common.exception.registry.ExceptionCodeScanner;
 
 /**
  * 异常模块核心自动配置
@@ -267,22 +270,9 @@ public class YdszExceptionCoreAutoConfiguration {
         messageSource.setFallbackToSystemLocale(i18nProperties.isFallbackToSystemLocale());
         messageSource.setUseCodeAsDefaultMessage(true);
 
-        validateAndLogConfig(messageSource, cacheSeconds);
+        log.info("国际化配置加载成功 | 基础路径: {} | 缓存时间: {}秒 | 支持语言: {}",
+                i18nProperties.getBasename(), cacheSeconds, Arrays.toString(i18nProperties.getSupportedLocales()));
 
         return messageSource;
-    }
-
-    private void validateAndLogConfig(MessageSource messageSource, int cacheSeconds) {
-        try {
-            messageSource.getMessage("test.key", null, Locale.CHINA);
-            log.info("国际化配置加载成功 | 基础路径: {} | 缓存时间: {}秒 | 支持语言: {}",
-                    i18nProperties.getBasename(), cacheSeconds, Arrays.toString(i18nProperties.getSupportedLocales()));
-        } catch (Exception e) {
-            if (e.getMessage() != null && e.getMessage().contains("No message found under key 'test.key'")) {
-                log.warn("国际化配置文件加载成功，但未找到测试key: test.key（非必选）");
-            } else {
-                log.error("国际化配置加载检查异常", e);
-            }
-        }
     }
 }

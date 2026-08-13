@@ -10,7 +10,8 @@ import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -68,13 +69,17 @@ public class RuleChain {
      * 建议在应用关闭时（如 @PreDestroy 方法中）调用。
      */
     private static final ExecutorService WHEN_FALLBACK_EXECUTOR =
-            Executors.newFixedThreadPool(
+            new ThreadPoolExecutor(
                     Math.max(2, Runtime.getRuntime().availableProcessors()),
+                    Math.max(2, Runtime.getRuntime().availableProcessors()),
+                    0L, TimeUnit.MILLISECONDS,
+                    new LinkedBlockingQueue<>(1024),
                     r -> {
                         Thread t = new Thread(r, "literule-when-fallback");
                         t.setDaemon(true);
                         return t;
-                    });
+                    },
+                    new ThreadPoolExecutor.CallerRunsPolicy());
 
     /**
      * 优雅关闭 WHEN 回退线程池（P1-T4）

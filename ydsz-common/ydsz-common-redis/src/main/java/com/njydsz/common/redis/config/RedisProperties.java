@@ -198,6 +198,14 @@ public class RedisProperties {
     private KeyExpiration keyExpiration = new KeyExpiration();
 
     /**
+     * 缓存防护（RedisCacheGuard）锁配置
+     *
+     * <p>控制防穿透锁、防击穿锁的租约时间、自旋等待时间、续期间隔等参数。
+     * 未配置时使用合理的默认值。
+     */
+    private CacheGuard cacheGuard = new CacheGuard();
+
+    /**
      * 客户端配置（连接池、SSL、读策略等）
      */
     @NestedConfigurationProperty
@@ -487,5 +495,65 @@ public class RedisProperties {
             /** 从网络拓扑最近的节点读取 */
             NEAREST
         }
+    }
+
+    /**
+     * 缓存防护（RedisCacheGuard）锁配置类
+     *
+     * <p>所有时间参数均可通过 ydsz.redis.cache-guard.* 配置覆盖。默认值经过
+     * 常规业务场景调优，大多数情况下无需修改。
+     */
+    @Data
+    public static class CacheGuard {
+
+        /**
+         * 防穿透锁租约时间（秒）
+         * <p>默认：5 秒。该锁仅保护短暂的双重检查+回源操作，无需过长。
+         */
+        private int penetrationLockLeaseSeconds = 5;
+
+        /**
+         * 防击穿锁租约时间（秒）
+         * <p>默认：10 秒。热点 key 回源时间一般短于 10 秒；
+         * 超过该时间仍未完成时 WatchDog 会自动续期。
+         */
+        private int breakdownLockLeaseSeconds = 10;
+
+        /**
+         * 自旋等待最大时长（毫秒），等待持锁线程回填缓存
+         * <p>默认：3000 毫秒。超时后降级直接回源查库。
+         */
+        private long spinMaxWaitMs = 3000;
+
+        /**
+         * 自旋等待初始退避间隔（毫秒）
+         * <p>默认：20 毫秒。采用指数退避逐步增大。
+         */
+        private long spinInitialBackoffMs = 20;
+
+        /**
+         * 防击穿锁等待获取最大时长（毫秒）
+         * <p>默认：2000 毫秒。超过该时间仍未获取到锁时降级自旋等待。
+         */
+        private long lockWaitMaxMs = 2000;
+
+        /**
+         * 防击穿锁等待获取初始退避间隔（毫秒）
+         * <p>默认：10 毫秒。
+         */
+        private long lockWaitInitialBackoffMs = 10;
+
+        /**
+         * 防击穿锁等待获取最大退避间隔（毫秒）
+         * <p>默认：200 毫秒。
+         */
+        private long lockWaitMaxBackoffMs = 200;
+
+        /**
+         * WatchDog 最大续期次数
+         * <p>默认：100 次（约 30 分钟，基于 10 秒租约每 3.3 秒续期一次）。
+         * <p>超过该次数后 WatchDog 停止续期，防止业务线程卡死导致锁永不释放。
+         */
+        private int maxRenewTimes = 100;
     }
 }
