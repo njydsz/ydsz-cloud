@@ -37,7 +37,7 @@ import com.njydsz.common.thread.metrics.ThreadPoolMetrics;
  * <ul>
  *   <li>按业务隔离：每个线程池独立的 coreSize/maxSize/queue/rejectPolicy</li>
  *   <li>Micrometer 指标：active/queueSize/completed/rejected Gauge + Counter，
- *       前缀 {@code ydzz.executor}，自动注册 {@link ThreadPoolMetrics} /
+ *       前缀 {@code ydsz.executor}，自动注册 {@link ThreadPoolMetrics} /
  *       {@link VirtualThreadMetrics} Bean</li>
  *   <li>优雅关闭：shutdown 时等待任务完成</li>
  *   <li>健康检查：自动注册 {@link ThreadHealthIndicator}</li>
@@ -185,7 +185,7 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
 
             String metricsBeanName = beanName + "Metrics";
             if (!beanFactory.containsBean(metricsBeanName)) {
-                // 不存在配套 Metrics Bean，说明不是 ydzz-common-thread 管理的线程池
+                // 不存在配套 Metrics Bean，说明不是 ydsz-common-thread 管理的线程池
                 return bean;
             }
 

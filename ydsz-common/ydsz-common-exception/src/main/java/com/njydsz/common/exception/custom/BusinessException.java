@@ -1,9 +1,7 @@
 package com.njydsz.common.exception.custom;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
-
-import lombok.ToString;
-import org.springframework.http.HttpStatus;
 
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.code.ResultCode;
@@ -12,6 +10,10 @@ import com.njydsz.common.exception.core.ExceptionInfo;
 import com.njydsz.common.exception.enums.ExceptionCategory;
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.enums.ExceptionLevel;
+
+import lombok.ToString;
+
+import org.springframework.http.HttpStatus;
 
 /**
  * 业务异常类
@@ -25,6 +27,26 @@ import com.njydsz.common.exception.enums.ExceptionLevel;
  *   <li>异常级别：ERROR</li>
  *   <li>异常分类：BUSINESS</li>
  * </ul>
+ *
+ * <p><b>推荐使用方式（v2.3.0）：</b>
+ * <pre>{@code
+ * // 1. 预定义异常码（推荐）
+ * throw BusinessException.of(CoreExceptionCode.NOT_FOUND);
+ *
+ * // 2. 预定义异常码 + 原始异常
+ * throw new BusinessException(CoreExceptionCode.DATABASE_ERROR, cause);
+ *
+ * // 3. 全参数链式构建（自定义错误码场景）
+ * throw BusinessException.builder()
+ *     .code("USER_NOT_FOUND")
+ *     .key("user.not.found")
+ *     .httpStatus(404)
+ *     .build();
+ *
+ * // 4. 链式附加数据
+ * throw BusinessException.of(CoreExceptionCode.PARAM_ERROR)
+ *     .data("field", "username");
+ * }</pre>
  *
  * <p><b>精简设计（v2.0）：</b>仅保留 3 个核心构造函数，
  * 其他参数化构造通过 {@link #builder()} 链式 Builder 完成，消除 15+ 构造函数爆炸问题。
@@ -89,13 +111,16 @@ public class BusinessException extends AbstractYdszException {
     }
 
     /**
-     * 使用自定义消息构造业务异常（兼容构造器）。
+     * 使用自定义消息构造业务异常（已弃用）。
      *
      * <p>保留给 {@code new BusinessException("...")} 形式的存量调用方，
-     * 新代码请优先使用 {@link #builder()}。</p>
+     * 新代码请优先使用 {@link #of(ExceptionCode)} 或 {@link #builder()}。</p>
      *
      * @param message 自定义异常消息
+     * @deprecated 请使用 {@link #of(ExceptionCode)} 或 {@link #builder()} 替代，
+     *             以便获得完整的错误码和国际化支持。
      */
+    @Deprecated
     public BusinessException(String message) {
         super(message);
         initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
@@ -125,7 +150,7 @@ public class BusinessException extends AbstractYdszException {
     }
 
     /**
-     * 使用异常码枚举和自定义消息构造业务异常（兼容构造器）。
+     * 使用异常码枚举和自定义消息构造业务异常（已弃用）。
      *
      * <p>保留给 {@code super(exceptionCode, message)} 形式的存量调用方
      * （如 {@code TenantIsolationException}），新代码请优先使用
@@ -133,7 +158,9 @@ public class BusinessException extends AbstractYdszException {
      *
      * @param exceptionCode 异常码枚举
      * @param message       自定义异常消息
+     * @deprecated 请使用 {@link #BusinessException(ExceptionCode)} 或 {@link #builder()} 替代。
      */
+    @Deprecated
     public BusinessException(ExceptionCode exceptionCode, String message) {
         super(message);
         init(exceptionCode, new Object[]{}, DEFAULT_LEVEL, DEFAULT_CATEGORY);
@@ -143,27 +170,31 @@ public class BusinessException extends AbstractYdszException {
     }
 
     /**
-     * 使用异常码枚举与消息参数构造业务异常（兼容构造器）。
+     * 使用异常码枚举与消息参数构造业务异常（已弃用）。
      *
      * <p>保留给 {@code new BusinessException(resultCode, new Object[]{...})} 形式的存量调用方，
      * 新代码请优先使用 {@link #builder()}。</p>
      *
      * @param exceptionCode 异常码枚举
      * @param params        国际化消息参数
+     * @deprecated 请使用 {@link #builder()} {@code .params(Object...)} 替代。
      */
+    @Deprecated
     public BusinessException(ExceptionCode exceptionCode, Object[] params) {
         super();
         init(exceptionCode, params == null ? new Object[]{} : params, DEFAULT_LEVEL, DEFAULT_CATEGORY);
     }
 
     /**
-     * 使用统一结果码构造业务异常（兼容构造器）。
+     * 使用统一结果码构造业务异常（已弃用）。
      *
      * <p>保留给 {@code new BusinessException(BaseResultCode.X)} 形式的存量调用方
-     * （{@code ResultCode} 体系），新代码请优先使用 {@link #builder()}。</p>
+     * （{@code ResultCode} 体系），新代码请优先使用 {@link #of(ExceptionCode)} 或 {@link #builder()}。</p>
      *
      * @param resultCode 统一结果码
+     * @deprecated 请使用 {@link #of(ExceptionCode)} 或 {@link #builder()} 替代。
      */
+    @Deprecated
     public BusinessException(ResultCode resultCode) {
         super();
         if (resultCode != null) {
