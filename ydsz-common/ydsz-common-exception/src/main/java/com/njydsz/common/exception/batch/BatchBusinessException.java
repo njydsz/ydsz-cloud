@@ -70,32 +70,32 @@ public class BatchBusinessException extends BusinessException implements IBatchE
         return new BatchBusinessException();
     }
 
-	/**
-	 * 动态生成包含当前成功/失败数量的 i18n 消息。
-	 *
-	 * <p>每次调用都基于当前 counts 重新生成消息，
-	 * 确保无论何时获取消息都能反映最新的批量处理结果。
-	 *
-	 * <p>使用 {@link MessageFormat} 处理 i18n 模板中的 {@code {0}} / {@code {1}} 占位符，
-	 * 与 {@link java.springframework.context.MessageSource} 的消息格式保持一致。
-	 *
-	 * @return 处理结果
-	 */
-	@Override
-	public String getMessage() {
-		String template = MessageSourceHolder.resolve(BATCH_PARTIAL_SUCCESS_KEY,
-				new Object[]{getSuccessCount(), getFailureCount()});
-		// 如果 i18n 未配置（返回 key 本身），使用默认文案
-		if (BATCH_PARTIAL_SUCCESS_KEY.equals(template)) {
-			return String.format("Batch operation partially successful: %d succeeded, %d failed",
-					getSuccessCount(), getFailureCount());
-		}
-		try {
-			return MessageFormat.format(template, getSuccessCount(), getFailureCount());
-		} catch (Exception e) {
-			return template;
-		}
-	}
+    /**
+     * 动态生成包含当前成功/失败数量的 i18n 消息。
+     *
+     * <p>每次调用都基于当前 counts 重新生成消息，
+     * 确保无论何时获取消息都能反映最新的批量处理结果。
+     *
+     * <p>使用 {@link MessageFormat} 处理 i18n 模板中的 {@code {0}} / {@code {1}} 占位符，
+     * 与 Spring {@link org.springframework.context.MessageSource} 的消息格式保持一致。
+     *
+     * @return 处理结果
+     */
+    @Override
+    public String getMessage() {
+        String template = MessageSourceHolder.resolve(BATCH_PARTIAL_SUCCESS_KEY,
+                new Object[]{getSuccessCount(), getFailureCount()});
+        // 如果 i18n 未配置（返回 key 本身），使用默认文案
+        if (BATCH_PARTIAL_SUCCESS_KEY.equals(template)) {
+            return String.format("Batch operation partially successful: %d succeeded, %d failed",
+                    getSuccessCount(), getFailureCount());
+        }
+        try {
+            return MessageFormat.format(template, getSuccessCount(), getFailureCount());
+        } catch (Exception e) {
+            return template;
+        }
+    }
 
     /**
      * 添加成功的子项

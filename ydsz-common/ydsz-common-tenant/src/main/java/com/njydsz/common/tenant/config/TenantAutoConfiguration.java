@@ -92,8 +92,14 @@ public class TenantAutoConfiguration {
      * Web 入口过滤器：从 JWT 解析租户上下文 + MDC 日志注入。
      *
      * <p>使用 {@link FilterRegistrationBean} 包装，显式指定 order 为
-     * {@code Ordered.HIGHEST_PRECEDENCE + 100}，确保在认证 Filter 之后、
-     * 业务 Filter 之前执行。
+     * {@code Ordered.HIGHEST_PRECEDENCE + 90}，确保在 ISOLATE_DB 数据源
+     * 路由过滤器（+100）之前执行，先解析租户上下文、后消费上下文。
+     *
+     * <p><b>Filter 链执行顺序：</b>
+     * <ol>
+     *   <li>TenantContextWebFilter（+90）：解析租户上下文写入 RequestContext</li>
+     *   <li>TenantDataSourceFilter（+100）：读取上下文切换数据源</li>
+     * </ol>
      *
      * @param properties 租户配置
      * @return Filter 注册 Bean
@@ -106,7 +112,7 @@ public class TenantAutoConfiguration {
             TenantProperties properties) {
         FilterRegistrationBean<TenantContextWebFilter> registration = new FilterRegistrationBean<>();
         registration.setFilter(new TenantContextWebFilter(properties));
-        registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 100);
+        registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 90);
         registration.addUrlPatterns("/*");
         registration.setName("tenantContextWebFilter");
         return registration;
@@ -275,6 +281,9 @@ public class TenantAutoConfiguration {
     /**
      * ISOLATE_DB 模式 Web 过滤器（可选，mode=ISOLATE_DB + web 应用时）。
      *
+     * <p>order = {@code HIGHEST_PRECEDENCE + 100}，在 TenantContextWebFilter（+90）
+     * 之后执行，确保租户上下文已解析后再进行数据源路由。
+     *
      * @param router     数据源路由器
      * @param properties 租户配置
      * @return Filter 注册 Bean
@@ -290,7 +299,7 @@ public class TenantAutoConfiguration {
             TenantProperties properties) {
         FilterRegistrationBean<TenantDataSourceFilter> registration = new FilterRegistrationBean<>();
         registration.setFilter(new TenantDataSourceFilter(router));
-        registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 90);
+        registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 100);
         registration.addUrlPatterns("/*");
         registration.setName("tenantDataSourceFilter");
         return registration;

@@ -8,6 +8,10 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.InitializingBean;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.task.TaskDecorator;
 import org.springframework.lang.NonNull;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -23,20 +27,37 @@ import com.njydsz.common.thread.config.ThreadPoolProperties.RejectPolicy;
  * <p>v1.3.0 重构：从 {@link ThreadPoolAutoConfiguration} 内部类提取为独立组件，
  * 确保 {@code BeanDefinitionRegistryPostProcessor} 可在测试环境中正确运行。
  *
+ * <p>v1.3.1 修复：实现 {@link ApplicationContextAware} 接口，修复 TaskDecorator 因
+ * {@link ApplicationContext} 未注入而始终失效的问题。
+ *
  * @author ydsz-team
  * @since 1.2.0
  */
-public class ThreadPoolExecutorFactory {
+public class ThreadPoolExecutorFactory implements ApplicationContextAware, InitializingBean {
 
     private static final Logger log = LoggerFactory.getLogger(ThreadPoolExecutorFactory.class);
 
-    private org.springframework.context.ApplicationContext applicationContext;
+    private ApplicationContext applicationContext;
 
     /**
      * 注入 ApplicationContext，供 TaskDecorator 配置使用。
+     *
+     * <p>该方法由 Spring 容器在 Bean 初始化阶段自动回调。
+     *
+     * @param applicationContext Spring 应用上下文
      */
-    public void setApplicationContext(@NonNull org.springframework.context.ApplicationContext applicationContext) {
+    @Override
+    public void setApplicationContext(@NonNull ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = applicationContext;
+    }
+
+    @Override
+    public void afterPropertiesSet() {
+        // 验证 ApplicationContext 已注入
+        if (applicationContext == null) {
+            log.warn("ydsz-thread: ThreadPoolExecutorFactory ApplicationContext 为 null，"
+                    + "TaskDecorator 配置将不可用");
+        }
     }
 
     /**
