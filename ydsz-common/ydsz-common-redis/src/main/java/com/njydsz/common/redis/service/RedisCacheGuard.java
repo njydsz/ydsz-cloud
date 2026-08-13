@@ -82,7 +82,6 @@ public class RedisCacheGuard {
     /** 防击穿锁租约时间（秒） */
     private static final int BREAKDOWN_LOCK_LEASE_SECONDS = 10;
 
-    private final RedisService redisService;
     private final RedisStringOps stringOps;
     private final RedisTemplate<String, Object> redisTemplate;
     private final int nullValueTtlSeconds;
@@ -92,14 +91,14 @@ public class RedisCacheGuard {
      */
     private final LockWatchDog lockWatchDog;
 
-    public RedisCacheGuard(RedisService redisService) {
-        this(redisService, 1800);
+    public RedisCacheGuard(RedisStringOps stringOps, RedisTemplate<String, Object> redisTemplate) {
+        this(stringOps, redisTemplate, 1800);
     }
 
-    public RedisCacheGuard(RedisService redisService, int nullValueTtlSeconds) {
-        this.redisService = redisService;
-        this.stringOps = redisService.stringOps();
-        this.redisTemplate = redisService.getRedisTemplate();
+    public RedisCacheGuard(RedisStringOps stringOps, RedisTemplate<String, Object> redisTemplate,
+                          int nullValueTtlSeconds) {
+        this.stringOps = stringOps;
+        this.redisTemplate = redisTemplate;
         this.nullValueTtlSeconds = nullValueTtlSeconds;
         this.lockWatchDog = new LockWatchDog(redisTemplate);
     }

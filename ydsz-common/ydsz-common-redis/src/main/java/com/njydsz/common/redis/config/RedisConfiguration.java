@@ -32,7 +32,6 @@ import com.njydsz.common.redis.service.RedisCacheGuard;
 import com.njydsz.common.redis.service.RedisDelayedQueue;
 import com.njydsz.common.redis.service.RedisKeyExpirationDispatcher;
 import com.njydsz.common.redis.service.RedisRateLimiter;
-import com.njydsz.common.redis.service.RedisService;
 import com.njydsz.common.redis.service.RedisSnowflakeIdGenerator;
 import com.njydsz.common.redis.service.ops.RedisAdvancedOps;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
@@ -266,15 +265,17 @@ public class RedisConfiguration {
      * <p>提供防穿透、防击穿、防雪崩三重缓存保护。
      * 空值缓存 TTL 从 {@link RedisProperties#getNullValueTtlSeconds()} 获取。
      *
-     * @param redisService    Redis 服务
+     * @param stringOps      Redis String 操作组件（用于读写缓存、SETNX 锁等）
+     * @param redisTemplate  Redis 模板（用于 WatchDog 续期）
      * @param redisProperties Redis 配置属性
      * @return RedisCacheGuard 实例
      */
     @Bean
     @ConditionalOnMissingBean
-    public RedisCacheGuard redisCacheGuard(RedisService redisService,
-                                            RedisProperties redisProperties) {
-        return new RedisCacheGuard(redisService, redisProperties.getNullValueTtlSeconds());
+    public RedisCacheGuard redisCacheGuard(RedisStringOps stringOps,
+                                           RedisTemplate<String, Object> redisTemplate,
+                                           RedisProperties redisProperties) {
+        return new RedisCacheGuard(stringOps, redisTemplate, redisProperties.getNullValueTtlSeconds());
     }
 
     /**
