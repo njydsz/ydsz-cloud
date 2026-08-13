@@ -12,10 +12,11 @@ import jakarta.validation.constraints.Min;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import com.njydsz.common.queue.enums.QueueType;
+import org.springframework.data.redis.core.RedisTemplate;
+
 import com.njydsz.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.common.queue.queue.MessageQueueFactory;
 import com.njydsz.common.queue.rate.ConsumerRateLimiter;
-import com.njydsz.common.redis.service.RedisService;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
  * 支持通过 {@link MessageQueueFactory} 创建消息队列实例，复用 ydsz-common-redis 连接。
  *
  * <p><b>连接复用：</b>
- * <p>当提供 {@link com.njydsz.common.redis.service.RedisService} 时，Redis 队列
+ * <p>当提供 RedisTemplate 时，Redis 队列
  * 优先复用 ydsz-common-redis 的连接，避免重复创建 JedisPool。
  *
  * @author ydsz-team
@@ -468,14 +469,14 @@ public class QueueProperties {
     /**
      * 构建消息队列工厂实例（复用 ydsz-common-redis 连接，推荐）
      *
-     * @param redisService     Redis 服务实例
+     * @param redisTemplate    Redis 模板实例
      * @param consumerExecutor 异步消费者线程池
      * @return 消息队列工厂
      */
-    public IMessageQueueProvider buildFactory(RedisService redisService,
+    public IMessageQueueProvider buildFactory(RedisTemplate<String, Object> redisTemplate,
                                               ExecutorService consumerExecutor) {
         log.info("构建消息队列工厂（复用 ydsz-common-redis 连接）");
-        return new MessageQueueFactory(this, redisService, consumerExecutor);
+        return new MessageQueueFactory(this, redisTemplate, consumerExecutor);
     }
 
     @Override

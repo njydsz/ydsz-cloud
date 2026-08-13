@@ -11,7 +11,6 @@ import com.njydsz.common.queue.service.IMessagePublisher;
 import com.njydsz.common.queue.service.IMessageSubscriber;
 import com.njydsz.common.queue.service.impl.RedisStreamPublisher;
 import com.njydsz.common.queue.service.impl.RedisStreamSubscriber;
-import com.njydsz.common.redis.service.RedisService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>Redis Stream 是 Redis 5.0 引入的数据结构，提供了更强大的消息持久化和消费组功能。
  * 它是 List 的增强版，支持消息确认、消费组、消息ID排序等高级特性。
  *
- * <p><b>连接复用：</b>通过 {@link RedisService} 复用 ydsz-common-redis 的连接。
+ * <p><b>连接复用：</b>通过 RedisTemplate 复用 ydsz-common-redis 的连接。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -36,18 +35,18 @@ public class RedisStreamMQ implements IMessageQueue {
     private final ReentrantLock closeLock = new ReentrantLock();
 
     /**
-     * 基于 RedisService 构造（复用 ydsz-common-redis 连接，推荐）
+     * 基于 RedisTemplate 构造（复用 ydsz-common-redis 连接，推荐）
      *
-     * @param redisService     Redis 服务
+     * @param redisTemplate    Redis 模板
      * @param config           队列配置
      * @param consumerExecutor 异步消费者线程池（可为 null，将退化到裸线程，不推荐）
      */
-    public RedisStreamMQ(RedisService redisService, QueueProperties config, ExecutorService consumerExecutor) {
+    public RedisStreamMQ(RedisTemplate<String, Object> redisTemplate, QueueProperties config, ExecutorService consumerExecutor) {
         if (config == null) {
             throw BusinessException.builder().key("队列配置不能为空").build();
         }
         this.queueProperties = config;
-        this.redisTemplate = redisService.getRedisTemplate();
+        this.redisTemplate = redisTemplate;
         this.consumerExecutor = consumerExecutor;
         log.info("[RedisStreamMQ] 初始化成功（复用 ydsz-common-redis 连接），消费者组: {}",
                 config.resolvedStreamGroup());

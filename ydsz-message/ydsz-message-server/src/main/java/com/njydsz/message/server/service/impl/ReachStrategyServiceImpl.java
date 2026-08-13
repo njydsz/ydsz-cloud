@@ -9,7 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.common.redis.service.RedisService;
+import org.springframework.data.redis.core.RedisTemplate;
+
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -61,7 +62,7 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
             "SMS", 1.0
     );
 
-    private final RedisService redisService;
+    private final RedisTemplate<String, Object> redisTemplate;
     /** OD-1: DND 逻辑委托给 DndService，消除重复实现 */
     private final DndService dndService;
 
@@ -81,7 +82,7 @@ public class ReachStrategyServiceImpl implements ReachStrategyService {
         }
         try {
             // 从 Redis 加载画像（外部系统写入）
-            Map<Object, Object> raw = redisService.opsForHash()
+            Map<Object, Object> raw = redisTemplate.opsForHash()
                     .entries(PROFILE_KEY_PREFIX + userId);
             if (raw == null || raw.isEmpty()) {
                 return defaultProfile();

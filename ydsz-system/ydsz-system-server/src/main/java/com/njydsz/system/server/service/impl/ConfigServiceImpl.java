@@ -20,7 +20,7 @@ import com.njydsz.common.event.model.StandardEventTypes;
 import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.query.ConfigPageQuery;
@@ -107,8 +107,8 @@ public class ConfigServiceImpl implements ConfigService {
 
     /** 系统配置仓储 */
     private final ConfigRepository configRepository;
-    /** Redis 缓存服务 */
-    private final RedisService redisService;
+    /** Redis String 操作组件 */
+    private final RedisStringOps stringOps;
     /** 系统监控指标采集器 */
     private final SystemMetrics metrics;
     /** 系统配置属性 */
@@ -212,7 +212,7 @@ public class ConfigServiceImpl implements ConfigService {
         long start = System.nanoTime();
         try {
             String cacheKey = CACHE_KEY_PREFIX + configKey;
-            String cached = redisService.get(cacheKey, String.class);
+            String cached = stringOps.get(cacheKey, String.class);
             if (cached != null) {
                 if (NULL_SENTINEL.equals(cached)) {
                     metrics.recordConfigCacheHit();
@@ -224,10 +224,10 @@ public class ConfigServiceImpl implements ConfigService {
             metrics.recordConfigCacheMiss();
             Config config = configRepository.getConfigMapper().selectByConfigKey(configKey);
             if (config != null) {
-                redisService.set(cacheKey, config.getConfigValue(), getCacheTtl());
+                stringOps.set(cacheKey, config.getConfigValue(), getCacheTtl());
                 return config.getConfigValue();
             }
-            redisService.set(cacheKey, NULL_SENTINEL, NULL_SENTINEL_TTL);
+            stringOps.set(cacheKey, NULL_SENTINEL, NULL_SENTINEL_TTL);
             return null;
         } finally {
             metrics.recordConfigRead(System.nanoTime() - start);
@@ -238,7 +238,7 @@ public class ConfigServiceImpl implements ConfigService {
     @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     public List<ConfigVO> getConfigsByGroup(String configGroup) {
         String cacheKey = CACHE_GROUP_PREFIX + configGroup;
-        String cached = redisService.get(cacheKey, String.class);
+        String cached = stringOps.get(cacheKey, String.class);
         if (cached != null) {
             metrics.recordConfigCacheHit();
             return YdszJson.parseArray(cached, ConfigVO.class);
@@ -250,14 +250,14 @@ public class ConfigServiceImpl implements ConfigService {
                 .map(SystemConverter.INSTANT::entityToVO)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-        redisService.set(cacheKey, YdszJson.toJson(vos), getCacheTtl());
+        stringOps.set(cacheKey, YdszJson.toJson(vos), getCacheTtl());
         return vos;
     }
 
     @Override
     @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     public List<ConfigVO> listPublicConfigs() {
-        String cached = redisService.get(CACHE_PUBLIC_KEY, String.class);
+        String cached = stringOps.get(CACHE_PUBLIC_KEY, String.class);
         if (cached != null) {
             metrics.recordConfigCacheHit();
             return YdszJson.parseArray(cached, ConfigVO.class);
@@ -269,7 +269,7 @@ public class ConfigServiceImpl implements ConfigService {
                 .map(SystemConverter.INSTANT::entityToVO)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-        redisService.set(CACHE_PUBLIC_KEY, YdszJson.toJson(vos), getCacheTtl());
+        stringOps.set(CACHE_PUBLIC_KEY, YdszJson.toJson(vos), getCacheTtl());
         return vos;
     }
 
@@ -474,12 +474,12 @@ public class ConfigServiceImpl implements ConfigService {
      */
     private void evictCache(String configKey, String configGroup) {
         if (configKey != null) {
-            redisService.delete(CACHE_KEY_PREFIX + configKey);
+            stringOps.del(CACHE_KEY_PREFIX + configKey);
         }
         if (configGroup != null) {
-            redisService.delete(CACHE_GROUP_PREFIX + configGroup);
+            stringOps.del(CACHE_GROUP_PREFIX + configGroup);
         }
-        redisService.delete(CACHE_PUBLIC_KEY);
+        stringOps.del(CACHE_PUBLIC_KEY);
 
         OutboxService outboxService = outboxServiceProvider.getIfAvailable();
         if (outboxService != null) {

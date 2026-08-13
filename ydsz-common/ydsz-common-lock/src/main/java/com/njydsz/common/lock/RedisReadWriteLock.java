@@ -12,7 +12,10 @@ import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.lock.core.DistributedLocker;
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
+
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -55,9 +58,13 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
     private static final long MAX_BACKOFF_MILLIS = 200;
 
     /**
-     * Redis 服务，用于执行 Lua 脚本
+     * Redis String 操作组件
      */
-    private final RedisService redisService;
+    private final RedisStringOps redisStringOps;
+    /**
+     * Redis 模板，用于执行 Lua 脚本
+     */
+    private final RedisTemplate<String, Object> redisTemplate;
     /**
      * 读锁 Redis Key
      */
@@ -147,28 +154,31 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
     /**
      * 构造分布式读写锁（无命名空间）
      *
-     * @param redisService Redis 服务
+     * @param redisStringOps Redis String 操作组件
+     * @param redisTemplate  Redis 模板，用于执行 Lua 脚本
      * @param key          锁键
      * @param expireMillis 锁过期时间（毫秒）
      * @param waitMillis   获取锁最大等待时间（毫秒）
      */
-    public RedisReadWriteLock(RedisService redisService, String key,
-                               long expireMillis, long waitMillis) {
-        this(redisService, key, expireMillis, waitMillis, null);
+    public RedisReadWriteLock(RedisStringOps redisStringOps, RedisTemplate<String, Object> redisTemplate,
+                               String key, long expireMillis, long waitMillis) {
+        this(redisStringOps, redisTemplate, key, expireMillis, waitMillis, null);
     }
 
     /**
      * 构造分布式读写锁（带命名空间）
      *
-     * @param redisService Redis 服务
+     * @param redisStringOps Redis String 操作组件
+     * @param redisTemplate  Redis 模板，用于执行 Lua 脚本
      * @param key          锁键
      * @param expireMillis 锁过期时间（毫秒）
      * @param waitMillis   获取锁最大等待时间（毫秒）
      * @param namespace    锁键命名空间前缀，用于多应用共享 Redis 时的隔离
      */
-    public RedisReadWriteLock(RedisService redisService, String key,
-                               long expireMillis, long waitMillis, String namespace) {
-        this.redisService = redisService;
+    public RedisReadWriteLock(RedisStringOps redisStringOps, RedisTemplate<String, Object> redisTemplate,
+                               String key, long expireMillis, long waitMillis, String namespace) {
+        this.redisStringOps = redisStringOps;
+        this.redisTemplate = redisTemplate;
         String prefix = (namespace != null && !namespace.isEmpty()) ? namespace + ":lock:" : "";
         this.readLockKey = prefix + "rlock:" + key;
         this.writeLockKey = prefix + "wlock:" + key;
@@ -280,10 +290,9 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
             long currentBackoff = MIN_BACKOFF_MILLIS;
             while (true) {
                 try {
-                    Long result = redisService.executeScript(
-                            READ_LOCK_ACQUIRE_SCRIPT,
+                    Long result = redisTemplate.execute(
+                            new DefaultRedisScript<>(READ_LOCK_ACQUIRE_SCRIPT, Long.class),
                             Arrays.asList(readLockKey, writeLockKey),
-                            Long.class,
                             lockValue,
                             String.valueOf(expireMillis)
                     );
@@ -320,10 +329,9 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
             }
             // 重入计数归零，真正释放锁
             try {
-                redisService.executeScript(
-                        READ_LOCK_RELEASE_SCRIPT,
+                redisTemplate.execute(
+                        new DefaultRedisScript<>(READ_LOCK_RELEASE_SCRIPT, Long.class),
                         Collections.singletonList(readLockKey),
-                        Long.class,
                         lockValue
                 );
             } catch (Exception e) {
@@ -395,10 +403,9 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
             long currentBackoff = MIN_BACKOFF_MILLIS;
             while (true) {
                 try {
-                    Long result = redisService.executeScript(
-                            WRITE_LOCK_ACQUIRE_SCRIPT,
+                    Long result = redisTemplate.execute(
+                            new DefaultRedisScript<>(WRITE_LOCK_ACQUIRE_SCRIPT, Long.class),
                             Arrays.asList(readLockKey, writeLockKey),
-                            Long.class,
                             lockValue,
                             String.valueOf(expireMillis)
                     );
@@ -427,10 +434,9 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
                 return;
             }
             try {
-                redisService.executeScript(
-                        WRITE_LOCK_RELEASE_SCRIPT,
+                redisTemplate.execute(
+                        new DefaultRedisScript<>(WRITE_LOCK_RELEASE_SCRIPT, Long.class),
                         Collections.singletonList(writeLockKey),
-                        Long.class,
                         lockValue
                 );
             } catch (Exception e) {
@@ -537,7 +543,7 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
     @Override
     public boolean isLocked(String lockKey) {
         try {
-            return Boolean.TRUE.equals(redisService.hasKey(writeLockKey));
+            return Boolean.TRUE.equals(redisStringOps.hasKey(writeLockKey));
         } catch (Exception e) {
             log.error("读写锁检查状态异常: {}", writeLockKey, e);
             return false;
@@ -554,7 +560,7 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
     @Override
     public long getRemainTime(String lockKey) {
         try {
-            long seconds = redisService.getExpire(writeLockKey);
+            long seconds = redisStringOps.getExpire(writeLockKey);
             return seconds > 0 ? TimeUnit.SECONDS.toMillis(seconds) : seconds;
         } catch (Exception e) {
             log.error("读写锁获取剩余时间异常: {}", writeLockKey, e);

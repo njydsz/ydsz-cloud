@@ -7,7 +7,7 @@ import java.util.function.Supplier;
  * 缓存提供者接口
  *
  * <p>为注解缓存切面（{@code @YdszCacheable}、{@code @YdszCacheEvict}、{@code @YdszCachePut}）
- * 提供最小化的缓存操作契约，解耦切面与 {@link RedisService} 门面类的强依赖。
+ * 提供最小化的缓存操作契约，解耦切面与具体实现的强依赖。
  *
  * <p>设计目标：
  * <ul>
@@ -18,8 +18,8 @@ import java.util.function.Supplier;
  *
  * <p><b>实现类：</b>
  * <ul>
- *   <li>{@link RedisService}（直接实现此接口）</li>
- *   <li>多级缓存实现（可后续扩展）</li>
+ *   <li>{@link com.njydsz.common.redis.service.multilevel.MultiLevelCacheProvider}（多级缓存实现）</li>
+ *   <li>其他自定义实现（可后续扩展）</li>
  * </ul>
  *
  * @author ydsz-team

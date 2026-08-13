@@ -4,7 +4,8 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.RedisStringOps;
+
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
@@ -54,7 +55,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     /** SpEL 表达式解析器（条件求值） */
     private final ExpressionParser expressionParser;
     /** Redis 模板（路由规则缓存） */
-    private final RedisService redisService;
+    private final RedisStringOps redisStringOps;
 
     /**
      * {@inheritDoc}
@@ -252,7 +253,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
      */
     private List<MsgRouteRule> loadEnabledRulesFromCache() {
         try {
-            String json = redisService.get(MessageConstants.ROUTE_RULE_CACHE_KEY, String.class);
+            String json = redisStringOps.get(MessageConstants.ROUTE_RULE_CACHE_KEY, String.class);
             if (StringUtils.hasText(json)) {
                 List<MsgRouteRule> cached = YdszJson.parseArray(json, MsgRouteRule.class);
                 if (cached != null) {
@@ -266,7 +267,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
                 .eq(MsgRouteRule::getStatus, "ENABLED")
                 .orderByAsc(MsgRouteRule::getPriority));
         try {
-            redisService.set(
+            redisStringOps.set(
                     MessageConstants.ROUTE_RULE_CACHE_KEY, YdszJson.toJson(rules),
                     CACHE_TTL);
         } catch (Exception e) {
@@ -280,7 +281,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
      */
     private void evictCache() {
         try {
-            redisService.delete(MessageConstants.ROUTE_RULE_CACHE_KEY);
+            redisStringOps.del(MessageConstants.ROUTE_RULE_CACHE_KEY);
         } catch (Exception e) {
             log.warn("[RouteRule] 缓存失效失败: {}", e.getMessage(), e);
         }

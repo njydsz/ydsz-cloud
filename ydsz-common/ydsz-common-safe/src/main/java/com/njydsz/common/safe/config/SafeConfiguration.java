@@ -25,7 +25,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
 
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.safe.advice.XssRequestBodyAdvice;
 import com.njydsz.common.safe.alert.SafeAlertProperties;
 import com.njydsz.common.safe.alert.SecurityEventAggregator;
@@ -326,25 +326,25 @@ public class SafeConfiguration {
     /**
      * 注册 CSRF 令牌存储库（Redis 分布式环境）
      *
-     * <p>当 RedisService 可用时，自动使用 Redis 存储以支持分布式部署。
+     * <p>当 RedisStringOps 可用时，自动使用 Redis 存储以支持分布式部署。
      */
     @Bean
     @Primary
-    @ConditionalOnBean(RedisService.class)
-    public CsrfTokenRepository redisCsrfTokenRepository(CsrfProperties properties, RedisService redisService) {
-        return new RedisCsrfTokenRepository(properties.getExpirationSeconds(), redisService);
+    @ConditionalOnBean(RedisStringOps.class)
+    public CsrfTokenRepository redisCsrfTokenRepository(CsrfProperties properties, RedisStringOps redisStringOps) {
+        return new RedisCsrfTokenRepository(properties.getExpirationSeconds(), redisStringOps);
     }
 
     /**
      * 注册 CSRF 令牌存储库（单机内存环境）
      *
-     * <p>仅当 RedisService 不可用时使用内存存储。适用于单机部署场景。
+     * <p>仅当 RedisStringOps 不可用时使用内存存储。适用于单机部署场景。
      *
      * @param properties CSRF 配置属性
      * @return CSRF 令牌存储库实例
      */
     @Bean
-    @ConditionalOnMissingBean({RedisService.class, CsrfTokenRepository.class})
+    @ConditionalOnMissingBean({RedisStringOps.class, CsrfTokenRepository.class})
     public CsrfTokenRepository inMemoryCsrfTokenRepository(CsrfProperties properties) {
         return new InMemoryCsrfTokenRepository(properties.getExpirationSeconds());
     }
@@ -405,17 +405,17 @@ public class SafeConfiguration {
      * <p>提供 IP 黑白名单管理能力，支持 CIDR 网段匹配、Redis 持久化存储和本地缓存。
      * 仅在 {@code ydsz.safe.ip-access.enabled=true} 且 Redis 可用时注册。
      *
-     * @param properties   IP 访问控制配置
-     * @param redisService Redis 服务
+     * @param properties     IP 访问控制配置
+     * @param redisStringOps Redis String 操作
      * @return IP 访问控制服务实例
      */
     @Bean
     @ConditionalOnMissingBean(IpAccessService.class)
-    @ConditionalOnBean(RedisService.class)
+    @ConditionalOnBean(RedisStringOps.class)
     @ConditionalOnProperty(prefix = "ydsz.safe.ip-access", name = "enabled", havingValue = "true")
-    public IpAccessService ipAccessService(IpAccessProperties properties, RedisService redisService) {
+    public IpAccessService ipAccessService(IpAccessProperties properties, RedisStringOps redisStringOps) {
         log.info("注册 IP 访问控制服务: mode={}", properties.getMode());
-        return new IpAccessService(properties, redisService);
+        return new IpAccessService(properties, redisStringOps);
     }
 
     /**

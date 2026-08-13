@@ -15,7 +15,9 @@ import com.njydsz.common.lock.impl.RedisFairLock;
 import com.njydsz.common.lock.impl.RedisReentrantLock;
 import com.njydsz.common.lock.metrics.LockMetrics;
 import com.njydsz.common.lock.scheduler.LockWatchDog;
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
+
+import org.springframework.data.redis.core.RedisTemplate;
 
 /**
  * 默认锁策略实现
@@ -27,8 +29,8 @@ import com.njydsz.common.redis.service.RedisService;
  * <ul>
  *   <li>REENTRANT - 可重入锁（默认）</li>
  *   <li>FAIR - 公平锁</li>
- *   <li>READ_WRITE - 读写锁（需要 RedisService）</li>
- *   <li>SEMAPHORE - 信号量（需要 RedisService）</li>
+ *   <li>READ_WRITE - 读写锁（需要 RedisTemplate）</li>
+ *   <li>SEMAPHORE - 信号量（需要 RedisTemplate）</li>
  * </ul>
  *
  * @author ydsz-team
@@ -45,9 +47,13 @@ public class DefaultLockStrategy implements LockStrategy {
      */
     private final LockWatchDog lockWatchDog;
     /**
-     * Redis 服务，用于读写锁和信号量
+     * Redis String 操作组件
      */
-    private final RedisService redisService;
+    private final RedisStringOps redisStringOps;
+    /**
+     * Redis 模板，用于执行 Lua 脚本
+     */
+    private final RedisTemplate<String, Object> redisTemplate;
     /**
      * 锁指标收集器
      */
@@ -79,16 +85,19 @@ public class DefaultLockStrategy implements LockStrategy {
      *
      * @param stringRedisTemplate Redis 模板
      * @param lockWatchDog 看门狗
-     * @param redisService Redis 服务
+     * @param redisStringOps Redis String 操作组件
+     * @param redisTemplate Redis 模板，用于执行 Lua 脚本
      * @param lockMetrics 锁指标收集器
      * @param scheduler 调度线程池（用于信号量超时调度）
      * @param namespace 锁键命名空间前缀（${spring.application.name}）
      */
     public DefaultLockStrategy(StringRedisTemplate stringRedisTemplate, LockWatchDog lockWatchDog,
-                               RedisService redisService, LockMetrics lockMetrics, TaskScheduler scheduler, String namespace) {
+                               RedisStringOps redisStringOps, RedisTemplate<String, Object> redisTemplate,
+                               LockMetrics lockMetrics, TaskScheduler scheduler, String namespace) {
         this.stringRedisTemplate = stringRedisTemplate;
         this.lockWatchDog = lockWatchDog;
-        this.redisService = redisService;
+        this.redisStringOps = redisStringOps;
+        this.redisTemplate = redisTemplate;
         this.lockMetrics = lockMetrics;
         this.scheduler = scheduler;
         this.namespace = namespace;
@@ -110,14 +119,14 @@ public class DefaultLockStrategy implements LockStrategy {
      *
      * @param key 锁键
      * @return RedisReadWriteLock 实例
-     * @throws IllegalStateException 当 RedisService 未配置时
+     * @throws IllegalStateException 当 RedisTemplate 未配置时
      */
     @Override
     public RedisReadWriteLock getReadWriteLock(String key) {
-        if (redisService == null) {
-            throw new IllegalStateException("RedisService is required for ReadWriteLock, please configure it in the constructor");
+        if (redisTemplate == null) {
+            throw new IllegalStateException("RedisTemplate is required for ReadWriteLock, please configure it in the constructor");
         }
-        return new RedisReadWriteLock(redisService, key, DEFAULT_EXPIRE_MILLIS, DEFAULT_WAIT_MILLIS, namespace);
+        return new RedisReadWriteLock(redisStringOps, redisTemplate, key, DEFAULT_EXPIRE_MILLIS, DEFAULT_WAIT_MILLIS, namespace);
     }
 
     /**
@@ -126,14 +135,14 @@ public class DefaultLockStrategy implements LockStrategy {
      * @param key 锁键
      * @param permits 许可数量
      * @return RedisSemaphore 实例
-     * @throws IllegalStateException 当 RedisService 未配置时
+     * @throws IllegalStateException 当 RedisTemplate 未配置时
      */
     @Override
     public RedisSemaphore getSemaphore(String key, int permits) {
-        if (redisService == null) {
-            throw new IllegalStateException("RedisService is required for Semaphore, please configure it in the constructor");
+        if (redisTemplate == null) {
+            throw new IllegalStateException("RedisTemplate is required for Semaphore, please configure it in the constructor");
         }
-        return new RedisSemaphore(redisService, key, permits, DEFAULT_EXPIRE_MILLIS, scheduler, namespace);
+        return new RedisSemaphore(redisStringOps, redisTemplate, key, permits, DEFAULT_EXPIRE_MILLIS, scheduler, namespace);
     }
 
     /**
@@ -143,13 +152,13 @@ public class DefaultLockStrategy implements LockStrategy {
      * @param expireMillis 锁过期时间（毫秒）
      * @param waitMillis 最大等待时间（毫秒）
      * @return RedisReadWriteLock 实例
-     * @throws IllegalStateException 当 RedisService 未配置时
+     * @throws IllegalStateException 当 RedisTemplate 未配置时
      */
     public RedisReadWriteLock getReadWriteLock(String key, long expireMillis, long waitMillis) {
-        if (redisService == null) {
-            throw new IllegalStateException("RedisService is required for ReadWriteLock, please configure it in the constructor");
+        if (redisTemplate == null) {
+            throw new IllegalStateException("RedisTemplate is required for ReadWriteLock, please configure it in the constructor");
         }
-        return new RedisReadWriteLock(redisService, key, expireMillis, waitMillis, namespace);
+        return new RedisReadWriteLock(redisStringOps, redisTemplate, key, expireMillis, waitMillis, namespace);
     }
 
     /**

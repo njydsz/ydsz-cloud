@@ -2,7 +2,8 @@ package com.njydsz.cronjob.server.core.executor;
 
 import java.time.Duration;
 
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.RedisStringOps;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.cronjob.server.config.CronjobProperties;
@@ -46,7 +47,8 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class GlobalConcurrencyController {
 
-    private final RedisService redisService;
+    private final RedisStringOps redisStringOps;
+    private final RedisTemplate<String, Object> redisTemplate;
     private final CronjobProperties cronjobProperties;
 
     /** 全局并发计数器 Redis key */
@@ -67,13 +69,13 @@ public class GlobalConcurrencyController {
         // 集群级并发 = 单节点并发 × 节点数（估算），简化为配置值
         int maxGlobal = maxConcurrent * 3; // 假设最多 3 个节点
         try {
-            Long current = redisService.incr(GLOBAL_CONCURRENT_KEY, 1);
+            Long current = redisStringOps.incr(GLOBAL_CONCURRENT_KEY, 1);
             if (current == null) {
                 return true; // Redis 异常时放行
             }
             if (current > maxGlobal) {
                 // 超限，回滚
-                redisService.opsForValue().decrement(GLOBAL_CONCURRENT_KEY);
+                redisTemplate.opsForValue().decrement(GLOBAL_CONCURRENT_KEY);
                 log.debug("[GlobalConcurrency] 全局并发已满, 拒绝: current={} max={}",
                         current, maxGlobal);
                 return false;
@@ -92,10 +94,10 @@ public class GlobalConcurrencyController {
      */
     public void release() {
         try {
-            Long current = redisService.getRedisTemplate().opsForValue().decrement(GLOBAL_CONCURRENT_KEY);
+            Long current = redisTemplate.opsForValue().decrement(GLOBAL_CONCURRENT_KEY);
             if (current != null && current < 0) {
                 // 计数器为负，修正为 0
-                redisService.set(GLOBAL_CONCURRENT_KEY, "0");
+                redisStringOps.set(GLOBAL_CONCURRENT_KEY, "0");
                 log.warn("[GlobalConcurrency] 计数器为负, 已修正为 0");
             }
         } catch (Exception e) {
@@ -110,7 +112,7 @@ public class GlobalConcurrencyController {
      */
     public long getCurrentConcurrent() {
         try {
-            String value = redisService.get(GLOBAL_CONCURRENT_KEY, String.class);
+            String value = redisStringOps.get(GLOBAL_CONCURRENT_KEY);
             return value != null ? Long.parseLong(value) : 0;
         } catch (Exception e) {
             return -1;
@@ -134,18 +136,18 @@ public class GlobalConcurrencyController {
      */
     public void calibrate(long actualRunningCount) {
         try {
-            Boolean acquired = redisService.opsForValue()
+            Boolean acquired = redisTemplate.opsForValue()
                     .setIfAbsent(CALIBRATION_LOCK_KEY, "1", Duration.ofSeconds(30));
             if (!Boolean.TRUE.equals(acquired)) {
                 return; // 其他节点正在校准
             }
-            redisService.set(GLOBAL_CONCURRENT_KEY, String.valueOf(actualRunningCount));
+            redisStringOps.set(GLOBAL_CONCURRENT_KEY, String.valueOf(actualRunningCount));
             log.info("[GlobalConcurrency] 计数器已校准: value={}", actualRunningCount);
         } catch (Exception e) {
             log.warn("[GlobalConcurrency] 校准失败: reason={}", e.getMessage());
         } finally {
             try {
-                redisService.delete(CALIBRATION_LOCK_KEY);
+                redisStringOps.delete(CALIBRATION_LOCK_KEY);
             } catch (Exception ignored) {
                 log.debug("Caught exception (ignored): {}", ignored.getMessage());
             }

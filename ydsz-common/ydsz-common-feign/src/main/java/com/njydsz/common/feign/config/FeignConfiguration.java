@@ -32,7 +32,7 @@ import com.njydsz.common.feign.interceptor.BulkheadRequestInterceptor;
 import com.njydsz.common.feign.interceptor.FeignResponseInterceptor;
 import com.njydsz.common.feign.monitor.FeignResponseMetricsAdapter;
 import com.njydsz.common.feign.trace.TraceRequestInterceptor;
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 import feign.Feign;
 import feign.Logger;
@@ -468,16 +468,16 @@ public class FeignConfiguration {
      * {@code ydsz.feign.circuit-breaker.state-ttl-seconds} 配置。
      *
      * @param feignProperties      Feign 配置属性
-     * @param redisServiceProvider Redis 服务提供者（可选）
+     * @param redisStringOpsProvider Redis String 操作提供者（可选）
      * @return CircuitBreakerStatePersistence 实例
      */
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnClass(RedisService.class)
+    @ConditionalOnClass(RedisStringOps.class)
     public CircuitBreakerStatePersistence circuitBreakerStatePersistence(
             FeignProperties feignProperties,
-            ObjectProvider<RedisService> redisServiceProvider) {
+            ObjectProvider<RedisStringOps> redisStringOpsProvider) {
         int ttlSeconds = feignProperties.getCircuitBreaker().getStateTtlSeconds();
-        return new CircuitBreakerStatePersistence(redisServiceProvider, Duration.ofSeconds(ttlSeconds));
+        return new CircuitBreakerStatePersistence(redisStringOpsProvider, Duration.ofSeconds(ttlSeconds));
     }
 }

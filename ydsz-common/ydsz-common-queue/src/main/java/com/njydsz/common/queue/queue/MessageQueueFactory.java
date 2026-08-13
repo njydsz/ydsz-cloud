@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 
+import org.springframework.data.redis.core.RedisTemplate;
+
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.queue.config.QueueProperties;
 import com.njydsz.common.queue.enums.QueueType;
@@ -15,7 +17,6 @@ import com.njydsz.common.queue.mq.rabbit.RabbitMQ;
 import com.njydsz.common.queue.mq.rabbit.RabbitMQProperties;
 import com.njydsz.common.queue.mq.rocket.RocketMQ;
 import com.njydsz.common.queue.mq.rocket.RocketMQProperties;
-import com.njydsz.common.redis.service.RedisService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  * 支持 Redis List、Redis PubSub、Redis Stream、Kafka、RocketMQ、RabbitMQ、ActiveMQ 等多种消息队列。
  *
  * <p><b>Redis 连接复用：</b>
- * Redis 队列实例复用 ydsz-common-redis 的连接，由 {@link RedisService} 统一管理。
+ * Redis 队列实例复用 ydsz-common-redis 的连接，由 RedisTemplate 统一管理。
  *
  * <p><b>线程池复用：</b>
  * 异步消费者统一使用 Spring 管理的 {@link ExecutorService}，避免业务代码直接创建裸线程。
@@ -38,23 +39,23 @@ import lombok.extern.slf4j.Slf4j;
 public class MessageQueueFactory implements IMessageQueueProvider {
 
     private final QueueProperties properties;
-    private final RedisService redisService;
+    private final RedisTemplate<String, Object> redisTemplate;
     private final ExecutorService consumerExecutor;
     private final List<IMessageQueue> createdQueues = new CopyOnWriteArrayList<>();
 
     /**
-     * 构造函数（推荐）
+     * 构造函数（基于 RedisTemplate，推荐）
      *
      * @param properties       队列配置
-     * @param redisService     Redis 服务（可为 null，仅使用非 Redis 队列时允许）
+     * @param redisTemplate    Redis 模板（可为 null，仅使用非 Redis 队列时允许）
      * @param consumerExecutor 异步消费者线程池（可为 null，将退化到裸线程，不推荐）
      */
-    public MessageQueueFactory(QueueProperties properties, RedisService redisService, ExecutorService consumerExecutor) {
+    public MessageQueueFactory(QueueProperties properties, RedisTemplate<String, Object> redisTemplate, ExecutorService consumerExecutor) {
         if (properties == null) {
             throw BusinessException.builder().key("队列配置不能为空").build();
         }
         this.properties = properties;
-        this.redisService = redisService;
+        this.redisTemplate = redisTemplate;
         this.consumerExecutor = consumerExecutor;
     }
 
@@ -107,27 +108,27 @@ public class MessageQueueFactory implements IMessageQueueProvider {
     }
 
     private IMessageQueue createRedisListMQ() {
-        if (redisService == null) {
+        if (redisTemplate == null) {
             throw BusinessException.builder().key("使用 Redis 队列需引入 ydsz-common-redis 模块").build();
         }
         log.info("[Factory] 创建 Redis List 队列（复用 ydsz-common-redis 连接）");
-        return new RedisListMQ(redisService, properties, consumerExecutor);
+        return new RedisListMQ(redisTemplate, properties, consumerExecutor);
     }
 
     private IMessageQueue createRedisPubSubMQ() {
-        if (redisService == null) {
+        if (redisTemplate == null) {
             throw BusinessException.builder().key("使用 Redis 队列需引入 ydsz-common-redis 模块").build();
         }
         log.info("[Factory] 创建 Redis PubSub 队列（复用 ydsz-common-redis 连接）");
-        return new RedisPubSubMQ(redisService, properties);
+        return new RedisPubSubMQ(redisTemplate, properties);
     }
 
     private IMessageQueue createRedisStreamMQ() {
-        if (redisService == null) {
+        if (redisTemplate == null) {
             throw BusinessException.builder().key("使用 Redis 队列需引入 ydsz-common-redis 模块").build();
         }
         log.info("[Factory] 创建 Redis Stream 队列（复用 ydsz-common-redis 连接）");
-        return new RedisStreamMQ(redisService, properties, consumerExecutor);
+        return new RedisStreamMQ(redisTemplate, properties, consumerExecutor);
     }
 
     private IMessageQueue createKafkaMQ() {

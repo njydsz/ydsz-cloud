@@ -7,7 +7,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.RedisCollectionOps;
+import com.njydsz.common.redis.service.RedisStringOps;
+
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -51,7 +53,8 @@ public class OfflineMessageService implements OfflineMessageStore {
     /** P3-6: 批量 insert 单批最大条数（ydsz_msg_offline 14 列，500 条 ≈ 7000 参数，远低于 PG 65535 上限） */
     private static final int INSERT_BATCH_SIZE = 500;
 
-    private final RedisService redisService;
+    private final RedisCollectionOps redisCollectionOps;
+    private final RedisStringOps redisStringOps;
     private final MsgOfflineMapper msgOfflineMapper;
 
     @Override
@@ -66,11 +69,11 @@ public class OfflineMessageService implements OfflineMessageStore {
                     "payload", payload,
                     "timestamp", System.currentTimeMillis());
             String json = YdszJson.toJson(envelope);
-            redisService.lPush(key, json);
-            redisService.lTrim(key, 0, WebSocketConstants.WS_OFFLINE_MAX_CACHE - 1);
-            redisService.expire(key, Duration.ofSeconds(WebSocketConstants.WS_OFFLINE_TTL_SECONDS));
+            redisCollectionOps.lPush(key, json);
+            redisCollectionOps.lTrim(key, 0, WebSocketConstants.WS_OFFLINE_MAX_CACHE - 1);
+            redisStringOps.expire(key, Duration.ofSeconds(WebSocketConstants.WS_OFFLINE_TTL_SECONDS));
 
-            long size = redisService.lSize(key);
+            long size = redisCollectionOps.lSize(key);
             if (size > WebSocketConstants.WS_OFFLINE_DB_PERSIST_THRESHOLD) {
                 persistOverflowToDb(userId, key, size);
             }
@@ -110,9 +113,9 @@ public class OfflineMessageService implements OfflineMessageStore {
 
         // 再从 Redis 拉取缓存消息
         String key = WebSocketConstants.WS_OFFLINE_KEY_PREFIX + userId;
-        List<String> raw = redisService.lRange(key, 0, -1, String.class);
+        List<String> raw = redisCollectionOps.lRange(key, 0, -1, String.class);
         if (raw != null && !raw.isEmpty()) {
-            redisService.delete(key);
+            redisStringOps.del(key);
             List<String> redisResult = new ArrayList<>(raw);
             Collections.reverse(redisResult);
             result.addAll(redisResult);
@@ -131,7 +134,7 @@ public class OfflineMessageService implements OfflineMessageStore {
         long dbCount = 0;
         try {
             String key = WebSocketConstants.WS_OFFLINE_KEY_PREFIX + userId;
-            long size = redisService.lSize(key);
+            long size = redisCollectionOps.lSize(key);
             redisCount = size;
         } catch (Exception e) {
             log.debug("[WS-Offline] Redis 计数失败: {}", e.getMessage());
@@ -167,7 +170,7 @@ public class OfflineMessageService implements OfflineMessageStore {
             if (overflowCount <= 0) {
                 return;
             }
-            List<String> overflowMessages = redisService.lRange(
+            List<String> overflowMessages = redisCollectionOps.lRange(
                     redisKey, WebSocketConstants.WS_OFFLINE_DB_PERSIST_THRESHOLD, -1, String.class);
             if (overflowMessages == null || overflowMessages.isEmpty()) {
                 return;
@@ -193,7 +196,7 @@ public class OfflineMessageService implements OfflineMessageStore {
                 int to = Math.min(i + INSERT_BATCH_SIZE, entities.size());
                 msgOfflineMapper.insertBatch(entities.subList(i, to));
             }
-            redisService.lTrim(redisKey, 0, WebSocketConstants.WS_OFFLINE_DB_PERSIST_THRESHOLD - 1);
+            redisCollectionOps.lTrim(redisKey, 0, WebSocketConstants.WS_OFFLINE_DB_PERSIST_THRESHOLD - 1);
             log.info("[WS-Offline] 溢出消息持久化到数据库: userId={}, count={}", userId, overflowMessages.size());
         } catch (Exception e) {
             log.warn("[WS-Offline] 溢出消息持久化失败: userId={}, err={}", userId, e.getMessage(), e);

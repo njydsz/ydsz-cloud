@@ -8,7 +8,7 @@ import java.util.Base64;
 
 import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.safe.csrf.CsrfToken;
 import com.njydsz.common.safe.csrf.CsrfTokenRepository;
 
@@ -39,11 +39,11 @@ public class RedisCsrfTokenRepository implements CsrfTokenRepository {
     private static final String SESSION_PREFIX = "csrf:session:";
 
     private final long expirationSeconds;
-    private final RedisService redisService;
+    private final RedisStringOps redisStringOps;
 
-    public RedisCsrfTokenRepository(long expirationSeconds, RedisService redisService) {
+    public RedisCsrfTokenRepository(long expirationSeconds, RedisStringOps redisStringOps) {
         this.expirationSeconds = expirationSeconds;
-        this.redisService = redisService;
+        this.redisStringOps = redisStringOps;
     }
 
     @Override
@@ -54,8 +54,8 @@ public class RedisCsrfTokenRepository implements CsrfTokenRepository {
         String tokenKey = TOKEN_PREFIX + tokenValue;
         String sessionKey = SESSION_PREFIX + sessionId;
 
-        redisService.set(tokenKey, token, expirationSeconds);
-        redisService.set(sessionKey, tokenValue, expirationSeconds);
+        redisStringOps.set(tokenKey, token, expirationSeconds);
+        redisStringOps.set(sessionKey, tokenValue, expirationSeconds);
 
         return token;
     }
@@ -66,7 +66,7 @@ public class RedisCsrfTokenRepository implements CsrfTokenRepository {
             return null;
         }
         String tokenKey = TOKEN_PREFIX + token;
-        return redisService.get(tokenKey, CsrfToken.class);
+        return redisStringOps.get(tokenKey, CsrfToken.class);
     }
 
     @Override
@@ -95,9 +95,9 @@ public class RedisCsrfTokenRepository implements CsrfTokenRepository {
         }
         CsrfToken csrfToken = getToken(token);
         if (csrfToken != null) {
-            redisService.del(SESSION_PREFIX + csrfToken.getSessionId());
+            redisStringOps.del(SESSION_PREFIX + csrfToken.getSessionId());
         }
-        redisService.del(TOKEN_PREFIX + token);
+        redisStringOps.del(TOKEN_PREFIX + token);
     }
 
     @Override
@@ -106,11 +106,11 @@ public class RedisCsrfTokenRepository implements CsrfTokenRepository {
             return;
         }
         String sessionKey = SESSION_PREFIX + sessionId;
-        String tokenValue = redisService.get(sessionKey, String.class);
+        String tokenValue = redisStringOps.get(sessionKey, String.class);
         if (tokenValue != null) {
-            redisService.del(TOKEN_PREFIX + tokenValue);
+            redisStringOps.del(TOKEN_PREFIX + tokenValue);
         }
-        redisService.del(sessionKey);
+        redisStringOps.del(sessionKey);
     }
 
     private String generateToken(String sessionId) {

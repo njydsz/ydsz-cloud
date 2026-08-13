@@ -4,9 +4,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.data.redis.core.RedisCallback;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
-import com.njydsz.common.redis.service.RedisService;
 import com.njydsz.system.infra.mapper.ConfigMapper;
 import com.njydsz.system.infra.mapper.DictItemMapper;
 
@@ -52,7 +52,7 @@ import org.springframework.boot.health.contributor.Health;
  * @since 1.0.0
  * @see org.springframework.boot.health.contributor.HealthIndicator Spring Boot 健康检查接口
  * @see com.njydsz.common.web.health.AbstractModuleHealthIndicator 通用健康检查基类
- * @see com.njydsz.common.redis.service.RedisService Redis 服务封装
+ * @see org.springframework.data.redis.core.RedisTemplate Redis 模板
  */
 @Slf4j
 @ConditionalOnClass(HealthIndicator.class)
@@ -60,8 +60,8 @@ import org.springframework.boot.health.contributor.Health;
 @RequiredArgsConstructor
 public class SystemHealthIndicator extends AbstractModuleHealthIndicator {
 
-    /** Redis 服务（用于 PING 探针） */
-    private final RedisService redisService;
+    /** Redis 模板（用于 PING 探针） */
+    private final RedisTemplate<String, Object> redisTemplate;
     /** 配置表 Mapper（用于配置表探针） */
     private final ConfigMapper configMapper;
     /** 字典项 Mapper（用于字典表探针） */
@@ -77,7 +77,7 @@ public class SystemHealthIndicator extends AbstractModuleHealthIndicator {
      */
     @Override
     protected void doHealthCheck(Health.Builder builder) {
-        checkRedis(builder, () -> redisService.getRedisTemplate().execute((RedisCallback<String>) conn -> conn.ping()));
+        checkRedis(builder, () -> redisTemplate.execute((RedisCallback<String>) conn -> conn.ping()));
         checkTableProbe(builder, "config", () -> configMapper.selectByConfigKey("__health_probe__"));
         checkTableProbe(builder, "dict", () -> dictItemMapper.selectByTypeAndCode("__health_probe__", "__health_probe__"));
     }

@@ -4,7 +4,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -112,8 +112,8 @@ public class VariableServiceImpl implements VariableService {
 
     /** 变量 Mapper（继承 {@code ydsz_variable} 表 CRUD） */
     private final VariableMapper mapper;
-    /** Redis 缓存服务 */
-    private final RedisService redisService;
+    /** Redis String 操作组件 */
+    private final RedisStringOps stringOps;
     /** 系统配置属性（含变量缓存 TTL 配置） */
     private final SystemProperties properties;
     /** 系统监控指标采集器 */
@@ -155,7 +155,7 @@ public class VariableServiceImpl implements VariableService {
         long start = System.nanoTime();
         try {
             String cacheKey = CACHE_KEY_PREFIX + variableKey;
-            String cached = redisService.get(cacheKey, String.class);
+            String cached = stringOps.get(cacheKey, String.class);
             if (cached != null) {
                 if (NULL_SENTINEL.equals(cached)) {
                     metrics.recordVariableCacheHit();
@@ -169,10 +169,10 @@ public class VariableServiceImpl implements VariableService {
             wrapper.eq("variable_key", variableKey).eq("status", "ENABLED");
             Variable entity = mapper.selectOne(wrapper);
             if (entity != null) {
-                redisService.set(cacheKey, entity.getVariableValue(), getCacheTtl());
+                stringOps.set(cacheKey, entity.getVariableValue(), getCacheTtl());
                 return entity.getVariableValue();
             }
-            redisService.set(cacheKey, NULL_SENTINEL, NULL_SENTINEL_TTL);
+            stringOps.set(cacheKey, NULL_SENTINEL, NULL_SENTINEL_TTL);
             return null;
         } finally {
             metrics.recordVariableRead(System.nanoTime() - start);
@@ -311,7 +311,7 @@ public class VariableServiceImpl implements VariableService {
      */
     private void evictCache(String variableKey) {
         if (variableKey != null) {
-            redisService.delete(CACHE_KEY_PREFIX + variableKey);
+            stringOps.del(CACHE_KEY_PREFIX + variableKey);
         }
     }
 

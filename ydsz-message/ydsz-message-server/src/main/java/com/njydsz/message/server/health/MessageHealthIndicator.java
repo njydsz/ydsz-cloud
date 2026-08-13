@@ -11,7 +11,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.RedisStringOps;
+
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
@@ -42,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class MessageHealthIndicator extends AbstractModuleHealthIndicator {
 
-    private final RedisService redisService;
+    private final RedisStringOps redisStringOps;
     private final MsgLogMapper msgLogMapper;
     private final ChannelRouter channelRouter;
 
@@ -59,7 +60,7 @@ public class MessageHealthIndicator extends AbstractModuleHealthIndicator {
 
         // ② Redis 连通性
         checkRedis(builder, () -> {
-            redisService.hasKey("__message_health_check__");
+            redisStringOps.hasKey("__message_health_check__");
             return "PONG";
         });
 

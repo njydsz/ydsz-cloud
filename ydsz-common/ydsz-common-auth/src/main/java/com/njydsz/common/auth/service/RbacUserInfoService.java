@@ -22,8 +22,8 @@ import com.njydsz.common.auth.service.impl.RedisRbacUserInfoService;
  * <pre>
  * // 默认实现：基于 Redis
  * &#64;Bean
- * public RbacUserInfoService rbacUserInfoService(RedisService redisService) {
- *     return new RedisRbacUserInfoService(redisService);
+ * public RbacUserInfoService rbacUserInfoService(RedisStringOps redisStringOps) {
+ *     return new RedisRbacUserInfoService(redisStringOps);
  * }
  *
  * // 自定义实现：来自数据库

@@ -2,7 +2,11 @@ package com.njydsz.message.server.service.impl;
 
 import java.time.Duration;
 
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.RedisHashOps;
+import com.njydsz.common.redis.service.RedisStringOps;
+
+import org.springframework.data.redis.core.RedisTemplate;
+
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -32,7 +36,9 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class WebSocketAckService {
 
-    private final RedisService redisService;
+    private final RedisHashOps redisHashOps;
+    private final RedisStringOps redisStringOps;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     /** Redis Key 前缀 */
     private static final String UNACKED_KEY_PREFIX = "ws:unacked:";
@@ -50,8 +56,8 @@ public class WebSocketAckService {
      */
     public void markUnacked(String userId, String msgId) {
         String key = buildKey(userId);
-        redisService.hSet(key, msgId, String.valueOf(System.currentTimeMillis()));
-        redisService.expire(key, Duration.ofSeconds(DEFAULT_ACK_TIMEOUT_SECONDS));
+        redisHashOps.hSet(key, msgId, String.valueOf(System.currentTimeMillis()));
+        redisStringOps.expire(key, Duration.ofSeconds(DEFAULT_ACK_TIMEOUT_SECONDS));
         log.debug("[WS-ACK] 消息标记 unacked: userId={} msgId={}", userId, msgId);
     }
 
@@ -66,7 +72,7 @@ public class WebSocketAckService {
      */
     public boolean handleAck(String userId, String msgId) {
         String key = buildKey(userId);
-        Long deleted = redisService.opsForHash().delete(key, msgId);
+        Long deleted = redisTemplate.opsForHash().delete(key, msgId);
         if (deleted != null && deleted > 0) {
             log.debug("[WS-ACK] 收到 ACK: userId={} msgId={}", userId, msgId);
             return true;
@@ -83,7 +89,7 @@ public class WebSocketAckService {
      */
     public boolean isUnacked(String userId, String msgId) {
         String key = buildKey(userId);
-        return redisService.opsForHash().hasKey(key, msgId);
+        return redisTemplate.opsForHash().hasKey(key, msgId);
     }
 
     /**
@@ -96,7 +102,7 @@ public class WebSocketAckService {
      */
     public int getUnackedCount(String userId) {
         String key = buildKey(userId);
-        Long size = redisService.opsForHash().size(key);
+        Long size = redisTemplate.opsForHash().size(key);
         return size != null ? size.intValue() : 0;
     }
 

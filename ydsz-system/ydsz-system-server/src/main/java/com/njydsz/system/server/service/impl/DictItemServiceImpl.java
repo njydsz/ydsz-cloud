@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.ScanOptions;
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -121,8 +121,8 @@ public class DictItemServiceImpl implements DictItemService {
 
     /** 字典项 Mapper（继承 {@code ydsz_dict_item} 表 CRUD） */
     private final DictItemMapper mapper;
-    /** Redis 缓存服务 */
-    private final RedisService redisService;
+    /** Redis String 操作组件 */
+    private final RedisStringOps stringOps;
     /** 系统监控指标采集器 */
     private final SystemMetrics metrics;
     /** 系统配置属性（含字典缓存 TTL 配置） */
@@ -164,7 +164,7 @@ public class DictItemServiceImpl implements DictItemService {
         long start = System.nanoTime();
         try {
             String cacheKey = CACHE_ITEM_PREFIX + typeCode + ":" + itemCode;
-            String cached = redisService.get(cacheKey, String.class);
+            String cached = stringOps.get(cacheKey, String.class);
             if (cached != null) {
                 if (NULL_SENTINEL.equals(cached)) {
                     metrics.recordDictCacheHit();
@@ -178,10 +178,10 @@ public class DictItemServiceImpl implements DictItemService {
             DictItemVO vo = SystemConverter.INSTANT.entityToVO(entity);
             Duration ttl = getCacheTtl();
             if (vo != null) {
-                redisService.set(cacheKey, YdszJson.toJson(vo), ttl);
+                stringOps.set(cacheKey, YdszJson.toJson(vo), ttl);
             } else {
                 // 缓存空值防穿透，短 TTL
-                redisService.set(cacheKey, NULL_SENTINEL, NULL_SENTINEL_TTL);
+                stringOps.set(cacheKey, NULL_SENTINEL, NULL_SENTINEL_TTL);
             }
             return vo;
         } finally {
@@ -210,7 +210,7 @@ public class DictItemServiceImpl implements DictItemService {
         long start = System.nanoTime();
         try {
             String cacheKey = CACHE_LIST_PREFIX + typeCode;
-            String cached = redisService.get(cacheKey, String.class);
+            String cached = stringOps.get(cacheKey, String.class);
             if (cached != null) {
                 metrics.recordDictCacheHit();
                 return YdszJson.parseArray(cached, DictItemVO.class);
@@ -218,7 +218,7 @@ public class DictItemServiceImpl implements DictItemService {
             metrics.recordDictCacheMiss();
             List<DictItem> entities = mapper.listEnabledByTypeCode(typeCode);
             List<DictItemVO> vos = entities.stream().map(SystemConverter.INSTANT::entityToVO).collect(Collectors.toList());
-            redisService.set(cacheKey, YdszJson.toJson(vos), getCacheTtl());
+            stringOps.set(cacheKey, YdszJson.toJson(vos), getCacheTtl());
             return vos;
         } finally {
             metrics.recordDictQuery(System.nanoTime() - start);
@@ -413,12 +413,12 @@ public class DictItemServiceImpl implements DictItemService {
         if (typeCode == null) {
             return;
         }
-        redisService.del(CACHE_LIST_PREFIX + typeCode);
+        stringOps.del(CACHE_LIST_PREFIX + typeCode);
         // 使用 SCAN 替代 KEYS，避免 Redis 阻塞
         String pattern = CACHE_ITEM_PREFIX + typeCode + ":*";
-        Set<String> keys = redisService.scan(pattern);
+        Set<String> keys = stringOps.scan(pattern);
         if (!keys.isEmpty()) {
-            redisService.del(keys);
+            stringOps.del(keys);
         }
     }
 

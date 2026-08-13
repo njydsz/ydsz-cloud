@@ -11,7 +11,7 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 
 import com.njydsz.common.queue.config.QueueProperties;
 import com.njydsz.common.queue.enums.QueueType;
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,13 +39,13 @@ public class QueueHealthIndicator implements HealthIndicator {
     private static final int DEFAULT_ROCKET_PORT = 9876;
     private static final int DEFAULT_ACTIVE_PORT = 61616;
 
-    private final RedisService redisService;
+    private final RedisStringOps redisStringOps;
     private final QueueProperties queueProperties;
 
     public QueueHealthIndicator(QueueProperties queueProperties,
-                                ObjectProvider<RedisService> redisServiceProvider) {
+                                ObjectProvider<RedisStringOps> redisStringOpsProvider) {
         this.queueProperties = queueProperties;
-        this.redisService = redisServiceProvider.getIfAvailable();
+        this.redisStringOps = redisStringOpsProvider.getIfAvailable();
     }
 
     @Override
@@ -91,14 +91,14 @@ public class QueueHealthIndicator implements HealthIndicator {
      * 检查 Redis 队列健康状态（协议级 PING）
      */
     private Health.Builder checkRedisHealth() {
-        if (redisService == null) {
+        if (redisStringOps == null) {
             return Health.unknown()
                     .withDetail("mqType", "redis")
-                    .withDetail("detail", "RedisService 未提供，无法执行健康检查");
+                    .withDetail("detail", "RedisStringOps 未提供，无法执行健康检查");
         }
 
         long startTime = System.currentTimeMillis();
-        redisService.hasKey("__health_check__");
+        redisStringOps.hasKey("__health_check__");
         long responseTime = System.currentTimeMillis() - startTime;
 
         return Health.up()

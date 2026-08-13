@@ -7,7 +7,8 @@ import java.util.stream.Collectors;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.redis.service.ops.RedisAdvancedOps;
 import com.njydsz.system.domain.converter.SystemConverter;
 import com.njydsz.system.domain.dto.DictItemDTO;
 import com.njydsz.system.domain.entity.DictItem;
@@ -97,8 +98,10 @@ public class DictVersionServiceImpl implements DictVersionService {
     private final DictVersionMapper mapper;
     /** 字典项 Mapper（用于回滚时删除/重建字典项） */
     private final DictItemMapper dictItemMapper;
-    /** Redis 缓存服务（用于失效缓存） */
-    private final RedisService redisService;
+    /** Redis String 操作组件（用于失效缓存） */
+    private final RedisStringOps stringOps;
+    /** Redis 高级操作组件（用于 SCAN 模式删除） */
+    private final RedisAdvancedOps advancedOps;
 
     /** 字典项缓存键前缀 */
     private static final String DICT_CACHE_PREFIX = "ydsz:dict:item:";
@@ -260,10 +263,10 @@ public class DictVersionServiceImpl implements DictVersionService {
      */
     private void evictCache(String typeCode) {
         // 删除列表缓存
-        redisService.delete(DICT_CACHE_PREFIX + typeCode);
+        stringOps.del(DICT_CACHE_PREFIX + typeCode);
         // 删除 lookup 模式的缓存（ydsz:dict:item:{typeCode}:{itemCode}）
         try {
-            redisService.advancedOps().deleteByPattern(DICT_CACHE_PREFIX + typeCode + ":*");
+            advancedOps.deleteByPattern(DICT_CACHE_PREFIX + typeCode + ":*");
         } catch (Exception e) {
             log.warn("[DictVersion] 缓存模式删除失败（非关键路径）: typeCode={}, error={}", typeCode, e.getMessage());
         }

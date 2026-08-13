@@ -20,12 +20,12 @@ import java.util.function.Function;
  * <pre>{@code
  * @Component
  * public class MyModuleHealthIndicator extends AbstractModuleHealthIndicator {
- *     private final RedisService redisService;
+ *     private final RedisStringOps redisStringOps;
  *     private final MyMapper myMapper;
  *
  *     @Override
  *     protected void doHealthCheck(Health.Builder builder) {
- *         checkRedis(builder, () -> redisService.execute(conn -> conn.ping(), true));
+ *         checkRedis(builder, () -> redisStringOps.hasKey("health-check"));
  *         checkTableProbe(builder, "myTable", () -> myMapper.selectById(1L));
  *     }
  * }
@@ -61,7 +61,7 @@ public abstract class AbstractModuleHealthIndicator implements HealthIndicator {
     /**
      * 检查 Redis 连通性。
      *
-     * <p>调用方提供 PING 操作（通常 {@code () -> redisService.execute(conn -> conn.ping(), true)}），
+     * <p>调用方提供 PING 操作（通常 {@code () -> redisStringOps.hasKey("health-check")}），
      * 基类统一处理成功/失败状态。
      *
      * @param builder   健康状态构建器

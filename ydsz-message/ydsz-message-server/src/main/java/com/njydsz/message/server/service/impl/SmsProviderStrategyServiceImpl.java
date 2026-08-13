@@ -9,7 +9,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.njydsz.common.util.id.RandomUtils;
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.RedisStringOps;
+
 import org.springframework.stereotype.Service;
 
 import com.njydsz.message.server.config.MessageProperties;
@@ -41,7 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyService {
 
     /** Redis 模板（服务商日发送量 / 失败量统计） */
-    private final RedisService redisService;
+    private final RedisStringOps redisStringOps;
     /** OD-4: 成本配置 + P3-3.2: 策略 / 权重配置统一从 MessageProperties 读取 */
     private final MessageProperties messageProperties;
 
@@ -101,10 +102,10 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
             String daySuffix = LocalDateTime.now()
                     .format(DateTimeFormatter.ofPattern("yyyyMMdd"));
             String totalKey = "ydsz:sms:stats:" + providerType + ":" + daySuffix + ":total";
-            redisService.incr(totalKey, 1);
+            redisStringOps.incr(totalKey, 1);
             if (!success) {
                 String failKey = "ydsz:sms:stats:" + providerType + ":" + daySuffix + ":failed";
-                redisService.incr(failKey, 1);
+                redisStringOps.incr(failKey, 1);
                 failureCount.computeIfAbsent(providerType, k -> new AtomicInteger(0)).incrementAndGet();
             } else {
                 failureCount.computeIfAbsent(providerType, k -> new AtomicInteger(0)).set(0);
@@ -131,8 +132,8 @@ public class SmsProviderStrategyServiceImpl implements SmsProviderStrategyServic
             for (String provider : new String[]{"aliyun", "tencent", "mock"}) {
                 String totalKey = "ydsz:sms:stats:" + provider + ":" + daySuffix + ":total";
                 String failKey = "ydsz:sms:stats:" + provider + ":" + daySuffix + ":failed";
-                String totalStr = redisService.get(totalKey, String.class);
-                String failStr = redisService.get(failKey, String.class);
+                String totalStr = redisStringOps.get(totalKey, String.class);
+                String failStr = redisStringOps.get(failKey, String.class);
                 long total = totalStr != null ? Long.parseLong(totalStr) : 0;
                 long failed = failStr != null ? Long.parseLong(failStr) : 0;
                 stats.put(provider, new long[]{total, total - failed, failed});

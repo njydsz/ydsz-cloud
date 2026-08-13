@@ -6,7 +6,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.RedisCollectionOps;
+import com.njydsz.common.redis.service.RedisHashOps;
+import com.njydsz.common.redis.service.RedisStringOps;
+
+import org.springframework.data.redis.core.RedisTemplate;
+
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -35,7 +40,10 @@ public class RealtimeStatsService {
     private static final DateTimeFormatter MINUTE_FMT = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
     private static final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
 
-    private final RedisService redisService;
+    private final RedisHashOps redisHashOps;
+    private final RedisCollectionOps redisCollectionOps;
+    private final RedisStringOps redisStringOps;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     /**
      * 记录一次消息发送到实时统计。
@@ -48,25 +56,25 @@ public class RealtimeStatsService {
         try {
             String minuteKey = "ydsz:stats:realtime:" + LocalDateTime.now().format(MINUTE_FMT);
             // 按状态+通道计数
-            redisService.opsForHash().increment(minuteKey, channel + ":" + status, 1);
-            redisService.expire(minuteKey, Duration.ofHours(2));
+            redisTemplate.opsForHash().increment(minuteKey, channel + ":" + status, 1);
+            redisStringOps.expire(minuteKey, Duration.ofHours(2));
             // 记录延迟到 Sorted Set（保留最近 10000 条用于分位数计算）
             if ("SUCCESS".equals(status) && costMs > 0) {
                 String latencyKey = "ydsz:stats:latency:" + channel;
                 String member = channel + ":" + System.nanoTime();
-                redisService.zAdd(latencyKey, member, costMs);
-                redisService.expire(latencyKey, Duration.ofMinutes(30));
+                redisCollectionOps.zAdd(latencyKey, member, costMs);
+                redisStringOps.expire(latencyKey, Duration.ofMinutes(30));
                 // 限制 Sorted Set 大小
-                long size = redisService.zSize(latencyKey);
+                long size = redisCollectionOps.zSize(latencyKey);
                 if (size > 10000) {
-                    redisService.zRemoveRange(latencyKey, 0, (int) (size - 10000) - 1);
+                    redisCollectionOps.zRemoveRange(latencyKey, 0, (int) (size - 10000) - 1);
                 }
             }
             // 错误计数
             if (!"SUCCESS".equals(status)) {
                 String errorKey = "ydsz:stats:errors:" + channel + ":" + LocalDateTime.now().format(DAY_FMT);
-                redisService.incr(errorKey, 1);
-                redisService.expire(errorKey, Duration.ofDays(7));
+                redisStringOps.incr(errorKey, 1);
+                redisStringOps.expire(errorKey, Duration.ofDays(7));
             }
         } catch (Exception e) {
             log.debug("[RealtimeStats] 记录失败(忽略): {}", e.getMessage());
@@ -80,7 +88,7 @@ public class RealtimeStatsService {
      */
     public Map<String, String> getRealtimeStats() {
         String minuteKey = "ydsz:stats:realtime:" + LocalDateTime.now().format(MINUTE_FMT);
-        Map<String, String> raw = redisService.hGetAll(minuteKey, String.class);
+        Map<String, String> raw = redisHashOps.hGetAll(minuteKey, String.class);
         Map<String, String> result = new HashMap<>();
         raw.forEach((k, v) -> result.put(String.valueOf(k), String.valueOf(v)));
         return result;
@@ -95,7 +103,7 @@ public class RealtimeStatsService {
     public double[] getLatencyPercentiles(String channel) {
         String latencyKey = "ydsz:stats:latency:" + channel;
         try {
-            long size = redisService.zSize(latencyKey);
+            long size = redisCollectionOps.zSize(latencyKey);
             if (size == 0) {
                 return new double[]{0, 0, 0};
             }
@@ -115,7 +123,7 @@ public class RealtimeStatsService {
     private double getPercentile(String key, long size, double percentile) {
         long index = (long) Math.ceil(size * percentile) - 1;
         if (index < 0) index = 0;
-        var range = redisService.getRedisTemplate().opsForZSet().rangeWithScores(key, index, index);
+        var range = redisTemplate.opsForZSet().rangeWithScores(key, index, index);
         if (range != null && !range.isEmpty()) {
             return range.iterator().next().getScore();
         }
@@ -132,7 +140,7 @@ public class RealtimeStatsService {
         Map<String, Long> result = new HashMap<>();
         for (String channel : new String[]{"SMS", "EMAIL", "PUSH", "INAPP", "DINGTALK", "WECOM", "WECOM_APP", "FEISHU", "WEBHOOK"}) {
             String key = "ydsz:stats:errors:" + channel + ":" + daySuffix;
-            String val = redisService.get(key, String.class);
+            String val = redisStringOps.get(key, String.class);
             if (val != null) {
                 try {
                     result.put(channel, Long.parseLong(val));

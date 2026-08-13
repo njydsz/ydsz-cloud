@@ -6,7 +6,8 @@ import java.time.format.DateTimeFormatter;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.RedisStringOps;
+
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.core.constant.SystemConstants;
@@ -48,7 +49,7 @@ public class RateLimitServiceImpl implements RateLimitService {
     /** Redis 令牌桶限流器（可选依赖，不可用时降级放行） */
     private final RedisRateLimiter rateLimiter;
     /** Redis 基础服务（用于 INCR/EXPIRE 频率计数） */
-    private final RedisService redisService;
+    private final RedisStringOps redisStringOps;
     /** 用户偏好服务（读取 hourlyLimit/dailyLimit） */
     private final PreferenceService preferenceService;
     /** 消息模块配置属性 */
@@ -65,11 +66,11 @@ public class RateLimitServiceImpl implements RateLimitService {
     private boolean failOpen;
 
     public RateLimitServiceImpl(ObjectProvider<RedisRateLimiter> rateLimiterProvider,
-                                RedisService redisService,
+                                RedisStringOps redisStringOps,
                                 PreferenceService preferenceService,
                                 MessageProperties messageProperties) {
         this.rateLimiter = rateLimiterProvider.getIfAvailable();
-        this.redisService = redisService;
+        this.redisStringOps = redisStringOps;
         this.preferenceService = preferenceService;
         this.messageProperties = messageProperties;
         if (this.rateLimiter == null) {
@@ -219,7 +220,7 @@ public class RateLimitServiceImpl implements RateLimitService {
     private Long readCounter(String prefix, String userId, String channel, String bizType, String suffix) {
         String key = prefix + userId + ":" + (channel == null ? SystemConstants.SYSTEM_USER_ID : channel)
                 + ":" + (bizType == null ? SystemConstants.SYSTEM_USER_ID : bizType) + ":" + suffix;
-        String val = redisService.get(key, String.class);
+        String val = redisStringOps.get(key, String.class);
         if (val == null || val.isBlank()) {
             return 0L;
         }
@@ -234,9 +235,9 @@ public class RateLimitServiceImpl implements RateLimitService {
         String key = prefix + userId + ":" + (channel == null ? SystemConstants.SYSTEM_USER_ID : channel)
                 + ":" + (bizType == null ? SystemConstants.SYSTEM_USER_ID : bizType) + ":" + suffix;
         try {
-            Long count = redisService.incr(key, 1);
+            Long count = redisStringOps.incr(key, 1);
             if (count != null && count == 1L) {
-                redisService.expire(key, Duration.ofSeconds(ttlSeconds));
+                redisStringOps.expire(key, Duration.ofSeconds(ttlSeconds));
             }
         } catch (Exception e) {
             log.warn("[RateLimit] 计数失败(降级忽略): key={} err={}", key, e.getMessage(), e);

@@ -13,7 +13,6 @@ import com.njydsz.common.queue.service.IMessagePublisher;
 import com.njydsz.common.queue.service.IMessageSubscriber;
 import com.njydsz.common.queue.service.impl.RedisPubSubPublisher;
 import com.njydsz.common.queue.service.impl.RedisPubSubSubscriber;
-import com.njydsz.common.redis.service.RedisService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -23,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>Redis PubSub（发布/订阅）是一种广播模式的消息通信机制。
  * 发布者将消息发送到指定频道，所有订阅该频道的订阅者都能收到消息。
  *
- * <p><b>连接复用：</b>通过 {@link RedisService} 复用 ydsz-common-redis 的连接。
+ * <p><b>连接复用：</b>通过 RedisTemplate 复用 ydsz-common-redis 的连接。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -38,18 +37,18 @@ public class RedisPubSubMQ implements IMessageQueue {
     private final ReentrantLock closeLock = new ReentrantLock();
 
     /**
-     * 基于 RedisService 构造（复用 ydsz-common-redis 连接）
+     * 基于 RedisTemplate 构造（复用 ydsz-common-redis 连接）
      *
-     * @param redisService Redis 服务
-     * @param config       队列配置
+     * @param redisTemplate Redis 模板
+     * @param config        队列配置
      */
-    public RedisPubSubMQ(RedisService redisService, QueueProperties config) {
+    public RedisPubSubMQ(RedisTemplate<String, Object> redisTemplate, QueueProperties config) {
         if (config == null) {
             throw BusinessException.builder().key("队列配置不能为空").build();
         }
         this.config = config;
         this.subscribers = new ConcurrentHashMap<>(4);
-        this.redisTemplate = redisService.getRedisTemplate();
+        this.redisTemplate = redisTemplate;
         log.info("[RedisPubSubMQ] 初始化成功（复用 ydsz-common-redis 连接）");
     }
 

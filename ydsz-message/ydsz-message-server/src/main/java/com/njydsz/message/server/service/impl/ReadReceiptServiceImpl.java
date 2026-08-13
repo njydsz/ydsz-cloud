@@ -3,7 +3,8 @@ package com.njydsz.message.server.service.impl.receipt;
 import java.time.Duration;
 import java.util.Base64;
 
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.RedisStringOps;
+
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -43,7 +44,7 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
     /** 分布式 ID 生成器 */
     private final SnowflakeIdGenerator snowflakeIdGenerator;
 
-    private final RedisService redisService;
+    private final RedisStringOps redisStringOps;
     /** P3-3.2: tracking / shortlink base-url 统一从 MessageProperties 读取 */
     private final MessageProperties messageProperties;
 
@@ -111,9 +112,9 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
         String shortlinkBaseUrl = messageProperties.getShortlink().getBaseUrl();
         String shortUrl = shortlinkBaseUrl + "/s/" + code;
         try {
-            redisService.set(SHORTLINK_PREFIX + code, originalUrl, Duration.ofSeconds(SHORTLINK_TTL));
+            redisStringOps.set(SHORTLINK_PREFIX + code, originalUrl, Duration.ofSeconds(SHORTLINK_TTL));
             if (StringUtils.hasText(msgId)) {
-                redisService.set(SHORTLINK_MSG_PREFIX + code, msgId, Duration.ofSeconds(SHORTLINK_TTL));
+                redisStringOps.set(SHORTLINK_MSG_PREFIX + code, msgId, Duration.ofSeconds(SHORTLINK_TTL));
             }
             log.debug("[ReadReceipt] 短链生成: code={} url={} msgId={}", code, originalUrl, msgId);
         } catch (Exception e) {
@@ -137,7 +138,7 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
             return;
         }
         try {
-            redisService.set(READ_STATUS_PREFIX + "email:" + msgId, "1", Duration.ofDays(30));
+            redisStringOps.set(READ_STATUS_PREFIX + "email:" + msgId, "1", Duration.ofDays(30));
             log.info("[ReadReceipt] 邮件已读: msgId={}", msgId);
         } catch (Exception e) {
             log.warn("[ReadReceipt] 邮件已读标记失败: msgId={} err={}", msgId, e.getMessage(), e);
@@ -159,15 +160,15 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
             return null;
         }
         try {
-            String originalUrl = redisService.get(SHORTLINK_PREFIX + shortCode, String.class);
+            String originalUrl = redisStringOps.get(SHORTLINK_PREFIX + shortCode, String.class);
             if (originalUrl == null) {
                 log.warn("[ReadReceipt] 短链不存在或已过期: code={}", shortCode);
                 return null;
             }
             // 标记消息已读
-            String msgId = redisService.get(SHORTLINK_MSG_PREFIX + shortCode, String.class);
+            String msgId = redisStringOps.get(SHORTLINK_MSG_PREFIX + shortCode, String.class);
             if (StringUtils.hasText(msgId)) {
-                redisService.set(READ_STATUS_PREFIX + "sms:" + msgId, "1", Duration.ofDays(30));
+                redisStringOps.set(READ_STATUS_PREFIX + "sms:" + msgId, "1", Duration.ofDays(30));
                 log.info("[ReadReceipt] 短信已读: msgId={} code={}", msgId, shortCode);
             }
             return originalUrl;
@@ -192,8 +193,8 @@ public class ReadReceiptServiceImpl implements ReadReceiptService {
             return false;
         }
         try {
-            Boolean emailRead = redisService.hasKey(READ_STATUS_PREFIX + "email:" + msgId);
-            Boolean smsRead = redisService.hasKey(READ_STATUS_PREFIX + "sms:" + msgId);
+            Boolean emailRead = redisStringOps.hasKey(READ_STATUS_PREFIX + "email:" + msgId);
+            Boolean smsRead = redisStringOps.hasKey(READ_STATUS_PREFIX + "sms:" + msgId);
             return Boolean.TRUE.equals(emailRead) || Boolean.TRUE.equals(smsRead);
         } catch (Exception e) {
             return false;

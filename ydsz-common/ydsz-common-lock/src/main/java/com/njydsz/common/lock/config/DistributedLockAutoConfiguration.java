@@ -35,7 +35,9 @@ import com.njydsz.common.lock.scheduler.LockLeakDetector;
 import com.njydsz.common.lock.scheduler.LockWatchDog;
 import com.njydsz.common.lock.strategy.DefaultLockStrategy;
 import com.njydsz.common.lock.strategy.LockStrategy;
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
+
+import org.springframework.data.redis.core.RedisTemplate;
 
 /**
  * 分布式锁自动配置类
@@ -122,22 +124,25 @@ public class DistributedLockAutoConfiguration {
      * @param stringRedisTemplate Redis 模板
      * @param lockWatchDog 看门狗
      * @param lockMetrics 锁指标收集器
-     * @param redisServiceProvider RedisService 提供者
+     * @param stringOpsProvider RedisStringOps 提供者
+     * @param redisTemplateProvider RedisTemplate 提供者
      * @return LockStrategy 实例
      */
     @Bean
     @ConditionalOnMissingBean
     public LockStrategy lockStrategy(StringRedisTemplate stringRedisTemplate, LockWatchDog lockWatchDog,
                                      LockMetrics lockMetrics, LockProperties lockProperties,
-                                     ObjectProvider<RedisService> redisServiceProvider,
+                                     ObjectProvider<RedisStringOps> stringOpsProvider,
+                                     ObjectProvider<RedisTemplate<String, Object>> redisTemplateProvider,
                                      ObjectProvider<TaskScheduler> schedulerProvider) {
-        RedisService redisService = redisServiceProvider.getIfAvailable();
+        RedisStringOps stringOps = stringOpsProvider.getIfAvailable();
+        RedisTemplate<String, Object> redisTemplate = redisTemplateProvider.getIfAvailable();
         TaskScheduler scheduler = schedulerProvider.getIfAvailable();
         String namespace = lockProperties.getNamespace();
-        if (redisService != null) {
-            return new DefaultLockStrategy(stringRedisTemplate, lockWatchDog, redisService, lockMetrics, scheduler, namespace);
+        if (redisTemplate != null) {
+            return new DefaultLockStrategy(stringRedisTemplate, lockWatchDog, stringOps, redisTemplate, lockMetrics, scheduler, namespace);
         }
-        return new DefaultLockStrategy(stringRedisTemplate, lockWatchDog, null, lockMetrics, scheduler, namespace);
+        return new DefaultLockStrategy(stringRedisTemplate, lockWatchDog, null, null, lockMetrics, scheduler, namespace);
     }
 
     /**

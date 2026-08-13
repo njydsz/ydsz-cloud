@@ -14,7 +14,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.safe.config.IpAccessProperties;
 
 /**
@@ -41,19 +41,19 @@ public class IpAccessService {
     private static final String WHITELIST_SUFFIX = "whitelist";
 
     private final IpAccessProperties properties;
-    private final RedisService redisService;
+    private final RedisStringOps redisStringOps;
 
     private final Cache<String, Boolean> blacklistCache;
     private final List<CidrBlock> staticBlacklistCidrs = new ArrayList<>();
     private final List<CidrBlock> staticWhitelistCidrs = new ArrayList<>();
 
     /**
-     * @param properties   IP 访问控制配置
-     * @param redisService Redis 服务
+     * @param properties     IP 访问控制配置
+     * @param redisStringOps Redis String 操作
      */
-    public IpAccessService(IpAccessProperties properties, RedisService redisService) {
+    public IpAccessService(IpAccessProperties properties, RedisStringOps redisStringOps) {
         this.properties = properties;
-        this.redisService = redisService;
+        this.redisStringOps = redisStringOps;
 
         this.blacklistCache = YdszCache.<String, Boolean>newBuilder()
                 .type(CacheType.STRIPED)
@@ -118,7 +118,7 @@ public class IpAccessService {
             return;
         }
         String key = properties.getRedisKeyPrefix() + BLACKLIST_SUFFIX + ":" + ip;
-        redisService.set(key, "1", blockSeconds > 0 ? blockSeconds : properties.getDefaultBlockSeconds());
+        redisStringOps.set(key, "1", blockSeconds > 0 ? blockSeconds : properties.getDefaultBlockSeconds());
         blacklistCache.put(ip, true);
         log.info("IP {} 已加入黑名单，封禁 {} 秒", ip, blockSeconds > 0 ? blockSeconds : properties.getDefaultBlockSeconds());
     }
@@ -142,7 +142,7 @@ public class IpAccessService {
             return;
         }
         String key = properties.getRedisKeyPrefix() + BLACKLIST_SUFFIX + ":" + ip;
-        redisService.del(key);
+        redisStringOps.del(key);
         blacklistCache.invalidate(ip);
         log.info("IP {} 已从黑名单移除", ip);
     }
@@ -157,7 +157,7 @@ public class IpAccessService {
             return;
         }
         String key = properties.getRedisKeyPrefix() + WHITELIST_SUFFIX + ":" + ip;
-        redisService.set(key, "1");
+        redisStringOps.set(key, "1");
         log.info("IP {} 已加入白名单", ip);
     }
 
@@ -171,7 +171,7 @@ public class IpAccessService {
             return;
         }
         String key = properties.getRedisKeyPrefix() + WHITELIST_SUFFIX + ":" + ip;
-        redisService.del(key);
+        redisStringOps.del(key);
         log.info("IP {} 已从白名单移除", ip);
     }
 
@@ -181,14 +181,14 @@ public class IpAccessService {
             return cached;
         }
         String key = properties.getRedisKeyPrefix() + BLACKLIST_SUFFIX + ":" + ip;
-        boolean blocked = redisService.hasKey(key);
+        boolean blocked = redisStringOps.hasKey(key);
         blacklistCache.put(ip, blocked);
         return blocked;
     }
 
     private boolean isInRedisWhitelist(String ip) {
         String key = properties.getRedisKeyPrefix() + WHITELIST_SUFFIX + ":" + ip;
-        return redisService.hasKey(key);
+        return redisStringOps.hasKey(key);
     }
 
     private void loadStaticList(List<String> entries, List<CidrBlock> target) {

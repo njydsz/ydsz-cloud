@@ -23,7 +23,8 @@ import com.njydsz.agent.domain.rag.TextChunker;
 import com.njydsz.agent.domain.rag.VectorStore;
 import com.njydsz.agent.domain.tool.ToolRegistry;
 import com.njydsz.agent.domain.trace.TraceRecorder;
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.agent.infra.guardrail.PiiMaskingGuardrail;
 import com.njydsz.agent.infra.guardrail.PromptInjectionGuardrail;
 import com.njydsz.agent.infra.llm.LlmClientRouter;
@@ -45,7 +46,6 @@ import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;
 import com.njydsz.agent.server.rag.RagService;
-import com.njydsz.common.redis.service.RedisService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -147,18 +147,19 @@ public class AgentAutoConfiguration {
      *
      * <p><b>降级</b>：Redis 不可用时记忆读写失败，Agent 会退化为无历史上下文的单轮问答。
      *
-     * @param redisService Redis 操作门面，由 common-redis 提供
+     * @param stringOps   Redis String 操作组件，由 common-redis 提供
+     * @param collectionOps Redis 集合操作组件，由 common-redis 提供
      * @param properties   Agent 配置，提供 {@code memory.maxMessages} 与 {@code memory.ttlHours}
      * @return 记忆实现；仅在容器中不存在其他 {@link ConversationMemory} 时生效
      */
     @Bean
     @ConditionalOnMissingBean(ConversationMemory.class)
-    public ConversationMemory conversationMemory(RedisService redisService,
+    public ConversationMemory conversationMemory(RedisStringOps stringOps, RedisCollectionOps collectionOps,
                                                    AgentProperties properties) {
         int maxMessages = properties.getMemory().getMaxMessages();
         // Redis 列表容量取「滑动窗口 2 倍」与「至少 50」的较大值，预留余量避免边界被覆盖
         int maxListSize = Math.max(maxMessages * 2, 50);
-        return new RedisConversationMemory(redisService,
+        return new RedisConversationMemory(stringOps, collectionOps,
                 properties.getMemory().getTtlHours(), maxListSize);
     }
 
@@ -367,13 +368,13 @@ public class AgentAutoConfiguration {
      * <p><b>降级</b>：Redis 不可用时无法判定配额，为保证可用性会放行请求，
      * 该窗口内限流与幂等保护同时失效，需依赖上游网关兜底。
      *
-     * @param redisService Redis 操作门面
+     * @param stringOps Redis String 操作组件
      * @return 请求卫士；仅在容器中不存在其他 {@link AgentRequestGuard} 时生效
      */
     @Bean
     @ConditionalOnMissingBean(AgentRequestGuard.class)
-    public AgentRequestGuard agentRequestGuard(RedisService redisService) {
-        return new AgentRequestGuard(redisService);
+    public AgentRequestGuard agentRequestGuard(RedisStringOps stringOps) {
+        return new AgentRequestGuard(stringOps);
     }
 
     /**

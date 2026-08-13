@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 
 import org.springframework.data.redis.core.RedisTemplate;
 
-import com.njydsz.common.redis.service.RedisService;
 import com.njydsz.common.json.YdszJson;
 
 import lombok.extern.slf4j.Slf4j;
@@ -35,11 +34,11 @@ public class RedisMessageTraceRecorder implements MessageTraceRecorder {
     private final RedisTemplate<String, Object> redisTemplate;
     private final long ttlMinutes;
 
-    public RedisMessageTraceRecorder(RedisService redisService, long ttlMinutes) {
-        if (redisService == null) {
-            throw new IllegalArgumentException("RedisService 不能为空");
+    public RedisMessageTraceRecorder(RedisTemplate<String, Object> redisTemplate, long ttlMinutes) {
+        if (redisTemplate == null) {
+            throw new IllegalArgumentException("RedisTemplate 不能为空");
         }
-        this.redisTemplate = redisService.getRedisTemplate();
+        this.redisTemplate = redisTemplate;
         this.ttlMinutes = ttlMinutes;
     }
 

@@ -10,7 +10,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.springframework.scheduling.TaskScheduler;
 
 import com.njydsz.common.lock.core.DistributedLocker;
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
+
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.util.id.IdGenerator;
@@ -55,9 +58,13 @@ public class RedisSemaphore implements DistributedLocker {
     private static final long MAX_BACKOFF_MILLIS = 200;
 
     /**
-     * Redis 服务，用于执行 Lua 脚本
+     * Redis String 操作组件
      */
-    private final RedisService redisService;
+    private final RedisStringOps redisStringOps;
+    /**
+     * Redis 模板，用于执行 Lua 脚本
+     */
+    private final RedisTemplate<String, Object> redisTemplate;
     /**
      * 信号量 Redis Key
      */
@@ -121,30 +128,34 @@ public class RedisSemaphore implements DistributedLocker {
     /**
      * 构造 RedisSemaphore（无命名空间，需要注入调度线程池，便于 Spring 管理和配置化）
      *
-     * @param redisService    Redis 服务
+     * @param redisStringOps  Redis String 操作组件
+     * @param redisTemplate   Redis 模板，用于执行 Lua 脚本
      * @param key             信号量键
      * @param permits         许可数量
      * @param expireMillis    过期时间（毫秒）
      * @param timeoutScheduler 超时调度线程池
      */
-    public RedisSemaphore(RedisService redisService, String key, int permits, long expireMillis,
-                          TaskScheduler timeoutScheduler) {
-        this(redisService, key, permits, expireMillis, timeoutScheduler, null);
+    public RedisSemaphore(RedisStringOps redisStringOps, RedisTemplate<String, Object> redisTemplate,
+                          String key, int permits, long expireMillis, TaskScheduler timeoutScheduler) {
+        this(redisStringOps, redisTemplate, key, permits, expireMillis, timeoutScheduler, null);
     }
 
     /**
      * 构造 RedisSemaphore（带命名空间）
      *
-     * @param redisService    Redis 服务
+     * @param redisStringOps  Redis String 操作组件
+     * @param redisTemplate   Redis 模板，用于执行 Lua 脚本
      * @param key             信号量键
      * @param permits         许可数量
      * @param expireMillis    过期时间（毫秒）
      * @param timeoutScheduler 超时调度线程池
      * @param namespace       锁键命名空间前缀，用于多应用共享 Redis 时的隔离
      */
-    public RedisSemaphore(RedisService redisService, String key, int permits, long expireMillis,
+    public RedisSemaphore(RedisStringOps redisStringOps, RedisTemplate<String, Object> redisTemplate,
+                          String key, int permits, long expireMillis,
                           TaskScheduler timeoutScheduler, String namespace) {
-        this.redisService = redisService;
+        this.redisStringOps = redisStringOps;
+        this.redisTemplate = redisTemplate;
         String prefix = (namespace != null && !namespace.isEmpty()) ? namespace + ":lock:" : "";
         this.key = prefix + "semaphore:" + key;
         this.permits = permits;
@@ -184,10 +195,9 @@ public class RedisSemaphore implements DistributedLocker {
             return;
         }
         try {
-            redisService.executeScript(
-                    INIT_PERMITS_SCRIPT,
+            redisTemplate.execute(
+                    new DefaultRedisScript<>(INIT_PERMITS_SCRIPT, Long.class),
                     Collections.singletonList(key),
-                    Long.class,
                     String.valueOf(permits),
                     String.valueOf(expireMillis)
             );
@@ -230,10 +240,9 @@ public class RedisSemaphore implements DistributedLocker {
         long currentBackoff = MIN_BACKOFF_MILLIS;
         while (true) {
             try {
-                Long result = redisService.executeScript(
-                        ACQUIRE_SCRIPT,
+                Long result = redisTemplate.execute(
+                        new DefaultRedisScript<>(ACQUIRE_SCRIPT, Long.class),
                         Collections.singletonList(key),
-                        Long.class,
                         String.valueOf(permits)
                 );
                 if (result != null && result >= 0) {
@@ -333,10 +342,9 @@ public class RedisSemaphore implements DistributedLocker {
      */
     private void releaseInternal() {
         try {
-            Long result = redisService.executeScript(
-                    RELEASE_SCRIPT,
+            Long result = redisTemplate.execute(
+                    new DefaultRedisScript<>(RELEASE_SCRIPT, Long.class),
                     Collections.singletonList(key),
-                    Long.class,
                     String.valueOf(permits)
             );
             if (result != null && result == -1L) {
@@ -394,10 +402,9 @@ public class RedisSemaphore implements DistributedLocker {
     @Override
     public boolean isLocked(String lockKey) {
         try {
-            Long current = redisService.executeScript(
-                    "local current = redis.call('get', KEYS[1]) return current and tonumber(current) or 0",
-                    Collections.singletonList(key),
-                    Long.class
+            Long current = redisTemplate.execute(
+                    new DefaultRedisScript<>("local current = redis.call('get', KEYS[1]) return current and tonumber(current) or 0", Long.class),
+                    Collections.singletonList(key)
             );
             return current != null && current <= 0;
         } catch (Exception e) {
@@ -409,7 +416,7 @@ public class RedisSemaphore implements DistributedLocker {
     @Override
     public long getRemainTime(String lockKey) {
         try {
-            long seconds = redisService.getExpire(key);
+            long seconds = redisStringOps.getExpire(key);
             return seconds > 0 ? TimeUnit.SECONDS.toMillis(seconds) : seconds;
         } catch (Exception e) {
             log.error("信号量获取剩余时间异常: {}", key, e);

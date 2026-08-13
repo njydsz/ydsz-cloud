@@ -52,7 +52,6 @@ import com.njydsz.common.auth.strategy.DefaultCacheKeyStrategy;
 import com.njydsz.common.auth.token.JwtTokenService;
 import com.njydsz.common.auth.token.TokenProperties;
 import com.njydsz.common.auth.token.TokenService;
-import com.njydsz.common.redis.service.RedisService;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
@@ -89,13 +88,13 @@ public class AuthConfiguration {
 
     private final LocalPermissionCache<Object> localCache;
 
-    private final ObjectProvider<RedisService> redisServiceProvider;
+    private final ObjectProvider<RedisTemplate<String, Object>> redisTemplateProvider;
     private final ObjectProvider<RbacPermissionEvaluator> evaluatorProvider;
 
-    public AuthConfiguration(ObjectProvider<RedisService> redisServiceProvider,
+    public AuthConfiguration(ObjectProvider<RedisTemplate<String, Object>> redisTemplateProvider,
                              ObjectProvider<RbacPermissionEvaluator> evaluatorProvider,
                              AuthProperties properties) {
-        this.redisServiceProvider = redisServiceProvider;
+        this.redisTemplateProvider = redisTemplateProvider;
         this.evaluatorProvider = evaluatorProvider;
         this.localCache = new LocalPermissionCache<>("auth-local-cache",
                 properties.getLocalPermissionCacheMinutes());
@@ -470,13 +469,13 @@ public class AuthConfiguration {
     @Scheduled(fixedRateString = "${ydsz.auth.health-check-interval:60000}")
     public void checkRedisHealth() {
         boolean redisOk = true;
-        RedisService redisService = redisServiceProvider.getIfAvailable();
-        if (redisService == null) {
+        RedisTemplate<String, Object> redisTemplate = redisTemplateProvider.getIfAvailable();
+        if (redisTemplate == null) {
             log.debug("Redis 服务未配置，使用本地缓存兜底");
             redisOk = false;
         } else {
             try {
-                var connectionFactory = redisService.getRedisTemplate().getConnectionFactory();
+                var connectionFactory = redisTemplate.getConnectionFactory();
                 if (connectionFactory == null) {
                     log.debug("Redis 连接工厂未初始化，降级到本地缓存");
                     redisOk = false;

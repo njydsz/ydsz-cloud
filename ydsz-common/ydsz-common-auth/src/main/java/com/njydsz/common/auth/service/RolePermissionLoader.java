@@ -25,8 +25,8 @@ import com.njydsz.common.auth.service.impl.RedisRolePermissionLoader;
  * <pre>
  * // 默认实现：基于 Redis
  * &#64;Bean
- * public RolePermissionLoader rolePermissionLoader(RedisService redisService) {
- *     return new RedisRolePermissionLoader(redisService);
+ * public RolePermissionLoader rolePermissionLoader(RedisStringOps redisStringOps) {
+ *     return new RedisRolePermissionLoader(redisStringOps);
  * }
  *
  * // 自定义实现：来自数据库

@@ -33,7 +33,7 @@ import com.njydsz.common.queue.trace.DefaultMessageTraceRecorder;
 import com.njydsz.common.queue.trace.MessageTraceAspect;
 import com.njydsz.common.queue.trace.MessageTraceRecorder;
 import com.njydsz.common.queue.trace.RedisMessageTraceRecorder;
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 import io.micrometer.core.instrument.MeterRegistry;
 
@@ -45,8 +45,8 @@ import lombok.extern.slf4j.Slf4j;
  * 当配置项 {@code ydsz.queue.enabled=true} 时自动启用。
  *
  * <p><b>Redis 连接复用：</b>
- * 优先使用 ydsz-common-redis 的 {@link RedisService} 复用 Redis 连接，
- * 当 RedisService 不可用时回退到 QueueProperties 中的连接配置自建 JedisPool。
+ * 优先使用 ydsz-common-redis 的 RedisTemplate 复用 Redis 连接，
+ * 当 RedisTemplate 不可用时回退到 QueueProperties 中的连接配置自建 JedisPool。
  *
  * <p><b>配置示例：</b>
  * <pre>{@code
@@ -73,12 +73,15 @@ import lombok.extern.slf4j.Slf4j;
 public class QueueConfiguration {
 
     private final QueueProperties queueProperties;
-    private final ObjectProvider<RedisService> redisServiceProvider;
+    private final ObjectProvider<RedisTemplate<String, Object>> redisTemplateProvider;
+    private final ObjectProvider<RedisStringOps> redisStringOpsProvider;
 
     public QueueConfiguration(QueueProperties queueProperties,
-                               ObjectProvider<RedisService> redisServiceProvider) {
+                               ObjectProvider<RedisTemplate<String, Object>> redisTemplateProvider,
+                               ObjectProvider<RedisStringOps> redisStringOpsProvider) {
         this.queueProperties = queueProperties;
-        this.redisServiceProvider = redisServiceProvider;
+        this.redisTemplateProvider = redisTemplateProvider;
+        this.redisStringOpsProvider = redisStringOpsProvider;
     }
 
     /**
@@ -87,8 +90,8 @@ public class QueueConfiguration {
      */
     @PostConstruct
     public void init() {
-        RedisService redisService = redisServiceProvider.getIfAvailable();
-        if (redisService != null) {
+        RedisTemplate<String, Object> redisTemplate = redisTemplateProvider.getIfAvailable();
+        if (redisTemplate != null) {
             log.info("[Queue] 消息队列配置初始化，Redis 连接：复用 ydsz-common-redis");
         } else {
             log.info("[Queue] 消息队列配置初始化，Redis 连接：自建 JedisPool（{}:{}）",
@@ -145,8 +148,8 @@ public class QueueConfiguration {
      * 创建消息队列提供者
      *
      * <p>消息队列提供者负责根据 QueueType 创建对应的队列实例。
-     * 优先注入 ydsz-common-redis 的 {@link RedisService} 复用连接，
-     * 当 RedisService 不可用时回退到自建 JedisPool 连接。
+     * 优先注入 ydsz-common-redis 的 RedisTemplate 复用连接，
+     * 当 RedisTemplate 不可用时回退到自建 JedisPool 连接。
      *
      * @param consumerExecutor 消费者线程池
      * @return 消息队列提供者实例
@@ -154,10 +157,10 @@ public class QueueConfiguration {
     @Bean
     @ConditionalOnMissingBean(IMessageQueueProvider.class)
     public IMessageQueueProvider messageQueueProvider(ExecutorService consumerExecutor) {
-        RedisService redisService = redisServiceProvider.getIfAvailable();
-        if (redisService != null) {
+        RedisTemplate<String, Object> redisTemplate = redisTemplateProvider.getIfAvailable();
+        if (redisTemplate != null) {
             log.info("[Queue] 创建消息队列提供者（复用 ydsz-common-redis 连接）");
-            return new MessageQueueFactory(queueProperties, redisService, consumerExecutor);
+            return new MessageQueueFactory(queueProperties, redisTemplate, consumerExecutor);
         }
         log.info("[Queue] 创建消息队列提供者（自建 JedisPool 连接）");
         return new MessageQueueFactory(queueProperties, null, consumerExecutor);
@@ -166,7 +169,7 @@ public class QueueConfiguration {
     /**
      * 创建死信队列服务
      *
-     * <p>当 RedisService 可用时，创建基于 Redis 的死信队列服务实例。
+     * <p>当 RedisTemplate 可用时，创建基于 Redis 的死信队列服务实例。
      *
      * @param messageQueueProvider 消息队列提供者
      * @return 死信队列服务实例
@@ -174,13 +177,12 @@ public class QueueConfiguration {
     @Bean
     @ConditionalOnMissingBean(DeadLetterQueueService.class)
     public DeadLetterQueueService deadLetterQueueService(IMessageQueueProvider messageQueueProvider) {
-        RedisService redisService = redisServiceProvider.getIfAvailable();
-        if (redisService != null) {
+        RedisTemplate<String, Object> redisTemplate = redisTemplateProvider.getIfAvailable();
+        if (redisTemplate != null) {
             log.info("[Queue] 创建死信队列服务（复用 ydsz-common-redis 连接）");
-            RedisTemplate<String, Object> redisTemplate = redisService.getRedisTemplate();
             return new DeadLetterQueueServiceImpl(redisTemplate, messageQueueProvider, queueProperties);
         }
-        log.warn("[Queue] RedisService 不可用，返回空操作死信队列服务");
+        log.warn("[Queue] RedisTemplate 不可用，返回空操作死信队列服务");
         return new NoOpDeadLetterQueueService();
     }
 
@@ -211,7 +213,7 @@ public class QueueConfiguration {
     /**
      * 创建内存消息去重器（单实例场景）
      *
-     * <p>当 ydsz.queue.dedup-enabled=true 且 RedisService 不可用时创建。
+     * <p>当 ydsz.queue.dedup-enabled=true 且 RedisTemplate 不可用时创建。
      * 分布式场景应使用 RedisMessageDeduplicator。
      *
      * @return 内存去重器实例
@@ -262,12 +264,12 @@ public class QueueConfiguration {
         int ttlMinutes = queueProperties.getTrace().getTtlMinutes();
 
         if ("redis".equalsIgnoreCase(backend)) {
-            RedisService redisService = redisServiceProvider.getIfAvailable();
-            if (redisService != null) {
+            RedisTemplate<String, Object> redisTemplate = redisTemplateProvider.getIfAvailable();
+            if (redisTemplate != null) {
                 log.info("[Queue] 创建 Redis 消息轨迹记录器，TTL: {} 分钟", ttlMinutes);
-                return new RedisMessageTraceRecorder(redisService, ttlMinutes);
+                return new RedisMessageTraceRecorder(redisTemplate, ttlMinutes);
             }
-            log.warn("[Queue] Redis 消息轨迹后端已配置但 RedisService 不可用，回退到内存模式");
+            log.warn("[Queue] Redis 消息轨迹后端已配置但 RedisTemplate 不可用，回退到内存模式");
         }
 
         int maxCapacity = queueProperties.getTrace().getMaxCapacity();
@@ -296,7 +298,7 @@ public class QueueConfiguration {
      * 创建消息队列健康检查器
      *
      * <p>当 spring-boot-health 模块在 classpath 中时自动注册。
-     * Redis 类型复用 RedisService 连接检查，非 Redis 类型通过 TCP 端口连通性检查。
+     * Redis 类型复用 RedisStringOps 连接检查，非 Redis 类型通过 TCP 端口连通性检查。
      *
      * @return 健康检查器实例
      */
@@ -305,7 +307,7 @@ public class QueueConfiguration {
     @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
     public QueueHealthIndicator queueHealthIndicator() {
         log.info("[Queue] 创建消息队列健康检查器");
-        return new QueueHealthIndicator(queueProperties, redisServiceProvider);
+        return new QueueHealthIndicator(queueProperties, redisStringOpsProvider);
     }
 
     // ==================== REST API 配置 ====================
