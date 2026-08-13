@@ -135,7 +135,7 @@ public class ShareController {
     @PostMapping("/verify")
     @Operation(summary = "验证分享链接访问权限")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_VERIFY)
-    public BaseResponse<ShareLink> verifyAccess(@RequestBody NextwikiDTOs.VerifyShareRequest request) {
+    public BaseResponse<ShareLink> verifyAccess(@Valid @RequestBody NextwikiDTOs.VerifyShareRequest request) {
         ShareLink result = shareApplicationService.verifyAccess(
                 request.getShareCode(),
                 request.getExtractCode(),

@@ -436,7 +436,7 @@ public class RedisCacheGuard {
      */
     private String acquireLockWithWait(String lockKey, int leaseTime, long waitMs) {
         long startTime = System.currentTimeMillis();
-        long backoff = LOCK_WAIT_INITIAL_BACKOFF_MS;
+        long backoffMs = LOCK_WAIT_INITIAL_BACKOFF_MS;
         while (true) {
             String lockValue = acquireLock(lockKey, leaseTime);
             if (lockValue != null) {
@@ -446,16 +446,15 @@ public class RedisCacheGuard {
             if (elapsed >= waitMs) {
                 return null;
             }
-            long sleepMs = Math.min(backoff, waitMs - elapsed);
+            long sleepMs = Math.min(backoffMs, waitMs - elapsed);
             if (sleepMs > 0) {
-                try {
-                    Thread.sleep(sleepMs);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    return null;
-                }
+                LockSupport.parkNanos(sleepMs * 1_000_000L);
             }
-            backoff = Math.min(backoff * 2, LOCK_WAIT_MAX_BACKOFF_MS);
+            if (Thread.currentThread().isInterrupted()) {
+                Thread.currentThread().interrupt();
+                return null;
+            }
+            backoffMs = Math.min(backoffMs * 2, LOCK_WAIT_MAX_BACKOFF_MS);
         }
     }
 

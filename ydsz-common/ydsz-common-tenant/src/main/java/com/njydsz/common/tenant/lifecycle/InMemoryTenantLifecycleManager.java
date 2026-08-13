@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.springframework.context.annotation.Primary;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Component;
 
 /**
@@ -13,15 +13,16 @@ import org.springframework.stereotype.Component;
  * <p>使用 {@link ConcurrentHashMap} 存储租户状态，适合单实例开发环境。
  * 多实例部署时各节点状态独立，生产环境请使用 {@link RedisTenantLifecycleManager}。
  *
- * <p><b>自动装配逻辑：</b>当 classpath 中不存在 {@code StringRedisTemplate} 时，
- * 此实现作为 {@code @Primary} Bean 启用。
+ * <p><b>自动装配逻辑：</b>当容器中不存在其他 {@link TenantLifecycleManager} 实现时，
+ * 此实现作为兜底 Bean 启用（{@code @ConditionalOnMissingBean}）。
+ * 引入 common-redis 后 {@link RedisTenantLifecycleManager} 以 {@code @Primary} 优先。
  *
  * @author ydsz-team
  * @since 1.1.0
  * @see TenantLifecycleManager
  */
 @Component
-@Primary
+@ConditionalOnMissingBean(TenantLifecycleManager.class)
 public class InMemoryTenantLifecycleManager implements TenantLifecycleManager {
 
     /** 未初始化时的回退单例（Spring 容器启动前使用） */
