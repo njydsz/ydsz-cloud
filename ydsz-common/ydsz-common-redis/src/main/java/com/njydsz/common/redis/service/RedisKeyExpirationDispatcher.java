@@ -113,7 +113,7 @@ public class RedisKeyExpirationDispatcher implements ApplicationContextAware, Sm
                 Object bean = applicationContext.getBean(beanName);
                 scanBeanForListeners(bean);
             } catch (Exception e) {
-                log.debug("【RedisKeyExpire】扫描 Bean 失败 | beanName={} | error={}", beanName, e.getMessage());
+                log.debug("【RedisKeyExpire】扫描 Bean 失败 | beanName={}", beanName, e);
             }
         }
 
@@ -252,9 +252,9 @@ public class RedisKeyExpirationDispatcher implements ApplicationContextAware, Sm
                 reg.method().invoke(reg.bean(), new RedisKeyExpirationEvent(expiredKey, businessKey));
             }
         } catch (Exception e) {
-            log.error("【RedisKeyExpire】调用过期监听器失败 | method={}.{} | expiredKey={} | error={}",
+            log.error("【RedisKeyExpire】调用过期监听器失败 | method={}.{} | expiredKey={}",
                     reg.method().getDeclaringClass().getSimpleName(),
-                    reg.method().getName(), expiredKey, e.getMessage());
+                    reg.method().getName(), expiredKey, e);
         }
     }
 

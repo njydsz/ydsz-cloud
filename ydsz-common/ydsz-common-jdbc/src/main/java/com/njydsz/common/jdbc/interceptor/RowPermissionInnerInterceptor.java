@@ -16,6 +16,7 @@ import com.baomidou.mybatisplus.extension.parser.JsqlParserSupport;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import com.njydsz.common.core.constant.DataScopeConstants;
 import com.njydsz.common.jdbc.config.DataPermissionConfiguration;
+import com.njydsz.common.jdbc.permission.DataPermissionBypass;
 import com.njydsz.common.jdbc.permission.DataPermissionContext;
 import com.njydsz.common.jdbc.permission.DataPermissionContextResolver;
 import com.njydsz.common.util.string.StringUtils;
@@ -133,6 +134,11 @@ public class RowPermissionInnerInterceptor extends JsqlParserSupport implements 
     @Override
     public void beforePrepare(StatementHandler sh, Connection connection, Integer transactionTimeout) {
         if (config == null || !Boolean.TRUE.equals(config.getEnabled())) {
+            return;
+        }
+        // 系统级绕过：后台任务（定时批处理、MQ 消费）无 HTTP 请求上下文，跳过权限检查
+        if (DataPermissionBypass.isActive()) {
+            log.debug("DataPermissionBypass 激活，跳过行级权限拦截");
             return;
         }
         PluginUtils.MPStatementHandler mpSh = PluginUtils.mpStatementHandler(sh);

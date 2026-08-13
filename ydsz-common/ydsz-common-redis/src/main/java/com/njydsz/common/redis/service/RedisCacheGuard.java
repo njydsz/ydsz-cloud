@@ -402,7 +402,7 @@ public class RedisCacheGuard {
             }
             return null;
         } catch (Exception e) {
-            log.warn("【RedisCacheGuard】获取防护锁失败 | key={} | error={}", lockKey, e.getMessage());
+            log.error("【RedisCacheGuard】获取防护锁失败 | key={}", lockKey, e);
             return null;
         }
     }

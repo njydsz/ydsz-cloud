@@ -68,8 +68,8 @@ public class NullValueCacheHelper {
             try {
                 return YdszJson.fromJson(cached, clazz);
             } catch (Exception e) {
-                log.warn("【NullValueCacheHelper】反序列化失败，将回源加载 | key={} | targetClass={} | error={}",
-                        key, clazz.getName(), e.getMessage());
+                log.warn("【NullValueCacheHelper】反序列化失败，将回源加载 | key={} | targetClass={}",
+                        key, clazz.getName(), e);
             }
         }
 

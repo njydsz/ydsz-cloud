@@ -109,7 +109,7 @@ public class RedisHealthIndicator implements HealthIndicator {
                 connection.close();
             }
         } catch (Exception e) {
-            log.error("【Redis】健康检查失败 | error={}", e.getMessage());
+            log.error("【Redis】健康检查失败", e);
             return Health.down()
                     .withDetail("error", e.getClass().getSimpleName())
                     .withDetail("reason", e.getMessage())

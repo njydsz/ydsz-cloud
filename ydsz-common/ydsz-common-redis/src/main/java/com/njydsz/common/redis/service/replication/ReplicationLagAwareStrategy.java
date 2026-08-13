@@ -173,7 +173,7 @@ public class ReplicationLagAwareStrategy {
             }
             recordSample(lag);
         } catch (Exception e) {
-            log.warn("ReplicationLagAwareStrategy: 探测失败: {}", e.getMessage());
+            log.warn("ReplicationLagAwareStrategy: 探测失败", e);
             recordSample(Long.MAX_VALUE / 2); // 异常时视为高延迟
         }
     }

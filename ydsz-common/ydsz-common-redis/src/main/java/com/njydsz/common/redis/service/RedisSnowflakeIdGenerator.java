@@ -208,7 +208,7 @@ public class RedisSnowflakeIdGenerator {
             try {
                 renewWorkerIdHeartbeat(workerId);
             } catch (Exception e) {
-                log.warn("【Snowflake】workerId 心跳续约失败 | workerId={} | error={}", workerId, e.getMessage());
+                log.warn("【Snowflake】workerId 心跳续约失败 | workerId={}", workerId, e);
             }
         }, HEARTBEAT_INTERVAL_SECONDS, HEARTBEAT_INTERVAL_SECONDS, TimeUnit.SECONDS);
 
@@ -246,7 +246,7 @@ public class RedisSnowflakeIdGenerator {
                 log.info("【Snowflake】重新分配 workerId 成功 | oldWorkerId={} | newWorkerId={}",
                         oldWorkerId, newWorkerId);
             } catch (Exception e) {
-                log.error("【Snowflake】重新分配 workerId 失败 | error={}", e.getMessage());
+                    log.error("【Snowflake】重新分配 workerId 失败", e);
             }
         }
     }

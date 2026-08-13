@@ -236,7 +236,7 @@ public class LockWatchDog {
                 activeTasks.remove(lockKey);
             }
         } catch (Exception e) {
-            log.warn("【LockWatchDog】续期异常 | key={} | error={}", lockKey, e.getMessage());
+            log.warn("【LockWatchDog】续期异常 | key={}", lockKey, e);
         }
     }
 
@@ -256,7 +256,7 @@ public class LockWatchDog {
                 return null;
             });
         } catch (Exception e) {
-            log.warn("【LockWatchDog】释放锁失败 | key={} | error={}", lockKey, e.getMessage());
+            log.warn("【LockWatchDog】释放锁失败 | key={}", lockKey, e);
         }
     }
 }

@@ -295,8 +295,7 @@ public class StreamConsumerTemplate implements DisposableBean {
 
                 if (pendingCount > highWatermark) {
                     // 积压严重，暂停消费等待消化
-                    log.warn("【StreamConsumer】pending 积压超过高水位线，暂停消费 | streamKey={} " +
-                                    "| pendingCount={} | highWatermark={}",
+                    log.warn("【StreamConsumer】pending 积压超过高水位线，暂停消费 | streamKey={} | pendingCount={} | highWatermark={}",
                             streamKey, pendingCount, highWatermark);
                     sleepQuietly(backpressurePauseMs);
                     continue;
@@ -331,7 +330,7 @@ public class StreamConsumerTemplate implements DisposableBean {
                 log.debug("【StreamConsumer】消费线程被中断 | streamKey={}", streamKey);
                 break;
             } catch (Exception e) {
-                log.error("【StreamConsumer】消费循环异常 | streamKey={} | error={}", streamKey, e.getMessage());
+                log.error("【StreamConsumer】消费循环异常 | streamKey={}", streamKey, e);
                 sleepQuietly(pollIntervalMs);
             }
         }
@@ -378,8 +377,7 @@ public class StreamConsumerTemplate implements DisposableBean {
             retryCount++;
             if (retryCount >= maxRetryCount) {
                 // 超过重试次数 → 转移死信
-                log.warn("【StreamConsumer】消息超过最大重试次数，转入死信 | streamKey={} " +
-                                "| messageId={} | retryCount={}",
+                log.warn("【StreamConsumer】消息超过最大重试次数，转入死信 | streamKey={} | messageId={} | retryCount={}",
                         streamKey, messageId, retryCount);
                 transferToDeadLetter(message, retryCount);
             } else {
@@ -439,8 +437,7 @@ public class StreamConsumerTemplate implements DisposableBean {
                 return summary.getTotalPendingMessages();
             }
         } catch (Exception e) {
-            log.debug("【StreamConsumer】获取 pending 数量失败 | streamKey={} | error={}",
-                    streamKey, e.getMessage());
+            log.debug("【StreamConsumer】获取 pending 数量失败 | streamKey={}", streamKey, e);
         }
         return 0;
     }

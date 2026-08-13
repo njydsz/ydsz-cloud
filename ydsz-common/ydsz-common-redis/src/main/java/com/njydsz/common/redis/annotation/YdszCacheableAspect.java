@@ -245,7 +245,7 @@ public class YdszCacheableAspect {
         try {
             redisService.executeScript(UNLOCK_LUA, Collections.singletonList(lockKey), Long.class, lockValue);
         } catch (Exception e) {
-            log.error("【YdszCacheable】释放防击穿锁失败 | lockKey={} | error={}", lockKey, e.getMessage());
+            log.error("【YdszCacheable】释放防击穿锁失败 | lockKey={}", lockKey, e);
         }
     }
 

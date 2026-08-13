@@ -261,7 +261,7 @@ public class RedisStreamOps {
                 pendingCount = summary.getTotalPendingMessages();
             }
         } catch (Exception e) {
-            log.debug("【Redis】背压检测 pending 查询失败 | streamKey={} | error={}", streamKey, e.getMessage());
+            log.debug("【Redis】背压检测 pending 查询失败 | streamKey={}", streamKey, e);
         }
 
         // 计算实际拉取量

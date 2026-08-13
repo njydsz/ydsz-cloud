@@ -63,27 +63,27 @@ public class RedisOperationExceptionHandler {
         } catch (RedisConnectionFailureException e) {
             // 连接失败 → 可恢复异常
             String key = extractKey(joinPoint.getArgs());
-            log.error("【Redis】连接失败 | method={} | key={} | error={}", methodName, key, e.getMessage());
+            log.error("【Redis】连接失败 | method={} | key={}", methodName, key, e);
             throw new RedisConnectionException(key, methodName, e);
         } catch (QueryTimeoutException e) {
             // 查询超时 → 可恢复异常
             String key = extractKey(joinPoint.getArgs());
-            log.error("【Redis】查询超时 | method={} | key={} | error={}", methodName, key, e.getMessage());
+            log.error("【Redis】查询超时 | method={} | key={}", methodName, key, e);
             throw new RedisConnectionException(key, methodName, e);
         } catch (SerializationException e) {
             // 序列化失败 → 不可恢复异常
-            log.error("【Redis】序列化失败 | method={} | error={}", methodName, e.getMessage());
+            log.error("【Redis】序列化失败 | method={}", methodName, e);
             throw new RedisBusinessException(null, methodName, e);
         } catch (IllegalArgumentException e) {
             // 参数非法 → 不可恢复异常
-            log.error("【Redis】参数非法 | method={} | error={}", methodName, e.getMessage());
+            log.error("【Redis】参数非法 | method={}", methodName, e);
             throw new RedisBusinessException(null, methodName, e);
         } catch (RedisOperationException e) {
             // 已经是内部异常，直接抛出
             throw e;
         } catch (Exception e) {
             // 未知异常 → 包装为业务异常
-            log.error("【Redis】未知异常 | method={} | error={}", methodName, e.getMessage());
+            log.error("【Redis】未知异常 | method={}", methodName, e);
             throw new RedisBusinessException(null, methodName, e);
         }
     }

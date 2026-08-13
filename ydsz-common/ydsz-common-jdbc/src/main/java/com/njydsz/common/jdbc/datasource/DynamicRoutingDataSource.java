@@ -9,6 +9,9 @@ import javax.sql.DataSource;
 
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
 
+import com.njydsz.common.jdbc.datasource.hint.HintManager;
+import com.njydsz.common.jdbc.datasource.hint.HintType;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -44,8 +47,40 @@ public class DynamicRoutingDataSource extends AbstractRoutingDataSource {
         setLenientFallback(true);
     }
 
+    /**
+     * 确定当前线程的数据源路由 key。
+     *
+     * <p>路由优先级（从高到低）：
+     * <ol>
+     *   <li>{@link HintManager} 强制路由 Hint（编程式，最高优先级）</li>
+     *   <li>{@link DynamicDataSourceContextHolder} 中的显式数据源（@DS 注解 / ReadWriteSplitting）</li>
+     *   <li>默认数据源</li>
+     * </ol>
+     *
+     * @return 数据源路由 key；determineCurrentLookupKey 契约中 null 表示使用默认数据源
+     */
     @Override
     protected Object determineCurrentLookupKey() {
+        // HintManager 强制路由最高优先级：覆盖事务上下文和 @DS 注解
+        var hint = HintManager.get().orElse(null);
+        if (hint != null) {
+            if (hint.getType() == HintType.CUSTOM) {
+                log.debug("HintManager 强制路由到数据源: {}", hint.getDsName());
+                return hint.getDsName();
+            }
+            if (hint.getType() == HintType.MASTER) {
+                log.debug("HintManager 强制路由到主库");
+                if (defaultDataSourceKey != null) {
+                    return defaultDataSourceKey;
+                }
+            }
+            // HintType.SLAVE：不干预，让负载均衡策略选择从库
+            if (hint.getType() == HintType.SLAVE) {
+                log.debug("HintManager 强制路由到从库（由负载均衡策略选择）");
+                return null;
+            }
+        }
+
         String ds = DynamicDataSourceContextHolder.peek();
         if (ds == null) {
             return defaultDataSourceKey;

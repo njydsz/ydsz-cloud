@@ -55,7 +55,7 @@ public class RedisPubSubOps {
             Long result = redisTemplate.convertAndSend(channel, message);
             return result != null ? result : 0;
         } catch (Exception e) {
-            log.error("【Redis】PUBLISH 操作失败 | channel={} | error={}", channel, e.getMessage());
+            log.error("【Redis】PUBLISH 操作失败 | channel={}", channel, e);
             return 0;
         }
     }
@@ -90,7 +90,7 @@ public class RedisPubSubOps {
             log.info("【Redis】订阅频道成功 | channel={} | subscriptionId={}", channel, subscriptionId);
             return subscriptionId;
         } catch (Exception e) {
-            log.error("【Redis】SUBSCRIBE 操作失败 | channel={} | error={}", channel, e.getMessage());
+            log.error("【Redis】SUBSCRIBE 操作失败 | channel={}", channel, e);
             return null;
         }
     }
@@ -130,7 +130,7 @@ public class RedisPubSubOps {
             log.info("【Redis】模式订阅成功 | pattern={} | subscriptionId={}", pattern, subscriptionId);
             return subscriptionId;
         } catch (Exception e) {
-            log.error("【Redis】PSUBSCRIBE 操作失败 | pattern={} | error={}", pattern, e.getMessage());
+            log.error("【Redis】PSUBSCRIBE 操作失败 | pattern={}", pattern, e);
             return null;
         }
     }
@@ -155,7 +155,7 @@ public class RedisPubSubOps {
                 log.info("【Redis】取消订阅成功 | subscriptionId={}", subscriptionId);
             }
         } catch (Exception e) {
-            log.error("【Redis】取消订阅失败 | subscriptionId={} | error={}", subscriptionId, e.getMessage());
+            log.error("【Redis】取消订阅失败 | subscriptionId={}", subscriptionId, e);
         }
     }
 
@@ -176,7 +176,7 @@ public class RedisPubSubOps {
                 log.info("【Redis】取消订阅成功 | topic={} | subscriptionId={}", topic, subscriptionId);
             }
         } catch (Exception e) {
-            log.error("【Redis】取消订阅失败 | topic={} | subscriptionId={} | error={}", topic, subscriptionId, e.getMessage());
+            log.error("【Redis】取消订阅失败 | topic={} | subscriptionId={}", topic, subscriptionId, e);
         }
     }
 
@@ -196,7 +196,7 @@ public class RedisPubSubOps {
                 log.info("【Redis】取消模式订阅成功 | subscriptionId={}", subscriptionId);
             }
         } catch (Exception e) {
-            log.error("【Redis】取消模式订阅失败 | subscriptionId={} | error={}", subscriptionId, e.getMessage());
+            log.error("【Redis】取消模式订阅失败 | subscriptionId={}", subscriptionId, e);
         }
     }
 
@@ -217,7 +217,7 @@ public class RedisPubSubOps {
                 log.info("【Redis】取消模式订阅成功 | pattern={} | subscriptionId={}", pattern, subscriptionId);
             }
         } catch (Exception e) {
-            log.error("【Redis】取消模式订阅失败 | pattern={} | subscriptionId={} | error={}", pattern, subscriptionId, e.getMessage());
+            log.error("【Redis】取消模式订阅失败 | pattern={} | subscriptionId={}", pattern, subscriptionId, e);
         }
     }
 

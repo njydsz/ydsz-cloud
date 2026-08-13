@@ -1286,7 +1286,7 @@ public class RedisService implements BatchRedisOperations, CacheProvider {
                 return null;
             });
         } catch (Exception e) {
-            log.error("【Redis】Pipeline 执行失败 | error={}", e.getMessage());
+            log.error("【Redis】Pipeline 执行失败", e);
         }
     }
 
@@ -1341,7 +1341,7 @@ public class RedisService implements BatchRedisOperations, CacheProvider {
                 return null;
             });
         } catch (Exception e) {
-            log.error("【Redis】Pipeline 批量 SET 失败 | mapSize={} | error={}", map.size(), e.getMessage());
+            log.error("【Redis】Pipeline 批量 SET 失败 | mapSize={}", map.size(), e);
         }
     }
 
@@ -1403,7 +1403,7 @@ public class RedisService implements BatchRedisOperations, CacheProvider {
             });
             return results != null ? results : Collections.emptyList();
         } catch (Exception e) {
-            log.error("【Redis】Pipeline 批量 GET 失败 | keyCount={} | error={}", keys.size(), e.getMessage());
+            log.error("【Redis】Pipeline 批量 GET 失败 | keyCount={}", keys.size(), e);
             return Collections.emptyList();
         }
     }
@@ -1458,7 +1458,7 @@ public class RedisService implements BatchRedisOperations, CacheProvider {
             });
             return results != null ? results : Collections.emptyList();
         } catch (Exception e) {
-            log.error("【Redis】Pipeline 批量 DELETE 失败 | keyCount={} | error={}", keys.size(), e.getMessage());
+            log.error("【Redis】Pipeline 批量 DELETE 失败 | keyCount={}", keys.size(), e);
             return Collections.emptyList();
         }
     }
@@ -1523,7 +1523,7 @@ public class RedisService implements BatchRedisOperations, CacheProvider {
         try {
             return Boolean.TRUE.equals(redisTemplate.delete(key));
         } catch (Exception e) {
-            log.error("【Redis】DELETE 操作失败 | key={} | error={}", key, e.getMessage());
+            log.error("【Redis】DELETE 操作失败 | key={}", key, e);
             return false;
         }
     }

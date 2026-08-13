@@ -198,7 +198,7 @@ public class RedisWorkerIdRegistry implements WorkerIdRegistry {
             }
             return success;
         } catch (Exception e) {
-            log.warn("【Snowflake-Registry】heartbeat workerId={} error: {}", workerId, e.getMessage());
+            log.warn("【Snowflake-Registry】heartbeat workerId={}", workerId, e);
             return false;
         }
     }
@@ -231,7 +231,7 @@ public class RedisWorkerIdRegistry implements WorkerIdRegistry {
                 log.warn("【Snowflake-Registry】release workerId={} no-op: key expired or value mismatch", workerId);
             }
         } catch (Exception e) {
-            log.warn("【Snowflake-Registry】release workerId={} error: {}", workerId, e.getMessage());
+            log.warn("【Snowflake-Registry】release workerId={}", workerId, e);
         }
     }
 
@@ -259,7 +259,7 @@ public class RedisWorkerIdRegistry implements WorkerIdRegistry {
                     log.warn("【Snowflake-Registry】workerId={} 已失效，从本地记录移除", entry.getKey());
                 }
             } catch (Exception e) {
-                log.warn("【Snowflake-Registry】renew workerId={} error: {}", entry.getKey(), e.getMessage());
+                log.warn("【Snowflake-Registry】renew workerId={}", entry.getKey(), e);
             }
         }
     }

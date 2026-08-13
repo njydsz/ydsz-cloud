@@ -78,7 +78,7 @@ public class RedisTransactionOps {
                 }
             });
         } catch (Exception e) {
-            log.error("【Redis】事务执行失败 | error={}", e.getMessage());
+            log.error("【Redis】事务执行失败", e);
             return null;
         }
     }
@@ -113,7 +113,7 @@ public class RedisTransactionOps {
             });
             return results != null;
         } catch (Exception e) {
-            log.error("【Redis】事务执行失败 | error={}", e.getMessage());
+            log.error("【Redis】事务执行失败", e);
             return false;
         }
     }

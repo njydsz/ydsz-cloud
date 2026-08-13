@@ -180,7 +180,7 @@ public class RedisBloomFilter implements BloomFilterService {
             redisTemplate.execute(addScript, keys, (Object[]) args);
             return true;
         } catch (Exception e) {
-            log.error("【Redis】布隆过滤器添加元素失败 | key={} | value={} | error={}", filterKey, value, e.getMessage());
+            log.error("【Redis】布隆过滤器添加元素失败 | key={} | value={}", filterKey, value, e);
             throw new RuntimeException("布隆过滤器添加元素失败: " + e.getMessage(), e);
         }
     }
@@ -247,8 +247,8 @@ public class RedisBloomFilter implements BloomFilterService {
             Boolean result = redisTemplate.execute(existsScript, keys, (Object[]) args);
             return Boolean.TRUE.equals(result);
         } catch (Exception e) {
-            log.error("【Redis】布隆过滤器检查元素失败 | key={} | value={} | error={} | failMode={}",
-                    filterKey, value, e.getMessage(), failMode);
+            log.error("【Redis】布隆过滤器检查元素失败 | key={} | value={} | failMode={}",
+                    filterKey, value, failMode, e);
             if (failMode == FailOpenPolicy.FAIL_CLOSED) {
                 return true;
             }
@@ -281,7 +281,7 @@ public class RedisBloomFilter implements BloomFilterService {
             }
             return bitCount / numHashes;
         } catch (Exception e) {
-            log.error("【Redis】布隆过滤器计数失败 | key={} | error={}", filterKey, e.getMessage());
+            log.error("【Redis】布隆过滤器计数失败 | key={}", filterKey, e);
             return -1;
         }
     }
@@ -350,8 +350,8 @@ public class RedisBloomFilter implements BloomFilterService {
             }
             return result;
         } catch (Exception e) {
-            log.error("【Redis】布隆过滤器批量检查失败 | key={} | size={} | error={} | failMode={}",
-                    filterKey, values.size(), e.getMessage(), failMode);
+            log.error("【Redis】布隆过滤器批量检查失败 | key={} | size={} | failMode={}",
+                    filterKey, values.size(), failMode, e);
             if (failMode == FailOpenPolicy.FAIL_CLOSED) {
                 return new ArrayList<>(validValues);
             }
@@ -376,7 +376,7 @@ public class RedisBloomFilter implements BloomFilterService {
         try {
             redisTemplate.delete(filterKey);
         } catch (Exception e) {
-            log.error("【Redis】布隆过滤器删除失败 | key={} | error={}", filterKey, e.getMessage());
+            log.error("【Redis】布隆过滤器删除失败 | key={}", filterKey, e);
         }
     }
 
@@ -395,7 +395,7 @@ public class RedisBloomFilter implements BloomFilterService {
                     connection.stringCommands().strLen(filterKey.getBytes(StandardCharsets.UTF_8)));
             return size != null ? size : -1;
         } catch (Exception e) {
-            log.error("【Redis】布隆过滤器内存查询失败 | key={} | error={}", filterKey, e.getMessage());
+            log.error("【Redis】布隆过滤器内存查询失败 | key={}", filterKey, e);
             return -1;
         }
     }

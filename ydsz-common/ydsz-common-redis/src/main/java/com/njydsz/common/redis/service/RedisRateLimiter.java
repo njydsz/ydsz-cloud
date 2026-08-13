@@ -378,7 +378,7 @@ public class RedisRateLimiter {
             Long ttl = redisTemplate.getExpire(formattedKey);
             return ttl == null ? 0L : ttl;
         } catch (Exception e) {
-            log.warn("【RedisRateLimiter】获取 TTL 失败 | key={} | error={}", key, e.getMessage());
+            log.warn("【RedisRateLimiter】获取 TTL 失败 | key={}", key, e);
             return -1;
         }
     }
