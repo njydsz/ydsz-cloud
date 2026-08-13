@@ -7,9 +7,15 @@
       "defaultValue": true
     },
     {
+      "name": "ydsz.thread.bean-name-prefix",
+      "type": "java.lang.String",
+      "description": "Bean 名称前缀（默认空字符串）。设置后所有线程池 Bean 名称将变为 prefix + key + \"Executor\"。建议新部署使用 \"ydsz-\" 前缀以避免与业务 Bean 命名冲突。",
+      "defaultValue": ""
+    },
+    {
       "name": "ydsz.thread.pools",
       "type": "java.util.Map<java.lang.String,com.njydsz.common.thread.config.ThreadPoolProperties$PoolConfig>",
-      "description": "线程池配置映射，key 为线程池名称（如 io、cpu、batch），Bean 名称为 key + \"Executor\"。"
+      "description": "线程池配置映射，key 为线程池名称（如 io、cpu、batch），Bean 名称为 beanNamePrefix + key + \"Executor\"。"
     },
     {
       "name": "ydsz.thread.pools.*.type",
@@ -20,19 +26,19 @@
     {
       "name": "ydsz.thread.pools.*.core-size",
       "type": "java.lang.Integer",
-      "description": "核心线程数（默认 2）。仅对 PLATFORM 类型生效。",
+      "description": "核心线程数（默认 2，最小 1）。仅对 PLATFORM 类型生效。",
       "defaultValue": 2
     },
     {
       "name": "ydsz.thread.pools.*.max-size",
       "type": "java.lang.Integer",
-      "description": "最大线程数（默认 8）。仅对 PLATFORM 类型生效。",
+      "description": "最大线程数（默认 8，最小 1）。必须 >= coreSize。仅对 PLATFORM 类型生效。",
       "defaultValue": 8
     },
     {
       "name": "ydsz.thread.pools.*.queue-capacity",
       "type": "java.lang.Integer",
-      "description": "阻塞队列容量（默认 100）。仅对 PLATFORM 类型生效。",
+      "description": "阻塞队列容量（默认 100，最小 0；0 表示 SynchronousQueue）。仅对 PLATFORM 类型生效。",
       "defaultValue": 100
     },
     {
@@ -50,7 +56,7 @@
     {
       "name": "ydsz.thread.pools.*.await-termination-seconds",
       "type": "java.lang.Integer",
-      "description": "优雅关闭等待秒数（默认 60）。",
+      "description": "优雅关闭等待秒数（默认 60，最小 0）。",
       "defaultValue": 60
     },
     {
@@ -62,8 +68,19 @@
     {
       "name": "ydsz.thread.pools.*.keep-alive-seconds",
       "type": "java.lang.Integer",
-      "description": "线程空闲存活秒数（默认 60）。仅对 PLATFORM 类型生效。",
+      "description": "线程空闲存活秒数（默认 60，最小 0，建议不超过 3600）。仅对 PLATFORM 类型生效。",
       "defaultValue": 60
+    },
+    {
+      "name": "ydsz.thread.pools.*.metric-prefix",
+      "type": "java.lang.String",
+      "description": "Micrometer 指标前缀（默认 ydsz.executor）。仅对 PLATFORM 类型生效。虚拟线程池固定使用 ydsz.virtual.executor。",
+      "defaultValue": "ydsz.executor"
+    },
+    {
+      "name": "ydsz.thread.pools.*.task-decorator-bean-names",
+      "type": "java.util.List<java.lang.String>",
+      "description": "TaskDecorator Bean 名称列表（仅对 PLATFORM 生效）。用于跨线程传播上下文（如 MDC 日志追踪 ID、RequestContext、SecurityContext）。"
     }
   ]
 }

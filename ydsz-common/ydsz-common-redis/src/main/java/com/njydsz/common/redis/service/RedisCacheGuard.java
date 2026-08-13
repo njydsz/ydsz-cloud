@@ -51,9 +51,9 @@ import lombok.extern.slf4j.Slf4j;
  * }</pre>
  *
  * <p><b>防击穿锁实现说明：</b></p>
- * <p>由于 {@code ydsz-common-lock} 模块已依赖 {@code ydsz-common-redis}，反向依赖会形成循环依赖，
- * 因此本类内嵌实现 WatchDog 续期机制（与 {@code LockWatchDog} 相同的设计模式），
- * 确保锁在缓存重建期间不会因业务执行时间超过 leaseTime 而自动释放。</p>
+ * <p>使用 {@link LockWatchDog} 公共组件实现锁续期机制，
+ * 确保锁在缓存重建期间不会因业务执行时间超过 leaseTime 而自动释放。
+ * 通过抽取公共 LockWatchDog 组件，避免各组件各自实现 WatchDog 导致的代码重复。</p>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -81,8 +81,6 @@ public class RedisCacheGuard {
     private static final int PENETRATION_LOCK_LEASE_SECONDS = 5;
     /** 防击穿锁租约时间（秒） */
     private static final int BREAKDOWN_LOCK_LEASE_SECONDS = 10;
-    /** 优雅关闭时等待调度器终止的最大时长（秒） */
-    private static final long SHUTDOWN_AWAIT_SECONDS = 5;
 
     private final RedisService redisService;
     private final RedisStringOps stringOps;
@@ -394,12 +392,12 @@ public class RedisCacheGuard {
     private String acquireLock(String lockKey, int leaseTime) {
         try {
             String lockValue = UUID.randomUUID().toString().replace("-", "");
-            // 使用 redisTemplate 直接操作，与 releaseLock/renewLock 保持 key 处理一致
+            // 使用 redisTemplate 直接操作，与 releaseLock/lockWatchDog 保持 key 处理一致
             Boolean locked = redisTemplate.opsForValue().setIfAbsent(
                     lockKey, lockValue, Duration.ofSeconds(leaseTime));
             if (Boolean.TRUE.equals(locked)) {
                 // 启动 WatchDog 自动续期，防止业务执行时间超过 leaseTime 导致锁自动释放
-                startWatchDog(lockKey, lockValue, leaseTime * 1000L);
+                lockWatchDog.start(lockKey, lockValue, leaseTime * 1000L);
                 return lockValue;
             }
             return null;
@@ -452,111 +450,6 @@ public class RedisCacheGuard {
      * @param lockValue 锁值
      */
     private void releaseLock(String lockKey, String lockValue) {
-        // 先停止 WatchDog 续期，避免续期任务与释放操作竞争
-        stopWatchDog(lockKey);
-        try {
-            redisTemplate.execute((RedisCallback<Object>) connection -> {
-                byte[] keyBytes = lockKey.getBytes(StandardCharsets.UTF_8);
-                byte[] valueBytes = lockValue.getBytes(StandardCharsets.UTF_8);
-                byte[] scriptBytes = RELEASE_LOCK_LUA.getBytes(StandardCharsets.UTF_8);
-                String sha = connection.scriptingCommands().scriptLoad(scriptBytes);
-                connection.scriptingCommands().evalSha(sha,
-                        ReturnType.INTEGER,
-                        1, keyBytes, valueBytes);
-                return null;
-            });
-        } catch (Exception e) {
-            log.warn("【RedisCacheGuard】释放防护锁失败 | key={} | error={}", lockKey, e.getMessage());
-        }
-    }
-
-    /**
-     * 启动 WatchDog 自动续期任务
-     *
-     * <p>续期间隔为 leaseTime 的 1/3（与 ydsz-common-lock 的 LockWatchDog 一致），
-     * 当续期次数超过 {@link #MAX_RENEW_TIMES} 时自动停止，防止业务线程卡死导致锁永不释放。</p>
-     *
-     * @param lockKey     锁键
-     * @param lockValue   锁值（用于校验持有者）
-     * @param leaseTimeMs 锁租约时间（毫秒）
-     */
-    private void startWatchDog(String lockKey, String lockValue, long leaseTimeMs) {
-        if (leaseTimeMs <= 0) {
-            return;
-        }
-        long renewInterval = leaseTimeMs / 3;
-        if (renewInterval <= 0) {
-            renewInterval = Math.max(leaseTimeMs / 2, 1000);
-        }
-        AtomicBoolean running = new AtomicBoolean(true);
-        ScheduledFuture<?> future = watchDogScheduler.scheduleAtFixedRate(
-                () -> renewLockWithCheck(lockKey, lockValue, leaseTimeMs),
-                renewInterval, renewInterval, TimeUnit.MILLISECONDS
-        );
-        WatchTask task = new WatchTask(lockKey, lockValue, leaseTimeMs, running, future);
-        activeWatchTasks.put(lockKey, task);
-        log.debug("【RedisCacheGuard】启动 WatchDog 续期 | key={} | leaseTime={}ms | interval={}ms",
-                lockKey, leaseTimeMs, renewInterval);
-    }
-
-    /**
-     * 停止 WatchDog 续期任务
-     *
-     * @param lockKey 锁键
-     */
-    private void stopWatchDog(String lockKey) {
-        WatchTask task = activeWatchTasks.remove(lockKey);
-        if (task != null) {
-            task.running.set(false);
-            task.future.cancel(false);
-            log.debug("【RedisCacheGuard】停止 WatchDog 续期 | key={}", lockKey);
-        }
-    }
-
-    /**
-     * 续期锁（带次数限制检查）
-     *
-     * @param lockKey     锁键
-     * @param lockValue   锁值
-     * @param leaseTimeMs 租约时间（毫秒）
-     */
-    private void renewLockWithCheck(String lockKey, String lockValue, long leaseTimeMs) {
-        WatchTask task = activeWatchTasks.get(lockKey);
-        if (task == null || !task.running.get()) {
-            return;
-        }
-        if (task.renewCount >= MAX_RENEW_TIMES) {
-            log.warn("【RedisCacheGuard】WatchDog 续期次数超限，停止续期 | key={} | renewCount={}",
-                    lockKey, task.renewCount);
-            task.running.set(false);
-            task.future.cancel(false);
-            activeWatchTasks.remove(lockKey);
-            return;
-        }
-        try {
-            Boolean renewed = redisTemplate.execute((RedisCallback<Boolean>) connection -> {
-                byte[] keyBytes = lockKey.getBytes(StandardCharsets.UTF_8);
-                byte[] valueBytes = lockValue.getBytes(StandardCharsets.UTF_8);
-                byte[] leaseBytes = String.valueOf(leaseTimeMs).getBytes(StandardCharsets.UTF_8);
-                byte[] scriptBytes = RENEW_LOCK_LUA.getBytes(StandardCharsets.UTF_8);
-                String sha = connection.scriptingCommands().scriptLoad(scriptBytes);
-                Long result = connection.scriptingCommands().evalSha(sha,
-                        ReturnType.INTEGER,
-                        1, keyBytes, valueBytes, leaseBytes);
-                return Long.valueOf(1L).equals(result);
-            });
-            if (Boolean.TRUE.equals(renewed)) {
-                task.renewCount++;
-                log.debug("【RedisCacheGuard】WatchDog 续期成功 | key={} | renewCount={}", lockKey, task.renewCount);
-            } else {
-                // 锁已不属于当前持有者（可能已过期被他人获取），停止续期
-                log.warn("【RedisCacheGuard】WatchDog 续期失败，锁可能已失效 | key={}", lockKey);
-                task.running.set(false);
-                task.future.cancel(false);
-                activeWatchTasks.remove(lockKey);
-            }
-        } catch (Exception e) {
-            log.warn("【RedisCacheGuard】WatchDog 续期异常 | key={} | error={}", lockKey, e.getMessage());
-        }
+        lockWatchDog.release(lockKey, lockValue);
     }
 }

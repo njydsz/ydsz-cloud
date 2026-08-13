@@ -21,7 +21,6 @@
 | 类 | 说明 |
 |---|---|
 | `MybatisPlusConfiguration` | MP 全局配置，按顺序组装乐观锁、逻辑删除、字段填充、SPI、数据权限、分页、SQL 防火墙拦截器链 |
-| `MapperScanConfiguration` | Mapper 扫描配置，扫描包由 `ydsz.jdbc.mapper-scan-packages` 指定（默认 `com.njydsz.**.mapper`） |
 | `MyMetaObjectHandler` | MP `MetaObjectHandler` 实现，配合 `FieldFillHandler` 完成审计字段填充 |
 
 拦截器链执行顺序（按添加顺序）：
@@ -290,8 +289,9 @@ SQL 指纹归一化规则：
 ydsz:
   jdbc:
     enabled: true
-    mapper-scan-packages: com.njydsz.**.mapper
 ```
+
+> **Mapper 扫描**：请在主应用类上添加 `@MapperScan("com.njydsz.xxx.infra.mapper")` 注解指定模块的 Mapper 扫描包。
 
 ### 3. DO 继承 MpBaseEntity
 
@@ -313,7 +313,6 @@ public class User extends MpBaseEntity<Long> {
 | 配置 | 默认值 | 说明 |
 |---|---|---|
 | `ydsz.jdbc.enabled` | true | 是否启用 JDBC 模块 |
-| `ydsz.jdbc.mapper-scan-packages` | `com.njydsz.**.mapper` | Mapper 扫描包路径数组 |
 | `ydsz.jdbc.hikari.*` | - | HikariCP 连接池配置（优先于 spring.datasource.hikari.*） |
 | `ydsz.jdbc.tenant-isolation.enabled` | true | 租户隔离开关 |
 | `ydsz.jdbc.tenant-isolation.mode` | SINGLE | 租户隔离模式（SINGLE/MULTI/ISOLATE_DB） |

@@ -6,6 +6,7 @@ import java.util.Collection;
 import jakarta.validation.constraints.Min;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.validation.annotation.Validated;
 
 import com.njydsz.common.redis.enums.FailOpenPolicy;
@@ -192,6 +193,17 @@ public class RedisProperties {
      * 租户隔离配置
      */
     private Tenant tenant = new Tenant();
+
+    /**
+     * Key 过期事件监听配置
+     */
+    private KeyExpiration keyExpiration = new KeyExpiration();
+
+    /**
+     * 客户端配置（连接池、SSL、读策略等）
+     */
+    @NestedConfigurationProperty
+    private Client client = new Client();
 
     /**
      * Lettuce 客户端配置类
@@ -382,6 +394,20 @@ public class RedisProperties {
         /**
          * 是否启用租户级 Redis Key 隔离
          * <p>启用后，所有 Redis key 会自动添加 {tenantId}: 前缀，实现租户间数据隔离
+         * <p>默认：false（不启用）
+         */
+        private boolean enabled = false;
+    }
+
+    /**
+     * Key 过期事件监听配置类
+     */
+    @Data
+    public static class KeyExpiration {
+
+        /**
+         * 是否启用 Key 过期事件监听
+         * <p>需要 Redis 服务端配置 notify-keyspace-events Ex
          * <p>默认：false（不启用）
          */
         private boolean enabled = false;

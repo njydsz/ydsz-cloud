@@ -91,12 +91,6 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-json</artifactId>
         </dependency>
-        <!-- Redisson 分布式锁（可选，提供降级策略）-->
-        <dependency>
-            <groupId>org.redisson</groupId>
-            <artifactId>redisson-spring-boot-starter</artifactId>
-            <optional>true</optional>
-        </dependency>
         <!--
             web（optional）
             RepeatSubmitTokenController 提供 REST 端点，编译期需要 spring-web 的 @RestController/@RequestMapping。

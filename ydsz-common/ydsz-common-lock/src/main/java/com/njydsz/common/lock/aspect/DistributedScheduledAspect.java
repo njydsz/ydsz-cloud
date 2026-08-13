@@ -71,7 +71,7 @@ public class DistributedScheduledAspect {
     public DistributedScheduledAspect(LockStrategy lockStrategy) {
         if (lockStrategy == null) {
             this.distributedLocker = null;
-            log.info("[DistributedScheduled] LockStrategy 不可用，定时任务将以单节点模式运行（不加锁）");
+            log.info("[ydsz-lock] [scheduled] LockStrategy 不可用，定时任务将以单节点模式运行（不加锁）");
         } else {
             this.distributedLocker = lockStrategy.getLock(LockType.REENTRANT);
         }
@@ -101,7 +101,7 @@ public class DistributedScheduledAspect {
 
         String lockValue = distributedLocker.tryLock(fullLockKey, leaseTime, timeUnit);
         if (lockValue == null) {
-            log.debug("[DistributedScheduled] 未获取锁，跳过本次执行: key={}", fullLockKey);
+            log.debug("[ydsz-lock] [scheduled] 未获取锁，跳过本次执行: key={}", fullLockKey);
             return null;
         }
 
@@ -111,7 +111,7 @@ public class DistributedScheduledAspect {
             try {
                 distributedLocker.unlock(fullLockKey, lockValue);
             } catch (Exception e) {
-                log.debug("[DistributedScheduled] 解锁异常（可能已超时自动释放）: key={} err={}",
+                log.debug("[ydsz-lock] [scheduled] 解锁异常（可能已超时自动释放）: key={} err={}",
                         fullLockKey, e.getMessage());
             }
         }
@@ -146,7 +146,7 @@ public class DistributedScheduledAspect {
             String evaluated = expression.getValue(context, String.class);
             return evaluated != null ? evaluated : lockKey;
         } catch (Exception e) {
-            log.warn("[DistributedScheduled] SpEL 解析失败，使用原始 key expr={} cause={}",
+            log.warn("[ydsz-lock] [scheduled] SpEL 解析失败，使用原始 key expr={} cause={}",
                     lockKey, e.getMessage());
             return lockKey;
         }

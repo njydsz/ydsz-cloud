@@ -93,4 +93,40 @@ public interface ExceptionCode extends ResultCode {
         }
         return ExceptionCategory.BUSINESS;
     }
+
+    // ======================== 可恢复性语义（驱动客户端重试策略） ========================
+
+    /**
+     * 标记该异常是否可恢复（客户端是否应重试）。
+     *
+     * <p>可恢复异常通常包括：
+     * <ul>
+     *   <li>限流（RATE_LIMIT / 429）— 客户端等待后重试</li>
+     *   <li>乐观锁冲突（OPTIMISTIC_LOCK_CONFLICT / 409）— 刷新数据后重试</li>
+     *   <li>服务暂时不可用（SERVICE_UNAVAILABLE / 503）— 稍后重试</li>
+     *   <li>熔断（CIRCUIT_BREAKER_OPEN / 503）— 稍后重试</li>
+     *   <li>资源耗尽（RESOURCE_EXHAUSTED / 429）— 降低频率后重试</li>
+     * </ul>
+     *
+     * <p>不可恢复异常：参数错误（400）、未认证（401）、无权限（403）、资源不存在（404）等。
+     *
+     * <p>全局异常处理器据此自动添加 {@code Retry-After} 响应头，引导客户端合理重试。
+     *
+     * @return true 表示客户端可以重试
+     */
+    default boolean retryable() {
+        return false;
+    }
+
+    /**
+     * 客户端重试前应等待的秒数。
+     *
+     * <p>仅当 {@link #retryable()} 返回 true 时有意义。
+     * 默认返回 0（由客户端自行决定重试间隔，如指数退避）。
+     *
+     * @return 建议的等待秒数
+     */
+    default int retryAfterSeconds() {
+        return 0;
+    }
 }

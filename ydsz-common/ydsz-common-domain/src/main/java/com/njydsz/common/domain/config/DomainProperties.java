@@ -14,7 +14,6 @@ import lombok.Data;
  * ydsz:
  *   domain:
  *     page:
- *       max-search-key-length: 200              # 搜索关键字最长长度（1~500，默认 200）
  *       cursor-warning-threshold: 10000         # 触发游标警告的 offset 阈值（默认 10000）
  *       cursor-reject-threshold: 50000          # 强制拒绝的 offset 阈值（默认 50000）
  * }</pre>
@@ -43,11 +42,6 @@ public class DomainProperties {
      */
     @Data
     public static class Page {
-        /**
-         * 搜索关键字最长长度（1~500，默认 200）
-         */
-        private int maxSearchKeyLength = 200;
-
         /**
          * 触发游标警告的 offset 阈值（默认 10000）
          *

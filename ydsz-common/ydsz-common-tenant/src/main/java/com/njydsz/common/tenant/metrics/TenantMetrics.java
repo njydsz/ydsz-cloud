@@ -36,6 +36,8 @@ public class TenantMetrics {
     private final AtomicLong contextSkipCount = new AtomicLong(0);
     private final AtomicLong superAdminCount = new AtomicLong(0);
     private final AtomicLong datasourceSwitchCount = new AtomicLong(0);
+    private final AtomicLong sqlCacheHitCount = new AtomicLong(0);
+    private final AtomicLong sqlCacheMissCount = new AtomicLong(0);
 
     public TenantMetrics(MeterRegistry meterRegistry) {
         this.meterRegistry = meterRegistry;
@@ -96,6 +98,22 @@ public class TenantMetrics {
     public void recordDatasourceSwitch() {
         datasourceSwitchCount.incrementAndGet();
         incrementCounter("datasource.switch.total");
+    }
+
+    /**
+     * 记录 SQL 缓存命中。
+     */
+    public void recordSqlCacheHit() {
+        sqlCacheHitCount.incrementAndGet();
+        incrementCounter("sql.cache.total", "result", "hit");
+    }
+
+    /**
+     * 记录 SQL 缓存未命中（实际解析）。
+     */
+    public void recordSqlCacheMiss() {
+        sqlCacheMissCount.incrementAndGet();
+        incrementCounter("sql.cache.total", "result", "miss");
     }
 
     /**
@@ -181,5 +199,23 @@ public class TenantMetrics {
      */
     public long getActiveContexts() {
         return activeContexts.get();
+    }
+
+    /**
+     * 获取 SQL 缓存命中次数。
+     *
+     * @return 缓存命中次数
+     */
+    public long getSqlCacheHitCount() {
+        return sqlCacheHitCount.get();
+    }
+
+    /**
+     * 获取 SQL 缓存未命中的次数。
+     *
+     * @return 缓存未命中次数
+     */
+    public long getSqlCacheMissCount() {
+        return sqlCacheMissCount.get();
     }
 }

@@ -30,6 +30,7 @@ import com.njydsz.common.redis.serializer.YdszJsonRedisSerializer;
 import com.njydsz.common.redis.service.RedisBloomFilter;
 import com.njydsz.common.redis.service.RedisCacheGuard;
 import com.njydsz.common.redis.service.RedisDelayedQueue;
+import com.njydsz.common.redis.service.RedisKeyExpirationDispatcher;
 import com.njydsz.common.redis.service.RedisRateLimiter;
 import com.njydsz.common.redis.service.RedisService;
 import com.njydsz.common.redis.service.RedisSnowflakeIdGenerator;
@@ -508,6 +509,29 @@ public class RedisConfiguration {
     public RedisSnowflakeIdGenerator redisSnowflakeIdGenerator(RedisTemplate<String, Object> redisTemplate,
                                                                   RedisProperties redisProperties) {
         return new RedisSnowflakeIdGenerator(redisTemplate, redisProperties);
+    }
+
+    /**
+     * 注册 Key 过期事件监听调度器
+     *
+     * <p>扫描所有 Spring Bean 中标注了 {@code @RedisKeyExpireListener} 的方法，
+     * 自动订阅 Redis Keyspace Notification 的过期事件，匹配 keyPattern 后回调。
+     *
+     * <p>需要通过 {@code ydsz.redis.key-expiration.enabled=true} 启用，
+     * 且 Redis 服务端需配置 {@code notify-keyspace-events Ex}。
+     *
+     * @param listenerContainer 消息监听容器
+     * @param redisProperties   Redis 配置
+     * @return 过期事件调度器
+     */
+    @Bean
+    @ConditionalOnMissingBean(RedisKeyExpirationDispatcher.class)
+    @ConditionalOnBean({RedisTemplate.class, RedisMessageListenerContainer.class})
+    @ConditionalOnProperty(prefix = "ydsz.redis.key-expiration", name = "enabled", havingValue = "true")
+    public RedisKeyExpirationDispatcher redisKeyExpirationDispatcher(
+            RedisMessageListenerContainer listenerContainer,
+            RedisProperties redisProperties) {
+        return new RedisKeyExpirationDispatcher(listenerContainer, redisProperties);
     }
 
     /**

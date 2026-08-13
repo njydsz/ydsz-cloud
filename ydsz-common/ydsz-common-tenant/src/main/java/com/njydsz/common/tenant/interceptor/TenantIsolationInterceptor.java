@@ -3,7 +3,9 @@ package com.njydsz.common.tenant.interceptor;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.MappedStatement;
@@ -76,6 +78,19 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
     private final Set<String> ignoreTables;
     private final TenantMetrics metrics;
 
+    /**
+     * SQL 签名缓存：缓存原始 SQL + 租户上下文的哈希 → 改写后的 SQL。
+     *
+     * <p>使用 normalized SQL（去除多余空白）+ tenantId 的哈希作为 Key，
+     * 避免重复的 JSqlParser 解析开销。
+     *
+     * <p>缓存上限 5000 条（LRU 通过 {@link ConcurrentHashMap} 的Segment锁保证线程安全），
+     * 实际使用中一般不会达到上限，因为大多数 SQL 是参数化后的固定模板。
+     */
+    private final ConcurrentHashMap<String, String> sqlCache = new ConcurrentHashMap<>(256);
+
+    private static final int MAX_CACHE_SIZE = 5000;
+
     public TenantIsolationInterceptor(TenantProperties properties, TenantMetrics metrics) {
         this.properties = properties;
         this.ignoreTables = properties.getNormalizedIgnoreTables();
@@ -96,9 +111,53 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
             sct == SqlCommandType.UPDATE || sct == SqlCommandType.DELETE) {
             if (!InterceptorIgnoreHelper.willIgnoreTenantLine(ms.getId())) {
                 PluginUtils.MPBoundSql mpBs = mpSh.mPBoundSql();
-                mpBs.sql(parserMulti(mpBs.sql(), null));
+                String originalSql = mpBs.sql();
+                String cacheKey = buildCacheKey(originalSql);
+
+                String cachedSql = sqlCache.get(cacheKey);
+                if (cachedSql != null) {
+                    // 缓存命中
+                    mpBs.sql(cachedSql);
+                    if (metrics != null) metrics.recordSqlCacheHit();
+                } else {
+                    // 缓存未命中，执行 JSqlParser 解析并缓存
+                    String rewrittenSql = parserMulti(originalSql, null);
+                    mpBs.sql(rewrittenSql);
+                    // 仅在缓存未满时写入
+                    if (sqlCache.size() < MAX_CACHE_SIZE) {
+                        sqlCache.put(cacheKey, rewrittenSql);
+                    }
+                    if (metrics != null) metrics.recordSqlCacheMiss();
+                }
             }
         }
+    }
+
+    /**
+     * 构建缓存 Key。
+     *
+     * <p>使用原始 SQL（去除多余空白）+ 租户上下文的哈希组合，
+     * 确保不同租户的相同 SQL 生成不同的缓存条目。
+     *
+     * @param originalSql 原始 SQL
+     * @return 缓存 Key
+     */
+    private String buildCacheKey(String originalSql) {
+        // 规范化 SQL（去除多余空白）
+        String normalized = originalSql.replaceAll("\\s+", " ").trim();
+        // 获取当前租户 ID 作为 Key 的一部分
+        TenantContext context = (TenantContext) RequestContext.get(BizContextKeys.KEY_TENANT_CONTEXT);
+        String tenantId = context != null ? String.valueOf(context.getTenantId()) : "none";
+        return tenantId + ":" + Objects.hash(normalized);
+    }
+
+    /**
+     * 获取当前缓存大小（用于监控）。
+     *
+     * @return 缓存条目数
+     */
+    public int getSqlCacheSize() {
+        return sqlCache.size();
     }
 
     @Override

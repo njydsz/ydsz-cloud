@@ -115,7 +115,7 @@ public class IdempotentAspect {
 
         // 方法级 @IdempotentExempt 检查：直接放行
         if (method.isAnnotationPresent(IdempotentExempt.class)) {
-            log.debug("[IdempotentAspect] 方法标注 @IdempotentExempt，跳过幂等检查 method={}", method.getName());
+            log.debug("[ydsz-lock] [idempotent] 方法标注 @IdempotentExempt，跳过幂等检查 method={}", method.getName());
             return joinPoint.proceed();
         }
 
@@ -138,18 +138,18 @@ public class IdempotentAspect {
         try {
             Object result = joinPoint.proceed();
             // 正常返回：保留幂等锁至 TTL 自然过期，防止重复提交
-            log.debug("[IdempotentAspect] 方法正常完成，保留幂等锁至 TTL 过期 key={}", redisKey);
+            log.debug("[ydsz-lock] [idempotent] 方法正常完成，保留幂等锁至 TTL 过期 key={}", redisKey);
             return result;
         } catch (BusinessException bizEx) {
             // 业务异常：自动释放幂等锁，允许客户端修正后重试（项目硬约束 P2-9）
             idempotentStrategy.release(redisKey, token);
             recordRelease(System.currentTimeMillis() - heldStart, "idempotent");
-            log.debug("[IdempotentAspect] 业务异常释放幂等锁 key={} cause={}", redisKey, bizEx.getMessage());
+            log.debug("[ydsz-lock] [idempotent] 业务异常释放幂等锁 key={} cause={}", redisKey, bizEx.getMessage());
             throw bizEx;
         } catch (Throwable ex) {
             // 非 BusinessException（如 SysException / RuntimeException / Error）：保留幂等锁
             // 防止下游异常时客户端重试风暴击穿系统
-            log.warn("[IdempotentAspect] 非 BusinessException 抛出，保留幂等锁 key={} cause={}",
+            log.warn("[ydsz-lock] [idempotent] 非 BusinessException 抛出，保留幂等锁 key={} cause={}",
                     redisKey, ex.getClass().getSimpleName());
             throw ex;
         }
@@ -228,7 +228,7 @@ public class IdempotentAspect {
             String evaluated = expression.getValue(context, String.class);
             return evaluated != null ? evaluated : generateAutoKey(method, args);
         } catch (Exception e) {
-            log.warn("[IdempotentAspect] SpEL 解析失败，降级为自动 key expr={} cause={}",
+            log.warn("[ydsz-lock] [idempotent] SpEL 解析失败，降级为自动 key expr={} cause={}",
                     keyExpression, e.getMessage());
             return generateAutoKey(method, args);
         }
@@ -317,7 +317,7 @@ public class IdempotentAspect {
      * @param redisKey   Redis key
      */
     private void recordIdempotentHit(Idempotent idempotent, String redisKey) {
-        log.info("[IdempotentAspect] 幂等命中拒绝 key={} ttl={}s", redisKey, idempotent.ttlSeconds());
+        log.info("[ydsz-lock] [idempotent] 幂等命中拒绝 key={} ttl={}s", redisKey, idempotent.ttlSeconds());
         if (lockMetrics != null) {
             lockMetrics.recordIdempotentHit();
         }

@@ -8,7 +8,6 @@ import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,8 +38,8 @@ import com.njydsz.common.thread.metrics.MeteredRejectedHandler;
 import com.njydsz.common.thread.metrics.ThreadPoolMetrics;
 import com.njydsz.common.thread.metrics.VirtualThreadMetrics;
 
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.binder.MeterBinder;
+import org.springframework.beans.factory.SmartInitializingSingleton;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * 统一线程池自动配置。
@@ -81,14 +80,23 @@ import io.micrometer.core.instrument.binder.MeterBinder;
 @AutoConfiguration
 @EnableConfigurationProperties(ThreadPoolProperties.class)
 @ConditionalOnProperty(prefix = "ydsz.thread", name = "enabled", matchIfMissing = true)
-public class ThreadPoolAutoConfiguration {
+public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
 
     private static final Logger log = LoggerFactory.getLogger(ThreadPoolAutoConfiguration.class);
 
-    private final org.springframework.context.ApplicationContext applicationContext;
+    /**
+     * 延迟注入 ApplicationContext，支持 {@code ApplicationContextRunner} 测试场景。
+     * <p>使用字段注入而非构造器注入，避免测试时缺少默认构造器的问题。
+     */
+    @Autowired
+    private org.springframework.context.ApplicationContext applicationContext;
 
-    public ThreadPoolAutoConfiguration(org.springframework.context.ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
+    @Override
+    public void afterSingletonsInstantiated() {
+        if (applicationContext != null) {
+            log.info("[ydsz-thread] 自动配置完成，已管理平台线程池: {}",
+                    applicationContext.getBeansOfType(ThreadPoolTaskExecutor.class).keySet());
+        }
     }
 
     /**
@@ -101,26 +109,10 @@ public class ThreadPoolAutoConfiguration {
      * @since 1.2.1
      */
     public Map<String, ThreadPoolTaskExecutor> getExecutors() {
-        return applicationContext == null
-                ? java.util.Collections.emptyMap()
-                : applicationContext.getBeansOfType(ThreadPoolTaskExecutor.class);
-    }
-
-    /**
-     * 注册线程池 Bean 定义注册器。
-     *
-     * <p>v1.2.0 引入：使用 {@link BeanDefinitionRegistryPostProcessor} 在容器刷新阶段
-     * 动态注册 BeanDefinition。v1.3.0 扩展：同时注册 {@link ThreadPoolMetrics} /
-     * {@link VirtualThreadMetrics} Bean。
-     *
-     * @param properties 线程池配置
-     * @return Bean 定义注册器
-     */
-    @Bean
-    @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-    @ConditionalOnMissingBean(name = "threadPoolRegistrar")
-    public ThreadPoolRegistrar threadPoolRegistrar(ThreadPoolProperties properties) {
-        return new ThreadPoolRegistrar(properties);
+        if (applicationContext == null) {
+            return java.util.Collections.emptyMap();
+        }
+        return applicationContext.getBeansOfType(ThreadPoolTaskExecutor.class);
     }
 
     /**
@@ -130,6 +122,8 @@ public class ThreadPoolAutoConfiguration {
      * <p>通过 BeanPostProcessor 而非构造器注入避免循环依赖：
      * ThreadPoolTaskExecutor → 拒绝策略 → MeteredRejectedHandler → ThreadPoolMetrics → ThreadPoolTaskExecutor。
      *
+     * <p>v1.3.0 重构：{@link ThreadPoolRegistrar} 已提取为独立组件类。
+     *
      * @return 装配后处理器
      * @since 1.3.0
      */
@@ -138,111 +132,6 @@ public class ThreadPoolAutoConfiguration {
     @ConditionalOnMissingBean(name = "threadPoolMetricsPostProcessor")
     public BeanPostProcessor threadPoolMetricsPostProcessor() {
         return new ThreadPoolMetricsPostProcessor();
-    }
-
-    /**
-     * 线程池 Bean 定义注册器。
-     *
-     * <p>实现 {@link BeanDefinitionRegistryPostProcessor}，在所有常规 BeanDefinition 加载完成后、
-     * Bean 实例化之前，动态注册线程池 + 指标 BeanDefinition。
-     */
-    public static class ThreadPoolRegistrar implements BeanDefinitionRegistryPostProcessor, Ordered {
-
-        private final ThreadPoolProperties properties;
-
-        public ThreadPoolRegistrar(ThreadPoolProperties properties) {
-            this.properties = properties;
-        }
-
-        @Override
-        public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
-            if (properties.getPools() == null || properties.getPools().isEmpty()) {
-                log.info("ydsz-thread: 未配置线程池，跳过动态注册");
-                return;
-            }
-
-            // 先注册工厂 Bean
-            if (!registry.containsBeanDefinition("threadPoolExecutorFactory")) {
-                registry.registerBeanDefinition("threadPoolExecutorFactory",
-                        BeanDefinitionBuilder.rootBeanDefinition(ThreadPoolExecutorFactory.class)
-                                .setRole(BeanDefinition.ROLE_INFRASTRUCTURE)
-                                .getBeanDefinition());
-            }
-
-            // 注册线程池 + 指标 Bean
-            properties.getPools().forEach((name, config) -> {
-                String beanName = name + "Executor";
-                if (registry.containsBeanDefinition(beanName)) {
-                    log.warn("ydsz-thread: Bean [{}] 已存在，跳过注册（可能与业务 Bean 命名冲突）", beanName);
-                    return;
-                }
-
-                if (config.getType() == PoolType.VIRTUAL) {
-                    BeanDefinition bd = BeanDefinitionBuilder
-                            .rootBeanDefinition(ExecutorService.class)
-                            .setFactoryMethodOnBean("createVirtualExecutor", "threadPoolExecutorFactory")
-                            .addConstructorArgValue(name)
-                            .addConstructorArgValue(config)
-                            .setRole(BeanDefinition.ROLE_INFRASTRUCTURE)
-                            .getBeanDefinition();
-                    registry.registerBeanDefinition(beanName, bd);
-
-                    // 注册虚拟线程池指标 Bean
-                    String metricsBeanName = beanName + "Metrics";
-                    if (!registry.containsBeanDefinition(metricsBeanName)) {
-                        BeanDefinition metricsBd = BeanDefinitionBuilder
-                                .rootBeanDefinition(VirtualThreadMetrics.class)
-                                .addConstructorArgReference(beanName)
-                                .addConstructorArgValue(name)
-                                .addConstructorArgValue(config.getMetricPrefix())
-                                .setRole(BeanDefinition.ROLE_INFRASTRUCTURE)
-                                .getBeanDefinition();
-                        registry.registerBeanDefinition(metricsBeanName, metricsBd);
-                    }
-
-                    log.info("ydsz-thread: 注册虚拟线程池 [{}] (prefix={})", beanName, config.getThreadNamePrefix());
-                } else {
-                    BeanDefinition bd = BeanDefinitionBuilder
-                            .rootBeanDefinition(ThreadPoolTaskExecutor.class)
-                            .setFactoryMethodOnBean("createTaskExecutor", "threadPoolExecutorFactory")
-                            .addConstructorArgValue(name)
-                            .addConstructorArgValue(config)
-                            .setRole(BeanDefinition.ROLE_INFRASTRUCTURE)
-                            .getBeanDefinition();
-                    registry.registerBeanDefinition(beanName, bd);
-
-                    // 注册平台线程池指标 Bean
-                    String metricsBeanName = beanName + "Metrics";
-                    if (!registry.containsBeanDefinition(metricsBeanName)) {
-                        BeanDefinition metricsBd = BeanDefinitionBuilder
-                                .rootBeanDefinition(ThreadPoolMetrics.class)
-                                .addConstructorArgReference(beanName)
-                                .addConstructorArgValue(name)
-                                .addConstructorArgValue(config.getMetricPrefix())
-                                .setRole(BeanDefinition.ROLE_INFRASTRUCTURE)
-                                .getBeanDefinition();
-                        registry.registerBeanDefinition(metricsBeanName, metricsBd);
-                    }
-
-                    log.info("ydsz-thread: 注册线程池 [{}] (core={}, max={}, queue={}, prefix={}, reject={}, taskDecorators={})",
-                            beanName, config.getCoreSize(), config.getMaxSize(), config.getQueueCapacity(),
-                            config.getThreadNamePrefix(), config.getRejectPolicy(),
-                            config.getTaskDecoratorBeanNames() == null ? 0 : config.getTaskDecoratorBeanNames().size());
-                }
-
-                log.info("ydsz-thread: 注册指标绑定器 [{}Metrics]", beanName);
-            });
-        }
-
-        @Override
-        public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-            // 无需额外处理
-        }
-
-        @Override
-        public int getOrder() {
-            return Ordered.LOWEST_PRECEDENCE;
-        }
     }
 
     /**
@@ -364,6 +253,9 @@ public class ThreadPoolAutoConfiguration {
      *
      * <p>虚拟线程池无法使用原生拒绝策略（虚拟线程池从不拒绝），因此无需包装。
      *
+     * <p>冲突防护：仅处理名称以 "Executor" 结尾、存在配套 Metrics Bean 的平台线程池，
+     * 避免误处理业务自定义的 ThreadPoolTaskExecutor Bean。
+     *
      * @since 1.3.0
      */
     public static class ThreadPoolMetricsPostProcessor implements BeanPostProcessor, BeanFactoryAware {
@@ -384,18 +276,21 @@ public class ThreadPoolAutoConfiguration {
                 return bean;
             }
 
-            // 仅处理 ydsz-common-thread 管理的 Bean
+            // 仅处理 ydsz-common-thread 管理的 Bean：
+            //   1. 名称以 "Executor" 结尾
+            //   2. 存在配套的 "<beanName>Metrics" Bean
             if (!beanName.endsWith("Executor") || beanFactory == null) {
                 return bean;
             }
 
-            // 排除指标/工厂本身
-            if (beanName.endsWith("Metrics") || beanName.endsWith("Factory")) {
+            // 排除工厂本身
+            if ("threadPoolExecutorFactory".equals(beanName)) {
                 return bean;
             }
 
             String metricsBeanName = beanName + "Metrics";
             if (!beanFactory.containsBean(metricsBeanName)) {
+                // 不存在配套 Metrics Bean，说明不是 ydzz-common-thread 管理的线程池
                 return bean;
             }
 
@@ -408,8 +303,11 @@ public class ThreadPoolAutoConfiguration {
                 ThreadPoolTaskExecutor executor = (ThreadPoolTaskExecutor) bean;
                 ThreadPoolMetrics metrics = (ThreadPoolMetrics) metricsBean;
 
-                RejectedExecutionHandler currentHandler = executor.getRejectedExecutionHandler();
+                // 通过底层 ThreadPoolExecutor 获取拒绝策略（ThreadPoolTaskExecutor 本身不提供 getter）
+                ThreadPoolExecutor threadPoolExecutor = executor.getThreadPoolExecutor();
+                RejectedExecutionHandler currentHandler = threadPoolExecutor.getRejectedExecutionHandler();
                 if (currentHandler == null) {
+                    log.warn("ydsz-thread: 线程池 [{}] 拒绝策略为 null，跳过指标包装", beanName);
                     return bean;
                 }
 
@@ -420,8 +318,9 @@ public class ThreadPoolAutoConfiguration {
 
                 MeteredRejectedHandler meteredHandler =
                         new MeteredRejectedHandler(currentHandler, metrics);
-                executor.setRejectedExecutionHandler(meteredHandler);
-                log.info("ydsz-thread: 已为线程池 [{}] 装配指标感知拒绝策略", beanName);
+                threadPoolExecutor.setRejectedExecutionHandler(meteredHandler);
+                log.info("ydsz-thread: 已为线程池 [{}] 装配指标感知拒绝策略 ([{}] → MeteredRejectedHandler)",
+                        beanName, currentHandler.getClass().getSimpleName());
             } catch (Exception e) {
                 log.warn("ydsz-thread: 为线程池 [{}] 装配指标感知拒绝策略失败: {}",
                         beanName, e.getMessage());

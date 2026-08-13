@@ -11,10 +11,13 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * 状态流转工具类。
+ * 状态流转工具类（BFS 路径推导）。
  *
  * <p>提供状态机的路径推导、合法下一跳查询能力，独立于 {@link BaseStatusEnum}，
  * 按需使用，避免强制所有状态枚举实现完整状态空间。
+ *
+ * <p><b>状态：</b>通用工具，可直接使用。不强制依赖 BaseStatusEnum 接口，
+ * 任何状态枚举（实现 canTransitTo 语义）均可结合此工具使用。
  *
  * <p><b>设计参考：</b>Spring Statemachine 的 StateMachineTransitionConfigurer。
  *

@@ -1,6 +1,8 @@
 package com.njydsz.common.cache.internal.decorator;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -167,6 +169,40 @@ public class HotKeyTrackingCacheDecorator<K, V> implements Cache<K, V> {
    * 获取热 key 追踪器实例（供外部注册 Micrometer 使用）。
    */
   public HotKeyTracker<K> getTracker() {
+    return tracker;
+  }
+
+  /**
+   * 获取当前 Top-K 热点 key 快照
+   *
+   * <p>委托给底层 {@link HotKeyTracker#snapshotAndGetTopK(int)}，
+   * 返回频率最高的 K 个 key，同时清空本地计数器为下一窗口做准备。
+   *
+   * @param k 期望返回的最大条目数
+   * @return Top-K 热点列表（按频率降序排列）；无任何访问时返回空列表
+   */
+  public List<HotKeyTracker.HotKeyEntry<K>> getTopHotKeys(int k) {
+    if (tracker != null) {
+      return tracker.snapshotAndGetTopK(k);
+    }
+    return Collections.emptyList();
+  }
+
+  /**
+   * 获取默认数量（10）的 Top-K 热点 key 快照
+   *
+   * @return Top-10 热点列表
+   */
+  public List<HotKeyTracker.HotKeyEntry<K>> getTopHotKeys() {
+    return getTopHotKeys(HotKeyTracker.DEFAULT_TOP_K);
+  }
+
+  /**
+   * 获取底层 HotKeyTracker（供外部高级用法如 Micrometer 桥接使用）
+   *
+   * @return HotKeyTracker 实例
+   */
+  public HotKeyTracker<K> hotKeyTracker() {
     return tracker;
   }
 

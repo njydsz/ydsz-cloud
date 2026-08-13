@@ -149,7 +149,7 @@ public class LockTemplate {
         }
 
         if (lockValue == null) {
-            log.debug("[LockTemplate] 锁获取失败，返回默认值 key={}", lockKey);
+            log.debug("[ydsz-lock] [template] 锁获取失败，返回默认值 key={}", lockKey);
             return defaultValue;
         }
 
@@ -186,7 +186,7 @@ public class LockTemplate {
         try {
             lock.unlock(lockKey, lockValue);
         } catch (Exception e) {
-            log.warn("[LockTemplate] 释放锁异常 key={} cause={}", lockKey, e.getMessage());
+            log.warn("[ydsz-lock] [template] 释放锁异常 key={} cause={}", lockKey, e.getMessage());
         }
     }
 

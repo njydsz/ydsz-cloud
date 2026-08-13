@@ -34,7 +34,6 @@ import net.sf.jsqlparser.statement.select.Values;
 import net.sf.jsqlparser.statement.update.Update;
 import net.sf.jsqlparser.statement.update.UpdateSet;
 
-import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.ParameterMapping;
 import org.apache.ibatis.session.Configuration;
 
@@ -218,12 +217,88 @@ public class OptimisticLockInterceptor extends JsqlParserSupport implements Inne
      *   <li>将修改后的 SQL 重新设置到 BoundSql 中</li>
      * </ul>
      *
+     * <p>对于 UPDATE 操作，若追加了乐观锁 WHERE 条件（{@code AND revision = ?}），
+     * 需要在参数映射中同步追加 revision 参数映射，确保 MyBatis 占位符与参数一一对应。
+     *
      * @param sh StatementHandler 实例
      */
     private void processIntercept(StatementHandler sh) {
         PluginUtils.MPStatementHandler mpSh = PluginUtils.mpStatementHandler(sh);
         PluginUtils.MPBoundSql mpBs = mpSh.mPBoundSql();
-        mpBs.sql(parserMulti(mpBs.sql(), null));
+
+        // 解析参数映射中 revision 列的位置，用于后续获取实际参数值
+        List<ParameterMapping> mappings = mpBs.boundSql().getParameterMappings();
+        int revisionMappingIndex = findRevisionParameterMappingIndex(mappings);
+
+        // 通过 context 在 processUpdate 与 processIntercept 间传递状态
+        ParameterSwapContext ctx = new ParameterSwapContext(revisionMappingIndex);
+        String newSql = parserMulti(mpBs.sql(), ctx);
+
+        mpBs.sql(newSql);
+
+        // 如果 revision 被处理（SET 中移除、WHERE 中添加），追加参数映射
+        if (ctx.revisionProcessed && revisionMappingIndex >= 0) {
+            appendRevisionParameterMapping(mpBs, mappings, revisionMappingIndex);
+        }
+    }
+
+    /**
+     * 查找 revision 列在参数映射中的索引位置
+     */
+    private int findRevisionParameterMappingIndex(List<ParameterMapping> mappings) {
+        if (mappings == null) {
+            return -1;
+        }
+        for (int i = 0; i < mappings.size(); i++) {
+            if (mappings.get(i) != null
+                    && revisionColumn.equalsIgnoreCase(mappings.get(i).getProperty())) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * 向 BoundSql 参数映射中追加 revision 的参数映射副本，
+     * 对应 WHERE 中新添加的 {@code revision = ?} 占位符。
+     */
+    private void appendRevisionParameterMapping(PluginUtils.MPBoundSql mpBs,
+                                                List<ParameterMapping> mappings,
+                                                int revisionMappingIndex) {
+        ParameterMapping original = mappings.get(revisionMappingIndex);
+        ParameterMapping copy = new ParameterMapping.Builder(
+                original.getConfiguration(), original.getProperty(), original.getJavaType())
+                .jdbcType(original.getJdbcType())
+                .numericScale(original.getNumericScale())
+                .resultMapId(original.getResultMapId())
+                .mode(original.getMode())
+                .typeHandler(original.getTypeHandler())
+                .expression(original.getExpression())
+                .build();
+        // 使用反射追加到 parameterMappings（List 在 BoundSql 初始化后仍可修改）
+        try {
+            java.lang.reflect.Field field = mpBs.boundSql().getClass().getDeclaredField("parameterMappings");
+            field.setAccessible(true);
+            @SuppressWarnings("unchecked")
+            List<ParameterMapping> list = (List<ParameterMapping>) field.get(mpBs.boundSql());
+            list.add(copy);
+        } catch (Exception e) {
+            log.warn("无法追加 revision 参数映射，乐观锁可能不生效: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * JSqlParser 上下文：在 processUpdate 和 processIntercept 之间传递 revision 处理状态。
+     */
+    private static final class ParameterSwapContext {
+        /** revision 参数在原始映射中的索引（-1 表示未找到） */
+        final int revisionMappingIndex;
+        /** processUpdate 检测到并处理了 revision 列 */
+        boolean revisionProcessed = false;
+
+        ParameterSwapContext(int revisionMappingIndex) {
+            this.revisionMappingIndex = revisionMappingIndex;
+        }
     }
 
     /**
@@ -280,6 +355,7 @@ public class OptimisticLockInterceptor extends JsqlParserSupport implements Inne
         if (values != null) {
             ExpressionList<?> expressionList = values.getExpressions();
             if (expressionList != null) {
+                // 单行 VALUES (...) 形式
                 ExpressionList<Expression> typedList = new ExpressionList<>();
                 for (Object item : expressionList) {
                     typedList.add(Expression.class.cast(item));
@@ -325,26 +401,26 @@ public class OptimisticLockInterceptor extends JsqlParserSupport implements Inne
      */
     @Override
     protected void processUpdate(Update update, int index, String sql, Object obj) {
+        // obj 为 ParameterSwapContext，用于向 processIntercept 传递处理状态
+        ParameterSwapContext ctx = obj instanceof ParameterSwapContext ? (ParameterSwapContext) obj : null;
+
         List<Column> columns = JSqlParserHelper.getUpdateSetsColumns(update);
         List<Expression> expressions = JSqlParserHelper.getUpdateSetsExpressions(update);
 
-        // 记录 revision 在原始 SET 中的参数位置，用于后续获取实际参数值
-        int revisionParamIndex = -1;
-        int currentParamIndex = 0;
+        boolean found = false;
 
         if (CollectionUtils.isNotEmpty(columns) && CollectionUtils.isNotEmpty(expressions)) {
             for (int i = 0; i < columns.size(); i++) {
                 if (isRevisionColumn(columns.get(i))) {
-                    revisionParamIndex = currentParamIndex;
                     columns.remove(i);
                     expressions.remove(i);
+                    found = true;
                     break;
                 }
-                currentParamIndex++;
             }
         }
 
-        if (revisionParamIndex == -1) {
+        if (!found) {
             List<UpdateSet> updateSets = update.getUpdateSets();
             if (CollectionUtils.isNotEmpty(updateSets)) {
                 for (int setIndex = 0; setIndex < updateSets.size(); setIndex++) {
@@ -359,24 +435,23 @@ public class OptimisticLockInterceptor extends JsqlParserSupport implements Inne
                     }
                     for (int columnIndex = 0; columnIndex < setColumns.size(); columnIndex++) {
                         if (isRevisionColumn(setColumns.get(columnIndex))) {
-                            revisionParamIndex = currentParamIndex;
                             setColumns.remove(columnIndex);
                             expressionList.remove(columnIndex);
                             if (CollectionUtils.isEmpty(setColumns) || expressionList.isEmpty()) {
                                 updateSets.remove(setIndex);
                             }
+                            found = true;
                             break;
                         }
-                        currentParamIndex++;
                     }
-                    if (revisionParamIndex >= 0) {
+                    if (found) {
                         break;
                     }
                 }
             }
         }
 
-        if (revisionParamIndex == -1) {
+        if (!found) {
             return;
         }
 
@@ -386,8 +461,7 @@ public class OptimisticLockInterceptor extends JsqlParserSupport implements Inne
         update.addUpdateSet(new Column(revisionColumn), addition);
         log.debug("OptimisticLockInterceptor: Replaced revision with increment in UPDATE statement");
 
-        // 使用 JdbcParameter 占位符追加到 WHERE，MyBatis 会按位置绑定参数
-        // 需要在参数映射中追加 revision 值，确保占位符与参数一一对应
+        // 使用 JdbcParameter 占位符追加到 WHERE，processIntercept 会追加对应的参数映射
         Expression where = update.getWhere();
         EqualsTo equalsTo = new EqualsTo(new Column(revisionColumn), new JdbcParameter());
 
@@ -395,6 +469,11 @@ public class OptimisticLockInterceptor extends JsqlParserSupport implements Inne
             update.setWhere(equalsTo);
         } else {
             update.setWhere(new AndExpression(equalsTo, where));
+        }
+
+        // 标记 revision 已被处理，通知 processIntercept 追加参数映射
+        if (ctx != null) {
+            ctx.revisionProcessed = true;
         }
 
         log.debug("OptimisticLockInterceptor: Added revision check to UPDATE WHERE clause");

@@ -55,7 +55,7 @@ public class LockLeakDetector {
         if (watchDog == null) {
             return;
         }
-        int maxRenewTimes = watchDog.getMaxRenewCount();
+        int maxRenewTimes = watchDog.getMaxRenewTimes();
         int warningThreshold = (int) (maxRenewTimes * 0.8);
 
         Map<String, LockWatchDog.WatchTask> activeTasks = watchDog.getActiveTasksSnapshot();
@@ -71,16 +71,16 @@ public class LockLeakDetector {
             int renewCount = task.getRenewCount();
 
             if (renewCount >= maxRenewTimes) {
-                log.error("【锁泄漏检测】锁续期次数已达最大限制，可能泄漏 | lockKey={} | renewCount={}/{} | leaseTime={}ms",
+                log.error("[ydsz-lock] [leak]锁续期次数已达最大限制，可能泄漏 | lockKey={} | renewCount={}/{} | leaseTime={}ms",
                         lockKey, renewCount, maxRenewTimes, task.getLeaseTime());
             } else if (renewCount >= warningThreshold) {
-                log.warn("【锁泄漏检测】锁续期次数接近最大限制，可能泄漏 | lockKey={} | renewCount={}/{} | leaseTime={}ms",
+                log.warn("[ydsz-lock] [leak]锁续期次数接近最大限制，可能泄漏 | lockKey={} | renewCount={}/{} | leaseTime={}ms",
                         lockKey, renewCount, maxRenewTimes, task.getLeaseTime());
             }
         }
 
         if (metrics != null && !activeTasks.isEmpty()) {
-            log.debug("【锁泄漏检测】活跃续期任务数={} | maxRenewTimes={}", activeTasks.size(), maxRenewTimes);
+            log.debug("[ydsz-lock] [leak]活跃续期任务数={} | maxRenewTimes={}", activeTasks.size(), maxRenewTimes);
         }
     }
 }

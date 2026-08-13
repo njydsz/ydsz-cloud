@@ -62,7 +62,17 @@ public class ThreadPoolProperties {
     private boolean enabled = true;
 
     /**
-     * 线程池配置映射，key 为线程池名称（如 io、cpu、batch），Bean 名称为 key + "Executor"。
+     * Bean 名称前缀（默认空字符串）。
+     * <p>设置后所有线程池 Bean 名称将变为 {@code beanNamePrefix + key + "Executor"}。
+     * 建议新部署使用 {@code "ydsz-"} 前缀以避免与业务 Bean 命名冲突。
+     * <p>示例：prefix = "ydsz-", key = "io" → Bean 名称为 "ydsz-ioExecutor"。
+     *
+     * @since 1.3.0
+     */
+    private String beanNamePrefix = "";
+
+    /**
+     * 线程池配置映射，key 为线程池名称（如 io、cpu、batch），Bean 名称为 beanNamePrefix + key + "Executor"。
      */
     private Map<String, PoolConfig> pools = new LinkedHashMap<>();
 

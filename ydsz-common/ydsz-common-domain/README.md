@@ -250,8 +250,6 @@ ydsz:
     page:
       cursor-warning-threshold: 10000           # 深度分页警告阈值（0 表示关闭）
       cursor-reject-threshold: 50000            # 深度分页拒绝阈值（0 表示关闭）
-    search:
-      max-search-key-length: 200                # searchKey 最大长度（1~500，默认 200）
 ```
 
 ## 变更记录
@@ -263,6 +261,8 @@ ydsz:
   - 新增 `SliceQuery/SliceResult` 游标分页实验性 API
   - 深度分页防护链路文档化（PageQuery → SafeQueryInnerInterceptor）
   - 移除 `DomainProperties.tree.maxDepth`（已无消费方）
+  - 移除死配置 `DomainProperties.Page.maxSearchKeyLength`（0 消费方）
+  - `PageQuery.assessPaginationRisk()` 增加缓存优化，防止重复计算
 - **v1.7.0**（2026-08-06）：对标大厂规范，执行过度设计治理——
   - PageQuery 职责收缩，SQL 安全下沉至 SafeQueryInnerInterceptor
   - BaseEntity 纯领域化，移除持久化字段

@@ -58,13 +58,24 @@ public final class TenantContext {
     /** 是否跳过租户隔离（登录/注册等公开接口） */
     private final boolean skipIsolation;
 
+    /** SCHEMA 模式下的 search_path（null 表示使用默认 Schema） */
+    private final String schema;
+
+    /** 跨租户共享：当前租户可访问的源租户 ID 列表（空表示不共享） */
+    private final List<String> sharedTenantIds;
+
     private TenantContext(String tenantId, Map<String, Object> fields,
-                          boolean systemTenant, boolean superAdmin, boolean skipIsolation) {
+                          boolean systemTenant, boolean superAdmin, boolean skipIsolation,
+                          String schema, List<String> sharedTenantIds) {
         this.tenantId = tenantId;
         this.fields = fields != null ? Collections.unmodifiableMap(fields) : Collections.emptyMap();
         this.systemTenant = systemTenant;
         this.superAdmin = superAdmin;
         this.skipIsolation = skipIsolation;
+        this.schema = schema;
+        this.sharedTenantIds = sharedTenantIds != null
+                ? Collections.unmodifiableList(sharedTenantIds)
+                : Collections.emptyList();
     }
 
     /**
@@ -75,7 +86,7 @@ public final class TenantContext {
      * @return 租户上下文
      */
     public static TenantContext of(String tenantId, Map<String, Object> fields) {
-        return new TenantContext(tenantId, fields, false, false, false);
+        return new TenantContext(tenantId, fields, false, false, false, null, null);
     }
 
     /**
@@ -87,7 +98,7 @@ public final class TenantContext {
     public static TenantContext of(String tenantId) {
         Map<String, Object> fields = new HashMap<>();
         fields.put("tenantId", tenantId);
-        return new TenantContext(tenantId, fields, false, false, false);
+        return new TenantContext(tenantId, fields, false, false, false, null, null);
     }
 
     /**
@@ -99,7 +110,7 @@ public final class TenantContext {
     public static TenantContext system(String systemTenantId) {
         Map<String, Object> fields = new HashMap<>();
         fields.put("tenantId", systemTenantId);
-        return new TenantContext(systemTenantId, fields, true, false, false);
+        return new TenantContext(systemTenantId, fields, true, false, false, null, null);
     }
 
     /**
@@ -108,7 +119,7 @@ public final class TenantContext {
      * @return 跳过隔离的上下文
      */
     public static TenantContext skip() {
-        return new TenantContext(null, Collections.emptyMap(), false, false, true);
+        return new TenantContext(null, Collections.emptyMap(), false, false, true, null, null);
     }
 
     /**
@@ -117,7 +128,7 @@ public final class TenantContext {
      * @return 空上下文
      */
     public static TenantContext empty() {
-        return new TenantContext(null, Collections.emptyMap(), false, false, false);
+        return new TenantContext(null, Collections.emptyMap(), false, false, false, null, null);
     }
 
     /**
@@ -221,12 +232,48 @@ public final class TenantContext {
     }
 
     /**
+     * 获取 SCHEMA 模式下的 search_path。
+     *
+     * @return schema 名称，非 SCHEMA 模式返回 null
+     */
+    public String getSchema() {
+        return schema;
+    }
+
+    /**
+     * 是否为 SCHEMA 隔离模式。
+     *
+     * @return true=SCHEMA 模式
+     */
+    public boolean isSchemaMode() {
+        return schema != null;
+    }
+
+    /**
+     * 获取跨租户共享的源租户 ID 列表。
+     *
+     * @return 共享租户 ID 列表（不可变），无共享返回空列表
+     */
+    public List<String> getSharedTenantIds() {
+        return sharedTenantIds;
+    }
+
+    /**
+     * 是否配置了跨租户共享。
+     *
+     * @return true=有共享配置
+     */
+    public boolean hasSharing() {
+        return !sharedTenantIds.isEmpty();
+    }
+
+    /**
      * 创建快照（用于异步传播）。
      *
      * @return 新的不可变实例
      */
     public TenantContext snapshot() {
-        return new TenantContext(tenantId, new HashMap<>(fields), systemTenant, superAdmin, skipIsolation);
+        return new TenantContext(tenantId, new HashMap<>(fields), systemTenant, superAdmin, skipIsolation, schema, sharedTenantIds);
     }
 
     /**
@@ -239,6 +286,8 @@ public final class TenantContext {
         private boolean systemTenant;
         private boolean superAdmin;
         private boolean skipIsolation;
+        private String schema;
+        private List<String> sharedTenantIds;
 
         private Builder(String tenantId) {
             this.tenantId = tenantId;
@@ -297,13 +346,35 @@ public final class TenantContext {
         }
 
         /**
+         * 设置 SCHEMA 模式下的 search_path。
+         *
+         * @param schema schema 名称（如 "tenant_acme"）
+         * @return this
+         */
+        public Builder schema(String schema) {
+            this.schema = schema;
+            return this;
+        }
+
+        /**
+         * 设置跨租户共享的源租户 ID 列表。
+         *
+         * @param sharedTenantIds 可访问的源租户 ID 列表
+         * @return this
+         */
+        public Builder sharedTenantIds(List<String> sharedTenantIds) {
+            this.sharedTenantIds = sharedTenantIds != null ? new ArrayList<>(sharedTenantIds) : null;
+            return this;
+        }
+
+        /**
          * 构建不可变上下文。
          */
         public TenantContext build() {
             if (!fields.containsKey("tenantId") && tenantId != null) {
                 fields.put("tenantId", tenantId);
             }
-            return new TenantContext(tenantId, fields, systemTenant, superAdmin, skipIsolation);
+            return new TenantContext(tenantId, fields, systemTenant, superAdmin, skipIsolation, schema, sharedTenantIds);
         }
     }
 }

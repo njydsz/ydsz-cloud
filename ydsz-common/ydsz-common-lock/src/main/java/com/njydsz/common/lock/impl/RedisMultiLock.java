@@ -439,15 +439,15 @@ public class RedisMultiLock implements DistributedLocker {
 			if (lockValue == null) {
 				return false;
 			}
-			// 尝试通过 pexpire 续期
 			try {
-				long result = lock.pexpire(subLockKey, leaseTime, timeUnit);
-				if (result <= 0) {
-					return false;
-				}
-			} catch (UnsupportedOperationException e) {
-				// 不支持 pexpire 的子锁，尝试重新获取
-				if (!lock.isLocked(subLockKey)) {
+				// 支持 pexpire 的子锁直接续期
+				if (lock.supportsPexpire()) {
+					long result = lock.pexpire(subLockKey, leaseTime, timeUnit);
+					if (result <= 0) {
+						return false;
+					}
+				} else if (!lock.isLocked(subLockKey)) {
+					// 不支持 pexpire 的子锁，检查锁是否仍存在
 					return false;
 				}
 			} catch (Exception e) {

@@ -4,11 +4,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.slf4j.MDC;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -24,15 +27,15 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.exception.batch.BatchBusinessException;
 import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.config.ExceptionProperties;
 import com.njydsz.common.exception.core.ExceptionInfo;
 import com.njydsz.common.exception.custom.AbstractYdszException;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;
-import com.njydsz.common.exception.config.ExceptionProperties;
 
-import org.springframework.core.env.Environment;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -70,19 +73,22 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     /**
      * 构造 MVC 全局异常处理器
      *
-     * @param environment      Spring 环境对象
-     * @param messageSource    国际化消息源
-     * @param exceptionMetrics 异常指标统计器
-     * @param properties       异常模块配置属性（可为 null）
+     * @param environment        Spring 环境对象
+     * @param messageSource      国际化消息源
+     * @param exceptionMetrics   异常指标统计器
+     * @param properties         异常模块配置属性（可为 null）
+     * @param eventPublisher     事件发布器（可为 null）
      */
     public MvcExceptionHandler(Environment environment,
                                MessageSource messageSource,
                                ExceptionMetrics exceptionMetrics,
-                               ExceptionProperties properties) {
+                               ExceptionProperties properties,
+                               ObjectProvider<ApplicationEventPublisher> eventPublisherProvider) {
         super(environment);
         this.messageSource = messageSource;
         setExceptionMetrics(environment, exceptionMetrics);
         setExceptionProperties(environment, properties);
+        setEventPublisher(eventPublisherProvider.getIfAvailable());
     }
 
     @Override
@@ -118,6 +124,48 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     // ============================ 异常处理方法 ============================
 
     /**
+     * 处理批量操作异常（HTTP 207 Multi-Status）
+     *
+     * <p>批量操作中部分成功部分失败时，返回 207 状态码 + 成功/失败明细。
+     * 此处理器必须在 {@link #handleBusinessException} 之前声明，
+     * 因为 BatchBusinessException 继承自 BusinessException。
+     */
+    @ExceptionHandler(BatchBusinessException.class)
+    public Object handleBatchBusinessException(BatchBusinessException e, HttpServletRequest request,
+                                                HttpServletResponse response) {
+        recordMetrics(e);
+        if (e.isAllSuccess()) {
+            // 全部成功时降级为 200
+            response.setStatus(HttpStatus.OK.value());
+        } else {
+            response.setStatus(207); // HTTP Multi-Status
+        }
+
+        String traceId = extractTraceId(request);
+        String resolvedMsg = e.getMessage();
+        publishExceptionEvent(e, request.getRequestURI(), traceId, resolvedMsg);
+
+        // 构建 207 响应体
+        java.util.Map<String, Object> batchResult = new java.util.LinkedHashMap<>();
+        batchResult.put("successCount", e.getSuccessCount());
+        batchResult.put("failureCount", e.getFailureCount());
+        batchResult.put("totalCount", e.getTotalCount());
+        batchResult.put("successItems", e.getSuccessItems());
+        batchResult.put("failureItems", e.getFailureItems());
+
+        log.warn("{}批量操作部分成功 | 路径: {} | 成功: {} | 失败: {} | traceId: {}",
+                getLogPrefix(), request.getRequestURI(), e.getSuccessCount(),
+                e.getFailureCount(), traceId);
+
+        return BaseResponse.builder()
+                .code(e.getCode())
+                .msg(resolvedMsg)
+                .data(batchResult)
+                .traceId(traceId)
+                .build();
+    }
+
+    /**
      * 处理业务异常（动态 HTTP 状态码）
      */
     @ExceptionHandler(BusinessException.class)
@@ -128,25 +176,29 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
                 getLogPrefix(), request.getRequestURI(), e.getCode(), e.getMessage(), e);
 
         setResponseStatus(response, e.getHttpStatus());
+        addRetryAfterHeader(response, e);
         String traceId = extractTraceId(request);
-        if (useProblemDetail()) {
-            return buildResponseEntity(buildProblemDetail(e, request.getRequestURI(), traceId), e);
-        }
-        ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), traceId);
-        return errorResponse(e.getCode(), e.getMessage(), info);
+        String resolvedMsg = e.getMessage();
+        publishExceptionEvent(e, request.getRequestURI(), traceId, resolvedMsg);
+        return buildResponse(e, request.getRequestURI(), traceId);
     }
 
     /**
      * 处理系统异常
      */
     @ExceptionHandler(SysException.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public Object handleSysException(SysException e, HttpServletRequest request) {
+    public Object handleSysException(SysException e, HttpServletRequest request,
+                                      HttpServletResponse response) {
         recordMetrics(e);
         log.error("{}系统异常 | 路径: {} | 错误码: {} | 消息: {}",
                 getLogPrefix(), request.getRequestURI(), e.getCode(), e.getMessage(), e);
 
-        return buildResponse(e, request.getRequestURI(), extractTraceId(request));
+        setResponseStatus(response, e.getHttpStatus());
+        addRetryAfterHeader(response, e);
+        String traceId = extractTraceId(request);
+        String resolvedMsg = e.getMessage();
+        publishExceptionEvent(e, request.getRequestURI(), traceId, resolvedMsg);
+        return buildResponse(e, request.getRequestURI(), traceId);
     }
 
     /**
@@ -161,7 +213,11 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
                 e.getClass().getSimpleName(), e);
 
         setResponseStatus(response, e.getHttpStatus());
-        return buildResponse(e, request.getRequestURI(), extractTraceId(request));
+        addRetryAfterHeader(response, e);
+        String traceId = extractTraceId(request);
+        String resolvedMsg = e.getMessage();
+        publishExceptionEvent(e, request.getRequestURI(), traceId, resolvedMsg);
+        return buildResponse(e, request.getRequestURI(), traceId);
     }
 
     /**
@@ -390,10 +446,12 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
         log.error("{}系统异常 | 路径: {} | 类型: {} | 消息: {}",
                 getLogPrefix(), request.getRequestURI(), e.getClass().getName(), e.getMessage(), e);
 
+        String traceId = extractTraceId(request);
         String message = messageSource.getMessage("system.error", null,
                 "系统异常，请联系管理员", LocaleContextHolder.getLocale());
+        publishExceptionEvent(e, request.getRequestURI(), traceId, message);
 
-        ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), extractTraceId(request));
+        ExceptionInfo info = buildExceptionInfo(e, request.getRequestURI(), traceId);
 
         return errorResponse(
                 CoreExceptionCode.SYSTEM_ERROR.getCode(),

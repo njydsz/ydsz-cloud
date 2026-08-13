@@ -12,13 +12,10 @@ import com.njydsz.common.json.annotation.JsonIgnore;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 /**
@@ -91,7 +88,6 @@ public class BaseEntity<T extends Serializable> implements Serializable, EventRe
      */
     @JsonIgnore
     @EqualsAndHashCode.Exclude
-    @ToString.Exclude
     @Builder.Default
     private transient List<Object> domainEvents = new ArrayList<>();
 

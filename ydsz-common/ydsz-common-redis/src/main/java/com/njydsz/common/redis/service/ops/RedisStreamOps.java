@@ -192,6 +192,22 @@ public class RedisStreamOps {
      * @return 消息列表
      */
     public List<StreamMessage> readGroup(String streamKey, String groupName, String consumerName, int count) {
+        return readGroup(streamKey, groupName, consumerName, count, false);
+    }
+
+    /**
+     * 从消费者组读取消息（支持指定读取模式）
+     *
+     * @param streamKey    Stream 键名
+     * @param groupName    消费者组名
+     * @param consumerName 消费者名
+     * @param count        读取数量（0 表示仅读 pending 不拉新消息）
+     * @param readPending  true 表示读取 pending 列表中该消费者的未确认消息（offset=0），
+     *                     false 表示读取新消息（offset=>）
+     * @return 消息列表
+     */
+    public List<StreamMessage> readGroup(String streamKey, String groupName,
+                                         String consumerName, int count, boolean readPending) {
         if (streamKey == null || groupName == null || consumerName == null) {
             log.warn("【Redis】XREADGROUP 操作失败：参数不能为空");
             return Collections.emptyList();
@@ -199,16 +215,86 @@ public class RedisStreamOps {
         String formattedKey = formatKey(streamKey);
         try {
             Consumer consumer = Consumer.from(groupName, consumerName);
-            StreamReadOptions readOptions = StreamReadOptions.empty().count(count);
-            StreamOffset<String> offset = StreamOffset.create(formattedKey, ReadOffset.lastConsumed());
+            StreamReadOptions readOptions = StreamReadOptions.empty().count(Math.max(count, 1));
+            // readPending=true 时使用 "0" 读取已投递但未确认的消息
+            // readPending=false 时使用 ">" 读取新消息
+            ReadOffset offset = readPending ? ReadOffset.from("0") : ReadOffset.lastConsumed();
+            StreamOffset<String> streamOffset = StreamOffset.create(formattedKey, offset);
             List<MapRecord<String, Object, Object>> records =
-                    ops().read(consumer, readOptions, offset);
+                    ops().read(consumer, readOptions, streamOffset);
             return convertRecords(records, streamKey);
         } catch (Exception e) {
-            log.error("【Redis】XREADGROUP 操作失败 | streamKey={} | groupName={} | consumerName={} | error={}",
-                    streamKey, groupName, consumerName, e);
+            log.error("【Redis】XREADGROUP 操作失败 | streamKey={} | groupName={} | consumerName={} | readPending={} | error={}",
+                    streamKey, groupName, consumerName, readPending, e);
             return Collections.emptyList();
         }
+    }
+
+    /**
+     * 从消费者组读取消息（背压感知模式）
+     *
+     * <p>根据当前消费者组的 pending 消息积压量动态调整实际拉取数量：
+     * <ul>
+     *   <li>pending 超过 highWatermark → 拉取量减半（限流保护）</li>
+     *   <li>pending 低于 lowWatermark → 拉取量逐步恢复至 maxBatch</li>
+     *   <li>pending 介于两者之间 → 保持上次拉取量</li>
+     * </ul>
+     *
+     * @param streamKey    Stream 键名
+     * @param groupName    消费者组名
+     * @param consumerName 消费者名
+     * @param maxBatch     最大拉取量
+     * @param lowWatermark 低水位线（pending 低于此值时增大批次）
+     * @param highWatermark 高水位线（pending 超过此值时减大批次）
+     * @param lastBatchRef  上次的批次大小（用于渐进调整），传入 0 则使用 min(maxBatch, 10)
+     * @return 背压感知的读取结果
+     */
+    public BackpressureResult readGroupWithBackpressure(String streamKey, String groupName,
+                                                        String consumerName, int maxBatch,
+                                                        int lowWatermark, int highWatermark,
+                                                        int lastBatchRef) {
+        // 查询当前 pending 数量
+        long pendingCount = 0;
+        try {
+            PendingMessagesSummary summary = pendingInfo(streamKey, groupName);
+            if (summary != null) {
+                pendingCount = summary.getTotalPendingMessages();
+            }
+        } catch (Exception e) {
+            log.debug("【Redis】背压检测 pending 查询失败 | streamKey={} | error={}", streamKey, e.getMessage());
+        }
+
+        // 计算实际拉取量
+        int actualBatch;
+        if (lastBatchRef <= 0) {
+            lastBatchRef = Math.min(maxBatch, 10);
+        }
+
+        if (pendingCount > highWatermark) {
+            // 积压严重，缩小拉取量（至少 1）
+            actualBatch = Math.max(lastBatchRef / 2, 1);
+        } else if (pendingCount < lowWatermark) {
+            // 积压少，渐进增大（步长为 maxBatch/10，不超过 maxBatch）
+            int step = Math.max(maxBatch / 10, 1);
+            actualBatch = Math.min(lastBatchRef + step, maxBatch);
+        } else {
+            // 中等积压，保持
+            actualBatch = lastBatchRef;
+        }
+
+        // 先读 pending 未确认，再读新消息
+        List<StreamMessage> pending = readGroup(streamKey, groupName, consumerName, 0, true);
+        if (pending.size() >= actualBatch) {
+            return new BackpressureResult(pending.subList(0, actualBatch), actualBatch, pendingCount);
+        }
+
+        int remainingForNew = actualBatch - pending.size();
+        List<StreamMessage> newMessages = readGroup(streamKey, groupName, consumerName, remainingForNew, false);
+        List<StreamMessage> combined = new ArrayList<>(pending.size() + newMessages.size());
+        combined.addAll(pending);
+        combined.addAll(newMessages);
+
+        return new BackpressureResult(combined, actualBatch, pendingCount);
     }
 
     /**
@@ -543,6 +629,29 @@ public class RedisStreamOps {
         return records.stream()
                 .map(r -> new StreamMessage(r.getId().getValue(), originalStreamKey, r.getValue()))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 背压感知读取结果
+     *
+     * @param messages      本次读取到的消息列表
+     * @param actualBatch   实际使用的批次大小（已根据积压量调整）
+     * @param pendingCount  当前消费者组 pending 积压总量
+     */
+    public record BackpressureResult(List<StreamMessage> messages, int actualBatch, long pendingCount) {
+
+        /**
+         * 判断是否处于高积压状态（需要限流）
+         */
+        public boolean isBackpressured() {
+            return messages.size() < actualBatch;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("BackpressureResult{msgSize=%d, actualBatch=%d, pending=%d}",
+                    messages.size(), actualBatch, pendingCount);
+        }
     }
 
     /**

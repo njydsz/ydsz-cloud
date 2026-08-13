@@ -10,6 +10,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
@@ -52,9 +53,10 @@ public class YdszExceptionHandlerAutoConfiguration {
     public MvcExceptionHandler mvcExceptionHandler(Environment environment,
                                                     MessageSource messageSource,
                                                     ObjectProvider<ExceptionMetrics> exceptionMetrics,
-                                                    ObjectProvider<ExceptionProperties> properties) {
+                                                    ObjectProvider<ExceptionProperties> properties,
+                                                    ObjectProvider<ApplicationEventPublisher> eventPublisherProvider) {
         return new MvcExceptionHandler(environment, messageSource, exceptionMetrics.getIfAvailable(),
-                properties.getIfAvailable());
+                properties.getIfAvailable(), eventPublisherProvider);
     }
 
     /**

@@ -58,7 +58,7 @@
       "name": "ydsz.i18n.dev-cache-seconds",
       "type": "java.lang.Integer",
       "description": "开发环境缓存刷新间隔（秒），0 表示不缓存。仅在 dev/test profile 下生效。",
-      "defaultValue": 0
+      "defaultValue": 5
     },
     {
       "name": "ydsz.i18n.prod-cache-seconds",
@@ -71,12 +71,6 @@
       "type": "java.lang.Boolean",
       "description": "当请求语言不在 supportedLocales 中时，是否回退到系统默认 Locale。",
       "defaultValue": false
-    },
-    {
-      "name": "ydsz.i18n.default-message",
-      "type": "java.lang.String",
-      "description": "找不到国际化消息时的默认提示。占位符 {0} 会被替换为实际的消息键。",
-      "defaultValue": "未找到对应的提示信息: {0}"
     },
     {
       "name": "ydsz.i18n.supported-locales",
@@ -100,6 +94,21 @@
       "type": "java.lang.Boolean",
       "description": "启动时是否校验所有 ExceptionCode 的 i18n key 可解析。",
       "defaultValue": true
+    }
+  ],
+  "hints": [
+    {
+      "name": "ydsz.exception.response-format",
+      "values": [
+        {
+          "value": "base-response",
+          "description": "返回 BaseResponse 格式（兼容旧版 API 客户端，包含 code/msg/data 字段）"
+        },
+        {
+          "value": "problem-detail",
+          "description": "返回 RFC 7807/9457 ProblemDetail 格式（Spring 标准，包含 type/title/status/detail 字段）"
+        }
+      ]
     }
   ]
 }

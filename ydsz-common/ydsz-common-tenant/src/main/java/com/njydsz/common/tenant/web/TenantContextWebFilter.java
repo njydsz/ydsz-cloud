@@ -94,6 +94,18 @@ public class TenantContextWebFilter implements Filter {
                 boolean isSuperAdmin = properties.getSuperTenantId().equals(tenantId);
                 TenantContext.Builder builder = TenantContext.builder(tenantId)
                         .superAdmin(isSuperAdmin);
+
+                // SCHEMA 模式：设置 search_path
+                if (properties.getMode() == TenantProperties.TenantMode.SCHEMA && !isSuperAdmin) {
+                    builder.schema("tenant_" + tenantId);
+                }
+
+                // 跨租户共享：附加可访问的源租户 ID
+                List<String> sharedSources = properties.getTenantSharing().get(tenantId);
+                if (sharedSources != null && !sharedSources.isEmpty()) {
+                    builder.sharedTenantIds(sharedSources);
+                }
+
                 for (Map.Entry<String, Object> entry : fields.entrySet()) {
                     if (entry.getValue() instanceof String s) {
                         builder.field(entry.getKey(), s);

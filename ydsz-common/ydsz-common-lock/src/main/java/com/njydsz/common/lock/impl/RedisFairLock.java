@@ -247,14 +247,14 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
             );
             acquired = Long.valueOf(1L).equals(result);
             if (acquired) {
-                log.debug("【分布式锁】获取公平锁成功 | lockKey={} | clientId={}", lockKey, clientId);
+                log.debug("[ydsz-lock]获取公平锁成功 | lockKey={} | clientId={}", lockKey, clientId);
                 recordLeaseTime(namespacedKey, leaseTimeMs);
                 startWatchDog(namespacedKey, clientId, leaseTimeMs, LockType.FAIR);
                 return clientId;
             }
             return null;
         } catch (Exception e) {
-            log.error("【分布式锁】获取公平锁异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
+            log.error("[ydsz-lock]获取公平锁异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
             return null;
         } finally {
             if (!acquired) {
@@ -297,11 +297,11 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
             );
             boolean released = Long.valueOf(1L).equals(result);
             if (released) {
-                log.debug("【分布式锁】释放公平锁成功 | lockKey={} | clientId={}", lockKey, clientId);
+                log.debug("[ydsz-lock]释放公平锁成功 | lockKey={} | clientId={}", lockKey, clientId);
             }
             return released;
         } catch (Exception e) {
-            log.error("【分布式锁】释放公平锁异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
+            log.error("[ydsz-lock]释放公平锁异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
             return false;
         }
     }
@@ -311,7 +311,7 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
         try {
             return Boolean.TRUE.equals(stringRedisTemplate.hasKey(lockKey));
         } catch (Exception e) {
-            log.error("【分布式锁】检查锁状态异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
+            log.error("[ydsz-lock]检查锁状态异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
             return false;
         }
     }
@@ -321,7 +321,7 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
         try {
             return stringRedisTemplate.getExpire(lockKey, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
-            log.error("【分布式锁】获取剩余时间异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
+            log.error("[ydsz-lock]获取剩余时间异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
             return -2;
         }
     }
@@ -347,7 +347,7 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
             );
             return Long.valueOf(1L).equals(result);
         } catch (Exception e) {
-            log.error("【分布式锁】续期锁异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
+            log.error("[ydsz-lock]续期锁异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
             return false;
         }
     }
@@ -367,9 +367,9 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
                     clientId,
                     String.valueOf(QUEUE_EXPIRE_SECONDS)
             );
-            log.debug("【分布式锁】公平锁等待队列清理 | queueKey={} | clientId={}", queueKey, clientId);
+            log.debug("[ydsz-lock]公平锁等待队列清理 | queueKey={} | clientId={}", queueKey, clientId);
         } catch (Exception e) {
-            log.debug("【分布式锁】清理等待队列异常 | queueKey={} | error={}", queueKey, e.getMessage());
+            log.debug("[ydsz-lock]清理等待队列异常 | queueKey={} | error={}", queueKey, e.getMessage());
         }
     }
 
@@ -380,7 +380,7 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
             Long index = stringRedisTemplate.opsForList().indexOf(queueKey, lockValue);
             return index != null ? index.intValue() : -1;
         } catch (Exception e) {
-            log.error("【分布式锁】获取排队位置异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
+            log.error("[ydsz-lock]获取排队位置异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
             return -1;
         }
     }
@@ -392,7 +392,7 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
             Long size = stringRedisTemplate.opsForList().size(queueKey);
             return size != null ? size.intValue() : -1;
         } catch (Exception e) {
-            log.error("【分布式锁】获取排队大小异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
+            log.error("[ydsz-lock]获取排队大小异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
             return -1;
         }
     }
@@ -411,8 +411,18 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
             Boolean result = stringRedisTemplate.expire(key, Duration.ofMillis(unit.toMillis(time)));
             return Boolean.TRUE.equals(result) ? unit.toMillis(time) : 0;
         } catch (Exception e) {
-            log.error("【分布式锁】PEXPIRE 续期异常 | lockKey={} | error={}", key, e.getMessage(), e);
+            log.error("[ydsz-lock]PEXPIRE 续期异常 | lockKey={} | error={}", key, e.getMessage(), e);
             return 0;
         }
+    }
+
+    @Override
+    public boolean supportsPexpire() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsQueueInfo() {
+        return true;
     }
 }

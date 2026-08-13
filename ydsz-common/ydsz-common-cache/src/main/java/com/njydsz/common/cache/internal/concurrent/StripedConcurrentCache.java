@@ -5,6 +5,8 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -14,6 +16,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.njydsz.common.cache.api.CachePolicy;
 import com.njydsz.common.cache.internal.AbstractCache;
 import com.njydsz.common.cache.listener.RemovalCause;
 import com.njydsz.common.cache.stats.CacheStats;
@@ -49,7 +52,9 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
 
   private final List<Segment<K, V>> segments;
   private final int mask;
-  private final int maxSize;
+
+  /** 最大容量（volatile，支持运行时动态调整） */
+  private volatile int maxSize;
 
   private final AtomicLong totalSize = new AtomicLong(0);
 
@@ -222,6 +227,72 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
   @Override
   public CacheStats getStats() {
     return new CacheStats(hitCount.sum(), missCount.sum());
+  }
+
+  /**
+   * 获取缓存策略查询接口 — 支持运行时调整最大容量。
+   *
+   * <p>使用示例：
+   *
+   * <pre>{@code
+   * cache.policy().eviction().ifPresent(eviction -> {
+   *     eviction.setMaximum(2000); // 动态扩容
+   * });
+   * }</pre>
+   *
+   * @return 缓存策略
+   */
+  @Override
+  public CachePolicy policy() {
+    return new CachePolicy() {
+      @Override
+      public Optional<EvictionPolicy> eviction() {
+        return Optional.of(new EvictionPolicy() {
+          @Override
+          public OptionalLong getMaximum() {
+            return OptionalLong.of(maxSize);
+          }
+
+          @Override
+          public void setMaximum(long maximumSize) {
+            if (maximumSize < 1) {
+              throw new IllegalArgumentException("maximumSize must be >= 1");
+            }
+            int oldMaxSize = maxSize;
+            maxSize = (int) maximumSize;
+            log.info("StripedConcurrentCache 最大容量调整: {} -> {}", oldMaxSize, maximumSize);
+            // 如果新容量小于当前总大小，触发异步淘汰
+            if (maximumSize < totalSize.get()) {
+              triggerAsyncEviction();
+            }
+          }
+
+          @Override
+          public OptionalLong weightedSize() {
+            return OptionalLong.empty();
+          }
+
+          @Override
+          public boolean isWeighted() {
+            return false;
+          }
+        });
+      }
+
+      @Override
+      public Optional<ExpirationPolicy> expiration() {
+        return Optional.empty();
+      }
+    };
+  }
+
+  /**
+   * 触发异步淘汰（当容量被缩小时）
+   */
+  private void triggerAsyncEviction() {
+    // 简单实现：在每个分段的下次写入时自然触发淘汰
+    // 更积极的方案：立即扫描并淘汰多余条目
+    log.info("StripedConcurrentCache 容量缩小，将在后续写入时自动淘汰多余条目");
   }
 
   private int getSegmentIndex(K key) {

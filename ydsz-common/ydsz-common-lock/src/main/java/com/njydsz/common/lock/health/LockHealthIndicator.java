@@ -109,7 +109,7 @@ public class LockHealthIndicator implements HealthIndicator {
             builder.withDetail("watchDog", "not configured");
             return;
         }
-        int maxRenewTimes = watchDog.getMaxRenewCount();
+        int maxRenewTimes = watchDog.getMaxRenewTimes();
         builder.withDetail("watchDogMaxRenewTimes", maxRenewTimes);
     }
 

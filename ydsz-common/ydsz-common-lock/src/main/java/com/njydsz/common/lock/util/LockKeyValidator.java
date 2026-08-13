@@ -31,17 +31,17 @@ public final class LockKeyValidator {
      */
     public static void validate(String lockKey) {
         if (lockKey == null || lockKey.isEmpty()) {
-            throw new IllegalArgumentException("【分布式锁】锁键不能为空");
+            throw new IllegalArgumentException("[ydsz-lock]锁键不能为空");
         }
         if (lockKey.length() > MAX_KEY_LENGTH) {
             throw new IllegalArgumentException(
-                    "【分布式锁】锁键长度超过最大限制 " + MAX_KEY_LENGTH + " | actualLength=" + lockKey.length());
+                    "[ydsz-lock]锁键长度超过最大限制 " + MAX_KEY_LENGTH + " | actualLength=" + lockKey.length());
         }
         for (int i = 0; i < lockKey.length(); i++) {
             char c = lockKey.charAt(i);
             if (c == '\n' || c == '\r' || c == '\t' || c == '\0') {
                 throw new IllegalArgumentException(
-                        "【分布式锁】锁键包含非法控制字符 | charCode=" + (int) c + " | index=" + i);
+                        "[ydsz-lock]锁键包含非法控制字符 | charCode=" + (int) c + " | index=" + i);
             }
         }
     }

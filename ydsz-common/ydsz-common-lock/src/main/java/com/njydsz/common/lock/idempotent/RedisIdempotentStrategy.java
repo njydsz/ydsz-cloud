@@ -52,7 +52,7 @@ public class RedisIdempotentStrategy implements IdempotentStrategy {
     @Override
     public String acquire(String key, long expireMillis) {
         if (expireMillis <= 0) {
-            log.warn("[RedisIdempotentStrategy] expireMillis={} 非法，降级放行 key={}", expireMillis, key);
+            log.warn("[ydsz-lock] [idempotent] [redis] expireMillis={} 非法，降级放行 key={}", expireMillis, key);
             return IdGenerator.nextIdStr();
         }
         long expireSeconds = Math.max(1, expireMillis / 1000);
@@ -69,7 +69,7 @@ public class RedisIdempotentStrategy implements IdempotentStrategy {
             }
             return null;
         } catch (Exception e) {
-            log.warn("[RedisIdempotentStrategy] Redis 不可用，降级放行 key={} cause={}", key, e.getMessage());
+            log.warn("[ydsz-lock] [idempotent] [redis] Redis 不可用，降级放行 key={} cause={}", key, e.getMessage());
             return token;
         }
     }
@@ -87,7 +87,7 @@ public class RedisIdempotentStrategy implements IdempotentStrategy {
             );
             return Long.valueOf(1L).equals(result);
         } catch (Exception e) {
-            log.warn("[RedisIdempotentStrategy] 释放幂等锁失败 key={} cause={}", key, e.getMessage());
+            log.warn("[ydsz-lock] [idempotent] [redis] 释放幂等锁失败 key={} cause={}", key, e.getMessage());
             return false;
         }
     }
@@ -97,7 +97,7 @@ public class RedisIdempotentStrategy implements IdempotentStrategy {
         try {
             return Boolean.TRUE.equals(redisTemplate.hasKey(key));
         } catch (Exception e) {
-            log.warn("[RedisIdempotentStrategy] 检查幂等键失败 key={} cause={}", key, e.getMessage());
+            log.warn("[ydsz-lock] [idempotent] [redis] 检查幂等键失败 key={} cause={}", key, e.getMessage());
             return false;
         }
     }

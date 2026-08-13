@@ -5,44 +5,29 @@ import java.util.concurrent.atomic.LongAdder;
 /**
  * 高性能无锁统计计数器 - 使用缓存行填充减少伪共享
  *
+ * <p><b>状态：实验性（Experimental）</b>
+ *
+ * <p>当前模块内未直接使用本类，实际统计逻辑依赖 JDK {@link LongAdder} 内置的分段优化。
+ * 本类保留作为性能调优参考实现。
+ *
+ * <p><b>替代方案（推荐）：</b>
+ *
+ * <ul>
+ *   <li>JDK 17+：使用 {@code @jdk.internal.vm.annotation.Contended} 注解替代手动填充</li>
+ *   <li>通用场景：直接使用 {@link LongAdder}，其内部已通过 cells 分段避免伪共享</li>
+ * </ul>
+ *
  * <p>核心优化（参考 Caffeine 和 Disruptor）：
  *
  * <ul>
  *   <li>缓存行填充：每个计数器独占 64 字节缓存行，避免伪共享
  *   <li>LongAdder 无锁设计：高并发下性能比 AtomicLong 提升 3-5 倍
- *   <li>分支预测优化：使用 final 字段，JIT 自动消除无用分支
- *   <li>内存屏障优化：使用 volatile 保证可见性，减少锁竞争
  * </ul>
- *
- * <p>伪共享问题：
- *
- * <ul>
- *   <li>当多个线程修改同一缓存行内的不同变量时，会导致缓存行失效
- *   <li>CPU 缓存行通常为 64 字节，包含 8 个 long 变量
- *   <li>通过填充字节，确保高频访问的变量独占缓存行
- * </ul>
- *
- * <p>预期提升：
- *
- * <ul>
- *   <li>高并发场景（100+ 线程）：统计性能提升 50-80%
- *   <li>中等并发场景（10-50 线程）：统计性能提升 20-40%
- *   <li>低并发场景（<10 线程）：统计性能提升 5-15%
- * </ul>
- *
- * <p>使用示例：
- *
- * <pre>{@code
- * PaddedStatsCounter stats = new PaddedStatsCounter();
- * stats.recordHit();
- * stats.recordMiss();
- * System.out.println("Hit rate: " + stats.getHitRate());
- * }</pre>
  *
  * @author ydsz-team
  * @since 1.0.0
- *
  */
+@Deprecated
 public final class PaddedStatsCounter {
 
   /** CPU 缓存行大小（字节） Intel/AMD 通常是 64 字节 */

@@ -165,14 +165,14 @@ public class RedisReentrantLock extends AbstractRedisDistributedLock {
             );
             boolean acquired = Long.valueOf(1L).equals(result);
             if (acquired) {
-                log.debug("【分布式锁】获取可重入锁成功 | lockKey={} | clientId={}", lockKey, clientId);
+                log.debug("[ydsz-lock]获取可重入锁成功 | lockKey={} | clientId={}", lockKey, clientId);
                 recordLeaseTime(lockKey, leaseTimeMs);
                 startWatchDog(lockKey, clientId, leaseTimeMs);
                 return clientId;
             }
             return null;
         } catch (Exception e) {
-            log.error("【分布式锁】获取可重入锁异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
+            log.error("[ydsz-lock]获取可重入锁异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
             return null;
         }
     }
@@ -187,11 +187,11 @@ public class RedisReentrantLock extends AbstractRedisDistributedLock {
             );
             boolean released = Long.valueOf(1L).equals(result);
             if (released) {
-                log.debug("【分布式锁】释放可重入锁成功 | lockKey={} | clientId={}", lockKey, clientId);
+                log.debug("[ydsz-lock]释放可重入锁成功 | lockKey={} | clientId={}", lockKey, clientId);
             }
             return released;
         } catch (Exception e) {
-            log.error("【分布式锁】释放可重入锁异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
+            log.error("[ydsz-lock]释放可重入锁异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
             return false;
         }
     }
@@ -202,7 +202,7 @@ public class RedisReentrantLock extends AbstractRedisDistributedLock {
             Long size = stringRedisTemplate.opsForHash().size(lockKey);
             return size != null && size > 0;
         } catch (Exception e) {
-            log.error("【分布式锁】检查锁状态异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
+            log.error("[ydsz-lock]检查锁状态异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
             return false;
         }
     }
@@ -212,7 +212,7 @@ public class RedisReentrantLock extends AbstractRedisDistributedLock {
         try {
             return stringRedisTemplate.getExpire(lockKey, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
-            log.error("【分布式锁】获取剩余时间异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
+            log.error("[ydsz-lock]获取剩余时间异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
             return -2;
         }
     }
@@ -234,7 +234,7 @@ public class RedisReentrantLock extends AbstractRedisDistributedLock {
             );
             return result != null ? result.intValue() : 0;
         } catch (Exception e) {
-            log.error("【分布式锁】获取重入计数异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
+            log.error("[ydsz-lock]获取重入计数异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
             return 0;
         }
     }
@@ -272,7 +272,7 @@ public class RedisReentrantLock extends AbstractRedisDistributedLock {
             );
             return Long.valueOf(1L).equals(result);
         } catch (Exception e) {
-            log.error("【分布式锁】续期锁异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
+            log.error("[ydsz-lock]续期锁异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
             return false;
         }
     }
@@ -328,8 +328,18 @@ public class RedisReentrantLock extends AbstractRedisDistributedLock {
             Boolean result = stringRedisTemplate.expire(key, Duration.ofMillis(unit.toMillis(time)));
             return Boolean.TRUE.equals(result) ? unit.toMillis(time) : 0;
         } catch (Exception e) {
-            log.error("【分布式锁】PEXPIRE 续期异常 | lockKey={} | error={}", key, e.getMessage(), e);
+            log.error("[ydsz-lock]PEXPIRE 续期异常 | lockKey={} | error={}", key, e.getMessage(), e);
             return 0;
         }
+    }
+
+    @Override
+    public boolean supportsPexpire() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsReentrantInfo() {
+        return true;
     }
 }

@@ -5,7 +5,7 @@ import java.util.Arrays;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -54,14 +54,17 @@ public class DsAnnotationInterceptor implements MethodInterceptor {
     }
 
     /**
-     * 解析 @DS 注解（方法级优先）
+     * 解析 @DS 注解（方法级优先，支持接口方法上的注解）
+     *
+     * <p>使用 {@link AnnotatedElementUtils#findMergedAnnotation} 替代 {@link java.lang.reflect.Method#getAnnotation}，
+     * 自动搜索接口方法和父类上的注解，确保接口方法上标注的 @DS 也能被正确识别。
      */
     private DS resolveDsAnnotation(Method method) {
-        DS ds = AnnotationUtils.findAnnotation(method, DS.class);
+        DS ds = AnnotatedElementUtils.findMergedAnnotation(method, DS.class);
         if (ds != null) {
             return ds;
         }
-        return AnnotationUtils.findAnnotation(method.getDeclaringClass(), DS.class);
+        return AnnotatedElementUtils.findMergedAnnotation(method.getDeclaringClass(), DS.class);
     }
 
     /**

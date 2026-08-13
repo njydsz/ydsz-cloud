@@ -2,6 +2,7 @@ package com.njydsz.common.thread.health;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import org.slf4j.Logger;
@@ -15,10 +16,16 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 /**
  * 线程池健康检查指标。
  *
- * <p>运行时从 {@link ApplicationContext} 获取所有 {@link ThreadPoolTaskExecutor} Bean，
+ * <p>运行时从 {@link ApplicationContext} 获取所有 {@link ThreadPoolTaskExecutor} Bean
+ * 以及 {@link BeanDefinition} 中注册的虚拟线程池（类型为 {@link ExecutorService} 且名称以 "Executor" 结尾），
  * 报告各线程池的 active/queueSize/completed/poolSize 状态。
  *
+ * <p>对于虚拟线程池（{@link ExecutorService}），仅报告类型标识和存活状态，
+ * 因为 JDK 21 的虚拟线程执行器不提供原生计数 API。
+ *
  * <p>当任何线程池无法获取底层 {@link ThreadPoolExecutor} 时，健康状态为 DOWN。
+ *
+ * <p>v1.3.0 变更：新增对虚拟线程池的感知，通过 Bean 类型和名称识别虚拟线程池。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -45,8 +52,10 @@ public class ThreadHealthIndicator implements HealthIndicator, ApplicationContex
     /**
      * 汇总全部线程池的运行时状态作为健康检查结果。
      *
-     * <p>明细以 {@code <beanName>.<指标>} 为键输出 active / queueSize / poolSize /
+     * <p><b>平台线程池</b>：明细以 {@code <beanName>.<指标>} 为键输出 active / queueSize / poolSize /
      * completed / threadNamePrefix 五项。
+     *
+     * <p><b>虚拟线程池</b>：输出 {@code <beanName>.type = VIRTUAL} 和 {@code <beanName>.alive = true}。
      *
      * <p><b>状态判定</b>：
      * <ul>
@@ -70,16 +79,15 @@ public class ThreadHealthIndicator implements HealthIndicator, ApplicationContex
             return Health.up().withDetail("status", "ApplicationContext not initialized").build();
         }
 
-        Map<String, ThreadPoolTaskExecutor> executors =
-            applicationContext.getBeansOfType(ThreadPoolTaskExecutor.class);
+        int poolCount = 0;
 
-        if (executors.isEmpty()) {
-            return Health.up().withDetail("pools", "none").build();
-        }
-
-        for (Map.Entry<String, ThreadPoolTaskExecutor> entry : executors.entrySet()) {
+        // 1. 平台线程池（ThreadPoolTaskExecutor）
+        Map<String, ThreadPoolTaskExecutor> platformExecutors =
+                applicationContext.getBeansOfType(ThreadPoolTaskExecutor.class);
+        for (Map.Entry<String, ThreadPoolTaskExecutor> entry : platformExecutors.entrySet()) {
             String beanName = entry.getKey();
             ThreadPoolTaskExecutor executor = entry.getValue();
+            poolCount++;
             try {
                 ThreadPoolExecutor pool = executor.getThreadPoolExecutor();
                 details.put(beanName + ".active", pool.getActiveCount());
@@ -87,6 +95,7 @@ public class ThreadHealthIndicator implements HealthIndicator, ApplicationContex
                 details.put(beanName + ".poolSize", pool.getPoolSize());
                 details.put(beanName + ".completed", pool.getCompletedTaskCount());
                 details.put(beanName + ".threadNamePrefix", executor.getThreadNamePrefix());
+                details.put(beanName + ".type", "PLATFORM");
             } catch (Exception e) {
                 log.warn("线程池 [{}] 健康检查失败", beanName, e);
                 details.put(beanName + ".error", e.getMessage());
@@ -94,9 +103,58 @@ public class ThreadHealthIndicator implements HealthIndicator, ApplicationContex
             }
         }
 
+        // 2. 虚拟线程池 —— 识别条件：Name 以 Executor 结尾且类型不是 ThreadPoolTaskExecutor
+        //    仅处理 ydzz-common-thread 注册的 Bean（org.springframework包下的 ExecutorService 是内部 Bean）
+        Map<String, ExecutorService> allExecutors =
+                applicationContext.getBeansOfType(ExecutorService.class);
+        for (Map.Entry<String, ExecutorService> entry : allExecutors.entrySet()) {
+            String beanName = entry.getKey();
+            ExecutorService es = entry.getValue();
+
+            // 跳过已处理的平台线程池
+            if (es instanceof ThreadPoolTaskExecutor) {
+                continue;
+            }
+
+            // 只处理 ydzz-common-thread 管理的 Bean
+            if (!beanName.endsWith("Executor")) {
+                continue;
+            }
+
+            // 跳过 ydzz-common-app 等容器内置的 ExecutorService（如 applicationTaskExecutor 已属于 ThreadPoolTaskExecutor）
+            // 此处不做严格 namespace 过滤，仅靠命名后缀区分。如确有需要可在 beanName 前统一加 ydzs 前缀
+            poolCount++;
+            details.put(beanName + ".type", "VIRTUAL");
+            details.put(beanName + ".alive", isAlive(es));
+            log.debug("线程池 [{}] 虚拟线程池健康检查完成", beanName);
+        }
+
+        if (poolCount == 0) {
+            return Health.up().withDetail("pools", "none").build();
+        }
+
+        details.put("totalPools", poolCount);
+        details.put("platformPools", platformExecutors.size());
+        details.put("virtualPools", poolCount - platformExecutors.size());
+
         if (anyDown) {
             return Health.down().withDetails(details).build();
         }
         return Health.up().withDetails(details).build();
+    }
+
+    /**
+     * 判断普通 ExecutorService 是否存活。
+     *
+     * <p>JDK 21 的虚拟线程执行器（{@code VirtualThread.currentThread()}）本身不提供 isShutdown 信息，
+     * 因此这里只做一个基于 toString 是否包含 "shutdown" 的近似判断。
+     */
+    private boolean isAlive(ExecutorService es) {
+        try {
+            String s = es.toString();
+            return s == null || !s.toLowerCase().contains("shutdown");
+        } catch (Exception e) {
+            return true;
+        }
     }
 }

@@ -82,10 +82,10 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
   private final Cache<K, V> delegate;
 
   /** 写入后过期时间（纳秒），0 表示不使用 */
-  private final long expireAfterWriteNanos;
+  private volatile long expireAfterWriteNanos;
 
   /** 访问后过期时间（纳秒），0 表示不使用 */
-  private final long expireAfterAccessNanos;
+  private volatile long expireAfterAccessNanos;
 
   /** 自定义过期策略（可选） */
   private final Expiry<? super K, ? super V> expiry;
@@ -657,15 +657,21 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
               }
 
               /**
-               * 修改写后过期时间（空操作）。
+               * 修改写后过期时间。
                *
-               * <p>过期时间在构造时固定，运行时不支持动态调整。
+               * <p>动态调整立即生效：新写入条目使用新 TTL，
+               * 已写入条目以其写入时计算的过期时间为准（不会追溯）。
                *
-               * @param expireAfterWriteNanos 期望的写后过期纳秒数，被忽略
+               * <p>设置为 0 表示禁用写后过期。
+               *
+               * @param expireAfterWriteNanos 期望的写后过期纳秒数
                */
               @Override
               public void setExpiresAfterWriteNanos(long expireAfterWriteNanos) {
-                // 过期时间在构造时固定，运行时不支持修改
+                if (expireAfterWriteNanos < 0) {
+                  throw new IllegalArgumentException("expireAfterWriteNanos must be >= 0");
+                }
+                ExpirableCache.this.expireAfterWriteNanos = expireAfterWriteNanos;
               }
 
               /**
@@ -679,15 +685,21 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
               }
 
               /**
-               * 修改访问后过期时间（空操作）。
+               * 修改访问后过期时间。
                *
-               * <p>过期时间在构造时固定，运行时不支持动态调整。
+               * <p>动态调整立即生效：新访问条目使用新 TTL，
+               * 已写入条目以其原有过期时间为准（不会追溯）。
                *
-               * @param expireAfterAccessNanos 期望的访问后过期纳秒数，被忽略
+               * <p>设置为 0 表示禁用访问后过期。
+               *
+               * @param expireAfterAccessNanos 期望的访问后过期纳秒数
                */
               @Override
               public void setExpiresAfterAccessNanos(long expireAfterAccessNanos) {
-                // 过期时间在构造时固定，运行时不支持修改
+                if (expireAfterAccessNanos < 0) {
+                  throw new IllegalArgumentException("expireAfterAccessNanos must be >= 0");
+                }
+                ExpirableCache.this.expireAfterAccessNanos = expireAfterAccessNanos;
               }
 
               /**

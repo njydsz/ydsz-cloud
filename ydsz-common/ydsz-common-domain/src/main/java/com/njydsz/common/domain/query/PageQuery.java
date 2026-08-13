@@ -272,16 +272,41 @@ public class PageQuery extends BaseQuery {
     // ======================== 深度分页风险评估 ========================
 
     /**
+     * 缓存的深度分页风险评估结果（transient，不参与序列化）。
+     *
+     * <p>使用 {@link #assessPaginationRisk()} 首次评估后缓存结果，
+     * 避免重复调用 {@link PageConstants#calcOffset} 和 {@link DeepPaginationRisk#assess}。
+     * 同一 PageQuery 对象的 offset 在生命周期内不变，缓存安全。
+     */
+    @JsonIgnore
+    private transient DeepPaginationRisk cachedRiskAssessment;
+
+    /** 缓存评估使用的阈值（default = 0 表示使用默认值） */
+    @JsonIgnore
+    private transient long cachedWarnThreshold = 0;
+
+    @JsonIgnore
+    private transient long cachedRejectThreshold = 0;
+
+    /**
      * 评估当前分页查询的深度分页风险（使用默认阈值 10000 / 50000）。
      *
      * <p>基于 {@link #getOffsetLong()} 计算 offset，再委托 {@link DeepPaginationRisk#assess(long)} 判定。
      * 业务层 / 拦截层可据此发出告警或拒绝执行，防止慢查询拖垮数据库。
      *
+     * <p><b>缓存优化：</b>同一对象的 offset 不变，首次评估后结果被缓存。
+     * 多次调用不会重复执行 {@link PageConstants#calcOffset}。
+     *
      * @return 风险等级（SAFE / WARN / REJECT）
      * @since 1.8.0
      */
     public DeepPaginationRisk assessPaginationRisk() {
-        return DeepPaginationRisk.assess(getOffsetLong());
+        if (cachedRiskAssessment == null || cachedWarnThreshold != 0 || cachedRejectThreshold != 0) {
+            cachedRiskAssessment = DeepPaginationRisk.assess(getOffsetLong());
+            cachedWarnThreshold = 0;
+            cachedRejectThreshold = 0;
+        }
+        return cachedRiskAssessment;
     }
 
     /**
@@ -294,13 +319,22 @@ public class PageQuery extends BaseQuery {
      *         page.getCursorWarningThreshold(), page.getCursorRejectThreshold());
      * }</pre>
      *
+     * <p><b>缓存优化：</b>阈值相同时复用上次结果；阈值变化时重新计算。
+     *
      * @param warnThreshold   警告阈值
      * @param rejectThreshold 拒绝阈值
      * @return 风险等级（SAFE / WARN / REJECT）
      * @since 1.8.0
      */
     public DeepPaginationRisk assessPaginationRisk(long warnThreshold, long rejectThreshold) {
-        return DeepPaginationRisk.assess(getOffsetLong(), warnThreshold, rejectThreshold);
+        if (cachedRiskAssessment == null
+                || cachedWarnThreshold != warnThreshold
+                || cachedRejectThreshold != rejectThreshold) {
+            cachedRiskAssessment = DeepPaginationRisk.assess(getOffsetLong(), warnThreshold, rejectThreshold);
+            cachedWarnThreshold = warnThreshold;
+            cachedRejectThreshold = rejectThreshold;
+        }
+        return cachedRiskAssessment;
     }
 
     /**

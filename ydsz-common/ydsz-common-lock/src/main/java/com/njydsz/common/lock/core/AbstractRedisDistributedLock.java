@@ -216,7 +216,7 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
 
             return resolvedId;
         } catch (Exception e) {
-            log.warn("【分布式锁】Redis 注册表获取 clientId 失败，使用本地生成 | lockKey={} | error={}", lockKey, e.getMessage());
+            log.warn("[ydsz-lock]Redis 注册表获取 clientId 失败，使用本地生成 | lockKey={} | error={}", lockKey, e.getMessage());
             clientIdCache.put(cacheKey, newClientId);
             return newClientId;
         }
@@ -239,7 +239,7 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
                     fieldKey
             );
         } catch (Exception e) {
-            log.warn("【分布式锁】清理 Redis 注册表 clientId 失败 | lockKey={} | error={}", lockKey, e.getMessage());
+            log.warn("[ydsz-lock]清理 Redis 注册表 clientId 失败 | lockKey={} | error={}", lockKey, e.getMessage());
         }
     }
 
@@ -347,7 +347,7 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
     @Override
     public boolean unlock(String lockKey, String lockValue) {
         if (lockKey == null || lockKey.isEmpty()) {
-            log.warn("【分布式锁】解锁失败 | 锁键为空");
+            log.warn("[ydsz-lock]解锁失败 | 锁键为空");
             return false;
         }
         try {
@@ -363,7 +363,7 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
             }
             return released;
         } catch (Exception e) {
-            log.error("【分布式锁】解锁异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
+            log.error("[ydsz-lock]解锁异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
             return false;
         } finally {
             // 无论解锁是否成功，始终清理 ThreadLocal，防止线程池复用场景下的泄漏
@@ -386,7 +386,7 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
         try {
             return doIsLocked(lockKey);
         } catch (Exception e) {
-            log.error("【分布式锁】检查锁状态异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
+            log.error("[ydsz-lock]检查锁状态异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
             return false;
         }
     }
@@ -405,7 +405,7 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
         try {
             return doGetRemainTime(lockKey);
         } catch (Exception e) {
-            log.error("【分布式锁】获取剩余时间异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
+            log.error("[ydsz-lock]获取剩余时间异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
             return -2;
         }
     }
@@ -426,7 +426,7 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
             );
             return Long.valueOf(1L).equals(result);
         } catch (Exception e) {
-            log.error("【分布式锁】执行释放锁脚本异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
+            log.error("[ydsz-lock]执行释放锁脚本异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
             return false;
         }
     }

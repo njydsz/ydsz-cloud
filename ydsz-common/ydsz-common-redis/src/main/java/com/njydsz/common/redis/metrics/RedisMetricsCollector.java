@@ -1,5 +1,4 @@
 package com.njydsz.common.redis.metrics;
-
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
@@ -12,6 +11,11 @@ import io.micrometer.core.instrument.Timer;
  *
  * <p>为 Redis 操作提供可选的 Micrometer 指标采集，仅当 Micrometer 在 classpath 中时启用。
  * 使用 {@link Timer.Sample} 模式进行低开销测量。
+ *
+ * <p><b>Meter 缓存优化：</b>
+ * 原实现每次调用 recordOperation 都执行 {@code Timer.builder().register()}，
+ * 导致重复注册 Meter 和 ConcurrentHashMap 竞争。现改为缓存已注册的 Meter，
+ * 运行时仅调用 {@code sample.stop(cachedTimer)}，符合 Micrometer 最佳实践。
  *
  * <p>注册的指标：
  * <ul>
@@ -56,6 +60,9 @@ public class RedisMetricsCollector {
     /** 慢操作阈值（毫秒），0 表示禁用 */
     private final long slowOperationThresholdMillis;
 
+    /** Timer 缓存：避免每次调用都重新注册 Meter */
+    private final ConcurrentHashMap<String, Timer> timerCache = new ConcurrentHashMap<>();
+
     /** 单例缓存：每个 MeterRegistry 对应一个 RedisMetricsCollector 实例 */
     private static final ConcurrentHashMap<MeterRegistry, RedisMetricsCollector> INSTANCES =
             new ConcurrentHashMap<>();
@@ -98,10 +105,28 @@ public class RedisMetricsCollector {
     }
 
     /**
+     * 获取或创建缓存的 Timer（避免重复注册）
+     *
+     * @param operationType 操作类型
+     * @return 缓存的 Timer 实例
+     */
+    private Timer getOrCreateTimer(String operationType) {
+        return timerCache.computeIfAbsent(operationType, op ->
+                Timer.builder(METRIC_OPERATION_LATENCY)
+                        .tag(TAG_OPERATION_TYPE, op)
+                        .description("Redis operation latency")
+                        .register(registry)
+        );
+    }
+
+
+    /**
      * 记录 Redis 操作的延迟
      *
      * <p>使用 Timer.Sample 模式，开销极低。
      * 当配置了慢操作阈值时，超阈值的操作会递增 {@code redis.operation.slow} Counter。
+     *
+     * <p><b>性能优化：</b>使用缓存的 Timer 实例，避免每次调用都执行 {@code register()}。
      *
      * @param operationType 操作类型（如 get, set, del）
      * @param supplier      要执行的操作
@@ -115,10 +140,8 @@ public class RedisMetricsCollector {
             return supplier.get();
         } finally {
             long elapsed = System.currentTimeMillis() - startTime;
-            sample.stop(Timer.builder(METRIC_OPERATION_LATENCY)
-                    .tag(TAG_OPERATION_TYPE, operationType)
-                    .description("Redis operation latency")
-                    .register(registry));
+            // 使用缓存的 Timer，避免重复注册
+            sample.stop(getOrCreateTimer(operationType));
             // P2: 慢操作检测
             if (slowOperationThresholdMillis > 0 && elapsed >= slowOperationThresholdMillis) {
                 recordSlowOperation(operationType, elapsed);
@@ -131,6 +154,8 @@ public class RedisMetricsCollector {
      *
      * <p>当配置了慢操作阈值时，超阈值的操作会递增 {@code redis.operation.slow} Counter。
      *
+     * <p><b>性能优化：</b>使用缓存的 Timer 实例，避免每次调用都执行 {@code register()}。
+     *
      * @param operationType 操作类型
      * @param runnable      要执行的操作
      */
@@ -141,10 +166,8 @@ public class RedisMetricsCollector {
             runnable.run();
         } finally {
             long elapsed = System.currentTimeMillis() - startTime;
-            sample.stop(Timer.builder(METRIC_OPERATION_LATENCY)
-                    .tag(TAG_OPERATION_TYPE, operationType)
-                    .description("Redis operation latency")
-                    .register(registry));
+            // 使用缓存的 Timer，避免重复注册
+            sample.stop(getOrCreateTimer(operationType));
             // P2: 慢操作检测
             if (slowOperationThresholdMillis > 0 && elapsed >= slowOperationThresholdMillis) {
                 recordSlowOperation(operationType, elapsed);

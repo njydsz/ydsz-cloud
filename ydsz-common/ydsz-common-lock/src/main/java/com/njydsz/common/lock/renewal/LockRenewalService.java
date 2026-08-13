@@ -176,14 +176,14 @@ public class LockRenewalService {
             );
             boolean success = Long.valueOf(1L).equals(result);
             if (!success) {
-                log.warn("【锁续期】续期失败，锁可能已释放 | lockKey={} | lockType={}", lockKey, lockType);
+                log.warn("[ydsz-lock] [renewal]续期失败，锁可能已释放 | lockKey={} | lockType={}", lockKey, lockType);
             }
             if (strategy != null) {
                 strategy.afterRenew(lockKey, lockType, success);
             }
             return success;
         } catch (Exception e) {
-            log.error("【锁续期】续期异常 | lockKey={} | lockType={} | error={}", lockKey, lockType, e.getMessage());
+            log.error("[ydsz-lock] [renewal]续期异常 | lockKey={} | lockType={} | error={}", lockKey, lockType, e.getMessage());
             if (strategy != null) {
                 strategy.afterRenew(lockKey, lockType, false);
             }
@@ -220,10 +220,10 @@ public class LockRenewalService {
                     args.toArray()
             );
             int successCount = result != null ? result.intValue() : 0;
-            log.debug("【锁续期】批量续期完成 | 总数={} | 成功={}", entries.size(), successCount);
+            log.debug("[ydsz-lock] [renewal]批量续期完成 | 总数={} | 成功={}", entries.size(), successCount);
             return successCount;
         } catch (Exception e) {
-            log.error("【锁续期】批量续期异常 | count={} | error={}", entries.size(), e.getMessage());
+            log.error("[ydsz-lock] [renewal]批量续期异常 | count={} | error={}", entries.size(), e.getMessage());
             return 0;
         }
     }

@@ -473,7 +473,7 @@ public class LogicalDeleteInterceptor extends JsqlParserSupport implements Inner
             return;
         }
 
-        // 仅处理 INSERT ... VALUES 单行形式；INSERT ... SELECT 由 processSelect 走 SELECT 链路
+        // 仅处理 INSERT ... VALUES 形式；INSERT ... SELECT 由 processSelect 走 SELECT 链路
         Values values = insert.getValues();
         if (values == null) {
             return;
@@ -487,12 +487,40 @@ public class LogicalDeleteInterceptor extends JsqlParserSupport implements Inner
         columns.add(new Column(deletedColumn));
 
         // 重建 VALUES 列表，追加 normalValue 字面量
-        ExpressionList<Expression> typedList = new ExpressionList<>();
-        for (Object item : expressionList) {
-            typedList.add(Expression.class.cast(item));
+        // 注意：JSqlParser 将 VALUES (...),(...) 的多行插入解析为单个 ExpressionList，
+        // 其中每个元素是 ExpressionList（子列表形式），而非平铺的表达式。
+        // 这里仅处理所有元素均为 JdbcParameter/字面量的简单单行场景；
+        // 对于批量 INSERT（多条 VALUES 行），需要为每行追加一个 normalValue。
+        if (expressionList.size() == 1 && expressionList.get(0) instanceof ExpressionList) {
+            // VALUES (...) 单行形式（JSqlParser 将整个 VALUES 后的括号视为一个 ExpressionList）
+            ExpressionList<Expression> typedList = new ExpressionList<>();
+            for (Object item : expressionList) {
+                typedList.add(Expression.class.cast(item));
+            }
+            typedList.add(new LongValue(normalValue));
+            values.setExpressions(typedList);
+        } else {
+            // VALUES (...), (...), ... 多行批量插入：每个表达式是一行的值列表
+            // 将每个元素包装为新的 ExpressionList 并追加 normalValue
+            ExpressionList<Expression> newExpressionList = new ExpressionList<>();
+            for (Object rowObj : expressionList) {
+                if (rowObj instanceof ExpressionList<?> rowList) {
+                    ExpressionList<Expression> typedRow = new ExpressionList<>();
+                    for (Object item : rowList) {
+                        typedRow.add(Expression.class.cast(item));
+                    }
+                    typedRow.add(new LongValue(normalValue));
+                    newExpressionList.add(typedRow);
+                } else {
+                    // 单行形式的兜底（所有表达式在同一层级）
+                    ExpressionList<Expression> typedRow = new ExpressionList<>();
+                    typedRow.add(Expression.class.cast(rowObj));
+                    typedRow.add(new LongValue(normalValue));
+                    newExpressionList.add(typedRow);
+                }
+            }
+            values.setExpressions(newExpressionList);
         }
-        typedList.add(new LongValue(normalValue));
-        values.setExpressions(typedList);
 
         log.debug("LogicalDeleteInterceptor: Added {}={} to INSERT VALUES for table {}",
                 deletedColumn, normalValue, table.getName());

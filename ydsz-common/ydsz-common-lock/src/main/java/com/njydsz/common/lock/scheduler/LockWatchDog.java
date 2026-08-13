@@ -84,7 +84,7 @@ public class LockWatchDog {
     /**
      * 最大续期次数限制
      *
-     * <p>使用 volatile 保证可见性：该字段可能由主线程通过 {@link #setMaxRenewCount} 修改，
+     * <p>使用 volatile 保证可见性：该字段可能由主线程通过 {@link #setMaxRenewTimes} 修改，
      * 而续期任务在调度线程中读取。缺少 volatile 可能导致调度线程读到陈旧值。
      */
     private volatile int maxRenewTimes;
@@ -219,7 +219,7 @@ public class LockWatchDog {
         startWatchLock.lock();
         try {
             if (activeTasks.containsKey(lockKey)) {
-                log.debug("【看门狗】续期任务已存在 | lockKey={}", lockKey);
+                log.debug("[ydsz-lock] [watchdog]续期任务已存在 | lockKey={}", lockKey);
                 return;
             }
 
@@ -236,7 +236,7 @@ public class LockWatchDog {
             );
 
             activeTasks.put(lockKey, new WatchTask(clientId, leaseTime, lockType, running, future));
-            log.info("【看门狗】启动续期任务 | lockKey={} | leaseTime={}ms | interval={}ms | lockType={}",
+            log.info("[ydsz-lock] [watchdog]启动续期任务 | lockKey={} | leaseTime={}ms | interval={}ms | lockType={}",
                     lockKey, leaseTime, renewInterval, lockType);
         } finally {
             startWatchLock.unlock();
@@ -253,7 +253,7 @@ public class LockWatchDog {
         if (task != null) {
             task.running.set(false);
             task.future.cancel(false);
-            log.info("【看门狗】停止续期任务 | lockKey={}", lockKey);
+            log.info("[ydsz-lock] [watchdog]停止续期任务 | lockKey={}", lockKey);
         }
     }
 
@@ -266,10 +266,10 @@ public class LockWatchDog {
         for (Map.Entry<String, WatchTask> entry : activeTasks.entrySet()) {
             entry.getValue().running.set(false);
             entry.getValue().future.cancel(false);
-            log.info("【看门狗】清理续期任务 | lockKey={}", entry.getKey());
+            log.info("[ydsz-lock] [watchdog]清理续期任务 | lockKey={}", entry.getKey());
         }
         activeTasks.clear();
-        log.info("【看门狗】已关闭所有续期任务");
+        log.info("[ydsz-lock] [watchdog]已关闭所有续期任务");
     }
 
     /**
@@ -296,6 +296,26 @@ public class LockWatchDog {
     }
 
     /**
+     * 获取当前活跃续期任务数量
+     *
+     * @return 活跃续期任务数
+     */
+    public int getActiveTaskCount() {
+        return activeTasks.size();
+    }
+
+    /**
+     * 取消指定锁的续期任务（运维强制释放场景）
+     *
+     * <p>等同于 {@link #stopWatch(String)}，提供别名以适配运维 API 语义。
+     *
+     * @param lockKey 锁的键
+     */
+    public void cancelRenewal(String lockKey) {
+        stopWatch(lockKey);
+    }
+
+    /**
      * 获取最大续期次数
      *
      * @return 最大续期次数
@@ -305,21 +325,12 @@ public class LockWatchDog {
     }
 
     /**
-     * 获取最大续期次数（别名方法，与 getMaxRenewTimes 等价）
+     * 设置最大续期次数
      *
-     * @return 最大续期次数
+     * @param maxRenewTimes 最大续期次数
      */
-    public int getMaxRenewCount() {
-        return maxRenewTimes;
-    }
-
-    /**
-     * 设置最大续期次数（别名方法，用于配置化场景）
-     *
-     * @param maxRenewCount 最大续期次数
-     */
-    public void setMaxRenewCount(int maxRenewCount) {
-        this.maxRenewTimes = maxRenewCount;
+    public void setMaxRenewTimes(int maxRenewTimes) {
+        this.maxRenewTimes = maxRenewTimes;
     }
 
     /**
@@ -346,7 +357,7 @@ public class LockWatchDog {
     private void renewLockWithRetry(String lockKey, String clientId, long leaseTime, LockType lockType) {
         WatchTask currentTask = activeTasks.get(lockKey);
         if (currentTask != null && currentTask.renewCount >= maxRenewTimes) {
-            log.warn("【看门狗】续期次数超过最大限制（{}次），停止续期，锁将自动过期 | lockKey={}", maxRenewTimes, lockKey);
+            log.warn("[ydsz-lock] [watchdog]续期次数超过最大限制（{}次），停止续期，锁将自动过期 | lockKey={}", maxRenewTimes, lockKey);
             stopWatch(lockKey);
             return;
         }
@@ -361,7 +372,7 @@ public class LockWatchDog {
                         lockType
                 );
                 if (success) {
-                    log.debug("【看门狗】锁续期成功 | lockKey={} | lockType={}", lockKey, lockType);
+                    log.debug("[ydsz-lock] [watchdog]锁续期成功 | lockKey={} | lockType={}", lockKey, lockType);
                     WatchTask task = activeTasks.get(lockKey);
                     if (task != null) {
                         task.renewCount++;
@@ -371,14 +382,14 @@ public class LockWatchDog {
                     }
                     return;
                 }
-                log.warn("【看门狗】锁续期失败，可能锁已释放 | lockKey={} | lockType={}", lockKey, lockType);
+                log.warn("[ydsz-lock] [watchdog]锁续期失败，可能锁已释放 | lockKey={} | lockType={}", lockKey, lockType);
                 stopWatch(lockKey);
                 return;
             } catch (Exception e) {
-                log.warn("【看门狗】锁续期异常 | lockKey={} | lockType={} | retry={}/{} | error={}",
+                log.warn("[ydsz-lock] [watchdog]锁续期异常 | lockKey={} | lockType={} | retry={}/{} | error={}",
                         lockKey, lockType, retry + 1, MAX_RETRY_COUNT, e.getMessage());
                 if (retry == MAX_RETRY_COUNT - 1) {
-                    log.error("【看门狗】锁续期最终失败，停止续期 | lockKey={} | lockType={}", lockKey, lockType);
+                    log.error("[ydsz-lock] [watchdog]锁续期最终失败，停止续期 | lockKey={} | lockType={}", lockKey, lockType);
                     stopWatch(lockKey);
                 }
             }

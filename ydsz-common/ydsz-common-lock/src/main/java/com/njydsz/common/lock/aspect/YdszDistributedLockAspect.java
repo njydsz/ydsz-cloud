@@ -144,7 +144,7 @@ public class YdszDistributedLockAspect {
             if (lockAnn.throwException()) {
                 throw new DistributedLockException(lockAnn.message());
             } else {
-                log.warn("【分布式锁】获取锁失败，跳过方法执行 | lockKey={} | traceId={}", lockKey, resolveTraceId());
+                log.warn("[ydsz-lock]获取锁失败，跳过方法执行 | lockKey={} | traceId={}", lockKey, resolveTraceId());
                 return null;
             }
         }
@@ -153,7 +153,7 @@ public class YdszDistributedLockAspect {
             lockMetrics.recordAcquireSuccess(waitTimeMillis, lockType.name().toLowerCase());
         }
 
-        log.debug("【分布式锁】获取锁成功 | lockKey={} | lockType={}", lockKey, lockType);
+        log.debug("[ydsz-lock]获取锁成功 | lockKey={} | lockType={}", lockKey, lockType);
 
         long holdStartTime = System.currentTimeMillis();
         try {
@@ -169,9 +169,9 @@ public class YdszDistributedLockAspect {
                 if (lockMetrics != null) {
                     lockMetrics.recordRelease(holdTimeMillis, lockType.name().toLowerCase());
                 }
-                log.debug("【分布式锁】释放锁成功 | lockKey={} | traceId={}", lockKey, resolveTraceId());
+                log.debug("[ydsz-lock]释放锁成功 | lockKey={} | traceId={}", lockKey, resolveTraceId());
             } else {
-                log.error("【分布式锁】释放锁失败 | lockKey={} | traceId={}", lockKey, resolveTraceId());
+                log.error("[ydsz-lock]释放锁失败 | lockKey={} | traceId={}", lockKey, resolveTraceId());
             }
         }
     }
@@ -219,7 +219,7 @@ public class YdszDistributedLockAspect {
                     lockValue = lock.tryLock(lockKey, waitTime, leaseTime, timeUnit);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    throw new DistributedLockException("【分布式锁】获取锁时被中断 | lockKey=" + lockKey, e);
+                    throw new DistributedLockException("[ydsz-lock]获取锁时被中断 | lockKey=" + lockKey, e);
                 }
             }
 
@@ -230,12 +230,12 @@ public class YdszDistributedLockAspect {
             attempt++;
             if (attempt <= maxRetries) {
                 long backoffDelay = retryInterval * (1L << (attempt - 1));
-                log.debug("【分布式锁】获取锁失败，第 {} 次重试，等待 {} ms | lockKey={}", attempt, backoffDelay, lockKey);
+                log.debug("[ydsz-lock]获取锁失败，第 {} 次重试，等待 {} ms | lockKey={}", attempt, backoffDelay, lockKey);
                 try {
                     TimeUnit.MILLISECONDS.sleep(backoffDelay);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    throw new DistributedLockException("【分布式锁】重试等待时被中断 | lockKey=" + lockKey, e);
+                    throw new DistributedLockException("[ydsz-lock]重试等待时被中断 | lockKey=" + lockKey, e);
                 }
             }
         }

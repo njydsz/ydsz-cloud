@@ -219,7 +219,7 @@ public class FallbackDistributedLock implements DistributedLocker {
             boolean released = delegate.unlock(lockKey, lockValue);
             if (!released) {
                 // Redis 释放失败，尝试释放本地锁
-                log.warn("【锁降级】Redis 锁释放失败，尝试释放本地锁 | lockKey={}", lockKey);
+                log.warn("[ydsz-lock] [fallback]Redis 锁释放失败，尝试释放本地锁 | lockKey={}", lockKey);
                 return releaseLocalLock(lockKey, lockValue);
             }
             resetFailureCounter();
@@ -285,7 +285,7 @@ public class FallbackDistributedLock implements DistributedLocker {
         if (acquired) {
             String lockValue = "local-lock:" + UUID.randomUUID();
             degradedLockValues.put(lockKey, lockValue);
-            log.info("【锁降级】本地锁获取成功 | lockKey={}", lockKey);
+            log.info("[ydsz-lock] [fallback]本地锁获取成功 | lockKey={}", lockKey);
             return lockValue;
         }
         return null;
@@ -306,7 +306,7 @@ public class FallbackDistributedLock implements DistributedLocker {
         if (acquired) {
             String lockValue = "local-lock:" + UUID.randomUUID();
             degradedLockValues.put(lockKey, lockValue);
-            log.info("【锁降级】本地锁获取成功 | lockKey={}", lockKey);
+            log.info("[ydsz-lock] [fallback]本地锁获取成功 | lockKey={}", lockKey);
             return lockValue;
         }
         return null;
@@ -327,13 +327,13 @@ public class FallbackDistributedLock implements DistributedLocker {
         // 校验 lockValue 匹配
         String expectedValue = degradedLockValues.get(lockKey);
         if (expectedValue != null && !expectedValue.equals(lockValue)) {
-            log.warn("【锁降级】本地锁 lockValue 不匹配，拒绝释放 | lockKey={}", lockKey);
+            log.warn("[ydsz-lock] [fallback]本地锁 lockValue 不匹配，拒绝释放 | lockKey={}", lockKey);
             return false;
         }
         if (localLock.isHeldByCurrentThread()) {
             localLock.unlock();
             degradedLockValues.remove(lockKey);
-            log.info("【锁降级】本地锁释放成功 | lockKey={}", lockKey);
+            log.info("[ydsz-lock] [fallback]本地锁释放成功 | lockKey={}", lockKey);
             return true;
         }
         return false;
@@ -345,10 +345,10 @@ public class FallbackDistributedLock implements DistributedLocker {
     private void onRedisFailure(String lockKey, Exception e) {
         int failures = consecutiveFailures.incrementAndGet();
         if (failures >= FAILURE_THRESHOLD && redisAvailable.compareAndSet(true, false)) {
-            log.warn("【锁降级】Redis 连续失败 {} 次，标记为不可用，全局切换到本地锁模式 | lastError={}",
+            log.warn("[ydsz-lock] [fallback]Redis 连续失败 {} 次，标记为不可用，全局切换到本地锁模式 | lastError={}",
                     failures, e.getMessage());
         }
-        log.warn("【锁降级】Redis 锁操作异常，降级为本地锁 | lockKey={} | error={}", lockKey, e.getMessage());
+        log.warn("[ydsz-lock] [fallback]Redis 锁操作异常，降级为本地锁 | lockKey={} | error={}", lockKey, e.getMessage());
         degradedKeys.put(lockKey, Boolean.TRUE);
     }
 
@@ -358,7 +358,7 @@ public class FallbackDistributedLock implements DistributedLocker {
     private void resetFailureCounter() {
         consecutiveFailures.set(0);
         if (!redisAvailable.get() && redisAvailable.compareAndSet(false, true)) {
-            log.info("【锁降级】Redis 已恢复，切换回分布式锁模式");
+            log.info("[ydsz-lock] [fallback]Redis 已恢复，切换回分布式锁模式");
         }
     }
 
@@ -379,12 +379,12 @@ public class FallbackDistributedLock implements DistributedLocker {
             if (lockValue != null) {
                 redisAvailable.set(true);
                 consecutiveFailures.set(0);
-                log.info("【锁降级】Redis 探测成功，已恢复分布式锁模式 | lockKey={}", lockKey);
+                log.info("[ydsz-lock] [fallback]Redis 探测成功，已恢复分布式锁模式 | lockKey={}", lockKey);
                 return lockValue;
             }
             return null;
         } catch (Exception e) {
-            log.debug("【锁降级】Redis 探测失败，继续使用本地锁 | error={}", e.getMessage());
+            log.debug("[ydsz-lock] [fallback]Redis 探测失败，继续使用本地锁 | error={}", e.getMessage());
             return acquireLocalLock(lockKey);
         }
     }
@@ -398,12 +398,12 @@ public class FallbackDistributedLock implements DistributedLocker {
             if (lockValue != null) {
                 redisAvailable.set(true);
                 consecutiveFailures.set(0);
-                log.info("【锁降级】Redis 探测成功，已恢复分布式锁模式 | lockKey={}", lockKey);
+                log.info("[ydsz-lock] [fallback]Redis 探测成功，已恢复分布式锁模式 | lockKey={}", lockKey);
                 return lockValue;
             }
             return null;
         } catch (Exception e) {
-            log.debug("【锁降级】Redis 探测失败，继续使用本地锁 | error={}", e.getMessage());
+            log.debug("[ydsz-lock] [fallback]Redis 探测失败，继续使用本地锁 | error={}", e.getMessage());
             return acquireLocalLock(lockKey, waitTime, timeUnit);
         }
     }

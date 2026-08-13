@@ -214,6 +214,10 @@ public class MultiLevelCache<K, V> implements Cache<K, V> {
     } else {
       l1Cache.put(key, value);
     }
+    // BloomFilter 优化：标记此 key 可能被其他节点缓存（减少后续 put 时的无效广播）
+    if (broadcaster instanceof BloomFilterBroadcastOptimizer bloomOpt) {
+      bloomOpt.markKeyCached(key);
+    }
   }
 
   @Override

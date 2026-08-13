@@ -63,7 +63,7 @@ public class RepeatSubmitAspect {
     public Object around(ProceedingJoinPoint joinPoint, RepeatSubmit repeatSubmit) throws Throwable {
         HttpServletRequest request = getCurrentRequest();
         if (request == null) {
-            log.warn("[RepeatSubmit] 非 Web 环境，跳过多提交校验");
+            log.warn("[ydsz-lock] [repeat-submit] 非 Web 环境，跳过多提交校验");
             return joinPoint.proceed();
         }
 
@@ -71,7 +71,7 @@ public class RepeatSubmitAspect {
         String token = request.getHeader(headerName);
 
         if (!StringUtils.hasText(token)) {
-            log.warn("[RepeatSubmit] 缺少防重复提交 Token | header={}", headerName);
+            log.warn("[ydsz-lock] [repeat-submit] 缺少防重复提交 Token | header={}", headerName);
             throw BusinessException.builder()
                     .code(CoreExceptionCode.FAIL.getCode())
                     .message("缺少防重复提交 Token，请先获取 Token")
@@ -80,7 +80,7 @@ public class RepeatSubmitAspect {
 
         boolean valid = tokenService.validateAndConsume(token);
         if (!valid) {
-            log.warn("[RepeatSubmit] Token 无效或已过期 | header={}, token={}", headerName, token);
+            log.warn("[ydsz-lock] [repeat-submit] Token 无效或已过期 | header={}, token={}", headerName, token);
             throw BusinessException.builder()
                     .code(CoreExceptionCode.FAIL.getCode())
                     .message(repeatSubmit.message())
@@ -90,7 +90,7 @@ public class RepeatSubmitAspect {
         try {
             return joinPoint.proceed();
         } catch (Throwable ex) {
-            log.debug("[RepeatSubmit] 业务方法执行异常 | cause={}", ex.getMessage());
+            log.debug("[ydsz-lock] [repeat-submit] 业务方法执行异常 | cause={}", ex.getMessage());
             throw ex;
         }
     }

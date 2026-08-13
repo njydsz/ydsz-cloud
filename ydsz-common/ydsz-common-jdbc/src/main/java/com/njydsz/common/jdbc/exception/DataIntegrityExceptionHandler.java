@@ -75,38 +75,55 @@ public class DataIntegrityExceptionHandler {
         //   23514: check constraint violation (PostgreSQL specific)
         String sqlState = extractSqlState(rootCause);
         String messageKey;
+        CoreExceptionCode exceptionCode;
 
         if (sqlState != null) {
             switch (sqlState) {
-                case "23505", "23000" -> messageKey = "data.integrity.duplicate";
-                case "23503" -> messageKey = "data.integrity.foreign.key";
-                case "23502" -> messageKey = "data.integrity.not.null";
-                case "23514", "23001" -> messageKey = "data.integrity.check";
+                case "23505", "23000" -> {
+                    messageKey = "data.integrity.duplicate";
+                    exceptionCode = CoreExceptionCode.UNIQUE_CONSTRAINT_VIOLATION;
+                }
+                case "23503" -> {
+                    messageKey = "data.integrity.foreign.key";
+                    exceptionCode = CoreExceptionCode.FOREIGN_KEY_VIOLATION;
+                }
+                case "23502" -> {
+                    messageKey = "data.integrity.not.null";
+                    exceptionCode = CoreExceptionCode.NOT_NULL_VIOLATION;
+                }
+                case "23514", "23001" -> {
+                    messageKey = "data.integrity.check";
+                    exceptionCode = CoreExceptionCode.CHECK_CONSTRAINT_VIOLATION;
+                }
                 default -> {
                     if (sqlState.startsWith("23")) {
                         messageKey = "data.integrity.conflict";
+                        exceptionCode = CoreExceptionCode.CONFLICT;
                     } else {
+                        // SQLState 不在已知范围，回退到消息匹配
                         messageKey = classifyByMessage(rootMessage);
+                        exceptionCode = classifyByMessageToCode(messageKey);
                     }
                 }
             }
         } else {
             // SQLState 不可用时，回退到消息匹配（兼容性保证）
             messageKey = classifyByMessage(rootMessage);
+            exceptionCode = classifyByMessageToCode(messageKey);
         }
 
         String message = messageSource.getMessage(messageKey, null, messageKey, LocaleContextHolder.getLocale());
         log.error("数据完整性异常 | 路径: {} | 消息: {}", request.getRequestURI(), rootMessage, e);
 
         ExceptionInfo info = new ExceptionInfo(
-                CoreExceptionCode.UNIQUE_CONSTRAINT_VIOLATION.getCode(),
-                CoreExceptionCode.UNIQUE_CONSTRAINT_VIOLATION.getKey(),
+                exceptionCode.getCode(),
+                exceptionCode.getKey(),
                 message,
                 HttpStatus.CONFLICT.value()
         );
         info.setPath(request.getRequestURI());
         return BaseResponse.<ExceptionInfo>builder()
-                .code(CoreExceptionCode.UNIQUE_CONSTRAINT_VIOLATION.getCode())
+                .code(exceptionCode.getCode())
                 .msg(message)
                 .data(info)
                 .timestamp(System.currentTimeMillis())
@@ -177,5 +194,27 @@ public class DataIntegrityExceptionHandler {
             return "data.integrity.check";
         }
         return "data.integrity.conflict";
+    }
+
+    /**
+     * 将回退分类得到的消息 key 映射到对应的 {@link CoreExceptionCode}。
+     *
+     * <p>保持与 {@link #classifyByMessage(String)} 分类逻辑一致，用于
+     * {@code ExceptionInfo} 和 {@code BaseResponse} 的错误码填充。
+     *
+     * @param messageKey 消息 key
+     * @return 对应的异常码枚举
+     */
+    private CoreExceptionCode classifyByMessageToCode(String messageKey) {
+        if (messageKey == null) {
+            return CoreExceptionCode.CONFLICT;
+        }
+        return switch (messageKey) {
+            case "data.integrity.duplicate" -> CoreExceptionCode.UNIQUE_CONSTRAINT_VIOLATION;
+            case "data.integrity.foreign.key" -> CoreExceptionCode.FOREIGN_KEY_VIOLATION;
+            case "data.integrity.not.null" -> CoreExceptionCode.NOT_NULL_VIOLATION;
+            case "data.integrity.check" -> CoreExceptionCode.CHECK_CONSTRAINT_VIOLATION;
+            default -> CoreExceptionCode.CONFLICT;
+        };
     }
 }

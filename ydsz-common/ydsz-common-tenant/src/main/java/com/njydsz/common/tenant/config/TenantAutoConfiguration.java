@@ -19,6 +19,10 @@ import com.njydsz.common.tenant.SystemTenantContextRunner;
 import com.njydsz.common.tenant.async.TenantContextTaskDecorator;
 import com.njydsz.common.tenant.datasource.TenantDataSourceFilter;
 import com.njydsz.common.tenant.datasource.TenantDataSourceRouter;
+import com.njydsz.common.tenant.datasource.resolver.ConfigurationResolver;
+import com.njydsz.common.tenant.datasource.resolver.DatasourceKeyResolver;
+import com.njydsz.common.tenant.datasource.resolver.NamingConventionResolver;
+import com.njydsz.common.tenant.diagnostics.TenantDiagnosticsContributor;
 import com.njydsz.common.tenant.feign.TenantContextFeignInterceptor;
 import com.njydsz.common.tenant.health.TenantHealthIndicator;
 import com.njydsz.common.tenant.interceptor.TenantInterceptorProvider;
@@ -248,6 +252,7 @@ public class TenantAutoConfiguration {
      *
      * @param routingDataSource 动态数据源
      * @param properties       租户配置
+     * @param keyResolver      数据源 Key 解析器 SPI
      * @return 数据源路由器
      */
     @Bean
@@ -258,9 +263,13 @@ public class TenantAutoConfiguration {
     public TenantDataSourceRouter tenantDataSourceRouter(
             DynamicRoutingDataSource routingDataSource,
             TenantProperties properties,
+            ObjectProvider<DatasourceKeyResolver> keyResolverProvider,
             ObjectProvider<TenantMetrics> metricsProvider) {
-        log.info("多租户 ISOLATE_DB 模式已启用，数据源路由器已注册");
-        return new TenantDataSourceRouter(routingDataSource, properties, metricsProvider.getIfAvailable());
+        DatasourceKeyResolver resolver = keyResolverProvider.getIfAvailable();
+        log.info("多租户 ISOLATE_DB 模式已启用，数据源路由器已注册，解析器={}",
+                resolver != null ? resolver.getClass().getSimpleName() : "naming-convention");
+        return new TenantDataSourceRouter(routingDataSource, properties, resolver,
+                metricsProvider.getIfAvailable());
     }
 
     /**

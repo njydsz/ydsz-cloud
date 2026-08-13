@@ -26,6 +26,7 @@ import lombok.Data;
  *   <li>{@link TenantMode#SINGLE}：只取 {@code tenant-fields} 的第一个字段注入 SQL</li>
  *   <li>{@link TenantMode#MULTI}：取 {@code tenant-fields} 的全部字段注入 SQL（AND 连接）</li>
  *   <li>{@link TenantMode#ISOLATE_DB}：独立数据源模式，每租户使用独立数据库</li>
+ *   <li>{@link TenantMode#SCHEMA}：Schema 隔离模式，每租户使用独立 PostgreSQL Schema</li>
  * </ul>
  *
  * <h3>配置示例 — 单租户</h3>
@@ -164,6 +165,53 @@ public class TenantProperties {
     private boolean lifecycleCheckEnabled = true;
 
     /**
+     * 跨租户数据共享配置。
+     *
+     * <p>允许指定租户访问其他租户的数据（如集团查看子公司）。
+     * key=当前租户 ID，value=可访问的源租户 ID 列表。
+     *
+     * <pre>
+     * ydsz:
+     *   tenant:
+     *     sharing:
+     *       group_acme: ["acme_shanghai", "acme_beijing"]
+     * </pre>
+     */
+    private Map<String, List<String>> tenantSharing = new HashMap<>();
+
+    /**
+     * 租户级加密配置。
+     *
+     * <p>为每个租户配置独立的加密密钥（用于敏感字段加密）。
+     * key=租户 ID，value=Base64 编码的 32 字节 AES 密钥。
+     *
+     * <pre>
+     * ydsz:
+     *   tenant:
+     *     encryption:
+     *       tenant_acme: "base64encoded32bytekey..."
+     * </pre>
+     */
+    private Map<String, String> tenantEncryptionKeys = new HashMap<>();
+
+    /**
+     * ISOLATE_DB 模式下租户 → 数据源 Key 的映射。
+     *
+     * <p>未配置时使用命名约定（tenant_{tenantId}）。
+     * 配置后使用 {@link com.njydsz.common.tenant.datasource.resolver.ConfigurationResolver}。
+     *
+     * <pre>
+     * ydsz:
+     *   tenant:
+     *     datasource:
+     *       mapping:
+     *         acme: "tenant_acme"
+     *         globex: "ds_globex_read"
+     * </pre>
+     */
+    private Map<String, String> datasourceMapping = new HashMap<>();
+
+    /**
      * 获取生效的租户字段列表。
      *
      * <p>SINGLE 模式只取第一个字段；MULTI 模式取全部字段。
@@ -238,7 +286,9 @@ public class TenantProperties {
         /** 多级租户模式：取全部字段 */
         MULTI,
         /** 数据库隔离模式：每个租户使用独立数据源 */
-        ISOLATE_DB
+        ISOLATE_DB,
+        /** Schema 隔离模式：每个租户使用独立 PostgreSQL Schema（search_path） */
+        SCHEMA
     }
 
     /**

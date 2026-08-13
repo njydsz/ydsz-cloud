@@ -71,7 +71,7 @@ public class RepeatSubmitTokenService {
                 TimeUnit.MILLISECONDS
         );
 
-        log.debug("[RepeatSubmit] 生成 Token | userId={}, token={}, ttl={}ms",
+        log.debug("[ydsz-lock] [repeat-submit] 生成 Token | userId={}, token={}, ttl={}ms",
                 userId, token, ttlMillis);
 
         return token;
@@ -88,13 +88,13 @@ public class RepeatSubmitTokenService {
      */
     public boolean validateAndConsume(String token) {
         if (!StringUtils.hasText(token)) {
-            log.warn("[RepeatSubmit] Token 为空");
+            log.warn("[ydsz-lock] [repeat-submit] Token 为空");
             return false;
         }
 
         String userId = getCurrentUserId();
         if (!StringUtils.hasText(userId)) {
-            log.warn("[RepeatSubmit] 用户未登录，无法校验 Token");
+            log.warn("[ydsz-lock] [repeat-submit] 用户未登录，无法校验 Token");
             return false;
         }
 
@@ -102,10 +102,10 @@ public class RepeatSubmitTokenService {
         Boolean deleted = redisTemplate.delete(redisKey);
 
         if (Boolean.TRUE.equals(deleted)) {
-            log.debug("[RepeatSubmit] Token 校验通过并消费 | userId={}, token={}", userId, token);
+            log.debug("[ydsz-lock] [repeat-submit] Token 校验通过并消费 | userId={}, token={}", userId, token);
             return true;
         } else {
-            log.warn("[RepeatSubmit] Token 无效或已过期 | userId={}, token={}", userId, token);
+            log.warn("[ydsz-lock] [repeat-submit] Token 无效或已过期 | userId={}, token={}", userId, token);
             return false;
         }
     }

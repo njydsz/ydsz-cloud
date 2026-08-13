@@ -1,11 +1,7 @@
 package com.njydsz.common.redis.service.ops;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
@@ -59,9 +55,6 @@ public class RedisStringOps {
     private final RedisTemplate<String, Object> redisTemplate;
     private final RedisProperties redisProperties;
     private final RedisMetricsCollector metricsCollector;
-
-    /** Lua 脚本 SHA1 缓存，避免每次执行都发送完整脚本 */
-    private final ConcurrentHashMap<String, String> scriptShaCache = new ConcurrentHashMap<>();
 
     // ============================ 通用操作 =============================
 
@@ -894,86 +887,19 @@ public class RedisStringOps {
     // ============================ 内部辅助方法 =============================
 
     /**
-     * 使用 Lua 脚本安全释放分布式锁（校验锁持有者）
+     * 释放分布式锁（校验锁持有者）
      *
-     * <p>使用 EVALSHA 优化：优先使用缓存的 SHA1 执行脚本，失败时回退到 EVAL。
+     * <p>使用 Spring Data Redis 内置的 DefaultRedisScript，框架自动处理 EVALSHA 优化。
      *
      * @param lockKey   锁键
      * @param lockValue 锁值（UUID）
      */
     private void releaseLock(String lockKey, String lockValue) {
         try {
-            executeScriptWithShaCache(UNLOCK_LUA, Long.class,
-                    Collections.singletonList(formatKey(lockKey)), lockValue);
+            DefaultRedisScript<Long> script = new DefaultRedisScript<>(UNLOCK_LUA, Long.class);
+            redisTemplate.execute(script, Collections.singletonList(formatKey(lockKey)), lockValue);
         } catch (Exception e) {
             log.error("【Redis】释放锁失败 | lockKey={} | error={}", lockKey, e);
-        }
-    }
-
-    /**
-     * 执行 Lua 脚本（带 EVALSHA 优化）
-     *
-     * <p>首次执行使用 EVAL 发送完整脚本，并缓存脚本的 SHA1 值；
-     * 后续执行优先使用 EVALSHA，若 Redis 中脚本已丢失（如重启）则回退到 EVAL。
-     *
-     * @param script     Lua 脚本内容
-     * @param returnType 返回值类型
-     * @param keys       键列表
-     * @param args       参数列表
-     * @param <T>        返回值类型
-     * @return 脚本执行结果
-     */
-    public <T> T executeScriptWithShaCache(String script, Class<T> returnType,
-                                            List<String> keys, Object... args) {
-        if (script == null) {
-            return null;
-        }
-        try {
-            String cachedSha1 = scriptShaCache.get(script);
-            if (cachedSha1 != null) {
-                // 优先使用 EVALSHA
-                try {
-                    DefaultRedisScript<T> evalShaScript = new DefaultRedisScript<>(script, returnType);
-                    T result = redisTemplate.execute(evalShaScript, keys, args);
-                    return result;
-                } catch (Exception e) {
-                    log.debug("【Redis】EVALSHA 执行失败，回退到 EVAL | sha1={} | error={}", cachedSha1, e);
-                    scriptShaCache.remove(script);
-                }
-            }
-            // 首次执行或 EVALSHA 回退：使用 EVAL 发送完整脚本
-            DefaultRedisScript<T> redisScript = new DefaultRedisScript<>(script, returnType);
-            T result = redisTemplate.execute(redisScript, keys, args);
-            // 缓存 SHA1
-            String computedSha = computeSha1(script);
-            if (computedSha != null) {
-                scriptShaCache.put(script, computedSha);
-            }
-            return result;
-        } catch (Exception e) {
-            log.error("【Redis】Lua 脚本执行失败 | error={}", e);
-            return null;
-        }
-    }
-
-    /**
-     * 计算 Lua 脚本的 SHA1 值
-     *
-     * @param script Lua 脚本内容
-     * @return SHA1 十六进制字符串
-     */
-    private String computeSha1(String script) {
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-1");
-            byte[] digest = md.digest(script.getBytes(StandardCharsets.UTF_8));
-            StringBuilder sb = new StringBuilder(digest.length * 2);
-            for (byte b : digest) {
-                sb.append(String.format("%02x", b));
-            }
-            return sb.toString();
-        } catch (NoSuchAlgorithmException e) {
-            log.warn("【Redis】SHA1 算法不可用，跳过 EVALSHA 缓存 | error={}", e);
-            return null;
         }
     }
 

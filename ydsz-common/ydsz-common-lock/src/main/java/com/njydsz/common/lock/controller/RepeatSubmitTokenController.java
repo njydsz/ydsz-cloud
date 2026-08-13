@@ -63,10 +63,10 @@ public class RepeatSubmitTokenController {
             @RequestParam(defaultValue = "60000") long ttlMillis) {
         try {
             String token = tokenService.generateToken(ttlMillis);
-            log.debug("[RepeatSubmit] 生成 Token 成功 | ttl={}ms", ttlMillis);
+            log.debug("[ydsz-lock] [repeat-submit] 生成 Token 成功 | ttl={}ms", ttlMillis);
             return BaseResponse.success(token);
         } catch (IllegalStateException e) {
-            log.warn("[RepeatSubmit] 生成 Token 失败 | cause={}", e.getMessage());
+            log.warn("[ydsz-lock] [repeat-submit] 生成 Token 失败 | cause={}", e.getMessage());
             return BaseResponse.error(BaseResultCode.UNAUTHORIZED, "用户未登录，无法生成 Token");
         }
     }

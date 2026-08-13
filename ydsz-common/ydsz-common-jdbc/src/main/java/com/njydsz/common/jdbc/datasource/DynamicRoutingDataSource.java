@@ -3,6 +3,7 @@ package com.njydsz.common.jdbc.datasource;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.sql.DataSource;
 
@@ -31,6 +32,12 @@ public class DynamicRoutingDataSource extends AbstractRoutingDataSource {
 
     private final Map<Object, DataSource> dataSourceMap = new ConcurrentHashMap<>();
     private Object defaultDataSourceKey;
+
+    /**
+     * 读写锁，保护 addDataSource / removeDataSource 中
+     * dataSourceMap 修改 + setTargetDataSources 全量替换的复合操作原子性。
+     */
+    private final ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
 
     public DynamicRoutingDataSource() {
         super();
@@ -79,9 +86,14 @@ public class DynamicRoutingDataSource extends AbstractRoutingDataSource {
      * @param dataSource 数据源实例
      */
     public void addDataSource(Object key, DataSource dataSource) {
-        dataSourceMap.put(key, dataSource);
-        super.setTargetDataSources(castToTargetMap(dataSourceMap));
-        log.info("动态添加数据源: {}", key);
+        rwLock.writeLock().lock();
+        try {
+            dataSourceMap.put(key, dataSource);
+            super.setTargetDataSources(castToTargetMap(dataSourceMap));
+            log.info("动态添加数据源: {}", key);
+        } finally {
+            rwLock.writeLock().unlock();
+        }
     }
 
     /**
@@ -93,9 +105,14 @@ public class DynamicRoutingDataSource extends AbstractRoutingDataSource {
         if (key.equals(defaultDataSourceKey)) {
             throw new IllegalArgumentException("不能移除默认数据源: " + key);
         }
-        dataSourceMap.remove(key);
-        super.setTargetDataSources(castToTargetMap(dataSourceMap));
-        log.info("动态移除数据源: {}", key);
+        rwLock.writeLock().lock();
+        try {
+            dataSourceMap.remove(key);
+            super.setTargetDataSources(castToTargetMap(dataSourceMap));
+            log.info("动态移除数据源: {}", key);
+        } finally {
+            rwLock.writeLock().unlock();
+        }
     }
 
     /**

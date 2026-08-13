@@ -8,6 +8,7 @@ import javax.sql.DataSource;
 import com.njydsz.common.jdbc.datasource.DynamicDataSourceContextHolder;
 import com.njydsz.common.jdbc.datasource.DynamicRoutingDataSource;
 import com.njydsz.common.tenant.config.TenantProperties;
+import com.njydsz.common.tenant.datasource.resolver.DatasourceKeyResolver;
 import com.njydsz.common.tenant.metrics.TenantMetrics;
 
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,9 @@ import lombok.extern.slf4j.Slf4j;
  * 避免每次请求都遍历 {@link DynamicRoutingDataSource#getDataSources()}。
  * 缓存生命周期与 Bean 一致（应用启动时预热，运行时只读）。
  *
+ * <p><b>解析策略：</b>通过 {@link DatasourceKeyResolver} SPI 接口自定义解析逻辑，
+ * 内置命名约定解析器和配置映射解析器。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -30,20 +34,24 @@ public class TenantDataSourceRouter {
     private final DynamicRoutingDataSource routingDataSource;
     private final TenantProperties properties;
     private final TenantMetrics metrics;
+    private final DatasourceKeyResolver keyResolver;
 
     /** 租户 ID → 数据源 Key 缓存（预热后只读） */
     private final Map<String, String> datasourceKeyCache = new ConcurrentHashMap<>();
 
     public TenantDataSourceRouter(DynamicRoutingDataSource routingDataSource,
-                                   TenantProperties properties) {
-        this(routingDataSource, properties, null);
+                                   TenantProperties properties,
+                                   DatasourceKeyResolver keyResolver) {
+        this(routingDataSource, properties, keyResolver, null);
     }
 
     public TenantDataSourceRouter(DynamicRoutingDataSource routingDataSource,
                                    TenantProperties properties,
+                                   DatasourceKeyResolver keyResolver,
                                    TenantMetrics metrics) {
         this.routingDataSource = routingDataSource;
         this.properties = properties;
+        this.keyResolver = keyResolver;
         this.metrics = metrics;
     }
 
@@ -66,14 +74,17 @@ public class TenantDataSourceRouter {
         String datasourceKey = datasourceKeyCache.computeIfAbsent(tenantId, this::resolveDatasourceKey);
 
         if (datasourceKey == null) {
-            log.warn("租户 {} 未配置数据源，使用默认数据源", tenantId);
+            log.warn("租户 {} 未配置数据源，使用默认数据源。"
+                    + "请在 ydsz.tenant.datasource.mapping 中配置映射关系，"
+                    + "或实现 DatasourceKeyResolver SPI。", tenantId);
             return;
         }
 
         // 验证数据源是否存在
         Map<Object, DataSource> dataSources = routingDataSource.getDataSources();
         if (!dataSources.containsKey(datasourceKey)) {
-            log.warn("租户 {} 的数据源 {} 不存在，使用默认数据源", tenantId, datasourceKey);
+            log.warn("租户 {} 的数据源 [{}] 不存在，使用默认数据源。已移除失效缓存。",
+                    tenantId, datasourceKey);
             // 移除失效缓存
             datasourceKeyCache.remove(tenantId);
             return;
@@ -87,15 +98,21 @@ public class TenantDataSourceRouter {
     /**
      * 解析租户对应的数据源 Key。
      *
-     * <p>当前实现使用 {@code "tenant_" + tenantId} 约定。
-     * <p>生产环境应从 {@code ydsz_tenant} 表查询 {@code datasource_key} 字段。
+     * <p>委托给 {@link DatasourceKeyResolver} SPI，内置支持：
+     * <ul>
+     *   <li>命名约定：{@code tenant_{tenantId}}</li>
+     *   <li>配置映射：从 ydsz.tenant.datasource.mapping 读取</li>
+     *   <li>自定义：业务模块实现 DatasourceKeyResolver 接口</li>
+     * </ul>
      *
      * @param tenantId 租户 ID
      * @return 数据源 Key，不存在返回 null
      */
     private String resolveDatasourceKey(String tenantId) {
-        // TODO: 生产环境从 ydsz_tenant 表查询 datasource_key 字段
-        // 此处使用约定命名：tenant_{tenantId}
+        if (keyResolver != null) {
+            return keyResolver.resolve(tenantId);
+        }
+        // 回退到约定命名
         String key = "tenant_" + tenantId;
         Map<Object, DataSource> dataSources = routingDataSource.getDataSources();
         if (dataSources.containsKey(key)) {
@@ -122,5 +139,14 @@ public class TenantDataSourceRouter {
      */
     public boolean isIsolateDbMode() {
         return properties.getMode() == TenantProperties.TenantMode.ISOLATE_DB;
+    }
+
+    /**
+     * 获取当前使用的数据源 Key 解析器类型。
+     *
+     * @return 解析器类名
+     */
+    public String getResolverType() {
+        return keyResolver != null ? keyResolver.getClass().getSimpleName() : "fallback";
     }
 }

@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.springframework.core.env.Environment;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
@@ -19,6 +20,9 @@ import com.njydsz.common.exception.config.ExceptionProperties;
 import com.njydsz.common.exception.core.ExceptionInfo;
 import com.njydsz.common.exception.custom.AbstractYdszException;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.exception.enums.ExceptionCategory;
+import com.njydsz.common.exception.enums.ExceptionLevel;
+import com.njydsz.common.exception.event.ExceptionHandledEvent;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;
 
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 public abstract class BaseExceptionHandler {
 
     private final Environment environment;
+    private ApplicationEventPublisher eventPublisher;
 
     /**
      * 构造基类异常处理器（通过 Spring 注入 {@link Environment}）
@@ -50,8 +55,21 @@ public abstract class BaseExceptionHandler {
         this.environment = environment;
     }
 
+    /**
+     * 异常模块配置属性
+     */
     private ExceptionProperties properties;
     private ExceptionMetrics exceptionMetrics;
+
+    /**
+     * 事件发布器（可选，由子类通过构造器注入）
+     *
+     * <p>当事件发布器可用时，异常处理完成后自动发布 {@link ExceptionHandledEvent}，
+     * 下游订阅者可用于告警通知、Sentry 上报等场景。
+     */
+    protected void setEventPublisher(ApplicationEventPublisher publisher) {
+        this.eventPublisher = publisher;
+    }
 
     /**
      * 获取日志前缀，由子类实现以定制不同端的日志前缀
@@ -87,21 +105,58 @@ public abstract class BaseExceptionHandler {
      * 记录异常指标（统一入口，所有 handler 调用此方法）
      *
      * <p>如果异常指标统计器未注入或被禁用，此方法为空操作。
-     * 同时记录异常处理耗时（Timer 指标）。
      *
      * @param throwable 异常对象
      */
     protected void recordMetrics(Throwable throwable) {
-        long startTime = System.nanoTime();
+        if (exceptionMetrics != null) {
+            exceptionMetrics.recordException(throwable);
+        }
+    }
+
+    /**
+     * 发布异常处理完成事件。
+     *
+     * <p>当 {@link ApplicationEventPublisher} 可用时，向 Spring 应用上下文发布
+     * {@link ExceptionHandledEvent}，下游订阅者可据此实现告警、审计、APM 上报等扩展。
+     *
+     * <p>事件包含：错误码、key、消息、HTTP 状态码、路径、traceId、类别、级别、异常类型。
+     *
+     * @param throwable    已处理的异常
+     * @param path         请求路径
+     * @param traceId      追踪 ID
+     * @param resolvedMsg   已解析的异常消息（i18n 文案或原始消息）
+     */
+    protected void publishExceptionEvent(Throwable throwable, String path, String traceId, String resolvedMsg) {
+        if (eventPublisher == null) {
+            return;
+        }
         try {
-            if (exceptionMetrics != null) {
-                exceptionMetrics.recordException(throwable);
+            String code = CoreExceptionCode.INTERNAL_ERROR.getCode();
+            String key = null;
+            int httpStatus = HttpStatus.INTERNAL_SERVER_ERROR.value();
+            ExceptionCategory category = ExceptionCategory.SYSTEM;
+            String levelName = ExceptionLevel.ERROR.name();
+
+            if (throwable instanceof AbstractYdszException ex) {
+                code = ex.getCode();
+                key = ex.getKey();
+                httpStatus = ex.getHttpStatus();
+                if (ex.getCategory() != null) {
+                    category = ex.getCategory();
+                }
+                if (ex.getLevel() != null) {
+                    levelName = ex.getLevel().name();
+                }
             }
-        } finally {
-            if (exceptionMetrics != null) {
-                long durationMs = (System.nanoTime() - startTime) / 1_000_000;
-                exceptionMetrics.recordHandlerDuration(durationMs, throwable);
-            }
+
+            ExceptionHandledEvent event = new ExceptionHandledEvent(
+                    this, code, key, resolvedMsg, httpStatus, path, traceId,
+                    category, levelName, throwable.getClass().getSimpleName());
+            eventPublisher.publishEvent(event);
+        } catch (Exception e) {
+            // 事件发布失败不应影响主异常处理流程
+            log.debug("发布异常处理事件失败: {}", e.getMessage());
         }
     }
 
@@ -380,6 +435,31 @@ public abstract class BaseExceptionHandler {
             httpStatus = ((AbstractYdszException) throwable).getHttpStatus();
         }
         return ResponseEntity.status(httpStatus).body(body);
+    }
+
+    /**
+     * 对可恢复异常添加 {@code Retry-After} 响应头，引导客户端合理重试。
+     *
+     * <p>对标 Google API 的 {@code ErrorInfo.reason} 和 HTTP 标准 {@code Retry-After} 头，
+     * 仅当异常标记为 {@link com.njydsz.common.exception.enums.ExceptionCode#retryable() retryable=true}
+     * 且 {@link com.njydsz.common.exception.enums.ExceptionCode#retryAfterSeconds()} > 0 时生效。
+     *
+     * <p>Retry-After 头的值为建议等待秒数（相对时间），符合 RFC 7231 §7.1.3 标准。
+     *
+     * @param response  HTTP 响应对象（可为 null，此时为空操作）
+     * @param throwable 异常对象
+     */
+    protected void addRetryAfterHeader(jakarta.servlet.http.HttpServletResponse response, Throwable throwable) {
+        if (response == null || !(throwable instanceof AbstractYdszException ex)) {
+            return;
+        }
+        if (!ex.retryable()) {
+            return;
+        }
+        int seconds = ex.retryAfterSeconds();
+        if (seconds > 0) {
+            response.setHeader("Retry-After", String.valueOf(seconds));
+        }
     }
 
     /**
