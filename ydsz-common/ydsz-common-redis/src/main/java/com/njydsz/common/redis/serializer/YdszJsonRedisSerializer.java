@@ -2,7 +2,6 @@ package com.njydsz.common.redis.serializer;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.lang.reflect.Type;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.redis.serializer.RedisSerializer;

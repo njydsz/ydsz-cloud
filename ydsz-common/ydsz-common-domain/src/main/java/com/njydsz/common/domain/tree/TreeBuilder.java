@@ -132,7 +132,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
             return new ArrayList<>();
         }
 
-        // 1. 建立 ID -> 节点 索引
+        // 1. 建立 ID -> 节点 索引（跳过 null ID 节点）
         Map<ID, T> nodeMap = new HashMap<>(nodeList.size());
         for (T node : nodeList) {
             ID id = node.getId();
@@ -141,34 +141,11 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
             }
         }
 
-        // 2. 构建父子关系 + 自动层级计算
-        // 同时收集所有已知的 nodeId 到 Set，isRootNode 使用 O(1) 查找替代 O(n) 遍历
+        // 2. 构建父子关系 + 自动层级计算；
+        //    同时收集所有已知的 nodeId 到 Set，isRootNode 使用 O(1) 查找替代 O(n) 遍历
         Set<ID> knownIds = new HashSet<>(nodeMap.keySet());
         for (T node : nodeList) {
-            ID parentId = node.getParentId();
-            if (parentId == null) {
-                node.setLevel(TreeNode.ROOT_LEVEL);
-                continue;
-            }
-            T parent = nodeMap.get(parentId);
-            if (parent == null) {
-                // 父节点不在列表中：视为根（多根容错）
-                node.setLevel(TreeNode.ROOT_LEVEL);
-                continue;
-            }
-            List<T> children = parent.getChildren();
-            if (children == null) {
-                children = new ArrayList<>();
-                parent.setChildren(children);
-            }
-            if (!children.contains(node)) {
-                children.add(node);
-                // 一旦挂上子节点即为非叶子（children 字段默认为空 ArrayList，非 null，
-                // 因此不能依赖 children == null 判断，需在真正添加子节点时置位）
-                parent.setLeaf(false);
-            }
-            Integer parentLevel = parent.getLevel();
-            node.setLevel(parentLevel != null ? parentLevel + 1 : TreeNode.ROOT_LEVEL + 1);
+            attachOrPromoteToRoot(node, nodeMap);
         }
 
         // 3. 筛选根节点并排序（isRootNode 使用 O(1) knownIds 查询）
@@ -179,6 +156,34 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
                 .collect(Collectors.toCollection(ArrayList::new));
         sortSubTree(roots);
         return new ArrayList<>(roots);
+    }
+
+    /**
+     * 将节点挂到父节点下（含子节点列表懒初始化与层级计算）；父节点缺失时按根节点处理（多根容错）。
+     *
+     * @param node    当前节点
+     * @param nodeMap ID -> 节点 索引
+     */
+    private void attachOrPromoteToRoot(T node, Map<ID, T> nodeMap) {
+        ID parentId = node.getParentId();
+        T parent = parentId == null ? null : nodeMap.get(parentId);
+        if (parent == null) {
+            node.setLevel(TreeNode.ROOT_LEVEL);
+            return;
+        }
+        List<T> children = parent.getChildren();
+        if (children == null) {
+            children = new ArrayList<>();
+            parent.setChildren(children);
+        }
+        if (!children.contains(node)) {
+            children.add(node);
+            // 一旦挂上子节点即为非叶子（children 字段默认为空 ArrayList，非 null，
+            // 因此不能依赖 children == null 判断，需在真正添加子节点时置位）
+            parent.setLeaf(false);
+        }
+        Integer parentLevel = parent.getLevel();
+        node.setLevel(parentLevel != null ? parentLevel + 1 : TreeNode.ROOT_LEVEL + 1);
     }
 
     /**
@@ -280,10 +285,11 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
     }
 
     /**
-     * 扁平化指定树形结构（深度优先，迭代式避免栈溢出）
+     * 扁平化指定树形结构（深度优先，迭代式避免栈溢出）。
      *
+     * @param <T>   节点类型（TreeNode 子类）
      * @param roots 根节点列表
-     * @return 扁平节点列表
+     * @return 扁平节点列表（深度优先顺序）
      */
     public static <T extends TreeNode<T, ?>> List<T> flatten(List<T> roots) {
         return flattenInternal(roots);

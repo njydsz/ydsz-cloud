@@ -42,13 +42,20 @@ public class DomainProperties {
      */
     @Data
     public static class Page {
+
+        /** 默认触发游标警告的 offset 阈值。 */
+        private static final long DEFAULT_CURSOR_WARNING_THRESHOLD = 10000L;
+
+        /** 默认强制拒绝的 offset 阈值。 */
+        private static final long DEFAULT_CURSOR_REJECT_THRESHOLD = 50000L;
+
         /**
          * 触发游标警告的 offset 阈值（默认 10000）
          *
          * <p>超过此值的深度分页将在日志中发出 WARN，提醒改用游标分页。
          * <p>消费方：{@code com.njydsz.common.jdbc.interceptor.SafeQueryInnerInterceptor}
          */
-        private long cursorWarningThreshold = 10000L;
+        private long cursorWarningThreshold = DEFAULT_CURSOR_WARNING_THRESHOLD;
 
         /**
          * 强制拒绝的 offset 阈值（默认 50000）
@@ -57,6 +64,6 @@ public class DomainProperties {
          * 防止慢查询拖垮数据库。必须改用游标分页。
          * <p>消费方：{@code com.njydsz.common.jdbc.interceptor.SafeQueryInnerInterceptor}
          */
-        private long cursorRejectThreshold = 50000L;
+        private long cursorRejectThreshold = DEFAULT_CURSOR_REJECT_THRESHOLD;
     }
 }

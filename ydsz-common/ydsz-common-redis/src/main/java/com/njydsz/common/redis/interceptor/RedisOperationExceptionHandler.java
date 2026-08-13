@@ -10,7 +10,6 @@ import org.springframework.dao.QueryTimeoutException;
 import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.serializer.SerializationException;
 
-import com.njydsz.common.redis.annotation.RedisOperation;
 import com.njydsz.common.redis.enums.RedisBusinessException;
 import com.njydsz.common.redis.enums.RedisConnectionException;
 import com.njydsz.common.redis.enums.RedisOperationException;
