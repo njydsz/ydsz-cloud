@@ -33,6 +33,8 @@ public enum RateLimitExceptionCode implements ExceptionCode {
      * @param "rate.limit.exceeded" "rate.limit.exceeded" 参数说明
      * @param 429 429 参数说明
      * @return 处理结果
+     * @param "A04057" "A04057" 参数说明
+     * @param "rate.limit" "rate.limit" 参数说明
      */
     RATE_LIMIT("A04057", "rate.limit", 429),
     /**
@@ -45,6 +47,8 @@ public enum RateLimitExceptionCode implements ExceptionCode {
      * @param "rate.limit.exceeded" "rate.limit.exceeded" 参数说明
      * @param 429 429 参数说明
      * @return 处理结果
+     * @param "A04058" "A04058" 参数说明
+     * @param "request.too.frequent" "request.too.frequent" 参数说明
      */
     REQUEST_TOO_FREQUENT("A04058", "request.too.frequent", 429),
     /**
@@ -55,6 +59,10 @@ public enum RateLimitExceptionCode implements ExceptionCode {
      * @param "rate.limit.exceeded" "rate.limit.exceeded" 参数说明
      * @param 429 429 参数说明
      * @return 处理结果
+     * @param "A04059" "A04059" 参数说明
+     * @param "operation.too.frequent" "operation.too.frequent" 参数说明
+     * @param RATE_LIMIT_EXCEEDED("A04060" RATE_LIMIT_EXCEEDED("A04060" 参数说明
+     * @param "rate.limit.exceeded" "rate.limit.exceeded" 参数说明
      */
     OPERATION_TOO_FREQUENT("A04059", "operation.too.frequent", 429),
     /**
@@ -63,6 +71,8 @@ public enum RateLimitExceptionCode implements ExceptionCode {
      * @param "rate.limit.exceeded" "rate.limit.exceeded" 参数说明
      * @param 429 429 参数说明
      * @return 处理结果
+     * @param "A04060" "A04060" 参数说明
+     * @param "rate.limit.exceeded" "rate.limit.exceeded" 参数说明
      */
     RATE_LIMIT_EXCEEDED("A04060", "rate.limit.exceeded", 429);
 

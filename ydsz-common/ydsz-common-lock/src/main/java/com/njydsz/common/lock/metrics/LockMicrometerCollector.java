@@ -66,6 +66,11 @@ public class LockMicrometerCollector {
 
     /**
      * 获取或缓存 Counter（懒加载，Micrometer 的 Counter.Builder 创建有一定开销）
+     *
+     * @param name        指标名称
+     * @param lockType    锁类型标签
+     * @param description 指标描述
+     * @return Counter 实例
      */
     private Counter counter(String name, String lockType, String description) {
         String cacheKey = name + "|" + lockType;
@@ -78,6 +83,11 @@ public class LockMicrometerCollector {
 
     /**
      * 获取或缓存 Timer（懒加载，Micrometer 的 Timer.Builder 创建有一定开销）
+     *
+     * @param name        指标名称
+     * @param lockType    锁类型标签
+     * @param description 指标描述
+     * @return Timer 实例
      */
     private Timer timer(String name, String lockType, String description) {
         String cacheKey = name + "|" + lockType;

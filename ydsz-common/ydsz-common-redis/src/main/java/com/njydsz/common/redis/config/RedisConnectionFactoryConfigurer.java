@@ -154,6 +154,9 @@ public class RedisConnectionFactoryConfigurer {
                     new RedisClusterConfiguration(new ArrayList<>(properties.getCluster().getNodes()));
             clusterConfig.setPassword(properties.getPassword());
             clusterConfig.setMaxRedirects(properties.getCluster().getMaxRedirects());
+            if (properties.getUser() != null) {
+                clusterConfig.setUsername(properties.getUser());
+            }
             return new LettuceConnectionFactory(clusterConfig, clientConfig);
         }
 
@@ -163,6 +166,9 @@ public class RedisConnectionFactoryConfigurer {
             sentinelConfig.setSentinels(buildRedisNodes(properties.getSentinel().getNodes()));
             sentinelConfig.setPassword(properties.getPassword());
             sentinelConfig.setSentinelPassword(properties.getSentinel().getPassword());
+            if (properties.getUser() != null) {
+                sentinelConfig.setUsername(properties.getUser());
+            }
             return new LettuceConnectionFactory(sentinelConfig, clientConfig);
         }
 
@@ -350,6 +356,9 @@ public class RedisConnectionFactoryConfigurer {
         config.setSentinels(buildRedisNodes(properties.getSentinel().getNodes()));
         config.setPassword(properties.getPassword());
         config.setSentinelPassword(properties.getSentinel().getPassword());
+        if (properties.getUser() != null) {
+            config.setUsername(properties.getUser());
+        }
         return config;
     }
 

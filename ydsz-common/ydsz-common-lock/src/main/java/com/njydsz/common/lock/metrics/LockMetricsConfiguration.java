@@ -24,6 +24,9 @@ public class LockMetricsConfiguration {
 
     /**
      * 将 MeterRegistry 绑定到 LockMetrics，启用 Prometheus 指标采集
+     *
+     * @param lockMetrics  锁指标收集器
+     * @param meterRegistry Micrometer 指标注册表
      */
     public LockMetricsConfiguration(LockMetrics lockMetrics, MeterRegistry meterRegistry) {
         lockMetrics.bindMeterRegistry(meterRegistry);

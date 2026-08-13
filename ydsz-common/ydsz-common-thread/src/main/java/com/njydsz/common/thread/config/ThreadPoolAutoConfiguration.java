@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.BeanFactoryAware;
+import org.springframework.beans.factory.SmartInitializingSingleton;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -23,9 +25,6 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.njydsz.common.thread.metrics.MeteredRejectedHandler;
 import com.njydsz.common.thread.metrics.ThreadPoolMetrics;
-
-import org.springframework.beans.factory.SmartInitializingSingleton;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * 统一线程池自动配置。
@@ -83,6 +82,27 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
             log.info("[ydsz-thread] 自动配置完成，已管理平台线程池: {}",
                     applicationContext.getBeansOfType(ThreadPoolTaskExecutor.class).keySet());
         }
+    }
+
+    /**
+     * 注册线程池 Bean 定义注册器。
+     *
+     * <p>该 Bean 负责在 Spring 容器初始化阶段动态注册线程池和指标绑定器 BeanDefinition。
+     * 通过 {@link BeanDefinitionRegistryPostProcessor} 在所有常规 BeanDefinition 加载完成后、
+     * Bean 实例化之前执行注册逻辑。
+     *
+     * <p>v1.3.1 修复：显式声明为 {@code @Bean}，
+     * 修复 {@link ThreadPoolRegistrar} 因缺少组件原型注解导致装配链路断裂的问题。
+     *
+     * @param properties 线程池配置属性
+     * @return 线程池注册器
+     * @since 1.3.1
+     */
+    @Bean
+    @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
+    @ConditionalOnMissingBean(name = "threadPoolRegistrar")
+    public ThreadPoolRegistrar threadPoolRegistrar(ThreadPoolProperties properties) {
+        return new ThreadPoolRegistrar(properties);
     }
 
     /**

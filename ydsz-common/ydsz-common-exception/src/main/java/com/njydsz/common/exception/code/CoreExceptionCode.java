@@ -204,6 +204,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "A00000" "A00000" 参数说明
+     * @param "success" "success" 参数说明
      */
     SUCCESS("A00000", "success", 200, false, 0),
 
@@ -385,6 +387,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "A01051" "A01051" 参数说明
+     * @param "operation.fail" "operation.fail" 参数说明
      */
     FAIL("A01051", "operation.fail", 400, false, 0),
     /**
@@ -559,6 +563,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "A01052" "A01052" 参数说明
+     * @param "param.error" "param.error" 参数说明
      */
     PARAM_ERROR("A01052", "param.error", 400, false, 0),
     /**
@@ -729,6 +735,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "A01053" "A01053" 参数说明
+     * @param "illegal.argument" "illegal.argument" 参数说明
      */
     ILLEGAL_ARGUMENT("A01053", "illegal.argument", 400, false, 0),
     /**
@@ -895,6 +903,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "A01054" "A01054" 参数说明
+     * @param "invalid.request.format" "invalid.request.format" 参数说明
      */
     INVALID_REQUEST_FORMAT("A01054", "invalid.request.format", 400, false, 0),
     /**
@@ -1057,6 +1067,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "A01055" "A01055" 参数说明
+     * @param "invalid.business.state" "invalid.business.state" 参数说明
      */
     INVALID_BUSINESS_STATE("A01055", "invalid.business.state", 400, false, 0),
     /**
@@ -1215,6 +1227,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "A01056" "A01056" 参数说明
+     * @param "business.rule.violation" "business.rule.violation" 参数说明
      */
     BUSINESS_RULE_VIOLATION("A01056", "business.rule.violation", 400, false, 0),
     /**
@@ -1369,6 +1383,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "A01057" "A01057" 参数说明
+     * @param "business.error" "business.error" 参数说明
      */
     BUSINESS_ERROR("A01057", "business.error", 400, false, 0),
     /**
@@ -1519,6 +1535,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "A01058" "A01058" 参数说明
+     * @param "method.not.allowed" "method.not.allowed" 参数说明
      */
     METHOD_NOT_ALLOWED("A01058", "method.not.allowed", 405, false, 0),
     /**
@@ -1665,6 +1683,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "A01059" "A01059" 参数说明
+     * @param "duplicate.submission" "duplicate.submission" 参数说明
      */
     DUPLICATE_SUBMISSION("A01059", "duplicate.submission", 400, false, 0),
     /**
@@ -1807,6 +1827,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "A01060" "A01060" 参数说明
+     * @param "invalid.flow.state" "invalid.flow.state" 参数说明
      */
     INVALID_FLOW_STATE("A01060", "invalid.flow.state", 400, false, 0),
     /**
@@ -1945,6 +1967,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "A01061" "A01061" 参数说明
+     * @param "optimistic.lock.conflict" "optimistic.lock.conflict" 参数说明
      */
     OPTIMISTIC_LOCK_CONFLICT("A01061", "optimistic.lock.conflict", 409, true, 0),
     /**
@@ -2079,6 +2103,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "A01062" "A01062" 参数说明
+     * @param "unique.constraint.violation" "unique.constraint.violation" 参数说明
      */
     UNIQUE_CONSTRAINT_VIOLATION("A01062", "unique.constraint.violation", 409, false, 0),
     /**
@@ -2209,6 +2235,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "A01063" "A01063" 参数说明
+     * @param "foreign.key.violation" "foreign.key.violation" 参数说明
      */
     FOREIGN_KEY_VIOLATION("A01063", "foreign.key.violation", 409, false, 0),
     /**
@@ -2335,6 +2363,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "A01064" "A01064" 参数说明
+     * @param "not.null.violation" "not.null.violation" 参数说明
      */
     NOT_NULL_VIOLATION("A01064", "not.null.violation", 409, false, 0),
     /**
@@ -2457,6 +2487,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "A01065" "A01065" 参数说明
+     * @param "check.constraint.violation" "check.constraint.violation" 参数说明
      */
     CHECK_CONSTRAINT_VIOLATION("A01065", "check.constraint.violation", 409, false, 0),
 
@@ -2578,6 +2610,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "A04051" "A04051" 参数说明
+     * @param "not.found" "not.found" 参数说明
      */
     NOT_FOUND("A04051", "not.found", 404, false, 0),
     /**
@@ -2692,6 +2726,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "A04052" "A04052" 参数说明
+     * @param "conflict" "conflict" 参数说明
      */
     CONFLICT("A04052", "conflict", 409, false, 0),
     /**
@@ -2802,6 +2838,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "A04053" "A04053" 参数说明
+     * @param "data.not.found" "data.not.found" 参数说明
      */
     DATA_NOT_FOUND("A04053", "data.not.found", 404, false, 0),
     /**
@@ -2908,6 +2946,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "A04054" "A04054" 参数说明
+     * @param "resource.not.found" "resource.not.found" 参数说明
      */
     RESOURCE_NOT_FOUND("A04054", "resource.not.found", 404, false, 0),
     /**
@@ -3010,6 +3050,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "A04055" "A04055" 参数说明
+     * @param "data.already.exists" "data.already.exists" 参数说明
      */
     DATA_ALREADY_EXISTS("A04055", "data.already.exists", 409, false, 0),
     /**
@@ -3108,6 +3150,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "A04056" "A04056" 参数说明
+     * @param "data.conflict" "data.conflict" 参数说明
      */
     DATA_CONFLICT("A04056", "data.conflict", 409, false, 0),
 
@@ -3204,6 +3248,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "A04061" "A04061" 参数说明
+     * @param "file.upload.failed" "file.upload.failed" 参数说明
      */
     FILE_UPLOAD_FAILED("A04061", "file.upload.failed", 500, false, 0),
     /**
@@ -3294,6 +3340,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "A04062" "A04062" 参数说明
+     * @param "file.download.failed" "file.download.failed" 参数说明
      */
     FILE_DOWNLOAD_FAILED("A04062", "file.download.failed", 500, false, 0),
     /**
@@ -3380,6 +3428,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "A04063" "A04063" 参数说明
+     * @param "unsupported.file.type" "unsupported.file.type" 参数说明
      */
     UNSUPPORTED_FILE_TYPE("A04063", "unsupported.file.type", 400, false, 0),
     /**
@@ -3462,6 +3512,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "A04064" "A04064" 参数说明
+     * @param "file.size.exceeded" "file.size.exceeded" 参数说明
      */
     FILE_SIZE_EXCEEDED("A04064", "file.size.exceeded", 400, false, 0),
 
@@ -3543,6 +3595,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "A05001" "A05001" 参数说明
+     * @param "batch.partial.success" "batch.partial.success" 参数说明
      */
     BATCH_PARTIAL_SUCCESS("A05001", "batch.partial.success", 207, true, 0),
 
@@ -3620,6 +3674,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "B01051" "B01051" 参数说明
+     * @param "internal.error" "internal.error" 参数说明
      */
     INTERNAL_ERROR("B01051", "internal.error", 500, false, 0),
     /**
@@ -3690,6 +3746,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "B01052" "B01052" 参数说明
+     * @param "system.error" "system.error" 参数说明
      */
     SYSTEM_ERROR("B01052", "system.error", 500, false, 0),
     /**
@@ -3756,6 +3814,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "B01053" "B01053" 参数说明
+     * @param "database.error" "database.error" 参数说明
      */
     DATABASE_ERROR("B01053", "database.error", 500, false, 0),
     /**
@@ -3818,6 +3878,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "B01054" "B01054" 参数说明
+     * @param "service.unavailable" "service.unavailable" 参数说明
      */
     SERVICE_UNAVAILABLE("B01054", "service.unavailable", 503, true, 30),
     /**
@@ -3876,6 +3938,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "B01055" "B01055" 参数说明
+     * @param "network.error" "network.error" 参数说明
      */
     NETWORK_ERROR("B01055", "network.error", 500, false, 0),
     /**
@@ -3930,6 +3994,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "B01056" "B01056" 参数说明
+     * @param "cache.error" "cache.error" 参数说明
      */
     CACHE_ERROR("B01056", "cache.error", 500, false, 0),
     /**
@@ -3980,6 +4046,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "B01057" "B01057" 参数说明
+     * @param "mq.error" "mq.error" 参数说明
      */
     MQ_ERROR("B01057", "mq.error", 500, false, 0),
     /**
@@ -4026,6 +4094,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "B01058" "B01058" 参数说明
+     * @param "storage.error" "storage.error" 参数说明
      */
     STORAGE_ERROR("B01058", "storage.error", 500, false, 0),
     /**
@@ -4068,6 +4138,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "B01059" "B01059" 参数说明
+     * @param "infrastructure.service.unavailable" "infrastructure.service.unavailable" 参数说明
      */
     INFRA_SERVICE_UNAVAILABLE("B01059", "infrastructure.service.unavailable", 503, true, 30),
     /**
@@ -4106,6 +4178,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "B01060" "B01060" 参数说明
+     * @param "circuit.breaker.open" "circuit.breaker.open" 参数说明
      */
     CIRCUIT_BREAKER_OPEN("B01060", "circuit.breaker.open", 503, true, 60),
     /**
@@ -4140,6 +4214,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "B01061" "B01061" 参数说明
+     * @param "resource.exhausted" "resource.exhausted" 参数说明
      */
     RESOURCE_EXHAUSTED("B01061", "resource.exhausted", 429, true, 10),
     /**
@@ -4170,6 +4246,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "B01062" "B01062" 参数说明
+     * @param "service.degraded" "service.degraded" 参数说明
      */
     SERVICE_DEGRADED("B01062", "service.degraded", 503, true, 15),
 
@@ -4199,6 +4277,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "B02051" "B02051" 参数说明
+     * @param "bad.gateway" "bad.gateway" 参数说明
      */
     BAD_GATEWAY("B02051", "bad.gateway", 502, false, 0),
     /**
@@ -4221,6 +4301,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "B02052" "B02052" 参数说明
+     * @param "gateway.timeout" "gateway.timeout" 参数说明
      */
     GATEWAY_TIMEOUT("B02052", "gateway.timeout", 504, false, 0),
     /**
@@ -4239,6 +4321,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "B02053" "B02053" 参数说明
+     * @param "other.external.error" "other.external.error" 参数说明
      */
     OTHER_EXTERNAL_ERROR("B02053", "other.external.error", 502, false, 0),
     /**
@@ -4253,6 +4337,10 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "B02054" "B02054" 参数说明
+     * @param "external.service.timeout" "external.service.timeout" 参数说明
+     * @param EXTERNAL_SERVICE_REJECTED("B02055" EXTERNAL_SERVICE_REJECTED("B02055" 参数说明
+     * @param "external.service.rejected" "external.service.rejected" 参数说明
      */
     EXTERNAL_SERVICE_TIMEOUT("B02054", "external.service.timeout", 504, false, 0),
     /**
@@ -4263,6 +4351,8 @@ public enum CoreExceptionCode implements ExceptionCode {
      * @param false false 参数说明
      * @param 0 0 参数说明
      * @return 处理结果
+     * @param "B02055" "B02055" 参数说明
+     * @param "external.service.rejected" "external.service.rejected" 参数说明
      */
     EXTERNAL_SERVICE_REJECTED("B02055", "external.service.rejected", 502, false, 0);
 

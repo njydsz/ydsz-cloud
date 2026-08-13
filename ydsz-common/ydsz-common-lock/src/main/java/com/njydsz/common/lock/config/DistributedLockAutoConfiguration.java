@@ -26,6 +26,7 @@ import com.njydsz.common.lock.aspect.DistributedScheduledAspect;
 import com.njydsz.common.lock.aspect.IdempotentAspect;
 import com.njydsz.common.lock.aspect.RepeatSubmitAspect;
 import com.njydsz.common.lock.aspect.YdszDistributedLockAspect;
+import com.njydsz.common.lock.core.FencingTokenProvider;
 import com.njydsz.common.lock.core.LockTemplate;
 import com.njydsz.common.lock.health.LockHealthIndicator;
 import com.njydsz.common.lock.idempotent.IdempotentStrategy;
@@ -75,6 +76,24 @@ public class DistributedLockAutoConfiguration {
     @ConditionalOnMissingBean
     public LockMetrics lockMetrics() {
         return new LockMetrics();
+    }
+
+    /**
+     * 创建 Fencing Token 提供者 Bean
+     *
+     * <p>基于 Redis INCR 生成全局单调递增的 fencing token，
+     * 用于解决分布式锁在过期后的安全窗口问题。
+     * 业务方可通过配置 {@code ydsz.lock.fencing-token-enabled=false} 禁用此功能。
+     *
+     * @param stringRedisTemplate Redis 操作模板
+     * @return FencingTokenProvider 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "ydsz.lock", name = "fencing-token-enabled",
+            havingValue = "true", matchIfMissing = true)
+    public FencingTokenProvider fencingTokenProvider(StringRedisTemplate stringRedisTemplate) {
+        return new FencingTokenProvider(stringRedisTemplate);
     }
 
     /**
@@ -344,7 +363,7 @@ public class DistributedLockAutoConfiguration {
      *
      * <p>降级策略：LockStrategy 不存在时直接执行任务不加锁。
      *
-     * @param lockStrategy 锁策略（可选）
+     * @param lockStrategyProvider 锁策略提供者（可选）
      * @return DistributedScheduledAspect 实例
      */
     @Bean
@@ -395,5 +414,25 @@ public class DistributedLockAutoConfiguration {
         scheduler.setDaemon(true);
         scheduler.afterPropertiesSet();
         return scheduler;
+    }
+
+    /**
+     * 锁策略可选依赖聚合
+     *
+     * <p>用于收敛 {@link LockStrategy} Bean 方法的参数数量
+     * （云顶编码规范 5.4 节：方法参数不超过 5 个）。</p>
+     *
+     * @param stringOpsProvider      RedisStringOps 提供者
+     * @param redisTemplateProvider  RedisTemplate 提供者
+     * @param schedulerProvider      TaskScheduler 提供者
+     * @param renewalServiceProvider LockRenewalService 提供者
+     * @param notifierProvider       LockReleaseNotifier 提供者
+     */
+    public record LockOptionalDependencies(
+            ObjectProvider<RedisStringOps> stringOpsProvider,
+            ObjectProvider<RedisTemplate<String, Object>> redisTemplateProvider,
+            ObjectProvider<TaskScheduler> schedulerProvider,
+            ObjectProvider<LockRenewalService> renewalServiceProvider,
+            ObjectProvider<LockReleaseNotifier> notifierProvider) {
     }
 }

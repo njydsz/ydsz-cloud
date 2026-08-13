@@ -180,4 +180,30 @@ public interface DistributedLocker {
     default boolean supportsQueueInfo() {
         return false;
     }
+
+    // ── Fencing Token 扩展方法 ──────────────────────────────────────────────
+
+    /**
+     * 获取指定锁键的 Fencing Token（单调递增）
+     *
+     * <p>Fencing Token 用于解决分布式锁的安全窗口问题。当锁过期后，原持有者继续操作
+     * 共享资源时可能违反互斥性。资源端通过校验 token 的单调递增性判断操作合法性。
+     *
+     * <p>默认返回 -1 表示不支持此能力。
+     *
+     * @param lockKey 锁的键
+     * @return fencing token（单调递增），-1 表示不支持或生成失败
+     */
+    default long getFencingToken(String lockKey) {
+        return -1L;
+    }
+
+    /**
+     * 是否支持 Fencing Token 能力
+     *
+     * @return true 表示 fencing token 可用
+     */
+    default boolean supportsFencingToken() {
+        return false;
+    }
 }

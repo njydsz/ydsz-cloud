@@ -53,6 +53,8 @@ public enum SecurityExceptionCode implements ExceptionCode {
      * @param "security.permission.denied" "security.permission.denied" 参数说明
      * @param 403 403 参数说明
      * @return 处理结果
+     * @param "A02051" "A02051" 参数说明
+     * @param "unauthorized" "unauthorized" 参数说明
      */
     UNAUTHORIZED("A02051", "unauthorized", 401),
     /**
@@ -85,6 +87,8 @@ public enum SecurityExceptionCode implements ExceptionCode {
      * @param "security.permission.denied" "security.permission.denied" 参数说明
      * @param 403 403 参数说明
      * @return 处理结果
+     * @param "A02052" "A02052" 参数说明
+     * @param "not.logged.in" "not.logged.in" 参数说明
      */
     NOT_LOGGED_IN("A02052", "not.logged.in", 401),
     /**
@@ -115,6 +119,8 @@ public enum SecurityExceptionCode implements ExceptionCode {
      * @param "security.permission.denied" "security.permission.denied" 参数说明
      * @param 403 403 参数说明
      * @return 处理结果
+     * @param "A02053" "A02053" 参数说明
+     * @param "session.expired" "session.expired" 参数说明
      */
     SESSION_EXPIRED("A02053", "session.expired", 401),
     /**
@@ -143,6 +149,8 @@ public enum SecurityExceptionCode implements ExceptionCode {
      * @param "security.permission.denied" "security.permission.denied" 参数说明
      * @param 403 403 参数说明
      * @return 处理结果
+     * @param "A02054" "A02054" 参数说明
+     * @param "authentication.failed" "authentication.failed" 参数说明
      */
     AUTHENTICATION_FAILED("A02054", "authentication.failed", 401),
     /**
@@ -169,6 +177,8 @@ public enum SecurityExceptionCode implements ExceptionCode {
      * @param "security.permission.denied" "security.permission.denied" 参数说明
      * @param 403 403 参数说明
      * @return 处理结果
+     * @param "A02055" "A02055" 参数说明
+     * @param "account.disabled" "account.disabled" 参数说明
      */
     ACCOUNT_DISABLED("A02055", "account.disabled", 401),
     /**
@@ -193,6 +203,8 @@ public enum SecurityExceptionCode implements ExceptionCode {
      * @param "security.permission.denied" "security.permission.denied" 参数说明
      * @param 403 403 参数说明
      * @return 处理结果
+     * @param "A02056" "A02056" 参数说明
+     * @param "account.logged.elsewhere" "account.logged.elsewhere" 参数说明
      */
     ACCOUNT_LOGGED_ELSEWHERE("A02056", "account.logged.elsewhere", 401),
 
@@ -218,6 +230,8 @@ public enum SecurityExceptionCode implements ExceptionCode {
      * @param "security.permission.denied" "security.permission.denied" 参数说明
      * @param 403 403 参数说明
      * @return 处理结果
+     * @param "A03051" "A03051" 参数说明
+     * @param "forbidden" "forbidden" 参数说明
      */
     FORBIDDEN("A03051", "forbidden", 403),
     /**
@@ -238,6 +252,8 @@ public enum SecurityExceptionCode implements ExceptionCode {
      * @param "security.permission.denied" "security.permission.denied" 参数说明
      * @param 403 403 参数说明
      * @return 处理结果
+     * @param "A03052" "A03052" 参数说明
+     * @param "insufficient.permissions" "insufficient.permissions" 参数说明
      */
     INSUFFICIENT_PERMISSIONS("A03052", "insufficient.permissions", 403),
     /**
@@ -256,6 +272,8 @@ public enum SecurityExceptionCode implements ExceptionCode {
      * @param "security.permission.denied" "security.permission.denied" 参数说明
      * @param 403 403 参数说明
      * @return 处理结果
+     * @param "A03053" "A03053" 参数说明
+     * @param "access.denied" "access.denied" 参数说明
      */
     ACCESS_DENIED("A03053", "access.denied", 403),
     /**
@@ -272,6 +290,8 @@ public enum SecurityExceptionCode implements ExceptionCode {
      * @param "security.permission.denied" "security.permission.denied" 参数说明
      * @param 403 403 参数说明
      * @return 处理结果
+     * @param "A03054" "A03054" 参数说明
+     * @param "role.mismatch" "role.mismatch" 参数说明
      */
     ROLE_MISMATCH("A03054", "role.mismatch", 403),
 
@@ -289,6 +309,8 @@ public enum SecurityExceptionCode implements ExceptionCode {
      * @param "security.permission.denied" "security.permission.denied" 参数说明
      * @param 403 403 参数说明
      * @return 处理结果
+     * @param "C01051" "C01051" 参数说明
+     * @param "security.access.denied" "security.access.denied" 参数说明
      */
     SEC_ACCESS_DENIED("C01051", "security.access.denied", 403),
     /**
@@ -301,6 +323,8 @@ public enum SecurityExceptionCode implements ExceptionCode {
      * @param "security.permission.denied" "security.permission.denied" 参数说明
      * @param 403 403 参数说明
      * @return 处理结果
+     * @param "C01052" "C01052" 参数说明
+     * @param "security.authentication.required" "security.authentication.required" 参数说明
      */
     AUTHENTICATION_REQUIRED("C01052", "security.authentication.required", 401),
     /**
@@ -311,6 +335,10 @@ public enum SecurityExceptionCode implements ExceptionCode {
      * @param "security.permission.denied" "security.permission.denied" 参数说明
      * @param 403 403 参数说明
      * @return 处理结果
+     * @param "C01053" "C01053" 参数说明
+     * @param "security.token.expired" "security.token.expired" 参数说明
+     * @param PERMISSION_DENIED("C01054" PERMISSION_DENIED("C01054" 参数说明
+     * @param "security.permission.denied" "security.permission.denied" 参数说明
      */
     TOKEN_EXPIRED("C01053", "security.token.expired", 401),
     /**
@@ -319,6 +347,8 @@ public enum SecurityExceptionCode implements ExceptionCode {
      * @param "security.permission.denied" "security.permission.denied" 参数说明
      * @param 403 403 参数说明
      * @return 处理结果
+     * @param "C01054" "C01054" 参数说明
+     * @param "security.permission.denied" "security.permission.denied" 参数说明
      */
     PERMISSION_DENIED("C01054", "security.permission.denied", 403);
 

@@ -4,7 +4,9 @@ import java.time.Duration;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
 import java.util.function.Supplier;
+
 
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -288,10 +290,18 @@ public class RedisCacheGuard {
     }
 
     /**
+     * 防穿透模式最大退避间隔（毫秒）
+     */
+    private static final long PENETRATION_SPIN_MAX_BACKOFF_MS = 200;
+
+    /**
      * 自旋等待缓存就绪（指数退避），用于防穿透锁未获取时等待持锁线程回填
      *
      * <p>与 {@link #spinWaitForCache} 类似，但额外处理空值标记：
      * 当缓存中为 {@link #NULL_PLACEHOLDER} 时表示数据确实不存在，直接返回 null。</p>
+     *
+     * <p>使用 {@link LockSupport#parkNanos} 替代 {@link Thread.sleep}，避免持有监视器锁，
+     * 减少对业务线程池的阻塞影响。</p>
      *
      * @param key        缓存 key
      * @param supplier   降级回源逻辑（自旋超时后调用）
@@ -303,7 +313,7 @@ public class RedisCacheGuard {
     private <T> T spinWaitForCacheOrPenetration(String key, Supplier<T> supplier,
                                                  Class<T> clazz, int nullCacheSec) {
         final long spinStart = System.currentTimeMillis();
-        long backoff = SPIN_INITIAL_BACKOFF_MS;
+        long backoffMs = SPIN_INITIAL_BACKOFF_MS;
         while (true) {
             Object cached = stringOps.get(key);
             if (cached != null) {
@@ -326,17 +336,22 @@ public class RedisCacheGuard {
                 }
                 return data;
             }
-            long sleepMs = Math.min(backoff, SPIN_MAX_WAIT_MS - elapsed);
-            try {
-                Thread.sleep(sleepMs);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+            long sleepMs = Math.min(backoffMs, SPIN_MAX_WAIT_MS - elapsed);
+            if (sleepMs > 0) {
+                LockSupport.parkNanos(sleepMs * 1_000_000L);
+            }
+            if (Thread.currentThread().isInterrupted()) {
                 log.warn("【RedisCacheGuard】防穿透自旋等待被中断，降级直接回源 | key={}", key);
                 return supplier.get();
             }
-            backoff = Math.min(backoff * 2, SPIN_MAX_BACKOFF_MS);
+            backoffMs = Math.min(backoffMs * 2, PENETRATION_SPIN_MAX_BACKOFF_MS);
         }
     }
+
+    /**
+     * 防击穿模式最大退避间隔（毫秒）
+     */
+    private static final long BREAKDOWN_SPIN_MAX_BACKOFF_MS = 200;
 
     /**
      * 自旋等待缓存就绪（指数退避），用于防击穿锁等待超时后避免直接回源
@@ -344,6 +359,9 @@ public class RedisCacheGuard {
      * <p>当获取锁超时时不立即调用 {@code supplier.get()}，而是以指数退避方式自旋检查缓存，
      * 等待持锁线程回填缓存。仅当自旋等待也超时后才降级直接回源，
      * 避免大量等待线程同时击穿数据库。</p>
+     *
+     * <p>使用 {@link LockSupport#parkNanos} 替代 {@link Thread.sleep}，避免持有监视器锁，
+     * 减少对业务线程池的阻塞影响。</p>
      *
      * @param key      缓存 key
      * @param supplier 降级回源逻辑（自旋超时后调用）
@@ -353,7 +371,7 @@ public class RedisCacheGuard {
      */
     private <T> T spinWaitForCache(String key, Supplier<T> supplier, Class<T> clazz) {
         final long spinStart = System.currentTimeMillis();
-        long backoff = SPIN_INITIAL_BACKOFF_MS;
+        long backoffMs = SPIN_INITIAL_BACKOFF_MS;
         while (true) {
             Object cached = stringOps.get(key);
             if (cached != null) {
@@ -368,15 +386,15 @@ public class RedisCacheGuard {
                 log.warn("【RedisCacheGuard】自旋等待超时，降级直接回源 | key={}", key);
                 return supplier.get();
             }
-            long sleepMs = Math.min(backoff, SPIN_MAX_WAIT_MS - elapsed);
-            try {
-                Thread.sleep(sleepMs);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+            long sleepMs = Math.min(backoffMs, SPIN_MAX_WAIT_MS - elapsed);
+            if (sleepMs > 0) {
+                LockSupport.parkNanos(sleepMs * 1_000_000L);
+            }
+            if (Thread.currentThread().isInterrupted()) {
                 log.warn("【RedisCacheGuard】自旋等待被中断，降级直接回源 | key={}", key);
                 return supplier.get();
             }
-            backoff = Math.min(backoff * 2, SPIN_MAX_BACKOFF_MS);
+            backoffMs = Math.min(backoffMs * 2, BREAKDOWN_SPIN_MAX_BACKOFF_MS);
         }
     }
 

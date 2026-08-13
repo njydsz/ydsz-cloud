@@ -34,6 +34,8 @@ public enum ExceptionCategory {
      * @param EXTERNAL("E" EXTERNAL("E" 参数说明
      * @param "外部服务异常" "外部服务异常" 参数说明
      * @return 处理结果
+     * @param "A" "A" 参数说明
+     * @param "外部服务异常" "外部服务异常" 参数说明
      */
     BUSINESS("A", "业务异常"),
 
@@ -46,6 +48,8 @@ public enum ExceptionCategory {
      * @param EXTERNAL("E" EXTERNAL("E" 参数说明
      * @param "外部服务异常" "外部服务异常" 参数说明
      * @return 处理结果
+     * @param "B" "B" 参数说明
+     * @param "外部服务异常" "外部服务异常" 参数说明
      */
     SYSTEM("B", "系统异常"),
 
@@ -57,6 +61,8 @@ public enum ExceptionCategory {
      * @param EXTERNAL("E" EXTERNAL("E" 参数说明
      * @param "外部服务异常" "外部服务异常" 参数说明
      * @return 处理结果
+     * @param "C" "C" 参数说明
+     * @param "外部服务异常" "外部服务异常" 参数说明
      */
     SECURITY("C", "安全异常"),
 
@@ -67,6 +73,9 @@ public enum ExceptionCategory {
      * @param EXTERNAL("E" EXTERNAL("E" 参数说明
      * @param "外部服务异常" "外部服务异常" 参数说明
      * @return 处理结果
+     * @param "D" "D" 参数说明
+     * @param EXTERNAL("E" EXTERNAL("E" 参数说明
+     * @param "外部服务异常" "外部服务异常" 参数说明
      */
     RATE_LIMIT("D", "限流熔断异常"),
 
@@ -76,6 +85,8 @@ public enum ExceptionCategory {
      * @param "E" "E" 参数说明
      * @param "外部服务异常" "外部服务异常" 参数说明
      * @return 处理结果
+     * @param "E" "E" 参数说明
+     * @param "外部服务异常" "外部服务异常" 参数说明
      */
     EXTERNAL("E", "外部服务异常");
 

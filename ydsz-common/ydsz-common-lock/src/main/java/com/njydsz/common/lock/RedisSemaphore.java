@@ -349,9 +349,7 @@ public class RedisSemaphore implements DistributedLocker {
     }
 
     /**
-     * 释放信号量（无 acquireId，不取消定时任务）
-     *
-     * @param acquireId 获取信号量时返回的 acquireId
+     * 释放信号量（不关联超时任务，超时自动释放任务继续生效）
      */
     public void release() {
         releaseInternal();

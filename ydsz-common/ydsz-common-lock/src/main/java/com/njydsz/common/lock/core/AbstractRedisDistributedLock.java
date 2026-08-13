@@ -15,6 +15,7 @@ import com.njydsz.common.lock.metrics.LockMetrics;
 import com.njydsz.common.lock.notify.LockReleaseNotifier;
 import com.njydsz.common.lock.scheduler.LockWatchDog;
 import com.njydsz.common.util.id.IdGenerator;
+import org.springframework.beans.factory.ObjectProvider;
 
 
 /**
@@ -76,6 +77,11 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
      * 锁释放通知器（可选，未配置时退化为退避轮询）
      */
     private LockReleaseNotifier lockReleaseNotifier;
+
+    /**
+     * Fencing Token 提供器（可选，未配置时不支持 fencing token）
+     */
+    private FencingTokenProvider fencingTokenProvider;
 
     /**
      * 本地缓存 clientId，线程级（key 为 {@code threadId:lockKey}）
@@ -168,6 +174,18 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
      */
     public void setLockReleaseNotifier(LockReleaseNotifier lockReleaseNotifier) {
         this.lockReleaseNotifier = lockReleaseNotifier;
+    }
+
+    /**
+     * 设置 Fencing Token 提供器（可选）
+     *
+     * <p>配置后，获取锁时可同时获取单调递增的 fencing token，
+     * 用于解决分布式锁的安全窗口问题。</p>
+     *
+     * @param fencingTokenProvider Fencing Token 提供器实例
+     */
+    public void setFencingTokenProvider(FencingTokenProvider fencingTokenProvider) {
+        this.fencingTokenProvider = fencingTokenProvider;
     }
 
     /**
@@ -550,4 +568,32 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
      * @return 剩余时间（毫秒），-2 表示异常
      */
     protected abstract long doGetRemainTime(String lockKey);
+
+    // ── Fencing Token 实现 ─────────────────────────────────────────────────
+
+    /**
+     * 获取指定锁键的 Fencing Token（单调递增）
+     *
+     * <p>仅在配置了 {@link FencingTokenProvider} 时可用。
+     *
+     * @param lockKey 锁的键
+     * @return fencing token，-1 表示不支持或生成失败
+     */
+    @Override
+    public long getFencingToken(String lockKey) {
+        if (fencingTokenProvider == null) {
+            return -1L;
+        }
+        return fencingTokenProvider.nextToken(lockKey);
+    }
+
+    /**
+     * 是否支持 Fencing Token 能力
+     *
+     * @return true 表示已配置 Fencing Token 提供器
+     */
+    @Override
+    public boolean supportsFencingToken() {
+        return fencingTokenProvider != null;
+    }
 }

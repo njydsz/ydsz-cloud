@@ -34,6 +34,8 @@ public enum ExceptionLevel {
      * @param FATAL("F" FATAL("F" 参数说明
      * @param "严重" "严重" 参数说明
      * @return 处理结果
+     * @param "I" "I" 参数说明
+     * @param "严重" "严重" 参数说明
      */
     INFO("I", "信息"),
 
@@ -45,6 +47,8 @@ public enum ExceptionLevel {
      * @param FATAL("F" FATAL("F" 参数说明
      * @param "严重" "严重" 参数说明
      * @return 处理结果
+     * @param "W" "W" 参数说明
+     * @param "严重" "严重" 参数说明
      */
     WARN("W", "警告"),
 
@@ -55,6 +59,9 @@ public enum ExceptionLevel {
      * @param FATAL("F" FATAL("F" 参数说明
      * @param "严重" "严重" 参数说明
      * @return 处理结果
+     * @param "E" "E" 参数说明
+     * @param FATAL("F" FATAL("F" 参数说明
+     * @param "严重" "严重" 参数说明
      */
     ERROR("E", "错误"),
 
@@ -64,6 +71,8 @@ public enum ExceptionLevel {
      * @param "F" "F" 参数说明
      * @param "严重" "严重" 参数说明
      * @return 处理结果
+     * @param "F" "F" 参数说明
+     * @param "严重" "严重" 参数说明
      */
     FATAL("F", "严重");
 
