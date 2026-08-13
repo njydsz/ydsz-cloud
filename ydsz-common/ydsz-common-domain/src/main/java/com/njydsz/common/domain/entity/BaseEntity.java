@@ -85,9 +85,9 @@ public class BaseEntity<T extends Serializable> implements Serializable, EventRe
      * <p>用于 DDD 聚合根在状态变更时注册事件，由 Repository 在持久化后统一分派。
      * 使用 {@code transient} 避免参与 Java 序列化，
      * 配合 {@code @JsonIgnore} 排除在 JSON 序列化之外。
+     * 类级 {@code @EqualsAndHashCode(of = "id")} 已排除非 id 字段，无需重复标注 Exclude。
      */
     @JsonIgnore
-    @EqualsAndHashCode.Exclude
     @Builder.Default
     private transient List<Object> domainEvents = new ArrayList<>();
 
