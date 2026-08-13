@@ -247,15 +247,20 @@ public class RedisConfiguration {
     /**
      * 注册 YdszCacheable 注解切面
      *
+     * <p>核心缓存防护逻辑委托给 {@link RedisCacheGuard} 统一处理，
+     * 切面仅负责 SpEL 解析和 AOP 织入，避免锁逻辑重复实现。
+     *
      * @param redisStringOps Redis String 操作组件（用于读写缓存、SETNX 锁等）
-     * @param redisTemplate  Redis 模板（用于执行 Lua 脚本释放锁）
+     * @param redisTemplate  Redis 模板（用于构建 RedisCacheGuard）
+     * @param redisProperties Redis 配置属性（含 CacheGuard 参数）
      * @return YdszCacheableAspect 实例
      */
     @Bean
     @ConditionalOnMissingBean
     public YdszCacheableAspect ydszCacheableAspect(RedisStringOps redisStringOps,
-                                                   RedisTemplate<String, Object> redisTemplate) {
-        return new YdszCacheableAspect(redisStringOps, redisTemplate);
+                                                   RedisTemplate<String, Object> redisTemplate,
+                                                   RedisProperties redisProperties) {
+        return new YdszCacheableAspect(redisStringOps, redisTemplate, redisProperties);
     }
 
     /**

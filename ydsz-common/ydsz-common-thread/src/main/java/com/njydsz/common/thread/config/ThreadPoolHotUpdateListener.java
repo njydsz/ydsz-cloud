@@ -2,10 +2,8 @@ package com.njydsz.common.thread.config;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,8 +42,13 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  *
  * <p>v1.3.0 新增：从 ydzs-cronjob 的 ThreadPoolHotUpdateListener 抽象为通用组件。
  *
- * <p>v1.3.1 修复：{@link #onContextReady(ContextRefreshedEvent)} 添加 {@link EventListener} 注解，
- * 应用启动完成后自动打印线程池注册摘要。
+ * <p>v1.3.1 变更：
+ * <ul>
+ *   <li>{@link #onContextReady(ContextRefreshedEvent)} 添加 {@link EventListener} 注解，
+ *       应用启动完成后自动打印线程池注册摘要</li>
+ *   <li>移除冗余的 {@code ReentrantReadWriteLock}，依赖 {@link ThreadPoolExecutor}
+ *       内置的线程安全保证</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.3.0
@@ -55,7 +58,6 @@ public class ThreadPoolHotUpdateListener {
     private static final Logger log = LoggerFactory.getLogger(ThreadPoolHotUpdateListener.class);
 
     private final ThreadPoolAutoConfiguration threadPoolAutoConfiguration;
-    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
     /**
      * 构造器，注入 ydsz-thread 的自动配置实例。
@@ -90,22 +92,17 @@ public class ThreadPoolHotUpdateListener {
      * @param newMaxSize  新的最大线程数（必须 >= newCoreSize）
      */
     public void resizePool(String poolName, int newCoreSize, int newMaxSize) {
-        lock.writeLock().lock();
-        try {
-            ThreadPoolTaskExecutor executor = getExecutor(poolName);
-            if (executor == null) {
-                log.warn("[ThreadPoolHotUpdate] 线程池 [{}] 不存在，跳过调整", poolName);
-                return;
-            }
-            if (newCoreSize < 1 || newMaxSize < 1 || newCoreSize > newMaxSize) {
-                log.warn("[ThreadPoolHotUpdate] 参数非法: core={}, max={}, 跳过", newCoreSize, newMaxSize);
-                return;
-            }
-
-            resizeInternal(executor, newCoreSize, newMaxSize, poolName);
-        } finally {
-            lock.writeLock().unlock();
+        ThreadPoolTaskExecutor executor = getExecutor(poolName);
+        if (executor == null) {
+            log.warn("[ThreadPoolHotUpdate] 线程池 [{}] 不存在，跳过调整", poolName);
+            return;
         }
+        if (newCoreSize < 1 || newMaxSize < 1 || newCoreSize > newMaxSize) {
+            log.warn("[ThreadPoolHotUpdate] 参数非法: core={}, max={}, 跳过", newCoreSize, newMaxSize);
+            return;
+        }
+
+        resizeInternal(executor, newCoreSize, newMaxSize, poolName);
     }
 
     /**
@@ -115,19 +112,14 @@ public class ThreadPoolHotUpdateListener {
      * @param newPolicy 新的拒绝策略
      */
     public void updateRejectPolicy(String poolName, ThreadPoolProperties.RejectPolicy newPolicy) {
-        lock.writeLock().lock();
-        try {
-            ThreadPoolTaskExecutor executor = getExecutor(poolName);
-            if (executor == null) {
-                log.warn("[ThreadPoolHotUpdate] 线程池 [{}] 不存在，跳过调整", poolName);
-                return;
-            }
-            RejectedExecutionHandler newHandler = createRejectHandler(newPolicy);
-            executor.setRejectedExecutionHandler(newHandler);
-            log.info("[ThreadPoolHotUpdate] 线程池 [{}] 拒绝策略已更新为 {}", poolName, newPolicy);
-        } finally {
-            lock.writeLock().unlock();
+        ThreadPoolTaskExecutor executor = getExecutor(poolName);
+        if (executor == null) {
+            log.warn("[ThreadPoolHotUpdate] 线程池 [{}] 不存在，跳过调整", poolName);
+            return;
         }
+        RejectedExecutionHandler newHandler = createRejectHandler(newPolicy);
+        executor.setRejectedExecutionHandler(newHandler);
+        log.info("[ThreadPoolHotUpdate] 线程池 [{}] 拒绝策略已更新为 {}", poolName, newPolicy);
     }
 
     /**
@@ -137,19 +129,14 @@ public class ThreadPoolHotUpdateListener {
      * @param newThreadPrefix 新的线程名前缀
      */
     public void updateThreadNamePrefix(String poolName, String newThreadPrefix) {
-        lock.writeLock().lock();
-        try {
-            ThreadPoolTaskExecutor executor = getExecutor(poolName);
-            if (executor == null) {
-                log.warn("[ThreadPoolHotUpdate] 线程池 [{}] 不存在，跳过调整", poolName);
-                return;
-            }
-            executor.setThreadNamePrefix(newThreadPrefix);
-            log.info("[ThreadPoolHotUpdate] 线程池 [{}] 线程名前缀已更新为 {}（仅影响新线程）",
-                    poolName, newThreadPrefix);
-        } finally {
-            lock.writeLock().unlock();
+        ThreadPoolTaskExecutor executor = getExecutor(poolName);
+        if (executor == null) {
+            log.warn("[ThreadPoolHotUpdate] 线程池 [{}] 不存在，跳过调整", poolName);
+            return;
         }
+        executor.setThreadNamePrefix(newThreadPrefix);
+        log.info("[ThreadPoolHotUpdate] 线程池 [{}] 线程名前缀已更新为 {}（仅影响新线程）",
+                poolName, newThreadPrefix);
     }
 
     /**

@@ -303,6 +303,12 @@ public class ExceptionCodeScanner implements SmartInitializingSingleton {
             log.debug("[ExceptionCodeScanner] 类 {} 未标注 @YdszExceptionCode，跳过", clazz.getName());
             return;
         }
+        if (annotation.deprecated()) {
+            String replacementTip = annotation.replacement().isEmpty()
+                    ? "新版错误码枚举" : annotation.replacement();
+            log.warn("[ExceptionCodeScanner] 模块错误码枚举已废弃: {} | module={} | 建议迁移到: {}",
+                    clazz.getName(), annotation.module(), replacementTip);
+        }
         registerEnum(annotation.module(), annotation.description(), clazz.getName());
     }
 

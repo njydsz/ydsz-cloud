@@ -228,7 +228,18 @@ public class YdszExceptionCoreAutoConfiguration {
     @ConditionalOnMissingBean(ExceptionMetrics.class)
     public ExceptionMetrics exceptionMetrics(MeterRegistry meterRegistry) {
         ExceptionMetrics metrics = new ExceptionMetrics(meterRegistry);
-        metrics.setIncludeCodeTag(exceptionProperties.isMetricsIncludeCodeTag());
+        boolean includeCodeTag = exceptionProperties.isMetricsIncludeCodeTag();
+        metrics.setIncludeCodeTag(includeCodeTag);
+        metrics.setPercentiles(exceptionProperties.getMetricsPercentiles());
+        if (includeCodeTag) {
+            log.error("[ExceptionMetrics] 已开启高基数 code tag（ydsz.exception.metrics-include-code-tag=true），"
+                    + "可能导致 Prometheus 存储空间激增与查询性能下降。建议仅在开发/测试环境开启，"
+                    + "生产环境请通过 ydsz.exception.metrics-include-code-tag=false 关闭，"
+                    + "或使用 Prometheus 的 Recording Rule 在存储层降采样。");
+        }
+        if (exceptionProperties.getMetricsPercentiles() != null && !exceptionProperties.getMetricsPercentiles().isEmpty()) {
+            log.info("[ExceptionMetrics] 异常处理耗时预计算分位数已启用: {}", exceptionProperties.getMetricsPercentiles());
+        }
         return metrics;
     }
 

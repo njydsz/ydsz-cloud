@@ -15,7 +15,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
  * @Scheduled(cron = "0 0 2 * * ?")
  * public void scanJobs() {
  *     SystemTenantContextRunner.run(() -> {
- *         // 此处 RequestContext.getTenantId() = systemTenantId
+ *         // 此处 TenantContextHolder.getTenantId() = systemTenantId
  *         jobScanner.scan();
  *     });
  * }

@@ -1,4 +1,5 @@
 package com.njydsz.common.exception.metrics;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -88,6 +89,11 @@ public class ExceptionMetrics {
      */
     private volatile boolean includeCodeTag = false;
 
+    /**
+     * 预计算分位数列表（如 0.99 = P99），为空则不预计算
+     */
+    private volatile double[] percentiles;
+
     public ExceptionMetrics(MeterRegistry meterRegistry) {
         this.meterRegistry = meterRegistry;
     }
@@ -99,6 +105,19 @@ public class ExceptionMetrics {
      */
     public void setIncludeCodeTag(boolean includeCodeTag) {
         this.includeCodeTag = includeCodeTag;
+    }
+
+    /**
+     * 设置预计算分位数。
+     *
+     * @param percentiles 分位数列表（0.0~1.0），如 [0.99] 表示 P99；为空则不预计算
+     */
+    public void setPercentiles(List<Double> percentiles) {
+        if (percentiles == null || percentiles.isEmpty()) {
+            this.percentiles = null;
+        } else {
+            this.percentiles = percentiles.stream().mapToDouble(Double::doubleValue).toArray();
+        }
     }
 
     /**
@@ -152,10 +171,12 @@ public class ExceptionMetrics {
         }
         try {
             String exceptionType = throwable.getClass().getSimpleName();
-            Timer.builder(METRIC_HANDLER_DURATION)
-                    .tag(TAG_TYPE, exceptionType)
-                    .register(meterRegistry)
-                    .record(durationMs, TimeUnit.MILLISECONDS);
+            Timer.Builder<?> timerBuilder = Timer.builder(METRIC_HANDLER_DURATION)
+                    .tag(TAG_TYPE, exceptionType);
+            if (percentiles != null) {
+                timerBuilder.publishPercentiles(percentiles);
+            }
+            timerBuilder.register(meterRegistry).record(durationMs, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
             log.warn("记录异常处理耗时指标失败: {}", e.getMessage());
         }

@@ -2,11 +2,8 @@ package com.njydsz.common.redis.annotation;
 
 import java.lang.reflect.Method;
 import java.time.Duration;
-import java.util.Collections;
-import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.LockSupport;
 
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -14,11 +11,12 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.SimpleEvaluationContext;
 
+import com.njydsz.common.redis.config.RedisProperties;
+import com.njydsz.common.redis.service.RedisCacheGuard;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 /**
@@ -27,17 +25,15 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * <p>提供三重缓存防护：
  * <ul>
  *   <li>缓存穿透防护（空值缓存）—— {@code preventPenetration}</li>
- *   <li>缓存击穿防护（分布式互斥锁）—— {@code preventStampede}</li>
+ *   <li>缓存击穿防护（分布式互斥锁 + WatchDog 续期）—— {@code preventStampede}</li>
  *   <li>缓存雪崩防护（随机TTL偏移）—— 默认启用</li>
  * </ul>
  *
- * <p><b>防击穿流程：</b>
- * <ol>
- *   <li>缓存未命中时，使用 Redis SETNX 获取互斥锁</li>
- *   <li>获取锁成功的线程执行数据加载并回填缓存</li>
- *   <li>获取锁失败的线程自旋等待（带超时），直到缓存被填充</li>
- *   <li>超时后降级执行数据加载（不缓存结果）</li>
- * </ol>
+ * <p><b>逻辑统一说明：</b>
+ * <p>本切面负责 SpEL 表达式解析和 AOP 织入，核心缓存防护逻辑
+ * （分布式锁、WatchDog 续期、单flight 等待、空值缓存）统一委托给
+ * {@link RedisCacheGuard}，避免与 {@code YdszCacheableAspect} 各自实现
+ * 一套锁机制导致的逻辑分歧和维护成本。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -46,65 +42,44 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 @Aspect
 public class YdszCacheableAspect {
 
-    /**
-     * 空值标记的序列化字符串，标识缓存中存放的是空值占位
-     */
-    private static final String NULL_VALUE_MARKER = "__NULL__";
-
-    /**
-     * 防击穿互斥锁 Key 前缀
-     */
-    private static final String LOCK_KEY_PREFIX = "lock:stampede:";
-
-    /**
-     * 防击穿互斥锁默认过期时间（秒）
-     * <p>超过该时间未释放则自动过期，避免死锁
-     */
-    private static final long LOCK_EXPIRE_SECONDS = 30;
-
-    /**
-     * 防击穿自旋等待的初始间隔（毫秒）
-     */
-    private static final long SPIN_WAIT_INITIAL_MILLIS = 50;
-
-    /**
-     * 缓存 TTL 随机抖动范围（比例）
-     */
+    /** 缓存 TTL 随机抖动范围（比例） */
     private static final double TTL_JITTER_RANGE = 0.1;
 
-    /**
-     * SpEL 表达式解析器（线程安全，复用）
-     */
+    /** SpEL 表达式解析器（线程安全，复用） */
     private static final ExpressionParser PARSER = new SpelExpressionParser();
 
-    private static final String UNLOCK_LUA =
-            "if redis.call('get', KEYS[1]) == ARGV[1] then " +
-            "return redis.call('del', KEYS[1]) " +
-            "else return 0 end";
-
+    private final RedisCacheGuard redisCacheGuard;
     private final RedisStringOps redisStringOps;
-    private final RedisTemplate<String, Object> redisTemplate;
 
     /**
      * 构造切面实例
      *
-     * @param redisStringOps Redis String 操作（用于读写缓存、释放锁等）
-     * @param redisTemplate  Redis 模板（用于执行 Lua 脚本）
+     * <p>注入 {@link RedisCacheGuard} 统一处理缓存防护逻辑，
+     * 通过 SpEL 解析后的缓存键调用防护方法，消除重复的锁代码。
+     *
+     * @param redisStringOps  Redis String 操作（用于 YdszCacheEvict/YdszCachePut）
+     * @param redisTemplate   Redis 模板（用于构建 RedisCacheGuard）
+     * @param redisProperties Redis 配置（用于获取 CacheGuard 参数）
      */
-    public YdszCacheableAspect(RedisStringOps redisStringOps, RedisTemplate<String, Object> redisTemplate) {
+    public YdszCacheableAspect(RedisStringOps redisStringOps,
+                                RedisTemplate<String, Object> redisTemplate,
+                                RedisProperties redisProperties) {
         this.redisStringOps = redisStringOps;
-        this.redisTemplate = redisTemplate;
+        // 构建 RedisCacheGuard 实例，复用可配置参数（breakdownLockLeaseSeconds 等）
+        int nullValueTtl = redisProperties != null ? redisProperties.getNullValueTtlSeconds() : 1800;
+        this.redisCacheGuard = new RedisCacheGuard(redisStringOps, redisTemplate,
+                nullValueTtl,
+                redisProperties != null ? redisProperties.getCacheGuard() : new RedisProperties.CacheGuard());
     }
 
     /**
      * 环绕通知：拦截 {@link YdszCacheable} 注解方法
      *
-     * <p>执行流程：</p>
+     * <p>执行流程：
      * <ol>
-     *   <li>解析 SpEL Key 后查询缓存</li>
-     *   <li>命中直接返回</li>
-     *   <li>未命中则根据 preventStampede 决定是否走防击穿分支</li>
-     *   <li>回源后将结果（含空值）回填缓存</li>
+     *   <li>解析 SpEL Key 后根据 preventStampede 选择防护策略</li>
+     *   <li>开启防击穿：委托 {@link RedisCacheGuard#antiBreakdown} 统一处理</li>
+     *   <li>未开启防击穿：直接加载并使用防穿透空值缓存回填</li>
      * </ol>
      *
      * @param joinPoint 切点
@@ -118,173 +93,38 @@ public class YdszCacheableAspect {
         YdszCacheable annotation = method.getAnnotation(YdszCacheable.class);
 
         String cacheKey = resolveKey(annotation.key(), signature, joinPoint.getArgs());
+        long ttlWithJitter = applyRandomJitter(annotation.ttl(), annotation.timeUnit());
 
-        long ttl = applyRandomJitter(annotation.ttl(), annotation.timeUnit());
-
-        // 1. 尝试从缓存获取
-        Object cachedValue = redisStringOps.get(cacheKey);
-        if (cachedValue != null) {
-            if (NULL_VALUE_MARKER.equals(cachedValue)) {
-                log.debug("【YdszCacheable】缓存命中空值标记 key={}", cacheKey);
-                return null;
-            }
-            log.debug("【YdszCacheable】缓存命中 key={}", cacheKey);
-            return cachedValue;
-        }
-
-        // 2. 缓存未命中 —— 根据是否开启防击穿走不同分支
+        // 委托 RedisCacheGuard 统一处理带防击穿的缓存读取
         if (annotation.preventStampede()) {
-            return handleWithStampedePrevention(joinPoint, annotation, cacheKey, ttl);
+            return redisCacheGuard.antiBreakdown(cacheKey, ttlWithJitter,
+                    () -> {
+                        try {
+                            return joinPoint.proceed();
+                        } catch (Throwable e) {
+                            if (e instanceof RuntimeException) {
+                                throw (RuntimeException) e;
+                            }
+                            throw new RuntimeException("缓存加载执行失败", e);
+                        }
+                    },
+                    Object.class);
         }
 
-        // 3. 无防击穿：直接加载数据并回填缓存
-        return loadAndCache(joinPoint, annotation, cacheKey, ttl);
-    }
-
-    /**
-     * 防击穿逻辑：使用 Redis SETNX 互斥锁保护数据加载
-     *
-     * @param joinPoint  切点
-     * @param annotation YdszCacheable 注解
-     * @param cacheKey   缓存键
-     * @param ttl        缓存过期时间
-     * @return 方法返回值
-     * @throws Throwable 原方法抛出的异常
-     */
-    private Object handleWithStampedePrevention(ProceedingJoinPoint joinPoint,
-                                                 YdszCacheable annotation,
-                                                 String cacheKey,
-                                                 long ttl) throws Throwable {
-        String lockKey = LOCK_KEY_PREFIX + cacheKey;
-        String lockValue = UUID.randomUUID().toString();
-
-        // 尝试获取互斥锁
-        boolean locked = redisStringOps.setIfAbsent(lockKey, lockValue, LOCK_EXPIRE_SECONDS);
-
-        if (locked) {
-            // 获取锁成功：执行数据加载并回填缓存
-            try {
-                // 双重检查：获取锁后再次检查缓存（可能已被其他线程填充）
-                Object cachedValue = redisStringOps.get(cacheKey);
-                if (cachedValue != null) {
-                    if (NULL_VALUE_MARKER.equals(cachedValue)) {
-                        log.debug("【YdszCacheable】防击穿双重检查命中空值标记 key={}", cacheKey);
-                        return null;
+        // 无防击穿：使用 antiPenetration 的空值缓存防穿透
+        return redisCacheGuard.antiPenetration(cacheKey,
+                () -> {
+                    try {
+                        return joinPoint.proceed();
+                    } catch (Throwable e) {
+                        if (e instanceof RuntimeException) {
+                            throw (RuntimeException) e;
+                        }
+                        throw new RuntimeException("缓存加载执行失败", e);
                     }
-                    log.debug("【YdszCacheable】防击穿双重检查命中 key={}", cacheKey);
-                    return cachedValue;
-                }
-
-                return loadAndCache(joinPoint, annotation, cacheKey, ttl);
-            } finally {
-                // 安全释放锁（Lua 脚本校验锁持有者，防止误删）
-                releaseLock(lockKey, lockValue);
-            }
-        }
-
-        // 获取锁失败：自旋等待缓存被填充
-        return spinWaitForCache(joinPoint, annotation, cacheKey, ttl);
-    }
-
-    /**
-     * 自旋等待缓存被填充（带超时）
-     *
-     * <p>使用指数退避策略，初始间隔 50ms，最大等待时间由 {@code lockWaitTimeout} 决定。
-     * 超时后降级执行数据加载（不缓存结果）。
-     *
-     * @param joinPoint  切点
-     * @param annotation YdszCacheable 注解
-     * @param cacheKey   缓存键
-     * @param ttl        缓存过期时间
-     * @return 方法返回值
-     * @throws Throwable 原方法抛出的异常
-     */
-    private Object spinWaitForCache(ProceedingJoinPoint joinPoint,
-                                     YdszCacheable annotation,
-                                     String cacheKey,
-                                     long ttl) throws Throwable {
-        long waitNanos = TimeUnit.MILLISECONDS.toNanos(SPIN_WAIT_INITIAL_MILLIS);
-        long maxWaitNanos = TimeUnit.SECONDS.toNanos(annotation.lockWaitTimeout());
-        long totalWaitNanos = 0;
-
-        while (totalWaitNanos < maxWaitNanos) {
-            LockSupport.parkNanos(waitNanos);
-            totalWaitNanos += waitNanos;
-
-            Object cachedValue = redisStringOps.get(cacheKey);
-            if (cachedValue != null) {
-                if (NULL_VALUE_MARKER.equals(cachedValue)) {
-                    log.debug("【YdszCacheable】防击穿等待命中空值标记 key={}", cacheKey);
-                    return null;
-                }
-                log.debug("【YdszCacheable】防击穿等待命中 key={} waitMs={}", cacheKey,
-                        TimeUnit.NANOSECONDS.toMillis(totalWaitNanos));
-                return cachedValue;
-            }
-
-            if (Thread.interrupted()) {
-                Thread.currentThread().interrupt();
-                break;
-            }
-
-            // 指数退避，但不超过剩余等待时间
-            waitNanos = Math.min(waitNanos * 2, maxWaitNanos - totalWaitNanos);
-            if (waitNanos <= 0) {
-                break;
-            }
-        }
-
-        // 超时降级：直接执行数据加载，不缓存结果
-        log.warn("【YdszCacheable】防击穿等待超时，降级执行 key={} timeout={}s",
-                cacheKey, annotation.lockWaitTimeout());
-        return joinPoint.proceed();
-    }
-
-    /**
-     * 执行数据加载并回填缓存
-     *
-     * @param joinPoint  切点
-     * @param annotation YdszCacheable 注解
-     * @param cacheKey   缓存键
-     * @param ttl        缓存过期时间
-     * @return 方法返回值
-     * @throws Throwable 原方法抛出的异常
-     */
-    private Object loadAndCache(ProceedingJoinPoint joinPoint,
-                                 YdszCacheable annotation,
-                                 String cacheKey,
-                                 long ttl) throws Throwable {
-        Object result = joinPoint.proceed();
-
-        if (result == null && annotation.preventPenetration()) {
-            Duration nullTtl = Duration.of(annotation.nullValueTtl(), annotation.timeUnit().toChronoUnit());
-            redisStringOps.set(cacheKey, NULL_VALUE_MARKER, nullTtl);
-            log.debug("【YdszCacheable】缓存空值防穿透 key={} ttl={}s", cacheKey, annotation.nullValueTtl());
-            return null;
-        }
-
-        if (result != null) {
-            Duration ttlDuration = Duration.of(ttl, annotation.timeUnit().toChronoUnit());
-            redisStringOps.set(cacheKey, result, ttlDuration);
-            log.debug("【YdszCacheable】缓存写入成功 key={} ttl={}s", cacheKey, ttl);
-        }
-
-        return result;
-    }
-
-    /**
-     * 使用 Lua 脚本安全释放分布式锁（校验锁持有者，防止误删其他线程的锁）
-     *
-     * @param lockKey   锁的 Redis 键
-     * @param lockValue 锁的持有者标识
-     */
-    private void releaseLock(String lockKey, String lockValue) {
-        try {
-            redisTemplate.execute(new DefaultRedisScript<>(UNLOCK_LUA, Long.class),
-                    Collections.singletonList(lockKey), lockValue);
-        } catch (Exception e) {
-            log.error("【YdszCacheable】释放防击穿锁失败 | lockKey={}", lockKey, e);
-        }
+                },
+                Object.class,
+                (int) annotation.nullValueTtl());
     }
 
     /**

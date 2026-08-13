@@ -14,6 +14,9 @@ import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
+import com.google.common.hash.HashCode;
+import com.google.common.hash.HashFunction;
+import com.google.common.hash.Hashing;
 import com.njydsz.common.redis.config.RedisProperties;
 import com.njydsz.common.redis.enums.FailOpenPolicy;
 
@@ -55,89 +58,11 @@ public class RedisBloomFilter implements BloomFilterService {
     private static final double DEFAULT_FALSE_POSITIVE_RATE = 0.01;
     private static final long DEFAULT_EXPECTED_INSERTIONS = 1000000;
 
-    /** MurmurHash3 64 位变体常量 c1 */
-    private static final long MURMUR_C1 = 0x87c37b91114253d5L;
-    /** MurmurHash3 64 位变体常量 c2 */
-    private static final long MURMUR_C2 = 0x4cf5ad432745937fL;
-
-    /** MurmurHash3 分块大小（字节） */
-    private static final int MURMUR_BLOCK_SIZE = 16;
-    /** MurmurHash3 半块大小（字节），用于拆分两个 64 位字 */
-    private static final int MURMUR_BLOCK_HALF_SIZE = 8;
-    /** MurmurHash3 尾部剩余字节数掩码（0~15） */
-    private static final int MURMUR_TAIL_MASK = 15;
-    /** MurmurHash3 状态更新乘数 */
-    private static final long MURMUR_MULTIPLIER = 5L;
-    /** MurmurHash3 状态更新常量一（0x52dce729） */
-    private static final long MURMUR_STATE_C1 = 0x52dce729L;
-    /** MurmurHash3 状态更新常量二（0x38495ab5） */
-    private static final long MURMUR_STATE_C2 = 0x38495ab5L;
-    /** MurmurHash3 最终混淆（fmix）第一乘法常量 */
-    private static final long FMIX_MULTIPLIER_1 = 0xff51afd7ed558ccdL;
-    /** MurmurHash3 最终混淆（fmix）第二乘法常量 */
-    private static final long FMIX_MULTIPLIER_2 = 0xc4ceb9fe1a85ec53L;
-    /** 字节无符号化掩码 */
-    private static final long BYTE_UNSIGNED_MASK = 0xffL;
-
-    /** MurmurHash3 循环左移位数 27 */
-    private static final int ROTATE_LEFT_27 = 27;
-    /** MurmurHash3 循环左移位数 31 */
-    private static final int ROTATE_LEFT_31 = 31;
-    /** MurmurHash3 循环左移位数 33 */
-    private static final int ROTATE_LEFT_33 = 33;
-    /** MurmurHash3 fmix 无符号右移位数 33 */
-    private static final int UNSIGNED_RIGHT_SHIFT_33 = 33;
-
-    /** 位移位数 8 */
-    private static final int SHIFT_BITS_8 = 8;
-    /** 位移位数 16 */
-    private static final int SHIFT_BITS_16 = 16;
-    /** 位移位数 24 */
-    private static final int SHIFT_BITS_24 = 24;
-    /** 位移位数 32 */
-    private static final int SHIFT_BITS_32 = 32;
-    /** 位移位数 40 */
-    private static final int SHIFT_BITS_40 = 40;
-    /** 位移位数 48 */
-    private static final int SHIFT_BITS_48 = 48;
-    /** 位移位数 56 */
-    private static final int SHIFT_BITS_56 = 56;
-
-    /** MurmurHash3 尾部剩余字节数 15 */
-    private static final int TAIL_REMAINING_15 = 15;
-    /** MurmurHash3 尾部剩余字节数 14 */
-    private static final int TAIL_REMAINING_14 = 14;
-    /** MurmurHash3 尾部剩余字节数 13 */
-    private static final int TAIL_REMAINING_13 = 13;
-    /** MurmurHash3 尾部剩余字节数 12 */
-    private static final int TAIL_REMAINING_12 = 12;
-    /** MurmurHash3 尾部剩余字节数 11 */
-    private static final int TAIL_REMAINING_11 = 11;
-    /** MurmurHash3 尾部剩余字节数 9 */
-    private static final int TAIL_REMAINING_9 = 9;
-    /** MurmurHash3 尾部剩余字节数 8 */
-    private static final int TAIL_REMAINING_8 = 8;
-    /** MurmurHash3 尾部剩余字节数 7 */
-    private static final int TAIL_REMAINING_7 = 7;
-    /** MurmurHash3 尾部剩余字节数 6 */
-    private static final int TAIL_REMAINING_6 = 6;
-    /** MurmurHash3 尾部剩余字节数 5 */
-    private static final int TAIL_REMAINING_5 = 5;
-    /** MurmurHash3 尾部剩余字节数 4 */
-    private static final int TAIL_REMAINING_4 = 4;
-    /** MurmurHash3 尾部剩余字节数 3 */
-    private static final int TAIL_REMAINING_3 = 3;
-
-    /** 小端读取字节偏移量 3 */
-    private static final int BYTE_OFFSET_3 = 3;
-    /** 小端读取字节偏移量 4 */
-    private static final int BYTE_OFFSET_4 = 4;
-    /** 小端读取字节偏移量 5 */
-    private static final int BYTE_OFFSET_5 = 5;
-    /** 小端读取字节偏移量 6 */
-    private static final int BYTE_OFFSET_6 = 6;
-    /** 小端读取字节偏移量 7 */
-    private static final int BYTE_OFFSET_7 = 7;
+    /**
+     * MurmurHash3 128 位哈希函数（Guava 标准实现）
+     * <p>使用种子 0 生成 128 位哈希值，拆分为两个 64 位字用于布隆过滤器的多哈希计算。
+     */
+    private static final HashFunction MURMUR3_128 = Hashing.murmur3_128(0);
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final DefaultRedisScript<Boolean> addScript;
@@ -559,15 +484,27 @@ public class RedisBloomFilter implements BloomFilterService {
     /**
      * MurmurHash 3 哈希函数，生成多个哈希值
      *
+     * <p>使用 Guava 的 MurmurHash3 x64 128 位标准实现，单次调用获取 128 位哈希值，
+     * 拆分为两个 64 位字作为双哈希种子，再通过线性组合生成任意数量的哈希位。
+     *
+     * <p>相比手写实现的优势：
+     * <ul>
+     *   <li>标准库实现，经过广泛测试验证，避免手写常量/移位错误</li>
+     *   <li>尾部的 switch fall-through 处理由 Guava 内部优化保证正确性</li>
+     *   <li>减少约 200 行手容易出现边界错误的代码</li>
+     * </ul>
+     *
      * @param value     输入值
      * @param numHashes 需要的哈希值数量
      * @param numBits   位数组大小（用于取模）
      * @return 哈希值列表
      */
     private static List<Long> murmurHash3(String value, int numHashes, long numBits) {
-        byte[] data = value.getBytes(StandardCharsets.UTF_8);
-        long hash1 = hash64A(data, 0);
-        long hash2 = hash64A(data, 1);
+        HashCode hashCode = MURMUR3_128.hashString(value, StandardCharsets.UTF_8);
+        // 128 位哈希值拆分为两个 64 位字：hash1 = 低 64 位，hash2 = 高 64 位
+        long hash1 = hashCode.getLeastSignificantBits();
+        // asLong() 返回 HashCode 前 8 字节（大端序）对应的 long，相当于高 64 位
+        long hash2 = hashCode.asLong();
 
         List<Long> positions = new ArrayList<>(numHashes);
         for (int i = 0; i < numHashes; i++) {
@@ -578,153 +515,5 @@ public class RedisBloomFilter implements BloomFilterService {
             positions.add(combinedHash % numBits);
         }
         return positions;
-    }
-
-    /**
-     * MurmurHash 3 的 64 位变体
-     *
-     * @param data 输入数据
-     * @param seed 种子值
-     * @return 64 位哈希值
-     */
-    private static long hash64A(byte[] data, int seed) {
-        long h1 = seed;
-        long h2 = seed;
-        int length = data.length;
-        int numBlocks = length / MURMUR_BLOCK_SIZE;
-
-        for (int i = 0; i < numBlocks; i++) {
-            int offset = i * MURMUR_BLOCK_SIZE;
-            long k1 = getLongLittleEndian(data, offset);
-            long k2 = getLongLittleEndian(data, offset + MURMUR_BLOCK_HALF_SIZE);
-
-            k1 *= MURMUR_C1;
-            k1 = Long.rotateLeft(k1, ROTATE_LEFT_31);
-            k1 *= MURMUR_C2;
-            h1 ^= k1;
-            h1 = Long.rotateLeft(h1, ROTATE_LEFT_27);
-            h1 += h2;
-            h1 = h1 * MURMUR_MULTIPLIER + MURMUR_STATE_C1;
-
-            k2 *= MURMUR_C2;
-            k2 = Long.rotateLeft(k2, ROTATE_LEFT_33);
-            k2 *= MURMUR_C1;
-            h2 ^= k2;
-            h2 = Long.rotateLeft(h2, ROTATE_LEFT_31);
-            h2 += h1;
-            h2 = h2 * MURMUR_MULTIPLIER + MURMUR_STATE_C2;
-        }
-
-        // 处理尾部字节（使用 switch fall-through，与 Guava MurmurHash3 实现一致）
-        long[] tail = applyTail(data, numBlocks * MURMUR_BLOCK_SIZE, length & MURMUR_TAIL_MASK, h1, h2);
-        h1 = tail[0];
-        h2 = tail[1];
-
-        h1 ^= length;
-        h2 ^= length;
-        h1 += h2;
-        h2 += h1;
-        h1 = fmix64(h1);
-        h2 = fmix64(h2);
-        h1 += h2;
-        return h1;
-    }
-
-    /**
-     * 处理 MurmurHash3 64 位变体的尾部字节（不足 16 字节的剩余部分）。
-     *
-     * <p>采用 switch fall-through 递减处理，与 Guava 的 MurmurHash3 实现保持一致。
-     *
-     * @param data      输入数据
-     * @param tailStart 尾部起始偏移
-     * @param remaining 剩余字节数（0~15）
-     * @param h1        状态值 h1
-     * @param h2        状态值 h2
-     * @return 更新后的 [h1, h2]
-     */
-    private static long[] applyTail(byte[] data, int tailStart, int remaining,
-                                    long h1, long h2) {
-        long k1 = 0;
-        long k2 = 0;
-
-        switch (remaining) {
-            case TAIL_REMAINING_15:
-                k2 ^= ((long) data[tailStart + TAIL_REMAINING_14] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_48;
-                // fall through
-            case TAIL_REMAINING_14:
-                k2 ^= ((long) data[tailStart + TAIL_REMAINING_13] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_40;
-                // fall through
-            case TAIL_REMAINING_13:
-                k2 ^= ((long) data[tailStart + TAIL_REMAINING_12] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_32;
-                // fall through
-            case TAIL_REMAINING_12:
-                k2 ^= ((long) data[tailStart + TAIL_REMAINING_11] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_24;
-                // fall through
-            case TAIL_REMAINING_11:
-                k2 ^= ((long) data[tailStart + 10] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_16;
-                // fall through
-            case 10:
-                k2 ^= ((long) data[tailStart + TAIL_REMAINING_9] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_8;
-                // fall through
-            case TAIL_REMAINING_9:
-                k2 ^= ((long) data[tailStart + TAIL_REMAINING_8] & BYTE_UNSIGNED_MASK);
-                k2 *= MURMUR_C2;
-                k2 = Long.rotateLeft(k2, ROTATE_LEFT_33);
-                k2 *= MURMUR_C1;
-                h2 ^= k2;
-                // fall through
-            case TAIL_REMAINING_8:
-                k1 ^= ((long) data[tailStart + TAIL_REMAINING_7] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_56;
-                // fall through
-            case TAIL_REMAINING_7:
-                k1 ^= ((long) data[tailStart + TAIL_REMAINING_6] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_48;
-                // fall through
-            case TAIL_REMAINING_6:
-                k1 ^= ((long) data[tailStart + TAIL_REMAINING_5] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_40;
-                // fall through
-            case TAIL_REMAINING_5:
-                k1 ^= ((long) data[tailStart + TAIL_REMAINING_4] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_32;
-                // fall through
-            case TAIL_REMAINING_4:
-                k1 ^= ((long) data[tailStart + TAIL_REMAINING_3] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_24;
-                // fall through
-            case TAIL_REMAINING_3:
-                k1 ^= ((long) data[tailStart + 2] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_16;
-                // fall through
-            case 2:
-                k1 ^= ((long) data[tailStart + 1] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_8;
-                // fall through
-            case 1:
-                k1 ^= ((long) data[tailStart] & BYTE_UNSIGNED_MASK);
-                k1 *= MURMUR_C1;
-                k1 = Long.rotateLeft(k1, ROTATE_LEFT_31);
-                k1 *= MURMUR_C2;
-                h1 ^= k1;
-                // fall through
-            default:
-                break;
-        }
-
-        return new long[]{h1, h2};
-    }
-
-    private static long getLongLittleEndian(byte[] data, int offset) {
-        return ((long) data[offset] & BYTE_UNSIGNED_MASK)
-                | (((long) data[offset + 1] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_8)
-                | (((long) data[offset + 2] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_16)
-                | (((long) data[offset + BYTE_OFFSET_3] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_24)
-                | (((long) data[offset + BYTE_OFFSET_4] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_32)
-                | (((long) data[offset + BYTE_OFFSET_5] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_40)
-                | (((long) data[offset + BYTE_OFFSET_6] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_48)
-                | (((long) data[offset + BYTE_OFFSET_7] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_56);
-    }
-
-    private static long fmix64(long k) {
-        k ^= k >>> UNSIGNED_RIGHT_SHIFT_33;
-        k *= FMIX_MULTIPLIER_1;
-        k ^= k >>> UNSIGNED_RIGHT_SHIFT_33;
-        k *= FMIX_MULTIPLIER_2;
-        k ^= k >>> UNSIGNED_RIGHT_SHIFT_33;
-        return k;
     }
 }

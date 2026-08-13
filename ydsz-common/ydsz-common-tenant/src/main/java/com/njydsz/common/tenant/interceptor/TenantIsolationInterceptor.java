@@ -70,7 +70,7 @@ import net.sf.jsqlparser.parser.CCJSqlParserUtil;
  * @author ydsz-team
  * @since 1.0.0
  * @see TenantProperties
- * @see RequestContext
+ * @see TenantContextHolder
  * @see TenantInterceptorProvider
  */
 @Slf4j
@@ -370,7 +370,7 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
     /**
      * 解析当前请求的租户字段值列表（fail-closed）。
      *
-     * <p>从 {@link RequestContext} 获取租户上下文，根据配置的
+     * <p>从 {@link TenantContextHolder} 获取租户上下文，根据配置的
      * {@link TenantField} 列表逐字段取值。任意字段缺失则抛异常。
      *
      * @return 租户字段值列表（非空）

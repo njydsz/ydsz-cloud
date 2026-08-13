@@ -9,9 +9,8 @@ import java.util.Set;
 
 import org.slf4j.MDC;
 
-import com.njydsz.common.core.context.BizContextKeys;
-import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.tenant.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.tenant.config.TenantProperties;
 import com.njydsz.common.tenant.config.TenantProperties.TenantField;
 import com.njydsz.common.tenant.lifecycle.TenantLifecycleManager;

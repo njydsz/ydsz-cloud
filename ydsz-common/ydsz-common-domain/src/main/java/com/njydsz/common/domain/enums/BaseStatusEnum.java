@@ -1,6 +1,5 @@
 package com.njydsz.common.domain.enums;
 
-import java.util.Collections;
 import java.util.List;
 
 /**

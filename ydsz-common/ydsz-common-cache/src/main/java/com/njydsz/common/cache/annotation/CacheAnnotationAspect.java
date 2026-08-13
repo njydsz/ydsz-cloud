@@ -5,8 +5,8 @@ import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.ForkJoinPool;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -21,6 +21,8 @@ import org.springframework.core.DefaultParameterNameDiscoverer;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
+
+import com.njydsz.common.cache.support.CacheThreadPoolManager;
 
 /**
  * 缓存注解 AOP 切面 — {@code @Cached} / {@code @CacheInvalidate} / {@code @CacheRefresh} 声明式缓存
@@ -268,6 +270,9 @@ public class CacheAnnotationAspect {
     // 更新刷新时间戳
     refreshTimestamps.put(refreshKey, now);
 
+    ExecutorService refreshExecutor = CacheThreadPoolManager.getInstance()
+        .getOrCreatePool("cache-annotation-refresh", 2, 4);
+
     if (cacheRefresh.staleWhileRevalidate()) {
       // SWR 模式：异步刷新，不阻塞当前请求
       CompletableFuture.runAsync(
@@ -282,7 +287,7 @@ public class CacheAnnotationAspect {
               log.warn("SWR 异步刷新失败: cache={}, key={}", cacheName, cacheKey, e);
             }
           },
-          ForkJoinPool.commonPool());
+          refreshExecutor);
     } else {
       // 非 SWR 模式：异步刷新
       CompletableFuture.runAsync(
@@ -297,7 +302,7 @@ public class CacheAnnotationAspect {
               log.warn("异步刷新失败: cache={}, key={}", cacheName, cacheKey, e);
             }
           },
-          ForkJoinPool.commonPool());
+          refreshExecutor);
     }
   }
   private EvaluationContext createEvaluationContext(Method method, Object[] args) {

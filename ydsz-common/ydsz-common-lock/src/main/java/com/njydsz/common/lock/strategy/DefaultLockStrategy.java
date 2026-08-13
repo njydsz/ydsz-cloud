@@ -99,6 +99,11 @@ public class DefaultLockStrategy implements LockStrategy {
     private LockEventListener lockEventListener = LockEventListener.NO_OP;
 
     /**
+     * 锁等待时间策略（可选，动态调整等待超时）
+     */
+    private LockWaitTimePolicy lockWaitTimePolicy;
+
+    /**
      * 锁实例缓存，按锁类型缓存避免重复创建
      */
     private final Map<LockType, DistributedLocker> lockCache = new ConcurrentHashMap<>();
@@ -240,6 +245,17 @@ public class DefaultLockStrategy implements LockStrategy {
     }
 
     /**
+     * 设置锁等待时间策略（可选）
+     *
+     * <p>配置后，每次带等待的锁获取会先通过策略动态调整等待时间。</p>
+     *
+     * @param lockWaitTimePolicy 等待时间策略实例
+     */
+    public void setLockWaitTimePolicy(LockWaitTimePolicy lockWaitTimePolicy) {
+        this.lockWaitTimePolicy = lockWaitTimePolicy;
+    }
+
+    /**
      * 创建多 Key 联锁实例
      *
      * @param locks 底层分布式锁列表（至少 2 个）
@@ -314,6 +330,9 @@ public class DefaultLockStrategy implements LockStrategy {
             }
             if (lockEventListener != null) {
                 abstractLock.setLockEventListener(lockEventListener);
+            }
+            if (lockWaitTimePolicy != null) {
+                abstractLock.setLockWaitTimePolicy(lockWaitTimePolicy);
             }
         }
         return lock;

@@ -92,6 +92,17 @@ public class ExceptionProperties {
     private boolean metricsIncludeCodeTag = false;
 
     /**
+     * 异常处理耗时分位数预计算配置（如 P99）。
+     *
+     * <p>配置值范围为 0.0~1.0（0.99 表示 P99），也可同时配置多个分位数（0.5, 0.95, 0.99）。
+     * 设置后 Micrometer 会在服务端预计算，无需 Prometheus 侧 Recording Rule。
+     * 默认预计算 P99（0.99）。
+     *
+     * <p>如需关闭预计算（降低服务端开销），设为空列表。
+     */
+    private List<Double> metricsPercentiles = List.of(0.99);
+
+    /**
      * 响应格式枚举
      */
     public enum ResponseFormat {

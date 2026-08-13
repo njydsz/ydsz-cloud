@@ -89,6 +89,11 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
     private LockEventListener lockEventListener = LockEventListener.NO_OP;
 
     /**
+     * 锁等待时间策略（可选，动态调整等待超时）
+     */
+    private LockWaitTimePolicy lockWaitTimePolicy;
+
+    /**
      * 本地缓存 clientId，线程级（key 为 {@code threadId:lockKey}）
      * <p>使用 ydsz-common-cache 替代 ThreadLocal，通过 TTL 和最大容量自动清理，
      * 彻底避免线程池复用场景下的内存泄漏。
@@ -208,6 +213,18 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
      */
     public void setLockEventListener(LockEventListener lockEventListener) {
         this.lockEventListener = lockEventListener != null ? lockEventListener : LockEventListener.NO_OP;
+    }
+
+    /**
+     * 设置锁等待时间策略（可选）
+     *
+     * <p>配置后，每次带等待的锁获取会先通过策略动态调整等待时间，
+     * 根据历史统计数据决定最优等待时长。</p>
+     *
+     * @param lockWaitTimePolicy 等待时间策略实例
+     */
+    public void setLockWaitTimePolicy(LockWaitTimePolicy lockWaitTimePolicy) {
+        this.lockWaitTimePolicy = lockWaitTimePolicy;
     }
 
     /**
@@ -492,7 +509,20 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
      * @throws InterruptedException 线程中断异常
      */
     protected String tryLockWithWait(String lockKey, long waitTime, long leaseTime, TimeUnit timeUnit) throws InterruptedException {
-        long waitNanos = timeUnit.toNanos(waitTime);
+        // 动态调整等待时间（如果配置了策略）
+        long adjustedWaitTime = waitTime;
+        LockWaitStats stats = null;
+        if (lockWaitTimePolicy != null) {
+            stats = lockWaitTimePolicy instanceof AdaptiveWaitTimePolicy
+                    ? ((AdaptiveWaitTimePolicy) lockWaitTimePolicy).getOrCreateStats(lockKey)
+                    : null;
+            adjustedWaitTime = lockWaitTimePolicy.calculateWaitTime(lockKey, waitTime, stats);
+            // 确保调整后不小于 0
+            if (adjustedWaitTime < 0) {
+                adjustedWaitTime = 0;
+            }
+        }
+        long waitNanos = timeUnit.toNanos(adjustedWaitTime);
         long startTime = System.nanoTime();
         long currentBackoff = MIN_BACKOFF_MILLIS;
         String lockValue = null;
@@ -512,6 +542,10 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
                     lockMetrics.recordLockTimeout(getLockType().name());
                 }
                 long waitTimeMs = TimeUnit.NANOSECONDS.toMillis(elapsed);
+                // 记录超时统计数据
+                if (stats != null) {
+                    stats.recordWait(waitTimeMs, true);
+                }
                 // 触发锁超时事件
                 try {
                     lockEventListener.onLockAcquireTimeout(lockKey, getLockType(), waitTimeMs);
@@ -531,6 +565,10 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
         long waitTimeMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
         if (lockMetrics != null) {
             lockMetrics.recordWaitDuration(waitTimeMillis, getLockType().name());
+        }
+        // 记录成功统计数据
+        if (stats != null) {
+            stats.recordWait(waitTimeMillis, false);
         }
         // 触发锁获取成功事件
         try {

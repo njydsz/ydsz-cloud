@@ -5,7 +5,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Duration;
-import java.util.List;
 import java.util.Optional;
 
 import javax.sql.DataSource;
@@ -18,19 +17,23 @@ import lombok.extern.slf4j.Slf4j;
  * 从库复制延迟检测器 SPI
  *
  * <p>通过 JDBC 查询数据库复制延迟，支持 MySQL、PostgreSQL、Oracle。
- * 扩展方可通过 {@link Ordered} 接口控制检测器匹配优先级（值越小越优先）。
+ * 扩展方可通过实现本接口并声明为 Spring Bean 自动注册到
+ * {@link CompositeLatencyDetector}。
+ *
+ * <p>实现类可通过 {@link Ordered} 接口控制检测器匹配优先级
+ * （{@link #getOrder()} 值越小越优先匹配）。
  *
  * <p>使用方式：
  * <pre>{@code
- * // 自动检测当前延迟
- * Optional<Duration> latency = detector.detect(masterDs);
- * if (latency.isPresent() && latency.get().compareTo(threshold) > 0) {
- *     // 延迟超标，降级走主库
+ * @Component
+ * public class CustomLatencyDetector implements SlaveLatencyDetector {
+ *     // 自定义实现
  * }
  * }</pre>
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see CompositeLatencyDetector
  */
 public interface SlaveLatencyDetector extends Ordered {
 
@@ -51,7 +54,7 @@ public interface SlaveLatencyDetector extends Ordered {
     boolean isSupported(DataSource dataSource);
 
     /**
-     * 默认优先级（最低）
+     * 默认优先级
      *
      * @return Ordered.LOWEST_PRECEDENCE
      */
@@ -59,6 +62,8 @@ public interface SlaveLatencyDetector extends Ordered {
     default int getOrder() {
         return Ordered.LOWEST_PRECEDENCE;
     }
+
+    // ==================== 内置实现 ====================
 
     /**
      * MySQL 实现：通过 SHOW SLAVE STATUS 获取 Seconds_Behind_Master
@@ -155,7 +160,7 @@ public interface SlaveLatencyDetector extends Ordered {
     }
 
     /**
-     * Oracle Data Guard 实现：查询 V$DATAGUARD_STATS 获取延迟
+     * Oracle Data Guard 实现：查询 V$DATAGUARD_STATS 获取应用延迟
      *
      * @since 1.8.0
      */
@@ -230,44 +235,6 @@ public interface SlaveLatencyDetector extends Ordered {
         @Override
         public int getOrder() {
             return 300;
-        }
-    }
-
-    /**
-     * 自动组合检测器：按 Order 排序遍历所有探测器，选择第一个支持的进行延迟检测
-     *
-     * <p>支持 SPI 扩展：通过 {@link #setDetectors(List)} 注入自定义探测器
-     *
-     * @since 1.8.0
-     */
-    @Slf4j
-    class CompositeLatencyDetector implements SlaveLatencyDetector {
-
-        private final List<SlaveLatencyDetector> detectors;
-
-        /**
-         * 构造组合探测器
-         *
-         * @param detectors 探测器列表（已按 Order 排序）
-         */
-        public CompositeLatencyDetector(List<SlaveLatencyDetector> detectors) {
-            this.detectors = detectors;
-        }
-
-        @Override
-        public Optional<Duration> detect(DataSource dataSource) {
-            for (SlaveLatencyDetector detector : detectors) {
-                if (detector.isSupported(dataSource)) {
-                    return detector.detect(dataSource);
-                }
-            }
-            log.warn("无匹配的延迟检测器，数据源: {}", dataSource.getClass().getName());
-            return Optional.empty();
-        }
-
-        @Override
-        public boolean isSupported(DataSource dataSource) {
-            return detectors.stream().anyMatch(d -> d.isSupported(dataSource));
         }
     }
 }
