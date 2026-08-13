@@ -4,8 +4,10 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
+import com.njydsz.common.cache.api.AsyncCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.api.LoadingCache;
+import com.njydsz.common.cache.internal.AsyncCacheAdapter;
 import com.njydsz.common.cache.internal.concurrent.ConcurrentCache;
 import com.njydsz.common.cache.internal.concurrent.StripedConcurrentCache;
 import com.njydsz.common.cache.internal.decorator.ExpirableCache;
@@ -748,6 +750,32 @@ public final class CacheBuilder<K, V> {
   }
 
   /**
+   * 构建异步缓存实例
+   *
+   * <p>所有操作（get/put/remove 等）均返回 {@link java.util.concurrent.CompletableFuture}，
+   * 适合在响应式编程和异步 IO 场景中使用。底层默认使用 TINYLFU 淘汰策略。
+   *
+   * <p>使用示例：
+   *
+   * <pre>{@code
+   * AsyncCache<String, User> cache = YdszCache.newBuilder()
+   *     .maximumSize(10000)
+   *     .executor(executor)
+   *     .buildAsync();
+   *
+   * CompletableFuture<User> user = cache.get("1", key -> loadAsync(key));
+   * }</pre>
+   *
+   * @return 异步缓存实例
+   */
+  public AsyncCache<K, V> buildAsync() {
+    validate();
+    Cache<K, V> cache = createBaseCache();
+    cache = applyDecorators(cache);
+    return new AsyncCacheAdapter<>(cache, taskExecutor != null ? taskExecutor : listenerExecutor);
+  }
+
+  /**
    * 创建基础缓存实例
    *
    * <p>如果设置了弱/软引用标志，优先创建引用缓存。 否则按 type 创建对应淘汰策略缓存。
@@ -822,6 +850,14 @@ public final class CacheBuilder<K, V> {
             elcRefreshUnit,
             null,
             recordStats);
+
+      case ASYNC:
+        // ASYNC 类型作为 buildAsync() 的基础缓存，使用 TINYLFU 底层策略
+        if (maximumSize > 0) {
+          return new WindowTinyLFUCache<K, V>((int) maximumSize, stripes);
+        } else {
+          return new WindowTinyLFUCache<K, V>(initialCapacity, stripes);
+        }
 
       default:
         throw new IllegalStateException("Unknown cache type: " + type);

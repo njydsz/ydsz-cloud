@@ -90,36 +90,9 @@ public class RedisCacheGuard {
     private final int nullValueTtlSeconds;
 
     /**
-     * WatchDog 续期调度器（守护线程池），用于防击穿锁的自动续期
+     * WatchDog 续期调度器（公共组件），用于防击穿锁的自动续期
      */
-    private final ScheduledExecutorService watchDogScheduler;
-
-    /**
-     * 活跃的 WatchDog 续期任务，key 为锁键
-     */
-    private final ConcurrentHashMap<String, WatchTask> activeWatchTasks = new ConcurrentHashMap<>();
-
-    /**
-     * WatchDog 续期任务上下文
-     */
-    private static class WatchTask {
-        final String lockKey;
-        final String lockValue;
-        final long leaseTimeMs;
-        final AtomicBoolean running;
-        final ScheduledFuture<?> future;
-        volatile int renewCount;
-
-        WatchTask(String lockKey, String lockValue, long leaseTimeMs,
-                  AtomicBoolean running, ScheduledFuture<?> future) {
-            this.lockKey = lockKey;
-            this.lockValue = lockValue;
-            this.leaseTimeMs = leaseTimeMs;
-            this.running = running;
-            this.future = future;
-            this.renewCount = 0;
-        }
-    }
+    private final LockWatchDog lockWatchDog;
 
     public RedisCacheGuard(RedisService redisService) {
         this(redisService, 1800);
@@ -130,11 +103,7 @@ public class RedisCacheGuard {
         this.stringOps = redisService.stringOps();
         this.redisTemplate = redisService.getRedisTemplate();
         this.nullValueTtlSeconds = nullValueTtlSeconds;
-        this.watchDogScheduler = Executors.newScheduledThreadPool(1, r -> {
-            Thread t = new Thread(r, "ydsz-cache-guard-watchdog");
-            t.setDaemon(true);
-            return t;
-        });
+        this.lockWatchDog = new LockWatchDog(redisTemplate);
     }
 
     /**
@@ -145,26 +114,7 @@ public class RedisCacheGuard {
      */
     @PreDestroy
     public void shutdown() {
-        // 先停止所有活跃的续期任务
-        for (Map.Entry<String, WatchTask> entry : activeWatchTasks.entrySet()) {
-            WatchTask task = entry.getValue();
-            task.running.set(false);
-            task.future.cancel(false);
-            log.debug("【RedisCacheGuard】关闭 WatchDog 续期任务 | key={}", entry.getKey());
-        }
-        activeWatchTasks.clear();
-
-        // 关闭调度器并等待正在执行的任务完成
-        watchDogScheduler.shutdown();
-        try {
-            if (!watchDogScheduler.awaitTermination(SHUTDOWN_AWAIT_SECONDS, TimeUnit.SECONDS)) {
-                log.warn("【RedisCacheGuard】WatchDog 调度器在 {}s 内未终止，执行强制关闭", SHUTDOWN_AWAIT_SECONDS);
-                watchDogScheduler.shutdownNow();
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            watchDogScheduler.shutdownNow();
-        }
+        lockWatchDog.shutdown();
         log.info("【RedisCacheGuard】WatchDog 调度器已关闭");
     }
 

@@ -48,5 +48,15 @@ public enum CacheType {
   STRIPED,
 
   /** 增强版自动加载缓存 适用场景：需要自动加载、自动刷新的场景 推荐：数据库查询缓存首选 */
-  ENHANCED_LOADING
+  ENHANCED_LOADING,
+
+  /**
+   * 异步缓存 — 所有操作返回 CompletableFuture
+   *
+   * <p>适用场景：响应式编程、异步 IO 场景。底层淘汰策略使用 TINYLFU。
+   * 通过 {@code CacheBuilder.buildAsync()} 构建。
+   *
+   * @since 1.0.0
+   */
+  ASYNC
 }
