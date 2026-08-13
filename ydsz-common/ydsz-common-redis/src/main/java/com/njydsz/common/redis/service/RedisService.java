@@ -36,26 +36,30 @@ import lombok.extern.slf4j.Slf4j;
  * <p>同时实现 {@link CacheProvider} 接口，为注解缓存切面提供最小化契约，
  * 解耦切面与门面类的强依赖，便于未来替换为多级缓存实现。
  *
- * <p><b>向后兼容：</b>所有 public 方法签名保持不变，现有调用方无需修改。
- * 新代码建议直接注入子组件以获得更清晰的依赖关系。
+ * <p><b>迁移建议（2.0 版本起弃用）：</b>
+ * <ul>
+ *   <li>新代码：直接注入 {@link RedisStringOps}、{@link RedisHashOps} 等子组件</li>
+ *   <li>现有代码：保持不变，后续按功能模块逐步迁移至子组件</li>
+ * </ul>
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
- * // 通过门面类（向后兼容）
- * redisService.set("key", "value");
- * String value = redisService.get("key", String.class);
- *
  * // 直接注入子组件（推荐新代码使用）
- * RedisStringOps stringOps;  // 注入
+ * {@code @Autowired} RedisStringOps stringOps;
  * stringOps.set("key", "value");
  *
  * // 注解切面通过 CacheProvider 接口注入（解耦）
- * CacheProvider cacheProvider;  // 注入
+ * {@code @Autowired} CacheProvider cacheProvider;
+ *
+ * // 门面类（仅兼容存量代码，新代码不建议使用）
+ * {@code @Autowired} RedisService redisService;  // deprecated
  * }</pre>
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 2.0.0 起标记弃用，新代码请直接注入子组件；计划 3.0 移除
  */
+@Deprecated(since = "2.0.0", forRemoval = true)
 @Slf4j
 public class RedisService implements BatchRedisOperations, CacheProvider {
 

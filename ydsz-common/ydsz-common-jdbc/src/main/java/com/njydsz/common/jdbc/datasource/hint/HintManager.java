@@ -4,8 +4,6 @@ import java.util.Optional;
 
 import org.springframework.core.NamedThreadLocal;
 
-import com.njydsz.common.jdbc.constant.DataSourceConstants;
-
 /**
  * 强制数据源路由管理器——对标 ShardingSphere 的 HintManager。
  *
