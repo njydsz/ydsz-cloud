@@ -320,7 +320,7 @@ public class ExceptionCodeScanner implements SmartInitializingSingleton {
      *   <li>按模块维护 code 明细（moduleIndex），供运维端点与统计使用</li>
      *   <li>填充全局 code → ExceptionCode 反查索引（codeIndex），供运行时 resolve 使用</li>
      * </ul>
-     * @param module 模块名
+     * @param module    模块名
      * @param description 模块描述
      * @param className 类全限定名
      */
@@ -331,11 +331,14 @@ public class ExceptionCodeScanner implements SmartInitializingSingleton {
                     || !ExceptionCode.class.isAssignableFrom(clazz)) {
                 return;
             }
+            // 提取注解中的模块默认分类
+            YdszExceptionCode annotation = clazz.getAnnotation(YdszExceptionCode.class);
+            ExceptionCategory moduleCategory = annotation != null ? annotation.category() : null;
             Map<String, ExceptionCode> codeMap = new HashMap<>();
             for (Object constant : clazz.getEnumConstants()) {
                 ExceptionCode code = (ExceptionCode) constant;
                 if (errorCodeTable != null) {
-                    errorCodeTable.registerModule(module, description);
+                    errorCodeTable.registerModule(module, description, moduleCategory);
                     errorCodeTable.registerCode(module, code.getCode(), code.getKey(), ((Enum<?>) constant).name());
                 }
                 codeMap.put(code.getCode(), code);

@@ -15,6 +15,7 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 
 import com.njydsz.common.cache.api.Cache;
+import com.njydsz.common.cache.support.CacheThreadPoolManager;
 
 /**
  * 缓存预热器 — Spring 生命周期管理（增强版）
@@ -71,11 +72,12 @@ public class CacheWarmer implements SmartInitializingSingleton, DisposableBean {
   private Semaphore rateLimiter;
 
   public CacheWarmer() {
-    this(ForkJoinPool.commonPool());
+    this.executor = CacheThreadPoolManager.getInstance()
+        .getOrCreatePool("cache-warmer", 2, 8);
   }
 
   public CacheWarmer(Executor executor) {
-    this.executor = executor != null ? executor : ForkJoinPool.commonPool();
+    this.executor = executor;
   }
 
   /**

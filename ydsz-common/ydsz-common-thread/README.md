@@ -16,14 +16,14 @@
 
 ### 1. 线程池自动配置
 
-`ThreadPoolAutoConfiguration` 基于 `ydsz.thread.pools` 配置动态创建并注册多个线程池 Bean，业务代码通过 `@Resource(name = "xxxExecutor")` 注入即可使用。
+`ThreadPoolAutoConfiguration` 结合 `ThreadPoolRegistrar`（`BeanDefinitionRegistryPostProcessor`）基于 `ydsz.thread.pools` 配置动态注册多个线程池 Bean，业务代码通过 `@Resource(name = "xxxExecutor")` 注入即可使用。
 
-- **按业务隔离**：每个线程池独立的 `coreSize` / `maxSize` / `queueCapacity` / `rejectPolicy` / `threadNamePrefix` 等参数。
-- **平台线程 + 虚拟线程双模式**：`type=PLATFORM` 创建 `ThreadPoolTaskExecutor`；`type=VIRTUAL` 创建 `Executors.newThreadPerTaskExecutor`（JDK 21+，每任务一虚拟线程）。
-- **动态注册**：实现 `BeanFactoryAware` + `InitializingBean`，在 `afterPropertiesSet` 阶段通过 `ConfigurableListableBeanFactory.registerSingleton` 将执行器以 `key + "Executor"` 名称注册为单例。
-- **优雅关闭**：实现 `DisposableBean`，`destroy()` 时统一 `shutdown()` 全部线程池；平台线程池额外开启 `waitForTasksToCompleteOnShutdown=true` 与 `awaitTerminationSeconds` 等待。
-- **Micrometer 指标自动绑定**：`MeterRegistry` 可用时为每个平台线程池注册 Gauge 指标（见下方「可观测性」）。
-- **健康检查**：当 classpath 存在 `org.springframework.boot.health.contributor.HealthIndicator` 时，自动注册 `ThreadHealthIndicator` Bean（`@ConditionalOnMissingBean`，可被业务覆盖）。
+- **按业务隔离**：每个线程池独立的 `coreSize` / `maxSize` / `queueCapacity` / `rejectPolicy` / `threadNamePrefix` 等参数
+- **平台线程 + 虚拟线程双模式**：`type=PLATFORM` 创建 `ThreadPoolTaskExecutor`；`type=VIRTUAL` 创建 `Executors.newThreadPerTaskExecutor`（JDK 21+，每任务一虚拟线程）
+- **Bean 名称规则**：Bean 名称为 `beanNamePrefix + key + "Executor"`（前缀默认为空字符串）
+- **优雅关闭**：平台线程池 `shutdown` 时自动等待任务完成
+- **Micrometer 指标自动绑定**：`MeterRegistry` 可用时为每个平台线程池注册 11 项指标（见下方「可观测性」）
+- **健康检查**：自动注册 `ThreadHealthIndicator` Bean，覆盖平台线程池与虚拟线程池
 
 ### 2. 线程池配置属性
 
@@ -31,7 +31,11 @@
 
 ### 3. 健康检查
 
-`ThreadHealthIndicator` 实现 `HealthIndicator` + `ApplicationContextAware`，运行时通过 `ApplicationContext.getBeansOfType(ThreadPoolTaskExecutor.class)` 自动发现所有平台线程池 Bean，上报 `active` / `queueSize` / `poolSize` / `completed` / `threadNamePrefix` 详情；任一线程池获取底层 `ThreadPoolExecutor` 失败时整体状态为 `DOWN`。虚拟线程池（`ExecutorService` 类型）不在该指标采集范围内。
+`ThreadHealthIndicator` 实现 `HealthIndicator` + `ApplicationContextAware`，运行时通过 `ApplicationContext` 自动发现所有线程池 Bean，检查其存活状态。平台线程池上报 `active` / `queueSize` / `poolSize` / `completed` / `threadNamePrefix` 详情；虚拟线程池上报类型标识与存活状态。任一线程池获取底层 `ThreadPoolExecutor` 失败时整体状态为 `DOWN`。
+
+### 4. 动态调参（热更新）
+
+`ThreadPoolHotUpdateListener` 支持运行时通过 Nacos / Spring Cloud Config 动态调整线程池参数，包括 `coreSize` / `maxSize` / `rejectPolicy` / `threadNamePrefix`，无需重启应用。
 
 ## 接入方式
 
@@ -52,6 +56,7 @@
 ydsz:
   thread:
     enabled: true
+    bean-name-prefix: ydzs-           # 可选：所有线程池 Bean 名称前缀
     pools:
       io:
         type: PLATFORM
@@ -63,6 +68,9 @@ ydsz:
         await-termination-seconds: 60
         allow-core-thread-time-out: false
         keep-alive-seconds: 60
+        task-decorator-bean-names:    # 可选：跨线程传播上下文
+          - mdcTaskDecorator
+          - requestContextTaskDecorator
       cpu:
         type: PLATFORM
         core-size: 4
@@ -82,7 +90,8 @@ ydsz:
 | 配置 | 默认值 | 说明 |
 |---|---|---|
 | `ydsz.thread.enabled` | `true` | 是否启用统一线程池自动配置（`matchIfMissing=true`，未配置时默认启用） |
-| `ydsz.thread.pools` | 空 Map | 线程池配置映射，key 为线程池名称（如 `io`、`cpu`、`batch`），Bean 名称为 `key + "Executor"` |
+| `ydsz.thread.bean-name-prefix` | `""` | Bean 名称前缀，设置后 Bean 名称变为 `prefix + key + "Executor"`（如 `ydsz-ioExecutor`） |
+| `ydsz.thread.pools` | 空 Map | 线程池配置映射，key 为线程池名称（如 `io`、`cpu`、`batch`） |
 
 ### 单个线程池配置（`ydsz.thread.pools.<name>`）
 
@@ -90,15 +99,27 @@ ydsz:
 |---|---|---|---|
 | `type` | `PLATFORM` | 全部 | 线程池类型：`PLATFORM`（平台线程） / `VIRTUAL`（虚拟线程，JDK 21+） |
 | `core-size` | `2` | PLATFORM | 核心线程数 |
-| `max-size` | `8` | PLATFORM | 最大线程数 |
-| `queue-capacity` | `100` | PLATFORM | 阻塞队列容量 |
+| `max-size` | `8` | PLATFORM | 最大线程数（必须 >= coreSize） |
+| `queue-capacity` | `100` | PLATFORM | 阻塞队列容量（0 表示 SynchronousQueue） |
 | `thread-name-prefix` | `ydsz-thread-` | 全部 | 线程名前缀 |
 | `reject-policy` | `CALLER_RUNS` | PLATFORM | 拒绝策略：`ABORT` / `CALLER_RUNS` / `DISCARD_OLDEST` / `DISCARD` |
-| `await-termination-seconds` | `60` | PLATFORM | 优雅关闭等待秒数 |
+| `await-termination-seconds` | `60` | 全部 | 优雅关闭等待秒数 |
 | `allow-core-thread-time-out` | `false` | PLATFORM | 是否允许核心线程超时回收 |
-| `keep-alive-seconds` | `60` | PLATFORM | 线程空闲存活秒数 |
+| `keep-alive-seconds` | `60` | PLATFORM | 线程空闲存活秒数（建议不超过 3600） |
+| `metric-prefix` | `ydsz.executor` | PLATFORM | Micrometer 指标前缀 |
+| `task-decorator-bean-names` | `[]` | PLATFORM | TaskDecorator Bean 名称列表，用于跨线程传播上下文 |
 
 > 虚拟线程池（`type=VIRTUAL`）仅读取 `thread-name-prefix`，其余参数（core-size/max-size/queue-capacity/reject-policy 等）不生效，因为虚拟线程为每任务一线程模型，无队列与池大小限制。
+
+### 配置校验
+
+`ThreadPoolProperties` 启用 `@Validated` 校验，启动阶段即报错（不延迟到运行时）：
+
+- `core-size` >= 1
+- `max-size` >= 1
+- `max-size` >= `core-size`
+- `queue-capacity` >= 0
+- `keep-alive-seconds` <= 3600
 
 ## 使用示例
 
@@ -232,31 +253,42 @@ public class VirtualTaskService {
 通过 Micrometer `/actuator/metrics` 端点查询线程池指标：
 
 ```
-# executor.active{name="io"}      3.0
-# executor.queue.size{name="io"}  12.0
-# executor.completed{name="io"}  15420.0
-# executor.pool.size{name="io"}    8.0
+# 平台线程池基础指标（前缀 ydsz.executor）
+ydsz.executor.active{pool.name="io"}       3.0
+ydsz.executor.queue.size{pool.name="io"}   12.0
+ydsz.executor.completed{pool.name="io"}   15420.0
+ydsz.executor.pool.size{pool.name="io"}    8.0
+ydsz.executor.rejected{pool.name="io"}     5.0
+
+# 平台线程池耗时指标（前缀 ydsz.executor，Timer 类型）
+ydsz.executor.execution{pool.name="io", quantile="0.99"}  1250.0
+ydsz.executor.queue.wait{pool.name="io", quantile="0.99"}  50.0
+ydsz.executor.slow.tasks{pool.name="io"}  3.0
+
+# 虚拟线程池指标（前缀 ydsz.virtual.executor）
+ydsz.virtual.executor.submitted{pool.name="virtual-io"}  1234.0
+ydsz.virtual.executor.completed{pool.name="virtual-io"}  1230.0
+ydsz.virtual.executor.rejected{pool.name="virtual-io"}  0.0
 ```
 
 或通过 `/actuator/health` 查看线程池健康检查详情（见「健康检查」章节）。
 
 ## SPI 扩展点
 
-本模块未提供独立的 SPI 扩展点接口（如 `ThreadFactoryCustomizer`、`ThreadPoolCustomizer`、`RejectedExecutionHandlerFactory` 等）。所有线程池均通过 `ThreadPoolAutoConfiguration.afterPropertiesSet()` 以 `beanFactory.registerSingleton(key + "Executor", executor)` 方式注册为**程序化单例**，而非通过 `@Bean` + `@ConditionalOnMissingBean` 注册的常规 Bean，因此无法通过常规的 `@ConditionalOnMissingBean` 方式覆盖。
-
-### 可覆盖的 Bean
+本模块提供以下可覆盖能力：
 
 | Bean | 注册方式 | 覆盖方式 |
 |---|---|---|
-| `ThreadHealthIndicator` | `@Bean` + `@ConditionalOnClass(HealthIndicator)` + `@ConditionalOnMissingBean(name = "threadHealthIndicator")` | 业务方提供名为 `threadHealthIndicator` 的 Bean 即可替换默认健康检查实现 |
+| `ThreadHealthIndicator` | `@ConditionalOnMissingBean(name = "threadHealthIndicator")` | 业务方提供名为 `threadHealthIndicator` 的 Bean 即可替换默认健康检查实现 |
+| `ThreadPoolMetrics` | 由 `ThreadPoolRegistrar` 自动注册 | 使用 `ydsz.thread.enabled=false` 关闭自动配置，完全手动管理 |
 
 ### 扩展建议
 
 如需自定义线程池行为（如自定义 `ThreadFactory`、`RejectedExecutionHandler`），建议：
 
-1. **不在本模块托管范围内创建线程池**：使用 `ydsz-common-util` 的 `ExecutorUtils` 静态工厂方法创建短生命周期线程池，业务自行管理生命周期。
-2. **通过配置属性定制**：`ydsz.thread.pools.<name>.*` 已支持 `reject-policy`、`allow-core-thread-time-out`、`keep-alive-seconds`、`await-termination-seconds` 等参数，无需编码。
-3. **覆盖健康检查**：提供自定义 `ThreadHealthIndicator` Bean（名为 `threadHealthIndicator`）替换默认实现，可在 `health()` 方法中加入自定义探针。
+1. **不在本模块托管范围内创建线程池**：使用 `ydsz-common-util` 的 `ExecutorUtils` 静态工厂方法创建短生命周期线程池，业务自行管理生命周期
+2. **通过配置属性定制**：`ydsz.thread.pools.<name>.*` 已支持 `reject-policy`、`allow-core-thread-time-out`、`keep-alive-seconds`、`await-termination-seconds`、`task-decorator-bean-names` 等参数
+3. **覆盖健康检查**：提供自定义 `ThreadHealthIndicator` Bean（名为 `threadHealthIndicator`）替换默认实现
 
 ## 健康检查
 
@@ -269,17 +301,15 @@ public class VirtualTaskService {
 
 **报告项：**
 
-运行时通过 `ApplicationContext.getBeansOfType(ThreadPoolTaskExecutor.class)` 自动发现所有平台线程池 Bean，上报以下详情：
-
-| 字段 | 说明 |
-|---|---|
-| `<beanName>.active` | 活跃线程数 |
-| `<beanName>.queueSize` | 队列堆积任务数 |
-| `<beanName>.poolSize` | 当前线程池大小 |
-| `<beanName>.completed` | 已完成任务总数 |
-| `<beanName>.threadNamePrefix` | 线程名前缀 |
-
-> 虚拟线程池（`ExecutorService` 类型）不在该指标采集范围内。
+| 字段 | 适用类型 | 说明 |
+|---|---|---|
+| `<beanName>.active` | PLATFORM | 活跃线程数 |
+| `<beanName>.queueSize` | PLATFORM | 队列堆积任务数 |
+| `<beanName>.poolSize` | PLATFORM | 当前线程池大小 |
+| `<beanName>.completed` | PLATFORM | 已完成任务总数 |
+| `<beanName>.threadNamePrefix` | PLATFORM | 线程名前缀 |
+| `<beanName>.type` | 全部 | 线程池类型（PLATFORM / VIRTUAL） |
+| `<beanName>.alive` | VIRTUAL | 虚拟线程池存活状态 |
 
 **响应示例（节选）：**
 
@@ -294,7 +324,13 @@ public class VirtualTaskService {
         "ioExecutor.queueSize": 12,
         "ioExecutor.poolSize": 8,
         "ioExecutor.completed": 15420,
-        "ioExecutor.threadNamePrefix": "ydsz-io-"
+        "ioExecutor.threadNamePrefix": "ydsz-io-",
+        "ioExecutor.type": "PLATFORM",
+        "virtualIoExecutor.type": "VIRTUAL",
+        "virtualIoExecutor.alive": true,
+        "totalPools": 2,
+        "platformPools": 1,
+        "virtualPools": 1
       }
     }
   }
@@ -303,32 +339,51 @@ public class VirtualTaskService {
 
 **状态判定：**
 
-- 当 `ApplicationContext` 未初始化时返回 UP 并标注 `ApplicationContext not initialized`。
-- 当容器中无 `ThreadPoolTaskExecutor` Bean 时返回 UP 并标注 `pools: none`。
-- 任一池获取底层 `ThreadPoolExecutor` 异常时整体状态为 `DOWN`，详情中包含 `<beanName>.error` 字段。
+- 当 `ApplicationContext` 未初始化时返回 UP 并标注 `ApplicationContext not initialized`
+- 当容器中无线程池 Bean 时返回 UP 并标注 `pools: none`
+- 任一线程池获取底层 `ThreadPoolExecutor` 异常时整体状态为 `DOWN`，详情中包含 `<beanName>.error` 字段
 
-### 可观测性（Micrometer 指标）
+## 可观测性（Micrometer 指标）
 
-当 classpath 存在 `MeterRegistry` 时，`ThreadPoolAutoConfiguration.bindMetrics()` 为每个**平台线程池**自动注册以下 Gauge 指标（tag `name` 为线程池配置 key）：
+### 平台线程池指标（前缀 `ydsz.executor`）
 
-| 指标 | 说明 |
-|---|---|
-| `executor.active` | 活跃线程数（`getActiveCount()`） |
-| `executor.queue.size` | 队列堆积任务数（`getQueue().size()`） |
-| `executor.completed` | 已完成任务总数（`getCompletedTaskCount()`） |
-| `executor.pool.size` | 当前线程池大小（`getPoolSize()`） |
+当 classpath 存在 `MeterRegistry` 时，为每个平台线程池自动注册以下指标（tag `pool.name` 为线程池配置 key）：
 
-> 虚拟线程池底层无 `ThreadPoolExecutor`，不绑定上述指标。`bindMetrics` 对单个池绑定失败时仅 `WARN` 日志，不阻断启动。
+| 指标 | 类型 | 说明 |
+|---|---|---|
+| `ydsz.executor.active` | Gauge | 活跃线程数（`getActiveCount()`） |
+| `ydsz.executor.pool.size` | Gauge | 当前线程池大小（`getPoolSize()`） |
+| `ydsz.executor.pool.max` | Gauge | 线程池最大容量（`getMaximumPoolSize()`） |
+| `ydsz.executor.queue.size` | Gauge | 队列堆积任务数（`getQueue().size()`） |
+| `ydsz.executor.queue.remaining` | Gauge | 工作队列剩余容量 |
+| `ydsz.executor.queue.usage` | Gauge | 工作队列使用率（0.0 - 1.0） |
+| `ydsz.executor.completed` | Gauge | 累计完成任务数 |
+| `ydsz.executor.rejected` | Counter | 累计拒绝任务数（自动通过 `MeteredRejectedHandler` 包装拒绝策略触发计数） |
+| `ydsz.executor.execution` | Timer | 任务执行耗时（含 P50/P95/P99 分位数） |
+| `ydsz.executor.queue.wait` | Timer | 任务在队列中等待时长 |
+| `ydsz.executor.slow.tasks` | Counter | 慢任务累计计数（执行耗时 > 5s） |
+
+### 虚拟线程池指标（前缀 `ydsz.virtual.executor`）
+
+虚拟线程执行器无原生计数 API，通过 `MeteredVirtualExecutorService` 包装实现：
+
+| 指标 | 类型 | 说明 |
+|---|---|---|
+| `ydsz.virtual.executor.submitted` | Gauge | 累计提交任务数 |
+| `ydsz.virtual.executor.completed` | Gauge | 累计完成任务数 |
+| `ydsz.virtual.executor.rejected` | Gauge | 累计拒绝任务数 |
 
 ## 注意事项
 
-- **不要直接 `new ThreadPoolExecutor(...)`**：业务模块应通过配置 `ydsz.thread.pools.<name>` 声明线程池，并以 `@Resource(name = "xxxExecutor")` 注入，确保被统一监控与关闭。
-- **虚拟线程要求 JDK 21+**：`type=VIRTUAL` 在低版本 JVM 上会抛错（本模块不自动回退，与 `ExecutorUtils` 行为不同）。
-- **Bean 名命名规则**：注册的 Bean 名称为 `<poolKey>Executor`（如 key 为 `io` → Bean 名 `ioExecutor`），注入时必须带上 `Executor` 后缀。
-- **指标依赖 Micrometer**：未引入 `micrometer-core` 时 `bindMetrics` 静默跳过，不会报错。
-- **健康检查依赖 spring-boot-health**：Spring Boot 4.x 将 health 类迁至独立模块，未引入时 `ThreadHealthIndicator` Bean 不会注册。
-- **未配置线程池时跳过初始化**：`ydsz.thread.pools` 为空时仅打印 `ydsz-thread: 未配置线程池，跳过初始化` 日志，不报错。
-- **拒绝策略默认 `CALLER_RUNS`**：避免任务丢失，但会阻塞调用线程；对延迟敏感场景应改用 `ABORT` 并在业务侧捕获 `RejectedExecutionException`。
+- **不要直接 `new ThreadPoolExecutor(...)`**：业务模块应通过配置 `ydsz.thread.pools.<name>` 声明线程池，并以 `@Resource(name = "xxxExecutor")` 注入，确保被统一监控与关闭
+- **虚拟线程要求 JDK 21+**：`type=VIRTUAL` 在低版本 JVM 上会抛错（本模块不自动回退，与 `ExecutorUtils` 行为不同）
+- **Bean 名命名规则**：注册的 Bean 名称为 `<beanNamePrefix><poolKey>Executor`（如 prefix 为空、key 为 `io` → Bean 名 `ioExecutor`；prefix 为 `ydsz-` → `ydsz-ioExecutor`），注入时必须带上 `Executor` 后缀
+- **指标依赖 Micrometer**：未引入 `micrometer-core` 时指标绑定静默跳过，不会报错
+- **健康检查依赖 spring-boot-health**：Spring Boot 4.x 将 health 类迁至独立模块，未引入时 `ThreadHealthIndicator` Bean 不会注册
+- **未配置线程池时跳过初始化**：`ydsz.thread.pools` 为空时仅打印 info 日志，不报错
+- **拒绝策略默认 `CALLER_RUNS`**：避免任务丢失，但会阻塞调用线程；对延迟敏感场景应改用 `ABORT` 并在业务侧捕获 `RejectedExecutionException`
+- **配置校验启动即失败**：`coreSize`/`maxSize`/`queueCapacity`/`keepAliveSeconds` 范围违规或 `maxSize < coreSize` 时启动抛 `ConstraintViolationException`
+- **上下文传播**：通过 `task-decorator-bean-names` 配置 MDC / RequestContext 等装饰器，多个装饰器会自动串联执行
 
 ### 与 common-util 的边界
 
@@ -337,17 +392,33 @@ public class VirtualTaskService {
 | 维度 | `ydsz-common-util` | `ydsz-common-thread`（本模块） |
 |---|---|---|
 | **`ExecutorUtils`** | 静态工厂方法（`newFixedThreadPool` / `newCachedThreadPool` / `newVirtualThreadExecutor` / `newCpuBoundThreadPool` 等），业务自行管理生命周期 | 不提供静态工厂，仅基于配置文件创建托管 Bean |
-| **`ThreadPoolMonitorAutoConfiguration`** | 提供 `ThreadPoolMonitor` Bean，业务需**手动调用** `monitor.register(name, executor)` 注册线程池才能被采集；指标前缀 `ydsz.threadpool.*` | 配置驱动的池**自动绑定** Micrometer 指标，无需手动注册；指标前缀 `executor.*` |
-| **生命周期** | 工厂方法返回的 `ExecutorService` 由调用方自行 shutdown | 实现 `DisposableBean`，随 Spring 容器统一优雅关闭 |
-| **健康检查** | 不提供 | 提供 `ThreadHealthIndicator`，自动发现所有 `ThreadPoolTaskExecutor` Bean |
+| **`ThreadPoolMonitorAutoConfiguration`** | 提供 `ThreadPoolMonitor` Bean，业务需**手动调用** `monitor.register(name, executor)` 注册线程池才能被采集；指标前缀 `ydsz.threadpool.*` | 配置驱动的池**自动绑定** Micrometer 指标，无需手动注册；指标前缀 `ydsz.executor` |
+| **生命周期** | 工厂方法返回的 `ExecutorService` 由调用方自行 shutdown | 随 Spring 容器统一优雅关闭 |
+| **健康检查** | 不提供 | 提供 `ThreadHealthIndicator`，自动发现所有线程池 Bean |
 | **虚拟线程** | `ExecutorUtils.newVirtualThreadExecutor()` 静态创建，不支持时回退到缓存池 | 配置 `type=VIRTUAL` 创建，不回退（要求 JDK 21+） |
+| **运行时可观测性** | 需手动注册后可采集 | 自动暴露 11 项平台池指标 + 3 项虚拟池指标（含耗时 P50/P95/P99） |
+| **动态调参** | 不支持 | 支持通过 `ThreadPoolHotUpdateListener` 运行时调整参数 |
 
 **选用建议：**
 
-- 需要 Spring 容器托管、配置化、统一监控与关闭 → 用本模块（`ydsz-common-thread`）。
-- 需要在非 Spring 场景或临时创建短生命周期线程池 → 用 `ExecutorUtils`。
-- 已通过本模块托管的池**无需**再注册到 `ThreadPoolMonitor`，避免重复采集。
+- 需要 Spring 容器托管、配置化、统一监控与关闭 → 用本模块（`ydsz-common-thread`）
+- 需要在非 Spring 场景或临时创建短生命周期线程池 → 用 `ExecutorUtils`
+- 已通过本模块托管的池**无需**再注册到 `ThreadPoolMonitor`，避免重复采集
 
 ## 变更记录
 
-- **v1.0.0**（2026-08-02）：初始版本。提供 `ThreadPoolAutoConfiguration` 配置驱动的多线程池自动装配、`ThreadPoolProperties` 平台/虚拟线程双模式配置、`ThreadHealthIndicator` 健康检查、Micrometer 指标自动绑定、`DisposableBean` 优雅关闭。
+- **v1.3.1**（2026-08-13）：
+  - **修复 P0-1**：`ThreadPoolRegistrar` 由 `ThreadPoolAutoConfiguration` 通过 `@Bean` 显式注册，修复装配链路断裂导致线程池不生效问题
+  - **修复 P0-2**：`ThreadPoolExecutorFactory` 实现 `ApplicationContextAware`，修复 `task-decorator-bean-names` 配置无效问题
+  - **修复 P0-4**：虚拟线程池自动包装 `MeteredVirtualExecutorService`，`VirtualThreadMetrics` 计数器（submitted/completed/rejected）真正生效
+  - **修复 P1-3**：`ThreadHealthIndicator.isAlive()` 改用 `ExecutorService.isShutdown()` 标准 API 替代 toString 伪判定
+  - **修复 P1-4**：统一命名 `ydsz-`，修正代码 Javadoc 中 `ydzz`/`ydzs` 残留
+  - **修复 P3-1**：移除 `ThreadPoolHotUpdateListener` 中冗余的 `ReentrantReadWriteLock`
+  - **修复 P3-2**：移除 `VirtualThreadMetrics` 无意义的 `active=1.0` Gauge，计数器改用 `LongAdder` 优化高并发
+  - **增强 P2-1**：`additional-spring-configuration-metadata.json` 补充枚举值提示与 `PoolType` / `RejectPolicy` 描述
+  - **增强 P2-2**：新增任务执行耗时 `Timer` 指标（`execution` / `queue.wait`）和慢任务 `Counter`
+  - **增强 P2-3**：`ThreadPoolProperties` 启用 `@Validated` 校验，`maxSize >= coreSize` 违规时启动失败
+  - **增强 P2-4**：`ThreadPoolRegistrar` 提供 `getManagedBeanNames()` 方法，便于下游按配置 key 查找 Bean 名称
+- **v1.3.0**（2026-08-10）：新增 Micrometer 指标绑定、拒绝策略自动包装、TaskDecorator 配置化上下文传播、热更新监听器提取
+- **v1.2.0**（2026-08-05）：`ThreadHealthIndicator` 支持虚拟线程池感知；`ThreadPoolRegistrar` 提取为独立组件
+- **v1.0.0**（2026-08-02）：初始版本。提供配置驱动的多线程池自动装配、平台/虚拟线程双模式配置、健康检查、Micrometer 指标、优雅关闭

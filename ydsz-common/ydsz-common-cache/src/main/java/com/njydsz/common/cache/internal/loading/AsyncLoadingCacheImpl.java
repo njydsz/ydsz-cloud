@@ -19,6 +19,7 @@ import com.njydsz.common.cache.api.AsyncCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.support.AsyncFunction;
 import com.njydsz.common.cache.support.CacheLoader;
+import com.njydsz.common.cache.support.CacheThreadPoolManager;
 
 import com.njydsz.common.cache.api.CachePolicy;
 import com.njydsz.common.cache.listener.RemovalListener;
@@ -71,12 +72,13 @@ public class AsyncLoadingCacheImpl<K, V> implements AsyncCache<K, V> {
    *
    * @param delegate 底层同步缓存
    * @param loader 缓存加载器（null 表示不自动加载）
-   * @param executor 异步任务执行器（null 使用 ForkJoinPool）
+   * @param executor 异步任务执行器（null 使用 CacheThreadPoolManager 统一管理）
    */
   public AsyncLoadingCacheImpl(Cache<K, V> delegate, CacheLoader<K, V> loader, Executor executor) {
     this.delegate = delegate;
     this.loader = loader;
-    this.executor = executor != null ? executor : ForkJoinPool.commonPool();
+    this.executor = executor != null ? executor : CacheThreadPoolManager.getInstance()
+        .getOrCreatePool("async-loading-cache", 2, 8);
   }
 
   /**

@@ -22,6 +22,7 @@ import com.njydsz.common.cache.listener.RemovalListener;
 import com.njydsz.common.cache.stats.CacheStats;
 import com.njydsz.common.cache.support.AsyncFunction;
 import com.njydsz.common.cache.support.CacheLoader;
+import com.njydsz.common.cache.support.CacheThreadPoolManager;
 
 /**
  * SWR (Stale-While-Revalidate) 缓存装饰器
@@ -82,7 +83,7 @@ public class SwrCacheDecorator<K, V> implements Cache<K, V> {
    * @param freshPeriod 新鲜期（在此期间直接返回缓存值）
    * @param stalePeriod 陈旧期（在此期间返回旧值+异步刷新）
    * @param timeUnit 时间单位
-   * @param executor 异步刷新执行器（null 使用 ForkJoinPool）
+   * @param executor 异步刷新执行器（null 使用 CacheThreadPoolManager 统一管理）
    */
   public SwrCacheDecorator(
       Cache<K, V> delegate,
@@ -95,7 +96,8 @@ public class SwrCacheDecorator<K, V> implements Cache<K, V> {
     this.loader = loader;
     this.freshPeriodNanos = timeUnit.toNanos(freshPeriod);
     this.stalePeriodNanos = timeUnit.toNanos(stalePeriod);
-    this.executor = executor != null ? executor : ForkJoinPool.commonPool();
+    this.executor = executor != null ? executor : CacheThreadPoolManager.getInstance()
+        .getOrCreatePool("swr-decorator", 2, 4);
   }
 
   /**
