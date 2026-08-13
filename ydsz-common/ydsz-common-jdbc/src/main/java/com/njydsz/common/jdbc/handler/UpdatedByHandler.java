@@ -3,6 +3,7 @@ package com.njydsz.common.jdbc.handler;
 import java.util.Optional;
 
 import com.njydsz.common.jdbc.config.FieldFillConfiguration;
+import com.njydsz.common.jdbc.constant.AuditFieldConstants;
 import com.njydsz.common.jdbc.enums.FieldFillStrategyEnum;
 import com.njydsz.common.util.auth.AuthInfo;
 import com.njydsz.common.util.auth.AuthInfoUtils;
@@ -14,7 +15,8 @@ import net.sf.jsqlparser.expression.StringValue;
  * 更新人字段填充处理器
  *
  * <p>在 INSERT 和 UPDATE 操作时自动为记录设置更新人标识（updated_by 字段）。
- * 从当前请求上下文中获取用户信息，如果获取失败则使用默认值"系统更新"。</p>
+ * 从当前请求上下文中获取用户信息，如果获取失败则使用英文标识符 {@value com.njydsz.common.jdbc.constant.AuditFieldConstants#UPDATED_BY_SYSTEM}，
+ * 由上层 MessageSource 通过 key {@code audit.updated_by.system} 解析为展示文本。</p>
  *
  * <h2>使用场景</h2>
  * <ul>
@@ -60,8 +62,10 @@ public class UpdatedByHandler extends AbstractFieldFillHandler {
     @Override
     protected Expression doGetFieldFillValue() {
         AuthInfo authInfo = AuthInfoUtils.getAuthInfo();
+        // 非 Web 上下文（定时任务、MQ 消费）返回英文标识符 "system"，
+        // 由上层 MessageSource 通过 key "audit.updated_by.system" 解析为展示文本
         String uniqueId = Optional.ofNullable(authInfo)
-                .map(AuthInfo::getUniqueId).orElse("系统更新");
+                .map(AuthInfo::getUniqueId).orElse(AuditFieldConstants.UPDATED_BY_SYSTEM);
         return new StringValue(uniqueId);
     }
 

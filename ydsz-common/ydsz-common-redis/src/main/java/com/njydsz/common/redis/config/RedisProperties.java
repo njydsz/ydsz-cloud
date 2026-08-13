@@ -412,4 +412,82 @@ public class RedisProperties {
          */
         private boolean enabled = false;
     }
+
+    /**
+     * 客户端配置类（对应 ydsz.redis.client.*）
+     *
+     * <p>包含客户端类型、连接池、SSL、读策略等配置。
+     */
+    @Data
+    public static class Client {
+
+        /**
+         * 客户端类型（默认 JEDIS）
+         */
+        private RedisClientType type = RedisClientType.JEDIS;
+
+        /**
+         * 连接池配置
+         */
+        private Pool pool = new Pool();
+
+        /**
+         * SSL 配置
+         */
+        private Ssl ssl = new Ssl();
+
+        /**
+         * 读策略（仅 Lettuce 客户端生效，用于读写分离场景）
+         * <p>可选值：MASTER、MASTER_PREFERRED、REPLICA_PREFERRED、REPLICA、NEAREST
+         * <p>默认值：MASTER（仅从主节点读取）
+         */
+        private ReadFrom readFrom = ReadFrom.MASTER;
+
+        /**
+         * 连接池配置类
+         */
+        @Data
+        public static class Pool {
+            /** 最大连接数（默认 16） */
+            @Min(1)
+            private int maxActive = 16;
+            /** 最大空闲连接数（默认 8） */
+            private int maxIdle = 8;
+            /** 最小空闲连接数（默认 2） */
+            private int minIdle = 2;
+            /** 获取连接最大等待时间（毫秒），-1 表示无限制 */
+            private long maxWait = -1;
+            /** 是否启用连接池（默认启用） */
+            private boolean enabled = true;
+        }
+
+        /**
+         * SSL 配置类
+         */
+        @Data
+        public static class Ssl {
+            /** 是否启用 SSL（默认 false） */
+            private boolean enabled = false;
+        }
+
+        /**
+         * Redis 读策略枚举（对应 Lettuce 的 io.lettuce.core.ReadFrom）
+         */
+        public enum ReadFrom {
+            /** 仅从主节点读取 */
+            MASTER,
+            /** 优先从主节点读取，主节点不可用时从副本读取 */
+            MASTER_PREFERRED,
+            /** 仅从上游（主）节点读取 */
+            UPSTREAM,
+            /** 优先从上游（主）节点读取，主节点不可用时从副本读取 */
+            UPSTREAM_PREFERRED,
+            /** 优先从副本读取，副本不可用时从主节点读取 */
+            REPLICA_PREFERRED,
+            /** 仅从副本读取 */
+            REPLICA,
+            /** 从网络拓扑最近的节点读取 */
+            NEAREST
+        }
+    }
 }

@@ -21,6 +21,7 @@ import lombok.Data;
  *       idle-timeout: 600000
  *       max-lifetime: 1800000
  *       leak-detection-threshold: 30000
+ *       initialization-fail-timeout: 0
  * }</pre>
  *
  * <p><b>默认值说明：</b> 所有默认值均参考互联网大厂连接池最佳实践。
@@ -94,6 +95,21 @@ public class HikariCPProperties {
      * 连接池名称（用于日志和监控）
      */
     private String poolName = "YdszHikariCP-Pool";
+
+    /**
+     * 连接池初始化失败超时时间（毫秒）
+     *
+     * <p>控制 HikariCP 启动时等待连接池初始化的行为：
+     * <ul>
+     *   <li>{@code 0} - 不等待连接池初始化完成，立即返回（惰性初始化，推荐）</li>
+     *   <li>{@code -1} (默认) - 若初始化失败则抛出异常，阻塞启动直至超时</li>
+     *   <li>{@code >0} - 等待指定毫秒数后若仍未就绪则抛出异常</li>
+     * </ul>
+     *
+     * <p>设为 {@code 0} 可实现惰性初始化，首批请求按需创建连接，避免启动阻塞。
+     * 默认值：0（惰性初始化，不阻塞启动）
+     */
+    private long initializationFailTimeout = 0L;
 
     /**
      * 是否注册 MBeans 用于 JMX 监控

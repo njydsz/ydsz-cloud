@@ -45,7 +45,13 @@ import io.micrometer.core.instrument.MeterRegistry;
  *       idle-timeout: 600000
  *       max-lifetime: 1800000
  *       leak-detection-threshold: 30000
+ *       initialization-fail-timeout: 0
  * }</pre>
+ *
+ * <p><b>惰性初始化：</b>
+ * 默认 {@code initialization-fail-timeout=0} 表示启动时不等待连接池初始化完成，
+ * 连接在首次请求时按需创建，避免同步预热阻塞启动。
+ * 业务方如需预热行为，可设为 {@code -1}（阻塞直至就绪）或正值（等待指定毫秒）。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -105,6 +111,7 @@ public class HikariCPConfiguration {
         config.setValidationTimeout(properties.getValidationTimeout());
         config.setPoolName(properties.getPoolName());
         config.setRegisterMbeans(properties.isRegisterMbeans());
+        config.setInitializationFailTimeout(properties.getInitializationFailTimeout());
 
         String testQuery = properties.getConnectionTestQuery();
         if (testQuery == null || testQuery.isEmpty()) {
@@ -114,14 +121,15 @@ public class HikariCPConfiguration {
             config.setConnectionTestQuery(testQuery);
         }
 
-        log.info("HikariCP 连接池配置完成 | 池名: {} | 最小空闲: {} | 最大连接: {} | 连接超时: {}ms | 空闲超时: {}ms | 最大生命周期: {}ms | 泄漏检测: {}ms",
+        log.info("HikariCP 连接池配置完成 | 池名: {} | 最小空闲: {} | 最大连接: {} | 连接超时: {}ms | 空闲超时: {}ms | 最大生命周期: {}ms | 泄漏检测: {}ms | 初始化超时: {}ms",
                 config.getPoolName(),
                 config.getMinimumIdle(),
                 config.getMaximumPoolSize(),
                 config.getConnectionTimeout(),
                 config.getIdleTimeout(),
                 config.getMaxLifetime(),
-                config.getLeakDetectionThreshold());
+                config.getLeakDetectionThreshold(),
+                config.getInitializationFailTimeout());
 
         return config;
     }
@@ -147,18 +155,11 @@ public class HikariCPConfiguration {
 
         log.info("HikariCP 数据源已初始化，池名: {}", dataSource.getPoolName());
 
-        // 连接池预热：预创建 minIdle 个连接，避免首批请求冷启动延迟
-        int minIdle = hikariConfig.getMinimumIdle();
-        int warmed = 0;
-        for (int i = 0; i < minIdle; i++) {
-            try (var conn = dataSource.getConnection()) {
-                warmed++;
-            } catch (Exception e) {
-                log.warn("连接池预热失败 (第 {} 个连接): {}", i + 1, e.getMessage());
-                break;
-            }
+        // 采用惰性初始化策略：不阻塞启动预热，首批请求按需创建连接
+        // initializationFailTimeout=0 确保启动不等待连接池就绪
+        if (hikariConfig.getInitializationFailTimeout() == 0) {
+            log.info("HikariCP 启用惰性初始化模式，连接将在首次请求时按需创建");
         }
-        log.info("HikariCP 连接池预热完成: {}/{} 个连接已就绪", warmed, minIdle);
 
         return dataSource;
     }

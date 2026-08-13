@@ -1,19 +1,21 @@
 package com.njydsz.common.jdbc.handler;
 
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-
 import com.njydsz.common.jdbc.config.FieldFillConfiguration;
 import com.njydsz.common.jdbc.enums.FieldFillStrategyEnum;
 
 import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.expression.TimestampValue;
+import net.sf.jsqlparser.expression.Function;
 
 /**
  * 更新时间字段填充处理器
  *
  * <p>在 INSERT 和 UPDATE 操作时自动为记录设置更新时间（updated_at 字段）。
- * 使用当前系统时间作为填充值，格式为 "yyyy-MM-dd HH:mm:ss"。</p>
+ * 使用数据库 CURRENT_TIMESTAMP 函数作为填充值，确保时间戳来源与 created_at 一致。</p>
+ *
+ * <h2>时间戳来源</h2>
+ * <p>与 {@link CreatedAtHandler} 统一使用数据库 {@code CURRENT_TIMESTAMP} 函数，
+ * 由数据库服务器计算时间戳。这样在多实例部署场景下，所有时间戳均来自数据库时钟，
+ * 避免应用服务器时钟偏差导致 created_at 与 updated_at 不一致。</p>
  *
  * <h2>使用场景</h2>
  * <ul>
@@ -27,12 +29,12 @@ import net.sf.jsqlparser.expression.TimestampValue;
  * // INSERT 原始 SQL
  * INSERT INTO sys_user (name, email) VALUES ('张三', 'zhangsan@example.com');
  * // INSERT 转换后 SQL
- * INSERT INTO sys_user (name, email, updated_at) VALUES ('张三', 'zhangsan@example.com', '2026-04-09 10:30:00');
+ * INSERT INTO sys_user (name, email, updated_at) VALUES ('张三', 'zhangsan@example.com', CURRENT_TIMESTAMP);
  *
  * // UPDATE 原始 SQL
  * UPDATE sys_user SET email = 'new@example.com' WHERE id = 1;
  * // UPDATE 转换后 SQL
- * UPDATE sys_user SET email = 'new@example.com', updated_at = '2026-04-09 11:00:00' WHERE id = 1;
+ * UPDATE sys_user SET email = 'new@example.com', updated_at = CURRENT_TIMESTAMP WHERE id = 1;
  * </pre>
  *
  * @author ydsz-team
@@ -41,8 +43,6 @@ import net.sf.jsqlparser.expression.TimestampValue;
  * @see FieldFillConfiguration 字段填充配置
  */
 public class UpdatedAtHandler extends AbstractFieldFillHandler {
-
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     /**
      * 构造更新时间填充处理器
@@ -55,8 +55,10 @@ public class UpdatedAtHandler extends AbstractFieldFillHandler {
 
     @Override
     protected Expression doGetFieldFillValue() {
-        String date = LocalDateTime.now().format(FORMATTER);
-        return new TimestampValue(date);
+        // 使用 CURRENT_TIMESTAMP 函数，由数据库计算时间戳，与 CreatedAtHandler 保持一致
+        Function func = new Function();
+        func.setName("CURRENT_TIMESTAMP");
+        return func;
     }
 
     @Override

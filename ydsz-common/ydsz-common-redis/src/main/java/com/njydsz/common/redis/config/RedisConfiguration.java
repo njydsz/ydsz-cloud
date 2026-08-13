@@ -88,7 +88,7 @@ import com.njydsz.common.redis.service.ops.RedisTransactionOps;
 @AutoConfiguration
 @AutoConfigureBefore(DataRedisAutoConfiguration.class)
 @RequiredArgsConstructor
-@EnableConfigurationProperties({RedisProperties.class, RedisClientProperties.class})
+@EnableConfigurationProperties(RedisProperties.class)
 public class RedisConfiguration {
 
     private final RedisProperties redisProperties;
@@ -96,19 +96,17 @@ public class RedisConfiguration {
     /**
      * 创建 Redis 连接工厂
      *
-     * <p>根据 RedisClientProperties 中的 clientType 配置，
+     * <p>根据 {@link RedisProperties.Client} 中的 clientType 配置，
      * 自动选择 Jedis 或 Lettuce 连接工厂。
      *
-     * @param properties       Redis 配置属性
-     * @param clientProperties 客户端配置属性
+     * @param properties Redis 配置属性（包含嵌套的 client 配置）
      * @return RedisConnectionFactory 实例
      */
     @Bean
     @ConditionalOnMissingBean(RedisConnectionFactory.class)
-    public RedisConnectionFactory redisConnectionFactory(RedisProperties properties,
-                                                          RedisClientProperties clientProperties) {
+    public RedisConnectionFactory redisConnectionFactory(RedisProperties properties) {
         RedisConnectionFactoryConfigurer configurer = new RedisConnectionFactoryConfigurer();
-        return configurer.createConnectionFactory(properties, clientProperties);
+        return configurer.createConnectionFactory(properties);
     }
 
     /**
