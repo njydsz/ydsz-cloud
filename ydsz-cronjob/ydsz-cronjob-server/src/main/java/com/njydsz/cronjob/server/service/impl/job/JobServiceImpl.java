@@ -20,7 +20,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.ApplicationContext;
-import com.njydsz.common.redis.service.RedisService;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -84,7 +84,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     /** Spring 应用上下文（用于按 Bean 名称获取 JobHandler） */
     private final ApplicationContext applicationContext;
     /** Redis 模板（用于分布式锁） */
-    private final RedisService redisService;
+    private final RedisTemplate<String, Object> redisTemplate;
     /** 调度配置属性（P0-4: 锁 TTL 等可配置项） */
     private final CronjobProperties cronjobProperties;
 
@@ -883,7 +883,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         if (!manual) {
             lockKey = LockKeyUtil.buildJobLockKey(job.getJobKey());
             Duration ttl = resolveLockTtl(job);
-            Boolean acquired = redisService.getRedisTemplate().opsForValue()
+            Boolean acquired = redisTemplate.opsForValue()
                     .setIfAbsent(lockKey, INSTANCE_ID, ttl);
             if (!Boolean.TRUE.equals(acquired)) {
                 log.info("[Cronjob] 任务已被其他实例持有锁, 跳过本次执行: key={}", job.getJobKey());
@@ -937,7 +937,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             // 释放分布式锁（Lua 脚本安全释放: 仅当 value 匹配时才 delete）
             if (lockKey != null) {
                 try {
-                    redisService.execute(RELEASE_LOCK_SCRIPT,
+                    redisTemplate.execute(RELEASE_LOCK_SCRIPT,
                             Collections.singletonList(lockKey), INSTANCE_ID);
                 } catch (Exception e) {
                     log.warn("[Cronjob] 释放分布式锁失败(将等待 TTL 自动过期): key={} reason={}",

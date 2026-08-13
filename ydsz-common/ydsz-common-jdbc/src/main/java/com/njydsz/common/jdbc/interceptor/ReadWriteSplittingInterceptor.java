@@ -1,5 +1,6 @@
 package com.njydsz.common.jdbc.interceptor;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.ibatis.cache.CacheKey;
@@ -21,6 +22,7 @@ import com.njydsz.common.jdbc.config.ReadWriteSplittingProperties;
 import com.njydsz.common.jdbc.config.RoundRobinLoadBalanceStrategy;
 import com.njydsz.common.jdbc.config.WeightedLoadBalanceStrategy;
 import com.njydsz.common.jdbc.monitor.ReadWriteSplittingMetrics;
+import com.njydsz.common.jdbc.monitor.SlaveLatencyMonitor;
 
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
@@ -66,19 +68,26 @@ public class ReadWriteSplittingInterceptor implements Interceptor {
     private final ReadWriteSplittingProperties properties;
     private final DataSourceLoadBalanceStrategy loadBalanceStrategy;
     private final ReadWriteSplittingMetrics metrics;
+    private final SlaveLatencyMonitor latencyMonitor;
 
     /**
      * 构造自动读写分离拦截器
      *
-     * @param properties 读写分离配置
-     * @param metrics    读写分离监控指标（可为 null，Micrometer 不可用时降级）
+     * @param properties     读写分离配置
+     * @param metrics        读写分离监控指标（可为 null，Micrometer 不可用时降级）
+     * @param latencyMonitor 从库延迟监控（可为 null，未配置延迟检测时降级）
      */
-    public ReadWriteSplittingInterceptor(ReadWriteSplittingProperties properties, ReadWriteSplittingMetrics metrics) {
+    public ReadWriteSplittingInterceptor(ReadWriteSplittingProperties properties,
+                                          ReadWriteSplittingMetrics metrics,
+                                          SlaveLatencyMonitor latencyMonitor) {
         this.properties = properties;
         this.loadBalanceStrategy = createLoadBalanceStrategy(properties);
         this.metrics = metrics;
-        log.info("ReadWriteSplitting interceptor enabled: master={}, {}, strategy={}",
-                properties.getMasterDs(), properties.getSlaveDsList(), properties.getLoadBalanceStrategy());
+        this.latencyMonitor = latencyMonitor;
+        log.info("ReadWriteSplitting interceptor enabled: master={}, {}, strategy={}, latencyCheck={}",
+                properties.getMasterDs(), properties.getSlaveDsList(),
+                properties.getLoadBalanceStrategy(),
+                properties.getLatencyCheck().isEnabled());
     }
 
     @Override
@@ -131,13 +140,23 @@ public class ReadWriteSplittingInterceptor implements Interceptor {
                 }
                 return properties.getMasterDs();
             }
-            if (slaves.size() == 1) {
+            // 过滤掉延迟超标的从库（如果启用了延迟检测）
+            List<String> healthySlaves = filterHealthySlaves(slaves);
+            if (healthySlaves.isEmpty()) {
+                // 所有从库都延迟超标，降级走主库
                 if (metrics != null) {
-                    metrics.recordRoute(slaves.get(0), sqlTypeName, "slave_single");
+                    metrics.recordRoute(properties.getMasterDs(), sqlTypeName, "master_latency_fallback");
                 }
-                return slaves.get(0);
+                log.debug("ReadWriteSplitting: all slaves latency exceeded, fallback to master");
+                return properties.getMasterDs();
             }
-            String selectedSlave = loadBalanceStrategy.select(slaves);
+            if (healthySlaves.size() == 1) {
+                if (metrics != null) {
+                    metrics.recordRoute(healthySlaves.get(0), sqlTypeName, "slave_single");
+                }
+                return healthySlaves.get(0);
+            }
+            String selectedSlave = loadBalanceStrategy.select(healthySlaves);
             if (metrics != null) {
                 metrics.recordRoute(selectedSlave, sqlTypeName, "slave");
             }
@@ -148,6 +167,29 @@ public class ReadWriteSplittingInterceptor implements Interceptor {
             metrics.recordRoute(properties.getMasterDs(), sqlTypeName, "master");
         }
         return properties.getMasterDs();
+    }
+
+    /**
+     * 过滤延迟超标的从库，返回健康的从库列表。
+     *
+     * <p>如果未配置延迟检测或检测器不可用，返回原始列表（向后兼容）。
+     *
+     * @param slaves 原始从库列表
+     * @return 健康的从库列表（可能为空）
+     */
+    private List<String> filterHealthySlaves(List<String> slaves) {
+        if (latencyMonitor == null || !properties.getLatencyCheck().isEnabled()) {
+            return slaves;
+        }
+        List<String> healthy = new ArrayList<>(slaves.size());
+        for (String slave : slaves) {
+            if (latencyMonitor.isHealthy(slave)) {
+                healthy.add(slave);
+            } else {
+                log.debug("ReadWriteSplitting: slave {} latency exceeded, excluded from routing", slave);
+            }
+        }
+        return healthy;
     }
 
     /**

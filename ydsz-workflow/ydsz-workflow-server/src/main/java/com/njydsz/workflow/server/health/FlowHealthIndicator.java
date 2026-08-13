@@ -39,11 +39,11 @@ public class FlowHealthIndicator extends AbstractModuleHealthIndicator {
 
     private final FlowInstanceMapper instanceMapper;
     private final FlowRunTaskMapper runTaskMapper;
-    private final ObjectProvider<RedisService> redisServiceProvider;
+    private final ObjectProvider<RedisStringOps> redisServiceProvider;
 
     public FlowHealthIndicator(FlowInstanceMapper instanceMapper,
                                 FlowRunTaskMapper runTaskMapper,
-                                ObjectProvider<RedisService> redisServiceProvider) {
+                                ObjectProvider<RedisStringOps> redisServiceProvider) {
         this.instanceMapper = instanceMapper;
         this.runTaskMapper = runTaskMapper;
         this.redisServiceProvider = redisServiceProvider;
@@ -52,7 +52,7 @@ public class FlowHealthIndicator extends AbstractModuleHealthIndicator {
     @Override
     protected void doHealthCheck(Health.Builder builder) {
         // Redis 可选
-        RedisService redisService = redisServiceProvider.getIfAvailable();
+        RedisStringOps redisService = redisServiceProvider.getIfAvailable();
         if (redisService != null) {
             checkRedis(builder, () -> {
                 redisService.hasKey("__flow_health_check__");

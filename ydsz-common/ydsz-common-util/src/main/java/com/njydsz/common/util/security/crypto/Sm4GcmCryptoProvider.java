@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.util.Objects;
+import javax.crypto.AEADBadTagException;
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -142,7 +143,7 @@ public final class Sm4GcmCryptoProvider implements CryptoProvider {
             return cipher.doFinal(ct);
         } catch (CryptoException e) {
             throw e;
-        } catch (javax.crypto.AEADBadTagException e) {
+        } catch (AEADBadTagException e) {
             throw new CryptoException("SM4-GCM authentication failed: data may be tampered", e);
         } catch (Exception e) {
             throw new CryptoException("SM4-GCM decryption failed", e);

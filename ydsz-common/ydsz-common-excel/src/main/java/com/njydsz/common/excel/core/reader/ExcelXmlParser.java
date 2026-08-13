@@ -4,6 +4,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Excel XML 手工解析器。
  *
@@ -52,7 +55,7 @@ import java.util.List;
  */
 public class ExcelXmlParser {
 
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(ExcelXmlParser.class);
+    private static final Logger log = LoggerFactory.getLogger(ExcelXmlParser.class);
 
     /** XML 标签前缀：<row */
     private static final byte[] ROW_START = "<row".getBytes(StandardCharsets.UTF_8);

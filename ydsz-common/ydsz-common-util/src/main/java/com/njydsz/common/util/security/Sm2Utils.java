@@ -18,6 +18,7 @@ import java.util.Objects;
 
 import javax.crypto.Cipher;
 
+import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.math.ec.ECPoint;
 
@@ -474,8 +475,7 @@ public final class Sm2Utils {
             return null;
         }
         try {
-            org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey pk =
-                    (org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey) publicKey;
+            BCECPublicKey pk = (BCECPublicKey) publicKey;
             ECPoint point = pk.getQ();
             BigInteger x = point.getAffineXCoord().toBigInteger();
             BigInteger y = point.getAffineYCoord().toBigInteger();

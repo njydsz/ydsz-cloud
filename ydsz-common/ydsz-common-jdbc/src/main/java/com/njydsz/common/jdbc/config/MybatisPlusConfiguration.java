@@ -6,12 +6,14 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.AnnotationUtils;
@@ -29,6 +31,7 @@ import com.baomidou.mybatisplus.annotation.Version;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
+import com.njydsz.common.jdbc.datasource.DynamicRoutingDataSource;
 import com.njydsz.common.jdbc.handler.CreatedAtHandler;
 import com.njydsz.common.jdbc.handler.CreatedByHandler;
 import com.njydsz.common.jdbc.handler.FieldFillHandler;
@@ -41,6 +44,7 @@ import com.njydsz.common.jdbc.interceptor.LogicalDeleteInterceptor;
 import com.njydsz.common.jdbc.interceptor.OptimisticLockInterceptor;
 import com.njydsz.common.jdbc.interceptor.RowPermissionInnerInterceptor;
 import com.njydsz.common.jdbc.interceptor.SqlFirewallInnerInterceptor;
+import com.njydsz.common.jdbc.interceptor.SqlTraceInnerInterceptor;
 import com.njydsz.common.jdbc.permission.DataPermissionContextResolver;
 import com.njydsz.common.jdbc.permission.DataScopeIdExpander;
 import com.njydsz.common.jdbc.spi.InnerInterceptorProvider;
@@ -353,5 +357,246 @@ public class MybatisPlusConfiguration {
             }
         }
         return false;
+    }
+
+    // ====================================================================
+    // 启动期 Banner 打印
+    // ====================================================================
+
+    /**
+     * 启动完成后打印能力概览 Banner
+     *
+     * <p>通过 {@link ApplicationReadyEvent} 确保在 Spring 容器完全就绪后执行，
+     * 此时所有 Bean 均已初始化完毕。ASCII 形式输出便于开发者快速确认：
+     * <ul>
+     *     <li>哪些拦截器已启用（基于运行时配置，非硬编码）</li>
+     *     <li>数据源数量（通过 {@link DynamicRoutingDataSource} 探测）</li>
+     *     <li>读写分离、熔断器等附属功能状态</li>
+     * </ul>
+     *
+     * @param event 应用就绪事件
+     */
+    @EventListener(ApplicationReadyEvent.class)
+    public void printCapabilityBanner(ApplicationReadyEvent event) {
+        ApplicationContext ctx = event.getApplicationContext();
+
+        List<FeatureLine> features = new ArrayList<>();
+
+        // 1. 乐观锁（二选一始终启用）
+        boolean customOptimisticLock = Boolean.TRUE.equals(optimisticLockConfiguration.isEnable());
+        features.add(new FeatureLine("Optimistic Lock", true,
+                customOptimisticLock ? "Custom @Revision" : "Built-in @Version"));
+
+        // 2. 逻辑删除
+        boolean logicalDelete = Boolean.TRUE.equals(logicalDeleteConfiguration.isEnable());
+        features.add(new FeatureLine("Logical Delete", logicalDelete, null));
+
+        // 3. 字段填充
+        boolean fieldFill = fieldFillConfiguration.getCreatedByIntercept().getEnabled()
+                || fieldFillConfiguration.getUpdateByIntercept().getEnabled()
+                || fieldFillConfiguration.getCreateAtIntercept().getEnabled()
+                || fieldFillConfiguration.getUpdateAtIntercept().getEnabled();
+        features.add(new FeatureLine("Field Fill", fieldFill, null));
+
+        // 4. 数据权限
+        boolean dataPermission = Boolean.TRUE.equals(dataPermissionConfiguration.getEnabled());
+        features.add(new FeatureLine("Data Permission", dataPermission, null));
+
+        // 5. SQL 防火墙
+        boolean sqlFirewall = sqlFirewallProperties != null && sqlFirewallProperties.isEnabled();
+        features.add(new FeatureLine("SQL Firewall", sqlFirewall, null));
+
+        // 6. Sql Trace（慢 SQL + 审计一体化）
+        boolean sqlTrace = isSqlTraceEnabled(ctx);
+        features.add(new FeatureLine("Sql Trace", sqlTrace, null));
+
+        // 7. 分页（始终启用）
+        features.add(new FeatureLine("Pagination", true,
+                paginationProperties.getDbType() != null ? paginationProperties.getDbType() : "auto"));
+
+        // 8. 读写分离
+        boolean rwSplitting = readWriteSplittingProperties != null && readWriteSplittingProperties.isEnabled();
+        features.add(new FeatureLine("RW Splitting", rwSplitting,
+                rwSplitting ? readWriteSplittingProperties.getLoadBalanceStrategy() : null));
+
+        // 9. 熔断器
+        boolean circuitBreaker = circuitBreakerProperties != null && circuitBreakerProperties.isEnabled();
+        features.add(new FeatureLine("Circuit Breaker", circuitBreaker, null));
+
+        // 10. SPI 拦截器
+        int spiCount = spiInterceptorProviders.getIfAvailable(Collections::emptyList).size();
+        features.add(new FeatureLine("SPI Extensions", spiCount > 0,
+                spiCount > 0 ? spiCount + " loaded" : null));
+
+        // 数据源数量
+        String dataSourceInfo = buildDataSourceInfo(ctx);
+
+        // 打印 Banner
+        StringBuilder banner = new StringBuilder();
+        banner.append(System.lineSeparator());
+
+        // Box 宽度
+        int boxWidth = 52;
+        String border = "═".repeat(boxWidth - 2);
+
+        // 标题行
+        banner.append("╔").append(border).append("╗").append(System.lineSeparator());
+        String title = "ydsz-common-jdbc Capability Overview";
+        banner.append(formatBannerLine(title, boxWidth, true)).append(System.lineSeparator());
+
+        // 分割线
+        banner.append("╠").append(border).append("╣").append(System.lineSeparator());
+
+        // 拦截器区标题
+        banner.append(formatBannerLine("Interceptors:", boxWidth, false)).append(System.lineSeparator());
+
+        // 功能列表（两列布局）
+        appendFeatureRows(features, banner, boxWidth);
+
+        // 数据源信息
+        banner.append("╠").append(border).append("╣").append(System.lineSeparator());
+        banner.append(formatBannerLine("DataSources: " + dataSourceInfo, boxWidth, false))
+                .append(System.lineSeparator());
+
+        // 底部
+        banner.append("╚").append(border).append("╝");
+
+        log.info(banner.toString());
+    }
+
+    /**
+     * 探测 SqlTraceInnerInterceptor 是否已注册到拦截器链
+     */
+    private boolean isSqlTraceEnabled(ApplicationContext ctx) {
+        try {
+            MybatisPlusInterceptor interceptor = ctx.getBean(MybatisPlusInterceptor.class);
+            for (Object inner : interceptor.getInterceptors()) {
+                if (inner instanceof SqlTraceInnerInterceptor) {
+                    return true;
+                }
+            }
+        } catch (NoSuchBeanDefinitionException ignored) {
+            // 拦截器链 Bean 不存在
+        }
+        return false;
+    }
+
+    /**
+     * 构建数据源信息描述字符串
+     */
+    private String buildDataSourceInfo(ApplicationContext ctx) {
+        try {
+            DynamicRoutingDataSource routingDs =
+                    ctx.getBeanProvider(DynamicRoutingDataSource.class).getIfAvailable();
+            if (routingDs != null) {
+                int count = routingDs.getDataSources().size();
+                return count + " registered";
+            }
+        } catch (NoSuchBeanDefinitionException ignored) {
+            // 动态路由数据源不存在
+        }
+        return "single";
+    }
+
+    /**
+     * 格式化单行内容（居中对齐用于标题，左对齐用于正文）
+     */
+    private String formatBannerLine(String text, int boxWidth, boolean center) {
+        int innerWidth = boxWidth - 4; // 两侧各留 "║ " 和 " ║"
+        if (center) {
+            int padding = innerWidth - text.length();
+            int leftPad = padding / 2;
+            int rightPad = padding - leftPad;
+            return "║ " + " ".repeat(Math.max(0, leftPad)) + text
+                    + " ".repeat(Math.max(0, rightPad)) + " ║";
+        } else {
+            return "║ " + text
+                    + " ".repeat(Math.max(0, innerWidth - text.length())) + " ║";
+        }
+    }
+
+    /**
+     * 将功能列表按两列布局追加到 Banner
+     *
+     * <p>每行两个项目，启用项使用 {@code ✓} 符号，禁用项使用 {@code ✗} 符号。
+     * 奇数项目时右侧留空。
+     */
+    private void appendFeatureRows(List<FeatureLine> features, StringBuilder banner, int boxWidth) {
+        int innerWidth = boxWidth - 4;
+        int colWidth = (innerWidth - 2) / 2; // 两列之间的间距
+
+        for (int i = 0; i < features.size(); i += 2) {
+            FeatureLine left = features.get(i);
+            FeatureLine right = (i + 1 < features.size()) ? features.get(i + 1) : null;
+
+            String leftStr = "  " + (left.enabled ? "✓ " : "✗ ") + left.label;
+            if (left.detail != null) {
+                leftStr += " (" + left.detail + ")";
+            }
+            leftStr = truncateToWidth(leftStr, colWidth);
+
+            String rightStr = "";
+            if (right != null) {
+                rightStr = "  " + (right.enabled ? "✓ " : "✗ ") + right.label;
+                if (right.detail != null) {
+                    rightStr += " (" + right.detail + ")";
+                }
+                rightStr = truncateToWidth(rightStr, colWidth);
+            }
+
+            // 构建行内容
+            String row = leftStr + " ".repeat(Math.max(0, colWidth - displayWidth(leftStr))) + "  " + rightStr;
+            row += " ".repeat(Math.max(0, innerWidth - displayWidth(row)));
+
+            banner.append("║ ").append(row).append(" ║").append(System.lineSeparator());
+        }
+    }
+
+    /**
+     * 截断字符串到指定显示宽度（处理中英文混合）
+     */
+    private String truncateToWidth(String str, int maxWidth) {
+        if (displayWidth(str) <= maxWidth) {
+            return str;
+        }
+        StringBuilder sb = new StringBuilder();
+        int width = 0;
+        for (int i = 0; i < str.length(); i++) {
+            char c = str.charAt(i);
+            int charWidth = (c > 127) ? 2 : 1;
+            if (width + charWidth > maxWidth - 1) {
+                sb.append('…');
+                break;
+            }
+            sb.append(c);
+            width += charWidth;
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 计算字符串的显示宽度（ASCII 字符计 1，CJK 及其他全角字符计 2）
+     */
+    private int displayWidth(String str) {
+        int width = 0;
+        for (int i = 0; i < str.length(); i++) {
+            width += (str.charAt(i) > 127) ? 2 : 1;
+        }
+        return width;
+    }
+
+    /**
+     * Banner 行内部数据结构
+     */
+    private static final class FeatureLine {
+        final String label;
+        final boolean enabled;
+        final String detail;
+
+        FeatureLine(String label, boolean enabled, String detail) {
+            this.label = label;
+            this.enabled = enabled;
+            this.detail = detail;
+        }
     }
 }

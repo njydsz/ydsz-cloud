@@ -11,6 +11,8 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.springframework.data.redis.core.StringRedisTemplate;
+
 import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.lock.renewal.LockRenewalService;
 
@@ -111,7 +113,7 @@ public class RedisMultiLock implements DistributedLocker {
 	 *
 	 * @param redisTemplate Redis 模板
 	 */
-	public void setRedisTemplate(org.springframework.data.redis.core.StringRedisTemplate redisTemplate) {
+	public void setRedisTemplate(StringRedisTemplate redisTemplate) {
 		this.redisTemplate = redisTemplate;
 	}
 

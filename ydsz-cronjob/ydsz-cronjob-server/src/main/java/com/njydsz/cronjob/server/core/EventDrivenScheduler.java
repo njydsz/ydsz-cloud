@@ -2,7 +2,7 @@ package com.njydsz.cronjob.server.core;
 
 import java.time.Duration;
 
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.RedisStringOps;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.cronjob.domain.entity.job.Job;
@@ -29,7 +29,7 @@ public class EventDrivenScheduler {
     private static final String DEDUP_KEY_PREFIX = "ydsz:job:event:dedup:";
     private static final Duration DEDUP_TTL = Duration.ofMinutes(30);
 
-    private final RedisService redisService;
+    private final RedisStringOps redisStringOps;
     private final JobMapper jobMapper;
     private final JobService jobService;
 
@@ -50,7 +50,7 @@ public class EventDrivenScheduler {
         }
 
         String dedupKey = DEDUP_KEY_PREFIX + (msgId != null ? msgId : jobKey + ":" + System.currentTimeMillis());
-        Boolean acquired = redisService.setIfAbsent(dedupKey, "1", DEDUP_TTL.toSeconds());
+        Boolean acquired = redisStringOps.setIfAbsent(dedupKey, "1", DEDUP_TTL.toSeconds());
         if (Boolean.FALSE.equals(acquired)) {
             log.info("[EventScheduler] 事件已去重, 跳过触发: jobKey={} msgId={}", jobKey, msgId);
             return false;

@@ -13,7 +13,7 @@ import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.safe.desensitize.ColumnDesensitizationContext;
 import com.njydsz.common.safe.desensitize.ColumnDesensitizationRule;
 import com.njydsz.common.util.string.StringUtils;
@@ -52,15 +52,15 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class ColumnDesensitizationService {
 
-    private final RedisService redisService;
+    private final RedisStringOps redisStringOps;
     private final AuthProperties properties;
     private final RbacUserInfoService userInfoService;
     private final Cache<String, ColumnDesensitizationContext> cache;
 
-    public ColumnDesensitizationService(RedisService redisService,
+    public ColumnDesensitizationService(RedisStringOps redisStringOps,
                                         AuthProperties properties,
                                         RbacUserInfoService userInfoService) {
-        this.redisService = redisService;
+        this.redisStringOps = redisStringOps;
         this.properties = properties;
         this.userInfoService = userInfoService;
         this.cache = YdszCache.<String, ColumnDesensitizationContext>newBuilder()
@@ -87,7 +87,7 @@ public class ColumnDesensitizationService {
         }
 
         ColumnDesensitizationContext context = new ColumnDesensitizationContext();
-        String json = redisService.get(String.format(properties.getRoleColKey(), roleCode.trim()), String.class);
+        String json = redisStringOps.get(String.format(properties.getRoleColKey(), roleCode.trim()), String.class);
 
         if (StringUtils.isNotBlank(json)) {
             parseAndMergeRules(json, context);

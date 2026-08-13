@@ -1,5 +1,6 @@
 package com.njydsz.common.jdbc.config;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -59,4 +60,45 @@ public class ReadWriteSplittingProperties {
      * 未配置的从库默认权重为 1。
      */
     private Map<String, Integer> weights = new LinkedHashMap<>();
+
+    /**
+     * 从库复制延迟检测配置
+     */
+    private LatencyCheck latencyCheck = new LatencyCheck();
+
+    /**
+     * 从库延迟检测配置
+     */
+    @Data
+    public static class LatencyCheck {
+
+        /**
+         * 是否启用延迟检测（默认 false）
+         * <p>启用后，延迟超标的从库会被自动摘除，查询降级到主库。
+         */
+        private boolean enabled = false;
+
+        /**
+         * 检测间隔（默认 30 秒）
+         */
+        private Duration interval = Duration.ofSeconds(30);
+
+        /**
+         * 延迟阈值（默认 5 秒）
+         * <p>从库延迟超过此值时判定为不健康，后续查询降级到主库。
+         */
+        private Duration threshold = Duration.ofSeconds(5);
+
+        /**
+         * 连续超标次数触发摘除（默认 3 次）
+         * <p>避免网络抖动导致的误判。
+         */
+        private int failureThreshold = 3;
+
+        /**
+         * 摘除后恢复检测间隔（默认 60 秒）
+         * <p>被摘除的从库每隔此时间重新检测一次，恢复后重新加入路由池。
+         */
+        private Duration recoveryInterval = Duration.ofSeconds(60);
+    }
 }

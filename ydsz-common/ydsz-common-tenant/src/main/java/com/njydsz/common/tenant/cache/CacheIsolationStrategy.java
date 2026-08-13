@@ -10,7 +10,6 @@ import com.njydsz.common.tenant.TenantContext;
  * <p>定义不同的 Redis Key 隔离方案：
  * <ul>
  *   <li>{@link #KEY_PREFIX} — Key 前缀方案（默认）：{@code {tenantId}:{originalKey}}</li>
- *   <li>{@link #REDIS_DB} — Redis DB 切换方案：每租户使用独立 Redis DB（SELECT 0-15）</li>
  *   <li>{@link #NONE} — 不隔离：所有租户共享缓存</li>
  * </ul>
  *
@@ -29,20 +28,6 @@ public enum CacheIsolationStrategy {
      * <p>缺点：所有租户共享同一 Redis 实例，Key 数量膨胀
      */
     KEY_PREFIX,
-
-    /**
-     * Redis DB 切换方案。
-     *
-     * <p>每租户使用独立 Redis DB（SELECT 0-15）。
-     * <p>优点：物理隔离、性能好
-     * <p>缺点：最多 16 个租户、Redis 连接数多
-     *
-     * @deprecated 自 1.1.0 起废弃。Redis DB 切换由 RedisConnectionFactory 层实现，
-     *             本模块不再承担此职责。如需物理隔离，请使用 ISOLATE_DB 模式
-     *             配合独立 Redis 实例。计划在 2.0.0 移除。
-     */
-    @Deprecated(since = "1.1.0", forRemoval = true)
-    REDIS_DB,
 
     /**
      * 不隔离。
@@ -70,7 +55,7 @@ public enum CacheIsolationStrategy {
             }
             return context.getTenantId() + ":" + originalKey;
         }
-        // REDIS_DB 策略：Key 不变，由 RedisConnectionFactory 层面切换 DB
+        // NONE 策略：直接返回原始 Key
         return originalKey;
     }
 }

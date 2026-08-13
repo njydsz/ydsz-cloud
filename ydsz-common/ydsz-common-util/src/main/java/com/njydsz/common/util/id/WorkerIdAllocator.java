@@ -5,8 +5,6 @@ import javax.annotation.Nonnull;
 /**
  * WorkerId 分配策略——负责为当前实例分配唯一 workerId（0 ≤ id < 1024）。
  *
- * <p>替代原 {@code WorkerIdRegistry} 接口，补全默认实现后形成完整策略链。
- *
  * <p>实现为 SPI 扩展点：K8s 环境使用 Pod Ordinal（{@link PodOrdinalWorkerIdAllocator}）、
  * 虚拟机环境使用 IP 哈希（{@link IpHashWorkerIdAllocator}）、
  * 开发环境使用本地文件缓存（{@link FilePersistedWorkerIdAllocator}）。

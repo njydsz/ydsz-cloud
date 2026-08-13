@@ -494,7 +494,7 @@ public class RedisConfiguration {
     /**
      * 注册雪花 ID 生成器（依赖 Redis 注册并续约 workerId，避免多实例时钟回拨/workerId 冲突）。
      *
-     * <p>workerId 的分配与保活由 {@code RedisWorkerIdRegistry} 协作完成；Redis 不可用时该生成器无法初始化 workerId，
+     * <p>workerId 的分配与保活由 WorkerIdAllocator 策略链完成；Redis 不可用时该生成器无法初始化 workerId，
      * 将导致 ID 生成失败。装配条件同其它 ops Bean。
      *
      * @param redisTemplate  基础模板，不会为 null

@@ -6,7 +6,9 @@ import java.util.List;
 
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
+import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.insert.Insert;
 import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.statement.update.Update;
@@ -34,6 +36,32 @@ public final class JSqlParserHelper {
      * 私有构造方法，工具类禁止实例化。
      */
     private JSqlParserHelper() {
+    }
+
+    /**
+     * 解析 SQL 语句并返回 AST，利用 {@link SqlParseContext} 线程级缓存避免重复解析。
+     *
+     * <p>在 MyBatis-Plus 拦截器链中，多个 InnerInterceptor 会对同一条 SQL 进行多次解析。
+     * 本方法通过 {@link SqlParseContext} 在同线程内缓存最新一条 SQL 的解析结果，
+     * 后续拦截器对同一 SQL 字符串调用时直接返回缓存的 AST，消除重复解析的 CPU 开销。</p>
+     *
+     * <p>使用示例：</p>
+     * <pre>
+     * // 替代直接调用 CCJSqlParserUtil.parse(sql)
+     * Statement stmt = JSqlParserHelper.parseWithCached(sql);
+     * </pre>
+     *
+     * <p><b>注意：</b>返回的 Statement 为缓存引用，仅应用于瞬时读取场景。
+     * 如需持有 AST 至下一次 SQL 调用，请自行深拷贝。</p>
+     *
+     * @param sql 原始 SQL 语句字符串
+     * @return 解析后的 JSqlParser Statement AST 对象
+     * @throws net.sf.jsqlparser.JSQLParserException 当 SQL 无法解析时抛出
+     * @see SqlParseContext#parse(String)
+     * @see SqlParseContext#clear()
+     */
+    public static Statement parseWithCached(String sql) throws net.sf.jsqlparser.JSQLParserException {
+        return SqlParseContext.parse(sql);
     }
 
     /**

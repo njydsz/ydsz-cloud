@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Configuration;
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.RedisStringOps;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnBean(LeaderElector.class)
 public class FencingTokenManager {
 
-    private final RedisService redisService;
+    private final RedisStringOps redisStringOps;
     private final ObjectProvider<LeaderElector> leaderElectorProvider;
 
     /** Redis key 前缀：存储当前 Leader 的 Fencing Token */
@@ -68,7 +68,7 @@ public class FencingTokenManager {
     public long acquireNewToken(String role) {
         String key = FENCING_TOKEN_PREFIX + role;
         try {
-            Long token = redisService.incr(key, 1);
+            Long token = redisStringOps.incr(key, 1);
             if (token == null || token <= 0) {
                 log.error("[FencingToken] INCR 返回非法值: role={} token={}", role, token);
                 return -1;
@@ -98,7 +98,7 @@ public class FencingTokenManager {
         }
         String key = FENCING_TOKEN_PREFIX + role;
         try {
-            String redisValue = redisService.get(key, String.class);
+            String redisValue = redisStringOps.get(key);
             if (redisValue == null) {
                 // Redis 中无 Token（被清理或过期），保守拒绝
                 log.warn("[FencingToken] Redis 中无 Token, 拒绝操作: role={} localToken={}", role, localToken);
@@ -113,7 +113,7 @@ public class FencingTokenManager {
             return true;
         } catch (NumberFormatException e) {
             log.error("[FencingToken] Redis Token 格式异常: role={} value={}", role,
-                    redisService.get(key, String.class));
+                    redisStringOps.get(key));
             return false;
         } catch (Exception e) {
             // Redis 异常时放行（避免 Redis 故障导致整个系统不可用）

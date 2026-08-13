@@ -150,7 +150,7 @@ public class TenantContextWebFilter implements Filter {
     }
 
     /**
-     * 清除租户上下文（对应原 TenantContextHolder.clear 语义）。
+     * 清除租户上下文（对应 RequestContext 清理语义）。
      */
     private static void clearTenantContext() {
         RequestContext.remove(BizContextKeys.KEY_TENANT_CONTEXT);

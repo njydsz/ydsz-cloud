@@ -1,5 +1,6 @@
 package com.njydsz.common.jdbc.config;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -8,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
 import com.njydsz.common.jdbc.interceptor.ReadWriteSplittingInterceptor;
 import com.njydsz.common.jdbc.monitor.ReadWriteSplittingMetrics;
+import com.njydsz.common.jdbc.monitor.SlaveLatencyMonitor;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
@@ -55,13 +57,17 @@ public class ReadWriteSplittingAutoConfiguration {
     /**
      * 注册自动读写分离拦截器
      *
-     * @param properties 读写分离配置
-     * @param metrics    读写分离监控指标（可选，Micrometer 不可用时为 null）
+     * @param properties     读写分离配置
+     * @param metrics        读写分离监控指标（可选，Micrometer 不可用时为 null）
+     * @param latencyMonitor 从库延迟监控（可选，未启用延迟检测时为 null）
      * @return ReadWriteSplittingInterceptor 实例
      */
     @Bean
     public ReadWriteSplittingInterceptor readWriteSplittingInterceptor(ReadWriteSplittingProperties properties,
-                                                                       ReadWriteSplittingMetrics metrics) {
-        return new ReadWriteSplittingInterceptor(properties, metrics);
+                                                                       ObjectProvider<ReadWriteSplittingMetrics> metrics,
+                                                                       ObjectProvider<SlaveLatencyMonitor> latencyMonitor) {
+        return new ReadWriteSplittingInterceptor(properties,
+                metrics.getIfAvailable(),
+                latencyMonitor.getIfAvailable());
     }
 }

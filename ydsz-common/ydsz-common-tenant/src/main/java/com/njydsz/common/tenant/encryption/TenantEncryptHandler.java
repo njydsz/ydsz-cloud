@@ -9,6 +9,10 @@ import java.sql.SQLException;
 import java.util.Base64;
 import java.util.Map;
 
+import javax.crypto.Cipher;
+import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedTypes;
@@ -113,12 +117,11 @@ public class TenantEncryptHandler extends BaseTypeHandler<String> {
             return null;
         }
         try {
-            javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance(TRANSFORMATION);
+            Cipher cipher = Cipher.getInstance(TRANSFORMATION);
             byte[] iv = new byte[IV_LENGTH];
             new SecureRandom().nextBytes(iv);
-            javax.crypto.spec.GCMParameterSpec spec = new javax.crypto.spec.GCMParameterSpec(
-                    TAG_LENGTH * 8, iv);
-            cipher.init(javax.crypto.Cipher.ENCRYPT_MODE, new javax.crypto.spec.SecretKeySpec(key, ALGORITHM), spec);
+            GCMParameterSpec spec = new GCMParameterSpec(TAG_LENGTH * 8, iv);
+            cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, ALGORITHM), spec);
             byte[] ciphertext = cipher.doFinal(plaintext.getBytes(StandardCharsets.UTF_8));
             // IV + ciphertext + tag
             byte[] result = new byte[IV_LENGTH + ciphertext.length];
@@ -156,10 +159,9 @@ public class TenantEncryptHandler extends BaseTypeHandler<String> {
             System.arraycopy(decoded, 0, iv, 0, IV_LENGTH);
             System.arraycopy(decoded, IV_LENGTH, encrypted, 0, encrypted.length);
 
-            javax.crypto.Cipher cipher = javax.crypto.Cipher.getInstance(TRANSFORMATION);
-            javax.crypto.spec.GCMParameterSpec spec = new javax.crypto.spec.GCMParameterSpec(
-                    TAG_LENGTH * 8, iv);
-            cipher.init(javax.crypto.Cipher.DECRYPT_MODE, new javax.crypto.spec.SecretKeySpec(key, ALGORITHM), spec);
+            Cipher cipher = Cipher.getInstance(TRANSFORMATION);
+            GCMParameterSpec spec = new GCMParameterSpec(TAG_LENGTH * 8, iv);
+            cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, ALGORITHM), spec);
             byte[] plaintext = cipher.doFinal(encrypted);
             recordMetric("decrypt");
             return new String(plaintext, StandardCharsets.UTF_8);

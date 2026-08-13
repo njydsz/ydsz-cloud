@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.loadbalancer.annotation.LoadBalancerClients;
+import org.springframework.cloud.loadbalancer.core.DiscoveryClientServiceInstanceListSupplier;
 import org.springframework.cloud.loadbalancer.core.HealthCheckServiceInstanceListSupplier;
 import org.springframework.cloud.loadbalancer.core.ReactorLoadBalancer;
 import org.springframework.cloud.loadbalancer.core.ServiceInstanceListSupplier;
@@ -101,7 +102,7 @@ public class GrayLoadBalancerConfig {
             LoadBalancerClientFactory factory) {
         // 基类供给者：从 Nacos 拉取服务实例
         ServiceInstanceListSupplier base =
-                new org.springframework.cloud.loadbalancer.core.DiscoveryClientServiceInstanceListSupplier(
+                new DiscoveryClientServiceInstanceListSupplier(
                         discoveryClient, environment);
 
         // HTTP 探活函数：GET http://{instance}/{path}，2xx 视为存活

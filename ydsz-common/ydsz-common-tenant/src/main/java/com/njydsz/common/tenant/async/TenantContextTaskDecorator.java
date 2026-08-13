@@ -23,7 +23,7 @@ import org.springframework.core.task.TaskDecorator;
  *   <li>父线程无上下文 → 系统租户（定时任务/内部调用）</li>
  * </ul>
  *
- * <p>基于 {@link RequestContext} 的快照/恢复机制实现（替代原 {@code TenantContextHolder}）。
+ * <p>基于 {@link RequestContext} 的快照/恢复机制实现。
  *
  * @author ydsz-team
  * @since 1.0.0

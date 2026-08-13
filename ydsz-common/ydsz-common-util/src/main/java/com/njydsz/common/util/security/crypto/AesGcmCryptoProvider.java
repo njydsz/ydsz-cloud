@@ -3,6 +3,7 @@ package com.njydsz.common.util.security.crypto;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.Objects;
+import javax.crypto.AEADBadTagException;
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -154,7 +155,7 @@ public final class AesGcmCryptoProvider implements CryptoProvider {
             return cipher.doFinal(ct);
         } catch (CryptoException e) {
             throw e;
-        } catch (javax.crypto.AEADBadTagException e) {
+        } catch (AEADBadTagException e) {
             throw new CryptoException("AES-GCM authentication failed: data may be tampered", e);
         } catch (Exception e) {
             throw new CryptoException("AES-GCM decryption failed", e);

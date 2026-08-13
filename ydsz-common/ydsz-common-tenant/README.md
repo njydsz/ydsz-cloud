@@ -69,7 +69,7 @@
 | 组件 | 说明 |
 |---|---|
 | `TenantAwareRedisKey` | 静态工具类，自动添加 `{tenantId}:` 前缀 |
-| `CacheIsolationStrategy` | 缓存隔离策略枚举：`KEY_PREFIX`（默认）/ `REDIS_DB`（每租户独立 DB）/ `NONE` |
+| `CacheIsolationStrategy` | 缓存隔离策略枚举：`KEY_PREFIX`（默认）/ `NONE` |
 | `TenantRedisKeyPrefixer` | common-redis 提供的序列化层前缀器，自动装配 |
 
 无租户上下文、跳过隔离、或超级管理员时不加前缀。
@@ -303,7 +303,7 @@ TenantAuditLogger.log("DELETE_FILE", "删除文件: " + fileId, fileId);
 
 | 枚举 | 作用 |
 |---|---|
-| `CacheIsolationStrategy` | 缓存隔离策略选择：`KEY_PREFIX`（默认，`{tenantId}:` 前缀）/ `REDIS_DB`（每租户独立 DB）/ `NONE`（不隔离） |
+| `CacheIsolationStrategy` | 缓存隔离策略选择：`KEY_PREFIX`（默认，`{tenantId}:` 前缀）/ `NONE`（不隔离） |
 
 ### 6. 可覆盖的 Bean（`@ConditionalOnMissingBean` / `@ConditionalOnClass` 守卫）
 

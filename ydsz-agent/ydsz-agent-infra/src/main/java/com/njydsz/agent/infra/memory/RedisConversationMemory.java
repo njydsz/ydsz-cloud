@@ -9,7 +9,8 @@ import com.njydsz.common.json.YdszJson;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.model.ChatMessage;
@@ -41,23 +42,26 @@ public class RedisConversationMemory implements ConversationMemory {
     /** 默认最大列表大小 */
     private static final int DEFAULT_MAX_LIST_SIZE = 50;
 
-    /** Redis 服务 */
-    private final RedisService redisService;
+    /** String 操作组件（expire / delete / hasKey） */
+    private final RedisStringOps stringOps;
+    /** 集合操作组件（rPush / lTrim / lSize / lRange） */
+    private final RedisCollectionOps collectionOps;
     /** TTL（小时） */
     private final int ttlHours;
     /** 最大列表大小 */
     private final int maxListSize;
 
-    public RedisConversationMemory(RedisService redisService) {
-        this(redisService, DEFAULT_TTL_HOURS, DEFAULT_MAX_LIST_SIZE);
+    public RedisConversationMemory(RedisStringOps stringOps, RedisCollectionOps collectionOps) {
+        this(stringOps, collectionOps, DEFAULT_TTL_HOURS, DEFAULT_MAX_LIST_SIZE);
     }
 
-    public RedisConversationMemory(RedisService redisService, int ttlHours) {
-        this(redisService, ttlHours, DEFAULT_MAX_LIST_SIZE);
+    public RedisConversationMemory(RedisStringOps stringOps, RedisCollectionOps collectionOps, int ttlHours) {
+        this(stringOps, collectionOps, ttlHours, DEFAULT_MAX_LIST_SIZE);
     }
 
-    public RedisConversationMemory(RedisService redisService, int ttlHours, int maxListSize) {
-        this.redisService = redisService;
+    public RedisConversationMemory(RedisStringOps stringOps, RedisCollectionOps collectionOps, int ttlHours, int maxListSize) {
+        this.stringOps = stringOps;
+        this.collectionOps = collectionOps;
         this.ttlHours = ttlHours > 0 ? ttlHours : DEFAULT_TTL_HOURS;
         this.maxListSize = maxListSize > 0 ? maxListSize : DEFAULT_MAX_LIST_SIZE;
     }
@@ -66,20 +70,20 @@ public class RedisConversationMemory implements ConversationMemory {
     public void save(String conversationId, ChatMessage message) {
         String key = KEY_PREFIX + conversationId;
         String json = serializeMessage(message);
-        redisService.rPush(key, json);
-        redisService.lTrim(key, -maxListSize, -1);
-        redisService.expire(key, ttlHours * 3600L);
+        collectionOps.rPush(key, json);
+        collectionOps.lTrim(key, -maxListSize, -1);
+        stringOps.expire(key, ttlHours * 3600L);
     }
 
     @Override
     public List<ChatMessage> load(String conversationId, int maxMessages) {
         String key = KEY_PREFIX + conversationId;
-        long size = redisService.lSize(key);
+        long size = collectionOps.lSize(key);
         if (size == 0) {
             return Collections.emptyList();
         }
         long start = Math.max(0, size - maxMessages);
-        List<String> rawList = redisService.lRange(key, start, size - 1, String.class);
+        List<String> rawList = collectionOps.lRange(key, start, size - 1, String.class);
         if (rawList == null || rawList.isEmpty()) {
             return Collections.emptyList();
         }
@@ -95,12 +99,12 @@ public class RedisConversationMemory implements ConversationMemory {
 
     @Override
     public void clear(String conversationId) {
-        redisService.delete(KEY_PREFIX + conversationId);
+        stringOps.del(KEY_PREFIX + conversationId);
     }
 
     @Override
     public long count(String conversationId) {
-        return redisService.lSize(KEY_PREFIX + conversationId);
+        return collectionOps.lSize(KEY_PREFIX + conversationId);
     }
 
     /**
@@ -110,7 +114,7 @@ public class RedisConversationMemory implements ConversationMemory {
      */
     public boolean isAvailable() {
         try {
-            return Boolean.TRUE.equals(redisService.hasKey(KEY_PREFIX + "health-check"));
+            return Boolean.TRUE.equals(stringOps.hasKey(KEY_PREFIX + "health-check"));
         } catch (Exception e) {
             log.warn("[Memory] Redis 连接检查失败: {}", e.getMessage());
             return false;

@@ -5,7 +5,8 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.RedisStringOps;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -44,8 +45,10 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
     private final JobMapper jobMapper;
     /** 定时任务模块配置属性 */
     private final CronjobProperties cronjobProperties;
-    /** P7-3: Redis 计数器（并发 + 日执行量） */
-    private final RedisService redisService;
+    /** P7-3: Redis String 操作（并发 + 日执行量） */
+    private final RedisStringOps redisStringOps;
+    /** Redis Template（用于 opsForValue） */
+    private final RedisTemplate<String, Object> redisTemplate;
 
     /** Redis key 前缀：并发计数器 */
     private static final String CONCURRENT_KEY_PREFIX = "ydsz:quota:concurrent:";
@@ -148,9 +151,9 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
         String dailyKey = DAILY_KEY_PREFIX + tenantId + ":" + todaySuffix();
         try {
             // INCR 并发计数器，首次设置 TTL
-            Long concurrentVal = redisService.incr(concurrentKey, 1);
+            Long concurrentVal = redisStringOps.incr(concurrentKey, 1);
             if (concurrentVal != null && concurrentVal == 1L) {
-                redisService.expire(concurrentKey, CONCURRENT_TTL);
+                redisStringOps.expire(concurrentKey, CONCURRENT_TTL);
             }
         } catch (Exception e) {
             log.warn("[Quota] INCR 并发计数器失败, 降级放行: tenant={} reason={}",
@@ -158,9 +161,9 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
         }
         try {
             // INCR 日执行计数器，首次设置 TTL
-            Long dailyVal = redisService.incr(dailyKey, 1);
+            Long dailyVal = redisStringOps.incr(dailyKey, 1);
             if (dailyVal != null && dailyVal == 1L) {
-                redisService.expire(dailyKey, DAILY_TTL);
+                redisStringOps.expire(dailyKey, DAILY_TTL);
             }
         } catch (Exception e) {
             log.warn("[Quota] INCR 日执行计数器失败, 降级放行: tenant={} reason={}",
@@ -176,11 +179,11 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
         String concurrentKey = CONCURRENT_KEY_PREFIX + tenantId;
         try {
             // DECR 并发计数器，保证不会为负
-            Long val = redisService.opsForValue().decrement(concurrentKey);
+            Long val = redisTemplate.opsForValue().decrement(concurrentKey);
             if (val != null && val < 0L) {
                 // 防御性处理：如果 DECR 后为负数，重置为 0（可能因宕机导致计数器错乱）
                 log.warn("[Quota] 并发计数器为负数, 重置为 0: tenant={} value={}", tenantId, val);
-                redisService.set(concurrentKey, "0");
+                redisStringOps.set(concurrentKey, "0");
             }
         } catch (Exception e) {
             log.warn("[Quota] DECR 并发计数器失败(不影响主流程): tenant={} reason={}",
@@ -272,7 +275,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
      */
     private long getConcurrentCount(String tenantId) {
         try {
-            String val = redisService.get(CONCURRENT_KEY_PREFIX + tenantId, String.class);
+            String val = redisStringOps.get(CONCURRENT_KEY_PREFIX + tenantId);
             if (val == null || val.isEmpty()) {
                 return 0L;
             }
@@ -290,7 +293,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
     private long getDailyCount(String tenantId) {
         try {
             String key = DAILY_KEY_PREFIX + tenantId + ":" + todaySuffix();
-            String val = redisService.get(key, String.class);
+            String val = redisStringOps.get(key);
             if (val == null || val.isEmpty()) {
                 return 0L;
             }

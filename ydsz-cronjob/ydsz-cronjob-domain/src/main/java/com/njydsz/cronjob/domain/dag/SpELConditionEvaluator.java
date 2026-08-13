@@ -2,6 +2,7 @@ package com.njydsz.cronjob.domain.dag;
 
 import java.util.Map;
 
+import org.springframework.context.expression.MapAccessor;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionParser;
@@ -124,7 +125,7 @@ public class SpELConditionEvaluator {
     private EvaluationContext buildEvaluationContext(Map<String, Object> context) {
         StandardEvaluationContext evalContext = new StandardEvaluationContext(context);
         @SuppressWarnings("removal")
-        org.springframework.context.expression.MapAccessor mapAccessor = new org.springframework.context.expression.MapAccessor();
+        MapAccessor mapAccessor = new MapAccessor();
         evalContext.addPropertyAccessor(mapAccessor);
         if (context != null) {
             for (Map.Entry<String, Object> entry : context.entrySet()) {

@@ -81,6 +81,31 @@
       "description": "是否启用读写分离（默认 false）。"
     },
     {
+      "name": "ydsz.jdbc.read-write-splitting.latency-check.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用从库延迟检测（默认 false）。启用后延迟超标的从库自动摘除。"
+    },
+    {
+      "name": "ydsz.jdbc.read-write-splitting.latency-check.interval",
+      "type": "java.time.Duration",
+      "description": "延迟检测间隔（默认 30s）。"
+    },
+    {
+      "name": "ydsz.jdbc.read-write-splitting.latency-check.threshold",
+      "type": "java.time.Duration",
+      "description": "延迟阈值（默认 5s），超过此值判定为不健康。"
+    },
+    {
+      "name": "ydsz.jdbc.read-write-splitting.latency-check.failure-threshold",
+      "type": "java.lang.Integer",
+      "description": "连续超标次数触发摘除（默认 3 次），避免网络抖动误判。"
+    },
+    {
+      "name": "ydsz.jdbc.read-write-splitting.latency-check.recovery-interval",
+      "type": "java.time.Duration",
+      "description": "摘除后恢复检测间隔（默认 60s）。"
+    },
+    {
       "name": "ydsz.jdbc.logical-delete.enabled",
       "type": "java.lang.Boolean",
       "description": "是否启用逻辑删除（默认 true）。"

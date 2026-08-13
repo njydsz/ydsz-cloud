@@ -8,6 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.njydsz.common.json.exception.JsonException;
 import com.njydsz.common.json.parser.JsonParserUtil;
 import com.njydsz.common.json.util.JsonTypeUtils;
@@ -39,7 +42,7 @@ import com.njydsz.common.json.reader.JSONReader;
  */
 @SuppressWarnings("deprecation")
 final class BeanDeserializerEngine {
-    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(BeanDeserializerEngine.class);
+    private static final Logger log = LoggerFactory.getLogger(BeanDeserializerEngine.class);
 
     private BeanDeserializerEngine() {
         throw new UnsupportedOperationException();

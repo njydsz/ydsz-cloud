@@ -393,7 +393,7 @@ public final class MapUtils {
      *     "age", 25,
      *     "createTime", "2024-01-15 10:30:00"
      * );
-     * UserDO user = MapUtils.toBean(userData, UserDO.class);
+     * UserDO user = MapUtils.toBeanOrRecord(userData, UserDO.class);
      * // user.getName() == "张三", user.getAge() == 25
      * }</pre>
      *
@@ -920,45 +920,6 @@ public final class MapUtils {
             return instantiateRecord(map, clazz);
         }
         return toBeanInternal(map, clazz);
-    }
-
-    /**
-     * 将 {@code Map<String, Object>} 转换为指定类型的 Java Bean（使用默认日期格式）。
-     * <p>内部实现，供 {@link #toBeanOrRecord} 和递归嵌套场景使用。
-     */
-    @SuppressWarnings("unchecked")
-    private static <T> T toBeanInternal(Map<String, Object> map, Class<T> targetClass) {
-        if (map == null) {
-            throw new IllegalArgumentException("map cannot be null");
-        }
-        if (targetClass == null) {
-            throw new IllegalArgumentException("targetClass cannot be null");
-        }
-
-        T bean = createInstance(targetClass);
-        if (map.isEmpty()) {
-            return bean;
-        }
-
-        Map<String, Method> setters = getCachedSetters(targetClass);
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-            String fieldName = entry.getKey();
-            Object value = entry.getValue();
-            Method setter = setters.get(fieldName);
-            if (setter == null || value == null) {
-                continue;
-            }
-            Class<?> paramType = setter.getParameterTypes()[0];
-            Object converted = convertValue(value, paramType, setter);
-            if (converted != null) {
-                try {
-                    setter.invoke(bean, converted);
-                } catch (Exception e) {
-                    // 设置失败（业务 setter 抛异常等），跳过该字段
-                }
-            }
-        }
-        return bean;
     }
 
     /**

@@ -10,7 +10,7 @@ import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Configuration;
-import com.njydsz.common.redis.service.RedisService;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,7 +70,7 @@ public class TimeoutMonitor {
     private final JobMapper jobMapper;
     private final JobLogMapper jobLogMapper;
     private final LeaderElector leaderElector;
-    private final RedisService redisService;
+    private final RedisTemplate<String, Object> redisTemplate;
     private final CronjobProperties cronjobProperties;
     /** P5: 告警触发器（可选注入，未配置时不触发告警） */
     private final ObjectProvider<AlertTrigger> alertTriggerProvider;
@@ -175,7 +175,7 @@ public class TimeoutMonitor {
         String holder = log0.getLockHolder();
         if (holder != null && !holder.isBlank()) {
             try {
-                Long released = redisService.execute(RELEASE_LOCK_SCRIPT,
+                Long released = redisTemplate.execute(RELEASE_LOCK_SCRIPT,
                         Collections.singletonList(lockKey), holder);
                 if (released != null && released > 0) {
                     log.info("[TimeoutMonitor] 安全释放超时任务锁成功: jobKey={} lockKey={} holder={}",

@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 /**
  * Agent 请求守卫：幂等去重 + 限流
@@ -38,10 +38,10 @@ public class AgentRequestGuard {
     private static final int MAX_REQUESTS_PER_MINUTE = 10;
     private static final Duration RATE_WINDOW = Duration.ofMinutes(1);
 
-    private final RedisService redisService;
+    private final RedisStringOps stringOps;
 
-    public AgentRequestGuard(RedisService redisService) {
-        this.redisService = redisService;
+    public AgentRequestGuard(RedisStringOps stringOps) {
+        this.stringOps = stringOps;
     }
 
     /**
@@ -65,7 +65,7 @@ public class AgentRequestGuard {
      */
     private void checkIdempotent(String requestId) {
         String key = IDEM_KEY_PREFIX + requestId;
-        Boolean acquired = redisService.setIfAbsent(key, "1", IDEM_TTL.toSeconds());
+        Boolean acquired = stringOps.setIfAbsent(key, "1", IDEM_TTL.toSeconds());
         if (acquired == null || !acquired) {
             log.warn("[Agent-Guard] 重复请求被拒绝: requestId={}", requestId);
             throw new BusinessException("重复请求，请勿在 60 秒内重复提交");
@@ -80,9 +80,9 @@ public class AgentRequestGuard {
      */
     private void checkRateLimit(String userId) {
         String key = RATE_KEY_PREFIX + userId;
-        long count = redisService.incr(key, 1);
+        long count = stringOps.incr(key, 1);
         if (count == 1) {
-            redisService.expire(key, RATE_WINDOW.toSeconds());
+            stringOps.expire(key, RATE_WINDOW.toSeconds());
         }
         if (count > MAX_REQUESTS_PER_MINUTE) {
             log.warn("[Agent-Guard] 限流触发: userId={}, count={}", userId, count);
@@ -98,6 +98,6 @@ public class AgentRequestGuard {
             return;
         }
         String key = IDEM_KEY_PREFIX + requestId;
-        redisService.delete(key);
+        stringOps.del(key);
     }
 }

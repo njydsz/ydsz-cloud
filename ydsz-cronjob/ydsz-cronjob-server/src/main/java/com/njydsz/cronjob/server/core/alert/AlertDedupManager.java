@@ -6,7 +6,7 @@ import java.util.Set;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.RedisStringOps;
 
 import com.njydsz.cronjob.server.config.CronjobProperties;
 
@@ -44,7 +44,7 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnProperty(name = "ydsz.cronjob.alert-dedup.enabled", havingValue = "true")
 public class AlertDedupManager {
 
-    private final RedisService redisService;
+    private final RedisStringOps redisStringOps;
     private final CronjobProperties cronjobProperties;
 
     /** Redis key 前缀：告警聚合计数 */
@@ -69,14 +69,14 @@ public class AlertDedupManager {
 
         try {
             // 原子递增计数
-            Long count = redisService.incr(aggregateKey, 1);
+            Long count = redisStringOps.incr(aggregateKey, 1);
             if (count == null) {
                 count = 1L;
             }
 
             // 首次告警：设置窗口 TTL
             if (count == 1) {
-                redisService.expire(aggregateKey, Duration.ofSeconds(config.getAggregateWindowSeconds()));
+                redisStringOps.expire(aggregateKey, Duration.ofSeconds(config.getAggregateWindowSeconds()));
                 // 首次告警，使用原始通道发送
                 return DedupDecision.send(origChannels, false);
             }
@@ -85,7 +85,7 @@ public class AlertDedupManager {
             if (count > config.getMaxAggregateCount()) {
                 // 超过阈值，升级通知
                 String escalateKey = ESCALATION_PREFIX + ruleId;
-                redisService.set(escalateKey, "1", Duration.ofSeconds(config.getDowngradeCooldownSeconds()));
+                redisStringOps.set(escalateKey, "1", Duration.ofSeconds(config.getDowngradeCooldownSeconds()));
 
                 String escalatedChannels = mergeChannels(origChannels, config.getEscalateChannels());
                 log.warn("[AlertDedup] 告警升级: ruleId={} alertType={} count={} channels={}",
@@ -113,7 +113,7 @@ public class AlertDedupManager {
     public boolean isEscalated(String ruleId) {
         try {
             String key = ESCALATION_PREFIX + ruleId;
-            return Boolean.TRUE.equals(redisService.hasKey(key));
+            return Boolean.TRUE.equals(redisStringOps.hasKey(key));
         } catch (Exception e) {
             return false;
         }

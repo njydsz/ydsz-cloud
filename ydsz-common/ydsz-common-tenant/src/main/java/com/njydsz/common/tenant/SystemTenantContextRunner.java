@@ -71,7 +71,7 @@ public final class SystemTenantContextRunner {
     }
 
     /**
-     * 清除租户上下文（对应原 TenantContextHolder.clear 语义）。
+     * 清除租户上下文（对应 RequestContext 清理语义）。
      */
     private static void clearTenant() {
         RequestContext.remove(BizContextKeys.KEY_TENANT_CONTEXT);

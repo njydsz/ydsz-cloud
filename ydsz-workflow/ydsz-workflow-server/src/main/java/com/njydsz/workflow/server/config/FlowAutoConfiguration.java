@@ -10,7 +10,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.RedisStringOps;
 import com.njydsz.workflow.infra.mapper.FlowCcMapper;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
@@ -48,7 +48,7 @@ public class FlowAutoConfiguration {
     @ConditionalOnMissingBean(FlowHealthIndicator.class)
     public FlowHealthIndicator flowHealthIndicator(FlowInstanceMapper instanceMapper,
                                                     FlowRunTaskMapper runTaskMapper,
-                                                    ObjectProvider<RedisService> redisServiceProvider) {
+                                                    ObjectProvider<RedisStringOps> redisServiceProvider) {
         return new FlowHealthIndicator(instanceMapper, runTaskMapper, redisServiceProvider);
     }
 
