@@ -14,6 +14,7 @@ import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.tenant.TenantContext;
 import com.njydsz.common.tenant.config.TenantProperties;
 import com.njydsz.common.tenant.config.TenantProperties.TenantField;
+import com.njydsz.common.tenant.lifecycle.TenantLifecycleManager;
 import com.njydsz.common.util.auth.AuthInfoUtils;
 
 import jakarta.servlet.Filter;

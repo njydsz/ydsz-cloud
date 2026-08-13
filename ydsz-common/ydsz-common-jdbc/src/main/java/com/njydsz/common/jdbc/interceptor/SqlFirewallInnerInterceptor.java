@@ -313,5 +313,7 @@ public class SqlFirewallInnerInterceptor implements InnerInterceptor {
             }
             this.allowTables = normalized;
         }
+        // 清空预编译正则缓存，下次 Detection 时重新构建
+        this.allowedTablesPattern = null;
     }
 }

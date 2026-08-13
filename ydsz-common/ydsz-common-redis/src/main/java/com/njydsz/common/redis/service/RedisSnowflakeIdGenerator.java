@@ -313,6 +313,14 @@ public class RedisSnowflakeIdGenerator {
                 long currentSeq = sequence.get();
                 long nextSeq = (currentSeq + 1) & SEQUENCE_MASK;
 
+                // 序列号用尽（溢出），等待下一毫秒
+                if (nextSeq == 0) {
+                    timestamp = waitNextMillisSequenceExhausted(lastTs);
+                    lastTs = lastTimestamp.get();
+                    // 重新进入外层逻辑（因为 timestamp 已变化）
+                    break;
+                }
+
                 if (sequence.compareAndSet(currentSeq, nextSeq)) {
                     // CAS 成功，组装 ID
                     return ((timestamp - EPOCH) << TIMESTAMP_SHIFT)
@@ -322,11 +330,15 @@ public class RedisSnowflakeIdGenerator {
                 }
                 // CAS 失败，重试
             }
-        } else {
-            // 新毫秒，重置序列号（使用 CAS 保证可见性）
+        }
+
+        // 处理：序列号用尽等待后的新时间戳 或 其他线程已更新时间戳的情况
+        if (timestamp != lastTs) {
             sequence.set(0L);
             // CAS 更新 lastTimestamp
-            if (lastTimestamp.compareAndSet(lastTs, timestamp)) {
+            if (lastTimestamp.compareAndSet(lastTs, timestamp)
+                    || lastTimestamp.get() == timestamp) {
+                // 组装 ID（序列号从 0 开始）
                 return ((timestamp - EPOCH) << TIMESTAMP_SHIFT)
                         | (datacenterId << DATACENTER_ID_SHIFT)
                         | (workerId << WORKER_ID_SHIFT)
@@ -336,6 +348,9 @@ public class RedisSnowflakeIdGenerator {
                 return nextId();
             }
         }
+
+        // 兜底：重新尝试
+        return nextId();
     }
 
     /**

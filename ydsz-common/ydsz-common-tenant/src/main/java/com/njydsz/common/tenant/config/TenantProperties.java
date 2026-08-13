@@ -157,6 +157,13 @@ public class TenantProperties {
     private Set<String> anonUrls = new HashSet<>();
 
     /**
+     * 是否在 WebFilter 中校验租户生命周期状态（默认 true）。
+     *
+     * <p>开启后，每次请求会检查租户状态，SUSPENDED/OFFLINE 租户将被拒绝。
+     */
+    private boolean lifecycleCheckEnabled = true;
+
+    /**
      * 获取生效的租户字段列表。
      *
      * <p>SINGLE 模式只取第一个字段；MULTI 模式取全部字段。
