@@ -8,8 +8,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import jakarta.annotation.PreDestroy;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -17,6 +15,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.TaskScheduler;
 
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Redis 复制延迟感知读写路由策略。
@@ -61,11 +60,10 @@ import lombok.Data;
  * @author ydsz-team
  * @since 1.2.0
  */
+@Slf4j
 @ConditionalOnClass(StringRedisTemplate.class)
 @ConditionalOnProperty(prefix = "ydsz.redis.replication.lag-aware", name = "enabled", havingValue = "true")
 public class ReplicationLagAwareStrategy {
-
-    private static final Logger log = LoggerFactory.getLogger(ReplicationLagAwareStrategy.class);
 
     /** 探测 key（位于 Redis 中） */
     private static final String PROBE_KEY = "__replication_lag_probe__";

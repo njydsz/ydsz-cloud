@@ -66,7 +66,7 @@ RuntimeException
 | `ExceptionCodeScanner` | 启动时读取 `META-INF/spring/ydsz-exception-codes.idx` 索引（回退 ASM 扫描）注册全部 `@YdszExceptionCode` 标注的枚举到 `ErrorCodeTable` |
 | `ErrorCodeTable` | 统一错误码表（按模块分组，供 Actuator 文档端点与运行时反查） |
 
-扫描器在 `ApplicationReadyEvent` 时确定性扫描注册，所有错误码统一注册到 `ErrorCodeTable`（单一注册中心），确保应用就绪后全部错误码可用。启动时会执行 fail-fast code 唯一性校验，重复 code 将阻止启动。
+扫描器在全部单例 Bean 实例化完成后（`SmartInitializingSingleton`）确定性扫描注册，所有错误码统一注册到 `ErrorCodeTable`（单一注册中心）。扫描完成后立即执行 i18n key fail-fast 校验（`ydsz.i18n.validate-on-startup=true` 时），任一 key 缺失将阻止启动。扫描注册由**核心装配**提供，不依赖 Actuator，无 Actuator 依赖的消费方也能完成注册与校验。
 
 ### 4. 全局异常处理
 
@@ -113,9 +113,9 @@ traceId 提取优先级：`MDC.get("traceId")` → Request Header `X-Trace-Id` �
 i18n 特性：
 
 - **多环境适配**：开发环境实时加载（cacheSeconds=5），生产环境缓存（cacheSeconds=3600）
-- **fail-fast 校验**：启动时校验所有已注册 `ExceptionCode` 的 i18n key 是否可解析，缺失则阻止启动
-- **懒加载解析**：异常抛出时只存储 key + params，`getMessage()` 调用时才通过 `MessageSourceHolder` 解析（CAS 无锁）
-- **多语言支持**：zh_CN、en_US、zh_TW
+- **按请求 Locale 解析**：`getMessage()` 通过 `LocaleContextHolder` 取当前请求 Locale，无 Web 上下文时回退 `Locale.ROOT`；同一异常在不同语言请求下返回对应文案（zh_CN / en_US / zh_TW）
+- **fail-fast 校验**：错误码扫描注册完成后，启动时校验所有已注册 `ExceptionCode` 的 i18n key 是否可解析，缺失则阻止启动（不再空转）
+- **懒加载解析**：异常抛出时只存储 key + params，`getMessage()` 首次按 Locale 解析并缓存（`ConcurrentHashMap.computeIfAbsent`，不同 Locale 互不串扰）
 - **Hibernate Validator 集成**：校验消息国际化
 
 ### 7. 异常指标监控

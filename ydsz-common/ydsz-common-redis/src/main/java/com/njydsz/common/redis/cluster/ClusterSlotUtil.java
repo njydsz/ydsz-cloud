@@ -28,6 +28,13 @@ import java.util.function.Function;
 public class ClusterSlotUtil {
 
     /**
+     * 私有构造：工具类禁止实例化。
+     */
+    private ClusterSlotUtil() {
+        throw new AssertionError("Utility class cannot be instantiated");
+    }
+
+    /**
      * Redis Cluster 槽位总数（固定 16384）
      */
     private static final int SLOT_COUNT = 16384;

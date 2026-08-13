@@ -31,6 +31,13 @@ import lombok.extern.slf4j.Slf4j;
 public class NullValueCacheHelper {
 
     /**
+     * 私有构造：工具类禁止实例化。
+     */
+    private NullValueCacheHelper() {
+        throw new AssertionError("Utility class cannot be instantiated");
+    }
+
+    /**
      * 空值占位符：缓存中以该字符串表示"数据库无此记录"
      */
     private static final String NULL_VALUE_PLACEHOLDER = "__NULL__";
