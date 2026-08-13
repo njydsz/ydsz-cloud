@@ -431,6 +431,156 @@ public class RedisRateLimiter {
             "redis.call('PEXPIRE', key, windowMs + 1000) " +
             "return {1, totalCount + 1}";
 
+    // ==================== P1-10: 高阶限流工具方法 ====================
+
+    /**
+     * 限流异常（被限流时抛出）
+     *
+     * <p>包含限流键、限制阈值和窗口信息，便于调用方按异常类型处理限流场景。</p>
+     */
+    public static class RateLimitException extends RuntimeException {
+        private final String key;
+        private final int limit;
+        private final Duration window;
+
+        public RateLimitException(String key, int limit, Duration window) {
+            super(String.format("Rate limit exceeded: key=%s, limit=%d per %s", key, limit, window));
+            this.key = key;
+            this.limit = limit;
+            this.window = window;
+        }
+
+        public String getKey() {
+            return key;
+        }
+
+        public int getLimit() {
+            return limit;
+        }
+
+        public Duration getWindow() {
+            return window;
+        }
+    }
+
+    /**
+     * 固定窗口限流（限流时抛出异常版）
+     *
+     * <p>当请求被限流时抛出 {@link RateLimitException}，
+     * 适用于"限流即错误"的业务场景（如 API 返回 429）。
+     *
+     * @param key    限流维度键
+     * @param limit  窗口内最大请求数
+     * @param window 时间窗口长度
+     * @throws RateLimitException 当请求被限流时
+     */
+    public void tryAcquireFixedWindowOrThrow(String key, int limit, Duration window) {
+        if (!tryAcquireFixedWindow(key, limit, window)) {
+            throw new RateLimitException(key, limit, window);
+        }
+    }
+
+    /**
+     * 令牌桶限流（限流时抛出异常版）
+     *
+     * @param key      限流维度键
+     * @param rate     令牌补充速率（每秒）
+     * @param capacity 桶容量
+     * @throws RateLimitException 当请求被限流时
+     */
+    public void tryAcquireTokenBucketOrThrow(String key, int rate, int capacity) {
+        if (!tryAcquireTokenBucket(key, rate, capacity)) {
+            throw new RateLimitException(key, capacity, Duration.ofSeconds(1));
+        }
+    }
+
+    /**
+     * 滑动窗口限流（限流时抛出异常版）
+     *
+     * @param key    限流维度键
+     * @param limit  窗口内最大请求数
+     * @param window 时间窗口长度
+     * @throws RateLimitException 当请求被限流时
+     */
+    public void tryAcquireSlidingWindowOrThrow(String key, int limit, Duration window) {
+        if (!tryAcquireSlidingWindow(key, limit, window)) {
+            throw new RateLimitException(key, limit, window);
+        }
+    }
+
+    /**
+     * 执行被限流保护的操作（限流时执行降级逻辑）
+     *
+     * <p>这是结构化的限流编程模式：
+     * <ul>
+     *   <li>通过限流：执行 {@code action} 并返回结果</li>
+     *   <li>未通过限流：执行 {@code onRateLimited} 降级逻辑并返回其结果</li>
+     * </ul>
+     *
+     * <p>使用示例：
+     * <pre>{@code
+     * String result = rateLimiter.executeOrRun(
+     *     "api:user:" + userId,
+     *     100,
+     *     Duration.ofMinutes(1),
+     *     () -> callExternalApi(userId),          // 正常逻辑
+     *     () -> "[]",                             // 限流降级：返回空 JSON 数组
+     * );
+     * }</pre>
+     *
+     * @param key            限流维度键
+     * @param limit          窗口内最大请求数
+     * @param window         时间窗口长度
+     * @param action         正常执行的逻辑
+     * @param onRateLimited  限流时的降级逻辑
+     * @param <T>            返回值类型
+     * @return 执行结果
+     */
+    public <T> T executeOrRun(String key, int limit, Duration window,
+                              java.util.function.Supplier<T> action,
+                              java.util.function.Supplier<T> onRateLimited) {
+        if (tryAcquireSlidingWindow(key, limit, window)) {
+            return action.get();
+        }
+        log.info("【RedisRateLimiter】限流降级 | key={} | limit={} | window={}", key, limit, window);
+        return onRateLimited.get();
+    }
+
+    /**
+     * 执行被限流保护的操作（限流时抛出异常）
+     *
+     * <p>语义明确：限流即异常，调用方通过捕获 {@link RateLimitException} 处理。</p>
+     *
+     * <p>使用示例：
+     * <pre>{@code
+     * try {
+     *     rateLimiter.executeOrThrow(
+     *         "order:create:" + userId,
+     *         5,
+     *         Duration.ofSeconds(1),
+     *         () -> orderService.create(order)
+     *     );
+     * } catch (RateLimitException e) {
+     *     return Result.fail("请求过于频繁，请稍后重试");
+     * }
+     * }</pre>
+     *
+     * @param key    限流维度键
+     * @param limit  窗口内最大请求数
+     * @param window 时间窗口长度
+     * @param action 要执行的逻辑
+     * @param <T>    返回值类型
+     * @return 执行结果
+     * @throws RateLimitException 当请求被限流时
+     */
+    public <T> T executeOrThrow(String key, int limit, Duration window,
+                                java.util.function.Supplier<T> action) {
+        if (!tryAcquireSlidingWindow(key, limit, window)) {
+            throw new RateLimitException(key, limit, window);
+        }
+        return action.get();
+    }
+
     private DefaultRedisScript<?> getOrCreateScript(String name, String scriptText, Class<?> returnType) {
         return scriptCache.computeIfAbsent(name, k -> {
             DefaultRedisScript<?> script = new DefaultRedisScript<>();

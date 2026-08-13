@@ -27,6 +27,7 @@ import com.njydsz.common.cache.listener.RemovalCause;
 import com.njydsz.common.cache.stats.CacheStats;
 import com.njydsz.common.cache.support.AsyncFunction;
 import com.njydsz.common.cache.support.CacheLoader;
+import com.njydsz.common.cache.support.CacheThreadPoolManager;
 
 /**
  * 增强版异步加载缓存实现 - 支持 CacheLoader、自动刷新和完整统计
@@ -119,9 +120,17 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
    */
   public static void shutdownSharedResources() {
     sharedResourcesShutdown = true;
-    Executor exec = sharedExecutor;
-    if (exec instanceof ForkJoinPool) {
-      ((ForkJoinPool) exec).shutdown();
+    ExecutorService exec = sharedExecutor;
+    if (exec != null) {
+      exec.shutdown();
+      try {
+        if (!exec.awaitTermination(5, TimeUnit.SECONDS)) {
+          exec.shutdownNow();
+        }
+      } catch (InterruptedException e) {
+        exec.shutdownNow();
+        Thread.currentThread().interrupt();
+      }
     }
     ScheduledExecutorService scheduler = sharedRefreshScheduler;
     if (scheduler != null) {

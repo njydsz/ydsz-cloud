@@ -55,7 +55,7 @@ public class ErrorCodeTable {
      */
     public void registerModule(String module, String description, ExceptionCategory defaultCategory) {
         ModuleEntry entry = moduleIndex.computeIfAbsent(module, k -> new ModuleEntry(module, description));
-        entry.defaultCategory = defaultCategory;
+        entry.setDefaultCategory(defaultCategory);
     }
 
     /**
