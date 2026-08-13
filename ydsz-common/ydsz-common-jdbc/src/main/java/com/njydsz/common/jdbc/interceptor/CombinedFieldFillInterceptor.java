@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
-import com.baomidou.mybatisplus.extension.parser.JsqlParserSupport;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import com.njydsz.common.jdbc.handler.FieldFillHandler;
 
@@ -50,7 +49,7 @@ import net.sf.jsqlparser.statement.update.Update;
  * @since 1.0.0
  * @see FieldFillInterceptor
  */
-public class CombinedFieldFillInterceptor extends JsqlParserSupport implements InnerInterceptor {
+public class CombinedFieldFillInterceptor extends CachingJsqlParserSupport implements InnerInterceptor {
 
     private static final Logger log = LoggerFactory.getLogger(CombinedFieldFillInterceptor.class);
 

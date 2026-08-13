@@ -7,6 +7,8 @@ import java.util.Set;
 import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * 认证信息快捷读取工具类。
  *
@@ -39,6 +41,7 @@ import com.njydsz.common.core.context.RequestContext;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public final class AuthInfoUtils {
 
     /**
@@ -314,6 +317,8 @@ public final class AuthInfoUtils {
                 Set<String> regionIds = getHasPermissionRegionIds();
                 return regionIds.isEmpty() ? null : String.join(",", regionIds);
             default:
+                log.debug("未识别的 claim 名: {}，支持的 claim: tenantId, uniqueId, userId, "
+                        + "companyIds, deptIds, projectIds, regionIds", claim);
                 return null;
         }
     }

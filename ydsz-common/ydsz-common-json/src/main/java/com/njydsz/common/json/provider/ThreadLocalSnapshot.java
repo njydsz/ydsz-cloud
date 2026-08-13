@@ -1,5 +1,7 @@
 package com.njydsz.common.json.provider;
 
+import java.util.Set;
+
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.parser.JsonParserUtil;
 import com.njydsz.common.json.provider.SerializationProvider.SerializationContext;
@@ -38,7 +40,7 @@ public final class ThreadLocalSnapshot {
     private final boolean savedPrettyPrint;
     private final String savedCircularRefStrategy;
     private final boolean savedSerializeEnumUsingOrdinal;
-    private final java.util.Set<String> savedExcludedFields;
+    private final Set<String> savedExcludedFields;
     private final String savedDateFormat;
     private final boolean savedFailOnError;
     private final PropertyNamingStrategy savedNamingStrategy;

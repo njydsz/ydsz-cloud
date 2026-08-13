@@ -34,9 +34,23 @@ import org.springframework.context.ApplicationContextAware;
  * 额外注册 JVM {@link Runtime#addShutdownHook(Thread) ShutdownHook} 兜底清理，
  * 防止多 ClassLoader 热部署场景下 {@code destroy()} 未触发导致旧上下文泄漏。
  *
+ * <p><b>反模式警告：</b>本类使用静态持有 ApplicationContext 的方式提供便捷访问，
+ * 但这属于服务定位器反模式。静态持有会导致：测试时需要完整容器上下文、
+ * 隐藏的类加载顺序依赖、掩盖组件之间的真实依赖关系。
+ *
+ * <p><b>推荐替代方案：</b>
+ * <ul>
+ *   <li>Spring Bean 场景：使用构造器注入或 {@code @Autowired} 直接注入目标 Bean</li>
+ *   <li>需要 ApplicationContext 本身：注入 {@link ApplicationContext} 而非使用本类</li>
+ *   <li>工厂类场景：使用 {@code ObjectProvider<T>} 或 {@code ApplicationContext#getBean} 注入</li>
+ * </ul>
+ *
+ * @deprecated 自 4.0.0 起标记为过时，推荐使用依赖注入替代。
+ *             保留本类为保证向后兼容，未来版本将移除。
  * @author ydsz-team
  * @since 1.0.0
  */
+@Deprecated(since = "4.0.0", forRemoval = true)
 public class SpringContextHolder implements ApplicationContextAware, DisposableBean {
 
     private static final Logger logger = LoggerFactory.getLogger(SpringContextHolder.class);

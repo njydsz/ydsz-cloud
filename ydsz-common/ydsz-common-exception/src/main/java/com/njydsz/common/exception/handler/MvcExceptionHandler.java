@@ -145,6 +145,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
         batchResult.put("totalCount", e.getTotalCount());
         batchResult.put("successItems", e.getSuccessItems());
         batchResult.put("failureItems", e.getFailureItems());
+        batchResult.put("aggregation", e.getFailureAggregation());
 
         log.warn("{}批量操作部分成功 | 路径: {} | 成功: {} | 失败: {} | traceId: {}",
                 getLogPrefix(), request.getRequestURI(), e.getSuccessCount(),
