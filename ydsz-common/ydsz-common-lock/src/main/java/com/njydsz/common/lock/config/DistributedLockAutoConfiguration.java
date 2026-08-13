@@ -427,12 +427,14 @@ public class DistributedLockAutoConfiguration {
      * @param schedulerProvider      TaskScheduler 提供者
      * @param renewalServiceProvider LockRenewalService 提供者
      * @param notifierProvider       LockReleaseNotifier 提供者
+     * @param fencingTokenProvider   Fencing Token 提供者
      */
     public record LockOptionalDependencies(
             ObjectProvider<RedisStringOps> stringOpsProvider,
             ObjectProvider<RedisTemplate<String, Object>> redisTemplateProvider,
             ObjectProvider<TaskScheduler> schedulerProvider,
             ObjectProvider<LockRenewalService> renewalServiceProvider,
-            ObjectProvider<LockReleaseNotifier> notifierProvider) {
+            ObjectProvider<LockReleaseNotifier> notifierProvider,
+            ObjectProvider<FencingTokenProvider> fencingTokenProvider) {
     }
 }

@@ -1,7 +1,17 @@
 package com.njydsz.common.exception.handler;
+
 import jakarta.servlet.http.HttpServletRequest;
+
+import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.config.ExceptionProperties;
+import com.njydsz.common.exception.core.ExceptionInfo;
+import com.njydsz.common.exception.metrics.ExceptionMetrics;
+
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.env.Environment;
@@ -11,19 +21,16 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.exception.code.CoreExceptionCode;
-import com.njydsz.common.exception.config.ExceptionProperties;
-import com.njydsz.common.exception.core.ExceptionInfo;
-import com.njydsz.common.exception.metrics.ExceptionMetrics;
-
 /**
  * JDBC 数据访问异常处理器
  *
- * <p>仅在 spring-jdbc 存在时注册，处理 DataAccessException 及其子类异常。
+ * <p>仅在 spring-jdbc 存在且为 Servlet Web 应用时注册，处理 DataAccessException 及其子类异常。
  *
- * <p><b>修复说明：</b>添加 {@link RestControllerAdvice} 注解使 {@code @ExceptionHandler}
- * 方法能够正确拦截 Controller 层抛出的数据访问异常。
+ * <p><b>装配条件：</b>
+ * <ul>
+ *   <li>类路径存在 {@link org.springframework.dao.DataAccessException}</li>
+ *   <li>应用类型为 {@link org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication.Type#SERVLET}</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -32,6 +39,7 @@ import com.njydsz.common.exception.metrics.ExceptionMetrics;
 @Slf4j
 @RestControllerAdvice
 @ConditionalOnClass(name = "org.springframework.dao.DataAccessException")
+@ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 public class JdbcExceptionHandler extends BaseExceptionHandler {
 
     /** 数据库错误兜底文案（i18n key 解析失败时使用） */

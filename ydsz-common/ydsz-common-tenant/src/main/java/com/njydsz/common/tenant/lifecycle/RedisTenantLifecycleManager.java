@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -14,7 +15,8 @@ import org.springframework.stereotype.Component;
  * <p>使用 Redis Hash 存储租户状态，多实例共享，适合生产环境。
  *
  * <p><b>自动装配逻辑：</b>当 classpath 中存在 {@link StringRedisTemplate} 时，
- * 此实现自动替代 {@link InMemoryTenantLifecycleManager} 成为 Primary Bean。
+ * 此实现以 {@code @Primary} 优先选中；{@link InMemoryTenantLifecycleManager}
+ * 以 {@code @ConditionalOnMissingBean} 作为兜底。
  *
  * <h3>Redis Key 设计</h3>
  * <ul>
@@ -29,6 +31,7 @@ import org.springframework.stereotype.Component;
  * @see TenantLifecycleManager
  */
 @Component
+@Primary
 @ConditionalOnClass(StringRedisTemplate.class)
 public class RedisTenantLifecycleManager implements TenantLifecycleManager {
 
