@@ -10,11 +10,6 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.MDC;
-import org.springframework.core.DefaultParameterNameDiscoverer;
-import org.springframework.expression.Expression;
-import org.springframework.expression.ExpressionParser;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.expression.spel.support.SimpleEvaluationContext;
 
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.lock.annotation.LockType;
@@ -24,6 +19,7 @@ import com.njydsz.common.lock.exception.DistributedLockException;
 import com.njydsz.common.lock.impl.FallbackDistributedLock;
 import com.njydsz.common.lock.metrics.LockMetrics;
 import com.njydsz.common.lock.strategy.LockStrategy;
+import com.njydsz.common.lock.util.LockExpressionUtils;
 import com.njydsz.common.lock.util.LockKeyValidator;
 
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
  * 分布式锁 AOP 切面
  *
  * 拦截带有 @YdszDistributedLock 注解的方法，在方法执行前后进行加锁和解锁操作。
- * 支持 SpEL 表达式解析锁的键。
+ * 支持 SpEL 表达式解析锁的键（委托 {@link LockExpressionUtils}）。
  *
  * 执行流程：
  * 1. 解析方法上的 @YdszDistributedLock 注解
@@ -48,21 +44,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Aspect
 public class YdszDistributedLockAspect {
-
-    /**
-     * SpEL 表达式解析器
-     */
-    private final ExpressionParser expressionParser = new SpelExpressionParser();
-
-    /**
-     * 参数名发现器
-     */
-    private final DefaultParameterNameDiscoverer parameterNameDiscoverer = new DefaultParameterNameDiscoverer();
-
-    /**
-     * SpEL 表达式缓存（避免重复解析相同表达式）
-     */
-    private final Map<String, Expression> expressionCache = new ConcurrentHashMap<>();
 
     /**
      * 降级锁实例缓存（按锁类型缓存，避免每次拦截创建新实例）
@@ -245,8 +226,11 @@ public class YdszDistributedLockAspect {
 
     /**
      * 解析锁的键
-     * <p>支持 SpEL 表达式，如 "order:#{#orderId}"
-     * <p>优化：缓存解析后的 Expression 对象，避免重复解析
+     * <p>支持两种 SpEL 写法（委托 {@link LockExpressionUtils}）：
+     * <ul>
+     *   <li>模板模式：{@code "order:#{#orderId}"}</li>
+     *   <li>整串 SpEL 模式：{@code "'order:' + #orderId"}</li>
+     * </ul>
      *
      * @param keyExpression 锁键表达式
      * @param method        目标方法
@@ -254,24 +238,6 @@ public class YdszDistributedLockAspect {
      * @return 解析后的锁键
      */
     private String resolveLockKey(String keyExpression, Method method, Object[] args) {
-        if (!keyExpression.contains("#{")) {
-            return keyExpression;
-        }
-
-        String spelExpression = keyExpression.replaceAll("#\\{(.+?)}", "$1");
-
-        // 从缓存获取或解析表达式
-        Expression expression = expressionCache.computeIfAbsent(spelExpression,
-            expr -> expressionParser.parseExpression(expr));
-
-        // 构建上下文并执行
-        SimpleEvaluationContext context = SimpleEvaluationContext.forReadOnlyDataBinding().build();
-        String[] parameterNames = parameterNameDiscoverer.getParameterNames(method);
-        if (parameterNames != null) {
-            for (int i = 0; i < parameterNames.length; i++) {
-                context.setVariable(parameterNames[i], args[i]);
-            }
-        }
-        return expression.getValue(context, String.class);
+        return LockExpressionUtils.resolve(keyExpression, method, args);
     }
 }

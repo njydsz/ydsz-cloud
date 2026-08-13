@@ -454,33 +454,59 @@ public class FlowTaskCreateService {
      */
     private void tryAutoApprove(FlowInstance instance, FlowNode node,
                                 FlowRunTask task, Map<String, Object> variables) {
-        if (node.getExt() == null || node.getExt().isBlank()) {
+        Map<String, Object> cfg = checkAutoApproveConditions(node, task);
+        if (cfg == null) {
             return;
+        }
+        Map<String, Object> env = buildAutoApproveContext(instance, task, node, variables);
+        executeAutoApprove(cfg, env, instance, node, task, variables);
+    }
+
+    /**
+     * 检查是否满足自动审批触发条件。
+     *
+     * <p>逐项校验：ext 含 autoApprove 配置、enabled=true、任务执行模式为 OR（单人审批）。
+     * 任一条件不满足时返回 null，调用方直接跳过自动审批。
+     *
+     * @return 自动审批配置 Map（满足所有条件时返回），不满足时返回 null
+     */
+    private Map<String, Object> checkAutoApproveConditions(FlowNode node, FlowRunTask task) {
+        if (node.getExt() == null || node.getExt().isBlank()) {
+            return null;
         }
         Map<String, Object> extConfig;
         try {
             extConfig = YdszJson.parseMap(node.getExt());
         } catch (Exception e) {
-            return;
+            return null;
         }
         if (extConfig == null) {
-            return;
+            return null;
         }
         Object autoApproveObj = extConfig.get("autoApprove");
         if (!(autoApproveObj instanceof Map<?, ?> autoApprove)) {
-            return;
+            return null;
         }
         Map<String, Object> cfg = MapUtils.toStringObjectMap(autoApprove);
         Boolean enabled = (Boolean) cfg.get("enabled");
         if (enabled == null || !enabled) {
-            return;
+            return null;
         }
         // 仅单人 OR 模式自动通过
         if (!FlowPerformType.OR.name().equals(task.getPerformType())) {
-            return;
+            return null;
         }
+        return cfg;
+    }
 
-        // P0-4: 构建评估环境
+    /**
+     * 构建自动审批评估环境变量。
+     *
+     * <p>将基础流程变量与 _initiatorId / _assigneeId / _nodeCode 三个内置变量合并，
+     * 供规则求值时使用。
+     */
+    private Map<String, Object> buildAutoApproveContext(FlowInstance instance, FlowRunTask task,
+                                                          FlowNode node, Map<String, Object> variables) {
         Map<String, Object> env = new HashMap<>();
         if (variables != null) {
             env.putAll(variables);
@@ -488,7 +514,19 @@ public class FlowTaskCreateService {
         env.put("_initiatorId", instance.getInitiatorId());
         env.put("_assigneeId", task.getAssigneeId());
         env.put("_nodeCode", node.getNodeCode());
+        return env;
+    }
 
+    /**
+     * 评估自动审批规则并执行匹配的动作。
+     *
+     * <p>优先使用 rules 数组（新配置）：逐条调用 {@link #evaluateAutoApproveRule}，
+     * 命中第一条即执行并返回。无新配置时回退到旧单条规则
+     * （{@code whenInitiatorIsApprover} / {@code expr}）。
+     */
+    private void executeAutoApprove(Map<String, Object> cfg, Map<String, Object> env,
+                                      FlowInstance instance, FlowNode node, FlowRunTask task,
+                                      Map<String, Object> variables) {
         // P0-4: 优先使用 rules 数组（新配置）
         Object rulesObj = cfg.get("rules");
         if (rulesObj instanceof List<?> rulesList && !rulesList.isEmpty()) {

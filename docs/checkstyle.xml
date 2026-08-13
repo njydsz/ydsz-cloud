@@ -323,9 +323,8 @@
             <property name="versionFormat" value="\S+"/>
         </module>
 
-        <!-- 公共方法必须有 Javadoc（checkstyle 9.x 使用 accessModifiers 替代已移除的 scope） -->
+        <!-- 公共方法必须有 Javadoc（默认 scope=public） -->
         <module name="JavadocMethod">
-            <property name="accessModifiers" value="public"/>
             <property name="allowedAnnotations" value="Override, Test, BeforeEach, AfterEach, BeforeAll, AfterAll, Bean, MockitoBean"/>
             <property name="allowMissingParamTags" value="false"/>
             <property name="allowMissingReturnTag" value="false"/>

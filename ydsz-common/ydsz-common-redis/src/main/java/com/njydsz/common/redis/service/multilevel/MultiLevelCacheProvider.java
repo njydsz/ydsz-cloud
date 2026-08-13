@@ -244,18 +244,6 @@ public class MultiLevelCacheProvider implements CacheProvider, Closeable {
     }
 
     /**
-     * 写入缓存（不带过期时间）
-     */
-    @Override
-    public boolean set(String key, Object value) {
-        boolean result = stringOps.set(key, value);
-        if (result) {
-            invalidateL1(key);
-        }
-        return result;
-    }
-
-    /**
      * 写入缓存（只写 L2，L1 自然过期或删除）
      */
     @Override

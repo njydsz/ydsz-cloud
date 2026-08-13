@@ -4,19 +4,11 @@ import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Arrays;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.springframework.core.DefaultParameterNameDiscoverer;
-import org.springframework.core.ParameterNameDiscoverer;
-import org.springframework.expression.Expression;
-import org.springframework.expression.ExpressionParser;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.expression.spel.support.SimpleEvaluationContext;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -24,6 +16,7 @@ import com.njydsz.common.lock.annotation.IdempotentExempt;
 import com.njydsz.common.lock.exception.IdempotentException;
 import com.njydsz.common.lock.idempotent.IdempotentStrategy;
 import com.njydsz.common.lock.metrics.LockMetrics;
+import com.njydsz.common.lock.util.LockExpressionUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -63,15 +56,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Aspect
 public class IdempotentAspect {
-
-    /** SpEL 表达式解析器 */
-    private final ExpressionParser expressionParser = new SpelExpressionParser();
-
-    /** 参数名发现器（用于 SpEL 上下文绑定） */
-    private final ParameterNameDiscoverer parameterNameDiscoverer = new DefaultParameterNameDiscoverer();
-
-    /** SpEL 表达式缓存，避免每次反射解析 */
-    private final Map<String, Expression> expressionCache = new ConcurrentHashMap<>();
 
     /** 幂等策略（委托实现，消除平行 Lua 脚本） */
     private final IdempotentStrategy idempotentStrategy;
@@ -210,23 +194,13 @@ public class IdempotentAspect {
         if (keyExpression == null || keyExpression.isEmpty()) {
             return generateAutoKey(method, args);
         }
-        if (!keyExpression.contains("#{")) {
-            return keyExpression;
-        }
-        // 提取 #{...} 内的 SpEL 表达式并解析
-        String spelExpression = keyExpression.replaceAll("#\\{(.+?)}", "$1");
         try {
-            Expression expression = expressionCache.computeIfAbsent(spelExpression,
-                    expr -> expressionParser.parseExpression(expr));
-            SimpleEvaluationContext context = SimpleEvaluationContext.forReadOnlyDataBinding().build();
-            String[] parameterNames = parameterNameDiscoverer.getParameterNames(method);
-            if (parameterNames != null) {
-                for (int i = 0; i < parameterNames.length; i++) {
-                    context.setVariable(parameterNames[i], args[i]);
-                }
+            String resolved = LockExpressionUtils.resolve(keyExpression, method, args);
+            if (resolved == null || resolved.isEmpty()) {
+                log.warn("[ydsz-lock] [idempotent] SpEL 解析结果为空，降级为自动 key expr={}", keyExpression);
+                return generateAutoKey(method, args);
             }
-            String evaluated = expression.getValue(context, String.class);
-            return evaluated != null ? evaluated : generateAutoKey(method, args);
+            return resolved;
         } catch (Exception e) {
             log.warn("[ydsz-lock] [idempotent] SpEL 解析失败，降级为自动 key expr={} cause={}",
                     keyExpression, e.getMessage());
