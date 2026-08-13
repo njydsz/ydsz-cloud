@@ -45,7 +45,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class MapUtils {
+public final class MapUtils {
 
     private MapUtils() {
         throw new UnsupportedOperationException("MapUtils is a utility class and cannot be instantiated");
@@ -897,13 +897,13 @@ public class MapUtils {
             return (T) convertMapWithType(rawMap, valueType);
         }
 
-        // 非参数化类型，退化为 Class 版本
+        // 非参数化类型，退化为 Class 版本（经 toBeanOrRecord 支持 Record 类型）
         if (type instanceof Class<?> clazz) {
             if (source instanceof Map<?, ?> rawMap) {
                 // 显式强转 Class<?> 为 Class<T>，避免 javac 泛型推断失败（等式约束 capture 与 T 冲突）
                 @SuppressWarnings("unchecked")
                 Class<T> target = (Class<T>) clazz;
-                return toBean(toStringObjectMap(rawMap), target);
+                return toBeanOrRecord(toStringObjectMap(rawMap), target);
             }
             if (clazz.isInstance(source)) {
                 return (T) source;

@@ -132,7 +132,10 @@ public final class IpValidator {
     }
 
     /**
-     * 规范化 IPv6 地址（折叠连续冒号并转小写）。
+     * 规范化 IPv6 地址（折叠连续冒号并转小写，符合 RFC 5952）。
+     *
+     * <p>JDK 的 {@link InetAddress#getHostAddress()} 返回全 8 组形式（不压缩），
+     * 本方法在此基础上折叠最长的连续全零组为 {@code ::}。
      */
     public static String normalizeIpv6(String ipv6) {
         if (StringUtils.isEmpty(ipv6)) {
@@ -142,10 +145,58 @@ public final class IpValidator {
             return ipv6.trim().toLowerCase();
         }
         try {
-            return toInetAddress(ipv6).getHostAddress();
+            String canonical = toInetAddress(ipv6).getHostAddress();
+            return compressIpv6(canonical);
         } catch (UnknownHostException e) {
             return ipv6.trim().toLowerCase();
         }
+    }
+
+    /**
+     * 将全 8 组形式的 IPv6 地址折叠最长的连续零组为 {@code ::}（RFC 5952）。
+     *
+     * <p>仅当连续零组长度 ≥ 2 时才折叠；无符合条件的零组时保持原样。
+     *
+     * @param canonical 规范形式 IPv6（形如 {@code 2001:db8:0:0:0:0:0:1}）
+     * @return 折叠后的 IPv6 字符串
+     */
+    private static String compressIpv6(String canonical) {
+        String[] groups = canonical.split(":", -1);
+        int bestStart = -1;
+        int bestLen = 0;
+        for (int i = 0; i < groups.length; i++) {
+            if (!"0".equals(groups[i])) {
+                continue;
+            }
+            int j = i;
+            while (j < groups.length && "0".equals(groups[j])) {
+                j++;
+            }
+            int len = j - i;
+            if (len >= 2 && len > bestLen) {
+                bestStart = i;
+                bestLen = len;
+            }
+            i = j - 1;
+        }
+        if (bestStart < 0) {
+            return canonical;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < bestStart; i++) {
+            if (i > 0) {
+                sb.append(':');
+            }
+            sb.append(groups[i]);
+        }
+        sb.append("::");
+        for (int i = bestStart + bestLen; i < groups.length; i++) {
+            if (i > bestStart + bestLen) {
+                sb.append(':');
+            }
+            sb.append(groups[i]);
+        }
+        return sb.toString();
     }
 
     /**

@@ -29,7 +29,7 @@ import java.util.Map;
  * @since 1.0.0
  *
  */
-public class StringUtils {
+public final class StringUtils {
 
     private StringUtils() {
         throw new UnsupportedOperationException("StringUtils is a utility class and cannot be instantiated");

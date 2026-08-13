@@ -54,7 +54,7 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  */
 @Slf4j
-public class ExecutorUtils {
+public final class ExecutorUtils {
 
     private static final int CPU_CORES = Runtime.getRuntime().availableProcessors();
 

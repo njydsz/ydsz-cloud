@@ -21,8 +21,12 @@ import com.njydsz.common.util.string.StringUtils;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class MessageUtils {
+public final class MessageUtils {
     private static final Logger logger = LoggerFactory.getLogger(MessageUtils.class);
+
+    private MessageUtils() {
+        throw new UnsupportedOperationException("MessageUtils is a utility class and cannot be instantiated");
+    }
 
     /**
      * 可选的 MessageSource 提供者（Spring 环境下由 {@link MessageSourceConfiguration} 注入）。

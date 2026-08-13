@@ -41,7 +41,7 @@ import java.util.stream.StreamSupport;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class CollectionUtils {
+public final class CollectionUtils {
 
     private CollectionUtils() {
         throw new UnsupportedOperationException("CollectionUtils is a utility class and cannot be instantiated");

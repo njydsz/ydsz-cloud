@@ -23,7 +23,7 @@ import javax.crypto.spec.SecretKeySpec;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class DigestUtils {
+public final class DigestUtils {
 
     /**
      * 私有构造器，工具类不允许实例化。

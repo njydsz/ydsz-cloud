@@ -39,7 +39,7 @@ import com.njydsz.common.core.context.RequestContext;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class AuthInfoUtils {
+public final class AuthInfoUtils {
 
     /**
      * 私有构造器，工具类不允许实例化。
