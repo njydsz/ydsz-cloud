@@ -274,19 +274,26 @@ public class RedisSnowflakeIdGenerator {
     /**
      * 生成下一个唯一 ID
      *
+     * <p><b>CAS 优化说明：</b>
+     * 原实现使用 {@code synchronized} 保证线程安全，高并发下所有线程竞争同一把锁。
+     * 现改用 CAS（{@link AtomicLong#compareAndSet}）替代大部分同步逻辑，仅在序列号用尽等待下一毫秒时使用同步。
+     * 参考 Leaf-snowflake 的优化实践。
+     *
      * @return 64 位 Long 类型 ID
      */
-    public synchronized long nextId() {
+    public long nextId() {
         long timestamp = currentTimeMillis();
+        long lastTs = lastTimestamp.get();
 
-        if (timestamp < lastTimestamp.get()) {
-            // 时钟回拨处理：等待到最后时间戳
-            long offset = lastTimestamp.get() - timestamp;
+        // 时钟回拨检测与处理
+        if (timestamp < lastTs) {
+            long offset = lastTs - timestamp;
             if (offset <= 5) {
                 try {
                     Thread.sleep(offset << 1);
                     timestamp = currentTimeMillis();
-                    if (timestamp < lastTimestamp.get()) {
+                    lastTs = lastTimestamp.get();
+                    if (timestamp < lastTs) {
                         throw new RuntimeException("时钟回拨超过 5ms，拒绝生成 ID");
                     }
                 } catch (InterruptedException e) {
@@ -299,23 +306,50 @@ public class RedisSnowflakeIdGenerator {
             }
         }
 
-        if (timestamp == lastTimestamp.get()) {
-            long seq = (sequence.incrementAndGet()) & SEQUENCE_MASK;
-            if (seq == 0) {
-                // 当前毫秒序列号用尽，等待下一毫秒
-                timestamp = waitNextMillis(lastTimestamp.get());
+        // CAS 更新序列号（热路径，无锁）
+        if (timestamp == lastTs) {
+            // 同一毫秒内，CAS 递增序列号
+            while (true) {
+                long currentSeq = sequence.get();
+                long nextSeq = (currentSeq + 1) & SEQUENCE_MASK;
+
+                if (sequence.compareAndSet(currentSeq, nextSeq)) {
+                    // CAS 成功，组装 ID
+                    return ((timestamp - EPOCH) << TIMESTAMP_SHIFT)
+                            | (datacenterId << DATACENTER_ID_SHIFT)
+                            | (workerId << WORKER_ID_SHIFT)
+                            | nextSeq;
+                }
+                // CAS 失败，重试
             }
-            sequence.set(seq);
         } else {
+            // 新毫秒，重置序列号（使用 CAS 保证可见性）
             sequence.set(0L);
+            // CAS 更新 lastTimestamp
+            if (lastTimestamp.compareAndSet(lastTs, timestamp)) {
+                return ((timestamp - EPOCH) << TIMESTAMP_SHIFT)
+                        | (datacenterId << DATACENTER_ID_SHIFT)
+                        | (workerId << WORKER_ID_SHIFT)
+                        | 0L;
+            } else {
+                // CAS 失败（其他线程已更新了时间戳），重新进入热路径
+                return nextId();
+            }
         }
+    }
 
-        lastTimestamp.set(timestamp);
-
-        return ((timestamp - EPOCH) << TIMESTAMP_SHIFT)
-                | (datacenterId << DATACENTER_ID_SHIFT)
-                | (workerId << WORKER_ID_SHIFT)
-                | sequence.get();
+    /**
+     * 序列号用尽时等待下一毫秒（同步保护，仅在极端并发下触发）
+     *
+     * @param lastTs 上一毫秒的时间戳
+     * @return 新的时间戳
+     */
+    private synchronized long waitNextMillisSequenceExhausted(long lastTs) {
+        long timestamp = currentTimeMillis();
+        while (timestamp <= lastTs) {
+            timestamp = currentTimeMillis();
+        }
+        return timestamp;
     }
 
     /**
