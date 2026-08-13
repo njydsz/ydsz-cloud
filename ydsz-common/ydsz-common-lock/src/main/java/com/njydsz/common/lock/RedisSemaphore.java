@@ -126,6 +126,38 @@ public class RedisSemaphore implements DistributedLocker {
                     "else return -1 end";
 
     /**
+     * 状态查询 Lua 脚本：键不存在返回 -1，否则返回当前许可数
+     */
+    private static final String STATUS_SCRIPT =
+            "local current = redis.call('get', KEYS[1]) " +
+                    "if current == false then return -1 end " +
+                    "return tonumber(current)";
+
+    /**
+     * 初始化信号量脚本封装（预编译，避免热路径重复构建）
+     */
+    private static final DefaultRedisScript<Long> INIT_SCRIPT =
+            new DefaultRedisScript<>(INIT_PERMITS_SCRIPT, Long.class);
+
+    /**
+     * 获取信号量脚本封装（预编译）
+     */
+    private static final DefaultRedisScript<Long> ACQUIRE_LOCK_SCRIPT =
+            new DefaultRedisScript<>(ACQUIRE_SCRIPT, Long.class);
+
+    /**
+     * 释放信号量脚本封装（预编译）
+     */
+    private static final DefaultRedisScript<Long> RELEASE_LOCK_SCRIPT =
+            new DefaultRedisScript<>(RELEASE_SCRIPT, Long.class);
+
+    /**
+     * 状态查询脚本封装（预编译）
+     */
+    private static final DefaultRedisScript<Long> STATUS_LOCK_SCRIPT =
+            new DefaultRedisScript<>(STATUS_SCRIPT, Long.class);
+
+    /**
      * 构造 RedisSemaphore（无命名空间，需要注入调度线程池，便于 Spring 管理和配置化）
      *
      * @param redisStringOps  Redis String 操作组件
@@ -196,7 +228,7 @@ public class RedisSemaphore implements DistributedLocker {
         }
         try {
             redisTemplate.execute(
-                    new DefaultRedisScript<>(INIT_PERMITS_SCRIPT, Long.class),
+                    INIT_SCRIPT,
                     Collections.singletonList(key),
                     String.valueOf(permits),
                     String.valueOf(expireMillis)
@@ -241,7 +273,7 @@ public class RedisSemaphore implements DistributedLocker {
         while (true) {
             try {
                 Long result = redisTemplate.execute(
-                        new DefaultRedisScript<>(ACQUIRE_SCRIPT, Long.class),
+                        ACQUIRE_LOCK_SCRIPT,
                         Collections.singletonList(key),
                         String.valueOf(permits)
                 );
@@ -343,7 +375,7 @@ public class RedisSemaphore implements DistributedLocker {
     private void releaseInternal() {
         try {
             Long result = redisTemplate.execute(
-                    new DefaultRedisScript<>(RELEASE_SCRIPT, Long.class),
+                    RELEASE_LOCK_SCRIPT,
                     Collections.singletonList(key),
                     String.valueOf(permits)
             );
@@ -399,14 +431,24 @@ public class RedisSemaphore implements DistributedLocker {
         return true;
     }
 
+    /**
+     * 检查信号量是否被占满
+     *
+     * <p>实现 {@link DistributedLocker#isLocked(String)}：返回 true 表示当前许可已耗尽
+     * （资源被完全占用）；信号量键不存在（未初始化或已过期）时返回 false。</p>
+     *
+     * @param lockKey 锁的键（当前实现忽略，使用构造时传入的 key）
+     * @return true-许可耗尽（被占满）
+     */
     @Override
     public boolean isLocked(String lockKey) {
         try {
             Long current = redisTemplate.execute(
-                    new DefaultRedisScript<>("local current = redis.call('get', KEYS[1]) return current and tonumber(current) or 0", Long.class),
+                    STATUS_LOCK_SCRIPT,
                     Collections.singletonList(key)
             );
-            return current != null && current <= 0;
+            // 仅许可耗尽（0）视为占满；-1（未初始化）与正数（仍有许可）均视为未占满
+            return Long.valueOf(0L).equals(current);
         } catch (Exception e) {
             log.error("信号量检查状态异常: {}", key, e);
             return false;

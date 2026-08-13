@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.Version;
 import com.njydsz.common.json.annotation.JsonFormat;
 import com.njydsz.common.json.annotation.JsonIgnore;
 
@@ -57,10 +58,10 @@ public class MpBaseEntity<T extends Serializable> extends MpBaseAuditEntity<T> {
     /**
      * 乐观锁版本号
      * <p>每次更新时自动递增（+1），防止并发更新冲突。
-     * <p>由自定义 {@code OptimisticLockInterceptor} 处理，不使用 {@code @Version} 注解，
-     * 避免与自定义拦截器产生双重处理冲突。当未启用自定义拦截器时，
-     * 可在业务实体上单独添加 {@code @Version} 注解使用 MP 内置能力。
+     * <p>由 MyBatis-Plus 原生 {@code OptimisticLockerInnerInterceptor} 处理，
+     * 使用 {@code @Version} 注解标记，避免自研拦截器维护参数映射的脆弱性。
      */
+    @Version
     @TableField("revision")
     @Builder.Default
     private Integer revision = 0;

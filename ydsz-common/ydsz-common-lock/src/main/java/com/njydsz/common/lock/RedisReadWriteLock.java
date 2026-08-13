@@ -1,21 +1,26 @@
 package com.njydsz.common.lock;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
+
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.scheduling.TaskScheduler;
 
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,6 +43,10 @@ import lombok.extern.slf4j.Slf4j;
  * <p><b>等待策略：</b>
  * 使用指数退避策略（10ms → 200ms）替代固定 50ms 轮询，减少无效 Redis 调用。
  *
+ * <p><b>自动续期：</b>
+ * 注入 {@link TaskScheduler} 后，读锁/写锁持有期间按租约时间 1/3 间隔自动续期，
+ * 防止长操作期间锁因 TTL 到期被强制释放。
+ *
  * <p>自 v3.5.1 起实现 {@link DistributedLocker} 接口，
  * 可纳入 {@link com.njydsz.common.lock.strategy.LockStrategy} 统一管理。
  *
@@ -56,6 +65,16 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
      * 最大退避等待时间（毫秒）
      */
     private static final long MAX_BACKOFF_MILLIS = 200;
+
+    /**
+     * 续期任务缓存键前缀：读锁
+     */
+    private static final String RENEWAL_KEY_READ = "R";
+
+    /**
+     * 续期任务缓存键前缀：写锁
+     */
+    private static final String RENEWAL_KEY_WRITE = "W";
 
     /**
      * Redis String 操作组件
@@ -81,6 +100,10 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
      * 获取锁最大等待时间（毫秒）
      */
     private final long waitMillis;
+    /**
+     * 续期调度器（可选，null 时禁用自动续期）
+     */
+    private final TaskScheduler scheduler;
 
     /**
      * 当前线程持有的读锁 lockValue，用于读锁重入
@@ -112,6 +135,11 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
             .expireAfterWrite(30, TimeUnit.MINUTES)
             .maximumSize(10_000)
             .build();
+
+    /**
+     * 续期任务表：缓存键（R/W + threadId）→ 定时任务
+     */
+    private final Map<String, ScheduledFuture<?>> renewalTasks = new ConcurrentHashMap<>();
 
     /**
      * 获取读锁 Lua 脚本：检查写锁不存在时，设置读锁计数器并设置过期时间
@@ -152,17 +180,41 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
                     "else return 0 end";
 
     /**
-     * 构造分布式读写锁（无命名空间）
+     * 获取读锁脚本封装（预编译，避免热路径重复构建）
+     */
+    private static final DefaultRedisScript<Long> READ_ACQUIRE_SCRIPT =
+            new DefaultRedisScript<>(READ_LOCK_ACQUIRE_SCRIPT, Long.class);
+
+    /**
+     * 释放读锁脚本封装（预编译）
+     */
+    private static final DefaultRedisScript<Long> READ_RELEASE_SCRIPT =
+            new DefaultRedisScript<>(READ_LOCK_RELEASE_SCRIPT, Long.class);
+
+    /**
+     * 获取写锁脚本封装（预编译）
+     */
+    private static final DefaultRedisScript<Long> WRITE_ACQUIRE_SCRIPT =
+            new DefaultRedisScript<>(WRITE_LOCK_ACQUIRE_SCRIPT, Long.class);
+
+    /**
+     * 释放写锁脚本封装（预编译）
+     */
+    private static final DefaultRedisScript<Long> WRITE_RELEASE_SCRIPT =
+            new DefaultRedisScript<>(WRITE_LOCK_RELEASE_SCRIPT, Long.class);
+
+    /**
+     * 构造分布式读写锁（无命名空间、无自动续期）
      *
      * @param redisStringOps Redis String 操作组件
      * @param redisTemplate  Redis 模板，用于执行 Lua 脚本
-     * @param key          锁键
-     * @param expireMillis 锁过期时间（毫秒）
-     * @param waitMillis   获取锁最大等待时间（毫秒）
+     * @param key            锁键
+     * @param expireMillis   锁过期时间（毫秒）
+     * @param waitMillis     获取锁最大等待时间（毫秒）
      */
     public RedisReadWriteLock(RedisStringOps redisStringOps, RedisTemplate<String, Object> redisTemplate,
                                String key, long expireMillis, long waitMillis) {
-        this(redisStringOps, redisTemplate, key, expireMillis, waitMillis, null);
+        this(redisStringOps, redisTemplate, key, expireMillis, waitMillis, null, null);
     }
 
     /**
@@ -170,13 +222,30 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
      *
      * @param redisStringOps Redis String 操作组件
      * @param redisTemplate  Redis 模板，用于执行 Lua 脚本
-     * @param key          锁键
-     * @param expireMillis 锁过期时间（毫秒）
-     * @param waitMillis   获取锁最大等待时间（毫秒）
-     * @param namespace    锁键命名空间前缀，用于多应用共享 Redis 时的隔离
+     * @param key            锁键
+     * @param expireMillis   锁过期时间（毫秒）
+     * @param waitMillis     获取锁最大等待时间（毫秒）
+     * @param namespace      锁键命名空间前缀，用于多应用共享 Redis 时的隔离
      */
     public RedisReadWriteLock(RedisStringOps redisStringOps, RedisTemplate<String, Object> redisTemplate,
                                String key, long expireMillis, long waitMillis, String namespace) {
+        this(redisStringOps, redisTemplate, key, expireMillis, waitMillis, namespace, null);
+    }
+
+    /**
+     * 构造分布式读写锁（带命名空间与自动续期调度器）
+     *
+     * @param redisStringOps Redis String 操作组件
+     * @param redisTemplate  Redis 模板，用于执行 Lua 脚本
+     * @param key            锁键
+     * @param expireMillis   锁过期时间（毫秒）
+     * @param waitMillis     获取锁最大等待时间（毫秒）
+     * @param namespace      锁键命名空间前缀，用于多应用共享 Redis 时的隔离
+     * @param scheduler      续期调度器（可为 null，禁用自动续期）
+     */
+    public RedisReadWriteLock(RedisStringOps redisStringOps, RedisTemplate<String, Object> redisTemplate,
+                               String key, long expireMillis, long waitMillis, String namespace,
+                               TaskScheduler scheduler) {
         this.redisStringOps = redisStringOps;
         this.redisTemplate = redisTemplate;
         String prefix = (namespace != null && !namespace.isEmpty()) ? namespace + ":lock:" : "";
@@ -184,6 +253,7 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
         this.writeLockKey = prefix + "wlock:" + key;
         this.expireMillis = expireMillis;
         this.waitMillis = waitMillis;
+        this.scheduler = scheduler;
     }
 
     /**
@@ -216,6 +286,67 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
             }
         }
         return Math.min(currentBackoff * 2, MAX_BACKOFF_MILLIS);
+    }
+
+    /**
+     * 启动持锁自动续期（读锁/写锁共用）
+     *
+     * @param renewalKey 续期任务缓存键（R/W + threadId）
+     * @param redisKey   需要续期的 Redis 键
+     * @param holderKey  锁持有者的线程缓存键
+     */
+    private void scheduleRenewal(String renewalKey, String redisKey, String holderKey) {
+        if (scheduler == null) {
+            return;
+        }
+        long renewInterval = Math.max(expireMillis / 3, 1000);
+        ScheduledFuture<?> future = scheduler.scheduleAtFixedRate(() -> renewHeldLock(
+                renewalKey, redisKey, holderKey), Duration.ofMillis(renewInterval));
+        renewalTasks.put(renewalKey, future);
+    }
+
+    /**
+     * 续期仍由原持有线程持有的锁
+     *
+     * @param renewalKey 续期任务缓存键
+     * @param redisKey   需要续期的 Redis 键
+     * @param holderKey  锁持有者的线程缓存键
+     */
+    private void renewHeldLock(String renewalKey, String redisKey, String holderKey) {
+        boolean stillHeld = isHeldByHolder(holderKey);
+        if (!stillHeld) {
+            cancelRenewal(renewalKey);
+            return;
+        }
+        try {
+            redisTemplate.expire(redisKey, Duration.ofMillis(expireMillis));
+        } catch (Exception e) {
+            log.warn("读写锁续期失败: key={} | error={}", redisKey, e.getMessage());
+            cancelRenewal(renewalKey);
+        }
+    }
+
+    /**
+     * 判断锁持有者的线程缓存是否仍持有锁
+     *
+     * @param holderKey 锁持有者的线程缓存键
+     * @return true-仍持有
+     */
+    private boolean isHeldByHolder(String holderKey) {
+        return readLockValueCache.getIfPresent(holderKey) != null
+                || writeLockValueCache.getIfPresent(holderKey) != null;
+    }
+
+    /**
+     * 取消持锁续期任务
+     *
+     * @param renewalKey 续期任务缓存键
+     */
+    private void cancelRenewal(String renewalKey) {
+        ScheduledFuture<?> future = renewalTasks.remove(renewalKey);
+        if (future != null) {
+            future.cancel(false);
+        }
     }
 
     @Override
@@ -291,7 +422,7 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
             while (true) {
                 try {
                     Long result = redisTemplate.execute(
-                            new DefaultRedisScript<>(READ_LOCK_ACQUIRE_SCRIPT, Long.class),
+                            READ_ACQUIRE_SCRIPT,
                             Arrays.asList(readLockKey, writeLockKey),
                             lockValue,
                             String.valueOf(expireMillis)
@@ -299,6 +430,7 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
                     if (result != null && result == 1L) {
                         readLockValueCache.put(cacheKey, lockValue);
                         readLockCountCache.put(cacheKey, 1);
+                        scheduleRenewal(RENEWAL_KEY_READ + cacheKey, readLockKey, cacheKey);
                         return true;
                     }
                 } catch (Exception e) {
@@ -330,13 +462,14 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
             // 重入计数归零，真正释放锁
             try {
                 redisTemplate.execute(
-                        new DefaultRedisScript<>(READ_LOCK_RELEASE_SCRIPT, Long.class),
+                        READ_RELEASE_SCRIPT,
                         Collections.singletonList(readLockKey),
                         lockValue
                 );
             } catch (Exception e) {
                 log.error("读锁释放异常: {}", readLockKey, e);
             } finally {
+                cancelRenewal(RENEWAL_KEY_READ + cacheKey);
                 readLockValueCache.invalidate(cacheKey);
                 readLockCountCache.invalidate(cacheKey);
             }
@@ -404,13 +537,14 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
             while (true) {
                 try {
                     Long result = redisTemplate.execute(
-                            new DefaultRedisScript<>(WRITE_LOCK_ACQUIRE_SCRIPT, Long.class),
+                            WRITE_ACQUIRE_SCRIPT,
                             Arrays.asList(readLockKey, writeLockKey),
                             lockValue,
                             String.valueOf(expireMillis)
                     );
                     if (result != null && result == 1L) {
                         writeLockValueCache.put(cacheKey, lockValue);
+                        scheduleRenewal(RENEWAL_KEY_WRITE + cacheKey, writeLockKey, cacheKey);
                         return true;
                     }
                 } catch (Exception e) {
@@ -435,13 +569,14 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
             }
             try {
                 redisTemplate.execute(
-                        new DefaultRedisScript<>(WRITE_LOCK_RELEASE_SCRIPT, Long.class),
+                        WRITE_RELEASE_SCRIPT,
                         Collections.singletonList(writeLockKey),
                         lockValue
                 );
             } catch (Exception e) {
                 log.error("写锁释放异常: {}", writeLockKey, e);
             } finally {
+                cancelRenewal(RENEWAL_KEY_WRITE + cacheKey);
                 writeLockValueCache.invalidate(cacheKey);
             }
         }
@@ -543,7 +678,7 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
     @Override
     public boolean isLocked(String lockKey) {
         try {
-            return Boolean.TRUE.equals(redisStringOps.hasKey(writeLockKey));
+            return redisStringOps.hasKey(writeLockKey);
         } catch (Exception e) {
             log.error("读写锁检查状态异常: {}", writeLockKey, e);
             return false;

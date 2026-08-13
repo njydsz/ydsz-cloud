@@ -140,7 +140,15 @@ public class ExceptionHandledEvent extends ApplicationEvent {
         return exceptionType;
     }
 
-    public LocalDateTime getTimestamp() {
+    /**
+     * 获取事件发生时间。
+     *
+     * <p>父类 {@link org.springframework.context.ApplicationEvent#getTimestamp()} 为 final，
+     * 本方法以业务语义命名，避免覆盖冲突。
+     *
+     * @return 事件发生时间（本地时间）
+     */
+    public LocalDateTime getEventTime() {
         return timestamp;
     }
 

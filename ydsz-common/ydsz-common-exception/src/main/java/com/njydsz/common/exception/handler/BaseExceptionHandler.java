@@ -1,19 +1,14 @@
 package com.njydsz.common.exception.handler;
 
-import java.io.StringWriter;
 import java.net.URI;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
-import org.springframework.core.env.Environment;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ProblemDetail;
-import org.springframework.http.ResponseEntity;
-
+import com.njydsz.common.core.constant.HeaderConstants;
+import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.config.ExceptionProperties;
@@ -21,11 +16,24 @@ import com.njydsz.common.exception.core.ExceptionInfo;
 import com.njydsz.common.exception.custom.AbstractYdszException;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.enums.ExceptionCategory;
+import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.enums.ExceptionLevel;
 import com.njydsz.common.exception.event.ExceptionHandledEvent;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;
+import com.njydsz.common.exception.util.ExceptionDesensitizer;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
+
+import org.slf4j.MDC;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.server.ServerWebExchange;
 
 /**
  * 异常处理器抽象基类
@@ -247,31 +255,59 @@ public abstract class BaseExceptionHandler {
     }
 
     /**
-     * 获取堆栈跟踪字符串
+     * 获取脱敏后的堆栈跟踪字符串
      *
-     * <p>手动遍历 {@link Throwable#getStackTrace()} 写入内存字符串，
-     * 不使用 {@code printStackTrace()}（Checkstyle R3 规则禁止）。
+     * <p>委托 {@link ExceptionDesensitizer#desensitizeStackTrace(Throwable)} 实现，
+     * 对外输出前统一完成敏感信息（密码/Token/身份证/手机号/JDBC 连接串）脱敏，
+     * 避免敏感数据泄露到响应详情与日志。
      */
     protected static String getStackTraceString(Throwable throwable) {
-        if (throwable == null) {
-            return null;
+        return ExceptionDesensitizer.desensitizeStackTrace(throwable);
+    }
+
+    /**
+     * 从 Servlet 请求上下文提取 traceId（统一入口）。
+     *
+     * <p>优先级：RequestContext > MDC > Request Header（X-Trace-Id > X-Request-Id）。
+     * MVC / Validation / JDBC 处理器复用，消除重复实现。
+     *
+     * @param request Servlet 请求，可为 null
+     * @return traceId，未提取到时返回 null
+     */
+    protected static String extractTraceId(HttpServletRequest request) {
+        String traceId = RequestContext.getTraceId();
+        if (traceId == null || traceId.isBlank()) {
+            traceId = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
         }
-        StringWriter writer = new StringWriter(256);
-        Throwable current = throwable;
-        while (current != null) {
-            writer.write(current.toString());
-            writer.write(System.lineSeparator());
-            for (StackTraceElement element : current.getStackTrace()) {
-                writer.write("\tat ");
-                writer.write(element.toString());
-                writer.write(System.lineSeparator());
-            }
-            current = current.getCause();
-            if (current != null) {
-                writer.write("Caused by: ");
+        if ((traceId == null || traceId.isBlank()) && request != null) {
+            traceId = request.getHeader(HeaderConstants.TRACE_ID_HEADER);
+            if (traceId == null) {
+                traceId = request.getHeader(HeaderConstants.X_REQUEST_ID);
             }
         }
-        return writer.toString();
+        return traceId;
+    }
+
+    /**
+     * 从 WebFlux 请求上下文提取 traceId（统一入口）。
+     *
+     * <p>优先级：RequestContext > MDC > Request Header（X-Trace-Id > X-Request-Id）。
+     *
+     * @param exchange WebFlux 请求上下文，可为 null
+     * @return traceId，未提取到时返回 null
+     */
+    protected static String extractTraceId(ServerWebExchange exchange) {
+        String traceId = RequestContext.getTraceId();
+        if (traceId == null || traceId.isBlank()) {
+            traceId = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
+        }
+        if ((traceId == null || traceId.isBlank()) && exchange != null) {
+            traceId = exchange.getRequest().getHeaders().getFirst(HeaderConstants.TRACE_ID_HEADER);
+            if (traceId == null) {
+                traceId = exchange.getRequest().getHeaders().getFirst(HeaderConstants.X_REQUEST_ID);
+            }
+        }
+        return traceId;
     }
 
     /**
@@ -401,12 +437,35 @@ public abstract class BaseExceptionHandler {
     /**
      * 构建统一异常响应（根据配置自动选择 BaseResponse 或 ProblemDetail 格式）
      *
+     * <p>统一在此处记录异常处理耗时（{@code exception.handler.duration} Timer），
+     * 使全部走响应构建链路的 handler 均纳入耗时监控。
+     *
      * @param throwable 异常对象
      * @param path      请求路径
      * @param traceId   追踪 ID
      * @return 响应对象（BaseResponse 或 ProblemDetail）
      */
     protected Object buildResponse(Throwable throwable, String path, String traceId) {
+        long startNanos = System.nanoTime();
+        try {
+            return doBuildResponse(throwable, path, traceId);
+        } finally {
+            long durationMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos);
+            if (exceptionMetrics != null) {
+                exceptionMetrics.recordHandlerDuration(durationMs, throwable);
+            }
+        }
+    }
+
+    /**
+     * 构建统一异常响应的内部实现。
+     *
+     * @param throwable 异常对象
+     * @param path      请求路径
+     * @param traceId   追踪 ID
+     * @return 响应对象（BaseResponse 或 ProblemDetail）
+     */
+    private Object doBuildResponse(Throwable throwable, String path, String traceId) {
         if (useProblemDetail()) {
             return buildProblemDetail(throwable, path, traceId);
         }
@@ -453,10 +512,13 @@ public abstract class BaseExceptionHandler {
         if (response == null || !(throwable instanceof AbstractYdszException ex)) {
             return;
         }
-        if (!ex.retryable()) {
+        if (!(ex.resultCode() instanceof ExceptionCode exceptionCode)) {
             return;
         }
-        int seconds = ex.retryAfterSeconds();
+        if (!exceptionCode.retryable()) {
+            return;
+        }
+        int seconds = exceptionCode.retryAfterSeconds();
         if (seconds > 0) {
             response.setHeader("Retry-After", String.valueOf(seconds));
         }

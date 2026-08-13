@@ -8,10 +8,13 @@ import java.util.concurrent.TimeUnit;
  *
  * <p>用于在方法级别声明分布式锁，支持多种锁类型：
  * <ul>
- *   <li>普通锁：不支持重入，简单场景</li>
- *   <li>可重入锁：同一线程可多次获取</li>
+ *   <li>可重入锁：同一线程可多次获取（默认）</li>
  *   <li>公平锁：按请求顺序获取</li>
  * </ul>
+ *
+ * <p><b>注意：</b>{@link LockType#READ_WRITE} 与 {@link LockType#SEMAPHORE}
+ * 为键维度实例，不支持注解方式使用（将抛出 {@code IllegalArgumentException}），
+ * 请通过 {@code LockStrategy.getReadWriteLock / getSemaphore} 编程式获取。</p>
  *
  * <p>与 {@link Idempotent} 的区别：本注解用于对同一资源的并发互斥（key 通常含 SpEL 表达式精确到资源 ID，
  * 并可阻塞等待），而 {@link Idempotent} 用于接口防重复提交（key 通常为静态串，不阻塞）。
@@ -27,8 +30,8 @@ import java.util.concurrent.TimeUnit;
  *
  * <p><b>参数说明：</b>
  * <ul>
- *   <li>key：锁的键，支持 SpEL 表达式</li>
- *   <li>lockType：锁类型，默认 REENTRANT</li>
+ *   <li>key：锁的键，支持 SpEL 表达式（模板 {@code "order:#{#orderId}"} 或整串 {@code "'order:' + #orderId"}）</li>
+ *   <li>lockType：锁类型，仅支持 REENTRANT / FAIR，默认 REENTRANT</li>
  *   <li>waitTime：最大等待时间，默认 0（不等待）</li>
  *   <li>leaseTime：锁的自动释放时间，默认 30 秒</li>
  *   <li>timeUnit：时间单位，默认秒</li>

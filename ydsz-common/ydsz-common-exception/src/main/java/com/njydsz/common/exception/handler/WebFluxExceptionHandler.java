@@ -1,22 +1,5 @@
 package com.njydsz.common.exception.handler;
 
-import org.slf4j.MDC;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
-import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.core.env.Environment;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.server.ServerWebExchange;
-
-import com.njydsz.common.core.constant.HeaderConstants;
-import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.config.ExceptionProperties;
@@ -27,6 +10,20 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;
 
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ServerWebExchange;
 
 /**
  * Spring WebFlux 全局异常处理器
@@ -58,6 +55,9 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
     /** 系统错误兜底文案（i18n key 解析失败时使用，避免向客户端泄露内部异常细节） */
     private static final String DEFAULT_SYSTEM_ERROR_MESSAGE = "系统异常，请联系管理员";
 
+    /** 非法参数兜底文案（i18n key 解析失败时使用，避免泄露内部异常细节） */
+    private static final String DEFAULT_ILLEGAL_ARGUMENT_MESSAGE = "非法参数";
+
     private final MessageSource messageSource;
 
     /**
@@ -80,25 +80,6 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
     @Override
     protected String getLogPrefix() {
         return "【WebFlux】";
-    }
-
-    /**
-     * 从 ServerWebExchange / RequestContext 提取 traceId
-     *
-     * <p>优先级：RequestContext > MDC > Request Header（X-Trace-Id > X-Request-Id）
-     */
-    private String extractTraceId(ServerWebExchange exchange) {
-        String traceId = RequestContext.getTraceId();
-        if (traceId == null || traceId.isBlank()) {
-            traceId = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
-        }
-        if ((traceId == null || traceId.isBlank()) && exchange != null) {
-            traceId = exchange.getRequest().getHeaders().getFirst(HeaderConstants.TRACE_ID_HEADER);
-            if (traceId == null) {
-                traceId = exchange.getRequest().getHeaders().getFirst(HeaderConstants.X_REQUEST_ID);
-            }
-        }
-        return traceId;
     }
 
     // ============================ 异常处理方法 ============================
@@ -152,7 +133,22 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
         log.error("{}非法参数异常 | 路径: {} | 消息: {}",
                 getLogPrefix(), exchange.getRequest().getPath().value(), e.getMessage(), e);
 
-        return buildResponse(e, exchange.getRequest().getPath().value(), extractTraceId(exchange));
+        // 与 MVC 处理器行为对齐：按请求 Locale 解析 i18n 文案，原始异常消息仅保留在日志中
+        String message = messageSource.getMessage(
+                CoreExceptionCode.ILLEGAL_ARGUMENT.getKey(), null,
+                DEFAULT_ILLEGAL_ARGUMENT_MESSAGE, LocaleContextHolder.getLocale());
+        ExceptionInfo info = new ExceptionInfo(
+                CoreExceptionCode.ILLEGAL_ARGUMENT.getCode(),
+                CoreExceptionCode.ILLEGAL_ARGUMENT.getKey(),
+                message,
+                HttpStatus.BAD_REQUEST.value()
+        );
+        info.setPath(exchange.getRequest().getPath().value());
+        return errorResponse(
+                CoreExceptionCode.ILLEGAL_ARGUMENT.getCode(),
+                message,
+                includeExceptionInfo() ? info : null
+        );
     }
 
     /**

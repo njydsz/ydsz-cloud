@@ -64,15 +64,16 @@
         <!-- 禁止冗余的 import -->
         <module name="RedundantImport"/>
 
-        <!-- import 分组与排序：
-             第 1 组：java.*
-             第 2 组：javax.*
-             第 3 组：第三方库（org.* / com.*，按字母序）
-             第 4 组：公司内部包（com.njydsz.*）
+        <!-- import 分组与排序（与《云顶编码规范》5.3 节对齐，4 组）：
+             第 1 组：java.* / javax.*
+             第 2 组：第三方库（org.* / jakarta.* / lombok 等，按字母序）
+             第 3 组：公司内部包（com.njydsz.*）
+             第 4 组：静态导入
              组间以空行分隔 -->
         <module name="CustomImportOrder">
             <property name="customImportOrderRules"
-                      value="STANDARD_JAVA_PACKAGE###THIRD_PARTY_PACKAGE"/>
+                      value="STANDARD_JAVA_PACKAGE###THIRD_PARTY_PACKAGE###SPECIAL_IMPORTS###STATIC"/>
+            <property name="specialImportsRegExp" value="^com\.njydsz\."/>
             <property name="sortImportsInGroupAlphabetically" value="true"/>
             <property name="separateLineBetweenGroups" value="true"/>
         </module>
@@ -206,9 +207,10 @@
                              STATIC_INIT, ANNOTATION_DEF, ENUM_DEF"/>
         </module>
 
-        <!-- 右大括号必须单独成行（除非后面紧跟 else/catch/finally），使用默认 token 集合 -->
+        <!-- 右大括号：与后续 else/catch/finally 同行（option=same，与《云顶编码规范》4.1 节一致） -->
         <module name="RightCurly">
-            <property name="option" value="alone"/>
+            <property name="option" value="same"/>
+            <property name="tokens" value="LITERAL_TRY, LITERAL_CATCH, LITERAL_FINALLY, LITERAL_IF, LITERAL_ELSE"/>
         </module>
 
         <!-- 必须使用大括号（即使只有一行语句） -->
@@ -237,10 +239,6 @@
         <!-- ============================================ -->
 
         <!-- 禁止覆盖 finalize() 方法 -->
-        <module name="FinalLocalVariable">
-            <property name="tokens" value="VARIABLE_DEF,PARAMETER_DEF"/>
-            <property name="validateEnhancedForLoopVariable" value="true"/>
-        </module>
 
         <!-- 禁止抛出 RuntimeException / Exception / Throwable -->
         <module name="IllegalThrows">
@@ -316,11 +314,10 @@
         <!-- 9. Javadoc 注释规范（Javadoc Conventions）    -->
         <!-- ============================================ -->
 
-        <!-- 类和接口必须有 Javadoc -->
+        <!-- 类和接口必须有 Javadoc（@author/@since 由《云顶编码规范》10.1 节约定，不强制 @version） -->
         <module name="JavadocType">
             <property name="scope" value="public"/>
             <property name="authorFormat" value="\S+"/>
-            <property name="versionFormat" value="\S+"/>
         </module>
 
         <!-- 公共方法必须有 Javadoc（默认 scope=public） -->
@@ -330,16 +327,13 @@
             <property name="allowMissingReturnTag" value="false"/>
         </module>
 
-        <!-- Javadoc 格式和段落规范 -->
+        <!-- Javadoc 格式和段落规范（中文 Javadoc 不强制首句句号，仅检查空 Javadoc） -->
         <module name="JavadocStyle">
             <property name="scope" value="public"/>
+            <property name="checkFirstSentence" value="false"/>
             <property name="checkEmptyJavadoc" value="true"/>
         </module>
 
-        <!-- 首句必须以 . 结束 -->
-        <module name="SummaryJavadoc">
-            <property name="forbiddenSummaryFragments" value="^@return the *|^This method returns |^A [{]@code [a-zA-Z0-9]+[}]( is a )"/>
-        </module>
 
     </module>
 </module>

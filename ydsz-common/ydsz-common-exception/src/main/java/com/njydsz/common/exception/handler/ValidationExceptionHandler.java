@@ -3,10 +3,18 @@ package com.njydsz.common.exception.handler;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.config.ExceptionProperties;
+import com.njydsz.common.exception.core.ExceptionInfo;
+import com.njydsz.common.exception.metrics.ExceptionMetrics;
+
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.MessageSource;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
@@ -20,18 +28,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-import com.njydsz.common.core.constant.HeaderConstants;
-import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.exception.code.CoreExceptionCode;
-import com.njydsz.common.exception.config.ExceptionProperties;
-import com.njydsz.common.exception.core.ExceptionInfo;
-import com.njydsz.common.exception.metrics.ExceptionMetrics;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 /**
  * Validation 相关异常处理器
@@ -99,25 +95,6 @@ public class ValidationExceptionHandler extends BaseExceptionHandler {
         return bindingResult.getAllErrors().stream()
                 .map(DefaultMessageSourceResolvable::getDefaultMessage)
                 .collect(Collectors.joining(", "));
-    }
-
-    /**
-     * 从 HttpServletRequest / MDC 提取 traceId
-     *
-     * <p>优先级：RequestContext > MDC > Request Header（X-Trace-Id > X-Request-Id）
-     */
-    private String extractTraceId(HttpServletRequest request) {
-        String traceId = RequestContext.getTraceId();
-        if (traceId == null || traceId.isBlank()) {
-            traceId = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
-        }
-        if ((traceId == null || traceId.isBlank()) && request != null) {
-            traceId = request.getHeader(HeaderConstants.TRACE_ID_HEADER);
-            if (traceId == null) {
-                traceId = request.getHeader(HeaderConstants.X_REQUEST_ID);
-            }
-        }
-        return traceId;
     }
 
     /**

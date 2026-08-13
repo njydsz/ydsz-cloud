@@ -1,12 +1,23 @@
 package com.njydsz.common.exception.handler;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.slf4j.MDC;
+import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.exception.batch.BatchBusinessException;
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.config.ExceptionProperties;
+import com.njydsz.common.exception.core.ExceptionInfo;
+import com.njydsz.common.exception.custom.AbstractYdszException;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.exception.metrics.ExceptionMetrics;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.ApplicationEventPublisher;
@@ -26,20 +37,6 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.NoHandlerFoundException;
-
-import com.njydsz.common.core.constant.HeaderConstants;
-import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.exception.batch.BatchBusinessException;
-import com.njydsz.common.exception.code.CoreExceptionCode;
-import com.njydsz.common.exception.config.ExceptionProperties;
-import com.njydsz.common.exception.core.ExceptionInfo;
-import com.njydsz.common.exception.custom.AbstractYdszException;
-import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.exception.metrics.ExceptionMetrics;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Spring MVC 全局异常处理器（非 Validation 部分）
@@ -71,6 +68,9 @@ import lombok.extern.slf4j.Slf4j;
 @RestControllerAdvice
 public class MvcExceptionHandler extends BaseExceptionHandler {
 
+    /** 非法参数兜底文案（i18n key 解析失败时使用，避免泄露内部异常细节） */
+    private static final String DEFAULT_ILLEGAL_ARGUMENT_MESSAGE = "非法参数";
+
     private final MessageSource messageSource;
 
     /**
@@ -97,22 +97,6 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
     @Override
     protected String getLogPrefix() {
         return "【全局】";
-    }
-
-    /**
-     * 从 RequestContext / HttpServletRequest / MDC 提取 traceId
-     *
-     * <p>优先级：RequestContext > MDC > Request Header
-     */
-    private String extractTraceId(HttpServletRequest request) {
-        String traceId = RequestContext.getTraceId();
-        if (traceId == null || traceId.isBlank()) {
-            traceId = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
-        }
-        if ((traceId == null || traceId.isBlank()) && request != null) {
-            traceId = request.getHeader(HeaderConstants.TRACE_ID_HEADER);
-        }
-        return traceId;
     }
 
     /**
@@ -374,16 +358,20 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
         recordMetrics(e);
         log.error("{}非法参数异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage(), e);
 
+        // 按请求 Locale 解析 i18n 文案，原始异常消息仅保留在日志中，避免泄露内部细节
+        String message = messageSource.getMessage(
+                CoreExceptionCode.ILLEGAL_ARGUMENT.getKey(), null,
+                DEFAULT_ILLEGAL_ARGUMENT_MESSAGE, LocaleContextHolder.getLocale());
         ExceptionInfo info = new ExceptionInfo(
                 CoreExceptionCode.ILLEGAL_ARGUMENT.getCode(),
                 CoreExceptionCode.ILLEGAL_ARGUMENT.getKey(),
-                e.getMessage(),
+                message,
                 HttpStatus.BAD_REQUEST.value()
         );
         info.setPath(request.getRequestURI());
         return errorResponse(
                 CoreExceptionCode.ILLEGAL_ARGUMENT.getCode(),
-                e.getMessage(),
+                message,
                 includeExceptionInfo() ? info : null
         );
     }

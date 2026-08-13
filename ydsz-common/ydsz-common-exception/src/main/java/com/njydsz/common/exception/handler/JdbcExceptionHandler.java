@@ -1,8 +1,15 @@
 package com.njydsz.common.exception.handler;
 
+import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.config.ExceptionProperties;
+import com.njydsz.common.exception.core.ExceptionInfo;
+import com.njydsz.common.exception.metrics.ExceptionMetrics;
+
 import jakarta.servlet.http.HttpServletRequest;
 
-import org.slf4j.MDC;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -12,16 +19,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-import com.njydsz.common.core.constant.HeaderConstants;
-import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.exception.code.CoreExceptionCode;
-import com.njydsz.common.exception.config.ExceptionProperties;
-import com.njydsz.common.exception.core.ExceptionInfo;
-import com.njydsz.common.exception.metrics.ExceptionMetrics;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * JDBC 数据访问异常处理器
@@ -95,24 +92,5 @@ public class JdbcExceptionHandler extends BaseExceptionHandler {
                 message,
                 includeExceptionInfo() ? info : null
         );
-    }
-
-    /**
-     * 从 RequestContext / MDC / Request Header 提取 traceId
-     *
-     * <p>优先级：RequestContext > MDC > Request Header（X-Trace-Id > X-Request-Id）
-     */
-    private String extractTraceId(HttpServletRequest request) {
-        String traceId = RequestContext.getTraceId();
-        if (traceId == null || traceId.isBlank()) {
-            traceId = MDC.get(HeaderConstants.MDC_TRACE_ID_KEY);
-        }
-        if (traceId == null && request != null) {
-            traceId = request.getHeader(HeaderConstants.TRACE_ID_HEADER);
-        }
-        if (traceId == null && request != null) {
-            traceId = request.getHeader(HeaderConstants.X_REQUEST_ID);
-        }
-        return traceId;
     }
 }

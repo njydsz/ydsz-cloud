@@ -16,7 +16,9 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
@@ -30,14 +32,14 @@ import com.njydsz.common.lock.idempotent.IdempotentStrategy;
 import com.njydsz.common.lock.idempotent.RedisIdempotentStrategy;
 import com.njydsz.common.lock.idempotent.RepeatSubmitTokenService;
 import com.njydsz.common.lock.metrics.LockMetrics;
+import com.njydsz.common.lock.metrics.LockMetricsExporter;
+import com.njydsz.common.lock.notify.LockReleaseNotifier;
 import com.njydsz.common.lock.renewal.LockRenewalService;
 import com.njydsz.common.lock.scheduler.LockLeakDetector;
 import com.njydsz.common.lock.scheduler.LockWatchDog;
 import com.njydsz.common.lock.strategy.DefaultLockStrategy;
 import com.njydsz.common.lock.strategy.LockStrategy;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-
-import org.springframework.data.redis.core.RedisTemplate;
 
 /**
  * 分布式锁自动配置类
@@ -119,13 +121,48 @@ public class DistributedLockAutoConfiguration {
     }
 
     /**
-     * 创建锁策略 Bean
+     * 创建锁释放通知器 Bean。
+     *
+     * <p>依赖 common-redis 提供的 {@link RedisMessageListenerContainer}，
+     * 基于 Redis pub/sub 在锁释放时唤醒等待线程，减少高竞争场景下的空轮询。
+     * 容器未配置时该 Bean 不注册，等待路径自动退化为指数退避轮询。
      *
      * @param stringRedisTemplate Redis 模板
-     * @param lockWatchDog 看门狗
+     * @param listenerContainer   Redis 消息监听容器
+     * @return LockReleaseNotifier 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnBean(RedisMessageListenerContainer.class)
+    public LockReleaseNotifier lockReleaseNotifier(StringRedisTemplate stringRedisTemplate,
+                                                   RedisMessageListenerContainer listenerContainer) {
+        return new LockReleaseNotifier(stringRedisTemplate, listenerContainer);
+    }
+
+    /**
+     * 创建锁指标导出器 Bean（供监控/日志聚合系统消费 JSON 指标快照）
+     *
      * @param lockMetrics 锁指标收集器
-     * @param stringOpsProvider RedisStringOps 提供者
-     * @param redisTemplateProvider RedisTemplate 提供者
+     * @return LockMetricsExporter 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public LockMetricsExporter lockMetricsExporter(LockMetrics lockMetrics) {
+        return new LockMetricsExporter(lockMetrics);
+    }
+
+    /**
+     * 创建锁策略 Bean
+     *
+     * @param stringRedisTemplate    Redis 模板
+     * @param lockWatchDog           看门狗
+     * @param lockMetrics            锁指标收集器
+     * @param lockProperties         锁配置属性
+     * @param stringOpsProvider      RedisStringOps 提供者
+     * @param redisTemplateProvider  RedisTemplate 提供者
+     * @param schedulerProvider      TaskScheduler 提供者
+     * @param renewalServiceProvider LockRenewalService 提供者
+     * @param notifierProvider       LockReleaseNotifier 提供者
      * @return LockStrategy 实例
      */
     @Bean
@@ -134,15 +171,19 @@ public class DistributedLockAutoConfiguration {
                                      LockMetrics lockMetrics, LockProperties lockProperties,
                                      ObjectProvider<RedisStringOps> stringOpsProvider,
                                      ObjectProvider<RedisTemplate<String, Object>> redisTemplateProvider,
-                                     ObjectProvider<TaskScheduler> schedulerProvider) {
+                                     ObjectProvider<TaskScheduler> schedulerProvider,
+                                     ObjectProvider<LockRenewalService> renewalServiceProvider,
+                                     ObjectProvider<LockReleaseNotifier> notifierProvider) {
         RedisStringOps stringOps = stringOpsProvider.getIfAvailable();
         RedisTemplate<String, Object> redisTemplate = redisTemplateProvider.getIfAvailable();
         TaskScheduler scheduler = schedulerProvider.getIfAvailable();
         String namespace = lockProperties.getNamespace();
-        if (redisTemplate != null) {
-            return new DefaultLockStrategy(stringRedisTemplate, lockWatchDog, stringOps, redisTemplate, lockMetrics, scheduler, namespace);
-        }
-        return new DefaultLockStrategy(stringRedisTemplate, lockWatchDog, null, null, lockMetrics, scheduler, namespace);
+        DefaultLockStrategy strategy = new DefaultLockStrategy(
+                stringRedisTemplate, lockWatchDog, stringOps, redisTemplate,
+                lockMetrics, scheduler, namespace, lockProperties.getMultiLock(),
+                notifierProvider.getIfAvailable());
+        renewalServiceProvider.ifAvailable(strategy::setLockRenewalService);
+        return strategy;
     }
 
     /**

@@ -2,7 +2,6 @@ package com.njydsz.common.jdbc.permission;
 
 import java.util.function.Supplier;
 
-import org.springframework.core.InheritableThreadLocal;
 import org.springframework.core.NamedThreadLocal;
 
 /**
@@ -33,8 +32,9 @@ import org.springframework.core.NamedThreadLocal;
  * }
  * }</pre>
  *
- * <p><b>线程安全：</b>基于 {@link ThreadLocal} 实现。
- * 使用 {@link InheritableThreadLocal} 支持子线程继承（通过 {@link #openInheritable()}）。
+ * <p><b>线程安全：</b>基于 {@link ThreadLocal} 实现，仅在当前线程生效。
+ * 异步子线程场景下，请在每个子线程入口处使用 {@link #runWithoutCheck(Runnable)}
+ * 包裹，或使用 TTL（TransmittableThreadLocal）等线程池上下文传递方案。
  *
  * <p><b>与 {@link DataPermissionIgnore} 的区别：</b>
  * <ul>
@@ -93,34 +93,6 @@ public final class DataPermissionBypass {
     }
 
     /**
-     * 将当前线程的绕过标志传播给子线程。
-     *
-     * <p>基于 {@link InheritableThreadLocal} 实现异步任务场景下父线程绕过状态的透传。
-     * 注意：线程池场景下 {@code InheritableThreadLocal} 仅在 {@code new Thread()} 时继承，
-     * 线程池复用线程无法自动继承，需使用 TTL（TransmittableThreadLocal）或任务包装器。
-     *
-     * @return 可用于清理的子线程 InheritableThreadLocal 句柄
-     */
-    public static InheritableBypassHandle inherit() {
-        InheritableThreadLocal<Boolean> inheritable = new InheritableThreadLocal<>() {
-            @Override
-            protected Boolean initialValue() {
-                return Boolean.FALSE;
-            }
-
-            @Override
-            protected Boolean childValue(Boolean parentValue) {
-                return parentValue != null ? parentValue : Boolean.FALSE;
-            }
-        };
-        // 将当前线程的绕过状态传播给 childValue
-        if (Boolean.TRUE.equals(BYPASS_FLAG.get())) {
-            inheritable.set(Boolean.TRUE);
-        }
-        return new InheritableBypassHandle(inheritable);
-    }
-
-    /**
      * 打开一个数据权限绕过作用域（try-with-resources 自动清理）。
      *
      * @return Scope 对象，关闭后恢复数据权限检查
@@ -171,27 +143,6 @@ public final class DataPermissionBypass {
          */
         @Override
         void close();
-    }
-
-    /**
-     * InheritableThreadLocal 句柄，用于子线程绕过状态的传播。
-     */
-    public static final class InheritableBypassHandle {
-
-        private final InheritableThreadLocal<Boolean> threadLocal;
-
-        private InheritableBypassHandle(InheritableThreadLocal<Boolean> threadLocal) {
-            this.threadLocal = threadLocal;
-        }
-
-        /**
-         * 检查子线程是否继承了绕过状态。
-         *
-         * @return 子线程应绕过时返回 {@code true}
-         */
-        public boolean isActive() {
-            return Boolean.TRUE.equals(threadLocal.get());
-        }
     }
 
     /**

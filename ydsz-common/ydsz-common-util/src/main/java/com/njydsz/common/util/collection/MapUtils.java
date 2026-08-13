@@ -991,7 +991,7 @@ public final class MapUtils {
                 Type innerType = pt.getActualTypeArguments()[0];
                 if (value instanceof Map<?, ?> m) {
                     if (innerType instanceof Class<?> clazz) {
-                        return java.util.Optional.of(toBean(toStringObjectMap(m), clazz));
+                        return java.util.Optional.of(toBeanOrRecord(toStringObjectMap(m), clazz));
                     }
                 }
             }
@@ -1005,7 +1005,7 @@ public final class MapUtils {
 
         // 嵌套 Bean
         if (value instanceof Map<?, ?> m && !paramType.isInterface()) {
-            return toBean(toStringObjectMap(m), paramType);
+            return toBeanOrRecord(toStringObjectMap(m), paramType);
         }
 
         // 标准类型转换
