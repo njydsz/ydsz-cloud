@@ -223,11 +223,7 @@ stringOps.set("key", "value");
 | `ydsz.redis.bloom-filter.fail-mode` | `FAIL_OPEN` | 布隆过滤器故障处理策略 |
 | `ydsz.redis.metrics.slow-operation-threshold-ms` | `100` | 慢操作阈值（毫秒），0 禁用 |
 | `ydsz.redis.tenant.enabled` | `false` | 是否启用租户级 Redis Key 隔离 |
-
-### RedisClientProperties（`ydsz.redis.client.*`）
-
-| 配置 | 默认值 | 说明 |
-|---|---|---|
+| `ydsz.redis.key-expiration.enabled` | `false` | 是否启用 Key 过期事件监听（需 Redis 服务端 notify-keyspace-events Ex） |
 | `ydsz.redis.client.type` | `JEDIS` | 客户端类型（JEDIS / LETTUCE） |
 | `ydsz.redis.client.read-from` | `MASTER` | 读策略（仅 Lettuce 生效：MASTER / MASTER_PREFERRED / REPLICA_PREFERRED / REPLICA / NEAREST） |
 | `ydsz.redis.client.pool.max-active` | `16` | 最大连接数 |

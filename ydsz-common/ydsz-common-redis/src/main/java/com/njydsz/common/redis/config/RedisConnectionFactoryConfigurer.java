@@ -24,7 +24,7 @@ import io.lettuce.core.cluster.ClusterTopologyRefreshOptions;
 /**
  * Redis 连接工厂配置器
  *
- * <p>根据 {@link RedisClientProperties} 中的 clientType 配置，
+ * <p>根据 {@link RedisProperties.Client} 中的 clientType 配置，
  * 自动选择并创建对应的连接工厂（Jedis 或 Lettuce）。
  *
  * <p>支持的功能：
@@ -58,17 +58,16 @@ public class RedisConnectionFactoryConfigurer {
      * <p>创建前会执行客户端唯一性校验，确保 classpath 中不会同时存在
      * Lettuce 和 Jedis 两个客户端库，避免运行时冲突。
      *
-     * @param properties       Redis 配置属性
-     * @param clientProperties 客户端配置属性
+     * @param properties Redis 配置属性（包含嵌套的 client 配置）
      * @return RedisConnectionFactory 实例
      * @throws IllegalStateException 如果检测到多个 Redis 客户端
      */
-    public RedisConnectionFactory createConnectionFactory(RedisProperties properties,
-                                                          RedisClientProperties clientProperties) {
+    public RedisConnectionFactory createConnectionFactory(RedisProperties properties) {
         validateClientUniqueness();
 
-        RedisClientType clientType = clientProperties != null
-                ? clientProperties.getType()
+        RedisProperties.Client client = properties.getClient();
+        RedisClientType clientType = client != null
+                ? client.getType()
                 : RedisClientType.LETTUCE;
 
         Duration timeout = properties.getTimeoutDuration() != null
@@ -77,10 +76,10 @@ public class RedisConnectionFactoryConfigurer {
 
         switch (clientType) {
             case JEDIS:
-                return createJedisConnectionFactory(properties, clientProperties, timeout);
+                return createJedisConnectionFactory(properties, client, timeout);
             case LETTUCE:
             default:
-                return createLettuceConnectionFactory(properties, clientProperties, timeout);
+                return createLettuceConnectionFactory(properties, client, timeout);
         }
     }
 
@@ -119,13 +118,13 @@ public class RedisConnectionFactoryConfigurer {
      * 创建 Jedis 连接工厂
      */
     private JedisConnectionFactory createJedisConnectionFactory(RedisProperties properties,
-                                                                 RedisClientProperties clientProperties,
+                                                                 RedisProperties.Client client,
                                                                  Duration timeout) {
         RedisStandaloneConfiguration standaloneConfig = buildStandaloneConfig(properties);
         RedisClusterConfiguration clusterConfig = buildClusterConfig(properties);
         RedisSentinelConfiguration sentinelConfig = buildSentinelConfig(properties);
 
-        JedisClientConfiguration clientConfig = buildJedisClientConfiguration(clientProperties, timeout);
+        JedisClientConfiguration clientConfig = buildJedisClientConfiguration(client, timeout);
 
         JedisConnectionFactory factory;
         if (clusterConfig != null) {
@@ -143,9 +142,9 @@ public class RedisConnectionFactoryConfigurer {
      * 创建 Lettuce 连接工厂
      */
     private LettuceConnectionFactory createLettuceConnectionFactory(RedisProperties properties,
-                                                                     RedisClientProperties clientProperties,
+                                                                     RedisProperties.Client client,
                                                                      Duration timeout) {
-        LettuceClientConfiguration clientConfig = buildLettuceClientConfiguration(properties, clientProperties, timeout);
+        LettuceClientConfiguration clientConfig = buildLettuceClientConfiguration(properties, client, timeout);
 
         if (properties.getCluster() != null && properties.getCluster().getNodes() != null
                 && !properties.getCluster().getNodes().isEmpty()) {
@@ -172,21 +171,20 @@ public class RedisConnectionFactoryConfigurer {
     /**
      * 构建 Jedis 客户端配置
      */
-    private JedisClientConfiguration buildJedisClientConfiguration(RedisClientProperties clientProperties,
+    private JedisClientConfiguration buildJedisClientConfiguration(RedisProperties.Client client,
                                                                     Duration timeout) {
         JedisClientConfiguration.JedisClientConfigurationBuilder builder =
                 JedisClientConfiguration.builder();
 
         builder.connectTimeout(timeout);
 
-        boolean sslEnabled = isSslEnabled(clientProperties);
+        boolean sslEnabled = isSslEnabled(client);
         if (sslEnabled) {
             builder.useSsl();
         }
 
-        if (clientProperties != null && clientProperties.getPool() != null
-                && clientProperties.getPool().isEnabled()) {
-            GenericObjectPoolConfig poolConfig = buildGenericPoolConfig(clientProperties.getPool());
+        if (client != null && client.getPool() != null && client.getPool().isEnabled()) {
+            GenericObjectPoolConfig poolConfig = buildGenericPoolConfig(client.getPool());
             builder.usePooling().poolConfig(poolConfig);
         }
 
@@ -197,21 +195,20 @@ public class RedisConnectionFactoryConfigurer {
      * 构建 Lettuce 客户端配置
      */
     private LettuceClientConfiguration buildLettuceClientConfiguration(RedisProperties properties,
-                                                                        RedisClientProperties clientProperties,
+                                                                        RedisProperties.Client client,
                                                                         Duration timeout) {
-        boolean usePool = clientProperties != null && clientProperties.getPool() != null
-                && clientProperties.getPool().isEnabled();
+        boolean usePool = client != null && client.getPool() != null && client.getPool().isEnabled();
 
-        ReadFrom readFrom = resolveReadFrom(clientProperties);
+        ReadFrom readFrom = resolveReadFrom(client);
 
         if (usePool) {
-            GenericObjectPoolConfig poolConfig = buildGenericPoolConfig(clientProperties.getPool());
+            GenericObjectPoolConfig poolConfig = buildGenericPoolConfig(client.getPool());
             LettucePoolingClientConfiguration.LettucePoolingClientConfigurationBuilder builder =
                     LettucePoolingClientConfiguration.builder()
                             .commandTimeout(timeout)
                             .poolConfig(poolConfig);
 
-            boolean sslEnabled = isSslEnabled(clientProperties);
+            boolean sslEnabled = isSslEnabled(client);
             if (sslEnabled) {
                 builder.useSsl();
             }
@@ -227,7 +224,7 @@ public class RedisConnectionFactoryConfigurer {
                 LettuceClientConfiguration.builder()
                         .commandTimeout(timeout);
 
-        boolean sslEnabled = isSslEnabled(clientProperties);
+        boolean sslEnabled = isSslEnabled(client);
         if (sslEnabled) {
             builder.useSsl();
         }
@@ -242,11 +239,11 @@ public class RedisConnectionFactoryConfigurer {
     /**
      * 将配置文件的读策略映射为 Lettuce 的 ReadFrom
      */
-    private ReadFrom resolveReadFrom(RedisClientProperties clientProperties) {
-        if (clientProperties == null || clientProperties.getReadFrom() == null) {
+    private ReadFrom resolveReadFrom(RedisProperties.Client client) {
+        if (client == null || client.getReadFrom() == null) {
             return null;
         }
-        RedisClientProperties.ReadFrom configured = clientProperties.getReadFrom();
+        RedisProperties.Client.ReadFrom configured = client.getReadFrom();
         return switch (configured) {
             case MASTER, UPSTREAM -> null; // Lettuce 默认就是 UPSTREAM，无需显式设置
             case MASTER_PREFERRED, UPSTREAM_PREFERRED -> ReadFrom.UPSTREAM_PREFERRED;
@@ -260,7 +257,7 @@ public class RedisConnectionFactoryConfigurer {
     /**
      * 构建通用连接池配置
      */
-    private GenericObjectPoolConfig buildGenericPoolConfig(RedisClientProperties.Pool poolConfig) {
+    private GenericObjectPoolConfig buildGenericPoolConfig(RedisProperties.Client.Pool poolConfig) {
         GenericObjectPoolConfig config = new GenericObjectPoolConfig();
         config.setMaxTotal(poolConfig.getMaxActive());
         config.setMaxIdle(poolConfig.getMaxIdle());
@@ -302,9 +299,9 @@ public class RedisConnectionFactoryConfigurer {
     /**
      * 判断是否启用 SSL
      */
-    private boolean isSslEnabled(RedisClientProperties clientProperties) {
-        if (clientProperties != null && clientProperties.getSsl() != null) {
-            return clientProperties.getSsl().isEnabled();
+    private boolean isSslEnabled(RedisProperties.Client client) {
+        if (client != null && client.getSsl() != null) {
+            return client.getSsl().isEnabled();
         }
         return false;
     }
