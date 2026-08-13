@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.Executor;
+import java.util.function.Supplier;
 
 import org.slf4j.MDC;
 
@@ -443,7 +445,7 @@ public final class RequestContext {
     public static void putExtraHeader(String key, String value) {
         Map<String, String> headers = (Map<String, String>) get(BizContextKeys.KEY_EXTRA_HEADERS);
         if (headers == null) {
-            headers = new java.util.LinkedHashMap<>(4);
+            headers = new LinkedHashMap<>(4);
             put(BizContextKeys.KEY_EXTRA_HEADERS, headers);
         }
         headers.put(key, value);
@@ -474,9 +476,9 @@ public final class RequestContext {
     public static Map<String, String> getExtraHeaders() {
         Object obj = get(BizContextKeys.KEY_EXTRA_HEADERS);
         if (obj instanceof Map) {
-            return java.util.Collections.unmodifiableMap((Map<String, String>) obj);
+            return Collections.unmodifiableMap((Map<String, String>) obj);
         }
-        return java.util.Collections.emptyMap();
+        return Collections.emptyMap();
     }
 
     /**
@@ -490,7 +492,7 @@ public final class RequestContext {
      */
     @SuppressWarnings("unchecked")
     public static Map<String, Object> createCachedUserInfoMap() {
-        Map<String, Object> map = new java.util.LinkedHashMap<>(8);
+        Map<String, Object> map = new LinkedHashMap<>(8);
         CACHE_HOLDER.set(map);
         return map;
     }
@@ -699,7 +701,7 @@ public final class RequestContext {
      * @return 包装后的 Supplier
      * @since 1.10.0
      */
-    public static <T> java.util.function.Supplier<T> async(java.util.function.Supplier<T> supplier) {
+    public static <T> Supplier<T> async(Supplier<T> supplier) {
         if (supplier == null) {
             return null;
         }
@@ -730,7 +732,7 @@ public final class RequestContext {
      * @return 包装后的 Executor，所有 submit/execute 调用自动传播上下文
      * @since 1.10.0
      */
-    public static java.util.concurrent.Executor executor(java.util.concurrent.Executor delegate) {
+    public static Executor executor(Executor delegate) {
         if (delegate == null) {
             throw new NullPointerException("delegate executor cannot be null");
         }
@@ -745,7 +747,7 @@ public final class RequestContext {
      * @return 逻辑返回值
      * @since 1.8.0
      */
-    public static <T> T supplyWithCleanup(java.util.function.Supplier<T> supplier) {
+    public static <T> T supplyWithCleanup(Supplier<T> supplier) {
         try (CleanupGuard guard = newCleanupGuard()) {
             return supplier.get();
         } finally {

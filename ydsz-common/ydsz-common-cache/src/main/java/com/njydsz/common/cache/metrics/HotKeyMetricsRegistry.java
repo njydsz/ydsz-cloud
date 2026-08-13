@@ -1,5 +1,6 @@
 package com.njydsz.common.cache.metrics;
 
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -67,16 +68,16 @@ public class HotKeyMetricsRegistry {
    * 返回指定缓存名称对应的 HotKeyMetrics，不存在时返回 Optional.empty()。
    */
   @SuppressWarnings("unchecked")
-  public <K> java.util.Optional<HotKeyMetrics<K>> find(String cacheName) {
+  public <K> Optional<HotKeyMetrics<K>> find(String cacheName) {
     HotKeyMetrics<?> m = metrics.get(cacheName);
-    return m == null ? java.util.Optional.empty() : java.util.Optional.of((HotKeyMetrics<K>) m);
+    return m == null ? Optional.empty() : Optional.of((HotKeyMetrics<K>) m);
   }
 
   /**
    * 返回指定缓存名称对应的 HotKeyTracker，不存在时返回 Optional.empty()。
    */
   @SuppressWarnings("unchecked")
-  public <K> java.util.Optional<HotKeyTracker<K>> findTracker(String cacheName) {
+  public <K> Optional<HotKeyTracker<K>> findTracker(String cacheName) {
     return find(cacheName).map(metrics -> (HotKeyTracker<K>) metrics.getTracker());
   }
 

@@ -14,7 +14,6 @@ import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import com.njydsz.common.lock.idempotent.IdempotentStrategy;
-import com.njydsz.common.redis.service.RedisService;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
 
@@ -63,7 +62,6 @@ import lombok.extern.slf4j.Slf4j;
 public class MessageConsumer implements RocketMQListener<String> {
 
     private final MessageService messageService;
-    private final RedisService redisService;
     private final IdempotentStrategy idempotentStrategy;
     private final MsgLogMapper msgLogMapper;
     private final MessageMetrics messageMetrics;

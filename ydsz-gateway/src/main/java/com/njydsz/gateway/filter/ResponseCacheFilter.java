@@ -3,6 +3,7 @@ package com.njydsz.gateway.filter;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Duration;
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -240,7 +241,7 @@ public class ResponseCacheFilter implements GlobalFilter, Ordered {
      * @param cacheKey    缓存键
      * @param dataBuffers 数据缓冲区列表
      */
-    private void cacheResponse(String cacheKey, java.util.List<? extends DataBuffer> dataBuffers) {
+    private void cacheResponse(String cacheKey, List<? extends DataBuffer> dataBuffers) {
         try {
             int totalSize = dataBuffers.stream().mapToInt(DataBuffer::readableByteCount).sum();
             byte[] bytes = new byte[totalSize];

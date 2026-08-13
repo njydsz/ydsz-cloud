@@ -1,5 +1,7 @@
 package com.njydsz.common.notify.helper;
 
+import java.util.List;
+
 import com.njydsz.common.notify.core.NotifyRequest;
 import com.njydsz.common.notify.core.NotifySendResult;
 import com.njydsz.common.notify.core.NotifyService;
@@ -73,7 +75,7 @@ public class NotifyHelper {
      * @param title       通知标题
      * @param content     通知内容
      */
-    public void sendInAppBatch(java.util.List<String> receiverIds, String title, String content) {
+    public void sendInAppBatch(List<String> receiverIds, String title, String content) {
         if (receiverIds == null || receiverIds.isEmpty()) {
             return;
         }
@@ -161,7 +163,7 @@ public class NotifyHelper {
      * @param title       通知标题
      * @param content     通知内容
      */
-    public void batchSendInApp(java.util.List<String> receiverIds, String title, String content) {
+    public void batchSendInApp(List<String> receiverIds, String title, String content) {
         if (receiverIds == null || receiverIds.isEmpty()) {
             return;
         }

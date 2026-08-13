@@ -8,7 +8,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -138,11 +139,15 @@ public class JobScanner {
                             cronjobProperties.getScanner().getBatchSize());
                 } catch (Exception e) {
                     int poolSize = cronjobProperties.getScanner().getParallelDispatchPoolSize();
-                    this.dispatchPool = Executors.newFixedThreadPool(poolSize, r -> {
-                        Thread t = new Thread(r, "job-scanner-dispatch");
-                        t.setDaemon(true);
-                        return t;
-                    });
+                    this.dispatchPool = new ThreadPoolExecutor(
+                            poolSize, poolSize, 0L, TimeUnit.MILLISECONDS,
+                            new LinkedBlockingQueue<>(1024),
+                            r -> {
+                                Thread t = new Thread(r, "job-scanner-dispatch");
+                                t.setDaemon(true);
+                                return t;
+                            },
+                            new ThreadPoolExecutor.CallerRunsPolicy());
                     this.useExternalDispatchPool = false;
                     log.info("[JobScanner] 初始化完成, role={} scanInterval={}ms batchSize={} parallelDispatch=true poolSize={} (manual fallback)",
                             leaderRole, cronjobProperties.getScanner().getIntervalMs(),

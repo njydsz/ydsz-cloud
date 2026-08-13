@@ -1,13 +1,17 @@
 package com.njydsz.common.domain.tree;
 
 import java.io.Serializable;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -139,7 +143,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
 
         // 2. 构建父子关系 + 自动层级计算
         // 同时收集所有已知的 nodeId 到 Set，isRootNode 使用 O(1) 查找替代 O(n) 遍历
-        java.util.Set<ID> knownIds = new java.util.HashSet<>(nodeMap.keySet());
+        Set<ID> knownIds = new HashSet<>(nodeMap.keySet());
         for (T node : nodeList) {
             ID parentId = node.getParentId();
             if (parentId == null) {
@@ -191,7 +195,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
      * @param knownIds  所有已知节点 ID 集合（用于 O(1) 父节点存在性判断）
      * @return 是根节点返回 true
      */
-    private boolean isRootNode(T node, java.util.Set<ID> knownIds) {
+    private boolean isRootNode(T node, Set<ID> knownIds) {
         ID parentId = node.getParentId();
         if (rootId == null) {
             return parentId == null || !knownIds.contains(parentId);
@@ -229,7 +233,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
         if (node == null || node.getChildren() == null || node.getChildren().isEmpty()) {
             return descendants;
         }
-        java.util.Deque<T> stack = new java.util.ArrayDeque<>(node.getChildren());
+        Deque<T> stack = new ArrayDeque<>(node.getChildren());
         while (!stack.isEmpty()) {
             T current = stack.pop();
             descendants.add(current);
@@ -290,7 +294,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
      */
     private static <T extends TreeNode<T, ?>> List<T> flattenInternal(List<T> roots) {
         List<T> result = new ArrayList<>();
-        java.util.Deque<T> stack = new java.util.ArrayDeque<>();
+        Deque<T> stack = new ArrayDeque<>();
         // 逆序压栈保证顺序
         for (int i = roots.size() - 1; i >= 0; i--) {
             stack.push(roots.get(i));
@@ -319,7 +323,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
         }
         // 使用自定义比较器（如果有），否则使用默认比较器
         Comparator<T> comparator = sortComparator != null ? sortComparator : defaultSortComparator();
-        java.util.Deque<List<T>> stack = new java.util.ArrayDeque<>();
+        Deque<List<T>> stack = new ArrayDeque<>();
         stack.push(nodes);
         while (!stack.isEmpty()) {
             List<T> current = stack.pop();

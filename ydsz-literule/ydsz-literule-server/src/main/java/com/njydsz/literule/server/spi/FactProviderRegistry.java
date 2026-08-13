@@ -8,8 +8,9 @@ import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
@@ -81,11 +82,15 @@ public class FactProviderRegistry {
     public FactProviderRegistry(long timeoutMs, boolean fallbackOnError) {
         this.timeoutMs = timeoutMs;
         this.fallbackOnError = fallbackOnError;
-        this.executor = Executors.newCachedThreadPool(r -> {
-            Thread t = new Thread(r, "literule-fact-provider");
-            t.setDaemon(true);
-            return t;
-        });
+        this.executor = new ThreadPoolExecutor(
+                0, 60, 60L, TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(1024),
+                r -> {
+                    Thread t = new Thread(r, "literule-fact-provider");
+                    t.setDaemon(true);
+                    return t;
+                },
+                new ThreadPoolExecutor.CallerRunsPolicy());
         this.ownsExecutor = true;
     }
 

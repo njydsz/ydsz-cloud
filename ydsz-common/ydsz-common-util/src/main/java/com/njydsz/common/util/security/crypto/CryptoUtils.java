@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * 业务加密工具类——项目中所有加密操作的唯一入口。
@@ -193,7 +194,7 @@ public final class CryptoUtils {
      *
      * @return 已注册的算法标识集合
      */
-    public static java.util.Set<String> availableAlgorithms() {
+    public static Set<String> availableAlgorithms() {
         return CryptoProviderRegistry.availableAlgorithms();
     }
 }

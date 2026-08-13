@@ -1,5 +1,12 @@
 package com.njydsz.common.core.code;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 /**
  * 标准结果码枚举（协议级错误码标识）。
  *
@@ -79,14 +86,14 @@ public enum BaseResultCode implements ResultCode {
 
     // ======================== 静态查询 API ========================
 
-    private static final java.util.Map<String, BaseResultCode> CODE_MAP =
-            java.util.Collections.unmodifiableMap(
-                    java.util.Arrays.stream(values())
-                            .collect(java.util.stream.Collectors.toMap(
+    private static final Map<String, BaseResultCode> CODE_MAP =
+            Collections.unmodifiableMap(
+                    Arrays.stream(values())
+                            .collect(Collectors.toMap(
                                     BaseResultCode::getCode,
-                                    java.util.function.Function.identity(),
+                                    Function.identity(),
                                     (a, b) -> a,
-                                    java.util.LinkedHashMap::new)));
+                                    LinkedHashMap::new)));
 
     /**
      * 根据 code 字符串查找对应的结果码。

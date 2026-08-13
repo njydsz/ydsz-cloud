@@ -79,6 +79,6 @@ public class EmailBounceHandler {
      */
     public String getBounceReason(String email) {
         String key = BOUNCE_KEY_PREFIX + email.toLowerCase().trim();
-        return redisService.get(key, String.class);
+        return redisStringOps.get(key, String.class);
     }
 }

@@ -14,6 +14,7 @@ import java.security.spec.ECGenParameterSpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
+import java.util.HexFormat;
 import java.util.Objects;
 
 import javax.crypto.Cipher;
@@ -137,7 +138,7 @@ public final class Sm2Utils {
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     /** Hex 编码器 */
-    private static final java.util.HexFormat HEX = java.util.HexFormat.of();
+    private static final HexFormat HEX = HexFormat.of();
 
     private Sm2Utils() {
         throw new UnsupportedOperationException("Sm2Utils is a utility class");

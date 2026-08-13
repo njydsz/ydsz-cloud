@@ -3,10 +3,11 @@ package com.njydsz.cronjob.server.core.scheduler;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import jakarta.annotation.PostConstruct;
@@ -84,7 +85,7 @@ public class SecondLevelScheduler {
     public void init() {
         this.leaderRole = cronjobProperties.getLeader().getRole();
         int poolSize = Math.max(2, cronjobProperties.getSchedulerPoolSize());
-        this.scheduler = Executors.newScheduledThreadPool(poolSize, buildThreadFactory());
+        this.scheduler = new ScheduledThreadPoolExecutor(poolSize, buildThreadFactory(), new ThreadPoolExecutor.CallerRunsPolicy());
         log.info("[SecondLevelScheduler] 初始化完成, poolSize={}, role={}", poolSize, leaderRole);
         try {
             reload();

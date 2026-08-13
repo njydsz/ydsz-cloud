@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.ObjectProvider;
@@ -100,8 +101,8 @@ public class ConfigServiceImpl implements ConfigService {
     private static final int MAX_JSON_LENGTH = 65536;
     private static final double MIN_NUMBER = -1e15;
     private static final double MAX_NUMBER = 1e15;
-    private static final java.util.regex.Pattern BOOLEAN_PATTERN =
-            java.util.regex.Pattern.compile("^(true|false|TRUE|FALSE|True|False)$");
+    private static final Pattern BOOLEAN_PATTERN =
+            Pattern.compile("^(true|false|TRUE|FALSE|True|False)$");
 
     // ============================== 依赖注入 ==============================
 

@@ -1,6 +1,9 @@
 package com.njydsz.common.thread.config;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.slf4j.Logger;
@@ -110,7 +113,7 @@ public class ThreadPoolHotUpdateListener {
                 log.warn("[ThreadPoolHotUpdate] 线程池 [{}] 不存在，跳过调整", poolName);
                 return;
             }
-            java.util.concurrent.RejectedExecutionHandler newHandler = createRejectHandler(newPolicy);
+            RejectedExecutionHandler newHandler = createRejectHandler(newPolicy);
             executor.setRejectedExecutionHandler(newHandler);
             log.info("[ThreadPoolHotUpdate] 线程池 [{}] 拒绝策略已更新为 {}", poolName, newPolicy);
         } finally {
@@ -152,7 +155,7 @@ public class ThreadPoolHotUpdateListener {
             return null;
         }
         try {
-            java.util.concurrent.ThreadPoolExecutor pool = executor.getThreadPoolExecutor();
+            ThreadPoolExecutor pool = executor.getThreadPoolExecutor();
             return new ThreadPoolSnapshot(
                     poolName,
                     pool.getCorePoolSize(),
@@ -174,14 +177,14 @@ public class ThreadPoolHotUpdateListener {
      * @return poolName → snapshot
      */
     public Map<String, ThreadPoolSnapshot> snapshotAll() {
-        Map<String, ThreadPoolSnapshot> result = new java.util.LinkedHashMap<>();
+        Map<String, ThreadPoolSnapshot> result = new LinkedHashMap<>();
         threadPoolAutoConfiguration.getExecutors().forEach((beanName, executor) -> {
             // 从 beanName 反推 poolName （去掉 "Executor" 后缀）
             String poolName = beanName.endsWith("Executor")
                     ? beanName.substring(0, beanName.length() - "Executor".length())
                     : beanName;
             try {
-                java.util.concurrent.ThreadPoolExecutor pool = executor.getThreadPoolExecutor();
+                ThreadPoolExecutor pool = executor.getThreadPoolExecutor();
                 result.put(poolName, new ThreadPoolSnapshot(
                         poolName,
                         pool.getCorePoolSize(),
@@ -212,7 +215,7 @@ public class ThreadPoolHotUpdateListener {
 
     private void resizeInternal(ThreadPoolTaskExecutor executor, int newCoreSize, int newMaxSize, String poolName) {
         try {
-            java.util.concurrent.ThreadPoolExecutor pool = executor.getThreadPoolExecutor();
+            ThreadPoolExecutor pool = executor.getThreadPoolExecutor();
             int oldCore = pool.getCorePoolSize();
             int oldMax = pool.getMaximumPoolSize();
 
@@ -238,22 +241,22 @@ public class ThreadPoolHotUpdateListener {
         }
     }
 
-    private java.util.concurrent.RejectedExecutionHandler createRejectHandler(
+    private RejectedExecutionHandler createRejectHandler(
             ThreadPoolProperties.RejectPolicy policy) {
         if (policy == null) {
-            return new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy();
+            return new ThreadPoolExecutor.CallerRunsPolicy();
         }
         switch (policy) {
             case ABORT:
-                return new java.util.concurrent.ThreadPoolExecutor.AbortPolicy();
+                return new ThreadPoolExecutor.AbortPolicy();
             case CALLER_RUNS:
-                return new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy();
+                return new ThreadPoolExecutor.CallerRunsPolicy();
             case DISCARD_OLDEST:
-                return new java.util.concurrent.ThreadPoolExecutor.DiscardOldestPolicy();
+                return new ThreadPoolExecutor.DiscardOldestPolicy();
             case DISCARD:
-                return new java.util.concurrent.ThreadPoolExecutor.DiscardPolicy();
+                return new ThreadPoolExecutor.DiscardPolicy();
             default:
-                return new java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy();
+                return new ThreadPoolExecutor.CallerRunsPolicy();
         }
     }
 

@@ -15,6 +15,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Map;
 
 import com.njydsz.common.json.annotation.JsonFormat;
@@ -89,7 +90,7 @@ public final class FieldMeta {
     public final java.time.ZoneId timezone;
 
     /** 日期格式化区域（@JsonFormat.locale，null 表示系统默认） */
-    public final java.util.Locale locale;
+    public final Locale locale;
 
     /** 包含策略（来自 @JsonInclude 注解，默认 ALWAYS） */
     public final JsonInclude.Include includeStrategy;

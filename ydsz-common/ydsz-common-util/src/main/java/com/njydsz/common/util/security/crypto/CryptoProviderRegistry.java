@@ -2,6 +2,7 @@ package com.njydsz.common.util.security.crypto;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
@@ -111,7 +112,7 @@ public final class CryptoProviderRegistry {
      *
      * @return 不可变的算法标识集合
      */
-    public static java.util.Set<String> availableAlgorithms() {
-        return java.util.Set.copyOf(REGISTRY.keySet());
+    public static Set<String> availableAlgorithms() {
+        return Set.copyOf(REGISTRY.keySet());
     }
 }

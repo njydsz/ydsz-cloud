@@ -5,7 +5,8 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisHashOps;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -40,8 +41,11 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class DeliveryTimeOptimizerImpl implements DeliveryTimeOptimizer {
 
-    /** Redis 模板（用户活跃度画像） */
-    private final RedisService redisService;
+    /** Redis Hash 操作（用户活跃度画像） */
+    private final RedisHashOps redisHashOps;
+
+    /** Redis String 操作（活跃计数等） */
+    private final RedisStringOps redisStringOps;
 
     /** Redis key 前缀 */
     private static final String ACTIVITY_HOURLY_PREFIX = "ydsz:activity:hourly:";
@@ -61,13 +65,13 @@ public class DeliveryTimeOptimizerImpl implements DeliveryTimeOptimizer {
 
             // 更新小时维度活跃计数（Hash: hour → count）
             String hourlyKey = ACTIVITY_HOURLY_PREFIX + userId;
-            redisService.opsForHash().increment(hourlyKey, hourKey, 1);
-            redisService.expire(hourlyKey, Duration.ofDays(ACTIVITY_EXPIRE_DAYS));
+            redisHashOps.hIncr(hourlyKey, hourKey, 1L);
+            redisStringOps.expire(hourlyKey, Duration.ofDays(ACTIVITY_EXPIRE_DAYS));
 
             // 更新总活跃计数
             String countKey = ACTIVITY_COUNT_PREFIX + userId;
-            redisService.incr(countKey, 1);
-            redisService.expire(countKey, Duration.ofDays(ACTIVITY_EXPIRE_DAYS));
+            redisStringOps.incr(countKey, 1);
+            redisStringOps.expire(countKey, Duration.ofDays(ACTIVITY_EXPIRE_DAYS));
 
             log.debug("[DeliveryTime] 记录活跃: userId={} hour={} channel={}", userId, now.getHour(), channel);
         } catch (Exception e) {
@@ -82,7 +86,7 @@ public class DeliveryTimeOptimizerImpl implements DeliveryTimeOptimizer {
         }
         try {
             String hourlyKey = ACTIVITY_HOURLY_PREFIX + userId;
-            Map<String, String> hourlyCounts = redisService.hGetAll(hourlyKey, String.class);
+            Map<String, String> hourlyCounts = redisHashOps.hGetAll(hourlyKey);
             if (hourlyCounts == null || hourlyCounts.isEmpty()) {
                 return null; // 无活跃数据
             }
@@ -137,7 +141,7 @@ public class DeliveryTimeOptimizerImpl implements DeliveryTimeOptimizer {
         }
         try {
             String countKey = ACTIVITY_COUNT_PREFIX + userId;
-            String countStr = redisService.get(countKey, String.class);
+            String countStr = redisStringOps.get(countKey, String.class);
             if (countStr == null) {
                 return 0;
             }

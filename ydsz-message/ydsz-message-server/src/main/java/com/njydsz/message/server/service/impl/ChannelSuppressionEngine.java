@@ -2,7 +2,7 @@ package com.njydsz.message.server.service.impl;
 
 import java.time.Duration;
 
-import com.njydsz.common.redis.service.RedisService;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.message.server.config.MessageProperties;
@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ChannelSuppressionEngine {
 
-    private final RedisService redisService;
+    private final RedisTemplate<String, Object> redisTemplate;
     /** OD-7 / P3-3.2: 抑制窗口配置统一从 MessageProperties 读取 */
     private final MessageProperties messageProperties;
 
@@ -58,7 +58,7 @@ public class ChannelSuppressionEngine {
         }
         long suppressWindowSeconds = messageProperties.getSuppressWindowSeconds();
         String key = buildKey(bizType, bizId, receiver);
-        Boolean acquired = redisService.opsForValue()
+        Boolean acquired = redisTemplate.opsForValue()
                 .setIfAbsent(key, channel, Duration.ofSeconds(suppressWindowSeconds));
         if (Boolean.TRUE.equals(acquired)) {
             // 首个渠道，放行
@@ -67,7 +67,7 @@ public class ChannelSuppressionEngine {
             return false;
         }
         // 已有其他渠道发送，抑制
-        String existingChannel = redisService.get(key, String.class);
+        String existingChannel = (String) redisTemplate.opsForValue().get(key);
         log.info("[Suppress] 跨渠道抑制: bizType={} bizId={} receiver={} current={} existing={}",
                 bizType, bizId, receiver, channel, existingChannel);
         return true;
@@ -82,7 +82,7 @@ public class ChannelSuppressionEngine {
      */
     public void release(String bizType, String bizId, String receiver) {
         String key = buildKey(bizType, bizId, receiver);
-        redisService.delete(key);
+        redisTemplate.delete(key);
     }
 
     private String buildKey(String bizType, String bizId, String receiver) {

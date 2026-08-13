@@ -6,7 +6,6 @@ import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import com.njydsz.common.lock.idempotent.IdempotentStrategy;
-import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -55,7 +54,6 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
 
     private final MsgLogMapper msgLogMapper;
     private final MessageMetrics messageMetrics;
-    private final RedisService redisService;
     private final IdempotentStrategy idempotentStrategy;
 
     @Override
