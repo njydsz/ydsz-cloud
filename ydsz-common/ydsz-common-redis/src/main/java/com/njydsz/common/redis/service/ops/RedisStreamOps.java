@@ -249,6 +249,15 @@ public class RedisStreamOps {
             log.warn("【Redis】XREADGROUP 操作失败：参数不能为空");
             return Collections.emptyList();
         }
+        if (metricsCollector != null) {
+            return metricsCollector.recordOperation("stream_readGroup",
+                    () -> doReadGroup(streamKey, groupName, consumerName, count, readPending));
+        }
+        return doReadGroup(streamKey, groupName, consumerName, count, readPending);
+    }
+
+    private List<StreamMessage> doReadGroup(String streamKey, String groupName,
+                                             String consumerName, int count, boolean readPending) {
         String formattedKey = formatKey(streamKey);
         try {
             Consumer consumer = Consumer.from(groupName, consumerName);
@@ -372,6 +381,14 @@ public class RedisStreamOps {
             log.warn("【Redis】XACK 操作失败：参数不能为空");
             return 0;
         }
+        if (metricsCollector != null) {
+            return metricsCollector.recordOperation("stream_ack",
+                    () -> doAck(streamKey, groupName, recordIds));
+        }
+        return doAck(streamKey, groupName, recordIds);
+    }
+
+    private long doAck(String streamKey, String groupName, String... recordIds) {
         String formattedKey = formatKey(streamKey);
         try {
             RecordId[] ids = Arrays.stream(recordIds)

@@ -10,6 +10,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -50,6 +52,11 @@ public abstract class BaseExceptionHandler {
 
     private final Environment environment;
     private ApplicationEventPublisher eventPublisher;
+
+    /**
+     * 国际化消息源（由子类注入后通过 {@link #setMessageSource(MessageSource)} 设置）
+     */
+    private MessageSource messageSource;
 
     /**
      * 构造基类异常处理器（通过 Spring 注入 {@link Environment}）
@@ -100,6 +107,15 @@ public abstract class BaseExceptionHandler {
      */
     protected void setExceptionMetrics(Environment env, ExceptionMetrics exceptionMetrics) {
         this.exceptionMetrics = exceptionMetrics;
+    }
+
+    /**
+     * 设置国际化消息源（由子类注入后调用）
+     *
+     * @param messageSource Spring MessageSource
+     */
+    protected void setMessageSource(MessageSource messageSource) {
+        this.messageSource = messageSource;
     }
 
     /**
@@ -528,6 +544,52 @@ public abstract class BaseExceptionHandler {
         if (seconds > 0) {
             response.setHeader("Retry-After", String.valueOf(seconds));
         }
+    }
+
+    /**
+     * 按请求 Locale 解析国际化消息（统一入口）。
+     *
+     * <p>消除 MVC / WebFlux / JDBC 等处理器中重复的
+     * {@code messageSource.getMessage(key, args, defaultMsg, LocaleContextHolder.getLocale())} 四参数调用模板。
+     *
+     * @param key         i18n 消息键
+     * @param args        消息参数（可为 null）
+     * @param defaultMsg  当 MessageSource 不可用或 key 未找到时的兜底文案
+     * @return 解析后的消息文本
+     */
+    protected String resolveMessage(String key, Object[] args, String defaultMsg) {
+        if (messageSource == null) {
+            return defaultMsg;
+        }
+        try {
+            return messageSource.getMessage(key, args, defaultMsg, LocaleContextHolder.getLocale());
+        } catch (Exception e) {
+            return defaultMsg;
+        }
+    }
+
+    /**
+     * 构建标准错误响应（统一 {@link ExceptionInfo} + {@link BaseResponse} 组合）。
+     *
+     * <p>消除各处理器中重复的"new ExceptionInfo → setPath → errorResponse"三步模板。
+     * 开发/测试环境自动填充详细信息（path + stackTrace），生产环境仅返回 code + message。
+     *
+     * @param code      错误码字符串
+     * @param key       i18n 消息键（可为 null）
+     * @param message   已解析的错误消息
+     * @param httpStatus HTTP 状态码
+     * @param path      请求路径
+     * @return 统一 BaseResponse
+     */
+    protected BaseResponse<?> buildStandardErrorResponse(
+            String code, String key, String message, int httpStatus, String path) {
+        if (!includeExceptionInfo()) {
+            return errorResponse(code, message, null);
+        }
+        ExceptionInfo info = new ExceptionInfo(code, key, message, httpStatus);
+        info.setPath(path);
+        info.setDetails(Map.of("stackTrace", getStackTraceString(null)));
+        return errorResponse(code, message, info);
     }
 
     /**

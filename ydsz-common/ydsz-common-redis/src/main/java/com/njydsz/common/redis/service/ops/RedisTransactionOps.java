@@ -10,6 +10,8 @@ import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SessionCallback;
 
+import com.njydsz.common.redis.metrics.RedisMetricsCollector;
+
 /**
  * Redis 事务操作组件
  *
@@ -39,9 +41,22 @@ import org.springframework.data.redis.core.SessionCallback;
 public class RedisTransactionOps {
 
     private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisMetricsCollector metricsCollector;
 
     public RedisTransactionOps(RedisTemplate<String, Object> redisTemplate) {
+        this(redisTemplate, null);
+    }
+
+    /**
+     * 构造事务操作组件（带指标采集）
+     *
+     * @param redisTemplate   Redis 模板
+     * @param metricsCollector 指标采集器（可为 null，null 时不采集指标）
+     */
+    public RedisTransactionOps(RedisTemplate<String, Object> redisTemplate,
+                                RedisMetricsCollector metricsCollector) {
         this.redisTemplate = Objects.requireNonNull(redisTemplate, "RedisTemplate 不能为 null");
+        this.metricsCollector = metricsCollector;
     }
 
     /**
