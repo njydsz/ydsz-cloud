@@ -1,5 +1,4 @@
 package com.njydsz.common.exception.enums;
-
 import com.njydsz.common.core.code.ResultCode;
 
 /**
@@ -43,6 +42,7 @@ public interface ExceptionCode extends ResultCode {
      * 错误码字符串（由 key 派生）。
      *
      * <p>默认将 key 完整作为 code（业务枚举可以覆盖）。
+     * @return 处理结果
      */
     @Override
     default String getCode() {
@@ -52,6 +52,7 @@ public interface ExceptionCode extends ResultCode {
     /**
      * i18n 解析失败时的兜底文案。默认委托 {@link #getKey()}，
      * 业务可覆盖以提供中文兜底文案。
+     * @return 处理结果
      */
     @Override
     default String getMsg() {
@@ -80,6 +81,7 @@ public interface ExceptionCode extends ResultCode {
      *   <li>"sec." / "security." / "auth." 开头 — 安全类异常（SECURITY）</li>
      *   <li>其他 — 默认 BUSINESS</li>
      * </ul>
+     * @return 处理结果
      */
     default ExceptionCategory getCategory() {
         String key = getKey();

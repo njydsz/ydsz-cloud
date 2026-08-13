@@ -193,7 +193,7 @@ public class RedisReentrantLock extends AbstractRedisDistributedLock {
             return stringRedisTemplate.getExpire(lockKey, TimeUnit.MILLISECONDS);
         } catch (Exception e) {
             log.error("[ydsz-lock]获取剩余时间异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
-            return -2;
+            return REMAIN_TIME_ERROR;
         }
     }
 

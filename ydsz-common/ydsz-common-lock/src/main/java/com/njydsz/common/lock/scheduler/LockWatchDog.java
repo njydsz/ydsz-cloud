@@ -55,6 +55,9 @@ public class LockWatchDog {
      */
     private static final int MAX_RETRY_COUNT = 3;
 
+    /** 续期间隔除数（租约时间 / 3） */
+    private static final int RENEW_DIVISOR = 3;
+
     /**
      * 默认最大续期次数（约 30 分钟：100 次 * leaseTime/3 间隔，假设 leaseTime=30s 则 100*10s≈1000s）
      */
@@ -222,7 +225,7 @@ public class LockWatchDog {
                 return;
             }
 
-            long renewInterval = leaseTime / 3;
+            long renewInterval = leaseTime / RENEW_DIVISOR;
             if (renewInterval <= 0) {
                 renewInterval = Math.max(leaseTime / 2, 1000);
             }

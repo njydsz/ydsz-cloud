@@ -150,7 +150,8 @@ public class DefaultLockStrategy implements LockStrategy {
     @Override
     public RedisReadWriteLock getReadWriteLock(String key) {
         if (redisTemplate == null) {
-            throw new IllegalStateException("RedisTemplate is required for ReadWriteLock, please configure it in the constructor");
+            throw new IllegalStateException(
+                    "RedisTemplate is required for ReadWriteLock, please configure it in the constructor");
         }
         return new RedisReadWriteLock(redisStringOps, redisTemplate, key,
                 DEFAULT_EXPIRE_MILLIS, DEFAULT_WAIT_MILLIS, namespace, scheduler);
@@ -167,9 +168,11 @@ public class DefaultLockStrategy implements LockStrategy {
     @Override
     public RedisSemaphore getSemaphore(String key, int permits) {
         if (redisTemplate == null) {
-            throw new IllegalStateException("RedisTemplate is required for Semaphore, please configure it in the constructor");
+            throw new IllegalStateException(
+                    "RedisTemplate is required for Semaphore, please configure it in the constructor");
         }
-        return new RedisSemaphore(redisStringOps, redisTemplate, key, permits, DEFAULT_EXPIRE_MILLIS, scheduler, namespace);
+        return new RedisSemaphore(redisStringOps, redisTemplate, key, permits,
+                DEFAULT_EXPIRE_MILLIS, scheduler, namespace);
     }
 
     /**
@@ -183,9 +186,11 @@ public class DefaultLockStrategy implements LockStrategy {
      */
     public RedisReadWriteLock getReadWriteLock(String key, long expireMillis, long waitMillis) {
         if (redisTemplate == null) {
-            throw new IllegalStateException("RedisTemplate is required for ReadWriteLock, please configure it in the constructor");
+            throw new IllegalStateException(
+                    "RedisTemplate is required for ReadWriteLock, please configure it in the constructor");
         }
-        return new RedisReadWriteLock(redisStringOps, redisTemplate, key, expireMillis, waitMillis, namespace, scheduler);
+        return new RedisReadWriteLock(redisStringOps, redisTemplate, key, expireMillis,
+                waitMillis, namespace, scheduler);
     }
 
     /**

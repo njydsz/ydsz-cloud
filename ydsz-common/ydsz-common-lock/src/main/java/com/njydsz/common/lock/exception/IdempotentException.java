@@ -21,6 +21,9 @@ public class IdempotentException extends BusinessException {
 
     private static final long serialVersionUID = 1L;
 
+    /** HTTP 409 Conflict 状态码 */
+    private static final int HTTP_STATUS_CONFLICT = 409;
+
     /**
      * 默认错误码
      */
@@ -33,7 +36,7 @@ public class IdempotentException extends BusinessException {
      */
     public IdempotentException(String message) {
         super();
-        this.httpStatus = 409;
+        this.httpStatus = HTTP_STATUS_CONFLICT;
         this.level = ExceptionLevel.WARN;
         this.category = ExceptionCategory.BUSINESS;
         this.code = DEFAULT_CODE;
@@ -54,7 +57,7 @@ public class IdempotentException extends BusinessException {
      */
     public IdempotentException(String message, String idempotentKey) {
         super();
-        this.httpStatus = 409;
+        this.httpStatus = HTTP_STATUS_CONFLICT;
         this.level = ExceptionLevel.WARN;
         this.category = ExceptionCategory.BUSINESS;
         this.code = DEFAULT_CODE;

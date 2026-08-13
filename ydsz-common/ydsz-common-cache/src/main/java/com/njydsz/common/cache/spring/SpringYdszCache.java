@@ -1,6 +1,10 @@
 package com.njydsz.common.cache.spring;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.springframework.cache.Cache.ValueRetrievalException;
 import org.springframework.cache.Cache.ValueWrapper;
@@ -22,6 +26,10 @@ public class SpringYdszCache extends AbstractValueAdaptingCache {
 
   private final String name;
   private final Cache<Object, Object> delegate;
+
+  /** 单飞加载信号（防击穿）：key → 完成信号 Future，仅存储结果不承载额外状态 */
+  private final ConcurrentMap<Object, CompletableFuture<Object>> pendingLoads =
+      new ConcurrentHashMap<>();
 
   /**
    * 创建 Spring YdszCache 适配器。
@@ -70,32 +78,44 @@ public class SpringYdszCache extends AbstractValueAdaptingCache {
     if (storeValue != null) {
       return (T) fromStoreValue(storeValue);
     }
-    // 使用 computeIfAbsent 防止缓存击穿：同一 key 的并发请求只有一个执行 valueLoader
-    try {
-      Object newStoreValue = delegate.computeIfAbsent(
-          key,
-          k -> {
-            try {
-              T v = valueLoader.call();
-              if (v == null && !isAllowNullValues()) {
-                return null;
-              }
-              return toStoreValue(v);
-            } catch (Exception e) {
-              throw new RuntimeException(e);
-            }
-          });
-      if (newStoreValue == null) {
-        return null;
+
+    // 单飞防击穿：同一 key 的并发请求仅一个执行 valueLoader，其余等待结果
+    CompletableFuture<Object> ourFuture = new CompletableFuture<>();
+    CompletableFuture<Object> existing = pendingLoads.putIfAbsent(key, ourFuture);
+    if (existing == null) {
+      try {
+        Object result;
+        try {
+          T value = valueLoader.call();
+          if (value != null || isAllowNullValues()) {
+            result = toStoreValue(value);
+            delegate.put(key, result);
+          } else {
+            result = null;
+          }
+        } catch (Exception e) {
+          ourFuture.completeExceptionally(e);
+          throw new ValueRetrievalException(key, valueLoader, e);
+        }
+        ourFuture.complete(result);
+        return result == null ? null : (T) fromStoreValue(result);
+      } finally {
+        pendingLoads.remove(key, ourFuture);
       }
-      return (T) fromStoreValue(newStoreValue);
-    } catch (RuntimeException e) {
-      Throwable cause = e.getCause();
-      if (cause != null) {
-        throw new ValueRetrievalException(key, valueLoader, cause);
-      }
-      throw new ValueRetrievalException(key, valueLoader, e);
     }
+
+    // 等待加载线程完成
+    try {
+      existing.join();
+    } catch (CompletionException e) {
+      Throwable cause = e.getCause();
+      throw new ValueRetrievalException(key, valueLoader, cause != null ? cause : e);
+    }
+    Object awaited = lookup(key);
+    if (awaited != null) {
+      return (T) fromStoreValue(awaited);
+    }
+    return null;
   }
 
   @Override

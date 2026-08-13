@@ -1,6 +1,7 @@
 package com.njydsz.common.jdbc.interceptor;
 
 import java.sql.SQLException;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.ibatis.cache.CacheKey;
 import org.apache.ibatis.executor.Executor;
@@ -82,13 +83,14 @@ public class CircuitBreakerInterceptor implements Interceptor {
             throw new SQLException("Database circuit breaker is OPEN, request rejected");
         }
 
+        long startNanos = System.nanoTime();
         try {
             Object result = invocation.proceed();
-            circuitBreaker.onSuccess();
+            circuitBreaker.onSuccess(System.nanoTime() - startNanos, TimeUnit.NANOSECONDS);
             return result;
         } catch (Throwable t) {
             // onError 内部依据配置的 recordException 谓词判定是否计入失败（业务异常不计数）
-            circuitBreaker.onError(t);
+            circuitBreaker.onError(System.nanoTime() - startNanos, TimeUnit.NANOSECONDS, t);
             throw t;
         }
     }

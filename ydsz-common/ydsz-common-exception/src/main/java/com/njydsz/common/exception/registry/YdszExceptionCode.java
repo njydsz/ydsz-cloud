@@ -1,5 +1,4 @@
 package com.njydsz.common.exception.registry;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -29,6 +28,7 @@ public @interface YdszExceptionCode {
 
     /**
      * 模块名称（如 "userinfo"、"system"、"project"）
+     * @return 处理结果
      */
     String module();
 

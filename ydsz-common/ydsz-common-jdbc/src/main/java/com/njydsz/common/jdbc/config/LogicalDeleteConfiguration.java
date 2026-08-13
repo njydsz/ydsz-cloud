@@ -52,7 +52,7 @@ public class LogicalDeleteConfiguration {
      * 是否启用逻辑删除拦截
      * <p>默认为 false，需要手动设置为 true 以启用
      */
-    private boolean enable = false;
+    private boolean enabled = false;
 
     /**
      * 删除标记字段名

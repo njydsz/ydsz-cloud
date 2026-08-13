@@ -1,15 +1,12 @@
 package com.njydsz.common.exception.config;
-
 import java.util.Collections;
 import java.util.List;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.validation.annotation.Validated;
-
 import jakarta.validation.constraints.NotBlank;
-
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * 异常处理模块配置属性
@@ -73,6 +70,7 @@ public class ExceptionProperties {
 
     /**
      * 错误码文档端点安全配置
+     * @return 处理结果
      */
     private DocEndpointSecurity docEndpoint = new DocEndpointSecurity();
 
@@ -97,9 +95,13 @@ public class ExceptionProperties {
      * 响应格式枚举
      */
     public enum ResponseFormat {
-        /** BaseResponse 格式 */
+    /**
+     * BaseResponse 格式
+     */
         BASE_RESPONSE,
-        /** RFC 7807 ProblemDetail 格式 */
+    /**
+     * RFC 7807 ProblemDetail 格式
+     */
         PROBLEM_DETAIL
     }
 
@@ -112,6 +114,7 @@ public class ExceptionProperties {
         /**
          * 端点模块白名单（仅允许查看指定模块的错误码）
          * 空列表表示允许所有模块
+     * @return 处理结果
          */
         private List<String> filterModules = Collections.emptyList();
 

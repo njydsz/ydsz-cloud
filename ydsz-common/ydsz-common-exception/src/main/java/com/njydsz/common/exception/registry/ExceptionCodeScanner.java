@@ -1,5 +1,4 @@
 package com.njydsz.common.exception.registry;
-
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -10,6 +9,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.context.MessageSource;
 import org.springframework.core.io.Resource;
@@ -22,8 +22,6 @@ import org.springframework.core.type.filter.AnnotationTypeFilter;
 
 import com.njydsz.common.exception.code.ErrorCodeTable;
 import com.njydsz.common.exception.enums.ExceptionCode;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 错误码自动扫描注册器。
@@ -156,6 +154,7 @@ public class ExceptionCodeScanner implements SmartInitializingSingleton {
 
     /**
      * 按索引行内容加载并注册枚举类
+     * @param className 类全限定名
      */
     private void registerByIndex(String className) {
         try {
@@ -208,6 +207,7 @@ public class ExceptionCodeScanner implements SmartInitializingSingleton {
 
     /**
      * 获取或创建 {@link MetadataReaderFactory}
+     * @return 处理结果
      */
     private MetadataReaderFactory getOrCreateReaderFactory() {
         if (metadataReaderFactory == null) {
@@ -222,6 +222,7 @@ public class ExceptionCodeScanner implements SmartInitializingSingleton {
 
     /**
      * 注册枚举类到注册表
+     * @param clazz 目标类
      */
     private void registerClass(Class<?> clazz) {
         if (!clazz.isEnum() || !java.lang.reflect.Modifier.isPublic(clazz.getModifiers())
@@ -245,6 +246,9 @@ public class ExceptionCodeScanner implements SmartInitializingSingleton {
      *   <li>按模块维护 code 明细（moduleIndex），供运维端点与统计使用</li>
      *   <li>填充全局 code → ExceptionCode 反查索引（codeIndex），供运行时 resolve 使用</li>
      * </ul>
+     * @param module 模块名
+     * @param description 模块描述
+     * @param className 类全限定名
      */
     private void registerEnum(String module, String description, String className) {
         try {

@@ -3,8 +3,10 @@ package com.njydsz.common.cache.spring;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -12,6 +14,7 @@ import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.cache.CacheManager;
 
 import com.njydsz.common.cache.YdszCache;
@@ -29,6 +32,7 @@ import com.njydsz.common.cache.internal.loading.EnhancedLoadingCache;
  *
  * <ul>
  *   <li>实现 {@link DisposableBean}，在 Spring 容器关闭时自动清理资源
+ *   <li>实现 {@link InitializingBean}，启动期预创建 {@code cacheNames} 配置的缓存
  *   <li>关闭所有 {@link EnhancedLoadingCache} 实例和共享线程池
  * </ul>
  *
@@ -54,7 +58,7 @@ import com.njydsz.common.cache.internal.loading.EnhancedLoadingCache;
  * @since 1.0.0
  *
  */
-public class YdszCacheManager implements CacheManager, DisposableBean {
+public class YdszCacheManager implements CacheManager, DisposableBean, InitializingBean {
 
   private static final Logger log = LoggerFactory.getLogger(YdszCacheManager.class);
 
@@ -182,21 +186,37 @@ public class YdszCacheManager implements CacheManager, DisposableBean {
       return cache;
     }
 
-    if (this.cacheNames != null && !this.cacheNames.contains(name)) {
-      return null;
-    }
-
+    // cacheNames 仅作为启动期预创建列表，不作为白名单拦截（空列表不得导致缓存整体失效）
     Cache<Object, Object> delegate = buildCache(name);
     createdCaches.add(delegate);
-        SpringYdszCache newCache = new SpringYdszCache(name, delegate, this.allowNullValues);
+    SpringYdszCache newCache = new SpringYdszCache(name, delegate, this.allowNullValues);
 
     SpringYdszCache existing = this.cacheMap.putIfAbsent(name, newCache);
     return existing != null ? existing : newCache;
   }
 
   @Override
-    public Collection<String> getCacheNames() {
-    return Collections.unmodifiableSet(this.cacheMap.keySet());
+  public Collection<String> getCacheNames() {
+    Set<String> names = new HashSet<>(this.cacheMap.keySet());
+    if (this.cacheNames != null) {
+      names.addAll(this.cacheNames);
+    }
+    return Collections.unmodifiableSet(names);
+  }
+
+  /**
+   * Spring 容器初始化完成后预创建配置的缓存名称列表。
+   *
+   * <p>所有 setter 配置就绪后触发，确保预创建使用最终的全局与 per-cache 配置。
+   */
+  @Override
+  public void afterPropertiesSet() {
+    if (this.cacheNames == null || this.cacheNames.isEmpty()) {
+      return;
+    }
+    for (final String name : this.cacheNames) {
+      getCache(name);
+    }
   }
 
   /** 构建底层 YdszCache 实例（支持 per-cache 配置覆盖） */

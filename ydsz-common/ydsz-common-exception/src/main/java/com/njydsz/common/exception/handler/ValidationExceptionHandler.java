@@ -1,18 +1,10 @@
 package com.njydsz.common.exception.handler;
-
 import java.util.List;
 import java.util.stream.Collectors;
-
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.exception.code.CoreExceptionCode;
-import com.njydsz.common.exception.config.ExceptionProperties;
-import com.njydsz.common.exception.core.ExceptionInfo;
-import com.njydsz.common.exception.metrics.ExceptionMetrics;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -28,6 +20,12 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.config.ExceptionProperties;
+import com.njydsz.common.exception.core.ExceptionInfo;
+import com.njydsz.common.exception.metrics.ExceptionMetrics;
 
 /**
  * Validation 相关异常处理器
@@ -80,6 +78,8 @@ public class ValidationExceptionHandler extends BaseExceptionHandler {
 
     /**
      * 提取约束违反异常的错误消息
+     * @param e 异常对象
+     * @return 处理结果
      */
     private String extractConstraintViolationMessages(ConstraintViolationException e) {
         List<String> messages = e.getConstraintViolations().stream()
@@ -90,6 +90,8 @@ public class ValidationExceptionHandler extends BaseExceptionHandler {
 
     /**
      * 提取绑定结果中的错误消息
+     * @param bindingResult 绑定结果
+     * @return 处理结果
      */
     private String extractBindingResultMessages(BindingResult bindingResult) {
         return bindingResult.getAllErrors().stream()
@@ -99,6 +101,9 @@ public class ValidationExceptionHandler extends BaseExceptionHandler {
 
     /**
      * 处理参数校验异常（简单参数 @Validated）
+     * @param e 异常对象
+     * @param request HTTP 请求
+     * @return 处理结果
      */
     @ExceptionHandler(ConstraintViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -114,6 +119,9 @@ public class ValidationExceptionHandler extends BaseExceptionHandler {
 
     /**
      * 处理请求体参数校验异常（@Valid/@Validated）
+     * @param e 异常对象
+     * @param request HTTP 请求
+     * @return 处理结果
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -129,6 +137,9 @@ public class ValidationExceptionHandler extends BaseExceptionHandler {
 
     /**
      * 处理表单绑定异常
+     * @param e 异常对象
+     * @param request HTTP 请求
+     * @return 处理结果
      */
     @ExceptionHandler(BindException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -143,6 +154,10 @@ public class ValidationExceptionHandler extends BaseExceptionHandler {
 
     /**
      * 构建校验异常 ExceptionInfo
+     * @param message 异常消息
+     * @param path 请求路径
+     * @param traceId 追踪 ID
+     * @return 处理结果
      */
     private ExceptionInfo buildValidationInfo(String message, String path, String traceId) {
         ExceptionInfo info = new ExceptionInfo();

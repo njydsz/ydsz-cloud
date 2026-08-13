@@ -98,6 +98,17 @@ public class RedisRetryInterceptor implements MethodInterceptor {
             "execute"
     );
 
+    /**
+     * 精确匹配的读操作方法名白名单。
+     * <p>这些方法名可能以写前缀开头（如 set 相关的 get），但实际是读操作，优先放行。
+     */
+    private static final Set<String> READ_METHOD_NAMES = Set.of(
+            "get", "hasKey", "count", "size", "keys", "randomMember",
+            "scan", "getExpire", "getBit", "range", "members", "intersect",
+            "union", "difference", "score", "rank", "reverseRank", "position",
+            "distance", "pending", "read", "readGroup"
+    );
+
     private final int maxRetries;
     private final long initialBackoffMs;
     private final long maxBackoffMs;
@@ -197,27 +208,24 @@ public class RedisRetryInterceptor implements MethodInterceptor {
             return false;
         }
         // 精确匹配常见读操作（这些方法名包含在 WRITE_METHOD_PREFIXES 中，但实际是读操作）
-        if (methodName.equals("get") || methodName.equals("hasKey")
-                || methodName.equals("count") || methodName.equals("size")
-                || methodName.equals("keys") || methodName.equals("randomMember")
-                || methodName.equals("scan") || methodName.equals("getExpire")
-                || methodName.equals("getBit") || methodName.equals("range")
-                || methodName.equals("members") || methodName.equals("intersect")
-                || methodName.equals("union") || methodName.equals("difference")
-                || methodName.equals("score") || methodName.equals("rank")
-                || methodName.equals("reverseRank") || methodName.equals("position")
-                || methodName.equals("distance") || methodName.equals("pending")
-                || methodName.equals("read") || methodName.equals("readGroup")) {
+        if (READ_METHOD_NAMES.contains(methodName)) {
             return false;
         }
+        // 前缀/后缀匹配写操作，或精确匹配写操作方法名
+        return isWriteByPrefix(methodName) || WRITE_METHOD_EXACT.contains(methodName);
+    }
+
+    /**
+     * 通过方法名前缀/后缀匹配写操作。
+     *
+     * @param methodName 方法名
+     * @return true-匹配到写操作特征
+     */
+    private boolean isWriteByPrefix(String methodName) {
         for (String prefix : WRITE_METHOD_PREFIXES) {
             if (methodName.startsWith(prefix) || methodName.endsWith(prefix)) {
                 return true;
             }
-        }
-        // 精确匹配写操作方法名
-        if (WRITE_METHOD_EXACT.contains(methodName)) {
-            return true;
         }
         return false;
     }

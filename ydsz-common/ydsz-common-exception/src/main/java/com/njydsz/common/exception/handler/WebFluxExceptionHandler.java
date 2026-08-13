@@ -1,16 +1,5 @@
 package com.njydsz.common.exception.handler;
-
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.exception.code.CoreExceptionCode;
-import com.njydsz.common.exception.config.ExceptionProperties;
-import com.njydsz.common.exception.core.ExceptionInfo;
-import com.njydsz.common.exception.custom.AbstractYdszException;
-import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.exception.metrics.ExceptionMetrics;
-
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -24,6 +13,15 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ServerWebExchange;
+
+import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.config.ExceptionProperties;
+import com.njydsz.common.exception.core.ExceptionInfo;
+import com.njydsz.common.exception.custom.AbstractYdszException;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.exception.metrics.ExceptionMetrics;
 
 /**
  * Spring WebFlux 全局异常处理器
@@ -52,10 +50,14 @@ import org.springframework.web.server.ServerWebExchange;
 @ConditionalOnProperty(prefix = "ydsz.exception", name = "global-handler-enabled", havingValue = "true", matchIfMissing = true)
 public class WebFluxExceptionHandler extends BaseExceptionHandler {
 
-    /** 系统错误兜底文案（i18n key 解析失败时使用，避免向客户端泄露内部异常细节） */
+    /**
+     * 系统错误兜底文案（i18n key 解析失败时使用，避免向客户端泄露内部异常细节）
+     */
     private static final String DEFAULT_SYSTEM_ERROR_MESSAGE = "系统异常，请联系管理员";
 
-    /** 非法参数兜底文案（i18n key 解析失败时使用，避免泄露内部异常细节） */
+    /**
+     * 非法参数兜底文案（i18n key 解析失败时使用，避免泄露内部异常细节）
+     */
     private static final String DEFAULT_ILLEGAL_ARGUMENT_MESSAGE = "非法参数";
 
     private final MessageSource messageSource;
@@ -66,6 +68,7 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
      * @param messageSource    国际化消息源
      * @param exceptionMetrics  异常指标统计器（可选）
      * @param properties       异常模块配置属性（可选）
+     * @param environment Spring 环境对象
      */
     public WebFluxExceptionHandler(Environment environment,
                                    MessageSource messageSource,
@@ -86,6 +89,9 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
 
     /**
      * 处理业务异常（动态 HTTP 状态码）
+     * @param e 异常对象
+     * @param exchange WebFlux 请求上下文
+     * @return 处理结果
      */
     @ExceptionHandler(BusinessException.class)
     public Object handleBusinessException(BusinessException e, ServerWebExchange exchange) {
@@ -99,6 +105,9 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
 
     /**
      * 处理系统异常
+     * @param e 异常对象
+     * @param exchange WebFlux 请求上下文
+     * @return 处理结果
      */
     @ExceptionHandler(SysException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -112,6 +121,9 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
 
     /**
      * 处理其他 YDSZ 异常（兜底，捕获所有 AbstractYdszException 子类）
+     * @param e 异常对象
+     * @param exchange WebFlux 请求上下文
+     * @return 处理结果
      */
     @ExceptionHandler(AbstractYdszException.class)
     public Object handleAbstractYdszException(AbstractYdszException e, ServerWebExchange exchange) {
@@ -125,6 +137,9 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
 
     /**
      * 处理非法参数异常
+     * @param e 异常对象
+     * @param exchange WebFlux 请求上下文
+     * @return 处理结果
      */
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -156,6 +171,9 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
      *
      * <p>IllegalStateException 属于系统级异常（非业务异常），统一返回 SYSTEM_ERROR，
      * 避免暴露内部状态信息。
+     * @param e 异常对象
+     * @param exchange WebFlux 请求上下文
+     * @return 处理结果
      */
     @ExceptionHandler(IllegalStateException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -169,6 +187,9 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
 
     /**
      * 处理空指针异常
+     * @param e 异常对象
+     * @param exchange WebFlux 请求上下文
+     * @return 处理结果
      */
     @ExceptionHandler(NullPointerException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -182,6 +203,9 @@ public class WebFluxExceptionHandler extends BaseExceptionHandler {
 
     /**
      * 处理所有未捕获的异常
+     * @param e 异常对象
+     * @param exchange WebFlux 请求上下文
+     * @return 处理结果
      */
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

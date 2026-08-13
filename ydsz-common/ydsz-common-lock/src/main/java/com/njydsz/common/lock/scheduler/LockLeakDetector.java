@@ -35,6 +35,9 @@ import com.njydsz.common.lock.metrics.LockMetrics;
 @Slf4j
 public class LockLeakDetector {
 
+    /** 泄漏告警阈值（续期次数占最大限制的比例） */
+    private static final double WARNING_RATIO = 0.8;
+
     private final ObjectProvider<LockWatchDog> watchDogProvider;
     private final ObjectProvider<LockMetrics> lockMetricsProvider;
 
@@ -56,7 +59,7 @@ public class LockLeakDetector {
             return;
         }
         int maxRenewTimes = watchDog.getMaxRenewTimes();
-        int warningThreshold = (int) (maxRenewTimes * 0.8);
+        int warningThreshold = (int) (maxRenewTimes * WARNING_RATIO);
 
         Map<String, LockWatchDog.WatchTask> activeTasks = watchDog.getActiveTasksSnapshot();
         if (activeTasks == null || activeTasks.isEmpty()) {

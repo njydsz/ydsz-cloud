@@ -57,6 +57,11 @@ public class RedisSemaphore implements DistributedLocker {
     private static final long MAX_BACKOFF_MILLIS = 200;
 
     /**
+     * 剩余时间错误码（键不存在或获取失败）
+     */
+    private static final long REMAIN_TIME_ERROR = -2L;
+
+    /**
      * Redis String 操作组件
      */
     private final RedisStringOps redisStringOps;
@@ -461,7 +466,7 @@ public class RedisSemaphore implements DistributedLocker {
             return seconds > 0 ? TimeUnit.SECONDS.toMillis(seconds) : seconds;
         } catch (Exception e) {
             log.error("信号量获取剩余时间异常: {}", key, e);
-            return -2;
+            return REMAIN_TIME_ERROR;
         }
     }
 }

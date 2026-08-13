@@ -1,18 +1,16 @@
 package com.njydsz.common.exception.metrics;
-
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.njydsz.common.exception.custom.AbstractYdszException;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
-import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.Tags;
+import io.micrometer.core.instrument.Timer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.njydsz.common.exception.custom.AbstractYdszException;
 
 /**
  * 异常指标统计器
@@ -78,7 +76,11 @@ public class ExceptionMetrics {
 
     private final MeterRegistry meterRegistry;
 
-    /** 是否启用指标统计，使用 AtomicBoolean 保证多线程可见性和 CAS 操作安全 */
+    /**
+     * 是否启用指标统计，使用 AtomicBoolean 保证多线程可见性和 CAS 操作安全
+     * @param true true 参数说明
+     * @return 处理结果
+     */
     private final AtomicBoolean enabled = new AtomicBoolean(true);
 
     /**
@@ -195,6 +197,9 @@ public class ExceptionMetrics {
      *
      * <p>Micrometer 内置 Meter 缓存保证相同 tag 组合不会重复构建 Meter，
      * 此处无需额外缓存层。
+     * @param throwable 异常对象
+     * @param extraTags 额外标签（key, value 交替）
+     * @return 处理结果
      */
     private Tags buildTags(Throwable throwable, String... extraTags) {
         String exceptionType = throwable.getClass().getSimpleName();

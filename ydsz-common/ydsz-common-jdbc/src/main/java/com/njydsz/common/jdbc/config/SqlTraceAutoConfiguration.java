@@ -45,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @AutoConfiguration
 @ConditionalOnClass(MybatisPlusInterceptor.class)
-@ConditionalOnExpression("${ydsz.jdbc.enabled:true} and (${ydsz.jdbc.slow-sql.enabled:true} or ${ydsz.jdbc.sql-audit.enabled:true})")
+@ConditionalOnExpression("${ydsz.jdbc.enabled:true} and (${ydsz.jdbc.slow-sql.enabled:false} or ${ydsz.jdbc.sql-audit.enabled:false})")
 @EnableConfigurationProperties(JdbcProperties.class)
 public class SqlTraceAutoConfiguration {
 

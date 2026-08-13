@@ -65,6 +65,14 @@ public class ReadWriteSplittingMetrics {
      */
     private final ConcurrentMap<String, DistributionSummary> summaryCache = new ConcurrentHashMap<>();
 
+    /**
+     * Timer 缓存，避免每次执行都重新构建 {@code Timer.builder().register()}。
+     *
+     * <p>与 {@link #summaryCache} 同理，将 Timer 按 datasource + sql_type 维度缓存，
+     * 消除逐条 SQL 执行时的指标注册开销。
+     */
+    private final ConcurrentMap<String, Timer> timerCache = new ConcurrentHashMap<>();
+
     public ReadWriteSplittingMetrics(MeterRegistry meterRegistry) {
         this.meterRegistry = meterRegistry;
         log.debug("ReadWriteSplittingMetrics initialized");
@@ -127,14 +135,17 @@ public class ReadWriteSplittingMetrics {
      */
     public void recordSqlExecutionTime(String datasource, String sqlType, long duration) {
         try {
-            Timer.builder(PREFIX + ".sql.execution.time")
-                    .description("SQL 执行耗时（含网络往返）")
-                    .tags(Tags.of(
-                            "datasource", sanitizeTag(datasource),
-                            "sql_type", sanitizeTag(sqlType)))
-                    .publishPercentiles(0.5, 0.95, 0.99)
-                    .register(meterRegistry)
-                    .record(duration, TimeUnit.NANOSECONDS);
+            String cacheKey = "sql.execution.time:" + sanitizeTag(datasource) + ":" + sanitizeTag(sqlType);
+            Timer timer = timerCache.computeIfAbsent(cacheKey, k ->
+                    Timer.builder(PREFIX + ".sql.execution.time")
+                            .description("SQL 执行耗时（含网络往返）")
+                            .tags(Tags.of(
+                                    "datasource", sanitizeTag(datasource),
+                                    "sql_type", sanitizeTag(sqlType)))
+                            .publishPercentiles(0.5, 0.95, 0.99)
+                            .register(meterRegistry)
+            );
+            timer.record(duration, TimeUnit.NANOSECONDS);
         } catch (Exception e) {
             log.debug("Failed to record SQL execution time metric", e);
         }

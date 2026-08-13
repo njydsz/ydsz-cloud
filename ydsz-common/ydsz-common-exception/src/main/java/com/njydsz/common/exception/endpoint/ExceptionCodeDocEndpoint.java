@@ -1,5 +1,4 @@
 package com.njydsz.common.exception.endpoint;
-
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -8,6 +7,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import lombok.Getter;
+import lombok.ToString;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.context.MessageSource;
@@ -15,9 +16,6 @@ import org.springframework.context.MessageSource;
 import com.njydsz.common.exception.code.ErrorCodeTable;
 import com.njydsz.common.exception.config.ExceptionProperties;
 import com.njydsz.common.exception.enums.ExceptionCode;
-
-import lombok.Getter;
-import lombok.ToString;
 
 /**
  * Actuator 端点：暴露所有已注册的异常错误码文档
@@ -112,6 +110,7 @@ public class ExceptionCodeDocEndpoint {
 
     /**
      * 获取模块过滤配置集合
+     * @return 处理结果
      */
     private Set<String> getFilterModules() {
         if (properties == null || properties.getDocEndpoint() == null) {
@@ -150,9 +149,13 @@ public class ExceptionCodeDocEndpoint {
     @Getter
     @ToString
     public static class ExceptionCodeDocResponse {
-        /** 错误码总数 */
+    /**
+     * 错误码总数
+     */
         private final int totalCodes;
-        /** 错误码文档列表 */
+    /**
+     * 错误码文档列表
+     */
         private final List<ExceptionCodeDoc> codes;
 
         /**
@@ -160,6 +163,7 @@ public class ExceptionCodeDocEndpoint {
          *
          * @param totalCodes 错误码总数
          * @param codes      错误码文档列表
+     * @return 处理结果
          */
         public ExceptionCodeDocResponse(int totalCodes, List<ExceptionCodeDoc> codes) {
             this.totalCodes = totalCodes;
@@ -173,15 +177,25 @@ public class ExceptionCodeDocEndpoint {
     @Getter
     @ToString
     public static class ExceptionCodeDoc {
-        /** 业务错误码 */
+    /**
+     * 业务错误码
+     */
         private final String code;
-        /** 国际化消息键 */
+    /**
+     * 国际化消息键
+     */
         private final String key;
-        /** HTTP 状态码 */
+    /**
+     * HTTP 状态码
+     */
         private final int httpStatus;
-        /** 已解析的消息 */
+    /**
+     * 已解析的消息
+     */
         private final String message;
-        /** 来源类名 */
+    /**
+     * 来源类名
+     */
         private final String source;
 
         /**
@@ -192,6 +206,7 @@ public class ExceptionCodeDocEndpoint {
          * @param httpStatus HTTP 状态码
          * @param message    已解析的消息
          * @param source     来源类名
+     * @return 处理结果
          */
         public ExceptionCodeDoc(String code, String key, int httpStatus, String message, String source) {
             this.code = code;

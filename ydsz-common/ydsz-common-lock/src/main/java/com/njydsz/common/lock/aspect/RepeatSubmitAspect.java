@@ -57,14 +57,13 @@ public class RepeatSubmitAspect {
      * @param joinPoint    AOP 连接点
      * @param repeatSubmit 防重复提交注解
      * @return 目标方法返回值
-     * @throws Throwable 目标方法抛出的异常
      */
     @Around("@annotation(repeatSubmit)")
-    public Object around(ProceedingJoinPoint joinPoint, RepeatSubmit repeatSubmit) throws Throwable {
+    public Object around(ProceedingJoinPoint joinPoint, RepeatSubmit repeatSubmit) {
         HttpServletRequest request = getCurrentRequest();
         if (request == null) {
             log.warn("[ydsz-lock] [repeat-submit] 非 Web 环境，跳过多提交校验");
-            return joinPoint.proceed();
+            return proceed(joinPoint);
         }
 
         String headerName = repeatSubmit.headerName();
@@ -101,10 +100,44 @@ public class RepeatSubmitAspect {
 
         try {
             return joinPoint.proceed();
+        } catch (RuntimeException | Error e) {
+            log.debug("[ydsz-lock] [repeat-submit] 业务方法执行异常 | cause={}", e.getMessage());
+            throw e;
         } catch (Throwable ex) {
-            log.debug("[ydsz-lock] [repeat-submit] 业务方法执行异常 | cause={}", ex.getMessage());
-            throw ex;
+            log.debug("[ydsz-lock] [repeat-submit] 检查型异常包装后抛出 | cause={}", ex.getMessage());
+            throw wrapCheckedException(ex);
         }
+    }
+
+    /**
+     * 执行目标方法并传播异常
+     *
+     * <p>切面不声明 {@code throws Throwable}（遵循编码规范），
+     * 运行时异常与 Error 原样传播，检查型异常包装为业务异常。</p>
+     *
+     * @param joinPoint 连接点
+     * @return 目标方法返回值
+     */
+    private Object proceed(ProceedingJoinPoint joinPoint) {
+        try {
+            return joinPoint.proceed();
+        } catch (RuntimeException | Error e) {
+            throw e;
+        } catch (Throwable t) {
+            throw wrapCheckedException(t);
+        }
+    }
+
+    /**
+     * 将检查型异常包装为业务异常
+     *
+     * @param cause 原始异常
+     * @return 包装后的业务异常
+     */
+    private BusinessException wrapCheckedException(Throwable cause) {
+        BusinessException wrapped = new BusinessException(CoreExceptionCode.FAIL, cause);
+        wrapped.setMessage("接口执行异常: " + cause.getMessage());
+        return wrapped;
     }
 
     /**

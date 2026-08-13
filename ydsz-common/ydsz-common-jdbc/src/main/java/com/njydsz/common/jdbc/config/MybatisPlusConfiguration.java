@@ -24,7 +24,6 @@ import com.njydsz.common.jdbc.datasource.DynamicRoutingDataSource;
 import com.njydsz.common.jdbc.handler.CreatedAtHandler;
 import com.njydsz.common.jdbc.handler.CreatedByHandler;
 import com.njydsz.common.jdbc.handler.FieldFillHandler;
-import com.njydsz.common.jdbc.handler.MyMetaObjectHandler;
 import com.njydsz.common.jdbc.handler.UpdatedAtHandler;
 import com.njydsz.common.jdbc.handler.UpdatedByHandler;
 import com.njydsz.common.jdbc.interceptor.ColPermissionInnerInterceptor;
@@ -144,7 +143,7 @@ public class MybatisPlusConfiguration {
         log.debug("MyBatis Plus: OptimisticLockerInnerInterceptor (built-in) enabled for @Version entities");
 
         // 2. 逻辑删除拦截器（自定义实现）
-        if (Boolean.TRUE.equals(logicalDeleteConfiguration.isEnable())) {
+        if (Boolean.TRUE.equals(logicalDeleteConfiguration.isEnabled())) {
             LogicalDeleteInterceptor logicalDeleteInterceptor = new LogicalDeleteInterceptor();
             logicalDeleteInterceptor.setDeletedColumn(logicalDeleteConfiguration.getDeletedColumn());
             logicalDeleteInterceptor.setDeletedValue(logicalDeleteConfiguration.getDeletedValue());
@@ -220,17 +219,6 @@ public class MybatisPlusConfiguration {
     }
 
     /**
-     * 注册 MyBatis-Plus MetaObjectHandler，自动填充审计字段
-     *
-     * @return MyMetaObjectHandler 实例
-     */
-    @Bean
-    @ConditionalOnMissingBean(MyMetaObjectHandler.class)
-    public MyMetaObjectHandler myMetaObjectHandler() {
-        return new MyMetaObjectHandler();
-    }
-
-    /**
      * 配置字段填充拦截器
      */
     private void configureFieldFillInterceptors(MybatisPlusInterceptor interceptor) {
@@ -302,7 +290,7 @@ public class MybatisPlusConfiguration {
         features.add(new FeatureLine("Optimistic Lock", true, "Built-in @Version"));
 
         // 2. 逻辑删除
-        boolean logicalDelete = Boolean.TRUE.equals(logicalDeleteConfiguration.isEnable());
+        boolean logicalDelete = Boolean.TRUE.equals(logicalDeleteConfiguration.isEnabled());
         features.add(new FeatureLine("Logical Delete", logicalDelete, null));
 
         // 3. 字段填充

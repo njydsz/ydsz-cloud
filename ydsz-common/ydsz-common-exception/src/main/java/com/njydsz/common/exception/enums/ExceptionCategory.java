@@ -27,36 +27,65 @@ public enum ExceptionCategory {
     /**
      * 业务异常 (A)
      * <p>业务逻辑校验失败、业务流程中断等
+     * @param "A" "A" 参数说明
+     * @param SYSTEM("B" SYSTEM("B" 参数说明
+     * @param SECURITY("C" SECURITY("C" 参数说明
+     * @param RATE_LIMIT("D" RATE_LIMIT("D" 参数说明
+     * @param EXTERNAL("E" EXTERNAL("E" 参数说明
+     * @param "外部服务异常" "外部服务异常" 参数说明
+     * @return 处理结果
      */
     BUSINESS("A", "业务异常"),
 
     /**
      * 系统异常 (B)
      * <p>系统内部错误、空指针、数据库错误等
+     * @param "B" "B" 参数说明
+     * @param SECURITY("C" SECURITY("C" 参数说明
+     * @param RATE_LIMIT("D" RATE_LIMIT("D" 参数说明
+     * @param EXTERNAL("E" EXTERNAL("E" 参数说明
+     * @param "外部服务异常" "外部服务异常" 参数说明
+     * @return 处理结果
      */
     SYSTEM("B", "系统异常"),
 
     /**
      * 安全/权限异常 (C)
      * <p>认证失败、授权不足、访问被拒绝等
+     * @param "C" "C" 参数说明
+     * @param RATE_LIMIT("D" RATE_LIMIT("D" 参数说明
+     * @param EXTERNAL("E" EXTERNAL("E" 参数说明
+     * @param "外部服务异常" "外部服务异常" 参数说明
+     * @return 处理结果
      */
     SECURITY("C", "安全异常"),
 
     /**
      * 限流/熔断/降级异常 (D)
      * <p>请求被限流、触发熔断、服务降级、热点参数限流等
+     * @param "D" "D" 参数说明
+     * @param EXTERNAL("E" EXTERNAL("E" 参数说明
+     * @param "外部服务异常" "外部服务异常" 参数说明
+     * @return 处理结果
      */
     RATE_LIMIT("D", "限流熔断异常"),
 
     /**
      * 外部/三方服务异常 (E)
      * <p>调用外部服务（支付、短信、邮件、API网关等）失败
+     * @param "E" "E" 参数说明
+     * @param "外部服务异常" "外部服务异常" 参数说明
+     * @return 处理结果
      */
     EXTERNAL("E", "外部服务异常");
 
-    /** 分类编码 */
+    /**
+     * 分类编码
+     */
     private final String code;
-    /** 分类描述 */
+    /**
+     * 分类描述
+     */
     private final String description;
 
     /**
@@ -64,6 +93,7 @@ public enum ExceptionCategory {
      *
      * @param code        分类编码
      * @param description 分类描述
+     * @return 处理结果
      */
     ExceptionCategory(String code, String description) {
         this.code = code;

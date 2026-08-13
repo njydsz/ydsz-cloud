@@ -22,72 +22,85 @@ import com.njydsz.common.cache.listener.RemovalCause;
 import com.njydsz.common.cache.stats.CacheStats;
 
 /**
- * 分段锁高性能缓存（O(1) LRU 优化版）
+ * 分段锁高性能缓存（采样 LRU 淘汰版）。
  *
- * <p>核心优化：
+ * <p>核心设计（并发安全修正）：
  *
  * <ol>
- *   <li>读操作无锁命中：直接使用 ConcurrentHashMap.get()
- *   <li>O(1) LRU 淘汰：每个分段内维护双向链表，淘汰时从链表头部 O(1) 移除最旧条目
- *   <li>批量淘汰：每次淘汰多个节点，减少锁竞争频次
- *   <li>惰性访问更新：读路径仅更新 timestamp，不触发链表重排；链表重排仅在批量淘汰时批量处理
+ *   <li>读路径无锁：命中仅更新 {@code lastAccessNanos}（volatile 写），不触碰链表
+ *   <li>链表独占：所有链表修改（addToTail / removeFromList / moveToTail / 淘汰采样）均在
+ *       {@code evictLock} 内完成，消除原实现 get/put/remove 无锁改链表的竞争
+ *   <li>采样 LRU 淘汰：淘汰时从链表头部向后采样 {@link #EVICT_SAMPLE_SIZE} 个候选，
+ *       选择最近访问时间最早的条目淘汰，正确性优先、读路径零锁
+ *   <li>权威容量：{@code maximumSize} 为全局总容量硬上限，段内达到阈值或全局超限均触发淘汰，
+ *       运行时缩容（{@code policy().eviction().setMaximum}）立即同步收缩
  * </ol>
- *
- * <p>LRU 数据结构：每个 Segment 维护一个双向链表（head <-> node1 <-> node2 <-> ... <-> tail），
- * 最近访问的节点靠近尾部，最久未访问的靠近头部。淘汰时从头部批量移除，时间复杂度 O(k)（k 为淘汰数量）。
  *
  * @param <K> 键类型
  * @param <V> 值类型
  * @author ydsz-team
  * @since 1.0.0
- *
  */
 public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
 
   private static final Logger log = LoggerFactory.getLogger(StripedConcurrentCache.class);
 
+  /** 默认分段数 */
   private static final int DEFAULT_STRIPES = 32;
-  private static final float LOAD_FACTOR = 0.75f;
+
+  /** 单次淘汰的最大条目数 */
   private static final int EVICT_BATCH_SIZE = 16;
+
+  /** 淘汰候选采样数量 */
+  private static final int EVICT_SAMPLE_SIZE = 8;
 
   private final List<Segment<K, V>> segments;
   private final int mask;
 
-  /** 最大容量（volatile，支持运行时动态调整） */
+  /** 全局权威总容量（volatile，支持运行时动态调整） */
   private volatile int maxSize;
 
+  /** 全局条目计数 */
   private final AtomicLong totalSize = new AtomicLong(0);
 
+  /**
+   * 创建分段缓存。
+   *
+   * @param maxCapacity 最大容量
+   */
   public StripedConcurrentCache(int maxCapacity) {
     this(maxCapacity, DEFAULT_STRIPES);
   }
 
+  /**
+   * 创建分段缓存。
+   *
+   * @param maxCapacity 最大容量
+   * @param stripes 分段数（向上取 2 的幂）
+   */
   public StripedConcurrentCache(int maxCapacity, int stripes) {
     int actualStripes = Integer.highestOneBit(Math.max(2, stripes) - 1) << 1;
     this.mask = actualStripes - 1;
-    this.maxSize = maxCapacity;
+    this.maxSize = Math.max(1, maxCapacity);
 
     List<Segment<K, V>> segs = new ArrayList<>(actualStripes);
     this.segments = segs;
 
-    int perSegmentCapacity = (int) ((maxCapacity / (float) actualStripes) / LOAD_FACTOR);
-    perSegmentCapacity = Math.max(16, perSegmentCapacity);
+    int perSegmentCapacity = Math.max(1, this.maxSize / actualStripes);
 
     for (int i = 0; i < actualStripes; i++) {
       segs.add(new Segment<>(perSegmentCapacity, this));
     }
 
     log.info(
-        "分段锁高性能缓存已创建，maxCapacity={}, stripes={}, perSegmentCapacity={}",
-        maxCapacity,
+        "分段锁缓存已创建，maxSize={}, stripes={}, perSegmentCapacity={}",
+        this.maxSize,
         actualStripes,
         perSegmentCapacity);
   }
 
   /**
-   * 获取缓存值（不触发加载）。
-   *
-   * <p>读路径无锁，按 key 哈希路由到对应分段读取；命中时更新 LRU 链表位置，计数统计。
+   * 获取缓存值（不触发加载），命中时无锁更新访问时间戳。
    *
    * @param key 缓存键
    * @return 缓存值；未命中时返回 {@code null}
@@ -108,11 +121,9 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
   }
 
   /**
-   * 写入键值对。
+   * 写入键值对；新增条目后按段内阈值或全局容量上限触发采样 LRU 淘汰。
    *
-   * <p>首次写入使分段尺寸达到淘汰阈值时，在分段锁内通过 LRU 链表 O(1) 批量淘汰旧条目。
-   *
-   * @param key   缓存键
+   * @param key 缓存键
    * @param value 缓存值
    */
   @Override
@@ -141,12 +152,10 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
 
   /**
    * 清空全部分段。
-   *
-   * <p>逐段清空，每段会向监听器发送 {@link RemovalCause#EXPLICIT} 通知并重置段内尺寸计数。
    */
   @Override
   public void clear() {
-    for (Segment<K, V> segment : segments) {
+    for (final Segment<K, V> segment : segments) {
       segment.clear();
     }
   }
@@ -177,32 +186,28 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
   }
 
   /**
-   * 返回缓存键集合。
-   *
-   * <p>聚合全部分段的键到新 {@link HashSet}，为一次性快照。
+   * 返回缓存键集合（一次性快照）。
    *
    * @return 当前缓存所有键的快照集合
    */
   @Override
   public Set<K> keySet() {
     Set<K> keys = new HashSet<>();
-    for (Segment<K, V> segment : segments) {
+    for (final Segment<K, V> segment : segments) {
       keys.addAll(segment.keySet());
     }
     return keys;
   }
 
   /**
-   * 返回缓存值集合。
-   *
-   * <p>聚合全部分段的值到新 {@link ArrayList}，为一次性快照。
+   * 返回缓存值集合（一次性快照）。
    *
    * @return 当前缓存所有值的快照集合
    */
   @Override
   public Collection<V> values() {
     List<V> values = new ArrayList<>();
-    for (Segment<K, V> segment : segments) {
+    for (final Segment<K, V> segment : segments) {
       values.addAll(segment.values());
     }
     return values;
@@ -222,7 +227,7 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
   /**
    * 获取缓存统计快照。
    *
-   * @return 包含命中数、未命中数的统计对象
+   * @return 包含命中数与未命中数的统计对象
    */
   @Override
   public CacheStats getStats() {
@@ -230,15 +235,7 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
   }
 
   /**
-   * 获取缓存策略查询接口 — 支持运行时调整最大容量。
-   *
-   * <p>使用示例：
-   *
-   * <pre>{@code
-   * cache.policy().eviction().ifPresent(eviction -> {
-   *     eviction.setMaximum(2000); // 动态扩容
-   * });
-   * }</pre>
+   * 获取缓存策略查询接口 — 支持运行时调整最大容量（缩容立即生效）。
    *
    * @return 缓存策略
    */
@@ -247,36 +244,36 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
     return new CachePolicy() {
       @Override
       public Optional<EvictionPolicy> eviction() {
-        return Optional.of(new EvictionPolicy() {
-          @Override
-          public OptionalLong getMaximum() {
-            return OptionalLong.of(maxSize);
-          }
+        return Optional.of(
+            new EvictionPolicy() {
+              @Override
+              public OptionalLong getMaximum() {
+                return OptionalLong.of(maxSize);
+              }
 
-          @Override
-          public void setMaximum(long maximumSize) {
-            if (maximumSize < 1) {
-              throw new IllegalArgumentException("maximumSize must be >= 1");
-            }
-            int oldMaxSize = maxSize;
-            maxSize = (int) maximumSize;
-            log.info("StripedConcurrentCache 最大容量调整: {} -> {}", oldMaxSize, maximumSize);
-            // 如果新容量小于当前总大小，触发异步淘汰
-            if (maximumSize < totalSize.get()) {
-              triggerAsyncEviction();
-            }
-          }
+              @Override
+              public void setMaximum(long maximumSize) {
+                if (maximumSize < 1) {
+                  throw new IllegalArgumentException("maximumSize must be >= 1");
+                }
+                int oldMaxSize = maxSize;
+                maxSize = (int) maximumSize;
+                log.info("StripedConcurrentCache 最大容量调整: {} -> {}", oldMaxSize, maxSize);
+                if (maxSize < totalSize.get()) {
+                  shrinkToCapacity();
+                }
+              }
 
-          @Override
-          public OptionalLong weightedSize() {
-            return OptionalLong.empty();
-          }
+              @Override
+              public OptionalLong weightedSize() {
+                return OptionalLong.empty();
+              }
 
-          @Override
-          public boolean isWeighted() {
-            return false;
-          }
-        });
+              @Override
+              public boolean isWeighted() {
+                return false;
+              }
+            });
       }
 
       @Override
@@ -287,12 +284,12 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
   }
 
   /**
-   * 触发异步淘汰（当容量被缩小时）
+   * 全局缩容：逐段在锁内淘汰至总量不超过当前容量。
    */
-  private void triggerAsyncEviction() {
-    // 简单实现：在每个分段的下次写入时自然触发淘汰
-    // 更积极的方案：立即扫描并淘汰多余条目
-    log.info("StripedConcurrentCache 容量缩小，将在后续写入时自动淘汰多余条目");
+  private void shrinkToCapacity() {
+    for (final Segment<K, V> segment : segments) {
+      segment.shrinkToGlobalCapacity();
+    }
   }
 
   private int getSegmentIndex(K key) {
@@ -320,32 +317,15 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
     return maxSize;
   }
 
-  /**
-   * 将分段内的淘汰/显式删除事件向上透传。
-   *
-   * @param key 被移除的键
-   * @param value 被移除的值
-   * @param cause 移除原因
-   */
+  /** 将分段内的淘汰/显式删除事件向上透传。 */
   protected void notifyRemoval(K key, V value, RemovalCause cause) {
     super.notifyRemoval(key, value, cause);
   }
 
   /**
-   * 分段内部实现：每个分段持有独立的 {@link ConcurrentHashMap} 与 O(1) LRU 双向链表。
+   * 分段内部实现：独立数据表 + 锁保护的采样 LRU 链表。
    *
-   * <p>数据结构：
-   * <ul>
-   *   <li>数据容器：ConcurrentHashMap&lt;K, Node&lt;K,V&gt;&gt; —— O(1) 读写</li>
-   *   <li>LRU 链表：head(哨兵) <-> ... 节点 ... <-> tail(哨兵) —— 双向链表维护访问顺序</li>
-   * </ul>
-   *
-   * <p>淘汰机制：
-   * <ul>
-   *   <li>容量阈值 evictThreshold = 分段容量 * 0.9</li>
-   *   <li>达到阈值时，锁内从链表头部（最旧）批量移除 EVICT_BATCH_SIZE 个节点</li>
-   *   <li>每次淘汰操作时间复杂度 O(k), k = EVICT_BATCH_SIZE</li>
-   * </ul>
+   * <p>链表仅由 {@code evictLock} 保护；读路径只更新节点 {@code lastAccessNanos}。
    *
    * @param <K> 键类型
    * @param <V> 值类型
@@ -357,21 +337,16 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
     private final StripedConcurrentCache<K, V> parent;
     private final int evictThreshold;
 
-    /** LRU 双向链表哨兵头节点（最旧的下一个） */
     private final Node<K, V> head;
-
-    /** LRU 双向链表哨兵尾节点（最新的前一个） */
     private final Node<K, V> tail;
 
     private final AtomicInteger size = new AtomicInteger(0);
 
     Segment(int capacity, StripedConcurrentCache<K, V> parent) {
-      this.evictThreshold = Math.max(1, (int) (capacity * 0.9f));
+      this.evictThreshold = Math.max(1, capacity);
       this.parent = parent;
-      this.map = new ConcurrentHashMap<>(capacity);
+      this.map = new ConcurrentHashMap<>(Math.max(4, capacity));
       this.evictLock = new ReentrantLock(false);
-
-      // 初始化哨兵节点
       this.head = new Node<>(null, null);
       this.tail = new Node<>(null, null);
       head.next = tail;
@@ -381,9 +356,7 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
     V get(K key) {
       Node<K, V> node = map.get(key);
       if (node != null) {
-        // 更新访问时间并移动到链表尾部（标记为最近使用）
         node.lastAccessNanos = System.nanoTime();
-        moveToTail(node);
         return node.value;
       }
       return null;
@@ -393,26 +366,25 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
       Node<K, V> newNode = new Node<>(key, value);
       Node<K, V> existing = map.putIfAbsent(key, newNode);
       if (existing == null) {
-        // 新节点：添加到链表尾部
         size.incrementAndGet();
         parent.incrementSize();
-        addToTail(newNode);
-        if (size.get() >= evictThreshold) {
-          evictLock.lock();
-          try {
-            if (size.get() >= evictThreshold) {
-              evict(EVICT_BATCH_SIZE);
-            }
-          } finally {
-            evictLock.unlock();
-          }
+        evictLock.lock();
+        try {
+          addToTail(newNode);
+        } finally {
+          evictLock.unlock();
         }
+        maybeEvict();
         return;
       }
-      // 已存在：更新值并移动到链表尾部
       existing.value = value;
       existing.lastAccessNanos = System.nanoTime();
-      moveToTail(existing);
+      evictLock.lock();
+      try {
+        moveToTail(existing);
+      } finally {
+        evictLock.unlock();
+      }
     }
 
     V remove(K key) {
@@ -420,8 +392,12 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
       if (node != null) {
         size.decrementAndGet();
         parent.decrementSize();
-        // 从链表移除
-        removeFromList(node);
+        evictLock.lock();
+        try {
+          removeFromList(node);
+        } finally {
+          evictLock.unlock();
+        }
         return node.value;
       }
       return null;
@@ -430,7 +406,7 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
     void clear() {
       evictLock.lock();
       try {
-        for (Map.Entry<K, Node<K, V>> entry : map.entrySet()) {
+        for (final Map.Entry<K, Node<K, V>> entry : map.entrySet()) {
           parent.notifyRemoval(entry.getKey(), entry.getValue().value, RemovalCause.EXPLICIT);
         }
         int removed = size.get();
@@ -439,7 +415,6 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
         if (removed > 0) {
           parent.decrementSize(removed);
         }
-        // 重置链表
         head.next = tail;
         tail.prev = head;
       } finally {
@@ -457,15 +432,83 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
 
     Collection<V> values() {
       List<V> result = new ArrayList<>();
-      for (Node<K, V> node : map.values()) {
+      for (final Node<K, V> node : map.values()) {
         result.add(node.value);
       }
       return result;
     }
 
-    // ====== LRU 双向链表操作（必须在 evictLock 写锁保护或单线程内调用） ======
+    /**
+     * 按段内阈值或全局容量上限触发淘汰（锁内执行）。
+     */
+    private void maybeEvict() {
+      if (size.get() < evictThreshold && parent.totalSize.get() < parent.maxSize) {
+        return;
+      }
+      evictLock.lock();
+      try {
+        int evicted = 0;
+        while (evicted < EVICT_BATCH_SIZE && size.get() > 0 && shouldEvict()) {
+          if (evictOne()) {
+            evicted++;
+          }
+        }
+      } finally {
+        evictLock.unlock();
+      }
+    }
 
-    /** 将节点添加到链表尾部（最近使用） */
+    private boolean shouldEvict() {
+      return size.get() >= evictThreshold || parent.totalSize.get() >= parent.maxSize;
+    }
+
+    /**
+     * 采样 LRU 淘汰：从链表头部向后采样候选，淘汰最近访问时间最早的条目。
+     *
+     * @return 是否淘汰成功
+     */
+    private boolean evictOne() {
+      Node<K, V> victim = null;
+      long oldest = Long.MAX_VALUE;
+      int sampled = 0;
+      Node<K, V> current = head.next;
+      while (current != tail && sampled < EVICT_SAMPLE_SIZE) {
+        if (current.lastAccessNanos < oldest) {
+          oldest = current.lastAccessNanos;
+          victim = current;
+        }
+        sampled++;
+        current = current.next;
+      }
+      if (victim == null || victim.key == null) {
+        return false;
+      }
+      if (map.remove(victim.key, victim)) {
+        removeFromList(victim);
+        size.decrementAndGet();
+        parent.decrementSize();
+        parent.notifyRemoval(victim.key, victim.value, RemovalCause.SIZE);
+        return true;
+      }
+      return false;
+    }
+
+    /**
+     * 全局缩容：锁内持续淘汰直至总量不超过全局容量。
+     */
+    void shrinkToGlobalCapacity() {
+      evictLock.lock();
+      try {
+        while (parent.totalSize.get() > parent.maxSize && size.get() > 0) {
+          if (!evictOne()) {
+            break;
+          }
+        }
+      } finally {
+        evictLock.unlock();
+      }
+    }
+
     private void addToTail(Node<K, V> node) {
       node.prev = tail.prev;
       node.next = tail;
@@ -473,7 +516,6 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
       tail.prev = node;
     }
 
-    /** 从链表中移除指定节点 */
     private void removeFromList(Node<K, V> node) {
       if (node.prev != null) {
         node.prev.next = node.next;
@@ -485,46 +527,19 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
       node.next = null;
     }
 
-    /** 将已有节点移动到链表尾部（标记为最近使用） */
     private void moveToTail(Node<K, V> node) {
-      // 快速检查：如果已经在尾部前一位，无需移动
       if (tail.prev == node) {
         return;
       }
       removeFromList(node);
       addToTail(node);
     }
-
-    /**
-     * O(1) LRU 淘汰：从链表头部批量移除最旧的节点。
-     *
-     * <p>时间复杂度 O(k)，k = min(batchSize, 当前条目数)。
-     * 与 sort-based 方案（O(n log n)）相比，在大容量、高并发场景下性能提升显著。
-     */
-    private void evict(int batchSize) {
-      int evictCount = 0;
-      Node<K, V> current = head.next;
-      while (current != tail && evictCount < batchSize) {
-        Node<K, V> next = current.next;
-        K key = current.key;
-        // 使用 CAS remove 避免并发删除冲突
-        if (map.remove(key, current)) {
-          removeFromList(current);
-          size.decrementAndGet();
-          parent.decrementSize();
-          parent.notifyRemoval(key, current.value, RemovalCause.SIZE);
-          evictCount++;
-        }
-        current = next;
-      }
-    }
   }
 
   /**
-   * 缓存节点：持有缓存值、最近访问时间戳和 LRU 双向链表指针。
+   * 缓存节点：持有缓存值与最近访问时间戳（volatile）。
    *
-   * <p>LRU 链表由 head/tail 哨兵节点 + 各节点的 prev/next 指针组成双向链表。
-   * 最近访问的节点靠近 tail，最久未访问的靠近 head。
+   * <p>链表指针仅在 {@code evictLock} 保护下修改。
    *
    * @param <K> 键类型
    * @param <V> 值类型
@@ -534,7 +549,6 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
     volatile V value;
     volatile long lastAccessNanos;
 
-    // LRU 双向链表指针
     Node<K, V> prev;
     Node<K, V> next;
 

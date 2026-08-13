@@ -1,5 +1,4 @@
 package com.njydsz.common.exception.config;
-
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -49,6 +48,10 @@ public class YdszExceptionActuatorAutoConfiguration {
      *
      * <p>暴露 {@code /actuator/exception-codes} 端点，输出全量异常码与文档说明，
      * 便于前端/测试同学检索错误码、运维同学做异常字典管理。
+     * @param messageSource 国际化消息源
+     * @param properties 异常模块配置属性
+     * @param errorCodeTable errorCodeTable 参数说明
+     * @return 处理结果
      */
     @Bean
     @ConditionalOnMissingBean(ExceptionCodeDocEndpoint.class)
@@ -65,6 +68,10 @@ public class YdszExceptionActuatorAutoConfiguration {
      * 创建异常模块健康指示器 Bean
      *
      * <p>向 Actuator 暴露异常体系的运行状态（异常计数、错误码注册数量等）。
+     * @param properties 异常模块配置属性
+     * @param metricsProvider metricsProvider 参数说明
+     * @param errorCodeTableProvider errorCodeTableProvider 参数说明
+     * @return 处理结果
      */
     @Bean
     @ConditionalOnClass(name = ACTUATOR_HEALTH_CLASS)

@@ -1,7 +1,7 @@
 package com.njydsz.common.exception.custom;
-
 import java.util.Map;
 
+import lombok.ToString;
 import org.springframework.http.HttpStatus;
 
 import com.njydsz.common.core.code.BaseResultCode;
@@ -11,8 +11,6 @@ import com.njydsz.common.exception.core.ExceptionInfo;
 import com.njydsz.common.exception.enums.ExceptionCategory;
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.enums.ExceptionLevel;
-
-import lombok.ToString;
 
 /**
  * 系统异常类
@@ -49,13 +47,23 @@ public class SysException extends AbstractYdszException {
 
     private static final long serialVersionUID = 1L;
 
-    /** 默认 HTTP 状态码 */
+    /**
+     * 默认 HTTP 状态码
+     * @return 处理结果
+     */
     private static final int DEFAULT_HTTP_STATUS = HttpStatus.INTERNAL_SERVER_ERROR.value();
-    /** 默认异常级别 */
+    /**
+     * 默认异常级别
+     */
     private static final ExceptionLevel DEFAULT_LEVEL = ExceptionLevel.ERROR;
-    /** 默认异常分类 */
+    /**
+     * 默认异常分类
+     */
     private static final ExceptionCategory DEFAULT_CATEGORY = ExceptionCategory.SYSTEM;
-    /** 默认错误码 */
+    /**
+     * 默认错误码
+     * @return 处理结果
+     */
     private static final String DEFAULT_CODE = CoreExceptionCode.INTERNAL_ERROR.getCode();
 
     // ==================== 核心构造函数（仅限 3 个） ====================
@@ -191,6 +199,8 @@ public class SysException extends AbstractYdszException {
 
         /**
          * 便捷方法：设置 {@link ExceptionCode} 作为错误码（推荐）。
+     * @param exceptionCode 异常码枚举
+     * @return 处理结果
          */
         public SysExceptionBuilder resultCode(ExceptionCode exceptionCode) {
             if (exceptionCode != null) {
@@ -206,6 +216,8 @@ public class SysException extends AbstractYdszException {
          *
          * <p>ResultCode 不包含 HTTP 状态码，使用 {@link #DEFAULT_HTTP_STATUS} 作为默认。
          * 如需精确 HTTP 语义，请使用 {@link #resultCode(ExceptionCode)} 传入异常码。
+     * @param resultCode 统一结果码
+     * @return 处理结果
          */
         public SysExceptionBuilder resultCode(ResultCode resultCode) {
             if (resultCode != null) {
@@ -220,6 +232,8 @@ public class SysException extends AbstractYdszException {
          * 便捷方法：设置 {@link BaseResultCode} 作为错误码（兼容路径）。
          *
          * <p>BaseResultCode 不包含 HTTP 状态码，使用默认值。
+     * @param resultCode 统一结果码
+     * @return 处理结果
          */
         public SysExceptionBuilder resultCode(BaseResultCode resultCode) {
             if (resultCode != null) {
@@ -235,6 +249,8 @@ public class SysException extends AbstractYdszException {
          *
          * <p>覆盖基类的 {@code params(Object[])} 以提供变长参数调用方式，
          * 与 {@link com.njydsz.common.exception.custom.BusinessException.BusinessExceptionBuilder#params(Object...)} 对齐。
+     * @param params 消息参数
+     * @return 处理结果
          */
         @Override
         public SysExceptionBuilder params(Object... params) {
@@ -244,6 +260,8 @@ public class SysException extends AbstractYdszException {
 
         /**
          * 覆盖业务错误码（保持链式返回子类类型，便于后续继续调用变长 {@link #params(Object...)}）。
+     * @param code 错误码
+     * @return 处理结果
          */
         @Override
         public SysExceptionBuilder code(String code) {
@@ -253,6 +271,8 @@ public class SysException extends AbstractYdszException {
 
         /**
          * 设置国际化消息键（保持链式返回子类类型）。
+     * @param key 消息键
+     * @return 处理结果
          */
         @Override
         public SysExceptionBuilder key(String key) {

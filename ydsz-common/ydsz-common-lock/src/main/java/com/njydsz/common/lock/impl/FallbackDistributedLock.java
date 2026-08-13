@@ -49,6 +49,9 @@ public class FallbackDistributedLock implements DistributedLocker {
     /**
      * 连续失败阈值，达到后全局标记 Redis 不可用
      */
+    /** 本地锁缓存 TTL（分钟） */
+    private static final int CACHE_TTL_MINUTES = 30;
+
     private static final int FAILURE_THRESHOLD = 3;
 
     /**
@@ -70,7 +73,7 @@ public class FallbackDistributedLock implements DistributedLocker {
      */
     private final Cache<String, ReentrantLock> localLocks = YdszCache.<String, ReentrantLock>newBuilder()
             .type(CacheType.STRIPED)
-            .expireAfterWrite(30, TimeUnit.MINUTES)
+            .expireAfterWrite(CACHE_TTL_MINUTES, TimeUnit.MINUTES)
             .maximumSize(10000)
             .build();
 

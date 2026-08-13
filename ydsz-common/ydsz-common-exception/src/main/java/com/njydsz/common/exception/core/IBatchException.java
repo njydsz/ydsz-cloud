@@ -1,5 +1,4 @@
 package com.njydsz.common.exception.core;
-
 import java.util.List;
 
 /**

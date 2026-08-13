@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.lock.exception.DistributedLockException;
 import com.njydsz.common.lock.strategy.LockStrategy;
 
-
 /**
  * 编程式锁操作模板 - 简化分布式锁的使用
  *
@@ -81,7 +80,6 @@ public class LockTemplate {
      * @param <T>       返回值类型
      * @return 业务逻辑的返回值
      * @throws DistributedLockException 锁获取失败时抛出
-     * @throws InterruptedException 等待过程中线程被中断
      */
     public <T> T execute(String lockKey, long waitTime, long leaseTime, TimeUnit timeUnit, Supplier<T> action) {
         DistributedLocker lock = lockStrategy.getLock(lockKey);
@@ -122,29 +120,43 @@ public class LockTemplate {
      */
     public <T> T executeOrDefault(String lockKey, long leaseTime, TimeUnit timeUnit,
                                    Supplier<T> action, T defaultValue) {
-        return executeOrDefault(lockKey, 0, leaseTime, timeUnit, action, defaultValue);
+        return tryExecuteOrDefault(lockKey, LockRequest.withoutWait(leaseTime, timeUnit), action, defaultValue);
     }
 
     /**
-     * 尝试在锁保护下执行业务逻辑（带等待时间），锁获取失败时返回默认值
+     * 尝试在锁保护下执行业务逻辑（带等待时间），锁获取失败时返回 null
+     *
+     * @param lockKey   锁键
+     * @param waitTime  最大等待时间
+     * @param leaseTime 租约时间
+     * @param timeUnit  时间单位
+     * @param action    要执行的业务逻辑
+     * @param <T>       返回值类型
+     * @return 业务逻辑的返回值，锁获取失败时返回 null
+     */
+    public <T> T executeOrDefault(String lockKey, long waitTime, long leaseTime, TimeUnit timeUnit,
+                                   Supplier<T> action) {
+        return tryExecuteOrDefault(lockKey, LockRequest.of(waitTime, leaseTime, timeUnit), action, null);
+    }
+
+    /**
+     * 尝试在锁保护下执行业务逻辑，锁获取失败时返回默认值
      *
      * @param lockKey      锁键
-     * @param waitTime     最大等待时间
-     * @param leaseTime    租约时间
-     * @param timeUnit     时间单位
+     * @param request      锁请求参数（等待时间/租约时间/时间单位）
      * @param action       要执行的业务逻辑
      * @param defaultValue 锁获取失败时的默认返回值
      * @param <T>          返回值类型
      * @return 业务逻辑的返回值或默认值
      */
-    public <T> T executeOrDefault(String lockKey, long waitTime, long leaseTime, TimeUnit timeUnit,
-                                   Supplier<T> action, T defaultValue) {
+    private <T> T tryExecuteOrDefault(String lockKey, LockRequest request,
+                                       Supplier<T> action, T defaultValue) {
         DistributedLocker lock = lockStrategy.getLock(lockKey);
         String lockValue;
         try {
-            lockValue = waitTime > 0
-                    ? lock.tryLock(lockKey, waitTime, leaseTime, timeUnit)
-                    : lock.tryLock(lockKey, leaseTime, timeUnit);
+            lockValue = request.waitTime() > 0
+                    ? lock.tryLock(lockKey, request.waitTime(), request.leaseTime(), request.timeUnit())
+                    : lock.tryLock(lockKey, request.leaseTime(), request.timeUnit());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             return defaultValue;
@@ -165,6 +177,12 @@ public class LockTemplate {
     /**
      * 获取锁（内部方法）
      *
+     * @param lock      锁实例
+     * @param lockKey   锁键
+     * @param waitTime  最大等待时间（0 表示不等待）
+     * @param leaseTime 租约时间
+     * @param timeUnit  时间单位
+     * @return 获取成功的锁值
      * @throws DistributedLockException 获取失败或被中断时抛出
      */
     private String acquireLock(DistributedLocker lock, String lockKey,
@@ -185,12 +203,49 @@ public class LockTemplate {
 
     /**
      * 释放锁（内部方法）
+     *
+     * @param lock      锁实例
+     * @param lockKey   锁键
+     * @param lockValue 获取锁时返回的锁值
      */
     private void releaseLock(DistributedLocker lock, String lockKey, String lockValue) {
         try {
             lock.unlock(lockKey, lockValue);
         } catch (Exception e) {
             log.warn("[ydsz-lock] [template] 释放锁异常 key={} cause={}", lockKey, e.getMessage());
+        }
+    }
+
+    /**
+     * 锁请求参数（等待时间 / 租约时间 / 时间单位）
+     *
+     * @param waitTime  最大等待时间
+     * @param leaseTime 租约时间
+     * @param timeUnit  时间单位
+     */
+    public record LockRequest(long waitTime, long leaseTime, TimeUnit timeUnit) {
+
+        /**
+         * 构造带等待时间的请求
+         *
+         * @param waitTime  最大等待时间
+         * @param leaseTime 租约时间
+         * @param timeUnit  时间单位
+         * @return 请求对象
+         */
+        public static LockRequest of(long waitTime, long leaseTime, TimeUnit timeUnit) {
+            return new LockRequest(waitTime, leaseTime, timeUnit);
+        }
+
+        /**
+         * 构造不带等待时间的请求
+         *
+         * @param leaseTime 租约时间
+         * @param timeUnit  时间单位
+         * @return 请求对象
+         */
+        public static LockRequest withoutWait(long leaseTime, TimeUnit timeUnit) {
+            return new LockRequest(0, leaseTime, timeUnit);
         }
     }
 }

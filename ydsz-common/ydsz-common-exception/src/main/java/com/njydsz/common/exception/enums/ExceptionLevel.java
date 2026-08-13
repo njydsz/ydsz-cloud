@@ -28,30 +28,52 @@ public enum ExceptionLevel {
     /**
      * 信息级
      * <p>提示性信息，不需要特别处理
+     * @param "I" "I" 参数说明
+     * @param WARN("W" WARN("W" 参数说明
+     * @param ERROR("E" ERROR("E" 参数说明
+     * @param FATAL("F" FATAL("F" 参数说明
+     * @param "严重" "严重" 参数说明
+     * @return 处理结果
      */
     INFO("I", "信息"),
 
     /**
      * 警告级
      * <p>潜在问题，但不影响业务继续执行
+     * @param "W" "W" 参数说明
+     * @param ERROR("E" ERROR("E" 参数说明
+     * @param FATAL("F" FATAL("F" 参数说明
+     * @param "严重" "严重" 参数说明
+     * @return 处理结果
      */
     WARN("W", "警告"),
 
     /**
      * 错误级
      * <p>一般业务错误，需要处理但不会导致系统崩溃
+     * @param "E" "E" 参数说明
+     * @param FATAL("F" FATAL("F" 参数说明
+     * @param "严重" "严重" 参数说明
+     * @return 处理结果
      */
     ERROR("E", "错误"),
 
     /**
      * 严重级
      * <p>严重错误，可能影响部分系统功能，事件订阅者应触发即时告警
+     * @param "F" "F" 参数说明
+     * @param "严重" "严重" 参数说明
+     * @return 处理结果
      */
     FATAL("F", "严重");
 
-    /** 级别编码 */
+    /**
+     * 级别编码
+     */
     private final String code;
-    /** 级别描述 */
+    /**
+     * 级别描述
+     */
     private final String description;
 
     /**
@@ -59,6 +81,7 @@ public enum ExceptionLevel {
      *
      * @param code        级别编码
      * @param description 级别描述
+     * @return 处理结果
      */
     ExceptionLevel(String code, String description) {
         this.code = code;

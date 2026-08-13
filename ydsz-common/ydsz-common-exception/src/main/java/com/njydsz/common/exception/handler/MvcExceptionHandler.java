@@ -1,23 +1,10 @@
 package com.njydsz.common.exception.handler;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.exception.batch.BatchBusinessException;
-import com.njydsz.common.exception.code.CoreExceptionCode;
-import com.njydsz.common.exception.config.ExceptionProperties;
-import com.njydsz.common.exception.core.ExceptionInfo;
-import com.njydsz.common.exception.custom.AbstractYdszException;
-import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.exception.metrics.ExceptionMetrics;
-
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.ApplicationEventPublisher;
@@ -37,6 +24,16 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.NoHandlerFoundException;
+
+import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.exception.batch.BatchBusinessException;
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.config.ExceptionProperties;
+import com.njydsz.common.exception.core.ExceptionInfo;
+import com.njydsz.common.exception.custom.AbstractYdszException;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.exception.metrics.ExceptionMetrics;
 
 /**
  * Spring MVC 全局异常处理器（非 Validation 部分）
@@ -68,7 +65,9 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 @RestControllerAdvice
 public class MvcExceptionHandler extends BaseExceptionHandler {
 
-    /** 非法参数兜底文案（i18n key 解析失败时使用，避免泄露内部异常细节） */
+    /**
+     * 非法参数兜底文案（i18n key 解析失败时使用，避免泄露内部异常细节）
+     */
     private static final String DEFAULT_ILLEGAL_ARGUMENT_MESSAGE = "非法参数";
 
     private final MessageSource messageSource;
@@ -81,6 +80,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
      * @param exceptionMetrics   异常指标统计器
      * @param properties         异常模块配置属性（可为 null）
      * @param eventPublisher     事件发布器（可为 null）
+     * @param eventPublisherProvider 事件发布器提供者
      */
     public MvcExceptionHandler(Environment environment,
                                MessageSource messageSource,
@@ -101,6 +101,8 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
 
     /**
      * 设置 HTTP 响应状态码（与异常对象中的 httpStatus 一致）
+     * @param response HTTP 响应
+     * @param httpStatus HTTP 状态码
      */
     private void setResponseStatus(HttpServletResponse response, int httpStatus) {
         if (response != null) {
@@ -116,6 +118,10 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
      * <p>批量操作中部分成功部分失败时，返回 207 状态码 + 成功/失败明细。
      * 此处理器必须在 {@link #handleBusinessException} 之前声明，
      * 因为 BatchBusinessException 继承自 BusinessException。
+     * @param e 异常对象
+     * @param request HTTP 请求
+     * @param response HTTP 响应
+     * @return 处理结果
      */
     @ExceptionHandler(BatchBusinessException.class)
     public Object handleBatchBusinessException(BatchBusinessException e, HttpServletRequest request,
@@ -154,6 +160,10 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
 
     /**
      * 处理业务异常（动态 HTTP 状态码）
+     * @param e 异常对象
+     * @param request HTTP 请求
+     * @param response HTTP 响应
+     * @return 处理结果
      */
     @ExceptionHandler(BusinessException.class)
     public Object handleBusinessException(BusinessException e, HttpServletRequest request,
@@ -172,6 +182,10 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
 
     /**
      * 处理系统异常
+     * @param e 异常对象
+     * @param request HTTP 请求
+     * @param response HTTP 响应
+     * @return 处理结果
      */
     @ExceptionHandler(SysException.class)
     public Object handleSysException(SysException e, HttpServletRequest request,
@@ -190,6 +204,10 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
 
     /**
      * 处理其他 YDSZ 异常（兜底，捕获所有 AbstractYdszException 子类）
+     * @param e 异常对象
+     * @param request HTTP 请求
+     * @param response HTTP 响应
+     * @return 处理结果
      */
     @ExceptionHandler(AbstractYdszException.class)
     public Object handleAbstractYdszException(AbstractYdszException e, HttpServletRequest request,
@@ -209,6 +227,9 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
 
     /**
      * 处理请求体解析异常
+     * @param e 异常对象
+     * @param request HTTP 请求
+     * @return 处理结果
      */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -236,6 +257,9 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
 
     /**
      * 处理缺少请求参数异常
+     * @param e 异常对象
+     * @param request HTTP 请求
+     * @return 处理结果
      */
     @ExceptionHandler(MissingServletRequestParameterException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -251,6 +275,9 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
 
     /**
      * 处理请求参数类型不匹配异常
+     * @param e 异常对象
+     * @param request HTTP 请求
+     * @return 处理结果
      */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -268,6 +295,9 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
 
     /**
      * 处理缺少请求头异常
+     * @param e 异常对象
+     * @param request HTTP 请求
+     * @return 处理结果
      */
     @ExceptionHandler(MissingRequestHeaderException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -283,6 +313,9 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
 
     /**
      * 处理请求方法不支持异常
+     * @param e 异常对象
+     * @param request HTTP 请求
+     * @return 处理结果
      */
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
@@ -298,6 +331,9 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
 
     /**
      * 处理文件上传大小超限异常
+     * @param e 异常对象
+     * @param request HTTP 请求
+     * @return 处理结果
      */
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     @ResponseStatus(HttpStatus.CONTENT_TOO_LARGE)
@@ -324,6 +360,9 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
 
     /**
      * 处理 404 异常
+     * @param e 异常对象
+     * @param request HTTP 请求
+     * @return 处理结果
      */
     @ExceptionHandler(NoHandlerFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
@@ -350,6 +389,9 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
 
     /**
      * 处理非法参数异常
+     * @param e 异常对象
+     * @param request HTTP 请求
+     * @return 处理结果
      */
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -381,6 +423,9 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
      *
      * <p>IllegalStateException 属于系统级异常（非业务异常），统一返回 SYSTEM_ERROR，
      * 避免暴露内部状态信息。业务层的"状态无效"应使用 {@link BusinessException}。
+     * @param e 异常对象
+     * @param request HTTP 请求
+     * @return 处理结果
      */
     @ExceptionHandler(IllegalStateException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -405,6 +450,9 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
 
     /**
      * 处理空指针异常
+     * @param e 异常对象
+     * @param request HTTP 请求
+     * @return 处理结果
      */
     @ExceptionHandler(NullPointerException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -429,6 +477,9 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
 
     /**
      * 处理所有未捕获的异常
+     * @param e 异常对象
+     * @param request HTTP 请求
+     * @return 处理结果
      */
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

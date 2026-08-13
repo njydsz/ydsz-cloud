@@ -51,6 +51,16 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
             "end";
 
     /**
+     * 客户端标识缓存 TTL（分钟）
+     */
+    private static final int CACHE_TTL_MINUTES = 30;
+
+    /**
+     * 剩余时间错误码（键不存在或获取失败）
+     */
+    protected static final long REMAIN_TIME_ERROR = -2L;
+
+    /**
      * Redis 操作模板
      */
     protected final StringRedisTemplate stringRedisTemplate;
@@ -74,7 +84,7 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
      */
     private final Cache<String, String> clientIdCache = YdszCache.<String, String>newBuilder()
             .type(CacheType.STRIPED)
-            .expireAfterWrite(30, TimeUnit.MINUTES)
+            .expireAfterWrite(CACHE_TTL_MINUTES, TimeUnit.MINUTES)
             .maximumSize(10_000)
             .build();
 
@@ -84,7 +94,7 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
      */
     private final Cache<String, Long> leaseTimeCache = YdszCache.<String, Long>newBuilder()
             .type(CacheType.STRIPED)
-            .expireAfterWrite(30, TimeUnit.MINUTES)
+            .expireAfterWrite(CACHE_TTL_MINUTES, TimeUnit.MINUTES)
             .maximumSize(10_000)
             .build();
 
@@ -363,13 +373,13 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
     @Override
     public long getRemainTime(String lockKey) {
         if (lockKey == null || lockKey.isEmpty()) {
-            return -2;
+            return REMAIN_TIME_ERROR;
         }
         try {
             return doGetRemainTime(lockKey);
         } catch (Exception e) {
             log.error("[ydsz-lock]获取剩余时间异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
-            return -2;
+            return REMAIN_TIME_ERROR;
         }
     }
 

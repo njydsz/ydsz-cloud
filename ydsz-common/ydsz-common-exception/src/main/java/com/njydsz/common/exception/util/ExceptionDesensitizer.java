@@ -1,5 +1,4 @@
 package com.njydsz.common.exception.util;
-
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -89,6 +88,24 @@ public final class ExceptionDesensitizer {
     private static final int MOBILE_SUFFIX_KEEP = 4;
     /** 邮箱用户名保留首字符 */
     private static final int EMAIL_LOCAL_KEEP = 1;
+    /** 堆栈构建缓冲区初始容量 */
+    private static final int STACK_BUFFER_SIZE = 1024;
+    /** 捕获组 1：敏感字段名 */
+    private static final int GROUP_SENSITIVE_FIELD = 1;
+    /** 捕获组 2：敏感字段值 */
+    private static final int GROUP_SENSITIVE_VALUE = 2;
+    /** 捕获组 3：银行卡号 */
+    private static final int GROUP_BANK_CARD = 3;
+    /** 捕获组 4：身份证号 */
+    private static final int GROUP_ID_CARD = 4;
+    /** 捕获组 5：手机号 */
+    private static final int GROUP_MOBILE = 5;
+    /** 捕获组 6：邮箱 */
+    private static final int GROUP_EMAIL = 6;
+    /** 捕获组 7：JDBC 连接密码前缀 */
+    private static final int GROUP_JDBC_PREFIX = 7;
+    /** 捕获组 8：JDBC 连接密码值 */
+    private static final int GROUP_JDBC_VALUE = 8;
 
     private ExceptionDesensitizer() {
         throw new UnsupportedOperationException();
@@ -131,40 +148,40 @@ public final class ExceptionDesensitizer {
      * @return 替换文案；无需替换时返回 null
      */
     private static String resolveReplacement(Matcher m) {
-        if (m.group(1) != null) {
+        if (m.group(GROUP_SENSITIVE_FIELD) != null) {
             // 敏感字段赋值：key=******
-            return m.group(1) + "=******";
+            return m.group(GROUP_SENSITIVE_FIELD) + "=******";
         }
-        if (m.group(3) != null) {
+        if (m.group(GROUP_BANK_CARD) != null) {
             // 银行卡号：校验位数后替换
-            int digits = m.group(3).replaceAll("[\\s-]", "").length();
+            int digits = m.group(GROUP_BANK_CARD).replaceAll("[\\s-]", "").length();
             if (digits >= BANK_CARD_MIN_DIGITS && digits <= BANK_CARD_MAX_DIGITS) {
                 return "****";
             }
             return null;
         }
-        if (m.group(4) != null) {
+        if (m.group(GROUP_ID_CARD) != null) {
             // 身份证号
             return "****";
         }
-        if (m.group(5) != null) {
+        if (m.group(GROUP_MOBILE) != null) {
             // 手机号：138****1234
-            String mobile = m.group(5);
+            String mobile = m.group(GROUP_MOBILE);
             return mobile.substring(0, MOBILE_PREFIX_KEEP)
                     + "****" + mobile.substring(mobile.length() - MOBILE_SUFFIX_KEEP);
         }
-        if (m.group(6) != null) {
+        if (m.group(GROUP_EMAIL) != null) {
             // 邮箱：a***@example.com
-            String email = m.group(6);
+            String email = m.group(GROUP_EMAIL);
             int atIdx = email.indexOf('@');
             if (atIdx > EMAIL_LOCAL_KEEP) {
                 return email.charAt(0) + "***" + email.substring(atIdx);
             }
             return null;
         }
-        if (m.group(7) != null) {
+        if (m.group(GROUP_JDBC_PREFIX) != null) {
             // JDBC 密码：保留前缀 + key=******
-            return m.group(7) + "******";
+            return m.group(GROUP_JDBC_PREFIX) + "******";
         }
         return null;
     }
@@ -179,7 +196,7 @@ public final class ExceptionDesensitizer {
         if (throwable == null) {
             return "";
         }
-        StringBuilder sb = new StringBuilder(1024);
+        StringBuilder sb = new StringBuilder(STACK_BUFFER_SIZE);
         buildDesensitizedStack(throwable, sb, Integer.MAX_VALUE);
         return sb.toString();
     }
@@ -195,7 +212,7 @@ public final class ExceptionDesensitizer {
         if (throwable == null) {
             return "";
         }
-        StringBuilder sb = new StringBuilder(1024);
+        StringBuilder sb = new StringBuilder(STACK_BUFFER_SIZE);
         buildDesensitizedStack(throwable, sb, maxFrames);
         return sb.toString();
     }
@@ -205,6 +222,10 @@ public final class ExceptionDesensitizer {
      *
      * <p>直接使用局部 StringBuilder，无需 ThreadLocal 缓存。
      * 现代 JVM 上小对象分配成本低，ThreadLocal 在线程池场景下反而可能引入内存泄漏风险。
+     *
+     * @param throwable 目标异常
+     * @param sb        脱敏堆栈输出缓冲区
+     * @param maxFrames 最大堆栈帧数
      */
     private static void buildDesensitizedStack(Throwable throwable, StringBuilder sb, int maxFrames) {
         Throwable current = throwable;

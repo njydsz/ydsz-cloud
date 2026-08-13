@@ -53,4 +53,21 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <!-- 编译期告警即错误：-Xlint:-unchecked 豁免 TreeNode 递归泛型的
+                 设计性 unchecked 强转（该类 Javadoc 已说明），其余告警一律编译失败。 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <compilerArgs>
+                        <arg>-Werror</arg>
+                        <arg>-Xlint:-unchecked</arg>
+                    </compilerArgs>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>

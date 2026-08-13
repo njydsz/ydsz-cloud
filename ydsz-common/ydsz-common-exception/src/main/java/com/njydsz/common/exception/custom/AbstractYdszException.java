@@ -1,5 +1,4 @@
 package com.njydsz.common.exception.custom;
-
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -45,22 +44,37 @@ public abstract class AbstractYdszException extends RuntimeException implements 
     protected String code;
     protected String key;
     protected transient Object[] params;
-    /** 按 Locale 缓存已解析消息，computeIfAbsent 保证并发安全且不串语言 */
+    /**
+     * 按 Locale 缓存已解析消息，computeIfAbsent 保证并发安全且不串语言
+     * @param 2 2 参数说明
+     */
     protected final ConcurrentHashMap<Locale, String> messageCache = new ConcurrentHashMap<>(2);
-    /** 通过 setMessage() 显式覆盖的消息（优先于 i18n 解析） */
+    /**
+     * 通过 setMessage() 显式覆盖的消息（优先于 i18n 解析）
+     */
     protected volatile String overrideMessage;
-    /** 懒加载解析的消息键 */
+    /**
+     * 懒加载解析的消息键
+     */
     protected String messageKey;
-    /** 懒加载解析的消息参数 */
+    /**
+     * 懒加载解析的消息参数
+     */
     protected transient Object[] messageParams;
-    /** HTTP 状态码 */
+    /**
+     * HTTP 状态码
+     */
     protected int httpStatus;
     protected ExceptionLevel level;
     protected ExceptionCategory category;
     protected transient LocalDateTime timestamp;
-    /** 附加数据（通过 BusinessException.data() 设置） */
+    /**
+     * 附加数据（通过 BusinessException.data() 设置）
+     */
     protected transient Map<String, Object> extData;
-    /** 异常链上下文快照（透写入 details，供排查定位） */
+    /**
+     * 异常链上下文快照（透写入 details，供排查定位）
+     */
     protected transient Map<String, String> snapshot;
 
     /**
@@ -117,6 +131,9 @@ public abstract class AbstractYdszException extends RuntimeException implements 
 
     /**
      * 初始化默认值（final 方法防止子类重写导致 this 逃逸）
+     * @param httpStatus HTTP 状态码
+     * @param level 异常级别
+     * @param category 异常分类
      */
     protected final void initDefaults(int httpStatus, ExceptionLevel level, ExceptionCategory category) {
         this.httpStatus = httpStatus;
@@ -126,6 +143,9 @@ public abstract class AbstractYdszException extends RuntimeException implements 
 
     /**
      * 初始化字段（final 方法防止子类重写导致 this 逃逸）
+     * @param code 错误码
+     * @param key 消息键
+     * @param params 消息参数
      */
     protected final void initFields(String code, String key, Object[] params) {
         this.code = code;

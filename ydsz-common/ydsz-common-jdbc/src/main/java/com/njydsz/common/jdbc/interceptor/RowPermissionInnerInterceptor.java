@@ -81,6 +81,9 @@ public class RowPermissionInnerInterceptor extends JsqlParserSupport implements 
     /** 安全值正则模式，仅允许字母、数字及常见安全字符 */
     private static final Pattern SAFE_VALUE_PATTERN = Pattern.compile("^[a-zA-Z0-9_\\-.:,@]+$");
 
+    /** 数值主键列后缀约定：以 _id 结尾的列视为数值类型，使用数值字面量避免隐式转换导致索引失效 */
+    private static final String NUMERIC_ID_COLUMN_SUFFIX = "_id";
+
     /** 永假表达式 {@code 1=0}，用于 fail-closed 时拒绝所有数据 */
     private static final Expression DENY_ALL_EXPRESSION = new EqualsTo(new LongValue(1L), new LongValue(0L));
 
@@ -435,7 +438,7 @@ public class RowPermissionInnerInterceptor extends JsqlParserSupport implements 
         }
         EqualsTo eq = new EqualsTo();
         eq.setLeftExpression(new Column(table, columnName));
-        eq.setRightExpression(new StringValue(value));
+        eq.setRightExpression(buildLiteral(columnName, value));
         return eq;
     }
 
@@ -461,9 +464,9 @@ public class RowPermissionInnerInterceptor extends JsqlParserSupport implements 
         if (StringUtils.isBlank(columnName) || CollectionUtils.isEmpty(values)) {
             return null;
         }
-        List<StringValue> safeValues = values.stream()
+        List<Expression> safeValues = values.stream()
                 .filter(this::isSafeValue)
-                .map(StringValue::new)
+                .map(value -> buildLiteral(columnName, value))
                 .collect(Collectors.toList());
         if (safeValues.isEmpty()) {
             return null;
@@ -472,6 +475,29 @@ public class RowPermissionInnerInterceptor extends JsqlParserSupport implements 
         in.setLeftExpression(new Column(table, columnName));
         in.setRightExpression(new ExpressionList<>(safeValues));
         return in;
+    }
+
+    /**
+     * 根据列类型约定构建值字面量。
+     *
+     * <p>以 {@code _id} 结尾的列视为数值主键列，使用 {@link LongValue} 数值字面量，
+     * 避免字符串字面量在数值列上产生隐式类型转换导致索引失效；其余列使用 {@link StringValue}。
+     *
+     * @param columnName 列名
+     * @param value      原始字符串值
+     * @return 值字面量表达式
+     */
+    private Expression buildLiteral(String columnName, String value) {
+        String normalized = columnName.toLowerCase();
+        if (normalized.endsWith(NUMERIC_ID_COLUMN_SUFFIX)) {
+            try {
+                return new LongValue(Long.parseLong(value));
+            } catch (NumberFormatException e) {
+                // 值不是合法数字（如 UUID 主键），回退为字符串字面量
+                return new StringValue(value);
+            }
+        }
+        return new StringValue(value);
     }
 
     /**

@@ -55,6 +55,11 @@ public class RedisBloomFilter implements BloomFilterService {
     private static final double DEFAULT_FALSE_POSITIVE_RATE = 0.01;
     private static final long DEFAULT_EXPECTED_INSERTIONS = 1000000;
 
+    /** MurmurHash3 64 位变体常量 c1 */
+    private static final long MURMUR_C1 = 0x87c37b91114253d5L;
+    /** MurmurHash3 64 位变体常量 c2 */
+    private static final long MURMUR_C2 = 0x4cf5ad432745937fL;
+
     private final RedisTemplate<String, Object> redisTemplate;
     private final DefaultRedisScript<Boolean> addScript;
     private final DefaultRedisScript<Boolean> existsScript;
@@ -460,8 +465,6 @@ public class RedisBloomFilter implements BloomFilterService {
     private static long hash64A(byte[] data, int seed) {
         long h1 = seed;
         long h2 = seed;
-        final long c1 = 0x87c37b91114253d5L;
-        final long c2 = 0x4cf5ad432745937fL;
         int length = data.length;
         int numBlocks = length / 16;
 
@@ -470,25 +473,25 @@ public class RedisBloomFilter implements BloomFilterService {
             long k1 = getLongLittleEndian(data, offset);
             long k2 = getLongLittleEndian(data, offset + 8);
 
-            k1 *= c1;
+            k1 *= MURMUR_C1;
             k1 = Long.rotateLeft(k1, 31);
-            k1 *= c2;
+            k1 *= MURMUR_C2;
             h1 ^= k1;
             h1 = Long.rotateLeft(h1, 27);
             h1 += h2;
             h1 = h1 * 5 + 0x52dce729;
 
-            k2 *= c2;
+            k2 *= MURMUR_C2;
             k2 = Long.rotateLeft(k2, 33);
-            k2 *= c1;
+            k2 *= MURMUR_C1;
             h2 ^= k2;
             h2 = Long.rotateLeft(h2, 31);
             h2 += h1;
             h2 = h2 * 5 + 0x38495ab5;
         }
 
-        // 处理尾部字节，避免 fall-through
-        long[] tail = applyTail(data, numBlocks * 16, length & 15, h1, h2, c1, c2);
+        // 处理尾部字节（使用 switch fall-through，与 Guava MurmurHash3 实现一致）
+        long[] tail = applyTail(data, numBlocks * 16, length & 15, h1, h2);
         h1 = tail[0];
         h2 = tail[1];
 
@@ -505,72 +508,76 @@ public class RedisBloomFilter implements BloomFilterService {
     /**
      * 处理 MurmurHash3 64 位变体的尾部字节（不足 16 字节的剩余部分）。
      *
+     * <p>采用 switch fall-through 递减处理，与 Guava 的 MurmurHash3 实现保持一致。
+     *
      * @param data      输入数据
      * @param tailStart 尾部起始偏移
-     * @param remaining 剩余字节数
+     * @param remaining 剩余字节数（0~15）
      * @param h1        状态值 h1
      * @param h2        状态值 h2
-     * @param c1        常量 c1
-     * @param c2        常量 c2
      * @return 更新后的 [h1, h2]
      */
     private static long[] applyTail(byte[] data, int tailStart, int remaining,
-                                    long h1, long h2, long c1, long c2) {
+                                    long h1, long h2) {
         long k1 = 0;
         long k2 = 0;
 
-        if (remaining >= 15) {
-            k2 ^= ((long) data[tailStart + 14] & 0xff) << 48;
-        }
-        if (remaining >= 14) {
-            k2 ^= ((long) data[tailStart + 13] & 0xff) << 40;
-        }
-        if (remaining >= 13) {
-            k2 ^= ((long) data[tailStart + 12] & 0xff) << 32;
-        }
-        if (remaining >= 12) {
-            k2 ^= ((long) data[tailStart + 11] & 0xff) << 24;
-        }
-        if (remaining >= 11) {
-            k2 ^= ((long) data[tailStart + 10] & 0xff) << 16;
-        }
-        if (remaining >= 10) {
-            k2 ^= ((long) data[tailStart + 9] & 0xff) << 8;
-        }
-        if (remaining >= 9) {
-            k2 ^= ((long) data[tailStart + 8] & 0xff);
-            k2 *= c2;
-            k2 = Long.rotateLeft(k2, 33);
-            k2 *= c1;
-            h2 ^= k2;
-        }
-        if (remaining >= 8) {
-            k1 ^= ((long) data[tailStart + 7] & 0xff) << 56;
-        }
-        if (remaining >= 7) {
-            k1 ^= ((long) data[tailStart + 6] & 0xff) << 48;
-        }
-        if (remaining >= 6) {
-            k1 ^= ((long) data[tailStart + 5] & 0xff) << 40;
-        }
-        if (remaining >= 5) {
-            k1 ^= ((long) data[tailStart + 4] & 0xff) << 32;
-        }
-        if (remaining >= 4) {
-            k1 ^= ((long) data[tailStart + 3] & 0xff) << 24;
-        }
-        if (remaining >= 3) {
-            k1 ^= ((long) data[tailStart + 2] & 0xff) << 16;
-        }
-        if (remaining >= 2) {
-            k1 ^= ((long) data[tailStart + 1] & 0xff) << 8;
-        }
-        if (remaining >= 1) {
-            k1 ^= ((long) data[tailStart] & 0xff);
-            k1 *= c1;
-            k1 = Long.rotateLeft(k1, 31);
-            k1 *= c2;
-            h1 ^= k1;
+        switch (remaining) {
+            case 15:
+                k2 ^= ((long) data[tailStart + 14] & 0xff) << 48;
+                // fall through
+            case 14:
+                k2 ^= ((long) data[tailStart + 13] & 0xff) << 40;
+                // fall through
+            case 13:
+                k2 ^= ((long) data[tailStart + 12] & 0xff) << 32;
+                // fall through
+            case 12:
+                k2 ^= ((long) data[tailStart + 11] & 0xff) << 24;
+                // fall through
+            case 11:
+                k2 ^= ((long) data[tailStart + 10] & 0xff) << 16;
+                // fall through
+            case 10:
+                k2 ^= ((long) data[tailStart + 9] & 0xff) << 8;
+                // fall through
+            case 9:
+                k2 ^= ((long) data[tailStart + 8] & 0xff);
+                k2 *= MURMUR_C2;
+                k2 = Long.rotateLeft(k2, 33);
+                k2 *= MURMUR_C1;
+                h2 ^= k2;
+                // fall through
+            case 8:
+                k1 ^= ((long) data[tailStart + 7] & 0xff) << 56;
+                // fall through
+            case 7:
+                k1 ^= ((long) data[tailStart + 6] & 0xff) << 48;
+                // fall through
+            case 6:
+                k1 ^= ((long) data[tailStart + 5] & 0xff) << 40;
+                // fall through
+            case 5:
+                k1 ^= ((long) data[tailStart + 4] & 0xff) << 32;
+                // fall through
+            case 4:
+                k1 ^= ((long) data[tailStart + 3] & 0xff) << 24;
+                // fall through
+            case 3:
+                k1 ^= ((long) data[tailStart + 2] & 0xff) << 16;
+                // fall through
+            case 2:
+                k1 ^= ((long) data[tailStart + 1] & 0xff) << 8;
+                // fall through
+            case 1:
+                k1 ^= ((long) data[tailStart] & 0xff);
+                k1 *= MURMUR_C1;
+                k1 = Long.rotateLeft(k1, 31);
+                k1 *= MURMUR_C2;
+                h1 ^= k1;
+                // fall through
+            default:
+                break;
         }
 
         return new long[]{h1, h2};

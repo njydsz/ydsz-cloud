@@ -2,7 +2,6 @@ package com.njydsz.common.jdbc.interceptor;
 
 import java.lang.reflect.Method;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -11,6 +10,8 @@ import org.apache.ibatis.mapping.MappedStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.njydsz.common.jdbc.config.DataPermissionConfiguration;
 import com.njydsz.common.jdbc.enums.InterceptTableStrategy;
 import com.njydsz.common.jdbc.permission.DataPermissionIgnore;
@@ -26,12 +27,12 @@ import net.sf.jsqlparser.schema.Table;
  * <ul>
  *   <li>检测 Mapper 方法是否标注了 {@link DataPermissionIgnore}（跳过数据权限拦截）</li>
  *   <li>解析 SQL 中的表名与数据权限规则匹配</li>
- *   <li>缓存忽略标记结果（有界 LRU 10000 条），避免重复反射扫描</li>
+ *   <li>缓存忽略标记结果（有界 10000 条），避免重复反射扫描</li>
  * </ul>
  *
  * <h3>缓存设计</h3>
- * <p>使用 {@link LinkedHashMap} LRU 模式缓存方法级忽略标记，
- * 最大容量 10000 条，防止内存泄漏。同步包装保证线程安全。
+ * <p>使用 Caffeine 缓存方法级忽略标记，最大容量 10000 条，防止内存泄漏，
+ * 并避免 {@code Collections.synchronizedMap} 全局锁带来的并发竞争。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -42,15 +43,10 @@ final class DataPermissionHelper {
 
     private static final Logger log = LoggerFactory.getLogger(DataPermissionHelper.class);
 
-    /** 有界 LRU 缓存，最大容量 10000，防止内存泄漏 */
+    /** 有界缓存最大容量 10000，防止内存泄漏 */
     private static final int MAX_CACHE_SIZE = 10000;
-    private static final Map<String, Boolean> IGNORE_CACHE = Collections.synchronizedMap(
-            new LinkedHashMap<String, Boolean>(256, 0.75f, true) {
-                @Override
-                protected boolean removeEldestEntry(Map.Entry<String, Boolean> eldest) {
-                    return size() > MAX_CACHE_SIZE;
-                }
-            });
+    private static final Cache<String, Boolean> IGNORE_CACHE =
+            Caffeine.newBuilder().maximumSize(MAX_CACHE_SIZE).build();
 
     /**
      * 私有构造方法，工具类禁止实例化。
@@ -117,7 +113,7 @@ final class DataPermissionHelper {
     /**
      * 检查 Mapper 方法是否标注了 {@link DataPermissionIgnore} 注解。
      *
-     * <p>使用 LRU 缓存（最大 10000 条）避免重复反射扫描。
+     * <p>使用 Caffeine 缓存（最大 10000 条）避免重复反射扫描。
      *
      * @param ms MyBatis MappedStatement
      * @return 是否应忽略数据权限拦截
@@ -127,13 +123,7 @@ final class DataPermissionHelper {
             return false;
         }
         String msId = ms.getId();
-        Boolean cached = IGNORE_CACHE.get(msId);
-        if (cached != null) {
-            return cached;
-        }
-        boolean result = checkDataPermissionIgnored(msId);
-        IGNORE_CACHE.put(msId, result);
-        return result;
+        return IGNORE_CACHE.get(msId, DataPermissionHelper::checkDataPermissionIgnored);
     }
 
     /**

@@ -1,22 +1,12 @@
 package com.njydsz.common.exception.config;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
-import com.njydsz.common.exception.code.ErrorCodeTable;
-import com.njydsz.common.exception.custom.AbstractYdszException;
-import com.njydsz.common.exception.custom.MessageSourceHolder;
-import com.njydsz.common.exception.metrics.ExceptionMetrics;
-import com.njydsz.common.exception.registry.ExceptionCodeScanner;
-
 import io.micrometer.core.instrument.MeterRegistry;
-
 import jakarta.annotation.PostConstruct;
-
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -33,6 +23,12 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
+
+import com.njydsz.common.exception.code.ErrorCodeTable;
+import com.njydsz.common.exception.custom.AbstractYdszException;
+import com.njydsz.common.exception.custom.MessageSourceHolder;
+import com.njydsz.common.exception.metrics.ExceptionMetrics;
+import com.njydsz.common.exception.registry.ExceptionCodeScanner;
 
 /**
  * 异常模块核心自动配置
@@ -60,7 +56,9 @@ import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
 @ConditionalOnClass(name = "org.springframework.context.MessageSource")
 public class YdszExceptionCoreAutoConfiguration {
 
-    /** MessageSource Bean 名称常量 */
+    /**
+     * MessageSource Bean 名称常量
+     */
     public static final String MESSAGE_SOURCE_BEAN_NAME = "messageSource";
 
     private final I18nProperties i18nProperties;
@@ -84,6 +82,7 @@ public class YdszExceptionCoreAutoConfiguration {
      * 创建统一错误码注册表 Bean。
      *
      * <p>显式声明以消除对消费方组件扫描的隐式依赖，保证任何消费方均可用。
+     * @return 处理结果
      */
     @Bean
     @ConditionalOnMissingBean(ErrorCodeTable.class)
@@ -96,6 +95,10 @@ public class YdszExceptionCoreAutoConfiguration {
      *
      * <p>扫描与 i18n key 校验在全部单例 Bean 实例化完成后执行（{@code SmartInitializingSingleton}），
      * 确保 fail-fast 校验基于完整注册表，而非空表空转。
+     * @param errorCodeTable errorCodeTable 参数说明
+     * @param messageSource 国际化消息源
+     * @param env Spring 环境对象
+     * @return 处理结果
      */
     @Bean
     @ConditionalOnMissingBean(ExceptionCodeScanner.class)
@@ -145,6 +148,7 @@ public class YdszExceptionCoreAutoConfiguration {
 
     /**
      * 创建全局国际化消息源。
+     * @return 处理结果
      */
     @Bean(name = MESSAGE_SOURCE_BEAN_NAME)
     @ConditionalOnMissingBean(name = MESSAGE_SOURCE_BEAN_NAME)
@@ -156,6 +160,8 @@ public class YdszExceptionCoreAutoConfiguration {
 
     /**
      * 注册关联国际化消息源的 JSR-303 验证器。
+     * @param messageSource 国际化消息源
+     * @return 处理结果
      */
     @Bean
     @ConditionalOnMissingBean(Validator.class)
@@ -170,6 +176,7 @@ public class YdszExceptionCoreAutoConfiguration {
 
     /**
      * 创建区域解析器 Bean。
+     * @return 处理结果
      */
     @Bean
     @ConditionalOnClass({LocaleResolver.class, AcceptHeaderLocaleResolver.class})
@@ -193,6 +200,7 @@ public class YdszExceptionCoreAutoConfiguration {
 
     /**
      * 创建语言切换拦截器 Bean。
+     * @return 处理结果
      */
     @Bean
     @ConditionalOnClass({LocaleResolver.class, AcceptHeaderLocaleResolver.class})
@@ -207,6 +215,8 @@ public class YdszExceptionCoreAutoConfiguration {
 
     /**
      * 注册异常指标统计器。
+     * @param meterRegistry meterRegistry 参数说明
+     * @return 处理结果
      */
     @Bean
     @ConditionalOnClass(MeterRegistry.class)

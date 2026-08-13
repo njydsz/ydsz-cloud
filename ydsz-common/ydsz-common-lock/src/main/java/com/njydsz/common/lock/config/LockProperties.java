@@ -41,6 +41,51 @@ import org.springframework.validation.annotation.Validated;
 public class LockProperties {
 
     /**
+     * 默认 WatchDog 最大续期次数（约 30 分钟）
+     */
+    private static final int DEFAULT_MAX_RENEW_TIMES = 100;
+
+    /**
+     * 默认调度线程池大小
+     */
+    private static final int DEFAULT_SCHEDULER_POOL_SIZE = 2;
+
+    /**
+     * 默认锁超时时间（秒）
+     */
+    private static final int DEFAULT_LOCK_TIMEOUT_SECONDS = 30;
+
+    /**
+     * 默认锁获取线程池核心线程数
+     */
+    private static final int DEFAULT_ACQUIRE_CORE_SIZE = 4;
+
+    /**
+     * 默认锁获取线程池最大线程数
+     */
+    private static final int DEFAULT_ACQUIRE_MAX_SIZE = 32;
+
+    /**
+     * 默认锁获取线程池队列容量
+     */
+    private static final int DEFAULT_ACQUIRE_QUEUE_CAPACITY = 256;
+
+    /**
+     * 默认多 Key 联锁最大续期次数
+     */
+    private static final int DEFAULT_MULTI_LOCK_MAX_RENEW = 30;
+
+    /**
+     * 默认多 Key 联锁续期间隔（秒）
+     */
+    private static final long DEFAULT_MULTI_LOCK_RENEW_INTERVAL = 10;
+
+    /**
+     * 默认幂等锁过期时间（秒）
+     */
+    private static final int DEFAULT_IDEMPOTENT_TTL_SECONDS = 5;
+
+    /**
      * 是否启用分布式锁功能（控制整个分布式锁模块的开关，默认开启）
      */
     private boolean enabled = true;
@@ -54,7 +99,7 @@ public class LockProperties {
      * WatchDog 最大续期次数（默认 100 次，约 30 分钟）
      * <p>续期次数超过限制后停止续期，锁自动过期，防止业务线程卡死导致锁永不释放
      */
-    private int maxRenewTimes = 100;
+    private int maxRenewTimes = DEFAULT_MAX_RENEW_TIMES;
 
     /**
      * 锁获取线程池配置
@@ -65,7 +110,7 @@ public class LockProperties {
      * 调度线程池大小（用于 WatchDog 续期和信号量超时调度）
      */
     @Min(1)
-    private int schedulerPoolSize = 2;
+    private int schedulerPoolSize = DEFAULT_SCHEDULER_POOL_SIZE;
 
     /**
      * 是否启用 WatchDog 自动续期功能
@@ -85,7 +130,7 @@ public class LockProperties {
      * 锁默认超时时间（秒），默认 30 秒
      */
     @Min(1)
-    private int defaultLockTimeoutSeconds = 30;
+    private int defaultLockTimeoutSeconds = DEFAULT_LOCK_TIMEOUT_SECONDS;
 
     /**
      * 多 Key 联锁（RedisMultiLock）专用配置
@@ -111,11 +156,11 @@ public class LockProperties {
     @Data
     public static class ThreadPool {
         /** 核心线程数 */
-        private int coreSize = 4;
+        private int coreSize = DEFAULT_ACQUIRE_CORE_SIZE;
         /** 最大线程数 */
-        private int maxSize = 32;
+        private int maxSize = DEFAULT_ACQUIRE_MAX_SIZE;
         /** 队列容量 */
-        private int queueCapacity = 256;
+        private int queueCapacity = DEFAULT_ACQUIRE_QUEUE_CAPACITY;
     }
 
     /**
@@ -127,14 +172,14 @@ public class LockProperties {
          * 多 Key 联锁最大续期次数，默认 30 次（即最长约 10 分钟）
          */
         @Min(1)
-        private int maxRenewCount = 30;
+        private int maxRenewCount = DEFAULT_MULTI_LOCK_MAX_RENEW;
 
         /**
          * 多 Key 联锁续期间隔（秒），默认 10 秒
          * <p>每次续期后等待此时间再次续期
          */
         @Min(1)
-        private int renewIntervalSeconds = 10;
+        private long renewIntervalSeconds = DEFAULT_MULTI_LOCK_RENEW_INTERVAL;
     }
 
     /**
@@ -147,7 +192,7 @@ public class LockProperties {
          * <p>覆盖大部分重复点击场景
          */
         @Min(1)
-        private int defaultTtlSeconds = 5;
+        private int defaultTtlSeconds = DEFAULT_IDEMPOTENT_TTL_SECONDS;
 
         /**
          * 幂等键 Redis 前缀

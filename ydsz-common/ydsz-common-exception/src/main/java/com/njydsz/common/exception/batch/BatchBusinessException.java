@@ -1,16 +1,15 @@
 package com.njydsz.common.exception.batch;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import lombok.Getter;
+
 import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.core.IBatchException;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.custom.MessageSourceHolder;
-
-import lombok.Getter;
 
 /**
  * 批量操作异常（HTTP 207 Multi-Status）
@@ -74,6 +73,7 @@ public class BatchBusinessException extends BusinessException implements IBatchE
      *
      * <p>每次调用都基于当前 counts 重新生成消息，
      * 确保无论何时获取消息都能反映最新的批量处理结果。
+     * @return 处理结果
      */
     @Override
     public String getMessage() {

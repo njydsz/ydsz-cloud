@@ -1,8 +1,6 @@
 package com.njydsz.common.exception.handler;
-
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolationException;
-
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -45,6 +43,12 @@ public class YdszExceptionHandlerAutoConfiguration {
 
     /**
      * 创建 Spring MVC 全局异常处理器 Bean
+     * @param environment Spring 环境对象
+     * @param messageSource 国际化消息源
+     * @param exceptionMetrics 异常指标统计器
+     * @param properties 异常模块配置属性
+     * @param eventPublisherProvider 事件发布器提供者
+     * @return 处理结果
      */
     @Bean
     @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
@@ -64,6 +68,11 @@ public class YdszExceptionHandlerAutoConfiguration {
      *
      * <p>置于 MVC 全局处理器之后，优先级更高（{@code @Order(HIGHEST_PRECEDENCE + 10)}），
      * 专门拦截参数校验异常并返回结构化字段错误信息。
+     * @param environment Spring 环境对象
+     * @param messageSource 国际化消息源
+     * @param exceptionMetrics 异常指标统计器
+     * @param properties 异常模块配置属性
+     * @return 处理结果
      */
     @Bean
     @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
@@ -81,6 +90,11 @@ public class YdszExceptionHandlerAutoConfiguration {
 
     /**
      * 创建 WebFlux 全局异常处理器 Bean
+     * @param environment Spring 环境对象
+     * @param messageSource 国际化消息源
+     * @param exceptionMetrics 异常指标统计器
+     * @param properties 异常模块配置属性
+     * @return 处理结果
      */
     @Bean
     @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.REACTIVE)
@@ -102,6 +116,11 @@ public class YdszExceptionHandlerAutoConfiguration {
      *
      * <p>捕获 JDBC 层的 {@code DataAccessException}，转换为标准错误响应。
      * 识别唯一索引冲突、外键约束、连接超时、死锁等典型数据库异常。
+     * @param environment Spring 环境对象
+     * @param messageSource 国际化消息源
+     * @param exceptionMetrics 异常指标统计器
+     * @param properties 异常模块配置属性
+     * @return 处理结果
      */
     @Bean
     @ConditionalOnClass(name = "org.springframework.dao.DataAccessException")

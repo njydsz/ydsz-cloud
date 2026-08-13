@@ -67,6 +67,21 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
     private static final long MAX_BACKOFF_MILLIS = 200;
 
     /**
+     * 客户端缓存 TTL（分钟）
+     */
+    private static final int CACHE_TTL_MINUTES = 30;
+
+    /**
+     * 续期间隔除数（租约时间 / 3）
+     */
+    private static final int RENEW_DIVISOR = 3;
+
+    /**
+     * 剩余时间错误码（键不存在或获取失败）
+     */
+    private static final long REMAIN_TIME_ERROR = -2L;
+
+    /**
      * 续期任务缓存键前缀：读锁
      */
     private static final String RENEWAL_KEY_READ = "R";
@@ -112,7 +127,7 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
      */
     private final Cache<String, String> readLockValueCache = YdszCache.<String, String>newBuilder()
             .type(CacheType.STRIPED)
-            .expireAfterWrite(30, TimeUnit.MINUTES)
+            .expireAfterWrite(CACHE_TTL_MINUTES, TimeUnit.MINUTES)
             .maximumSize(10_000)
             .build();
 
@@ -122,7 +137,7 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
      */
     private final Cache<String, Integer> readLockCountCache = YdszCache.<String, Integer>newBuilder()
             .type(CacheType.STRIPED)
-            .expireAfterWrite(30, TimeUnit.MINUTES)
+            .expireAfterWrite(CACHE_TTL_MINUTES, TimeUnit.MINUTES)
             .maximumSize(10_000)
             .build();
 
@@ -132,7 +147,7 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
      */
     private final Cache<String, String> writeLockValueCache = YdszCache.<String, String>newBuilder()
             .type(CacheType.STRIPED)
-            .expireAfterWrite(30, TimeUnit.MINUTES)
+            .expireAfterWrite(CACHE_TTL_MINUTES, TimeUnit.MINUTES)
             .maximumSize(10_000)
             .build();
 
@@ -299,7 +314,7 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
         if (scheduler == null) {
             return;
         }
-        long renewInterval = Math.max(expireMillis / 3, 1000);
+        long renewInterval = Math.max(expireMillis / RENEW_DIVISOR, 1000);
         ScheduledFuture<?> future = scheduler.scheduleAtFixedRate(() -> renewHeldLock(
                 renewalKey, redisKey, holderKey), Duration.ofMillis(renewInterval));
         renewalTasks.put(renewalKey, future);
@@ -699,7 +714,7 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
             return seconds > 0 ? TimeUnit.SECONDS.toMillis(seconds) : seconds;
         } catch (Exception e) {
             log.error("读写锁获取剩余时间异常: {}", writeLockKey, e);
-            return -2;
+            return REMAIN_TIME_ERROR;
         }
     }
 }

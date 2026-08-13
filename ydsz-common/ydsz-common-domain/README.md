@@ -2,15 +2,19 @@
 
 > YDSZ DDD 领域模型基类库（L3 基础服务层）— 分页查询、领域事件注册、状态机契约、树构建器、类型安全 ID
 >
-> **v1.8.0 变更（2026-08-13）：** 基于对标审查结论，执行以下优化——
-> - **README 对齐现状**：删除已移除的 PageQueryFactory/@DomainEvent/Command/DTO/VO 描述
-> - **深度分页防护闭环**：PageQuery.assessPaginationRisk() → SafeQueryInnerInterceptor 链路已验证有效
-> - **BaseEntity equals 语义修正**：仅以 id 判同，符合 DDD 实体标准
-> - **新增 SliceQuery/SliceResult**：游标分页专用入参/出参（实验性，需显式启用）
+> **v1.9.0 变更（2026-08-13）：** 恢复可构建 + 规范对齐 + 测试全绿——
+> - **修复编译阻断**：BaseEntity 混用 @EqualsAndHashCode(of=...) 与 @Exclude 的 Lombok 冲突已修复
+> - **基类抽象化**：BaseEntity / BaseQuery 改为 abstract（Base 前缀类应为抽象类）
+> - **PageQuery 风险评估去缓存**：assessPaginationRisk 退化为纯函数，修复哨兵值 bug 与 equals/hashCode 污染
+> - **DeepPaginationRisk 阈值契约**：非法阈值（负数 / reject < warn）抛 IllegalArgumentException 快速失败
+> - **TreeBuilder**：build() 拆分降低圈复杂度；buildSimple 6 参收敛为 5 参（内联根父 ID "0"）
+> - **规范对齐**：CRLF→LF、import 4 组重排、@param/@return 补全、幽灵配置键清理、ArchUnit import 修正
+> - **质量门禁**：checkstyle 0 违规；编译 -Werror（豁免 TreeNode 设计性 unchecked）；127 个测试全绿
 
 为业务模块提供领域驱动设计的基础设施：分页查询模型、状态枚举契约、O(n) 树构建器、类型安全 ID、领域事件注册能力。
 
 > **历史变更：**
+> - v1.8.0（2026-08-13）：README 对齐现状、深度分页防护闭环、BaseEntity equals 语义修正、新增 SliceQuery/SliceResult
 > - v1.7.0（2026-08-06）：消除静态配置耦合、PageQuery 职责收缩、BaseEntity 纯领域化
 > - v1.6.0（2026-08-06）：深度分页保护 + PageSlice + 状态机 pathTo/successors
 > - v1.5.0（2026-08-06）：游标分页 + DomainProperties 嵌套分组
@@ -24,7 +28,7 @@
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 分页查询、领域事件、状态机、树构建、类型安全 ID |
 | **依赖** | common-core、common-json；Jakarta Validation、Spring Context |
-| **版本** | 1.8.0 |
+| **版本** | 1.9.0 |
 | **源文件数** | 20 |
 
 ## API 生命周期状态

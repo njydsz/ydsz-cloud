@@ -12,6 +12,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.lock.annotation.LockType;
 import com.njydsz.common.lock.core.DistributedLocker;
+import com.njydsz.common.lock.exception.DistributedLockException;
 import com.njydsz.common.lock.strategy.LockStrategy;
 import com.njydsz.common.lock.util.LockExpressionUtils;
 
@@ -69,12 +70,11 @@ public class DistributedScheduledAspect {
      * @param joinPoint AOP 连接点
      * @param annotation 注解（由参数绑定自动注入）
      * @return 目标方法返回值；未获取锁时返回 null
-     * @throws Throwable 目标方法抛出的异常
      */
     @Around("@annotation(annotation)")
-    public Object around(ProceedingJoinPoint joinPoint, DistributedScheduled annotation) throws Throwable {
+    public Object around(ProceedingJoinPoint joinPoint, DistributedScheduled annotation) {
         if (distributedLocker == null) {
-            return joinPoint.proceed();
+            return proceed(joinPoint);
         }
 
         Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
@@ -90,7 +90,7 @@ public class DistributedScheduledAspect {
         }
 
         try {
-            return joinPoint.proceed();
+            return proceed(joinPoint);
         } finally {
             try {
                 distributedLocker.unlock(fullLockKey, lockValue);
@@ -98,6 +98,25 @@ public class DistributedScheduledAspect {
                 log.debug("[ydsz-lock] [scheduled] 解锁异常（可能已超时自动释放）: key={} err={}",
                         fullLockKey, e.getMessage());
             }
+        }
+    }
+
+    /**
+     * 执行目标方法并传播异常
+     *
+     * <p>切面不声明 {@code throws Throwable}（遵循编码规范），
+     * 运行时异常与 Error 原样传播，检查型异常包装为业务异常。</p>
+     *
+     * @param joinPoint 连接点
+     * @return 目标方法返回值
+     */
+    private Object proceed(ProceedingJoinPoint joinPoint) {
+        try {
+            return joinPoint.proceed();
+        } catch (RuntimeException | Error e) {
+            throw e;
+        } catch (Throwable t) {
+            throw new DistributedLockException("定时任务执行异常", t);
         }
     }
 

@@ -1,5 +1,4 @@
 package com.njydsz.common.exception.event;
-
 import java.time.LocalDateTime;
 
 import org.springframework.context.ApplicationEvent;
@@ -37,34 +36,54 @@ public class ExceptionHandledEvent extends ApplicationEvent {
 
     private static final long serialVersionUID = 1L;
 
-    /** 错误码 */
+    /**
+     * 错误码
+     */
     private final String code;
 
-    /** i18n 消息键 */
+    /**
+     * i18n 消息键
+     */
     private final String key;
 
-    /** 异常消息（已解析的 i18n 文案） */
+    /**
+     * 异常消息（已解析的 i18n 文案）
+     */
     private final String message;
 
-    /** HTTP 状态码 */
+    /**
+     * HTTP 状态码
+     */
     private final int httpStatus;
 
-    /** 请求路径 */
+    /**
+     * 请求路径
+     */
     private final String path;
 
-    /** 追踪 ID */
+    /**
+     * 追踪 ID
+     */
     private final String traceId;
 
-    /** 异常类别 */
+    /**
+     * 异常类别
+     */
     private final ExceptionCategory category;
 
-    /** 异常级别名称 */
+    /**
+     * 异常级别名称
+     */
     private final String levelName;
 
-    /** 异常类名（简单名） */
+    /**
+     * 异常类名（简单名）
+     */
     private final String exceptionType;
 
-    /** 事件发布时间 */
+    /**
+     * 事件发布时间
+     */
     private final LocalDateTime timestamp;
 
     /**
@@ -80,6 +99,7 @@ public class ExceptionHandledEvent extends ApplicationEvent {
      * @param category        异常类别
      * @param levelName       异常级别名称
      * @param exceptionType   异常类名
+     * @return 处理结果
      */
     public ExceptionHandledEvent(Object source,
                                   String code,

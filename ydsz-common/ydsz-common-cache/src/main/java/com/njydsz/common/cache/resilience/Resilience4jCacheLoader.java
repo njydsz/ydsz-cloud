@@ -93,7 +93,7 @@ public class Resilience4jCacheLoader<K, V> {
               return delegate.load(key);
             } catch (Exception e) {
               log.debug("CacheLoader 单键加载异常, key={}", key, e);
-              throw e;
+              throw new RuntimeException(e);
             }
           })).get();
     } catch (Exception e) {
@@ -116,7 +116,7 @@ public class Resilience4jCacheLoader<K, V> {
           return delegate.loadAll(keys);
         } catch (Exception e) {
           log.debug("CacheLoader 批量加载异常", e);
-          throw e;
+          throw new RuntimeException(e);
         }
       }).get();
     } catch (Exception e) {

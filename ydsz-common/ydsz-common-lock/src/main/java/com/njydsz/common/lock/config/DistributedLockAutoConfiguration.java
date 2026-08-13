@@ -155,36 +155,55 @@ public class DistributedLockAutoConfiguration {
     /**
      * 创建锁策略 Bean
      *
-     * @param stringRedisTemplate    Redis 模板
-     * @param lockWatchDog           看门狗
-     * @param lockMetrics            锁指标收集器
-     * @param lockProperties         锁配置属性
-     * @param stringOpsProvider      RedisStringOps 提供者
-     * @param redisTemplateProvider  RedisTemplate 提供者
-     * @param schedulerProvider      TaskScheduler 提供者
-     * @param renewalServiceProvider LockRenewalService 提供者
-     * @param notifierProvider       LockReleaseNotifier 提供者
+     * <p>可选依赖（RedisStringOps / RedisTemplate / TaskScheduler / LockRenewalService /
+     * LockReleaseNotifier）通过 {@link LockOptionalDependencies} 聚合注入，
+     * 避免 Bean 方法参数超过 5 个（云顶编码规范 5.4 节）。
+     *
+     * @param stringRedisTemplate Redis 模板
+     * @param lockWatchDog         看门狗
+     * @param lockMetrics          锁指标收集器
+     * @param lockProperties       锁配置属性
+     * @param optionalDependencies 可选依赖聚合
      * @return LockStrategy 实例
      */
     @Bean
     @ConditionalOnMissingBean
     public LockStrategy lockStrategy(StringRedisTemplate stringRedisTemplate, LockWatchDog lockWatchDog,
                                      LockMetrics lockMetrics, LockProperties lockProperties,
-                                     ObjectProvider<RedisStringOps> stringOpsProvider,
-                                     ObjectProvider<RedisTemplate<String, Object>> redisTemplateProvider,
-                                     ObjectProvider<TaskScheduler> schedulerProvider,
-                                     ObjectProvider<LockRenewalService> renewalServiceProvider,
-                                     ObjectProvider<LockReleaseNotifier> notifierProvider) {
-        RedisStringOps stringOps = stringOpsProvider.getIfAvailable();
-        RedisTemplate<String, Object> redisTemplate = redisTemplateProvider.getIfAvailable();
-        TaskScheduler scheduler = schedulerProvider.getIfAvailable();
+                                     LockOptionalDependencies optionalDependencies) {
         String namespace = lockProperties.getNamespace();
         DefaultLockStrategy strategy = new DefaultLockStrategy(
-                stringRedisTemplate, lockWatchDog, stringOps, redisTemplate,
-                lockMetrics, scheduler, namespace, lockProperties.getMultiLock(),
-                notifierProvider.getIfAvailable());
-        renewalServiceProvider.ifAvailable(strategy::setLockRenewalService);
+                stringRedisTemplate, lockWatchDog,
+                optionalDependencies.stringOpsProvider().getIfAvailable(),
+                optionalDependencies.redisTemplateProvider().getIfAvailable(),
+                lockMetrics,
+                optionalDependencies.schedulerProvider().getIfAvailable(),
+                namespace, lockProperties.getMultiLock(),
+                optionalDependencies.notifierProvider().getIfAvailable());
+        optionalDependencies.renewalServiceProvider().ifAvailable(strategy::setLockRenewalService);
         return strategy;
+    }
+
+    /**
+     * 创建锁策略可选依赖聚合 Bean
+     *
+     * @param stringOpsProvider      RedisStringOps 提供者
+     * @param redisTemplateProvider  RedisTemplate 提供者
+     * @param schedulerProvider      TaskScheduler 提供者
+     * @param renewalServiceProvider LockRenewalService 提供者
+     * @param notifierProvider       LockReleaseNotifier 提供者
+     * @return 可选依赖聚合
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public LockOptionalDependencies lockOptionalDependencies(
+            ObjectProvider<RedisStringOps> stringOpsProvider,
+            ObjectProvider<RedisTemplate<String, Object>> redisTemplateProvider,
+            ObjectProvider<TaskScheduler> schedulerProvider,
+            ObjectProvider<LockRenewalService> renewalServiceProvider,
+            ObjectProvider<LockReleaseNotifier> notifierProvider) {
+        return new LockOptionalDependencies(stringOpsProvider, redisTemplateProvider,
+                schedulerProvider, renewalServiceProvider, notifierProvider);
     }
 
     /**
@@ -241,9 +260,9 @@ public class DistributedLockAutoConfiguration {
      * <p>项目硬约束：AOP 组件必须通过 {@code @ConditionalOnMissingBean} 注册，
      * 允许业务方覆盖默认实现。
      *
-     * @param stringRedisTemplate Redis 客户端
-     * @param lockMetrics         锁指标收集器（可选）
-     * @param lockProperties      锁配置属性（用于获取 namespace）
+     * @param idempotentStrategy 幂等策略
+     * @param lockMetrics        锁指标收集器（可选）
+     * @param lockProperties     锁配置属性（用于获取 namespace）
      * @return IdempotentAspect 实例
      */
     @Bean
@@ -341,13 +360,16 @@ public class DistributedLockAutoConfiguration {
      * @param lockProperties 锁配置属性
      * @return ExecutorService 实例
      */
+    /** 锁获取线程池空闲线程存活时间（秒） */
+    private static final long ACQUIRE_THREAD_KEEP_ALIVE_SECONDS = 60L;
+
     @Bean("lockAcquireExecutor")
     @ConditionalOnMissingBean(name = "lockAcquireExecutor")
     public ExecutorService lockAcquireExecutor(LockProperties lockProperties) {
         LockProperties.ThreadPool pool = lockProperties.getAcquirePool();
         AtomicInteger threadNumber = new AtomicInteger(1);
         return new ThreadPoolExecutor(
-                pool.getCoreSize(), pool.getMaxSize(), 60L, TimeUnit.SECONDS,
+                pool.getCoreSize(), pool.getMaxSize(), ACQUIRE_THREAD_KEEP_ALIVE_SECONDS, TimeUnit.SECONDS,
                 new LinkedBlockingQueue<>(pool.getQueueCapacity()),
                 r -> {
                     Thread t = new Thread(r, "ydsz-lock-acquire-" + threadNumber.getAndIncrement());

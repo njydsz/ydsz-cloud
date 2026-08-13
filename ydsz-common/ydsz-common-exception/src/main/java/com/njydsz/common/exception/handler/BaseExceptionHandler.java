@@ -1,11 +1,21 @@
 package com.njydsz.common.exception.handler;
-
 import java.net.URI;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.server.ServerWebExchange;
 
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
@@ -21,19 +31,6 @@ import com.njydsz.common.exception.enums.ExceptionLevel;
 import com.njydsz.common.exception.event.ExceptionHandledEvent;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;
 import com.njydsz.common.exception.util.ExceptionDesensitizer;
-
-import jakarta.servlet.http.HttpServletRequest;
-
-import lombok.extern.slf4j.Slf4j;
-
-import org.slf4j.MDC;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.core.env.Environment;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ProblemDetail;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.server.ServerWebExchange;
 
 /**
  * 异常处理器抽象基类
@@ -74,6 +71,7 @@ public abstract class BaseExceptionHandler {
      *
      * <p>当事件发布器可用时，异常处理完成后自动发布 {@link ExceptionHandledEvent}，
      * 下游订阅者可用于告警通知、Sentry 上报等场景。
+     * @param publisher 事件发布器
      */
     protected void setEventPublisher(ApplicationEventPublisher publisher) {
         this.eventPublisher = publisher;
@@ -88,6 +86,8 @@ public abstract class BaseExceptionHandler {
 
     /**
      * 设置异常模块配置属性（由 AutoConfiguration 注入）
+     * @param env Spring 环境对象
+     * @param properties 异常模块配置属性
      */
     protected void setExceptionProperties(Environment env, ExceptionProperties properties) {
         this.properties = properties;
@@ -95,6 +95,8 @@ public abstract class BaseExceptionHandler {
 
     /**
      * 设置异常指标统计器（由 AutoConfiguration 注入）
+     * @param env Spring 环境对象
+     * @param exceptionMetrics 异常指标统计器
      */
     protected void setExceptionMetrics(Environment env, ExceptionMetrics exceptionMetrics) {
         this.exceptionMetrics = exceptionMetrics;
@@ -242,6 +244,8 @@ public abstract class BaseExceptionHandler {
 
     /**
      * 获取根本原因的消息
+     * @param throwable 异常对象
+     * @return 处理结果
      */
     protected static String getRootCauseMessage(Throwable throwable) {
         if (throwable == null) {
@@ -260,6 +264,8 @@ public abstract class BaseExceptionHandler {
      * <p>委托 {@link ExceptionDesensitizer#desensitizeStackTrace(Throwable)} 实现，
      * 对外输出前统一完成敏感信息（密码/Token/身份证/手机号/JDBC 连接串）脱敏，
      * 避免敏感数据泄露到响应详情与日志。
+     * @param throwable 异常对象
+     * @return 处理结果
      */
     protected static String getStackTraceString(Throwable throwable) {
         return ExceptionDesensitizer.desensitizeStackTrace(throwable);

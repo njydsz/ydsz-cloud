@@ -40,6 +40,9 @@ public class LockMicrometerCollector {
 
     private static final String TAG_LOCK_TYPE = "lock_type";
 
+    /** Timer 发布的分位数（P50/P90/P99/P999） */
+    private static final double[] PUBLISH_PERCENTILES = {0.5, 0.9, 0.99, 0.999};
+
     private final MeterRegistry registry;
     private final AtomicInteger activeLocksCounter = new AtomicInteger(0);
 
@@ -82,7 +85,7 @@ public class LockMicrometerCollector {
                 Timer.builder(name)
                         .tag(TAG_LOCK_TYPE, lockType)
                         .description(description)
-                        .publishPercentiles(0.5, 0.9, 0.99, 0.999)
+                        .publishPercentiles(PUBLISH_PERCENTILES)
                         .register(registry));
     }
 
