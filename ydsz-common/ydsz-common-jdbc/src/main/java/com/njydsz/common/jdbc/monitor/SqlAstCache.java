@@ -1,29 +1,28 @@
 package com.njydsz.common.jdbc.monitor;
 
-import java.time.Duration;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-
-import lombok.extern.slf4j.Slf4j;
+import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
- * JSqlParser AST 解析缓存
+ * JSqlParser AST 解析缓存（JDK 标准库实现，无外部依赖）
  *
- * <p>基于 Caffeine 的高性能 SQL 解析缓存，将 SQL 指纹 → 解析后的 {@link Statement} 进行缓存，
+ * <p>基于 LRU 淘汰策略的 SQL 解析缓存，将 SQL 指纹 → 解析后的 {@link Statement} 进行缓存，
  * 避免同一条 SQL 模板在多个拦截器中重复解析。
  *
  * <p>缓存策略：
  * <ul>
  *   <li>Key = SQL 指纹（{@link SqlFingerprint#fingerprint(String)} 归一化后的模板）</li>
  *   <li>Value = 解析后的 AST {@link Statement} 对象</li>
- *   <li>最大容量 {@value #DEFAULT_MAX_SIZE} 条，写入后 {@value #DEFAULT_EXPIRE_MINUTES} 分钟过期</li>
+ *   <li>最大容量 {@value #DEFAULT_MAX_SIZE} 条，LRU 淘汰</li>
  *   <li>返回前执行深拷贝，避免并发改写同一 AST 导致线程安全问题</li>
+ *   <li>使用读写锁保证并发安全，读操作不加锁（CopyOnWrite 思路）</li>
  * </ul>
  *
  * <p>使用示例：
@@ -40,39 +39,35 @@ import net.sf.jsqlparser.statement.Statement;
 @Slf4j
 public final class SqlAstCache {
 
-    private static final Logger log = LoggerFactory.getLogger(SqlAstCache.class);
-
     /** 默认最大缓存条数 */
     private static final int DEFAULT_MAX_SIZE = 512;
-
-    /** 默认写入后过期时间（分钟） */
-    private static final long DEFAULT_EXPIRE_MINUTES = 10;
 
     /** 全局单例实例 */
     private static volatile SqlAstCache instance;
 
-    /** Caffeine 缓存实例 */
-    private final Cache<String, Statement> cache;
+    /** LRU 缓存映射（access-order） */
+    private final Map<String, Statement> cache;
+
+    /** 读写锁，保护缓存复合操作 */
+    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
     /**
-     * 私有构造方法，使用默认配置初始化缓存
+     * 私有构造方法，初始化 LRU 缓存
      */
     private SqlAstCache() {
-        this.cache = Caffeine.newBuilder()
-                .maximumSize(DEFAULT_MAX_SIZE)
-                .expireAfterWrite(Duration.ofMinutes(DEFAULT_EXPIRE_MINUTES))
-                .removalListener((key, value, cause) -> {
-                    if (log.isDebugEnabled()) {
-                        log.debug("SqlAstCache 移除条目: key={}, cause={}", key, cause);
-                    }
-                })
-                .build();
-        log.info("SqlAstCache 已初始化 (maxSize={}, expireAfterWrite={}min)",
-                DEFAULT_MAX_SIZE, DEFAULT_EXPIRE_MINUTES);
+        this.cache = new LinkedHashMap<String, Statement>(DEFAULT_MAX_SIZE, 0.75f, true) {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, Statement> eldest) {
+                return size() > DEFAULT_MAX_SIZE;
+            }
+        };
+        log.info("SqlAstCache 已初始化 (maxSize={})", DEFAULT_MAX_SIZE);
     }
 
     /**
-     * 获取全局单例实例
+     * 获取全局单例实例（双重检查锁定）
      *
      * @return SqlAstCache 单例
      */
@@ -95,25 +90,39 @@ public final class SqlAstCache {
      *
      * @param sql 原始 SQL 语句
      * @return 解析后的 AST（深拷贝，可安全改写）
-     * @throws net.sf.jsqlparser.JSQLParserException 解析失败时抛出
+     * @throws JSQLParserException 解析失败时抛出
      */
-    public Statement parse(String sql) throws net.sf.jsqlparser.JSQLParserException {
+    public Statement parse(String sql) throws JSQLParserException {
         if (sql == null || sql.isEmpty()) {
             throw new IllegalArgumentException("SQL 不能为空");
         }
 
         String fingerprint = SqlFingerprint.fingerprint(sql);
-        Statement cached = cache.getIfPresent(fingerprint);
+
+        // 读操作：尝试从缓存获取
+        lock.readLock().lock();
+        Statement cached;
+        try {
+            cached = cache.get(fingerprint);
+        } finally {
+            lock.readLock().unlock();
+        }
 
         if (cached != null) {
-            // 返回深拷贝以避免并发改写
             return deepCopy(cached);
         }
 
         // 缓存未命中，解析原始 SQL
         Statement parsed = CCJSqlParserUtil.parse(sql);
-        cache.put(fingerprint, parsed);
-        // 返回深拷贝，保留缓存中的原始 AST 不变
+
+        // 写操作：放入缓存
+        lock.writeLock().lock();
+        try {
+            cache.put(fingerprint, parsed);
+        } finally {
+            lock.writeLock().unlock();
+        }
+
         return deepCopy(parsed);
     }
 
@@ -133,7 +142,7 @@ public final class SqlAstCache {
         try {
             String sql = original.toString();
             return CCJSqlParserUtil.parse(sql);
-        } catch (net.sf.jsqlparser.JSQLParserException e) {
+        } catch (JSQLParserException e) {
             // 深拷贝失败不应阻塞业务，回退到返回原始对象（此时存在并发风险，但极罕见）
             log.warn("SqlAstCache 深拷贝失败，返回原始 AST 引用（存在并发风险）: {}", e.getMessage());
             return original;
@@ -141,28 +150,29 @@ public final class SqlAstCache {
     }
 
     /**
-     * 获取缓存统计信息
-     *
-     * @return Caffeine 缓存统计
-     */
-    public com.github.benmanes.caffeine.cache.stats.CacheStats stats() {
-        return cache.stats();
-    }
-
-    /**
      * 清空缓存
      */
     public void invalidateAll() {
-        cache.invalidateAll();
+        lock.writeLock().lock();
+        try {
+            cache.clear();
+        } finally {
+            lock.writeLock().unlock();
+        }
         log.info("SqlAstCache 已清空");
     }
 
     /**
-     * 获取当前缓存条目数（估算值）
+     * 获取当前缓存条目数
      *
-     * @return 缓存大小估算
+     * @return 缓存大小
      */
-    public long estimatedSize() {
-        return cache.estimatedSize();
+    public int size() {
+        lock.readLock().lock();
+        try {
+            return cache.size();
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 }

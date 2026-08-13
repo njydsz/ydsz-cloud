@@ -13,12 +13,12 @@ import io.micrometer.core.instrument.binder.MeterBinder;
  * 虚拟线程池 Micrometer 指标绑定器。
  *
  * <p>JDK 21 的 {@link Executors#newThreadPerTaskExecutor} 返回的虚拟线程执行器
- * （注意由 {@code ydzs-common-thread} 配置管理的虚拟线程池不受并发限制，每任务一线程）
+ * （注意由 {@code ydsz-common-thread} 配置管理的虚拟线程池不受并发限制，每任务一线程）
  * 不支持 {@link java.util.concurrent.ThreadPoolExecutor} 的计数 API，
  * 因此本绑定器通过应用层计数器暴露 submitted / completed / rejected / active 四个指标。
  *
  * <p>如需对虚拟线程池进行精细化监控（活跃线程数、拒绝计数等），
- * 建议使用 {@code ydzs-common-util} 中的 {@code BoundedVirtualThreadScheduler}。
+ * 建议使用 {@code ydsz-common-util} 中的 {@code BoundedVirtualThreadScheduler}。
  *
  * @author ydsz-team
  * @since 1.3.0

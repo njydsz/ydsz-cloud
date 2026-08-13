@@ -21,7 +21,17 @@
       "name": "ydsz.thread.pools.*.type",
       "type": "com.njydsz.common.thread.config.ThreadPoolProperties$PoolType",
       "description": "线程池类型：PLATFORM（平台线程，默认）或 VIRTUAL（虚拟线程，JDK 21+）。虚拟线程池不受 coreSize/maxSize/queueCapacity 限制。",
-      "defaultValue": "PLATFORM"
+      "defaultValue": "PLATFORM",
+      "values": [
+        {
+          "value": "PLATFORM",
+          "description": "平台线程池，基于传统 ThreadPoolExecutor"
+        },
+        {
+          "value": "VIRTUAL",
+          "description": "虚拟线程池（JDK 21+），每任务一线程，无并发上限"
+        }
+      ]
     },
     {
       "name": "ydsz.thread.pools.*.core-size",
@@ -51,7 +61,25 @@
       "name": "ydsz.thread.pools.*.reject-policy",
       "type": "com.njydsz.common.thread.config.ThreadPoolProperties$RejectPolicy",
       "description": "拒绝策略：ABORT/CALLER_RUNS/DISCARD_OLDEST/DISCARD（默认 CALLER_RUNS）。仅对 PLATFORM 类型生效。",
-      "defaultValue": "CALLER_RUNS"
+      "defaultValue": "CALLER_RUNS",
+      "values": [
+        {
+          "value": "ABORT",
+          "description": "抛出 RejectedExecutionException（推荐强一致场景）"
+        },
+        {
+          "value": "CALLER_RUNS",
+          "description": "由调用线程执行（推荐兜底防丢失）"
+        },
+        {
+          "value": "DISCARD_OLDEST",
+          "description": "丢弃队列最旧任务（推荐允许丢弃场景）"
+        },
+        {
+          "value": "DISCARD",
+          "description": "静默丢弃（不推荐）"
+        }
+      ]
     },
     {
       "name": "ydsz.thread.pools.*.await-termination-seconds",
@@ -81,6 +109,51 @@
       "name": "ydsz.thread.pools.*.task-decorator-bean-names",
       "type": "java.util.List<java.lang.String>",
       "description": "TaskDecorator Bean 名称列表（仅对 PLATFORM 生效）。用于跨线程传播上下文（如 MDC 日志追踪 ID、RequestContext、SecurityContext）。"
+    }
+  ],
+  "hints": [
+    {
+      "name": "ydsz.thread.pools.*.type",
+      "values": [
+        {
+          "value": "PLATFORM",
+          "description": "平台线程池（基于 ThreadPoolExecutor，受 core/max/queue 限制）"
+        },
+        {
+          "value": "VIRTUAL",
+          "description": "虚拟线程池（JDK 21+，轻量级，适合 IO 密集型）"
+        }
+      ]
+    },
+    {
+      "name": "ydsz.thread.pools.*.reject-policy",
+      "values": [
+        {
+          "value": "ABORT",
+          "description": "抛出异常，调用方感知拒绝"
+        },
+        {
+          "value": "CALLER_RUNS",
+          "description": "调用线程执行，提供背压"
+        },
+        {
+          "value": "DISCARD_OLDEST",
+          "description": "丢弃队列头，尝试提交新任务"
+        },
+        {
+          "value": "DISCARD",
+          "description": "静默丢弃当前任务"
+        }
+      ]
+    },
+    {
+      "name": "ydsz.thread.pools.*.queue-capacity",
+      "values": [
+        {
+          "value": 0,
+          "description": "使用 SynchronousQueue，无缓冲，直接交付线程"
+        }
+      ]
     }
   ]
 }

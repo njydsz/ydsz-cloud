@@ -104,6 +104,16 @@ public class FallbackDistributedLock implements DistributedLocker {
     private final AtomicInteger degradedAttempts = new AtomicInteger(0);
 
     /**
+     * 降级回调（可选，用于通知业务方 Redis 已不可用或已恢复）
+     */
+    private LockDegradationCallback degradationCallback = LockDegradationCallback.NO_OP;
+
+    /**
+     * 最后一次异常信息（用于回调时传递错误上下文）
+     */
+    private volatile String lastErrorMessage;
+
+    /**
      * 构造器
      *
      * @param delegate         被包装的分布式锁实例
@@ -121,6 +131,18 @@ public class FallbackDistributedLock implements DistributedLocker {
      */
     public FallbackDistributedLock(DistributedLocker delegate) {
         this(delegate, true);
+    }
+
+    /**
+     * 设置降级回调
+     *
+     * <p>当 Redis 不可用触发降级或恢复时，会调用回调通知业务方。
+     *
+     * @param degradationCallback 降级回调实现，为 null 则使用空实现
+     */
+    public void setDegradationCallback(LockDegradationCallback degradationCallback) {
+        this.degradationCallback = degradationCallback != null
+                ? degradationCallback : LockDegradationCallback.NO_OP;
     }
 
     /**
@@ -349,11 +371,21 @@ public class FallbackDistributedLock implements DistributedLocker {
      */
     private void onRedisFailure(String lockKey, Exception e) {
         int failures = consecutiveFailures.incrementAndGet();
+        this.lastErrorMessage = e.getMessage();
         if (failures >= FAILURE_THRESHOLD && redisAvailable.compareAndSet(true, false)) {
-            log.warn("[ydsz-lock] [fallback]Redis 连续失败 {} 次，标记为不可用，全局切换到本地锁模式 | lastError={}",
-                    failures, e.getMessage());
+            log.warn("[ydsz-lock] [fallback]Redis 连续失败 {} 次，标记为不可用，全局切换到本地锁模式 | "
+                            + "lockKey={} | lastError={}",
+                    failures, lockKey, e.getMessage());
+            // 触发降级回调
+            try {
+                degradationCallback.onDegraded(lockKey, failures, e.getMessage());
+            } catch (Exception callbackEx) {
+                log.warn("[ydsz-lock] [fallback]降级回调执行异常 | lockKey={} | error={}",
+                        lockKey, callbackEx.getMessage());
+            }
         }
-        log.warn("[ydsz-lock] [fallback]Redis 锁操作异常，降级为本地锁 | lockKey={} | error={}", lockKey, e.getMessage());
+        log.warn("[ydsz-lock] [fallback]Redis 锁操作异常，降级为本地锁 | lockKey={} | error={}",
+                lockKey, e.getMessage());
         degradedKeys.put(lockKey, Boolean.TRUE);
     }
 
@@ -364,6 +396,12 @@ public class FallbackDistributedLock implements DistributedLocker {
         consecutiveFailures.set(0);
         if (!redisAvailable.get() && redisAvailable.compareAndSet(false, true)) {
             log.info("[ydsz-lock] [fallback]Redis 已恢复，切换回分布式锁模式");
+            // 触发恢复回调
+            try {
+                degradationCallback.onRecovered("global");
+            } catch (Exception callbackEx) {
+                log.warn("[ydsz-lock] [fallback]恢复回调执行异常 | error={}", callbackEx.getMessage());
+            }
         }
     }
 
@@ -385,6 +423,12 @@ public class FallbackDistributedLock implements DistributedLocker {
                 redisAvailable.set(true);
                 consecutiveFailures.set(0);
                 log.info("[ydsz-lock] [fallback]Redis 探测成功，已恢复分布式锁模式 | lockKey={}", lockKey);
+                try {
+                    degradationCallback.onRecovered(lockKey);
+                } catch (Exception callbackEx) {
+                    log.warn("[ydsz-lock] [fallback]恢复回调执行异常 | lockKey={} | error={}",
+                            lockKey, callbackEx.getMessage());
+                }
                 return lockValue;
             }
             return null;
@@ -404,6 +448,12 @@ public class FallbackDistributedLock implements DistributedLocker {
                 redisAvailable.set(true);
                 consecutiveFailures.set(0);
                 log.info("[ydsz-lock] [fallback]Redis 探测成功，已恢复分布式锁模式 | lockKey={}", lockKey);
+                try {
+                    degradationCallback.onRecovered(lockKey);
+                } catch (Exception callbackEx) {
+                    log.warn("[ydsz-lock] [fallback]恢复回调执行异常 | lockKey={} | error={}",
+                            lockKey, callbackEx.getMessage());
+                }
                 return lockValue;
             }
             return null;

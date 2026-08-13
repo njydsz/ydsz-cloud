@@ -1,8 +1,6 @@
 package com.njydsz.common.exception.custom;
-import java.util.Map;
 
-import lombok.ToString;
-import org.springframework.http.HttpStatus;
+import java.util.Map;
 
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.code.ResultCode;
@@ -12,11 +10,31 @@ import com.njydsz.common.exception.enums.ExceptionCategory;
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.enums.ExceptionLevel;
 
+import lombok.ToString;
+
+import org.springframework.http.HttpStatus;
+
 /**
  * 系统异常类
  *
  * <p>用于封装基础设施故障类异常，如数据库连接失败、缓存服务异常、消息队列故障等。
  * 默认 HTTP 状态码为 500，异常分类为 SYSTEM。
+ *
+ * <p><b>推荐使用方式（v2.3.0）：</b>
+ * <pre>{@code
+ * // 1. 预定义异常码（推荐）
+ * throw SysException.of(CoreExceptionCode.DATABASE_ERROR);
+ *
+ * // 2. 预定义异常码 + 原始异常
+ * throw new SysException(CoreExceptionCode.CACHE_ERROR, cause);
+ *
+ * // 3. 全参数链式构建（自定义错误码场景）
+ * throw SysException.builder()
+ *     .code("MQ_PUBLISH_FAILED")
+ *     .key("mq.publish.failed")
+ *     .level(ExceptionLevel.FATAL)
+ *     .build();
+ * }</pre>
  *
  * <p><b>精简设计（v2.0）：</b>仅保留 3 个核心构造函数，
  * 其他参数化构造通过 {@link #builder()} 链式 Builder 完成，消除 20+ 构造函数爆炸问题。
@@ -99,13 +117,16 @@ public class SysException extends AbstractYdszException {
     }
 
     /**
-     * 使用自定义消息构造系统异常（兼容构造器，v2.0 精简后由 Builder 替代）。
+     * 使用自定义消息构造系统异常（已弃用）。
      *
      * <p>大量存量调用方仍使用消息字符串形式，保留此构造器避免批量迁移；
-     * 新代码请优先使用 {@link #builder()} 或 {@link #SysException(ExceptionCode)}。</p>
+     * 新代码请优先使用 {@link #of(ExceptionCode)} 或 {@link #builder()}。</p>
      *
      * @param message 异常详细信息
+     * @deprecated 请使用 {@link #of(ExceptionCode)} 或 {@link #builder()} 替代，
+     *             以便获得完整的错误码和国际化支持。
      */
+    @Deprecated
     public SysException(String message) {
         super(message);
         initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
@@ -113,11 +134,16 @@ public class SysException extends AbstractYdszException {
     }
 
     /**
-     * 使用自定义消息和原始异常构造系统异常（兼容构造器，v2.0 精简后由 Builder 替代）。
+     * 使用自定义消息和原始异常构造系统异常（已弃用）。
+     *
+     * <p>保留给存量调用方，新代码请优先使用 {@link #SysException(ExceptionCode, Throwable)}
+     * 或 {@link #builder()}。</p>
      *
      * @param message 异常详细信息
      * @param cause   原始异常
+     * @deprecated 请使用 {@link #SysException(ExceptionCode, Throwable)} 或 {@link #builder()} 替代。
      */
+    @Deprecated
     public SysException(String message, Throwable cause) {
         super(message, cause);
         initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);

@@ -60,6 +60,85 @@ public class RedisBloomFilter implements BloomFilterService {
     /** MurmurHash3 64 位变体常量 c2 */
     private static final long MURMUR_C2 = 0x4cf5ad432745937fL;
 
+    /** MurmurHash3 分块大小（字节） */
+    private static final int MURMUR_BLOCK_SIZE = 16;
+    /** MurmurHash3 半块大小（字节），用于拆分两个 64 位字 */
+    private static final int MURMUR_BLOCK_HALF_SIZE = 8;
+    /** MurmurHash3 尾部剩余字节数掩码（0~15） */
+    private static final int MURMUR_TAIL_MASK = 15;
+    /** MurmurHash3 状态更新乘数 */
+    private static final long MURMUR_MULTIPLIER = 5L;
+    /** MurmurHash3 状态更新常量一（0x52dce729） */
+    private static final long MURMUR_STATE_C1 = 0x52dce729L;
+    /** MurmurHash3 状态更新常量二（0x38495ab5） */
+    private static final long MURMUR_STATE_C2 = 0x38495ab5L;
+    /** MurmurHash3 最终混淆（fmix）第一乘法常量 */
+    private static final long FMIX_MULTIPLIER_1 = 0xff51afd7ed558ccdL;
+    /** MurmurHash3 最终混淆（fmix）第二乘法常量 */
+    private static final long FMIX_MULTIPLIER_2 = 0xc4ceb9fe1a85ec53L;
+    /** 字节无符号化掩码 */
+    private static final long BYTE_UNSIGNED_MASK = 0xffL;
+
+    /** MurmurHash3 循环左移位数 27 */
+    private static final int ROTATE_LEFT_27 = 27;
+    /** MurmurHash3 循环左移位数 31 */
+    private static final int ROTATE_LEFT_31 = 31;
+    /** MurmurHash3 循环左移位数 33 */
+    private static final int ROTATE_LEFT_33 = 33;
+    /** MurmurHash3 fmix 无符号右移位数 33 */
+    private static final int UNSIGNED_RIGHT_SHIFT_33 = 33;
+
+    /** 位移位数 8 */
+    private static final int SHIFT_BITS_8 = 8;
+    /** 位移位数 16 */
+    private static final int SHIFT_BITS_16 = 16;
+    /** 位移位数 24 */
+    private static final int SHIFT_BITS_24 = 24;
+    /** 位移位数 32 */
+    private static final int SHIFT_BITS_32 = 32;
+    /** 位移位数 40 */
+    private static final int SHIFT_BITS_40 = 40;
+    /** 位移位数 48 */
+    private static final int SHIFT_BITS_48 = 48;
+    /** 位移位数 56 */
+    private static final int SHIFT_BITS_56 = 56;
+
+    /** MurmurHash3 尾部剩余字节数 15 */
+    private static final int TAIL_REMAINING_15 = 15;
+    /** MurmurHash3 尾部剩余字节数 14 */
+    private static final int TAIL_REMAINING_14 = 14;
+    /** MurmurHash3 尾部剩余字节数 13 */
+    private static final int TAIL_REMAINING_13 = 13;
+    /** MurmurHash3 尾部剩余字节数 12 */
+    private static final int TAIL_REMAINING_12 = 12;
+    /** MurmurHash3 尾部剩余字节数 11 */
+    private static final int TAIL_REMAINING_11 = 11;
+    /** MurmurHash3 尾部剩余字节数 9 */
+    private static final int TAIL_REMAINING_9 = 9;
+    /** MurmurHash3 尾部剩余字节数 8 */
+    private static final int TAIL_REMAINING_8 = 8;
+    /** MurmurHash3 尾部剩余字节数 7 */
+    private static final int TAIL_REMAINING_7 = 7;
+    /** MurmurHash3 尾部剩余字节数 6 */
+    private static final int TAIL_REMAINING_6 = 6;
+    /** MurmurHash3 尾部剩余字节数 5 */
+    private static final int TAIL_REMAINING_5 = 5;
+    /** MurmurHash3 尾部剩余字节数 4 */
+    private static final int TAIL_REMAINING_4 = 4;
+    /** MurmurHash3 尾部剩余字节数 3 */
+    private static final int TAIL_REMAINING_3 = 3;
+
+    /** 小端读取字节偏移量 3 */
+    private static final int BYTE_OFFSET_3 = 3;
+    /** 小端读取字节偏移量 4 */
+    private static final int BYTE_OFFSET_4 = 4;
+    /** 小端读取字节偏移量 5 */
+    private static final int BYTE_OFFSET_5 = 5;
+    /** 小端读取字节偏移量 6 */
+    private static final int BYTE_OFFSET_6 = 6;
+    /** 小端读取字节偏移量 7 */
+    private static final int BYTE_OFFSET_7 = 7;
+
     private final RedisTemplate<String, Object> redisTemplate;
     private final DefaultRedisScript<Boolean> addScript;
     private final DefaultRedisScript<Boolean> existsScript;
@@ -466,32 +545,32 @@ public class RedisBloomFilter implements BloomFilterService {
         long h1 = seed;
         long h2 = seed;
         int length = data.length;
-        int numBlocks = length / 16;
+        int numBlocks = length / MURMUR_BLOCK_SIZE;
 
         for (int i = 0; i < numBlocks; i++) {
-            int offset = i * 16;
+            int offset = i * MURMUR_BLOCK_SIZE;
             long k1 = getLongLittleEndian(data, offset);
-            long k2 = getLongLittleEndian(data, offset + 8);
+            long k2 = getLongLittleEndian(data, offset + MURMUR_BLOCK_HALF_SIZE);
 
             k1 *= MURMUR_C1;
-            k1 = Long.rotateLeft(k1, 31);
+            k1 = Long.rotateLeft(k1, ROTATE_LEFT_31);
             k1 *= MURMUR_C2;
             h1 ^= k1;
-            h1 = Long.rotateLeft(h1, 27);
+            h1 = Long.rotateLeft(h1, ROTATE_LEFT_27);
             h1 += h2;
-            h1 = h1 * 5 + 0x52dce729;
+            h1 = h1 * MURMUR_MULTIPLIER + MURMUR_STATE_C1;
 
             k2 *= MURMUR_C2;
-            k2 = Long.rotateLeft(k2, 33);
+            k2 = Long.rotateLeft(k2, ROTATE_LEFT_33);
             k2 *= MURMUR_C1;
             h2 ^= k2;
-            h2 = Long.rotateLeft(h2, 31);
+            h2 = Long.rotateLeft(h2, ROTATE_LEFT_31);
             h2 += h1;
-            h2 = h2 * 5 + 0x38495ab5;
+            h2 = h2 * MURMUR_MULTIPLIER + MURMUR_STATE_C2;
         }
 
         // 处理尾部字节（使用 switch fall-through，与 Guava MurmurHash3 实现一致）
-        long[] tail = applyTail(data, numBlocks * 16, length & 15, h1, h2);
+        long[] tail = applyTail(data, numBlocks * MURMUR_BLOCK_SIZE, length & MURMUR_TAIL_MASK, h1, h2);
         h1 = tail[0];
         h2 = tail[1];
 
@@ -523,56 +602,56 @@ public class RedisBloomFilter implements BloomFilterService {
         long k2 = 0;
 
         switch (remaining) {
-            case 15:
-                k2 ^= ((long) data[tailStart + 14] & 0xff) << 48;
+            case TAIL_REMAINING_15:
+                k2 ^= ((long) data[tailStart + TAIL_REMAINING_14] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_48;
                 // fall through
-            case 14:
-                k2 ^= ((long) data[tailStart + 13] & 0xff) << 40;
+            case TAIL_REMAINING_14:
+                k2 ^= ((long) data[tailStart + TAIL_REMAINING_13] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_40;
                 // fall through
-            case 13:
-                k2 ^= ((long) data[tailStart + 12] & 0xff) << 32;
+            case TAIL_REMAINING_13:
+                k2 ^= ((long) data[tailStart + TAIL_REMAINING_12] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_32;
                 // fall through
-            case 12:
-                k2 ^= ((long) data[tailStart + 11] & 0xff) << 24;
+            case TAIL_REMAINING_12:
+                k2 ^= ((long) data[tailStart + TAIL_REMAINING_11] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_24;
                 // fall through
-            case 11:
-                k2 ^= ((long) data[tailStart + 10] & 0xff) << 16;
+            case TAIL_REMAINING_11:
+                k2 ^= ((long) data[tailStart + 10] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_16;
                 // fall through
             case 10:
-                k2 ^= ((long) data[tailStart + 9] & 0xff) << 8;
+                k2 ^= ((long) data[tailStart + TAIL_REMAINING_9] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_8;
                 // fall through
-            case 9:
-                k2 ^= ((long) data[tailStart + 8] & 0xff);
+            case TAIL_REMAINING_9:
+                k2 ^= ((long) data[tailStart + TAIL_REMAINING_8] & BYTE_UNSIGNED_MASK);
                 k2 *= MURMUR_C2;
-                k2 = Long.rotateLeft(k2, 33);
+                k2 = Long.rotateLeft(k2, ROTATE_LEFT_33);
                 k2 *= MURMUR_C1;
                 h2 ^= k2;
                 // fall through
-            case 8:
-                k1 ^= ((long) data[tailStart + 7] & 0xff) << 56;
+            case TAIL_REMAINING_8:
+                k1 ^= ((long) data[tailStart + TAIL_REMAINING_7] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_56;
                 // fall through
-            case 7:
-                k1 ^= ((long) data[tailStart + 6] & 0xff) << 48;
+            case TAIL_REMAINING_7:
+                k1 ^= ((long) data[tailStart + TAIL_REMAINING_6] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_48;
                 // fall through
-            case 6:
-                k1 ^= ((long) data[tailStart + 5] & 0xff) << 40;
+            case TAIL_REMAINING_6:
+                k1 ^= ((long) data[tailStart + TAIL_REMAINING_5] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_40;
                 // fall through
-            case 5:
-                k1 ^= ((long) data[tailStart + 4] & 0xff) << 32;
+            case TAIL_REMAINING_5:
+                k1 ^= ((long) data[tailStart + TAIL_REMAINING_4] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_32;
                 // fall through
-            case 4:
-                k1 ^= ((long) data[tailStart + 3] & 0xff) << 24;
+            case TAIL_REMAINING_4:
+                k1 ^= ((long) data[tailStart + TAIL_REMAINING_3] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_24;
                 // fall through
-            case 3:
-                k1 ^= ((long) data[tailStart + 2] & 0xff) << 16;
+            case TAIL_REMAINING_3:
+                k1 ^= ((long) data[tailStart + 2] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_16;
                 // fall through
             case 2:
-                k1 ^= ((long) data[tailStart + 1] & 0xff) << 8;
+                k1 ^= ((long) data[tailStart + 1] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_8;
                 // fall through
             case 1:
-                k1 ^= ((long) data[tailStart] & 0xff);
+                k1 ^= ((long) data[tailStart] & BYTE_UNSIGNED_MASK);
                 k1 *= MURMUR_C1;
-                k1 = Long.rotateLeft(k1, 31);
+                k1 = Long.rotateLeft(k1, ROTATE_LEFT_31);
                 k1 *= MURMUR_C2;
                 h1 ^= k1;
                 // fall through
@@ -584,22 +663,22 @@ public class RedisBloomFilter implements BloomFilterService {
     }
 
     private static long getLongLittleEndian(byte[] data, int offset) {
-        return ((long) data[offset] & 0xff)
-                | (((long) data[offset + 1] & 0xff) << 8)
-                | (((long) data[offset + 2] & 0xff) << 16)
-                | (((long) data[offset + 3] & 0xff) << 24)
-                | (((long) data[offset + 4] & 0xff) << 32)
-                | (((long) data[offset + 5] & 0xff) << 40)
-                | (((long) data[offset + 6] & 0xff) << 48)
-                | (((long) data[offset + 7] & 0xff) << 56);
+        return ((long) data[offset] & BYTE_UNSIGNED_MASK)
+                | (((long) data[offset + 1] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_8)
+                | (((long) data[offset + 2] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_16)
+                | (((long) data[offset + BYTE_OFFSET_3] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_24)
+                | (((long) data[offset + BYTE_OFFSET_4] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_32)
+                | (((long) data[offset + BYTE_OFFSET_5] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_40)
+                | (((long) data[offset + BYTE_OFFSET_6] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_48)
+                | (((long) data[offset + BYTE_OFFSET_7] & BYTE_UNSIGNED_MASK) << SHIFT_BITS_56);
     }
 
     private static long fmix64(long k) {
-        k ^= k >>> 33;
-        k *= 0xff51afd7ed558ccdL;
-        k ^= k >>> 33;
-        k *= 0xc4ceb9fe1a85ec53L;
-        k ^= k >>> 33;
+        k ^= k >>> UNSIGNED_RIGHT_SHIFT_33;
+        k *= FMIX_MULTIPLIER_1;
+        k ^= k >>> UNSIGNED_RIGHT_SHIFT_33;
+        k *= FMIX_MULTIPLIER_2;
+        k ^= k >>> UNSIGNED_RIGHT_SHIFT_33;
         return k;
     }
 }
