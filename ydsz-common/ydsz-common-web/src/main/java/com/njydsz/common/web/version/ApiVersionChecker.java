@@ -79,7 +79,7 @@ public class ApiVersionChecker {
             return;
         }
 
-        List<String> violations = new ArrayList<>();
+        List<String> violations = new ArrayList<>(64);
 
         handlerMapping.getHandlerMethods().forEach((requestMappingInfo, handlerMethod) -> {
             violations.addAll(validateHandlerMethod(handlerMethod));

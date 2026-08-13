@@ -166,10 +166,10 @@ public abstract class YdszExceptionBuilder<T extends AbstractYdszException> {
     /**
      * 设置自定义异常消息。
      *
-     * <p><b>注意</b>：该值仅透传给 {@link #doBuild} 由具体子类决定是否采纳。
-     * 内置的 {@code BusinessExceptionBuilder} 与 {@code SysExceptionBuilder} 均忽略此值，
-     * 最终消息仍由 {@link #key(String)} 经国际化解析得到；
-     * 需要绕过 i18n 直接指定文案时，请改用异常类中接收 {@code message} 的构造函数。
+     * <p>该值透传给 {@link #doBuild} 由具体子类消费：内置的
+     * {@code BusinessExceptionBuilder} 与 {@code SysExceptionBuilder} 在
+     * {@code message} 非 null 时通过 {@link AbstractYdszException#setMessage(String)}
+     * 直接覆盖消息（跳过 i18n 解析）。未设置时仍按 {@link #key(String)} 国际化解析。
      *
      * @param message 自定义消息文案，允许为 {@code null}
      * @return 当前构建器，便于链式调用

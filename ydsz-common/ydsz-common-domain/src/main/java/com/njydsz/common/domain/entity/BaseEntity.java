@@ -5,11 +5,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.njydsz.common.domain.event.EventRegistry;
-import com.njydsz.common.json.annotation.JsonClass;
-import com.njydsz.common.json.annotation.JsonFormat;
-import com.njydsz.common.json.annotation.JsonIgnore;
-
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,6 +13,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.domain.event.EventRegistry;
+import com.njydsz.common.json.annotation.JsonClass;
+import com.njydsz.common.json.annotation.JsonFormat;
+import com.njydsz.common.json.annotation.JsonIgnore;
 
 /**
  * 领域基础实体（纯领域，不携带持久化语义）。
@@ -57,7 +57,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class BaseEntity<T extends Serializable> implements Serializable, EventRegistry {
+public abstract class BaseEntity<T extends Serializable> implements Serializable, EventRegistry {
 
     private static final long serialVersionUID = 1L;
 

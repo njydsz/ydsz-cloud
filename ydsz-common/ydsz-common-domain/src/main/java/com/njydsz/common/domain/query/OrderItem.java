@@ -3,8 +3,6 @@ package com.njydsz.common.domain.query;
 import java.io.Serializable;
 import java.util.Locale;
 
-import com.njydsz.common.domain.query.OrderItem.Direction;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

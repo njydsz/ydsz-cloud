@@ -28,7 +28,8 @@ import java.util.Objects;
  *
  * <p><b>对标：</b>Axon 的 {@code Identifier}、Vlad Mihalcea 的 {@code DomainId}。</p>
  *
- * @param <T> 实体类型（phantom type，仅用于编译期区分，运行时擦除）
+ * @param <T>   实体类型（phantom type，仅用于编译期区分，运行时擦除）
+ * @param value 底层 ID 值（Long），不可为 null 且必须为正数
  * @author ydsz-team
  * @since 1.2.0
  */
@@ -90,8 +91,12 @@ public record TypedId<T>(Long value) implements Serializable, Comparable<TypedId
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         TypedId<?> typedId = (TypedId<?>) o;
         return Objects.equals(value, typedId.value);
     }

@@ -103,7 +103,7 @@ public final class HintManager {
      *
      * @return 当前 Hint，未设置时返回 {@link Optional#empty()}
      */
-    static Optional<Hint> get() {
+    public static Optional<Hint> get() {
         return Optional.ofNullable(CURRENT_HINT.get());
     }
 

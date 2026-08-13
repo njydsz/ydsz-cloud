@@ -23,10 +23,12 @@ package com.njydsz.common.domain.validation;
  *
  * // Controller 层指定分组
  * @PostMapping
- * public BaseResponse&lt;Void&gt; create(@Validated(ValidationGroups.Create.class) @RequestBody UserCommand cmd) { ... }
+ * public BaseResponse&lt;Void&gt; create(
+ *         @Validated(ValidationGroups.Create.class) @RequestBody UserCommand cmd) { ... }
  *
  * @PutMapping("/{id}")
- * public BaseResponse&lt;Void&gt; update(@Validated(ValidationGroups.Update.class) @RequestBody UserCommand cmd) { ... }
+ * public BaseResponse&lt;Void&gt; update(
+ *         @Validated(ValidationGroups.Update.class) @RequestBody UserCommand cmd) { ... }
  * }</pre>
  *
  * <p>设计参考：

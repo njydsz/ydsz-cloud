@@ -217,7 +217,8 @@ public class SysException extends AbstractYdszException {
         }
 
         /**
-         * 便捷方法：设置 {@link BaseResultCode} 作为错误码（兼容路径）。n         *
+         * 便捷方法：设置 {@link BaseResultCode} 作为错误码（兼容路径）。
+         *
          * <p>BaseResultCode 不包含 HTTP 状态码，使用默认值。
          */
         public SysExceptionBuilder resultCode(BaseResultCode resultCode) {

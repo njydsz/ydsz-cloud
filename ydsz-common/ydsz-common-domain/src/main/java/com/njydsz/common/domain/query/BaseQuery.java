@@ -1,12 +1,11 @@
 package com.njydsz.common.domain.query;
 
-import lombok.Builder;
+import java.io.Serializable;
+import java.time.LocalDateTime;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-
-import java.io.Serializable;
-import java.time.LocalDateTime;
 
 import static lombok.AccessLevel.PROTECTED;
 
@@ -43,7 +42,7 @@ import static lombok.AccessLevel.PROTECTED;
 @Data
 @SuperBuilder
 @NoArgsConstructor(access = PROTECTED)
-public class BaseQuery implements Serializable {
+public abstract class BaseQuery implements Serializable {
 
     /**
      * 序列化版本

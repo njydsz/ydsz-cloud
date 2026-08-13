@@ -140,7 +140,7 @@ public class FlowMonitorDashboardController {
         String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
 
         // 拉取全量异常（detectAnomalies 默认 limit=100，足够覆盖监控场景）
-        List<Map<String, Object>> all = new ArrayList<>();
+        List<Map<String, Object>> all = new ArrayList<>(100);
         try {
             List<Map<String, Object>> detected = efficiencyService.detectAnomalies(tenantId, 100, 24, 7);
             if (detected != null) {
@@ -216,7 +216,7 @@ public class FlowMonitorDashboardController {
         List<Map<String, Object>> rows = hisTaskMapper.selectApproverEfficiency(tenantId, startDt, endDt, topN);
 
         // 字段重命名：assigneeId(String) → userId(Long) / assigneeName → userName
-        List<Map<String, Object>> result = new ArrayList<>();
+        List<Map<String, Object>> result = new ArrayList<>(topN);
         if (rows != null) {
             for (Map<String, Object> row : rows) {
                 Map<String, Object> item = new LinkedHashMap<>();
@@ -262,7 +262,7 @@ public class FlowMonitorDashboardController {
             }
         }
 
-        List<Map<String, Object>> result = new ArrayList<>();
+        List<Map<String, Object>> result = new ArrayList<>(32);
         if (rows != null) {
             for (Map<String, Object> row : rows) {
                 Map<String, Object> item = new LinkedHashMap<>();

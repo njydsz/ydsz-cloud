@@ -45,12 +45,19 @@ public class ExceptionInfo implements Serializable {
 
     /**
      * 错误详情
-     * <p>结构化键值对</p>
+     *
+     * <p>结构化键值对，序列化为 JSON 时按 {@code @JsonInclude(NON_NULL)} 语义输出。
+     * 注意：{@code transient} 标记会误导 Jackson 序列化行为（默认忽略 transient 标记），
+     * 故此处不使用 transient，序列化控制交由 JSON 配置层统一处理。
      */
-    private transient Map<String, Object> details;
+    private Map<String, Object> details;
 
-    /** 异常发生时间 */
-    private transient LocalDateTime timestamp;
+    /**
+     * 异常发生时间
+     *
+     * <p>序列化依赖 JSR-310 模块（Spring Boot 默认启用），输出为 ISO-8601 字符串。
+     */
+    private LocalDateTime timestamp;
 
     /** 发生异常的请求路径 */
     private String path;

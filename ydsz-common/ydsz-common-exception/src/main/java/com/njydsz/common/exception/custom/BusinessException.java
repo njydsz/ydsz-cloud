@@ -92,7 +92,7 @@ public class BusinessException extends AbstractYdszException {
         super(message);
         initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
         this.key = DEFAULT_CODE;
-        this.messageKey = DEFAULT_CODE;
+        setMessage(message);
     }
 
     /**
@@ -129,6 +129,9 @@ public class BusinessException extends AbstractYdszException {
     public BusinessException(ExceptionCode exceptionCode, String message) {
         super(message);
         init(exceptionCode, new Object[]{}, DEFAULT_LEVEL, DEFAULT_CATEGORY);
+        if (message != null) {
+            setMessage(message);
+        }
     }
 
     /**

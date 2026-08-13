@@ -217,7 +217,7 @@ public class HikariCPConfiguration {
 
             @Override
             public void start() {
-                Map<Object, Object> targetDataSources = dynamicRoutingDataSource.getTargetDataSources();
+                Map<Object, DataSource> targetDataSources = dynamicRoutingDataSource.getDataSources();
                 if (targetDataSources == null || targetDataSources.isEmpty()) {
                     log.warn("多数据源路由中未找到目标数据源，跳过 HikariCP 连接池定制");
                     this.running = true;
@@ -234,9 +234,9 @@ public class HikariCPConfiguration {
                 int customized = 0;
                 int skipped = 0;
 
-                for (Map.Entry<Object, Object> entry : targetDataSources.entrySet()) {
+                for (Map.Entry<Object, DataSource> entry : targetDataSources.entrySet()) {
                     String dsName = entry.getKey().toString();
-                    Object ds = entry.getValue();
+                    DataSource ds = entry.getValue();
 
                     if (ds instanceof HikariDataSource) {
                         applyPoolConfig(dsName, (HikariDataSource) ds, configurers);
