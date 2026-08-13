@@ -12,6 +12,8 @@ import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 
+import com.njydsz.common.redis.config.RedisProperties;
+import com.njydsz.common.redis.config.RedisProperties.CacheGuard;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 /**
@@ -56,6 +58,10 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * 确保锁在缓存重建期间不会因业务执行时间超过 leaseTime 而自动释放。
  * 通过抽取公共 LockWatchDog 组件，避免各组件各自实现 WatchDog 导致的代码重复。</p>
  *
+ * <p><b>配置化说明：</b></p>
+ * <p>所有锁租约时间、自旋退避参数均可通过 {@code ydsz.redis.cache-guard.*} 配置项覆盖，
+ * 无需修改代码即可适配不同业务场景的需求。</p>
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -66,23 +72,6 @@ public class RedisCacheGuard {
     private static final String PENETRATION_LOCK_PREFIX = "cache:guard:penetration:";
     private static final String BREAKDOWN_LOCK_PREFIX = "cache:guard:breakdown:";
 
-    /** 自旋等待最大时长（毫秒），等待持锁线程回填缓存 */
-    private static final long SPIN_MAX_WAIT_MS = 3000;
-    /** 自旋等待初始退避间隔（毫秒） */
-    private static final long SPIN_INITIAL_BACKOFF_MS = 20;
-    /** 自旋等待最大退避间隔（毫秒） */
-    private static final long SPIN_MAX_BACKOFF_MS = 500;
-    /** 防击穿锁等待获取最大时长（毫秒） */
-    private static final long LOCK_WAIT_MS = 2000;
-    /** 防击穿锁等待获取初始退避间隔（毫秒） */
-    private static final long LOCK_WAIT_INITIAL_BACKOFF_MS = 10;
-    /** 防击穿锁等待获取最大退避间隔（毫秒） */
-    private static final long LOCK_WAIT_MAX_BACKOFF_MS = 200;
-    /** 防穿透锁租约时间（秒） */
-    private static final int PENETRATION_LOCK_LEASE_SECONDS = 5;
-    /** 防击穿锁租约时间（秒） */
-    private static final int BREAKDOWN_LOCK_LEASE_SECONDS = 10;
-
     private final RedisStringOps stringOps;
     private final RedisTemplate<String, Object> redisTemplate;
     private final int nullValueTtlSeconds;
@@ -92,16 +81,47 @@ public class RedisCacheGuard {
      */
     private final LockWatchDog lockWatchDog;
 
+    /** 缓存防护可配置参数 */
+    private final CacheGuard cacheGuardConfig;
+
+    /**
+     * 创建缓存防护实例（使用默认配置）
+     *
+     * @param stringOps      Redis String 操作组件
+     * @param redisTemplate  Redis 模板
+     */
     public RedisCacheGuard(RedisStringOps stringOps, RedisTemplate<String, Object> redisTemplate) {
-        this(stringOps, redisTemplate, 1800);
+        this(stringOps, redisTemplate, 1800, new CacheGuard());
     }
 
+    /**
+     * 创建缓存防护实例（自定义空值 TTL，默认防护配置）
+     *
+     * @param stringOps          Redis String 操作组件
+     * @param redisTemplate      Redis 模板
+     * @param nullValueTtlSeconds 空值缓存 TTL（秒）
+     */
     public RedisCacheGuard(RedisStringOps stringOps, RedisTemplate<String, Object> redisTemplate,
-                          int nullValueTtlSeconds) {
+                           int nullValueTtlSeconds) {
+        this(stringOps, redisTemplate, nullValueTtlSeconds, new CacheGuard());
+    }
+
+    /**
+     * 创建缓存防护实例（完整配置）
+     *
+     * @param stringOps          Redis String 操作组件
+     * @param redisTemplate      Redis 模板
+     * @param nullValueTtlSeconds 空值缓存 TTL（秒）
+     * @param cacheGuardConfig   缓存防护可配置参数（来自 ydsz.redis.cache-guard.*）
+     */
+    public RedisCacheGuard(RedisStringOps stringOps, RedisTemplate<String, Object> redisTemplate,
+                           int nullValueTtlSeconds, CacheGuard cacheGuardConfig) {
         this.stringOps = stringOps;
         this.redisTemplate = redisTemplate;
         this.nullValueTtlSeconds = nullValueTtlSeconds;
-        this.lockWatchDog = new LockWatchDog(redisTemplate);
+        this.cacheGuardConfig = cacheGuardConfig != null ? cacheGuardConfig : new CacheGuard();
+        this.lockWatchDog = new LockWatchDog(redisTemplate, this.cacheGuardConfig.getMaxRenewTimes(),
+                "ydsz-cache-guard-watchdog");
     }
 
     /**
@@ -161,7 +181,7 @@ public class RedisCacheGuard {
         String lockKey = PENETRATION_LOCK_PREFIX + key;
         String lockValue = null;
         try {
-            lockValue = acquireLock(lockKey, PENETRATION_LOCK_LEASE_SECONDS);
+            lockValue = acquireLock(lockKey, cacheGuardConfig.getPenetrationLockLeaseSeconds());
             if (lockValue != null) {
                 // 获取锁成功，双重检查缓存
                 cached = stringOps.get(key);
@@ -222,7 +242,8 @@ public class RedisCacheGuard {
         String lockValue = null;
         try {
             // 尝试获取锁（带等待），获取后 WatchDog 自动续期，防止重建期间锁过期
-            lockValue = acquireLockWithWait(lockKey, BREAKDOWN_LOCK_LEASE_SECONDS, LOCK_WAIT_MS);
+            lockValue = acquireLockWithWait(lockKey, cacheGuardConfig.getBreakdownLockLeaseSeconds(),
+                    cacheGuardConfig.getLockWaitMaxMs());
             if (lockValue != null) {
                 // 获取锁成功，双重检查缓存（singleflight：可能在等待锁期间缓存已被其他线程填充）
                 cached = stringOps.get(key);
@@ -290,11 +311,6 @@ public class RedisCacheGuard {
     }
 
     /**
-     * 防穿透模式最大退避间隔（毫秒）
-     */
-    private static final long PENETRATION_SPIN_MAX_BACKOFF_MS = 200;
-
-    /**
      * 自旋等待缓存就绪（指数退避），用于防穿透锁未获取时等待持锁线程回填
      *
      * <p>与 {@link #spinWaitForCache} 类似，但额外处理空值标记：
@@ -313,7 +329,8 @@ public class RedisCacheGuard {
     private <T> T spinWaitForCacheOrPenetration(String key, Supplier<T> supplier,
                                                  Class<T> clazz, int nullCacheSec) {
         final long spinStart = System.currentTimeMillis();
-        long backoffMs = SPIN_INITIAL_BACKOFF_MS;
+        long backoffMs = cacheGuardConfig.getSpinInitialBackoffMs();
+        final long maxBackoffMs = Math.min(backoffMs * 10, 200);
         while (true) {
             Object cached = stringOps.get(key);
             if (cached != null) {
@@ -328,7 +345,7 @@ public class RedisCacheGuard {
                 return stringOps.get(key, clazz);
             }
             long elapsed = System.currentTimeMillis() - spinStart;
-            if (elapsed >= SPIN_MAX_WAIT_MS) {
+            if (elapsed >= cacheGuardConfig.getSpinMaxWaitMs()) {
                 log.warn("【RedisCacheGuard】防穿透自旋等待超时，降级直接回源 | key={}", key);
                 T data = supplier.get();
                 if (data == null) {
@@ -336,7 +353,7 @@ public class RedisCacheGuard {
                 }
                 return data;
             }
-            long sleepMs = Math.min(backoffMs, SPIN_MAX_WAIT_MS - elapsed);
+            long sleepMs = Math.min(backoffMs, cacheGuardConfig.getSpinMaxWaitMs() - elapsed);
             if (sleepMs > 0) {
                 LockSupport.parkNanos(sleepMs * 1_000_000L);
             }
@@ -344,14 +361,9 @@ public class RedisCacheGuard {
                 log.warn("【RedisCacheGuard】防穿透自旋等待被中断，降级直接回源 | key={}", key);
                 return supplier.get();
             }
-            backoffMs = Math.min(backoffMs * 2, PENETRATION_SPIN_MAX_BACKOFF_MS);
+            backoffMs = Math.min(backoffMs * 2, maxBackoffMs);
         }
     }
-
-    /**
-     * 防击穿模式最大退避间隔（毫秒）
-     */
-    private static final long BREAKDOWN_SPIN_MAX_BACKOFF_MS = 200;
 
     /**
      * 自旋等待缓存就绪（指数退避），用于防击穿锁等待超时后避免直接回源
@@ -371,7 +383,8 @@ public class RedisCacheGuard {
      */
     private <T> T spinWaitForCache(String key, Supplier<T> supplier, Class<T> clazz) {
         final long spinStart = System.currentTimeMillis();
-        long backoffMs = SPIN_INITIAL_BACKOFF_MS;
+        long backoffMs = cacheGuardConfig.getSpinInitialBackoffMs();
+        final long maxBackoffMs = Math.min(backoffMs * 10, 200);
         while (true) {
             Object cached = stringOps.get(key);
             if (cached != null) {
@@ -382,11 +395,11 @@ public class RedisCacheGuard {
                 return stringOps.get(key, clazz);
             }
             long elapsed = System.currentTimeMillis() - spinStart;
-            if (elapsed >= SPIN_MAX_WAIT_MS) {
+            if (elapsed >= cacheGuardConfig.getSpinMaxWaitMs()) {
                 log.warn("【RedisCacheGuard】自旋等待超时，降级直接回源 | key={}", key);
                 return supplier.get();
             }
-            long sleepMs = Math.min(backoffMs, SPIN_MAX_WAIT_MS - elapsed);
+            long sleepMs = Math.min(backoffMs, cacheGuardConfig.getSpinMaxWaitMs() - elapsed);
             if (sleepMs > 0) {
                 LockSupport.parkNanos(sleepMs * 1_000_000L);
             }
@@ -394,7 +407,7 @@ public class RedisCacheGuard {
                 log.warn("【RedisCacheGuard】自旋等待被中断，降级直接回源 | key={}", key);
                 return supplier.get();
             }
-            backoffMs = Math.min(backoffMs * 2, BREAKDOWN_SPIN_MAX_BACKOFF_MS);
+            backoffMs = Math.min(backoffMs * 2, maxBackoffMs);
         }
     }
 
@@ -436,7 +449,8 @@ public class RedisCacheGuard {
      */
     private String acquireLockWithWait(String lockKey, int leaseTime, long waitMs) {
         long startTime = System.currentTimeMillis();
-        long backoffMs = LOCK_WAIT_INITIAL_BACKOFF_MS;
+        long backoffMs = cacheGuardConfig.getLockWaitInitialBackoffMs();
+        final long maxBackoff = cacheGuardConfig.getLockWaitMaxBackoffMs();
         while (true) {
             String lockValue = acquireLock(lockKey, leaseTime);
             if (lockValue != null) {
@@ -454,7 +468,7 @@ public class RedisCacheGuard {
                 Thread.currentThread().interrupt();
                 return null;
             }
-            backoffMs = Math.min(backoffMs * 2, LOCK_WAIT_MAX_BACKOFF_MS);
+            backoffMs = Math.min(backoffMs * 2, maxBackoff);
         }
     }
 

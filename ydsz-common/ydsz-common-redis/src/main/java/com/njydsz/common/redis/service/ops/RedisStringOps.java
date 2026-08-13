@@ -62,6 +62,17 @@ public class RedisStringOps {
 
     private static final long CACHE_EXPIRE_JITTER_RATIO = 10;
 
+    /** getExpire 返回的键不存在标识 */
+    private static final long KEY_NOT_EXIST_TTL = -2L;
+    /** SCAN 初始集合容量上限，防止一次性分配过大内存 */
+    private static final int SCAN_INITIAL_CAPACITY = 1024;
+    /** getOrCompute 计算锁过期时间（秒） */
+    private static final long COMPUTE_LOCK_EXPIRE_SECONDS = 30;
+    /** 空值占位缓存过期时间上限（秒） */
+    private static final long NULL_PLACEHOLDER_EXPIRE_SECONDS = 60;
+    /** getOrCompute 获取计算锁的最大等待时间（毫秒） */
+    private static final long COMPUTE_LOCK_WAIT_MILLIS = 3000;
+
     private final RedisTemplate<String, Object> redisTemplate;
     private final RedisProperties redisProperties;
     private final RedisMetricsCollector metricsCollector;
@@ -70,6 +81,9 @@ public class RedisStringOps {
 
     /**
      * 格式化 Key，添加统一前缀
+     *
+     * @param key 原始键
+     * @return 带前缀的键；未配置前缀或键为 null 时返回原值
      */
     private String formatKey(String key) {
         if (key == null) {
@@ -99,6 +113,9 @@ public class RedisStringOps {
 
     /**
      * 批量格式化 Keys
+     *
+     * @param keys 键集合
+     * @return 带前缀的键列表
      */
     private List<String> formatKeys(Collection<String> keys) {
         if (keys == null) {
@@ -121,7 +138,8 @@ public class RedisStringOps {
         String formattedKey = formatKey(key);
         try {
             return metricsCollector != null
-                    ? metricsCollector.recordOperation("expire", () -> Boolean.TRUE.equals(redisTemplate.expire(formattedKey, Duration.ofSeconds(time))))
+                    ? metricsCollector.recordOperation("expire",
+                            () -> Boolean.TRUE.equals(redisTemplate.expire(formattedKey, Duration.ofSeconds(time))))
                     : Boolean.TRUE.equals(redisTemplate.expire(formattedKey, Duration.ofSeconds(time)));
         } catch (Exception e) {
             recordError("expire", e);
@@ -144,7 +162,8 @@ public class RedisStringOps {
         String formattedKey = formatKey(key);
         try {
             return metricsCollector != null
-                    ? metricsCollector.recordOperation("expire", () -> Boolean.TRUE.equals(redisTemplate.expire(formattedKey, duration)))
+                    ? metricsCollector.recordOperation("expire",
+                            () -> Boolean.TRUE.equals(redisTemplate.expire(formattedKey, duration)))
                     : Boolean.TRUE.equals(redisTemplate.expire(formattedKey, duration));
         } catch (Exception e) {
             recordError("expire", e);
@@ -161,20 +180,20 @@ public class RedisStringOps {
      */
     public long getExpire(String key) {
         if (key == null) {
-            return -2;
+            return KEY_NOT_EXIST_TTL;
         }
         String formattedKey = formatKey(key);
         try {
             return metricsCollector != null
                     ? metricsCollector.recordOperation("getExpire", () -> {
                         Long expire = redisTemplate.getExpire(formattedKey, TimeUnit.SECONDS);
-                        return expire != null ? expire : -2L;
+                        return expire != null ? expire : KEY_NOT_EXIST_TTL;
                     })
-                    : Optional.ofNullable(redisTemplate.getExpire(formattedKey, TimeUnit.SECONDS)).orElse(-2L);
+                    : Optional.ofNullable(redisTemplate.getExpire(formattedKey, TimeUnit.SECONDS)).orElse(KEY_NOT_EXIST_TTL);
         } catch (Exception e) {
             recordError("getExpire", e);
             log.error("【Redis】获取过期时间失败 | key={} | error={}", key, e);
-            return -2;
+            return KEY_NOT_EXIST_TTL;
         }
     }
 
@@ -191,7 +210,8 @@ public class RedisStringOps {
         String formattedKey = formatKey(key);
         try {
             return metricsCollector != null
-                    ? metricsCollector.recordOperation("hasKey", () -> Boolean.TRUE.equals(redisTemplate.hasKey(formattedKey)))
+                    ? metricsCollector.recordOperation("hasKey",
+                            () -> Boolean.TRUE.equals(redisTemplate.hasKey(formattedKey)))
                     : Boolean.TRUE.equals(redisTemplate.hasKey(formattedKey));
         } catch (Exception e) {
             recordError("hasKey", e);
@@ -299,9 +319,10 @@ public class RedisStringOps {
             return Collections.emptySet();
         }
         try {
-            Set<String> keys = new HashSet<>(Math.min(maxKeys, 1024));
+            Set<String> keys = new HashSet<>(Math.min(maxKeys, SCAN_INITIAL_CAPACITY));
             String keyPrefixStr = redisProperties != null ? redisProperties.getKeyPrefix() : null;
-            String scanPattern = keyPrefixStr == null || keyPrefixStr.isEmpty() ? pattern : keyPrefixStr + ":" + pattern;
+            String scanPattern = keyPrefixStr == null || keyPrefixStr.isEmpty()
+                    ? pattern : keyPrefixStr + ":" + pattern;
             ScanOptions options = ScanOptions.scanOptions().match(scanPattern).count(1000).build();
             try (Cursor<byte[]> cursor = redisTemplate.execute((RedisCallback<Cursor<byte[]>>) connection ->
                     connection.keyCommands().scan(options))) {
@@ -310,7 +331,8 @@ public class RedisStringOps {
                     while (cursor.hasNext() && keys.size() < maxKeys) {
                         String fullKey = new String(cursor.next(), StandardCharsets.UTF_8);
                         // Strip prefix from returned keys
-                        keys.add(keyPrefixStr == null || keyPrefixStr.isEmpty() ? fullKey : fullKey.substring(prefixLen));
+                        keys.add(keyPrefixStr == null || keyPrefixStr.isEmpty()
+                                ? fullKey : fullKey.substring(prefixLen));
                     }
                 }
             }
@@ -366,7 +388,8 @@ public class RedisStringOps {
         String formattedNewKey = formatKey(newKey);
         try {
             return metricsCollector != null
-                    ? metricsCollector.recordOperation("renameIfAbsent", () -> Boolean.TRUE.equals(redisTemplate.renameIfAbsent(formattedOldKey, formattedNewKey)))
+                    ? metricsCollector.recordOperation("renameIfAbsent",
+                            () -> Boolean.TRUE.equals(redisTemplate.renameIfAbsent(formattedOldKey, formattedNewKey)))
                     : Boolean.TRUE.equals(redisTemplate.renameIfAbsent(formattedOldKey, formattedNewKey));
         } catch (Exception e) {
             recordError("renameIfAbsent", e);
@@ -477,7 +500,8 @@ public class RedisStringOps {
         String formattedKey = formatKey(key);
         try {
             long expireWithJitter = addJitter(time);
-            Runnable action = () -> redisTemplate.opsForValue().set(formattedKey, value, Duration.ofSeconds(expireWithJitter));
+            Runnable action = () -> redisTemplate.opsForValue().set(
+                    formattedKey, value, Duration.ofSeconds(expireWithJitter));
             if (metricsCollector != null) {
                 metricsCollector.recordOperation("set", action);
             } else {
@@ -545,11 +569,16 @@ public class RedisStringOps {
             long expireWithJitter = addJitter(expire);
             if (expireWithJitter > 0) {
                 return metricsCollector != null
-                        ? metricsCollector.recordOperation("setIfAbsent", () -> Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(formattedKey, value, Duration.ofSeconds(expireWithJitter))))
-                        : Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(formattedKey, value, Duration.ofSeconds(expireWithJitter)));
+                        ? metricsCollector.recordOperation("setIfAbsent",
+                                () -> Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(
+                                        formattedKey, value, Duration.ofSeconds(expireWithJitter))))
+                        : Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(
+                                formattedKey, value, Duration.ofSeconds(expireWithJitter)));
             } else {
                 return metricsCollector != null
-                        ? metricsCollector.recordOperation("setIfAbsent", () -> Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(formattedKey, value)))
+                        ? metricsCollector.recordOperation("setIfAbsent",
+                                () -> Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(
+                                        formattedKey, value)))
                         : Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(formattedKey, value));
             }
         } catch (Exception e) {
@@ -576,11 +605,16 @@ public class RedisStringOps {
             long expireWithJitter = addJitter(expire);
             if (expireWithJitter > 0) {
                 return metricsCollector != null
-                        ? metricsCollector.recordOperation("setIfPresent", () -> Boolean.TRUE.equals(redisTemplate.opsForValue().setIfPresent(formattedKey, value, Duration.ofSeconds(expireWithJitter))))
-                        : Boolean.TRUE.equals(redisTemplate.opsForValue().setIfPresent(formattedKey, value, Duration.ofSeconds(expireWithJitter)));
+                        ? metricsCollector.recordOperation("setIfPresent",
+                                () -> Boolean.TRUE.equals(redisTemplate.opsForValue().setIfPresent(
+                                        formattedKey, value, Duration.ofSeconds(expireWithJitter))))
+                        : Boolean.TRUE.equals(redisTemplate.opsForValue().setIfPresent(
+                                formattedKey, value, Duration.ofSeconds(expireWithJitter)));
             } else {
                 return metricsCollector != null
-                        ? metricsCollector.recordOperation("setIfPresent", () -> Boolean.TRUE.equals(redisTemplate.opsForValue().setIfPresent(formattedKey, value)))
+                        ? metricsCollector.recordOperation("setIfPresent",
+                                () -> Boolean.TRUE.equals(redisTemplate.opsForValue().setIfPresent(
+                                        formattedKey, value)))
                         : Boolean.TRUE.equals(redisTemplate.opsForValue().setIfPresent(formattedKey, value));
             }
         } catch (Exception e) {
@@ -612,7 +646,7 @@ public class RedisStringOps {
         }
         String lockKey = "lock:compute:" + key;
         String lockValue = UUID.randomUUID().toString();
-        Boolean locked = redisTemplate.opsForValue().setIfAbsent(formatKey(lockKey), lockValue, Duration.ofSeconds(30));
+        Boolean locked = redisTemplate.opsForValue().setIfAbsent(formatKey(lockKey), lockValue, Duration.ofSeconds(COMPUTE_LOCK_EXPIRE_SECONDS));
         if (Boolean.TRUE.equals(locked)) {
             try {
                 value = get(key, clazz);
@@ -624,7 +658,7 @@ public class RedisStringOps {
                     if (value != null) {
                         set(key, value, expire);
                     } else {
-                        set(key, NullPlaceholder.INSTANCE, Math.min(expire, 60));
+                        set(key, NullPlaceholder.INSTANCE, Math.min(expire, NULL_PLACEHOLDER_EXPIRE_SECONDS));
                     }
                 }
             } finally {
@@ -632,7 +666,7 @@ public class RedisStringOps {
             }
         } else {
             long waitNanos = TimeUnit.MILLISECONDS.toNanos(10);
-            long maxWaitNanos = TimeUnit.MILLISECONDS.toNanos(3000);
+            long maxWaitNanos = TimeUnit.MILLISECONDS.toNanos(COMPUTE_LOCK_WAIT_MILLIS);
             long totalWaitNanos = 0;
             while (totalWaitNanos < maxWaitNanos) {
                 LockSupport.parkNanos(waitNanos);
@@ -835,7 +869,9 @@ public class RedisStringOps {
         String formattedKey = formatKey(key);
         try {
             return metricsCollector != null
-                    ? metricsCollector.recordOperation("setBit", () -> Boolean.TRUE.equals(redisTemplate.opsForValue().setBit(formattedKey, offset, value)))
+                    ? metricsCollector.recordOperation("setBit",
+                            () -> Boolean.TRUE.equals(redisTemplate.opsForValue().setBit(
+                                    formattedKey, offset, value)))
                     : Boolean.TRUE.equals(redisTemplate.opsForValue().setBit(formattedKey, offset, value));
         } catch (Exception e) {
             recordError("setBit", e);
@@ -858,7 +894,9 @@ public class RedisStringOps {
         String formattedKey = formatKey(key);
         try {
             return metricsCollector != null
-                    ? metricsCollector.recordOperation("getBit", () -> Boolean.TRUE.equals(redisTemplate.opsForValue().getBit(formattedKey, offset)))
+                    ? metricsCollector.recordOperation("getBit",
+                            () -> Boolean.TRUE.equals(redisTemplate.opsForValue().getBit(
+                                    formattedKey, offset)))
                     : Boolean.TRUE.equals(redisTemplate.opsForValue().getBit(formattedKey, offset));
         } catch (Exception e) {
             recordError("getBit", e);
@@ -886,7 +924,8 @@ public class RedisStringOps {
                         return count != null ? count : 0L;
                     })
                     : Optional.ofNullable(redisTemplate.execute((RedisCallback<Long>) connection ->
-                            connection.stringCommands().bitCount(formattedKey.getBytes(StandardCharsets.UTF_8)))).orElse(0L);
+                            connection.stringCommands().bitCount(
+                                    formattedKey.getBytes(StandardCharsets.UTF_8)))).orElse(0L);
         } catch (Exception e) {
             recordError("bitCount", e);
             log.error("【Redis】BITCOUNT 操作失败 | key={} | error={}", key, e);
@@ -979,6 +1018,9 @@ public class RedisStringOps {
 
     /**
      * 记录指标错误
+     *
+     * @param operationType 操作类型
+     * @param e             异常信息
      */
     private void recordError(String operationType, Throwable e) {
         if (metricsCollector != null) {

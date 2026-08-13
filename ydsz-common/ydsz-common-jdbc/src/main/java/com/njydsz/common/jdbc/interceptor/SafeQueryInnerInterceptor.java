@@ -226,7 +226,7 @@ public class SafeQueryInnerInterceptor implements InnerInterceptor {
      * <p><b>优先解析 {@link IPage} 参数：</b>MP 分页主路径的 offset 是绑定参数
      * （SQL 中为 {@code LIMIT ? OFFSET ?} 占位符），无法通过 SQL 正则匹配，
      * 因此从 {@code StatementHandler} 的绑定参数中提取分页对象计算 offset。
-     * 仅在未携带分页参数（原生字面量 LIMIT）时，回退到正则兜底。
+     * 仅在第一页或未携带分页参数（原生字面量 LIMIT）时，跳过检测或回退到正则兜底。
      *
      * @param sh  StatementHandler（用于获取绑定参数对象）
      * @param sql SQL 语句
@@ -234,8 +234,10 @@ public class SafeQueryInnerInterceptor implements InnerInterceptor {
     private void checkDeepPagination(StatementHandler sh, String sql) {
         IPage<?> page = findPageParameter(sh.getBoundSql().getParameterObject());
         if (page != null && page.getSize() > 0 && page.getCurrent() > 1) {
-            long offset = (page.getCurrent() - 1) * page.getSize();
-            evaluateDeepPagination(offset);
+            int pageNum = (int) page.getCurrent();
+            int pageSize = (int) page.getSize();
+            long offset = (long) (pageNum - 1) * pageSize;
+            evaluateDeepPagination(offset, pageNum, pageSize);
             return;
         }
         checkDeepPaginationBySql(sql);

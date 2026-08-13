@@ -263,6 +263,8 @@ public class RedisConfiguration {
      *
      * <p>提供防穿透、防击穿、防雪崩三重缓存保护。
      * 空值缓存 TTL 从 {@link RedisProperties#getNullValueTtlSeconds()} 获取。
+     * 锁租约、自旋退避等参数从 {@link RedisProperties.CacheGuard} 获取，
+     * 可通过 {@code ydsz.redis.cache-guard.*} 配置项覆盖。
      *
      * @param stringOps      Redis String 操作组件（用于读写缓存、SETNX 锁等）
      * @param redisTemplate  Redis 模板（用于 WatchDog 续期）
@@ -274,7 +276,9 @@ public class RedisConfiguration {
     public RedisCacheGuard redisCacheGuard(RedisStringOps stringOps,
                                            RedisTemplate<String, Object> redisTemplate,
                                            RedisProperties redisProperties) {
-        return new RedisCacheGuard(stringOps, redisTemplate, redisProperties.getNullValueTtlSeconds());
+        return new RedisCacheGuard(stringOps, redisTemplate,
+                redisProperties.getNullValueTtlSeconds(),
+                redisProperties.getCacheGuard());
     }
 
     /**

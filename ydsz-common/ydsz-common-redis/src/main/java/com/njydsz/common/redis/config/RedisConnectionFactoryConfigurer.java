@@ -46,6 +46,13 @@ public class RedisConnectionFactoryConfigurer {
 
     private static final long DEFAULT_TOPOLOGY_REFRESH_SECONDS = 30;
 
+    /** 连接池逐出扫描间隔（秒） */
+    private static final long POOL_EVICTION_INTERVAL_SECONDS = 30;
+    /** 空闲对象最小存活时间（分钟） */
+    private static final int MIN_EVICTABLE_IDLE_MINUTES = 5;
+    /** 每次逐出扫描测试的对象数量 */
+    private static final int NUM_TESTS_PER_EVICTION_RUN = 3;
+
     private static final String LETTUCE_CLIENT_CLASS = "io.lettuce.core.RedisClient";
     private static final String JEDIS_CLIENT_CLASS = "redis.clients.jedis.Jedis";
 
@@ -118,6 +125,11 @@ public class RedisConnectionFactoryConfigurer {
 
     /**
      * 创建 Jedis 连接工厂
+     *
+     * @param properties Redis 配置属性
+     * @param client     Redis 客户端配置
+     * @param timeout    连接超时时间
+     * @return Jedis 连接工厂
      */
     private JedisConnectionFactory createJedisConnectionFactory(RedisProperties properties,
                                                                  RedisProperties.Client client,
@@ -142,6 +154,11 @@ public class RedisConnectionFactoryConfigurer {
 
     /**
      * 创建 Lettuce 连接工厂
+     *
+     * @param properties Redis 配置属性
+     * @param client     Redis 客户端配置
+     * @param timeout    命令超时时间
+     * @return Lettuce 连接工厂
      */
     private LettuceConnectionFactory createLettuceConnectionFactory(RedisProperties properties,
                                                                      RedisProperties.Client client,
@@ -178,6 +195,10 @@ public class RedisConnectionFactoryConfigurer {
 
     /**
      * 构建 Jedis 客户端配置
+     *
+     * @param client  Redis 客户端配置
+     * @param timeout 连接超时时间
+     * @return Jedis 客户端配置
      */
     private JedisClientConfiguration buildJedisClientConfiguration(RedisProperties.Client client,
                                                                     Duration timeout) {
@@ -201,6 +222,11 @@ public class RedisConnectionFactoryConfigurer {
 
     /**
      * 构建 Lettuce 客户端配置
+     *
+     * @param properties Redis 配置属性
+     * @param client     Redis 客户端配置
+     * @param timeout    命令超时时间
+     * @return Lettuce 客户端配置
      */
     private LettuceClientConfiguration buildLettuceClientConfiguration(RedisProperties properties,
                                                                         RedisProperties.Client client,
@@ -246,6 +272,9 @@ public class RedisConnectionFactoryConfigurer {
 
     /**
      * 将配置文件的读策略映射为 Lettuce 的 ReadFrom
+     *
+     * @param client Redis 客户端配置
+     * @return 对应的 ReadFrom 策略，使用默认策略时返回 null
      */
     private ReadFrom resolveReadFrom(RedisProperties.Client client) {
         if (client == null || client.getReadFrom() == null) {
@@ -264,6 +293,9 @@ public class RedisConnectionFactoryConfigurer {
 
     /**
      * 构建通用连接池配置
+     *
+     * @param poolConfig 连接池配置属性
+     * @return commons-pool2 连接池配置
      */
     private GenericObjectPoolConfig buildGenericPoolConfig(RedisProperties.Client.Pool poolConfig) {
         GenericObjectPoolConfig config = new GenericObjectPoolConfig();
@@ -274,14 +306,17 @@ public class RedisConnectionFactoryConfigurer {
         config.setTestOnBorrow(false);
         config.setTestOnReturn(false);
         config.setTestWhileIdle(true);
-        config.setTimeBetweenEvictionRuns(Duration.ofSeconds(30));
-        config.setMinEvictableIdleDuration(Duration.ofMinutes(5));
-        config.setNumTestsPerEvictionRun(3);
+        config.setTimeBetweenEvictionRuns(Duration.ofSeconds(POOL_EVICTION_INTERVAL_SECONDS));
+        config.setMinEvictableIdleDuration(Duration.ofMinutes(MIN_EVICTABLE_IDLE_MINUTES));
+        config.setNumTestsPerEvictionRun(NUM_TESTS_PER_EVICTION_RUN);
         return config;
     }
 
     /**
      * 构建 Lettuce 客户端选项：自动重连 + 集群拓扑刷新
+     *
+     * @param properties Redis 配置属性
+     * @return Lettuce 客户端选项
      */
     private ClientOptions buildLettuceClientOptions(RedisProperties properties) {
         if (properties.getCluster() != null && properties.getCluster().getNodes() != null
@@ -306,6 +341,9 @@ public class RedisConnectionFactoryConfigurer {
 
     /**
      * 判断是否启用 SSL
+     *
+     * @param client Redis 客户端配置
+     * @return true-启用 SSL，false-未启用
      */
     private boolean isSslEnabled(RedisProperties.Client client) {
         if (client != null && client.getSsl() != null) {
@@ -316,6 +354,9 @@ public class RedisConnectionFactoryConfigurer {
 
     /**
      * 构建单机模式配置
+     *
+     * @param properties Redis 配置属性
+     * @return 单机模式配置
      */
     private RedisStandaloneConfiguration buildStandaloneConfig(RedisProperties properties) {
         RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
@@ -331,6 +372,9 @@ public class RedisConnectionFactoryConfigurer {
 
     /**
      * 构建集群模式配置
+     *
+     * @param properties Redis 配置属性
+     * @return 集群模式配置，未配置集群时返回 null
      */
     private RedisClusterConfiguration buildClusterConfig(RedisProperties properties) {
         if (properties.getCluster() == null || properties.getCluster().getNodes() == null
@@ -346,6 +390,9 @@ public class RedisConnectionFactoryConfigurer {
 
     /**
      * 构建哨兵模式配置
+     *
+     * @param properties Redis 配置属性
+     * @return 哨兵模式配置，未配置哨兵时返回 null
      */
     private RedisSentinelConfiguration buildSentinelConfig(RedisProperties properties) {
         if (properties.getSentinel() == null || properties.getSentinel().getMaster() == null) {
@@ -364,6 +411,9 @@ public class RedisConnectionFactoryConfigurer {
 
     /**
      * 构建 Redis 节点列表
+     *
+     * @param nodes 节点字符串列表（host:port 格式）
+     * @return Redis 节点列表
      */
     private List<RedisNode> buildRedisNodes(Collection<String> nodes) {
         List<RedisNode> redisNodes = new ArrayList<>();

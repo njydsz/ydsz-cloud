@@ -63,6 +63,16 @@ public class YdszCacheableAspect {
     private static final long LOCK_EXPIRE_SECONDS = 30;
 
     /**
+     * 防击穿自旋等待的初始间隔（毫秒）
+     */
+    private static final long SPIN_WAIT_INITIAL_MILLIS = 50;
+
+    /**
+     * 缓存 TTL 随机抖动范围（比例）
+     */
+    private static final double TTL_JITTER_RANGE = 0.1;
+
+    /**
      * SpEL 表达式解析器（线程安全，复用）
      */
     private static final ExpressionParser PARSER = new SpelExpressionParser();
@@ -133,6 +143,13 @@ public class YdszCacheableAspect {
 
     /**
      * 防击穿逻辑：使用 Redis SETNX 互斥锁保护数据加载
+     *
+     * @param joinPoint  切点
+     * @param annotation YdszCacheable 注解
+     * @param cacheKey   缓存键
+     * @param ttl        缓存过期时间
+     * @return 方法返回值
+     * @throws Throwable 原方法抛出的异常
      */
     private Object handleWithStampedePrevention(ProceedingJoinPoint joinPoint,
                                                  YdszCacheable annotation,
@@ -174,12 +191,19 @@ public class YdszCacheableAspect {
      *
      * <p>使用指数退避策略，初始间隔 50ms，最大等待时间由 {@code lockWaitTimeout} 决定。
      * 超时后降级执行数据加载（不缓存结果）。
+     *
+     * @param joinPoint  切点
+     * @param annotation YdszCacheable 注解
+     * @param cacheKey   缓存键
+     * @param ttl        缓存过期时间
+     * @return 方法返回值
+     * @throws Throwable 原方法抛出的异常
      */
     private Object spinWaitForCache(ProceedingJoinPoint joinPoint,
                                      YdszCacheable annotation,
                                      String cacheKey,
                                      long ttl) throws Throwable {
-        long waitNanos = TimeUnit.MILLISECONDS.toNanos(50);
+        long waitNanos = TimeUnit.MILLISECONDS.toNanos(SPIN_WAIT_INITIAL_MILLIS);
         long maxWaitNanos = TimeUnit.SECONDS.toNanos(annotation.lockWaitTimeout());
         long totalWaitNanos = 0;
 
@@ -218,6 +242,13 @@ public class YdszCacheableAspect {
 
     /**
      * 执行数据加载并回填缓存
+     *
+     * @param joinPoint  切点
+     * @param annotation YdszCacheable 注解
+     * @param cacheKey   缓存键
+     * @param ttl        缓存过期时间
+     * @return 方法返回值
+     * @throws Throwable 原方法抛出的异常
      */
     private Object loadAndCache(ProceedingJoinPoint joinPoint,
                                  YdszCacheable annotation,
@@ -243,10 +274,14 @@ public class YdszCacheableAspect {
 
     /**
      * 使用 Lua 脚本安全释放分布式锁（校验锁持有者，防止误删其他线程的锁）
+     *
+     * @param lockKey   锁的 Redis 键
+     * @param lockValue 锁的持有者标识
      */
     private void releaseLock(String lockKey, String lockValue) {
         try {
-            redisTemplate.execute(new DefaultRedisScript<>(UNLOCK_LUA, Long.class), Collections.singletonList(lockKey), lockValue);
+            redisTemplate.execute(new DefaultRedisScript<>(UNLOCK_LUA, Long.class),
+                    Collections.singletonList(lockKey), lockValue);
         } catch (Exception e) {
             log.error("【YdszCacheable】释放防击穿锁失败 | lockKey={}", lockKey, e);
         }
@@ -258,6 +293,11 @@ public class YdszCacheableAspect {
      * <p>使用 {@link SimpleEvaluationContext} 替代 {@code StandardEvaluationContext}，
      * 禁止访问 Bean 引用、类型引用和方法引用，防止 SpEL 注入攻击。
      * 仅支持读取变量和属性访问，满足缓存键解析需求。
+     *
+     * @param keyExpression SpEL 键表达式
+     * @param signature     方法签名（用于获取参数名）
+     * @param args          方法实参
+     * @return 解析后的缓存键
      */
     private String resolveKey(String keyExpression, MethodSignature signature, Object[] args) {
         SimpleEvaluationContext context = SimpleEvaluationContext.forReadOnlyDataBinding().build();
@@ -272,7 +312,7 @@ public class YdszCacheableAspect {
 
     private long applyRandomJitter(long ttl, TimeUnit timeUnit) {
         long ttlSeconds = timeUnit.toSeconds(ttl);
-        double jitter = 1.0 + ThreadLocalRandom.current().nextDouble(-0.1, 0.1);
+        double jitter = 1.0 + ThreadLocalRandom.current().nextDouble(-TTL_JITTER_RANGE, TTL_JITTER_RANGE);
         return Math.max(1, (long) (ttlSeconds * jitter));
     }
 

@@ -1,4 +1,5 @@
 package com.njydsz.common.exception.registry;
+
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -9,7 +10,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import com.njydsz.common.exception.code.ErrorCodeTable;
+import com.njydsz.common.exception.enums.ExceptionCode;
+
 import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.context.MessageSource;
 import org.springframework.core.io.Resource;
@@ -19,9 +24,6 @@ import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.core.type.classreading.SimpleMetadataReaderFactory;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
-
-import com.njydsz.common.exception.code.ErrorCodeTable;
-import com.njydsz.common.exception.enums.ExceptionCode;
 
 /**
  * 错误码自动扫描注册器。
@@ -51,8 +53,17 @@ import com.njydsz.common.exception.enums.ExceptionCode;
 public class ExceptionCodeScanner implements SmartInitializingSingleton {
 
     private static final String INDEX_LOCATION = "META-INF/spring/ydsz-exception-codes.idx";
-    private static final String SCAN_PATTERN = "classpath*:com/njydsz/**/*.class";
+    /**
+     * ASM 兜底扫描模式。
+     *
+     * <p>优先扫描 exception 子包（业务错误码枚举的推荐放置位置），
+     * 再扫描全量类路径作为兜底，避免加载明显无关的类。
+     */
+    private static final String SCAN_PATTERN_EXCEPTION_PKG = "classpath*:com/njydsz/**/exception/**/*.class";
+    private static final String SCAN_PATTERN_FALLBACK = "classpath*:com/njydsz/**/*ExceptionCode*.class";
     private static final String INDEX_PATTERN = "classpath*:" + INDEX_LOCATION;
+    /** ASM 扫描耗时告警阈值（毫秒），超过此值输出 WARN 日志引导引入编译时索引 */
+    private static final long SCAN_DURATION_WARN_THRESHOLD_MS = 500;
 
     private final ErrorCodeTable errorCodeTable;
     private final MessageSource messageSource;
@@ -168,14 +179,53 @@ public class ExceptionCodeScanner implements SmartInitializingSingleton {
     }
 
     /**
-     * ASM 字节码扫描（兜底策略）
+     * ASM 字节码扫描（兜底策略）。
+     *
+     * <p>优先扫描 {@code exception} 子包，再以 {@code *ExceptionCode*} 模式全量兜底，
+     * 避免加载明显无关的类。扫描耗时超过 {@link #SCAN_DURATION_WARN_THRESHOLD_MS} 时
+     * 输出 WARN 日志，引导业务模块引入编译时索引插件以消除运行时扫描。
      */
     private void scanWithAsm() {
+        long startNanos = System.nanoTime();
         try {
             MetadataReaderFactory readerFactory = getOrCreateReaderFactory();
-            Resource[] resources = resourceResolver.getResources(SCAN_PATTERN);
             int registeredCount = 0;
 
+            // 第一轮：优先扫描 exception 子包
+            registeredCount += scanResourcesByPattern(
+                    readerFactory, SCAN_PATTERN_EXCEPTION_PKG, false);
+
+            // 第二轮：以 *ExceptionCode* 模式全量兜底（覆盖未放在 exception 子包的枚举）
+            registeredCount += scanResourcesByPattern(
+                    readerFactory, SCAN_PATTERN_FALLBACK, true);
+
+            long durationMs = (System.nanoTime() - startNanos) / 1_000_000;
+            if (durationMs > SCAN_DURATION_WARN_THRESHOLD_MS) {
+                log.warn("[ExceptionCodeScanner] ASM 扫描耗时 {}ms（超过阈值 {}ms），"
+                                + "建议业务模块引入 ydsz-exception-codes 编译时索引插件以消除运行时扫描 | 注册错误码: {}",
+                        durationMs, SCAN_DURATION_WARN_THRESHOLD_MS, registeredCount);
+            } else {
+                log.info("[ExceptionCodeScanner] ASM 扫描完成，注册 {} 个模块的错误码 | 耗时 {}ms",
+                        registeredCount, durationMs);
+            }
+        } catch (Exception e) {
+            log.warn("[ExceptionCodeScanner] 扫描失败: {}", e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 按指定模式扫描资源并注册标注 {@link YdszExceptionCode} 注解的枚举类。
+     *
+     * @param readerFactory 元数据读取器工厂
+     * @param pattern       资源路径模式
+     * @param skipOnFailure 单个资源解析失败时是否跳过（true 跳过 / false 抛出）
+     * @return本次扫描注册的枚举类数量
+     */
+    private int scanResourcesByPattern(MetadataReaderFactory readerFactory, String pattern,
+                                        boolean skipOnFailure) {
+        int count = 0;
+        try {
+            Resource[] resources = resourceResolver.getResources(pattern);
             for (Resource resource : resources) {
                 if (!resource.isReadable()) {
                     continue;
@@ -193,16 +243,20 @@ public class ExceptionCodeScanner implements SmartInitializingSingleton {
                     String module = (String) annotationAttrs.get("module");
                     String description = (String) annotationAttrs.get("description");
                     registerEnum(module, description, reader.getClassMetadata().getClassName());
-                    registeredCount++;
+                    count++;
                 } catch (Throwable e) {
-                    log.debug("[ExceptionCodeScanner] 跳过无法加载的类: {} err={}",
-                            resource.getFilename(), e.getMessage());
+                    if (skipOnFailure) {
+                        log.debug("[ExceptionCodeScanner] 跳过无法加载的类: {} err={}",
+                                resource.getFilename(), e.getMessage());
+                    } else {
+                        throw e;
+                    }
                 }
             }
-            log.info("[ExceptionCodeScanner] ASM 扫描完成，注册 {} 个模块的错误码", registeredCount);
         } catch (Exception e) {
-            log.warn("[ExceptionCodeScanner] 扫描失败: {}", e.getMessage(), e);
+            log.debug("[ExceptionCodeScanner] 模式 {} 扫描异常: {}", pattern, e.getMessage());
         }
+        return count;
     }
 
     /**

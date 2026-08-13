@@ -63,14 +63,18 @@ public interface BaseStatusEnum<E extends Enum<E>> {
     /**
      * 获取所有状态枚举值。
      *
-     * <p>由实现类覆写，提供完整的状态集合。默认返回空列表，
-     * 已废弃的 {@link #pathTo(Enum)} 使用此方法获取完整状态空间。
+     * <p>默认实现抛出 {@link UnsupportedOperationException}，
+     * 强制实现类显式覆写提供完整状态集合。避免默认返回空列表导致
+     * 调用方误以为状态机无可用状态而产生隐蔽逻辑错误。
      *
      * @return 所有状态枚举值列表（非 null）
+     * @throws UnsupportedOperationException 默认实现，需子类覆写
      * @since 1.6.0
      */
     default List<E> allStates() {
-        return Collections.emptyList();
+        throw new UnsupportedOperationException(
+                "BaseStatusEnum.allStates() must be overridden by: "
+                        + this.getClass().getName());
     }
 
 }

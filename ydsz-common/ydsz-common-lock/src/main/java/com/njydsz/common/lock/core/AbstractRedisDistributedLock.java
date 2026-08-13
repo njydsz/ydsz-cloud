@@ -84,6 +84,11 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
     private FencingTokenProvider fencingTokenProvider;
 
     /**
+     * 锁事件监听器（可选，用于感知锁生命周期事件）
+     */
+    private LockEventListener lockEventListener = LockEventListener.NO_OP;
+
+    /**
      * 本地缓存 clientId，线程级（key 为 {@code threadId:lockKey}）
      * <p>使用 ydsz-common-cache 替代 ThreadLocal，通过 TTL 和最大容量自动清理，
      * 彻底避免线程池复用场景下的内存泄漏。
@@ -120,6 +125,12 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
      * 最大退避等待时间（毫秒）
      */
     private static final long MAX_BACKOFF_MILLIS = 200;
+
+    /**
+     * 全抖动随机退避的随机数生成器（线程安全）
+     */
+    private static final java.util.concurrent.ThreadLocalRandom BACKOFF_RANDOM =
+            java.util.concurrent.ThreadLocalRandom.current();
 
     protected AbstractRedisDistributedLock(StringRedisTemplate stringRedisTemplate) {
         this(stringRedisTemplate, null);
@@ -186,6 +197,17 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
      */
     public void setFencingTokenProvider(FencingTokenProvider fencingTokenProvider) {
         this.fencingTokenProvider = fencingTokenProvider;
+    }
+
+    /**
+     * 设置锁事件监听器（可选）
+     *
+     * <p>配置后，锁生命周期事件（获取、释放、超时、续期失败）将通知监听器。</p>
+     *
+     * @param lockEventListener 锁事件监听器实例
+     */
+    public void setLockEventListener(LockEventListener lockEventListener) {
+        this.lockEventListener = lockEventListener != null ? lockEventListener : LockEventListener.NO_OP;
     }
 
     /**
@@ -339,6 +361,7 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
             log.warn("[ydsz-lock]解锁失败 | 锁键为空");
             return false;
         }
+        long holdStartTime = System.currentTimeMillis();
         try {
             boolean released = doReleaseLock(lockKey, lockValue);
             if (released) {
@@ -350,6 +373,13 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
                 }
                 if (lockReleaseNotifier != null) {
                     lockReleaseNotifier.notifyRelease(lockKey);
+                }
+                // 触发锁释放事件
+                long holdTimeMs = System.currentTimeMillis() - holdStartTime;
+                try {
+                    lockEventListener.onLockReleased(lockKey, lockValue, getLockType(), holdTimeMs);
+                } catch (Exception e) {
+                    log.warn("[ydsz-lock]锁释放事件监听异常 | lockKey={} | error={}", lockKey, e.getMessage());
                 }
             }
             return released;
@@ -481,6 +511,13 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
                 if (lockMetrics != null) {
                     lockMetrics.recordLockTimeout(getLockType().name());
                 }
+                long waitTimeMs = TimeUnit.NANOSECONDS.toMillis(elapsed);
+                // 触发锁超时事件
+                try {
+                    lockEventListener.onLockAcquireTimeout(lockKey, getLockType(), waitTimeMs);
+                } catch (Exception e) {
+                    log.warn("[ydsz-lock]锁超时事件监听异常 | lockKey={} | error={}", lockKey, e.getMessage());
+                }
                 return null;
             }
             long remainingWait = waitNanos - elapsed;
@@ -495,6 +532,12 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
         if (lockMetrics != null) {
             lockMetrics.recordWaitDuration(waitTimeMillis, getLockType().name());
         }
+        // 触发锁获取成功事件
+        try {
+            lockEventListener.onLockAcquired(lockKey, lockValue, getLockType(), waitTimeMillis);
+        } catch (Exception e) {
+            log.warn("[ydsz-lock]锁获取成功事件监听异常 | lockKey={} | error={}", lockKey, e.getMessage());
+        }
         return lockValue;
     }
 
@@ -502,7 +545,13 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
      * 等待后重试
      *
      * <p>优先使用释放通知阻塞等待（上限 {@link LockReleaseNotifier#getMaxAwaitMillis()}），
-     * 未配置通知器时退化为指数退避睡眠。</p>
+     * 未配置通知器时退化为全抖动随机睡眠（Full Jitter）。
+     *
+     * <p><b>全抖动策略（Full Jitter）：</b>来自 AWS 架构博客推荐的指数退避 + 随机抖动算法，
+     * 可在高并发场景下有效分散同步请求，避免"惊群效应"。
+     * <pre>
+     * sleep = randomBetween(0, min(maxBackoff, base * 2^attempt))
+     * </pre>
      *
      * @param lockKey       锁的键
      * @param remainingWait 剩余可等待时间（纳秒）
@@ -520,9 +569,13 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
             }
             return;
         }
+        // 全抖动随机退避：在 [0, currentBackoff] 范围内随机选取等待时间
         long sleepMillis = Math.min(TimeUnit.NANOSECONDS.toMillis(remainingWait), currentBackoff);
         if (sleepMillis > 0) {
-            Thread.sleep(sleepMillis);
+            long jitterSleep = BACKOFF_RANDOM.nextLong(sleepMillis + 1);
+            log.debug("[ydsz-lock] 全抖动退避等待 | lockKey={} | sleepMs={} | maxBackoff={}",
+                    lockKey, jitterSleep, sleepMillis);
+            Thread.sleep(jitterSleep);
         }
     }
 
