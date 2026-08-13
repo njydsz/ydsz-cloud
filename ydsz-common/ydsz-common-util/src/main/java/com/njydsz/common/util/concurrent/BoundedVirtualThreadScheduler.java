@@ -144,8 +144,6 @@ public final class BoundedVirtualThreadScheduler {
         return maxConcurrency - concurrencyLimiter.availablePermits();
     }
 
-    private final int maxConcurrency;
-
     @Override
     public String toString() {
         return "BoundedVirtualThreadScheduler{" +

@@ -41,7 +41,7 @@ public interface WorkerIdRegistry {
      * 推荐实现：基于 nodeId 哈希取模、分布式锁 + 自增序号、或容器序号直接映射。
      *
      * @param nodeId 节点标识（通常为 Pod 名、IP 或主机名）
-     * @return WorkerId（0-31）
+     * @return WorkerId（0-1023）
      * @throws IllegalStateException 当 WorkerId 资源耗尽或分配失败时
      */
     long acquire(String nodeId);

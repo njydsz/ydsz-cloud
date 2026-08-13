@@ -4,6 +4,9 @@ package com.njydsz.common.util.auth;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 /**
  * 认证信息统一接口
  *
@@ -32,6 +35,7 @@ public interface AuthInfo {
      *
      * @return 语言码，如 {@code zh-CN}、{@code en-US}
      */
+    @Nullable
     String getUserLanguage();
 
     /**
@@ -39,6 +43,7 @@ public interface AuthInfo {
      *
      * @return 用户ID
      */
+    @Nullable
     String getUniqueId();
 
     /**
@@ -46,6 +51,7 @@ public interface AuthInfo {
      *
      * @return 身份类型编码，如 "company"、"visitor"、"ydszsoft"
      */
+    @Nullable
     String getIdentityType();
 
     /**
@@ -53,6 +59,7 @@ public interface AuthInfo {
      *
      * @return 服务类型码，如 "webService"、"appService"
      */
+    @Nullable
     String getServiceTypeCode();
 
     /**
@@ -60,6 +67,7 @@ public interface AuthInfo {
      *
      * @return AccessToken
      */
+    @Nullable
     String getAccessToken();
 
     /**
@@ -79,6 +87,7 @@ public interface AuthInfo {
      * @return 数据范围类型编码
      * @see com.njydsz.common.domain.constant.DataScopeConstants
      */
+    @Nullable
     String getDataScope();
 
     /**
@@ -88,6 +97,7 @@ public interface AuthInfo {
      *
      * @return 租户ID
      */
+    @Nullable
     String getTenantId();
 
     /**
@@ -95,6 +105,7 @@ public interface AuthInfo {
      *
      * @return 设备唯一ID
      */
+    @Nullable
     String getDistinctId();
 
     /**
@@ -104,6 +115,7 @@ public interface AuthInfo {
      *
      * @return 请求来源
      */
+    @Nullable
     String getRequestSource();
 
     /**
@@ -123,6 +135,7 @@ public interface AuthInfo {
      *
      * @return 表名到可见列集合的映射；不允许返回 null，无规则时返回空 Map
      */
+    @Nonnull
     Map<String, Set<String>> getVisibleColumnsByTable();
 
     /**
@@ -142,5 +155,6 @@ public interface AuthInfo {
      *
      * @return 表名到可编辑列集合的映射；不允许返回 null，无规则时返回空 Map
      */
+    @Nonnull
     Map<String, Set<String>> getEditableColumnsByTable();
 }

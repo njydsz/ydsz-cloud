@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
@@ -409,7 +410,22 @@ public class MapUtils {
      * @return 填充后的 Bean 实例
      * @throws IllegalArgumentException 入参为 null、targetClass 无无参构造器、或实例化失败
      * @since 1.3.0
+     * @deprecated 自 4.0.0 起标记废弃（forRemoval=true）。本方法仅支持 setter 注入的 POJO，无法处理：
+     *             <ul>
+     *               <li>Java Record（无 setter）→ 使用 {@link #toBeanOrRecord(Map, Class)}</li>
+     *               <li>泛型集合（如 {@code List<T>}）→ 使用 JSON 框架（推荐 Fastjson2 / Jackson）</li>
+     *             </ul>
+     *             迁移示例：
+     *             <pre>{@code
+     *             // 旧：反射 toBean
+     *             UserDO user = MapUtils.toBean(map, UserDO.class);
+     *             // 新：JSON 框架（推荐）
+     *             UserDO user = YdszJson.toJavaObject(map, UserDO.class);
+     *             // 或：Record 自动检测
+     *             UserDO user = MapUtils.toBeanOrRecord(map, UserDO.class);
+     *             }</pre>
      */
+    @Deprecated(since = "4.0.0", forRemoval = true)
     @SuppressWarnings("unchecked")
     public static <T> T toBean(Map<String, Object> map, Class<T> targetClass) {
         if (map == null) {
@@ -520,7 +536,10 @@ public class MapUtils {
      * @return 填充后的 Bean 实例
      * @throws IllegalArgumentException 入参为 null 时抛出
      * @since 1.4.0
+     * @deprecated 自 4.0.0 起标记废弃（forRemoval=true）。请使用 {@link #toBeanOrRecord(Map, Class)} 替代
+     *             或基于 JSON 框架（Fastjson2 / Jackson）进行类型转换。
      */
+    @Deprecated(since = "4.0.0", forRemoval = true)
     public static <T> T toBean(Map<String, Object> map, Class<T> targetClass,
                                java.time.format.DateTimeFormatter dateFormatter) {
         if (map == null) {
@@ -881,7 +900,10 @@ public class MapUtils {
         // 非参数化类型，退化为 Class 版本
         if (type instanceof Class<?> clazz) {
             if (source instanceof Map<?, ?> rawMap) {
-                return toBean(toStringObjectMap(rawMap), clazz);
+                // 显式强转 Class<?> 为 Class<T>，避免 javac 泛型推断失败（等式约束 capture 与 T 冲突）
+                @SuppressWarnings("unchecked")
+                Class<T> target = (Class<T>) clazz;
+                return toBean(toStringObjectMap(rawMap), target);
             }
             if (clazz.isInstance(source)) {
                 return (T) source;

@@ -1,6 +1,7 @@
 package com.njydsz.common.util.concurrent;
 
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Callable;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -180,14 +181,49 @@ public class MeteredThreadPoolExecutor extends ThreadPoolExecutor {
     }
 
     @Override
+    public <T> java.util.concurrent.Future<T> submit(Callable<T> task) {
+        return super.submit(new MeteredCallable<>(task));
+    }
+
+    @Override
+    public java.util.concurrent.Future<?> submit(Runnable task) {
+        return super.submit(new MeteredTask(task));
+    }
+
+    @Override
+    public <T> java.util.concurrent.Future<T> submit(Runnable task, T result) {
+        return super.submit(new MeteredTask(task), result);
+    }
+
+    @Override
     protected void afterExecute(Runnable r, Throwable t) {
         super.afterExecute(r, t);
-        if (t != null && r instanceof MeteredTask mt) {
-            failedTaskCount.incrementAndGet();
+        // 注意：execute(Runnable) 与 submit(Runnable) 路径的失败统计由
+        // MeteredTask/MeteredCallable 内部完成（submit 路径异常被 Future 吞掉，
+        // afterExecute 收不到 t，只能由包装器捕获）。此处不再重复计数。
+    }
+
+    /**
+     * 记录一次任务执行耗时与慢任务检测（execute / submit 共用）。
+     *
+     * @param startNanos 任务开始时间（System.nanoTime）
+     * @param taskName   任务标识（用于慢任务日志）
+     */
+    private void recordElapsed(long startNanos, String taskName) {
+        long elapsedNanos = System.nanoTime() - startNanos;
+        long elapsedMs = TimeUnit.NANOSECONDS.toMillis(elapsedNanos);
+
+        if (micrometerAvailable) {
+            meterRegistry.timer("executor.task.duration", "pool.name", poolName)
+                    .record(elapsedNanos, TimeUnit.NANOSECONDS);
+        }
+
+        if (elapsedMs > slowTaskThresholdMs) {
+            slowTaskCount.incrementAndGet();
             if (micrometerAvailable) {
-                meterRegistry.counter("executor.failed.tasks", "pool.name", poolName).increment();
+                meterRegistry.counter("executor.slow.tasks", "pool.name", poolName).increment();
             }
-            onTaskFailed(mt.delegate(), t);
+            onSlowTask(taskName, elapsedMs);
         }
     }
 
@@ -277,7 +313,10 @@ public class MeteredThreadPoolExecutor extends ThreadPoolExecutor {
     }
 
     /**
-     * 任务包装器——添加耗时统计和慢任务检测。
+     * 任务包装器（Runnable）——添加耗时统计、慢任务检测与失败统计。
+     *
+     * <p>失败统计放在包装器内部而非 afterExecute：submit(Runnable) 路径的异常
+     * 会被 Future 吞掉（afterExecute 收不到），只有包装器自身能可靠捕获。
      */
     private class MeteredTask implements Runnable {
         private final Runnable delegate;
@@ -295,25 +334,50 @@ public class MeteredThreadPoolExecutor extends ThreadPoolExecutor {
             totalTaskCount.incrementAndGet();
             try {
                 delegate.run();
+            } catch (Throwable t) {
+                countFailure(t);
+                throw t;
             } finally {
-                long elapsedNanos = System.nanoTime() - startTime;
-                long elapsedMs = TimeUnit.NANOSECONDS.toMillis(elapsedNanos);
-
-                if (micrometerAvailable) {
-                    meterRegistry.timer("executor.task.duration", "pool.name", poolName)
-                            .record(elapsedNanos, TimeUnit.NANOSECONDS);
-                }
-
-                if (elapsedMs > slowTaskThresholdMs) {
-                    slowTaskCount.incrementAndGet();
-                    if (micrometerAvailable) {
-                        meterRegistry.counter("executor.slow.tasks", "pool.name", poolName).increment();
-                    }
-                    String taskName = delegate.getClass().getSimpleName();
-                    onSlowTask(taskName, elapsedMs);
-                }
+                recordElapsed(startTime, delegate.getClass().getSimpleName());
             }
         }
+    }
+
+    /**
+     * 任务包装器（Callable）——与 {@link MeteredTask} 等价，覆盖 submit(Callable) 路径。
+     */
+    private class MeteredCallable<T> implements Callable<T> {
+        private final Callable<T> delegate;
+        private final long startTime;
+
+        MeteredCallable(Callable<T> delegate) {
+            this.delegate = delegate;
+            this.startTime = System.nanoTime();
+        }
+
+        @Override
+        public T call() throws Exception {
+            totalTaskCount.incrementAndGet();
+            try {
+                return delegate.call();
+            } catch (Throwable t) {
+                countFailure(t);
+                throw t;
+            } finally {
+                recordElapsed(startTime, delegate.getClass().getSimpleName());
+            }
+        }
+    }
+
+    /**
+     * 统一的失败统计逻辑（execute / submit 路径共用）。
+     */
+    private void countFailure(Throwable t) {
+        failedTaskCount.incrementAndGet();
+        if (micrometerAvailable) {
+            meterRegistry.counter("executor.failed.tasks", "pool.name", poolName).increment();
+        }
+        onTaskFailed(() -> { /* 无法还原原始任务对象，仅记录异常 */ }, t);
     }
 
     @Override

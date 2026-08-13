@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.util.security.DigestUtils;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -24,14 +23,18 @@ import lombok.extern.slf4j.Slf4j;
  * <pre>{@code
  * +------+----------------------+-------------+-------------+---------+
  * | sign |     timestamp        | datacenter  |   worker    | sequence |
- * | 1bit |       41bit          |    5bit     |    5bit     |  12bit  |
+ * | 1bit |       41bit          |    5bit     |    10bit    |  7bit   |
  * +------+----------------------+-------------+-------------+---------+
  * }</pre>
  *
+ * <p>workerId 占 10 位（0-1023），与 {@link WorkerIdAllocator} 策略链的分配契约对齐
+ * （支持 StatefulSet 最多 1024 副本 / IP 哈希 / 文件兜底随机），
+ * 避免分配器产出值超出 ID 结构可承载范围导致启动失败。
+ *
  * <h2>性能特征</h2>
  * <ul>
- *   <li>单节点理论峰值：409.6 万 ID/s（12 位序列号 / 毫秒）</li>
- *   <li>实际吞吐量取决于 CAS 竞争程度，普通服务器 50-200 万 ID/s</li>
+ *   <li>单节点理论峰值：12.8 万 ID/s（7 位序列号 / 毫秒，每毫秒 128 个）</li>
+ *   <li>实际吞吐量取决于 CAS 竞争程度，普通服务器 5-12 万 ID/s</li>
  *   <li>如需更高吞吐，建议使用 Leaf-segment 或号段模式</li>
  * </ul>
  *
@@ -53,17 +56,17 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnProperty(prefix = "ydsz.util.snowflake", name = "enabled", matchIfMissing = true)
 public class SnowflakeIdGenerator {
 
-    /** 起始纪元时间戳（2020-01-01 00:00:00 UTC） */
-    private static final long EPOCH = 1577836800000L;
+    /** 默认起始纪元时间戳（2020-01-01 00:00:00 UTC） */
+    private static final long DEFAULT_EPOCH = 1577836800000L;
 
-    /** 工作节点 ID 占用位数 */
-    private static final long WORKER_ID_BITS = 5L;
+    /** 工作节点 ID 占用位数（10 位，0-1023，与 WorkerIdAllocator 契约一致） */
+    private static final long WORKER_ID_BITS = 10L;
     /** 数据中心 ID 占用位数 */
     private static final long DATACENTER_ID_BITS = 5L;
-    /** 序列号占用位数 */
-    private static final long SEQUENCE_BITS = 12L;
+    /** 序列号占用位数（7 位，每毫秒 128 个） */
+    private static final long SEQUENCE_BITS = 7L;
 
-    /** 最大工作节点 ID（31） */
+    /** 最大工作节点 ID（1023） */
     private static final long MAX_WORKER_ID = -1L ^ (-1L << WORKER_ID_BITS);
     /** 最大数据中心 ID（31） */
     private static final long MAX_DATACENTER_ID = -1L ^ (-1L << DATACENTER_ID_BITS);
@@ -75,7 +78,7 @@ public class SnowflakeIdGenerator {
     /** 时间戳左移位数 */
     private static final long TIMESTAMP_LEFT_SHIFT = SEQUENCE_BITS + WORKER_ID_BITS + DATACENTER_ID_BITS;
 
-    /** 序列号掩码（4095） */
+    /** 序列号掩码（127） */
     private static final long SEQUENCE_MASK = -1L ^ (-1L << SEQUENCE_BITS);
 
     /** 时钟回拨容忍阈值（毫秒），≤ 5ms 直接等待 */
@@ -88,8 +91,13 @@ public class SnowflakeIdGenerator {
     /** 数据中心 ID */
     private final long datacenterId;
 
+    /** 起始纪元时间戳（实例级，可配置） */
+    private final long epoch;
+    /** Snowflake 配置属性（resolveNodeId 读取 node-id 配置使用） */
+    private final SnowflakeProperties properties;
+
     /**
-     * 状态（高 52 位 = 相对 epoch 的时间戳毫秒数，低 12 位 = 序列号）。
+     * 状态（高 57 位 = 相对 epoch 的时间戳毫秒数，低 7 位 = 序列号）。
      * -1 表示未初始化（首次生成时自动填充当前时间戳 + 序列号 0）。
      */
     private final AtomicLong state = new AtomicLong(-1L);
@@ -106,6 +114,7 @@ public class SnowflakeIdGenerator {
      * @param allocator    WorkerId 分配策略链
      */
     public SnowflakeIdGenerator(SnowflakeProperties properties, WorkerIdAllocator allocator) {
+        this.properties = properties;
         String nodeId = resolveNodeId();
 
         // workerId 分配：显式配置优先，否则使用策略链
@@ -127,8 +136,10 @@ public class SnowflakeIdGenerator {
             throw new IllegalArgumentException(
                     String.format("datacenter Id can't be greater than %d or less than 0", MAX_DATACENTER_ID));
         }
-        log.info("SnowflakeIdGenerator initialized. Worker ID: {}, Datacenter ID: {}, allocator: {}",
-                this.workerId, this.datacenterId, allocator.name());
+        // EPOCH：显式配置优先，否则使用默认值
+        this.epoch = properties.getEpoch() != null ? properties.getEpoch() : DEFAULT_EPOCH;
+        log.info("SnowflakeIdGenerator initialized. Worker ID: {}, Datacenter ID: {}, epoch: {}, allocator: {}",
+                this.workerId, this.datacenterId, this.epoch, allocator.name());
     }
 
     /**
@@ -137,6 +148,22 @@ public class SnowflakeIdGenerator {
      */
     public SnowflakeIdGenerator() {
         this(new SnowflakeProperties(), WorkerIdAllocatorChain.defaults());
+    }
+
+    /**
+     * 便捷构造器：指定 EPOCH。
+     *
+     * @param epoch 起始纪元时间戳（毫秒）
+     * @since 4.0.0
+     */
+    public SnowflakeIdGenerator(long epoch) {
+        this(createPropertiesWithEpoch(epoch), WorkerIdAllocatorChain.defaults());
+    }
+
+    private static SnowflakeProperties createPropertiesWithEpoch(long epoch) {
+        SnowflakeProperties props = new SnowflakeProperties();
+        props.setEpoch(epoch);
+        return props;
     }
 
     /**
@@ -249,7 +276,7 @@ public class SnowflakeIdGenerator {
      * 也保证 {@link #getLastTimestamp()} / {@link #parseTimestamp(long)} 的反解语义正确。
      */
     private long currentTimeRelative() {
-        return timeGen() - EPOCH;
+        return timeGen() - epoch;
     }
 
     /**
@@ -354,7 +381,7 @@ public class SnowflakeIdGenerator {
         if (currentState < 0) {
             return System.currentTimeMillis();
         }
-        return extractTimestamp(currentState) + EPOCH;
+        return extractTimestamp(currentState) + epoch;
     }
 
     // ==================== 静态常量暴露 ====================
@@ -370,7 +397,19 @@ public class SnowflakeIdGenerator {
     // ==================== ID 反解析 ====================
 
     public static long parseTimestamp(long id) {
-        return (id >> TIMESTAMP_LEFT_SHIFT) + EPOCH;
+        return parseTimestamp(id, DEFAULT_EPOCH);
+    }
+
+    /**
+     * 从 ID 中反解时间戳（使用指定 EPOCH）。
+     *
+     * @param id    Snowflake ID
+     * @param epoch 生成该 ID 时使用的 EPOCH
+     * @return 绝对时间戳（毫秒）
+     * @since 4.0.0
+     */
+    public static long parseTimestamp(long id, long epoch) {
+        return (id >> TIMESTAMP_LEFT_SHIFT) + epoch;
     }
 
     public static long parseDatacenterId(long id) {
@@ -386,6 +425,16 @@ public class SnowflakeIdGenerator {
     }
 
     public static long getEpoch() {
-        return EPOCH;
+        return DEFAULT_EPOCH;
+    }
+
+    /**
+     * 获取当前实例使用的 EPOCH。
+     *
+     * @return 实例级 EPOCH（毫秒）
+     * @since 4.0.0
+     */
+    public long getInstanceEpoch() {
+        return epoch;
     }
 }

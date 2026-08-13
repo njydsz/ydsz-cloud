@@ -22,6 +22,10 @@ import org.slf4j.LoggerFactory;
  *
  * @author ydsz-team
  * @since 3.0.0
+ * @deprecated 自 3.1.0 起标记废弃（forRemoval=true）。开发环境推荐通过配置
+ *             {@code ydsz.util.snowflake.worker-id} 显式指定 WorkerId，无需文件持久化。
+ *             生产环境推荐使用 K8s Pod 序号（{@link PodOrdinalWorkerIdAllocator}）或 IP 哈希
+ *             （{@link IpHashWorkerIdAllocator}）。
  */
 public final class FilePersistedWorkerIdAllocator implements WorkerIdAllocator {
 

@@ -2,6 +2,9 @@ package com.njydsz.common.util.password;
 
 import java.util.Locale;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 /**
  * 密码强度校验 SPI（Service Provider Interface）。
  *
@@ -57,7 +60,8 @@ public interface PasswordStrengthChecker {
      * @param password 明文密码，可能为 null
      * @return 密码强度等级（非 null）
      */
-    PasswordStrengthLevel check(String password);
+    @Nonnull
+    PasswordStrengthLevel check(@Nullable String password);
 
     /**
      * 将密码强度等级转为用户可读的本地化描述。
@@ -68,7 +72,8 @@ public interface PasswordStrengthChecker {
      * @param locale 目标语言区域，不可为 null
      * @return 本地化描述字符串（如 "密码强度弱" / "Password is weak"）
      */
-    String describe(PasswordStrengthLevel level, Locale locale);
+    @Nonnull
+    String describe(@Nonnull PasswordStrengthLevel level, @Nonnull Locale locale);
 
     /**
      * 校验失败时的建议提示。
@@ -79,7 +84,8 @@ public interface PasswordStrengthChecker {
      * @param locale   目标语言区域
      * @return 改进建议，无建议时返回空字符串或 null
      */
-    String suggest(String password, Locale locale);
+    @Nonnull
+    String suggest(@Nullable String password, @Nonnull Locale locale);
 
     /**
      * 密码强度等级枚举。

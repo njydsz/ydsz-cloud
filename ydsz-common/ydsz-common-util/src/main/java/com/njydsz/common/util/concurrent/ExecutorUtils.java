@@ -31,12 +31,24 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 线程池工具类
  *
- * <p>提供全面的线程池创建和管理方法，支持：
- * 1. 常规线程池（Fixed、Cached、Single）
- * 2. VirtualThread（Java 21+，IO 密集型场景）
- * 3. CPU 密集型有界队列线程池
- * 4. 自定义命名、守护线程、拒绝策略
- * </p>
+ * <p>提供全面的线程池创建和管理方法，支持常规线程池、VirtualThread、CPU 密集型有界队列、
+ * 自定义命名、守护线程、拒绝策略、TTL 上下文透传等能力。
+ *
+ * <h2>快速选择指南</h2>
+ * <table border="1">
+ *   <caption>场景与 API 映射</caption>
+ *   <tr><th>场景</th><th>推荐方法</th><th>说明</th></tr>
+ *   <tr><td>固定大小线程池</td><td>{@link #newFixedThreadPool(int)}</td><td>核心线程数固定，有界队列</td></tr>
+ *   <tr><td>CPU 密集型</td><td>{@link #newCpuBoundThreadPool()}</td><td>核心数 + 1，有界队列</td></tr>
+ *   <tr><td>IO 密集型（Java 21+）</td><td>{@link #newVirtualThreadExecutor()}</td><td>每任务一线程，百万级并发</td></tr>
+ *   <tr><td>IO 密集型（兼容）</td><td>{@link #newPlatformThreadExecutor()}</td><td>平台线程缓存池</td></tr>
+ *   <tr><td>单个后台线程</td><td>{@link #newSingleThreadExecutor()}</td><td>顺序执行，有界队列</td></tr>
+ *   <tr><td>定时任务</td><td>{@link #newScheduledThreadPool(int)}</td><td>ScheduledExecutorService</td></tr>
+ *   <tr><td>TTL 上下文透传</td><td>{@link #newTtlFixedThreadPool(int)}</td><td>包装 TransmittableThreadLocal</td></tr>
+ *   <tr><td>完全自定义</td><td>{@link #builder()}</td><td>Builder 模式，灵活配置</td></tr>
+ *   <tr><td>优雅关闭</td><td>{@link #shutdownGracefully(ExecutorService, long, TimeUnit)}</td><td>先 shutdown，超时强制 shutdownNow</td></tr>
+ *   <tr><td>带超时任务</td><td>{@link #submitWithTimeout(ExecutorService, Callable, long, TimeUnit)}</td><td>超时自动取消</td></tr>
+ * </table>
  *
  * @author ydsz-team
  * @since 1.0.0

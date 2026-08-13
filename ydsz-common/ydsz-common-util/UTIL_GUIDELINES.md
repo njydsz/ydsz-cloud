@@ -115,20 +115,16 @@
 | **可观测线程池（3.0.0 新增）** | `MeteredThreadPoolExecutor` | `new(poolName, core, max, ...)` | Micrometer 指标自动注册 + 慢任务检测 |
 | **有界虚拟线程（3.0.0 新增）** | `BoundedVirtualThreadScheduler` | `submit(task)` | 背压控制，防止无限创建虚拟线程 |
 
-### JDK 21 结构化并发（3.0.0 新增）
+### JDK 21 并发增强
 
 | 需求场景 | 推荐类 | 方法 | 备注 |
 |---------|--------|------|------|
-| 并行子任务（全部成功） | `StructuredConcurrencyScopes` | `allSuccess()` + `fork/throwIfFailed` | 任一失败取消其他 |
-| 竞速模式（首个成功） | `StructuredConcurrencyScopes` | `firstSuccess()` + `fork/join` | 多 LLM/CDN 竞速 |
-| 并行收集结果 | `StructuredConcurrencyScopes` | `allOf(tasks)` | 不取消，逐个检查 |
-| 竞速收集（带返回值） | `StructuredConcurrencyScopes` | `firstSuccessOf(tasks)` | 首个成功即返回 |
-| 上下文传递（替代 ThreadLocal） | `ScopedValues` | `TRACE_ID` / `OPERATOR_ID` / `runWhere(...)` | 虚拟线程安全，零泄漏 |
 | 有序集合 first/last | `SequencedCollections` | `first(coll)` / `last(coll)` / `reversed(map)` | JDK 21+ 原生 / JDK 17 兼容 |
 
-> `StructuredConcurrencyScopes`、`ScopedValues` 需要 JDK 21+。JDK 17 环境请使用 `CompletableFuture` + `TransmittableThreadLocal`。
-
-> `ScopedValues` 优势：作用域内可见、出作用域自动清除、与结构化并发天然集成，无需手动 remove()。
+> ⚠️ `ScopedValues`、`StructuredConcurrencyScopes` 依赖 JDK 21 预览 API（`ScopedValue` / `StructuredTaskScope`），
+> 在项目声明 `java.version=21`（未启用 `--enable-preview`）下无法编译，已于 2026-08-13 移除。
+> 需要结构化并发时请直接使用 JDK 原生 `StructuredTaskScope`（需 JDK 22+）或 `CompletableFuture` + `TransmittableThreadLocal`；
+> 上下文传递统一使用 `RequestContext`（TTL）。
 
 ### 认证上下文
 

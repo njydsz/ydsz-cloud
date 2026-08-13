@@ -35,12 +35,28 @@ public class PwdUtils {
     private static final BCryptPasswordEncoder BCRYPT_ENCODER = new BCryptPasswordEncoder(12);
 
     /**
-     * 密码强度枚举
+     * 密码强度枚举（三档评分）。
      *
      * <p>本枚举兼容 1.x {@code WEAK/MEDIUM/STRONG} 三档评分逻辑。
-     * 2.x 新增 SPI 接口 {@link PasswordStrengthChecker} 提供更细粒度的
-     * {@link PasswordStrengthChecker.PasswordStrengthLevel} 五档评分与国际化提示。
+     * 2.x 起推荐使用 {@link PasswordStrengthChecker.PasswordStrengthLevel} 五档评分。
+     *
+     * <p><b>迁移指引：</b>
+     * <pre>{@code
+     * // 旧 API（已废弃）
+     * PasswordStrength strength = PwdUtils.checkPasswordStrength(password);
+     * if (strength == PasswordStrength.WEAK) { ... }
+     *
+     * // 新 API（推荐）
+     * PasswordStrengthLevel level = PwdUtils.checkPasswordStrengthLevel(password);
+     * if (level == PasswordStrengthLevel.VERY_WEAK || level == PasswordStrengthLevel.WEAK) { ... }
+     * }</pre>
+     *
+     * @since 1.0.0
+     * @deprecated 自 3.0.0 起替换为 {@link PasswordStrengthChecker.PasswordStrengthLevel} 五档评分。
+     *             新 API 提供更细粒度的强度分级（{@code VERY_WEAK / WEAK / MEDIUM / STRONG / VERY_STRONG}）
+     *             并支持国际化提示。映射关系：VERY_WEAK/WEAK → WEAK，MEDIUM → MEDIUM，STRONG/VERY_STRONG → STRONG。
      */
+    @Deprecated(since = "3.0.0", forRemoval = true)
     public enum PasswordStrength {
         /** 弱密码 */
         WEAK,
@@ -127,28 +143,74 @@ public class PwdUtils {
     private static final int DEFAULT_SALT_LENGTH = 16;
 
     /**
-     * 使用 BCrypt 哈希密码
+     * 检查 BCrypt 依赖是否可用。
      *
-     * @param rawPassword 原始密码
+     * <p>BCrypt 依赖 spring-security-crypto，未引入时返回 false。
+     * 调用 {@link #hashPasswordBCrypt(String)} / {@link #verifyPasswordBCrypt(String, String)}
+     * 前可先检查，避免 {@link NoClassDefFoundError}。
+     *
+     * @return BCrypt 可用返回 true
+     * @since 3.1.0
+     */
+    public static boolean isBcryptAvailable() {
+        try {
+            Class.forName("org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
+        }
+    }
+
+    /**
+     * 使用 BCrypt 哈希密码。
+     *
+     * <p><b>依赖要求</b>：classpath 需包含 spring-security-crypto。
+     * 未引入时抛出 {@link IllegalStateException} 并附引入指引。
+     *
+     * @param rawPassword 原始密码（不为 null）
      * @return BCrypt 哈希值
+     * @throws IllegalStateException spring-security-crypto 未引入时抛出
      */
     public static String hashPasswordBCrypt(String rawPassword) {
+        if (!isBcryptAvailable()) {
+            throw new IllegalStateException(
+                    "BCrypt 需要 spring-security-crypto 依赖。请在 pom.xml 中添加：\n"
+                    + "<dependency>\n"
+                    + "  <groupId>org.springframework.security</groupId>\n"
+                    + "  <artifactId>spring-security-crypto</artifactId>\n"
+                    + "</dependency>"
+            );
+        }
         return BCRYPT_ENCODER.encode(rawPassword);
     }
 
     /**
-     * 验证 BCrypt 密码
+     * 验证 BCrypt 密码。
+     *
+     * <p><b>依赖要求</b>：classpath 需包含 spring-security-crypto。
      *
      * @param rawPassword 原始密码
      * @param hashedPassword BCrypt 哈希值
      * @return 匹配返回 true
+     * @throws IllegalStateException spring-security-crypto 未引入时抛出
      */
     public static boolean verifyPasswordBCrypt(String rawPassword, String hashedPassword) {
+        if (!isBcryptAvailable()) {
+            throw new IllegalStateException(
+                    "BCrypt 需要 spring-security-crypto 依赖。请在 pom.xml 中添加：\n"
+                    + "<dependency>\n"
+                    + "  <groupId>org.springframework.security</groupId>\n"
+                    + "  <artifactId>spring-security-crypto</artifactId>\n"
+                    + "</dependency>"
+            );
+        }
         return BCRYPT_ENCODER.matches(rawPassword, hashedPassword);
     }
 
     /**
-     * 判断密码是否为 BCrypt 格式
+     * 判断密码是否为 BCrypt 格式。
+     *
+     * <p>纯 JDK 正则判断，无需 spring-security-crypto 依赖。
      *
      * @param password 密码字符串
      * @return 是 BCrypt 格式返回 true
@@ -319,7 +381,12 @@ public class PwdUtils {
      *
      * @param password 密码
      * @return 密码强度枚举（WEAK/MEDIUM/STRONG），null/空串返回 WEAK
+     * @deprecated 自 3.0.0 起替换为 {@link #checkPasswordStrengthLevel(String)}。
+     *             新 API 返回 {@link PasswordStrengthChecker.PasswordStrengthLevel} 五档评分，
+     *             提供更细粒度的强度分级。映射关系：VERY_WEAK/WEAK → WEAK，MEDIUM → MEDIUM，STRONG/VERY_STRONG → STRONG。
+     * @see #checkPasswordStrengthLevel(String)
      */
+    @Deprecated(since = "3.0.0", forRemoval = true)
     public static PasswordStrength checkPasswordStrength(String password) {
         PasswordStrengthChecker checker = getPasswordStrengthChecker();
         PasswordStrengthChecker.PasswordStrengthLevel level = checker.check(password);

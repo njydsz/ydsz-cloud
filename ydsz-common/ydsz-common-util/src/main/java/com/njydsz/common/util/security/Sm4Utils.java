@@ -72,8 +72,8 @@ public final class Sm4Utils {
     /** GCM 模式转换字符串 */
     private static final String TRANSFORM_GCM = "SM4/GCM/NoPadding";
 
-    /** CBC 模式转换字符串 */
-    private static final String TRANSFORM_CBC = "SM4/CBC/PKCS5Padding";
+    /** CBC 模式转换字符串（与 Sm4CbcCryptoProvider 统一为 PKCS7Padding） */
+    private static final String TRANSFORM_CBC = "SM4/CBC/PKCS7Padding";
 
     /** GCM Tag 长度（位） */
     private static final int GCM_TAG_LENGTH = 128;

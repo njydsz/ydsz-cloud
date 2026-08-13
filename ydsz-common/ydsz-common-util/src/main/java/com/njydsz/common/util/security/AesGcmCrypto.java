@@ -34,7 +34,13 @@ import javax.crypto.spec.SecretKeySpec;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 自 3.0.0 起统一收敛到 {@link com.njydsz.common.util.security.crypto.CryptoUtils} /
+ *             {@link com.njydsz.common.util.security.crypto.CryptoProviderRegistry} 加密体系。
+ *             新代码使用 {@code CryptoUtils.encrypt(text, key)} / {@code CryptoUtils.decrypt(ct, key)}
+ *             实现同等 AES-256-GCM 能力（密文格式兼容：IV(12B) || ciphertext+tag）。
+ *             本类保留仅供历史密文兼容。
  */
+@Deprecated(since = "3.0.0", forRemoval = false)
 public class AesGcmCrypto {
 
     /** GCM 认证 Tag 长度（位） */

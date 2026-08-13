@@ -92,6 +92,11 @@
             <artifactId>micrometer-core</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- JSR-305 Null-safety 注解（@Nonnull / @Nullable） -->
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+        </dependency>
 
         <!-- Spring Boot AutoConfiguration -->
         <dependency>

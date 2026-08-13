@@ -1,5 +1,8 @@
 package com.njydsz.common.util.security.crypto;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 /**
  * 对称加密算法统一契约。
  *
@@ -27,6 +30,7 @@ public interface CryptoProvider {
      *
      * @return 算法唯一标识字符串
      */
+    @Nonnull
     String algorithm();
 
     /**
@@ -50,6 +54,7 @@ public interface CryptoProvider {
      *
      * @return 密钥字节数组，长度等于 {@link #keyLength()}
      */
+    @Nonnull
     byte[] generateKey();
 
     /**
@@ -57,6 +62,7 @@ public interface CryptoProvider {
      *
      * @return IV 字节数组，长度等于 {@link #ivLength()}
      */
+    @Nonnull
     byte[] generateIv();
 
     /**
@@ -76,7 +82,8 @@ public interface CryptoProvider {
      * @throws IllegalArgumentException 密钥长度不匹配或 algorithm 不可用时
      * @throws CryptoException           加密失败时（如 AEAD 标签验证失败）
      */
-    byte[] encrypt(byte[] plaintext, byte[] key, byte[] aad);
+    @Nonnull
+    byte[] encrypt(@Nonnull byte[] plaintext, @Nonnull byte[] key, @Nullable byte[] aad);
 
     /**
      * 解密数据。
@@ -95,5 +102,6 @@ public interface CryptoProvider {
      * @throws IllegalArgumentException 密钥长度不匹配或密文格式非法时
      * @throws CryptoException           解密失败时（如 AEAD 认证标签不匹配）
      */
-    byte[] decrypt(byte[] ciphertext, byte[] key, byte[] aad);
+    @Nonnull
+    byte[] decrypt(@Nonnull byte[] ciphertext, @Nonnull byte[] key, @Nullable byte[] aad);
 }

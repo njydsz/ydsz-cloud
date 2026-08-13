@@ -1,11 +1,9 @@
 package com.njydsz.common.util.security.crypto;
 
-import java.security.Security;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,17 +47,20 @@ public final class CryptoProviderRegistry {
         register(new AesGcmCryptoProvider(192));
         register(new AesGcmCryptoProvider(256));
 
-        // SM4 系列（需 BouncyCastle）
-        if (Security.getProvider(BouncyCastleProvider.PROVIDER_NAME) != null) {
-            try {
-                register(new Sm4GcmCryptoProvider());
-                register(new Sm4CbcCryptoProvider());
-                LOG.info("SM4 crypto providers registered (BC available)");
-            } catch (Exception e) {
-                LOG.warn("Failed to register SM4 providers: {}", e.getMessage());
-            }
-        } else {
-            LOG.info("BouncyCastle not available, SM4 providers skipped");
+        // SM4 系列（需 BouncyCastle，构造器内部会幂等注册 BC Provider）。
+        // 不再前置判断 Security.getProvider(BC) —— BC 是懒注册的，前置判断会导致
+        // SM4 永远注册不上（鸡生蛋问题）。改为无条件 try 注册：
+        //  - bcprov-jdk18on 在 classpath：构造器内 ensure BC，注册成功；
+        //  - bcprov-jdk18on 缺失：构造触发 NoClassDefFoundError，捕获后跳过，
+        //    保证纯 AES 场景不依赖 BC（避免注册表静态初始化失败）。
+        try {
+            register(new Sm4GcmCryptoProvider());
+            register(new Sm4CbcCryptoProvider());
+            LOG.info("SM4 crypto providers registered (BC available)");
+        } catch (NoClassDefFoundError e) {
+            LOG.info("BouncyCastle not on classpath, SM4 providers skipped: {}", e.getMessage());
+        } catch (Exception e) {
+            LOG.warn("Failed to register SM4 providers: {}", e.getMessage());
         }
     }
 

@@ -1,24 +1,30 @@
 package com.njydsz.common.util.security;
 
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Base64;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Objects;
 
+import com.njydsz.common.util.security.crypto.CryptoProvider;
+import com.njydsz.common.util.security.crypto.CryptoProviderRegistry;
 import com.njydsz.common.util.security.HexUtils;
 
 /**
  * AES 加密工具类（轻量静态工具）
  *
  * <p>提供 AES-GCM 对称加密解密、密钥生成、Base64/Hex 编解码能力。
- * 纯 JDK 实现，零第三方依赖。
  *
  * <p><b>核心特性：</b>
  * <ul>
- *   <li><b>GCM 模式</b>：encrypt/decrypt 使用 AES-256-GCM，提供认证加密（AEAD）</li>
+ *   <li><b>GCM 模式</b>：encrypt/decrypt 使用 AES-GCM，提供认证加密（AEAD）</li>
  *   <li><b>自动生成 IV</b>：每次加密生成全新的 12 字节随机 IV</li>
- *   <li><b>256 位密钥</b>：默认密钥长度 256 位</li>
+ *   <li><b>密钥长度</b>：128/192/256 位，按密钥长度自动路由对应 AES-GCM Provider</li>
  *   <li><b>Hex/Base64 编码</b>：支持两种输出格式</li>
  * </ul>
+ *
+ * <p><b>实现说明：</b>本类为兼容入口，加解密内部委派
+ * {@link com.njydsz.common.util.security.crypto.CryptoProviderRegistry}
+ * （密文格式与旧版一致：IV(12B) || ciphertext+tag，Base64 输出，历史密文可平滑解密）。
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
@@ -44,8 +50,15 @@ import com.njydsz.common.util.security.HexUtils;
  *             新 API 通过 {@link com.njydsz.common.util.security.crypto.CryptoProviderRegistry} 支持算法路由，
  *             可一键切换 AES/SM4。迁移示例：
  *             {@code AesUtils.encrypt(text, hexKey) → CryptoUtils.encryptHex(text, hexKey)}
+ *             <p><b>移除时间表：</b>
+ *             <ul>
+ *               <li>3.0.0（已发布）：标记废弃，内部委派新 API 实现</li>
+ *               <li>4.0.0（计划）：移除本类，新代码必须使用 {@code CryptoUtils}</li>
+ *             </ul>
+ *             历史密文兼容：新 API 密文格式与旧版一致（IV(12B) || ciphertext+tag，Base64），
+ *             直接切换 API 无需数据迁移。
  */
-@Deprecated(since = "3.0.0", forRemoval = false)
+@Deprecated(since = "3.0.0", forRemoval = true)
 public final class AesUtils {
 
     /** AES 密钥算法类型 */
@@ -57,35 +70,32 @@ public final class AesUtils {
     /** 共享的线程安全 SecureRandom 实例 */
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
-    /**
-     * 按 Hex 密钥缓存 {@link AesGcmCrypto} 实例。
-     *
-     * <p>AesGcmCrypto 内部持有不可变的 {@code SecretKeySpec}，按密钥复用可避免
-     * 每次调用都新建实例与重复解析 Hex 密钥，同时复用其 ThreadLocal Cipher 池。
-     * 业务使用的密钥数量极少，ConcurrentHashMap 无界在此场景可接受。
-     */
-    private static final ConcurrentHashMap<String, AesGcmCrypto> CRYPTO_CACHE = new ConcurrentHashMap<>();
-
     private AesUtils() {
         throw new UnsupportedOperationException("AesUtils is a utility class");
-    }
-
-    /**
-     * 获取（或创建并缓存）指定 Hex 密钥对应的加密器。
-     *
-     * @param hexAesKey Hex 格式 AES 密钥
-     * @return 复用型的 AesGcmCrypto 实例
-     */
-    private static AesGcmCrypto crypto(String hexAesKey) {
-        return CRYPTO_CACHE.computeIfAbsent(hexAesKey, k -> new AesGcmCrypto(hexToBytes(k)));
     }
 
     // ==================== 加解密 ====================
 
     /**
+     * 按密钥字节长度路由到对应 AES-GCM Provider。
+     *
+     * @param keyBytes 密钥字节数（16/24/32）
+     * @return 对应位数的 AES-GCM Provider
+     */
+    private static CryptoProvider providerFor(int keyBytes) {
+        String algorithm = switch (keyBytes) {
+            case 16 -> "AES-128-GCM";
+            case 24 -> "AES-192-GCM";
+            case 32 -> "AES-256-GCM";
+            default -> throw new IllegalArgumentException("AES key length must be 16/24/32 bytes");
+        };
+        return CryptoProviderRegistry.get(algorithm);
+    }
+
+    /**
      * AES-GCM 加密
      *
-     * <p>使用 AES-256-GCM 模式，自动生成 12 字节随机 IV。
+     * <p>使用 AES-GCM 模式，自动生成 12 字节随机 IV。
      * 密文格式：Base64(IV(12 字节) + 密文 + GCM 认证标签)。
      *
      * @param content   明文内容（不可为 null）
@@ -95,7 +105,11 @@ public final class AesUtils {
      * @throws IllegalStateException    加密失败
      */
     public static String encrypt(String content, String hexAesKey) {
-        return crypto(hexAesKey).encrypt(content);
+        Objects.requireNonNull(content, "content must not be null");
+        byte[] key = HexUtils.decode(hexAesKey);
+        byte[] ciphertext = providerFor(key.length)
+                .encrypt(content.getBytes(StandardCharsets.UTF_8), key, null);
+        return Base64.getEncoder().encodeToString(ciphertext);
     }
 
     /**
@@ -111,7 +125,11 @@ public final class AesUtils {
      * @throws IllegalStateException    解密失败或密文被篡改
      */
     public static String decrypt(String encryptedBase64, String hexAesKey) {
-        return crypto(hexAesKey).decrypt(encryptedBase64);
+        Objects.requireNonNull(encryptedBase64, "ciphertext must not be null");
+        byte[] key = HexUtils.decode(hexAesKey);
+        byte[] plaintext = providerFor(key.length)
+                .decrypt(Base64.getDecoder().decode(encryptedBase64), key, null);
+        return new String(plaintext, StandardCharsets.UTF_8);
     }
 
     // ==================== 密钥生成 ====================

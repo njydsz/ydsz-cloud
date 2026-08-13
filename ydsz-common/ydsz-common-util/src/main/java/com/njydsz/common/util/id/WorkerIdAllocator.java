@@ -1,5 +1,7 @@
 package com.njydsz.common.util.id;
 
+import javax.annotation.Nonnull;
+
 /**
  * WorkerId 分配策略——负责为当前实例分配唯一 workerId（0 ≤ id < 1024）。
  *
@@ -31,13 +33,14 @@ public interface WorkerIdAllocator {
      * @throws WorkerIdExhaustedException 当无法分配唯一 workerId 时
      * @throws NotApplicableException    当当前环境不适用此策略时（让位给下个策略）
      */
-    int allocate(String nodeId);
+    int allocate(@Nonnull String nodeId);
 
     /**
      * 策略名称（用于日志和监控）
      *
      * @return 可读的策略名称
      */
+    @Nonnull
     default String name() {
         return getClass().getSimpleName();
     }

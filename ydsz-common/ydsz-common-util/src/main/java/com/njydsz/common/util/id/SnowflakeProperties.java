@@ -49,10 +49,10 @@ public class SnowflakeProperties {
 
     /**
      * 工作节点ID（显式配置，最高优先级）。
-     * <p>范围：0-31；不设置时由 {@link WorkerIdAllocator} 策略链自动分配。
+     * <p>范围：0-1023；不设置时由 {@link WorkerIdAllocator} 策略链自动分配。
      */
     @Min(0)
-    @Max(31)
+    @Max(1023)
     private Long workerId;
 
     /**
@@ -68,4 +68,15 @@ public class SnowflakeProperties {
      * <p>不设置时自动解析 HOSTNAME 环境变量或 InetAddress.getLocalHost()。
      */
     private String nodeId;
+
+    /**
+     * 起始纪元时间戳（毫秒），即 Snowflake ID 中时间戳字段的起算点。
+     * <p>默认值：{@code 1577836800000}（2020-01-01 00:00:00 UTC）。
+     * <p>修改 EPOCH 会影响 ID 的数值范围，请确保集群内所有节点使用相同的 EPOCH。
+     * <p>注意：修改 EPOCH 后，新生成的 ID 与旧 EPOCH 生成的 ID 不保证连续，
+     * 且反解时间戳时需使用与生成时相同的 EPOCH 才能得到正确结果。
+     *
+     * @since 4.0.0
+     */
+    private Long epoch;
 }

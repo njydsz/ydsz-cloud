@@ -153,6 +153,7 @@ public final class Sm2Utils {
      * @throws IllegalStateException 密钥生成失败时抛出
      */
     public static KeyPair generateKeyPair() {
+        BcProvider.ensure(); // 幂等注册 BC Provider，避免首次调用抛 NoSuchProviderException
         try {
             KeyPairGenerator kpg = KeyPairGenerator.getInstance(KEY_ALGORITHM, BouncyCastleProvider.PROVIDER_NAME);
             kpg.initialize(new ECGenParameterSpec(EC_CURVE_NAME), SECURE_RANDOM);
@@ -169,6 +170,7 @@ public final class Sm2Utils {
      * @return 公钥对象
      */
     public static PublicKey loadPublicKey(String base64PublicKey) {
+        BcProvider.ensure(); // 幂等注册 BC Provider
         try {
             byte[] keyBytes = Base64.getDecoder().decode(base64PublicKey);
             X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
@@ -186,6 +188,7 @@ public final class Sm2Utils {
      * @return 私钥对象
      */
     public static PrivateKey loadPrivateKey(String base64PrivateKey) {
+        BcProvider.ensure(); // 幂等注册 BC Provider
         try {
             byte[] keyBytes = Base64.getDecoder().decode(base64PrivateKey);
             PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
@@ -203,6 +206,7 @@ public final class Sm2Utils {
      * @return 公钥对象
      */
     public static PublicKey decodePublicKey(byte[] keyBytes) {
+        BcProvider.ensure(); // 幂等注册 BC Provider
         try {
             X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
             KeyFactory kf = KeyFactory.getInstance(KEY_ALGORITHM, BouncyCastleProvider.PROVIDER_NAME);
@@ -219,6 +223,7 @@ public final class Sm2Utils {
      * @return 私钥对象
      */
     public static PrivateKey decodePrivateKey(byte[] keyBytes) {
+        BcProvider.ensure(); // 幂等注册 BC Provider
         try {
             PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
             KeyFactory kf = KeyFactory.getInstance(KEY_ALGORITHM, BouncyCastleProvider.PROVIDER_NAME);
