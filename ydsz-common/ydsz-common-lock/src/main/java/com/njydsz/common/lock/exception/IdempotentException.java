@@ -1,8 +1,8 @@
 package com.njydsz.common.lock.exception;
-
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.enums.ExceptionCategory;
 import com.njydsz.common.exception.enums.ExceptionLevel;
+
 
 /**
  * 接口幂等性异常

@@ -2,13 +2,13 @@ package com.njydsz.common.domain.query;
 
 import java.io.Serializable;
 
-import com.njydsz.common.json.annotation.JsonClass;
-import com.njydsz.common.json.annotation.JsonIgnore;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import com.njydsz.common.json.annotation.JsonClass;
+import com.njydsz.common.json.annotation.JsonIgnore;
 
 /**
  * 分页查询请求参数（输入）。
@@ -110,6 +110,8 @@ public class SliceQuery implements Serializable {
 
     /**
      * 判断是否为 Cursor 分页模式。
+     *
+     * @return cursor 非空且非空白时返回 true
      */
     @JsonIgnore
     public boolean isCursorBased() {
@@ -118,6 +120,8 @@ public class SliceQuery implements Serializable {
 
     /**
      * 判断是否为 Offset 分页模式。
+     *
+     * @return 非 Cursor 模式时返回 true
      */
     @JsonIgnore
     public boolean isOffsetBased() {

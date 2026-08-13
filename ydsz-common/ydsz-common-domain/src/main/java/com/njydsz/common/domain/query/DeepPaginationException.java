@@ -1,8 +1,8 @@
 package com.njydsz.common.domain.query;
 
-import lombok.Getter;
-
 import java.io.Serializable;
+
+import lombok.Getter;
 
 /**
  * 深度分页异常。

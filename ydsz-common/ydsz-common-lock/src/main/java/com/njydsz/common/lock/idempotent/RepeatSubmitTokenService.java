@@ -1,17 +1,14 @@
 package com.njydsz.common.lock.idempotent;
-
-import java.util.UUID;
+import com.njydsz.common.auth.context.AuthContextUtils;
+import com.njydsz.common.lock.annotation.RepeatSubmit;
+import com.njydsz.common.security.LoginUser;
 import java.util.concurrent.TimeUnit;
-
+import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.auth.context.AuthContextUtils;
-import com.njydsz.common.security.LoginUser;
 
-import lombok.extern.slf4j.Slf4j;
-
-import com.njydsz.common.lock.annotation.RepeatSubmit;
 /**
  * 表单重复提交 Token 服务
  *

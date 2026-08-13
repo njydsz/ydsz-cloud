@@ -1,10 +1,9 @@
 package com.njydsz.common.lock.metrics;
-
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 
-import io.micrometer.core.instrument.MeterRegistry;
 
 /**
  * 分布式锁指标采集配置。

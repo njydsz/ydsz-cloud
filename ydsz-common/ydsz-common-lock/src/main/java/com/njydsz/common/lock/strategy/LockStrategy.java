@@ -1,13 +1,12 @@
 package com.njydsz.common.lock.strategy;
-
-import java.util.List;
-
-import com.njydsz.common.lock.RedisReadWriteLock;
-import com.njydsz.common.lock.RedisSemaphore;
 import com.njydsz.common.lock.annotation.LockType;
 import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.lock.impl.RedisMultiLock;
+import com.njydsz.common.lock.RedisReadWriteLock;
+import com.njydsz.common.lock.RedisSemaphore;
 import com.njydsz.common.lock.scheduler.LockWatchDog;
+import java.util.List;
+
 
 /**
  * 锁策略工厂接口

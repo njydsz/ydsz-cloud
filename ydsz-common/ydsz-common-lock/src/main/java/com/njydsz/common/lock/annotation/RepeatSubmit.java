@@ -1,10 +1,10 @@
 package com.njydsz.common.lock.annotation;
-
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
 
 /**
  * 表单重复提交防护注解（Token 令牌模式）

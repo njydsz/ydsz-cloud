@@ -75,8 +75,12 @@ public class DelayedTask implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof DelayedTask)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof DelayedTask)) {
+            return false;
+        }
         DelayedTask that = (DelayedTask) o;
         return Objects.equals(taskId, that.taskId) && Objects.equals(queueName, that.queueName);
     }

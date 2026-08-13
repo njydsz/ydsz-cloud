@@ -156,26 +156,11 @@ public class SqlTraceInnerInterceptor implements InnerInterceptor, Ordered, Mete
         if (timing == null) {
             return;
         }
-        try {
-            long elapsed = System.currentTimeMillis() - timing.startTime;
-            SqlCommandType commandType = timing.commandType;
-            String sqlId = timing.sqlId;
-
-            BoundSql boundSql = sh.getBoundSql();
-            String rawSql = extractRawSql(sh, boundSql);
-            String cleanedSql = rawSql != null ? rawSql.replaceAll("\\s+", " ").trim() : null;
-
-            // 慢 SQL 检测与审计共用同一次 SQL 提取结果
-            if (slowSqlEnabled && elapsed > slowSqlThresholdMillis) {
-                handleSlowSql(sqlId, elapsed, rawSql);
-            }
-            if (auditEnabled && shouldAudit(commandType) && !shouldExclude(sqlId, cleanedSql)) {
-                logAudit(sqlId, cleanedSql, boundSql, timing.parameter, commandType, elapsed);
-            }
-        } finally {
-            TIMING_CONTEXT.remove();
-            AFFECTED_ROWS.remove();
-        }
+        // 此处 SQL 已被所有前置拦截器改写为最终形态，提取后供 intercept 在
+        // 真实执行完成后统一处理慢 SQL 与审计（耗时以拦截器链最外层计时为准）。
+        BoundSql boundSql = sh.getBoundSql();
+        String rawSql = extractRawSql(sh, boundSql);
+        timing.finalSql = rawSql != null ? rawSql.replaceAll("\\s+", " ").trim() : null;
     }
 
     /**
@@ -192,7 +177,7 @@ public class SqlTraceInnerInterceptor implements InnerInterceptor, Ordered, Mete
         if (commandType == null || commandType == SqlCommandType.FLUSH) {
             return;
         }
-        TIMING_CONTEXT.set(new TimingContext(System.currentTimeMillis(), ms.getId(), commandType, parameter));
+        TIMING_CONTEXT.set(new TimingContext(System.nanoTime(), ms.getId(), commandType, parameter));
     }
 
     /**

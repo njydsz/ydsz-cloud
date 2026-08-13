@@ -6,12 +6,12 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.njydsz.common.json.annotation.JsonClass;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import com.njydsz.common.json.annotation.JsonClass;
 
 /**
  * 分页查询结果（输出）。
@@ -188,6 +188,8 @@ public class SliceResult<T> implements Serializable {
 
     /**
      * 判断当前页数据是否为空。
+     *
+     * @return 当前页有数据时返回 true
      */
     public boolean hasContent() {
         return records != null && !records.isEmpty();
@@ -195,6 +197,8 @@ public class SliceResult<T> implements Serializable {
 
     /**
      * 获取当前页实际记录数。
+     *
+     * @return 当前页记录数（records 为 null 时返回 0）
      */
     public int getNumberOfElements() {
         return records != null ? records.size() : 0;
@@ -202,6 +206,8 @@ public class SliceResult<T> implements Serializable {
 
     /**
      * 判断是否为 Cursor 分页模式。
+     *
+     * @return 存在任意游标值时返回 true
      */
     public boolean isCursorBased() {
         return nextCursor != null || prevCursor != null;
@@ -209,6 +215,8 @@ public class SliceResult<T> implements Serializable {
 
     /**
      * 判断是否为 Offset 分页模式。
+     *
+     * @return 非 Cursor 模式时返回 true
      */
     public boolean isOffsetBased() {
         return !isCursorBased();
@@ -216,6 +224,8 @@ public class SliceResult<T> implements Serializable {
 
     /**
      * 判断是否为第一页（无前置记录）。
+     *
+     * @return 无上一页时返回 true
      */
     public boolean isFirst() {
         return !hasPrevious;
@@ -223,6 +233,8 @@ public class SliceResult<T> implements Serializable {
 
     /**
      * 判断是否为最后一页（无后续记录）。
+     *
+     * @return 无下一页时返回 true
      */
     public boolean isLast() {
         return !hasNext;
@@ -230,6 +242,8 @@ public class SliceResult<T> implements Serializable {
 
     /**
      * 是否有下一页（别名，兼容 {@code hasNext()} 调用约定）。
+     *
+     * @return 有下一页时返回 true
      */
     public boolean hasNext() {
         return hasNext;
@@ -237,6 +251,8 @@ public class SliceResult<T> implements Serializable {
 
     /**
      * 是否有上一页（别名，兼容 {@code hasPrevious()} 调用约定）。
+     *
+     * @return 有上一页时返回 true
      */
     public boolean hasPrevious() {
         return hasPrevious;

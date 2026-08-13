@@ -3,8 +3,8 @@ package com.njydsz.common.redis.service;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -198,7 +198,7 @@ public class RedisSnowflakeIdGenerator {
      * @param workerId 工作节点 ID
      */
     private void startHeartbeatScheduler(long workerId) {
-        heartbeatExecutor = Executors.newSingleThreadScheduledExecutor(r -> {
+        heartbeatExecutor = new ScheduledThreadPoolExecutor(1, r -> {
             Thread t = new Thread(r, "snowflake-heartbeat-" + workerId);
             t.setDaemon(true);
             return t;

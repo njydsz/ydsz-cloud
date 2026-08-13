@@ -1,12 +1,12 @@
 package com.njydsz.common.json.tree;
 
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.exception.JsonException;
-import com.njydsz.common.json.type.JsonType;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.exception.JsonException;
+import com.njydsz.common.json.type.JsonType;
 
 /**
  * JSON Patch (RFC 6902) 与 JSON Merge Patch (RFC 7396) 实现。

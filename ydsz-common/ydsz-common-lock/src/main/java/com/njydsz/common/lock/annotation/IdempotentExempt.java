@@ -1,6 +1,6 @@
 package com.njydsz.common.lock.annotation;
-
 import java.lang.annotation.*;
+
 
 /**
  * 幂等豁免注解（兼容旧 com.njydsz.common.lock.annotation.IdempotentExempt）。

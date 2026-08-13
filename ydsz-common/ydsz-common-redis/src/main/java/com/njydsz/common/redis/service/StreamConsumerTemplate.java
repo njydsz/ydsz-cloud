@@ -465,7 +465,13 @@ public class StreamConsumerTemplate implements DisposableBean {
     // ==================== 统计记录 ====================
 
     /**
-     * 消费者统计快照
+     * 消费者统计快照。
+     *
+     * @param totalConsumed     累计消费消息数
+     * @param totalFailed       累计失败数
+     * @param totalDeadLettered 累计死信转移数
+     * @param currentBatchSize  当前动态批次大小
+     * @param pendingCount      当前 pending 消息积压数
      */
     public record ConsumerStats(long totalConsumed, long totalFailed, long totalDeadLettered,
                                  long currentBatchSize, long pendingCount) {

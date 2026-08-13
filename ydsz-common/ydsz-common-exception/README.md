@@ -35,7 +35,7 @@ RuntimeException
        └─ SysException                  ← 系统异常（HTTP 5xx，不可预期）
 ```
 
-> **核心特性**：`AbstractYdszException.getMessage()` 通过 `MessageSourceHolder` 实现 i18n 懒加载解析（CAS 无锁），首次调用时通过 Spring MessageSource 自动解析国际化文案。
+> **核心特性**：`AbstractYdszException.getMessage()` 通过 `MessageSourceHolder` 实现按请求 Locale 的 i18n 懒加载解析，解析结果按 Locale 缓存（`ConcurrentHashMap.computeIfAbsent`），首次调用时通过 Spring MessageSource 自动解析国际化文案，不同语言请求互不串扰。
 
 > **设计原则**：仅保留 `BusinessException`（业务可预期）和 `SysException`（系统不可预期）两个具体异常类。安全 / 限流 / 重复提交 / 基础设施等场景通过 `ExceptionCategory` 分类标签区分，无需独立异常类。
 
@@ -89,7 +89,7 @@ RuntimeException
 - `IllegalArgumentException` / `IllegalStateException` / `NullPointerException`
 - 兜底 `Exception` 处理
 
-traceId 提取优先级：`MDC.get("traceId")` → Request Header `X-Trace-Id` → `X-Request-Id`。
+traceId 提取优先级：`RequestContext.getTraceId()` → `MDC.get("traceId")` → Request Header `X-Trace-Id` → `X-Request-Id`（由 `BaseExceptionHandler` 统一提供，各 handler 复用）。
 
 ### 5. 响应格式
 

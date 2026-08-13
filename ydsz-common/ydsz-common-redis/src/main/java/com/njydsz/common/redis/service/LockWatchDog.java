@@ -3,9 +3,9 @@ package com.njydsz.common.redis.service;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -112,7 +112,7 @@ public class LockWatchDog {
     public LockWatchDog(RedisTemplate<String, Object> redisTemplate, int maxRenewTimes, String threadName) {
         this.redisTemplate = redisTemplate;
         this.maxRenewTimes = maxRenewTimes;
-        this.scheduler = Executors.newScheduledThreadPool(1, r -> {
+        this.scheduler = new ScheduledThreadPoolExecutor(1, r -> {
             Thread t = new Thread(r, threadName);
             t.setDaemon(true);
             return t;

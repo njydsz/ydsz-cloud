@@ -1,13 +1,11 @@
 package com.njydsz.common.lock.idempotent;
-
+import com.njydsz.common.util.id.IdGenerator;
 import java.util.Collections;
-
-import org.springframework.data.redis.core.StringRedisTemplate;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.script.RedisScript;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
-import lombok.extern.slf4j.Slf4j;
-import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * 基于 Redis SET NX EX 的幂等策略默认实现

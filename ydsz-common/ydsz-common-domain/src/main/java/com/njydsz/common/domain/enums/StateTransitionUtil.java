@@ -123,7 +123,13 @@ public final class StateTransitionUtil {
     }
 
     /**
-     * 重建路径。
+     * 重建 BFS 搜索路径（从目标节点沿 parentMap 回溯至起始节点）。
+     *
+     * @param <E>       状态枚举类型
+     * @param parentMap 节点 → 父节点映射（BFS 过程中记录）
+     * @param start     起始状态
+     * @param target    目标状态
+     * @return 从起始到目标的路径列表（含起始与目标，不含父节点）
      */
     private static <E> List<E> reconstructPath(Map<E, E> parentMap, E start, E target) {
         LinkedList<E> path = new LinkedList<>();
