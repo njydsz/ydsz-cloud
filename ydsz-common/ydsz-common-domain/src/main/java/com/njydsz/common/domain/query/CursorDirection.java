@@ -12,6 +12,8 @@ package com.njydsz.common.domain.query;
  * <p><b>v1.8.0 变更：</b>从 {@link PageQuery} 的内部枚举提取为顶层枚举，
  * 支持跨类复用与独立演进。
  *
+ * <p><b>状态：</b>实验性 API（v1.8.0 引入），与 {@link SliceQuery} 配合使用。
+ *
  * @author ydsz-team
  * @since 1.8.0
  * @see SliceQuery

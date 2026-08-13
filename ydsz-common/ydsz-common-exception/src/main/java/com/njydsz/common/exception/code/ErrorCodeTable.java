@@ -53,10 +53,17 @@ public class ErrorCodeTable {
      * @param code      错误码字符串
      * @param key       i18n 消息键
      * @param enumName  枚举常量名
+     * @throws IllegalArgumentException 当同一模块下注册了重复错误码时
      */
     public void registerCode(String module, String code, String key, String enumName) {
         ModuleEntry entry = moduleIndex.computeIfAbsent(module, k -> new ModuleEntry(module, module));
-        entry.codes().put(code, new CodeEntry(code, key, enumName));
+        CodeEntry previous = entry.codes().put(code, new CodeEntry(code, key, enumName));
+        if (previous != null) {
+            throw new IllegalArgumentException(String.format(
+                    "错误码重复注册：模块 [%s] 中的 code [%s] 已被枚举常量 [%s] 占用，"
+                    + "尝试再次注册为 [%s]（key=%s）。请检查 @YdszExceptionCode 注解的模块错误码定义。",
+                    module, code, previous.enumName(), enumName, key));
+        }
         // 注意：全局 code→ExceptionCode 反查索引（codeIndex）由 registerAll(codeMap) 统一填充，
         // 此处仅维护按模块的 CodeEntry 明细（供 groupByModule / getCodes / lookupByCode 使用）。
         // 早期版本曾在此处调用 lookupByEnumName(enumName) 直接写入 codeIndex，但该辅助方法只能拿到
@@ -68,10 +75,25 @@ public class ErrorCodeTable {
      * 向全局 code→ExceptionCode 索引注册映射。
      *
      * <p>由 {@link com.njydsz.common.exception.registry.ExceptionCodeScanner} 在扫描枚举后调用。
+     * <p><b>唯一性校验：</b>若传入的 codeMap 中包含已注册的 code，将抛出 IllegalStateException，
+     * 阻止应用启动。这保证了全局错误码的唯一性，避免静默覆盖导致的难以排查的问题。
      *
      * @param codeMap code → ExceptionCode 的映射
+     * @throws IllegalStateException 当存在重复错误码时
      */
     public void registerAll(Map<String, ExceptionCode> codeMap) {
+        // 唯一性 fail-fast 校验
+        if (codeMap != null) {
+            for (String code : codeMap.keySet()) {
+                if (codeIndex.containsKey(code)) {
+                    ExceptionCode existing = codeIndex.get(code);
+                    throw new IllegalStateException(String.format(
+                            "错误码重复注册：code [%s] 已存在（来源: %s），当前尝试注册的 codeMap 包含重复项。"
+                            + "请检查所有 @YdszExceptionCode 标注的枚举类，确保全局 code 唯一。",
+                            code, existing != null ? existing.getClass().getSimpleName() : "unknown"));
+                }
+            }
+        }
         codeIndex.putAll(codeMap);
     }
 

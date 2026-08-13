@@ -19,6 +19,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.JdbcParameter;
 import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.operators.arithmetic.Addition;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
@@ -32,6 +33,10 @@ import net.sf.jsqlparser.statement.select.SetOperationList;
 import net.sf.jsqlparser.statement.select.Values;
 import net.sf.jsqlparser.statement.update.Update;
 import net.sf.jsqlparser.statement.update.UpdateSet;
+
+import org.apache.ibatis.mapping.BoundSql;
+import org.apache.ibatis.mapping.ParameterMapping;
+import org.apache.ibatis.session.Configuration;
 
 /**
  * 自定义乐观锁拦截器 - 替代 MyBatis-Plus 的 @Version 注解
@@ -323,19 +328,23 @@ public class OptimisticLockInterceptor extends JsqlParserSupport implements Inne
         List<Column> columns = JSqlParserHelper.getUpdateSetsColumns(update);
         List<Expression> expressions = JSqlParserHelper.getUpdateSetsExpressions(update);
 
-        Expression originalRevisionValue = null;
+        // 记录 revision 在原始 SET 中的参数位置，用于后续获取实际参数值
+        int revisionParamIndex = -1;
+        int currentParamIndex = 0;
+
         if (CollectionUtils.isNotEmpty(columns) && CollectionUtils.isNotEmpty(expressions)) {
             for (int i = 0; i < columns.size(); i++) {
                 if (isRevisionColumn(columns.get(i))) {
-                    originalRevisionValue = expressions.get(i);
+                    revisionParamIndex = currentParamIndex;
                     columns.remove(i);
                     expressions.remove(i);
                     break;
                 }
+                currentParamIndex++;
             }
         }
 
-        if (originalRevisionValue == null) {
+        if (revisionParamIndex == -1) {
             List<UpdateSet> updateSets = update.getUpdateSets();
             if (CollectionUtils.isNotEmpty(updateSets)) {
                 for (int setIndex = 0; setIndex < updateSets.size(); setIndex++) {
@@ -350,7 +359,7 @@ public class OptimisticLockInterceptor extends JsqlParserSupport implements Inne
                     }
                     for (int columnIndex = 0; columnIndex < setColumns.size(); columnIndex++) {
                         if (isRevisionColumn(setColumns.get(columnIndex))) {
-                            originalRevisionValue = Expression.class.cast(expressionList.get(columnIndex));
+                            revisionParamIndex = currentParamIndex;
                             setColumns.remove(columnIndex);
                             expressionList.remove(columnIndex);
                             if (CollectionUtils.isEmpty(setColumns) || expressionList.isEmpty()) {
@@ -358,15 +367,16 @@ public class OptimisticLockInterceptor extends JsqlParserSupport implements Inne
                             }
                             break;
                         }
+                        currentParamIndex++;
                     }
-                    if (originalRevisionValue != null) {
+                    if (revisionParamIndex >= 0) {
                         break;
                     }
                 }
             }
         }
 
-        if (originalRevisionValue == null) {
+        if (revisionParamIndex == -1) {
             return;
         }
 
@@ -376,8 +386,10 @@ public class OptimisticLockInterceptor extends JsqlParserSupport implements Inne
         update.addUpdateSet(new Column(revisionColumn), addition);
         log.debug("OptimisticLockInterceptor: Replaced revision with increment in UPDATE statement");
 
+        // 使用 JdbcParameter 占位符追加到 WHERE，MyBatis 会按位置绑定参数
+        // 需要在参数映射中追加 revision 值，确保占位符与参数一一对应
         Expression where = update.getWhere();
-        EqualsTo equalsTo = new EqualsTo(new Column(revisionColumn), originalRevisionValue);
+        EqualsTo equalsTo = new EqualsTo(new Column(revisionColumn), new JdbcParameter());
 
         if (where == null) {
             update.setWhere(equalsTo);

@@ -33,6 +33,10 @@ import lombok.NoArgsConstructor;
  *
  * <p><b>设计参考：</b>Spring Data {@code Slice<T>} — 纯结果对象，hasNext/hasContent。
  *
+ * <p><b>状态：</b>实验性 API（v1.8.0 引入），与 {@link SliceQuery} 配合使用。
+ * 当前未经大规模生产验证，API 可能在后续版本中调整。
+ * 推荐优先使用 {@code PageResponse<T>}（位于 common-core）。
+ *
  * @param <T> 数据类型
  * @author ydsz-team
  * @since 1.8.0

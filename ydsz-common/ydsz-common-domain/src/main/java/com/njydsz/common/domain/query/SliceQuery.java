@@ -27,9 +27,14 @@ import lombok.NoArgsConstructor;
  *
  * <p><b>设计参考：</b>Spring Data {@code Pageable} — 纯输入参数对象。
  *
+ * <p><b>状态：</b>实验性 API（v1.8.0 引入），设计对标 Spring Data 但未经生产验证。
+ * 当前推荐使用 {@link PageQuery} 进行分页查询。如需游标分页场景，可试用此类，
+ * 但请注意 API 可能在后续版本中调整。
+ *
  * @author ydsz-team
  * @since 1.8.0
  * @see SliceResult 分页查询结果（输出）
+ * @see PageQuery 推荐的分页查询类
  */
 @Data
 @Builder

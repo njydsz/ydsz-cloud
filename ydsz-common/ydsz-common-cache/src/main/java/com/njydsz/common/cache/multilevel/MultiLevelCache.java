@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
@@ -18,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.cache.api.Cache;
+import com.njydsz.common.cache.internal.decorator.ExpirableCache;
 import com.njydsz.common.cache.listener.RemovalCause;
 import com.njydsz.common.cache.listener.RemovalListener;
 import com.njydsz.common.cache.stats.CacheStats;
@@ -37,6 +39,10 @@ import com.njydsz.common.cache.support.AsyncFunction;
  * <p>写入流程：同时写入 L1 和 L2（Write-Through 模式）
  *
  * <p>删除流程：同时从 L1 和 L2 删除
+ *
+ * <p>L1 独立 TTL：
+ * 通过 {@link #l1TTL} 配置回填 L1 时的独立过期时间。未配置（-1）时回填条目使用 L1 缓存自身的过期策略。
+ * 配置后回填条目会被包装为独立的短 TTL 控制，确保 L1 数据比 L2 更快失效，减少 L1 脏数据风险。
  *
  * <p>适用场景：
  *
@@ -61,6 +67,12 @@ public class MultiLevelCache<K, V> implements Cache<K, V> {
 
   /** L2 Redis 缓存 */
   private final Cache<K, V> l2Cache;
+
+  /** L1 回填独立 TTL（纳秒），-1 表示不启用（使用 L1 自身策略） */
+  private final long l1BackfillTtlNanos;
+
+  /** L1 回填 TTL 装饰器（仅当 l1BackfillTtlNanos > 0 时启用） */
+  private final Cache<K, V> l1BackfillCache;
 
   /** 缓存名称（用于广播失效消息） */
   private final String cacheName;
@@ -90,7 +102,7 @@ public class MultiLevelCache<K, V> implements Cache<K, V> {
    * @param l2Cache L2 Redis 缓存
    */
   public MultiLevelCache(Cache<K, V> l1Cache, Cache<K, V> l2Cache) {
-    this(l1Cache, l2Cache, null, null, null);
+    this(l1Cache, l2Cache, null, null, null, -1);
   }
 
   /**
@@ -106,7 +118,7 @@ public class MultiLevelCache<K, V> implements Cache<K, V> {
       Cache<K, V> l2Cache,
       String cacheName,
       CacheInvalidationBroadcaster broadcaster) {
-    this(l1Cache, l2Cache, cacheName, broadcaster, null);
+    this(l1Cache, l2Cache, cacheName, broadcaster, null, -1);
   }
 
   /**
@@ -124,11 +136,41 @@ public class MultiLevelCache<K, V> implements Cache<K, V> {
       String cacheName,
       CacheInvalidationBroadcaster broadcaster,
       DistributedRebuildLock rebuildLock) {
+    this(l1Cache, l2Cache, cacheName, broadcaster, rebuildLock, -1);
+  }
+
+  /**
+   * 创建多级缓存（完整参数，支持 L1 独立回填 TTL）
+   *
+   * @param l1Cache L1 本地缓存
+   * @param l2Cache L2 Redis 缓存
+   * @param cacheName 缓存名称（用于广播消息标识）
+   * @param broadcaster 失效广播器（null 表示不广播）
+   * @param rebuildLock 分布式重建锁（null 表示不加锁）
+   * @param l1BackfillTtlNanos L1 回填独立 TTL（纳秒），-1 表示不启用
+   */
+  public MultiLevelCache(
+      Cache<K, V> l1Cache,
+      Cache<K, V> l2Cache,
+      String cacheName,
+      CacheInvalidationBroadcaster broadcaster,
+      DistributedRebuildLock rebuildLock,
+      long l1BackfillTtlNanos) {
     this.l1Cache = l1Cache;
     this.l2Cache = l2Cache;
     this.cacheName = cacheName;
     this.broadcaster = broadcaster;
     this.rebuildLock = rebuildLock;
+    this.l1BackfillTtlNanos = l1BackfillTtlNanos;
+
+    // 当设置了 L1 独立回填 TTL 时，创建回填装饰器（write expiry only）
+    if (l1BackfillTtlNanos > 0) {
+      this.l1BackfillCache = new ExpirableCache<>(
+          l1Cache, l1BackfillTtlNanos, 0, null, 30, 0.1);
+    } else {
+      this.l1BackfillCache = null;
+    }
+
     if (broadcaster instanceof RedisCacheInvalidationBroadcaster redisBroadcaster
         && cacheName != null) {
       redisBroadcaster.registerLocalCache(cacheName, l1Cache);
@@ -150,14 +192,28 @@ public class MultiLevelCache<K, V> implements Cache<K, V> {
     if (value != null) {
       hitCount.increment();
       l2HitCount.increment();
-      // 回填 L1
-      l1Cache.put(key, value);
+      // 回填 L1：使用独立 TTL 回填或普通回填
+      backfillL1(key, value);
       return value;
     }
 
     // 3. 都未命中
     missCount.increment();
     return null;
+  }
+
+  /**
+   * 回填 L1 缓存（内部方法，支持独立 TTL 策略）
+   *
+   * <p>当配置了 L1 独立回填 TTL 时，通过 l1BackfillCache 写入以施加 L1 独占的短 TTL。
+   * 未配置时使用原始 L1 缓存写入。
+   */
+  private void backfillL1(K key, V value) {
+    if (l1BackfillCache != null) {
+      l1BackfillCache.put(key, value);
+    } else {
+      l1Cache.put(key, value);
+    }
   }
 
   @Override
@@ -328,7 +384,7 @@ public class MultiLevelCache<K, V> implements Cache<K, V> {
           hitCount.increment();
           l2HitCount.increment();
           // 回填 L1
-          l1Cache.put(key, value);
+          backfillL1(key, value);
           result.put(key, value);
         } else {
           missCount.increment();
@@ -465,5 +521,23 @@ public class MultiLevelCache<K, V> implements Cache<K, V> {
   /** 获取 L2 缓存实例 */
   public Cache<K, V> getL2Cache() {
     return l2Cache;
+  }
+
+  /**
+   * 获取 L1 回填独立 TTL（纳秒）
+   *
+   * @return L1 回填 TTL（纳秒），-1 表示未启用
+   */
+  public long getL1BackfillTtlNanos() {
+    return l1BackfillTtlNanos;
+  }
+
+  /**
+   * 判断是否启用了 L1 独立回填 TTL
+   *
+   * @return 启用时返回 true
+   */
+  public boolean isL1BackfillTtlEnabled() {
+    return l1BackfillTtlNanos > 0;
   }
 }

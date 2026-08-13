@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.njydsz.common.lock.core.DistributedLocker;
+import com.njydsz.common.lock.renewal.LockRenewalService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -85,6 +86,34 @@ public class RedisMultiLock implements DistributedLocker {
 	 * WatchDog 续期状态
 	 */
 	private final AtomicBoolean renewing = new AtomicBoolean(false);
+
+	/**
+	 * 批量续期服务（可选，注入后自动启用批量续期减少网络往返）
+	 */
+	private LockRenewalService renewalService;
+
+	/**
+	 * Redis 模板（批量续期时需要，与 renewalService 配套使用）
+	 */
+	private org.springframework.data.redis.core.StringRedisTemplate redisTemplate;
+
+	/**
+	 * 设置批量续期服务（可选，启用后减少子锁续期的网络往返）
+	 *
+	 * @param renewalService 批量续期服务
+	 */
+	public void setRenewalService(LockRenewalService renewalService) {
+		this.renewalService = renewalService;
+	}
+
+	/**
+	 * 设置 Redis 模板（配合批量续期服务使用）
+	 *
+	 * @param redisTemplate Redis 模板
+	 */
+	public void setRedisTemplate(org.springframework.data.redis.core.StringRedisTemplate redisTemplate) {
+		this.redisTemplate = redisTemplate;
+	}
 
 	/**
 	 * 构造多Key联锁（需要注入自定义锁列表）
@@ -376,12 +405,33 @@ public class RedisMultiLock implements DistributedLocker {
 	/**
 	 * 续期所有子锁
 	 *
+	 * <p>当 {@link LockRenewalService} 与 Redis 模板均已注入时，使用批量续期脚本
+	 * 一次网络往返完成所有子锁续期；降级为逐 Key 续期以兼容未配置场景。
+	 *
 	 * @param lockKey   主锁键
 	 * @param leaseTime 租约时间
 	 * @param timeUnit  时间单位
 	 * @return true-全部续期成功
 	 */
 	private boolean renewAllLocks(String lockKey, long leaseTime, TimeUnit timeUnit) {
+		long leaseTimeMs = timeUnit.toMillis(leaseTime);
+
+		// 批量续期路径：需要 renewalService + redisTemplate 均已配置
+		if (renewalService != null && redisTemplate != null && !acquiredLockValues.isEmpty()) {
+			List<LockRenewalService.RenewEntry> entries = new ArrayList<>(acquiredLockValues.size());
+			for (Map.Entry<String, String> entry : acquiredLockValues.entrySet()) {
+				entries.add(LockRenewalService.RenewEntry.of(entry.getKey(), entry.getValue(), leaseTimeMs));
+			}
+			try {
+				int successCount = renewalService.renewBatch(redisTemplate, entries);
+				return successCount == entries.size();
+			} catch (Exception e) {
+				log.warn("RedisMultiLock 批量续期异常，降级为逐Key续期 key={}", lockKey, e);
+				// 降级到逐 Key 续期
+			}
+		}
+
+		// 逐 Key 续期（兼容降级路径）
 		for (int i = 0; i < locks.size(); i++) {
 			DistributedLocker lock = locks.get(i);
 			String subLockKey = buildSubLockKey(lockKey, i);

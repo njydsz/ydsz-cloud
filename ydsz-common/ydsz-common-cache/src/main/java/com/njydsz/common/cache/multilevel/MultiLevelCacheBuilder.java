@@ -53,6 +53,8 @@ public final class MultiLevelCacheBuilder<K, V> {
   private String cacheName;
   private CacheInvalidationBroadcaster broadcaster;
   private DistributedRebuildLock rebuildLock;
+  private long l1BackfillTtlDuration = -1;
+  private TimeUnit l1BackfillTtlUnit;
 
   private MultiLevelCacheBuilder() {}
 
@@ -257,6 +259,25 @@ public final class MultiLevelCacheBuilder<K, V> {
   }
 
   /**
+   * 设置 L1 回填独立 TTL（与 L2 TTL 正交）
+   *
+   * <p>默认情况下，从 L2 回填到 L1 的条目使用 L1 缓存自身的过期策略（如果有）。
+   * 启用此配置后，回填条目将被包装为独立的短 TTL 控制，确保 L1 数据比 L2 更快失效。
+   *
+   * <p>典型用途：L2 Redis 缓存 1 小时，L1 本地缓存回填后 5 分钟即过期，
+   * 减少 L1 脏数据风险，同时享受本地缓存的高速读取优势。
+   *
+   * @param duration 回填 TTL 时长
+   * @param unit 时间单位
+   * @return this
+   */
+  public MultiLevelCacheBuilder<K, V> l1BackfillTTL(long duration, TimeUnit unit) {
+    this.l1BackfillTtlDuration = duration;
+    this.l1BackfillTtlUnit = unit;
+    return this;
+  }
+
+  /**
    * 构建多级缓存实例
    *
    * @return 多级缓存实例
@@ -269,6 +290,9 @@ public final class MultiLevelCacheBuilder<K, V> {
     if (l2Cache == null) {
       throw new IllegalStateException("L2 cache must be set. Use l2() or l2Redis().");
     }
-    return new MultiLevelCache<>(l1Cache, l2Cache, cacheName, broadcaster, rebuildLock);
+    long backfillTtlNanos = l1BackfillTtlDuration > 0 && l1BackfillTtlUnit != null
+        ? l1BackfillTtlUnit.toNanos(l1BackfillTtlDuration)
+        : -1;
+    return new MultiLevelCache<>(l1Cache, l2Cache, cacheName, broadcaster, rebuildLock, backfillTtlNanos);
   }
 }

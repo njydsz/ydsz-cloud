@@ -1,22 +1,12 @@
 package com.njydsz.common.redis.service;
 
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 import jakarta.annotation.PreDestroy;
 
-import org.springframework.data.redis.connection.ReturnType;
-import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
@@ -74,20 +64,6 @@ public class RedisCacheGuard {
     private static final String NULL_PLACEHOLDER = "__NULL__";
     private static final String PENETRATION_LOCK_PREFIX = "cache:guard:penetration:";
     private static final String BREAKDOWN_LOCK_PREFIX = "cache:guard:breakdown:";
-
-    private static final String RELEASE_LOCK_LUA =
-            "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
-
-    /**
-     * 续期锁 Lua 脚本：仅当锁持有者匹配时才续期，避免误续期他人持有的锁
-     */
-    private static final String RENEW_LOCK_LUA =
-            "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('pexpire', KEYS[1], ARGV[2]) else return 0 end";
-
-    /**
-     * WatchDog 最大续期次数（与 ydsz-common-lock 的 LockWatchDog 默认值一致，约 30 分钟）
-     */
-    private static final int MAX_RENEW_TIMES = 100;
 
     /** 自旋等待最大时长（毫秒），等待持锁线程回填缓存 */
     private static final long SPIN_MAX_WAIT_MS = 3000;

@@ -30,10 +30,12 @@
 
 ```
 RuntimeException
-  └─ AbstractYdszException            ← YDSZ 异常抽象基类
-       ├─ BusinessException             ← 业务异常（HTTP 4xx，可预期）
+  └─ AbstractYdszException            ← YDSZ 异常抽象基类（错误码 + i18n + 扩展数据 + 链路追踪）
+       ├─ BusinessException             ← 业务异常（HTTP 4xx，可预期，支持链式 data() 附加数据）
        └─ SysException                  ← 系统异常（HTTP 5xx，不可预期）
 ```
+
+> **核心特性**：`AbstractYdszException.getMessage()` 通过 `MessageSourceHolder` 实现 i18n 懒加载解析（CAS 无锁），首次调用时通过 Spring MessageSource 自动解析国际化文案。
 
 > **设计原则**：仅保留 `BusinessException`（业务可预期）和 `SysException`（系统不可预期）两个具体异常类。安全 / 限流 / 重复提交 / 基础设施等场景通过 `ExceptionCategory` 分类标签区分，无需独立异常类。
 
@@ -104,16 +106,16 @@ traceId 提取优先级：`MDC.get("traceId")` → Request Header `X-Trace-Id` �
 
 | 类 | 说明 |
 |---|---|
-| `I18nConfiguration` | 国际化核心配置，桥接 `MessageSource` 到 `AbstractYdszException`（注入消息解析器） |
-| `WebI18nConfiguration` | Web 端国际化配置（`LocaleResolver` + `LocaleChangeInterceptor`），仅在 spring-webmvc 在类路径时装配 |
+| `YdszExceptionCoreAutoConfiguration` | 核心自动配置，创建 `MessageSource`、`Validator`，并将解析器注入 `MessageSourceHolder` |
+| `MessageSourceHolder` | 静态持有者，桥接 Spring MessageSource 到 `AbstractYdszException`（无侵入设计） |
 | `I18nProperties` | i18n 配置属性（`ydsz.i18n.*`） |
 
 i18n 特性：
 
-- **多环境适配**：开发环境实时加载（cacheSeconds=0），生产环境缓存（cacheSeconds=3600）
+- **多环境适配**：开发环境实时加载（cacheSeconds=5），生产环境缓存（cacheSeconds=3600）
 - **fail-fast 校验**：启动时校验所有已注册 `ExceptionCode` 的 i18n key 是否可解析，缺失则阻止启动
-- **懒加载解析**：异常抛出时只存储 key + params，`getMessage()` 调用时才解析（DCL 双重检查锁）
-- **多语言支持**：zh_CN（默认）、en_US、zh_TW
+- **懒加载解析**：异常抛出时只存储 key + params，`getMessage()` 调用时才通过 `MessageSourceHolder` 解析（CAS 无锁）
+- **多语言支持**：zh_CN、en_US、zh_TW
 - **Hibernate Validator 集成**：校验消息国际化
 
 ### 7. 异常指标监控
@@ -121,7 +123,7 @@ i18n 特性：
 | 类 | 说明 |
 |---|---|
 | `ExceptionMetrics` | 异常指标统计器（集成 Micrometer，按异常类型 / 级别 / 类别统计） |
-| `ExceptionMetricsAutoConfiguration` | 自动配置，触发条件：`MeterRegistry` Bean 存在 |
+| `YdszExceptionCoreAutoConfiguration` | 异常指标自动配置，触发条件：`MeterRegistry` Bean 存在 |
 
 | 指标 | 类型 | Tag 维度 | 说明 |
 |---|---|---|---|
@@ -322,8 +324,8 @@ ydsz:
 1. **仅两个具体异常类**：业务模块不应继承 `AbstractYdszException` 创建新的异常子类，应直接使用 `BusinessException` 或 `SysException`，通过 `ExceptionCategory` 区分场景。
 2. **i18n fail-fast 校验**：启动时会校验所有已注册 `ExceptionCode` 的 i18n key 是否可解析，缺失会阻止应用启动。可通过 `ydsz.i18n.validate-on-startup=false` 关闭（不推荐）。
 3. **高基数 code tag 治理**：`metrics-include-code-tag` 默认关闭，仅在错误码数量可控且需要按 code 维度查询时显式开启，避免 Prometheus 指标爆炸。
-4. **懒加载消息解析**：异常抛出时只存储 i18n key + params，`getMessage()` 调用时才解析。消息解析器由 `I18nConfiguration` 通过 `AbstractYdszException.setMessageResolver()` 静态注入，未注入时降级返回 key。
-5. **错误码注册模式**：所有 `@YdszExceptionCode` 标注的枚举由 `ExceptionCodeScanner` 在启动时自动注册到 `ErrorCodeTable`；code 全局唯一，重复将 fail-fast 阻止启动（可通过 `ydsz.exception.codetable.allow-duplicate=false` 配置，默认即严格）。
+4. **懒加载消息解析**：异常抛出时只存储 i18n key + params，`getMessage()` 调用时才通过 `MessageSourceHolder` 解析国际化文案。解析器由 `YdszExceptionCoreAutoConfiguration` 在启动时注入，未注入时降级返回 key。
+5. **错误码注册模式**：所有 `@YdszExceptionCode` 标注的枚举由 `ExceptionCodeScanner` 在启动时自动注册到 `ErrorCodeTable`；code 全局唯一，重复将 fail-fast 阻止启动。
 6. **traceId 提取降级链**：所有异常处理器统一从 SLF4J MDC 提取 traceId，降级到 Request Header `X-Trace-Id` → `X-Request-Id`，由 common-core 的 `TraceIdGenerator` 注入 MDC。
 7. **ProblemDetail type URI**：`problem-detail-type-base-url` 默认 `about:blank`，配置后会拼接 `/{category}` 作为 type URI，如 `https://api.example.com/errors/business`。
 8. **AutoConfiguration 解耦**：`@AutoConfiguration` 与 `@RestControllerAdvice` 解耦，避免在 Advice 类上叠加 Spring Boot 自动配置语义，提升可测试性。

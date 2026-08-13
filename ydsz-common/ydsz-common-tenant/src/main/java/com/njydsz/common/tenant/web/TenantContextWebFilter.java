@@ -108,6 +108,12 @@ public class TenantContextWebFilter implements Filter {
                     }
                 }
                 setTenantContext(builder.build());
+
+                // 4. 检查租户生命周期状态（非超级管理员）
+                if (properties.isLifecycleCheckEnabled() && !isSuperAdmin) {
+                    TenantLifecycleManager.checkCurrentTenantActive();
+                }
+
                 MDC.put(MDC_TENANT_ID, tenantId);
             }
             // 无认证无跳过 → 不设置上下文，SQL 拦截器 fail-closed

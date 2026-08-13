@@ -1,6 +1,7 @@
 package com.njydsz.common.lock.metrics;
 
 import java.time.Duration;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.micrometer.core.instrument.Counter;
@@ -14,8 +15,8 @@ import io.micrometer.core.instrument.Timer;
  * <p>独立的顶级类，通过 {@code @ConditionalOnClass(MeterRegistry.class)} 控制加载，
  * 避免对 Micrometer 的编译期硬依赖。
  *
- * <p>所有 Counter/Timer 实例在构造函数中预注册并缓存，record 方法直接调用
- * {@code .increment()} / {@code .record()}，避免每次创建 Builder 对象。
+ * <p>所有 Counter/Timer 实例在首次使用时懒加载并缓存，record 方法直接调用
+ * 缓存实例的 {@code .increment()} / {@code .record()}，避免每次创建 Builder 对象。
  *
  * <p>注册的指标：
  * <ul>
@@ -41,6 +42,12 @@ public class LockMicrometerCollector {
     private final MeterRegistry registry;
     private final AtomicInteger activeLocksCounter = new AtomicInteger(0);
 
+    /** Counter 缓存，避免每次 record 创建 Builder */
+    private final ConcurrentHashMap<String, Counter> counterCache = new ConcurrentHashMap<>();
+
+    /** Timer 缓存，避免每次 record 创建 Builder */
+    private final ConcurrentHashMap<String, Timer> timerCache = new ConcurrentHashMap<>();
+
     /**
      * 构造 Micrometer 指标收集器，预注册 Gauge 和初始化计数器
      *
@@ -54,24 +61,28 @@ public class LockMicrometerCollector {
     }
 
     /**
-     * 获取或注册 Counter（Micrometer 的 register 是幂等的）
+     * 获取或缓存 Counter（懒加载，Micrometer 的 Counter.Builder 创建有一定开销）
      */
     private Counter counter(String name, String lockType, String description) {
-        return Counter.builder(name)
-                .tag(TAG_LOCK_TYPE, lockType)
-                .description(description)
-                .register(registry);
+        String cacheKey = name + "|" + lockType;
+        return counterCache.computeIfAbsent(cacheKey, k ->
+                Counter.builder(name)
+                        .tag(TAG_LOCK_TYPE, lockType)
+                        .description(description)
+                        .register(registry));
     }
 
     /**
-     * 获取或注册 Timer（Micrometer 的 register 是幂等的）
+     * 获取或缓存 Timer（懒加载，Micrometer 的 Timer.Builder 创建有一定开销）
      */
     private Timer timer(String name, String lockType, String description) {
-        return Timer.builder(name)
-                .tag(TAG_LOCK_TYPE, lockType)
-                .description(description)
-                .publishPercentiles(0.5, 0.9, 0.99, 0.999)
-                .register(registry);
+        String cacheKey = name + "|" + lockType;
+        return timerCache.computeIfAbsent(cacheKey, k ->
+                Timer.builder(name)
+                        .tag(TAG_LOCK_TYPE, lockType)
+                        .description(description)
+                        .publishPercentiles(0.5, 0.9, 0.99, 0.999)
+                        .register(registry));
     }
 
     void recordAcquireSuccess(long waitTimeMillis, String lockType) {
@@ -120,9 +131,10 @@ public class LockMicrometerCollector {
     }
 
     void recordIdempotentHit() {
-        Counter.builder("lock.idempotent.hit.count")
-                .description("Total number of idempotent hits (rejected duplicate requests)")
-                .register(registry)
-                .increment();
+        counterCache.computeIfAbsent("lock.idempotent.hit.count|", k ->
+                io.micrometer.core.instrument.Counter.builder("lock.idempotent.hit.count")
+                        .description("Total number of idempotent hits (rejected duplicate requests)")
+                        .register(registry)
+        ).increment();
     }
 }
