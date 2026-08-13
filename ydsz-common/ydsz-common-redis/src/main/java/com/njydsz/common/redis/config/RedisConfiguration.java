@@ -535,40 +535,4 @@ public class RedisConfiguration {
         return new RedisKeyExpirationDispatcher(listenerContainer, redisProperties);
     }
 
-    /**
-     * 注册 RedisService 门面，聚合并编排上述各 Ops 组件，对外提供更简洁的统一 API。
-     *
-     * <p>作为业务代码的主要入口，将 String/Hash/集合/GEO/高级/PubSub/Stream/事务等能力组合暴露。
-     * 使用 {@code @ConditionalOnMissingBean}，允许外部自定义 {@code RedisService} 整体覆盖默认实现。
-     * 所有子 Ops 实例必须由容器先提供（上方各 Bean），否则本 Bean 因依赖缺失而不装配。
-     *
-     * @param redisTemplate  基础模板，不会为 null
-     * @param redisProperties 全局配置，不会为 null
-     * @param stringOps String 操作封装，不会为 null
-     * @param hashOps Hash 操作封装，不会为 null
-     * @param collectionOps 集合操作封装，不会为 null
-     * @param geoOps GEO 操作封装，不会为 null
-     * @param advancedOps 高级操作封装，不会为 null
-     * @param pubSubOps Pub/Sub 操作封装，不会为 null
-     * @param streamOps Stream 操作封装，不会为 null
-     * @param transactionOps 事务操作封装，不会为 null
-     * @return 聚合后的 RedisService 实例
-     */
-    @Bean
-    @ConditionalOnMissingBean(RedisService.class)
-    @ConditionalOnBean(RedisTemplate.class)
-    public RedisService redisService(RedisTemplate<String, Object> redisTemplate,
-                                       RedisProperties redisProperties,
-                                       RedisStringOps stringOps,
-                                       RedisHashOps hashOps,
-                                       RedisCollectionOps collectionOps,
-                                       RedisGeoOps geoOps,
-                                       RedisAdvancedOps advancedOps,
-                                       RedisPubSubOps pubSubOps,
-                                       RedisStreamOps streamOps,
-                                       RedisTransactionOps transactionOps) {
-        return new RedisService(redisTemplate, redisProperties, stringOps, hashOps,
-                collectionOps, geoOps, advancedOps, pubSubOps, streamOps, transactionOps);
-    }
-
 }
