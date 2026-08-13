@@ -77,6 +77,14 @@ public class RedisTransactionOps {
             log.warn("【Redis】事务执行失败：回调函数不能为空");
             return null;
         }
+        if (metricsCollector != null) {
+            return metricsCollector.recordOperation("transaction_exec",
+                    () -> doExecuteInTransaction(callback));
+        }
+        return doExecuteInTransaction(callback);
+    }
+
+    private <T> List<Object> doExecuteInTransaction(Function<RedisTemplate<String, Object>, T> callback) {
         try {
             return redisTemplate.execute(new SessionCallback<List<Object>>() {
                 @Override
@@ -111,6 +119,14 @@ public class RedisTransactionOps {
             log.warn("【Redis】事务执行失败：回调函数不能为空");
             return false;
         }
+        if (metricsCollector != null) {
+            return metricsCollector.recordOperation("transaction_exec",
+                    () -> doExecuteInTransaction(callback));
+        }
+        return doExecuteInTransaction(callback);
+    }
+
+    private boolean doExecuteInTransaction(Runnable callback) {
         try {
             List<Object> results = redisTemplate.execute(new SessionCallback<List<Object>>() {
                 @Override
