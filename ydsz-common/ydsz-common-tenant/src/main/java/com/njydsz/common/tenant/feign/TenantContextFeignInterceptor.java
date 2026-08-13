@@ -3,10 +3,9 @@ package com.njydsz.common.tenant.feign;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
-import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.tenant.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
@@ -35,7 +34,7 @@ public class TenantContextFeignInterceptor implements RequestInterceptor {
 
     @Override
     public void apply(RequestTemplate template) {
-        TenantContext context = (TenantContext) RequestContext.get(BizContextKeys.KEY_TENANT_CONTEXT);
+        TenantContext context = TenantContextHolder.get();
         if (context == null || context.isSkipIsolation() || context.getTenantId() == null) {
             return;
         }

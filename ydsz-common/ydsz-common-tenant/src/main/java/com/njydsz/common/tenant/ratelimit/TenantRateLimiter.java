@@ -2,9 +2,9 @@ package com.njydsz.common.tenant.ratelimit;
 
 import java.time.Duration;
 
-import com.njydsz.common.core.context.RequestContext;
-
 import com.njydsz.common.redis.service.RedisRateLimiter;
+
+import com.njydsz.common.tenant.TenantContextHolder;
 
 /**
  * 租户级限流门面。
@@ -45,7 +45,7 @@ public class TenantRateLimiter {
      * @return true=获取成功，false=被限流
      */
     public boolean tryAcquireTokenBucket(String ruleName, int rate, int capacity) {
-        String tenantId = RequestContext.getTenantId();
+        String tenantId = TenantContextHolder.getTenantId();
         String key = tenantId != null
                 ? "tenant:" + tenantId + ":" + ruleName
                 : ruleName;
@@ -62,7 +62,7 @@ public class TenantRateLimiter {
      * @return true=获取成功，false=被限流
      */
     public boolean tryAcquireTokenBucket(String ruleName, int rate, int capacity, Duration period) {
-        String tenantId = RequestContext.getTenantId();
+        String tenantId = TenantContextHolder.getTenantId();
         String key = tenantId != null
                 ? "tenant:" + tenantId + ":" + ruleName
                 : ruleName;
@@ -78,7 +78,7 @@ public class TenantRateLimiter {
      * @return true=允许，false=被限流
      */
     public boolean tryAcquireFixedWindow(String ruleName, int limit, Duration window) {
-        String tenantId = RequestContext.getTenantId();
+        String tenantId = TenantContextHolder.getTenantId();
         String key = tenantId != null
                 ? "tenant:" + tenantId + ":" + ruleName
                 : ruleName;

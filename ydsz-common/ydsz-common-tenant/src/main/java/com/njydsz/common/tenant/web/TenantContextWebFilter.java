@@ -143,18 +143,14 @@ public class TenantContextWebFilter implements Filter {
      * @param context 租户上下文
      */
     private static void setTenantContext(TenantContext context) {
-        RequestContext.put(BizContextKeys.KEY_TENANT_CONTEXT, context);
-        if (context != null && context.getTenantId() != null) {
-            RequestContext.setTenantId(context.getTenantId());
-        }
+        TenantContextHolder.set(context);
     }
 
     /**
      * 清除租户上下文（对应 RequestContext 清理语义）。
      */
     private static void clearTenantContext() {
-        RequestContext.remove(BizContextKeys.KEY_TENANT_CONTEXT);
-        RequestContext.remove(RequestContext.KEY_TENANT_ID);
+        TenantContextHolder.clear();
     }
 
     /**

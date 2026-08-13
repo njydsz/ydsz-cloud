@@ -7,7 +7,7 @@ import org.springframework.context.ApplicationContext;
 
 import com.njydsz.common.jdbc.exception.TenantIsolationException;
 import com.njydsz.common.tenant.config.TenantProperties;
-import com.njydsz.common.core.context.RequestContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 
 /**
  * 租户生命周期管理器接口。
@@ -85,7 +85,7 @@ public interface TenantLifecycleManager {
     }
 
     static boolean checkCurrentTenantActive() {
-        String tenantId = RequestContext.getTenantId();
+        String tenantId = TenantContextHolder.getTenantId();
         if (tenantId == null) {
             return true;
         }

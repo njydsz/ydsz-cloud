@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.List;
 
 import com.njydsz.common.exception.code.CoreExceptionCode;
-import com.njydsz.common.exception.core.IBatchException;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.custom.MessageSourceHolder;
 
@@ -40,7 +39,7 @@ import lombok.Getter;
  * @since 2.3.0
  */
 @Getter
-public class BatchBusinessException extends BusinessException implements IBatchException {
+public class BatchBusinessException extends BusinessException {
 
     private static final long serialVersionUID = 1L;
 

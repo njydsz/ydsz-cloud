@@ -3,7 +3,7 @@ package com.njydsz.common.tenant.config;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.njydsz.common.core.context.RequestContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 
 /**
  * 租户级配置隔离。
@@ -48,7 +48,7 @@ public class TenantConfigProvider {
      * @return 配置值
      */
     public String get(String key, String defaultValue) {
-        String tenantId = RequestContext.getTenantId();
+        String tenantId = TenantContextHolder.getTenantId();
         if (tenantId != null) {
             Map<String, String> tenantOverrides = overridesCache.get(tenantId);
             if (tenantOverrides != null && tenantOverrides.containsKey(key)) {

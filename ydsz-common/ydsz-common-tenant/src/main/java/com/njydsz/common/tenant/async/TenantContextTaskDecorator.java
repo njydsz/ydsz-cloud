@@ -2,9 +2,9 @@ package com.njydsz.common.tenant.async;
 
 import java.util.Map;
 
-import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.tenant.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.tenant.config.TenantProperties;
 
 import org.springframework.core.task.TaskDecorator;
@@ -45,11 +45,14 @@ public class TenantContextTaskDecorator implements TaskDecorator {
             if (snapshot != null && !snapshot.isEmpty()) {
                 // 传播父线程的租户上下文
                 RequestContext.restore(snapshot);
+                // 恢复快照时同步 tenantId 字符串（bridgeToMdc 兼容）
+                TenantContext ctx = TenantContextHolder.get();
+                if (ctx != null) {
+                    RequestContext.setTenantId(ctx.getTenantId());
+                }
             } else {
                 // 无父线程上下文 → 系统租户
-                RequestContext.put(BizContextKeys.KEY_TENANT_CONTEXT, TenantContext.system(
-                        properties.getSystemTenantId()));
-                RequestContext.setTenantId(properties.getSystemTenantId());
+                TenantContextHolder.set(TenantContext.system(properties.getSystemTenantId()));
             }
             try {
                 runnable.run();

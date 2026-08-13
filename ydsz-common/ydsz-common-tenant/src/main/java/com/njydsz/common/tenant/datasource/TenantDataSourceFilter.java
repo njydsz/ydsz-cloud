@@ -2,7 +2,7 @@ package com.njydsz.common.tenant.datasource;
 
 import java.io.IOException;
 
-import com.njydsz.common.core.context.RequestContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
@@ -34,7 +34,7 @@ public class TenantDataSourceFilter implements Filter {
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
             throws IOException, ServletException {
         if (router.isIsolateDbMode()) {
-            String tenantId = RequestContext.getTenantId();
+            String tenantId = TenantContextHolder.getTenantId();
             try {
                 router.routeToTenantDataSource(tenantId);
                 chain.doFilter(req, res);

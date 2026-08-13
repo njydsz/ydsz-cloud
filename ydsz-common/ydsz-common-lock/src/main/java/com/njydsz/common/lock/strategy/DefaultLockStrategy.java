@@ -312,6 +312,9 @@ public class DefaultLockStrategy implements LockStrategy {
             if (fencingTokenProvider != null) {
                 abstractLock.setFencingTokenProvider(fencingTokenProvider);
             }
+            if (lockEventListener != null) {
+                abstractLock.setLockEventListener(lockEventListener);
+            }
         }
         return lock;
     }

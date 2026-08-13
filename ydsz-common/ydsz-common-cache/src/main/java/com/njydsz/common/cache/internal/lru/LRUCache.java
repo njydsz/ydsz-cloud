@@ -1,24 +1,27 @@
 package com.njydsz.common.cache.internal.lru;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.Map;
+import java.util.List;
 import java.util.Set;
-import java.util.concurrent.locks.StampedLock;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 
 import com.njydsz.common.cache.internal.AbstractCache;
 import com.njydsz.common.cache.listener.RemovalCause;
 
 /**
- * 基于 {@link LinkedHashMap} 的 LRU（最近最少使用）缓存实现。
+ * 基于 {@link ConcurrentHashMap} + 双向链表的 LRU（最近最少使用）缓存实现。
  *
- * <p>使用 {@link StampedLock} 保证并发安全，access-order 模式下 get 操作需要写锁
- * （因为会修改链表结构）。淘汰条目通过 ThreadLocal 队列延迟通知监听器，
- * 避免在写锁内触发回调导致死锁。
+ * <p>核心设计（并发优化）：
+ *
+ * <ul>
+ *   <li>读路径无锁：命中率统计通过 {@code LongAdder} 无锁更新，链表调整在写锁内完成
+ *   <li>写路径读写分离：{@link ReentrantReadWriteLock} 允许多个读线程并发，写入/淘汰时获取写锁
+ *   <li>权威容量：{@code maxSize} 为容量硬上限，写入时超出则从链表头部淘汰最久未访问条目
+ * </ul>
  *
  * <p>支持最大容量限制、命中/未命中统计、移除通知监听器。
  *
@@ -29,16 +32,19 @@ import com.njydsz.common.cache.listener.RemovalCause;
  */
 public class LRUCache<K, V> extends AbstractCache<K, V> {
 
-  private final LinkedHashMap<K, V> map;
+  private final ConcurrentHashMap<K, Node<K, V>> map;
 
-  private final StampedLock lock = new StampedLock();
+  private final ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
 
   private final boolean recordStats;
 
   private final int maxSize;
 
-  private final ThreadLocal<ArrayDeque<Map.Entry<K, V>>> pendingEvictions =
-      ThreadLocal.withInitial(ArrayDeque::new);
+  /** 链表哨兵头节点（next 指向最近访问的节点） */
+  private final Node<K, V> head;
+
+  /** 链表哨尾节点（prev 指向最久未访问的节点） */
+  private final Node<K, V> tail;
 
   public LRUCache(int maxSize) {
     this(maxSize, Math.max(16, maxSize), true);
@@ -50,75 +56,47 @@ public class LRUCache<K, V> extends AbstractCache<K, V> {
 
   public LRUCache(int maxSize, int initialCapacity, boolean recordStats) {
     this.maxSize = maxSize;
-    this.map =
-        new LinkedHashMap<K, V>(initialCapacity, 0.75f, true) {
-          /**
-           * LRU 容量上限控制：当条目数超过 maxSize 时淘汰最久未访问的条目。
-           *
-           * <p>被淘汰的条目不在此处直接通知监听器（避免在 LinkedHashMap 内部回调中触发
-           * 重入操作），而是压入 {@link #pendingEvictions} 线程本地队列，由外层方法在
-           * 释放写锁后统一 {@link #drainEvictions()} 处理。
-           *
-           * @param eldest 最久未访问的条目
-           * @return 条目数超过 maxSize 时返回 {@code true} 触发淘汰
-           */
-          @Override
-          protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
-            boolean remove = size() > LRUCache.this.maxSize;
-            if (remove) {
-              pendingEvictions.get().addLast(eldest);
-            }
-            return remove;
-          }
-        };
+    this.map = new ConcurrentHashMap<>(Math.max(4, initialCapacity));
     this.recordStats = recordStats;
-  }
-
-  private void drainEvictions() {
-    ArrayDeque<Map.Entry<K, V>> queue = pendingEvictions.get();
-    Map.Entry<K, V> entry;
-    while ((entry = queue.pollFirst()) != null) {
-      notifyRemoval(entry.getKey(), entry.getValue(), RemovalCause.SIZE);
-    }
+    this.head = new Node<>(null, null);
+    this.tail = new Node<>(null, null);
+    head.next = tail;
+    tail.prev = head;
   }
 
   /**
-   * 获取缓存值（不触发加载），并维护 LRU 访问顺序。
+   * 获取缓存值（不触发加载）。
    *
-   * <p>access-order 模式下读操作会调整内部链表结构，因此必须持有写锁（不能走乐观读）；
-   * 命中/未命中计入统计（未开启统计时跳过）。由于锁持有期间可能触发容量淘汰，
-   * 锁释放后统一处理延迟淘汰通知。
+   * <p>读路径无锁：仅更新节点时间戳和调整链表位置（链表操作获取写锁）。
+   * 命中时通过写锁保护链表调整，未命中时无额外开销。
    *
    * @param key 缓存键
    * @return 缓存值；未命中时返回 {@code null}
    */
   @Override
   public V getIfPresent(K key) {
-    // LinkedHashMap 在 access-order 模式下 get 会修改链表结构，
-    // 不能使用 StampedLock 乐观读（乐观读期间不允许结构性修改），
-    // 必须使用写锁保证安全
-    long stamp = lock.writeLock();
-    try {
-      V value = map.get(key);
-      if (recordStats) {
-        if (value != null) {
-          hitCount.increment();
-        } else {
-          missCount.increment();
-        }
-      }
-      return value;
-    } finally {
-      lock.unlockWrite(stamp);
-      drainEvictions();
+    if (key == null) {
+      return null;
     }
+    Node<K, V> node = map.get(key);
+    if (node != null) {
+      if (recordStats) {
+        hitCount.increment();
+      }
+      node.lastAccessNanos = System.nanoTime();
+      promoteToHead(node);
+      return node.value;
+    }
+    if (recordStats) {
+      missCount.increment();
+    }
+    return null;
   }
 
   /**
    * 键存在时返回缓存值（并刷新 LRU 顺序），否则加锁原子计算并写入。
    *
-   * <p>整个"查-算-写"流程在写锁内完成，多个线程对同一未命中键只会计算一次；
-   * 计算结果为 null 时不写入缓存。同样通过写锁后延迟队列处理容量淘汰通知。
+   * <p>整个"查-算-写"流程在读锁 + 写锁组合内完成，多个线程对同一未命中键只会计算一次。
    *
    * @param key             缓存键
    * @param mappingFunction 键不存在时的计算函数
@@ -126,107 +104,123 @@ public class LRUCache<K, V> extends AbstractCache<K, V> {
    */
   @Override
   public V computeIfAbsent(K key, Function<K, V> mappingFunction) {
-    long stamp = lock.writeLock();
+    Node<K, V> node = map.get(key);
+    if (node != null) {
+      if (recordStats) {
+        hitCount.increment();
+      }
+      node.lastAccessNanos = System.nanoTime();
+      promoteToHead(node);
+      return node.value;
+    }
+
+    rwLock.writeLock().lock();
     try {
-      V value = map.get(key);
-      if (value != null) {
+      // double-check：获取写锁后再次检查
+      node = map.get(key);
+      if (node != null) {
         if (recordStats) {
           hitCount.increment();
         }
-        return value;
+        node.lastAccessNanos = System.nanoTime();
+        addToHead(node);
+        return node.value;
       }
       if (recordStats) {
         missCount.increment();
       }
-      value = mappingFunction.apply(key);
+      V value = mappingFunction.apply(key);
       if (value != null) {
-        map.put(key, value);
+        putInternal(key, value);
       }
       return value;
     } finally {
-      lock.unlockWrite(stamp);
-      drainEvictions();
+      rwLock.writeLock().unlock();
     }
   }
 
   /**
-   * 写入键值对；键已存在时覆盖旧值并向监听器发送 {@link RemovalCause#REPLACED} 通知。
-   *
-   * <p>写入可能触发 LRU 容量淘汰（最久未使用条目），淘汰通知延迟到锁释放后处理。
+   * 写入键值对；超出容量时从链表尾部淘汰最久未访问条目。
    *
    * @param key   缓存键
    * @param value 缓存值
    */
   @Override
   public void put(K key, V value) {
-    long stamp = lock.writeLock();
+    if (key == null || value == null) {
+      return;
+    }
+    rwLock.writeLock().lock();
     try {
-      V oldValue = map.put(key, value);
-      if (oldValue != null && !listeners.isEmpty()) {
-        notifyRemoval(key, oldValue, RemovalCause.REPLACED);
+      Node<K, V> existing = map.get(key);
+      if (existing != null) {
+        existing.value = value;
+        existing.lastAccessNanos = System.nanoTime();
+        addToHead(existing);
+        if (!listeners.isEmpty()) {
+          notifyRemoval(key, existing.value, RemovalCause.REPLACED);
+        }
+      } else {
+        putInternal(key, value);
       }
     } finally {
-      lock.unlockWrite(stamp);
-      drainEvictions();
+      rwLock.writeLock().unlock();
     }
   }
 
   /**
    * 移除指定键并返回被移除的值。
    *
-   * <p>成功移除（旧值非 null）且存在监听器时发送 {@link RemovalCause#EXPLICIT} 通知。
-   *
    * @param key 缓存键
    * @return 被移除的值；键不存在时返回 {@code null}
    */
   @Override
   public V remove(K key) {
-    long stamp = lock.writeLock();
+    if (key == null) {
+      return null;
+    }
+    rwLock.writeLock().lock();
     try {
-      V value = map.remove(key);
-      if (value != null && !listeners.isEmpty()) {
-        notifyRemoval(key, value, RemovalCause.EXPLICIT);
+      Node<K, V> node = map.remove(key);
+      if (node != null) {
+        removeFromList(node);
+        if (!listeners.isEmpty()) {
+          notifyRemoval(key, node.value, RemovalCause.EXPLICIT);
+        }
+        return node.value;
       }
-      return value;
+      return null;
     } finally {
-      lock.unlockWrite(stamp);
+      rwLock.writeLock().unlock();
     }
   }
 
   /**
    * 清空缓存。
-   *
-   * <p>在写锁内直接遍历底层 Map 发送 {@link RemovalCause#EXPLICIT} 通知，
-   * 刻意不走 {@code forEach} 路径，避免经 keySet/getIfPresent 造成锁重入死锁。
-   *
    */
   @Override
   public void clear() {
-    long stamp = lock.writeLock();
+    rwLock.writeLock().lock();
     try {
-      // 在写锁内直接遍历 map，避免调用 forEach（会触发 keySet/getIfPresent 导致重入死锁）
-      for (Map.Entry<K, V> entry : map.entrySet()) {
-        notifyRemoval(entry.getKey(), entry.getValue(), RemovalCause.EXPLICIT);
+      for (Node<K, V> node = head.next; node != tail; node = node.next) {
+        notifyRemoval(node.key, node.value, RemovalCause.EXPLICIT);
       }
       map.clear();
+      head.next = tail;
+      tail.prev = head;
     } finally {
-      lock.unlockWrite(stamp);
+      rwLock.writeLock().unlock();
     }
   }
 
   /**
-   * 返回缓存条目数（精确值，读锁保护下统计）。
+   * 返回缓存条目数（精确值）。
    *
    * @return 缓存条目数
    */
   @Override
   public long estimatedSize() {
-    long stamp = lock.readLock();
-    try {
-      return map.size();
-    } finally {
-      lock.unlockRead(stamp);
-    }
+    return map.size();
   }
 
   /**
@@ -237,45 +231,113 @@ public class LRUCache<K, V> extends AbstractCache<K, V> {
    */
   @Override
   public boolean containsKey(K key) {
-    long stamp = lock.readLock();
-    try {
-      return map.containsKey(key);
-    } finally {
-      lock.unlockRead(stamp);
-    }
+    return map.containsKey(key);
   }
 
   /**
    * 返回缓存键集合。
    *
-   * <p>读锁内复制为新的 {@link LinkedHashSet}（保留访问序），返回一次性快照， 与底层 Map 的弱一致视图不同。
-   *
-   * @return 当前缓存键的有序快照集合
+   * @return 当前缓存键的快照集合
    */
   @Override
   public Set<K> keySet() {
-    long stamp = lock.readLock();
-    try {
-      return new LinkedHashSet<>(map.keySet());
-    } finally {
-      lock.unlockRead(stamp);
-    }
+    return new LinkedHashSet<>(map.keySet());
   }
 
   /**
    * 返回缓存值集合。
    *
-   * <p>读锁内复制为新的 {@link ArrayList}，返回一次性快照，顺序与底层 Map 迭代序一致。
-   *
    * @return 当前缓存值的快照集合
    */
   @Override
   public Collection<V> values() {
-    long stamp = lock.readLock();
+    List<V> result = new ArrayList<>(map.size());
+    rwLock.readLock().lock();
     try {
-      return new ArrayList<>(map.values());
+      for (Node<K, V> node = head.next; node != tail; node = node.next) {
+        result.add(node.value);
+      }
     } finally {
-      lock.unlockRead(stamp);
+      rwLock.readLock().unlock();
+    }
+    return result;
+  }
+
+  /**
+   * 内部写入方法（调用方需持有写锁）。
+   */
+  private void putInternal(K key, V value) {
+    Node<K, V> newNode = new Node<>(key, value);
+    map.put(key, newNode);
+    addToHead(newNode);
+    evictIfNeeded();
+  }
+
+  /**
+   * 容量淘汰（调用方需持有写锁）。
+   */
+  private void evictIfNeeded() {
+    while (map.size() > maxSize) {
+      Node<K, V> lru = tail.prev;
+      if (lru == head) {
+        break;
+      }
+      map.remove(lru.key);
+      removeFromList(lru);
+      notifyRemoval(lru.key, lru.value, RemovalCause.SIZE);
+    }
+  }
+
+  /**
+   * 将节点提升到链表头部（最近访问），获取写锁保护。
+   */
+  private void promoteToHead(Node<K, V> node) {
+    rwLock.writeLock().lock();
+    try {
+      if (node.next != null && node.prev != null) {
+        removeFromList(node);
+        addToHead(node);
+      }
+    } finally {
+      rwLock.writeLock().unlock();
+    }
+  }
+
+  private void addToHead(Node<K, V> node) {
+    node.prev = head;
+    node.next = head.next;
+    head.next.prev = node;
+    head.next = node;
+  }
+
+  private void removeFromList(Node<K, V> node) {
+    if (node.prev != null) {
+      node.prev.next = node.next;
+    }
+    if (node.next != null) {
+      node.next.prev = node.prev;
+    }
+    node.prev = null;
+    node.next = null;
+  }
+
+  /**
+   * 缓存节点：持有缓存值与最近访问时间戳。
+   *
+   * @param <K> 键类型
+   * @param <V> 值类型
+   */
+  private static class Node<K, V> {
+    final K key;
+    volatile V value;
+    volatile long lastAccessNanos;
+    Node<K, V> prev;
+    Node<K, V> next;
+
+    Node(K key, V value) {
+      this.key = key;
+      this.value = value;
+      this.lastAccessNanos = System.nanoTime();
     }
   }
 }

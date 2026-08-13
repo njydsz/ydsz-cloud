@@ -2,8 +2,7 @@ package com.njydsz.common.tenant;
 
 import java.util.concurrent.Callable;
 
-import com.njydsz.common.core.context.BizContextKeys;
-import com.njydsz.common.core.context.RequestContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 
 /**
  * 系统租户上下文执行器。
@@ -66,16 +65,14 @@ public final class SystemTenantContextRunner {
      * 写入系统租户上下文（含 tenantId 同步）。
      */
     private static void applySystemTenant() {
-        RequestContext.put(BizContextKeys.KEY_TENANT_CONTEXT, TenantContext.system(systemTenantId));
-        RequestContext.setTenantId(systemTenantId);
+        TenantContextHolder.set(TenantContext.system(systemTenantId));
     }
 
     /**
      * 清除租户上下文（对应 RequestContext 清理语义）。
      */
     private static void clearTenant() {
-        RequestContext.remove(BizContextKeys.KEY_TENANT_CONTEXT);
-        RequestContext.remove(RequestContext.KEY_TENANT_ID);
+        TenantContextHolder.clear();
     }
 
     /**

@@ -63,6 +63,10 @@ public class RedisMetricsCollector {
     /** Timer 缓存：避免每次调用都重新注册 Meter */
     private final ConcurrentHashMap<String, Timer> timerCache = new ConcurrentHashMap<>();
 
+    /** Counter 缓存：避免错误/慢操作指标每次调用都重新注册 Meter */
+    private final ConcurrentHashMap<String, Counter> errorCounterCache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Counter> slowCounterCache = new ConcurrentHashMap<>();
+
     /** 单例缓存：每个 MeterRegistry 对应一个 RedisMetricsCollector 实例 */
     private static final ConcurrentHashMap<MeterRegistry, RedisMetricsCollector> INSTANCES =
             new ConcurrentHashMap<>();
@@ -178,16 +182,22 @@ public class RedisMetricsCollector {
     /**
      * 记录 Redis 操作错误
      *
+     * <p><b>性能优化：</b>使用缓存的 Counter 实例，避免每次调用都执行 {@code register()}。
+     * 缓存 key 为 {@code operationType:errorType} 组合，确保不同错误类型有独立的 Counter。
+     *
      * @param operationType 操作类型
      * @param errorType     错误类型（如异常类名）
      */
     public void recordError(String operationType, String errorType) {
-        Counter.builder(METRIC_OPERATION_ERRORS)
-                .tag(TAG_OPERATION_TYPE, operationType)
-                .tag(TAG_ERROR_TYPE, errorType)
-                .description("Redis operation errors")
-                .register(registry)
-                .increment();
+        String cacheKey = operationType + ":" + errorType;
+        Counter counter = errorCounterCache.computeIfAbsent(cacheKey, key ->
+                Counter.builder(METRIC_OPERATION_ERRORS)
+                        .tag(TAG_OPERATION_TYPE, operationType)
+                        .tag(TAG_ERROR_TYPE, errorType)
+                        .description("Redis operation errors")
+                        .register(registry)
+        );
+        counter.increment();
     }
 
     /**
@@ -207,15 +217,19 @@ public class RedisMetricsCollector {
      * <p>当 Redis 操作耗时超过配置阈值时递增此计数器，
      * 标签包含操作类型，便于按操作维度告警。
      *
+     * <p><b>性能优化：</b>使用缓存的 Counter 实例，避免每次调用都执行 {@code register()}。
+     *
      * @param operationType 操作类型
      * @param duration      耗时（毫秒）
      */
     public void recordSlowOperation(String operationType, long duration) {
-        Counter.builder(METRIC_OPERATION_SLOW)
-                .tag(TAG_OPERATION_TYPE, operationType)
-                .description("Redis slow operation count (exceeds configured threshold)")
-                .register(registry)
-                .increment();
+        Counter counter = slowCounterCache.computeIfAbsent(operationType, op ->
+                Counter.builder(METRIC_OPERATION_SLOW)
+                        .tag(TAG_OPERATION_TYPE, op)
+                        .description("Redis slow operation count (exceeds configured threshold)")
+                        .register(registry)
+        );
+        counter.increment();
     }
 
     /**

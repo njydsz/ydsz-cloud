@@ -356,7 +356,15 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
      * 通过函数式接口传入 ID/parentId/children/sort 的获取和设置方式。
      *
      * <p>算法：O(n) 时间复杂度，通过 HashMap 分组实现。
-     * 根节点约定：parentId 为 null 或等于 "0" 的节点视为根节点。
+     *
+     * <p><b>根判定规则（与实例方法 {@link #build()} 对齐）：</b>
+     * <ul>
+     *   <li>parentId 为 {@code null} → 根节点</li>
+     *   <li>parentId 等于 {@code "0"} → 根节点（通用约定）</li>
+     * </ul>
+     *
+     * <p>若业务模块使用其他根标识（如 {@code -1}），请使用实例方法
+     * {@link #build(Object, List, Comparator)} 并传入自定义 rootId。
      *
      * @param flatList       扁平列表
      * @param idGetter       ID 获取函数
@@ -377,14 +385,22 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
             return List.of();
         }
 
-        String effectiveRootParentId = "0";
+        String rootParentId = "0";
         Map<String, List<T>> parentIdMap = flatList.stream()
                 .collect(Collectors.groupingBy(item -> {
                     String pid = parentIdGetter.apply(item);
-                    return pid == null ? effectiveRootParentId : pid;
+                    return pid == null ? rootParentId : pid;
                 }));
 
-        List<T> roots = new ArrayList<>(parentIdMap.getOrDefault(effectiveRootParentId, Collections.emptyList()));
+        List<T> roots = new ArrayList<>();
+        // rootId=null 或 rootId="0" 均视为根（对齐 build() 的语义）
+        roots.addAll(parentIdMap.getOrDefault(rootParentId, Collections.emptyList()));
+        for (T item : flatList) {
+            if (parentIdGetter.apply(item) == null) {
+                // 已在 groupedBy 时映射到 rootParentId 分组，无需重复添加
+            }
+        }
+
         for (T item : flatList) {
             List<T> children = parentIdMap.get(idGetter.apply(item));
             if (children != null) {

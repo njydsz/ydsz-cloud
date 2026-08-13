@@ -1,8 +1,7 @@
 package com.njydsz.common.tenant.redis;
 
-import com.njydsz.common.core.context.BizContextKeys;
-import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.tenant.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 
 /**
  * 租户感知的 Redis Key 构建器。
@@ -44,7 +43,7 @@ public final class TenantAwareRedisKey {
         if (key == null || key.isEmpty()) {
             return key;
         }
-        TenantContext context = (TenantContext) RequestContext.get(BizContextKeys.KEY_TENANT_CONTEXT);
+        TenantContext context = TenantContextHolder.get();
         if (context == null || context.isSkipIsolation()
                 || context.isSuperAdmin() || context.getTenantId() == null) {
             return key;

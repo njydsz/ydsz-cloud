@@ -15,9 +15,8 @@ import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthContributor;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.core.context.BizContextKeys;
-import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.tenant.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.tenant.config.TenantProperties;
 import com.njydsz.common.tenant.lifecycle.TenantLifecycleManager;
 import com.njydsz.common.tenant.metrics.TenantMetrics;
@@ -64,8 +63,7 @@ public class TenantDiagnosticsContributor implements HealthContributor {
         Map<String, Object> details = new LinkedHashMap<>();
 
         // 1. 当前租户上下文快照
-        TenantContext currentContext = (TenantContext)
-                RequestContext.get(BizContextKeys.KEY_TENANT_CONTEXT);
+        TenantContext currentContext = TenantContextHolder.get();
         if (currentContext != null) {
             Map<String, Object> ctxInfo = new LinkedHashMap<>();
             ctxInfo.put("tenantId", currentContext.getTenantId());

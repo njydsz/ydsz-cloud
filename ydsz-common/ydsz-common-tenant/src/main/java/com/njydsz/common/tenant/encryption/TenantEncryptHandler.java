@@ -18,9 +18,8 @@ import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedTypes;
 import org.springframework.beans.factory.ObjectProvider;
 
-import com.njydsz.common.core.context.BizContextKeys;
-import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.tenant.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.tenant.config.TenantProperties;
 import com.njydsz.common.tenant.metrics.TenantMetrics;
 
@@ -180,8 +179,7 @@ public class TenantEncryptHandler extends BaseTypeHandler<String> {
      * @return 32 字节密钥，未配置返回 null
      */
     private byte[] getCurrentTenantKey() {
-        TenantContext context = (TenantContext)
-                RequestContext.get(BizContextKeys.KEY_TENANT_CONTEXT);
+        TenantContext context = TenantContextHolder.get();
         if (context == null || encryptionKeys == null) {
             return null;
         }

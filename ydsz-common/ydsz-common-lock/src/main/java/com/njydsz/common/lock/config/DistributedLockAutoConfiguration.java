@@ -27,6 +27,7 @@ import com.njydsz.common.lock.aspect.IdempotentAspect;
 import com.njydsz.common.lock.aspect.RepeatSubmitAspect;
 import com.njydsz.common.lock.aspect.YdszDistributedLockAspect;
 import com.njydsz.common.lock.core.FencingTokenProvider;
+import com.njydsz.common.lock.core.LockEventListener;
 import com.njydsz.common.lock.core.LockTemplate;
 import com.njydsz.common.lock.health.LockHealthIndicator;
 import com.njydsz.common.lock.idempotent.IdempotentStrategy;
@@ -94,6 +95,21 @@ public class DistributedLockAutoConfiguration {
             havingValue = "true", matchIfMissing = true)
     public FencingTokenProvider fencingTokenProvider(StringRedisTemplate stringRedisTemplate) {
         return new FencingTokenProvider(stringRedisTemplate);
+    }
+
+    /**
+     * 创建锁事件监听器 Bean
+     *
+     * <p>业务方可实现 {@link LockEventListener} 接口并注册为 Bean，
+     * 感知锁生命周期事件（获取、释放、超时、续期失败）。
+     *
+     * @param listener 业务方提供的监听器（可选）
+     * @return LockEventListener 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public LockEventListener lockEventListener(ObjectProvider<LockEventListener> listener) {
+        return listener.getIfAvailable(LockEventListener.NO_OP);
     }
 
     /**
@@ -201,6 +217,7 @@ public class DistributedLockAutoConfiguration {
                 optionalDependencies.notifierProvider().getIfAvailable());
         optionalDependencies.renewalServiceProvider().ifAvailable(strategy::setLockRenewalService);
         optionalDependencies.fencingTokenProvider().ifAvailable(strategy::setFencingTokenProvider);
+        strategy.setLockEventListener(optionalDependencies.lockEventListener());
         return strategy;
     }
 
@@ -213,6 +230,7 @@ public class DistributedLockAutoConfiguration {
      * @param renewalServiceProvider LockRenewalService 提供者
      * @param notifierProvider       LockReleaseNotifier 提供者
      * @param fencingTokenProvider   Fencing Token 提供者
+     * @param lockEventListener     锁事件监听器
      * @return 可选依赖聚合
      */
     @Bean
@@ -223,9 +241,11 @@ public class DistributedLockAutoConfiguration {
             ObjectProvider<TaskScheduler> schedulerProvider,
             ObjectProvider<LockRenewalService> renewalServiceProvider,
             ObjectProvider<LockReleaseNotifier> notifierProvider,
-            ObjectProvider<FencingTokenProvider> fencingTokenProvider) {
+            ObjectProvider<FencingTokenProvider> fencingTokenProvider,
+            LockEventListener lockEventListener) {
         return new LockOptionalDependencies(stringOpsProvider, redisTemplateProvider,
-                schedulerProvider, renewalServiceProvider, notifierProvider, fencingTokenProvider);
+                schedulerProvider, renewalServiceProvider, notifierProvider,
+                fencingTokenProvider, lockEventListener);
     }
 
     /**
@@ -431,6 +451,7 @@ public class DistributedLockAutoConfiguration {
      * @param renewalServiceProvider LockRenewalService 提供者
      * @param notifierProvider       LockReleaseNotifier 提供者
      * @param fencingTokenProvider   Fencing Token 提供者
+     * @param lockEventListener     锁事件监听器
      */
     public record LockOptionalDependencies(
             ObjectProvider<RedisStringOps> stringOpsProvider,
@@ -438,6 +459,7 @@ public class DistributedLockAutoConfiguration {
             ObjectProvider<TaskScheduler> schedulerProvider,
             ObjectProvider<LockRenewalService> renewalServiceProvider,
             ObjectProvider<LockReleaseNotifier> notifierProvider,
-            ObjectProvider<FencingTokenProvider> fencingTokenProvider) {
+            ObjectProvider<FencingTokenProvider> fencingTokenProvider,
+            LockEventListener lockEventListener) {
     }
 }
