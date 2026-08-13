@@ -21,7 +21,7 @@ import org.springframework.boot.jdbc.autoconfigure.DataSourceProperties;
 import org.springframework.context.SmartLifecycle;
 import org.springframework.context.annotation.Bean;
 
-import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
+import com.njydsz.common.jdbc.datasource.DynamicRoutingDataSource;
 import com.njydsz.common.jdbc.health.DataSourceHealthIndicator;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariConfigMXBean;
@@ -174,7 +174,7 @@ public class HikariCPConfiguration {
     /**
      * 多数据源场景下的 HikariCP 连接池定制
      *
-     * <p>当项目中使用了 baomidou 的 dynamic-datasource-spring-boot3-starter 时，
+     * <p>当项目中使用了本模块的 {@link DynamicRoutingDataSource} 时，
      * 此 {@link SmartLifecycle} Bean 会在所有数据源初始化完成后，遍历
      * {@link DynamicRoutingDataSource} 中的所有目标数据源，对每个 {@link HikariDataSource}
      * 执行连接池参数定制。
@@ -200,7 +200,7 @@ public class HikariCPConfiguration {
      * }
      * }</pre>
      *
-     * @param dynamicRoutingDataSource baomidou 动态路由数据源
+     * @param dynamicRoutingDataSource 动态路由数据源
      * @param poolConfigurerProvider   连接池定制器列表（可选，无实现时不执行定制）
      * @return SmartLifecycle 实例
      */

@@ -109,6 +109,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
                 }
                 return null;
             }
+            // baseTableName validated in constructor via validateTableName() — safe from SQL injection
             String sql = "SELECT * FROM " + baseTableName + " WHERE id = ? LIMIT 1";
             return jdbcTemplate.queryForObject(sql, BeanPropertyRowMapper.newInstance(AuditLog.class), id);
         } catch (Exception e) {
@@ -130,6 +131,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
                 String unionSql = buildUnionAllSql(tables, "business_no = ? ORDER BY operation_time DESC");
                 return jdbcTemplate.query(unionSql, BeanPropertyRowMapper.newInstance(AuditLog.class), businessNo);
             }
+            // baseTableName validated in constructor via validateTableName() — safe from SQL injection
             String sql = "SELECT * FROM " + baseTableName + " WHERE business_no = ? ORDER BY operation_time DESC";
             return jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(AuditLog.class), businessNo);
         } catch (Exception e) {
@@ -154,6 +156,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
                 return jdbcTemplate.query(unionSql,
                         BeanPropertyRowMapper.newInstance(AuditLog.class), params.toArray());
             }
+            // baseTableName validated in constructor via validateTableName() — safe from SQL injection
             StringBuilder sql = new StringBuilder("SELECT * FROM ").append(baseTableName)
                     .append(" WHERE operator_id = ?");
             List<Object> params = new ArrayList<>();
@@ -530,6 +533,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
     private AuditLog queryFromTable(String tableName, String whereClause, Object... params) {
         validateTableName(tableName);
         try {
+            // tableName validated by validateTableName() above; whereClause built from hardcoded fragments — safe from SQL injection
             String sql = "SELECT * FROM " + tableName + " WHERE " + whereClause;
             return jdbcTemplate.queryForObject(sql, BeanPropertyRowMapper.newInstance(AuditLog.class), params);
         } catch (Exception e) {
@@ -544,6 +548,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
         if (tables.size() == 1) {
             String table = tables.iterator().next();
             validateTableName(table);
+            // whereClause built from hardcoded fragments (column = ?) — safe from SQL injection
             return "SELECT * FROM " + table + " WHERE " + whereClause;
         }
         StringBuilder sql = new StringBuilder();
@@ -553,6 +558,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
             if (idx > 0) {
                 sql.append(" UNION ALL ");
             }
+            // whereClause built from hardcoded fragments (column = ?) — safe from SQL injection
             sql.append("SELECT * FROM ").append(table).append(" WHERE ").append(whereClause);
             idx++;
         }
@@ -566,6 +572,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
         if (tables.size() == 1) {
             String table = tables.iterator().next();
             validateTableName(table);
+            // whereClause built from hardcoded fragments (column = ?) — safe from SQL injection
             return "SELECT * FROM " + table + " WHERE " + whereClause
                     + " ORDER BY operation_time DESC LIMIT ? OFFSET ?";
         }
@@ -577,6 +584,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
             if (idx > 0) {
                 sql.append(" UNION ALL ");
             }
+            // whereClause built from hardcoded fragments (column = ?) — safe from SQL injection
             sql.append("SELECT * FROM ").append(table).append(" WHERE ").append(whereClause);
             idx++;
         }

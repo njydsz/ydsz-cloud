@@ -564,6 +564,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             Object val = ext.get("sequenceFlowId");
             return val == null ? null : String.valueOf(val);
         } catch (Exception e) {
+            log.warn("[Flow] 提取 sequenceFlowId 失败, skipId={}, err={}", skip.getId(), e.getMessage());
             return null;
         }
     }
@@ -586,6 +587,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             Object val = ext.get("sourceRef");
             return val == null ? null : String.valueOf(val);
         } catch (Exception e) {
+            log.warn("[Flow] 提取 sourceRef 失败, skipId={}, err={}", skip.getId(), e.getMessage());
             return null;
         }
     }

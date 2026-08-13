@@ -125,6 +125,7 @@ public class DagController {
                     "dagName", dag.getName(),
                     "nodeCount", dag.getNodes().size()));
         } catch (Exception e) {
+            log.error("[DAG-API] DSL 解析失败, dsl={}, err={}", request.getDsl(), e.getMessage(), e);
             // 解析失败时仍返回 success，由 valid 字段标识
             return BaseResponse.success(Map.of(
                     "valid", false,

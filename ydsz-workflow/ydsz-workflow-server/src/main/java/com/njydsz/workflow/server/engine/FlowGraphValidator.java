@@ -213,6 +213,7 @@ public class FlowGraphValidator {
                 }
             } catch (Exception e) {
                 // ignore parse error
+                log.debug("[Flow-Validate] 解析 sourceRef 失败, ext={}, err={}", skip.getExt(), e.getMessage());
             }
         }
         // 降级：部分老数据可能将 source 存在 skipName 或其他字段

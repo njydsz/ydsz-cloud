@@ -3,6 +3,7 @@ package com.njydsz.common.redis.service;
 import java.time.Duration;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import jakarta.annotation.PreDestroy;

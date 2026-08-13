@@ -3,8 +3,9 @@ package com.njydsz.common.exception.custom;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.njydsz.common.core.code.ResultCode;
 import com.njydsz.common.exception.code.IExceptionResultCode;
@@ -44,8 +45,10 @@ public abstract class AbstractYdszException extends RuntimeException implements 
     protected String code;
     protected String key;
     protected transient Object[] params;
-    /** 懒加载消息缓存，使用 AtomicReference 实现无锁并发，避免 getMessage() 高频调用时锁竞争 */
-    protected final AtomicReference<String> messageRef = new AtomicReference<>();
+    /** 按 Locale 缓存已解析消息，computeIfAbsent 保证并发安全且不串语言 */
+    protected final ConcurrentHashMap<Locale, String> messageCache = new ConcurrentHashMap<>(2);
+    /** 通过 setMessage() 显式覆盖的消息（优先于 i18n 解析） */
+    protected volatile String overrideMessage;
     /** 懒加载解析的消息键 */
     protected String messageKey;
     /** 懒加载解析的消息参数 */
@@ -128,7 +131,8 @@ public abstract class AbstractYdszException extends RuntimeException implements 
         this.code = code;
         this.key = key;
         this.params = normalizeParams(params);
-        this.messageRef.set(null);
+        this.messageCache.clear();
+        this.overrideMessage = null;
         this.messageKey = key;
         this.messageParams = this.params;
     }
@@ -263,19 +267,20 @@ public abstract class AbstractYdszException extends RuntimeException implements 
     }
 
     /**
-     * 获取异常消息（懒加载 i18n 解析 - 无锁 CAS 实现）
+     * 获取异常消息（懒加载 i18n 解析 - 按 Locale 缓存）
      *
-     * <p>首次调用时通过 {@link MessageSourceHolder} 解析国际化消息，
-     * 解析结果通过 {@link AtomicReference#compareAndSet} 原子缓存，
-     * 后续调用直接返回缓存值。
+     * <p>首次按某 Locale 调用时通过 {@link MessageSourceHolder} 解析国际化消息，
+     * 解析结果按 Locale 存入 {@link ConcurrentHashMap}，后续同 Locale 调用直接返回缓存值，
+     * 不同 Locale 互不干扰，保证多语言切换不串文案。
      *
      * <p>若 {@link MessageSourceHolder} 未注入（如非 Spring 环境），
      * 则直接返回 messageKey 本身（兜底行为，保持向后兼容）。
+     * 若通过 {@link #setMessage(String)} 显式覆盖消息，优先返回覆盖值。
      *
      * <p>性能优势：
      * <ul>
-     *     <li>无锁设计，高并发 {@code getMessage()} 调用时不会产生锁竞争</li>
-     *     <li>CAS 失败时简单重试即可，无需 system call</li>
+     *     <li>{@code computeIfAbsent} 并发安全，同 Locale 下仅首次解析</li>
+     *     <li>按 Locale 隔离缓存，兼顾正确性与性能</li>
      *     <li>对异常链打印、日志输出、JSON 序列化等多消费方友好</li>
      * </ul>
      *
@@ -283,19 +288,15 @@ public abstract class AbstractYdszException extends RuntimeException implements 
      */
     @Override
     public String getMessage() {
-        String msg = messageRef.get();
-        if (msg != null) {
-            return msg;
+        String override = overrideMessage;
+        if (override != null) {
+            return override;
         }
-        // 懒加载解析：通过 CAS 原子写入，避免重复解析及锁等待
-        String resolved;
-        if (messageKey != null) {
-            resolved = MessageSourceHolder.resolve(messageKey, messageParams);
-        } else {
-            resolved = super.getMessage();
+        if (messageKey == null) {
+            return super.getMessage();
         }
-        messageRef.compareAndSet(null, resolved);
-        return messageRef.get();
+        Locale locale = MessageSourceHolder.currentLocale();
+        return messageCache.computeIfAbsent(locale, l -> MessageSourceHolder.resolve(messageKey, messageParams, l));
     }
 
     /**
@@ -304,7 +305,8 @@ public abstract class AbstractYdszException extends RuntimeException implements 
      * @param message 异常消息
      */
     public void setMessage(String message) {
-        messageRef.set(message);
+        this.overrideMessage = message;
+        this.messageCache.clear();
     }
 
     public int getHttpStatus() {

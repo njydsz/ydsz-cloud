@@ -173,6 +173,7 @@ public class FlowAssigneeAvailabilityService {
             if (val == null) return 0;
             return Integer.parseInt(val);
         } catch (Exception e) {
+            log.warn("[Availability] 查询待办计数失败 userId={}, err={}", userId, e.getMessage());
             return 0;
         }
     }
@@ -181,6 +182,7 @@ public class FlowAssigneeAvailabilityService {
         try {
             return redisStringOps.get(LAST_ACTIVE_PREFIX + userId, String.class);
         } catch (Exception e) {
+            log.warn("[Availability] 查询活跃时间失败 userId={}, err={}", userId, e.getMessage());
             return null;
         }
     }

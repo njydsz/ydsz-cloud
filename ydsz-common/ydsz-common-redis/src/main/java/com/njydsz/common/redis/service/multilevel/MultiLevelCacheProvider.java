@@ -5,10 +5,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import jakarta.annotation.PreDestroy;
 
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.data.redis.core.script.RedisScript;
 
 import com.njydsz.common.redis.config.RedisProperties;
 import com.njydsz.common.redis.service.CacheProvider;
@@ -241,7 +245,7 @@ public class MultiLevelCacheProvider implements CacheProvider, Closeable {
      */
     @Override
     public boolean delete(String key) {
-        boolean result = stringOps.delete(key);
+        boolean result = stringOps.del(key);
         invalidateL1(key);
         return result;
     }
@@ -250,21 +254,21 @@ public class MultiLevelCacheProvider implements CacheProvider, Closeable {
      * 批量删除
      */
     @Override
-    public boolean delete(List<String> keys) {
+    public void delete(List<String> keys) {
         if (keys == null || keys.isEmpty()) {
-            return true;
+            return;
         }
-        boolean result = stringOps.delete(keys);
+        stringOps.del(keys);
         keys.forEach(this::invalidateL1);
-        return result;
     }
 
     /**
      * 执行 Lua 脚本（多级缓存不支持脚本操作，转发到 Redis）
      */
     @Override
-    public <T> T executeScript(String script, Class<T> returnType, List<String> keys, Object... args) {
-        return stringOps.executeScriptWithShaCache(script, returnType, keys, args);
+    public <T> T executeScript(String script, List<String> keys, Class<T> returnType, Object... args) {
+        RedisScript<T> redisScript = new DefaultRedisScript<>(script, returnType);
+        return redisTemplate.execute(redisScript, keys, args);
     }
 
     /**
@@ -344,7 +348,7 @@ public class MultiLevelCacheProvider implements CacheProvider, Closeable {
             // ConcurrentHashMap 实现：简单容量保护
             if (simpleL1Cache.size() >= l1MaxSize) {
                 // 清理过期条目
-                simpleL1Cache.entries().removeIf(entry -> entry.getValue().isExpired());
+                simpleL1Cache.entrySet().removeIf(entry -> entry.getValue().isExpired());
                 // 仍然超限则放弃写入（下次自然回填）
                 if (simpleL1Cache.size() >= l1MaxSize) {
                     log.debug("【MultiLevelCache】L1 容量已满，跳过写入 | key={}", key);

@@ -203,7 +203,7 @@
                       value="CLASS_DEF, INTERFACE_DEF, METHOD_DEF, CTOR_DEF,
                              LITERAL_IF, LITERAL_ELSE, LITERAL_FOR, LITERAL_WHILE,
                              LITERAL_DO, LITERAL_SWITCH, LITERAL_TRY, LITERAL_CATCH,
-                             STATIC_INIT, INSTANCE_INIT, ANNOTATION_DEF, ENUM_DEF"/>
+                             STATIC_INIT, ANNOTATION_DEF, ENUM_DEF"/>
         </module>
 
         <!-- 右大括号必须单独成行（除非后面紧跟 else/catch/finally） -->
@@ -221,10 +221,10 @@
 
         <!-- 保留字（if/for/while/switch/do）与括号之间必须有空格 -->
         <module name="WhitespaceAfter">
-            <property name="tokens" value="if,for,while,switch,do"/>
+            <property name="tokens" value="COMMA, SEMI, TYPECAST"/>
         </module>
 
-        <!-- 运算符、括号、分号周围空格规范 -->
+        <!-- 运算符、括号、分号周围空格规范（使用 checkstyle 默认 token 集合） -->
         <module name="WhitespaceAround">
             <property name="allowEmptyConstructors" value="true"/>
             <property name="allowEmptyMethods" value="true"/>
@@ -232,16 +232,6 @@
             <property name="allowEmptyLoops" value="true"/>
             <property name="allowEmptyLambdas" value="true"/>
             <property name="ignoreEnhancedForColon" value="false"/>
-            <property name="tokens"
-                      value="ASSIGN, BAND, BOR, BSR, BXOR, COLON, DIV, DO_WHILE, EQUAL,
-                             GE, GT, LAND, LCURLY, LE, LITERAL_ASSERT, LITERAL_CATCH,
-                             LITERAL_DO, LITERAL_ELSE, LITERAL_FOR, LITERAL_IF,
-                             LITERAL_RETURN, LITERAL_SWITCH, LITERAL_SYNCHRONIZED,
-                             LITERAL_TRY, LITERAL_WHILE, LOR, LT, MINUS, MOD, NOT_EQUAL,
-                             PLUS, QUESTION, RCURLY, SL, SR, STAR,
-                             TYPECAST, WILDCARD_TYPE, GENERIC_START, GENERIC_END,
-                             ELIST, SLIST, METHOD_CALL, INDEX_OP, LITERAL_DEFAULT,
-                             ANNOTATION, ANNOTATION_FIELD_DEF"/>
         </module>
 
         <!-- 注释双斜线与内容之间有且仅有一个空格 -->

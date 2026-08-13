@@ -6,8 +6,6 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
-import com.njydsz.common.jdbc.monitor.SlaveLatencyMonitor;
-
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -16,13 +14,16 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
+import com.njydsz.common.jdbc.datasource.DynamicRoutingDataSource;
+import com.njydsz.common.jdbc.monitor.SlaveLatencyMonitor;
+
 /**
  * 从库延迟监控自动配置
  *
  * <p>当满足以下条件时启用延迟监控：
  * <ul>
  *   <li>{@code ydsz.jdbc.read-write-splitting.latency-check.enabled=true}</li>
- *   <li>Spring 容器中存在 baomidou {@code DynamicRoutingDataSource}</li>
+ *   <li>Spring 容器中存在自研 {@link DynamicRoutingDataSource}</li>
  *   <li>从库列表非空</li>
  * </ul>
  *
@@ -36,7 +37,7 @@ import org.springframework.context.annotation.Bean;
  */
 @AutoConfiguration(after = ReadWriteSplittingAutoConfiguration.class)
 @EnableConfigurationProperties(ReadWriteSplittingProperties.class)
-@ConditionalOnClass(name = "com.baomidou.dynamic.datasource.DynamicRoutingDataSource")
+@ConditionalOnClass(DynamicRoutingDataSource.class)
 @ConditionalOnProperty(prefix = "ydsz.jdbc.read-write-splitting.latency-check",
         name = "enabled", havingValue = "true")
 public class SlaveLatencyAutoConfiguration {
@@ -44,14 +45,14 @@ public class SlaveLatencyAutoConfiguration {
     /**
      * 创建从库延迟监控器
      *
-     * @param properties    读写分离配置
-     * @param routingDataSource baomidou 动态路由数据源
+     * @param properties        读写分离配置
+     * @param routingDataSource 动态路由数据源
      * @return 延迟监控器（如果无法获取从库数据源则返回 null）
      */
     @Bean
     @ConditionalOnMissingBean
     public SlaveLatencyMonitor slaveLatencyMonitor(ReadWriteSplittingProperties properties,
-                                                    ObjectProvider<com.baomidou.dynamic.datasource.DynamicRoutingDataSource> routingDataSource) {
+                                                    ObjectProvider<DynamicRoutingDataSource> routingDataSource) {
         Map<String, DataSource> slaveDataSources = resolveSlaveDataSources(properties, routingDataSource.getIfAvailable());
         if (slaveDataSources.isEmpty()) {
             return null;
@@ -62,18 +63,22 @@ public class SlaveLatencyAutoConfiguration {
     }
 
     /**
-     * 从 DynamicRoutingDataSource 中提取从库数据源
+     * 从动态路由数据源中提取从库数据源
+     *
+     * @param properties        读写分离配置
+     * @param routingDataSource 动态路由数据源
+     * @return 从库名称到数据源的映射
      */
     private Map<String, DataSource> resolveSlaveDataSources(ReadWriteSplittingProperties properties,
-                                                             com.baomidou.dynamic.datasource.DynamicRoutingDataSource routingDataSource) {
+                                                             DynamicRoutingDataSource routingDataSource) {
         if (routingDataSource == null) {
             return Collections.emptyMap();
         }
-        Map<String, DataSource> result = new HashMap<>();
-        Map<Object, ?> targetDataSources = routingDataSource.getTargetDataSources();
+        Map<String, DataSource> result = new HashMap<>(properties.getSlaveDsList().size());
+        Map<Object, DataSource> targetDataSources = routingDataSource.getDataSources();
         for (String slaveName : properties.getSlaveDsList()) {
-            Object ds = targetDataSources.get(slaveName);
-            if (ds instanceof DataSource dataSource) {
+            DataSource dataSource = targetDataSources.get(slaveName);
+            if (dataSource != null) {
                 result.put(slaveName, dataSource);
             }
         }

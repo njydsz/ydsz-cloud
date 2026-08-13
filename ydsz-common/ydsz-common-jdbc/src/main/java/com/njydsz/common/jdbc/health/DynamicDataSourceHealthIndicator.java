@@ -5,7 +5,7 @@ import javax.sql.DataSource;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
-import com.baomidou.dynamic.datasource.DynamicRoutingDataSource;
+import com.njydsz.common.jdbc.datasource.DynamicRoutingDataSource;
 import com.zaxxer.hikari.HikariDataSource;
 
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 动态多数据源健康检查指示器
  *
- * <p>当使用 baomidou dynamic-datasource 时，检查主数据源的连接池状态。
+ * <p>当自研 {@link DynamicRoutingDataSource} 注册后，检查主数据源的连接池状态。
  * 仅读取 HikariPoolMXBean 指标，不获取连接。
  *
  * @author ydsz-team
@@ -30,7 +30,7 @@ public class DynamicDataSourceHealthIndicator implements HealthIndicator {
 
     @Override
     public Health health() {
-        DataSource primaryDs = dynamicDataSource.getDataSource("master");
+        DataSource primaryDs = dynamicDataSource.getDataSources().get("master");
         if (primaryDs instanceof HikariDataSource hikariDs) {
             try {
                 var mxBean = hikariDs.getHikariPoolMXBean();

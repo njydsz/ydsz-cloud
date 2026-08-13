@@ -15,6 +15,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.code.BaseResultCode;
@@ -45,6 +47,8 @@ import com.njydsz.common.exception.custom.SysException;
  */
 @Component
 public class DefaultTemplateEngine implements TemplateEngine {
+
+    private static final Logger log = LoggerFactory.getLogger(DefaultTemplateEngine.class);
 
     /** 变量占位符正则：匹配 ${var} / ${a.b.c} / ${this} / ${@index} / ${var|filter:arg} */
     private static final Pattern VAR_PATTERN = Pattern.compile("\\$\\{([^}]+)\\}");
@@ -307,6 +311,7 @@ public class DefaultTemplateEngine implements TemplateEngine {
                         .toLocalDateTime().format(formatter);
             }
         } catch (Exception e) {
+            log.debug("[Template] 日期格式化降级为原始值, value={}, err={}", value, e.getMessage());
             return String.valueOf(value);
         }
         return String.valueOf(value);
@@ -330,6 +335,7 @@ public class DefaultTemplateEngine implements TemplateEngine {
                 return df.format(new BigDecimal(str));
             }
         } catch (Exception e) {
+            log.debug("[Template] 数字格式化降级为原始值, value={}, err={}", value, e.getMessage());
             return String.valueOf(value);
         }
         return String.valueOf(value);

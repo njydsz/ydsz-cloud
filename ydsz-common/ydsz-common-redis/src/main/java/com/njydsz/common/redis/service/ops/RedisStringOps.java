@@ -1,5 +1,6 @@
 package com.njydsz.common.redis.service.ops;
 
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,6 +9,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -20,7 +22,10 @@ import java.util.stream.Collectors;
 import jakarta.annotation.PostConstruct;
 
 import org.springframework.data.redis.RedisConnectionFailureException;
-import org.springframework.data.redis.core.*;
+import org.springframework.data.redis.core.Cursor;
+import org.springframework.data.redis.core.RedisCallback;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 import com.njydsz.common.redis.config.RedisProperties;
@@ -890,6 +895,38 @@ public class RedisStringOps {
             recordError("bitCount", e);
             log.error("【Redis】BITCOUNT 操作失败 | key={} | error={}", key, e);
             return 0;
+        }
+    }
+
+    // ============================ Lua 脚本操作 =============================
+
+    /**
+     * 执行 Lua 脚本（带 SHA 缓存优化）。
+     *
+     * <p>通过 {@link DefaultRedisScript} 执行脚本，Spring Data Redis 脚本执行器
+     * 会先执行 {@code SCRIPT LOAD} 缓存脚本 SHA，后续调用自动使用 {@code EVALSHA}，
+     * 避免每次请求都传输完整脚本内容，降低网络开销。
+     *
+     * @param script     Lua 脚本内容，不允许为 null
+     * @param returnType 返回值类型
+     * @param keys       键列表（自动添加统一前缀）
+     * @param args       脚本参数
+     * @param <T>        返回值类型
+     * @return 脚本执行结果；脚本为空或执行异常时返回 null
+     */
+    public <T> T executeScriptWithShaCache(String script, Class<T> returnType,
+                                           List<String> keys, Object... args) {
+        if (script == null || script.isEmpty()) {
+            return null;
+        }
+        try {
+            List<String> formattedKeys = formatKeys(keys);
+            DefaultRedisScript<T> redisScript = new DefaultRedisScript<>(script, returnType);
+            return redisTemplate.execute(redisScript, formattedKeys, args);
+        } catch (Exception e) {
+            recordError("executeScript", e);
+            log.error("【Redis】Lua 脚本执行失败 | error={}", e);
+            return null;
         }
     }
 

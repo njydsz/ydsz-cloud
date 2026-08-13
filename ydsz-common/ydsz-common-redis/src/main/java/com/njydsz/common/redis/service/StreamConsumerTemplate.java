@@ -342,7 +342,7 @@ public class StreamConsumerTemplate implements DisposableBean {
      */
     private List<StreamMessage> readMessages(int batchSize) {
         // 先读取 pending 消息（从 "0" 偏移开始 = 读 pending）
-        List<StreamMessage> pending = streamOps.readGroup(streamKey, groupName, consumerName, 0, batchSize);
+        List<StreamMessage> pending = streamOps.readGroup(streamKey, groupName, consumerName, 0, true);
         if (!pending.isEmpty()) {
             return pending;
         }

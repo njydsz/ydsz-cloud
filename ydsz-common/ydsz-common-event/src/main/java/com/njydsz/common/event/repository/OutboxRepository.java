@@ -113,6 +113,8 @@ public class OutboxRepository {
      * @return 待投递消息列表
      */
     public List<OutboxMessage> findPending(int limit) {
+        // tableName is validated at construction via TABLE_NAME_PATTERN regex (^[a-zA-Z_][a-zA-Z0-9_]*$),
+        // stored as final, and sourced from EventProperties config (not user input) — safe from SQL injection
         String sql = "SELECT * FROM " + tableName
                 + " WHERE status = ? AND (next_retry_at IS NULL OR next_retry_at <= ?)"
                 + " ORDER BY priority DESC, created_at ASC"
@@ -141,6 +143,7 @@ public class OutboxRepository {
             }
             placeholders.append("?");
         }
+        // tableName validated at construction (see findPending) — safe from SQL injection
         String sql = "UPDATE " + tableName
                 + " SET status = ?, updated_at = ?"
                 + " WHERE id IN (" + placeholders + ") AND status = ?";
@@ -163,6 +166,7 @@ public class OutboxRepository {
      * @return true 表示 claim 成功，false 表示消息已被其他实例 claim
      */
     public boolean claimForProcessing(String id) {
+        // tableName validated at construction (see findPending) — safe from SQL injection
         String sql = "UPDATE " + tableName
                 + " SET status = ?, updated_at = ?"
                 + " WHERE id = ? AND status = ?";
@@ -182,6 +186,7 @@ public class OutboxRepository {
      */
     public int reclaimStaleProcessing(int thresholdMinutes) {
         Instant cutoff = Instant.now().minusSeconds(thresholdMinutes * 60L);
+        // tableName validated at construction (see findPending) — safe from SQL injection
         String sql = "UPDATE " + tableName
                 + " SET status = ?, updated_at = ?"
                 + " WHERE status = ? AND updated_at < ?";
@@ -202,6 +207,7 @@ public class OutboxRepository {
      * @param id 消息 ID
      */
     public void markAsSent(String id) {
+        // tableName validated at construction (see findPending) — safe from SQL injection
         String sql = "UPDATE " + tableName
                 + " SET status = ?, sent_at = ?, updated_at = ?, error_message = NULL"
                 + " WHERE id = ?";
@@ -220,6 +226,7 @@ public class OutboxRepository {
      * @param backoffSeconds  退避秒数
      */
     public void markAsFailed(String id, String errorMessage, long backoffSeconds) {
+        // tableName validated at construction (see findPending) — safe from SQL injection
         String sql = "UPDATE " + tableName
                 + " SET retry_count = retry_count + 1, error_message = ?,"
                 + " next_retry_at = ?, updated_at = ?,"
@@ -240,6 +247,7 @@ public class OutboxRepository {
      * @return 状态 → 数量
      */
     public Map<String, Long> countByStatus() {
+        // tableName validated at construction (see findPending) — safe from SQL injection
         String sql = "SELECT status, COUNT(*) as cnt FROM " + tableName + " GROUP BY status";
         return jdbcTemplate.query(sql, rs -> {
             Map<String, Long> result = new HashMap<>();
@@ -257,6 +265,7 @@ public class OutboxRepository {
      * @return 删除条数
      */
     public int deleteSentBefore(Instant beforeTime) {
+        // tableName validated at construction (see findPending) — safe from SQL injection
         String sql = "DELETE FROM " + tableName + " WHERE status = ? AND sent_at < ?";
         return jdbcTemplate.update(sql, OutboxStatus.SENT.name(), Timestamp.from(beforeTime));
     }
@@ -271,6 +280,7 @@ public class OutboxRepository {
         if (deduplicationId == null || deduplicationId.isBlank()) {
             return false;
         }
+        // tableName validated at construction (see findPending) — safe from SQL injection
         String sql = "SELECT COUNT(*) FROM " + tableName
                 + " WHERE deduplication_id = ? AND status IN (?, ?)";
         Long count = jdbcTemplate.queryForObject(sql, Long.class,

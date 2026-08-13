@@ -11,6 +11,7 @@ import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.lock.annotation.LockType;
 import com.njydsz.common.lock.metrics.LockMetrics;
+import com.njydsz.common.lock.notify.LockReleaseNotifier;
 import com.njydsz.common.lock.scheduler.LockWatchDog;
 
 import lombok.extern.slf4j.Slf4j;
@@ -21,15 +22,15 @@ import com.njydsz.common.util.id.IdGenerator;
  *
  * <p>提供分布式锁的公共能力：
  * <ul>
- *   <li>客户端标识生成与管理（基于 Redis 存储，线程池安全）</li>
+ *   <li>客户端标识生成与管理（线程级 UUID，本地缓存，线程池安全）</li>
  *   <li>锁超时时间记录与管理</li>
  *   <li>WatchDog 自动续期机制集成</li>
- *   <li>等待重试退避策略</li>
+ *   <li>等待重试退避策略（可配合 {@link LockReleaseNotifier} 释放通知避免空轮询）</li>
  * </ul>
  *
  * <p><b>设计要点：</b>
- * 客户端标识使用 Redis Hash 存储（lock:client:registry）作为持久存储，Caffeine 缓存作为线程级前置缓存，
- * 确保线程池环境下 clientId 不会因线程复用而混乱。
+ * 客户端标识使用 {@code IdGenerator + threadId} 生成，通过本地缓存（key 为 {@code threadId:lockKey}）管理，
+ * 确保线程池环境下 clientId 不会因线程复用而混乱，且不依赖 Redis 额外往返。
  * <p><b>内存安全：</b>使用 Caffeine 缓存替代 ThreadLocal，通过 TTL（30 分钟）和最大容量（10000）自动清理，
  * 彻底避免线程池复用场景下的 ThreadLocal 内存泄漏。
  *
@@ -38,40 +39,6 @@ import com.njydsz.common.util.id.IdGenerator;
  */
 @Slf4j
 public abstract class AbstractRedisDistributedLock implements DistributedLocker {
-
-    /**
-     * 客户端标识注册表 Redis Key 前缀
-     */
-    private static final String CLIENT_REGISTRY_KEY = "lock:client:registry";
-
-    /**
-     * 注册表 Lua 脚本 - 获取或创建 clientId
-     * 如果已存在则返回现有值，否则生成新值
-     */
-    private static final String GET_OR_CREATE_CLIENT_LUA =
-            "local key = 'lock:client:registry' " +
-            "local field = ARGV[1] " +
-            "local ttlMs = ARGV[2] " +
-            "local existing = redis.call('HGET', key, field) " +
-            "if existing then " +
-            "    redis.call('PEXPIRE', key, ttlMs) " +
-            "    return existing " +
-            "else " +
-            "    local newId = ARGV[3] " +
-            "    redis.call('HSET', key, field, newId) " +
-            "    redis.call('PEXPIRE', key, ttlMs) " +
-            "    return newId " +
-            "end";
-
-    /**
-     * 注册表 Lua 脚本 - 删除 clientId
-     */
-    private static final String REMOVE_CLIENT_LUA =
-            "redis.call('HDEL', 'lock:client:registry', ARGV[1]) " +
-            "if redis.call('HLEN', 'lock:client:registry') == 0 then " +
-            "    redis.call('DEL', 'lock:client:registry') " +
-            "end " +
-            "return 1";
 
     /**
      * 释放锁 Lua 脚本
@@ -95,12 +62,15 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
      * 锁指标收集器
      */
     private LockMetrics lockMetrics;
+    /**
+     * 锁释放通知器（可选，未配置时退化为退避轮询）
+     */
+    private LockReleaseNotifier lockReleaseNotifier;
 
     /**
-     * 本地缓存 clientId，作为 Redis 注册表的前置缓存
+     * 本地缓存 clientId，线程级（key 为 {@code threadId:lockKey}）
      * <p>使用 ydsz-common-cache 替代 ThreadLocal，通过 TTL 和最大容量自动清理，
      * 彻底避免线程池复用场景下的内存泄漏。
-     * <p>缓存键格式：{@code threadId:lockKey}，确保不同线程的 clientId 互不干扰。
      */
     private final Cache<String, String> clientIdCache = YdszCache.<String, String>newBuilder()
             .type(CacheType.STRIPED)
@@ -119,13 +89,21 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
             .build();
 
     private final DefaultRedisScript<Long> releaseLockScript;
-    private final DefaultRedisScript<String> getOrCreateClientScript;
-    private final DefaultRedisScript<Long> removeClientScript;
 
     /**
      * 锁键命名空间前缀，用于多应用共享 Redis 时的隔离
      */
     private final String keyNamespace;
+
+    /**
+     * 最小退避等待时间（毫秒）
+     */
+    private static final long MIN_BACKOFF_MILLIS = 10;
+
+    /**
+     * 最大退避等待时间（毫秒）
+     */
+    private static final long MAX_BACKOFF_MILLIS = 200;
 
     protected AbstractRedisDistributedLock(StringRedisTemplate stringRedisTemplate) {
         this(stringRedisTemplate, null);
@@ -135,8 +113,6 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
         this.stringRedisTemplate = stringRedisTemplate;
         this.keyNamespace = (namespace != null && !namespace.isEmpty()) ? namespace : null;
         this.releaseLockScript = new DefaultRedisScript<>(RELEASE_LOCK_LUA_SCRIPT, Long.class);
-        this.getOrCreateClientScript = new DefaultRedisScript<>(GET_OR_CREATE_CLIENT_LUA, String.class);
-        this.removeClientScript = new DefaultRedisScript<>(REMOVE_CLIENT_LUA, Long.class);
     }
 
     /**
@@ -174,6 +150,17 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
     }
 
     /**
+     * 设置锁释放通知器（可选）
+     *
+     * <p>未配置时等待路径退化为指数退避轮询。</p>
+     *
+     * @param lockReleaseNotifier 释放通知器实例
+     */
+    public void setLockReleaseNotifier(LockReleaseNotifier lockReleaseNotifier) {
+        this.lockReleaseNotifier = lockReleaseNotifier;
+    }
+
+    /**
      * 获取锁续期看门狗
      *
      * @return 看门狗实例，未设置时返回 null
@@ -185,8 +172,12 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
     /**
      * 获取或生成客户端标识
      *
-     * <p>优先从本地 Caffeine 缓存获取，未命中则从 Redis 注册表获取或创建。
-     * 生成规则: UUID + threadId，确保全局唯一性。
+     * <p>采用 {@code IdGenerator + threadId} 本地生成并缓存，不依赖 Redis 注册表：
+     * <ul>
+     *   <li>标识按 {@code threadId:lockKey} 缓存，线程池环境下互不干扰</li>
+     *   <li>避免原注册表方案在跨 JVM 共享 Redis 时线程号碰撞导致 clientId 复用</li>
+     *   <li>省去每次加锁/解锁的 Redis 往返开销</li>
+     * </ul>
      *
      * @param lockKey 锁的键
      * @return 客户端标识
@@ -197,29 +188,9 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
         if (cached != null) {
             return cached;
         }
-
-        String fieldKey = buildRegistryField(lockKey);
         String newClientId = IdGenerator.nextIdStr() + ":" + Thread.currentThread().threadId();
-        long ttlMs = 3600000L;
-
-        try {
-            String existingId = stringRedisTemplate.execute(
-                    getOrCreateClientScript,
-                    Collections.singletonList(CLIENT_REGISTRY_KEY),
-                    fieldKey,
-                    String.valueOf(ttlMs),
-                    newClientId
-            );
-
-            String resolvedId = existingId != null ? existingId : newClientId;
-            clientIdCache.put(cacheKey, resolvedId);
-
-            return resolvedId;
-        } catch (Exception e) {
-            log.warn("[ydsz-lock]Redis 注册表获取 clientId 失败，使用本地生成 | lockKey={} | error={}", lockKey, e.getMessage());
-            clientIdCache.put(cacheKey, newClientId);
-            return newClientId;
-        }
+        clientIdCache.put(cacheKey, newClientId);
+        return newClientId;
     }
 
     /**
@@ -228,19 +199,7 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
      * @param lockKey 锁的键
      */
     protected void clearClientId(String lockKey) {
-        String cacheKey = buildCacheKey(lockKey);
-        clientIdCache.invalidate(cacheKey);
-
-        String fieldKey = buildRegistryField(lockKey);
-        try {
-            stringRedisTemplate.execute(
-                    removeClientScript,
-                    Collections.singletonList(CLIENT_REGISTRY_KEY),
-                    fieldKey
-            );
-        } catch (Exception e) {
-            log.warn("[ydsz-lock]清理 Redis 注册表 clientId 失败 | lockKey={} | error={}", lockKey, e.getMessage());
-        }
+        clientIdCache.invalidate(buildCacheKey(lockKey));
     }
 
     /**
@@ -313,16 +272,6 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
     }
 
     /**
-     * 构建注册表字段键
-     *
-     * @param lockKey 锁的键
-     * @return 注册表字段键
-     */
-    private String buildRegistryField(String lockKey) {
-        return Thread.currentThread().threadId() + ":" + lockKey;
-    }
-
-    /**
      * 构建本地缓存键
      * <p>使用 threadId 前缀确保不同线程的缓存条目互不干扰，
      * 同时避免使用 ThreadLocal 导致的内存泄漏。
@@ -337,8 +286,9 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
     /**
      * 释放锁
      *
-     * <p>通过 Lua 脚本原子性释放锁，释放成功后停止看门狗续期并减少活跃锁计数，
-     * 无论释放是否成功都会清理本地缓存，防止线程池复用场景下的泄漏。
+     * <p>通过 Lua 脚本原子性释放锁，释放成功后停止看门狗续期、减少活跃锁计数
+     * 并广播释放通知（唤醒其他等待线程），无论释放是否成功都会清理本地缓存，
+     * 防止线程池复用场景下的泄漏。
      *
      * @param lockKey   锁的键
      * @param lockValue 锁的值（客户端标识）
@@ -356,9 +306,11 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
                 if (lockWatchDog != null) {
                     lockWatchDog.stopWatch(lockKey);
                 }
-                // 减少活跃锁计数
                 if (lockMetrics != null) {
                     lockMetrics.decrementActiveLocks();
+                }
+                if (lockReleaseNotifier != null) {
+                    lockReleaseNotifier.notifyRelease(lockKey);
                 }
             }
             return released;
@@ -366,7 +318,7 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
             log.error("[ydsz-lock]解锁异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
             return false;
         } finally {
-            // 无论解锁是否成功，始终清理 ThreadLocal，防止线程池复用场景下的泄漏
+            // 无论解锁是否成功，始终清理本地缓存，防止线程池复用场景下的泄漏
             clearClientId(lockKey);
             clearLeaseTime(lockKey);
         }
@@ -432,20 +384,38 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
     }
 
     /**
-     * 最小退避等待时间（毫秒）
+     * 单次获取锁（不做命名空间处理，使用调用方传入的完整键）
+     *
+     * <p>供 {@link #tryLockWithWait} 与子类非等待 {@code tryLock} 复用，
+     * 避免带命名空间键被二次前缀导致锁键漂移。
+     *
+     * @param lockKey   锁的键（已含命名空间前缀）
+     * @param leaseTime 租约时间
+     * @param timeUnit  时间单位
+     * @return 锁值，获取成功返回非 null
      */
-    private static final long MIN_BACKOFF_MILLIS = 10;
-    /**
-     * 最大退避等待时间（毫秒）
-     */
-    private static final long MAX_BACKOFF_MILLIS = 200;
+    protected String tryAcquireOnce(String lockKey, long leaseTime, TimeUnit timeUnit) {
+        String clientId = getClientId(lockKey);
+        String lockValue = doAcquireLock(lockKey, clientId, leaseTime, timeUnit);
+        if (lockValue == null) {
+            // 锁获取失败时清理本地缓存，防止泄漏（调用方不会调用 unlock）
+            clearClientId(lockKey);
+            clearLeaseTime(lockKey);
+            return null;
+        }
+        if (lockMetrics != null) {
+            lockMetrics.incrementActiveLocks();
+        }
+        return lockValue;
+    }
 
     /**
      * 带等待重试的锁获取
      *
-     * <p>使用指数退避策略，初始等待 10ms，最大 200ms
+     * <p>等待策略：配置了 {@link LockReleaseNotifier} 时，通过 Redis pub/sub 释放通知
+     * 唤醒等待线程，避免空轮询放大 Redis QPS；未配置时使用指数退避（10ms → 200ms）。
      *
-     * @param lockKey   锁的键
+     * @param lockKey   锁的键（已含命名空间前缀）
      * @param waitTime  等待时间
      * @param leaseTime 租约时间
      * @param timeUnit  时间单位
@@ -458,7 +428,7 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
         long currentBackoff = MIN_BACKOFF_MILLIS;
         String lockValue = null;
         while (true) {
-            lockValue = tryLock(lockKey, leaseTime, timeUnit);
+            lockValue = tryAcquireOnce(lockKey, leaseTime, timeUnit);
             if (lockValue != null) {
                 break;
             }
@@ -475,22 +445,46 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
                 return null;
             }
             long remainingWait = waitNanos - elapsed;
-            long sleepMillis = Math.min(TimeUnit.NANOSECONDS.toMillis(remainingWait), currentBackoff);
-            if (sleepMillis > 0) {
-                Thread.sleep(sleepMillis);
-            }
+            waitBeforeRetry(lockKey, remainingWait, currentBackoff);
             currentBackoff = Math.min(currentBackoff * 2, MAX_BACKOFF_MILLIS);
             if (Thread.currentThread().isInterrupted()) {
                 throw new InterruptedException();
             }
         }
-        // 锁获取成功，记录等待时间和活跃锁
+        // 锁获取成功，记录等待时间
         long waitTimeMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
         if (lockMetrics != null) {
             lockMetrics.recordWaitDuration(waitTimeMillis, getLockType().name());
-            lockMetrics.incrementActiveLocks();
         }
         return lockValue;
+    }
+
+    /**
+     * 等待后重试
+     *
+     * <p>优先使用释放通知阻塞等待（上限 {@link LockReleaseNotifier#getMaxAwaitMillis()}），
+     * 未配置通知器时退化为指数退避睡眠。</p>
+     *
+     * @param lockKey       锁的键
+     * @param remainingWait 剩余可等待时间（纳秒）
+     * @param currentBackoff 当前退避时间（毫秒）
+     * @throws InterruptedException 线程中断异常
+     */
+    private void waitBeforeRetry(String lockKey, long remainingWait, long currentBackoff) throws InterruptedException {
+        if (lockReleaseNotifier != null) {
+            long awaitMillis = Math.min(
+                    TimeUnit.NANOSECONDS.toMillis(remainingWait),
+                    LockReleaseNotifier.getMaxAwaitMillis()
+            );
+            if (awaitMillis > 0) {
+                lockReleaseNotifier.awaitRelease(lockKey, awaitMillis);
+            }
+            return;
+        }
+        long sleepMillis = Math.min(TimeUnit.NANOSECONDS.toMillis(remainingWait), currentBackoff);
+        if (sleepMillis > 0) {
+            Thread.sleep(sleepMillis);
+        }
     }
 
     /**
