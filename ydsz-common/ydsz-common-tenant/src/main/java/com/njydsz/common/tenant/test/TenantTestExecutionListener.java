@@ -7,9 +7,8 @@ import java.util.Map;
 import org.springframework.test.context.TestContext;
 import org.springframework.test.context.TestExecutionListener;
 
-import com.njydsz.common.core.context.BizContextKeys;
-import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.tenant.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 
 /**
  * 测试执行监听器：在测试方法执行前后注入/清除租户上下文。
@@ -63,14 +62,12 @@ public class TenantTestExecutionListener implements TestExecutionListener {
         }
 
         TenantContext context = builder.build();
-        RequestContext.put(BizContextKeys.KEY_TENANT_CONTEXT, context);
-        RequestContext.setTenantId(tenantId);
+        TenantContextHolder.set(context);
     }
 
     @Override
     public void afterTestMethod(TestContext testContext) {
-        RequestContext.remove(BizContextKeys.KEY_TENANT_CONTEXT);
-        RequestContext.remove(RequestContext.KEY_TENANT_ID);
+        TenantContextHolder.clear();
     }
 
     private WithMockTenant findAnnotation(TestContext testContext) {

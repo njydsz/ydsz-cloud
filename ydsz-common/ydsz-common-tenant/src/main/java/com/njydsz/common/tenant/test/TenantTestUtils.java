@@ -4,9 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.common.core.context.BizContextKeys;
-import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.tenant.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 
 /**
  * 测试用租户上下文工具类。
@@ -64,8 +63,7 @@ public final class TenantTestUtils {
         TenantContext context = systemTenant
                 ? TenantContext.system(tenantId)
                 : TenantContext.of(tenantId);
-        RequestContext.put(BizContextKeys.KEY_TENANT_CONTEXT, context);
-        RequestContext.setTenantId(tenantId);
+        TenantContextHolder.set(context);
     }
 
     /**
@@ -96,23 +94,21 @@ public final class TenantTestUtils {
             });
         }
         TenantContext context = builder.build();
-        RequestContext.put(BizContextKeys.KEY_TENANT_CONTEXT, context);
-        RequestContext.setTenantId(tenantId);
+        TenantContextHolder.set(context);
     }
 
     /**
      * 初始化跳过隔离的上下文（模拟匿名 URL）。
      */
     public static void setUpSkipIsolation() {
-        RequestContext.put(BizContextKeys.KEY_TENANT_CONTEXT, TenantContext.skip());
+        TenantContextHolder.set(TenantContext.skip());
     }
 
     /**
      * 清除租户上下文。
      */
     public static void clearContext() {
-        RequestContext.remove(BizContextKeys.KEY_TENANT_CONTEXT);
-        RequestContext.remove(RequestContext.KEY_TENANT_ID);
+        TenantContextHolder.clear();
     }
 
     /**
@@ -121,7 +117,7 @@ public final class TenantTestUtils {
      * @return 租户上下文，可能为 null
      */
     public static TenantContext getCurrentContext() {
-        return (TenantContext) RequestContext.get(BizContextKeys.KEY_TENANT_CONTEXT);
+        return TenantContextHolder.get();
     }
 
     /**
