@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
 
 import org.springframework.boot.health.contributor.HealthIndicator;
 
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.health.MessageHealthIndicator;
@@ -66,9 +66,9 @@ public class MessageAutoConfiguration {
     @Bean
     @ConditionalOnClass(HealthIndicator.class)
     @ConditionalOnMissingBean(MessageHealthIndicator.class)
-    public MessageHealthIndicator messageHealthIndicator(RedisService redisService,
+    public MessageHealthIndicator messageHealthIndicator(RedisStringOps redisStringOps,
                                                           MsgLogMapper msgLogMapper,
                                                           ChannelRouter channelRouter) {
-        return new MessageHealthIndicator(redisService, msgLogMapper, channelRouter);
+        return new MessageHealthIndicator(redisStringOps, msgLogMapper, channelRouter);
     }
 }

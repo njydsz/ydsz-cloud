@@ -2,6 +2,8 @@ package com.njydsz.common.util.concurrent;
 
 import java.util.Objects;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadFactory;
@@ -102,13 +104,13 @@ public final class BoundedVirtualThreadScheduler {
      * @throws InterruptedException   获取信号量许可被中断时
      * @throws RejectedExecutionException 调度器已关闭时
      */
-    public <T> java.util.concurrent.Future<T> submitWithResult(Callable<T> task) throws InterruptedException {
+    public <T> Future<T> submitWithResult(Callable<T> task) throws InterruptedException {
         Objects.requireNonNull(task, "task must not be null");
         if (shutdown) {
             throw new RejectedExecutionException("Scheduler has been shut down");
         }
 
-        java.util.concurrent.CompletableFuture<T> future = new java.util.concurrent.CompletableFuture<>();
+        CompletableFuture<T> future = new CompletableFuture<>();
         concurrencyLimiter.acquire();
         threadFactory.newThread(() -> {
             try {

@@ -7,6 +7,8 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
 import java.lang.reflect.Constructor;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -569,11 +571,11 @@ public final class MapUtils {
                 return b != null ? b : null;
             }
             // BigDecimal / BigInteger
-            if (paramType == java.math.BigDecimal.class) {
-                return new java.math.BigDecimal(str);
+            if (paramType == BigDecimal.class) {
+                return new BigDecimal(str);
             }
-            if (paramType == java.math.BigInteger.class) {
-                return new java.math.BigInteger(str);
+            if (paramType == BigInteger.class) {
+                return new BigInteger(str);
             }
             // 3.0.0: 新增 JDK 常用业务类型
             if (paramType == java.util.UUID.class) {

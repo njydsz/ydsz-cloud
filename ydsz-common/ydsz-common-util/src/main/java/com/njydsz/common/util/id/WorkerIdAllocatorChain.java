@@ -1,5 +1,6 @@
 package com.njydsz.common.util.id;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -52,7 +53,7 @@ public final class WorkerIdAllocatorChain implements WorkerIdAllocator {
      * @return 新的策略链实例
      */
     public WorkerIdAllocatorChain prepend(WorkerIdAllocator allocator) {
-        List<WorkerIdAllocator> newChain = new java.util.ArrayList<>();
+        List<WorkerIdAllocator> newChain = new ArrayList<>();
         newChain.add(allocator);
         newChain.addAll(chain);
         return new WorkerIdAllocatorChain(newChain);
@@ -65,7 +66,7 @@ public final class WorkerIdAllocatorChain implements WorkerIdAllocator {
      * @return 新的策略链实例
      */
     public WorkerIdAllocatorChain append(WorkerIdAllocator allocator) {
-        List<WorkerIdAllocator> newChain = new java.util.ArrayList<>(chain);
+        List<WorkerIdAllocator> newChain = new ArrayList<>(chain);
         newChain.add(allocator);
         return new WorkerIdAllocatorChain(newChain);
     }

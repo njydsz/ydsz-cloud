@@ -8,6 +8,7 @@ import com.njydsz.common.json.annotation.JsonTypeName;
 import com.njydsz.common.json.annotation.JsonSubType;
 import com.njydsz.common.json.annotation.JsonSubTypes;
 import com.njydsz.common.json.annotation.JsonTypeInfo;
+import com.njydsz.common.json.util.BoundedLruCache;
 
 /**
  * 多态类型解析器
@@ -38,8 +39,8 @@ import com.njydsz.common.json.annotation.JsonTypeInfo;
 public final class PolymorphicTypeResolver {
 
     /** 类型映射缓存（有界 LRU，容量 256） */
-    private static final com.njydsz.common.json.util.BoundedLruCache<Class<?>, TypeMapping> TYPE_MAPPING_CACHE =
-        new com.njydsz.common.json.util.BoundedLruCache<>(256);
+    private static final BoundedLruCache<Class<?>, TypeMapping> TYPE_MAPPING_CACHE =
+        new BoundedLruCache<>(256);
 
     /** 默认类型属性名（预留扩展） */
     static final String DEFAULT_TYPE_PROPERTY = "type";

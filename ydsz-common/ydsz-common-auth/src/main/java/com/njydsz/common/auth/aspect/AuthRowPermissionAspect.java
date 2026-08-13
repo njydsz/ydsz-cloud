@@ -2,6 +2,7 @@ package com.njydsz.common.auth.aspect;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -104,7 +105,7 @@ public class AuthRowPermissionAspect {
      */
     @Around("rowPermissionPointCut()")
     public Object doAround(ProceedingJoinPoint joinPoint) throws Throwable {
-        Map<String, String> snapshot = new java.util.HashMap<>(RequestContext.getExtraHeaders());
+        Map<String, String> snapshot = new HashMap<>(RequestContext.getExtraHeaders());
         MethodSignature signature = (MethodSignature) joinPoint.getSignature();
         Method method = signature.getMethod();
 

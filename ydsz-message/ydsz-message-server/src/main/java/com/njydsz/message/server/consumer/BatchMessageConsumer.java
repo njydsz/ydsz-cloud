@@ -8,7 +8,6 @@ import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import com.njydsz.common.lock.idempotent.IdempotentStrategy;
-import com.njydsz.common.redis.service.RedisService;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.queue.constant.YdszMessageTopics;
@@ -54,7 +53,6 @@ import lombok.extern.slf4j.Slf4j;
 public class BatchMessageConsumer implements RocketMQListener<String> {
 
     private final MessageService messageService;
-    private final RedisService redisService;
     private final IdempotentStrategy idempotentStrategy;
 
     /** 批量消费幂等前缀 */

@@ -1,8 +1,9 @@
 package com.njydsz.common.cache.support;
 
 import java.util.Collection;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -56,14 +57,15 @@ public class CacheScheduler {
   /** 默认构造函数（使用守护线程） */
   public CacheScheduler() {
     this.scheduler =
-        Executors.newScheduledThreadPool(
+        new ScheduledThreadPoolExecutor(
             2,
             r -> {
               Thread t = new Thread(r, "CacheScheduler");
               t.setDaemon(true);
               t.setPriority(Thread.NORM_PRIORITY - 1);
               return t;
-            });
+            },
+            new ThreadPoolExecutor.CallerRunsPolicy());
     log.info("缓存调度器已创建");
   }
 
@@ -75,14 +77,15 @@ public class CacheScheduler {
    */
   public CacheScheduler(int poolSize, String threadName) {
     this.scheduler =
-        Executors.newScheduledThreadPool(
+        new ScheduledThreadPoolExecutor(
             poolSize,
             r -> {
               Thread t = new Thread(r, threadName);
               t.setDaemon(true);
               t.setPriority(Thread.NORM_PRIORITY - 1);
               return t;
-            });
+            },
+            new ThreadPoolExecutor.CallerRunsPolicy());
     log.info("缓存调度器已创建，poolSize={}, threadName={}", poolSize, threadName);
   }
 

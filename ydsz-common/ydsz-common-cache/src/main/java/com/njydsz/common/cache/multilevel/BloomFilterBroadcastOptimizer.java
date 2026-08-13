@@ -3,7 +3,9 @@ package com.njydsz.common.cache.multilevel;
 import java.nio.charset.StandardCharsets;
 import java.util.BitSet;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -79,7 +81,7 @@ public class BloomFilterBroadcastOptimizer implements CacheInvalidationBroadcast
   private final AtomicLong insertionCount = new AtomicLong(0);
 
   /** 注册的处理器 */
-  private final java.util.List<InvalidationHandler> handlers = new java.util.concurrent.CopyOnWriteArrayList<>();
+  private final List<InvalidationHandler> handlers = new CopyOnWriteArrayList<>();
 
   /** 本地缓存注册表 */
   private final ConcurrentHashMap<String, com.njydsz.common.cache.api.Cache<?, ?>> localCaches = new ConcurrentHashMap<>();

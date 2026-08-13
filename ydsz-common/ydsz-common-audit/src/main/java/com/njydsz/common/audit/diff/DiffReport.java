@@ -2,7 +2,9 @@ package com.njydsz.common.audit.diff;
 
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.njydsz.common.json.YdszJson;
@@ -93,9 +95,9 @@ public class DiffReport implements Serializable {
         if (diffs.isEmpty()) {
             return "[]";
         }
-        List<java.util.Map<String, Object>> patchOps = diffs.stream()
+        List<Map<String, Object>> patchOps = diffs.stream()
                 .map(diff -> {
-                    java.util.Map<String, Object> op = new java.util.LinkedHashMap<>();
+                    Map<String, Object> op = new LinkedHashMap<>();
                     op.put("op", "replace");
                     op.put("path", "/" + diff.getFieldName());
                     op.put("value", diff.getNewValue());

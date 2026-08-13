@@ -14,10 +14,10 @@ import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -1626,12 +1626,12 @@ try {
             this.nodeId = INSTANCE_ID;
         }
         // P1-1: 初始化重试调度线程池
-        this.retryScheduler = Executors.newScheduledThreadPool(
+        this.retryScheduler = new ScheduledThreadPoolExecutor(
                 2, r -> {
                     Thread t = new Thread(r, "ydsz-job-retry");
                     t.setDaemon(true);
                     return t;
-                });
+                }, new ThreadPoolExecutor.CallerRunsPolicy());
         // P1-7: 初始化任务执行线程池（隔离调度线程与执行线程）
         // P0-3: 使用 PriorityBlockingQueue 实现优先级调度
         CronjobProperties.Executor execConfig = cronjobProperties.getExecutor();

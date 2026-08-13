@@ -1,7 +1,6 @@
 package com.njydsz.workflow.server.service.impl.definition;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;

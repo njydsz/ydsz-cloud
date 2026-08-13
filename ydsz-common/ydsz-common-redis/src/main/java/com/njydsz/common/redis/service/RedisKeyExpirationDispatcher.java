@@ -6,7 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import jakarta.annotation.PreDestroy;
 
@@ -81,11 +83,15 @@ public class RedisKeyExpirationDispatcher implements ApplicationContextAware, Sm
                                         RedisProperties redisProperties) {
         this.listenerContainer = Objects.requireNonNull(listenerContainer, "listenerContainer 不能为 null");
         this.redisProperties = redisProperties;
-        this.executorService = Executors.newFixedThreadPool(2, r -> {
-            Thread t = new Thread(r, THREAD_POOL_NAME + "handler");
-            t.setDaemon(true);
-            return t;
-        });
+        this.executorService = new ThreadPoolExecutor(
+                2, 2, 0L, TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<>(1024),
+                r -> {
+                    Thread t = new Thread(r, THREAD_POOL_NAME + "handler");
+                    t.setDaemon(true);
+                    return t;
+                },
+                new ThreadPoolExecutor.CallerRunsPolicy());
     }
 
     @Override

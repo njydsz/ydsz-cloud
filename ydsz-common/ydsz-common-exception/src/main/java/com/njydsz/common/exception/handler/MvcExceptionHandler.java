@@ -3,6 +3,9 @@ package com.njydsz.common.exception.handler;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import org.slf4j.MDC;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -146,7 +149,7 @@ public class MvcExceptionHandler extends BaseExceptionHandler {
         publishExceptionEvent(e, request.getRequestURI(), traceId, resolvedMsg);
 
         // 构建 207 响应体
-        java.util.Map<String, Object> batchResult = new java.util.LinkedHashMap<>();
+        Map<String, Object> batchResult = new LinkedHashMap<>();
         batchResult.put("successCount", e.getSuccessCount());
         batchResult.put("failureCount", e.getFailureCount());
         batchResult.put("totalCount", e.getTotalCount());

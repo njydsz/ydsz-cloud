@@ -19,6 +19,7 @@ import com.njydsz.common.json.cache.FieldMeta;
 import com.njydsz.common.json.cache.SerializerCache;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.internal.JsonConfig;
+import com.njydsz.common.json.util.BoundedLruCache;
 import com.njydsz.common.json.writer.JSONWriter;
 
 import java.sql.Date;
@@ -875,8 +876,8 @@ public final class ValueWriter {
     /**
      * 日期格式化器缓存（有界 LRU 容量 128，防止动态 pattern 场景下无界增长）
      */
-    private static final com.njydsz.common.json.util.BoundedLruCache<String, DateTimeFormatter> FORMATTER_CACHE =
-        new com.njydsz.common.json.util.BoundedLruCache<>(128);
+    private static final BoundedLruCache<String, DateTimeFormatter> FORMATTER_CACHE =
+        new BoundedLruCache<>(128);
 
     /**
      * 格式化日期/时间值为字符串（统一入口，支持全局日期格式配置）。

@@ -16,7 +16,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import jakarta.annotation.PreDestroy;
@@ -91,11 +93,15 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
     /**
      * P0-6: 共享单线程 Executor（避免每次 listener 回调创建新线程池导致泄漏）
      */
-    private final ExecutorService sharedExecutor = Executors.newSingleThreadExecutor(r -> {
-        Thread t = new Thread(r, "nacos-route-listener");
-        t.setDaemon(true);
-        return t;
-    });
+    private final ExecutorService sharedExecutor = new ThreadPoolExecutor(
+            1, 1, 0L, TimeUnit.MILLISECONDS,
+            new LinkedBlockingQueue<>(1024),
+            r -> {
+                Thread t = new Thread(r, "nacos-route-listener");
+                t.setDaemon(true);
+                return t;
+            },
+            new ThreadPoolExecutor.CallerRunsPolicy());
 
     /**
      * 构造 Nacos 动态路由仓库

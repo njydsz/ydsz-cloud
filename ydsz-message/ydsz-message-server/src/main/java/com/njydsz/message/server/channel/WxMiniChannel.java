@@ -6,7 +6,7 @@ import java.util.Map;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.ParameterizedTypeReference;
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -53,16 +53,16 @@ public class WxMiniChannel implements MessageChannel {
 
     private final MessageProperties messageProperties;
     private final RestTemplate restTemplate;
-    private final RedisService redisService;
+    private final RedisStringOps redisStringOps;
     private final SnowflakeIdGenerator snowflakeIdGenerator;
 
     public WxMiniChannel(MessageProperties messageProperties,
                          RestTemplate restTemplate,
-                         RedisService redisService,
+                         RedisStringOps redisStringOps,
                          SnowflakeIdGenerator snowflakeIdGenerator) {
         this.messageProperties = messageProperties;
         this.restTemplate = restTemplate;
-        this.redisService = redisService;
+        this.redisStringOps = redisStringOps;
         this.snowflakeIdGenerator = snowflakeIdGenerator;
     }
 
@@ -134,7 +134,7 @@ public class WxMiniChannel implements MessageChannel {
      */
     private String getAccessToken(MessageProperties.WxMiniConfig config) {
         try {
-            String cached = redisService.get(ACCESS_TOKEN_CACHE_KEY, String.class);
+            String cached = redisStringOps.get(ACCESS_TOKEN_CACHE_KEY, String.class);
             if (StringUtils.hasText(cached)) {
                 return cached;
             }
@@ -148,7 +148,7 @@ public class WxMiniChannel implements MessageChannel {
             if (body != null && body.containsKey("access_token")) {
                 String token = (String) body.get("access_token");
                 int expiresIn = body.containsKey("expires_in") ? (Integer) body.get("expires_in") : 7200;
-                redisService.set(ACCESS_TOKEN_CACHE_KEY, token, Duration.ofSeconds(expiresIn - 300));
+                redisStringOps.set(ACCESS_TOKEN_CACHE_KEY, token, Duration.ofSeconds(expiresIn - 300));
                 return token;
             }
             log.error("[WxMiniChannel] 获取 access_token 失败: {}",

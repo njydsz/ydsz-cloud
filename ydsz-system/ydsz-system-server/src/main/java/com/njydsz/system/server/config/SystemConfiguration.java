@@ -8,7 +8,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import com.njydsz.common.redis.service.RedisService;
+import org.springframework.data.redis.core.RedisTemplate;
 import com.njydsz.system.infra.mapper.ConfigMapper;
 import com.njydsz.system.infra.mapper.DictItemMapper;
 import com.njydsz.system.server.health.SystemHealthIndicator;
@@ -68,9 +68,9 @@ public class SystemConfiguration {
     @Bean
     @ConditionalOnClass(HealthIndicator.class)
     @ConditionalOnMissingBean(SystemHealthIndicator.class)
-    public SystemHealthIndicator systemHealthIndicator(RedisService redisService,
+    public SystemHealthIndicator systemHealthIndicator(RedisTemplate<String, Object> redisTemplate,
                                                        ConfigMapper configMapper,
                                                        DictItemMapper dictItemMapper) {
-        return new SystemHealthIndicator(redisService, configMapper, dictItemMapper);
+        return new SystemHealthIndicator(redisTemplate, configMapper, dictItemMapper);
     }
 }

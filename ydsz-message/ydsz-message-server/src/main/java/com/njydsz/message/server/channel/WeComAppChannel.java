@@ -6,7 +6,7 @@ import java.util.Map;
 
 import jakarta.annotation.PostConstruct;
 
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -54,7 +54,7 @@ public class WeComAppChannel implements MessageChannel {
     private final SnowflakeIdGenerator snowflakeIdGenerator;
 
     private final ChannelProperties channelProperties;
-    private final RedisService redisService;
+    private final RedisStringOps redisStringOps;
 
     RestClient restClient;
 
@@ -136,7 +136,7 @@ public class WeComAppChannel implements MessageChannel {
     private String getAccessToken(ChannelProperties.WeComAppConfig cfg) {
         try {
             String cacheKey = TOKEN_CACHE_KEY_PREFIX + cfg.getCorpId();
-            String cached = redisService.get(cacheKey, String.class);
+            String cached = redisStringOps.get(cacheKey, String.class);
             if (StringUtils.hasText(cached)) {
                 return cached;
             }
@@ -148,7 +148,7 @@ public class WeComAppChannel implements MessageChannel {
                 int errcode = ((Number) body.getOrDefault("errcode", -1)).intValue();
                 if (errcode == 0) {
                     String token = (String) body.get("access_token");
-                    redisService.set(cacheKey, token, TOKEN_TTL.minusSeconds(300));
+                    redisStringOps.set(cacheKey, token, TOKEN_TTL.minusSeconds(300));
                     log.info("[WECOM_APP] 刷新 access_token 成功: corpId={}", cfg.getCorpId());
                     return token;
                 }

@@ -3,8 +3,8 @@ package com.njydsz.common.event.processor;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -103,11 +103,11 @@ public class OutboxProcessor {
         this.properties = properties;
 
         // 调度线程（单线程，仅负责轮询和 claim）
-        this.scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+        this.scheduler = new ScheduledThreadPoolExecutor(1, r -> {
             Thread t = new Thread(r, "outbox-scheduler");
             t.setDaemon(true);
             return t;
-        });
+        }, new ThreadPoolExecutor.CallerRunsPolicy());
 
         // 投递线程池（可配置线程数，负责实际 MQ 发送）
         int workerThreads = Math.max(1, properties.getWorkerThreads());

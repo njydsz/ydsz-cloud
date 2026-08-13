@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
@@ -184,7 +185,7 @@ public class DictVersionServiceImpl implements DictVersionService {
     public String rollbackTo(String typeCode, String targetVersion, String operatorId) {
         // 1. 查询目标版本
         DictVersion targetVersionEntity = mapper.selectOne(
-                new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<DictVersion>()
+                new QueryWrapper<DictVersion>()
                         .eq("type_code", typeCode)
                         .eq("version", targetVersion)
                         .eq("deleted", 0)
@@ -197,7 +198,7 @@ public class DictVersionServiceImpl implements DictVersionService {
 
         // 2. 查询当前字典项作为回滚前快照（用于审计回溯）
         List<DictItem> currentItems = dictItemMapper.selectList(
-                new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<DictItem>()
+                new QueryWrapper<DictItem>()
                         .eq("type_code", typeCode)
                         .eq("deleted", 0)
         );
