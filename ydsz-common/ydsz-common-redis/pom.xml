@@ -113,6 +113,11 @@
             <artifactId>caffeine</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- Guava（布隆过滤器使用 MurmurHash3 标准实现） -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

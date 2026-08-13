@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 
@@ -11,6 +12,7 @@ import com.njydsz.common.thread.metrics.ThreadPoolMetrics;
 import com.njydsz.common.thread.metrics.VirtualThreadMetrics;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
 import lombok.Data;
 
@@ -53,6 +55,7 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@Validated
 @ConfigurationProperties(prefix = "ydsz.thread")
 public class ThreadPoolProperties {
 
@@ -80,6 +83,7 @@ public class ThreadPoolProperties {
      * 单个线程池配置。
      */
     @Data
+    @Validated
     public static class PoolConfig {
 
         /**
@@ -159,6 +163,21 @@ public class ThreadPoolProperties {
          * @since 1.3.0
          */
         private List<String> taskDecoratorBeanNames;
+
+        /**
+         * 校验 maxSize 必须 >= coreSize。
+         *
+         * <p>仅对 PLATFORM 类型生效。虚拟线程池不受此限制。
+         *
+         * @return true 如果配置合法
+         */
+        @AssertTrue(message = "maxSize 必须 >= coreSize")
+        public boolean isMaxSizeValid() {
+            if (type != PoolType.PLATFORM) {
+                return true;
+            }
+            return maxSize >= coreSize;
+        }
     }
 
     /**

@@ -1,6 +1,5 @@
 package com.njydsz.common.jdbc.monitor;
 
-import java.sql.SQLException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
@@ -48,11 +47,12 @@ public class SlaveLatencyMonitor {
     /** 当前被摘除的从库集合（延迟超标） */
     private final Set<String> excludedSlaves = ConcurrentHashMap.newKeySet();
 
-    public SlaveLatencyMonitor(Map<String, DataSource> slaveDataSources,
+    public SlaveLatencyMonitor(SlaveLatencyDetector detector,
+                                Map<String, DataSource> slaveDataSources,
                                 LatencyCheck config) {
+        this.detector = detector;
         this.slaveDataSources = new ConcurrentHashMap<>(slaveDataSources);
         this.config = config;
-        this.detector = new SlaveLatencyDetector.AutoDetectLatencyDetector();
         this.latencyThreshold = config.getThreshold();
         this.failureThreshold = config.getFailureThreshold();
         this.scheduler = new ScheduledThreadPoolExecutor(1, r -> {

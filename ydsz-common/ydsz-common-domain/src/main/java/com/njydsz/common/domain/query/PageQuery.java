@@ -62,6 +62,23 @@ public class PageQuery extends BaseQuery {
     private static final long serialVersionUID = 1L;
 
     /**
+     * 创建分页查询对象（简化静态工厂，对标 Spring Data {@code PageRequest.of}）。
+     *
+     * <p>适用场景：仅需指定页码和页大小时的简洁构造，无需 {@code @SuperBuilder} 继承链。
+     *
+     * @param pageNum  当前页码（从 1 开始）
+     * @param pageSize 每页记录数
+     * @return PageQuery 实例
+     * @since 1.9.0
+     */
+    public static PageQuery of(int pageNum, int pageSize) {
+        return PageQuery.builder()
+                .pageNum(pageNum)
+                .pageSize(pageSize)
+                .build();
+    }
+
+    /**
      * 搜索关键字最大长度（仅做截断，不做转义）。
      *
      * <p>v1.7.0 变更：移除 LIKE 转义逻辑，转义由业务层或 MyBatis ResultMapper 处理。

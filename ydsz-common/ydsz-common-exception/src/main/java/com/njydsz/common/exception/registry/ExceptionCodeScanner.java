@@ -75,6 +75,10 @@ public class ExceptionCodeScanner implements SmartInitializingSingleton {
      * {@link MetadataReaderFactory} 懒加载构造
      */
     private volatile MetadataReaderFactory metadataReaderFactory;
+    /** 本次启动扫描来源（用于启动摘要日志） */
+    private transient String scanSource;
+    /** 本次启动注册的错误码总数（用于启动摘要日志） */
+    private transient int totalCodes;
 
     /**
      * 构造扫描注册器。
@@ -154,8 +158,13 @@ public class ExceptionCodeScanner implements SmartInitializingSingleton {
                 }
             }
 
+            this.scanSource = "index";
+            this.totalCodes = errorCodeTable != null ? errorCodeTable.size() : registeredCount;
             log.info("[ExceptionCodeScanner] 从索引文件加载完成，注册 {} 个错误码枚举 | 索引来源: {}",
                     registeredCount, resources.length);
+            log.info("[ExceptionCodeScanner] 启动摘要 | 错误码注册完成 | 来源: 编译时索引 | "
+                            + "已注册模块: {} 个 | 错误码总数: {} 个",
+                    errorCodeTable != null ? errorCodeTable.getModules().size() : 0, totalCodes);
             return true;
         } catch (Exception e) {
             log.warn("[ExceptionCodeScanner] 索引文件加载失败: {}，将回退到 ASM 扫描", e.getMessage());
@@ -200,6 +209,8 @@ public class ExceptionCodeScanner implements SmartInitializingSingleton {
                     readerFactory, SCAN_PATTERN_FALLBACK, true);
 
             long durationMs = (System.nanoTime() - startNanos) / 1_000_000;
+            this.scanSource = "asm";
+            this.totalCodes = errorCodeTable != null ? errorCodeTable.size() : registeredCount;
             if (durationMs > SCAN_DURATION_WARN_THRESHOLD_MS) {
                 log.warn("[ExceptionCodeScanner] ASM 扫描耗时 {}ms（超过阈值 {}ms），"
                                 + "建议业务模块引入 ydsz-exception-codes 编译时索引插件以消除运行时扫描 | 注册错误码: {}",
@@ -208,6 +219,9 @@ public class ExceptionCodeScanner implements SmartInitializingSingleton {
                 log.info("[ExceptionCodeScanner] ASM 扫描完成，注册 {} 个模块的错误码 | 耗时 {}ms",
                         registeredCount, durationMs);
             }
+            log.info("[ExceptionCodeScanner] 启动摘要 | 错误码注册完成 | 来源: ASM 字节码扫描 | "
+                            + "已注册模块: {} 个 | 错误码总数: {} 个",
+                    errorCodeTable != null ? errorCodeTable.getModules().size() : 0, totalCodes);
         } catch (Exception e) {
             log.warn("[ExceptionCodeScanner] 扫描失败: {}", e.getMessage(), e);
         }
