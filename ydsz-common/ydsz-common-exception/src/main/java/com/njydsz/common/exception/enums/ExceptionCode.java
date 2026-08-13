@@ -77,7 +77,7 @@ public interface ExceptionCode extends ResultCode {
      *
      * <ul>
      *   <li>"sys." / "system." 开头 — 系统级异常（SYSTEM）</li>
-     *   <li>"sec." / "auth." 开头 — 安全类异常（SECURITY）</li>
+     *   <li>"sec." / "security." / "auth." 开头 — 安全类异常（SECURITY）</li>
      *   <li>其他 — 默认 BUSINESS</li>
      * </ul>
      */
@@ -88,7 +88,8 @@ public interface ExceptionCode extends ResultCode {
         if (lower.startsWith("sys.") || lower.startsWith("system.")) {
             return ExceptionCategory.SYSTEM;
         }
-        if (lower.startsWith("sec.") || lower.startsWith("auth.")) {
+        if (lower.startsWith("sec.") || lower.startsWith("security.")
+                || lower.startsWith("auth.")) {
             return ExceptionCategory.SECURITY;
         }
         return ExceptionCategory.BUSINESS;

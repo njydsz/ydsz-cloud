@@ -9,13 +9,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import jakarta.annotation.PreDestroy;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 import com.njydsz.common.redis.config.RedisProperties;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 分布式雪花 ID 生成器

@@ -296,7 +296,11 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
     }
 
     /**
-     * 内部扁平化实现（迭代式）
+     * 内部扁平化实现（迭代式，深度优先）。
+     *
+     * @param <T>   节点类型（TreeNode 子类）
+     * @param roots 根节点列表
+     * @return 扁平节点列表（深度优先顺序）
      */
     private static <T extends TreeNode<T, ?>> List<T> flattenInternal(List<T> roots) {
         List<T> result = new ArrayList<>();
@@ -352,7 +356,7 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
      * 通过函数式接口传入 ID/parentId/children/sort 的获取和设置方式。
      *
      * <p>算法：O(n) 时间复杂度，通过 HashMap 分组实现。
-     * 默认根父 ID 为 "0"，可使用 {@link #buildSimple(List, String, Function, Function, BiConsumer, Function)} 指定。
+     * 根节点约定：parentId 为 null 或等于 "0" 的节点视为根节点。
      *
      * @param flatList       扁平列表
      * @param idGetter       ID 获取函数
@@ -368,38 +372,12 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
             Function<T, String> parentIdGetter,
             BiConsumer<T, List<T>> childrenSetter,
             Function<T, Integer> sortGetter) {
-        return buildSimple(flatList, "0", idGetter, parentIdGetter, childrenSetter, sortGetter);
-    }
-
-    /**
-     * 从扁平列表构建树形结构（指定根父 ID，内部实现）。
-     *
-     * <p>与 {@link #buildSimple(List, Function, Function, BiConsumer, Function)} 相同，
-     * 但允许指定根父 ID（如 null、"0"、"-1" 等）。当前无外部调用方，收敛为 private，
-     * 以满足方法参数不超过 5 个的编码规范；如后续出现自定义根父 ID 需求，可再升级为公开 API。
-     *
-     * @param flatList       扁平列表
-     * @param rootParentId   根节点的父 ID 值（如 "0"、null、"-1" 等）
-     * @param idGetter       ID 获取函数
-     * @param parentIdGetter 父 ID 获取函数
-     * @param childrenSetter children 设置函数
-     * @param sortGetter     排序字段获取函数（可为 null，null 表示不排序）
-     * @param <T>            节点类型
-     * @return 树形结构根节点列表
-     */
-    private static <T> List<T> buildSimple(
-            List<T> flatList,
-            String rootParentId,
-            Function<T, String> idGetter,
-            Function<T, String> parentIdGetter,
-            BiConsumer<T, List<T>> childrenSetter,
-            Function<T, Integer> sortGetter) {
 
         if (flatList == null || flatList.isEmpty()) {
             return List.of();
         }
 
-        String effectiveRootParentId = rootParentId != null ? rootParentId : "0";
+        String effectiveRootParentId = "0";
         Map<String, List<T>> parentIdMap = flatList.stream()
                 .collect(Collectors.groupingBy(item -> {
                     String pid = parentIdGetter.apply(item);

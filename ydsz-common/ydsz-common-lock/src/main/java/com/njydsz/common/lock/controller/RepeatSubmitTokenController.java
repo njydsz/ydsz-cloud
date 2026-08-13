@@ -1,7 +1,5 @@
 package com.njydsz.common.lock.controller;
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.lock.idempotent.RepeatSubmitTokenService;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -12,6 +10,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.lock.idempotent.RepeatSubmitTokenService;
 
 
 /**

@@ -7,7 +7,7 @@ import java.util.Collections;
 import java.util.List;
 
 import jakarta.annotation.PostConstruct;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.ReturnType;
 import org.springframework.data.redis.core.RedisCallback;
@@ -16,8 +16,6 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 import com.njydsz.common.redis.config.RedisProperties;
 import com.njydsz.common.redis.enums.FailOpenPolicy;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Redis 布隆过滤器工具类

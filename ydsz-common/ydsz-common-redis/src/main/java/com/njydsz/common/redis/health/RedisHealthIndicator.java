@@ -2,13 +2,12 @@ package com.njydsz.common.redis.health;
 
 import java.util.Properties;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Redis 健康检查指示器

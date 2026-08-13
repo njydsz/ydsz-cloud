@@ -1,13 +1,16 @@
 package com.njydsz.common.jdbc.interceptor;
 
 import java.sql.Connection;
+import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.SqlCommandType;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import com.njydsz.common.domain.config.DomainProperties;
@@ -49,6 +52,14 @@ public class SafeQueryInnerInterceptor implements InnerInterceptor {
 
     /** 安全字段校验正则（与 PageQuery 保持一致） */
     private static final Pattern SAFE_COLUMN_PATTERN = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_.]*$");
+
+    /** 字面量 LIMIT offset, size 模式（深度分页兜底检测） */
+    private static final Pattern LIMIT_COMMA_PATTERN =
+            Pattern.compile("LIMIT\\s+(\\d+)\\s*,\\s*(\\d+)", Pattern.CASE_INSENSITIVE);
+
+    /** 字面量 LIMIT size OFFSET offset 模式（深度分页兜底检测） */
+    private static final Pattern LIMIT_OFFSET_PATTERN =
+            Pattern.compile("LIMIT\\s+(\\d+)\\s+OFFSET\\s+(\\d+)", Pattern.CASE_INSENSITIVE);
 
     /** 排序字段白名单（可选，为空表示仅使用正则校验） */
     private Set<String> orderByWhitelist = null;
@@ -105,8 +116,8 @@ public class SafeQueryInnerInterceptor implements InnerInterceptor {
         // ORDER BY 安全校验
         validateOrderBySafety(sql);
 
-        // 深度分页检测
-        checkDeepPagination(sql);
+        // 深度分页检测（优先解析 IPage 参数，正则仅兜底字面量 LIMIT）
+        checkDeepPagination(sh, sql);
     }
 
     /**
@@ -210,18 +221,57 @@ public class SafeQueryInnerInterceptor implements InnerInterceptor {
     }
 
     /**
-     * 检测深度分页（简单正则匹配 LIMIT offset 模式）。
+     * 检测深度分页。
+     *
+     * <p><b>优先解析 {@link IPage} 参数：</b>MP 分页主路径的 offset 是绑定参数
+     * （SQL 中为 {@code LIMIT ? OFFSET ?} 占位符），无法通过 SQL 正则匹配，
+     * 因此从 {@code StatementHandler} 的绑定参数中提取分页对象计算 offset。
+     * 仅在未携带分页参数（原生字面量 LIMIT）时，回退到正则兜底。
+     *
+     * @param sh  StatementHandler（用于获取绑定参数对象）
+     * @param sql SQL 语句
+     */
+    private void checkDeepPagination(StatementHandler sh, String sql) {
+        IPage<?> page = findPageParameter(sh.getBoundSql().getParameterObject());
+        if (page != null && page.getSize() > 0 && page.getCurrent() > 1) {
+            long offset = (page.getCurrent() - 1) * page.getSize();
+            evaluateDeepPagination(offset);
+            return;
+        }
+        checkDeepPaginationBySql(sql);
+    }
+
+    /**
+     * 从绑定参数对象中递归查找 {@link IPage} 分页实例。
+     *
+     * <p>MP 分页参数可能直接是 {@code Page} 对象，也可能是包含 {@code page} 键的
+     * 参数 Map（如 {@code selectPage(page, wrapper)} 场景）。
+     *
+     * @param parameter 绑定参数对象
+     * @return 找到的 IPage 实例；未找到返回 null
+     */
+    private IPage<?> findPageParameter(Object parameter) {
+        if (parameter instanceof IPage<?> page) {
+            return page;
+        }
+        if (parameter instanceof Map<?, ?> parameterMap) {
+            for (Object value : parameterMap.values()) {
+                if (value instanceof IPage<?> page) {
+                    return page;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 检测深度分页（简单正则匹配字面量 LIMIT offset 模式，仅作兜底）。
      *
      * @param sql SQL 语句
      */
-    private void checkDeepPagination(String sql) {
-        String upperSql = sql.toUpperCase();
-
+    private void checkDeepPaginationBySql(String sql) {
         // 检测 LIMIT offset, size 模式
-        java.util.regex.Matcher matcher = Pattern.compile(
-            "LIMIT\\s+(\\d+)\\s*,\\s*(\\d+)", Pattern.CASE_INSENSITIVE
-        ).matcher(sql);
-
+        Matcher matcher = LIMIT_COMMA_PATTERN.matcher(sql);
         if (matcher.find()) {
             long offset = Long.parseLong(matcher.group(1));
             evaluateDeepPagination(offset);
@@ -229,10 +279,7 @@ public class SafeQueryInnerInterceptor implements InnerInterceptor {
         }
 
         // 检测 LIMIT size OFFSET offset 模式
-        matcher = Pattern.compile(
-            "LIMIT\\s+(\\d+)\\s+OFFSET\\s+(\\d+)", Pattern.CASE_INSENSITIVE
-        ).matcher(sql);
-
+        matcher = LIMIT_OFFSET_PATTERN.matcher(sql);
         if (matcher.find()) {
             long offset = Long.parseLong(matcher.group(2));
             evaluateDeepPagination(offset);

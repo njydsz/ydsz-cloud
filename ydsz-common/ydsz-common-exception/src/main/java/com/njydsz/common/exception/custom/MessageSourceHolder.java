@@ -77,7 +77,10 @@ public final class MessageSourceHolder {
     }
 
     /**
-     * 获取当前请求线程绑定的 Locale，无绑定（非 Web 场景）时回退到 {@link Locale#ROOT}。
+     * 获取当前请求线程绑定的 Locale。
+     *
+     * <p>Web 请求场景返回 {@link LocaleContextHolder} 绑定的请求 Locale；
+     * 无请求上下文（定时任务、MQ 消费等）时返回系统默认 Locale，永不为 null。
      *
      * @return 当前解析使用的 Locale，永不为 null
      */

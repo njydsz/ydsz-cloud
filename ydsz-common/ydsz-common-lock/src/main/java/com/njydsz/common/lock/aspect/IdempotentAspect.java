@@ -1,4 +1,16 @@
 package com.njydsz.common.lock.aspect;
+
+import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.Arrays;
+
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.reflect.MethodSignature;
+
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.lock.annotation.IdempotentExempt;
@@ -6,15 +18,6 @@ import com.njydsz.common.lock.exception.IdempotentException;
 import com.njydsz.common.lock.idempotent.IdempotentStrategy;
 import com.njydsz.common.lock.metrics.LockMetrics;
 import com.njydsz.common.lock.util.LockExpressionUtils;
-import java.lang.reflect.Method;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.util.Arrays;
-import lombok.extern.slf4j.Slf4j;
-import org.aspectj.lang.annotation.Around;
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.reflect.MethodSignature;
 
 
 /**
@@ -91,20 +94,20 @@ public class IdempotentAspect {
      * @throws Throwable 目标方法抛出的异常
      */
     @Around("@annotation(idempotent)")
-    public Object around(ProceedingJoinPoint joinPoint, Idempotent idempotent) throws Throwable {
+    public Object around(ProceedingJoinPoint joinPoint, Idempotent idempotent) {
         Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
 
         // 方法级 @IdempotentExempt 检查：直接放行
         if (method.isAnnotationPresent(IdempotentExempt.class)) {
             log.debug("[ydsz-lock] [idempotent] 方法标注 @IdempotentExempt，跳过幂等检查 method={}", method.getName());
-            return joinPoint.proceed();
+            return proceed(joinPoint);
         }
 
         String userKey = resolveUserKey(idempotent.key(), method, joinPoint.getArgs());
         String redisKey = buildRedisKey(userKey);
 
         long acquireStart = System.currentTimeMillis();
-        String token = idempotentStrategy.acquire(redisKey, idempotent.ttlSeconds() * 1000L);
+        String token = idempotentStrategy.acquire(redisKey, idempotent.ttlSeconds() * SECONDS_TO_MILLIS);
         if (token == null) {
             // 幂等命中：同一 key 在 TTL 窗口内被重复提交，拒绝处理
             recordIdempotentHit(idempotent, redisKey);
@@ -127,13 +130,48 @@ public class IdempotentAspect {
             recordRelease(System.currentTimeMillis() - heldStart, "idempotent");
             log.debug("[ydsz-lock] [idempotent] 业务异常释放幂等锁 key={} cause={}", redisKey, bizEx.getMessage());
             throw bizEx;
-        } catch (Throwable ex) {
+        } catch (RuntimeException | Error e) {
             // 非 BusinessException（如 SysException / RuntimeException / Error）：保留幂等锁
             // 防止下游异常时客户端重试风暴击穿系统
             log.warn("[ydsz-lock] [idempotent] 非 BusinessException 抛出，保留幂等锁 key={} cause={}",
+                    redisKey, e.getClass().getSimpleName());
+            throw e;
+        } catch (Throwable ex) {
+            log.warn("[ydsz-lock] [idempotent] 检查型异常包装后抛出，保留幂等锁 key={} cause={}",
                     redisKey, ex.getClass().getSimpleName());
-            throw ex;
+            throw wrapCheckedException(ex);
         }
+    }
+
+    /**
+     * 执行目标方法并传播异常
+     *
+     * <p>切面不声明 {@code throws Throwable}（遵循编码规范），
+     * 运行时异常与 Error 原样传播，检查型异常包装为业务异常。</p>
+     *
+     * @param joinPoint 连接点
+     * @return 目标方法返回值
+     */
+    private Object proceed(ProceedingJoinPoint joinPoint) {
+        try {
+            return joinPoint.proceed();
+        } catch (RuntimeException | Error e) {
+            throw e;
+        } catch (Throwable t) {
+            throw wrapCheckedException(t);
+        }
+    }
+
+    /**
+     * 将检查型异常包装为业务异常
+     *
+     * @param cause 原始异常
+     * @return 包装后的业务异常
+     */
+    private BusinessException wrapCheckedException(Throwable cause) {
+        BusinessException wrapped = new BusinessException(CoreExceptionCode.FAIL, cause);
+        wrapped.setMessage("接口执行异常: " + cause.getMessage());
+        return wrapped;
     }
 
     /**

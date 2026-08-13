@@ -10,22 +10,20 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import jakarta.annotation.PreDestroy;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.listener.PatternTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
-import org.springframework.core.annotation.AnnotatedElementUtils;
 
 import com.njydsz.common.redis.annotation.RedisKeyExpireListener;
 import com.njydsz.common.redis.config.RedisProperties;
 import com.njydsz.common.redis.event.RedisKeyExpirationEvent;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Redis Key 过期事件监听调度器

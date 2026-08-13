@@ -1,6 +1,10 @@
 package com.njydsz.common.lock.annotation;
-import java.lang.annotation.*;
 
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * 幂等豁免注解（兼容旧 com.njydsz.common.lock.annotation.IdempotentExempt）。

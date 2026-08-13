@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Range;
 import org.springframework.data.redis.connection.RedisStreamCommands;
 import org.springframework.data.redis.connection.RedisStreamCommands.TrimOptions;
@@ -29,10 +30,8 @@ import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StreamOperations;
 
-import com.njydsz.common.redis.config.RedisProperties;
 import com.njydsz.common.json.YdszJson;
-
-import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.redis.config.RedisProperties;
 
 /**
  * Redis Stream 操作组件
@@ -258,16 +257,16 @@ public class RedisStreamOps {
      * @param streamKey    Stream 键名
      * @param groupName    消费者组名
      * @param consumerName 消费者名
-     * @param maxBatch     最大拉取量
-     * @param lowWatermark 低水位线（pending 低于此值时增大批次）
-     * @param highWatermark 高水位线（pending 超过此值时减大批次）
-     * @param lastBatchRef  上次的批次大小（用于渐进调整），传入 0 则使用 min(maxBatch, 10)
+     * @param config       背压读取配置（批次上限、水位线、上次批次）
      * @return 背压感知的读取结果
      */
     public BackpressureResult readGroupWithBackpressure(String streamKey, String groupName,
-                                                        String consumerName, int maxBatch,
-                                                        int lowWatermark, int highWatermark,
-                                                        int lastBatchRef) {
+                                                        String consumerName,
+                                                        BackpressureConfig config) {
+        int maxBatch = config.maxBatch();
+        int lowWatermark = config.lowWatermark();
+        int highWatermark = config.highWatermark();
+        int lastBatchRef = config.lastBatchRef();
         // 查询当前 pending 数量
         long pendingCount = 0;
         try {
@@ -310,6 +309,17 @@ public class RedisStreamOps {
         combined.addAll(newMessages);
 
         return new BackpressureResult(combined, actualBatch, pendingCount);
+    }
+
+    /**
+     * 背压读取配置（封装背压调参，避免方法参数过多）。
+     *
+     * @param maxBatch      最大拉取量
+     * @param lowWatermark  低水位线（pending 低于此值时增大批次）
+     * @param highWatermark 高水位线（pending 超过此值时减大批次）
+     * @param lastBatchRef  上次的批次大小（用于渐进调整），传入 0 则使用 min(maxBatch, 10)
+     */
+    public record BackpressureConfig(int maxBatch, int lowWatermark, int highWatermark, int lastBatchRef) {
     }
 
     /**

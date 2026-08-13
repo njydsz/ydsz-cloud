@@ -1,4 +1,5 @@
 package com.njydsz.common.lock.config;
+
 import jakarta.validation.constraints.Min;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

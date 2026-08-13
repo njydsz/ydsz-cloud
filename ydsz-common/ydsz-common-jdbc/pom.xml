@@ -132,6 +132,11 @@
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-core</artifactId>
         </dependency>
+        <!-- resilience4j 熔断器（数据库熔断，按数据源分桶） -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-circuitbreaker</artifactId>
+        </dependency>
         <!-- spring-boot-actuator (optional for HealthIndicator) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -314,14 +314,14 @@ public class SqlTraceInnerInterceptor implements InnerInterceptor, Ordered, Mete
     /**
      * 记录 SQL 审计日志
      */
-    private void logAudit(String methodId, String sql, BoundSql boundSql, Object parameter,
+    private void logAudit(String methodId, String sql, Object parameter,
                           SqlCommandType commandType, long elapsed) {
         try {
             String timestamp = LocalDateTime.now().format(FORMATTER);
 
             String parameters = "";
             if (logParameters && parameter != null) {
-                parameters = formatParameters(parameter, boundSql);
+                parameters = formatParameters(parameter);
             }
 
             // 获取实际影响行数：从 AFFECTED_ROWS ThreadLocal 中读取，无值则显示 "N/A"
@@ -351,7 +351,7 @@ public class SqlTraceInnerInterceptor implements InnerInterceptor, Ordered, Mete
     /**
      * 格式化 SQL 参数
      */
-    private String formatParameters(Object parameter, BoundSql boundSql) {
+    private String formatParameters(Object parameter) {
         try {
             if (parameter == null) {
                 return "[]";
@@ -376,17 +376,24 @@ public class SqlTraceInnerInterceptor implements InnerInterceptor, Ordered, Mete
         }
     }
 
-    // ----- MyBatis Interceptor interface (捕获影响行数) -----
+    // ----- MyBatis Interceptor interface (计时 + 影响行数捕获) -----
 
     /**
-     * 拦截 Executor.query / Executor.update，从执行结果中提影响行数存入 ThreadLocal，
-     * 供后续 {@link #logAudit} 使用。
+     * 拦截 Executor.query / Executor.update，在真实执行前后计时，
+     * 并在执行完成后统一处理慢 SQL 检测与 SQL 审计。
+     *
+     * <p><b>计时语义：</b>耗时 = {@code proceed()} 前后 {@code System.nanoTime()} 差值，
+     * 包含完整数据库往返时间，替代原先在 {@code beforePrepare} 阶段计时的错误窗口
+     * （该阶段发生在 SQL 真正执行之前，无法反映真实执行耗时）。
      */
     @Override
     public Object intercept(Invocation invocation) throws Throwable {
+        long startNanos = System.nanoTime();
         try {
             Object result = invocation.proceed();
-            // 从执行结果中提影响行数
+            long elapsedMillis = (System.nanoTime() - startNanos) / 1_000_000;
+
+            // 从执行结果中提取影响行数
             if (result instanceof List<?> list) {
                 // query 返回 List，size 即为返回行数
                 AFFECTED_ROWS.set(list.size());
@@ -401,11 +408,25 @@ public class SqlTraceInnerInterceptor implements InnerInterceptor, Ordered, Mete
                 }
                 AFFECTED_ROWS.set(sum);
             }
+
+            // SQL 真实执行完成后统一处理慢 SQL 与审计
+            TimingContext timing = TIMING_CONTEXT.get();
+            if (timing != null) {
+                if (slowSqlEnabled && elapsedMillis > slowSqlThresholdMillis) {
+                    handleSlowSql(timing.sqlId, elapsedMillis, timing.finalSql);
+                }
+                if (auditEnabled && shouldAudit(timing.commandType)
+                        && !shouldExclude(timing.sqlId, timing.finalSql)) {
+                    logAudit(timing.sqlId, timing.finalSql, timing.parameter, timing.commandType, elapsedMillis);
+                }
+            }
             return result;
         } catch (Throwable t) {
-            // 执行失败时清除 ThreadLocal，避免泄漏
-            AFFECTED_ROWS.remove();
             throw t;
+        } finally {
+            // 执行结束（成功或失败）统一清理 ThreadLocal，避免线程池复用泄漏
+            TIMING_CONTEXT.remove();
+            AFFECTED_ROWS.remove();
         }
     }
 
@@ -537,15 +558,20 @@ public class SqlTraceInnerInterceptor implements InnerInterceptor, Ordered, Mete
 
     /**
      * 计时上下文
+     *
+     * <p>{@code startNanos} 记录 {@code willDoQuery/willDoUpdate} 阶段起始纳秒时间，
+     * 供 {@code intercept} 在真实执行完成后计算耗时；
+     * {@code finalSql} 由 {@code beforePrepare} 写入 SQL 改写后的最终形态。
      */
     private static class TimingContext {
-        final long startTime;
+        final long startNanos;
         final String sqlId;
         final SqlCommandType commandType;
         final Object parameter;
+        String finalSql;
 
-        TimingContext(long startTime, String sqlId, SqlCommandType commandType, Object parameter) {
-            this.startTime = startTime;
+        TimingContext(long startNanos, String sqlId, SqlCommandType commandType, Object parameter) {
+            this.startNanos = startNanos;
             this.sqlId = sqlId;
             this.commandType = commandType;
             this.parameter = parameter;

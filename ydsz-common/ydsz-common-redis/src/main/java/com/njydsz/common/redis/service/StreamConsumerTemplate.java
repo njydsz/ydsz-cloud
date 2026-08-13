@@ -7,13 +7,11 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 import jakarta.annotation.PreDestroy;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
 
 import com.njydsz.common.redis.service.ops.RedisStreamOps;
 import com.njydsz.common.redis.service.ops.RedisStreamOps.StreamMessage;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Stream 消费模板（背压感知 + 自动 ACK + 死信兜底）

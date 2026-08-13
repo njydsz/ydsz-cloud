@@ -7,12 +7,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import jakarta.annotation.PreDestroy;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Redis 缓存防护工具类

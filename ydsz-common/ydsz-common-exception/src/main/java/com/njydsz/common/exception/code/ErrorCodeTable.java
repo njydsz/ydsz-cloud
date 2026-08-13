@@ -113,7 +113,8 @@ public class ErrorCodeTable {
     /**
      * 按 code 跨模块反查（兼容 {@code ErrorCodeTable.lookupByCode}）。
      *
-     * <p>直接命中全局 {@link #codeIndex}（O(1)），避免遍历各模块索引。
+     * <p>优先命中全局 {@link #codeIndex}（O(1)）；未命中时回退遍历各模块索引，
+     * 兼容仅通过 {@link #registerCode} 注册（未走 {@link #registerAll}）的历史调用路径。
      *
      * @param code 错误码字符串
      * @return 对应的 CodeEntry，未找到返回 null
@@ -123,12 +124,18 @@ public class ErrorCodeTable {
             return null;
         }
         ExceptionCode exceptionCode = codeIndex.get(code);
-        if (exceptionCode == null) {
-            return null;
+        if (exceptionCode != null) {
+            String enumName = exceptionCode instanceof Enum<?> enumValue
+                    ? enumValue.name() : exceptionCode.getClass().getSimpleName();
+            return new CodeEntry(code, exceptionCode.getKey(), enumName);
         }
-        String enumName = exceptionCode instanceof Enum<?> enumValue
-                ? enumValue.name() : exceptionCode.getClass().getSimpleName();
-        return new CodeEntry(code, exceptionCode.getKey(), enumName);
+        for (ModuleEntry module : moduleIndex.values()) {
+            CodeEntry entry = module.codes().get(code);
+            if (entry != null) {
+                return entry;
+            }
+        }
+        return null;
     }
 
     /**

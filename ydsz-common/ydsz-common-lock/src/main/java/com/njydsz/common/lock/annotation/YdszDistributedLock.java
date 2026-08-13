@@ -1,5 +1,6 @@
 package com.njydsz.common.lock.annotation;
-import java.lang.annotation.*;
+
+
 import java.util.concurrent.TimeUnit;
 
 

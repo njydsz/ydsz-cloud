@@ -1,4 +1,17 @@
 package com.njydsz.common.lock.aspect;
+
+import java.lang.reflect.Method;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.reflect.MethodSignature;
+import org.slf4j.MDC;
+
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.lock.annotation.LockType;
 import com.njydsz.common.lock.annotation.YdszDistributedLock;
@@ -9,16 +22,6 @@ import com.njydsz.common.lock.metrics.LockMetrics;
 import com.njydsz.common.lock.strategy.LockStrategy;
 import com.njydsz.common.lock.util.LockExpressionUtils;
 import com.njydsz.common.lock.util.LockKeyValidator;
-import java.lang.reflect.Method;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.Map;
-import lombok.extern.slf4j.Slf4j;
-import org.aspectj.lang.annotation.Around;
-import org.aspectj.lang.annotation.Aspect;
-import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.reflect.MethodSignature;
-import org.slf4j.MDC;
 
 
 /**
@@ -89,10 +92,9 @@ public class YdszDistributedLockAspect {
      * @param joinPoint 切入点
      * @param lockAnn 分布式锁注解
      * @return 方法执行结果
-     * @throws Throwable 方法执行异常
      */
     @Around("@annotation(lockAnn)")
-    public Object around(ProceedingJoinPoint joinPoint, YdszDistributedLock lockAnn) throws Throwable {
+    public Object around(ProceedingJoinPoint joinPoint, YdszDistributedLock lockAnn) {
         Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
         String lockKey = resolveLockKey(lockAnn.key(), method, joinPoint.getArgs());
         LockKeyValidator.validate(lockKey);
@@ -112,7 +114,7 @@ public class YdszDistributedLockAspect {
         }
 
         long acquireStartTime = System.currentTimeMillis();
-        String lockValue = acquireLockWithRetry(lock, lockKey, waitTime, leaseTime, timeUnit, retryCount, retryInterval);
+        String lockValue = acquireLockWithRetry(lock, lockKey, lockAnn);
         long waitTimeMillis = System.currentTimeMillis() - acquireStartTime;
 
         if (lockValue == null) {
@@ -121,10 +123,9 @@ public class YdszDistributedLockAspect {
             }
             if (lockAnn.throwException()) {
                 throw new DistributedLockException(lockAnn.message());
-            } else {
-                log.warn("[ydsz-lock]获取锁失败，跳过方法执行 | lockKey={} | traceId={}", lockKey, resolveTraceId());
-                return null;
             }
+            log.warn("[ydsz-lock]获取锁失败，跳过方法执行 | lockKey={} | traceId={}", lockKey, resolveTraceId());
+            return null;
         }
 
         if (lockMetrics != null) {
@@ -140,6 +141,10 @@ public class YdszDistributedLockAspect {
                 lockStrategy.stopWatchDog(lockKey);
             }
             return joinPoint.proceed();
+        } catch (RuntimeException | Error e) {
+            throw e;
+        } catch (Throwable t) {
+            throw new DistributedLockException("业务方法执行异常 | lockKey=" + lockKey, t);
         } finally {
             long holdTimeMillis = System.currentTimeMillis() - holdStartTime;
             boolean released = lock.unlock(lockKey, lockValue);
@@ -170,22 +175,22 @@ public class YdszDistributedLockAspect {
     /**
      * 带重试机制的锁获取
      *
-     * 采用指数退避策略：每次重试间隔 = retryInterval * 2^attempt
+     * <p>采用指数退避策略：每次重试间隔 = retryInterval * 2^attempt，
+     * 重试次数上限 {@value #MAX_RETRY_CAP} 次。
      *
-     * @param lock          锁实例
-     * @param lockKey       锁键
-     * @param waitTime      等待时间
-     * @param leaseTime     租期
-     * @param timeUnit      时间单位
-     * @param retryCount    最大重试次数
-     * @param retryInterval 重试间隔（毫秒）
+     * @param lock    锁实例
+     * @param lockKey 锁键
+     * @param lockAnn 分布式锁注解（等待时间/租约/重试参数均取自注解）
      * @return 锁值，获取失败返回 null
      */
-    private String acquireLockWithRetry(
-            DistributedLocker lock, String lockKey, long waitTime,
-            long leaseTime, TimeUnit timeUnit, int retryCount, long retryInterval) {
+    private String acquireLockWithRetry(DistributedLocker lock, String lockKey, YdszDistributedLock lockAnn) {
+        long waitTime = lockAnn.waitTime();
+        long leaseTime = lockAnn.leaseTime();
+        TimeUnit timeUnit = lockAnn.timeUnit();
+        int retryCount = lockAnn.retryCount();
+        long retryInterval = lockAnn.retryInterval();
 
-        int maxRetries = Math.min(retryCount, 5);
+        int maxRetries = Math.min(retryCount, MAX_RETRY_CAP);
         int attempt = 0;
 
         while (attempt <= maxRetries) {
@@ -220,6 +225,11 @@ public class YdszDistributedLockAspect {
 
         return null;
     }
+
+    /**
+     * 最大重试次数上限（防止异常配置导致无界重试）
+     */
+    private static final int MAX_RETRY_CAP = 5;
 
     /**
      * 解析锁的键

@@ -1,10 +1,13 @@
 package com.njydsz.common.lock.idempotent;
-import com.njydsz.common.util.id.IdGenerator;
+
 import java.util.Collections;
+
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.script.RedisScript;
-import org.springframework.data.redis.core.StringRedisTemplate;
+
+import com.njydsz.common.util.id.IdGenerator;
 
 
 /**
