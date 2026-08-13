@@ -289,11 +289,31 @@ public class SafeQueryInnerInterceptor implements InnerInterceptor {
     }
 
     /**
-     * 评估深度分页风险。
+     * 评估深度分页风险（IPage 参数场景，携带真实页码信息）。
      *
      * <p>复用领域层 {@link DeepPaginationRisk#assess(long, long, long)} 的统一判定，
-     * 命中拒绝阈值时抛出领域异常 {@link DeepPaginationException}（替代原先的通用 SysException），
-     * 使异常类型与领域语义一致，便于上游按类型捕获与处理。
+     * 命中拒绝阈值时抛出携带完整分页信息的 {@link DeepPaginationException}。
+     *
+     * @param offset   偏移量
+     * @param pageNum  当前页码（从 1 开始）
+     * @param pageSize 每页记录数
+     */
+    private void evaluateDeepPagination(long offset, int pageNum, int pageSize) {
+        DeepPaginationRisk risk = DeepPaginationRisk.assess(offset, cursorWarningThreshold, cursorRejectThreshold);
+        if (risk == DeepPaginationRisk.REJECT) {
+            throw new DeepPaginationException(offset, pageNum, pageSize, cursorRejectThreshold);
+        }
+        if (risk == DeepPaginationRisk.WARN) {
+            log.warn("深度分页警告：offset={}（pageNum={}, pageSize={}）超过警告阈值={}，建议改用游标分页",
+                offset, pageNum, pageSize, cursorWarningThreshold);
+        }
+    }
+
+    /**
+     * 评估深度分页风险（SQL 字面量 LIMIT 正则兜底场景，无分页元信息）。
+     *
+     * <p>仅适用于未携带 IPage 参数、SQL 中硬编码 LIMIT 的罕见查询场景，
+     * 此时 pageNum/pageSize 无法从拦截器上下文获取，异常中显示为 -1。
      *
      * @param offset 偏移量
      */
@@ -303,7 +323,7 @@ public class SafeQueryInnerInterceptor implements InnerInterceptor {
             throw new DeepPaginationException(offset, -1, -1, cursorRejectThreshold);
         }
         if (risk == DeepPaginationRisk.WARN) {
-            log.warn("深度分页警告：offset={} 超过警告阈值={}，建议改用游标分页（SliceQuery / SliceResult）",
+            log.warn("深度分页警告：offset={}（SQL 字面量 LIMIT）超过警告阈值={}，建议改用游标分页",
                 offset, cursorWarningThreshold);
         }
     }

@@ -15,6 +15,7 @@ import com.njydsz.common.lock.config.LockProperties;
 import com.njydsz.common.lock.core.AbstractRedisDistributedLock;
 import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.lock.core.FencingTokenProvider;
+import com.njydsz.common.lock.core.LockEventListener;
 import com.njydsz.common.lock.impl.RedisFairLock;
 import com.njydsz.common.lock.impl.RedisMultiLock;
 import com.njydsz.common.lock.impl.RedisReentrantLock;
@@ -91,6 +92,11 @@ public class DefaultLockStrategy implements LockStrategy {
      * Fencing Token 提供器（可选，配置后支持单调递增 token 能力）
      */
     private FencingTokenProvider fencingTokenProvider;
+
+    /**
+     * 锁事件监听器（可选，用于感知锁生命周期事件）
+     */
+    private LockEventListener lockEventListener = LockEventListener.NO_OP;
 
     /**
      * 锁实例缓存，按锁类型缓存避免重复创建
@@ -220,6 +226,17 @@ public class DefaultLockStrategy implements LockStrategy {
      */
     public void setFencingTokenProvider(FencingTokenProvider fencingTokenProvider) {
         this.fencingTokenProvider = fencingTokenProvider;
+    }
+
+    /**
+     * 设置锁事件监听器（可选）
+     *
+     * <p>配置后，锁生命周期事件（获取、释放、超时、续期失败）将通知监听器。</p>
+     *
+     * @param lockEventListener 锁事件监听器实例
+     */
+    public void setLockEventListener(LockEventListener lockEventListener) {
+        this.lockEventListener = lockEventListener != null ? lockEventListener : LockEventListener.NO_OP;
     }
 
     /**
