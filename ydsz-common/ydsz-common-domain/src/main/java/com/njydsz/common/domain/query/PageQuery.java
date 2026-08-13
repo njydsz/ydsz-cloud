@@ -123,6 +123,9 @@ public class PageQuery extends BaseQuery {
 
     /**
      * 添加升序排序项。
+     *
+     * @param column 字段名
+     * @return 当前对象，支持链式调用
      */
     public PageQuery addAscOrder(String column) {
         return addOrder(column, true);
@@ -130,6 +133,9 @@ public class PageQuery extends BaseQuery {
 
     /**
      * 添加降序排序项。
+     *
+     * @param column 字段名
+     * @return 当前对象，支持链式调用
      */
     public PageQuery addDescOrder(String column) {
         return addOrder(column, false);
@@ -155,7 +161,10 @@ public class PageQuery extends BaseQuery {
     }
 
     /**
-     * 设置排序项列表。
+     * 设置排序项列表（过滤 null 与空列名项）。
+     *
+     * @param orderItems 排序项列表（可为 null）
+     * @return 当前对象，支持链式调用
      */
     public PageQuery setOrderItems(List<OrderItem> orderItems) {
         this.orderItems = new ArrayList<>();
@@ -172,6 +181,8 @@ public class PageQuery extends BaseQuery {
 
     /**
      * 清空排序项。
+     *
+     * @return 当前对象，支持链式调用
      */
     public PageQuery clearOrders() {
         if (orderItems != null) {
@@ -182,6 +193,8 @@ public class PageQuery extends BaseQuery {
 
     /**
      * 获取排序项数量。
+     *
+     * @return 排序项数量（无排序项时返回 0）
      */
     @JsonIgnore
     public int getOrderCount() {
@@ -202,6 +215,7 @@ public class PageQuery extends BaseQuery {
     /**
      * 获取偏移量（int 类型）。
      *
+     * @return 分页偏移量（LIMIT 的 offset）
      * @throws ArithmeticException 当计算结果超过 Integer.MAX_VALUE 时抛出
      */
     public int getOffset() {
@@ -216,6 +230,8 @@ public class PageQuery extends BaseQuery {
 
     /**
      * 获取偏移量（long 类型，无溢出风险）。
+     *
+     * @return 分页偏移量（long）；pageNum/pageSize 为 null 时返回 0
      */
     public long getOffsetLong() {
         if (pageNum == null || pageSize == null) {
@@ -226,6 +242,8 @@ public class PageQuery extends BaseQuery {
 
     /**
      * 获取实际每页大小。
+     *
+     * @return 归一化后的页大小（null/<1 取默认值，超上限截断）
      */
     public int getEffectivePageSize() {
         return PageConstants.normalizePageSize(this.pageSize);
@@ -235,6 +253,8 @@ public class PageQuery extends BaseQuery {
      * 获取实际页码（委托 {@link PageConstants#normalizePageNum} 统一归一化）。
      *
      * <p>归一化规则：null 或小于 1 → 返回 1（{@link PageConstants#DEFAULT_PAGE_NUM}）。</p>
+     *
+     * @return 归一化后的页码（从 1 开始）
      */
     @JsonIgnore
     public int getEffectivePageNum() {
@@ -243,6 +263,8 @@ public class PageQuery extends BaseQuery {
 
     /**
      * 计算起始行号（从1开始）。
+     *
+     * @return 起始行号
      */
     public int getStartRow() {
         return getOffset() + 1;
@@ -250,6 +272,8 @@ public class PageQuery extends BaseQuery {
 
     /**
      * 计算结束行号。
+     *
+     * @return 结束行号（含当前页最后一行）
      */
     public long getEndRow() {
         return getOffsetLong() + getEffectivePageSize();
@@ -257,6 +281,8 @@ public class PageQuery extends BaseQuery {
 
     /**
      * 判断是否有上一页。
+     *
+     * @return 当前页大于 1 时返回 true
      */
     public boolean hasPrevious() {
         return getEffectivePageNum() > 1;
@@ -264,6 +290,9 @@ public class PageQuery extends BaseQuery {
 
     /**
      * 判断是否有下一页。
+     *
+     * @param total 总记录数
+     * @return 当前页未达末页时返回 true
      */
     public boolean hasNext(long total) {
         return (long) getOffset() + getEffectivePageSize() < total;

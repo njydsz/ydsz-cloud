@@ -12,8 +12,6 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.SimpleEvaluationContext;
@@ -21,6 +19,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * {@link YdszCacheable} 注解的 AOP 切面实现
@@ -43,10 +43,9 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 @Aspect
 public class YdszCacheableAspect {
-
-    private static final Logger log = LoggerFactory.getLogger(YdszCacheableAspect.class);
 
     /**
      * 空值标记的序列化字符串，标识缓存中存放的是空值占位
