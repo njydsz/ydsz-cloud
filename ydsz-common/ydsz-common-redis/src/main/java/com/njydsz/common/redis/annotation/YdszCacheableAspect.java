@@ -17,8 +17,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.SimpleEvaluationContext;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 
-import com.njydsz.common.redis.service.RedisService;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 /**
  * {@link YdszCacheable} 注解的 AOP 切面实现
@@ -72,15 +74,18 @@ public class YdszCacheableAspect {
             "return redis.call('del', KEYS[1]) " +
             "else return 0 end";
 
-    private final RedisService redisService;
+    private final RedisStringOps redisStringOps;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     /**
      * 构造切面实例
      *
-     * @param redisService Redis 服务（用于读写缓存、释放锁等）
+     * @param redisStringOps Redis String 操作（用于读写缓存、释放锁等）
+     * @param redisTemplate  Redis 模板（用于执行 Lua 脚本）
      */
-    public YdszCacheableAspect(RedisService redisService) {
-        this.redisService = redisService;
+    public YdszCacheableAspect(RedisStringOps redisStringOps, RedisTemplate<String, Object> redisTemplate) {
+        this.redisStringOps = redisStringOps;
+        this.redisTemplate = redisTemplate;
     }
 
     /**
@@ -109,7 +114,7 @@ public class YdszCacheableAspect {
         long ttl = applyRandomJitter(annotation.ttl(), annotation.timeUnit());
 
         // 1. 尝试从缓存获取
-        Object cachedValue = redisService.get(cacheKey);
+        Object cachedValue = redisStringOps.get(cacheKey);
         if (cachedValue != null) {
             if (NULL_VALUE_MARKER.equals(cachedValue)) {
                 log.debug("【YdszCacheable】缓存命中空值标记 key={}", cacheKey);
@@ -139,13 +144,13 @@ public class YdszCacheableAspect {
         String lockValue = UUID.randomUUID().toString();
 
         // 尝试获取互斥锁
-        boolean locked = redisService.setIfAbsent(lockKey, lockValue, LOCK_EXPIRE_SECONDS);
+        boolean locked = redisStringOps.setIfAbsent(lockKey, lockValue, LOCK_EXPIRE_SECONDS);
 
         if (locked) {
             // 获取锁成功：执行数据加载并回填缓存
             try {
                 // 双重检查：获取锁后再次检查缓存（可能已被其他线程填充）
-                Object cachedValue = redisService.get(cacheKey);
+                Object cachedValue = redisStringOps.get(cacheKey);
                 if (cachedValue != null) {
                     if (NULL_VALUE_MARKER.equals(cachedValue)) {
                         log.debug("【YdszCacheable】防击穿双重检查命中空值标记 key={}", cacheKey);
@@ -184,7 +189,7 @@ public class YdszCacheableAspect {
             LockSupport.parkNanos(waitNanos);
             totalWaitNanos += waitNanos;
 
-            Object cachedValue = redisService.get(cacheKey);
+            Object cachedValue = redisStringOps.get(cacheKey);
             if (cachedValue != null) {
                 if (NULL_VALUE_MARKER.equals(cachedValue)) {
                     log.debug("【YdszCacheable】防击穿等待命中空值标记 key={}", cacheKey);
@@ -224,14 +229,14 @@ public class YdszCacheableAspect {
 
         if (result == null && annotation.preventPenetration()) {
             Duration nullTtl = Duration.of(annotation.nullValueTtl(), annotation.timeUnit().toChronoUnit());
-            redisService.set(cacheKey, NULL_VALUE_MARKER, nullTtl);
+            redisStringOps.set(cacheKey, NULL_VALUE_MARKER, nullTtl);
             log.debug("【YdszCacheable】缓存空值防穿透 key={} ttl={}s", cacheKey, annotation.nullValueTtl());
             return null;
         }
 
         if (result != null) {
             Duration ttlDuration = Duration.of(ttl, annotation.timeUnit().toChronoUnit());
-            redisService.set(cacheKey, result, ttlDuration);
+            redisStringOps.set(cacheKey, result, ttlDuration);
             log.debug("【YdszCacheable】缓存写入成功 key={} ttl={}s", cacheKey, ttl);
         }
 
@@ -243,7 +248,7 @@ public class YdszCacheableAspect {
      */
     private void releaseLock(String lockKey, String lockValue) {
         try {
-            redisService.executeScript(UNLOCK_LUA, Collections.singletonList(lockKey), Long.class, lockValue);
+            redisTemplate.execute(new DefaultRedisScript<>(UNLOCK_LUA, Long.class), Collections.singletonList(lockKey), lockValue);
         } catch (Exception e) {
             log.error("【YdszCacheable】释放防击穿锁失败 | lockKey={}", lockKey, e);
         }
@@ -291,7 +296,7 @@ public class YdszCacheableAspect {
         Object result = joinPoint.proceed();
 
         String cacheKey = resolveKey(annotation.key(), signature, joinPoint.getArgs());
-        redisService.delete(cacheKey);
+        redisStringOps.del(cacheKey);
         log.debug("【YdszCacheEvict】缓存淘汰 | key={}", cacheKey);
 
         return result;
@@ -318,7 +323,7 @@ public class YdszCacheableAspect {
         if (result != null) {
             String cacheKey = resolveKey(annotation.key(), signature, joinPoint.getArgs());
             Duration ttlDuration = Duration.of(annotation.ttl(), annotation.timeUnit().toChronoUnit());
-            redisService.set(cacheKey, result, ttlDuration);
+            redisStringOps.set(cacheKey, result, ttlDuration);
             log.debug("【YdszCachePut】缓存更新 | key={} | ttl={}s", cacheKey, annotation.ttl());
         }
 

@@ -249,13 +249,15 @@ public class RedisConfiguration {
     /**
      * 注册 YdszCacheable 注解切面
      *
-     * @param redisService Redis 服务
+     * @param redisStringOps Redis String 操作组件（用于读写缓存、SETNX 锁等）
+     * @param redisTemplate  Redis 模板（用于执行 Lua 脚本释放锁）
      * @return YdszCacheableAspect 实例
      */
     @Bean
     @ConditionalOnMissingBean
-    public YdszCacheableAspect ydszCacheableAspect(RedisService redisService) {
-        return new YdszCacheableAspect(redisService);
+    public YdszCacheableAspect ydszCacheableAspect(RedisStringOps redisStringOps,
+                                                   RedisTemplate<String, Object> redisTemplate) {
+        return new YdszCacheableAspect(redisStringOps, redisTemplate);
     }
 
     /**

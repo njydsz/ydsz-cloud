@@ -11,7 +11,8 @@ import org.slf4j.MDC;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
 import com.njydsz.common.core.constant.HeaderConstants;
-import static com.njydsz.common.core.context.BizContextKeys.*;
+import static com.njydsz.common.core.context.BizContextKeys.KEY_EXTRA_HEADERS;
+import static com.njydsz.common.core.context.BizContextKeys.KEY_HTTP_REQUEST;
 
 /**
  * 请求上下文持有者
