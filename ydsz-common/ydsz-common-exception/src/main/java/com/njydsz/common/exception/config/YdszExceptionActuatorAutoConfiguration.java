@@ -13,7 +13,6 @@ import com.njydsz.common.exception.code.ErrorCodeTable;
 import com.njydsz.common.exception.endpoint.ExceptionCodeDocEndpoint;
 import com.njydsz.common.exception.health.ExceptionHealthIndicator;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;
-import com.njydsz.common.exception.registry.ExceptionCodeScanner;
 
 /**
  * 异常模块 Actuator / 观测能力自动配置
@@ -25,6 +24,8 @@ import com.njydsz.common.exception.registry.ExceptionCodeScanner;
  * </ul>
  *
  * <p>仅在 Spring Boot Actuator 存在于类路径时激活，无 Actuator 依赖时自动跳过。
+ * 错误码扫描注册（{@code ExceptionCodeScanner}）由核心装配 {@link YdszExceptionCoreAutoConfiguration}
+ * 负责，与 Actuator 解耦，保证无 Actuator 依赖时错误码仍能正常注册。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -56,17 +57,6 @@ public class YdszExceptionActuatorAutoConfiguration {
                                                               ExceptionProperties properties,
                                                               ErrorCodeTable errorCodeTable) {
         return new ExceptionCodeDocEndpoint(messageSource, properties, errorCodeTable);
-    }
-
-    /**
-     * 创建错误码自动扫描注册器 Bean
-     *
-     * <p>注入统一错误码表 ErrorCodeTable，扫描结果仅注册到该单一注册中心。
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public ExceptionCodeScanner exceptionCodeScanner(ObjectProvider<ErrorCodeTable> errorCodeTableProvider) {
-        return new ExceptionCodeScanner(errorCodeTableProvider.getIfAvailable());
     }
 
     // ==================== 健康检查 ====================

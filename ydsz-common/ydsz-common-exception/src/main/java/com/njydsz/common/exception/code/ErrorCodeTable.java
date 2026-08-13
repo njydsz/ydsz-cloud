@@ -5,8 +5,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.springframework.stereotype.Component;
-
 import com.njydsz.common.exception.enums.ExceptionCode;
 
 /**
@@ -21,13 +19,15 @@ import com.njydsz.common.exception.enums.ExceptionCode;
  *   <li>文档端点：{@link #groupByModule()} / {@link #allCodes()} — 供 Actuator 错误码文档</li>
  * </ul>
  *
+ * <p><b>装配：</b>由 {@code YdszExceptionCoreAutoConfiguration} 以 {@code @Bean} 显式声明
+ * （{@code @ConditionalOnMissingBean}），不依赖消费方组件扫描，保证任何消费方均可用。
+ *
  * <p><b>线程安全：</b>内部使用 {@link ConcurrentHashMap}，启动期扫描注册完毕后
  * 后续只有读操作（{@link #lookup}），无需额外同步。
  *
  * @author ydsz-team
  * @since 2.0.0
  */
-@Component
 public class ErrorCodeTable {
 
     /** code → ExceptionCode 全局索引（运行时反查） */
@@ -113,6 +113,8 @@ public class ErrorCodeTable {
     /**
      * 按 code 跨模块反查（兼容 {@code ErrorCodeTable.lookupByCode}）。
      *
+     * <p>直接命中全局 {@link #codeIndex}（O(1)），避免遍历各模块索引。
+     *
      * @param code 错误码字符串
      * @return 对应的 CodeEntry，未找到返回 null
      */
@@ -120,13 +122,13 @@ public class ErrorCodeTable {
         if (code == null) {
             return null;
         }
-        for (ModuleEntry module : moduleIndex.values()) {
-            CodeEntry entry = module.codes().get(code);
-            if (entry != null) {
-                return entry;
-            }
+        ExceptionCode exceptionCode = codeIndex.get(code);
+        if (exceptionCode == null) {
+            return null;
         }
-        return null;
+        String enumName = exceptionCode instanceof Enum<?> enumValue
+                ? enumValue.name() : exceptionCode.getClass().getSimpleName();
+        return new CodeEntry(code, exceptionCode.getKey(), enumName);
     }
 
     /**

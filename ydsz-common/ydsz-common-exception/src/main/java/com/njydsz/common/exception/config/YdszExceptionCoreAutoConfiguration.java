@@ -4,19 +4,26 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
+
+import com.njydsz.common.exception.code.ErrorCodeTable;
+import com.njydsz.common.exception.custom.AbstractYdszException;
+import com.njydsz.common.exception.custom.MessageSourceHolder;
+import com.njydsz.common.exception.metrics.ExceptionMetrics;
+import com.njydsz.common.exception.registry.ExceptionCodeScanner;
+
+import io.micrometer.core.instrument.MeterRegistry;
 
 import jakarta.annotation.PostConstruct;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
@@ -27,15 +34,6 @@ import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
 
-import com.njydsz.common.exception.code.ErrorCodeTable;
-import com.njydsz.common.exception.custom.AbstractYdszException;
-import com.njydsz.common.exception.custom.MessageSourceHolder;
-import com.njydsz.common.exception.enums.ExceptionCode;
-import com.njydsz.common.exception.metrics.ExceptionMetrics;
-
-import io.micrometer.core.instrument.MeterRegistry;
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * 异常模块核心自动配置
  *
@@ -45,6 +43,10 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>Web 国际化：{@link LocaleResolver}、{@link LocaleChangeInterceptor}</li>
  *   <li>异常指标：{@link ExceptionMetrics}</li>
  * </ul>
+ *
+ * <p>同时负责错误码注册中心的显式装配：{@link ErrorCodeTable} 与 {@link ExceptionCodeScanner}
+ * 均在核心装配中声明（不依赖 Actuator 或组件扫描），保证无 Actuator 依赖的消费方
+ * 也能完成错误码注册与 i18n key fail-fast 校验。
  *
  * <p>所有 Web/Actuator 相关能力均通过 {@code @ConditionalOnClass} 条件加载，
  * 保证在纯后端（无 Web 容器）场景下也能使用异常模块的核心功能。
@@ -66,9 +68,6 @@ public class YdszExceptionCoreAutoConfiguration {
     private final Environment environment;
     private final ObjectProvider<MessageSource> messageSourceProvider;
 
-    /** Spring 应用上下文，用于延迟获取 ErrorCodeTable Bean */
-    private ApplicationContext applicationContext;
-
     public YdszExceptionCoreAutoConfiguration(I18nProperties i18nProperties,
                                                ExceptionProperties exceptionProperties,
                                                ObjectProvider<Environment> environmentProvider,
@@ -79,12 +78,33 @@ public class YdszExceptionCoreAutoConfiguration {
         this.messageSourceProvider = messageSourceProvider;
     }
 
+    // ==================== 错误码注册中心 ====================
+
     /**
-     * 由 Spring 注入 ApplicationContext。
+     * 创建统一错误码注册表 Bean。
+     *
+     * <p>显式声明以消除对消费方组件扫描的隐式依赖，保证任何消费方均可用。
      */
-    @Autowired
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
+    @Bean
+    @ConditionalOnMissingBean(ErrorCodeTable.class)
+    public ErrorCodeTable errorCodeTable() {
+        return new ErrorCodeTable();
+    }
+
+    /**
+     * 创建错误码自动扫描注册器 Bean。
+     *
+     * <p>扫描与 i18n key 校验在全部单例 Bean 实例化完成后执行（{@code SmartInitializingSingleton}），
+     * 确保 fail-fast 校验基于完整注册表，而非空表空转。
+     */
+    @Bean
+    @ConditionalOnMissingBean(ExceptionCodeScanner.class)
+    public ExceptionCodeScanner exceptionCodeScanner(ErrorCodeTable errorCodeTable,
+                                                     MessageSource messageSource,
+                                                     Environment env) {
+        boolean validateOnStartup = env == null
+                || env.getProperty("ydsz.i18n.validate-on-startup", Boolean.class, true);
+        return new ExceptionCodeScanner(errorCodeTable, messageSource, validateOnStartup);
     }
 
     // ==================== 国际化核心 ====================
@@ -98,7 +118,7 @@ public class YdszExceptionCoreAutoConfiguration {
      *
      * <p>i18n 解析策略：
      * <ul>
-     *     <li>MessageSource 可用时：{@code getMessage()} 自动解析 i18n 文案</li>
+     *     <li>MessageSource 可用时：{@code getMessage()} 按当前请求 Locale 自动解析 i18n 文案</li>
      *     <li>MessageSource 不可用时：{@code getMessage()} 返回原始 key（兜底）</li>
      * </ul>
      */
@@ -124,20 +144,14 @@ public class YdszExceptionCoreAutoConfiguration {
     }
 
     /**
-     * 创建全局国际化消息源，并在启动阶段对异常错误码的 i18n key 做 fail-fast 校验。
+     * 创建全局国际化消息源。
      */
     @Bean(name = MESSAGE_SOURCE_BEAN_NAME)
     @ConditionalOnMissingBean(name = MESSAGE_SOURCE_BEAN_NAME)
     public MessageSource messageSource() {
         boolean isProd = isProdEnvironment();
         int cacheSeconds = isProd ? i18nProperties.getProdCacheSeconds() : i18nProperties.getDevCacheSeconds();
-        MessageSource messageSource = createMessageSource(cacheSeconds);
-        boolean validateEnabled = environment == null
-                || environment.getProperty("ydsz.i18n.validate-on-startup", Boolean.class, true);
-        if (validateEnabled) {
-            validateExceptionCodeKeys(messageSource);
-        }
-        return messageSource;
+        return createMessageSource(cacheSeconds);
     }
 
     /**
@@ -164,7 +178,7 @@ public class YdszExceptionCoreAutoConfiguration {
         AcceptHeaderLocaleResolver resolver = new AcceptHeaderLocaleResolver();
         resolver.setDefaultLocale(Locale.CHINA);
 
-        List<Locale> localeList = new ArrayList<>();
+        List<Locale> localeList = new ArrayList<>(4);
         for (String localeStr : i18nProperties.getSupportedLocales()) {
             String[] parts = localeStr.split("_");
             if (parts.length == 2) {
@@ -222,7 +236,7 @@ public class YdszExceptionCoreAutoConfiguration {
 
         String basename = i18nProperties.getBasename();
         String[] basenameArray = basename.split(",");
-        List<String> basenameList = new ArrayList<>();
+        List<String> basenameList = new ArrayList<>(8);
         for (String bn : basenameArray) {
             basenameList.add(bn.trim());
         }
@@ -259,57 +273,6 @@ public class YdszExceptionCoreAutoConfiguration {
             } else {
                 log.error("国际化配置加载检查异常", e);
             }
-        }
-    }
-
-    /**
-     * 启动时校验所有已注册的 ExceptionCode 的 i18n key 是否能在默认 messages.properties 中解析。
-     *
-     * <p>优先从 {@link ErrorCodeTable} 获取注册信息，确保 fail-fast 校验覆盖全部已注册错误码。
-     */
-    private void validateExceptionCodeKeys(MessageSource messageSource) {
-        List<String> missingKeys = new ArrayList<>();
-
-        // 从 ErrorCodeTable（统一注册表）获取已注册 code
-        ErrorCodeTable errorCodeTable = applicationContext != null
-                ? applicationContext.getBeanProvider(ErrorCodeTable.class).getIfAvailable()
-                : null;
-        if (errorCodeTable == null) {
-            log.warn("ErrorCodeTable 尚未就绪，跳过 i18n key 启动校验");
-            return;
-        }
-        Map<String, ExceptionCode> registered = errorCodeTable.allCodes();
-
-        for (Map.Entry<String, ExceptionCode> entry : registered.entrySet()) {
-            collectMissingKey(messageSource, entry.getValue(), missingKeys);
-        }
-
-        if (!missingKeys.isEmpty()) {
-            String errorMsg = String.format(
-                    "i18n 启动校验失败：以下 %d 个 ExceptionCode 的 key 在 messages.properties 中缺失，"
-                    + "请检查 src/main/resources/i18n/messages.properties 及对应语言文件：\n  - %s\n"
-                    + "如需关闭校验，可设置 ydsz.i18n.validate-on-startup=false（不推荐）。",
-                    missingKeys.size(), String.join("\n  - ", missingKeys));
-            log.error(errorMsg);
-            throw new IllegalStateException(errorMsg);
-        }
-
-        log.info("i18n 启动校验通过：共 {} 个 ExceptionCode key 全部可在 messages.properties 中解析",
-                registered.size());
-    }
-
-    private void collectMissingKey(MessageSource messageSource, ExceptionCode code, List<String> missingKeys) {
-        String key = code.getKey();
-        if (key == null || key.isEmpty()) {
-            return;
-        }
-        try {
-            String message = messageSource.getMessage(key, null, null, Locale.ROOT);
-            if (message == null || message.equals(key)) {
-                missingKeys.add(key + " (code=" + code.getCode() + ")");
-            }
-        } catch (Exception e) {
-            missingKeys.add(key + " (code=" + code.getCode() + ", error=" + e.getMessage() + ")");
         }
     }
 }

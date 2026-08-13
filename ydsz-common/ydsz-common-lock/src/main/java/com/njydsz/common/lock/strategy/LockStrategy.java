@@ -1,16 +1,19 @@
 package com.njydsz.common.lock.strategy;
 
+import java.util.List;
+
 import com.njydsz.common.lock.RedisReadWriteLock;
 import com.njydsz.common.lock.RedisSemaphore;
 import com.njydsz.common.lock.annotation.LockType;
 import com.njydsz.common.lock.core.DistributedLocker;
+import com.njydsz.common.lock.impl.RedisMultiLock;
 import com.njydsz.common.lock.scheduler.LockWatchDog;
 
 /**
  * 锁策略工厂接口
  *
  * <p>根据 {@link LockType} 创建并返回对应的分布式锁实例，
- * 同时提供读写锁和信号量的创建方法。
+ * 同时提供读写锁、信号量与多 Key 联锁的创建方法。
  *
  * <p>实现类通过 Spring 注入 Redis 连接等资源，确保所有锁实例共享同一连接池。
  *
@@ -22,6 +25,9 @@ public interface LockStrategy {
 
     /**
      * 根据锁类型获取对应的分布式锁实例
+     *
+     * <p>仅支持 {@link LockType#REENTRANT} 与 {@link LockType#FAIR}；
+     * 读写锁与信号量请使用 {@link #getReadWriteLock} / {@link #getSemaphore} 获取。</p>
      *
      * @param lockType 锁类型，不能为空
      * @return 对应类型的分布式锁实例
@@ -44,6 +50,17 @@ public interface LockStrategy {
      * @return 信号量实例
      */
     RedisSemaphore getSemaphore(String key, int permits);
+
+    /**
+     * 获取 Redis 多 Key 联锁实例
+     *
+     * <p>至少需要 2 个底层锁，全部获取成功才算成功，任一失败回滚全部。
+     * 续期参数（间隔/次数上限）取 {@code ydsz.lock.multi-lock} 配置。</p>
+     *
+     * @param locks 底层分布式锁列表（至少 2 个）
+     * @return 多 Key 联锁实例
+     */
+    RedisMultiLock getMultiLock(List<DistributedLocker> locks);
 
     /**
      * 获取看门狗实例（可选）

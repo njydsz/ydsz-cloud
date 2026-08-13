@@ -1,25 +1,18 @@
 package com.njydsz.common.lock.aspect;
 
 import java.lang.reflect.Method;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.springframework.core.DefaultParameterNameDiscoverer;
-import org.springframework.core.ParameterNameDiscoverer;
-import org.springframework.expression.Expression;
-import org.springframework.expression.ExpressionParser;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.expression.spel.support.SimpleEvaluationContext;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.lock.annotation.LockType;
 import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.lock.strategy.LockStrategy;
+import com.njydsz.common.lock.util.LockExpressionUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -50,15 +43,6 @@ public class DistributedScheduledAspect {
 
     /** 锁 key 前缀 */
     private static final String LOCK_PREFIX = "ydsz:schedule:";
-
-    /** SpEL 表达式解析器 */
-    private final ExpressionParser expressionParser = new SpelExpressionParser();
-
-    /** 参数名发现器（用于 SpEL 上下文绑定） */
-    private final ParameterNameDiscoverer parameterNameDiscoverer = new DefaultParameterNameDiscoverer();
-
-    /** SpEL 表达式缓存，避免每次反射解析 */
-    private final Map<String, Expression> expressionCache = new ConcurrentHashMap<>();
 
     /** 分布式锁提供者（null 时降级为不加锁） */
     private final DistributedLocker distributedLocker;
@@ -118,10 +102,10 @@ public class DistributedScheduledAspect {
     }
 
     /**
-     * 解析锁 key，支持 SpEL 表达式
+     * 解析锁 key，支持 SpEL 表达式（委托 {@link LockExpressionUtils}）
      *
-     * <p>如果 lockKey 包含 {@code #{...}} 占位符，则解析为 SpEL 表达式；
-     * 否则直接返回原字符串。
+     * <p>支持模板模式（{@code "message:#{#param}"}）与整串 SpEL 模式
+     * （{@code "'message:' + #param}"}），无占位符时直接返回原字符串。
      *
      * @param lockKey 注解上的 key 表达式
      * @param method  目标方法
@@ -129,26 +113,6 @@ public class DistributedScheduledAspect {
      * @return 解析后的锁 key
      */
     private String resolveLockKey(String lockKey, Method method, Object[] args) {
-        if (lockKey == null || !lockKey.contains("#{")) {
-            return lockKey;
-        }
-        try {
-            String spelExpression = lockKey.replaceAll("#\\{(.+?)}", "$1");
-            Expression expression = expressionCache.computeIfAbsent(spelExpression,
-                    expr -> expressionParser.parseExpression(expr));
-            SimpleEvaluationContext context = SimpleEvaluationContext.forReadOnlyDataBinding().build();
-            String[] parameterNames = parameterNameDiscoverer.getParameterNames(method);
-            if (parameterNames != null) {
-                for (int i = 0; i < parameterNames.length; i++) {
-                    context.setVariable(parameterNames[i], args[i]);
-                }
-            }
-            String evaluated = expression.getValue(context, String.class);
-            return evaluated != null ? evaluated : lockKey;
-        } catch (Exception e) {
-            log.warn("[ydsz-lock] [scheduled] SpEL 解析失败，使用原始 key expr={} cause={}",
-                    lockKey, e.getMessage());
-            return lockKey;
-        }
+        return LockExpressionUtils.resolve(lockKey, method, args);
     }
 }

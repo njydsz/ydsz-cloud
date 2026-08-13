@@ -204,17 +204,13 @@ public class FlowTaskCreateService {
                              List<String> explicitAssignees) {
         FlowInstance instance = lookupInstance(instanceId);
 
-        // P1-4: SERVICE 服务节点 — 自动执行
+        // 特殊节点创建路径（提前返回）
         if (isNodeType(node, FlowNodeType.SERVICE)) {
             return executeServiceNode(instance, node, variables);
         }
-
-        // GAP-P2-10: FOREACH 循环节点 — 对集合中每个元素创建独立 task
         if (isNodeType(node, FlowNodeType.FOREACH)) {
             return createForeachTasks(instance, node, variables, explicitAssignees);
         }
-
-        // P0-4: LEVEL_APPROVAL 逐级审批节点 — 动态展开多级上级
         if (isNodeType(node, FlowNodeType.LEVEL_APPROVAL)) {
             List<String> levelApprovers = expandLevelApprovers(instance, node, variables, explicitAssignees);
             if (levelApprovers.isEmpty()) {
@@ -222,6 +218,42 @@ public class FlowTaskCreateService {
             }
             return createLevelApprovalTask(instance, node, variables, levelApprovers);
         }
+
+        // 标准审批创建路径：构建 → 后置处理
+        TaskBuildResult result = buildTaskEntities(instance, node, variables, explicitAssignees);
+        if (result.earlyReturnTaskId() != null) {
+            return result.earlyReturnTaskId();
+        }
+        return postCreateTask(result.task(), instance, node, variables);
+    }
+
+    /**
+     * 标准节点任务构建结果。
+     *
+     * <p>当 {@code earlyReturnTaskId} 非空时，表示任务创建流程已提前完成
+     * （去重跳过 / 审批人为空兜底 / 自动去重），无需执行 {@link #postCreateTask}，
+     * 此时 {@code task} 为 null。
+     *
+     * <p>当 {@code task} 非空时，表示任务已构建完毕（含 insert + flow_user），
+     * 需继续执行 {@link #postCreateTask} 完成后置动作。
+     *
+     * @param earlyReturnTaskId 提前返回的任务 ID（null 表示需继续 postCreateTask）
+     * @param task              已持久化的任务实体（null 表示已有提前返回）
+     */
+    private record TaskBuildResult(String earlyReturnTaskId, FlowRunTask task) {
+    }
+
+    /**
+     * 构建标准审批节点的任务实体（含持久化）。
+     *
+     * <p>完成办理人解析 → 跨节点去重 → 审批人为空兜底 → 自动去重判断 → 写入任务表 + ydsz_flow_user。
+     * 出现提前返回场景（空审批人去重跳过 / 空审批人兜底 / 自动去重命中）时，
+     * 通过 {@link TaskBuildResult#earlyReturnTaskId} 传递结果。
+     */
+    private TaskBuildResult buildTaskEntities(FlowInstance instance, FlowNode node,
+                                               Map<String, Object> variables,
+                                               List<String> explicitAssignees) {
+        String instanceId = instance.getId();
 
         // 解析办理人：GAP-P2-9 显式指定优先；否则尝试展开 ROLE/DEPT 为多人
         List<String> userIds = (explicitAssignees != null && !explicitAssignees.isEmpty())
@@ -240,13 +272,13 @@ public class FlowTaskCreateService {
         if (userIds.isEmpty()) {
             // 跨节点去重后候选人为空 — 自动跳过该节点
             if (autoDedup) {
-                return handleAutoDedupSkip(task, instance, node, variables);
+                return new TaskBuildResult(handleAutoDedupSkip(task, instance, node, variables), null);
             }
             // P0-1: 审批人为空兜底处理
-            return handleEmptyAssignee(task, instance, node, variables);
+            return new TaskBuildResult(handleEmptyAssignee(task, instance, node, variables), null);
         }
 
-        // 正常路径：设置首个办理人 + 写入 ydsz_flow_user
+        // 正常路径：设置首个办理人
         task.setAssigneeType(FlowAssigneeType.USER.name());
         task.setAssigneeId(userIds.get(0));
         task.setAssigneeName("USER:" + userIds.get(0));
@@ -255,21 +287,34 @@ public class FlowTaskCreateService {
         if (performType == FlowPerformType.OR) {
             String dedupTaskId = tryAutoDedup(task, instance, node, variables, userIds.get(0));
             if (dedupTaskId != null) {
-                return dedupTaskId;
+                return new TaskBuildResult(dedupTaskId, null);
             }
         }
+
+        // 持久化任务 + 写入 ydsz_flow_user（需 task ID，必须在 insert 之后）
         taskMapper.insert(task);
-        // 写入 ydsz_flow_user
         Map<String, Integer> userWeights = parseUserWeights(node.getExt());
         for (String uid : userIds) {
             insertFlowUser(task, instance, node, uid, userWeights);
         }
         log.info("[Flow] 创建任务: instanceId={} node={} performType={} assigneeCount={}",
                 instanceId, node.getNodeCode(), performType, userIds.size());
+
+        return new TaskBuildResult(null, task);
+    }
+
+    /**
+     * 任务创建后置处理：委派改写 + 事件发布 + WebSocket 推送 + 自动审批。
+     *
+     * <p>前置条件：{@code task} 已持久化且 ydsz_flow_user 已写入。
+     */
+    private String postCreateTask(FlowRunTask task, FlowInstance instance, FlowNode node,
+                                    Map<String, Object> variables) {
         // P1-4: 应用长期授权委派
         applyDelegateRedirect(task, instance, node);
+        // P0-1: 事件发布
         support.fireEvent(l -> l.onTaskCreated(task.getId()), task.getId());
-        support.publishWorkflowEvent("TASK_CREATED", instanceId, task.getId());
+        support.publishWorkflowEvent("TASK_CREATED", instance.getId(), task.getId());
         // P1-7: WebSocket 推送
         if (todoCountPushService != null) {
             todoCountPushService.pushTaskAssigned(task);

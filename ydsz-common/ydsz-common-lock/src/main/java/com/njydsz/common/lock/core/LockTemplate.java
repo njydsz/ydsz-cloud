@@ -3,6 +3,7 @@ package com.njydsz.common.lock.core;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+import com.njydsz.common.lock.exception.DistributedLockException;
 import com.njydsz.common.lock.strategy.LockStrategy;
 
 import lombok.extern.slf4j.Slf4j;
@@ -62,7 +63,7 @@ public class LockTemplate {
      * @param action    要执行的业务逻辑
      * @param <T>       返回值类型
      * @return 业务逻辑的返回值
-     * @throws LockAcquireException 锁获取失败时抛出
+     * @throws DistributedLockException 锁获取失败时抛出
      */
     public <T> T execute(String lockKey, long leaseTime, TimeUnit timeUnit, Supplier<T> action) {
         return execute(lockKey, 0, leaseTime, timeUnit, action);
@@ -78,7 +79,7 @@ public class LockTemplate {
      * @param action    要执行的业务逻辑
      * @param <T>       返回值类型
      * @return 业务逻辑的返回值
-     * @throws LockAcquireException 锁获取失败时抛出
+     * @throws DistributedLockException 锁获取失败时抛出
      * @throws InterruptedException 等待过程中线程被中断
      */
     public <T> T execute(String lockKey, long waitTime, long leaseTime, TimeUnit timeUnit, Supplier<T> action) {
@@ -162,6 +163,8 @@ public class LockTemplate {
 
     /**
      * 获取锁（内部方法）
+     *
+     * @throws DistributedLockException 获取失败或被中断时抛出
      */
     private String acquireLock(DistributedLocker lock, String lockKey,
                                 long waitTime, long leaseTime, TimeUnit timeUnit) {
@@ -170,12 +173,12 @@ public class LockTemplate {
                     ? lock.tryLock(lockKey, waitTime, leaseTime, timeUnit)
                     : lock.tryLock(lockKey, leaseTime, timeUnit);
             if (lockValue == null) {
-                throw new LockAcquireException("获取分布式锁失败: " + lockKey);
+                throw new DistributedLockException("获取分布式锁失败: " + lockKey);
             }
             return lockValue;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new LockAcquireException("获取分布式锁被中断: " + lockKey, e);
+            throw new DistributedLockException("获取分布式锁被中断: " + lockKey, e);
         }
     }
 
@@ -187,19 +190,6 @@ public class LockTemplate {
             lock.unlock(lockKey, lockValue);
         } catch (Exception e) {
             log.warn("[ydsz-lock] [template] 释放锁异常 key={} cause={}", lockKey, e.getMessage());
-        }
-    }
-
-    /**
-     * 锁获取失败异常
-     */
-    public static class LockAcquireException extends RuntimeException {
-        public LockAcquireException(String message) {
-            super(message);
-        }
-
-        public LockAcquireException(String message, Throwable cause) {
-            super(message, cause);
         }
     }
 }

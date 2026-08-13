@@ -785,6 +785,25 @@ public final class MapUtils {
     }
 
     /**
+     * 将 Map 转换为指定类型的 Bean（支持普通 Bean 与 Record）。
+     *
+     * <p>普通 Bean 基于 setter 反射绑定字段；Record 基于规范构造器绑定组件值。
+     *
+     * @param source 源 Map（String 键）
+     * @param targetClass 目标类型
+     * @param <T> 目标类型泛型
+     * @return 转换后的对象；source 为 null 时返回 null
+     * @since 3.0.0
+     */
+    public static <T> T toBean(Map<String, Object> source, Class<T> targetClass) {
+        Objects.requireNonNull(targetClass, "targetClass must not be null");
+        if (source == null) {
+            return null;
+        }
+        return toBeanOrRecord(source, targetClass);
+    }
+
+    /**
      * 泛型版 toBean，支持 List&lt;T&gt;、Map&lt;K,V&gt; 等参数化类型转换。
      *
      * <p>与 {@link #toBean(Map, Class)} 不同，本方法通过 {@link TypeReference} 捕获泛型信息，

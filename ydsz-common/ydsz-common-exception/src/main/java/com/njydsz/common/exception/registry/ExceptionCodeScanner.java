@@ -4,13 +4,14 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
+import org.springframework.beans.factory.SmartInitializingSingleton;
+import org.springframework.context.MessageSource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.ResourcePatternResolver;
@@ -30,6 +31,9 @@ import lombok.extern.slf4j.Slf4j;
  * <p>启动时扫描所有标注 {@link YdszExceptionCode} 注解的枚举类，
  * 将其注册到统一错误码表 {@link ErrorCodeTable}（单一注册中心）。
  *
+ * <p><b>时序说明：</b>实现 {@link SmartInitializingSingleton}，在全部单例 Bean 实例化完成后
+ * 执行扫描注册与 i18n key fail-fast 校验，保证校验时机晚于注册，避免"校验空转"。
+ *
  * <p><b>性能优化（v2.0）：</b>优先读取编译时生成的索引文件 META-INF/spring/ydsz-exception-codes.idx，
  * 仅在索引不存在时回退到 ASM 字节码扫描，减少启动开销。
  *
@@ -46,13 +50,15 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  */
 @Slf4j
-public class ExceptionCodeScanner {
+public class ExceptionCodeScanner implements SmartInitializingSingleton {
 
     private static final String INDEX_LOCATION = "META-INF/spring/ydsz-exception-codes.idx";
     private static final String SCAN_PATTERN = "classpath*:com/njydsz/**/*.class";
     private static final String INDEX_PATTERN = "classpath*:" + INDEX_LOCATION;
 
     private final ErrorCodeTable errorCodeTable;
+    private final MessageSource messageSource;
+    private final boolean validateOnStartup;
     private final AnnotationTypeFilter annotationFilter = new AnnotationTypeFilter(YdszExceptionCode.class);
     private final ResourcePatternResolver resourceResolver = new PathMatchingResourcePatternResolver();
 
@@ -64,18 +70,36 @@ public class ExceptionCodeScanner {
     /**
      * 构造扫描注册器。
      *
-     * @param errorCodeTable 统一错误码表（可为 null，为 null 时跳过注册）
+     * @param errorCodeTable  统一错误码表（可为 null，为 null 时跳过注册）
+     * @param messageSource   国际化消息源（用于 i18n key fail-fast 校验）
+     * @param validateOnStartup 是否启动时校验 i18n key 可解析
      */
-    public ExceptionCodeScanner(ErrorCodeTable errorCodeTable) {
+    public ExceptionCodeScanner(ErrorCodeTable errorCodeTable,
+                                MessageSource messageSource,
+                                boolean validateOnStartup) {
         this.errorCodeTable = errorCodeTable;
+        this.messageSource = messageSource;
+        this.validateOnStartup = validateOnStartup;
     }
 
     /**
-     * 应用就绪后执行扫描注册。
+     * 所有单例 Bean 实例化完成后执行扫描注册与 i18n key 校验。
+     *
+     * <p>扫描先于校验，保证 fail-fast 校验基于完整注册表执行。
+     */
+    @Override
+    public void afterSingletonsInstantiated() {
+        scanAndRegister();
+        if (validateOnStartup && messageSource != null) {
+            validateExceptionCodeKeys();
+        }
+    }
+
+    /**
+     * 执行扫描注册。
      *
      * <p>优先使用编译时索引，回退到 ASM 字节码扫描。
      */
-    @EventListener(ApplicationReadyEvent.class)
     public void scanAndRegister() {
         // 1. 优先尝试从索引文件加载
         boolean indexed = scanFromIndex();
@@ -245,6 +269,56 @@ public class ExceptionCodeScanner {
             log.debug("[ExceptionCodeScanner] 注册模块错误码: module={} codes={}", module, codeMap.size());
         } catch (Exception e) {
             log.debug("[ExceptionCodeScanner] 加载枚举失败: {} err={}", className, e.getMessage());
+        }
+    }
+
+    /**
+     * 启动时校验所有已注册 ExceptionCode 的 i18n key 是否可在默认 messages.properties 中解析。
+     *
+     * <p>基于扫描完成的 {@link ErrorCodeTable} 全量注册表执行 fail-fast 校验，
+     * 任一 key 缺失即抛出 {@link IllegalStateException} 阻止应用启动。
+     */
+    private void validateExceptionCodeKeys() {
+        if (errorCodeTable == null) {
+            log.warn("[ExceptionCodeScanner] ErrorCodeTable 不可用，跳过 i18n key 启动校验");
+            return;
+        }
+        Map<String, ExceptionCode> registered = errorCodeTable.allCodes();
+        List<String> missingKeys = new ArrayList<>(4);
+        for (ExceptionCode code : registered.values()) {
+            collectMissingKey(code, missingKeys);
+        }
+        if (!missingKeys.isEmpty()) {
+            String errorMsg = String.format(
+                    "i18n 启动校验失败：以下 %d 个 ExceptionCode 的 key 在 messages.properties 中缺失，"
+                    + "请检查 src/main/resources/i18n/messages.properties 及对应语言文件：\n  - %s\n"
+                    + "如需关闭校验，可设置 ydsz.i18n.validate-on-startup=false（不推荐）。",
+                    missingKeys.size(), String.join("\n  - ", missingKeys));
+            log.error(errorMsg);
+            throw new IllegalStateException(errorMsg);
+        }
+        log.info("[ExceptionCodeScanner] i18n 启动校验通过：共 {} 个 ExceptionCode key 全部可在 messages.properties 中解析",
+                registered.size());
+    }
+
+    /**
+     * 收集单个异常码缺失的 i18n key。
+     *
+     * @param code        异常码枚举
+     * @param missingKeys 缺失 key 收集列表
+     */
+    private void collectMissingKey(ExceptionCode code, List<String> missingKeys) {
+        String key = code.getKey();
+        if (key == null || key.isEmpty()) {
+            return;
+        }
+        try {
+            String message = messageSource.getMessage(key, null, null, Locale.ROOT);
+            if (message == null || message.equals(key)) {
+                missingKeys.add(key + " (code=" + code.getCode() + ")");
+            }
+        } catch (Exception e) {
+            missingKeys.add(key + " (code=" + code.getCode() + ", error=" + e.getMessage() + ")");
         }
     }
 }
