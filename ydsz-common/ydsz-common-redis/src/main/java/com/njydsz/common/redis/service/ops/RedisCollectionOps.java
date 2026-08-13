@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Redis 集合操作组件（Set + List + ZSet）
  *
- * <p>从 {@code RedisService} 按数据类型拆分而来，职责单一，便于维护与测试。
+ * <p>按数据类型拆分而来的细粒度操作组件，职责单一，便于维护与测试。
  * 集成 {@link RedisMetricsCollector} 进行操作指标采集，与 {@link RedisStringOps} 保持一致。
  *
  * @author ydsz-team

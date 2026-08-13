@@ -2,7 +2,11 @@ package com.njydsz.workflow.web.controller.analytics;
 
 import org.springframework.validation.annotation.Validated;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;

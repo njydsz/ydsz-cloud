@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Redis String / Bitmap 操作组件
  *
- * <p>从 {@code RedisService} 按数据类型拆分而来，职责单一，便于维护。
+ * <p>按数据类型拆分而来的细粒度操作组件，职责单一，便于维护。
  * 包含：通用操作、String 操作、Bitmap 操作。
  *
  * <p><b>增强特性：</b>

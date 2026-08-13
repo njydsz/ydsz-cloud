@@ -95,7 +95,7 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  *
  * @see FlowInstanceMergeService 接口定义
- * @see com.njydsz.common.redis.service.RedisService Redis 服务
+ * @see com.njydsz.common.redis.service.ops.RedisHashOps Redis Hash 操作
  * @see FlowTaskService 流程任务服务
  * @see FlowInstanceService 流程实例服务
  */
