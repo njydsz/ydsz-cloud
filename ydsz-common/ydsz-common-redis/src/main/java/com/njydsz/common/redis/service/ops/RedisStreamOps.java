@@ -32,6 +32,7 @@ import org.springframework.data.redis.core.StreamOperations;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.config.RedisProperties;
+import com.njydsz.common.redis.metrics.RedisMetricsCollector;
 
 /**
  * Redis Stream 操作组件
@@ -56,10 +57,25 @@ public class RedisStreamOps {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final String keyPrefix;
+    private final RedisMetricsCollector metricsCollector;
 
     public RedisStreamOps(RedisTemplate<String, Object> redisTemplate, RedisProperties redisProperties) {
+        this(redisTemplate, redisProperties, null);
+    }
+
+    /**
+     * 构造 Stream 操作组件（带指标采集）
+     *
+     * @param redisTemplate   Redis 模板
+     * @param redisProperties Redis 配置属性
+     * @param metricsCollector 指标采集器（可为 null，null 时不采集指标）
+     */
+    public RedisStreamOps(RedisTemplate<String, Object> redisTemplate,
+                          RedisProperties redisProperties,
+                          RedisMetricsCollector metricsCollector) {
         this.redisTemplate = Objects.requireNonNull(redisTemplate, "RedisTemplate 不能为 null");
         this.keyPrefix = redisProperties != null ? (redisProperties.getKeyPrefix() != null ? redisProperties.getKeyPrefix() : "") : "";
+        this.metricsCollector = metricsCollector;
     }
 
     /**
@@ -90,6 +106,13 @@ public class RedisStreamOps {
             log.warn("【Redis】XADD 操作失败：消息内容不能为空");
             return null;
         }
+        if (metricsCollector != null) {
+            return metricsCollector.recordOperation("stream_add", () -> doAdd(streamKey, message));
+        }
+        return doAdd(streamKey, message);
+    }
+
+    private String doAdd(String streamKey, Map<String, Object> message) {
         String formattedKey = formatKey(streamKey);
         try {
             MapRecord<String, String, String> record = StreamRecords.newRecord()
