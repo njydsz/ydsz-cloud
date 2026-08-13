@@ -1,5 +1,7 @@
 package com.njydsz.common.jdbc.monitor;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 import io.micrometer.core.instrument.Counter;
@@ -44,6 +46,14 @@ public class ReadWriteSplittingMetrics {
 
     private final MeterRegistry meterRegistry;
 
+    /**
+     * Counter 缓存，避免每次路由都重新注册 Micrometer Counter。
+     *
+     * <p>Micrometer 的 {@code Counter.builder().register()} 本身是幂等操作（相同 name + tags 返回同一实例），
+     * 但每次都构建 Tags 对象和调用链仍有开销。缓存后可将每次路由降低到一次 HashMap lookup。
+     */
+    private final ConcurrentMap<String, Counter> counterCache = new ConcurrentHashMap<>();
+
     public ReadWriteSplittingMetrics(MeterRegistry meterRegistry) {
         this.meterRegistry = meterRegistry;
         log.debug("ReadWriteSplittingMetrics initialized");
@@ -58,14 +68,17 @@ public class ReadWriteSplittingMetrics {
      */
     public void recordRoute(String datasource, String sqlType, String routeReason) {
         try {
-            Counter.builder(PREFIX + ".route.total")
-                    .description("读写分离路由总次数")
-                    .tags(Tags.of(
-                            "datasource", sanitizeTag(datasource),
-                            "sql_type", sanitizeTag(sqlType),
-                            "route_reason", sanitizeTag(routeReason)))
-                    .register(meterRegistry)
-                    .increment();
+            String cacheKey = "route.total:" + sanitizeTag(datasource) + ":" + sanitizeTag(sqlType) + ":" + sanitizeTag(routeReason);
+            Counter counter = counterCache.computeIfAbsent(cacheKey, k ->
+                    Counter.builder(PREFIX + ".route.total")
+                            .description("读写分离路由总次数")
+                            .tags(Tags.of(
+                                    "datasource", sanitizeTag(datasource),
+                                    "sql_type", sanitizeTag(sqlType),
+                                    "route_reason", sanitizeTag(routeReason)))
+                            .register(meterRegistry)
+            );
+            counter.increment();
         } catch (Exception e) {
             log.debug("Failed to record route metric", e);
         }
@@ -78,11 +91,14 @@ public class ReadWriteSplittingMetrics {
      */
     public void recordTransactionForced(String sqlType) {
         try {
-            Counter.builder(PREFIX + ".route.transaction_forced")
-                    .description("事务强制路由到主库次数（@Transactional 中 SELECT 强制走主库）")
-                    .tags("sql_type", sanitizeTag(sqlType))
-                    .register(meterRegistry)
-                    .increment();
+            String cacheKey = "route.transaction_forced:" + sanitizeTag(sqlType);
+            Counter counter = counterCache.computeIfAbsent(cacheKey, k ->
+                    Counter.builder(PREFIX + ".route.transaction_forced")
+                            .description("事务强制路由到主库次数（@Transactional 中 SELECT 强制走主库）")
+                            .tags("sql_type", sanitizeTag(sqlType))
+                            .register(meterRegistry)
+            );
+            counter.increment();
         } catch (Exception e) {
             log.debug("Failed to record transaction forced metric", e);
         }

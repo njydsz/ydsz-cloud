@@ -7,12 +7,17 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.SqlCommandType;
+import org.apache.ibatis.plugin.Interceptor;
+import org.apache.ibatis.plugin.Intercepts;
+import org.apache.ibatis.plugin.Invocation;
+import org.apache.ibatis.plugin.Signature;
 import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
 import org.slf4j.Logger;
@@ -57,12 +62,25 @@ import lombok.extern.slf4j.Slf4j;
  * @see SqlAuditInterceptor
  */
 @Slf4j
-public class SqlTraceInnerInterceptor implements InnerInterceptor, Ordered, MeterBinder {
+@Intercepts({
+        @Signature(type = Executor.class, method = "query", args = {MappedStatement.class, Object.class, RowBounds.class, ResultHandler.class}),
+        @Signature(type = Executor.class, method = "query", args = {MappedStatement.class, Object.class, RowBounds.class, ResultHandler.class, org.apache.ibatis.cache.CacheKey.class, BoundSql.class}),
+        @Signature(type = Executor.class, method = "update", args = {MappedStatement.class, Object.class})
+})
+public class SqlTraceInnerInterceptor implements InnerInterceptor, Ordered, MeterBinder, Interceptor {
 
     /**
      * ThreadLocal 存储当前查询/更新操作的开始时间与 SQL 标识
      */
     private static final ThreadLocal<TimingContext> TIMING_CONTEXT = new ThreadLocal<>();
+
+    /**
+     * ThreadLocal 存储当前 SQL 执行的影响行数。
+     *
+     * <p>在 {@link #intercept(Invocation)} 中执行完 Executor.query/update 后写入，
+     * 供 {@link #logAudit} 读取，替代硬编码 "N/A"。
+     */
+    private static final ThreadLocal<Integer> AFFECTED_ROWS = new ThreadLocal<>();
 
     /**
      * SQL 审计专用日志，便于独立配置 appender
@@ -156,6 +174,7 @@ public class SqlTraceInnerInterceptor implements InnerInterceptor, Ordered, Mete
             }
         } finally {
             TIMING_CONTEXT.remove();
+            AFFECTED_ROWS.remove();
         }
     }
 
@@ -165,6 +184,7 @@ public class SqlTraceInnerInterceptor implements InnerInterceptor, Ordered, Mete
     private void startTiming(MappedStatement ms, Object parameter) {
         // 清理上一个请求可能遗留的 ThreadLocal，防止线程池复用时泄漏
         TIMING_CONTEXT.remove();
+        AFFECTED_ROWS.remove();
         if (ms == null) {
             return;
         }
@@ -319,13 +339,17 @@ public class SqlTraceInnerInterceptor implements InnerInterceptor, Ordered, Mete
                 parameters = formatParameters(parameter, boundSql);
             }
 
+            // 获取实际影响行数：从 AFFECTED_ROWS ThreadLocal 中读取，无值则显示 "N/A"
+            Integer affectedRows = AFFECTED_ROWS.get();
+            String rowsInfo = affectedRows != null ? String.valueOf(affectedRows) : "N/A";
+
             StringBuilder auditLog = new StringBuilder();
             auditLog.append("[SQL审计] ")
                     .append(timestamp).append(" | ")
                     .append(commandType.name()).append(" | ")
                     .append(methodId).append(" | ")
                     .append(elapsed).append("ms | ")
-                    .append("影响行数: N/A");
+                    .append("影响行数: ").append(rowsInfo);
 
             if (!parameters.isEmpty()) {
                 auditLog.append(" | 参数: ").append(parameters);
@@ -365,6 +389,55 @@ public class SqlTraceInnerInterceptor implements InnerInterceptor, Ordered, Mete
         } catch (Exception e) {
             return "[参数格式化失败]";
         }
+    }
+
+    // ----- MyBatis Interceptor interface (捕获影响行数) -----
+
+    /**
+     * 拦截 Executor.query / Executor.update，从执行结果中提影响行数存入 ThreadLocal，
+     * 供后续 {@link #logAudit} 使用。
+     */
+    @Override
+    public Object intercept(Invocation invocation) throws Throwable {
+        try {
+            Object result = invocation.proceed();
+            // 从执行结果中提影响行数
+            if (result instanceof List<?> list) {
+                // query 返回 List，size 即为返回行数
+                AFFECTED_ROWS.set(list.size());
+            } else if (result instanceof Integer intResult) {
+                // update 返回 Integer，即 JDBC 影响行数
+                AFFECTED_ROWS.set(intResult);
+            } else if (result instanceof int[] intArray) {
+                // 批量 update 返回 int[]，取总和
+                int sum = 0;
+                for (int rows : intArray) {
+                    sum += rows;
+                }
+                AFFECTED_ROWS.set(sum);
+            }
+            return result;
+        } catch (Throwable t) {
+            // 执行失败时清除 ThreadLocal，避免泄漏
+            AFFECTED_ROWS.remove();
+            throw t;
+        }
+    }
+
+    /**
+     * 包装 Executor，实现 SQL 执行后的影响行数捕获。
+     */
+    @Override
+    public Object plugin(Object target) {
+        if (target instanceof Executor) {
+            return org.apache.ibatis.plugin.Plugin.wrap(target, this);
+        }
+        return target;
+    }
+
+    @Override
+    public void setProperties(Properties properties) {
+        // 无额外配置项
     }
 
     // ----- Getters / Setters -----

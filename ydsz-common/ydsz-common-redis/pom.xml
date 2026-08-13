@@ -107,6 +107,12 @@
             <artifactId>redisson-spring-boot-starter</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- Caffeine 本地缓存 L1（可选，用于多级缓存） -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 
 </project>

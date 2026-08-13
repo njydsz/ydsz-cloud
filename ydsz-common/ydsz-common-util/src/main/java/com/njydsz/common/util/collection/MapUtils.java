@@ -410,24 +410,9 @@ public final class MapUtils {
      * @return 填充后的 Bean 实例
      * @throws IllegalArgumentException 入参为 null、targetClass 无无参构造器、或实例化失败
      * @since 1.3.0
-     * @deprecated 自 4.0.0 起标记废弃（forRemoval=true）。本方法仅支持 setter 注入的 POJO，无法处理：
-     *             <ul>
-     *               <li>Java Record（无 setter）→ 使用 {@link #toBeanOrRecord(Map, Class)}</li>
-     *               <li>泛型集合（如 {@code List<T>}）→ 使用 JSON 框架（推荐 Fastjson2 / Jackson）</li>
-     *             </ul>
-     *             迁移示例：
-     *             <pre>{@code
-     *             // 旧：反射 toBean
-     *             UserDO user = MapUtils.toBean(map, UserDO.class);
-     *             // 新：JSON 框架（推荐）
-     *             UserDO user = YdszJson.toJavaObject(map, UserDO.class);
-     *             // 或：Record 自动检测
-     *             UserDO user = MapUtils.toBeanOrRecord(map, UserDO.class);
-     *             }</pre>
      */
-    @Deprecated(since = "4.0.0", forRemoval = true)
     @SuppressWarnings("unchecked")
-    public static <T> T toBean(Map<String, Object> map, Class<T> targetClass) {
+    private static <T> T toBeanInternal(Map<String, Object> map, Class<T> targetClass) {
         if (map == null) {
             throw new IllegalArgumentException("map cannot be null");
         }
@@ -521,61 +506,6 @@ public final class MapUtils {
             return false;
         }
         return method.getParameterCount() == 1;
-    }
-
-    /**
-     * 将 {@code Map<String, Object>} 转换为指定类型的 Java Bean（可指定日期格式）。
-     *
-     * <p>与 {@link #toBean(Map, Class)} 行为完全一致，仅日期解析使用传入的
-     * {@code dateFormatter} 代替默认的 {@code "yyyy-MM-dd HH:mm:ss"} 格式。
-     *
-     * @param map           源 Map，不可为 null
-     * @param targetClass   目标 Bean 类型，不可为 null
-     * @param dateFormatter 日期时间格式（用于 LocalDateTime / Date 字段的解析），不可为 null
-     * @param <T>           Bean 类型
-     * @return 填充后的 Bean 实例
-     * @throws IllegalArgumentException 入参为 null 时抛出
-     * @since 1.4.0
-     * @deprecated 自 4.0.0 起标记废弃（forRemoval=true）。请使用 {@link #toBeanOrRecord(Map, Class)} 替代
-     *             或基于 JSON 框架（Fastjson2 / Jackson）进行类型转换。
-     */
-    @Deprecated(since = "4.0.0", forRemoval = true)
-    public static <T> T toBean(Map<String, Object> map, Class<T> targetClass,
-                               java.time.format.DateTimeFormatter dateFormatter) {
-        if (map == null) {
-            throw new IllegalArgumentException("map cannot be null");
-        }
-        if (targetClass == null) {
-            throw new IllegalArgumentException("targetClass cannot be null");
-        }
-        if (dateFormatter == null) {
-            throw new IllegalArgumentException("dateFormatter cannot be null");
-        }
-
-        T bean = createInstance(targetClass);
-        if (map.isEmpty()) {
-            return bean;
-        }
-
-        Map<String, Method> setters = getCachedSetters(targetClass);
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-            String fieldName = entry.getKey();
-            Object value = entry.getValue();
-            Method setter = setters.get(fieldName);
-            if (setter == null || value == null) {
-                continue;
-            }
-            Class<?> paramType = setter.getParameterTypes()[0];
-            Object converted = convertValue(value, paramType, dateFormatter, setter);
-            if (converted != null) {
-                try {
-                    setter.invoke(bean, converted);
-                } catch (Exception e) {
-                    // 设置失败，跳过该字段
-                }
-            }
-        }
-        return bean;
     }
 
     /**
@@ -684,7 +614,7 @@ public final class MapUtils {
         if (value instanceof Map<?, ?> nestedMap && !paramType.isInterface() && !Modifier.isAbstract(paramType.getModifiers())) {
             Map<String, Object> nestedStringMap = toStringObjectMap(nestedMap);
             try {
-                return toBean(nestedStringMap, paramType, dateFormatter);
+                return toBeanOrRecord(nestedStringMap, paramType);
             } catch (Exception e) {
                 return null;
             }
@@ -721,7 +651,7 @@ public final class MapUtils {
             Type innerType = pt.getActualTypeArguments()[0];
             if (innerType instanceof Class<?> clazz) {
                 Object converted = (value instanceof Map<?, ?> m)
-                        ? toBean(toStringObjectMap(m), clazz)
+                        ? toBeanOrRecord(toStringObjectMap(m), clazz)
                         : convertValue(value, clazz, DEFAULT_DATE_FORMATTER, null);
                 return java.util.Optional.ofNullable(converted);
             }
@@ -759,7 +689,7 @@ public final class MapUtils {
             for (Object item : rawList) {
                 if (item instanceof Map<?, ?> itemMap) {
                     if (!elementType.isInterface() && !Modifier.isAbstract(elementType.getModifiers())) {
-                        result.add(toBean(toStringObjectMap(itemMap), elementType, formatter));
+                        result.add(toBeanOrRecord(toStringObjectMap(itemMap), elementType));
                     } else {
                         result.add(item);
                     }
@@ -944,7 +874,7 @@ public final class MapUtils {
         if (targetType instanceof Class<?> clazz) {
             if (clazz.isInstance(item)) return item;
             if (item instanceof Map<?, ?> itemMap) {
-                return toBean(toStringObjectMap(itemMap), clazz);
+                return toBeanOrRecord(toStringObjectMap(itemMap), clazz);
             }
             return item;
         }
@@ -989,7 +919,46 @@ public final class MapUtils {
         if (clazz.isRecord()) {
             return instantiateRecord(map, clazz);
         }
-        return toBean(map, clazz);
+        return toBeanInternal(map, clazz);
+    }
+
+    /**
+     * 将 {@code Map<String, Object>} 转换为指定类型的 Java Bean（使用默认日期格式）。
+     * <p>内部实现，供 {@link #toBeanOrRecord} 和递归嵌套场景使用。
+     */
+    @SuppressWarnings("unchecked")
+    private static <T> T toBeanInternal(Map<String, Object> map, Class<T> targetClass) {
+        if (map == null) {
+            throw new IllegalArgumentException("map cannot be null");
+        }
+        if (targetClass == null) {
+            throw new IllegalArgumentException("targetClass cannot be null");
+        }
+
+        T bean = createInstance(targetClass);
+        if (map.isEmpty()) {
+            return bean;
+        }
+
+        Map<String, Method> setters = getCachedSetters(targetClass);
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            String fieldName = entry.getKey();
+            Object value = entry.getValue();
+            Method setter = setters.get(fieldName);
+            if (setter == null || value == null) {
+                continue;
+            }
+            Class<?> paramType = setter.getParameterTypes()[0];
+            Object converted = convertValue(value, paramType, setter);
+            if (converted != null) {
+                try {
+                    setter.invoke(bean, converted);
+                } catch (Exception e) {
+                    // 设置失败（业务 setter 抛异常等），跳过该字段
+                }
+            }
+        }
+        return bean;
     }
 
     /**

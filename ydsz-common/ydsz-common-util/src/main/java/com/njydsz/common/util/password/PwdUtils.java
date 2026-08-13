@@ -35,38 +35,6 @@ public final class PwdUtils {
     private static final BCryptPasswordEncoder BCRYPT_ENCODER = new BCryptPasswordEncoder(12);
 
     /**
-     * 密码强度枚举（三档评分）。
-     *
-     * <p>本枚举兼容 1.x {@code WEAK/MEDIUM/STRONG} 三档评分逻辑。
-     * 2.x 起推荐使用 {@link PasswordStrengthChecker.PasswordStrengthLevel} 五档评分。
-     *
-     * <p><b>迁移指引：</b>
-     * <pre>{@code
-     * // 旧 API（已废弃）
-     * PasswordStrength strength = PwdUtils.checkPasswordStrength(password);
-     * if (strength == PasswordStrength.WEAK) { ... }
-     *
-     * // 新 API（推荐）
-     * PasswordStrengthLevel level = PwdUtils.checkPasswordStrengthLevel(password);
-     * if (level == PasswordStrengthLevel.VERY_WEAK || level == PasswordStrengthLevel.WEAK) { ... }
-     * }</pre>
-     *
-     * @since 1.0.0
-     * @deprecated 自 3.0.0 起替换为 {@link PasswordStrengthChecker.PasswordStrengthLevel} 五档评分。
-     *             新 API 提供更细粒度的强度分级（{@code VERY_WEAK / WEAK / MEDIUM / STRONG / VERY_STRONG}）
-     *             并支持国际化提示。映射关系：VERY_WEAK/WEAK → WEAK，MEDIUM → MEDIUM，STRONG/VERY_STRONG → STRONG。
-     */
-    @Deprecated(since = "3.0.0", forRemoval = true)
-    public enum PasswordStrength {
-        /** 弱密码 */
-        WEAK,
-        /** 中等密码 */
-        MEDIUM,
-        /** 强密码 */
-        STRONG
-    }
-
-    /**
      * 私有构造器，工具类不允许实例化。
      */
     private PwdUtils() {
@@ -369,41 +337,9 @@ public final class PwdUtils {
     }
 
     /**
-     * 检查密码强度（兼容 1.x 三档枚举）。
-     *
-     * <p>内部委托给 SPI {@link #getPasswordStrengthChecker()} 获取评分结果，
-     * 并映射到新五档 {@link PasswordStrengthChecker.PasswordStrengthLevel} 到旧三档 {@link PasswordStrength}：
-     * <ul>
-     *   <li>VERY_WEAK / WEAK → WEAK</li>
-     *   <li>MEDIUM → MEDIUM</li>
-     *   <li>STRONG / VERY_STRONG → STRONG</li>
-     * </ul>
-     *
-     * @param password 密码
-     * @return 密码强度枚举（WEAK/MEDIUM/STRONG），null/空串返回 WEAK
-     * @deprecated 自 3.0.0 起替换为 {@link #checkPasswordStrengthLevel(String)}。
-     *             新 API 返回 {@link PasswordStrengthChecker.PasswordStrengthLevel} 五档评分，
-     *             提供更细粒度的强度分级。映射关系：VERY_WEAK/WEAK → WEAK，MEDIUM → MEDIUM，STRONG/VERY_STRONG → STRONG。
-     * @see #checkPasswordStrengthLevel(String)
-     */
-    @Deprecated(since = "3.0.0", forRemoval = true)
-    public static PasswordStrength checkPasswordStrength(String password) {
-        PasswordStrengthChecker checker = getPasswordStrengthChecker();
-        PasswordStrengthChecker.PasswordStrengthLevel level = checker.check(password);
-        if (level == PasswordStrengthChecker.PasswordStrengthLevel.STRONG
-                || level == PasswordStrengthChecker.PasswordStrengthLevel.VERY_STRONG) {
-            return PasswordStrength.STRONG;
-        } else if (level == PasswordStrengthChecker.PasswordStrengthLevel.MEDIUM) {
-            return PasswordStrength.MEDIUM;
-        }
-        return PasswordStrength.WEAK;
-    }
-
-    /**
      * 检查密码强度（五档精细评分，返回新 API Level 枚举）。
      *
-     * <p>2.x 新增方法，建议新代码调用本方法替代旧三档 {@link #checkPasswordStrength(String)}。
-     * 内部委托给 SPI {@link #getPasswordStrengthChecker()}。
+     * <p>内部委托给 SPI {@link #getPasswordStrengthChecker()}。
      *
      * @param password 密码（可为 null）
      * @return 密码强度级别；null 或空串返回 VERY_WEAK
