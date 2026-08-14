@@ -325,6 +325,14 @@
                 <artifactId>ydsz-common-tenant</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <!-- tenant test-jar（TenantTestUtils / WithMockTenant 等测试工具，供下游模块复用） -->
+            <dependency>
+                <groupId>com.njydsz</groupId>
+                <artifactId>ydsz-common-tenant</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
             <dependency>
                 <groupId>com.njydsz</groupId>
                 <artifactId>ydsz-common-event</artifactId>

@@ -426,14 +426,4 @@ public class RowPermissionInnerInterceptor extends DataPermissionInnerIntercepto
         return new StringValue(value);
     }
 
-    /**
-     * 判断是否应对指定表应用行级权限拦截，根据拦截策略（INCLUDE/EXCLUDE）和标准化表名集合判断
-     *
-     * @param table 目标表
-     * @return 需要拦截时返回 true，否则返回 false
-     */
-    private boolean shouldApply(Table table) {
-        return DataPermissionHelper.shouldApply(table, config, normalizedTables);
-    }
-
 }
