@@ -25,9 +25,11 @@ import com.njydsz.common.jdbc.exception.TenantIsolationException;
 
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.ExpressionList;
 import net.sf.jsqlparser.expression.StringValue;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
+import net.sf.jsqlparser.expression.operators.relational.InExpression;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.delete.Delete;
@@ -44,8 +46,7 @@ import net.sf.jsqlparser.statement.update.Update;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.njydsz.common.tenant.metrics.TenantMetrics;
-import net.sf.jsqlparser.JSQLParserException;
-import net.sf.jsqlparser.parser.CCJSqlParserUtil;
+
 /**
  * 多租户隔离拦截器。
  *
@@ -320,19 +321,8 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
             Column column = buildAliasedColumn(table, columnName);
             Expression condition;
             if (tfv.value instanceof List<?> list) {
-                // 多值 → IN (?, ?, ...)
-                StringBuilder inClause = new StringBuilder();
-                inClause.append(column.toString()).append(" IN (");
-                for (int i = 0; i < list.size(); i++) {
-                    if (i > 0) inClause.append(", ");
-                    inClause.append("'").append(list.get(i)).append("'");
-                }
-                inClause.append(")");
-                try {
-                    condition = CCJSqlParserUtil.parseCondExpression(inClause.toString());
-                } catch (JSQLParserException e) {
-                    throw new RuntimeException("解析 IN 表达式失败: " + inClause, e);
-                }
+                // 多值 → IN (...)：构建表达式树，避免字符串拼接导致的注入风险
+                condition = buildInExpression(column, list);
             } else {
                 condition = new EqualsTo(column, new StringValue(String.valueOf(tfv.value)));
             }

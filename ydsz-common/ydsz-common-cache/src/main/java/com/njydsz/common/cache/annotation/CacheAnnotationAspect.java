@@ -63,6 +63,9 @@ public class CacheAnnotationAspect {
 
   private static final Logger log = LoggerFactory.getLogger(CacheAnnotationAspect.class);
 
+  /** unless 表达式缓存键前缀，避免与 key 表达式在 expressionCache 中碰撞 */
+  private static final String UNLESS_PREFIX = "unless:";
+
   private final CacheManager cacheManager;
   private final SpelExpressionParser parser = new SpelExpressionParser();
   private final DefaultParameterNameDiscoverer parameterNameDiscoverer =
@@ -221,12 +224,37 @@ public class CacheAnnotationAspect {
     if (result == null && cached.unlessNull()) {
       return null;
     }
+    // 评估 unless 条件：表达式为 true 时不缓存
+    if (!cached.unless().isEmpty()) {
+      Boolean unless = evaluateResultExpression(cached.unless(), result);
+      if (Boolean.TRUE.equals(unless)) {
+        return result;
+      }
+    }
     springCache.put(cacheKey, result);
     CacheRefresh cacheRefresh = method.getAnnotation(CacheRefresh.class);
     if (cacheRefresh != null && cacheRefresh.refreshAfterWrite() > 0) {
       refreshTimestamps.put(cached.name() + ":" + cacheKey, System.nanoTime());
     }
     return result;
+  }
+
+  /**
+   * 评估 unless SpEL 表达式（基于方法返回值）。
+   *
+   * <p>表达式可通过 {@code #result} 引用方法返回值。
+   *
+   * @param expression SpEL 表达式
+   * @param result 方法返回值
+   * @return 表达式评估结果
+   */
+  private Boolean evaluateResultExpression(String expression, Object result) {
+    EvaluationContext context = new org.springframework.expression.spel.support.StandardEvaluationContext();
+    context.setVariable("result", result);
+    Boolean value = expressionCache
+        .computeIfAbsent(UNLESS_PREFIX + expression, parser::parseExpression)
+        .getValue(context, Boolean.class);
+    return value != null && value;
   }
 
   /**

@@ -7,7 +7,6 @@ package com.njydsz.common.cache.builder;
  *
  * <ul>
  *   <li>LRU：最近最少使用淘汰策略
- *   <li>LFU：最不经常使用淘汰策略
  *   <li>TinyLFU：Window-TinyLFU 算法（参考 Caffeine）
  *   <li>Weighted：基于权重的缓存
  *   <li>Concurrent：并发安全的 ConcurrentHashMap 缓存
@@ -31,9 +30,6 @@ package com.njydsz.common.cache.builder;
 public enum CacheType {
   /** LRU 最近最少使用淘汰策略 适用场景：热点数据缓存 */
   LRU,
-
-  /** LFU 最不经常使用淘汰策略 适用场景：访问频率差异大的场景 */
-  LFU,
 
   /** Window-TinyLFU 算法（参考 Caffeine） 适用场景：通用场景，命中率最优（默认） */
   TINYLFU,

@@ -15,7 +15,6 @@ import com.njydsz.common.cache.internal.decorator.MemoryAwareEvictionCache;
 import com.njydsz.common.cache.internal.decorator.SwrCacheDecorator;
 import com.njydsz.common.cache.internal.decorator.WriteBehindCache;
 import com.njydsz.common.cache.internal.decorator.WriteThroughCache;
-import com.njydsz.common.cache.internal.lfu.LFUCache;
 import com.njydsz.common.cache.internal.loading.EnhancedLoadingCache;
 import com.njydsz.common.cache.internal.lru.LRUCache;
 import com.njydsz.common.cache.internal.reference.SoftValueCache;
@@ -799,9 +798,6 @@ public final class CacheBuilder<K, V> {
     switch (type) {
       case LRU:
         return new LRUCache<>(effectiveSize, initialCapacity);
-
-      case LFU:
-        return new LFUCache<>(effectiveSize, 16);
 
       case TINYLFU:
         if (maximumSize > 0) {
