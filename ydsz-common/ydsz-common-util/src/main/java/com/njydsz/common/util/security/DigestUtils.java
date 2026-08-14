@@ -46,15 +46,22 @@ public final class DigestUtils {
     private static final int STREAM_BUFFER_SIZE = 8 * 1024;
 
     /**
-     * 流处理缓冲区（ThreadLocal 复用）。
+     * 流处理缓冲区（ThreadLocal 复用，带复用计数自动重置）。
      *
      * <p>每次调用 {@link #digest(InputStream, String)} 时复用本线程的缓冲区，
      * 避免频繁分配 8KB 数组带来的 GC 压力。
      *
      * <p>注意：缓冲区仅在 digest 方法内部借用，方法返回前不被修改或清空。
      * 由于方法执行期间线程独占使用，不会出现并发安全问题。
+     *
+     * <p>复用次数超过 {@link #MAX_REUSE_COUNT} 后会自动重新分配，
+     * 防止长期运行后缓冲区意外膨胀。
      */
-    private static final ThreadLocal<byte[]> STREAM_BUFFER = ThreadLocal.withInitial(() -> new byte[STREAM_BUFFER_SIZE]);
+    /** 每个摘要实例的最大 ThreadLocal 缓冲区复用次数（防止长期运行后缓冲区膨胀） */
+    private static final int MAX_REUSE_COUNT = 1024;
+
+    private static final ThreadLocal<BufferWithReuseCounter> BUFFER_HOLDER =
+            ThreadLocal.withInitial(BufferWithReuseCounter::new);
 
     /**
      * PBKDF2 密钥派生算法
@@ -144,7 +151,8 @@ public final class DigestUtils {
     public static byte[] digest(InputStream input, String algorithm) throws IOException {
         try {
             final MessageDigest digest = MessageDigest.getInstance(algorithm);
-            final byte[] buffer = STREAM_BUFFER.get();
+            BufferWithReuseCounter counter = BUFFER_HOLDER.get();
+            byte[] buffer = counter.getBuffer();
 
             int bytesRead;
             while ((bytesRead = input.read(buffer)) != -1) {
@@ -198,7 +206,8 @@ public final class DigestUtils {
         byte[] hash = digest(input, "SHA-256");
         String hex = HexFormat.of().formatHex(hash);
         // 清空 ThreadLocal 缓冲区，避免文件数据残留
-        byte[] buffer = STREAM_BUFFER.get();
+        BufferWithReuseCounter counter = BUFFER_HOLDER.get();
+        byte[] buffer = counter.getBuffer();
         java.util.Arrays.fill(buffer, (byte) 0);
         return hex;
     }
@@ -386,5 +395,28 @@ public final class DigestUtils {
                 ? hmacSha256Base64(data, secret)
                 : hmacSha256Hex(data, secret);
         return constantTimeEquals(computed, signature);
+    }
+
+    /**
+     * 附带复用计数的缓冲区，超过复用次数后自动重新分配。
+     */
+    private static final class BufferWithReuseCounter {
+
+        private byte[] buffer;
+        private int reuseCount;
+
+        BufferWithReuseCounter() {
+            this.buffer = new byte[STREAM_BUFFER_SIZE];
+            this.reuseCount = 0;
+        }
+
+        byte[] getBuffer() {
+            if (reuseCount >= MAX_REUSE_COUNT) {
+                buffer = new byte[STREAM_BUFFER_SIZE];
+                reuseCount = 0;
+            }
+            reuseCount++;
+            return buffer;
+        }
     }
 }

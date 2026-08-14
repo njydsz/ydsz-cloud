@@ -10,6 +10,8 @@ import com.njydsz.common.exception.custom.MessageSourceAccessor;
 import com.njydsz.common.exception.custom.MessageSourceHolder;
 import com.njydsz.common.exception.alert.ExceptionAlertPolicy;
 import com.njydsz.common.exception.alert.SlidingWindowAlertPolicy;
+import com.njydsz.common.exception.adapter.ExceptionCodeAdapter;
+import com.njydsz.common.exception.adapter.ExceptionCodeAdapterRegistry;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;
 import com.njydsz.common.exception.registry.ExceptionCodeScanner;
 
@@ -311,5 +313,21 @@ public class YdszExceptionCoreAutoConfiguration {
     public ExceptionAlertPolicy exceptionAlertPolicy(
             ObjectProvider<org.springframework.context.ApplicationEventPublisher> eventPublisher) {
         return new SlidingWindowAlertPolicy(eventPublisher.getIfAvailable());
+    }
+
+    /**
+     * 注册异常码适配器注册中心（自动发现 Spring 容器中的所有 {@link ExceptionCodeAdapter}）。
+     *
+     * <p>业务方实现 {@link ExceptionCodeAdapter} 并声明为 Bean 即可自动接入 gRPC / GraphQL 等协议适配。
+     * 当容器中无任何适配器时本 Bean 也存在（空注册中心），不影响主流程。
+     *
+     * @param adapterProvider Spring 容器中所有 ExceptionCodeAdapter 实现
+     * @return 适配器注册中心
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public ExceptionCodeAdapterRegistry exceptionCodeAdapterRegistry(
+            ObjectProvider<ExceptionCodeAdapter> adapterProvider) {
+        return new ExceptionCodeAdapterRegistry(adapterProvider);
     }
 }

@@ -25,6 +25,8 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.config.ExceptionProperties;
 import com.njydsz.common.exception.core.ExceptionInfo;
+import com.njydsz.common.exception.trace.OtelTraceInfo;
+import com.njydsz.common.exception.trace.OtelTraceInfoExtractor;
 import com.njydsz.common.exception.custom.AbstractYdszException;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.enums.ExceptionCategory;
@@ -433,7 +435,37 @@ public abstract class BaseExceptionHandler {
         problem.setProperty("traceId", traceId);
         problem.setProperty("requestId", traceId);
         problem.setProperty("timestamp", Instant.now().toString());
+
+        // 自动注入 OpenTelemetry traceId/spanId（当 OTel 可用时）
+        injectOtelTraceContext(problem);
+
         return problem;
+    }
+
+    /**
+     * 注入 OpenTelemetry 链路追踪上下文到 ProblemDetail。
+     *
+     * <p>当 classpath 中存在 OpenTelemetry API 时，自动将 traceId、spanId 注入到
+     * ProblemDetail 的扩展属性中，便于与 APM（Grafana Tempo、Jaeger 等）关联。
+     * 当 OTel 未接入时本方法为静默空操作，对主流程零侵入。
+     *
+     * @param problem 待注入的 ProblemDetail
+     */
+    private void injectOtelTraceContext(ProblemDetail problem) {
+        try {
+            OtelTraceInfo otelTrace = OtelTraceInfoExtractor.currentTraceInfo();
+            if (otelTrace.isValid()) {
+                problem.setProperty("otelTraceId", otelTrace.traceId());
+                problem.setProperty("otelSpanId", otelTrace.spanId());
+                problem.setProperty("otelSampled", otelTrace.sampled());
+                // 同时更新 traceId（OTel 的 traceId 与 header 中的一致，优先使用）
+                problem.setProperty("traceId", otelTrace.traceId());
+                problem.setProperty("requestId", otelTrace.traceId());
+            }
+        } catch (Exception e) {
+            // OTel 反射调用异常时降级（不影响主流程）
+            log.debug("[BaseExceptionHandler] OTel TraceContext 注入失败: {}", e.getMessage());
+        }
     }
 
     /**

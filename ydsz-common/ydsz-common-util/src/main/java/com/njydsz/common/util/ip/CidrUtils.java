@@ -2,6 +2,7 @@ package com.njydsz.common.util.ip;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.njydsz.common.util.string.StringUtils;
 
@@ -23,6 +24,13 @@ public final class CidrUtils {
     private CidrUtils() {
         throw new UnsupportedOperationException("CidrUtils is a utility class and cannot be instantiated");
     }
+
+    /** 缓存最大条目数 */
+    private static final int MAX_CACHE_SIZE = 1024;
+
+    /** IP 范围判断缓存（ip_cidr -> isInRange 结果） */
+    private static final ConcurrentHashMap<String, Boolean> RANGE_CACHE =
+            new ConcurrentHashMap<>(MAX_CACHE_SIZE);
 
     /**
      * 判断 IP 是否在 CIDR 网段内。
@@ -67,6 +75,25 @@ public final class CidrUtils {
      * @return {@code true} 表示在网段内；解析异常返回 {@code false}
      */
     public static boolean isIpv4InRange(String ip, String networkIp, int prefix) {
+        String cacheKey = ip + "_" + networkIp + "_" + prefix;
+        Boolean cached = RANGE_CACHE.get(cacheKey);
+        if (cached != null) {
+            return cached;
+        }
+        boolean result = doIsIpv4InRange(ip, networkIp, prefix);
+        putCache(cacheKey, result);
+        return result;
+    }
+
+    /**
+     * IPv4 网段判断的实际实现（不含缓存逻辑）。
+     *
+     * @param ip        待判断的 IPv4 地址
+     * @param networkIp 网段起始地址（网络地址）
+     * @param prefix    前缀长度 [0, 32]
+     * @return {@code true} 表示在网段内
+     */
+    private static boolean doIsIpv4InRange(String ip, String networkIp, int prefix) {
         if (prefix < 0 || prefix > 32) {
             return false;
         }
@@ -92,6 +119,25 @@ public final class CidrUtils {
      * @return {@code true} 表示在网段内；解析异常返回 {@code false}
      */
     public static boolean isIpv6InRange(String ip, String networkIp, int prefix) {
+        String cacheKey = ip + "_" + networkIp + "_" + prefix;
+        Boolean cached = RANGE_CACHE.get(cacheKey);
+        if (cached != null) {
+            return cached;
+        }
+        boolean result = doIsIpv6InRange(ip, networkIp, prefix);
+        putCache(cacheKey, result);
+        return result;
+    }
+
+    /**
+     * IPv6 网段判断的实际实现（不含缓存逻辑）。
+     *
+     * @param ip        待判断的 IPv6 地址
+     * @param networkIp 网段起始地址（网络地址）
+     * @param prefix    前缀长度 [0, 128]
+     * @return {@code true} 表示在网段内
+     */
+    private static boolean doIsIpv6InRange(String ip, String networkIp, int prefix) {
         if (!IpValidator.validIpv6(ip) || !IpValidator.validIpv6(networkIp)) {
             return false;
         }
@@ -206,6 +252,30 @@ public final class CidrUtils {
         long ipLong = ipToLong(ip);
         long mask = prefix == 0 ? 0L : (0xFFFFFFFFL << (32 - prefix)) & 0xFFFFFFFFL;
         return longToIp(ipLong & mask);
+    }
+
+    private static void putCache(String key, Boolean value) {
+        if (RANGE_CACHE.size() >= MAX_CACHE_SIZE) {
+            // ConcurrentHashMap 不支持 LRU，超过上限时清空一半条目
+            RANGE_CACHE.clear();
+        }
+        RANGE_CACHE.put(key, value);
+    }
+
+    /**
+     * 清除所有缓存。
+     */
+    public static void clearCache() {
+        RANGE_CACHE.clear();
+    }
+
+    /**
+     * 获取当前缓存大小。
+     *
+     * @return 缓存条目数
+     */
+    public static int getCacheSize() {
+        return RANGE_CACHE.size();
     }
 
     /**

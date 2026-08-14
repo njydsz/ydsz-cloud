@@ -2,8 +2,10 @@ package com.njydsz.common.json.provider;
 
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
+import java.time.temporal.Temporal;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +27,7 @@ import com.njydsz.common.json.internal.JsonRuntimeConfig;
 import com.njydsz.common.json.module.JsonModuleRegistry;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.parser.JsonParserUtil;
+import com.njydsz.common.json.reader.JSONReader;
 import com.njydsz.common.json.serializer.JsonSerializer;
 import com.njydsz.common.json.serializer.SerializerRegistry;
 import com.njydsz.common.json.tree.JsonNode;
@@ -399,8 +402,8 @@ public final class SerializationProvider {
         SerializationContext.clear();
         FieldMetadataLoader.NAMING_STRATEGY.remove();
         JsonParserUtil.clearThreadLocals();
-        com.njydsz.common.json.reader.JSONReader.clearThreadLocals();
-        com.njydsz.common.json.provider.DeserializationProvider.clearThreadLocals();
+        JSONReader.clearThreadLocals();
+        DeserializationProvider.clearThreadLocals();
     }
 
     /**
@@ -599,7 +602,7 @@ public final class SerializationProvider {
 
         // JsonNode 树模型快速路径：ObjectNode/ArrayNode 等直接走树模型 toString()，
         // 避免被当作普通 Bean 反射序列化导致输出损坏（如 {"value":30}）
-        if (obj instanceof com.njydsz.common.json.tree.JsonNode) {
+        if (obj instanceof JsonNode) {
             return obj.toString();
         }
 
@@ -1045,9 +1048,8 @@ public final class SerializationProvider {
             || obj instanceof Boolean
             || obj instanceof Character
             || obj instanceof Enum
-            || obj instanceof java.util.Date
-            || obj instanceof java.time.temporal.Temporal
-            || obj instanceof Class;
+            || obj instanceof Date
+            || obj instanceof Temporal;
     }
 
     /**

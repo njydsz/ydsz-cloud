@@ -18,6 +18,7 @@ import com.njydsz.common.jdbc.datasource.DynamicRoutingDataSource;
 import com.njydsz.common.tenant.SystemTenantContextRunner;
 import com.njydsz.common.tenant.annotation.TenantColumnScanner;
 import com.njydsz.common.tenant.async.TenantContextTaskDecorator;
+import com.njydsz.common.tenant.metrics.TenantMetrics;
 import com.njydsz.common.tenant.datasource.TenantDataSourceFilter;
 import com.njydsz.common.tenant.datasource.TenantDataSourceRouter;
 import com.njydsz.common.tenant.datasource.resolver.ConfigurationResolver;
@@ -144,9 +145,9 @@ public class TenantAutoConfiguration {
     @ConditionalOnWebApplication
     @ConditionalOnMissingBean
     public FilterRegistrationBean<TenantContextWebFilter> tenantContextWebFilterRegistration(
-            TenantProperties properties) {
+            TenantProperties properties, ObjectProvider<TenantMetrics> metricsProvider) {
         FilterRegistrationBean<TenantContextWebFilter> registration = new FilterRegistrationBean<>();
-        registration.setFilter(new TenantContextWebFilter(properties));
+        registration.setFilter(new TenantContextWebFilter(properties, metricsProvider.getIfAvailable()));
         registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 90);
         registration.addUrlPatterns("/*");
         registration.setName("tenantContextWebFilter");

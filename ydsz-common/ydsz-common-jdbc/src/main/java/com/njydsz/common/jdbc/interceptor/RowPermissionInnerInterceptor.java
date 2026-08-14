@@ -1,21 +1,14 @@
 package com.njydsz.common.jdbc.interceptor;
 
-import java.sql.Connection;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.apache.ibatis.executor.statement.StatementHandler;
-import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.SqlCommandType;
 
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
-import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import com.njydsz.common.core.constant.DataScopeConstants;
 import com.njydsz.common.jdbc.config.DataPermissionConfiguration;
-import com.njydsz.common.jdbc.permission.DataPermissionBypass;
 import com.njydsz.common.jdbc.permission.DataPermissionContext;
 import com.njydsz.common.jdbc.permission.DataPermissionContextResolver;
 import com.njydsz.common.util.string.StringUtils;
@@ -30,7 +23,6 @@ import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.expression.operators.relational.InExpression;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
-import net.sf.jsqlparser.statement.delete.Delete;
 import net.sf.jsqlparser.statement.select.FromItem;
 import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.statement.select.ParenthesedSelect;
@@ -68,14 +60,7 @@ import net.sf.jsqlparser.statement.update.Update;
  * @since 1.0.0
  */
 @Slf4j
-public class RowPermissionInnerInterceptor extends CachingJsqlParserSupport implements InnerInterceptor {
-
-    /** 数据权限配置 */
-    private final DataPermissionConfiguration config;
-    /** 数据权限上下文解析器 */
-    private final DataPermissionContextResolver contextResolver;
-    /** 标准化后的表名集合（小写），与拦截策略配合使用 */
-    private final Set<String> normalizedTables;
+public class RowPermissionInnerInterceptor extends DataPermissionInnerInterceptor {
 
     /** 安全值正则模式，仅允许字母、数字及常见安全字符 */
     private static final Pattern SAFE_VALUE_PATTERN = Pattern.compile("^[a-zA-Z0-9_\\-.:,@]+$");
@@ -94,90 +79,30 @@ public class RowPermissionInnerInterceptor extends CachingJsqlParserSupport impl
      */
     public RowPermissionInnerInterceptor(DataPermissionConfiguration config,
                                          DataPermissionContextResolver contextResolver) {
-        this.config = config;
-        this.contextResolver = contextResolver;
-        this.normalizedTables = normalizeTableSet(config);
+        super(config, contextResolver);
     }
 
     /**
-     * 应用行级权限到 SQL（供复合拦截器调用）
+     * 行级权限需要检查系统级绕过（后台任务无用户上下文时跳过）。
      *
-     * @param sql     原始 SQL 语句
-     * @param context 数据权限上下文，为 null 时使用空上下文
-     * @return 追加行级过滤条件后的 SQL 语句
-     */
-    public String apply(String sql, DataPermissionContext context) {
-        if (config == null || !Boolean.TRUE.equals(config.getEnabled())) {
-            return sql;
-        }
-        if (context == null) {
-            context = DataPermissionContext.empty();
-        }
-        return parserSingle(sql, context);
-    }
-
-    /**
-     * 标准化表名集合，去除空白、去除前后空格并统一为小写
-     *
-     * @param config 数据权限配置
-     * @return 标准化后的表名集合，配置为空时返回空集合
-     */
-    private Set<String> normalizeTableSet(DataPermissionConfiguration config) {
-        return DataPermissionHelper.normalizeTableSet(config);
-    }
-
-    /**
-     * SQL 执行前回调，解析当前 SQL 类型并追加行级权限过滤条件
-     *
-     * @param sh                 StatementHandler
-     * @param connection         数据库连接
-     * @param transactionTimeout 事务超时时间
+     * @return true
      */
     @Override
-    public void beforePrepare(StatementHandler sh, Connection connection, Integer transactionTimeout) {
-        if (config == null || !Boolean.TRUE.equals(config.getEnabled())) {
-            return;
-        }
-        // 系统级绕过：后台任务（定时批处理、MQ 消费）无 HTTP 请求上下文，跳过权限检查
-        if (DataPermissionBypass.isActive()) {
-            log.debug("DataPermissionBypass 激活，跳过行级权限拦截");
-            return;
-        }
-        PluginUtils.MPStatementHandler mpSh = PluginUtils.mpStatementHandler(sh);
-        MappedStatement ms = mpSh.mappedStatement();
-        SqlCommandType sct = ms.getSqlCommandType();
-        if (!isSupportedSqlType(sct)) {
-            return;
-        }
-        // 检查 @DataPermissionIgnore 注解，跳过数据权限拦截
-        if (isDataPermissionIgnored(ms)) {
-            return;
-        }
-        DataPermissionContext context = contextResolver.resolve();
-        PluginUtils.MPBoundSql mpBs = mpSh.mPBoundSql();
-        mpBs.sql(parserSingle(mpBs.sql(), context));
+    protected boolean shouldCheckBypass() {
+        return true;
     }
 
     /**
-     * 检查 MappedStatement 对应的方法是否标注了 @DataPermissionIgnore 注解
+     * 行级权限支持 SELECT/UPDATE/DELETE。
      *
-     * @param ms MyBatis MappedStatement
-     * @return 标注了忽略注解时返回 true，否则返回 false
+     * @param sqlCommandType SQL 命令类型
+     * @return 支持 SELECT/UPDATE/DELETE 时返回 true
      */
-    private boolean isDataPermissionIgnored(MappedStatement ms) {
-        return DataPermissionHelper.isDataPermissionIgnored(ms);
-    }
-
-    /**
-     * 判断当前 SQL 命令类型是否支持行级权限拦截
-     *
-     * @param sct SQL 命令类型
-     * @return 支持 SELECT/UPDATE/DELETE 时返回 true，否则返回 false
-     */
-    private boolean isSupportedSqlType(SqlCommandType sct) {
-        return sct == SqlCommandType.SELECT
-                || sct == SqlCommandType.UPDATE
-                || sct == SqlCommandType.DELETE;
+    @Override
+    protected boolean isSupportedSqlType(SqlCommandType sqlCommandType) {
+        return sqlCommandType == SqlCommandType.SELECT
+                || sqlCommandType == SqlCommandType.UPDATE
+                || sqlCommandType == SqlCommandType.DELETE;
     }
 
     /**

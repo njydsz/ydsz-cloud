@@ -103,6 +103,14 @@ public class ExceptionProperties {
     private List<Double> metricsPercentiles = List.of(0.99);
 
     /**
+     * 是否启用 SpringDoc OpenAPI 错误码文档自动增强。
+     *
+     * <p>需要 classpath 中存在 springdoc-openapi 库才生效。
+     * 默认 true（自动启用）。
+     */
+    private boolean openapiEnabled = true;
+
+    /**
      * 响应格式枚举
      */
     public enum ResponseFormat {

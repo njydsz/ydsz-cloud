@@ -15,6 +15,7 @@ import com.njydsz.common.tenant.config.TenantProperties;
 import com.njydsz.common.tenant.config.TenantProperties.TenantField;
 import com.njydsz.common.tenant.feign.TenantHeaderContract;
 import com.njydsz.common.tenant.lifecycle.TenantLifecycleManager;
+import com.njydsz.common.tenant.metrics.TenantMetrics;
 import com.njydsz.common.util.auth.AuthInfoUtils;
 
 import jakarta.servlet.Filter;
@@ -52,23 +53,32 @@ public class TenantContextWebFilter implements Filter {
     private final TenantProperties properties;
     private final Set<String> anonUrls;
     private final List<TenantField> activeFields;
+    private final TenantMetrics metrics;
 
     public TenantContextWebFilter(TenantProperties properties) {
+        this(properties, null);
+    }
+
+    public TenantContextWebFilter(TenantProperties properties, TenantMetrics metrics) {
         this.properties = properties;
         this.anonUrls = properties.getNormalizedAnonUrls();
         this.activeFields = properties.getActiveTenantFields();
+        this.metrics = metrics;
     }
 
     @Override
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
             throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) req;
+        boolean contextSet = false;
         try {
             String requestUri = request.getRequestURI();
 
             // 1. 匿名 URL → 跳过隔离
             if (isAnonUrl(requestUri)) {
                 setTenantContext(TenantContext.skip());
+                contextSet = true;
+                if (metrics != null) metrics.incrementActiveContext();
                 chain.doFilter(req, res);
                 return;
             }
@@ -122,6 +132,8 @@ public class TenantContextWebFilter implements Filter {
                     }
                 }
                 setTenantContext(builder.build());
+                contextSet = true;
+                if (metrics != null) metrics.incrementActiveContext();
 
                 // 4. 检查租户生命周期状态（非超级管理员）
                 if (properties.isLifecycleCheckEnabled() && !isSuperAdmin) {
@@ -134,6 +146,10 @@ public class TenantContextWebFilter implements Filter {
 
             chain.doFilter(req, res);
         } finally {
+            // 活跃上下文计数 -1（Gauge 观测，仅对设置了上下文的请求累计）
+            if (contextSet && metrics != null) {
+                metrics.decrementActiveContext();
+            }
             clearTenantContext();
             MDC.remove(MDC_TENANT_ID);
         }
