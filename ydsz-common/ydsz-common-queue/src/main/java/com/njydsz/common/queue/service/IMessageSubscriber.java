@@ -111,7 +111,7 @@ public interface IMessageSubscriber {
             handler.onMessage(message);
             return message.getTraceId();
         } catch (Exception e) {
-            throw new SysException("消息处理失败: " + e.getMessage(), e);
+            throw SysException.builder().message("消息处理失败: " + e.getMessage()).cause(e).build();
         }
     }
 

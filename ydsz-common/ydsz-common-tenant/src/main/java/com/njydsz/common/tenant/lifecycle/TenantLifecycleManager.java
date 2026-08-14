@@ -24,15 +24,19 @@ import com.njydsz.common.tenant.TenantContextHolder;
  *   <li>{@link RedisTenantLifecycleManager} — Redis 分布式存储，适用于多实例生产环境</li>
  * </ul>
  *
+ * <p><b>异常体系：</b>租户状态校验失败时抛出 {@link TenantIsolationException}，
+ * 与 SQL 隔离拦截器 fail-closed 语义保持一致（HTTP 403，code=A03053 ACCESS_DENIED）。
+ * 全局异常处理器会自动将其转换为标准错误响应，无需调用方额外处理。
+ *
  * <h3>使用方式</h3>
  * <pre>{@code
- * // 在 WebFilter / Interceptor 中检查租户状态
- * if (!tenantLifecycleManager.isActive("tenant_001")) {
+ * // 手动检查租户状态（不满足时自行抛出）
+ * if (!TenantLifecycleManager.isActive("tenant_001")) {
  *     throw new TenantIsolationException("租户已暂停或下线");
  * }
  *
- * // 或在拦截器中直接校验当前租户
- * tenantLifecycleManager.checkCurrentTenantActive();
+ * // 便捷方法：校验当前请求租户是否活跃，不活跃则自动抛出 TenantIsolationException
+ * TenantLifecycleManager.checkCurrentTenantActive();
  * }</pre>
  *
  * <h3>注册租户状态</h3>
@@ -169,7 +173,12 @@ public interface TenantLifecycleManager {
         private LifecycleManagerHolder() {
         }
 
-        static void init(ApplicationContext ctx) {
+        /**
+         * 初始化 ApplicationContext 持有者（供 AutoConfiguration 调用）。
+         *
+         * @param ctx Spring 应用上下文
+         */
+        public static void init(ApplicationContext ctx) {
             applicationContext = ctx;
         }
 

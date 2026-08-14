@@ -160,7 +160,7 @@ public class UserExcelServiceImpl implements UserExcelService {
             return result;
         } catch (Exception e) {
             log.error("读取 Excel 失败: filename={}, error={}", originalFilename, e.getMessage(), e);
-            throw new BusinessException("读取 Excel 文件失败: " + e.getMessage());
+            throw BusinessException.builder().message("读取 Excel 文件失败: " + e.getMessage()).build();
         }
     }
 
@@ -170,20 +170,20 @@ public class UserExcelServiceImpl implements UserExcelService {
     private void importSingleUser(UserImportDTO importDTO) {
         // 1. 必填校验
         if (importDTO.getUsername() == null || importDTO.getUsername().isBlank()) {
-            throw new BusinessException("用户名不能为空");
+            throw BusinessException.builder().message("用户名不能为空").build();
         }
         if (importDTO.getRealName() == null || importDTO.getRealName().isBlank()) {
-            throw new BusinessException("真实姓名不能为空");
+            throw BusinessException.builder().message("真实姓名不能为空").build();
         }
         if (importDTO.getPassword() == null || importDTO.getPassword().isBlank()) {
-            throw new BusinessException("初始密码不能为空");
+            throw BusinessException.builder().message("初始密码不能为空").build();
         }
 
         // 2. 用户名唯一性校验
         LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(UserAccount::getUsername, importDTO.getUsername());
         if (userAccountMapper.selectCount(wrapper) > 0) {
-            throw new BusinessException("用户名已存在");
+            throw BusinessException.builder().message("用户名已存在").build();
         }
 
         // 3. 部门编码校验
@@ -193,7 +193,7 @@ public class UserExcelServiceImpl implements UserExcelService {
             deptWrapper.eq(Department::getDeptCode, importDTO.getDeptCode());
             Department dept = departmentMapper.selectOne(deptWrapper);
             if (dept == null) {
-                throw new BusinessException("部门编码不存在: " + importDTO.getDeptCode());
+                throw BusinessException.builder().message("部门编码不存在: " + importDTO.getDeptCode()).build();
             }
             deptId = dept.getId();
         }
@@ -205,7 +205,7 @@ public class UserExcelServiceImpl implements UserExcelService {
             leaderWrapper.eq(UserAccount::getUsername, importDTO.getLeaderUsername());
             UserAccount leader = userAccountMapper.selectOne(leaderWrapper);
             if (leader == null) {
-                throw new BusinessException("上级用户名不存在: " + importDTO.getLeaderUsername());
+                throw BusinessException.builder().message("上级用户名不存在: " + importDTO.getLeaderUsername()).build();
             }
             leaderId = leader.getId();
         }

@@ -214,7 +214,7 @@ public class SafeQueryInnerInterceptor implements InnerInterceptor {
 
         if (strictMode) {
             log.error(message);
-            throw new SysException(message);
+            throw SysException.builder().message(message).build();
         } else {
             log.warn(message);
         }

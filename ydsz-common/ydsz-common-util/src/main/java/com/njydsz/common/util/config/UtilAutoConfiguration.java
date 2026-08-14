@@ -1,5 +1,7 @@
 package com.njydsz.common.util.config;
 
+import javax.annotation.PostConstruct;
+
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -9,19 +11,20 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.njydsz.common.util.http.ServletRequestUtils;
+import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.common.util.id.SnowflakeHealthIndicator;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.id.SnowflakeProperties;
 import com.njydsz.common.util.id.WorkerIdAllocator;
 import com.njydsz.common.util.id.WorkerIdAllocatorChain;
-import com.njydsz.common.util.spring.SpringContextHolder;
+import com.njydsz.common.util.ip.TrustedProxyConfiguration;
 
 /**
  * 通用工具类自动配置。
  *
  * <p>注册项目级工具 Bean：
  * <ul>
- *   <li>{@link SpringContextHolder} — ApplicationContext 静态持有者</li>
  *   <li>{@link WorkerIdAllocatorChain} — WorkerId 分配策略链（PodOrdinal → IpHash → FilePersisted）</li>
  *   <li>{@link SnowflakeHealthIndicator} — Snowflake ID 生成器健康检查（仅 actuator 在 classpath 时注册）</li>
  * </ul>
@@ -35,18 +38,19 @@ import com.njydsz.common.util.spring.SpringContextHolder;
 @EnableConfigurationProperties({SnowflakeProperties.class})
 public class UtilAutoConfiguration {
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private ObjectProvider<SnowflakeIdGenerator> idGeneratorProvider;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    private ObjectProvider<TrustedProxyConfiguration> trustedProxyConfigProvider;
+
     /**
-     * 注册 SpringContextHolder Bean
-     *
-     * <p>SpringContextHolder 已移除 {@code @Component} 注解，统一在此处以 {@code @Bean} 注册，
-     * 避免组件扫描与 AutoConfiguration 双重注册冲突。
-     *
-     * @return SpringContextHolder 实例
+     * 注册静态工具类的 Supplier，替代 SpringContextHolder 查找。
      */
-    @Bean
-    @ConditionalOnMissingBean
-    public SpringContextHolder springContextHolder() {
-        return new SpringContextHolder();
+    @PostConstruct
+    public void registerStaticToolSuppliers() {
+        IdGenerator.setGeneratorSupplier(idGeneratorProvider::getIfAvailable);
+        ServletRequestUtils.setTrustedProxyConfigSupplier(trustedProxyConfigProvider::getIfAvailable);
     }
 
     /**

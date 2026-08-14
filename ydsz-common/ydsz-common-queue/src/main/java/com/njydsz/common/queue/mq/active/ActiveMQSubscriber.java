@@ -84,7 +84,7 @@ public class ActiveMQSubscriber implements IMessageSubscriber {
                     queueName, properties.resolvedBrokerUrl());
         } catch (Exception e) {
             log.error("[ActiveMQ] 初始化订阅者失败，queue={}", queueName, e);
-            throw new SysException("ActiveMQ 订阅者初始化失败：" + e.getMessage(), e);
+            throw SysException.builder().message("ActiveMQ 订阅者初始化失败：" + e.getMessage()).cause(e).build();
         }
     }
 

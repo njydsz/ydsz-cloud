@@ -235,7 +235,7 @@ public class ChannelRouter {
         }
         MessageResult result = dispatch(request);
         if (!result.isSuccess()) {
-            throw new SysException(result.getErrorMessage());
+            throw SysException.builder().message(result.getErrorMessage()).build();
         }
         return result.getTraceId();
     }

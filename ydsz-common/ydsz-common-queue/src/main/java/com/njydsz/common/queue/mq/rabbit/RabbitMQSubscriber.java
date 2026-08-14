@@ -93,7 +93,7 @@ public class RabbitMQSubscriber implements IMessageSubscriber {
             log.info("[RabbitMQ] 订阅者初始化完成，queue={}", queueName);
         } catch (IOException | TimeoutException e) {
             log.error("[RabbitMQ] 初始化订阅者失败，queue={}", queueName, e);
-            throw new SysException("RabbitMQ 订阅者初始化失败：" + e.getMessage(), e);
+            throw SysException.builder().message("RabbitMQ 订阅者初始化失败：" + e.getMessage()).cause(e).build();
         }
     }
 
@@ -136,7 +136,7 @@ public class RabbitMQSubscriber implements IMessageSubscriber {
             running.set(false);
             lastError.set(e);
             log.error("[RabbitMQ] 启动消费者失败，queue={}", queueName, e);
-            throw new SysException("RabbitMQ 消费者启动失败：" + e.getMessage(), e);
+            throw SysException.builder().message("RabbitMQ 消费者启动失败：" + e.getMessage()).cause(e).build();
         }
         return queueName;
     }

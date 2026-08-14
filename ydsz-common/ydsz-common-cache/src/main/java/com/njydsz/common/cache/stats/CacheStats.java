@@ -51,7 +51,7 @@ public class CacheStats {
   private final long totalLoadTimeNanos;
 
   /** 空统计快照（零值） */
-  public static final CacheStats EMPTY = new CacheStats(0, 0, 0, 0, 0, 0, 0);
+  public static final CacheStats EMPTY = new CacheStats(0L, 0L, 0L, 0L, 0L, 0L, 0L);
 
   /**
    * 创建基础统计信息
@@ -60,7 +60,7 @@ public class CacheStats {
    * @param missCount 未命中次数
    */
   public CacheStats(long hitCount, long missCount) {
-    this(hitCount, missCount, 0, 0, 0, 0, 0);
+    this(hitCount, missCount, 0L, 0L, 0L, 0L, 0L);
   }
 
   /**
@@ -99,7 +99,7 @@ public class CacheStats {
     this(
         hitCount,
         missCount,
-        0,
+        0L,
         loadCount,
         loadSuccessCount,
         loadExceptionCount,

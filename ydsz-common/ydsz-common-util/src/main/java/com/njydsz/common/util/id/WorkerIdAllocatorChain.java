@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 /**
  * WorkerId 分配策略链——按优先级尝试各策略，首个成功即返回。
  *
- * <p>内置策略链：PodOrdinal → IpHash → FilePersisted。
+ * <p>内置策略链：PodOrdinal → IpHash。
  *
  * <p>业务方可通过 {@link #prepend(WorkerIdAllocator)} 插入自定义策略：
  * <pre>{@code
@@ -34,15 +34,14 @@ public final class WorkerIdAllocatorChain implements WorkerIdAllocator {
     }
 
     /**
-     * 创建默认策略链：PodOrdinal → IpHash → FilePersisted。
+     * 创建默认策略链：PodOrdinal → IpHash。
      *
      * @return 默认策略链
      */
     public static WorkerIdAllocatorChain defaults() {
         return new WorkerIdAllocatorChain(List.of(
                 new PodOrdinalWorkerIdAllocator(),
-                new IpHashWorkerIdAllocator(),
-                new FilePersistedWorkerIdAllocator()
+                new IpHashWorkerIdAllocator()
         ));
     }
 

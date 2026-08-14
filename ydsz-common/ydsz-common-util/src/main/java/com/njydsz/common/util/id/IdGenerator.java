@@ -1,8 +1,7 @@
 package com.njydsz.common.util.id;
 
 import java.util.concurrent.ThreadLocalRandom;
-
-import com.njydsz.common.util.spring.SpringContextHolder;
+import java.util.function.Supplier;
 
 /**
  * 分布式 ID 生成器统一门面。
@@ -12,8 +11,8 @@ import com.njydsz.common.util.spring.SpringContextHolder;
  *
  * <p><b>两种使用方式：</b>
  * <ol>
- *   <li><b>静态门面（本类）：</b>适用于非 Spring 托管场景，通过 {@link SpringContextHolder}
- *       懒获取 {@link SnowflakeIdGenerator} Bean，容器未初始化时安全降级为伪随机 long</li>
+ *   <li><b>静态门面（本类）：</b>适用于非 Spring 托管场景，通过注册的
+ *       {@link Supplier} 懒获取 {@link SnowflakeIdGenerator} Bean，未注册时安全降级为伪随机 long</li>
  *   <li><b>依赖注入：</b>Spring Bean 直接注入 {@link SnowflakeIdGenerator}（由 {@link SnowflakeIdBean} 注册）</li>
  * </ol>
  *
@@ -34,6 +33,20 @@ public final class IdGenerator {
 
     private IdGenerator() {
         throw new UnsupportedOperationException("Utility class");
+    }
+
+    /** 由 UtilAutoConfiguration 设置的 Supplier，用于替代 SpringContextHolder 查找 */
+    private static volatile Supplier<SnowflakeIdGenerator> generatorSupplier;
+
+    /**
+     * 注册 SnowflakeIdGenerator 的 Supplier。
+     *
+     * <p>由 {@code UtilAutoConfiguration} 在容器初始化时调用，传入 ObjectProvider 风格的 Supplier。
+     *
+     * @param supplier SnowflakeIdGenerator 提供者，非空
+     */
+    public static void setGeneratorSupplier(Supplier<SnowflakeIdGenerator> supplier) {
+        generatorSupplier = supplier;
     }
 
     /**
@@ -104,6 +117,10 @@ public final class IdGenerator {
         if (gen != null) {
             return gen;
         }
+        Supplier<SnowflakeIdGenerator> supplier = generatorSupplier;
+        if (supplier == null) {
+            return null;
+        }
         // 失败冷却：避免非 Spring 环境下每次生成 ID 都触发 getBean 查找
         long now = System.currentTimeMillis();
         if (now - lastFailureMillis < FAILURE_COOLDOWN_MILLIS) {
@@ -118,7 +135,7 @@ public final class IdGenerator {
                 return null;
             }
             try {
-                gen = SpringContextHolder.getBean(SnowflakeIdGenerator.class);
+                gen = supplier.get();
                 cached = gen;
                 return gen;
             } catch (Exception ignored) {

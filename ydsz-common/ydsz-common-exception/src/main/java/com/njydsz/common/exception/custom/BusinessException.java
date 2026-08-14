@@ -100,7 +100,7 @@ public class BusinessException extends AbstractYdszException {
      */
     private static final String DEFAULT_CODE = CoreExceptionCode.FAIL.getCode();
 
-    // ==================== 核心构造函数（仅限 3 个） ====================
+    // ==================== 核心构造函数 ====================
 
     /**
      * 默认构造函数，初始化为 400 Bad Request / ERROR / BUSINESS
@@ -108,24 +108,6 @@ public class BusinessException extends AbstractYdszException {
     public BusinessException() {
         super();
         initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
-    }
-
-    /**
-     * 使用自定义消息构造业务异常（已弃用）。
-     *
-     * <p>保留给 {@code new BusinessException("...")} 形式的存量调用方，
-     * 新代码请优先使用 {@link #of(ExceptionCode)} 或 {@link #builder()}。</p>
-     *
-     * @param message 自定义异常消息
-     * @deprecated 请使用 {@link #of(ExceptionCode)} 或 {@link #builder()} 替代，
-     *             以便获得完整的错误码和国际化支持。
-     */
-    @Deprecated
-    public BusinessException(String message) {
-        super(message);
-        initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
-        this.key = DEFAULT_CODE;
-        setMessage(message);
     }
 
     /**
@@ -147,68 +129,6 @@ public class BusinessException extends AbstractYdszException {
     public BusinessException(ExceptionCode exceptionCode, Throwable cause) {
         super(null, cause);
         init(exceptionCode, new Object[]{}, DEFAULT_LEVEL, DEFAULT_CATEGORY);
-    }
-
-    /**
-     * 使用异常码枚举和自定义消息构造业务异常（已弃用）。
-     *
-     * <p>保留给 {@code super(exceptionCode, message)} 形式的存量调用方
-     * （如 {@code TenantIsolationException}），新代码请优先使用
-     * {@link #BusinessException(ExceptionCode)} 或 {@link #builder()}。</p>
-     *
-     * @param exceptionCode 异常码枚举
-     * @param message       自定义异常消息
-     * @deprecated 请使用 {@link #BusinessException(ExceptionCode)} 或 {@link #builder()} 替代。
-     */
-    @Deprecated
-    public BusinessException(ExceptionCode exceptionCode, String message) {
-        super(message);
-        init(exceptionCode, new Object[]{}, DEFAULT_LEVEL, DEFAULT_CATEGORY);
-        if (message != null) {
-            setMessage(message);
-        }
-    }
-
-    /**
-     * 使用异常码枚举与消息参数构造业务异常（已弃用）。
-     *
-     * <p>保留给 {@code new BusinessException(resultCode, new Object[]{...})} 形式的存量调用方，
-     * 新代码请优先使用 {@link #builder()}。</p>
-     *
-     * @param exceptionCode 异常码枚举
-     * @param params        国际化消息参数
-     * @deprecated 请使用 {@link #builder()} {@code .params(Object...)} 替代。
-     */
-    @Deprecated
-    public BusinessException(ExceptionCode exceptionCode, Object[] params) {
-        super();
-        init(exceptionCode, params == null ? new Object[]{} : params, DEFAULT_LEVEL, DEFAULT_CATEGORY);
-    }
-
-    /**
-     * 使用统一结果码构造业务异常（已弃用）。
-     *
-     * <p>保留给 {@code new BusinessException(BaseResultCode.X)} 形式的存量调用方
-     * （{@code ResultCode} 体系），新代码请优先使用 {@link #of(ExceptionCode)} 或 {@link #builder()}。</p>
-     *
-     * @param resultCode 统一结果码
-     * @deprecated 请使用 {@link #of(ExceptionCode)} 或 {@link #builder()} 替代。
-     */
-    @Deprecated
-    public BusinessException(ResultCode resultCode) {
-        super();
-        if (resultCode != null) {
-            int httpStatus = (resultCode instanceof ExceptionCode ec)
-                    ? ec.getHttpStatus() : DEFAULT_HTTP_STATUS;
-            String key = (resultCode instanceof ExceptionCode ec)
-                    ? ec.getKey()
-                    : resultCode.getKey();
-            init(resultCode.getCode(), key, new Object[]{},
-                    httpStatus, DEFAULT_LEVEL, DEFAULT_CATEGORY);
-        } else {
-            initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
-            initFields(DEFAULT_CODE, DEFAULT_CODE, new Object[]{});
-        }
     }
 
     // ==================== 业务方法 ====================

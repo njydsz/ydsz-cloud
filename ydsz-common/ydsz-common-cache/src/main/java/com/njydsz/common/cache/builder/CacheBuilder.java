@@ -183,6 +183,15 @@ public final class CacheBuilder<K, V> {
   /** 软引用值标志（与 type 正交，不覆盖 type） */
   private boolean softValuesFlag = false;
 
+  /** 缓存名称（可选，用于健康检查注册和监控标识） */
+  private String cacheName;
+
+  /** 是否启用健康检查注册（默认 true） */
+  private boolean healthCheckEnabled = true;
+
+  /** 健康检查指示器（可选，启用健康检查时自动注册） */
+  private com.njydsz.common.cache.health.CacheHealthIndicator healthIndicator;
+
   /** 私有构造函数，通过 YdszCache.newBuilder() 创建 */
   private CacheBuilder() {}
 
@@ -369,6 +378,48 @@ public final class CacheBuilder<K, V> {
    */
   public CacheBuilder<K, V> memoryAware() {
     return memoryAware(0.75, 0.85, 0.95, 10);
+  }
+
+  /**
+   * 设置缓存名称
+   *
+   * <p>用于健康检查注册、监控标识和日志追踪。如果设置了 {@link #healthIndicator}，
+   * 构建时会自动将缓存注册到该指示器。
+   *
+   * @param cacheName 缓存名称，非空字符串
+   * @return this
+   */
+  public CacheBuilder<K, V> name(String cacheName) {
+    this.cacheName = cacheName;
+    return this;
+  }
+
+  /**
+   * 设置是否启用健康检查注册
+   *
+   * <p>启用后，构建的缓存会自动注册到 {@link com.njydsz.common.cache.health.CacheHealthIndicator}（如果通过 {@link #healthIndicator} 设置）。
+   *
+   * @param healthCheckEnabled true 表示启用（默认），false 表示禁用
+   * @return this
+   */
+  public CacheBuilder<K, V> healthCheckEnabled(boolean healthCheckEnabled) {
+    this.healthCheckEnabled = healthCheckEnabled;
+    return this;
+  }
+
+  /**
+   * 设置健康检查指示器
+   *
+   * <p>构建缓存后，如果 {@link #healthCheckEnabled} 为 true 且缓存名称非空，
+   * 会自动将此缓存注册到指示器进行健康监控。
+   *
+   * @param healthIndicator 健康检查指示器
+   * @return this
+   */
+  public CacheBuilder<K, V> healthIndicator(
+      com.njydsz.common.cache.health.CacheHealthIndicator healthIndicator) {
+    this.healthIndicator = healthIndicator;
+    return this;
   }
 
   /**
@@ -566,7 +617,12 @@ public final class CacheBuilder<K, V> {
   public Cache<K, V> build() {
     validate();
     Cache<K, V> cache = createBaseCache();
-    return applyDecorators(cache);
+    cache = applyDecorators(cache);
+    // 健康检查自动注册
+    if (healthCheckEnabled && healthIndicator != null && cacheName != null && !cacheName.isEmpty()) {
+      healthIndicator.registerCache(cacheName, cache);
+    }
+    return cache;
   }
 
   /**
@@ -704,6 +760,46 @@ public final class CacheBuilder<K, V> {
       throw new IllegalArgumentException(
           "Cannot set expireAfterWrite, expireAfterAccess, and expiry simultaneously. "
               + "Use only one expiration strategy.");
+    }
+    // 装饰器组合校验
+    validateDecoratorCombinations();
+  }
+
+  /**
+   * 校验装饰器组合合法性。
+   *
+   * <p>以下组合存在语义冲突或数据安全风险，直接拒绝构建：
+   *
+   * <ul>
+   *   <li>Write-Behind + SWR：两者都管理数据新鲜度，语义冲突且可能导致数据不一致
+   *   <li>内存感知淘汰 + 弱/软引用淘汰：两种淘汰策略叠加，行为不可预测
+   *   <li>Write-Behind + 弱/软引用值：弱/软引用值可能被 GC，Write-Behind 延迟写入时值已丢失
+   * </ul>
+   */
+  private void validateDecoratorCombinations() {
+    boolean hasSwr = swrFreshPeriod > 0 && swrStalePeriod > 0;
+    boolean hasWeakOrSoftRef = weakKeysFlag || weakValuesFlag || softValuesFlag;
+
+    // Write-Behind + SWR 语义冲突
+    if (writeBehindEnabled && hasSwr) {
+      throw new IllegalStateException(
+          "Write-Behind 与 Stale-While-Revalidate (SWR) 不能同时启用："
+              + "两者都管理数据新鲜度，语义冲突。请仅选择一种策略。");
+    }
+
+    // 内存感知淘汰 + 弱/软引用淘汰：两种策略行为不可预测
+    if (memoryAwareEnabled && hasWeakOrSoftRef) {
+      throw new IllegalStateException(
+          "内存感知淘汰 (memoryAwareEnabled) 与弱/软引用淘汰不能同时启用："
+              + "两种淘汰策略叠加后行为不可预测。请仅选择一种策略。");
+    }
+
+    // Write-Behind + 弱/软引用值：延迟写入期间值可能被 GC 导致数据丢失
+    if (writeBehindEnabled && hasWeakOrSoftRef) {
+      throw new IllegalStateException(
+          "Write-Behind 与弱/软引用值不能同时启用："
+              + "Write-Behind 延迟写入期间弱/软引用值可能被 GC 回收导致数据丢失。"
+              + "如需异步写入，请使用强引用 + maximumSize 淘汰策略。");
     }
   }
 

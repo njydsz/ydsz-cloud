@@ -97,7 +97,7 @@ public class RocketMQSubscriber implements IMessageSubscriber {
             running.set(false);
             lastError.set(e);
             log.error("[RocketMQ] 启动消费者失败，topic={}, groupId={}", topic, groupId, e);
-            throw new SysException("RocketMQ 消费者启动失败：" + e.getMessage(), e);
+            throw SysException.builder().message("RocketMQ 消费者启动失败：" + e.getMessage()).cause(e).build();
         }
         return groupId;
     }
@@ -165,7 +165,7 @@ public class RocketMQSubscriber implements IMessageSubscriber {
             lastError.set(e);
             log.error("[RocketMQ] 消息处理异常，topic={}, msgId={}",
                     msgExt.getTopic(), msgExt.getMsgId(), e);
-            throw new SysException("消息处理失败", e);
+            throw SysException.builder().message("消息处理失败").cause(e).build();
         }
     }
 
@@ -182,7 +182,7 @@ public class RocketMQSubscriber implements IMessageSubscriber {
         } catch (Exception e) {
             log.error("[RocketMQ] 创建消费者失败，topic={}, namesrvAddr={}",
                     topic, properties.resolvedNamesrvAddr(), e);
-            throw new SysException("RocketMQ 消费者创建失败：" + e.getMessage(), e);
+            throw SysException.builder().message("RocketMQ 消费者创建失败：" + e.getMessage()).cause(e).build();
         }
     }
 }

@@ -8,7 +8,6 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.MessageSource;
 
 import com.njydsz.common.util.auth.AuthInfoUtils;
-import com.njydsz.common.util.spring.SpringContextHolder;
 import com.njydsz.common.util.string.StringUtils;
 
 /**
@@ -179,9 +178,8 @@ public final class MessageUtils {
     /**
      * 解析并缓存 MessageSource
      *
-     * <p>优先使用已注入的 {@link ObjectProvider}（Spring 环境下由 {@link MessageSourceConfiguration} 注入）；
-     * 若未注入则降级使用 {@link SpringContextHolder} 懒加载。
-     * 解析成功时缓存结果，解析失败时返回 null 以便下次调用可重新尝试。
+     * <p>使用已注入的 {@link ObjectProvider}（Spring 环境下由 {@link MessageSourceConfiguration} 注入）
+     * 解析并缓存 MessageSource 实例。解析成功时缓存结果，解析失败时返回 null 以便下次调用可重新尝试。
      *
      * @return MessageSource 实例，未找到或上下文未初始化时返回 null
      */
@@ -191,7 +189,6 @@ public final class MessageUtils {
             return messageSource;
         }
         try {
-            // 优先使用 ObjectProvider（Spring 注入路径，更安全）
             ObjectProvider<MessageSource> provider = messageSourceProvider;
             if (provider != null) {
                 messageSource = provider.getIfAvailable();
@@ -199,13 +196,6 @@ public final class MessageUtils {
                     cachedMessageSource = messageSource;
                     return messageSource;
                 }
-                return null;
-            }
-            // 降级：通过 SpringContextHolder 懒加载（非 Spring 环境或未注入时使用）
-            if (SpringContextHolder.isInitialized()) {
-                messageSource = SpringContextHolder.getBean("messageSource", MessageSource.class);
-                cachedMessageSource = messageSource;
-                return messageSource;
             }
             return null;
         } catch (Exception e) {

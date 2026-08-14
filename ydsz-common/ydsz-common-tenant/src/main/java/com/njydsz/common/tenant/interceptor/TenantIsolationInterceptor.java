@@ -25,10 +25,10 @@ import com.njydsz.common.jdbc.exception.TenantIsolationException;
 
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.expression.ExpressionList;
 import net.sf.jsqlparser.expression.StringValue;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
+import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.expression.operators.relational.InExpression;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
@@ -340,6 +340,26 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
         return column;
     }
 
+    /**
+     * 构建类型安全的 IN 表达式。
+     *
+     * <p>基于 JSqlParser 表达式树构造，{@link StringValue} 内部已正确处理
+     * 单引号转义，避免字符串拼接导致的 SQL 注入风险。
+     *
+     * @param column 目标列
+     * @param list   值列表
+     * @return InExpression 表达式
+     */
+    private Expression buildInExpression(Column column, List<?> list) {
+        ExpressionList<Expression> expressionList = new ExpressionList<>();
+        List<Expression> items = new ArrayList<>(list.size());
+        for (Object item : list) {
+            items.add(new StringValue(String.valueOf(item)));
+        }
+        expressionList.setExpressions(items);
+        return new InExpression(column, expressionList);
+    }
+
     private Expression mergeWhere(Expression existing, Expression additional) {
         if (additional == null) {
             return existing;
@@ -419,7 +439,7 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
                     + "），已拒绝执行 SQL。");
             }
             // 跨租户共享：将主租户字段值扩展为 [当前租户, 共享租户...]
-            if (context.hasSharedTenantIds() && isPrimaryTenantField(field)) {
+            if (context.hasSharing() && isPrimaryTenantField(field)) {
                 value = expandWithSharedTenants(value, context.getSharedTenantIds());
             }
             result.add(new TenantFieldValue(field.getColumn(), value));

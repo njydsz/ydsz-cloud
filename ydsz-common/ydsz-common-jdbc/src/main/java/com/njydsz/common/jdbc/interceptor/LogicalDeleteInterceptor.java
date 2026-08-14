@@ -285,8 +285,10 @@ public class LogicalDeleteInterceptor extends CachingJsqlParserSupport implement
             mpBs.sql(rewrittenSql);
         } catch (JSQLParserException e) {
             log.error("LogicalDeleteInterceptor: Failed to parse DELETE SQL, aborting to prevent physical delete: {}", originalSql, e);
-            throw new SysException(
-                    "Failed to parse DELETE SQL, logical delete conversion aborted to prevent physical delete", e);
+            throw SysException.builder()
+                    .message("Failed to parse DELETE SQL, logical delete conversion aborted to prevent physical delete")
+                    .cause(e)
+                    .build();
         }
     }
 

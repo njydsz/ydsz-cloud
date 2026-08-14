@@ -65,8 +65,7 @@ public class CaptchaService {
             return "data:image/png;base64," + Base64.getEncoder().encodeToString(bytes);
         } catch (IOException e) {
             log.error("Failed to generate captcha image", e);
-            throw new BusinessException(UserInfoExceptionCode.CAPTCHA_INVALID,
-                    "验证码生成失败");
+            throw new BusinessException(UserInfoExceptionCode.CAPTCHA_INVALID);
         }
     }
 
@@ -85,13 +84,13 @@ public class CaptchaService {
 
         String storedCode = redisStringOps.get(CAPTCHA_KEY_PREFIX + captchaKey, String.class);
         if (storedCode == null) {
-            throw new BusinessException(UserInfoExceptionCode.CAPTCHA_INVALID, new Object[]{"验证码已过期"});
+            throw BusinessException.builder().resultCode(UserInfoExceptionCode.CAPTCHA_INVALID).params("验证码已过期").build();
         }
 
         redisStringOps.del(CAPTCHA_KEY_PREFIX + captchaKey);
 
         if (!storedCode.equalsIgnoreCase(userInput)) {
-            throw new BusinessException(UserInfoExceptionCode.CAPTCHA_INVALID, new Object[]{"验证码错误"});
+            throw BusinessException.builder().resultCode(UserInfoExceptionCode.CAPTCHA_INVALID).params("验证码错误").build();
         }
 
         return true;

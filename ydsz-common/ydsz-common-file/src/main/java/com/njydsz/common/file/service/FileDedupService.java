@@ -45,7 +45,7 @@ public class FileDedupService {
                 digest.update(buffer, 0, len);
             }
         } catch (Exception e) {
-            throw new SysException("Failed to calculate SHA-256", e);
+            throw SysException.builder().message("Failed to calculate SHA-256").cause(e).build();
         }
         byte[] digestBytes = digest.digest();
         StringBuilder sb = new StringBuilder();

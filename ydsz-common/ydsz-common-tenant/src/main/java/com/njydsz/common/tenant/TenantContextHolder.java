@@ -59,10 +59,14 @@ public final class TenantContextHolder {
     /**
      * 获取租户上下文（类型安全，无需强转）。
      *
+     * <p>由于 {@link ContextKey#cast(Object)} 是包私有方法，此处通过
+     * {@link ContextKey#type()} 做运行时类型检查后强转。
+     *
      * @return 当前租户上下文，不存在返回 {@code null}
      */
     public static TenantContext get() {
-        return KEY.cast(RequestContext.get(KEY.key()));
+        Object value = RequestContext.get(KEY.key());
+        return KEY.type().isInstance(value) ? KEY.type().cast(value) : null;
     }
 
     /**

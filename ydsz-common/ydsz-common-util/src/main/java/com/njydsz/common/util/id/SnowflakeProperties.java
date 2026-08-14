@@ -30,7 +30,6 @@ import lombok.Setter;
  *   <li>显式配置：{@code ydsz.util.snowflake.worker-id}</li>
  *   <li>PodOrdinal：{@link PodOrdinalWorkerIdAllocator} 从 StatefulSet 主机名解析序号</li>
  *   <li>IpHash：{@link IpHashWorkerIdAllocator} 基于本地 IPv4 地址哈希</li>
- *   <li>FilePersisted：{@link FilePersistedWorkerIdAllocator} 基于本地文件持久化</li>
  * </ol>
  *
  * @author ydsz-team
@@ -65,7 +64,7 @@ public class SnowflakeProperties {
     private Long datacenterId;
 
     /**
-     * 节点标识（用于 PodOrdinal/IFilePersisted 策略）。
+     * 节点标识（用于 PodOrdinal/IpHash 策略）。
      * <p>不设置时自动解析 HOSTNAME 环境变量或 InetAddress.getLocalHost()。
      */
     private String nodeId;

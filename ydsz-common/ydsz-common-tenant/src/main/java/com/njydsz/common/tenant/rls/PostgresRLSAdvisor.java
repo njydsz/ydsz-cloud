@@ -71,9 +71,11 @@ public final class PostgresRLSAdvisor {
                 continue;
             }
 
-            ddl.add(String.format("-- ===== 表: %s =====", tableName));
-            // 启用 RLS
-            ddl.add(String.format("ALTER TABLE %s ENABLE ROW LEVEL SECURITY;", tableName));
+            String safeTable = escapeIdentifier(tableName);
+            String safeColumn = escapeIdentifier(tenantColumn);
+            ddl.add(String.format("-- ===== 表: %s =====", safeTable));
+            // 启用 RLS：标识符使用双引号转义，防止 DDL 注入或关键字冲突
+            ddl.add(String.format("ALTER TABLE %s ENABLE ROW LEVEL SECURITY;", safeTable));
             // 创建策略
             ddl.add(String.format(
                 "CREATE POLICY tenant_isolation_policy ON %s " +
@@ -81,7 +83,7 @@ public final class PostgresRLSAdvisor {
                 "TO public " +
                 "USING (%s::text = current_setting('app.tenant_id', true)) " +
                 "WITH CHECK (%s::text = current_setting('app.tenant_id', true));",
-                tableName, tenantColumn, tenantColumn));
+                safeTable, safeColumn, safeColumn));
             ddl.add("");
         }
 
@@ -107,9 +109,10 @@ public final class PostgresRLSAdvisor {
     public static List<String> generateDisableDdl(List<String> tableNames) {
         List<String> ddl = new ArrayList<>();
         for (String tableName : tableNames) {
+            String safeTable = escapeIdentifier(tableName);
             ddl.add(String.format(
-                "DROP POLICY IF EXISTS tenant_isolation_policy ON %s;", tableName));
-            ddl.add(String.format("ALTER TABLE %s DISABLE ROW LEVEL SECURITY;", tableName));
+                "DROP POLICY IF EXISTS tenant_isolation_policy ON %s;", safeTable));
+            ddl.add(String.format("ALTER TABLE %s DISABLE ROW LEVEL SECURITY;", safeTable));
         }
         return ddl;
     }
@@ -138,10 +141,39 @@ public final class PostgresRLSAdvisor {
 
     /**
      * 简易 SQL 逃逸（仅用于租户 ID 值，不用于通用 SQL 防护）。
+     *
      * <p>注意：实际应使用 PreparedStatement，此方法仅用于输出 DDL。
+     *
+     * @param value 租户 ID 值
+     * @return 转义后的值（单引号加倍）
      */
     private static String escapeSql(String value) {
-        if (value == null) return "NULL";
+        if (value == null) {
+            return "NULL";
+        }
         return value.replace("'", "''");
+    }
+
+    /**
+     * PostgreSQL DDL 标识符转义（表名、列名、策略名等）。
+     *
+     * <p>使用双引号包裹标识符，并将内部的双引号加倍（标准 SQL 转义规则）。
+     * 这可以防止：
+     * <ul>
+     *   <li>标识符与 SQL 关键字冲突（如表名为 "order"、"user"）</li>
+     *   <li>表名/列名中包含特殊字符时被错误解析</li>
+     * </ul>
+     *
+     * <p>注意：此方法仅转义标识符本身，不处理 schema 前缀。
+     * 若表名包含 schema（如 {@code public.orders}），应分别转义每一部分。
+     *
+     * @param identifier 标识符（表名或列名）
+     * @return 转义后的标识符（已包裹双引号）
+     */
+    public static String escapeIdentifier(String identifier) {
+        if (identifier == null || identifier.isEmpty()) {
+            return "\"\"";
+        }
+        return "\"" + identifier.replace("\"", "\"\"") + "\"";
     }
 }

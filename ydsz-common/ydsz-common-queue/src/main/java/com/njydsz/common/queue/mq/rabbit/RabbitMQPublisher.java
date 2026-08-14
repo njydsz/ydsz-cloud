@@ -79,7 +79,7 @@ public class RabbitMQPublisher implements IMessagePublisher {
                     queueName, exchangeName, this.routingKey);
         } catch (IOException | TimeoutException e) {
             log.error("[RabbitMQ] 初始化发布者失败，queue={}", queueName, e);
-            throw new SysException("RabbitMQ 发布者初始化失败：" + e.getMessage(), e);
+            throw SysException.builder().message("RabbitMQ 发布者初始化失败：" + e.getMessage()).cause(e).build();
         }
     }
 
@@ -96,7 +96,7 @@ public class RabbitMQPublisher implements IMessagePublisher {
             publish(queueMessage);
         } catch (Exception e) {
             log.error("[RabbitMQ] 消息发布失败，routingKey={}", routingKey, e);
-            throw new SysException("RabbitMQ 消息发布失败：" + e.getMessage(), e);
+            throw SysException.builder().message("RabbitMQ 消息发布失败：" + e.getMessage()).cause(e).build();
         }
     }
 
@@ -118,7 +118,7 @@ public class RabbitMQPublisher implements IMessagePublisher {
             }
         } catch (Exception e) {
             log.error("[RabbitMQ] 消息发布失败，routingKey={}, traceId={}", routingKey, message.getTraceId(), e);
-            throw new SysException("RabbitMQ 消息发布失败：" + e.getMessage(), e);
+            throw SysException.builder().message("RabbitMQ 消息发布失败：" + e.getMessage()).cause(e).build();
         }
     }
 

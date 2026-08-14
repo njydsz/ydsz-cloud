@@ -179,7 +179,7 @@ public class JdbcAuditStorage implements AuditStorage {
             }
         } catch (Exception e) {
             log.error("【审计存储】批量写入审计日志失败, count={}", auditLogs.size(), e);
-            throw new SysException("审计日志批量写入失败", e);
+            throw SysException.builder().message("审计日志批量写入失败").cause(e).build();
         }
     }
 

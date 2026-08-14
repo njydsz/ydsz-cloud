@@ -13,7 +13,7 @@ import com.njydsz.common.util.message.MessageUtils;
  * MessageSource 自动装配配置。
  *
  * <p>将 Spring 容器的 {@link MessageSource} 以 {@link ObjectProvider} 形式注入到
- * {@link MessageUtils}，打破 {@code MessageUtils ↔ SpringContextHolder} 的静态耦合。
+ * {@link MessageUtils}，打破 {@code MessageUtils} 与静态上下文的耦合。
  *
  * <p>仅当容器中存在 {@link MessageSource} Bean 时才激活，不会影响无 Spring 上下文场景。
  *

@@ -44,13 +44,14 @@
 
 ### 3. 多级租户支持
 
-通过 `TenantProperties.TenantMode` 配置三种模式，仅改配置不改代码：
+通过 `TenantProperties.TenantMode` 配置四种模式，仅改配置不改代码：
 
 | 模式 | 说明 |
 |---|---|
 | `SINGLE` | 只取 `tenant-fields` 第一个字段注入 SQL |
 | `MULTI` | 取 `tenant-fields` 全部字段注入 SQL（AND 连接），支持集团+公司+部门+项目多维度 |
 | `ISOLATE_DB` | 独立数据源模式，每租户使用独立数据库（配合 `TenantDataSourceRouter`） |
+| `SCHEMA` | Schema 隔离模式，每租户使用独立 PostgreSQL Schema（`search_path`），SQL 拦截器不注入列条件 |
 
 ### 4. 全链路传播
 
@@ -256,7 +257,7 @@ executor.submit(() -> {
 // 7. 手动快照与恢复（跨线程自定义场景）
 TenantContext snapshot = TenantContextHolder.snapshot();
 new Thread(() -> {
-    TenantContextHolder.restore(snapshot);
+    TenantContextHolder.set(snapshot);
     try {
         service.process();
     } finally {
@@ -362,11 +363,12 @@ TenantAuditLogger.log("DELETE_FILE", "删除文件: " + fileId, fileId);
 
 ```
 com.njydsz.common.tenant/
-├── TenantContextHolder          # 上下文持有者（TTL）
+├── TenantContextHolder          # 上下文持有者（类型安全入口）
 ├── TenantContext                # 上下文值对象（不可变）
 ├── SystemTenantContextRunner    # 系统租户执行器
 ├── annotation/
-│   └── TenantColumn             # per-table 列名覆盖注解
+│   ├── TenantColumn             # per-table 列名覆盖注解
+│   └── TenantColumnScanner      # 启动时扫描 @TenantColumn 并填充配置
 ├── async/
 │   └── TenantContextTaskDecorator  # 异步传播装饰器
 ├── audit/
@@ -376,12 +378,21 @@ com.njydsz.common.tenant/
 ├── config/
 │   ├── TenantProperties         # 配置属性
 │   ├── TenantConfigProvider     # 租户级配置覆盖
-│   └── TenantAutoConfiguration  # 自动装配
+│   ├── TenantAutoConfiguration  # 自动装配
+│   └── TenantPropertiesAnnotationPopulator  # BeanPostProcessor：注解扫描回填
 ├── datasource/
 │   ├── TenantDataSourceRouter   # ISOLATE_DB 数据源路由器
-│   └── TenantDataSourceFilter   # ISOLATE_DB Web 过滤器
+│   ├── TenantDataSourceFilter   # ISOLATE_DB Web 过滤器
+│   └── resolver/
+│       ├── DatasourceKeyResolver      # 数据源键解析策略接口
+│       ├── NamingConventionResolver   # 约定命名解析（tenant_{id}）
+│       └── ConfigurationResolver      # 配置驱动解析（@Primary）
+├── encryption/
+│   ├── TenantEncrypt            # 字段加密注解
+│   └── TenantEncryptHandler     # 字段加密处理器
 ├── feign/
-│   └── TenantContextFeignInterceptor  # Feign 透传拦截器
+│   ├── TenantContextFeignInterceptor  # Feign 透传拦截器
+│   └── TenantHeaderContract     # Feign/WebFilter header 契约统一
 ├── health/
 │   └── TenantHealthIndicator    # 健康检查
 ├── interceptor/
@@ -389,17 +400,26 @@ com.njydsz.common.tenant/
 │   └── TenantIsolationInterceptor # SQL 改写拦截器
 ├── lifecycle/
 │   ├── TenantLifecycleManager   # 生命周期管理器
-│   └── TenantStatus             # 状态枚举
+│   ├── TenantStatus             # 状态枚举
+│   ├── InMemoryTenantLifecycleManager   # 内存实现（开发/测试）
+│   └── RedisTenantLifecycleManager      # Redis 实现（生产）
 ├── metrics/
 │   └── TenantMetrics            # Micrometer 指标
+├── provisioning/
+│   └── TenantProvisioningHook   # 租户初始化钩子
 ├── ratelimit/
 │   └── TenantRateLimiter        # 租户限流门面
 ├── redis/
 │   └── TenantAwareRedisKey      # Redis Key 构建器
+├── rls/
+│   └── PostgresRLSAdvisor       # PostgreSQL RLS DDL 生成顾问
+├── validation/
+│   └── TenantIndexValidator     # 启动时租户列索引校验
 └── web/
     └── TenantContextWebFilter   # Web 入口过滤器
 ```
 
 ## 变更记录
 
+- **v1.1.0**（2026-08-14）：安全加固与架构优化。新增 SCHEMA 模式、`@TenantColumn` 启动扫描、Feign/WebFilter header 契约统一、SQL IN 表达式树防注入、PostgresRLSAdvisor 标识符转义、Caffeine 缓存替代 ConcurrentHashMap、双路径上下文统一为 `TenantContextHolder`、`TenantIndexValidator` 启动校验、`TenantDiagnosticsContributor` 诊断信息。
 - **v1.0.0**（2026-08-02）：初始版本。提供统一租户上下文、SQL 隔离拦截器、多级租户支持（SINGLE/MULTI/ISOLATE_DB）、全链路传播（Web/Feign/Async/定时任务）、Redis Key 隔离、per-table 列名覆盖、租户限流、生命周期管理、审计、Micrometer 指标、Fail-Closed 保护、健康检查。

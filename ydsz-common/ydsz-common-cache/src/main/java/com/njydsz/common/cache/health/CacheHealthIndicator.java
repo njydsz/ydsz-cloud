@@ -42,11 +42,14 @@ public class CacheHealthIndicator {
     DOWN
   }
 
-  /** 告警阈值：命中率低于此值时状态为 WARN */
-  private static final double HIT_RATE_WARN_THRESHOLD = 0.3;
+  /** 告警阈值：命中率低于此值时状态为 WARN（默认 0.3） */
+  private double hitRateWarnThreshold = 0.3;
 
-  /** 告警阈值：容量使用率高于此值时状态为 WARN */
-  private static final double CAPACITY_WARN_THRESHOLD = 0.9;
+  /** 告警阈值：容量使用率高于此值时状态为 WARN（默认 0.9） */
+  private double capacityWarnThreshold = 0.9;
+
+  /** 命中率检查的最小访问样本数（低于此数量不判断命中率，默认 100） */
+  private long minSampleSize = 100;
 
   private final Map<String, Cache<?, ?>> monitoredCaches = new ConcurrentHashMap<>();
 
@@ -64,6 +67,54 @@ public class CacheHealthIndicator {
   /** 注销缓存实例 */
   public void unregisterCache(String name) {
     monitoredCaches.remove(name);
+  }
+
+  /**
+   * 设置命中率告警阈值
+   *
+   * <p>当缓存命中率低于此阈值且访问样本数达到 {@link #setMinSampleSize(long)} 时，
+   * 健康状态标记为 WARN。
+   *
+   * @param hitRateWarnThreshold 阈值（0.0 ~ 1.0），默认 0.3
+   * @throws IllegalArgumentException 当阈值不在 (0, 1] 范围内时抛出
+   */
+  public void setHitRateWarnThreshold(double hitRateWarnThreshold) {
+    if (hitRateWarnThreshold <= 0 || hitRateWarnThreshold > 1.0) {
+      throw new IllegalArgumentException(
+          "hitRateWarnThreshold 必须在 (0, 1] 范围内: " + hitRateWarnThreshold);
+    }
+    this.hitRateWarnThreshold = hitRateWarnThreshold;
+  }
+
+  /**
+   * 设置容量使用率告警阈值
+   *
+   * <p>当缓存当前大小与最大容量的比值高于此阈值时，健康状态标记为 WARN。
+   *
+   * @param capacityWarnThreshold 阈值（0.0 ~ 1.0），默认 0.9
+   * @throws IllegalArgumentException 当阈值不在 (0, 1] 范围内时抛出
+   */
+  public void setCapacityWarnThreshold(double capacityWarnThreshold) {
+    if (capacityWarnThreshold <= 0 || capacityWarnThreshold > 1.0) {
+      throw new IllegalArgumentException(
+          "capacityWarnThreshold 必须在 (0, 1] 范围内: " + capacityWarnThreshold);
+    }
+    this.capacityWarnThreshold = capacityWarnThreshold;
+  }
+
+  /**
+   * 设置命中率检查的最小访问样本数
+   *
+   * <p访问量低于此数量时不判断命中率，避免冷启动阶段的误报。
+   *
+   * @param minSampleSize 最小样本数，必须 ≥ 0，默认 100
+   * @throws IllegalArgumentException 当样本数 < 0 时抛出
+   */
+  public void setMinSampleSize(long minSampleSize) {
+    if (minSampleSize < 0) {
+      throw new IllegalArgumentException("minSampleSize 必须 ≥ 0: " + minSampleSize);
+    }
+    this.minSampleSize = minSampleSize;
   }
 
   /**
@@ -117,9 +168,9 @@ public class CacheHealthIndicator {
     details.put("hitCount", stats.getHitCount());
     details.put("missCount", stats.getMissCount());
 
-    // 命中率检查
+    // 命中率检查（访问量达到最小样本数才判断，避免冷启动误报）
     long totalAccess = stats.getHitCount() + stats.getMissCount();
-    if (totalAccess > 100 && hitRate < HIT_RATE_WARN_THRESHOLD) {
+    if (totalAccess > minSampleSize && hitRate < hitRateWarnThreshold) {
       status = Status.WARN;
       details.put("warning", "低命中率: " + String.format("%.2f%%", hitRate * 100));
     }
@@ -135,7 +186,7 @@ public class CacheHealthIndicator {
           double usage = (double) size / maxSize;
           details.put("maxSize", maxSize);
           details.put("usage", String.format("%.2f%%", usage * 100));
-          if (usage > CAPACITY_WARN_THRESHOLD) {
+          if (usage > capacityWarnThreshold) {
             status = Status.WARN;
             details.put("warning", "高容量使用率: " + String.format("%.2f%%", usage * 100));
           }

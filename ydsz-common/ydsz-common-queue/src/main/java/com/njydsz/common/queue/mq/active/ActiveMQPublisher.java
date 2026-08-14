@@ -70,7 +70,7 @@ public class ActiveMQPublisher implements IMessagePublisher {
                     queueName, properties.resolvedBrokerUrl());
         } catch (Exception e) {
             log.error("[ActiveMQ] 初始化发布者失败，queue={}", queueName, e);
-            throw new SysException("ActiveMQ 发布者初始化失败：" + e.getMessage(), e);
+            throw SysException.builder().message("ActiveMQ 发布者初始化失败：" + e.getMessage()).cause(e).build();
         }
     }
 
@@ -87,7 +87,7 @@ public class ActiveMQPublisher implements IMessagePublisher {
             publish(queueMessage);
         } catch (Exception e) {
             log.error("[ActiveMQ] 消息发布失败，queue={}", queueName, e);
-            throw new SysException("ActiveMQ 消息发布失败：" + e.getMessage(), e);
+            throw SysException.builder().message("ActiveMQ 消息发布失败：" + e.getMessage()).cause(e).build();
         }
     }
 
@@ -106,7 +106,7 @@ public class ActiveMQPublisher implements IMessagePublisher {
             }
         } catch (Exception e) {
             log.error("[ActiveMQ] 消息发布失败，queue={}, traceId={}", queueName, message.getTraceId(), e);
-            throw new SysException("ActiveMQ 消息发布失败：" + e.getMessage(), e);
+            throw SysException.builder().message("ActiveMQ 消息发布失败：" + e.getMessage()).cause(e).build();
         }
     }
 

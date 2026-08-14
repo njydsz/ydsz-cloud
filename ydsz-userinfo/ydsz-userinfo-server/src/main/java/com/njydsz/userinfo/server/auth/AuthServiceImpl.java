@@ -115,8 +115,7 @@ public class AuthServiceImpl implements AuthService {
                     "FAILED", "IP_BLOCKED", userAgent);
             userInfoMetrics.recordLoginFail();
             userInfoMetrics.stopTimer(sample);
-            throw new BusinessException(UserInfoExceptionCode.IP_BLOCKED,
-                    "当前 IP 登录失败次数过多，请稍后再试");
+            throw new BusinessException(UserInfoExceptionCode.IP_BLOCKED);
         }
 
         // 验证码校验（可配置开关）
@@ -265,14 +264,14 @@ public class AuthServiceImpl implements AuthService {
         // 1. 校验 refresh_token 有效性
         if (!tokenService.validateRefreshToken(refreshToken)) {
             log.warn("Refresh token validation failed, possible token reuse attack");
-            throw new BusinessException(BaseResultCode.UNAUTHORIZED);
+            throw BusinessException.builder().resultCode(BaseResultCode.UNAUTHORIZED).build();
         }
 
         // 2. 解析用户信息
         UserInfo userInfo = tokenService.parseRefreshToken(refreshToken);
         if (userInfo == null) {
             log.warn("Failed to parse user info from refresh token");
-            throw new BusinessException(BaseResultCode.UNAUTHORIZED);
+            throw BusinessException.builder().resultCode(BaseResultCode.UNAUTHORIZED).build();
         }
 
         // 3. 签发新的 access_token 和 refresh_token（token 轮换）

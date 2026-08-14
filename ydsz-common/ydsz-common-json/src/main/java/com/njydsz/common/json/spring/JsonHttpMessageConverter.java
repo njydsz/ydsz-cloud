@@ -4,7 +4,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
@@ -47,52 +46,8 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
     /** 读取缓冲区大小（8KB，平衡内存占用与系统调用次数） */
     private static final int READ_BUFFER_SIZE = 8192;
 
-    /**
-     * Spring 的 {@code MappingJacksonValue} 在 Spring 7.0 已被标记为待删除（{@code @Deprecated(since="7.0", forRemoval=true)}）。
-     *
-     * <p>该类的 class 文件内部引用了 Jackson 枚举常量（{@code JsonInclude.Include.NON_EMPTY} 等），
-     * 但本模块刻意不引入 Jackson 依赖。因此采用反射按需探测：</p>
-     * <ul>
-     *   <li><b>Spring 6.x：</b>找到该类 → 反射解包 {@code serializationView} + {@code value}</li>
-     *   <li><b>Spring 7.x（移除该类后）：</b>{@code loadClassOrNull} 返回 null → 原样输出</li>
-     * </ul>
-     *
-     * <p><b>迁移指引（P1-F2）：</b>Spring 7.x 移除 {@code MappingJacksonValue} 后，
-     * controller 若需 @JsonView 视图过滤，改用以下任一方案：</p>
-     * <ol>
-     *   <li>在 controller 方法内手动过滤字段后返回 POJO</li>
-     *   <li>使用 {@code JsonMapper.toJson(data, viewClass)} 显式指定视图</li>
-     *   <li>使用 {@code SerializationProvider.serializeWithView(data, viewClass)} 直接调用</li>
-     * </ol>
-     */
-    private static final Class<?> MAPPING_JACKSON_VALUE_CLASS = loadClassOrNull(
-            "org.springframework.http.converter.json.MappingJacksonValue");
-    private static final Method GET_SERIALIZATION_VIEW_METHOD = lookupMethodOrNull(
-            MAPPING_JACKSON_VALUE_CLASS, "getSerializationView");
-    private static final Method GET_VALUE_METHOD = lookupMethodOrNull(
-            MAPPING_JACKSON_VALUE_CLASS, "getValue");
-
     /** 可配置的最大请求体大小（默认与 MAX_REQUEST_BODY_SIZE 相同） */
     private long maxRequestBodySize = MAX_REQUEST_BODY_SIZE;
-
-    private static Class<?> loadClassOrNull(String className) {
-        try {
-            return Class.forName(className);
-        } catch (ClassNotFoundException e) {
-            return null;
-        }
-    }
-
-    private static Method lookupMethodOrNull(Class<?> owner, String methodName) {
-        if (owner == null) {
-            return null;
-        }
-        try {
-            return owner.getMethod(methodName);
-        } catch (NoSuchMethodException e) {
-            return null;
-        }
-    }
 
     /**
      * 构造函数，注册支持的媒体类型。
@@ -212,14 +167,13 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
     protected void writeInternal(Object o, HttpOutputMessage outputMessage)
             throws IOException, HttpMessageNotWritableException {
         try {
-            // 检查是否带有 @JsonView 视图过滤（通过反射探测 Spring 的 MappingJacksonValue 包装类）
-            Class<?> viewClass = extractViewClass(o);
-            Object value = extractValue(o);
-
             OutputStream out = outputMessage.getBody();
 
             // 缓冲模式：序列化为 byte[] 后设置 Content-Length 一次性写出
-            writeBuffered(value, viewClass, outputMessage, out);
+            byte[] bytes = YdszJson.toJsonBytes(o);
+            // 设置 Content-Length，避免 HTTP chunked 编码开销
+            outputMessage.getHeaders().setContentLength(bytes.length);
+            StreamUtils.copy(bytes, out);
             // 不手动 flush，由 Spring 框架统一管理输出流生命周期
         } catch (Exception e) {
             throw new HttpMessageNotWritableException("JSON 序列化失败：" + e.getMessage(), e);
@@ -229,73 +183,9 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
         }
     }
 
-    /**
-     * 缓冲模式：序列化为 byte[] 后设置 Content-Length 一次性写出
-     */
-    private void writeBuffered(Object value, Class<?> viewClass,
-                                HttpOutputMessage outputMessage, OutputStream out) throws IOException {
-        byte[] bytes;
-        if (viewClass != null) {
-            bytes = SerializationProvider.serializeWithView(value, viewClass)
-                    .getBytes(StandardCharsets.UTF_8);
-        } else {
-            bytes = YdszJson.toJsonBytes(value);
-        }
-        // 设置 Content-Length，避免 HTTP chunked 编码开销
-        outputMessage.getHeaders().setContentLength(bytes.length);
-        StreamUtils.copy(bytes, out);
-    }
-
     @Override
     protected void writeInternal(Object o, Type type, HttpOutputMessage outputMessage)
             throws IOException, HttpMessageNotWritableException {
         writeInternal(o, outputMessage);
     }
-
-    /**
-     * 从对象中提取 @JsonView 视图类。
-     *
-     * <p>支持 Spring 的 {@code MappingJacksonValue} 包装类（反射探测，避免直接引用已废弃类），
-     * 当控制器方法使用 {@code @JsonView} 注解时，Spring 会将返回值
-     * 包装在 {@code MappingJacksonValue} 中，其中包含视图类信息。</p>
-     *
-     * @param obj 待序列化对象
-     * @return 视图类，如果没有视图过滤则返回 null
-     * @since 1.0.0
-     */
-    private Class<?> extractViewClass(Object obj) {
-        if (MAPPING_JACKSON_VALUE_CLASS == null || GET_SERIALIZATION_VIEW_METHOD == null) {
-            return null;
-        }
-        if (MAPPING_JACKSON_VALUE_CLASS.isInstance(obj)) {
-            try {
-                return (Class<?>) GET_SERIALIZATION_VIEW_METHOD.invoke(obj);
-            } catch (ReflectiveOperationException e) {
-                return null;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * 从对象中提取实际值（反射解包 MappingJacksonValue）。
-     *
-     * @param obj 待序列化对象
-     * @return 实际值
-     * @since 1.0.0
-     */
-    private Object extractValue(Object obj) {
-        if (MAPPING_JACKSON_VALUE_CLASS == null || GET_VALUE_METHOD == null) {
-            return obj;
-        }
-        if (MAPPING_JACKSON_VALUE_CLASS.isInstance(obj)) {
-            try {
-                return GET_VALUE_METHOD.invoke(obj);
-            } catch (ReflectiveOperationException e) {
-                return obj;
-            }
-        }
-        return obj;
-    }
-
 }

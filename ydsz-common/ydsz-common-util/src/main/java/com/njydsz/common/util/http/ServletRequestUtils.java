@@ -7,13 +7,13 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.http.MediaType;
 
 import com.njydsz.common.util.ip.IpValidator;
-import com.njydsz.common.util.spring.SpringContextHolder;
 import com.njydsz.common.util.string.StringUtils;
 
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +44,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class ServletRequestUtils {
 
+    /** 由 AutoConfiguration 设置的 TrustedProxyConfiguration Supplier */
+    private static volatile Supplier<TrustedProxyConfiguration> trustedProxyConfigSupplier;
+
+    /**
+     * 注册 TrustedProxyConfiguration 的 Supplier。
+     *
+     * @param supplier TrustedProxyConfiguration 提供者，非空
+     */
+    public static void setTrustedProxyConfigSupplier(Supplier<TrustedProxyConfiguration> supplier) {
+        trustedProxyConfigSupplier = supplier;
+    }
+
     private ServletRequestUtils() {
         throw new UnsupportedOperationException("Utility class");
     }
@@ -67,14 +79,19 @@ public final class ServletRequestUtils {
         if (IpValidator.isInternalIp(remoteAddr)) {
             return true;
         }
-        // 尝试从 Spring 容器获取配置（非 Spring 环境返回 false）
-        try {
-            TrustedProxyConfiguration config = SpringContextHolder.getBean(TrustedProxyConfiguration.class);
-            return config.isTrusted(remoteAddr);
-        } catch (Exception e) {
-            // Bean 不存在或 Spring 未初始化，回退到仅内网/回环判断
-            return false;
+        // 尝试从注册的 Supplier 获取配置（未注册时返回 false）
+        Supplier<TrustedProxyConfiguration> supplier = trustedProxyConfigSupplier;
+        if (supplier != null) {
+            try {
+                TrustedProxyConfiguration config = supplier.get();
+                if (config != null) {
+                    return config.isTrusted(remoteAddr);
+                }
+            } catch (Exception e) {
+                // Bean 不存在，回退到仅内网/回环判断
+            }
         }
+        return false;
     }
 
     /**

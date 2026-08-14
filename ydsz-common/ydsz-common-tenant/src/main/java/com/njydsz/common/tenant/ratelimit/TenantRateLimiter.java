@@ -2,6 +2,7 @@ package com.njydsz.common.tenant.ratelimit;
 
 import java.time.Duration;
 
+import com.njydsz.common.jdbc.exception.TenantIsolationException;
 import com.njydsz.common.redis.service.RedisRateLimiter;
 
 import com.njydsz.common.tenant.TenantContextHolder;
@@ -12,16 +13,20 @@ import com.njydsz.common.tenant.TenantContextHolder;
  * <p>将 {@code common-redis} 的 {@code RedisRateLimiter} 包装为按租户维度限流，
  * 自动在限流 Key 前添加租户前缀。
  *
+ * <p>所有限流方法均返回 boolean，调用方根据返回值决定是否抛出异常。
+ * 建议统一使用 {@link TenantIsolationException} 表示租户级访问受限，
+ * 与模块异常体系保持一致。
+ *
  * <p><b>使用示例：</b>
  * <pre>{@code
  * // 检查租户 API 调用配额
  * if (!tenantRateLimiter.tryAcquireTokenBucket("api:invoke", 100, 10, Duration.ofSeconds(60))) {
- *     throw new RuntimeException("API 调用配额已用尽");
+ *     throw new TenantIsolationException("租户 API 调用配额已用尽，请稍后重试");
  * }
  *
  * // 检查租户存储配额（固定窗口）
  * if (!tenantRateLimiter.tryAcquireFixedWindow("storage:upload", 1000, Duration.ofHours(1))) {
- *     throw new RuntimeException("存储配额已用尽");
+ *     throw new TenantIsolationException("租户存储配额已用尽，请升级套餐");
  * }
  * }</pre>
  *

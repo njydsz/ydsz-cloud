@@ -68,7 +68,10 @@ public class AgentRequestGuard {
         Boolean acquired = stringOps.setIfAbsent(key, "1", IDEM_TTL.toSeconds());
         if (acquired == null || !acquired) {
             log.warn("[Agent-Guard] 重复请求被拒绝: requestId={}", requestId);
-            throw new BusinessException("重复请求，请勿在 60 秒内重复提交");
+            throw BusinessException.builder()
+                    .code("REQUEST_DUPLICATE")
+                    .message("重复请求，请勿在 60 秒内重复提交")
+                    .build();
         }
     }
 
@@ -86,7 +89,10 @@ public class AgentRequestGuard {
         }
         if (count > MAX_REQUESTS_PER_MINUTE) {
             log.warn("[Agent-Guard] 限流触发: userId={}, count={}", userId, count);
-            throw new BusinessException("请求过于频繁，每分钟最多 " + MAX_REQUESTS_PER_MINUTE + " 次");
+            throw BusinessException.builder()
+                    .code("RATE_LIMIT_EXCEEDED")
+                    .message("请求过于频繁，每分钟最多 " + MAX_REQUESTS_PER_MINUTE + " 次")
+                    .build();
         }
     }
 

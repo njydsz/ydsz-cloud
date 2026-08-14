@@ -129,7 +129,8 @@ public class Resilience4jCacheDecorator<K, V> implements Cache<K, V> {
 
   @Override
   public long estimatedSize() {
-    return CircuitBreaker.decorateSupplier(circuitBreaker, delegate::estimatedSize).get();
+    // estimatedSize 为本地统计操作，不访问后端，无需熔断保护
+    return delegate.estimatedSize();
   }
 
   @Override

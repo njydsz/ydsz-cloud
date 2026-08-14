@@ -2,3 +2,4 @@ com.njydsz.common.app.config.AppMvcConfiguration
 com.njydsz.common.app.config.AppTimezoneConfiguration
 com.njydsz.common.app.config.AppI18nConfiguration
 com.njydsz.common.app.config.AppOpenApiConfiguration
+com.njydsz.common.app.config.RequestIdGeneratorAutoConfiguration

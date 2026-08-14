@@ -219,7 +219,7 @@ public class SqlFirewallInnerInterceptor implements InnerInterceptor {
      */
     private void reject(String message, String sql) {
         log.error("{} | SQL: {}", message, truncate(sql, 200));
-        throw new SysException(message);
+        throw SysException.builder().message(message).build();
     }
 
     private String truncate(String sql, int maxLength) {

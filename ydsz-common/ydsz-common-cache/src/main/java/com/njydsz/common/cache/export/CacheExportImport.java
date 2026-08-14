@@ -46,6 +46,15 @@ public class CacheExportImport {
   /** 默认最大导入条目数 */
   private static final int DEFAULT_MAX_ENTRIES = 1_000_000;
 
+  /**
+   * 序列化导出的安全条目数上限。
+   *
+   * <p>序列化导出需要将全部条目加载到内存 HashMap 后再写入，内存占用约为缓存本身的 2 倍。
+   * 超过此上限时抛出 {@link CacheExportException}，建议改用流式文本导出
+   * {@link #exportCacheToText(Cache, String)} 或分批导出。
+   */
+  private static final int MAX_SERIALIZED_EXPORT_ENTRIES = 500_000;
+
   /** 默认最大反序列化深度 */
   private static final int MAX_DEPTH = 5;
 
@@ -121,16 +130,43 @@ public class CacheExportImport {
   }
 
   /**
+   * 检查缓存大小是否适合序列化导出。
+   *
+   * <p>序列化导出需将全部条目加载到内存 HashMap，内存占用约为缓存本身的 2 倍。
+   * 超过 {@link #MAX_SERIALIZED_EXPORT_ENTRIES} 时抛出 {@link CacheExportException}。
+   *
+   * @param cache 缓存实例
+   * @throws CacheExportException 当缓存条目数超过安全上限时抛出
+   */
+  private static void checkExportSize(Cache<?, ?> cache) {
+    long estimatedSize = cache.estimatedSize();
+    if (estimatedSize > MAX_SERIALIZED_EXPORT_ENTRIES) {
+      throw new CacheExportException(
+          "缓存条目数 ("
+              + estimatedSize
+              + ") 超过序列化导出安全上限 ("
+              + MAX_SERIALIZED_EXPORT_ENTRIES
+              + ")，为避免 OOM，请使用 exportCacheToText() 或分批导出");
+    }
+  }
+
+  /**
    * 导出缓存数据到序列化文件
+   *
+   * <p><b>注意</b>：本方法会将全部条目加载到内存 HashMap 后再序列化，
+   * 缓存条目数超过 {@link #MAX_SERIALIZED_EXPORT_ENTRIES} 时会抛出
+   * {@link CacheExportException} 以防止 OOM。
    *
    * @param cache 缓存实例
    * @param filePath 文件路径
    * @param <K> 键类型（必须实现 Serializable）
    * @param <V> 值类型（必须实现 Serializable）
    * @throws IOException 如果导出失败
+   * @throws CacheExportException 当缓存条目数超过安全上限时抛出
    */
   public static <K extends Serializable, V extends Serializable> void exportCache(
       Cache<K, V> cache, String filePath) throws IOException {
+    checkExportSize(cache);
     try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filePath))) {
       Map<K, V> data = new HashMap<>();
       for (K key : cache.keySet()) {
@@ -225,6 +261,10 @@ public class CacheExportImport {
   /**
    * 带过滤条件导出缓存数据
    *
+   * <p><b>注意</b>：即使仅部分条目命中过滤条件，仍需遍历全部条目。
+   * 缓存条目数超过 {@link #MAX_SERIALIZED_EXPORT_ENTRIES} 时会抛出
+   * {@link CacheExportException} 以防止 OOM。
+   *
    * @param cache 缓存实例
    * @param filePath 文件路径
    * @param filter 过滤器
@@ -232,9 +272,11 @@ public class CacheExportImport {
    * @param <V> 值类型
    * @return 导出的条目数
    * @throws IOException 如果导出失败
+   * @throws CacheExportException 当缓存条目数超过安全上限时抛出
    */
   public static <K, V> int exportCacheWithFilter(
       Cache<K, V> cache, String filePath, CacheFilter<K, V> filter) throws IOException {
+    checkExportSize(cache);
     int count = 0;
     try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filePath))) {
       Map<K, V> data = new HashMap<>();

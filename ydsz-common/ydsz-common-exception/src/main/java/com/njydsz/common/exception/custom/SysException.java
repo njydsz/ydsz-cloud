@@ -84,7 +84,7 @@ public class SysException extends AbstractYdszException {
      */
     private static final String DEFAULT_CODE = CoreExceptionCode.INTERNAL_ERROR.getCode();
 
-    // ==================== 核心构造函数（仅限 3 个） ====================
+    // ==================== 核心构造函数 ====================
 
     /**
      * 默认构造函数，初始化为 500 Internal Server Error / ERROR / SYSTEM
@@ -114,40 +114,6 @@ public class SysException extends AbstractYdszException {
     public SysException(ExceptionCode exceptionCode, Throwable cause) {
         super(null, cause);
         init(exceptionCode, new Object[]{}, DEFAULT_LEVEL, DEFAULT_CATEGORY);
-    }
-
-    /**
-     * 使用自定义消息构造系统异常（已弃用）。
-     *
-     * <p>大量存量调用方仍使用消息字符串形式，保留此构造器避免批量迁移；
-     * 新代码请优先使用 {@link #of(ExceptionCode)} 或 {@link #builder()}。</p>
-     *
-     * @param message 异常详细信息
-     * @deprecated 请使用 {@link #of(ExceptionCode)} 或 {@link #builder()} 替代，
-     *             以便获得完整的错误码和国际化支持。
-     */
-    @Deprecated
-    public SysException(String message) {
-        super(message);
-        initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
-        this.code = DEFAULT_CODE;
-    }
-
-    /**
-     * 使用自定义消息和原始异常构造系统异常（已弃用）。
-     *
-     * <p>保留给存量调用方，新代码请优先使用 {@link #SysException(ExceptionCode, Throwable)}
-     * 或 {@link #builder()}。</p>
-     *
-     * @param message 异常详细信息
-     * @param cause   原始异常
-     * @deprecated 请使用 {@link #SysException(ExceptionCode, Throwable)} 或 {@link #builder()} 替代。
-     */
-    @Deprecated
-    public SysException(String message, Throwable cause) {
-        super(message, cause);
-        initDefaults(DEFAULT_HTTP_STATUS, DEFAULT_LEVEL, DEFAULT_CATEGORY);
-        this.code = DEFAULT_CODE;
     }
 
     // ==================== 业务方法 ====================

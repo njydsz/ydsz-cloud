@@ -14,6 +14,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 import org.springframework.core.Ordered;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -29,7 +30,6 @@ import com.njydsz.common.tenant.datasource.TenantDataSourceRouter;
 import com.njydsz.common.tenant.datasource.resolver.ConfigurationResolver;
 import com.njydsz.common.tenant.datasource.resolver.DatasourceKeyResolver;
 import com.njydsz.common.tenant.datasource.resolver.NamingConventionResolver;
-import com.njydsz.common.tenant.diagnostics.TenantDiagnosticsContributor;
 import com.njydsz.common.tenant.feign.TenantContextFeignInterceptor;
 import com.njydsz.common.tenant.health.TenantHealthIndicator;
 import com.njydsz.common.tenant.interceptor.TenantInterceptorProvider;
@@ -196,21 +196,6 @@ public class TenantAutoConfiguration {
     // -----------------------------------------------------------------------
     // 租户诊断 / 校验（替代 @Component，统一注册入口）
     // -----------------------------------------------------------------------
-
-    /**
-     * 租户诊断信息贡献者（可选，需显式开启）。
-     *
-     * @param properties 租户配置
-     * @return 诊断贡献者
-     */
-    @Bean
-    @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
-    @ConditionalOnProperty(prefix = "management.endpoint.health",
-            name = "tenant-diagnostics.enabled", havingValue = "true", matchIfMissing = false)
-    @ConditionalOnMissingBean
-    public TenantDiagnosticsContributor tenantDiagnosticsContributor(TenantProperties properties) {
-        return new TenantDiagnosticsContributor(properties);
-    }
 
     /**
      * 租户表索引校验器（异步，DataSource 存在时）。
