@@ -1,8 +1,10 @@
 package com.njydsz.common.util.string;
 
+import java.text.Normalizer;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * 字符串工具类
@@ -269,4 +271,76 @@ public final class StringUtils {
         }
         return org.slf4j.helpers.MessageFormatter.arrayFormat(pattern, arguments).getMessage();
     }
+
+    // ======================== 截断与缩写 ========================
+
+    /**
+     * 截断字符串到指定最大长度。
+     *
+     * <p>如果字符串为 {@code null} 直接返回 {@code null}；
+     * 如果字符串长度不超过 {@code maxLength}，返回原字符串。
+     *
+     * @param text      待截断字符串
+     * @param maxLength 最大允许长度（≥ 0），超过将被截断
+     * @return 不超过 maxLength 的字符串，或原字符串
+     * @throws IllegalArgumentException 如果 maxLength 为负数
+     * @since 4.0.0
+     */
+    public static String truncate(String text, int maxLength) {
+        if (maxLength < MIN_INDEX) {
+            throw new IllegalArgumentException("maxLength 不能为负数: " + maxLength);
+        }
+        if (Objects.isNull(text) || text.length() <= maxLength) {
+            return text;
+        }
+        return text.substring(MIN_INDEX, maxLength);
+    }
+
+    /**
+     * 缩写字符串：截断到指定长度并在末尾追加省略号 "..."。
+     *
+     * <p>当文本长度不超过 {@code maxLength} 时返回原字符串不追加省略号；
+     * 截断后的文本长度 + "..." 长度等于 maxLength。
+     *
+     * @param text      待缩写字符串
+     * @param maxLength 缩写后最大长度（≥ 4，因为至少要保留 1 字符 + "..."）
+     * @return 缩写后的字符串
+     * @throws IllegalArgumentException 如果 maxLength 小于 4
+     * @since 4.0.0
+     */
+    public static String abbreviate(String text, int maxLength) {
+        if (maxLength < MIN_ABBREVIATION_LENGTH) {
+            throw new IllegalArgumentException("maxLength 不能小于 " + MIN_ABBREVIATION_LENGTH);
+        }
+        if (Objects.isNull(text) || text.length() <= maxLength) {
+            return text;
+        }
+        return text.substring(MIN_INDEX, maxLength - ELLIPSIS_LENGTH) + ELLIPSIS;
+    }
+
+    /**
+     * 规范化空白字符：将所有空白序列（空格、制表符、换行等）替换为单个空格，
+     * 并移除首尾空白。
+     *
+     * <p>等价于 Apache Commons Lang 中 {@code StringUtils.normalizeSpace}。
+     *
+     * @param text 待处理字符串
+     * @return 处理后的字符串，输入为 {@code null} 时返回 {@code null}
+     * @since 4.0.0
+     */
+    public static String normalizeSpace(String text) {
+        if (Objects.isNull(text)) {
+            return null;
+        }
+        return Normalizer.normalize(text, Normalizer.Form.NFKC)
+                .replaceAll(WHITESPACE_REGEX, BYTE_SPACE)
+                .trim();
+    }
+
+    private static final int MIN_ABBREVIATION_LENGTH = 4;
+    private static final int ELLIPSIS_LENGTH = 3;
+    private static final String ELLIPSIS = "...";
+    private static final int MIN_INDEX = 0;
+    private static final String BYTE_SPACE = " ";
+    private static final String WHITESPACE_REGEX = "\\s+";
 }

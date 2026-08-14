@@ -14,6 +14,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.njydsz.common.jdbc.config.DataPermissionConfiguration;
 import com.njydsz.common.jdbc.enums.InterceptTableStrategy;
+import com.njydsz.common.jdbc.permission.DataPermissionBypass;
 import com.njydsz.common.jdbc.permission.DataPermissionIgnore;
 import com.njydsz.common.util.string.StringUtils;
 
@@ -108,6 +109,15 @@ final class DataPermissionHelper {
             name = name.substring(name.lastIndexOf('.') + 1);
         }
         return name.toLowerCase();
+    }
+
+    /**
+     * 检查当前线程是否激活了数据权限绕过（系统级绕过，适用于定时任务等无用户上下文场景）。
+     *
+     * @return 绕过激活时返回 true
+     */
+    static boolean isBypassActive() {
+        return DataPermissionBypass.isActive();
     }
 
     /**

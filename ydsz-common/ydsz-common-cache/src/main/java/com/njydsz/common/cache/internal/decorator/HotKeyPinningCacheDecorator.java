@@ -1,23 +1,15 @@
 package com.njydsz.common.cache.internal.decorator;
 
 import java.util.Collection;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.cache.api.Cache;
-import com.njydsz.common.cache.api.CachePolicy;
 import com.njydsz.common.cache.listener.RemovalCause;
 import com.njydsz.common.cache.listener.RemovalListener;
-import com.njydsz.common.cache.stats.CacheStats;
-import com.njydsz.common.cache.support.AsyncFunction;
 
 /**
  * 热点 Key 钉选装饰器 — 防止高频访问的 key 被容量淘汰
@@ -31,26 +23,6 @@ import com.njydsz.common.cache.support.AsyncFunction;
  *   <li>轻量级：使用 ConcurrentHashMap 存储钉选集，查询 O(1)
  * </ul>
  *
- * <p>使用场景：
- *
- * <pre>{@code
- * // 基础用法：钉选热点 key
- * HotKeyPinningCacheDecorator<String, User> cache =
- *     new HotKeyPinningCacheDecorator<>(baseCache);
- * cache.pin("user:10086"); // 钉选高频 key
- *
- * // 结合 HotKeyTracker 使用：自动钉选 Top-K 热点
- * HotKeyTracker<String> tracker = new HotKeyTracker<>("userCache");
- * HotKeyTrackingCacheDecorator<String, User> trackedCache =
- *     new HotKeyTrackingCacheDecorator<>(baseCache, tracker);
- * // 每 5 分钟钉选 Top-20 热点
- * ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
- * scheduler.scheduleAtFixedRate(() -> {
- *     List<HotKeyTracker.HotKeyEntry<String>> topKeys = trackedCache.getTopHotKeys(20);
- *     cache.repin(topKeys.stream().map(HotKeyTracker.HotKeyEntry::key).toList());
- * }, 5, 5, TimeUnit.MINUTES);
- * }</pre>
- *
  * <p>注意：钉选仅防止容量淘汰（SIZE），过期淘汰（EXPIRED）和显式删除（EXPLICIT）不受影响。
  *
  * @param <K> 键类型
@@ -58,12 +30,9 @@ import com.njydsz.common.cache.support.AsyncFunction;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class HotKeyPinningCacheDecorator<K, V> implements Cache<K, V> {
+public class HotKeyPinningCacheDecorator<K, V> extends AbstractCacheDecorator<K, V> {
 
   private static final Logger log = LoggerFactory.getLogger(HotKeyPinningCacheDecorator.class);
-
-  /** 底层缓存 */
-  private final Cache<K, V> delegate;
 
   /** 钉选 key 集合（O(1) 查询） */
   private final ConcurrentHashMap<K, Boolean> pinnedKeys = new ConcurrentHashMap<>();
@@ -93,7 +62,7 @@ public class HotKeyPinningCacheDecorator<K, V> implements Cache<K, V> {
    * @param maxPinnedKeys 最大钉选 key 数量（超过后钉选操作将被忽略）
    */
   public HotKeyPinningCacheDecorator(Cache<K, V> delegate, int maxPinnedKeys) {
-    this.delegate = delegate;
+    super(delegate);
     this.maxPinnedKeys = maxPinnedKeys;
     this.pinningListener = (key, value, cause) -> {
       if (cause == RemovalCause.SIZE && key != null && pinnedKeys.containsKey(key)) {
@@ -108,9 +77,6 @@ public class HotKeyPinningCacheDecorator<K, V> implements Cache<K, V> {
 
   /**
    * 钉选指定 key（防止被容量淘汰）
-   *
-   * <p>如果 key 尚未存在于底层缓存中，会先尝试写入一个占位符（不实际占用缓存空间），
-   * 确保后续该 key 被真正写入时能得到钉选保护。
    *
    * @param key 需要钉选的 key
    * @return true 表示成功钉选；false 表示超过最大钉选数量限制
@@ -148,8 +114,6 @@ public class HotKeyPinningCacheDecorator<K, V> implements Cache<K, V> {
 
   /**
    * 重新钉选（清空当前钉选集合并钉选新的 key 集合）
-   *
-   * <p>适用于定期刷新热点 key 的场景，如每 5 分钟从 HotKeyTracker 获取 Top-K 重新钉选。
    *
    * @param keys 新的钉选 key 集合
    * @return 实际成功钉选的数量
@@ -217,13 +181,15 @@ public class HotKeyPinningCacheDecorator<K, V> implements Cache<K, V> {
     this.maxPinnedKeys = Math.max(1, maxPinnedKeys);
   }
 
+  /**
+   * 获取缓存值，如果不存在则使用加载器加载。
+   *
+   * @param key 缓存键
+   * @param loader 加载器
+   * @return 缓存值
+   */
   @Override
-  public V getIfPresent(K key) {
-    return delegate.getIfPresent(key);
-  }
-
-  @Override
-  public V get(K key, Function<K, V> loader) {
+  public V get(K key, java.util.function.Function<K, V> loader) {
     V value = getIfPresent(key);
     if (value == null && loader != null) {
       value = loader.apply(key);
@@ -232,131 +198,6 @@ public class HotKeyPinningCacheDecorator<K, V> implements Cache<K, V> {
       }
     }
     return value;
-  }
-
-  @Override
-  public CompletableFuture<V> getAsync(K key, AsyncFunction<K, V> loader) {
-    return delegate.getAsync(key, loader);
-  }
-
-  @Override
-  public boolean containsKey(K key) {
-    return delegate.containsKey(key);
-  }
-
-  @Override
-  public void put(K key, V value) {
-    delegate.put(key, value);
-  }
-
-  @Override
-  public V putIfAbsent(K key, V value) {
-    return delegate.putIfAbsent(key, value);
-  }
-
-  @Override
-  public V computeIfAbsent(K key, Function<K, V> mappingFunction) {
-    return delegate.computeIfAbsent(key, mappingFunction);
-  }
-
-  @Override
-  public V compute(K key, BiFunction<? super K, ? super V, ? extends V> remappingFunction) {
-    return delegate.compute(key, remappingFunction);
-  }
-
-  @Override
-  public V merge(K key, V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
-    return delegate.merge(key, value, remappingFunction);
-  }
-
-  @Override
-  public V remove(K key) {
-    return delegate.remove(key);
-  }
-
-  @Override
-  public void invalidate(K key) {
-    delegate.invalidate(key);
-  }
-
-  @Override
-  public void invalidateAll(Collection<K> keys) {
-    delegate.invalidateAll(keys);
-  }
-
-  @Override
-  public void invalidateAll() {
-    delegate.invalidateAll();
-  }
-
-  @Override
-  public void clear() {
-    delegate.clear();
-  }
-
-  @Override
-  public void putAll(Map<K, V> map) {
-    delegate.putAll(map);
-  }
-
-  @Override
-  public Map<K, V> getAll(Collection<K> keys) {
-    return delegate.getAll(keys);
-  }
-
-  @Override
-  public void removeAll(Collection<K> keys) {
-    delegate.removeAll(keys);
-  }
-
-  @Override
-  public long estimatedSize() {
-    return delegate.estimatedSize();
-  }
-
-  @Override
-  public double getHitRate() {
-    return delegate.getHitRate();
-  }
-
-  @Override
-  public CacheStats getStats() {
-    return delegate.getStats();
-  }
-
-  @Override
-  public CachePolicy policy() {
-    return delegate.policy();
-  }
-
-  @Override
-  public Set<K> keySet() {
-    return delegate.keySet();
-  }
-
-  @Override
-  public Collection<V> values() {
-    return delegate.values();
-  }
-
-  @Override
-  public void cleanUp() {
-    delegate.cleanUp();
-  }
-
-  @Override
-  public void addListener(RemovalListener<? super K, ? super V> listener) {
-    delegate.addListener(listener);
-  }
-
-  @Override
-  public void forEach(BiConsumer<? super K, ? super V> action) {
-    delegate.forEach(action);
-  }
-
-  /** 获取底层缓存 */
-  public Cache<K, V> getDelegate() {
-    return delegate;
   }
 
   /**

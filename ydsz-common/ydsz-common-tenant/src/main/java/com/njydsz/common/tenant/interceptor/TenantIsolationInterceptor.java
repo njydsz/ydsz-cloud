@@ -381,11 +381,19 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
 
         // 跳过隔离（匿名 URL）
         if (context != null && context.isSkipIsolation()) {
+            if (metrics != null) {
+                metrics.recordContextSkip();
+                metrics.recordInterceptSkipped();
+            }
             return new ArrayList<>(0);
         }
 
         // 超级管理员不隔离
         if (context != null && context.isSuperAdmin()) {
+            if (metrics != null) {
+                metrics.recordSuperAdminBypass();
+                metrics.recordInterceptSkipped();
+            }
             return new ArrayList<>(0);
         }
 

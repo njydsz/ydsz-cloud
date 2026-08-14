@@ -1,26 +1,33 @@
 package com.njydsz.common.json.provider;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.json.annotation.JsonClass;
 import com.njydsz.common.json.annotation.JsonSerialize;
-import com.njydsz.common.json.internal.JsonConfig;
-import com.njydsz.common.json.internal.JsonRuntimeConfig;
-import com.njydsz.common.json.module.JsonModuleRegistry;
-import com.njydsz.common.json.parser.JsonParserUtil;
-import com.njydsz.common.json.serializer.JsonSerializer;
-import com.njydsz.common.json.serializer.SerializerRegistry;
 import com.njydsz.common.json.cache.BeanSerializerCache;
 import com.njydsz.common.json.cache.FieldMeta;
 import com.njydsz.common.json.cache.SerializerCache;
 import com.njydsz.common.json.exception.JsonSerializationException;
+import com.njydsz.common.json.internal.JsonConfig;
+import com.njydsz.common.json.internal.JsonRuntimeConfig;
+import com.njydsz.common.json.module.JsonModuleRegistry;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
+import com.njydsz.common.json.parser.JsonParserUtil;
+import com.njydsz.common.json.serializer.JsonSerializer;
+import com.njydsz.common.json.serializer.SerializerRegistry;
+import com.njydsz.common.json.tree.JsonNode;
 import com.njydsz.common.json.util.BoundedLruCache;
 import com.njydsz.common.json.writer.BeanSerializer;
 import com.njydsz.common.json.writer.JSONWriter;
@@ -977,7 +984,7 @@ public final class SerializationProvider {
         Class<?> clazz = obj.getClass();
 
         // JsonNode 树模型：由 serialize() 入口直接 toString() 处理，这里不拦截
-        if (obj instanceof com.njydsz.common.json.tree.JsonNode) {
+        if (obj instanceof JsonNode) {
             return null;
         }
 
@@ -1039,7 +1046,8 @@ public final class SerializationProvider {
             || obj instanceof Character
             || obj instanceof Enum
             || obj instanceof java.util.Date
-            || obj instanceof java.time.temporal.Temporal;
+            || obj instanceof java.time.temporal.Temporal
+            || obj instanceof Class;
     }
 
     /**
