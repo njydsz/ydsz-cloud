@@ -1,6 +1,7 @@
 package com.njydsz.common.json.spring.boot;
 
 import java.util.List;
+import java.util.Objects;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -15,12 +16,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.converter.Converter;
 
 import com.njydsz.common.json.cache.BeanSerializerCache;
+import com.njydsz.common.json.cache.SerializerCache;
 import com.njydsz.common.json.internal.JsonConfig;
 import com.njydsz.common.json.module.JsonModule;
+import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.spring.JsonHttpMessageConverter;
 import com.njydsz.common.json.spring.JsonModuleRegistrar;
 import com.njydsz.common.json.spring.JsonProperties;
-import com.njydsz.common.json.naming.PropertyNamingStrategy;
 
 /**
  * Ydsz JSON 自动配置。
@@ -123,6 +125,9 @@ public class JsonAutoConfiguration {
         private final JsonProperties properties;
         private final List<JsonModule> springModules;
 
+        /** JMX MBean（配置运维视图），在 @PostConstruct 阶段注册 */
+        private JsonConfigViewer configViewer;
+
         public JsonConfigBean(JsonProperties properties,
                                    List<JsonModule> springModules) {
             this.properties = properties;
@@ -182,7 +187,7 @@ public class JsonAutoConfiguration {
                 if (oldConfig.getNamingStrategy() != nextConfig.getNamingStrategy()) {
                     needClear = true;
                 }
-                if (!java.util.Objects.equals(oldConfig.getDateFormat(), nextConfig.getDateFormat())) {
+                if (!Objects.equals(oldConfig.getDateFormat(), nextConfig.getDateFormat())) {
                     needClear = true;
                 }
                 if (oldConfig.isSerializeEnumUsingOrdinal() != nextConfig.isSerializeEnumUsingOrdinal()) {
@@ -192,6 +197,10 @@ public class JsonAutoConfiguration {
                     BeanSerializerCache.clear();
                 }
             });
+
+            // 注册 JMX MBean（配置运维视图），暴露配置版本号、缓存大小等指标
+            configViewer = new JsonConfigViewer();
+            configViewer.register();
         }
 
         /**
@@ -204,8 +213,12 @@ public class JsonAutoConfiguration {
          */
         @PreDestroy
         public void destroy() {
+            // 注销 JMX MBean
+            if (configViewer != null) {
+                configViewer.unregister();
+            }
             BeanSerializerCache.clear();
-            com.njydsz.common.json.cache.SerializerCache.clear();
+            SerializerCache.clear();
             com.njydsz.common.json.reader.BeanReader.clearCache();
             com.njydsz.common.json.provider.PolymorphicTypeResolver.clearCache();
             com.njydsz.common.json.provider.SerializationProvider.clearThreadLocals();

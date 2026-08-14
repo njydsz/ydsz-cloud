@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.ToString;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
+import org.springframework.boot.actuate.endpoint.annotation.Selector;
 import org.springframework.context.MessageSource;
 
 import com.njydsz.common.exception.code.ErrorCodeTable;
@@ -72,12 +73,19 @@ public class ExceptionCodeDocEndpoint {
     }
 
     /**
-     * 返回所有已注册的异常错误码文档（经过安全过滤）
+     * 返回所有已注册的异常错误码文档（经过安全过滤）。
      *
-     * @return 错误码文档响应
+     * <p>支持通过 {@code format} 选择器切换输出格式：
+     * <ul>
+     *   <li>不传选择器：返回 JSON（{@link ExceptionCodeDocResponse}）</li>
+     *   <li>{@code markdown}：返回 Markdown 表格格式的纯文本文档，便于直接粘贴至 API 文档</li>
+     * </ul>
+     *
+     * @param format 输出格式选择器（可为 null 或 {@code markdown}）
+     * @return 错误码文档响应（JSON 或 Markdown 文本）
      */
     @ReadOperation
-    public ExceptionCodeDocResponse exceptionCodes() {
+    public Object exceptionCodes(@Selector String format) {
         Map<String, ExceptionCode> all = errorCodeTable.allCodes();
         List<ExceptionCodeDoc> docs = new ArrayList<>(all.size());
 
@@ -105,6 +113,9 @@ public class ExceptionCodeDocEndpoint {
 
         docs.sort(Comparator.comparing(ExceptionCodeDoc::getCode));
 
+        if ("markdown".equalsIgnoreCase(format)) {
+            return generateMarkdown(docs);
+        }
         return new ExceptionCodeDocResponse(docs.size(), docs);
     }
 
@@ -141,6 +152,43 @@ public class ExceptionCodeDocEndpoint {
         } catch (Exception e) {
             return code.getKey();
         }
+    }
+
+    /**
+     * 生成 Markdown 表格格式的错误码文档。
+     *
+     * <p>输出格式可直接粘贴至项目 Wiki / API 文档，结构如：
+     * <pre>{@code
+     * # 异常错误码表
+     *
+     * 共 52 个错误码
+     *
+     * | 错误码 | i18n Key | HTTP 状态 | 消息 | 来源 |
+     * |--------|----------|----------|------|------|
+     * | A00000 | success  | 200 | Operation succeeded | CoreExceptionCode |
+     * }</pre>
+     *
+     * @param docs 错误码文档列表
+     * @return Markdown 纯文本
+     */
+    private String generateMarkdown(List<ExceptionCodeDoc> docs) {
+        StringBuilder md = new StringBuilder(64 + docs.size() * 64);
+        md.append("# 异常错误码表\n\n");
+        md.append("共 ").append(docs.size()).append(" 个错误码\n\n");
+        md.append("| 错误码 | i18n Key | HTTP 状态 | 消息 | 来源 |\n");
+        md.append("|--------|----------|----------|------|------|\n");
+
+        for (ExceptionCodeDoc doc : docs) {
+            // 转义 Markdown 表格内的管道符
+            String safeMessage = doc.getMessage().replace("|", "\\|").replace("\n", " ");
+            md.append("| ").append(doc.getCode())
+                    .append(" | ").append(doc.getKey())
+                    .append(" | ").append(doc.getHttpStatus())
+                    .append(" | ").append(safeMessage)
+                    .append(" | ").append(doc.getSource())
+                    .append(" |\n");
+        }
+        return md.toString();
     }
 
     /**

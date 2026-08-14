@@ -13,6 +13,7 @@ import com.njydsz.common.tenant.TenantContext;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.tenant.config.TenantProperties;
 import com.njydsz.common.tenant.config.TenantProperties.TenantField;
+import com.njydsz.common.tenant.feign.TenantHeaderContract;
 import com.njydsz.common.tenant.lifecycle.TenantLifecycleManager;
 import com.njydsz.common.util.auth.AuthInfoUtils;
 
@@ -79,7 +80,9 @@ public class TenantContextWebFilter implements Filter {
             for (TenantField field : activeFields) {
                 Object value = resolveFieldValue(request, field);
                 if (value != null) {
-                    fields.put(field.getClaim() != null ? field.getClaim() : field.getColumn(), value);
+                    // 有效 key = claim 优先，回退到列名（与 Feign 写入端一致）
+                    String fieldKey = TenantHeaderContract.effectiveKey(field);
+                    fields.put(fieldKey, value);
 
                     // 第一个字段的值作为主 tenantId
                     if (tenantId == null && value instanceof String s) {
@@ -156,6 +159,8 @@ public class TenantContextWebFilter implements Filter {
      * 解析单个租户字段的值。
      *
      * <p>优先从 JWT claim 取值，回退到 HTTP header。
+     * <p>header 名通过 {@link TenantHeaderContract#resolveHeaderName} 计算，
+     * 确保与 Feign 写入端使用同一规则。
      * <p>多值字段用逗号分隔解析为 List。
      */
     private Object resolveFieldValue(HttpServletRequest request, TenantField field) {
@@ -166,9 +171,10 @@ public class TenantContextWebFilter implements Filter {
             value = AuthInfoUtils.getClaim(field.getClaim());
         }
 
-        // 回退到 HTTP header
-        if ((value == null || value.isEmpty()) && field.getHeader() != null && !field.getHeader().isEmpty()) {
-            value = request.getHeader(field.getHeader());
+        // 回退到 HTTP header（使用与 Feign 写入端一致的 header 名）
+        if ((value == null || value.isEmpty())) {
+            String headerName = TenantHeaderContract.resolveHeaderName(field, TenantHeaderContract.effectiveKey(field));
+            value = request.getHeader(headerName);
         }
 
         if (value == null || value.isEmpty()) {

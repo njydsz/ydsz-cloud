@@ -1,11 +1,12 @@
 package com.njydsz.common.tenant.feign;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
 import com.njydsz.common.tenant.TenantContext;
 import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.common.tenant.config.TenantProperties.TenantField;
 
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
@@ -16,6 +17,9 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>将 {@link TenantContext} 中的所有字段透传为 HTTP header，
  * 下游服务的 {@code TenantContextWebFilter} 从 header 恢复全部字段。
+ *
+ * <p><b>header 名计算：</b>使用 {@link TenantHeaderContract} 共享规则，
+ * 确保与 WebFilter 读取端一致。
  *
  * <p>透传规则：
  * <ul>
@@ -29,8 +33,20 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class TenantContextFeignInterceptor implements RequestInterceptor {
 
-    private static final String HEADER_PREFIX = "X-Tenant-";
-    private static final String HEADER_TENANT_ID = DataPermissionHeaderConstants.X_TENANT_ID;
+    private final Map<String, TenantField> fieldByKey;
+
+    /**
+     * @param fields 激活的租户字段列表（来自 TenantProperties）
+     */
+    public TenantContextFeignInterceptor(List<TenantField> fields) {
+        this.fieldByKey = new HashMap<>();
+        if (fields != null) {
+            for (TenantField field : fields) {
+                String key = TenantHeaderContract.effectiveKey(field);
+                fieldByKey.put(key, field);
+            }
+        }
+    }
 
     @Override
     public void apply(RequestTemplate template) {
@@ -40,7 +56,7 @@ public class TenantContextFeignInterceptor implements RequestInterceptor {
         }
 
         // 注入主租户 ID
-        template.header(HEADER_TENANT_ID, context.getTenantId());
+        template.header(TenantHeaderContract.primaryTenantIdHeader(), context.getTenantId());
 
         // 透传全部字段
         Map<String, Object> fields = context.getFields();
@@ -52,24 +68,36 @@ public class TenantContextFeignInterceptor implements RequestInterceptor {
                     continue;
                 }
                 Object value = entry.getValue();
-                String headerName = HEADER_PREFIX + key;
+
+                // 通过共享契约计算 header 名（显式 header 优先，否则 X-Tenant-{key}）
+                TenantField field = fieldByKey.get(key);
+                String headerName = TenantHeaderContract.resolveHeaderName(
+                        field != null ? field : new TenantField(key), key);
 
                 if (value instanceof String s) {
                     template.header(headerName, s);
                 } else if (value instanceof List<?> list) {
                     // 多值 → 逗号分隔
-                    StringBuilder sb = new StringBuilder();
-                    for (int i = 0; i < list.size(); i++) {
-                        if (i > 0) {
-                            sb.append(",");
-                        }
-                        sb.append(list.get(i));
-                    }
-                    if (!sb.isEmpty()) {
-                        template.header(headerName, sb.toString());
+                    String joined = joinList(list);
+                    if (joined != null) {
+                        template.header(headerName, joined);
                     }
                 }
             }
         }
+    }
+
+    private String joinList(List<?> list) {
+        if (list == null || list.isEmpty()) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < list.size(); i++) {
+            if (i > 0) {
+                sb.append(",");
+            }
+            sb.append(list.get(i));
+        }
+        return sb.toString();
     }
 }

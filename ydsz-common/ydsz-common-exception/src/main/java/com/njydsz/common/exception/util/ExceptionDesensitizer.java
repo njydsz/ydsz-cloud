@@ -1,4 +1,6 @@
 package com.njydsz.common.exception.util;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,15 +20,12 @@ import java.util.regex.Pattern;
  *   <li>数据库连接地址（含密码部分）</li>
  * </ul>
  *
- * <p><b>性能优化（v2.3.0）：</b>
+ * <p><b>设计演进（v2.4.0）：</b>从单一复合正则 + 编号捕获组 改为 独立规则序列：
  * <ul>
- *   <li>将 6 个独立正则合并为 1 个复合正则，单次扫描完成全部脱敏</li>
- *   <li>移除 ThreadLocal StringBuilder 缓存，直接使用局部 StringBuilder 对象</li>
+ *   <li>每条规则独立 {@link Pattern} + 独立替换逻辑，消除编号耦合</li>
+ *   <li>新增/修改规则只需添加一行声明，无需重新编号全部捕获组</li>
+ *   <li>启用/禁用某类脱敏只需注释对应规则</li>
  * </ul>
- *
- * <p><b>修复说明（v2.3.1）：</b>修正复合正则捕获组编号与处理逻辑不一致的缺陷——
- * 原正则实际仅 5 个捕获组，但处理逻辑引用了组 3-8，导致手机号/身份证/邮箱分支
- * 抛出 {@link IndexOutOfBoundsException}。现统一为显式 8 组并逐一对应处理。
  *
  * <p><b>使用方式：</b>
  * <pre>{@code
@@ -42,42 +41,6 @@ import java.util.regex.Pattern;
  */
 public final class ExceptionDesensitizer {
 
-    /**
-     * 复合脱敏正则 — 单次扫描完成全部 6 类敏感信息检测。
-     *
-     * <p>分组说明：
-     * <ul>
-     *   <li>Group 1-2: 敏感字段赋值 (key=value)</li>
-     *   <li>Group 3: 银行卡号</li>
-     *   <li>Group 4: 身份证号</li>
-     *   <li>Group 5: 手机号</li>
-     *   <li>Group 6: 邮箱</li>
-     *   <li>Group 7-8: JDBC 连接密码（前缀 + 值）</li>
-     * </ul>
-     */
-    private static final Pattern COMPOSITE_DESENSIZE_PATTERN = Pattern.compile(
-            "(?i)" +
-            // 1-2: 敏感字段赋值 key=value
-            "(?:(password|passwd|secret|token|apikey|accesskey|privatekey|credential|auth)" +
-            "[\\s]*[=:][\\s]*[\"']?([^\"'\\s,;)]+))" +
-            "|" +
-            // 3: 银行卡号（13-19 位，前 4 + 中间 + 后 4 的基本格式）
-            "(\\b\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}(?:[\\s-]?\\d{0,7})\\b)" +
-            "|" +
-            // 4: 身份证号（18 位，含 X 校验位）
-            "(\\b[1-9]\\d{5}(?:18|19|20)\\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\\d|3[01])\\d{3}[\\dXx]\\b)" +
-            "|" +
-            // 5: 手机号（11 位，1 开头，第 2 位 3-9）
-            "((?<![\\d])1[3-9]\\d{9}(?![\\d]))" +
-            "|" +
-            // 6: 邮箱
-            "([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,})" +
-            "|" +
-            // 7-8: JDBC 连接字符串中的密码（前缀 + 值）
-            "((?:jdbc:[^?]*\\?.*)(?:password|pwd)=)([^&\\s]*)",
-            Pattern.CASE_INSENSITIVE
-    );
-
     /** 银行卡位数下限 */
     private static final int BANK_CARD_MIN_DIGITS = 13;
     /** 银行卡位数上限 */
@@ -90,32 +53,107 @@ public final class ExceptionDesensitizer {
     private static final int EMAIL_LOCAL_KEEP = 1;
     /** 堆栈构建缓冲区初始容量 */
     private static final int STACK_BUFFER_SIZE = 1024;
-    /** 捕获组 1：敏感字段名 */
-    private static final int GROUP_SENSITIVE_FIELD = 1;
-    /** 捕获组 2：敏感字段值 */
-    private static final int GROUP_SENSITIVE_VALUE = 2;
-    /** 捕获组 3：银行卡号 */
-    private static final int GROUP_BANK_CARD = 3;
-    /** 捕获组 4：身份证号 */
-    private static final int GROUP_ID_CARD = 4;
-    /** 捕获组 5：手机号 */
-    private static final int GROUP_MOBILE = 5;
-    /** 捕获组 6：邮箱 */
-    private static final int GROUP_EMAIL = 6;
-    /** 捕获组 7：JDBC 连接密码前缀 */
-    private static final int GROUP_JDBC_PREFIX = 7;
-    /** 捕获组 8：JDBC 连接密码值 */
-    private static final int GROUP_JDBC_VALUE = 8;
 
     private ExceptionDesensitizer() {
         throw new UnsupportedOperationException();
     }
 
     /**
+     * 脱敏规则定义。
+     *
+     * <p>每条规则包含一个 {@link Pattern} 和对应的替换策略（{@link Replacer}），
+     * 保持单一职责，便于独立测试与维护。
+     */
+    private static final class DesensitizeRule {
+
+        /** 规则名称（日志与调试用） */
+        private final String name;
+        /** 匹配该敏感类型的正则 */
+        private final Pattern pattern;
+        /** 替换策略 */
+        private final Replacer replacer;
+
+        DesensitizeRule(String name, Pattern pattern, Replacer replacer) {
+            this.name = name;
+            this.pattern = pattern;
+            this.replacer = replacer;
+        }
+    }
+
+    /**
+     * 替换策略接口。
+     *
+     * <p>根据匹配结果返回替换字符串；返回 {@code null} 表示跳过（保持原文）。
+     */
+    @FunctionalInterface
+    private interface Replacer {
+        String replace(Matcher m);
+    }
+
+    /**
+     * 脱敏规则序列。
+     *
+     * <p>顺序影响优先级：靠前的规则优先匹配；
+     * 重叠匹配场景下后续规则在剩余文本上继续执行。
+     */
+    private static final List<DesensitizeRule> RULES = new ArrayList<>();
+
+    static {
+        // 1. 敏感字段赋值（password=xxx 等形式）
+        RULES.add(new DesensitizeRule("sensitive-field",
+                Pattern.compile(
+                        "(?i)(password|passwd|secret|token|apikey|accesskey|privatekey"
+                                + "|credential|auth)[\\s]*[=:][\\s]*[\"']?([^\"'\\s,;)]+)"),
+                m -> m.group(1) + "=******"));
+
+        // 2. 银行卡号（13-19 位数字，允许空格/连字符分隔）
+        RULES.add(new DesensitizeRule("bank-card",
+                Pattern.compile(
+                        "\\b\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}(?:[\\s-]?\\d{0,7})\\b"),
+                m -> {
+                    int digits = m.group().replaceAll("[\\s-]", "").length();
+                    return (digits >= BANK_CARD_MIN_DIGITS && digits <= BANK_CARD_MAX_DIGITS)
+                            ? "****" : null;
+                }));
+
+        // 3. 身份证号（18 位，含 X 校验位）
+        RULES.add(new DesensitizeRule("id-card",
+                Pattern.compile(
+                        "\\b[1-9]\\d{5}(?:18|19|20)\\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\\d|3[01])\\d{3}[\\dXx]\\b"),
+                m -> "****"));
+
+        // 4. 手机号（11 位，1 开头，第 2 位 3-9）
+        RULES.add(new DesensitizeRule("mobile",
+                Pattern.compile("(?<![\\d])1[3-9]\\d{9}(?![\\d])"),
+                m -> {
+                    String mobile = m.group();
+                    return mobile.substring(0, MOBILE_PREFIX_KEEP)
+                            + "****" + mobile.substring(mobile.length() - MOBILE_SUFFIX_KEEP);
+                }));
+
+        // 5. 邮箱地址
+        RULES.add(new DesensitizeRule("email",
+                Pattern.compile("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}"),
+                m -> {
+                    String email = m.group();
+                    int atIdx = email.indexOf('@');
+                    return atIdx > EMAIL_LOCAL_KEEP
+                            ? email.charAt(0) + "***" + email.substring(atIdx)
+                            : null;
+                }));
+
+        // 6. JDBC 连接字符串中的密码
+        RULES.add(new DesensitizeRule("jdbc-password",
+                Pattern.compile("((?:jdbc:[^?]*\\?.*)(?:password|pwd)=)([^&\\s]*)",
+                        Pattern.CASE_INSENSITIVE),
+                m -> m.group(1) + "******"));
+    }
+
+    /**
      * 脱敏单个字符串消息。
      *
-     * <p>使用复合正则单次扫描完成全部类别的敏感信息脱敏，
-     * 比原来 6 次顺序正则替换性能提升约 60-80%。
+     * <p>按规则序列逐条执行，每条规则独立匹配与替换，
+     * 消除原复合正则的捕获组编号耦合问题。
      *
      * @param message 原始消息，可为 null
      * @return 脱敏后的消息，null 入参返回 null
@@ -125,65 +163,32 @@ public final class ExceptionDesensitizer {
             return message;
         }
 
-        Matcher m = COMPOSITE_DESENSIZE_PATTERN.matcher(message);
-        StringBuffer sb = new StringBuffer(message.length());
+        String result = message;
+        for (DesensitizeRule rule : RULES) {
+            result = applyRule(result, rule);
+        }
+        return result;
+    }
+
+    /**
+     * 对单条文本应用一条脱敏规则。
+     *
+     * @param text 待脱敏文本
+     * @param rule 脱敏规则
+     * @return 脱敏后的文本
+     */
+    private static String applyRule(String text, DesensitizeRule rule) {
+        Matcher m = rule.pattern.matcher(text);
+        StringBuffer sb = new StringBuffer(text.length());
 
         while (m.find()) {
-            String replacement = resolveReplacement(m);
+            String replacement = rule.replacer.replace(m);
             if (replacement != null) {
                 m.appendReplacement(sb, Matcher.quoteReplacement(replacement));
             }
         }
         m.appendTail(sb);
         return sb.toString();
-    }
-
-    /**
-     * 根据匹配结果解析脱敏替换文案。
-     *
-     * <p>命中敏感字段/JDBC 密码等场景返回掩码文案；命中银行卡但位数不合法、
-     * 邮箱用户名过短等边界场景返回 null（跳过替换，保持原文）。
-     *
-     * @param m 已匹配的正则匹配器
-     * @return 替换文案；无需替换时返回 null
-     */
-    private static String resolveReplacement(Matcher m) {
-        if (m.group(GROUP_SENSITIVE_FIELD) != null) {
-            // 敏感字段赋值：key=******
-            return m.group(GROUP_SENSITIVE_FIELD) + "=******";
-        }
-        if (m.group(GROUP_BANK_CARD) != null) {
-            // 银行卡号：校验位数后替换
-            int digits = m.group(GROUP_BANK_CARD).replaceAll("[\\s-]", "").length();
-            if (digits >= BANK_CARD_MIN_DIGITS && digits <= BANK_CARD_MAX_DIGITS) {
-                return "****";
-            }
-            return null;
-        }
-        if (m.group(GROUP_ID_CARD) != null) {
-            // 身份证号
-            return "****";
-        }
-        if (m.group(GROUP_MOBILE) != null) {
-            // 手机号：138****1234
-            String mobile = m.group(GROUP_MOBILE);
-            return mobile.substring(0, MOBILE_PREFIX_KEEP)
-                    + "****" + mobile.substring(mobile.length() - MOBILE_SUFFIX_KEEP);
-        }
-        if (m.group(GROUP_EMAIL) != null) {
-            // 邮箱：a***@example.com
-            String email = m.group(GROUP_EMAIL);
-            int atIdx = email.indexOf('@');
-            if (atIdx > EMAIL_LOCAL_KEEP) {
-                return email.charAt(0) + "***" + email.substring(atIdx);
-            }
-            return null;
-        }
-        if (m.group(GROUP_JDBC_PREFIX) != null) {
-            // JDBC 密码：保留前缀 + key=******
-            return m.group(GROUP_JDBC_PREFIX) + "******";
-        }
-        return null;
     }
 
     /**

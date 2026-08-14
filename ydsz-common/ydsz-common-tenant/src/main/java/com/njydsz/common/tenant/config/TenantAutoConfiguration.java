@@ -156,14 +156,19 @@ public class TenantAutoConfiguration {
     /**
      * Feign 跨服务透传拦截器（可选，common-feign 在 classpath 时）。
      *
+     * <p>注入 {@link TenantProperties#getActiveTenantFields()}，使拦截器
+     * 通过 {@link com.njydsz.common.tenant.feign.TenantHeaderContract}
+     * 计算与 WebFilter 端一致的 header 名称。
+     *
+     * @param properties 租户配置
      * @return Feign 拦截器
      */
     @Bean
     @ConditionalOnClass(name = "feign.RequestInterceptor")
     @ConditionalOnMissingBean
-    public TenantContextFeignInterceptor tenantContextFeignInterceptor() {
+    public TenantContextFeignInterceptor tenantContextFeignInterceptor(TenantProperties properties) {
         log.info("多租户 Feign 跨服务透传已启用");
-        return new TenantContextFeignInterceptor();
+        return new TenantContextFeignInterceptor(properties.getActiveTenantFields());
     }
 
     /**

@@ -67,8 +67,13 @@ public final class SerializationProvider {
     /**
      * 序列化上下文（对标 Jackson SerializerProvider）。
      *
-     * <p>合并 11 个原独立 ThreadLocal 字段到单一对象，降低 ThreadLocal 粒度，
+     * <p>合并 10 个原独立 ThreadLocal 字段到单一对象，降低 ThreadLocal 粒度，
      * 方便快照保存/恢复。通过 {@link #CONTEXT} ThreadLocal 访问。</p>
+     *
+     * <p><b>namingStrategy 说明：</b>命名策略未并入此上下文（仍由
+     * {@link FieldMetadataLoader#NAMING_STRATEGY} 持有），因其需通过
+     * {@link BeanSerializerCache} 的二级缓存 Key（Class + NamingStrategy）直接访问，
+     * 与序列化流程解耦。快照 {@link ThreadLocalSnapshot} 单独保存/恢复它。</p>
      *
      * @since 1.1.0
      */

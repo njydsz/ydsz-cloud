@@ -14,6 +14,8 @@ import java.util.Map;
  *   <li>前缀匹配：startsWithIgnoreCase（忽略大小写）</li>
  *   <li>命名转换：toCamelCase / toUnderScoreCase</li>
  *   <li>格式化：format（使用 {} 占位符，类似 SLF4J 风格）</li>
+ *   <li>截断/缩写：truncate / abbreviate（带省略号）</li>
+ *   <li>空白规范化：normalizeSpace</li>
  * </ul>
  *
  * <p><b>不提供的能力（直接使用 JDK）：</b>

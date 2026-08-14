@@ -47,6 +47,9 @@ public class SlaveLatencyMonitor {
     /** 当前被摘除的从库集合（延迟超标） */
     private final Set<String> excludedSlaves = ConcurrentHashMap.newKeySet();
 
+    /** 缓存的健康从库快照 — 每次检测周期更新，读操作无锁零分配 */
+    private volatile Set<String> healthySlavesCache;
+
     public SlaveLatencyMonitor(SlaveLatencyDetector detector,
                                 Map<String, DataSource> slaveDataSources,
                                 LatencyCheck config) {
@@ -60,6 +63,8 @@ public class SlaveLatencyMonitor {
             t.setDaemon(true);
             return t;
         }, new ThreadPoolExecutor.CallerRunsPolicy());
+        // 初始状态：假设所有从库均健康，检测周期会修正
+        this.healthySlavesCache = Set.copyOf(slaveDataSources.keySet());
     }
 
     /**
@@ -87,29 +92,39 @@ public class SlaveLatencyMonitor {
     /**
      * 判断从库是否健康（未被摘除）
      *
+     * <p>读取由检测周期维护的缓存快照，无锁无分配，适合高频路由决策调用。
+     *
      * @param slaveName 从库名称
      * @return true 表示健康，可以路由
      */
     public boolean isHealthy(String slaveName) {
-        return !excludedSlaves.contains(slaveName);
+        Set<String> cache = healthySlavesCache;
+        return cache != null && cache.contains(slaveName);
     }
 
     /**
      * 获取当前可用的从库名称列表（排除延迟超标的）
      *
-     * @return 健康从库名称集合
+     * <p>返回不可变缓存快照，调用方无需额外同步。
+     * 每次检测周期（{@link LatencyCheck#getInterval()}）更新一次，
+     * 读操作无锁无分配，适合高频路由决策场景。
+     *
+     * @return 健康从库名称集合（不可变）
      */
     public Set<String> getHealthySlaves() {
-        return slaveDataSources.keySet().stream()
-                .filter(this::isHealthy)
-                .collect(java.util.stream.Collectors.toUnmodifiableSet());
+        return healthySlavesCache;
     }
 
     /**
-     * 检测所有从库的延迟
+     * 检测所有从库的延迟，并在完成后更新健康缓存快照
      */
     private void checkAllSlaves() {
         slaveDataSources.forEach(this::checkSingleSlave);
+        // 一次性更新缓存快照，保证路由决策看到一致的健康状态
+        healthySlavesCache = Set.copyOf(
+                slaveDataSources.keySet().stream()
+                        .filter(s -> !excludedSlaves.contains(s))
+                        .collect(java.util.stream.Collectors.toUnmodifiableSet()));
     }
 
     /**
@@ -156,11 +171,17 @@ public class SlaveLatencyMonitor {
     /**
      * 运行时动态注册从库
      *
+     * <p>新注册从库默认视为健康，下个检测周期会根据实际延迟修正状态。
+     *
      * @param slaveName   从库名称
      * @param dataSource 数据源
      */
     public void registerSlave(String slaveName, DataSource dataSource) {
         slaveDataSources.put(slaveName, dataSource);
+        // 新从库默认加入健康池，下个检测周期会验证
+        Set<String> updated = new java.util.HashSet<>(healthySlavesCache);
+        updated.add(slaveName);
+        healthySlavesCache = Set.copyOf(updated);
     }
 
     /**
@@ -172,5 +193,9 @@ public class SlaveLatencyMonitor {
         slaveDataSources.remove(slaveName);
         excludedSlaves.remove(slaveName);
         failureCounts.remove(slaveName);
+        // 从健康缓存中移除
+        Set<String> updated = new java.util.HashSet<>(healthySlavesCache);
+        updated.remove(slaveName);
+        healthySlavesCache = Set.copyOf(updated);
     }
 }

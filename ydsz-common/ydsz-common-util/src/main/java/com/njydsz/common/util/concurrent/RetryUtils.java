@@ -5,6 +5,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Predicate;
 
+import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -171,113 +172,25 @@ public final class RetryUtils {
     /**
      * 重试配置。
      *
-     * <p>使用 Builder 模式构建，支持 Lombok 的 {@code @Builder} 注解。
+     * <p>使用 Lombok {@link Builder} 注解自动生成 Builder 模式代码。
+     * 默认值：最大重试 3 次，初始延迟 500ms，最大延迟 30s，退避乘数 2.0。
      */
+    @Builder
     public static class RetryConfig {
-        /** 最大重试次数（≥ 0） */
-        private final int maxRetries;
-        /** 初始延迟（第一次重试前的等待时间） */
-        private final Duration initialDelay;
-        /** 最大延迟上限 */
-        private final Duration maxDelay;
-        /** 退避乘数（每次延迟增长倍数） */
-        private final double multiplier;
-        /** 重试条件（哪些异常触发重试） */
-        private final Predicate<Throwable> retryOn;
-
-        /**
-         * 构造器。
-         *
-         * @param maxRetries   最大重试次数
-         * @param initialDelay 初始延迟
-         * @param maxDelay     最大延迟上限
-         * @param multiplier   退避乘数
-         * @param retryOn      重试条件
-         */
-        public RetryConfig(int maxRetries, Duration initialDelay, Duration maxDelay,
-                           double multiplier, Predicate<Throwable> retryOn) {
-            this.maxRetries = maxRetries;
-            this.initialDelay = initialDelay;
-            this.maxDelay = maxDelay;
-            this.multiplier = multiplier;
-            this.retryOn = retryOn;
-        }
-
-        // ==================== Builder ====================
-
-        /**
-         * 创建 Builder 实例。
-         */
-        public static Builder builder() {
-            return new Builder();
-        }
-
-        /**
-         * 配置构建器。
-         */
-        public static final class Builder {
-            private int maxRetries = 3;
-            private Duration initialDelay = Duration.ofMillis(500);
-            private Duration maxDelay = Duration.ofSeconds(30);
-            private double multiplier = DEFAULT_MULTIPLIER;
-            private Predicate<Throwable> retryOn = e -> true;
-
-            Builder() {
-            }
-
-            public Builder maxRetries(int maxRetries) {
-                this.maxRetries = maxRetries;
-                return this;
-            }
-
-            public Builder initialDelay(Duration initialDelay) {
-                this.initialDelay = initialDelay;
-                return this;
-            }
-
-            public Builder maxDelay(Duration maxDelay) {
-                this.maxDelay = maxDelay;
-                return this;
-            }
-
-            public Builder multiplier(double multiplier) {
-                this.multiplier = multiplier;
-                return this;
-            }
-
-            public Builder retryOn(Predicate<Throwable> retryOn) {
-                this.retryOn = retryOn;
-                return this;
-            }
-
-            /**
-             * 构建配置。
-             */
-            public RetryConfig build() {
-                return new RetryConfig(maxRetries, initialDelay, maxDelay, multiplier, retryOn);
-            }
-        }
-
-        // ==================== Getters ====================
-
-        public int getMaxRetries() {
-            return maxRetries;
-        }
-
-        public Duration getInitialDelay() {
-            return initialDelay;
-        }
-
-        public Duration getMaxDelay() {
-            return maxDelay;
-        }
-
-        public double getMultiplier() {
-            return multiplier;
-        }
-
-        public Predicate<Throwable> getRetryOn() {
-            return retryOn;
-        }
+        /** 最大重试次数（≥ 0），默认 3 */
+        @Builder.Default
+        private final int maxRetries = 3;
+        /** 初始延迟（第一次重试前的等待时间），默认 500ms */
+        @Builder.Default
+        private final Duration initialDelay = Duration.ofMillis(500);
+        /** 最大延迟上限，默认 30s */
+        @Builder.Default
+        private final Duration maxDelay = Duration.ofSeconds(30);
+        /** 退避乘数（每次延迟增长倍数），默认 2.0 */
+        @Builder.Default
+        private final double multiplier = DEFAULT_MULTIPLIER;
+        /** 重试条件（哪些异常触发重试），默认所有异常 */
+        @Builder.Default
+        private final Predicate<Throwable> retryOn = e -> true;
     }
 }

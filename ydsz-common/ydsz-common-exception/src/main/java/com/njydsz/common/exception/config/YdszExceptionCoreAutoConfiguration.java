@@ -6,7 +6,10 @@ import java.util.List;
 
 import com.njydsz.common.exception.code.ErrorCodeTable;
 import com.njydsz.common.exception.custom.AbstractYdszException;
+import com.njydsz.common.exception.custom.MessageSourceAccessor;
 import com.njydsz.common.exception.custom.MessageSourceHolder;
+import com.njydsz.common.exception.alert.ExceptionAlertPolicy;
+import com.njydsz.common.exception.alert.SlidingWindowAlertPolicy;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;
 import com.njydsz.common.exception.registry.ExceptionCodeScanner;
 
@@ -150,6 +153,22 @@ public class YdszExceptionCoreAutoConfiguration {
     }
 
     /**
+     * 注册 {@link MessageSourceAccessor} Bean（可注入的消息源访问器）。
+     *
+     * <p>为需要通过 Spring DI 获取 i18n 解析能力的业务代码提供可注入组件。
+     * 静态 {@link MessageSourceHolder} 仍然可用但不利于单元测试，
+     * 新代码建议优先使用本 Bean。
+     *
+     * @param messageSource Spring MessageSource
+     * @return MessageSourceAccessor 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public MessageSourceAccessor messageSourceAccessor(MessageSource messageSource) {
+        return new MessageSourceAccessor(messageSource);
+    }
+
+    /**
      * 创建全局国际化消息源。
      * @return 处理结果
      */
@@ -275,5 +294,22 @@ public class YdszExceptionCoreAutoConfiguration {
                 i18nProperties.getBasename(), cacheSeconds, Arrays.toString(i18nProperties.getSupportedLocales()));
 
         return messageSource;
+    }
+
+    /**
+     * 注册异常告警策略 Bean（滑动窗口频率检测）。
+     *
+     * <p>默认实现 {@link SlidingWindowAlertPolicy} 基于内存滑动窗口，
+     * 5 分钟内同一异常码触发 ≥ 10 次则通过 {@link org.springframework.context.ApplicationEventPublisher} 发布事件。
+     * 业务方可声明自己的 {@link ExceptionAlertPolicy} Bean 替换默认实现。
+     *
+     * @param eventPublisher Spring 事件发布者（可为 null）
+     * @return 异常告警策略
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public ExceptionAlertPolicy exceptionAlertPolicy(
+            ObjectProvider<org.springframework.context.ApplicationEventPublisher> eventPublisher) {
+        return new SlidingWindowAlertPolicy(eventPublisher.getIfAvailable());
     }
 }

@@ -17,6 +17,7 @@ import com.njydsz.common.json.exception.JsonException;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.parser.JsonParserUtil;
 import com.njydsz.common.json.provider.DeserializationProvider;
+import com.njydsz.common.json.provider.FieldMetadataLoader;
 import com.njydsz.common.json.provider.SerializationProvider;
 import com.njydsz.common.json.provider.SerializationProvider.SerializationContext;
 import com.njydsz.common.json.provider.ThreadLocalSnapshot;
@@ -195,13 +196,14 @@ public class JsonMapper {
     private void applyRuntimeConfig() {
         SerializationContext ctx = SerializationContext.CONTEXT.get();
         // 使用预计算运行时配置快速填充配置字段
-        ctx.namingStrategy = runtimeConfig.namingStrategy();
         ctx.writeNulls = runtimeConfig.writeNulls();
         ctx.prettyPrint = runtimeConfig.prettyPrint();
         ctx.circularRefStrategy = runtimeConfig.circularRefStrategy();
         ctx.serializeEnumUsingOrdinal = runtimeConfig.serializeEnumUsingOrdinal();
         ctx.dateFormat = runtimeConfig.dateFormat();
         ctx.failOnError = runtimeConfig.failOnError();
+        // namingStrategy 设置到独立 ThreadLocal（与 BeanSerializerCache 二级 Key 对齐）
+        FieldMetadataLoader.NAMING_STRATEGY.set(runtimeConfig.namingStrategy());
     }
 
     /**

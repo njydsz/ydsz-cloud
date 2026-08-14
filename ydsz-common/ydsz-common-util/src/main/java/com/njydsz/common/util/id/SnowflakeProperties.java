@@ -22,6 +22,7 @@ import lombok.Setter;
  *       worker-id: 1         # 可选：显式指定 workerId（最高优先级）
  *       datacenter-id: 0     # 可选：显式指定 datacenterId
  *       node-id: pod-0       # 可选：节点标识（用于 PodOrdinal 策略）
+ *       sequence-bits: 7     # 可选：序列号位数（默认 7，最高 13）
  * }</pre>
  *
  * <p><b>workerId 自动分配策略链：</b>
@@ -79,4 +80,16 @@ public class SnowflakeProperties {
      * @since 4.0.0
      */
     private Long epoch;
+
+    /**
+     * 序列号占用位数。
+     * <p>默认 {@value SnowflakeIdGenerator#DEFAULT_SEQUENCE_BITS} 位（每毫秒 128 个 ID）。
+     * <p>最高 {@value SnowflakeIdGenerator#MAX_SEQUENCE_BITS} 位（每毫秒 8192 个 ID）。
+     * <p>增大此值可提升并发吞吐，但会压缩时间戳字段，缩短 ID 可用年限。
+     *
+     * @since 4.0.0
+     */
+    @Min(1)
+    @Max(13)
+    private Integer sequenceBits;
 }

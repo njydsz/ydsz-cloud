@@ -265,19 +265,24 @@ public class LRUCache<K, V> extends AbstractCache<K, V> {
 
   /**
    * 内部写入方法（调用方需持有写锁）。
+   *
+   * <p>先执行容量淘汰再插入新节点，确保插入后 {@code map.size()} 始终不超过 {@code maxSize}，
+   * 避免并发写入场景下 size 短暂超限。
    */
   private void putInternal(K key, V value) {
+    evictBeforeAdd();
     Node<K, V> newNode = new Node<>(key, value);
     map.put(key, newNode);
     addToHead(newNode);
-    evictIfNeeded();
   }
 
   /**
-   * 容量淘汰（调用方需持有写锁）。
+   * 插入前容量淘汰（调用方需持有写锁）。
+   *
+   * <p>使用 {@code >=} 而非 {@code >} 判断，确保插入新节点后容量不会超过上限。
    */
-  private void evictIfNeeded() {
-    while (map.size() > maxSize) {
+  private void evictBeforeAdd() {
+    while (map.size() >= maxSize) {
       Node<K, V> lru = tail.prev;
       if (lru == head) {
         break;

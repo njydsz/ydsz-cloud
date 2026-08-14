@@ -6,16 +6,12 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Primary;
-import org.springframework.stereotype.Component;
-
 import com.njydsz.common.util.security.DigestUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 分布式 ID 生成器（Spring Bean 封装）。
+ * 分布式 ID 生成器（核心算法，无 Spring 依赖）。
  *
  * <p>基于 Twitter Snowflake 算法实现，64 位 long 类型唯一 ID，趋势递增、高性能、低冲突。
  *
@@ -31,11 +27,15 @@ import lombok.extern.slf4j.Slf4j;
  * （支持 StatefulSet 最多 1024 副本 / IP 哈希 / 文件兜底随机），
  * 避免分配器产出值超出 ID 结构可承载范围导致启动失败。
  *
+ * <p>序列号位数可通过构造器配置（{@code sequenceBits}），默认 7 位（每毫秒 128 个），
+ * 最高 13 位（每毫秒 8192 个）。位数越高，每毫秒并发能力越强，
+ * 但其余字段位数固定，总位数不能超过 63 位。
+ *
  * <h2>性能特征</h2>
  * <ul>
- *   <li>单节点理论峰值：12.8 万 ID/s（7 位序列号 / 毫秒，每毫秒 128 个）</li>
- *   <li>实际吞吐量取决于 CAS 竞争程度，普通服务器 5-12 万 ID/s</li>
- *   <li>如需更高吞吐，建议使用 Leaf-segment 或号段模式</li>
+ *   <li>单节点理论峰值（默认 7-bit）：12.8 万 ID/s（每毫秒 128 个）</li>
+ *   <li>单节点理论峰值（13-bit）：81.9 万 ID/s（每毫秒 8192 个）</li>
+ *   <li>实际吞吐量取决于 CAS 竞争程度，普通服务器 5-10 万 ID/s</li>
  * </ul>
  *
  * <h2>时钟回拨处理</h2>
@@ -44,42 +44,44 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>> 5ms：抛出 {@link ClockBackwardException} 强制报错</li>
  * </ul>
  *
- * <p>本类为 Spring Bean 封装，遵循 Spring IoC 容器生命周期管理，
- * 支持多租户、多实例场景下的 Bean 隔离。
+ * <p>本类为纯算法实现，不包含 Spring 注解。Spring Bean 封装请参见 {@link SnowflakeIdBean}。
  *
  * @author ydsz-team
- * @since 2.0.0
+ * @since 4.0.0
  */
 @Slf4j
-@Component
-@Primary
-@ConditionalOnProperty(prefix = "ydsz.util.snowflake", name = "enabled", matchIfMissing = true)
 public class SnowflakeIdGenerator {
 
     /** 默认起始纪元时间戳（2020-01-01 00:00:00 UTC） */
     private static final long DEFAULT_EPOCH = 1577836800000L;
 
+    /** 默认序列号位数（每毫秒 128 个） */
+    public static final int DEFAULT_SEQUENCE_BITS = 7;
+    /** 最大允许序列号位数（每毫秒 8192 个） */
+    public static final int MAX_SEQUENCE_BITS = 13;
+
     /** 工作节点 ID 占用位数（10 位，0-1023，与 WorkerIdAllocator 契约一致） */
     private static final long WORKER_ID_BITS = 10L;
     /** 数据中心 ID 占用位数 */
     private static final long DATACENTER_ID_BITS = 5L;
-    /** 序列号占用位数（7 位，每毫秒 128 个） */
-    private static final long SEQUENCE_BITS = 7L;
 
     /** 最大工作节点 ID（1023） */
     private static final long MAX_WORKER_ID = -1L ^ (-1L << WORKER_ID_BITS);
     /** 最大数据中心 ID（31） */
     private static final long MAX_DATACENTER_ID = -1L ^ (-1L << DATACENTER_ID_BITS);
 
-    /** 工作节点 ID 左移位数 */
-    private static final long WORKER_ID_SHIFT = SEQUENCE_BITS;
-    /** 数据中心 ID 左移位数 */
-    private static final long DATACENTER_ID_SHIFT = SEQUENCE_BITS + WORKER_ID_BITS;
-    /** 时间戳左移位数 */
-    private static final long TIMESTAMP_LEFT_SHIFT = SEQUENCE_BITS + WORKER_ID_BITS + DATACENTER_ID_BITS;
+    // ---- 实例级可配置字段（由 sequenceBits 推导） ----
 
-    /** 序列号掩码（127） */
-    private static final long SEQUENCE_MASK = -1L ^ (-1L << SEQUENCE_BITS);
+    /** 序列号占用位数 */
+    private final long sequenceBits;
+    /** 序列号掩码 */
+    private final long sequenceMask;
+    /** 工作节点 ID 左移位数 */
+    private final long workerIdShift;
+    /** 数据中心 ID 左移位数 */
+    private final long datacenterIdShift;
+    /** 时间戳左移位数 */
+    private final long timestampLeftShift;
 
     /** 时钟回拨容忍阈值（毫秒），≤ 5ms 直接等待 */
     private static final long CLOCK_BACKWARD_TOLERANCE_MILLIS = 5L;
@@ -97,13 +99,13 @@ public class SnowflakeIdGenerator {
     private final SnowflakeProperties properties;
 
     /**
-     * 状态（高 57 位 = 相对 epoch 的时间戳毫秒数，低 7 位 = 序列号）。
+     * 状态（高位 = 相对 epoch 的时间戳毫秒数，低位 = 序列号）。
      * -1 表示未初始化（首次生成时自动填充当前时间戳 + 序列号 0）。
      */
     private final AtomicLong state = new AtomicLong(-1L);
 
     /**
-     * 构造 Spring Bean，使用 {@link WorkerIdAllocator} 自动分配 workerId。
+     * 完整构造器：显式指定 sequenceBits。
      *
      * <p>workerId 分配策略链：PodOrdinal → IpHash → FilePersisted。
      * 业务方可通过声明自定义 {@link WorkerIdAllocator} Bean 插入更高优先级的策略。
@@ -112,8 +114,21 @@ public class SnowflakeIdGenerator {
      *
      * @param properties   Snowflake 配置属性
      * @param allocator    WorkerId 分配策略链
+     * @param sequenceBits 序列号位数（1-${@link #MAX_SEQUENCE_BITS}）
+     * @throws IllegalArgumentException 当 sequenceBits 超出范围时
      */
-    public SnowflakeIdGenerator(SnowflakeProperties properties, WorkerIdAllocator allocator) {
+    public SnowflakeIdGenerator(SnowflakeProperties properties, WorkerIdAllocator allocator, int sequenceBits) {
+        if (sequenceBits < 1 || sequenceBits > MAX_SEQUENCE_BITS) {
+            throw new IllegalArgumentException(
+                    String.format("sequenceBits must be between 1 and %d, got %d", MAX_SEQUENCE_BITS, sequenceBits));
+        }
+
+        this.sequenceBits = sequenceBits;
+        this.sequenceMask = -1L ^ (-1L << sequenceBits);
+        this.workerIdShift = sequenceBits;
+        this.datacenterIdShift = sequenceBits + WORKER_ID_BITS;
+        this.timestampLeftShift = sequenceBits + WORKER_ID_BITS + DATACENTER_ID_BITS;
+
         this.properties = properties;
         String nodeId = resolveNodeId();
 
@@ -138,13 +153,28 @@ public class SnowflakeIdGenerator {
         }
         // EPOCH：显式配置优先，否则使用默认值
         this.epoch = properties.getEpoch() != null ? properties.getEpoch() : DEFAULT_EPOCH;
-        log.info("SnowflakeIdGenerator initialized. Worker ID: {}, Datacenter ID: {}, epoch: {}, allocator: {}",
-                this.workerId, this.datacenterId, this.epoch, allocator.name());
+        log.info("SnowflakeIdGenerator initialized. Worker ID: {}, Datacenter ID: {}, "
+                        + "sequenceBits: {}, epoch: {}, allocator: {}",
+                this.workerId, this.datacenterId, this.sequenceBits, this.epoch, allocator.name());
+    }
+
+    /**
+     * 构造 Spring Bean，使用 {@link WorkerIdAllocator} 自动分配 workerId。
+     *
+     * <p>使用默认序列号位数（{@value #DEFAULT_SEQUENCE_BITS} 位）。
+     *
+     * @param properties Snowflake 配置属性
+     * @param allocator  WorkerId 分配策略链
+     */
+    public SnowflakeIdGenerator(SnowflakeProperties properties, WorkerIdAllocator allocator) {
+        this(properties, allocator, DEFAULT_SEQUENCE_BITS);
     }
 
     /**
      * 便捷构造器：使用默认策略链（PodOrdinal → IpHash → FilePersisted）。
      * 适用于非 Spring 托管场景（如单元测试、独立工具）。
+     *
+     * <p>使用默认序列号位数（{@value #DEFAULT_SEQUENCE_BITS} 位）。
      */
     public SnowflakeIdGenerator() {
         this(new SnowflakeProperties(), WorkerIdAllocatorChain.defaults());
@@ -153,11 +183,24 @@ public class SnowflakeIdGenerator {
     /**
      * 便捷构造器：指定 EPOCH。
      *
+     * <p>使用默认序列号位数（{@value #DEFAULT_SEQUENCE_BITS} 位）。
+     *
      * @param epoch 起始纪元时间戳（毫秒）
      * @since 4.0.0
      */
     public SnowflakeIdGenerator(long epoch) {
         this(createPropertiesWithEpoch(epoch), WorkerIdAllocatorChain.defaults());
+    }
+
+    /**
+     * 便捷构造器：指定 EPOCH 和序列号位数。
+     *
+     * @param epoch        起始纪元时间戳（毫秒）
+     * @param sequenceBits 序列号位数（1-${@link #MAX_SEQUENCE_BITS}）
+     * @since 4.0.0
+     */
+    public SnowflakeIdGenerator(long epoch, int sequenceBits) {
+        this(createPropertiesWithEpoch(epoch), WorkerIdAllocatorChain.defaults(), sequenceBits);
     }
 
     private static SnowflakeProperties createPropertiesWithEpoch(long epoch) {
@@ -216,7 +259,7 @@ public class SnowflakeIdGenerator {
             long sequence;
             if (timestamp == lastTimestamp) {
                 sequence = lastSequence + 1;
-                if (sequence > SEQUENCE_MASK) {
+                if (sequence > sequenceMask) {
                     timestamp = tilNextMillis(lastTimestamp);
                     sequence = 0;
                 }
@@ -234,7 +277,7 @@ public class SnowflakeIdGenerator {
     /**
      * 等待下一毫秒。
      *
-     * <p>统一时钟回拨处理逻辑（合并原 resolveTimestamp 与 tilNextMillis 的双自旋路径）：
+     * <p>统一时钟回拨处理逻辑：
      * <ul>
      *   <li>≤ {@link #CLOCK_BACKWARD_TOLERANCE_MILLIS}ms：使用 {@link LockSupport#parkNanos} 挂起等待，
      *       避免忙等消耗 CPU</li>
@@ -257,7 +300,7 @@ public class SnowflakeIdGenerator {
                 throw new ClockBackwardException(offset, lastTimestamp, timeGen());
             }
             long parkMillis = Math.max(offset, 1L);
-            LockSupport.parkNanos(parkMillis * 1_000_000);
+            LockSupport.parkNanos(parkMillis * 1_000_000L);
             totalWaited += parkMillis;
             timestamp = currentTimeRelative();
         }
@@ -269,9 +312,9 @@ public class SnowflakeIdGenerator {
     }
 
     /**
-     * 当前时间相对 {@link #EPOCH} 的毫秒数（41 位时间字段存储的就是相对毫秒）。
+     * 当前时间相对 {@link #DEFAULT_EPOCH} 的毫秒数。
      *
-     * <p>ID 内只存相对毫秒，配合 {@link #EPOCH} 偏移量即可反解出绝对时间。
+     * <p>ID 内只存相对毫秒，配合 {@code epoch} 偏移量即可反解出绝对时间。
      * 这样 41 位时间戳字段寿命从 1970 年起算延长至约 2090 年，
      * 也保证 {@link #getLastTimestamp()} / {@link #parseTimestamp(long)} 的反解语义正确。
      */
@@ -283,7 +326,7 @@ public class SnowflakeIdGenerator {
      * 处理时间戳解析（含时钟回拨容忍）。
      *
      * <p>统一使用 {@link LockSupport#parkNanos} 等待策略，替代原来的 100ms 截止时间自旋循环，
-     * 减少 CPU 空转。所有时间戳均处于相对 {@link #EPOCH} 的毫秒域内（见 {@link #currentTimeRelative()}）。
+     * 减少 CPU 空转。所有时间戳均处于相对 epoch 的毫秒域内（见 {@link #currentTimeRelative()}）。
      *
      * @param lastTimestamp 上一次生成 ID 时的相对时间戳
      * @return 当前可用的相对时间戳（≥ lastTimestamp）；时钟回拨超阈值抛出 {@link ClockBackwardException}
@@ -308,7 +351,7 @@ public class SnowflakeIdGenerator {
                 }
                 long parkMillis = Math.min(Math.max(lastTimestamp - currentTimeRelative(), 1L),
                         CLOCK_BACKWARD_MAX_WAIT_MILLIS - totalWaited);
-                LockSupport.parkNanos(parkMillis * 1_000_000);
+                LockSupport.parkNanos(parkMillis * 1_000_000L);
                 totalWaited += parkMillis;
             }
             timestamp = currentTimeRelative();
@@ -317,22 +360,22 @@ public class SnowflakeIdGenerator {
     }
 
     private long composeId(long timestamp, long sequence) {
-        return (timestamp << TIMESTAMP_LEFT_SHIFT)
-                | (datacenterId << DATACENTER_ID_SHIFT)
-                | (workerId << WORKER_ID_SHIFT)
+        return (timestamp << timestampLeftShift)
+                | (datacenterId << datacenterIdShift)
+                | (workerId << workerIdShift)
                 | sequence;
     }
 
-    private static long packState(long timestamp, long sequence) {
-        return (timestamp << SEQUENCE_BITS) | sequence;
+    private long packState(long timestamp, long sequence) {
+        return (timestamp << sequenceBits) | sequence;
     }
 
-    private static long extractTimestamp(long state) {
-        return state < 0 ? -1L : state >>> SEQUENCE_BITS;
+    private long extractTimestamp(long currentState) {
+        return currentState < 0 ? -1L : currentState >>> sequenceBits;
     }
 
-    private static long extractSequence(long state) {
-        return state < 0 ? -1L : state & SEQUENCE_MASK;
+    private long extractSequence(long currentState) {
+        return currentState < 0 ? -1L : currentState & sequenceMask;
     }
 
     private static long computeDatacenterId() {
@@ -369,6 +412,26 @@ public class SnowflakeIdGenerator {
     }
 
     /**
+     * 获取配置的序列号位数。
+     *
+     * @return 序列号位数
+     * @since 4.0.0
+     */
+    public int getSequenceBits() {
+        return (int) sequenceBits;
+    }
+
+    /**
+     * 获取当前实例的序列号最大值（2^sequenceBits - 1）。
+     *
+     * @return 序列号上限值
+     * @since 4.0.0
+     */
+    public long getMaxSequence() {
+        return sequenceMask;
+    }
+
+    /**
      * 获取最近一次生成 ID 时的时间戳（毫秒）。
      *
      * <p>用于健康检查等场景快速获取最后一次 ID 生成时间，不会触发 ID 生成。
@@ -394,36 +457,71 @@ public class SnowflakeIdGenerator {
         return MAX_DATACENTER_ID;
     }
 
-    // ==================== ID 反解析 ====================
+    // ==================== ID 反解析（实例方法） ====================
 
-    public static long parseTimestamp(long id) {
-        return parseTimestamp(id, DEFAULT_EPOCH);
+    /**
+     * 从 ID 中反解时间戳（使用本实例的 EPOCH 和位移配置）。
+     *
+     * @param id Snowflake ID
+     * @return 绝对时间戳（毫秒）
+     * @since 4.0.0
+     */
+    public long parseTimestamp(long id) {
+        return (id >> timestampLeftShift) + epoch;
     }
 
     /**
-     * 从 ID 中反解时间戳（使用指定 EPOCH）。
+     * 从 ID 中反解时间戳（使用本实例的位移配置 + 指定 EPOCH）。
      *
      * @param id    Snowflake ID
      * @param epoch 生成该 ID 时使用的 EPOCH
      * @return 绝对时间戳（毫秒）
      * @since 4.0.0
      */
-    public static long parseTimestamp(long id, long epoch) {
-        return (id >> TIMESTAMP_LEFT_SHIFT) + epoch;
+    public long parseTimestamp(long id, long epoch) {
+        return (id >> timestampLeftShift) + epoch;
     }
 
-    public static long parseDatacenterId(long id) {
-        return (id >> DATACENTER_ID_SHIFT) & MAX_DATACENTER_ID;
+    /**
+     * 从 ID 中反解数据中心 ID（使用本实例的位移配置）。
+     *
+     * @param id Snowflake ID
+     * @return 数据中心 ID
+     * @since 4.0.0
+     */
+    public long parseDatacenterId(long id) {
+        return (id >> datacenterIdShift) & MAX_DATACENTER_ID;
     }
 
-    public static long parseWorkerId(long id) {
-        return (id >> WORKER_ID_SHIFT) & MAX_WORKER_ID;
+    /**
+     * 从 ID 中反解工作节点 ID（使用本实例的位移配置）。
+     *
+     * @param id Snowflake ID
+     * @return 工作节点 ID
+     * @since 4.0.0
+     */
+    public long parseWorkerId(long id) {
+        return (id >> workerIdShift) & MAX_WORKER_ID;
     }
 
-    public static long parseSequence(long id) {
-        return id & SEQUENCE_MASK;
+    /**
+     * 从 ID 中反解序列号（使用本实例的序列号掩码）。
+     *
+     * @param id Snowflake ID
+     * @return 序列号
+     * @since 4.0.0
+     */
+    public long parseSequence(long id) {
+        return id & sequenceMask;
     }
 
+    // ==================== 静态反解析方法（已废弃） ====================
+
+    /**
+     * 从默认配置中获取 EPOCH。
+     *
+     * @return 默认 EPOCH（毫秒）
+     */
     public static long getEpoch() {
         return DEFAULT_EPOCH;
     }

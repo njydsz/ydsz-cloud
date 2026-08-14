@@ -1,7 +1,9 @@
 package com.njydsz.common.jdbc.interceptor;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.ibatis.cache.CacheKey;
 import org.apache.ibatis.executor.Executor;
@@ -170,9 +172,11 @@ public class ReadWriteSplittingInterceptor implements Interceptor {
     }
 
     /**
-     * 过滤延迟超标的从库，返回健康的从库列表。
+     * 获取健康的从库列表，用于路由决策。
      *
      * <p>如果未配置延迟检测或检测器不可用，返回原始列表（向后兼容）。
+     * 如果启用了延迟检测，返回 {@link SlaveLatencyMonitor#getHealthySlaves()} 缓存快照，
+     * 避免每次请求重复遍历和过滤。
      *
      * @param slaves 原始从库列表
      * @return 健康的从库列表（可能为空）
@@ -181,15 +185,12 @@ public class ReadWriteSplittingInterceptor implements Interceptor {
         if (latencyMonitor == null || !properties.getLatencyCheck().isEnabled()) {
             return slaves;
         }
-        List<String> healthy = new ArrayList<>(slaves.size());
-        for (String slave : slaves) {
-            if (latencyMonitor.isHealthy(slave)) {
-                healthy.add(slave);
-            } else {
-                log.debug("ReadWriteSplitting: slave {} latency exceeded, excluded from routing", slave);
-            }
+        Set<String> healthySet = latencyMonitor.getHealthySlaves();
+        if (healthySet == null || healthySet.isEmpty()) {
+            return Collections.emptyList();
         }
-        return healthy;
+        // 转换为 List 以支持 loadBalanceStrategy.select(List)
+        return new ArrayList<>(healthySet);
     }
 
     /**

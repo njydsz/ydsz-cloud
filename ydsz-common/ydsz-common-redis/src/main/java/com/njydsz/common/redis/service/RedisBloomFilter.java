@@ -501,10 +501,11 @@ public class RedisBloomFilter implements BloomFilterService {
      */
     private static List<Long> murmurHash3(String value, int numHashes, long numBits) {
         HashCode hashCode = MURMUR3_128.hashString(value, StandardCharsets.UTF_8);
-        // 128 位哈希值拆分为两个 64 位字：hash1 = 低 64 位，hash2 = 高 64 位
-        long hash1 = hashCode.getLeastSignificantBits();
-        // asLong() 返回 HashCode 前 8 字节（大端序）对应的 long，相当于高 64 位
-        long hash2 = hashCode.asLong();
+        // 128 位哈希值拆分为两个 64 位字
+        // 使用 writeBytesTo 将哈希写入字节数组，前 8 字节为高位，后 8 字节为低位
+        byte[] hashBytes = hashCode.asBytes();
+        long hash1 = bytesToLong(hashBytes, 0);
+        long hash2 = bytesToLong(hashBytes, 8);
 
         List<Long> positions = new ArrayList<>(numHashes);
         for (int i = 0; i < numHashes; i++) {
@@ -515,5 +516,23 @@ public class RedisBloomFilter implements BloomFilterService {
             positions.add(combinedHash % numBits);
         }
         return positions;
+    }
+
+    /**
+     * 将字节数组指定偏移处读取 8 字节为小端序 long
+     *
+     * @param bytes  字节数组
+     * @param offset 起始偏移
+     * @return 小端序 long 值
+     */
+    private static long bytesToLong(byte[] bytes, int offset) {
+        return (bytes[offset] & 0xFFL)
+                | ((bytes[offset + 1] & 0xFFL) << 8)
+                | ((bytes[offset + 2] & 0xFFL) << 16)
+                | ((bytes[offset + 3] & 0xFFL) << 24)
+                | ((bytes[offset + 4] & 0xFFL) << 32)
+                | ((bytes[offset + 5] & 0xFFL) << 40)
+                | ((bytes[offset + 6] & 0xFFL) << 48)
+                | ((bytes[offset + 7] & 0xFFL) << 56);
     }
 }
