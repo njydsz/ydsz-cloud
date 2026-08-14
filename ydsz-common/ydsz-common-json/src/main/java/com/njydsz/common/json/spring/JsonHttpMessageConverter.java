@@ -225,7 +225,7 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
             throw new HttpMessageNotWritableException("JSON 序列化失败：" + e.getMessage(), e);
         } finally {
             // 请求结束后清理 ThreadLocal 资源（StringBuilder/JSONWriter/循环引用检测集），防止 Tomcat 线程池泄漏
-            com.njydsz.common.json.provider.SerializationProvider.clearThreadLocals();
+            SerializationProvider.clearThreadLocals();
         }
     }
 

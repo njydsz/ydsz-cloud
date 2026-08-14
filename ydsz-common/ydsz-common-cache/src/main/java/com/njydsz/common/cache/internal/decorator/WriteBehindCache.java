@@ -193,6 +193,7 @@ public class WriteBehindCache<K, V> implements Cache<K, V>, AutoCloseable {
    * 移除指定键并返回被移除的值，同时异步排队删除后端数据。
    *
    * <p>仅在键真实存在（返回值非 null）时才产生 DELETE 写操作，避免无谓的后端删除调用。
+   * 队列满时降级为同步删除后端数据，与 {@link #put} 的降级策略保持一致。
    *
    * @param key 缓存键
    * @return 被移除的值；键不存在时返回 {@code null}
@@ -201,7 +202,18 @@ public class WriteBehindCache<K, V> implements Cache<K, V>, AutoCloseable {
   public V remove(K key) {
     V value = delegate.remove(key);
     if (value != null) {
-      writeQueue.offer(new WriteOp<>(OpType.DELETE, key, value));
+      if (writeQueue.size() >= maxQueueSize) {
+        // 队列满，降级为同步删除
+        queueOverflowCount.incrementAndGet();
+        syncFallbackCount.incrementAndGet();
+        try {
+          writer.delete(key, value);
+        } catch (Exception e) {
+          log.warn("Write-Behind 同步降级删除失败: key={}", key, e);
+        }
+      } else {
+        writeQueue.offer(new WriteOp<>(OpType.DELETE, key, value));
+      }
     }
     return value;
   }

@@ -58,7 +58,11 @@ import com.njydsz.common.cache.listener.RemovalCause;
  * @author ydsz-team
  * @since 1.0.0
  *
+ * @deprecated 使用 {@link com.njydsz.common.cache.internal.tinylfu.WindowTinyLFUCache} 替代。
+ *     WindowTinyLFUCache 基于 Caffeine 的 TinyLFU 算法，具有更高的命中率与更好的并发性能。
+ *     当前实现存在采样竞争与频率草图质量不足的问题，后续版本将移除本类。
  */
+@Deprecated
 public class LFUCache<K, V> extends AbstractCache<K, V> {
 
   /** 日志记录器 */
