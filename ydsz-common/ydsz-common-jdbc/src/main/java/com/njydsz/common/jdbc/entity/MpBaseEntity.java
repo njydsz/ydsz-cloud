@@ -2,12 +2,14 @@ package com.njydsz.common.jdbc.entity;
 
 import java.io.Serializable;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.experimental.SuperBuilder;
 import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 业务实体统一基类（全功能版本，含乐观锁）
@@ -61,10 +63,11 @@ import lombok.AllArgsConstructor;
  * @see MpBaseAuditEntity
  * @see MpBaseIdEntity
  */
-@Data
+@Getter
+@Setter
+@ToString(callSuper = true)
 @SuperBuilder
 @NoArgsConstructor
-@AllArgsConstructor(access = AccessLevel.PROTECTED)
 @EqualsAndHashCode(callSuper = true)
 public class MpBaseEntity<T extends Serializable> extends MpVersionedEntity<T> {
 

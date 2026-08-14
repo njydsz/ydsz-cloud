@@ -7,8 +7,11 @@ import com.njydsz.common.json.annotation.JsonIgnore;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 /**
@@ -48,10 +51,13 @@ import lombok.experimental.SuperBuilder;
  * @see MpBaseEntity
  * @see MpBaseAuditEntity
  */
-@Data
+@Getter
+@Setter
+@ToString(callSuper = true)
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
+@EqualsAndHashCode(callSuper = true)
 public class MpSimpleEntity<T extends Serializable> extends MpBaseAuditEntity<T> {
 
     private static final long serialVersionUID = 1L;

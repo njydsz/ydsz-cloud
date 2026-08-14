@@ -69,12 +69,15 @@ public class JdbcException extends BusinessException {
     }
 
     /**
-     * 使用通用异常码构造异常（兼容非 JDBC 预定义码的场景）
+     * 使用通用异常码和自定义消息构造异常
+     *
+     * <p>保留用于需要携带通用异常码（如安全模块异常码）并补充自定义消息的场景。
      *
      * @param exceptionCode 通用异常码
+     * @param message       自定义消息
      */
-    protected JdbcException(ExceptionCode exceptionCode) {
-        super(exceptionCode);
+    protected JdbcException(ExceptionCode exceptionCode, String message) {
+        super(exceptionCode, message);
     }
 
     /**

@@ -8,8 +8,11 @@ import com.baomidou.mybatisplus.annotation.Version;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 /**
@@ -48,10 +51,13 @@ import lombok.experimental.SuperBuilder;
  * @see MpBaseEntity
  * @see MpBaseAuditEntity
  */
-@Data
+@Getter
+@Setter
+@ToString(callSuper = true)
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
+@EqualsAndHashCode(callSuper = true)
 public class MpVersionedEntity<T extends Serializable> extends MpSimpleEntity<T> {
 
     private static final long serialVersionUID = 1L;

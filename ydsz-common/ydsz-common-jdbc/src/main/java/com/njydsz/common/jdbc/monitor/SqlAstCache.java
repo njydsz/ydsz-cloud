@@ -175,4 +175,13 @@ public final class SqlAstCache {
             lock.readLock().unlock();
         }
     }
+
+    /**
+     * 获取缓存最大容量
+     *
+     * @return 最大缓存条数
+     */
+    public int maxSize() {
+        return DEFAULT_MAX_SIZE;
+    }
 }

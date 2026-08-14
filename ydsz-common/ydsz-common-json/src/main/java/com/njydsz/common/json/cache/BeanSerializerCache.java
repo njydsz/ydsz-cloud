@@ -3,6 +3,7 @@ package com.njydsz.common.json.cache;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import com.njydsz.common.json.internal.JsonConfig;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.util.BoundedLruCache;
 import com.njydsz.common.json.writer.BeanSerializer;
@@ -18,9 +19,11 @@ import com.njydsz.common.json.writer.BeanSerializer;
  * 导致字段名输出与当前命名策略不一致。修复后内层以 PropertyNamingStrategy 引用为 Key，
  * 不同策略独立缓存各自的 BeanSerializer。</p>
  *
- * <p><b>缓存治理（1.2.1）：</b></p>
- * <p>外层采用 {@link BoundedLruCache}（容量 1024），超限按 LRU 淘汰，
- * 防止热部署/动态类加载场景下缓存无界增长导致 OOM。</p>
+ * <p><b>版本感知自动失效（P2-O1，1.2.1）：</b></p>
+ * <p>注册为 {@link JsonConfig.ConfigChangeListener}，当全局配置版本变更时（如命名策略切换），
+ * 自动清理全部缓存条目。此前 BeanSerializerCache 未注册监听器，仅 SerializerCache 注册了，
+ * 导致命名策略变更后 BeanSerializerCache 持有旧的 BeanSerializer（烘焙了旧命名字段名），
+ * 新请求仍输出旧字段名。现已对齐 {@link SerializerCache} 的缓存一致性保障。</p>
  *
  * <ul>
  *   <li>双层 Key：外层 Class -> 内层 命名策略 -> BeanSerializer</li>
@@ -36,6 +39,16 @@ public final class BeanSerializerCache {
     /** 外层有界 LRU：Class -> 内层命名策略映射（容量 1024） */
     private static final BoundedLruCache<Class<?>, ConcurrentMap<PropertyNamingStrategy, BeanSerializer>> CACHE =
         new BoundedLruCache<>(1024);
+
+    static {
+        // P2-O1：注册配置变更监听器，确保命名策略变更时自动失效旧缓存
+        JsonConfig.addChangeListener((oldConfig, nextConfig, newVersion) -> {
+            if (oldConfig != null && oldConfig.getNamingStrategy() == nextConfig.getNamingStrategy()) {
+                return; // 命名策略未变更，跳过清理
+            }
+            CACHE.clear();
+        });
+    }
 
     private BeanSerializerCache() {
         throw new UnsupportedOperationException();

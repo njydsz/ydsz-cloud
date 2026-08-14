@@ -397,6 +397,11 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
             return new ArrayList<>(0);
         }
 
+        // SCHEMA 模式：由 PostgreSQL search_path 在数据库层隔离，无需列注入
+        if (properties.getMode() == TenantProperties.TenantMode.SCHEMA) {
+            return new ArrayList<>(0);
+        }
+
         // fail-closed：无上下文
         if (context == null || context.isEmpty()) {
             throw new TenantIsolationException(
@@ -423,10 +428,50 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
                     "无法获取租户字段 [" + field.getColumn() + "] 的值（claim=" + claimName
                     + "），已拒绝执行 SQL。");
             }
+            // 跨租户共享：将主租户字段值扩展为 [当前租户, 共享租户...]
+            if (context.hasSharedTenantIds() && isPrimaryTenantField(field)) {
+                value = expandWithSharedTenants(value, context.getSharedTenantIds());
+            }
             result.add(new TenantFieldValue(field.getColumn(), value));
         }
         if (metrics != null) metrics.recordInterceptPass();
         return result;
+    }
+
+    /**
+     * 判断字段是否为主租户 ID 字段（tenantId 列）。
+     *
+     * <p>仅主租户字段参与跨租户共享扩展，其他字段（如 companyId、deptId）保持原值。
+     */
+    private boolean isPrimaryTenantField(TenantField field) {
+        return "tenantId".equals(field.getColumn());
+    }
+
+    /**
+     * 将主租户字段值与共享租户 ID 列表合并。
+     *
+     * <p>若原始值为单值 String，返回 {@code List<当前, 共享1, 共享2...>}；
+     * 若原始值已是 List，将共享租户追加到末尾（去重）。
+     *
+     * @param originalValue 原始字段值（String 或 List）
+     * @param sharedTenantIds 共享租户 ID 列表
+     * @return 合并后的 List（非空）
+     */
+    private List<String> expandWithSharedTenants(Object originalValue, List<String> sharedTenantIds) {
+        Set<String> merged = new java.util.LinkedHashSet<>();
+        if (originalValue instanceof String s) {
+            merged.add(s);
+        } else if (originalValue instanceof List<?> list) {
+            for (Object item : list) {
+                if (item instanceof String s) {
+                    merged.add(s);
+                }
+            }
+        }
+        if (sharedTenantIds != null) {
+            merged.addAll(sharedTenantIds);
+        }
+        return new ArrayList<>(merged);
     }
 
     /**

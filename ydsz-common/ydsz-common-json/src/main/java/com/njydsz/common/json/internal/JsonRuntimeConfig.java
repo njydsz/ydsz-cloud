@@ -57,13 +57,6 @@ public record JsonRuntimeConfig(
     private static final long serialVersionUID = 1L;
 
     /**
-     * 默认运行时配置（与 {@link JsonConfig.Builder} 默认值对齐）。
-     *
-     * <p>用于无配置场景的快速路径，避免重复构建相同默认值的实例。</p>
-     */
-    public static final JsonRuntimeConfig DEFAULT = from(JsonConfig.getInstance());
-
-    /**
      * 从 {@link JsonConfig} 创建预计算运行时配置。
      *
      * <p>不可变快照：后续对源 JsonConfig 的修改不会反映到此实例中。

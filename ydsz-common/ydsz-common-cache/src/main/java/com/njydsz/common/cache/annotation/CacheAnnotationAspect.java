@@ -77,6 +77,9 @@ public class CacheAnnotationAspect {
   /** 是否启用防击穿保护（默认开启） */
   private volatile boolean stampedeProtectionEnabled = true;
 
+  /** SpEL 表达式解析缓存（expression → parsed Expression）避免重复解析相同表达式 */
+  private final ConcurrentHashMap<String, Expression> expressionCache = new ConcurrentHashMap<>();
+
   /**
    * 创建缓存注解切面
    *
@@ -315,7 +318,8 @@ public class CacheAnnotationAspect {
   private <T> T evaluateExpression(
       String expression, Method method, Object[] args, Class<T> expectedResultType) {
     EvaluationContext context = createEvaluationContext(method, args);
-    Expression exp = parser.parseExpression(expression);
+    // 使用缓存避免重复解析相同 SpEL 表达式
+    Expression exp = expressionCache.computeIfAbsent(expression, parser::parseExpression);
     return exp.getValue(context, expectedResultType);
   }
 

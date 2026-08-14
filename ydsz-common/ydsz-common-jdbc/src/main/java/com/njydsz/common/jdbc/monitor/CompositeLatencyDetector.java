@@ -8,6 +8,8 @@ import java.util.Optional;
 
 import javax.sql.DataSource;
 
+import org.springframework.core.Ordered;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**

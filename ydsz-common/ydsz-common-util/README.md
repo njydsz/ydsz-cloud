@@ -69,7 +69,7 @@ byte[] ciphertext = sm4.encrypt(plaintextBytes, keyBytes, null);
 
 | 业务场景 | 推荐入口类 | 一句话说明 |
 |---------|-----------|-----------|
-| 生成分布式唯一 ID | `IdGenerator` / `SnowflakeIdGenerator` | 雪花算法，支持静态门面或 Spring 注入 |
+| 生成分布式唯一 ID | `IdGenerator` / `SnowflakeIdGenerator` / `SnowflakeIdBean` | 雪花算法核心 + Spring Bean 包装器，序列号可配置 |
 | 加密解密（统一入口） | `CryptoUtils` | AES-256-GCM / SM4-GCM 算法路由，支持 AEAD/AAD |
 | 国密算法（SM2/SM3/SM4） | `Sm2Utils` / `Sm3Utils` / `Sm4Utils` | 依赖 bcprov-jdk18on，GM/T 标准 |
 | 摘要/签名/HMAC | `DigestUtils` | SHA-256/SHA-512/HMAC-SHA256/PBKDF2 + constantTimeEquals |
@@ -86,7 +86,12 @@ byte[] ciphertext = sm4.encrypt(plaintextBytes, keyBytes, null);
 | 有界虚拟线程调度 | `BoundedVirtualThreadScheduler` | Semaphore 背压控制 + 虚拟线程轻量优势 |
 | 限流 | `RateLimiter` | 单机令牌桶算法（阻塞/非阻塞/超时模式） |
 | 重试 | `RetryUtils` | 固定间隔 + 指数退避（含抖动），可自定义重试条件 |
-| 字符串判空/转换 | `StringUtils` | null-safe 判空、驼峰/下划线互转 |
+| 字符串判空/转换/截断 | `StringUtils` | null-safe 判空、驼峰/下划线互转、truncate/abbreviate/normalizeSpace |
+| 日期时间 | `DateUtils` | java.time API 封装：日起始/结束、工作日计算、格式化解析 |
+| 文件操作 | `FileUtils` | 封装 commons-io：读写、复制、目录操作、扩展名解析 |
+| 数据脱敏 | `MaskUtils` | 手机号/身份证/银行卡/邮箱/姓名掩码 |
+| 业务校验 | `ValidationUtils` | 手机号/邮箱/身份证/统一社会信用代码等正则+校验码验证 |
+| Bean 映射 | `BeanMapper` | Map → Bean / Record 转换（从 MapUtils 独立） |
 | 集合判空/转换 | `CollectionUtils` / `MapUtils` | null-safe 判空、类型安全取值 |
 | JDK 21 SequencedCollection | `SequencedCollections` | reverse/first/last 兼容 JDK 17/21 |
 | Bean PATCH 更新 | `BeanUpdateUtil` | 仅复制非 null 属性 |
@@ -95,32 +100,36 @@ byte[] ciphertext = sm4.encrypt(plaintextBytes, keyBytes, null);
 | 认证信息读取 | `AuthInfoUtils` | 用户 ID、租户 ID、数据权限维度 |
 | YAML 处理 | `YamlUtils` | 基于 snakeyaml |
 | 国际化消息 | `MessageUtils` | MessageSource 便捷读取 |
-| Spring 上下文 | `SpringContextHolder` | 静态 getBean |
+| Spring 上下文 | `SpringContextHolder` | 静态 getBean（@Deprecated 4.0.0，推荐注入） |
 
 ### 按包结构查找工具
 
 ```
 com.njydsz.common.util
 ├── auth/           认证信息：AuthInfo、AuthInfoUtils、YdszAuthInfo
-├── bean/           Bean 更新：BeanUpdateUtil（PATCH 语义）
-├── collection/     集合工具：CollectionUtils、MapUtils、SequencedCollections
+├── bean/           Bean 映射：BeanMapper（Map→Bean/Record）、BeanUpdateUtil（PATCH 语义）
+├── collection/     集合工具：CollectionUtils、MapUtils（聚焦 Map 操作）、SequencedCollections
+├── date/           日期时间：DateUtils（java.time API 封装）
 ├── concurrent/     并发工具：ExecutorUtils、MeteredThreadPoolExecutor、BoundedVirtualThreadScheduler、
 │                   RateLimiter、RetryUtils
 ├── config/         自动配置：UtilAutoConfiguration、MessageSourceConfiguration
 ├── http/           HTTP 工具：ServletRequestUtils、HttpResponseUtils、HttpTokenUtils、
 │                   RequestContextUtils、UrlPathUtils、UrlPathMatcher、TrustedProxyConfiguration
+├── io/             文件操作：FileUtils（封装 commons-io）
 ├── id/             ID 生成：SnowflakeIdGenerator、IdGenerator、RandomUtils、TracerUtils、
 │                   WorkerIdAllocator（SPI）、WorkerIdAllocatorChain、SnowflakeProperties、
 │                   SnowflakeHealthIndicator、WorkerIdRegistry
-├── ip/             IP 工具：IpValidator、CidrUtils、NetworkInterfaceUtils
+├── ip/             IP 工具：IpValidator、CidrUtils（含缓存）、NetworkInterfaceUtils
+├── mask/           数据脱敏：MaskUtils
 ├── message/        国际化：MessageUtils
 ├── password/       密码工具：PwdUtils、PasswordStrengthChecker（SPI）
 ├── security/       加密工具：CryptoUtils（统一入口）、CryptoProviderRegistry、DigestUtils、
 │                   AesUtils、AesGcmCrypto、国密工具（Sm2Utils/Sm3Utils/Sm4Utils）、BcProvider
 ├── security/crypto/ 加密提供者：CryptoProvider（SPI）、CryptoProviderRegistry、
 │                   AesGcmCryptoProvider、Sm4GcmCryptoProvider、Sm4CbcCryptoProvider
-├── spring/         Spring 集成：SpringContextHolder
+├── spring/         Spring 集成：SpringContextHolder（@ Deprecated 4.0.0）
 ├── string/         字符串：StringUtils
+├── validate/       业务校验：ValidationUtils
 └── yaml/           YAML：YamlUtils
 ```
 
@@ -165,6 +174,7 @@ com.njydsz.common.util
 | `ydsz.util.snowflake.datacenter-id` | - | 数据中心 ID（0-31，未配置时基于主机名哈希） |
 | `ydsz.util.snowflake.node-id` | - | 节点标识（用于 PodOrdinal/FilePersisted 策略） |
 | `ydsz.util.snowflake.epoch` | `1577836800000` | 起始纪元时间戳（2020-01-01 UTC），@since 4.0.0 |
+| `ydsz.util.snowflake.sequence-bits` | `7` | 序列号位数（7-13，决定每毫秒并发能力），@since 4.0.0 |
 | `crypto.algorithm`（系统属性） | `AES-256-GCM` | 加密算法标识，可选 `SM4-GCM`/`SM4-CBC`/`AES-256-GCM` |
 
 **WorkerId 解析优先级**：显式配置 → PodOrdinal → IpHash → FilePersisted
@@ -266,4 +276,26 @@ boolean isExact = matcher.matchesExact(requestPath);
 
 ---
 
-> **文档与代码一致性**：本文档严格对齐模块内真实源码（61 个 Java 文件）。
+---
+
+## v4.0.0 变更亮点
+
+### 架构优化
+- **BeanMapper 独立**：将 MapUtils 中 700+ 行 Bean 映射逻辑抽取为独立的 `BeanMapper` 类，MapUtils 回归纯 Map 操作职责（单一职责原则）
+- **SnowflakeIdGenerator 拆分**：核心算法（`SnowflakeIdGenerator`）与 Spring Bean 包装（`SnowflakeIdBean`）分离，序列号位数可配置（7-13 位）
+- **循环导入消除**：`CidrUtils` 与 `IpValidator` 不再相互 import
+
+### 功能增强
+- **DateUtils**：16 个 java.time API 方法 — 日起始/结束、工作日计算、格式化解析
+- **FileUtils**：10 个文件操作方法 — 读写、复制、目录操作、扩展名安全处理
+- **MaskUtils**：6 个脱敏方法 — 手机号/身份证/银行卡/邮箱/姓名掩码
+- **ValidationUtils**：8 个校验方法 — 手机号/邮箱/身份证/统一社会信用代码（含校验码）
+- **StringUtils 增强**：`truncate`、`abbreviate`、`normalizeSpace`
+
+### 体验改善
+- **SpringContextHolder @Deprecated**：标记为过时并文档说明替代方案
+- **AuthInfoUtils 日志增强**：`getClaim` 未识别 claim 名输出 debug 日志
+- **CidrUtils 缓存**：IP 范围判断结果缓存（ConcurrentHashMap，上限 1024）
+- **DigestUtils 缓冲区**：ThreadLocal 缓冲区带复用计数自动重置
+
+> **文档与代码一致性**：本文档严格对齐模块内真实源码。

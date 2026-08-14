@@ -638,7 +638,6 @@ public final class CacheBuilder<K, V> {
           new WriteBehindCache<>(
               cache,
               writer,
-              taskExecutor != null ? taskExecutor : listenerExecutor,
               writeBehindFlushIntervalMs,
               writeBehindBatchSize,
               writeBehindMaxQueueSize);

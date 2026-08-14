@@ -146,7 +146,7 @@ public class CacheThreadPoolManager implements DisposableBean {
             TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(1024),
             factory,
-            new ThreadPoolExecutor.CallerRunsPolicy());
+            (r, exec) -> log.warn("缓存线程池队列已满，拒绝任务: pool={}", name));
 
     log.info("缓存线程池已创建: name={}, coreSize={}, maxSize={}", name, coreSize, maxSize);
     return executor;

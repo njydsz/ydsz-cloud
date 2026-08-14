@@ -169,27 +169,51 @@ public abstract class DataPermissionInnerInterceptor extends CachingJsqlParserSu
      * @param table 目标表
      * @return 需要拦截时返回 true
      */
-    protected boolean shouldApply(net.sf.jsqlparser.schema.Table table) {
+    public boolean shouldApply(net.sf.jsqlparser.schema.Table table) {
         return DataPermissionHelper.shouldApply(table, config, normalizedTables);
     }
 
     // ====================================================================
-    // 抽象方法（子类必须实现）
+    // 默认空实现（子类按需覆盖）
     // ====================================================================
 
-    /** 处理 SELECT 语句 */
+    /**
+     * 处理 SELECT 语句。
+     *
+     * <p>默认空实现，子类可按需覆盖。
+     */
     @Override
-    protected abstract void processSelect(Select select, int index, String sql, Object obj);
+    protected void processSelect(Select select, int index, String sql, Object obj) {
+        // 默认不处理
+    }
 
-    /** 处理 INSERT 语句 */
+    /**
+     * 处理 INSERT 语句。
+     *
+     * <p>默认空实现，子类可按需覆盖。
+     */
     @Override
-    protected abstract void processInsert(Insert insert, int index, String sql, Object obj);
+    protected void processInsert(Insert insert, int index, String sql, Object obj) {
+        // 默认不处理
+    }
 
-    /** 处理 UPDATE 语句 */
+    /**
+     * 处理 UPDATE 语句。
+     *
+     * <p>默认空实现，子类可按需覆盖。
+     */
     @Override
-    protected abstract void processUpdate(Update update, int index, String sql, Object obj);
+    protected void processUpdate(Update update, int index, String sql, Object obj) {
+        // 默认不处理
+    }
 
-    /** 处理 DELETE 语句 */
+    /**
+     * 处理 DELETE 语句。
+     *
+     * <p>默认空实现，子类可按需覆盖。
+     */
     @Override
-    protected abstract void processDelete(Delete delete, int index, String sql, Object obj);
+    protected void processDelete(Delete delete, int index, String sql, Object obj) {
+        // 默认不处理
+    }
 }

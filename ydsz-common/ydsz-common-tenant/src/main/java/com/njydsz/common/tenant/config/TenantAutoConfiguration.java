@@ -137,13 +137,14 @@ public class TenantAutoConfiguration {
      *
      * <p>当容器中不存在其他 {@link TenantLifecycleManager} 实现时启用。
      *
+     * @param properties 租户配置（用于设置 @Autowired 字段，非构造注入）
      * @return 内存版生命周期管理器
      */
     @Bean
     @ConditionalOnMissingBean(TenantLifecycleManager.class)
-    public InMemoryTenantLifecycleManager inMemoryTenantLifecycleManager(
-            TenantProperties properties) {
-        return new InMemoryTenantLifecycleManager(properties);
+    public InMemoryTenantLifecycleManager inMemoryTenantLifecycleManager(TenantProperties properties) {
+        // properties 参数保证 TenantProperties 先于本 Bean 初始化；实际字段由 @Autowired 注入
+        return new InMemoryTenantLifecycleManager();
     }
 
     /**
@@ -152,7 +153,6 @@ public class TenantAutoConfiguration {
      * <p>仅当 classpath 中存在 {@code StringRedisTemplate} 时激活，
      * 自动覆盖内存版成为主管理器。
      *
-     * @param properties 租户配置
      * @param redisTemplate Redis 模板
      * @return Redis 版生命周期管理器
      */
@@ -160,9 +160,8 @@ public class TenantAutoConfiguration {
     @ConditionalOnClass(name = "org.springframework.data.redis.core.StringRedisTemplate")
     @ConditionalOnMissingBean
     public RedisTenantLifecycleManager redisTenantLifecycleManager(
-            TenantProperties properties,
             ObjectProvider<org.springframework.data.redis.core.StringRedisTemplate> redisTemplate) {
-        return new RedisTenantLifecycleManager(properties, redisTemplate.getIfAvailable());
+        return new RedisTenantLifecycleManager(redisTemplate.getIfAvailable());
     }
 
     // -----------------------------------------------------------------------
@@ -216,6 +215,7 @@ public class TenantAutoConfiguration {
     /**
      * 租户表索引校验器（异步，DataSource 存在时）。
      *
+     * @param dataSource 数据源
      * @param properties 租户配置
      * @return 索引校验器
      */
@@ -224,9 +224,10 @@ public class TenantAutoConfiguration {
     @ConditionalOnProperty(prefix = "ydsz.tenant.validation.index-check",
             name = "enabled", havingValue = "true", matchIfMissing = true)
     @ConditionalOnMissingBean
-    public TenantIndexValidator tenantIndexValidator(TenantProperties properties,
+    public TenantIndexValidator tenantIndexValidator(DataSource dataSource,
+            TenantProperties properties,
             ObjectProvider<ThreadPoolTaskExecutor> taskExecutorProvider) {
-        return new TenantIndexValidator(properties, taskExecutorProvider);
+        return new TenantIndexValidator(dataSource, properties, taskExecutorProvider);
     }
 
     /**

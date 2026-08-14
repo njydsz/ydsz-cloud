@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.Executor;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -30,29 +30,37 @@ import com.njydsz.common.cache.support.CacheWriter;
 /**
  * Write-Behind 缓存装饰器 — 异步写回模式
  *
- * <p>写入操作先更新缓存，然后异步批量写入后端存储。 相比 Write-Through 模式，
+ * <p>写入操作先更新缓存，然后异步批量写入后端存储。相比 Write-Behind 模式，
  * Write-Behind 提供更高的写入吞吐量，但有数据丢失风险。
  *
  * <p>工作原理：
  *
  * <ol>
- *   <li>put：先写入缓存，然后将写入操作加入队列
- *   <li>后台线程定期从队列批量取出操作，写入后端存储
- *   <li>如果队列满，降级为同步写入
+ *   <li>put：先写入缓存，然后将写入操作加入队列</li>
+ *   <li>后台线程定期从队列批量取出操作，写入后端存储</li>
+ *   <li>如果队列满，降级为同步写入</li>
  * </ol>
+ *
+ * <p>线程模型：
+ *
+ * <ul>
+ *   <li>调度线程（scheduleWithFixedDelay）：仅触发 flush 信号，不执行实际写入，
+ *       避免 Thread.sleep 阻塞调度线程导致后续 flush 被跳过</li>
+ *   <li>工作线程（CacheThreadPoolManager）：执行实际的后端写入，
+ *       支持重试/死信/降级，即使阻塞也不影响调度</li>
+ * </ul>
  *
  * <p>适用场景：
  *
  * <ul>
- *   <li>高写入吞吐场景（如计数器、日志）
- *   <li>可容忍短暂数据不一致的场景
- *   <li>后端存储写入延迟较高的场景
+ *   <li>高写入吞吐场景（如计数器、日志）</li>
+ *   <li>可容忍短暂数据不一致的场景</li>
+ *   <li>后端存储写入延迟较高的场景</li>
  * </ul>
  *
  * @param <K> 键类型
  * @param <V> 值类型
  * @author ydsz-team
- *
  * @since 1.0.0
  */
 public class WriteBehindCache<K, V> implements Cache<K, V>, AutoCloseable {
@@ -61,7 +69,6 @@ public class WriteBehindCache<K, V> implements Cache<K, V>, AutoCloseable {
 
   private final Cache<K, V> delegate;
   private final CacheWriter<? super K, ? super V> writer;
-  private final ScheduledExecutorService batchExecutor;
   private final int batchSize;
 
   /** 待写入队列 */
@@ -87,6 +94,9 @@ public class WriteBehindCache<K, V> implements Cache<K, V>, AutoCloseable {
   /** 最大队列长度（超过后降级为同步写入） */
   private final int maxQueueSize;
 
+  /** 执行实际写入的工作线程池（不阻塞调度线程） */
+  private final java.util.concurrent.ExecutorService flushWorker;
+
   /** 写操作类型 */
   private enum OpType {
     WRITE,
@@ -111,7 +121,6 @@ public class WriteBehindCache<K, V> implements Cache<K, V>, AutoCloseable {
    *
    * @param delegate 底层缓存
    * @param writer 后端写入器
-   * @param executor 异步写入执行器
    * @param flushIntervalMs 批量刷新间隔（毫秒）
    * @param batchSize 每批最大写入数量
    * @param maxQueueSize 最大队列长度
@@ -119,7 +128,6 @@ public class WriteBehindCache<K, V> implements Cache<K, V>, AutoCloseable {
   public WriteBehindCache(
       Cache<K, V> delegate,
       CacheWriter<? super K, ? super V> writer,
-      Executor executor,
       long flushIntervalMs,
       int batchSize,
       int maxQueueSize) {
@@ -128,10 +136,25 @@ public class WriteBehindCache<K, V> implements Cache<K, V>, AutoCloseable {
     this.batchSize = batchSize;
     this.maxQueueSize = maxQueueSize;
 
-    this.batchExecutor =
-        CacheThreadPoolManager.getInstance().getOrCreateScheduledPool("write-behind-flusher", 1);
-    this.batchExecutor.scheduleWithFixedDelay(
-        this::flushBatch, flushIntervalMs, flushIntervalMs, TimeUnit.MILLISECONDS);
+    // 实际执行后端写入的工作线程池（CallerRunsPolicy 会导致调用者被阻塞，因此使用自定义拒绝策略）
+    this.flushWorker = CacheThreadPoolManager.getInstance()
+        .getOrCreatePool("write-behind-worker", 2, 4);
+
+    // 调度线程仅触发 flush 信号，不执行实际写入
+    ScheduledExecutorService scheduler =
+        CacheThreadPoolManager.getInstance()
+            .getOrCreateScheduledPool("write-behind-scheduler", 1);
+    scheduler.scheduleWithFixedDelay(
+        () -> {
+          try {
+            flushWorker.submit(this::flushBatch);
+          } catch (RejectedExecutionException e) {
+            log.warn("Write-Behind 刷新任务被拒绝，队列可能已满");
+          }
+        },
+        flushIntervalMs,
+        flushIntervalMs,
+        TimeUnit.MILLISECONDS);
 
     log.info("WriteBehindCache 已创建, flushInterval={}ms, batchSize={}, maxQueue={}",
         flushIntervalMs, batchSize, maxQueueSize);
@@ -169,7 +192,7 @@ public class WriteBehindCache<K, V> implements Cache<K, V>, AutoCloseable {
   /**
    * 移除指定键并返回被移除的值，同时异步排队删除后端数据。
    *
-   * <p>仅在键真实存在（返回值非 null）时才产生 DELETE 写操作， 避免无谓的后端删除调用。
+   * <p>仅在键真实存在（返回值非 null）时才产生 DELETE 写操作，避免无谓的后端删除调用。
    *
    * @param key 缓存键
    * @return 被移除的值；键不存在时返回 {@code null}
@@ -183,7 +206,11 @@ public class WriteBehindCache<K, V> implements Cache<K, V>, AutoCloseable {
     return value;
   }
 
-  /** 批量刷新队列中的写操作到后端存储（带重试 + 死信） */
+  /**
+   * 批量刷新队列中的写操作到后端存储（带重试 + 死信）
+   *
+   * <p>此方法在工作线程池中执行，即使内部有 Thread.sleep 重试也不会阻塞调度线程。
+   */
   private void flushBatch() {
     int count = 0;
     WriteOp<K, V> op;
@@ -203,6 +230,7 @@ public class WriteBehindCache<K, V> implements Cache<K, V>, AutoCloseable {
             retryCount.incrementAndGet();
             log.warn("Write-Behind 写入重试 {}/{}: key={}, op={}",
                 attempt + 1, MAX_RETRY, op.key, op.type, e);
+            // 在工作线程中 sleep 不影响调度线程
             try {
               Thread.sleep(RETRY_DELAY_MS * (attempt + 1));
             } catch (InterruptedException ie) {
@@ -258,9 +286,7 @@ public class WriteBehindCache<K, V> implements Cache<K, V>, AutoCloseable {
    */
   @Override
   public void close() {
-    // 刷新剩余操作
     flushBatch();
-    // 线程池由 CacheThreadPoolManager 统一管理，不单独关闭
     log.info("WriteBehindCache 已关闭");
   }
 
@@ -371,7 +397,6 @@ public class WriteBehindCache<K, V> implements Cache<K, V>, AutoCloseable {
   @Override
   public void putAll(Map<K, V> map) {
     delegate.putAll(map);
-    long now = System.nanoTime();
     for (Map.Entry<K, V> entry : map.entrySet()) {
       if (writeQueue.size() >= maxQueueSize) {
         // 队列满，降级为同步写入
