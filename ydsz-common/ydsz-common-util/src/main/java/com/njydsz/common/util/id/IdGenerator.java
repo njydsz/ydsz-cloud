@@ -5,13 +5,17 @@ import java.util.concurrent.ThreadLocalRandom;
 import com.njydsz.common.util.spring.SpringContextHolder;
 
 /**
- * 分布式 ID 静态工具入口。
+ * 分布式 ID 生成器统一门面。
  *
  * <p>为非 Spring 管理的类（Domain Model、工具类、非 Bean Pojo）提供
- * 便捷的 Snowflake ID 生成入口，替代 {@code UUID.randomUUID()}。</p>
+ * 便捷的 ID 生成入口，替代 {@code UUID.randomUUID()}。</p>
  *
- * <p>内部通过 {@link SpringContextHolder} 懒获取 {@link SnowflakeIdGenerator} Bean，
- * 容器未初始化时安全降级为伪随机 long（{@link ThreadLocalRandom}）。</p>
+ * <p><b>两种使用方式：</b>
+ * <ol>
+ *   <li><b>静态门面（本类）：</b>适用于非 Spring 托管场景，通过 {@link SpringContextHolder}
+ *       懒获取 {@link SnowflakeIdGenerator} Bean，容器未初始化时安全降级为伪随机 long</li>
+ *   <li><b>依赖注入：</b>Spring Bean 直接注入 {@link SnowflakeIdGenerator}（由 {@link SnowflakeIdBean} 注册）</li>
+ * </ol>
  *
  * <p><b>降级策略：</b>
  * <ul>
@@ -20,7 +24,8 @@ import com.njydsz.common.util.spring.SpringContextHolder;
  *   <li>ydsz.util.snowflake.fallback-to-uuid=true：行为与旧版一致，使用 {@code UUID.getMostSignificantBits()}</li>
  * </ul>
  *
- * <p><b>Spring Bean 应注入 {@link SnowflakeIdGenerator}，不应使用本类。</b></p>
+ * <p><b>推荐实践：</b>Spring Bean 注入 {@link SnowflakeIdGenerator} 优于使用本类，
+ * 避免服务定位器反模式。
  *
  * @author ydsz-team
  * @since 2.1.0

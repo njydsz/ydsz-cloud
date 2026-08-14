@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.health.contributor.Health;
@@ -14,6 +15,7 @@ import org.springframework.context.annotation.Configuration;
 import com.njydsz.common.jdbc.monitor.SlaveLatencyMonitor;
 import com.njydsz.common.jdbc.monitor.SqlAstCache;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -21,16 +23,16 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>暴露以下运行时状态供运维监控：
  * <ul>
- *   <li>从库延迟监控健康状态</li>
- *   <li>SQL 解析缓存统计</li>
+ *   <li>从库延迟监控健康状态（健康从库列表、被摘除从库）</li>
+ *   <li>SQL 解析缓存统计（当前容量、最大容量）</li>
  * </ul>
  *
  * <p>端点路径：{@code /actuator/health/jdbc}
  *
  * <p>触发条件：
  * <ul>
- *   <li>classpath 存在 {@code spring-boot-actuator} / {@code spring-boot-health}</li>
- *   <li>（可选）ydsz.jdbc.health.enabled=true（默认启用）</li>
+ *   <li>classpath 存在 {@code spring-boot-health} 模块</li>
+ *   <li>{@code ydsz.jdbc.health.enabled=true}（默认启用）</li>
  * </ul>
  *
  * @author ydsz-team
@@ -47,12 +49,12 @@ public class JdbcHealthIndicator {
     /**
      * 注册 JDBC 健康指标 Bean
      *
-     * @param latencyMonitor 从库延迟监控器（可为 null，表示未启用读写分离监控）
+     * @param latencyMonitorProvider 从库延迟监控器提供者（可为 null，表示未启用读写分离监控）
      * @return HealthIndicator 实例
      */
     @Bean
-    public HealthIndicator jdbcHealthIndicator(ObjectProvider<SlaveLatencyMonitor> latencyMonitor) {
-        return new JdbcHealthIndicatorImpl(latencyMonitor.getIfAvailable());
+    public HealthIndicator jdbcHealthIndicator(ObjectProvider<SlaveLatencyMonitor> latencyMonitorProvider) {
+        return new JdbcHealthIndicatorImpl(latencyMonitorProvider.getIfAvailable());
     }
 
     /**

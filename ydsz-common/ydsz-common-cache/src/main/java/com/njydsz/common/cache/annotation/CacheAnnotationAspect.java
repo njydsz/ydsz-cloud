@@ -7,6 +7,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -70,6 +71,12 @@ public class CacheAnnotationAspect {
   /** 缓存最后刷新时间戳（cacheName:key → nanoTime） */
   private final ConcurrentHashMap<String, Long> refreshTimestamps = new ConcurrentHashMap<>();
 
+  /** 防击穿每键锁（cacheName:key → lock）确保同一 key 同时只有一个线程回源 */
+  private final ConcurrentHashMap<String, ReentrantLock> keyLocks = new ConcurrentHashMap<>();
+
+  /** 是否启用防击穿保护（默认开启） */
+  private volatile boolean stampedeProtectionEnabled = true;
+
   /**
    * 创建缓存注解切面
    *
@@ -77,6 +84,18 @@ public class CacheAnnotationAspect {
    */
   public CacheAnnotationAspect(CacheManager cacheManager) {
     this.cacheManager = cacheManager;
+  }
+
+  /**
+   * 设置是否启用防击穿保护
+   *
+   * <p>默认开启。在高并发场景下，同一 key 的缓存失效后，
+   * 多个线程可能同时回源查询。开启此功能后，同一 key 同时只有一个线程执行回源方法。
+   *
+   * @param enabled true 表示开启，false 表示关闭
+   */
+  public void setStampedeProtectionEnabled(boolean enabled) {
+    this.stampedeProtectionEnabled = enabled;
   }
 
   /**
@@ -129,17 +148,77 @@ public class CacheAnnotationAspect {
       return cachedValue;
     }
 
-    // 缓存未命中，执行方法
-    Object result = joinPoint.proceed();
+    // 缓存未命中，防击穿保护下只允许一个线程回源
+    if (stampedeProtectionEnabled) {
+      return loadWithProtection(cached, springCache, cacheKey, joinPoint, method, args);
+    }
 
-    // 空值排除
+    // 无防击穿保护：直接执行方法
+    return doExecuteAndCache(cached, springCache, cacheKey, joinPoint, method, args);
+  }
+
+  /**
+   * 防击穿保护加载 — 同一 key 仅允许一个线程回源，其他线程阻塞等待结果
+   *
+   * <p>使用 per-key ReentrantLock：
+   * <ol>
+   *   <li>通过 {@code computeIfAbsent} 获取或创建锁</li>
+   *   <li>先到先得：第一个线程获取锁后执行回源方法</li>
+   *   <li>后续线程发现锁已被占用，等待锁释放后从缓存读取结果（double-check）</li>
+   * </ol>
+   *
+   * @param cached 缓存注解
+   * @param springCache Spring Cache
+   * @param cacheKey 缓存 key
+   * @param joinPoint AOP 连接点
+   * @param method 目标方法
+   * @param args 方法参数
+   * @return 缓存值或方法执行结果
+   */
+  private Object loadWithProtection(
+      Cached cached, Cache springCache, Object cacheKey,
+      ProceedingJoinPoint joinPoint, Method method, Object[] args) throws Throwable {
+    String lockKey = cached.name() + ":" + cacheKey;
+    ReentrantLock lock = keyLocks.computeIfAbsent(lockKey, k -> new ReentrantLock());
+    lock.lock();
+    try {
+      // double-check：获取锁后再次检查缓存（可能已由前一线程写入）
+      Cache.ValueWrapper existing = springCache.get(cacheKey);
+      if (existing != null) {
+        Object val = existing.get();
+        if (val == null && cached.unlessNull()) {
+          return null;
+        }
+        return val;
+      }
+      // 执行回源方法并缓存
+      return doExecuteAndCache(cached, springCache, cacheKey, joinPoint, method, args);
+    } finally {
+      lock.unlock();
+      // 清理锁对象（避免长时间运行后锁对象无限累积）
+      keyLocks.remove(lockKey, lock);
+    }
+  }
+
+  /**
+   * 执行方法并将结果写入缓存
+   *
+   * @param cached 缓存注解
+   * @param springCache Spring Cache
+   * @param cacheKey 缓存 key
+   * @param joinPoint AOP 连接点
+   * @param method 目标方法
+   * @param args 方法参数
+   * @return 方法执行结果
+   */
+  private Object doExecuteAndCache(
+      Cached cached, Cache springCache, Object cacheKey,
+      ProceedingJoinPoint joinPoint, Method method, Object[] args) throws Throwable {
+    Object result = joinPoint.proceed();
     if (result == null && cached.unlessNull()) {
       return null;
     }
-
-    // 写入缓存
     springCache.put(cacheKey, result);
-    // 记录刷新时间戳
     CacheRefresh cacheRefresh = method.getAnnotation(CacheRefresh.class);
     if (cacheRefresh != null && cacheRefresh.refreshAfterWrite() > 0) {
       refreshTimestamps.put(cached.name() + ":" + cacheKey, System.nanoTime());

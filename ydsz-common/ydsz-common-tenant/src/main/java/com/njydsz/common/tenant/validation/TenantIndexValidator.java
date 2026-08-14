@@ -12,9 +12,12 @@ import java.util.Set;
 
 import javax.sql.DataSource;
 
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.tenant.config.TenantProperties;
@@ -40,32 +43,58 @@ import lombok.extern.slf4j.Slf4j;
  * <p><b>注意：</b>此校验器仅检查索引是否<b>包含</b>租户列，不验证索引顺序或覆盖度。
  * 对于大表的复杂查询路径，建议结合 EXPLAIN 进一步分析。
  *
+ * <p><b>装配守卫：</b>仅当 {@link DataSource} Bean 存在时装配，
+ * 避免非 JDBC 场景（纯 WebFlux/网关/无数据库模块）启动失败。
+ *
+ * <p><b>异步化：</b>校验逻辑在独立单线程池中执行，不阻塞主线程的
+ * {@code ApplicationReadyEvent} 处理和应用就绪。
+ *
  * @author ydsz-team
  * @since 1.1.0
  */
 @Slf4j
 @Component
+@ConditionalOnBean(DataSource.class)
 @ConditionalOnProperty(prefix = "ydsz.tenant.validation.index-check",
         name = "enabled", havingValue = "true", matchIfMissing = true)
 public class TenantIndexValidator {
 
     private final DataSource dataSource;
     private final TenantProperties properties;
+    private final ObjectProvider<ThreadPoolTaskExecutor> taskExecutorProvider;
 
-    public TenantIndexValidator(DataSource dataSource, TenantProperties properties) {
+    public TenantIndexValidator(DataSource dataSource, TenantProperties properties,
+                                ObjectProvider<ThreadPoolTaskExecutor> taskExecutorProvider) {
         this.dataSource = dataSource;
         this.properties = properties;
+        this.taskExecutorProvider = taskExecutorProvider;
     }
 
     /**
-     * 应用启动完成后执行索引校验。
+     * 应用启动完成后异步执行索引校验。
+     *
+     * <p>校验在独立线程中执行，避免元数据查询阻塞应用就绪。
      */
     @EventListener(ApplicationReadyEvent.class)
     public void validateIndexes() {
         if (!properties.isEnabled()) {
             return;
         }
+        // 优先使用业务配置的线程池，否则使用临时守护线程
+        ThreadPoolTaskExecutor executor = taskExecutorProvider.getIfAvailable();
+        if (executor != null) {
+            executor.submit(this::doValidateIndexes);
+        } else {
+            Thread thread = new Thread(this::doValidateIndexes, "tenant-index-validator");
+            thread.setDaemon(true);
+            thread.start();
+        }
+    }
 
+    /**
+     * 实际校验逻辑（数据库元数据查询）。
+     */
+    private void doValidateIndexes() {
         log.info("开始校验租户表索引...");
         List<IndexWarning> warnings = new ArrayList<>();
 
