@@ -5,4 +5,5 @@ com.njydsz.common.jdbc.config.SqlTraceAutoConfiguration
 com.njydsz.common.jdbc.config.SafeQueryAutoConfiguration
 com.njydsz.common.jdbc.config.ReadWriteSplittingAutoConfiguration
 com.njydsz.common.jdbc.config.DatabaseCircuitBreakerAutoConfiguration
+com.njydsz.common.jdbc.actuator.JdbcHealthIndicator
 com.njydsz.common.jdbc.exception.DataIntegrityExceptionHandler

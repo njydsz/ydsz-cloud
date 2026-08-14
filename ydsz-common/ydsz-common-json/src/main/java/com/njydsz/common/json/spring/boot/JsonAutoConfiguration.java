@@ -12,6 +12,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.converter.Converter;
 
@@ -112,6 +113,23 @@ public class JsonAutoConfiguration {
                 }
             };
         };
+    }
+
+    /**
+     * 自动预热 Runner（P1-E2）。
+     *
+     * <p>仅在 {@code ydsz.json.warmup-enabled=true} 时注册，应用启动阶段自动扫描
+     * Spring 容器中的 Controller Bean，提取 {@code @RequestBody}/{@code @ResponseBody} 类型
+     * 并调用 {@link com.njydsz.common.json.YdszJson#warmup(Class...)} 触发缓存构建。</p>
+     *
+     * @param applicationContext Spring 应用上下文
+     * @return 预热 Runner
+     * @since 1.2.1
+     */
+    @Bean
+    @ConditionalOnProperty(prefix = "ydsz.json", name = "warmup-enabled", havingValue = "true")
+    public JsonWarmupRunner jsonWarmupRunner(ApplicationContext applicationContext) {
+        return new JsonWarmupRunner(applicationContext);
     }
 
     /**

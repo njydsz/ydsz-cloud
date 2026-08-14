@@ -2,10 +2,6 @@ package com.njydsz.common.tenant.datasource.resolver;
 
 import java.util.Map;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Primary;
-import org.springframework.stereotype.Component;
-
 import com.njydsz.common.tenant.config.TenantProperties;
 
 /**
@@ -23,16 +19,14 @@ import com.njydsz.common.tenant.config.TenantProperties;
  *         initech: "ds_itech_primary"
  * </pre>
  *
- * <p>当配置了 {@code ydsz.tenant.datasource.mapping} 时此解析器自动激活为 Primary，
- * 未匹配时回退到 {@link NamingConventionResolver} 的命名约定。
+ * <p>由 {@code TenantAutoConfiguration} 以
+ * {@code @ConditionalOnProperty(prefix="ydsz.tenant.datasource", name="mapping")}
+ * 条件注册为 Primary；未匹配时回退到 {@link NamingConventionResolver} 的命名约定。
  *
  * @author ydsz-team
  * @since 1.1.0
  * @see DatasourceKeyResolver
  */
-@Component
-@Primary
-@ConditionalOnProperty(prefix = "ydsz.tenant.datasource", name = "mapping")
 public class ConfigurationResolver implements DatasourceKeyResolver {
 
     private final Map<String, String> mapping;

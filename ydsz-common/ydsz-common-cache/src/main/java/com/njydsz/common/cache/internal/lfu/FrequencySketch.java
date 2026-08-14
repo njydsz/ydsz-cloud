@@ -125,21 +125,38 @@ public final class FrequencySketch {
   public void increment(Object e) {
     int start = hash(e) & resetMask;
     int increment = hash2(e) & resetMask;
+    // 保证增量与表长（2 的幂）互质：若为偶数或 0，强制置为奇数增量
+    // 避免 4 路探测退化为更少槽位，导致 Count-Min Sketch 质量下降
+    if ((increment & 1) == 0 || increment == 0) {
+      increment = (increment | 1) + 1;
+      if ((increment & 1) == 0) {
+        increment = 1;
+      }
+    }
 
     for (int i = 0; i < 4; i++) {
       int index = (start + i * increment) & resetMask;
-      int offset = (index & 3) << counterShift;
-      long slot;
-      int count;
-      do {
-        slot = (long) TABLE_VARHANDLE.getVolatile(table, index >>> counterShift);
-        count = (int) ((slot >>> offset) & counterMask);
-        if (count >= maxCount) {
-          break;
-        }
-      } while (!TABLE_VARHANDLE.compareAndSet(
-          table, index >>> counterShift, slot, slot + (1L << offset)));
+      incrementSlot(index);
     }
+  }
+
+  /**
+   * 对指定槽位计数器执行 CAS 自增（饱和则丢弃）
+   *
+   * @param index 槽位索引
+   */
+  private void incrementSlot(int index) {
+    int offset = (index & 3) << counterShift;
+    long slot;
+    int count;
+    do {
+      slot = (long) TABLE_VARHANDLE.getVolatile(table, index >>> counterShift);
+      count = (int) ((slot >>> offset) & counterMask);
+      if (count >= maxCount) {
+        break;
+      }
+    } while (!TABLE_VARHANDLE.compareAndSet(
+        table, index >>> counterShift, slot, slot + (1L << offset)));
   }
 
   /**

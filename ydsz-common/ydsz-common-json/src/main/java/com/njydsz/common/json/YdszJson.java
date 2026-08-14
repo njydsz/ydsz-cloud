@@ -1,5 +1,22 @@
 package com.njydsz.common.json;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Writer;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.njydsz.common.json.deserializer.JsonDeserializer;
 import com.njydsz.common.json.exception.JsonException;
 import com.njydsz.common.json.internal.JsonConfig;
@@ -9,21 +26,13 @@ import com.njydsz.common.json.provider.SerializationProvider;
 import com.njydsz.common.json.reader.JSONReader;
 import com.njydsz.common.json.serializer.JsonSerializer;
 import com.njydsz.common.json.serializer.SerializerRegistry;
-import com.njydsz.common.json.tree.*;
+import com.njydsz.common.json.tree.ArrayNode;
+import com.njydsz.common.json.tree.JsonNode;
+import com.njydsz.common.json.tree.JsonPatch;
+import com.njydsz.common.json.tree.JsonPatch.PatchOp;
+import com.njydsz.common.json.tree.ObjectNode;
 import com.njydsz.common.json.type.JsonType;
 import com.njydsz.common.json.type.TypeFactory;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Writer;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Type;
-import java.util.*;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * YdszJson - 高性能 JSON 工具类
@@ -679,10 +688,14 @@ public class YdszJson {
         SerializationProvider.serializeToWriter(obj, writer);
     }
 
+    /** 默认 InputStream 读取上限（10MB），防止无界流导致 OOM */
+    private static final long DEFAULT_MAX_INPUT_STREAM_SIZE = 10L * 1024 * 1024;
+
     /**
      * 从 InputStream 读取 JSON 并反序列化为指定类型。
      *
-     * <p>适用于大 JSON 输入场景，但仍需全量读入内存进行解析。</p>
+     * <p>使用有界读取（默认 10MB 上限），防止恶意或无界 InputStream 导致 OOM。
+     * 超过上限时会抛出 {@link JsonException}。</p>
      *
      * @param in 输入流
      * @param clazz 目标类型
@@ -691,11 +704,29 @@ public class YdszJson {
      * @since 1.0.0
      */
     public static <T> T toObject(InputStream in, Class<T> clazz) {
+        return toObject(in, DEFAULT_MAX_INPUT_STREAM_SIZE, clazz);
+    }
+
+    /**
+     * 从 InputStream 读取 JSON 并反序列化为指定类型（自定义上限）。
+     *
+     * <p>P1-P2 流式安全保护：替代 {@code InputStream.readAllBytes()} 无界读取，
+     * 超限时立即抛异常，防止大输入导致 OOM。</p>
+     *
+     * @param in       输入流，不允许 null
+     * @param maxBytes 最大允许读取字节数
+     * @param clazz    目标类型
+     * @param <T>      类型参数
+     * @return 反序列化后的对象；若输入流为空返回 null
+     * @throws JsonException 读取超限或 IO 错误
+     * @since 1.2.1
+     */
+    public static <T> T toObject(InputStream in, long maxBytes, Class<T> clazz) {
         if (in == null) {
             return null;
         }
         try {
-            byte[] bytes = in.readAllBytes();
+            byte[] bytes = readBoundedBytes(in, maxBytes);
             if (bytes.length == 0) {
                 return null;
             }
@@ -719,7 +750,7 @@ public class YdszJson {
             return null;
         }
         try {
-            byte[] bytes = in.readAllBytes();
+            byte[] bytes = readBoundedBytes(in, DEFAULT_MAX_INPUT_STREAM_SIZE);
             if (bytes.length == 0) {
                 return null;
             }
@@ -727,6 +758,34 @@ public class YdszJson {
         } catch (IOException e) {
             throw new JsonException("Failed to read from InputStream", e);
         }
+    }
+
+    /**
+     * 从输入流中读取最多 maxBytes 字节，超限时立即抛 IOException。
+     *
+     * <p>对标 JsonHttpMessageConverter.readBoundedBytes()——有界读取防御 OOM，
+     * 与 HTTP 层的安全策略一致，适用于任意 InputStream 场景。</p>
+     *
+     * @param input   输入流
+     * @param maxBytes 最大允许读取字节数
+     * @return 读取的字节数组（长度不超过 maxBytes）
+     * @throws IOException 读取失败或超过大小限制
+     * @since 1.2.1
+     */
+    private static byte[] readBoundedBytes(InputStream input, long maxBytes) throws IOException {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream(8192);
+        byte[] chunk = new byte[8192];
+        long totalRead = 0;
+        int n;
+        while ((n = input.read(chunk)) != -1) {
+            totalRead += n;
+            if (totalRead > maxBytes) {
+                throw new IOException("InputStream exceeds maximum size: " + maxBytes
+                        + " (read " + totalRead + " bytes so far)");
+            }
+            buffer.write(chunk, 0, n);
+        }
+        return buffer.toByteArray();
     }
 
     // ==================== 预热 ====================
@@ -866,8 +925,8 @@ public class YdszJson {
      * @since 1.2.0
      * @see com.njydsz.common.json.tree.JsonPatch#parse(String)
      */
-    public static List<com.njydsz.common.json.tree.JsonPatch.PatchOp> parsePatch(String patchJson) {
-        return com.njydsz.common.json.tree.JsonPatch.parse(patchJson);
+    public static List<PatchOp> parsePatch(String patchJson) {
+        return JsonPatch.parse(patchJson);
     }
 
     /**
@@ -881,7 +940,7 @@ public class YdszJson {
      * @since 1.2.0
      */
     public static <T> T applyPatch(String patchJson, T target, Class<T> clazz) {
-        return com.njydsz.common.json.tree.JsonPatch.apply(patchJson, target, clazz);
+        return JsonPatch.apply(patchJson, target, clazz);
     }
 
     /**
@@ -897,6 +956,6 @@ public class YdszJson {
      * @since 1.2.0
      */
     public static <T> T applyMergePatch(String mergeJson, T target, Class<T> clazz) {
-        return com.njydsz.common.json.tree.JsonPatch.applyMerge(mergeJson, target, clazz);
+        return JsonPatch.applyMerge(mergeJson, target, clazz);
     }
 }

@@ -1,8 +1,11 @@
 package com.njydsz.common.tenant.config;
 
+import javax.sql.DataSource;
+
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -14,11 +17,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
+import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.jdbc.datasource.DynamicRoutingDataSource;
+import com.njydsz.common.redis.service.RedisRateLimiter;
+import com.njydsz.common.redis.tenant.TenantRedisKeyPrefixer;
 import com.njydsz.common.tenant.SystemTenantContextRunner;
 import com.njydsz.common.tenant.annotation.TenantColumnScanner;
 import com.njydsz.common.tenant.async.TenantContextTaskDecorator;
-import com.njydsz.common.tenant.metrics.TenantMetrics;
 import com.njydsz.common.tenant.datasource.TenantDataSourceFilter;
 import com.njydsz.common.tenant.datasource.TenantDataSourceRouter;
 import com.njydsz.common.tenant.datasource.resolver.ConfigurationResolver;
@@ -28,16 +33,15 @@ import com.njydsz.common.tenant.diagnostics.TenantDiagnosticsContributor;
 import com.njydsz.common.tenant.feign.TenantContextFeignInterceptor;
 import com.njydsz.common.tenant.health.TenantHealthIndicator;
 import com.njydsz.common.tenant.interceptor.TenantInterceptorProvider;
+import com.njydsz.common.tenant.lifecycle.InMemoryTenantLifecycleManager;
+import com.njydsz.common.tenant.lifecycle.RedisTenantLifecycleManager;
 import com.njydsz.common.tenant.lifecycle.TenantLifecycleManager;
 import com.njydsz.common.tenant.metrics.TenantMetrics;
+import com.njydsz.common.tenant.ratelimit.TenantRateLimiter;
+import com.njydsz.common.tenant.validation.TenantIndexValidator;
 import com.njydsz.common.tenant.web.TenantContextWebFilter;
 
 import lombok.extern.slf4j.Slf4j;
-
-import com.njydsz.common.redis.service.RedisRateLimiter;
-import com.njydsz.common.redis.tenant.TenantRedisKeyPrefixer;
-import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.tenant.ratelimit.TenantRateLimiter;
 import io.micrometer.core.instrument.MeterRegistry;
 /**
  * 多租户自动装配。
@@ -122,6 +126,107 @@ public class TenantAutoConfiguration {
     public TenantPropertiesAnnotationPopulator tenantPropertiesAnnotationPopulator(
             TenantColumnScanner scanner) {
         return new TenantPropertiesAnnotationPopulator(scanner);
+    }
+
+    // -----------------------------------------------------------------------
+    // 租户生命周期管理器（替代 @Component，统一注册入口）
+    // -----------------------------------------------------------------------
+
+    /**
+     * 内存版租户生命周期兜底实现。
+     *
+     * <p>当容器中不存在其他 {@link TenantLifecycleManager} 实现时启用。
+     *
+     * @return 内存版生命周期管理器
+     */
+    @Bean
+    @ConditionalOnMissingBean(TenantLifecycleManager.class)
+    public InMemoryTenantLifecycleManager inMemoryTenantLifecycleManager(
+            TenantProperties properties) {
+        return new InMemoryTenantLifecycleManager(properties);
+    }
+
+    /**
+     * Redis 版租户生命周期实现（优先）。
+     *
+     * <p>仅当 classpath 中存在 {@code StringRedisTemplate} 时激活，
+     * 自动覆盖内存版成为主管理器。
+     *
+     * @param properties 租户配置
+     * @param redisTemplate Redis 模板
+     * @return Redis 版生命周期管理器
+     */
+    @Bean
+    @ConditionalOnClass(name = "org.springframework.data.redis.core.StringRedisTemplate")
+    @ConditionalOnMissingBean
+    public RedisTenantLifecycleManager redisTenantLifecycleManager(
+            TenantProperties properties,
+            ObjectProvider<org.springframework.data.redis.core.StringRedisTemplate> redisTemplate) {
+        return new RedisTenantLifecycleManager(properties, redisTemplate.getIfAvailable());
+    }
+
+    // -----------------------------------------------------------------------
+    // 租户数据源 Key 解析器（替代 @Component，统一注册入口）
+    // -----------------------------------------------------------------------
+
+    /**
+     * 配置映射型数据源解析器（Primary，有 mapping 配置时优先）。
+     *
+     * @param properties 租户配置
+     * @return 配置映射解析器
+     */
+    @Bean
+    @Primary
+    @ConditionalOnProperty(prefix = "ydsz.tenant.datasource", name = "mapping")
+    @ConditionalOnMissingBean
+    public ConfigurationResolver configurationResolver(TenantProperties properties) {
+        return new ConfigurationResolver(properties, namingConventionResolver());
+    }
+
+    /**
+     * 命名约定兜底数据源解析器（始终注册）。
+     *
+     * @return 命名约定解析器
+     */
+    @Bean
+    @ConditionalOnMissingBean(DatasourceKeyResolver.class)
+    public NamingConventionResolver namingConventionResolver() {
+        return new NamingConventionResolver();
+    }
+
+    // -----------------------------------------------------------------------
+    // 租户诊断 / 校验（替代 @Component，统一注册入口）
+    // -----------------------------------------------------------------------
+
+    /**
+     * 租户诊断信息贡献者（可选，需显式开启）。
+     *
+     * @param properties 租户配置
+     * @return 诊断贡献者
+     */
+    @Bean
+    @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
+    @ConditionalOnProperty(prefix = "management.endpoint.health",
+            name = "tenant-diagnostics.enabled", havingValue = "true", matchIfMissing = false)
+    @ConditionalOnMissingBean
+    public TenantDiagnosticsContributor tenantDiagnosticsContributor(TenantProperties properties) {
+        return new TenantDiagnosticsContributor(properties);
+    }
+
+    /**
+     * 租户表索引校验器（异步，DataSource 存在时）。
+     *
+     * @param properties 租户配置
+     * @return 索引校验器
+     */
+    @Bean
+    @ConditionalOnBean(DataSource.class)
+    @ConditionalOnProperty(prefix = "ydsz.tenant.validation.index-check",
+            name = "enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnMissingBean
+    public TenantIndexValidator tenantIndexValidator(TenantProperties properties,
+            ObjectProvider<ThreadPoolTaskExecutor> taskExecutorProvider) {
+        return new TenantIndexValidator(properties, taskExecutorProvider);
     }
 
     /**

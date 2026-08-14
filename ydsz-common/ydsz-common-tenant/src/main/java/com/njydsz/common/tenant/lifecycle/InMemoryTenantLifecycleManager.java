@@ -4,8 +4,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.stereotype.Component;
 
 /**
  * 内存版租户生命周期管理器。
@@ -21,8 +19,6 @@ import org.springframework.stereotype.Component;
  * @since 1.1.0
  * @see TenantLifecycleManager
  */
-@Component
-@ConditionalOnMissingBean(TenantLifecycleManager.class)
 public class InMemoryTenantLifecycleManager implements TenantLifecycleManager {
 
     /** 未初始化时的回退单例（Spring 容器启动前使用） */

@@ -2,8 +2,6 @@ package com.njydsz.common.cache.support;
 
 import java.util.Collection;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
@@ -14,7 +12,7 @@ import com.njydsz.common.cache.api.LoadingCache;
 import com.njydsz.common.cache.stats.CacheStats;
 
 /**
- * 缓存调度器 - 支持定时清理、自动刷新、过期检查
+ * 缓存调度器 — 支持定时清理、自动刷新、过期检查
  *
  * <p>核心功能：
  *
@@ -26,11 +24,19 @@ import com.njydsz.common.cache.stats.CacheStats;
  *   <li>健康检查：监控缓存运行状态
  * </ul>
  *
+ * <p>线程池策略：
+ *
+ * <ul>
+ *   <li>默认构造器使用 {@link CacheThreadPoolManager} 创建专用调度线程池，
+ *       避免多缓存共享全局调度器导致的线程争抢
+ *   <li>支持使用外部调度器（自定义或共享管理器中的调度池）
+ * </ul>
+ *
  * <p>使用示例：
  *
  * <pre>{@code
- * // 创建调度器
- * CacheScheduler scheduler = new CacheScheduler();
+ * // 创建调度器（使用专用线程池）
+ * CacheScheduler scheduler = new CacheScheduler("userCache");
  *
  * // 定时清理过期缓存（每分钟执行一次）
  * scheduler.scheduleCleanup(ttlCache, 1, TimeUnit.MINUTES);
@@ -44,29 +50,29 @@ import com.njydsz.common.cache.stats.CacheStats;
  *
  * @author ydsz-team
  * @since 1.0.0
- *
  */
 public class CacheScheduler {
 
-  /** 日志记录器 */
   private static final Logger log = LoggerFactory.getLogger(CacheScheduler.class);
 
   /** 调度器执行服务 */
   private final ScheduledExecutorService scheduler;
 
-  /** 默认构造函数（使用守护线程） */
-  public CacheScheduler() {
-    this.scheduler =
-        new ScheduledThreadPoolExecutor(
-            2,
-            r -> {
-              Thread t = new Thread(r, "CacheScheduler");
-              t.setDaemon(true);
-              t.setPriority(Thread.NORM_PRIORITY - 1);
-              return t;
-            },
-            new ThreadPoolExecutor.CallerRunsPolicy());
-    log.info("缓存调度器已创建");
+  /** 是否由本实例拥有调度器（需要负责关闭） */
+  private final boolean owner;
+
+  /**
+   * 创建缓存调度器（使用 CacheThreadPoolManager 管理的专用调度线程池）
+   *
+   * <p>每个缓存实例拥有独立的调度线程池，避免多缓存共享全局调度器导致的线程争抢。
+   *
+   * @param cacheName 缓存名称（用作线程池名称，便于监控与排查）
+   */
+  public CacheScheduler(String cacheName) {
+    this.scheduler = CacheThreadPoolManager.getInstance()
+        .getOrCreateScheduledPool("cache-scheduler-" + cacheName, 1);
+    this.owner = false;
+    log.info("缓存调度器已创建（使用 CacheThreadPoolManager 共享调度池）: cacheName={}", cacheName);
   }
 
   /**
@@ -76,16 +82,9 @@ public class CacheScheduler {
    * @param threadName 线程名称前缀
    */
   public CacheScheduler(int poolSize, String threadName) {
-    this.scheduler =
-        new ScheduledThreadPoolExecutor(
-            poolSize,
-            r -> {
-              Thread t = new Thread(r, threadName);
-              t.setDaemon(true);
-              t.setPriority(Thread.NORM_PRIORITY - 1);
-              return t;
-            },
-            new ThreadPoolExecutor.CallerRunsPolicy());
+    this.scheduler = CacheThreadPoolManager.getInstance()
+        .getOrCreateScheduledPool("cache-scheduler-" + threadName, poolSize);
+    this.owner = false;
     log.info("缓存调度器已创建，poolSize={}, threadName={}", poolSize, threadName);
   }
 
@@ -96,6 +95,7 @@ public class CacheScheduler {
    */
   public CacheScheduler(ScheduledExecutorService scheduler) {
     this.scheduler = scheduler;
+    this.owner = false;
   }
 
   /**

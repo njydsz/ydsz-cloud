@@ -1,7 +1,5 @@
 package com.njydsz.common.jdbc.interceptor;
 
-import java.sql.SQLException;
-
 import org.apache.ibatis.cache.CacheKey;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.BoundSql;
@@ -14,6 +12,8 @@ import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
 
 import com.njydsz.common.jdbc.datasource.DynamicDataSourceContextHolder;
+import com.njydsz.common.jdbc.exception.JdbcException;
+import com.njydsz.common.jdbc.exception.JdbcExceptionCode;
 import com.njydsz.common.jdbc.monitor.DatabaseCircuitBreaker;
 
 import lombok.extern.slf4j.Slf4j;
@@ -74,7 +74,8 @@ public class CircuitBreakerInterceptor implements Interceptor {
         if (!circuitBreaker.tryAcquire()) {
             String datasource = resolveCurrentDatasource();
             log.warn("数据库熔断器[db-{}]处于 OPEN 状态，请求被拒绝", datasource);
-            throw new SQLException("Database circuit breaker is OPEN for datasource: " + datasource);
+            throw new JdbcException(JdbcExceptionCode.CIRCUIT_BREAKER_OPEN)
+                    .data("datasource", datasource);
         }
 
         try {
@@ -105,19 +106,24 @@ public class CircuitBreakerInterceptor implements Interceptor {
     /**
      * 判断异常是否为数据库异常
      *
-     * <p>SQLException 及其包装的 RuntimeException 视为数据库故障；
-     * 其他业务异常（如参数校验失败）不计入熔断计数。</p>
+     * <p>以下情况视为数据库故障：
+     * <ul>
+     *   <li>{@link java.sql.SQLException} 及其子类</li>
+     *   <li>{@link JdbcException}（携带 JDBC 模块异常码）</li>
+     *   <li>由 SQLException 包装的 RuntimeException</li>
+     * </ul>
+     * 其他业务异常（如参数校验失败）不计入熔断计数。
      *
      * @param t 异常对象
      * @return true 如果是数据库异常
      */
     private boolean isDatabaseException(Throwable t) {
-        if (t instanceof SQLException) {
+        if (t instanceof java.sql.SQLException || t instanceof JdbcException) {
             return true;
         }
         Throwable cause = t.getCause();
         while (cause != null && cause != t) {
-            if (cause instanceof SQLException) {
+            if (cause instanceof java.sql.SQLException) {
                 return true;
             }
             t = cause;

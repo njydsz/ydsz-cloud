@@ -9,11 +9,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthContributor;
-import org.springframework.stereotype.Component;
 
 import com.njydsz.common.tenant.TenantContext;
 import com.njydsz.common.tenant.TenantContextHolder;
@@ -36,16 +33,13 @@ import com.njydsz.common.tenant.metrics.TenantMetrics;
  *
  * <p><b>使用场景：</b>排查租户上下文不生效、SQL 拦截器未触发、状态不同步等问题。
  *
- * <p>通过 {@code management.endpoint.health.tenant-diagnostics.enabled=true} 激活，
- * 默认关闭。
+ * <p>由 {@code TenantAutoConfiguration} 以
+ * {@code @ConditionalOnProperty(prefix="management.endpoint.health",
+ * name="tenant-diagnostics.enabled")} 条件注册，默认关闭。
  *
  * @author ydsz-team
  * @since 1.1.0
  */
-@Component
-@ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
-@ConditionalOnProperty(prefix = "management.endpoint.health",
-        name = "tenant-diagnostics.enabled", havingValue = "true", matchIfMissing = false)
 public class TenantDiagnosticsContributor implements HealthContributor {
 
     private final TenantProperties properties;

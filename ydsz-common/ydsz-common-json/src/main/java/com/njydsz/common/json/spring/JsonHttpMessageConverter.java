@@ -48,12 +48,22 @@ public class JsonHttpMessageConverter extends AbstractGenericHttpMessageConverte
     private static final int READ_BUFFER_SIZE = 8192;
 
     /**
-     * Spring 的 {@code MappingJacksonValue} 在 Spring 7.0 已被标记为待删除（{@code @Deprecated(since="7.0", forRemoval=true)}），
-     * 其 class 文件字节码内部仍引用 {@code com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY} 等 Jackson 枚举常量。
-     * 本模块刻意不引入 Jackson 依赖，因此不能直接 import 引用该类（否则编译器会同时报告 5 个
-     * "未知的枚举常量 JsonInclude.Include.NON_EMPTY" 警告）。
-     * <p>此处用反射按需探测：找到则按既有语义解包；找不到（Spring 7.x 移除该类后）则降级为原样输出，
-     * 届时 controller 侧应改用 {@code @JsonView} 注解由框架消息转换器处理视图过滤。
+     * Spring 的 {@code MappingJacksonValue} 在 Spring 7.0 已被标记为待删除（{@code @Deprecated(since="7.0", forRemoval=true)}）。
+     *
+     * <p>该类的 class 文件内部引用了 Jackson 枚举常量（{@code JsonInclude.Include.NON_EMPTY} 等），
+     * 但本模块刻意不引入 Jackson 依赖。因此采用反射按需探测：</p>
+     * <ul>
+     *   <li><b>Spring 6.x：</b>找到该类 → 反射解包 {@code serializationView} + {@code value}</li>
+     *   <li><b>Spring 7.x（移除该类后）：</b>{@code loadClassOrNull} 返回 null → 原样输出</li>
+     * </ul>
+     *
+     * <p><b>迁移指引（P1-F2）：</b>Spring 7.x 移除 {@code MappingJacksonValue} 后，
+     * controller 若需 @JsonView 视图过滤，改用以下任一方案：</p>
+     * <ol>
+     *   <li>在 controller 方法内手动过滤字段后返回 POJO</li>
+     *   <li>使用 {@code JsonMapper.toJson(data, viewClass)} 显式指定视图</li>
+     *   <li>使用 {@code SerializationProvider.serializeWithView(data, viewClass)} 直接调用</li>
+     * </ol>
      */
     private static final Class<?> MAPPING_JACKSON_VALUE_CLASS = loadClassOrNull(
             "org.springframework.http.converter.json.MappingJacksonValue");

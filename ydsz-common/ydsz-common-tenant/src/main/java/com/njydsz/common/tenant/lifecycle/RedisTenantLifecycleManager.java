@@ -4,19 +4,17 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.stereotype.Component;
 
 /**
  * Redis 版租户生命周期管理器。
  *
  * <p>使用 Redis Hash 存储租户状态，多实例共享，适合生产环境。
  *
- * <p><b>自动装配逻辑：</b>当 classpath 中存在 {@link StringRedisTemplate} 时，
- * 此实现以 {@code @Primary} 优先选中；{@link InMemoryTenantLifecycleManager}
- * 以 {@code @ConditionalOnMissingBean} 作为兜底。
+ * <p><b>自动装配逻辑：</b>由 {@code TenantAutoConfiguration} 以
+ * {@code @Primary @ConditionalOnClass(StringRedisTemplate.class)} 注册，
+ * 仅在 classpath 中存在 {@link StringRedisTemplate} 时激活；
+ * {@link InMemoryTenantLifecycleManager} 以 {@code @ConditionalOnMissingBean} 作为兜底。
  *
  * <h3>Redis Key 设计</h3>
  * <ul>
@@ -30,9 +28,6 @@ import org.springframework.stereotype.Component;
  * @since 1.1.0
  * @see TenantLifecycleManager
  */
-@Component
-@Primary
-@ConditionalOnClass(StringRedisTemplate.class)
 public class RedisTenantLifecycleManager implements TenantLifecycleManager {
 
     private static final String REDIS_KEY = "ydsz:tenant:lifecycle";
