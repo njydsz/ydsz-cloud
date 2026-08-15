@@ -2,12 +2,12 @@ package com.njydsz.common.json.provider;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import com.njydsz.common.json.annotation.JsonTypeName;
 import com.njydsz.common.json.annotation.JsonSubType;
 import com.njydsz.common.json.annotation.JsonSubTypes;
 import com.njydsz.common.json.annotation.JsonTypeInfo;
+import com.njydsz.common.json.parser.JsonParserUtil;
 import com.njydsz.common.json.util.BoundedLruCache;
 
 /**
@@ -139,36 +139,25 @@ public final class PolymorphicTypeResolver {
     /**
      * 从 JSON 中提取类型属性值
      *
+     * <p>基于 JSON token 流解析（P0-3 修复）：先完整解析 JSON 为结构化对象，
+     * 再按键精确取值。替代原先的文本级 {@code indexOf} 扫描——文本扫描会被
+     * 字符串值内的转义文本（如 {@code "remark":"literal \"type\":\"evil\""}）
+     * 或键名部分匹配（如 {@code user_type}）误判。</p>
+     *
      * @param json JSON 字符串
      * @param typeProperty 类型属性名
-     * @return 类型值，如果不存在返回 null
+     * @return 类型值（仅接受字符串值），不存在或非字符串时返回 null
      */
     public static String extractTypeValue(String json, String typeProperty) {
-        int propStart = json.indexOf("\"" + typeProperty + "\"");
-        if (propStart < 0) {
+        if (json == null || typeProperty == null || typeProperty.isEmpty()) {
             return null;
         }
-
-        int colonPos = json.indexOf(':', propStart + typeProperty.length() + 1);
-        if (colonPos < 0) {
+        Object parsed = JsonParserUtil.parse(json);
+        if (!(parsed instanceof Map<?, ?> map)) {
             return null;
         }
-
-        int valueStart = colonPos + 1;
-        while (valueStart < json.length() && Character.isWhitespace(json.charAt(valueStart))) {
-            valueStart++;
-        }
-
-        if (valueStart >= json.length() || json.charAt(valueStart) != '"') {
-            return null;
-        }
-
-        int valueEnd = json.indexOf('"', valueStart + 1);
-        if (valueEnd < 0) {
-            return null;
-        }
-
-        return json.substring(valueStart + 1, valueEnd);
+        Object value = map.get(typeProperty);
+        return value instanceof String typeName ? typeName : null;
     }
 
     /**

@@ -26,20 +26,16 @@ import com.njydsz.common.lock.aspect.DistributedScheduledAspect;
 import com.njydsz.common.lock.aspect.IdempotentAspect;
 import com.njydsz.common.lock.aspect.RepeatSubmitAspect;
 import com.njydsz.common.lock.aspect.YdszDistributedLockAspect;
-import com.njydsz.common.lock.core.FencingTokenProvider;
 import com.njydsz.common.lock.core.LockEventListener;
 import com.njydsz.common.lock.core.LockTemplate;
 import com.njydsz.common.lock.core.LockWaitTimePolicy;
-import com.njydsz.common.lock.core.AdaptiveWaitTimePolicy;
 import com.njydsz.common.lock.health.LockHealthIndicator;
 import com.njydsz.common.lock.idempotent.IdempotentStrategy;
 import com.njydsz.common.lock.idempotent.RedisIdempotentStrategy;
 import com.njydsz.common.lock.idempotent.RepeatSubmitTokenService;
 import com.njydsz.common.lock.metrics.LockMetrics;
-import com.njydsz.common.lock.metrics.LockMetricsExporter;
 import com.njydsz.common.lock.notify.LockReleaseNotifier;
 import com.njydsz.common.lock.renewal.LockRenewalService;
-import com.njydsz.common.lock.scheduler.LockLeakDetector;
 import com.njydsz.common.lock.scheduler.LockWatchDog;
 import com.njydsz.common.lock.strategy.DefaultLockStrategy;
 import com.njydsz.common.lock.strategy.LockStrategy;
@@ -82,24 +78,6 @@ public class DistributedLockAutoConfiguration {
     }
 
     /**
-     * 创建 Fencing Token 提供者 Bean
-     *
-     * <p>基于 Redis INCR 生成全局单调递增的 fencing token，
-     * 用于解决分布式锁在过期后的安全窗口问题。
-     * 业务方可通过配置 {@code ydsz.lock.fencing-token-enabled=false} 禁用此功能。
-     *
-     * @param stringRedisTemplate Redis 操作模板
-     * @return FencingTokenProvider 实例
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = "ydsz.lock", name = "fencing-token-enabled",
-            havingValue = "true", matchIfMissing = true)
-    public FencingTokenProvider fencingTokenProvider(StringRedisTemplate stringRedisTemplate) {
-        return new FencingTokenProvider(stringRedisTemplate);
-    }
-
-    /**
      * 创建锁事件监听器 Bean
      *
      * <p>业务方可实现 {@link LockEventListener} 接口并注册为 Bean，
@@ -112,20 +90,6 @@ public class DistributedLockAutoConfiguration {
     @ConditionalOnMissingBean
     public LockEventListener lockEventListener(ObjectProvider<LockEventListener> listener) {
         return listener.getIfAvailable(LockEventListener.NO_OP);
-    }
-
-    /**
-     * 创建锁等待时间策略 Bean
-     *
-     * <p>基于历史等待统计数据动态调整锁获取的等待超时时间。
-     * 业务方可实现 {@link LockWaitTimePolicy} 接口并注册为 Bean 以覆盖默认实现。
-     *
-     * @return LockWaitTimePolicy 实例
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public LockWaitTimePolicy lockWaitTimePolicy() {
-        return new AdaptiveWaitTimePolicy();
     }
 
     /**
@@ -192,18 +156,6 @@ public class DistributedLockAutoConfiguration {
     }
 
     /**
-     * 创建锁指标导出器 Bean（供监控/日志聚合系统消费 JSON 指标快照）
-     *
-     * @param lockMetrics 锁指标收集器
-     * @return LockMetricsExporter 实例
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public LockMetricsExporter lockMetricsExporter(LockMetrics lockMetrics) {
-        return new LockMetricsExporter(lockMetrics);
-    }
-
-    /**
      * 创建锁策略 Bean
      *
      * <p>可选依赖（RedisStringOps / RedisTemplate / TaskScheduler / LockRenewalService /
@@ -232,7 +184,6 @@ public class DistributedLockAutoConfiguration {
                 namespace, lockProperties.getMultiLock(),
                 optionalDependencies.notifierProvider().getIfAvailable());
         optionalDependencies.renewalServiceProvider().ifAvailable(strategy::setLockRenewalService);
-        optionalDependencies.fencingTokenProvider().ifAvailable(strategy::setFencingTokenProvider);
         optionalDependencies.waitTimePolicyProvider().ifAvailable(strategy::setLockWaitTimePolicy);
         strategy.setLockEventListener(optionalDependencies.lockEventListener());
         return strategy;
@@ -246,7 +197,6 @@ public class DistributedLockAutoConfiguration {
      * @param schedulerProvider      TaskScheduler 提供者
      * @param renewalServiceProvider LockRenewalService 提供者
      * @param notifierProvider       LockReleaseNotifier 提供者
-     * @param fencingTokenProvider   Fencing Token 提供者
      * @param lockEventListener     锁事件监听器
      * @param waitTimePolicyProvider 等待时间策略提供者
      * @return 可选依赖聚合
@@ -259,12 +209,11 @@ public class DistributedLockAutoConfiguration {
             ObjectProvider<TaskScheduler> schedulerProvider,
             ObjectProvider<LockRenewalService> renewalServiceProvider,
             ObjectProvider<LockReleaseNotifier> notifierProvider,
-            ObjectProvider<FencingTokenProvider> fencingTokenProvider,
             ObjectProvider<LockWaitTimePolicy> waitTimePolicyProvider,
             LockEventListener lockEventListener) {
         return new LockOptionalDependencies(stringOpsProvider, redisTemplateProvider,
                 schedulerProvider, renewalServiceProvider, notifierProvider,
-                fencingTokenProvider, lockEventListener, waitTimePolicyProvider);
+                lockEventListener, waitTimePolicyProvider);
     }
 
     /**
@@ -354,20 +303,6 @@ public class DistributedLockAutoConfiguration {
     }
 
     /**
-     * 注册锁泄漏检测器 Bean。
-     *
-     * <p>周期性扫描持有超时的锁记录（如看门狗续期失败、节点崩溃遗留），触发告警或强制释放，
-     * 防止死锁导致业务线程永久阻塞。依赖看门狗实例存在时启用；无自定义 Bean 时注册默认实现。
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnBean(LockWatchDog.class)
-    public LockLeakDetector lockLeakDetector(ObjectProvider<LockWatchDog> watchDogProvider,
-                                               ObjectProvider<LockMetrics> lockMetricsProvider) {
-        return new LockLeakDetector(watchDogProvider, lockMetricsProvider);
-    }
-
-    /**
      * 创建表单重复提交 Token 服务 Bean
      *
      * <p>提供 Token 的生成、校验和删除功能，用于防止表单重复提交。
@@ -416,32 +351,6 @@ public class DistributedLockAutoConfiguration {
     }
 
     /**
-     * 创建锁获取线程池（Spring 管理，支持优雅停机和配置化）
-     *
-     * @param lockProperties 锁配置属性
-     * @return ExecutorService 实例
-     */
-    /** 锁获取线程池空闲线程存活时间（秒） */
-    private static final long ACQUIRE_THREAD_KEEP_ALIVE_SECONDS = 60L;
-
-    @Bean("lockAcquireExecutor")
-    @ConditionalOnMissingBean(name = "lockAcquireExecutor")
-    public ExecutorService lockAcquireExecutor(LockProperties lockProperties) {
-        LockProperties.ThreadPool pool = lockProperties.getAcquirePool();
-        AtomicInteger threadNumber = new AtomicInteger(1);
-        return new ThreadPoolExecutor(
-                pool.getCoreSize(), pool.getMaxSize(), ACQUIRE_THREAD_KEEP_ALIVE_SECONDS, TimeUnit.SECONDS,
-                new LinkedBlockingQueue<>(pool.getQueueCapacity()),
-                r -> {
-                    Thread t = new Thread(r, "ydsz-lock-acquire-" + threadNumber.getAndIncrement());
-                    t.setDaemon(true);
-                    return t;
-                },
-                new ThreadPoolExecutor.CallerRunsPolicy()
-        );
-    }
-
-    /**
      * 创建调度线程池（用于 WatchDog 续期和信号量超时调度，Spring 管理，支持优雅停机和配置化）
      *
      * @param lockProperties 锁配置属性
@@ -469,7 +378,6 @@ public class DistributedLockAutoConfiguration {
      * @param schedulerProvider      TaskScheduler 提供者
      * @param renewalServiceProvider LockRenewalService 提供者
      * @param notifierProvider       LockReleaseNotifier 提供者
-     * @param fencingTokenProvider   Fencing Token 提供者
      * @param lockEventListener     锁事件监听器
      * @param waitTimePolicyProvider 等待时间策略提供者
      */
@@ -479,7 +387,6 @@ public class DistributedLockAutoConfiguration {
             ObjectProvider<TaskScheduler> schedulerProvider,
             ObjectProvider<LockRenewalService> renewalServiceProvider,
             ObjectProvider<LockReleaseNotifier> notifierProvider,
-            ObjectProvider<FencingTokenProvider> fencingTokenProvider,
             LockEventListener lockEventListener,
             ObjectProvider<LockWaitTimePolicy> waitTimePolicyProvider) {
     }

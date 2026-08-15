@@ -6,17 +6,21 @@ import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.binder.MeterBinder;
+
 import org.springframework.lang.NonNull;
 
 /**
  * 虚拟线程池 Micrometer 指标绑定器。
  *
  * <p>JDK 21 的虚拟线程执行器不支持 {@link java.util.concurrent.ThreadPoolExecutor} 的计数 API，
- * 因此本绑定器通过应用层计数器暴露 submitted / completed / rejected 三个指标，
- * 由 {@link MeteredVirtualExecutorService} 在任务提交/完成/拒绝时回调计数。
+ * 因此本绑定器通过应用层计数器暴露 submitted / completed 两个指标，
+ * 由 {@link MeteredVirtualExecutorService} 在任务提交/完成时回调计数。
  *
  * <p>如需对虚拟线程池进行精细化监控（活跃线程数等），
  * 建议使用 {@code ydsz-common-util} 中的 {@code BoundedVirtualThreadScheduler}。
+ *
+ * <p>v1.4.0 变更：移除 rejected 指标（JDK 21 的虚拟线程执行器从不拒绝任务，
+ * 该计数器始终为 0，无实际意义）。
  *
  * <p>v1.3.1 变更：移除无意义的 {@code active} Gauge（固定返回 1.0），
  * 计数器改用 {@link LongAdder} 优化高并发写入性能。
@@ -32,7 +36,6 @@ public class VirtualThreadMetrics implements MeterBinder {
     private final String metricPrefix;
     private final LongAdder submittedCounter = new LongAdder();
     private final LongAdder completedCounter = new LongAdder();
-    private final LongAdder rejectedCounter = new LongAdder();
 
     /**
      * 构造虚拟线程池指标绑定器。
@@ -56,11 +59,6 @@ public class VirtualThreadMetrics implements MeterBinder {
                 .tags(Tags.of("pool.name", poolName))
                 .description("累计完成虚拟线程任务数")
                 .register(registry);
-
-        Gauge.builder(metricPrefix + ".rejected", rejectedCounter, LongAdder::doubleValue)
-                .tags(Tags.of("pool.name", poolName))
-                .description("累计拒绝虚拟线程任务数")
-                .register(registry);
     }
 
     /**
@@ -82,15 +80,6 @@ public class VirtualThreadMetrics implements MeterBinder {
     }
 
     /**
-     * 增加已拒绝任务计数。
-     *
-     * <p>由 {@link MeteredVirtualExecutorService} 在任务拒绝时回调。
-     */
-    public void incrementRejected() {
-        rejectedCounter.increment();
-    }
-
-    /**
      * 获取累计提交任务数。
      *
      * @return 提交总数
@@ -106,14 +95,5 @@ public class VirtualThreadMetrics implements MeterBinder {
      */
     public long getCompletedCount() {
         return completedCounter.sum();
-    }
-
-    /**
-     * 获取累计拒绝任务数。
-     *
-     * @return 拒绝总数
-     */
-    public long getRejectedCount() {
-        return rejectedCounter.sum();
     }
 }

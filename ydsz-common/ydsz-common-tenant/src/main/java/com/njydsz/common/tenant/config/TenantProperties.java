@@ -157,12 +157,6 @@ public class TenantProperties {
      */
     private Set<String> anonUrls = new HashSet<>();
 
-    /**
-     * 是否在 WebFilter 中校验租户生命周期状态（默认 true）。
-     *
-     * <p>开启后，每次请求会检查租户状态，SUSPENDED/OFFLINE 租户将被拒绝。
-     */
-    private boolean lifecycleCheckEnabled = true;
 
     /**
      * 跨租户数据共享配置。
@@ -180,25 +174,9 @@ public class TenantProperties {
     private Map<String, List<String>> tenantSharing = new HashMap<>();
 
     /**
-     * 租户级加密配置。
-     *
-     * <p>为每个租户配置独立的加密密钥（用于敏感字段加密）。
-     * key=租户 ID，value=Base64 编码的 32 字节 AES 密钥。
-     *
-     * <pre>
-     * ydsz:
-     *   tenant:
-     *     encryption:
-     *       tenant_acme: "base64encoded32bytekey..."
-     * </pre>
-     */
-    private Map<String, String> tenantEncryptionKeys = new HashMap<>();
-
-    /**
      * ISOLATE_DB 模式下租户 → 数据源 Key 的映射。
      *
      * <p>未配置时使用命名约定（tenant_{tenantId}）。
-     * 配置后使用 {@link com.njydsz.common.tenant.datasource.resolver.ConfigurationResolver}。
      *
      * <pre>
      * ydsz:
@@ -210,6 +188,24 @@ public class TenantProperties {
      * </pre>
      */
     private Map<String, String> datasourceMapping = new HashMap<>();
+
+    /**
+     * 是否启用 SQL 改写缓存（默认 false）。
+     *
+     * <p>开启后使用 Caffeine 缓存「原始 SQL + 租户字段签名」→ 改写结果，
+     * 减少 JSqlParser 重复解析开销。仅在热点 SQL 重复度高时有效，
+     * MULTI 模式下因缓存 Key 包含全字段签名，命中率可能较低。
+     *
+     * <pre>
+     * ydsz:
+     *   tenant:
+     *     sql-cache:
+     *       enabled: true
+     * </pre>
+     *
+     * @since 1.10.0
+     */
+    private boolean sqlCacheEnabled = false;
 
     /**
      * 获取生效的租户字段列表。

@@ -21,33 +21,12 @@ import com.njydsz.common.json.annotation.JsonIgnore;
 /**
  * 领域基础实体（纯领域，不携带持久化语义）。
  *
- * <p>系统统一的业务实体基类，包含主键、审计字段、领域事件支持。
- * 此类为纯 POJO，不含 MyBatis-Plus 注解，也不含持久化专用字段。
+ * <p>统一的业务实体基类，包含主键、审计字段，并实现 {@link EventRegistry} 提供领域事件注册能力。
+ * equals/hashCode 仅以 {@code id} 参与判同（DDD 实体标准语义）。
  *
- * <p>实现 {@link EventRegistry} 接口，提供标准化的领域事件注册能力。
- * 任意类均可通过实现此接口获得事件注册能力，不必强制继承此类。
- *
- * <p><b>equals/hashCode 语义：</b>仅以 {@code id} 参与判同（DDD 实体标准语义），
- * 确保持久化实体在集合操作（Set/Map）中的正确行为。
- *
- * <p><b>v1.8.0 变更：</b>实现 {@link EventRegistry} 接口，领域事件能力标准化；
- * equals 语义修正为仅以 id 判同。
- *
- * <p><b>v1.7.0 变更：</b>移除持久化相关字段（revision/deleted/tenantId/status），
- * 这些字段应由 {@code common-jdbc} 的 {@code MpBaseEntity} 承载，保持领域纯净。
- *
- * <p><b>继承关系（根据持久化框架选择）：</b>
- * <ul>
- *   <li>使用 MyBatis-Plus：业务实体继承 {@code com.njydsz.common.jdbc.entity.MpBaseEntity}</li>
- *   <li>使用 JPA：业务实体继承此类 + JPA 注解</li>
- *   <li>纯内存/事件溯源：继承此类 + 自定义事件逻辑</li>
- * </ul>
- *
- * @param <T> 主键ID类型
+ * @param <T> 主键 ID 类型
  * @author ydsz-team
- * @since 1.0.0
- * @since 1.7.0 纯领域化：移除 revision/deleted/tenantId/status 持久化字段
- * @since 1.8.0 实现 EventRegistry 接口
+ * @since 1.10.0
  */
 @JsonClass(description = "领域实体基类，纯领域无持久化语义")
 @Getter

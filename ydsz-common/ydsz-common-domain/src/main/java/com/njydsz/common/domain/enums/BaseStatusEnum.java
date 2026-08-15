@@ -10,20 +10,14 @@ import java.util.List;
  *
  * <p>实现约定：
  * <ul>
- *   <li>自身到自身（{@code this == target}）返回 {@code true}</li>
+ *   <li>自身到自身返回 {@code true}</li>
  *   <li>{@code target == null} 返回 {@code false}</li>
  *   <li>终态到任何其他状态返回 {@code false}</li>
  * </ul>
  *
- * <p>路径推导、下一跳查询等高级能力请使用独立工具类 {@link StateTransitionUtil}，
- * 避免强制所有枚举实现完整状态空间。
- *
  * @param <E> 具体状态枚举类型
  * @author ydsz-team
- * @since 1.0.0
- * @since 1.6.0 增加路径推导与下一跳查询
- * @since 1.8.0 pathTo/successors 标记废弃
- * @since 2.0.0 pathTo/successors 已移除，使用 {@link StateTransitionUtil} 替代
+ * @since 1.10.0
  */
 public interface BaseStatusEnum<E extends Enum<E>> {
 
