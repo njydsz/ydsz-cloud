@@ -152,9 +152,17 @@ public class FileApplicationService {
                     log.info("[FileApplicationService] 同名文件已存在，覆盖: name={}, existingId={}",
                             fileName, existing.getId());
                     if (existing.getStorageKey() != null) {
-                        IFileStorage storage = resolveStorage();
-                        if (storage != null) {
-                            storage.delete(existing.getBucketName(), existing.getStorageKey());
+                        long refCount = storageReferenceService.decrement(existing.getStorageKey());
+                        if (refCount <= 0) {
+                            IFileStorage storage = resolveStorage();
+                            if (storage != null) {
+                                storage.delete(existing.getBucketName(), existing.getStorageKey());
+                                log.info("[StorageReference] 覆盖时物理清除存储对象: storageKey={}",
+                                        existing.getStorageKey());
+                            }
+                        } else {
+                            log.info("[StorageReference] 覆盖跳过物理删除，仍有引用: storageKey={}, refCount={}",
+                                    existing.getStorageKey(), refCount);
                         }
                     }
                     if (existing.getSize() != null) {
@@ -402,6 +410,21 @@ public class FileApplicationService {
             locker.unlock(lockKey, lockValue);
         }
 
+        // 引用计数 -1，归零时物理删除存储对象（防止秒传/副本悬空引用）
+        if (node.isFile() && node.getStorageKey() != null) {
+            long refCount = storageReferenceService.decrement(node.getStorageKey());
+            if (refCount <= 0) {
+                IFileStorage storage = resolveStorage();
+                if (storage != null) {
+                    storage.delete(node.getBucketName(), node.getStorageKey());
+                    log.info("[StorageReference] 删除时物理清除存储对象: storageKey={}", node.getStorageKey());
+                }
+            } else {
+                log.info("[StorageReference] 删除跳过物理删除，仍有引用: storageKey={}, refCount={}",
+                        node.getStorageKey(), refCount);
+            }
+        }
+
         log.info("[FileApplicationService] 删除文件: nodeId={}, name={}", nodeId, node.getName());
         indexDelete(nodeId);
     }
@@ -522,6 +545,11 @@ public class FileApplicationService {
         copyNode.setUpdatedBy(userId);
 
         FileNode saved = fileNodeRepository.save(copyNode);
+
+        // 文件引用计数 +1（副本共享同一 storageKey）
+        if (source.isFile() && source.getStorageKey() != null) {
+            storageReferenceService.increment(source.getStorageKey());
+        }
 
         // 文件创建版本引用
         if (source.isFile()) {
