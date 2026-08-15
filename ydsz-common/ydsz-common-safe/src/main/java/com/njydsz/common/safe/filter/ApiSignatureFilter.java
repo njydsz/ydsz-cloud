@@ -154,11 +154,10 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
         CachedBodyHttpServletRequestWrapper wrappedRequest = null;
         String contentType = request.getContentType();
         if (contentType != null && contentType.contains("application/json")) {
-            try {
-                bodyBytes = request.getInputStream().readAllBytes();
+            bodyBytes = extractBodyBytes(request);
+            // 仅在请求未被包装时才创建新包装器
+            if (!(request instanceof CachedBodyHttpServletRequestWrapper)) {
                 wrappedRequest = new CachedBodyHttpServletRequestWrapper(request, bodyBytes);
-            } catch (IOException e) {
-                log.warn("【API签名验证】读取请求体失败 | uri={}", request.getRequestURI());
             }
         }
 
@@ -203,6 +202,24 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
                     SecurityEvent.Severity.HIGH
             );
             eventPublisher.publish(event);
+        }
+    }
+
+    /**
+     * 提取请求体字节数组（优先复用 SafeRequestBodyCacheFilter 已缓存的请求体）
+     *
+     * @param request HTTP 请求
+     * @return 请求体字节数组；若无 body 或读取失败返回空数组
+     */
+    private static byte[] extractBodyBytes(HttpServletRequest request) {
+        if (request instanceof CachedBodyHttpServletRequestWrapper cachedWrapper) {
+            return cachedWrapper.getCachedBody();
+        }
+        try {
+            return request.getInputStream().readAllBytes();
+        } catch (IOException e) {
+            log.warn("【API签名验证】读取请求体失败 | uri={}", request.getRequestURI());
+            return new byte[0];
         }
     }
 

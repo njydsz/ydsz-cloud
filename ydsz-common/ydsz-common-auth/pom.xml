@@ -137,6 +137,11 @@
             <artifactId>micrometer-core</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- Guava（GuavaTokenBlacklistBloomFilter 使用 BloomFilter + Funnels） -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+        </dependency>
         <!-- JUnit 5 (test) -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

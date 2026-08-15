@@ -310,6 +310,105 @@ public class PermissionPreChecker {
         return results;
     }
 
+    /**
+     * 批量检查权限，返回每个权限码的检查结果。
+     *
+     * <p>内部仅加载一次用户权限，然后对每个权限码逐一判断，避免重复加载。
+     * 校验范围涵盖当前用户的 MENU / BUTTON / API 全部权限集合。
+     *
+     * <p><b>使用示例：</b>
+     * <pre>{@code
+     * Map<String, Boolean> result = preChecker.batchCheck(
+     *     Set.of("sys:user:add", "sys:user:edit", "sys:user:delete")
+     * );
+     * // result: {"sys:user:add"=true, "sys:user:edit"=false, "sys:user:delete"=true}
+     * }</pre>
+     *
+     * @param permissionCodes 权限码集合，允许为 {@code null} 或空集合
+     * @return permissionCode -> hasPermission 的映射；若输入为空则返回空映射
+     * @author ydsz-team
+     * @since 1.0.0
+     */
+    public Map<String, Boolean> batchCheck(Set<String> permissionCodes) {
+        Map<String, Boolean> result = new LinkedHashMap<>();
+        if (permissionCodes == null || permissionCodes.isEmpty()) {
+            return result;
+        }
+        doBatchCheck(permissionCodes, (code, granted) -> result.put(code, granted));
+        return result;
+    }
+
+    /**
+     * 批量检查权限，返回当前用户实际拥有的权限子集。
+     *
+     * <p>内部仅加载一次用户权限，然后筛选出用户实际拥有的权限码。
+     * 校验范围涵盖当前用户的 MENU / BUTTON / API 全部权限集合。
+     *
+     * <p><b>使用示例：</b>
+     * <pre>{@code
+     * Set<String> permitted = preChecker.filterPermitted(
+     *     Set.of("sys:user:add", "sys:user:edit", "sys:user:delete")
+     * );
+     * // permitted: {"sys:user:add", "sys:user:delete"}
+     * }</pre>
+     *
+     * @param permissionCodes 权限码集合，允许为 {@code null} 或空集合
+     * @return 当前用户拥有的权限子集；若输入为空则返回空集合
+     * @author ydsz-team
+     * @since 1.0.0
+     */
+    public Set<String> filterPermitted(Set<String> permissionCodes) {
+        Set<String> result = new LinkedHashSet<>();
+        if (permissionCodes == null || permissionCodes.isEmpty()) {
+            return result;
+        }
+        doBatchCheck(permissionCodes, (code, granted) -> {
+            if (granted) {
+                result.add(code);
+            }
+        });
+        return result;
+    }
+
+    /**
+     * 批量权限校验的共享逻辑：一次性加载用户权限，然后逐一匹配。
+     *
+     * @param permissionCodes 需要校验的权限码集合（非空）
+     * @param consumer 对每个权限码及其匹配结果进行消费
+     */
+    private void doBatchCheck(Set<String> permissionCodes,
+                              BiConsumer<String, Boolean> consumer) {
+        Map<String, Object> userInfo = loadCurrentUserInfo();
+        if (userInfo == null || userInfo.isEmpty()) {
+            log.debug("batchCheck: 用户未登录，全部返回 false");
+            for (String code : permissionCodes) {
+                consumer.accept(code, false);
+            }
+            return;
+        }
+
+        Set<String> userRoles = parseUserRoles(userInfo);
+        if (isSuperAdmin(userRoles)) {
+            log.debug("batchCheck: 超级管理员，全部返回 true");
+            for (String code : permissionCodes) {
+                consumer.accept(code, true);
+            }
+            return;
+        }
+
+        RolePermissions rolePermissions = loadRolePermissions(userRoles);
+        // 合并 MENU / BUTTON / API 三类权限，便于统一匹配
+        Set<String> allGranted = new HashSet<>();
+        allGranted.addAll(getGrantedPermissions(rolePermissions, PermissionType.MENU));
+        allGranted.addAll(getGrantedPermissions(rolePermissions, PermissionType.BUTTON));
+        allGranted.addAll(getGrantedPermissions(rolePermissions, PermissionType.API));
+
+        for (String code : permissionCodes) {
+            boolean granted = hasPermission(allGranted, code);
+            consumer.accept(code, granted);
+        }
+    }
+
     private Map<String, Object> loadCurrentUserInfo() {
         String token = userInfoService.loadCurrentToken();
         if (StringUtils.isBlank(token)) {

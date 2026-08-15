@@ -1,7 +1,13 @@
 package com.njydsz.common.config.cli;
 
+import java.time.Instant;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import org.jasypt.encryption.pbe.PooledPBEStringEncryptor;
 import org.jasypt.encryption.pbe.config.SimpleStringPBEConfig;
+
+import com.njydsz.common.json.YdszJson;
 
 /**
  * Jasypt 配置加密 CLI 工具
@@ -46,8 +52,8 @@ public class ConfigCliTool {
      *
      * <p>参数格式：
      * <ul>
-     *   <li>{@code encrypt <plaintext> [masterPassword]}</li>
-     *   <li>{@code decrypt <ciphertext> [masterPassword]}</li>
+     *   <li>{@code encrypt <plaintext> [masterPassword] [--format json]}</li>
+     *   <li>{@code decrypt <ciphertext> [masterPassword] [--format json]}</li>
      * </ul>
      * <p>如未提供 masterPassword，从环境变量 {@code JASYPT_ENCRYPTOR_PASSWORD} 读取。
      *
@@ -61,11 +67,30 @@ public class ConfigCliTool {
 
         String command = args[0].toLowerCase();
         String value = args[1];
-        String masterPassword = args.length >= 3 ? args[2] : System.getenv("JASYPT_ENCRYPTOR_PASSWORD");
+        String masterPassword = null;
+        OutputFormat format = OutputFormat.TEXT;
+
+        // 解析可选参数
+        for (int i = 2; i < args.length; i++) {
+            if ("--format".equalsIgnoreCase(args[i]) && i + 1 < args.length) {
+                format = OutputFormat.fromValue(args[++i]);
+            } else if (masterPassword == null) {
+                masterPassword = args[i];
+            }
+        }
 
         if (masterPassword == null || masterPassword.isBlank()) {
-            System.err.println("ERROR: Master password is required.");
-            System.err.println("Provide as 3rd argument or set JASYPT_ENCRYPTOR_PASSWORD env var.");
+            masterPassword = System.getenv("JASYPT_ENCRYPTOR_PASSWORD");
+        }
+
+        if (masterPassword == null || masterPassword.isBlank()) {
+            String errorMsg = "ERROR: Master password is required. "
+                    + "Provide as 3rd argument or set JASYPT_ENCRYPTOR_PASSWORD env var.";
+            if (format == OutputFormat.JSON) {
+                printJsonError(errorMsg);
+            } else {
+                System.err.println(errorMsg);
+            }
             System.exit(2);
         }
 
@@ -74,19 +99,96 @@ public class ConfigCliTool {
         switch (command) {
             case "encrypt" -> {
                 String encrypted = encryptor.encrypt(value);
-                System.out.println(ENC_PREFIX + encrypted + ENC_SUFFIX);
+                String result = ENC_PREFIX + encrypted + ENC_SUFFIX;
+                if (format == OutputFormat.JSON) {
+                    printJsonResult(command, DEFAULT_ALGORITHM, result);
+                } else {
+                    System.out.println(result);
+                }
             }
             case "decrypt" -> {
                 String cipherText = stripEncWrapper(value);
                 String decrypted = encryptor.decrypt(cipherText);
-                System.out.println(decrypted);
+                if (format == OutputFormat.JSON) {
+                    printJsonResult(command, DEFAULT_ALGORITHM, decrypted);
+                } else {
+                    System.out.println(decrypted);
+                }
+            }
+            case "re-encrypt" -> {
+                // 需要旧密码和新密码
+                if (args.length < 3) {
+                    String errorMsg = "re-encrypt requires old-master-password and new-master-password";
+                    if (format == OutputFormat.JSON) {
+                        printJsonError(errorMsg);
+                    } else {
+                        System.err.println(errorMsg);
+                    }
+                    System.exit(2);
+                }
+                String oldPassword = null;
+                String newPassword = null;
+                for (int i = 2; i < args.length; i++) {
+                    if ("--format".equalsIgnoreCase(args[i])) {
+                        i++; // skip format value
+                        continue;
+                    }
+                    if (oldPassword == null) {
+                        oldPassword = args[i];
+                    } else if (newPassword == null) {
+                        newPassword = args[i];
+                    }
+                }
+                if (newPassword == null) {
+                    String errorMsg = "re-encrypt requires both old-master-password and new-master-password";
+                    if (format == OutputFormat.JSON) {
+                        printJsonError(errorMsg);
+                    } else {
+                        System.err.println(errorMsg);
+                    }
+                    System.exit(2);
+                }
+                String cipherText = stripEncWrapper(value);
+                String reEncrypted = reEncrypt(cipherText, oldPassword, newPassword);
+                if (format == OutputFormat.JSON) {
+                    printJsonResult(command, DEFAULT_ALGORITHM, reEncrypted);
+                } else {
+                    System.out.println(reEncrypted);
+                }
             }
             default -> {
-                System.err.println("Unknown command: " + command);
-                printUsage();
+                String errorMsg = "Unknown command: " + command;
+                if (format == OutputFormat.JSON) {
+                    printJsonError(errorMsg);
+                } else {
+                    System.err.println(errorMsg);
+                    printUsage();
+                }
                 System.exit(1);
             }
         }
+    }
+
+    /**
+     * 输出 JSON 格式结果
+     */
+    private static void printJsonResult(String operation, String algorithm, String result) {
+        Map<String, Object> output = new LinkedHashMap<>();
+        output.put("operation", operation);
+        output.put("algorithm", algorithm);
+        output.put("result", result);
+        output.put("timestamp", Instant.now().toString());
+        System.out.println(YdszJson.toJsonString(output));
+    }
+
+    /**
+     * 输出 JSON 格式错误
+     */
+    private static void printJsonError(String message) {
+        Map<String, Object> output = new LinkedHashMap<>();
+        output.put("error", message);
+        output.put("timestamp", Instant.now().toString());
+        System.err.println(YdszJson.toJsonString(output));
     }
 
     /**
@@ -133,14 +235,55 @@ public class ConfigCliTool {
         return value;
     }
 
+    /**
+     * 使用新主密码重新加密
+     *
+     * @param cipherText   密文（可带 ENC() 包裹）
+     * @param oldPassword  旧主密码
+     * @param newPassword  新主密码
+     * @return 重新加密后的 ENC(...) 格式串
+     */
+    public static String reEncrypt(String cipherText, String oldPassword, String newPassword) {
+        PooledPBEStringEncryptor oldEncryptor = createEncryptor(oldPassword);
+        PooledPBEStringEncryptor newEncryptor = createEncryptor(newPassword);
+        String plaintext = oldEncryptor.decrypt(stripEncWrapper(cipherText));
+        return ENC_PREFIX + newEncryptor.encrypt(plaintext) + ENC_SUFFIX;
+    }
+
     private static void printUsage() {
         System.out.println("YDSZ Config Encrypt CLI Tool");
         System.out.println();
         System.out.println("Usage:");
-        System.out.println("  encrypt <plaintext> [masterPassword]   - Encrypt a value, output ENC(ciphertext)");
-        System.out.println("  decrypt <ciphertext> [masterPassword]   - Decrypt ENC(ciphertext) or raw ciphertext");
+        System.out.println("  encrypt <plaintext> [masterPassword] [--format json|text]");
+        System.out.println("  decrypt <ciphertext> [masterPassword] [--format json|text]");
+        System.out.println();
+        System.out.println("Options:");
+        System.out.println("  --format json|text    Output format (default: text)");
         System.out.println();
         System.out.println("If masterPassword is omitted, reads from JASYPT_ENCRYPTOR_PASSWORD env var.");
         System.out.println("Default algorithm: " + DEFAULT_ALGORITHM);
+    }
+
+    /**
+     * 输出格式枚举
+     */
+    private enum OutputFormat {
+        TEXT("text"),
+        JSON("json");
+
+        private final String value;
+
+        OutputFormat(String value) {
+            this.value = value;
+        }
+
+        static OutputFormat fromValue(String value) {
+            for (OutputFormat format : values()) {
+                if (format.value.equalsIgnoreCase(value)) {
+                    return format;
+                }
+            }
+            return TEXT;
+        }
     }
 }

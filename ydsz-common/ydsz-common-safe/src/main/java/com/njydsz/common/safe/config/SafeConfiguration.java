@@ -49,6 +49,7 @@ import com.njydsz.common.safe.crypto.NonceCache;
 import com.njydsz.common.safe.filter.ApiSignatureFilter;
 import com.njydsz.common.safe.filter.CsrfFilter;
 import com.njydsz.common.safe.filter.IpAccessFilter;
+import com.njydsz.common.safe.filter.SafeRequestBodyCacheFilter;
 import com.njydsz.common.safe.filter.SecurityHeaderFilter;
 import com.njydsz.common.safe.filter.SqlInjectionFilter;
 import com.njydsz.common.safe.filter.XssFilter;

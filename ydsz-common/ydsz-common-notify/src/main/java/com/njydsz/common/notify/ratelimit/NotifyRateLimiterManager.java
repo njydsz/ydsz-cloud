@@ -143,7 +143,17 @@ public class NotifyRateLimiterManager {
                 : "未配置";
     }
 
-    private String buildKey(NotifyChannel channel) {
+    /**
+     * 构建限流 key（支持多租户隔离）。
+     *
+     * @param channel  通知渠道
+     * @param tenantId 租户 ID（可为 null）
+     * @return 限流 key
+     */
+    private String buildKey(NotifyChannel channel, String tenantId) {
+        if (tenantId != null && !tenantId.isEmpty()) {
+            return "notify:tenant:" + tenantId + ":channel:" + channel.name().toLowerCase();
+        }
         return "notify:channel:" + channel.name().toLowerCase();
     }
 

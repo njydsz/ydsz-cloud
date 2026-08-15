@@ -299,6 +299,26 @@ public class SqlInjectionFilter extends OncePerRequestFilter {
     }
 
     /**
+     * 提取请求体字节数组。
+     *
+     * <p>优先从 {@link CachedBodyHttpServletRequestWrapper} 获取已缓存的请求体，
+     * 避免重复读取 InputStream。
+     *
+     * @param request HTTP 请求
+     * @return 请求体字节数组；若无 body 或读取失败返回 null
+     */
+    private static byte[] extractBodyBytes(HttpServletRequest request) {
+        if (request instanceof CachedBodyHttpServletRequestWrapper cachedWrapper) {
+            return cachedWrapper.getCachedBody();
+        }
+        try {
+            return request.getInputStream().readAllBytes();
+        } catch (IOException e) {
+            return null;
+        }
+    }
+
+    /**
      * 过滤掉列表中的空白字符串（处理 @Value 空默认值场景）
      */
     private static List<String> filterNotBlank(List<String> list) {

@@ -145,7 +145,7 @@ public class NotifyServiceImpl implements NotifyService {
     /**
      * 发送单条文本通知。
      *
-     * <p>等价于 {@code send(channel, receiver, title, content, null, null, NotifyType.TEXT)}。
+     * <p>等价于 {@code send(channel, receiver, title, content, null, null, NotifyType.TEXT, null)}。
      *
      * @param channel  通知渠道（EMAIL/DINGTALK/FEISHU等）
      * @param receiver 接收方（邮箱地址/手机号/用户ID等）
@@ -155,7 +155,7 @@ public class NotifyServiceImpl implements NotifyService {
      */
     @Override
     public NotifySendResult send(NotifyChannel channel, String receiver, String title, String content) {
-        return doSend(channel, receiver, title, content, null, null, NotifyType.TEXT);
+        return doSend(channel, receiver, title, content, null, null, NotifyType.TEXT, null);
     }
 
     /**
@@ -214,10 +214,10 @@ public class NotifyServiceImpl implements NotifyService {
         if (request.isTemplateRequest()) {
             return doSendTemplate(channel, request.getReceiver(),
                     request.getTemplateCode(), request.getTemplateParams(),
-                    request.getTitle());
+                    request.getTitle(), request.getTenantId());
         }
         return doSend(channel, request.getReceiver(), request.getTitle(), request.getContent(),
-                request.getUserId(), null, NotifyType.TEXT);
+                request.getUserId(), null, NotifyType.TEXT, request.getTenantId());
     }
 
     /**
@@ -398,11 +398,12 @@ public class NotifyServiceImpl implements NotifyService {
      * @param userId        用户 ID（可选，用于偏好检查和审计）
      * @param templateCode  模板编码（可选，用于指标）
      * @param notifyType    通知类型（TEXT/TEMPLATE）
+     * @param tenantId      租户 ID（可选，用于多租户限流隔离）
      * @return 发送结果
      */
     private NotifySendResult doSend(NotifyChannel channel, String receiver, String title,
                              String content, String userId, String templateCode,
-                             NotifyType notifyType) {
+                             NotifyType notifyType, String tenantId) {
         // P0-6: 去重检查
         if (isDuplicate(receiver, title, content)) {
             log.debug("[NotifyServiceImpl] 去重命中，跳过发送: receiver={}, title={}", receiver, title);
@@ -414,8 +415,8 @@ public class NotifyServiceImpl implements NotifyService {
             return NotifySendResult.failure("通知渠道[" + channel.getName() + "]已熔断，请稍后重试", channel.getName());
         }
 
-        // 限流检查
-        if (!tryAcquireRateLimit(channel)) {
+        // 限流检查（支持多租户隔离）
+        if (!tryAcquireRateLimit(channel, tenantId)) {
             return NotifySendResult.failure("通知渠道限流触发，请稍后重试: " + channel.getName(), channel.getName());
         }
 
@@ -504,14 +505,15 @@ public class NotifyServiceImpl implements NotifyService {
     /**
      * 尝试获取限流令牌。
      *
-     * @param channel 通知渠道
+     * @param channel  通知渠道
+     * @param tenantId 租户 ID（可为 null）
      * @return 是否获取成功（未配置限流管理器时默认成功）
      */
-    private boolean tryAcquireRateLimit(NotifyChannel channel) {
+    private boolean tryAcquireRateLimit(NotifyChannel channel, String tenantId) {
         if (rateLimiterManager == null) {
             return true;
         }
-        return rateLimiterManager.tryAcquire(channel);
+        return rateLimiterManager.tryAcquire(channel, tenantId);
     }
 
     /**

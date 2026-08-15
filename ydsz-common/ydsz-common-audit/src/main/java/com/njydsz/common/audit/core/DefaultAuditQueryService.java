@@ -435,6 +435,15 @@ public class DefaultAuditQueryService implements AuditQueryService {
         }
     }
 
+    /**
+     * 按链路追踪 ID 查询审计日志
+     *
+     * <p>使用 {@code trace_id} 列的等值查询（非 LIKE），
+     * 可利用数据库索引，避免全表扫描导致的性能问题。
+     *
+     * @param traceId 链路追踪 ID
+     * @return 审计日志列表，按 operation_time 倒序
+     */
     @Override
     public List<AuditLog> queryByTraceId(String traceId) {
         if (traceId == null || traceId.isEmpty()) {
@@ -446,14 +455,15 @@ public class DefaultAuditQueryService implements AuditQueryService {
                 LocalDateTime start = end.minusMonths(12);
                 Set<String> tables = shardingStrategy.getTableNamesInRange(baseTableName, start, end);
                 String unionSql = buildUnionAllSql(tables,
-                        "extra_info LIKE ? ORDER BY operation_time DESC");
+                        "trace_id = ? ORDER BY operation_time DESC");
                 return jdbcTemplate.query(unionSql,
-                        BeanPropertyRowMapper.newInstance(AuditLog.class), "%" + traceId + "%");
+                        BeanPropertyRowMapper.newInstance(AuditLog.class), traceId);
             }
+            // trace_id 列已建立索引，等值查询性能优于 LIKE
             String sql = "SELECT * FROM " + baseTableName +
-                    " WHERE extra_info LIKE ? ORDER BY operation_time DESC";
+                    " WHERE trace_id = ? ORDER BY operation_time DESC";
             return jdbcTemplate.query(sql,
-                    BeanPropertyRowMapper.newInstance(AuditLog.class), "%" + traceId + "%");
+                    BeanPropertyRowMapper.newInstance(AuditLog.class), traceId);
         } catch (Exception e) {
             log.warn("按追踪ID查询审计日志失败, traceId={}", traceId, e);
             return Collections.emptyList();

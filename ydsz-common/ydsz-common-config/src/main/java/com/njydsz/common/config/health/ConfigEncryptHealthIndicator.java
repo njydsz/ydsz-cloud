@@ -2,13 +2,13 @@ package com.njydsz.common.config.health;
 
 import java.util.HashSet;
 import java.util.Set;
-
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.EnumerablePropertySource;
-import org.springframework.core.env.PropertySource;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.EnumerablePropertySource;
+import org.springframework.core.env.PropertySource;
 
 /**
  * 配置加密健康指标
@@ -53,6 +53,12 @@ public class ConfigEncryptHealthIndicator implements HealthIndicator {
 
     private final ConfigurableEnvironment environment;
 
+    /** 健康检查结果缓存 */
+    private final AtomicReference<HealthCheckResult> cache = new AtomicReference<>();
+
+    /** 缓存 TTL */
+    private static final long CACHE_TTL_MS = 5000L;
+
     public ConfigEncryptHealthIndicator(ConfigurableEnvironment environment) {
         this.environment = environment;
     }
@@ -62,6 +68,7 @@ public class ConfigEncryptHealthIndicator implements HealthIndicator {
      *
      * <p>扫描环境中所有以 {@code ENC(...)} 包裹的加密属性，按以下规则判定健康：
      * <ul>
+     *   <li>环境不可用 → UNKNOWN（检查 environment 是否为 null）</li>
      *   <li>不存在加密属性 → UP</li>
      *   <li>存在加密属性但 Jasypt 主密码未配置（环境变量与配置项均缺失）→ DOWN，提示必须配置</li>
      *   <li>存在加密属性且主密码就绪 → UP，附带密钥来源与加密属性数量</li>
@@ -71,6 +78,20 @@ public class ConfigEncryptHealthIndicator implements HealthIndicator {
      */
     @Override
     public Health health() {
+        // 环境不可用时返回 UNKNOWN（编码规范要求的三态完整实现）
+        if (environment == null) {
+            return Health.unknown()
+                    .withDetail("error", "ConfigurableEnvironment is not available")
+                    .build();
+        }
+
+        // 检查缓存（高频调用场景减少全量扫描）
+        HealthCheckResult cached = cache.get();
+        long now = System.currentTimeMillis();
+        if (cached != null && (now - cached.timestamp()) < CACHE_TTL_MS) {
+            return cached.health();
+        }
+
         // 检查密钥来源
         String keySource = resolveKeySource();
         int encryptedCount = countEncryptedProperties();
@@ -83,7 +104,8 @@ public class ConfigEncryptHealthIndicator implements HealthIndicator {
                     .withDetail("encryptedPropertyCount", 0);
         } else if ("NOT_CONFIGURED".equals(keySource)) {
             builder = Health.down()
-                    .withDetail("error", "Encrypted properties found but Jasypt master password is not configured");
+                    .withDetail("error",
+                            "Encrypted properties found but Jasypt master password is not configured");
         } else {
             builder = Health.up()
                     .withDetail("encryptorPasswordSource", keySource)
@@ -101,7 +123,27 @@ public class ConfigEncryptHealthIndicator implements HealthIndicator {
             builder.withDetail("encryptedProperties", displayKeys);
         }
 
-        return builder.build();
+        Health result = builder.build();
+        cache.set(new HealthCheckResult(result, now));
+        return result;
+    }
+
+    /**
+     * 健康检查结果缓存记录
+     *
+     * @param health    检查结果
+     * @param timestamp 生成时间戳
+     */
+    private record HealthCheckResult(Health health, long timestamp) {
+    }
+
+    /**
+     * 手动清除健康检查缓存
+     *
+     * <p>在主动配置刷新后可调用此方法强制下次重新扫描。
+     */
+    public void evictCache() {
+        cache.set(null);
     }
 
     /**

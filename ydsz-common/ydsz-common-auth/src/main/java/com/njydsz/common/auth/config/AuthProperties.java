@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.Data;
 
@@ -24,6 +26,7 @@ import lombok.Data;
  *
  */
 @Data
+@Validated
 @ConfigurationProperties(prefix = "ydsz.auth")
 public class AuthProperties {
     /**
@@ -96,13 +99,33 @@ public class AuthProperties {
     /**
      * 权限缓存 TTL（秒），默认 30 分钟。
      */
-    @Min(1)
+    @Min(60)
+    @Max(86400)
     private Integer permissionCacheTtlSeconds = 1800;
+
+    /**
+     * 空值缓存 TTL（秒），默认 30 秒。
+     *
+     * <p>当角色权限查询返回空结果（menu/button/api 全部为空）时，
+     * 缓存该空值较短时间，防止缓存穿透（大量请求反复查询不存在的角色权限）。
+     */
+    @Min(1)
+    private Integer permissionCacheNullTtlSeconds = 30;
+
+    /**
+     * 权限缓存 TTL 随机抖动百分比，默认 10（±10%）。
+     *
+     * <p>用于在所有缓存写入时添加随机抖动，避免大量缓存同时过期导致雪崩。
+     * 例如 TTL=1800 秒、jitter=10%，实际 TTL 范围为 1620~1980 秒。
+     */
+    @Min(0)
+    private Integer permissionCacheTtlJitterPercent = 10;
 
     /**
      * 权限缓存最大容量（默认 1000）。
      */
-    @Min(1)
+    @Min(100)
+    @Max(100000)
     private Integer permissionCacheMaxSize = 1000;
 
     /**
@@ -182,9 +205,63 @@ public class AuthProperties {
         /**
          * 黑名单过期时间（秒），应与 Token 有效期一致
          */
-    @Min(1)
-    private long expireSeconds = 7200;
+        @Min(1)
+        private long expireSeconds = 7200;
     }
+
+    /**
+     * Token 有效期（秒），默认 7200（2 小时）。
+     *
+     * <p>控制 Access Token 的过期时间，过期后需使用 Refresh Token 重新获取。</p>
+     */
+    @Min(300)
+    @Max(604800)
+    private Integer tokenExpireSeconds = 7200;
+
+    /**
+     * Refresh Token 有效期（秒），默认 2592000（30 天）。
+     *
+     * <p>控制 Refresh Token 的过期时间，过期后需重新登录。</p>
+     */
+    @Min(3600)
+    @Max(2592000)
+    private Integer refreshTokenExpireSeconds = 2592000;
+
+    /**
+     * 空权限缓存 TTL（秒），默认 60。
+     *
+     * <p>当查询结果为空权限时，缓存该结果以避免缓存穿透。</p>
+     */
+    @Min(5)
+    @Max(300)
+    private Integer nullPermissionCacheTtlSeconds = 60;
+
+    /**
+     * 缓存 TTL 抖动百分比，默认 10（10%）。
+     *
+     * <p>在缓存过期时间上增加随机抖动，避免大量缓存同时过期导致缓存雪崩。</p>
+     */
+    @Min(0)
+    @Max(50)
+    private Integer cacheTtlJitterPercent = 10;
+
+    /**
+     * 最大登录失败次数，默认 5。
+     *
+     * <p>超过此次数后账户将被锁定。</p>
+     */
+    @Min(3)
+    @Max(20)
+    private Integer maxFailedAttempts = 5;
+
+    /**
+     * 账户锁定时间（分钟），默认 30。
+     *
+     * <p>达到最大失败次数后，账户被锁定的持续时间。</p>
+     */
+    @Min(1)
+    @Max(1440)
+    private Integer lockTimeMinutes = 30;
 
     /**
      * 是否启用权限预热（默认 true）。
