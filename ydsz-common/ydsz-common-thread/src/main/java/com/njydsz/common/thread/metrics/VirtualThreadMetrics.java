@@ -16,9 +16,6 @@ import org.springframework.lang.NonNull;
  * 因此本绑定器通过应用层计数器暴露 submitted / completed 两个指标，
  * 由 {@link MeteredVirtualExecutorService} 在任务提交/完成时回调计数。
  *
- * <p>如需对虚拟线程池进行精细化监控（活跃线程数等），
- * 建议使用 {@code ydsz-common-util} 中的 {@code BoundedVirtualThreadScheduler}。
- *
  * <p>v1.4.0 变更：移除 rejected 指标（JDK 21 的虚拟线程执行器从不拒绝任务，
  * 该计数器始终为 0，无实际意义）。
  *

@@ -3,6 +3,8 @@ package com.njydsz.common.util.validate;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
+import com.njydsz.common(util.api.Experimental;
+
 /**
  * 业务校验工具类
  *
@@ -22,6 +24,7 @@ import javax.annotation.Nullable;
  * @author ydsz-team
  * @since 4.0.0
  */
+@Experimental("零采用；覆盖面待扩充（护照、港澳台手机号等）")
 public final class ValidationUtils {
 
     /** 中国大陆手机号正则：1开头，第二位3-9，共11位 */

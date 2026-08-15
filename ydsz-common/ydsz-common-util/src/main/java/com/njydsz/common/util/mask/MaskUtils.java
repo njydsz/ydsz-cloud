@@ -1,5 +1,7 @@
 package com.njydsz.common.util.mask;
 
+import com.njydsz.common.util.api.Experimental;
+
 /**
  * 数据脱敏工具类
  *
@@ -13,6 +15,7 @@ package com.njydsz.common.util.mask;
  * @author ydsz-team
  * @since 4.0.0
  */
+@Experimental("零采用；@Mask 注解化与脱敏位可配置化待实现")
 public final class MaskUtils {
 
     /** 默认掩码字符 */

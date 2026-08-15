@@ -10,6 +10,8 @@ import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
+import com.njydsz.common.util.api.Experimental;
+
 /**
  * 日期时间工具类（基于 java.time API）
  *
@@ -23,6 +25,7 @@ import java.util.Objects;
  * @author ydsz-team
  * @since 4.0.0
  */
+@Experimental("零采用；节假日日历与国际化场景待验证")
 public final class DateUtils {
 
     /** 默认日期时间格式：yyyy-MM-dd HH:mm:ss */
