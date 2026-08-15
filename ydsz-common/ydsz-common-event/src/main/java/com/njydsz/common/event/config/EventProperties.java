@@ -25,20 +25,13 @@ import lombok.Setter;
  *       auto-cleanup: true
  *       cleanup-interval-hours: 6
  *       max-payload-size-bytes: 4194304
- *       default-priority: 5
- *       default-schema-version: v1.0.0
- *       stale-processing-threshold-minutes: 5
- *       pending-alert-threshold: 10000
- *       dead-letter-alert-threshold: 10
- *       enable-tenant-isolation: true
- *       enable-sync-publish: false
- *       auto-dedup: false
  *       worker-threads: 1
  *       fail-on-noop: true
  * }</pre>
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @since 1.7.0 精简配置项，移除 schema-validation/sync-publish/alert-threshold 等未验证配置
  */
 @Getter
 @Setter
@@ -78,29 +71,8 @@ public class EventProperties {
     /** 消息 payload 最大字节数（默认 4MB） */
     private int maxPayloadSizeBytes = 4 * 1024 * 1024;
 
-    /** 默认优先级（0-9，9 最高） */
-    private int defaultPriority = 5;
-
-    /** 默认 Schema 版本号 */
-    private String defaultSchemaVersion = "v1.0.0";
-
     /** PROCESSING 状态超时阈值（分钟），超时后回收为 PENDING */
     private int staleProcessingThresholdMinutes = 5;
-
-    /** PENDING 积压告警阈值 */
-    private long pendingAlertThreshold = 10000;
-
-    /** DEAD_LETTER 告警阈值 */
-    private long deadLetterAlertThreshold = 10;
-
-    /** 是否启用租户隔离 */
-    private boolean enableTenantIsolation = true;
-
-    /** 是否启用同步投递模式（事务提交后立即投递） */
-    private boolean enableSyncPublish = false;
-
-    /** 是否自动生成幂等去重 ID（基于内容 SHA-256 哈希，默认关闭） */
-    private boolean autoDedup = false;
 
     /** 投递工作线程数（1=单线程，>1=多线程并行投递） */
     private int workerThreads = 1;
@@ -108,15 +80,6 @@ public class EventProperties {
     /** 检测到 NoopEventPublishGateway 时是否启动失败（生产环境应设为 true） */
     private boolean failOnNoop = true;
 
-    /** 是否在事务提交后将领域事件发布为 Spring 事件（供进程内 @EventListener 订阅） */
-    private boolean enableDomainEventPublish = true;
-
     /** Outbox 队列深度统计缓存时间（秒），减少 countByStatus 全表扫描频率 */
     private long statusCountCacheSeconds = 5;
-
-    /** 是否启用 JSON Schema 校验（默认 false = 仅注册 Schema 但不校验） */
-    private boolean enableSchemaValidation = false;
-
-    /** Schema 校验失败时是否阻断写入（true = 抛异常；false = 仅 WARN 日志） */
-    private boolean schemaValidationFailFast = false;
 }

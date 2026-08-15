@@ -37,9 +37,15 @@ import lombok.ToString;
  *
  * <p><b>互踢事件：</b>被互踢的会话 token 会自动加入黑名单，客户端收到 401 时需重新登录。</p>
  *
+ * <p><b>迁移指南：</b>会话管理与认证鉴权属于不同关注点，已超出本模块职责边界。
+ * 请迁移至独立的会话管理模块或使用网关层会话控制能力。</p>
+ *
  * @author ydsz-team
  * @since 1.2.0
+ * @deprecated 自 3.0.0 起标记废弃，计划 4.0.0 移除。
+ *             迁移目标：独立 {@code ydsz-common-session} 模块或网关层会话控制。
  */
+@Deprecated(forRemoval = true, since = "3.0.0")
 @Service
 @ConditionalOnBean(RedisHashOps.class)
 public class SessionControlService {
@@ -206,7 +212,10 @@ public class SessionControlService {
 
     /**
      * 设备信息值对象。
+     *
+     * @deprecated 自 3.0.0 起标记废弃，随 {@link SessionControlService} 一并移除。
      */
+    @Deprecated(forRemoval = true, since = "3.0.0")
     @Getter
     @Builder
     @ToString
@@ -231,7 +240,10 @@ public class SessionControlService {
 
     /**
      * 活跃会话信息。
+     *
+     * @deprecated 自 3.0.0 起标记废弃，随 {@link SessionControlService} 一并移除。
      */
+    @Deprecated(forRemoval = true, since = "3.0.0")
     @Getter
     @Builder
     @ToString
@@ -245,7 +257,10 @@ public class SessionControlService {
      * 会话互踢事件监听器。
      *
      * <p>业务方可通过实现此接口监听互踢事件（如推送通知给被踢客户端）。</p>
+     *
+     * @deprecated 自 3.0.0 起标记废弃，随 {@link SessionControlService} 一并移除。
      */
+    @Deprecated(forRemoval = true, since = "3.0.0")
     @FunctionalInterface
     public interface SessionControlListener {
         void onSessionEvicted(Long userId, String tokenId);

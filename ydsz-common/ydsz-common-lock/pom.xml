@@ -118,6 +118,16 @@
             <artifactId>ydsz-common-auth</artifactId>
             <optional>true</optional>
         </dependency>
+        <!--ydsz-common-redis-->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-redis</artifactId>
+        </dependency>
+        <!--ydsz-common-json-->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-json</artifactId>
+        </dependency>
         <!-- Test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

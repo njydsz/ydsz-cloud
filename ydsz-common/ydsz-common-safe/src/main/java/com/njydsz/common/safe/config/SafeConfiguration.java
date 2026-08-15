@@ -51,7 +51,6 @@ import com.njydsz.common.safe.filter.CsrfFilter;
 import com.njydsz.common.safe.filter.IpAccessFilter;
 import com.njydsz.common.safe.filter.SafeRequestBodyCacheFilter;
 import com.njydsz.common.safe.filter.SecurityHeaderFilter;
-import com.njydsz.common.safe.filter.SqlInjectionFilter;
 import com.njydsz.common.safe.filter.XssFilter;
 import com.njydsz.common.safe.ip.IpAccessService;
 import com.njydsz.common.safe.sensitive.SensitiveDataAdvice;
@@ -91,15 +90,13 @@ import com.njydsz.common.safe.sensitive.SensitiveDataAdvice;
         SafeAlertProperties.class,
         ApiSignatureProperties.class,
         IpAccessProperties.class,
-        AutoBlockProperties.class,
-        SqlInjectionProperties.class
+        AutoBlockProperties.class
 })
 public class SafeConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(SafeConfiguration.class);
 
     private final SafeXssProperties safeXssProperties;
-    private final SqlInjectionProperties sqlInjectionProperties;
     private final CsrfProperties csrfProperties;
     private final SecurityHeaderProperties securityHeaderProperties;
     private final IpAccessProperties ipAccessProperties;
@@ -109,13 +106,11 @@ public class SafeConfiguration {
      * 构造方法，注入各子模块配置属性用于启动日志输出
      */
     public SafeConfiguration(SafeXssProperties safeXssProperties,
-                              SqlInjectionProperties sqlInjectionProperties,
                               CsrfProperties csrfProperties,
                               SecurityHeaderProperties securityHeaderProperties,
                               IpAccessProperties ipAccessProperties,
                               ApiSignatureProperties apiSignatureProperties) {
         this.safeXssProperties = safeXssProperties;
-        this.sqlInjectionProperties = sqlInjectionProperties;
         this.csrfProperties = csrfProperties;
         this.securityHeaderProperties = securityHeaderProperties;
         this.ipAccessProperties = ipAccessProperties;
@@ -132,8 +127,6 @@ public class SafeConfiguration {
         log.info("==================== [Safe Module] Effective Config Summary ====================");
         log.info("  XSS:            mode={}, enabled={}, strictLevel={}",
                 safeXssProperties.getMode(), safeXssProperties.isEnabled(), safeXssProperties.getStrictLevel());
-        log.info("  SQL Injection:  enabled={}, blockOnDetect={}",
-                sqlInjectionProperties.isEnabled(), sqlInjectionProperties.isBlockOnDetect());
         log.info("  CSRF:           mode={}, enabled={}, checkOrigin={}",
                 csrfProperties.getMode(), csrfProperties.isEnabled(), csrfProperties.isCheckOrigin());
         log.info("  Security Heads: enabled={}", securityHeaderProperties.isEnabled());

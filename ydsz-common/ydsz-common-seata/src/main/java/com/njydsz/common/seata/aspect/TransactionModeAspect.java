@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 
 import com.njydsz.common.seata.annotation.TransactionalMode;
-import com.njydsz.common.seata.api.TransactionContext;
+import com.njydsz.common.seata.context.XidContextHolder;
 
 /**
  * 事务模式切面
@@ -23,8 +23,8 @@ import com.njydsz.common.seata.api.TransactionContext;
  *
  * <p>设计说明：
  * <ul>
- *   <li>基于 {@link TransactionContext} 静态 ThreadLocal 标记事务上下文</li>
- *   <li>事务执行器通过 {@link TransactionContext#getRequiredType()} 获取当前声明类型</li>
+ *   <li>基于 {@link XidContextHolder} 的 TransmittableThreadLocal 标记事务上下文</li>
+ *   <li>事务执行器通过 {@link XidContextHolder#getRequiredType()} 获取当前声明类型</li>
  *   <li>提供方法级别事务声明不影响不相关的其它调用</li>
  * </ul>
  *
@@ -67,7 +67,7 @@ public class TransactionModeAspect implements Ordered {
             txName = getMethodName(joinPoint);
         }
 
-        TransactionContext.setTransactionType(type, txName);
+        XidContextHolder.setTransactionType(type, txName);
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("[TxMode] Transaction type set: {}, method: {}", type, txName);
@@ -76,7 +76,7 @@ public class TransactionModeAspect implements Ordered {
         try {
             return joinPoint.proceed();
         } finally {
-            TransactionContext.clear();
+            XidContextHolder.remove();
         }
     }
 

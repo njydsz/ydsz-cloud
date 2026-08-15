@@ -2,81 +2,143 @@ package com.njydsz.common.seata.context;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
 
+import com.njydsz.common.seata.api.TransactionType;
+
 /**
- * 全局事务 XID 上下文持有者
+ * XID 与事务上下文持有者
  *
- * <p>基于 {@link TransmittableThreadLocal} 实现，支持跨线程池的 XID 透传，
- * 解决父子线程、线程池场景下 XID 丢失的问题。
+ * <p>基于 {@link TransmittableThreadLocal} 存储全局事务 XID 及事务类型/名称，
+ * 支持线程池场景下的上下文透传。
  *
- * <p><b>P2-3 新增</b>：从 {@code AbstractTransactionManager} 抽取出独立的 XID 持有者，
- * 解决 {@code AbstractTransactionManager} 与 {@code DefaultXidPropagator} 之间的循环依赖。
+ * <p>合并了原 {@code TransactionContext} 的事务类型标记能力，
+ * 消除双 ThreadLocal 并存导致的内存占用与生命周期不一致问题。
  *
- * <p>工作原理：
- * <ul>
- *   <li>{@code AbstractTransactionManager} 在 begin 时 set XID，在 commit/rollback 后 remove</li>
- *   <li>{@code DefaultXidPropagator} 在 HTTP 入口 restore XID，在出口 propagate XID</li>
- *   <li>{@code FeignXidRequestInterceptor} / {@code XidServletFilter} 依赖此持有者实现上下文传播</li>
- *   <li>{@code SeataTaskDecorator} / {@code SeataExecutors} 通过 TTL 自动透传 XID 到子线程</li>
- * </ul>
- *
- * <p>线程安全性：每个线程拥有独立的 XID 副本，TTL 在任务提交/执行时自动 snapshot & restore。
+ * <p><b>使用注意</b>：必须在请求结束时调用 {@link #remove()} 清理，
+ * 建议在 ServletFilter 或 AOP 切面的 finally 块中统一清理。
  *
  * @author ydsz-team
- * @since 1.3.0
+ * @since 1.4.0
  */
 public final class XidContextHolder {
 
-    /**
-     * 基于 TransmittableThreadLocal 的 XID 持有者
-     *
-     * <p>当使用 {@code TtlExecutors} 包装线程池，或手动调用
-     * {@code TtlRunnable.get(runnable)} / {@code TtlCallable.get(callable)} 时，
-     * 子线程自动获取父线程的 XID 副本。
-     */
-    private static final TransmittableThreadLocal<String> XID_HOLDER = new TransmittableThreadLocal<>();
+    private static final TransmittableThreadLocal<XidContext> HOLDER = new TransmittableThreadLocal<>();
 
     private XidContextHolder() {
-        // utility class
+        // 工具类，禁止实例化
+    }
+
+    /**
+     * 设置全局事务 XID
+     *
+     * @param xid 全局事务 ID
+     */
+    public static void setXid(String xid) {
+        XidContext ctx = HOLDER.get();
+        if (ctx == null) {
+            ctx = new XidContext();
+            HOLDER.set(ctx);
+        }
+        ctx.xid = xid;
     }
 
     /**
      * 获取当前线程的全局事务 XID
      *
-     * @return XID，无事务上下文时返回 null
+     * @return 全局事务 ID，无事务上下文时返回 null
      */
     public static String getXid() {
-        return XID_HOLDER.get();
+        XidContext ctx = HOLDER.get();
+        return ctx != null ? ctx.xid : null;
     }
 
     /**
-     * 设置当前线程的全局事务 XID
+     * 设置当前线程的事务类型与名称
      *
-     * @param xid 全局事务 ID，null 等效于 {@link #remove()}
+     * @param type 事务类型（非空）
+     * @param name 事务名称（可为空）
      */
-    public static void setXid(String xid) {
-        if (xid == null) {
-            XID_HOLDER.remove();
-        } else {
-            XID_HOLDER.set(xid);
+    public static void setTransactionType(TransactionType type, String name) {
+        if (type == null) {
+            throw new IllegalArgumentException("TransactionType cannot be null");
         }
+        XidContext ctx = HOLDER.get();
+        if (ctx == null) {
+            ctx = new XidContext();
+            HOLDER.set(ctx);
+        }
+        ctx.type = type;
+        ctx.name = name != null ? name : "";
     }
 
     /**
-     * 清除当前线程的全局事务 XID
+     * 获取当前线程声明的事务类型
      *
-     * <p>应在事务完成后调用，避免 ThreadLocal 内存泄漏。
+     * @return 事务类型，未声明时返回 null
+     */
+    public static TransactionType getRequiredType() {
+        XidContext ctx = HOLDER.get();
+        return ctx != null ? ctx.type : null;
+    }
+
+    /**
+     * 获取当前线程声明的事务名称
+     *
+     * @return 事务名称，未声明时返回 null
+     */
+    public static String getTransactionName() {
+        XidContext ctx = HOLDER.get();
+        return ctx != null ? ctx.name : null;
+    }
+
+    /**
+     * 判断当前线程是否已声明事务类型
+     *
+     * @return 已声明返回 true，否则返回 false
+     */
+    public static boolean isTransactionActive() {
+        XidContext ctx = HOLDER.get();
+        return ctx != null && ctx.type != null;
+    }
+
+    /**
+     * 获取完整的 XID 上下文（供框架内部使用）
+     *
+     * @return 当前上下文，不存在返回 null
+     */
+    public static XidContext current() {
+        return HOLDER.get();
+    }
+
+    /**
+     * 清除当前线程的事务上下文
+     *
+     * <p><b>注意</b>：此方法仅应在请求结束时调用一次，避免上下文污染。
      */
     public static void remove() {
-        XID_HOLDER.remove();
+        HOLDER.remove();
     }
 
     /**
-     * 判断当前线程是否存在事务上下文
+     * XID 上下文数据对象
      *
-     * @return 存在返回 true，否则返回 false
+     * <p>封装全局事务 ID、事务类型和事务名称，支持 TTL 透传。
      */
-    public static boolean hasXid() {
-        return XID_HOLDER.get() != null;
-    }
+    public static final class XidContext {
 
+        private String xid;
+        private TransactionType type;
+        private String name;
+
+        public String getXid() {
+            return xid;
+        }
+
+        public TransactionType getType() {
+            return type;
+        }
+
+        public String getName() {
+            return name;
+        }
+    }
 }
