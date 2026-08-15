@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.system.infra.mapper.DictItemMapper">
+
+    <!--
+        批量插入字典项（一次 SQL 批量写入）
+
+        用于 DictItemBatchServiceImpl.batchSave 场景，将 N 次单条 INSERT 合并为 1 次批量 INSERT。
+        注意：id 字段需由调用方预先设置（通过 IdentifierGenerator 生成雪花 ID），
+        不会触发 MyBatis-Plus 的 @TableId 自动填充（批量 XML 不走 MP 拦截器）。
+
+        审计字段（created_at, created_by）同理由调用方设置，与单条 insert 保持一致。
+    -->
+    <insert id="insertBatch" parameterType="java.util.List">
+        INSERT INTO ydsz_dict_item (
+            id, type_code, item_code, item_value, sort_order,
+            parent_id, description, ext_json, status,
+            tenant_id, deleted, created_at, created_by
+        ) VALUES
+        <foreach collection="items" item="item" separator=",">
+            (
+                #{item.id}, #{item.typeCode}, #{item.itemCode}, #{item.itemValue}, #{item.sortOrder},
+                #{item.parentId}, #{item.description}, #{item.extJson}, #{item.status},
+                #{item.tenantId}, #{item.deleted}, #{item.createdAt}, #{item.createdBy}
+            )
+        </foreach>
+    </insert>
+
+</mapper>
