@@ -69,17 +69,6 @@ public class AuthColPermissionSigner {
     private final int validitySeconds;
 
     /**
-     * 构造签名器（向后兼容，默认关闭签名校验）。
-     *
-     * @param secretKey 签名密钥，为空时签名校验将被跳过
-     * @deprecated 使用 {@link #AuthColPermissionSigner(String, boolean, int)} 替代
-     */
-    @Deprecated
-    public AuthColPermissionSigner(String secretKey) {
-        this(secretKey, false, 300);
-    }
-
-    /**
      * 构造签名器。
      *
      * @param secretKey       签名密钥，为空时签名校验将被跳过

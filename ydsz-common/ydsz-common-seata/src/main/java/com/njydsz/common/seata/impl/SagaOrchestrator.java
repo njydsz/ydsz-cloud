@@ -12,6 +12,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import com.njydsz.common.seata.api.SagaStateMachineLog;
 import com.njydsz.common.seata.api.SagaStateMachineLogStore;
 import com.njydsz.common.seata.api.SagaStep;
+import com.njydsz.common.seata.api.SagaResult;
 import com.njydsz.common.seata.audit.TransactionAuditLogger;
 import com.njydsz.common.seata.config.SeataProperties;
 import com.njydsz.common.seata.metrics.SeataMetrics;
@@ -174,8 +175,8 @@ public class SagaOrchestrator extends AbstractTransactionManager {
                 log.warn("SAGA step has no compensation, skipping: name={}, xid={}", step.getName(), xid);
                 continue;
             }
-            boolean success = compensateStepWithRetry(step, xid);
-            if (!success) {
+            int result = compensateStepWithRetry(step, xid);
+            if (result < 0) {
                 allSuccess = false;
                 log.error("SAGA compensation failed after retries: step={}, xid={}", step.getName(), xid);
             }
@@ -196,6 +197,203 @@ public class SagaOrchestrator extends AbstractTransactionManager {
     public <T> T execute(String transactionName, List<? extends SagaStep<?>> steps, Class<T> resultType) throws Exception {
         Object result = execute(transactionName, steps);
         return resultType.cast(result);
+    }
+
+    /**
+     * 执行 SAGA 事务并返回详细结果（P2-4 新增）
+     *
+     * <p>与 {@link #execute(String, List)} 不同，本方法不抛出异常，
+     * 而是将执行结果封装为 {@link SagaResult} 返回，包含：
+     * <ul>
+     *   <li>执行状态（SUCCESS/COMPENSATED/COMPENSATION_FAILED）</li>
+     *   <li>各步骤执行详情（名称、耗时、结果）</li>
+     *   <li>补偿失败明细（步骤名、错误信息、重试次数）</li>
+     * </ul>
+     *
+     * @param transactionName 事务名称
+     * @param steps           SAGA 步骤链
+     * @param <T>             最后一步的返回值类型
+     * @return SAGA 执行结果
+     */
+    @SuppressWarnings("unchecked")
+    public <T> SagaResult<T> executeWithResult(String transactionName, List<? extends SagaStep<?>> steps) {
+        String xid = beginXid(transactionName);
+        LocalDateTime startTime = LocalDateTime.now();
+        log.info("SAGA transaction started: name={}, xid={}, steps={}", transactionName, xid, steps.size());
+
+        SagaResult.Builder<T> resultBuilder = SagaResult.<T>builder(transactionName, xid)
+                .startTime(startTime);
+
+        // 创建状态机日志（如存储可用）
+        SagaStateMachineLog stateLog = createStateMachineLog(transactionName, xid, steps);
+
+        List<SagaStep<?>> completedSteps = new ArrayList<>();
+        Object lastResult = null;
+
+        try {
+            for (int i = 0; i < steps.size(); i++) {
+                SagaStep<?> step = steps.get(i);
+                long stepStart = System.currentTimeMillis();
+                log.info("SAGA step {}/{} forward: name={}, xid={}", i + 1, steps.size(), step.getName(), xid);
+
+                // 更新当前步骤状态
+                if (stateLog != null) {
+                    stateLog.setCurrentStepIndex(i);
+                    stateLog.setCurrentStepName(step.getName());
+                    stateLog.setState(SagaStateMachineLog.SagaState.EXECUTING);
+                    persistStateMachineLog(stateLog);
+                }
+
+                try {
+                    // P2-6: 步骤级超时控制
+                    if (step instanceof SagaStep<?> sagaStep && sagaStep.hasTimeout()) {
+                        lastResult = executeWithTimeout(sagaStep, xid);
+                    } else {
+                        lastResult = step.getForwardAction().call();
+                    }
+                    long stepDuration = System.currentTimeMillis() - stepStart;
+                    completedSteps.add(step);
+                    resultBuilder.addStepExecution(
+                            new SagaResult.StepExecution(i, step.getName(), true, stepDuration, null));
+                    log.info("SAGA step {}/{} completed: name={}, xid={}, duration={}ms",
+                            i + 1, steps.size(), step.getName(), xid, stepDuration);
+                } catch (Exception stepEx) {
+                    long stepDuration = System.currentTimeMillis() - stepStart;
+                    resultBuilder.addStepExecution(
+                            new SagaResult.StepExecution(i, step.getName(), false, stepDuration, stepEx.getMessage()));
+                    throw stepEx;
+                }
+            }
+
+            // 全部步骤执行成功
+            if (stateLog != null) {
+                stateLog.setState(SagaStateMachineLog.SagaState.SUCCEEDED);
+                persistStateMachineLog(stateLog);
+            }
+
+            log.info("SAGA transaction completed: name={}, xid={}", transactionName, xid);
+            return resultBuilder
+                    .status(SagaResult.Status.SUCCESS)
+                    .result((T) lastResult)
+                    .build();
+
+        } catch (Exception e) {
+            log.error("SAGA transaction failed at step {}/{}, executing compensation: name={}, xid={}",
+                    completedSteps.size() + 1, steps.size(), transactionName, xid, e);
+
+            // 更新状态为失败
+            if (stateLog != null) {
+                stateLog.setState(SagaStateMachineLog.SagaState.FAILED);
+                stateLog.setLastError(e.getMessage());
+                persistStateMachineLog(stateLog);
+            }
+
+            // 执行补偿
+            List<SagaResult.CompensationFailure> compensationFailures = new ArrayList<>();
+            boolean compensationSuccess = executeCompensationWithDetails(completedSteps, xid, stateLog, compensationFailures);
+
+            resultBuilder.addCompensationFailures(compensationFailures);
+
+            if (compensationSuccess) {
+                if (stateLog != null) {
+                    stateLog.setState(SagaStateMachineLog.SagaState.COMPENSATED);
+                    persistStateMachineLog(stateLog);
+                }
+                return resultBuilder
+                        .status(SagaResult.Status.COMPENSATED)
+                        .errorMessage(e.getMessage())
+                        .build();
+            } else {
+                if (stateLog != null) {
+                    stateLog.setState(SagaStateMachineLog.SagaState.COMPENSATION_FAILED);
+                    persistStateMachineLog(stateLog);
+                }
+                return resultBuilder
+                        .status(SagaResult.Status.COMPENSATION_FAILED)
+                        .errorMessage(e.getMessage())
+                        .build();
+            }
+        }
+    }
+
+    /**
+     * 执行补偿操作（逆序），并收集补偿失败详情
+     *
+     * @param completedSteps 已完成的步骤
+     * @param xid            全局事务 ID
+     * @param stateLog       状态机日志
+     * @param failures       补偿失败详情收集器
+     * @return 补偿是否全部成功
+     */
+    private boolean executeCompensationWithDetails(List<SagaStep<?>> completedSteps, String xid,
+                                                    SagaStateMachineLog stateLog,
+                                                    List<SagaResult.CompensationFailure> failures) {
+        List<SagaStep<?>> reverseSteps = new ArrayList<>(completedSteps);
+        Collections.reverse(reverseSteps);
+
+        if (stateLog != null) {
+            stateLog.setState(SagaStateMachineLog.SagaState.COMPENSATING);
+            persistStateMachineLog(stateLog);
+        }
+
+        boolean allSuccess = true;
+        for (SagaStep<?> step : reverseSteps) {
+            if (!step.hasCompensation()) {
+                log.warn("SAGA step has no compensation, skipping: name={}, xid={}", step.getName(), xid);
+                continue;
+            }
+            int attempt = compensateStepWithRetry(step, xid);
+            if (attempt < 0) {
+                allSuccess = false;
+                String errorMsg = "Compensation failed after max retries";
+                failures.add(new SagaResult.CompensationFailure(step.getName(), errorMsg,
+                        properties != null ? properties.getSagaMaxRetries() : 0));
+                log.error("SAGA compensation failed after retries: step={}, xid={}", step.getName(), xid);
+            }
+        }
+        return allSuccess;
+    }
+
+    /**
+     * 带超时控制执行步骤（P2-6 新增）
+     *
+     * <p>使用 CompletableFuture 实现步骤级超时控制。
+     * 超时后抛出 StepTimeoutException，由上层执行补偿。
+     *
+     * @param step SAGA 步骤（带超时设置）
+     * @param xid  全局事务 ID
+     * @return 步骤执行结果
+     * @throws Exception 执行异常或超时异常
+     */
+    private Object executeWithTimeout(SagaStep<?> step, String xid) throws Exception {
+        java.util.concurrent.ExecutorService executor = java.util.concurrent.Executors.newSingleThreadExecutor(r -> {
+            Thread t = new Thread(r, "saga-step-" + step.getName());
+            t.setDaemon(true);
+            return t;
+        });
+        try {
+            return java.util.concurrent.CompletableFuture.supplyAsync(() -> {
+                        try {
+                            return step.getForwardAction().call();
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }, executor)
+                    .get(step.getTimeoutMs(), java.util.concurrent.TimeUnit.MILLISECONDS);
+        } catch (java.util.concurrent.TimeoutException te) {
+            throw new StepTimeoutException(step.getName(), step.getTimeoutMs(), xid);
+        } catch (java.util.concurrent.ExecutionException ee) {
+            Throwable cause = ee.getCause();
+            if (cause instanceof RuntimeException && cause.getCause() != null) {
+                cause = cause.getCause();
+            }
+            if (cause instanceof Exception e) {
+                throw e;
+            }
+            throw new Exception(cause);
+        } finally {
+            executor.shutdownNow();
+        }
     }
 
     /**
@@ -240,15 +438,22 @@ public class SagaOrchestrator extends AbstractTransactionManager {
         return stateMachineLogStoreProvider != null ? stateMachineLogStoreProvider.getIfAvailable() : null;
     }
 
-    private boolean compensateStepWithRetry(SagaStep<?> step, String xid) {
+    /**
+     * 带重试的补偿步骤执行
+     *
+     * @param step 步骤
+     * @param xid  全局事务 ID
+     * @return 成功时返回重试次数（0 表示首次成功），失败返回 -1
+     */
+    private int compensateStepWithRetry(SagaStep<?> step, String xid) {
         int maxRetries = properties != null ? properties.getSagaMaxRetries() : 0;
         long intervalMs = properties != null ? properties.getSagaRetryIntervalMs() : 2000;
 
         for (int attempt = 0; attempt <= maxRetries; attempt++) {
             try {
                 step.getCompensation().run();
-                log.info("SAGA compensation completed: step={}, xid={}", step.getName(), xid);
-                return true;
+                log.info("SAGA compensation completed: step={}, xid={}, attempt={}", step.getName(), xid, attempt);
+                return attempt;
             } catch (Exception e) {
                 log.warn("SAGA compensation attempt {} failed: step={}, xid={}", attempt + 1, step.getName(), xid, e);
                 if (attempt < maxRetries) {
@@ -261,7 +466,7 @@ public class SagaOrchestrator extends AbstractTransactionManager {
                 }
             }
         }
-        return false;
+        return -1;
     }
 
     @Override

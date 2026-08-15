@@ -13,13 +13,16 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.common.seata.impl.AbstractTransactionManager;
+import com.njydsz.common.seata.context.XidContextHolder;
 
 /**
  * Seata 感知的 ExecutorService 包装器
  *
  * <p>将普通 ExecutorService 包装为支持 XID 传递的线程池服务。
  * 自动装饰 submit 和 invoke 方法，确保任务在异步线程中正确恢复 XID。
+ *
+ * <p><b>P2-3 修复</b>：改为依赖 {@link XidContextHolder}，
+ * 不再使用 {@code AbstractTransactionManager} 的包级私有方法。
  *
  * @author ydsz-team
  * @since 1.3.0
@@ -36,31 +39,31 @@ class SeataDecoratorExecutorService implements ExecutorService {
 
     @Override
     public void execute(Runnable command) {
-        String capturedXid = AbstractTransactionManager.getXidFromHolder();
+        String capturedXid = XidContextHolder.getXid();
         delegate.execute(new SeataRunnable(command, capturedXid));
     }
 
     @Override
     public <T> Future<T> submit(Callable<T> task) {
-        String capturedXid = AbstractTransactionManager.getXidFromHolder();
+        String capturedXid = XidContextHolder.getXid();
         return delegate.submit(new SeataCallable<>(task, capturedXid));
     }
 
     @Override
     public <T> Future<T> submit(Runnable task, T result) {
-        String capturedXid = AbstractTransactionManager.getXidFromHolder();
+        String capturedXid = XidContextHolder.getXid();
         return delegate.submit(new SeataRunnable(task, capturedXid), result);
     }
 
     @Override
     public Future<?> submit(Runnable task) {
-        String capturedXid = AbstractTransactionManager.getXidFromHolder();
+        String capturedXid = XidContextHolder.getXid();
         return delegate.submit(new SeataRunnable(task, capturedXid));
     }
 
     @Override
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
-        String capturedXid = AbstractTransactionManager.getXidFromHolder();
+        String capturedXid = XidContextHolder.getXid();
         List<SeataCallable<T>> wrappedTasks = tasks.stream()
                 .map(task -> new SeataCallable<>(task, capturedXid))
                 .collect(Collectors.toList());
@@ -70,7 +73,7 @@ class SeataDecoratorExecutorService implements ExecutorService {
     @Override
     public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
             throws InterruptedException {
-        String capturedXid = AbstractTransactionManager.getXidFromHolder();
+        String capturedXid = XidContextHolder.getXid();
         List<SeataCallable<T>> wrappedTasks = tasks.stream()
                 .map(task -> new SeataCallable<>(task, capturedXid))
                 .collect(Collectors.toList());
@@ -79,7 +82,7 @@ class SeataDecoratorExecutorService implements ExecutorService {
 
     @Override
     public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
-        String capturedXid = AbstractTransactionManager.getXidFromHolder();
+        String capturedXid = XidContextHolder.getXid();
         List<SeataCallable<T>> wrappedTasks = tasks.stream()
                 .map(task -> new SeataCallable<>(task, capturedXid))
                 .collect(Collectors.toList());
@@ -89,7 +92,7 @@ class SeataDecoratorExecutorService implements ExecutorService {
     @Override
     public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit)
             throws InterruptedException, ExecutionException, TimeoutException {
-        String capturedXid = AbstractTransactionManager.getXidFromHolder();
+        String capturedXid = XidContextHolder.getXid();
         List<SeataCallable<T>> wrappedTasks = tasks.stream()
                 .map(task -> new SeataCallable<>(task, capturedXid))
                 .collect(Collectors.toList());
@@ -141,12 +144,12 @@ class SeataDecoratorExecutorService implements ExecutorService {
         @Override
         public void run() {
             if (capturedXid != null) {
-                AbstractTransactionManager.setXidToHolder(capturedXid);
+                XidContextHolder.setXid(capturedXid);
             }
             try {
                 delegate.run();
             } finally {
-                AbstractTransactionManager.removeXidFromHolder();
+                XidContextHolder.remove();
             }
         }
     }
@@ -167,12 +170,12 @@ class SeataDecoratorExecutorService implements ExecutorService {
         @Override
         public T call() throws Exception {
             if (capturedXid != null) {
-                AbstractTransactionManager.setXidToHolder(capturedXid);
+                XidContextHolder.setXid(capturedXid);
             }
             try {
                 return delegate.call();
             } finally {
-                AbstractTransactionManager.removeXidFromHolder();
+                XidContextHolder.remove();
             }
         }
     }

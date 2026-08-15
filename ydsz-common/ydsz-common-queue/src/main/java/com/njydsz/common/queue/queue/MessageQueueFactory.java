@@ -10,8 +10,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.queue.config.QueueProperties;
 import com.njydsz.common.queue.enums.QueueType;
-import com.njydsz.common.queue.mq.active.ActiveMQ;
-import com.njydsz.common.queue.mq.active.ActiveMQProperties;
 import com.njydsz.common.queue.mq.kafka.KafkaMQ;
 import com.njydsz.common.queue.mq.kafka.KafkaQueueProperties;
 import com.njydsz.common.queue.mq.rabbit.RabbitMQ;
@@ -25,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
  * 消息队列工厂类
  *
  * <p>根据队列类型创建对应的消息队列实例。
- * 支持 Redis List、Redis PubSub、Redis Stream、Kafka、RocketMQ、RabbitMQ、ActiveMQ 等多种消息队列。
+ * 支持 Redis List、Redis PubSub、Redis Stream、Kafka、RocketMQ、RabbitMQ 等多种消息队列。
  *
  * <p><b>Redis 连接复用：</b>
  * Redis 队列实例复用 ydsz-common-redis 的连接，由 RedisTemplate 统一管理。
@@ -123,9 +121,6 @@ public class MessageQueueFactory implements IMessageQueueProvider, DisposableBea
             case RABBIT:
                 queue = createRabbitMQ();
                 break;
-            case ACTIVE:
-                queue = createActiveMQ();
-                break;
             default:
                 throw BusinessException.builder().key("不支持的消息平台: " + type).build();
         }
@@ -196,12 +191,6 @@ public class MessageQueueFactory implements IMessageQueueProvider, DisposableBea
         return new RabbitMQ(rabbitProperties);
     }
 
-    private IMessageQueue createActiveMQ() {
-        log.info("[Factory] 创建 ActiveMQ 队列");
-        ActiveMQProperties activeProperties = extractActiveMQProperties();
-        return new ActiveMQ(activeProperties, consumerExecutor);
-    }
-
     private KafkaQueueProperties extractKafkaProperties() {
         KafkaQueueProperties kafkaProperties = new KafkaQueueProperties();
         kafkaProperties.setBootstrapServers(properties.resolvedHost() + ":" + properties.resolvedPort());
@@ -231,12 +220,4 @@ public class MessageQueueFactory implements IMessageQueueProvider, DisposableBea
         return rabbitProperties;
     }
 
-    private ActiveMQProperties extractActiveMQProperties() {
-        ActiveMQProperties activeProperties = new ActiveMQProperties();
-        activeProperties.setBrokerUrl("tcp://" + properties.resolvedHost() + ":" + properties.resolvedPort());
-        activeProperties.setUsername(properties.getUsername());
-        activeProperties.setPassword(properties.resolvedPassword());
-        activeProperties.setQueueName(properties.getStreamConsumer());
-        return activeProperties;
-    }
 }

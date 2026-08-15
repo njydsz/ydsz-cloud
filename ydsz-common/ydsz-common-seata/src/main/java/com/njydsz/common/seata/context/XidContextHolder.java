@@ -79,29 +79,4 @@ public final class XidContextHolder {
         return XID_HOLDER.get() != null;
     }
 
-    // ============= 兼容旧 API（保持向后兼容） =============
-
-    /**
-     * @deprecated 使用 {@link #getXid()} 替代
-     */
-    @Deprecated
-    public static String getXidFromHolder() {
-        return getXid();
-    }
-
-    /**
-     * @deprecated 使用 {@link #setXid(String)} 替代
-     */
-    @Deprecated
-    public static void setXidToHolder(String xid) {
-        setXid(xid);
-    }
-
-    /**
-     * @deprecated 使用 {@link #remove()} 替代
-     */
-    @Deprecated
-    public static void removeXidFromHolder() {
-        remove();
-    }
 }

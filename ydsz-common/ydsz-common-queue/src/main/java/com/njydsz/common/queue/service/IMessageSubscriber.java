@@ -104,7 +104,6 @@ public interface IMessageSubscriber {
      *   <li>Redis：Jedis 或 JedisPubSub</li>
      *   <li>Kafka：KafkaConsumer</li>
      *   <li>RabbitMQ：Channel</li>
-     *   <li>ActiveMQ：Session</li>
      * </ul>
      *
      * @return 底层通道对象

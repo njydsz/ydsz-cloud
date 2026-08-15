@@ -4,14 +4,13 @@ package com.njydsz.common.queue.enums;
  * 消息队列类型枚举
  *
  * <p>定义系统支持的消息队列实现类型，包括 Redis 系列（List、Stream、PubSub）
- * 和主流中间件（ActiveMQ、RabbitMQ、RocketMQ、Kafka）。
+ * 和主流中间件（RabbitMQ、RocketMQ、Kafka）。
  *
  * <p><b>类型说明：</b>
  * <ul>
  *   <li>{@link #LIST}：Redis List，轻量级队列，支持 FIFO</li>
  *   <li>{@link #STREAM}：Redis Stream，支持消费组、消息确认等高级特性</li>
  *   <li>{@link #PUBSUB}：Redis PubSub，支持发布/订阅模式</li>
- *   <li>{@link #ACTIVE}：ActiveMQ，面向消息的中间件</li>
  *   <li>{@link #RABBIT}：RabbitMQ，AMQP 协议实现</li>
  *   <li>{@link #ROCKET}：RocketMQ，阿里巴巴开源的分布式消息中间件</li>
  *   <li>{@link #KAFKA}：Kafka，高吞吐量分布式消息系统</li>
@@ -47,14 +46,6 @@ public enum QueueType {
      * <p>支持多订阅者模式，但消息不持久化，适合实时通知场景
      */
     PUBSUB("pubsub"),
-
-    /**
-     * ActiveMQ
-     * <p>Apache 旗下的面向消息的中间件，支持多种协议
-     *
-     * @deprecated 自 1.1.0 起废弃，建议迁移至 RabbitMQ 或 Artemis。将在 2.0.0 版本移除。
-     */
-    ACTIVE("active"),
 
     /**
      * RabbitMQ

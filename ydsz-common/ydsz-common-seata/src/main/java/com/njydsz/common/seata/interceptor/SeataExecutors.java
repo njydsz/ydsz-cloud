@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
  * // 使用
  * executor.submit(() -> {
  *     // 异步任务中可正常获取 XID
- *     String xid = AbstractTransactionManager.getXidFromHolder();
+ *     String xid = XidContextHolder.getXid();
  *     // 执行业务逻辑...
  * });
  * }</pre>

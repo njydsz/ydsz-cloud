@@ -41,7 +41,6 @@ public class QueueHealthIndicator implements HealthIndicator {
     private static final int DEFAULT_KAFKA_PORT = 9092;
     private static final int DEFAULT_RABBIT_PORT = 5672;
     private static final int DEFAULT_ROCKET_PORT = 9876;
-    private static final int DEFAULT_ACTIVE_PORT = 61616;
 
     private final RedisStringOps redisStringOps;
     private final QueueProperties queueProperties;
@@ -165,9 +164,6 @@ public class QueueHealthIndicator implements HealthIndicator {
         }
         if (type == QueueType.ROCKET) {
             return DEFAULT_ROCKET_PORT;
-        }
-        if (type == QueueType.ACTIVE) {
-            return DEFAULT_ACTIVE_PORT;
         }
         return DEFAULT_REDIS_PORT;
     }
