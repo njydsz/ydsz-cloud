@@ -78,7 +78,7 @@ public class RateLimitAspect {
             log.warn("Rate limit blocked: resource={}, key={}, reason={}",
                     decision.getResource(), context.getResource(), decision.getReason());
             // 添加标准化限流响应头（Retry-After / X-RateLimit-*）
-            applyRateLimitHeaders(request(), decision);
+            applyRateLimitHeaders(currentRequest(), decision);
             String code = (errorCode == null || errorCode.isEmpty()) ? "D02001" : errorCode;
             throw BusinessException.builder()
                     .code(code)

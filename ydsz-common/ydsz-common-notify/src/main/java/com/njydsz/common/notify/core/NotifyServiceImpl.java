@@ -80,6 +80,9 @@ public class NotifyServiceImpl implements NotifyService {
     /** 发送处理链（Pipeline 模式） */
     private final SendChain sendChain;
 
+    /** 通知回执追踪器（可选依赖，骨架实现） */
+    private NotifyReceiptTracker receiptTracker = new InMemoryNotifyReceiptTracker();
+
     public NotifyServiceImpl(List<NotifyChannelStrategy> strategyList) {
         this(strategyList, null, null, null, null, null, null, null, null, null);
     }

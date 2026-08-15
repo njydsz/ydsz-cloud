@@ -249,9 +249,11 @@ public class SendChain {
         // 失败降级
         if (!ctx.sendResult().isSuccess() && fallbackManager != null) {
             log.info("[SendChain] 主渠道[{}]发送失败，尝试降级", ctx.channel().getName());
+            String fallbackTitle = ctx.title() != null ? ctx.title() : ctx.templateCode();
+            String fallbackContent = ctx.content() != null ? ctx.content()
+                    : (ctx.templateParams() != null ? String.valueOf(ctx.templateParams()) : "");
             NotifySendResult fallbackResult = fallbackManager.fallbackSend(
-                    ctx.channel(), ctx.receiver(), ctx.title(),
-                    ctx.content() != null ? ctx.content() : String.valueOf(ctx.templateParams()));
+                    ctx.channel(), ctx.receiver(), fallbackTitle, fallbackContent);
             return ctx.withResult(fallbackResult);
         }
 
@@ -261,14 +263,17 @@ public class SendChain {
     // ==================== 辅助方法 ====================
 
     private void recordCircuitResult(NotifyChannel channel, boolean success) {
-        if (circuitBreakerRegistry != null) {
-            circuitBreakerRegistry.recordResult(channel, success);
+        if (circuitBreakerRegistry == null) {
+            return;
+        }
+        if (success) {
+            circuitBreakerRegistry.recordSuccess(channel);
+        } else {
+            circuitBreakerRegistry.recordFailure(channel);
         }
     }
 
     private void recordCircuitFailure(NotifyChannel channel) {
-        if (circuitBreakerRegistry != null) {
-            circuitBreakerRegistry.recordResult(channel, false);
-        }
+        recordCircuitResult(channel, false);
     }
 }

@@ -173,6 +173,35 @@ public class AuthProperties {
     private String colPermissionSignKey;
 
     /**
+     * 是否启用列权限签名校验，默认 false。
+     *
+     * <p>列权限数据实际由服务端从 Redis 或 ColumnPermissionResolver 加载，
+     * 客户端透传的 Header 仅用于 Feign 调用下游服务时传递权限信息。
+     * 在服务端已有独立权限数据源的场景下，签名校验的收益有限，但增加了前端对接复杂度。
+     *
+     * <p>建议：
+     * <ul>
+     *   <li>内部服务间调用：保持关闭（默认），依赖服务端权限数据源</li>
+     *   <li>开放 API 或跨网络边界调用：开启签名校验，防止中间人篡改</li>
+     * </ul>
+     *
+     * @since 2.0.0
+     */
+    private boolean colPermissionSignEnabled = false;
+
+    /**
+     * 列权限签名有效时间窗口（秒），默认 300（5 分钟）。
+     *
+     * <p>用于防重放攻击，签名时间戳与当前时间差超过此窗口时拒绝请求。
+     * 仅在 {@link #colPermissionSignEnabled} 为 true 时生效。
+     *
+     * @since 2.0.0
+     */
+    @Min(60)
+    @Max(3600)
+    private Integer colPermissionSignValiditySeconds = 300;
+
+    /**
      * Redis 不可用时的权限降级策略。
      *
      * <p>当 Redis 服务不可用导致无法加载用户权限时，使用此策略决定是否放行：

@@ -17,6 +17,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import com.njydsz.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.common.queue.queue.MessageQueueFactory;
 import com.njydsz.common.queue.rate.ConsumerRateLimiter;
+import com.njydsz.common.queue.topology.TopologyType;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -378,6 +379,11 @@ public class QueueProperties {
     }
 
     /**
+     * 多 MQ 组合拓扑配置
+     */
+    private MultiTopologyConfig multiTopology = new MultiTopologyConfig();
+
+    /**
      * 消息轨迹配置
      */
     private TraceConfig trace = new TraceConfig();
@@ -412,6 +418,57 @@ public class QueueProperties {
          */
         public String resolvedBackend() {
             return backend != null && !backend.isEmpty() ? backend : "memory";
+        }
+    }
+
+    /**
+     * 多 MQ 组合拓扑配置项
+     */
+    @Data
+    public static class MultiTopologyConfig {
+        /**
+         * 是否启用多 MQ 拓扑（默认 false）
+         */
+        private boolean enabled = false;
+
+        /**
+         * 拓扑类型（primary-backup / fan-out / aggregation）
+         */
+        private String type = "primary-backup";
+
+        /**
+         * 参与拓扑的 MQ 类型列表（逗号分隔, 如 "STREAM,KAFKA"）
+         */
+        private String participants = "";
+
+        /**
+         * 拓扑名称（用于日志和监控标识）
+         */
+        private String topologyName = "default";
+
+        /**
+         * 解析后的拓扑类型
+         *
+         * @return 拓扑类型枚举
+         */
+        public TopologyType resolvedType() {
+            return TopologyType.fromValue(type);
+        }
+
+        /**
+         * 解析后的参与者 MQ 类型列表
+         *
+         * @return MQ 类型枚举列表
+         */
+        public List<QueueType> resolvedParticipants() {
+            if (participants == null || participants.trim().isEmpty()) {
+                return List.of();
+            }
+            return Arrays.stream(participants.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .map(QueueType::fromValue)
+                    .toList();
         }
     }
 

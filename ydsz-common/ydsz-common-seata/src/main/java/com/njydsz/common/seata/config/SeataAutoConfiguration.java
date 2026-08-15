@@ -22,6 +22,7 @@ import com.njydsz.common.seata.api.XidSigner;
 import com.njydsz.common.seata.aspect.TransactionModeAspect;
 import com.njydsz.common.seata.impl.DbTccTransactionLogStore;
 import com.njydsz.common.seata.impl.DefaultXidPropagator;
+import com.njydsz.common.seata.mq.SeataMQSendTemplate;
 import com.njydsz.common.seata.impl.HmacXidSigner;
 import com.njydsz.common.seata.impl.InMemoryTccTransactionLogStore;
 import com.njydsz.common.seata.impl.LocalTransactionManager;
@@ -322,6 +323,25 @@ public class SeataAutoConfiguration {
     @ConditionalOnClass(name = "org.aspectj.lang.annotation.Aspect")
     public TransactionModeAspect transactionModeAspect() {
         return new TransactionModeAspect(-100); // 在 Spring 事务拦截器（默认 LOWEST_PRECEDENCE）之前执行
+    }
+
+    /**
+     * Seata MQ 发送模板（P2-1 新增）
+     *
+     * <p>当 RocketMQ 生产者存在时自动注册，用于透传 XID 到 MQ 消息头。
+     */
+    @Bean
+    @ConditionalOnMissingBean(SeataMQSendTemplate.class)
+    @ConditionalOnClass(name = "org.apache.rocketmq.client.producer.DefaultMQProducer")
+    public SeataMQSendTemplate seataMQSendTemplate(
+            ObjectProvider<org.apache.rocketmq.client.producer.DefaultMQProducer> producerProvider,
+            ObjectProvider<XidPropagator> xidPropagatorProvider) {
+        org.apache.rocketmq.client.producer.DefaultMQProducer producer = producerProvider.getIfAvailable();
+        if (producer == null) {
+            log.warn("RocketMQ DefaultMQProducer not found, SeataMQSendTemplate disabled");
+            return null;
+        }
+        return new SeataMQSendTemplate(producer, xidPropagatorProvider);
     }
 
     /**

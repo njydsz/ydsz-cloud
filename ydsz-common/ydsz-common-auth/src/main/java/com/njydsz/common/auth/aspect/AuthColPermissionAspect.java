@@ -101,7 +101,10 @@ public class AuthColPermissionAspect {
                                    AuthProperties properties) {
         this.resolver = resolver;
         this.desensitizationService = desensitizationService;
-        this.signer = new AuthColPermissionSigner(properties.getColPermissionSignKey());
+        this.signer = new AuthColPermissionSigner(
+                properties.getColPermissionSignKey(),
+                properties.isColPermissionSignEnabled(),
+                properties.getColPermissionSignValiditySeconds());
     }
 
     /**

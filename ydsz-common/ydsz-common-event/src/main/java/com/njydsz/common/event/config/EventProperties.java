@@ -113,4 +113,10 @@ public class EventProperties {
 
     /** Outbox 队列深度统计缓存时间（秒），减少 countByStatus 全表扫描频率 */
     private long statusCountCacheSeconds = 5;
+
+    /** 是否启用 JSON Schema 校验（默认 false = 仅注册 Schema 但不校验） */
+    private boolean enableSchemaValidation = false;
+
+    /** Schema 校验失败时是否阻断写入（true = 抛异常；false = 仅 WARN 日志） */
+    private boolean schemaValidationFailFast = false;
 }

@@ -12,9 +12,10 @@ import io.micrometer.core.instrument.MeterRegistry;
  *
  * <p>注册的指标：
  * <ul>
- *   <li>{@code feign.request.latency} - 请求延迟 Timer（标签: client, method）</li>
+ *   <li>{@code feign.request.latency} - 请求延迟 Timer（标签: client, method, status_code）</li>
  *   <li>{@code feign.request.errors} - 请求错误 Counter（标签: client, method, status_code）</li>
  *   <li>{@code feign.request.slow} - 慢调用 Counter（标签: client, method）</li>
+ *   <li>{@code feign.response.body.size} - 响应体大小 DistributionSummary（标签: client, method, status_code）</li>
  * </ul>
  *
  * @author ydsz-team
@@ -35,17 +36,22 @@ public class FeignResponseMetricsAdapter implements FeignResponseInterceptor.Fei
 
     @Override
     public void recordSuccess(String service, String method, int status, long duration) {
-        collector.recordLatency(service, method, duration);
+        collector.recordLatency(service, method, duration, String.valueOf(status));
     }
 
     @Override
     public void recordFailure(String service, String method, int status, long duration, String errorType) {
         collector.recordError(service, method, String.valueOf(status));
-        collector.recordLatency(service, method, duration);
+        collector.recordLatency(service, method, duration, String.valueOf(status));
     }
 
     @Override
     public void recordSlowCall(String service, String method, long duration, long threshold) {
         collector.recordSlowCall(service, method);
+    }
+
+    @Override
+    public void recordResponseBodySize(String service, String method, int status, long bodySizeBytes) {
+        collector.recordResponseBodySize(service, method, status, bodySizeBytes);
     }
 }

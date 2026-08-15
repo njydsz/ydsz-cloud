@@ -32,6 +32,7 @@ public class FeignMicrometerCollector {
     private static final String METRIC_REQUEST_LATENCY = "feign.request.latency";
     private static final String METRIC_REQUEST_ERRORS = "feign.request.errors";
     private static final String METRIC_REQUEST_SLOW = "feign.request.slow";
+    private static final String METRIC_RESPONSE_BODY_SIZE = "feign.response.body.size";
     private static final String TAG_CLIENT = "client";
     private static final String TAG_METHOD = "method";
     private static final String TAG_STATUS_CODE = "status_code";
@@ -149,6 +150,31 @@ public class FeignMicrometerCollector {
     public void recordError(String clientName, String method, Throwable exception) {
         String statusCode = exception != null ? exception.getClass().getSimpleName() : "Unknown";
         recordError(clientName, method, statusCode);
+    }
+
+    /**
+     * 记录响应体大小。
+     *
+     * <p>注册指标 {@code feign.response.body.size}（DistributionSummary），
+     * 使用标签 client / method / status_code 区分维度，便于监控响应体分布、
+     * 识别异常大响应或持续空响应。
+     *
+     * @param clientName Feign 客户端名称
+     * @param method     HTTP 方法
+     * @param statusCode HTTP 状态码
+     * @param bodySizeBytes 响应体大小（字节），若未知可传 -1（将不记录）
+     */
+    public void recordResponseBodySize(String clientName, String method, int statusCode, long bodySizeBytes) {
+        if (bodySizeBytes < 0) {
+            return;
+        }
+        io.micrometer.core.instrument.DistributionSummary.builder(METRIC_RESPONSE_BODY_SIZE)
+                .tag(TAG_CLIENT, clientName)
+                .tag(TAG_METHOD, method)
+                .tag(TAG_STATUS_CODE, String.valueOf(statusCode))
+                .description("Feign response body size in bytes")
+                .register(registry)
+                .record(bodySizeBytes);
     }
 
     /**

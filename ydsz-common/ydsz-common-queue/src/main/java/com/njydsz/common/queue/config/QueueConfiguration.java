@@ -37,6 +37,8 @@ import com.njydsz.common.queue.trace.MessageTraceAspect;
 import com.njydsz.common.queue.trace.MessageTraceFilter;
 import com.njydsz.common.queue.trace.MessageTraceRecorder;
 import com.njydsz.common.queue.trace.RedisMessageTraceRecorder;
+import com.njydsz.common.queue.topology.MultiMQTopology;
+import com.njydsz.common.queue.topology.TopologyType;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 import io.micrometer.core.instrument.MeterRegistry;
@@ -353,6 +355,40 @@ public class QueueConfiguration {
     public TraceQueryController traceQueryController(MessageTraceRecorder traceRecorder) {
         log.info("[Queue] 注册消息轨迹查询 REST API");
         return new TraceQueryController(traceRecorder);
+    }
+
+    // ==================== 健康检查配置 ====================
+
+    /**
+     * 创建多 MQ 组合拓扑实例
+     *
+     * <p>当 ydsz.queue.multi-topology.enabled=true 时，根据配置创建多 MQ 拓扑实例。
+     * 支持主备切换、扇出和多源聚合三种拓扑模式。
+     *
+     * @param messageQueueProvider 消息队列提供者
+     * @return 多 MQ 拓扑实例（禁用时返回 null）
+     */
+    @Bean
+    @ConditionalOnMissingBean(MultiMQTopology.class)
+    @ConditionalOnProperty(prefix = "ydsz.queue.multi-topology", name = "enabled", havingValue = "true")
+    public MultiMQTopology multiMQTopology(IMessageQueueProvider messageQueueProvider) {
+        QueueProperties.MultiTopologyConfig config = queueProperties.getMultiTopology();
+        TopologyType type = config.resolvedType();
+        List<QueueType> participantTypes = config.resolvedParticipants();
+        String topologyName = config.getTopologyName();
+
+        if (participantTypes.size() < 2) {
+            log.warn("[Queue] 多 MQ 拓扑配置参与者不足 2 个，跳过拓扑创建: {}", config.getParticipants());
+            return null;
+        }
+
+        log.info("[Queue] 创建多 MQ 拓扑，名称: {}, 类型: {}, 参与者: {}", topologyName, type, participantTypes);
+
+        List<IMessageQueue> participants = participantTypes.stream()
+                .map(messageQueueProvider::createMessageQueue)
+                .toList();
+
+        return new MultiMQTopology(topologyName, type, participants);
     }
 
     // ==================== 健康检查配置 ====================
