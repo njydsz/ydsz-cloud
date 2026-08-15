@@ -3,10 +3,11 @@ package com.njydsz.gateway.config;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.njydsz.common.redis.health.RedisHealthIndicator;
+
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 
 import com.njydsz.gateway.filter.AuthGlobalFilter;
 
@@ -35,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class GatewayHealthIndicator implements HealthIndicator {
 
-    private final ObjectProvider<ReactiveStringRedisTemplate> redisTemplateProvider;
+    private final ObjectProvider<RedisHealthIndicator> redisHealthIndicatorProvider;
     private final ObjectProvider<SecurityHeadersProperties> securityHeadersProvider;
     private final ObjectProvider<RateLimitProperties> rateLimitPropertiesProvider;
     private final ObjectProvider<IpWhitelistProperties> ipWhitelistProvider;
@@ -55,13 +56,13 @@ public class GatewayHealthIndicator implements HealthIndicator {
      * @param gatewayMetricsProvider    网关指标（可选）
      */
     public GatewayHealthIndicator(
-            ObjectProvider<ReactiveStringRedisTemplate> redisTemplateProvider,
+            ObjectProvider<RedisHealthIndicator> redisHealthIndicatorProvider,
             ObjectProvider<SecurityHeadersProperties> securityHeadersProvider,
             ObjectProvider<RateLimitProperties> rateLimitPropertiesProvider,
             ObjectProvider<IpWhitelistProperties> ipWhitelistProvider,
             ObjectProvider<AuthGlobalFilter> authFilterProvider,
             ObjectProvider<GatewayMetrics> gatewayMetricsProvider) {
-        this.redisTemplateProvider = redisTemplateProvider;
+        this.redisHealthIndicatorProvider = redisHealthIndicatorProvider;
         this.securityHeadersProvider = securityHeadersProvider;
         this.rateLimitPropertiesProvider = rateLimitPropertiesProvider;
         this.ipWhitelistProvider = ipWhitelistProvider;
@@ -84,15 +85,14 @@ public class GatewayHealthIndicator implements HealthIndicator {
         boolean healthy = true;
 
         // Redis 连通性检查
-        ReactiveStringRedisTemplate redisTemplate = redisTemplateProvider.getIfAvailable();
-        if (redisTemplate != null) {
-            try {
-                redisTemplate.getConnectionFactory().getReactiveConnection().ping().block();
-                details.put("redis.status", "UP");
-            } catch (Exception e) {
-                details.put("redis.status", "DOWN");
-                details.put("redis.error", e.getMessage());
+        RedisHealthIndicator redisHealth = redisHealthIndicatorProvider.getIfAvailable();
+        if (redisHealth != null) {
+            Health redisHealthResult = redisHealth.health();
+            String redisStatus = redisHealthResult.getStatus().getCode();
+            details.put("redis.status", redisStatus.toUpperCase());
+            if ("DOWN".equals(redisStatus)) {
                 healthy = false;
+                details.put("redis.error", redisHealthResult.getDetails().getOrDefault("reason", "unknown"));
             }
         } else {
             details.put("redis.status", "NOT_CONFIGURED");

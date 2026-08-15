@@ -1,11 +1,6 @@
 package com.njydsz.system.server.health;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.health.contributor.HealthIndicator;
-import org.springframework.data.redis.core.RedisCallback;
-import org.springframework.data.redis.core.RedisTemplate;
-
+import com.njydsz.common.redis.health.RedisHealthIndicator;
 import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
 import com.njydsz.system.infra.mapper.ConfigMapper;
 import com.njydsz.system.infra.mapper.DictItemMapper;
@@ -14,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.boot.health.contributor.Health;
+import org.springframework.beans.factory.ObjectProvider;
 /**
  * 系统模块健康检查 Indicator
  *
@@ -60,8 +56,8 @@ import org.springframework.boot.health.contributor.Health;
 @RequiredArgsConstructor
 public class SystemHealthIndicator extends AbstractModuleHealthIndicator {
 
-    /** Redis 模板（用于 PING 探针） */
-    private final RedisTemplate<String, Object> redisTemplate;
+    /** Redis 健康检查（由 common-redis 提供） */
+    private final ObjectProvider<RedisHealthIndicator> redisHealthIndicatorProvider;
     /** 配置表 Mapper（用于配置表探针） */
     private final ConfigMapper configMapper;
     /** 字典项 Mapper（用于字典表探针） */
@@ -77,7 +73,17 @@ public class SystemHealthIndicator extends AbstractModuleHealthIndicator {
      */
     @Override
     protected void doHealthCheck(Health.Builder builder) {
-        checkRedis(builder, () -> redisTemplate.execute((RedisCallback<String>) conn -> conn.ping()));
+        RedisHealthIndicator redisHealth = redisHealthIndicatorProvider.getIfAvailable();
+        if (redisHealth != null) {
+            Health redisResult = redisHealth.health();
+            builder.withDetail("redis", redisResult.getStatus().getCode().toUpperCase());
+            redisResult.getDetails().forEach((k, v) -> builder.withDetail("redis." + k, v));
+            if (!redisResult.getStatus().equals(org.springframework.boot.health.contributor.Status.UP)) {
+                builder.down();
+            }
+        } else {
+            checkRedisNotConfigured(builder);
+        }
         checkTableProbe(builder, "config", () -> configMapper.selectByConfigKey("__health_probe__"));
         checkTableProbe(builder, "dict", () -> dictItemMapper.selectByTypeAndCode("__health_probe__", "__health_probe__"));
     }

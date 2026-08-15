@@ -50,6 +50,10 @@ public class FlowProperties {
     @Min(1)
     private int definitionCacheTtlMinutes = 30;
 
+    /** 流程定义缓存最大容量（默认 1000） */
+    @Min(1)
+    private int definitionCacheMaxSize = 1000;
+
     /** 单实例最大并发流程数（0=不限） */
     @Min(0)
     private int maxConcurrentInstances = 0;

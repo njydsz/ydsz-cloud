@@ -20,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>{@link #tryAcquireLock}：抢占分布式锁（委托 {@link DistributedLocker#tryLock}）</li>
  *   <li>{@link #releaseLock}：安全释放锁（委托 {@link DistributedLocker#unlock}，仅持有者可释放）</li>
  *   <li>{@link #isLocked}：检查锁是否被持有（委托 {@link DistributedLocker#isLocked}）</li>
- * <li>{@link #getLockHolder}：已废弃（接口能力不提供），使用 {@link #isLocked(String, Integer)} 替代</li>
  * </ul>
  *
  * <h3>改造动机</h3>

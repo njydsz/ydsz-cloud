@@ -100,6 +100,12 @@ public class AuthProperties {
     private Integer permissionCacheTtlSeconds = 1800;
 
     /**
+     * 权限缓存最大容量（默认 1000）。
+     */
+    @Min(1)
+    private Integer permissionCacheMaxSize = 1000;
+
+    /**
      * 角色行级数据权限本地缓存过期时间（秒），默认 30。
      */
     @Min(0)

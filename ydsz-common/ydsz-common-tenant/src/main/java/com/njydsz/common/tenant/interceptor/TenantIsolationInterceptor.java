@@ -102,6 +102,7 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
         this.metrics = metrics;
         this.sqlCache = properties.getSqlCache().isEnabled()
                 ? YdszCache.<String, String>newBuilder()
+                        .name("tenant:sql-cache")
                         .maximumSize(properties.getSqlCache().getMaxSize())
                         .expireAfterAccess(properties.getSqlCache().getExpireMinutes(), TimeUnit.MINUTES)
                         .build()

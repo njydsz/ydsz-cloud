@@ -74,7 +74,9 @@ public class SpELConditionEvaluator {
      * 创建有界 ydsz-common-cache 缓存（开启统计，便于监控命中率）。
      */
     private static Cache<String, Expression> createCache(int maxSize) {
-        var builder = YdszCache.<String, Expression>newBuilder().recordStats();
+        var builder = YdszCache.<String, Expression>newBuilder()
+                .name("cronjob:spel-expr")
+                .recordStats();
         if (maxSize > 0) {
             builder.maximumSize(maxSize);
         }

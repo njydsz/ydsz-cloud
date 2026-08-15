@@ -1,14 +1,10 @@
 package com.njydsz.workflow.server.engine;
 
-import com.njydsz.common.util.collection.MapUtils;
-import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
-import com.njydsz.common.json.YdszJson;
 
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
@@ -16,12 +12,12 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
-import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.workflow.domain.entity.FlowNode;
 import com.njydsz.workflow.domain.entity.FlowSkip;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
 import com.njydsz.workflow.infra.mapper.FlowSkipMapper;
+import com.njydsz.workflow.server.config.FlowProperties;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,7 +28,8 @@ import java.util.HashMap;
  *
  * <p>P1: 使用 ydsz-common-cache 本地缓存流程节点和跳转定义，避免每次推进时重复查库。
  * <p>缓存策略：以 definitionId 为 key，缓存该定义下所有节点和 skip 列表，
- *   TTL 30 分钟，流程部署新版本时主动 evict。
+ *   TTL 与容量通过 {@code ydsz.flow.definition-cache-ttl-minutes/definition-cache-max-size} YAML 配置，
+ *   流程部署新版本时主动 evict。
  *
  * <p>设计说明：节点和 skip 的全量列表各自仅查库一次（{@code selectByDefinitionId}），
  *   其余按 nodeCode / nextNodeCode / 起始节点 等维度的查询均从缓存列表中派生，
@@ -44,11 +41,6 @@ import java.util.HashMap;
 @Slf4j
 @Component
 public class FlowDefinitionCacheService {
-
-    /** 缓存 TTL：30 分钟自动过期 */
-    private static final Duration TTL = Duration.ofMinutes(30);
-    /** 最大缓存流程定义数 */
-    private static final int MAX_SIZE = 1000;
 
     private final FlowNodeMapper flowNodeMapper;
     private final FlowSkipMapper flowSkipMapper;
@@ -62,37 +54,35 @@ public class FlowDefinitionCacheService {
 
     /**
      * Spring 注入构造器，使用系统时钟。
+     *
+     * <p>缓存 TTL 与容量从 {@link FlowProperties} 读取（P1-2: 硬编码值迁移至 YAML）。
+     *
+     * @param properties 工作流配置属性
      */
     public FlowDefinitionCacheService(FlowNodeMapper flowNodeMapper,
                                       FlowSkipMapper flowSkipMapper,
-                                      @Lazy FlowDefinitionCacheBroadcaster broadcaster) {
-        this(flowNodeMapper, flowSkipMapper, broadcaster, null);
-    }
-
-    /**
-     * 测试用构造器。
-     */
-    FlowDefinitionCacheService(FlowNodeMapper flowNodeMapper,
-                               FlowSkipMapper flowSkipMapper,
-                               FlowDefinitionCacheBroadcaster broadcaster,
-                               Object unused) {
+                                      @Lazy FlowDefinitionCacheBroadcaster broadcaster,
+                                      FlowProperties properties) {
         this.flowNodeMapper = flowNodeMapper;
         this.flowSkipMapper = flowSkipMapper;
         this.broadcaster = broadcaster;
         this.nodeCache = YdszCache.<String, List<FlowNode>>newBuilder()
                 .type(CacheType.STRIPED)
-                .expireAfterWrite(30, TimeUnit.MINUTES)
-                .maximumSize(MAX_SIZE)
+                .name("flow:def-nodes")
+                .expireAfterWrite(properties.getDefinitionCacheTtlMinutes(), TimeUnit.MINUTES)
+                .maximumSize(properties.getDefinitionCacheMaxSize())
                 .build();
         this.skipCache = YdszCache.<String, List<FlowSkip>>newBuilder()
                 .type(CacheType.STRIPED)
-                .expireAfterWrite(30, TimeUnit.MINUTES)
-                .maximumSize(MAX_SIZE)
+                .name("flow:def-skips")
+                .expireAfterWrite(properties.getDefinitionCacheTtlMinutes(), TimeUnit.MINUTES)
+                .maximumSize(properties.getDefinitionCacheMaxSize())
                 .build();
         this.skipSourceRefIndexCache = YdszCache.<String, Map<String, List<FlowSkip>>>newBuilder()
                 .type(CacheType.STRIPED)
-                .expireAfterWrite(30, TimeUnit.MINUTES)
-                .maximumSize(MAX_SIZE)
+                .name("flow:def-sourceref-index")
+                .expireAfterWrite(properties.getDefinitionCacheTtlMinutes(), TimeUnit.MINUTES)
+                .maximumSize(properties.getDefinitionCacheMaxSize())
                 .build();
     }
 

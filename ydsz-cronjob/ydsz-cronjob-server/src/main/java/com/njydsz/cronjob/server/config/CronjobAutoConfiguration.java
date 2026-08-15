@@ -53,14 +53,17 @@ public class CronjobAutoConfiguration {
     /**
      * 注册 SpEL 条件评估器（DAG 条件分支节点使用）。
      *
-     * <p><b>v1.4.0</b>：自 ydsz-common-domain 迁移至本模块（原由 DomainAutoConfiguration 注册），
-     * 使用默认配置（启用表达式缓存，容量 1024）。
+     * <p><b>v1.4.0</b>：自 ydsz-common-domain 迁移至本模块（原由 DomainAutoConfiguration 注册）。
      *
+     * <p><b>P1-2:</b> 缓存配置从 {@link CronjobProperties#getSpel()} 读取，
+     * 可通过 {@code ydsz.cronjob.spel.enabled/max-size} 动态调整。
+     *
+     * @param properties 定时任务配置属性
      * @return SpELConditionEvaluator 实例
      */
     @Bean
     @ConditionalOnMissingBean
-    public SpELConditionEvaluator spELConditionEvaluator() {
-        return new SpELConditionEvaluator();
+    public SpELConditionEvaluator spELConditionEvaluator(CronjobProperties properties) {
+        return new SpELConditionEvaluator(properties.getSpel().isEnabled(), properties.getSpel().getMaxSize());
     }
 }

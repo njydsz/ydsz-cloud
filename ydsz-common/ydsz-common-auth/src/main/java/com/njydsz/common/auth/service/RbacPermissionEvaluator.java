@@ -102,7 +102,8 @@ public class RbacPermissionEvaluator {
         this.rolePermissionLoader = rolePermissionLoader;
         this.rolePermissionsCache = YdszCache.<String, RolePermissions>newBuilder()
                 .type(CacheType.STRIPED)
-                .maximumSize(1000)
+                .name("auth:role-permissions")
+                .maximumSize(properties.getPermissionCacheMaxSize())
                 .expireAfterWrite(resolvePermissionCacheTtlSeconds(), TimeUnit.SECONDS)
                 .build();
     }

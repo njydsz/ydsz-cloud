@@ -106,6 +106,35 @@ public class CronjobProperties {
     /** P3-2: 自愈系统配置 */
     private SelfHealing selfHealing = new SelfHealing();
 
+    /** SpEL 表达式缓存配置（P1-2: 硬编码值迁移至 YAML）。 */
+    private Spel spel = new Spel();
+
+    /**
+     * SpEL 表达式缓存配置（P1-2 新增）。
+     *
+     * <p>控制 {@link com.njydsz.cronjob.domain.dag.SpELConditionEvaluator} 的表达式解析缓存：
+     * <ul>
+     *   <li>{@code enabled} — 是否启用缓存（默认 true）</li>
+     *   <li>{@code max-size} — 缓存最大容量（默认 1024，0 表示无限制）</li>
+     * </ul>
+     *
+     * <pre>
+     * ydsz:
+     *   cronjob:
+     *     spel:
+     *       enabled: true
+     *       max-size: 1024
+     * </pre>
+     */
+    @Data
+    public static class Spel {
+        /** 是否启用 SpEL 表达式缓存（默认 true）。 */
+        private boolean enabled = true;
+
+        /** 缓存最大容量（默认 1024，0 表示无限制）。 */
+        private int maxSize = 1024;
+    }
+
     /**
      * 校验并规整化 TTL 值。
      *
@@ -550,8 +579,13 @@ public class CronjobProperties {
      */
     @Data
     public static class Sandbox {
-        /** 是否启用沙箱模式（false=使用 ScriptJobHandler 原始执行逻辑） */
-        private boolean enabled = false;
+        /**
+         * 是否启用沙箱模式（false=使用 ScriptJobHandler 原始执行逻辑）。
+         *
+         * <p>P0-3: 默认改为 true，防止脚本任务代码注入风险。
+         * 可通过 {@code ydsz.cronjob.sandbox.enabled=false} 关闭。
+         */
+        private boolean enabled = true;
 
         /** 默认超时时间（秒） */
         private int timeoutSeconds = 300;
