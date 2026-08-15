@@ -107,7 +107,12 @@
             <artifactId>spring-boot-starter-data-redis</artifactId>
             <optional>true</optional>
         </dependency>
-        <!-- TccTransactionLog JSON 序列化使用 ydsz-common-json 的 YdszJson，无需 jackson-databind -->
+        <!-- ydzs-common-json -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-json</artifactId>
+        </dependency>
+        <!-- TccTransactionLog JSON 序列化使用 ydzs-common-json 的 YdszJson，无需 jackson-databind -->
         <!-- spring-web (optional, for XID servlet filter) -->
         <dependency>
             <groupId>org.springframework</groupId>

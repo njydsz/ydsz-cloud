@@ -92,6 +92,12 @@
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>jsr305</artifactId>
         </dependency>
+        <!-- ydsz-common-json（DiffReport 序列化使用，可选依赖） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-json</artifactId>
+            <optional>true</optional>
+        </dependency>
 
         <!-- Spring Boot AutoConfiguration -->
         <dependency>

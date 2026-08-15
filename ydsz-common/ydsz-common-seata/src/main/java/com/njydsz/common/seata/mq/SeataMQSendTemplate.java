@@ -12,6 +12,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.messaging.MessagingException;
 
 import com.njydsz.common.seata.api.XidPropagator;
+import com.njydsz.common.seata.context.XidContextHolder;
 
 /**
  * Seata MQ 消息发送模板
@@ -92,9 +93,8 @@ public class SeataMQSendTemplate {
      * @param producer                 RocketMQ 生产者实例（非空）
      * @param xidPropagatorProvider    XID 传播器（非空）
      */
-    public SeataMQSendTemplate(
-            org.apache.rocketmq.client.producer.DefaultMQProducer producer,
-            ObjectProvider<XidPropagator> xidPropagatorProvider) {
+    public SeataMQSendTemplate(org.apache.rocketmq.client.producer.DefaultMQProducer producer,
+                               ObjectProvider<XidPropagator> xidPropagatorProvider) {
         this.producer = producer;
         this.xidPropagatorProvider = xidPropagatorProvider;
     }
@@ -196,13 +196,11 @@ public class SeataMQSendTemplate {
         }
 
         // 注入事务类型和名称
-        com.njydsz.common.seata.api.TransactionContext ctx =
-                com.njydsz.common.seata.api.TransactionContext.current();
-        if (ctx != null) {
-            msg.putUserProperty(HEADER_TX_TYPE,
-                    com.njydsz.common.seata.api.TransactionContext.getRequiredType().name());
-            String txName = com.njydsz.common.seata.api.TransactionContext.getTransactionName();
-            if (txName != null) {
+        XidContextHolder.XidContext ctx = XidContextHolder.current();
+        if (ctx != null && ctx.getType() != null) {
+            msg.putUserProperty(HEADER_TX_TYPE, ctx.getType().name());
+            String txName = ctx.getName();
+            if (txName != null && !txName.isEmpty()) {
                 msg.putUserProperty(HEADER_TX_NAME, truncate(txName, MAX_HEADER_LENGTH));
             }
         }

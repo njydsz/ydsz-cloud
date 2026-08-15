@@ -129,6 +129,16 @@
             <optional>true</optional>
         </dependency>
 
+        <!--ydsz-common-json-->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-json</artifactId>
+        </dependency>
+        <!--ydsz-common-redis-->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-redis</artifactId>
+        </dependency>
         <!-- 测试依赖（含 junit-jupiter、assertj-core） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

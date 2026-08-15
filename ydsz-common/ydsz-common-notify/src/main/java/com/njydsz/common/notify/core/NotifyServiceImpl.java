@@ -183,35 +183,18 @@ public class NotifyServiceImpl implements NotifyService {
     }
 
     /**
-     * 发送单条文本通知。
-     *
-     * <p>等价于 {@code send(channel, receiver, title, content, null, null, NotifyType.TEXT, null)}。
-     *
-     * @param channel  通知渠道（EMAIL/DINGTALK/FEISHU等）
-     * @param receiver 接收方（邮箱地址/手机号/用户ID等）
-     * @param title    消息标题
-     * @param content  消息内容
-     * @return 发送结果
-     */
-    @Override
-    public NotifySendResult send(NotifyChannel channel, String receiver, String title, String content) {
-        return doSend(channel, receiver, title, content, null, null, NotifyType.TEXT, null);
-    }
-
-    /**
-     * 发送通知（完整上下文）。
+     * 发送通知（统一入口）。
      *
      * <p>支持以下全链路增强：
      * <ul>
-     *   <li>P0-5: 用户偏好检查（免打扰时段、渠道开关、类型开关），P0_CRITICAL 跳过</li>
-     *   <li>P0-7: 消息聚合检查（低优先级消息在时间窗口内聚合为摘要），P0_CRITICAL 跳过</li>
-     *   <li>P0-6: 去重检查（相同内容在时间窗口内只发送一次）</li>
+     *   <li>用户偏好检查（免打扰时段、渠道开关、类型开关），P0_CRITICAL 跳过</li>
+     *   <li>消息聚合检查（低优先级消息在时间窗口内聚合为摘要），P0_CRITICAL 跳过</li>
+     *   <li>去重检查（相同内容在时间窗口内只发送一次）</li>
      *   <li>熔断检查（连续失败超过阈值自动熔断）</li>
      *   <li>限流检查（每个渠道独立限流，基于滑动窗口算法）</li>
-     *   <li>P0-1: 渠道降级（主渠道失败时按降级链尝试备用渠道）</li>
-     *   <li>P0-4: 指标埋点（所有渠道发送量/失败率/延迟统一上报 Micrometer）</li>
-     *   <li>P0-2: 审计日志（每条通知发送记录结构化审计日志）</li>
-     *   <li>P0-8: ACK 待确认注册</li>
+     *   <li>渠道降级（主渠道失败时按降级链尝试备用渠道）</li>
+     *   <li>指标埋点（所有渠道发送量/失败率/延迟统一上报 Micrometer）</li>
+     *   <li>审计日志（每条通知发送记录结构化审计日志）</li>
      * </ul>
      *
      * @param request 通知请求（包含渠道、接收方、标题、内容、模板信息、优先级等）
@@ -258,23 +241,6 @@ public class NotifyServiceImpl implements NotifyService {
         }
         return doSend(channel, request.getReceiver(), request.getTitle(), request.getContent(),
                 request.getUserId(), null, NotifyType.TEXT, request.getTenantId());
-    }
-
-    /**
-     * 发送模板通知。
-     *
-     * <p>等价于 {@code doSendTemplate(channel, receiver, templateCode, templateParams, null, null)}。
-     *
-     * @param channel       通知渠道
-     * @param receiver      接收方
-     * @param templateCode  模板编码
-     * @param templateParams 模板参数
-     * @return 发送结果
-     */
-    @Override
-    public NotifySendResult sendTemplate(NotifyChannel channel, String receiver,
-                                  String templateCode, Object templateParams) {
-        return doSendTemplate(channel, receiver, templateCode, templateParams, null, null);
     }
 
     /**
