@@ -464,6 +464,7 @@ public final class ExecutorUtils {
      * @param <T>      返回类型
      * @return TTL 包装的 Callable；若 TTL 库不可用则返回原始 Callable
      * @since 2.2.0
+     * @param T 泛型参数类型
      */
     public static <T> Callable<T> toTtlCallable(Callable<T> callable) {
         if (callable == null) {
@@ -670,6 +671,7 @@ public final class ExecutorUtils {
      * @param timeout 超时时间
      * @param unit 时间单位
      * @return 处理后的结果
+     * @param T 泛型参数类型
      */
     public static <T> T submitWithTimeout(ExecutorService executor, Callable<T> task, long timeout, TimeUnit unit) {
         if (executor == null || task == null) {
@@ -720,6 +722,10 @@ public final class ExecutorUtils {
         }
     }
 }
+
+
+
+
 
 
 

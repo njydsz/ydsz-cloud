@@ -7,8 +7,11 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.lang.NonNull;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 /**
@@ -22,50 +25,46 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  *   <li>{@code rejectPolicy} 运行时可直接替换执行器持有的拒绝策略引用</li>
  * </ul>
  *
- * <p>两种触发方式（按需选择其一）：
- * <ol>
- *   <li>Spring Cloud {@code @RefreshScope} 或 {@code EnvironmentChangeEvent}：
- *       修改 application.yml / Nacos 配置后发布 {@code RefreshEvent}</li>
- *   <li>Nacos {@code @NacosConfigListener}：
- *       直接在 Nacos 管理台修改并推送</li>
- * </ol>
+ * <p>启用方式：在 application.yml 中设置 {@code ydsz.thread.hot-update.enabled=true}，
+ * 或通过 {@link ThreadPoolHotUpdateAutoConfiguration} 注册。
  *
- * <p>使用示例（Nacos 方式）：
- * <pre>{@code
- * // 在业务模块中创建该 Bean
- * &#64;Bean
- * public ThreadPoolHotUpdateListener threadPoolHotUpdateListener(
- *         ThreadPoolAutoConfiguration threadPoolAutoConfiguration) {
- *     return new ThreadPoolHotUpdateListener(threadPoolAutoConfiguration);
- * }
- * }</pre>
- *
- * <p>v1.3.0 新增：从 ydsz-cronjob 的 ThreadPoolHotUpdateListener 抽象为通用组件。
- *
- * <p>v1.3.1 变更：
+ * <p>v1.4.0 变更：
  * <ul>
- *   <li>{@link #onContextReady(ContextRefreshedEvent)} 添加 {@link EventListener} 注解，
- *       应用启动完成后自动打印线程池注册摘要</li>
- *   <li>移除冗余的 {@code ReentrantReadWriteLock}，依赖 {@link ThreadPoolExecutor}
- *       内置的线程安全保证</li>
+ *   <li>从依赖 {@link ThreadPoolAutoConfiguration} 改为直接注入 {@link ApplicationContext}，
+ *       降低耦合并纳入自动配置体系</li>
+ *   <li>由 {@link ThreadPoolHotUpdateAutoConfiguration} 自动注册，无需业务模块手动创建 Bean</li>
  * </ul>
  *
  * @author ydsz-team
  * @since 1.3.0
  */
-public class ThreadPoolHotUpdateListener {
+public class ThreadPoolHotUpdateListener implements ApplicationContextAware {
 
     private static final Logger log = LoggerFactory.getLogger(ThreadPoolHotUpdateListener.class);
 
-    private final ThreadPoolAutoConfiguration threadPoolAutoConfiguration;
+    /**
+     * Bean 名称常量，供其他模块引用。
+     *
+     * @since 1.4.0
+     */
+    public static final String BEAN_NAME = "threadPoolHotUpdateListener";
+
+    private ApplicationContext applicationContext;
 
     /**
-     * 构造器，注入 ydsz-thread 的自动配置实例。
-     *
-     * @param threadPoolAutoConfiguration 线程池自动配置（提供 getExecutors() 运行时查询）
+     * 构造线程池运行时参数调整器。
      */
-    public ThreadPoolHotUpdateListener(ThreadPoolAutoConfiguration threadPoolAutoConfiguration) {
-        this.threadPoolAutoConfiguration = threadPoolAutoConfiguration;
+    public ThreadPoolHotUpdateListener() {
+    }
+
+    /**
+     * 注入 {@link ApplicationContext} 以运行时查询线程池 Bean。
+     *
+     * @param applicationContext Spring 应用上下文
+     */
+    @Override
+    public void setApplicationContext(@NonNull ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
     }
 
     /**
@@ -77,7 +76,7 @@ public class ThreadPoolHotUpdateListener {
      */
     @EventListener(ContextRefreshedEvent.class)
     public void onContextReady(ContextRefreshedEvent event) {
-        Map<String, ThreadPoolTaskExecutor> executors = threadPoolAutoConfiguration.getExecutors();
+        Map<String, ThreadPoolTaskExecutor> executors = getExecutors();
         log.info("[ThreadPoolHotUpdate] 热更新监听器就绪，当前共 {} 个平台线程池: {}",
                 executors.size(), executors.keySet());
     }
@@ -174,10 +173,11 @@ public class ThreadPoolHotUpdateListener {
      */
     public Map<String, ThreadPoolSnapshot> snapshotAll() {
         Map<String, ThreadPoolSnapshot> result = new LinkedHashMap<>();
-        threadPoolAutoConfiguration.getExecutors().forEach((beanName, executor) -> {
+        getExecutors().forEach((beanName, executor) -> {
             String poolName = resolvePoolName(beanName);
             if (poolName == null) {
-                log.debug("[ThreadPoolHotUpdate] Bean [{}] 不是 ydsz-common-thread 管理的线程池，跳过", beanName);
+                log.debug("[ThreadPoolHotUpdate] Bean [{}] 不是 ydsz-common-thread 管理的线程池，跳过",
+                        beanName);
                 return;
             }
             try {
@@ -200,12 +200,15 @@ public class ThreadPoolHotUpdateListener {
 
     // ====================== private ======================
 
-    private ThreadPoolTaskExecutor getExecutor(String poolName) {
-        if (threadPoolAutoConfiguration == null) {
-            log.warn("[ThreadPoolHotUpdate] ThreadPoolAutoConfiguration 未注入");
-            return null;
+    private Map<String, ThreadPoolTaskExecutor> getExecutors() {
+        if (applicationContext == null) {
+            return new LinkedHashMap<>();
         }
-        Map<String, ThreadPoolTaskExecutor> executors = threadPoolAutoConfiguration.getExecutors();
+        return applicationContext.getBeansOfType(ThreadPoolTaskExecutor.class);
+    }
+
+    private ThreadPoolTaskExecutor getExecutor(String poolName) {
+        Map<String, ThreadPoolTaskExecutor> executors = getExecutors();
         // 查找以 poolName + "Executor" 结尾的 Bean
         for (Map.Entry<String, ThreadPoolTaskExecutor> entry : executors.entrySet()) {
             String beanName = entry.getKey();
@@ -232,7 +235,8 @@ public class ThreadPoolHotUpdateListener {
         return beanName.substring(0, beanName.length() - "Executor".length());
     }
 
-    private void resizeInternal(ThreadPoolTaskExecutor executor, int newCoreSize, int newMaxSize, String poolName) {
+    private void resizeInternal(ThreadPoolTaskExecutor executor, int newCoreSize, int newMaxSize,
+            String poolName) {
         try {
             ThreadPoolExecutor pool = executor.getThreadPoolExecutor();
             int oldCore = pool.getCorePoolSize();
@@ -337,8 +341,10 @@ public class ThreadPoolHotUpdateListener {
         @Override
         public String toString() {
             return String.format(
-                    "ThreadPoolSnapshot{pool='%s', core=%d, max=%d, active=%d, poolSize=%d, queue=%d, completed=%d}",
-                    poolName, corePoolSize, maxPoolSize, activeCount, poolSize, queueSize, completedTaskCount);
+                    "ThreadPoolSnapshot{pool='%s', core=%d, max=%d, active=%d, poolSize=%d, "
+                            + "queue=%d, completed=%d}",
+                    poolName, corePoolSize, maxPoolSize, activeCount, poolSize, queueSize,
+                    completedTaskCount);
         }
     }
 }

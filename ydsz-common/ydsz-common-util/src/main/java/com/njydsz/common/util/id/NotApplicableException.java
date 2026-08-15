@@ -21,3 +21,7 @@ public class NotApplicableException extends RuntimeException {
     }
 }
 
+
+
+
+

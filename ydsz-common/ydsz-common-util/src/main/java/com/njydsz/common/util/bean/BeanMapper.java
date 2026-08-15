@@ -94,7 +94,7 @@ public final class BeanMapper {
      * @param <T>         Bean 类型
      * @return 填充后的 Bean 实例
      * @since 4.0.0
-     * @param String String
+     * @param T 泛型参数类型
      */
     @SuppressWarnings("unchecked")
     public static <T> T toBeanInternal(Map<String, Object> map, Class<T> targetClass) {
@@ -423,6 +423,7 @@ public final class BeanMapper {
      * @return 新实例
      * @throws IllegalArgumentException 无无参构造器或实例化失败
      * @since 4.0.0
+     * @param T 泛型参数类型
      */
     @SuppressWarnings("unchecked")
     public static <T> T createInstance(Class<T> clazz) {
@@ -532,7 +533,7 @@ public final class BeanMapper {
      * @return 填充后的 Bean 实例
      * @throws IllegalArgumentException 入参为 null、targetClass 无无参构造器、或实例化失败
      * @since 4.0.0
-     * @param String String
+     * @param T 泛型参数类型
      */
     public static <T> T toBean(Map<String, Object> source, Class<T> targetClass) {
         Objects.requireNonNull(targetClass, "targetClass must not be null");
@@ -564,6 +565,7 @@ public final class BeanMapper {
      * @param <T>     目标类型
      * @return 转换后的对象
      * @since 4.0.0
+     * @param T 泛型参数类型
      */
     @SuppressWarnings("unchecked")
     public static <T> T toBean(Object source, TypeReference<T> typeRef) {
@@ -614,7 +616,7 @@ public final class BeanMapper {
      * @param <T>         目标类型泛型
      * @return 转换后的对象；source 为 null 时返回 null
      * @since 4.0.0
-     * @param String String
+     * @param T 泛型参数类型
      */
     public static <T> T toBeanOrRecord(Map<String, Object> source, Class<T> targetClass) {
         Objects.requireNonNull(source, "source must not be null");
@@ -651,7 +653,6 @@ public final class BeanMapper {
      * @param valueType 值类型
      * @return 转换后的 Map
      * @since 4.0.0
-     * @param Map Map
      */
     public static Map<String, Object> convertMapWithType(Map<?, ?> rawMap, Type valueType) {
         Map<String, Object> result = new LinkedHashMap<>(rawMap.size());
@@ -712,7 +713,7 @@ public final class BeanMapper {
      * @param <T>   目标类型
      * @return 填充后的实例
      * @since 4.0.0
-     * @param String String
+     * @param T 泛型参数类型
      */
     public static <T> T instantiateRecord(Map<String, Object> map, Class<T> clazz) {
         RecordComponent[] components = clazz.getRecordComponents();
@@ -881,6 +882,10 @@ public final class BeanMapper {
         return result;
     }
 }
+
+
+
+
 
 
 

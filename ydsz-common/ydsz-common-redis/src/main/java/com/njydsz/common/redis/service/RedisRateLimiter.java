@@ -193,7 +193,10 @@ public class RedisRateLimiter {
      * @param rate     令牌补充速率（每秒）
      * @param capacity 桶容量（最大令牌数）
      * @return true=允许，false=拒绝
+     *
+     * @deprecated 自 v1.1.0 起标记废弃，请使用 {@link #tryAcquireTokenBucket(String, int, int, Duration)} 显式指定周期参数。
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     public boolean tryAcquireTokenBucket(String key, int rate, int capacity) {
         return tryAcquireTokenBucket(key, rate, capacity, Duration.ofSeconds(1), 1);
     }
@@ -287,7 +290,10 @@ public class RedisRateLimiter {
      * @param limit  窗口内最大请求数
      * @param window 时间窗口长度
      * @return true=允许，false=拒绝
+     *
+     * @deprecated 自 v1.1.0 起标记废弃。请使用 {@link #tryAcquireSlidingWindow(String, int, Duration)}。
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     public boolean tryAcquireSlidingWindowBucketed(String key, int limit, Duration window) {
         if (key == null || limit <= 0 || window == null || window.isZero() || window.isNegative()) {
             return false;
@@ -329,7 +335,10 @@ public class RedisRateLimiter {
      *
      * @param key 限流维度键
      * @return 当前可用令牌数；键不存在时返回 -1
+     *
+     * @deprecated 自 v1.1.0 起标记废弃，无替代方案。该诊断方法未纳入正式 API 契约。
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     public long getTokenBucketAvailable(String key) {
         if (key == null) {
             return -1;
@@ -367,7 +376,10 @@ public class RedisRateLimiter {
      *
      * @param key 限流维度键
      * @return 剩余秒数（0=可操作，>0=冷却中，<0=键不存在或查询失败）
+     *
+     * @deprecated 自 v1.1.0 起标记废弃，无替代方案。该诊断方法未纳入正式 API 契约。
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     public long getTtlSeconds(String key) {
         if (key == null) {
             return -1;
@@ -480,7 +492,10 @@ public class RedisRateLimiter {
      * @param limit  窗口内最大请求数
      * @param window 时间窗口长度
      * @return true=允许，false=拒绝
+     *
+     * @deprecated 自 v1.1.0 起标记废弃。请使用 {@link #tryAcquireSlidingWindow(String, int, Duration)}。
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     public boolean tryAcquireSlidingWindowExact(String key, int limit, Duration window) {
         if (key == null || limit <= 0 || window == null || window.isZero() || window.isNegative()) {
             return false;

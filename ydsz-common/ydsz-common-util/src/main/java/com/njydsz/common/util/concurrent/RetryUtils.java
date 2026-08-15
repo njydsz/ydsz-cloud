@@ -71,6 +71,7 @@ public final class RetryUtils {
      * @param <T>        返回值类型
      * @return 操作成功时的返回值
      * @throws RetryException 所有重试均失败（或执行被中断）时抛出
+     * @param T 泛型参数类型
      */
     public static <T> T executeWithRetry(Callable<T> action, int maxRetries, Duration delay) {
         return executeWithRetry(action, maxRetries, delay, e -> true);
@@ -88,6 +89,7 @@ public final class RetryUtils {
      * @param <T>        返回值类型
      * @return 操作成功时的返回值
      * @throws RetryException 所有重试均失败（或执行被中断）时抛出
+     * @param T 泛型参数类型
      */
     public static <T> T executeWithRetry(Callable<T> action, int maxRetries, Duration delay,
                                          Predicate<Throwable> retryOn) {
@@ -133,6 +135,7 @@ public final class RetryUtils {
      * @param <T>    返回值类型
      * @return 操作成功时的返回值
      * @throws RetryException 所有重试均失败（或执行被中断）时抛出
+     * @param T 泛型参数类型
      */
     public static <T> T executeWithBackoff(Callable<T> action, RetryConfig config) {
         if (action == null) {
@@ -233,4 +236,8 @@ public final class RetryUtils {
         private final Predicate<Throwable> retryOn = e -> true;
     }
 }
+
+
+
+
 
