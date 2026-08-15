@@ -278,18 +278,16 @@ public class OutboxProcessor {
     /**
      * 分发投递任务到工作线程池
      *
-     * <p>当 workerThreads=1 时直接在调度线程中执行（同步），避免线程切换开销。
-     * 当 workerThreads>1 时提交到线程池异步执行。
+     * <p>始终提交到工作线程池执行，避免调度线程被慢 MQ 阻塞。
+     * 当 worker 线程池满时，{@link java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy}
+     * 会回退到调用线程（调度线程）执行，提供自然的背压——即 MQ 慢时自动降低轮询频率，
+     * 但不会因为单次慢投递阻塞整个轮询周期。
      */
     private void dispatchPublish(List<OutboxMessage> messages) {
         Runnable task = messages.size() > 1
                 ? () -> processBatchPublish(messages)
                 : () -> processSingle(messages.get(0));
-        if (properties.getWorkerThreads() <= 1) {
-            task.run();
-        } else {
-            publishExecutor.execute(task);
-        }
+        publishExecutor.execute(task);
     }
 
     /**

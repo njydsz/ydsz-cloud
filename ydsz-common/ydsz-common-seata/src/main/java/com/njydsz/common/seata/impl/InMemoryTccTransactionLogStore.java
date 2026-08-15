@@ -88,6 +88,22 @@ public class InMemoryTccTransactionLogStore implements TccTransactionLogStore {
     }
 
     /**
+     * 分页查询超时未完成的分支事务（返回前 limit 条）
+     *
+     * @param threshold 超时阈值
+     * @param limit     单次返回最大记录数
+     * @return 超时分支列表
+     */
+    @Override
+    public List<TccTransactionLog> findTimeoutPendingPaged(LocalDateTime threshold, int limit) {
+        return store.values().stream()
+                .filter(log -> log.getStatus() == TccBranchStatus.TRIED)
+                .filter(log -> log.getTryCompletedAt() != null && log.getTryCompletedAt().isBefore(threshold))
+                .limit(limit)
+                .collect(Collectors.toList());
+    }
+
+    /**
      * 查询超时未完成的分支事务数量（高效计数，不加载完整日志）
      *
      * @param threshold 超时阈值，早于此时间的 TRIED 状态分支需要恢复

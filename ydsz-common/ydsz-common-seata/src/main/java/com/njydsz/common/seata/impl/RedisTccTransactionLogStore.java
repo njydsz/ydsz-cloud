@@ -179,6 +179,48 @@ public class RedisTccTransactionLogStore implements TccTransactionLogStore {
     }
 
     /**
+     * 分页查询超时未完成的分支事务（P1-2 新增）
+     *
+     * <p>使用 SCAN 遍历 Redis，仅返回前 limit 条超时未完成的分支记录，
+     * 避免一次性加载全部超时事务到内存。
+     *
+     * @param threshold 超时阈值
+     * @param limit     单次返回最大记录数
+     * @return 超时分支列表
+     */
+    @Override
+    public List<TccTransactionLog> findTimeoutPendingPaged(LocalDateTime threshold, int limit) {
+        List<TccTransactionLog> result = new ArrayList<>();
+        String pattern = keyPrefix + "*";
+        ScanOptions options = ScanOptions.scanOptions()
+                .match(pattern)
+                .count(SCAN_BATCH_SIZE)
+                .build();
+        Cursor<String> cursor = redisTemplate.scan(options);
+        try {
+            while (cursor.hasNext() && result.size() < limit) {
+                String key = cursor.next();
+                Map<Object, Object> raw = redisTemplate.opsForHash().entries(key);
+                if (raw == null || raw.isEmpty()) {
+                    continue;
+                }
+                TccTransactionLog logEntry = fromHash(raw);
+                if (logEntry == null) {
+                    continue;
+                }
+                if (logEntry.getStatus() == TccBranchStatus.TRIED
+                        && logEntry.getTryCompletedAt() != null
+                        && logEntry.getTryCompletedAt().isBefore(threshold)) {
+                    result.add(logEntry);
+                }
+            }
+        } finally {
+            cursor.close();
+        }
+        return result;
+    }
+
+    /**
      * 根据 XID 和分支 ID 从 Redis 查询事务日志
      *
      * @param xid      全局事务 ID

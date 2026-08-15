@@ -2,8 +2,6 @@ package com.njydsz.common.queue.health;
 
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.health.contributor.Health;
@@ -24,6 +22,12 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>非 Redis 类型：通过 TCP 端口连通性检查（使用各 MQ 默认端口）</li>
  * </ul>
  *
+ * <p><b>端口解析逻辑：</b>
+ * <ul>
+ *   <li>如果用户显式配置了端口（{@code ydsz.queue.port != 0}），则始终使用用户配置</li>
+ *   <li>如果端口为 0（未配置），则回退到各 MQ 类型的默认端口</li>
+ * </ul>
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -32,7 +36,7 @@ public class QueueHealthIndicator implements HealthIndicator {
 
     private static final int HEALTH_CHECK_TIMEOUT_MS = 2000;
 
-    /** 各 MQ 类型的默认端口 */
+    /** 各 MQ 类型的默认端口（仅当用户未配置端口时使用） */
     private static final int DEFAULT_REDIS_PORT = 6379;
     private static final int DEFAULT_KAFKA_PORT = 9092;
     private static final int DEFAULT_RABBIT_PORT = 5672;
@@ -120,19 +124,20 @@ public class QueueHealthIndicator implements HealthIndicator {
         boolean connected = checkTcpConnection(host, port);
         long responseTime = System.currentTimeMillis() - startTime;
 
-        Map<String, Object> details = new HashMap<>();
-        details.put("mqType", type.getValue());
-        details.put("host", host);
-        details.put("port", port);
-        details.put("responseTimeMs", responseTime);
-        details.put("connected", connected);
-        details.put("checkMethod", "tcp-port");
-
         if (connected) {
-            return Health.up().withDetails(details);
+            return Health.up()
+                    .withDetail("mqType", type.getValue())
+                    .withDetail("host", host)
+                    .withDetail("port", port)
+                    .withDetail("responseTimeMs", responseTime)
+                    .withDetail("checkMethod", "tcp-port");
         } else {
             return Health.down()
-                    .withDetails(details)
+                    .withDetail("mqType", type.getValue())
+                    .withDetail("host", host)
+                    .withDetail("port", port)
+                    .withDetail("responseTimeMs", responseTime)
+                    .withDetail("checkMethod", "tcp-port")
                     .withDetail("error", "无法连接到 " + type.getValue() + " 服务 " + host + ":" + port);
         }
     }
@@ -142,22 +147,29 @@ public class QueueHealthIndicator implements HealthIndicator {
      *
      * <p>逻辑：
      * <ul>
-     *   <li>如果用户显式配置了端口（非 Redis 默认 6379），则使用用户配置</li>
-     *   <li>如果端口仍为 Redis 默认 6379，则使用各 MQ 类型的默认端口</li>
+     *   <li>如果用户显式配置了端口（{@code port != 0}），则使用用户配置</li>
+     *   <li>如果端口为 0（未配置），则使用各 MQ 类型的默认端口</li>
      * </ul>
      */
     private int resolvePort(QueueType type) {
-        int configuredPort = queueProperties.resolvedPort();
-        if (type == QueueType.KAFKA) {
-            return configuredPort != DEFAULT_REDIS_PORT ? configuredPort : DEFAULT_KAFKA_PORT;
-        } else if (type == QueueType.RABBIT) {
-            return configuredPort != DEFAULT_REDIS_PORT ? configuredPort : DEFAULT_RABBIT_PORT;
-        } else if (type == QueueType.ROCKET) {
-            return configuredPort != DEFAULT_REDIS_PORT ? configuredPort : DEFAULT_ROCKET_PORT;
-        } else if (type == QueueType.ACTIVE) {
-            return configuredPort != DEFAULT_REDIS_PORT ? configuredPort : DEFAULT_ACTIVE_PORT;
+        int configuredPort = queueProperties.getPort();
+        if (configuredPort > 0) {
+            return configuredPort;
         }
-        return configuredPort;
+        // 用户未配置端口，使用各 MQ 类型的默认端口
+        if (type == QueueType.KAFKA) {
+            return DEFAULT_KAFKA_PORT;
+        }
+        if (type == QueueType.RABBIT) {
+            return DEFAULT_RABBIT_PORT;
+        }
+        if (type == QueueType.ROCKET) {
+            return DEFAULT_ROCKET_PORT;
+        }
+        if (type == QueueType.ACTIVE) {
+            return DEFAULT_ACTIVE_PORT;
+        }
+        return DEFAULT_REDIS_PORT;
     }
 
     /**

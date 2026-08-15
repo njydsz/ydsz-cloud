@@ -26,6 +26,7 @@ import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.data.redis.serializer.RedisSerializer;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.config.RedisProperties;
@@ -878,6 +879,50 @@ public class RedisStringOps {
         } catch (Exception e) {
             recordError("mgetObjects", e);
             log.error("【Redis】MGET 操作失败 | keys={} | error={}", keys, e);
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * 批量获取值（使用 Redis Pipeline 优化）。
+     *
+     * <p>将 N 次 GET 操作合并为 1 次网络往返，适用于大批量键值获取场景。
+     * 相比 {@link #mget(List)} 使用的 MGET 命令，Pipeline 将所有命令一次性
+     * 发送给服务端，只需 1 轮网络往返，高延迟网络下性能优势更明显。
+     *
+     * <p>注意：MGET 是原子命令，而 Pipeline 不保证原子性（中间可能有其他命令插入）。
+     * 对于权限加载等最终一致性场景，Pipeline 的更高吞吐量更为合适。
+     *
+     * @param keys 键集合
+     * @return 值列表（与 keys 顺序对应，不存在的键对应位置为 null）
+     */
+    public List<String> multiGetPipelined(List<String> keys) {
+        if (CollectionUtils.isEmpty(keys)) {
+            return Collections.emptyList();
+        }
+        try {
+            List<String> formattedKeys = formatKeys(keys);
+            byte[][] rawKeys = formattedKeys.stream()
+                    .map(k -> redisTemplate.getStringSerializer().serialize(k))
+                    .toArray(byte[][]::new);
+            List<byte[]> rawResults = redisTemplate.executePipelined(
+                    (RedisCallback<Object>) connection -> {
+                        for (byte[] rawKey : rawKeys) {
+                            connection.stringCommands().get(rawKey);
+                        }
+                        return null;
+                    },
+                    RedisSerializer.byteArray()
+            );
+            if (rawResults == null) {
+                return Collections.emptyList();
+            }
+            return rawResults.stream()
+                    .map(b -> b == null ? null : new String(b, StandardCharsets.UTF_8))
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            recordError("multiGetPipelined", e);
+            log.error("【Redis】Pipeline 批量获取失败 | keyCount={} | error={}", keys.size(), e);
             return Collections.emptyList();
         }
     }
