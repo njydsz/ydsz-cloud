@@ -121,7 +121,10 @@ public class OutboxService {
      * </ul>
      *
      * @param event 领域事件
+     * @deprecated 自 1.6.0 起废弃，推荐使用 {@link #appendToOutbox(OutboxMessage.OutboxMessageBuilder)}
+     *             以获取完整的字段控制能力。本类将在 2.0.0 版本移除。
      */
+    @Deprecated
     @Transactional
     public void appendToOutbox(DomainEvent event) {
         Map<String, String> headers = new HashMap<>();
@@ -158,7 +161,10 @@ public class OutboxService {
      * @param aggregateId   聚合根 ID
      * @param eventType     事件类型
      * @param payload       事件负载（JSON）
+     * @deprecated 自 1.6.0 起废弃，推荐使用 {@link #appendToOutbox(OutboxMessage.OutboxMessageBuilder)}。
+     *             本类将在 2.0.0 版本移除。
      */
+    @Deprecated
     @Transactional
     public void appendToOutbox(String aggregateType, String aggregateId,
                                String eventType, String payload) {
@@ -173,7 +179,10 @@ public class OutboxService {
      * @param eventType     事件类型
      * @param payload       事件负载（JSON）
      * @param headers       扩展头
+     * @deprecated 自 1.6.0 起废弃，推荐使用 {@link #appendToOutbox(OutboxMessage.OutboxMessageBuilder)}。
+     *             本类将在 2.0.0 版本移除。
      */
+    @Deprecated
     @Transactional
     public void appendToOutbox(String aggregateType, String aggregateId,
                                String eventType, String payload,
@@ -198,7 +207,10 @@ public class OutboxService {
      * @param schemaVersion    Schema 版本号
      * @param contentType      内容类型
      * @param deduplicationId  幂等去重 ID（null 表示不自动生成，除非 auto-dedup=true）
+     * @deprecated 自 1.6.0 起废弃，推荐使用 {@link #appendToOutbox(OutboxMessage.OutboxMessageBuilder)}。
+     *             本类将在 2.0.0 版本移除。
      */
+    @Deprecated
     @Transactional
     public void appendToOutbox(String aggregateType, String aggregateId,
                                String eventType, String payload,
@@ -463,6 +475,13 @@ public class OutboxService {
     /**
      * 执行同步投递
      *
+     * <p>异常分类：
+     * <ul>
+     *   <li><b>可恢复异常</b>（网络超时、连接拒绝）：WARN 日志后依赖异步轮询器兜底重试</li>
+     *   <li><b>不可恢复异常</b>（序列化失败、消息体过大）：此类异常重试无意义，
+     *       但当前实现仍由异步轮询器处理（轮询 maxRetries 后进入 DEAD_LETTER）</li>
+     * </ul>
+     *
      * @param message Outbox 消息
      */
     private void doSyncPublish(OutboxMessage message) {
@@ -476,8 +495,36 @@ public class OutboxService {
                         message.getId());
             }
         } catch (Exception e) {
-            log.warn("Sync publish failed, message will be picked up by async poller: id={}, error={}",
-                    message.getId(), e.getMessage());
+            // 异常分类：可恢复异常依赖异步轮询兜底；不可恢复异常在轮询 maxRetries 后进入 DEAD_LETTER
+            if (isRecoverableException(e)) {
+                log.warn("Sync publish failed (recoverable), message will be retried by async poller: id={}, err={}",
+                        message.getId(), e.getMessage());
+            } else {
+                log.error("Sync publish failed (non-recoverable): id={}, type={}, err={}",
+                        message.getId(), message.getEventType(), e.getMessage());
+            }
         }
+    }
+
+    /**
+     * 判断异常是否可恢复
+     *
+     * <p>可恢复异常（Retriable）：网络超时、连接拒绝、服务暂时不可用等，这类异常
+     * 通过后续重试可能成功。不可恢复异常（Non-retriable）：序列化失败、消息体校验错误等，
+     * 重试无意义。
+     *
+     * @param e 投递异常
+     * @return true 表示可恢复（应重试）
+     */
+    private boolean isRecoverableException(Exception e) {
+        String className = e.getClass().getSimpleName();
+        // 网络/连接/超时类异常通常可恢复
+        return className.contains("Timeout")
+                || className.contains("Connect")
+                || className.contains("Socket")
+                || className.contains("IOException")
+                || className.contains("Retriable")
+                || className.contains("Transient")
+                || e.getCause() instanceof java.io.IOException;
     }
 }

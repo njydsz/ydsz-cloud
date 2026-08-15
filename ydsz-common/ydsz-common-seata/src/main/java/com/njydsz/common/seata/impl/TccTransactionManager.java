@@ -3,23 +3,28 @@ package com.njydsz.common.seata.impl;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 
 import com.njydsz.common.seata.api.TccAction;
 import com.njydsz.common.seata.api.TccBranchStatus;
+import com.njydsz.common.seata.api.TccConfirmCallback;
 import com.njydsz.common.seata.api.TccContext;
 import com.njydsz.common.seata.api.TccTransactionLog;
 import com.njydsz.common.seata.api.TccTransactionLogStore;
 import com.njydsz.common.seata.api.TransactionType;
 import com.njydsz.common.seata.config.SeataProperties;
-import org.springframework.beans.factory.ObjectProvider;
 import com.njydsz.common.seata.audit.TransactionAuditLogger;
 import com.njydsz.common.seata.metrics.SeataMetrics;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ForkJoinPool;
 /**
  * TCC 事务管理器
  *
@@ -50,6 +55,9 @@ public class TccTransactionManager extends AbstractTransactionManager
     private final SeataProperties properties;
     private final Map<String, TccAction<?>> registeredActions = new ConcurrentHashMap<>();
 
+    /** Confirm/Cancel 异步执行器（可选，为空则使用 ForkJoinPool） */
+    private Executor asyncExecutor;
+
     /**
      * 无日志存储模式（向后兼容）
      */
@@ -70,6 +78,25 @@ public class TccTransactionManager extends AbstractTransactionManager
         super(metricsProvider, auditProvider);
         this.logStore = logStore;
         this.properties = properties;
+    }
+
+    /**
+     * 设置异步执行器（P1-3 新增）
+     *
+     * <p>用于异步 Confirm 模式，执行 Confirm 操作的后台线程池。
+     * 建议注入专用的业务线程池，避免与 RPC 线程池竞争。
+     *
+     * @param asyncExecutor 异步执行器
+     */
+    public void setAsyncExecutor(Executor asyncExecutor) {
+        this.asyncExecutor = asyncExecutor;
+    }
+
+    /**
+     * 获取异步执行器，未设置时返回 ForkJoinPool.commonPool()
+     */
+    private Executor getAsyncExecutor() {
+        return asyncExecutor != null ? asyncExecutor : ForkJoinPool.commonPool();
     }
 
     /**
@@ -186,6 +213,135 @@ public class TccTransactionManager extends AbstractTransactionManager
         }
 
         return result;
+    }
+
+    /**
+     * 异步执行 TCC 事务（P1-3 新增）
+     *
+     * <p>Try 阶段同步执行，完成后立即返回。Confirm 阶段异步执行，
+     * 通过 {@link TccConfirmCallback} 回调通知执行结果。
+     *
+     * <p>适用场景：
+     * <ul>
+     *   <li>Confirm 阶段耗时较长（如调用外部系统）</li>
+     *   <li>希望 Try 完成后立即释放主线程资源</li>
+     *   <li>Confirm 失败可接受异步重试</li>
+     * </ul>
+     *
+     * <p>注意：
+     * <ul>
+     *   <li>异步模式下 Confirm 失败会自动触发 Cancel</li>
+     *   <li>建议注入专用线程池，避免使用 ForkJoinPool.commonPool()</li>
+     *   <li>回调方法中不应执行耗时操作，避免阻塞 Confirm 线程池</li>
+     * </ul>
+     *
+     * @param transactionName 事务名称
+     * @param tccAction       TCC 动作
+     * @param callback        Confirm/Cancel 回调（可为 null）
+     * @param <T>             返回值类型
+     * @return Try 阶段的返回值（CompletableFuture，Try 完成后即可获取）
+     */
+    public <T> CompletableFuture<T> executeTccAsync(String transactionName,
+                                                      TccAction<T> tccAction,
+                                                      TccConfirmCallback<T> callback) {
+        String xid = beginXid(transactionName);
+        String branchId = generateBranchId();
+        TccContext context = new TccContext(xid, branchId);
+        registeredActions.put(xid, tccAction);
+
+        TccTransactionLog txLog = new TccTransactionLog(xid, branchId, transactionName);
+        if (logStore != null) {
+            logStore.save(txLog);
+        }
+
+        log.info("TCC Async Try phase: name={}, xid={}, branch={}", transactionName, xid, branchId);
+
+        // 同步执行 Try 阶段
+        T result;
+        try {
+            if (logStore != null && isSuspended(xid, branchId)) {
+                log.warn("TCC Async Try skipped (suspension): already cancelled: xid={}, branch={}", xid, branchId);
+                endXid();
+                return CompletableFuture.completedFuture(null);
+            }
+            updateStatus(txLog, TccBranchStatus.TRYING);
+            txLog.setTryStartedAt(LocalDateTime.now());
+
+            result = tccAction.tryAction(context);
+
+            txLog.setTryCompletedAt(LocalDateTime.now());
+            updateStatus(txLog, TccBranchStatus.TRIED);
+        } catch (Exception e) {
+            log.error("TCC Async Try failed, executing Cancel: name={}, xid={}", transactionName, xid, e);
+            // Try 失败同步执行 Cancel
+            executeCancelWithGuard(transactionName, xid, branchId, txLog, tccAction, context);
+            endXid();
+            if (callback != null) {
+                try {
+                    callback.onCancelSuccess(context);
+                } catch (Exception ce) {
+                    log.warn("Cancel callback failed", ce);
+                }
+            }
+            return CompletableFuture.failedFuture(e);
+        }
+
+        // 异步执行 Confirm 阶段
+        final T finalResult = result;
+        Executor executor = getAsyncExecutor();
+        log.info("TCC Async Confirm phase scheduled: name={}, xid={}, branch={}, executor={}",
+                transactionName, xid, branchId, executor.getClass().getSimpleName());
+
+        CompletableFuture<T> future = CompletableFuture.supplyAsync(() -> {
+            try {
+                executeConfirmWithRetry(transactionName, xid, branchId, txLog, tccAction, context);
+                log.info("TCC Async Confirm completed: name={}, xid={}", transactionName, xid);
+                if (callback != null) {
+                    try {
+                        callback.onConfirmSuccess(context, finalResult);
+                    } catch (Exception ce) {
+                        log.warn("Confirm success callback failed", ce);
+                    }
+                }
+                return finalResult;
+            } catch (Exception e) {
+                log.error("TCC Async Confirm failed, executing Cancel: name={}, xid={}", transactionName, xid, e);
+                try {
+                    executeCancelWithRetry(transactionName, xid, branchId, txLog, tccAction, context);
+                    if (callback != null) {
+                        try {
+                            callback.onCancelSuccess(context);
+                        } catch (Exception ce) {
+                            log.warn("Cancel success callback failed", ce);
+                        }
+                    }
+                } catch (Exception cancelEx) {
+                    log.error("TCC Async Cancel also failed: name={}, xid={}", transactionName, xid, cancelEx);
+                    if (callback != null) {
+                        try {
+                            callback.onCancelFailure(context, cancelEx);
+                        } catch (Exception ce) {
+                            log.warn("Cancel failure callback failed", ce);
+                        }
+                    }
+                }
+                if (callback != null) {
+                    try {
+                        callback.onConfirmFailure(context, e);
+                    } catch (Exception ce) {
+                        log.warn("Confirm failure callback failed", ce);
+                    }
+                }
+                throw new RuntimeException("TCC Async Confirm failed: " + transactionName, e);
+            } finally {
+                registeredActions.remove(xid);
+                endXid();
+            }
+        }, executor);
+
+        // Try 完成后立即返回，不等待 Confirm
+        endXid();
+        return future;
     }
 
     // ============= P0-4: 三大问题检查 =============

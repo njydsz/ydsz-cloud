@@ -74,6 +74,7 @@ public class ActiveMQ extends AbstractMessageQueue {
         this.properties = properties;
         this.consumerExecutor = consumerExecutor;
         validateConnection();
+        log.warn("[ActiveMQ] ActiveMQ 自 1.1.0 起已废弃，建议迁移至 RabbitMQ 或 ActiveMQ Artemis，将在 2.0.0 版本移除");
         log.info("[ActiveMQ] 初始化成功，brokerUrl={}", properties.resolvedBrokerUrl());
     }
 

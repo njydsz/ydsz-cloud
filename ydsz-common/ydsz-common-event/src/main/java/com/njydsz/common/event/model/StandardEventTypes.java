@@ -10,7 +10,10 @@ package com.njydsz.common.event.model;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 自 1.6.0 起废弃，统一使用 {@link com.njydsz.common.event.api.DomainEventTypes}。
+ *             本类将在 2.0.0 版本移除。
  */
+@Deprecated
 public final class StandardEventTypes {
 
     private StandardEventTypes() {

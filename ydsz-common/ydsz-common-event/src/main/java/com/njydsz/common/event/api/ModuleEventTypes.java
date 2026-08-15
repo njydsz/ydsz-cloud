@@ -23,7 +23,10 @@ package com.njydsz.common.event.api;
  * @author ydsz-team
  * @since 1.0.0
  * @since 1.5.0 由 common-domain 迁入 common-event
+ * @deprecated 自 1.6.0 起废弃，统一使用 {@link DomainEventTypes}。
+ *             本类将在 2.0.0 版本移除。
  */
+@Deprecated
 public final class ModuleEventTypes {
 
     private ModuleEventTypes() {

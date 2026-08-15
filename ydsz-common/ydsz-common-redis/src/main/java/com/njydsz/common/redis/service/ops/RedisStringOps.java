@@ -895,6 +895,9 @@ public class RedisStringOps {
      *
      * @param keys 键集合
      * @return 值列表（与 keys 顺序对应，不存在的键对应位置为 null）
+     *
+     * @author ydsz-team
+     * @since 1.0.0
      */
     public List<String> multiGetPipelined(List<String> keys) {
         if (CollectionUtils.isEmpty(keys)) {

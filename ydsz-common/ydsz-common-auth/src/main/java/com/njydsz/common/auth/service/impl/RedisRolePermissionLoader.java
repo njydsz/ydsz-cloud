@@ -18,7 +18,7 @@ import org.springframework.http.HttpStatus;
 import com.njydsz.common.auth.cache.LocalPermissionCache;
 import com.njydsz.common.auth.config.AuthProperties;
 import com.njydsz.common.auth.event.PermissionChangeNotifier;
-import com.njydsz.common.auth.hierarchy.PermissionHierarchy;
+import com.njydsz.common.auth.hierarchy.PermissionHierarchyService;
 import com.njydsz.common.auth.model.RolePermissions;
 import com.njydsz.common.auth.service.RolePermissionLoader;
 import com.njydsz.common.cache.YdszCache;
@@ -66,6 +66,7 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
     private final Cache<String, RolePermissions> cache;
     private final PermissionChangeNotifier notifier;
     private final LocalPermissionCache<RolePermissions> localCache;
+    private final PermissionHierarchyService hierarchyService;
 
     /**
      * 标记 Redis 是否可用，初始值为 true。
@@ -74,17 +75,25 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
 
     public RedisRolePermissionLoader(RedisStringOps redisStringOps, AuthProperties properties,
                                      PermissionChangeNotifier notifier) {
-        this(redisStringOps, properties, notifier, null);
+        this(redisStringOps, properties, notifier, null, null);
     }
 
     public RedisRolePermissionLoader(RedisStringOps redisStringOps, AuthProperties properties,
                                      PermissionChangeNotifier notifier,
                                      LocalPermissionCache<RolePermissions> localCache) {
+        this(redisStringOps, properties, notifier, localCache, null);
+    }
+
+    public RedisRolePermissionLoader(RedisStringOps redisStringOps, AuthProperties properties,
+                                     PermissionChangeNotifier notifier,
+                                     LocalPermissionCache<RolePermissions> localCache,
+                                     PermissionHierarchyService hierarchyService) {
         this.redisStringOps = redisStringOps;
         this.properties = properties;
         this.cache = buildCache();
         this.notifier = notifier;
         this.localCache = localCache;
+        this.hierarchyService = hierarchyService;
     }
 
     /**
@@ -207,15 +216,14 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
     /**
      * 批量加载多个角色的权限集合。
      *
-     * <p>使用 Redis MGET 批量获取所有角色的 menu-key 和 api-key，
-     * 将 N 个角色的 2N 次 Redis 往返减少为 2 次，大幅降低网络延迟。
+     * <p>使用 Redis Pipeline 批量获取所有角色的 menu-key 和 api-key，
+     * 将 N 个角色的 2N 次 GET 操作合并为 1 次网络往返，大幅降低网络延迟。
      *
      * <p>处理流程：
      * <ol>
      *   <li>先检查 Caffeine 本地缓存，筛选出未缓存的角色</li>
      *   <li>对未缓存的角色，构建 menu-keys 和 api-keys 列表</li>
-     *   <li>MGET 批量获取所有 menu-keys（1 次往返）</li>
-     *   <li>MGET 批量获取所有 api-keys（1 次往返）</li>
+     *   <li>通过 Pipeline 一次性发送所有 GET 命令（1 次往返）</li>
      *   <li>解析每个角色的 JSON 数据，构建 RolePermissions</li>
      *   <li>写入 Caffeine 缓存和 LocalPermissionCache</li>
      * </ol>
@@ -268,15 +276,19 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
         }
 
         try {
-            // 3. MGET 批量获取 menu 数据和 api 数据（2 次 Redis 往返）
-            List<String> menuDataList = redisStringOps.mget(menuKeys);
-            List<String> apiDataList = redisStringOps.mget(apiKeys);
+            // 3. Pipeline 批量获取 menu 数据和 api 数据（1 次 Redis 往返）
+            //    所有 key 合并为一个列表：前 uncachedCount 条为 menuKeys，后 uncachedCount 条为 apiKeys
+            List<String> allKeys = new ArrayList<>(uncachedCount * 2);
+            allKeys.addAll(menuKeys);
+            allKeys.addAll(apiKeys);
+            List<String> allResults = redisStringOps.multiGetPipelined(allKeys);
 
             // 4. 解析每个角色的权限数据
             for (int i = 0; i < uncachedCount; i++) {
                 String role = uncachedRoles.get(i);
-                String menuData = (i < menuDataList.size()) ? menuDataList.get(i) : null;
-                String apiData = (i < apiDataList.size()) ? apiDataList.get(i) : null;
+                String menuData = (i < allResults.size()) ? allResults.get(i) : null;
+                String apiData = (uncachedCount + i < allResults.size())
+                        ? allResults.get(uncachedCount + i) : null;
 
                 Set<String> menuPerms = new HashSet<>();
                 Set<String> buttonPerms = new HashSet<>();
@@ -402,8 +414,22 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
             int lastColon = trimmed.lastIndexOf(':');
             if (lastColon > 0) {
                 String parent = trimmed.substring(0, lastColon);
-                PermissionHierarchy.register(parent, trimmed);
+                registerHierarchy(parent, trimmed);
             }
+        }
+    }
+
+    /**
+     * 注册权限层级到 {@link PermissionHierarchyService}。
+     *
+     * <p>如果层级服务未配置（为 null），则跳过注册。
+     *
+     * @param parent 父权限码
+     * @param child  子权限码
+     */
+    private void registerHierarchy(String parent, String child) {
+        if (hierarchyService != null) {
+            hierarchyService.registerPermission(PermissionHierarchyService.DEFAULT_TENANT_ID, parent, child);
         }
     }
 
