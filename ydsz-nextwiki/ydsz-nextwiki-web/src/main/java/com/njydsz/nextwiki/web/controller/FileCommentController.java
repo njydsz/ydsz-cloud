@@ -75,6 +75,12 @@ import com.njydsz.common.lock.annotation.Idempotent;
  *                                   ydsz_file_comment
  * </pre>
  *
+ * <h3>实现状态</h3>
+ * <p>当前为 stub 实现，infra 层 {@link FileCommentRepository} 仅有空壳 Bean，
+ * 所有接口写操作会返回 501 错误。详见 P1-5 待排期。
+ *
+ * TODO: 待接入 {@code nw_file_comment} 表 + FileCommentMapper 后启用完整评论能力
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -85,10 +91,10 @@ import com.njydsz.common.lock.annotation.Idempotent;
 @Tag(name = "文件评论", description = "文件级评论、回复、批注、解决标记")
 public class FileCommentController {
 
-    /** 文件评论仓储（封装评论的 CRUD + 解决标记） */
     /** 分布式 ID 生成器 */
     private final SnowflakeIdGenerator snowflakeIdGenerator;
 
+    /** 文件评论仓储（封装评论的 CRUD + 解决标记） */
     private final FileCommentRepository commentRepository;
 
     /**
