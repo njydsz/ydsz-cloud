@@ -541,10 +541,15 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     public String resolveRejectTarget(String definitionId, String currentNodeCode) {
         List<FlowSkip> incoming = flowDefinitionCacheService.getSkipsByNextNode(definitionId, currentNodeCode);
         if (!incoming.isEmpty()) {
-            return incoming.get(0).getSkipName() == null
-                    ? currentNodeCode
-                    : lookupNodeCodeByName(definitionId, incoming.get(0).getSkipName());
+            // P0-1 修复：使用 extractSourceNodeCode 获取入边 sourceRef（前驱节点编码），
+            // 跳过脆弱的 lookupNodeCodeByName 名称匹配路径。
+            // 设计器常将 sequenceFlow 的 name 属性留空，按名称查找极易失败或错配。
+            String sourceNodeCode = extractSourceNodeCode(incoming.get(0));
+            if (sourceNodeCode != null && !sourceNodeCode.isBlank()) {
+                return sourceNodeCode;
+            }
         }
+        // 兜底：无前驱时退回到开始节点
         FlowNode start = flowDefinitionCacheService.getStartNode(definitionId);
         return start == null ? null : start.getNodeCode();
     }
@@ -719,15 +724,6 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
                     node.getNodeCode(), node.getExt(), e.getMessage());
             return incomingCount;
         }
-    }
-
-    private String lookupNodeCodeByName(String definitionId, String skipName) {
-        List<FlowNode> all = flowDefinitionCacheService.getAllNodes(definitionId);
-        return all.stream()
-                .filter(n -> skipName.equals(n.getNodeName()))
-                .map(FlowNode::getNodeCode)
-                .findFirst()
-                .orElse(null);
     }
 
     private Map<String, Object> parseVariable(String json) {

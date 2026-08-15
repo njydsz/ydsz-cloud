@@ -311,14 +311,19 @@ public class ParallelRuleEvaluator {
     }
 
     /**
-     * 创建命名线程池
+     * 创建默认线程池（仅当未注入外部 common-thread 线程池时使用）。
+     *
+     * <p>命名符合云顶编码规范 15.4.4 约定：ydsz-{module}-{biz}-。
+     *
+     * @param poolSize 线程池大小
+     * @return 默认线程池
      */
     private static ExecutorService createExecutor(int poolSize) {
         ThreadFactory factory = new ThreadFactory() {
             private final AtomicInteger counter = new AtomicInteger(0);
             @Override
             public Thread newThread(Runnable r) {
-                Thread t = new Thread(r, "literule-parallel-" + counter.getAndIncrement());
+                Thread t = new Thread(r, "ydsz-literule-parallel-" + counter.getAndIncrement());
                 t.setDaemon(true);
                 return t;
             }

@@ -11,8 +11,6 @@ import java.util.Set;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
-import org.springframework.data.redis.core.RedisTemplate;
-
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -50,7 +48,6 @@ import lombok.extern.slf4j.Slf4j;
 public class FlowAssigneeAvailabilityService {
 
     private final RedisStringOps redisStringOps;
-    private final RedisTemplate<String, Object> redisTemplate;
 
     private static final String TODO_COUNT_PREFIX = "flow:assignee:todo_count:";
     private static final String LAST_ACTIVE_PREFIX = "flow:assignee:last_active:";
@@ -84,8 +81,8 @@ public class FlowAssigneeAvailabilityService {
         if (!StringUtils.hasText(userId)) return;
         try {
             String key = TODO_COUNT_PREFIX + userId;
-            Long count = redisTemplate.opsForValue().decrement(key);
-            if (count != null && count <= 0) {
+            long count = redisStringOps.decr(key, 1);
+            if (count <= 0) {
                 redisStringOps.del(key);
             }
             updateLastActive(userId);
