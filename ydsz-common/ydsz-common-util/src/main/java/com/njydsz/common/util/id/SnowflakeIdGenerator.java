@@ -8,6 +8,7 @@ import java.util.concurrent.locks.LockSupport;
 
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.util.api.Stable;
 import com.njydsz.common.util.security.DigestUtils;
 
 /**
@@ -49,6 +50,7 @@ import com.njydsz.common.util.security.DigestUtils;
  * @author ydsz-team
  * @since 4.0.0
  */
+@Stable(since = "4.0.0")
 @Slf4j
 public class SnowflakeIdGenerator {
 

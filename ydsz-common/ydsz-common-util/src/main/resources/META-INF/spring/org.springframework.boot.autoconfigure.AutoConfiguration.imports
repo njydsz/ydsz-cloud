@@ -1,2 +1,3 @@
 com.njydsz.common.util.config.UtilAutoConfiguration
 com.njydsz.common.util.config.MessageSourceConfiguration
+com.njydsz.common.util.security.crypto.CryptoAutoConfiguration

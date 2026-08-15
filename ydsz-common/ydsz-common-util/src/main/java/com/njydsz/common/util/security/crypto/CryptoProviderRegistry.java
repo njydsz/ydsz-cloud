@@ -56,7 +56,6 @@ public final class CryptoProviderRegistry {
         //    保证纯 AES 场景不依赖 BC（避免注册表静态初始化失败）。
         try {
             register(new Sm4GcmCryptoProvider());
-            register(new Sm4CbcCryptoProvider());
             LOG.info("SM4 crypto providers registered (BC available)");
         } catch (NoClassDefFoundError e) {
             LOG.info("BouncyCastle not on classpath, SM4 providers skipped: {}", e.getMessage());

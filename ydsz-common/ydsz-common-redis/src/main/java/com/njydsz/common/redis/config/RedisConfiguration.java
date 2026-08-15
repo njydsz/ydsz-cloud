@@ -26,12 +26,7 @@ import com.njydsz.common.redis.health.RedisHealthIndicator;
 import com.njydsz.common.redis.interceptor.RedisRetryInterceptor;
 import com.njydsz.common.redis.metrics.RedisMetricsCollector;
 import com.njydsz.common.redis.serializer.YdszJsonRedisSerializer;
-import com.njydsz.common.redis.service.RedisBloomFilter;
-import com.njydsz.common.redis.service.RedisCacheGuard;
-import com.njydsz.common.redis.service.RedisDelayedQueue;
-import com.njydsz.common.redis.service.RedisKeyExpirationDispatcher;
 import com.njydsz.common.redis.service.RedisRateLimiter;
-import com.njydsz.common.redis.service.RedisSnowflakeIdGenerator;
 import com.njydsz.common.redis.service.ops.RedisAdvancedOps;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisGeoOps;
@@ -247,12 +242,11 @@ public class RedisConfiguration {
     /**
      * 注册 YdszCacheable 注解切面
      *
-     * <p>核心缓存防护逻辑委托给 {@link RedisCacheGuard} 统一处理，
-     * 切面仅负责 SpEL 解析和 AOP 织入，避免锁逻辑重复实现。
+     * <p>切面负责 SpEL 解析和 AOP 织入，提供缓存防护能力。
      *
      * @param redisStringOps Redis String 操作组件（用于读写缓存、SETNX 锁等）
-     * @param redisTemplate  Redis 模板（用于构建 RedisCacheGuard）
-     * @param redisProperties Redis 配置属性（含 CacheGuard 参数）
+     * @param redisTemplate  Redis 模板
+     * @param redisProperties Redis 配置属性
      * @return YdszCacheableAspect 实例
      */
     @Bean
@@ -261,29 +255,6 @@ public class RedisConfiguration {
                                                    RedisTemplate<String, Object> redisTemplate,
                                                    RedisProperties redisProperties) {
         return new YdszCacheableAspect(redisStringOps, redisTemplate, redisProperties);
-    }
-
-    /**
-     * 注册 Redis 缓存防护组件
-     *
-     * <p>提供防穿透、防击穿、防雪崩三重缓存保护。
-     * 空值缓存 TTL 从 {@link RedisProperties#getNullValueTtlSeconds()} 获取。
-     * 锁租约、自旋退避等参数从 {@link RedisProperties.CacheGuard} 获取，
-     * 可通过 {@code ydsz.redis.cache-guard.*} 配置项覆盖。
-     *
-     * @param stringOps      Redis String 操作组件（用于读写缓存、SETNX 锁等）
-     * @param redisTemplate  Redis 模板（用于 WatchDog 续期）
-     * @param redisProperties Redis 配置属性
-     * @return RedisCacheGuard 实例
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public RedisCacheGuard redisCacheGuard(RedisStringOps stringOps,
-                                           RedisTemplate<String, Object> redisTemplate,
-                                           RedisProperties redisProperties) {
-        return new RedisCacheGuard(stringOps, redisTemplate,
-                redisProperties.getNullValueTtlSeconds(),
-                redisProperties.getCacheGuard());
     }
 
     /**
@@ -455,40 +426,6 @@ public class RedisConfiguration {
     }
 
     /**
-     * 注册布隆过滤器封装（BF.ADD/BF.EXISTS，用于存在性判重与缓存穿透防护）。
-     *
-     * <p>建立在 RedisBloom 模块之上；若 Redis 未加载该模块，调用相关命令将抛异常，需由调用方保证模块可用。
-     *
-     * @param redisTemplate 基础模板，不会为 null
-     * @return 布隆过滤器封装实例
-     */
-    @Bean
-    @ConditionalOnMissingBean(RedisBloomFilter.class)
-    @ConditionalOnBean(RedisTemplate.class)
-    public RedisBloomFilter redisBloomFilter(RedisTemplate<String, Object> redisTemplate) {
-        return new RedisBloomFilter(redisTemplate);
-    }
-
-    /**
-     * 注册延迟队列封装（基于 ZSet 的 score 时间戳 + 轮询弹出实现定时任务）。
-     *
-     * <p>指标采集器可选，缺失时降级不采集。消费端需自行保证幂等：轮询取出后若处理失败，消息不会自动重回队列。
-     *
-     * @param redisTemplate  基础模板，不会为 null
-     * @param redisProperties 全局配置（含延迟队列轮询参数），不会为 null
-     * @param metricsProvider 指标采集器供应方，可能为 null
-     * @return 延迟队列封装实例
-     */
-    @Bean
-    @ConditionalOnMissingBean(RedisDelayedQueue.class)
-    @ConditionalOnBean(RedisTemplate.class)
-    public RedisDelayedQueue redisDelayedQueue(RedisTemplate<String, Object> redisTemplate,
-                                                 RedisProperties redisProperties,
-                                                 ObjectProvider<RedisMetricsCollector> metricsProvider) {
-        return new RedisDelayedQueue(redisTemplate, redisProperties, metricsProvider.getIfAvailable());
-    }
-
-    /**
      * 注册分布式限流器封装（基于 Redis 原子计数/脚本实现的令牌桶或滑动窗口）。
      *
      * <p>依赖 {@code redisProperties} 中的限流阈值配置。Redis 不可用时限流判定无法执行，调用方应明确降级策略
@@ -504,47 +441,6 @@ public class RedisConfiguration {
     public RedisRateLimiter redisRateLimiter(RedisTemplate<String, Object> redisTemplate,
                                                RedisProperties redisProperties) {
         return new RedisRateLimiter(redisTemplate, redisProperties);
-    }
-
-    /**
-     * 注册雪花 ID 生成器（依赖 Redis 注册并续约 workerId，避免多实例时钟回拨/workerId 冲突）。
-     *
-     * <p>workerId 的分配与保活由 WorkerIdAllocator 策略链完成；Redis 不可用时该生成器无法初始化 workerId，
-     * 将导致 ID 生成失败。装配条件同其它 ops Bean。
-     *
-     * @param redisTemplate  基础模板，不会为 null
-     * @param redisProperties 全局配置，不会为 null
-     * @return 雪花 ID 生成器实例
-     */
-    @Bean
-    @ConditionalOnMissingBean(RedisSnowflakeIdGenerator.class)
-    @ConditionalOnBean(RedisTemplate.class)
-    public RedisSnowflakeIdGenerator redisSnowflakeIdGenerator(RedisTemplate<String, Object> redisTemplate,
-                                                                  RedisProperties redisProperties) {
-        return new RedisSnowflakeIdGenerator(redisTemplate, redisProperties);
-    }
-
-    /**
-     * 注册 Key 过期事件监听调度器
-     *
-     * <p>扫描所有 Spring Bean 中标注了 {@code @RedisKeyExpireListener} 的方法，
-     * 自动订阅 Redis Keyspace Notification 的过期事件，匹配 keyPattern 后回调。
-     *
-     * <p>需要通过 {@code ydsz.redis.key-expiration.enabled=true} 启用，
-     * 且 Redis 服务端需配置 {@code notify-keyspace-events Ex}。
-     *
-     * @param listenerContainer 消息监听容器
-     * @param redisProperties   Redis 配置
-     * @return 过期事件调度器
-     */
-    @Bean
-    @ConditionalOnMissingBean(RedisKeyExpirationDispatcher.class)
-    @ConditionalOnBean({RedisTemplate.class, RedisMessageListenerContainer.class})
-    @ConditionalOnProperty(prefix = "ydsz.redis.key-expiration", name = "enabled", havingValue = "true")
-    public RedisKeyExpirationDispatcher redisKeyExpirationDispatcher(
-            RedisMessageListenerContainer listenerContainer,
-            RedisProperties redisProperties) {
-        return new RedisKeyExpirationDispatcher(listenerContainer, redisProperties);
     }
 
 }

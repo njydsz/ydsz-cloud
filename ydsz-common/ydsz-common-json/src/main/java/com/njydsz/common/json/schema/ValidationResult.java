@@ -12,7 +12,7 @@ import java.util.List;
  *
  * <p><b>使用示例：</b></p>
  * <pre>
- * ValidationResult result = JsonSchemaValidator.validate(data, schema);
+ * ValidationResult result = ValidationResult.success();
  * if (!result.isSuccess()) {
  *     log.error("JSON Schema 校验失败：{}", result.getErrors());
  * }

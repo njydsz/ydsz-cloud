@@ -6,6 +6,8 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 
+import com.njydsz.common.util.api.Stable;
+
 /**
  * 字符串工具类
  *
@@ -33,6 +35,7 @@ import java.util.Objects;
  * @since 1.0.0
  *
  */
+@Stable(since = "1.0.0")
 public final class StringUtils {
 
     private StringUtils() {

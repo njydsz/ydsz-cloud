@@ -10,7 +10,7 @@
  *       通过 {@code ydsz.thread.pools} 配置的线程池会被注册为 Spring Bean，
  *       自动绑定 Micrometer 指标、健康检查与优雅关闭钩子</li>
  *   <li>common-util：提供编程式并发工具（{@code ExecutorUtils} 静态工厂、
- *       {@code BoundedVirtualThreadScheduler}、{@code ThreadPoolMonitor} 等）。
+ *       {@code ThreadPoolMonitor} 等）。
  *       适用于非 Spring 场景、短生命周期线程池或需要手动注册监控的场景</li>
  * </ul>
  *

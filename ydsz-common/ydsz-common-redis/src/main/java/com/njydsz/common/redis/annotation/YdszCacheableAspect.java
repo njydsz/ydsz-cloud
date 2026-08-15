@@ -10,30 +10,20 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.SimpleEvaluationContext;
 
-import com.njydsz.common.redis.config.RedisProperties;
-import com.njydsz.common.redis.service.RedisCacheGuard;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 /**
  * {@link YdszCacheable} 注解的 AOP 切面实现
  *
- * <p>提供三重缓存防护：
+ * <p>提供缓存防护能力：
  * <ul>
  *   <li>缓存穿透防护（空值缓存）—— {@code preventPenetration}</li>
- *   <li>缓存击穿防护（分布式互斥锁 + WatchDog 续期）—— {@code preventStampede}</li>
  *   <li>缓存雪崩防护（随机TTL偏移）—— 默认启用</li>
  * </ul>
- *
- * <p><b>逻辑统一说明：</b>
- * <p>本切面负责 SpEL 表达式解析和 AOP 织入，核心缓存防护逻辑
- * （分布式锁、WatchDog 续期、单flight 等待、空值缓存）统一委托给
- * {@link RedisCacheGuard}，避免与 {@code YdszCacheableAspect} 各自实现
- * 一套锁机制导致的逻辑分歧和维护成本。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -48,28 +38,19 @@ public class YdszCacheableAspect {
     /** SpEL 表达式解析器（线程安全，复用） */
     private static final ExpressionParser PARSER = new SpelExpressionParser();
 
-    private final RedisCacheGuard redisCacheGuard;
     private final RedisStringOps redisStringOps;
 
     /**
      * 构造切面实例
      *
-     * <p>注入 {@link RedisCacheGuard} 统一处理缓存防护逻辑，
-     * 通过 SpEL 解析后的缓存键调用防护方法，消除重复的锁代码。
-     *
-     * @param redisStringOps  Redis String 操作（用于 YdszCacheEvict/YdszCachePut）
-     * @param redisTemplate   Redis 模板（用于构建 RedisCacheGuard）
-     * @param redisProperties Redis 配置（用于获取 CacheGuard 参数）
+     * @param redisStringOps  Redis String 操作（用于缓存读写、空值缓存等）
+     * @param redisTemplate   Redis 模板（预留，供未来扩展）
+     * @param redisProperties Redis 配置（预留，供未来扩展）
      */
     public YdszCacheableAspect(RedisStringOps redisStringOps,
-                                RedisTemplate<String, Object> redisTemplate,
-                                RedisProperties redisProperties) {
+                                org.springframework.data.redis.core.RedisTemplate<String, Object> redisTemplate,
+                                com.njydsz.common.redis.config.RedisProperties redisProperties) {
         this.redisStringOps = redisStringOps;
-        // 构建 RedisCacheGuard 实例，复用可配置参数（breakdownLockLeaseSeconds 等）
-        int nullValueTtl = redisProperties != null ? redisProperties.getNullValueTtlSeconds() : 1800;
-        this.redisCacheGuard = new RedisCacheGuard(redisStringOps, redisTemplate,
-                nullValueTtl,
-                redisProperties != null ? redisProperties.getCacheGuard() : new RedisProperties.CacheGuard());
     }
 
     /**
@@ -77,9 +58,9 @@ public class YdszCacheableAspect {
      *
      * <p>执行流程：
      * <ol>
-     *   <li>解析 SpEL Key 后根据 preventStampede 选择防护策略</li>
-     *   <li>开启防击穿：委托 {@link RedisCacheGuard#antiBreakdown} 统一处理</li>
-     *   <li>未开启防击穿：直接加载并使用防穿透空值缓存回填</li>
+     *   <li>解析 SpEL Key 后检查缓存命中</li>
+     *   <li>缓存未命中：执行方法体，结果写入缓存（含 TTL 抖动防雪崩）</li>
+     *   <li>空值缓存：方法返回 null 时写入空值标记，防止缓存穿透</li>
      * </ol>
      *
      * @param joinPoint 切点
@@ -95,36 +76,28 @@ public class YdszCacheableAspect {
         String cacheKey = resolveKey(annotation.key(), signature, joinPoint.getArgs());
         long ttlWithJitter = applyRandomJitter(annotation.ttl(), annotation.timeUnit());
 
-        // 委托 RedisCacheGuard 统一处理带防击穿的缓存读取
-        if (annotation.preventStampede()) {
-            return redisCacheGuard.antiBreakdown(cacheKey, ttlWithJitter,
-                    () -> {
-                        try {
-                            return joinPoint.proceed();
-                        } catch (Throwable e) {
-                            if (e instanceof RuntimeException) {
-                                throw (RuntimeException) e;
-                            }
-                            throw new RuntimeException("缓存加载执行失败", e);
-                        }
-                    },
-                    Object.class);
+        // 查询缓存
+        Object cached = redisStringOps.get(cacheKey);
+        if (cached != null) {
+            // 命中空值缓存标记，返回 null
+            if ("NULL".equals(cached)) {
+                return null;
+            }
+            return cached;
         }
 
-        // 无防击穿：使用 antiPenetration 的空值缓存防穿透
-        return redisCacheGuard.antiPenetration(cacheKey,
-                () -> {
-                    try {
-                        return joinPoint.proceed();
-                    } catch (Throwable e) {
-                        if (e instanceof RuntimeException) {
-                            throw (RuntimeException) e;
-                        }
-                        throw new RuntimeException("缓存加载执行失败", e);
-                    }
-                },
-                Object.class,
-                (int) annotation.nullValueTtl());
+        // 缓存未命中：执行方法体
+        Object result = joinPoint.proceed();
+
+        if (result != null) {
+            // 写入缓存（带 TTL 抖动防雪崩）
+            redisStringOps.set(cacheKey, result, Duration.ofSeconds(ttlWithJitter));
+        } else if (annotation.preventPenetration()) {
+            // 空值缓存防穿透
+            redisStringOps.set(cacheKey, "NULL", Duration.ofSeconds(annotation.nullValueTtl()));
+        }
+
+        return result;
     }
 
     /**

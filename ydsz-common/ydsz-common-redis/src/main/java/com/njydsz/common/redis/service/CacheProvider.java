@@ -18,7 +18,6 @@ import java.util.function.Supplier;
  *
  * <p><b>实现类：</b>
  * <ul>
- *   <li>{@link com.njydsz.common.redis.service.multilevel.MultiLevelCacheProvider}（多级缓存实现）</li>
  *   <li>其他自定义实现（可后续扩展）</li>
  * </ul>
  *
