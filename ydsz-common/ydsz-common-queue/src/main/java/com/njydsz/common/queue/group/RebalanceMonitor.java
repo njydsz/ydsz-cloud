@@ -12,6 +12,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.DisposableBean;
+import org.springframework.data.redis.connection.stream.PendingMessagesSummary;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import com.njydsz.common.queue.group.ConsumerGroupEvent.EventType;
@@ -26,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p><b>工作原理：</b>
  * <ol>
- *   <li>以固定间隔（默认 30 秒）调用 XINFO GROUPS 获取当前消费者列表</li>
+ *   <li>以固定间隔（默认 30 秒）调用 XPENDING 获取当前消费者列表</li>
  *   <li>与上一次快照对比，检测新增/移除的消费者</li>
  *   <li>触发对应类型的 {@link ConsumerGroupEvent} 事件</li>
  * </ol>
@@ -175,23 +176,19 @@ public class RebalanceMonitor implements DisposableBean {
 
     /**
      * 获取当前消费者列表
+     *
+     * <p>使用 XPENDING 命令获取消费组中所有有 pending 消息的消费者。
      */
     private Set<String> fetchCurrentConsumers() {
         Set<String> consumers = new HashSet<>();
         try {
-            // 使用 XINFO GROUPS 获取消费组信息
-            var groups = redisTemplate.opsForStream().groups(channel);
-            if (groups != null) {
-                for (var groupInfo : groups) {
-                    if (groupName.equals(groupInfo.groupName())) {
-                        // 获取消费者列表
-                        var consumerInfos = groupInfo.consumers();
-                        if (consumerInfos != null) {
-                            for (var consumerInfo : consumerInfos) {
-                                consumers.add(consumerInfo.consumerName());
-                            }
-                        }
-                        break;
+            PendingMessagesSummary summary = redisTemplate.opsForStream()
+                    .pending(channel, groupName);
+            if (summary != null) {
+                // getPendingMessagesPerConsumer 返回 Map<String, Long>，key 为消费者名称
+                for (Map.Entry<String, Long> entry : summary.getPendingMessagesPerConsumer().entrySet()) {
+                    if (entry.getValue() != null && entry.getValue() > 0) {
+                        consumers.add(entry.getKey());
                     }
                 }
             }

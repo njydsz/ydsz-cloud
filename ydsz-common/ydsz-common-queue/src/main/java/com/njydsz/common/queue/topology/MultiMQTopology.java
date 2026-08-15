@@ -274,6 +274,22 @@ public class MultiMQTopology {
         }
 
         @Override
+        public String subscribe() {
+            // 从第一个订阅者拉取
+            for (IMessageSubscriber subscriber : subscribers) {
+                try {
+                    String result = subscriber.subscribe();
+                    if (result != null) {
+                        return result;
+                    }
+                } catch (Exception e) {
+                    log.warn("[MultiMQTopology] 聚合拉取异常, topology={}, error={}", topologyName, e.getMessage());
+                }
+            }
+            return null;
+        }
+
+        @Override
         public String subscribeAsync(IMessageHandler handler) {
             List<String> consumerIds = new ArrayList<>();
             for (IMessageSubscriber subscriber : subscribers) {

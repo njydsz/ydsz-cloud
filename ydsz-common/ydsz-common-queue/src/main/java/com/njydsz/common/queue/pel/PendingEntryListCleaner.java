@@ -6,8 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.data.redis.connection.stream.Consumer;
 import org.springframework.data.redis.connection.stream.PendingMessage;
+import org.springframework.data.redis.connection.stream.PendingMessages;
 import org.springframework.data.redis.connection.stream.PendingMessagesSummary;
 import org.springframework.data.redis.core.RedisTemplate;
 
@@ -29,20 +29,6 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>支持清理策略：重试 / ACK 丢弃 / 转死信</li>
  *   <li>生成 PEL 统计报告</li>
  * </ul>
- *
- * <p><b>使用示例：</b>
- * <pre>{@code
- * PendingEntryListCleaner cleaner = new PendingEntryListCleaner(redisTemplate, "stream", "group");
- *
- * // 扫描超时消息
- * List<PendingEntryInfo> stale = cleaner.scanStaleEntries(Duration.ofMinutes(30));
- *
- * // 清理（重试 3 次后 ACK 丢弃）
- * int cleaned = cleaner.cleanStaleEntries(Duration.ofMinutes(30), 3);
- *
- * // 获取统计
- * PelStatistics stats = cleaner.getStatistics();
- * }</pre>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -92,23 +78,26 @@ public class PendingEntryListCleaner {
                 return staleEntries;
             }
 
-            // 遍历每个消费者的 pending 消息
+            // 遍历每个消费者的 pending 消息数量
             for (Map.Entry<String, Long> entry : summary.getPendingMessagesPerConsumer().entrySet()) {
                 String consumerName = entry.getKey();
-                Consumer consumer = Consumer.from(groupName, consumerName);
-                List<PendingMessage> pendingMessages = redisTemplate.opsForStream()
-                        .pending(channel, consumer, org.springframework.data.domain.Range.unbounded(), Integer.MAX_VALUE);
-                if (pendingMessages != null) {
-                    for (PendingMessage pending : pendingMessages) {
-                        if (pending.getElapsedTimeSinceLastDelivery().compareTo(idleThreshold) > 0) {
-                            staleEntries.add(PendingEntryInfo.builder()
-                                    .entryId(pending.getIdAsString())
-                                    .consumerName(consumerName)
-                                    .idleTimeMillis(pending.getElapsedTimeSinceLastDelivery().toMillis())
-                                    .deliveryCount(pending.getTotalDeliveryCount())
-                                    .firstDeliveryTime(LocalDateTime.now().minus(
-                                            pending.getElapsedTimeSinceLastDelivery()))
-                                    .build());
+                Long count = entry.getValue();
+                if (count != null && count > 0) {
+                    // 获取该消费者的 pending 消息
+                    PendingMessages pendingMessages = redisTemplate.opsForStream()
+                            .pending(channel, groupName, consumerName, count.intValue());
+                    if (pendingMessages != null) {
+                        for (PendingMessage pending : pendingMessages) {
+                            if (pending.getElapsedTimeSinceLastDelivery().compareTo(idleThreshold) > 0) {
+                                staleEntries.add(PendingEntryInfo.builder()
+                                        .entryId(pending.getIdAsString())
+                                        .consumerName(consumerName)
+                                        .idleTimeMillis(pending.getElapsedTimeSinceLastDelivery().toMillis())
+                                        .deliveryCount(pending.getTotalDeliveryCount())
+                                        .firstDeliveryTime(LocalDateTime.now().minus(
+                                                pending.getElapsedTimeSinceLastDelivery()))
+                                        .build());
+                            }
                         }
                     }
                 }
@@ -179,9 +168,8 @@ public class PendingEntryListCleaner {
 
             summary.getPendingMessagesPerConsumer().forEach((consumerName, count) -> {
                 if (count != null && count > 0) {
-                    Consumer consumer = Consumer.from(groupName, consumerName);
-                    List<PendingMessage> pendingMessages = redisTemplate.opsForStream()
-                            .pending(channel, consumer, org.springframework.data.domain.Range.unbounded(), count > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) (long) count);
+                    PendingMessages pendingMessages = redisTemplate.opsForStream()
+                            .pending(channel, groupName, consumerName, count.intValue());
                     if (pendingMessages != null) {
                         for (PendingMessage pm : pendingMessages) {
                             allPending.add(PendingEntryInfo.builder()
@@ -224,7 +212,6 @@ public class PendingEntryListCleaner {
      */
     private boolean retryEntry(String entryId) {
         try {
-            // 这里可以实现更复杂的重试逻辑
             acknowledge(entryId);
             return true;
         } catch (Exception e) {

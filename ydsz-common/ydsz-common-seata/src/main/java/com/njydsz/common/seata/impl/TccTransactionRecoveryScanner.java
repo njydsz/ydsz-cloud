@@ -45,6 +45,8 @@ public class TccTransactionRecoveryScanner {
     private final TccRecoveryHandler recoveryHandler;
 
     /**
+     * 构造 TCC 事务恢复扫描器
+     *
      * @param logStore       事务日志存储
      * @param properties     配置
      * @param recoveryHandler 恢复处理回调（由 TccTransactionManager 注册）
@@ -111,6 +113,8 @@ public class TccTransactionRecoveryScanner {
      * 恢复单个超时事务
      *
      * <p>策略：超时未 Confirm 的事务视为失败，触发 Cancel（资源释放优先）
+     *
+     * @param txLog 超时事务日志
      */
     private void recover(TccTransactionLog txLog) {
         if (txLog.getRetryCount() >= properties.getTccRetryCount()) {
@@ -144,8 +148,8 @@ public class TccTransactionRecoveryScanner {
          * 恢复时执行 Cancel
          *
          * @param txLog 超时事务日志
-         * @throws Exception Cancel 执行异常
+         * @throws CancelException Cancel 执行异常
          */
-        void recoverCancel(TccTransactionLog txLog) throws Exception;
+        void recoverCancel(TccTransactionLog txLog) throws CancelException;
     }
 }
