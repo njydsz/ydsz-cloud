@@ -10,6 +10,7 @@ import org.apache.ibatis.mapping.SqlCommandType;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.njydsz.common.core.constant.DataScopeConstants;
 import com.njydsz.common.jdbc.config.DataPermissionConfiguration;
+import com.njydsz.common.jdbc.monitor.SqlAstCache;
 import com.njydsz.common.jdbc.permission.DataPermissionContext;
 import com.njydsz.common.jdbc.permission.DataPermissionContextResolver;
 import com.njydsz.common.util.string.StringUtils;
@@ -73,16 +74,18 @@ public class RowPermissionInnerInterceptor extends DataPermissionInnerIntercepto
     /** 永假表达式 {@code 1=0}，用于 fail-closed 时拒绝所有数据 */
     private static final Expression DENY_ALL_EXPRESSION = new EqualsTo(new LongValue(1L), new LongValue(0L));
 
-    /**
-     * 构造行级数据权限拦截器
-     *
-     * @param config          数据权限配置
-     * @param contextResolver 数据权限上下文解析器
-     */
-    public RowPermissionInnerInterceptor(DataPermissionConfiguration config,
-                                         DataPermissionContextResolver contextResolver) {
-        super(config, contextResolver);
-    }
+/**
+ * 构造行级数据权限拦截器
+ *
+ * @param sqlAstCache      SQL 解析缓存
+ * @param config           数据权限配置
+ * @param contextResolver  数据权限上下文解析器
+ */
+public RowPermissionInnerInterceptor(SqlAstCache sqlAstCache,
+                                     DataPermissionConfiguration config,
+                                     DataPermissionContextResolver contextResolver) {
+    super(sqlAstCache, config, contextResolver);
+}
 
     /**
      * 行级权限需要检查系统级绕过（后台任务无用户上下文时跳过）。

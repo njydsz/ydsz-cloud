@@ -54,7 +54,7 @@ public class TenantRateLimiter {
         String key = tenantId != null
                 ? "tenant:" + tenantId + ":" + ruleName
                 : ruleName;
-        return delegate.tryAcquireTokenBucket(key, rate, capacity);
+        return delegate.tryAcquireTokenBucket(key, rate, capacity, Duration.ofSeconds(1), 1);
     }
 
     /**
@@ -71,7 +71,7 @@ public class TenantRateLimiter {
         String key = tenantId != null
                 ? "tenant:" + tenantId + ":" + ruleName
                 : ruleName;
-        return delegate.tryAcquireTokenBucket(key, rate, capacity, period);
+        return delegate.tryAcquireTokenBucket(key, rate, capacity, period, 1);
     }
 
     /**

@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
@@ -203,7 +204,7 @@ public class ThreadPoolRegistrar implements BeanDefinitionRegistryPostProcessor,
                     .rootBeanDefinition(ThreadPoolTimerMetrics.class)
                     .addConstructorArgValue(name)
                     .setRole(BeanDefinition.ROLE_INFRASTRUCTURE)
-                    .setAutowireMode(BeanDefinition.AUTOWIRE_CONSTRUCTOR)
+                    .setAutowireMode(AbstractBeanDefinition.AUTOWIRE_CONSTRUCTOR)
                     .getBeanDefinition();
             registry.registerBeanDefinition(timerMetricsBeanName, timerMetricsBd);
         }

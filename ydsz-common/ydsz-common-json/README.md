@@ -6,36 +6,15 @@
 
 **YdszJson 的架构设计兼具 Jackson 的"配置不可变"哲学和 Fastjson2 的"静态入口便利"。** `YdszJson` 作为静态入口提供 `toJson` / `toObject` 等零配置开箱即用体验，与 FastJSON 的静态工具风格一脉相承；而底层 `JsonConfig` 采用 `final` 字段构建不可变配置，配合 `JsonMapper.copyOf()` 以"副本 + 不可变替换"方式替代运行期可变状态，实现与 Jackson 相同的线程安全语义。两层 API 共享同一委托链（`YdszJson` → `JsonMapper` → `Engine` → `Provider` → `Parser`），行为完全一致，用户可根据场景自由选择而无需担心序列化行为分歧。
 
-## 最新变更（v1.2.0 — JSON Patch/Merge Patch / 流式支持 / 泛型推断）
-
-本次从 RFC 标准支持、泛型类型推断、流式 API 三个维度完成优化：
-
-| 编号 | 优先级 | 变更项 | 状态 |
-|---|---|---|---|
-| P0-RFC | P0 | **JSON Patch (RFC 6902) + Merge Patch (RFC 7396)**：新增 `JsonPatch`（6 种操作 add/remove/replace/move/copy/test + JSON Pointer 路径解析）与 `JsonMergePatch`，REST PATCH 局部更新能力 | ✅ 已实施 |
-| P1-TYPEREF | P1 | **泛型类型推断**：新增 `TypeRef` 工具类，对标 Jackson `TypeReference` | ✅ 已实施 |
-| P1-STREAM | P1 | **流式 API 增强**：新增 `YdszJson.toJson(OutputStream)` / `YdszJson.toJson(Writer)` / `YdszJson.toObject(InputStream)` 等流式读写方法 | ✅ 已实施 |
-| P2-FIX | P2 | **修复启动失败**：`JsonConfig.install()` 原子替换 + 配置变更监听器（命名策略/日期格式/枚举变更时自动清空 BeanSerializerCache） | ✅ 已实施 |
-
-## 最新变更（v1.0.0 优化汇总）
-
-本次对标互联网大厂研发规范，从架构、功能、性能、体验、过度设计五个维度完成专项优化：
-
-| 编号 | 优先级 | 变更项 | 状态 |
-|---|---|---|---|
-| P0-SO | P0 | **泛型递归深度保护**：新增 `max-generic-depth`（默认 64）防御恶意嵌套泛型 `List<List<...>>` 导致 StackOverflow | ✅ 已实施 |
-| P1-FP | P1 | **序列化异常字段路径追踪**：`JsonSerializationException` 新增 `fieldPath` 字段，异常消息输出 `at path 'user.address.street'` | ✅ 已实施 |
-| P1-IMM | P1 | **JsonConfig 构建后不可变**：新增 `install()` 方法替代旧 `setInstance` 模式，AutoConfig 走 Builder + install 不可变安装 | ✅ 已实施 |
-
 ## 模块定位
 
-| 属性 | 值 |
-|---|---|
-| **层级** | L2 工具模块层 |
-| **类型** | 公共依赖库（不独立部署） |
-| **作用** | 提供高性能 JSON 序列化/反序列化、树模型、Jackson 兼容注解、Spring MVC 集成等能力 |
+| 属性 | 值                                                                                                    |
+|---|------------------------------------------------------------------------------------------------------|
+| **层级** | L2 工具模块层                                                                                             |
+| **类型** | 公共依赖库（不独立部署）                                                                                         |
+| **作用** | 提供高性能 JSON 序列化/反序列化、树模型、Jackson 兼容注解、Spring MVC 集成等能力                                                |
 | **依赖** | Lombok；可选依赖 SLF4J、Spring Boot AutoConfigure、Spring Web、Jackson Annotations（编译期可见）、Jakarta Validation |
-| **版本** | 1.2.0 |
+| **版本** | 1.0.0                                                                                                |
 
 ## 功能成熟度总览
 
@@ -59,14 +38,17 @@
 | JSON Patch (RFC 6902) / Merge Patch (RFC 7396) | **Beta** | v1.2.0 新增 |
 | TypeRef 泛型工厂 | **Beta** | v1.2.0 新增 |
 | @JsonBuilder 构造器模式 | **Deprecated** | 推荐使用 @JsonCreator + 静态工厂方法 |
-| @JsonView 视图过滤 | **Deprecated** | 推荐定义独立 DTO 或手动裁剪字段 |
-| @JsonUnwrapped | **Deprecated** | 推荐将嵌套对象序列化为子对象结构 |
-| @JsonRawValue | **Deprecated** | 推荐手动构建后序列化 |
+| @JsonView 视图过滤 | **Stable** | 序列化层（ValueWriter/Formatter）与 MVC 层完整支持；字段裁剪统一用 @JsonView + toJson(obj, viewClass)（见 JsonView 注解文档） |
+| @JsonUnwrapped | **未提供** | 推荐将嵌套对象序列化为子对象结构 |
+| @JsonRawValue | **未提供** | 推荐手动构建后序列化 |
 | @JsonAlias | **Stable** | v1.2.2 恢复支持：反序列化多命名兼容（如 user_id/userId），序列化仍输出主名称 |
-| @JsonAnyGetter/@JsonAnySetter | **Deprecated** | 推荐显式定义字段提升可维护性 |
-| @JsonEnumDefaultValue | **Deprecated** | 推荐 Controller 层手动处理 |
-| @JsonVisibility | **Deprecated** | 推荐使用 @JsonIgnore |
-| @JsonRootName | **Deprecated** | 推荐使用统一 Response 包装类 |
+| @JsonAnyGetter/@JsonAnySetter | **未提供** | 推荐显式定义字段提升可维护性 |
+| @JsonEnumDefaultValue | **未提供** | 推荐 Controller 层手动处理 |
+| @JsonVisibility | **未提供** | 推荐使用 @JsonIgnore |
+| @JsonRootName | **未提供** | 推荐使用统一 Response 包装类 |
+
+> 注：标记为「未提供」的注解类未在本模块发布（README 历史遗留描述），
+> 若确有需要可参考 Jackson 对应注解并提交 Issue 评估补齐。
 
 ## 核心能力
 
@@ -107,6 +89,17 @@
 | `ObjectNode` / `ArrayNode` / `TextNode` / `NumberNode` / `BooleanNode` / `NullNode` / `MissingNode` | 节点类型 |
 | `TreeConverter` | 树 ↔ 对象转换 |
 | `JsonPatch` / `JsonMergePatch` | JSON Patch (RFC 6902) / Merge Patch (RFC 7396) 实现 |
+
+### 4.1 JSON Schema 校验（schema 包，Draft-07 子集）
+
+| 类 | 说明 |
+|---|---|
+| `JsonSchemaValidator` / `ValidationResult` | 轻量 Schema 校验器（F-5：**仅支持 Draft-07 子集**） |
+
+> **能力边界明示**：仅支持 `type` / `required` / `properties` / `minimum` / `maximum` /
+> `minLength` / `maxLength` / `pattern` / `enum` / `nullable` 关键字；
+> **不支持** `$ref`、`allOf` / `oneOf`、`if/then`、`format`、`items` 数组逐项校验。
+> 若需完整 Draft-07/2020-12 支持，请引入 `networknt/json-schema-validator` 依赖。
 
 ### 5. 类型系统（type / naming / number 包）
 
@@ -428,7 +421,7 @@ String formatted = YdszJson.format(compactJson);
 |---------|------|
 | char[] 直接操作 | 避免 StringBuilder 中间分配 |
 | 零拷贝反序列化 | 直接解析 JSON 到 Bean 字段，无需 Map 中转 |
-| FNV-1a 字段哈希 | O(1) 字段匹配，优于 Jackson O(n) 扫描 |
+| FNV-1a 字段哈希 | O(1) 字段匹配（与 Jackson 同量级；差异请以 JMH 基准实测为准） |
 | ThreadLocal 对象池 | StringBuilder / JSONWriter 复用，减少 GC |
 | ASCII 快速路径 | byte[] → char[] 跳过 UTF-8 解码 |
 | 分级 StringBuilder | 小/中/大 JSON 预分配合适容量 |
@@ -442,6 +435,16 @@ String formatted = YdszJson.format(compactJson);
 | v1.1.0 → v1.2.0 | ✅ 向后兼容，无破坏性变更 |
 | v1.2.0 → 未来版本 | 标注 `@Beta` 的 API 可能破坏性变更；标注 `@Deprecated` 的 API 将在下个主版本移除 |
 
+### 与父 POM 版本对照（E-3）
+
+模块 `ydsz-common-json` 不声明独立 `<version>`，随父 POM（`ydsz-common` / `ydsz-cloud`）发布：
+
+| 本文档版本 | 父 POM 版本 | 说明 |
+|------|-----------|------|
+| v1.0.0 ~ v1.2.0 | `1.0.0-SNAPSHOT` | 功能版本在 README「最新变更」维护，制品版本统一由父 POM 控制 |
+
+> 若需独立发布模块版本，可启用 Maven flatten 插件在父 POM 统一管理。
+
 ---
 
-*文档更新日期：2026-08-10 | 代码版本：v1.2.0 | 审计方法：全量源码静态走读 + 实际代码证据交叉验证*
+*文档更新日期：2026-08-10 | 代码版本：v1.0.0 | 审计方法：全量源码静态走读 + 实际代码证据交叉验证*

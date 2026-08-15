@@ -15,7 +15,6 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.TaskScheduler;
 
 import com.njydsz.common.lock.core.DistributedLocker;
-import com.njydsz.common.lock.renewal.LockRenewalService;
 
 
 /**
@@ -133,34 +132,6 @@ public class RedisMultiLock implements DistributedLocker {
      * 已续期次数
      */
     private final Map<String, Integer> renewCounts = new ConcurrentHashMap<>();
-
-    /**
-     * 批量续期服务（可选，注入后自动启用批量续期减少网络往返）
-     */
-    private LockRenewalService renewalService;
-
-    /**
-     * Redis 模板（批量续期时需要，与 renewalService 配套使用）
-     */
-    private StringRedisTemplate redisTemplate;
-
-    /**
-     * 设置批量续期服务（可选，启用后减少子锁续期的网络往返）
-     *
-     * @param renewalService 批量续期服务
-     */
-    public void setRenewalService(LockRenewalService renewalService) {
-        this.renewalService = renewalService;
-    }
-
-    /**
-     * 设置 Redis 模板（配合批量续期服务使用）
-     *
-     * @param redisTemplate Redis 模板
-     */
-    public void setRedisTemplate(StringRedisTemplate redisTemplate) {
-        this.redisTemplate = redisTemplate;
-    }
 
     /**
      * 尝试获取多Key联锁（非阻塞）
@@ -445,58 +416,12 @@ public class RedisMultiLock implements DistributedLocker {
     /**
      * 续期所有子锁
      *
-     * <p>当 {@link LockRenewalService} 与 Redis 模板均已注入时，使用批量续期脚本
-     * 一次网络往返完成所有子锁续期；降级为逐 Key 续期以兼容未配置场景。
-     *
      * @param lockKey   主锁键
      * @param leaseTime 租约时间
      * @param timeUnit  时间单位
      * @return true-全部续期成功
      */
     private boolean renewAllLocks(String lockKey, long leaseTime, TimeUnit timeUnit) {
-        long leaseTimeMs = timeUnit.toMillis(leaseTime);
-        if (tryRenewBatch(lockKey, leaseTimeMs)) {
-            return true;
-        }
-        return renewAllLocksIndividually(lockKey, leaseTime, timeUnit);
-    }
-
-    /**
-     * 批量续期路径
-     *
-     * <p>需要 {@link LockRenewalService} 与 Redis 模板均已注入；
-     * 批量部分失败或异常时返回 false，由调用方降级为逐 Key 续期。
-     *
-     * @param lockKey     主锁键（日志用）
-     * @param leaseTimeMs 租约时间（毫秒）
-     * @return true-批量续期全部成功
-     */
-    private boolean tryRenewBatch(String lockKey, long leaseTimeMs) {
-        if (renewalService == null || redisTemplate == null || acquiredLockValues.isEmpty()) {
-            return false;
-        }
-        List<LockRenewalService.RenewEntry> entries = new ArrayList<>(acquiredLockValues.size());
-        for (Map.Entry<String, String> entry : acquiredLockValues.entrySet()) {
-            entries.add(LockRenewalService.RenewEntry.of(entry.getKey(), entry.getValue(), leaseTimeMs));
-        }
-        try {
-            int successCount = renewalService.renewBatch(redisTemplate, entries);
-            return successCount == entries.size();
-        } catch (Exception e) {
-            log.warn("RedisMultiLock 批量续期异常，降级为逐Key续期 key={}", lockKey, e);
-            return false;
-        }
-    }
-
-    /**
-     * 逐 Key 续期路径（兼容批量路径未配置或失败的场景）
-     *
-     * @param lockKey   主锁键
-     * @param leaseTime 租约时间
-     * @param timeUnit  时间单位
-     * @return true-全部续期成功
-     */
-    private boolean renewAllLocksIndividually(String lockKey, long leaseTime, TimeUnit timeUnit) {
         long leaseTimeMs = timeUnit.toMillis(leaseTime);
         for (int i = 0; i < locks.size(); i++) {
             String subLockKey = buildSubLockKey(lockKey, i);

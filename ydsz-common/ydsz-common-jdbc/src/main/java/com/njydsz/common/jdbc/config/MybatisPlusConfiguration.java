@@ -31,6 +31,7 @@ import com.njydsz.common.jdbc.interceptor.CombinedFieldFillInterceptor;
 import com.njydsz.common.jdbc.interceptor.RowPermissionInnerInterceptor;
 import com.njydsz.common.jdbc.interceptor.SqlFirewallInnerInterceptor;
 import com.njydsz.common.jdbc.interceptor.SqlTraceInnerInterceptor;
+import com.njydsz.common.jdbc.monitor.SqlAstCache;
 import com.njydsz.common.jdbc.permission.DataPermissionContextResolver;
 import com.njydsz.common.jdbc.permission.DataScopeIdExpander;
 import com.njydsz.common.jdbc.spi.InnerInterceptorProvider;
@@ -87,19 +88,22 @@ public class MybatisPlusConfiguration {
     private final PaginationProperties paginationProperties;
     private final SqlFirewallProperties sqlFirewallProperties;
     private final ObjectProvider<List<InnerInterceptorProvider>> spiInterceptorProviders;
+    private final SqlAstCache sqlAstCache;
 
     public MybatisPlusConfiguration(FieldFillConfiguration fieldFillConfiguration,
                                      DataPermissionConfiguration dataPermissionConfiguration,
                                      ObjectProvider<DataScopeIdExpander> dataScopeIdExpanderProvider,
                                      PaginationProperties paginationProperties,
                                      SqlFirewallProperties sqlFirewallProperties,
-                                     ObjectProvider<List<InnerInterceptorProvider>> spiInterceptorProviders) {
+                                     ObjectProvider<List<InnerInterceptorProvider>> spiInterceptorProviders,
+                                     SqlAstCache sqlAstCache) {
         this.fieldFillConfiguration = fieldFillConfiguration;
         this.dataPermissionConfiguration = dataPermissionConfiguration;
         this.dataScopeIdExpanderProvider = dataScopeIdExpanderProvider;
         this.paginationProperties = paginationProperties;
         this.sqlFirewallProperties = sqlFirewallProperties;
         this.spiInterceptorProviders = spiInterceptorProviders;
+        this.sqlAstCache = sqlAstCache;
     }
 
     /**
@@ -200,7 +204,7 @@ public class MybatisPlusConfiguration {
         if (enabledHandlers.isEmpty()) {
             return;
         }
-        interceptor.addInnerInterceptor(new CombinedFieldFillInterceptor(enabledHandlers));
+        interceptor.addInnerInterceptor(new CombinedFieldFillInterceptor(sqlAstCache, enabledHandlers));
         log.debug("MyBatis Plus: CombinedFieldFill interceptor enabled with {} handlers.",
                 enabledHandlers.size());
     }
@@ -219,8 +223,8 @@ public class MybatisPlusConfiguration {
             DataScopeIdExpander expander = dataScopeIdExpanderProvider == null ? null : dataScopeIdExpanderProvider.getIfAvailable();
             DataPermissionContextResolver resolver = new DataPermissionContextResolver(expander);
 
-            interceptor.addInnerInterceptor(new RowPermissionInnerInterceptor(dataPermissionConfiguration, resolver));
-            interceptor.addInnerInterceptor(new ColPermissionInnerInterceptor(dataPermissionConfiguration, resolver));
+interceptor.addInnerInterceptor(new RowPermissionInnerInterceptor(sqlAstCache, dataPermissionConfiguration, resolver));
+interceptor.addInnerInterceptor(new ColPermissionInnerInterceptor(sqlAstCache, dataPermissionConfiguration, resolver));
             log.debug("MyBatis Plus: RowPermission + ColPermission interceptors enabled.");
         }
     }

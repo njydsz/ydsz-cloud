@@ -20,7 +20,6 @@ import com.njydsz.common.lock.impl.RedisMultiLock;
 import com.njydsz.common.lock.impl.RedisReentrantLock;
 import com.njydsz.common.lock.metrics.LockMetrics;
 import com.njydsz.common.lock.notify.LockReleaseNotifier;
-import com.njydsz.common.lock.renewal.LockRenewalService;
 import com.njydsz.common.lock.scheduler.LockWatchDog;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
@@ -81,11 +80,6 @@ public class DefaultLockStrategy implements LockStrategy {
      * 锁释放通知器（可选）
      */
     private final LockReleaseNotifier lockReleaseNotifier;
-
-    /**
-     * 统一锁续期服务（可选，注入后多锁启用批量续期）
-     */
-    private LockRenewalService lockRenewalService;
 
     /**
      * 锁事件监听器（可选，用于感知锁生命周期事件）
@@ -205,17 +199,6 @@ public class DefaultLockStrategy implements LockStrategy {
     }
 
     /**
-     * 设置统一锁续期服务（可选）
-     *
-     * <p>注入后多 Key 联锁自动启用批量续期，减少子锁续期的网络往返。</p>
-     *
-     * @param lockRenewalService 锁续期服务
-     */
-    public void setLockRenewalService(LockRenewalService lockRenewalService) {
-        this.lockRenewalService = lockRenewalService;
-    }
-
-    /**
      * 设置锁事件监听器（可选）
      *
      * <p>配置后，锁生命周期事件（获取、释放、超时、续期失败）将通知监听器。</p>
@@ -246,13 +229,8 @@ public class DefaultLockStrategy implements LockStrategy {
     @Override
     public RedisMultiLock getMultiLock(List<DistributedLocker> locks) {
         LockProperties.MultiLock config = multiLockConfig != null ? multiLockConfig : new LockProperties.MultiLock();
-        RedisMultiLock multiLock = new RedisMultiLock(locks, scheduler,
+        return new RedisMultiLock(locks, scheduler,
                 config.getMaxRenewCount(), config.getRenewIntervalSeconds());
-        if (lockRenewalService != null) {
-            multiLock.setRenewalService(lockRenewalService);
-            multiLock.setRedisTemplate(stringRedisTemplate);
-        }
-        return multiLock;
     }
 
     /**

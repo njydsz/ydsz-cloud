@@ -1,8 +1,6 @@
 package com.njydsz.common.lock.renewal;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -17,11 +15,10 @@ import com.njydsz.common.lock.annotation.LockType;
  * <p>将散落在各锁实现（{@code LockWatchDog}、{@code RedisReentrantLock} 等）中的
  * 续期 Lua 脚本统一收口到本服务，消除"双锁冗余"——避免同一续期逻辑在多处维护导致脚本漂移。
  *
- * <p>提供三类续期脚本：</p>
+ * <p>提供两类续期脚本：</p>
  * <ul>
  *   <li>{@link #RENEW_SCRIPT_HASH}：适用于可重入锁（clientId 作为 Hash field）</li>
  *   <li>{@link #RENEW_SCRIPT_OWNER}：适用于公平锁（clientId 作为 owner 字段的值）</li>
- *   <li>{@link #RENEW_SCRIPT_BATCH}：批量续期（减少网络往返）</li>
  * </ul>
  *
  * <p><b> SPI 扩展点：</b>业务方可实现 {@link LockRenewalStrategy} 接口自定义续期逻辑
@@ -64,22 +61,6 @@ public class LockRenewalService {
             "end";
 
     /**
-     * 批量续期 Lua 脚本。
-     *
-     * <p>对多个锁批量续期，返回成功续期的数量。
-     * 最后一个参数为统一的 leaseTime（毫秒），其余参数与各锁的 clientId 一一对应。
-     */
-    public static final String RENEW_SCRIPT_BATCH =
-            "local count = 0 " +
-            "for i = 1, #KEYS do " +
-            "    if redis.call('HEXISTS', KEYS[i], ARGV[i]) == 1 then " +
-            "        redis.call('PEXPIRE', KEYS[i], ARGV[#ARGV]) " +
-            "        count = count + 1 " +
-            "    end " +
-            "end " +
-            "return count";
-
-    /**
      * 可重入锁续期脚本（已编译）。
      */
     private final DefaultRedisScript<Long> renewHashScript;
@@ -88,11 +69,6 @@ public class LockRenewalService {
      * 公平锁续期脚本（已编译）。
      */
     private final DefaultRedisScript<Long> renewOwnerScript;
-
-    /**
-     * 批量续期脚本（已编译）。
-     */
-    private final DefaultRedisScript<Long> renewBatchScript;
 
     /**
      * 可选的续期策略（SPI 扩展点）。
@@ -105,7 +81,6 @@ public class LockRenewalService {
     public LockRenewalService() {
         this.renewHashScript = new DefaultRedisScript<>(RENEW_SCRIPT_HASH, Long.class);
         this.renewOwnerScript = new DefaultRedisScript<>(RENEW_SCRIPT_OWNER, Long.class);
-        this.renewBatchScript = new DefaultRedisScript<>(RENEW_SCRIPT_BATCH, Long.class);
     }
 
     /**
@@ -128,15 +103,6 @@ public class LockRenewalService {
             return renewOwnerScript;
         }
         return renewHashScript;
-    }
-
-    /**
-     * 获取批量续期脚本。
-     *
-     * @return 批量续期脚本
-     */
-    public DefaultRedisScript<Long> getRenewBatchScript() {
-        return renewBatchScript;
     }
 
     /**
@@ -188,74 +154,6 @@ public class LockRenewalService {
                 strategy.afterRenew(lockKey, lockType, false);
             }
             return false;
-        }
-    }
-
-    /**
-     * 执行批量续期。
-     *
-     * @param redisTemplate Redis 操作模板
-     * @param entries       锁续期条目列表
-     * @return 成功续期的锁数量
-     */
-    public int renewBatch(StringRedisTemplate redisTemplate, List<RenewEntry> entries) {
-        if (entries == null || entries.isEmpty()) {
-            return 0;
-        }
-        List<String> keys = new ArrayList<>(entries.size());
-        List<String> args = new ArrayList<>(entries.size() + 1);
-
-        for (RenewEntry entry : entries) {
-            keys.add(entry.getLockKey());
-            args.add(entry.getClientId());
-        }
-        if (!entries.isEmpty()) {
-            args.add(String.valueOf(entries.get(0).getLeaseTimeMs()));
-        }
-
-        try {
-            Long result = redisTemplate.execute(
-                    renewBatchScript,
-                    keys,
-                    args.toArray()
-            );
-            int successCount = result != null ? result.intValue() : 0;
-            log.debug("[ydsz-lock] [renewal]批量续期完成 | 总数={} | 成功={}", entries.size(), successCount);
-            return successCount;
-        } catch (Exception e) {
-            log.error("[ydsz-lock] [renewal]批量续期异常 | count={} | error={}", entries.size(), e.getMessage());
-            return 0;
-        }
-    }
-
-    /**
-     * 锁续期条目（用于批量续期）。
-     */
-    public static class RenewEntry {
-        private final String lockKey;
-        private final String clientId;
-        private final long leaseTimeMs;
-
-        public RenewEntry(String lockKey, String clientId, long leaseTimeMs) {
-            this.lockKey = lockKey;
-            this.clientId = clientId;
-            this.leaseTimeMs = leaseTimeMs;
-        }
-
-        public static RenewEntry of(String lockKey, String clientId, long leaseTimeMs) {
-            return new RenewEntry(lockKey, clientId, leaseTimeMs);
-        }
-
-        public String getLockKey() {
-            return lockKey;
-        }
-
-        public String getClientId() {
-            return clientId;
-        }
-
-        public long getLeaseTimeMs() {
-            return leaseTimeMs;
         }
     }
 

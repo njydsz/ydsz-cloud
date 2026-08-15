@@ -18,7 +18,7 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.context.annotation.Bean;
 
 import com.njydsz.common.jdbc.annotation.DS;
-import com.njydsz.common.jdbc.config.HikariCPConfiguration;
+import com.njydsz.common.jdbc.config.MultiDataSourcePoolCustomizer;
 import com.njydsz.common.jdbc.constant.DataSourceConstants;
 import com.njydsz.common.jdbc.health.DynamicDataSourceHealthIndicator;
 
@@ -47,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @AutoConfiguration
-@AutoConfigureAfter(HikariCPConfiguration.class)
+@AutoConfigureAfter(MultiDataSourcePoolCustomizer.class)
 @ConditionalOnProperty(prefix = "ydsz.jdbc.dynamic-datasource", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class DynamicDataSourceAutoConfiguration {
 

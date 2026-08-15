@@ -9,7 +9,7 @@ import com.njydsz.common.tenant.config.TenantProperties;
  *
  * <p>在 ISOLATE_DB 模式下，根据租户 ID 解析出对应的 Spring 数据源 Bean 名称（或 lookup key）。
  *
- * <p><b>内置实现：</b>{@link TenantAutoConfiguration.DefaultDatasourceKeyResolver}
+ * <p><b>内置实现：</b>{@link SimpleDatasourceKeyResolver}
  * 支持配置映射 + 命名约定回退。
  *
  * <p><b>扩展方式：</b>业务模块可实现此接口并注册为 {@code @Primary} Bean 以覆盖默认行为。

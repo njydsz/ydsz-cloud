@@ -12,6 +12,7 @@ import org.apache.ibatis.mapping.SqlCommandType;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.njydsz.common.jdbc.config.DataPermissionConfiguration;
 import com.njydsz.common.jdbc.exception.TenantIsolationException;
+import com.njydsz.common.jdbc.monitor.SqlAstCache;
 import com.njydsz.common.jdbc.permission.DataPermissionContext;
 import com.njydsz.common.jdbc.permission.DataPermissionContextResolver;
 import com.njydsz.common.util.string.StringUtils;
@@ -53,16 +54,18 @@ import net.sf.jsqlparser.statement.update.Update;
 @Slf4j
 public class ColPermissionInnerInterceptor extends DataPermissionInnerInterceptor {
 
-    /**
-     * 构造列级数据权限拦截器
-     *
-     * @param config          数据权限配置
-     * @param contextResolver 数据权限上下文解析器
-     */
-    public ColPermissionInnerInterceptor(DataPermissionConfiguration config,
-                                         DataPermissionContextResolver contextResolver) {
-        super(config, contextResolver);
-    }
+/**
+ * 构造列级数据权限拦截器
+ *
+ * @param sqlAstCache      SQL 解析缓存
+ * @param config           数据权限配置
+ * @param contextResolver  数据权限上下文解析器
+ */
+public ColPermissionInnerInterceptor(SqlAstCache sqlAstCache,
+                                     DataPermissionConfiguration config,
+                                     DataPermissionContextResolver contextResolver) {
+    super(sqlAstCache, config, contextResolver);
+}
 
     /**
      * 列级权限不需要检查系统级绕过（列过滤对后台任务同样生效）。

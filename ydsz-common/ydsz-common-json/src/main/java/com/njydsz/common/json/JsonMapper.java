@@ -446,27 +446,31 @@ public class JsonMapper {
     }
 
     /**
-     * 从 JSON 字符串反序列化为指定类型（与 {@link #toJson(Object)} 对称的 API）。
+     * 从 JSON 字符串反序列化为指定类型。
      *
      * @param json  JSON 字符串
      * @param clazz 目标类型
      * @param <T>   类型参数
      * @return 反序列化后的对象
+     * @deprecated since 1.2.2, 与 {@link #toObject(String, Class)} 同义，统一使用 {@code toObject} 词根
      * @since 1.0.0
      */
+    @Deprecated(since = "1.2.2", forRemoval = true)
     public <T> T fromJson(String json, Class<T> clazz) {
         return toObject(json, clazz);
     }
 
     /**
-     * 从 JSON 字符串反序列化为指定泛型类型（与 {@link #toJson(Object)} 对称的 API）。
+     * 从 JSON 字符串反序列化为指定泛型类型。
      *
      * @param json    JSON 字符串
      * @param typeRef 类型引用
      * @param <T>     类型参数
      * @return 反序列化后的对象
+     * @deprecated since 1.2.2, 与 {@link #toObject(String, JsonType)} 同义，统一使用 {@code toObject} 词根
      * @since 1.0.0
      */
+    @Deprecated(since = "1.2.2", forRemoval = true)
     public <T> T fromJson(String json, JsonType<T> typeRef) {
         return toObject(json, typeRef);
     }
@@ -478,8 +482,10 @@ public class JsonMapper {
      * @param clazz 目标类型
      * @param <T>   目标类型泛型
      * @return 反序列化对象，bytes 为空时返回 null
+     * @deprecated since 1.2.2, 与 {@link #toObject(byte[], Class)} 同义，统一使用 {@code toObject} 词根
      * @since 1.0.0
      */
+    @Deprecated(since = "1.2.2", forRemoval = true)
     public <T> T fromJsonBytes(byte[] bytes, Class<T> clazz) {
         if (bytes == null || bytes.length == 0) {
             return null;
@@ -806,8 +812,10 @@ public class JsonMapper {
      *
      * @param obj 要序列化的对象
      * @return JSON 字符串
+     * @deprecated since 1.2.2, 与 {@link #toJson(Object)} 同义，统一使用 {@code toJson} 词根
      * @since 1.0.0
      */
+    @Deprecated(since = "1.2.2", forRemoval = true)
     public String writeValueAsString(Object obj) {
         return toJson(obj);
     }
@@ -817,8 +825,10 @@ public class JsonMapper {
      *
      * @param obj 要序列化的对象
      * @return UTF-8 编码的字节数组
+     * @deprecated since 1.2.2, 与 {@link #toJsonBytes(Object)} 同义，统一使用 {@code toJsonBytes} 词根
      * @since 1.0.0
      */
+    @Deprecated(since = "1.2.2", forRemoval = true)
     public byte[] writeValueAsBytes(Object obj) {
         return toJsonBytes(obj);
     }
@@ -830,8 +840,10 @@ public class JsonMapper {
      * @param type 目标类型
      * @param <T> 目标类型参数
      * @return 反序列化后的对象
+     * @deprecated since 1.2.2, 与 {@link #toObject(String, Type)} 同义，统一使用 {@code toObject} 词根
      * @since 1.0.0
      */
+    @Deprecated(since = "1.2.2", forRemoval = true)
     public <T> T readValue(String json, Type type) {
         if (json == null || json.isBlank()) {
             return null;
