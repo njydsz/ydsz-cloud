@@ -41,6 +41,7 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
     private final ConcurrentHashMap<String, CircuitBreakerState> stateCache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, CircuitBreakerMetrics> metricsCache = new ConcurrentHashMap<>();
 
+    private final FeignProperties properties;
     private final CircuitBreakerConfig config;
     private final CircuitBreakerStatePersistence statePersistence;
     private final FeignCircuitBreakerMetricsExporter metricsExporter;
@@ -64,8 +65,9 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
     public Resilience4jCircuitBreakerAdapter(FeignProperties properties,
                                               CircuitBreakerStatePersistence statePersistence,
                                               FeignCircuitBreakerMetricsExporter metricsExporter) {
+        this.properties = properties;
         FeignProperties.CircuitBreaker cb = properties.getCircuitBreaker();
-        this.config = buildConfig(cb);
+        this.config = buildConfig(cb, "_default");
         this.statePersistence = statePersistence;
         this.metricsExporter = metricsExporter;
         log.info("[Resilience4jCircuitBreaker] 初始化完成, failureRateThreshold={}%, " +

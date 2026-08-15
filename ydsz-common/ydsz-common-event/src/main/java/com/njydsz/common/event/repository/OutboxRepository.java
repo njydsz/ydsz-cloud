@@ -110,6 +110,61 @@ public class OutboxRepository {
     }
 
     /**
+     * 批量插入 Outbox 消息（在当前事务中执行）
+     *
+     * <p>使用 {@link JdbcTemplate#batchUpdate} 实现真正的批量插入，
+     * 相比逐条 {@link #save} 可显著减少数据库往返次数。
+     * 适用于批量事件写入场景（如聚合根批量操作、事件溯源回放等）。
+     *
+     * @param messages 消息列表（不能为空）
+     */
+    public void saveBatch(List<OutboxMessage> messages) {
+        if (messages == null || messages.isEmpty()) {
+            return;
+        }
+        // tableName validated at construction (see findPending) — safe from SQL injection
+        String sql = "INSERT INTO " + tableName
+                + " (id, aggregate_id, aggregate_type, event_type, payload, headers,"
+                + " status, retry_count, max_retries, next_retry_at, created_at, updated_at,"
+                + " tenant_id, deduplication_id, schema_version, content_type, priority, trace_id)"
+                + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(java.sql.PreparedStatement ps, int i) throws SQLException {
+                OutboxMessage msg = messages.get(i);
+                ps.setString(1, msg.getId());
+                ps.setString(2, msg.getAggregateId());
+                ps.setString(3, msg.getAggregateType());
+                ps.setString(4, msg.getEventType());
+                ps.setString(5, msg.getPayload());
+                ps.setString(6, serializeHeaders(msg.getHeaders()));
+                ps.setString(7, msg.getStatus().name());
+                ps.setInt(8, msg.getRetryCount());
+                ps.setInt(9, msg.getMaxRetries());
+                ps.setTimestamp(10, msg.getNextRetryAt() != null
+                        ? Timestamp.from(msg.getNextRetryAt()) : null);
+                ps.setTimestamp(11, msg.getCreatedAt() != null
+                        ? Timestamp.from(msg.getCreatedAt()) : null);
+                ps.setTimestamp(12, msg.getUpdatedAt() != null
+                        ? Timestamp.from(msg.getUpdatedAt()) : null);
+                ps.setString(13, msg.getTenantId());
+                ps.setString(14, msg.getDeduplicationId());
+                ps.setString(15, msg.getSchemaVersion());
+                ps.setString(16, msg.getContentType());
+                ps.setObject(17, msg.getPriority() != null
+                        ? msg.getPriority() : OutboxMessage.DEFAULT_PRIORITY);
+                ps.setString(18, msg.getTraceId());
+            }
+
+            @Override
+            public int getBatchSize() {
+                return messages.size();
+            }
+        });
+    }
+
+    /**
      * 查询待投递的消息（按优先级降序、创建时间升序）
      *
      * @param limit 最大条数

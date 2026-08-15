@@ -1,11 +1,13 @@
 package com.njydsz.common.safe.ratelimit.core;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import com.njydsz.common.safe.ratelimit.algorithm.RateLimiter;
+import com.njydsz.common.safe.ratelimit.circuitbreaker.CircuitBreaker;
 import com.njydsz.common.safe.ratelimit.cluster.ClusterRateLimiter;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitMode;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitResult;
@@ -22,16 +24,25 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>统一入口：根据规则模式（LOCAL / CLUSTER / ADAPTIVE）分发到不同的限流器。
  *
+ * <p><b>熔断保护：</b>集群模式下的 Redis 调用通过 {@link CircuitBreaker} 进行保护，
+ * 当 Redis 连续失败时自动熔断，避免级联故障。熔断期间直接降级为本地限流或放行。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Slf4j
 public class RateLimitManager {
 
+    /** 熔断器资源标识（用于区分不同熔断目标） */
+    private static final String CIRCUIT_BREAKER_RESOURCE = "redis-cluster-limiter";
+
     private final RateLimitRuleProvider ruleProvider;
     private final RateLimitRuleCache ruleCache;
     private final RateLimitProperties properties;
     private final ClusterRateLimiter clusterLimiter;
+
+    /** Redis 集群调用的熔断器 */
+    private final CircuitBreaker circuitBreaker;
 
     /** 决策监听器（用于埋点） */
     private final List<DecisionListener> listeners = new CopyOnWriteArrayList<>();
@@ -47,13 +58,57 @@ public class RateLimitManager {
     public RateLimitManager(RateLimitRuleProvider ruleProvider,
                             RateLimitProperties properties,
                             ClusterRateLimiter clusterLimiter) {
+        this(ruleProvider, properties, clusterLimiter, createDefaultCircuitBreaker(properties));
+    }
+
+    /**
+     * 构造函数（允许注入自定义熔断器，便于测试）
+     *
+     * @param ruleProvider 规则提供器
+     * @param properties   限流配置
+     * @param clusterLimiter 集群限流器
+     * @param circuitBreaker 熔断器实例
+     */
+    public RateLimitManager(RateLimitRuleProvider ruleProvider,
+                            RateLimitProperties properties,
+                            ClusterRateLimiter clusterLimiter,
+                            CircuitBreaker circuitBreaker) {
         this.ruleProvider = ruleProvider;
         this.properties = properties;
         this.ruleCache = new RateLimitRuleCache(ruleProvider);
         this.clusterLimiter = clusterLimiter;
+        this.circuitBreaker = circuitBreaker;
         if (clusterLimiter == null) {
             log.warn("RateLimitManager initialized without ClusterRateLimiter; CLUSTER mode will fall back to {}", properties.getFallbackOnError());
         }
+        if (circuitBreaker != null) {
+            log.info("RateLimitManager initialized with CircuitBreaker for Redis cluster protection");
+        }
+    }
+
+    /**
+     * 创建默认熔断器配置
+     *
+     * <p>默认策略：
+     * <ul>
+     *   <li>失败率阈值 50%</li>
+     *   <li>最小调用数 5（快速熔断）</li>
+     *   <li>OPEN 状态等待 10s 后进入 HALF_OPEN</li>
+     * </ul>
+     */
+    private static CircuitBreaker createDefaultCircuitBreaker(RateLimitProperties properties) {
+        boolean cbEnabled = properties.getCircuitBreaker() != null && properties.getCircuitBreaker().isEnabled();
+        if (!cbEnabled) {
+            return null;
+        }
+        CircuitBreaker.CircuitBreakerConfig config = CircuitBreaker.CircuitBreakerConfig.builder()
+                .failureRateThreshold(properties.getCircuitBreaker().getFailureRateThreshold())
+                .minimumNumberOfCalls(properties.getCircuitBreaker().getMinimumNumberOfCalls())
+                .waitDurationInOpenState(Duration.ofSeconds(properties.getCircuitBreaker().getWaitDurationSeconds()))
+                .permittedNumberOfCallsInHalfOpenState(properties.getCircuitBreaker().getPermittedHalfOpenCalls())
+                .slidingWindowSize(properties.getCircuitBreaker().getSlidingWindowSize())
+                .build();
+        return new CircuitBreaker(config);
     }
 
     /**
@@ -78,13 +133,7 @@ public class RateLimitManager {
             if (rule.getMode() == RateLimitMode.LOCAL) {
                 decision = limiter.tryAcquire(context);
             } else if (rule.getMode() == RateLimitMode.CLUSTER) {
-                if (clusterLimiter == null) {
-                    // ClusterRateLimiter 未注入（如 Redis 未启用），降级为本地限流
-                    log.debug("ClusterRateLimiter not available, fall back to local limiter for resource={}", context.getResource());
-                    decision = limiter.tryAcquire(context);
-                } else {
-                    decision = clusterLimiter.tryAcquire(rule, context);
-                }
+                decision = decideClusterMode(context, limiter, rule);
             } else {
                 // ADAPTIVE / HYBRID：简化处理，按 LOCAL 处理
                 decision = limiter.tryAcquire(context);
@@ -96,6 +145,33 @@ public class RateLimitManager {
         decision.setResource(context.getResource());
         notifyListeners(decision);
         return decision;
+    }
+
+    /**
+     * 集群模式决策（带熔断保护）
+     *
+     * <p>通过熔断器保护 Redis 调用，熔断开启时直接降级为本地限流。
+     */
+    private RateLimitDecision decideClusterMode(RateLimitContext context, RateLimiter limiter, RateLimitRule rule) {
+        if (clusterLimiter == null) {
+            // ClusterRateLimiter 未注入（如 Redis 未启用），降级为本地限流
+            log.debug("ClusterRateLimiter not available, fall back to local limiter for resource={}", context.getResource());
+            return limiter.tryAcquire(context);
+        }
+
+        // 熔断器未启用或未配置，直接调用集群限流器
+        if (circuitBreaker == null) {
+            return clusterLimiter.tryAcquire(rule, context);
+        }
+
+        // 检查熔断器状态，OPEN 状态直接降级
+        if (circuitBreaker.getState(CIRCUIT_BREAKER_RESOURCE) == CircuitBreaker.State.OPEN) {
+            log.debug("Circuit breaker OPEN, fall back to local limiter for resource={}", context.getResource());
+            return limiter.tryAcquire(context);
+        }
+
+        // 通过熔断器执行 Redis 调用
+        return circuitBreaker.tryAcquire(CIRCUIT_BREAKER_RESOURCE, () -> clusterLimiter.tryAcquire(rule, context));
     }
 
     /**
@@ -165,6 +241,13 @@ public class RateLimitManager {
      */
     public RateLimitRuleCache getRuleCache() {
         return ruleCache;
+    }
+
+    /**
+     * 获取熔断器（用于监控/管理）
+     */
+    public Optional<CircuitBreaker> getCircuitBreaker() {
+        return Optional.ofNullable(circuitBreaker);
     }
 
     /**

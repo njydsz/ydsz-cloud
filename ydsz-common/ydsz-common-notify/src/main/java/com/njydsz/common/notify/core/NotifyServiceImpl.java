@@ -1,6 +1,7 @@
 package com.njydsz.common.notify.core;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -76,6 +77,9 @@ public class NotifyServiceImpl implements NotifyService {
     /** 消息聚合器（可选依赖，P0-7） */
     private final NotificationAggregator aggregator;
 
+    /** 发送处理链（Pipeline 模式） */
+    private final SendChain sendChain;
+
     public NotifyServiceImpl(List<NotifyChannelStrategy> strategyList) {
         this(strategyList, null, null, null, null, null, null, null, null, null);
     }
@@ -135,6 +139,9 @@ public class NotifyServiceImpl implements NotifyService {
         this.preferenceManager = preferenceManager;
         this.dedupService = dedupService;
         this.aggregator = aggregator;
+        this.sendChain = new SendChain(this.channelStrategies, rateLimiterManager,
+                circuitBreakerRegistry, dedupService, preferenceManager, metrics,
+                auditService, fallbackManager);
         log.info("[NotifyServiceImpl] 初始化完成, strategies={}, rateLimit={}, parallel={}, circuitBreaker={}, "
                         + "fallback={}, audit={}, metrics={}, preference={}, dedup={}, aggregator={}",
                 channelStrategies.size(), rateLimiterManager != null, parallelExecutor != null,
@@ -345,6 +352,104 @@ public class NotifyServiceImpl implements NotifyService {
                     channel.getName()
                 );
             });
+    }
+
+    /**
+     * 并行批量发送（返回结构化明细）
+     *
+     * <p>与 {@link #parallelBatchSend} 逻辑一致，但结果包含每个接收者的发送明细。
+     *
+     * @param channel   通知渠道
+     * @param receivers 接收方列表
+     * @param title     消息标题
+     * @param content   消息内容
+     * @return 异步批量发送结构化结果
+     */
+    @Override
+    public CompletableFuture<BatchSendResult> parallelBatchSendDetailed(NotifyChannel channel, List<String> receivers,
+                                                                       String title, String content) {
+        if (!tryAcquireCircuitBreaker(channel)) {
+            return CompletableFuture.completedFuture(buildBatchErrorResult(receivers,
+                    "通知渠道[" + channel.getName() + "]已熔断，请稍后重试", channel.getName()));
+        }
+        if (!tryAcquireRateLimit(channel)) {
+            return CompletableFuture.completedFuture(buildBatchErrorResult(receivers,
+                    "通知渠道限流触发，请稍后重试: " + channel.getName(), channel.getName()));
+        }
+        NotifyChannelStrategy strategy = channelStrategies.get(channel);
+        if (strategy == null) {
+            recordCircuitFailure(channel);
+            return CompletableFuture.completedFuture(buildBatchErrorResult(receivers,
+                    "通知渠道未配置: " + channel.getName(), channel.getName()));
+        }
+        if (parallelExecutor == null) {
+            NotifySendResult batchResult = strategy.batchSend(receivers, title, content);
+            return CompletableFuture.completedFuture(buildBatchResultFromSingle(receivers, batchResult));
+        }
+
+        List<CompletableFuture<BatchSendResult.ReceiverSendResult>> futures = receivers.stream()
+                .map(receiver -> CompletableFuture.supplyAsync(
+                        () -> new BatchSendResult.ReceiverSendResult(receiver,
+                                strategy.send(receiver, title, content)),
+                        parallelExecutor
+                ))
+                .collect(Collectors.toList());
+
+        CompletableFuture<Void> allFutures = CompletableFuture.allOf(
+                futures.toArray(new CompletableFuture<?>[0])
+        );
+        return allFutures.thenApply(v -> {
+            List<BatchSendResult.ReceiverSendResult> details = new ArrayList<>();
+            int successCount = 0;
+            int failureCount = 0;
+            for (CompletableFuture<BatchSendResult.ReceiverSendResult> future : futures) {
+                try {
+                    BatchSendResult.ReceiverSendResult item = future.get();
+                    details.add(item);
+                    if (item.result().isSuccess()) {
+                        successCount++;
+                    } else {
+                        failureCount++;
+                    }
+                } catch (Exception e) {
+                    failureCount++;
+                }
+            }
+            recordCircuitResult(channel, failureCount == 0);
+            return new BatchSendResult(receivers.size(), successCount, failureCount, details);
+        });
+    }
+
+    /**
+     * 构建批量错误结果（所有接收者标记为同一错误）
+     *
+     * @param receivers  接收者列表
+     * @param errorMessage 错误信息
+     * @param channelName 渠道名称
+     * @return 批量错误结果
+     */
+    private BatchSendResult buildBatchErrorResult(List<String> receivers, String errorMessage, String channelName) {
+        List<BatchSendResult.ReceiverSendResult> details = receivers.stream()
+                .map(r -> new BatchSendResult.ReceiverSendResult(r,
+                        NotifySendResult.failure(errorMessage, channelName)))
+                .collect(Collectors.toList());
+        return new BatchSendResult(receivers.size(), 0, receivers.size(), details);
+    }
+
+    /**
+     * 从单条批量发送结果构建批量结果（parallelExecutor 不可用时的降级路径）
+     *
+     * @param receivers  接收者列表
+     * @param batchResult 批量发送结果
+     * @return 批量结构化结果
+     */
+    private BatchSendResult buildBatchResultFromSingle(List<String> receivers, NotifySendResult batchResult) {
+        List<BatchSendResult.ReceiverSendResult> details = receivers.stream()
+                .map(r -> new BatchSendResult.ReceiverSendResult(r, batchResult))
+                .collect(Collectors.toList());
+        int successCount = batchResult.isSuccess() ? receivers.size() : 0;
+        int failureCount = batchResult.isSuccess() ? 0 : receivers.size();
+        return new BatchSendResult(receivers.size(), successCount, failureCount, details);
     }
 
     /**

@@ -60,4 +60,7 @@ public class RateLimitProperties {
 
     /** 热点参数特殊配置（key 索引 → 阈值） */
     private List<HotParamRule> hotParams = new ArrayList<>();
+
+    /** 熔断器配置（保护 Redis 集群限流调用） */
+    private CircuitBreakerProperties circuitBreaker = new CircuitBreakerProperties();
 }

@@ -31,9 +31,17 @@ import java.util.regex.Pattern;
  * }
  * }</pre>
  *
+ * <p><b>迁移说明：</b>
+ * 密码强度校验属于用户认证域逻辑，不属于通用安全防护模块职责。
+ * 请迁移至 {@code ydsz-common-user: com.njydsz.common.user.password.PasswordStrengthService}。
+ * 预计移除版本：v1.2.0。
+ *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 自 v1.0.0 起准备迁移，请使用 {@code ydsz-common-user} 模块中的
+ *             {@code PasswordStrengthService} 替代。此类将在 v1.2.0 中移除。
  */
+@Deprecated(since = "1.0.0", forRemoval = true)
 public class PasswordStrengthValidator {
 
     private static final Pattern UPPER_CASE = Pattern.compile(".*[A-Z].*");

@@ -473,6 +473,94 @@ public class OutboxService {
     }
 
     /**
+     * 批量追加领域事件到 Outbox（在当前数据库事务中执行）
+     *
+     * <p>使用 JDBC batchUpdate 实现真正的批量插入，相比逐条 {@link #appendToOutbox(DomainEvent)}
+     * 可显著减少数据库往返次数（100 条事件从 100 次网络往返降为 1 次）。
+     *
+     * <p><b>注意：</b>
+     * <ul>
+     *   <li>幂等去重在批量模式下不做逐条检查（trade-off 性能），
+     *       如需幂等保证请在调用前自行过滤或通过 deduplicationId 唯一约束保障</li>
+     *   <li>Spring 事件发布在批量模式下会为每个消息独立发布（afterCommit）</li>
+     * </ul>
+     *
+     * @param events 领域事件列表
+     * @since 1.6.0
+     */
+    @Transactional
+    public void appendAllToOutbox(List<DomainEvent> events) {
+        if (events == null || events.isEmpty()) {
+            return;
+        }
+        Instant now = Instant.now();
+        String tenantId = resolveTenantId();
+        String traceId = resolveTraceId();
+
+        List<OutboxMessage> messages = new java.util.ArrayList<>(events.size());
+        for (DomainEvent event : events) {
+            Map<String, String> headers = new HashMap<>();
+            if (event.getMetadata() != null) {
+                event.getMetadata().forEach((k, v) -> {
+                    if (v != null) {
+                        headers.put(k, v.toString());
+                    }
+                });
+            }
+
+            String payload = YdszJson.toJson(event);
+            validatePayloadSize(payload);
+
+            OutboxMessage message = OutboxMessage.builder()
+                    .id(String.valueOf(snowflakeIdGenerator.nextId()))
+                    .aggregateType(event.getAggregateType())
+                    .aggregateId(event.getAggregateId())
+                    .eventType(event.getEventType())
+                    .payload(payload)
+                    .headers(headers)
+                    .deduplicationId(event.getEventId())
+                    .tenantId(tenantId)
+                    .traceId(traceId)
+                    .schemaVersion(properties.getDefaultSchemaVersion())
+                    .priority(properties.getDefaultPriority())
+                    .status(OutboxStatus.PENDING)
+                    .retryCount(0)
+                    .maxRetries(properties.getMaxRetries())
+                    .nextRetryAt(now)
+                    .createdAt(now)
+                    .updatedAt(now)
+                    .build();
+            messages.add(message);
+        }
+
+        outboxRepository.saveBatch(messages);
+        log.debug("Batch appended {} outbox messages", messages.size());
+
+        // 注册批量事件发布回调
+        if (properties.isEnableDomainEventPublish()) {
+            registerBatchDomainEventPublishCallback(messages);
+        }
+    }
+
+    /**
+     * 注册批量领域事件发布回调（事务提交后为每个消息发布 Spring 事件）
+     *
+     * @param messages Outbox 消息列表
+     */
+    private void registerBatchDomainEventPublishCallback(List<OutboxMessage> messages) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            messages.forEach(this::doPublishDomainEvent);
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                messages.forEach(OutboxService.this::doPublishDomainEvent);
+            }
+        });
+    }
+
+    /**
      * 执行同步投递
      *
      * <p>异常分类：

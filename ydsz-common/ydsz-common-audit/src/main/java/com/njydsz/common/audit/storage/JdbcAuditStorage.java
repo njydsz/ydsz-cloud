@@ -17,6 +17,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 
 import com.njydsz.common.audit.core.AuditStorage;
+import com.njydsz.common.audit.core.AuditWriteException;
+import com.njydsz.common.audit.core.AuditWriter;
 import com.njydsz.common.audit.domain.AuditLog;
 import com.njydsz.common.audit.sharding.TableShardingStrategy;
 import com.njydsz.common.exception.custom.SysException;
@@ -27,6 +29,8 @@ import com.njydsz.common.exception.custom.SysException;
  * 将审计日志写入数据库表，支持分表策略。内部复用 Spring 容器中的
  * {@link NamedParameterJdbcTemplate}，避免每次创建新实例。
  * </p>
+ *
+ * <p>同时实现 {@link AuditStorage}（向后兼容）和 {@link AuditWriter}（供 Recorder 委托写入）。</p>
  *
  * <p><b>依赖说明：</b>本类使用 {@code javax.sql.DataSource}，该接口属于 JDK 标准库，
  * 不受 Jakarta EE 迁移影响，在 Spring Boot 3.x 中无需修改。</p>
@@ -68,7 +72,7 @@ import com.njydsz.common.exception.custom.SysException;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class JdbcAuditStorage implements AuditStorage {
+public class JdbcAuditStorage implements AuditStorage, AuditWriter {
 
     private static final Logger log = LoggerFactory.getLogger(JdbcAuditStorage.class);
 
@@ -172,14 +176,45 @@ public class JdbcAuditStorage implements AuditStorage {
             return;
         }
         try {
+            writeBatch(auditLogs);
+        } catch (AuditWriteException e) {
+            log.error("【审计存储】批量写入审计日志失败, count={}", auditLogs.size(), e);
+            throw SysException.builder().message("审计日志批量写入失败").cause(e).build();
+        }
+    }
+
+    // ====================== AuditWriter 实现（供 Recorder 委托写入） ======================
+
+    @Override
+    public void write(AuditLog auditLog) {
+        if (auditLog == null) {
+            return;
+        }
+        try {
+            String tableName = resolveTableName(auditLog);
+            String sql = buildInsertSql(tableName);
+            java.util.Map<String, Object> params = buildParamMap(auditLog);
+            namedParameterJdbcTemplate.update(sql, params);
+        } catch (Exception e) {
+            throw new AuditWriteException("审计日志单条写入失败 id=" + auditLog.getId(), e);
+        }
+    }
+
+    @Override
+    public void writeBatch(List<AuditLog> auditLogs) {
+        if (auditLogs == null || auditLogs.isEmpty()) {
+            return;
+        }
+        try {
             if (shardingStrategy != null) {
                 saveBatchWithSharding(auditLogs);
             } else {
                 saveBatchNoSharding(auditLogs);
             }
+        } catch (AuditWriteException e) {
+            throw e;
         } catch (Exception e) {
-            log.error("【审计存储】批量写入审计日志失败, count={}", auditLogs.size(), e);
-            throw SysException.builder().message("审计日志批量写入失败").cause(e).build();
+            throw new AuditWriteException("审计日志批量写入失败 count=" + auditLogs.size(), e);
         }
     }
 

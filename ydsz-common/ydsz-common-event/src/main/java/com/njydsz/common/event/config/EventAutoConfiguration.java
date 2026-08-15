@@ -51,17 +51,19 @@ import javax.sql.DataSource;
  *   <li>{@link RocketMqGatewayConfiguration} 作为嵌套 {@code @Configuration} 类，
  *       通过 {@code @ConditionalOnClass} / {@code @ConditionalOnBean} 条件控制加载</li>
  *   <li>当 RocketMQ 不在 classpath 时，整个嵌套配置类不加载，不会创建相关 Bean</li>
+ *   <li>当用户自定义 {@link EventStore} Bean 时，本类整体不加载，避免半成品状态</li>
  * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
  * @since 1.6.0 将 {@code @Import(RocketMqGatewayConfiguration.class)} 改为嵌套 {@code @Configuration}，
- *             修复条件注解失效问题
+ *             修复条件注解失效问题；新增类级 {@code @ConditionalOnMissingBean(EventStore.class)} 守卫
  */
 @AutoConfiguration
 @EnableConfigurationProperties(EventProperties.class)
 @ConditionalOnProperty(prefix = "ydsz.event.outbox", name = "enabled", havingValue = "true", matchIfMissing = true)
 @ConditionalOnBean(JdbcTemplate.class)
+@ConditionalOnMissingBean(EventStore.class)
 public class EventAutoConfiguration {
 
     /** 日志实例 */
@@ -126,7 +128,6 @@ public class EventAutoConfiguration {
      * @return Outbox 事件存储适配器实例
      */
     @Bean
-    @ConditionalOnMissingBean(EventStore.class)
     public OutboxEventStore outboxEventStore(OutboxService outboxService) {
         log.info("OutboxEventStore registered as default EventStore implementation");
         return new OutboxEventStore(outboxService);

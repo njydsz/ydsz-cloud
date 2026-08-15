@@ -20,6 +20,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.njydsz.common.queue.controller.DeadLetterQueueController;
+import com.njydsz.common.queue.controller.TraceQueryController;
 import com.njydsz.common.queue.dedup.DedupCleanupScheduler;
 import com.njydsz.common.queue.dedup.MessageDeduplicator;
 import com.njydsz.common.queue.health.QueueHealthIndicator;
@@ -33,6 +34,7 @@ import com.njydsz.common.queue.service.impl.DeadLetterQueueServiceImpl;
 import com.njydsz.common.queue.service.impl.NoOpDeadLetterQueueService;
 import com.njydsz.common.queue.trace.DefaultMessageTraceRecorder;
 import com.njydsz.common.queue.trace.MessageTraceAspect;
+import com.njydsz.common.queue.trace.MessageTraceFilter;
 import com.njydsz.common.queue.trace.MessageTraceRecorder;
 import com.njydsz.common.queue.trace.RedisMessageTraceRecorder;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
@@ -315,6 +317,42 @@ public class QueueConfiguration {
     public MessageTraceAspect messageTraceAspect(MessageTraceRecorder traceRecorder) {
         log.info("[Queue] 注册消息轨迹 AOP 切面");
         return new MessageTraceAspect(traceRecorder);
+    }
+
+    /**
+     * 创建消息队列链路追踪过滤器
+     *
+     * <p>从 HTTP 请求头中提取 traceId 并注入到 MDC 和 RequestContext，
+     * 确保 REST API 调用消息发布者时 traceId 能够全链路传递。
+     *
+     * <p>当 MessageTraceRecorder 和 Servlet API 均可用时自动注册。
+     *
+     * @return 链路追踪过滤器实例
+     */
+    @Bean
+    @ConditionalOnBean(MessageTraceRecorder.class)
+    @ConditionalOnClass(name = "jakarta.servlet.Filter")
+    public MessageTraceFilter messageTraceFilter() {
+        log.info("[Queue] 注册消息队列链路追踪过滤器");
+        return new MessageTraceFilter();
+    }
+
+    /**
+     * 注册消息轨迹查询 REST API
+     *
+     * <p>提供按消息ID或链路追踪ID查询消息轨迹的 REST 接口，
+     * 用于问题排查和全链路追踪可视化。
+     *
+     * @param traceRecorder 消息轨迹记录器
+     * @return 轨迹查询控制器实例
+     */
+    @Bean
+    @ConditionalOnBean(MessageTraceRecorder.class)
+    @ConditionalOnClass(name = "org.springframework.web.bind.annotation.RestController")
+    @ConditionalOnMissingBean(TraceQueryController.class)
+    public TraceQueryController traceQueryController(MessageTraceRecorder traceRecorder) {
+        log.info("[Queue] 注册消息轨迹查询 REST API");
+        return new TraceQueryController(traceRecorder);
     }
 
     // ==================== 健康检查配置 ====================

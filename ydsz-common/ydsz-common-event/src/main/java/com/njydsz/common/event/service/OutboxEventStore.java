@@ -14,7 +14,9 @@ import com.njydsz.common.event.api.EventStore;
  * <p><b>设计说明：</b>
  * <ul>
  *   <li>Outbox 模式专注于可靠投递（forward-only），不提供事件回放能力</li>
- *   <li>{@code append} / {@code appendAll} 委托给 {@link OutboxService#appendToOutbox(DomainEvent)}</li>
+ *   <li>{@code append} / {@code appendAll} 委托给 {@link OutboxService}</li>
+ *   <li>批量追加（{@link #appendAll}）使用 JDBC batchUpdate 实现真正的批量插入，
+ *       相比逐条插入可显著减少数据库往返次数</li>
  *   <li>自 1.4.0 起 {@link EventStore} 接口已精简为追加契约，
  *       事件溯源查询能力不再由本适配器暴露（如需事件回放请实现独立的 EventStore）</li>
  * </ul>
@@ -24,6 +26,7 @@ import com.njydsz.common.event.api.EventStore;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @since 1.6.0 appendAll 使用批量插入优化性能
  */
 public class OutboxEventStore implements EventStore {
 
@@ -52,6 +55,9 @@ public class OutboxEventStore implements EventStore {
     /**
      * 批量追加领域事件到 Outbox
      *
+     * <p>使用 {@link OutboxService#appendAllToOutbox} 实现真正的批量插入，
+     * 相比逐条调用 {@link #append} 可显著减少数据库往返次数。
+     *
      * @param events 领域事件列表，为空时直接返回
      */
     @Override
@@ -59,8 +65,6 @@ public class OutboxEventStore implements EventStore {
         if (events == null || events.isEmpty()) {
             return;
         }
-        for (DomainEvent event : events) {
-            outboxService.appendToOutbox(event);
-        }
+        outboxService.appendAllToOutbox(events);
     }
 }

@@ -148,6 +148,57 @@ public class DynamicFeignClientFactory {
     }
 
     /**
+     * 清除指定客户端的缓存（增量刷新）。
+     *
+     * <p>仅移除指定客户端的 Builder 及其关联的代理实例，不影响其他已缓存的客户端。
+     * 适用于 per-client 配置变更（如 client-timeouts.<clientName>）的场景。
+     *
+     * @param clientName 客户端名称
+     */
+    public void clearClientCache(String clientName) {
+        Feign.Builder removed = builderCache.remove(clientName);
+        if (removed != null) {
+            // 同步清除该客户端关联的实例缓存
+            instanceCache.keySet().removeIf(key -> key.startsWith(clientName + "|"));
+            log.info("[Feign] 已清除客户端 {} 的缓存（增量刷新）", clientName);
+        }
+    }
+
+    /**
+     * 根据超时配置变更键，仅清除受影响的客户端缓存。
+     *
+     * <p>分析变更键中属于 {@code ydsz.feign.client-timeouts.<clientName>.} 前缀的键，
+     * 提取对应的客户端名称并仅清除这些客户端的缓存，保留其他客户端不受影响。
+     *
+     * @param changedKeys 变更的配置键集合
+     */
+    public void clearTimeoutAffectedCache(Set<String> changedKeys) {
+        final String timeoutPrefix = "ydsz.feign.client-timeouts.";
+        List<String> affectedClients = new ArrayList<>();
+
+        for (String key : changedKeys) {
+            if (key.startsWith(timeoutPrefix)) {
+                String remainder = key.substring(timeoutPrefix.length());
+                int dotIndex = remainder.indexOf('.');
+                if (dotIndex > 0) {
+                    String clientName = remainder.substring(0, dotIndex);
+                    if (!affectedClients.contains(clientName)) {
+                        affectedClients.add(clientName);
+                    }
+                }
+            }
+        }
+
+        for (String clientName : affectedClients) {
+            clearClientCache(clientName);
+        }
+
+        if (!affectedClients.isEmpty()) {
+            log.info("[Feign] 增量刷新：仅清除超时变更影响的客户端: {}", affectedClients);
+        }
+    }
+
+    /**
      * 获取当前缓存的实例数量。
      *
      * @return 缓存的实例数量

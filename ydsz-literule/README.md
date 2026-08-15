@@ -50,7 +50,7 @@ ydsz-literule/
 
 | 能力 | 说明 | 关键类 |
 |---|---|---|
-| **LiteExpr 表达式引擎** | 2.0.0 起自研，零外部依赖；含词法/语法分析、AST 编译缓存、常量折叠、短路求值、AST 级安全沙箱 | `LiteExprEvaluator` / `LiteExprCompiler` / `TreeInterpreter` / `LiteExprSandbox` |
+| **LiteExpr 表达式引擎** | 2.0.0 起自研，零外部依赖；含词法/语法分析、AST 编译缓存、常量折叠、短路求值、AST 级安全沙箱 | `AviatorExpressionEngine` / `LiteExprCompiler` / `TreeInterpreter` / `LiteExprSandbox` |
 | **规则链编排** | 8 种语义：THEN/WHEN/IF/ELIF/SWITCH/FOR/WHILE/BREAK，支持 DSL + DAG 可视化画布 | `RuleChain` / `RuleChainGraph` / `RuleChainDslParser` |
 | **多级缓存** | Caffeine（L1 本地）+ Redis（L2 分布式）装饰器模式 | `CachingRuleConfigProvider` |
 | **热加载** | DB / Nacos / Apollo / ZooKeeper / Redis / File 多源动态刷新 | `RuleHotReloader` / `RuleSourceManager` |

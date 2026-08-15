@@ -28,6 +28,8 @@ import com.njydsz.common.auth.event.PermissionChangeCacheInvalidator;
 import com.njydsz.common.auth.event.PermissionChangeNotifier;
 import com.njydsz.common.auth.event.PermissionChangePublisher;
 import com.njydsz.common.auth.health.AuthHealthIndicator;
+import com.njydsz.common.auth.hierarchy.PermissionHierarchy;
+import com.njydsz.common.auth.hierarchy.PermissionHierarchyService;
 import com.njydsz.common.auth.listener.PermissionKeyspaceNotificationListener;
 import com.njydsz.common.auth.metrics.AuthMetricsCollector;
 import com.njydsz.common.auth.model.RolePermissions;
@@ -136,9 +138,11 @@ public class AuthConfiguration {
     @ConditionalOnMissingBean
     @ConditionalOnBean(RedisStringOps.class)
     public RolePermissionLoader rolePermissionLoader(RedisStringOps redisStringOps, AuthProperties properties,
-                                                      PermissionChangeNotifier notifier) {
+                                                      PermissionChangeNotifier notifier,
+                                                      ObjectProvider<PermissionHierarchyService> hierarchyServiceProvider) {
         LocalPermissionCache<RolePermissions> typedLocalCache = (LocalPermissionCache<RolePermissions>) (LocalPermissionCache<?>) localCache;
-        return new RedisRolePermissionLoader(redisStringOps, properties, notifier, typedLocalCache);
+        PermissionHierarchyService hierarchyService = hierarchyServiceProvider.getIfAvailable();
+        return new RedisRolePermissionLoader(redisStringOps, properties, notifier, typedLocalCache, hierarchyService);
     }
 
     /**
@@ -187,7 +191,8 @@ public class AuthConfiguration {
             RolePermissionLoader rolePermissionLoader,
             RolePermissionCacheService rolePermissionCacheService,
             CacheKeyStrategy cacheKeyStrategy,
-            ObjectProvider<AuthMetricsCollector> metricsCollectorProvider
+            ObjectProvider<AuthMetricsCollector> metricsCollectorProvider,
+            ObjectProvider<PermissionHierarchyService> hierarchyServiceProvider
     ) {
         RbacPermissionEvaluator evaluator = new RbacPermissionEvaluator(
                 properties, userInfoService, rolePermissionLoader, rolePermissionCacheService);
@@ -195,6 +200,10 @@ public class AuthConfiguration {
         AuthMetricsCollector metricsCollector = metricsCollectorProvider.getIfAvailable();
         if (metricsCollector != null) {
             evaluator.setMetricsCollector(metricsCollector);
+        }
+        PermissionHierarchyService hierarchyService = hierarchyServiceProvider.getIfAvailable();
+        if (hierarchyService != null) {
+            evaluator.setHierarchyService(hierarchyService);
         }
         return evaluator;
     }
@@ -473,6 +482,18 @@ public class AuthConfiguration {
      */
     public LocalPermissionCache<Object> getLocalCache() {
         return localCache;
+    }
+
+    /**
+     * 初始化静态 {@link PermissionHierarchy} 门面，将其指向 Spring Bean。
+     *
+     * <p>在所有 Bean 就绪后调用，确保静态门面委托到正确的服务实例。
+     *
+     * @param hierarchyService 权限层级服务（自动注入）
+     */
+    @jakarta.annotation.PostConstruct
+    public void initPermissionHierarchyFacade(PermissionHierarchyService hierarchyService) {
+        PermissionHierarchy.setService(hierarchyService);
     }
 
     /**
