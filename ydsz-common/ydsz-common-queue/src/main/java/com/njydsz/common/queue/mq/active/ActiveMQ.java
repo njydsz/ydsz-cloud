@@ -56,7 +56,10 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 自 1.1.0 起废弃，ActiveMQ 社区活跃度下降，建议迁移至 RabbitMQ 或 Artemis。
+ *             将在 2.0.0 版本移除。
  */
+@Deprecated
 @Slf4j
 public class ActiveMQ extends AbstractMessageQueue {
 

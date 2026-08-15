@@ -51,6 +51,8 @@ public enum QueueType {
     /**
      * ActiveMQ
      * <p>Apache 旗下的面向消息的中间件，支持多种协议
+     *
+     * @deprecated 自 1.1.0 起废弃，建议迁移至 RabbitMQ 或 Artemis。将在 2.0.0 版本移除。
      */
     ACTIVE("active"),
 
