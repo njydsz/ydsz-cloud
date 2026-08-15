@@ -14,7 +14,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>将 {@link RuleChain} 包装为 {@link Rule} 接口实例，
  * 使嵌套子链可作为规则节点被父链引用。
  *
- * <p>评估时委托给内部的 {@link RuleChain#evaluate(RuleContext, ExpressionEvaluator)}，
+ * <p>评估时委托给内部的 {@link RuleChain#evaluate(RuleContext, ExpressionEngine)}，
  * 返回全部已触发结果中的第一条（作为 RuleResult）。
  * 若有多个触发结果，其余通过 {@link RuleResult#getCollectedResults()} 收集。
  *
@@ -55,7 +55,7 @@ public class ChainAsRule implements Rule {
 
     @Override
     public RuleResult evaluate(RuleContext context) {
-        // 嵌套子链评估时不需要 ExpressionEvaluator（THEN/WHEN/FOR/WHILE 不需要）
+        // 嵌套子链评估时不需要 ExpressionEngine（THEN/WHEN/FOR/WHILE 不需要）
         // 仅 IF/ELIF/SWITCH 需要 evaluator，此处使用 null 降级
         List<RuleResult> results;
         try {

@@ -17,7 +17,7 @@ import com.njydsz.literule.api.RuleExecutionTrace;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.RuleSeverity;
 import com.njydsz.literule.server.config.RuleAdminService;
-import com.njydsz.literule.api.expression.ExpressionEvaluator;
+import com.njydsz.literule.api.expression.ExpressionEngine;
 import com.njydsz.literule.server.impl.ExpressionRule;
 import com.njydsz.literule.server.spi.RuleVersionRepository;
 import com.njydsz.literule.server.spi.TraceRecorder;
@@ -73,7 +73,7 @@ public class ExecutionReplayService {
     private final RuleAdminService ruleAdminService;
     private final TraceRecorder traceRecorder;
     private final RuleVersionRepository versionRepository;
-    private final ExpressionEvaluator evaluator;
+    private final ExpressionEngine evaluator;
 
     /**
      * 构造执行回放服务
@@ -86,7 +86,7 @@ public class ExecutionReplayService {
     public ExecutionReplayService(RuleAdminService ruleAdminService,
                                     TraceRecorder traceRecorder,
                                     RuleVersionRepository versionRepository,
-                                    ExpressionEvaluator evaluator) {
+                                    ExpressionEngine evaluator) {
         this.ruleAdminService = Objects.requireNonNull(ruleAdminService, "ruleAdminService");
         this.traceRecorder = traceRecorder;
         this.versionRepository = versionRepository;

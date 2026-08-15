@@ -53,10 +53,10 @@ import com.njydsz.literule.server.core.RuleLifecycleService;
 import com.njydsz.literule.server.core.RuleMetrics;
 import com.njydsz.literule.server.core.RuleTimeoutExecutor;
 import com.njydsz.literule.server.expression.EmptyVariableRegistry;
-import com.njydsz.literule.api.expression.ExpressionEvaluator;
+import com.njydsz.literule.api.expression.ExpressionEngine;
 import com.njydsz.literule.server.expression.ExpressionValidationService;
 import com.njydsz.literule.server.expression.VariableRegistry;
-import com.njydsz.literule.server.engine.liteexpr.LiteExprEvaluator;
+import com.njydsz.literule.server.engine.liteexpr.AviatorExpressionEngine;
 import com.njydsz.literule.server.health.LiteRuleHealthIndicator;
 import com.njydsz.literule.server.replay.ExecutionReplayService;
 import com.njydsz.literule.server.orchestrator.RuleChain;
@@ -125,16 +125,16 @@ public class LiteRuleAutoConfiguration {
     /**
      * 表达式求值器
      *
-     * <p>2.1.0 起仅保留自研 {@link LiteExprEvaluator}，零外部依赖、AST 原生追踪/沙箱/变量提取。
+     * <p>2.1.0 起仅保留自研 {@link AviatorExpressionEngine}，零外部依赖、AST 原生追踪/沙箱/变量提取。
      *
      * @param properties 配置属性
-     * @return ExpressionEvaluator 实例
+     * @return ExpressionEngine 实例
      */
     @Bean
     @ConditionalOnMissingBean
-    public ExpressionEvaluator expressionEvaluator(LiteRuleProperties properties) {
+    public ExpressionEngine expressionEvaluator(LiteRuleProperties properties) {
         log.info("[LiteRule] LiteExpr 自研表达式求值器已初始化（sandbox={}）", properties.isSandboxEnabled());
-        return new LiteExprEvaluator(properties.isSandboxEnabled());
+        return new AviatorExpressionEngine(properties.isSandboxEnabled());
     }
 
     /**
@@ -159,7 +159,7 @@ public class LiteRuleAutoConfiguration {
     @ConditionalOnMissingBean
     public RuleEngine ruleEngine(LiteRuleProperties properties,
                                   ObjectProvider<TraceRecorder> traceDelegateProvider,
-                                  ObjectProvider<ExpressionEvaluator> evaluatorProvider,
+                                  ObjectProvider<ExpressionEngine> evaluatorProvider,
                                   ObjectProvider<BreakpointHook> breakpointHookProvider,
                                   ObjectProvider<ModelInputRegistry> modelRegistryProvider,
                                   ObjectProvider<FactProviderRegistry> factRegistryProvider,
@@ -343,9 +343,9 @@ public class LiteRuleAutoConfiguration {
      * 配置灰度路由（P3-3 提取）
      */
     private void configureCanaryRouting(DefaultRuleEngine engine, LiteRuleProperties properties,
-                                         ObjectProvider<ExpressionEvaluator> evaluatorProvider) {
+                                         ObjectProvider<ExpressionEngine> evaluatorProvider) {
         if (!properties.isCanaryEnabled()) return;
-        ExpressionEvaluator evaluator = evaluatorProvider.getIfAvailable();
+        ExpressionEngine evaluator = evaluatorProvider.getIfAvailable();
         if (evaluator == null) {
             evaluator = expressionEvaluator(properties);
         }
@@ -389,7 +389,7 @@ public class LiteRuleAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    public ABTestService abTestService(ExpressionEvaluator evaluator) {
+    public ABTestService abTestService(ExpressionEngine evaluator) {
         log.info("[LiteRule] A/B 测试服务已初始化");
         return new ABTestService(evaluator);
     }
@@ -409,7 +409,7 @@ public class LiteRuleAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public ExpressionValidationService expressionValidationService(
-            ExpressionEvaluator evaluator,
+            ExpressionEngine evaluator,
             ObjectProvider<VariableRegistry> registryProvider) {
         VariableRegistry registry = registryProvider.getIfAvailable();
         if (registry == null) {
@@ -441,7 +441,7 @@ public class LiteRuleAutoConfiguration {
     @ConditionalOnMissingBean
     @ConditionalOnBean(RuleConfigProvider.class)
     public RuleHotReloader ruleHotReloader(RuleEngine ruleEngine,
-                                            ExpressionEvaluator evaluator,
+                                            ExpressionEngine evaluator,
                                             RuleConfigProvider configProvider,
                                             ObjectProvider<DecisionTableConfigProvider> dtConfigProvider,
                                             ObjectProvider<ScorecardConfigProvider> scConfigProvider,
@@ -514,7 +514,7 @@ public class LiteRuleAutoConfiguration {
     @ConditionalOnMissingBean
     @ConditionalOnBean(RuleConfigProvider.class)
     public RuleAdminService ruleAdminService(RuleEngine ruleEngine,
-                                              ExpressionEvaluator evaluator,
+                                              ExpressionEngine evaluator,
                                               RuleConfigProvider configProvider,
                                               ObjectProvider<RuleVersionRepository> versionRepoProvider,
                                               ObjectProvider<RuleConfigBroadcaster> broadcasterProvider,
@@ -677,7 +677,7 @@ public class LiteRuleAutoConfiguration {
     @ConditionalOnMissingBean
     @ConditionalOnProperty(
             prefix = "ydsz.literule.cep", name = "enabled", havingValue = "true", matchIfMissing = true)
-    public CEPEngine cepEngine(ExpressionEvaluator evaluator) {
+    public CEPEngine cepEngine(ExpressionEngine evaluator) {
         CEPEngine engine = new CEPEngine(evaluator);
         log.info("[LiteRule-CEP] 复杂事件处理引擎已初始化");
         return engine;
@@ -799,7 +799,7 @@ public class LiteRuleAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public LiteRuleAnnotationRegistrar liteRuleAnnotationRegistrar(RuleEngine ruleEngine,
-                                                                   ExpressionEvaluator evaluator,
+                                                                   ExpressionEngine evaluator,
                                                                    ApplicationContext applicationContext,
                                                                    LiteRuleProperties properties) {
         LiteRuleAnnotationRegistrar registrar =
@@ -1249,7 +1249,7 @@ public class LiteRuleAutoConfiguration {
             RuleAdminService ruleAdminService,
             ObjectProvider<TraceRecorder> traceRecorderProvider,
             ObjectProvider<RuleVersionRepository> versionRepoProvider,
-            ExpressionEvaluator evaluator) {
+            ExpressionEngine evaluator) {
         ExecutionReplayService service =
                 new ExecutionReplayService(
                         ruleAdminService,
@@ -1299,7 +1299,7 @@ public class LiteRuleAutoConfiguration {
     /**
      * LiteRule SDK Bean（P3-3）
      *
-     * <p>当 {@code RuleEngine} 和 {@code ExpressionEvaluator} Bean 存在时自动装配，
+     * <p>当 {@code RuleEngine} 和 {@code ExpressionEngine} Bean 存在时自动装配，
      * 使业务方可在 Spring Boot 场景下通过 {@code @Autowired} 注入 {@link LiteRuleSdk}，
      * 无需手动调用 {@code LiteRuleSdk.builder()}。
      *
@@ -1316,7 +1316,7 @@ public class LiteRuleAutoConfiguration {
     @ConditionalOnProperty(prefix = "ydsz.literule.sdk", name = "enabled",
             havingValue = "true", matchIfMissing = true)
     public LiteRuleSdk liteRuleSdk(RuleEngine ruleEngine,
-                                     ExpressionEvaluator evaluator,
+                                     ExpressionEngine evaluator,
                                      LiteRuleProperties properties) {
         LiteRuleSdk sdk = new LiteRuleSdk(ruleEngine, evaluator,
                 properties.getDefaultTenantId(), properties.getEnvironment());

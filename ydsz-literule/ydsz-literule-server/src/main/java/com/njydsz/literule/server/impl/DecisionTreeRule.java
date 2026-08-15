@@ -7,7 +7,7 @@ import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.RuleSeverity;
-import com.njydsz.literule.api.expression.ExpressionEvaluator;
+import com.njydsz.literule.api.expression.ExpressionEngine;
 
 import lombok.Builder;
 import lombok.Data;
@@ -53,10 +53,10 @@ public class DecisionTreeRule implements Rule {
     private final int priority;
     private final String scope;
     private final DecisionNode root;
-    private final ExpressionEvaluator evaluator;
+    private final ExpressionEngine evaluator;
 
     public DecisionTreeRule(String code, String name, String category, int priority,
-                            String scope, DecisionNode root, ExpressionEvaluator evaluator) {
+                            String scope, DecisionNode root, ExpressionEngine evaluator) {
         this.code = code;
         this.name = name;
         this.category = category;
@@ -74,7 +74,7 @@ public class DecisionTreeRule implements Rule {
      * @return DecisionTreeRule 实例
      * @since 1.0.0
      */
-    public static DecisionTreeRule from(DecisionTreeDefinition def, ExpressionEvaluator evaluator) {
+    public static DecisionTreeRule from(DecisionTreeDefinition def, ExpressionEngine evaluator) {
         return new DecisionTreeRule(
                 def.getRuleCode(),
                 def.getRuleName(),

@@ -6,7 +6,7 @@ import java.util.Map;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.api.RuleResult;
-import com.njydsz.literule.api.expression.ExpressionEvaluator;
+import com.njydsz.literule.api.expression.ExpressionEngine;
 import com.njydsz.literule.server.impl.ExpressionRule;
 
 import lombok.extern.slf4j.Slf4j;
@@ -39,14 +39,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class ABTestService {
 
-    private final ExpressionEvaluator evaluator;
+    private final ExpressionEngine evaluator;
 
     /**
      * 构造 A/B 测试服务
      *
      * @param evaluator 表达式求值器
      */
-    public ABTestService(ExpressionEvaluator evaluator) {
+    public ABTestService(ExpressionEngine evaluator) {
         this.evaluator = evaluator;
     }
 

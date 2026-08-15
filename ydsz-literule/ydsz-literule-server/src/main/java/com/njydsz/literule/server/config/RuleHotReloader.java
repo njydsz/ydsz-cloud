@@ -16,7 +16,7 @@ import com.njydsz.literule.api.RuleEngine;
 import com.njydsz.literule.api.ScorecardDefinition;
 import com.njydsz.literule.api.ScriptDefinition;
 import com.njydsz.literule.domain.event.RuleConfigRefreshEvent;
-import com.njydsz.literule.api.expression.ExpressionEvaluator;
+import com.njydsz.literule.api.expression.ExpressionEngine;
 import com.njydsz.literule.server.impl.DecisionTableRule;
 import com.njydsz.literule.server.impl.DecisionTreeRule;
 import com.njydsz.literule.server.impl.ExpressionRule;
@@ -58,7 +58,7 @@ public class RuleHotReloader {
     /** 规则引擎实例，热加载后将构建的 Rule 实例注册/注销到引擎 */
     private final RuleEngine ruleEngine;
     /** 表达式求值器，用于构建表达式规则（ExpressionRule） */
-    private final ExpressionEvaluator evaluator;
+    private final ExpressionEngine evaluator;
     /** 规则配置提供者（SPI），从数据库/配置中心加载规则定义 */
     private final RuleConfigProvider configProvider;
     /** LiteRule 配置属性，控制 dry-run、热加载开关等行为 */

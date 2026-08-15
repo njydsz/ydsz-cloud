@@ -12,7 +12,7 @@ import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.api.RuleEngine;
 import com.njydsz.literule.domain.annotation.LiteRule;
-import com.njydsz.literule.api.expression.ExpressionEvaluator;
+import com.njydsz.literule.api.expression.ExpressionEngine;
 import com.njydsz.literule.server.impl.ExpressionRule;
 
 import lombok.extern.slf4j.Slf4j;
@@ -48,7 +48,7 @@ public class LiteRuleAnnotationRegistrar implements SmartInitializingSingleton {
     private final RuleEngine ruleEngine;
 
     /** 表达式求值器 */
-    private final ExpressionEvaluator evaluator;
+    private final ExpressionEngine evaluator;
 
     /** Spring 容器 */
     private final ApplicationContext applicationContext;
@@ -57,7 +57,7 @@ public class LiteRuleAnnotationRegistrar implements SmartInitializingSingleton {
     private final LiteRuleProperties properties;
 
     public LiteRuleAnnotationRegistrar(RuleEngine ruleEngine,
-                                       ExpressionEvaluator evaluator,
+                                       ExpressionEngine evaluator,
                                        ApplicationContext applicationContext,
                                        LiteRuleProperties properties) {
         this.ruleEngine = ruleEngine;

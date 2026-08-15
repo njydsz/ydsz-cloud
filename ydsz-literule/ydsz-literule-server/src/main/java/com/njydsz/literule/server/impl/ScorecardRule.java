@@ -9,7 +9,7 @@ import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.RuleSeverity;
 import com.njydsz.literule.api.ScorecardDefinition;
-import com.njydsz.literule.api.expression.ExpressionEvaluator;
+import com.njydsz.literule.api.expression.ExpressionEngine;
 
 import lombok.Builder;
 import lombok.Data;
@@ -78,7 +78,7 @@ public class ScorecardRule implements Rule {
     /** 自定义评级映射（可选） */
     @Singular
     private final List<ScorecardDefinition.ScoreGrade> grades;
-    private final ExpressionEvaluator evaluator;
+    private final ExpressionEngine evaluator;
 
     @Override
     public String getCode() { return code; }
@@ -103,7 +103,7 @@ public class ScorecardRule implements Rule {
      * @return ScorecardRule 实例
      * @since 1.0.0
      */
-    public static ScorecardRule from(ScorecardDefinition def, ExpressionEvaluator evaluator) {
+    public static ScorecardRule from(ScorecardDefinition def, ExpressionEngine evaluator) {
         ScorecardRuleBuilder b = ScorecardRule.builder()
                 .code(def.getRuleCode())
                 .name(def.getRuleName())

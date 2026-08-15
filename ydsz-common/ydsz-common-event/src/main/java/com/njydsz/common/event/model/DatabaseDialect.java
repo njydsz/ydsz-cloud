@@ -15,8 +15,11 @@ import org.slf4j.LoggerFactory;
  * <p>用于 OutboxRepository 根据数据库类型适配 SQL 语法和 JSON 列处理。
  * 自动从 JDBC URL 检测，也可通过配置显式指定。
  *
+ * <p>当前支持 PostgreSQL（首选）和 MySQL，覆盖主流部署场景。
+ *
  * @author ydsz-team
  * @since 1.0.0
+ * @since 1.6.0 移除 Oracle 分支（无实际部署需求，降低维护成本）
  */
 public enum DatabaseDialect {
 
@@ -25,9 +28,6 @@ public enum DatabaseDialect {
 
     /** MySQL 8.x+ 数据库 */
     MYSQL,
-
-    /** Oracle 19c+ 数据库 */
-    ORACLE,
 
     /** 未知方言，使用通用 SQL */
     UNKNOWN;
@@ -58,9 +58,6 @@ public enum DatabaseDialect {
             if (name.contains("mysql")) {
                 return MYSQL;
             }
-            if (name.contains("oracle")) {
-                return ORACLE;
-            }
             log.warn("Unknown database product name: {}, using UNKNOWN dialect", productName);
             return UNKNOWN;
         } catch (SQLException e) {
@@ -72,17 +69,12 @@ public enum DatabaseDialect {
     /**
      * 构建 LIMIT 子句
      *
-     * <p>PostgreSQL/MySQL 使用 {@code LIMIT ?}，
-     * Oracle 使用 {@code FETCH FIRST ? ROWS ONLY}，
-     * UNKNOWN 使用 {@code LIMIT ?}（兼容大部分数据库）。
+     * <p>PostgreSQL/MySQL 使用 {@code LIMIT ?}，UNKNOWN 使用 {@code LIMIT ?}（兼容大部分数据库）。
      *
      * @return LIMIT 子句 SQL 片段
      */
     public String limitClause() {
-        return switch (this) {
-            case ORACLE -> " FETCH FIRST ? ROWS ONLY";
-            default -> " LIMIT ?";
-        };
+        return " LIMIT ?";
     }
 
 }

@@ -8,7 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.njydsz.literule.api.RuleContext;
-import com.njydsz.literule.api.expression.ExpressionEvaluator;
+import com.njydsz.literule.api.expression.ExpressionEngine;
 import com.njydsz.literule.api.expression.ExpressionValidationResult;
 
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 表达式校验服务
  *
- * <p>面向前端表达式编辑器的高层校验 API，封装 {@link ExpressionEvaluator#validateDetailed(String)}
+ * <p>面向前端表达式编辑器的高层校验 API，封装 {@link ExpressionEngine#validateDetailed(String)}
  * 并叠加业务语义校验（条件表达式必须返回 boolean、严重度表达式取值合法、模板占位符闭合等）。
  *
  * <p>1.4.0 起支持 VariableRegistry（P2-4）：
@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ExpressionValidationService {
 
     /** 表达式求值器，执行底层 LiteExpr 表达式编译与求值 */
-    private final ExpressionEvaluator evaluator;
+    private final ExpressionEngine evaluator;
     /** 变量注册表，用于校验表达式中引用的变量是否已声明（为 EmptyVariableRegistry 时跳过该校验） */
     private final VariableRegistry variableRegistry;
 
@@ -52,7 +52,7 @@ public class ExpressionValidationService {
      *
      * @param evaluator 表达式求值器
      */
-    public ExpressionValidationService(ExpressionEvaluator evaluator) {
+    public ExpressionValidationService(ExpressionEngine evaluator) {
         this(evaluator, new EmptyVariableRegistry());
     }
 
@@ -62,7 +62,7 @@ public class ExpressionValidationService {
      * @param evaluator 表达式求值器
      * @param variableRegistry 变量注册表（null 时使用 EmptyVariableRegistry，跳过 UNDEFINED_VARIABLE 校验）
      */
-    public ExpressionValidationService(ExpressionEvaluator evaluator, VariableRegistry variableRegistry) {
+    public ExpressionValidationService(ExpressionEngine evaluator, VariableRegistry variableRegistry) {
         this.evaluator = evaluator;
         this.variableRegistry = variableRegistry != null ? variableRegistry : new EmptyVariableRegistry();
         if (!this.variableRegistry.isEmpty()) {

@@ -15,7 +15,7 @@ import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.RuleSeverity;
 import com.njydsz.literule.api.RuleStatus;
 import com.njydsz.literule.domain.event.RuleConfigRefreshEvent;
-import com.njydsz.literule.api.expression.ExpressionEvaluator;
+import com.njydsz.literule.api.expression.ExpressionEngine;
 import com.njydsz.literule.api.expression.ExpressionTraceNode;
 import com.njydsz.literule.server.impl.ExpressionRule;
 import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
@@ -45,7 +45,7 @@ public class RuleAdminService {
     /** 规则引擎实例，用于规则注册/注销和 dry-run 仿真 */
     private final RuleEngine ruleEngine;
     /** 表达式求值器，用于编译条件/严重度表达式并构建 ExpressionRule */
-    private final ExpressionEvaluator evaluator;
+    private final ExpressionEngine evaluator;
     /** 规则配置提供者（SPI），从数据库/配置中心加载规则定义 */
     private final RuleConfigProvider configProvider;
     /** 规则版本仓库（SPI），保存规则变更版本以支持回滚；为 null 时不支持版本管理 */
@@ -80,7 +80,7 @@ public class RuleAdminService {
      * @param versionRepository 版本仓库（可为 null）
      * @param eventPublisher  事件发布器
      */
-    public RuleAdminService(RuleEngine ruleEngine, ExpressionEvaluator evaluator,
+    public RuleAdminService(RuleEngine ruleEngine, ExpressionEngine evaluator,
                             RuleConfigProvider configProvider, RuleVersionRepository versionRepository,
                             ApplicationEventPublisher eventPublisher) {
         this.ruleEngine = ruleEngine;
@@ -571,7 +571,7 @@ public class RuleAdminService {
      * @return 追踪结果（含求值结果和追踪树）
      * @since 1.0.0
      */
-    public ExpressionEvaluator.TraceResult traceExpression(String expression, Map<String, Object> facts) {
+    public ExpressionEngine.TraceResult traceExpression(String expression, Map<String, Object> facts) {
         if (expression == null || expression.isBlank()) {
             ExpressionTraceNode root = ExpressionTraceNode.builder()
                     .nodeType(ExpressionTraceNode.NodeType.ROOT)
@@ -579,7 +579,7 @@ public class RuleAdminService {
                     .result(false)
                     .error("表达式为空")
                     .build();
-            return new ExpressionEvaluator.TraceResult(false, root);
+            return new ExpressionEngine.TraceResult(false, root);
         }
         RuleContext context = RuleContext.of(facts != null ? facts : Collections.emptyMap(),
                 "EXPR_TRACE", "MANUAL");

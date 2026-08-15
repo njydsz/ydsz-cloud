@@ -17,7 +17,7 @@ import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.RuleSeverity;
-import com.njydsz.literule.api.expression.ExpressionEvaluator;
+import com.njydsz.literule.api.expression.ExpressionEngine;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -47,9 +47,9 @@ public class DecisionTableRule implements Rule {
     private static final String EXPR_PREFIX = "expr:";
 
     private final DecisionTableDefinition definition;
-    private final ExpressionEvaluator evaluator;
+    private final ExpressionEngine evaluator;
 
-    public DecisionTableRule(DecisionTableDefinition definition, ExpressionEvaluator evaluator) {
+    public DecisionTableRule(DecisionTableDefinition definition, ExpressionEngine evaluator) {
         this.definition = definition;
         this.evaluator = evaluator;
     }

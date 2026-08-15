@@ -2,8 +2,8 @@ package com.njydsz.literule.server.sdk;
 
 import com.njydsz.literule.api.RuleEngine;
 import com.njydsz.literule.server.core.DefaultRuleEngine;
-import com.njydsz.literule.api.expression.ExpressionEvaluator;
-import com.njydsz.literule.server.engine.liteexpr.LiteExprEvaluator;
+import com.njydsz.literule.api.expression.ExpressionEngine;
+import com.njydsz.literule.server.engine.liteexpr.AviatorExpressionEngine;
 
 /**
  * LiteRuleSdk 构建器
@@ -32,7 +32,7 @@ import com.njydsz.literule.server.engine.liteexpr.LiteExprEvaluator;
 public class LiteRuleSdkBuilder {
 
     private RuleEngine ruleEngine;
-    private ExpressionEvaluator evaluator;
+    private ExpressionEngine evaluator;
     private String tenantId = "1";
     private String environment = "default";
 
@@ -47,7 +47,7 @@ public class LiteRuleSdkBuilder {
     /**
      * 设置自定义表达式求值器
      */
-    public LiteRuleSdkBuilder evaluator(ExpressionEvaluator evaluator) {
+    public LiteRuleSdkBuilder evaluator(ExpressionEngine evaluator) {
         this.evaluator = evaluator;
         return this;
     }
@@ -72,11 +72,11 @@ public class LiteRuleSdkBuilder {
      * 构建 LiteRuleSdk
      *
      * <p>如果未提供 RuleEngine，则自动创建 {@link DefaultRuleEngine}；
-     * 如果未提供 ExpressionEvaluator，则自动创建 {@link LiteExprEvaluator}。
+     * 如果未提供 ExpressionEngine，则自动创建 {@link AviatorExpressionEngine}。
      */
     public LiteRuleSdk build() {
         if (evaluator == null) {
-            evaluator = new LiteExprEvaluator();
+            evaluator = new AviatorExpressionEngine();
         }
         if (ruleEngine == null) {
             ruleEngine = new DefaultRuleEngine();

@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.njydsz.literule.api.RuleContext;
-import com.njydsz.literule.api.expression.ExpressionEvaluator;
+import com.njydsz.literule.api.expression.ExpressionEngine;
 import com.njydsz.literule.api.expression.ExpressionFunctionDef;
 import com.njydsz.literule.api.expression.ExpressionTraceNode;
 import com.njydsz.literule.api.expression.ExpressionValidationResult;
@@ -16,7 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * LiteExpr 自研表达式求值器
  *
- * <p>实现 {@link ExpressionEvaluator} 接口，对接上层规则引擎。
+ * <p>实现 {@link ExpressionEngine} 接口，对接上层规则引擎。
  * 完全自研实现，不依赖 Aviator / QLExpress，核心组件：
  * <ul>
  *   <li>{@link LiteExprCompiler} — 编译缓存 + 常量折叠 + 变量提取</li>
@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author ydsz-team
  */
 @Slf4j
-public class LiteExprEvaluator implements ExpressionEvaluator {
+public class AviatorExpressionEngine implements ExpressionEngine {
 
     private final LiteExprCompiler compiler;
     private final FunctionRegistry functionRegistry;
@@ -44,11 +44,11 @@ public class LiteExprEvaluator implements ExpressionEvaluator {
     private final LiteExprSandbox sandbox;
     private final boolean sandboxEnabled;
 
-    public LiteExprEvaluator() {
+    public AviatorExpressionEngine() {
         this(true);
     }
 
-    public LiteExprEvaluator(boolean sandboxEnabled) {
+    public AviatorExpressionEngine(boolean sandboxEnabled) {
         this.sandboxEnabled = sandboxEnabled;
         this.compiler = new LiteExprCompiler();
         this.functionRegistry = new FunctionRegistry();

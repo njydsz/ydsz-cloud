@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 import com.njydsz.literule.api.RuleContext;
-import com.njydsz.literule.api.expression.ExpressionEvaluator;
+import com.njydsz.literule.api.expression.ExpressionEngine;
 
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -60,13 +60,13 @@ public class CEPEngine implements Serializable {
     private final Map<String, Map<String, ConcurrentLinkedDeque<CEPEvent>>> eventQueues = new ConcurrentHashMap<>();
 
     /** 表达式求值器（用于 filter 条件，通过构造器注入） */
-    private final ExpressionEvaluator expressionEvaluator;
+    private final ExpressionEngine expressionEvaluator;
 
     /** 单分区事件队列上限，超过时丢弃最旧事件 */
     private static final int MAX_EVENTS_PER_PARTITION = 10_000;
 
     /** 默认表达式求值器（无参构造时使用，向后兼容） */
-    private static final ExpressionEvaluator DEFAULT_EVALUATOR = createDefaultEvaluator();
+    private static final ExpressionEngine DEFAULT_EVALUATOR = createDefaultEvaluator();
 
     /** 序列状态：patternId → partitionKey → 序列已匹配步骤 */
     private final Map<String, Map<String, SequenceState>> sequenceStates = new ConcurrentHashMap<>();
@@ -93,16 +93,16 @@ public class CEPEngine implements Serializable {
      * @param expressionEvaluator 表达式求值器
      * @since 1.0.0
      */
-    public CEPEngine(ExpressionEvaluator expressionEvaluator) {
+    public CEPEngine(ExpressionEngine expressionEvaluator) {
         this.expressionEvaluator = expressionEvaluator != null ? expressionEvaluator : DEFAULT_EVALUATOR;
     }
 
-    private static ExpressionEvaluator createDefaultEvaluator() {
+    private static ExpressionEngine createDefaultEvaluator() {
         try {
-            Class<?> clazz = Class.forName("com.njydsz.literule.server.engine.liteexpr.LiteExprEvaluator");
-            return (ExpressionEvaluator) clazz.getConstructor(boolean.class).newInstance(true);
+            Class<?> clazz = Class.forName("com.njydsz.literule.server.engine.liteexpr.AviatorExpressionEngine");
+            return (ExpressionEngine) clazz.getConstructor(boolean.class).newInstance(true);
         } catch (Exception e) {
-            throw new IllegalStateException("无法创建默认 LiteExprEvaluator", e);
+            throw new IllegalStateException("无法创建默认 AviatorExpressionEngine", e);
         }
     }
     /**

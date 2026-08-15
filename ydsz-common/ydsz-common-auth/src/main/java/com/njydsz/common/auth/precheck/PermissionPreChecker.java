@@ -442,7 +442,7 @@ public class PermissionPreChecker {
         Set<String> menu = new HashSet<>();
         Set<String> button = new HashSet<>();
         Set<String> api = new HashSet<>();
-        // 使用批量加载替代逐个加载，将 N 次 Redis 往返减少为 2 次（MGET）
+        // 使用批量加载（Redis Pipeline）替代逐个加载，将 2N 次 GET 合并为 1 次往返
         Map<String, RolePermissions> permissionsMap = rolePermissionLoader.loadByRoleCodes(roleCodes);
         for (RolePermissions rp : permissionsMap.values()) {
             if (rp == null) {

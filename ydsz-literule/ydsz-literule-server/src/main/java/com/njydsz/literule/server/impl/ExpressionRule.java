@@ -13,7 +13,7 @@ import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.api.RuleEnvironment;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.RuleSeverity;
-import com.njydsz.literule.api.expression.ExpressionEvaluator;
+import com.njydsz.literule.api.expression.ExpressionEngine;
 
 import com.njydsz.common.util.string.StringUtils;
 
@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ExpressionRule implements Rule {
 
     private final RuleDefinition definition;
-    private final ExpressionEvaluator evaluator;
+    private final ExpressionEngine evaluator;
 
     /**
      * 构造表达式规则
@@ -40,7 +40,7 @@ public class ExpressionRule implements Rule {
      * @param definition 规则定义
      * @param evaluator  表达式求值器
      */
-    public ExpressionRule(RuleDefinition definition, ExpressionEvaluator evaluator) {
+    public ExpressionRule(RuleDefinition definition, ExpressionEngine evaluator) {
         this.definition = definition;
         this.evaluator = evaluator;
     }

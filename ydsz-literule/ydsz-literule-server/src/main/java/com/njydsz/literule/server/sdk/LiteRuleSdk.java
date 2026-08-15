@@ -11,7 +11,7 @@ import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.api.RuleEngine;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.RuleSeverity;
-import com.njydsz.literule.api.expression.ExpressionEvaluator;
+import com.njydsz.literule.api.expression.ExpressionEngine;
 import com.njydsz.literule.server.impl.ExpressionRule;
 
 /**
@@ -58,12 +58,12 @@ import com.njydsz.literule.server.impl.ExpressionRule;
 public class LiteRuleSdk {
 
     private final RuleEngine ruleEngine;
-    private final ExpressionEvaluator evaluator;
+    private final ExpressionEngine evaluator;
     private final String tenantId;
     private final String environment;
     private final Map<String, RuleDefinition> ruleDefinitions = new ConcurrentHashMap<>();
 
-    public LiteRuleSdk(RuleEngine ruleEngine, ExpressionEvaluator evaluator,
+    public LiteRuleSdk(RuleEngine ruleEngine, ExpressionEngine evaluator,
                    String tenantId, String environment) {
         this.ruleEngine = Objects.requireNonNull(ruleEngine, "ruleEngine");
         this.evaluator = Objects.requireNonNull(evaluator, "evaluator");

@@ -17,7 +17,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleResult;
-import com.njydsz.literule.api.expression.ExpressionEvaluator;
+import com.njydsz.literule.api.expression.ExpressionEngine;
 import com.njydsz.literule.server.dsl.RuleDsl;
 import com.njydsz.literule.server.dsl.RuleDslConverter;
 import com.njydsz.literule.server.dsl.RuleDslEntry;
@@ -52,7 +52,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
  * <ul>
  *   <li>YAML / JSON 格式合法性</li>
  *   <li>必填字段完整性（code / name / condition 等）</li>
- *   <li>表达式语法合法性（通过 {@link ExpressionEvaluator#validate}）</li>
+ *   <li>表达式语法合法性（通过 {@link ExpressionEngine#validate}）</li>
  *   <li>链引用规则是否存在</li>
  * </ul>
  *
@@ -64,7 +64,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
  * @since 1.0.0
  *
  * @see RuleDslImportExportController DSL 导入 / 导出接口
- * @see ExpressionEvaluator 表达式校验器
+ * @see ExpressionEngine 表达式校验器
  * @see RuleDslParser DSL 解析器
  */
 @Slf4j
@@ -74,7 +74,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 @Tag(name = "规则DSL校验解析", description = "DSL 校验 / 解析 / 预览")
 public class RuleDslController {
 
-    private final ExpressionEvaluator evaluator;
+    private final ExpressionEngine evaluator;
 
     /**
      * 校验 DSL 内容。

@@ -29,7 +29,7 @@ import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.api.RuleEngine;
 import com.njydsz.literule.api.dto.ExpressionValidateDTO;
 import com.njydsz.literule.api.dto.RuleABTestDTO;
-import com.njydsz.literule.api.expression.ExpressionEvaluator;
+import com.njydsz.literule.api.expression.ExpressionEngine;
 import com.njydsz.literule.api.expression.ExpressionValidationResult;
 import com.njydsz.literule.domain.vo.ExpressionValidationResultVO;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
@@ -271,7 +271,7 @@ public class RuleAdminController {
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'traceExpression'")
     @RateLimit(resource = "literule.rule_admin.traceExpression", threshold = 50)
     @PostMapping("/exprTrace")
-    public BaseResponse<ExpressionEvaluator.TraceResult> traceExpression(@RequestBody Map<String, Object> request) {
+    public BaseResponse<ExpressionEngine.TraceResult> traceExpression(@RequestBody Map<String, Object> request) {
         String expression = (String) request.get("expression");
         Map<String, Object> facts = new HashMap<>();
         Object raw = request.get("facts");

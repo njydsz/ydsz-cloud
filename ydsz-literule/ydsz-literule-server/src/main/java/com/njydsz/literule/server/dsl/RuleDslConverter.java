@@ -12,7 +12,7 @@ import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.api.RuleSeverity;
 import com.njydsz.literule.api.ScorecardDefinition;
-import com.njydsz.literule.api.expression.ExpressionEvaluator;
+import com.njydsz.literule.api.expression.ExpressionEngine;
 import com.njydsz.literule.server.impl.DecisionTableRule;
 import com.njydsz.literule.server.impl.ExpressionRule;
 import com.njydsz.literule.server.impl.ScorecardRule;
@@ -56,7 +56,7 @@ public final class RuleDslConverter {
      * @param evaluator 表达式求值器
      * @return Rule 列表（按 DSL 中的顺序）
      */
-    public static List<Rule> toRules(RuleDsl dsl, ExpressionEvaluator evaluator) {
+    public static List<Rule> toRules(RuleDsl dsl, ExpressionEngine evaluator) {
         if (dsl == null || dsl.getRules() == null || dsl.getRules().isEmpty()) {
             return Collections.emptyList();
         }
@@ -101,7 +101,7 @@ public final class RuleDslConverter {
      * @param evaluator 表达式求值器
      * @return RuleChain 列表
      */
-    public static List<RuleChain> toChains(RuleDsl dsl, Map<String, Rule> ruleMap, ExpressionEvaluator evaluator) {
+    public static List<RuleChain> toChains(RuleDsl dsl, Map<String, Rule> ruleMap, ExpressionEngine evaluator) {
         if (dsl == null || dsl.getChains() == null || dsl.getChains().isEmpty()) {
             return Collections.emptyList();
         }
@@ -127,7 +127,7 @@ public final class RuleDslConverter {
      * @return Rule 实例
      * @throws IllegalArgumentException 类型不支持或必填字段缺失
      */
-    public static Rule toRule(RuleDslEntry entry, ExpressionEvaluator evaluator) {
+    public static Rule toRule(RuleDslEntry entry, ExpressionEngine evaluator) {
         String type = entry.getType() == null ? "expression" : entry.getType().toLowerCase();
         return switch (type) {
             case "expression" -> new ExpressionRule(toRuleDefinition(entry), evaluator);
@@ -150,7 +150,7 @@ public final class RuleDslConverter {
      * @param evaluator 表达式求值器
      * @return RuleChain 实例
      */
-    public static RuleChain toChain(ChainDslEntry entry, Map<String, Rule> ruleMap, ExpressionEvaluator evaluator) {
+    public static RuleChain toChain(ChainDslEntry entry, Map<String, Rule> ruleMap, ExpressionEngine evaluator) {
         String type = entry.getType() == null ? "THEN" : entry.getType().toUpperCase();
         return switch (type) {
             case "THEN" -> RuleChain.then(resolveRules(entry.getSteps(), ruleMap, entry.getName()));
