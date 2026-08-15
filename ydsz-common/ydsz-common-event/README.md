@@ -10,7 +10,6 @@ YDSZ 通用事件模块——事务性 Outbox 模式，保障领域事件在微�
 - 后台轮询器异步投递到 RocketMQ
 - 指数退避重试 + 死信管理
 - 多实例并发安全（原子 claim）
-- JSON Schema 校验（可选 SPI）
 - Micrometer 指标 + Actuator 健康检查
 
 ## 快速开始
@@ -64,7 +63,6 @@ public class OrderEventListener {
 |--------|----------|
 | PostgreSQL 16+ | `src/main/resources/db/outbox_postgresql.sql` |
 | MySQL 8.0+ | `src/main/resources/db/outbox_mysql.sql` |
-| Oracle 19c+ | `src/main/resources/db/outbox_oracle.sql` |
 
 ## 配置参考
 
@@ -83,20 +81,11 @@ ydsz:
       auto-cleanup: true              # 是否启用自动清理
       cleanup-interval-hours: 6       # 清理间隔（小时）
       max-payload-size-bytes: 4194304 # 消息 payload 最大字节数（4MB）
-      default-priority: 5             # 默认优先级（0-9，9 最高）
-      default-schema-version: v1.0.0  # 默认 Schema 版本号
       stale-processing-threshold-minutes: 5  # PROCESSING 超时阈值（分钟）
-      pending-alert-threshold: 10000  # PENDING 积压告警阈值
-      dead-letter-alert-threshold: 10 # DEAD_LETTER 告警阈值
-      enable-tenant-isolation: true   # 是否启用租户隔离
-      enable-sync-publish: false      # 是否启用同步投递模式
-      auto-dedup: false               # 是否自动生成幂等去重 ID
       worker-threads: 1               # 投递工作线程数
+      await-termination-seconds: 10   # 优雅关闭等待超时（秒）
       fail-on-noop: true              # 检测到 Noop 网关时是否启动失败
-      enable-domain-event-publish: true  # 是否发布 Spring 事件
       status-count-cache-seconds: 5   # 队列深度统计缓存时间（秒）
-      enable-schema-validation: false        # 是否启用 Schema 校验
-      schema-validation-fail-fast: false     # Schema 校验失败是否阻断写入
 ```
 
 详见 [运维手册](src/main/resources/db/OUTBOX_README.md)（含 Grafana 面板配置、故障排查、Actuator 健康检查）。
@@ -219,7 +208,7 @@ Thread t = new Thread(r, "ydsz-outbox-worker");
 | 类型 | 处理方式 |
 |------|----------|
 | 可恢复异常（网络超时、连接拒绝） | WARN 日志 + 依赖重试 |
-| 不可恢复异常（序列化失败、校验错误） | ERROR 日志 + 快速失败 |
+| 不可恢复异常（序列化失败、配置错误） | ERROR 日志 + 快速失败 |
 
 #### 异常抛出
 
@@ -239,7 +228,7 @@ throw new IllegalStateException(
 
 ```java
 } catch (Exception e) {
-    log.warn("Sync publish failed (recoverable), message will be retried: id={}, err={}",
+    log.warn("Publish failed (recoverable), message will be retried: id={}, err={}",
             message.getId(), e.getMessage());
 }
 ```
@@ -297,7 +286,6 @@ void processBatch_whenMaxRetriesReached_shouldBeDeadLetter()
 | `EventPublishGateway` | 投递网关 SPI（RocketMQ / Noop 实现） |
 | `OutboxRepository` | 数据访问层，JDBC 操作 |
 | `OutboxAdminService` | 死信运维管理 |
-| `JsonSchemaRegistry` | JSON Schema 注册中心 |
 
 ### 状态流转
 
@@ -344,6 +332,23 @@ PENDING → PROCESSING → SENT
 ### Actuator 健康检查
 
 访问 `GET /actuator/health/outbox` 获取健康状态（详见 [运维手册](src/main/resources/db/OUTBOX_README.md)）。
+
+---
+
+## 版本变更
+
+### v1.7.0 (2026-08-16)
+
+**精简重构：去除过度设计，聚焦核心 Outbox 模式**
+
+- **移除 JSON Schema 校验框架**：删除 `JsonSchemaRegistry`、`JsonSchemaValidator` 等 5 个 SPI 类（原框架无实际实现，属于幽灵 SPI）
+- **移除同步投递模式**：删除 `doSyncPublish`、`registerSyncPublishCallback`、`isRecoverableException` 等方法及相关配置（与 Outbox 异步本质冲突）
+- **EventProperties 配置瘦身**：从 25+ 个字段精简至 15 个核心配置，移除未验证/占位配置项
+- **DatabaseDialect 枚举移除**：所有数据库方言生成相同 SQL（`LIMIT ?`），删除抽象层
+- **OutboxMessage 字段精简**：移除 `headers`、`schemaVersion`、`contentType`、`priority` 字段及 `OutboxMessageDraft` 类
+- **DomainEvent 精简**：移除 `Serializable` 接口和 `Clock` 参数
+- **DDL 简化**：同步移除对应列定义和索引条件
+- **新增**：`await-termination-seconds` 配置支持优雅关闭超时自定义
 
 ---
 

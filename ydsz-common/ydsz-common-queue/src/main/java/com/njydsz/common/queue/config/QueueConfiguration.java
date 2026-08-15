@@ -221,7 +221,7 @@ public class QueueConfiguration {
     public DeadLetterRetryScheduler deadLetterRetryScheduler(DeadLetterQueueService deadLetterQueueService) {
         if (deadLetterQueueService == null
                 || deadLetterQueueService instanceof NoOpDeadLetterQueueService
-                || !queueProperties.getDeadLetterRetryEnabled()) {
+                || !queueProperties.isDeadLetterRetryEnabled()) {
             log.info("[Queue] 死信队列自动重试已禁用，跳过调度器创建");
             return null;
         }

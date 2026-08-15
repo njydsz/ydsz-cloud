@@ -67,7 +67,9 @@ public class RedisListSubscriber implements IMessageSubscriber {
                                int blockTimeoutSeconds, int maxBackupQueueSize,
                                QueueProperties queueProperties, ExecutorService consumerExecutor) {
         this(redisTemplate, channel, blockTimeoutSeconds, maxBackupQueueSize,
-                queueProperties != null ? queueProperties.createRateLimiter() : new ConsumerRateLimiter(0),
+                queueProperties != null
+                ? new ConsumerRateLimiter(queueProperties.getConsumerRateLimitPerSecond())
+                : new ConsumerRateLimiter(0),
                 consumerExecutor);
     }
 
@@ -250,7 +252,7 @@ public class RedisListSubscriber implements IMessageSubscriber {
             }
             if (queueMessage.isExpired()) {
                 log.warn("[RedisList] 消息已过期，丢弃处理，channel={}, traceId={}, expireMillis={}",
-                        channel, queueMessage.getTraceId(), queueMessage.getExpireMillis());
+                        channel, queueMessage.getTraceId(), queueMessage.getHeader("expireMillis"));
                 ackSuccess = true;
                 return;
             }

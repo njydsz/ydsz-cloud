@@ -4,13 +4,13 @@ import java.util.concurrent.Callable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.beans.factory.ObjectProvider;
-import com.njydsz.common.seata.audit.TransactionAuditLogger;
-import com.njydsz.common.seata.metrics.SeataMetrics;
+import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.njydsz.common.seata.api.TransactionType;
+import com.njydsz.common.seata.audit.TransactionAuditLogger;
+import com.njydsz.common.seata.metrics.SeataMetrics;
 
 /**
  * 本地事务管理器（降级实现）
@@ -69,6 +69,7 @@ public class LocalTransactionManager extends AbstractTransactionManager {
     @Override
     public <T> T execute(String transactionName, TransactionType type, Callable<T> action) throws Exception {
         String xid = beginXid(transactionName);
+        long startTime = System.currentTimeMillis();
         try {
             T result = transactionTemplate.execute(status -> {
                 try {
@@ -81,12 +82,22 @@ public class LocalTransactionManager extends AbstractTransactionManager {
                     throw e;
                 }
             });
+            long duration = System.currentTimeMillis() - startTime;
+            recordComplete(transactionName, xid, null, "success", duration, null);
             log.debug("Local transaction committed: name={}, xid={}", transactionName, xid);
             return result;
         } catch (TransactionExecutionException e) {
+            long duration = System.currentTimeMillis() - startTime;
+            recordComplete(transactionName, xid, null, "fail", duration, e.getCause().getMessage());
             log.error("Local transaction rolled back: name={}, xid={}", transactionName, xid, e.getCause());
-            Throwable cause = e.getCause(); if (cause instanceof Exception) { throw (Exception) cause; } throw e;
+            Throwable cause = e.getCause();
+            if (cause instanceof Exception) {
+                throw (Exception) cause;
+            }
+            throw e;
         } catch (Exception e) {
+            long duration = System.currentTimeMillis() - startTime;
+            recordComplete(transactionName, xid, null, "fail", duration, e.getMessage());
             log.error("Local transaction rolled back: name={}, xid={}", transactionName, xid, e);
             throw e;
         } finally {
@@ -109,6 +120,7 @@ public class LocalTransactionManager extends AbstractTransactionManager {
                                           Callable<T> action,
                                           Runnable compensation) throws Exception {
         String xid = beginXid(transactionName);
+        long startTime = System.currentTimeMillis();
         log.debug("Saga transaction started: name={}, xid={}", transactionName, xid);
         try {
             T result = transactionTemplate.execute(status -> {
@@ -122,9 +134,13 @@ public class LocalTransactionManager extends AbstractTransactionManager {
                     throw e;
                 }
             });
+            long duration = System.currentTimeMillis() - startTime;
+            recordComplete(transactionName, xid, null, "success", duration, null);
             log.debug("Saga transaction completed: name={}, xid={}", transactionName, xid);
             return result;
         } catch (TransactionExecutionException e) {
+            long duration = System.currentTimeMillis() - startTime;
+            recordComplete(transactionName, xid, null, "fail", duration, e.getCause().getMessage());
             Throwable cause = e.getCause();
             log.error("Saga transaction failed, executing compensation: name={}, xid={}", transactionName, xid, cause);
             runCompensation(transactionName, xid, compensation);
@@ -133,6 +149,8 @@ public class LocalTransactionManager extends AbstractTransactionManager {
             }
             throw e;
         } catch (Exception e) {
+            long duration = System.currentTimeMillis() - startTime;
+            recordComplete(transactionName, xid, null, "fail", duration, e.getMessage());
             log.error("Saga transaction failed, executing compensation: name={}, xid={}", transactionName, xid, e);
             runCompensation(transactionName, xid, compensation);
             throw e;

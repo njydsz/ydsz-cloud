@@ -23,8 +23,7 @@ import com.njydsz.common.event.model.OutboxMessage;
  * <ul>
  *   <li>Topic：固定为 {@code ydsz-outbox-events}（可通过配置覆盖）</li>
  *   <li>Tag：使用 {@code eventType} 作为 Tag，消费端可按事件类型订阅</li>
- *   <li>Body：使用 {@code payload} 作为消息体</li>
- *   <li>headers：作为 RocketMQ 用户自定义属性传递</li>
+ *   <li>keys：使用 {@code deduplicationId} 作为消息 keys（如有）</li>
  * </ul>
  *
  * <p>批量投递使用 RocketMQ 原生批量发送能力（{@code DefaultMQProducer.send(Collection<Message>)}），
@@ -74,9 +73,6 @@ public class RocketMqEventPublishGateway implements EventPublishGateway {
         try {
             org.springframework.messaging.support.MessageBuilder<String> builder =
                     org.springframework.messaging.support.MessageBuilder.withPayload(message.getPayload());
-            if (message.getHeaders() != null) {
-                message.getHeaders().forEach(builder::setHeader);
-            }
             if (message.getTenantId() != null) {
                 builder.setHeader("tenantId", message.getTenantId());
             }
@@ -151,9 +147,6 @@ public class RocketMqEventPublishGateway implements EventPublishGateway {
         for (OutboxMessage msg : batch) {
             String destination = buildDestination(msg);
             Message mqMsg = new Message(topic, destination.split(":")[1], msg.getPayload().getBytes(StandardCharsets.UTF_8));
-            if (msg.getHeaders() != null) {
-                msg.getHeaders().forEach((k, v) -> mqMsg.putUserProperty(k, v));
-            }
             if (msg.getTenantId() != null) {
                 mqMsg.putUserProperty("tenantId", msg.getTenantId());
             }
@@ -238,9 +231,6 @@ public class RocketMqEventPublishGateway implements EventPublishGateway {
         }
         if (msg.getEventType() != null) {
             size += msg.getEventType().getBytes().length;
-        }
-        if (msg.getHeaders() != null) {
-            size += msg.getHeaders().size() * 64; // 估算每对 header 约 64 字节
         }
         return size;
     }

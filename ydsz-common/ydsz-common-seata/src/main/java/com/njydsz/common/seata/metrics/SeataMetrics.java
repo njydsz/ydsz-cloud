@@ -4,11 +4,13 @@ import java.time.Duration;
 import java.util.concurrent.atomic.AtomicLong;
 
 import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import org.springframework.beans.factory.ObjectProvider;
 
 import com.njydsz.common.seata.api.TransactionType;
+
 /**
  * 分布式事务指标采集
  *
@@ -22,16 +24,23 @@ import com.njydsz.common.seata.api.TransactionType;
  *   <li>{@code seata.tx.active} - 活跃事务数 Gauge</li>
  * </ul>
  *
- * <p>当 MeterRegistry 不可用时降级为内存计数器。
+ * <p><b>降级策略</b>：当 MeterRegistry 不可用时，内部仍维护计数器和活跃事务数，
+ * 并通过 {@link #getActiveTxCount()} 暴露。一旦 Registry 可用（如动态加载），
+ * 后续指标上报自动恢复。Gauge 在首次 Registry 可用时注册。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 public class SeataMetrics {
 
+    private static final String ACTIVE_TX_GAUGE_NAME = "seata.tx.active";
+
     private final ObjectProvider<MeterRegistry> registryProvider;
 
     private final AtomicLong activeTxCount = new AtomicLong(0);
+
+    /** Gauge 注册标记（保证只注册一次） */
+    private volatile boolean gaugeRegistered = false;
 
     /**
      * 构造分布式事务指标采集器
@@ -49,6 +58,7 @@ public class SeataMetrics {
      */
     public void recordTxStart(TransactionType type) {
         activeTxCount.incrementAndGet();
+        ensureGaugeRegistered();
     }
 
     /**
@@ -115,10 +125,36 @@ public class SeataMetrics {
     /**
      * 获取当前活跃事务数
      *
+     * <p>无论 MeterRegistry 是否可用，此方法始终返回当前活跃事务数量。
+     * 当 Registry 可用时，该值还会通过 {@code seata.tx.active} Gauge 自动上报。
+     *
      * @return 活跃事务数
      */
     public long getActiveTxCount() {
         return activeTxCount.get();
     }
 
+    /**
+     * 确保活跃事务数 Gauge 已注册（线程安全，仅注册一次）
+     *
+     * <p>采用懒注册策略：首次事务开始时检查 Registry 可用性并注册 Gauge。
+     * 如果 Registry 后续才可用，下次事务开始时自动注册。
+     */
+    private void ensureGaugeRegistered() {
+        if (gaugeRegistered) {
+            return;
+        }
+        synchronized (this) {
+            if (gaugeRegistered) {
+                return;
+            }
+            MeterRegistry registry = registryProvider.getIfAvailable();
+            if (registry != null) {
+                Gauge.builder(ACTIVE_TX_GAUGE_NAME, activeTxCount, AtomicLong::get)
+                        .description("Current active distributed transaction count")
+                        .register(registry);
+                gaugeRegistered = true;
+            }
+        }
+    }
 }

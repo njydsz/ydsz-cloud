@@ -13,7 +13,7 @@
     {
       "name": "ydsz.config.cli.enabled",
       "type": "java.lang.Boolean",
-      "description": "是否启用 CLI 加密工具 Bean（默认 true）。"
+      "description": "保留字段（CLI 工具通过 main 方法独立运行）。"
     },
     {
       "name": "ydsz.config.cli.algorithm",

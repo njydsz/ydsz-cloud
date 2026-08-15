@@ -11,7 +11,6 @@ import org.springframework.core.annotation.Order;
 import com.njydsz.common.auth.config.AuthFilterConfiguration;
 import com.njydsz.common.auth.filter.BaseAuthFilter;
 import com.njydsz.common.auth.handler.AuthHandler;
-import com.njydsz.common.auth.model.AuthenticationProvider;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.util.auth.AuthInfo;
@@ -35,9 +34,8 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>认证策略解耦：
  * <ul>
- *   <li>默认使用 {@link AuthHandlerFactory} 获取认证处理器</li>
- *   <li>业务方可注入自定义 {@link AuthenticationProvider} 覆盖默认策略</li>
- *   <li>通过 Spring {@code @ConditionalOnBean} 或 SPI 实现可插拔认证</li>
+ *   <li>使用 {@link AuthHandlerFactory} 根据请求头 {@code X-Service-Type} 获取对应的认证处理器</li>
+ *   <li>业务方可注入自定义 {@link AuthHandler} 实现可插拔认证</li>
  * </ul>
  *
  * <p>过滤器优先级设置为 3，在 CORS 过滤器（优先级 0）之后执行。
@@ -45,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-team
  * @see AuthHandlerFactory
- * @see AuthenticationProvider
+ * @see AuthHandler
  * @see RequestContext
  * @see WebMetrics
  * @since 1.0.0
@@ -55,17 +53,14 @@ import lombok.extern.slf4j.Slf4j;
 public class WebAuthFilter extends BaseAuthFilter {
 
     private final AuthHandlerFactory authHandlerFactory;
-    private final AuthenticationProvider authenticationProvider;
     private final WebMetrics webMetrics;
 
     public WebAuthFilter(String applicationName,
                          AuthFilterConfiguration authFilterConfiguration,
                          AuthHandlerFactory authHandlerFactory,
-                         AuthenticationProvider authenticationProvider,
                          WebMetrics webMetrics) {
         super(applicationName, authFilterConfiguration);
         this.authHandlerFactory = authHandlerFactory;
-        this.authenticationProvider = authenticationProvider;
         this.webMetrics = webMetrics;
     }
 
@@ -92,11 +87,7 @@ public class WebAuthFilter extends BaseAuthFilter {
     }
 
     private AuthInfo doResolveAuthInfo(HttpServletRequest request, HttpServletResponse response) {
-        if (authenticationProvider != null) {
-            return authenticationProvider.authenticate(request, response);
-        }
-
-        Objects.requireNonNull(authHandlerFactory, "AuthHandlerFactory or AuthenticationProvider must be configured");
+        Objects.requireNonNull(authHandlerFactory, "AuthHandlerFactory must be configured");
         String serviceType = request.getHeader(AuthHeaderConstants.X_SERVICE_TYPE);
         log.debug("X_SERVICE_TYPE: {}", serviceType);
 

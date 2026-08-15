@@ -29,7 +29,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p><b>核心职责：</b>
  * <ul>
  *   <li><b>JSON → 表达式</b>：{@link #buildExpression} —
- *       将结构化条件 JSON（{@code {logic, groups, rules}}）转换为 Aviator / SpEL 表达式字符串</li>
+ *       将结构化条件 JSON（{@code {logic, groups, rules}}）转换为 Aviator 表达式字符串</li>
  *   <li><b>表达式 → JSON</b>：{@link #parseExpression} —
  *       将表达式字符串解析为结构化条件 JSON（用于设计器展示 / 编辑）</li>
  *   <li><b>表达式校验</b>：{@link #validateExpression} —
@@ -38,32 +38,24 @@ import lombok.extern.slf4j.Slf4j;
  *       使用测试变量执行表达式，返回 true / false 验证条件语义</li>
  * </ul>
  *
- * <p><b>支持的表达式引擎：</b>
- * <ul>
- *   <li><b>Aviator</b>（默认）：轻量、高性能 Java 表达式引擎，
- *       支持数学运算 / 字符串操作 / 集合操作 / 自定义函数（{@code seq.contains / string.contains}）</li>
- *   <li><b>SpEL</b>（已废弃）：Spring Expression Language。P1-3 起运行时评估不再支持 SpEL，
- *       仅保留构建/解析方法用于历史数据兼容</li>
- * </ul>
- *
  * <p><b>P1-3 引擎收敛：</b>运行时条件评估统一收敛为 Aviator 单引擎，
- * 自研正则解析器仅作 Aviator 不可用时的降级路径。SpEL 分支标记为 {@code @deprecated}。
+ * SpEL 代码已全部移除。
  *
  * <p><b>操作符映射：</b>
  * <p>前端下拉选择的<b>结构化操作符</b>（如 {@code EQ / GT / IN / CONTAINS}）在转换时
- * 映射为不同引擎的<b>原生操作符</b>，映射关系见 {@link #OPERATOR_MAP}：
+ * 映射为 Aviator <b>原生操作符</b>，映射关系见 {@link #OPERATOR_MAP}：
  * <pre>
- *   EQ       → ==        / ==
- *   NE       → !=        / !=
- *   GT       → &gt;         / &gt;
- *   GTE      → &gt;=        / &gt;=
- *   LT       → &lt;         / &lt;
- *   LTE      → &lt;=        / &lt;=
- *   IN       → seq.in    / T(String).valueOf(#field).matches
- *   NOT_IN   → !seq.in   / !
- *   CONTAINS → string.contains / contains
- *   IS_NULL  → ==nil     / == null
- *   IS_EMPTY → string.isEmpty / empty
+ *   EQ       → ==
+ *   NE       → !=
+ *   GT       → &gt;
+ *   GTE      → &gt;=
+ *   LT       → &lt;
+ *   LTE      → &lt;=
+ *   IN       → seq.in
+ *   NOT_IN   → !seq.in
+ *   CONTAINS → string.contains
+ *   IS_NULL  → ==nil
+ *   IS_EMPTY → string.isEmpty
  *   ...
  * </pre>
  *
@@ -112,38 +104,37 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
     private final FlowNodeMapper nodeMapper;
 
     /**
-     * 操作符映射：枚举 → Aviator / SpEL 符号
+     * 操作符映射：枚举 → Aviator 符号
      *
-     * <p>Key 为前端下拉选择的<b>结构化操作符</b>，Value 为 {@code [Aviator符号, SpEL符号]} 数组。
+     * <p>Key 为前端下拉选择的<b>结构化操作符</b>，Value 为 Aviator 原生符号。
      * 新增操作符只需在此 Map 中新增一行即可，无需修改业务逻辑。
      */
-    private static final Map<String, String[]> OPERATOR_MAP = new LinkedHashMap<>();
+    private static final Map<String, String> OPERATOR_MAP = new LinkedHashMap<>();
 
     static {
-        OPERATOR_MAP.put("EQ",   new String[]{"==", "=="});
-        OPERATOR_MAP.put("NE",   new String[]{"!=", "!="});
-        OPERATOR_MAP.put("GT",   new String[]{">",  ">"});
-        OPERATOR_MAP.put("GTE",  new String[]{">=", ">="});
-        OPERATOR_MAP.put("LT",   new String[]{"<",  "<"});
-        OPERATOR_MAP.put("LTE",  new String[]{"<=", "<="});
-        OPERATOR_MAP.put("IN",   new String[]{"seq.in", "T(String).valueOf(#field).matches"});
-        OPERATOR_MAP.put("NOT_IN", new String[]{"!seq.in", "!"});
-        OPERATOR_MAP.put("CONTAINS", new String[]{"string.contains", "contains"});
-        OPERATOR_MAP.put("STARTS_WITH", new String[]{"string.startsWith", "startsWith"});
-        OPERATOR_MAP.put("ENDS_WITH", new String[]{"string.endsWith", "endsWith"});
-        OPERATOR_MAP.put("IS_NULL", new String[]{"==nil", "== null"});
-        OPERATOR_MAP.put("NOT_NULL", new String[]{"!=nil", "!= null"});
-        OPERATOR_MAP.put("IS_EMPTY", new String[]{"string.isEmpty", "empty"});
-        OPERATOR_MAP.put("NOT_EMPTY", new String[]{"!string.isEmpty", "!empty"});
+        OPERATOR_MAP.put("EQ",   "==");
+        OPERATOR_MAP.put("NE",   "!=");
+        OPERATOR_MAP.put("GT",   ">");
+        OPERATOR_MAP.put("GTE",  ">=");
+        OPERATOR_MAP.put("LT",   "<");
+        OPERATOR_MAP.put("LTE",  "<=");
+        OPERATOR_MAP.put("IN",   "seq.in");
+        OPERATOR_MAP.put("NOT_IN", "!seq.in");
+        OPERATOR_MAP.put("CONTAINS", "string.contains");
+        OPERATOR_MAP.put("STARTS_WITH", "string.startsWith");
+        OPERATOR_MAP.put("ENDS_WITH", "string.endsWith");
+        OPERATOR_MAP.put("IS_NULL", "==nil");
+        OPERATOR_MAP.put("NOT_NULL", "!=nil");
+        OPERATOR_MAP.put("IS_EMPTY", "string.isEmpty");
+        OPERATOR_MAP.put("NOT_EMPTY", "!string.isEmpty");
     }
 
     /**
-     * 将结构化条件 JSON 转换为 Aviator / SpEL 表达式字符串
+     * 将结构化条件 JSON 转换为 Aviator 表达式字符串
      *
      * <p>完整转换链路：
      * <ol>
      *   <li>解析条件 JSON，提取 {@code logic}（AND/OR）与 {@code groups}（条件项列表）</li>
-     *   <li>按 engine 选择 Aviator 符号表（{@code engineIdx=0}）或 SpEL 符号表（{@code engineIdx=1}）</li>
      *   <li>逐个条件组构建原子表达式（{@link #buildGroupExpr}），值按 {@code valueType} 格式化</li>
      *   <li>多组条件下用 {@code &&} / {@code ||} 拼接，单组条件不加括号</li>
      * </ol>
@@ -152,12 +143,15 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
      * 由调用方决定空表达式语义。
      *
      * @param conditionJson 结构化条件 JSON
-     * @param engine        表达式引擎：{@code AVIATOR}（默认） / {@code SPEL}
+     * @param engine        表达式引擎（仅支持 {@code AVIATOR}，其他值返回空字符串）
      * @return 表达式字符串（如 {@code amount > 10000 && deptCode == 'SALES'}），无输入返回空字符串
      */
     @Override
     public String buildExpression(String conditionJson, String engine) {
         if (conditionJson == null || conditionJson.isBlank()) {
+            return "";
+        }
+        if (engine != null && !"AVIATOR".equalsIgnoreCase(engine)) {
             return "";
         }
         try {
@@ -167,7 +161,6 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
             }
             String logic = root.get("logic") == null ? "AND" : String.valueOf(root.get("logic"));
             String logicOp = "OR".equalsIgnoreCase(logic) ? " || " : " && ";
-            int engineIdx = "SPEL".equalsIgnoreCase(engine) ? 1 : 0;
 
             List<Map<String, Object>> groups = MapUtils.getListOfMaps(root, "groups");
             if (groups == null || groups.isEmpty()) {
@@ -176,7 +169,7 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
 
             List<String> parts = new ArrayList<>();
             for (Map<String, Object> group : groups) {
-                String part = buildGroupExpr(group, engineIdx);
+                String part = buildGroupExpr(group);
                 if (part != null) {
                     parts.add(part);
                 }
@@ -304,7 +297,7 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
     /**
      * 获取全部可用操作符列表
      *
-     * <p>遍历 {@link #OPERATOR_MAP}，每项返回 {@code {code, aviator, spel}} 三个字段，
+     * <p>遍历 {@link #OPERATOR_MAP}，每项返回 {@code {code, aviator}} 两个字段，
      * 供前端下拉框渲染。修改 {@link #OPERATOR_MAP} 即自动同步到前端。
      *
      * @return 操作符列表（保持 {@code OPERATOR_MAP} 的插入顺序）
@@ -312,11 +305,10 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
     @Override
     public List<Map<String, String>> getOperators() {
         List<Map<String, String>> result = new ArrayList<>();
-        for (Map.Entry<String, String[]> entry : OPERATOR_MAP.entrySet()) {
+        for (Map.Entry<String, String> entry : OPERATOR_MAP.entrySet()) {
             Map<String, String> op = new LinkedHashMap<>();
             op.put("code", entry.getKey());
-            op.put("aviator", entry.getValue()[0]);
-            op.put("spel", entry.getValue()[1]);
+            op.put("aviator", entry.getValue());
             result.add(op);
         }
         return result;
@@ -345,32 +337,30 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
     // ============================== 内部辅助 ==============================
 
     /**
-     * 构建单个条件组的原子表达式
+     * 构建单个条件组的原子表达式（仅 Aviator）
      *
      * <p>根据 {@code operator} 选择操作符符号，特殊处理：
      * <ul>
      *   <li>NULL / EMPTY 类操作符不需要值，仅 {@code field symbol}</li>
-     *   <li>IN / NOT_IN：Aviator 用 {@code seq.in(list, value)}，SpEL 用 {@code field in {list}}</li>
-     *   <li>CONTAINS / STARTS_WITH / ENDS_WITH：Aviator 用 {@code string.xxx(field, value)}，SpEL 用 {@code field.xxx(value)}</li>
+     *   <li>IN / NOT_IN：Aviator 用 {@code seq.in(list, value)}</li>
+     *   <li>CONTAINS / STARTS_WITH / ENDS_WITH：Aviator 用 {@code string.xxx(field, value)}</li>
      *   <li>其他操作符：{@code field symbol value}</li>
      * </ul>
      *
-     * @param group     单个条件组（含 field/operator/value/valueType）
-     * @param engineIdx 引擎索引（{@code 0}=Aviator，{@code 1}=SpEL）
+     * @param group 单个条件组（含 field/operator/value/valueType）
      * @return 原子表达式字符串，未知操作符返回 {@code null}
      */
-    private String buildGroupExpr(Map<String, Object> group, int engineIdx) {
+    private String buildGroupExpr(Map<String, Object> group) {
         String field = String.valueOf(group.get("field"));
         String operator = String.valueOf(group.get("operator")).toUpperCase();
         Object value = group.get("value");
         String valueType = group.get("valueType") == null ? "STRING" : String.valueOf(group.get("valueType")).toUpperCase();
 
-        String[] symbols = OPERATOR_MAP.get(operator);
-        if (symbols == null) {
+        String symbol = OPERATOR_MAP.get(operator);
+        if (symbol == null) {
             log.warn("[CondExpr] 未知操作符: {}", operator);
             return null;
         }
-        String symbol = symbols[engineIdx];
 
         // NULL / EMPTY 类操作符不需要值
         if ("IS_NULL".equals(operator) || "NOT_NULL".equals(operator)
@@ -379,52 +369,40 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
         }
 
         // 格式化值
-        String formattedValue = formatValue(value, valueType, engineIdx);
+        String formattedValue = formatValue(value, valueType);
 
         // IN / NOT_IN 特殊处理
         if ("IN".equals(operator) || "NOT_IN".equals(operator)) {
-            if (engineIdx == 0) {
-                // Aviator: seq.in(list, value)
-                return symbol + "(" + formattedValue + ", " + field + ")";
-            } else {
-                // SpEL: 简化处理
-                return field + " " + ("IN".equals(operator) ? "in" : "not in") + " " + formattedValue;
-            }
+            return symbol + "(" + formattedValue + ", " + field + ")";
         }
 
         // CONTAINS / STARTS_WITH / ENDS_WITH 特殊处理
         if ("CONTAINS".equals(operator) || "STARTS_WITH".equals(operator) || "ENDS_WITH".equals(operator)) {
-            if (engineIdx == 0) {
-                // Aviator: string.contains(str, substr)
-                return symbol + "(" + field + ", " + formattedValue + ")";
-            } else {
-                return field + "." + symbol + "(" + formattedValue + ")";
-            }
+            return symbol + "(" + field + ", " + formattedValue + ")";
         }
 
         return field + " " + symbol + " " + formattedValue;
     }
 
     /**
-     * 按值类型格式化值
+     * 按值类型格式化值（仅 Aviator）
      *
      * <p>不同 {@code valueType} 对应不同格式化策略：
      * <ul>
      *   <li>NUMBER — 原样输出</li>
      *   <li>BOOLEAN — 转小写</li>
      *   <li>STRING / DATE / DATETIME — 用单引号包裹</li>
-     *   <li>LIST — Aviator 用 {@code seq.list(a, b, c)}，SpEL 用 {@code {a, b, c}}</li>
-     *   <li>NULL — 引擎对应 {@code nil} / {@code null}</li>
+     *   <li>LIST — Aviator 用 {@code seq.list(a, b, c)}</li>
+     *   <li>NULL — {@code nil}</li>
      * </ul>
      *
      * @param value     原始值
      * @param valueType 值类型字符串
-     * @param engineIdx 引擎索引
      * @return 格式化后的值字符串
      */
-    private String formatValue(Object value, String valueType, int engineIdx) {
+    private String formatValue(Object value, String valueType) {
         if (value == null) {
-            return engineIdx == 0 ? "nil" : "null";
+            return "nil";
         }
         switch (valueType) {
             case "NUMBER":
@@ -437,25 +415,13 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
                 return "'" + value + "'";
             case "LIST":
                 List<Object> list = value instanceof List<?> l ? new ArrayList<>(l) : List.of();
-                if (engineIdx == 0) {
-                    // Aviator: seq.list(a, b, c)
-                    StringBuilder sb = new StringBuilder("seq.list(");
-                    for (int i = 0; i < list.size(); i++) {
-                        if (i > 0) sb.append(", ");
-                        sb.append(formatValue(list.get(i), "STRING", engineIdx));
-                    }
-                    sb.append(")");
-                    return sb.toString();
-                } else {
-                    // SpEL: {a, b, c}
-                    StringBuilder sb = new StringBuilder("{");
-                    for (int i = 0; i < list.size(); i++) {
-                        if (i > 0) sb.append(", ");
-                        sb.append(formatValue(list.get(i), "STRING", engineIdx));
-                    }
-                    sb.append("}");
-                    return sb.toString();
+                StringBuilder sb = new StringBuilder("seq.list(");
+                for (int i = 0; i < list.size(); i++) {
+                    if (i > 0) sb.append(", ");
+                    sb.append(formatValue(list.get(i), "STRING"));
                 }
+                sb.append(")");
+                return sb.toString();
             default:
                 return "'" + value + "'";
         }
@@ -476,8 +442,8 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
             expr = expr.substring(1, expr.length() - 1).trim();
         }
         // 简单解析：field OP value
-        for (Map.Entry<String, String[]> entry : OPERATOR_MAP.entrySet()) {
-            String op = entry.getValue()[0]; // Aviator 符号
+        for (Map.Entry<String, String> entry : OPERATOR_MAP.entrySet()) {
+            String op = entry.getValue();
             int idx = expr.indexOf(" " + op + " ");
             if (idx > 0) {
                 String field = expr.substring(0, idx).trim();
@@ -577,14 +543,11 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
      * 表达式预览执行（P1-4 可视化编辑增强）
      *
      * <p>使用测试变量驱动表达式执行，返回布尔结果。供前端表达式编辑器「实时预览」使用，
-     * 业务方输入变量值后立即看到条件匹配结果。
-     *
-     * <p><b>当前限制：</b>仅 Aviator 引擎已实现。SpEL 引擎已废弃，返回错误信息。
-     * // TODO: P1-3 后续彻底移除 SpEL 分支，仅保留 Aviator 路径
+     * 业务方输入变量值后立即看到条件匹配结果。仅支持 Aviator 引擎。
      *
      * @param expression 表达式字符串
      * @param variables  测试变量（{@code null} 时按空 Map 处理）
-     * @param engine     表达式引擎（默认 {@code AVIATOR}）
+     * @param engine     表达式引擎（仅支持 {@code AVIATOR}）
      * @return 执行结果 Map：
      *   <ul>
      *     <li>{@code result} (Boolean) — 表达式执行结果（执行异常时为 {@code null}）</li>
@@ -599,20 +562,16 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
             result.put("error", "表达式不能为空");
             return result;
         }
-        String eng = engine == null || engine.isBlank() ? "AVIATOR" : engine.toUpperCase();
+        if (engine != null && !"AVIATOR".equalsIgnoreCase(engine)) {
+            result.put("result", null);
+            result.put("error", "不支持的表达式引擎");
+            return result;
+        }
 
         try {
-            if ("AVIATOR".equals(eng)) {
-                Object exprResult = AviatorEvaluator.execute(expression, variables != null ? variables : Map.of());
-                result.put("result", Boolean.TRUE.equals(exprResult));
-                result.put("error", null);
-            } else if ("SPEL".equals(eng)) {
-                result.put("result", null);
-                result.put("error", "SpEL 预览功能暂未实现，请使用 Aviator 引擎");
-            } else {
-                result.put("result", null);
-                result.put("error", "不支持的表达式引擎: " + eng);
-            }
+            Object exprResult = AviatorEvaluator.execute(expression, variables != null ? variables : Map.of());
+            result.put("result", Boolean.TRUE.equals(exprResult));
+            result.put("error", null);
         } catch (Exception e) {
             log.warn("[CondExpr] 表达式预览失败: expr={} err={}", expression, e.getMessage());
             result.put("result", null);

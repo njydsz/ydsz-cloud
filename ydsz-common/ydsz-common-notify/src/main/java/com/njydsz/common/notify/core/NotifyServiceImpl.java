@@ -48,6 +48,9 @@ public class NotifyServiceImpl implements NotifyService {
 
     private static final Logger log = LoggerFactory.getLogger(NotifyServiceImpl.class);
 
+    /** 纳秒到毫秒的转换系数 */
+    private static final long NANOS_TO_MILLIS = 1_000_000L;
+
     private final Map<NotifyChannel, NotifyChannelStrategy> channelStrategies;
 
     /** 渠道限流管理器（可选依赖） */
@@ -731,7 +734,7 @@ public class NotifyServiceImpl implements NotifyService {
         // 审计日志
         if (auditService != null) {
             auditService.audit(ctx.channel(), ctx.receiver(), ctx.title(),
-                    ctx.sendResult(), ctx.durationNanos() / 1_000_000, ctx.templateCode());
+                    ctx.sendResult(), ctx.durationNanos() / NANOS_TO_MILLIS, ctx.templateCode());
         }
 
         // 失败降级

@@ -19,7 +19,6 @@ import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -32,9 +31,9 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.config.AuditProperties;
 import com.njydsz.common.audit.context.AuditContext;
 import com.njydsz.common.audit.context.AuditContext.AuditContextData;
+import com.njydsz.common.audit.core.AuditRecorder;
 import com.njydsz.common.audit.domain.AuditLog;
 import com.njydsz.common.audit.enums.AuditStatus;
-import com.njydsz.common.audit.event.AuditEvent;
 import com.njydsz.common.audit.mask.SensitiveFieldMask;
 import com.njydsz.common.audit.template.AuditTemplateProcessor;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
@@ -42,6 +41,7 @@ import com.njydsz.common.util.http.RequestContextUtils;
 import com.njydsz.common.safe.util.ClientIpResolver;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.string.StringUtils;
+
 /**
  * 审计日志切面
  * <p>
@@ -59,9 +59,7 @@ import com.njydsz.common.util.string.StringUtils;
  *   <li>请求参数使用 {@link SensitiveFieldMask} 进行脱敏；默认敏感词列表见
  *       {@link com.njydsz.common.audit.config.AuditProperties#getSensitiveParams()}</li>
  *   <li>对超大参数（&gt;10KB）和深嵌套对象进行截断/占位，避免 OOM</li>
- *   <li>异步事件通过 Spring {@code ApplicationEventPublisher} 发布，
- *       由 {@link com.njydsz.common.audit.config.AuditEventListener} 委托
- *       {@link com.njydsz.common.audit.core.AuditRecorder} 落盘</li>
+ *   <li>审计记录通过 {@link AuditRecorder} 异步落盘，不阻塞业务主链路</li>
  *   <li>支持 @Async 方法（自动透传 RequestAttributes）</li>
  *   <li>审计本身异常被 try-catch 隔离，绝不污染业务主链路</li>
  * </ul>
@@ -85,9 +83,9 @@ public class AuditAspect {
     private static final int DEFAULT_MAX_SERIALIZE_LENGTH = 10 * 1024;
 
     /**
-     * Spring 事件发布器
+     * 审计记录器，用于异步落盘审计日志
      */
-    private final ApplicationEventPublisher eventPublisher;
+    private final AuditRecorder auditRecorder;
 
     /**
      * 审计配置属性
@@ -110,14 +108,16 @@ public class AuditAspect {
     /**
      * 构造审计日志切面
      *
-     * @param eventPublisher    Spring 事件发布器
+     * @param auditRecorder     审计记录器
      * @param properties        审计配置属性
      * @param templateProcessor SpEL 模板处理器
      * @param snowflakeIdGenerator 分布式 ID 生成器
      */
-    public AuditAspect(ApplicationEventPublisher eventPublisher, AuditProperties properties, AuditTemplateProcessor templateProcessor,
-                        SnowflakeIdGenerator snowflakeIdGenerator) {
-        this.eventPublisher = eventPublisher;
+    public AuditAspect(AuditRecorder auditRecorder,
+                       AuditProperties properties,
+                       AuditTemplateProcessor templateProcessor,
+                       SnowflakeIdGenerator snowflakeIdGenerator) {
+        this.auditRecorder = auditRecorder;
         this.properties = properties;
         this.templateProcessor = templateProcessor;
         this.snowflakeIdGenerator = snowflakeIdGenerator;
@@ -135,7 +135,7 @@ public class AuditAspect {
     }
 
     /**
-     * 环绕通知：执行业务方法、采集上下文、发布审计事件。
+     * 环绕通知：执行业务方法、采集上下文、记录审计日志。
      * <p>关闭审计（{@code properties.isEnabled() == false}）时直接放行，不采集。
      *
      * @param joinPoint 切点
@@ -173,7 +173,7 @@ public class AuditAspect {
         } finally {
             try {
                 AuditLog auditLog = buildAuditLog(joinPoint, audit, context, result, exception, startTime);
-                publishAuditEvent(auditLog, context.getToken());
+                recordAuditLog(auditLog);
             } catch (Exception e) {
                 log.error("【审计切面】记录审计日志失败: {}", e.getMessage(), e);
             } finally {
@@ -243,22 +243,6 @@ public class AuditAspect {
             context.setIpAddress(ClientIpResolver.getClientIp(request));
             context.setToken(request.getHeader("X-Access-Token"));
             context.setBusinessNo(request.getHeader("X-Business-No"));
-
-            // 启用 IP 归属地解析时，记录 IP 地址（实际解析需要外部服务）
-            if (properties.isIpLocationEnabled()) {
-                String ipAddress = context.getIpAddress();
-                if (StringUtils.isNotBlank(ipAddress)) {
-                    context.putExtra("ipLocation", ipAddress); // 实际应用中需要调用 IP 归属地服务
-                }
-            }
-
-            // 启用 User-Agent 解析时，记录客户端信息
-            if (properties.isUserAgentEnabled()) {
-                String userAgent = request.getHeader("User-Agent");
-                if (StringUtils.isNotBlank(userAgent)) {
-                    context.putExtra("userAgent", userAgent);
-                }
-            }
 
             // 记录 TraceId（如果存在）
             String traceId = request.getHeader(HeaderConstants.TRACE_ID_HEADER);
@@ -334,9 +318,7 @@ public class AuditAspect {
             auditLog.setErrorMessage(exception.getClass().getName() + ": " + exception.getMessage());
         }
 
-        auditLog.setAppId(properties.getAppId());
-        auditLog.setAppCode(properties.getAppCode());
-        auditLog.setAppName(properties.getAppName());
+        auditLog.setAppKey(properties.getAppKey());
         auditLog.setCreatedAt(LocalDateTime.now());
 
         return auditLog;
@@ -474,23 +456,21 @@ public class AuditAspect {
     }
 
     /**
-     * 发布审计事件
+     * 记录审计日志（委托给 AuditRecorder 异步落盘）
      *
-     * @param auditLog 审计日志
-     * @param token    用户令牌
+     * @param auditLog 审计日志实体
      */
-    private void publishAuditEvent(AuditLog auditLog, String token) {
+    private void recordAuditLog(AuditLog auditLog) {
         if (auditLog == null) {
             return;
         }
 
         try {
-            AuditEvent event = AuditEvent.of(this, auditLog, token);
-            eventPublisher.publishEvent(event);
-            log.debug("【审计切面】审计事件已发布: id={}, module={}, action={}",
+            auditRecorder.record(auditLog);
+            log.debug("【审计切面】审计日志已记录: id={}, module={}, action={}",
                     auditLog.getId(), auditLog.getModule(), auditLog.getAction());
         } catch (Exception e) {
-            log.error("【审计切面】发布审计事件失败: {}", e.getMessage(), e);
+            log.error("【审计切面】记录审计日志失败: {}", e.getMessage(), e);
         }
     }
 

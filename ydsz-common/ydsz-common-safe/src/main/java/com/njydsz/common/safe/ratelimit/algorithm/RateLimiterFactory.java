@@ -3,6 +3,8 @@ package com.njydsz.common.safe.ratelimit.algorithm;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitAlgorithm;
 import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * 限流器工厂
  *
@@ -11,6 +13,7 @@ import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Slf4j
 public final class RateLimiterFactory {
 
     private RateLimiterFactory() {
@@ -30,6 +33,12 @@ public final class RateLimiterFactory {
         RateLimitAlgorithm algorithm = rule.getAlgorithm() == null
                 ? RateLimitAlgorithm.TOKEN_BUCKET
                 : rule.getAlgorithm();
+
+        // 废弃算法降级警告
+        if (algorithm != RateLimitAlgorithm.TOKEN_BUCKET) {
+            log.warn("限流算法 {} 已废弃，建议迁移至 token-bucket", algorithm);
+        }
+
         switch (algorithm) {
             case COUNTER:
                 return new CounterLimiter(rule);

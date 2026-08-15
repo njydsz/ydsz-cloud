@@ -131,17 +131,17 @@ public class RedisStreamSubscriber implements IMessageSubscriber {
         }
         this.redisTemplate = redisTemplate;
         this.channel = channel;
-        this.group = queueProperties.resolvedStreamGroup();
-        this.consumer = queueProperties.resolvedStreamConsumer() + "-" + generateShortId();
-        this.retryMax = queueProperties.resolvedStreamRetryMax();
-        this.blockMillis = Math.toIntExact(queueProperties.resolvedStreamBlockMillis());
-        this.batchSize = queueProperties.resolvedStreamBatchSize();
-        this.dlqChannel = channel + queueProperties.resolvedStreamDeadLetterSuffix();
+        this.group = queueProperties.getStreamGroup();
+        this.consumer = queueProperties.getStreamConsumer() + "-" + generateShortId();
+        this.retryMax = queueProperties.getStreamRetryMax();
+        this.blockMillis = Math.toIntExact(queueProperties.getStreamBlockMillis());
+        this.batchSize = queueProperties.getStreamBatchSize();
+        this.dlqChannel = channel + queueProperties.getStreamDeadLetterSuffix();
         this.running = new AtomicBoolean(false);
         this.consumedCount = new AtomicLong(0);
         this.lastError = new AtomicReference<>();
         this.messageMetrics = new MessageMetrics(channel, "redis-stream");
-        this.rateLimiter = queueProperties.createRateLimiter();
+        this.rateLimiter = new ConsumerRateLimiter(queueProperties.getConsumerRateLimitPerSecond());
         this.consumerExecutor = consumerExecutor;
         this.retryPolicy = RetryPolicy.exponentialBackoff(retryMax, 1000L, 30000L);
         ensureGroup();
@@ -449,7 +449,10 @@ public class RedisStreamSubscriber implements IMessageSubscriber {
                     sequence = null;
                 }
             }
-            message.setSequential(groupKey, sequence);
+            message.setMessageGroupKey(groupKey);
+            if (sequence != null) {
+                message.addHeader("sequence", String.valueOf(sequence));
+            }
         }
 
         return message;

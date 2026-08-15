@@ -70,12 +70,21 @@ public class FeignProperties {
         /** 是否启用请求头透传，默认true */
         private boolean enabled = true;
 
-        /** 默认透传的4个核心头：链路头/租户ID/访问令牌/请求ID */
+        /** 默认透传的13个核心业务头：覆盖链路追踪、身份鉴权、权限校验、租户隔离等所有业务场景 */
         private Set<String> headers = new LinkedHashSet<>(Arrays.asList(
-                "traceparent",
-                "X-Tenant-Id",
-                "X-Access-Token",
-                "X-Request-Id"
+                "traceparent", // W3C链路追踪头
+                "X-Tenant-Id", // 租户ID
+                "X-Access-Token", // 访问令牌
+                "X-Request-Id", // 请求唯一ID
+                "X-User-Userid", // 当前用户ID
+                "X-User-Username", // 当前用户名
+                "X-User-Locale", // 用户语言环境（国际化）
+                "X-Request-Source", // 请求来源标识
+                "X-Company-Ids", // 公司ID集合（权限校验）
+                "X-Data-Scope", // 数据权限范围类型
+                "X-Unique-Id", // 用户登录唯一ID
+                "X-Dept-Ids", // 部门ID集合（权限校验）
+                "X-Service-Type" // 服务类型标识
         ));
     }
 

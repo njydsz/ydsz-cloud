@@ -16,7 +16,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -26,7 +25,6 @@ import com.njydsz.common.audit.core.AuditFallbackWriter;
 import com.njydsz.common.audit.core.AuditMetricsBinder;
 import com.njydsz.common.audit.core.AuditQueryService;
 import com.njydsz.common.audit.core.AuditRecorder;
-import com.njydsz.common.audit.core.AuditStorage;
 import com.njydsz.common.audit.core.AuditWriter;
 import com.njydsz.common.audit.core.DefaultAuditQueryService;
 import com.njydsz.common.audit.core.DefaultAuditRecorder;
@@ -50,11 +48,11 @@ import io.micrometer.core.instrument.MeterRegistry;
  * <ul>
  *   <li>{@link AuditAspect}：审计切面，拦截 {@link com.njydsz.common.audit.annotation.Audit} 注解</li>
  *   <li>{@link AuditTemplateProcessor}：SpEL 模板解析器</li>
- *   <li>{@link com.njydsz.common.audit.core.AuditStorage}：审计日志存储（JDBC / 控制台）</li>
- *   <li>{@link com.njydsz.common.audit.core.AuditRecorder}：异步/同步审计记录器</li>
- *   <li>{@link com.njydsz.common.audit.sharding.TableShardingStrategy}：分表策略</li>
- *   <li>{@link com.njydsz.common.audit.core.AuditQueryService}：审计日志查询服务</li>
- *   <li>{@link com.njydsz.common.audit.health.AuditHealthIndicator}：健康检查指示器</li>
+ *   <li>{@link AuditWriter}：审计日志写入器（JDBC / 控制台）</li>
+ *   <li>{@link AuditRecorder}：异步/同步审计记录器</li>
+ *   <li>{@link TableShardingStrategy}：分表策略</li>
+ *   <li>{@link AuditQueryService}：审计日志查询服务</li>
+ *   <li>{@link AuditHealthIndicator}：健康检查指示器</li>
  * </ul>
  * </p>
  *
@@ -108,67 +106,44 @@ public class AuditAutoConfiguration {
     }
 
     /**
-     * 创建 JDBC 审计日志存储 Bean
-     * 当存在 DataSource 且未提供自定义 AuditStorage 时创建
+     * 创建 JDBC 审计日志写入器 Bean
+     * 当存在 DataSource 且未提供自定义 AuditWriter 时创建
      *
-     * @param dataSource         数据源
-     * @param shardingStrategy   分表策略（可选）
-     * @param properties         审计配置属性
-     * @return JDBC 审计日志存储
+     * @param dataSource       数据源
+     * @param shardingStrategy 分表策略（可选）
+     * @param properties       审计配置属性
+     * @return JDBC 审计日志写入器
      */
     @Bean
-    @ConditionalOnMissingBean(AuditStorage.class)
+    @ConditionalOnMissingBean(AuditWriter.class)
     @ConditionalOnBean(DataSource.class)
-    public AuditStorage jdbcAuditStorage(DataSource dataSource,
-                                         TableShardingStrategy shardingStrategy,
-                                         AuditProperties properties) {
+    public AuditWriter jdbcAuditWriter(DataSource dataSource,
+                                       TableShardingStrategy shardingStrategy,
+                                       AuditProperties properties) {
         String baseTableName = properties.getShardingBaseTableName();
-        log.info("初始化 JDBC 审计日志存储: JdbcAuditStorage, 分表策略={}, 基础表名={}",
+        log.info("初始化 JDBC 审计日志写入器: JdbcAuditWriter, 分表策略={}, 基础表名={}",
                 shardingStrategy != null ? shardingStrategy.getShardType() : "DISABLED", baseTableName);
         return new JdbcAuditStorage(dataSource, shardingStrategy, baseTableName);
     }
 
     /**
-     * 创建审计日志写入器 Bean
-     * <p>
-     * 将 {@link JdbcAuditStorage} 包装为 {@link AuditWriter} 供 Recorder 委托写入。
-     * 当未提供自定义 AuditWriter 时自动创建。
-     * </p>
+     * 创建默认控制台审计日志写入器 Bean
+     * 当系统中不存在 DataSource 时降级为控制台输出
      *
-     * @param auditStorage 审计日志存储（通常是 JdbcAuditStorage）
-     * @return 审计日志写入器
+     * @return 默认审计日志写入器
      */
     @Bean
     @ConditionalOnMissingBean(AuditWriter.class)
-    public AuditWriter auditWriter(AuditStorage auditStorage) {
-        if (auditStorage instanceof AuditWriter writer) {
-            log.info("初始化审计写入器: {}", writer.getName());
-            return writer;
-        }
-        // 非 JDBC 存储（如 DefaultAuditStorage）不支持高性能写入，抛出异常提示
-        throw new IllegalStateException(
-                "当前审计存储 " + auditStorage.getClass().getSimpleName() + " 未实现 AuditWriter 接口，"
-                + "无法提供高性能写入能力。请确保使用 JdbcAuditStorage 或自定义实现 AuditWriter。");
-    }
-
-    /**
-     * 创建默认审计日志存储 Bean
-     * 当系统中不存在 DataSource 时降级为控制台输出
-     *
-     * @return 默认审计日志存储
-     */
-    @Bean
-    @ConditionalOnMissingBean(AuditStorage.class)
-    public AuditStorage defaultAuditStorage() {
-        log.info("初始化默认审计日志存储: DefaultAuditStorage(控制台输出)，未检测到 DataSource，降级使用控制台存储");
+    public AuditWriter defaultAuditWriter() {
+        log.info("初始化默认审计日志写入器: DefaultAuditStorage(控制台输出)，未检测到 DataSource，降级使用控制台存储");
         return new DefaultAuditStorage();
     }
 
     /**
      * 创建审计日志切面 Bean
      *
-     * @param eventPublisher 事件发布器
-     * @param properties 审计配置属性
+     * @param auditRecorder     审计记录器
+     * @param properties        审计配置属性
      * @param templateProcessor SpEL 模板处理器
      * @param snowflakeIdGenerator 分布式 ID 生成器
      * @return 审计日志切面
@@ -176,10 +151,12 @@ public class AuditAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(AuditAspect.class)
     @ConditionalOnClass(name = "com.njydsz.common.json.YdszJson")
-    public AuditAspect auditAspect(ApplicationEventPublisher eventPublisher, AuditProperties properties, AuditTemplateProcessor templateProcessor,
+    public AuditAspect auditAspect(AuditRecorder auditRecorder,
+                                   AuditProperties properties,
+                                   AuditTemplateProcessor templateProcessor,
                                    SnowflakeIdGenerator snowflakeIdGenerator) {
         log.info("初始化审计日志切面: AuditAspect, 存储策略={}", properties.getStorageType());
-        return new AuditAspect(eventPublisher, properties, templateProcessor, snowflakeIdGenerator);
+        return new AuditAspect(auditRecorder, properties, templateProcessor, snowflakeIdGenerator);
     }
 
     /**
@@ -218,19 +195,6 @@ public class AuditAutoConfiguration {
     }
 
     /**
-     * 创建审计事件监听器
-     * 接收审计事件并委托给 AuditRecorder 进行异步批量保存
-     *
-     * @param auditRecorder 审计记录器
-     * @return 事件监听器 Bean 方法
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public AuditEventListener auditEventListener(AuditRecorder auditRecorder) {
-        return new AuditEventListener(auditRecorder);
-    }
-
-    /**
      * 创建异步审计记录器 Bean
      * 当存在 AuditWriter 且未提供自定义 AuditRecorder 时，使用 LinkedBlockingQueue 实现异步批量写入。
      *
@@ -258,15 +222,15 @@ public class AuditAutoConfiguration {
      * 创建默认审计记录器 Bean
      * 当系统中不存在 AuditRecorder 类型的 Bean 且未启用异步模式时创建
      *
-     * @param auditStorage 审计日志存储
+     * @param auditWriter 审计日志写入器
      * @return 默认审计记录器
      */
     @Bean
     @ConditionalOnMissingBean(AuditRecorder.class)
     @ConditionalOnProperty(prefix = "ydsz.audit", name = "async", havingValue = "false", matchIfMissing = false)
-    public AuditRecorder auditRecorder(AuditStorage auditStorage) {
+    public AuditRecorder auditRecorder(AuditWriter auditWriter) {
         log.info("初始化默认审计记录器: DefaultAuditRecorder");
-        return new DefaultAuditRecorder(auditStorage);
+        return new DefaultAuditRecorder(auditWriter);
     }
 
     /**
@@ -332,8 +296,8 @@ public class AuditAutoConfiguration {
      * 创建审计模块健康检查指示器 Bean
      * 当存在 HealthIndicator 类且启用审计模块时创建
      *
-     * @param dataSource 数据源
-     * @param properties 审计配置属性
+     * @param auditRecorder 审计记录器
+     * @param properties    审计配置属性
      * @return 审计健康检查指示器
      */
     @Bean

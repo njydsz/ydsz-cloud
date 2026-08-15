@@ -4,8 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.tree.JsonMergePatch;
 import com.njydsz.common.json.tree.JsonNode;
-import com.njydsz.common.json.tree.ObjectNode;
 
 /**
  * 配置合并工具（基于 RFC 7396 JSON Merge Patch 语义）
@@ -25,6 +25,8 @@ import com.njydsz.common.json.tree.ObjectNode;
  *   <li>嵌套对象递归合并（非整体替换）</li>
  * </ul>
  *
+ * <p>核心算法委托给 {@link JsonMergePatch#apply}，本类提供 String 入参出参的便捷封装。
+ *
  * <p><b>使用示例：</b>
  * <pre>{@code
  * String baseConfig = "{\"timeout\":30,\"retry\":3,\"pool\":{\"min\":1,\"max\":10}}";
@@ -35,6 +37,7 @@ import com.njydsz.common.json.tree.ObjectNode;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see JsonMergePatch
  */
 public final class ConfigMergeUtils {
 
@@ -47,7 +50,7 @@ public final class ConfigMergeUtils {
     /**
      * 合并两个 JSON 配置。
      *
-     * @param baseConfig    基础配置 JSON 字符串
+     * @param baseConfig     基础配置 JSON 字符串
      * @param overrideConfig 覆盖配置 JSON 字符串（优先级更高）
      * @return 合并后的 JSON 字符串；如果 override 为空返回 base；如果 base 为空返回 override
      */
@@ -61,7 +64,7 @@ public final class ConfigMergeUtils {
         try {
             JsonNode base = YdszJson.readTree(baseConfig);
             JsonNode patch = YdszJson.readTree(overrideConfig);
-            JsonNode merged = mergePatch(base, patch);
+            JsonNode merged = JsonMergePatch.apply(base, patch);
             String result = merged.toString();
             log.debug("[ConfigMerge] 配置合并完成: base keys={} → merged", baseConfig.length());
             return result;
@@ -91,38 +94,4 @@ public final class ConfigMergeUtils {
         return result;
     }
 
-    /**
-     * RFC 7396 JSON Merge Patch 核心算法。
-     *
-     * <ul>
-     *   <li>patch 为对象时：递归合并每个字段；字段值为 null 则从 target 删除</li>
-     *   <li>patch 为其他类型（标量/数组/null）：整体替换 target</li>
-     * </ul>
-     */
-    private static JsonNode mergePatch(JsonNode target, JsonNode patch) {
-        if (!patch.isObject()) {
-            return patch;
-        }
-        if (!target.isObject()) {
-            // target 不是对象时，patch 对象直接作为新对象开始累积
-            target = new ObjectNode();
-        }
-        ObjectNode result = new ObjectNode();
-        // 先复制 target 的所有字段
-        for (java.util.Map.Entry<String, JsonNode> entry : ((ObjectNode) target).entrySet()) {
-            result.set(entry.getKey(), entry.getValue());
-        }
-        // 应用 patch 字段
-        for (java.util.Map.Entry<String, JsonNode> entry : ((ObjectNode) patch).entrySet()) {
-            String key = entry.getKey();
-            JsonNode patchValue = entry.getValue();
-            if (patchValue.isNull()) {
-                result.remove(key);
-            } else {
-                JsonNode existing = result.get(key);
-                result.set(key, mergePatch(existing, patchValue));
-            }
-        }
-        return result;
-    }
 }

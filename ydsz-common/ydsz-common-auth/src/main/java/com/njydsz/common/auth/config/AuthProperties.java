@@ -165,38 +165,29 @@ public class AuthProperties {
     /**
      * 列权限 HMAC 签名密钥。
      *
-     * <p>用于对列权限 Header（X-Visible-Columns / X-Editable-Columns）进行签名校验，
-     * 防止客户端伪造或篡改列权限数据。
+     * <p>用于对列权限 Header（X-Visible-Columns / X-Editable-Columns）进行签名校验。
      *
-     * <p>为空时跳过签名校验（仅建议开发/测试环境使用）。
+     * @deprecated 自 3.0.0 起标记废弃，列权限应由服务端独立决策，无需客户端签名校验。
      */
+    @Deprecated
     private String colPermissionSignKey;
 
     /**
      * 是否启用列权限签名校验，默认 false。
      *
-     * <p>列权限数据实际由服务端从 Redis 或 ColumnPermissionResolver 加载，
-     * 客户端透传的 Header 仅用于 Feign 调用下游服务时传递权限信息。
-     * 在服务端已有独立权限数据源的场景下，签名校验的收益有限，但增加了前端对接复杂度。
-     *
-     * <p>建议：
-     * <ul>
-     *   <li>内部服务间调用：保持关闭（默认），依赖服务端权限数据源</li>
-     *   <li>开放 API 或跨网络边界调用：开启签名校验，防止中间人篡改</li>
-     * </ul>
-     *
+     * @deprecated 自 3.0.0 起标记废弃，列权限应由服务端独立决策。
      * @since 2.0.0
      */
+    @Deprecated
     private boolean colPermissionSignEnabled = false;
 
     /**
      * 列权限签名有效时间窗口（秒），默认 300（5 分钟）。
      *
-     * <p>用于防重放攻击，签名时间戳与当前时间差超过此窗口时拒绝请求。
-     * 仅在 {@link #colPermissionSignEnabled} 为 true 时生效。
-     *
+     * @deprecated 自 3.0.0 起标记废弃，随 {@link #colPermissionSignEnabled} 一并移除。
      * @since 2.0.0
      */
+    @Deprecated
     @Min(60)
     @Max(3600)
     private Integer colPermissionSignValiditySeconds = 300;
@@ -260,7 +251,11 @@ public class AuthProperties {
      * 空权限缓存 TTL（秒），默认 60。
      *
      * <p>当查询结果为空权限时，缓存该结果以避免缓存穿透。</p>
+     *
+     * @deprecated 自 3.0.0 起标记废弃，与 {@link #permissionCacheNullTtlSeconds} 重复。
+     *             迁移目标：{@link #permissionCacheNullTtlSeconds}。
      */
+    @Deprecated
     @Min(5)
     @Max(300)
     private Integer nullPermissionCacheTtlSeconds = 60;
@@ -269,7 +264,11 @@ public class AuthProperties {
      * 缓存 TTL 抖动百分比，默认 10（10%）。
      *
      * <p>在缓存过期时间上增加随机抖动，避免大量缓存同时过期导致缓存雪崩。</p>
+     *
+     * @deprecated 自 3.0.0 起标记废弃，与 {@link #permissionCacheTtlJitterPercent} 重复。
+     *             迁移目标：{@link #permissionCacheTtlJitterPercent}。
      */
+    @Deprecated
     @Min(0)
     @Max(50)
     private Integer cacheTtlJitterPercent = 10;
@@ -278,7 +277,10 @@ public class AuthProperties {
      * 最大登录失败次数，默认 5。
      *
      * <p>超过此次数后账户将被锁定。</p>
+     *
+     * @deprecated 自 3.0.0 起标记废弃，暴力破解防护应由网关层或独立安全模块负责。
      */
+    @Deprecated
     @Min(3)
     @Max(20)
     private Integer maxFailedAttempts = 5;
@@ -287,7 +289,10 @@ public class AuthProperties {
      * 账户锁定时间（分钟），默认 30。
      *
      * <p>达到最大失败次数后，账户被锁定的持续时间。</p>
+     *
+     * @deprecated 自 3.0.0 起标记废弃，暴力破解防护应由网关层或独立安全模块负责。
      */
+    @Deprecated
     @Min(1)
     @Max(1440)
     private Integer lockTimeMinutes = 30;
@@ -296,22 +301,31 @@ public class AuthProperties {
      * 是否启用权限预热（默认 true）。
      *
      * <p>启用后，应用启动时会自动加载指定角色的权限到本地缓存，
-     * 减少首次请求的延迟。
+     * 减少首次请求的延迟。</p>
+     *
+     * @deprecated 自 3.0.0 起标记废弃，权限预热为性能优化手段，非核心功能。
      */
+    @Deprecated
     private Boolean warmUpEnabled = true;
 
     /**
      * 需要预热的角色 ID 列表。
      *
-     * <p>建议配置系统中高频使用的角色，如 admin、operator 等。
+     * <p>建议配置系统中高频使用的角色，如 admin、operator 等。</p>
+     *
+     * @deprecated 自 3.0.0 起标记废弃，随 {@link #warmUpEnabled} 一并移除。
      */
+    @Deprecated
     private List<String> warmUpRoleIds = new ArrayList<>();
 
     /**
      * 预热延迟时间（毫秒），默认 3000。
      *
-     * <p>延迟执行预热，避免与应用启动竞争资源。
+     * <p>延迟执行预热，避免与应用启动竞争资源。</p>
+     *
+     * @deprecated 自 3.0.0 起标记废弃，随 {@link #warmUpEnabled} 一并移除。
      */
+    @Deprecated
     private Long warmUpDelay = 3000L;
 
     /**
@@ -322,17 +336,18 @@ public class AuthProperties {
     /**
      * 多端会话控制配置。
      *
-     * <p>管理用户并发登录会话，支持互踢策略：</p>
-     * <ul>
-     *   <li>max-sessions-per-user：单用户最大并发会话数</li>
-     *   <li>eviction-strategy：超出限制时的淘汰策略（LRU / FIFO）</li>
-     * </ul>
+     * @deprecated 自 3.0.0 起标记废弃，会话管理已超出本模块职责边界。
+     *             迁移目标：独立会话管理模块或网关层。
      */
+    @Deprecated
     private SessionProperties session = new SessionProperties();
 
     /**
      * 多端会话控制配置属性。
+     *
+     * @deprecated 自 3.0.0 起标记废弃，随 {@link AuthProperties#session} 一并移除。
      */
+    @Deprecated
     @Data
     public static class SessionProperties {
         /**

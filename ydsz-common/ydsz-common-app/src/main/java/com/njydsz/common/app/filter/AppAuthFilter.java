@@ -10,7 +10,6 @@ import com.njydsz.common.auth.config.AuthFilterConfiguration;
 import com.njydsz.common.auth.filter.BaseAuthFilter;
 import com.njydsz.common.auth.handler.AuthHandler;
 import com.njydsz.common.auth.metrics.AuthMetrics;
-import com.njydsz.common.auth.model.AuthenticationProvider;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.util.auth.AuthInfo;
@@ -22,11 +21,8 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>作为移动端请求的入口过滤器，负责解析请求头中的认证信息并写入 {@link RequestContext} 上下文。
  *
- * <p>认证策略解耦：
- * <ul>
- *   <li>默认使用注入的 AuthHandler 进行认证</li>
- *   <li>业务方可注入自定义 {@link AuthenticationProvider} 覆盖默认策略</li>
- * </ul>
+ * <p>认证策略解耦：通过 {@link AuthHandler} 解析请求头中的认证信息，
+ * 业务方可注入自定义 {@link AuthHandler} Bean 覆盖默认策略。
  *
  * <p>认证埋点：通过 {@link AuthMetrics} 接口（默认由 {@code AppMetrics} 实现）
  * 上报认证成功/失败耗时指标到 Micrometer，便于监控 App 端认证质量。
@@ -35,15 +31,14 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  * @see AuthHandler
  * @see AuthInfo
- * @see AuthenticationProvider
  * @see AuthMetrics
  * @see RequestContext
  */
 @Slf4j
 public class AppAuthFilter extends BaseAuthFilter {
 
-    /** 业务异常：当 AuthHandler 与 AuthenticationProvider 都未配置时抛出 */
-    private static final String AUTH_HANDLER_NULL_MESSAGE = "AuthHandler or AuthenticationProvider must be configured";
+    /** 业务异常：当 AuthHandler 未配置时抛出 */
+    private static final String AUTH_HANDLER_NULL_MESSAGE = "AuthHandler must be configured";
 
     /** 请求追踪 ID 请求头名称 */
     private static final String REQUEST_ID_HEADER = HeaderConstants.TRACE_ID_HEADER;
@@ -53,8 +48,6 @@ public class AppAuthFilter extends BaseAuthFilter {
 
     /** 认证处理器，负责解析请求头中的认证信息 */
     private final AuthHandler authHandler;
-    /** 自定义认证提供者，优先于 AuthHandler 使用 */
-    private final AuthenticationProvider authenticationProvider;
     /** 认证指标采集器（可选依赖，为 null 时不采集指标） */
     private final AuthMetrics authMetrics;
 
@@ -64,17 +57,14 @@ public class AppAuthFilter extends BaseAuthFilter {
      * @param applicationName        应用名称
      * @param authFilterConfiguration 通用鉴权过滤器配置
      * @param authHandler            认证处理器
-     * @param authenticationProvider 自定义认证提供者（可为空，为空时使用 AuthHandler）
      * @param authMetrics            认证指标采集器（可为空，为空时不采集指标）
      */
     public AppAuthFilter(String applicationName,
                          AuthFilterConfiguration authFilterConfiguration,
                          AuthHandler authHandler,
-                         AuthenticationProvider authenticationProvider,
                          AuthMetrics authMetrics) {
         super(applicationName, authFilterConfiguration);
         this.authHandler = authHandler;
-        this.authenticationProvider = authenticationProvider;
         this.authMetrics = authMetrics;
     }
 
@@ -95,13 +85,13 @@ public class AppAuthFilter extends BaseAuthFilter {
     /**
      * 解析当前请求的认证信息
      *
-     * <p>优先使用 {@link AuthenticationProvider}，为空时降级到 {@link AuthHandler}。
+     * <p>使用 {@link AuthHandler} 解析请求头中的认证信息。
      * 认证成功/失败均通过 {@link AuthMetrics} 上报耗时指标。
      *
      * @param request  当前 HTTP 请求
      * @param response 当前 HTTP 响应
      * @return 解析得到的认证信息
-     * @throws NullPointerException 当 AuthHandler 与 AuthenticationProvider 都未配置时抛出
+     * @throws NullPointerException 当 AuthHandler 未配置时抛出
      */
     @Override
     protected AuthInfo resolveAuthInfo(HttpServletRequest request, HttpServletResponse response) {
@@ -125,9 +115,6 @@ public class AppAuthFilter extends BaseAuthFilter {
      * 实际的认证信息解析逻辑
      */
     private AuthInfo doResolveAuthInfo(HttpServletRequest request, HttpServletResponse response) {
-        if (authenticationProvider != null) {
-            return authenticationProvider.authenticate(request, response);
-        }
         Objects.requireNonNull(authHandler, AUTH_HANDLER_NULL_MESSAGE);
         return authHandler.getAuthInfo(request, response);
     }

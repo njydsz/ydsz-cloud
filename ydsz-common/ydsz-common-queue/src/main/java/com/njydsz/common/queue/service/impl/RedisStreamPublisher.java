@@ -116,8 +116,9 @@ public class RedisStreamPublisher implements IMessagePublisher {
         // 顺序消息支持：添加分组键和序号
         if (message.isSequential()) {
             fields.put(FIELD_GROUP_KEY, message.getMessageGroupKey());
-            if (message.getSequenceNumber() != null) {
-                fields.put(FIELD_SEQUENCE, String.valueOf(message.getSequenceNumber()));
+            String sequence = message.getHeader("sequence");
+            if (sequence != null) {
+                fields.put(FIELD_SEQUENCE, sequence);
             }
         }
 
@@ -152,8 +153,9 @@ public class RedisStreamPublisher implements IMessagePublisher {
                     String.valueOf(message.getRetryCount() != null ? message.getRetryCount() : 0));
             if (message.isSequential()) {
                 fields.put(FIELD_GROUP_KEY, message.getMessageGroupKey());
-                if (message.getSequenceNumber() != null) {
-                    fields.put(FIELD_SEQUENCE, String.valueOf(message.getSequenceNumber()));
+                String sequence = message.getHeader("sequence");
+                if (sequence != null) {
+                    fields.put(FIELD_SEQUENCE, sequence);
                 }
             }
             MapRecord<String, String, String> record = StreamRecords.mapBacked(fields).withStreamKey(channel);

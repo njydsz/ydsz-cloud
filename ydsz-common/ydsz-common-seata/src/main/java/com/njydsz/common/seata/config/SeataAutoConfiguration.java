@@ -22,7 +22,8 @@ import com.njydsz.common.seata.api.XidSigner;
 import com.njydsz.common.seata.aspect.TransactionModeAspect;
 import com.njydsz.common.seata.impl.DbTccTransactionLogStore;
 import com.njydsz.common.seata.impl.DefaultXidPropagator;
-import com.njydsz.common.seata.mq.SeataMQSendTemplate;
+import com.njydsz.common.seata.mq.MqXidPropagator;
+import com.njydsz.common.seata.mq.RocketMqXidPropagator;
 import com.njydsz.common.seata.impl.HmacXidSigner;
 import com.njydsz.common.seata.impl.InMemoryTccTransactionLogStore;
 import com.njydsz.common.seata.impl.LocalTransactionManager;
@@ -30,6 +31,7 @@ import com.njydsz.common.seata.impl.NoopXidSigner;
 import com.njydsz.common.seata.impl.RedisTccTransactionLogStore;
 import com.njydsz.common.seata.impl.SagaOrchestrator;
 import com.njydsz.common.seata.impl.SeataTransactionManager;
+import com.njydsz.common.seata.impl.TccActionRegistry;
 import com.njydsz.common.seata.impl.TccTransactionManager;
 import com.njydsz.common.seata.impl.TccTransactionRecoveryScanner;
 import com.njydsz.common.seata.interceptor.FeignXidRequestInterceptor;
@@ -326,22 +328,34 @@ public class SeataAutoConfiguration {
     }
 
     /**
-     * Seata MQ 发送模板（P2-1 新增）
+     * TCC Action 注册表（P2-7 新增）
      *
-     * <p>当 RocketMQ 生产者存在时自动注册，用于透传 XID 到 MQ 消息头。
+     * <p>自动扫描并注册所有 TccAction Bean，支持跨实例事务恢复。
      */
     @Bean
-    @ConditionalOnMissingBean(SeataMQSendTemplate.class)
+    @ConditionalOnMissingBean(TccActionRegistry.class)
+    public TccActionRegistry tccActionRegistry() {
+        return new TccActionRegistry();
+    }
+
+    /**
+     * MQ XID 传播器（P2-7 新增，替代 SeataMQSendTemplate）
+     *
+     * <p>当 RocketMQ 生产者存在时自动注册，用于透传 XID 到 MQ 消息头。
+     * 使用 SPI 设计，支持多种 MQ 实现。
+     */
+    @Bean
+    @ConditionalOnMissingBean(MqXidPropagator.class)
     @ConditionalOnClass(name = "org.apache.rocketmq.client.producer.DefaultMQProducer")
-    public SeataMQSendTemplate seataMQSendTemplate(
+    public RocketMqXidPropagator mqXidPropagator(
             ObjectProvider<org.apache.rocketmq.client.producer.DefaultMQProducer> producerProvider,
             ObjectProvider<XidPropagator> xidPropagatorProvider) {
         org.apache.rocketmq.client.producer.DefaultMQProducer producer = producerProvider.getIfAvailable();
         if (producer == null) {
-            LOG.warn("RocketMQ DefaultMQProducer not found, SeataMQSendTemplate disabled");
+            LOG.warn("RocketMQ DefaultMQProducer not found, MqXidPropagator disabled");
             return null;
         }
-        return new SeataMQSendTemplate(producer, xidPropagatorProvider);
+        return new RocketMqXidPropagator(producer, xidPropagatorProvider);
     }
 
     /**

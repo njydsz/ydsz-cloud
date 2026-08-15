@@ -18,10 +18,8 @@ import lombok.NoArgsConstructor;
  * <ul>
  *   <li>{@link #requestParams} 和 {@link #responseResult} 默认仅记录截断/脱敏后的数据，
  *       避免日志膨胀和敏感信息泄露</li>
- *   <li>{@link #operatorId} 等操作人字段从 {@code RequestContext} 透传，
- *       避免在审计上下文中重复存储</li>
- *   <li>{@link #extraInfo} 用于透传业务自定义字段（如 traceId、租户 ID 等），
- *       存储为 JSON 字符串</li>
+ *   <li>{@link #operatorId} 从 {@code RequestContext} 透传，避免在审计上下文中重复存储</li>
+ *   <li>{@link #appKey} 为应用标识（合并原 appId/appCode/appName），从配置中心读取</li>
  * </ul>
  *
  * @author ydsz-team
@@ -75,11 +73,6 @@ public class AuditLog implements Serializable {
     private String operatorId;
 
     /**
-     * 操作人编码（工号/登录名）
-     */
-    private String operatorCode;
-
-    /**
      * 操作人姓名
      */
     private String operatorName;
@@ -93,16 +86,6 @@ public class AuditLog implements Serializable {
      * 请求 IP 地址
      */
     private String ipAddress;
-
-    /**
-     * IP 归属地（需结合外部 IP 库解析）
-     */
-    private String ipLocation;
-
-    /**
-     * 客户端 User-Agent
-     */
-    private String userAgent;
 
     /**
      * 请求参数（已脱敏/截断）
@@ -125,24 +108,9 @@ public class AuditLog implements Serializable {
     private Long costTime;
 
     /**
-     * 应用 ID
+     * 应用标识（合并原 appId/appCode/appName，从配置中心读取）
      */
-    private String appId;
-
-    /**
-     * 应用编码
-     */
-    private String appCode;
-
-    /**
-     * 应用名称
-     */
-    private String appName;
-
-    /**
-     * 扩展信息（JSON 格式，用于透传业务自定义字段）
-     */
-    private String extraInfo;
+    private String appKey;
 
     /**
      * 租户 ID（多租户场景下用于数据隔离）

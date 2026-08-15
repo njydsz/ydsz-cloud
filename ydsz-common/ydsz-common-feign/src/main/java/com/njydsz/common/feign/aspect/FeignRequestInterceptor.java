@@ -18,11 +18,12 @@ import feign.RequestTemplate;
 /**
  * Feign核心请求头透传拦截器
  * 
- * <p>仅透传4个通用核心请求头，保证链路可追溯、租户上下文透传：
- * 1. traceparent：W3C标准链路追踪头
- * 2. X-Tenant-Id：租户上下文标识
- * 3. X-Access-Token：用户访问令牌
- * 4. X-Request-Id：请求唯一标识，用于问题排查
+ * <p>透传13个高频业务常用请求头，覆盖所有业务场景需求：
+ * 【链路追踪】traceparent：W3C标准链路追踪头
+ * 【租户隔离】X-Tenant-Id：租户上下文标识
+ * 【身份鉴权】X-Access-Token：用户访问令牌、X-Service-Type：服务类型标识、X-User-Userid：当前用户ID、X-User-Username：当前用户名、X-Unique-Id：用户登录唯一ID
+ * 【权限校验】X-Data-Scope：数据权限范围类型、X-Company-Ids：公司ID集合、X-Dept-Ids：部门ID集合
+ * 【业务通用】X-User-Locale：用户语言环境（国际化）、X-Request-Source：请求来源标识、X-Request-Id：请求唯一标识（不存在时自动生成）
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -55,9 +56,18 @@ public class FeignRequestInterceptor implements RequestInterceptor {
             requestTemplate.header("traceparent", TracerUtils.getCurrentTraceParent());
         }
 
-        // 透传其他3个核心头
+        // 透传租户/身份/权限相关常用头
         propagateSimpleHeader(requestTemplate, request, headersToPropagate, "X-Tenant-Id");
         propagateSimpleHeader(requestTemplate, request, headersToPropagate, "X-Access-Token");
+        propagateSimpleHeader(requestTemplate, request, headersToPropagate, "X-User-Userid");
+        propagateSimpleHeader(requestTemplate, request, headersToPropagate, "X-User-Username");
+        propagateSimpleHeader(requestTemplate, request, headersToPropagate, "X-User-Locale");
+        propagateSimpleHeader(requestTemplate, request, headersToPropagate, "X-Request-Source");
+        propagateSimpleHeader(requestTemplate, request, headersToPropagate, "X-Company-Ids");
+        propagateSimpleHeader(requestTemplate, request, headersToPropagate, "X-Data-Scope");
+        propagateSimpleHeader(requestTemplate, request, headersToPropagate, "X-Unique-Id");
+        propagateSimpleHeader(requestTemplate, request, headersToPropagate, "X-Dept-Ids");
+        propagateSimpleHeader(requestTemplate, request, headersToPropagate, "X-Service-Type");
 
         // 处理请求ID透传，不存在时自动生成
         if (headersToPropagate.contains("X-Request-Id") && !hasHeader(requestTemplate, "X-Request-Id")) {

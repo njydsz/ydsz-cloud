@@ -6,23 +6,18 @@ import javax.naming.Context;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.auth.model.AuthenticationProvider;
-import com.njydsz.common.util.auth.AuthInfo;
 import com.njydsz.userinfo.server.config.LdapProperties;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * LDAP/ADFS 域账号认证提供者。
+ * LDAP/ADFS 域账号认证服务。
  *
- * <p>实现 common-auth AuthenticationProvider SPI，支持 LDAP/Active Directory 域认证。
+ * <p>提供 LDAP/Active Directory 域认证能力，供 {@code AuthServiceImpl} 直接调用。
  * 配置通过 {@link LdapProperties} 注入。
  *
  * @author ydsz-team
@@ -32,24 +27,9 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 @ConditionalOnProperty(prefix = "ydsz.auth.ldap", name = "enabled", havingValue = "true")
 @RequiredArgsConstructor
-public class LdapAuthenticationProvider implements AuthenticationProvider {
+public class LdapAuthenticationProvider {
 
     private final LdapProperties properties;
-
-    @Override
-    public AuthInfo authenticate(HttpServletRequest request, HttpServletResponse response) {
-        String username = request.getParameter("username");
-        String password = request.getParameter("password");
-        if (username == null || password == null) {
-            return null;
-        }
-        if (!authenticateLdap(username, password)) {
-            return null;
-        }
-        log.info("LDAP authentication success for user: {}", username);
-        // Token 签发由 AuthServiceImpl 统一处理，SPI 方法返回 null
-        return null;
-    }
 
     /**
      * LDAP 认证（JNDI 方式）。

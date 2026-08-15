@@ -23,6 +23,7 @@ import com.njydsz.common.seata.api.TransactionType;
 import com.njydsz.common.seata.audit.TransactionAuditLogger;
 import com.njydsz.common.seata.config.SeataProperties;
 import com.njydsz.common.seata.metrics.SeataMetrics;
+
 /**
  * TCC 事务管理器
  *
@@ -51,7 +52,10 @@ public class TccTransactionManager extends AbstractTransactionManager
 
     private final TccTransactionLogStore logStore;
     private final SeataProperties properties;
-    private final Map<String, TccAction<?>> registeredActions = new ConcurrentHashMap<>();
+    private final ObjectProvider<TccActionRegistry> actionRegistryProvider;
+
+    /** 当前实例的 TCC Action 缓存（同实例快速路径） */
+    private final Map<String, TccAction<?>> localActionCache = new ConcurrentHashMap<>();
 
     /** Confirm/Cancel 异步执行器（可选，为空则使用 ForkJoinPool） */
     private Executor asyncExecutor;
@@ -62,6 +66,7 @@ public class TccTransactionManager extends AbstractTransactionManager
     public TccTransactionManager() {
         this.logStore = null;
         this.properties = null;
+        this.actionRegistryProvider = null;
     }
 
     /**
@@ -73,9 +78,26 @@ public class TccTransactionManager extends AbstractTransactionManager
     public TccTransactionManager(TccTransactionLogStore logStore, SeataProperties properties,
             ObjectProvider<SeataMetrics> metricsProvider,
             ObjectProvider<TransactionAuditLogger> auditProvider) {
+        this(logStore, properties, metricsProvider, auditProvider, null);
+    }
+
+    /**
+     * 带日志存储和注册表模式（推荐用于生产环境）
+     *
+     * @param logStore         事务日志存储
+     * @param properties       配置
+     * @param metricsProvider  指标采集提供者（可选）
+     * @param auditProvider    审计日志提供者（可选）
+     * @param actionRegistryProvider TCC Action 注册表提供者（可选）
+     */
+    public TccTransactionManager(TccTransactionLogStore logStore, SeataProperties properties,
+            ObjectProvider<SeataMetrics> metricsProvider,
+            ObjectProvider<TransactionAuditLogger> auditProvider,
+            ObjectProvider<TccActionRegistry> actionRegistryProvider) {
         super(metricsProvider, auditProvider);
         this.logStore = logStore;
         this.properties = properties;
+        this.actionRegistryProvider = actionRegistryProvider;
     }
 
     /**
@@ -110,7 +132,7 @@ public class TccTransactionManager extends AbstractTransactionManager
     @Override
     public <T> T execute(String transactionName, TransactionType type, Callable<T> action) throws Exception {
         if (type == TransactionType.TCC && action instanceof TccAction) {
-            return executeTcc(transactionName, (TccAction<T>) action);
+            return executeTcc(transactionName, null, (TccAction<T>) action);
         }
         String xid = beginXid(transactionName);
         log.debug("TCC transaction started: name={}, xid={}, type={}", transactionName, xid, type);
@@ -162,18 +184,20 @@ public class TccTransactionManager extends AbstractTransactionManager
      * Try 前进行悬挂检查，Confirm/Cancel 前进行幂等检查。
      *
      * @param transactionName 事务名称
+     * @param actionBeanName  TCC Action 的 Spring Bean 名称（可为 null）
      * @param tccAction       TCC 动作
      * @param <T>             返回值类型
      * @return Try 阶段的返回值
      * @throws Exception 事务异常
      */
-    public <T> T executeTcc(String transactionName, TccAction<T> tccAction) throws Exception {
+    public <T> T executeTcc(String transactionName, String actionBeanName, TccAction<T> tccAction) throws Exception {
         String xid = beginXid(transactionName);
         String branchId = generateBranchId();
         TccContext context = new TccContext(xid, branchId);
-        registeredActions.put(xid, tccAction);
+        cacheAction(xid, tccAction);
 
         TccTransactionLog txLog = new TccTransactionLog(xid, branchId, transactionName);
+        txLog.setActionBeanName(actionBeanName);
         if (logStore != null) {
             logStore.save(txLog);
         }
@@ -214,40 +238,46 @@ public class TccTransactionManager extends AbstractTransactionManager
     }
 
     /**
-     * 异步执行 TCC 事务（P1-3 新增）
-     *
-     * <p>Try 阶段同步执行，完成后立即返回。Confirm 阶段异步执行，
-     * 通过 {@link TccConfirmCallback} 回调通知执行结果。
-     *
-     * <p>适用场景：
-     * <ul>
-     *   <li>Confirm 阶段耗时较长（如调用外部系统）</li>
-     *   <li>希望 Try 完成后立即释放主线程资源</li>
-     *   <li>Confirm 失败可接受异步重试</li>
-     * </ul>
-     *
-     * <p>注意：
-     * <ul>
-     *   <li>异步模式下 Confirm 失败会自动触发 Cancel</li>
-     *   <li>建议注入专用线程池，避免使用 ForkJoinPool.commonPool()</li>
-     *   <li>回调方法中不应执行耗时操作，避免阻塞 Confirm 线程池</li>
-     * </ul>
+     * 执行 TCC 事务（向后兼容，无 Bean 名称版本）
      *
      * @param transactionName 事务名称
      * @param tccAction       TCC 动作
-     * @param callback        Confirm/Cancel 回调（可为 null）
+     * @param <T>             返回值类型
+     * @return Try 阶段的返回值
+     * @throws Exception 事务异常
+     */
+    public <T> T executeTcc(String transactionName, TccAction<T> tccAction) throws Exception {
+        return executeTcc(transactionName, null, tccAction);
+    }
+
+    /**
+     * 异步执行 TCC 事务
+     *
+     * <p>Try 阶段同步执行，完成后立即返回。Confirm 阶段异步执行，
+     * 通过回调通知执行结果。
+     *
+     * <p>回调签名：{@code BiConsumer<TccContext, Throwable>}
+     * - 成功时：{@code callback.accept(context, null)}
+     * - 失败时：{@code callback.accept(context, error)}
+     *
+     * @param transactionName 事务名称
+     * @param actionBeanName  TCC Action 的 Spring Bean 名称（可为 null）
+     * @param tccAction       TCC 动作
+     * @param callback        完成回调（可为 null）
      * @param <T>             返回值类型
      * @return Try 阶段的返回值（CompletableFuture，Try 完成后即可获取）
      */
     public <T> CompletableFuture<T> executeTccAsync(String transactionName,
+                                                      String actionBeanName,
                                                       TccAction<T> tccAction,
-                                                      TccConfirmCallback<T> callback) {
+                                                      BiConsumer<TccContext, Throwable> callback) {
         String xid = beginXid(transactionName);
         String branchId = generateBranchId();
         TccContext context = new TccContext(xid, branchId);
-        registeredActions.put(xid, tccAction);
+        cacheAction(xid, tccAction);
 
         TccTransactionLog txLog = new TccTransactionLog(xid, branchId, transactionName);
+        txLog.setActionBeanName(actionBeanName);
         if (logStore != null) {
             logStore.save(txLog);
         }
@@ -271,16 +301,9 @@ public class TccTransactionManager extends AbstractTransactionManager
             updateStatus(txLog, TccBranchStatus.TRIED);
         } catch (Exception e) {
             log.error("TCC Async Try failed, executing Cancel: name={}, xid={}", transactionName, xid, e);
-            // Try 失败同步执行 Cancel
             executeCancelWithGuard(transactionName, xid, branchId, txLog, tccAction, context);
             endXid();
-            if (callback != null) {
-                try {
-                    callback.onCancelSuccess(context);
-                } catch (Exception ce) {
-                    log.warn("Cancel callback failed", ce);
-                }
-            }
+            notifyCallback(callback, context, e);
             return CompletableFuture.failedFuture(e);
         }
 
@@ -290,56 +313,61 @@ public class TccTransactionManager extends AbstractTransactionManager
         log.info("TCC Async Confirm phase scheduled: name={}, xid={}, branch={}, executor={}",
                 transactionName, xid, branchId, executor.getClass().getSimpleName());
 
-        CompletableFuture<T> future = CompletableFuture.supplyAsync(() -> {
-            try {
-                executeConfirmWithRetry(transactionName, xid, branchId, txLog, tccAction, context);
-                log.info("TCC Async Confirm completed: name={}, xid={}", transactionName, xid);
-                if (callback != null) {
-                    try {
-                        callback.onConfirmSuccess(context, finalResult);
-                    } catch (Exception ce) {
-                        log.warn("Confirm success callback failed", ce);
-                    }
-                }
-                return finalResult;
-            } catch (Exception e) {
-                log.error("TCC Async Confirm failed, executing Cancel: name={}, xid={}", transactionName, xid, e);
-                try {
-                    executeCancelWithRetry(transactionName, xid, branchId, txLog, tccAction, context);
-                    if (callback != null) {
-                        try {
-                            callback.onCancelSuccess(context);
-                        } catch (Exception ce) {
-                            log.warn("Cancel success callback failed", ce);
-                        }
-                    }
-                } catch (Exception cancelEx) {
-                    log.error("TCC Async Cancel also failed: name={}, xid={}", transactionName, xid, cancelEx);
-                    if (callback != null) {
-                        try {
-                            callback.onCancelFailure(context, cancelEx);
-                        } catch (Exception ce) {
-                            log.warn("Cancel failure callback failed", ce);
-                        }
-                    }
-                }
-                if (callback != null) {
-                    try {
-                        callback.onConfirmFailure(context, e);
-                    } catch (Exception ce) {
-                        log.warn("Confirm failure callback failed", ce);
-                    }
-                }
-                throw new RuntimeException("TCC Async Confirm failed: " + transactionName, e);
-            } finally {
-                registeredActions.remove(xid);
-                endXid();
-            }
-        }, executor);
+        CompletableFuture<T> future = CompletableFuture.supplyAsync(() ->
+                doAsyncConfirm(transactionName, xid, branchId, txLog, tccAction, context, finalResult),
+                executor);
 
         // Try 完成后立即返回，不等待 Confirm
         endXid();
-        return future;
+        return future.whenComplete((r, ex) -> notifyCallback(callback, context, ex));
+    }
+
+    /**
+     * 异步执行 TCC 事务（向后兼容，无 Bean 名称版本）
+     */
+    public <T> CompletableFuture<T> executeTccAsync(String transactionName,
+                                                      TccAction<T> tccAction,
+                                                      BiConsumer<TccContext, Throwable> callback) {
+        return executeTccAsync(transactionName, null, tccAction, callback);
+    }
+
+    /**
+     * 异步 Confirm 执行逻辑（提取为独立方法降低嵌套层级）
+     */
+    private <T> T doAsyncConfirm(String transactionName, String xid, String branchId,
+                                  TccTransactionLog txLog, TccAction<T> tccAction,
+                                  TccContext context, T result) {
+        try {
+            executeConfirmWithRetry(transactionName, xid, branchId, txLog, tccAction, context);
+            log.info("TCC Async Confirm completed: name={}, xid={}", transactionName, xid);
+            return result;
+        } catch (Exception e) {
+            log.error("TCC Async Confirm failed, executing Cancel: name={}, xid={}", transactionName, xid, e);
+            try {
+                executeCancelWithRetry(transactionName, xid, branchId, txLog, tccAction, context);
+            } catch (Exception cancelEx) {
+                log.error("TCC Async Cancel also failed: name={}, xid={}", transactionName, xid, cancelEx);
+                throw new RuntimeException("TCC Async Confirm failed: " + transactionName, cancelEx);
+            }
+            throw new RuntimeException("TCC Async Confirm failed: " + transactionName, e);
+        } finally {
+            localActionCache.remove(xid);
+            endXid();
+        }
+    }
+
+    /**
+     * 通知回调（安全包装，避免回调异常影响主流程）
+     */
+    private <T> void notifyCallback(BiConsumer<TccContext, Throwable> callback, TccContext context, Throwable error) {
+        if (callback == null) {
+            return;
+        }
+        try {
+            callback.accept(context, error);
+        } catch (Exception ce) {
+            log.warn("TCC callback execution failed", ce);
+        }
     }
 
     // ============= P0-4: 三大问题检查 =============
@@ -365,7 +393,7 @@ public class TccTransactionManager extends AbstractTransactionManager
             Optional<TccTransactionLog> existing = logStore.findByXidAndBranchId(xid, branchId);
             if (existing.isPresent()) {
                 TccBranchStatus currentStatus = existing.get().getStatus();
-                if (currentStatus.isFinal()) {  // idempotent check
+                if (currentStatus.isFinal()) {
                     log.info("TCC Cancel skipped (idempotent): already final: xid={}, branch={}, status={}",
                             xid, branchId, currentStatus);
                     return;
@@ -477,10 +505,13 @@ public class TccTransactionManager extends AbstractTransactionManager
         throw lastException;
     }
 
-    // ============= 恢复回调（P0-11） =============
+    // ============= 恢复回调 =============
 
     /**
      * 恢复时执行 Cancel（由恢复扫描器回调）
+     *
+     * <p>优先从本地缓存查找 Action，未命中时通过注册表查找。
+     * 注册表查找支持跨实例恢复。
      *
      * @param txLog 超时事务日志
      * @throws Exception Cancel 执行异常
@@ -488,7 +519,8 @@ public class TccTransactionManager extends AbstractTransactionManager
     @Override
     public void recoverCancel(TccTransactionLog txLog) throws Exception {
         log.info("TCC recovery Cancel: xid={}, branch={}", txLog.getXid(), txLog.getBranchId());
-        TccAction<?> action = registeredActions.get(txLog.getXid());
+
+        TccAction<?> action = resolveAction(txLog);
         if (action != null) {
             try {
                 action.cancelAction(new TccContext(txLog.getXid(), txLog.getBranchId()));
@@ -497,14 +529,41 @@ public class TccTransactionManager extends AbstractTransactionManager
                 log.error("TCC recovery Cancel failed: xid={}", txLog.getXid(), e);
             }
         } else {
-            log.warn("TCC recovery Cancel skipped: no TccAction registered for xid={}", txLog.getXid());
+            log.warn("TCC recovery Cancel skipped: no TccAction found for xid={}, beanName={}",
+                    txLog.getXid(), txLog.getActionBeanName());
         }
         if (logStore != null) {
             logStore.updateStatus(txLog.getXid(), txLog.getBranchId(), TccBranchStatus.CANCELLED);
         }
     }
 
+    /**
+     * 解析 TCC Action：优先本地缓存，其次注册表
+     */
+    @SuppressWarnings("unchecked")
+    private <T> TccAction<T> resolveAction(TccTransactionLog txLog) {
+        // 1. 本地缓存（同实例快速路径）
+        TccAction<T> action = (TccAction<T>) localActionCache.get(txLog.getXid());
+        if (action != null) {
+            return action;
+        }
+        // 2. 注册表（跨实例恢复）
+        if (actionRegistryProvider != null && txLog.getActionBeanName() != null) {
+            TccActionRegistry registry = actionRegistryProvider.getIfAvailable();
+            if (registry != null) {
+                return registry.findByName(txLog.getActionBeanName());
+            }
+        }
+        return null;
+    }
+
     // ============= 辅助方法 =============
+
+    private void cacheAction(String xid, TccAction<?> action) {
+        if (action != null) {
+            localActionCache.put(xid, action);
+        }
+    }
 
     private void updateStatus(TccTransactionLog txLog, TccBranchStatus status) {
         if (logStore != null) {

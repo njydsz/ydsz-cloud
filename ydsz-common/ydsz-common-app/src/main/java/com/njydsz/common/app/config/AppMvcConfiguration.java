@@ -1,6 +1,5 @@
 package com.njydsz.common.app.config;
 
-import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -28,7 +27,6 @@ import com.njydsz.common.auth.config.AuthFilterConfiguration;
 import com.njydsz.common.auth.handler.AuthHandler;
 import com.njydsz.common.auth.handler.AbstractAuthHandler;
 import com.njydsz.common.auth.metrics.AuthMetrics;
-import com.njydsz.common.auth.model.AuthenticationProvider;
 import com.njydsz.common.base.config.BaseAutoConfiguration;
 import com.njydsz.common.base.config.BaseMvcConfiguration;
 import com.njydsz.common.base.constant.BaseFilterOrders;
@@ -146,7 +144,6 @@ public class AppMvcConfiguration extends BaseMvcConfiguration {
      *
      * @param appAuthHandler             App 端认证处理器
      * @param authFilterConfiguration    通用鉴权过滤器配置
-     * @param authenticationProvider     自定义认证提供者（可为空）
      * @param appMetricsProvider         App 指标采集器（可选依赖）
      * @param applicationContext         Spring 应用上下文
      * @return AppAuthFilter 实例
@@ -155,13 +152,12 @@ public class AppMvcConfiguration extends BaseMvcConfiguration {
     @ConditionalOnMissingBean(name = "appAuthFilter")
     public AppAuthFilter appAuthFilter(AuthHandler appAuthHandler,
                                         AuthFilterConfiguration authFilterConfiguration,
-                                        @Nullable AuthenticationProvider authenticationProvider,
                                         ObjectProvider<AppMetrics> appMetricsProvider,
                                         ApplicationContext applicationContext) {
         String applicationName = applicationContext.getApplicationName();
         AppMetrics appMetrics = appMetricsProvider.getIfAvailable();
         return new AppAuthFilter(applicationName, authFilterConfiguration, appAuthHandler,
-                authenticationProvider, appMetrics);
+                appMetrics);
     }
 
     /**

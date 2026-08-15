@@ -23,7 +23,7 @@
 | `ConfigChangeBridge` | 配置变更桥接器，实现 `ApplicationListener<ApplicationEvent>`，监听 Spring Cloud 的 `RefreshEvent`（刷新前快照）与 `EnvironmentChangeEvent`（刷新后 diff），自动计算属性变更并分发 |
 | `ConfigChangeEvent` | 配置变更 Spring 事件，携带 `List<ConfigChange>` 变更记录，业务模块可通过 `@EventListener` 监听 |
 | `ConfigChangeEvent.ConfigChange` | 单个属性变更记录（record 类型，含 `key`/`oldValue`/`newValue`） |
-| `ConfigChangeListener` | 配置变更监听器接口（`@FunctionalInterface`），定义 `onChange(key, oldValue, newValue)` 与默认批量方法 `onBatchChange(changes)` |
+| `ConfigChangeListener` | 配置变更监听器接口（`@FunctionalInterface`），定义 `onChange(key, oldValue, newValue)` |
 | `ConfigProperties.ChangeMonitor` | 变更监听配置属性 |
 
 工作原理：
@@ -39,7 +39,8 @@ EnvironmentChangeEvent ──► ConfigChangeBridge 反射调用 getKeys() 提�
     │
     ├── 与快照对比计算 oldValue / newValue（跳过未实际变更的属性）
     ├── 发布 ConfigChangeEvent（Spring 事件）
-    └── 通知所有 ConfigChangeListener（批量回调，单监听器异常不影响其他）
+    ├── 记录审计日志（含节点 IP、变更数量）
+    └── 通知所有 ConfigChangeListener（逐个回调 onChange，单监听器异常不影响其他）
 ```
 
 条件激活：仅在 classpath 存在 `org.springframework.cloud.context.environment.EnvironmentChangeEvent`（即引入 `spring-cloud-context`）时生效，由 `@ConditionalOnClass` 控制。
@@ -55,7 +56,7 @@ EnvironmentChangeEvent ──► ConfigChangeBridge 反射调用 getKeys() 提�
 
 - 主密码来源识别：`ENV_VARIABLE`（`JASYPT_ENCRYPTOR_PASSWORD` 环境变量）/ `CONFIG_PROPERTY`（`jasypt.encryptor.password` 属性）/ `NOT_CONFIGURED`
 - 扫描所有 `EnumerablePropertySource`，统计 `ENC()` 格式属性数量
-- 属性名脱敏：仅显示最后一段（如 `spring.datasource.password` → `***.password`），最多展示 20 个
+- 属性名展示：最多展示 20 个加密属性名，超出时显示省略提示
 
 条件激活：仅在 classpath 存在 `org.springframework.boot.health.contributor.HealthIndicator`（即引入 `spring-boot-health`）时生效。
 
@@ -164,11 +165,12 @@ jasypt:
 |---|---|---|
 | `ydsz.config.change-monitor.enabled` | true | 是否启用配置变更监听桥接 |
 | `ydsz.config.change-monitor.snapshot-old-values` | true | 是否在变更通知前快照旧值（false 时 `oldValue` 为 null，减少内存开销） |
-| `ydsz.config.cli.enabled` | true | 是否启用 CLI 工具 Bean |
+| `ydsz.config.cli.enabled` | true | 保留字段（CLI 工具通过 main 方法独立运行） |
 | `ydsz.config.cli.algorithm` | `PBEWithHMACSHA512AndAES_256` | 加密算法（与 Jasypt 对齐） |
 | `ydsz.config.cli.key-obtention-iterations` | 1000 | 密钥派生迭代次数 |
 | `ydsz.config.cli.pool-size` | 4 | 加密器池大小 |
 | `ydsz.config.health.enabled` | true | 是否启用加密健康检查 |
+| `ydsz.config.health.cache-ttl-ms` | 5000 | 健康检查缓存 TTL（毫秒），设为 0 禁用缓存 |
 
 > 加密相关配置（`jasypt.encryptor.password` / `jasypt.encryptor.algorithm`）使用 Jasypt 原生属性，不在 `ydsz.config` 前缀下。
 
@@ -195,33 +197,7 @@ public class MyConfigListener implements ConfigChangeListener {
 }
 ```
 
-### 2. 批量处理配置变更（覆写 onBatchChange）
-
-```java
-import com.njydsz.common.config.hotreload.ConfigChangeEvent;
-import com.njydsz.common.config.hotreload.ConfigChangeListener;
-import org.springframework.stereotype.Component;
-
-@Component
-public class BatchConfigListener implements ConfigChangeListener {
-
-    @Override
-    public void onChange(String key, String oldValue, String newValue) {
-        // 默认实现逐个调用，覆写 onBatchChange 后此方法不再被调用
-    }
-
-    @Override
-    public void onBatchChange(java.util.List<ConfigChangeEvent.ConfigChange> changes) {
-        // 整体重新初始化，避免逐个回调的额外开销
-        log.info("批量配置变更，共 {} 项", changes.size());
-        for (ConfigChangeEvent.ConfigChange c : changes) {
-            log.info("  {} | {} -> {}", c.key(), c.oldValue(), c.newValue());
-        }
-    }
-}
-```
-
-### 3. 通过 @EventListener 监听 ConfigChangeEvent
+### 2. 通过 @EventListener 监听 ConfigChangeEvent（替代批量处理）
 
 ```java
 import com.njydsz.common.config.hotreload.ConfigChangeEvent;
@@ -233,13 +209,15 @@ public class ConfigEventLogger {
 
     @EventListener
     public void onConfigChange(ConfigChangeEvent event) {
+        // 批量处理所有变更
+        log.info("批量配置变更，共 {} 项", event.getChanges().size());
         event.getChanges().forEach(c ->
-            log.info("配置变更: {} | {} -> {}", c.key(), c.oldValue(), c.newValue()));
+            log.info("  {} | {} -> {}", c.key(), c.oldValue(), c.newValue()));
     }
 }
 ```
 
-### 4. 手动注册监听器
+### 3. 手动注册监听器
 
 ```java
 import com.njydsz.common.config.hotreload.ConfigChangeBridge;
@@ -260,7 +238,7 @@ public class DynamicListenerService {
 }
 ```
 
-### 5. CLI 加密 / 解密
+### 4. CLI 加密 / 解密
 
 ```bash
 # 加密（主密码作为第 3 参数）
@@ -284,7 +262,7 @@ java -cp ydsz-common-config.jar \
   encrypt "my-db-password"
 ```
 
-### 6. JSON 配置合并
+### 5. JSON 配置合并
 
 ```java
 import com.njydsz.common.config.hotreload.ConfigMergeUtils;
@@ -308,7 +286,7 @@ public class ConfigMergeExample {
 }
 ```
 
-### 7. 配置示例
+### 6. 配置示例
 
 ```yaml
 ydsz:

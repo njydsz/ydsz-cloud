@@ -214,17 +214,18 @@ public class OutboxProcessor {
     /**
      * 停止 Outbox 轮询处理器
      *
-     * <p>优雅关闭调度线程和投递线程池，等待最多 10 秒。
+     * <p>优雅关闭调度线程和投递线程池，等待最多 {@code awaitTerminationSeconds} 秒。
      */
     public void stop() {
         running = false;
         scheduler.shutdown();
         publishExecutor.shutdown();
         try {
-            if (!scheduler.awaitTermination(10, TimeUnit.SECONDS)) {
+            int timeout = properties.getAwaitTerminationSeconds();
+            if (!scheduler.awaitTermination(timeout, TimeUnit.SECONDS)) {
                 scheduler.shutdownNow();
             }
-            if (!publishExecutor.awaitTermination(10, TimeUnit.SECONDS)) {
+            if (!publishExecutor.awaitTermination(timeout, TimeUnit.SECONDS)) {
                 publishExecutor.shutdownNow();
             }
         } catch (InterruptedException e) {

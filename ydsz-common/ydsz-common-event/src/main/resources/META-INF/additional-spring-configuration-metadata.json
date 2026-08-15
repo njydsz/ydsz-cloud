@@ -67,52 +67,10 @@
       "defaultValue": 4194304
     },
     {
-      "name": "ydsz.event.outbox.default-priority",
-      "type": "java.lang.Integer",
-      "description": "默认优先级（0-9，9 最高）。",
-      "defaultValue": 5
-    },
-    {
-      "name": "ydsz.event.outbox.default-schema-version",
-      "type": "java.lang.String",
-      "description": "默认 Schema 版本号。",
-      "defaultValue": "v1.0.0"
-    },
-    {
       "name": "ydsz.event.outbox.stale-processing-threshold-minutes",
       "type": "java.lang.Integer",
       "description": "PROCESSING 状态超时阈值（分钟），超时后回收为 PENDING。",
       "defaultValue": 5
-    },
-    {
-      "name": "ydsz.event.outbox.pending-alert-threshold",
-      "type": "java.lang.Long",
-      "description": "PENDING 积压告警阈值。",
-      "defaultValue": 10000
-    },
-    {
-      "name": "ydsz.event.outbox.dead-letter-alert-threshold",
-      "type": "java.lang.Long",
-      "description": "DEAD_LETTER 告警阈值。",
-      "defaultValue": 10
-    },
-    {
-      "name": "ydsz.event.outbox.enable-tenant-isolation",
-      "type": "java.lang.Boolean",
-      "description": "是否启用租户隔离。",
-      "defaultValue": true
-    },
-    {
-      "name": "ydsz.event.outbox.enable-sync-publish",
-      "type": "java.lang.Boolean",
-      "description": "是否启用同步投递模式（事务提交后立即投递）。",
-      "defaultValue": false
-    },
-    {
-      "name": "ydsz.event.outbox.auto-dedup",
-      "type": "java.lang.Boolean",
-      "description": "是否自动生成幂等去重 ID（基于内容 SHA-256 哈希，默认关闭）。",
-      "defaultValue": false
     },
     {
       "name": "ydsz.event.outbox.worker-threads",
@@ -121,10 +79,22 @@
       "defaultValue": 1
     },
     {
+      "name": "ydsz.event.outbox.await-termination-seconds",
+      "type": "java.lang.Integer",
+      "description": "优雅关闭等待超时（秒）。",
+      "defaultValue": 10
+    },
+    {
       "name": "ydsz.event.outbox.fail-on-noop",
       "type": "java.lang.Boolean",
       "description": "检测到 NoopEventPublishGateway 时是否启动失败（生产环境应设为 true）。",
       "defaultValue": true
+    },
+    {
+      "name": "ydsz.event.outbox.status-count-cache-seconds",
+      "type": "java.lang.Integer",
+      "description": "队列深度统计缓存时间（秒）。",
+      "defaultValue": 5
     }
   ]
 }

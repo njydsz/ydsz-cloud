@@ -77,6 +77,9 @@ public class EventProperties {
     /** 投递工作线程数（1=单线程，>1=多线程并行投递） */
     private int workerThreads = 1;
 
+    /** 优雅关闭等待超时（秒） */
+    private int awaitTerminationSeconds = 10;
+
     /** 检测到 NoopEventPublishGateway 时是否启动失败（生产环境应设为 true） */
     private boolean failOnNoop = true;
 

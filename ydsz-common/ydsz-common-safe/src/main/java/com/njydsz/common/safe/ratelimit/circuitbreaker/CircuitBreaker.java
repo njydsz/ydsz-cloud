@@ -3,12 +3,11 @@ package com.njydsz.common.safe.ratelimit.circuitbreaker;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 import com.njydsz.common.safe.ratelimit.enums.RateLimitResult;
 import com.njydsz.common.safe.ratelimit.model.RateLimitDecision;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,7 +15,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 熔断器（Resilience4j 风格）
+ * 熔断器（基于 Resilience4j 实现）
  *
  * <p><b>三态机：</b>
  * <ul>
@@ -34,6 +33,9 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>开启后等待时间（waitDurationInOpenState，默认 10s）</li>
  * </ul>
  *
+ * <p>底层委托给 {@link io.github.resilience4j.circuitbreaker.CircuitBreaker}，
+ * 提供更成熟的滑动窗口统计、状态事件、Micrometer 指标等能力。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -41,12 +43,17 @@ import lombok.extern.slf4j.Slf4j;
 public class CircuitBreaker {
 
     /** 资源 → 熔断器实例 */
-    private final ConcurrentHashMap<String, CircuitBreakerInstance> breakers = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, io.github.resilience4j.circuitbreaker.CircuitBreaker> breakers =
+            new ConcurrentHashMap<>();
 
     private final CircuitBreakerConfig config;
+    private final CircuitBreakerRegistry registry;
 
     public CircuitBreaker(CircuitBreakerConfig config) {
         this.config = config;
+        io.github.resilience4j.circuitbreaker.CircuitBreakerConfig resilience4jConfig =
+                config.toResilience4jConfig();
+        this.registry = CircuitBreakerRegistry.of(resilience4jConfig);
     }
 
     public CircuitBreaker() {
@@ -55,19 +62,15 @@ public class CircuitBreaker {
 
     /**
      * 尝试执行（同步）
+     *
+     * @param resource 资源标识
+     * @param callback 受保护的调用回调
+     * @return 限流决策（含执行结果或拒绝原因）
      */
     public <T> RateLimitDecision tryAcquire(String resource, CircuitBreakerCallback<T> callback) {
-        CircuitBreakerInstance instance = breakers.computeIfAbsent(resource,
-                k -> new CircuitBreakerInstance(config));
-        State state = instance.getState();
-        if (state == State.OPEN) {
-            return blockedDecision(resource, "circuit breaker open");
-        }
-        long start = System.nanoTime();
+        io.github.resilience4j.circuitbreaker.CircuitBreaker cb = getOrCreate(resource);
         try {
-            T result = callback.call();
-            long durationNs = System.nanoTime() - start;
-            instance.recordSuccess(durationNs, config);
+            T result = cb.executeSupplier(callback::call);
             return RateLimitDecision.builder()
                     .resource(resource)
                     .result(RateLimitResult.PASS)
@@ -77,8 +80,6 @@ public class CircuitBreaker {
                     .reason("circuit breaker pass")
                     .build();
         } catch (Exception ex) {
-            long durationNs = System.nanoTime() - start;
-            instance.recordFailure(durationNs, config, ex);
             return blockedDecision(resource, "circuit breaker failure: " + ex.getMessage());
         }
     }
@@ -96,28 +97,58 @@ public class CircuitBreaker {
 
     /**
      * 强制开启
+     *
+     * @param resource 资源标识
      */
     public void forceOpen(String resource) {
-        CircuitBreakerInstance instance = breakers.computeIfAbsent(resource,
-                k -> new CircuitBreakerInstance(config));
-        instance.forceOpen();
+        io.github.resilience4j.circuitbreaker.CircuitBreaker cb = getOrCreate(resource);
+        cb.transitionToForcedOpenState();
     }
 
     /**
      * 强制关闭
+     *
+     * @param resource 资源标识
      */
     public void forceClose(String resource) {
-        CircuitBreakerInstance instance = breakers.computeIfAbsent(resource,
-                k -> new CircuitBreakerInstance(config));
-        instance.forceClose();
+        io.github.resilience4j.circuitbreaker.CircuitBreaker cb = getOrCreate(resource);
+        cb.reset();
     }
 
     /**
      * 获取当前状态
+     *
+     * @param resource 资源标识
+     * @return 熔断器状态（未创建时返回 CLOSED）
      */
     public State getState(String resource) {
-        CircuitBreakerInstance instance = breakers.get(resource);
-        return instance == null ? State.CLOSED : instance.getState();
+        io.github.resilience4j.circuitbreaker.CircuitBreaker cb = breakers.get(resource);
+        if (cb == null) {
+            return State.CLOSED;
+        }
+        return switch (cb.getState()) {
+            case CLOSED -> State.CLOSED;
+            case OPEN -> State.OPEN;
+            case HALF_OPEN -> State.HALF_OPEN;
+            case DISABLED, METRICS_ONLY, FORCED_OPEN -> State.OPEN;
+        };
+    }
+
+    /**
+     * 获取或创建指定资源的熔断器实例
+     */
+    private io.github.resilience4j.circuitbreaker.CircuitBreaker getOrCreate(String resource) {
+        return breakers.computeIfAbsent(resource, registry::circuitBreaker);
+    }
+
+    /**
+     * 获取 Resilience4j 原生熔断器（供高级场景使用）
+     *
+     * @param resource 资源标识
+     * @return Resilience4j 熔断器实例；未创建时返回 null
+     */
+    public io.github.resilience4j.circuitbreaker.CircuitBreaker getResilience4jCircuitBreaker(String resource) {
+        return breakers.get(resource);
     }
 
     /**
@@ -129,7 +160,7 @@ public class CircuitBreaker {
     public enum State {
         /** 关闭态：正常调用，统计失败率。 */
         CLOSED,
-        /** 开启态：直接拒绝调用，等待 {@link CircuitBreakerConfig#getWaitDurationInOpenState()} 后进入半开。 */
+        /** 开启态：直接拒绝调用，等待配置时长后进入半开。 */
         OPEN,
         /** 半开态：放行少量探测请求，用于试探下游是否已恢复。 */
         HALF_OPEN
@@ -155,7 +186,7 @@ public class CircuitBreaker {
     }
 
     /**
-     * 熔断器配置
+     * 熔断器配置（与 Resilience4j CircuitBreakerConfig 映射）。
      */
     @Data
     @Builder
@@ -198,6 +229,26 @@ public class CircuitBreaker {
         public static CircuitBreakerConfig defaults() {
             return new CircuitBreakerConfig();
         }
+
+        /**
+         * 转换为 Resilience4j CircuitBreakerConfig
+         */
+        io.github.resilience4j.circuitbreaker.CircuitBreakerConfig toResilience4jConfig() {
+            CircuitBreakerConfig.SlidingWindowType swType = this.slidingWindowType;
+            return io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom()
+                    .failureRateThreshold((float) (this.failureRateThreshold * 100))
+                    .slowCallRateThreshold((float) (this.slowCallRateThreshold * 100))
+                    .slowCallDurationThreshold(Duration.ofMillis(this.slowCallDurationThresholdMillis))
+                    .minimumNumberOfCalls(this.minimumNumberOfCalls)
+                    .waitDurationInOpenState(this.waitDurationInOpenState)
+                    .permittedNumberOfCallsInHalfOpenState(this.permittedNumberOfCallsInHalfOpenState)
+                    .slidingWindowSize(this.slidingWindowSize)
+                    .slidingWindowType(SlidingWindowType.COUNT_BASED.equals(swType)
+                            ? io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType.COUNT_BASED
+                            : io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType.TIME_BASED)
+                    .recordException(recordException -> true)
+                    .build();
+        }
     }
 
     /**
@@ -211,103 +262,5 @@ public class CircuitBreaker {
         TIME_BASED,
         /** 基于调用次数的滑动窗口。 */
         COUNT_BASED
-    }
-
-    /**
-     * 单资源熔断器实例
-     */
-    private static class CircuitBreakerInstance {
-        private final CircuitBreakerConfig config;
-        private volatile State state = State.CLOSED;
-        private volatile Instant openedAt;
-        private final AtomicInteger successCount = new AtomicInteger(0);
-        private final AtomicInteger failureCount = new AtomicInteger(0);
-        private final AtomicInteger slowCallCount = new AtomicInteger(0);
-        private final AtomicInteger totalCount = new AtomicInteger(0);
-        private final AtomicLong totalDurationNanos = new AtomicLong(0);
-        private final AtomicInteger halfOpenPermits = new AtomicInteger(0);
-
-        CircuitBreakerInstance(CircuitBreakerConfig config) {
-            this.config = config;
-        }
-
-        State getState() {
-            if (state == State.OPEN && openedAt != null) {
-                if (Instant.now().isAfter(openedAt.plus(config.getWaitDurationInOpenState()))) {
-                    // 自动转换到 HALF_OPEN
-                    state = State.HALF_OPEN;
-                    halfOpenPermits.set(config.getPermittedNumberOfCallsInHalfOpenState());
-                }
-            }
-            return state;
-        }
-
-        synchronized void recordSuccess(long durationNanos, CircuitBreakerConfig config) {
-            totalCount.incrementAndGet();
-            totalDurationNanos.addAndGet(durationNanos);
-            if (durationNanos > config.getSlowCallDurationThresholdMillis() * 1_000_000L) {
-                slowCallCount.incrementAndGet();
-            } else {
-                successCount.incrementAndGet();
-            }
-            if (state == State.HALF_OPEN) {
-                int permits = halfOpenPermits.decrementAndGet();
-                if (permits <= 0) {
-                    // 探测成功，关闭熔断器
-                    state = State.CLOSED;
-                    reset();
-                }
-            }
-            checkThresholds();
-        }
-
-        synchronized void recordFailure(long durationNanos, CircuitBreakerConfig config, Throwable ex) {
-            totalCount.incrementAndGet();
-            totalDurationNanos.addAndGet(durationNanos);
-            failureCount.incrementAndGet();
-            if (state == State.HALF_OPEN) {
-                // 探测失败，重新打开
-                state = State.OPEN;
-                openedAt = Instant.now();
-                return;
-            }
-            checkThresholds();
-        }
-
-        private void checkThresholds() {
-            int total = totalCount.get();
-            if (total < config.getMinimumNumberOfCalls()) {
-                return;
-            }
-            double failureRate = (double) failureCount.get() / total;
-            double slowCallRate = (double) slowCallCount.get() / total;
-            if (failureRate >= config.getFailureRateThreshold()
-                    || slowCallRate >= config.getSlowCallRateThreshold()) {
-                if (state != State.OPEN) {
-                    log.info("Circuit breaker open: failureRate={}, slowCallRate={}", failureRate, slowCallRate);
-                    state = State.OPEN;
-                    openedAt = Instant.now();
-                }
-            }
-        }
-
-        void forceOpen() {
-            state = State.OPEN;
-            openedAt = Instant.now();
-        }
-
-        void forceClose() {
-            state = State.CLOSED;
-            openedAt = null;
-            reset();
-        }
-
-        private void reset() {
-            successCount.set(0);
-            failureCount.set(0);
-            slowCallCount.set(0);
-            totalCount.set(0);
-            totalDurationNanos.set(0);
-        }
     }
 }

@@ -67,7 +67,10 @@
             <artifactId>spring-webmvc</artifactId>
             <scope>provided</scope>
         </dependency>
-        <!-- spring-security-crypto（PasswordPolicy 使用 BCryptPasswordEncoder） -->
+        <!--
+            spring-security-crypto（PasswordPolicy 使用 BCryptPasswordEncoder）
+            注意：密码策略属于业务层职责，计划于 4.0.0 移除此依赖。
+        -->
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-crypto</artifactId>
@@ -86,7 +89,10 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- TransmittableThreadLocal for thread context propagation -->
+        <!--
+            TransmittableThreadLocal for thread context propagation
+            注意：若 RequestContext 已内置此能力，计划于 4.0.0 移除此依赖。
+        -->
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>transmittable-thread-local</artifactId>
@@ -127,7 +133,11 @@
             <artifactId>micrometer-core</artifactId>
             <optional>true</optional>
         </dependency>
-        <!-- Guava（GuavaTokenBlacklistBloomFilter 使用 BloomFilter + Funnels） -->
+        <!--
+            Guava（GuavaTokenBlacklistBloomFilter 使用 BloomFilter + Funnels）
+            注意：仅被已废弃的 GuavaTokenBlacklistBloomFilter 使用，计划 4.0.0 随该移除此依赖。
+            请勿在新代码中引入 Guava 依赖。
+        -->
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>

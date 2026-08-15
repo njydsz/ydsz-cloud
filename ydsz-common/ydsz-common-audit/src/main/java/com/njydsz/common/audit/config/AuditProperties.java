@@ -17,6 +17,7 @@ import org.springframework.validation.annotation.Validated;
  * ydsz:
  *   audit:
  *     enabled: true
+ *     app-key: my-app
  *     storage-type: LOCAL
  *     record-request: true
  *     record-response: false
@@ -43,19 +44,9 @@ public class AuditProperties {
     private boolean enabled = true;
 
     /**
-     * 应用 ID（多应用场景区分审计数据归属）
+     * 应用标识（多应用场景区分审计数据归属，合并原 appId/appCode/appName）
      */
-    private String appId;
-
-    /**
-     * 应用编码
-     */
-    private String appCode;
-
-    /**
-     * 应用名称
-     */
-    private String appName;
+    private String appKey;
 
     /**
      * 存储策略类型（默认 LOCAL）
@@ -87,21 +78,6 @@ public class AuditProperties {
             "token", "accessToken", "refreshToken", "authorization",
             "secret", "apiKey", "privateKey"
     };
-
-    /**
-     * 是否启用 IP 归属地解析（默认禁用，需要外部 IP 库支持）
-     */
-    private boolean ipLocationEnabled = false;
-
-    /**
-     * 是否启用 User-Agent 解析（默认禁用，UA 字段较长）
-     */
-    private boolean userAgentEnabled = false;
-
-    /**
-     * 批量刷新间隔（毫秒，默认 3000ms）
-     */
-    private long batchFlushInterval = 3000;
 
     /**
      * 是否启用敏感字段脱敏（默认启用）
@@ -139,28 +115,12 @@ public class AuditProperties {
         this.enabled = enabled;
     }
 
-    public String getAppId() {
-        return appId;
+    public String getAppKey() {
+        return appKey;
     }
 
-    public void setAppId(String appId) {
-        this.appId = appId;
-    }
-
-    public String getAppCode() {
-        return appCode;
-    }
-
-    public void setAppCode(String appCode) {
-        this.appCode = appCode;
-    }
-
-    public String getAppName() {
-        return appName;
-    }
-
-    public void setAppName(String appName) {
-        this.appName = appName;
+    public void setAppKey(String appKey) {
+        this.appKey = appKey;
     }
 
     public String getStorageType() {
@@ -201,30 +161,6 @@ public class AuditProperties {
 
     public void setSensitiveParams(String[] sensitiveParams) {
         this.sensitiveParams = sensitiveParams;
-    }
-
-    public boolean isIpLocationEnabled() {
-        return ipLocationEnabled;
-    }
-
-    public void setIpLocationEnabled(boolean ipLocationEnabled) {
-        this.ipLocationEnabled = ipLocationEnabled;
-    }
-
-    public boolean isUserAgentEnabled() {
-        return userAgentEnabled;
-    }
-
-    public void setUserAgentEnabled(boolean userAgentEnabled) {
-        this.userAgentEnabled = userAgentEnabled;
-    }
-
-    public long getBatchFlushInterval() {
-        return batchFlushInterval;
-    }
-
-    public void setBatchFlushInterval(long batchFlushInterval) {
-        this.batchFlushInterval = batchFlushInterval;
     }
 
     public boolean isMaskEnabled() {

@@ -1,6 +1,5 @@
 package com.njydsz.common.web.config;
 
-import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -16,7 +15,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 
 import com.njydsz.common.auth.config.AuthFilterConfiguration;
-import com.njydsz.common.auth.model.AuthenticationProvider;
 import com.njydsz.common.base.config.BaseAutoConfiguration;
 import com.njydsz.common.base.config.BaseMvcConfiguration;
 import com.njydsz.common.base.constant.BaseFilterOrders;
@@ -56,8 +54,6 @@ import nl.basjes.parse.useragent.UserAgentAnalyzer;
 public class WebMvcConfiguration extends BaseMvcConfiguration {
 
     private final BaseHttpInterceptor baseHttpInterceptor;
-    @Nullable
-    private final AuthenticationProvider authenticationProvider;
     private final AuthFilterConfiguration authFilterConfiguration;
     private final AuthHandlerFactory authHandlerFactory;
     private final WebTraceProperties webTraceProperties;
@@ -74,7 +70,6 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
                                WebTraceProperties webTraceProperties,
                                WebContentCacheProperties contentCacheProperties,
                                RequestLogInterceptor requestLogInterceptor,
-                               @Nullable AuthenticationProvider authenticationProvider,
                                ApplicationContext applicationContext) {
         super(webCorsProperties);
         this.webCorsProperties = webCorsProperties;
@@ -84,7 +79,6 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
         this.webTraceProperties = webTraceProperties;
         this.contentCacheProperties = contentCacheProperties;
         this.requestLogInterceptor = requestLogInterceptor;
-        this.authenticationProvider = authenticationProvider;
         this.applicationName = applicationContext.getApplicationName();
     }
 
@@ -162,7 +156,6 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
                 applicationName,
                 authFilterConfiguration,
                 authHandlerFactory,
-                authenticationProvider,
                 webMetricsProvider.getIfAvailable()
         );
         FilterRegistrationBean<WebAuthFilter> authFilterBean = new FilterRegistrationBean<>(authFilter);

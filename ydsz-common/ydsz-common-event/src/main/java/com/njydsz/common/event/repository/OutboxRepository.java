@@ -1,15 +1,11 @@
 package com.njydsz.common.event.repository;
 
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,9 +18,6 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.event.model.OutboxStatus;
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.exception.JsonException;
-import com.njydsz.common.json.type.JsonType;
 
 /**
  * Outbox 消息 JDBC 仓储
@@ -37,14 +30,12 @@ import com.njydsz.common.json.type.JsonType;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @since 1.7.0 精简字段：移除 headers/schemaVersion/contentType/priority 四个未验证字段的读写
  */
 public class OutboxRepository {
 
     /** 日志实例 */
     private static final Logger log = LoggerFactory.getLogger(OutboxRepository.class);
-
-    /** headers 字段 JSON 反序列化类型 */
-    private static final JsonType<Map<String, String>> MAP_TYPE = new JsonType<>() {};
 
     /** 表名合法字符校验正则（防 SQL 注入） */
     private static final String TABLE_NAME_PATTERN = "^[a-zA-Z_][a-zA-Z0-9_]*$";
@@ -79,13 +70,12 @@ public class OutboxRepository {
      * @param message 消息实体
      */
     public void save(OutboxMessage message) {
-        Map<String, Object> params = new HashMap<>(16);
+        Map<String, Object> params = new HashMap<>(12);
         params.put("id", message.getId());
         params.put("aggregate_id", message.getAggregateId());
         params.put("aggregate_type", message.getAggregateType());
         params.put("event_type", message.getEventType());
         params.put("payload", message.getPayload());
-        params.put("headers", serializeHeaders(message.getHeaders()));
         params.put("status", message.getStatus().name());
         params.put("retry_count", message.getRetryCount());
         params.put("max_retries", message.getMaxRetries());
@@ -94,11 +84,6 @@ public class OutboxRepository {
         params.put("updated_at", Timestamp.from(message.getUpdatedAt()));
         params.put("tenant_id", message.getTenantId());
         params.put("deduplication_id", message.getDeduplicationId());
-        params.put("schema_version", message.getSchemaVersion());
-        params.put("content_type", message.getContentType());
-        params.put("priority", message.getPriority() != null
-                ? message.getPriority()
-                : OutboxMessage.DEFAULT_PRIORITY);
         params.put("trace_id", message.getTraceId());
         jdbcInsert.execute(params);
     }
@@ -118,37 +103,32 @@ public class OutboxRepository {
         }
         // tableName validated at construction (see findPending) — safe from SQL injection
         String sql = "INSERT INTO " + tableName
-                + " (id, aggregate_id, aggregate_type, event_type, payload, headers,"
+                + " (id, aggregate_id, aggregate_type, event_type, payload,"
                 + " status, retry_count, max_retries, next_retry_at, created_at, updated_at,"
-                + " tenant_id, deduplication_id, schema_version, content_type, priority, trace_id)"
-                + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                + " tenant_id, deduplication_id, trace_id)"
+                + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
         jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
             @Override
-            public void setValues(java.sql.PreparedStatement ps, int i) throws SQLException {
+            public void setValues(java.sql.PreparedStatement ps, int i) throws java.sql.SQLException {
                 OutboxMessage msg = messages.get(i);
                 ps.setString(1, msg.getId());
                 ps.setString(2, msg.getAggregateId());
                 ps.setString(3, msg.getAggregateType());
                 ps.setString(4, msg.getEventType());
                 ps.setString(5, msg.getPayload());
-                ps.setString(6, serializeHeaders(msg.getHeaders()));
-                ps.setString(7, msg.getStatus().name());
-                ps.setInt(8, msg.getRetryCount());
-                ps.setInt(9, msg.getMaxRetries());
-                ps.setTimestamp(10, msg.getNextRetryAt() != null
+                ps.setString(6, msg.getStatus().name());
+                ps.setInt(7, msg.getRetryCount());
+                ps.setInt(8, msg.getMaxRetries());
+                ps.setTimestamp(9, msg.getNextRetryAt() != null
                         ? Timestamp.from(msg.getNextRetryAt()) : null);
-                ps.setTimestamp(11, msg.getCreatedAt() != null
+                ps.setTimestamp(10, msg.getCreatedAt() != null
                         ? Timestamp.from(msg.getCreatedAt()) : null);
-                ps.setTimestamp(12, msg.getUpdatedAt() != null
+                ps.setTimestamp(11, msg.getUpdatedAt() != null
                         ? Timestamp.from(msg.getUpdatedAt()) : null);
-                ps.setString(13, msg.getTenantId());
-                ps.setString(14, msg.getDeduplicationId());
-                ps.setString(15, msg.getSchemaVersion());
-                ps.setString(16, msg.getContentType());
-                ps.setObject(17, msg.getPriority() != null
-                        ? msg.getPriority() : OutboxMessage.DEFAULT_PRIORITY);
-                ps.setString(18, msg.getTraceId());
+                ps.setString(12, msg.getTenantId());
+                ps.setString(13, msg.getDeduplicationId());
+                ps.setString(14, msg.getTraceId());
             }
 
             @Override
@@ -159,7 +139,7 @@ public class OutboxRepository {
     }
 
     /**
-     * 查询待投递的消息（按优先级降序、创建时间升序）
+     * 查询待投递的消息（按创建时间升序）
      *
      * @param limit 最大条数
      * @return 待投递消息列表
@@ -169,7 +149,7 @@ public class OutboxRepository {
         // stored as final, and sourced from EventProperties config (not user input) — safe from SQL injection
         String sql = "SELECT * FROM " + tableName
                 + " WHERE status = ? AND (next_retry_at IS NULL OR next_retry_at <= ?)"
-                + " ORDER BY priority DESC, created_at ASC"
+                + " ORDER BY created_at ASC"
                 + " LIMIT ?";
         return jdbcTemplate.query(sql, OutboxRowMapper.INSTANCE,
                 OutboxStatus.PENDING.name(), Timestamp.from(Instant.now()), limit);
@@ -534,46 +514,9 @@ public class OutboxRepository {
     }
 
     /**
-     * 序列化扩展头为 JSON 字符串
-     *
-     * @param headers 扩展头映射
-     * @return JSON 字符串，序列化失败返回 null
-     */
-    private String serializeHeaders(Map<String, String> headers) {
-        if (headers == null || headers.isEmpty()) {
-            return null;
-        }
-        try {
-            return YdszJson.toJson(headers);
-        } catch (JsonException e) {
-            log.warn("Failed to serialize headers", e);
-            return null;
-        }
-    }
-
-    /**
-     * 反序列化 JSON 字符串为扩展头映射
-     *
-     * @param json JSON 字符串
-     * @return 扩展头映射，反序列化失败返回空 Map
-     */
-    private static Map<String, String> deserializeHeaders(String json) {
-        if (json == null || json.isBlank()) {
-            return Map.of();
-        }
-        try {
-            return YdszJson.fromJson(json, MAP_TYPE);
-        } catch (JsonException e) {
-            log.warn("Failed to deserialize headers: {}", json, e);
-            return Map.of();
-        }
-    }
-
-    /**
      * Outbox 消息行映射器
      *
-     * <p>静态内部类，复用单一实例，使用 ResultSetMetaData 一次性检查列是否存在，
-     * 避免逐列 try-catch SQLException 的性能开销。
+     * <p>静态内部类，复用单一实例。
      */
     static final class OutboxRowMapper implements RowMapper<OutboxMessage> {
 
@@ -586,22 +529,21 @@ public class OutboxRepository {
          * @param rs     结果集
          * @param rowNum 行号（从 0 开始）
          * @return OutboxMessage 实例
-         * @throws SQLException 读取列数据失败
+         * @throws java.sql.SQLException 读取列数据失败
          */
         @Override
-        public OutboxMessage mapRow(ResultSet rs, int rowNum) throws SQLException {
+        public OutboxMessage mapRow(ResultSet rs, int rowNum) throws java.sql.SQLException {
             Timestamp nextRetry = rs.getTimestamp("next_retry_at");
             Timestamp sentAt = rs.getTimestamp("sent_at");
             Timestamp createdAt = rs.getTimestamp("created_at");
             Timestamp updatedAt = rs.getTimestamp("updated_at");
 
-            var builder = OutboxMessage.builder()
+            return OutboxMessage.builder()
                     .id(rs.getString("id"))
                     .aggregateId(rs.getString("aggregate_id"))
                     .aggregateType(rs.getString("aggregate_type"))
                     .eventType(rs.getString("event_type"))
                     .payload(rs.getString("payload"))
-                    .headers(deserializeHeaders(rs.getString("headers")))
                     .status(OutboxStatus.valueOf(rs.getString("status")))
                     .retryCount(rs.getInt("retry_count"))
                     .maxRetries(rs.getInt("max_retries"))
@@ -609,47 +551,11 @@ public class OutboxRepository {
                     .createdAt(createdAt != null ? createdAt.toInstant() : null)
                     .updatedAt(updatedAt != null ? updatedAt.toInstant() : null)
                     .sentAt(sentAt != null ? sentAt.toInstant() : null)
-                    .errorMessage(rs.getString("error_message"));
-
-            // 使用 ResultSetMetaData 一次性检查列是否存在，避免 try-catch SQLException 开销
-            Set<String> columns = getColumnNames(rs);
-            if (columns.contains("tenant_id")) {
-                builder.tenantId(rs.getString("tenant_id"));
-            }
-            if (columns.contains("deduplication_id")) {
-                builder.deduplicationId(rs.getString("deduplication_id"));
-            }
-            if (columns.contains("schema_version")) {
-                builder.schemaVersion(rs.getString("schema_version"));
-            }
-            if (columns.contains("content_type")) {
-                builder.contentType(rs.getString("content_type"));
-            }
-            if (columns.contains("priority")) {
-                builder.priority(rs.getObject("priority", Integer.class));
-            }
-            if (columns.contains("trace_id")) {
-                builder.traceId(rs.getString("trace_id"));
-            }
-
-            return builder.build();
-        }
-
-        /**
-         * 获取 ResultSet 中所有列名（小写）
-         *
-         * @param rs 结果集
-         * @return 列名集合
-         * @throws SQLException 获取元数据失败
-         */
-        private Set<String> getColumnNames(ResultSet rs) throws SQLException {
-            ResultSetMetaData meta = rs.getMetaData();
-            int count = meta.getColumnCount();
-            Set<String> names = new HashSet<>(count);
-            for (int i = 1; i <= count; i++) {
-                names.add(meta.getColumnLabel(i).toLowerCase());
-            }
-            return names;
+                    .errorMessage(rs.getString("error_message"))
+                    .tenantId(rs.getString("tenant_id"))
+                    .deduplicationId(rs.getString("deduplication_id"))
+                    .traceId(rs.getString("trace_id"))
+                    .build();
         }
     }
 }

@@ -81,16 +81,16 @@ public class JdbcAuditStorage implements AuditWriter {
     /** 审计日志表列定义 */
     private static final String INSERT_COLUMNS =
             "(id, audit_type, action, status, module, content, " +
-            "business_no, operator_id, operator_code, operator_name, ip_address, ip_location, " +
-            "user_agent, request_params, response_result, error_message, cost_time, " +
-            "app_id, app_code, app_name, extra_info, operation_time, created_at)";
+            "business_no, operator_id, operator_name, ip_address, " +
+            "request_params, response_result, error_message, cost_time, " +
+            "app_key, tenant_id, trace_id, operation_time, created_at)";
 
     /** INSERT 语句命名参数值模板 */
     private static final String INSERT_VALUES =
             "VALUES (:id, :auditType, :action, :status, :module, :content, " +
-            ":businessNo, :operatorId, :operatorCode, :operatorName, :ipAddress, :ipLocation, " +
-            ":userAgent, :requestParams, :responseResult, :errorMessage, :costTime, " +
-            ":appId, :appCode, :appName, :extraInfo, :operationTime, :createdAt)";
+            ":businessNo, :operatorId, :operatorName, :ipAddress, " +
+            ":requestParams, :responseResult, :errorMessage, :costTime, " +
+            ":appKey, :tenantId, :traceId, :operationTime, :createdAt)";
 
     /** 命名参数 JDBC 模板，用于执行参数化 SQL */
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
@@ -281,7 +281,7 @@ public class JdbcAuditStorage implements AuditWriter {
      * 构建 NamedParameterJdbcTemplate 参数 Map
      */
     private Map<String, Object> buildParamMap(AuditLog auditLog) {
-        Map<String, Object> params = new HashMap<>(22);
+        Map<String, Object> params = new HashMap<>(18);
         params.put("id", auditLog.getId());
         params.put("auditType", auditLog.getAuditType());
         params.put("action", auditLog.getAction());
@@ -290,19 +290,15 @@ public class JdbcAuditStorage implements AuditWriter {
         params.put("content", auditLog.getContent());
         params.put("businessNo", auditLog.getBusinessNo());
         params.put("operatorId", auditLog.getOperatorId());
-        params.put("operatorCode", auditLog.getOperatorCode());
         params.put("operatorName", auditLog.getOperatorName());
         params.put("ipAddress", auditLog.getIpAddress());
-        params.put("ipLocation", auditLog.getIpLocation());
-        params.put("userAgent", auditLog.getUserAgent());
         params.put("requestParams", auditLog.getRequestParams());
         params.put("responseResult", auditLog.getResponseResult());
         params.put("errorMessage", auditLog.getErrorMessage());
         params.put("costTime", auditLog.getCostTime());
-        params.put("appId", auditLog.getAppId());
-        params.put("appCode", auditLog.getAppCode());
-        params.put("appName", auditLog.getAppName());
-        params.put("extraInfo", auditLog.getExtraInfo());
+        params.put("appKey", auditLog.getAppKey());
+        params.put("tenantId", auditLog.getTenantId());
+        params.put("traceId", auditLog.getTraceId());
         params.put("operationTime", auditLog.getOperationTime() != null
                 ? Timestamp.valueOf(auditLog.getOperationTime()) : new Timestamp(System.currentTimeMillis()));
         params.put("createdAt", auditLog.getCreatedAt() != null

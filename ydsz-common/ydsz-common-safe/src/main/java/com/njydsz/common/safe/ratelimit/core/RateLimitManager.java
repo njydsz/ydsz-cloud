@@ -102,7 +102,7 @@ public class RateLimitManager {
             return null;
         }
         CircuitBreaker.CircuitBreakerConfig config = CircuitBreaker.CircuitBreakerConfig.builder()
-                .failureRateThreshold(properties.getCircuitBreaker().getFailureRateThreshold())
+                .failureRateThreshold(properties.getCircuitBreaker().getFailureRateThreshold() / 100.0)
                 .minimumNumberOfCalls(properties.getCircuitBreaker().getMinimumNumberOfCalls())
                 .waitDurationInOpenState(Duration.ofSeconds(properties.getCircuitBreaker().getWaitDurationSeconds()))
                 .permittedNumberOfCallsInHalfOpenState(properties.getCircuitBreaker().getPermittedHalfOpenCalls())
