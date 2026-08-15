@@ -320,8 +320,8 @@ public class OpenAiCompatibleClient implements LlmClient {
     private ChatChunk parseChunk(String data) {
         try {
             ObjectNode obj = (ObjectNode) YdszJson.readTree(data);
-            String id = obj.get("id").asText();
-            String model = obj.get("model").asText();
+            String id = obj.has("id") ? obj.get("id").asText() : "";
+            String model = obj.has("model") ? obj.get("model").asText() : "";
             ArrayNode choices = (ArrayNode) obj.get("choices");
             if (choices == null || choices.size() == 0) {
                 return null;
@@ -330,6 +330,8 @@ public class OpenAiCompatibleClient implements LlmClient {
             ObjectNode delta = choice.has("delta") ? (ObjectNode) choice.get("delta") : null;
             String finishReason = choice.has("finish_reason") ? choice.get("finish_reason").asText() : null;
             String content = delta != null && delta.has("content") ? delta.get("content").asText() : null;
+
+            List<ToolCall> toolCalls = parseDeltaToolCalls(delta);
 
             TokenUsage usage = null;
             if (obj.has("usage") && obj.get("usage") != null) {
@@ -340,15 +342,72 @@ public class OpenAiCompatibleClient implements LlmClient {
             }
 
             if (finishReason != null) {
-                return ChatChunk.finish(id, model, finishReason, usage);
+                return ChatChunk.finish(id, model, finishReason, usage, toolCalls);
             }
             if (content != null) {
-                return ChatChunk.content(id, model, content);
+                return ChatChunk.content(id, model, content, toolCalls);
+            }
+            if (!toolCalls.isEmpty()) {
+                return ChatChunk.toolCalls(id, model, toolCalls);
             }
             return null;
         } catch (Exception e) {
             log.warn("[LLM-{}] 解析 chunk 失败: {}", provider, e.getMessage());
             return null;
+        }
+    }
+
+    /**
+     * 解析 delta 中的 tool_calls 数组（流式 Function Calling 场景）。
+     *
+     * <p>OpenAI 流式协议下，tool_calls 以增量方式推送：首个 chunk 含 id 和 function name，
+     * 后续 chunk 仅含 arguments 的部分 JSON 字符串。本方法将每个 tool_call 元素解析为
+     * {@link ToolCall} 对象（arguments 可能为空 Map，表示部分 JSON，需下游拼接完整后再反序列化）。</p>
+     *
+     * @param delta 当前 chunk 的 delta 节点（可为 null）
+     * @return 解析后的工具调用列表，无 tool_calls 时返回空列表
+     */
+    private List<ToolCall> parseDeltaToolCalls(ObjectNode delta) {
+        if (delta == null || !delta.has("tool_calls")) {
+            return List.of();
+        }
+        ArrayNode calls = (ArrayNode) delta.get("tool_calls");
+        if (calls == null || calls.size() == 0) {
+            return List.of();
+        }
+        List<ToolCall> toolCalls = new ArrayList<>(calls.size());
+        for (int i = 0; i < calls.size(); i++) {
+            ObjectNode call = (ObjectNode) calls.get(i);
+            String callId = call.has("id") ? call.get("id").asText() : "";
+            ObjectNode function = call.has("function") ? (ObjectNode) call.get("function") : null;
+            String name = function != null && function.has("name") ? function.get("name").asText() : "";
+            String argsStr = function != null && function.has("arguments")
+                    ? function.get("arguments").asText() : "";
+            Map<String, Object> args = parsePartialArguments(argsStr);
+            toolCalls.add(new ToolCall(callId, name, args));
+        }
+        return toolCalls;
+    }
+
+    /**
+     * 安全解析流式 tool_call arguments（可能为不完整的部分 JSON）。
+     *
+     * <p>流式场景下 arguments 可能只是完整 JSON 的前缀（如 {@code "{"location":"}），
+     * 此时解析会失败，返回空 Map 而不抛出异常，由下游根据 finishReason=tool_calls
+     * 拼接所有增量片段后统一反序列化。</p>
+     *
+     * @param argsStr arguments JSON 字符串（可能不完整）
+     * @return 解析后的参数 Map；解析失败时返回空 Map
+     */
+    private Map<String, Object> parsePartialArguments(String argsStr) {
+        if (argsStr == null || argsStr.isEmpty()) {
+            return Map.of();
+        }
+        try {
+            return YdszJson.fromJson(argsStr, Map.class);
+        } catch (Exception e) {
+            // 流式 partial JSON 解析失败属正常情况，返回空 Map 由下游拼接后处理
+            return Map.of();
         }
     }
 

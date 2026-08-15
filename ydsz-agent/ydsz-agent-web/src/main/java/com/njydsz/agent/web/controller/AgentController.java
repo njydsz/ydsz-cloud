@@ -1,8 +1,8 @@
 package com.njydsz.agent.web.controller;
 
 import java.io.IOException;
-import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -28,11 +28,12 @@ import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.server.agent.AgentFactory;
 import com.njydsz.agent.server.chat.AgentRequestGuard;
-import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -195,11 +196,13 @@ public class AgentController {
                         throw new RuntimeException("SSE 连接已断开，终止 Agent 执行");
                     }
                     try {
-                        emitter.send(SseEmitter.event()
-                                .data(Map.of(
-                                        "content", chunk.getDeltaContent() != null ? chunk.getDeltaContent() : "",
-                                        "finished", chunk.isFinished()))
-                                .name("chunk"));
+                        Map<String, Object> chunkData = new HashMap<>();
+                        chunkData.put("content", chunk.getDeltaContent() != null ? chunk.getDeltaContent() : "");
+                        chunkData.put("finished", chunk.isFinished());
+                        if (chunk.hasToolCalls()) {
+                            chunkData.put("toolCalls", chunk.getDeltaToolCalls());
+                        }
+                        emitter.send(SseEmitter.event().data(chunkData).name("chunk"));
                     } catch (IOException e) {
                         active.set(false);
                         log.warn("[Agent-API] SSE 发送失败，标记连接断开: {}", e.getMessage());

@@ -5,7 +5,6 @@ import java.util.List;
 import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleResult;
-import com.njydsz.literule.api.expr.ExpressionEvaluator;
 
 import lombok.extern.slf4j.Slf4j;
 

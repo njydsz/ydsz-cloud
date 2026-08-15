@@ -6,17 +6,33 @@
 # 每行一个标注了 @YdszExceptionCode 注解的枚举类全限定名。
 # 以 # 开头的行为注释。
 #
-# 配置示例：
-# com.example.module.UserExceptionCode
-# com.example.module.OrderResultCode
-#
 # 构建工具插件（Gradle/Maven）可在编译时自动生成此文件内容。
 # 如果此文件为空或不存在，ExceptionCodeScanner 将回退到 ASM 字节码扫描。
 #
 # ===========================
-# 已注册的模块错误码枚举类（按模块分组）
+# 核心模块（ydsz-common-exception）
 # ===========================
 com.njydsz.common.exception.code.CoreExceptionCode
 com.njydsz.common.exception.code.SecurityExceptionCode
 com.njydsz.common.exception.code.RateLimitExceptionCode
 
+# ===========================
+# 通用基础设施（ydsz-common-*）
+# ===========================
+com.njydsz.common.file.exception.FileExceptionCode
+com.njydsz.common.excel.exception.ExcelExceptionCode
+com.njydsz.common.docs.exception.DocumentExceptionCode
+com.njydsz.common.jdbc.exception.JdbcExceptionCode
+com.njydsz.common.lock.exception.LockExceptionCode
+
+# ===========================
+# 业务域模块（*-domain）
+# ===========================
+com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode
+com.njydsz.workflow.domain.enums.WorkflowExceptionCode
+com.njydsz.literule.domain.enums.LiteruleExceptionCode
+com.njydsz.system.domain.enums.SystemExceptionCode
+com.njydsz.userinfo.domain.enums.UserInfoExceptionCode
+com.njydsz.agent.domain.enums.AgentExceptionCode
+com.njydsz.message.domain.enums.MessageExceptionCode
+com.njydsz.cronjob.domain.enums.CronjobExceptionCode
