@@ -42,7 +42,8 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
     /**
      * 查询子节点（未删除）
      */
-    List<FileNode> selectChildren(@Param("parentId") String parentId);
+    List<FileNode> selectChildren(@Param("parentId") String parentId,
+            @Param("tenantId") String tenantId);
 
     /**
      * 带 revision 乐观锁的更新（更新失败返回 0）
@@ -126,12 +127,15 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
     /**
      * 搜索文件名（LIKE）
      */
-    List<FileNode> searchByName(@Param("keyword") String keyword, @Param("createdBy") String createdBy);
+    List<FileNode> searchByName(@Param("keyword") String keyword,
+            @Param("createdBy") String createdBy,
+            @Param("tenantId") String tenantId);
 
     /**
      * 查询用户根目录
      */
-    FileNode selectRootByUser(@Param("createdBy") String createdBy);
+    FileNode selectRootByUser(@Param("createdBy") String createdBy,
+            @Param("tenantId") String tenantId);
 
     /**
      * 统计用户文件数量
@@ -169,13 +173,18 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
     /**
      * 按文件哈希查询（用于秒传去重）
      */
-    @Select("SELECT * FROM nw_file_node WHERE file_hash = #{fileHash} AND deleted = 0 AND node_type = 'file' LIMIT 1")
-    FileNode findByFileHash(@Param("fileHash") String fileHash);
+    @Select("SELECT * FROM nw_file_node WHERE file_hash = #{fileHash} "
+            + "AND tenant_id = #{tenantId} AND deleted = 0 AND node_type = 'file' LIMIT 1")
+    FileNode findByFileHash(@Param("fileHash") String fileHash,
+            @Param("tenantId") String tenantId);
 
     /**
      * 按 createdBy + parentId 查询同名文件
      */
-    @Select("SELECT * FROM nw_file_node WHERE name = #{name} AND parent_id = #{parentId} " +
-            "AND created_by = #{createdBy} AND deleted = 0")
-    List<FileNode> findByNameAndParent(@Param("name") String name, @Param("parentId") String parentId, @Param("createdBy") String createdBy);
+    @Select("SELECT * FROM nw_file_node WHERE name = #{name} AND parent_id = #{parentId} "
+            + "AND created_by = #{createdBy} AND tenant_id = #{tenantId} AND deleted = 0")
+    List<FileNode> findByNameAndParent(@Param("name") String name,
+            @Param("parentId") String parentId,
+            @Param("createdBy") String createdBy,
+            @Param("tenantId") String tenantId);
 }

@@ -35,7 +35,9 @@
 
     <select id="selectChildren" resultMap="FileNodeResult">
         SELECT * FROM nw_file_node
-        WHERE parent_id = #{parentId} AND deleted = 0
+        WHERE parent_id = #{parentId}
+          AND tenant_id = #{tenantId}
+          AND deleted = 0
         ORDER BY node_type DESC, sort ASC, name ASC
     </select>
 
@@ -108,6 +110,7 @@
         WHERE deleted = 0 AND node_type = 'file'
         AND name ILIKE CONCAT('%', #{keyword}, '%')
         AND created_by = #{createdBy}
+        AND tenant_id = #{tenantId}
         ORDER BY updated_at DESC
         LIMIT 50
     </select>
@@ -116,6 +119,7 @@
         SELECT * FROM nw_file_node
         WHERE deleted = 0 AND node_type = 'folder' AND parent_id = '0'
         AND created_by = #{createdBy}
+        AND tenant_id = #{tenantId}
         LIMIT 1
     </select>
 

@@ -11,6 +11,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.jdbc.support.PageResponses;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.infra.mapper.FileNodeMapper;
@@ -41,7 +42,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
 
     @Override
     public List<FileNode> findChildren(String parentId) {
-        return fileNodeMapper.selectChildren(parentId);
+        return fileNodeMapper.selectChildren(parentId, TenantContextHolder.getTenantId());
     }
 
     @Override
@@ -129,7 +130,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
 
     @Override
     public List<FileNode> searchByName(String keyword, String createdBy) {
-        return fileNodeMapper.searchByName(keyword, createdBy);
+        return fileNodeMapper.searchByName(keyword, createdBy, TenantContextHolder.getTenantId());
     }
 
     @Override
@@ -160,7 +161,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
 
     @Override
     public FileNode findOrCreateRoot(String userId) {
-        FileNode root = fileNodeMapper.selectRootByUser(userId);
+        FileNode root = fileNodeMapper.selectRootByUser(userId, TenantContextHolder.getTenantId());
         if (root != null) {
             return root;
         }
@@ -179,6 +180,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
                 .starred(false)
                 .shareStatus("private")
                 .status("active")
+                .tenantId(TenantContextHolder.getTenantId())
                 .deleted(0)
                 .revision(0)
                 .build();
@@ -196,11 +198,12 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
         if (fileHash == null || fileHash.isEmpty()) {
             return null;
         }
-        return fileNodeMapper.findByFileHash(fileHash);
+        return fileNodeMapper.findByFileHash(fileHash, TenantContextHolder.getTenantId());
     }
 
     @Override
     public List<FileNode> findByNameAndParent(String name, String parentId, String createdBy) {
-        return fileNodeMapper.findByNameAndParent(name, parentId, createdBy);
+        return fileNodeMapper.findByNameAndParent(name, parentId, createdBy,
+                TenantContextHolder.getTenantId());
     }
 }

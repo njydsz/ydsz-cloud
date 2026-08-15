@@ -129,17 +129,57 @@ public class AuthRowPermissionAspect {
             injectIntoArgs(joinPoint, info, ann);
             applyExtraHeadersIfAbsent(info);
 
+            // P2: 将 DataScopeInfo 适配为 DataPermissionContext 注入到 Holder，
+            // 使 SQL 拦截器可直接读取结构化的数据权限上下文，无需经过 HTTP Header 反序列化
+            DataPermissionContext context = adaptToDataPermissionContext(info);
+            DataScopeContextHolder.set(context);
+
             if (log.isDebugEnabled()) {
-                log.debug("行权限注入: scope={}, companyIds={}, deptIds={}",
+                log.debug("行权限注入: scope={}, companyIds={}, deptIds={}, contextInjected={}",
                         info == null ? null : info.getScope(),
                         info == null ? 0 : safeSize(info.getCompanyIds()),
-                        info == null ? 0 : safeSize(info.getDeptIds()));
+                        info == null ? 0 : safeSize(info.getDeptIds()),
+                        context != null);
             }
 
             return joinPoint.proceed();
         } finally {
+            DataScopeContextHolder.remove();
             restoreExtraHeaders(snapshot);
         }
+    }
+
+    /**
+     * 将 {@link DataScopeInfo} 适配为 {@link DataPermissionContext}。
+     *
+     * <p>字段映射关系：
+     * <ul>
+     *   <li>scope → dataScope（行级维度编码）</li>
+     *   <li>userId → userId（当前用户 ID）</li>
+     *   <li>companyIds → companyIds（公司维度集合，复制为新 HashSet 避免不可变集合问题）</li>
+     *   <li>deptIds → deptIds（部门维度集合）</li>
+     *   <li>projectIds → projectIds（项目维度集合）</li>
+     *   <li>regionIds → regionIds（区域维度集合）</li>
+     * </ul>
+     *
+     * <p>注意：customSqlCondition 不在此映射，因为 SQL 拦截器不直接使用自定义 SQL 条件片段。
+     * 如需支持列级权限联动，可扩展本方法填充 visibleColumnsByTable / editableColumnsByTable。
+     *
+     * @param info 数据权限信息，可为 {@code null}
+     * @return 数据权限上下文，info 为 {@code null} 时返回空上下文
+     */
+    private DataPermissionContext adaptToDataPermissionContext(DataScopeInfo info) {
+        if (info == null) {
+            return DataPermissionContext.empty();
+        }
+        DataPermissionContext context = new DataPermissionContext();
+        context.setDataScope(info.getScope());
+        context.setUserId(info.getUserId());
+        context.setCompanyIds(info.getCompanyIds() != null ? new HashSet<>(info.getCompanyIds()) : new HashSet<>());
+        context.setDeptIds(info.getDeptIds() != null ? new HashSet<>(info.getDeptIds()) : new HashSet<>());
+        context.setProjectIds(info.getProjectIds() != null ? new HashSet<>(info.getProjectIds()) : new HashSet<>());
+        context.setRegionIds(info.getRegionIds() != null ? new HashSet<>(info.getRegionIds()) : new HashSet<>());
+        return context;
     }
 
     private ResolvedRowPermission findAnnotation(Method method, ProceedingJoinPoint joinPoint) {

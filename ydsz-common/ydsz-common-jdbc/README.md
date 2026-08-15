@@ -109,11 +109,40 @@ public class UserService {
 |---|---|
 | `DataPermissionConfiguration` | 数据权限配置（`ydsz.jdbc.data-permission.*`） |
 | `DataPermissionContext` / `DataPermissionContextResolver` | 数据权限上下文与解析器 |
+| `DataScopeContextHolder` | ThreadLocal 持有器，供 `@AuthRowPermission` 切面直接注入结构化上下文 |
 | `DataScopeIdExpander` | 数据范围 ID 展开 SPI（部门/角色/自定义） |
 | `DataPermissionIgnore` | 数据权限忽略标记 |
 | `DataPermissionHelper` / `JSqlParserHelper` | JSqlParser 辅助工具 |
 | `RowPermissionInnerInterceptor` | 行级数据权限（基于 SQL 解析注入 WHERE 条件） |
 | `ColPermissionInnerInterceptor` | 列级权限（SELECT 字段过滤） |
+
+#### 与 ydsz-common-auth 的对接关系
+
+```
+┌──────────────────────────────┐     ┌──────────────────────────────────┐
+│      ydsz-common-auth        │     │        ydsz-common-jdbc          │
+│                              │     │                                  │
+│  @AuthRowPermission          │     │  DataPermissionContextResolver   │
+│         ↓                    │     │         ↓                        │
+│  AuthRowPermissionAspect     │     │  DataPermissionInnerInterceptor  │
+│         ↓                    │     │    (RowPermission / ColPermission)│
+│  DataPermissionResolver      │     │         ↓                        │
+│    .resolve() → DataScopeInfo│     │  DataPermissionContext           │
+│         ↓                    │     │                                  │
+│  adaptToDataPermissionContext│     │                                  │
+│         ↓                    │     │                                  │
+│  DataScopeContextHolder.set()├────→│  DataScopeContextHolder.get()    │
+│                              │     │    (优先路径，避免 Header 解析)   │
+└──────────────────────────────┘     └──────────────────────────────────┘
+```
+
+**解析器优先级** (`DataPermissionContextResolver.resolve()`):
+1. **DataScopeContextHolder**（由 `@AuthRowPermission` 切面注入，结构化对象，无序列化开销）
+2. **HttpServletRequest Headers**（HTTP 请求头，标准 Web 场景）
+3. **RequestContext extra headers**（Feign 透传兜底）
+
+**生命周期**：`DataScopeContextHolder` 使用 ThreadLocal 存储，在 `AuthRowPermissionAspect` 的
+`try-finally` 块中确保清除，防止线程池复用场景下上下文泄漏。
 
 ### 8. SQL 防火墙
 

@@ -130,7 +130,7 @@ public class AgentController {
      * @return 统一响应结果，data 为 {@link ChatResponseDTO}（含 content/model/usage）
      */
     @Audit(module = "Agent管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'execute'")
-    @Idempotent(key = "ydsz:agent:AgentController:execute:lock", ttlSeconds = 5)
+    @Idempotent(key = "'agent:execute:' + #request.requestId", ttlSeconds = 5)
     @RateLimit(resource = "agent.agent.execute", threshold = 50)
     @PostMapping("/execute")
     @Operation(summary = "同步执行 Agent", description = "等待完整响应后返回，适用于非实时对话场景")
@@ -167,7 +167,7 @@ public class AgentController {
      * @return SseEmitter（Spring MVC 的 SSE 句柄）
      */
     @Audit(module = "Agent管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'executeStream'")
-    @Idempotent(key = "ydsz:agent:AgentController:executeStream:lock", ttlSeconds = 5)
+    @Idempotent(key = "'agent:execute:stream:' + #request.requestId", ttlSeconds = 5)
     @RateLimit(resource = "agent.agent.executeStream", threshold = 50)
     @PostMapping(value = "/execute/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Operation(summary = "流式执行 Agent（SSE）", description = "逐 chunk 推送 LLM 响应，支持心跳保活和断连检测")

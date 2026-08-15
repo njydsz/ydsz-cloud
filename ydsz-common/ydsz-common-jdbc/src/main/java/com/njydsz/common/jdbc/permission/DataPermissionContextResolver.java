@@ -83,8 +83,9 @@ public class DataPermissionContextResolver {
      *
      * <p>执行顺序：
      * <ol>
-     *   <li>获取当前请求（优先从 ServletUtils，兜底从 RequestContext）</li>
-     *   <li>读取并解析所有数据权限相关 header</li>
+     *   <li>检查 {@link DataScopeContextHolder}（由 {@code @AuthRowPermission} 切面注入的结构化上下文）</li>
+     *   <li>若 Holder 中存在有效上下文，直接返回（优先路径，避免 HTTP Header 反序列化开销）</li>
+     *   <li>降级到 HTTP Header 解析（兼容无注解场景或 Header 透传场景）</li>
      *   <li>调用 {@link #expandIdsIfNecessary(DataPermissionContext)} 扩展子级 ID</li>
      *   <li>返回完整的 DataPermissionContext</li>
      * </ol>
@@ -92,6 +93,12 @@ public class DataPermissionContextResolver {
      * @return 数据权限上下文；所有字段均不为 null（集合为空 Set/Map）
      */
     public DataPermissionContext resolve() {
+        // P2: 优先从 DataScopeContextHolder 读取（由 @AuthRowPermission 切面注入的结构化上下文）
+        DataPermissionContext holderContext = DataScopeContextHolder.get();
+        if (holderContext != null) {
+            return holderContext;
+        }
+
         HttpServletRequest request = RequestContextUtils.getRequest();
         if (request == null) {
             request = (HttpServletRequest) RequestContext.get(BizContextKeys.KEY_HTTP_REQUEST);

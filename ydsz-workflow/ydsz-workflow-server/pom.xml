@@ -144,5 +144,10 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-tenant</artifactId>
         </dependency>
+        <!-- P2: JdbcHealthIndicator 自动注册（需要 actuator 在 classpath 上） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
 </dependencies>
 </project>

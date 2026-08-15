@@ -66,9 +66,11 @@ import com.njydsz.cronjob.server.core.alert.AlertContext;
 import com.njydsz.cronjob.server.core.alert.AlertTrigger;
 import com.njydsz.cronjob.server.core.alert.AlertType;
 import com.njydsz.cronjob.server.core.discovery.NodeDiscoveryStrategy;
+import com.njydsz.cronjob.server.core.executor.GlobalConcurrencyController;
 import com.njydsz.cronjob.server.core.executor.JobNodeHeartbeat;
 import com.njydsz.cronjob.server.core.executor.TenantAwareExecutorPool;
 import com.njydsz.cronjob.server.core.handler.GlueJobHandler;
+import com.njydsz.cronjob.server.core.leader.FencingTokenManager;
 import com.njydsz.cronjob.server.core.handler.HttpJobHandler;
 import com.njydsz.cronjob.server.core.handler.ScriptJobHandler;
 import com.njydsz.cronjob.server.core.logger.JobLoggerImpl;
@@ -157,6 +159,10 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     private final ObjectProvider<PreemptiveScheduler> preemptiveSchedulerProvider;
     /** P0-2: 事务性 Outbox 事件服务（可选，未配置时为 null，用于跨模块可靠投递任务失败事件） */
     private final ObjectProvider<OutboxService> outboxServiceProvider;
+    /** P0-1: Fencing Token 管理器（可选注入，用于防脑裂校验） */
+    private final ObjectProvider<FencingTokenManager> fencingTokenManagerProvider;
+    /** P0-2: 全局并发控制器（可选注入，用于限制集群总并发） */
+    private final ObjectProvider<GlobalConcurrencyController> globalConcurrencyControllerProvider;
 
     /** 当前实例标识（hostname:pid），用于锁值和安全释放 */
     private static final String INSTANCE_ID = initInstanceId();
@@ -243,6 +249,12 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
      */
     @Override
     public String dispatch(Job job, String executorNode, String triggerType) {
+        // P0-1: Fencing Token 校验（防脑裂）— 当前节点 Token 过期时拒绝派发
+        if (!validateFencingToken()) {
+            log.warn("[Dispatcher] Fencing Token 无效, 拒绝派发: key={} triggerType={}",
+                    job.getJobKey(), triggerType);
+            return null;
+        }
         // P3-12: 跨集群调度 — 任务指定了目标集群时，通过 CrossClusterDispatcher 派发
         if (job.getCluster() != null && !job.getCluster().isBlank()) {
             return dispatchToCluster(job, triggerType);
@@ -384,6 +396,31 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
             log.debug("[Dispatcher] 抢占尝试异常, 不影响正常派发: key={} reason={}",
                     job.getJobKey(), e.getMessage());
         }
+    }
+
+    /**
+     * P0-1: 校验当前节点持有的 Fencing Token 是否仍然有效（防脑裂）。
+     *
+     * <p>通过 {@link FacingTokenManager#isCurrentTokenValid(String)} 对比本地 Token 与
+     * Redis 中的最新 Token。Token 无效时说明已发生 Leader 切换，当前节点应拒绝派发，
+     * 防止多实例同时认为自己是主节点导致任务重复执行。
+     *
+     * <p>FencingTokenManager 未注册时降级放行（兼容非 Leader 选举模式）。
+     *
+     * @return true Token 有效或 FencingTokenManager 不可用（降级放行）；false Token 过期
+     */
+    private boolean validateFencingToken() {
+        FencingTokenManager fencingManager = fencingTokenManagerProvider.getIfAvailable();
+        if (fencingManager == null) {
+            return true;
+        }
+        String role = cronjobProperties.getLeader().getRole();
+        boolean valid = fencingManager.isCurrentTokenValid(role);
+        if (!valid) {
+            log.warn("[Dispatcher] Fencing Token 校验失败: role={} currentToken={}",
+                    role, fencingManager.getCurrentToken());
+        }
+        return valid;
     }
 
     /**
@@ -915,6 +952,15 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
                     lockKey, INSTANCE_ID, ttl.toMillis());
         }
 
+        // P0-2: 全局并发控制 — 任务执行前获取全局并发配额
+        boolean globalConcurrencyAcquired = tryAcquireGlobalConcurrency();
+        if (!globalConcurrencyAcquired) {
+            log.warn("[Dispatcher] 全局并发已满, 拒绝执行: key={} triggerType={}",
+                    job.getJobKey(), triggerType);
+            releaseJobLock(lockKey);
+            return null;
+        }
+
         // 通知心跳组件：任务开始
         notifyTaskStart();
 
@@ -943,23 +989,23 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
                 jobLogContentServiceProvider.getIfAvailable(),
                 logStreamManagerProvider.getIfAvailable());
         JobExecutionContext.setLogger(jobLogger);
-// P1-2: 设置任务上下文（jobId/jobKey），供 GlueJobHandler 等 handler 读取
-ShardingContext shardingCtx = new ShardingContext();
-shardingCtx.setJobId(job.getId());
-shardingCtx.setJobKey(job.getJobKey());
-shardingCtx.setLogId(log0.getId());
-JobExecutionContext.setShardingContext(shardingCtx);
+        // P1-2: 设置任务上下文（jobId/jobKey），供 GlueJobHandler 等 handler 读取
+        ShardingContext shardingCtx = new ShardingContext();
+        shardingCtx.setJobId(job.getId());
+        shardingCtx.setJobKey(job.getJobKey());
+        shardingCtx.setLogId(log0.getId());
+        JobExecutionContext.setShardingContext(shardingCtx);
 
-// P7-3: 记录执行开始（INCR 并发计数器 + 日执行计数器）
-recordExecutionStart(job.getTenantId());
+        // P7-3: 记录执行开始（INCR 并发计数器 + 日执行计数器）
+        recordExecutionStart(job.getTenantId());
 
-// P3-13: 推送 TASK_STARTED WebHook 事件
-dispatchWebhookEvent("TASK_STARTED", job, log0);
+        // P3-13: 推送 TASK_STARTED WebHook 事件
+        dispatchWebhookEvent("TASK_STARTED", job, log0);
 
-boolean success = false;
-Object result = null;
-try {
-    // P0-4: MAP/MAP_REDUCE 类型走 MapTaskExecutor
+        boolean success = false;
+        Object result = null;
+        try {
+            // P0-4: MAP/MAP_REDUCE 类型走 MapTaskExecutor
             String jobType = job.getJobType();
             if ("MAP".equals(jobType) || "MAP_REDUCE".equals(jobType)) {
                 MapTaskExecutor mapExecutor = mapTaskExecutorProvider.getIfAvailable();
@@ -1020,6 +1066,9 @@ try {
                             lockKey, e.getMessage());
                 }
             }
+
+            // P0-2: 释放全局并发配额
+            releaseGlobalConcurrency();
 
             // P7-3: 记录执行结束（DECR 并发计数器）
             recordExecutionEnd(job.getTenantId());

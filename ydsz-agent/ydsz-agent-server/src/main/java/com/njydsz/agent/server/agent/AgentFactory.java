@@ -16,6 +16,7 @@ import com.njydsz.agent.domain.guardrail.OutputGuardrail;
 import com.njydsz.agent.domain.tool.ToolRegistry;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
+import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.rag.RagService;
@@ -56,6 +57,8 @@ public class AgentFactory {
     private final AgentMetrics agentMetrics;
     /** 成本分析服务 */
     private final CostAnalysisService costAnalysisService;
+    /** 护栏编排服务（统一驱动输入/输出护栏，消除各执行器重复逻辑） */
+    private final GuardrailService guardrailService;
     /** 执行器缓存（key=Agent 类型） */
     private final Map<String, AgentExecutor> executorCache = new ConcurrentHashMap<>();
 
@@ -66,7 +69,8 @@ public class AgentFactory {
                         RagService ragService,
                         TraceRecorder traceRecorder,
                         AgentMetrics agentMetrics,
-                        CostAnalysisService costAnalysisService) {
+                        CostAnalysisService costAnalysisService,
+                        GuardrailService guardrailService) {
         this.llmClient = llmClient;
         this.memory = memory;
         this.toolRegistry = toolRegistry;
@@ -77,6 +81,7 @@ public class AgentFactory {
         this.traceRecorder = traceRecorder;
         this.agentMetrics = agentMetrics;
         this.costAnalysisService = costAnalysisService;
+        this.guardrailService = guardrailService;
     }
 
     /**
@@ -102,17 +107,17 @@ public class AgentFactory {
         if ("REACT".equalsIgnoreCase(type) || "REACT_AGENT".equalsIgnoreCase(type)) {
             return new ReActAgentExecutor(llmClient, memory, toolRegistry, properties,
                     inputGuardrails, outputGuardrails,
-                    traceRecorder, agentMetrics, costAnalysisService);
+                    traceRecorder, agentMetrics, costAnalysisService, guardrailService);
         }
         if ("CHAT".equalsIgnoreCase(type)) {
             return new SimpleAgentExecutor(llmClient, memory, properties,
                     inputGuardrails, outputGuardrails,
-                    traceRecorder, agentMetrics, costAnalysisService);
+                    traceRecorder, agentMetrics, costAnalysisService, guardrailService);
         }
         if ("RAG".equalsIgnoreCase(type)) {
             return new RagAgentExecutor(llmClient, memory, properties, ragService,
                     inputGuardrails, outputGuardrails,
-                    traceRecorder, agentMetrics, costAnalysisService);
+                    traceRecorder, agentMetrics, costAnalysisService, guardrailService);
         }
         if ("PLAN_EXECUTE".equalsIgnoreCase(type)) {
             return new PlanExecuteAgentExecutor(llmClient, memory, properties,
@@ -125,6 +130,6 @@ public class AgentFactory {
         log.warn("[Agent-Factory] 未知 Agent 类型: {}，回退到 ReAct", type);
         return new ReActAgentExecutor(llmClient, memory, toolRegistry, properties,
                 inputGuardrails, outputGuardrails,
-                traceRecorder, agentMetrics, costAnalysisService);
+                traceRecorder, agentMetrics, costAnalysisService, guardrailService);
     }
 }
