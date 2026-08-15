@@ -8,6 +8,25 @@ mybatis-plus:
 
 # P0-1: 统一线程池配置（ydsz-common-thread）
 ydsz:
+  # P1-1: 多租户 MULTI 模式试点（集团+公司+部门三级隔离）
+  tenant:
+    enabled: true
+    mode: MULTI
+    super-tenant-id: "0"
+    system-tenant-id: "0"
+    tenant-fields:
+      - column: tenant_id
+        claim: tenantId
+        header: X-Tenant-Id
+      - column: company_id
+        claim: companyId
+        header: X-Company-Ids
+      - column: dept_id
+        claim: deptId
+        header: X-Dept-Ids
+        multi-value: true
+    ignore-tables: [ydsz_tenant, ydsz_tenant_plan, ydsz_dict, ydsz_dict_data]
+    anon-urls: [/auth/login, /auth/register, /workflow/anonymous/**]
   thread:
     enabled: true
     pools:
@@ -46,6 +65,35 @@ ydsz:
       - com.njydsz.workflow.domain.entity.FlowTemplate
       - com.njydsz.workflow.domain.entity.FlowAuditLog
     streaming-enabled: true
+
+  # P0: JDBC 安全加固（ydsz-common-jdbc）
+  jdbc:
+    # SQL 防火墙：拦截 DDL（DROP/TRUNCATE）、无 WHERE 写操作、多语句注入、GRANT/REVOKE
+    sql-firewall:
+      enabled: true
+      block-drop-table: true
+      block-truncate: true
+      block-delete-without-where: true
+      block-update-without-where: true
+      block-multi-statement: true
+      block-permission-ops: true
+    # 分页安全上限：防止 pageSize=999999 导致全表扫描 OOM
+    pagination:
+      max-limit: 500
+    # P1: 慢 SQL 全局检测
+    slow-sql:
+      enabled: true
+      threshold-millis: 500
+      alert-threshold-millis: 2000
+    # P2: SQL 审计（写操作落盘备查）
+    sql-audit:
+      enabled: true
+      audit-select: false
+      audit-insert: true
+      audit-update: true
+      audit-delete: true
+      log-parameters: true
+      max-parameter-length: 500
 
 # Seata 客户端配置（TC 就绪后设置 seata.enabled=true 并取消注释）
 # seata:

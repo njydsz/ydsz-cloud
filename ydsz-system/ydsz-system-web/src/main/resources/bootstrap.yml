@@ -56,8 +56,41 @@ spring:
             group: ${spring.profiles.active}
             refresh: true
 
-# JSON 引擎配置（ydsz-common-json）
+# 统一线程池配置（ydsz-common-thread）
+# 参考：云顶编码规范 15.4 节
 ydsz:
+  thread:
+    enabled: true
+    hot-update:
+      enabled: true
+    pools:
+      # 配置变更通知异步线程池
+      configChangeNotifyExecutor:
+        type: PLATFORM
+        core-size: 2
+        max-size: 4
+        queue-capacity: 128
+        thread-name-prefix: ydsz-sys-config-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 15
+        slow-task-threshold-ms: 3000
+        task-decorator-bean-names:
+          - tenantContextTaskDecorator
+      # 文件导出异步线程池
+      fileExportExecutor:
+        type: PLATFORM
+        core-size: 2
+        max-size: 8
+        queue-capacity: 64
+        thread-name-prefix: ydsz-sys-export-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 30
+        slow-task-threshold-ms: 10000
+        enable-detailed-metrics: true
+        task-decorator-bean-names:
+          - tenantContextTaskDecorator
+
+# JSON 引擎配置（ydsz-common-json）
   json:
     enabled: true
     date-format: yyyy-MM-dd HH:mm:ss
