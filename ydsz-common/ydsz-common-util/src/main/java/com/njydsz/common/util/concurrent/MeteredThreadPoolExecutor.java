@@ -2,6 +2,7 @@ package com.njydsz.common.util.concurrent;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -10,6 +11,11 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 
 /**
  * 可观测线程池执行器——Micrometer 指标自动注册 + 慢任务检测。
@@ -68,14 +74,14 @@ public class MeteredThreadPoolExecutor extends ThreadPoolExecutor {
     private final AtomicLong totalTaskCount = new AtomicLong();
 
     // Micrometer 指标
-    private final io.micrometer.core.instrument.MeterRegistry meterRegistry;
+    private final MeterRegistry meterRegistry;
     private final boolean micrometerAvailable;
 
     // 预缓存 Micrometer 指标实例，避免热路径重复做 tag 拼接与 registry 查找
-    private io.micrometer.core.instrument.Timer taskDurationTimer;
-    private io.micrometer.core.instrument.Counter slowTaskCounter;
-    private io.micrometer.core.instrument.Counter failedTaskCounter;
-    private io.micrometer.core.instrument.Counter rejectedCounter;
+    private Timer taskDurationTimer;
+    private Counter slowTaskCounter;
+    private Counter failedTaskCounter;
+    private Counter rejectedCounter;
 
     // 慢任务检测阈值（毫秒），Long.MAX_VALUE 表示关闭
     private volatile long slowTaskThresholdMs = Long.MAX_VALUE;
@@ -92,7 +98,6 @@ public class MeteredThreadPoolExecutor extends ThreadPoolExecutor {
      * @param threadFactory 线程工厂
      * @param handler 拒绝策略
      * @param meterRegistry Micrometer Registry（为 null 时不注册指标，仍可使用慢任务检测和异常统计）
-     @return 处理结果
      */
     public MeteredThreadPoolExecutor(String poolName,
                                       int corePoolSize,
@@ -102,7 +107,7 @@ public class MeteredThreadPoolExecutor extends ThreadPoolExecutor {
                                       BlockingQueue<Runnable> workQueue,
                                       ThreadFactory threadFactory,
                                       RejectedExecutionHandler handler,
-                                      io.micrometer.core.instrument.MeterRegistry meterRegistry) {
+                                      MeterRegistry meterRegistry) {
         super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory);
         setRejectedExecutionHandler(wrapHandler(handler));
         this.poolName = poolName;
@@ -124,7 +129,6 @@ public class MeteredThreadPoolExecutor extends ThreadPoolExecutor {
      * @param workQueue 工作队列
      * @param threadFactory 线程工厂
      * @param handler 拒绝策略
-     @return 处理结果
      */
     public MeteredThreadPoolExecutor(String poolName,
                                       int corePoolSize,
@@ -141,47 +145,47 @@ public class MeteredThreadPoolExecutor extends ThreadPoolExecutor {
     // ==================== Micrometer 指标注册 ====================
 
     private void registerMicrometerMetrics() {
-        io.micrometer.core.instrument.Gauge.builder("executor.active.threads", this, ThreadPoolExecutor::getActiveCount)
+        Gauge.builder("executor.active.threads", this, ThreadPoolExecutor::getActiveCount)
                 .tag("pool.name", poolName)
                 .description("当前执行任务的线程数")
                 .register(meterRegistry);
 
-        io.micrometer.core.instrument.Gauge.builder("executor.pool.size", this, c -> c.getPoolSize())
+        Gauge.builder("executor.pool.size", this, c -> c.getPoolSize())
                 .tag("pool.name", poolName)
                 .description("当前线程池大小")
                 .register(meterRegistry);
 
-        io.micrometer.core.instrument.Gauge.builder("executor.queue.size", this, c -> c.getQueue().size())
+        Gauge.builder("executor.queue.size", this, c -> c.getQueue().size())
                 .tag("pool.name", poolName)
                 .description("当前等待队列大小")
                 .register(meterRegistry);
 
-        io.micrometer.core.instrument.Gauge.builder("executor.queue.remaining", this, c -> c.getQueue().remainingCapacity())
+        Gauge.builder("executor.queue.remaining", this, c -> c.getQueue().remainingCapacity())
                 .tag("pool.name", poolName)
                 .description("队列剩余容量")
                 .register(meterRegistry);
 
-        io.micrometer.core.instrument.Gauge.builder("executor.completed.tasks", this, c -> c.getCompletedTaskCount())
+        Gauge.builder("executor.completed.tasks", this, c -> c.getCompletedTaskCount())
                 .tag("pool.name", poolName)
                 .description("累计完成任务数")
                 .register(meterRegistry);
 
-        rejectedCounter = io.micrometer.core.instrument.Counter.builder("executor.rejected.count")
+        rejectedCounter = Counter.builder("executor.rejected.count")
                 .tag("pool.name", poolName)
                 .description("累计拒绝任务数")
                 .register(meterRegistry);
 
-        failedTaskCounter = io.micrometer.core.instrument.Counter.builder("executor.failed.tasks")
+        failedTaskCounter = Counter.builder("executor.failed.tasks")
                 .tag("pool.name", poolName)
                 .description("累计执行失败的任务数")
                 .register(meterRegistry);
 
-        slowTaskCounter = io.micrometer.core.instrument.Counter.builder("executor.slow.tasks")
+        slowTaskCounter = Counter.builder("executor.slow.tasks")
                 .tag("pool.name", poolName)
                 .description("累计慢任务数（耗时超过阈值）")
                 .register(meterRegistry);
 
-        taskDurationTimer = io.micrometer.core.instrument.Timer.builder("executor.task.duration")
+        taskDurationTimer = Timer.builder("executor.task.duration")
                 .tag("pool.name", poolName)
                 .description("任务执行耗时分布")
                 .publishPercentiles(0.5, 0.95, 0.99)
@@ -196,17 +200,17 @@ public class MeteredThreadPoolExecutor extends ThreadPoolExecutor {
     }
 
     @Override
-    public <T> java.util.concurrent.Future<T> submit(Callable<T> task) {
+    public <T> Future<T> submit(Callable<T> task) {
         return super.submit(new MeteredCallable<>(task));
     }
 
     @Override
-    public java.util.concurrent.Future<?> submit(Runnable task) {
+    public Future<?> submit(Runnable task) {
         return super.submit(new MeteredTask(task));
     }
 
     @Override
-    public <T> java.util.concurrent.Future<T> submit(Runnable task, T result) {
+    public <T> Future<T> submit(Runnable task, T result) {
         return super.submit(new MeteredTask(task), result);
     }
 
@@ -280,7 +284,8 @@ public class MeteredThreadPoolExecutor extends ThreadPoolExecutor {
 
     /**
      * 获取累计拒绝任务数。
-     @return 处理结果
+     *
+     * @return 拒绝任务总数
      */
     public long getRejectedCount() {
         return rejectedCount.get();
@@ -288,7 +293,8 @@ public class MeteredThreadPoolExecutor extends ThreadPoolExecutor {
 
     /**
      * 获取累计失败任务数。
-     @return 计算结果
+     *
+     * @return 失败任务总数
      */
     public long getFailedTaskCount() {
         return failedTaskCount.get();
@@ -296,7 +302,8 @@ public class MeteredThreadPoolExecutor extends ThreadPoolExecutor {
 
     /**
      * 获取累计慢任务数。
-     @return 计算结果
+     *
+     * @return 慢任务总数
      */
     public long getSlowTaskCount() {
         return slowTaskCount.get();
@@ -304,7 +311,8 @@ public class MeteredThreadPoolExecutor extends ThreadPoolExecutor {
 
     /**
      * 获取累计总任务数。
-     @return 计算结果
+     *
+     * @return 总任务数
      */
     public long getTotalTaskCount() {
         return totalTaskCount.get();
@@ -312,7 +320,8 @@ public class MeteredThreadPoolExecutor extends ThreadPoolExecutor {
 
     /**
      * 获取线程池名称。
-     @return 计算结果
+     *
+     * @return 池名称
      */
     public String getPoolName() {
         return poolName;
@@ -390,7 +399,8 @@ public class MeteredThreadPoolExecutor extends ThreadPoolExecutor {
 
     /**
      * 统一的失败统计逻辑（execute / submit 路径共用）。
-     * @param t t
+     *
+     * @param t 异常对象
      */
     private void countFailure(Throwable t) {
         failedTaskCount.incrementAndGet();

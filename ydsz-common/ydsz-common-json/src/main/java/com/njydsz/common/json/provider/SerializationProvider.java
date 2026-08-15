@@ -26,7 +26,6 @@ import com.njydsz.common.json.cache.SerializerCache;
 import com.njydsz.common.json.exception.JsonSerializationException;
 import com.njydsz.common.json.internal.JsonConfig;
 import com.njydsz.common.json.internal.JsonRuntimeConfig;
-import com.njydsz.common.json.module.JsonModuleRegistry;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.parser.JsonParserUtil;
 import com.njydsz.common.json.reader.JSONReader;
@@ -611,10 +610,9 @@ public final class SerializationProvider {
         // @JsonSerialize 快速路径：如果类有 @JsonSerialize 注解，使用自定义序列化器
         Object customSerializer = getCustomSerializer(obj.getClass());
         if (customSerializer == null) {
-            // 模块注册 / 全局注册 快速路径：直接查询 SerializerRegistry / JsonModuleRegistry，
-            // 避免反向依赖 YdszJson（打破 YdszJson <-> SerializationProvider 循环依赖，1.2.1）
-            JsonSerializer<?> registered = SerializerRegistry.getInstance().get(obj.getClass());
-            customSerializer = registered != null ? registered : JsonModuleRegistry.getInstance().getSerializer(obj.getClass());
+            // P1-6：模块与直接注册的序列化器已统一写入 SerializerRegistry（单一事实源），
+            // 直接查询全局注册中心，避免反向依赖 YdszJson（打破 YdszJson <-> SerializationProvider 循环依赖，1.2.1）
+            customSerializer = SerializerRegistry.getInstance().get(obj.getClass());
         }
         if (customSerializer != null) {
             return invokeCustomSerializer(customSerializer, obj);

@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.json.deserializer.JsonDeserializer;
 import com.njydsz.common.json.serializer.JsonSerializer;
+import com.njydsz.common.json.serializer.SerializerRegistry;
 
 /**
  * YdszJson 模块注册中心
@@ -52,9 +54,17 @@ public final class JsonModuleRegistry {
 
     private static volatile JsonModuleRegistry instance;
 
-    private final Map<Class<?>, JsonSerializer<?>> serializers = new ConcurrentHashMap<>();
+    /**
+     * 模块来源的序列化器类型集合（P1-6：单一事实源改造）。
+     *
+     * <p>模块注册的序列化器/反序列化器不再由本类独立维护，而是直接写入
+     * {@link SerializerRegistry}（全局唯一注册中心）；本集合仅记录"由模块注册"
+     * 的类型，供 {@link #clear()} / {@link #reinitialize()} 精确清理模块来源的
+     * 注册项，避免误删用户直接注册（{@code SerializerRegistry.register}）的序列化器。</p>
+     */
+    private final Set<Class<?>> moduleSerializerTypes = ConcurrentHashMap.newKeySet();
 
-    private final Map<Class<?>, JsonDeserializer<?>> deserializers = new ConcurrentHashMap<>();
+    private final Set<Class<?>> moduleDeserializerTypes = ConcurrentHashMap.newKeySet();
 
     private final List<JsonModule> modules = Collections.synchronizedList(new ArrayList<>());
 
@@ -203,7 +213,7 @@ public final class JsonModuleRegistry {
             }
             initialized = true;
             log.info("JsonModuleRegistry initialized successfully. Serializers: {}, Deserializers: {}",
-                    serializers.size(), deserializers.size());
+                    moduleSerializerTypes.size(), moduleDeserializerTypes.size());
         }
     }
 
@@ -211,14 +221,16 @@ public final class JsonModuleRegistry {
         ModuleSerializerRegistry registry = new ModuleSerializerRegistry();
         module.setSerializers(registry);
         Map<Class<?>, JsonSerializer<?>> moduleSerializers = registry.getSerializers();
+        SerializerRegistry global = SerializerRegistry.getInstance();
         for (Map.Entry<Class<?>, JsonSerializer<?>> entry : moduleSerializers.entrySet()) {
             Class<?> type = entry.getKey();
             JsonSerializer<?> serializer = entry.getValue();
-            JsonSerializer<?> existing = serializers.putIfAbsent(type, serializer);
+            JsonSerializer<?> existing = global.registerIfAbsent(type, serializer);
             if (existing != null) {
                 log.debug("Serializer for type {} already exists (from module {}), skipping",
                         type.getName(), module.getModuleName());
             } else {
+                moduleSerializerTypes.add(type);
                 log.debug("Registered serializer for type {} from module {}",
                         type.getName(), module.getModuleName());
             }
@@ -229,14 +241,16 @@ public final class JsonModuleRegistry {
         ModuleDeserializerRegistry registry = new ModuleDeserializerRegistry();
         module.setDeserializers(registry);
         Map<Class<?>, JsonDeserializer<?>> moduleDeserializers = registry.getDeserializers();
+        SerializerRegistry global = SerializerRegistry.getInstance();
         for (Map.Entry<Class<?>, JsonDeserializer<?>> entry : moduleDeserializers.entrySet()) {
             Class<?> type = entry.getKey();
             JsonDeserializer<?> deserializer = entry.getValue();
-            JsonDeserializer<?> existing = deserializers.putIfAbsent(type, deserializer);
+            JsonDeserializer<?> existing = global.registerIfAbsent(type, deserializer);
             if (existing != null) {
                 log.debug("Deserializer for type {} already exists (from module {}), skipping",
                         type.getName(), module.getModuleName());
             } else {
+                moduleDeserializerTypes.add(type);
                 log.debug("Registered deserializer for type {} from module {}",
                         type.getName(), module.getModuleName());
             }
@@ -250,35 +264,29 @@ public final class JsonModuleRegistry {
     /**
      * 获取序列化器
      *
+     * <p>P1-6：委托全局唯一注册中心 {@link SerializerRegistry}，模块与直接注册的
+     * 序列化器共用同一存储，返回结果不再区分来源。</p>
+     *
      * @param type 目标类型
      * @param <T> 类型参数
      * @return 序列化器，如果未找到返回 null
      */
-
     public <T> JsonSerializer<T> getSerializer(Class<T> type) {
-        JsonSerializer<?> serializer = serializers.get(type);
-        return captureSerializer(serializer);
-    }
-
-    private static <T> JsonSerializer<T> captureSerializer(JsonSerializer<?> serializer) {
-        return (JsonSerializer<T>) serializer;
+        return SerializerRegistry.getInstance().get(type);
     }
 
     /**
      * 获取反序列化器。
      *
+     * <p>P1-6：委托全局唯一注册中心 {@link SerializerRegistry}，模块与直接注册的
+     * 反序列化器共用同一存储。</p>
+     *
      * @param type 目标类型
      * @param <T> 类型参数
      * @return 反序列化器，如果未找到返回 null
      */
-
     public <T> JsonDeserializer<T> getDeserializer(Class<T> type) {
-        JsonDeserializer<?> deserializer = deserializers.get(type);
-        return captureDeserializer(deserializer);
-    }
-
-    private static <T> JsonDeserializer<T> captureDeserializer(JsonDeserializer<?> deserializer) {
-        return (JsonDeserializer<T>) deserializer;
+        return SerializerRegistry.getInstance().getDeserializer(type);
     }
 
     /**
@@ -288,7 +296,7 @@ public final class JsonModuleRegistry {
      * @return 如果有返回 true
      */
     public boolean hasSerializer(Class<?> type) {
-        return serializers.containsKey(type);
+        return SerializerRegistry.getInstance().hasSerializer(type);
     }
 
     /**
@@ -298,7 +306,7 @@ public final class JsonModuleRegistry {
      * @return 如果有返回 true
      */
     public boolean hasDeserializer(Class<?> type) {
-        return deserializers.containsKey(type);
+        return SerializerRegistry.getInstance().hasDeserializer(type);
     }
 
     /**
@@ -321,13 +329,15 @@ public final class JsonModuleRegistry {
     }
 
     /**
-     * 清空所有模块和注册
+     * 清空所有模块和注册。
+     *
+     * <p>P1-6：仅清理模块来源的序列化器/反序列化器（依据 {@code moduleSerializerTypes} /
+     * {@code moduleDeserializerTypes} 精确移除），用户直接注册的注册项不受影响。</p>
      */
     public void clear() {
         synchronized (this) {
             modules.clear();
-            serializers.clear();
-            deserializers.clear();
+            clearModuleRegistrations();
             initialized = false;
             log.info("JsonModuleRegistry cleared");
         }
@@ -336,15 +346,25 @@ public final class JsonModuleRegistry {
     /**
      * 重新初始化。
      *
-     * <p>清空所有注册并重新注册所有模块</p>
+     * <p>清空模块来源的注册并重新注册所有模块。</p>
      */
     public void reinitialize() {
         synchronized (this) {
-            serializers.clear();
-            deserializers.clear();
+            clearModuleRegistrations();
             initialized = false;
             initialize();
         }
+    }
+
+    /**
+     * 移除所有模块来源的序列化器/反序列化器注册项，并清空模块类型集合。
+     */
+    private void clearModuleRegistrations() {
+        SerializerRegistry global = SerializerRegistry.getInstance();
+        global.unregisterAll(moduleSerializerTypes);
+        global.unregisterAllDeserializers(moduleDeserializerTypes);
+        moduleSerializerTypes.clear();
+        moduleDeserializerTypes.clear();
     }
 
     /**
@@ -359,19 +379,23 @@ public final class JsonModuleRegistry {
     /**
      * 获取已注册序列化器数量。
      *
+     * <p>P1-6：返回全局唯一注册中心的序列化器总数（含用户直接注册与模块注册）。</p>
+     *
      * @return 序列化器数量
      */
     public int getSerializerCount() {
-        return serializers.size();
+        return SerializerRegistry.getInstance().getSerializerCount();
     }
 
     /**
-     * 获取已注册反序列化器数量
+     * 获取已注册反序列化器数量。
+     *
+     * <p>P1-6：返回全局唯一注册中心的反序列化器总数（含用户直接注册与模块注册）。</p>
      *
      * @return 反序列化器数量
      */
     public int getDeserializerCount() {
-        return deserializers.size();
+        return SerializerRegistry.getInstance().getDeserializerCount();
     }
 
     /**

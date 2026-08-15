@@ -20,7 +20,6 @@ import org.slf4j.LoggerFactory;
 import com.njydsz.common.json.deserializer.JsonDeserializer;
 import com.njydsz.common.json.exception.JsonException;
 import com.njydsz.common.json.internal.JsonConfig;
-import com.njydsz.common.json.module.JsonModuleRegistry;
 import com.njydsz.common.json.parser.JsonParserUtil;
 import com.njydsz.common.json.provider.SerializationProvider;
 import com.njydsz.common.json.reader.JSONReader;
@@ -344,19 +343,13 @@ public class YdszJson {
     // 自定义序列化器/反序列化器请实现 JsonModule 接口并标注 @Component，由 SPI 自动发现注册。
 
     static <T> JsonSerializer<T> getCustomSerializer(Class<T> clazz) {
-        JsonSerializer<T> serializer = SerializerRegistry.getInstance().get(clazz);
-        if (serializer != null) {
-            return serializer;
-        }
-        return JsonModuleRegistry.getInstance().getSerializer(clazz);
+        // P1-6：模块序列化器已统一写入 SerializerRegistry（单一事实源），无需再兜底查询模块注册中心
+        return SerializerRegistry.getInstance().get(clazz);
     }
 
     static <T> JsonDeserializer<T> getCustomDeserializer(Class<T> clazz) {
-        JsonDeserializer<T> deserializer = SerializerRegistry.getInstance().getDeserializer(clazz);
-        if (deserializer != null) {
-            return deserializer;
-        }
-        return JsonModuleRegistry.getInstance().getDeserializer(clazz);
+        // P1-6：模块反序列化器已统一写入 SerializerRegistry（单一事实源），无需再兜底查询模块注册中心
+        return SerializerRegistry.getInstance().getDeserializer(clazz);
     }
 
     /**
@@ -388,11 +381,13 @@ public class YdszJson {
     }
 
     static boolean hasCustomSerializer(Class<?> clazz) {
-        return SerializerRegistry.getInstance().hasSerializer(clazz) || JsonModuleRegistry.getInstance().hasSerializer(clazz);
+        // P1-6：单一事实源，直接查询全局注册中心
+        return SerializerRegistry.getInstance().hasSerializer(clazz);
     }
 
     static boolean hasCustomDeserializer(Class<?> clazz) {
-        return SerializerRegistry.getInstance().hasDeserializer(clazz) || JsonModuleRegistry.getInstance().hasDeserializer(clazz);
+        // P1-6：单一事实源，直接查询全局注册中心
+        return SerializerRegistry.getInstance().hasDeserializer(clazz);
     }
 
     // ==================== 类型转换 ====================

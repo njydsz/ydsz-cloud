@@ -13,6 +13,12 @@ import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,7 +27,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
@@ -297,7 +305,7 @@ public final class BeanMapper {
         }
 
         // 4.0.0: Optional<T> 字段支持 — 从 setter 泛型提取 T
-        if (paramType == java.util.Optional.class && setter != null) {
+        if (paramType == Optional.class && setter != null) {
             return convertOptional(value, setter.getGenericParameterTypes()[0]);
         }
 
@@ -340,30 +348,30 @@ public final class BeanMapper {
                 return new BigInteger(str);
             }
             // 4.0.0: 新增 JDK 常用业务类型
-            if (paramType == java.util.UUID.class) {
-                return java.util.UUID.fromString(str);
+            if (paramType == UUID.class) {
+                return UUID.fromString(str);
             }
-            if (paramType == java.time.YearMonth.class) {
-                return java.time.YearMonth.parse(str);
+            if (paramType == YearMonth.class) {
+                return YearMonth.parse(str);
             }
-            if (paramType == java.time.Duration.class) {
-                return java.time.Duration.parse(str);
+            if (paramType == Duration.class) {
+                return Duration.parse(str);
             }
             // 日期时间类型
-            if (paramType == java.time.LocalDateTime.class) {
-                return java.time.LocalDateTime.parse(str, dateFormatter);
+            if (paramType == LocalDateTime.class) {
+                return LocalDateTime.parse(str, dateFormatter);
             }
-            if (paramType == java.time.LocalDate.class) {
-                return java.time.LocalDate.parse(str);
+            if (paramType == LocalDate.class) {
+                return LocalDate.parse(str);
             }
-            if (paramType == java.time.LocalTime.class) {
-                return java.time.LocalTime.parse(str);
+            if (paramType == LocalTime.class) {
+                return LocalTime.parse(str);
             }
-            if (paramType == java.time.Instant.class) {
-                return java.time.Instant.parse(str);
+            if (paramType == Instant.class) {
+                return Instant.parse(str);
             }
             if (paramType == java.util.Date.class) {
-                java.time.LocalDateTime ldt = java.time.LocalDateTime.parse(str, dateFormatter);
+                LocalDateTime ldt = LocalDateTime.parse(str, dateFormatter);
                 return java.util.Date.from(ldt.atZone(java.time.ZoneId.systemDefault()).toInstant());
             }
             // String
@@ -412,9 +420,9 @@ public final class BeanMapper {
      */
     public static Object convertOptional(Object value, Type optionalGenericType) {
         if (value == null) {
-            return java.util.Optional.empty();
+            return Optional.empty();
         }
-        if (value instanceof java.util.Optional<?>) {
+        if (value instanceof Optional<?>) {
             return value;
         }
         // 提取 Optional<T> 中的 T
@@ -424,10 +432,10 @@ public final class BeanMapper {
                 Object converted = (value instanceof Map<?, ?> m)
                         ? toBeanOrRecord(toStringObjectMap(m), clazz)
                         : convertValue(value, clazz, DEFAULT_DATE_FORMATTER, null);
-                return java.util.Optional.ofNullable(converted);
+                return Optional.ofNullable(converted);
             }
         }
-        return java.util.Optional.ofNullable(value);
+        return Optional.ofNullable(value);
     }
 
     /**
@@ -557,7 +565,8 @@ public final class BeanMapper {
 
         /**
          * 获取完整的泛型类型（包含参数化信息）。
-          @return 处理结果
+         *
+         * @return 泛型类型
          */
         public Type getType() {
             return type;
@@ -565,7 +574,8 @@ public final class BeanMapper {
 
         /**
          * 获取原始类型（擦除泛型后的 Class）。
-         @return 处理结果
+         *
+         * @return 原始类型 Class
          */
         @SuppressWarnings("unchecked")
         public Class<T> getRawType() {
@@ -846,16 +856,16 @@ public final class BeanMapper {
         if (paramType.isInstance(value)) return value;
 
         // Optional 解包
-        if (paramType == java.util.Optional.class) {
+        if (paramType == Optional.class) {
             if (genericType instanceof ParameterizedType pt) {
                 Type innerType = pt.getActualTypeArguments()[0];
                 if (value instanceof Map<?, ?> m) {
                     if (innerType instanceof Class<?> clazz) {
-                        return java.util.Optional.of(toBeanOrRecord(toStringObjectMap(m), clazz));
+                        return Optional.of(toBeanOrRecord(toStringObjectMap(m), clazz));
                     }
                 }
             }
-            return java.util.Optional.ofNullable(value);
+            return Optional.ofNullable(value);
         }
 
         // 嵌套 Record

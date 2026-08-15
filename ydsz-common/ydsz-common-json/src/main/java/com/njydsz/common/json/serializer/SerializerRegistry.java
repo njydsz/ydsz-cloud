@@ -82,11 +82,10 @@ public final class SerializerRegistry {
      *
      * @param type 目标类型
      * @param serializer 序列化器
-     * @param <T> 类型参数
      * @return 已存在（未被覆盖）的旧序列化器，若此前未注册返回 null
      * @since 1.2.3
      */
-    public <T> JsonSerializer<?> registerIfAbsent(Class<T> type, JsonSerializer<T> serializer) {
+    public JsonSerializer<?> registerIfAbsent(Class<?> type, JsonSerializer<?> serializer) {
         if (type == null) {
             throw new IllegalArgumentException("Type cannot be null");
         }
@@ -121,11 +120,10 @@ public final class SerializerRegistry {
      *
      * @param type 目标类型
      * @param deserializer 反序列化器
-     * @param <T> 类型参数
      * @return 已存在（未被覆盖）的旧反序列化器，若此前未注册返回 null
      * @since 1.2.3
      */
-    public <T> JsonDeserializer<?> registerIfAbsent(Class<T> type, JsonDeserializer<T> deserializer) {
+    public JsonDeserializer<?> registerIfAbsent(Class<?> type, JsonDeserializer<?> deserializer) {
         if (type == null) {
             throw new IllegalArgumentException("Type cannot be null");
         }

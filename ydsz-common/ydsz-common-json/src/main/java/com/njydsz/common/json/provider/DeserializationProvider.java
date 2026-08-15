@@ -24,7 +24,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.njydsz.common.json.annotation.JsonDeserialize;
 import com.njydsz.common.json.deserializer.JsonDeserializer;
 import com.njydsz.common.json.exception.JsonDeserializationException;
-import com.njydsz.common.json.module.JsonModuleRegistry;
 import com.njydsz.common.json.serializer.SerializerRegistry;
 import com.njydsz.common.json.util.BoundedLruCache;
 import com.njydsz.common.json.parser.JsonParserUtil;
@@ -285,10 +284,9 @@ public final class DeserializationProvider {
             // @JsonDeserialize 快速路径：如果类有自定义反序列化器，直接使用
             Object customDeserializer = getCustomDeserializer(clazz);
             if (customDeserializer == null) {
-                // 模块注册 / 全局注册 快速路径：直接查询 SerializerRegistry / JsonModuleRegistry，
-                // 避免反向依赖 YdszJson（打破 YdszJson <-> DeserializationProvider 循环依赖，1.2.1）
-                JsonDeserializer<?> registered = SerializerRegistry.getInstance().getDeserializer(clazz);
-                customDeserializer = registered != null ? registered : JsonModuleRegistry.getInstance().getDeserializer(clazz);
+                // P1-6：模块与直接注册的反序列化器已统一写入 SerializerRegistry（单一事实源），
+                // 直接查询全局注册中心，避免反向依赖 YdszJson（打破 YdszJson <-> DeserializationProvider 循环依赖，1.2.1）
+                customDeserializer = SerializerRegistry.getInstance().getDeserializer(clazz);
             }
             if (customDeserializer != null) {
                 Object result = invokeCustomDeserializer(customDeserializer, json, clazz);
