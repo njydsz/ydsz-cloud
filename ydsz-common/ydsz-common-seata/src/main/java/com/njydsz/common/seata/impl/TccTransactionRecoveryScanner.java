@@ -16,14 +16,16 @@ import org.springframework.scheduling.annotation.Scheduled;
 /**
  * TCC 事务恢复扫描器
  *
- * <p>定时扫描超时未完成的 TCC 分支事务，重新执行 Confirm 或 Cancel。
+ * <p>定时扫描超时未完成的 TCC 分支事务，重新执行 Cancel。
  *
  * <p><b>P0-11</b>：解决 JVM 崩溃后 Confirm/Cancel 未执行的问题。
  * <p><b>P0-12</b>：失败重试通过恢复扫描器周期性重试。
+ * <p><b>P1-2 修复</b>：支持分页模式，每次扫描仅处理 {@code recoveryBatchSize} 条记录，
+ * 避免一次性加载全部超时事务导致内存溢出和长时间停顿。
  *
  * <p>扫描逻辑：
  * <ol>
- *   <li>查询所有 {@code TRIED} 状态且超时的分支事务</li>
+ *   <li>查询超时未完成的 TCC 分支事务（分页）</li>
  *   <li>根据全局事务状态决定执行 Confirm 还是 Cancel（当前实现中，超时未 Confirm 默认触发 Cancel）</li>
  *   <li>更新重试计数，超过最大重试次数则标记为终态</li>
  * </ol>
@@ -57,23 +59,48 @@ public class TccTransactionRecoveryScanner {
      *
      * <p>扫描间隔由 {@code ydsz.seata.recovery-scan-interval-ms} 控制（默认 10s）。
      * 通过 {@link DistributedScheduled} 保证多节点部署时仅一个节点执行恢复，避免重复 Cancel。
+     *
+     * <p>当 {@code recovery-paged-mode=true} 时，每次扫描仅处理 {@code recoveryBatchSize} 条记录，
+     * 下次扫描继续处理剩余记录，渐进式完成全部超时事务的恢复。
      */
     @Scheduled(fixedDelayString = "${ydsz.seata.recovery-scan-interval-ms:10000}")
     @DistributedScheduled(lockKey = "seata:tcc-recovery-scan", leaseTime = 60)
     public void scan() {
         LocalDateTime threshold = LocalDateTime.now().minusNanos(
                 properties.getRecoveryTimeoutThresholdMs() * 1_000_000);
-        List<TccTransactionLog> pending = logStore.findTimeoutPending(threshold);
+
+        List<TccTransactionLog> pending;
+        if (properties.isRecoveryPagedMode()) {
+            // 分页模式：每次仅处理 recoveryBatchSize 条
+            pending = logStore.findTimeoutPendingPaged(threshold, properties.getRecoveryBatchSize());
+        } else {
+            // 兼容模式：全量查询（不推荐生产环境使用）
+            pending = logStore.findTimeoutPending(threshold);
+        }
+
         if (pending.isEmpty()) {
             return;
         }
-        log.info("TCC recovery scan found {} pending transactions", pending.size());
+
+        log.info("TCC recovery scan found {} pending transactions (paged={}, batchSize={})",
+                pending.size(), properties.isRecoveryPagedMode(), properties.getRecoveryBatchSize());
+
+        int successCount = 0;
+        int failCount = 0;
         for (TccTransactionLog txLog : pending) {
             try {
                 recover(txLog);
+                successCount++;
             } catch (Exception e) {
+                failCount++;
                 log.error("TCC recovery failed for xid={}, branch={}", txLog.getXid(), txLog.getBranchId(), e);
             }
+        }
+
+        if (failCount > 0) {
+            log.warn("TCC recovery scan completed: success={}, fail={}", successCount, failCount);
+        } else {
+            log.info("TCC recovery scan completed: success={}", successCount);
         }
     }
 
