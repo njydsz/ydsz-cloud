@@ -14,6 +14,7 @@ import com.njydsz.common.auth.annotation.DataScope;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.system.domain.converter.SystemConverter;
 import com.njydsz.system.domain.dto.AppInfoDTO;
 import com.njydsz.system.domain.entity.AppInfo;
@@ -193,10 +194,7 @@ public class AppInfoServiceImpl implements AppInfoService {
         }
         wrapper.orderByDesc("created_at");
         IPage<AppInfo> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
-        List<AppInfoVO> vos = page.getRecords().stream()
-                .map(SystemConverter.INSTANT::entityToVO)
-                .collect(Collectors.toList());
-        return PageResponse.success(page.getTotal(), (long) pageNum, (long) pageSize, vos);
+        return PageResponses.success(page, SystemConverter.INSTANT::entityToVO);
     }
 
     /**

@@ -31,6 +31,7 @@ import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.lock.annotation.IdempotentExempt;
 import com.njydsz.common.permission.PermissionCodes;
@@ -371,11 +372,7 @@ public class JobController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String group) {
         Page<Job> page = jobService.page(pageNum, size, keyword, status, group);
-        return PageResponse.success(
-                page.getTotal(),
-                page.getCurrent(),
-                page.getSize(),
-                CronjobConverter.INSTANT.jobListToVO(page.getRecords()));
+        return PageResponses.success(page, CronjobConverter.INSTANT::entityToVO);
     }
 
     /**
@@ -398,11 +395,7 @@ public class JobController {
             @RequestParam(required = false) String jobKey,
             @RequestParam(required = false) String status) {
         Page<JobLog> page = jobService.pageLog(pageNum, size, jobKey, status);
-        return PageResponse.success(
-                page.getTotal(),
-                page.getCurrent(),
-                page.getSize(),
-                CronjobConverter.INSTANT.jobLogListToVO(page.getRecords()));
+        return PageResponses.success(page, CronjobConverter.INSTANT::entityToVO);
     }
 
     /**

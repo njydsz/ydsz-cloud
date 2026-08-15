@@ -1,15 +1,21 @@
 package com.njydsz.common.netty.ssl;
 
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.custom.SysException;
+
 /**
  * Netty SSL/TLS 上下文创建异常。
  *
  * <p>封装 SSL 上下文初始化过程中的各种错误（证书加载失败、密码错误、格式不支持等），
  * 便于调用方精确捕获和处理。
  *
+ * <p>继承 {@link SysException}，错误码固定为 {@link CoreExceptionCode#NETWORK_ERROR}（B01055），
+ * 表示基础设施层网络/SSL 故障。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
-public class NettySslException extends RuntimeException {
+public class NettySslException extends SysException {
 
     private static final long serialVersionUID = 1L;
 
@@ -23,7 +29,8 @@ public class NettySslException extends RuntimeException {
      * @param message     错误消息
      */
     public NettySslException(String contextType, String message) {
-        super(message);
+        super(CoreExceptionCode.NETWORK_ERROR);
+        setMessage(message);
         this.contextType = contextType;
     }
 
@@ -35,7 +42,8 @@ public class NettySslException extends RuntimeException {
      * @param cause       根因
      */
     public NettySslException(String contextType, String message, Throwable cause) {
-        super(message, cause);
+        super(CoreExceptionCode.NETWORK_ERROR, cause);
+        setMessage(message);
         this.contextType = contextType;
     }
 

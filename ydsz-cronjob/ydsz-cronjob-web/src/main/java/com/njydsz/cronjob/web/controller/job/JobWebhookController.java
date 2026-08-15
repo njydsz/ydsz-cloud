@@ -19,6 +19,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.cronjob.domain.entity.job.JobWebhook;
@@ -161,11 +162,7 @@ public class JobWebhookController {
                         w -> w.getJobKey(), jobKey)
                 .orderByDesc(w -> w.getCreatedAt());
         Page<JobWebhook> page = webhookMapper.selectPage(new Page<>(pageNum, size), wrapper);
-        return PageResponse.success(
-                page.getTotal(),
-                page.getCurrent(),
-                page.getSize(),
-                CronjobConverter.INSTANT.jobWebhookListToVO(page.getRecords()));
+        return PageResponses.success(page, CronjobConverter.INSTANT::entityToVO);
     }
 
     /**
