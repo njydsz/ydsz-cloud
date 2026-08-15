@@ -99,22 +99,6 @@ public class CircuitBreakerPublisher implements IMessagePublisher {
     }
 
     @Override
-    public void publishBatch(String... messages) {
-        if (!circuitBreaker.allowRequest()) {
-            log.warn("[CircuitBreaker] 熔断中，拒绝批量消息发布，channel={}, state={}",
-                    delegate.getChannel(), circuitBreaker.getState());
-            return;
-        }
-        try {
-            delegate.publishBatch(messages);
-            circuitBreaker.recordSuccess();
-        } catch (Exception e) {
-            circuitBreaker.recordFailure();
-            throw e;
-        }
-    }
-
-    @Override
     public void publishBatch(List<QueueMessage> messages) {
         if (!circuitBreaker.allowRequest()) {
             log.warn("[CircuitBreaker] 熔断中，拒绝批量消息发布，channel={}, state={}",

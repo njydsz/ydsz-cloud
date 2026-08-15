@@ -242,51 +242,110 @@ public class SagaResult<T> {
             this.startTime = LocalDateTime.now();
         }
 
+        /**
+         * 设置执行状态
+         *
+         * @param status 执行状态
+         * @return this
+         */
         public Builder<T> status(Status status) {
             this.status = status;
             return this;
         }
 
+        /**
+         * 设置正向操作返回值
+         *
+         * @param result 正向操作返回值
+         * @return this
+         */
         public Builder<T> result(T result) {
             this.result = result;
             return this;
         }
 
+        /**
+         * 添加步骤执行详情
+         *
+         * @param execution 步骤执行详情
+         * @return this
+         */
         public Builder<T> addStepExecution(StepExecution execution) {
             this.stepExecutions.add(execution);
             return this;
         }
 
+        /**
+         * 添加补偿失败详情
+         *
+         * @param failure 补偿失败详情
+         * @return this
+         */
         public Builder<T> addCompensationFailure(CompensationFailure failure) {
             this.compensationFailures.add(failure);
             return this;
         }
 
+        /**
+         * 批量添加补偿失败详情
+         *
+         * @param failures 补偿失败详情列表
+         * @return this
+         */
         public Builder<T> addCompensationFailures(List<CompensationFailure> failures) {
             this.compensationFailures.addAll(failures);
             return this;
         }
 
+        /**
+         * 设置事务开始时间
+         *
+         * @param startTime 事务开始时间
+         * @return this
+         */
         public Builder<T> startTime(LocalDateTime startTime) {
             this.startTime = startTime;
             return this;
         }
 
+        /**
+         * 设置事务结束时间
+         *
+         * @param endTime 事务结束时间
+         * @return this
+         */
         public Builder<T> endTime(LocalDateTime endTime) {
             this.endTime = endTime;
             return this;
         }
 
+        /**
+         * 设置事务总耗时
+         *
+         * @param totalDurationMs 事务总耗时（毫秒）
+         * @return this
+         */
         public Builder<T> totalDurationMs(long totalDurationMs) {
             this.totalDurationMs = totalDurationMs;
             return this;
         }
 
+        /**
+         * 设置错误信息
+         *
+         * @param errorMessage 错误信息
+         * @return this
+         */
         public Builder<T> errorMessage(String errorMessage) {
             this.errorMessage = errorMessage;
             return this;
         }
 
+        /**
+         * 构建 SagaResult 实例
+         *
+         * @return SagaResult 实例
+         */
         public SagaResult<T> build() {
             if (endTime == null) {
                 endTime = LocalDateTime.now();

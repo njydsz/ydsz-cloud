@@ -167,6 +167,13 @@ public class SeataMQSendTemplate {
 
     /**
      * 构建 RocketMQ 消息对象，自动注入 XID 等信息
+     *
+     * @param topic           消息主题
+     * @param tag             消息标签
+     * @param keys            消息业务键
+     * @param body            消息体
+     * @param extraProperties 额外属性
+     * @return RocketMQ 消息对象
      */
     private Message buildMessage(String topic, String tag, String keys, byte[] body,
                                  Map<String, String> extraProperties) {
@@ -220,6 +227,8 @@ public class SeataMQSendTemplate {
 
     /**
      * 获取当前线程 XID（用于日志）
+     *
+     * @return 当前线程 XID，无事务上下文时返回 null
      */
     private String getCurrentXid() {
         XidPropagator propagator = xidPropagatorProvider.getIfAvailable();
@@ -228,6 +237,9 @@ public class SeataMQSendTemplate {
 
     /**
      * 校验发送结果
+     *
+     * @param result 发送结果
+     * @throws MessagingException 发送状态非 SEND_OK 时抛出
      */
     private void validateSendResult(SendResult result) {
         SendStatus status = result.getSendStatus();
@@ -238,6 +250,10 @@ public class SeataMQSendTemplate {
 
     /**
      * 截断字符串到指定字节长度
+     *
+     * @param value    原始字符串
+     * @param maxBytes 最大字节长度
+     * @return 截断后的字符串，原始字符串为 null 时返回 null
      */
     private String truncate(String value, int maxBytes) {
         if (value == null) {

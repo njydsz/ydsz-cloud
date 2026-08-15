@@ -9,7 +9,6 @@ import java.util.Map;
 import org.springframework.data.redis.connection.stream.Consumer;
 import org.springframework.data.redis.connection.stream.PendingMessage;
 import org.springframework.data.redis.connection.stream.PendingMessagesSummary;
-import org.springframework.data.redis.connection.stream.Range;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import lombok.AllArgsConstructor;
@@ -98,7 +97,7 @@ public class PendingEntryListCleaner {
                 String consumerName = entry.getKey();
                 Consumer consumer = Consumer.from(groupName, consumerName);
                 List<PendingMessage> pendingMessages = redisTemplate.opsForStream()
-                        .pending(channel, consumer, Range.unbounded(), Integer.MAX_VALUE);
+                        .pending(channel, consumer, org.springframework.data.domain.Range.unbounded(), Integer.MAX_VALUE);
                 if (pendingMessages != null) {
                     for (PendingMessage pending : pendingMessages) {
                         if (pending.getElapsedTimeSinceLastDelivery().compareTo(idleThreshold) > 0) {
@@ -182,7 +181,7 @@ public class PendingEntryListCleaner {
                 if (count != null && count > 0) {
                     Consumer consumer = Consumer.from(groupName, consumerName);
                     List<PendingMessage> pendingMessages = redisTemplate.opsForStream()
-                            .pending(channel, consumer, Range.unbounded(), count > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) (long) count);
+                            .pending(channel, consumer, org.springframework.data.domain.Range.unbounded(), count > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) (long) count);
                     if (pendingMessages != null) {
                         for (PendingMessage pm : pendingMessages) {
                             allPending.add(PendingEntryInfo.builder()

@@ -181,6 +181,9 @@ public class SagaStep<T> {
 
         /**
          * 设置正向操作（必填）
+         *
+         * @param forwardAction 正向操作
+         * @return this
          */
         public Builder<T> forwardAction(Callable<T> forwardAction) {
             this.forwardAction = forwardAction;
@@ -189,6 +192,9 @@ public class SagaStep<T> {
 
         /**
          * 设置补偿操作（可选）
+         *
+         * @param compensation 补偿操作
+         * @return this
          */
         public Builder<T> compensation(Runnable compensation) {
             this.compensation = compensation;
@@ -199,6 +205,7 @@ public class SagaStep<T> {
          * 设置超时时间（毫秒）
          *
          * @param timeoutMs 超时时间，0 表示不限制
+         * @return this
          */
         public Builder<T> timeoutMs(long timeoutMs) {
             this.timeoutMs = Math.max(0, timeoutMs);

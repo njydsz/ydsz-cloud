@@ -3,7 +3,6 @@ package com.njydsz.common.queue.service;
 import java.util.List;
 
 import com.njydsz.common.queue.domain.QueueMessage;
-import com.njydsz.common.queue.service.impl.RedisStreamPublisher;
 
 /**
  * 消息发布者接口
@@ -11,26 +10,7 @@ import com.njydsz.common.queue.service.impl.RedisStreamPublisher;
  * <p>定义消息发布的核心操作，支持单条发布、批量发布、延迟发布和顺序消息发布。
  *
  * <p><b>批量优化：</b>
- * 对于支持原生批量的队列实现（如 {@link RedisStreamPublisher}），
- * 可覆盖 {@link #publishBatch(List)} 以利用原生批量 API 提升吞吐量。
- *
- * <p><b>使用示例：</b>
- * <pre>{@code
- * // 单条发布
- * publisher.publish("Hello World");
- *
- * // 发布 QueueMessage
- * publisher.publish(queueMessage);
- *
- * // 批量发布
- * publisher.publishBatch(messages);
- *
- * // 顺序消息发布
- * publisher.publishSequential(sequentialMessage);
- *
- * // 延迟发布
- * publisher.publishDelayed(message, 60000);
- * }</pre>
+ * 对于支持原生批量的队列实现，可覆盖 {@link #publishBatch(List)} 以利用原生批量 API 提升吞吐量。
  *
  * <p><b>线程安全性：</b>
  * 实现类应该是线程安全的，可以被多个线程共享使用。
@@ -54,30 +34,45 @@ public interface IMessagePublisher {
      * 发布 QueueMessage 消息
      *
      * <p>将 {@link QueueMessage} 发布到队列通道，携带 headers、traceId 等元数据。
+     * 默认实现将 QueueMessage 序列化为 JSON 后调用 {@link #publish(String)}。
      *
      * @param message 待发布的消息，为 null 时静默忽略
      */
-    void publish(QueueMessage message);
+    default void publish(QueueMessage message) {
+        if (message == null) {
+            return;
+        }
+        publish(com.njydsz.common.json.YdszJson.toJson(message));
+    }
 
     /**
      * 批量发布 QueueMessage 消息
      *
      * <p>将多条 QueueMessage 批量发布到队列通道。
-     * 支持批量发送的队列实现（如 Redis Stream pipeline、Kafka batch、RocketMQ batch）
-     * 可以覆盖此方法以利用原生批量 API 提升吞吐量。
+     * 默认实现逐条调用 {@link #publish(QueueMessage)}。
      *
      * @param messages 待发布的消息列表，为空或 null 时静默忽略
      */
-    void publishBatch(List<QueueMessage> messages);
+    default void publishBatch(List<QueueMessage> messages) {
+        if (messages == null || messages.isEmpty()) {
+            return;
+        }
+        for (QueueMessage msg : messages) {
+            publish(msg);
+        }
+    }
 
     /**
      * 发布顺序消息
      *
      * <p>保证相同 {@code groupKey} 的消息被路由到同一分区/队列，顺序消费。
+     * 默认实现直接调用 {@link #publish(QueueMessage)}。
      *
-     * @param message 待发布的顺序消息，需携带 {@code groupKey} 和 {@code sequence}
+     * @param message 待发布的顺序消息
      */
-    void publishSequential(QueueMessage message);
+    default void publishSequential(QueueMessage message) {
+        publish(message);
+    }
 
     /**
      * 发布延迟消息
@@ -88,7 +83,9 @@ public interface IMessagePublisher {
      * @param message     待发布的消息
      * @param delayMillis 延迟时间（毫秒）
      */
-    void publishDelayed(QueueMessage message, long delayMillis);
+    default void publishDelayed(QueueMessage message, long delayMillis) {
+        publish(message);
+    }
 
     /**
      * 获取发布者关联的通道名称

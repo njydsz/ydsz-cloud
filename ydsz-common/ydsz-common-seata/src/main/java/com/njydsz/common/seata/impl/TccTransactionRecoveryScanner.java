@@ -37,6 +37,9 @@ public class TccTransactionRecoveryScanner {
 
     private static final Logger LOG = LoggerFactory.getLogger(TccTransactionRecoveryScanner.class);
 
+    /** 每毫秒对应的纳秒数（1 ms = 1,000,000 ns）。 */
+    private static final long NANOS_PER_MS = 1_000_000L;
+
     private final TccTransactionLogStore logStore;
     private final SeataProperties properties;
     private final TccRecoveryHandler recoveryHandler;
@@ -67,7 +70,7 @@ public class TccTransactionRecoveryScanner {
     @DistributedScheduled(lockKey = "seata:tcc-recovery-scan", leaseTime = 60)
     public void scan() {
         LocalDateTime threshold = LocalDateTime.now().minusNanos(
-                properties.getRecoveryTimeoutThresholdMs() * 1_000_000);
+                properties.getRecoveryTimeoutThresholdMs() * NANOS_PER_MS);
 
         List<TccTransactionLog> pending;
         if (properties.isRecoveryPagedMode()) {

@@ -13,13 +13,8 @@ package com.njydsz.common.event.api;
  *   <li>每个事件类型注明发布方模块和消费方模块</li>
  * </ul>
  *
- * <p><b>迁移说明：</b>本类合并了 {@link ModuleEventTypes} 和
- * {@code StandardEventTypes}（model 包），统一命名规范和事件集合。
- * 旧类标注 {@code @Deprecated}，请迁移至本类常量。
- *
  * @author ydsz-team
  * @since 1.6.0
- * @since 1.6.0 由 ModuleEventTypes 与 StandardEventTypes 合并而来
  */
 public final class DomainEventTypes {
 

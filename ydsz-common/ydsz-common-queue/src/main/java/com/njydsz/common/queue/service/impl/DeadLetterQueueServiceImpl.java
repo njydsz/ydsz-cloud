@@ -117,7 +117,8 @@ public class DeadLetterQueueServiceImpl implements DeadLetterQueueService {
         try {
             IMessagePublisher publisher = queueProvider.createMessageQueue(queueProperties.resolvedType())
                     .createPublisher(topic);
-            publisher.publish(queueMessage != null ? queueMessage : QueueMessage.of(dlqMessage.getMessageBody()));
+            QueueMessage toPublish = queueMessage != null ? queueMessage : QueueMessage.of(dlqMessage.getMessageBody());
+            publisher.publish(toPublish);
 
             // 重试成功后从死信队列彻底移除（不再保留 retryCount）
             redisTemplate.opsForHash().delete(dlqKey, messageId);

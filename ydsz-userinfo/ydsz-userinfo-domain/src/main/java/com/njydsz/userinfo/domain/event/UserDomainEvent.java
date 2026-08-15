@@ -15,7 +15,7 @@ import com.njydsz.common.util.id.IdGenerator;
  *
  * <p>封装用户模块的用户/角色/组织变更事件，继承 {@link DomainEvent}，
  * 事件类型常量统一取自 {@link DomainEventTypes}（USER_CREATED / USER_UPDATED / USER_DELETED /
- * ROLE_CHANGED / DEPARTMENT_CHANGED）。
+ * ROLE_CHANGED / ORG_STRUCTURE_CHANGED）。
  *
  * <p><b>发布方式：</b>
  * <pre>{@code
