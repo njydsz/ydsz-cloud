@@ -18,6 +18,24 @@
       "description": "K8s 健康探针路径放行列表。"
     },
     {
+      "name": "ydsz.gateway.cors.allowed-origin",
+      "type": "java.lang.String",
+      "description": "CORS 允许的单一可信来源（不含通配符），与 allowCredentials=true 配合使用时禁止为 *。",
+      "defaultValue": "https://ydsz.example.com"
+    },
+    {
+      "name": "ydsz.gateway.cors.allow-credentials",
+      "type": "java.lang.Boolean",
+      "description": "是否允许携带凭据（Cookie / Authorization），开启时 allowed-origin 不能为 *。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.gateway.cors.max-age-seconds",
+      "type": "java.lang.Long",
+      "description": "预检请求缓存时间（秒）。",
+      "defaultValue": 3600
+    },
+    {
       "name": "ydsz.gateway.httpclient.pool.max-connections",
       "type": "java.lang.int",
       "description": "HttpClient 连接池最大连接数（每路由维度）。",

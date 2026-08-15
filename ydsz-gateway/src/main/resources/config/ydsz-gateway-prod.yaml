@@ -48,20 +48,8 @@ spring:
         locator:
           enabled: false
           lower-case-service-id: true
-      # P0-阶段二-10: 生产环境 CORS 严格化
-      globalcors:
-        cors-configurations:
-          '[/**]':
-            # 生产环境必须配置可信域，禁止 *
-            allowedOriginPatterns: ${CORS_ALLOWED_ORIGINS:https://ydsz.example.com,https://*.ydsz.example.com}
-            allowedMethods: "GET,POST,PUT,DELETE,OPTIONS,PATCH"
-            allowedHeaders: "Authorization,Content-Type,X-Requested-With,X-Access-Token,X-Trace-Id,X-Gray-Tag"
-            exposedHeaders:
-              - Authorization
-              - X-Trace-Id
-              - Content-Disposition
-            allowCredentials: true
-            maxAge: 3600
+      # P2-1 安全修复：globalcors 已移除，CORS 改由 ydsz.gateway.cors.allowed-origin 单一可信来源控制
+      # 避免 CorsWebFilter 与 globalcors 双重注册导致行为不确定
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
         # P0-4: 请求体大小限制 10MB（防 DoS）
