@@ -23,8 +23,8 @@ import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.infra.mapper.FlowTimerMapper;
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.workflow.server.engine.FlowAdvancer;
-import com.njydsz.workflow.server.engine.FlowClusterLockHelper;
 import com.njydsz.workflow.server.service.FlowNotificationService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowTimerService;
@@ -60,13 +60,14 @@ import lombok.extern.slf4j.Slf4j;
  * <p><b>事务边界：</b>
  * <ul>
  *   <li>所有写操作开启 {@code @Transactional(rollbackFor = Exception.class)}</li>
- *   <li>通过 {@link FlowClusterLockHelper} 分布式锁保证集群中只有<b>一个节点</b>执行扫描，
+ *   <li>通过 {@link DistributedScheduled} 分布式锁保证集群中只有<b>一个节点</b>执行扫描，
  *       避免重复触发同一定时器</li>
  * </ul>
  *
  * <p><b>设计要点：</b>
  * <ul>
- *   <li><b>集群单点扫描</b>：通过 {@code ydsz:flow:timer:scan:lock} 分布式锁保证同一时刻只有一个节点执行扫描</li>
+ *   <li><b>集群单点扫描</b>：通过 {@code @DistributedScheduled} 保证同一时刻只有一个节点执行扫描，
+ *       锁 key 自动添加 {@code ydsz:schedule:} 前缀</li>
  *   <li><b>幂等触发</b>：同一定时器的多次触发由 {@code @Transactional} 串行化，
  *       触发成功后立即置为 {@code TRIGGERED}，避免重复推进流程</li>
  *   <li><b>失败重试</b>：触发失败的定时器记录 {@code retry_count}，下次扫描时重试（最多 3 次）</li>
@@ -90,7 +91,7 @@ import lombok.extern.slf4j.Slf4j;
  * @see com.njydsz.workflow.domain.entity.FlowTimer 定时器实体
  * @see FlowAdvancer 流程推进引擎
  * @see FlowSlaServiceImpl SLA 监控（与定时器同属「超时处理」但职责不同）
- * @see FlowClusterLockHelper 集群锁辅助
+ * @see com.njydsz.common.lock.annotation.DistributedScheduled 分布式调度注解
  */
 @Slf4j
 @Service
@@ -108,8 +109,6 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     /** 流程推进引擎，定时器触发后推进流程 */
     private final FlowAdvancer advancer;
     private final FlowNotificationService notificationService;
-    /** P0-2: 集群调度分布式锁辅助 */
-    private final FlowClusterLockHelper clusterLockHelper;
 
     /** 单次扫描上限，避免大表全表扫描 */
     private static final int SCAN_BATCH_SIZE = 200;
@@ -363,10 +362,14 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     /**
      * 每 30s 扫描一次（在 workflow 模块自身启用，
      * workflow 模块需配 {@code @EnableScheduling} 或在公共配置中开启）。
+     *
+     * <p>通过 {@link DistributedScheduled} 保证多节点部署时同一时刻只有一个节点执行扫描，
+     * 获取不到锁的节点直接跳过本次执行（非阻塞）。
      */
     @Scheduled(fixedDelay = 30_000L, initialDelay = 60_000L)
+    @DistributedScheduled(lockKey = "flow:timer:scan", leaseTime = 30)
     public void scheduledScan() {
-        clusterLockHelper.tryRun("timer:scan", 25, this::scanAndFire);
+        scanAndFire();
     }
 
     // ============== 内部辅助 ==============

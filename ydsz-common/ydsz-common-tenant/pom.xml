@@ -69,10 +69,10 @@
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-core</artifactId>
         </dependency>
-        <!-- Caffeine（SQL 改写缓存，替代 ConcurrentHashMap 实现 LRU + TTL） -->
+        <!-- ydsz-common-cache（统一本地缓存框架，替代 Caffeine） -->
         <dependency>
-            <groupId>com.github.ben-manes.caffeine</groupId>
-            <artifactId>caffeine</artifactId>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-cache</artifactId>
         </dependency>
 
         <!-- 测试依赖 -->

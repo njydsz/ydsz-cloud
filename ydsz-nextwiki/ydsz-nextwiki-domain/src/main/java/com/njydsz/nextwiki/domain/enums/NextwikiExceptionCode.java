@@ -1,6 +1,7 @@
 package com.njydsz.nextwiki.domain.enums;
 
 import com.njydsz.common.exception.enums.ExceptionCode;
+import com.njydsz.common.exception.registry.YdszExceptionCode;
 
 /**
  * 网盘知识库模块异常码枚举
@@ -23,6 +24,7 @@ import com.njydsz.common.exception.enums.ExceptionCode;
  * @author ydsz-team
  * @since 1.0.0
  */
+@YdszExceptionCode(module = "nextwiki", description = "知识库")
 public enum NextwikiExceptionCode implements ExceptionCode {
 
     // 文件相关 W01xxx

@@ -1,6 +1,7 @@
 package com.njydsz.common.file.exception;
 
 import com.njydsz.common.exception.enums.ExceptionCode;
+import com.njydsz.common.exception.registry.YdszExceptionCode;
 
 /**
  * 文件存储模块异常码枚举
@@ -23,6 +24,7 @@ import com.njydsz.common.exception.enums.ExceptionCode;
  * @author ydsz-team
  * @since 1.0.0
  */
+@YdszExceptionCode(module = "file", description = "文件存储")
 public enum FileExceptionCode implements ExceptionCode {
 
     /** 上传文件为空 */

@@ -1,6 +1,7 @@
 package com.njydsz.common.docs.exception;
 
 import com.njydsz.common.exception.enums.ExceptionCode;
+import com.njydsz.common.exception.registry.YdszExceptionCode;
 
 /**
  * 文档处理模块异常码枚举
@@ -20,6 +21,7 @@ import com.njydsz.common.exception.enums.ExceptionCode;
  * @author ydsz-team
  * @since 1.0.0
  */
+@YdszExceptionCode(module = "docs", description = "文档管理")
 public enum DocumentExceptionCode implements ExceptionCode {
 
     /** 不支持的文档格式 */

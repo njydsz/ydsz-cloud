@@ -8,6 +8,7 @@ import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.security.LoginUser;
+import com.njydsz.common.tenant.TenantContextHolder;
 
 /**
  * 认证上下文便捷访问工具类（替代已废弃的 {@code AuthContext}）。
@@ -119,10 +120,10 @@ public final class AuthContextUtils {
     /**
      * 当前租户 ID（多租户上下文）。
      *
-     * <p>从登录用户上下文获取 tenantId；未登录或上下文为空时返回默认值 "1"。
+     * <p>从 {@link TenantContextHolder} 获取 tenantId；未设置时返回默认值 "1"。
      * 适用于后台任务、单元测试等无 HTTP 请求上下文的场景。
      *
-     * @return 当前租户 ID；未登录时返回 "1"
+     * @return 当前租户 ID；未设置时返回 "1"
      */
     public static String getTenantIdOrDefault() {
         return getTenantIdOrDefault("1");
@@ -131,15 +132,15 @@ public final class AuthContextUtils {
     /**
      * 当前租户 ID（带自定义默认值）。
      *
-     * @param defaultTenantId 默认租户 ID（未登录时使用）
-     * @return 当前租户 ID；未登录时返回 defaultTenantId
+     * @param defaultTenantId 默认租户 ID（未设置时使用）
+     * @return 当前租户 ID；未设置时返回 defaultTenantId
      */
     public static String getTenantIdOrDefault(String defaultTenantId) {
-        LoginUser user = getCurrentOrNull();
-        if (user == null || user.getTenantId() == null || user.getTenantId().isEmpty()) {
+        String tenantId = TenantContextHolder.getTenantId();
+        if (tenantId == null || tenantId.isEmpty()) {
             return defaultTenantId == null || defaultTenantId.isEmpty() ? "1" : defaultTenantId;
         }
-        return user.getTenantId();
+        return tenantId;
     }
 
     /**
@@ -238,19 +239,28 @@ public final class AuthContextUtils {
     /**
      * 获取租户 ID。
      *
+     * <p>从 {@link TenantContextHolder} 获取当前租户 ID。
+     *
      * @return 租户 ID，未设置时返回 null
      */
     public static String getTenantId() {
-        return RequestContext.getTenantId();
+        return TenantContextHolder.getTenantId();
     }
 
     /**
      * 设置租户 ID。
      *
+     * <p>通过 {@link TenantContextHolder} 设置当前租户 ID。
+     *
      * @param tenantId 租户 ID
      */
     public static void setTenantId(String tenantId) {
-        RequestContext.setTenantId(tenantId);
+        if (tenantId == null) {
+            TenantContextHolder.clear();
+            return;
+        }
+        TenantContextHolder.set(
+                com.njydsz.common.tenant.TenantContext.of(tenantId));
     }
 
     // ==================== 清理 ====================

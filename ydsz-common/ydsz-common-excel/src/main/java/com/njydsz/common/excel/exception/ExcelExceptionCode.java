@@ -1,6 +1,7 @@
 package com.njydsz.common.excel.exception;
 
 import com.njydsz.common.exception.enums.ExceptionCode;
+import com.njydsz.common.exception.registry.YdszExceptionCode;
 
 /**
  * Excel 模块异常码枚举
@@ -19,6 +20,7 @@ import com.njydsz.common.exception.enums.ExceptionCode;
  * @author ydsz-team
  * @since 1.0.0
  */
+@YdszExceptionCode(module = "excel", description = "Excel处理")
 public enum ExcelExceptionCode implements ExceptionCode {
 
     // ==================== 读取异常 H01xxx ====================

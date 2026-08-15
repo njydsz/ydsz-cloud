@@ -24,11 +24,18 @@ import com.njydsz.common.json.annotation.JsonIgnore;
  * <p>统一的业务实体基类，包含主键、审计字段，并实现 {@link EventRegistry} 提供领域事件注册能力。
  * equals/hashCode 仅以 {@code id} 参与判同（DDD 实体标准语义）。
  *
+ * <p><b>已废弃：</b>当前项目统一使用 {@code ydsz-common-jdbc} 提供的
+ * {@link com.njydsz.common.jdbc.entity.MpBaseEntity MpBaseEntity} 作为持久化实体基类（支持 MyBatis-Plus
+ * 注解、乐观锁、逻辑删除、多租户等能力）。若需领域事件能力，可直接实现 {@link EventRegistry} 接口。
+ *
  * @param <T> 主键 ID 类型
  * @author ydsz-team
  * @since 1.10.0
+ * @deprecated 自 1.10.0 起废弃，替代方案为 {@code com.njydsz.common.jdbc.entity.MpBaseEntity}。
+ *             需要领域事件能力时请直接实现 {@link EventRegistry} 接口。
  */
-@JsonClass(description = "领域实体基类，纯领域无持久化语义")
+@Deprecated(since = "1.10.0", forRemoval = false)
+@JsonClass(description = "领域实体基类，纯领域无持久化语义（已废弃，请使用 MpBaseEntity）")
 @Getter
 @Setter
 @SuperBuilder

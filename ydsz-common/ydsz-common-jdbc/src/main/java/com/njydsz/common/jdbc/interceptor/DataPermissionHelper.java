@@ -10,8 +10,8 @@ import org.apache.ibatis.mapping.MappedStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
+import com.njydsz.common.cache.YdszCache;
+import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.jdbc.config.DataPermissionConfiguration;
 import com.njydsz.common.jdbc.enums.InterceptTableStrategy;
 import com.njydsz.common.jdbc.permission.DataPermissionBypass;
@@ -32,7 +32,7 @@ import net.sf.jsqlparser.schema.Table;
  * </ul>
  *
  * <h3>缓存设计</h3>
- * <p>使用 Caffeine 缓存方法级忽略标记，最大容量 10000 条，防止内存泄漏，
+ * <p>使用 ydsz-common-cache 缓存方法级忽略标记，最大容量 10000 条，防止内存泄漏，
  * 并避免 {@code Collections.synchronizedMap} 全局锁带来的并发竞争。
  *
  * @author ydsz-team
@@ -47,7 +47,7 @@ final class DataPermissionHelper {
     /** 有界缓存最大容量 10000，防止内存泄漏 */
     private static final int MAX_CACHE_SIZE = 10000;
     private static final Cache<String, Boolean> IGNORE_CACHE =
-            Caffeine.newBuilder().maximumSize(MAX_CACHE_SIZE).build();
+            YdszCache.<String, Boolean>newBuilder().maximumSize(MAX_CACHE_SIZE).build();
 
     /**
      * 私有构造方法，工具类禁止实例化。
@@ -123,7 +123,7 @@ final class DataPermissionHelper {
     /**
      * 检查 Mapper 方法是否标注了 {@link DataPermissionIgnore} 注解。
      *
-     * <p>使用 Caffeine 缓存（最大 10000 条）避免重复反射扫描。
+     * <p>使用 ydsz-common-cache 缓存（最大 10000 条）避免重复反射扫描。
      *
      * @param ms MyBatis MappedStatement
      * @return 是否应忽略数据权限拦截

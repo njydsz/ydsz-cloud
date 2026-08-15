@@ -1,7 +1,8 @@
 package com.njydsz.common.security;
 
 import com.njydsz.common.core.constant.SystemConstants;
-import com.njydsz.common.core.context.RequestContext;
+import com.njydsz.common.tenant.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 
 /**
  * 租户上下文
@@ -25,7 +26,12 @@ import com.njydsz.common.core.context.RequestContext;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 自 v2.0.0 起，统一使用 {@link TenantContextHolder} 作为租户上下文读写入口。
+ *             本方法已委托给 TenantContextHolder 实现，仅作向后兼容。
+ *             迁移示例：{@code TenantContext.set(id)} → {@code TenantContextHolder.set(TenantContext.of(id))}
+ *             ；{@code TenantContext.getTenantId()} → {@link TenantContextHolder#getTenantId()}
  */
+@Deprecated
 public final class TenantContext {
 
     /** 默认租户 ID（未登录或无租户上下文时使用，委托 {@link SystemConstants#DEFAULT_TENANT_ID}） */
@@ -38,18 +44,29 @@ public final class TenantContext {
      * 设置当前线程的租户 ID
      *
      * @param tenantId 租户 ID（可为 null）
+     * @deprecated 使用 {@link TenantContextHolder#set(TenantContext)} 替代，
+     *             示例：{@code TenantContextHolder.set(TenantContext.of(tenantId))}
      */
+    @Deprecated
     public static void set(String tenantId) {
-        RequestContext.setTenantId(tenantId);
+        if (tenantId == null) {
+            TenantContextHolder.clear();
+            return;
+        }
+        TenantContextHolder.set(TenantContext.of(tenantId));
     }
 
     /**
      * 获取当前线程的租户 ID
      *
      * @return 租户 ID；未设置时返回 {@link #DEFAULT_TENANT_ID}
+     * @deprecated 使用 {@link TenantContextHolder#getTenantId()} 替代，
+     *             注意：TenantContextHolder.getTenantId() 未设置时返回 null，
+     *             需自行处理默认值逻辑
      */
+    @Deprecated
     public static String get() {
-        String tenantId = RequestContext.getTenantId();
+        String tenantId = TenantContextHolder.getTenantId();
         return tenantId != null ? tenantId : DEFAULT_TENANT_ID;
     }
 
@@ -57,15 +74,20 @@ public final class TenantContext {
      * 获取当前线程的租户 ID（语义别名，等同 {@link #get()}）
      *
      * @return 租户 ID；未设置时返回 {@link #DEFAULT_TENANT_ID}
+     * @deprecated 使用 {@link TenantContextHolder#getTenantId()} 替代
      */
+    @Deprecated
     public static String getTenantId() {
         return get();
     }
 
     /**
      * 清除当前线程的租户 ID
+     *
+     * @deprecated 使用 {@link TenantContextHolder#clear()} 替代
      */
+    @Deprecated
     public static void clear() {
-        RequestContext.setTenantId(null);
+        TenantContextHolder.clear();
     }
 }
