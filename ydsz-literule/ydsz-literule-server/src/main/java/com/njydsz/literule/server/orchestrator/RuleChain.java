@@ -20,7 +20,7 @@ import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.RuleSeverity;
 import com.njydsz.literule.api.StatsRecorder;
-import com.njydsz.literule.api.expression.ExpressionEvaluator;
+import com.njydsz.literule.api.expression.ExpressionEngine;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -478,7 +478,7 @@ public class RuleChain {
      * @param evaluator 表达式求值器（IF/SWITCH 嵌套链需要）
      * @return 已触发的规则结果列表；无触发返回空列表
      */
-    public List<RuleResult> evaluate(RuleContext context, ExpressionEvaluator evaluator) {
+    public List<RuleResult> evaluate(RuleContext context, ExpressionEngine evaluator) {
         return evaluate(context, evaluator, null);
     }
 
@@ -494,7 +494,7 @@ public class RuleChain {
      * @return 已触发的规则结果列表；无触发返回空列表
      * @since 1.0.0
      */
-    public List<RuleResult> evaluate(RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder) {
+    public List<RuleResult> evaluate(RuleContext context, ExpressionEngine evaluator, StatsRecorder statsRecorder) {
         return evaluate(context, evaluator, statsRecorder, null, 0);
     }
 
@@ -509,7 +509,7 @@ public class RuleChain {
      * @return 已触发的规则结果列表
      * @since 1.0.0
      */
-    public List<RuleResult> evaluate(RuleContext context, ExpressionEvaluator evaluator,
+    public List<RuleResult> evaluate(RuleContext context, ExpressionEngine evaluator,
                                      StatsRecorder statsRecorder,
                                      ExecutorService parallelExecutor,
                                      long timeoutMs) {
@@ -536,7 +536,7 @@ public class RuleChain {
      * @param evaluator 表达式求值器
      * @return 已触发的结果列表
      */
-    private List<RuleResult> evaluateThen(RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder) {
+    private List<RuleResult> evaluateThen(RuleContext context, ExpressionEngine evaluator, StatsRecorder statsRecorder) {
         List<RuleResult> results = new ArrayList<>();
         if (nodes == null) {
             return results;
@@ -557,7 +557,7 @@ public class RuleChain {
      * @param evaluator 表达式求值器
      * @return 已触发的结果列表
      */
-    private List<RuleResult> evaluateWhen(RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder,
+    private List<RuleResult> evaluateWhen(RuleContext context, ExpressionEngine evaluator, StatsRecorder statsRecorder,
                                            ExecutorService parallelExecutor, long timeoutMs) {
         List<RuleResult> results = new ArrayList<>();
         if (nodes == null || nodes.isEmpty()) {
@@ -607,10 +607,10 @@ public class RuleChain {
      * @param evaluator 表达式求值器
      * @return 已触发的结果列表
      */
-    private List<RuleResult> evaluateIf(RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder) {
+    private List<RuleResult> evaluateIf(RuleContext context, ExpressionEngine evaluator, StatsRecorder statsRecorder) {
         List<RuleResult> results = new ArrayList<>();
         if (evaluator == null) {
-            log.warn("[LiteRule-Chain] IF 链缺少 ExpressionEvaluator，跳过求值");
+            log.warn("[LiteRule-Chain] IF 链缺少 ExpressionEngine，跳过求值");
             return results;
         }
         boolean matched = evaluator.evalBoolean(conditionExpression, context);
@@ -634,7 +634,7 @@ public class RuleChain {
      * @param evaluator 表达式求值器
      * @return 已触发的结果列表
      */
-    private List<RuleResult> evaluateSwitch(RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder) {
+    private List<RuleResult> evaluateSwitch(RuleContext context, ExpressionEngine evaluator, StatsRecorder statsRecorder) {
         List<RuleResult> results = new ArrayList<>();
         if (branchMap == null || branchKey == null) {
             return results;
@@ -665,10 +665,10 @@ public class RuleChain {
     /**
      * ELIF 语义：依次求值多个条件表达式，执行第一个匹配的分支；无匹配则执行 else 分支
      */
-    private List<RuleResult> evaluateElif(RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder) {
+    private List<RuleResult> evaluateElif(RuleContext context, ExpressionEngine evaluator, StatsRecorder statsRecorder) {
         List<RuleResult> results = new ArrayList<>();
         if (evaluator == null) {
-            log.warn("[LiteRule-Chain] ELIF 链缺少 ExpressionEvaluator，跳过求值");
+            log.warn("[LiteRule-Chain] ELIF 链缺少 ExpressionEngine，跳过求值");
             return results;
         }
         if (elifBranches != null) {
@@ -698,7 +698,7 @@ public class RuleChain {
      *
      * @since 1.0.0 修复 FOR 循环不可变 Map bug
      */
-    private List<RuleResult> evaluateFor(RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder) {
+    private List<RuleResult> evaluateFor(RuleContext context, ExpressionEngine evaluator, StatsRecorder statsRecorder) {
         List<RuleResult> results = new ArrayList<>();
         if (iterableExpression == null || iterationVar == null) {
             return results;
@@ -739,10 +739,10 @@ public class RuleChain {
     /**
      * WHILE 语义：条件为 true 时持续执行规则链，最多执行 maxIterations 次
      */
-    private List<RuleResult> evaluateWhile(RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder) {
+    private List<RuleResult> evaluateWhile(RuleContext context, ExpressionEngine evaluator, StatsRecorder statsRecorder) {
         List<RuleResult> results = new ArrayList<>();
         if (evaluator == null) {
-            log.warn("[LiteRule-Chain] WHILE 链缺少 ExpressionEvaluator，跳过求值");
+            log.warn("[LiteRule-Chain] WHILE 链缺少 ExpressionEngine，跳过求值");
             return results;
         }
         int iteration = 0;
@@ -780,7 +780,7 @@ public class RuleChain {
     /**
      * BREAK 语义：返回一个特殊的 BREAK 结果，由上层循环（FOR/WHILE）检测后终止
      */
-    private List<RuleResult> evaluateBreak(RuleContext context, ExpressionEvaluator evaluator) {
+    private List<RuleResult> evaluateBreak(RuleContext context, ExpressionEngine evaluator) {
         // 返回一个标记为 BREAK 的特殊结果（使用 BREAK_CODE 常量，避免与真实规则编码冲突）
         RuleResult breakResult = new RuleResult();
         breakResult.setRuleCode(RuleResult.BREAK_CODE);
@@ -804,7 +804,7 @@ public class RuleChain {
      * @return 主节点或补偿节点的评估结果
      * @since 1.0.0
      */
-    private List<RuleResult> evaluateCatch(RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder) {
+    private List<RuleResult> evaluateCatch(RuleContext context, ExpressionEngine evaluator, StatsRecorder statsRecorder) {
         List<RuleResult> results = new ArrayList<>();
         if (primaryNode == null) {
             log.warn("[LiteRule-Chain] CATCH 链缺少主节点，跳过执行");
@@ -839,7 +839,7 @@ public class RuleChain {
      * @return 主节点或回滚节点的评估结果
      * @since 1.0.0
      */
-    private List<RuleResult> evaluateRetry(RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder) {
+    private List<RuleResult> evaluateRetry(RuleContext context, ExpressionEngine evaluator, StatsRecorder statsRecorder) {
         List<RuleResult> results = new ArrayList<>();
         if (primaryNode == null) {
             log.warn("[LiteRule-Chain] RETRY 链缺少主节点，跳过执行");
@@ -909,7 +909,7 @@ public class RuleChain {
      * @param evaluator 表达式求值器
      * @return 已触发的结果列表
      */
-    private List<RuleResult> evaluateNode(RuleNode node, RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder) {
+    private List<RuleResult> evaluateNode(RuleNode node, RuleContext context, ExpressionEngine evaluator, StatsRecorder statsRecorder) {
         List<RuleResult> results = new ArrayList<>();
         if (node == null) {
             return results;
