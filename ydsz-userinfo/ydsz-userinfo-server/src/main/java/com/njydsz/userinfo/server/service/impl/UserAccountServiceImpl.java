@@ -261,6 +261,11 @@ public class UserAccountServiceImpl implements UserAccountService {
         if (result) {
             indexUpsert(entity);
             eventPublisher.publishUserUpdated(entity);
+            // P1-1: 用户被禁用时驱逐全部会话
+            if ("0".equals(entity.getStatus())) {
+                authService.evictAllSessions(dto.getId());
+                log.info("User {} disabled, all sessions evicted", dto.getId());
+            }
         }
         return result;
     }

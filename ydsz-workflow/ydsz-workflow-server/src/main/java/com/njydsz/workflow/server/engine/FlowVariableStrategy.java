@@ -3,9 +3,13 @@ package com.njydsz.workflow.server.engine;
 import java.util.Map;
 
 /**
- * 流程变量 SpEL 表达式解析策略
+ * 流程变量表达式解析策略
  *
- * <p>支持 ${var} 占位符 + 简单 SpEL 表达式（如 ${amount > 100000}）。
+ * <p>P1-3 引擎收敛：主路径使用 Aviator 表达式引擎（通过 ydsz-literule），
+ * 自研正则解析器仅作为 Aviator 不可用时的降级路径。不支持 SpEL。
+ *
+ * <p>支持 ${var} 占位符 + Aviator 表达式（如 ${amount > 100000}）
+ * 以及向后兼容的正则语法（仅降级时启用）。
  *
  * @since 1.0.0
  * @author ydsz-team

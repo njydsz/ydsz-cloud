@@ -8,9 +8,9 @@ import java.util.function.Supplier;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.Expiry;
-import com.njyzsz.common.json.YdszJson;
-import com.njyzsz.common.redis.config.RedisProperties;
-import com.njyzsz.common.redis.service.CacheProvider;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.redis.config.RedisProperties;
+import com.njydsz.common.redis.service.CacheProvider;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.string.StringUtils;
 
@@ -93,7 +93,7 @@ public class MultiLevelCacheProvider implements CacheProvider {
                 .maximumSize(Math.max(1, l1MaxSize))
                 .expireAfter(new CustomExpiry(l1TtlSeconds))
                 .removalListener((key, value, cause) ->
-                        LOG.trace("[{}] L1 缓存移除 - key={}, cause={}", CACHE_NAME, key, cause))
+                        log.trace("[{}] L1 缓存移除 - key={}, cause={}", CACHE_NAME, key, cause))
                 .build();
     }
 
@@ -105,20 +105,20 @@ public class MultiLevelCacheProvider implements CacheProvider {
         // L1 查询
         Object l1Value = l1Cache.getIfPresent(key);
         if (l1Value != null) {
-            LOG.trace("[{}] L1 命中 - key={}", CACHE_NAME, key);
+            log.trace("[{}] L1 命中 - key={}", CACHE_NAME, key);
             return NULL_PLACEHOLDER.equals(l1Value) ? null : l1Value;
         }
 
         // L2 查询
         String jsonValue = redisStringOps.get(key, String.class);
         if (jsonValue != null) {
-            LOG.debug("[{}] L2 命中 - key={}", CACHE_NAME, key);
+            log.debug("[{}] L2 命中 - key={}", CACHE_NAME, key);
             Object value = deserialize(jsonValue);
             l1Cache.put(key, value == null ? NULL_PLACEHOLDER : value);
             return value;
         }
 
-        LOG.debug("[{}] L1+L2 未命中 - key={}", CACHE_NAME, key);
+        log.debug("[{}] L1+L2 未命中 - key={}", CACHE_NAME, key);
         return null;
     }
 
@@ -134,7 +134,7 @@ public class MultiLevelCacheProvider implements CacheProvider {
         }
         // L2 返回的是 JSON 字符串，需要反序列化
         if (value instanceof String) {
-            return YdszJson.fromJsonString((String) value, clazz);
+            return YdszJson.fromJson((String) value, clazz);
         }
         return null;
     }
@@ -168,7 +168,7 @@ public class MultiLevelCacheProvider implements CacheProvider {
             l1Cache.invalidate(key);
             return true;
         } catch (Exception e) {
-            LOG.warn("[{}] L2 删除失败 - key={}, error={}", CACHE_NAME, key, e.getMessage());
+            log.warn("[{}] L2 删除失败 - key={}, error={}", CACHE_NAME, key, e.getMessage());
             return false;
         }
     }
@@ -181,7 +181,7 @@ public class MultiLevelCacheProvider implements CacheProvider {
         try {
             redisStringOps.del(keys);
         } catch (Exception e) {
-            LOG.warn("[{}] L2 批量删除失败 - keys={}, error={}", CACHE_NAME, keys, e.getMessage());
+            log.warn("[{}] L2 批量删除失败 - keys={}, error={}", CACHE_NAME, keys, e.getMessage());
         }
         for (String key : keys) {
             l1Cache.invalidate(key);
@@ -226,7 +226,7 @@ public class MultiLevelCacheProvider implements CacheProvider {
         if (value instanceof String) {
             return (String) value;
         }
-        return YdszJson.toJsonString(value);
+        return YdszJson.toJson(value);
     }
 
     /**
@@ -244,9 +244,9 @@ public class MultiLevelCacheProvider implements CacheProvider {
             return jsonValue;
         }
         try {
-            return YdszJson.fromJsonString(jsonValue, Object.class);
+            return YdszJson.fromJson(jsonValue, Object.class);
         } catch (Exception e) {
-            LOG.debug("[{}] JSON 反序列化失败，返回原始字符串 - value={}", CACHE_NAME, jsonValue);
+            log.debug("[{}] JSON 反序列化失败，返回原始字符串 - value={}", CACHE_NAME, jsonValue);
             return jsonValue;
         }
     }

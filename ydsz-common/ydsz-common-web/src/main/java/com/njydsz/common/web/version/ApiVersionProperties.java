@@ -79,9 +79,8 @@ public class ApiVersionProperties {
      * 是否在启动时校验所有 @ApiVersion 注解的合法性。
      *
      * <p>校验项包括 since/deprecatedAt 版本格式、sunsetAt 日期格式、版本逻辑一致性。
-     * 发现违规时抛出 {@link ApiVersionViolationException} 阻止启动。
+     * 默认 true。设置为 false 可关闭校验（不推荐）。
      *
-     * <p>默认 true。设置为 false 可关闭校验（不推荐）。n     *
      * @since 1.2.0
      */
     private boolean validate = true;

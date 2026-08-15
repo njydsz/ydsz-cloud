@@ -491,7 +491,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
      * <ol>
      *   <li>P0-1: DMN 决策表（condition 以 {@code dmn:} 前缀时，如 {@code dmn:risk_level_decision}）</li>
      *   <li>FlowRoutingService（literule Aviator 引擎）</li>
-     *   <li>DefaultFlowVariableStrategy（SpEL）兜底</li>
+     *   <li>DefaultFlowVariableStrategy（Aviator 引擎 + 正则降级兜底）</li>
      * </ol>
      *
      * @param condition 跳转条件表达式
@@ -536,7 +536,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             }
         }
 
-        // 回退到原有 SpEL 变量策略
+        // 回退到变量策略（Aviator 引擎 + 正则降级）
         return variableStrategy.evaluate(condition, variables);
     }
 

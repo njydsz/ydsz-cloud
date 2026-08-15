@@ -5,22 +5,22 @@ import java.util.Map;
 
 /**
  * 流程条件表达式服务。
- * <p>求值 Groovy/JS/QLExpress 条件。
+ *
+ * <p>P1-3 引擎收敛：运行时条件评估统一使用 Aviator 引擎，SpEL 已废弃。
+ * 本服务保留 SpEL 相关的构建/解析方法已标记 {@code @deprecated}，仅作历史数据兼容。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
-
-
 public interface FlowConditionExprService {
 
     /**
      * 将结构化条件 JSON 转换为表达式字符串。
      *
-     * <p>支持 Aviator 和 SpEL 两种表达式引擎。
+     * <p>默认使用 Aviator 引擎。SpEL 引擎已废弃，传入 {@code "SPEL"} 将返回降级提示。
      *
      * @param conditionJson 结构化条件 JSON
-     * @param engine        表达式引擎：AVIATOR / SPEL
+     * @param engine        表达式引擎：{@code AVIATOR}（默认）；{@code SPEL} 已废弃
      * @return 表达式字符串（如 {@code amount > 10000 && deptCode == 'SALES'}）
      */
     String buildExpression(String conditionJson, String engine);

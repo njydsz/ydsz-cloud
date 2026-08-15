@@ -3,7 +3,7 @@ package com.njydsz.common.redis.service.multilevel;
 import java.util.Objects;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
-import com.njyzsz.common.redis.config.RedisProperties;
+import com.njydsz.common.redis.config.RedisProperties;
 import com.njydsz.common.redis.service.CacheProvider;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
@@ -70,7 +70,7 @@ public class MultiLevelCacheAutoConfiguration {
         long l1MaxSize = multilevel.getL1MaxSize();
         long l1TtlSeconds = multilevel.getL1TtlSeconds();
 
-        LOG.info("[ydsz-redis] 多级缓存已启用 - l1MaxSize={}, l1TtlSeconds={}",
+        log.info("[ydsz-redis] 多级缓存已启用 - l1MaxSize={}, l1TtlSeconds={}",
                 l1MaxSize, l1TtlSeconds);
         return new MultiLevelCacheProvider(redisStringOps, redisProperties, l1MaxSize, l1TtlSeconds);
     }

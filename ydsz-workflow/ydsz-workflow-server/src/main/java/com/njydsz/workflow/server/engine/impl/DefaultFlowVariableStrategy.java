@@ -20,14 +20,19 @@ import lombok.extern.slf4j.Slf4j;
  * 默认流程变量表达式解析策略
  *
  * <p>本组件是工作流条件评估的统一入口，内部优先委托 Aviator 表达式引擎（ydsz-literule 模块）
- * 进行求值，以统一项目中的表达式引擎，避免双引擎并存导致的语义不一致问题。
+ * 进行求值，以统一项目中的表达式引擎，避免多引擎并存导致的语义不一致问题。
  *
- * <h3>Aviator 优先策略</h3>
+ * <h3>P1-3 引擎收敛：Aviator 单引擎策略</h3>
  * <ol>
- *   <li>若 Spring 容器中存在 {@link ExpressionEvaluator} Bean，则优先使用 Aviator 求值</li>
- *   <li>若 Aviator 求值失败（表达式语法不兼容等），自动回退到内置正则解析器</li>
- *   <li>若 Aviator 不可用（literule 模块未启用），直接使用内置正则解析器</li>
- * </ol>
+     *   <li>若 Spring 容器中存在 {@link ExpressionEvaluator} Bean，则优先使用 Aviator 求值（主路径）</li>
+     *   <li>若 Aviator 求值失败（表达式语法不兼容等），自动回退到内置正则解析器，
+     *       并输出<b>降级告警</b>日志（WARN 级别）</li>
+     *   <li>若 Aviator 不可用（literule 模块未启用），直接使用内置正则解析器，
+     *       并输出一次性<b>降级告警</b>日志</li>
+     * </ol>
+     *
+     * <p><b>SpEL 已废弃：</b>自 P1-3 起，SpEL 不再作为运行时求值引擎，
+     * 条件评估统一收敛为 Aviator，正则解析器仅作兼容性兜底。
  *
  * <h3>向后兼容语法</h3>
  * <ul>
@@ -106,18 +111,19 @@ public class DefaultFlowVariableStrategy implements FlowVariableStrategy {
                         condition, aviatorExpr, result);
                 return result;
             } catch (Exception e) {
-                log.warn("[Flow] Aviator 求值失败，回退到正则解析器: expr='{}' err={}",
+                // P1-3: 降级告警 — Aviator 求值失败，回退到自研正则解析器
+                log.warn("[Flow][降级告警] Aviator 求值失败，回退到正则解析器: expr='{}' err={}",
                         condition, e.getMessage());
             }
         } else {
-            // Aviator 不可用，仅警告一次
+            // P1-3: 降级告警 — Aviator 不可用，回退到自研正则解析器（仅输出一次）
             if (!aviatorUnavailableLogged) {
-                log.warn("[Flow] Aviator 表达式引擎不可用，使用传统正则解析器。" +
-                        "建议启用 ydsz-literule 模块以获得更好的表达式支持。");
+                log.warn("[Flow][降级告警] Aviator 表达式引擎不可用，使用正则解析器降级求值。" +
+                        "建议启用 ydsz-literule 模块以获得统一的 Aviator 表达式支持。");
                 aviatorUnavailableLogged = true;
             }
         }
-        // 回退到传统正则解析
+        // 回退到正则解析器降级路径
         return evaluateLegacy(condition, variables);
     }
 

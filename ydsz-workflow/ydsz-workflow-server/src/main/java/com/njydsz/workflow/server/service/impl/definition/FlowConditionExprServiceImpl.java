@@ -42,9 +42,12 @@ import lombok.extern.slf4j.Slf4j;
  * <ul>
  *   <li><b>Aviator</b>（默认）：轻量、高性能 Java 表达式引擎，
  *       支持数学运算 / 字符串操作 / 集合操作 / 自定义函数（{@code seq.contains / string.contains}）</li>
- *   <li><b>SpEL</b>：Spring Expression Language，与 Spring 生态无缝集成，
- *       支持 {@code #variable} 语法访问变量</li>
+ *   <li><b>SpEL</b>（已废弃）：Spring Expression Language。P1-3 起运行时评估不再支持 SpEL，
+ *       仅保留构建/解析方法用于历史数据兼容</li>
  * </ul>
+ *
+ * <p><b>P1-3 引擎收敛：</b>运行时条件评估统一收敛为 Aviator 单引擎，
+ * 自研正则解析器仅作 Aviator 不可用时的降级路径。SpEL 分支标记为 {@code @deprecated}。
  *
  * <p><b>操作符映射：</b>
  * <p>前端下拉选择的<b>结构化操作符</b>（如 {@code EQ / GT / IN / CONTAINS}）在转换时
@@ -576,7 +579,8 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
      * <p>使用测试变量驱动表达式执行，返回布尔结果。供前端表达式编辑器「实时预览」使用，
      * 业务方输入变量值后立即看到条件匹配结果。
      *
-     * <p><b>当前限制：</b>仅 Aviator 引擎已实现，SpEL 引擎返回错误信息（SpEL 预览待补齐）。
+     * <p><b>当前限制：</b>仅 Aviator 引擎已实现。SpEL 引擎已废弃，返回错误信息。
+     * // TODO: P1-3 后续彻底移除 SpEL 分支，仅保留 Aviator 路径
      *
      * @param expression 表达式字符串
      * @param variables  测试变量（{@code null} 时按空 Map 处理）

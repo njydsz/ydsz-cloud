@@ -248,12 +248,6 @@ public class FlowDefinitionCacheService {
     }
 
     /**
-     * 从 skip 的 ext JSON 中提取 sourceRef（出发节点编码）。
-     *
-     * <p>skip 表无 source_node_code 列，源节点编码冗余存储在 ext JSON 的 sourceRef 字段
-     * （见 FlowDefinitionServiceImpl 部署逻辑）。
-     */
-    /**
      * P0-3: 构建租户感知的缓存 key，防止跨租户缓存串号。
      *
      * @param definitionId 流程定义 ID

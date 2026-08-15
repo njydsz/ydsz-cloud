@@ -449,7 +449,10 @@ public class AuthServiceImpl implements AuthService {
                 }
             }
             redisStringOps.del(sessionKey);
-            userInfoMetrics.recordLogout();
+            // P1-1: 按实际驱逐的会话数递减计数器
+            for (int i = 0; i < tokens.size(); i++) {
+                userInfoMetrics.recordLogout();
+            }
             log.info("Evicted {} sessions for user: {}", tokens.size(), userId);
         } catch (Exception e) {
             log.warn("Failed to evict sessions for user: {}, error={}", userId, e.getMessage());
