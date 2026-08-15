@@ -44,18 +44,6 @@
             <artifactId>ydsz-common-safe</artifactId>
         </dependency>
 
-        <!-- Redis 模块（BloomFilterConfig / BloomFilterService） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-redis</artifactId>
-        </dependency>
-
-        <!-- JSON 序列化统一使用 ydsz-common-json 的 YdszJson 引擎 -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-json</artifactId>
-        </dependency>
-
         <!-- Doc 模块能力已合并到 common-base（OpenApiConfig / Knife4jConfig / Excel 工具等） -->
 
         <!-- 异常模块（用于 BizErrorCode） -->

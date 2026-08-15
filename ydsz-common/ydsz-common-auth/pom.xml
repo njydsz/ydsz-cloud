@@ -23,11 +23,6 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-tenant</artifactId>
         </dependency>
-        <!--ydsz-common-redis-->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-redis</artifactId>
-        </dependency>
         <!--ydsz-common-util-->
         <dependency>
             <groupId>com.njydsz</groupId>
@@ -47,11 +42,6 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-cache</artifactId>
-        </dependency>
-        <!--ydsz-common-json（权限树 JSON 序列化/反序列化：JsonNode/ObjectNode/ArrayNode）-->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-json</artifactId>
         </dependency>
         <!-- ydsz-common-lock（optional, TokenBlacklistService 刷新锁使用 DistributedLocker） -->
         <dependency>

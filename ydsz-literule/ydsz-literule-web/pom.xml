@@ -30,11 +30,6 @@
             <artifactId>ydsz-common-core</artifactId>
         </dependency>
 
-        <!-- P1-2: 显式声明 JSON 引擎依赖，避免隐式传递依赖 -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-json</artifactId>
-        </dependency>
         <!-- P1-1: 安全模块（@RateLimit 限流注解） -->
         <dependency>
             <groupId>com.njydsz</groupId>

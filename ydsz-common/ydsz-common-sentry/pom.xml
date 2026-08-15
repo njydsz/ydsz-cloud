@@ -30,11 +30,6 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-exception</artifactId>
         </dependency>
-        <!--common-json（统一 JSON 引擎）-->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-json</artifactId>
-        </dependency>
         <!--common-notify（告警通知渠道，可选）-->
         <dependency>
             <groupId>com.njydsz</groupId>

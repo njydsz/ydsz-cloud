@@ -26,11 +26,6 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
-        <!-- Unified JSON engine -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-json</artifactId>
-        </dependency>
         <!-- TransmittableThreadLocal -->
         <dependency>
             <groupId>com.alibaba</groupId>

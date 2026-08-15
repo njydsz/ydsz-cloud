@@ -34,12 +34,6 @@
             <artifactId>ydsz-common-domain</artifactId>
         </dependency>
 
-        <!-- 可选依赖：Redis Key 隔离 -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-redis</artifactId>
-            <optional>true</optional>
-        </dependency>
         <!-- 可选依赖：Feign 跨服务透传 -->
         <dependency>
             <groupId>com.njydsz</groupId>

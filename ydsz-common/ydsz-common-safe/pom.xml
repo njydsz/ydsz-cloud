@@ -14,16 +14,6 @@
     </parent>
 
     <dependencies>
-        <!-- ydsz-common-json（YdszJson 引擎，替代 Jackson） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-json</artifactId>
-        </dependency>
-        <!--ydsz-common-redis-->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-redis</artifactId>
-        </dependency>
         <!--ydsz-common-core（RequestContext 统一上下文管理）-->
         <dependency>
             <groupId>com.njydsz</groupId>

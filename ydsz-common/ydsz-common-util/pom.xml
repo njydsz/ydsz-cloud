@@ -24,11 +24,6 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-domain</artifactId>
         </dependency>
-        <!-- ydsz-common-json（统一 JSON 引擎，替代 Jackson/FastJSON2/Gson） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-json</artifactId>
-        </dependency>
         <!-- snakeyaml（YAML 解析，YamlUtils 使用） -->
         <dependency>
             <groupId>org.yaml</groupId>

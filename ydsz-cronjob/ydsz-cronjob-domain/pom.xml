@@ -37,11 +37,6 @@
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-json</artifactId>
-            <!-- P1-2: 为下游 server 模块提供传递依赖，领域对象序列化能力由 ydsz-common-json 提供 -->
-        </dependency>
         <!--spring-expression（SpELConditionEvaluator，v1.4.0 自 common-domain 迁入）-->
         <dependency>
             <groupId>org.springframework</groupId>

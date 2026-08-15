@@ -20,12 +20,6 @@
             <artifactId>ydsz-common-core</artifactId>
         </dependency>
 
-        <!-- ydsz-common-json（WebSocket 消息序列化/集群广播，8 个类使用，显式声明避免传递依赖） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-json</artifactId>
-        </dependency>
-
         <!-- common-util（JsonUtils） -->
         <dependency>
             <groupId>com.njydsz</groupId>
@@ -42,13 +36,6 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-auth</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- common-redis（集群广播 Pub/Sub + 在线状态 + 离线缓存 + 限流，optional） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-redis</artifactId>
             <optional>true</optional>
         </dependency>
 

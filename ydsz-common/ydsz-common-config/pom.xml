@@ -20,12 +20,6 @@
             <artifactId>ydsz-common-core</artifactId>
         </dependency>
 
-        <!-- ydsz-common-json（ConfigMergeUtils 使用 JsonMergePatch，显式声明避免传递依赖） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-json</artifactId>
-        </dependency>
-
         <!-- spring-context -->
         <dependency>
             <groupId>org.springframework</groupId>

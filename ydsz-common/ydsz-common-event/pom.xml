@@ -34,11 +34,6 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-tx</artifactId>
         </dependency>
-        <!-- json -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-json</artifactId>
-        </dependency>
         <!-- domain (DomainEvent / EventStore SPI 集成) -->
         <dependency>
             <groupId>com.njydsz</groupId>

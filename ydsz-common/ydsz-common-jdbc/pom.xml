@@ -33,11 +33,6 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-util</artifactId>
         </dependency>
-        <!--ydsz-common-json-->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-json</artifactId>
-        </dependency>
         <!-- Jackson 由 ydsz-common-util 传递依赖引入，无需显式声明 -->
 
         <!-- mybatis-plus (Spring Boot 4.x) -->

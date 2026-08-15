@@ -20,11 +20,6 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-core</artifactId>
         </dependency>
-        <!--common-json（统一 JSON 引擎 — P0-4: 替代手工 JSON 序列化）-->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-json</artifactId>
-        </dependency>
         <!--common-domain（PageQuery/PageResponse/Specification）-->
         <dependency>
             <groupId>com.njydsz</groupId>
@@ -50,12 +45,6 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-cache</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <!--common-redis（热词/搜索建议，可选）-->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-redis</artifactId>
             <optional>true</optional>
         </dependency>
         <!--common-docs（文档内容索引，可选）-->

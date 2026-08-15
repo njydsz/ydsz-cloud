@@ -68,12 +68,6 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- ydsz-common-redis (optional, for file dedup service) -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-redis</artifactId>
-            <optional>true</optional>
-        </dependency>
 
         <!-- ydsz-common-lock (optional, @DistributedScheduled 保护定时清理任务) -->
         <dependency>
@@ -226,10 +220,6 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
-        </dependency>
-            <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-json</artifactId>
         </dependency>
 </dependencies>
 

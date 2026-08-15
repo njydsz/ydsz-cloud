@@ -44,12 +44,6 @@
             <artifactId>ydsz-common-exception</artifactId>
         </dependency>
 
-        <!-- 公共 JSON 模块（直接使用 YdszJson，显式声明） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-json</artifactId>
-        </dependency>
-
         <!-- 公共认证模块（AuthHeaderConstants OpenAPI header 定义） -->
         <dependency>
             <groupId>com.njydsz</groupId>

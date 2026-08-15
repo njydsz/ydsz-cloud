@@ -66,12 +66,6 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- ydsz-common-redis：Redis 连接复用 -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-redis</artifactId>
-            <optional>true</optional>
-        </dependency>
 
         <!-- Kafka 消息队列依赖（按需引入） -->
         <dependency>
@@ -140,11 +134,6 @@
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
         </dependency>
-            <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-json</artifactId>
-        </dependency>
-
         <!-- Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

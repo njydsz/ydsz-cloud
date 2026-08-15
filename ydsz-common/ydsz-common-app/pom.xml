@@ -50,12 +50,6 @@
             <artifactId>ydsz-common-safe</artifactId>
         </dependency>
 
-        <!-- Redis 模块（auth Token 存储 / safe 限流 CSRF 等依赖） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-redis</artifactId>
-        </dependency>
-
         <!-- spring-boot-actuator (optional for HealthIndicator) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -64,11 +64,11 @@
 
     <modules>
         <!-- L1 基础设施层 -->
-        <module>ydsz-common-json</module>
         <module>ydsz-common-core</module>
         <!-- L2 工具模块层 -->
         <module>ydsz-common-util</module>
         <!-- L3 基础服务层 -->
+        <module>ydsz-common-json</module>
         <module>ydsz-common-domain</module>
         <module>ydsz-common-exception</module>
         <!-- L4 基础数据层 -->
