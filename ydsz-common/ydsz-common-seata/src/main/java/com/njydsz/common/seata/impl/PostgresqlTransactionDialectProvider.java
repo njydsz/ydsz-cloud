@@ -87,6 +87,18 @@ public class PostgresqlTransactionDialectProvider implements TccTransactionDiale
     }
 
     /**
+     * 获取分页查询超时未完成事务的 SQL（PostgreSQL LIMIT 语法）
+     */
+    @Override
+    public String getFindTimeoutPendingPagedSql() {
+        return String.format(
+            "SELECT xid, branch_id, transaction_name, status, context_snapshot, " +
+            "       try_started_at, try_completed_at, finished_at, retry_count, last_error " +
+            "FROM %s WHERE status = ? AND try_completed_at < ? ORDER BY try_completed_at ASC LIMIT ?",
+            tableName);
+    }
+
+    /**
      * 获取统计超时未完成事务数量的 SQL
      */
     @Override

@@ -1,6 +1,8 @@
 package com.njydsz.common.queue.config;
 
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import jakarta.annotation.PostConstruct;
