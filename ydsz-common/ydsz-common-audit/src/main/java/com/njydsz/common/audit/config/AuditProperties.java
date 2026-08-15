@@ -22,10 +22,12 @@ import org.springframework.validation.annotation.Validated;
  *     record-response: false
  *     sensitive-params: [password, token, secret]
  *     retention-days: 90
- *     executor-queue-capacity: 200
  *     async:
  *       batch-size: 100
  *       queue-capacity: 10000
+ *       thread-core-size: 2
+ *       thread-max-size: 4
+ *       reject-policy: DISCARD_OLDEST
  * }</pre>
  *
  * @author ydsz-team
@@ -56,10 +58,10 @@ public class AuditProperties {
     private String appName;
 
     /**
-     * 存储策略类型（默认 DEFAULT）
+     * 存储策略类型（默认 LOCAL）
      * <p>可选值：DEFAULT（默认日志输出）、LOCAL（本地数据库）、REMOTE（远程推送）、MQ（消息队列）
      */
-    private String storageType = "DEFAULT";
+    private String storageType = "LOCAL";
 
     /**
      * 是否记录请求参数（默认启用，敏感接口需配合 {@code excludeParams} 使用）
@@ -80,7 +82,11 @@ public class AuditProperties {
      * 敏感参数名称列表，命中名称的参数不会被序列化到审计日志
      * <p>默认覆盖常见敏感词：password、token、secret、apiKey、privateKey 等
      */
-    private String[] sensitiveParams = {"password", "oldPassword", "newPassword", "confirmPassword", "token", "accessToken", "refreshToken", "authorization", "secret", "apiKey", "privateKey"};
+    private String[] sensitiveParams = {
+            "password", "oldPassword", "newPassword", "confirmPassword",
+            "token", "accessToken", "refreshToken", "authorization",
+            "secret", "apiKey", "privateKey"
+    };
 
     /**
      * 是否启用 IP 归属地解析（默认禁用，需要外部 IP 库支持）
@@ -98,43 +104,32 @@ public class AuditProperties {
     private long batchFlushInterval = 3000;
 
     /**
-     * 异步队列满时的拒绝策略（默认 DISCARD_OLDEST）
-     * <p>可选值：DISCARD_OLDEST（丢弃最旧日志）、DISCARD_NEWEST（丢弃最新日志）、CALLER_RUNS（调用者阻塞等待）
-     */
-    private String asyncRejectPolicy = "DISCARD_OLDEST";
-
-    /**
-     * 优雅停机超时时间（秒，默认 30s）
-     */
-    private long asyncShutdownTimeout = 30;
-
-    /**
      * 是否启用敏感字段脱敏（默认启用）
      */
     private boolean maskEnabled = true;
 
-    /** 审计日志保留天数（默认 90 天，超过可通过清理任务归档） */
+    /**
+     * 审计日志保留天数（默认 90 天，超过可通过清理任务归档）
+     */
     private int retentionDays = 90;
 
-    /** 异步记录线程池核心线程数 */
-    @Min(1)
-    private int corePoolSize = 2;
-
-    /** 异步记录线程池最大线程数 */
-    @Min(1)
-    private int maxPoolSize = 4;
-
-    /** 异步记录线程池等待队列容量（用于 ThreadPoolTaskExecutor 的工作队列） */
-    private int executorQueueCapacity = 200;
-
-    /** 是否启用分表（默认不启用） */
+    /**
+     * 是否启用分表（默认不启用）
+     */
     private boolean shardingEnabled = false;
 
-    /** 分表类型：monthly / daily / yearly（默认 monthly） */
+    /**
+     * 分表类型：monthly / daily / yearly（默认 monthly）
+     */
     private String shardingType = "monthly";
 
-    /** 基础表名（默认 sys_audit_log） */
+    /**
+     * 基础表名（默认 sys_audit_log）
+     */
     private String shardingBaseTableName = "sys_audit_log";
+
+    /** 异步批量写入配置 */
+    private AsyncProperties async = new AsyncProperties();
 
     public boolean isEnabled() {
         return enabled;
@@ -232,22 +227,6 @@ public class AuditProperties {
         this.batchFlushInterval = batchFlushInterval;
     }
 
-    public String getAsyncRejectPolicy() {
-        return asyncRejectPolicy;
-    }
-
-    public void setAsyncRejectPolicy(String asyncRejectPolicy) {
-        this.asyncRejectPolicy = asyncRejectPolicy;
-    }
-
-    public long getAsyncShutdownTimeout() {
-        return asyncShutdownTimeout;
-    }
-
-    public void setAsyncShutdownTimeout(long asyncShutdownTimeout) {
-        this.asyncShutdownTimeout = asyncShutdownTimeout;
-    }
-
     public boolean isMaskEnabled() {
         return maskEnabled;
     }
@@ -262,30 +241,6 @@ public class AuditProperties {
 
     public void setRetentionDays(int retentionDays) {
         this.retentionDays = retentionDays;
-    }
-
-    public int getCorePoolSize() {
-        return corePoolSize;
-    }
-
-    public void setCorePoolSize(int corePoolSize) {
-        this.corePoolSize = corePoolSize;
-    }
-
-    public int getMaxPoolSize() {
-        return maxPoolSize;
-    }
-
-    public void setMaxPoolSize(int maxPoolSize) {
-        this.maxPoolSize = maxPoolSize;
-    }
-
-public int getExecutorQueueCapacity() {
-        return executorQueueCapacity;
-    }
-
-    public void setExecutorQueueCapacity(int executorQueueCapacity) {
-        this.executorQueueCapacity = executorQueueCapacity;
     }
 
     public boolean isShardingEnabled() {
@@ -312,11 +267,6 @@ public int getExecutorQueueCapacity() {
         this.shardingBaseTableName = shardingBaseTableName;
     }
 
-    /**
-     * 异步批量写入配置
-     */
-    private AsyncProperties async = new AsyncProperties();
-
     public AsyncProperties getAsync() {
         return async;
     }
@@ -341,9 +291,32 @@ public int getExecutorQueueCapacity() {
         private long batchIntervalMillis = 5000;
 
         /**
-         * 异步队列最大容量（满后按 {@code asyncRejectPolicy} 处理）
+         * 异步队列最大容量（满后按 rejectPolicy 处理）
          */
         private int queueCapacity = 10000;
+
+        /**
+         * 异步线程池核心线程数（默认 2）
+         */
+        @Min(1)
+        private int threadCoreSize = 2;
+
+        /**
+         * 异步线程池最大线程数（默认 4）
+         */
+        @Min(1)
+        private int threadMaxSize = 4;
+
+        /**
+         * 队列满时的拒绝策略（默认 DISCARD_OLDEST）
+         * <p>可选值：DISCARD_OLDEST（丢弃最旧日志）、DISCARD_NEWEST（丢弃最新日志）、CALLER_RUNS（调用者阻塞等待）
+         */
+        private String rejectPolicy = "DISCARD_OLDEST";
+
+        /**
+         * 优雅停机超时时间（秒，默认 30s）
+         */
+        private long shutdownTimeout = 30;
 
         /**
          * Disruptor WaitStrategy 策略名称（可选值：blocking / sleeping / yielding，默认 blocking）
@@ -366,12 +339,80 @@ public int getExecutorQueueCapacity() {
             this.batchIntervalMillis = batchIntervalMillis;
         }
 
+        /**
+         * 获取异步队列容量（兼容旧配置）
+         *
+         * @return 队列容量
+         */
         public int getExecutorQueueCapacity() {
             return queueCapacity;
         }
 
-        public void setExecutorQueueCapacity(int queueCapacity) {
+        public int getQueueCapacity() {
+            return queueCapacity;
+        }
+
+        public void setQueueCapacity(int queueCapacity) {
             this.queueCapacity = queueCapacity;
+        }
+
+        public int getThreadCoreSize() {
+            return threadCoreSize;
+        }
+
+        public void setThreadCoreSize(int threadCoreSize) {
+            this.threadCoreSize = threadCoreSize;
+        }
+
+        public int getThreadMaxSize() {
+            return threadMaxSize;
+        }
+
+        public void setThreadMaxSize(int threadMaxSize) {
+            this.threadMaxSize = threadMaxSize;
+        }
+
+        /**
+         * 获取线程池核心线程数（兼容旧配置）
+         *
+         * @return 核心线程数
+         */
+        public int getCorePoolSize() {
+            return threadCoreSize;
+        }
+
+        /**
+         * 获取线程池最大线程数（兼容旧配置）
+         *
+         * @return 最大线程数
+         */
+        public int getMaxPoolSize() {
+            return threadMaxSize;
+        }
+
+        /**
+         * 获取拒绝策略（兼容旧配置）
+         *
+         * @return 拒绝策略名称
+         */
+        public String getAsyncRejectPolicy() {
+            return rejectPolicy;
+        }
+
+        public String getRejectPolicy() {
+            return rejectPolicy;
+        }
+
+        public void setRejectPolicy(String rejectPolicy) {
+            this.rejectPolicy = rejectPolicy;
+        }
+
+        public long getShutdownTimeout() {
+            return shutdownTimeout;
+        }
+
+        public void setShutdownTimeout(long shutdownTimeout) {
+            this.shutdownTimeout = shutdownTimeout;
         }
 
         public String getWaitStrategy() {

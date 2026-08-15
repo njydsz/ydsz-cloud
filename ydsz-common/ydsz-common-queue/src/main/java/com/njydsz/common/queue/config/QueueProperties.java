@@ -139,6 +139,14 @@ public class QueueProperties {
     private long deadLetterRetryInterval = 60000;
 
     /**
+     * 死信队列重试抖动百分比（默认30，范围 0-100，0=无抖动）
+     *
+     * <p>多实例部署时，各实例在基础延迟上附加 [0, interval * jitterPercent / 100] 的随机抖动，
+     * 避免所有实例同时扫描死信队列造成惊群。
+     */
+    private int deadLetterRetryJitterPercent = 30;
+
+    /**
      * 是否启用消息去重（默认 false，分布式场景推荐使用 RedisMessageDeduplicator）
      */
     private boolean dedupEnabled = false;
@@ -162,14 +170,16 @@ public class QueueProperties {
 
     /**
      * 解析后的队列类型
+     *
+     * <p>优先返回 {@link #type} 枚举值；若为 null 则惰性解析 {@link #typeStr}。
+     * 本方法不修改 {@link #type} 字段，保证幂等性。
      */
     public QueueType resolvedType() {
         if (type != null) {
             return type;
         }
         if (typeStr != null && !typeStr.trim().isEmpty()) {
-            type = QueueType.fromValue(typeStr);
-            return type;
+            return QueueType.fromValue(typeStr);
         }
         throw new IllegalStateException("队列类型不能为空");
     }
@@ -278,6 +288,13 @@ public class QueueProperties {
      */
     public long resolvedDeadLetterRetryInterval() {
         return deadLetterRetryInterval > 0 ? deadLetterRetryInterval : 60000;
+    }
+
+    /**
+     * 解析后的死信队列重试抖动百分比
+     */
+    public int getDeadLetterRetryJitterPercent() {
+        return deadLetterRetryJitterPercent;
     }
 
     /**

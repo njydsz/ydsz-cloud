@@ -44,12 +44,20 @@ public class DefaultAuditQueryService implements AuditQueryService {
     private static final Pattern TABLE_NAME_PATTERN =
             Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$");
 
+    /** 默认查询时间范围（月） */
+    private static final int DEFAULT_QUERY_RANGE_MONTHS = 12;
+
     /** JDBC 模板，用于执行数据库查询 */
     private final JdbcTemplate jdbcTemplate;
+
     /** 分表策略（可为 null） */
     private final TableShardingStrategy shardingStrategy;
+
     /** 基础表名 */
     private final String baseTableName;
+
+    /** BeanPropertyRowMapper 缓存 */
+    private final BeanPropertyRowMapper<AuditLog> rowMapper = BeanPropertyRowMapper.newInstance(AuditLog.class);
 
     /**
      * 构造默认审计查询服务（无分表）
@@ -97,9 +105,9 @@ public class DefaultAuditQueryService implements AuditQueryService {
         }
         try {
             if (shardingStrategy != null) {
-                // 跨分表查询：查询最近12个月的分表
+                // 跨分表查询：查询最近 N 个月的分表
                 LocalDateTime end = LocalDateTime.now();
-                LocalDateTime start = end.minusMonths(12);
+                LocalDateTime start = end.minusMonths(DEFAULT_QUERY_RANGE_MONTHS);
                 Set<String> tables = shardingStrategy.getTableNamesInRange(baseTableName, start, end);
                 for (String table : tables) {
                     AuditLog result = queryFromTable(table, "id = ? LIMIT 1", id);
@@ -110,8 +118,8 @@ public class DefaultAuditQueryService implements AuditQueryService {
                 return null;
             }
             // baseTableName validated in constructor via validateTableName() — safe from SQL injection
-            String sql = "SELECT * FROM " + baseTableName + " WHERE id = ? LIMIT 1";
-            return jdbcTemplate.queryForObject(sql, BeanPropertyRowMapper.newInstance(AuditLog.class), id);
+            String sql = buildSelectSql(baseTableName, "id = ? LIMIT 1", null);
+            return jdbcTemplate.queryForObject(sql, rowMapper, id);
         } catch (Exception e) {
             log.warn("查询审计日志失败, id={}", id, e);
             return null;
@@ -124,16 +132,9 @@ public class DefaultAuditQueryService implements AuditQueryService {
             return Collections.emptyList();
         }
         try {
-            if (shardingStrategy != null) {
-                LocalDateTime end = LocalDateTime.now();
-                LocalDateTime start = end.minusMonths(12);
-                Set<String> tables = shardingStrategy.getTableNamesInRange(baseTableName, start, end);
-                String unionSql = buildUnionAllSql(tables, "business_no = ? ORDER BY operation_time DESC");
-                return jdbcTemplate.query(unionSql, BeanPropertyRowMapper.newInstance(AuditLog.class), businessNo);
-            }
-            // baseTableName validated in constructor via validateTableName() — safe from SQL injection
-            String sql = "SELECT * FROM " + baseTableName + " WHERE business_no = ? ORDER BY operation_time DESC";
-            return jdbcTemplate.query(sql, BeanPropertyRowMapper.newInstance(AuditLog.class), businessNo);
+            SqlContext ctx = new SqlContext();
+            ctx.addCondition("business_no = ?", businessNo);
+            return executeListQuery(ctx);
         } catch (Exception e) {
             log.warn("按业务流水号查询审计日志失败, businessNo={}", businessNo, e);
             return Collections.emptyList();
@@ -146,34 +147,10 @@ public class DefaultAuditQueryService implements AuditQueryService {
             return Collections.emptyList();
         }
         try {
-            if (shardingStrategy != null) {
-                Set<String> tables = resolveTables(startTime, endTime);
-                List<Object> params = new ArrayList<>();
-                params.add(operatorId);
-                String whereClause = "operator_id = ?" + appendTimeCondition(params, startTime, endTime)
-                        + " ORDER BY operation_time DESC";
-                String unionSql = buildUnionAllSql(tables, whereClause);
-                return jdbcTemplate.query(unionSql,
-                        BeanPropertyRowMapper.newInstance(AuditLog.class), params.toArray());
-            }
-            // baseTableName validated in constructor via validateTableName() — safe from SQL injection
-            StringBuilder sql = new StringBuilder("SELECT * FROM ").append(baseTableName)
-                    .append(" WHERE operator_id = ?");
-            List<Object> params = new ArrayList<>();
-            params.add(operatorId);
-
-            if (startTime != null) {
-                sql.append(" AND operation_time >= ?");
-                params.add(startTime);
-            }
-            if (endTime != null) {
-                sql.append(" AND operation_time <= ?");
-                params.add(endTime);
-            }
-            sql.append(" ORDER BY operation_time DESC");
-
-            return jdbcTemplate.query(sql.toString(),
-                    BeanPropertyRowMapper.newInstance(AuditLog.class), params.toArray());
+            SqlContext ctx = new SqlContext();
+            ctx.addCondition("operator_id = ?", operatorId);
+            ctx.setTimeRange(startTime, endTime);
+            return executeListQuery(ctx);
         } catch (Exception e) {
             log.warn("按操作人查询审计日志失败, operatorId={}", operatorId, e);
             return Collections.emptyList();
@@ -186,33 +163,10 @@ public class DefaultAuditQueryService implements AuditQueryService {
             return Collections.emptyList();
         }
         try {
-            if (shardingStrategy != null) {
-                Set<String> tables = resolveTables(startTime, endTime);
-                List<Object> params = new ArrayList<>();
-                params.add(module);
-                String whereClause = "module = ?" + appendTimeCondition(params, startTime, endTime)
-                        + " ORDER BY operation_time DESC";
-                String unionSql = buildUnionAllSql(tables, whereClause);
-                return jdbcTemplate.query(unionSql,
-                        BeanPropertyRowMapper.newInstance(AuditLog.class), params.toArray());
-            }
-            StringBuilder sql = new StringBuilder("SELECT * FROM ").append(baseTableName)
-                    .append(" WHERE module = ?");
-            List<Object> params = new ArrayList<>();
-            params.add(module);
-
-            if (startTime != null) {
-                sql.append(" AND operation_time >= ?");
-                params.add(startTime);
-            }
-            if (endTime != null) {
-                sql.append(" AND operation_time <= ?");
-                params.add(endTime);
-            }
-            sql.append(" ORDER BY operation_time DESC");
-
-            return jdbcTemplate.query(sql.toString(),
-                    BeanPropertyRowMapper.newInstance(AuditLog.class), params.toArray());
+            SqlContext ctx = new SqlContext();
+            ctx.addCondition("module = ?", module);
+            ctx.setTimeRange(startTime, endTime);
+            return executeListQuery(ctx);
         } catch (Exception e) {
             log.warn("按模块查询审计日志失败, module={}", module, e);
             return Collections.emptyList();
@@ -225,33 +179,10 @@ public class DefaultAuditQueryService implements AuditQueryService {
             return Collections.emptyList();
         }
         try {
-            if (shardingStrategy != null) {
-                Set<String> tables = resolveTables(startTime, endTime);
-                List<Object> params = new ArrayList<>();
-                params.add(auditType);
-                String whereClause = "audit_type = ?" + appendTimeCondition(params, startTime, endTime)
-                        + " ORDER BY operation_time DESC";
-                String unionSql = buildUnionAllSql(tables, whereClause);
-                return jdbcTemplate.query(unionSql,
-                        BeanPropertyRowMapper.newInstance(AuditLog.class), params.toArray());
-            }
-            StringBuilder sql = new StringBuilder("SELECT * FROM ").append(baseTableName)
-                    .append(" WHERE audit_type = ?");
-            List<Object> params = new ArrayList<>();
-            params.add(auditType);
-
-            if (startTime != null) {
-                sql.append(" AND operation_time >= ?");
-                params.add(startTime);
-            }
-            if (endTime != null) {
-                sql.append(" AND operation_time <= ?");
-                params.add(endTime);
-            }
-            sql.append(" ORDER BY operation_time DESC");
-
-            return jdbcTemplate.query(sql.toString(),
-                    BeanPropertyRowMapper.newInstance(AuditLog.class), params.toArray());
+            SqlContext ctx = new SqlContext();
+            ctx.addCondition("audit_type = ?", auditType);
+            ctx.setTimeRange(startTime, endTime);
+            return executeListQuery(ctx);
         } catch (Exception e) {
             log.warn("按审计类型查询审计日志失败, auditType={}", auditType, e);
             return Collections.emptyList();
@@ -261,42 +192,9 @@ public class DefaultAuditQueryService implements AuditQueryService {
     @Override
     public List<AuditLog> getByTimeRange(LocalDateTime startTime, LocalDateTime endTime) {
         try {
-            if (shardingStrategy != null) {
-                Set<String> tables = resolveTables(startTime, endTime);
-                if (tables.isEmpty()) {
-                    return Collections.emptyList();
-                }
-                if (tables.size() == 1) {
-                    String table = tables.iterator().next();
-                    List<Object> params = new ArrayList<>();
-                    String whereClause = "1=1" + appendTimeCondition(params, startTime, endTime)
-                            + " ORDER BY operation_time DESC";
-                    return jdbcTemplate.query("SELECT * FROM " + table + " WHERE " + whereClause,
-                            BeanPropertyRowMapper.newInstance(AuditLog.class), params.toArray());
-                }
-                List<Object> params = new ArrayList<>();
-                String whereClause = "1=1" + appendTimeCondition(params, startTime, endTime)
-                        + " ORDER BY operation_time DESC";
-                String unionSql = buildUnionAllSql(tables, whereClause);
-                return jdbcTemplate.query(unionSql,
-                        BeanPropertyRowMapper.newInstance(AuditLog.class), params.toArray());
-            }
-            StringBuilder sql = new StringBuilder("SELECT * FROM ").append(baseTableName)
-                    .append(" WHERE 1=1");
-            List<Object> params = new ArrayList<>();
-
-            if (startTime != null) {
-                sql.append(" AND operation_time >= ?");
-                params.add(startTime);
-            }
-            if (endTime != null) {
-                sql.append(" AND operation_time <= ?");
-                params.add(endTime);
-            }
-            sql.append(" ORDER BY operation_time DESC");
-
-            return jdbcTemplate.query(sql.toString(),
-                    BeanPropertyRowMapper.newInstance(AuditLog.class), params.toArray());
+            SqlContext ctx = new SqlContext();
+            ctx.setTimeRange(startTime, endTime);
+            return executeListQuery(ctx);
         } catch (Exception e) {
             log.warn("按时间范围查询审计日志失败", e);
             return Collections.emptyList();
@@ -308,45 +206,18 @@ public class DefaultAuditQueryService implements AuditQueryService {
     @Override
     public BaseResponse<List<AuditLog>> queryByTimeRange(LocalDateTime start, LocalDateTime end, int page, int size) {
         try {
+            SqlContext countCtx = new SqlContext();
+            countCtx.setTimeRange(start, end);
             int offset = validatePagination(page, size);
-            long total = countByTimeRange(start, end);
+            long total = executeCountQuery(countCtx);
             if (total == 0) {
                 return emptyPageResult(page, size);
             }
 
-            if (shardingStrategy != null) {
-                Set<String> tables = resolveTables(start, end);
-                if (tables.size() == 1) {
-                    String table = tables.iterator().next();
-                    List<Object> params = new ArrayList<>();
-                    String sql = "SELECT * FROM " + table + " WHERE 1=1"
-                            + appendTimeCondition(params, start, end)
-                            + " ORDER BY operation_time DESC LIMIT ? OFFSET ?";
-                    params.add(size);
-                    params.add(offset);
-                    List<AuditLog> records = jdbcTemplate.query(sql,
-                            BeanPropertyRowMapper.newInstance(AuditLog.class), params.toArray());
-                    return PageResponse.success(total, (long) page, (long) size, records);
-                }
-                // 多分表：使用子查询合并后分页
-                List<Object> params = new ArrayList<>();
-                String whereClause = "1=1" + appendTimeCondition(params, start, end);
-                String unionSql = buildUnionAllWithLimit(tables, whereClause, size, offset);
-                List<AuditLog> records = jdbcTemplate.query(unionSql,
-                        BeanPropertyRowMapper.newInstance(AuditLog.class), params.toArray());
-                return PageResponse.success(total, (long) page, (long) size, records);
-            }
-
-            List<Object> params = new ArrayList<>();
-            StringBuilder sql = new StringBuilder("SELECT * FROM ").append(baseTableName)
-                    .append(" WHERE 1=1");
-            appendTimeCondition(sql, params, start, end);
-            sql.append(" ORDER BY operation_time DESC LIMIT ? OFFSET ?");
-            params.add(size);
-            params.add(offset);
-
-            List<AuditLog> records = jdbcTemplate.query(sql.toString(),
-                    BeanPropertyRowMapper.newInstance(AuditLog.class), params.toArray());
+            SqlContext ctx = new SqlContext();
+            ctx.setTimeRange(start, end);
+            ctx.setPagination(size, offset);
+            List<AuditLog> records = executeListQueryWithLimit(ctx);
             return PageResponse.success(total, (long) page, (long) size, records);
         } catch (Exception e) {
             log.warn("按时间范围分页查询审计日志失败", e);
@@ -365,15 +236,10 @@ public class DefaultAuditQueryService implements AuditQueryService {
             if (total == 0) {
                 return emptyPageResult(page, size);
             }
-
-            List<Object> params = new ArrayList<>();
-            String sql = "SELECT * FROM " + baseTableName + " WHERE operator_id = ? ORDER BY operation_time DESC LIMIT ? OFFSET ?";
-            params.add(operatorId);
-            params.add(size);
-            params.add(offset);
-
-            List<AuditLog> records = jdbcTemplate.query(sql,
-                    BeanPropertyRowMapper.newInstance(AuditLog.class), params.toArray());
+            SqlContext ctx = new SqlContext();
+            ctx.addCondition("operator_id = ?", operatorId);
+            ctx.setPagination(size, offset);
+            List<AuditLog> records = executeListQueryWithLimit(ctx);
             return PageResponse.success(total, (long) page, (long) size, records);
         } catch (Exception e) {
             log.warn("按操作人分页查询审计日志失败, operatorId={}", operatorId, e);
@@ -392,15 +258,10 @@ public class DefaultAuditQueryService implements AuditQueryService {
             if (total == 0) {
                 return emptyPageResult(page, size);
             }
-
-            List<Object> params = new ArrayList<>();
-            String sql = "SELECT * FROM " + baseTableName + " WHERE action = ? ORDER BY operation_time DESC LIMIT ? OFFSET ?";
-            params.add(action);
-            params.add(size);
-            params.add(offset);
-
-            List<AuditLog> records = jdbcTemplate.query(sql,
-                    BeanPropertyRowMapper.newInstance(AuditLog.class), params.toArray());
+            SqlContext ctx = new SqlContext();
+            ctx.addCondition("action = ?", action);
+            ctx.setPagination(size, offset);
+            List<AuditLog> records = executeListQueryWithLimit(ctx);
             return PageResponse.success(total, (long) page, (long) size, records);
         } catch (Exception e) {
             log.warn("按操作类型分页查询审计日志失败, action={}", action, e);
@@ -419,15 +280,10 @@ public class DefaultAuditQueryService implements AuditQueryService {
             if (total == 0) {
                 return emptyPageResult(page, size);
             }
-
-            List<Object> params = new ArrayList<>();
-            String sql = "SELECT * FROM " + baseTableName + " WHERE module = ? ORDER BY operation_time DESC LIMIT ? OFFSET ?";
-            params.add(entityType);
-            params.add(size);
-            params.add(offset);
-
-            List<AuditLog> records = jdbcTemplate.query(sql,
-                    BeanPropertyRowMapper.newInstance(AuditLog.class), params.toArray());
+            SqlContext ctx = new SqlContext();
+            ctx.addCondition("module = ?", entityType);
+            ctx.setPagination(size, offset);
+            List<AuditLog> records = executeListQueryWithLimit(ctx);
             return PageResponse.success(total, (long) page, (long) size, records);
         } catch (Exception e) {
             log.warn("按实体类型分页查询审计日志失败, entityType={}", entityType, e);
@@ -450,20 +306,9 @@ public class DefaultAuditQueryService implements AuditQueryService {
             return Collections.emptyList();
         }
         try {
-            if (shardingStrategy != null) {
-                LocalDateTime end = LocalDateTime.now();
-                LocalDateTime start = end.minusMonths(12);
-                Set<String> tables = shardingStrategy.getTableNamesInRange(baseTableName, start, end);
-                String unionSql = buildUnionAllSql(tables,
-                        "trace_id = ? ORDER BY operation_time DESC");
-                return jdbcTemplate.query(unionSql,
-                        BeanPropertyRowMapper.newInstance(AuditLog.class), traceId);
-            }
-            // trace_id 列已建立索引，等值查询性能优于 LIKE
-            String sql = "SELECT * FROM " + baseTableName +
-                    " WHERE trace_id = ? ORDER BY operation_time DESC";
-            return jdbcTemplate.query(sql,
-                    BeanPropertyRowMapper.newInstance(AuditLog.class), traceId);
+            SqlContext ctx = new SqlContext();
+            ctx.addCondition("trace_id = ?", traceId);
+            return executeListQuery(ctx);
         } catch (Exception e) {
             log.warn("按追踪ID查询审计日志失败, traceId={}", traceId, e);
             return Collections.emptyList();
@@ -474,45 +319,21 @@ public class DefaultAuditQueryService implements AuditQueryService {
     public long countByConditions(String operatorId, Integer action, String module, Integer auditType,
                                   LocalDateTime startTime, LocalDateTime endTime) {
         try {
-            if (shardingStrategy != null) {
-                Set<String> tables = resolveTables(startTime, endTime);
-                long total = 0;
-                for (String table : tables) {
-                    total += countFromTable(table, operatorId, action, module, auditType, startTime, endTime);
-                }
-                return total;
-            }
-            StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM ").append(baseTableName)
-                    .append(" WHERE 1=1");
-            List<Object> params = new ArrayList<>();
-
+            SqlContext ctx = new SqlContext();
             if (operatorId != null && !operatorId.isEmpty()) {
-                sql.append(" AND operator_id = ?");
-                params.add(operatorId);
+                ctx.addCondition("operator_id = ?", operatorId);
             }
             if (action != null) {
-                sql.append(" AND action = ?");
-                params.add(action);
+                ctx.addCondition("action = ?", action);
             }
             if (module != null && !module.isEmpty()) {
-                sql.append(" AND module = ?");
-                params.add(module);
+                ctx.addCondition("module = ?", module);
             }
             if (auditType != null) {
-                sql.append(" AND audit_type = ?");
-                params.add(auditType);
+                ctx.addCondition("audit_type = ?", auditType);
             }
-            if (startTime != null) {
-                sql.append(" AND operation_time >= ?");
-                params.add(startTime);
-            }
-            if (endTime != null) {
-                sql.append(" AND operation_time <= ?");
-                params.add(endTime);
-            }
-
-            Long count = jdbcTemplate.queryForObject(sql.toString(), Long.class, params.toArray());
-            return count != null ? count : 0L;
+            ctx.setTimeRange(startTime, endTime);
+            return executeCountQuery(ctx);
         } catch (Exception e) {
             log.warn("按条件统计审计日志数量失败", e);
             return 0L;
@@ -529,7 +350,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
             return Collections.singleton(baseTableName);
         }
         if (startTime == null) {
-            startTime = LocalDateTime.now().minusMonths(12);
+            startTime = LocalDateTime.now().minusMonths(DEFAULT_QUERY_RANGE_MONTHS);
         }
         if (endTime == null) {
             endTime = LocalDateTime.now();
@@ -545,10 +366,121 @@ public class DefaultAuditQueryService implements AuditQueryService {
         try {
             // tableName validated by validateTableName() above; whereClause built from hardcoded fragments — safe from SQL injection
             String sql = "SELECT * FROM " + tableName + " WHERE " + whereClause;
-            return jdbcTemplate.queryForObject(sql, BeanPropertyRowMapper.newInstance(AuditLog.class), params);
+            return jdbcTemplate.queryForObject(sql, rowMapper, params);
         } catch (Exception e) {
             return null;
         }
+    }
+
+    /**
+     * 构建 SELECT SQL（不含分页）
+     */
+    private String buildSelectSql(String tableName, String condition, List<Object> params) {
+        String sql = "SELECT * FROM " + tableName;
+        if (condition != null && !condition.isEmpty()) {
+            sql += " WHERE " + condition;
+        }
+        return sql;
+    }
+
+    /**
+     * 构建 SELECT SQL（带分页）
+     */
+    private String buildSelectSqlWithLimit(String tableName, String condition, int limit, int offset) {
+        String sql = "SELECT * FROM " + tableName;
+        if (condition != null && !condition.isEmpty()) {
+            sql += " WHERE " + condition;
+        }
+        sql += " ORDER BY operation_time DESC LIMIT " + limit + " OFFSET " + offset;
+        return sql;
+    }
+
+    /**
+     * 执行列表查询（公共方法，处理分表和非分表逻辑）
+     */
+    private List<AuditLog> executeListQuery(SqlContext ctx) {
+        if (shardingStrategy != null) {
+            Set<String> tables = resolveTables(ctx.getStartTime(), ctx.getEndTime());
+            if (tables.isEmpty()) {
+                return Collections.emptyList();
+            }
+            String whereClause = buildWhereClause(ctx);
+            if (tables.size() == 1) {
+                String table = tables.iterator().next();
+                validateTableName(table);
+                String sql = "SELECT * FROM " + table + " WHERE " + whereClause + " ORDER BY operation_time DESC";
+                return jdbcTemplate.query(sql, rowMapper, ctx.getParamsArray());
+            }
+            String unionSql = buildUnionAllSql(tables, whereClause + " ORDER BY operation_time DESC");
+            return jdbcTemplate.query(unionSql, rowMapper, ctx.getParamsArray());
+        }
+        // 非分表模式
+        String sql = buildSelectSql(baseTableName, null, null) + " WHERE " + buildWhereClause(ctx)
+                + " ORDER BY operation_time DESC";
+        return jdbcTemplate.query(sql, rowMapper, ctx.getParamsArray());
+    }
+
+    /**
+     * 执行带分页的列表查询
+     */
+    private List<AuditLog> executeListQueryWithLimit(SqlContext ctx) {
+        if (shardingStrategy != null) {
+            Set<String> tables = resolveTables(ctx.getStartTime(), ctx.getEndTime());
+            if (tables.size() == 1) {
+                String table = tables.iterator().next();
+                validateTableName(table);
+                String sql = buildSelectSqlWithLimit(table, buildWhereClause(ctx),
+                        ctx.getLimit(), ctx.getOffset());
+                return jdbcTemplate.query(sql, rowMapper, ctx.getParamsArray());
+            }
+            // 多分表：使用子查询合并后分页
+            String whereClause = buildWhereClause(ctx);
+            String unionSql = buildUnionAllWithLimit(tables, whereClause,
+                    ctx.getLimit(), ctx.getOffset());
+            return jdbcTemplate.query(unionSql, rowMapper, ctx.getParamsArray());
+        }
+        // 非分表模式
+        String sql = buildSelectSqlWithLimit(baseTableName, buildWhereClause(ctx),
+                ctx.getLimit(), ctx.getOffset());
+        return jdbcTemplate.query(sql, rowMapper, ctx.getParamsArray());
+    }
+
+    /**
+     * 执行计数查询
+     */
+    private long executeCountQuery(SqlContext ctx) {
+        if (shardingStrategy != null) {
+            Set<String> tables = resolveTables(ctx.getStartTime(), ctx.getEndTime());
+            long total = 0;
+            for (String table : tables) {
+                validateTableName(table);
+                String sql = "SELECT COUNT(*) FROM " + table + " WHERE " + buildWhereClause(ctx);
+                Long count = jdbcTemplate.queryForObject(sql, Long.class, ctx.getParamsArray());
+                total += count != null ? count : 0L;
+            }
+            return total;
+        }
+        // 非分表模式
+        String sql = "SELECT COUNT(*) FROM " + baseTableName + " WHERE " + buildWhereClause(ctx);
+        Long count = jdbcTemplate.queryForObject(sql, Long.class, ctx.getParamsArray());
+        return count != null ? count : 0L;
+    }
+
+    /**
+     * 构建 WHERE 子句
+     */
+    private String buildWhereClause(SqlContext ctx) {
+        StringBuilder sb = new StringBuilder("1=1");
+        for (String condition : ctx.getConditions()) {
+            sb.append(" AND ").append(condition);
+        }
+        if (ctx.getStartTime() != null) {
+            sb.append(" AND operation_time >= ?");
+        }
+        if (ctx.getEndTime() != null) {
+            sb.append(" AND operation_time <= ?");
+        }
+        return sb.toString();
     }
 
     /**
@@ -584,7 +516,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
             validateTableName(table);
             // whereClause built from hardcoded fragments (column = ?) — safe from SQL injection
             return "SELECT * FROM " + table + " WHERE " + whereClause
-                    + " ORDER BY operation_time DESC LIMIT ? OFFSET ?";
+                    + " ORDER BY operation_time DESC LIMIT " + limit + " OFFSET " + offset;
         }
         StringBuilder sql = new StringBuilder();
         sql.append("SELECT * FROM (");
@@ -598,39 +530,8 @@ public class DefaultAuditQueryService implements AuditQueryService {
             sql.append("SELECT * FROM ").append(table).append(" WHERE ").append(whereClause);
             idx++;
         }
-        sql.append(") AS combined ORDER BY operation_time DESC LIMIT ? OFFSET ?");
+        sql.append(") AS combined ORDER BY operation_time DESC LIMIT ").append(limit).append(" OFFSET ").append(offset);
         return sql.toString();
-    }
-
-    /**
-     * 追加时间条件到 where 子句
-     */
-    private String appendTimeCondition(List<Object> params, LocalDateTime startTime, LocalDateTime endTime) {
-        StringBuilder sb = new StringBuilder();
-        if (startTime != null) {
-            sb.append(" AND operation_time >= ?");
-            params.add(startTime);
-        }
-        if (endTime != null) {
-            sb.append(" AND operation_time <= ?");
-            params.add(endTime);
-        }
-        return sb.toString();
-    }
-
-    /**
-     * 追加时间条件到 StringBuilder SQL
-     */
-    private void appendTimeCondition(StringBuilder sql, List<Object> params,
-                                     LocalDateTime startTime, LocalDateTime endTime) {
-        if (startTime != null) {
-            sql.append(" AND operation_time >= ?");
-            params.add(startTime);
-        }
-        if (endTime != null) {
-            sql.append(" AND operation_time <= ?");
-            params.add(endTime);
-        }
     }
 
     /**
@@ -663,34 +564,15 @@ public class DefaultAuditQueryService implements AuditQueryService {
 
     /**
      * 按时间范围统计审计日志数量
-     *
-     * @param startTime 起始时间（可为 null）
-     * @param endTime   结束时间（可为 null）
-     * @return 符合条件的记录数
      */
     private long countByTimeRange(LocalDateTime startTime, LocalDateTime endTime) {
-        if (shardingStrategy != null) {
-            Set<String> tables = resolveTables(startTime, endTime);
-            long total = 0;
-            for (String table : tables) {
-                total += countFromTable(table, null, null, null, null, startTime, endTime);
-            }
-            return total;
-        }
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM ").append(baseTableName)
-                .append(" WHERE 1=1");
-        List<Object> params = new ArrayList<>();
-        appendTimeCondition(sql, params, startTime, endTime);
-
-        Long count = jdbcTemplate.queryForObject(sql.toString(), Long.class, params.toArray());
-        return count != null ? count : 0L;
+        SqlContext ctx = new SqlContext();
+        ctx.setTimeRange(startTime, endTime);
+        return executeCountQuery(ctx);
     }
 
     /**
      * 按操作人统计审计日志数量
-     *
-     * @param operatorId 操作人ID
-     * @return 符合条件的记录数
      */
     private long countByOperator(String operatorId) {
         String sql = "SELECT COUNT(*) FROM " + baseTableName + " WHERE operator_id = ?";
@@ -700,9 +582,6 @@ public class DefaultAuditQueryService implements AuditQueryService {
 
     /**
      * 按操作类型统计审计日志数量
-     *
-     * @param action 操作类型
-     * @return 符合条件的记录数
      */
     private long countByAction(Integer action) {
         String sql = "SELECT COUNT(*) FROM " + baseTableName + " WHERE action = ?";
@@ -712,9 +591,6 @@ public class DefaultAuditQueryService implements AuditQueryService {
 
     /**
      * 按实体类型统计审计日志数量
-     *
-     * @param entityType 实体类型
-     * @return 符合条件的记录数
      */
     private long countByEntityType(String entityType) {
         String sql = "SELECT COUNT(*) FROM " + baseTableName + " WHERE module = ?";
@@ -723,53 +599,67 @@ public class DefaultAuditQueryService implements AuditQueryService {
     }
 
     /**
-     * 从指定分表中按条件统计审计日志数量
-     *
-     * @param tableName  表名
-     * @param operatorId 操作人ID（可为 null）
-     * @param action     操作类型（可为 null）
-     * @param module     模块名（可为 null）
-     * @param auditType  审计类型（可为 null）
-     * @param startTime  起始时间（可为 null）
-     * @param endTime    结束时间（可为 null）
-     * @return 符合条件的记录数
+     * SQL 查询上下文，封装条件、参数、时间范围和分页信息
      */
-    private long countFromTable(String tableName, String operatorId, Integer action, String module,
-                                Integer auditType, LocalDateTime startTime, LocalDateTime endTime) {
-        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM ").append(tableName)
-                .append(" WHERE 1=1");
-        List<Object> params = new ArrayList<>();
+    private static class SqlContext {
 
-        if (operatorId != null && !operatorId.isEmpty()) {
-            sql.append(" AND operator_id = ?");
-            params.add(operatorId);
-        }
-        if (action != null) {
-            sql.append(" AND action = ?");
-            params.add(action);
-        }
-        if (module != null && !module.isEmpty()) {
-            sql.append(" AND module = ?");
-            params.add(module);
-        }
-        if (auditType != null) {
-            sql.append(" AND audit_type = ?");
-            params.add(auditType);
-        }
-        if (startTime != null) {
-            sql.append(" AND operation_time >= ?");
-            params.add(startTime);
-        }
-        if (endTime != null) {
-            sql.append(" AND operation_time <= ?");
-            params.add(endTime);
+        private final List<String> conditions = new ArrayList<>();
+
+        private final List<Object> params = new ArrayList<>();
+
+        private LocalDateTime startTime;
+
+        private LocalDateTime endTime;
+
+        private int limit = -1;
+
+        private int offset = -1;
+
+        void addCondition(String condition, Object param) {
+            this.conditions.add(condition);
+            this.params.add(param);
         }
 
-        try {
-            Long count = jdbcTemplate.queryForObject(sql.toString(), Long.class, params.toArray());
-            return count != null ? count : 0L;
-        } catch (Exception e) {
-            return 0L;
+        void setTimeRange(LocalDateTime start, LocalDateTime end) {
+            this.startTime = start;
+            this.endTime = end;
+            if (start != null) {
+                this.params.add(start);
+            }
+            if (end != null) {
+                this.params.add(end);
+            }
+        }
+
+        void setPagination(int limit, int offset) {
+            this.limit = limit;
+            this.offset = offset;
+            this.params.add(limit);
+            this.params.add(offset);
+        }
+
+        List<String> getConditions() {
+            return conditions;
+        }
+
+        Object[] getParamsArray() {
+            return params.toArray();
+        }
+
+        LocalDateTime getStartTime() {
+            return startTime;
+        }
+
+        LocalDateTime getEndTime() {
+            return endTime;
+        }
+
+        int getLimit() {
+            return limit;
+        }
+
+        int getOffset() {
+            return offset;
         }
     }
 }

@@ -16,7 +16,7 @@ import io.micrometer.core.instrument.Timer;
  *
  * <p>注册的指标：
  * <ul>
- *   <li>{@code feign.request.latency} - Feign 请求延迟 Timer（标签: client, method）</li>
+ *   <li>{@code feign.request.latency} - Feign 请求延迟 Timer（标签: client, method, status_code）</li>
  *   <li>{@code feign.request.errors} - Feign 请求错误 Counter（标签: client, method, status_code）</li>
  *   <li>{@code feign.request.slow} - Feign 慢调用 Counter（标签: client, method）</li>
  * </ul>
@@ -40,7 +40,7 @@ public class FeignMicrometerCollector {
     private static final ConcurrentHashMap<MeterRegistry, FeignMicrometerCollector> INSTANCES =
             new ConcurrentHashMap<>();
 
-    /** Timer 缓存，Key = "client|method" */
+    /** Timer 缓存，Key = "client|method|status" */
     private final ConcurrentHashMap<String, Timer> timerCache = new ConcurrentHashMap<>();
 
     private final MeterRegistry registry;
@@ -64,31 +64,48 @@ public class FeignMicrometerCollector {
      *
      * @param clientName Feign 客户端名称
      * @param method     HTTP 方法
+     * @param status     HTTP 状态码分类（如 "200"、"4xx"、"5xx"、"error"）
      * @return 缓存的 Timer 实例
      */
-    private Timer getOrCreateTimer(String clientName, String method) {
-        String cacheKey = clientName + "|" + method;
+    private Timer getOrCreateTimer(String clientName, String method, String status) {
+        String cacheKey = clientName + "|" + method + "|" + status;
         return timerCache.computeIfAbsent(cacheKey, k ->
                 Timer.builder(METRIC_REQUEST_LATENCY)
                         .tag(TAG_CLIENT, clientName)
                         .tag(TAG_METHOD, method)
+                        .tag(TAG_STATUS_CODE, status)
                         .description("Feign request latency")
                         .register(registry));
     }
 
     /**
-     * 记录 Feign 请求延迟。
+     * 记录 Feign 请求延迟（带状态码标签）。
+     *
+     * @param clientName Feign 客户端名称
+     * @param method     HTTP 方法（如 GET, POST）
+     * @param durationMs 耗时（毫秒）
+     * @param statusCode HTTP 状态码（如 "200"、"500"），用于区分成功/失败的延迟分布
+     */
+    public void recordLatency(String clientName, String method, long durationMs, String statusCode) {
+        getOrCreateTimer(clientName, method, statusCode).record(Duration.ofMillis(durationMs));
+    }
+
+    /**
+     * 记录 Feign 请求延迟（向后兼容，不含状态码标签）。
      *
      * @param clientName Feign 客户端名称
      * @param method     HTTP 方法（如 GET, POST）
      * @param durationMs 耗时（毫秒）
      */
     public void recordLatency(String clientName, String method, long durationMs) {
-        getOrCreateTimer(clientName, method).record(Duration.ofMillis(durationMs));
+        recordLatency(clientName, method, durationMs, "unknown");
     }
 
     /**
      * 记录 Feign 请求延迟（通过 Supplier 包装调用）。
+     *
+     * <p>注意：此方法无法感知调用结果状态，Timer 将打上 {@code status_code=unknown} 标签。
+     * 若需区分成功/失败延迟，建议直接调用 {@link #recordLatency(String, String, long, String)}。
      *
      * @param clientName Feign 客户端名称
      * @param method     HTTP 方法
@@ -101,7 +118,7 @@ public class FeignMicrometerCollector {
         try {
             return supplier.get();
         } finally {
-            sample.stop(getOrCreateTimer(clientName, method));
+            sample.stop(getOrCreateTimer(clientName, method, "unknown"));
         }
     }
 

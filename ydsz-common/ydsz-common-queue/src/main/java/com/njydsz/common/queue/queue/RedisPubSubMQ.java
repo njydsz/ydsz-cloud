@@ -3,7 +3,6 @@ package com.njydsz.common.queue.queue;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.springframework.data.redis.core.RedisTemplate;
 
@@ -28,13 +27,11 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  */
 @Slf4j
-public class RedisPubSubMQ implements IMessageQueue {
+public class RedisPubSubMQ extends AbstractMessageQueue {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final QueueProperties config;
     private final ConcurrentMap<String, RedisPubSubSubscriber> subscribers;
-    private volatile boolean closed = false;
-    private final ReentrantLock closeLock = new ReentrantLock();
 
     /**
      * 基于 RedisTemplate 构造（复用 ydsz-common-redis 连接）
@@ -43,6 +40,7 @@ public class RedisPubSubMQ implements IMessageQueue {
      * @param config        队列配置
      */
     public RedisPubSubMQ(RedisTemplate<String, Object> redisTemplate, QueueProperties config) {
+        super("Redis-PubSub");
         if (config == null) {
             throw BusinessException.builder().key("队列配置不能为空").build();
         }
@@ -76,38 +74,16 @@ public class RedisPubSubMQ implements IMessageQueue {
     }
 
     @Override
-    public boolean isClosed() {
-        return closed;
-    }
-
-    @Override
-    public String getType() {
-        return "Redis-PubSub";
-    }
-
-    @Override
-    public void close() {
-        if (closed) {
-            return;
-        }
-        closeLock.lock();
-        try {
-            if (closed) {
-                return;
-            }
-            closed = true;
-            shutdownSubscribers();
-            // RedisTemplate 由 ydsz-common-redis 管理，无需关闭
-            log.info("[Redis-PubSub] 队列已关闭");
-        } finally {
-            closeLock.unlock();
-        }
+    protected void doClose() {
+        shutdownSubscribers();
+        // RedisTemplate 由 ydsz-common-redis 管理，无需关闭
+        log.info("[Redis-PubSub] 队列已关闭");
     }
 
     /**
      * 登记订阅者到内部映射。
      *
-     * <p>便于 {@link #close()} 时统一关闭所有订阅者、防止连接泄漏。
+     * <p>便于 {@link #doClose()} 时统一关闭所有订阅者、防止连接泄漏。
      * 仅登记由本 MQ 创建的订阅者；{@code subscriberId} 重复会覆盖旧条目（旧订阅者不再被本 MQ 管理，需调用方自行关闭）。
      * {@code subscriberId} 或 {@code subscriber} 为 {@code null} 时静默忽略。
      *
@@ -125,7 +101,7 @@ public class RedisPubSubMQ implements IMessageQueue {
      * 从内部映射移除订阅者登记。
      *
      * <p>通常在订阅者主动取消订阅时调用。注意：本方法<b>仅移除引用、不主动关闭底层订阅连接</b>，
-     * 以避免影响仍持有该订阅者的其它引用；真正的资源释放交由 {@link #close()} 或订阅者自身的 {@code shutdown()}。
+     * 以避免影响仍持有该订阅者的其它引用；真正的资源释放交由 {@link #doClose()} 或订阅者自身的 {@code shutdown()}。
      * {@code subscriberId} 为 {@code null} 时忽略。
      *
      * @param subscriberId 待移除的订阅者 ID

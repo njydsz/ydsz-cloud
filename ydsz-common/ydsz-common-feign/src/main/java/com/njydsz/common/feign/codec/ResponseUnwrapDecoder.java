@@ -99,7 +99,7 @@ public class ResponseUnwrapDecoder implements Decoder {
                 String code = wrapper.getCode();
                 String msg = wrapper.getMsg();
                 log.warn("Feign 响应业务失败, code: {}, msg: {}", code, msg);
-                throw new FeignBusinessException(code, msg, response.request().url());
+                throw new FeignBusinessException(code, msg, response.request().url(), response.status());
             }
 
             Object data = wrapper.getData();
@@ -171,7 +171,8 @@ public class ResponseUnwrapDecoder implements Decoder {
     /**
      * Feign 业务异常
      *
-     * <p>当 Feign 调用返回的业务状态码非成功时抛出
+     * <p>当 Feign 调用返回的业务状态码非成功时抛出。
+     * 携带原始 HTTP 状态码，便于调用方区分网络错误与业务错误。
      */
     public static class FeignBusinessException extends DecodeException {
 
@@ -181,8 +182,15 @@ public class ResponseUnwrapDecoder implements Decoder {
         private final String msg;
         private final String url;
 
-        public FeignBusinessException(String code, String msg, String url) {
-            super(500, String.format("Feign 业务失败, url: %s, code: %s, msg: %s", url, code, msg), null);
+        /**
+         * @param code     业务错误码
+         * @param msg      错误消息
+         * @param url      请求 URL
+         * @param httpCode 原始 HTTP 状态码（如 200、403 等）
+         */
+        public FeignBusinessException(String code, String msg, String url, int httpCode) {
+            super(httpCode, String.format("Feign 业务失败, url: %s, httpCode: %d, code: %s, msg: %s",
+                    url, httpCode, code, msg), null);
             this.code = code;
             this.msg = msg;
             this.url = url;

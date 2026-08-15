@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.api.expression;
+package com.njydsz.literule.api.expression;
 
 import java.util.ArrayList;
 import java.util.List;

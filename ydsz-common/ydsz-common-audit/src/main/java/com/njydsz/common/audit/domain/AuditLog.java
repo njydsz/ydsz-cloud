@@ -3,7 +3,9 @@ package com.njydsz.common.audit.domain;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 审计日志实体
@@ -26,6 +28,8 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class AuditLog implements Serializable {
 
     private static final long serialVersionUID = 1L;

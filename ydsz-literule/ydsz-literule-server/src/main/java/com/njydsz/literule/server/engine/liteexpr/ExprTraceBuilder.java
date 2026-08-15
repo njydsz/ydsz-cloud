@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.server.engine.liteexpr;
+package com.njydsz.literule.server.engine.liteexpr;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +29,7 @@ import java.util.List;
 public class ExprTraceBuilder {
 
     /**
-     * 追踪节点（简化版，映射到 {@link com.njydsz.literule.server.expr.ExpressionTraceNode}）
+     * 追踪节点（简化版，映射到 {@link com.njydsz.literule.server.engine.liteexpr.ExpressionTraceNode}）
      */
     public record TraceNode(
             String type,

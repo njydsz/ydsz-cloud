@@ -96,16 +96,29 @@ public class RateLimitRule implements Serializable {
 
     /**
      * 校验规则合法性
+     *
+     * <p>校验以下内容：
+     * <ul>
+     *   <li>{@code resource} 不能为空</li>
+     *   <li>{@code threshold} 必须大于 0</li>
+     *   <li>{@code window} 必须大于 0</li>
+     *   <li>{@code burstCapacity} 必须大于 0</li>
+     * </ul>
+     *
+     * @throws IllegalArgumentException 校验失败时抛出
      */
     public void validate() {
         if (resource == null || resource.trim().isEmpty()) {
             throw new IllegalArgumentException("resource cannot be null or empty");
         }
         if (threshold <= 0) {
-            throw new IllegalArgumentException("threshold must be positive");
+            throw new IllegalArgumentException("threshold must be positive, got: " + threshold);
         }
         if (window == null || window.isNegative() || window.isZero()) {
-            throw new IllegalArgumentException("window must be positive");
+            throw new IllegalArgumentException("window must be positive, got: " + window);
+        }
+        if (burstCapacity <= 0) {
+            throw new IllegalArgumentException("burstCapacity must be positive, got: " + burstCapacity);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.server.engine.liteexpr;
+package com.njydsz.literule.server.engine.liteexpr;
 
 import com.njydsz.common.exception.custom.BusinessException;
 
@@ -6,7 +6,7 @@ import com.njydsz.common.exception.custom.BusinessException;
  * LiteExpr 表达式引擎异常
  *
  * <p>词法/语法分析阶段抛出，携带精确的行列位置信息，
- * 供 {@link com.njydsz.literule.server.expr.ExpressionValidationResult} 渲染错误位置。
+ * 供 {@link com.njydsz.literule.server.engine.liteexpr.ExpressionValidationResult} 渲染错误位置。
  *
  * <p>继承 {@link BusinessException}，纳入 common-exception 统一异常体系。
  *

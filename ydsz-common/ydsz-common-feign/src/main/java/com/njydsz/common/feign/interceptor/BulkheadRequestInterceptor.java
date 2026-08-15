@@ -71,6 +71,9 @@ public class BulkheadRequestInterceptor implements RequestInterceptor {
     private final int defaultMaxConcurrent;
     private final long acquireTimeoutMillis;
 
+    /** 记录每个信号量创建时的最大并发数，用于检测配置变更 */
+    private final ConcurrentHashMap<String, Integer> semaphoreMaxPermits = new ConcurrentHashMap<>();
+
     /**
      * 当前线程已获取许可的服务名（用于在调用完成后释放许可）。
      *
@@ -136,8 +139,9 @@ public class BulkheadRequestInterceptor implements RequestInterceptor {
     public void apply(RequestTemplate requestTemplate) {
         String serviceName = extractServiceName(requestTemplate);
         int maxConcurrent = resolveMaxConcurrent(serviceName);
-        Semaphore semaphore = bulkheads.computeIfAbsent(serviceName,
-                k -> new Semaphore(maxConcurrent));
+
+        // 获取或创建信号量，如果配置变更则重建
+        Semaphore semaphore = getOrCreateSemaphore(serviceName, maxConcurrent);
 
         try {
             if (!semaphore.tryAcquire(acquireTimeoutMillis, TimeUnit.MILLISECONDS)) {
@@ -153,6 +157,33 @@ public class BulkheadRequestInterceptor implements RequestInterceptor {
         // 成功获取许可后，记录服务名供后续释放
         currentServiceName.set(serviceName);
         requestTemplate.header("X-Bulkhead-Acquired", serviceName);
+    }
+
+    /**
+     * 获取或创建信号量，当配置的最大并发数发生变更时自动重建。
+     *
+     * <p>热更新机制：比较当前配置值与创建信号量时的值，若不一致则创建新信号量替换旧值。
+     * 注意：重建信号量时旧信号量中已持有的许可不会被迁移，需等待自然释放后新请求才能获取新配额。
+     *
+     * @param serviceName   服务名称
+     * @param maxConcurrent 当前配置的最大并发数
+     * @return 与配置匹配的信号量实例
+     */
+    private Semaphore getOrCreateSemaphore(String serviceName, int maxConcurrent) {
+        Semaphore current = bulkheads.get(serviceName);
+        if (current != null) {
+            Integer previousMax = semaphoreMaxPermits.get(serviceName);
+            if (previousMax != null && previousMax == maxConcurrent) {
+                return current;
+            }
+            // 配置已变更，需要重建信号量（旧信号量等待自然释放后可被 GC）
+            log.info("[Bulkhead] 服务 {} 并发配置从 {} 变更为 {}, 重建信号量",
+                    serviceName, previousMax, maxConcurrent);
+        }
+        Semaphore created = new Semaphore(maxConcurrent);
+        bulkheads.put(serviceName, created);
+        semaphoreMaxPermits.put(serviceName, maxConcurrent);
+        return created;
     }
 
     /**

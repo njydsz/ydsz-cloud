@@ -222,7 +222,7 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
      * @param auditLog 待写入的审计日志
      */
     private void handleQueueFull(AuditLog auditLog) {
-        String strategy = properties.getAsyncRejectPolicy();
+        String strategy = asyncProps.getAsyncRejectPolicy();
         long warnCount = queueFullWarnCount.incrementAndGet();
         logQueueFullWarn(auditLog, strategy, warnCount);
 
@@ -386,7 +386,7 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
         if (!"DISCARD_OLDEST".equals(upper) && !"DISCARD_NEWEST".equals(upper) && !"CALLER_RUNS".equals(upper)) {
             throw new IllegalArgumentException("策略必须为 DISCARD_OLDEST、DISCARD_NEWEST 或 CALLER_RUNS");
         }
-        properties.setAsyncRejectPolicy(upper);
+        asyncProps.setRejectPolicy(upper);
         log.info("【异步审计记录器】队列满策略已设置为: {}", upper);
     }
 

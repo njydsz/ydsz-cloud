@@ -223,7 +223,7 @@ public class NotifyServiceImpl implements NotifyService {
     /**
      * 发送模板通知。
      *
-     * <p>等价于 {@code doSendTemplate(channel, receiver, templateCode, templateParams, null)}。
+     * <p>等价于 {@code doSendTemplate(channel, receiver, templateCode, templateParams, null, null)}。
      *
      * @param channel       通知渠道
      * @param receiver      接收方
@@ -234,7 +234,7 @@ public class NotifyServiceImpl implements NotifyService {
     @Override
     public NotifySendResult sendTemplate(NotifyChannel channel, String receiver,
                                   String templateCode, Object templateParams) {
-        return doSendTemplate(channel, receiver, templateCode, templateParams, null);
+        return doSendTemplate(channel, receiver, templateCode, templateParams, null, null);
     }
 
     /**
@@ -456,18 +456,19 @@ public class NotifyServiceImpl implements NotifyService {
      * @param templateCode  模板编码
      * @param templateParams 模板参数
      * @param title         消息标题（可选，用于降级）
+     * @param tenantId      租户 ID（可选，用于多租户限流隔离）
      * @return 发送结果
      */
     private NotifySendResult doSendTemplate(NotifyChannel channel, String receiver,
                                  String templateCode, Object templateParams,
-                                 String title) {
+                                 String title, String tenantId) {
         // 熔断检查
         if (!tryAcquireCircuitBreaker(channel)) {
             return NotifySendResult.failure("通知渠道[" + channel.getName() + "]已熔断，请稍后重试", channel.getName());
         }
 
-        // 限流检查
-        if (!tryAcquireRateLimit(channel)) {
+        // 限流检查（支持多租户隔离）
+        if (!tryAcquireRateLimit(channel, tenantId)) {
             return NotifySendResult.failure("通知渠道限流触发，请稍后重试: " + channel.getName(), channel.getName());
         }
 

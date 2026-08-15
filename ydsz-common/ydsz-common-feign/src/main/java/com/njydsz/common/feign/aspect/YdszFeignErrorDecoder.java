@@ -32,6 +32,7 @@ import feign.codec.ErrorDecoder;
  *   <li>{@code 404 Not Found} - 转换为 {@link NotFoundException}</li>
  *   <li>{@code 429 Too Many Requests} - 转换为 {@link OpenFeignException}（错误码 429）</li>
  *   <li>{@code 500 Internal Server Error} - 转换为 {@link OpenFeignException}（错误码 500）</li>
+ *   <li>{@code 502 Bad Gateway} - 转换为 {@link OpenFeignException}（错误码 502）</li>
  *   <li>{@code 503 Service Unavailable} - 转换为 {@link OpenFeignException}（错误码 503）</li>
  *   <li>{@code 504 Gateway Timeout} - 转换为 {@link OpenFeignException}（错误码 504）</li>
  * </ul>
@@ -99,6 +100,9 @@ public class YdszFeignErrorDecoder implements ErrorDecoder {
 
             case 500:
                 return new OpenFeignException("500", buildErrorMessage(methodKey, response));
+
+            case 502:
+                return new OpenFeignException("502", buildErrorMessage(methodKey, response));
 
             case 503:
                 return new OpenFeignException("503", buildErrorMessage(methodKey, response));

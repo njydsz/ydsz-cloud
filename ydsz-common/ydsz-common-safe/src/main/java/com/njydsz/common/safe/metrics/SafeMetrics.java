@@ -1,5 +1,6 @@
 package com.njydsz.common.safe.metrics;
 
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -29,6 +30,10 @@ import io.micrometer.core.instrument.Timer;
  *   <li>{@code safe_filter_duration_seconds} - 安全过滤器处理耗时</li>
  * </ul>
  *
+ * <p><b>性能优化：</b>Counter 实例预注册并缓存，避免每次事件触发时的重复 {@code Counter.builder().register()} 开销。
+ * Micrometer 的 {@code Counter.register()} 内部已有幂等处理（相同 MeterId 返回已有实例），但
+ * 缓存 MeterId 维度 Counter 可进一步减少 Tag 匹配与 Map 查找。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -44,6 +49,9 @@ public class SafeMetrics {
     private final AtomicLong rateLimitTriggered = new AtomicLong(0);
     private final AtomicLong illegalAccess = new AtomicLong(0);
     private final AtomicLong ipBlocked = new AtomicLong(0);
+
+    /** Counter 缓存（预注册） */
+    private final ConcurrentHashMap<String, Counter> counterCache = new ConcurrentHashMap<>();
 
     /**
      * @param meterRegistry Micrometer MeterRegistry（可为 null，降级为内存计数）
@@ -132,13 +140,28 @@ public class SafeMetrics {
         return rateLimitTriggered.get();
     }
 
+    /**
+     * 增加计数。
+     *
+     * <p>优先从 {@link #counterCache} 获取已缓存的 Counter 实例；
+     * 首次调用时通过 {@code Counter.builder().register()} 创建并缓存。
+     * 内存计数（fallback）始终递增，确保降级模式下数据不丢失。
+     *
+     * @param name     指标名称
+     * @param sourceIp 来源 IP（Tag 值）
+     * @param fallback 内存计数器（降级兜底）
+     */
     private void incrementCounter(String name, String sourceIp, AtomicLong fallback) {
         fallback.incrementAndGet();
-        if (meterRegistry != null) {
-            Counter.builder(name)
-                    .tag("source_ip", sourceIp)
-                    .register(meterRegistry)
-                    .increment();
+        if (meterRegistry == null) {
+            return;
         }
+        // 缓存 key = metricName + tagValue，避免重复 builder/register 开销
+        String cacheKey = name + "|" + sourceIp;
+        Counter counter = counterCache.computeIfAbsent(cacheKey, k ->
+                Counter.builder(name)
+                        .tag("source_ip", sourceIp)
+                        .register(meterRegistry));
+        counter.increment();
     }
 }

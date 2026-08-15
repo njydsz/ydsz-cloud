@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.domain.entity;
+package com.njydsz.literule.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;

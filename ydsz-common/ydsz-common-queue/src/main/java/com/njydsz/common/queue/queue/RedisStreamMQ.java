@@ -1,7 +1,6 @@
 package com.njydsz.common.queue.queue;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.springframework.data.redis.core.RedisTemplate;
 
@@ -26,13 +25,11 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  */
 @Slf4j
-public class RedisStreamMQ implements IMessageQueue {
+public class RedisStreamMQ extends AbstractMessageQueue {
 
     private final QueueProperties queueProperties;
     private final RedisTemplate<String, Object> redisTemplate;
     private final ExecutorService consumerExecutor;
-    private volatile boolean closed = false;
-    private final ReentrantLock closeLock = new ReentrantLock();
 
     /**
      * 基于 RedisTemplate 构造（复用 ydsz-common-redis 连接，推荐）
@@ -41,7 +38,10 @@ public class RedisStreamMQ implements IMessageQueue {
      * @param config           队列配置
      * @param consumerExecutor 异步消费者线程池（可为 null，将退化到裸线程，不推荐）
      */
-    public RedisStreamMQ(RedisTemplate<String, Object> redisTemplate, QueueProperties config, ExecutorService consumerExecutor) {
+    public RedisStreamMQ(RedisTemplate<String, Object> redisTemplate,
+                         QueueProperties config,
+                         ExecutorService consumerExecutor) {
+        super("Redis-Stream");
         if (config == null) {
             throw BusinessException.builder().key("队列配置不能为空").build();
         }
@@ -76,30 +76,8 @@ public class RedisStreamMQ implements IMessageQueue {
     }
 
     @Override
-    public boolean isClosed() {
-        return closed;
-    }
-
-    @Override
-    public String getType() {
-        return "Redis-Stream";
-    }
-
-    @Override
-    public void close() {
-        if (closed) {
-            return;
-        }
-        closeLock.lock();
-        try {
-            if (closed) {
-                return;
-            }
-            closed = true;
-            // RedisTemplate 由 ydsz-common-redis 管理，无需关闭
-            log.info("[Redis-Stream] 队列已关闭");
-        } finally {
-            closeLock.unlock();
-        }
+    protected void doClose() {
+        // RedisTemplate 由 ydsz-common-redis 管理，无需关闭
+        log.info("[Redis-Stream] 队列已关闭");
     }
 }

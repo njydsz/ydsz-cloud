@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.server.orchestrator;
+package com.njydsz.literule.server.orchestrator;
 
 import java.util.ArrayList;
 import java.util.Collections;

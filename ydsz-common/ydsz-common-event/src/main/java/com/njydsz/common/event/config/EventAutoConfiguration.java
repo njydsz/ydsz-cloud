@@ -13,12 +13,14 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import com.njydsz.common.event.admin.OutboxAdminService;
 import com.njydsz.common.event.api.EventStore;
 import com.njydsz.common.event.gateway.EventPublishGateway;
 import com.njydsz.common.event.gateway.NoopEventPublishGateway;
+import com.njydsz.common.event.gateway.RocketMqEventPublishGateway;
 import com.njydsz.common.event.health.OutboxHealthIndicator;
 import com.njydsz.common.event.model.DatabaseDialect;
 import com.njydsz.common.event.processor.OutboxProcessor;
@@ -44,14 +46,22 @@ import javax.sql.DataSource;
  *   <li>降级为 {@link NoopEventPublishGateway}（生产环境应设置 fail-on-noop=true 阻止启动）</li>
  * </ol>
  *
+ * <p><b>条件装配说明：</b>
+ * <ul>
+ *   <li>{@link RocketMqGatewayConfiguration} 作为嵌套 {@code @Configuration} 类，
+ *       通过 {@code @ConditionalOnClass} / {@code @ConditionalOnBean} 条件控制加载</li>
+ *   <li>当 RocketMQ 不在 classpath 时，整个嵌套配置类不加载，不会创建相关 Bean</li>
+ * </ul>
+ *
  * @author ydsz-team
  * @since 1.0.0
+ * @since 1.6.0 将 {@code @Import(RocketMqGatewayConfiguration.class)} 改为嵌套 {@code @Configuration}，
+ *             修复条件注解失效问题
  */
 @AutoConfiguration
 @EnableConfigurationProperties(EventProperties.class)
 @ConditionalOnProperty(prefix = "ydsz.event.outbox", name = "enabled", havingValue = "true", matchIfMissing = true)
 @ConditionalOnBean(JdbcTemplate.class)
-@Import(RocketMqGatewayConfiguration.class)
 public class EventAutoConfiguration {
 
     /** 日志实例 */
@@ -85,10 +95,10 @@ public class EventAutoConfiguration {
     /**
      * 创建 Outbox 写入服务
      *
-     * @param outboxRepository Outbox 仓储
-     * @param properties       事件配置属性
-     * @param gatewayProvider  投递网关提供者（用于同步投递模式）
-     * @param snowflakeIdGenerator 分布式 ID 生成器
+     * @param outboxRepository      Outbox 仓储
+     * @param properties            事件配置属性
+     * @param gatewayProvider       投递网关提供者（用于同步投递模式）
+     * @param snowflakeIdGenerator  分布式 ID 生成器
      * @return Outbox 写入服务实例
      */
     @Bean
@@ -96,9 +106,11 @@ public class EventAutoConfiguration {
     public OutboxService outboxService(OutboxRepository outboxRepository,
                                        EventProperties properties,
                                        ObjectProvider<EventPublishGateway> gatewayProvider,
-                                       SnowflakeIdGenerator snowflakeIdGenerator) {
+                                       SnowflakeIdGenerator snowflakeIdGenerator,
+                                       org.springframework.context.ApplicationEventPublisher eventPublisher) {
         EventPublishGateway syncGateway = properties.isEnableSyncPublish() ? gatewayProvider.getIfAvailable() : null;
-        return new OutboxService(outboxRepository, properties, syncGateway, snowflakeIdGenerator);
+        return new OutboxService(outboxRepository, properties, syncGateway,
+                snowflakeIdGenerator, eventPublisher);
     }
 
     /**
@@ -135,10 +147,10 @@ public class EventAutoConfiguration {
     /**
      * 创建 Outbox 后台处理器
      *
-     * @param outboxRepository    Outbox 仓储
-     * @param publishGateway      投递网关
-     * @param properties          事件配置属性
-     * @param meterRegistryProvider Micrometer 指标注册器提供者（可选）
+     * @param outboxRepository       Outbox 仓储
+     * @param publishGateway         投递网关
+     * @param properties             事件配置属性
+     * @param meterRegistryProvider  Micrometer 指标注册器提供者（可选）
      * @return Outbox 后台处理器实例
      */
     @Bean(initMethod = "start")
@@ -174,6 +186,18 @@ public class EventAutoConfiguration {
     }
 
     /**
+     * 创建 Outbox 运维管理服务
+     *
+     * @param outboxRepository Outbox 仓储
+     * @return Outbox 运维管理服务实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public OutboxAdminService outboxAdminService(OutboxRepository outboxRepository) {
+        return new OutboxAdminService(outboxRepository);
+    }
+
+    /**
      * 启动后校验投递网关
      *
      * <p>如果使用 NoopEventPublishGateway 且 fail-on-noop=true，抛出异常阻止应用启动，
@@ -197,6 +221,44 @@ public class EventAutoConfiguration {
     public void destroy() {
         if (outboxProcessor != null) {
             outboxProcessor.stop();
+        }
+    }
+
+    // ==================== 嵌套配置：RocketMQ 网关 ====================
+
+    /**
+     * RocketMQ 网关配置（嵌套配置类）
+     *
+     * <p>通过嵌套 {@code @Configuration} 类实现条件装配——
+     * {@code @ConditionalOnClass} / {@code @ConditionalOnBean} 会正常生效，
+     * 避免 {@code @Import} 导致的条件注解失效问题。
+     *
+     * <p>封装 RocketMQ 生产者 Bean 注册逻辑，支持事务消息、顺序消息、延迟消息。
+     *
+     * @author ydsz-team
+     * @since 1.0.0
+     * @since 1.6.0 由独立顶层配置类改为嵌套配置类
+     */
+    @Configuration
+    @ConditionalOnClass(name = "org.apache.rocketmq.spring.core.RocketMQTemplate")
+    @ConditionalOnBean(type = "org.apache.rocketmq.spring.core.RocketMQTemplate")
+    public static class RocketMqGatewayConfiguration {
+
+        /** 日志实例 */
+        private static final Logger log = LoggerFactory.getLogger(RocketMqGatewayConfiguration.class);
+
+        /**
+         * 注册 RocketMQ 事件投递网关
+         *
+         * @param rocketMQTemplate RocketMQ 模板（由 rocketmq-spring-boot-starter 自动注册）
+         * @return RocketMQ 网关实例
+         */
+        @Bean
+        @ConditionalOnMissingBean(EventPublishGateway.class)
+        public EventPublishGateway rocketMqEventPublishGateway(
+                org.apache.rocketmq.spring.core.RocketMQTemplate rocketMQTemplate) {
+            log.info("RocketMqEventPublishGateway registered: topic=ydsz-outbox-events");
+            return new RocketMqEventPublishGateway(rocketMQTemplate, null);
         }
     }
 }

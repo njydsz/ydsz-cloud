@@ -1,22 +1,18 @@
 package com.njydsz.common.auth.service;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import jakarta.annotation.PreDestroy;
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.slf4j.MDC;
-import org.springframework.http.HttpStatus;
 
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.auth.annotation.PermissionMode;
 import com.njydsz.common.auth.annotation.AuthMenuPermission;
+import com.njydsz.common.auth.annotation.PermissionMode;
 import com.njydsz.common.auth.config.AuthProperties;
-import com.njydsz.common.core.context.BizContextKeys;
-import com.njydsz.common.core.context.RequestContext;
+import com.njydsz.common.auth.constant.AuthErrorCode;
 import com.njydsz.common.auth.exception.PermissionDeniedException;
 import com.njydsz.common.auth.exception.PermissionDeniedException.PermissionType;
 import com.njydsz.common.auth.metrics.AuthMetricsCollector;
@@ -24,9 +20,8 @@ import com.njydsz.common.auth.model.RolePermissions;
 import com.njydsz.common.auth.strategy.CacheKeyStrategy;
 import com.njydsz.common.auth.strategy.DefaultCacheKeyStrategy;
 import com.njydsz.common.auth.util.PermissionUtils;
-import com.njydsz.common.cache.YdszCache;
-import com.njydsz.common.cache.api.Cache;
-import com.njydsz.common.cache.builder.CacheType;
+import com.njydsz.common.core.context.BizContextKeys;
+import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.string.StringUtils;
 
@@ -68,6 +63,7 @@ public class RbacPermissionEvaluator {
     private final AuthProperties properties;
     private final RbacUserInfoService userInfoService;
     private final RolePermissionLoader rolePermissionLoader;
+    private final RolePermissionCacheService rolePermissionCacheService;
 
     /**
      * 可选的指标采集器，由 AuthConfiguration 注入。为 null 时不采集指标（向后兼容）。
@@ -84,28 +80,14 @@ public class RbacPermissionEvaluator {
      */
     private volatile boolean redisAvailable = true;
 
-    /**
-     * 角色权限缓存（TTL 可配置，默认 30 分钟）
-     * 使用 Caffeine 缓存，自带 LRU 淘汰和过期清理
-     */
-    private final Cache<String, RolePermissions> rolePermissionsCache;
-
-    /**
-     * roleCode → cacheKey 的反向索引，用于按角色清理缓存。
-     * 由于 cacheKey 使用 SHA-256 Hash，无法从 Key 反解角色，需维护此映射。
-     */
-    private final Map<String, Set<String>> roleToCacheKeyIndex = new ConcurrentHashMap<>();
-
-    public RbacPermissionEvaluator(AuthProperties properties, RbacUserInfoService userInfoService, RolePermissionLoader rolePermissionLoader) {
+    public RbacPermissionEvaluator(AuthProperties properties,
+                                   RbacUserInfoService userInfoService,
+                                   RolePermissionLoader rolePermissionLoader,
+                                   RolePermissionCacheService rolePermissionCacheService) {
         this.properties = properties;
         this.userInfoService = userInfoService;
         this.rolePermissionLoader = rolePermissionLoader;
-        this.rolePermissionsCache = YdszCache.<String, RolePermissions>newBuilder()
-                .type(CacheType.STRIPED)
-                .name("auth:role-permissions")
-                .maximumSize(properties.getPermissionCacheMaxSize())
-                .expireAfterWrite(resolvePermissionCacheTtlSeconds(), TimeUnit.SECONDS)
-                .build();
+        this.rolePermissionCacheService = rolePermissionCacheService;
     }
 
     /**
@@ -116,12 +98,16 @@ public class RbacPermissionEvaluator {
      */
     public Map<String, Object> loadUserInfo(String accessToken) {
         if (StringUtils.isBlank(accessToken)) {
-            throw BusinessException.builder().code(String.valueOf(HttpStatus.UNAUTHORIZED.value())).message("缺少访问令牌").build();
+            throw BusinessException.builder()
+                    .resultCode(AuthErrorCode.TOKEN_MISSING)
+                    .build();
         }
 
         Map<String, Object> userInfo = userInfoService.loadUserInfoMap(accessToken);
         if (userInfo == null || userInfo.isEmpty()) {
-            throw BusinessException.builder().code(String.valueOf(HttpStatus.UNAUTHORIZED.value())).message("访问令牌已过期，请重新登录").build();
+            throw BusinessException.builder()
+                    .resultCode(AuthErrorCode.TOKEN_EXPIRED)
+                    .build();
         }
         return userInfo;
     }
@@ -325,8 +311,7 @@ public class RbacPermissionEvaluator {
      */
     public void clearAllCaches() {
         PermissionUtils.clearPatternCache();
-        rolePermissionsCache.invalidateAll();
-        roleToCacheKeyIndex.clear();
+        rolePermissionCacheService.invalidateAll();
     }
 
     /**
@@ -334,7 +319,7 @@ public class RbacPermissionEvaluator {
      */
     @PreDestroy
     public void destroy() {
-        rolePermissionsCache.invalidateAll();
+        rolePermissionCacheService.invalidateAll();
         log.info("[RbacPermissionEvaluator] 缓存已清理");
     }
 
@@ -374,7 +359,7 @@ public class RbacPermissionEvaluator {
 
         String tenantId = resolveTenantId();
         String cacheKey = cacheKeyStrategy.generate(tenantId, roleCodes);
-        RolePermissions cached = rolePermissionsCache.getIfPresent(cacheKey);
+        RolePermissions cached = rolePermissionCacheService.getCachedPermissions(cacheKey);
         if (cached != null) {
             return cached;
         }
@@ -414,12 +399,7 @@ public class RbacPermissionEvaluator {
 
         // 仅在 Redis 可用时放入缓存，避免 Redis 故障期间的空权限被缓存毒化
         if (redisAvailable) {
-            rolePermissionsCache.put(cacheKey, result);
-            // 维护 roleCode → cacheKey 反向索引，用于按角色清理缓存
-            for (String roleCode : roleCodes) {
-                roleToCacheKeyIndex.computeIfAbsent(roleCode, k -> ConcurrentHashMap.newKeySet())
-                        .add(cacheKey);
-            }
+            rolePermissionCacheService.cachePermissions(cacheKey, roleCodes, result);
         }
 
         return result;
@@ -448,14 +428,6 @@ public class RbacPermissionEvaluator {
         return null;
     }
 
-    private long resolvePermissionCacheTtlSeconds() {
-        Integer ttlSeconds = properties.getPermissionCacheTtlSeconds();
-        if (ttlSeconds == null || ttlSeconds <= 0) {
-            return 1800;
-        }
-        return ttlSeconds;
-    }
-
     /**
      * 按角色清理缓存。
      *
@@ -466,17 +438,9 @@ public class RbacPermissionEvaluator {
         PermissionUtils.clearPatternCache();
         if (csvRoleCodes != null && !csvRoleCodes.isEmpty()) {
             Set<String> roleCodes = PermissionUtils.splitCsv(csvRoleCodes);
-            for (String roleCode : roleCodes) {
-                Set<String> cacheKeys = roleToCacheKeyIndex.remove(roleCode);
-                if (cacheKeys != null) {
-                    for (String cacheKey : cacheKeys) {
-                        rolePermissionsCache.invalidate(cacheKey);
-                    }
-                }
-            }
+            rolePermissionCacheService.invalidateByRoleCodes(roleCodes);
         } else {
-            rolePermissionsCache.invalidateAll();
-            roleToCacheKeyIndex.clear();
+            rolePermissionCacheService.invalidateAll();
         }
     }
 

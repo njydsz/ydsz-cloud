@@ -37,6 +37,9 @@ public class NotifyRequest {
     /** 用户ID（用于偏好检查和审计，可为 null） */
     private final String userId;
 
+    /** 租户ID（用于多租户限流隔离，可为 null） */
+    private final String tenantId;
+
     /** traceId（链路追踪用，可为 null） */
     private final String traceId;
 
@@ -49,6 +52,7 @@ public class NotifyRequest {
         this.templateParams = builder.templateParams;
         this.priority = builder.priority;
         this.userId = builder.userId;
+        this.tenantId = builder.tenantId;
         this.traceId = builder.traceId;
     }
 
@@ -125,6 +129,15 @@ public class NotifyRequest {
     }
 
     /**
+     * 获取租户ID
+     *
+     * @return 租户ID，未设置时返回 null
+     */
+    public String getTenantId() {
+        return tenantId;
+    }
+
+    /**
      * 获取链路追踪ID
      *
      * @return traceId，未设置时返回 null
@@ -171,6 +184,7 @@ public class NotifyRequest {
         private Object templateParams;
         private NotifyPriority priority = NotifyPriority.P2_NORMAL;
         private String userId;
+        private String tenantId;
         private String traceId;
 
         Builder(NotifyChannel channel, String receiver, String title, String content) {
@@ -212,6 +226,17 @@ public class NotifyRequest {
          */
         public Builder userId(String userId) {
             this.userId = userId;
+            return this;
+        }
+
+        /**
+         * 设置租户ID
+         *
+         * @param tenantId 租户ID
+         * @return this
+         */
+        public Builder tenantId(String tenantId) {
+            this.tenantId = tenantId;
             return this;
         }
 

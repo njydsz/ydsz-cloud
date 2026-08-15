@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.web;
+package com.njydsz.literule.web;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

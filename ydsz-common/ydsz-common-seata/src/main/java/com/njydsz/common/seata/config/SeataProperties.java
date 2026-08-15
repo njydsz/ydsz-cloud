@@ -88,6 +88,38 @@ public class SeataProperties {
     private String tccLogDbSchema = null;
 
     /**
+     * TCC 日志 DB 存储时的数据库方言（P0-3 新增）
+     *
+     * <p>支持的值：
+     * <ul>
+     *   <li>{@code mysql} - MySQL / MariaDB（使用 ON DUPLICATE KEY UPDATE）</li>
+     *   <li>{@code postgresql} - PostgreSQL 9.5+（使用 ON CONFLICT DO UPDATE）</li>
+     * </ul>
+     * 为空或null时自动根据数据源元数据检测。
+     */
+    private String tccLogDbDialect = null;
+
+    // ============= XID 签名配置（P0-4） =============
+
+    /**
+     * XID 签名开关（P0-4 新增）
+     *
+     * <p>开启后，XID 跨服务传播时携带 HMAC-SHA256 签名，
+     * 下游服务验证签名有效后才绑定到上下文，防止 XID 伪造注入。
+     *
+     * <p>生产环境建议开启，配置 {@link #xidSignKey} 为强密钥。
+     */
+    private boolean xidSignEnabled = false;
+
+    /**
+     * XID 签名密钥（当 xid-sign-enabled=true 时必填）
+     *
+     * <p>建议使用 32 字节以上的随机字符串，通过环境变量或配置中心注入，
+     * 确保所有参与服务的密钥一致。
+     */
+    private String xidSignKey = null;
+
+    /**
      * TCC 事务日志存储类型。
      *
      * <p>决定 TCC 一阶段确认信息持久化在哪里，直接影响分布式事务的恢复能力：

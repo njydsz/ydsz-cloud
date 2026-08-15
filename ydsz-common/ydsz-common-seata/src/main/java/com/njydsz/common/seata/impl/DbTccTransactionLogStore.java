@@ -13,6 +13,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 
 import com.njydsz.common.seata.api.TccBranchStatus;
+import com.njydsz.common.seata.api.TccTransactionDialectProvider;
 import com.njydsz.common.seata.api.TccTransactionLog;
 import com.njydsz.common.seata.api.TccTransactionLogStore;
 
@@ -27,30 +28,17 @@ import com.njydsz.common.seata.api.TccTransactionLogStore;
  *   <li><b>跨服务共享</b>：多服务实例共享数据库，任一实例均可执行 Confirm/Cancel 恢复</li>
  * </ul>
  *
- * <p><b>表结构 DDL（MySQL / PostgreSQL / H2 兼容）：</b>
- * <pre>{@code
- * CREATE TABLE tcc_transaction_log (
- *   id              BIGINT       AUTO_INCREMENT PRIMARY KEY,
- *   xid             VARCHAR(128) NOT NULL,
- *   branch_id       VARCHAR(128) NOT NULL,
- *   transaction_name VARCHAR(255),
- *   status          VARCHAR(32)  NOT NULL,
- *   context_snapshot TEXT,
- *   try_started_at   TIMESTAMP    NULL,
- *   try_completed_at TIMESTAMP    NULL,
- *   finished_at      TIMESTAMP    NULL,
- *   retry_count      INT          NOT NULL DEFAULT 0,
- *   last_error       VARCHAR(1024),
- *   created_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
- *   updated_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
- *   UNIQUE KEY uk_xid_branch (xid, branch_id)
- * );
- * CREATE INDEX idx_status_updated ON tcc_transaction_log (status, updated_at);
- * }</pre>
+ * <p><b>P0-3 修复</b>：引入 {@link TccTransactionDialectProvider} 接口适配多数据库，
+ * 解决原 MySQL 专有语法与"兼容 PG"声明矛盾的问题。
+ * 仅当选择 {@code db} 且类路径存在 {@code JdbcTemplate} 时注册。
+ *
+ * <div>
+ * MySQL / PostgreSQL 兼容 DDL 见 {@link #getMysqlDdl()} / {@link #getPostgresqlDdl()}。
+ * </div>
  *
  * <p><b>实现要点：</b>
  * <ul>
- *   <li>使用 INSERT ON DUPLICATE KEY UPDATE（MySQL）或 UPSERT（PG 兼容写法通过先查后插）保证幂等</li>
+ *   <li>使用方言提供者适配不同数据库的 UPSERT 语法（MySQL ON DUPLICATE KEY UPDATE / PG ON CONFLICT）</li>
  *   <li>查询超时记录利用索引 {@code idx_status_updated} 加速扫描</li>
  *   <li>终态日志保留用于审计，需定期清理（建议通过定时任务删除 {@code finished_at < NOW() - 90d} 的日志）</li>
  * </ul>
@@ -61,6 +49,7 @@ import com.njydsz.common.seata.api.TccTransactionLogStore;
  *   seata:
  *     tcc-log-store: db
  *     tcc-log-db-table: tcc_transaction_log
+ *     tcc-log-db-dialect: mysql  # mysql / postgresql，默认自动检测
  * }</pre>
  *
  * @author ydsz-team
@@ -72,68 +61,152 @@ public class DbTccTransactionLogStore implements TccTransactionLogStore {
 
     private final JdbcTemplate jdbcTemplate;
     private final String tableName;
-
-    private static final String SQL_UPSERT = """
-            INSERT INTO %s (xid, branch_id, transaction_name, status, context_snapshot,
-                            try_started_at, try_completed_at, finished_at, retry_count, last_error,
-                            created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-            ON DUPLICATE KEY UPDATE
-                status = VALUES(status),
-                context_snapshot = VALUES(context_snapshot),
-                try_started_at = VALUES(try_started_at),
-                try_completed_at = VALUES(try_completed_at),
-                finished_at = VALUES(finished_at),
-                retry_count = VALUES(retry_count),
-                last_error = VALUES(last_error),
-                updated_at = CURRENT_TIMESTAMP
-            """;
-
-    private static final String SQL_UPDATE_STATUS = """
-            UPDATE %s SET status = ?, finished_at = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE xid = ? AND branch_id = ?
-            """;
-
-    private static final String SQL_FIND_BY_XID_BRANCH = """
-            SELECT xid, branch_id, transaction_name, status, context_snapshot,
-                   try_started_at, try_completed_at, finished_at, retry_count, last_error
-            FROM %s WHERE xid = ? AND branch_id = ?
-            """;
-
-    private static final String SQL_FIND_TIMEOUT_PENDING = """
-            SELECT xid, branch_id, transaction_name, status, context_snapshot,
-                   try_started_at, try_completed_at, finished_at, retry_count, last_error
-            FROM %s WHERE status = ? AND try_completed_at < ?
-            """;
-
-    private static final String SQL_DELETE = """
-            DELETE FROM %s WHERE xid = ? AND branch_id = ?
-            """;
+    private final TccTransactionDialectProvider dialectProvider;
 
     private final RowMapper<TccTransactionLog> rowMapper = (rs, rowNum) -> mapRow(rs);
 
     /**
-     * 构造 DB 版 TCC 事务日志存储
+     * 构造 DB 版 TCC 事务日志存储（自动检测数据库方言）
      *
      * @param jdbcTemplate JDBC 模板（不能为 null）
      * @param tableName    表名（可为 null，默认 {@code tcc_transaction_log}）
      */
     public DbTccTransactionLogStore(JdbcTemplate jdbcTemplate, String tableName) {
+        this(jdbcTemplate, tableName, (TccTransactionDialectProvider) null);
+    }
+
+    /**
+     * 构造 DB 版 TCC 事务日志存储（指定方言提供者）
+     *
+     * @param jdbcTemplate JDBC 模板（不能为 null）
+     * @param tableName    表名（可为 null，默认 {@code tcc_transaction_log}）
+     * @param dialect      数据库方言字符串（mysql / postgresql），为空则自动检测
+     */
+    public DbTccTransactionLogStore(JdbcTemplate jdbcTemplate, String tableName, String dialect) {
+        this(jdbcTemplate, tableName, createDialectFromString(dialect, jdbcTemplate, tableName));
+    }
+
+    /**
+     * 构造 DB 版 TCC 事务日志存储（指定方言提供者）
+     *
+     * @param jdbcTemplate    JDBC 模板（不能为 null）
+     * @param tableName       表名（可为 null，默认 {@code tcc_transaction_log}）
+     * @param dialectProvider 数据库方言提供者（可为 null，默认自动检测）
+     */
+    public DbTccTransactionLogStore(JdbcTemplate jdbcTemplate, String tableName,
+                                     TccTransactionDialectProvider dialectProvider) {
         this.jdbcTemplate = jdbcTemplate;
         this.tableName = (tableName == null || tableName.isBlank()) ? "tcc_transaction_log" : tableName;
+        this.dialectProvider = dialectProvider != null ? dialectProvider
+                : detectDialect(jdbcTemplate, this.tableName);
+    }
+
+    /**
+     * 从字符串创建方言提供者
+     */
+    private static TccTransactionDialectProvider createDialectFromString(
+            String dialect, JdbcTemplate jdbcTemplate, String tableName) {
+        if (dialect == null || dialect.isBlank()) {
+            return detectDialect(jdbcTemplate, tableName);
+        }
+        switch (dialect.toLowerCase()) {
+            case "postgresql":
+                return new PostgresqlTransactionDialectProvider(tableName);
+            case "mysql":
+                return new MysqlTransactionDialectProvider(tableName);
+            default:
+                log.warn("Unknown dialect: {}, fallback to auto detection", dialect);
+                return detectDialect(jdbcTemplate, tableName);
+        }
+    }
+
+    /**
+     * 自动检测数据库方言
+     *
+     * <p>通过 {@link JdbcTemplate} 获取数据源元数据，判断数据库类型并返回对应的方言提供者。
+     *
+     * @param jdbcTemplate JDBC 模板
+     * @param tableName     表名
+     * @return 对应的数据库方言提供者
+     */
+    private static TccTransactionDialectProvider detectDialect(JdbcTemplate jdbcTemplate, String tableName) {
+        try {
+            return jdbcTemplate.execute((org.springframework.jdbc.core.ConnectionCallback<TccTransactionDialectProvider>) conn -> {
+                String databaseProductName = conn.getMetaData().getDatabaseProductName();
+                log.info("Detected database product: {}, selecting dialect provider", databaseProductName);
+                if (databaseProductName != null && databaseProductName.toLowerCase().contains("postgresql")) {
+                    return new PostgresqlTransactionDialectProvider(tableName);
+                }
+                // 默认使用 MySQL 方言
+                return new MysqlTransactionDialectProvider(tableName);
+            });
+        } catch (Exception e) {
+            log.warn("Failed to detect database dialect, fallback to MySQL: {}", e.getMessage());
+            return new MysqlTransactionDialectProvider(tableName);
+        }
+    }
+
+    /**
+     * 获取 MySQL DDL（供初始化脚本参考）
+     */
+    public static String getMysqlDdl() {
+        return """
+                CREATE TABLE tcc_transaction_log (
+                  id              BIGINT       AUTO_INCREMENT PRIMARY KEY,
+                  xid             VARCHAR(128) NOT NULL,
+                  branch_id       VARCHAR(128) NOT NULL,
+                  transaction_name VARCHAR(255),
+                  status          VARCHAR(32)  NOT NULL,
+                  context_snapshot TEXT,
+                  try_started_at   TIMESTAMP    NULL,
+                  try_completed_at TIMESTAMP    NULL,
+                  finished_at      TIMESTAMP    NULL,
+                  retry_count      INT          NOT NULL DEFAULT 0,
+                  last_error       VARCHAR(1024),
+                  created_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                  updated_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                  UNIQUE KEY uk_xid_branch (xid, branch_id)
+                );
+                CREATE INDEX idx_status_updated ON tcc_transaction_log (status, updated_at);
+                """;
+    }
+
+    /**
+     * 获取 PostgreSQL DDL（供初始化脚本参考）
+     */
+    public static String getPostgresqlDdl() {
+        return """
+                CREATE TABLE tcc_transaction_log (
+                  id              BIGSERIAL    PRIMARY KEY,
+                  xid             VARCHAR(128) NOT NULL,
+                  branch_id       VARCHAR(128) NOT NULL,
+                  transaction_name VARCHAR(255),
+                  status          VARCHAR(32)  NOT NULL,
+                  context_snapshot TEXT,
+                  try_started_at   TIMESTAMP    NULL,
+                  try_completed_at TIMESTAMP    NULL,
+                  finished_at      TIMESTAMP    NULL,
+                  retry_count      INT          NOT NULL DEFAULT 0,
+                  last_error       VARCHAR(1024),
+                  created_at       TIMESTAMP    NOT NULL DEFAULT NOW(),
+                  updated_at       TIMESTAMP    NOT NULL DEFAULT NOW(),
+                  CONSTRAINT uk_xid_branch UNIQUE (xid, branch_id)
+                );
+                CREATE INDEX idx_status_updated ON tcc_transaction_log (status, updated_at);
+                """;
     }
 
     /**
      * 保存事务日志（Try 前调用）
      *
-     * <p>使用 INSERT ... ON DUPLICATE KEY UPDATE 保证幂等性，
+     * <p>使用方言提供者提供的 UPSERT SQL 保证幂等性，
      * 若已存在该分支记录，则更新状态和时间戳。
      *
      * @param txLog 事务日志
      */
     @Override
     public void save(TccTransactionLog txLog) {
-        String sql = String.format(SQL_UPSERT, tableName);
+        String sql = dialectProvider.getUpsertSql();
         jdbcTemplate.update(sql,
                 txLog.getXid(),
                 txLog.getBranchId(),
@@ -161,7 +234,7 @@ public class DbTccTransactionLogStore implements TccTransactionLogStore {
      */
     @Override
     public void updateStatus(String xid, String branchId, TccBranchStatus status) {
-        String sql = String.format(SQL_UPDATE_STATUS, tableName);
+        String sql = dialectProvider.getUpdateStatusSql();
         Timestamp finishedAt = status.isFinal() ? Timestamp.valueOf(LocalDateTime.now()) : null;
         jdbcTemplate.update(sql, status.name(), finishedAt, xid, branchId);
         if (log.isDebugEnabled()) {
@@ -178,7 +251,7 @@ public class DbTccTransactionLogStore implements TccTransactionLogStore {
      */
     @Override
     public Optional<TccTransactionLog> findByXidAndBranchId(String xid, String branchId) {
-        String sql = String.format(SQL_FIND_BY_XID_BRANCH, tableName);
+        String sql = dialectProvider.getFindByXidBranchSql();
         List<TccTransactionLog> results = jdbcTemplate.query(sql, rowMapper, xid, branchId);
         return results.isEmpty() ? Optional.empty() : Optional.of(results.get(0));
     }
@@ -194,9 +267,25 @@ public class DbTccTransactionLogStore implements TccTransactionLogStore {
      */
     @Override
     public List<TccTransactionLog> findTimeoutPending(LocalDateTime threshold) {
-        String sql = String.format(SQL_FIND_TIMEOUT_PENDING, tableName);
+        String sql = dialectProvider.getFindTimeoutPendingSql();
         return jdbcTemplate.query(sql, rowMapper,
                 TccBranchStatus.TRIED.name(), Timestamp.valueOf(threshold));
+    }
+
+    /**
+     * 查询超时未完成的分支事务数量（高效计数，不加载完整日志）
+     *
+     * <p>使用 {@code SELECT COUNT(*)} 直接获取计数，避免加载完整事务日志到内存。
+     *
+     * @param threshold 超时阈值，早于此时间的 TRIED 状态分支需要恢复
+     * @return 超时未完成的分支事务数量
+     */
+    @Override
+    public long countTimeoutPending(LocalDateTime threshold) {
+        String sql = dialectProvider.getCountTimeoutPendingSql();
+        Long count = jdbcTemplate.queryForObject(sql, Long.class,
+                TccBranchStatus.TRIED.name(), Timestamp.valueOf(threshold));
+        return count != null ? count : 0L;
     }
 
     /**
@@ -207,7 +296,7 @@ public class DbTccTransactionLogStore implements TccTransactionLogStore {
      */
     @Override
     public void delete(String xid, String branchId) {
-        String sql = String.format(SQL_DELETE, tableName);
+        String sql = dialectProvider.getDeleteSql();
         jdbcTemplate.update(sql, xid, branchId);
         if (log.isDebugEnabled()) {
             log.debug("TCC log deleted: xid={}, branchId={}", xid, branchId);

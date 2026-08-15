@@ -74,6 +74,12 @@
             <artifactId>caffeine</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- spring-data-commons (for Page / Pageable) -->
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-commons</artifactId>
+            <optional>true</optional>
+        </dependency>
         <!--
             RocketMQ Spring Boot Starter（optional，编译期可见，运行期不强制）
             提供 RocketMQTemplate 供 RocketMqEventPublishGateway 使用。

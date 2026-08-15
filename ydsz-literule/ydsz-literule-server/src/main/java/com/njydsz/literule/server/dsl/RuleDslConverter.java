@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.server.dsl;
+package com.njydsz.literule.server.dsl;
 
 import java.util.ArrayList;
 import java.util.Collections;

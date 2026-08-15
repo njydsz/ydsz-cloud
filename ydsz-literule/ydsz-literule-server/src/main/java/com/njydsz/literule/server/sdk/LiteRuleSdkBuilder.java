@@ -1,9 +1,9 @@
-﻿package com.njydsz.literule.server.sdk;
+package com.njydsz.literule.server.sdk;
 
 import com.njydsz.literule.api.RuleEngine;
 import com.njydsz.literule.server.core.DefaultRuleEngine;
 import com.njydsz.literule.api.expression.ExpressionEvaluator;
-import com.njydsz.literule.server.expr.liteexpr.LiteExprEvaluator;
+import com.njydsz.literule.server.engine.liteexpr.LiteExprEvaluator;
 
 /**
  * LiteRuleSdk 构建器

@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.server.engine.liteexpr;
+package com.njydsz.literule.server.engine.liteexpr;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -28,7 +28,7 @@ import java.util.List;
 /**
  * ExprLexer 类。
  *
- * <p>所属包：{@code com.njydsz.literule.server.expr.liteexpr}
+ * <p>所属包：{@code com.njydsz.literule.server.engine.liteexpr}
  *
  * @author ydsz-team
  * @since 1.0.0

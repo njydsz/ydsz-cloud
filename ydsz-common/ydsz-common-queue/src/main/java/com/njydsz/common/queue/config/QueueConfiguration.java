@@ -119,11 +119,16 @@ public class QueueConfiguration {
     }
 
     /**
-     * 创建消息队列异步消费者线程池（Spring 管理，支持优雅停机）。     *
+     * 创建消息队列异步消费者线程池（Spring 管理，支持优雅停机）。
+     *
      * <p>统一托管所有消息队列异步消费者的执行线程，避免业务代码直接 new Thread。
      *
      * <p>通过 {@code @ConditionalOnMissingBean} 允许业务方通过
-     * {@code ydsz.thread.pools.queueConsumerExecutor} 注入统一管理线程池覆盖本默认实现。
+     * {@code ydsz.thread.pools.queueConsumerExecutor} 注入 ydsz-common-thread 统一管理线程池覆盖本默认实现。
+     *
+     * <p><b>线程池管理规范：</b>
+     * 本方法仅在 ydsz-common-thread 未提供 {@code queueConsumerExecutor} Bean 时生效。
+     * 生产环境推荐通过 ydsz-common-thread 配置消费者线程池，获得监控、热更新、上下文传播能力。
      *
      * @param queueProperties 队列配置属性
      * @return 消费者线程池
@@ -132,7 +137,11 @@ public class QueueConfiguration {
     @ConditionalOnMissingBean(name = "queueConsumerExecutor")
     public ExecutorService queueConsumerExecutor(QueueProperties queueProperties) {
         QueueProperties.ExecutorConfig cfg = queueProperties.resolvedConsumerExecutor();
+        // CHECKSTYLE.OFF: ThreadPoolCreate
+        // 兜底线程池：仅当 ydsz-common-thread 未提供 queueConsumerExecutor Bean 时生效。
+        // 生产环境应通过 ydsz.thread.pools.queueConsumerExecutor 配置统一管理。
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        // CHECKSTYLE.ON: ThreadPoolCreate
         executor.setCorePoolSize(cfg.getCoreSize());
         executor.setMaxPoolSize(cfg.getMaxSize());
         executor.setQueueCapacity(cfg.getQueueCapacity());
@@ -143,7 +152,8 @@ public class QueueConfiguration {
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.setAwaitTerminationSeconds(cfg.getAwaitTerminationSeconds());
         executor.initialize();
-        log.info("[Queue] 创建异步消费者线程池，core={}, max={}, queue={}, prefix={}",
+        log.info("[Queue] 创建兜底异步消费者线程池，core={}, max={}, queue={}, prefix={} "
+                + "(生产环境推荐使用 ydsz-common-thread 统一管理)",
                 cfg.getCoreSize(), cfg.getMaxSize(), cfg.getQueueCapacity(), executor.getThreadNamePrefix());
         return executor.getThreadPoolExecutor();
     }

@@ -177,9 +177,9 @@ public class AuditAutoConfiguration {
     @ConditionalOnMissingBean(name = "auditAsyncExecutor")
     public Executor auditAsyncExecutor(AuditProperties properties) {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        int corePoolSize = properties.getCorePoolSize() > 0 ? properties.getCorePoolSize() : 2;
-        int maxPoolSize = properties.getMaxPoolSize() > 0 ? properties.getMaxPoolSize() : 4;
-        int queueCapacity = properties.getAsync().getExecutorQueueCapacity();
+        int corePoolSize = properties.getAsync().getThreadCoreSize();
+        int maxPoolSize = properties.getAsync().getThreadMaxSize();
+        int queueCapacity = properties.getAsync().getQueueCapacity();
         executor.setCorePoolSize(corePoolSize);
         executor.setMaxPoolSize(maxPoolSize);
         executor.setQueueCapacity(queueCapacity);
@@ -187,7 +187,7 @@ public class AuditAutoConfiguration {
         executor.setThreadNamePrefix("ydsz-audit-async-");
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardOldestPolicy());
         executor.setWaitForTasksToCompleteOnShutdown(true);
-        executor.setAwaitTerminationSeconds(30);
+        executor.setAwaitTerminationSeconds((int) properties.getAsync().getShutdownTimeout());
         executor.initialize();
         log.info("初始化审计异步线程池: core={}, max={}, queue={}, rejectPolicy=DiscardOldest",
                 corePoolSize, maxPoolSize, queueCapacity);

@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.expression.Expression;
+import org.springframework.expression.ExpressionException;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
@@ -36,11 +37,14 @@ public class SpelTemplateEngine implements TemplateEngine {
     /** SpEL 表达式匹配模式，匹配 #{...} 格式的表达式 */
     private static final Pattern SPEL_PATTERN = Pattern.compile("#\\{([^}]+)}");
 
-    /** SpEL 表达式解析器 */
+    /** SpEL 表达式解析器（线程安全，可复用） */
     private final ExpressionParser parser = new SpelExpressionParser();
 
     /** 模板缓存 */
     private final Map<String, NotifyTemplate> templates = new ConcurrentHashMap<>();
+
+    /** 已解析表达式缓存（key=expressionStr, value=Expression），避免每次渲染重复解析 */
+    private final ConcurrentHashMap<String, Expression> expressionCache = new ConcurrentHashMap<>();
 
     /** 模板变量校验器（可选依赖，P0-9） */
     private TemplateVariableValidator variableValidator;
@@ -99,12 +103,16 @@ public class SpelTemplateEngine implements TemplateEngine {
             while (matcher.find()) {
                 String expressionStr = matcher.group(1);
                 try {
-                    Expression expression = parser.parseExpression("#" + expressionStr);
+                    Expression expression = getOrParseExpression(expressionStr);
+                    if (expression == null) {
+                        matcher.appendReplacement(sb, Matcher.quoteReplacement(matcher.group()));
+                        continue;
+                    }
                     Object value = expression.getValue(context);
                     String replacement = value != null ? String.valueOf(value) : "";
                     matcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
-                } catch (Exception e) {
-                    log.debug("[SpelTemplateEngine] 表达式解析失败: {}, error={}", expressionStr, e.getMessage());
+                } catch (ExpressionException e) {
+                    log.debug("[SpelTemplateEngine] 表达式求值失败: {}, error={}", expressionStr, e.getMessage());
                     matcher.appendReplacement(sb, Matcher.quoteReplacement(matcher.group()));
                 }
             }
@@ -113,6 +121,30 @@ public class SpelTemplateEngine implements TemplateEngine {
         } catch (Exception e) {
             log.warn("[SpelTemplateEngine] 渲染失败: template={}, error={}", template, e.getMessage());
             return template;
+        }
+    }
+
+    /**
+     * 获取或解析 SpEL表达式（带缓存）。
+     *
+     * <p>已解析的表达式会被缓存，避免对同一表达式重复解析。
+     * 解析失败时返回 null（调用方应保留原始占位符）。
+     *
+     * @param expressionStr 去掉 "#{...}" 包裹的表达式字符串
+     * @return 解析后的 Expression 实例，解析失败时返回 null
+     */
+    private Expression getOrParseExpression(String expressionStr) {
+        Expression cached = expressionCache.get(expressionStr);
+        if (cached != null) {
+            return cached;
+        }
+        try {
+            Expression parsed = parser.parseExpression("#" + expressionStr);
+            expressionCache.putIfAbsent(expressionStr, parsed);
+            return parsed;
+        } catch (ExpressionException e) {
+            log.debug("[SpelTemplateEngine] 表达式语法错误，无法缓存: {}", expressionStr);
+            return null;
         }
     }
 

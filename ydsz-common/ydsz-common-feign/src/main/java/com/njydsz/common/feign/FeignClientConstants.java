@@ -6,18 +6,19 @@ package com.njydsz.common.feign;
  * <p>统一管理所有微服务的 Spring Cloud 服务名和预定义 API 路径，避免各模块硬编码字符串。
  * 新增 Feign 客户端时，在此添加对应的服务名和路径常量。
  *
+ * <p>注意：仅包含当前项目已存在且已部署的服务常量，不提前声明未实现的服务。
+ *
  * <h3>服务清单</h3>
  * <ul>
  *   <li>{@link #MESSAGE} — 消息中心（通知/短信/邮件/Webhook）</li>
  *   <li>{@link #WORKFLOW} — 工作流引擎（流程定义/实例/审批）</li>
- *   <li>{@link #SALES} — 商务销售（商机/合同/变更/模板）</li>
- *   <li>{@link #FINANCE} — 财务会计（发票/回款/费用/收入/利润/对账）</li>
  *   <li>{@link #AGENT} — AI Agent 服务（编排/工具/知识库）</li>
  *   <li>{@link #CRONJOB} — 定时任务调度（DAG/告警/统计）</li>
  *   <li>{@link #GATEWAY} — API 网关（路由/限流/鉴权）</li>
  *   <li>{@link #USERINFO} — 用户中心（userinfo 模块）</li>
  *   <li>{@link #SYSTEM} — 系统管理</li>
  *   <li>{@link #LITERULE} — 规则引擎（规则定义/编排/评估/灰度/回放）</li>
+ *   <li>{@link #NEXTWIKI} — 网盘知识库</li>
  * </ul>
  *
  * <h3>URL 路径常量</h3>
@@ -55,12 +56,6 @@ public final class FeignClientConstants {
 
     /** 用户中心服务名（userinfo 模块） */
     public static final String USERINFO = "ydsz-userinfo";
-
-    /** 用户中心服务名（如有独立部署） */
-    public static final String USER_CENTER = "ydsz-user-center";
-
-    /** 配置中心服务名（如有独立部署） */
-    public static final String CONFIG_CENTER = "ydsz-config-center";
 
     /** 系统管理服务名 */
     public static final String SYSTEM = "ydsz-system";

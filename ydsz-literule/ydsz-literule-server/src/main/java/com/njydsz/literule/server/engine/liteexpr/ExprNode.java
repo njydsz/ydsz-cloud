@@ -1,4 +1,4 @@
-﻿package com.njydsz.literule.server.engine.liteexpr;
+package com.njydsz.literule.server.engine.liteexpr;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +34,7 @@ import java.util.Map;
 /**
  * ExprNode 接口，定义模块契约。
  *
- * <p>所属包：{@code com.njydsz.literule.server.expr.liteexpr}
+ * <p>所属包：{@code com.njydsz.literule.server.engine.liteexpr}
  *
  * @author ydsz-team
  * @since 1.0.0

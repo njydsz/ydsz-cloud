@@ -45,6 +45,9 @@ public class DynamicFeignClientFactory {
      */
     private final Map<String, Feign.Builder> builderCache = new ConcurrentHashMap<>();
 
+    /** Feign 代理实例缓存（二级缓存），Key = "clientName|targetClass|url" */
+    private final Map<String, Object> instanceCache = new ConcurrentHashMap<>();
+
     /** Feign 配置属性 */
     private final FeignProperties feignProperties;
     /** Feign 日志处理器提供者 */
@@ -107,7 +110,7 @@ public class DynamicFeignClientFactory {
     }
 
     /**
-     * 清除缓存并重建 Feign.Builder。
+     * 清除缓存并重建 Feign.Builder 和实例。
      *
      * @param excludeClients 排除的客户端名称集合
      */
@@ -124,9 +127,53 @@ public class DynamicFeignClientFactory {
             clearedClients.add(clientName);
         }
 
+        // 同步清除受影响的实例缓存
+        if (!clearedClients.isEmpty()) {
+            instanceCache.keySet().removeIf(key ->
+                    clearedClients.stream().anyMatch(name -> key.startsWith(name + "|")));
+        }
+
         if (!clearedClients.isEmpty()) {
             log.info("[Feign] 已清除 {} 个 Feign.Builder 缓存: {}", clearedClients.size(), clearedClients);
         }
+    }
+
+    /**
+     * 完全清除所有缓存（Builder + 实例）。
+     */
+    public void clearAllCache() {
+        builderCache.clear();
+        instanceCache.clear();
+        log.info("[Feign] 已清除全部缓存");
+    }
+
+    /**
+     * 获取当前缓存的实例数量。
+     *
+     * @return 缓存的实例数量
+     */
+    public int getCachedInstanceCount() {
+        return instanceCache.size();
+    }
+
+    /**
+     * 获取或创建 Feign 代理实例（带二级缓存）。
+     *
+     * <p>避免每次调用都通过反射创建新的代理对象，高频调用场景下减少不必要的开销。
+     * 注意：当配置变更（通过 {@link #clearCache(Set)} 清除 Builder 缓存）时，
+     * 实例缓存会同步清除，确保下次创建使用新的 Builder 配置。
+     *
+     * @param clientName  客户端名称
+     * @param targetClass Feign 接口类
+     * @param url         目标 URL
+     * @param <T>         接口类型
+     * @return Feign 代理实例
+     */
+    @SuppressWarnings("unchecked")
+    public <T> T getOrCreateInstance(String clientName, Class<T> targetClass, String url) {
+        String cacheKey = clientName + "|" + targetClass.getName() + "|" + url;
+        return (T) instanceCache.computeIfAbsent(cacheKey,
+                k -> getBuilder(clientName).target(targetClass, url));
     }
 
     /**

@@ -1,7 +1,9 @@
 package com.njydsz.common.notify.channel;
 
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -76,6 +78,26 @@ public interface NotifyChannelStrategy {
      */
     default void setTemplateEngine(TemplateEngine templateEngine) {
         // 默认空实现，按需覆盖
+    }
+
+    /**
+     * 从模板参数对象中提取 Map。
+     *
+     * <p>将 {@code Map} 类型参数安全地转换为 {@code Map<String, Object>} 供模板渲染使用。
+     * 非 Map 参数返回空 Map。
+     *
+     * @param templateParams 模板参数对象
+     * @return 参数映射，非 Map 输入时返回空 Map
+     */
+    default Map<String, Object> extractParams(Object templateParams) {
+        if (templateParams instanceof Map<?, ?> rawMap) {
+            Map<String, Object> params = new HashMap<>(rawMap.size());
+            for (Map.Entry<?, ?> entry : rawMap.entrySet()) {
+                params.put(String.valueOf(entry.getKey()), entry.getValue());
+            }
+            return params;
+        }
+        return Map.of();
     }
 
     /**

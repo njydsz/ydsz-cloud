@@ -347,12 +347,6 @@ public class NotifyConfiguration {
      * <p>为每个渠道/Provider 维护独立的熔断状态，在下游持续异常时切断请求、防止线程池耗尽与级联故障。
      * 无自定义 Bean 时注册默认实现，供 {@link NotifyServiceImpl} 在发送前做熔断判定。
      */
-    /**
-     * 注册通知熔断器注册表 Bean。
-     *
-     * <p>为每个渠道/Provider 维护独立的熔断状态，在下游持续异常时切断请求、防止线程池耗尽与级联故障。
-     * 无自定义 Bean 时注册默认实现，供 {@link NotifyServiceImpl} 在发送前做熔断判定。
-     */
     @Bean
     @ConditionalOnMissingBean(NotifyCircuitBreakerRegistry.class)
     public NotifyCircuitBreakerRegistry notifyCircuitBreakerRegistry() {
@@ -633,9 +627,11 @@ public class NotifyConfiguration {
     // ==================== 定时任务 ====================
 
     /**
-     * 定时消费重试队列，每 5 秒执行一次。
+     * 定时消费重试队列。
+     *
+     * <p>调度周期由 {@code ydsz.notify.scheduler.retry-queue-fixed-delay-ms} 控制，默认 5000ms。
      */
-    @Scheduled(fixedDelay = 5000)
+    @Scheduled(fixedDelayString = "${ydsz.notify.scheduler.retry-queue-fixed-delay-ms:5000}")
     public void processRetryQueue() {
         if (notifyServiceInstance != null && retryQueueInstance != null && retryQueueInstance.getQueueSize() > 0) {
             log.debug("[NotifyRetryQueue] 开始消费重试队列, queueSize={}", retryQueueInstance.getQueueSize());
@@ -648,9 +644,11 @@ public class NotifyConfiguration {
     }
 
     /**
-     * 定时刷新聚合消息缓冲区，每 30 秒执行一次。
+     * 定时刷新聚合消息缓冲区。
+     *
+     * <p>调度周期由 {@code ydsz.notify.scheduler.aggregate-flush-fixed-delay-ms} 控制，默认 30000ms。
      */
-    @Scheduled(fixedDelay = 30000)
+    @Scheduled(fixedDelayString = "${ydsz.notify.scheduler.aggregate-flush-fixed-delay-ms:30000}")
     public void flushAggregatedMessages() {
         if (notifyServiceInstance != null) {
             notifyServiceInstance.flushAggregatedMessages();

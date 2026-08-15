@@ -13,7 +13,6 @@ import org.springframework.http.HttpEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -139,22 +138,5 @@ public class WeComNotifySender implements NotifyChannelStrategy {
     @Override
     public boolean isEnabled() {
         return webhook != null && !webhook.isEmpty();
-    }
-
-    /**
-     * 从模板参数对象中提取 Map
-     *
-     * @param templateParams 模板参数对象
-     * @return 参数映射
-     */
-    private Map<String, Object> extractParams(Object templateParams) {
-        if (templateParams instanceof Map<?, ?> rawMap) {
-            Map<String, Object> params = new HashMap<>();
-            for (Map.Entry<?, ?> entry : rawMap.entrySet()) {
-                params.put(String.valueOf(entry.getKey()), entry.getValue());
-            }
-            return params;
-        }
-        return Map.of();
     }
 }

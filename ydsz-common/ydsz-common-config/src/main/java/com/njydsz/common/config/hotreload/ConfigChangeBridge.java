@@ -1,5 +1,7 @@
 package com.njydsz.common.config.hotreload;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -26,7 +28,8 @@ import com.njydsz.common.config.ConfigProperties;
  * {@code EnvironmentChangeEvent}（配置刷新后），自动 diff 属性变更并：
  * <ol>
  *   <li>发布 {@link ConfigChangeEvent} Spring 事件</li>
- *   <li>通知所有 {@link ConfigChangeListener} 实现类</li>
+ *   <li>发布 {@link ConfigAuditEvent} 审计事件（含节点 IP、时间戳）</li>
+ *   <li>通知所有 {@link ConfigChangeListener} 实现类（支持过滤）</li>
  * </ol>
  *
  * <h3>工作原理</h3>
@@ -59,10 +62,13 @@ public class ConfigChangeBridge
     private static final java.util.concurrent.ConcurrentHashMap<Class<?>, java.lang.reflect.Method> GET_KEYS_METHOD_CACHE =
             new java.util.concurrent.ConcurrentHashMap<>();
 
+    private static final String UNKNOWN_HOST = "unknown";
+
     private final ConfigurableEnvironment environment;
     private final ApplicationEventPublisher publisher;
     private final ConfigProperties.ChangeMonitor changeMonitorProps;
     private final List<ConfigChangeListener> listeners;
+    private final String nodeIp;
 
     /** 刷新前的属性值快照（仅在 snapshotOldValues=true 时维护） */
     private final Map<String, String> snapshot = new ConcurrentHashMap<>();
@@ -84,6 +90,21 @@ public class ConfigChangeBridge
         this.listeners = listeners != null
                 ? new CopyOnWriteArrayList<>(listeners)
                 : new CopyOnWriteArrayList<>();
+        this.nodeIp = resolveNodeIp();
+    }
+
+    /**
+     * 解析当前节点的 IP 地址
+     *
+     * @return 节点 IP，若解析失败返回 "unknown"
+     */
+    private static String resolveNodeIp() {
+        try {
+            InetAddress localHost = InetAddress.getLocalHost();
+            return localHost.getHostAddress();
+        } catch (UnknownHostException e) {
+            return UNKNOWN_HOST;
+        }
     }
 
     /**
@@ -166,7 +187,10 @@ public class ConfigChangeBridge
         ConfigChangeEvent changeEvent = new ConfigChangeEvent(this, changes);
         publisher.publishEvent(changeEvent);
 
-        // 2. 通知监听器
+        // 2. 发布审计事件
+        publisher.publishEvent(new ConfigAuditEvent(this, nodeIp, changes));
+
+        // 3. 通知监听器
         for (ConfigChangeListener listener : listeners) {
             try {
                 listener.onBatchChange(changes);

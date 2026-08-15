@@ -11,18 +11,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
+
 import com.njydsz.common.event.model.DatabaseDialect;
 import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.event.model.OutboxStatus;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.exception.JsonException;
 import com.njydsz.common.json.type.JsonType;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
 /**
  * Outbox 消息 JDBC 仓储
@@ -244,9 +247,35 @@ public class OutboxRepository {
     /**
      * 统计各状态消息数
      *
+     * <p>默认开启时间窗口缓存（缓存时间由 {@code statusCountCacheSeconds} 配置），
+     * 减少全表 COUNT 查询对数据库的压力。当 {@code useCache=false} 时
+     * 直接查询数据库获取精确值。
+     *
+     * @param useCache 是否使用缓存
+     * @return 状态 → 数量
+     */
+    public Map<String, Long> countByStatus(boolean useCache) {
+        if (useCache) {
+            return countByStatusCached();
+        }
+        return countByStatusFromDb();
+    }
+
+    /**
+     * 统计各状态消息数（始终查询数据库）
+     *
      * @return 状态 → 数量
      */
     public Map<String, Long> countByStatus() {
+        return countByStatusFromDb();
+    }
+
+    /**
+     * 从数据库查询各状态消息数
+     *
+     * @return 状态 → 数量
+     */
+    private Map<String, Long> countByStatusFromDb() {
         // tableName validated at construction (see findPending) — safe from SQL injection
         String sql = "SELECT status, COUNT(*) as cnt FROM " + tableName + " GROUP BY status";
         return jdbcTemplate.query(sql, rs -> {
@@ -256,6 +285,41 @@ public class OutboxRepository {
             }
             return result;
         });
+    }
+
+    /** 缓存的计数结果 */
+    private volatile Map<String, Long> cachedStatusCounts = null;
+
+    /** 缓存过期时间（毫秒） */
+    private volatile long cacheExpireAt = 0L;
+
+    /**
+     * 从缓存获取各状态消息数（时间窗口缓存，过期后自动回源）
+     *
+     * @return 状态 → 数量（可能为空 Map）
+     */
+    private Map<String, Long> countByStatusCached() {
+        long now = System.currentTimeMillis();
+        if (cachedStatusCounts != null && now < cacheExpireAt) {
+            return cachedStatusCounts;
+        }
+        // 缓存过期，回源查询
+        Map<String, Long> fresh = countByStatusFromDb();
+        cachedStatusCounts = fresh;
+        cacheExpireAt = now + cacheTtlMillis;
+        return fresh;
+    }
+
+    /** 缓存 TTL（毫秒），由 EventProperties 初始化时设置 */
+    private long cacheTtlMillis = 5000L;
+
+    /**
+     * 设置缓存 TTL
+     *
+     * @param ttlMillis 缓存毫秒数
+     */
+    public void setCacheTtlMillis(long ttlMillis) {
+        this.cacheTtlMillis = Math.max(ttlMillis, 1000L);
     }
 
     /**
@@ -297,6 +361,130 @@ public class OutboxRepository {
      */
     String getTableName() {
         return tableName;
+    }
+
+    // ==================== 运维管理 API ====================
+
+    /**
+     * 分页查询指定状态的消息
+     *
+     * <p>支持按事件类型过滤，按创建时间倒序排列。
+     *
+     * @param status          消息状态
+     * @param pageable        分页参数
+     * @param eventTypeFilter 事件类型过滤（可为 null）
+     * @return 分页消息列表
+     */
+    public Page<OutboxMessage> findByStatus(OutboxStatus status, Pageable pageable, String eventTypeFilter) {
+        // tableName validated at construction (see findPending) — safe from SQL injection
+        StringBuilder sql = new StringBuilder("SELECT * FROM ").append(tableName)
+                .append(" WHERE status = ?");
+        java.util.List<Object> params = new java.util.ArrayList<>();
+        params.add(status.name());
+
+        if (eventTypeFilter != null && !eventTypeFilter.isBlank()) {
+            sql.append(" AND event_type = ?");
+            params.add(eventTypeFilter);
+        }
+        sql.append(" ORDER BY created_at DESC");
+        sql.append(dialect.limitClause());
+        params.add(pageable.getPageSize());
+        // OFFSET 支持（PostgreSQL / MySQL 统一）
+        if (dialect != DatabaseDialect.ORACLE) {
+            sql.append(" OFFSET ?");
+            params.add(pageable.getOffset());
+        }
+
+        List<OutboxMessage> messages = jdbcTemplate.query(sql.toString(),
+                OutboxRowMapper.INSTANCE,
+                params.toArray());
+
+        // COUNT 查询
+        StringBuilder countSql = new StringBuilder("SELECT COUNT(*) FROM ").append(tableName)
+                .append(" WHERE status = ?");
+        List<Object> countParams = new java.util.ArrayList<>();
+        countParams.add(status.name());
+        if (eventTypeFilter != null && !eventTypeFilter.isBlank()) {
+            countSql.append(" AND event_type = ?");
+            countParams.add(eventTypeFilter);
+        }
+        Long total = jdbcTemplate.queryForObject(countSql.toString(), Long.class, countParams.toArray());
+
+        return new PageImpl<>(messages, pageable, total != null ? total : 0L);
+    }
+
+    /**
+     * CAS 重置消息为 PENDING（仅当当前状态为指定 fromStatus 时）
+     *
+     * @param id         消息 ID
+     * @param fromStatus 原始状态（CAS 条件）
+     * @return 成功更新的行数
+     */
+    public int resetToPending(String id, OutboxStatus fromStatus) {
+        // tableName validated at construction (see findPending) — safe from SQL injection
+        String sql = "UPDATE " + tableName
+                + " SET status = ?, retry_count = 0, next_retry_at = ?, updated_at = ?, error_message = NULL"
+                + " WHERE id = ? AND status = ?";
+        return jdbcTemplate.update(sql,
+                OutboxStatus.PENDING.name(),
+                Timestamp.from(Instant.now()),
+                Timestamp.from(Instant.now()),
+                id,
+                fromStatus.name());
+    }
+
+    /**
+     * 批量重置指定状态的消息为 PENDING
+     *
+     * @param fromStatus      原始状态
+     * @param eventTypeFilter 事件类型过滤（可为 null）
+     * @return 成功更新的行数
+     */
+    public int resetAllToPending(OutboxStatus fromStatus, String eventTypeFilter) {
+        // tableName validated at construction (see findPending) — safe from SQL injection
+        StringBuilder sql = new StringBuilder("UPDATE ").append(tableName)
+                .append(" SET status = ?, retry_count = 0, next_retry_at = ?, updated_at = ?, error_message = NULL")
+                .append(" WHERE status = ?");
+        java.util.List<Object> params = new java.util.ArrayList<>();
+        params.add(OutboxStatus.PENDING.name());
+        params.add(Timestamp.from(Instant.now()));
+        params.add(Timestamp.from(Instant.now()));
+        params.add(fromStatus.name());
+
+        if (eventTypeFilter != null && !eventTypeFilter.isBlank()) {
+            sql.append(" AND event_type = ?");
+            params.add(eventTypeFilter);
+        }
+        return jdbcTemplate.update(sql.toString(), params.toArray());
+    }
+
+    /**
+     * 仅当消息处于终态时删除
+     *
+     * @param id               消息 ID
+     * @param terminalStatuses 允许删除的终态状态列表
+     * @return 成功删除的行数
+     */
+    public int deleteIfTerminal(String id, java.util.Collection<OutboxStatus> terminalStatuses) {
+        if (terminalStatuses == null || terminalStatuses.isEmpty()) {
+            return 0;
+        }
+        // tableName validated at construction (see findPending) — safe from SQL injection
+        StringBuilder sql = new StringBuilder("DELETE FROM ").append(tableName)
+                .append(" WHERE id = ? AND status IN (");
+        java.util.List<Object> params = new java.util.ArrayList<>();
+        params.add(id);
+        int i = 0;
+        for (OutboxStatus s : terminalStatuses) {
+            if (i > 0) {
+                sql.append(",");
+            }
+            sql.append("?");
+            params.add(s.name());
+            i++;
+        }
+        sql.append(")");
+        return jdbcTemplate.update(sql.toString(), params.toArray());
     }
 
     /**

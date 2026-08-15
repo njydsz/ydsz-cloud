@@ -61,6 +61,9 @@ public abstract class DefaultFallbackFactory<T> implements FallbackFactory<T> {
 
     protected final Logger log = LoggerFactory.getLogger(getClass());
 
+    /** 安全降级时使用的默认业务错误码（子类可覆盖 {@link #getDefaultFallbackErrorCode()} 自定义） */
+    private static final String DEFAULT_FALLBACK_ERROR_CODE = "FEIGN-FALLBACK-001";
+
     /**
      * 根据异常创建降级实例。
      *
@@ -93,6 +96,18 @@ public abstract class DefaultFallbackFactory<T> implements FallbackFactory<T> {
     protected abstract T createFallback(Throwable cause);
 
     /**
+     * 获取安全降级时使用的默认业务错误码。
+     *
+     * <p>子类可覆盖此方法返回自定义错误码（如不同服务使用不同的降级错误码）。
+     * 默认返回 {@code FEIGN-FALLBACK-001}。
+     *
+     * @return 降级错误码，不可为 null 或空
+     */
+    protected String getDefaultFallbackErrorCode() {
+        return DEFAULT_FALLBACK_ERROR_CODE;
+    }
+
+    /**
      * 创建安全降级实现，当 {@link #createFallback(Throwable)} 返回 null 时调用。
      * <p>
      * 通过动态代理为目标接口生成降级实例，方法调用返回包含错误码的 {@link BaseResponse}，
@@ -116,7 +131,7 @@ public abstract class DefaultFallbackFactory<T> implements FallbackFactory<T> {
                     }
                     if (BaseResponse.class.isAssignableFrom(returnType)) {
                         return BaseResponse.error(
-                                "B01004",
+                                getDefaultFallbackErrorCode(),
                                 errorMsg
                         );
                     }

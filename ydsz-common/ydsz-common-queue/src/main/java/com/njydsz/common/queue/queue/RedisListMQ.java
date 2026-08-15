@@ -1,7 +1,6 @@
 package com.njydsz.common.queue.queue;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.locks.ReentrantLock;
 
 import org.springframework.data.redis.core.RedisTemplate;
 
@@ -34,13 +33,11 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  */
 @Slf4j
-public class RedisListMQ implements IMessageQueue {
+public class RedisListMQ extends AbstractMessageQueue {
 
     private final QueueProperties queueProperties;
     private final RedisTemplate<String, Object> redisTemplate;
     private final ExecutorService consumerExecutor;
-    private volatile boolean closed = false;
-    private final ReentrantLock closeLock = new ReentrantLock();
 
     /**
      * 基于 RedisTemplate 构造（复用 ydsz-common-redis 连接，推荐）
@@ -49,7 +46,10 @@ public class RedisListMQ implements IMessageQueue {
      * @param config           队列配置
      * @param consumerExecutor 异步消费者线程池（可为 null，将退化到裸线程，不推荐）
      */
-    public RedisListMQ(RedisTemplate<String, Object> redisTemplate, QueueProperties config, ExecutorService consumerExecutor) {
+    public RedisListMQ(RedisTemplate<String, Object> redisTemplate,
+                       QueueProperties config,
+                       ExecutorService consumerExecutor) {
+        super("Redis-List");
         if (config == null) {
             throw BusinessException.builder().key("队列配置不能为空").build();
         }
@@ -57,8 +57,8 @@ public class RedisListMQ implements IMessageQueue {
         this.redisTemplate = redisTemplate;
         this.consumerExecutor = consumerExecutor;
         log.info("[RedisListMQ] 初始化成功（复用 ydsz-common-redis 连接）");
-        log.warn("[RedisListMQ] 警告: Redis List 队列不适合生产环境关键业务场景，" +
-                "不具备消息 ACK/重试/死信能力，关键业务请使用 Kafka/RocketMQ/RabbitMQ");
+        log.warn("[RedisListMQ] 警告: Redis List 队列不适合生产环境关键业务场景，"
+                + "不具备消息 ACK/重试/死信能力，关键业务请使用 Kafka/RocketMQ/RabbitMQ");
     }
 
     @Override
@@ -86,30 +86,8 @@ public class RedisListMQ implements IMessageQueue {
     }
 
     @Override
-    public boolean isClosed() {
-        return closed;
-    }
-
-    @Override
-    public String getType() {
-        return "Redis-List";
-    }
-
-    @Override
-    public void close() {
-        if (closed) {
-            return;
-        }
-        closeLock.lock();
-        try {
-            if (closed) {
-                return;
-            }
-            closed = true;
-            // RedisTemplate 由 ydsz-common-redis 管理，无需关闭
-            log.info("[Redis-List] 队列已关闭");
-        } finally {
-            closeLock.unlock();
-        }
+    protected void doClose() {
+        // RedisTemplate 由 ydsz-common-redis 管理，无需关闭
+        log.info("[Redis-List] 队列已关闭");
     }
 }

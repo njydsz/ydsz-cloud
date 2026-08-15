@@ -182,22 +182,65 @@ import com.njydsz.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.common.queue.enums.QueueType;
 import com.njydsz.common.queue.service.IMessagePublisher;
 import com.njydsz.common.queue.service.IMessageSubscriber;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.njydsz.common.queue.annotation.EnableQueue;
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+
+/**
+ * 订单消息服务示例
+ *
+ * <p>展示如何正确初始化队列、发布消息、订阅消息，并确保资源在服务销毁时释放。
+ */
 @Service
 public class OrderMessageService {
 
-    @Autowired
-    private IMessageQueueProvider messageQueueProvider;
+    private final IMessageQueueProvider messageQueueProvider;
+    private IMessageQueue queue;
+    private IMessagePublisher publisher;
+    private IMessageSubscriber subscriber;
 
-    public void publish(String channel, String payload) {
-        IMessageQueue queue = messageQueueProvider.createMessageQueue(QueueType.STREAM);
-        IMessagePublisher publisher = queue.createPublisher(channel);
+    public OrderMessageService(IMessageQueueProvider messageQueueProvider) {
+        this.messageQueueProvider = messageQueueProvider;
+    }
+
+    @PostConstruct
+    public void init() {
+        // 在服务启动时创建队列实例，避免每次调用都创建
+        this.queue = messageQueueProvider.createMessageQueue(QueueType.STREAM);
+        this.publisher = queue.createPublisher("order-topic");
+        this.subscriber = queue.createSubscriber("order-topic");
+    }
+
+    public void publish(String payload) {
         publisher.publish(payload);
+    }
+
+    /**
+     * 订阅消费（异步模式，推荐）
+     */
+    public void startConsuming() {
+        subscriber.subscribeAsync(message -> {
+            // 业务处理逻辑
+            processOrder(message);
+        });
+    }
+
+    @PreDestroy
+    public void cleanup() {
+        // 服务关闭时释放队列资源，防止连接泄漏
+        if (queue != null) {
+            queue.close();
+        }
     }
 }
 ```
+
+> **注意事项：**
+> - 使用 `@EnableQueue` 注解启用队列自动配置（放在任意 `@Configuration` 类上即可）
+> - 队列实例应在服务初始化时创建（如 `@PostConstruct`），避免频繁创建/销毁带来的连接开销
+> - 务必在 `@PreDestroy` 中调用 `queue.close()` 释放资源，否则可能导致连接泄漏
 
 ## 配置项
 
@@ -348,6 +391,38 @@ GET  /api/v1/queue/dead-letter/{topic}/retry-count/{messageId}  # 查询重试�
 7. **Payload 限制**：`QueueMessage.fromPayload` 限制最大 16MB，超过抛 `IllegalArgumentException`；超过 4KB 自动 GZIP 压缩。
 8. **优雅停机**：消费者线程池由 Spring 管理，`await-termination-seconds=30` 等待积压消息处理；`ConsumerThreadGuard` 自动恢复崩溃线程。
 9. **RocketMQ 依赖排除**：`rocketmq-client` 强制排除 FastJSON 系列与 Jackson，统一使用 `ydsz-common-json` 提供的 Jackson 实现。
+
+## 故障排查（Troubleshooting）
+
+### 常见问题
+
+| 现象 | 可能原因 | 解决方案 |
+|---|---|---|
+| `QueueConfiguration` 未生效、Bean 未注入 | 未添加 `@EnableQueue` 注解 | 在任意 `@Configuration` 类上添加 `@EnableQueue` |
+| `NoSuchBeanDefinitionException: IMessageQueueProvider` | `ydsz.queue.enabled=false` 或缺少引擎依赖 | 确认配置项开启且对应 MQ 引擎依赖已引入 |
+| 启动报 `Kafka 连接失败` | Kafka broker 不可达或 bootstrapServers 配置错误 | 检查网络连通性与 `ydsz.queue.kafka.bootstrap-servers` 配置 |
+| 消费端无消息输出 | 消费者组未创建或 offset 已到最新 | 确认生产者先发送消息，或重置 consumer group offset |
+| 死信队列 REST API 返回 503 | `DeadLetterQueueServiceImpl` 因 Redis 不可用降级为 NoOp | 检查 `ydsz-common-redis` 连接是否正常 |
+| 消息体乱码或反序列化失败 | 发送端/接收端序列化协议不一致 | 统一使用 `ydsz-common-json` 序列化，避免混用 JSON 库 |
+| `IllegalStateException: 队列已关闭` | 操作了已 `close()` 的队列实例 | 检查是否在 `@PreDestroy` 后仍持有队列引用 |
+| 消费者线程池拒绝任务 | 消费速率跟不上生产速率，队列满 | 增大 `consumer-executor.queue-capacity` 或 `max-size` |
+| 健康检查 DOWN | Redis 连接失败或 MQ 端口不可达 | 参见上方健康检查章节，检查连接配置与网络 |
+
+### 调试日志
+
+开启 DEBUG 级别日志可观察消息全链路：
+
+```yaml
+logging:
+  level:
+    com.njydsz.common.queue: DEBUG
+```
+
+关键日志关键字：
+- `[RedisStreamMQ]` — Redis Stream 队列生命周期
+- `[CircuitBreaker-xxx]` — 熔断器状态切换
+- `[DeadLetterRetryScheduler]` — 死信重试扫描
+- `[ConsumerGuard]` — 消费者线程恢复
 
 ## 变更记录
 

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import com.njydsz.common.exception.custom.BusinessException;
@@ -32,11 +33,22 @@ import lombok.extern.slf4j.Slf4j;
  * <p><b>线程池复用：</b>
  * 异步消费者统一使用 Spring 管理的 {@link ExecutorService}，避免业务代码直接创建裸线程。
  *
+ * <p><b>生命周期管理：</b>
+ * 工厂持有所有创建的队列实例引用，实现 {@link DisposableBean}，确保 Spring 容器关闭时统一释放。
+ * 单工厂创建的队列实例上限为 {@link #MAX_HELD_QUEUES}，超过时记录 WARN 日志并触发部分关闭。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Slf4j
-public class MessageQueueFactory implements IMessageQueueProvider {
+public class MessageQueueFactory implements IMessageQueueProvider, DisposableBean {
+
+    /**
+     * 单工厂持有的队列实例上限
+     *
+     * <p>超过此阈值时记录告警并触发兜底关闭最老的实例，防止连接泄漏。
+     */
+    private static final int MAX_HELD_QUEUES = 100;
 
     private final QueueProperties properties;
     private final RedisTemplate<String, Object> redisTemplate;
@@ -50,13 +62,23 @@ public class MessageQueueFactory implements IMessageQueueProvider {
      * @param redisTemplate    Redis 模板（可为 null，仅使用非 Redis 队列时允许）
      * @param consumerExecutor 异步消费者线程池（可为 null，将退化到裸线程，不推荐）
      */
-    public MessageQueueFactory(QueueProperties properties, RedisTemplate<String, Object> redisTemplate, ExecutorService consumerExecutor) {
+    public MessageQueueFactory(QueueProperties properties,
+                               RedisTemplate<String, Object> redisTemplate,
+                               ExecutorService consumerExecutor) {
         if (properties == null) {
             throw BusinessException.builder().key("队列配置不能为空").build();
         }
         this.properties = properties;
         this.redisTemplate = redisTemplate;
         this.consumerExecutor = consumerExecutor;
+    }
+
+    /**
+     * Spring 容器关闭时兜底关闭所有持有的队列实例，防止连接泄漏。
+     */
+    @Override
+    public void destroy() {
+        close();
     }
 
     @Override
@@ -76,6 +98,10 @@ public class MessageQueueFactory implements IMessageQueueProvider {
     public IMessageQueue createMessageQueue(QueueType type, String... args) {
         if (type == null) {
             throw BusinessException.builder().key("队列类型不能为空").build();
+        }
+        // 容量上限检查，防止无限增长
+        if (createdQueues.size() >= MAX_HELD_QUEUES) {
+            evictOldestQueue();
         }
         IMessageQueue queue;
         switch (type) {
@@ -105,6 +131,27 @@ public class MessageQueueFactory implements IMessageQueueProvider {
         }
         createdQueues.add(queue);
         return queue;
+    }
+
+    /**
+     * 关闭并移除最老的队列实例（兜底策略）。
+     *
+     * <p>当持有的队列数量超过 {@link #MAX_HELD_QUEUES} 时触发，
+     * 关闭最老的实例以释放资源，避免 OOM / 连接泄漏。
+     */
+    private void evictOldestQueue() {
+        if (createdQueues.isEmpty()) {
+            return;
+        }
+        IMessageQueue oldest = createdQueues.get(0);
+        log.warn("[MessageQueueFactory] 队列实例数量达到上限 {}，关闭最老实例 type={}, "
+                + "请关注是否存在队列泄漏（创建后未 close）", MAX_HELD_QUEUES, oldest.getType());
+        try {
+            oldest.close();
+        } catch (Exception e) {
+            log.warn("[MessageQueueFactory] 关闭最老队列实例时异常", e);
+        }
+        createdQueues.remove(0);
     }
 
     private IMessageQueue createRedisListMQ() {

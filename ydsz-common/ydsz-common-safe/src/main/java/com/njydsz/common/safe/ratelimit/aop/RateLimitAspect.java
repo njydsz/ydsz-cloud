@@ -12,6 +12,7 @@ import org.aspectj.lang.reflect.MethodSignature;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.safe.ratelimit.core.RateLimitManager;
+import com.njydsz.common.safe.ratelimit.decorator.RateLimitResponseDecorator;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitAlgorithm;
 import com.njydsz.common.safe.ratelimit.enums.RateLimitDimension;
 import com.njydsz.common.safe.ratelimit.model.RateLimitContext;
@@ -20,6 +21,7 @@ import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
 import com.njydsz.common.safe.util.ClientIpResolver;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,6 +44,9 @@ import com.njydsz.common.util.http.RequestContextUtils;
 public class RateLimitAspect {
 
     private final RateLimitManager rateLimitManager;
+
+    /** 限流响应装饰器（用于添加 Retry-After/X-RateLimit-* 标准化头部） */
+    private final RateLimitResponseDecorator responseDecorator = new RateLimitResponseDecorator();
 
     /** 方法签名缓存：避免重复解析 */
     private final ConcurrentHashMap<Method, RateLimitRule> ruleCache = new ConcurrentHashMap<>();
@@ -72,6 +77,8 @@ public class RateLimitAspect {
         if (decision.isBlocked()) {
             log.warn("Rate limit blocked: resource={}, key={}, reason={}",
                     decision.getResource(), context.getResource(), decision.getReason());
+            // 添加标准化限流响应头（Retry-After / X-RateLimit-*）
+            applyRateLimitHeaders(request(), decision);
             String code = (errorCode == null || errorCode.isEmpty()) ? "D02001" : errorCode;
             throw BusinessException.builder()
                     .code(code)
@@ -89,8 +96,57 @@ public class RateLimitAspect {
         }
     }
 
+    /**
+     * 为限流拒绝响应添加标准化头部
+     *
+     * <p>从当前 HTTP 请求/响应中获取对象，调用 {@link RateLimitResponseDecorator} 设置头部。
+     * 头部设置失败不影响主流程（限流拒绝仍正常抛出异常）。
+     *
+     * @param request  当前 HTTP 请求（可为 null）
+     * @param decision 限流决策
+     */
+    private void applyRateLimitHeaders(HttpServletRequest request, RateLimitDecision decision) {
+        if (request == null) {
+            return;
+        }
+        try {
+            HttpServletResponse response = response(request);
+            if (response != null && !response.isCommitted()) {
+                responseDecorator.decorateBlockedResponse(request, response, decision);
+            }
+        } catch (Exception e) {
+            log.debug("设置限流响应头失败: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * 获取当前 HTTP 响应
+     *
+     * <p>通过 {@link org.springframework.web.context.request.RequestContextHolder} 获取
+     * 当前请求的 HttpServletResponse。
+     *
+     * @param request 当前 HTTP 请求（用于判空）
+     * @return HttpServletResponse；不可用时返回 null
+     */
+    @SuppressWarnings("unchecked")
+    private static HttpServletResponse response(HttpServletRequest request) {
+        if (request == null) {
+            return null;
+        }
+        try {
+            org.springframework.web.context.request.RequestAttributes attrs =
+                    org.springframework.web.context.request.RequestContextHolder.currentRequestAttributes();
+            Object response = attrs.getAttribute(
+                    "jakarta.servlet.http.HttpServletResponse",
+                    org.springframework.web.context.request.RequestAttributes.SCOPE_REQUEST);
+            return response instanceof HttpServletResponse httpResponse ? httpResponse : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     private RateLimitRule buildRule(RateLimit annotation) {
-        return RateLimitRule.builder()
+        RateLimitRule rule = RateLimitRule.builder()
                 .resource(annotation.resource())
                 .algorithm(annotation.algorithm())
                 .dimension(annotation.dimension())
@@ -104,6 +160,9 @@ public class RateLimitAspect {
                 .fallback(annotation.fallback())
                 .enabled(true)
                 .build();
+        // 启动时校验规则合法性，提前暴露配置错误
+        rule.validate();
+        return rule;
     }
 
     private RateLimitContext buildContext(ProceedingJoinPoint pjp, RateLimit annotation, RateLimitRule rule) {

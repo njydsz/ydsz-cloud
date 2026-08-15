@@ -61,6 +61,9 @@ public class NotifyProperties {
     /** 限流配置 */
     private RateLimit rateLimit = new RateLimit();
 
+    /** 定时任务配置 */
+    private SchedulerConfig scheduler = new SchedulerConfig();
+
     /**
      * 重试队列配置
      */
@@ -480,5 +483,31 @@ public class NotifyProperties {
         /** 时间窗口（秒） */
         @Min(1)
         private int windowSeconds = 60;
+    }
+
+    /**
+     * 定时任务配置
+     *
+     * <p>控制重试队列消费与聚合消息刷新的调度周期。
+     *
+     * <p><b>配置示例（application.yml）：</b>
+     * <pre>{@code
+     * ydsz:
+     *   notify:
+     *     scheduler:
+     *       retry-queue-fixed-delay-ms: 5000
+     *       aggregate-flush-fixed-delay-ms: 30000
+     * }</pre>
+     */
+    @Data
+    public static class SchedulerConfig {
+
+        /** 重试队列消费间隔（毫秒） */
+        @Min(100)
+        private long retryQueueFixedDelayMs = 5000L;
+
+        /** 聚合消息刷新间隔（毫秒） */
+        @Min(1000)
+        private long aggregateFlushFixedDelayMs = 30000L;
     }
 }

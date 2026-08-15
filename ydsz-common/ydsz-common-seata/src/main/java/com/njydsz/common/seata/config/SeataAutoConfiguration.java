@@ -18,10 +18,13 @@ import com.njydsz.common.seata.api.DistributedTransactionManager;
 import com.njydsz.common.seata.api.TransactionType;
 import com.njydsz.common.seata.api.TccTransactionLogStore;
 import com.njydsz.common.seata.api.XidPropagator;
-import com.njydsz.common.seata.impl.DefaultXidPropagator;
-import com.njydsz.common.seata.impl.InMemoryTccTransactionLogStore;
+import com.njydsz.common.seata.api.XidSigner;
 import com.njydsz.common.seata.impl.DbTccTransactionLogStore;
+import com.njydsz.common.seata.impl.DefaultXidPropagator;
+import com.njydsz.common.seata.impl.HmacXidSigner;
+import com.njydsz.common.seata.impl.InMemoryTccTransactionLogStore;
 import com.njydsz.common.seata.impl.LocalTransactionManager;
+import com.njydsz.common.seata.impl.NoopXidSigner;
 import com.njydsz.common.seata.impl.RedisTccTransactionLogStore;
 import com.njydsz.common.seata.impl.SagaOrchestrator;
 import com.njydsz.common.seata.impl.SeataTransactionManager;
@@ -44,20 +47,22 @@ import org.springframework.context.annotation.Configuration;
  *
  * <p>根据类路径和配置自动选择事务管理器实现：
  * <ul>
- *   <li>Seata 在类路径且 {@code default-type=SEATA_AT} → SeataTransactionManager（待实现）</li>
+ *   <li>Seata 在类路径且 {@code default-type=SEATA_AT} → SeataTransactionManager（Seata 原生 API）</li>
  *   <li>{@code default-type=TCC} → TccTransactionManager（带事务日志 + 恢复扫描）</li>
  *   <li>默认 → LocalTransactionManager（降级）</li>
  * </ul>
  *
- * <p><b>P0-2 修复</b>：{@code @ConditionalOnClass} 类名从 {@code io.seata}（1.x）
- * 修正为 {@code org.apache.seata}（2.x），匹配项目使用的 Seata 2.5.0。
+ * <p><b>P0-1 修复</b>：移除 {@code SeataGlobalTransactionExecutor} 反射封装，
+ * 改为直接使用 Seata 原生 {@code GlobalTransactionContext} API。
  *
- * <p><b>P0-4/P0-11/P0-12</b>：注册 {@link TccTransactionLogStore}（内存版）和
- * {@link TccTransactionRecoveryScanner}（定时恢复扫描）。
+ * <p><b>P0-2 修复</b>：健康检查使用 {@code countTimeoutPending} 计数接口，
+ * 避免全量查询挂起事务导致健康检查超时。
  *
- * <p><b>P1-4 修复</b>：新增 {@link RedisTccTransactionLogStore} 注册路径。
- * 当 {@code ydsz.seata.tcc-log-store=redis} 且类路径存在 {@code RedisTemplate} 时
- * 自动切换到 Redis 实现，支持跨服务事务状态共享；否则回退到 {@link InMemoryTccTransactionLogStore}。
+ * <p><b>P0-3 修复</b>：DB 版 TCC 日志存储引入 {@code TccTransactionDialectProvider} 接口，
+ * 兼容 MySQL ({@code ON DUPLICATE KEY UPDATE}) 和 PostgreSQL ({@code ON CONFLICT DO UPDATE})。
+ *
+ * <p><b>P0-4/P0-6/P0-11/P0-12</b>：注册 XID 传播器、XID Servlet 过滤器、
+ * TCC 事务恢复扫描器、事务日志存储。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -73,8 +78,8 @@ public class SeataAutoConfiguration {
     /**
      * TCC 事务日志存储（内存版，默认）
      *
-     * <p>仅当 {@code ydsz.seata.tcc-log-store} 未设置为 {@code redis} 或
-     * 类路径无 {@code RedisTemplate} 时注册。
+     * <p>仅当 {@code ydsz.seata.tcc-log-store} 未设置为 {@code redis}/{@code db} 或
+     * 类路径无对应依赖时注册。适用于开发、测试环境。
      */
     @Bean
     @ConditionalOnMissingBean(TccTransactionLogStore.class)
@@ -113,7 +118,10 @@ public class SeataAutoConfiguration {
      * TCC 事务日志存储（DB 版，生产环境强持久化）
      *
      * <p>当 {@code ydsz.seata.tcc-log-store=db} 且类路径存在 {@code JdbcTemplate} 时注册，
-     * 支持跨服务事务状态共享，无需 Redis。适用于不使用 Redis 但需要持久化事务日志的生产环境。
+     * 支持跨服务事务状态共享，无需 Redis。
+     *
+     * <p>通过 {@code tcc-log-db-dialect} 配置项支持数据库方言选择，
+     * 兼容 MySQL ({@code mysql}) 和 PostgreSQL ({@code postgresql})，默认自动检测。
      */
     @Bean
     @ConditionalOnMissingBean(TccTransactionLogStore.class)
@@ -122,7 +130,10 @@ public class SeataAutoConfiguration {
     public TccTransactionLogStore dbTccTransactionLogStore(
             JdbcTemplate jdbcTemplate,
             SeataProperties properties) {
-        return new DbTccTransactionLogStore(jdbcTemplate, properties.getTccLogDbTable());
+        return new DbTccTransactionLogStore(
+                jdbcTemplate,
+                properties.getTccLogDbTable(),
+                properties.getTccLogDbDialect());
     }
 
     /**
@@ -146,7 +157,7 @@ public class SeataAutoConfiguration {
     /**
      * TCC 事务恢复扫描器
      *
-     * <p>定时扫描超时未完成的 TCC 分支事务，重新执行 Confirm 或 Cancel。
+     * <p>定时扫描超时未完成的 TCC 分支事务，重新执行 Cancel。
      */
     @Bean
     @ConditionalOnMissingBean(TccTransactionRecoveryScanner.class)
@@ -182,7 +193,7 @@ public class SeataAutoConfiguration {
         }
 
         if (properties.getDefaultType() == TransactionType.SEATA_AT) {
-            // delegate to SeataTransactionManager
+            // delegate to SeataTransactionManager (使用 Seata 原生 API)
             SeataTransactionManager seataTm = seataTmProvider.getIfAvailable();
             if (seataTm != null) { return seataTm; }
         }
@@ -198,12 +209,34 @@ public class SeataAutoConfiguration {
     }
 
     /**
-     * XID 传播器（P0-6）
+     * XID 签名器（P0-4 新增）
+     *
+     * <p>当 {@code ydsz.seata.xid-sign-enabled=true} 时注册 HMAC-SHA256 签名器，
+     * 用于 XID 跨服务传播时的防伪造校验。未提供签名器时注册空实现。
+     */
+    @Bean
+    @ConditionalOnMissingBean(XidSigner.class)
+    public XidSigner xidSigner(SeataProperties properties) {
+        if (properties.isXidSignEnabled()) {
+            String signKey = properties.getXidSignKey();
+            if (signKey == null || signKey.isBlank()) {
+                log.warn("ydsz.seata.xid-sign-enabled=true but no xid-sign-key configured, XID signing disabled");
+                return new NoopXidSigner();
+            }
+            return new HmacXidSigner(signKey);
+        }
+        return new NoopXidSigner();
+    }
+
+    /**
+     * XID 传播器（P0-6 + P0-4）
+     *
+     * <p>集成签名器实现，支持 XID 跨服务传播的签名校验。
      */
     @Bean
     @ConditionalOnMissingBean(XidPropagator.class)
-    public XidPropagator xidPropagator() {
-        return new DefaultXidPropagator();
+    public XidPropagator xidPropagator(ObjectProvider<XidSigner> signerProvider) {
+        return new DefaultXidPropagator(signerProvider);
     }
 
     /**
@@ -227,7 +260,7 @@ public class SeataAutoConfiguration {
     }
 
     /**
-     * 事务审计日志（P1-3）
+     * 事务审计日志（P1-3 预留）
      */
     @Bean
     @ConditionalOnMissingBean(TransactionAuditLogger.class)
@@ -263,7 +296,7 @@ public class SeataAutoConfiguration {
     }
 
     /**
-     * SAGA 事务编排器（P0-3）
+     * SAGA 事务编排器（P0-3 修复基础实现）
      *
      * <p>可通过 {@code ydsz.seata.saga-enabled=false} 关闭
      */
@@ -278,10 +311,10 @@ public class SeataAutoConfiguration {
     }
 
     /**
-     * Seata AT 模式配置
+     * Seata AT 模式配置（使用 Seata 原生 API）
      *
      * <p>当 Seata 在类路径且 {@code seata-at-enabled=true} 时注册
-     * {@link SeataTransactionManager}，使用 Seata 原生 API 实现 AT 模式。
+     * {@link SeataTransactionManager}，不再使用反射调用。
      */
     @Configuration
     @ConditionalOnClass(name = "org.apache.seata.tm.api.GlobalTransactionContext")
@@ -291,7 +324,7 @@ public class SeataAutoConfiguration {
         /**
          * 注册 Seata AT 事务管理器 Bean。
          *
-         * <p>使用 Seata 原生 {@link org.apache.seata.tm.api.GlobalTransactionContext} API，
+         * <p>使用 Seata 原生 {@code GlobalTransactionContext} API，
          * 在 Seata AT 启用时装配；无自定义 Bean 时注册，供 {@link DistributedTransactionManager} 委派。
          */
         @Bean

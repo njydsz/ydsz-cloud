@@ -256,9 +256,15 @@ public class ConfigCliTool {
         System.out.println("Usage:");
         System.out.println("  encrypt <plaintext> [masterPassword] [--format json|text]");
         System.out.println("  decrypt <ciphertext> [masterPassword] [--format json|text]");
+        System.out.println("  re-encrypt <ciphertext> <oldPassword> <newPassword> [--format json|text]");
         System.out.println();
         System.out.println("Options:");
         System.out.println("  --format json|text    Output format (default: text)");
+        System.out.println();
+        System.out.println("Commands:");
+        System.out.println("  encrypt       Encrypt plaintext, output ENC(ciphertext)");
+        System.out.println("  decrypt       Decrypt ENC(ciphertext) or raw ciphertext");
+        System.out.println("  re-encrypt    Re-encrypt ciphertext with new master password (key rotation)");
         System.out.println();
         System.out.println("If masterPassword is omitted, reads from JASYPT_ENCRYPTOR_PASSWORD env var.");
         System.out.println("Default algorithm: " + DEFAULT_ALGORITHM);

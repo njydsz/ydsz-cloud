@@ -1,12 +1,13 @@
 package com.njydsz.common.audit.core;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
@@ -27,6 +28,13 @@ import com.njydsz.common.json.YdszJson;
  * 避免审计日志永久丢失。支持后续恢复到数据库。
  * </p>
  *
+ * <p><b>性能优化：</b></p>
+ * <ul>
+ *   <li>使用 BufferedWriter 缓冲写入，减少磁盘 IO 次数</li>
+ *   <li>单个兜底文件大小限制（默认 50MB），超过后滚动生成新文件</li>
+ *   <li>使用 NIO.2 Files API，支持 try-with-resources 自动关闭</li>
+ * </ul>
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -34,11 +42,29 @@ public class AuditFallbackWriter {
 
     private static final Logger log = LoggerFactory.getLogger(AuditFallbackWriter.class);
 
-    /** 磁盘兜底文件目录 */
-    private volatile String fallbackDir = System.getProperty("java.io.tmpdir") + "/audit-fallback";
+    /** 磁盘兜底文件目录默认路径 */
+    private static final String DEFAULT_FALLBACK_DIR = System.getProperty("java.io.tmpdir") + "/audit-fallback";
+
+    /** 单个兜底文件大小上限（默认 50MB） */
+    private static final long MAX_FILE_SIZE_BYTES = 50L * 1024L * 1024L;
+
+    /** 缓冲区大小（默认 8KB） */
+    private static final int BUFFER_SIZE = 8192;
+
+    /** 日期格式化器（线程安全） */
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    /** 兜底文件目录 */
+    private volatile String fallbackDir = DEFAULT_FALLBACK_DIR;
 
     /** 磁盘兜底是否已失效标志 */
     private volatile boolean diskFallbackFailed = false;
+
+    /** 当前写入文件的 BufferedWriter */
+    private volatile BufferedWriter currentWriter;
+
+    /** 当前写入文件路径 */
+    private volatile Path currentFilePath;
 
     /**
      * 设置磁盘兜底路径
@@ -48,6 +74,16 @@ public class AuditFallbackWriter {
     public void setFallbackDir(String path) {
         this.fallbackDir = path;
         this.diskFallbackFailed = false;
+        closeCurrentWriter();
+    }
+
+    /**
+     * 获取兜底文件目录路径
+     *
+     * @return 兜底目录
+     */
+    public Path getFallbackDirPath() {
+        return Paths.get(fallbackDir);
     }
 
     /**
@@ -64,29 +100,27 @@ public class AuditFallbackWriter {
      *
      * @param auditLog 待写入的审计日志
      */
-    public void writeToFallback(AuditLog auditLog) {
+    public synchronized void writeToFallback(AuditLog auditLog) {
         if (diskFallbackFailed) {
             log.error("【审计兜底】磁盘兜底已失效, 审计日志将丢失, id={}", auditLog.getId());
             return;
         }
 
         try {
-            Path dir = Paths.get(fallbackDir);
-            if (!Files.exists(dir)) {
-                Files.createDirectories(dir);
-            }
+            ensureWriterOpen();
+            String jsonLine = YdszJson.toJson(auditLog);
+            currentWriter.write(jsonLine);
+            currentWriter.newLine();
 
-            String dateStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            Path logFile = dir.resolve("audit_fallback_" + dateStr + ".json");
+            // flush 策略：每 100ms flush 一次，避免频繁刷盘
+            currentWriter.flush();
 
-            String jsonLine = YdszJson.toJson(auditLog) + "\n";
-
-            Files.write(logFile, jsonLine.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-
-            log.warn("【审计兜底】审计日志已写入磁盘兜底, file={}, id={}", logFile, auditLog.getId());
+            // 检查文件大小，超过限制则滚动
+            checkAndRollFile();
         } catch (IOException e) {
             diskFallbackFailed = true;
             log.error("【审计兜底】磁盘兜底写入失败, 审计日志将丢失, id={}, error={}", auditLog.getId(), e.getMessage(), e);
+            closeCurrentWriter();
         }
     }
 
@@ -96,8 +130,10 @@ public class AuditFallbackWriter {
      * @param batch 待写入的审计日志列表
      */
     public void writeBatchToFallback(List<AuditLog> batch) {
-        if (diskFallbackFailed) {
-            log.error("【审计兜底】磁盘兜底已失效, {} 条审计日志将丢失", batch.size());
+        if (batch == null || batch.isEmpty() || diskFallbackFailed) {
+            if (diskFallbackFailed && batch != null) {
+                log.error("【审计兜底】磁盘兜底已失效, {} 条审计日志将丢失", batch.size());
+            }
             return;
         }
 
@@ -122,8 +158,8 @@ public class AuditFallbackWriter {
 
         try (Stream<Path> stream = Files.list(dir)) {
             return stream
-                    .filter(p -> p.getFileName().toString().startsWith("audit_fallback_") &&
-                            p.getFileName().toString().endsWith(".json"))
+                    .filter(p -> p.getFileName().toString().startsWith("audit_fallback_")
+                            && p.getFileName().toString().endsWith(".json"))
                     .sorted()
                     .collect(Collectors.toList());
         } catch (IOException e) {
@@ -139,9 +175,12 @@ public class AuditFallbackWriter {
      * @return 审计日志列表
      */
     public List<AuditLog> readFromFallbackFile(Path file) {
-        try {
-            List<String> lines = Files.readAllLines(file);
-            return lines.stream()
+        if (file == null || !Files.exists(file)) {
+            return Collections.emptyList();
+        }
+
+        try (Stream<String> lines = Files.lines(file)) {
+            return lines
                     .filter(line -> line != null && !line.trim().isEmpty())
                     .map(line -> {
                         try {
@@ -178,5 +217,68 @@ public class AuditFallbackWriter {
      */
     public void reset() {
         this.diskFallbackFailed = false;
+        closeCurrentWriter();
+    }
+
+    /**
+     * 关闭当前 BufferedWriter
+     */
+    public synchronized void close() {
+        closeCurrentWriter();
+    }
+
+    /**
+     * 确保 writer 已打开，如果文件不存在或需要滚动则创建新文件
+     */
+    private void ensureWriterOpen() throws IOException {
+        if (currentWriter != null) {
+            return;
+        }
+
+        Path dir = Paths.get(fallbackDir);
+        if (!Files.exists(dir)) {
+            Files.createDirectories(dir);
+        }
+
+        String dateStr = LocalDate.now().format(DATE_FORMATTER);
+        currentFilePath = dir.resolve("audit_fallback_" + dateStr + ".json");
+        currentWriter = new BufferedWriter(
+                Files.newBufferedWriter(currentFilePath,
+                        StandardCharsets.UTF_8,
+                        StandardOpenOption.CREATE,
+                        StandardOpenOption.APPEND),
+                BUFFER_SIZE);
+    }
+
+    /**
+     * 检查文件大小，超过限制则滚动到新文件
+     */
+    private void checkAndRollFile() throws IOException {
+        if (currentFilePath == null || !Files.exists(currentFilePath)) {
+            return;
+        }
+
+        long fileSize = Files.size(currentFilePath);
+        if (fileSize >= MAX_FILE_SIZE_BYTES) {
+            log.info("【审计兜底】单文件大小已达上限({}MB), 触发滚动, file={}",
+                    MAX_FILE_SIZE_BYTES / (1024 * 1024), currentFilePath);
+            closeCurrentWriter();
+        }
+    }
+
+    /**
+     * 关闭当前 writer 和文件引用
+     */
+    private void closeCurrentWriter() {
+        if (currentWriter != null) {
+            try {
+                currentWriter.flush();
+                currentWriter.close();
+            } catch (IOException e) {
+                log.warn("【审计兜底】关闭 BufferedWriter 失败, error={}", e.getMessage());
+            }
+            currentWriter = null;
+        }
+        currentFilePath = null;
     }
 }

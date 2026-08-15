@@ -98,29 +98,70 @@ public class SafeConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(SafeConfiguration.class);
 
+    private final SafeXssProperties safeXssProperties;
+    private final SqlInjectionProperties sqlInjectionProperties;
+    private final CsrfProperties csrfProperties;
+    private final SecurityHeaderProperties securityHeaderProperties;
+    private final IpAccessProperties ipAccessProperties;
+    private final ApiSignatureProperties apiSignatureProperties;
+
+    /**
+     * 构造方法，注入各子模块配置属性用于启动日志输出
+     */
+    public SafeConfiguration(SafeXssProperties safeXssProperties,
+                              SqlInjectionProperties sqlInjectionProperties,
+                              CsrfProperties csrfProperties,
+                              SecurityHeaderProperties securityHeaderProperties,
+                              IpAccessProperties ipAccessProperties,
+                              ApiSignatureProperties apiSignatureProperties) {
+        this.safeXssProperties = safeXssProperties;
+        this.sqlInjectionProperties = sqlInjectionProperties;
+        this.csrfProperties = csrfProperties;
+        this.securityHeaderProperties = securityHeaderProperties;
+        this.ipAccessProperties = ipAccessProperties;
+        this.apiSignatureProperties = apiSignatureProperties;
+    }
+
     /**
      * 安全模块启动摘要日志
      *
-     * <p>启动时输出安全能力清单。各能力是否实际注册由对应的
-     * {@code @ConditionalOnProperty} 决定，此处仅列出模块支持的全部能力。
+     * <p>启动时输出当前生效的安全配置实际值，便于运维人员快速确认各能力状态。
      */
     @PostConstruct
     public void logStartupSummary() {
-        log.info("==================== [Safe Module] Security Capabilities Summary ====================");
-        log.info("  XSS Filter:         OWASP Sanitizer + configurable policies (STRICT/STANDARD/RELAXED)");
-        log.info("  SQL Injection:      Regex-based detection + runtime hot-reload");
-        log.info("  CSRF:               Synchronizer Token / Double Submit Cookie (dual mode)");
-        log.info("  Security Headers:   CSP / HSTS / X-Frame-Options / X-Content-Type-Options");
-        log.info("  Rate Limit:         Redis sliding window + @RateLimit AOP + local fallback");
-        log.info("  IP Access Control:  CIDR blacklist/whitelist + auto-block");
-        log.info("  API Signature:       timestamp + nonce + HMAC-SHA256");
-        log.info("  Auto Block:         Sliding window event aggregation + auto IP ban");
-        log.info("  Sensitive Data:     18 types + Record support + role-based control");
-        log.info("  Captcha:            Image + Arithmetic + Slider");
-        log.info("  Crypto:             AES-256-GCM + Nonce cache");
-        log.info("  Metrics:            Micrometer Counter/Timer (optional)");
-        log.info("  Audit Logger:       Structured JSON + traceId");
-        log.info("====================================================================================");
+        log.info("==================== [Safe Module] Effective Config Summary ====================");
+        log.info("  XSS:            mode={}, enabled={}, strictLevel={}",
+                safeXssProperties.getMode(), safeXssProperties.isEnabled(), safeXssProperties.getStrictLevel());
+        log.info("  SQL Injection:  enabled={}, blockOnDetect={}",
+                sqlInjectionProperties.isEnabled(), sqlInjectionProperties.isBlockOnDetect());
+        log.info("  CSRF:           mode={}, enabled={}, checkOrigin={}",
+                csrfProperties.getMode(), csrfProperties.isEnabled(), csrfProperties.isCheckOrigin());
+        log.info("  Security Heads: enabled={}", securityHeaderProperties.isEnabled());
+        log.info("  Rate Limit:     see RateLimitAutoConfiguration for details");
+        log.info("  IP Access:      enabled={}, mode={}", ipAccessProperties.isEnabled(), ipAccessProperties.getMode());
+        log.info("  API Signature:  enabled={}", apiSignatureProperties.isEnabled());
+        log.info("==============================================================================");
+    }
+
+    /**
+     * 注册统一请求体缓存过滤器
+     *
+     * <p>在安全过滤器链最前端将请求体缓存到内存，使下游 XSS / SQL 注入 / API 签名等
+     * 过滤器可以直接复用已缓存的请求体，消除各自独立读取导致的重复 I/O 与内存拷贝。
+     *
+     * <p>优先级为 {@link Ordered#HIGHEST_PRECEDENCE}，确保在其他安全过滤器之前执行。
+     *
+     * @return 统一请求体缓存过滤器注册 bean
+     */
+    @Bean
+    @ConditionalOnMissingBean(name = "safeRequestBodyCacheFilter")
+    public FilterRegistrationBean<SafeRequestBodyCacheFilter> safeRequestBodyCacheFilterRegistration() {
+        FilterRegistrationBean<SafeRequestBodyCacheFilter> registrationBean =
+                new FilterRegistrationBean<>(new SafeRequestBodyCacheFilter());
+        registrationBean.setName("safeRequestBodyCacheFilter");
+        registrationBean.addUrlPatterns("/*");
+        registrationBean.setOrder(Ordered.HIGHEST_PRECEDENCE);
+        return registrationBean;
     }
 
     /**
