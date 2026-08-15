@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import com.njydsz.common.core.constant.HeaderConstants;
+import com.njydsz.common.core.trace.TraceIdGenerator;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.common.util.string.StringUtils;
 
@@ -80,7 +81,10 @@ public class MessageTraceFilter implements jakarta.servlet.Filter {
         // 优先尝试 W3C traceparent 头
         String traceparent = request.getHeader(HEADER_TRACEPARENT);
         if (StringUtils.isNotEmpty(traceparent)) {
-            if (TracerUtils.injectTraceparent(traceparent)) {
+            TraceIdGenerator.ParsedTraceparent parsed = TraceIdGenerator.parseTraceparent(traceparent);
+            if (parsed != null) {
+                TracerUtils.setTraceId(parsed.traceId());
+                TracerUtils.setSpanId(parsed.spanId());
                 log.debug("[MessageTrace] 从 W3C traceparent 注入 traceId: {}", TracerUtils.getTraceId());
                 return;
             }
