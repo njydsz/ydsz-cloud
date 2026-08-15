@@ -35,6 +35,7 @@ import com.njydsz.common.redis.service.ops.RedisPubSubOps;
 import com.njydsz.common.redis.service.ops.RedisStreamOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.redis.service.ops.RedisTransactionOps;
+import com.njydsz.common.redis.tenant.TenantRedisKeyPrefixer;
 
 /**
  * Redis 配置类
@@ -283,9 +284,13 @@ public class RedisConfiguration {
      * <p>仅当容器已存在 {@code RedisTemplate} 时装配；依赖注入的 {@code RedisMetricsCollector} 通过
      * {@code ObjectProvider#getIfAvailable()} 惰性获取，未引入监控模块时传 null，对应操作降级为不采集指标。
      *
+     * <p>租户 Key 前缀器（{@link TenantRedisKeyPrefixer}）同样为可选依赖，
+     * 未启用多租户（{@code ydsz.tenant.enabled=false}）时传 null，key 不添加租户前缀。
+     *
      * @param redisTemplate  基础模板，由容器注入，不会为 null
      * @param redisProperties 全局配置（含命令超时等），不会为 null
      * @param metricsProvider 指标采集器供应方，可能返回 null（缺失监控依赖时）
+     * @param tenantPrefixerProvider 租户 Key 前缀器提供者，可能返回 null（未启用多租户时）
      * @return String 操作封装实例
      */
     @Bean
@@ -293,8 +298,9 @@ public class RedisConfiguration {
     @ConditionalOnBean(RedisTemplate.class)
     public RedisStringOps redisStringOps(RedisTemplate<String, Object> redisTemplate,
                                           RedisProperties redisProperties,
-                                          ObjectProvider<RedisMetricsCollector> metricsProvider) {
-        return new RedisStringOps(redisTemplate, redisProperties, metricsProvider.getIfAvailable());
+                                          ObjectProvider<RedisMetricsCollector> metricsProvider,
+                                          ObjectProvider<TenantRedisKeyPrefixer> tenantPrefixerProvider) {
+        return new RedisStringOps(redisTemplate, redisProperties, metricsProvider, tenantPrefixerProvider);
     }
 
     /**

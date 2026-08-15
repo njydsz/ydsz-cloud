@@ -18,8 +18,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import jakarta.annotation.PostConstruct;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.data.redis.RedisConnectionFailureException;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisCallback;
@@ -31,6 +31,7 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.config.RedisProperties;
 import com.njydsz.common.redis.enums.RedisKeysEnum;
 import com.njydsz.common.redis.metrics.RedisMetricsCollector;
+import com.njydsz.common.redis.tenant.TenantRedisKeyPrefixer;
 import com.njydsz.common.util.collection.CollectionUtils;
 
 /**
@@ -52,7 +53,6 @@ import com.njydsz.common.util.collection.CollectionUtils;
  *
  */
 @Slf4j
-@RequiredArgsConstructor
 public class RedisStringOps {
 
     private static final String UNLOCK_LUA =
@@ -76,11 +76,35 @@ public class RedisStringOps {
     private final RedisTemplate<String, Object> redisTemplate;
     private final RedisProperties redisProperties;
     private final RedisMetricsCollector metricsCollector;
+    private final TenantRedisKeyPrefixer tenantKeyPrefixer;
+
+    /**
+     * 构造 Redis String 操作组件。
+     *
+     * @param redisTemplate      Redis 模板（必须）
+     * @param redisProperties    Redis 配置属性（必须）
+     * @param metricsProvider    指标采集器提供者（可选，未引入监控时传 null）
+     * @param tenantPrefixerProvider 租户 Key 前缀器提供者（可选，未启用多租户时传 null）
+     */
+    public RedisStringOps(RedisTemplate<String, Object> redisTemplate,
+                          RedisProperties redisProperties,
+                          ObjectProvider<RedisMetricsCollector> metricsProvider,
+                          ObjectProvider<TenantRedisKeyPrefixer> tenantPrefixerProvider) {
+        this.redisTemplate = Objects.requireNonNull(redisTemplate, "RedisTemplate 必须不为 null");
+        this.redisProperties = Objects.requireNonNull(redisProperties, "RedisProperties 必须不为 null");
+        this.metricsCollector = metricsProvider.getIfAvailable();
+        this.tenantKeyPrefixer = tenantPrefixerProvider.getIfAvailable();
+    }
 
     // ============================ 通用操作 =============================
 
     /**
-     * 格式化 Key，添加统一前缀
+     * 格式化 Key，添加统一前缀（租户前缀 + 应用前缀）。
+     *
+     * <p>前缀顺序：{@code {tenantId}:{appPrefix}:{originalKey}}。
+     * 租户前缀由 {@link TenantRedisKeyPrefixer} 注入（多租户场景），
+     * 应用前缀由 {@link RedisProperties#getKeyPrefix()} 提供（多应用共享 Redis 场景）。
+     * 两者均为可选，未配置时跳过对应前缀。
      *
      * @param key 原始键
      * @return 带前缀的键；未配置前缀或键为 null 时返回原值
@@ -89,11 +113,17 @@ public class RedisStringOps {
         if (key == null) {
             return null;
         }
-        String prefix = redisProperties != null ? redisProperties.getKeyPrefix() : null;
-        if (prefix == null || prefix.isEmpty()) {
-            return key;
+        String result = key;
+        // 第一层：租户前缀（多租户隔离）
+        if (tenantKeyPrefixer != null) {
+            result = tenantKeyPrefixer.prefixKey(result);
         }
-        return prefix + ":" + key;
+        // 第二层：应用前缀（多应用共享 Redis）
+        String prefix = redisProperties != null ? redisProperties.getKeyPrefix() : null;
+        if (prefix != null && !prefix.isEmpty()) {
+            result = prefix + ":" + result;
+        }
+        return result;
     }
 
     /**
