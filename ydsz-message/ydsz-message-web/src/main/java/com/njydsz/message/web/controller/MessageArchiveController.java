@@ -13,6 +13,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.converter.MessageConverter;
@@ -113,10 +114,6 @@ public class MessageArchiveController {
             @RequestParam(defaultValue = "20") int pageSize) {
         Page<MsgLog> result = messageArchiveService.search(keyword, channel, status, bizType,
                 startTime, endTime, TenantContextHolder.getTenantId(), pageNum, pageSize);
-        return PageResponse.success(
-                result.getTotal(),
-                result.getCurrent(),
-                result.getSize(),
-                MessageConverter.INSTANT.logListToVO(result.getRecords()));
+        return PageResponses.success(result, MessageConverter.INSTANT::entityToVO);
     }
 }

@@ -1,8 +1,6 @@
 package com.njydsz.system.server.service.impl;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.cache.annotation.CacheEvict;
@@ -14,7 +12,6 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.cache.constant.CacheConstants;
-import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.support.PageResponses;

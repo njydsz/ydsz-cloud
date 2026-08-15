@@ -100,10 +100,10 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
         this.properties = properties;
         this.ignoreTables = properties.getNormalizedIgnoreTables();
         this.metrics = metrics;
-        this.sqlCache = properties.isSqlCacheEnabled()
+        this.sqlCache = properties.getSqlCache().isEnabled()
                 ? YdszCache.<String, String>newBuilder()
-                        .maximumSize(2000)
-                        .expireAfterAccess(10, TimeUnit.MINUTES)
+                        .maximumSize(properties.getSqlCache().getMaxSize())
+                        .expireAfterAccess(properties.getSqlCache().getExpireMinutes(), TimeUnit.MINUTES)
                         .build()
                 : null;
     }

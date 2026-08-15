@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.infra.mapper.FileNodeMapper;
@@ -55,8 +56,7 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
         Page<FileNode> pageParam = new Page<>(page, pageSize);
         IPage<FileNode> result = fileNodeMapper.selectPageByParentId(
                 pageParam, parentId, nodeType, sortBy, sortDir);
-        return PageResponse.success(result.getTotal(), (long) result.getCurrent(), (long) result.getSize(),
-                result.getRecords());
+        return PageResponses.success(result);
     }
 
     @Override

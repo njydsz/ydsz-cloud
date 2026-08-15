@@ -17,12 +17,11 @@ import org.springframework.beans.factory.annotation.Value;
 import com.njydsz.common.base.config.DocProperties;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.type.JsonType;
-import com.njydsz.common.util.yaml.YamlUtils;
 
 /**
  * 文档导出器抽象基类
  *
- * <p>封装 HTML / Markdown / YAML / JSON 四种导出格式的公共逻辑，
+ * <p>封装 HTML / Markdown / JSON 三种导出格式的公共逻辑，
  * 子类只需覆盖 {@link #generateHtmlContent(ApiDocInfo, String)} 和
  * {@link #generateMarkdownContent(String)} 方法提供差异化内容生成。
  *
@@ -42,7 +41,7 @@ public abstract class AbstractDocExporter implements DocExporter {
     /**
      * 支持的导出格式列表
      */
-    private static final List<String> SUPPORTED_FORMATS = List.of("html", "markdown", "yaml", "json");
+    private static final List<String> SUPPORTED_FORMATS = List.of("html", "markdown", "json");
 
     /**
      * 应用版本号
@@ -107,16 +106,6 @@ public abstract class AbstractDocExporter implements DocExporter {
     }
 
     @Override
-    public File exportToYaml(String apiDocs, String outputDir) throws IOException {
-        ensureOutputDirectory(outputDir);
-        File outputFile = new File(outputDir, "api-documentation.yaml");
-        String yamlContent = YamlUtils.jsonToYaml(apiDocs);
-        Files.writeString(outputFile.toPath(), yamlContent);
-        logger.info("YAML 文档已导出: {}", outputFile.getAbsolutePath());
-        return outputFile;
-    }
-
-    @Override
     public File exportToJson(String apiDocs, String outputDir) throws IOException {
         ensureOutputDirectory(outputDir);
         File outputFile = new File(outputDir, "api-documentation.json");
@@ -134,7 +123,6 @@ public abstract class AbstractDocExporter implements DocExporter {
         return switch (fmt) {
             case "html" -> exportToHtml(apiDocs, outputDir);
             case "markdown", "md" -> exportToMarkdown(apiDocs, outputDir);
-            case "yaml", "yml" -> exportToYaml(apiDocs, outputDir);
             case "json" -> exportToJson(apiDocs, outputDir);
             default -> throw new IllegalArgumentException("不支持的导出格式: " + fmt);
         };
@@ -146,7 +134,7 @@ public abstract class AbstractDocExporter implements DocExporter {
             return false;
         }
         return switch (format.toLowerCase()) {
-            case "html", "markdown", "md", "yaml", "yml", "json" -> true;
+            case "html", "markdown", "md", "json" -> true;
             default -> false;
         };
     }

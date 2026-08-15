@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.message.domain.dto.config.UnsubscribeQueryDTO;
@@ -121,7 +122,7 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
                 .eq(StringUtils.hasText(query.getTenantId()), MsgSubscription::getTenantId, query.getTenantId())
                 .orderByDesc(MsgSubscription::getUnsubscribedAt);
         Page<MsgSubscription> result = msgSubscriptionMapper.selectPage(page, w);
-        return PageResponse.success(result.getTotal(), result.getCurrent(), result.getSize(), result.getRecords());
+        return PageResponses.success(result);
     }
 
     /**

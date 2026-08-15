@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.nextwiki.domain.entity.SearchIndex;
 import com.njydsz.nextwiki.domain.repository.SearchIndexRepository;
 import com.njydsz.nextwiki.infra.mapper.SearchIndexMapper;
@@ -94,7 +95,6 @@ public class SearchIndexRepositoryImpl implements SearchIndexRepository {
         Page<SearchIndex> pageParam = new Page<>(page, pageSize);
         IPage<SearchIndex> result = searchIndexMapper.searchPage(
                 pageParam, keyword, createdBy, scope);
-        return PageResponse.success(result.getTotal(), (long) result.getCurrent(), (long) result.getSize(),
-                result.getRecords());
+        return PageResponses.success(result);
     }
 }

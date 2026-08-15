@@ -18,6 +18,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.message.domain.converter.MessageConverter;
@@ -157,11 +158,7 @@ public class TemplateController {
     @GetMapping("/page")
     public PageResponse<List<MsgTemplateVO>> page(TemplateQueryDTO query) {
         Page<MsgTemplate> page = templateService.page(query);
-        return PageResponse.success(
-                page.getTotal(),
-                page.getCurrent(),
-                page.getSize(),
-                MessageConverter.INSTANT.templateListToVO(page.getRecords()));
+        return PageResponses.success(page, MessageConverter.INSTANT::entityToVO);
     }
 
     /**

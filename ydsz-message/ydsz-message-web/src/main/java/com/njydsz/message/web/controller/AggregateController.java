@@ -14,6 +14,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.domain.query.PageQuery;
+import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.message.domain.converter.MessageConverter;
@@ -92,11 +93,7 @@ public class AggregateController {
     @GetMapping("/page")
     public PageResponse<List<MsgAggregateVO>> page(PageQuery query) {
         Page<MsgAggregate> page = aggregateService.page(query);
-        return PageResponse.success(
-                page.getTotal(),
-                page.getCurrent(),
-                page.getSize(),
-                MessageConverter.INSTANT.aggregateListToVO(page.getRecords()));
+        return PageResponses.success(page, MessageConverter.INSTANT::entityToVO);
     }
 
     /**

@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>{@link #tryAcquireLock}：抢占分布式锁（委托 {@link DistributedLocker#tryLock}）</li>
  *   <li>{@link #releaseLock}：安全释放锁（委托 {@link DistributedLocker#unlock}，仅持有者可释放）</li>
  *   <li>{@link #isLocked}：检查锁是否被持有（委托 {@link DistributedLocker#isLocked}）</li>
- *   <li>{@link #getLockHolder}：获取当前锁持有者标识（接口能力不提供，保留签名兼容）</li>
+ * <li>{@link #getLockHolder}：已废弃（接口能力不提供），使用 {@link #isLocked(String, Integer)} 替代</li>
  * </ul>
  *
  * <h3>改造动机</h3>
@@ -111,17 +111,24 @@ public class JobLockManager {
     /**
      * 获取当前锁持有者标识。
      *
-     * <p><b>注意：</b>改造为 {@link DistributedLocker} 后，锁内部以 Redis Hash 结构
-     * 存储可重入计数（Hash Field 为 clientId），{@link DistributedLocker} 接口
-     * 未暴露获取 holder 的能力。本方法保留签名以保持调用方编译兼容，
-     * 但始终返回 {@code null}；建议改用 {@link #isLocked(String, Integer)} 判断锁状态。
+     * <p><b>已废弃：</b>委托至 {@link DistributedLocker} 后，锁内部以 Redis Hash 结构
+     * 存储可重入计数（Hash Field 为 clientId），{@link DistributedLocker} 接口未暴露
+     * 获取 holder 的能力。本方法始终返回 {@code null}，仅保留签名避免破坏性变更。
+     *
+     * <p><b>替代方案：</b>使用 {@link #isLocked(String, Integer)} 判断锁状态；
+     * 如需释放其他节点的锁，参考 {@code FailoverScanner.releaseLockSafe()} 通过
+     * {@code JobLog#getLockHolder()} 获取锁持有者（dispatch 时写入 DB）后直接通过
+     * Lua 脚本安全释放。
      *
      * @param jobKey     任务 KEY
      * @param shardIndex 分片索引
-     * @return 始终返回 {@code null}（接口能力不提供）
+     * @return 始终返回 {@code null}
+     *
+     * @deprecated 自 v1.1.0 起废弃，使用 {@link #isLocked(String, Integer)} 替代
      */
+    @Deprecated
     public String getLockHolder(String jobKey, Integer shardIndex) {
-        log.debug("[JobLock] getLockHolder 已委托至 DistributedLocker，接口不提供此能力，返回 null | jobKey={} shardIndex={}",
+        log.debug("[JobLock] getLockHolder 已废弃，请使用 isLocked() 替代 | jobKey={} shardIndex={}",
                 jobKey, shardIndex);
         return null;
     }

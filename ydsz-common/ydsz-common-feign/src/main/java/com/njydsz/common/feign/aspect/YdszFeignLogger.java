@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import feign.Logger;
@@ -33,7 +34,7 @@ import feign.Response;
  */
 public class YdszFeignLogger extends Logger {
 
-    private static final org.slf4j.Logger LOG = LoggerFactory.getLogger("com.njydsz.feign"); // FQN-OK: name conflict with feign.Logger
+    private static final Logger LOG = LoggerFactory.getLogger("com.njydsz.feign");
 
     /** Feign 日志级别 */
     private volatile Logger.Level logLevel = Logger.Level.BASIC;

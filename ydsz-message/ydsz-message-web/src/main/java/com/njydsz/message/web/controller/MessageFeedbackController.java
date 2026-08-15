@@ -17,6 +17,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.message.domain.converter.MessageConverter;
@@ -135,11 +136,7 @@ public class MessageFeedbackController {
                                                       @RequestParam(required = false) String channel,
                                                       @RequestParam(required = false) String userId) {
         Page<MsgFeedback> result = messageFeedbackService.pageFeedback(page, size, channel, userId);
-        return PageResponse.success(
-                result.getTotal(),
-                result.getCurrent(),
-                result.getSize(),
-                MessageConverter.INSTANT.feedbackListToVO(result.getRecords()));
+        return PageResponses.success(result, MessageConverter.INSTANT::entityToVO);
     }
 
     /**

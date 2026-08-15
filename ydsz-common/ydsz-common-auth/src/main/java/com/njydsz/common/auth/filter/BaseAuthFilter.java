@@ -15,10 +15,8 @@ import com.njydsz.common.auth.config.AuthFilterConfiguration;
 import com.njydsz.common.auth.config.AuthFilterIgnoreProperties;
 import com.njydsz.common.auth.constant.FilterIgnoreConstants;
 import com.njydsz.common.auth.security.CsrfTokenValidator;
-import com.njydsz.common.auth.security.RateLimiter;
 import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.safe.util.ClientIpResolver;
 import com.njydsz.common.util.auth.AuthInfo;
 import com.njydsz.common.util.http.UrlPathUtils;
 
@@ -30,7 +28,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>提取 Web 端和 App 端认证过滤器的公共逻辑，包括：
  * <ul>
  *   <li>请求路径排除判断（白名单路径直接放行）</li>
- *   <li>限流检查（通过 {@link RateLimiter} 防止暴力请求）</li>
  *   <li>CSRF Token 校验（通过 {@link CsrfTokenValidator}）</li>
  *   <li>认证上下文 {@link RequestContext} 初始化和清理</li>
  * </ul>
@@ -49,18 +46,16 @@ public abstract class BaseAuthFilter extends OncePerRequestFilter {
 
     protected final String applicationName;
     protected final AuthFilterConfiguration authFilterConfiguration;
-    protected final RateLimiter rateLimiter;
     protected final CsrfTokenValidator csrfTokenValidator;
 
     public BaseAuthFilter(String applicationName, AuthFilterConfiguration authFilterConfiguration) {
-        this(applicationName, authFilterConfiguration, null, null);
+        this(applicationName, authFilterConfiguration, null);
     }
 
     public BaseAuthFilter(String applicationName, AuthFilterConfiguration authFilterConfiguration,
-                          RateLimiter rateLimiter, CsrfTokenValidator csrfTokenValidator) {
+                          CsrfTokenValidator csrfTokenValidator) {
         this.applicationName = applicationName;
         this.authFilterConfiguration = authFilterConfiguration;
-        this.rateLimiter = rateLimiter;
         this.csrfTokenValidator = csrfTokenValidator;
     }
 
@@ -79,15 +74,6 @@ public abstract class BaseAuthFilter extends OncePerRequestFilter {
             log.warn("{}[CSRF 校验失败] 请求路径: {}", getLogPrefix(), servletPath);
             response.sendError(HttpServletResponse.SC_FORBIDDEN, "CSRF Token validation failed");
             return;
-        }
-        // 限流检查（如果启用）
-        if (rateLimiter != null) {
-            String clientIp = ClientIpResolver.getClientIp(request);
-            if (!rateLimiter.tryAcquire(clientIp)) {
-                log.warn("{}[限流] IP: {}, 请求路径: {}", getLogPrefix(), clientIp, servletPath);
-                response.sendError(429, "Rate limit exceeded");
-                return;
-            }
         }
         long startTime = System.currentTimeMillis();
         AuthInfo authInfo = resolveAuthInfo(request, response);

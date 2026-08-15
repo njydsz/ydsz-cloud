@@ -122,11 +122,7 @@ public class JobGroupController {
         // 3. 执行分页查询
         Page<Job> result = jobMapper.selectPage(pageObj, wrapper);
         // 4. 转换为 VO（Entity → VO 含审计字段脱敏等）
-        return PageResponse.success(
-                result.getTotal(),
-                result.getCurrent(),
-                result.getSize(),
-                CronjobConverter.INSTANT.jobListToVO(result.getRecords()));
+        return PageResponses.success(result, CronjobConverter.INSTANT::entityToVO);
     }
 
     /**

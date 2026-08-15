@@ -10,6 +10,7 @@ import com.njydsz.common.json.annotation.JsonPropertyOrder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import java.io.Serializable;
@@ -350,7 +351,7 @@ public class BaseResponse<T> implements IResponse<T>, Serializable {
     public static boolean setResolverIfAbsent(MessageResolver resolver) {
         boolean success = RESOLVER.compareAndSet(null, resolver);
         if (!success && resolver != null) {
-            org.slf4j.LoggerFactory.getLogger(BaseResponse.class)
+            LoggerFactory.getLogger(BaseResponse.class)
                     .debug("MessageResolver already registered, ignoring subsequent setResolverIfAbsent call");
         }
         return success;

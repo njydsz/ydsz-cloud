@@ -9,6 +9,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import com.njydsz.common.exception.code.SecurityExceptionCode;
+import com.njydsz.common.exception.custom.BusinessException;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -301,16 +304,25 @@ public final class HttpConnectionValidator {
 
     /**
      * SSRF 访问阻断异常。
+     *
+     * <p>当出站 HTTP 请求被 SSRF 防护机制拦截时抛出，携带安全异常码
+     * {@link SecurityExceptionCode#SEC_ACCESS_DENIED}（C01051 / 403），
+     * 由全局异常处理器统一转换为标准错误响应。</p>
+     *
+     * @author ydsz-team
+     * @since 1.0.0
      */
-    public static class SsrfBlockedException extends RuntimeException {
+    public static class SsrfBlockedException extends BusinessException {
         private static final long serialVersionUID = 1L;
 
         public SsrfBlockedException(String message) {
-            super(message);
+            super(SecurityExceptionCode.SEC_ACCESS_DENIED);
+            setMessage(message);
         }
 
         public SsrfBlockedException(String message, Throwable cause) {
-            super(message, cause);
+            super(SecurityExceptionCode.SEC_ACCESS_DENIED, cause);
+            setMessage(message);
         }
     }
 }

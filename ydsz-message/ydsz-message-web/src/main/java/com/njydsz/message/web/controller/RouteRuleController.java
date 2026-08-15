@@ -19,6 +19,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.domain.query.PageQuery;
+import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.message.domain.converter.MessageConverter;
@@ -155,11 +156,7 @@ public class RouteRuleController {
     @GetMapping("/page")
     public PageResponse<List<MsgRouteRuleVO>> page(PageQuery query) {
         Page<MsgRouteRule> page = routeRuleService.page(query);
-        return PageResponse.success(
-                page.getTotal(),
-                page.getCurrent(),
-                page.getSize(),
-                MessageConverter.INSTANT.routeRuleListToVO(page.getRecords()));
+        return PageResponses.success(page, MessageConverter.INSTANT::entityToVO);
     }
 
     /**

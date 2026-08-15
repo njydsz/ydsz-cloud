@@ -1,32 +1,30 @@
 package com.njydsz.system.server.service.impl;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.njydsz.common.redis.service.ops.RedisStringOps;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.auth.annotation.DataScope;
+import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.jdbc.support.PageResponses;
+import com.njydsz.system.domain.converter.SystemConverter;
 import com.njydsz.system.domain.dto.VariableDTO;
 import com.njydsz.system.domain.entity.Variable;
 import com.njydsz.system.domain.vo.VariableVO;
 import com.njydsz.system.infra.mapper.VariableMapper;
-import com.njydsz.system.server.cache.SystemCacheKeys;
-import com.njydsz.system.server.config.SystemProperties;
 import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.service.VariableService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.njydsz.common.auth.annotation.DataScope;
-import com.njydsz.system.domain.converter.SystemConverter;
 
 /**
  * 系统变量 Service 实现
@@ -40,18 +38,18 @@ import com.njydsz.system.domain.converter.SystemConverter;
  * <ul>
  *   <li><b>CRUD</b>：{@link #page} / {@link #getById} / {@link #save} / {@link #updateById} /
  *       {@link #removeById}，全部走 {@code @Transactional} 事务保证</li>
- *   <li><b>按 key 查询值</b>：{@link #getVariableValue}（走 Redis 缓存 + 空值哨兵防穿透）</li>
+ *   <li><b>按 key 查询值</b>：{@link #getVariableValue}（走 ydsz-common-cache 本地缓存 + Spring Cache 注解）</li>
  *   <li><b>分页 / 列表查询</b>：{@link #page} / {@link #list}，支持行级数据权限过滤
  *       （{@code @DataScope}）</li>
- *   <li><b>缓存失效</b>：写操作触发 {@link #evictCache} 主动失效</li>
+ *   <li><b>缓存失效</b>：写操作通过 {@code @CacheEvict(allEntries=true)} 主动清空</li>
  * </ul>
  *
  * <p><b>缓存设计：</b>
  * <ul>
- *   <li>缓存键：{@code system:variable:value:{variableKey}}</li>
- *   <li>TTL 取自配置 {@code ydsz.system.variable.cache-ttl-minutes}，默认 5 分钟</li>
- *   <li>空值哨兵（{@link #NULL_SENTINEL}）防缓存穿透，1 分钟 TTL</li>
- *   <li>写操作触发 {@link #evictCache} 主动失效</li>
+ *   <li>缓存名称：{@link CacheConstants#SYSTEM_VARIABLE_CACHE}（ydsz-common-cache 本地缓存）</li>
+ *   <li>缓存键：{@code {tenantId}:{variableKey}}</li>
+ *   <li>TTL 与容量通过 {@code ydsz.cache.caches.system:variable} YAML 配置</li>
+ *   <li>写操作触发 {@code @CacheEvict(allEntries=true)} 主动失效</li>
  * </ul>
  *
  * <p><b>事务边界：</b>
@@ -105,19 +103,8 @@ import com.njydsz.system.domain.converter.SystemConverter;
 @RequiredArgsConstructor
 public class VariableServiceImpl implements VariableService {
 
-    /** 变量值缓存键前缀：{@code system:variable:value:{variableKey}} */
-    private static final String CACHE_KEY_PREFIX = "system:variable:value:";
-    /** 空值哨兵字符串，用于防缓存穿透 */
-    private static final String NULL_SENTINEL = "__NULL__";
-    /** 空值哨兵 TTL（1 分钟） */
-    private static final Duration NULL_SENTINEL_TTL = Duration.ofMinutes(1);
-
     /** 变量 Mapper（继承 {@code ydsz_variable} 表 CRUD） */
     private final VariableMapper mapper;
-    /** Redis String 操作组件 */
-    private final RedisStringOps stringOps;
-    /** 系统配置属性（含变量缓存 TTL 配置） */
-    private final SystemProperties properties;
     /** 系统监控指标采集器 */
     private final SystemMetrics metrics;
 
@@ -141,41 +128,26 @@ public class VariableServiceImpl implements VariableService {
      *
      * <p>执行链路：
      * <ol>
-     *   <li>查 Redis 缓存（{@code system:variable:value:{variableKey}}），命中直接返回</li>
-     *   <li>缓存未命中查 DB（仅 {@code status=ENABLED}），存在则写缓存（TTL 默认 5min），
-     *       不存在写空值哨兵（TTL 1min）</li>
-     *   <li>记录缓存命中 / 未命中指标、查询耗时指标</li>
+     *   <li>通过 Spring Cache {@code @Cacheable} 查本地缓存（{@link CacheConstants#SYSTEM_VARIABLE_CACHE}），命中直接返回</li>
+     *   <li>缓存未命中查 DB（方法体内仅执行此逻辑）</li>
+     *   <li>记录查询耗时指标（缓存命中时方法不执行，由 Micrometer 记录）</li>
      * </ol>
      *
      * <p>本方法是高频读入口，跨服务 Feign 调用建议走本方法，避免直连 DB。
      *
      * @param variableKey 变量键
-     * @return 变量值字符串，不存在时返回 null（受空值哨兵保护，短 TTL 内不会反复穿透到 DB）
+     * @return 变量值字符串，不存在时返回 null（SpringYdszCache 自动缓存 null 值防穿透）
      */
     @Override
+    @Cacheable(value = CacheConstants.SYSTEM_VARIABLE_CACHE, key = "@cacheKeyBuilder.variable(#p0)")
     public String getVariableValue(String variableKey) {
         long start = System.nanoTime();
         try {
-            String cacheKey = SystemCacheKeys.of(CACHE_KEY_PREFIX, variableKey);
-            String cached = stringOps.get(cacheKey, String.class);
-            if (cached != null) {
-                if (NULL_SENTINEL.equals(cached)) {
-                    metrics.recordVariableCacheHit();
-                    return null;
-                }
-                metrics.recordVariableCacheHit();
-                return cached;
-            }
             metrics.recordVariableCacheMiss();
             QueryWrapper<Variable> wrapper = new QueryWrapper<>();
             wrapper.eq("variable_key", variableKey).eq("status", "ENABLED");
             Variable entity = mapper.selectOne(wrapper);
-            if (entity != null) {
-                stringOps.set(cacheKey, entity.getVariableValue(), getCacheTtl());
-                return entity.getVariableValue();
-            }
-            stringOps.set(cacheKey, NULL_SENTINEL, NULL_SENTINEL_TTL);
-            return null;
+            return entity != null ? entity.getVariableValue() : null;
         } finally {
             metrics.recordVariableRead(System.nanoTime() - start);
         }
@@ -243,11 +215,11 @@ public class VariableServiceImpl implements VariableService {
      * @return 新创建的变量 ID
      */
     @Override
+    @CacheEvict(value = CacheConstants.SYSTEM_VARIABLE_CACHE, allEntries = true)
     @Transactional(rollbackFor = Exception.class)
     public String save(VariableDTO dto) {
         Variable entity = toEntity(dto);
         mapper.insert(entity);
-        evictCache(entity.getVariableKey());
         return entity.getId();
     }
 
@@ -268,14 +240,11 @@ public class VariableServiceImpl implements VariableService {
      * @return true=更新成功，false=记录不存在
      */
     @Override
+    @CacheEvict(value = CacheConstants.SYSTEM_VARIABLE_CACHE, allEntries = true)
     @Transactional(rollbackFor = Exception.class)
     public boolean updateById(VariableDTO dto) {
         Variable entity = toEntity(dto);
-        boolean result = mapper.updateById(entity) > 0;
-        if (result && entity.getVariableKey() != null) {
-            evictCache(entity.getVariableKey());
-        }
-        return result;
+        return mapper.updateById(entity) > 0;
     }
 
     /**
@@ -295,38 +264,11 @@ public class VariableServiceImpl implements VariableService {
      * @return true=删除成功，false=记录不存在
      */
     @Override
+    @CacheEvict(value = CacheConstants.SYSTEM_VARIABLE_CACHE, allEntries = true)
     @Transactional(rollbackFor = Exception.class)
     public boolean removeById(String id) {
         Variable entity = mapper.selectById(id);
-        boolean result = mapper.deleteById(id) > 0;
-        if (result && entity != null && entity.getVariableKey() != null) {
-            evictCache(entity.getVariableKey());
-        }
-        return result;
-    }
-
-    /**
-     * 清除指定变量键的缓存（私有）
-     *
-     * @param variableKey 变量键（{@code null} 时跳过）
-     */
-    private void evictCache(String variableKey) {
-        if (variableKey != null) {
-            stringOps.del(SystemCacheKeys.of(CACHE_KEY_PREFIX, variableKey));
-        }
-    }
-
-    /**
-     * 获取变量缓存 TTL（私有）
-     *
-     * <p>从 {@link SystemProperties.Variable#getCacheTtlMinutes()} 读取配置，
-     * 若配置值 <= 0 则降级为默认 5 分钟。
-     *
-     * @return 缓存 TTL Duration
-     */
-    private Duration getCacheTtl() {
-        int minutes = properties.getVariable().getCacheTtlMinutes();
-        return Duration.ofMinutes(minutes > 0 ? minutes : 5);
+        return mapper.deleteById(id) > 0;
     }
 
     /**

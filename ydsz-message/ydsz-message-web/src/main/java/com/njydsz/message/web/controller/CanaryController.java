@@ -18,6 +18,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.domain.query.PageQuery;
+import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.message.domain.converter.MessageConverter;
@@ -133,11 +134,7 @@ public class CanaryController {
     @GetMapping("/page")
     public PageResponse<List<MsgCanaryVO>> page(PageQuery query) {
         Page<MsgCanary> page = canaryService.page(query);
-        return PageResponse.success(
-                page.getTotal(),
-                page.getCurrent(),
-                page.getSize(),
-                MessageConverter.INSTANT.canaryListToVO(page.getRecords()));
+        return PageResponses.success(page, MessageConverter.INSTANT::entityToVO);
     }
 
     /**

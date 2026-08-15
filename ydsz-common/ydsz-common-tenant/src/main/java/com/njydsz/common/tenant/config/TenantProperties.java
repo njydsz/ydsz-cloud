@@ -190,9 +190,9 @@ public class TenantProperties {
     private Map<String, String> datasourceMapping = new HashMap<>();
 
     /**
-     * 是否启用 SQL 改写缓存（默认 false）。
+     * SQL 改写缓存配置。
      *
-     * <p>开启后使用 Caffeine 缓存「原始 SQL + 租户字段签名」→ 改写结果，
+     * <p>开启后使用 ydsz-common-cache 缓存「原始 SQL + 租户字段签名」→ 改写结果，
      * 减少 JSqlParser 重复解析开销。仅在热点 SQL 重复度高时有效，
      * MULTI 模式下因缓存 Key 包含全字段签名，命中率可能较低。
      *
@@ -201,11 +201,27 @@ public class TenantProperties {
      *   tenant:
      *     sql-cache:
      *       enabled: true
+     *       max-size: 2000
+     *       expire-minutes: 10
      * </pre>
      *
      * @since 1.10.0
      */
-    private boolean sqlCacheEnabled = false;
+    private SqlCacheConfig sqlCache = new SqlCacheConfig();
+
+    /** SQL 改写缓存配置（内部类）。 */
+    @Data
+    public static class SqlCacheConfig {
+
+        /** 是否启用 SQL 改写缓存（默认 false）。 */
+        private boolean enabled = false;
+
+        /** 缓存最大容量（默认 2000）。 */
+        private int maxSize = 2000;
+
+        /** 缓存访问后过期时间（分钟，默认 10）。 */
+        private int expireMinutes = 10;
+    }
 
     /**
      * 获取生效的租户字段列表。

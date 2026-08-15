@@ -10,9 +10,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.njydsz.common.redis.service.ops.RedisCollectionOps;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.json.YdszJson;
@@ -68,7 +70,8 @@ public class EmailTrackingService {
                     + "style=\"display:none;border:0;outline:none;\"/>";
 
     private final NotifyProperties properties;
-    private final StringRedisTemplate redisTemplate;
+    private final RedisStringOps redisStringOps;
+    private final RedisCollectionOps redisCollectionOps;
 
     /** 内存降级计数器 */
     private final ConcurrentMap<String, AtomicLong> memoryOpenCount = new ConcurrentHashMap<>();
@@ -77,9 +80,11 @@ public class EmailTrackingService {
     private final ConcurrentMap<String, AtomicLong> memoryClickCount = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, String> memoryDeliveryStatus = new ConcurrentHashMap<>();
 
-    public EmailTrackingService(NotifyProperties properties, StringRedisTemplate redisTemplate) {
+    public EmailTrackingService(NotifyProperties properties, RedisStringOps redisStringOps,
+                                RedisCollectionOps redisCollectionOps) {
         this.properties = properties;
-        this.redisTemplate = redisTemplate;
+        this.redisStringOps = redisStringOps;
+        this.redisCollectionOps = redisCollectionOps;
     }
 
     /**
@@ -128,15 +133,15 @@ public class EmailTrackingService {
     public void recordOpen(String trackingId, String userAgent) {
         long now = System.currentTimeMillis();
 
-        if (redisTemplate != null) {
+        if (redisStringOps != null) {
             try {
-                redisTemplate.opsForValue().increment(REDIS_KEY_OPEN_COUNT + trackingId);
-                redisTemplate.opsForValue().setIfAbsent(REDIS_KEY_OPEN_FIRST + trackingId,
-                        String.valueOf(now), REDIS_TTL);
-                redisTemplate.opsForValue().set(REDIS_KEY_OPEN_LAST + trackingId,
+                redisStringOps.incr(REDIS_KEY_OPEN_COUNT + trackingId, 1);
+                redisStringOps.setIfAbsent(REDIS_KEY_OPEN_FIRST + trackingId,
+                        String.valueOf(now), REDIS_TTL.getSeconds());
+                redisStringOps.set(REDIS_KEY_OPEN_LAST + trackingId,
                         String.valueOf(now), REDIS_TTL);
                 if (StringUtils.hasText(userAgent)) {
-                    redisTemplate.opsForValue().set(REDIS_KEY_OPEN_UA + trackingId,
+                    redisStringOps.set(REDIS_KEY_OPEN_UA + trackingId,
                             userAgent, REDIS_TTL);
                 }
                 log.debug("[EmailTrackingService] 打开事件已记录(Redis): trackingId={}, userAgent={}",
@@ -161,9 +166,9 @@ public class EmailTrackingService {
      * @return 打开次数（0 表示未打开）
      */
     public long getOpenCount(String trackingId) {
-        if (redisTemplate != null) {
+        if (redisStringOps != null) {
             try {
-                String count = redisTemplate.opsForValue().get(REDIS_KEY_OPEN_COUNT + trackingId);
+                String count = redisStringOps.get(REDIS_KEY_OPEN_COUNT + trackingId, String.class);
                 return count != null ? Long.parseLong(count) : 0;
             } catch (Exception e) {
                 log.debug("[EmailTrackingService] Redis 查询打开次数失败: {}", e.getMessage());
@@ -224,11 +229,11 @@ public class EmailTrackingService {
         }
 
         // 存储完整事件记录
-        if (redisTemplate != null) {
+        if (redisCollectionOps != null) {
             try {
                 String eventJson = buildEventJson(event, now, userAgent, metadata);
-                redisTemplate.opsForList().rightPush(REDIS_KEY_EVENT + trackingId, eventJson);
-                redisTemplate.expire(REDIS_KEY_EVENT + trackingId, REDIS_TTL);
+                redisCollectionOps.rPush(REDIS_KEY_EVENT + trackingId, eventJson);
+                redisStringOps.expire(REDIS_KEY_EVENT + trackingId, REDIS_TTL);
             } catch (Exception e) {
                 log.debug("[EmailTrackingService] Redis 存储事件失败: {}", e.getMessage());
             }
@@ -243,9 +248,9 @@ public class EmailTrackingService {
      * @param trackingId 追踪 ID
      */
     public void recordClick(String trackingId) {
-        if (redisTemplate != null) {
+        if (redisStringOps != null) {
             try {
-                redisTemplate.opsForValue().increment(REDIS_KEY_CLICK_COUNT + trackingId);
+                redisStringOps.incr(REDIS_KEY_CLICK_COUNT + trackingId, 1);
                 return;
             } catch (Exception e) {
                 log.debug("[EmailTrackingService] Redis 记录点击失败: {}", e.getMessage());
@@ -261,9 +266,9 @@ public class EmailTrackingService {
      * @return 点击次数
      */
     public long getClickCount(String trackingId) {
-        if (redisTemplate != null) {
+        if (redisStringOps != null) {
             try {
-                String count = redisTemplate.opsForValue().get(REDIS_KEY_CLICK_COUNT + trackingId);
+                String count = redisStringOps.get(REDIS_KEY_CLICK_COUNT + trackingId, String.class);
                 return count != null ? Long.parseLong(count) : 0;
             } catch (Exception e) {
                 log.debug("[EmailTrackingService] Redis 查询点击次数失败: {}", e.getMessage());
@@ -280,9 +285,9 @@ public class EmailTrackingService {
      * @param status     投递状态
      */
     private void recordDeliveryStatus(String trackingId, String status) {
-        if (redisTemplate != null) {
+        if (redisStringOps != null) {
             try {
-                redisTemplate.opsForValue().set(REDIS_KEY_EVENT + "status:" + trackingId, status, REDIS_TTL);
+                redisStringOps.set(REDIS_KEY_EVENT + "status:" + trackingId, status, REDIS_TTL);
                 return;
             } catch (Exception e) {
                 log.debug("[EmailTrackingService] Redis 记录投递状态失败: {}", e.getMessage());
@@ -298,9 +303,9 @@ public class EmailTrackingService {
      * @return 投递状态，未记录返回 null
      */
     public String getDeliveryStatus(String trackingId) {
-        if (redisTemplate != null) {
+        if (redisStringOps != null) {
             try {
-                return redisTemplate.opsForValue().get(REDIS_KEY_EVENT + "status:" + trackingId);
+                return redisStringOps.get(REDIS_KEY_EVENT + "status:" + trackingId, String.class);
             } catch (Exception e) {
                 log.debug("[EmailTrackingService] Redis 查询投递状态失败: {}", e.getMessage());
             }

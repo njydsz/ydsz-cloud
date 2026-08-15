@@ -2,7 +2,8 @@ package com.njydsz.message.server.service.impl;
 
 import java.time.Duration;
 
-import org.springframework.data.redis.core.RedisTemplate;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
+
 import org.springframework.stereotype.Service;
 
 import com.njydsz.message.server.config.MessageProperties;
@@ -33,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class ChannelSuppressionEngine {
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisStringOps redisStringOps;
     /** OD-7 / P3-3.2: 抑制窗口配置统一从 MessageProperties 读取 */
     private final MessageProperties messageProperties;
 
@@ -58,16 +59,15 @@ public class ChannelSuppressionEngine {
         }
         long suppressWindowSeconds = messageProperties.getSuppressWindowSeconds();
         String key = buildKey(bizType, bizId, receiver);
-        Boolean acquired = redisTemplate.opsForValue()
-                .setIfAbsent(key, channel, Duration.ofSeconds(suppressWindowSeconds));
-        if (Boolean.TRUE.equals(acquired)) {
+        boolean acquired = redisStringOps.setIfAbsent(key, channel, suppressWindowSeconds);
+        if (acquired) {
             // 首个渠道，放行
             log.debug("[Suppress] 首渠道放行: bizType={} bizId={} receiver={} channel={}",
                     bizType, bizId, receiver, channel);
             return false;
         }
         // 已有其他渠道发送，抑制
-        String existingChannel = (String) redisTemplate.opsForValue().get(key);
+        String existingChannel = redisStringOps.get(key, String.class);
         log.info("[Suppress] 跨渠道抑制: bizType={} bizId={} receiver={} current={} existing={}",
                 bizType, bizId, receiver, channel, existingChannel);
         return true;
@@ -82,7 +82,7 @@ public class ChannelSuppressionEngine {
      */
     public void release(String bizType, String bizId, String receiver) {
         String key = buildKey(bizType, bizId, receiver);
-        redisTemplate.delete(key);
+        redisStringOps.del(key);
     }
 
     private String buildKey(String bizType, String bizId, String receiver) {

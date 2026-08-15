@@ -59,6 +59,8 @@ import com.njydsz.common.notify.template.TemplateEngine;
 import com.njydsz.common.notify.template.TemplateVariableValidator;
 import com.njydsz.common.notify.tracking.EmailTrackingService;
 import com.njydsz.common.redis.service.RedisRateLimiter;
+import com.njydsz.common.redis.service.ops.RedisCollectionOps;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.concurrent.ExecutorUtils;
 
 import io.micrometer.core.instrument.MeterRegistry;
@@ -216,11 +218,13 @@ public class NotifyConfiguration {
     @ConditionalOnMissingBean(EmailTrackingService.class)
     @ConditionalOnProperty(prefix = "ydsz.notify.email", name = "enabled", havingValue = "true")
     public EmailTrackingService emailTrackingService(NotifyProperties properties,
-                                                     ObjectProvider<StringRedisTemplate> redisTemplateProvider) {
-        StringRedisTemplate redisTemplate = redisTemplateProvider.getIfAvailable();
-        log.info("[NotifyConfiguration] EmailTrackingService bean registered, redis={}",
-                redisTemplate != null);
-        return new EmailTrackingService(properties, redisTemplate);
+                                                     ObjectProvider<RedisStringOps> redisStringOpsProvider,
+                                                     ObjectProvider<RedisCollectionOps> redisCollectionOpsProvider) {
+        RedisStringOps redisStringOps = redisStringOpsProvider.getIfAvailable();
+        RedisCollectionOps redisCollectionOps = redisCollectionOpsProvider.getIfAvailable();
+        log.info("[NotifyConfiguration] EmailTrackingService bean registered, redisStringOps={}, redisCollectionOps={}",
+                redisStringOps != null, redisCollectionOps != null);
+        return new EmailTrackingService(properties, redisStringOps, redisCollectionOps);
     }
 
     // ==================== 渠道降级 ====================
@@ -281,11 +285,11 @@ public class NotifyConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean(NotifyPreferenceManager.class)
-    public NotifyPreferenceManager notifyPreferenceManager(ObjectProvider<StringRedisTemplate> redisTemplateProvider) {
-        StringRedisTemplate redisTemplate = redisTemplateProvider.getIfAvailable();
+    public NotifyPreferenceManager notifyPreferenceManager(ObjectProvider<RedisStringOps> redisStringOpsProvider) {
+        RedisStringOps redisStringOps = redisStringOpsProvider.getIfAvailable();
         log.info("[NotifyConfiguration] NotifyPreferenceManager bean registered, redis={}",
-                redisTemplate != null);
-        return new NotifyPreferenceManager(redisTemplate);
+                redisStringOps != null);
+        return new NotifyPreferenceManager(redisStringOps);
     }
 
     // ==================== 去重 ====================
@@ -299,11 +303,11 @@ public class NotifyConfiguration {
     @Bean
     @ConditionalOnMissingBean(NotifyDedupService.class)
     public NotifyDedupService notifyDedupService(NotifyProperties properties,
-                                                 ObjectProvider<StringRedisTemplate> redisTemplateProvider) {
-        StringRedisTemplate redisTemplate = redisTemplateProvider.getIfAvailable();
+                                                 ObjectProvider<RedisStringOps> redisStringOpsProvider) {
+        RedisStringOps redisStringOps = redisStringOpsProvider.getIfAvailable();
         log.info("[NotifyConfiguration] NotifyDedupService bean registered, redis={}",
-                redisTemplate != null);
-        return new NotifyDedupService(properties, redisTemplate);
+                redisStringOps != null);
+        return new NotifyDedupService(properties, redisStringOps);
     }
 
     // ==================== 国际化 ====================

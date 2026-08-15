@@ -19,6 +19,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
@@ -153,11 +154,7 @@ public class MessageController {
     @GetMapping("/log/page")
     public PageResponse<List<MsgLogVO>> pageLog(MessageLogQueryDTO query) {
         Page<MsgLog> page = messageService.pageLog(query);
-        return PageResponse.success(
-                page.getTotal(),
-                page.getCurrent(),
-                page.getSize(),
-                MessageConverter.INSTANT.logListToVO(page.getRecords()));
+        return PageResponses.success(page, MessageConverter.INSTANT::entityToVO);
     }
 
     /**
@@ -219,10 +216,6 @@ public class MessageController {
         query.setPageNum((int) page);
         query.setPageSize((int) size);
         Page<MsgLog> result = messageService.pageLog(query);
-        return PageResponse.success(
-                result.getTotal(),
-                result.getCurrent(),
-                result.getSize(),
-                MessageConverter.INSTANT.logListToVO(result.getRecords()));
+        return PageResponses.success(result, MessageConverter.INSTANT::entityToVO);
     }
 }

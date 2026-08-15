@@ -21,6 +21,7 @@ import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.feign.dto.RealtimePushDTO;
+import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.message.domain.converter.MessageConverter;
@@ -123,11 +124,7 @@ public class NotificationController {
     @GetMapping("/inbox")
     public PageResponse<List<MsgNotificationVO>> inbox(NotificationQueryDTO query) {
         Page<MsgNotification> page = notificationService.inbox(AuthContextUtils.getUserId(), query);
-        return PageResponse.success(
-                page.getTotal(),
-                page.getCurrent(),
-                page.getSize(),
-                MessageConverter.INSTANT.notificationListToVO(page.getRecords()));
+        return PageResponses.success(page, MessageConverter.INSTANT::entityToVO);
     }
 
     /**

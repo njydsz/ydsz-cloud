@@ -42,16 +42,6 @@ public interface DocExporter {
     File exportToMarkdown(String apiDocs, String outputDir) throws IOException;
 
     /**
-     * 导出为 YAML 格式
-     *
-     * @param apiDocs OpenAPI 文档 JSON 字符串
-     * @param outputDir 输出目录
-     * @return 导出的文件对象
-     * @throws IOException 如果导出过程中发生 IO 异常
-     */
-    File exportToYaml(String apiDocs, String outputDir) throws IOException;
-
-    /**
      * 导出为 JSON 格式
      *
      * @param apiDocs OpenAPI 文档 JSON 字符串
@@ -64,8 +54,7 @@ public interface DocExporter {
     /**
      * 根据格式类型导出
      *
-     * <p>支持的格式包括：{@code html}、{@code markdown} / {@code md}、
-     * {@code yaml} / {@code yml}、{@code json}。
+     * <p>支持的格式包括：{@code html}、{@code markdown} / {@code md}、{@code json}。
      *
      * @param apiDocs OpenAPI 文档 JSON 字符串
      * @param outputDir 输出目录

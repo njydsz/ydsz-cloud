@@ -1,7 +1,5 @@
 package com.njydsz.common.auth.config;
 
-import java.util.concurrent.TimeUnit;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -34,7 +32,6 @@ import com.njydsz.common.auth.listener.PermissionKeyspaceNotificationListener;
 import com.njydsz.common.auth.metrics.AuthMetricsCollector;
 import com.njydsz.common.auth.model.RolePermissions;
 import com.njydsz.common.auth.security.CsrfTokenValidator;
-import com.njydsz.common.auth.security.RateLimiter;
 import com.njydsz.common.auth.service.ColumnPermissionResolver;
 import com.njydsz.common.auth.service.DataPermissionResolver;
 import com.njydsz.common.auth.service.RbacPermissionEvaluator;
@@ -53,7 +50,6 @@ import com.njydsz.common.auth.token.JwtTokenService;
 import com.njydsz.common.auth.token.TokenProperties;
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.lock.core.DistributedLocker;
-import com.njydsz.common.redis.service.RedisRateLimiter;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
@@ -338,23 +334,6 @@ public class AuthConfiguration {
             log.info("[AuthConfiguration] DistributedLocker 不可用，TokenBlacklistService 刷新锁降级为原生 setIfAbsent");
         }
         return new TokenBlacklistService(locker, redisStringOps, authProperties);
-    }
-
-    /**
-     * 创建限流器 Bean（可选，默认 60 秒内 100 次请求）。
-     *
-     * <p>P0-1 架构优化：当 {@link RedisRateLimiter} 可用时委托其固定窗口限流实现
-     * （分布式一致）；RedisRateLimiter 不可用时降级为本地内存实现。
-     *
-     * @param redisRateLimiterProvider Redis 限流器（可选）
-     * @return RateLimiter 实例
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = "ydsz.auth", name = "rate-limit-enabled", havingValue = "true", matchIfMissing = false)
-    public RateLimiter authRateLimiter(ObjectProvider<RedisRateLimiter> redisRateLimiterProvider) {
-        RedisRateLimiter redisRateLimiter = redisRateLimiterProvider.getIfAvailable();
-        return new RateLimiter(100, 60, TimeUnit.SECONDS, redisRateLimiter);
     }
 
     /**

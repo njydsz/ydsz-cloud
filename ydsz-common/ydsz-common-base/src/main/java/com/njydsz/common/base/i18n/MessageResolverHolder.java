@@ -2,6 +2,8 @@ package com.njydsz.common.base.i18n;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.slf4j.LoggerFactory;
+
 /**
  * 国际化消息解析器持有者（SPI）。
  *
@@ -47,7 +49,7 @@ public final class MessageResolverHolder {
     public static boolean setResolverIfAbsent(MessageResolver resolver) {
         boolean success = RESOLVER.compareAndSet(null, resolver);
         if (!success && resolver != null) {
-            org.slf4j.LoggerFactory.getLogger(MessageResolverHolder.class)
+            LoggerFactory.getLogger(MessageResolverHolder.class)
                     .debug("MessageResolver already registered, ignoring subsequent setResolverIfAbsent call");
         }
         return success;
