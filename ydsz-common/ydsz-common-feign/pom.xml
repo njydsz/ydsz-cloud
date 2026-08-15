@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>ydsz-common-feign</artifactId>
     <name>ydsz-common-feign</name>
-    <description>YdszFeign - 企业级 OpenFeign 统一增强模块</description>
+    <description>YdszFeign - 企业级 OpenFeign 统一增强模块，仅保留核心公共能力</description>
 
     <parent>
         <groupId>com.njydsz</groupId>
@@ -13,7 +13,7 @@
     </parent>
 
     <dependencies>
-        <!-- ydsz-common 内部依赖 -->
+        <!-- ydsz-common 内部基础依赖 -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-util</artifactId>
@@ -30,7 +30,12 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-domain</artifactId>
         </dependency>
-        <!-- Spring Cloud OpenFeign -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-json</artifactId>
+        </dependency>
+
+        <!-- Spring Cloud OpenFeign 核心依赖 -->
         <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-openfeign</artifactId>
@@ -54,28 +59,7 @@
             </exclusions>
         </dependency>
 
-        <!-- Spring Cloud Context - 动态配置刷新支持 -->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-context</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- Spring Cloud LoadBalancer - 服务实例选择能力（optional，使用方按需启用） -->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-loadbalancer</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- Spring Boot 配置处理器 -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-configuration-processor</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- Apache HttpClient 5（替代旧版 feign-httpclient，提供连接池和重试支持） -->
+        <!-- Apache HttpClient 5 Feign实现 -->
         <dependency>
             <groupId>io.github.openfeign</groupId>
             <artifactId>feign-hc5</artifactId>
@@ -85,25 +69,21 @@
             <artifactId>httpclient5</artifactId>
         </dependency>
 
-        <!-- SLF4J 日志门面 -->
+        <!-- 基础依赖 -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
-        <!--lombok-->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
         </dependency>
-        <!--servlet-->
         <dependency>
             <groupId>jakarta.servlet</groupId>
             <artifactId>jakarta.servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
-
-        <!-- Micrometer 可观测性（可选） -->
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-core</artifactId>
@@ -114,59 +94,18 @@
             <artifactId>spring-boot-autoconfigure</artifactId>
             <scope>provided</scope>
         </dependency>
-
-        <!-- Resilience4j 熔断器（推荐替代自研 SlidingWindowCircuitBreakerStrategy） -->
+        <!-- Spring Boot 配置处理器，用于属性提示 -->
         <dependency>
-            <groupId>io.github.resilience4j</groupId>
-            <artifactId>resilience4j-spring-boot3</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.core</groupId>
-                    <artifactId>jackson-databind</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.datatype</groupId>
-                    <artifactId>jackson-datatype-jdk8</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.datatype</groupId>
-                    <artifactId>jackson-datatype-jsr310</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.fasterxml.jackson.module</groupId>
-                    <artifactId>jackson-module-parameter-names</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
-
-        <!-- TransmittableThreadLocal 用于线程池场景下的 ThreadLocal 传递 -->
+        <!-- 线程池上下文传递支持 -->
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>transmittable-thread-local</artifactId>
         </dependency>
-        <!-- spring-boot-actuator (optional for HealthIndicator) -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-actuator</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <!-- spring-boot-health (Spring Boot 4.x: health classes moved from actuator to health module) -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-health</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <!--ydsz-common-redis-->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-redis</artifactId>
-        </dependency>
-        <!--ydsz-common-json-->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-json</artifactId>
-        </dependency>
+
         <!-- 测试依赖 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

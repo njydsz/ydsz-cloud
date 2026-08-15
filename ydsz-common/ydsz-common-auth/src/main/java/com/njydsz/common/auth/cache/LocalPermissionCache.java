@@ -16,10 +16,15 @@ import com.njydsz.common.cache.listener.RemovalCause;
  * <p>当 Redis 不可用时，提供本地缓存作为降级方案。
  * 使用 ydsz-common-cache 实现，支持 5 分钟过期。
  *
+ * <p><b>废弃原因：</b>与 {@link com.njydsz.common.auth.service.RolePermissionCacheService}
+ * 职责重叠，本地缓存能力已整合到统一的缓存服务中。
+ *
  * @author ydsz-team
  * @since 1.0.0
- *
+ * @deprecated 自 3.0.0 起标记废弃，计划 4.0.0 移除。
+ *             迁移目标：{@link com.njydsz.common.auth.service.RolePermissionCacheService}。
  */
+@Deprecated(forRemoval = true, since = "3.0.0")
 public class LocalPermissionCache<V> {
 
     private static final Logger log = LoggerFactory.getLogger(LocalPermissionCache.class);

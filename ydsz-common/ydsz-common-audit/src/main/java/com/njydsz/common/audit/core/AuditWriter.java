@@ -7,18 +7,18 @@ import com.njydsz.common.audit.domain.AuditLog;
 /**
  * 审计日志写入器接口
  * <p>
- * 供 {@link AuditRecorder} 实现类委托数据库写入，与 {@link AuditStorage} 的关键区别：
- * <ul>
- *   <li>写入失败时抛出异常（而非吞异常），让 Recorder 层自行决定降级/兜底策略</li>
- *   <li>支持分表路由（由实现类内部处理）</li>
- * </ul>
+ * 定义审计日志持久化的统一抽象，供 {@link AuditRecorder} 实现类委托写入操作。
+ * 写入失败时抛出 {@link AuditWriteException}，让 Recorder 层自行决定降级/兜底策略。
  * </p>
  *
- * <p>典型实现：{@code JdbcAuditStorage}（JDBC 批量写入）。</p>
+ * <p>内置实现：</p>
+ * <ul>
+ *   <li>{@link com.njydsz.common.audit.storage.DefaultAuditStorage}：开发测试用，控制台输出</li>
+ *   <li>{@link com.njydsz.common.audit.storage.JdbcAuditStorage}：JDBC 持久化（支持分表路由）</li>
+ * </ul>
  *
  * @author ydsz-team
- * @since 1.1.0
- *
+ * @since 1.0.0
  */
 public interface AuditWriter {
 
@@ -45,5 +45,27 @@ public interface AuditWriter {
      */
     default String getName() {
         return this.getClass().getSimpleName();
+    }
+
+    /**
+     * 获取存储策略类型
+     *
+     * @return 存储类型标识（如 "DEFAULT"、"JDBC"）
+     *
+     * @since 1.1.0 原 AuditStorage.getType()
+     */
+    default String getType() {
+        return "UNKNOWN";
+    }
+
+    /**
+     * 检查写入器是否可用
+     *
+     * @return 可用返回 true
+     *
+     * @since 1.1.0 原 AuditStorage.isAvailable()
+     */
+    default boolean isAvailable() {
+        return true;
     }
 }

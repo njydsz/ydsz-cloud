@@ -193,7 +193,7 @@ public class MessageQueueFactory implements IMessageQueueProvider, DisposableBea
 
     private KafkaQueueProperties extractKafkaProperties() {
         KafkaQueueProperties kafkaProperties = new KafkaQueueProperties();
-        kafkaProperties.setBootstrapServers(properties.resolvedHost() + ":" + properties.resolvedPort());
+        kafkaProperties.setBootstrapServers(properties.getHost() + ":" + properties.getPort());
         kafkaProperties.setGroupId(properties.getStreamGroup());
         kafkaProperties.setTopic(properties.getStreamConsumer());
         kafkaProperties.setEnableAutoCommit(false);
@@ -204,7 +204,7 @@ public class MessageQueueFactory implements IMessageQueueProvider, DisposableBea
 
     private RocketMQProperties extractRocketMQProperties() {
         RocketMQProperties rocketProperties = new RocketMQProperties();
-        rocketProperties.setNamesrvAddr(properties.resolvedHost() + ":" + properties.resolvedPort());
+        rocketProperties.setNamesrvAddr(properties.getHost() + ":" + properties.getPort());
         rocketProperties.setGroupId(properties.getStreamGroup());
         rocketProperties.setTopic(properties.getStreamConsumer());
         return rocketProperties;
@@ -212,10 +212,10 @@ public class MessageQueueFactory implements IMessageQueueProvider, DisposableBea
 
     private RabbitMQProperties extractRabbitMQProperties() {
         RabbitMQProperties rabbitProperties = new RabbitMQProperties();
-        rabbitProperties.setHost(properties.resolvedHost());
-        rabbitProperties.setRabbitPort(properties.resolvedPort());
+        rabbitProperties.setHost(properties.getHost());
+        rabbitProperties.setRabbitPort(properties.getPort());
         rabbitProperties.setUsername(properties.getUsername());
-        rabbitProperties.setPassword(properties.resolvedPassword());
+        rabbitProperties.setPassword(properties.getPassword());
         rabbitProperties.setQueueName(properties.getStreamConsumer());
         return rabbitProperties;
     }
