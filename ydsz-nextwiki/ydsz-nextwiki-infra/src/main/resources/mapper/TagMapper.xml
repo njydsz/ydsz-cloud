@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.nextwiki.infra.mapper.TagMapper">
+
+    <resultMap id="TagResult" type="com.njydsz.nextwiki.domain.entity.Tag">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="color" property="color"/>
+        <result column="type" property="type"/>
+        <result column="usage_count" property="usageCount"/>
+        <result column="status" property="status"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="revision" property="revision"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <resultMap id="FileTagResult" type="com.njydsz.nextwiki.domain.entity.FileTag">
+        <id column="id" property="id"/>
+        <result column="file_node_id" property="fileNodeId"/>
+        <result column="tag_id" property="tagId"/>
+    </resultMap>
+
+    <select id="selectByName" resultMap="TagResult">
+        SELECT * FROM nw_tag WHERE name = #{name} AND deleted = 0
+    </select>
+
+    <select id="selectAll" resultMap="TagResult">
+        SELECT * FROM nw_tag WHERE deleted = 0 ORDER BY usage_count DESC, name ASC
+    </select>
+
+    <select id="selectByFileNodeId" resultMap="TagResult">
+        SELECT t.* FROM nw_tag t
+        INNER JOIN nw_file_tag ft ON t.id = ft.tag_id
+        WHERE ft.file_node_id = #{fileNodeId} AND t.deleted = 0 AND ft.deleted = 0
+        ORDER BY t.name ASC
+    </select>
+
+    <select id="selectFileTagsByFileNodeId" resultMap="FileTagResult">
+        SELECT * FROM nw_file_tag WHERE file_node_id = #{fileNodeId} AND deleted = 0
+    </select>
+
+</mapper>

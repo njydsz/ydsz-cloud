@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-agent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>ydsz-agent-domain</artifactId>
+    <name>ydsz-agent-domain</name>
+    <description>Domain Layer - Agent 领域模型、对话、工具、记忆、知识库、LLM 模型</description>
+    <dependencies>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-core</artifactId>
+        </dependency>
+        <!-- ydsz-common-util: SnowflakeIdGenerator（Entity ID 生成，替代 UUID） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-util</artifactId>
+        </dependency>
+        <!-- ydsz-common-exception（错误码枚举实现 ExceptionCode 接口） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-exception</artifactId>
+        </dependency>
+        <!-- P1-5: ydsz-common-domain 显式依赖（AgentStatusEnum/AgentDomainEvent 实现 BaseStatusEnum/DomainEvent） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-domain</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-event</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-safe</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-annotation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-json</artifactId>
+        </dependency>
+            <!-- MapStruct -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+</project>

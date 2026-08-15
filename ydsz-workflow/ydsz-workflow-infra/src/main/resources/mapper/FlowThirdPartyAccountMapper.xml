@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.workflow.infra.mapper.FlowThirdPartyAccountMapper">
+
+    <!-- 基础列 -->
+    <sql id="Base_Column">
+        id, user_id, platform, open_id, union_id, corp_id, agent_id,
+        access_token, refresh_token, token_expire_at, status, tenant_id,
+        created_by, created_at, updated_by, updated_at, deleted
+    </sql>
+
+    <!-- 按系统用户 ID + 平台查询 -->
+    <select id="selectByUserIdAndPlatform"
+            resultType="com.njydsz.workflow.domain.entity.FlowThirdPartyAccount">
+        SELECT
+            <include refid="Base_Column"/>
+        FROM ydsz_flow_third_party_account
+        WHERE user_id = #{userId}
+          AND platform = #{platform}
+          AND deleted = 0
+        LIMIT 1
+    </select>
+
+    <!-- 按平台 + openId 查询（回调反查系统用户） -->
+    <select id="selectByOpenId"
+            resultType="com.njydsz.workflow.domain.entity.FlowThirdPartyAccount">
+        SELECT
+            <include refid="Base_Column"/>
+        FROM ydsz_flow_third_party_account
+        WHERE platform = #{platform}
+          AND open_id = #{openId}
+          AND deleted = 0
+        LIMIT 1
+    </select>
+</mapper>

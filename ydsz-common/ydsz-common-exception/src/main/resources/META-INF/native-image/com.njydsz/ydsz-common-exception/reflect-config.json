@@ -1,0 +1,93 @@
+[
+  {
+    "name": "com.njydsz.common.exception.handler.MvcExceptionHandler",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.njydsz.common.exception.handler.ValidationExceptionHandler",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.njydsz.common.exception.handler.JdbcExceptionHandler",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.njydsz.common.exception.handler.WebFluxExceptionHandler",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.njydsz.common.exception.metrics.ExceptionMetrics",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.njydsz.common.exception.config.YdszExceptionCoreAutoConfiguration",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "com.njydsz.common.exception.handler.YdszExceptionHandlerAutoConfiguration",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "com.njydsz.common.exception.config.YdszExceptionActuatorAutoConfiguration",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true
+  },
+  {
+    "name": "com.njydsz.common.exception.endpoint.ExceptionCodeDocEndpoint",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.njydsz.common.exception.core.ExceptionInfo",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.njydsz.common.exception.custom.AbstractYdszException",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.njydsz.common.exception.custom.BusinessException",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.njydsz.common.exception.custom.SysException",
+    "allDeclaredConstructors": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.njydsz.common.exception.code.CoreExceptionCode",
+    "allPublicConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.njydsz.common.exception.code.SecurityExceptionCode",
+    "allPublicConstructors": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.njydsz.common.exception.code.RateLimitExceptionCode",
+    "allPublicConstructors": true,
+    "allPublicMethods": true
+  }
+]

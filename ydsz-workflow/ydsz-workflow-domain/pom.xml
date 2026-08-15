@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-workflow</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>ydsz-workflow-domain</artifactId>
+    <name>ydsz-workflow-domain</name>
+    <description>Domain Layer</description>
+    <dependencies>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-core</artifactId>
+        </dependency>
+        <!-- ydsz-common-exception（错误码枚举实现 ExceptionCode 接口） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-exception</artifactId>
+        </dependency>
+        <!-- ydsz-common-domain: explicit declaration for direct usage (PageQuery/BaseStatusEnum, was transitive via common-jdbc) -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-domain</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-safe</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-annotation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-json</artifactId>
+        </dependency>
+            <!-- MapStruct -->
+        <dependency>
+            <groupId>org.mapstruct</groupId>
+            <artifactId>mapstruct</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+</project>

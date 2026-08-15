@@ -1,0 +1,53 @@
+{
+  "groups": [
+    {
+      "name": "ydsz.core",
+      "type": "com.njydsz.common.core.config.CoreProperties",
+      "description": "YDSZ Core 模块全局配置。提供分页参数、API 版本路由等核心能力的运行时参数绑定。"
+    }
+  ],
+  "properties": [
+    {
+      "name": "ydsz.core.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 ydsz-core 自动配置。默认 true，设为 false 可完全禁用 CoreAutoConfiguration。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.core.max-page-size",
+      "type": "java.lang.Integer",
+      "description": "运行时最大每页记录数上限（1-5000），由 PageConstants.getMaxPageSize() 读取。防止一次性拉取过多数据。",
+      "defaultValue": 1000
+    },
+    {
+      "name": "ydsz.core.default-page-size",
+      "type": "java.lang.Integer",
+      "description": "运行时默认每页记录数（≥1），由 PageConstants.getDefaultPageSize() 读取。分页查询未指定 pageSize 时使用。",
+      "defaultValue": 20
+    },
+    {
+      "name": "ydsz.core.tenant-mdc-filter-order",
+      "type": "java.lang.Integer",
+      "description": "租户 MDC 过滤器优先级，默认高于业务过滤器（HIGHEST_PRECEDENCE + 100）。",
+      "defaultValue": 100
+    },
+    {
+      "name": "ydsz.core.api-version.default-version",
+      "type": "java.lang.String",
+      "description": "默认 API 版本号。当客户端未通过 header 声明版本时，路由到此默认版本。",
+      "defaultValue": "v1"
+    },
+    {
+      "name": "ydsz.core.api-version.header",
+      "type": "java.lang.String",
+      "description": "客户端声明版本的 HTTP 请求头名称。",
+      "defaultValue": "X-Api-Version"
+    },
+    {
+      "name": "ydsz.core.api-version.routes",
+      "type": "java.util.Map<java.lang.String, java.util.List<java.lang.String>>",
+      "description": "版本号到 URL 路径模式的路由规则（Ant 路径格式）。key 为版本号，value 为匹配的路径模式列表。供 web 模块做版本路由分发。"
+    }
+  ],
+  "hints": []
+}

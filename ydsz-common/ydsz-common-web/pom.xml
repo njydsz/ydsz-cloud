@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>ydsz-common-web</artifactId>
+    <name>ydsz-common-web</name>
+    <description>ydsz-common-web 是YDSZ公共依赖中的 PC Web 端基座模块</description>
+
+    <parent>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <dependencies>
+        <!-- HTTP 公共基座模块 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-base</artifactId>
+        </dependency>
+
+        <!-- 领域模型模块 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-domain</artifactId>
+        </dependency>
+
+        <!-- OpenAPI 注解（common-base 中按 optional 引入，web 层直接使用需显式声明） -->
+        <dependency>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations-jakarta</artifactId>
+        </dependency>
+
+        <!-- 认证模块 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-auth</artifactId>
+        </dependency>
+
+        <!-- 安全模块 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-safe</artifactId>
+        </dependency>
+
+        <!-- Redis 模块（BloomFilterConfig / BloomFilterService） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-redis</artifactId>
+        </dependency>
+
+        <!-- JSON 序列化统一使用 ydsz-common-json 的 YdszJson 引擎 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-json</artifactId>
+        </dependency>
+
+        <!-- Doc 模块能力已合并到 common-base（OpenApiConfig / Knife4jConfig / Excel 工具等） -->
+
+        <!-- 异常模块（用于 BizErrorCode） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-exception</artifactId>
+        </dependency>
+
+        <!-- Spring Security 支持（optional，通过 ConditionalOnClass 条件装配） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+            <optional>true</optional>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-web</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- Spring Boot Actuator（健康检查 / 指标） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- spring-boot-health（Spring Boot 4.x: Health/HealthIndicator 迁移到独立模块） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-health</artifactId>
+        </dependency>
+
+        <!-- Micrometer（ApiMetricsAspect 使用 MeterRegistry） -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+        </dependency>
+
+        <!-- MyBatis-Plus（OperationLogAspect 使用 IPage） -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-core</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Jasypt（CommonAutoConfiguration 使用 StringEncryptor） -->
+        <dependency>
+            <groupId>com.github.ulisesbocchio</groupId>
+            <artifactId>jasypt-spring-boot-starter</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Redisson（CommonAutoConfiguration 使用 RedissonClient / RBloomFilter） -->
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson-spring-boot-starter</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- common-excel（ExcelTemplate / ExcelUtil） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-excel</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- HikariCP（DatabaseHealthIndicator 使用 HikariDataSource） -->
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- User-Agent 解析器（Web 端特有） -->
+        <dependency>
+            <groupId>nl.basjes.parse.useragent</groupId>
+            <artifactId>yauaa</artifactId>
+        </dependency>
+
+        <!-- jakarta.servlet-api（编译时需要） -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Lombok 简化代码 -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Spring Boot Configuration Processor -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
+</project>

@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-system</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+    <artifactId>ydsz-system-server</artifactId>
+    <name>ydsz-system-server</name>
+    <description>Application Layer - Service + Config + AppInfo</description>
+    <dependencies>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-system-infra</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-lock</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-feign</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-audit</artifactId>
+        </dependency>
+        <!-- P0-2: 事务性 Outbox 事件模式 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-event</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-web</artifactId>
+        </dependency>
+        <!-- ydsz-common-core: explicit declaration for direct usage (was transitive via common-web) -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-core</artifactId>
+        </dependency>
+        <!-- ydsz-common-util: ServletUtils.getClientIp 用于客户端 IP 解析 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-util</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-cache</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-config</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>dynamic-datasource-spring-boot3-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-health</artifactId>
+        </dependency>
+        <!-- P0-1: 统一监控告警（Sentry SPI：ELK/Loki 日志推送 + 告警收敛 + SLA） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-sentry</artifactId>
+        </dependency>
+        <!-- P2-2: 通知渠道（配置变更/字典变更通知） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-notify</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-redis</artifactId>
+        </dependency>
+        <!-- P2-3: 统一文件存储接入 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-file</artifactId>
+        </dependency>
+        <!-- P1-5: 统一线程池管理 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-thread</artifactId>
+        </dependency>
+        <!-- P1-5: 搜索 Provider SPI（系统配置/字典搜索） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-search</artifactId>
+        </dependency>
+        <!-- P1-7: 跨模块 Feign 客户端（用户信息查询） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-userinfo-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <!-- P2-5: 统一 Excel 导入导出 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-excel</artifactId>
+        </dependency>
+        <!-- P0-2: 多租户隔离 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-tenant</artifactId>
+        </dependency>
+</dependencies>
+</project>

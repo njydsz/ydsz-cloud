@@ -1,0 +1,36 @@
+{
+  "properties": [
+    {
+      "name": "ydsz.domain.page.cursor-warning-threshold",
+      "type": "java.lang.Long",
+      "description": "触发深度分页警告的 offset 阈值（默认 10000）。超过此值的 offset 分页将在日志中发出 WARN，提醒改用游标分页。"
+    },
+    {
+      "name": "ydsz.domain.page.cursor-reject-threshold",
+      "type": "java.lang.Long",
+      "description": "强制拒绝深度分页的 offset 阈值（默认 50000）。超过此值的 offset 分页将被拦截器拒绝，必须改用游标分页。"
+    }
+  ],
+  "deprecated": [
+    {
+      "name": "ydsz.domain.enabled",
+      "type": "java.lang.Boolean",
+      "reason": "v1.7.0 已移除。Domain 模块不再提供 enabled 开关，改为通过 Spring Boot 自动装配机制控制。"
+    },
+    {
+      "name": "ydsz.domain.page.max-search-key-length",
+      "type": "java.lang.Integer",
+      "reason": "v1.8.0 已移除。搜索关键字截断长度改为 PageQuery.MAX_SEARCH_KEY_LENGTH 编译期常量，不再支持运行时配置。"
+    },
+    {
+      "name": "ydsz.domain.tree.max-depth",
+      "type": "java.lang.Integer",
+      "reason": "v1.8.0 已移除。树构建深度限制能力未落地，对应 TreeDepthExceededException 一并清理，暂无消费方。"
+    },
+    {
+      "name": "ydsz.domain.idempotent.default-expire-seconds",
+      "type": "java.lang.Long",
+      "reason": "v1.8.0 已移除。幂等能力（IdempotentOperation）未落地且 0 引用，对应配置项一并删除。"
+    }
+  ]
+}

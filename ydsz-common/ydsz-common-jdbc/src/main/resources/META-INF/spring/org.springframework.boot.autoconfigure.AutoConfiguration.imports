@@ -1,0 +1,7 @@
+com.njydsz.common.jdbc.config.MybatisPlusConfiguration
+com.njydsz.common.jdbc.config.MultiDataSourcePoolCustomizer
+com.njydsz.common.jdbc.datasource.DynamicDataSourceAutoConfiguration
+com.njydsz.common.jdbc.config.SqlTraceAutoConfiguration
+com.njydsz.common.jdbc.config.SafeQueryAutoConfiguration
+com.njydsz.common.jdbc.actuator.JdbcHealthIndicator
+com.njydsz.common.jdbc.exception.DataIntegrityExceptionHandler

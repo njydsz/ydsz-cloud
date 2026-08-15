@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>ydsz-common-app</artifactId>
+    <name>ydsz-common-app</name>
+    <description>ydsz-common-app 是YDSZ公共依赖中的移动端 App 基座模块</description>
+
+    <parent>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+
+    <dependencies>
+        <!-- HTTP 公共基座模块 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-domain</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-base</artifactId>
+        </dependency>
+
+        <!-- Test -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- 异常模块（直接依赖，避免通过 ydsz-common-base 间接引入） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-exception</artifactId>
+        </dependency>
+
+        <!-- 认证模块 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-auth</artifactId>
+        </dependency>
+
+        <!-- 安全模块 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-safe</artifactId>
+        </dependency>
+
+        <!-- Redis 模块（auth Token 存储 / safe 限流 CSRF 等依赖） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-redis</artifactId>
+        </dependency>
+
+        <!-- spring-boot-actuator (optional for HealthIndicator) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-actuator</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- spring-boot-health (Spring Boot 4.x: health classes moved to health module) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-health</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Micrometer (optional for AppMetrics) -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Jakarta Validation API (optional for @Validated) -->
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Lombok 简化代码 -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Spring Boot Configuration Processor -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
+</project>

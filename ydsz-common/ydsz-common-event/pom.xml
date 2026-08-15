@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>ydsz-common-event</artifactId>
+    <name>ydsz-common-event</name>
+    <description>YDSZ Common Event - 事务性 Outbox 模式，保障领域事件可靠投递</description>
+
+    <parent>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+
+    <dependencies>
+        <!-- core -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-core</artifactId>
+        </dependency>
+        <!-- exception -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-exception</artifactId>
+        </dependency>
+        <!-- jdbc (for JdbcTemplate) -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
+        </dependency>
+        <!-- json -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-json</artifactId>
+        </dependency>
+        <!-- domain (DomainEvent / EventStore SPI 集成) -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-domain</artifactId>
+        </dependency>
+        <!-- configuration processor -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- actuator -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-actuator</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- spring-boot-health (Spring Boot 4.x) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-health</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- micrometer -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!--
+            RocketMQ Spring Boot Starter（optional，编译期可见，运行期不强制）
+            提供 RocketMQTemplate 供 RocketMqEventPublishGateway 使用。
+            仅当使用方引入 rocketmq-spring-boot-starter 时才自动装配 RocketMQ 网关。
+        -->
+        <dependency>
+            <groupId>org.apache.rocketmq</groupId>
+            <artifactId>rocketmq-spring-boot-starter</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!--
+            Jackson annotations（optional，编译期可见，运行期不强制）
+            spring-boot 4.x 的 spring-boot-health / spring-boot-actuator / spring-web 7.0.x
+            的 class 文件字节码中带有 @JsonInclude 等 Jackson 注解。声明为 optional 即可在
+            编译期消除 "未知的枚举常量 com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY"
+            警告，又不强制本模块使用者必须引入 Jackson 核心。
+        -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- lombok -->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <!-- slf4j -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+        <!-- Test -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+</project>

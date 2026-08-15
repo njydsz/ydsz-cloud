@@ -1,0 +1,3 @@
+com.njydsz.common.cache.spring.YdszCacheAutoConfiguration
+com.njydsz.common.cache.metrics.CacheMetricsAutoConfiguration
+com.njydsz.common.cache.actuator.CacheActuatorAutoConfiguration

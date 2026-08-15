@@ -1,0 +1,244 @@
+{
+  "properties": [
+    {
+      "name": "ydsz.jdbc.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 JDBC 模块（默认 true）。"
+    },
+    {
+      "name": "ydsz.jdbc.mapper-scan-packages",
+      "type": "java.util.List",
+      "description": "Mapper 扫描包路径数组（默认 com.njydsz.**.mapper）。"
+    },
+    {
+      "name": "ydsz.jdbc.slow-sql.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用慢 SQL 监控（默认 false）。"
+    },
+    {
+      "name": "ydsz.jdbc.slow-sql.threshold-millis",
+      "type": "java.lang.Long",
+      "description": "慢 SQL 检测阈值（毫秒），超过此阈值的 SQL 将被记录警告（默认 1000）。"
+    },
+    {
+      "name": "ydsz.jdbc.slow-sql.alert-threshold-millis",
+      "type": "java.lang.Long",
+      "description": "慢 SQL 告警阈值（毫秒），超过此值输出告警日志并打印调用堆栈（默认 3000）。"
+    },
+    {
+      "name": "ydsz.jdbc.sql-audit.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 SQL 审计（默认 false）。"
+    },
+    {
+      "name": "ydsz.jdbc.sql-audit.audit-select",
+      "type": "java.lang.Boolean",
+      "description": "是否审计 SELECT 语句（默认 false）。"
+    },
+    {
+      "name": "ydsz.jdbc.sql-audit.audit-insert",
+      "type": "java.lang.Boolean",
+      "description": "是否审计 INSERT 语句（默认 true）。"
+    },
+    {
+      "name": "ydsz.jdbc.sql-audit.audit-update",
+      "type": "java.lang.Boolean",
+      "description": "是否审计 UPDATE 语句（默认 true）。"
+    },
+    {
+      "name": "ydsz.jdbc.sql-audit.audit-delete",
+      "type": "java.lang.Boolean",
+      "description": "是否审计 DELETE 语句（默认 true）。"
+    },
+    {
+      "name": "ydsz.jdbc.sql-audit.log-parameters",
+      "type": "java.lang.Boolean",
+      "description": "是否记录 SQL 参数（默认 true）。"
+    },
+    {
+      "name": "ydsz.jdbc.sql-audit.max-parameter-length",
+      "type": "java.lang.Integer",
+      "description": "参数最大长度（超过则截断，默认 500）。"
+    },
+    {
+      "name": "ydsz.jdbc.sql-audit.exclude-tables",
+      "type": "java.util.List",
+      "description": "排除的表名列表（不审计这些表的 SQL）。"
+    },
+    {
+      "name": "ydsz.jdbc.sql-audit.exclude-methods",
+      "type": "java.util.List",
+      "description": "排除的 Mapper 方法名列表（不审计这些方法的 SQL）。"
+    },
+    {
+      "name": "ydsz.jdbc.hikari.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 HikariCP 自定义配置（默认 true）。"
+    },
+    {
+      "name": "ydsz.jdbc.read-write-splitting.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用读写分离（默认 false）。"
+    },
+    {
+      "name": "ydsz.jdbc.read-write-splitting.latency-check.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用从库延迟检测（默认 false）。启用后延迟超标的从库自动摘除。"
+    },
+    {
+      "name": "ydsz.jdbc.read-write-splitting.latency-check.interval",
+      "type": "java.time.Duration",
+      "description": "延迟检测间隔（默认 30s）。"
+    },
+    {
+      "name": "ydsz.jdbc.read-write-splitting.latency-check.threshold",
+      "type": "java.time.Duration",
+      "description": "延迟阈值（默认 5s），超过此值判定为不健康。"
+    },
+    {
+      "name": "ydsz.jdbc.read-write-splitting.latency-check.failure-threshold",
+      "type": "java.lang.Integer",
+      "description": "连续超标次数触发摘除（默认 3 次），避免网络抖动误判。"
+    },
+    {
+      "name": "ydsz.jdbc.read-write-splitting.latency-check.recovery-interval",
+      "type": "java.time.Duration",
+      "description": "摘除后恢复检测间隔（默认 60s）。"
+    },
+    {
+      "name": "ydsz.jdbc.logical-delete.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用逻辑删除（默认 true）。"
+    },
+    {
+      "name": "ydsz.jdbc.optimistic-lock.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用乐观锁（默认 true）。"
+    },
+    {
+      "name": "ydsz.jdbc.sql-firewall.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 SQL 防火墙（默认 true）。"
+    },
+    {
+      "name": "ydsz.jdbc.circuit-breaker.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用数据库熔断器（默认 false）。"
+    },
+    {
+      "name": "ydsz.jdbc.tenant-isolation.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用租户隔离（默认 false，由 common-tenant 模块管理）。"
+    },
+    {
+      "name": "ydsz.jdbc.pagination.max-page-size",
+      "type": "java.lang.Integer",
+      "description": "分页最大页大小（默认 500）。"
+    },
+    {
+      "name": "ydsz.jdbc.safe-query.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用安全查询拦截，包括 ORDER BY 注入防护与深度分页检测（默认 true）。"
+    },
+    {
+      "name": "ydsz.jdbc.safe-query.strict-mode",
+      "type": "java.lang.Boolean",
+      "description": "严格模式（默认 false）。true: 非法排序字段抛出异常; false: 忽略非法排序字段并日志警告。"
+    },
+    {
+      "name": "ydsz.jdbc.safe-query.order-by-whitelist",
+      "type": "java.util.Set",
+      "description": "排序字段白名单（仅允许白名单中的字段参与排序，为空时使用正则校验）。"
+    },
+    {
+      "name": "ydsz.jdbc.circuit-breaker.failure-threshold",
+      "type": "java.lang.Integer",
+      "description": "连续失败次数阈值，超过后触发熔断（默认 10）。"
+    },
+    {
+      "name": "ydsz.jdbc.circuit-breaker.open-duration-millis",
+      "type": "java.lang.Long",
+      "description": "熔断持续时间（毫秒），超过后进入半开状态（默认 30000）。"
+    },
+    {
+      "name": "ydsz.jdbc.circuit-breaker.half-open-probe-size",
+      "type": "java.lang.Integer",
+      "description": "半开状态探测请求数（默认 3）。"
+    },
+    {
+      "name": "ydsz.jdbc.hikari.minimum-idle",
+      "type": "java.lang.Integer",
+      "description": "最小空闲连接数（默认 5）。"
+    },
+    {
+      "name": "ydsz.jdbc.hikari.maximum-pool-size",
+      "type": "java.lang.Integer",
+      "description": "最大连接池大小（默认 20）。"
+    },
+    {
+      "name": "ydsz.jdbc.hikari.connection-timeout",
+      "type": "java.lang.Long",
+      "description": "连接超时时间毫秒（默认 30000，30 秒）。"
+    },
+    {
+      "name": "ydsz.jdbc.hikari.idle-timeout",
+      "type": "java.lang.Long",
+      "description": "空闲连接超时时间毫秒（默认 600000，10 分钟）。"
+    },
+    {
+      "name": "ydsz.jdbc.hikari.max-lifetime",
+      "type": "java.lang.Long",
+      "description": "连接最大生命周期毫秒（默认 1800000，30 分钟）。"
+    },
+    {
+      "name": "ydsz.jdbc.hikari.leak-detection-threshold",
+      "type": "java.lang.Long",
+      "description": "连接泄漏检测阈值毫秒（默认 30000，设为 0 禁用）。"
+    },
+    {
+      "name": "ydsz.jdbc.hikari.keepalive-time",
+      "type": "java.lang.Long",
+      "description": "连接保活时间毫秒（默认 120000，2 分钟）。"
+    },
+    {
+      "name": "ydsz.jdbc.hikari.validation-timeout",
+      "type": "java.lang.Long",
+      "description": "连接校验超时时间毫秒（默认 5000，5 秒）。"
+    },
+    {
+      "name": "ydsz.jdbc.hikari.initialization-fail-timeout",
+      "type": "java.lang.Long",
+      "description": "连接池初始化失败超时毫秒（默认 0，惰性初始化不阻塞启动）。"
+    },
+    {
+      "name": "ydsz.jdbc.data-permission.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用数据权限拦截（行级 + 列级）（默认 false）。"
+    },
+    {
+      "name": "ydsz.jdbc.data-permission.intercept-table-strategy",
+      "type": "java.lang.String",
+      "description": "拦截表策略：INCLUDE 仅拦截配置表；EXCLUDE 排除配置表（默认 EXCLUDE）。"
+    },
+    {
+      "name": "ydsz.jdbc.data-permission.tables",
+      "type": "java.util.Set",
+      "description": "与拦截策略配合使用的表清单（忽略大小写）。"
+    },
+    {
+      "name": "ydsz.jdbc.read-write-splitting.load-balance-strategy",
+      "type": "java.lang.String",
+      "description": "从库负载均衡策略：ROUND_ROBIN（轮询）、RANDOM（随机）、WEIGHTED（加权）（默认 ROUND_ROBIN）。"
+    },
+    {
+      "name": "ydsz.jdbc.read-write-splitting.slave-ds-list",
+      "type": "java.util.List",
+      "description": "从库数据源名称列表（需与 spring.datasource.dynamic.datasources 中的 key 对应）。"
+    },
+    {
+      "name": "ydsz.jdbc.health.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 JDBC 健康指标端点，暴露从库状态与缓存统计（默认 true）。"
+    }
+  ]
+}

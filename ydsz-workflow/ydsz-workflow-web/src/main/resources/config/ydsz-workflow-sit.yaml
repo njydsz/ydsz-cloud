@@ -1,0 +1,30 @@
+# =====================================================================
+#  YDSZ · Workflow · SIT 环境配置（Nacos DataId）
+#  DataId:    ydsz-workflow-sit.yaml
+#  Group:     sit
+#  端口:      9005
+# =====================================================================
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 100MB
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml,classpath*:mapper/flow/**/*.xml
+  type-aliases-package: com.njydsz.workflow.entity
+
+# SIT 环境关闭文档 UI
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: true
+knife4j:
+  production: true
+
+# SIT 环境 YDSZ 业务日志降为 INFO
+logging:
+  level:
+    "[com.njydsz]": INFO

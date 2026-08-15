@@ -1,0 +1,85 @@
+# =====================================================================
+#  YDSZ 调度服务 bootstrap 配置（自研分布式任务调度引擎）
+#  --------------------------------------------------------------------
+#  端口：9006
+#  职责：Leader 选举 + DB 行锁 + Redis 分布式锁
+#    - 报表定时生成（每日报表、订阅推送）
+#    - 成本/收入/工时/利润/开票/回款 月度自动对账
+#    - 预警重试补偿、巡检、SLA 计算
+#    - 流程超时扫描、归档
+#  依赖：Nacos 服务发现 / 配置中心、PostgreSQL、Redis、MinIO
+#  说明：bootstrap.yml 在 application.yml 之前加载，用于提前连接 Nacos
+# =====================================================================
+
+server:
+  # HTTP 监听端口（按构建顺序 7/10）
+  port: 9006
+  max-http-request-header-size: 16KB
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: ydsz-cronjob
+  profiles:
+    # 默认 dev，可通过 -Dspring.profiles.active=dev|sit|uat|prod 或 ENV SPRING_PROFILES_ACTIVE 覆盖
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  main:
+    web-application-type: servlet
+    allow-bean-definition-overriding: true
+  cloud:
+    nacos:
+      # ---------- 服务注册 ----------
+      discovery:
+        enabled: true
+        register-enabled: true
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:ydsz}
+        group: ${NACOS_GROUP:DEFAULT_GROUP}
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:nacos}
+        metadata:
+          version: 1.0.0
+          port: 9006
+        ip-type: IPv4
+      # ---------- 配置中心 ----------
+      config:
+        enabled: true
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:ydsz}
+        group: ${NACOS_GROUP:${spring.profiles.active}}
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:nacos}
+        file-extension: yaml
+        refresh-enabled: true
+        shared-configs:
+          - data-id: ydsz-common.yaml
+            group: ${spring.profiles.active}
+            refresh: true
+
+# P0-2: 统一线程池配置（ydsz-common-thread）
+ydsz:
+  thread:
+    enabled: true
+    pools:
+      jobDispatchExecutor:
+        core-size: 4
+        max-size: 16
+        queue-capacity: 512
+        thread-name-prefix: cronjob-dispatch-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 30
+      mapTaskExecutor:
+        core-size: 2
+        max-size: 8
+        queue-capacity: 256
+        thread-name-prefix: cronjob-map-task-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 30
+      retrySchedulerExecutor:
+        core-size: 2
+        max-size: 4
+        queue-capacity: 128
+        thread-name-prefix: cronjob-retry-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 15

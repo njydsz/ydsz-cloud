@@ -1,0 +1,24 @@
+{
+  "properties": [
+    {
+      "name": "ydsz.util.snowflake.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 Snowflake ID 自动配置（默认 true）。设置为 false 时禁用 SnowflakeIdGenerator 注册。"
+    },
+    {
+      "name": "ydsz.util.snowflake.worker-id",
+      "type": "java.lang.Long",
+      "description": "工作节点ID（范围 0-1023，显式配置，最高优先级；未配置时由 WorkerIdAllocator 策略链自动分配）。"
+    },
+    {
+      "name": "ydsz.util.snowflake.datacenter-id",
+      "type": "java.lang.Long",
+      "description": "数据中心ID（范围 0-31，未配置时基于主机名哈希自动计算）。"
+    },
+    {
+      "name": "ydsz.util.snowflake.node-id",
+      "type": "java.lang.String",
+      "description": "节点标识（用于 PodOrdinal/FilePersisted 分配策略，未配置时自动解析 HOSTNAME 或本机主机名）。"
+    }
+  ]
+}

@@ -1,0 +1,114 @@
+{
+  "properties": [
+    {
+      "name": "ydsz.exception.metrics-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用异常指标统计。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.exception.global-handler-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用全局异常处理器。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.exception.response-format",
+      "type": "com.njydsz.common.exception.config.ExceptionProperties$ResponseFormat",
+      "description": "响应格式：base-response（默认）或 problem-detail（RFC 7807）。",
+      "defaultValue": "base-response"
+    },
+    {
+      "name": "ydsz.exception.include-stack-trace",
+      "type": "java.lang.Boolean",
+      "description": "是否在响应中包含异常堆栈信息（仅开发/测试环境建议开启）。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.exception.doc-endpoint-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用错误码文档 Actuator 端点。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.exception.problem-detail-type-base-url",
+      "type": "java.lang.String",
+      "description": "ProblemDetail type URI 基础 URL（RFC 7807），用于构建 problem.type 字段指向错误码文档。",
+      "defaultValue": "about:blank"
+    },
+    {
+      "name": "ydsz.exception.metrics-include-code-tag",
+      "type": "java.lang.Boolean",
+      "description": "是否在 Micrometer 指标中包含高基数 code tag。注意：code tag 可能导致 Prometheus 指标爆炸，仅在错误码数量可控时开启。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.i18n.basename",
+      "type": "java.lang.String",
+      "description": "国际化资源文件基路径，支持 classpath:、file: 等 Spring Resource 协议。",
+      "defaultValue": "classpath:i18n/messages"
+    },
+    {
+      "name": "ydsz.i18n.encoding",
+      "type": "java.lang.String",
+      "description": "国际化资源文件编码。",
+      "defaultValue": "UTF-8"
+    },
+    {
+      "name": "ydsz.i18n.dev-cache-seconds",
+      "type": "java.lang.Integer",
+      "description": "开发环境缓存刷新间隔（秒），0 表示不缓存。仅在 dev/test profile 下生效。",
+      "defaultValue": 5
+    },
+    {
+      "name": "ydsz.i18n.prod-cache-seconds",
+      "type": "java.lang.Integer",
+      "description": "生产环境缓存刷新间隔（秒）。",
+      "defaultValue": 3600
+    },
+    {
+      "name": "ydsz.i18n.fallback-to-system-locale",
+      "type": "java.lang.Boolean",
+      "description": "当请求语言不在 supportedLocales 中时，是否回退到系统默认 Locale。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.i18n.supported-locales",
+      "type": "java.util.List<java.lang.String>",
+      "description": "支持的语言列表，用于解析 Accept-Language 请求头和验证 lang 参数。"
+    },
+    {
+      "name": "ydsz.i18n.lang-param-name",
+      "type": "java.lang.String",
+      "description": "自定义语言参数名称，用于从请求参数中解析语言。",
+      "defaultValue": "lang"
+    },
+    {
+      "name": "ydsz.i18n.i18n-base-names",
+      "type": "java.lang.String",
+      "description": "国际化资源文件基础名（备用），与 basename 类似但优先级不同。",
+      "defaultValue": "i18n/messages"
+    },
+    {
+      "name": "ydsz.i18n.validate-on-startup",
+      "type": "java.lang.Boolean",
+      "description": "启动时是否校验所有 ExceptionCode 的 i18n key 可解析。",
+      "defaultValue": true
+    }
+  ],
+  "hints": [
+    {
+      "name": "ydsz.exception.response-format",
+      "values": [
+        {
+          "value": "base-response",
+          "description": "返回 BaseResponse 格式（兼容旧版 API 客户端，包含 code/msg/data 字段）"
+        },
+        {
+          "value": "problem-detail",
+          "description": "返回 RFC 7807/9457 ProblemDetail 格式（Spring 标准，包含 type/title/status/detail 字段）"
+        }
+      ]
+    }
+  ]
+}

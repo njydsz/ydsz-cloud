@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <artifactId>ydsz-common-safe</artifactId>
+    <name>ydsz-common-safe</name>
+    <description>ydsz-common-safe</description>
+
+    <parent>
+        <groupId>com.njydsz</groupId>
+        <artifactId>ydsz-common</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <dependencies>
+        <!-- ydsz-common-json（YdszJson 引擎，替代 Jackson） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-json</artifactId>
+        </dependency>
+        <!--ydsz-common-redis-->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-redis</artifactId>
+        </dependency>
+        <!--ydsz-common-core（RequestContext 统一上下文管理）-->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-core</artifactId>
+        </dependency>
+        <!--ydsz-common-util-->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-util</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-exception</artifactId>
+        </dependency>
+        <!--spring-->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webmvc</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aspectj</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!--ydsz-common-cache（本地缓存框架，替代 Caffeine）-->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-cache</artifactId>
+        </dependency>
+        <!--lombok-->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <!--spring-boot-actuator (optional for HealthIndicator) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-actuator</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- spring-boot-health (Spring Boot 4.x: health classes moved from actuator to health module) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-health</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- spring-boot-http-converter (Spring Boot 4.x: HttpMessageConverters moved to separate module) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-http-converter</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- OWASP Java HTML Sanitizer for XSS protection -->
+        <dependency>
+            <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
+            <artifactId>owasp-java-html-sanitizer</artifactId>
+        </dependency>
+        <!-- Micrometer (optional, for SafeMetrics) -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-core</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!--
+            Jackson annotations（optional，编译期可见，运行期不强制）
+            spring-boot 4.x 的 spring-boot-health / spring-boot-actuator / spring-web 7.0.x
+            的 class 文件字节码中带有 @JsonInclude 等 Jackson 注解。声明为 optional 即可在
+            编译期消除 "未知的枚举常量 com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY"
+            警告，又不强制本模块使用者必须引入 Jackson 核心。
+        -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- JUnit 5 (test scope) -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- mybatis-plus-core（AuditFieldFiller 使用） -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-core</artifactId>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
+</project>
