@@ -62,10 +62,15 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * <p>所有锁租约时间、自旋退避参数均可通过 {@code ydsz.redis.cache-guard.*} 配置项覆盖，
  * 无需修改代码即可适配不同业务场景的需求。</p>
  *
+ * <p><b>迁移说明：</b>自 v1.1.0 起标记废弃，计划 v2.0.0 移除。
+ * 当前无业务消费方。缓存防护能力请由各业务模块按需自行实现。
+ *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 自 v1.1.0 起无消费方，计划 v2.0.0 移除。替代方案：业务模块按需实现缓存防护逻辑。
  */
 @Slf4j
+@Deprecated(since = "1.1.0", forRemoval = true)
 public class RedisCacheGuard {
 
     private static final String NULL_PLACEHOLDER = "__NULL__";

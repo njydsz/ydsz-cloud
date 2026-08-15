@@ -18,40 +18,16 @@ import com.njydsz.common.json.annotation.JsonIgnore;
 import static lombok.AccessLevel.PROTECTED;
 
 /**
- * 分页查询参数封装类（v1.7.0 职责精简版）。
+ * 分页查询参数封装类。
  *
- * <p>用于封装分页查询的请求参数，包括页码、页大小、排序信息和通用搜索条件。
- *
- * <p><b>v1.7.0 职责变更：</b>参考互联网大厂规范（Spring Data Pageable、Axon Framework），
- * 将 SQL 安全相关职责下沉至 {@code SafeQueryInnerInterceptor}：
- * <ul>
- *   <li>LIKE 转义 → 业务层/ResultMapper 处理</li>
- *   <li>ORDER BY SQL 拼接 → {@code SafeQueryInnerInterceptor}</li>
- *   <li>深度分页评估 → {@code SafeQueryInnerInterceptor}</li>
- * </ul>
- *
- * <p>此类现在仅负责<b>承载查询参数</b>，遵循单一职责原则（SRP）。
- *
- * <p><b>使用示例：</b>
- * <pre>{@code
- * // 直接构造（推荐，交由 MyBatis 参数绑定 / 子类继承）
- * PageQuery query = PageQuery.builder()
- *         .pageNum(1).pageSize(10)
- *         .build();
- *
- * // 添加排序（安全校验由 SafeQueryInnerInterceptor 统一处理）
- * query.addOrder("created_at", true);
- * query.addDescOrder("updated_at");
- *
- * // 深度分页风险评估（阈值来自 DomainProperties，默认 10000 / 50000）
- * DeepPaginationRisk risk = query.assessPaginationRisk();
- * }</pre>
+ * <p>承载分页查询的请求参数（页码、页大小、排序项），提供偏移量计算、
+ * 排序操作、游标模式判定等基础能力。深度分页风险评估已解耦至
+ * {@link PageQueryRiskAssessor}。
  *
  * @author ydsz-team
- * @since 1.0.0
- * @since 1.7.0 职责精简：移除 SQL 安全处理逻辑，下沉至拦截器层
- * @since 1.8.0 移除失效的 PageQueryFactory 运行时注入，深度分页评估改为 assessPaginationRisk()
+ * @see PageQueryRiskAssessor
  * @see DeepPaginationRisk
+ * @since 1.10.0
  */
 @Data
 @SuperBuilder
@@ -64,12 +40,9 @@ public class PageQuery extends BaseQuery {
     /**
      * 创建分页查询对象（简化静态工厂，对标 Spring Data {@code PageRequest.of}）。
      *
-     * <p>适用场景：仅需指定页码和页大小时的简洁构造，无需 {@code @SuperBuilder} 继承链。
-     *
      * @param pageNum  当前页码（从 1 开始）
      * @param pageSize 每页记录数
      * @return PageQuery 实例
-     * @since 1.9.0
      */
     public static PageQuery of(int pageNum, int pageSize) {
         return PageQuery.builder()
@@ -78,11 +51,7 @@ public class PageQuery extends BaseQuery {
                 .build();
     }
 
-    /**
-     * 搜索关键字最大长度（仅做截断，不做转义）。
-     *
-     * <p>v1.7.0 变更：移除 LIKE 转义逻辑，转义由业务层或 MyBatis ResultMapper 处理。
-     */
+    /** 搜索关键字最大长度（仅做截断，不做转义） */
     public static final int MAX_SEARCH_KEY_LENGTH = 200;
 
     /**
@@ -316,40 +285,13 @@ public class PageQuery extends BaseQuery {
     /**
      * 评估当前分页查询的深度分页风险（使用默认阈值 10000 / 50000）。
      *
-     * <p>基于 {@link #getOffsetLong()} 计算 offset，再委托 {@link DeepPaginationRisk#assess(long)} 判定。
-     * 业务层 / 拦截层可据此发出告警或拒绝执行，防止慢查询拖垮数据库。
-     *
-     * <p><b>纯函数设计：</b>评估不产生副作用、不做结果缓存。offset 计算与阈值判定开销极小，
-     * 缓存反而引入可变状态（污染 equals/hashCode、与"阈值 0 表示关闭"语义冲突），故 v1.9.0 起移除缓存。
+     * <p>委托 {@link PageQueryRiskAssessor#assess(PageQuery)} 执行评估。
+     * 纯函数设计，不产生副作用、不做结果缓存。
      *
      * @return 风险等级（SAFE / WARN / REJECT）
-     * @since 1.8.0
-     * @since 1.9.0 移除结果缓存，退化为纯函数
      */
     public DeepPaginationRisk assessPaginationRisk() {
-        return DeepPaginationRisk.assess(getOffsetLong());
-    }
-
-    /**
-     * 评估当前分页查询的深度分页风险（使用指定阈值）。
-     *
-     * <p>阈值契约：{@code rejectThreshold >= warnThreshold >= 0}，非法阈值由
-     * {@link DeepPaginationRisk#assess(long, long, long)} 校验。典型调用：
-     * <pre>{@code
-     * DomainProperties.Page page = domainProperties.getPage();
-     * DeepPaginationRisk risk = query.assessPaginationRisk(
-     *         page.getCursorWarningThreshold(), page.getCursorRejectThreshold());
-     * }</pre>
-     *
-     * @param warnThreshold   警告阈值
-     * @param rejectThreshold 拒绝阈值
-     * @return 风险等级（SAFE / WARN / REJECT）
-     * @throws IllegalArgumentException 当阈值非法（负数或 reject < warn）时
-     * @since 1.8.0
-     * @since 1.9.0 移除结果缓存，退化为纯函数
-     */
-    public DeepPaginationRisk assessPaginationRisk(long warnThreshold, long rejectThreshold) {
-        return DeepPaginationRisk.assess(getOffsetLong(), warnThreshold, rejectThreshold);
+        return PageQueryRiskAssessor.assess(this);
     }
 
     /**

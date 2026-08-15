@@ -42,8 +42,8 @@ public final class FieldMetadataLoader {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FieldMetadataLoader.class);
 
-    /** 当前使用的命名策略 */
-    static final ThreadLocal<PropertyNamingStrategy> NAMING_STRATEGY =
+    /** 当前使用的命名策略（JsonMapper.applyRuntimeConfig 会写入，故需 public） */
+    public static final ThreadLocal<PropertyNamingStrategy> NAMING_STRATEGY =
         ThreadLocal.withInitial(() -> PropertyNamingStrategy.LOWER_CAMEL_CASE);
 
     /**

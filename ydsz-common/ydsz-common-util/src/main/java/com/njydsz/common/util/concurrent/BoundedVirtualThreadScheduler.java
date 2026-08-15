@@ -134,6 +134,7 @@ public final class BoundedVirtualThreadScheduler {
 
     /**
      * 获取当前可用并发许可数（可用于健康检查或监控）。
+      * @return 处理后的结果
      */
     public int availablePermits() {
         return concurrencyLimiter.availablePermits();
@@ -153,3 +154,5 @@ public final class BoundedVirtualThreadScheduler {
                 ", shutdown=" + shutdown + '}';
     }
 }
+
+

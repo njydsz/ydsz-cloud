@@ -7,7 +7,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
@@ -17,6 +16,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPerTaskExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -25,7 +25,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.alibaba.ttl.TtlCallable;
 import com.alibaba.ttl.TtlRunnable;
 import com.alibaba.ttl.threadpool.TtlExecutors;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -318,7 +317,8 @@ public final class ExecutorUtils {
                 .name(name, 0)
                 .uncaughtExceptionHandler(ExecutorUtils::handleUncaughtException)
                 .factory();
-        return Executors.newThreadPerTaskExecutor(factory);
+        // 直接构造 ThreadPerTaskExecutor（JDK 21 公共类），避免使用 Executors 工厂方法（编码规范 8.1 节）
+        return new ThreadPerTaskExecutor(factory);
     }
 
     /**
@@ -464,6 +464,12 @@ public final class ExecutorUtils {
 
     /**
      * 创建自定义线程池
+      * @param corePoolSize corePoolSize
+      * @param maximumPoolSize maximumPoolSize
+      * @param keepAliveTime keepAliveTime
+      * @param unit 时间单位
+      * @param workQueue workQueue
+      * @return 处理后的结果
      */
     public static ThreadPoolExecutor newCustomThreadPool(
             int corePoolSize,
@@ -484,6 +490,14 @@ public final class ExecutorUtils {
 
     /**
      * 创建自定义线程池
+      * @param corePoolSize 核心线程数
+      * @param maximumPoolSize 最大线程数
+      * @param keepAliveTime 空闲线程存活时间
+      * @param unit 时间单位
+      * @param workQueue 工作队列
+      * @param threadNamePrefix 线程名前缀
+      * @param handler 拒绝策略
+      * @return 处理后的结果
      */
     public static ThreadPoolExecutor newCustomThreadPool(
             int corePoolSize,
@@ -667,3 +681,5 @@ public final class ExecutorUtils {
         }
     }
 }
+
+

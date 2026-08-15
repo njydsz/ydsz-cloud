@@ -466,6 +466,7 @@ public final class BeanMapper {
 
         /**
          * 获取完整的泛型类型（包含参数化信息）。
+          * @return 处理后的结果
          */
         public Type getType() {
             return type;
@@ -874,3 +875,5 @@ public final class BeanMapper {
         return result;
     }
 }
+
+

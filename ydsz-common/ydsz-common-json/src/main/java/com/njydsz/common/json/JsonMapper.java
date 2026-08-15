@@ -71,9 +71,6 @@ import com.njydsz.common.json.type.TypeFactory;
  */
 public class JsonMapper {
 
-    /** 默认单例实例（YdszJson 静态方法委托给此实例） */
-    private static final JsonMapper DEFAULT = new JsonMapper();
-
     /** 此 Mapper 实例的配置（独立副本，不可变） */
     private final JsonConfig config;
 
@@ -852,10 +849,13 @@ public class JsonMapper {
     /**
      * 获取默认 Mapper 实例。
      *
-     * @return 默认单例实例
+     * <p>与 {@link YdszJson#getDefaultMapper()} 同源：{@link JsonConfig#install(JsonConfig)}
+     * 热更新后，此入口返回的实例即携带最新配置（P0-2 修复）。</p>
+     *
+     * @return 当前默认 Mapper 实例，永不为 null
      */
     public static JsonMapper getDefault() {
-        return DEFAULT;
+        return YdszJson.getDefaultMapper();
     }
 
     // ==================== Builder API ====================

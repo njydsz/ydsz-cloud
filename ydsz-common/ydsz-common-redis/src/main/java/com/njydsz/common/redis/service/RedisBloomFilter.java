@@ -35,6 +35,9 @@ import com.njydsz.common.redis.enums.FailOpenPolicy;
  *   <li>自动计算最优的位数组大小和哈希函数数量</li>
  * </ul>
  *
+ * <p><b>迁移说明：</b>自 v1.1.0 起标记废弃，计划 v2.0.0 移除。
+ * 当前无业务消费方。如需布隆过滤器能力，推荐使用 Redisson 的 {@code RBloomFilter}。
+ *
  * <p><b>使用示例：</b>
  * <pre>{@code
  * RedisBloomFilter bloomFilter; // 注入
@@ -51,8 +54,10 @@ import com.njydsz.common.redis.enums.FailOpenPolicy;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 自 v1.1.0 起无消费方，计划 v2.0.0 移除。替代方案：Redisson RBloomFilter。
  */
 @Slf4j
+@Deprecated(since = "1.1.0", forRemoval = true)
 public class RedisBloomFilter implements BloomFilterService {
 
     private static final double DEFAULT_FALSE_POSITIVE_RATE = 0.01;

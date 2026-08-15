@@ -47,10 +47,15 @@ import com.njydsz.common.redis.config.RedisProperties;
  * }
  * }</pre>
  *
+ * <p><b>迁移说明：</b>自 v1.1.0 起标记废弃，计划 v2.0.0 移除。
+ * 当前无业务消费方。如需分布式 ID 生成能力，推荐使用 ydsz-common-util 提供的 IdGenerator。
+ *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 自 v1.1.0 起无消费方，计划 v2.0.0 移除。替代方案：ydsz-common-util IdGenerator。
  */
 @Slf4j
+@Deprecated(since = "1.1.0", forRemoval = true)
 public class RedisSnowflakeIdGenerator {
 
     /** 起始时间戳（2024-01-01） */

@@ -79,11 +79,6 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
     private LockReleaseNotifier lockReleaseNotifier;
 
     /**
-     * Fencing Token 提供器（可选，未配置时不支持 fencing token）
-     */
-    private FencingTokenProvider fencingTokenProvider;
-
-    /**
      * 锁事件监听器（可选，用于感知锁生命周期事件）
      */
     private LockEventListener lockEventListener = LockEventListener.NO_OP;
@@ -190,18 +185,6 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
      */
     public void setLockReleaseNotifier(LockReleaseNotifier lockReleaseNotifier) {
         this.lockReleaseNotifier = lockReleaseNotifier;
-    }
-
-    /**
-     * 设置 Fencing Token 提供器（可选）
-     *
-     * <p>配置后，获取锁时可同时获取单调递增的 fencing token，
-     * 用于解决分布式锁的安全窗口问题。</p>
-     *
-     * @param fencingTokenProvider Fencing Token 提供器实例
-     */
-    public void setFencingTokenProvider(FencingTokenProvider fencingTokenProvider) {
-        this.fencingTokenProvider = fencingTokenProvider;
     }
 
     /**
@@ -660,31 +643,5 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
      */
     protected abstract long doGetRemainTime(String lockKey);
 
-    // ── Fencing Token 实现 ─────────────────────────────────────────────────
 
-    /**
-     * 获取指定锁键的 Fencing Token（单调递增）
-     *
-     * <p>仅在配置了 {@link FencingTokenProvider} 时可用。
-     *
-     * @param lockKey 锁的键
-     * @return fencing token，-1 表示不支持或生成失败
-     */
-    @Override
-    public long getFencingToken(String lockKey) {
-        if (fencingTokenProvider == null) {
-            return -1L;
-        }
-        return fencingTokenProvider.nextToken(lockKey);
-    }
-
-    /**
-     * 是否支持 Fencing Token 能力
-     *
-     * @return true 表示已配置 Fencing Token 提供器
-     */
-    @Override
-    public boolean supportsFencingToken() {
-        return fencingTokenProvider != null;
-    }
 }

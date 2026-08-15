@@ -28,7 +28,6 @@ import com.njydsz.common.jdbc.handler.UpdatedAtHandler;
 import com.njydsz.common.jdbc.handler.UpdatedByHandler;
 import com.njydsz.common.jdbc.interceptor.ColPermissionInnerInterceptor;
 import com.njydsz.common.jdbc.interceptor.CombinedFieldFillInterceptor;
-import com.njydsz.common.jdbc.interceptor.LogicalDeleteInterceptor;
 import com.njydsz.common.jdbc.interceptor.RowPermissionInnerInterceptor;
 import com.njydsz.common.jdbc.interceptor.SqlFirewallInnerInterceptor;
 import com.njydsz.common.jdbc.interceptor.SqlTraceInnerInterceptor;
@@ -44,17 +43,18 @@ import lombok.extern.slf4j.Slf4j;
  * <p>配置 MyBatis Plus 的各种插件和拦截器，包括：
  * <ul>
  *   <li>乐观锁拦截器：MP 内置 {@code OptimisticLockerInnerInterceptor}（配合实体 {@code @Version} 注解）</li>
- *   <li>逻辑删除拦截器（自定义实现）：自动追加 deleted 过滤条件，替代 @TableLogic 注解</li>
  *   <li>字段填充拦截器：自动填充 createdBy、createdAt、updatedBy、updatedAt</li>
  *   <li>SPI 拦截器：外部模块通过 {@link InnerInterceptorProvider} 注入（如 common-tenant 的租户隔离）</li>
  *   <li>数据权限拦截器：实现行级和列级数据权限控制</li>
  *   <li>分页拦截器：支持多数据库类型的分页查询</li>
  * </ul>
  *
+ * <p><b>逻辑删除说明：</b>自 v1.9.0 起，统一采用 MP 原生 {@code @TableLogic} 注解实现逻辑删除，
+ * 替代自研的 {@code LogicalDeleteInterceptor}。业务实体只需在 deleted 字段上标注 {@code @TableLogic} 即可。
+ *
  * <p>拦截器执行顺序（按添加顺序）：
  * <ol>
  *   <li>OptimisticLocker - 乐观锁（内置 @Version）</li>
- *   <li>LogicalDeleteInterceptor - 逻辑删除（SELECT/DELETE）</li>
  *   <li>FieldFillInterceptor - 字段填充</li>
  *   <li>SPI Interceptors - 外部模块通过 {@link InnerInterceptorProvider} SPI 注入（按 order 排序）</li>
  *   <li>DataPermissionInnerInterceptor - 数据权限（行级+列级）</li>
@@ -68,7 +68,6 @@ import lombok.extern.slf4j.Slf4j;
  * @author ydsz-team
  * @since 1.0.0
  * @see MybatisPlusInterceptor
- * @see LogicalDeleteInterceptor
  * @see InnerInterceptorProvider
  */
 @Slf4j
@@ -76,11 +75,8 @@ import lombok.extern.slf4j.Slf4j;
 @EnableConfigurationProperties({
     FieldFillConfiguration.class,
     DataPermissionConfiguration.class,
-    LogicalDeleteConfiguration.class,
     PaginationProperties.class,
-    SqlFirewallProperties.class,
-    ReadWriteSplittingProperties.class,
-    CircuitBreakerProperties.class
+    SqlFirewallProperties.class
 })
 @ConditionalOnProperty(prefix = "ydsz.jdbc", name = "enabled", matchIfMissing = true)
 public class MybatisPlusConfiguration {
@@ -88,30 +84,21 @@ public class MybatisPlusConfiguration {
     private final FieldFillConfiguration fieldFillConfiguration;
     private final DataPermissionConfiguration dataPermissionConfiguration;
     private final ObjectProvider<DataScopeIdExpander> dataScopeIdExpanderProvider;
-    private final LogicalDeleteConfiguration logicalDeleteConfiguration;
     private final PaginationProperties paginationProperties;
     private final SqlFirewallProperties sqlFirewallProperties;
-    private final ReadWriteSplittingProperties readWriteSplittingProperties;
-    private final CircuitBreakerProperties circuitBreakerProperties;
     private final ObjectProvider<List<InnerInterceptorProvider>> spiInterceptorProviders;
 
     public MybatisPlusConfiguration(FieldFillConfiguration fieldFillConfiguration,
                                      DataPermissionConfiguration dataPermissionConfiguration,
                                      ObjectProvider<DataScopeIdExpander> dataScopeIdExpanderProvider,
-                                     LogicalDeleteConfiguration logicalDeleteConfiguration,
                                      PaginationProperties paginationProperties,
                                      SqlFirewallProperties sqlFirewallProperties,
-                                     ReadWriteSplittingProperties readWriteSplittingProperties,
-                                     CircuitBreakerProperties circuitBreakerProperties,
                                      ObjectProvider<List<InnerInterceptorProvider>> spiInterceptorProviders) {
         this.fieldFillConfiguration = fieldFillConfiguration;
         this.dataPermissionConfiguration = dataPermissionConfiguration;
         this.dataScopeIdExpanderProvider = dataScopeIdExpanderProvider;
-        this.logicalDeleteConfiguration = logicalDeleteConfiguration;
         this.paginationProperties = paginationProperties;
         this.sqlFirewallProperties = sqlFirewallProperties;
-        this.readWriteSplittingProperties = readWriteSplittingProperties;
-        this.circuitBreakerProperties = circuitBreakerProperties;
         this.spiInterceptorProviders = spiInterceptorProviders;
     }
 
@@ -121,15 +108,15 @@ public class MybatisPlusConfiguration {
      * <p>按顺序添加以下拦截器：
      * <ol>
      *   <li>乐观锁拦截器（MP 内置，配合实体 @Version 注解）</li>
-     *   <li>逻辑删除拦截器（自定义实现，替代@TableLogic）</li>
      *   <li>字段填充拦截器（针对非实体类的更新操作）</li>
      *   <li>SPI 拦截器（外部模块通过 {@link InnerInterceptorProvider} 注入，按 order 排序）</li>
      *   <li>数据权限拦截器（行级+列级）</li>
      *   <li>分页拦截器（动态适配数据库类型）</li>
      * </ol>
      *
+     * <p><b>注意：</b>逻辑删除已迁移至 MP 原生 {@code @TableLogic} 注解，无需拦截器处理。
+     *
      * @return MybatisPlusInterceptor 实例
-     * @see LogicalDeleteInterceptor
      * @see InnerInterceptorProvider
      * @see PaginationInnerInterceptor
      */
@@ -142,23 +129,10 @@ public class MybatisPlusConfiguration {
         interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());
         log.debug("MyBatis Plus: OptimisticLockerInnerInterceptor (built-in) enabled for @Version entities");
 
-        // 2. 逻辑删除拦截器（自定义实现）
-        if (Boolean.TRUE.equals(logicalDeleteConfiguration.isEnabled())) {
-            LogicalDeleteInterceptor logicalDeleteInterceptor = new LogicalDeleteInterceptor();
-            logicalDeleteInterceptor.setDeletedColumn(logicalDeleteConfiguration.getDeletedColumn());
-            logicalDeleteInterceptor.setDeletedValue(logicalDeleteConfiguration.getDeletedValue());
-            logicalDeleteInterceptor.setNormalValue(logicalDeleteConfiguration.getNormalValue());
-            logicalDeleteInterceptor.setIgnoreTables(logicalDeleteConfiguration.getNormalizedIgnoreTables());
-            interceptor.addInnerInterceptor(logicalDeleteInterceptor);
-            log.debug("MyBatis Plus: LogicalDelete interceptor enabled (deletedColumn={}, ignoreTables={})",
-                    logicalDeleteConfiguration.getDeletedColumn(),
-                    logicalDeleteConfiguration.getNormalizedIgnoreTables());
-        }
-
-        // 3. 字段填充拦截器（合并多 Handler，单次 SQL 解析完成所有字段填充）
+        // 2. 字段填充拦截器（合并多 Handler，单次 SQL 解析完成所有字段填充）
         configureFieldFillInterceptors(interceptor);
 
-        // 4. SPI 拦截器（外部模块通过 InnerInterceptorProvider 注入，按 order 排序）
+        // 3. SPI 拦截器（外部模块通过 InnerInterceptorProvider 注入，按 order 排序）
         //    常见用途：common-tenant 的 TenantIsolationInterceptor（order=400）
         //    在数据权限之前注入，确保 tenant_id 条件优先追加
         List<InnerInterceptorProvider> providers = spiInterceptorProviders.getIfAvailable(Collections::emptyList);
@@ -173,10 +147,10 @@ public class MybatisPlusConfiguration {
                 });
         }
 
-        // 5. 数据权限拦截器（行级+列级）
+        // 4. 数据权限拦截器（行级+列级）
         configureDataPermissionInterceptor(interceptor);
 
-        // 6. 分页拦截器（支持显式指定 DbType + maxLimit 安全加固）
+        // 5. 分页拦截器（支持显式指定 DbType + maxLimit 安全加固）
         PaginationInnerInterceptor paginationInterceptor = new PaginationInnerInterceptor();
         String dbType = paginationProperties.getDbType();
         if (dbType != null && !dbType.isEmpty()) {
@@ -188,7 +162,7 @@ public class MybatisPlusConfiguration {
         paginationInterceptor.setOverflow(paginationProperties.isOverflow());
         interceptor.addInnerInterceptor(paginationInterceptor);
 
-        // 7. SQL 防火墙拦截器（置于拦截器链末端，在所有 SQL 改写完成后做安全校验）
+        // 6. SQL 防火墙拦截器（置于拦截器链末端，在所有 SQL 改写完成后做安全校验）
         if (sqlFirewallProperties != null && sqlFirewallProperties.isEnabled()) {
             SqlFirewallInnerInterceptor firewall = new SqlFirewallInnerInterceptor();
             firewall.setEnabled(true);
@@ -201,18 +175,6 @@ public class MybatisPlusConfiguration {
             firewall.setAllowTables(sqlFirewallProperties.getAllowTables());
             interceptor.addInnerInterceptor(firewall);
             log.debug("MyBatis Plus: SqlFirewall interceptor enabled");
-        }
-
-        // 读写分离状态日志
-        if (readWriteSplittingProperties != null && readWriteSplittingProperties.isEnabled()) {
-            log.info("MyBatis Plus: ReadWriteSplitting configured (master={}, slaves={})",
-                    readWriteSplittingProperties.getMasterDs(), readWriteSplittingProperties.getSlaveDsList());
-        }
-
-        // 数据库熔断器状态日志
-        if (circuitBreakerProperties != null && circuitBreakerProperties.isEnabled()) {
-            log.info("MyBatis Plus: DatabaseCircuitBreaker configured (threshold={}, openDuration={}ms)",
-                    circuitBreakerProperties.getFailureThreshold(), circuitBreakerProperties.getOpenDurationMillis());
         }
 
         return interceptor;
@@ -271,12 +233,8 @@ public class MybatisPlusConfiguration {
      * 启动完成后打印能力概览 Banner
      *
      * <p>通过 {@link ApplicationReadyEvent} 确保在 Spring 容器完全就绪后执行，
-     * 此时所有 Bean 均已初始化完毕。ASCII 形式输出便于开发者快速确认：
-     * <ul>
-     *     <li>哪些拦截器已启用（基于运行时配置，非硬编码）</li>
-     *     <li>数据源数量（通过 {@link DynamicRoutingDataSource} 探测）</li>
-     *     <li>读写分离、熔断器等附属功能状态</li>
-     * </ul>
+     * 此时所有 Bean 均已初始化完毕。结构化单行输出便于 ELK/Loki 采集，
+     * 避免多行 ASCII art 在容器日志中产生噪音。
      *
      * @param event 应用就绪事件
      */
@@ -284,7 +242,6 @@ public class MybatisPlusConfiguration {
     public void printCapabilityBanner(ApplicationReadyEvent event) {
         ApplicationContext ctx = event.getApplicationContext();
 
-        boolean logicalDelete = Boolean.TRUE.equals(logicalDeleteConfiguration.isEnabled());
         boolean fieldFill = fieldFillConfiguration.getCreatedByIntercept().getEnabled()
                 || fieldFillConfiguration.getUpdateByIntercept().getEnabled()
                 || fieldFillConfiguration.getCreateAtIntercept().getEnabled()
@@ -292,20 +249,17 @@ public class MybatisPlusConfiguration {
         boolean dataPermission = Boolean.TRUE.equals(dataPermissionConfiguration.getEnabled());
         boolean sqlFirewall = sqlFirewallProperties != null && sqlFirewallProperties.isEnabled();
         boolean sqlTrace = isSqlTraceEnabled(ctx);
-        boolean rwSplitting = readWriteSplittingProperties != null && readWriteSplittingProperties.isEnabled();
-        boolean circuitBreaker = circuitBreakerProperties != null && circuitBreakerProperties.isEnabled();
         int spiCount = spiInterceptorProviders.getIfAvailable(Collections::emptyList).size();
         String dataSourceInfo = buildDataSourceInfo(ctx);
         String dbType = paginationProperties.getDbType() != null ? paginationProperties.getDbType() : "auto";
-        String rwStrategy = rwSplitting ? readWriteSplittingProperties.getLoadBalanceStrategy() : "disabled";
 
-        // 结构化单行输出，兼容 ELK/Loki 采集，避免多行 ASCII art 在容器日志中产生噪音
+        // 结构化单行输出，兼容 ELK/Loki 采集
         log.info("[ydsz-common-jdbc] capabilities: "
-                        + "optimisticLock=true, logicalDelete={}, fieldFill={}, dataPermission={}, "
-                        + "sqlFirewall={}, sqlTrace={}, pagination={}, rwSplitting={}, rwStrategy={}, "
-                        + "circuitBreaker={}, spiExtensions={}, dataSources={}",
-                logicalDelete, fieldFill, dataPermission, sqlFirewall, sqlTrace, dbType,
-                rwSplitting, rwStrategy, circuitBreaker, spiCount, dataSourceInfo);
+                        + "optimisticLock=true, fieldFill={}, dataPermission={}, "
+                        + "sqlFirewall={}, sqlTrace={}, pagination={}, "
+                        + "spiExtensions={}, dataSources={}",
+                fieldFill, dataPermission, sqlFirewall, sqlTrace, dbType,
+                spiCount, dataSourceInfo);
     }
 
     /**

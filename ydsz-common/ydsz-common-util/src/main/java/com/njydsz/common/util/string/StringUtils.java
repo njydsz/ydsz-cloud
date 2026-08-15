@@ -49,6 +49,8 @@ public final class StringUtils {
 
     /**
      * 判断字符串是否为 null 或空字符串（""）
+      * @param cs cs
+      * @return 处理后的结果
      */
     public static boolean isEmpty(CharSequence cs) {
         return cs == null || cs.length() == 0;
@@ -344,3 +346,5 @@ public final class StringUtils {
     private static final String BYTE_SPACE = " ";
     private static final String WHITESPACE_REGEX = "\\s+";
 }
+
+

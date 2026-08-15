@@ -41,10 +41,16 @@ import org.springframework.data.redis.core.RedisTemplate;
  * watchDog.stop("lock:order:123");  // 停止续期
  * }</pre>
  *
+ * <p><b>迁移说明：</b>自 v1.1.0 起标记废弃，计划 v2.0.0 移除。
+ * 当前无业务消费方（仅供内部 RedisCacheGuard 使用，而 CacheGuard 自身已标记废弃）。
+ * 锁续期能力请直接使用 ydsz-common-lock 模块提供的分布式锁组件。
+ *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 自 v1.1.0 起无消费方，计划 v2.0.0 移除。替代方案：ydsz-common-lock 分布式锁。
  */
 @Slf4j
+@Deprecated(since = "1.1.0", forRemoval = true)
 public class LockWatchDog {
 
     /** 续期 Lua 脚本：仅当锁持有者匹配时才续期 */

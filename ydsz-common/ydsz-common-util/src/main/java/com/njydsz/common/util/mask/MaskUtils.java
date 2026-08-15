@@ -1,7 +1,5 @@
 package com.njydsz.common.util.mask;
 
-import java.util.Objects;
-
 /**
  * 数据脱敏工具类
  *

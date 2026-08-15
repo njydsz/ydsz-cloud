@@ -53,9 +53,13 @@ public class DynamicRoutingDataSource extends AbstractRoutingDataSource {
      * <p>路由优先级（从高到低）：
      * <ol>
      *   <li>{@link HintManager} 强制路由 Hint（编程式，最高优先级）</li>
-     *   <li>{@link DynamicDataSourceContextHolder} 中的显式数据源（@DS 注解 / ReadWriteSplitting）</li>
+     *   <li>{@link DynamicDataSourceContextHolder} 中的显式数据源（@DS 注解 / 读写分离）</li>
      *   <li>默认数据源</li>
      * </ol>
+     *
+     * <p><b>读写分离说明：</b>自 v1.9.0 起，读写分离能力委托 dynamic-datasource 内置实现，
+     * 不再使用自研拦截器。{@link DynamicDataSourceContextHolder} 中的从库选择由
+     * dynamic-datasource 自动处理。
      *
      * @return 数据源路由 key；determineCurrentLookupKey 契约中 null 表示使用默认数据源
      */
@@ -75,9 +79,9 @@ public class DynamicRoutingDataSource extends AbstractRoutingDataSource {
                 }
             }
             if (hint.getType() == HintType.SLAVE) {
-                // SLAVE 语义：优先使用 holder 中已选中的从库（由 ReadWriteSplittingInterceptor
+                // SLAVE 语义：优先使用 holder 中已选中的从库（由 dynamic-datasource
                 // 完成负载均衡后 push）；holder 为空时返回 null 由默认数据源兜底。
-                // 注意：本层不负责从库选择，负载均衡由读写分离拦截器统一处理。
+                // 注意：本层不负责从库选择，负载均衡由 dynamic-datasource 统一处理。
                 String pushedDs = DynamicDataSourceContextHolder.peek();
                 if (pushedDs != null) {
                     log.debug("HintManager 强制路由到从库: {}", pushedDs);

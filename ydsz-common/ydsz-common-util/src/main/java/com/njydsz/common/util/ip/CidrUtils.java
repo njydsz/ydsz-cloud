@@ -1,12 +1,11 @@
 package com.njydsz.common.util.ip;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.njydsz.common.util.string.StringUtils;
-
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.util.string.StringUtils;
 
 /**
  * CIDR 网段计算工具类。

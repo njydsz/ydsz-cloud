@@ -42,10 +42,15 @@ import com.njydsz.common.redis.service.ops.RedisStreamOps.StreamMessage;
  * consumer.start();
  * }</pre>
  *
+ * <p><b>迁移说明：</b>自 v1.1.0 起标记废弃，计划 v2.0.0 移除。
+ * 当前无业务消费方。如需 Stream 消费能力，请基于 ops.RedisStreamOps 自行封装。
+ *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 自 v1.1.0 起无消费方，计划 v2.0.0 移除。替代方案：业务模块基于 RedisStreamOps 自行封装。
  */
 @Slf4j
+@Deprecated(since = "1.1.0", forRemoval = true)
 public class StreamConsumerTemplate implements DisposableBean {
 
     // ==================== 配置常量 ====================

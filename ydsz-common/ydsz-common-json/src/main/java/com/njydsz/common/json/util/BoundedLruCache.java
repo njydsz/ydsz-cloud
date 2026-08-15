@@ -2,8 +2,8 @@ package com.njydsz.common.json.util;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Function;
 
 /**
  * 线程安全的有界 LRU 缓存（零外部依赖实现）。
@@ -16,8 +16,11 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  *   <li>容量上限 {@code maxSize}，超出后按访问顺序淘汰最久未使用的条目（LRU）</li>
  *   <li>读写锁保证线程安全（读读并发、写写互斥、读写互斥）</li>
  *   <li>零外部依赖，仅使用 JDK 内置 {@link LinkedHashMap}</li>
- *   <li>{@link #computeIfAbsent} 原子执行"查-建-存"，避免重复创建开销</li>
+ *   <li>{@link #computeIfAbsent} 锁外构建 + 锁内双检，构建期间不阻塞其他线程</li>
  * </ul>
+ *
+ * <p><b>并发说明：</b>{@code accessOrder=true} 的 LinkedHashMap 在 {@code get()} 时会重排链表
+ * （afterNodeAccess 副作用），因此 {@link #get} 必须持写锁，否则并发读会损坏链表结构。</p>
  *
  * <p>适用场景：类元数据、序列化器实例、格式化器等小对象缓存（建议容量 128~1024）。</p>
  *
@@ -54,15 +57,18 @@ public final class BoundedLruCache<K, V> {
     /**
      * 获取缓存值。
      *
+     * <p>accessOrder 模式下 {@code get()} 会重排链表，必须持写锁执行，
+     * 否则并发读会产生数据竞争导致链表损坏（P0-1 修复）。</p>
+     *
      * @param key 键
      * @return 缓存值，不存在返回 null
      */
     public V get(K key) {
-        lock.readLock().lock();
+        lock.writeLock().lock();
         try {
             return map.get(key);
         } finally {
-            lock.readLock().unlock();
+            lock.writeLock().unlock();
         }
     }
 
@@ -83,24 +89,29 @@ public final class BoundedLruCache<K, V> {
     }
 
     /**
-     * 原子执行"查-建-存"：键已存在直接返回；否则用 mappingFunction 创建并缓存。
+     * 执行"查-建-存"：键已存在直接返回；否则用 mappingFunction 创建并缓存。
      *
-     * <p>在写锁保护下执行，避免并发场景下重复创建实例。</p>
+     * <p>构建函数在锁外执行（可能包含反射扫描全字段等重操作），避免冷启动并发时
+     * 阻塞其他线程；构建完成后在写锁内双检，并发构建时先到者生效，保证全线程
+     * 可见同一实例（P0-1 修复：原先在持写锁状态下执行 mappingFunction）。</p>
      *
      * @param key 键
      * @param mappingFunction 值创建函数（不应为 null）
-     * @return 缓存值
+     * @return 缓存值；mappingFunction 返回 null 时不缓存并返回 null
      */
     public V computeIfAbsent(K key, Function<K, V> mappingFunction) {
+        V existing = get(key);
+        if (existing != null) {
+            return existing;
+        }
+        V created = mappingFunction.apply(key);
+        if (created == null) {
+            return null;
+        }
         lock.writeLock().lock();
         try {
-            V existing = map.get(key);
-            if (existing != null) {
-                return existing;
-            }
-            V value = mappingFunction.apply(key);
-            map.put(key, value);
-            return value;
+            V winner = map.putIfAbsent(key, created);
+            return winner != null ? winner : created;
         } finally {
             lock.writeLock().unlock();
         }

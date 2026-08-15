@@ -83,18 +83,6 @@
             <optional>true</optional>
         </dependency>
 
-        <!--
-            Jakarta JSON-B API（optional，编译期可见，运行期不强制）
-            为 YdszJsonb 适配器提供 jakarta.json.bind.Jsonb / JsonbBuilder 接口定义。
-            业务代码若需使用标准 JSON-B API，需自行引入实现（如 ydsz-common-json 提供的 YdszJsonb）。
-        -->
-        <dependency>
-            <groupId>jakarta.json.bind</groupId>
-            <artifactId>jakarta.json.bind-api</artifactId>
-            <version>3.0.1</version>
-            <optional>true</optional>
-        </dependency>
-
         <!-- Test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

@@ -41,8 +41,8 @@ public final class TenantContextHolder {
     /**
      * 设置租户上下文（唯一写入口）。
      *
-     * <p>同时同步 {@code tenantId} 字符串到 RequestContext，确保
-     * {@link RequestContext#bridgeToMdc()} 等已有读取方正常工作。
+     * <p>仅向 RequestContext 注入 {@link BizContextKeys#KEY_TENANT_CONTEXT}，
+     * 所有读取方应通过 {@link #get()} 或 {@link #getTenantId()} 获取。
      *
      * @param context 租户上下文，传入 {@code null} 等同于 {@link #clear()}
      */
@@ -52,8 +52,6 @@ public final class TenantContextHolder {
             return;
         }
         RequestContext.put(KEY.key(), context);
-        // 同步 tenantId 字符串，兼容 bridgeToMdc() 等已有读取方
-        RequestContext.setTenantId(context.getTenantId());
     }
 
     /**
@@ -119,11 +117,10 @@ public final class TenantContextHolder {
     }
 
     /**
-     * 清除租户上下文（含 tenantId 字符串同步清理）。
+     * 清除租户上下文。
      */
     public static void clear() {
         RequestContext.remove(KEY.key());
-        RequestContext.remove(RequestContext.KEY_TENANT_ID);
     }
 
     /**

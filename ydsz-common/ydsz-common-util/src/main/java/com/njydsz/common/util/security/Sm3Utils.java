@@ -7,9 +7,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.util.HexFormat;
 
-import org.bouncycastle.jce.provider.BouncyCastleProvider;
-
 import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 /**
  * SM3 密码杂凑算法工具类

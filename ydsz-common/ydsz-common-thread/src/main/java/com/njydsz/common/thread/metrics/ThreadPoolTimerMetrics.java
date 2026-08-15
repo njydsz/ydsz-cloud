@@ -1,177 +1,122 @@
 package com.njydsz.common.thread.metrics;
 
-import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.SmartInitializingSingleton;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.lang.NonNull;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.lang.Nullable;
 
-import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
-import io.micrometer.core.instrument.binder.MeterBinder;
 
 /**
- * 线程池任务耗时与排队时长 Micrometer 指标绑定器。
+ * 平台线程池耗时指标绑定器。
  *
- * <p>暴露以下三类指标（均按 {@code pool.name} 打标）：
- * <ul>
- *   <li>{@code <prefix>.execution} - 任务执行耗时 Timer（P50/P95/P99）</li>
- *   <li>{@code <prefix>.queue.wait} - 任务在队列中等待时长 Timer</li>
- *   <li>{@code <prefix>.slow.tasks} - 慢任务累计计数（耗时超过 {@link #slowTaskThresholdMs}）</li>
- * </ul>
+ * <p>向 Micrometer 注册执行耗时与队列等待时长的 Timer 指标，
+ * 并追踪慢任务（执行耗时超过阈值）计数。
  *
- * <p>实现 {@link SmartInitializingSingleton}，在所有单例 Bean 初始化完成后自动为
- * 匹配的 {@link ThreadPoolTaskExecutor} 安装 {@link TimedTaskDecorator}，
- * 解决 Bean 创建时序问题。
+ * <p>初始化流程：
+ * <ol>
+ *   <li>{@link #afterSingletonsInstantiated()}：在 Spring 容器启动后，
+ *       遍历所有 {@link ThreadPoolExecutor}，为每个池创建{@link io.micrometer.core.instrument.Timer}</li>
+ * </ol>
+ *
+ * <p><b>注意</b>：{@link #record} 方法由 {@link TimedTaskDecorator} 调用，
+ * 慢任务阈值通过参数传入，各池可使用不同阈值。
  *
  * @author ydsz-team
- * @since 1.3.1
+ * @since 1.4.0
  * @see TimedTaskDecorator
  */
-public class ThreadPoolTimerMetrics implements MeterBinder, SmartInitializingSingleton, ApplicationContextAware {
-
-    private static final Logger log = LoggerFactory.getLogger(ThreadPoolTimerMetrics.class);
-
-    private static final String METRIC_EXECUTION = ".execution";
-    private static final String METRIC_QUEUE_WAIT = ".queue.wait";
-    private static final String METRIC_SLOW_TASKS = ".slow.tasks";
+public class ThreadPoolTimerMetrics {
 
     /**
-     * 慢任务默认阈值：任务执行耗时超过 5 秒判定为慢任务。
+     * 默认慢任务阈值（毫秒）。当池级别未指定阈值时使用此值。
      */
     public static final long DEFAULT_SLOW_TASK_THRESHOLD_MS = 5_000L;
 
+    private static final String METRIC_EXECUTION_TIME = "ydsz.executor.execution";
+    private static final String METRIC_QUEUE_WAIT_TIME = "ydsz.executor.queue.wait";
+    private static final String METRIC_SLOW_TASKS = "ydsz.executor.slow.tasks";
+
     private final String poolName;
-    private final String metricPrefix;
-    private final Iterable<Tag> tags;
-    private final long slowTaskThresholdMs;
-
-    private ApplicationContext applicationContext;
-    private Timer executionTimer;
-    private Timer queueWaitTimer;
-    private Counter slowTaskCounter;
+    private final MeterRegistry meterRegistry;
+    private final Tags commonTags;
 
     /**
-     * 构造绑定器，使用默认慢任务阈值（5 秒）。
+     * 构造指标绑定器。
      *
-     * @param poolName     线程池名称
-     * @param metricPrefix Micrometer 指标前缀
+     * @param poolName     线程池名称（作为指标 tag）
+     * @param meterRegistry Micrometer 注册表
      */
-    public ThreadPoolTimerMetrics(String poolName, String metricPrefix) {
-        this(poolName, metricPrefix, Tags.empty(), DEFAULT_SLOW_TASK_THRESHOLD_MS);
-    }
-
-    /**
-     * 构造绑定器（完整参数）。
-     *
-     * @param poolName           线程池名称
-     * @param metricPrefix       Micrometer 指标前缀
-     * @param tags               附加标签
-     * @param slowTaskThresholdMs 慢任务耗时阈值（毫秒），必须 > 0
-     */
-    public ThreadPoolTimerMetrics(String poolName, String metricPrefix,
-                                   Iterable<Tag> tags, long slowTaskThresholdMs) {
+    public ThreadPoolTimerMetrics(String poolName, MeterRegistry meterRegistry) {
         this.poolName = poolName;
-        this.metricPrefix = metricPrefix != null ? metricPrefix : ThreadPoolMetrics.DEFAULT_METRIC_PREFIX;
-        this.tags = tags != null ? tags : Tags.empty();
-        this.slowTaskThresholdMs = slowTaskThresholdMs > 0 ? slowTaskThresholdMs : DEFAULT_SLOW_TASK_THRESHOLD_MS;
-    }
-
-    @Override
-    public void bindTo(@NonNull MeterRegistry registry) {
-        executionTimer = Timer.builder(metricPrefix + METRIC_EXECUTION)
-                .tags(Tags.concat(tags, "pool.name", poolName))
-                .description("任务执行耗时")
-                .publishPercentileHistogram()
-                .publishPercentiles(0.5, 0.95, 0.99)
-                .register(registry);
-
-        queueWaitTimer = Timer.builder(metricPrefix + METRIC_QUEUE_WAIT)
-                .tags(Tags.concat(tags, "pool.name", poolName))
-                .description("任务在队列中等待时长")
-                .publishPercentileHistogram()
-                .publishPercentiles(0.5, 0.95, 0.99)
-                .register(registry);
-
-        slowTaskCounter = Counter.builder(metricPrefix + METRIC_SLOW_TASKS)
-                .tags(Tags.concat(tags, "pool.name", poolName))
-                .description("慢任务累计计数（耗时超过 " + slowTaskThresholdMs + "ms）")
-                .register(registry);
-    }
-
-    @Override
-    public void setApplicationContext(@NonNull ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext = applicationContext;
+        this.meterRegistry = meterRegistry;
+        this.commonTags = Tags.of("pool", poolName);
     }
 
     /**
-     * 所有单例初始化完成后，自动为匹配的线程池安装耗时追踪装饰器。
-     */
-    @Override
-    public void afterSingletonsInstantiated() {
-        if (applicationContext == null) {
-            return;
-        }
-        Map<String, ThreadPoolTaskExecutor> executors = applicationContext.getBeansOfType(ThreadPoolTaskExecutor.class);
-        for (Map.Entry<String, ThreadPoolTaskExecutor> entry : executors.entrySet()) {
-            String beanName = entry.getKey();
-            // 匹配：beanName 以 poolName + "Executor" 结尾
-            if (beanName.endsWith(poolName + "Executor")) {
-                installDecorator(entry.getValue());
-                return;
-            }
-        }
-        log.debug("[ThreadPoolTimerMetrics] 未找到匹配的线程池 [{}]，耗时指标不会生效", poolName);
-    }
-
-    /**
-     * 安装耗时追踪装饰器到指定的线程池。
-     */
-    private void installDecorator(ThreadPoolTaskExecutor executor) {
-        try {
-            TimedTaskDecorator decorator = new TimedTaskDecorator(poolName, this);
-            executor.setTaskDecorator(decorator);
-            log.info("[ThreadPoolTimerMetrics] 已为线程池 [{}] 安装耗时追踪装饰器", poolName);
-        } catch (Exception e) {
-            log.warn("[ThreadPoolTimerMetrics] 安装耗时追踪装饰器失败 (pool={}): {}", poolName, e.getMessage());
-        }
-    }
-
-    /**
-     * 记录一次任务执行。
+     * 记录任务执行耗时与队列等待时长。
      *
-     * <p>由 {@link TimedTaskDecorator} 在任务完成时回调。
+     * <p>若执行耗时超过 {@code slowTaskThresholdMs}，则递增慢任务计数器。
      *
-     * @param executionDurationMs  任务执行耗时（毫秒）
-     * @param queueWaitDurationMs  任务在队列中等待时长（毫秒）
+     * @param executionMs         执行耗时（毫秒）
+     * @param queueWaitMs         队列等待时长（毫秒）
+     * @param slowTaskThresholdMs 慢任务阈值（毫秒），≥ 100
+     * @param metricPoolName      指标 pool tag 值（用于标签一致性校验）
      */
-    public void record(long executionDurationMs, long queueWaitDurationMs) {
-        if (executionTimer != null) {
-            executionTimer.record(executionDurationMs, TimeUnit.MILLISECONDS);
-        }
-        if (queueWaitTimer != null && queueWaitDurationMs > 0) {
-            queueWaitTimer.record(queueWaitDurationMs, TimeUnit.MILLISECONDS);
-        }
-        if (slowTaskCounter != null && executionDurationMs > slowTaskThresholdMs) {
-            slowTaskCounter.increment();
+    public void record(long executionMs, long queueWaitMs, long slowTaskThresholdMs,
+            String metricPoolName) {
+        Timer executionTimer = Timer.builder(METRIC_EXECUTION_TIME)
+                .tags(commonTags)
+                .publishPercentiles(0.5, 0.95, 0.99)
+                .register(meterRegistry);
+        Timer queueWaitTimer = Timer.builder(METRIC_QUEUE_WAIT_TIME)
+                .tags(commonTags)
+                .publishPercentiles(0.5, 0.95, 0.99)
+                .register(meterRegistry);
+
+        executionTimer.record(executionMs, TimeUnit.MILLISECONDS);
+        queueWaitTimer.record(queueWaitMs, TimeUnit.MILLISECONDS);
+
+        if (executionMs > slowTaskThresholdMs) {
+            meterRegistry.counter(METRIC_SLOW_TASKS, commonTags).increment();
         }
     }
 
+    /**
+     * 构建指标标签。
+     *
+     * @return 通用标签
+     */
+    public Tags getCommonTags() {
+        return commonTags;
+    }
+
+    /**
+     * 获取线程池名称。
+     *
+     * @return 线程池名称
+     */
     public String getPoolName() {
         return poolName;
     }
 
-    public long getSlowTaskThresholdMs() {
-        return slowTaskThresholdMs;
+    /**
+     * 根据 pool 配置构建 {@link ThreadPoolTimerMetrics} 实例。
+     *
+     * <p>工厂方法，供 {@code ThreadPoolRegistrar} 使用。
+     *
+     * @param poolName     线程池名称
+     * @param meterRegistry Micrometer 注册表
+     * @return 指标绑定器实例
+     */
+    @Nullable
+    public static ThreadPoolTimerMetrics createIfMeterRegistryPresent(
+            String poolName, MeterRegistry meterRegistry) {
+        if (meterRegistry == null) {
+            return null;
+        }
+        return new ThreadPoolTimerMetrics(poolName, meterRegistry);
     }
 }

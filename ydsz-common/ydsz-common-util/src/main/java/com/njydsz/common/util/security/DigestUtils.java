@@ -170,6 +170,8 @@ public final class DigestUtils {
 
     /**
      * 计算 SHA-256 散列
+  * @param input 输入
+  * @return 处理后的结果
  */
     public static byte[] sha256(byte[] input) {
         return digest(input, "SHA-256", null, 1);
@@ -420,3 +422,5 @@ public final class DigestUtils {
         }
     }
 }
+
+

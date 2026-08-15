@@ -7,11 +7,14 @@ import java.util.Collection;
  * <p>用于海量 ID 存在性判断。
  * <p>误判率 < 1%。
  *
+ * <p><b>迁移说明：</b>自 v1.1.0 起标记废弃，计划 v2.0.0 移除。
+ * 当前无业务消费方。如需布隆过滤器能力，推荐使用 Redisson 的 {@code RBloomFilter}。
+ *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 自 v1.1.0 起无消费方，计划 v2.0.0 移除。替代方案：Redisson RBloomFilter。
  */
-
-
+@Deprecated(since = "1.1.0", forRemoval = true)
 public interface BloomFilterService {
 
     /**

@@ -60,10 +60,15 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * }
  * }</pre>
  *
+ * <p><b>迁移说明：</b>自 v1.1.0 起标记废弃，计划 v2.0.0 移除。
+ * 当前无业务消费方。如需多级缓存能力，请基于 Caffeine + RedisStringOps 自行封装。
+ *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 自 v1.1.0 起无消费方，计划 v2.0.0 移除。替代方案：业务模块基于 Caffeine + RedisStringOps 自行封装。
  */
 @Slf4j
+@Deprecated(since = "1.1.0", forRemoval = true)
 public class MultiLevelCacheProvider implements CacheProvider, Closeable {
 
     // ==================== 配置常量 ====================

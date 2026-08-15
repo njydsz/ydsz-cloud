@@ -373,7 +373,7 @@ public class FallbackDistributedLock implements DistributedLocker {
         int failures = consecutiveFailures.incrementAndGet();
         this.lastErrorMessage = e.getMessage();
         if (failures >= FAILURE_THRESHOLD && redisAvailable.compareAndSet(true, false)) {
-            log.warn("[ydsz-lock] [fallback]Redis 连续失败 {} 次，标记为不可用，全局切换到本地锁模式 | "
+            log.error("[ydsz-lock] [fallback]Redis 连续失败 {} 次，标记为不可用，全局切换到本地锁模式 | "
                             + "lockKey={} | lastError={}",
                     failures, lockKey, e.getMessage());
             // 触发降级回调
@@ -384,7 +384,7 @@ public class FallbackDistributedLock implements DistributedLocker {
                         lockKey, callbackEx.getMessage());
             }
         }
-        log.warn("[ydsz-lock] [fallback]Redis 锁操作异常，降级为本地锁 | lockKey={} | error={}",
+        log.error("[ydsz-lock] [fallback]Redis 锁操作异常，降级为本地锁 | lockKey={} | error={}",
                 lockKey, e.getMessage());
         degradedKeys.put(lockKey, Boolean.TRUE);
     }

@@ -35,6 +35,7 @@ import lombok.Data;
  *         reject-policy: CALLER_RUNS
  *         await-termination-seconds: 60
  *         metric-prefix: ydsz.executor
+ *         slow-task-threshold-ms: 3000
  *         task-decorator-bean-names:
  *           - mdcTaskDecorator
  *           - requestContextTaskDecorator
@@ -154,6 +155,16 @@ public class ThreadPoolProperties {
          * @since 1.3.0
          */
         private String metricPrefix = ThreadPoolMetrics.DEFAULT_METRIC_PREFIX;
+
+        /**
+         * 慢任务阈值毫秒数（默认 5000，最小 100）。
+         * <p>任务执行耗时超过此阈值时，慢任务计数器 {@code ydsz.executor.slow.tasks} 递增。
+         * 默认值 5000ms 适用于大多数 IO 密集场景；AI Agent 等长耗时场景建议设置为 30000。
+         *
+         * @since 1.4.0
+         */
+        @Min(value = 100, message = "slowTaskThresholdMs 必须 >= 100")
+        private long slowTaskThresholdMs = 5000L;
 
         /**
          * TaskDecorator Bean 名称列表（仅对 PLATFORM 类型生效）。

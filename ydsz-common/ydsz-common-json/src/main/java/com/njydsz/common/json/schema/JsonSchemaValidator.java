@@ -2,12 +2,14 @@ package com.njydsz.common.json.schema;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.json.tree.JsonNode;
 import com.njydsz.common.json.tree.ObjectNode;
 
@@ -127,11 +129,9 @@ public final class JsonSchemaValidator {
         JsonNode enumNode = schemaObj.get("enum");
         if (enumNode != null && enumNode.isArray()) {
             boolean matched = false;
-            for (JsonNode value : enumNode) {
-                if (value.equals(data)) {
-                    matched = true;
-                    break;
-                }
+            Iterator<JsonNode> enumValues = ((ArrayNode) enumNode).elements();
+            while (!matched && enumValues.hasNext()) {
+                matched = enumValues.next().equals(data);
             }
             if (!matched) {
                 errors.add(path + "：值不在枚举范围内，当前值=" + data.asText());
@@ -215,8 +215,9 @@ public final class JsonSchemaValidator {
         // required 校验
         JsonNode requiredNode = schemaObj.get("required");
         if (requiredNode != null && requiredNode.isArray()) {
-            for (JsonNode req : requiredNode) {
-                String fieldName = req.asText();
+            Iterator<JsonNode> requiredFields = ((ArrayNode) requiredNode).elements();
+            while (requiredFields.hasNext()) {
+                String fieldName = requiredFields.next().asText();
                 if (!dataObj.has(fieldName)) {
                     errors.add(path + "：必填字段 \"" + fieldName + "\" 缺失");
                 }
@@ -225,9 +226,9 @@ public final class JsonSchemaValidator {
 
         // properties 递归校验
         JsonNode propertiesNode = schemaObj.get("properties");
-        if (propertiesNode != null && propertiesNode instanceof ObjectNode) {
+        if (propertiesNode instanceof ObjectNode) {
             ObjectNode properties = (ObjectNode) propertiesNode;
-            for (Map.Entry<String, JsonNode> entry : properties) {
+            for (Map.Entry<String, JsonNode> entry : properties.entrySet()) {
                 String fieldName = entry.getKey();
                 JsonNode fieldSchema = entry.getValue();
                 JsonNode fieldValue = dataObj.get(fieldName);

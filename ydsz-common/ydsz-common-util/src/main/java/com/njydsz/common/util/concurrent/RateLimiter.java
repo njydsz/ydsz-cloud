@@ -1,7 +1,8 @@
 package com.njydsz.common.util.concurrent;
 
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.LockSupport;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * 轻量级限流器（令牌桶算法）。
@@ -20,6 +21,11 @@ import java.util.concurrent.locks.LockSupport;
  *   <li>桶满时新令牌丢弃（允许突发流量 = 桶容量）</li>
  *   <li>桶空时调用方等待或立即返回失败（取决于调用方式）</li>
  * </ul>
+ *
+ * <p><b>并发模型：</b>基于 {@link ReentrantLock} + {@link Condition} 实现。
+ * 等待期间不持有锁（与 {@code synchronized + park} 不同），
+ * 因此单个线程的等待不会阻塞其他线程的 tryAcquire 判断；
+ * 且仅在实际获取到令牌时才扣减，失败的 tryAcquire 不会消耗令牌。
  *
  * <p><b>与 Guava RateLimiter 对比：</b>
  * <ul>
@@ -52,20 +58,40 @@ import java.util.concurrent.locks.LockSupport;
  */
 public final class RateLimiter {
 
-    /** 每秒令牌数（速率） */
+    /**
+     * 每秒令牌数（速率）。
+     */
     private final double permitsPerSecond;
 
-    /** 桶最大容量（允许的突发量） */
+    /**
+     * 桶最大容量（允许的突发量）。
+     */
     private final double maxPermits;
 
-    /** 每枚令牌之间的间隔（纳秒） */
+    /**
+     * 每枚令牌之间的间隔（纳秒）。
+     */
     private final long intervalNanos;
 
-    /** 当前可用令牌数 */
+    /**
+     * 全局互斥锁，保护令牌状态。
+     */
+    private final ReentrantLock lock = new ReentrantLock();
+
+    /**
+     * 桶非空条件（令牌不足时的等待队列）。
+     */
+    private final Condition notEmpty = lock.newCondition();
+
+    /**
+     * 当前可用令牌数。
+     */
     private double storedPermits;
 
-    /** 上次补充令牌的时间（纳秒） */
-    private volatile long lastRefillNanos;
+    /**
+     * 上次补充令牌的时间（纳秒）。
+     */
+    private long lastRefillNanos;
 
     /**
      * 创建限流器。
@@ -112,45 +138,52 @@ public final class RateLimiter {
     /**
      * 阻塞式获取一枚令牌。
      *
-     * <p>如果当前无可用令牌，会阻塞等待直到获取成功。
+     * <p>如果当前无可用令牌，会阻塞等待直到获取成功（线程中断时退出并恢复中断标志）。
      *
      * @return 等待时间（毫秒）
      */
-    public synchronized double acquire() {
+    public double acquire() {
         return acquire(1);
     }
 
     /**
      * 阻塞式获取指定数量的令牌。
      *
+     * <p>如果当前无可用令牌，会阻塞等待直到获取成功（线程中断时退出并恢复中断标志）。
+     *
      * @param permits 需要获取的令牌数（必须 > 0）
      * @return 等待时间（毫秒）
      */
-    public synchronized double acquire(int permits) {
+    public double acquire(int permits) {
         if (permits <= 0) {
             throw new IllegalArgumentException("permits must be positive: " + permits);
         }
-
-        long nowNanos = System.nanoTime();
-        refill(nowNanos);
-
-        double waitTimeNanos = reserve(permits);
-        if (waitTimeNanos <= 0) {
-            return 0;
+        long startNanos = System.nanoTime();
+        lock.lock();
+        try {
+            refill(System.nanoTime());
+            while (storedPermits < permits) {
+                double waitNanos = (permits - storedPermits) * intervalNanos;
+                try {
+                    // 等待期间不持有锁，其他线程可正常进入 tryAcquire
+                    notEmpty.awaitNanos((long) waitNanos);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new IllegalStateException("RateLimiter acquire interrupted", e);
+                }
+                refill(System.nanoTime());
+            }
+            storedPermits -= permits;
+            return (System.nanoTime() - startNanos) / 1_000_000.0;
+        } finally {
+            lock.unlock();
         }
-
-        // 等待指定时间
-        long waitMillis = (long) (waitTimeNanos / 1_000_000);
-        int waitRemainder = (int) (waitTimeNanos % 1_000_000);
-        if (waitMillis > 0 || waitRemainder > 0) {
-            LockSupport.parkNanos(waitMillis * 1_000_000L + waitRemainder);
-        }
-
-        return waitTimeNanos / 1_000_000.0;
     }
 
     /**
      * 尝试在指定超时时间内获取一枚令牌。
+     *
+     * <p>超时返回 false 时不会消耗任何令牌（失败的尝试不扣减桶内令牌）。
      *
      * @param timeout 最大等待时间
      * @param unit    时间单位
@@ -163,12 +196,14 @@ public final class RateLimiter {
     /**
      * 尝试在指定超时时间内获取指定数量的令牌。
      *
+     * <p>超时返回 false 时不会消耗任何令牌（失败的尝试不扣减桶内令牌）。
+     *
      * @param permits 需要获取的令牌数（必须 > 0）
      * @param timeout 最大等待时间（必须 ≥ 0）
      * @param unit    时间单位
      * @return 获取成功返回 true，超时返回 false
      */
-    public synchronized boolean tryAcquire(int permits, long timeout, TimeUnit unit) {
+    public boolean tryAcquire(int permits, long timeout, TimeUnit unit) {
         if (permits <= 0) {
             throw new IllegalArgumentException("permits must be positive: " + permits);
         }
@@ -177,23 +212,29 @@ public final class RateLimiter {
         }
 
         long timeoutNanos = unit.toNanos(timeout);
-        long nowNanos = System.nanoTime();
-        refill(nowNanos);
-
-        double waitTimeNanos = reserve(permits);
-        if (waitTimeNanos <= 0) {
-            return true; // 立即获取成功
-        }
-
-        // 需要等待，检查是否能在超时内完成
-        if (waitTimeNanos <= timeoutNanos) {
-            long waitMillis = (long) (waitTimeNanos / 1_000_000);
-            int waitRemainder = (int) (waitTimeNanos % 1_000_000);
-            LockSupport.parkNanos(waitMillis * 1_000_000L + waitRemainder);
+        long remainingNanos = timeoutNanos;
+        lock.lock();
+        try {
+            refill(System.nanoTime());
+            while (storedPermits < permits && remainingNanos > 0) {
+                double waitNanos = (permits - storedPermits) * intervalNanos;
+                long waitBound = (long) Math.min(waitNanos, remainingNanos);
+                try {
+                    remainingNanos = notEmpty.awaitNanos(waitBound);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    return false;
+                }
+                refill(System.nanoTime());
+            }
+            if (storedPermits < permits) {
+                return false;
+            }
+            storedPermits -= permits;
             return true;
+        } finally {
+            lock.unlock();
         }
-
-        return false; // 超时
     }
 
     /**
@@ -208,7 +249,10 @@ public final class RateLimiter {
     /**
      * 补充令牌（基于时间差计算）。
      *
-     * @param nowNanos 当前时间（纳秒）     */
+     * <p>仅在持有锁时调用。
+     *
+     * @param nowNanos 当前时间（纳秒）
+     */
     private void refill(long nowNanos) {
         long elapsedNanos = nowNanos - lastRefillNanos;
         if (elapsedNanos > 0) {
@@ -219,29 +263,18 @@ public final class RateLimiter {
     }
 
     /**
-     * 预留令牌，返回需要等待的纳秒数。
-     *
-     * @param permits 需要预留的令牌数
-     * @return 需要等待的纳秒数（0 表示立即获取）
-     */
-    private double reserve(int permits) {
-        if (storedPermits >= permits) {
-            storedPermits -= permits;
-            return 0;
-        }
-        double deficit = permits - storedPermits;
-        storedPermits = 0;
-        return deficit * intervalNanos;
-    }
-
-    /**
      * 获取当前可用令牌数（近似值）。
      *
      * @return 当前可用令牌数
      */
-    public synchronized double getStoredPermits() {
-        refill(System.nanoTime());
-        return storedPermits;
+    public double getStoredPermits() {
+        lock.lock();
+        try {
+            refill(System.nanoTime());
+            return storedPermits;
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**

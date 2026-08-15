@@ -6,9 +6,9 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
 
-import com.njydsz.common.util.security.DigestUtils;
-
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.util.security.DigestUtils;
 
 /**
  * 分布式 ID 生成器（核心算法，无 Spring 依赖）。
@@ -283,6 +283,8 @@ public class SnowflakeIdGenerator {
      *       避免忙等消耗 CPU</li>
      *   <li>超过最大等待时间：抛出 {@link ClockBackwardException}</li>
      * </ul>
+      * @param lastTimestamp lastTimestamp
+      * @return 处理后的结果
      */
     private long tilNextMillis(long lastTimestamp) {
         long timestamp = currentTimeRelative();
@@ -536,3 +538,5 @@ public class SnowflakeIdGenerator {
         return epoch;
     }
 }
+
+

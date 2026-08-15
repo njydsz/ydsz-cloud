@@ -497,22 +497,16 @@ public class RedisMultiLock implements DistributedLocker {
      * @return true-全部续期成功
      */
     private boolean renewAllLocksIndividually(String lockKey, long leaseTime, TimeUnit timeUnit) {
+        long leaseTimeMs = timeUnit.toMillis(leaseTime);
         for (int i = 0; i < locks.size(); i++) {
-            DistributedLocker lock = locks.get(i);
             String subLockKey = buildSubLockKey(lockKey, i);
             String lockValue = acquiredLockValues.get(subLockKey);
             if (lockValue == null) {
                 return false;
             }
             try {
-                // 支持 pexpire 的子锁直接续期
-                if (lock.supportsPexpire()) {
-                    long result = lock.pexpire(subLockKey, leaseTime, timeUnit);
-                    if (result <= 0) {
-                        return false;
-                    }
-                } else if (!lock.isLocked(subLockKey)) {
-                    // 不支持 pexpire 的子锁，检查锁是否仍存在
+                Boolean success = stringRedisTemplate.expire(subLockKey, Duration.ofMillis(leaseTimeMs));
+                if (!Boolean.TRUE.equals(success)) {
                     return false;
                 }
             } catch (Exception e) {

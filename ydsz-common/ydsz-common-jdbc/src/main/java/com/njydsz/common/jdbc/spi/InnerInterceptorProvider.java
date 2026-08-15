@@ -12,12 +12,14 @@ import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
  * <p><b>拦截器链顺序约定（值越小越靠前）：</b>
  * <ul>
  *   <li>100: OptimisticLock（乐观锁）</li>
- *   <li>200: LogicalDelete（逻辑删除）</li>
  *   <li>300: FieldFill（字段填充）</li>
  *   <li>400: TenantIsolation（租户隔离，由 common-tenant 提供）</li>
  *   <li>500: DataPermission（行级 + 列级数据权限）</li>
  *   <li>600: Pagination（分页）</li>
  * </ul>
+ *
+ * <p><b>注意：</b>逻辑删除（LogicalDelete）自 v1.9.0 起已迁移至 MP 原生 {@code @TableLogic} 注解，
+ * 不再占用拦截器链节点。
  *
  * <p>外部模块只需在 classpath 提供此接口的实现，并通过 Spring {@code @Bean} 或
  * {@code @Component} 注册，{@code MybatisPlusConfiguration} 将自动收集并按
@@ -32,12 +34,12 @@ import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
  *         this.properties = properties;
  *     }
  *
- *     @Override
+ *     &#64;Override
  *     public InnerInterceptor createInterceptor() {
  *         return new TenantIsolationInterceptor(properties);
  *     }
  *
- *     @Override
+ *     &#64;Override
  *     public int getOrder() {
  *         return 400;
  *     }

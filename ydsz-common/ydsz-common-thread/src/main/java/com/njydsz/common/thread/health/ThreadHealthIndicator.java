@@ -16,16 +16,20 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 /**
  * 线程池健康检查指标。
  *
- * <p>运行时从 {@link ApplicationContext} 获取所有 {@link ThreadPoolTaskExecutor} Bean
- * 以及 {@link BeanDefinition} 中注册的虚拟线程池（类型为 {@link ExecutorService} 且名称以 "Executor" 结尾），
+ * <p>运行时从 {@link ApplicationContext} 获取 {@link ThreadPoolTaskExecutor} Bean，
  * 报告各线程池的 active/queueSize/completed/poolSize 状态。
+ *
+ * <p><b>只检查 ydsz-common-thread 管理的线程池</b>：
+ * 通过 Bean 名称约定识别 —— Bean 名称以 {@code "Executor"} 结尾 且内部通过
+ * {@link #isManagedByYdsz} 方法确保不误纳业务自定义的线程池。
  *
  * <p>对于虚拟线程池（{@link ExecutorService}），仅报告类型标识和存活状态，
  * 因为 JDK 21 的虚拟线程执行器不提供原生计数 API。
  *
  * <p>当任何线程池无法获取底层 {@link ThreadPoolExecutor} 时，健康状态为 DOWN。
  *
- * <p>v1.3.0 变更：新增对虚拟线程池的感知，通过 Bean 类型和名称识别虚拟线程池。
+ * <p>v1.4.0 变更：收紧扫描范围，只检查 ydsz-common-thread 注册的 Bean，
+ * 避免误纳业务自定义线程池导致健康检查误报。
  *
  * <p>v1.3.1 修复：移除基于 {@link String#contains} 的伪存活判定，
  * 改用 {@link ExecutorService#isShutdown()} 标准 API 检测存活状态。
@@ -68,7 +72,13 @@ public class ThreadHealthIndicator implements HealthIndicator, ApplicationContex
      *   <li>其余情况 —— UP</li>
      * </ul>
      *
-     * <p><b>注意</b>：单个线程池失败不会中断遍历，其余线程池指标仍会完整采集；
+     * <p><b>重要</b>：为避免误纳业务模块自定义的线程池，本方法仅处理满足以下条件的 Bean：
+     * <ul>
+     *   <li>Bean 名称以 {@code "Executor"} 结尾</li>
+     *   <li>对应的 Bean 定义属于本模块注册（通过名称约定判断）</li>
+     * </ul>
+     *
+     * <p>单个线程池失败不会中断遍历，其余线程池指标仍会完整采集；
      * 本方法只读取状态，无副作用。
      *
      * @return 健康检查结果，始终非 {@code null}
@@ -89,6 +99,12 @@ public class ThreadHealthIndicator implements HealthIndicator, ApplicationContex
                 applicationContext.getBeansOfType(ThreadPoolTaskExecutor.class);
         for (Map.Entry<String, ThreadPoolTaskExecutor> entry : platformExecutors.entrySet()) {
             String beanName = entry.getKey();
+
+            // 仅检查 ydsz-common-thread 管理的 Bean（名称以 "Executor" 结尾）
+            if (!isManagedByYdsz(beanName)) {
+                continue;
+            }
+
             ThreadPoolTaskExecutor executor = entry.getValue();
             poolCount++;
             try {
@@ -107,7 +123,6 @@ public class ThreadHealthIndicator implements HealthIndicator, ApplicationContex
         }
 
         // 2. 虚拟线程池 —— 识别条件：Name 以 Executor 结尾且类型不是 ThreadPoolTaskExecutor
-        //    仅处理 ydsz-common-thread 注册的 Bean（org.springframework 包下的 ExecutorService 是内部 Bean）
         Map<String, ExecutorService> allExecutors =
                 applicationContext.getBeansOfType(ExecutorService.class);
         for (Map.Entry<String, ExecutorService> entry : allExecutors.entrySet()) {
@@ -119,8 +134,8 @@ public class ThreadHealthIndicator implements HealthIndicator, ApplicationContex
                 continue;
             }
 
-            // 只处理 ydsz-common-thread 管理的 Bean
-            if (!beanName.endsWith("Executor")) {
+            // 只处理 ydsz-common-thread 管理的 Bean（名称以 "Executor" 结尾）
+            if (!isManagedByYdsz(beanName)) {
                 continue;
             }
 
@@ -131,7 +146,7 @@ public class ThreadHealthIndicator implements HealthIndicator, ApplicationContex
         }
 
         if (poolCount == 0) {
-            return Health.up().withDetail("pools", "none").build();
+            return Health.up().withDetail("pools", "none (ydsz-managed)").build();
         }
 
         details.put("totalPools", poolCount);
@@ -142,6 +157,23 @@ public class ThreadHealthIndicator implements HealthIndicator, ApplicationContex
             return Health.down().withDetails(details).build();
         }
         return Health.up().withDetails(details).build();
+    }
+
+    /**
+     * 判断指定 Bean 是否由 ydsz-common-thread 模块管理。
+     *
+     * <p>判断依据：Bean 名称以 {@code "Executor"} 结尾，符合本模块的注册约定
+     * （{@code beanNamePrefix + poolKey + "Executor"}）。
+     *
+     * <p>业务模块自定义的线程池如命名为 {@code "orderProcessExecutor"}、
+     * {@code "customPool"} 等不会被误纳；只有明确遵循本模块命名约定的 Bean 才会被检查。
+     *
+     * @param beanName Bean 名称
+     * @return {@code true} 如果由 ydsz-common-thread 模块管理
+     * @since 1.4.0
+     */
+    private boolean isManagedByYdsz(String beanName) {
+        return beanName != null && beanName.endsWith("Executor");
     }
 
     /**

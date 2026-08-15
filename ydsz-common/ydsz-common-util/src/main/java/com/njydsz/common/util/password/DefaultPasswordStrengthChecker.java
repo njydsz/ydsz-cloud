@@ -231,6 +231,8 @@ public class DefaultPasswordStrengthChecker implements PasswordStrengthChecker {
 
     /**
      * 检测连续字符（长度 >= 3，如 abc、123、xyz）。
+      * @param password password
+      * @return 处理后的结果
      */
     private boolean hasConsecutiveChars(String password) {
         if (password == null || password.length() < 3) {
@@ -344,3 +346,5 @@ public class DefaultPasswordStrengthChecker implements PasswordStrengthChecker {
         }
     }
 }
+
+

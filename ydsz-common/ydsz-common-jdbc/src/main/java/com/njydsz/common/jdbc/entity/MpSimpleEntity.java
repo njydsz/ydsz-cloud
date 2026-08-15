@@ -3,6 +3,7 @@ package com.njydsz.common.jdbc.entity;
 import java.io.Serializable;
 
 import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.njydsz.common.json.annotation.JsonIgnore;
 
 import lombok.AccessLevel;
@@ -30,8 +31,10 @@ import lombok.experimental.SuperBuilder;
  *                  └─ MpBaseEntity (全功能别名)
  * </pre>
  *
- * <p><b>v1.8.0</b>：从 {@link MpBaseEntity} 中拆出，将乐观锁能力下沉到 {@link MpVersionedEntity}，
- * 让业务实体按需选择是否携带乐观锁。
+ * <p><b>逻辑删除：</b>deleted 字段使用 MP 原生 {@code @TableLogic} 注解，
+ * 由 MyBatis-Plus 自动处理 SELECT 条件追加和 DELETE 转 UPDATE。
+ *
+ * <p><b>v1.9.0</b>：逻辑删除从自研 {@code LogicalDeleteInterceptor} 迁移至 {@code @TableLogic} 注解。
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
@@ -46,7 +49,7 @@ import lombok.experimental.SuperBuilder;
  * @param <T> 主键ID类型
  *
  * @author ydsz-team
- * @since 1.8.0
+ * @since 1.0.0
  * @see MpVersionedEntity
  * @see MpBaseEntity
  * @see MpBaseAuditEntity
@@ -65,9 +68,10 @@ public class MpSimpleEntity<T extends Serializable> extends MpBaseAuditEntity<T>
     /**
      * 逻辑删除标识
      *
-     * <p>0=未删除，1=已删除。删除操作转为 UPDATE，查询自动追加 WHERE deleted = 0。
-     * 由自定义 {@code LogicalDeleteInterceptor} 处理。
+     * <p>0=未删除，1=已删除。使用 MP 原生 {@code @TableLogic} 注解，
+     * 由 MyBatis-Plus 自动处理逻辑删除条件。
      */
+    @TableLogic
     @TableField("deleted")
     @JsonIgnore
     private Integer deleted;

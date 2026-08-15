@@ -375,7 +375,14 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
      * @param unit 时间单位
      * @return 设置成功返回过期时间的毫秒值，失败返回 0
      */
-    @Override
+    /**
+     * 设置键的过期时间（毫秒精度）
+     *
+     * @param key  Redis 键
+     * @param time 过期时间
+     * @param unit 时间单位
+     * @return 设置成功返回过期时间的毫秒值，失败返回 0
+     */
     public long pexpire(String key, long time, TimeUnit unit) {
         try {
             Boolean result = stringRedisTemplate.expire(key, Duration.ofMillis(unit.toMillis(time)));
@@ -384,15 +391,5 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
             log.error("[ydsz-lock]PEXPIRE 续期异常 | lockKey={} | error={}", key, e.getMessage(), e);
             return 0;
         }
-    }
-
-    @Override
-    public boolean supportsPexpire() {
-        return true;
-    }
-
-    @Override
-    public boolean supportsQueueInfo() {
-        return true;
     }
 }

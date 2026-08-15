@@ -61,10 +61,15 @@ import com.njydsz.common.util.id.IdGenerator;
  *   <li>消费者侧去重通过 Redis SETNX 实现，默认去重窗口为 24 小时</li>
  * </ul>
  *
+ * <p><b>迁移说明：</b>自 v1.1.0 起标记废弃，计划 v2.0.0 移除。
+ * 当前无业务消费方。推荐使用 Redisson {@code RDelayedQueue} 或消息中间件定时消息。
+ *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 自 v1.1.0 起无消费方，计划 v2.0.0 移除。替代方案：Redisson RDelayedQueue。
  */
 @Slf4j
+@Deprecated(since = "1.1.0", forRemoval = true)
 public class RedisDelayedQueue {
 
     private final RedisTemplate<String, Object> redisTemplate;

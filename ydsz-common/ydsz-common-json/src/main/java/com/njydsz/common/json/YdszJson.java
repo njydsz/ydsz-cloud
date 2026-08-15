@@ -27,10 +27,13 @@ import com.njydsz.common.json.reader.JSONReader;
 import com.njydsz.common.json.serializer.JsonSerializer;
 import com.njydsz.common.json.serializer.SerializerRegistry;
 import com.njydsz.common.json.tree.ArrayNode;
+import com.njydsz.common.json.tree.JsonMergePatch;
 import com.njydsz.common.json.tree.JsonNode;
 import com.njydsz.common.json.tree.JsonPatch;
 import com.njydsz.common.json.tree.JsonPatch.PatchOp;
+import com.njydsz.common.json.tree.NullNode;
 import com.njydsz.common.json.tree.ObjectNode;
+import com.njydsz.common.json.tree.TreeConverter;
 import com.njydsz.common.json.type.JsonType;
 import com.njydsz.common.json.type.TypeFactory;
 
@@ -102,6 +105,20 @@ public class YdszJson {
      */
     public static void reloadDefaultMapper() {
         defaultMapper = new JsonMapper(JsonConfig.getInstance());
+    }
+
+    /**
+     * 获取当前生效的默认 Mapper 实例。
+     *
+     * <p>与 {@link JsonMapper#getDefault()} 同源（单一事实来源），保证配置热更新后
+     * 两个入口看到的默认配置一致（P0-2 修复：原先 {@code JsonMapper.DEFAULT} 是
+     * 类加载时的 static final 快照，{@link JsonConfig#install(JsonConfig)} 后不会刷新）。</p>
+     *
+     * @return 当前默认 Mapper 实例（volatile 保证可见性，永不为 null）
+     * @since 1.2.2
+     */
+    public static JsonMapper getDefaultMapper() {
+        return defaultMapper;
     }
 
     // ==================== 序列化入口方法 ====================

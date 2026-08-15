@@ -42,10 +42,15 @@ import com.njydsz.common.redis.event.RedisKeyExpirationEvent;
  * <p><b>注意：</b>需要 Redis 服务端配置 {@code notify-keyspace-events Ex}，
  * 否则无法接收到过期事件。
  *
+ * <p><b>迁移说明：</b>自 v1.1.0 起标记废弃，计划 v2.0.0 移除。
+ * 当前无业务消费方。如需监听 Key 过期事件，推荐直接在业务模块中实现 {@code MessageListener}。
+ *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 自 v1.1.0 起无消费方，计划 v2.0.0 移除。替代方案：业务模块实现 MessageListener。
  */
 @Slf4j
+@Deprecated(since = "1.1.0", forRemoval = true)
 public class RedisKeyExpirationDispatcher implements ApplicationContextAware, SmartInitializingSingleton, DisposableBean {
 
     /** 过期事件通道前缀 */

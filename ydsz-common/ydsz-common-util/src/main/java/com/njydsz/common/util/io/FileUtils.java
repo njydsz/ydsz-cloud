@@ -9,19 +9,19 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * 文件操作工具类
  *
- * <p>封装 Apache Commons IO 的 {@link FileUtils} 提供便捷的文件读写、
+ * <p>封装 Apache Commons IO 的 {@link org.apache.commons.io.FileUtils} 提供便捷的文件读写、
  * 目录操作、扩展名解析等能力。所有 IO 异常均被转为安全默认值或日志记录，
  * 不向上抛出（除非方法文档显式说明）。
  *
  * <p>统一使用 UTF-8 字符编码进行文本读写。
+ *
+ * <p>注意：本类与 {@code org.apache.commons.io.FileUtils} 同名，类内对 Commons IO
+ * 的调用一律使用全限定名，避免同名类遮蔽导致的编译冲突。
  *
  * @author ydsz-team
  * @since 4.0.0
@@ -59,7 +59,7 @@ public final class FileUtils {
     public static String readFileToString(String path) {
         Objects.requireNonNull(path, "path must not be null");
         try {
-            return FileUtils.readFileToString(new File(path), StandardCharsets.UTF_8);
+            return org.apache.commons.io.FileUtils.readFileToString(new File(path), StandardCharsets.UTF_8);
         } catch (IOException e) {
             log.error("Failed to read file to string: {}", path, e);
             return null;
@@ -80,7 +80,7 @@ public final class FileUtils {
         Objects.requireNonNull(path, "path must not be null");
         Objects.requireNonNull(content, "content must not be null");
         try {
-            FileUtils.writeStringToFile(new File(path), content, StandardCharsets.UTF_8);
+            org.apache.commons.io.FileUtils.writeStringToFile(new File(path), content, StandardCharsets.UTF_8);
             return true;
         } catch (IOException e) {
             log.error("Failed to write string to file: {}", path, e);
@@ -102,13 +102,13 @@ public final class FileUtils {
         Objects.requireNonNull(is, "input stream must not be null");
         Objects.requireNonNull(targetPath, "targetPath must not be null");
         try {
-            FileUtils.copyInputStreamToFile(is, new File(targetPath));
+            org.apache.commons.io.FileUtils.copyInputStreamToFile(is, new File(targetPath));
             return true;
         } catch (IOException e) {
             log.error("Failed to copy input stream to file: {}", targetPath, e);
             return false;
         } finally {
-            IOUtils.closeQuietly(is);
+            org.apache.commons.io.IOUtils.closeQuietly(is);
         }
     }
 
@@ -124,7 +124,7 @@ public final class FileUtils {
     public static boolean mkdirs(String dirPath) {
         Objects.requireNonNull(dirPath, "dirPath must not be null");
         try {
-            FileUtils.forceMkdir(new File(dirPath));
+            org.apache.commons.io.FileUtils.forceMkdir(new File(dirPath));
             return true;
         } catch (IOException e) {
             log.error("Failed to create directories: {}", dirPath, e);
@@ -141,7 +141,7 @@ public final class FileUtils {
      */
     public static boolean deleteQuietly(String path) {
         Objects.requireNonNull(path, "path must not be null");
-        return FileUtils.deleteQuietly(new File(path));
+        return org.apache.commons.io.FileUtils.deleteQuietly(new File(path));
     }
 
     /**
@@ -154,7 +154,7 @@ public final class FileUtils {
     public static boolean touch(String path) {
         Objects.requireNonNull(path, "path must not be null");
         try {
-            FileUtils.touch(new File(path));
+            org.apache.commons.io.FileUtils.touch(new File(path));
             return true;
         } catch (IOException e) {
             log.error("Failed to touch file: {}", path, e);
@@ -222,7 +222,7 @@ public final class FileUtils {
             return true;
         }
         try {
-            return FileUtils.sizeOfDirectory(new File(dirPath)) == 0;
+            return org.apache.commons.io.FileUtils.sizeOfDirectory(new File(dirPath)) == 0;
         } catch (Exception e) {
             log.warn("Failed to check directory emptiness: {}", dirPath, e);
             return true;
@@ -245,7 +245,7 @@ public final class FileUtils {
             return SIZE_NOT_EXIST;
         }
         try {
-            return FileUtils.sizeOf(new File(path));
+            return org.apache.commons.io.FileUtils.sizeOf(new File(path));
         } catch (Exception e) {
             log.warn("Failed to get file size: {}", path, e);
             return SIZE_NOT_EXIST;

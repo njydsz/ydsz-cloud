@@ -92,8 +92,9 @@ public class LockProperties {
 
     /**
      * 是否启用锁降级策略（Redis 不可用时降级为本地 ReentrantLock）
+     * <p>默认 false：Redis 不可用时快速失败，避免静默破坏分布式互斥性
      */
-    private boolean fallbackEnabled = true;
+    private boolean fallbackEnabled = false;
 
     /**
      * WatchDog 最大续期次数（默认 100 次，约 30 分钟）

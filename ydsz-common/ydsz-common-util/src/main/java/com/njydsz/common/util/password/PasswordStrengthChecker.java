@@ -1,7 +1,6 @@
 package com.njydsz.common.util.password;
 
 import java.util.Locale;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 

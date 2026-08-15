@@ -2,9 +2,7 @@ package com.njydsz.common.exception.custom;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import com.njydsz.common.core.code.ResultCode;
 import com.njydsz.common.exception.code.IExceptionResultCode;
@@ -44,10 +42,6 @@ public abstract class AbstractYdszException extends RuntimeException implements 
     protected String code;
     protected String key;
     protected transient Object[] params;
-    /**
-     * 按 Locale 缓存已解析消息，computeIfAbsent 保证并发安全且不串语言
-     */
-    protected final ConcurrentHashMap<Locale, String> messageCache = new ConcurrentHashMap<>(2);
     /**
      * 通过 setMessage() 显式覆盖的消息（优先于 i18n 解析）
      */
@@ -150,7 +144,6 @@ public abstract class AbstractYdszException extends RuntimeException implements 
         this.code = code;
         this.key = key;
         this.params = normalizeParams(params);
-        this.messageCache.clear();
         this.overrideMessage = null;
         this.messageKey = key;
         this.messageParams = this.params;
@@ -286,22 +279,18 @@ public abstract class AbstractYdszException extends RuntimeException implements 
     }
 
     /**
-     * 获取异常消息（懒加载 i18n 解析 - 按 Locale 缓存）
+     * 获取异常消息（i18n 解析 - 无对象内缓存）。
      *
-     * <p>首次按某 Locale 调用时通过 {@link MessageSourceHolder} 解析国际化消息，
-     * 解析结果按 Locale 存入 {@link ConcurrentHashMap}，后续同 Locale 调用直接返回缓存值，
-     * 不同 Locale 互不干扰，保证多语言切换不串文案。
+     * <p>直接通过 {@link MessageSourceHolder} 按当前请求 Locale 解析国际化消息。
+     * {@link org.springframework.context.i18n.LocaleContextHolder} 基于 {@link ThreadLocal} 实现，
+     * 同一请求线程内 Locale 恒定，天然保证多语言切换不串文案，无需异常对象内维护 ConcurrentHashMap 缓存。
      *
      * <p>若 {@link MessageSourceHolder} 未注入（如非 Spring 环境），
      * 则直接返回 messageKey 本身（兜底行为，保持向后兼容）。
      * 若通过 {@link #setMessage(String)} 显式覆盖消息，优先返回覆盖值。
      *
-     * <p>性能优势：
-     * <ul>
-     *     <li>{@code computeIfAbsent} 并发安全，同 Locale 下仅首次解析</li>
-     *     <li>按 Locale 隔离缓存，兼顾正确性与性能</li>
-     *     <li>对异常链打印、日志输出、JSON 序列化等多消费方友好</li>
-     * </ul>
+     * <p>调用方注意：本方法依赖请求线程绑定的 Locale（{@link org.springframework.context.i18n.LocaleContextHolder}），
+     * 跨线程场景（如异步任务）需通过 {@code LocaleContextHolder.setLocale(locale)} 传递上下文。
      *
      * @return 解析后的国际化消息；解析器未注入时返回 messageKey
      */
@@ -314,18 +303,19 @@ public abstract class AbstractYdszException extends RuntimeException implements 
         if (messageKey == null) {
             return super.getMessage();
         }
-        Locale locale = MessageSourceHolder.currentLocale();
-        return messageCache.computeIfAbsent(locale, l -> MessageSourceHolder.resolve(messageKey, messageParams, l));
+        return MessageSourceHolder.resolve(messageKey, messageParams);
     }
 
     /**
-     * 设置异常消息（直接覆盖，跳过懒加载解析）
+     * 设置异常消息（直接覆盖，跳过 i18n 解析）。
      *
-     * @param message 异常消息
+     * <p>设置后 {@link #getMessage()} 直接返回此值，优先级最高。
+     * 传 {@code null} 清除覆盖，恢复走 i18n 解析逻辑。
+     *
+     * @param message 异常消息；传入 {@code null} 清除覆盖
      */
     public void setMessage(String message) {
         this.overrideMessage = message;
-        this.messageCache.clear();
     }
 
     public int getHttpStatus() {

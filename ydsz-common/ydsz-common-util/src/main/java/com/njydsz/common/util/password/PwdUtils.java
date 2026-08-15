@@ -7,11 +7,10 @@ import java.util.Locale;
 import java.util.ServiceLoader;
 import java.util.regex.Pattern;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.njydsz.common.util.security.DigestUtils;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 用户密码安全工具类（纯 JDK 实现 + Spring Security BCrypt）

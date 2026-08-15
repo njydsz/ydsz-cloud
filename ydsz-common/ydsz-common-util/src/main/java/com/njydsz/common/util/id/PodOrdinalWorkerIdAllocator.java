@@ -55,6 +55,8 @@ public final class PodOrdinalWorkerIdAllocator implements WorkerIdAllocator {
 
     /**
      * 解析当前节点 hostname，依次尝试：HOSTNAME 环境变量 → POD_NAME 环境变量 → InetAddress。
+      * @param nodeId nodeId
+      * @return 处理后的结果
      */
     private String resolveHostname(String nodeId) {
         if (nodeId != null && !nodeId.isBlank()) {
@@ -75,3 +77,5 @@ public final class PodOrdinalWorkerIdAllocator implements WorkerIdAllocator {
         }
     }
 }
+
+

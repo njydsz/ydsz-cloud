@@ -51,6 +51,8 @@ public final class IpHashWorkerIdAllocator implements WorkerIdAllocator {
     /**
      * 解析 IP 地址，优先使用 nodeId（当它是 IP 格式时），
      * 否则自动选择第一个非回环 IPv4 地址。
+      * @param nodeId nodeId
+      * @return 处理后的结果
      */
     private InetAddress resolveAddress(String nodeId) {
         // 尝试将 nodeId 解析为 IP
@@ -90,3 +92,5 @@ public final class IpHashWorkerIdAllocator implements WorkerIdAllocator {
         }
     }
 }
+
+

@@ -55,10 +55,15 @@ import org.springframework.scheduling.TaskScheduler;
  *
  * <p><b>v1.2.0 变更：</b>新增组件，对标 Redis 大厂实践中的"复制延迟感知读"模式。
  *
+ * <p><b>迁移说明：</b>自 v1.1.0 起标记废弃，计划 v2.0.0 移除。
+ * 当前无业务消费方。如需强制读主能力，请使用客户端 {@code ReadFrom.UPSTREAM} 配置。
+ *
  * @author ydsz-team
  * @since 1.2.0
+ * @deprecated 自 v1.1.0 起无消费方，计划 v2.0.0 移除。替代方案：客户端 ReadFrom.UPSTREAM 强制读主。
  */
 @Slf4j
+@Deprecated(since = "1.1.0", forRemoval = true)
 @ConditionalOnClass(StringRedisTemplate.class)
 @ConditionalOnProperty(prefix = "ydsz.redis.replication.lag-aware", name = "enabled", havingValue = "true")
 public class ReplicationLagAwareStrategy {

@@ -1,5 +1,6 @@
 package com.njydsz.common.util.collection;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -9,8 +10,6 @@ import java.util.Map;
 import java.util.SequencedCollection;
 import java.util.SequencedMap;
 import java.util.SequencedSet;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -210,3 +209,4 @@ public final class SequencedCollections {
         return Collections.unmodifiableSet(set);
     }
 }
+

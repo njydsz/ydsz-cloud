@@ -54,6 +54,8 @@ public final class IpValidator {
 
     /**
      * 校验 IP 地址格式（IPv4 或 IPv6）。
+      * @param ip ip
+      * @return 处理后的结果
      */
     public static boolean validIp(String ip) {
         return validIpv4(ip) || validIpv6(ip);
@@ -252,3 +254,5 @@ public final class IpValidator {
         LOCALHOST, PRIVATE_IPV4, PRIVATE_IPV6, PUBLIC_IPV4, PUBLIC_IPV6, UNKNOWN, INVALID
     }
 }
+
+

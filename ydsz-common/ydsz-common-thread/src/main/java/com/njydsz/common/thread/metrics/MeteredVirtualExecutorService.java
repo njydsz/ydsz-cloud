@@ -15,10 +15,13 @@ import org.springframework.lang.NonNull;
 /**
  * 带指标追踪的虚拟线程执行器服务包装器。
  *
- * <p>包装 JDK 21 的虚拟线程执行器（{@link Executors#newThreadPerTaskExecutor}），
- * 在任务提交、完成、拒绝时自动同步更新关联的 {@link VirtualThreadMetrics} 计数器。
+ * <p>包装 JDK 21 的虚拟线程执行器（{@link java.util.concurrent.Executors#newThreadPerTaskExecutor}），
+ * 在任务提交、完成时自动同步更新关联的 {@link VirtualThreadMetrics} 计数器。
  *
  * <p>使用装饰器模式透明包装原始 {@link ExecutorService}，对调用方无侵入。
+ *
+ * <p>v1.4.0 变更：移除 rejected 相关逻辑（JDK 21 的虚拟线程执行器从不拒绝任务，
+ * 拒绝计数器和对应指标为不可达代码）。
  *
  * <p>v1.3.1 新增：修复虚拟线程池指标计数器空转问题。
  *
@@ -42,11 +45,6 @@ public class MeteredVirtualExecutorService implements ExecutorService {
     private final LongAdder completedCount = new LongAdder();
 
     /**
-     * 已拒绝任务计数器。
-     */
-    private final LongAdder rejectedCount = new LongAdder();
-
-    /**
      * 构造带指标追踪的虚拟线程执行器服务。
      *
      * @param delegate 原始虚拟线程执行器（不可为 null）
@@ -60,55 +58,36 @@ public class MeteredVirtualExecutorService implements ExecutorService {
     @Override
     public void execute(@NonNull Runnable command) {
         submittedCount.increment();
-        try {
-            delegate.execute(wrapTask(command));
-        } catch (Exception e) {
-            rejectedCount.increment();
-            metrics.incrementRejected();
-            throw e;
-        }
+        metrics.incrementSubmitted();
+        delegate.execute(wrapTask(command));
     }
 
     @Override
     public <T> Future<T> submit(@NonNull Callable<T> task) {
         submittedCount.increment();
-        try {
-            return delegate.submit(wrapCallable(task));
-        } catch (Exception e) {
-            rejectedCount.increment();
-            metrics.incrementRejected();
-            throw e;
-        }
+        metrics.incrementSubmitted();
+        return delegate.submit(wrapCallable(task));
     }
 
     @Override
     public <T> Future<T> submit(@NonNull Runnable task, T result) {
         submittedCount.increment();
-        try {
-            return delegate.submit(wrapTask(task), result);
-        } catch (Exception e) {
-            rejectedCount.increment();
-            metrics.incrementRejected();
-            throw e;
-        }
+        metrics.incrementSubmitted();
+        return delegate.submit(wrapTask(task), result);
     }
 
     @Override
     public Future<?> submit(@NonNull Runnable task) {
         submittedCount.increment();
-        try {
-            return delegate.submit(wrapTask(task));
-        } catch (Exception e) {
-            rejectedCount.increment();
-            metrics.incrementRejected();
-            throw e;
-        }
+        metrics.incrementSubmitted();
+        return delegate.submit(wrapTask(task));
     }
 
     @Override
     public <T> List<Future<T>> invokeAll(@NonNull Collection<? extends Callable<T>> tasks)
             throws InterruptedException {
         submittedCount.add(tasks.size());
+        metrics.getSubmittedCount();
         return delegate.invokeAll(tasks);
     }
 
@@ -176,15 +155,6 @@ public class MeteredVirtualExecutorService implements ExecutorService {
      */
     public long getCompletedCount() {
         return completedCount.sum();
-    }
-
-    /**
-     * 获取累计拒绝任务数。
-     *
-     * @return 拒绝总数
-     */
-    public long getRejectedCount() {
-        return rejectedCount.sum();
     }
 
     // ====================== private helpers ======================
