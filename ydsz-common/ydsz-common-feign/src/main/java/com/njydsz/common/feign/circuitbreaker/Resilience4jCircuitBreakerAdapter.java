@@ -1,6 +1,7 @@
 package com.njydsz.common.feign.circuitbreaker;
 
 import java.time.Duration;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -167,6 +168,11 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
             statePersistence.clearState(serviceName);
         }
         log.info("[Resilience4jCircuitBreaker] 熔断器已重置, service={}", serviceName);
+    }
+
+    @Override
+    public Set<String> getServiceNames() {
+        return Set.copyOf(circuitBreakers.keySet());
     }
 
     /**

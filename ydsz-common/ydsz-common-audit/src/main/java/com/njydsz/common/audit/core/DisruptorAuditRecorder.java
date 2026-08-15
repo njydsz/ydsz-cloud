@@ -1,26 +1,16 @@
 package com.njydsz.common.audit.core;
 
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
-
-import javax.sql.DataSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 import com.lmax.disruptor.BlockingWaitStrategy;
@@ -34,7 +24,6 @@ import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import com.njydsz.common.audit.config.AuditProperties;
 import com.njydsz.common.audit.domain.AuditLog;
-import com.njydsz.common.audit.sharding.TableShardingStrategy;
 
 /**
  * 基于 LMAX Disruptor 的高性能异步审计记录器
@@ -51,7 +40,7 @@ import com.njydsz.common.audit.sharding.TableShardingStrategy;
  * <ul>
  *   <li>支持多生产者并发写入（ProducerType.MULTI）</li>
  *   <li>支持批量消费（batch handler）</li>
- *   <li>支持分表策略写入</li>
+ *   <li>写入操作委托给 {@link AuditWriter}，支持 JDBC、消息队列等多种后端</li>
  *   <li>优雅停机时自动刷新剩余日志</li>
  *   <li>批量写入失败时磁盘兜底，不丢失审计日志</li>
  *   <li>队列满计数监控指标</li>
@@ -60,30 +49,14 @@ import com.njydsz.common.audit.sharding.TableShardingStrategy;
  *
  * @author ydsz-team
  * @since 1.0.0
+ *
  */
 public class DisruptorAuditRecorder implements AuditRecorder, DisposableBean {
 
     private static final Logger log = LoggerFactory.getLogger(DisruptorAuditRecorder.class);
 
-    /** 批量写入分片大小（每批最多 500 条） */
-    private static final int BATCH_SLICE_SIZE = 500;
-
     /** 优雅停机超时时间（秒） */
     private static final long SHUTDOWN_TIMEOUT_SECONDS = 30;
-
-    /** 默认基础表名 */
-    private static final String BASE_TABLE_NAME = "sys_audit_log";
-
-    /** INSERT 语句列定义 */
-    private static final String INSERT_COLUMNS =
-            "(id, audit_type, action, status, module, content, " +
-            "business_no, operator_id, operator_code, operator_name, ip_address, ip_location, " +
-            "user_agent, request_params, response_result, error_message, cost_time, " +
-            "app_id, app_code, app_name, extra_info, operation_time, created_at)";
-
-    /** INSERT 语句占位符值 */
-    private static final String INSERT_VALUES =
-            "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     /** Disruptor 实例 */
     private final Disruptor<AuditLogEvent> disruptor;
@@ -91,17 +64,11 @@ public class DisruptorAuditRecorder implements AuditRecorder, DisposableBean {
     /** RingBuffer 引用 */
     private final RingBuffer<AuditLogEvent> ringBuffer;
 
-    /** JDBC 模板 */
-    private final JdbcTemplate jdbcTemplate;
+    /** 审计写入器，负责实际的持久化操作 */
+    private final AuditWriter auditWriter;
 
     /** 异步批量写入配置 */
     private final AuditProperties.AsyncProperties asyncProps;
-
-    /** 分表策略 */
-    private final TableShardingStrategy shardingStrategy;
-
-    /** 基础表名 */
-    private final String baseTableName;
 
     /** 运行状态标志 */
     private final AtomicBoolean running = new AtomicBoolean(true);
@@ -127,34 +94,25 @@ public class DisruptorAuditRecorder implements AuditRecorder, DisposableBean {
     /**
      * 构造函数（使用默认 BlockingWaitStrategy）
      *
-     * @param dataSource       数据源
-     * @param properties       审计配置属性
-     * @param shardingStrategy 分表策略（可为 null）
-     * @param baseTableName    基础表名
+     * @param auditWriter 审计写入器
+     * @param properties  审计配置属性
      */
-    public DisruptorAuditRecorder(DataSource dataSource, AuditProperties properties,
-                                   TableShardingStrategy shardingStrategy, String baseTableName) {
-        this(dataSource, properties, shardingStrategy, baseTableName, "blocking");
+    public DisruptorAuditRecorder(AuditWriter auditWriter, AuditProperties properties) {
+        this(auditWriter, properties, "blocking");
     }
 
     /**
      * 构造函数 — 支持自定义 WaitStrategy
      *
-     * @param dataSource       数据源
+     * @param auditWriter      审计写入器
      * @param properties       审计配置属性
-     * @param shardingStrategy 分表策略（可为 null）
-     * @param baseTableName    基础表名
-     * @param waitStrategyName  等待策略名称（blocking / sleeping / yielding）
+     * @param waitStrategyName 等待策略名称（blocking / sleeping / yielding）
      */
-    public DisruptorAuditRecorder(DataSource dataSource, AuditProperties properties,
-                                   TableShardingStrategy shardingStrategy, String baseTableName,
-                                   String waitStrategyName) {
-        Objects.requireNonNull(dataSource, "DataSource must not be null");
+    public DisruptorAuditRecorder(AuditWriter auditWriter, AuditProperties properties, String waitStrategyName) {
+        Objects.requireNonNull(auditWriter, "AuditWriter must not be null");
         Objects.requireNonNull(properties, "AuditProperties must not be null");
-        this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.auditWriter = auditWriter;
         this.asyncProps = properties.getAsync();
-        this.shardingStrategy = shardingStrategy;
-        this.baseTableName = baseTableName != null ? baseTableName : BASE_TABLE_NAME;
         this.batchBuffer = new ArrayList<>(asyncProps.getBatchSize());
 
         // 创建线程工厂
@@ -179,9 +137,9 @@ public class DisruptorAuditRecorder implements AuditRecorder, DisposableBean {
         disruptor.start();
         this.ringBuffer = disruptor.getRingBuffer();
 
-        log.info("【Disruptor审计记录器】启动成功, RingBuffer容量={}, 批量阈值={}, 分表策略={}, WaitStrategy={}",
+        log.info("【Disruptor审计记录器】启动成功, RingBuffer容量={}, 批量阈值={}, WaitStrategy={}, 写入器={}",
                 asyncProps.getExecutorQueueCapacity(), asyncProps.getBatchSize(),
-                shardingStrategy != null ? shardingStrategy.getShardType() : "DISABLED", waitStrategyName);
+                waitStrategyName, auditWriter.getName());
     }
 
     /**
@@ -216,7 +174,7 @@ public class DisruptorAuditRecorder implements AuditRecorder, DisposableBean {
         if (!running.get()) {
             log.warn("【Disruptor审计记录器】记录器已停止, 尝试同步写入");
             try {
-                saveSingle(auditLog);
+                auditWriter.write(auditLog);
             } catch (Exception e) {
                 log.error("【Disruptor审计记录器】同步写入失败", e);
                 fallbackWriter.writeToFallback(auditLog);
@@ -319,162 +277,13 @@ public class DisruptorAuditRecorder implements AuditRecorder, DisposableBean {
         int total = batch.size();
 
         try {
-            if (shardingStrategy != null) {
-                flushBatchWithSharding(batch);
-            } else {
-                for (int offset = 0; offset < total; offset += BATCH_SLICE_SIZE) {
-                    int end = Math.min(offset + BATCH_SLICE_SIZE, total);
-                    List<AuditLog> slice = batch.subList(offset, end);
-                    saveBatchDirect(slice);
-                }
-            }
+            auditWriter.writeBatch(batch);
             successCount.addAndGet(total);
             log.debug("【Disruptor审计记录器】批量写入成功, total={}", total);
         } catch (Exception e) {
             failureCount.addAndGet(total);
             log.error("【Disruptor审计记录器】批量写入失败, count={}, 尝试磁盘兜底", total, e);
             fallbackWriter.writeBatchToFallback(batch);
-        }
-    }
-
-    /**
-     * 分表模式批量写入
-     */
-    private void flushBatchWithSharding(List<AuditLog> batch) {
-        Map<String, List<AuditLog>> grouped = batch.stream()
-                .collect(Collectors.groupingBy(this::resolveTableName));
-
-        for (Map.Entry<String, List<AuditLog>> entry : grouped.entrySet()) {
-            List<AuditLog> slice = entry.getValue();
-            for (int offset = 0; offset < slice.size(); offset += BATCH_SLICE_SIZE) {
-                int end = Math.min(offset + BATCH_SLICE_SIZE, slice.size());
-                List<AuditLog> subSlice = slice.subList(offset, end);
-                saveBatchDirectToTable(entry.getKey(), subSlice);
-            }
-        }
-    }
-
-    /**
-     * 解析目标表名
-     */
-    private String resolveTableName(AuditLog auditLog) {
-        if (shardingStrategy == null) {
-            return baseTableName;
-        }
-        LocalDateTime time = auditLog.getOperationTime();
-        if (time == null) {
-            time = auditLog.getCreatedAt();
-        }
-        if (time == null) {
-            time = LocalDateTime.now();
-        }
-        return shardingStrategy.getTableName(baseTableName, time);
-    }
-
-    /**
-     * 构建 INSERT SQL
-     */
-    private String buildInsertSql(String tableName) {
-        return "INSERT INTO " + tableName + " " + INSERT_COLUMNS + " VALUES " + INSERT_VALUES;
-    }
-
-    /**
-     * 直接批量保存
-     */
-    private void saveBatchDirect(List<AuditLog> auditLogs) {
-        saveBatchDirectToTable(baseTableName, auditLogs);
-    }
-
-    /**
-     * 直接批量保存到指定表
-     */
-    private void saveBatchDirectToTable(String tableName, List<AuditLog> auditLogs) {
-        if (auditLogs == null || auditLogs.isEmpty()) {
-            return;
-        }
-
-        String sql = buildInsertSql(tableName);
-
-        int total = auditLogs.size();
-        for (int offset = 0; offset < total; offset += BATCH_SLICE_SIZE) {
-            int end = Math.min(offset + BATCH_SLICE_SIZE, total);
-            List<AuditLog> slice = auditLogs.subList(offset, end);
-
-            jdbcTemplate.batchUpdate(sql, slice, slice.size(),
-                    (ps, auditLog) -> setPreparedStatementParams(ps, auditLog));
-        }
-    }
-
-    /**
-     * 保存单条审计日志
-     */
-    private void saveSingle(AuditLog auditLog) {
-        String tableName = resolveTableName(auditLog);
-        String sql = buildInsertSql(tableName);
-        jdbcTemplate.update(sql, createPreparedStatementSetter(auditLog));
-    }
-
-    /**
-     * 创建 PreparedStatement 设置器
-     */
-    private PreparedStatementSetter createPreparedStatementSetter(AuditLog auditLog) {
-        return ps -> setPreparedStatementParams(ps, auditLog);
-    }
-
-    /**
-     * 设置 PreparedStatement 参数
-     *
-     * <p>使用明确类型的 setter 方法（setInt/setLong/setString），避免 setObject 导致数据库驱动类型推断不一致
-     * 而引发索引失效问题。
-     */
-    private void setPreparedStatementParams(PreparedStatement ps, AuditLog auditLog) throws SQLException {
-        int i = 1;
-        ps.setString(i++, auditLog.getId());
-        setIntegerParam(ps, i++, auditLog.getAuditType());
-        setIntegerParam(ps, i++, auditLog.getAction());
-        setIntegerParam(ps, i++, auditLog.getStatus());
-        ps.setString(i++, auditLog.getModule());
-        ps.setString(i++, auditLog.getContent());
-        ps.setString(i++, auditLog.getBusinessNo());
-        ps.setString(i++, auditLog.getOperatorId());
-        ps.setString(i++, auditLog.getOperatorCode());
-        ps.setString(i++, auditLog.getOperatorName());
-        ps.setString(i++, auditLog.getIpAddress());
-        ps.setString(i++, auditLog.getIpLocation());
-        ps.setString(i++, auditLog.getUserAgent());
-        ps.setString(i++, auditLog.getRequestParams());
-        ps.setString(i++, auditLog.getResponseResult());
-        ps.setString(i++, auditLog.getErrorMessage());
-        setLongParam(ps, i++, auditLog.getCostTime());
-        ps.setString(i++, auditLog.getAppId());
-        ps.setString(i++, auditLog.getAppCode());
-        ps.setString(i++, auditLog.getAppName());
-        ps.setString(i++, auditLog.getExtraInfo());
-        ps.setTimestamp(i++, auditLog.getOperationTime() != null
-                ? Timestamp.valueOf(auditLog.getOperationTime()) : new Timestamp(System.currentTimeMillis()));
-        ps.setTimestamp(i, auditLog.getCreatedAt() != null
-                ? Timestamp.valueOf(auditLog.getCreatedAt()) : new Timestamp(System.currentTimeMillis()));
-    }
-
-    /**
-     * 设置 Integer 类型参数（null 值安全）
-     */
-    private void setIntegerParam(PreparedStatement ps, int index, Integer value) throws SQLException {
-        if (value != null) {
-            ps.setInt(index, value);
-        } else {
-            ps.setNull(index, java.sql.Types.INTEGER);
-        }
-    }
-
-    /**
-     * 设置 Long 类型参数（null 值安全）
-     */
-    private void setLongParam(PreparedStatement ps, int index, Long value) throws SQLException {
-        if (value != null) {
-            ps.setLong(index, value);
-        } else {
-            ps.setNull(index, java.sql.Types.BIGINT);
         }
     }
 
