@@ -1,15 +1,16 @@
 package com.njydsz.common.notify.preference;
 
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.notify.enums.NotifyChannel;
-import com.njydsz.common.notify.enums.NotifyType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.data.redis.core.StringRedisTemplate;
-
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.notify.enums.NotifyChannel;
+import com.njydsz.common.notify.enums.NotifyType;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 通知偏好管理器（P3-12）
@@ -27,16 +28,16 @@ public class NotifyPreferenceManager {
     private static final String REDIS_KEY_PREFIX = "notify:preference:";
     private static final Duration CACHE_TTL = Duration.ofHours(24);
 
-    private final StringRedisTemplate redisTemplate;
+    private final RedisStringOps redisStringOps;
     private final ConcurrentMap<String, NotifyPreference> localCache = new ConcurrentHashMap<>();
 
     /**
      * 构造通知偏好管理器
      *
-     * @param redisTemplate Redis 模板（可为 null，降级为本地缓存）
+     * @param redisStringOps Redis String 操作（可为 null，降级为本地缓存）
      */
-    public NotifyPreferenceManager(StringRedisTemplate redisTemplate) {
-        this.redisTemplate = redisTemplate;
+    public NotifyPreferenceManager(RedisStringOps redisStringOps) {
+        this.redisStringOps = redisStringOps;
     }
 
     /**
@@ -55,9 +56,9 @@ public class NotifyPreferenceManager {
             return cached;
         }
         // 查 Redis
-        if (redisTemplate != null) {
+        if (redisStringOps != null) {
             try {
-                String json = redisTemplate.opsForValue().get(REDIS_KEY_PREFIX + userId);
+                String json = redisStringOps.get(REDIS_KEY_PREFIX + userId, String.class);
                 if (json != null) {
                     NotifyPreference pref = YdszJson.fromJson(json, NotifyPreference.class);
                     localCache.put(userId, pref);
@@ -83,10 +84,10 @@ public class NotifyPreferenceManager {
             return;
         }
         localCache.put(preference.getUserId(), preference);
-        if (redisTemplate != null) {
+        if (redisStringOps != null) {
             try {
                 String json = YdszJson.toJson(preference);
-                redisTemplate.opsForValue().set(REDIS_KEY_PREFIX + preference.getUserId(), json, CACHE_TTL);
+                redisStringOps.set(REDIS_KEY_PREFIX + preference.getUserId(), json, CACHE_TTL);
             } catch (Exception e) {
                 log.warn("[NotifyPreferenceManager] Redis 保存偏好失败: {}", e.getMessage());
             }

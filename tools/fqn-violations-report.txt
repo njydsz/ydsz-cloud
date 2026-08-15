@@ -1,0 +1,30 @@
+================================================================================
+行内 FQN 使用扫描报告
+================================================================================
+项目路径: D:\Code\open\ydsz-cloud
+总文件数: 3035
+扫描文件数: 3035
+违规文件数: 3
+违规总数:  3
+
+--------------------------------------------------------------------------------
+按 FQN 频率排序 (Top 30):
+--------------------------------------------------------------------------------
+     2  org.slf4j.LoggerFactory.getLogger
+     1  org.slf4j.Logger
+
+--------------------------------------------------------------------------------
+详细违规列表:
+--------------------------------------------------------------------------------
+
+[ydsz-common\ydsz-common-base\src\main\java\com\njydsz\common\base\i18n\MessageResolverHolder.java] (1 处违规)
+  行   50: org.slf4j.LoggerFactory.getLogger
+                       org.slf4j.LoggerFactory.getLogger(MessageResolverHolder.class)
+
+[ydsz-common\ydsz-common-core\src\main\java\com\njydsz\common\core\response\BaseResponse.java] (1 处违规)
+  行  353: org.slf4j.LoggerFactory.getLogger
+                       org.slf4j.LoggerFactory.getLogger(BaseResponse.class)
+
+[ydsz-common\ydsz-common-feign\src\main\java\com\njydsz\common\feign\aspect\YdszFeignLogger.java] (1 处违规)
+  行   36: org.slf4j.Logger
+               private static final org.slf4j.Logger LOG = LoggerFactory.getLogger("com.njydsz.feign"); // FQN-
