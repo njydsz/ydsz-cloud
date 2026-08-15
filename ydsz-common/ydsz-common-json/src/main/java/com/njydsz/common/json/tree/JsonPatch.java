@@ -111,14 +111,26 @@ public final class JsonPatch {
      * @return Patch 后的新对象
      */
     public static <T> T apply(String patchJson, T target, Class<T> clazz) {
-        List<PatchOp> ops = parse(patchJson);
-        ObjectNode tree = (ObjectNode) YdszJson.valueToTree(target);
+        ObjectNode tree = applyToTree(patchJson, (ObjectNode) YdszJson.valueToTree(target));
+        return YdszJson.convertValue(tree, clazz);
+    }
 
+    /**
+     * 将 RFC 6902 Patch 直接应用到 JsonNode 树（原地修改），返回同一棵树。
+     *
+     * <p>P-2 优化：供树模型调用方直接操作，避免 {code Map} 中转
+     * （原先 {@code YdszJson.patch} 走 parseMap → Map → tree → Map → String 的多重转换）。</p>
+     *
+     * @param patchJson Patch JSON 数组字符串
+     * @param tree      目标树（必须是 ObjectNode）
+     * @return 应用 Patch 后的同一棵树（原地修改）
+     */
+    public static ObjectNode applyToTree(String patchJson, ObjectNode tree) {
+        List<PatchOp> ops = parse(patchJson);
         for (PatchOp op : ops) {
             applyOp(tree, op);
         }
-
-        return YdszJson.convertValue(tree, clazz);
+        return tree;
     }
 
     /**

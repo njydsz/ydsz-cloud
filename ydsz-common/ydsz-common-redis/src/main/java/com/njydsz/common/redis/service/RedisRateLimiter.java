@@ -209,7 +209,10 @@ public class RedisRateLimiter {
      * @param capacity 桶容量
      * @param period   补充周期
      * @return true=允许，false=拒绝
+     *
+     * @deprecated 自 v1.1.0 起标记废弃，请使用 {@link #tryAcquireTokenBucket(String, int, int, Duration, int)} 显式指定请求令牌数。
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     public boolean tryAcquireTokenBucket(String key, int rate, int capacity, Duration period) {
         return tryAcquireTokenBucket(key, rate, capacity, period, 1);
     }
@@ -539,7 +542,10 @@ public class RedisRateLimiter {
      * 限流异常（被限流时抛出）
      *
      * <p>包含限流键、限制阈值和窗口信息，便于调用方按异常类型处理限流场景。</p>
+     *
+     * @deprecated 自 v1.1.0 起标记废弃。限流异常由各业务模块自行定义。
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     public static class RateLimitException extends RuntimeException {
         private final String key;
         private final int limit;
@@ -575,7 +581,10 @@ public class RedisRateLimiter {
      * @param limit  窗口内最大请求数
      * @param window 时间窗口长度
      * @throws RateLimitException 当请求被限流时
+     *
+     * @deprecated 自 v1.1.0 起标记废弃。请自行调用 {@link #tryAcquireFixedWindow} 并结合异常处理。
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     public void tryAcquireFixedWindowOrThrow(String key, int limit, Duration window) {
         if (!tryAcquireFixedWindow(key, limit, window)) {
             throw new RateLimitException(key, limit, window);
@@ -589,7 +598,10 @@ public class RedisRateLimiter {
      * @param rate     令牌补充速率（每秒）
      * @param capacity 桶容量
      * @throws RateLimitException 当请求被限流时
+     *
+     * @deprecated 自 v1.1.0 起标记废弃。请自行调用 {@link #tryAcquireTokenBucket(String, int, int, Duration, int)} 并结合异常处理。
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     public void tryAcquireTokenBucketOrThrow(String key, int rate, int capacity) {
         if (!tryAcquireTokenBucket(key, rate, capacity)) {
             throw new RateLimitException(key, capacity, Duration.ofSeconds(1));
@@ -603,7 +615,10 @@ public class RedisRateLimiter {
      * @param limit  窗口内最大请求数
      * @param window 时间窗口长度
      * @throws RateLimitException 当请求被限流时
+     *
+     * @deprecated 自 v1.1.0 起标记废弃。请自行调用 {@link #tryAcquireSlidingWindow} 并结合异常处理。
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     public void tryAcquireSlidingWindowOrThrow(String key, int limit, Duration window) {
         if (!tryAcquireSlidingWindow(key, limit, window)) {
             throw new RateLimitException(key, limit, window);
@@ -637,7 +652,10 @@ public class RedisRateLimiter {
      * @param onRateLimited  限流时的降级逻辑
      * @param <T>            返回值类型
      * @return 执行结果
+     *
+     * @deprecated 自 v1.1.0 起标记废弃，无替代方案。该编程模式未纳入正式 API 契约。
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     public <T> T executeOrRun(String key, int limit, Duration window,
                               java.util.function.Supplier<T> action,
                               java.util.function.Supplier<T> onRateLimited) {
@@ -674,7 +692,10 @@ public class RedisRateLimiter {
      * @param <T>    返回值类型
      * @return 执行结果
      * @throws RateLimitException 当请求被限流时
+     *
+     * @deprecated 自 v1.1.0 起标记废弃，无替代方案。该编程模式未纳入正式 API 契约。
      */
+    @Deprecated(since = "1.1.0", forRemoval = true)
     public <T> T executeOrThrow(String key, int limit, Duration window,
                                 java.util.function.Supplier<T> action) {
         if (!tryAcquireSlidingWindow(key, limit, window)) {

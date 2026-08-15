@@ -129,6 +129,8 @@ public class HikariCPProperties {
     /**
      * 根据 JDBC URL 获取默认的连接测试查询语句
      *
+     * <p>MySQL / PostgreSQL 等主流数据库均支持 {@code SELECT 1}。
+     *
      * @param jdbcUrl JDBC 连接 URL
      * @return 测试查询语句
      */
@@ -136,13 +138,7 @@ public class HikariCPProperties {
         if (connectionTestQuery != null && !connectionTestQuery.isEmpty()) {
             return connectionTestQuery;
         }
-        if (jdbcUrl == null) {
-            return "SELECT 1";
-        }
-        String url = jdbcUrl.toLowerCase();
-        if (url.contains("oracle")) {
-            return "SELECT 1 FROM DUAL";
-        }
+        // MySQL / PostgreSQL / H2 等均支持 SELECT 1
         return "SELECT 1";
     }
 }

@@ -127,8 +127,8 @@ public final class CollectionUtils {
      * @param list      待转换的列表
      * @param keyMapper 键提取函数
      * @return 转换后的 Map
-     * @param K 泛型参数类型
-     * @param V 泛型参数类型
+     * @param <K> 泛型参数类型
+     * @param <V> 泛型参数类型
      */
     public static <K, V> Map<K, V> listToMap(Collection<V> list, Function<? super V, ? extends K> keyMapper) {
         Objects.requireNonNull(keyMapper, "keyMapper must not be null");
@@ -147,9 +147,9 @@ public final class CollectionUtils {
      * @param keyMapper   键提取函数
      * @param valueMapper 值提取函数
      * @return 转换后的 Map
-     * @param K 泛型参数类型
-     * @param V 泛型参数类型
-     * @param T 泛型参数类型
+     * @param <K> 泛型参数类型
+     * @param <V> 泛型参数类型
+     * @param <T> 泛型参数类型
      */
     public static <K, V, T> Map<K, V> listToMap(Collection<T> list,
                                                   Function<? super T, ? extends K> keyMapper,
@@ -168,8 +168,8 @@ public final class CollectionUtils {
      * @param list       待分组的列表
      * @param classifier 分类函数
      * @return 分组后的 Map，入参为空返回空 Map
-     * @param K 泛型参数类型
-     * @param V 泛型参数类型
+     * @param <K> 泛型参数类型
+     * @param <V> 泛型参数类型
      */
     public static <K, V> Map<K, List<V>> listToGroup(Collection<V> list, Function<? super V, ? extends K> classifier) {
         Objects.requireNonNull(classifier, "classifier must not be null");
@@ -185,8 +185,8 @@ public final class CollectionUtils {
      * @param source 待转换的列表
      * @param mapper 转换函数
      * @return 转换后的列表，入参为空返回空 List
-     * @param T 泛型参数类型
-     * @param R 泛型参数类型
+     * @param <T> 泛型参数类型
+     * @param <R> 泛型参数类型
      */
     public static <T, R> List<R> convertList(Collection<T> source, Function<? super T, ? extends R> mapper) {
         Objects.requireNonNull(mapper, "mapper must not be null");
@@ -204,7 +204,7 @@ public final class CollectionUtils {
      * @param source    待过滤的集合
      * @param predicate 过滤条件
      * @return 过滤后的列表，入参为空返回空 List
-     * @param T 泛型参数类型
+     * @param <T> 泛型参数类型
      */
     public static <T> List<T> filter(Collection<T> source, Predicate<? super T> predicate) {
         Objects.requireNonNull(predicate, "predicate must not be null");
@@ -221,7 +221,7 @@ public final class CollectionUtils {
      *
      * @param collection 待查找的集合
      * @return 包含第一个元素的 Optional，集合为空返回空 Optional
-     * @param T 泛型参数类型
+     * @param <T> 泛型参数类型
      */
     public static <T> Optional<T> findFirst(Collection<T> collection) {
         if (isEmpty(collection)) {
@@ -235,7 +235,7 @@ public final class CollectionUtils {
      *
      * @param collection 待查找的集合
      * @return 包含最后一个元素的 Optional，集合为空返回空 Optional
-     * @param T 泛型参数类型
+     * @param <T> 泛型参数类型
      */
     public static <T> Optional<T> findLast(Collection<T> collection) {
         if (isEmpty(collection)) {
@@ -265,7 +265,6 @@ public final class CollectionUtils {
      * @param <T>         元素类型
      * @return 合并后的可变 ArrayList；所有输入为 null 时返回空 List
      * @since 2.2.0
-     * @param T 泛型参数类型
      */
     @SafeVarargs
     public static <T> List<T> concat(Collection<? extends T>... collections) {
@@ -294,7 +293,6 @@ public final class CollectionUtils {
      * @param <T>       元素类型
      * @return 合并后的可变 ArrayList；所有输入为 null 时返回空 List
      * @since 2.2.0
-     * @param T 泛型参数类型
      */
     @SafeVarargs
     public static <T> List<T> concatIterables(Iterable<? extends T>... iterables) {
@@ -325,7 +323,6 @@ public final class CollectionUtils {
      * @param <T>    元素类型
      * @return 展平后的可变 ArrayList；输入为 null 时返回空 List
      * @since 2.2.0
-     * @param T 泛型参数类型
      */
     public static <T> List<T> flatten(Collection<? extends Collection<T>> nested) {
         if (isEmpty(nested)) {
@@ -347,7 +344,6 @@ public final class CollectionUtils {
      * @param <T>    元素类型
      * @return 展平后的可变 ArrayList；输入为 null 时返回空 List
      * @since 2.2.0
-     * @param T 泛型参数类型
      */
     public static <T> List<T> flattenIterables(Iterable<? extends Iterable<T>> nested) {
         if (nested == null) {
@@ -383,7 +379,6 @@ public final class CollectionUtils {
      * @return 分片结果 List，每个元素是一个子 List；输入为空时返回空 List
      * @throws IllegalArgumentException batchSize < 1 时抛出
      * @since 2.2.0
-     * @param T 泛型参数类型
      */
     public static <T> List<List<T>> partition(Collection<T> source, int batchSize) {
         if (batchSize < 1) {
@@ -424,7 +419,6 @@ public final class CollectionUtils {
      * @param <T>    元素类型（需正确实现 equals/hashCode）
      * @return 去重后的可变 ArrayList；输入为 null 时返回空 List
      * @since 2.2.0
-     * @param T 泛型参数类型
      */
     public static <T> List<T> distinct(Collection<T> source) {
         if (isEmpty(source)) {
@@ -448,8 +442,6 @@ public final class CollectionUtils {
      * @param <K>       键类型（需正确实现 equals/hashCode）
      * @return 去重后的可变 ArrayList；输入为 null 时返回空 List
      * @since 2.2.0
-     * @param T 泛型参数类型
-     * @param K 泛型参数类型
      */
     public static <T, K> List<T> distinctBy(Collection<T> source, Function<? super T, ? extends K> keyMapper) {
         Objects.requireNonNull(keyMapper, "keyMapper must not be null");
@@ -466,6 +458,11 @@ public final class CollectionUtils {
         return result;
     }
 }
+
+
+
+
+
 
 
 

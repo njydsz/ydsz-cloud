@@ -1,7 +1,8 @@
 package com.njydsz.common.exception.custom;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
+
+import com.njydsz.common.exception.core.ExceptionContext;
 
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.code.ResultCode;
@@ -134,20 +135,20 @@ public class BusinessException extends AbstractYdszException {
     // ==================== 业务方法 ====================
 
     /**
-     * 添加附加数据（链式调用）
+     * 添加附加数据（链式调用）。
      *
-     * <p>统一写入基类 {@link #extData}（与 Builder 的 {@code extData(...)} 共用同一存储），
-     * 避免双轨存储导致的数据覆盖与语义混乱。
+     * <p>写入 {@link com.njydsz.common.exception.core.ExceptionContext} 的 extData，
+     * 与 Builder 的 {@code extData(...)} 共用同一存储，避免双轨存储导致的数据覆盖与语义混乱。
      *
      * @param key   数据键
      * @param value 数据值
      * @return 当前异常对象
      */
     public BusinessException data(String key, Object value) {
-        if (this.extData == null) {
-            this.extData = new LinkedHashMap<>(2);
+        if (this.ctx == null) {
+            this.ctx = new ExceptionContext();
         }
-        this.extData.put(key, value);
+        this.ctx.addData(key, value);
         return this;
     }
 

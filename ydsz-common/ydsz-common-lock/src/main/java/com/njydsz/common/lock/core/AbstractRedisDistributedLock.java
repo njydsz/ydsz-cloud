@@ -14,6 +14,7 @@ import com.njydsz.common.lock.annotation.LockType;
 import com.njydsz.common.lock.metrics.LockMetrics;
 import com.njydsz.common.lock.notify.LockReleaseNotifier;
 import com.njydsz.common.lock.scheduler.LockWatchDog;
+import com.njydsz.common.lock.util.BackoffPolicy;
 import com.njydsz.common.util.id.IdGenerator;
 
 
@@ -59,6 +60,11 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
      * 剩余时间错误码（键不存在或获取失败）
      */
     protected static final long REMAIN_TIME_ERROR = -2L;
+
+    /**
+     * 退避策略实例
+     */
+    private static final BackoffPolicy BACKOFF_POLICY = new BackoffPolicy();
 
     /**
      * Redis 操作模板
@@ -114,22 +120,6 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
      * 锁键命名空间前缀，用于多应用共享 Redis 时的隔离
      */
     private final String keyNamespace;
-
-    /**
-     * 最小退避等待时间（毫秒）
-     */
-    private static final long MIN_BACKOFF_MILLIS = 10;
-
-    /**
-     * 最大退避等待时间（毫秒）
-     */
-    private static final long MAX_BACKOFF_MILLIS = 200;
-
-    /**
-     * 全抖动随机退避的随机数生成器（线程安全）
-     */
-    private static final java.util.concurrent.ThreadLocalRandom BACKOFF_RANDOM =
-            java.util.concurrent.ThreadLocalRandom.current();
 
     protected AbstractRedisDistributedLock(StringRedisTemplate stringRedisTemplate) {
         this(stringRedisTemplate, null);
@@ -506,7 +496,7 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
         }
         long waitNanos = timeUnit.toNanos(adjustedWaitTime);
         long startTime = System.nanoTime();
-        long currentBackoff = MIN_BACKOFF_MILLIS;
+        long currentBackoff = BACKOFF_POLICY.getMinBackoff();
         String lockValue = null;
         while (true) {
             lockValue = tryAcquireOnce(lockKey, leaseTime, timeUnit);
@@ -538,7 +528,7 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
             }
             long remainingWait = waitNanos - elapsed;
             waitBeforeRetry(lockKey, remainingWait, currentBackoff);
-            currentBackoff = Math.min(currentBackoff * 2, MAX_BACKOFF_MILLIS);
+            currentBackoff = BACKOFF_POLICY.nextBackoff(currentBackoff);
             if (Thread.currentThread().isInterrupted()) {
                 throw new InterruptedException();
             }

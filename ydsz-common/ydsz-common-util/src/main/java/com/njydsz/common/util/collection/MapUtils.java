@@ -196,7 +196,7 @@ public final class MapUtils {
      * @param obj     原始对象
      * @param element 元素类型
      * @return 类型安全的可变 List
-     * @param T 泛型参数类型
+     * @param <T> 泛型参数类型
      */
     public static <T> List<T> safeCastList(Object obj, Class<T> element) {
         if (!(obj instanceof List<?> raw)) {
@@ -274,7 +274,6 @@ public final class MapUtils {
      * @param <T>         目标类型泛型
      * @return 转换后的对象；source 为 null 时返回 null
      * @since 3.0.0
-     * @param T 泛型参数类型
      */
     public static <T> T toBean(Map<String, Object> source, Class<T> targetClass) {
         return BeanMapper.toBean(source, targetClass);
@@ -294,7 +293,6 @@ public final class MapUtils {
      * @param <T>     目标类型泛型
      * @return 转换后的对象
      * @since 3.0.0
-     * @param T 泛型参数类型
      */
     @SuppressWarnings("unchecked")
     public static <T> T toBean(Object source, BeanMapper.TypeReference<T> typeRef) {
@@ -311,7 +309,6 @@ public final class MapUtils {
      * @param <T>   目标类型泛型
      * @return 填充后的实例
      * @since 3.0.0
-     * @param T 泛型参数类型
      */
     public static <T> T toBeanOrRecord(Map<String, Object> map, Class<T> clazz) {
         return BeanMapper.toBeanOrRecord(map, clazz);
@@ -442,6 +439,11 @@ public final class MapUtils {
         return null;
     }
 }
+
+
+
+
+
 
 
 

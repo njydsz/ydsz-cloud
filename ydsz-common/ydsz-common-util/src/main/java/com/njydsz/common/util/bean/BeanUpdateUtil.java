@@ -62,7 +62,6 @@ public final class BeanUpdateUtil {
      * @param <T>              目标对象类型
      * @return 传入的 target 对象（便于链式调用）
      * @throws BeansException 如果属性访问失败
-     * @param T 泛型参数类型
      */
     public static <T> T copyNonNull(Object source, T target, String... ignoreProperties) {
         if (source == null) {
@@ -102,6 +101,11 @@ public final class BeanUpdateUtil {
         return ignored.toArray(new String[0]);
     }
 }
+
+
+
+
+
 
 
 

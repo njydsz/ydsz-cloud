@@ -1,11 +1,9 @@
 package com.njydsz.common.exception.custom;
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.njydsz.common.core.code.ResultCode;
 import com.njydsz.common.exception.code.IExceptionResultCode;
+import com.njydsz.common.exception.core.ExceptionContext;
 import com.njydsz.common.exception.core.ExceptionInfo;
 import com.njydsz.common.exception.enums.ExceptionCategory;
 import com.njydsz.common.exception.enums.ExceptionCode;
@@ -19,14 +17,14 @@ import com.njydsz.common.exception.enums.ExceptionLevel;
  *
  * <p><b>核心职责：</b>
  * <ul>
- *   <li><b>公共字段管理</b>：code / key / params / httpStatus / level / category / path / timestamp</li>
- *   <li><b>国际化消息解析</b>：懒加载 + 缓存，调用 {@link #getMessage()} 时才解析 i18n 文案</li>
- *   <li><b>链路追踪</b>：自动写入 path、timestamp，便于分布式追踪</li>
+ *   <li><b>公共字段管理</b>：code / key / params / httpStatus</li>
+ *   <li><b>国际化消息解析</b>：通过 {@link MessageSourceHolder} 按请求线程 Locale 解析 i18n 文案</li>
+ *   <li><b>异常元数据</b>：level / category / snapshot / extData / timestamp 委托给 {@link ExceptionContext}</li>
  * </ul>
  *
  * <p><b>国际化消息解析：</b>通过 {@link MessageSourceHolder} 静态持有者获取 Spring MessageSource，
- * 避免异常类对 Spring 上下文的硬依赖。首次调用 {@link #getMessage()} 时懒加载解析 i18n 文案，
- * 使用 {@link AtomicReference} 实现无锁 CAS 缓存，高并发场景下无锁竞争。
+ * 避免异常类对 Spring 上下文的硬依赖。{@code getMessage()} 直接按当前请求 Locale 解析 i18n 文案，
+ * {@link org.springframework.context.i18n.LocaleContextHolder} 基于线程绑定天然保证多语言不串文案。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -34,6 +32,7 @@ import com.njydsz.common.exception.enums.ExceptionLevel;
  * @see ExceptionCode
  * @see ExceptionCategory
  * @see ExceptionLevel
+ * @see ExceptionContext
  */
 public abstract class AbstractYdszException extends RuntimeException implements IExceptionResultCode {
 
@@ -58,24 +57,17 @@ public abstract class AbstractYdszException extends RuntimeException implements 
      * HTTP 状态码
      */
     protected int httpStatus;
-    protected ExceptionLevel level;
-    protected ExceptionCategory category;
-    protected transient LocalDateTime timestamp;
     /**
-     * 附加数据（通过 BusinessException.data() 设置）
+     * 异常元数据上下文（level / category / snapshot / extData / timestamp）。
+     *
+     * <p>延迟初始化：仅在需要设置元数据时分配，避免简单异常场景的对象创建开销。
      */
-    protected transient Map<String, Object> extData;
-    /**
-     * 异常链上下文快照（透写入 details，供排查定位）
-     */
-    protected transient Map<String, String> snapshot;
+    protected transient ExceptionContext ctx;
 
     /**
      * 默认构造函数
      */
     protected AbstractYdszException() {
-        super();
-        this.timestamp = LocalDateTime.now();
     }
 
     /**
@@ -85,7 +77,6 @@ public abstract class AbstractYdszException extends RuntimeException implements 
      */
     protected AbstractYdszException(String message) {
         super(message);
-        this.timestamp = LocalDateTime.now();
     }
 
     /**
@@ -96,7 +87,6 @@ public abstract class AbstractYdszException extends RuntimeException implements 
      */
     protected AbstractYdszException(String message, Throwable cause) {
         super(message, cause);
-        this.timestamp = LocalDateTime.now();
     }
 
     /**
@@ -106,7 +96,6 @@ public abstract class AbstractYdszException extends RuntimeException implements 
      */
     protected AbstractYdszException(Throwable cause) {
         super(cause);
-        this.timestamp = LocalDateTime.now();
     }
 
     /**
@@ -119,25 +108,25 @@ public abstract class AbstractYdszException extends RuntimeException implements 
      */
     protected AbstractYdszException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
-        this.timestamp = LocalDateTime.now();
     }
 
     /**
      * 初始化默认值（final 方法防止子类重写导致 this 逃逸）
+     *
      * @param httpStatus HTTP 状态码
-     * @param level 异常级别
-     * @param category 异常分类
+     * @param level      异常级别
+     * @param category   异常分类
      */
     protected final void initDefaults(int httpStatus, ExceptionLevel level, ExceptionCategory category) {
         this.httpStatus = httpStatus;
-        this.level = level;
-        this.category = category;
+        this.ctx = new ExceptionContext(level, category);
     }
 
     /**
      * 初始化字段（final 方法防止子类重写导致 this 逃逸）
-     * @param code 错误码
-     * @param key 消息键
+     *
+     * @param code   错误码
+     * @param key    消息键
      * @param params 消息参数
      */
     protected final void initFields(String code, String key, Object[] params) {
@@ -183,11 +172,11 @@ public abstract class AbstractYdszException extends RuntimeException implements 
      * 将异常自身的上下文投影为可序列化的 {@link ExceptionInfo}，供全局异常处理器输出响应体。
      *
      * <p>内部调用 {@link #getMessage()}，会触发国际化文案的懒加载解析。
-     * 若 {@link MessageSourceHolder} 已注入 Spring MessageSource，则按 Locale.ROOT 解析；
+     * 若 {@link MessageSourceHolder} 已注入 Spring MessageSource，则按当前请求 Locale 解析；
      * 若未注入，则返回 messageKey 本身。
      *
-     * <p>投影字段包括：code / key / message / httpStatus / path / timestamp，
-     * 以及 {@link #snapshot}（如有，透写入 details 供排查定位）。
+     * <p>投影字段包括：code / key / message / httpStatus / timestamp，
+     * 以及 {@link #getSnapshot()}（如有，透写入 details 供排查定位）。
      * {@code traceId} 与 {@code details}（非 snapshot）由子类或调用方补充。
      *
      * @return 新建的异常信息对象，永不为 {@code null}；各字段可能为 {@code null}（取决于异常构造时是否赋值）
@@ -198,10 +187,13 @@ public abstract class AbstractYdszException extends RuntimeException implements 
         info.setKey(this.key);
         info.setMessage(getMessage());
         info.setHttpStatus(this.httpStatus);
-        info.setTimestamp(this.timestamp);
+        if (this.ctx != null) {
+            info.setTimestamp(this.ctx.getTimestamp());
+        }
         // 快照透写入 details（details 可枚举，方便前端 / 日志展示）
-        if (this.snapshot != null && !this.snapshot.isEmpty()) {
-            Map<String, Object> details = new LinkedHashMap<>(this.snapshot);
+        Map<String, String> snapshot = getSnapshot();
+        if (snapshot != null && !snapshot.isEmpty()) {
+            Map<String, Object> details = new java.util.LinkedHashMap<>(snapshot);
             info.setDetails(details);
         }
         return info;
@@ -243,7 +235,7 @@ public abstract class AbstractYdszException extends RuntimeException implements 
      * <p>字段映射规则：
      * <ul>
      *   <li>{@link ResultCode#getCode()} → {@code code} 字段</li>
-     *   <li>{@link ResultCode#getMsg()} → {@link #getMessage()}（含 i18n 懒加载解析）</li>
+     *   <li>{@link ResultCode#getMsg()} → {@link #getMessage()}（含 i18n 解析）</li>
      *   <li>{@code getKey()} → {@code key} 字段（i18n 消息键，用于二次解析）</li>
      *   <li>{@link ResultCode#getHttpStatus()} → {@code httpStatus} 字段（0 视为 500）</li>
      * </ul>
@@ -272,7 +264,7 @@ public abstract class AbstractYdszException extends RuntimeException implements 
 
             @Override
             public String getMsg() {
-                // 触发 i18n 懒加载解析，解析结果由 AbstractYdszException.getMessage() 缓存
+                // 触发 i18n 懒加载解析，结果由 AbstractYdszException.getMessage() 返回
                 return AbstractYdszException.this.getMessage();
             }
         };
@@ -327,35 +319,47 @@ public abstract class AbstractYdszException extends RuntimeException implements 
     }
 
     public ExceptionLevel getLevel() {
-        return level;
+        return ctx == null ? null : ctx.getLevel();
     }
 
     public void setLevel(ExceptionLevel level) {
-        this.level = level;
+        if (this.ctx == null) {
+            this.ctx = new ExceptionContext();
+        }
+        this.ctx.setLevel(level);
     }
 
     public ExceptionCategory getCategory() {
-        return category;
+        return ctx == null ? null : ctx.getCategory();
     }
 
     public void setCategory(ExceptionCategory category) {
-        this.category = category;
+        if (this.ctx == null) {
+            this.ctx = new ExceptionContext();
+        }
+        this.ctx.setCategory(category);
     }
 
-    public LocalDateTime getTimestamp() {
-        return timestamp;
+    public java.time.LocalDateTime getTimestamp() {
+        return ctx == null ? null : ctx.getTimestamp();
     }
 
-    public void setTimestamp(LocalDateTime timestamp) {
-        this.timestamp = timestamp;
+    public void setTimestamp(java.time.LocalDateTime timestamp) {
+        if (this.ctx == null) {
+            this.ctx = new ExceptionContext();
+        }
+        this.ctx.setTimestamp(timestamp);
     }
 
     public Map<String, Object> getExtData() {
-        return extData;
+        return ctx == null ? null : ctx.getExtData();
     }
 
     public void setExtData(Map<String, Object> extData) {
-        this.extData = extData;
+        if (this.ctx == null) {
+            this.ctx = new ExceptionContext();
+        }
+        this.ctx.setExtData(extData);
     }
 
     /**
@@ -367,28 +371,27 @@ public abstract class AbstractYdszException extends RuntimeException implements 
      * @return 不可变快照 Map；未设置时返回 {@code null}
      */
     public Map<String, String> getSnapshot() {
-        return snapshot == null ? null : Collections.unmodifiableMap(snapshot);
+        return ctx == null ? null : ctx.getSnapshot();
     }
 
     /**
      * 设置快照 Map（覆盖式）。
      *
-     * <p>内部拷贝传入 Map 为 {@link LinkedHashMap}，保留插入顺序，便于排查时按设置顺序回溯。
+     * <p>内部拷贝传入 Map 为 {@link java.util.LinkedHashMap}，保留插入顺序，便于排查时按设置顺序回溯。
      *
      * @param snapshot 快照 Map，可为 {@code null}
      */
     public void setSnapshot(Map<String, String> snapshot) {
-        if (snapshot == null) {
-            this.snapshot = null;
-        } else {
-            this.snapshot = new LinkedHashMap<>(snapshot);
+        if (this.ctx == null) {
+            this.ctx = new ExceptionContext();
         }
+        this.ctx.setSnapshot(snapshot);
     }
 
     /**
      * 向上下文快照追加单个键值对（链式调用）。
      *
-     * <p>惰性初始化内部 {@link LinkedHashMap}，首次调用时创建快照容器。
+     * <p>惰性初始化内部 {@link java.util.LinkedHashMap}，首次调用时创建快照容器。
      * 适合在 throw 前逐条追加关键业务信息：
      * <pre>{@code
      * throw BusinessException.builder()
@@ -403,10 +406,10 @@ public abstract class AbstractYdszException extends RuntimeException implements 
      * @return 当前异常对象，便于链式调用
      */
     public AbstractYdszException snapshot(String key, Object value) {
-        if (this.snapshot == null) {
-            this.snapshot = new LinkedHashMap<>();
+        if (this.ctx == null) {
+            this.ctx = new ExceptionContext();
         }
-        this.snapshot.put(key, value == null ? null : value.toString());
+        this.ctx.addSnapshot(key, value);
         return this;
     }
 
@@ -428,13 +431,10 @@ public abstract class AbstractYdszException extends RuntimeException implements 
         if (entries == null || entries.isEmpty()) {
             return this;
         }
-        if (this.snapshot == null) {
-            this.snapshot = new LinkedHashMap<>(entries.size());
+        if (this.ctx == null) {
+            this.ctx = new ExceptionContext();
         }
-        for (Map.Entry<String, ?> e : entries.entrySet()) {
-            Object val = e.getValue();
-            this.snapshot.put(e.getKey(), val == null ? null : val.toString());
-        }
+        this.ctx.addSnapshots(entries);
         return this;
     }
 }

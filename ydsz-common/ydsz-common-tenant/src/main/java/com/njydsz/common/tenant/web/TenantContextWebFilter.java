@@ -14,7 +14,6 @@ import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.tenant.config.TenantProperties;
 import com.njydsz.common.tenant.config.TenantProperties.TenantField;
 import com.njydsz.common.tenant.feign.TenantHeaderContract;
-import com.njydsz.common.tenant.lifecycle.TenantLifecycleManager;
 import com.njydsz.common.tenant.metrics.TenantMetrics;
 import com.njydsz.common.util.auth.AuthInfoUtils;
 
@@ -29,13 +28,14 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 租户上下文 Web 过滤器。
  *
- * <p>在请求入口从 JWT 认证信息和 HTTP Header 解析全部配置的租户字段，
- * 设置到 {@link RequestContext} 和 MDC 日志上下文。
+ * <p>在请求入口从 HTTP Header 解析全部配置的租户字段，
+ * 设置到 {@link TenantContextHolder} 和 MDC 日志上下文。
  *
  * <p><b>解析逻辑（逐字段）：</b>
  * <ol>
- *   <li>从 JWT claim 取值（配置了 {@code claim} 且 JWT 可用时）</li>
- *   <li>从 HTTP header 取值（配置了 {@code header}，用于 Feign 跨服务恢复）</li>
+ *   <li>HTTP header 取值（配置了 {@code header}）</li>
+ *   <li>JWT claim 取值（配置了 {@code claim} 且 JWT 可用时，注意：此方式
+ *       依赖静态工具 {@code AuthInfoUtils}，单元测试需 mock 该静态方法）</li>
  *   <li>多值字段（{@code multiValue=true}）→ 逗号分隔解析为 List</li>
  * </ol>
  *
@@ -135,11 +135,6 @@ public class TenantContextWebFilter implements Filter {
                 contextSet = true;
                 if (metrics != null) metrics.incrementActiveContext();
 
-                // 4. 检查租户生命周期状态（非超级管理员）
-                if (properties.isLifecycleCheckEnabled() && !isSuperAdmin) {
-                    TenantLifecycleManager.checkCurrentTenantActive();
-                }
-
                 MDC.put(MDC_TENANT_ID, tenantId);
             }
             // 无认证无跳过 → 不设置上下文，SQL 拦截器 fail-closed
@@ -178,13 +173,17 @@ public class TenantContextWebFilter implements Filter {
      * <p>header 名通过 {@link TenantHeaderContract#resolveHeaderName} 计算，
      * 确保与 Feign 写入端使用同一规则。
      * <p>多值字段用逗号分隔解析为 List。
+     *
+     * @param request HTTP 请求
+     * @param field   租户字段配置
+     * @return 解析后的值（String 或 List<String>），无值返回 null
      */
     private Object resolveFieldValue(HttpServletRequest request, TenantField field) {
         String value = null;
 
-        // 优先从 JWT 取值
+        // 优先从 JWT 取值（protected 方法，单元测试可覆盖）
         if (field.getClaim() != null && !field.getClaim().isEmpty()) {
-            value = AuthInfoUtils.getClaim(field.getClaim());
+            value = resolveClaimValue(field.getClaim());
         }
 
         // 回退到 HTTP header（使用与 Feign 写入端一致的 header 名）
@@ -211,6 +210,20 @@ public class TenantContextWebFilter implements Filter {
         }
 
         return value;
+    }
+
+    /**
+     * 从 JWT claim 解析值。
+     *
+     * <p>提取为 protected 方法以便单元测试中通过子类覆盖，
+     * 避免 mock 静态工具 {@link AuthInfoUtils}。
+     *
+     * @param claim JWT claim 名
+     * @return claim 值，不存在返回 null
+     * @since 1.10.0
+     */
+    protected String resolveClaimValue(String claim) {
+        return AuthInfoUtils.getClaim(claim);
     }
 
     private boolean isAnonUrl(String requestUri) {

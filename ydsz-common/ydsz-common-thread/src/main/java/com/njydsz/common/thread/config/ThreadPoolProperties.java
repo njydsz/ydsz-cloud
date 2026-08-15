@@ -52,6 +52,12 @@ import lombok.Data;
  *
  * <p>v1.3.0 变更：新增 {@code metric-prefix} 和 {@code task-decorator-bean-names} 配置项。
  *
+ * <p>v1.4.0 变更：
+ * <ul>
+ *   <li>新增 {@code slow-task-threshold-ms} 配置项，支持自定义慢任务阈值</li>
+ *   <li>新增 {@code hot-update} 配置项，支持自动注册热更新监听器</li>
+ * </ul>
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -64,6 +70,14 @@ public class ThreadPoolProperties {
      * 是否启用统一线程池管理（默认 true）。
      */
     private boolean enabled = true;
+
+    /**
+     * 热更新配置。默认不启用。
+     * <p>启用后，应用启动时会自动注册热更新监听器，允许运行时动态调整线程池参数。
+     *
+     * @since 1.4.0
+     */
+    private HotUpdateConfig hotUpdate = new HotUpdateConfig();
 
     /**
      * Bean 名称前缀（默认空字符串）。
@@ -213,5 +227,21 @@ public class ThreadPoolProperties {
         DISCARD_OLDEST,
         /** 静默丢弃 */
         DISCARD
+    }
+
+    /**
+     * 热更新配置属性。
+     *
+     * @since 1.4.0
+     */
+    @Data
+    public static class HotUpdateConfig {
+
+        /**
+         * 是否启用热更新监听器（默认 false）。
+         * <p>启用后，应用启动时自动打印线程池注册摘要，
+         * 并提供运行时调整线程池参数的能力。
+         */
+        private boolean enabled = false;
     }
 }

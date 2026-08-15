@@ -61,7 +61,7 @@ public final class SequencedCollections {
      *
      * @param coll 有序集合
      * @return 首元素或 {@code Optional.empty()}
-     * @param T 泛型参数类型
+     * @param <T> 泛型参数类型
      */
     @SuppressWarnings("unchecked")
     public static <T> java.util.Optional<T> first(Collection<T> coll) {
@@ -83,7 +83,7 @@ public final class SequencedCollections {
      *
      * @param coll 有序集合
      * @return 末元素或 {@code Optional.empty()}
-     * @param T 泛型参数类型
+     * @param <T> 泛型参数类型
      */
     @SuppressWarnings("unchecked")
     public static <T> java.util.Optional<T> last(Collection<T> coll) {
@@ -112,7 +112,7 @@ public final class SequencedCollections {
      *
      * @param coll 源集合
      * @return 反转后的集合
-     * @param T 泛型参数类型
+     * @param <T> 泛型参数类型
      */
     @SuppressWarnings("unchecked")
     public static <T> Collection<T> reversed(Collection<T> coll) {
@@ -140,8 +140,8 @@ public final class SequencedCollections {
      *
      * @param map 有序 Map
      * @return 首 entry 或 {@code Optional.empty()}
-     * @param K 泛型参数类型
-     * @param V 泛型参数类型
+     * @param <K> 泛型参数类型
+     * @param <V> 泛型参数类型
      */
     public static <K, V> java.util.Optional<Map.Entry<K, V>> firstEntry(Map<K, V> map) {
         if (map == null || map.isEmpty()) {
@@ -159,8 +159,8 @@ public final class SequencedCollections {
      *
      * @param map 有序 Map
      * @return 末 entry 或 {@code Optional.empty()}
-     * @param K 泛型参数类型
-     * @param V 泛型参数类型
+     * @param <K> 泛型参数类型
+     * @param <V> 泛型参数类型
      */
     public static <K, V> java.util.Optional<Map.Entry<K, V>> lastEntry(Map<K, V> map) {
         if (map == null || map.isEmpty()) {
@@ -182,8 +182,8 @@ public final class SequencedCollections {
      *
      * @param map 源 Map
      * @return 反转后的 Map
-     * @param K 泛型参数类型
-     * @param V 泛型参数类型
+     * @param <K> 泛型参数类型
+     * @param <V> 泛型参数类型
      */
     @SuppressWarnings("unchecked")
     public static <K, V> Map<K, V> reversed(Map<K, V> map) {
@@ -210,7 +210,7 @@ public final class SequencedCollections {
      *
      * @param elements 元素
      * @return 不可变 LinkedHashSet
-     * @param T 泛型参数类型
+     * @param <T> 泛型参数类型
      */
     @SafeVarargs
     public static <T> Set<T> of(T... elements) {
@@ -219,6 +219,11 @@ public final class SequencedCollections {
         return Collections.unmodifiableSet(set);
     }
 }
+
+
+
+
+
 
 
 

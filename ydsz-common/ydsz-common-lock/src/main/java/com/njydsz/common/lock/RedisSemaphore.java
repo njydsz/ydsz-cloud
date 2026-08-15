@@ -13,6 +13,7 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scheduling.TaskScheduler;
 
 import com.njydsz.common.lock.core.DistributedLocker;
+import com.njydsz.common.lock.util.BackoffPolicy;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.id.IdGenerator;
 
@@ -45,16 +46,6 @@ import com.njydsz.common.util.id.IdGenerator;
  */
 @Slf4j
 public class RedisSemaphore implements DistributedLocker {
-
-    /**
-     * 最小退避等待时间（毫秒）
-     */
-    private static final long MIN_BACKOFF_MILLIS = 10;
-
-    /**
-     * 最大退避等待时间（毫秒）
-     */
-    private static final long MAX_BACKOFF_MILLIS = 200;
 
     /**
      * 剩余时间错误码（键不存在或获取失败）
@@ -200,27 +191,9 @@ public class RedisSemaphore implements DistributedLocker {
     }
 
     /**
-     * 指数退避等待
-     *
-     * @param deadline       截止时间戳
-     * @param currentBackoff 当前退避时间
-     * @return 下一次退避时间
+     * 退避策略实例
      */
-    private static long backoffSleep(long deadline, long currentBackoff) {
-        long remaining = deadline - System.currentTimeMillis();
-        if (remaining <= 0) {
-            return currentBackoff;
-        }
-        long sleepMillis = Math.min(remaining, currentBackoff);
-        if (sleepMillis > 0) {
-            try {
-                Thread.sleep(sleepMillis);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
-        return Math.min(currentBackoff * 2, MAX_BACKOFF_MILLIS);
-    }
+    private static final BackoffPolicy BACKOFF_POLICY = new BackoffPolicy();
 
     /**
      * 初始化信号量许可数量，仅在 key 不存在时设置
@@ -273,7 +246,7 @@ public class RedisSemaphore implements DistributedLocker {
         ensureInitialized();
         long deadline = System.currentTimeMillis() + unit.toMillis(timeout);
         boolean reinitialized = false;
-        long currentBackoff = MIN_BACKOFF_MILLIS;
+        long currentBackoff = BACKOFF_POLICY.getMinBackoff();
         while (true) {
             try {
                 Long result = redisTemplate.execute(
@@ -297,7 +270,7 @@ public class RedisSemaphore implements DistributedLocker {
             if (System.currentTimeMillis() >= deadline) {
                 return false;
             }
-            currentBackoff = backoffSleep(deadline, currentBackoff);
+            currentBackoff = BACKOFF_POLICY.sleepAndNextBackoff(deadline, currentBackoff);
         }
     }
 

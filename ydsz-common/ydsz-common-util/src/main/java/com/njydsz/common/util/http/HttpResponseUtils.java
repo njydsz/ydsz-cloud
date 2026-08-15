@@ -109,6 +109,11 @@ public final class HttpResponseUtils {
 
     /**
      * 底层渲染方法（统一处理响应头设置与写入）。
+     * @param response response
+     * @param content 内容
+     * @param status status
+     * @param contentType contentType
+     * @param charset charset
      */
     private static void render(HttpServletResponse response, String content, int status, String contentType, String charset) {
         if (response == null) {
@@ -124,6 +129,11 @@ public final class HttpResponseUtils {
         }
     }
 }
+
+
+
+
+
 
 
 

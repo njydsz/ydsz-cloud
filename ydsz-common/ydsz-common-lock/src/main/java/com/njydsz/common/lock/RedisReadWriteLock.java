@@ -21,6 +21,7 @@ import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.lock.core.DistributedLocker;
+import com.njydsz.common.lock.util.BackoffPolicy;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 
@@ -55,16 +56,6 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  */
 @Slf4j
 public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
-
-    /**
-     * 最小退避等待时间（毫秒）
-     */
-    private static final long MIN_BACKOFF_MILLIS = 10;
-
-    /**
-     * 最大退避等待时间（毫秒）
-     */
-    private static final long MAX_BACKOFF_MILLIS = 200;
 
     /**
      * 客户端缓存 TTL（分钟）
@@ -281,27 +272,9 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
     }
 
     /**
-     * 指数退避等待
-     *
-     * @param deadline       截止时间戳
-     * @param currentBackoff 当前退避时间
-     * @return 下一次退避时间
+     * 退避策略实例
      */
-    private static long backoffSleep(long deadline, long currentBackoff) {
-        long remaining = deadline - System.currentTimeMillis();
-        if (remaining <= 0) {
-            return currentBackoff;
-        }
-        long sleepMillis = Math.min(remaining, currentBackoff);
-        if (sleepMillis > 0) {
-            try {
-                Thread.sleep(sleepMillis);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        }
-        return Math.min(currentBackoff * 2, MAX_BACKOFF_MILLIS);
-    }
+    private static final BackoffPolicy BACKOFF_POLICY = new BackoffPolicy();
 
     /**
      * 启动持锁自动续期（读锁/写锁共用）
@@ -433,7 +406,7 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
             // 首次获取读锁
             String lockValue = UUID.randomUUID().toString();
             long deadline = System.currentTimeMillis() + unit.toMillis(time);
-            long currentBackoff = MIN_BACKOFF_MILLIS;
+            long currentBackoff = BACKOFF_POLICY.getMinBackoff();
             while (true) {
                 try {
                     Long result = redisTemplate.execute(
@@ -454,7 +427,7 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
                 if (System.currentTimeMillis() >= deadline) {
                     return false;
                 }
-                currentBackoff = backoffSleep(deadline, currentBackoff);
+                currentBackoff = BACKOFF_POLICY.sleepAndNextBackoff(deadline, currentBackoff);
             }
         }
 
@@ -548,7 +521,7 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
             String cacheKey = threadCacheKey();
             String lockValue = UUID.randomUUID().toString();
             long deadline = System.currentTimeMillis() + unit.toMillis(time);
-            long currentBackoff = MIN_BACKOFF_MILLIS;
+            long currentBackoff = BACKOFF_POLICY.getMinBackoff();
             while (true) {
                 try {
                     Long result = redisTemplate.execute(
@@ -568,7 +541,7 @@ public class RedisReadWriteLock implements ReadWriteLock, DistributedLocker {
                 if (System.currentTimeMillis() >= deadline) {
                     return false;
                 }
-                currentBackoff = backoffSleep(deadline, currentBackoff);
+                currentBackoff = BACKOFF_POLICY.sleepAndNextBackoff(deadline, currentBackoff);
             }
         }
 

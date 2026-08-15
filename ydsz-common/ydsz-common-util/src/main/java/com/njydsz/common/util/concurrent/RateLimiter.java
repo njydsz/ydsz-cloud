@@ -98,6 +98,7 @@ public final class RateLimiter {
      *
      * @param permitsPerSecond 每秒允许的请求数（必须 > 0）
      * @param maxBurstSeconds   桶容量（以秒为单位，即允许的突发秒数，必须 ≥ 1）
+     * @return 处理后的结果
      */
     private RateLimiter(double permitsPerSecond, double maxBurstSeconds) {
         this.permitsPerSecond = permitsPerSecond;
@@ -295,6 +296,11 @@ public final class RateLimiter {
         return maxPermits;
     }
 }
+
+
+
+
+
 
 
 

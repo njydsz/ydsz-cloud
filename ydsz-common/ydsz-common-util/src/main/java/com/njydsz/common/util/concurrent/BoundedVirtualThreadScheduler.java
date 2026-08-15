@@ -105,7 +105,7 @@ public final class BoundedVirtualThreadScheduler {
      * @return Future 对象，可获取结果或抛出异常
      * @throws InterruptedException   获取信号量许可被中断时
      * @throws RejectedExecutionException 调度器已关闭时
-     * @param T 泛型参数类型
+     * @param <T> 泛型参数类型
      */
     public <T> Future<T> submitWithResult(Callable<T> task) throws InterruptedException {
         Objects.requireNonNull(task, "task must not be null");
@@ -158,6 +158,11 @@ public final class BoundedVirtualThreadScheduler {
                 ", shutdown=" + shutdown + '}';
     }
 }
+
+
+
+
+
 
 
 

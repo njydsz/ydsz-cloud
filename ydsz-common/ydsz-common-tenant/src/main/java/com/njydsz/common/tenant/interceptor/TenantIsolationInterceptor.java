@@ -191,10 +191,12 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
     /**
      * 获取当前缓存条目数估算值（用于监控）。
      *
+     * <p>缓存未开启时返回 0。
+     *
      * @return 缓存条目数估算值
      */
     public long getSqlCacheSize() {
-        return sqlCache.estimatedSize();
+        return sqlCache != null ? sqlCache.estimatedSize() : 0L;
     }
 
     @Override

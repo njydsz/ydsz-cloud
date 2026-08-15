@@ -31,17 +31,16 @@ import com.njydsz.common.json.spring.JsonProperties;
  * <p>注册全局 {@code YdszJson} Bean（自研 JSON 引擎，非 Jackson 封装），支持 Long 转 String、日期格式化、
  * 脱敏字段、未知字段忽略、BigDecimal 精度等统一序列化策略。
  *
- * <p><b>与 Spring Boot Jackson 的关系（默认单引擎策略）：</b>
+ * <p><b>与 Spring Boot Jackson 的关系（默认共存策略，A-3 修复）：</b>
  * 本配置通过 {@code @AutoConfigureBefore} 声明在 {@code JacksonAutoConfiguration} 之前加载，
  * 并通过 {@code @ConditionalOnMissingBean} 占位 HTTP 消息转换器，使业务 REST 接口走 YdszJson。
- * 同时，{@link JacksonExclusionEnvironmentPostProcessor} 默认将
- * {@code JacksonAutoConfiguration} 加入 {@code spring.autoconfigure.exclude}，
- * 使 Spring 容器不再注册 {@code ObjectMapper} Bean，实现全仓库统一使用 YdszJson。
+ * 默认<b>不</b>排除 {@code JacksonAutoConfiguration}——Spring 容器仍注册 {@code ObjectMapper}
+ * Bean，供 Actuator / springdoc-openapi 等内部组件使用，构成"可控并存"的双引擎格局。
  *
- * <p>如需恢复 Spring Boot 默认的 Jackson 共存行为，可在配置文件中设置
- * {@code ydsz.json.disable-jackson-auto-configuration=false}，此时 Spring Boot
- * 仍会注册 {@code ObjectMapper} Bean 供 Actuator 部分端点等 Spring 内部组件使用，
- * 构成"可控并存"的双引擎格局。
+ * <p>如需强隔离（全仓库唯一 JSON 底座，容器不注册 {@code ObjectMapper} Bean），
+ * 可在配置文件中显式设置 {@code ydsz.json.disable-jackson-auto-configuration=true}，
+ * 此时 {@link JacksonExclusionEnvironmentPostProcessor} 会将 {@code JacksonAutoConfiguration}
+ * 加入 {@code spring.autoconfigure.exclude}。</p>
  *
  * @author ydsz-team
  * @since 1.0.0

@@ -1,7 +1,5 @@
 package com.njydsz.common.jdbc.config;
 
-import java.util.Set;
-
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -39,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>触发条件：
  * <ul>
- *   <li>{@code ydsz.jdbc.safe-query.enabled=true}（默认启用）</li>
+ *   <li>{@code ydzs.jdbc.safe-query.enabled=true}（默认启用）</li>
  * </ul>
  *
  * @author ydsz-team
@@ -51,29 +49,28 @@ import lombok.extern.slf4j.Slf4j;
 @AutoConfiguration
 @ConditionalOnClass(MybatisPlusInterceptor.class)
 @ConditionalOnProperty(prefix = "ydsz.jdbc.safe-query", name = "enabled", havingValue = "true", matchIfMissing = true)
-@EnableConfigurationProperties({JdbcProperties.class, DomainProperties.class})
+@EnableConfigurationProperties({JdbcProperties.class, SafeQueryProperties.class, DomainProperties.class})
 public class SafeQueryAutoConfiguration {
 
     /**
      * 创建安全查询拦截器 Bean。
      *
-     * @param domainProperties 领域配置（深度分页阈值）
-     * @param jdbcProperties JDBC 配置（安全查询相关配置）
+     * @param domainProperties    领域配置（深度分页阈值）
+     * @param safeQueryProperties 安全查询配置属性
      * @return SafeQueryInnerInterceptor 实例
      */
     @Bean
     @ConditionalOnMissingBean(SafeQueryInnerInterceptor.class)
     public SafeQueryInnerInterceptor safeQueryInnerInterceptor(
             ObjectProvider<DomainProperties> domainProperties,
-            ObjectProvider<JdbcProperties> jdbcProperties) {
+            ObjectProvider<SafeQueryProperties> safeQueryProperties) {
 
         SafeQueryInnerInterceptor interceptor = new SafeQueryInnerInterceptor(
                 domainProperties.getIfAvailable());
 
         // 从 JDBC 配置加载安全查询设置
-        JdbcProperties jdbc = jdbcProperties.getIfAvailable();
-        if (jdbc != null && jdbc.getSafeQuery() != null) {
-            JdbcProperties.SafeQuery safeQuery = jdbc.getSafeQuery();
+        SafeQueryProperties safeQuery = safeQueryProperties.getIfAvailable();
+        if (safeQuery != null) {
             interceptor.setEnabled(safeQuery.isEnabled());
             interceptor.setStrictMode(safeQuery.isStrictMode());
             if (safeQuery.getOrderByWhitelist() != null) {

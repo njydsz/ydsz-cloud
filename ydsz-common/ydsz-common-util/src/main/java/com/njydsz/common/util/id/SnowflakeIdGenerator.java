@@ -324,6 +324,7 @@ public class SnowflakeIdGenerator {
      * <p>ID 内只存相对毫秒，配合 {@code epoch} 偏移量即可反解出绝对时间。
      * 这样 41 位时间戳字段寿命从 1970 年起算延长至约 2090 年，
      * 也保证 {@link #getLastTimestamp()} / {@link #parseTimestamp(long)} 的反解语义正确。
+     * @return 处理后的结果
      */
     private long currentTimeRelative() {
         return timeGen() - epoch;
@@ -543,6 +544,11 @@ public class SnowflakeIdGenerator {
         return epoch;
     }
 }
+
+
+
+
+
 
 
 

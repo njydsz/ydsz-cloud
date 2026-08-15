@@ -36,6 +36,12 @@ import com.njydsz.common.thread.metrics.VirtualThreadMetrics;
  * <p>作为独立类而非内部类，确保 {@code ApplicationContextRunner} 测试
  * 和 Spring Boot 自动装配均能正确识别并调用本注册器。
  *
+ * <p>v1.4.0 变更：
+ * <ul>
+ *   <li>移除虚拟线程池 rejected 相关注册（JDK 21 虚拟线程从不拒绝）</li>
+ *   <li>平台线程池指标支持慢任务阈值传递</li>
+ * </ul>
+ *
  * <p>v1.3.1 修复：
  * <ul>
  *   <li>支持 {@code @Bean} 方式由 {@link ThreadPoolAutoConfiguration} 显式注册</li>
@@ -113,8 +119,7 @@ public class ThreadPoolRegistrar implements BeanDefinitionRegistryPostProcessor,
     /**
      * 注册虚拟线程池及其指标绑定器。
      *
-     * <p>v1.3.1：通过 ObjectProvider 延迟获取原始 ExecutorService 和 VirtualThreadMetrics，
-     * 然后包装为 {@link MeteredVirtualExecutorService}，解决计数器空转问题。
+     * <p>v1.4.0 简化：移除对 rejected 指标的追踪（JDK 21 的虚拟线程执行器从不拒绝）。
      */
     private void registerVirtualThreadPool(BeanDefinitionRegistry registry, String name,
                                             PoolConfig config, String beanName) {
@@ -158,8 +163,10 @@ public class ThreadPoolRegistrar implements BeanDefinitionRegistryPostProcessor,
     /**
      * 注册平台线程池及其指标绑定器。
      *
-     * <p>v1.3.1 变更：新增 {@link ThreadPoolTimerMetrics} Bean 注册，
-     * 用于任务执行耗时与排队时长的指标追踪。
+     * <p>v1.4.0 变更：
+     * <ul>
+     *   <li>ThreadPoolTimerMetrics 注册时传递慢任务阈值</li>
+     * </ul>
      */
     private void registerPlatformThreadPool(BeanDefinitionRegistry registry, String name,
                                              PoolConfig config, String beanName) {
@@ -185,21 +192,25 @@ public class ThreadPoolRegistrar implements BeanDefinitionRegistryPostProcessor,
             registry.registerBeanDefinition(metricsBeanName, metricsBd);
         }
 
-        // 注册平台线程池耗时指标 Bean（v1.3.1 新增）
+        // 注册平台线程池耗时指标 Bean
+        // 注意：v1.4.0 中 ThreadPoolTimerMetrics 的构造器不再需要 MeterRegistry，
+        // 改为在 record 方法接收 slowTaskThresholdMs 参数
         String timerMetricsBeanName = beanName + "TimerMetrics";
         if (!registry.containsBeanDefinition(timerMetricsBeanName)) {
             BeanDefinition timerMetricsBd = BeanDefinitionBuilder
                     .rootBeanDefinition(ThreadPoolTimerMetrics.class)
                     .addConstructorArgValue(name)
-                    .addConstructorArgValue(config.getMetricPrefix())
                     .setRole(BeanDefinition.ROLE_INFRASTRUCTURE)
+                    .setAutowireMode(BeanDefinition.AUTOWIRE_CONSTRUCTOR)
                     .getBeanDefinition();
             registry.registerBeanDefinition(timerMetricsBeanName, timerMetricsBd);
         }
 
-        log.info("ydsz-thread: 注册线程池 [{}] (core={}, max={}, queue={}, prefix={}, reject={}, taskDecorators={})",
+        log.info("ydsz-thread: 注册线程池 [{}] (core={}, max={}, queue={}, prefix={}, "
+                        + "reject={}, slowTaskThreshold={}, taskDecorators={})",
                 beanName, config.getCoreSize(), config.getMaxSize(), config.getQueueCapacity(),
                 config.getThreadNamePrefix(), config.getRejectPolicy(),
+                config.getSlowTaskThresholdMs(),
                 config.getTaskDecoratorBeanNames() == null ? 0 : config.getTaskDecoratorBeanNames().size());
     }
 

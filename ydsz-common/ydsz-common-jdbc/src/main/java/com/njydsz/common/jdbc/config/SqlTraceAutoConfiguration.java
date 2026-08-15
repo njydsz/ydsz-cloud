@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
  *       enabled: true
  * }</pre>
  *
- * <p>配置项沿用 {@link JdbcProperties.SlowSql} 与 {@link JdbcProperties.SqlAudit}，
+ * <p>配置项使用 {@link SlowSqlProperties} 与 {@link SqlAuditProperties}，
  * 对已有 {@code ydsz.jdbc.slow-sql.*} 和 {@code ydsz.jdbc.sql-audit.*} 配置完全兼容。
  *
  * @author ydsz-team
@@ -46,41 +46,42 @@ import lombok.extern.slf4j.Slf4j;
 @AutoConfiguration
 @ConditionalOnClass(MybatisPlusInterceptor.class)
 @ConditionalOnExpression("${ydsz.jdbc.enabled:true} and (${ydsz.jdbc.slow-sql.enabled:false} or ${ydsz.jdbc.sql-audit.enabled:false})")
-@EnableConfigurationProperties(JdbcProperties.class)
+@EnableConfigurationProperties({JdbcProperties.class, SlowSqlProperties.class, SqlAuditProperties.class})
 public class SqlTraceAutoConfiguration {
 
     /**
      * 构造 SQL 链路追踪自动配置
      *
      * @param mybatisPlusInterceptor MyBatis-Plus 拦截器链
-     * @param jdbcProperties         JDBC 配置属性
+     * @param jdbcProperties         JDBC 基础配置属性
+     * @param slowSqlProperties      慢 SQL 配置属性
+     * @param sqlAuditProperties     SQL 审计配置属性
      * @param meterRegistryProvider  Micrometer 指标注册表（可选）
      */
     public SqlTraceAutoConfiguration(MybatisPlusInterceptor mybatisPlusInterceptor,
                                       JdbcProperties jdbcProperties,
+                                      SlowSqlProperties slowSqlProperties,
+                                      SqlAuditProperties sqlAuditProperties,
                                       ObjectProvider<MeterRegistry> meterRegistryProvider) {
-        JdbcProperties.SlowSql slowSql = jdbcProperties.getSlowSql();
-        JdbcProperties.SqlAudit sqlAudit = jdbcProperties.getSqlAudit();
-
         SqlTraceInnerInterceptor interceptor = findOrCreateTraceInterceptor(mybatisPlusInterceptor);
 
         // 慢 SQL 配置
-        boolean slowSqlActive = Boolean.TRUE.equals(slowSql.isEnabled());
+        boolean slowSqlActive = Boolean.TRUE.equals(slowSqlProperties.isEnabled());
         interceptor.setSlowSqlEnabled(slowSqlActive || interceptor.isSlowSqlEnabled());
-        interceptor.setSlowSqlThresholdMillis(slowSql.getThresholdMillis());
-        interceptor.setAlertThresholdMillis(slowSql.getAlertThresholdMillis());
+        interceptor.setSlowSqlThresholdMillis(slowSqlProperties.getThresholdMillis());
+        interceptor.setAlertThresholdMillis(slowSqlProperties.getAlertThresholdMillis());
 
         // SQL 审计配置
-        boolean auditActive = Boolean.TRUE.equals(sqlAudit.isEnabled());
+        boolean auditActive = Boolean.TRUE.equals(sqlAuditProperties.isEnabled());
         interceptor.setAuditEnabled(auditActive || interceptor.isAuditEnabled());
-        interceptor.setAuditSelect(sqlAudit.isAuditSelect());
-        interceptor.setAuditInsert(sqlAudit.isAuditInsert());
-        interceptor.setAuditUpdate(sqlAudit.isAuditUpdate());
-        interceptor.setAuditDelete(sqlAudit.isAuditDelete());
-        interceptor.setLogParameters(sqlAudit.isLogParameters());
-        interceptor.setMaxParameterLength(sqlAudit.getMaxParameterLength());
-        interceptor.setExcludeTables(sqlAudit.getExcludeTables());
-        interceptor.setExcludeMethods(sqlAudit.getExcludeMethods());
+        interceptor.setAuditSelect(sqlAuditProperties.isAuditSelect());
+        interceptor.setAuditInsert(sqlAuditProperties.isAuditInsert());
+        interceptor.setAuditUpdate(sqlAuditProperties.isAuditUpdate());
+        interceptor.setAuditDelete(sqlAuditProperties.isAuditDelete());
+        interceptor.setLogParameters(sqlAuditProperties.isLogParameters());
+        interceptor.setMaxParameterLength(sqlAuditProperties.getMaxParameterLength());
+        interceptor.setExcludeTables(sqlAuditProperties.getExcludeTables());
+        interceptor.setExcludeMethods(sqlAuditProperties.getExcludeMethods());
 
         // Micrometer 指标注册表
         MeterRegistry meterRegistry = meterRegistryProvider.getIfAvailable();
@@ -90,7 +91,7 @@ public class SqlTraceAutoConfiguration {
 
         log.info("SQL链路追踪已启用 (慢SQL={}, 审计={}), 慢SQL阈值: {}ms, 告警阈值: {}ms",
                 interceptor.isSlowSqlEnabled(), interceptor.isAuditEnabled(),
-                slowSql.getThresholdMillis(), slowSql.getAlertThresholdMillis());
+                slowSqlProperties.getThresholdMillis(), slowSqlProperties.getAlertThresholdMillis());
     }
 
     /**

@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Role;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -33,6 +34,7 @@ import org.springframework.beans.factory.config.BeanDefinition;
  * @see ThreadPoolHotUpdateListener
  */
 @AutoConfiguration(after = ThreadPoolAutoConfiguration.class)
+@EnableConfigurationProperties(ThreadPoolProperties.class)
 @ConditionalOnProperty(prefix = "ydsz.thread.hot-update", name = "enabled", havingValue = "true")
 public class ThreadPoolHotUpdateAutoConfiguration {
 
@@ -44,15 +46,13 @@ public class ThreadPoolHotUpdateAutoConfiguration {
      * <p>该 Bean 在应用启动完成后自动打印线程池注册摘要，
      * 并提供运行时调整线程池参数的能力。
      *
-     * @param listener 热更新监听器
      * @return 热更新监听器
      */
-    @Bean
+    @Bean(name = ThreadPoolHotUpdateListener.BEAN_NAME)
     @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-    @ConditionalOnMissingBean(name = "threadPoolHotUpdateListener")
-    public ThreadPoolHotUpdateListener threadPoolHotUpdateListener(
-            ThreadPoolHotUpdateListener listener) {
+    @ConditionalOnMissingBean(name = ThreadPoolHotUpdateListener.BEAN_NAME)
+    public ThreadPoolHotUpdateListener threadPoolHotUpdateListener() {
         log.info("[ydsz-thread] 热更新监听器已启用，可通过 ydsz.thread.hot-update.enabled=false 禁用");
-        return listener;
+        return new ThreadPoolHotUpdateListener();
     }
 }

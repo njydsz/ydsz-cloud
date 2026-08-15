@@ -15,9 +15,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "ydsz.domain")
 public class DomainProperties {
 
-    /**
-     * 分页查询配置
-     */
+    /** 是否启用 domain 模块自动装配 */
+    private boolean enabled = true;
+
+    /** 分页查询配置 */
     private Page page = new Page();
 
     /**

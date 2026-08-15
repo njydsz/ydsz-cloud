@@ -46,6 +46,7 @@ public final class AuthInfoUtils {
 
     /**
      * 私有构造器，工具类不允许实例化。
+     * @return 处理后的结果
      */
     private AuthInfoUtils() {
     }
@@ -323,6 +324,11 @@ public final class AuthInfoUtils {
         }
     }
 }
+
+
+
+
+
 
 
 

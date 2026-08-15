@@ -43,7 +43,6 @@ public final class AesGcmCryptoProvider implements CryptoProvider {
 
     /**
      * 默认构造——256 位密钥。
-     * @return 处理后的结果
      */
     public AesGcmCryptoProvider() {
         this(256);
@@ -54,7 +53,6 @@ public final class AesGcmCryptoProvider implements CryptoProvider {
      *
      * @param keyBits 密钥位数（128 或 256）
      * @throws IllegalArgumentException 密钥位数非 128/256 时
-     * @return 处理后的结果
      */
     public AesGcmCryptoProvider(int keyBits) {
         if (keyBits != 128 && keyBits != 192 && keyBits != 256) {
@@ -169,6 +167,10 @@ public final class AesGcmCryptoProvider implements CryptoProvider {
         return "AesGcmCryptoProvider{algorithm='" + algorithm() + "'}";
     }
 }
+
+
+
+
 
 
 

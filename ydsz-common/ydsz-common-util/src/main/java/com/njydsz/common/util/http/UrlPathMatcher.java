@@ -53,6 +53,7 @@ public final class UrlPathMatcher {
      *
      * @param exactPatterns    精确匹配模式集合
      * @param wildcardPatterns 含通配符的模式列表
+     * @return 处理后的结果
      */
     private UrlPathMatcher(Set<String> exactPatterns, List<String> wildcardPatterns) {
         this.exactPatterns = Collections.unmodifiableSet(exactPatterns);
@@ -163,6 +164,11 @@ public final class UrlPathMatcher {
         return pattern.indexOf('*') >= 0 || pattern.indexOf('?') >= 0;
     }
 }
+
+
+
+
+
 
 
 

@@ -93,16 +93,16 @@ public class JsonProperties {
     /**
      * 是否禁用 Spring Boot Jackson 自动配置。
      *
-     * <p>默认 true，全仓库统一使用 YdszJson 作为唯一 JSON 底座。
-     * {@code JacksonAutoConfiguration} 将被加入 {@code spring.autoconfigure.exclude}，
-     * Spring 容器中不再注册 {@code ObjectMapper} Bean。
+     * <p>默认 false（共存优先，A-3 修复）：不触碰全局 Jackson 自动配置，
+     * springdoc-openapi / actuator 等依赖 {@code ObjectMapper} Bean 的组件可正常工作；
+     * MVC 层通过 {@code JsonHttpMessageConverter} 的注册顺序已足以让业务接口走 YdszJson。</p>
      *
-     * <p>设置为 false 可恢复 Spring Boot 默认行为，适用于需要与 Jackson 生态组件
-     * 共存或排查序列化兼容问题的场景。
+     * <p>设置为 true 可将 {@code JacksonAutoConfiguration} 加入
+     * {@code spring.autoconfigure.exclude}，适用于强隔离或排查序列化兼容问题的场景。</p>
      *
      * @since 1.0.0
      */
-    private boolean disableJacksonAutoConfiguration = true;
+    private boolean disableJacksonAutoConfiguration = false;
 
     // --- enabled ---
 

@@ -34,7 +34,6 @@ import com.njydsz.common.cache.stats.CacheStats;
 import com.njydsz.common.cache.support.AsyncFunction;
 import com.njydsz.common.cache.support.CacheThreadPoolManager;
 import com.njydsz.common.cache.support.Expiry;
-import com.njydsz.common.cache.timer.TimerWheel;
 
 /**
  * 过期缓存装饰器 — 为任意基础缓存叠加 TTL 过期能力
@@ -106,12 +105,6 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
   /** 桶大小（纳秒），默认 1 秒 */
   private final long bucketSizeNanos;
 
-  /** 是否使用时间轮进行 O(1) 过期调度（默认 false，使用 SkipList 桶） */
-  private final boolean useTimerWheel;
-
-  /** 时间轮实例（useTimerWheel 为 true 时使用） */
-  private final TimerWheel<K> timerWheel;
-
   /** 清理任务 Future */
   private final ScheduledFuture<?> cleanupFuture;
 
@@ -164,7 +157,7 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
       long expireAfterAccessNanos,
       Expiry<? super K, ? super V> expiry,
       long cleanupIntervalSeconds) {
-    this(delegate, expireAfterWriteNanos, expireAfterAccessNanos, expiry, cleanupIntervalSeconds, 0.1, false);
+    this(delegate, expireAfterWriteNanos, expireAfterAccessNanos, expiry, cleanupIntervalSeconds, 0.1);
   }
 
   /**
@@ -184,54 +177,25 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
       Expiry<? super K, ? super V> expiry,
       long cleanupIntervalSeconds,
       double jitterRatio) {
-    this(delegate, expireAfterWriteNanos, expireAfterAccessNanos, expiry, cleanupIntervalSeconds, jitterRatio, false);
-  }
-
-  /**
-   * 创建过期缓存装饰器（完整参数）
-   *
-   * <p>当 {@code useTimerWheel} 为 true 时，使用 {@link TimerWheel} 进行 O(1) 过期调度，
-   * 适合条目数超过 10 万的大规模过期场景；false 时使用 SkipList 桶（适合中小规模）。
-   *
-   * @param delegate 底层缓存
-   * @param expireAfterWriteNanos 写入后过期时间（纳秒），0 表示不使用
-   * @param expireAfterAccessNanos 访问后过期时间（纳秒），0 表示不使用
-   * @param expiry 自定义过期策略（可选，null 表示不使用）
-   * @param cleanupIntervalSeconds 清理间隔（秒）
-   * @param jitterRatio TTL 抖动比例（0-1，防雪崩），0 表示无抖动
-   * @param useTimerWheel 是否使用时间轮（true = O(1) 调度，false = SkipList 桶）
-   */
-  public ExpirableCache(
-      Cache<K, V> delegate,
-      long expireAfterWriteNanos,
-      long expireAfterAccessNanos,
-      Expiry<? super K, ? super V> expiry,
-      long cleanupIntervalSeconds,
-      double jitterRatio,
-      boolean useTimerWheel) {
     this.delegate = delegate;
     this.expireAfterWriteNanos = expireAfterWriteNanos;
     this.expireAfterAccessNanos = expireAfterAccessNanos;
     this.expiry = expiry;
     this.jitterRatio = Math.max(0, Math.min(1, jitterRatio));
-    this.useTimerWheel = useTimerWheel;
-    // 桶大小固定 1 秒（见字段 Javadoc），可后续通过构造器参数暴露以支持自定义
+    // 桶大小固定 1 秒（见字段 Javadoc）
     this.bucketSizeNanos = TimeUnit.SECONDS.toNanos(1);
-    // 时间轮实例（仅 useTimerWheel 为 true 时初始化）
-    this.timerWheel = useTimerWheel ? new TimerWheel<>() : null;
     // 注册淘汰监听器，防止 expirationMap 内存泄漏
     delegate.addListener(evictionListener);
     this.cleanupFuture =
         getSharedCleaner().scheduleAtFixedRate(
             this::cleanupExpired, cleanupIntervalSeconds, cleanupIntervalSeconds, TimeUnit.SECONDS);
     log.info(
-        "ExpirableCache 已创建，delegate={}, expireAfterWrite={}ns, expireAfterAccess={}ns, expiry={}, jitter={}, timerWheel={}",
+        "ExpirableCache 已创建，delegate={}, expireAfterWrite={}ns, expireAfterAccess={}ns, expiry={}, jitter={}",
         delegate.getClass().getSimpleName(),
         expireAfterWriteNanos,
         expireAfterAccessNanos,
         expiry != null ? "enabled" : "disabled",
-        jitterRatio,
-        useTimerWheel);
+        jitterRatio);
   }
 
   /** 计算 TTL 抖动后的实际过期时间（防雪崩） */
@@ -311,40 +275,13 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
   /**
    * 批量清理过期条目
    *
-   * <p>当启用时间轮时，调用 {@link TimerWheel#advance()} 获取过期 key（O(1)）；
-   * 否则基于 SkipList 桶索引扫描（O(log n)）。
+   * <p>基于 SkipList 桶索引扫描（O(log n)）。
    */
   private void cleanupExpired() {
     try {
-      if (useTimerWheel) {
-        cleanupExpiredByWheel();
-      } else {
-        cleanupExpiredByBuckets();
-      }
+      cleanupExpiredByBuckets();
     } catch (Exception e) {
       log.warn("ExpirableCache 清理任务异常", e);
-    }
-  }
-
-  /** 基于时间轮的过期清理（O(1)） */
-  private void cleanupExpiredByWheel() {
-    int removed = 0;
-    List<K> expiredKeys = timerWheel.advance();
-    long now = System.nanoTime();
-    for (K key : expiredKeys) {
-      ExpiryHolder holder = expirationMap.get(key);
-      // Double-check：expireAfterAccess 可能已刷新过期时间
-      if (holder != null && holder.expireAtNanos <= now) {
-        expirationMap.remove(key);
-        delegate.remove(key);
-        removed++;
-      } else if (holder != null && holder.expireAtNanos > now) {
-        // 被访问刷新了，重新调度
-        timerWheel.schedule(key, holder.expireAtNanos);
-      }
-    }
-    if (removed > 0) {
-      log.debug("ExpirableCache 时间轮清理过期条目: removed={}", removed);
     }
   }
 

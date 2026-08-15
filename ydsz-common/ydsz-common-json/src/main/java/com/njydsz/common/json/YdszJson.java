@@ -199,9 +199,11 @@ public class YdszJson {
      * @since 1.2.0
      */
     public static String patch(String targetJson, String patchJson) {
-        Map<String, Object> target = parseMap(targetJson);
-        Map<String, Object> result = JsonPatch.apply(patchJson, target, Map.class);
-        return toJson(result);
+        // P-2 优化：统一走 JsonNode 树路径（readTree → applyToTree → toJson），
+        // 去掉原先 parseMap → Map 中转的两次结构转换（Map → tree → Map）。
+        ObjectNode tree = (ObjectNode) readTree(targetJson);
+        JsonPatch.applyToTree(patchJson, tree);
+        return toJson(tree);
     }
 
     /**
@@ -535,8 +537,9 @@ public class YdszJson {
             return null;
         }
         validateJsonSize(json);
-        Map<String, Object> result = defaultMapper.toObject(json, Map.class);
-        return toStringObjectMap(result);
+        // P-1 优化：底层 toObject(json, Map.class) 直接产出 Map<String,Object>（键恒为 String，
+        // 嵌套 Map/List 结构正确），原先的 toStringObjectMap 递归重建整棵 Map 为纯冗余分配，已移除。
+        return defaultMapper.toObject(json, Map.class);
     }
 
     /**
@@ -569,8 +572,9 @@ public class YdszJson {
             return null;
         }
         validateJsonSize(json);
-        List<Object> result = defaultMapper.toObject(json, List.class);
-        return toObjectList(result);
+        // P-1 优化：底层 toObject(json, List.class) 直接产出 List<Object>（元素为 Map/List/标量，
+        // 结构正确），原先的 toObjectList 递归重建整棵 List 为纯冗余分配，已移除。
+        return defaultMapper.toObject(json, List.class);
     }
 
     /**
@@ -595,48 +599,6 @@ public class YdszJson {
             return result;
         }
         return new LinkedHashMap<>();
-    }
-
-    /**
-     * 将 Map 中嵌套的 List/Map 值转换为类型安全的 Object 表示（与旧版 parseMap 行为一致）。
-     */
-    private static Map<String, Object> toStringObjectMap(Map<String, Object> map) {
-        if (map == null) {
-            return null;
-        }
-        for (Map.Entry<String, Object> entry : map.entrySet()) {
-            Object value = entry.getValue();
-            if (value instanceof Map<?, ?> nestedMap) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> converted = toStringObjectMap((Map<String, Object>) nestedMap);
-                entry.setValue(converted);
-            } else if (value instanceof List<?> nestedList) {
-                entry.setValue(toObjectList(nestedList));
-            }
-        }
-        return map;
-    }
-
-    /**
-     * 将 List 中嵌套的 List/Map 值转换为类型安全的 Object 表示（与旧版 parseArray 行为一致）。
-     */
-    private static List<Object> toObjectList(List<?> list) {
-        if (list == null) {
-            return null;
-        }
-        List<Object> result = new ArrayList<>(list.size());
-        for (Object item : list) {
-            if (item instanceof Map<?, ?> nestedMap) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> converted = toStringObjectMap((Map<String, Object>) nestedMap);
-                result.add(converted);
-            } else if (item instanceof List<?> nestedList) {
-                result.add(toObjectList(nestedList));
-            } else {
-                result.add(item);
-            }
-        }
-        return result;
     }
 
 

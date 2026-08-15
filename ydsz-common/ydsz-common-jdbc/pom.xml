@@ -81,47 +81,26 @@
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
         </dependency>
-        <!-- mysql -->
+        <!-- mysql (开发环境常用) -->
         <dependency>
             <artifactId>mysql-connector-j</artifactId>
             <groupId>com.mysql</groupId>
             <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
-        <!-- oracle -->
-        <dependency>
-            <groupId>com.oracle.database.jdbc</groupId>
-            <artifactId>ojdbc11</artifactId>
-            <scope>runtime</scope>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <groupId>com.oracle.database.nls</groupId>
-            <artifactId>orai18n</artifactId>
-            <scope>runtime</scope>
-            <optional>true</optional>
-        </dependency>
-        <!-- sqlserver -->
-        <dependency>
-            <groupId>com.microsoft.sqlserver</groupId>
-            <artifactId>mssql-jdbc</artifactId>
-            <scope>runtime</scope>
-            <optional>true</optional>
-        </dependency>
-        <!-- db2 -->
-        <dependency>
-            <groupId>com.ibm.db2</groupId>
-            <artifactId>jcc</artifactId>
-            <scope>runtime</scope>
-            <optional>true</optional>
-        </dependency>
-        <!-- postgresql -->
+        <!-- postgresql (生产环境主选) -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
+        <!--
+            以下数据库驱动已移除（如需使用，请在业务模块 pom.xml 中自行引入）：
+            - Oracle (ojdbc11 + orai18n)：许可证合规风险
+            - SQL Server (mssql-jdbc)：非主流选择
+            - DB2 (jcc)：许可证合规风险且社区活跃度低
+        -->
         <!--slf4j-->
         <dependency>
             <groupId>org.slf4j</groupId>
