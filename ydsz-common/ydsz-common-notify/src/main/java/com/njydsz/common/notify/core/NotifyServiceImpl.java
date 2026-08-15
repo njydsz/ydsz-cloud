@@ -496,6 +496,8 @@ public class NotifyServiceImpl implements NotifyService {
     /**
      * 执行单条通知发送（含去重、熔断、限流、指标、审计、降级全链路）。
      *
+     * <p>通过 {@link SendChain} 发送处理链执行，链路步骤：去重 → 熔断 → 限流 → 执行 → 指标 → 审计 → 降级。
+     *
      * @param channel       通知渠道
      * @param receiver      接收方
      * @param title         消息标题
@@ -509,52 +511,15 @@ public class NotifyServiceImpl implements NotifyService {
     private NotifySendResult doSend(NotifyChannel channel, String receiver, String title,
                              String content, String userId, String templateCode,
                              NotifyType notifyType, String tenantId) {
-        // P0-6: 去重检查
-        if (isDuplicate(receiver, title, content)) {
-            log.debug("[NotifyServiceImpl] 去重命中，跳过发送: receiver={}, title={}", receiver, title);
-            return NotifySendResult.success("dedup-skipped", channel.getName());
-        }
-
-        // 熔断检查
-        if (!tryAcquireCircuitBreaker(channel)) {
-            return NotifySendResult.failure("通知渠道[" + channel.getName() + "]已熔断，请稍后重试", channel.getName());
-        }
-
-        // 限流检查（支持多租户隔离）
-        if (!tryAcquireRateLimit(channel, tenantId)) {
-            return NotifySendResult.failure("通知渠道限流触发，请稍后重试: " + channel.getName(), channel.getName());
-        }
-
-        NotifyChannelStrategy strategy = channelStrategies.get(channel);
-        if (strategy == null) {
-            recordCircuitFailure(channel);
-            return NotifySendResult.failure("通知渠道未配置: " + channel.getName(), channel.getName());
-        }
-
-        long startTime = System.nanoTime();
-        NotifySendResult result;
-        try {
-            result = strategy.send(receiver, title, content);
-        } catch (Exception e) {
-            result = NotifySendResult.failure(e.getMessage(), channel.getName());
-        }
-
-        long durationNanos = System.nanoTime() - startTime;
-        recordCircuitResult(channel, result.isSuccess());
-        recordMetrics(channel, result.isSuccess(), durationNanos, templateCode);
-        auditLog(channel, receiver, templateCode, result, durationNanos);
-
-        // P0-1: 失败降级
-        if (!result.isSuccess() && fallbackManager != null) {
-            log.info("[NotifyServiceImpl] 主渠道[{}]发送失败，尝试降级", channel.getName());
-            result = fallbackManager.fallbackSend(channel, receiver, title, content);
-        }
-
-        return result;
+        SendContext ctx = SendContext.forSend(channel, receiver, title, content,
+                userId, templateCode, notifyType, tenantId);
+        return sendChain.executeSend(ctx);
     }
 
     /**
      * 执行模板通知发送（含熔断、限流、指标、审计、降级全链路）。
+     *
+     * <p>通过 {@link SendChain} 发送处理链执行，链路步骤：熔断 → 限流 → 执行 → 指标 → 审计 → 降级。
      *
      * @param channel       通知渠道
      * @param receiver      接收方
@@ -567,43 +532,9 @@ public class NotifyServiceImpl implements NotifyService {
     private NotifySendResult doSendTemplate(NotifyChannel channel, String receiver,
                                  String templateCode, Object templateParams,
                                  String title, String tenantId) {
-        // 熔断检查
-        if (!tryAcquireCircuitBreaker(channel)) {
-            return NotifySendResult.failure("通知渠道[" + channel.getName() + "]已熔断，请稍后重试", channel.getName());
-        }
-
-        // 限流检查（支持多租户隔离）
-        if (!tryAcquireRateLimit(channel, tenantId)) {
-            return NotifySendResult.failure("通知渠道限流触发，请稍后重试: " + channel.getName(), channel.getName());
-        }
-
-        NotifyChannelStrategy strategy = channelStrategies.get(channel);
-        if (strategy == null) {
-            recordCircuitFailure(channel);
-            return NotifySendResult.failure("通知渠道未配置: " + channel.getName(), channel.getName());
-        }
-
-        long startTime = System.nanoTime();
-        NotifySendResult result;
-        try {
-            result = strategy.sendTemplate(receiver, templateCode, templateParams);
-        } catch (Exception e) {
-            result = NotifySendResult.failure(e.getMessage(), channel.getName());
-        }
-
-        long durationNanos = System.nanoTime() - startTime;
-        recordCircuitResult(channel, result.isSuccess());
-        recordMetrics(channel, result.isSuccess(), durationNanos, templateCode);
-        auditLog(channel, receiver, templateCode, result, durationNanos);
-
-        // P0-1: 失败降级
-        if (!result.isSuccess() && fallbackManager != null) {
-            String fallbackTitle = title != null ? title : templateCode;
-            String fallbackContent = templateParams != null ? String.valueOf(templateParams) : "";
-            result = fallbackManager.fallbackSend(channel, receiver, fallbackTitle, fallbackContent);
-        }
-
-        return result;
+        SendContext ctx = SendContext.forTemplate(channel, receiver, templateCode,
+                templateParams, title, tenantId);
+        return sendChain.executeTemplate(ctx);
     }
 
     // ==================== 辅助方法 ====================

@@ -1,48 +1,40 @@
 package com.njydsz.common.audit.core;
 
 import java.nio.file.Path;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
-
-import javax.sql.DataSource;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.PreparedStatementSetter;
 
 import com.njydsz.common.audit.config.AuditProperties;
 import com.njydsz.common.audit.domain.AuditLog;
-import com.njydsz.common.audit.sharding.TableShardingStrategy;
 import com.njydsz.common.util.concurrent.ExecutorUtils;
 
 /**
  * 异步批量审计记录器
  *
- * <p>使用 LinkedBlockingQueue 作为缓冲队列，通过 ScheduledExecutorService 定时批量写入数据库。
+ * <p>使用 LinkedBlockingQueue 作为缓冲队列，通过 ScheduledExecutorService 定时批量写入。
  * 相比同步写入，显著降低对主业务的性能影响。
  *
  * <p>特性：
  * <ul>
  *   <li>基于 LinkedBlockingQueue 的高性能缓冲队列（有界队列，支持背压控制）</li>
  *   <li>使用 ScheduledExecutorService 定时刷新，支持按阈值刷新和定时刷新双机制</li>
- *   <li>使用 JdbcTemplate.batchUpdate() 批量插入，减少数据库往返</li>
+ *   <li>写入操作委托给 {@link AuditWriter}，支持 JDBC、消息队列等多种后端</li>
  *   <li>优雅停机时自动将队列剩余日志全部写入（通过 DisposableBean 接口）</li>
- *   <li>写入失败数据不丢失，保留在队列中下次重试</li>
+ *   <li>写入失败数据不丢失，降级到磁盘兜底</li>
  *   <li>队列满时支持三种拒绝策略：DISCARD_OLDEST（丢弃最旧）、DISCARD_NEWEST（丢弃最新）、CALLER_RUNS（调用者阻塞）</li>
  *   <li>提供队列使用率监控指标，支持背压感知</li>
- *   <li>支持分表策略写入</li>
  * </ul>
  *
  * <p><b>队列满拒绝策略：</b></p>
@@ -60,33 +52,17 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
 
     private static final Logger log = LoggerFactory.getLogger(AsyncAuditRecorder.class);
 
-    /** 批量写入分片大小（每批最多 500 条） */
-    private static final int BATCH_SLICE_SIZE = 500;
     /** 优雅停机超时时间（秒） */
     private static final long SHUTDOWN_TIMEOUT_SECONDS = 30;
     /** CALLER_RUNS 策略阻塞等待超时时间（毫秒） */
     private static final long DEFAULT_BLOCK_TIMEOUT_MS = 3000L;
-
-    /** 默认基础表名 */
-    private static final String BASE_TABLE_NAME = "sys_audit_log";
-
-    /** INSERT 语句列定义 */
-    private static final String INSERT_COLUMNS =
-            "(id, audit_type, action, status, module, content, " +
-            "business_no, operator_id, operator_code, operator_name, ip_address, ip_location, " +
-            "user_agent, request_params, response_result, error_message, cost_time, " +
-            "app_id, app_code, app_name, extra_info, operation_time, created_at)";
-
-    /** INSERT 语句占位符值 */
-    private static final String INSERT_VALUES =
-            "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    /** 告警日志节流间隔（毫秒），避免频繁刷日志 */
+    private static final long WARN_LOG_THROTTLE_MS = 10_000L;
 
     /** 异步缓冲队列，有界队列支持背压控制 */
-    private final LinkedBlockingQueue<AuditLog> queue;
-    /** 数据源引用 */
-    private final DataSource dataSource;
-    /** JDBC 模板，用于批量写入数据库 */
-    private final JdbcTemplate jdbcTemplate;
+    private final BlockingQueue<AuditLog> queue;
+    /** 审计写入器，负责实际的持久化操作 */
+    private final AuditWriter auditWriter;
     /** 审计配置属性 */
     private final AuditProperties properties;
     /** 异步批量写入配置 */
@@ -95,68 +71,28 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
     private final ScheduledExecutorService scheduler;
     /** 记录器运行状态标志 */
     private final AtomicBoolean running = new AtomicBoolean(true);
-    /** 分表策略（可为 null） */
-    private final TableShardingStrategy shardingStrategy;
-    /** 基础表名 */
-    private final String baseTableName;
-
     /** 磁盘兜底写入器 */
     private final AuditFallbackWriter fallbackWriter;
-
     /** 队列满告警计数 */
     private final AtomicLong queueFullWarnCount = new AtomicLong(0);
     /** 上一次告警日志时间戳（用于节流） */
     private volatile long lastWarnLogTime = 0;
-    /** 告警日志节流间隔（毫秒），避免频繁刷日志 */
-    private static final long WARN_LOG_THROTTLE_MS = 10_000L;
-
     /** 防止并发刷新的锁对象 */
     private final Object flushLock = new Object();
 
     /**
      * 构造函数
      *
-     * @param dataSource 数据源
-     * @param properties 审计配置属性
+     * @param auditWriter 审计写入器
+     * @param properties  审计配置属性
      */
-    public AsyncAuditRecorder(DataSource dataSource, AuditProperties properties) {
-        this(dataSource, properties, null, BASE_TABLE_NAME, new AuditFallbackWriter());
-    }
-
-    /**
-     * 构造函数 - 支持分表策略
-     *
-     * @param dataSource        数据源
-     * @param properties        审计配置属性
-     * @param shardingStrategy  分表策略（可为 null）
-     * @param baseTableName     基础表名
-     */
-    public AsyncAuditRecorder(DataSource dataSource, AuditProperties properties,
-                              TableShardingStrategy shardingStrategy, String baseTableName) {
-        this(dataSource, properties, shardingStrategy, baseTableName, new AuditFallbackWriter());
-    }
-
-    /**
-     * 构造函数 - 支持分表策略 + 磁盘兜底写入器
-     *
-     * @param dataSource        数据源
-     * @param properties        审计配置属性
-     * @param shardingStrategy  分表策略（可为 null）
-     * @param baseTableName     基础表名
-     * @param fallbackWriter    磁盘兜底写入器
-     */
-    public AsyncAuditRecorder(DataSource dataSource, AuditProperties properties,
-                              TableShardingStrategy shardingStrategy, String baseTableName,
-                              AuditFallbackWriter fallbackWriter) {
-        this.dataSource = Objects.requireNonNull(dataSource, "DataSource must not be null");
+    public AsyncAuditRecorder(AuditWriter auditWriter, AuditProperties properties) {
+        this.auditWriter = Objects.requireNonNull(auditWriter, "AuditWriter must not be null");
         this.properties = Objects.requireNonNull(properties, "AuditProperties must not be null");
-        this.jdbcTemplate = new JdbcTemplate(dataSource);
         this.asyncProps = properties.getAsync();
         this.queue = new LinkedBlockingQueue<>(asyncProps.getExecutorQueueCapacity());
         this.scheduler = ExecutorUtils.newScheduledThreadPool(1, "audit-scheduler");
-        this.shardingStrategy = shardingStrategy;
-        this.baseTableName = baseTableName != null ? baseTableName : BASE_TABLE_NAME;
-        this.fallbackWriter = fallbackWriter != null ? fallbackWriter : new AuditFallbackWriter();
+        this.fallbackWriter = new AuditFallbackWriter();
 
         // 启动定时刷新任务
         scheduler.scheduleAtFixedRate(
@@ -166,9 +102,9 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
                 TimeUnit.MILLISECONDS
         );
 
-        log.info("【异步审计记录器】启动成功, 队列容量={}, 批量阈值={}, 刷新间隔={}ms, 分表策略={}",
-                asyncProps.getExecutorQueueCapacity(), asyncProps.getBatchSize(), asyncProps.getBatchIntervalMillis(),
-                shardingStrategy != null ? shardingStrategy.getShardType() : "DISABLED");
+        log.info("【异步审计记录器】启动成功, 队列容量={}, 批量阈值={}, 刷新间隔={}ms, 写入器={}",
+                asyncProps.getExecutorQueueCapacity(), asyncProps.getBatchSize(),
+                asyncProps.getBatchIntervalMillis(), auditWriter.getName());
     }
 
     @Override
@@ -186,7 +122,7 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
         if (!running.get()) {
             log.warn("【异步审计记录器】记录器已停止, 尝试同步写入");
             try {
-                saveSingle(auditLog);
+                auditWriter.write(auditLog);
             } catch (Exception e) {
                 log.error("【异步审计记录器】同步写入失败", e);
             }
@@ -354,7 +290,7 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
         if (!running.get()) {
             log.warn("【异步审计记录器】记录器已停止, 尝试同步批量写入, count={}", auditLogs.size());
             try {
-                saveBatchDirect(auditLogs);
+                auditWriter.writeBatch(auditLogs);
             } catch (Exception e) {
                 log.error("【异步审计记录器】同步批量写入失败", e);
             }
@@ -401,7 +337,7 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
     }
 
     /**
-     * 从队列中批量取出审计日志并写入数据库。
+     * 从队列中批量取出审计日志并写入。
      * 此方法由定时调度任务和队列满阈值触发调用。
      */
     private void flushFromQueue() {
@@ -423,7 +359,7 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
     }
 
     /**
-     * 批量写入数据库
+     * 批量写入审计日志
      *
      * @param batch 待写入的审计日志列表
      */
@@ -433,20 +369,10 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
         }
 
         int total = batch.size();
-        int successCount = 0;
 
         try {
-            if (shardingStrategy != null) {
-                flushBatchWithSharding(batch);
-            } else {
-                for (int offset = 0; offset < total; offset += BATCH_SLICE_SIZE) {
-                    int end = Math.min(offset + BATCH_SLICE_SIZE, total);
-                    List<AuditLog> slice = batch.subList(offset, end);
-                    saveBatchDirect(slice);
-                    successCount += slice.size();
-                }
-            }
-            log.debug("【异步审计记录器】批量写入成功, total={}, success={}", total, successCount);
+            auditWriter.writeBatch(batch);
+            log.debug("【异步审计记录器】批量写入成功, total={}", total);
         } catch (Exception e) {
             log.warn("【异步审计记录器】批量写入失败, count={}, 尝试磁盘兜底写入", total, e);
             writeBatchToFallback(batch);
@@ -471,171 +397,6 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
                     log.error("【异步审计记录器】磁盘兜底失效且队列已满, 审计日志将丢失, id={}", auditLog.getId());
                 }
             }
-        }
-    }
-
-    /**
-     * 分表模式批量写入：按分表分组后分别写入
-     */
-    private void flushBatchWithSharding(List<AuditLog> batch) {
-        Map<String, List<AuditLog>> grouped = batch.stream()
-                .collect(Collectors.groupingBy(this::resolveTableName));
-
-        for (Map.Entry<String, List<AuditLog>> entry : grouped.entrySet()) {
-            List<AuditLog> slice = entry.getValue();
-            for (int offset = 0; offset < slice.size(); offset += BATCH_SLICE_SIZE) {
-                int end = Math.min(offset + BATCH_SLICE_SIZE, slice.size());
-                List<AuditLog> subSlice = slice.subList(offset, end);
-                saveBatchDirectToTable(entry.getKey(), subSlice);
-            }
-        }
-    }
-
-    /**
-     * 根据审计日志解析目标表名
-     */
-    private String resolveTableName(AuditLog auditLog) {
-        if (shardingStrategy == null) {
-            return baseTableName;
-        }
-        LocalDateTime time = auditLog.getOperationTime();
-        if (time == null) {
-            time = auditLog.getCreatedAt();
-        }
-        if (time == null) {
-            time = LocalDateTime.now();
-        }
-        return shardingStrategy.getTableName(baseTableName, time);
-    }
-
-    /**
-     * 构建 INSERT SQL
-     */
-    private String buildInsertSql(String tableName) {
-        return "INSERT INTO " + tableName + " " + INSERT_COLUMNS + " VALUES " + INSERT_VALUES;
-    }
-
-    /**
-     * 直接批量保存（不经过队列）
-     *
-     * @param auditLogs 审计日志列表
-     */
-    private void saveBatchDirect(List<AuditLog> auditLogs) {
-        saveBatchDirectToTable(baseTableName, auditLogs);
-    }
-
-    /**
-     * 直接批量保存到指定表
-     *
-     * @param tableName 表名
-     * @param auditLogs 审计日志列表
-     */
-    private void saveBatchDirectToTable(String tableName, List<AuditLog> auditLogs) {
-        if (auditLogs == null || auditLogs.isEmpty()) {
-            return;
-        }
-
-        String sql = buildInsertSql(tableName);
-
-        int total = auditLogs.size();
-        for (int offset = 0; offset < total; offset += BATCH_SLICE_SIZE) {
-            int end = Math.min(offset + BATCH_SLICE_SIZE, total);
-            List<AuditLog> slice = auditLogs.subList(offset, end);
-
-            jdbcTemplate.batchUpdate(sql, slice, slice.size(),
-                    (ps, auditLog) -> setPreparedStatementParams(ps, auditLog));
-        }
-    }
-
-    /**
-     * 保存单条审计日志
-     *
-     * @param auditLog 审计日志
-     */
-    private void saveSingle(AuditLog auditLog) {
-        String tableName = resolveTableName(auditLog);
-        String sql = buildInsertSql(tableName);
-        jdbcTemplate.update(sql, createPreparedStatementSetter(auditLog));
-    }
-
-    /**
-     * 创建 PreparedStatement 设置器
-     *
-     * @param auditLog 审计日志
-     * @return PreparedStatementSetter
-     */
-    private PreparedStatementSetter createPreparedStatementSetter(AuditLog auditLog) {
-        return ps -> setPreparedStatementParams(ps, auditLog);
-    }
-
-    /**
-     * 设置 PreparedStatement 参数
-     *
-     * <p>使用明确类型的 setter 方法（setInt/setLong/setString），避免 setObject 导致数据库驱动类型推断不一致
-     * 而引发索引失效问题。
-     *
-     * @param ps PreparedStatement
-     * @param auditLog 审计日志
-     * @throws SQLException SQL 异常
-     */
-    private void setPreparedStatementParams(PreparedStatement ps, AuditLog auditLog) throws SQLException {
-        int i = 1;
-        ps.setString(i++, auditLog.getId());
-        setIntegerParam(ps, i++, auditLog.getAuditType());
-        setIntegerParam(ps, i++, auditLog.getAction());
-        setIntegerParam(ps, i++, auditLog.getStatus());
-        ps.setString(i++, auditLog.getModule());
-        ps.setString(i++, auditLog.getContent());
-        ps.setString(i++, auditLog.getBusinessNo());
-        ps.setString(i++, auditLog.getOperatorId());
-        ps.setString(i++, auditLog.getOperatorCode());
-        ps.setString(i++, auditLog.getOperatorName());
-        ps.setString(i++, auditLog.getIpAddress());
-        ps.setString(i++, auditLog.getIpLocation());
-        ps.setString(i++, auditLog.getUserAgent());
-        ps.setString(i++, auditLog.getRequestParams());
-        ps.setString(i++, auditLog.getResponseResult());
-        ps.setString(i++, auditLog.getErrorMessage());
-        setLongParam(ps, i++, auditLog.getCostTime());
-        ps.setString(i++, auditLog.getAppId());
-        ps.setString(i++, auditLog.getAppCode());
-        ps.setString(i++, auditLog.getAppName());
-        ps.setString(i++, auditLog.getExtraInfo());
-        ps.setTimestamp(i++, auditLog.getOperationTime() != null
-                ? Timestamp.valueOf(auditLog.getOperationTime()) : new Timestamp(System.currentTimeMillis()));
-        ps.setTimestamp(i, auditLog.getCreatedAt() != null
-                ? Timestamp.valueOf(auditLog.getCreatedAt()) : new Timestamp(System.currentTimeMillis()));
-    }
-
-    /**
-     * 设置 Integer 类型参数（null 值安全）
-     *
-     * @param ps PreparedStatement
-     * @param index 参数索引
-     * @param value 整数值
-     * @throws SQLException SQL 异常
-     */
-    private void setIntegerParam(PreparedStatement ps, int index, Integer value) throws SQLException {
-        if (value != null) {
-            ps.setInt(index, value);
-        } else {
-            ps.setNull(index, java.sql.Types.INTEGER);
-        }
-    }
-
-    /**
-     * 设置 Long 类型参数（null 值安全）
-     *
-     * @param ps PreparedStatement
-     * @param index 参数索引
-     * @param value 长整数值
-     * @throws SQLException SQL 异常
-     */
-    private void setLongParam(PreparedStatement ps, int index, Long value) throws SQLException {
-        if (value != null) {
-            ps.setLong(index, value);
-        } else {
-            ps.setNull(index, java.sql.Types.BIGINT);
         }
     }
 

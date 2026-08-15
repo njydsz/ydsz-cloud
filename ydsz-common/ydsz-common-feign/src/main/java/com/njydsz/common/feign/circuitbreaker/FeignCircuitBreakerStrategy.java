@@ -1,5 +1,6 @@
 package com.njydsz.common.feign.circuitbreaker;
 
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 
@@ -100,6 +101,18 @@ public interface FeignCircuitBreakerStrategy {
      * @param serviceName 服务名称
      */
     default void reset(String serviceName) {
+    }
+
+    /**
+     * 获取所有已初始化的服务名称集合。
+     *
+     * <p>用于健康检查和监控场景，运行时探测各服务的熔断状态。
+     * 默认返回空集合，实现类应覆盖此方法返回实际注册的服务列表。
+     *
+     * @return 已初始化服务的名称集合，不会返回 null
+     */
+    default Set<String> getServiceNames() {
+        return Set.of();
     }
 
     /**
