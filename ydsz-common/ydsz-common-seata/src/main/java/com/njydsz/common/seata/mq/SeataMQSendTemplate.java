@@ -151,7 +151,7 @@ public class SeataMQSendTemplate {
      * @return 发送结果
      */
     public SendResult send(String topic, String body) {
-        return send topic, null, null, body.getBytes(StandardCharsets.UTF_8), null);
+        return send(topic, null, null, body.getBytes(StandardCharsets.UTF_8), null);
     }
 
     /**

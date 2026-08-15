@@ -27,7 +27,8 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.event.model.StandardEventTypes;
+import com.njydsz.common.event.api.DomainEventTypes;
+import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.assembler.NameAssembler;
@@ -338,10 +339,11 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         // 审批通过事件 FLOW_INSTANCE_APPROVED 由 complete() 发布，避免消息中心误发"审批通过通知"
         OutboxService outboxService = outboxServiceProvider.getIfAvailable();
         if (outboxService != null) {
-            outboxService.appendToOutbox(
-                    "FlowInstance", instanceId,
-                    StandardEventTypes.FLOW_INSTANCE_STARTED,
-                    YdszJson.toJson(Map.of(
+            outboxService.appendToOutbox(OutboxMessage.builder()
+                    .aggregateType("FlowInstance")
+                    .aggregateId(instanceId)
+                    .eventType(DomainEventTypes.FLOW_INSTANCE_STARTED)
+                    .payload(YdszJson.toJson(Map.of(
                             "instanceId", instanceId,
                             "flowCode", dto.getFlowCode(),
                             "flowName", def.getFlowName() != null ? def.getFlowName() : "",
@@ -349,7 +351,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                             "businessId", dto.getBusinessId() != null ? dto.getBusinessId() : "",
                             "initiatorId", dto.getInitiatorId() != null ? dto.getInitiatorId() : "",
                             "tenantId", tenantId
-                    ))
+                    )))
             );
         }
 
@@ -1545,9 +1547,11 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                     payload.put(String.valueOf(kvPairs[i]), kvPairs[i + 1]);
                 }
             }
-            outboxService.appendToOutbox(
-                    "FlowInstance", instanceId, eventType,
-                    YdszJson.toJson(payload));
+            outboxService.appendToOutbox(OutboxMessage.builder()
+                    .aggregateType("FlowInstance")
+                    .aggregateId(instanceId)
+                    .eventType(eventType)
+                    .payload(YdszJson.toJson(payload)));
         } catch (Exception e) {
             log.warn("[Flow] 发布 Outbox 事件失败: type={} id={} err={}",
                     eventType, instanceId, e.getMessage());

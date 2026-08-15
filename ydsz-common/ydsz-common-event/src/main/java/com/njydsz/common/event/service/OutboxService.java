@@ -60,9 +60,11 @@ import com.njydsz.common.json.YdszJson;
  *         Order order = orderMapper.insert(dto);
  *
  *         // 同一事务写入 Outbox
- *         outboxService.appendToOutbox(
- *             "Order", order.getId(), "OrderCreated",
- *             toJson(order)
+ *         outboxService.appendToOutbox(OutboxMessage.builder()
+ *             .aggregateType("Order")
+ *             .aggregateId(order.getId())
+ *             .eventType("OrderCreated")
+ *             .payload(toJson(order))
  *         );
  *     }
  * }
@@ -210,40 +212,6 @@ public class OutboxService {
                 .eventType(eventType)
                 .payload(payload)
                 .headers(headers));
-    }
-
-    /**
-     * 追加事件到 Outbox（完整参数）
-     *
-     * @param aggregateType    聚合根类型
-     * @param aggregateId      聚合根 ID
-     * @param eventType        事件类型
-     * @param payload          事件负载（JSON）
-     * @param headers          扩展头
-     * @param priority         优先级（0-9，9 最高）
-     * @param schemaVersion    Schema 版本号
-     * @param contentType      内容类型
-     * @param deduplicationId  幂等去重 ID（null 表示不自动生成，除非 auto-dedup=true）
-     * @deprecated 自 1.6.0 起废弃，推荐使用 {@link #appendToOutbox(OutboxMessage.OutboxMessageBuilder)}。
-     *             本类将在 2.0.0 版本移除。
-     */
-    @Deprecated
-    @Transactional
-    public void appendToOutbox(String aggregateType, String aggregateId,
-                               String eventType, String payload,
-                               Map<String, String> headers,
-                               int priority, String schemaVersion,
-                               String contentType, String deduplicationId) {
-        appendToOutbox(OutboxMessage.builder()
-                .aggregateType(aggregateType)
-                .aggregateId(aggregateId)
-                .eventType(eventType)
-                .payload(payload)
-                .headers(headers)
-                .priority(priority)
-                .schemaVersion(schemaVersion)
-                .contentType(contentType)
-                .deduplicationId(deduplicationId));
     }
 
     /**
