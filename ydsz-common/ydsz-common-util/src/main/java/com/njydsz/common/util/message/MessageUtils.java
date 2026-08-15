@@ -8,6 +8,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.MessageSource;
 
 import com.njydsz.common.util.auth.AuthInfoUtils;
+import com.njydsz.common.util.config.StaticBridge;
 import com.njydsz.common.util.string.StringUtils;
 
 /**
@@ -21,24 +22,19 @@ import com.njydsz.common.util.string.StringUtils;
  * @since 1.0.0
  */
 public final class MessageUtils {
+
     private static final Logger logger = LoggerFactory.getLogger(MessageUtils.class);
+
+    /**
+     * MessageSource 桥接器（Spring 环境下由 {@link MessageSourceConfiguration} 注入）。
+     *
+     * <p>使用 {@link ObjectProvider} 而非直接引用，避免启动期缺少 MessageSource 时抛出异常。
+     */
+    private static final StaticBridge<MessageSource> MESSAGE_SOURCE_BRIDGE = new StaticBridge<>();
 
     private MessageUtils() {
         throw new UnsupportedOperationException("MessageUtils is a utility class and cannot be instantiated");
     }
-
-    /**
-     * 可选的 MessageSource 提供者（Spring 环境下由 {@link MessageSourceConfiguration} 注入）。
-     * <p>使用 {@link ObjectProvider} 而非直接引用，避免启动期缺少 MessageSource 时抛出异常。
-     */
-    private static volatile ObjectProvider<MessageSource> messageSourceProvider;
-
-    /**
-     * 缓存的 MessageSource 实例（已成功解析后缓存，避免重复 getIfAvailable）。
-     *
-     * <p>volatile 保证多线程可见性。null 表示首次解析尚未完成或解析失败。
-     */
-    private static volatile MessageSource cachedMessageSource;
 
     /**
      * 注入 MessageSource 提供者（Spring 容器启动后调用）。
@@ -50,9 +46,7 @@ public final class MessageUtils {
      * @since 2.2.0
      */
     public static void setMessageSourceProvider(ObjectProvider<MessageSource> provider) {
-        messageSourceProvider = provider;
-        // 注入后清空缓存，以便首次调用重新解析（可能在 Spring 上下文就绪后 MessageSource 才可用）
-        cachedMessageSource = null;
+        MESSAGE_SOURCE_BRIDGE.registerSupplier(provider::getIfAvailable);
     }
 
     /**
@@ -176,32 +170,15 @@ public final class MessageUtils {
     }
 
     /**
-     * 解析并缓存 MessageSource
+     * 解析并缓存 MessageSource。
      *
-     * <p>使用已注入的 {@link ObjectProvider}（Spring 环境下由 {@link MessageSourceConfiguration} 注入）
-     * 解析并缓存 MessageSource 实例。解析成功时缓存结果，解析失败时返回 null 以便下次调用可重新尝试。
+     * <p>使用已注入的桥接器（Spring 环境下由 {@link MessageSourceConfiguration} 注入）
+     * 解析并缓存 MessageSource 实例。解析成功时缓存结果，解析失败时返回 null 以便下次调用可重新尝试。</p>
      *
      * @return MessageSource 实例，未找到或上下文未初始化时返回 null
      */
     private static MessageSource resolveMessageSource() {
-        MessageSource messageSource = cachedMessageSource;
-        if (messageSource != null) {
-            return messageSource;
-        }
-        try {
-            ObjectProvider<MessageSource> provider = messageSourceProvider;
-            if (provider != null) {
-                messageSource = provider.getIfAvailable();
-                if (messageSource != null) {
-                    cachedMessageSource = messageSource;
-                    return messageSource;
-                }
-            }
-            return null;
-        } catch (Exception e) {
-            logger.warn("MessageSource bean not found: {}", e.getMessage());
-            return null;
-        }
+        return MESSAGE_SOURCE_BRIDGE.getIfAvailable();
     }
 
     /**

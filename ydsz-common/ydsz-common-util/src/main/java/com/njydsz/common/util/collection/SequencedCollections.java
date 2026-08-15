@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.SequencedCollection;
 import java.util.SequencedMap;
 import java.util.SequencedSet;
@@ -47,7 +48,12 @@ import java.util.Set;
  *
  * @author ydsz-team
  * @since 3.0.0
+ *
+ * @deprecated 自 4.2.0 起废弃。JDK 21+ 已原生支持 {@link SequencedCollection}、
+ *             {@link SequencedSet}、{@link SequencedMap}，推荐直接使用原生 API。
+ *             计划在 5.0.0 移除。
  */
+@Deprecated(since = "4.2.0", forRemoval = true)
 public final class SequencedCollections {
 
     private SequencedCollections() {
@@ -64,18 +70,18 @@ public final class SequencedCollections {
      * @param <T> 泛型参数类型
      */
     @SuppressWarnings("unchecked")
-    public static <T> java.util.Optional<T> first(Collection<T> coll) {
+    public static <T> Optional<T> first(Collection<T> coll) {
         if (coll == null || coll.isEmpty()) {
-            return java.util.Optional.empty();
+            return Optional.empty();
         }
         if (coll instanceof SequencedCollection<T> sc) {
-            return java.util.Optional.of(sc.getFirst());
+            return Optional.of(sc.getFirst());
         }
         // JDK 17 fallback
         if (coll instanceof List<T> list) {
-            return java.util.Optional.of(list.get(0));
+            return Optional.of(list.get(0));
         }
-        return java.util.Optional.of(coll.iterator().next());
+        return Optional.of(coll.iterator().next());
     }
 
     /**
@@ -86,23 +92,23 @@ public final class SequencedCollections {
      * @param <T> 泛型参数类型
      */
     @SuppressWarnings("unchecked")
-    public static <T> java.util.Optional<T> last(Collection<T> coll) {
+    public static <T> Optional<T> last(Collection<T> coll) {
         if (coll == null || coll.isEmpty()) {
-            return java.util.Optional.empty();
+            return Optional.empty();
         }
         if (coll instanceof SequencedCollection<T> sc) {
-            return java.util.Optional.of(sc.getLast());
+            return Optional.of(sc.getLast());
         }
         // JDK 17 fallback
         if (coll instanceof List<T> list) {
-            return java.util.Optional.of(list.get(list.size() - 1));
+            return Optional.of(list.get(list.size() - 1));
         }
         // 非 List 的迭代器遍历
         T last = null;
         for (T item : coll) {
             last = item;
         }
-        return java.util.Optional.ofNullable(last);
+        return Optional.ofNullable(last);
     }
 
     // ==================== reversed ====================
@@ -143,15 +149,15 @@ public final class SequencedCollections {
      * @param <K> 泛型参数类型
      * @param <V> 泛型参数类型
      */
-    public static <K, V> java.util.Optional<Map.Entry<K, V>> firstEntry(Map<K, V> map) {
+    public static <K, V> Optional<Map.Entry<K, V>> firstEntry(Map<K, V> map) {
         if (map == null || map.isEmpty()) {
-            return java.util.Optional.empty();
+            return Optional.empty();
         }
         if (map instanceof SequencedMap<K, V> sm) {
-            return java.util.Optional.of(sm.firstEntry());
+            return Optional.of(sm.firstEntry());
         }
         // JDK 17 fallback
-        return java.util.Optional.of(map.entrySet().iterator().next());
+        return Optional.of(map.entrySet().iterator().next());
     }
 
     /**
@@ -162,19 +168,19 @@ public final class SequencedCollections {
      * @param <K> 泛型参数类型
      * @param <V> 泛型参数类型
      */
-    public static <K, V> java.util.Optional<Map.Entry<K, V>> lastEntry(Map<K, V> map) {
+    public static <K, V> Optional<Map.Entry<K, V>> lastEntry(Map<K, V> map) {
         if (map == null || map.isEmpty()) {
-            return java.util.Optional.empty();
+            return Optional.empty();
         }
         if (map instanceof SequencedMap<K, V> sm) {
-            return java.util.Optional.of(sm.lastEntry());
+            return Optional.of(sm.lastEntry());
         }
         // JDK 17 fallback
         Map.Entry<K, V> last = null;
         for (Map.Entry<K, V> entry : map.entrySet()) {
             last = entry;
         }
-        return java.util.Optional.ofNullable(last);
+        return Optional.ofNullable(last);
     }
 
     /**

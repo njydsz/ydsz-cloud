@@ -42,7 +42,13 @@ import java.util.concurrent.ThreadFactory;
  * @author ydsz-team
  * @since 3.0.0
  * @see java.util.concurrent.Semaphore
+ *
+ * @deprecated 自 4.2.0 起废弃。JDK 21+ 推荐直接使用
+ *             {@code newVirtualThreadPerTaskExecutor()} 配合 {@code Semaphore} 实现有界并发，
+ *             {@code StructuredTaskScope} 也可替代本类的结构化并发场景。
+ *             计划在 5.0.0 移除。
  */
+@Deprecated(since = "4.2.0", forRemoval = true)
 public final class BoundedVirtualThreadScheduler {
 
     private final Semaphore concurrencyLimiter;
@@ -54,7 +60,6 @@ public final class BoundedVirtualThreadScheduler {
      * 构造有界虚拟线程调度器。
      *
      * @param maxConcurrency 最大并发虚拟线程数（建议值：IO 密集场景 100-1000，CPU 密集场景 ≤ CPU 核心数）
-     @return 处理结果
      */
     public BoundedVirtualThreadScheduler(int maxConcurrency) {
         this(maxConcurrency, true);
@@ -65,7 +70,6 @@ public final class BoundedVirtualThreadScheduler {
      *
      * @param maxConcurrency 最大并发虚拟线程数
      * @param fair           是否使用公平模式（true = 先提交先执行）
-     @return 处理结果
      */
     public BoundedVirtualThreadScheduler(int maxConcurrency, boolean fair) {
         if (maxConcurrency <= 0) {
@@ -137,7 +141,8 @@ public final class BoundedVirtualThreadScheduler {
 
     /**
      * 获取当前可用并发许可数（可用于健康检查或监控）。
-      @return 处理结果
+     *
+     * @return 可用并发许可数
      */
     public int availablePermits() {
         return concurrencyLimiter.availablePermits();
@@ -145,7 +150,8 @@ public final class BoundedVirtualThreadScheduler {
 
     /**
      * 获取当前正在使用的并发数。
-     @return 计算结果
+     *
+     * @return 正在使用的并发数
      */
     public int activeCount() {
         return maxConcurrency - concurrencyLimiter.availablePermits();

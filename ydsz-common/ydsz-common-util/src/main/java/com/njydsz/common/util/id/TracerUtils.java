@@ -20,9 +20,10 @@ import com.njydsz.common.util.string.StringUtils;
  * <ul>
  *   <li>支持 SkyWalking {@code TraceContext} 集成（反射调用，无编译期硬依赖）</li>
  *   <li>支持 SLF4J MDC 上下文注入</li>
- *   <li>支持基于 UUID v7 的 Trace ID 生成</li>
+ *   <li>支持 {@link TraceIdGenerator#generateSortableTraceId()} 生成时间有序 TraceId</li>
  *   <li>支持 Span ID 父子关系管理</li>
  *   <li>支持线程间链路追踪上下文传递</li>
+ *   <li>支持 W3C TraceContext {@code traceparent} 头的解析与注入（v4.2.0+）</li>
  * </ul>
  *
  * <p><b>统一上下文：</b>自 v2.0.0 起，traceId 读写统一收口至 {@link RequestContext}
@@ -44,6 +45,9 @@ import com.njydsz.common.util.string.StringUtils;
  * TracerUtils.runWithTrace(traceId, () -> {
  *     // 业务逻辑
  * });
+ *
+ * // 从入站 HTTP 请求头注入 W3C traceparent
+ * boolean injected = TracerUtils.injectTraceparent(request.getHeader("traceparent"));
  * }</pre>
  *
  * @author ydsz-team
@@ -343,5 +347,43 @@ public final class TracerUtils {
     public static void runWithTrace(Runnable runnable) {
         String traceId = generateTraceId();
         runWithTrace(traceId, runnable);
+    }
+
+    // ==================== W3C TraceContext traceparent 编解码 ====================
+
+    /**
+     * 解析 W3C {@code traceparent} 头并注入到当前线程的 MDC 与 {@link RequestContext}。
+     *
+     * <p>用于入口拦截器接收上游 W3C 格式的 {@code traceparent} header 后恢复链路上下文。
+     * 注入成功后，{@link #getTraceId()} 与 {@link #getSpanId()} 可直接读取解析结果。</p>
+     *
+     * <p>格式：{@code 00-{32hex}-{16hex}-{flags}}，非法格式返回 {@code false}。</p>
+     *
+     * @param traceparent W3C traceparent 字符串（如
+     *                    {@code 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01}）
+     * @return {@code true} 表示注入成功；格式非法返回 {@code false}
+     * @since 4.2.0
+     */
+    public static boolean injectTraceparent(String traceparent) {
+        TraceIdGenerator.ParsedTraceparent parsed = TraceIdGenerator.parseTraceparent(traceparent);
+        if (parsed == null) {
+            return false;
+        }
+        setTraceId(parsed.traceId());
+        setSpanId(parsed.spanId());
+        return true;
+    }
+
+    /**
+     * 解析 W3C {@code traceparent} 头。
+     *
+     * <p>仅解析、不注入上下文，适用于需要对解析结果做自定义处理的场景。</p>
+     *
+     * @param traceparent W3C traceparent 字符串
+     * @return 解析结果；格式非法返回 null
+     * @since 4.2.0
+     */
+    public static TraceIdGenerator.ParsedTraceparent parseTraceparent(String traceparent) {
+        return TraceIdGenerator.parseTraceparent(traceparent);
     }
 }

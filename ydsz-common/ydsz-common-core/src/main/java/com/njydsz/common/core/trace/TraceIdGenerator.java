@@ -154,6 +154,48 @@ public final class TraceIdGenerator {
     }
 
     /**
+     * 解析 W3C Trace Context traceparent header 值。
+     *
+     * <p>格式：{@code {version}-{traceId}-{spanId}-{traceFlags}}，如
+     * {@code 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01}。</p>
+     *
+     * @param traceparent W3C traceparent 字符串，非空
+     * @return 解析结果；格式非法时返回 null
+     * @since 4.2.0
+     * @see <a href="https://www.w3.org/TR/trace-context/">W3C Trace Context</a>
+     */
+    public static ParsedTraceparent parseTraceparent(String traceparent) {
+        if (traceparent == null || traceparent.isEmpty()) {
+            return null;
+        }
+        String[] parts = traceparent.split("-");
+        if (parts.length != 4 || parts[1].length() != 32 || parts[2].length() != 16) {
+            return null;
+        }
+        try {
+            int version = Integer.parseInt(parts[0], 16);
+            int traceFlags = Integer.parseInt(parts[3], 16);
+            return new ParsedTraceparent(version, parts[1], parts[2], traceFlags);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    /**
+     * 解析后的 W3C traceparent 组件。
+     *
+     * @param version    版本（通常为 {@code 00}）
+     * @param traceId    32 位十六进制 traceId
+     * @param spanId     16 位十六进制 spanId（注入后可作为 parentSpanId）
+     * @param traceFlags 2 位十六进制 traceFlags（{@code 01} = sampled）
+     *
+     * @since 4.2.0
+     * @see <a href="https://www.w3.org/TR/trace-context/">W3C Trace Context</a>
+     */
+    public record ParsedTraceparent(int version, String traceId, String spanId, int traceFlags) {
+    }
+
+    /**
      * 可排序 TraceId 的线程本地状态：跟踪上次使用的时间戳和同毫秒内的序号。
      *
      * <p>无需原子操作/锁：每个线程独立维护自己的时间戳和序号（ThreadLocal 语义），

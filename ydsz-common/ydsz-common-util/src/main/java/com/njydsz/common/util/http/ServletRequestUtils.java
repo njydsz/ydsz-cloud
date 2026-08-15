@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 
+import com.njydsz.common.util.config.StaticBridge;
 import com.njydsz.common.util.ip.IpValidator;
 import com.njydsz.common.util.string.StringUtils;
 
@@ -42,8 +43,8 @@ import com.njydsz.common.util.string.StringUtils;
 @Slf4j
 public final class ServletRequestUtils {
 
-    /** 由 AutoConfiguration 设置的 TrustedProxyConfiguration Supplier */
-    private static volatile Supplier<TrustedProxyConfiguration> trustedProxyConfigSupplier;
+    /** 可信代理配置桥接器（由 AutoConfiguration 设置） */
+    private static final StaticBridge<TrustedProxyConfiguration> TRUSTED_PROXY_BRIDGE = new StaticBridge<>();
 
     /**
      * 注册 TrustedProxyConfiguration 的 Supplier。
@@ -51,7 +52,7 @@ public final class ServletRequestUtils {
      * @param supplier TrustedProxyConfiguration 提供者，非空
      */
     public static void setTrustedProxyConfigSupplier(Supplier<TrustedProxyConfiguration> supplier) {
-        trustedProxyConfigSupplier = supplier;
+        TRUSTED_PROXY_BRIDGE.registerSupplier(supplier);
     }
 
     private ServletRequestUtils() {
@@ -77,17 +78,10 @@ public final class ServletRequestUtils {
         if (IpValidator.isInternalIp(remoteAddr)) {
             return true;
         }
-        // 尝试从注册的 Supplier 获取配置（未注册时返回 false）
-        Supplier<TrustedProxyConfiguration> supplier = trustedProxyConfigSupplier;
-        if (supplier != null) {
-            try {
-                TrustedProxyConfiguration config = supplier.get();
-                if (config != null) {
-                    return config.isTrusted(remoteAddr);
-                }
-            } catch (Exception e) {
-                // Bean 不存在，回退到仅内网/回环判断
-            }
+        // 尝试从桥接器获取配置（未注册时返回 false）
+        TrustedProxyConfiguration config = TRUSTED_PROXY_BRIDGE.getIfAvailable();
+        if (config != null) {
+            return config.isTrusted(remoteAddr);
         }
         return false;
     }

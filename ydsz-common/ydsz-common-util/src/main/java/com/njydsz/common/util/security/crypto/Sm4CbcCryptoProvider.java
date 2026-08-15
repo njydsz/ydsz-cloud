@@ -20,7 +20,12 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
  *
  * @author ydsz-team
  * @since 3.0.0
+ *
+ * @deprecated 自 4.2.0 起废弃。CBC 模式不提供认证（AEAD），密文可能被篡改而不自知。
+ *             新业务推荐使用 {@link Sm4GcmCryptoProvider}（SM4-GCM），老密文可按需保留。
+ *             计划在 5.0.0 移除。
  */
+@Deprecated(since = "4.2.0", forRemoval = true)
 public final class Sm4CbcCryptoProvider implements CryptoProvider {
 
     private static final String ALGORITHM = "SM4";
