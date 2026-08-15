@@ -9,6 +9,7 @@ import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
 import com.njydsz.common.json.YdszJson;
 
+import com.njydsz.gateway.config.GatewayFilterOrder;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -510,6 +511,6 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
      */
     @Override
     public int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE + 30;
+        return GatewayFilterOrder.RATE_LIMIT.getOrder();
     }
 }

@@ -14,6 +14,7 @@ import org.springframework.web.server.ServerWebExchange;
 
 import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
 import com.njydsz.gateway.config.GatewayConstants;
+import com.njydsz.gateway.config.GatewayFilterOrder;
 
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
@@ -301,6 +302,6 @@ public class AuditLogFilter implements GlobalFilter, Ordered {
      */
     @Override
     public int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE + 35;
+        return GatewayFilterOrder.AUDIT_LOG.getOrder();
     }
 }

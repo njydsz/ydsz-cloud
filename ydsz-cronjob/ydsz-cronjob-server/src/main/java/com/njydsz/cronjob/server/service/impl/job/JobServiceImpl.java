@@ -42,6 +42,7 @@ import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
+import com.njydsz.cronjob.server.core.JobLockManager;
 import com.njydsz.cronjob.server.core.LockKeyUtil;
 import com.njydsz.cronjob.server.core.dispatch.DefaultTaskDispatcher;
 import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
@@ -87,6 +88,8 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     private final RedisTemplate<String, Object> redisTemplate;
     /** 调度配置属性（P0-4: 锁 TTL 等可配置项） */
     private final CronjobProperties cronjobProperties;
+    /** 任务锁管理器（委托 ydsz-common-lock 公共模块，复用 WatchDog / 指标等能力） */
+    private final JobLockManager jobLockManager;
 
     /**
      * 任务派发器（P1-7 可选注入）。
@@ -870,6 +873,8 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * 执行任务内部逻辑
      *
      * <p>定时触发（非手动）时通过 Redis 分布式锁防止多实例重复执行；
+     * 锁的获取与释放委托 {@link JobLockManager}，复用 ydsz-common-lock 公共模块的
+     * WatchDog 续期、锁监控指标等能力。
      * 记录执行日志（开始/结束/耗时/状态/结果）并更新任务统计字段。
      *
      * @param job    任务定义
@@ -879,18 +884,16 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     private String executeJob(Job job, boolean manual) {
         // 定时触发（非手动）时获取分布式锁，防止多实例重复执行
         // P0-4: TTL 支持任务级 override + 全局配置 + 上下限规整
-        String lockKey = null;
+        String lockValue = null;
         if (!manual) {
-            lockKey = LockKeyUtil.buildJobLockKey(job.getJobKey());
             Duration ttl = resolveLockTtl(job);
-            Boolean acquired = redisTemplate.opsForValue()
-                    .setIfAbsent(lockKey, INSTANCE_ID, ttl);
-            if (!Boolean.TRUE.equals(acquired)) {
+            lockValue = jobLockManager.tryAcquireLock(job.getJobKey(), null, ttl.toMillis());
+            if (lockValue == null) {
                 log.info("[Cronjob] 任务已被其他实例持有锁, 跳过本次执行: key={}", job.getJobKey());
                 return null;
             }
             log.debug("[Cronjob] 获取分布式锁成功: key={} holder={} ttl={}ms",
-                    lockKey, INSTANCE_ID, ttl.toMillis());
+                    job.getJobKey(), lockValue, ttl.toMillis());
         }
 
         // 写开始日志
@@ -934,14 +937,13 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             jobMapper.updateStats(job.getId(), log0.getStartTime(), next, incFire, incSucc, incFail,
                     success ? null : "ERROR");
 
-            // 释放分布式锁（Lua 脚本安全释放: 仅当 value 匹配时才 delete）
-            if (lockKey != null) {
+            // 释放分布式锁（JobLockManager 安全释放: 仅持有者可释放）
+            if (lockValue != null) {
                 try {
-                    redisTemplate.execute(RELEASE_LOCK_SCRIPT,
-                            Collections.singletonList(lockKey), INSTANCE_ID);
+                    jobLockManager.releaseLock(job.getJobKey(), null, lockValue);
                 } catch (Exception e) {
                     log.warn("[Cronjob] 释放分布式锁失败(将等待 TTL 自动过期): key={} reason={}",
-                            lockKey, e.getMessage());
+                            job.getJobKey(), e.getMessage());
                 }
             }
         }

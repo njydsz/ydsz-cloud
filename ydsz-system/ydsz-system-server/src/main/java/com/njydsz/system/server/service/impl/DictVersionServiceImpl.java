@@ -104,8 +104,11 @@ public class DictVersionServiceImpl implements DictVersionService {
     /** Redis 高级操作组件（用于 SCAN 模式删除） */
     private final RedisAdvancedOps advancedOps;
 
-    /** 字典项缓存键前缀 */
-    private static final String DICT_CACHE_PREFIX = "ydsz:dict:item:";
+    /** 字典项单条缓存键前缀（与 {@link DictItemServiceImpl} 保持一致） */
+    private static final String DICT_ITEM_CACHE_PREFIX = "system:dict:item:";
+
+    /** 字典项列表缓存键前缀（与 {@link DictItemServiceImpl} 保持一致） */
+    private static final String DICT_LIST_CACHE_PREFIX = "system:dict:list:";
 
     /**
      * 按字典类型编码查询所有历史版本（按生效时间倒序）

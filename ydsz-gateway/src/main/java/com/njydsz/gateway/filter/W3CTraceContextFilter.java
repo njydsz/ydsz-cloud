@@ -10,6 +10,7 @@ import org.springframework.web.server.ServerWebExchange;
 
 import com.njydsz.common.core.trace.TraceIdGenerator;
 import com.njydsz.gateway.config.GatewayConstants;
+import com.njydsz.gateway.config.GatewayFilterOrder;
 
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
@@ -109,6 +110,6 @@ public class W3CTraceContextFilter implements GlobalFilter, Ordered {
      */
     @Override
     public int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE;
+        return GatewayFilterOrder.W3C_TRACE.getOrder();
     }
 }

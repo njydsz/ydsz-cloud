@@ -4,6 +4,7 @@ import java.util.Set;
 
 import com.njydsz.common.json.YdszJson;
 
+import com.njydsz.gateway.config.GatewayFilterOrder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -231,6 +232,6 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
      */
     @Override
     public int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE + 15;
+        return GatewayFilterOrder.API_KEY_AUTH.getOrder();
     }
 }

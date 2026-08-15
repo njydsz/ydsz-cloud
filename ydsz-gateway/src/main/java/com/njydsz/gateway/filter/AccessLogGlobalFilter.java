@@ -20,6 +20,7 @@ import org.springframework.web.server.ServerWebExchange;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.gateway.config.GatewayConstants;
+import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.config.GatewayIpUtils;
 import com.njydsz.gateway.config.GatewayMetrics;
 import com.njydsz.common.core.trace.TraceIdGenerator;
@@ -287,6 +288,6 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
      */
     @Override
     public int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE + 1;
+        return GatewayFilterOrder.ACCESS_LOG.getOrder();
     }
 }

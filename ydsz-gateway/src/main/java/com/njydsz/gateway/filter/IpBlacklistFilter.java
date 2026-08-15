@@ -22,6 +22,7 @@ import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.gateway.config.GatewayConstants;
+import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.config.GatewayIpUtils;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.trace.TraceIdGenerator;
@@ -181,6 +182,6 @@ public class IpBlacklistFilter implements GlobalFilter, Ordered {
      */
     @Override
     public int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE + 3;
+        return GatewayFilterOrder.IP_BLACKLIST.getOrder();
     }
 }

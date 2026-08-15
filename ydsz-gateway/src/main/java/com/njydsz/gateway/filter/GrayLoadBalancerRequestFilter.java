@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
 import com.njydsz.gateway.config.GatewayConstants;
+import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.loadbalancer.GrayLoadBalancer;
 
 import lombok.extern.slf4j.Slf4j;
@@ -198,6 +199,6 @@ public class GrayLoadBalancerRequestFilter implements GlobalFilter, Ordered {
      */
     @Override
     public int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE + 20;
+        return GatewayFilterOrder.GRAY_LOADBALANCER.getOrder();
     }
 }

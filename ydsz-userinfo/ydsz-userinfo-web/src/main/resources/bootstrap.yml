@@ -56,7 +56,8 @@ spring:
             group: ${spring.profiles.active}
             refresh: true
 
-# P2-3: API 版本管理机制
+ydsz:
+  # P2-3: API 版本管理机制
   web:
     api-version:
       enabled: true
@@ -64,6 +65,38 @@ spring:
       strategy: HEADER
       header-name: X-API-Version
       sunset-headers: true
+
+# 统一线程池配置（ydsz-common-thread）
+# 参考：云顶编码规范 15.4 节
+  thread:
+    enabled: true
+    hot-update:
+      enabled: true
+    pools:
+      # 用户通知异步线程池（站内信/邮件/短信等）
+      userNotifyExecutor:
+        type: PLATFORM
+        core-size: 2
+        max-size: 8
+        queue-capacity: 256
+        thread-name-prefix: ydsz-user-notify-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 30
+        slow-task-threshold-ms: 5000
+        task-decorator-bean-names:
+          - tenantContextTaskDecorator
+      # 用户行为审计异步线程池
+      userAuditExecutor:
+        type: PLATFORM
+        core-size: 2
+        max-size: 4
+        queue-capacity: 512
+        thread-name-prefix: ydsz-user-audit-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 15
+        enable-detailed-metrics: true
+        task-decorator-bean-names:
+          - tenantContextTaskDecorator
 
 # JSON 引擎配置（ydsz-common-json）
   json:
@@ -75,3 +108,32 @@ spring:
     warmup-classes:
       - com.njydsz.userinfo.domain.vo.LoginVO
       - com.njydsz.userinfo.domain.entity.UserAccount
+
+  # P0: JDBC 安全加固（ydsz-common-jdbc）
+  jdbc:
+    # SQL 防火墙：拦截 DDL（DROP/TRUNCATE）、无 WHERE 写操作、多语句注入、GRANT/REVOKE
+    sql-firewall:
+      enabled: true
+      block-drop-table: true
+      block-truncate: true
+      block-delete-without-where: true
+      block-update-without-where: true
+      block-multi-statement: true
+      block-permission-ops: true
+    # 分页安全上限：防止 pageSize=999999 导致全表扫描 OOM
+    pagination:
+      max-limit: 500
+    # P1: 慢 SQL 全局检测
+    slow-sql:
+      enabled: true
+      threshold-millis: 500
+      alert-threshold-millis: 2000
+    # P2: SQL 审计（写操作落盘备查）
+    sql-audit:
+      enabled: true
+      audit-select: false
+      audit-insert: true
+      audit-update: true
+      audit-delete: true
+      log-parameters: true
+      max-parameter-length: 500

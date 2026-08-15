@@ -17,6 +17,7 @@ import org.springframework.web.server.ServerWebExchange;
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.gateway.config.CachedJwtValidator;
 import com.njydsz.gateway.config.GatewayConstants;
+import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.config.InternalHeaderSigner;
 import com.njydsz.gateway.config.PathGuard;
 import com.njydsz.common.core.trace.TraceIdGenerator;
@@ -323,6 +324,6 @@ public class WebSocketAuthFilter implements GlobalFilter, Ordered {
      */
     @Override
     public int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE + 8;
+        return GatewayFilterOrder.WEBSOCKET_AUTH.getOrder();
     }
 }

@@ -3,6 +3,7 @@ package com.njydsz.gateway.filter;
 
 import com.njydsz.common.json.YdszJson;
 
+import com.njydsz.gateway.config.GatewayFilterOrder;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -159,6 +160,6 @@ public class PayloadValidationFilter implements GlobalFilter, Ordered {
      */
     @Override
     public int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE + 3;
+        return GatewayFilterOrder.PAYLOAD_VALIDATION.getOrder();
     }
 }

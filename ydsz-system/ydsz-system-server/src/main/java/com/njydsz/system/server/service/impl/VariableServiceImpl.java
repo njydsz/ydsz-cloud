@@ -17,6 +17,7 @@ import com.njydsz.system.domain.dto.VariableDTO;
 import com.njydsz.system.domain.entity.Variable;
 import com.njydsz.system.domain.vo.VariableVO;
 import com.njydsz.system.infra.mapper.VariableMapper;
+import com.njydsz.system.server.cache.SystemCacheKeys;
 import com.njydsz.system.server.config.SystemProperties;
 import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.service.VariableService;
@@ -154,7 +155,7 @@ public class VariableServiceImpl implements VariableService {
     public String getVariableValue(String variableKey) {
         long start = System.nanoTime();
         try {
-            String cacheKey = CACHE_KEY_PREFIX + variableKey;
+            String cacheKey = SystemCacheKeys.of(CACHE_KEY_PREFIX, variableKey);
             String cached = stringOps.get(cacheKey, String.class);
             if (cached != null) {
                 if (NULL_SENTINEL.equals(cached)) {
@@ -311,7 +312,7 @@ public class VariableServiceImpl implements VariableService {
      */
     private void evictCache(String variableKey) {
         if (variableKey != null) {
-            stringOps.del(CACHE_KEY_PREFIX + variableKey);
+            stringOps.del(SystemCacheKeys.of(CACHE_KEY_PREFIX, variableKey));
         }
     }
 

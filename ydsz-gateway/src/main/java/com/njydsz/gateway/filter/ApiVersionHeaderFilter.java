@@ -14,6 +14,8 @@ import org.springframework.web.server.ServerWebExchange;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
+import com.njydsz.gateway.config.GatewayFilterOrder;
+
 /**
  * API 版本响应头注入过滤器（P1-3 完善）
  *
@@ -83,6 +85,6 @@ public class ApiVersionHeaderFilter implements GlobalFilter, Ordered {
      */
     @Override
     public int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE + 200;
+        return GatewayFilterOrder.API_VERSION_HEADER.getOrder();
     }
 }

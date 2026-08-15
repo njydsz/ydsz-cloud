@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import com.njydsz.common.json.YdszJson;
 
+import com.njydsz.gateway.config.GatewayFilterOrder;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -484,6 +485,6 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
      */
     @Override
     public int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE + 10;
+        return GatewayFilterOrder.AUTH.getOrder();
     }
 }
