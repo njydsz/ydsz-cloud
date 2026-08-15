@@ -8,6 +8,8 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import com.njydsz.common.util.api.Experimental;
+
 /**
  * AES-GCM 加密提供者——实现 {@link CryptoProvider} 统一契约。
  *
@@ -22,6 +24,7 @@ import javax.crypto.spec.SecretKeySpec;
  * @author ydsz-team
  * @since 3.0.0
  */
+@Experimental("SPI 仍在试用期；AAD 与密钥长度的默认行为可能调整")
 public final class AesGcmCryptoProvider implements CryptoProvider {
 
     private static final String ALGORITHM = "AES";

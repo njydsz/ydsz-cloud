@@ -7,6 +7,9 @@ import java.util.HexFormat;
 import java.util.Objects;
 import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * 业务加密工具类——项目中所有加密操作的唯一入口。
  *
@@ -19,8 +22,12 @@ import java.util.Set;
  * }</pre>
  *
  * <h2>算法选择</h2>
- * <p>通过系统属性 {@code crypto.algorithm} 配置，默认 AES-256-GCM。
- * 国密合规系统可配置为 {@code SM4-GCM}。
+ * <p>优先级由低到高：</p>
+ * <ol>
+ *   <li>注册表默认值：{@code AES-256-GCM}</li>
+ *   <li>Spring 配置：{@code ydsz.util.crypto.default-algorithm}（通过 {@link CryptoAutoConfiguration} 注入）</li>
+ *   <li>系统属性：{@code crypto.algorithm}（最高优先级，用于覆盖）</li>
+ * </ol>
  *
  * <h2>扩展能力</h2>
  * <p>支持 AAD（Additional Authenticated Data）的 AEAD 加密，
@@ -30,15 +37,49 @@ import java.util.Set;
  * @since 3.0.0
  * @see CryptoProvider
  * @see CryptoProviderRegistry
+ * @see CryptoAutoConfiguration
  */
 public final class CryptoUtils {
 
+    private static final Logger log = LoggerFactory.getLogger(CryptoUtils.class);
+
     private static final HexFormat HEX = HexFormat.of();
+
+    /**
+     * 系统属性 key：通过 {@code -Dcrypto.algorithm=SM4-GCM} 指定默认算法。
+     */
+    public static final String ALGORITHM_SYSTEM_PROPERTY = "crypto.algorithm";
+
+    /**
+     * Spring 配置前缀：{@code ydsz.util.crypto}。
+     */
+    public static final String CONFIG_PREFIX = "ydsz.util.crypto";
 
     private static volatile CryptoProvider defaultProvider;
 
+    /** 由 CryptoAutoConfiguration 注入的算法标识（Spring 配置桥接） */
+    private static volatile String injectedAlgorithm;
+
     private CryptoUtils() {
         throw new UnsupportedOperationException("CryptoUtils is a utility class");
+    }
+
+    /**
+     * 设置默认算法标识（由 {@link CryptoAutoConfiguration} 在容器初始化时调用）。
+     *
+     * <p>注入后会清空已有缓存，下次 {@link #provider()} 重新解析。仅允许注入一次，
+     * 重复调用将被忽略并打印 warn 日志。</p>
+     *
+     * @param algorithm 算法标识（如 {@code "SM4-GCM"}）
+     */
+    public static void setDefaultAlgorithm(String algorithm) {
+        if (injectedAlgorithm != null) {
+            log.warn("CryptoUtils.setDefaultAlgorithm 已被调用过，忽略重复注入，保持原值: {}", injectedAlgorithm);
+            return;
+        }
+        injectedAlgorithm = algorithm;
+        defaultProvider = null;
+        log.info("CryptoUtils 默认算法已设置为: {}", algorithm);
     }
 
     // ==================== 字符串加密（Base64 编码） ====================
@@ -170,13 +211,22 @@ public final class CryptoUtils {
     /**
      * 获取当前默认算法提供者。
      *
+     * <p>解析优先级：系统属性 {@code crypto.algorithm} 优先，未设置时使用 {@link CryptoAutoConfiguration} 注入值。</p>
+     *
      * @return 默认 CryptoProvider
      */
     public static CryptoProvider provider() {
-        if (defaultProvider == null) {
-            String algo = System.getProperty("crypto.algorithm", "AES-256-GCM");
-            defaultProvider = CryptoProviderRegistry.get(algo);
+        if (defaultProvider != null) {
+            return defaultProvider;
         }
+        String algo = System.getProperty(ALGORITHM_SYSTEM_PROPERTY);
+        if (algo == null) {
+            algo = injectedAlgorithm;
+        }
+        if (algo == null) {
+            algo = "AES-256-GCM";
+        }
+        defaultProvider = CryptoProviderRegistry.get(algo);
         return defaultProvider;
     }
 

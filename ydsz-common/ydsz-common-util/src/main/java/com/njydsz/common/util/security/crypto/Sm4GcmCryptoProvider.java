@@ -11,6 +11,8 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import com.njydsz.common.util.api.Experimental;
+
 /**
  * SM4-GCM 加密提供者——国密合规场景使用。
  *
@@ -24,6 +26,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
  * @author ydsz-team
  * @since 3.0.0
  */
+@Experimental("SPI 仍在试用期；AAD 与密钥长度的默认行为可能调整")
 public final class Sm4GcmCryptoProvider implements CryptoProvider {
 
     private static final String ALGORITHM = "SM4";
