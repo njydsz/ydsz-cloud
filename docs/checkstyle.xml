@@ -353,6 +353,36 @@
             <property name="checkEmptyJavadoc" value="true"/>
         </module>
 
+        <!-- ============================================ -->
+        <!-- 10. ydsz-common-lock 幂等键命名规范           -->
+        <!-- ============================================ -->
+
+        <!-- @Idempotent 键名正则校验：静态键（非 SpEL）需匹配 {namespace}:{domain}:{resource}:{action} 格式，不以 :lock 结尾 -->
+        <module name="RegexpSinglelineJava">
+            <property name="format"
+                      value="@Idempotent\s*\(\s*key\s*=&quot;(?!.*\#)(?!.*\$\{)(?!ydsz:)(?![a-z]+:[\w]+:[\w]+:[\w]+&quot;)(?![a-z]+:[\w]+:[\w]+:[\w]+:[\w]+&quot;)[^&quot;]+&quot;"/>
+            <property name="ignoreComments" value="true"/>
+            <property name="message"
+                      value="@Idempotent 键名不符合命名规范：应使用 `ydsz:{domain}:{resource}:{action}` 格式（如 ydsz:workflow:attachment:delete），禁止 :lock 后缀与缩写类名。参考 common-lock README「命名规范」章节"/>
+        </module>
+
+        <!-- 禁止 @Idempotent 键名以 :lock 结尾（SpEL 表达式豁免） -->
+        <module name="RegexpSinglelineJava">
+            <property name="format"
+                      value="@Idempotent\s*\(\s*key\s*=&quot;(?!.*\#)(?!.*\$\{)[^&quot;]*:lock\s*&quot;"/>
+            <property name="ignoreComments" value="true"/>
+            <property name="message"
+                      value="@Idempotent 键名禁止以 `:lock` 结尾，`@Idempotent` 本身已表达幂等锁语义，后缀冗余。参考 common-lock README「命名规范」章节"/>
+        </module>
+
+        <!-- 禁止 @Idempotent 键名包含 Controller 类名（应使用领域资源名） -->
+        <module name="RegexpSinglelineJava">
+            <property name="format"
+                      value="@Idempotent\s*\(\s*key\s*=&quot;(?!.*\#)(?!.*\$\{)[^&quot;]*Controller[^&quot;]*&quot;"/>
+            <property name="ignoreComments" value="true"/>
+            <property name="message"
+                      value="@Idempotent 键名禁止包含 `Controller` 类名，应使用领域资源名（如 `attachment` 而非 `FlowAttachmentController`）。参考 common-lock README「命名规范」章节"/>
+        </module>
 
     </module>
 </module>
