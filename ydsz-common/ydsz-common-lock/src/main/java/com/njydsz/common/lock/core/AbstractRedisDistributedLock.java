@@ -559,9 +559,6 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
      *
      * <p><b>全抖动策略（Full Jitter）：</b>来自 AWS 架构博客推荐的指数退避 + 随机抖动算法，
      * 可在高并发场景下有效分散同步请求，避免"惊群效应"。
-     * <pre>
-     * sleep = randomBetween(0, min(maxBackoff, base * 2^attempt))
-     * </pre>
      *
      * @param lockKey       锁的键
      * @param remainingWait 剩余可等待时间（纳秒）
@@ -580,11 +577,11 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
             return;
         }
         // 全抖动随机退避：在 [0, currentBackoff] 范围内随机选取等待时间
-        long sleepMillis = Math.min(TimeUnit.NANOSECONDS.toMillis(remainingWait), currentBackoff);
-        if (sleepMillis > 0) {
-            long jitterSleep = BACKOFF_RANDOM.nextLong(sleepMillis + 1);
+        long remainingMillis = TimeUnit.NANOSECONDS.toMillis(remainingWait);
+        long jitterSleep = BACKOFF_POLICY.calculateSleepMillis(remainingMillis, currentBackoff);
+        if (jitterSleep > 0) {
             log.debug("[ydsz-lock] 全抖动退避等待 | lockKey={} | sleepMs={} | maxBackoff={}",
-                    lockKey, jitterSleep, sleepMillis);
+                    lockKey, jitterSleep, remainingMillis);
             Thread.sleep(jitterSleep);
         }
     }
