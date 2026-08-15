@@ -9,22 +9,22 @@ import java.util.concurrent.Executor;
 import com.njydsz.common.audit.domain.AuditLog;
 
 /**
- * 基于 {@link AuditStorage} 的默认审计记录器实现
+ * 基于 {@link AuditWriter} 的默认审计记录器实现
  * <p>
- * 将审计记录委托给底层的 {@link AuditStorage}，支持同步、异步、批量三种记录方式。
+ * 将审计记录委托给底层的 {@link AuditWriter}，支持同步、异步、批量三种记录方式。
  * 当 {@code executor} 为 null 时，异步模式使用 {@link CompletableFuture} 的默认线程池
  * （ForkJoinPool.commonPool()），建议生产环境显式注入专用线程池。
  * </p>
  *
- * <p><b>线程安全：</b>本类无状态，{@link AuditStorage} 实现需自身保证线程安全。</p>
+ * <p><b>线程安全：</b>本类无状态，{@link AuditWriter} 实现需自身保证线程安全。</p>
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 public class DefaultAuditRecorder implements AuditRecorder {
 
-    /** 审计日志存储实现 */
-    private final AuditStorage storage;
+    /** 审计日志写入器实现 */
+    private final AuditWriter writer;
 
     /** 异步执行器（可为 null，为 null 时使用 CompletableFuture 默认线程池） */
     private final Executor executor;
@@ -32,20 +32,20 @@ public class DefaultAuditRecorder implements AuditRecorder {
     /**
      * 构造默认审计记录器（同步模式）
      *
-     * @param storage 审计日志存储实现
+     * @param writer 审计日志写入器实现
      */
-    public DefaultAuditRecorder(AuditStorage storage) {
-        this(storage, null);
+    public DefaultAuditRecorder(AuditWriter writer) {
+        this(writer, null);
     }
 
     /**
      * 构造默认审计记录器（支持异步执行器）
      *
-     * @param storage  审计日志存储实现
+     * @param writer  审计日志写入器实现
      * @param executor 异步执行器（可为 null，为 null 时使用 {@link CompletableFuture} 默认线程池）
      */
-    public DefaultAuditRecorder(AuditStorage storage, Executor executor) {
-        this.storage = Objects.requireNonNull(storage, "AuditStorage must not be null");
+    public DefaultAuditRecorder(AuditWriter writer, Executor executor) {
+        this.writer = Objects.requireNonNull(writer, "AuditWriter must not be null");
         this.executor = executor;
     }
 
@@ -58,7 +58,7 @@ public class DefaultAuditRecorder implements AuditRecorder {
     @Override
     public void record(AuditLog auditLog) {
         Objects.requireNonNull(auditLog, "AuditLog must not be null");
-        storage.save(auditLog);
+        writer.write(auditLog);
     }
 
     /**
@@ -71,9 +71,9 @@ public class DefaultAuditRecorder implements AuditRecorder {
     public void recordAsync(AuditLog auditLog) {
         Objects.requireNonNull(auditLog, "AuditLog must not be null");
         if (executor != null) {
-            CompletableFuture.runAsync(() -> storage.save(auditLog), executor);
+            CompletableFuture.runAsync(() -> writer.write(auditLog), executor);
         } else {
-            CompletableFuture.runAsync(() -> storage.save(auditLog));
+            CompletableFuture.runAsync(() -> writer.write(auditLog));
         }
     }
 
@@ -89,7 +89,7 @@ public class DefaultAuditRecorder implements AuditRecorder {
         if (auditLogs.isEmpty()) {
             return;
         }
-        storage.saveBatch(Collections.unmodifiableList(auditLogs));
+        writer.writeBatch(Collections.unmodifiableList(auditLogs));
     }
 
     /**

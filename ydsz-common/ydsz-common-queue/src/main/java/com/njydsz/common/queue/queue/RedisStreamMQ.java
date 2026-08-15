@@ -49,7 +49,7 @@ public class RedisStreamMQ extends AbstractMessageQueue {
         this.redisTemplate = redisTemplate;
         this.consumerExecutor = consumerExecutor;
         log.info("[RedisStreamMQ] 初始化成功（复用 ydsz-common-redis 连接），消费者组: {}",
-                config.resolvedStreamGroup());
+                config.getStreamGroup());
     }
 
     @Override

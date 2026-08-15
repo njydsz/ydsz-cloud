@@ -67,7 +67,7 @@ public class DeadLetterRetryScheduler implements DisposableBean {
      * 以便在每次执行后动态计算带抖动的下次执行时间。
      */
     private void scheduleNext() {
-        long interval = queueProperties.resolvedDeadLetterRetryInterval();
+        long interval = queueProperties.getDeadLetterRetryInterval();
         long jitter = calculateJitter(interval);
         long delay = interval + jitter;
 
@@ -115,7 +115,7 @@ public class DeadLetterRetryScheduler implements DisposableBean {
      * 定时扫描并重试死信队列中的消息
      */
     public void scanAndRetry() {
-        if (!queueProperties.resolvedDeadLetterRetryEnabled()) {
+        if (!queueProperties.isDeadLetterRetryEnabled()) {
             log.debug("[DeadLetterRetryScheduler] 死信队列自动重试已禁用，跳过扫描");
             return;
         }

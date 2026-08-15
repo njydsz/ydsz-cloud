@@ -1,7 +1,6 @@
 package com.njydsz.common.event.model;
 
 import java.time.Instant;
-import java.util.Map;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -15,35 +14,36 @@ import lombok.ToString;
  *
  * <p>核心字段：
  * <ul>
- *   <li>{@code id} - 雪花 ID / UUID，全局唯一</li>
- *   <li>{@code aggregateId} - 聚合根 ID（如订单号）</li>
+ *   <li>{@code id} - 雪花 ID，全局唯一</li>
  *   <li>{@code aggregateType} - 聚合根类型（如 "Order"）</li>
+ *   <li>{@code aggregateId} - 聚合根 ID（如订单号）</li>
  *   <li>{@code eventType} - 事件类型（如 "OrderCreated"）</li>
  *   <li>{@code payload} - 事件负载（JSON 字符串）</li>
- *   <li>{@code headers} - 扩展头（可选，用于路由 / 追踪）</li>
  *   <li>{@code status} - 投递状态</li>
- *   <li>{@code retryCount} - 重试次数</li>
+ *   <li>{@code retryCount} - 当前重试次数</li>
+ *   <li>{@code maxRetries} - 最大重试次数</li>
  *   <li>{@code nextRetryAt} - 下次重试时间（指数退避）</li>
  *   <li>{@code tenantId} - 租户 ID（多租户隔离）</li>
- *   <li>{@code deduplicationId} - 幂等去重 ID（下游消费端去重）</li>
- *   <li>{@code schemaVersion} - 事件 Schema 版本号（如 "v1.0.0"）</li>
- *   <li>{@code contentType} - 内容类型（如 "application/vnd.ydsz.order.v1+json"）</li>
- *   <li>{@code priority} - 优先级（0-9，9 最高，null 表示未设置由 OutboxService 填充默认值）</li>
+ *   <li>{@code deduplicationId} - 幂等去重 ID</li>
  *   <li>{@code traceId} - 链路追踪 ID</li>
+ *   <li>{@code createdAt} - 创建时间</li>
+ *   <li>{@code updatedAt} - 最后更新时间</li>
+ *   <li>{@code sentAt} - 投递成功时间</li>
+ *   <li>{@code errorMessage} - 错误信息</li>
  * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @since 1.7.0 精简字段：移除 headers/schemaVersion/contentType/priority 四个未验证字段，
+ *              移除非约定的 mutable state 方法（markAsProcessing/Sent/Failed）和 fromDraft 工厂方法，
+ *              实体回归纯 POJO + Builder 模式
  */
 @Getter
 @Builder
 @ToString
 public class OutboxMessage {
 
-    /** 默认优先级 */
-    public static final int DEFAULT_PRIORITY = 5;
-
-    /** 主键 ID（UUID） */
+    /** 主键 ID（雪花 ID） */
     private final String id;
 
     /** 聚合根 ID（如订单号） */
@@ -58,32 +58,29 @@ public class OutboxMessage {
     /** 事件负载（JSON 字符串） */
     private final String payload;
 
-    /** 扩展头（可选，用于路由/追踪） */
-    private final Map<String, String> headers;
-
     /** 投递状态 */
-    private OutboxStatus status;
+    private final OutboxStatus status;
 
     /** 重试次数 */
-    private int retryCount;
+    private final int retryCount;
 
     /** 最大重试次数 */
     private final int maxRetries;
 
     /** 下次重试时间（指数退避） */
-    private Instant nextRetryAt;
+    private final Instant nextRetryAt;
 
     /** 创建时间 */
     private final Instant createdAt;
 
     /** 最后更新时间 */
-    private Instant updatedAt;
+    private final Instant updatedAt;
 
     /** 投递成功时间 */
-    private Instant sentAt;
+    private final Instant sentAt;
 
     /** 错误信息（最后一次失败的异常消息） */
-    private String errorMessage;
+    private final String errorMessage;
 
     /** 租户 ID（多租户隔离） */
     private final String tenantId;
@@ -91,102 +88,6 @@ public class OutboxMessage {
     /** 幂等去重 ID（下游消费端去重） */
     private final String deduplicationId;
 
-    /** 事件 Schema 版本号（如 "v1.0.0"） */
-    private final String schemaVersion;
-
-    /** 内容类型（如 "application/vnd.ydsz.order.v1+json"） */
-    private final String contentType;
-
-    /**
-     * 优先级（0-9，9 最高）
-     *
-     * <p>使用 {@code Integer} 包装类型，{@code null} 表示未设置，
-     * 由 {@code OutboxService} 填充配置的默认优先级。
-     * 这样可以正确区分"用户显式设置 0"和"未设置"两种情况。
-     */
-    private final Integer priority;
-
     /** 链路追踪 ID */
     private final String traceId;
-
-    /**
-     * 从 Draft 创建 OutboxMessage 实体（添加系统管理字段）
-     *
-     * <p>工厂方法，用于将业务输入的 {@link OutboxMessageDraft} 转换为完整的持久化实体。
-     *
-     * @param draft       业务输入的 Draft（不可为 null）
-     * @param id           雪花 ID
-     * @param tenantId     租户 ID（可为 null）
-     * @param traceId      链路追踪 ID（可为 null）
-     * @param maxRetries   最大重试次数
-     * @param defaultPriority 默认优先级（当 draft.priority 为 null 时使用）
-     * @return OutboxMessage 实体
-     * @since 1.6.0
-     */
-    public static OutboxMessage fromDraft(OutboxMessageDraft draft, String id,
-                                           String tenantId, String traceId,
-                                           int maxRetries, int defaultPriority) {
-        Instant now = Instant.now();
-        return OutboxMessage.builder()
-                .id(id)
-                .aggregateType(draft.getAggregateType())
-                .aggregateId(draft.getAggregateId())
-                .eventType(draft.getEventType())
-                .payload(draft.getPayload())
-                .headers(draft.getHeaders())
-                .deduplicationId(draft.getDeduplicationId())
-                .schemaVersion(draft.getSchemaVersion())
-                .contentType(draft.getContentType())
-                .priority(draft.getPriority() != null ? draft.getPriority() : defaultPriority)
-                .status(OutboxStatus.PENDING)
-                .retryCount(0)
-                .maxRetries(maxRetries)
-                .nextRetryAt(now)
-                .tenantId(tenantId)
-                .traceId(traceId)
-                .createdAt(now)
-                .updatedAt(now)
-                .build();
-    }
-
-    /**
-     * 标记为处理中
-     *
-     * <p>将状态从 PENDING 改为 PROCESSING，表示已被某个实例 claim，正在投递。
-     */
-    public void markAsProcessing() {
-        this.status = OutboxStatus.PROCESSING;
-        this.updatedAt = Instant.now();
-    }
-
-    /**
-     * 标记为已投递成功
-     *
-     * <p>设置状态为 SENT，记录投递成功时间，清空错误信息。
-     */
-    public void markAsSent() {
-        this.status = OutboxStatus.SENT;
-        this.sentAt = Instant.now();
-        this.updatedAt = Instant.now();
-        this.errorMessage = null;
-    }
-
-    /**
-     * 标记为投递失败，增加重试计数并按指数退避策略设置下次重试时间
-     *
-     * <p>当 {@code retryCount} 达到 {@code maxRetries} 时，状态流转为 {@link OutboxStatus#DEAD_LETTER}；
-     * 否则状态回退为 {@link OutboxStatus#PENDING} 等待下次调度。
-     *
-     * @param errorMessage   失败错误信息
-     * @param backoffSeconds 退避秒数（下次重试时间 = 当前时间 + backoffSeconds）
-     */
-    public void markAsFailed(String errorMessage, int backoffSeconds) {
-        this.retryCount++;
-        this.errorMessage = errorMessage;
-        this.nextRetryAt = Instant.now().plusSeconds(backoffSeconds);
-        this.updatedAt = Instant.now();
-        this.status = this.retryCount >= this.maxRetries
-                ? OutboxStatus.DEAD_LETTER
-                : OutboxStatus.PENDING;
-    }
 }

@@ -14,9 +14,13 @@ import com.njydsz.common.audit.domain.AuditLog;
  *
  * <p>业务方可实现该接口对接 ELK、消息队列、远程审计中心等自定义存储后端。</p>
  *
+ * <p><b>注意：</b>该接口已迁移至 {@link AuditWriter}，推荐使用 {@code AuditWriter} 替代本接口。</p>
+ *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 使用 {@link AuditWriter} 替代，将在 2.0.0 版本移除
  */
+@Deprecated
 public interface AuditStorage {
 
     /**

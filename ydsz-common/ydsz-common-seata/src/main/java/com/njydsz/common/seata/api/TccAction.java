@@ -10,24 +10,27 @@ package com.njydsz.common.seata.api;
  *   <li>{@link #cancelAction} - 取消预留（如释放冻结的库存、释放冻结的余额）</li>
  * </ul>
  *
+ * <p><b>幂等设计</b>：Confirm 和 Cancel 方法必须支持幂等调用，
+ * 框架会在重试场景下多次调用同一方法。
+ *
  * <p>使用示例：
  * <pre>{@code
- * @Component
- * public class OrderTccAction implements TccAction<OrderResult> {
- *     @Override
+ * &#64;Component
+ * public class OrderTccAction implements TccAction&lt;OrderResult&gt; {
+ *     &#64;Override
  *     public OrderResult tryAction(TccContext context) {
  *         // 冻结库存
  *         inventoryMapper.freeze(context.get("skuId"), context.get("qty"));
  *         return new OrderResult(context.getXid());
  *     }
  *
- *     @Override
+ *     &#64;Override
  *     public void confirmAction(TccContext context) {
  *         // 扣减冻结的库存
  *         inventoryMapper.deductFrozen(context.get("skuId"), context.get("qty"));
  *     }
  *
- *     @Override
+ *     &#64;Override
  *     public void cancelAction(TccContext context) {
  *         // 释放冻结的库存
  *         inventoryMapper.unfreeze(context.get("skuId"), context.get("qty"));
@@ -35,6 +38,7 @@ package com.njydsz.common.seata.api;
  * }
  * }</pre>
  *
+ * @param <T> Try 阶段的返回值类型
  * @author ydsz-team
  * @since 1.0.0
  */

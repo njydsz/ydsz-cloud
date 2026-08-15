@@ -1,7 +1,12 @@
 package com.njydsz.common.safe.alert;
 
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
@@ -36,6 +41,11 @@ import com.njydsz.common.safe.ip.IpAccessService;
  *       window-seconds: 60
  * }</pre>
  *
+ * <p><b>异步解耦设计：</b>
+ * 为避免事件处理链中的循环依赖（事件聚合器 → IP 封禁 → 可能的后续事件），
+ * 自动封禁操作通过 {@link BlockingQueue} 异步投递到单线程消费者执行，
+ * 事件监听线程仅负责入队，不直接调用 {@link IpAccessService}。
+ *
  * @author ydsz-team
  * @since 1.0.0
  * @see SecurityEvent
@@ -45,6 +55,9 @@ public class SecurityEventAggregator {
 
     private static final Logger log = LoggerFactory.getLogger(SecurityEventAggregator.class);
 
+    /** 封禁命令队列容量 */
+    private static final int BLOCK_QUEUE_CAPACITY = 256;
+
     private final IpAccessService ipAccessService;
     private final boolean enabled;
     private final int threshold;
@@ -53,6 +66,17 @@ public class SecurityEventAggregator {
     private final ConcurrentHashMap<String, ConcurrentLinkedDeque<Long>> ipEventTimestamps = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Long> blockedIpMap = new ConcurrentHashMap<>();
     private final AtomicLong autoBlockedCount = new AtomicLong(0);
+
+    /** 异步封禁命令队列 */
+    private final BlockingQueue<BlockCommand> blockQueue = new LinkedBlockingQueue<>(BLOCK_QUEUE_CAPACITY);
+    /** 封禁消费者单线程池 */
+    private final ExecutorService blockConsumerExecutor;
+
+    /**
+     * 封禁命令（内部模型）
+     */
+    private record BlockCommand(String ip, long blockSeconds) {
+    }
 
     /**
      * @param ipAccessService IP 访问控制服务（可为 null，未启用 IP 访问控制时降级为仅日志）
@@ -69,8 +93,48 @@ public class SecurityEventAggregator {
         this.threshold = threshold;
         this.windowSeconds = windowSeconds;
 
+        this.blockConsumerExecutor = Executors.newSingleThreadExecutor(r -> {
+            Thread t = new Thread(r, "safe-auto-block-consumer");
+            t.setDaemon(true);
+            return t;
+        });
+        this.blockConsumerExecutor.submit(this::consumeBlockCommands);
+
         log.info("安全事件自动响应聚合器初始化: enabled={}, threshold={}, window={}s",
                 enabled, threshold, windowSeconds);
+    }
+
+    /**
+     * 封禁命令消费循环
+     */
+    private void consumeBlockCommands() {
+        while (!Thread.currentThread().isInterrupted()) {
+            try {
+                BlockCommand command = blockQueue.poll(1, TimeUnit.SECONDS);
+                if (command != null) {
+                    executeBlock(command);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            } catch (Exception e) {
+                log.error("【安全事件自动响应】封禁命令消费异常: {}", e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * 执行 IP 封禁
+     */
+    private void executeBlock(BlockCommand command) {
+        if (ipAccessService == null) {
+            return;
+        }
+        try {
+            ipAccessService.block(command.ip(), command.blockSeconds());
+        } catch (Exception e) {
+            log.error("【安全事件自动响应】IP 自动封禁失败: ip={}, error={}", command.ip(), e.getMessage());
+        }
     }
 
     /**

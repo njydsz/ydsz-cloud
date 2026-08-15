@@ -15,22 +15,19 @@ import org.slf4j.LoggerFactory;
  * <p>在查询 Redis 黑名单之前，先通过本地 Bloom Filter 快速判断 token 是否可能被加入黑名单。
  * Bloom Filter 误判率约 0.01%，可过滤 99.99% 的非黑名单 token 的 Redis 查询。
  *
- * <p><b>工作原理：</b>
- * <ul>
- *   <li>{@code addToBlacklist(token)} 被调用时，同时将 token 的 SHA-256 摘要加入 Bloom Filter</li>
- *   <li>{@code mightBeBlacklisted(token)} 返回 false 时，token 一定不在黑名单中（无需查 Redis）</li>
- *   <li>{@code mightBeBlacklisted(token)} 返回 true 时，token 可能在黑名单中（需进一步查 Redis）</li>
- * </ul>
- *
- * <p><b>容量估算：</b>100 万 token × 10 bit/entry ≈ 1.2 MB 内存，误判率约 0.1%。
+ * <p><b>废弃原因：</b>布隆过滤器在 Token 黑名单场景收益有限。黑名单 Token 是少数派，
+ * Redis 对 key exists 的判断本身就是 O(1)，自建布隆过滤器无法动态扩容，超出容量后误判率上升，
+ * 且应用重启后需要重建。如需减少 Redis 查询，建议使用 Redis 内置的 Bloom Filter 模块。
  *
  * <p>使用 Java 内置的 BitSet 实现，无需引入 Guava 依赖。
  * 采用双哈希策略（Double Hashing）减少哈希函数数量。
  *
  * @author ydsz-team
  * @since 1.0.0
-
+ * @deprecated 自 3.0.0 起标记废弃，计划 4.0.0 移除。
+ *             如需布隆过滤器能力，建议使用 Redis 内置 Bloom Filter 模块。
  */
+@Deprecated(forRemoval = true, since = "3.0.0")
 public class TokenBlacklistBloomFilter {
 
     private static final Logger log = LoggerFactory.getLogger(TokenBlacklistBloomFilter.class);
