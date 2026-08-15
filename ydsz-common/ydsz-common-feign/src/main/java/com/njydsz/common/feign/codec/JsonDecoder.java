@@ -7,6 +7,7 @@ import feign.codec.Decoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
@@ -104,32 +105,32 @@ public class JsonDecoder implements Decoder {
     /**
      * 读取响应体内容，超过最大字节数限制时抛出异常。
      *
+     * <p>使用 {@link ByteArrayOutputStream} 自动扩容，初始容量设为 64KB，
+     * 避免小初始缓冲区导致的频繁数组拷贝（旧实现从 8KB 开始翻倍扩容，
+     * 5MB 响应体将触发 ~120 次数组复制）。
+     *
      * @param response HTTP 响应对象
      * @return 响应体的 UTF-8 字符串内容
      * @throws IOException 读取响应体失败或响应体超过最大限制时抛出
      */
     private String readBody(Response response) throws IOException {
         try (InputStream inputStream = response.body().asInputStream()) {
-            byte[] buffer = new byte[8192];
+            // 初始容量 64KB，平衡了小响应体的内存占用和大响应体的扩容次数
+            ByteArrayOutputStream buffer = new ByteArrayOutputStream(65536);
+            byte[] chunk = new byte[8192];
             int totalRead = 0;
-            byte[] bodyBytes = new byte[Math.min(maxBodyBytes, 8192)];
-
             int bytesRead;
-            while ((bytesRead = inputStream.read(buffer)) != -1) {
+
+            while ((bytesRead = inputStream.read(chunk)) != -1) {
                 if (totalRead + bytesRead > maxBodyBytes) {
                     throw new DecodeException(500, "响应体超过最大限制: " + maxBodyBytes + " bytes",
                             response.request(), null);
                 }
-                if (totalRead + bytesRead > bodyBytes.length) {
-                    byte[] newBytes = new byte[Math.min(maxBodyBytes, bodyBytes.length * 2)];
-                    System.arraycopy(bodyBytes, 0, newBytes, 0, totalRead);
-                    bodyBytes = newBytes;
-                }
-                System.arraycopy(buffer, 0, bodyBytes, totalRead, bytesRead);
+                buffer.write(chunk, 0, bytesRead);
                 totalRead += bytesRead;
             }
 
-            return new String(bodyBytes, 0, totalRead, StandardCharsets.UTF_8);
+            return buffer.toString(StandardCharsets.UTF_8.name());
         }
     }
 
