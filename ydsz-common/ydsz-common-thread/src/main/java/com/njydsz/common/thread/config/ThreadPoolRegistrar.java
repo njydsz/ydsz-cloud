@@ -187,6 +187,8 @@ public class ThreadPoolRegistrar implements BeanDefinitionRegistryPostProcessor,
                     .addConstructorArgReference(beanName)
                     .addConstructorArgValue(name)
                     .addConstructorArgValue(config.getMetricPrefix())
+                    .addConstructorArgValue(null) // tags (保留扩展)
+                    .addConstructorArgValue(config.isEnableDetailedMetrics())
                     .setRole(BeanDefinition.ROLE_INFRASTRUCTURE)
                     .getBeanDefinition();
             registry.registerBeanDefinition(metricsBeanName, metricsBd);

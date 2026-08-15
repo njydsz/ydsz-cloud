@@ -17,6 +17,7 @@ import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import com.njydsz.common.jdbc.handler.FieldFillHandler;
+import com.njydsz.common.jdbc.monitor.SqlAstCache;
 
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
@@ -58,13 +59,14 @@ public class CombinedFieldFillInterceptor extends CachingJsqlParserSupport imple
      */
     private final List<FieldFillHandler> handlers;
 
-    public CombinedFieldFillInterceptor(List<FieldFillHandler> handlers) {
-        if (handlers == null || handlers.isEmpty()) {
-            this.handlers = Collections.emptyList();
-        } else {
-            this.handlers = Collections.unmodifiableList(new ArrayList<>(handlers));
-        }
+public CombinedFieldFillInterceptor(SqlAstCache sqlAstCache, List<FieldFillHandler> handlers) {
+    super(sqlAstCache);
+    if (handlers == null || handlers.isEmpty()) {
+        this.handlers = Collections.emptyList();
+    } else {
+        this.handlers = Collections.unmodifiableList(new ArrayList<>(handlers));
     }
+}
 
     @Override
     public void beforePrepare(StatementHandler sh, Connection connection, Integer transactionTimeout) {

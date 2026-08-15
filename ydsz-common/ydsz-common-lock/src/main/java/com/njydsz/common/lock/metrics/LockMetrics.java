@@ -140,16 +140,13 @@ public class LockMetrics {
     // --- 新增指标采集方法 ---
 
     /**
-     * 记录锁竞争次数（带锁类型和锁键标签）
+     * 记录锁竞争次数
      *
      * @param lockType 锁类型
      * @param lockKey  锁键
      */
     public void recordCompetition(String lockType, String lockKey) {
         competitionCount.increment();
-        if (micrometerCollector != null) {
-            micrometerCollector.recordCompetition(lockType, lockKey);
-        }
     }
 
     /**
@@ -213,9 +210,6 @@ public class LockMetrics {
      */
     public void recordIdempotentHit() {
         idempotentHitCount.increment();
-        if (micrometerCollector != null) {
-            micrometerCollector.recordIdempotentHit();
-        }
     }
 
     /**
@@ -226,20 +220,8 @@ public class LockMetrics {
      *
      * @param meterRegistry Micrometer MeterRegistry 实例
      */
-    public void bindMeterRegistry(Object meterRegistry) {
-        this.micrometerCollector = new LockMicrometerCollector(
-                (MeterRegistry) meterRegistry, LockKeyCategoryExtractor.DEFAULT);
-    }
-
-    /**
-     * 绑定 Micrometer MeterRegistry（带自定义类别提取器）
-     *
-     * @param meterRegistry       Micrometer MeterRegistry 实例
-     * @param categoryExtractor   锁键分类提取器
-     */
-    public void bindMeterRegistry(Object meterRegistry, LockKeyCategoryExtractor categoryExtractor) {
-        this.micrometerCollector = new LockMicrometerCollector(
-                (MeterRegistry) meterRegistry, categoryExtractor);
+    public void bindMeterRegistry(MeterRegistry meterRegistry) {
+        this.micrometerCollector = new LockMicrometerCollector(meterRegistry);
     }
 
     /**

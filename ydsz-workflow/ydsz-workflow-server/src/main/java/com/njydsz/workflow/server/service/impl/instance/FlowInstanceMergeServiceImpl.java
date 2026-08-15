@@ -10,7 +10,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.common.redis.service.RedisCollectionOps;
+import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;

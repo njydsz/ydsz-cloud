@@ -62,6 +62,20 @@ public @interface YdszExceptionCode {
     String replacement() default "";
 
     /**
+     * 该模块错误码的引入版本号（语义化版本，如 "1.0.0"、"2.3.0"）。
+     *
+     * <p>用于：
+     * <ul>
+     *   <li>错误码文档端点中展示各模块的引入版本，便于前端判断兼容性</li>
+     *   <li>追踪模块错误码的演进历史，配合 {@link #deprecated()} 标识废弃版本</li>
+     * </ul>
+     *
+     * @return 引入版本号；空字符串表示未指定
+     * @since 2.5.0
+     */
+    String since() default "";
+
+    /**
      * 模块级别默认异常分类。
      *
      * <p>默认值 {@link ExceptionCategory#BUSINESS}，扫描注册时会将此值

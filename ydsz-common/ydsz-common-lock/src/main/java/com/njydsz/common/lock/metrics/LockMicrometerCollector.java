@@ -25,12 +25,10 @@ import io.micrometer.core.instrument.Timer;
  *   <li>{@code lock.acquire.failed.total} - 获取锁失败总数（Counter，标签: lock_type）</li>
  *   <li>{@code lock.release.total} - 释放锁总数（Counter，标签: lock_type）</li>
  *   <li>{@code lock.hold.duration} - 锁持有耗时（Timer，标签: lock_type，P50/P90/P99/P999）</li>
- *   <li>{@code lock.competition.count} - 锁竞争次数（Counter，标签: lock_type）</li>
  *   <li>{@code lock.wait.duration} - 锁等待时间分布（Timer，标签: lock_type，P50/P90/P99/P999）</li>
  *   <li>{@code lock.active.locks} - 当前活跃锁数量（Gauge）</li>
  *   <li>{@code lock.timeout.count} - 锁超时次数（Counter，标签: lock_type）</li>
  *   <li>{@code lock.watchdog.renew.count} - 续期次数（Counter，标签: lock_type）</li>
- *   <li>{@code lock.idempotent.hit.count} - 幂等命中次数（Counter）</li>
  * </ul>
  *
  * @author ydsz-team
@@ -40,17 +38,11 @@ public class LockMicrometerCollector {
 
     private static final String TAG_LOCK_TYPE = "lock_type";
 
-    /** 锁键类别标签（低基数，避免指标标签膨胀） */
-    private static final String TAG_LOCK_CATEGORY = "lock_category";
-
     /** Timer 发布的分位数（P50/P90/P99/P999） */
     private static final double[] PUBLISH_PERCENTILES = {0.5, 0.9, 0.99, 0.999};
 
     private final MeterRegistry registry;
     private final AtomicInteger activeLocksCounter = new AtomicInteger(0);
-
-    /** 锁键分类提取器（用于降低指标标签基数） */
-    private final LockKeyCategoryExtractor categoryExtractor;
 
     /** Counter 缓存，避免每次 record 创建 Builder */
     private final ConcurrentHashMap<String, Counter> counterCache = new ConcurrentHashMap<>();
@@ -64,18 +56,7 @@ public class LockMicrometerCollector {
      * @param registry Micrometer 指标注册表
      */
     public LockMicrometerCollector(MeterRegistry registry) {
-        this(registry, LockKeyCategoryExtractor.DEFAULT);
-    }
-
-    /**
-     * 构造 Micrometer 指标收集器（带类别提取器）
-     *
-     * @param registry           Micrometer 指标注册表
-     * @param categoryExtractor  锁键分类提取器
-     */
-    public LockMicrometerCollector(MeterRegistry registry, LockKeyCategoryExtractor categoryExtractor) {
         this.registry = registry;
-        this.categoryExtractor = categoryExtractor;
         Gauge.builder("lock.active.locks", activeLocksCounter, AtomicInteger::get)
                 .description("Current number of active locks")
                 .register(registry);
@@ -132,18 +113,6 @@ public class LockMicrometerCollector {
                 .record(Duration.ofMillis(holdTimeMillis));
     }
 
-    void recordCompetition(String lockType, String lockKey) {
-        String category = categoryExtractor.extractCategory(lockKey);
-        String cacheKey = "lock.competition.count|" + lockType + "|" + category;
-        counterCache.computeIfAbsent(cacheKey, k ->
-                io.micrometer.core.instrument.Counter.builder("lock.competition.count")
-                        .tag(TAG_LOCK_TYPE, lockType)
-                        .tag(TAG_LOCK_CATEGORY, category)
-                        .description("Total number of lock competitions by lock category")
-                        .register(registry)
-        ).increment();
-    }
-
     void recordWaitDuration(long waitTimeMillis, String lockType) {
         timer("lock.wait.duration", lockType, "Lock wait time distribution")
                 .record(Duration.ofMillis(waitTimeMillis));
@@ -169,11 +138,5 @@ public class LockMicrometerCollector {
         counter("lock.watchdog.renew.count", lockType, "Total number of watchdog renewals").increment();
     }
 
-    void recordIdempotentHit() {
-        counterCache.computeIfAbsent("lock.idempotent.hit.count|", k ->
-                io.micrometer.core.instrument.Counter.builder("lock.idempotent.hit.count")
-                        .description("Total number of idempotent hits (rejected duplicate requests)")
-                        .register(registry)
-        ).increment();
-    }
+
 }

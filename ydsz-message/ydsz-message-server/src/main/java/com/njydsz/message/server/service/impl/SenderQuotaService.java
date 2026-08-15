@@ -4,7 +4,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-import com.njydsz.common.redis.service.RedisStringOps;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 import org.springframework.stereotype.Service;
 

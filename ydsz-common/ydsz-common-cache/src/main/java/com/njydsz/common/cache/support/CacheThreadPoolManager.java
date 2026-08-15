@@ -23,7 +23,6 @@ import org.springframework.beans.factory.DisposableBean;
  *   <li>refreshPool：缓存自动刷新线程池
  *   <li>cleanupPool：过期清理线程池
  *   <li>listenerPool：异步删除监听器线程池
- *   <li>swrPool：SWR 异步重新加载线程池
  * </ul>
  *
  * <p>实现 {@link DisposableBean} 确保应用关闭时优雅关闭所有线程池。
@@ -42,7 +41,7 @@ public class CacheThreadPoolManager implements DisposableBean {
   /**
    * 获取全局单例实例
    *
-   * <p>供非 Spring 管理的缓存组件（如 ExpirableCache、MemoryAwareEvictionCache 等）使用，
+   * <p>供非 Spring 管理的缓存组件（如 ExpirableCache 等）使用，
    * 确保所有线程池统一管理。
    *
    * @return 全局单例实例

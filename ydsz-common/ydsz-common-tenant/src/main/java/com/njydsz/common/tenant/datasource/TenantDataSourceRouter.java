@@ -8,7 +8,7 @@ import javax.sql.DataSource;
 import com.njydsz.common.jdbc.datasource.DynamicDataSourceContextHolder;
 import com.njydsz.common.jdbc.datasource.DynamicRoutingDataSource;
 import com.njydsz.common.tenant.config.TenantProperties;
-import com.njydsz.common.tenant.datasource.resolver.DatasourceKeyResolver;
+import com.njydsz.common.tenant.datasource.DatasourceKeyResolver;
 import com.njydsz.common.tenant.metrics.TenantMetrics;
 
 import lombok.extern.slf4j.Slf4j;

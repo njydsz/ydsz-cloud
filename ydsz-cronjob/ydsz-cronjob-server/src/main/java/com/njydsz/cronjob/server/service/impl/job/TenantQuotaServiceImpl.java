@@ -6,7 +6,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.common.redis.service.RedisStringOps;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import org.springframework.data.redis.core.RedisTemplate;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;

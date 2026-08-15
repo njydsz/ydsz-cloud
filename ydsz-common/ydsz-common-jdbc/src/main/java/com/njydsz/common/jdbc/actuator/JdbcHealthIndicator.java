@@ -44,11 +44,12 @@ public class JdbcHealthIndicator {
     /**
      * 注册 JDBC 健康指标 Bean
      *
+     * @param sqlAstCache SQL 解析缓存实例
      * @return HealthIndicator 实例
      */
     @Bean
-    public HealthIndicator jdbcHealthIndicator() {
-        return new JdbcHealthIndicatorImpl();
+    public HealthIndicator jdbcHealthIndicator(SqlAstCache sqlAstCache) {
+        return new JdbcHealthIndicatorImpl(sqlAstCache);
     }
 
     /**
@@ -57,6 +58,8 @@ public class JdbcHealthIndicator {
     @Slf4j
     @RequiredArgsConstructor
     static class JdbcHealthIndicatorImpl implements HealthIndicator {
+
+        private final SqlAstCache sqlAstCache;
 
         @Override
         public Health health() {
@@ -75,8 +78,8 @@ public class JdbcHealthIndicator {
          */
         private void appendCacheInfo(Health.Builder builder) {
             Map<String, Object> cacheStats = new LinkedHashMap<>();
-            cacheStats.put("size", SqlAstCache.getInstance().size());
-            cacheStats.put("maxSize", SqlAstCache.getInstance().maxSize());
+            cacheStats.put("size", sqlAstCache.size());
+            cacheStats.put("maxSize", sqlAstCache.maxSize());
             builder.withDetail("sqlAstCache", cacheStats);
         }
     }

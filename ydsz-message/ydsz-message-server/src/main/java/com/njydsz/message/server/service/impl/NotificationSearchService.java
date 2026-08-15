@@ -11,8 +11,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.common.redis.service.RedisCollectionOps;
-import com.njydsz.common.redis.service.RedisStringOps;
+import com.njydsz.common.redis.service.ops.RedisCollectionOps;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 /**
  * P2-18: 站内通知全文搜索。

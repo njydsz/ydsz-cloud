@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.njydsz.common.redis.service.RedisStringOps;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import org.springframework.stereotype.Component;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;

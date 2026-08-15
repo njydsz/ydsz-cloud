@@ -1,6 +1,5 @@
 package com.njydsz.common.thread.metrics;
 
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.lang.Nullable;
@@ -15,14 +14,11 @@ import io.micrometer.core.instrument.Timer;
  * <p>向 Micrometer 注册执行耗时与队列等待时长的 Timer 指标，
  * 并追踪慢任务（执行耗时超过阈值）计数。
  *
- * <p>初始化流程：
- * <ol>
- *   <li>{@link #afterSingletonsInstantiated()}：在 Spring 容器启动后，
- *       遍历所有 {@link ThreadPoolExecutor}，为每个池创建{@link io.micrometer.core.instrument.Timer}</li>
- * </ol>
- *
  * <p><b>注意</b>：{@link #record} 方法由 {@link TimedTaskDecorator} 调用，
  * 慢任务阈值通过参数传入，各池可使用不同阈值。
+ *
+ * <p>v1.4.0 变更：修复指标 tag 名称（"pool" → "pool.name"）保持与
+ * {@link ThreadPoolMetrics} 一致；Timer 懒加载注册表避免重复注册。
  *
  * @author ydsz-team
  * @since 1.4.0
@@ -52,7 +48,8 @@ public class ThreadPoolTimerMetrics {
     public ThreadPoolTimerMetrics(String poolName, MeterRegistry meterRegistry) {
         this.poolName = poolName;
         this.meterRegistry = meterRegistry;
-        this.commonTags = Tags.of("pool", poolName);
+        // tag 名称与 ThreadPoolMetrics 保持一致（"pool.name"）
+        this.commonTags = Tags.of("pool.name", poolName);
     }
 
     /**
@@ -63,10 +60,11 @@ public class ThreadPoolTimerMetrics {
      * @param executionMs         执行耗时（毫秒）
      * @param queueWaitMs         队列等待时长（毫秒）
      * @param slowTaskThresholdMs 慢任务阈值（毫秒），≥ 100
-     * @param metricPoolName      指标 pool tag 值（用于标签一致性校验）
+     * @param metricPoolName      指标 pool tag 值（用于日志追溯，当前版本保留）
      */
     public void record(long executionMs, long queueWaitMs, long slowTaskThresholdMs,
             String metricPoolName) {
+        // Timer 懒加载注册（Micrometer 会自动去重，重复注册为同一实例）
         Timer executionTimer = Timer.builder(METRIC_EXECUTION_TIME)
                 .tags(commonTags)
                 .publishPercentiles(0.5, 0.95, 0.99)

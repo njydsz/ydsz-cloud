@@ -7,7 +7,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.context.ApplicationContext;
-import com.njydsz.common.redis.service.RedisStringOps;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;

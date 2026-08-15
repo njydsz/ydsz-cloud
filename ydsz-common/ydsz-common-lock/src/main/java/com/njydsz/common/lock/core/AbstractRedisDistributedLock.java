@@ -483,12 +483,8 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
     protected String tryLockWithWait(String lockKey, long waitTime, long leaseTime, TimeUnit timeUnit) throws InterruptedException {
         // 动态调整等待时间（如果配置了策略）
         long adjustedWaitTime = waitTime;
-        LockWaitStats stats = null;
         if (lockWaitTimePolicy != null) {
-            stats = lockWaitTimePolicy instanceof AdaptiveWaitTimePolicy
-                    ? ((AdaptiveWaitTimePolicy) lockWaitTimePolicy).getOrCreateStats(lockKey)
-                    : null;
-            adjustedWaitTime = lockWaitTimePolicy.calculateWaitTime(lockKey, waitTime, stats);
+            adjustedWaitTime = lockWaitTimePolicy.calculateWaitTime(lockKey, waitTime, null);
             // 确保调整后不小于 0
             if (adjustedWaitTime < 0) {
                 adjustedWaitTime = 0;

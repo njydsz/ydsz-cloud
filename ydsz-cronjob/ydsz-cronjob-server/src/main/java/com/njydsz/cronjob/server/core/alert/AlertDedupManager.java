@@ -6,7 +6,7 @@ import java.util.Set;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
-import com.njydsz.common.redis.service.RedisStringOps;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 import com.njydsz.cronjob.server.config.CronjobProperties;
 

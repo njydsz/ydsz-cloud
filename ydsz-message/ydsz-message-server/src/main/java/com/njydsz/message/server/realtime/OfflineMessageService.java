@@ -7,8 +7,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.common.redis.service.RedisCollectionOps;
-import com.njydsz.common.redis.service.RedisStringOps;
+import com.njydsz.common.redis.service.ops.RedisCollectionOps;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;

@@ -6,7 +6,7 @@ import java.time.format.DateTimeFormatter;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
-import com.njydsz.common.redis.service.RedisStringOps;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 import org.springframework.stereotype.Service;
 
@@ -97,7 +97,8 @@ public class RateLimitServiceImpl implements RateLimitService {
         }
         try {
             return rateLimiter.tryAcquireTokenBucket(
-                    MessageConstants.RATE_LIMIT_KEY_PREFIX + key, permits, permits);
+                    MessageConstants.RATE_LIMIT_KEY_PREFIX + key, permits, permits,
+                    Duration.ofSeconds(1), 1);
         } catch (Exception e) {
             // P0-5 修复：根据 fail-open 配置决定降级策略
             if (failOpen) {

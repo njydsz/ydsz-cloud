@@ -7,19 +7,15 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
-import org.springframework.data.redis.core.RedisTemplate;
 
-import com.njydsz.common.cache.annotation.CacheAnnotationAspect;
 import com.njydsz.common.cache.health.CacheHealthIndicator;
 import com.njydsz.common.cache.health.SpringCacheHealthIndicator;
-import com.njydsz.common.cache.multilevel.DistributedRebuildLock;
 import com.njydsz.common.cache.support.CacheThreadPoolManager;
-import com.njydsz.common.cache.support.CacheWarmer;
 
 /**
  * YdszCache Spring Boot 自动配置
  *
- * <p>提供 YdszCache 的 Spring Boot 自动配置， 支持通过 application.yml 配置缓存参数（全局默认 + per-cache 覆盖）。
+ * <p>提供 YdszCache 的 Spring Boot 自动配置，支持通过 application.yml 配置缓存参数（全局默认 + per-cache 覆盖）。
  *
  * <p>配置示例：
  *
@@ -33,13 +29,12 @@ import com.njydsz.common.cache.support.CacheWarmer;
  *     allow-null-values: true
  *     caches:
  *       users:
- *         type: LRU
+ *         type: STRIPED
  *         maximum-size: 5000
  *       orders:
  *         type: TINYLFU
  *         maximum-size: 20000
  * </pre>
- *
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -52,7 +47,7 @@ public class YdszCacheAutoConfiguration {
   /**
    * 创建本地（进程内）缓存管理器，作为 Spring Cache 抽象的主实现。
    *
-   * <p>将 {@link YdszCacheProperties} 中的全局默认参数（类型、容量、TTL、是否允许 null、弱引用开关等）
+   * <p>将 {@link YdszCacheProperties} 中的全局默认参数（类型、容量、TTL、是否允许 null 等）
    * 一次性灌入 {@link YdszCacheManager}，并叠加 {@code caches} 下的 per-cache 覆盖配置。
    * 使用 {@code @ConditionalOnMissingBean}，允许用户自定义 {@code YdszCacheManager} 完全覆盖本默认实例。
    *
@@ -72,9 +67,6 @@ public class YdszCacheAutoConfiguration {
     cacheManager.setExpireAfterAccess(props.getExpireAfterAccess(), props.getExpireTimeUnit());
     cacheManager.setRefreshAfterWrite(props.getRefreshAfterWrite(), props.getExpireTimeUnit());
     cacheManager.setRecordStats(props.isRecordStats());
-    cacheManager.setWeakKeys(props.isWeakKeys());
-    cacheManager.setWeakValues(props.isWeakValues());
-    cacheManager.setSoftValues(props.isSoftValues());
     // 设置 per-cache 配置
     cacheManager.setPerCacheConfigs(props.getCaches());
     return cacheManager;
@@ -118,7 +110,7 @@ public class YdszCacheAutoConfiguration {
   /**
    * 创建缓存异步任务线程池管理器，并固定为全局单例。
    *
-   * <p>缓存的预热、异步刷新、分布式重建等后台任务共用该线程池。此处通过
+   * <p>缓存的异步刷新、过期清理等后台任务共用该线程池。此处通过
    * {@link com.njydsz.common.cache.support.CacheThreadPoolManager#setInstance} 将其设为全局可达实例，
    * 以便非 Spring 托管的缓存内部代码也能取用，同时使其 {@code DisposableBean} 生命周期钩子由 Spring 统一回收。
    * {@code @ConditionalOnMissingBean} 允许外部自定义线程池策略。
@@ -132,54 +124,5 @@ public class YdszCacheAutoConfiguration {
     // 将 Spring 管理的实例设置为全局单例，使 DisposableBean 生命周期管理生效
     CacheThreadPoolManager.setInstance(manager);
     return manager;
-  }
-
-  /**
-   * 注册缓存预热器，在应用启动后主动加载热点数据以降低冷启动命中率。
-   *
-   * <p>仅当 {@code ydsz.cache.warmup.enabled=true} 时装配（默认不开启），避免无预热需求的场景占用启动时间。
-   * 预热任务运行于 {@link #cacheThreadPoolManager()} 提供的线程池，由 {@code SmartInitializingSingleton}
-   * 在所有单例就绪后触发。{@code @ConditionalOnMissingBean} 允许自定义预热逻辑覆盖。
-   *
-   * @return 缓存预热器
-   */
-  @Bean
-  @ConditionalOnMissingBean
-  @ConditionalOnProperty(name = "ydsz.cache.warmup.enabled", havingValue = "true")
-  public CacheWarmer cacheWarmer() {
-    return new CacheWarmer();
-  }
-
-  /**
-   * 注册分布式缓存重建锁（防止多节点同时重建缓存）
-   *
-   * <p>需要 classpath 中存在 RedisTemplate。当使用多级缓存的分布式重建功能时自动生效。
-   */
-  @Bean
-  @ConditionalOnMissingBean
-  @ConditionalOnClass(name = "org.springframework.data.redis.core.RedisTemplate")
-  @ConditionalOnProperty(
-      name = "ydsz.cache.multilevel.rebuild-lock.enabled",
-      havingValue = "true",
-      matchIfMissing = false)
-  public DistributedRebuildLock distributedRebuildLock(
-      RedisTemplate<String, Object> redisTemplate) {
-    return new DistributedRebuildLock(redisTemplate);
-  }
-
-  /**
-   * 注册缓存注解 AOP 切面（@Cached / @CacheInvalidate）
-   *
-   * <p>需要 classpath 中存在 AspectJ Weaver。当使用 @Cached 注解时自动生效。
-   */
-  @Bean
-  @ConditionalOnMissingBean
-  @ConditionalOnClass(name = "org.aspectj.lang.annotation.Aspect")
-  @ConditionalOnProperty(
-      name = "ydsz.cache.annotation.enabled",
-      havingValue = "true",
-      matchIfMissing = true)
-  public CacheAnnotationAspect cacheAnnotationAspect(CacheManager cacheManager) {
-    return new CacheAnnotationAspect(cacheManager);
   }
 }

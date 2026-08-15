@@ -8,10 +8,13 @@ import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * JSqlParser AST 解析缓存（JDK 标准库实现，无外部依赖）
+ * JSqlParser AST 解析缓存（Spring Bean）
  *
  * <p>基于 LRU 淘汰策略的 SQL 解析缓存，将 SQL 指纹 → 解析后的 {@link Statement} 进行缓存，
  * 避免同一条 SQL 模板在多个拦截器中重复解析。
@@ -20,15 +23,34 @@ import lombok.extern.slf4j.Slf4j;
  * <ul>
  *   <li>Key = SQL 指纹（{@link SqlFingerprint#fingerprint(String)} 归一化后的模板）</li>
  *   <li>Value = 解析后的 AST {@link Statement} 对象</li>
- *   <li>最大容量 {@value #DEFAULT_MAX_SIZE} 条，LRU 淘汰</li>
+ *   <li>最大容量可配置（默认 {@code 512} 条），LRU 淘汰</li>
  *   <li>返回前执行深拷贝，避免并发改写同一 AST 导致线程安全问题</li>
- *   <li>使用读写锁保证并发安全，读操作不加锁（CopyOnWrite 思路）</li>
+ *   <li>使用读写锁保证并发安全</li>
  * </ul>
  *
- * <p>使用示例：
+ * <p>配置方式：
  * <pre>{@code
- * Statement ast = SqlAstCache.getInstance().parse(sql);
- * // 使用 ast 进行 AST 改写...
+ * ydsz:
+ *   jdbc:
+ *     sql-ast-cache:
+ *       max-size: 512
+ * }</pre>
+ *
+ * <p>使用方式：
+ * <pre>{@code
+ * @Component
+ * public class MyInterceptor {
+ *     private final SqlAstCache sqlAstCache;
+ *
+ *     public MyInterceptor(SqlAstCache sqlAstCache) {
+ *         this.sqlAstCache = sqlAstCache;
+ *     }
+ *
+ *     public void process(String sql) {
+ *         Statement ast = sqlAstCache.parse(sql);
+ *         // 使用 ast 进行 AST 改写...
+ *     }
+ * }
  * }</pre>
  *
  * <p><b>注意：</b>返回的 {@link Statement} 是缓存 AST 的深拷贝，可安全进行原地改写。
@@ -37,13 +59,11 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.8.0
  */
 @Slf4j
+@Component
 public final class SqlAstCache {
 
     /** 默认最大缓存条数 */
-    private static final int DEFAULT_MAX_SIZE = 512;
-
-    /** 全局单例实例 */
-    private static volatile SqlAstCache instance;
+    public static final int DEFAULT_MAX_SIZE = 512;
 
     /** LRU 缓存映射（access-order） */
     private final Map<String, Statement> cache;
@@ -51,35 +71,29 @@ public final class SqlAstCache {
     /** 读写锁，保护缓存复合操作 */
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
+    /** 最大缓存容量 */
+    private final int maxSize;
+
     /**
-     * 私有构造方法，初始化 LRU 缓存
+     * 构造方法，初始化 LRU 缓存。
+     *
+     * @param maxSize 最大缓存条数（默认 512）
      */
-    private SqlAstCache() {
-        this.cache = new LinkedHashMap<String, Statement>(DEFAULT_MAX_SIZE, 0.75f, true) {
+    public SqlAstCache(@Value("${ydsz.jdbc.sql-ast-cache.max-size:" + DEFAULT_MAX_SIZE + "}") int maxSize) {
+        if (maxSize <= 0) {
+            this.maxSize = DEFAULT_MAX_SIZE;
+        } else {
+            this.maxSize = maxSize;
+        }
+        this.cache = new LinkedHashMap<String, Statement>(this.maxSize, 0.75f, true) {
             private static final long serialVersionUID = 1L;
 
             @Override
             protected boolean removeEldestEntry(Map.Entry<String, Statement> eldest) {
-                return size() > DEFAULT_MAX_SIZE;
+                return size() > SqlAstCache.this.maxSize;
             }
         };
-        log.info("SqlAstCache 已初始化 (maxSize={})", DEFAULT_MAX_SIZE);
-    }
-
-    /**
-     * 获取全局单例实例（双重检查锁定）
-     *
-     * @return SqlAstCache 单例
-     */
-    public static SqlAstCache getInstance() {
-        if (instance == null) {
-            synchronized (SqlAstCache.class) {
-                if (instance == null) {
-                    instance = new SqlAstCache();
-                }
-            }
-        }
-        return instance;
+        log.info("SqlAstCache 已初始化 (maxSize={})", this.maxSize);
     }
 
     /**
@@ -182,6 +196,6 @@ public final class SqlAstCache {
      * @return 最大缓存条数
      */
     public int maxSize() {
-        return DEFAULT_MAX_SIZE;
+        return maxSize;
     }
 }

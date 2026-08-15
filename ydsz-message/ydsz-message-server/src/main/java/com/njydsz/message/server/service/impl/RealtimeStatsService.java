@@ -6,9 +6,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.njydsz.common.redis.service.RedisCollectionOps;
-import com.njydsz.common.redis.service.RedisHashOps;
-import com.njydsz.common.redis.service.RedisStringOps;
+import com.njydsz.common.redis.service.ops.RedisCollectionOps;
+import com.njydsz.common.redis.service.ops.RedisHashOps;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 import org.springframework.data.redis.core.RedisTemplate;
 

@@ -9,6 +9,7 @@ import org.apache.ibatis.mapping.MappedStatement;
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import com.njydsz.common.jdbc.config.DataPermissionConfiguration;
+import com.njydsz.common.jdbc.monitor.SqlAstCache;
 import com.njydsz.common.jdbc.permission.DataPermissionContext;
 import com.njydsz.common.jdbc.permission.DataPermissionContextResolver;
 
@@ -51,18 +52,21 @@ public abstract class DataPermissionInnerInterceptor extends CachingJsqlParserSu
     /** 标准化后的表名集合（小写），与拦截策略配合使用 */
     protected final Set<String> normalizedTables;
 
-    /**
-     * 构造数据权限拦截器基类
-     *
-     * @param config          数据权限配置
-     * @param contextResolver 数据权限上下文解析器
-     */
-    protected DataPermissionInnerInterceptor(DataPermissionConfiguration config,
-                                             DataPermissionContextResolver contextResolver) {
-        this.config = config;
-        this.contextResolver = contextResolver;
-        this.normalizedTables = DataPermissionHelper.normalizeTableSet(config);
-    }
+/**
+ * 构造数据权限拦截器基类
+ *
+ * @param sqlAstCache      SQL 解析缓存
+ * @param config           数据权限配置
+ * @param contextResolver  数据权限上下文解析器
+ */
+protected DataPermissionInnerInterceptor(SqlAstCache sqlAstCache,
+                                         DataPermissionConfiguration config,
+                                         DataPermissionContextResolver contextResolver) {
+    super(sqlAstCache);
+    this.config = config;
+    this.contextResolver = contextResolver;
+    this.normalizedTables = DataPermissionHelper.normalizeTableSet(config);
+}
 
     // ====================================================================
     // 公共模板方法

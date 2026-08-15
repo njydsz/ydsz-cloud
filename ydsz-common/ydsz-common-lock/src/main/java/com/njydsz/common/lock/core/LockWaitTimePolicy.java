@@ -17,11 +17,13 @@ package com.njydsz.common.lock.core;
  *
  * <p>使用示例：
  * <pre>{@code
- * LockWaitTimePolicy policy = new AdaptiveWaitTimePolicy(
- *     Duration.ofSeconds(30),
- *     Duration.ofMillis(100)
- * );
- * // 在 tryLockWithWait 中调用
+ * // 自定义实现：根据历史统计动态调整等待时间
+ * LockWaitTimePolicy policy = (lockKey, requestedWaitTime, stats) -&gt; {
+ *     if (stats != null &amp;&amp; stats.getTimeoutRate() &gt; 0.5) {
+ *         return requestedWaitTime / 2; // 超时率高，减少等待
+ *     }
+ *     return requestedWaitTime;
+ * };
  * long adjustedWaitTime = policy.calculateWaitTime(lockKey, requestedWaitTime, stats);
  * }</pre>
  *

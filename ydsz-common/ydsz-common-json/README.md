@@ -62,7 +62,7 @@
 | @JsonView 视图过滤 | **Deprecated** | 推荐定义独立 DTO 或手动裁剪字段 |
 | @JsonUnwrapped | **Deprecated** | 推荐将嵌套对象序列化为子对象结构 |
 | @JsonRawValue | **Deprecated** | 推荐手动构建后序列化 |
-| @JsonAlias | **Deprecated** | 推荐使用统一 @JsonProperty 命名约定 |
+| @JsonAlias | **Stable** | v1.2.2 恢复支持：反序列化多命名兼容（如 user_id/userId），序列化仍输出主名称 |
 | @JsonAnyGetter/@JsonAnySetter | **Deprecated** | 推荐显式定义字段提升可维护性 |
 | @JsonEnumDefaultValue | **Deprecated** | 推荐 Controller 层手动处理 |
 | @JsonVisibility | **Deprecated** | 推荐使用 @JsonIgnore |

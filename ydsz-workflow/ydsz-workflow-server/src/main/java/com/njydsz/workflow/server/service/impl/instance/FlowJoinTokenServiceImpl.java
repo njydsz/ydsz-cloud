@@ -3,7 +3,7 @@ package com.njydsz.workflow.server.service.impl.instance;
 import java.time.Duration;
 import java.util.List;
 
-import com.njydsz.common.redis.service.RedisStringOps;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;

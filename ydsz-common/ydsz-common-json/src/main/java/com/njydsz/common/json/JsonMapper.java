@@ -720,6 +720,10 @@ public class JsonMapper {
         if (fromValue == null) {
             return null;
         }
+        // F-2 直绑：JsonNode 源走 treeToValue，跳过 toJson 字符串中转
+        if (fromValue instanceof JsonNode node) {
+            return treeToValue(node, toValueTypeRef);
+        }
         String json = toJson(fromValue);
         return toObject(json, toValueTypeRef);
     }
@@ -737,8 +741,64 @@ public class JsonMapper {
         if (node == null) {
             return null;
         }
+        // F-2 直绑优化：标量 / Map / List / Object 目标类型直接从树取值，
+        // 跳过"树 → 字符串 → 再解析"的两次结构转换（对标 Jackson TokenBuffer）
+        if (clazz == String.class) {
+            return clazz.cast(node.asText());
+        }
+        if (clazz == int.class || clazz == Integer.class) {
+            @SuppressWarnings("unchecked")
+            T result = (T) Integer.valueOf(node.asInt());
+            return result;
+        }
+        if (clazz == long.class || clazz == Long.class) {
+            @SuppressWarnings("unchecked")
+            T result = (T) Long.valueOf(node.asLong());
+            return result;
+        }
+        if (clazz == double.class || clazz == Double.class) {
+            @SuppressWarnings("unchecked")
+            T result = (T) Double.valueOf(node.asDouble());
+            return result;
+        }
+        if (clazz == boolean.class || clazz == Boolean.class) {
+            @SuppressWarnings("unchecked")
+            T result = (T) Boolean.valueOf(node.asBoolean());
+            return result;
+        }
+        if (clazz == Map.class || clazz == List.class || clazz == Object.class) {
+            @SuppressWarnings("unchecked")
+            T result = (T) TreeConverter.convertToJavaObject(node);
+            return result;
+        }
+        // Bean 目标类型：走现有字符串管道（Map 版 BeanReader 直绑为 F-2 二期）
         String json = node.toString();
         return toObject(json, clazz);
+    }
+
+    /**
+     * 将 JsonNode 树转换为指定泛型类型的对象（对标 Jackson ObjectMapper.treeToValue）。
+     *
+     * <p>目标为具体类时走 {@link #treeToValue(JsonNode, Class)} 直绑路径；
+     * 泛型类型（如 {@code List<User>}）仍走字符串管道。</p>
+     *
+     * @param node     JsonNode 树
+     * @param typeRef  目标类型引用（可为泛型）
+     * @param <T>      目标类型参数
+     * @return 转换后的对象
+     * @since 1.2.2
+     */
+    public <T> T treeToValue(JsonNode node, JsonType<T> typeRef) {
+        if (node == null) {
+            return null;
+        }
+        if (typeRef.getType() instanceof Class<?> clazz) {
+            @SuppressWarnings("unchecked")
+            T direct = (T) treeToValue(node, clazz);
+            return direct;
+        }
+        String json = node.toString();
+        return toObject(json, typeRef);
     }
 
     /**

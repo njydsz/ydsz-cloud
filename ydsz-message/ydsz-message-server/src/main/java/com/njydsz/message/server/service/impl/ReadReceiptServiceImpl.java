@@ -3,7 +3,7 @@ package com.njydsz.message.server.service.impl.receipt;
 import java.time.Duration;
 import java.util.Base64;
 
-import com.njydsz.common.redis.service.RedisStringOps;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;

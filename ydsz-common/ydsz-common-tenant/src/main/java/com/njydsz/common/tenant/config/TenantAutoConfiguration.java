@@ -12,7 +12,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -72,14 +71,12 @@ public class TenantAutoConfiguration {
      * SPI 拦截器提供者：注册 TenantIsolationInterceptor 到 MybatisPlusInterceptor 链。
      *
      * @param properties 租户配置
-     * @param applicationContext Spring 上下文
      * @return 拦截器提供者
      */
     @Bean
     @ConditionalOnMissingBean
     public TenantInterceptorProvider tenantInterceptorProvider(
             TenantProperties properties,
-            ApplicationContext applicationContext,
             ObjectProvider<TenantMetrics> metricsProvider) {
         log.info("多租户隔离已启用: mode={}, tenantColumn={}, superTenantId={}, systemTenantId={}",
                 properties.getMode(),
@@ -131,7 +128,7 @@ public class TenantAutoConfiguration {
     /**
      * 数据源 Key 解析器。
      *
-     * <p>内置实现同时支持：
+     * <p>使用内置默认实现，同时支持：
      * <ul>
      *   <li>配置映射：从 {@code ydsz.tenant.datasource.mapping} 读取</li>
      *   <li>命名约定回退：未配置时 {@code "tenant_" + tenantId}</li>
@@ -145,7 +142,7 @@ public class TenantAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public DatasourceKeyResolver datasourceKeyResolver(TenantProperties properties) {
-        return new DefaultDatasourceKeyResolver(properties);
+        return DatasourceKeyResolver.createDefault(properties);
     }
 
     // -----------------------------------------------------------------------
@@ -389,55 +386,5 @@ public class TenantAutoConfiguration {
         registration.addUrlPatterns("/*");
         registration.setName("tenantDataSourceFilter");
         return registration;
-    }
-
-    // -----------------------------------------------------------------------
-    // 内部数据源 Key 解析器实现（替代已被移除的 NamingConventionResolver 和 ConfigurationResolver）
-    // -----------------------------------------------------------------------
-
-    /**
-     * 默认数据源 Key 解析器实现。
-     *
-     * <p>支持配置映射 + 命名约定回退，替代原 {@code ConfigurationResolver} + {@code NamingConventionResolver}
-     * 分层 SPI，简化单一职责。
-     *
-     * <p><b>回退逻辑：</b>
-     * <ol>
-     *   <li>优先从 {@code ydsz.tenant.datasource.mapping} 配置读取租户→数据源映射</li>
-     *   <li>未命中时使用命名约定 {@code "tenant_" + tenantId}</li>
-     * </ol>
-     *
-     * @author ydsz-team
-     * @since 1.10.0
-     * @see DatasourceKeyResolver
-     */
-    static class DefaultDatasourceKeyResolver implements DatasourceKeyResolver {
-
-        private static final String DATASOURCE_PREFIX = "tenant_";
-
-        private final TenantProperties properties;
-
-        DefaultDatasourceKeyResolver(TenantProperties properties) {
-            this.properties = properties;
-        }
-
-        @Override
-        public String resolve(String tenantId) {
-            if (tenantId == null || tenantId.isEmpty()) {
-                return null;
-            }
-
-            // 优先从配置映射读取
-            Map<String, String> mapping = properties.getDatasourceMapping();
-            if (mapping != null && !mapping.isEmpty()) {
-                String key = mapping.get(tenantId);
-                if (key != null && !key.isEmpty()) {
-                    return key;
-                }
-            }
-
-            // 命名约定回退
-            return DATASOURCE_PREFIX + tenantId;
-        }
     }
 }

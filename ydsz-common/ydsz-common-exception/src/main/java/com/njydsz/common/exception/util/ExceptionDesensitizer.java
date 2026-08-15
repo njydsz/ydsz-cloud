@@ -99,14 +99,24 @@ public final class ExceptionDesensitizer {
     private static final List<DesensitizeRule> RULES = new ArrayList<>();
 
     static {
-        // 1. 敏感字段赋值（password=xxx 等形式）
+        // 0. JWT Token（三段 base64 用 . 分隔，eyJ... 开头）
+        RULES.add(new DesensitizeRule("jwt-token",
+                Pattern.compile("\\beyJ[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\\b"),
+                m -> "eyJ****.****.****"));
+
+        // 1. Bearer Token（Authorization: Bearer xxx 形式）
+        RULES.add(new DesensitizeRule("bearer-token",
+                Pattern.compile("(?i)(?:bearer|basic|digest)[\\s]+([A-Za-z0-9._~+/=-]{16,})"),
+                m -> m.group(0).substring(0, m.group(0).indexOf(' ') + 1) + "******"));
+
+        // 2. 敏感字段赋值（password=xxx 等形式）
         RULES.add(new DesensitizeRule("sensitive-field",
                 Pattern.compile(
                         "(?i)(password|passwd|secret|token|apikey|accesskey|privatekey"
                                 + "|credential|auth)[\\s]*[=:][\\s]*[\"']?([^\"'\\s,;)]+)"),
                 m -> m.group(1) + "=******"));
 
-        // 2. 银行卡号（13-19 位数字，允许空格/连字符分隔）
+        // 3. 银行卡号（13-19 位数字，允许空格/连字符分隔）
         RULES.add(new DesensitizeRule("bank-card",
                 Pattern.compile(
                         "\\b\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}[\\s-]?\\d{4}(?:[\\s-]?\\d{0,7})\\b"),
@@ -116,13 +126,13 @@ public final class ExceptionDesensitizer {
                             ? "****" : null;
                 }));
 
-        // 3. 身份证号（18 位，含 X 校验位）
+        // 4. 身份证号（18 位，含 X 校验位）
         RULES.add(new DesensitizeRule("id-card",
                 Pattern.compile(
                         "\\b[1-9]\\d{5}(?:18|19|20)\\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\\d|3[01])\\d{3}[\\dXx]\\b"),
                 m -> "****"));
 
-        // 4. 手机号（11 位，1 开头，第 2 位 3-9）
+        // 5. 手机号（11 位，1 开头，第 2 位 3-9）
         RULES.add(new DesensitizeRule("mobile",
                 Pattern.compile("(?<![\\d])1[3-9]\\d{9}(?![\\d])"),
                 m -> {
@@ -131,7 +141,7 @@ public final class ExceptionDesensitizer {
                             + "****" + mobile.substring(mobile.length() - MOBILE_SUFFIX_KEEP);
                 }));
 
-        // 5. 邮箱地址
+        // 6. 邮箱地址
         RULES.add(new DesensitizeRule("email",
                 Pattern.compile("[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}"),
                 m -> {
@@ -142,7 +152,7 @@ public final class ExceptionDesensitizer {
                             : null;
                 }));
 
-        // 6. JDBC 连接字符串中的密码
+        // 7. JDBC 连接字符串中的密码
         RULES.add(new DesensitizeRule("jdbc-password",
                 Pattern.compile("((?:jdbc:[^?]*\\?.*)(?:password|pwd)=)([^&\\s]*)",
                         Pattern.CASE_INSENSITIVE),

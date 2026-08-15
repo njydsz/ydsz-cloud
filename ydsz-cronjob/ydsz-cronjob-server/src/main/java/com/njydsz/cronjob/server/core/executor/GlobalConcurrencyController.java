@@ -2,7 +2,7 @@ package com.njydsz.cronjob.server.core.executor;
 
 import java.time.Duration;
 
-import com.njydsz.common.redis.service.RedisStringOps;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 

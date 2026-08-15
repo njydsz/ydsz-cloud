@@ -1,4 +1,5 @@
 package com.njydsz.common.exception.custom;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 import com.njydsz.common.core.code.ResultCode;
@@ -193,7 +194,7 @@ public abstract class AbstractYdszException extends RuntimeException implements 
         // 快照透写入 details（details 可枚举，方便前端 / 日志展示）
         Map<String, String> snapshot = getSnapshot();
         if (snapshot != null && !snapshot.isEmpty()) {
-            Map<String, Object> details = new java.util.LinkedHashMap<>(snapshot);
+            Map<String, Object> details = new LinkedHashMap<>(snapshot);
             info.setDetails(details);
         }
         return info;

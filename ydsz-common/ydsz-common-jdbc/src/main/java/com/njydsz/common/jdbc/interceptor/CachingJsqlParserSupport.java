@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  * </ul>
  *
  * <p>使用方式：将拦截器继承的父类从 {@code JsqlParserSupport} 改为 {@code CachingJsqlParserSupport}，
- * 即可透明获得缓存能力，无需修改拦截器内部逻辑。
+ * 并通过构造器注入 {@link SqlAstCache}，即可透明获得缓存能力。
  *
  * <p>性能收益：假设 SQL 模板重复率 80%，拦截器链长度为 3，
  * 则总解析次数从 3N 降至 N + 2×0（缓存命中），理论提升 67%。
@@ -39,6 +39,18 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public abstract class CachingJsqlParserSupport extends JsqlParserSupport {
+
+    /** SQL 解析缓存 */
+    protected final SqlAstCache sqlAstCache;
+
+    /**
+     * 构造方法，注入 SqlAstCache
+     *
+     * @param sqlAstCache SQL 解析缓存实例
+     */
+    protected CachingJsqlParserSupport(SqlAstCache sqlAstCache) {
+        this.sqlAstCache = sqlAstCache;
+    }
 
     /**
      * 解析 SQL（带缓存），处理多语句批量场景。
@@ -56,7 +68,7 @@ public abstract class CachingJsqlParserSupport extends JsqlParserSupport {
             return null;
         }
         try {
-            Statement statement = SqlAstCache.getInstance().parse(sql);
+            Statement statement = sqlAstCache.parse(sql);
             return processStatement(statement, sql, obj);
         } catch (JSQLParserException e) {
             if (log.isDebugEnabled()) {
@@ -81,7 +93,7 @@ public abstract class CachingJsqlParserSupport extends JsqlParserSupport {
             return null;
         }
         try {
-            Statement statement = SqlAstCache.getInstance().parse(sql);
+            Statement statement = sqlAstCache.parse(sql);
             return processStatement(statement, sql, obj);
         } catch (JSQLParserException e) {
             if (log.isDebugEnabled()) {

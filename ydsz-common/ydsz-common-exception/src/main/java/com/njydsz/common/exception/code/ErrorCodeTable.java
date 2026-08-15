@@ -76,11 +76,6 @@ public class ErrorCodeTable {
                     + "尝试再次注册为 [%s]（key=%s）。请检查 @YdszExceptionCode 注解的模块错误码定义。",
                     module, code, previous.enumName(), enumName, key));
         }
-        // 注意：全局 code→ExceptionCode 反查索引（codeIndex）由 registerAll(codeMap) 统一填充，
-        // 此处仅维护按模块的 CodeEntry 明细（供 groupByModule / getCodes / lookupByCode 使用）。
-        // 早期版本曾在此处调用 lookupByEnumName(enumName) 直接写入 codeIndex，但该辅助方法只能拿到
-        // 枚举常量名而无法解析出真实的 ExceptionCode 实例，且 ConcurrentHashMap 禁止 null 值，
-        // 会在扫描注册首条常量时抛出 NullPointerException，故移除。
     }
 
     /**

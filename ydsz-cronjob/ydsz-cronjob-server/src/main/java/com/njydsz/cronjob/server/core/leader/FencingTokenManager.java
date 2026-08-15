@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Configuration;
-import com.njydsz.common.redis.service.RedisStringOps;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

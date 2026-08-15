@@ -2,7 +2,7 @@ package com.njydsz.message.server.service.core;
 
 import java.time.Duration;
 
-import com.njydsz.common.redis.service.RedisStringOps;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;

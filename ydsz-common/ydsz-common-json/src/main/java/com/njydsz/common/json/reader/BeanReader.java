@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.njydsz.common.json.annotation.JsonAlias;
 import com.njydsz.common.json.annotation.JsonCreator;
 import com.njydsz.common.json.annotation.JsonIgnore;
 import com.njydsz.common.json.annotation.JsonIgnoreProperties;
@@ -296,6 +297,20 @@ public final class BeanReader<T> {
                     matched = true;
                     break;
                 }
+                // @JsonAlias 别名字段匹配（F-3 恢复）：按 aliasHashes 二次比对，避免 hash 碰撞误命中
+                if (!matched && fr.aliasHashes.length > 0) {
+                    for (int a = 0; a < fr.aliasHashes.length; a++) {
+                        if (fr.aliasHashes[a] == hash && fr.aliasNames[a].equals(fieldName)) {
+                            if (target != null) {
+                                fr.readValue(reader, target, depth);
+                            } else {
+                                pending.put(fr.fieldName, fr.readRawValue(reader));
+                            }
+                            matched = true;
+                            break;
+                        }
+                    }
+                }
             }
 
             if (!matched) {
@@ -368,6 +383,10 @@ public final class BeanReader<T> {
         public final String jsonName;
         /** JSON 匹配名哈希 */
         public final int jsonNameHash;
+        /** @JsonAlias 备用名称（不含主名称；空数组表示无别名） */
+        public final String[] aliasNames;
+        /** @JsonAlias 备用名称哈希（与 aliasNames 一一对应） */
+        public final int[] aliasHashes;
         public final Class<?> fieldType;
         public final Field field;
         public final int typeCode;
@@ -396,6 +415,26 @@ public final class BeanReader<T> {
                 this.jsonName = this.fieldName;
             }
             this.jsonNameHash = this.jsonName.hashCode();
+
+            // F-3 恢复：加载 @JsonAlias 备用名称（仅反序列化匹配，序列化仍输出主名称）
+            com.njydsz.common.json.annotation.JsonAlias jsonAlias =
+                    field.getAnnotation(com.njydsz.common.json.annotation.JsonAlias.class);
+            if (jsonAlias != null && jsonAlias.value().length > 0) {
+                List<String> aliases = new ArrayList<>(jsonAlias.value().length);
+                for (String alias : jsonAlias.value()) {
+                    if (alias != null && !alias.isEmpty() && !alias.equals(this.jsonName)) {
+                        aliases.add(alias);
+                    }
+                }
+                this.aliasNames = aliases.toArray(new String[0]);
+                this.aliasHashes = new int[this.aliasNames.length];
+                for (int i = 0; i < this.aliasNames.length; i++) {
+                    this.aliasHashes[i] = this.aliasNames[i].hashCode();
+                }
+            } else {
+                this.aliasNames = new String[0];
+                this.aliasHashes = new int[0];
+            }
 
         }
 

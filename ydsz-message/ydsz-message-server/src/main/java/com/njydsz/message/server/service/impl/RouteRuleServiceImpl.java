@@ -4,7 +4,7 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 
-import com.njydsz.common.redis.service.RedisStringOps;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
