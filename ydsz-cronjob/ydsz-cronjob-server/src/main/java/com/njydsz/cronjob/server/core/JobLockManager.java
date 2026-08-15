@@ -107,29 +107,4 @@ public class JobLockManager {
         String lockKey = LockKeyUtil.buildJobLockKey(jobKey, shardIndex);
         return distributedLocker.isLocked(lockKey);
     }
-
-    /**
-     * 获取当前锁持有者标识。
-     *
-     * <p><b>已废弃：</b>委托至 {@link DistributedLocker} 后，锁内部以 Redis Hash 结构
-     * 存储可重入计数（Hash Field 为 clientId），{@link DistributedLocker} 接口未暴露
-     * 获取 holder 的能力。本方法始终返回 {@code null}，仅保留签名避免破坏性变更。
-     *
-     * <p><b>替代方案：</b>使用 {@link #isLocked(String, Integer)} 判断锁状态；
-     * 如需释放其他节点的锁，参考 {@code FailoverScanner.releaseLockSafe()} 通过
-     * {@code JobLog#getLockHolder()} 获取锁持有者（dispatch 时写入 DB）后直接通过
-     * Lua 脚本安全释放。
-     *
-     * @param jobKey     任务 KEY
-     * @param shardIndex 分片索引
-     * @return 始终返回 {@code null}
-     *
-     * @deprecated 自 v1.1.0 起废弃，使用 {@link #isLocked(String, Integer)} 替代
-     */
-    @Deprecated
-    public String getLockHolder(String jobKey, Integer shardIndex) {
-        log.debug("[JobLock] getLockHolder 已废弃，请使用 isLocked() 替代 | jobKey={} shardIndex={}",
-                jobKey, shardIndex);
-        return null;
-    }
 }

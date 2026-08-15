@@ -7,11 +7,11 @@ import java.util.HexFormat;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import com.njydsz.common.notify.config.NotifyProperties;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.redis.core.StringRedisTemplate;
-
-import com.njydsz.common.notify.config.NotifyProperties;
 
 /**
  * 通知去重与幂等服务（P3-13）
@@ -34,14 +34,14 @@ public class NotifyDedupService {
     private static final Logger log = LoggerFactory.getLogger(NotifyDedupService.class);
 
     private final NotifyProperties properties;
-    private final StringRedisTemplate redisTemplate;
+    private final RedisStringOps redisStringOps;
 
     /** 内存降级去重缓存：key=fingerprint, value=过期时间戳 */
     private final ConcurrentMap<String, Long> memoryDedup = new ConcurrentHashMap<>();
 
-    public NotifyDedupService(NotifyProperties properties, StringRedisTemplate redisTemplate) {
+    public NotifyDedupService(NotifyProperties properties, RedisStringOps redisStringOps) {
         this.properties = properties;
-        this.redisTemplate = redisTemplate;
+        this.redisStringOps = redisStringOps;
     }
 
     /**
@@ -67,10 +67,10 @@ public class NotifyDedupService {
         int windowSeconds = properties.getDedup().getWindowSeconds();
         String redisKey = properties.getDedup().getRedisKeyPrefix() + fingerprint;
 
-        if (redisTemplate != null) {
+        if (redisStringOps != null) {
             try {
-                Boolean absent = redisTemplate.opsForValue().setIfAbsent(
-                        redisKey, "1", Duration.ofSeconds(windowSeconds));
+                Boolean absent = redisStringOps.setIfAbsent(
+                        redisKey, "1", windowSeconds);
                 if (Boolean.TRUE.equals(absent)) {
                     return false;
                 }
