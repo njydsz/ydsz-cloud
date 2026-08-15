@@ -3,6 +3,9 @@ package com.njydsz.gateway.config;
 import java.net.ConnectException;
 import java.util.concurrent.TimeoutException;
 
+import com.njydsz.common.auth.exception.PermissionDeniedException;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 
 import org.springframework.context.annotation.Bean;
@@ -23,26 +26,28 @@ import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 /**
- * GAP-P0-2: 网关全局异常处理器配置（增强 common-exception WebFluxExceptionHandler）
+ * P2-2: 网关全局异常处理器配置（HTTP 状态码映射修复）
  *
- * <p>历史版本完全自定义 WebExceptionHandler，与 ydsz-common-exception 的
- * {@code WebFluxExceptionHandler} 功能重复。本版本保留网关特有的 HTTP 状态码→业务码映射
- * （404→40400、502→50200、504→50400），但通过委托公共异常处理器的方式实现统一格式：
+ * <p><b>问题背景：</b>此前的全局异常处理器仅处理 {@link ResponseStatusException}、
+ * {@link ConnectException}、{@link TimeoutException} 和 Cloud Gateway 的
+ * {@code NotFoundException}，对于认证/权限类异常（如 {@link PermissionDeniedException}）
+ * 和业务异常（{@link BusinessException}）未做显式映射，导致这些异常被归为
+ * {@link HttpStatus#INTERNAL_SERVER_ERROR}（500），而非正确的 401/403/400。
+ * 前端无法根据 HTTP 状态码统一拦截认证失败，必须解析 body 中的 bizCode 才能识别。
  *
+ * <p><b>P2-2 修复内容：</b>
  * <ul>
- *   <li>{@code WebFluxExceptionHandler}（common-exception 自动注册）处理通用异常</li>
- *   <li>{@link GatewayExceptionHandler}（本类注册，@Order(-2) 优先级）补充网关特有场景：
- *     <ul>
- *       <li>404 — 路由匹配失败（NotFoundException）</li>
- *       <li>502 — 下游服务连接失败（ConnectException）</li>
- *       <li>504 — 下游服务响应超时（TimeoutException）</li>
- *     </ul>
- *   </li>
+ *   <li>{@link PermissionDeniedException} → 403 FORBIDDEN（权限不足）</li>
+ *   <li>{@link BusinessException} → 按其 {@code httpStatus} 映射（默认 400 BAD_REQUEST）</li>
+ *   <li>{@link SysException} → 500 INTERNAL_SERVER_ERROR（系统异常）</li>
+ *   <li>类名匹配 "Authentication"/"Unauthorized"/"Login"/"Token" → 401 UNAUTHORIZED</li>
+ *   <li>{@link ResponseStatusException} → 按其状态码（已有，增强日志）</li>
+ *   <li>其他未知异常 → 500 INTERNAL_SERVER_ERROR（兜底）</li>
  * </ul>
  *
- * <p>所有响应均为 {@code application/json;charset=UTF-8}，包含 traceId，不暴露内部堆栈。
+ * <p>所有响应体保持 {@link BaseResponse} 格式，包含 bizCode、message、traceId、help 链接。
  *
- * @since 1.0.0
+ * @since 2.0.0
  * @author ydsz-team
  */
 @Slf4j
@@ -52,7 +57,7 @@ public class GatewayErrorConfig {
     /**
      * 注册自定义网关异常处理器
      *
-     * <p>通过 {@code @Order(-2)} 确保优先于默认的异常处理器。
+     * <p>通过 {@code @Order(-2)} 确保优先于 Spring Boot 默认的 ErrorWebExceptionHandler。
      *
      * @return 网关异常处理器
      */
@@ -66,7 +71,7 @@ public class GatewayErrorConfig {
      * 网关全局异常处理器
      *
      * <p>实现 {@link WebExceptionHandler} 接口，
-     * 拦截所有网关层异常并返回统一 {@link Result} JSON。
+     * 拦截所有网关层异常并返回统一 {@link BaseResponse} JSON。
      */
     @Slf4j
     static class GatewayExceptionHandler implements WebExceptionHandler {
@@ -89,7 +94,7 @@ public class GatewayErrorConfig {
             }
 
             HttpStatus httpStatus = resolveHttpStatus(ex);
-            int bizCode = resolveBizCode(httpStatus);
+            int bizCode = resolveBizCode(httpStatus, ex);
             String message = resolveMessage(ex, httpStatus);
 
             String traceId = exchange.getRequest().getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
@@ -100,7 +105,6 @@ public class GatewayErrorConfig {
             BaseResponse<Void> body = BaseResponse.error(String.valueOf(bizCode), message);
             body.assignTraceId(traceId);
 
-            // P0-3: 添加错误文档链接（Link 头 + extensions），帮助前端定位帮助文档
             GatewayErrorCode errorCode = GatewayErrorCode.fromCode(bizCode);
             body.putExtension("help", errorCode.getHelpUrl());
 
@@ -122,12 +126,23 @@ public class GatewayErrorConfig {
 
         /**
          * 根据异常类型解析 HTTP 状态码
+         *
+         * <p>P2-2: 扩展映射规则，覆盖认证授权异常和业务异常。
          */
         private HttpStatus resolveHttpStatus(Throwable ex) {
+            if (ex instanceof PermissionDeniedException) {
+                return HttpStatus.FORBIDDEN;
+            }
             if (ex instanceof ResponseStatusException rse) {
-                return HttpStatus.resolve(rse.getStatusCode().value()) != null
-                        ? HttpStatus.valueOf(rse.getStatusCode().value())
-                        : HttpStatus.INTERNAL_SERVER_ERROR;
+                HttpStatus resolved = HttpStatus.resolve(rse.getStatusCode().value());
+                return resolved != null ? resolved : HttpStatus.INTERNAL_SERVER_ERROR;
+            }
+            if (ex instanceof BusinessException bizEx) {
+                HttpStatus resolved = HttpStatus.resolve(bizEx.getHttpStatus());
+                return resolved != null ? resolved : HttpStatus.BAD_REQUEST;
+            }
+            if (ex instanceof SysException) {
+                return HttpStatus.INTERNAL_SERVER_ERROR;
             }
             if (ex instanceof ConnectException) {
                 return HttpStatus.BAD_GATEWAY;
@@ -140,15 +155,49 @@ public class GatewayErrorConfig {
             if ("NotFoundException".equals(className)) {
                 return HttpStatus.NOT_FOUND;
             }
+            // P2-2: 类名模式匹配，兜底处理 Spring Security / 自定义认证异常
+            if (isAuthenticationException(className)) {
+                return HttpStatus.UNAUTHORIZED;
+            }
             return HttpStatus.INTERNAL_SERVER_ERROR;
         }
 
         /**
-         * 根据 HTTP 状态码映射业务错误码。
+         * 判断是否为认证类异常（通过类名模式匹配兜底）
          *
-         * <p>P0-3: 与 {@link GatewayErrorCode} 对齐，确保网关层错误码标准化。
+         * <p>覆盖 Spring Security 的 {@code AuthenticationException}、
+         * {@code BadCredentialsException}、{@code JwtException} 等，
+         * 以及自定义的认证失败异常。返回 401 便于前端统一拦截跳转登录页。
+         *
+         * @param className 异常类短名称
+         * @return true=认证类异常
          */
-        private int resolveBizCode(HttpStatus httpStatus) {
+        private boolean isAuthenticationException(String className) {
+            return className.contains("Authentication")
+                    || className.contains("Unauthorized")
+                    || className.contains("Login")
+                    || className.contains("Token")
+                    || className.contains("Credentials");
+        }
+
+        /**
+         * 根据 HTTP 状态码和异常类型映射业务错误码
+         *
+         * <p>P2-2: 优先使用 {@link BusinessException#getCode()} 中的业务编码，
+         * 非数字编码时按 HTTP 状态码 × 100 生成降级码。
+         */
+        private int resolveBizCode(HttpStatus httpStatus, Throwable ex) {
+            if (ex instanceof BusinessException bizEx) {
+                String code = bizEx.getCode();
+                if (code != null && !code.isBlank()) {
+                    try {
+                        return Integer.parseInt(code);
+                    } catch (NumberFormatException e) {
+                        // 非数字编码（如 "A02051"）时按状态码降级
+                        return httpStatus.value() * 100;
+                    }
+                }
+            }
             return switch (httpStatus) {
                 case NOT_FOUND -> GatewayErrorCode.ROUTE_NOT_FOUND.getCode();
                 case BAD_GATEWAY -> GatewayErrorCode.BAD_GATEWAY.getCode();
@@ -156,17 +205,22 @@ public class GatewayErrorConfig {
                 case GATEWAY_TIMEOUT -> GatewayErrorCode.GATEWAY_TIMEOUT.getCode();
                 case REQUEST_TIMEOUT -> GatewayErrorCode.REQUEST_TIMEOUT.getCode();
                 case TOO_MANY_REQUESTS -> GatewayErrorCode.RATE_LIMITED.getCode();
+                case UNAUTHORIZED -> GatewayErrorCode.UNAUTHORIZED.getCode();
+                case FORBIDDEN -> GatewayErrorCode.FORBIDDEN.getCode();
                 default -> httpStatus.value() * 100;
             };
         }
 
         /**
-         * 解析用户友好的 i18n 错误消息键。
+         * 解析用户友好的错误消息
          *
-         * <p>P0-3: 使用 {@link GatewayErrorCode#getMessageKey()} 确保 i18n key 与错误码一一对应，
-         * 前端根据此键翻译为对应语言。
+         * <p>P2-2: 对于 {@link BusinessException} 优先使用其自带的消息
+         * （已通过 i18n 解析），其他情况使用 {@link GatewayErrorCode} 的 i18n key。
          */
         private String resolveMessage(Throwable ex, HttpStatus httpStatus) {
+            if (ex instanceof BusinessException bizEx && bizEx.getMessage() != null) {
+                return bizEx.getMessage();
+            }
             return switch (httpStatus) {
                 case NOT_FOUND -> GatewayErrorCode.ROUTE_NOT_FOUND.getMessageKey();
                 case BAD_GATEWAY -> GatewayErrorCode.BAD_GATEWAY.getMessageKey();
@@ -174,8 +228,12 @@ public class GatewayErrorConfig {
                 case GATEWAY_TIMEOUT -> GatewayErrorCode.GATEWAY_TIMEOUT.getMessageKey();
                 case REQUEST_TIMEOUT -> GatewayErrorCode.REQUEST_TIMEOUT.getMessageKey();
                 case TOO_MANY_REQUESTS -> GatewayErrorCode.RATE_LIMITED.getMessageKey();
+                case UNAUTHORIZED -> GatewayErrorCode.UNAUTHORIZED.getMessageKey();
+                case FORBIDDEN -> GatewayErrorCode.FORBIDDEN.getMessageKey();
                 case INTERNAL_SERVER_ERROR -> GatewayErrorCode.INTERNAL_ERROR.getMessageKey();
-                default -> ex.getMessage() != null ? ex.getMessage() : GatewayErrorCode.INTERNAL_ERROR.getMessageKey();
+                default -> ex.getMessage() != null
+                        ? ex.getMessage()
+                        : GatewayErrorCode.INTERNAL_ERROR.getMessageKey();
             };
         }
     }

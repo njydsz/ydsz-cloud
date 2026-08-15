@@ -33,18 +33,8 @@ spring:
         locator:
           enabled: true
           lower-case-service-id: true
-      globalcors:
-        cors-configurations:
-          '[/**]':
-            allowedOriginPatterns: ${CORS_ALLOWED_ORIGINS:https://uat.example.com,https://*.uat.example.com}
-            allowedMethods: "GET,POST,PUT,DELETE,OPTIONS,PATCH"
-            allowedHeaders: "Authorization,Content-Type,X-Requested-With,X-Access-Token,X-Trace-Id,X-Gray-Tag"
-            exposedHeaders:
-              - Authorization
-              - X-Trace-Id
-              - Content-Disposition
-            allowCredentials: true
-            maxAge: 3600
+      # P2-1 安全修复：globalcors 已移除，CORS 改由 ydsz.gateway.cors.allowed-origin 单一可信来源控制
+      # 避免 CorsWebFilter 与 globalcors 双重注册导致行为不确定
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
         # P0-4: 请求体大小限制 10MB（防 DoS）
@@ -79,9 +69,18 @@ ydsz:
     # P0-2: 内部头签名密钥（与 JWT 密钥分离）
     # UAT 环境通过 YDSZ_GATEWAY_INTERNAL_SIGN_SECRET 环境变量注入
     internal-sign-secret: ${YDSZ_GATEWAY_INTERNAL_SIGN_SECRET:${JWT_SECRET:}}
+    # P2-1: CORS 单一可信来源（与凭据模式互斥校验）
+    cors:
+      allowed-origin: ${YDSZ_GATEWAY_CORS_ALLOWED_ORIGIN:https://uat.example.com}
+      allowed-methods: GET,POST,PUT,DELETE,OPTIONS,PATCH
+      allowed-headers: Authorization,Content-Type,X-Requested-With,X-Trace-Id,X-Gray-Tag
+      exposed-headers: X-Trace-Id,Content-Disposition
+      allow-credentials: true
+      max-age-seconds: 3600
+      enabled: true
     # P0-4: WebSocket Origin 白名单
     websocket:
-      allowed-origins: ${YDSZ_GATEWAY_WS_ALLOWED_ORIGINS:https://uat.example.com,https://*.uat.example.com}
+      allowed-origins: ${YDSZ_GATEWAY_WS_ALLOWED_ORIGINS:https://uat.example.com}
     # P0-阶段二-6: HttpClient 连接池配置
     httpclient:
       pool:

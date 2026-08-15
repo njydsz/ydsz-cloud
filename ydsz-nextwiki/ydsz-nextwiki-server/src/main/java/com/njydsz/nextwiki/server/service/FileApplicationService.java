@@ -38,6 +38,7 @@ import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.service.FileVersionDomainService;
 import com.njydsz.nextwiki.domain.service.FolderDomainService;
 import com.njydsz.nextwiki.domain.service.QuotaDomainService;
+import com.njydsz.nextwiki.domain.service.StorageReferenceService;
 import com.njydsz.nextwiki.domain.service.TrashDomainService;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
@@ -73,6 +74,7 @@ public class FileApplicationService {
     private final FolderDomainService folderDomainService;
     private final FileVersionDomainService versionDomainService;
     private final QuotaDomainService quotaDomainService;
+    private final StorageReferenceService storageReferenceService;
     private final TrashDomainService trashDomainService;
     private final FileNodeRepository fileNodeRepository;
     private final ApplicationEventPublisher eventPublisher;
@@ -188,7 +190,8 @@ public class FileApplicationService {
                 FileNode dedupedNode = buildDedupedFileNode(resolvedParentId, fileName, suffix,
                         existing, fileHash, path, level, userId);
                 FileNode saved = fileNodeRepository.save(dedupedNode);
-        indexUpsert(saved);
+                indexUpsert(saved);
+                storageReferenceService.increment(existing.getStorageKey());
                 versionDomainService.createVersion(saved.getId(), existing.getStorageKey(),
                         existing.getSize(), fileHash, existing.getMimeType(), "秒传", userId);
                 quotaDomainService.addUsage("user", userId, existing.getSize(), 1);
@@ -228,6 +231,7 @@ public class FileApplicationService {
                 storageKey, fileHash, path, level, userId);
         FileNode saved = fileNodeRepository.save(fileNode);
         indexUpsert(saved);
+        storageReferenceService.increment(storageKey);
 
         // 8. 创建版本记录
         versionDomainService.createVersion(saved.getId(), storageKey, file.getSize(),

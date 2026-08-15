@@ -83,9 +83,18 @@ ydsz:
   gateway:
     # P0-2: 内部头签名密钥（生产环境必须通过环境变量注入强随机密钥）
     internal-sign-secret: ${YDSZ_GATEWAY_INTERNAL_SIGN_SECRET:}
+    # P2-1: CORS 单一可信来源（与凭据模式互斥校验，生产环境禁止通配符）
+    cors:
+      allowed-origin: ${YDSZ_GATEWAY_CORS_ALLOWED_ORIGIN:https://ydsz.example.com}
+      allowed-methods: GET,POST,PUT,DELETE,OPTIONS,PATCH
+      allowed-headers: Authorization,Content-Type,X-Requested-With,X-Trace-Id,X-Gray-Tag
+      exposed-headers: X-Trace-Id,Content-Disposition
+      allow-credentials: true
+      max-age-seconds: 3600
+      enabled: true
     # P0-4: WebSocket Origin 白名单（生产环境必须配置）
     websocket:
-      allowed-origins: ${YDSZ_GATEWAY_WS_ALLOWED_ORIGINS:https://ydsz.example.com,https://*.ydsz.example.com}
+      allowed-origins: ${YDSZ_GATEWAY_WS_ALLOWED_ORIGINS:https://ydsz.example.com}
     # P0-阶段二-6: HttpClient 连接池配置
     httpclient:
       pool:
