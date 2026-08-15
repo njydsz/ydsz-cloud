@@ -424,6 +424,13 @@ logging:
 - `[DeadLetterRetryScheduler]` — 死信重试扫描
 - `[ConsumerGuard]` — 消费者线程恢复
 
+## 相关文档
+
+| 文档 | 说明 |
+|---|---|
+| [MQ 选型决策树](docs/mq-selection-guide.md) | 7 种 MQ 引擎选型指南、对比矩阵、Q&A、配置示例 |
+
 ## 变更记录
 
+- **v1.0.1**（2026-08-16）：新增 MQ 选型决策树文档、消息轨迹追踪 REST API、消费者组重平衡监控、统一序列化器 SPI、@QueueListener 注解驱动消费、Actuator 端点、多 MQ 拓扑支持
 - **v1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节；完善配置项表、SPI 扩展点、健康检查、注意事项

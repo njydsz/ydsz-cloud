@@ -17,7 +17,7 @@ import com.njydsz.common.util.id.IdGenerator;
  * 发布，监听方使用 {@code @EventListener} + {@code @Async} 异步处理，解耦主流程事务。
  *
  * <p><b>P2-1</b>：现在继承 {@link DomainEvent}，复用统一的元数据字段（tenantId/userId/traceId），
- * 事件类型常量定义在 {@link com.njydsz.common.event.api.ModuleEventTypes}。
+ * 事件类型常量定义在 {@link com.njydsz.common.event.api.DomainEventTypes}。
  *
  * <p>事件类型（eventType）枚举：
  * <ul>

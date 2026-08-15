@@ -4,6 +4,8 @@ import java.util.List;
 
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.EventStore;
+import com.njydsz.common.event.model.OutboxMessage;
+import com.njydsz.common.json.YdszJson;
 
 /**
  * 基于 Outbox 的领域事件存储适配器
@@ -49,7 +51,12 @@ public class OutboxEventStore implements EventStore {
      */
     @Override
     public void append(DomainEvent event) {
-        outboxService.appendToOutbox(event);
+        outboxService.appendToOutbox(OutboxMessage.builder()
+                .aggregateType(event.getAggregateType())
+                .aggregateId(event.getAggregateId())
+                .eventType(event.getEventType())
+                .payload(YdszJson.toJson(event))
+                .deduplicationId(event.getEventId()));
     }
 
     /**

@@ -7,8 +7,10 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.event.api.DomainEvent;
-import com.njydsz.common.event.api.ModuleEventTypes;
+import com.njydsz.common.event.api.DomainEventTypes;
+import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.event.service.OutboxService;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.userinfo.domain.entity.Department;
 import com.njydsz.userinfo.domain.entity.Role;
 import com.njydsz.userinfo.domain.entity.UserAccount;
@@ -56,7 +58,7 @@ public class UserDomainEventPublisher {
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("username", user.getUsername());
         metadata.put("realName", user.getRealName());
-        publish(ModuleEventTypes.USER_CREATED, user.getId(), "USER", metadata);
+        publish(DomainEventTypes.USER_CREATED, user.getId(), "USER", metadata);
     }
 
     /**
@@ -71,7 +73,7 @@ public class UserDomainEventPublisher {
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("username", user.getUsername());
         metadata.put("status", user.getStatus());
-        publish(ModuleEventTypes.USER_UPDATED, user.getId(), "USER", metadata);
+        publish(DomainEventTypes.USER_UPDATED, user.getId(), "USER", metadata);
     }
 
     /**
@@ -83,7 +85,7 @@ public class UserDomainEventPublisher {
     public void publishUserDeleted(String userId, String username) {
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("username", username);
-        publish(ModuleEventTypes.USER_DELETED, userId, "USER", metadata);
+        publish(DomainEventTypes.USER_DELETED, userId, "USER", metadata);
     }
 
     /**
@@ -96,7 +98,7 @@ public class UserDomainEventPublisher {
         Map<String, Object> metadata = new HashMap<>();
         metadata.put("action", "ROLE_CHANGED");
         metadata.put("roleCount", roleCount);
-        publish(ModuleEventTypes.ROLE_CHANGED, userId, "USER", metadata);
+        publish(DomainEventTypes.ROLE_CHANGED, userId, "USER", metadata);
     }
 
     /**
@@ -113,7 +115,7 @@ public class UserDomainEventPublisher {
         metadata.put("roleId", role.getId());
         metadata.put("roleCode", role.getRoleCode());
         metadata.put("action", action);
-        publish(ModuleEventTypes.ROLE_CHANGED, role.getId(), "ROLE", metadata);
+        publish(DomainEventTypes.ROLE_CHANGED, role.getId(), "ROLE", metadata);
     }
 
     /**
@@ -131,7 +133,7 @@ public class UserDomainEventPublisher {
         metadata.put("deptCode", dept.getDeptCode());
         metadata.put("deptName", dept.getDeptName());
         metadata.put("action", action);
-        publish(ModuleEventTypes.DEPARTMENT_CHANGED, dept.getId(), "DEPARTMENT", metadata);
+        publish(DomainEventTypes.ORG_STRUCTURE_CHANGED, dept.getId(), "DEPARTMENT", metadata);
     }
 
     /**
@@ -142,7 +144,12 @@ public class UserDomainEventPublisher {
         DomainEvent event = new UserDomainEvent(eventType, aggregateId, aggregateType, metadata);
         OutboxService outbox = outboxServiceProvider.getIfAvailable();
         if (outbox != null) {
-            outbox.appendToOutbox(event);
+            outbox.appendToOutbox(OutboxMessage.builder()
+                    .aggregateType(event.getAggregateType())
+                    .aggregateId(event.getAggregateId())
+                    .eventType(event.getEventType())
+                    .payload(YdszJson.toJson(event))
+                    .deduplicationId(event.getEventId()));
             log.debug("Domain event published via Outbox: type={}, aggregateId={}", eventType, aggregateId);
         } else {
             log.debug("OutboxService not available, skipping domain event: type={}, aggregateId={}",

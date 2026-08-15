@@ -21,6 +21,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.njydsz.common.queue.controller.DeadLetterQueueController;
 import com.njydsz.common.queue.controller.TraceQueryController;
+import com.njydsz.common.queue.actuator.QueueEndpoint;
 import com.njydsz.common.queue.dedup.DedupCleanupScheduler;
 import com.njydsz.common.queue.dedup.MessageDeduplicator;
 import com.njydsz.common.queue.health.QueueHealthIndicator;
@@ -426,6 +427,25 @@ public class QueueConfiguration {
     public DeadLetterQueueController deadLetterQueueController(DeadLetterQueueService deadLetterQueueService) {
         log.info("[Queue] 注册死信队列管理 REST API");
         return new DeadLetterQueueController(deadLetterQueueService);
+    }
+
+    // ==================== Actuator 端点配置 ====================
+
+    /**
+     * 注册消息队列 Actuator 端点
+     *
+     * <p>提供 /actuator/queues 端点，用于查询消息队列运行状态。
+     * 需要 spring-boot-actuator 依赖。
+     *
+     * @param queueManager 队列管理器
+     * @return 队列监控端点实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(QueueEndpoint.class)
+    @ConditionalOnClass(name = "org.springframework.boot.actuate.endpoint.annotation.Endpoint")
+    public QueueEndpoint queueEndpoint(QueueManager queueManager) {
+        log.info("[Queue] 注册消息队列 Actuator 端点");
+        return new QueueEndpoint(queueProperties, queueManager);
     }
 
     // ==================== Micrometer 指标配置 ====================

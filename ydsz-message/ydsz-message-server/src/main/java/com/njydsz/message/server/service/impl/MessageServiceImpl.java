@@ -75,6 +75,7 @@ import com.njydsz.message.server.template.TemplateVariableValidator;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.event.service.OutboxService;
 
 /**
@@ -944,7 +945,11 @@ log.debug("[Message] 智能推送时间优化失败,降级立即发送: receiver
         try {
             OutboxService outboxService = outboxServiceProvider.getIfAvailable();
             if (outboxService != null) {
-                outboxService.appendToOutbox(aggregateType, aggregateId, eventType, payload);
+                outboxService.appendToOutbox(OutboxMessage.builder()
+                        .aggregateType(aggregateType)
+                        .aggregateId(aggregateId)
+                        .eventType(eventType)
+                        .payload(payload));
             } else {
                 log.debug("[Outbox] OutboxService not configured, skip: type={} id={}", eventType, aggregateId);
             }

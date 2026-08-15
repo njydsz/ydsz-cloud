@@ -8,7 +8,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.common.event.model.StandardEventTypes;
+import com.njydsz.common.event.api.DomainEventTypes;
+import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ArrayNode;
@@ -99,7 +100,7 @@ public class AlertDispatcher {
             dispatch(event.context(), event.rule());
             // 发布任务告警领域事件到 Outbox
             publishOutboxEvent(
-                    event.recovery() ? StandardEventTypes.JOB_EXECUTION_SUCCESS : StandardEventTypes.JOB_EXECUTION_FAILED,
+                    event.recovery() ? DomainEventTypes.JOB_EXECUTION_SUCCESS : DomainEventTypes.JOB_EXECUTION_FAILED,
                     event.context().jobId(),
                     Map.of("ruleId", event.rule().getId(), "jobKey", event.context().jobKey(),
                             "recovery", event.recovery()));
@@ -570,8 +571,11 @@ public class AlertDispatcher {
             return;
         }
         try {
-            outboxService.appendToOutbox("Job", aggregateId, eventType,
-                    YdszJson.toJson(payload));
+            outboxService.appendToOutbox(OutboxMessage.builder()
+                    .aggregateType("Job")
+                    .aggregateId(aggregateId)
+                    .eventType(eventType)
+                    .payload(YdszJson.toJson(payload)));
         } catch (Exception e) {
             log.warn("[AlertDispatcher] Failed to publish outbox event: type={}, id={}, error={}",
                     eventType, aggregateId, e.getMessage());

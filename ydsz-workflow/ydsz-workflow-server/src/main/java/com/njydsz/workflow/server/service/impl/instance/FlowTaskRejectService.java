@@ -18,7 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.event.model.StandardEventTypes;
+import com.njydsz.common.event.api.DomainEventTypes;
+import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
@@ -208,10 +209,11 @@ public class FlowTaskRejectService {
             payload.put("initiatorId", instance.getInitiatorId() != null ? instance.getInitiatorId() : "");
             payload.put("rejectReason", dto.getComment() != null ? dto.getComment() : "未提供原因");
             payload.put("operatorId", dto.getUserId() != null ? dto.getUserId() : "");
-            outboxService.appendToOutbox(
-                    "FlowInstance", instance.getId(),
-                    StandardEventTypes.FLOW_INSTANCE_REJECTED,
-                    YdszJson.toJson(payload));
+            outboxService.appendToOutbox(OutboxMessage.builder()
+                    .aggregateType("FlowInstance")
+                    .aggregateId(instance.getId())
+                    .eventType(DomainEventTypes.FLOW_INSTANCE_REJECTED)
+                    .payload(YdszJson.toJson(payload)));
         } catch (Exception e) {
             log.warn("[Flow] 发布 REJECTED Outbox 事件失败: instanceId={} err={}",
                     instance.getId(), e.getMessage());

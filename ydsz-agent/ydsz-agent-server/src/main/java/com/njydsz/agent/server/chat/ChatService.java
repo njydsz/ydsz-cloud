@@ -25,7 +25,8 @@ import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;
-import com.njydsz.common.event.model.StandardEventTypes;
+import com.njydsz.common.event.api.DomainEventTypes;
+import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.json.YdszJson;
@@ -192,7 +193,7 @@ public class ChatService {
         log.info("[Chat] 对话完成: convId={}, tokens={}", convId,
                 response.getUsage() != null ? response.getUsage().getTotalTokens() : 0);
         traceRecorder.endTrace(traceId, "SUCCESS");
-        publishEvent(StandardEventTypes.CONVERSATION_CREATED, convId, response);
+        publishEvent(DomainEventTypes.CONVERSATION_CREATED, convId, response);
         return new ChatResponse(response.getId(), response.getModel(),
                 assistantMsg, response.getUsage(), response.getFinishReason(), List.of());
     }
@@ -389,8 +390,11 @@ public class ChatService {
             return;
         }
         try {
-            outboxService.appendToOutbox("Conversation", aggregateId, eventType,
-                    YdszJson.toJson(payload));
+            outboxService.appendToOutbox(OutboxMessage.builder()
+                    .aggregateType("Conversation")
+                    .aggregateId(aggregateId)
+                    .eventType(eventType)
+                    .payload(YdszJson.toJson(payload)));
         } catch (Exception e) {
             log.warn("[Chat] Failed to publish outbox event: type={}, id={}, error={}",
                     eventType, aggregateId, e.getMessage());

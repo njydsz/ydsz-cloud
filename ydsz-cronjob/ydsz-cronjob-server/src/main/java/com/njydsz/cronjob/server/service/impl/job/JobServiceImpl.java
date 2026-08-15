@@ -54,6 +54,7 @@ import com.njydsz.cronjob.server.service.job.TenantQuotaService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.event.service.OutboxService;
 
 /**
@@ -1107,7 +1108,11 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         try {
             OutboxService outboxService = outboxServiceProvider.getIfAvailable();
             if (outboxService != null) {
-                outboxService.appendToOutbox(aggregateType, aggregateId, eventType, payload);
+                outboxService.appendToOutbox(OutboxMessage.builder()
+                        .aggregateType(aggregateType)
+                        .aggregateId(aggregateId)
+                        .eventType(eventType)
+                        .payload(payload));
             } else {
                 log.debug("[Outbox] OutboxService not configured, skip: type={} id={}", eventType, aggregateId);
             }

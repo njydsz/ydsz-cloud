@@ -21,7 +21,8 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.event.model.StandardEventTypes;
+import com.njydsz.common.event.api.DomainEventTypes;
+import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.file.domain.FileStorage;
 import com.njydsz.common.json.YdszJson;
@@ -700,7 +701,7 @@ public class FileApplicationService {
                 .operatedAt(LocalDateTime.now())
                 .build());
         // 同步发布到 Outbox（跨模块事件驱动）
-        publishOutboxEvent(StandardEventTypes.FILE_UPLOADED, saved.getId(), saved);
+        publishOutboxEvent(DomainEventTypes.FILE_UPLOADED, saved.getId(), saved);
     }
 
     /**
@@ -712,8 +713,11 @@ public class FileApplicationService {
             return;
         }
         try {
-            outboxService.appendToOutbox("FileNode", aggregateId, eventType,
-                    YdszJson.toJson(payload));
+            outboxService.appendToOutbox(OutboxMessage.builder()
+                    .aggregateType("FileNode")
+                    .aggregateId(aggregateId)
+                    .eventType(eventType)
+                    .payload(YdszJson.toJson(payload)));
         } catch (Exception e) {
             log.warn("Failed to publish outbox event: type={}, id={}, error={}",
                     eventType, aggregateId, e.getMessage());

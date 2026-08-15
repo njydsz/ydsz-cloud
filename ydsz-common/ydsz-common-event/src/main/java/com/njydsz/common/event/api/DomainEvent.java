@@ -30,7 +30,7 @@ import com.njydsz.common.util.id.IdGenerator;
  * 由 {@code RequestContext} / MDC 自动传透，事件仅保留业务语义字段。
  * 如需持久化上下文（如 Outbox），由写入方在落库时从 RequestContext 解析。
  *
- * <p>跨模块事件类型常量定义在 {@link ModuleEventTypes}。
+ * <p>跨模块事件类型常量定义在 {@link DomainEventTypes}。
  *
  * <p><b>创建方式：</b>推荐使用 Builder 模式创建领域事件，自动填充 eventId、occurredAt：
  * <pre>{@code

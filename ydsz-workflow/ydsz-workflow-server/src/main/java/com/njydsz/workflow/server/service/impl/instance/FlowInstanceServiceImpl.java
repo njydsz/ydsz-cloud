@@ -433,7 +433,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         // P2-35: 发布 Spring 异步事件
         publishWorkflowEvent("INSTANCE_TERMINATED", instanceId, null);
         // P0-2: 发布 Outbox 事件 FLOW_INSTANCE_TERMINATED（跨模块可靠投递）
-        publishOutboxEvent(StandardEventTypes.FLOW_INSTANCE_TERMINATED, instanceId, instance,
+        publishOutboxEvent(DomainEventTypes.FLOW_INSTANCE_TERMINATED, instanceId, instance,
                 "flowTitle", instance.getTitle() != null ? instance.getTitle() : instance.getFlowName(),
                 "reason", reason != null ? reason : "管理员终止",
                 "initiatorId", instance.getInitiatorId() != null ? instance.getInitiatorId() : ""
@@ -563,7 +563,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         publishWorkflowEvent("INSTANCE_COMPLETED", instanceId, null);
         // P0-2: 发布 Outbox 事件 FLOW_INSTANCE_APPROVED（跨模块可靠投递）
         // 流程走完所有审批节点到达结束节点 = 审批通过，消息中心据此通知发起人
-        publishOutboxEvent(StandardEventTypes.FLOW_INSTANCE_APPROVED, instanceId, instance,
+        publishOutboxEvent(DomainEventTypes.FLOW_INSTANCE_APPROVED, instanceId, instance,
                 "flowTitle", instance.getTitle() != null ? instance.getTitle() : instance.getFlowName(),
                 "flowCode", instance.getFlowCode(),
                 "businessType", instance.getBusinessType() != null ? instance.getBusinessType() : "",
@@ -1522,7 +1522,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
      * <p>异常不影响主流程：Outbox 投递失败仅记录 WARN 日志，不回滚业务事务
      * （Outbox 表未写入时，后台轮询器自然不会投递，下游模块不感知，符合"最终一致"语义）。
      *
-     * @param eventType   事件类型（{@link StandardEventTypes#FLOW_INSTANCE_APPROVED} 等）
+     * @param eventType   事件类型（{@link DomainEventTypes#FLOW_INSTANCE_APPROVED} 等）
      * @param instanceId  实例 ID（作为 aggregateId）
      * @param instance    流程实例（可空，用于提取 tenantId）
      * @param kvPairs     payload 键值对（交替排列：k1, v1, k2, v2, ...）

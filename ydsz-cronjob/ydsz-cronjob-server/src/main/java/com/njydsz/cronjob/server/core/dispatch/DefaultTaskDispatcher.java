@@ -24,7 +24,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-import com.njydsz.common.event.model.StandardEventTypes;
+import com.njydsz.common.event.api.DomainEventTypes;
+import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.json.YdszJson;
 
@@ -1224,7 +1225,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     /**
      * P0-2: 发布任务执行失败 Outbox 事件（跨模块可靠投递）。
      *
-     * <p>消息中心订阅 {@link StandardEventTypes#JOB_EXECUTION_FAILED} 后据此发送告警通知。
+     * <p>消息中心订阅 {@link DomainEventTypes#JOB_EXECUTION_FAILED} 后据此发送告警通知。
      * OutboxService 为可选依赖，未配置时安全降级（仅 DEBUG 日志）。
      * 异常不影响主流程：投递失败仅记录 WARN。
      *
@@ -1248,10 +1249,11 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
             payload.put("triggerType", log0.getTriggerType() != null ? log0.getTriggerType() : "");
             payload.put("durationMs", log0.getDurationMs());
             payload.put("tenantId", job.getTenantId() != null ? job.getTenantId() : "");
-            outboxService.appendToOutbox(
-                    "JobLog", log0.getId(),
-                    StandardEventTypes.JOB_EXECUTION_FAILED,
-                    YdszJson.toJson(payload));
+            outboxService.appendToOutbox(OutboxMessage.builder()
+                    .aggregateType("JobLog")
+                    .aggregateId(log0.getId())
+                    .eventType(DomainEventTypes.JOB_EXECUTION_FAILED)
+                    .payload(YdszJson.toJson(payload)));
         } catch (Exception e) {
             log.warn("[Dispatcher] 发布 JOB_EXECUTION_FAILED Outbox 事件失败: jobKey={} reason={}",
                     job.getJobKey(), e.getMessage());

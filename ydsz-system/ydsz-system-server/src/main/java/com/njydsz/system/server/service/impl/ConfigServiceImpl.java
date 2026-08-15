@@ -19,7 +19,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.auth.annotation.DataScope;
 import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.common.event.model.StandardEventTypes;
+import com.njydsz.common.event.api.DomainEventTypes;
+import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.exception.custom.BusinessException;
@@ -458,9 +459,11 @@ public class ConfigServiceImpl implements ConfigService {
                 if (configGroup != null) {
                     payload.put("configGroup", configGroup);
                 }
-                outboxService.appendToOutbox(
-                        "Config", null, StandardEventTypes.CONFIG_CHANGED,
-                        YdszJson.toJson(payload));
+                outboxService.appendToOutbox(OutboxMessage.builder()
+                        .aggregateType("Config")
+                        .aggregateId(null)
+                        .eventType(DomainEventTypes.CONFIG_CHANGED)
+                        .payload(YdszJson.toJson(payload)));
             } catch (Exception e) {
                 log.warn("Failed to publish CONFIG_CHANGED event: error={}", e.getMessage());
             }

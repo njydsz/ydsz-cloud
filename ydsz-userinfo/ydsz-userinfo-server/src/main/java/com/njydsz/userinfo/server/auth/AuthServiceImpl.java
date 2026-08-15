@@ -29,7 +29,8 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.vo.LoginVO;
 import com.njydsz.userinfo.infra.mapper.RoleMapper;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
-import com.njydsz.common.event.model.StandardEventTypes;
+import com.njydsz.common.event.api.DomainEventTypes;
+import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.userinfo.infra.mapper.UserRoleMapper;
@@ -236,7 +237,7 @@ public class AuthServiceImpl implements AuthService {
         userInfoMetrics.stopTimer(sample);
 
         // 发布用户登录领域事件到 Outbox
-        publishEvent(StandardEventTypes.USER_LOGIN, user.getId(), user);
+        publishEvent(DomainEventTypes.USER_LOGIN, user.getId(), user);
 
         LoginVO result = new LoginVO();
         result.setAccessToken(accessToken);
@@ -408,8 +409,11 @@ public class AuthServiceImpl implements AuthService {
             return;
         }
         try {
-            outboxService.appendToOutbox("UserAccount", aggregateId, eventType,
-                    YdszJson.toJson(payload));
+            outboxService.appendToOutbox(OutboxMessage.builder()
+                    .aggregateType("UserAccount")
+                    .aggregateId(aggregateId)
+                    .eventType(eventType)
+                    .payload(YdszJson.toJson(payload)));
         } catch (Exception e) {
             log.warn("Failed to publish outbox event: type={}, id={}, error={}",
                     eventType, aggregateId, e.getMessage());
