@@ -9,9 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 
-import com.njydsz.common.auth.audit.DefaultSecurityAuditPublisher;
-import com.njydsz.common.auth.audit.SecurityAuditEvent;
-import com.njydsz.common.auth.audit.SecurityAuditPublisher;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
@@ -36,8 +33,6 @@ import io.micrometer.core.instrument.Timer;
  *   <li>{@code auth.redis.available} - Redis 可用状态 Gauge</li>
  * </ul>
  *
- * <p>同时负责权限拒绝事件的安全审计日志记录。
- *
  * <p><b>性能要点：</b>动态标签组合的 Counter/Timer 通过 {@link ConcurrentHashMap} 缓存，
  * 避免每次调用都创建新的 Builder 对象。Micrometer 内部对同 name+tags 的注册做了幂等处理，
  * 但缓存 Builder 仍可减少对象分配与 map 查询开销。
@@ -55,16 +50,7 @@ public class AuthMetricsCollector implements AuthMetrics, PermissionMetrics {
     /** 默认降级值，避免 null/空串污染指标基数 */
     private static final String UNKNOWN = "unknown";
 
-    /** 权限拒绝结果常量 */
-    private static final String RESULT_FAILURE = "FAILURE";
-
-    /** 权限拒绝动作常量 */
-    private static final String ACTION_PERMISSION_DENIED = "PERMISSION_DENIED";
-
     private final MeterRegistry meterRegistry;
-
-    /** 安全审计事件发布者，可选 */
-    private final SecurityAuditPublisher auditPublisher;
 
     /** 动态标签 Counter 缓存，避免重复创建 Builder */
     private final ConcurrentMap<String, Counter> counterCache = new ConcurrentHashMap<>();
@@ -84,23 +70,12 @@ public class AuthMetricsCollector implements AuthMetrics, PermissionMetrics {
     private final AtomicInteger redisAvailable = new AtomicInteger(1);
 
     /**
-     * 构造指标采集器（使用默认审计发布者）。
+     * 构造指标采集器。
      *
      * @param meterRegistry Micrometer 注册器
      */
     public AuthMetricsCollector(MeterRegistry meterRegistry) {
-        this(meterRegistry, new DefaultSecurityAuditPublisher());
-    }
-
-    /**
-     * 构造指标采集器（自定义审计发布者）。
-     *
-     * @param meterRegistry  Micrometer 注册器
-     * @param auditPublisher 安全审计事件发布者
-     */
-    public AuthMetricsCollector(MeterRegistry meterRegistry, SecurityAuditPublisher auditPublisher) {
         this.meterRegistry = meterRegistry;
-        this.auditPublisher = auditPublisher;
         initMetrics();
     }
 
@@ -164,9 +139,6 @@ public class AuthMetricsCollector implements AuthMetrics, PermissionMetrics {
     public void recordPermissionDeny(String userId, String permissionType,
                                       String requiredPermissions, String resource) {
         permissionDenyCounter.increment();
-
-        // 发布安全审计事件
-        publishAuditEvent(userId, permissionType, requiredPermissions, resource);
     }
 
     @Override
@@ -190,37 +162,6 @@ public class AuthMetricsCollector implements AuthMetrics, PermissionMetrics {
     }
 
     // ==================== 私有方法 ====================
-
-    /**
-     * 构建并发布权限拒绝审计事件。
-     *
-     * @param userId             操作者用户 ID
-     * @param permissionType     权限类型
-     * @param requiredPermissions 要求的权限
-     * @param resource           被访问的资源
-     */
-    private void publishAuditEvent(String userId, String permissionType,
-                                    String requiredPermissions, String resource) {
-        if (auditPublisher == null) {
-            return;
-        }
-
-        try {
-            SecurityAuditEvent event = SecurityAuditEvent.builder()
-                    .actor(userId != null ? userId : UNKNOWN)
-                    .action(ACTION_PERMISSION_DENIED)
-                    .resource(resource)
-                    .result(RESULT_FAILURE)
-                    .detail("permissionType", permissionType)
-                    .detail("requiredPermissions", requiredPermissions)
-                    .build();
-
-            auditPublisher.publish(event);
-        } catch (Exception e) {
-            // 审计发布不应影响主流程，仅记录调试日志
-            log.debug("[AuthMetricsCollector] 发布审计事件失败: {}", e.getMessage());
-        }
-    }
 
     // ==================== 工具方法 ====================
 

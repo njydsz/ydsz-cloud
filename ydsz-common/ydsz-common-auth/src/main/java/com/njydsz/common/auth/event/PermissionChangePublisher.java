@@ -20,27 +20,18 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>通过 Redis Pub/Sub 通知其他节点（触发其他节点缓存失效）</li>
  * </ol>
  *
- * <p><b>使用示例：</b>
- * <pre>{@code
- * // 角色权限变更时调用
- * permissionChangePublisher.publishRolePermissionChanged("admin");
- *
- * // 角色数据权限变更时调用
- * permissionChangePublisher.publishRoleDataScopeChanged("admin");
- *
- * // 角色列权限变更时调用
- * permissionChangePublisher.publishRoleColumnPermissionChanged("admin");
- *
- * // 角色删除时调用
- * permissionChangePublisher.publishRoleDeleted("admin");
- * }</pre>
+ * <p><b>废弃原因：</b>Redis Pub/Sub 不保证送达，且需要业务代码显式调用发布方法。
+ * Redis Keyspace Notification 能够在 Redis 数据变更时精确触发缓存失效，更加可靠。
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 自 3.0.0 起标记废弃，计划 4.0.0 移除。
+ *             多节点缓存同步目标：Redis Keyspace Notification。
  *
  * @see PermissionChangedEvent
  * @see PermissionChangeListener
  */
+@Deprecated(forRemoval = true, since = "3.0.0")
 @Slf4j
 @RequiredArgsConstructor
 public class PermissionChangePublisher {

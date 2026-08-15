@@ -16,6 +16,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 import com.njydsz.common.safe.ip.IpAccessService;
 
+import jakarta.annotation.PreDestroy;
+
 /**
  * 安全事件自动响应聚合器
  *
@@ -93,11 +95,14 @@ public class SecurityEventAggregator {
         this.threshold = threshold;
         this.windowSeconds = windowSeconds;
 
+        // CHECKSTYLE.OFF: ThreadPoolCreate
+        // 单线程守护线程，专用于消费自动封禁命令队列，生命周期随 Bean 销毁
         this.blockConsumerExecutor = Executors.newSingleThreadExecutor(r -> {
             Thread t = new Thread(r, "safe-auto-block-consumer");
             t.setDaemon(true);
             return t;
         });
+        // CHECKSTYLE.ON: ThreadPoolCreate
         this.blockConsumerExecutor.submit(this::consumeBlockCommands);
 
         log.info("安全事件自动响应聚合器初始化: enabled={}, threshold={}, window={}s",
@@ -176,6 +181,8 @@ public class SecurityEventAggregator {
     /**
      * 触发自动封禁
      *
+     * <p>将封禁命令异步投递到队列，由单线程消费者执行，避免事件风暴放大。
+     *
      * @param ip       来源 IP
      * @param severity 最后一个事件的严重级别
      * @param count    窗口内事件数量
@@ -194,12 +201,11 @@ public class SecurityEventAggregator {
         log.warn("【安全事件自动响应】IP {} 在 {} 秒内触发 {} 次安全事件（严重级别: {}），自动封禁 {} 秒",
                 ip, windowSeconds, count, severity, blockSeconds);
 
-        if (ipAccessService != null) {
-            try {
-                ipAccessService.block(ip, blockSeconds);
-            } catch (Exception e) {
-                log.error("【安全事件自动响应】IP 自动封禁失败: ip={}, error={}", ip, e.getMessage());
-            }
+        // 异步投递封禁命令，解耦事件处理链
+        boolean offered = blockQueue.offer(new BlockCommand(ip, blockSeconds));
+        if (!offered) {
+            log.warn("【安全事件自动响应】封禁命令队列已满，降级为同步执行: ip={}", ip);
+            executeBlock(new BlockCommand(ip, blockSeconds));
         }
     }
 
@@ -248,6 +254,14 @@ public class SecurityEventAggregator {
             log.debug("【安全事件自动响应】清理过期事件记录: 清理IP={}, 活跃IP={}, 累计封禁={}",
                     cleanedEntries, ipEventTimestamps.size(), autoBlockedCount.get());
         }
+    }
+
+    /**
+     * 销毁回调：关闭异步消费者线程
+     */
+    @PreDestroy
+    public void destroy() {
+        blockConsumerExecutor.shutdownNow();
     }
 
     /**

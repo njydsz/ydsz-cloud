@@ -34,7 +34,7 @@ import org.springframework.core.env.PropertySource;
  *   "details": {
  *     "encryptorPasswordSource": "ENV_VARIABLE",
  *     "encryptedPropertyCount": 3,
- *     "encryptedProperties": ["spring.datasource.password", "spring.data.redis.password", "ydsz.jwt.secret"]
+ *     "encryptedProperties": ["spring.datasource.password", "spring.data.redis.password"]
  *   }
  * }</pre>
  *
@@ -48,19 +48,18 @@ public class ConfigEncryptHealthIndicator implements HealthIndicator {
     private static final String JASYPT_PASSWORD_ENV = "JASYPT_ENCRYPTOR_PASSWORD";
     private static final String JASYPT_PASSWORD_PROPERTY = "jasypt.encryptor.password";
 
-    /** 脱敏时仅显示属性名的最后一段（如 spring.datasource.password → password） */
+    /** details 中最多显示的属性数量 */
     private static final int MAX_DETAIL_ITEMS = 20;
 
     private final ConfigurableEnvironment environment;
+    private final long cacheTtlMs;
 
     /** 健康检查结果缓存 */
     private final AtomicReference<HealthCheckResult> cache = new AtomicReference<>();
 
-    /** 缓存 TTL */
-    private static final long CACHE_TTL_MS = 5000L;
-
-    public ConfigEncryptHealthIndicator(ConfigurableEnvironment environment) {
+    public ConfigEncryptHealthIndicator(ConfigurableEnvironment environment, long cacheTtlMs) {
         this.environment = environment;
+        this.cacheTtlMs = cacheTtlMs;
     }
 
     /**
@@ -73,12 +72,10 @@ public class ConfigEncryptHealthIndicator implements HealthIndicator {
      *   <li>存在加密属性但 Jasypt 主密码未配置（环境变量与配置项均缺失）→ DOWN，提示必须配置</li>
      *   <li>存在加密属性且主密码就绪 → UP，附带密钥来源与加密属性数量</li>
      * </ul>
-     *
-     * <p>details 中仅暴露属性名的最后一段（脱敏），不包含任何密文或明文值。
      */
     @Override
     public Health health() {
-        // 环境不可用时返回 UNKNOWN（编码规范要求的三态完整实现）
+        // 环境不可用时返回 UNKNOWN
         if (environment == null) {
             return Health.unknown()
                     .withDetail("error", "ConfigurableEnvironment is not available")
@@ -86,10 +83,12 @@ public class ConfigEncryptHealthIndicator implements HealthIndicator {
         }
 
         // 检查缓存（高频调用场景减少全量扫描）
-        HealthCheckResult cached = cache.get();
-        long now = System.currentTimeMillis();
-        if (cached != null && (now - cached.timestamp()) < CACHE_TTL_MS) {
-            return cached.health();
+        if (cacheTtlMs > 0) {
+            HealthCheckResult cached = cache.get();
+            long now = System.currentTimeMillis();
+            if (cached != null && (now - cached.timestamp()) < cacheTtlMs) {
+                return cached.health();
+            }
         }
 
         // 检查密钥来源
@@ -112,19 +111,21 @@ public class ConfigEncryptHealthIndicator implements HealthIndicator {
                     .withDetail("encryptedPropertyCount", encryptedCount);
             // 仅显示前 MAX_DETAIL_ITEMS 个属性名
             Set<String> displayKeys = new HashSet<>();
-            int i = 0;
+            int count = 0;
             for (String key : encryptedKeys) {
-                if (i++ >= MAX_DETAIL_ITEMS) {
+                if (count++ >= MAX_DETAIL_ITEMS) {
                     displayKeys.add("... (" + (encryptedKeys.size() - MAX_DETAIL_ITEMS) + " more)");
                     break;
                 }
-                displayKeys.add(maskKey(key));
+                displayKeys.add(key);
             }
             builder.withDetail("encryptedProperties", displayKeys);
         }
 
         Health result = builder.build();
-        cache.set(new HealthCheckResult(result, now));
+        if (cacheTtlMs > 0) {
+            cache.set(new HealthCheckResult(result, System.currentTimeMillis()));
+        }
         return result;
     }
 
@@ -205,17 +206,5 @@ public class ConfigEncryptHealthIndicator implements HealthIndicator {
         return value != null
                 && value.startsWith(ENC_PREFIX)
                 && value.endsWith(ENC_SUFFIX);
-    }
-
-    /**
-     * 脱敏属性名：仅保留最后一段
-     * <p>如 spring.datasource.password → ***.password
-     */
-    private String maskKey(String key) {
-        int lastDot = key.lastIndexOf('.');
-        if (lastDot < 0) {
-            return "***";
-        }
-        return "***" + key.substring(lastDot);
     }
 }

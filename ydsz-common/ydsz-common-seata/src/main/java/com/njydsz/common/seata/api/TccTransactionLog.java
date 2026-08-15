@@ -23,6 +23,9 @@ public class TccTransactionLog {
     /** 事务名称 */
     private final String transactionName;
 
+    /** TCC Action Bean 名称（用于跨实例恢复时查找 Action） */
+    private String actionBeanName;
+
     /** 分支状态 */
     private TccBranchStatus status;
 
@@ -208,5 +211,23 @@ public class TccTransactionLog {
      */
     public void setLastError(String lastError) {
         this.lastError = lastError;
+    }
+
+    /**
+     * 获取 TCC Action Bean 名称
+     *
+     * @return Bean 名称，未设置时返回 null
+     */
+    public String getActionBeanName() {
+        return actionBeanName;
+    }
+
+    /**
+     * 设置 TCC Action Bean 名称
+     *
+     * @param actionBeanName Spring Bean 名称
+     */
+    public void setActionBeanName(String actionBeanName) {
+        this.actionBeanName = actionBeanName;
     }
 }

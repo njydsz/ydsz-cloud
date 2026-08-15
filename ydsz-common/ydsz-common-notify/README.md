@@ -206,6 +206,27 @@ public class OrderService {
 
 ## 配置项
 
+### 简化配置（推荐）
+
+对于仅需邮件和基础 IM 通知的场景，可使用简化配置前缀 `ydsz.notify-lite`：
+
+| 配置 | 默认值 | 说明 |
+|---|---|---|
+| `ydsz.notify-lite.enabled` | true | 是否启用通知模块 |
+| `ydsz.notify-lite.email.enabled` | true | 是否启用邮件渠道 |
+| `ydsz.notify-lite.email.smtp-host` | - | SMTP 主机地址 |
+| `ydsz.notify-lite.email.smtp-port` | 465 | SMTP 端口 |
+| `ydsz.notify-lite.email.from-mail` | - | 发件人邮箱 |
+| `ydsz.notify-lite.email.from-name` | - | 发件人显示名称 |
+| `ydsz.notify-lite.email.password` | - | 邮箱密码/授权码 |
+| `ydsz.notify-lite.wecom.enabled` | false | 是否启用企业微信 |
+| `ydsz.notify-lite.dingtalk.enabled` | false | 是否启用钉钉 |
+| `ydsz.notify-lite.feishu.enabled` | false | 是否启用飞书 |
+
+### 完整配置
+
+高级功能（DKIM 签名、邮件追踪、渠道降级等）请使用完整配置前缀 `ydsz.notify`：
+
 | 配置 | 默认值 | 说明 |
 |---|---|---|
 | `ydsz.notify.enabled` | true | 是否启用通知模块 |
@@ -521,13 +542,13 @@ public class WebhookNotifySender implements NotifyChannelStrategy {
 
 ## 注意事项
 
-1. **重试队列持久化**：`ydsz.notify.retry-queue.persistent=true` 时使用 Redis ZSET 持久化，服务重启不丢失待重试消息；`persistent=false` 时退化为内存队列，重启后丢失。多实例部署必须开启持久化。
-2. **限流单实例限制**：`NotifyRateLimiterManager` 为纯内存实现，仅适用于单实例部署。多实例部署应使用 `common-redis` 的 `RedisRateLimiter#tryAcquireSlidingWindow()` 实现分布式滑动窗口限流。
-3. **熔断器默认参数**：默认 `failureThreshold=5`、`recoveryTimeoutMs=60000`，连续失败 5 次触发熔断，熔断持续 60 秒后半开探测。HALF_OPEN 状态下仅允许单个探测请求通过（CAS 保证）。
-4. **降级链最多 3 次**：`NotifyFallbackManager` 最多尝试 3 个备用渠道，防止无限降级；降级渠道不可用或未启用时自动跳过。
-5. **密码加密**：邮件密码支持 `ENC(xxx)` 格式通过 Jasypt 解密，需引入 `jasypt-spring-boot-starter` 依赖；未引入时密码以明文存储。
-6. **事务性发布**：`TransactionalNotifyPublisher` 在事务提交后才投递通知，避免事务回滚后通知已发送的脏发问题。
-7. **渠道枚举未完成项**：`NotifyChannel.SMS` 与 `NotifyChannel.INSITE` 当前版本暂未完整实现（见枚举注释），生产使用前需确认实现状态。
+1. **简化配置**：`ydsz.notify-lite` 提供精简配置入口，适用于仅需邮件和基础 IM 通知的场景；高级功能（DKIM、追踪、降级、去重等）请使用 `ydsz.notify` 完整配置。
+2. **重试队列持久化**：`ydsz.notify.retry-queue.persistent=true` 时使用 Redis ZSET 持久化，服务重启不丢失待重试消息；`persistent=false` 时退化为内存队列，重启后丢失。多实例部署必须开启持久化。
+3. **限流实现**：`NotifyRateLimiterManager` 默认委托 `common-redis` 的 `RedisRateLimiter#tryAcquireSlidingWindow()` 实现分布式滑动窗口限流。单实例部署可直接使用内存限流。
+4. **熔断器默认参数**：默认连续失败 5 次触发熔断，熔断持续 60 秒后半开探测。HALF_OPEN 状态下仅允许单个探测请求通过。
+5. **降级链最多 3 次**：`NotifyFallbackManager` 最多尝试 3 个备用渠道，防止无限降级；降级渠道不可用或未启用时自动跳过。
+6. **密码加密**：邮件密码支持 `ENC(xxx)` 格式通过 Jasypt 解密，需引入 `jasypt-spring-boot-starter` 依赖；未引入时密码以明文存储。
+7. **事务性发布**：`TransactionalNotifyPublisher` 在事务提交后才投递通知，避免事务回滚后通知已发送的脏发问题。
 8. **Micrometer 可选**：`NotifyMetrics` 在 `micrometer-core` 不存在时降级为 no-op，不影响功能；建议生产环境引入以保证可观测性。
 9. **审计日志独立 Logger**：`NotifyAuditService` 使用专用 logger `NOTIFY_AUDIT`，便于在 logback 中单独配置 appender 与保留策略；接收者标识自动脱敏（保留前 3 位）。
 10. **共享虚拟线程池**：`NotifyConfiguration` 注册名为 `notifyVirtualThreadExecutor` 的共享虚拟线程池，供 `parallelBatchSend` 与 `AsyncNotifyService` 使用，JDK 21+ 生效。

@@ -311,7 +311,9 @@ public class AuthConfiguration {
      * @param redisTemplate Redis 模板
      * @param evaluator     权限评估器
      * @return Redis 消息监听容器
+     * @deprecated 自 3.0.0 起标记废弃，迁移至 Redis Keyspace Notification。
      */
+    @Deprecated
     @Bean
     @ConditionalOnBean(StringRedisTemplate.class)
     public RedisMessageListenerContainer permissionCacheRedisSubscriber(

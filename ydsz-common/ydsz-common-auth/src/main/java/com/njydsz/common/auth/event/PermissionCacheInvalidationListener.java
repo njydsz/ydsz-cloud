@@ -97,7 +97,10 @@ public class PermissionCacheInvalidationListener {
      * @param redisTemplate Redis 模板
      * @param evaluator     权限评估器
      * @return RedisMessageListenerContainer 实例
+     * @deprecated 自 3.0.0 起标记废弃，计划 4.0.0 移除。
+     *             迁移目标：Redis Keyspace Notification（{@link PermissionKeyspaceNotificationListener}）。
      */
+    @Deprecated(forRemoval = true, since = "3.0.0")
     public static RedisMessageListenerContainer createRedisSubscriber(
             StringRedisTemplate redisTemplate, RbacPermissionEvaluator evaluator) {
         RedisMessageListenerContainer container = new RedisMessageListenerContainer();
