@@ -624,6 +624,27 @@ public abstract class BaseExceptionHandler {
     }
 
     /**
+     * 构建带详细信息的统一错误响应（强制包含 ExceptionInfo，便于客户端排障）。
+     *
+     * <p>与 {@link #buildStandardErrorResponse} 不同，本方法不受
+     * {@link #includeExceptionInfo()} 开关控制，始终填充 ExceptionInfo。
+     * 适用于需要强制返回结构化错误详情的场景（如数据完整性异常分类）。
+     *
+     * @param code      错误码字符串
+     * @param key       i18n 消息键
+     * @param message   已解析的错误消息
+     * @param httpStatus HTTP 状态码
+     * @param path      请求路径
+     * @return 统一 BaseResponse（始终包含 ExceptionInfo）
+     */
+    protected BaseResponse<?> buildWithInfo(
+            String code, String key, String message, int httpStatus, String path) {
+        ExceptionInfo info = new ExceptionInfo(code, key, message, httpStatus);
+        info.setPath(path);
+        return errorResponse(code, message, info);
+    }
+
+    /**
      * 构建校验错误响应
      *
      * @param errorCode  异常码

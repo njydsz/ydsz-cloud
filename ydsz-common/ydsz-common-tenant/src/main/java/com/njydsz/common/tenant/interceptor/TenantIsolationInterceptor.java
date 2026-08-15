@@ -1,12 +1,12 @@
 package com.njydsz.common.tenant.interceptor;
 
 import java.sql.Connection;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.MappedStatement;
@@ -43,8 +43,8 @@ import net.sf.jsqlparser.statement.select.SelectItem;
 import net.sf.jsqlparser.statement.select.SetOperationList;
 import net.sf.jsqlparser.statement.update.Update;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
+import com.njydsz.common.cache.YdszCache;
+import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.tenant.metrics.TenantMetrics;
 
 /**
@@ -84,7 +84,7 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
     /**
      * SQL 改写缓存：缓存「原始 SQL + 完整租户字段签名」→ 改写后的 SQL。
      *
-     * <p>使用 Caffeine 实现 LRU 淘汰 + TTL 过期，Key 包含完整租户字段签名
+     * <p>使用 ydsz-common-cache 实现 LRU 淘汰 + TTL 过期，Key 包含完整租户字段签名
      * （tenantId + companyId + deptId + ...），避免 MULTI 模式不同维度取值
      * 命中错误缓存导致的跨租户数据泄露。
      *
@@ -92,7 +92,7 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
      *
      * <p><b>注意：</b>默认关闭，需通过 {@code ydsz.tenant.sql-cache.enabled=true} 开启。
      *
-     * @since 1.1.0 由 ConcurrentHashMap 迁移至 Caffeine（修复 P0-1 缓存 Key 不完整缺陷）
+     * @since 1.1.0 由 ConcurrentHashMap 迁移至 ydsz-common-cache（修复 P0-1 缓存 Key 不完整缺陷）
      */
     private final Cache<String, String> sqlCache;
 
@@ -101,9 +101,9 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
         this.ignoreTables = properties.getNormalizedIgnoreTables();
         this.metrics = metrics;
         this.sqlCache = properties.isSqlCacheEnabled()
-                ? Caffeine.newBuilder()
+                ? YdszCache.<String, String>newBuilder()
                         .maximumSize(2000)
-                        .expireAfterAccess(Duration.ofMinutes(10))
+                        .expireAfterAccess(10, TimeUnit.MINUTES)
                         .build()
                 : null;
     }

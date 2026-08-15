@@ -10,7 +10,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.security.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.workflow.domain.entity.FlowAdminRole;
 import com.njydsz.workflow.infra.mapper.FlowAdminRoleMapper;
 import com.njydsz.workflow.server.service.FlowAdminPermissionService;
@@ -118,7 +118,7 @@ public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionServic
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(roleCode)) {
             return false;
         }
-        String tenantId = TenantContext.getTenantId();
+        String tenantId = TenantContextHolder.getTenantId();
         FlowAdminRole role = adminRoleMapper.selectByUserAndRole(userId, roleCode, tenantId);
         return role != null && isRoleValid(role);
     }
@@ -154,7 +154,7 @@ public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionServic
         if (!StringUtils.hasText(userId)) {
             return List.of();
         }
-        String tenantId = TenantContext.getTenantId();
+        String tenantId = TenantContextHolder.getTenantId();
         List<FlowAdminRole> roles = adminRoleMapper.selectByUserId(userId, tenantId);
         return roles.stream()
                 .filter(this::isRoleValid)
@@ -203,7 +203,7 @@ public class FlowAdminPermissionServiceImpl implements FlowAdminPermissionServic
         if (!StringUtils.hasText(userId) || !StringUtils.hasText(roleCode)) {
             return;
         }
-        String tenantId = TenantContext.getTenantId();
+        String tenantId = TenantContextHolder.getTenantId();
         FlowAdminRole existing = adminRoleMapper.selectByUserAndRole(userId, roleCode, tenantId);
         if (existing == null) {
             return;

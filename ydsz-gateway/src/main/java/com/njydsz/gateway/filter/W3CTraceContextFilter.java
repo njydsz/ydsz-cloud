@@ -1,6 +1,5 @@
 package com.njydsz.gateway.filter;
 
-
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -9,13 +8,14 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
-import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.common.core.trace.TraceIdGenerator;
 import com.njydsz.gateway.config.GatewayConstants;
 
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 /**
- * W3C Trace Context 注入过滤器（P3-13）
+ * W3C Trace Context 注入过滤器（P3-13 + Q3 修复）
  *
  * <p>在网关入口注入 W3C 标准 Trace Context 头，使下游服务可通过
  * OpenTelemetry / SkyWalking / Jaeger / Zipkin 自动采集全链路追踪。
@@ -26,6 +26,12 @@ import reactor.core.publisher.Mono;
  *   示例: 00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01
  * </pre>
  *
+ * <h3>Q3 修复说明</h3>
+ * <p>历史版本使用 {@code SnowflakeIdGenerator} 生成十进制 traceId/spanId，
+ * 不符合 W3C 要求的 32/16 位十六进制格式，导致下游链路追踪系统无法解析。
+ * 本版本统一委托 {@link TraceIdGenerator}（32-hex 可排序 traceId + 16-hex spanId），
+ * 与 {@link AccessLogGlobalFilter} / {@link AuthGlobalFilter} 的 traceId 生成口径一致。
+ *
  * <h3>兼容性</h3>
  * <ul>
  *   <li>保留现有 {@code X-Trace-Id} 头，向后兼容</li>
@@ -34,36 +40,18 @@ import reactor.core.publisher.Mono;
  * </ul>
  *
  * <h3>执行顺序</h3>
- * <p>{@code HIGHEST_PRECEDENCE + 2}，在 {@link AccessLogGlobalFilter}(+1) 之后、
- * {@link IpBlacklistFilter}(+3) 之前，确保所有下游请求都携带 trace context。
+ * <p>{@code HIGHEST_PRECEDENCE}，最早执行，确保所有下游请求都携带 trace context。
  *
  * @since 1.0.0
  * @author ydsz-team
  */
+@Slf4j
 @Component
 @ConditionalOnProperty(prefix = "ydsz.gateway.filter", name = "w3c-trace", havingValue = "true", matchIfMissing = true)
 public class W3CTraceContextFilter implements GlobalFilter, Ordered {
 
-    /** W3C Trace Context 版本 */
-    private static final String TRACE_VERSION = "00";
-
-    /** W3C Trace Context 采样标志（01=sampled） */
-    private static final String TRACE_FLAGS = "01";
-
     /** traceparent 请求头名 */
     private static final String HEADER_TRACEPARENT = "traceparent";
-
-    /** 分布式 ID 生成器（traceId/spanId 生成） */
-    private final SnowflakeIdGenerator snowflakeIdGenerator;
-
-    /**
-     * 构造 W3C 追踪上下文过滤器。
-     *
-     * @param snowflakeIdGenerator 分布式 ID 生成器
-     */
-    public W3CTraceContextFilter(SnowflakeIdGenerator snowflakeIdGenerator) {
-        this.snowflakeIdGenerator = snowflakeIdGenerator;
-    }
 
     /**
      * 注入 W3C Trace Context，建立全链路追踪上下文。
@@ -82,22 +70,20 @@ public class W3CTraceContextFilter implements GlobalFilter, Ordered {
 
         String traceId;
         String spanId;
-        String traceparent;
 
-        // P0-3 修复：优先继承上游 traceparent（W3C 规范），不存在才生成新的
+        // 优先继承上游 traceparent（W3C 规范），不存在或非法时生成新的 traceId
         String upstreamTraceparent = request.getHeaders().getFirst(HEADER_TRACEPARENT);
-        if (isValidTraceparent(upstreamTraceparent)) {
+        TraceIdGenerator.ParsedTraceparent parsed = TraceIdGenerator.parseTraceparent(upstreamTraceparent);
+        if (parsed != null) {
             // 延续上游 traceId，生成新 spanId（每跳新 span）
-            String[] parts = upstreamTraceparent.split("-");
-            traceId = parts[1];
-            spanId = generateSpanId();
-            traceparent = TRACE_VERSION + "-" + traceId + "-" + spanId + "-" + TRACE_FLAGS;
+            traceId = parsed.traceId();
+            spanId = TraceIdGenerator.generateSpanId();
         } else {
-            // 上游无 traceparent，生成新的 traceId + spanId
-            traceId = generateTraceId();
-            spanId = generateSpanId();
-            traceparent = TRACE_VERSION + "-" + traceId + "-" + spanId + "-" + TRACE_FLAGS;
+            // 上游无合法 traceparent，生成新的 traceId + spanId
+            traceId = TraceIdGenerator.generateSortableTraceId();
+            spanId = TraceIdGenerator.generateSpanId();
         }
+        String traceparent = TraceIdGenerator.traceparentHeader(traceId, spanId);
 
         // 注入 traceparent 和 X-Trace-Id（兼容）
         ServerHttpRequest mutated = request.mutate()
@@ -113,71 +99,7 @@ public class W3CTraceContextFilter implements GlobalFilter, Ordered {
     }
 
     /**
-     * 校验 traceparent 格式是否符合 W3C 规范。
-     *
-     * <p>格式：00-{traceId(32hex)}-{spanId(16hex)}-{flags(2hex)}
-     * traceId 和 spanId 不能全为 0。
-     *
-     * @param traceparent 待校验的 traceparent 头值
-     * @return 合法返回 true
-     */
-    private boolean isValidTraceparent(String traceparent) {
-        if (traceparent == null || traceparent.isEmpty()) {
-            return false;
-        }
-        String[] parts = traceparent.split("-");
-        if (parts.length != 4) {
-            return false;
-        }
-        // traceId: 32 hex，不能全 0
-        if (parts[1].length() != 32 || !isHex(parts[1])
-                || parts[1].equals("00000000000000000000000000000000")) {
-            return false;
-        }
-        // spanId: 16 hex，不能全 0
-        if (parts[2].length() != 16 || !isHex(parts[2])
-                || parts[2].equals("0000000000000000")) {
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * 判断字符串是否全为十六进制字符。
-     *
-     * @param s 待检查字符串
-     * @return 全 hex 返回 true
-     */
-    private boolean isHex(String s) {
-        for (int i = 0; i < s.length(); i++) {
-            char c = s.charAt(i);
-            if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /**
-     * 生成 W3C 格式的 traceId（32 位 hex，去除 UUID 的短横线）
-     *
-     * @return 32 位 hex 字符串
-     */
-    private String generateTraceId() {
-        return String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "");
-    }
-
-    /**
-     * 生成 W3C 格式的 spanId（16 位 hex，取 UUID 前 16 位）
-     *
-     * @return 16 位 hex 字符串
-     */
-    private String generateSpanId() {
-        return String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "").substring(0, 16);
-    }
-
-    /**
-     * P0-2: 过滤器执行顺序调整为 HIGHEST_PRECEDENCE + 0
+     * 过滤器执行顺序：{@code HIGHEST_PRECEDENCE}。
      *
      * <p>作为最早期执行的过滤器，统一生成 traceId 并注入 traceparent 头。
      * 后续所有过滤器（AccessLog +1、IpBlacklist +3、Auth +10 等）直接读取已注入的 traceId，

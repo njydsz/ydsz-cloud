@@ -2,6 +2,9 @@ package com.njydsz.common.exception.handler;
 
 import jakarta.servlet.http.HttpServletRequest;
 
+import java.sql.BatchUpdateException;
+import java.sql.SQLException;
+
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.config.ExceptionProperties;
@@ -15,6 +18,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.context.MessageSource;
 import org.springframework.core.env.Environment;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -71,7 +75,56 @@ public class JdbcExceptionHandler extends BaseExceptionHandler {
     }
 
     /**
-     * 处理数据访问异常
+     * 处理数据完整性违反异常（细粒度分类）
+     *
+     * <p>通过 SQLState 精确匹配分类，返回 HTTP 409 Conflict。
+     * SQLState 23xxx 对应 Integrity Constraint Violation：
+     * <ul>
+     *   <li>23505 / 23000：唯一约束冲突</li>
+     *   <li>23503：外键约束冲突</li>
+     *   <li>23502：非空约束违反</li>
+     *   <li>23514 / 23001：检查约束违反</li>
+     * </ul>
+     *
+     * <p>当 SQLState 不可用时，回退到消息文本匹配。
+     *
+     * @param e       数据完整性违反异常
+     * @param request HTTP 请求
+     * @return 统一错误响应，HTTP 状态码 409
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public BaseResponse<?> handleDataIntegrityViolationException(
+            DataIntegrityViolationException e, HttpServletRequest request) {
+        recordMetrics(e);
+
+        Throwable rootCause = getRootCause(e);
+        String rootMessage = rootCause != null ? rootCause.getMessage() : e.getMessage();
+        String sqlState = extractSqlState(rootCause);
+
+        CoreExceptionCode exceptionCode;
+        String messageKey;
+
+        if (sqlState != null) {
+            String classification = classifyBySqlState(sqlState);
+            messageKey = classification;
+            exceptionCode = codeFromMessageKey(classification);
+        } else {
+            messageKey = classifyByMessage(rootMessage);
+            exceptionCode = codeFromMessageKey(messageKey);
+        }
+
+        String message = resolveMessage(messageKey, null, messageKey);
+        log.error("{}数据完整性异常 | 路径: {} | SQLState: {} | 消息: {}",
+                getLogPrefix(), request.getRequestURI(), sqlState, rootMessage, e);
+
+        return buildWithInfo(
+                exceptionCode.getCode(), messageKey, message,
+                HttpStatus.CONFLICT.value(), request.getRequestURI());
+    }
+
+    /**
+     * 处理通用数据访问异常（非完整性违反）
      *
      * @param e       数据访问异常
      * @param request HTTP 请求
@@ -97,5 +150,113 @@ public class JdbcExceptionHandler extends BaseExceptionHandler {
                 message,
                 includeExceptionInfo() ? info : null
         );
+    }
+
+    // ==================== 私有辅助方法 ====================
+
+    /**
+     * 沿异常链追溯根本原因
+     *
+     * @param throwable 异常对象
+     * @return 根本原因异常
+     */
+    private Throwable getRootCause(Throwable throwable) {
+        Throwable cause = throwable;
+        while (cause.getCause() != null && cause.getCause() != cause) {
+            cause = cause.getCause();
+        }
+        return cause;
+    }
+
+    /**
+     * 从异常链中提取 SQLState
+     *
+     * @param throwable 异常对象
+     * @return SQLState 字符串，不可用时返回 null
+     */
+    private String extractSqlState(Throwable throwable) {
+        Throwable current = throwable;
+        while (current != null) {
+            if (current instanceof SQLException sqlException) {
+                String sqlState = sqlException.getSQLState();
+                if (sqlState != null && !sqlState.isEmpty()) {
+                    return sqlState;
+                }
+            }
+            if (current instanceof BatchUpdateException batchException) {
+                String sqlState = batchException.getSQLState();
+                if (sqlState != null && !sqlState.isEmpty()) {
+                    return sqlState;
+                }
+            }
+            current = current.getCause();
+        }
+        return null;
+    }
+
+    /**
+     * 通过 SQLState 分类（精确匹配）
+     *
+     * @param sqlState SQLState 字符串
+     * @return 对应的消息 key
+     */
+    private String classifyBySqlState(String sqlState) {
+        return switch (sqlState) {
+            case "23505", "23000" -> CoreExceptionCode.UNIQUE_CONSTRAINT_VIOLATION.getKey();
+            case "23503" -> CoreExceptionCode.FOREIGN_KEY_VIOLATION.getKey();
+            case "23502" -> CoreExceptionCode.NOT_NULL_VIOLATION.getKey();
+            case "23514", "23001" -> CoreExceptionCode.CHECK_CONSTRAINT_VIOLATION.getKey();
+            default -> {
+                if (sqlState.startsWith("23")) {
+                    yield CoreExceptionCode.CONFLICT.getKey();
+                }
+                // SQLState 不在已知范围，回退到消息匹配
+                yield classifyByMessage(null);
+            }
+        };
+    }
+
+    /**
+     * 通过消息文本回退分类（当 SQLState 不可用时使用）
+     *
+     * @param message 异常消息
+     * @return 消息 key
+     */
+    private String classifyByMessage(String message) {
+        if (message == null) {
+            return CoreExceptionCode.CONFLICT.getKey();
+        }
+        String lower = message.toLowerCase();
+        if (lower.contains("duplicate") || lower.contains("unique")) {
+            return CoreExceptionCode.UNIQUE_CONSTRAINT_VIOLATION.getKey();
+        }
+        if (lower.contains("foreign key") || lower.contains("referential")) {
+            return CoreExceptionCode.FOREIGN_KEY_VIOLATION.getKey();
+        }
+        if (lower.contains("not-null") || lower.contains("cannot be null")) {
+            return CoreExceptionCode.NOT_NULL_VIOLATION.getKey();
+        }
+        if (lower.contains("check constraint") || lower.contains("violates")) {
+            return CoreExceptionCode.CHECK_CONSTRAINT_VIOLATION.getKey();
+        }
+        return CoreExceptionCode.CONFLICT.getKey();
+    }
+
+    /**
+     * 将消息 key 映射到对应的 {@link CoreExceptionCode}
+     *
+     * @param messageKey 消息 key
+     * @return 对应异常码枚举
+     */
+    private CoreExceptionCode codeFromMessageKey(String messageKey) {
+        if (messageKey == null) {
+            return CoreExceptionCode.CONFLICT;
+        }
+        for (CoreExceptionCode code : CoreExceptionCode.values()) {
+            if (code.getKey().equals(messageKey)) {
+                return code;
+            }
+        }
+        return CoreExceptionCode.CONFLICT;
     }
 }

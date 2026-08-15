@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.common.security.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.workflow.domain.dto.FlowCategoryDTO;
 import com.njydsz.workflow.domain.entity.FlowCategory;
 import com.njydsz.workflow.server.service.FlowCategoryService;
@@ -85,7 +85,7 @@ public class FlowCategoryController {
     @GetMapping
     @Operation(summary = "查询全部分类")
     public BaseResponse<List<FlowCategoryVO>> list() {
-        return BaseResponse.success(WorkflowConverter.INSTANT.flowCategoryListToVO(categoryService.listAll(TenantContext.getTenantId())));
+        return BaseResponse.success(WorkflowConverter.INSTANT.flowCategoryListToVO(categoryService.listAll(TenantContextHolder.getTenantId())));
     }
 
     /**
@@ -104,7 +104,7 @@ public class FlowCategoryController {
     @Audit(module = "流程分类", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'create'")
     @Operation(summary = "新增分类")
     public BaseResponse<String> create(@Valid @RequestBody FlowCategoryDTO dto) {
-        return BaseResponse.success(categoryService.create(dto, TenantContext.getTenantId()));
+        return BaseResponse.success(categoryService.create(dto, TenantContextHolder.getTenantId()));
     }
 
     /**

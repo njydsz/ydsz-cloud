@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
-import com.njydsz.common.security.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.workflow.domain.entity.FlowNode;
 import com.njydsz.workflow.domain.entity.FlowSkip;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
@@ -269,7 +269,7 @@ public class FlowDefinitionCacheService {
      * @return "tenantId:definitionId"
      */
     private String buildCacheKey(String definitionId) {
-        return TenantContext.getTenantId() + ":" + definitionId;
+        return TenantContextHolder.getTenantId() + ":" + definitionId;
     }
 
     /**

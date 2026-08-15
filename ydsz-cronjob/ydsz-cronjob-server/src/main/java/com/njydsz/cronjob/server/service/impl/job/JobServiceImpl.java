@@ -35,7 +35,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.cronjob.domain.job.JobHandler;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.security.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.domain.entity.log.JobLog;
@@ -265,7 +265,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             job.setJobGroup("DEFAULT");
         }
         if (job.getTenantId() == null) {
-            job.setTenantId(TenantContext.getTenantId());
+            job.setTenantId(TenantContextHolder.getTenantId());
         }
         // P7-2: 租户级配额检查（在 insert 之前调用，避免任务计数提前增加导致误判）
         tenantQuotaService.checkJobQuota(job.getTenantId());

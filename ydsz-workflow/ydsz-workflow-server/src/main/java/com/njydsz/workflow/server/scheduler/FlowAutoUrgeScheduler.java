@@ -17,7 +17,7 @@ import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.config.FlowProperties;
-import com.njydsz.workflow.server.engine.FlowClusterLockHelper;
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.workflow.server.service.FlowNotificationService;
 import com.njydsz.workflow.server.service.impl.instance.FlowTaskUrgeService;
 
@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
  * </ul>
  *
  * <p>催办通知通过 {@link FlowNotificationService} 推送，覆盖站内信 + IM（钉钉/企微）双通道。
- * 分布式锁通过 {@link FlowClusterLockHelper} 保证集群只有一个节点执行。
+ * 分布式锁通过 {@link DistributedScheduled} 保证集群只有一个节点执行。
  *
  * @since 1.0.0
  * @author ydsz-team
@@ -51,7 +51,6 @@ public class FlowAutoUrgeScheduler {
     private final FlowInstanceMapper instanceMapper;
     private final FlowTaskUrgeService urgeService;
     private final FlowNotificationService notificationService;
-    private final FlowClusterLockHelper clusterLockHelper;
     /** P3-3.4: 自动催办配置统一从 FlowProperties 读取 */
     private final FlowProperties flowProperties;
 
@@ -62,16 +61,18 @@ public class FlowAutoUrgeScheduler {
 
     /**
      * 每 30 分钟执行一次自动催办扫描。
+     *
+     * <p>通过 {@link DistributedScheduled} 保证多节点部署时仅一个节点执行扫描，
+     * 获取不到锁的节点直接跳过本次执行（非阻塞）。
      */
     @Scheduled(fixedDelayString = "${ydsz.flow.auto-urge.scan-interval-ms:1800000}")
+    @DistributedScheduled(lockKey = "flow:auto-urge:scan", leaseTime = 300)
     public void autoUrge() {
-        clusterLockHelper.tryRun("flow:auto-urge:scan", 300, () -> {
-            try {
-                doAutoUrge();
-            } catch (Exception e) {
-                log.error("[AutoUrge] 自动催办扫描异常: {}", e.getMessage(), e);
-            }
-        });
+        try {
+            doAutoUrge();
+        } catch (Exception e) {
+            log.error("[AutoUrge] 自动催办扫描异常: {}", e.getMessage(), e);
+        }
     }
 
     private void doAutoUrge() {

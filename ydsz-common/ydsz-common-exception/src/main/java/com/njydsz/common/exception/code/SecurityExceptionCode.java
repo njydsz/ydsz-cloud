@@ -93,10 +93,38 @@ public enum SecurityExceptionCode implements ExceptionCode {
      */
     TOKEN_EXPIRED("C01053", "security.token.expired", 401),
     /**
-     * 权限拒绝
+     * 权限拒绝（通用）
      * @return 处理结果
      */
-    PERMISSION_DENIED("C01054", "security.permission.denied", 403);
+    PERMISSION_DENIED("C01054", "security.permission.denied", 403),
+
+    // ==================== C01 细分权限拒绝（按权限类型） ====================
+
+    /**
+     * 菜单权限拒绝
+     * @return 处理结果
+     */
+    PERMISSION_DENIED_MENU("C01061", "security.permission.denied.menu", 403),
+    /**
+     * 按钮权限拒绝
+     * @return 处理结果
+     */
+    PERMISSION_DENIED_BUTTON("C01062", "security.permission.denied.button", 403),
+    /**
+     * 接口权限拒绝
+     * @return 处理结果
+     */
+    PERMISSION_DENIED_API("C01063", "security.permission.denied.api", 403),
+    /**
+     * 数据权限拒绝
+     * @return 处理结果
+     */
+    PERMISSION_DENIED_DATA("C01064", "security.permission.denied.data", 403),
+    /**
+     * 列权限拒绝
+     * @return 处理结果
+     */
+    PERMISSION_DENIED_COLUMN("C01065", "security.permission.denied.column", 403);
 
     // ==================== 字段定义 ====================
 

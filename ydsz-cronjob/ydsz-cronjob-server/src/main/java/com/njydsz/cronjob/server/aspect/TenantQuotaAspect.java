@@ -9,7 +9,7 @@ import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.security.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.cronjob.server.annotation.TenantQuotaCheck;
 import com.njydsz.cronjob.server.annotation.TenantQuotaCheck.QuotaType;
 import com.njydsz.cronjob.server.service.job.TenantQuotaService;
@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  * <ol>
  *   <li>优先从注解指定的方法参数名提取（{@code tenantIdParam}）</li>
  *   <li>其次从方法参数中查找名为 {@code tenantId} 的参数</li>
- *   <li>最后从 {@link TenantContext} 获取当前租户 ID</li>
+ *   <li>最后从 {@link com.njydsz.common.tenant.TenantContextHolder} 获取当前租户 ID</li>
  * </ol>
  *
  * <p>配额检查失败时抛出 {@link com.njydsz.common.exception.custom.SysException}，
@@ -108,7 +108,7 @@ public class TenantQuotaAspect {
         }
 
         // 3. 从 TenantContext 获取
-        return TenantContext.getTenantId();
+        return TenantContextHolder.getTenantId();
     }
 
     /**

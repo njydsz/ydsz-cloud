@@ -14,7 +14,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.common.security.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.converter.MessageConverter;
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.vo.MsgLogVO;
@@ -112,7 +112,7 @@ public class MessageArchiveController {
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "20") int pageSize) {
         Page<MsgLog> result = messageArchiveService.search(keyword, channel, status, bizType,
-                startTime, endTime, TenantContext.getTenantId(), pageNum, pageSize);
+                startTime, endTime, TenantContextHolder.getTenantId(), pageNum, pageSize);
         return PageResponse.success(
                 result.getTotal(),
                 result.getCurrent(),

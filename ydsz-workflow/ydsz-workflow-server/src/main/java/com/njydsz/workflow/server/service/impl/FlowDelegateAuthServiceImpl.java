@@ -17,12 +17,12 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.workflow.domain.entity.FlowAuditLog;
 import com.njydsz.workflow.domain.entity.FlowDelegateAuth;
 import com.njydsz.workflow.infra.mapper.FlowAuditLogMapper;
 import com.njydsz.workflow.infra.mapper.FlowDelegateAuthMapper;
-import com.njydsz.workflow.server.engine.FlowClusterLockHelper;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;
 import com.njydsz.workflow.server.service.FlowOfflineAutoForwardService;
 import com.njydsz.workflow.server.service.impl.instance.FlowTaskAuditService;
@@ -112,8 +112,6 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     /** P2-5: 离线代理自动转发（@Lazy 避免循环依赖） */
     @Lazy
     private final FlowOfflineAutoForwardService offlineAutoForwardService;
-    /** 集群锁助手（定时任务幂等：多节点部署时仅一个节点执行扫描） */
-    private final FlowClusterLockHelper clusterLockHelper;
 
     /**
      * 创建委派授权
@@ -392,21 +390,20 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     /**
      * 定时扫描并标记过期授权（每 5 分钟）
      *
-     * <p>集群幂等：通过 {@link FlowClusterLockHelper#tryRun} 加分布式锁，
-     * 多节点部署时仅一个节点执行扫描，避免重复标记。
+     * <p>通过 {@link DistributedScheduled} 保证多节点部署时仅一个节点执行扫描，
+     * 获取不到锁的节点直接跳过本次执行（非阻塞），避免重复标记。
      */
     @Scheduled(fixedDelay = 5 * 60 * 1000L, initialDelay = 60 * 1000L)
+    @DistributedScheduled(lockKey = "flow:delegate:scan-expired", leaseTime = 60)
     public void scheduledScanExpired() {
-        clusterLockHelper.tryRun("delegate:scan-expired", 55, () -> {
-            try {
-                int n = scanAndMarkExpired();
-                if (n > 0) {
-                    log.info("[FlowDelegate] 本轮扫描过期授权: count={}", n);
-                }
-            } catch (Exception e) {
-                log.error("[FlowDelegate] 扫描过期异常: {}", e.getMessage(), e);
+        try {
+            int n = scanAndMarkExpired();
+            if (n > 0) {
+                log.info("[FlowDelegate] 本轮扫描过期授权: count={}", n);
             }
-        });
+        } catch (Exception e) {
+            log.error("[FlowDelegate] 扫描过期异常: {}", e.getMessage(), e);
+        }
     }
 
     /**

@@ -15,7 +15,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.common.security.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.message.domain.entity.config.MsgVariableSource;
 import com.njydsz.message.infra.mapper.config.MsgVariableSourceMapper;
@@ -57,7 +57,7 @@ public class VariableSourceResolver {
         }
         return variableSourceMapper.selectList(new LambdaQueryWrapper<MsgVariableSource>()
                 .eq(MsgVariableSource::getTemplateCode, templateCode)
-                .eq(MsgVariableSource::getTenantId, TenantContext.getTenantId()));
+                .eq(MsgVariableSource::getTenantId, TenantContextHolder.getTenantId()));
     }
 
     /**

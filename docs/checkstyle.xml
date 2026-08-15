@@ -101,12 +101,22 @@
                      value="SimpleDateFormat 线程不安全，请使用 java.time.format.DateTimeFormatter 替代。参考：云顶编码规范 7.1 节"/>
         </module>
 
-        <!-- 禁止 import Executors（推荐 ThreadPoolExecutor 显式创建） -->
+        <!-- 禁止 import Executors（推荐通过 ydsz-common-thread 统一管理） -->
         <module name="IllegalImport">
             <property name="illegalClasses"
                       value="java.util.concurrent.Executors"/>
             <message key="import.illegal"
-                     value="禁止直接使用 Executors 创建线程池（无界队列风险），请使用 ThreadPoolExecutor 显式创建。参考：云顶编码规范 8.1 节"/>
+                     value="禁止直接使用 Executors 创建线程池（无界队列风险），请使用 ydsz-common-thread 统一管理。参考：云顶编码规范 15.4 节"/>
+        </module>
+
+        <!-- 禁止直接 new ThreadPoolExecutor / ThreadPoolTaskExecutor（必须通过 ydsz-common-thread 配置）
+             豁免：ydsz-common-thread 模块本身、方法内短生命周期临时池（需 CHECKSTYLE.OFF 注释说明） -->
+        <module name="RegexpSinglelineJava">
+            <property name="format"
+                      value="new\s+ThreadPoolExecutor\s*\(|new\s+ThreadPoolTaskExecutor\s*\(|new\s+ScheduledThreadPoolExecutor\s*\("/>
+            <property name="ignoreComments" value="false"/>
+            <property name="message"
+                      value="禁止直接创建线程池实例，必须通过 ysz.thread.pools.* 配置使用 ydsz-common-thread 统一管理。参考：云顶编码规范 15.4.1 节"/>
         </module>
 
         <!-- ============================================ -->

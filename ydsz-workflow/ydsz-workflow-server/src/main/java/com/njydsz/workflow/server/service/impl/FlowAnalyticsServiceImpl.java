@@ -8,7 +8,7 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.common.security.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
@@ -109,7 +109,7 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
 
     @Override
     public Map<String, Object> overview(LocalDateTime startTime, LocalDateTime endTime, String tenantId) {
-        String tid = tenantId != null ? tenantId : TenantContext.getTenantId();
+        String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
 
         // P1-5: 使用单 SQL 聚合查询替代多次 COUNT（5 次 → 1 次）
         Map<String, Object> hisStats = hisTaskMapper.selectOverviewStats(tid, startTime, endTime);
@@ -153,26 +153,26 @@ public class FlowAnalyticsServiceImpl implements FlowAnalyticsService {
 
     @Override
     public Object approverEfficiency(LocalDateTime startTime, LocalDateTime endTime, String tenantId, int limit) {
-        String tid = tenantId != null ? tenantId : TenantContext.getTenantId();
+        String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
         int l = Math.max(1, Math.min(limit, 100));
         return hisTaskMapper.selectApproverEfficiency(tid, startTime, endTime, l);
     }
 
     @Override
     public Object flowEfficiencyComparison(LocalDateTime startTime, LocalDateTime endTime, String tenantId) {
-        String tid = tenantId != null ? tenantId : TenantContext.getTenantId();
+        String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
         return hisTaskMapper.selectFlowEfficiencyComparison(tid, startTime, endTime);
     }
 
     @Override
     public Object nodeDurationStats(String flowCode, String tenantId) {
-        String tid = tenantId != null ? tenantId : TenantContext.getTenantId();
+        String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
         return hisTaskMapper.nodeDurationStats(flowCode, tid);
     }
 
     @Override
     public Object approvalTrend(LocalDateTime startTime, LocalDateTime endTime, String tenantId, String granularity) {
-        String tid = tenantId != null ? tenantId : TenantContext.getTenantId();
+        String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
         // P1-5: 使用 SQL date_trunc 聚合，替代前端聚合
         String gran = granularity != null ? granularity.toLowerCase() : "day";
         // 校验粒度值，防止 SQL 注入

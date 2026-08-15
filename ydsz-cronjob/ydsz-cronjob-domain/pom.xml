@@ -52,10 +52,10 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
         </dependency>
-        <!-- Caffeine（SpELConditionEvaluator 表达式缓存，v1.4.0 迁入） -->
+        <!-- ydsz-common-cache（SpELConditionEvaluator 表达式缓存，替代 Caffeine） -->
         <dependency>
-            <groupId>com.github.ben-manes.caffeine</groupId>
-            <artifactId>caffeine</artifactId>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-cache</artifactId>
         </dependency>
             <!-- MapStruct -->
         <dependency>

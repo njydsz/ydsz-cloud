@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.server.service.AppInfoService;
 import com.njydsz.system.server.service.ConfigService;
@@ -39,6 +40,10 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>后续可启用 mTLS 双向认证或 JWT 内部令牌，进一步提升安全性</li>
  * </ul>
  *
+ * <p><b>响应契约：</b>所有端点统一返回 {@link BaseResponse} 包装，与
+ * {@code ydsz-system-api} 模块中 {@code ConfigClient / DictClient / AppInfoClient}
+ * 的 Feign 声明严格对齐，避免跨服务反序列化失败。
+ *
  * <p><b>典型使用：</b>本服务通过 {@code @FeignClient} 调用 {@code ydsz-system} 的内部 API，
  * 如工作流模块查询字典项、用户模块校验应用密钥等。
  *
@@ -61,55 +66,56 @@ public class InternalApiController {
     /**
      * 按配置键查询配置值（走缓存）
      *
-     * <p>走 Redis 二级缓存（{@code ydsz:config:value:{configKey}}），未命中时回源 DB 并回写缓存。
+     * <p>走 Redis 二级缓存（{@code system:config:value:{configKey}}），未命中时回源 DB 并回写缓存。
      * <p>为防止重试风暴，本接口启用 5 秒幂等保护 + 50 QPS 限流。
      *
      * @param request 请求体（必须包含 {@code key} 字段，如 {@code {"key": "ydsz.workflow.sla-default-hours"}}）
-     * @return 配置值字符串；不存在时返回 null
+     * @return 配置值字符串；不存在时返回 {@code null}（包装在 {@link BaseResponse} 中）
      */
     @RateLimit(resource = "system.internalapi.getConfig", threshold = 50)
     @Idempotent(key = "ydsz:system:InternalApiController:getConfig:lock", ttlSeconds = 5)
     @PostMapping("/config/get")
-    public String getConfig(@RequestBody Map<String, String> request) {
-        return configService.getConfigValue(request.get("key"));
+    public BaseResponse<String> getConfig(@RequestBody Map<String, String> request) {
+        return BaseResponse.success(configService.getConfigValue(request.get("key")));
     }
 
     /**
-     * 按类型编码和字典项编码查询字典项（走缓存）
+     * 按类型编码和字典项编码查询字典项展示值（走缓存）
      *
      * <p>走 Redis 缓存（{@code ydsz:dict:item:{typeCode}:{itemCode}}），高频调用安全。
-     * <p>典型场景：工作流模块解析「审批状态」「审批类型」等字典项。
+     * <p>典型场景：工作流模块解析「审批状态」「审批类型」等字典项的展示值（{@code itemValue}）。
      *
      * @param request 请求体（必须包含 {@code typeCode} 和 {@code itemCode} 字段）
-     * @return 字典项 VO；不存在时返回 null
+     * @return 字典项展示值；不存在时返回 {@code null}（包装在 {@link BaseResponse} 中）
      */
     @RateLimit(resource = "system.internalapi.getDictItem", threshold = 50)
     @Idempotent(key = "ydsz:system:InternalApiController:getDictItem:lock", ttlSeconds = 5)
     @PostMapping("/dict/item")
-    public DictItemVO getDictItem(@RequestBody Map<String, String> request) {
-        return dictItemService.getByTypeAndCode(request.get("typeCode"), request.get("itemCode"));
+    public BaseResponse<String> getDictItem(@RequestBody Map<String, String> request) {
+        DictItemVO vo = dictItemService.getByTypeAndCode(request.get("typeCode"), request.get("itemCode"));
+        return BaseResponse.success(vo == null ? null : vo.getItemValue());
     }
 
     /**
-     * 按字典类型编码查询全部启用字典项的值列表（走缓存）
+     * 按字典类型编码查询全部启用字典项的展示值列表（走缓存）
      *
      * <p>走 Redis 缓存，高频调用安全。
      * <p>典型场景：跨服务 Feign 调用获取字典项值列表（如工作流模块获取所有审批状态）。
      *
      * @param typeCode 字典类型编码
-     * @return 字典项值列表（itemValue 字段）；类型不存在时返回空列表
+     * @return 字典项展示值列表；类型不存在时返回空列表（包装在 {@link BaseResponse} 中）
      */
     @RateLimit(resource = "system.internalapi.listDictItems", threshold = 50)
     @Idempotent(key = "ydsz:system:InternalApiController:listDictItems:lock", ttlSeconds = 5)
     @PostMapping("/dict/list")
-    public List<String> listDictItems(@RequestParam("typeCode") String typeCode) {
+    public BaseResponse<List<String>> listDictItems(@RequestParam("typeCode") String typeCode) {
         List<DictItemVO> items = dictItemService.listEnabledByTypeCode(typeCode);
         if (items == null || items.isEmpty()) {
-            return List.of();
+            return BaseResponse.success(List.of());
         }
-        return items.stream()
+        return BaseResponse.success(items.stream()
                 .map(DictItemVO::getItemValue)
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()));
     }
 
     /**
@@ -121,11 +127,12 @@ public class InternalApiController {
      *
      * @param request 请求体（必须包含 {@code appKey} 和 {@code appSecret} 字段）
      * @return 校验通过返回 {@code true}；应用不存在 / 未启用 / 密钥不匹配返回 {@code false}
+     *         （包装在 {@link BaseResponse} 中）
      */
     @RateLimit(resource = "system.internalapi.validateClient", threshold = 50)
     @Idempotent(key = "ydsz:system:InternalApiController:validateClient:lock", ttlSeconds = 5)
     @PostMapping("/app/validate")
-    public boolean validateClient(@RequestBody Map<String, String> request) {
-        return appInfoService.validateClient(request.get("appKey"), request.get("appSecret"));
+    public BaseResponse<Boolean> validateClient(@RequestBody Map<String, String> request) {
+        return BaseResponse.success(appInfoService.validateClient(request.get("appKey"), request.get("appSecret")));
     }
 }

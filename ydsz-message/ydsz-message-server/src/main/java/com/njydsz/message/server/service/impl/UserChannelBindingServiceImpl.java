@@ -8,7 +8,7 @@ import org.springframework.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.security.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.config.UserChannelBindingDTO;
 import com.njydsz.message.domain.entity.config.MsgUserChannel;
 import com.njydsz.message.infra.mapper.config.MsgUserChannelMapper;
@@ -53,7 +53,7 @@ public class UserChannelBindingServiceImpl implements UserChannelBindingService 
                 .message("用户ID和通道类型不能为空")
                 .build();
         }
-        String tenantId = TenantContext.getTenantId();
+        String tenantId = TenantContextHolder.getTenantId();
         String channelType = dto.getChannelType().trim().toUpperCase();
 
         // 查找已有绑定
@@ -115,7 +115,7 @@ public class UserChannelBindingServiceImpl implements UserChannelBindingService 
         }
         return msgUserChannelMapper.selectList(new LambdaQueryWrapper<MsgUserChannel>()
                 .eq(MsgUserChannel::getUserId, userId)
-                .eq(MsgUserChannel::getTenantId, TenantContext.getTenantId())
+                .eq(MsgUserChannel::getTenantId, TenantContextHolder.getTenantId())
                 .orderByDesc(MsgUserChannel::getIsPrimary)
                 .orderByDesc(MsgUserChannel::getCreatedAt));
     }
@@ -136,7 +136,7 @@ public class UserChannelBindingServiceImpl implements UserChannelBindingService 
         return msgUserChannelMapper.selectOne(new LambdaQueryWrapper<MsgUserChannel>()
                 .eq(MsgUserChannel::getUserId, userId)
                 .eq(MsgUserChannel::getChannelType, channelType.trim().toUpperCase())
-                .eq(MsgUserChannel::getTenantId, TenantContext.getTenantId())
+                .eq(MsgUserChannel::getTenantId, TenantContextHolder.getTenantId())
                 .orderByDesc(MsgUserChannel::getIsPrimary)
                 .last("LIMIT 1"));
     }

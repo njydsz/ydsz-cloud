@@ -1,10 +1,12 @@
 package com.njydsz.message.domain.enums.receipt;
 
+import com.njydsz.common.domain.enums.BaseStatusEnum;
 
 /**
  * 消息回执状态枚举。
  *
  * <p>对应 SQL {@code ydsz_msg_log.receipt_status} 的 CHECK 约束取值。
+ * 实现 {@link BaseStatusEnum} 契约，提供 {@link #canTransitTo} 状态流转校验。
  *
  * <ul>
  *   <li>{@link #NONE} - 无回执（发送成功后初始态）</li>
@@ -15,10 +17,18 @@ package com.njydsz.message.domain.enums.receipt;
  *   <li>{@link #TIMEOUT} - 回执超时（P2-9: 超过阈值仍未收到回执，由 {@code ReceiptPuller} 标记）</li>
  * </ul>
  *
+ * <p><b>状态流转规则：</b>
+ * <ul>
+ *   <li>NONE → DELIVERED / FAILED / TIMEOUT</li>
+ *   <li>DELIVERED → READ / TIMEOUT / FAILED</li>
+ *   <li>READ → CLICKED</li>
+ *   <li>CLICKED / FAILED / TIMEOUT 为终态，不可再流转</li>
+ * </ul>
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
-public enum ReceiptStatusEnum {
+public enum ReceiptStatusEnum implements BaseStatusEnum<ReceiptStatusEnum> {
 
     /** 无回执 */
     NONE,
@@ -31,5 +41,42 @@ public enum ReceiptStatusEnum {
     /** 投递失败 */
     FAILED,
     /** 回执超时（P2-9） */
-    TIMEOUT
+    TIMEOUT;
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>CLICKED、FAILED、TIMEOUT 为终态，不可再流转。
+     */
+    @Override
+    public boolean isTerminal() {
+        return this == CLICKED || this == FAILED || this == TIMEOUT;
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * <p>流转规则：
+     * <ul>
+     *   <li>NONE → DELIVERED / FAILED / TIMEOUT</li>
+     *   <li>DELIVERED → READ / TIMEOUT / FAILED</li>
+     *   <li>READ → CLICKED</li>
+     *   <li>CLICKED / FAILED / TIMEOUT 为终态，不可再流转</li>
+     * </ul>
+     *
+     * @param target 目标状态
+     * @return true 表示允许流转
+     */
+    @Override
+    public boolean canTransitTo(ReceiptStatusEnum target) {
+        if (this == target) {
+            return true;
+        }
+        return switch (this) {
+            case NONE -> target == DELIVERED || target == FAILED || target == TIMEOUT;
+            case DELIVERED -> target == READ || target == TIMEOUT || target == FAILED;
+            case READ -> target == CLICKED;
+            case CLICKED, FAILED, TIMEOUT -> false;
+        };
+    }
 }

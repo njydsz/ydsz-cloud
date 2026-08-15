@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.common.security.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.workflow.domain.dto.FlowQuickCommentDTO;
 import com.njydsz.workflow.domain.entity.FlowQuickComment;
 import com.njydsz.workflow.server.service.FlowQuickCommentService;
@@ -87,7 +87,7 @@ public class FlowQuickCommentController {
     @Operation(summary = "查询当前用户的常用语列表")
     public BaseResponse<List<FlowQuickCommentVO>> list() {
         String userId = AuthContextUtils.getUserId();
-        String tenantId = TenantContext.getTenantId();
+        String tenantId = TenantContextHolder.getTenantId();
         return BaseResponse.success(WorkflowConverter.INSTANT.flowQuickCommentListToVO(quickCommentService.listByUser(userId, tenantId)));
     }
 
@@ -104,7 +104,7 @@ public class FlowQuickCommentController {
     @Operation(summary = "新增常用语")
     public BaseResponse<String> create(@Valid @RequestBody FlowQuickCommentDTO dto) {
         String userId = AuthContextUtils.getUserId();
-        String tenantId = TenantContext.getTenantId();
+        String tenantId = TenantContextHolder.getTenantId();
         return BaseResponse.success(quickCommentService.create(dto, userId, tenantId));
     }
 

@@ -4,14 +4,15 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
+import com.njydsz.common.domain.query.PageQuery;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.experimental.SuperBuilder;
 
 /**
  * 网盘知识库 API DTO 集合
@@ -170,11 +171,18 @@ public final class NextwikiDTOs {
     }
 
     /**
-     * 搜索请求
+     * 搜索请求。
+     *
+     * <p>继承 {@link PageQuery} 获得分页参数（pageNum/pageSize）、排序、
+     * 深度分页风险评估等能力，新增搜索 keyword 和 scope 业务字段。
      */
     @Data
+    @SuperBuilder
+    @NoArgsConstructor
+    @EqualsAndHashCode(callSuper = true)
     @Schema(description = "搜索请求")
-    public static class SearchRequest implements Serializable {
+    public static class SearchRequest extends PageQuery {
+
         private static final long serialVersionUID = 1L;
 
         @Schema(description = "关键词")
@@ -183,17 +191,6 @@ public final class NextwikiDTOs {
 
         @Schema(description = "搜索范围: all / filename / content / tag")
         private String scope;
-
-        @Schema(description = "页码（从 1 开始）")
-        @NotNull(message = "页码不能为空")
-        @Positive(message = "页码必须大于0")
-        private Integer page;
-
-        @Schema(description = "每页大小")
-        @NotNull(message = "每页大小不能为空")
-        @Positive(message = "每页大小必须大于0")
-        @Max(value = 100, message = "每页大小不能超过100")
-        private Integer pageSize;
     }
 
     /**

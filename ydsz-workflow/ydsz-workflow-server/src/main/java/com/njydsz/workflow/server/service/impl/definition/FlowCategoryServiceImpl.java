@@ -10,7 +10,7 @@ import org.springframework.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.security.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.workflow.domain.dto.FlowCategoryDTO;
 import com.njydsz.workflow.domain.entity.FlowCategory;
 import com.njydsz.workflow.domain.entity.FlowDefinition;
@@ -103,7 +103,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
      */
     @Override
     public List<FlowCategory> listAll(String tenantId) {
-        String tid = tenantId != null ? tenantId : TenantContext.getTenantId();
+        String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
         List<FlowCategory> list = categoryMapper.selectList(
                 new LambdaQueryWrapper<FlowCategory>()
                         .eq(FlowCategory::getTenantId, tid)
@@ -133,7 +133,7 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
     @Transactional(rollbackFor = Exception.class)
     public String create(FlowCategoryDTO dto, String tenantId) {
         // 校验编码唯一
-        String tid = tenantId != null ? tenantId : TenantContext.getTenantId();
+        String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
         Long count = categoryMapper.selectCount(
                 new LambdaQueryWrapper<FlowCategory>()
                         .eq(FlowCategory::getCategoryCode, dto.getCategoryCode())

@@ -1,5 +1,6 @@
 package com.njydsz.workflow.server.service.impl;
 
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.util.collection.MapUtils;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
@@ -9,8 +10,6 @@ import java.util.Map;
 
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
-
-import com.njydsz.workflow.server.engine.FlowClusterLockHelper;
 
 import org.springframework.stereotype.Service;
 
@@ -45,8 +44,8 @@ import lombok.extern.slf4j.Slf4j;
  * <ul>
  *   <li><b>周报</b>：{@code @Scheduled(cron = "0 0 9 ? * MON")} 每周一 9:00 触发</li>
  *   <li><b>月报</b>：{@code @Scheduled(cron = "0 0 9 1 * ?")} 每月 1 号 9:00 触发</li>
- *   <li>通过 {@link FlowClusterLockHelper} 分布式锁保证集群中只有<b>一个节点</b>执行推送，
- *       避免重复推送（{@code ydsz:flow:report:weekly:lock} / {@code ydsz:flow:report:monthly:lock}）</li>
+ *   <li>通过 {@link DistributedScheduled} 分布式锁保证集群中只有<b>一个节点</b>执行推送，
+ *       避免重复推送</li>
  * </ul>
  *
  * <p><b>报告内容：</b>
@@ -97,7 +96,7 @@ import lombok.extern.slf4j.Slf4j;
  * @see FlowReportService 接口定义
  * @see FlowAnalyticsService 审批分析服务（报告数据来源）
  * @see FlowNotificationService 通知服务（报告推送通道）
- * @see FlowClusterLockHelper 集群锁辅助（避免重复推送）
+ * @see DistributedScheduled 分布式调度注解（避免重复推送）
  */
 @Slf4j
 @Service
@@ -107,43 +106,38 @@ public class FlowReportServiceImpl implements FlowReportService {
     private final FlowAnalyticsService analyticsService;
     @Lazy
     private final FlowNotificationService notificationService;
-    /** 集群锁：避免多节点重复推送周报/月报 */
-    private final FlowClusterLockHelper clusterLockHelper;
-
     /**
      * 定时推送周报：每周一 9:00
      *
-     * <p>集群幂等：通过 {@link FlowClusterLockHelper#tryRun} 加分布式锁，
-     * 多节点部署时仅一个节点执行推送，避免重复发送。
+     * <p>通过 {@link DistributedScheduled} 保证多节点部署时仅一个节点执行推送，
+     * 获取不到锁的节点直接跳过本次执行（非阻塞），避免重复发送。
      */
     @Scheduled(cron = "0 0 9 ? * MON")
+    @DistributedScheduled(lockKey = "flow:report:weekly", leaseTime = 600)
     public void scheduledWeeklyReport() {
-        clusterLockHelper.tryRun("report:weekly", 600, () -> {
-            try {
-                sendWeeklyReport("1");
-                log.info("[FlowReport] 周报推送完成");
-            } catch (Exception e) {
-                log.error("[FlowReport] 周报推送失败: {}", e.getMessage(), e);
-            }
-        });
+        try {
+            sendWeeklyReport("1");
+            log.info("[FlowReport] 周报推送完成");
+        } catch (Exception e) {
+            log.error("[FlowReport] 周报推送失败: {}", e.getMessage(), e);
+        }
     }
 
     /**
      * 定时推送月报：每月 1 号 9:00
      *
-     * <p>集群幂等：通过 {@link FlowClusterLockHelper#tryRun} 加分布式锁，
-     * 多节点部署时仅一个节点执行推送，避免重复发送。
+     * <p>通过 {@link DistributedScheduled} 保证多节点部署时仅一个节点执行推送，
+     * 获取不到锁的节点直接跳过本次执行（非阻塞），避免重复发送。
      */
     @Scheduled(cron = "0 0 9 1 * ?")
+    @DistributedScheduled(lockKey = "flow:report:monthly", leaseTime = 600)
     public void scheduledMonthlyReport() {
-        clusterLockHelper.tryRun("report:monthly", 600, () -> {
-            try {
-                sendMonthlyReport("1");
-                log.info("[FlowReport] 月报推送完成");
-            } catch (Exception e) {
-                log.error("[FlowReport] 月报推送失败: {}", e.getMessage(), e);
-            }
-        });
+        try {
+            sendMonthlyReport("1");
+            log.info("[FlowReport] 月报推送完成");
+        } catch (Exception e) {
+            log.error("[FlowReport] 月报推送失败: {}", e.getMessage(), e);
+        }
     }
 
     /**

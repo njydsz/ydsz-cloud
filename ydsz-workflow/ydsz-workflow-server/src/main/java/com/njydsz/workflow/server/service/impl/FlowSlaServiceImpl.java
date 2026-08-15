@@ -15,13 +15,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.entity.FlowNode;
 import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.domain.enums.FlowSlaAction;
 import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
-import com.njydsz.workflow.server.engine.FlowClusterLockHelper;
 import com.njydsz.workflow.server.service.FlowNotificationService;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 import com.njydsz.workflow.server.service.FlowSlaService;
@@ -48,7 +48,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p><b>设计要点：</b>
  * <ul>
- *   <li><b>分布式锁</b>：通过 {@link FlowClusterLockHelper} 保证集群中只有一个节点执行扫描</li>
+ *   <li><b>分布式锁</b>：通过 {@link DistributedScheduled} 保证集群中只有一个节点执行扫描</li>
  *   <li><b>子事务隔离</b>：{@code @Transactional(propagation = REQUIRES_NEW)} 隔离单条任务的失败</li>
  *   <li><b>指标埋点</b>：通过 {@link FlowMetrics} 暴露 SLA 触发次数 / 升级次数等 Prometheus 指标</li>
  *   <li><b>多租户</b>：扫描时按租户分批处理，避免单租户数据倾斜</li>
@@ -86,9 +86,6 @@ public class FlowSlaServiceImpl implements FlowSlaService {
     private final FlowNotificationService notificationService;
     /** P2-3: Prometheus 指标（可能为 null：测试环境） */
     private final FlowMetrics flowMetrics;
-    /** P0-2: 集群调度分布式锁辅助 */
-    private final FlowClusterLockHelper clusterLockHelper;
-
     /** 单次扫描上限（避免大表全表扫描） */
     private static final int SCAN_BATCH_SIZE = 500;
     /** P1-6: 单轮扫描最大迭代次数（安全阀，避免大量超期任务导致单次扫描耗时过长） */
@@ -184,7 +181,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
      * </ol>
      *
      * <p>集群幂等：本方法由 {@code @Scheduled} 定时任务调用，<b>调用方</b>需通过
-     * {@link FlowClusterLockHelper} 加分布式锁。
+     * {@link DistributedScheduled} 加分布式锁。
      *
      * @return 本轮处理的任务数（含 REMIND 提醒 + 最终动作）
      */
@@ -565,12 +562,14 @@ public class FlowSlaServiceImpl implements FlowSlaService {
     /**
      * 每 60s 扫描一次（与 FlowTimerService 错峰 — FlowTimerService 30s, FlowSlaService 60s）
      *
-     * <p>P0-2: 使用 Redisson 分布式锁包装，多节点部署时只有一个节点执行扫描。
+     * <p>通过 {@link DistributedScheduled} 保证多节点部署时只有一个节点执行扫描，
+     * 获取不到锁的节点直接跳过本次执行（非阻塞）。
      * 锁持有时间 55s（略小于 fixedDelay 60s），保证下次扫描前锁已释放。
      */
     @Scheduled(fixedDelay = 60_000L, initialDelay = 90_000L)
+    @DistributedScheduled(lockKey = "flow:sla:scan", leaseTime = 55)
     public void scheduledScan() {
-        clusterLockHelper.tryRun("sla:scan", 55, this::scanAndProcess);
+        scanAndProcess();
     }
 
     // ============================== 辅助方法 ==============================

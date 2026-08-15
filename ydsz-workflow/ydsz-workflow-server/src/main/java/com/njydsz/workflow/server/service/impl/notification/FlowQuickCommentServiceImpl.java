@@ -10,7 +10,7 @@ import org.springframework.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.security.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.workflow.domain.dto.FlowQuickCommentDTO;
 import com.njydsz.workflow.domain.entity.FlowQuickComment;
 import com.njydsz.workflow.infra.mapper.FlowQuickCommentMapper;
@@ -98,7 +98,7 @@ public class FlowQuickCommentServiceImpl implements FlowQuickCommentService {
         if (!StringUtils.hasText(userId)) {
             return List.of();
         }
-        String tid = tenantId != null ? tenantId : TenantContext.getTenantId();
+        String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
         // 查询：用户自定义 + 系统预设（isSystem=1）
         List<FlowQuickComment> list = quickCommentMapper.selectList(
                 new LambdaQueryWrapper<FlowQuickComment>()
@@ -149,7 +149,7 @@ public class FlowQuickCommentServiceImpl implements FlowQuickCommentService {
         comment.setSortNum(dto.getSortNum() != null ? dto.getSortNum() : 0);
         comment.setUseCount(0);
         comment.setIsSystem(0);
-        comment.setTenantId(tenantId != null ? tenantId : TenantContext.getTenantId());
+        comment.setTenantId(tenantId != null ? tenantId : TenantContextHolder.getTenantId());
         quickCommentMapper.insert(comment);
         log.info("[FlowQuickComment] 新增常用语: userId={} id={}", userId, comment.getId());
         return comment.getId();

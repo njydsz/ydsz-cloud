@@ -96,6 +96,9 @@ public final class FeignClientConstants {
     /** 按字典类型查询字典项列表 API 路径 */
     public static final String SYSTEM_PATH_DICT_LIST = "/api/internal/dict/list";
 
+    /** 校验应用密钥 API 路径 */
+    public static final String SYSTEM_PATH_APP_VALIDATE = "/api/internal/app/validate";
+
     // ==================== AI Agent URL 路径常量 ====================
     // P3-3 TODO: ydsz-agent 模块尚未创建 InternalApiController，
     // 以下端点需在 agent-web 中实现后才能正常调用

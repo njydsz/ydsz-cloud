@@ -36,7 +36,6 @@ import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
 import com.njydsz.userinfo.server.service.LoginHistoryService;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -136,10 +135,12 @@ public class AuthServiceImpl implements AuthService {
         UserAccount user = userAccountMapper.selectOne(wrapper);
 
         if (user == null) {
+            // P0-4: 统一返回「用户名或密码错误」，避免通过响应差异枚举有效用户名；
+            // 真实原因（USER_NOT_FOUND）仅保留在审计日志中。
             loginHistoryService.recordLoginAttempt(null, username, loginIp, "FAILED", "USER_NOT_FOUND", userAgent);
             userInfoMetrics.recordLoginFail();
             userInfoMetrics.stopTimer(sample);
-            throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
+            throw new BusinessException(UserInfoExceptionCode.PASSWORD_INCORRECT);
         }
 
         // 账号状态检查（status 为 String: "0"=禁用, "1"=启用）
@@ -206,7 +207,7 @@ public class AuthServiceImpl implements AuthService {
         redisHashOps.hMSet(accessToken, sessionInfo);
         redisStringOps.expire(accessToken, Duration.ofSeconds(properties.getTokenTtlSeconds()));
 
-        updateLoginSuccess(user);
+        updateLoginSuccess(user, loginIp);
 
         // P1-3: 记录成功登录
         loginHistoryService.recordLoginAttempt(user.getId(), username, loginIp,
@@ -325,33 +326,23 @@ public class AuthServiceImpl implements AuthService {
     }
 
     /**
-     * 记录登录失败：递增失败计数，达到阈值自动锁定。
+     * 记录登录失败：原子自增失败计数，达到阈值时由 SQL 原子设置锁定时间。
+     *
+     * <p>P0-1: 改为数据库原子自增（{@code login_fail_count = login_fail_count + 1}），
+     * 消除先读后写（read-modify-write）的并发竞态——并发失败时计数不再丢失，
+     * 锁定阈值不可被并发击穿。
      */
     private void recordLoginFailure(UserAccount user) {
-        int failCount = (user.getLoginFailCount() == null ? 0 : user.getLoginFailCount()) + 1;
-
-        LambdaUpdateWrapper<UserAccount> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.eq(UserAccount::getId, user.getId());
-        updateWrapper.set(UserAccount::getLoginFailCount, failCount);
-
-        if (failCount >= properties.getMaxLoginFailCount()) {
-            updateWrapper.set(UserAccount::getLockedUntil,
-                    LocalDateTime.now().plusMinutes(properties.getLockDurationMinutes()));
-            log.warn("User {} locked after {} failed attempts", user.getUsername(), failCount);
-        }
-        userAccountMapper.update(null, updateWrapper);
+        userAccountMapper.increaseLoginFailCount(user.getId(),
+                properties.getMaxLoginFailCount(), properties.getLockDurationMinutes());
+        log.warn("User [{}] login failed, fail count incremented atomically", user.getUsername());
     }
 
     /**
-     * 更新登录成功信息：重置失败计数、记录最后登录时间。
+     * 更新登录成功信息：原子重置失败计数、清除锁定时间、记录最后登录时间/IP。
      */
-    private void updateLoginSuccess(UserAccount user) {
-        LambdaUpdateWrapper<UserAccount> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.eq(UserAccount::getId, user.getId());
-        updateWrapper.set(UserAccount::getLoginFailCount, 0);
-        updateWrapper.set(UserAccount::getLockedUntil, null);
-        updateWrapper.set(UserAccount::getLastLoginAt, LocalDateTime.now());
-        userAccountMapper.update(null, updateWrapper);
+    private void updateLoginSuccess(UserAccount user, String loginIp) {
+        userAccountMapper.resetLoginSuccess(user.getId(), loginIp);
     }
 
     /**

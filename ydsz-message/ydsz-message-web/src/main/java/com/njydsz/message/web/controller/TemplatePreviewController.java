@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.security.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.entity.template.MsgTemplate;
 import com.njydsz.message.server.service.template.TemplateService;
 import com.njydsz.message.server.template.TemplateEngine;
@@ -94,7 +94,7 @@ public class TemplatePreviewController {
                 req.getTemplateCode(),
                 StringUtils.hasText(req.getChannel()) ? req.getChannel() : "INAPP",
                 StringUtils.hasText(req.getLocale()) ? req.getLocale() : "zh-CN",
-                TenantContext.getTenantId());
+                TenantContextHolder.getTenantId());
         if (template == null) {
             return BaseResponse.error(MessageExceptionCode.TEMPLATE_NOT_FOUND, "模板不存在: " + req.getTemplateCode());
         }
