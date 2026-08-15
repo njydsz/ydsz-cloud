@@ -1,5 +1,8 @@
 package com.njydsz.common.feign.exception;
 
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.custom.SysException;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -24,11 +27,10 @@ import lombok.NoArgsConstructor;
  *
  * @author ydsz-team
  * @since 1.0.0
- *
  */
 @Getter
 @NoArgsConstructor
-public class NotFoundException extends RuntimeException {
+public class NotFoundException extends SysException {
 
     private static final long serialVersionUID = 1L;
 
@@ -50,8 +52,9 @@ public class NotFoundException extends RuntimeException {
      * @param message 异常消息
      */
     public NotFoundException(String message) {
-        super(message);
+        super(CoreExceptionCode.NOT_FOUND);
         this.code = DEFAULT_ERROR_CODE;
+        setMessage(message);
     }
 
     /**
@@ -61,8 +64,9 @@ public class NotFoundException extends RuntimeException {
      * @param cause   原因异常
      */
     public NotFoundException(String message, Throwable cause) {
-        super(message, cause);
+        super(CoreExceptionCode.NOT_FOUND, cause);
         this.code = DEFAULT_ERROR_CODE;
+        setMessage(message);
     }
 
     /**

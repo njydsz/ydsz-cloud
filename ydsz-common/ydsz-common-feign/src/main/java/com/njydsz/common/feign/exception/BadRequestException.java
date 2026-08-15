@@ -1,5 +1,8 @@
 package com.njydsz.common.feign.exception;
 
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.custom.SysException;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -24,11 +27,10 @@ import lombok.NoArgsConstructor;
  *
  * @author ydsz-team
  * @since 1.0.0
- *
  */
 @Getter
 @NoArgsConstructor
-public class BadRequestException extends RuntimeException {
+public class BadRequestException extends SysException {
 
     private static final long serialVersionUID = 1L;
 
@@ -48,8 +50,9 @@ public class BadRequestException extends RuntimeException {
      * @param message 异常消息
      */
     public BadRequestException(String message) {
-        super(message);
+        super(CoreExceptionCode.PARAM_ERROR);
         this.code = "400";
+        setMessage(message);
     }
 
     /**
@@ -59,8 +62,9 @@ public class BadRequestException extends RuntimeException {
      * @param cause   原因异常
      */
     public BadRequestException(String message, Throwable cause) {
-        super(message, cause);
+        super(CoreExceptionCode.PARAM_ERROR, cause);
         this.code = "400";
+        setMessage(message);
     }
 
     /**

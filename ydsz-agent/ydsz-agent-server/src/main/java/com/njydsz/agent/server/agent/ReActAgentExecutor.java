@@ -262,7 +262,7 @@ public class ReActAgentExecutor implements AgentExecutor {
             }
 
             if (!response.hasToolCalls()) {
-                String output = applyOutputGuardrails(response.getContent(), traceId);
+                String output = guardrailService.applyOutputGuardrails(response.getContent());
                 memory.save(convId, ChatMessage.user(userInput, convId));
                 memory.save(convId, ChatMessage.assistant(output, convId, totalUsage));
                 traceRecorder.endTrace(traceId, "SUCCESS");
@@ -309,41 +309,6 @@ public class ReActAgentExecutor implements AgentExecutor {
     @Override
     public boolean supports(String type) {
         return "react".equalsIgnoreCase(type) || "react_agent".equalsIgnoreCase(type);
-    }
-
-    private String applyInputGuardrails(String input, String traceId) {
-        String sanitized = input;
-        for (InputGuardrail guard : inputGuardrails) {
-            GuardrailResult result = guard.check(sanitized);
-            if (result.isRejected()) {
-                log.warn("[ReAct] 输入被护栏拒绝: {} - {}", guard.getName(), result.getReason());
-                traceRecorder.recordStep(traceId, "GUARDRAIL_REJECT_INPUT",
-                        guard.getName(), input, result.getReason(), 0);
-                return null;
-            }
-            if (result.getSanitizedInput() != null) {
-                sanitized = result.getSanitizedInput();
-            }
-        }
-        return sanitized;
-    }
-
-    private String applyOutputGuardrails(String output, String traceId) {
-        String sanitized = output;
-        for (OutputGuardrail guard : outputGuardrails) {
-            GuardrailResult result = guard.check(sanitized);
-            if (result.isRejected()) {
-                log.warn("[ReAct] 输出被护栏拒绝: {} - {}", guard.getName(), result.getReason());
-                agentMetrics.recordGuardrailRejection(guard.getName(), "output");
-                traceRecorder.recordStep(traceId, "GUARDRAIL_REJECT_OUTPUT",
-                        guard.getName(), output, result.getReason(), 0);
-                return "抱歉，我无法回答这个问题。";
-            }
-            if (result.getSanitizedInput() != null) {
-                sanitized = result.getSanitizedInput();
-            }
-        }
-        return sanitized;
     }
 
     private String buildSystemPrompt(AgentExecutionRequest request) {

@@ -274,7 +274,7 @@ public class ScriptRule implements Rule {
             // P0-2：沙箱模式下使用虚拟线程 + 超时中断，防止死循环
             if (sandboxEnabled) {
                 CompletableFuture<Object> future = CompletableFuture.supplyAsync(
-                        () -> compiledScript.eval(bindings), SCRIPT_EXECUTOR);
+                        () -> evalScript(bindings), SCRIPT_EXECUTOR);
                 try {
                     result = future.get(SANDBOX_TIMEOUT_MS, TimeUnit.MILLISECONDS);
                 } catch (TimeoutException te) {
@@ -569,6 +569,24 @@ public class ScriptRule implements Rule {
         if (byteMatcher.find()) {
             throw new SecurityException("脚本检测到字节构造: " + byteMatcher.group()
                     + "（沙箱模式禁止使用 new String(new byte[]{...}) 绕过类名检测）");
+        }
+    }
+
+    /**
+     * 求值已编译脚本（P0-2 辅助方法）
+     *
+     * <p>将 checked 的 {@link javax.script.ScriptException} 转为 unchecked，
+     * 使其可用于 {@link java.util.concurrent.CompletableFuture#supplyAsync}。
+     *
+     * @param bindings 脚本绑定变量
+     * @return 脚本执行结果
+     * @throws RuntimeException 脚本执行异常
+     */
+    private Object evalScript(Bindings bindings) {
+        try {
+            return compiledScript.eval(bindings);
+        } catch (javax.script.ScriptException e) {
+            throw new RuntimeException("脚本执行异常: " + e.getMessage(), e);
         }
     }
 

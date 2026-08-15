@@ -11,7 +11,6 @@ import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.agent.AgentExecutor;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
-import com.njydsz.agent.domain.guardrail.GuardrailResult;
 import com.njydsz.agent.domain.guardrail.InputGuardrail;
 import com.njydsz.agent.domain.guardrail.OutputGuardrail;
 import com.njydsz.agent.domain.model.ChatChunk;
@@ -22,6 +21,7 @@ import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
+import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.rag.RagService;
@@ -59,6 +59,8 @@ public class RagAgentExecutor implements AgentExecutor {
     private final AgentMetrics agentMetrics;
     /** 成本分析服务（Token 用量核算） */
     private final CostAnalysisService costAnalysisService;
+    /** 护栏编排服务（统一驱动输入/输出护栏，消除重复逻辑） */
+    private final GuardrailService guardrailService;
 
     public RagAgentExecutor(LlmClient llmClient, ConversationMemory memory,
                             AgentProperties properties, RagService ragService,
@@ -66,7 +68,8 @@ public class RagAgentExecutor implements AgentExecutor {
                             List<OutputGuardrail> outputGuardrails,
                             TraceRecorder traceRecorder,
                             AgentMetrics agentMetrics,
-                            CostAnalysisService costAnalysisService) {
+                            CostAnalysisService costAnalysisService,
+                            GuardrailService guardrailService) {
         this.llmClient = llmClient;
         this.memory = memory;
         this.properties = properties;
@@ -76,6 +79,7 @@ public class RagAgentExecutor implements AgentExecutor {
         this.traceRecorder = traceRecorder;
         this.agentMetrics = agentMetrics;
         this.costAnalysisService = costAnalysisService;
+        this.guardrailService = guardrailService;
     }
 
     /**
@@ -90,9 +94,8 @@ public class RagAgentExecutor implements AgentExecutor {
         String traceId = traceRecorder.startTrace(convId, "RAG");
         log.info("[RAG-Agent] 执行: convId={}, traceId={}", convId, traceId);
 
-        String userInput = applyInputGuardrails(request.getUserInput(), traceId);
+        String userInput = guardrailService.applyInputGuardrails(request.getUserInput());
         if (userInput == null) {
-            agentMetrics.recordGuardrailRejection("input-guardrail", "input");
             traceRecorder.endTrace(traceId, "GUARDRAIL_REJECTED");
             ChatMessage msg = ChatMessage.assistant("抱歉，您的输入被安全护栏拒绝。", convId, TokenUsage.zero());
             return new ChatResponse(IdGenerator.nextIdStr(), "guardrail",
@@ -149,7 +152,7 @@ public class RagAgentExecutor implements AgentExecutor {
         traceRecorder.recordStep(traceId, "LLM_CALL",
                 "RAG enhanced LLM call", messages, response, llmDuration);
 
-        String output = applyOutputGuardrails(response.getContent(), traceId);
+        String output = guardrailService.applyOutputGuardrails(response.getContent());
 
         memory.save(convId, ChatMessage.user(userInput, convId));
         memory.save(convId, ChatMessage.assistant(output, convId, response.getUsage()));
@@ -175,9 +178,8 @@ public class RagAgentExecutor implements AgentExecutor {
         String traceId = traceRecorder.startTrace(convId, "RAG_STREAM");
         log.info("[RAG-Agent-Stream] 流式执行: convId={}, traceId={}", convId, traceId);
 
-        String userInput = applyInputGuardrails(request.getUserInput(), traceId);
+        String userInput = guardrailService.applyInputGuardrails(request.getUserInput());
         if (userInput == null) {
-            agentMetrics.recordGuardrailRejection("input-guardrail", "input");
             traceRecorder.endTrace(traceId, "GUARDRAIL_REJECTED");
             chunkConsumer.accept(ChatChunk.content("", "guardrail",
                     "抱歉，您的输入被安全护栏拒绝。"));
@@ -242,7 +244,7 @@ public class RagAgentExecutor implements AgentExecutor {
         traceRecorder.recordStep(traceId, "LLM_CALL",
                 "RAG stream LLM call", llmRequest, contentBuilder.toString(), duration);
 
-        String output = applyOutputGuardrails(contentBuilder.toString(), traceId);
+        String output = guardrailService.applyOutputGuardrails(contentBuilder.toString());
         memory.save(convId, ChatMessage.user(userInput, convId));
         memory.save(convId, ChatMessage.assistant(output, convId, usage[0]));
 
@@ -272,38 +274,5 @@ public class RagAgentExecutor implements AgentExecutor {
             sb.append("\n\n").append(ragContext);
         }
         return sb.toString();
-    }
-
-    private String applyInputGuardrails(String input, String traceId) {
-        String sanitized = input;
-        for (InputGuardrail guard : inputGuardrails) {
-            GuardrailResult result = guard.check(sanitized);
-            if (result.isRejected()) {
-                traceRecorder.recordStep(traceId, "GUARDRAIL_REJECT_INPUT",
-                        guard.getName(), input, result.getReason(), 0);
-                return null;
-            }
-            if (result.getSanitizedInput() != null) {
-                sanitized = result.getSanitizedInput();
-            }
-        }
-        return sanitized;
-    }
-
-    private String applyOutputGuardrails(String output, String traceId) {
-        String sanitized = output;
-        for (OutputGuardrail guard : outputGuardrails) {
-            GuardrailResult result = guard.check(sanitized);
-            if (result.isRejected()) {
-                agentMetrics.recordGuardrailRejection(guard.getName(), "output");
-                traceRecorder.recordStep(traceId, "GUARDRAIL_REJECT_OUTPUT",
-                        guard.getName(), output, result.getReason(), 0);
-                return "抱歉，我无法回答这个问题。";
-            }
-            if (result.getSanitizedInput() != null) {
-                sanitized = result.getSanitizedInput();
-            }
-        }
-        return sanitized;
     }
 }

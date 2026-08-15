@@ -1,5 +1,8 @@
 package com.njydsz.common.feign.exception;
 
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.custom.SysException;
+
 import lombok.Getter;
 
 /**
@@ -25,10 +28,9 @@ import lombok.Getter;
  *
  * @author ydsz-team
  * @since 1.0.0
- *
  */
 @Getter
-public class OpenFeignException extends RuntimeException {
+public class OpenFeignException extends SysException {
 
     private static final long serialVersionUID = 1L;
 
@@ -50,7 +52,7 @@ public class OpenFeignException extends RuntimeException {
      * @param cause 原因异常
      */
     public OpenFeignException(Throwable cause) {
-        super(cause);
+        super(CoreExceptionCode.NETWORK_ERROR, cause);
         this.code = DEFAULT_ERROR_CODE;
         this.data = null;
     }
@@ -61,9 +63,10 @@ public class OpenFeignException extends RuntimeException {
      * @param message 异常消息
      */
     public OpenFeignException(String message) {
-        super(message);
+        super(CoreExceptionCode.NETWORK_ERROR);
         this.code = DEFAULT_ERROR_CODE;
         this.data = null;
+        setMessage(message);
     }
 
     /**
@@ -73,9 +76,10 @@ public class OpenFeignException extends RuntimeException {
      * @param message 异常消息
      */
     public OpenFeignException(String code, String message) {
-        super(message);
+        super(CoreExceptionCode.NETWORK_ERROR);
         this.code = code;
         this.data = null;
+        setMessage(message);
     }
 
     /**
@@ -85,7 +89,7 @@ public class OpenFeignException extends RuntimeException {
      * @param cause 原因异常
      */
     public OpenFeignException(String code, Throwable cause) {
-        super(cause);
+        super(CoreExceptionCode.NETWORK_ERROR, cause);
         this.code = code;
         this.data = null;
     }
@@ -98,9 +102,10 @@ public class OpenFeignException extends RuntimeException {
      * @param cause   原因异常
      */
     public OpenFeignException(String code, String message, Throwable cause) {
-        super(message, cause);
+        super(CoreExceptionCode.NETWORK_ERROR, cause);
         this.code = code;
         this.data = null;
+        setMessage(message);
     }
 
     /**
@@ -114,8 +119,9 @@ public class OpenFeignException extends RuntimeException {
      */
     public OpenFeignException(String code, String message, Throwable cause,
                               boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
+        super(CoreExceptionCode.NETWORK_ERROR, cause);
         this.code = code;
         this.data = null;
+        setMessage(message);
     }
 }
