@@ -183,7 +183,6 @@ public class DistributedLockAutoConfiguration {
                 optionalDependencies.schedulerProvider().getIfAvailable(),
                 namespace, lockProperties.getMultiLock(),
                 optionalDependencies.notifierProvider().getIfAvailable());
-        optionalDependencies.renewalServiceProvider().ifAvailable(strategy::setLockRenewalService);
         optionalDependencies.waitTimePolicyProvider().ifAvailable(strategy::setLockWaitTimePolicy);
         strategy.setLockEventListener(optionalDependencies.lockEventListener());
         return strategy;
