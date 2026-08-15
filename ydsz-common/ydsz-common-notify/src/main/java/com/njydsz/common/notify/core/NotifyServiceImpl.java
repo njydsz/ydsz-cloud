@@ -153,6 +153,26 @@ public class NotifyServiceImpl implements NotifyService {
     }
 
     /**
+     * 设置回执追踪器（可选，用于替换默认的内存实现）
+     *
+     * @param receiptTracker 回执追踪器
+     */
+    public void setReceiptTracker(NotifyReceiptTracker receiptTracker) {
+        if (receiptTracker != null) {
+            this.receiptTracker = receiptTracker;
+        }
+    }
+
+    /**
+     * 获取回执追踪器（供业务方查询回执）
+     *
+     * @return 回执追踪器
+     */
+    public NotifyReceiptTracker getReceiptTracker() {
+        return receiptTracker;
+    }
+
+    /**
      * 发送单条文本通知。
      *
      * <p>等价于 {@code send(channel, receiver, title, content, null, null, NotifyType.TEXT, null)}。
@@ -516,7 +536,9 @@ public class NotifyServiceImpl implements NotifyService {
                              NotifyType notifyType, String tenantId) {
         SendContext ctx = SendContext.forSend(channel, receiver, title, content,
                 userId, templateCode, notifyType, tenantId);
-        return sendChain.executeSend(ctx);
+        NotifySendResult result = sendChain.executeSend(ctx);
+        updateReceipt(result);
+        return result;
     }
 
     /**
@@ -537,7 +559,27 @@ public class NotifyServiceImpl implements NotifyService {
                                  String title, String tenantId) {
         SendContext ctx = SendContext.forTemplate(channel, receiver, templateCode,
                 templateParams, title, tenantId);
-        return sendChain.executeTemplate(ctx);
+        NotifySendResult result = sendChain.executeTemplate(ctx);
+        updateReceipt(result);
+        return result;
+    }
+
+    /**
+     * 根据发送结果更新回执状态
+     */
+    private void updateReceipt(NotifySendResult result) {
+        if (receiptTracker == null || result.getMessageId() == null) {
+            return;
+        }
+        try {
+            if (result.isSuccess()) {
+                receiptTracker.markDelivered(result.getMessageId());
+            } else if (result.getErrorMessage() != null) {
+                receiptTracker.markFailed(result.getMessageId(), result.getErrorMessage());
+            }
+        } catch (Exception e) {
+            log.debug("[NotifyServiceImpl] 回执更新异常: {}", e.getMessage());
+        }
     }
 
     // ==================== 辅助方法 ====================

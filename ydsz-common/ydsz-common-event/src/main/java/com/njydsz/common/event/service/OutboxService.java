@@ -19,6 +19,10 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.event.api.DomainEvent;
+import com.njydsz.common.event.api.JsonSchemaRegistry;
+import com.njydsz.common.event.api.JsonSchemaValidator;
+import com.njydsz.common.event.api.SchemaValidationException;
+import com.njydsz.common.event.api.SchemaValidationResult;
 import com.njydsz.common.event.config.EventProperties;
 import com.njydsz.common.event.gateway.EventPublishGateway;
 import com.njydsz.common.event.model.OutboxMessage;
@@ -88,6 +92,12 @@ public class OutboxService {
     /** Spring 事件发布器 */
     private final ApplicationEventPublisher eventPublisher;
 
+    /** JSON Schema 校验器 */
+    private final JsonSchemaValidator schemaValidator;
+
+    /** JSON Schema 注册中心 */
+    private final JsonSchemaRegistry schemaRegistry;
+
     /**
      * 构造函数
      *
@@ -96,17 +106,23 @@ public class OutboxService {
      * @param syncPublishGateway 同步投递网关（可选）
      * @param snowflakeIdGenerator 分布式 ID 生成器
      * @param eventPublisher     Spring 事件发布器
+     * @param schemaValidator    JSON Schema 校验器
+     * @param schemaRegistry     JSON Schema 注册中心
      */
     public OutboxService(OutboxRepository outboxRepository,
                          EventProperties properties,
                          EventPublishGateway syncPublishGateway,
                          SnowflakeIdGenerator snowflakeIdGenerator,
-                         ApplicationEventPublisher eventPublisher) {
+                         ApplicationEventPublisher eventPublisher,
+                         JsonSchemaValidator schemaValidator,
+                         JsonSchemaRegistry schemaRegistry) {
         this.outboxRepository = outboxRepository;
         this.properties = properties;
         this.syncPublishGateway = syncPublishGateway;
         this.snowflakeIdGenerator = snowflakeIdGenerator;
         this.eventPublisher = eventPublisher;
+        this.schemaValidator = schemaValidator;
+        this.schemaRegistry = schemaRegistry;
     }
 
     /**
@@ -254,6 +270,11 @@ public class OutboxService {
         // payload 大小校验
         validatePayloadSize(partial.getPayload());
 
+        // JSON Schema 校验（可选，需显式启用）
+        if (properties.isEnableSchemaValidation()) {
+            validateSchema(partial.getEventType(), partial.getPayload());
+        }
+
         Instant now = Instant.now();
         String tenantId = resolveTenantId();
         String traceId = resolveTraceId();
@@ -360,6 +381,37 @@ public class OutboxService {
             throw new IllegalArgumentException(
                     "Outbox payload size " + size + " exceeds maximum "
                             + properties.getMaxPayloadSizeBytes() + " bytes");
+        }
+    }
+
+    /**
+     * 校验事件 payload 是否符合已注册的 JSON Schema
+     *
+     * <p>仅当 {@link EventProperties#isEnableSchemaValidation()} 为 true 时执行。
+     * 若该 eventType 未注册 Schema，则跳过校验（宽松策略）。
+     *
+     * <p>校验失败时：
+     * <ul>
+     *   <li>fail-fast=true：抛出 {@link SchemaValidationException}</li>
+     *   <li>fail-fast=false：记录 WARN 日志，不阻断写入</li>
+     * </ul>
+     *
+     * @param eventType 事件类型
+     * @param payload   事件 payload JSON
+     */
+    private void validateSchema(String eventType, String payload) {
+        if (!schemaRegistry.hasSchema(eventType)) {
+            // 未注册 Schema 的事件类型不做校验
+            return;
+        }
+        String schemaJson = schemaRegistry.getSchema(eventType);
+        SchemaValidationResult result = schemaValidator.validate(eventType, payload, schemaJson);
+        if (!result.isValid()) {
+            if (properties.isSchemaValidationFailFast()) {
+                throw new SchemaValidationException(eventType, result.getErrors());
+            }
+            log.warn("Schema validation failed for eventType={}, errors={} (fail-fast=false, message still written)",
+                    eventType, result.getErrors());
         }
     }
 

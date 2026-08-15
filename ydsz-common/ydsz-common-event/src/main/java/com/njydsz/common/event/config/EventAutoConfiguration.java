@@ -18,6 +18,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.njydsz.common.event.admin.OutboxAdminService;
 import com.njydsz.common.event.api.EventStore;
+import com.njydsz.common.event.api.JsonSchemaRegistry;
+import com.njydsz.common.event.api.JsonSchemaValidator;
+import com.njydsz.common.event.api.NoopJsonSchemaValidator;
 import com.njydsz.common.event.gateway.EventPublishGateway;
 import com.njydsz.common.event.gateway.NoopEventPublishGateway;
 import com.njydsz.common.event.gateway.RocketMqEventPublishGateway;
@@ -200,6 +203,33 @@ public class EventAutoConfiguration {
     @ConditionalOnMissingBean
     public OutboxAdminService outboxAdminService(OutboxRepository outboxRepository) {
         return new OutboxAdminService(outboxRepository);
+    }
+
+    /**
+     * 创建 JSON Schema 注册中心
+     *
+     * <p>业务方可通过 {@link JsonSchemaRegistry#register} 方法注册事件类型的 Schema。
+     *
+     * @return Schema 注册中心实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public JsonSchemaRegistry jsonSchemaRegistry() {
+        return new JsonSchemaRegistry();
+    }
+
+    /**
+     * 创建默认的 JSON Schema 校验器（空实现）
+     *
+     * <p>当使用方未引入具体的 JSON Schema 库实现时，使用此空实现作为 fallback。
+     * 使用方可定义自己的 {@link JsonSchemaValidator} Bean 覆盖此默认实现。
+     *
+     * @return 空实现校验器
+     */
+    @Bean
+    @ConditionalOnMissingBean(JsonSchemaValidator.class)
+    public JsonSchemaValidator jsonSchemaValidator() {
+        return new NoopJsonSchemaValidator();
     }
 
     /**
