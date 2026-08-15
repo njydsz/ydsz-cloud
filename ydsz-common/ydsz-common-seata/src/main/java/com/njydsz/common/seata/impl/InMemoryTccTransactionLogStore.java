@@ -79,6 +79,13 @@ public class InMemoryTccTransactionLogStore implements TccTransactionLogStore {
         }
     }
 
+    /**
+     * 生成存储键
+     *
+     * @param xid      全局事务 ID
+     * @param branchId 分支事务 ID
+     * @return 存储键（格式：xid:branchId）
+     */
     private static String key(String xid, String branchId) {
         return xid + ":" + branchId;
     }

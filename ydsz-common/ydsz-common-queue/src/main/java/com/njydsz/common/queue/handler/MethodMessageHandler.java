@@ -3,6 +3,7 @@ package com.njydsz.common.queue.handler;
 import java.lang.reflect.Method;
 import java.util.Map;
 
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.queue.domain.QueueMessage;
 import com.njydsz.common.queue.service.IMessageHandler;
 
@@ -64,7 +65,7 @@ public class MethodMessageHandler implements IMessageHandler {
             // 尝试将 body 反序列化为 Map
             @SuppressWarnings("unchecked")
             Map<String, Object> bodyMap = message != null && message.getBody() != null
-                    ? new com.njydsz.common.json.YdszJson().fromJsonToMap(message.getBody())
+                    ? YdszJson.fromJsonToMap(message.getBody())
                     : null;
             method.invoke(bean, bodyMap);
         } else {

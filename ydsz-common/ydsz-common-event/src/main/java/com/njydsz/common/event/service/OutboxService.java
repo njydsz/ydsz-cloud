@@ -129,92 +129,6 @@ public class OutboxService {
     }
 
     /**
-     * 追加领域事件到 Outbox（在当前数据库事务中执行）
-     *
-     * <p>将 {@link DomainEvent} 转换为 Outbox 消息并写入。自动处理：
-     * <ul>
-     *   <li>eventType / aggregateId / aggregateType 从 DomainEvent 提取</li>
-     *   <li>payload 为 DomainEvent 序列化后的 JSON</li>
-     *   <li>metadata 转换为 headers</li>
-     *   <li>eventId 作为 deduplicationId（天然唯一）</li>
-     * </ul>
-     *
-     * @param event 领域事件
-     * @deprecated 自 1.6.0 起废弃，推荐使用 {@link #appendToOutbox(OutboxMessage.OutboxMessageBuilder)}
-     *             以获取完整的字段控制能力。本类将在 2.0.0 版本移除。
-     */
-    @Deprecated
-    @Transactional
-    public void appendToOutbox(DomainEvent event) {
-        Map<String, String> headers = new HashMap<>();
-        if (event.getMetadata() != null) {
-            event.getMetadata().forEach((k, v) -> {
-                if (v != null) {
-                    headers.put(k, v.toString());
-                }
-            });
-        }
-        String userId = null;
-        try {
-            userId = RequestContext.getUserId();
-        } catch (NoClassDefFoundError | Exception ignored) {
-            // RequestContext 不可用
-        }
-        if (userId != null) {
-            headers.put("_userId", userId);
-        }
-
-        appendToOutbox(OutboxMessage.builder()
-                .aggregateType(event.getAggregateType())
-                .aggregateId(event.getAggregateId())
-                .eventType(event.getEventType())
-                .payload(YdszJson.toJson(event))
-                .headers(headers)
-                .deduplicationId(event.getEventId()));
-    }
-
-    /**
-     * 追加事件到 Outbox（在当前数据库事务中执行）
-     *
-     * @param aggregateType 聚合根类型
-     * @param aggregateId   聚合根 ID
-     * @param eventType     事件类型
-     * @param payload       事件负载（JSON）
-     * @deprecated 自 1.6.0 起废弃，推荐使用 {@link #appendToOutbox(OutboxMessage.OutboxMessageBuilder)}。
-     *             本类将在 2.0.0 版本移除。
-     */
-    @Deprecated
-    @Transactional
-    public void appendToOutbox(String aggregateType, String aggregateId,
-                               String eventType, String payload) {
-        appendToOutbox(aggregateType, aggregateId, eventType, payload, null);
-    }
-
-    /**
-     * 追加事件到 Outbox（带扩展头）
-     *
-     * @param aggregateType 聚合根类型
-     * @param aggregateId   聚合根 ID
-     * @param eventType     事件类型
-     * @param payload       事件负载（JSON）
-     * @param headers       扩展头
-     * @deprecated 自 1.6.0 起废弃，推荐使用 {@link #appendToOutbox(OutboxMessage.OutboxMessageBuilder)}。
-     *             本类将在 2.0.0 版本移除。
-     */
-    @Deprecated
-    @Transactional
-    public void appendToOutbox(String aggregateType, String aggregateId,
-                               String eventType, String payload,
-                               Map<String, String> headers) {
-        appendToOutbox(OutboxMessage.builder()
-                .aggregateType(aggregateType)
-                .aggregateId(aggregateId)
-                .eventType(eventType)
-                .payload(payload)
-                .headers(headers));
-    }
-
-    /**
      * 追加事件到 Outbox（基于 Builder 模式，自动填充系统字段）
      *
      * <p>此方法自动填充以下字段：
@@ -496,8 +410,8 @@ public class OutboxService {
     /**
      * 批量追加领域事件到 Outbox（在当前数据库事务中执行）
      *
-     * <p>使用 JDBC batchUpdate 实现真正的批量插入，相比逐条 {@link #appendToOutbox(DomainEvent)}
-     * 可显著减少数据库往返次数（100 条事件从 100 次网络往返降为 1 次）。
+     * <p>使用 JDBC batchUpdate 实现真正的批量插入，相比逐条调用
+     * {@link #appendToOutbox(OutboxMessage.OutboxMessageBuilder)} 可显著减少
      *
      * <p><b>注意：</b>
      * <ul>

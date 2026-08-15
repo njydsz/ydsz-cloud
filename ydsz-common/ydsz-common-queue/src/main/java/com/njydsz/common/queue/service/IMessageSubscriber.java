@@ -7,23 +7,6 @@ import com.njydsz.common.queue.domain.QueueMessage;
  *
  * <p>定义消息订阅的核心操作，支持同步消费、异步消费、结构化消费和一次性消费。
  *
- * <p><b>同步消费：</b>
- * <ul>
- *   <li>{@link #subscribe()} - 阻塞式获取一条消息</li>
- *   <li>{@link #subscribeMessage()} - 阻塞式获取一条 QueueMessage</li>
- * </ul>
- *
- * <p><b>异步消费：</b>
- * <ul>
- *   <li>{@link #subscribeAsync(IMessageHandler)} - 启动后台线程持续监听消息</li>
- *   <li>返回消费者 ID，可用于停止消费（见 {@link #stop()}）</li>
- * </ul>
- *
- * <p><b>一次性消费：</b>
- * <ul>
- *   <li>{@link #subscribeOnce(IMessageHandler)} - 消费一条消息后自动停止</li>
- * </ul>
- *
  * <p><b>线程安全性：</b>
  * 实现类应该是线程安全的，可以被多个线程共享使用。
  *
@@ -46,10 +29,17 @@ public interface IMessageSubscriber {
      * 同步消费结构化消息（阻塞式）
      *
      * <p>消费一条消息并解析为 {@link QueueMessage}，携带 headers、traceId 等元数据。
+     * 默认实现调用 {@link #subscribe()} 后反序列化。
      *
      * @return 消费到的消息对象，无消息时返回 null
      */
-    QueueMessage subscribeMessage();
+    default QueueMessage subscribeMessage() {
+        String payload = subscribe();
+        if (payload == null) {
+            return null;
+        }
+        return QueueMessage.fromPayload(payload);
+    }
 
     /**
      * 异步订阅消息
@@ -66,11 +56,22 @@ public interface IMessageSubscriber {
      * 一次性消费消息
      *
      * <p>消费一条消息后自动停止，适合定时拉取场景。
+     * 默认实现调用 {@link #subscribeAsync(IMessageHandler)} 并在第一条消息处理后停止。
      *
      * @param handler 消息处理回调
      * @return 消费者 ID
      */
-    String subscribeOnce(IMessageHandler handler);
+    default String subscribeOnce(IMessageHandler handler) {
+        String[] consumerId = new String[1];
+        consumerId[0] = subscribeAsync(message -> {
+            try {
+                handler.onMessage(message);
+            } finally {
+                stop();
+            }
+        });
+        return consumerId[0];
+    }
 
     /**
      * 获取底层传输通道
