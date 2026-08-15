@@ -1,5 +1,6 @@
 package com.njydsz.common.auth.security;
 
+import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -7,25 +8,21 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.njydsz.common.redis.service.RedisRateLimiter;
+
 /**
- * 基于滑动窗口的内存级 Rate Limiter。
+ * 基于固定窗口的限流器（支持 Redis 分布式降级到本地内存）
  *
  * <p>用于限制权限校验和 Token 验证的调用频率，防止被盗 Token 高频发起请求。
  *
  * <p><b>算法：</b>固定时间窗口计数器，每个窗口期内允许最多 maxRequests 次请求。
  *
- * <p><b>限制：</b>此实现为单机内存级别，不支持分布式限流。
- * 生产环境如需分布式限流，请集成 Redis + Lua 脚本方案
- * （参见 {@code com.njydsz.common.redis.service.RedisRateLimiter}）。
- *
- * <p><b>设计说明：</b>本类为 Auth 模块内部的轻量级限流器，
- * 用于在 Redis 不可用时提供降级保护。与 {@code safe} 模块的
- * {@code RateLimitFilter} 和 {@code redis} 模块的 {@code RedisRateLimiter}
- * 互为补充，不构成重复设计。
+ * <p><b>P0-1 架构优化：</b>当 {@link RedisRateLimiter} 可用时委托其固定窗口限流实现
+ * （分布式一致）；RedisRateLimiter 不可用时降级为本地内存实现。
  *
  * @author ydsz-team
  * @since 1.0.0
-
+ * @see RedisRateLimiter
  */
 public class RateLimiter {
 
@@ -34,17 +31,28 @@ public class RateLimiter {
     private final int maxRequests;
     private final long windowMillis;
     private final ConcurrentHashMap<String, Window> windows = new ConcurrentHashMap<>();
+    private final RedisRateLimiter redisRateLimiter;
 
     /**
-     * 构建 Rate Limiter。
+     * 构建 Rate Limiter（带 Redis 分布式能力）。
      *
-     * @param maxRequests    窗口期内最大请求数
-     * @param windowDuration 窗口时长
-     * @param unit           时间单位
+     * @param maxRequests     窗口期内最大请求数
+     * @param windowDuration  窗口时长
+     * @param unit            时间单位
+     * @param redisRateLimiter Redis 限流器（可选，不可用时降级到本地内存）
      */
-    public RateLimiter(int maxRequests, long windowDuration, TimeUnit unit) {
+    public RateLimiter(int maxRequests, long windowDuration, TimeUnit unit,
+                       RedisRateLimiter redisRateLimiter) {
         this.maxRequests = maxRequests;
         this.windowMillis = unit.toMillis(windowDuration);
+        this.redisRateLimiter = redisRateLimiter;
+        if (redisRateLimiter != null) {
+            log.info("[AuthRateLimiter] 启用 Redis 分布式限流 | maxRequests={} | window={}ms",
+                    maxRequests, windowMillis);
+        } else {
+            log.info("[AuthRateLimiter] 启用本地内存限流 | maxRequests={} | window={}ms",
+                    maxRequests, windowMillis);
+        }
     }
 
     /**
@@ -58,23 +66,10 @@ public class RateLimiter {
             return true;
         }
 
-        long now = System.currentTimeMillis();
-        Window window = windows.compute(key, (k, existing) -> {
-            if (existing == null || now - existing.windowStart >= windowMillis) {
-                return new Window(now);
-            }
-            return existing;
-        });
-
-        int count = window.counter.incrementAndGet();
-        if (count > maxRequests) {
-            if (count == maxRequests + 1) {
-                log.warn("Rate limit exceeded: key={}, max={}, window={}ms",
-                        key, maxRequests, windowMillis);
-            }
-            return false;
+        if (redisRateLimiter != null) {
+            return tryAcquireDistributed(key);
         }
-        return true;
+        return tryAcquireLocal(key);
     }
 
     /**
@@ -112,6 +107,49 @@ public class RateLimiter {
      */
     public long getWindowMillis() {
         return windowMillis;
+    }
+
+    // ==================== 私有方法 ====================
+
+    /**
+     * 分布式限流（基于 Redis 固定窗口）
+     */
+    private boolean tryAcquireDistributed(String key) {
+        try {
+            boolean acquired = redisRateLimiter.tryAcquireFixedWindow(
+                    "auth:" + key, maxRequests, Duration.ofMillis(windowMillis));
+            if (!acquired) {
+                log.warn("[AuthRateLimiter] 分布式限流触发 | key={} | max={} | window={}ms",
+                        key, maxRequests, windowMillis);
+            }
+            return acquired;
+        } catch (Exception e) {
+            log.warn("[AuthRateLimiter] Redis 限流异常，降级本地 | key={} | error={}", key, e.getMessage());
+            return tryAcquireLocal(key);
+        }
+    }
+
+    /**
+     * 本地内存限流（固定窗口计数器）
+     */
+    private boolean tryAcquireLocal(String key) {
+        long now = System.currentTimeMillis();
+        Window window = windows.compute(key, (k, existing) -> {
+            if (existing == null || now - existing.windowStart >= windowMillis) {
+                return new Window(now);
+            }
+            return existing;
+        });
+
+        int count = window.counter.incrementAndGet();
+        if (count > maxRequests) {
+            if (count == maxRequests + 1) {
+                log.warn("[AuthRateLimiter] 本地限流触发 | key={} | max={} | window={}ms",
+                        key, maxRequests, windowMillis);
+            }
+            return false;
+        }
+        return true;
     }
 
     /**

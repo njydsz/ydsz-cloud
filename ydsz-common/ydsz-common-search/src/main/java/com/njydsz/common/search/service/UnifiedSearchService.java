@@ -58,13 +58,30 @@ public class UnifiedSearchService {
     private final AtomicInteger halfOpenProbeCount = new AtomicInteger(0);
     private final Semaphore searchConcurrencyLimit;
 
+    /**
+     * 创建统一搜索服务（使用外部注入的线程池）。
+     *
+     * <p>推荐用法：由 {@code SearchAutoConfiguration} 注入通过
+     * {@code ydsz.thread.pools.searchExecutor} 配置的统一管理线程池，
+     * 或直接注入业务方自定义的 {@link ThreadPoolTaskExecutor}。
+     *
+     * @param engineRegistry   引擎注册表
+     * @param providerRegistry 提供者注册表
+     * @param properties       搜索配置
+     * @param metrics          指标采集器
+     * @param analyticsService 行为分析服务
+     * @param textProcessor    查询文本预处理器
+     * @param ranker           业务重排器
+     * @param searchExecutor   外部注入的线程池（不可为 {@code null}）
+     */
     public UnifiedSearchService(SearchEngineRegistry engineRegistry,
                                 SearchProviderRegistry providerRegistry,
                                 SearchProperties properties,
                                 SearchMetrics metrics,
                                 SearchAnalyticsService analyticsService,
                                 SearchTextProcessor textProcessor,
-                                BusinessRanker ranker) {
+                                BusinessRanker ranker,
+                                ThreadPoolTaskExecutor searchExecutor) {
         this.engineRegistry = engineRegistry;
         this.providerRegistry = providerRegistry;
         this.properties = properties;
@@ -73,17 +90,53 @@ public class UnifiedSearchService {
         this.textProcessor = textProcessor;
         this.ranker = ranker;
         this.cacheService = new SearchCacheService(properties);
-
-        this.searchExecutor = new ThreadPoolTaskExecutor();
-        this.searchExecutor.setCorePoolSize(Math.max(2, properties.getIndex().getThreadPoolSize()));
-        this.searchExecutor.setMaxPoolSize(Math.max(4, properties.getIndex().getThreadPoolSize() * 2));
-        this.searchExecutor.setQueueCapacity(256);
-        this.searchExecutor.setThreadNamePrefix("search-");
-        this.searchExecutor.setWaitForTasksToCompleteOnShutdown(true);
-        this.searchExecutor.setAwaitTerminationSeconds(5);
-        this.searchExecutor.initialize();
-
+        this.searchExecutor = searchExecutor;
         this.searchConcurrencyLimit = new Semaphore(properties.getMaxPageSize(), true);
+    }
+
+    /**
+     * 创建统一搜索服务（使用默认自创建线程池，兼容无统一线程池场景）。
+     *
+     * <p>当 classpath 上不存在 {@code ydsz-common-thread} 或未配置
+     * {@code ydsz.thread.pools.searchExecutor} 时，回退为内部创建线程池以保证可用性。
+     *
+     * @param engineRegistry   引擎注册表
+     * @param providerRegistry 提供者注册表
+     * @param properties       搜索配置
+     * @param metrics          指标采集器
+     * @param analyticsService 行为分析服务
+     * @param textProcessor    查询文本预处理器
+     * @param ranker           业务重排器
+     */
+    public UnifiedSearchService(SearchEngineRegistry engineRegistry,
+                                SearchProviderRegistry providerRegistry,
+                                SearchProperties metrics,
+                                SearchMetrics searchMetrics,
+                                SearchAnalyticsService analyticsService,
+                                SearchTextProcessor textProcessor,
+                                BusinessRanker ranker) {
+        this(engineRegistry, providerRegistry, metrics, searchMetrics, analyticsService, textProcessor, ranker,
+                createDefaultSearchExecutor(metrics));
+    }
+
+    /**
+     * 创建默认搜索线程池。
+     *
+     * <p>仅在未注入外部线程池时使用，线程池参数与原有逻辑保持一致。
+     *
+     * @param properties 搜索配置
+     * @return 默认搜索线程池
+     */
+    static ThreadPoolTaskExecutor createDefaultSearchExecutor(SearchProperties properties) {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(Math.max(2, properties.getIndex().getThreadPoolSize()));
+        executor.setMaxPoolSize(Math.max(4, properties.getIndex().getThreadPoolSize() * 2));
+        executor.setQueueCapacity(256);
+        executor.setThreadNamePrefix("ydsz-search-");
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(5);
+        executor.initialize();
+        return executor;
     }
 
     /**

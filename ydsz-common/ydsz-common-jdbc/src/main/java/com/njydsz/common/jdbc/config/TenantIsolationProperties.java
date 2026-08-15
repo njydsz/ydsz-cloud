@@ -32,9 +32,16 @@ import lombok.Data;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 自 v2.0.0 起，租户配置统一收口至 {@code ydsz.tenant.*} 前缀，
+ *             请使用 {@link com.njydsz.common.tenant.config.TenantProperties} 替代。
+ *             旧配置前缀 {@code ydsz.jdbc.tenant-isolation.*} 将在 v3.0.0 移除。
+ *             迁移示例：
+ *             {@code ydsz.jdbc.tenant-isolation.enabled} → {@code ydsz.tenant.enabled}
+ *             ；{@code ydsz.jdbc.tenant-isolation.mode} → {@code ydsz.tenant.mode}
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.jdbc.tenant-isolation")
+@Deprecated
 public class TenantIsolationProperties {
 
     /**

@@ -66,38 +66,6 @@ ydsz:
       header-name: X-API-Version
       sunset-headers: true
 
-# 统一线程池配置（ydsz-common-thread）
-# 参考：云顶编码规范 15.4 节
-  thread:
-    enabled: true
-    hot-update:
-      enabled: true
-    pools:
-      # 用户通知异步线程池（站内信/邮件/短信等）
-      userNotifyExecutor:
-        type: PLATFORM
-        core-size: 2
-        max-size: 8
-        queue-capacity: 256
-        thread-name-prefix: ydsz-user-notify-
-        reject-policy: CALLER_RUNS
-        await-termination-seconds: 30
-        slow-task-threshold-ms: 5000
-        task-decorator-bean-names:
-          - tenantContextTaskDecorator
-      # 用户行为审计异步线程池
-      userAuditExecutor:
-        type: PLATFORM
-        core-size: 2
-        max-size: 4
-        queue-capacity: 512
-        thread-name-prefix: ydsz-user-audit-
-        reject-policy: CALLER_RUNS
-        await-termination-seconds: 15
-        enable-detailed-metrics: true
-        task-decorator-bean-names:
-          - tenantContextTaskDecorator
-
 # JSON 引擎配置（ydsz-common-json）
   json:
     enabled: true

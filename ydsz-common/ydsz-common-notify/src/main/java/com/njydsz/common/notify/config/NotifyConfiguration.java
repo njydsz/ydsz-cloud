@@ -58,6 +58,7 @@ import com.njydsz.common.notify.template.HtmlTemplateRegistry;
 import com.njydsz.common.notify.template.TemplateEngine;
 import com.njydsz.common.notify.template.TemplateVariableValidator;
 import com.njydsz.common.notify.tracking.EmailTrackingService;
+import com.njydsz.common.redis.service.RedisRateLimiter;
 import com.njydsz.common.util.concurrent.ExecutorUtils;
 
 import io.micrometer.core.instrument.MeterRegistry;
@@ -476,16 +477,21 @@ public class NotifyConfiguration {
     /**
      * 注册通知限流管理器 Bean。
      *
-     * <p>按渠道/租户维度对发送速率进行令牌桶限流，保护下游网关不被突发流量击穿。
+     * <p>按渠道/租户维度对发送速率进行滑动窗口限流，保护下游网关不被突发流量击穿。
      * 依据 {@code ydsz.notify.ratelimit} 配置初始化；无自定义 Bean 时注册默认实现。
+     *
+     * <p>P0-1 架构优化：委托 {@link RedisRateLimiter} 实现分布式限流，
+     * RedisRateLimiter 不可用时降级为不限制。
      */
     @Bean
     @ConditionalOnMissingBean(NotifyRateLimiterManager.class)
-    public NotifyRateLimiterManager notifyRateLimiterManager(NotifyProperties properties) {
+    public NotifyRateLimiterManager notifyRateLimiterManager(NotifyProperties properties,
+                                                             ObjectProvider<RedisRateLimiter> redisRateLimiterProvider) {
         NotifyProperties.RateLimit rateLimitConfig = properties.getRateLimit();
-        log.info("[NotifyConfiguration] NotifyRateLimiterManager bean registered, enabled={}, defaultMaxRequests={}, defaultWindowSeconds={}",
-                rateLimitConfig.isEnabled(), rateLimitConfig.getDefaultMaxRequests(), rateLimitConfig.getDefaultWindowSeconds());
-        return new NotifyRateLimiterManager(rateLimitConfig);
+        RedisRateLimiter redisRateLimiter = redisRateLimiterProvider.getIfAvailable();
+        log.info("[NotifyConfiguration] NotifyRateLimiterManager bean registered, redisRateLimiter={}, enabled={}, defaultMaxRequests={}, defaultWindowSeconds={}",
+                redisRateLimiter != null, rateLimitConfig.isEnabled(), rateLimitConfig.getDefaultMaxRequests(), rateLimitConfig.getDefaultWindowSeconds());
+        return new NotifyRateLimiterManager(rateLimitConfig, redisRateLimiter);
     }
 
     // ==================== NotifyService ====================

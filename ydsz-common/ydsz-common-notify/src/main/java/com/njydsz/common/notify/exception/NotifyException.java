@@ -8,14 +8,15 @@ import com.njydsz.common.exception.enums.ExceptionLevel;
 /**
  * 通知发送异常
  *
+ * <p>错误码使用 {@link CoreExceptionCode#NOTIFY_ERROR}（B02056），
+ * i18n 消息键 {@code notify.error}，HTTP 500。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
 public class NotifyException extends BusinessException {
 
     private static final long serialVersionUID = 1L;
-
-    private static final String DEFAULT_CODE = "NOTIFY_ERROR";
 
     /**
      * 构造通知异常
@@ -24,12 +25,12 @@ public class NotifyException extends BusinessException {
      */
     public NotifyException(String message) {
         super();
-        this.httpStatus = 400;
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.BUSINESS;
-        this.code = DEFAULT_CODE;
+        initFields(CoreExceptionCode.NOTIFY_ERROR.getCode(),
+                CoreExceptionCode.NOTIFY_ERROR.getKey(), new Object[]{});
+        setHttpStatus(CoreExceptionCode.NOTIFY_ERROR.getHttpStatus());
+        setLevel(ExceptionLevel.ERROR);
+        setCategory(ExceptionCategory.BUSINESS);
         setMessage(message);
-        this.params = new Object[]{};
     }
 
     /**
@@ -39,12 +40,10 @@ public class NotifyException extends BusinessException {
      * @param cause   原始异常
      */
     public NotifyException(String message, Throwable cause) {
-        super(CoreExceptionCode.FAIL, cause);
-        this.httpStatus = 400;
-        this.level = ExceptionLevel.ERROR;
-        this.category = ExceptionCategory.BUSINESS;
-        this.code = DEFAULT_CODE;
+        super(CoreExceptionCode.NOTIFY_ERROR, cause);
+        setHttpStatus(CoreExceptionCode.NOTIFY_ERROR.getHttpStatus());
+        setLevel(ExceptionLevel.ERROR);
+        setCategory(ExceptionCategory.BUSINESS);
         setMessage(message);
-        this.params = new Object[]{};
     }
 }

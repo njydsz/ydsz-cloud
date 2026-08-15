@@ -42,23 +42,62 @@ public class IndexSyncService {
     private static final int MAX_DLQ_SIZE = 10000;
     private final ConcurrentLinkedQueue<IndexOperation> deadLetterQueue = new ConcurrentLinkedQueue<>();
 
+    /**
+     * 创建索引同步服务（使用外部注入的线程池）。
+     *
+     * <p>推荐用法：由 {@code SearchAutoConfiguration} 注入通过
+     * {@code ydsz.thread.pools.indexSyncExecutor} 配置的统一管理线程池。
+     *
+     * @param engineRegistry 引擎注册表
+     * @param providerRegistry 提供者注册表
+     * @param properties 搜索配置
+     * @param metrics 指标采集器
+     * @param executorService 外部注入的线程池（不可为 {@code null}）
+     */
     public IndexSyncService(SearchEngineRegistry engineRegistry,
                             SearchProviderRegistry providerRegistry,
                             SearchProperties properties,
-                            SearchMetrics metrics) {
+                            SearchMetrics metrics,
+                            ThreadPoolTaskExecutor executorService) {
         this.engineRegistry = engineRegistry;
         this.providerRegistry = providerRegistry;
         this.properties = properties;
         this.metrics = metrics;
+        this.executorService = executorService;
+    }
 
-        this.executorService = new ThreadPoolTaskExecutor();
-        this.executorService.setCorePoolSize(Math.max(2, properties.getIndex().getThreadPoolSize()));
-        this.executorService.setMaxPoolSize(Math.max(4, properties.getIndex().getThreadPoolSize() * 2));
-        this.executorService.setQueueCapacity(512);
-        this.executorService.setThreadNamePrefix("index-sync-");
-        this.executorService.setWaitForTasksToCompleteOnShutdown(true);
-        this.executorService.setAwaitTerminationSeconds(5);
-        this.executorService.initialize();
+    /**
+     * 创建索引同步服务（使用默认自创建线程池，兼容无统一线程池场景）。
+     *
+     * @param engineRegistry 引擎注册表
+     * @param providerRegistry 提供者注册表
+     * @param properties 搜索配置
+     * @param metrics 指标采集器
+     */
+    public IndexSyncService(SearchEngineRegistry engineRegistry,
+                            SearchProviderRegistry providerRegistry,
+                            SearchProperties properties,
+                            SearchMetrics metrics) {
+        this(engineRegistry, providerRegistry, properties, metrics,
+                createDefaultIndexSyncExecutor(properties));
+    }
+
+    /**
+     * 创建默认索引同步线程池。
+     *
+     * @param properties 搜索配置
+     * @return 默认索引同步线程池
+     */
+    static ThreadPoolTaskExecutor createDefaultIndexSyncExecutor(SearchProperties properties) {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(Math.max(2, properties.getIndex().getThreadPoolSize()));
+        executor.setMaxPoolSize(Math.max(4, properties.getIndex().getThreadPoolSize() * 2));
+        executor.setQueueCapacity(512);
+        executor.setThreadNamePrefix("ydsz-index-sync-");
+        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(5);
+        executor.initialize();
+        return executor;
     }
 
     /**

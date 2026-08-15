@@ -1,5 +1,6 @@
 package com.njydsz.common.lock.exception;
 
+import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.enums.ExceptionCategory;
 import com.njydsz.common.exception.enums.ExceptionLevel;
@@ -12,7 +13,8 @@ import com.njydsz.common.exception.enums.ExceptionLevel;
  * 与 {@link DistributedLockException} 不同，本异常表示"同一业务键在 TTL 窗口内已处理过"，
  * 属于业务约束冲突，对应 HTTP 409 Conflict。
  *
- * <p>错误码：{@code IDEMPOTENT_REJECT}，消息键同错误码，前端可直接展示 message。
+ * <p>错误码使用 {@link CoreExceptionCode#IDEMPOTENT_REJECT}（A07001），
+ * i18n 消息键 {@code idempotent.reject}。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -21,14 +23,6 @@ public class IdempotentException extends BusinessException {
 
     private static final long serialVersionUID = 1L;
 
-    /** HTTP 409 Conflict 状态码 */
-    private static final int HTTP_STATUS_CONFLICT = 409;
-
-    /**
-     * 默认错误码
-     */
-    private static final String DEFAULT_CODE = "IDEMPOTENT_REJECT";
-
     /**
      * 构造幂等性异常
      *
@@ -36,37 +30,29 @@ public class IdempotentException extends BusinessException {
      */
     public IdempotentException(String message) {
         super();
-        this.httpStatus = HTTP_STATUS_CONFLICT;
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.BUSINESS;
-        this.code = DEFAULT_CODE;
-        this.key = DEFAULT_CODE;
-        this.params = new Object[]{};
-        // 使用 setMessage 确保 messageResolved=true，防止 getMessage() 懒加载时
-        // 用 messageKey 覆盖已设置的直显消息（@Idempotent.message() 是用户可读文案，非 i18n key）
+        initFields(CoreExceptionCode.IDEMPOTENT_REJECT.getCode(),
+                CoreExceptionCode.IDEMPOTENT_REJECT.getKey(), new Object[]{});
+        setHttpStatus(CoreExceptionCode.IDEMPOTENT_REJECT.getHttpStatus());
+        setLevel(ExceptionLevel.WARN);
+        setCategory(ExceptionCategory.BUSINESS);
+        // 使用 setMessage 确保 @Idempotent.message() 用户可读文案优先展示
         setMessage(message);
-        this.messageKey = DEFAULT_CODE;
-        this.messageParams = this.params;
     }
 
     /**
      * 构造幂等性异常（带幂等键，便于日志追踪）
      *
-     * @param message 异常消息
+     * @param message      异常消息
      * @param idempotentKey 触发幂等的 Redis 键
      */
     public IdempotentException(String message, String idempotentKey) {
         super();
-        this.httpStatus = HTTP_STATUS_CONFLICT;
-        this.level = ExceptionLevel.WARN;
-        this.category = ExceptionCategory.BUSINESS;
-        this.code = DEFAULT_CODE;
-        this.key = DEFAULT_CODE;
-        this.params = new Object[]{idempotentKey};
-        // 使用 setMessage 确保 messageResolved=true，防止 getMessage() 懒加载时
-        // 用 messageKey 覆盖已设置的直显消息（@Idempotent.message() 是用户可读文案，非 i18n key）
+        initFields(CoreExceptionCode.IDEMPOTENT_REJECT.getCode(),
+                CoreExceptionCode.IDEMPOTENT_REJECT.getKey(), new Object[]{idempotentKey});
+        setHttpStatus(CoreExceptionCode.IDEMPOTENT_REJECT.getHttpStatus());
+        setLevel(ExceptionLevel.WARN);
+        setCategory(ExceptionCategory.BUSINESS);
+        // 使用 setMessage 确保 @Idempotent.message() 用户可读文案优先展示
         setMessage(message);
-        this.messageKey = DEFAULT_CODE;
-        this.messageParams = this.params;
     }
 }

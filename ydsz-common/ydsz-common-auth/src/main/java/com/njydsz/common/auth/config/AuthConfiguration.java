@@ -52,6 +52,7 @@ import com.njydsz.common.auth.strategy.DefaultCacheKeyStrategy;
 import com.njydsz.common.auth.token.JwtTokenService;
 import com.njydsz.common.auth.token.TokenProperties;
 import com.njydsz.common.auth.token.TokenService;
+import com.njydsz.common.redis.service.RedisRateLimiter;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
@@ -331,13 +332,18 @@ public class AuthConfiguration {
     /**
      * 创建限流器 Bean（可选，默认 60 秒内 100 次请求）。
      *
+     * <p>P0-1 架构优化：当 {@link RedisRateLimiter} 可用时委托其固定窗口限流实现
+     * （分布式一致）；RedisRateLimiter 不可用时降级为本地内存实现。
+     *
+     * @param redisRateLimiterProvider Redis 限流器（可选）
      * @return RateLimiter 实例
      */
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnProperty(prefix = "ydsz.auth", name = "rate-limit-enabled", havingValue = "true", matchIfMissing = false)
-    public RateLimiter authRateLimiter() {
-        return new RateLimiter(100, 60, TimeUnit.SECONDS);
+    public RateLimiter authRateLimiter(ObjectProvider<RedisRateLimiter> redisRateLimiterProvider) {
+        RedisRateLimiter redisRateLimiter = redisRateLimiterProvider.getIfAvailable();
+        return new RateLimiter(100, 60, TimeUnit.SECONDS, redisRateLimiter);
     }
 
     /**

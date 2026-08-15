@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.njydsz.common.search.analytics.SearchAnalyticsService;
 import com.njydsz.common.search.analytics.SearchQualityTracker;
@@ -156,6 +157,38 @@ public class SearchAutoConfiguration {
     @ConditionalOnMissingBean(name = "memorySearchStrategy")
     public SearchStrategy memorySearchStrategy() {
         return new InMemorySearchStrategy();
+    }
+
+    // ==================== 线程池装配 ====================
+
+    /**
+     * 搜索执行线程池 — 供 {@link UnifiedSearchService} 使用。
+     *
+     * <p>通过 {@code @ConditionalOnMissingBean} 允许业务方注入自定义线程池覆盖。
+     * 当 classpath 存在 {@code ydsz-common-thread} 且配置了
+     * {@code ydsz.thread.pools.searchExecutor} 时，业务方应注入对应的统一管理线程池。
+     *
+     * @param properties 搜索配置
+     * @return 搜索执行线程池
+     */
+    @Bean("searchExecutor")
+    @ConditionalOnMissingBean(name = "searchExecutor")
+    public ThreadPoolTaskExecutor searchExecutor(SearchProperties properties) {
+        return UnifiedSearchService.createDefaultSearchExecutor(properties);
+    }
+
+    /**
+     * 索引同步线程池 — 供 {@link IndexSyncService} 使用。
+     *
+     * <p>通过 {@code @ConditionalOnMissingBean} 允许业务方注入自定义线程池覆盖。
+     *
+     * @param properties 搜索配置
+     * @return 索引同步线程池
+     */
+    @Bean("indexSyncExecutor")
+    @ConditionalOnMissingBean(name = "indexSyncExecutor")
+    public ThreadPoolTaskExecutor indexSyncExecutor(SearchProperties properties) {
+        return IndexSyncService.createDefaultIndexSyncExecutor(properties);
     }
 
     // ==================== 核心服务装配 ====================
