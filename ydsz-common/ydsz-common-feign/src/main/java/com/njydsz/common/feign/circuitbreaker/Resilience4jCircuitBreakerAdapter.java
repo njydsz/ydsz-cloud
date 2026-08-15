@@ -206,11 +206,14 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
      * <ol>
      *   <li>尝试从 Redis 恢复之前的熔断状态</li>
      *   <li>自动注册 Micrometer 指标</li>
+     *   <li>应用 per-client 配置覆盖（如有）</li>
      * </ol>
      */
     private CircuitBreaker getOrCreateCircuitBreaker(String serviceName) {
         return circuitBreakers.computeIfAbsent(serviceName, name -> {
-            CircuitBreaker cb = CircuitBreaker.of(toResource(name), config);
+            // 构建配置时应用 per-client 覆盖
+            CircuitBreakerConfig cbConfig = buildConfig(properties.getCircuitBreaker(), name);
+            CircuitBreaker cb = CircuitBreaker.of(toResource(name), cbConfig);
 
             if (statePersistence != null) {
                 CircuitBreakerState restored = statePersistence.restoreState(name);
@@ -232,19 +235,47 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
         return RESOURCE_PREFIX + serviceName;
     }
 
-    private CircuitBreakerConfig buildConfig(FeignProperties.CircuitBreaker cb) {
-        SlidingWindowType windowType = "TIME_BASED".equalsIgnoreCase(cb.getSlidingWindowType())
-                ? SlidingWindowType.TIME_BASED
-                : SlidingWindowType.COUNT_BASED;
+    /**
+     * 构建 CircuitBreaker 配置，应用 per-client 覆盖。
+     *
+     * @param cb          全局熔断器配置
+     * @param serviceName 服务名称（用于查找 per-client 覆盖）
+     * @return 合并后的 CircuitBreakerConfig
+     */
+    private CircuitBreakerConfig buildConfig(FeignProperties.CircuitBreaker cb, String serviceName) {
+        // 查找 per-client 配置覆盖
+        FeignProperties.CircuitBreakerClientConfig clientOverride =
+                cb.getClientConfig() != null ? cb.getClientConfig().get(serviceName) : null;
+
+        float failureRateThreshold = clientOverride != null && clientOverride.getFailureRateThreshold() != null
+                ? clientOverride.getFailureRateThreshold() : cb.getFailureRateThreshold();
+        float slowCallRateThreshold = clientOverride != null && clientOverride.getSlowCallRateThreshold() != null
+                ? clientOverride.getSlowCallRateThreshold() : cb.getSlowCallRateThreshold();
+        int slowCallDurationThreshold = clientOverride != null && clientOverride.getSlowCallDurationThreshold() != null
+                ? clientOverride.getSlowCallDurationThreshold() : cb.getSlowCallDurationThreshold();
+        int slidingWindowSize = clientOverride != null && clientOverride.getSlidingWindowSize() != null
+                ? clientOverride.getSlidingWindowSize() : cb.getSlidingWindowSize();
+        int waitDurationInOpenState = clientOverride != null && clientOverride.getWaitDurationInOpenState() != null
+                ? clientOverride.getWaitDurationInOpenState() : cb.getWaitDurationInOpenState();
+        int permittedHalfOpen = clientOverride != null && clientOverride.getPermittedNumberOfCallsInHalfOpenState() != null
+                ? clientOverride.getPermittedNumberOfCallsInHalfOpenState() : cb.getPermittedNumberOfCallsInHalfOpenState();
+        SlidingWindowType windowType;
+        if (clientOverride != null && clientOverride.getSlidingWindowType() != null) {
+            windowType = "TIME_BASED".equalsIgnoreCase(clientOverride.getSlidingWindowType())
+                    ? SlidingWindowType.TIME_BASED : SlidingWindowType.COUNT_BASED;
+        } else {
+            windowType = "TIME_BASED".equalsIgnoreCase(cb.getSlidingWindowType())
+                    ? SlidingWindowType.TIME_BASED : SlidingWindowType.COUNT_BASED;
+        }
 
         return CircuitBreakerConfig.custom()
-                .failureRateThreshold(cb.getFailureRateThreshold())
-                .slowCallRateThreshold(cb.getSlowCallRateThreshold())
-                .slowCallDurationThreshold(Duration.ofMillis(cb.getSlowCallDurationThreshold()))
-                .permittedNumberOfCallsInHalfOpenState(cb.getPermittedNumberOfCallsInHalfOpenState())
-                .slidingWindowSize(cb.getSlidingWindowSize())
+                .failureRateThreshold(failureRateThreshold)
+                .slowCallRateThreshold(slowCallRateThreshold)
+                .slowCallDurationThreshold(Duration.ofMillis(slowCallDurationThreshold))
+                .permittedNumberOfCallsInHalfOpenState(permittedHalfOpen)
+                .slidingWindowSize(slidingWindowSize)
                 .slidingWindowType(windowType)
-                .waitDurationInOpenState(Duration.ofSeconds(cb.getWaitDurationInOpenState()))
+                .waitDurationInOpenState(Duration.ofSeconds(waitDurationInOpenState))
                 .build();
     }
 

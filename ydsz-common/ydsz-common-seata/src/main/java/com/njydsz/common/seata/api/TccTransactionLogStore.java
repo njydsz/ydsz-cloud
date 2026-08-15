@@ -60,6 +60,18 @@ public interface TccTransactionLogStore {
     List<TccTransactionLog> findTimeoutPending(LocalDateTime threshold);
 
     /**
+     * 分页查询超时未完成的分支事务（P1-2 新增）
+     *
+     * <p>相比 {@link #findTimeoutPending}，此方法仅返回指定数量的超时事务记录，
+     * 适用于恢复扫描场景下的分批处理，避免一次性加载过多事务到内存。
+     *
+     * @param threshold 超时阈值，早于此时间的 TRIED 状态分支需要恢复
+     * @param limit     单次返回的最大记录数
+     * @return 超时分支列表，数量不超过 limit
+     */
+    List<TccTransactionLog> findTimeoutPendingPaged(LocalDateTime threshold, int limit);
+
+    /**
      * 查询超时未完成的分支事务数量（P0-2 新增）
      *
      * <p>相比 {@link #findTimeoutPending}，此方法仅返回计数而不加载完整事务日志，
