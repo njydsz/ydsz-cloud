@@ -1,5 +1,6 @@
 package com.njydsz.system.server.service.impl;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -12,7 +13,9 @@ import org.apache.ibatis.session.SqlSessionFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisAdvancedOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
@@ -201,11 +204,13 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
     /**
      * DTO 转 Entity + 预生成雪花 ID（私有）
      *
-     * <p>批量 XML 插入不走 MyBatis-Plus 拦截器，需提前生成 ID。
-     * 缺省 {@code status="ENABLED"}、{@code deleted=false}。
+     * <p>批量 XML 插入不走 MyBatis-Plus 拦截器（CombinedFieldFillInterceptor、租户拦截器、
+     * IdentifierGenerator 均不生效），需在此处手动预生成 ID 并填充审计字段。
+     *
+     * <p>缺省 {@code status="ENABLED"}、{@code deleted=0}（{@code @TableLogic} 字段用 int 存储）。
      *
      * @param dto 字典项 DTO
-     * @return 字典项实体（含预生成 ID）
+     * @return 字典项实体（含预生成 ID 和审计字段）
      */
     private DictItem toEntityWithId(DictItemDTO dto) {
         DictItem entity = new DictItem();
@@ -222,7 +227,28 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
         entity.setDescription(dto.getDescription());
         entity.setExtJson(dto.getExtJson());
         entity.setStatus(dto.getStatus() != null ? dto.getStatus() : "ENABLED");
-        entity.setDeleted(false);
+        entity.setDeleted(0);
+        entity.setRevision(0);
+        entity.setCreatedAt(LocalDateTime.now());
+        entity.setUpdatedAt(LocalDateTime.now());
+        entity.setCreatedBy(getCurrentUserId());
+        entity.setUpdatedBy(getCurrentUserId());
+        entity.setTenantId(TenantContextHolder.getTenantId());
         return entity;
+    }
+
+    /**
+     * 获取当前用户 ID（私有）
+     *
+     * <p>从 RequestContext 获取当前操作人 ID，未登录时返回 "system"。
+     *
+     * @return 当前用户 ID
+     */
+    private String getCurrentUserId() {
+        try {
+            return RequestContext.getUserId();
+        } catch (Exception e) {
+            return "system";
+        }
     }
 }

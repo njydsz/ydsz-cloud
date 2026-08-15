@@ -269,11 +269,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // P1-1: 从会话 Hash 中获取 userId，以便清理会话索引
-        String userId = null;
-        Object userIdObj = redisHashOps.hGet(accessToken, "userId");
-        if (userIdObj != null) {
-            userId = userIdObj.toString();
-        }
+        String userId = redisHashOps.hGet(accessToken, "userId", String.class);
 
         // P1-1: 从 userId → Set 索引中移除该 token
         if (userId != null) {

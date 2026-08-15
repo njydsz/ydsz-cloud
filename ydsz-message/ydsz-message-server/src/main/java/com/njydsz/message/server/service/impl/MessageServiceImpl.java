@@ -59,6 +59,9 @@ import com.njydsz.message.server.service.core.DeliveryTimeOptimizer;
 import com.njydsz.message.server.service.core.MessageService;
 import com.njydsz.message.server.service.core.MessageTraceService;
 import com.njydsz.message.server.service.core.RateLimitService;
+import com.njydsz.message.server.service.core.MessageQueryService;
+import com.njydsz.message.server.service.core.MessageSendService;
+import com.njydsz.message.server.util.PiiMasker;
 import com.njydsz.message.server.service.impl.AggregatePersistenceService;
 import com.njydsz.message.server.service.impl.ChannelSuppressionEngine;
 import com.njydsz.message.server.service.impl.DndService;
@@ -151,6 +154,10 @@ public class MessageServiceImpl implements MessageService {
     private final ParallelBatchSender parallelBatchSender;
     /** P2-14: 时区感知 DND 服务 */
     private final DndService dndService;
+    /** P1-1: 发送 / 查询子服务（从本类拆分，降低 God Class 复杂度） */
+    private final MessageSendService messageSendService;
+    private final MessageQueryService messageQueryService;
+
     /** P0-5: 聚合路径独立 Service（事务安全） */
     private final AggregatePersistenceService aggregatePersistenceService;
     private final ObjectProvider<OutboxService> outboxServiceProvider;
@@ -181,7 +188,7 @@ public class MessageServiceImpl implements MessageService {
         // P2-6: 级联深度保护(防御性,正常路径下 triggerCascade 已提前拦截)
         if (depth > MessageConstants.MAX_CASCADE_DEPTH) {
             log.warn("[Message] 级联深度超限,拒绝发送: depth={} max={} receiver={}",
-                    depth, MessageConstants.MAX_CASCADE_DEPTH, request.getReceiver());
+                    depth, MessageConstants.MAX_CASCADE_DEPTH, PiiMasker.maskReceiver(request.getReceiver()));
             return MessageResult.fail(request.getChannel(), "级联深度超限");
         }
 
@@ -220,7 +227,7 @@ public class MessageServiceImpl implements MessageService {
                 "消息已落库: status=" + logDO.getStatus());
 
         // ⑥ 通道分发 + 级联
-        MessageResult result = doDispatch(logDO, ctx.matchedRule, ctx.receiver);
+        MessageResult result = messageSendService.dispatch(logDO, ctx.matchedRule, ctx.receiver);
         if (result != null && result.isSuccess()) {
             triggerCascade(request, logDO, depth);
         }
@@ -271,8 +278,8 @@ public class MessageServiceImpl implements MessageService {
         if (StringUtils.hasText(ctx.receiver) && StringUtils.hasText(channel)) {
             String resolved = userChannelBindingService.resolveChannelUserId(ctx.receiver, channel);
             if (resolved != null) {
-                log.debug("[Message] P0-1 通道绑定解析: userId={} channel={} → channelUserId={}",
-                        ctx.receiver, channel, resolved);
+log.debug("[Message] P0-1 通道绑定解析: userId={} channel={} → channelUserId={}",
+                    PiiMasker.maskReceiver(ctx.receiver), channel, resolved);
                 request.setReceiver(resolved);
                 ctx.receiver = resolved;
             }
@@ -303,7 +310,7 @@ public class MessageServiceImpl implements MessageService {
         if (StringUtils.hasText(ctx.receiver) && StringUtils.hasText(ctx.templateCode)
                 && subscriptionService.isBlocked(ctx.receiver, ctx.templateCode, ctx.channel)) {
             log.info("[Message] 用户已退订,跳过发送: receiver={} topic={} channel={}",
-                    ctx.receiver, ctx.templateCode, ctx.channel);
+                    PiiMasker.maskReceiver(ctx.receiver), ctx.templateCode, ctx.channel);
             messageMetrics.recordSend(ctx.channel, "BLOCKED", 0);
             ctx.result = MessageResult.fail(ctx.channel, "用户已退订该消息");
             return ctx;
@@ -320,7 +327,7 @@ public class MessageServiceImpl implements MessageService {
             if (!channelDisruptive) {
                 log.debug("[Message] 非打扰型通道绕过 DND: channel={}", ctx.channel);
             } else if (urgentBypass) {
-                log.info("[Message] URGENT 消息绕过 DND: receiver={} channel={}", ctx.receiver, ctx.channel);
+                log.info("[Message] URGENT 消息绕过 DND: receiver={} channel={}", PiiMasker.maskReceiver(ctx.receiver), ctx.channel);
             } else if (stc != null && stc.isEnabled()) {
                 LocalDateTime nextTime = calculateDndEndTime(ctx.pref);
                 if (nextTime == null) {
@@ -330,14 +337,14 @@ public class MessageServiceImpl implements MessageService {
                 }
                 long deferHours = Duration.between(LocalDateTime.now(), nextTime).toHours();
                 if (deferHours > stc.getMaxDeferHours()) {
-                    log.info("[Message] DND 延迟超过阈值,丢弃: receiver={} defer={}h max={}h",
-                            ctx.receiver, deferHours, stc.getMaxDeferHours());
+log.info("[Message] DND 延迟超过阈值,丢弃: receiver={} defer={}h max={}h",
+                    PiiMasker.maskReceiver(ctx.receiver), deferHours, stc.getMaxDeferHours());
                     messageMetrics.recordSend(ctx.channel, "DND_DROPPED", 0);
                     ctx.result = MessageResult.fail(ctx.channel, "免打扰时段消息延迟过久,已丢弃");
                     return ctx;
                 }
-                log.info("[Message] DND 延迟发送: receiver={} dnd={}~{} nextSendAt={}",
-                        ctx.receiver, ctx.pref.getDndStart(), ctx.pref.getDndEnd(), nextTime);
+log.info("[Message] DND 延迟发送: receiver={} dnd={}~{} nextSendAt={}",
+                    PiiMasker.maskReceiver(ctx.receiver), ctx.pref.getDndStart(), ctx.pref.getDndEnd(), nextTime);
                 messageMetrics.recordSend(ctx.channel, "DND_DEFERRED", 0);
                 request.setScheduledAt(nextTime);
             } else {
@@ -349,14 +356,14 @@ public class MessageServiceImpl implements MessageService {
 
         // ⑤-1b P2-14: 时区感知 DND 补充检查
         if (StringUtils.hasText(ctx.receiver) && dndService.shouldDelay(ctx.receiver, resolvePriority(request))) {
-            log.info("[Message] P2-14 时区感知 DND 延迟发送: receiver={} channel={}", ctx.receiver, ctx.channel);
+            log.info("[Message] P2-14 时区感知 DND 延迟发送: receiver={} channel={}", PiiMasker.maskReceiver(ctx.receiver), ctx.channel);
             messageMetrics.recordSend(ctx.channel, "DND_DEFERRED", 0);
         }
 
         // ⑤-2 P2-1: 智能去重（SET NX EX）
         ctx.dedupKey = buildDedupKey(request);
         if (StringUtils.hasText(ctx.dedupKey) && !dedupService.tryAcquire(ctx.dedupKey)) {
-            log.info("[Message] 检测到重复消息,跳过发送: dedupKey={} receiver={}", ctx.dedupKey, ctx.receiver);
+            log.info("[Message] 检测到重复消息,跳过发送: dedupKey={} receiver={}", ctx.dedupKey, PiiMasker.maskReceiver(ctx.receiver));
             messageMetrics.recordSend(ctx.channel, "DEDUPED", 0);
             ctx.result = MessageResult.fail(ctx.channel, "消息重复,已忽略");
             return ctx;
@@ -367,7 +374,7 @@ public class MessageServiceImpl implements MessageService {
                 && StringUtils.hasText(ctx.receiver)
                 && channelSuppressionEngine.shouldSuppress(ctx.bizType, request.getBizId(), ctx.receiver, ctx.channel)) {
             log.info("[Message] 跨渠道抑制,跳过发送: bizType={} bizId={} receiver={} channel={}",
-                    ctx.bizType, request.getBizId(), ctx.receiver, ctx.channel);
+                    ctx.bizType, request.getBizId(), PiiMasker.maskReceiver(ctx.receiver), ctx.channel);
             messageMetrics.recordSend(ctx.channel, "SUPPRESSED", 0);
             ctx.result = MessageResult.fail(ctx.channel, "跨渠道抑制: 已有其他渠道发送");
             return ctx;
@@ -553,13 +560,13 @@ public class MessageServiceImpl implements MessageService {
                     messageTraceService.recordTrace(logDO.getMsgId(),
                             MsgTrace.Node.SCHEDULED,
                             "SUCCESS", ctx.channel, "智能定时: optimalAt=" + optimalTime);
-                    log.info("[Message] 智能定时推送: msgId={} receiver={} optimalAt={}",
-                            logDO.getMsgId(), ctx.receiver, optimalTime);
+log.info("[Message] 智能定时推送: msgId={} receiver={} optimalAt={}",
+                    logDO.getMsgId(), PiiMasker.maskReceiver(ctx.receiver), optimalTime);
                     return MessageResult.ok(ctx.channel, logDO.getMsgId());
                 }
             } catch (Exception e) {
-                log.debug("[Message] 智能推送时间优化失败,降级立即发送: receiver={} err={}",
-                        ctx.receiver, e.getMessage());
+log.debug("[Message] 智能推送时间优化失败,降级立即发送: receiver={} err={}",
+                    PiiMasker.maskReceiver(ctx.receiver), e.getMessage());
             }
         }
 
@@ -635,167 +642,6 @@ public class MessageServiceImpl implements MessageService {
         }
     }
 
-    /**
-     * 执行通道分发,包含 P0-3 重试落库 与 P0-4 通道降级 / P1-8 多级降级链。
-     */
-    private MessageResult doDispatch(MsgLog logDO, MsgRouteRule matchedRule, String receiver) {
-        String channel = logDO.getChannel();
-        long start = System.currentTimeMillis();
-        try {
-            // P2-16: 邮件退信黑名单检查 —— EMAIL 通道发送前校验收信人是否在退信黑名单中
-            if ("EMAIL".equalsIgnoreCase(channel) && StringUtils.hasText(receiver)
-                    && emailBounceHandler.isBounced(receiver)) {
-                String bounceReason = emailBounceHandler.getBounceReason(receiver);
-                log.info("[Message] 邮件退信黑名单拦截: msgId={} receiver={} reason={}",
-                        logDO.getMsgId(), receiver, bounceReason);
-                logDO.setStatus(MessageStatusEnum.SKIPPED.name());
-                logDO.setErrorMessage("EMAIL_BOUNCED: " + bounceReason);
-                msgLogMapper.updateById(logDO);
-                messageMetrics.recordSend(channel, "BOUNCED", 0);
-                messageMetrics.recordSendFailure(channel, logDO.getTemplateCode(),
-                        logDO.getTenantId(), "EMAIL_BOUNCED");
-                return MessageResult.fail(channel, "邮件地址在退信黑名单中: " + receiver);
-            }
-
-            logDO.setStatus(MessageStatusEnum.SENDING.name());
-            msgLogMapper.updateById(logDO);
-            // P0-2: 记录分发开始轨迹
-            messageTraceService.recordTrace(logDO.getMsgId(),
-                    MsgTrace.Node.DISPATCH_START,
-                    "SUCCESS", channel, "通道分发开始");
-            String providerTraceId = channelRouter.dispatch(logDO);
-            long cost = System.currentTimeMillis() - start;
-            logDO.setStatus(MessageStatusEnum.SUCCESS.name());
-            logDO.setProviderTraceId(providerTraceId);
-            logDO.setCostMs(cost);
-            logDO.setCost(calculateCost(channel));
-            msgLogMapper.updateById(logDO);
-            if (StringUtils.hasText(receiver)) {
-                rateLimitService.recordFrequency(receiver, channel, logDO.getBizType());
-            }
-            // P2-20: 发送成功后记录配额计数
-            senderQuotaService.recordSend(logDO.getSenderId(), channel);
-            messageMetrics.recordSend(channel, "SUCCESS", cost);
-            // P3-24: 记录发送成功（Counter）
-            messageMetrics.recordSendSuccess(channel, logDO.getTemplateCode(), logDO.getTenantId());
-            // P0-2: 记录分发成功轨迹
-            messageTraceService.recordTrace(logDO.getMsgId(),
-                    MsgTrace.Node.DISPATCH_SUCCESS,
-                    "SUCCESS", channel, "发送成功: cost=" + cost + "ms");
-            log.info("[Message] 发送成功: msgId={} channel={} receiver={} cost={}ms",
-                    logDO.getMsgId(), channel, receiver, cost);
-            return MessageResult.ok(channel, providerTraceId);
-        } catch (Exception e) {
-            long cost = System.currentTimeMillis() - start;
-            logDO.setCostMs(cost);
-            logDO.setErrorMessage(e.getMessage());
-            // P3-24/P3-25: 记录发送失败 + 异常分类
-            messageMetrics.recordSendFailure(channel, logDO.getTemplateCode(),
-                    logDO.getTenantId(), e.getClass().getSimpleName());
-            messageMetrics.recordException(channel, e.getClass().getSimpleName());
-            // P0-4 + P1-8: 多级降级链（优先）→ 单通道降级
-            List<String> fallbackChannels = resolveFallbackChannels(matchedRule, channel);
-            if (!fallbackChannels.isEmpty()) {
-                MessageResult fallback = tryFallbackChain(logDO, fallbackChannels, cost);
-                if (fallback != null) {
-                    return fallback;
-                }
-            }
-            // P0-3 重试落库：retryCount < MAX → RETRY + nextRetryAt,否则 FAILED
-            return handleFailure(logDO, e, cost);
-        }
-    }
-
-    /**
-     * P1-8: 解析降级通道列表。
-     *
-     * <p>使用 {@link MsgRouteRule#getFallbackChannel()}（单通道），
-     * 自动过滤当前通道(避免循环降级)。
-     *
-     * @param matchedRule    命中的路由规则
-     * @param currentChannel 当前发送通道(排除自身)
-     * @return 降级通道列表（大写），可能为空
-     */
-    private List<String> resolveFallbackChannels(MsgRouteRule matchedRule, String currentChannel) {
-        if (matchedRule == null) {
-            return Collections.emptyList();
-        }
-        List<String> result = new ArrayList<>();
-        String single = matchedRule.getFallbackChannel();
-        if (StringUtils.hasText(single)
-                && !single.equalsIgnoreCase(currentChannel)) {
-            result.add(single.trim().toUpperCase());
-        }
-        return result;
-    }
-
-    /**
-     * P0-4 + P1-8: 按降级链顺序逐个尝试,任一成功即返回。
-     *
-     * @param logDO            消息日志(会被修改 channel)
-     * @param fallbackChannels 有序降级通道列表
-     * @param prevCost         前序累计耗时
-     * @return 降级成功返回 MessageResult.ok;全部失败返回 null(继续走重试逻辑)
-     */
-    private MessageResult tryFallbackChain(MsgLog logDO, List<String> fallbackChannels, long prevCost) {
-        String origChannel = logDO.getChannel();
-        long accumulatedCost = prevCost;
-        List<String> tried = new ArrayList<>();
-        tried.add(origChannel);
-        for (String fallbackChannel : fallbackChannels) {
-            long start = System.currentTimeMillis();
-            try {
-                logDO.setStatus(MessageStatusEnum.SENDING.name());
-                logDO.setChannel(fallbackChannel);
-                msgLogMapper.updateById(logDO);
-                String providerTraceId = channelRouter.dispatch(logDO);
-                long cost = System.currentTimeMillis() - start;
-                logDO.setStatus(MessageStatusEnum.SUCCESS.name());
-                logDO.setProviderTraceId(providerTraceId);
-                logDO.setCostMs(accumulatedCost + cost);
-                logDO.setCost(calculateCost(fallbackChannel));
-                msgLogMapper.updateById(logDO);
-                messageMetrics.recordSend(fallbackChannel, "SUCCESS", cost);
-                log.info("[Message] 降级发送成功: msgId={} chain={} final={} cost={}ms",
-                        logDO.getMsgId(), tried, fallbackChannel, cost);
-                return MessageResult.ok(fallbackChannel, providerTraceId);
-            } catch (Exception fe) {
-                long cost = System.currentTimeMillis() - start;
-                accumulatedCost += cost;
-                tried.add(fallbackChannel);
-                log.warn("[Message] 降级发送失败: msgId={} fallback={} err={} 继续尝试下一通道",
-                        logDO.getMsgId(), fallbackChannel, fe.getMessage());
-            }
-        }
-        // 全部降级失败,恢复原 channel,继续走重试逻辑
-        logDO.setChannel(origChannel);
-        logDO.setErrorMessage(String.join("→", tried) + " 均失败");
-        return null;
-    }
-
-    /**
-     * P0-3 失败处理：retryCount < MAX → RETRY + nextRetryAt(指数退避),否则 FAILED。
-     *
-     * <p>P1-7: 重试次数与退避由 {@link RetryStrategyResolver} 按通道解析,替代硬编码常量。
-     */
-    private MessageResult handleFailure(MsgLog logDO, Exception e, long cost) {
-        int retryCount = logDO.getRetryCount() == null ? 0 : logDO.getRetryCount();
-        if (!retryStrategyResolver.isMaxRetriesReached(retryCount, logDO.getChannel())) {
-            logDO.setStatus(MessageStatusEnum.RETRY.name());
-            logDO.setNextRetryAt(retryStrategyResolver.calcNextRetryAt(retryCount, logDO.getChannel()));
-            msgLogMapper.updateById(logDO);
-            messageMetrics.recordRetry(logDO.getChannel());
-            log.warn("[Message] 发送失败转重试: msgId={} channel={} retryCount={} nextRetryAt={} err={}",
-                    logDO.getMsgId(), logDO.getChannel(), retryCount, logDO.getNextRetryAt(), e.getMessage());
-            return MessageResult.fail(logDO.getChannel(), "发送失败,已加入重试队列: " + e.getMessage());
-        }
-        logDO.setStatus(MessageStatusEnum.FAILED.name());
-        msgLogMapper.updateById(logDO);
-        messageMetrics.recordSend(logDO.getChannel(), "FAILED", cost);
-        log.error("[Message] 发送失败(重试耗尽): msgId={} channel={} retryCount={} err={}",
-                logDO.getMsgId(), logDO.getChannel(), retryCount, e.getMessage());
-        return MessageResult.fail(logDO.getChannel(), e.getMessage());
-    }
 
     @Override
     public MessageResult sendDirect(MessageSendDTO dto) {
@@ -843,39 +689,7 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public Page<MsgLog> pageLog(MessageLogQueryDTO query) {
-        Page<MsgLog> page = new Page<>(
-                query == null ? 1 : query.getPageNum(),
-                Math.min(query == null ? 10 : query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
-        LambdaQueryWrapper<MsgLog> w = new LambdaQueryWrapper<>();
-        if (query != null) {
-            w.eq(StringUtils.hasText(query.getChannel()), MsgLog::getChannel, query.getChannel());
-            w.eq(StringUtils.hasText(query.getBizType()), MsgLog::getBizType, query.getBizType());
-            w.eq(StringUtils.hasText(query.getBizId()), MsgLog::getBizId, query.getBizId());
-            w.eq(StringUtils.hasText(query.getStatus()), MsgLog::getStatus, query.getStatus());
-            w.eq(StringUtils.hasText(query.getReceiver()), MsgLog::getReceiver, query.getReceiver());
-            w.eq(StringUtils.hasText(query.getPriority()), MsgLog::getPriority, query.getPriority());
-            w.eq(StringUtils.hasText(query.getRecallStatus()), MsgLog::getRecallStatus, query.getRecallStatus());
-            w.eq(StringUtils.hasText(query.getTenantId()), MsgLog::getTenantId, query.getTenantId());
-            // P2-13: 全文搜索（模糊匹配 content / receiver / templateCode）
-            if (StringUtils.hasText(query.getKeyword())) {
-                String kw = query.getKeyword().trim();
-                w.and(wrapper -> wrapper
-                        .like(MsgLog::getContent, kw)
-                        .or().like(MsgLog::getReceiver, kw)
-                        .or().like(MsgLog::getTemplateCode, kw)
-                        .or().like(MsgLog::getMsgId, kw)
-                        .or().like(MsgLog::getBizId, kw));
-            }
-            // P2-13: 时间范围
-            if (StringUtils.hasText(query.getStartTime())) {
-                w.ge(MsgLog::getCreatedAt, LocalDateTime.parse(query.getStartTime()));
-            }
-            if (StringUtils.hasText(query.getEndTime())) {
-                w.le(MsgLog::getCreatedAt, LocalDateTime.parse(query.getEndTime()));
-            }
-        }
-        w.orderByDesc(MsgLog::getCreatedAt);
-        return msgLogMapper.selectPage(page, w);
+        return messageQueryService.pageLog(query);
     }
 
     /**
@@ -1007,18 +821,6 @@ public class MessageServiceImpl implements MessageService {
     }
 
     /**
-     * P2-4: 按通道计算单条消息成本。
-     *
-     * @param channel 通道
-     * @return 单条成本（元），未配置或关闭时返回 ZERO
-     */
-    private BigDecimal calculateCost(String channel) {
-        MessageProperties.CostConfig cfg = messageProperties.getCost();
-        if (cfg == null || !cfg.isEnabled() || cfg.getUnitPrices() == null) {
-            return BigDecimal.ZERO;
-        }
-        return cfg.getUnitPrices().getOrDefault(channel, BigDecimal.ZERO);
-    }
 
     private String buildDedupKey(MessageRequest request) {
         if (StringUtils.hasText(request.getMessageId())) {
