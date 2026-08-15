@@ -178,5 +178,6 @@ public final class IdGenerator {
     static void resetForTesting() {
         cached = null;
         lastFailureMillis = 0L;
+        DEGRADED_WARNED.set(false);
     }
 }

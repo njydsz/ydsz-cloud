@@ -206,6 +206,42 @@ public final class SerializerRegistry {
     }
 
     /**
+     * 批量移除指定类型的序列化器（用于模块卸载时清理模块来源的注册）。
+     *
+     * <p>仅移除 {@code types} 中列出的类型，不影响其他类型与用户直接注册的序列化器。
+     * 空集合或 null 为安全空操作。</p>
+     *
+     * @param types 要移除的类型集合
+     * @since 1.2.3
+     */
+    public void unregisterAll(Set<Class<?>> types) {
+        if (types == null || types.isEmpty()) {
+            return;
+        }
+        for (Class<?> type : types) {
+            serializers.remove(type);
+        }
+    }
+
+    /**
+     * 批量移除指定类型的反序列化器（用于模块卸载时清理模块来源的注册）。
+     *
+     * <p>仅移除 {@code types} 中列出的类型，不影响其他类型与用户直接注册的反序列化器。
+     * 空集合或 null 为安全空操作。</p>
+     *
+     * @param types 要移除的类型集合
+     * @since 1.2.3
+     */
+    public void unregisterAllDeserializers(Set<Class<?>> types) {
+        if (types == null || types.isEmpty()) {
+            return;
+        }
+        for (Class<?> type : types) {
+            deserializers.remove(type);
+        }
+    }
+
+    /**
      * 清空所有注入
      */
     public void clear() {
