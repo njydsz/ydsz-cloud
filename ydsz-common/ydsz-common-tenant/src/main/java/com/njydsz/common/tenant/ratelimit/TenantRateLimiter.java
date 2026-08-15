@@ -50,11 +50,7 @@ public class TenantRateLimiter {
      * @return true=获取成功，false=被限流
      */
     public boolean tryAcquireTokenBucket(String ruleName, int rate, int capacity) {
-        String tenantId = TenantContextHolder.getTenantId();
-        String key = tenantId != null
-                ? "tenant:" + tenantId + ":" + ruleName
-                : ruleName;
-        return delegate.tryAcquireTokenBucket(key, rate, capacity, Duration.ofSeconds(1), 1);
+        return tryAcquireTokenBucket(ruleName, rate, capacity, Duration.ofSeconds(1));
     }
 
     /**

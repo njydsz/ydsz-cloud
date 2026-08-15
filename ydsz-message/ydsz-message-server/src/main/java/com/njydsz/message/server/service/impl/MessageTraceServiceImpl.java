@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.common.security.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.message.domain.entity.config.MsgTrace;
@@ -55,7 +55,7 @@ public class MessageTraceServiceImpl implements MessageTraceService {
             trace.setChannel(channel);
             trace.setMessage(message);
             trace.setEventAt(LocalDateTime.now());
-            trace.setTenantId(TenantContext.getTenantId());
+            trace.setTenantId(TenantContextHolder.getTenantId());
             if (extra != null && !extra.isEmpty()) {
                 trace.setExtra(YdszJson.toJson(extra));
             }

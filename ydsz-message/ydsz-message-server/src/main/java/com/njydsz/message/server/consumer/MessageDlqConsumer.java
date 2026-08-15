@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.njydsz.common.queue.constant.YdszMessageTopics;
 import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.security.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
@@ -123,7 +123,7 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
                 logDO.setErrorMessage(errorMessage);
                 logDO.setTopic(originTopic);
                 logDO.setReconsumeTimes(reconsumeTimes);
-                logDO.setTenantId(TenantContext.getTenantId());
+                logDO.setTenantId(TenantContextHolder.getTenantId());
                 msgLogMapper.insert(logDO);
                 messageMetrics.recordDead(logDO.getChannel());
             } catch (Exception e) {

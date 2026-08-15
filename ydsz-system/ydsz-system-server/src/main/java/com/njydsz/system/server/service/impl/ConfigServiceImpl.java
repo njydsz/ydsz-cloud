@@ -30,6 +30,7 @@ import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.infra.repository.ConfigRepository;
+import com.njydsz.system.server.cache.SystemCacheKeys;
 import com.njydsz.system.server.config.SystemProperties;
 import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.service.ConfigService;
@@ -212,7 +213,7 @@ public class ConfigServiceImpl implements ConfigService {
     public String getConfigValue(String configKey) {
         long start = System.nanoTime();
         try {
-            String cacheKey = CACHE_KEY_PREFIX + configKey;
+            String cacheKey = SystemCacheKeys.of(CACHE_KEY_PREFIX, configKey);
             String cached = stringOps.get(cacheKey, String.class);
             if (cached != null) {
                 if (NULL_SENTINEL.equals(cached)) {
@@ -238,7 +239,7 @@ public class ConfigServiceImpl implements ConfigService {
     @Override
     @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     public List<ConfigVO> getConfigsByGroup(String configGroup) {
-        String cacheKey = CACHE_GROUP_PREFIX + configGroup;
+        String cacheKey = SystemCacheKeys.of(CACHE_GROUP_PREFIX, configGroup);
         String cached = stringOps.get(cacheKey, String.class);
         if (cached != null) {
             metrics.recordConfigCacheHit();
@@ -258,7 +259,8 @@ public class ConfigServiceImpl implements ConfigService {
     @Override
     @DataScope(deptColumn = "dept_id", userColumn = "created_by")
     public List<ConfigVO> listPublicConfigs() {
-        String cached = stringOps.get(CACHE_PUBLIC_KEY, String.class);
+        String cacheKey = SystemCacheKeys.of(CACHE_PUBLIC_KEY, "");
+        String cached = stringOps.get(cacheKey, String.class);
         if (cached != null) {
             metrics.recordConfigCacheHit();
             return YdszJson.parseArray(cached, ConfigVO.class);
@@ -270,7 +272,7 @@ public class ConfigServiceImpl implements ConfigService {
                 .map(SystemConverter.INSTANT::entityToVO)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-        stringOps.set(CACHE_PUBLIC_KEY, YdszJson.toJson(vos), getCacheTtl());
+        stringOps.set(cacheKey, YdszJson.toJson(vos), getCacheTtl());
         return vos;
     }
 
@@ -475,12 +477,12 @@ public class ConfigServiceImpl implements ConfigService {
      */
     private void evictCache(String configKey, String configGroup) {
         if (configKey != null) {
-            stringOps.del(CACHE_KEY_PREFIX + configKey);
+            stringOps.del(SystemCacheKeys.of(CACHE_KEY_PREFIX, configKey));
         }
         if (configGroup != null) {
-            stringOps.del(CACHE_GROUP_PREFIX + configGroup);
+            stringOps.del(SystemCacheKeys.of(CACHE_GROUP_PREFIX, configGroup));
         }
-        stringOps.del(CACHE_PUBLIC_KEY);
+        stringOps.del(SystemCacheKeys.of(CACHE_PUBLIC_KEY, ""));
 
         OutboxService outboxService = outboxServiceProvider.getIfAvailable();
         if (outboxService != null) {

@@ -25,6 +25,7 @@ import com.njydsz.system.domain.entity.DictItem;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.infra.mapper.DictItemMapper;
+import com.njydsz.system.server.cache.SystemCacheKeys;
 import com.njydsz.system.server.config.SystemProperties;
 import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.service.DictItemService;
@@ -163,7 +164,7 @@ public class DictItemServiceImpl implements DictItemService {
     public DictItemVO getByTypeAndCode(String typeCode, String itemCode) {
         long start = System.nanoTime();
         try {
-            String cacheKey = CACHE_ITEM_PREFIX + typeCode + ":" + itemCode;
+            String cacheKey = SystemCacheKeys.of(CACHE_ITEM_PREFIX, typeCode + ":" + itemCode);
             String cached = stringOps.get(cacheKey, String.class);
             if (cached != null) {
                 if (NULL_SENTINEL.equals(cached)) {
@@ -209,7 +210,7 @@ public class DictItemServiceImpl implements DictItemService {
     public List<DictItemVO> listEnabledByTypeCode(String typeCode) {
         long start = System.nanoTime();
         try {
-            String cacheKey = CACHE_LIST_PREFIX + typeCode;
+            String cacheKey = SystemCacheKeys.of(CACHE_LIST_PREFIX, typeCode);
             String cached = stringOps.get(cacheKey, String.class);
             if (cached != null) {
                 metrics.recordDictCacheHit();
@@ -413,9 +414,9 @@ public class DictItemServiceImpl implements DictItemService {
         if (typeCode == null) {
             return;
         }
-        stringOps.del(CACHE_LIST_PREFIX + typeCode);
+        stringOps.del(SystemCacheKeys.of(CACHE_LIST_PREFIX, typeCode));
         // 使用 SCAN 替代 KEYS，避免 Redis 阻塞
-        String pattern = CACHE_ITEM_PREFIX + typeCode + ":*";
+        String pattern = SystemCacheKeys.of(CACHE_ITEM_PREFIX, typeCode) + ":*";
         Set<String> keys = stringOps.scan(pattern);
         if (!keys.isEmpty()) {
             stringOps.del(keys);

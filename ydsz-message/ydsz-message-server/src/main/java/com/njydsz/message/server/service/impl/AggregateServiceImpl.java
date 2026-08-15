@@ -19,7 +19,7 @@ import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
-import com.njydsz.common.security.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.entity.batch.MsgAggregate;
 import com.njydsz.message.domain.entity.template.MsgTemplate;
@@ -79,7 +79,7 @@ public class AggregateServiceImpl implements AggregateService {
                 .message("聚合组与接收人不能为空")
                 .build();
         }
-        String tid = StringUtils.hasText(tenantId) ? tenantId : TenantContext.getTenantId();
+        String tid = StringUtils.hasText(tenantId) ? tenantId : TenantContextHolder.getTenantId();
         String lockKey = MessageConstants.AGGREGATE_LOCK_PREFIX + group + ":" + receiver;
         String lockValue = null;
         try {

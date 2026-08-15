@@ -23,7 +23,7 @@ import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
-import com.njydsz.common.security.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.common.json.YdszJson;
@@ -382,7 +382,7 @@ public class MessageServiceImpl implements MessageService {
                 .build();
         }
         if (!rateLimitService.checkSendLimit(ctx.channel, ctx.receiver, ctx.templateCode,
-                TenantContext.getTenantId(), request.getPriority())) {
+                TenantContextHolder.getTenantId(), request.getPriority())) {
             messageMetrics.recordSend(ctx.channel, "RATE_LIMITED", 0);
             throw SysException.builder()
                 .resultCode(BaseResultCode.TOO_MANY_REQUESTS)
@@ -424,7 +424,7 @@ public class MessageServiceImpl implements MessageService {
 
         if (StringUtils.hasText(ctx.templateCode)) {
             MsgTemplate template = templateService.loadByCodeAndChannel(
-                    ctx.templateCode, ctx.channel, prefLocale, TenantContext.getTenantId());
+                    ctx.templateCode, ctx.channel, prefLocale, TenantContextHolder.getTenantId());
             if (template == null) {
                 return new RenderedContent(content, subject, true);
             }
@@ -508,7 +508,7 @@ public class MessageServiceImpl implements MessageService {
         if (ctx.matchedRule != null) {
             logDO.setRouteRuleId(ctx.matchedRule.getId());
         }
-        logDO.setTenantId(TenantContext.getTenantId());
+        logDO.setTenantId(TenantContextHolder.getTenantId());
         return logDO;
     }
 
@@ -1108,7 +1108,7 @@ public class MessageServiceImpl implements MessageService {
         logDO.setRecallStatus(RecallStatusEnum.NONE.name());
         logDO.setTraceId(TracerUtils.getOrCreateTraceId());
         logDO.setSenderId(SystemConstants.SYSTEM_USER_ID);
-        logDO.setTenantId(TenantContext.getTenantId());
+        logDO.setTenantId(TenantContextHolder.getTenantId());
         logDO.setTopic(YdszMessageTopics.TOPIC_MESSAGE);
         try {
             msgLogMapper.insert(logDO);

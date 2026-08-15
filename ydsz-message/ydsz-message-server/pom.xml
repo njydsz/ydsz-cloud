@@ -148,11 +148,6 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-event</artifactId>
         </dependency>
-        <!-- P1-3: 缓存（消息模板缓存） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-cache</artifactId>
-        </dependency>
         <!-- P1-3: 搜索 Provider SPI（消息搜索） -->
         <dependency>
             <groupId>com.njydsz</groupId>

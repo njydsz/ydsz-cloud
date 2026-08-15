@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.security.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.json.JsonMapper;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.message.domain.entity.template.MsgTemplate;
@@ -161,7 +161,7 @@ public class MessageTransactionListener implements RocketMQLocalTransactionListe
             return "通道未启用: " + req.getChannel();
         }
         MsgTemplate tpl = templateService.loadByCodeAndChannel(
-                req.getTemplateCode(), req.getChannel(), null, TenantContext.getTenantId());
+                req.getTemplateCode(), req.getChannel(), null, TenantContextHolder.getTenantId());
         if (tpl == null) {
             return "模板不存在: " + req.getTemplateCode();
         }

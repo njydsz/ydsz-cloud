@@ -9,7 +9,7 @@ import org.springframework.util.StringUtils;
 
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
-import com.njydsz.common.security.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.receipt.ReceiptResult;
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.entity.template.MsgTemplate;
@@ -156,7 +156,7 @@ public class SmsChannel implements MessageChannel {
         if (templateService != null && StringUtils.hasText(request.getTemplateCode())) {
             try {
                 return templateService.loadByCodeAndChannel(
-                        request.getTemplateCode(), CHANNEL_TYPE, null, TenantContext.getTenantId());
+                        request.getTemplateCode(), CHANNEL_TYPE, null, TenantContextHolder.getTenantId());
             } catch (Exception e) {
                 log.debug("[SmsChannel] 模板查询失败,忽略: code={} err={}",
                         request.getTemplateCode(), e.getMessage());

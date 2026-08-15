@@ -20,12 +20,13 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
+import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.trace.TraceIdGenerator;
 import com.njydsz.gateway.config.GatewayConstants;
+import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.config.GatewayIpUtils;
 import com.njydsz.gateway.config.IpWhitelistProperties;
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.trace.TraceIdGenerator;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -57,9 +58,6 @@ public class IpWhitelistFilter implements GlobalFilter, Ordered {
 
     /** 配置项分隔符：白名单字符串中多个条目以逗号或换行分隔 */
     private static final String WHITELIST_SEPARATOR = "[,\\n]";
-
-    /** AuthGlobalFilter 的 order 值（HIGHEST_PRECEDENCE + 10），本过滤器需在其之前执行 */
-    private static final int AUTH_FILTER_ORDER = Ordered.HIGHEST_PRECEDENCE + 10;
 
     private final IpWhitelistProperties properties;
 
@@ -125,14 +123,14 @@ public class IpWhitelistFilter implements GlobalFilter, Ordered {
     /**
      * 过滤器执行顺序：在 {@link AuthGlobalFilter} 之前执行（更小的 order 值）
      *
-     * <p>AuthGlobalFilter 的 order 为 {@code HIGHEST_PRECEDENCE + 10}，
-     * 本过滤器设为 {@code HIGHEST_PRECEDENCE + 5}，确保认证前完成 IP 拦截。
+     * <p>AuthGlobalFilter 的 order 为 {@code GatewayFilterOrder.AUTH}，
+     * 本过滤器设为 {@code GatewayFilterOrder.IP_WHITELIST}，确保认证前完成 IP 拦截。
      *
      * @return 过滤器顺序值
      */
     @Override
     public int getOrder() {
-        return AUTH_FILTER_ORDER - 5;
+        return GatewayFilterOrder.IP_WHITELIST.getOrder();
     }
 
     /**

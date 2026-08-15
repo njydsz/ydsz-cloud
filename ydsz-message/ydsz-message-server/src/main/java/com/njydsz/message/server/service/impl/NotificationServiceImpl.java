@@ -17,7 +17,7 @@ import com.njydsz.common.core.constant.SystemConstants;
 import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.security.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.core.NotificationQueryDTO;
 import com.njydsz.message.domain.dto.core.NotificationSendDTO;
 import com.njydsz.message.domain.entity.core.MsgNotification;
@@ -233,7 +233,7 @@ public class NotificationServiceImpl implements NotificationService {
         return msgNotificationMapper.selectList(new LambdaQueryWrapper<MsgNotification>()
                 .eq(MsgNotification::getReceiverId, userId)
                 .eq(MsgNotification::getMessageGroup, messageGroup)
-                .eq(MsgNotification::getTenantId, TenantContext.getTenantId())
+                .eq(MsgNotification::getTenantId, TenantContextHolder.getTenantId())
                 .orderByDesc(MsgNotification::getCreatedAt));
     }
 
@@ -272,7 +272,7 @@ public class NotificationServiceImpl implements NotificationService {
         n.setRecallStatus(RecallStatusEnum.NONE.name());
         n.setExpiredAt(dto.getExpiredAt());
         // P2-7: 补齐租户隔离,与其他消息实体一致(原依赖 DB DEFAULT '1',多租户场景会越权)
-        n.setTenantId(TenantContext.getTenantId());
+        n.setTenantId(TenantContextHolder.getTenantId());
         return n;
     }
 }

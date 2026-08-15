@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.security.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.core.MessageFeedbackDTO;
 import com.njydsz.message.domain.entity.config.MsgFeedback;
 import com.njydsz.message.infra.mapper.config.MsgFeedbackMapper;
@@ -82,7 +82,7 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
         feedback.setRating(dto.getRating());
         feedback.setFeedbackType(dto.getFeedbackType());
         feedback.setContent(dto.getContent());
-        feedback.setTenantId(TenantContext.getTenantId());
+        feedback.setTenantId(TenantContextHolder.getTenantId());
 
         // 通道和业务类型由前端或上游传入，此处不强制补全
 

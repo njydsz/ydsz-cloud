@@ -125,7 +125,7 @@ public class FlowUrgeLimiter {
         return targetIds.stream()
                 .map(targetId -> {
                     try {
-                        long ttl = rateLimiter.getTtlSeconds(buildKey(userId, targetId, type));
+                        long ttl = rateLimiter.getRemainingSeconds(buildKey(userId, targetId, type));
                         return Math.max(0, ttl);
                     } catch (Exception e) {
                         log.warn("[FlowUrgeLimiter] 获取催办剩余 TTL 失败 targetId={}: {}", targetId, e.getMessage());

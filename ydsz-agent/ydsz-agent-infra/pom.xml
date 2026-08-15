@@ -22,10 +22,6 @@
         </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-cache</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-feign</artifactId>
         </dependency>
         <!-- P1-8: PiiMaskingGuardrail 委托 common-safe 的 SensitiveUtil 进行 PII 脱敏 -->

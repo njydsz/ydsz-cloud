@@ -83,7 +83,7 @@ public class SearchController {
      * <p>根据 keyword 在用户可见范围内搜索匹配的文件；scope 控制搜索维度（name/content/tag/all）。
      * 底层自动选择 ES（可用时）或 DB LIKE（降级）。
      *
-     * @param request 搜索请求（keyword / scope / page / pageSize）
+     * @param request 搜索请求（keyword / scope / pageNum / pageSize）
      * @param userId  当前用户 ID（用于权限过滤）
      * @return 统一响应结果，data 为 {@link SearchResultVO}（含结果列表 + 总数 + 高亮信息）
      */
@@ -95,12 +95,12 @@ public class SearchController {
             @Valid @RequestBody NextwikiDTOs.SearchRequest request,
             @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
-        int page = request.getPage() != null ? request.getPage() : 1;
-        int pageSize = request.getPageSize() != null ? request.getPageSize() : 20;
+        int pageNum = request.getEffectivePageNum();
+        int pageSize = request.getEffectivePageSize();
         String scope = request.getScope() != null ? request.getScope() : "all";
 
         SearchResultVO result = searchApplicationService.search(
-                request.getKeyword(), userId, scope, page, pageSize);
+                request.getKeyword(), userId, scope, pageNum, pageSize);
         return BaseResponse.success(result);
     }
 

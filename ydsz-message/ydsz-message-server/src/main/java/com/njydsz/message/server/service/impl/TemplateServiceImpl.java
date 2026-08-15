@@ -11,7 +11,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.security.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.dto.template.TemplateAuditDTO;
 import com.njydsz.message.domain.dto.template.TemplateCreateDTO;
@@ -75,7 +75,7 @@ public class TemplateServiceImpl implements TemplateService {
                 .message("模板编码与通道不能为空")
                 .build();
         }
-        String tenantId = TenantContext.getTenantId();
+        String tenantId = TenantContextHolder.getTenantId();
         String locale = StringUtils.hasText(dto.getLocale()) ? dto.getLocale() : MessageConstants.DEFAULT_LOCALE;
         // 唯一性校验 (templateCode, channel, locale, tenantId)
         MsgTemplate existing = msgTemplateMapper.selectOne(new LambdaQueryWrapper<MsgTemplate>()
@@ -261,7 +261,7 @@ public class TemplateServiceImpl implements TemplateService {
                 .message("模板编码与通道不能为空")
                 .build();
         }
-        String tid = StringUtils.hasText(tenantId) ? tenantId : TenantContext.getTenantId();
+        String tid = StringUtils.hasText(tenantId) ? tenantId : TenantContextHolder.getTenantId();
         String loc = StringUtils.hasText(locale) ? locale : MessageConstants.DEFAULT_LOCALE;
         // 精确 locale
         MsgTemplate entity = msgTemplateMapper.selectOne(new LambdaQueryWrapper<MsgTemplate>()

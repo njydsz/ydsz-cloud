@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>P0-1b 架构优化：令牌桶限流从 Redisson {@code RRateLimiter} 改为委托
  * {@link RedisRateLimiter}（ydsz-common-redis 公共能力），统一全项目限流技术栈。
  *
- * <p>令牌桶使用 {@link RedisRateLimiter#tryAcquireTokenBucket(String, int, int)}；
+ * <p>令牌桶使用 {@link RedisRateLimiter#tryAcquireTokenBucket(String, int, int, Duration, int)}；
  * 每日 / 每小时频率使用 Redis INCR + EXPIRE，
  * 上限取自用户偏好 {@link MsgPreference#getDailyLimit()} / {@code hourlyLimit}。
  *

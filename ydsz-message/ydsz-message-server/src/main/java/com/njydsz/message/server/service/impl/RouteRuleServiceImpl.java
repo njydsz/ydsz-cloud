@@ -20,7 +20,7 @@ import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.security.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.dto.config.RouteRuleUpsertDTO;
@@ -73,7 +73,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
         }
         MsgRouteRule existing = msgRouteRuleMapper.selectOne(new LambdaQueryWrapper<MsgRouteRule>()
                 .eq(MsgRouteRule::getRuleCode, dto.getRuleCode())
-                .eq(MsgRouteRule::getTenantId, TenantContext.getTenantId())
+                .eq(MsgRouteRule::getTenantId, TenantContextHolder.getTenantId())
                 .last("LIMIT 1"));
         if (existing != null) {
             throw SysException.builder()
@@ -300,7 +300,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
         entity.setStatus(StringUtils.hasText(dto.getStatus()) ? dto.getStatus() : "ENABLED");
         entity.setDescription(dto.getDescription());
         entity.setSortOrder(dto.getSortOrder() == null ? 100 : dto.getSortOrder());
-        entity.setTenantId(TenantContext.getTenantId());
+        entity.setTenantId(TenantContextHolder.getTenantId());
         return entity;
     }
 }

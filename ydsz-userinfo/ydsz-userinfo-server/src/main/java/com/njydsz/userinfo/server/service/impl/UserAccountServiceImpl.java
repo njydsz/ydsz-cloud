@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.util.bean.BeanUpdateUtil;
-import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.dto.ChangePasswordDTO;
 import com.njydsz.userinfo.domain.dto.ResetPasswordDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
@@ -37,6 +36,7 @@ import com.njydsz.userinfo.server.auth.PasswordPolicyValidator;
 import com.njydsz.userinfo.server.auth.UserPasswordHistoryService;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.service.UserAccountService;
+import com.njydsz.userinfo.server.service.WorkflowApproverCacheService;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
@@ -114,11 +114,11 @@ public class UserAccountServiceImpl implements UserAccountService {
     private final UserPasswordHistoryService passwordHistoryService;
     /** 用户中心配置属性 */
     private final UserInfoProperties properties;
-    /** Redis 服务（工作流缓存） */
-    private final RedisStringOps redisStringOps;
     private final ObjectProvider<SearchIndexEventBridge> searchIndexBridgeProvider;
     /** 领域事件发布器（Outbox 模式） */
     private final UserDomainEventPublisher eventPublisher;
+    /** 工作流审批人缓存服务（懒加载，避免与 UserAccountService 构造循环依赖） */
+    private final ObjectProvider<WorkflowApproverCacheService> workflowCacheProvider;
 
     /**
      * {@inheritDoc}
@@ -388,8 +388,9 @@ public class UserAccountServiceImpl implements UserAccountService {
         }
         log.info("Roles assigned to user {}: {}", userId, roleIds);
 
-        // 清理工作流审批人缓存（角色分配变更会影响 role:xxx 和 leader:xxx 查询）
-        evictWorkflowCacheForUser(userId);
+        // P0-2: 角色分配变更会影响 role:xxx 审批人展开缓存，按角色编码逐个失效。
+        // 原实现仅删除 leader 缓存（key 维度错误），导致 role:xxx 旧名单残留。
+        evictWorkflowCache(userId);
 
         // 发布角色变更领域事件（通知 Gateway 刷新权限缓存）
         eventPublisher.publishRoleChanged(userId, roleIds.size());
@@ -398,13 +399,23 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
 
     /**
-     * 清理指定用户的工作流审批人缓存
+     * 清理指定用户的工作流审批人缓存。
+     *
+     * <p>角色分配变更会同时影响「角色→用户列表」与「用户→上级」两类缓存，
+     * 这里统一委托 {@link WorkflowApproverCacheService} 处理，避免硬编码缓存 key。
      */
-    private void evictWorkflowCacheForUser(String userId) {
+    private void evictWorkflowCache(String userId) {
+        WorkflowApproverCacheService workflowCache = workflowCacheProvider.getIfAvailable();
+        if (workflowCache == null) {
+            return;
+        }
         try {
-            redisStringOps.del("userinfo:workflow:leader:" + userId);
+            // 角色分配变更后，全部 role:xxx 缓存都可能过期（角色成员已变化），全量失效最安全
+            workflowCache.evictRoleCache(null);
+            // 用户角色变化不影响 leader，但用户可能同时被移出审批链，连带失效 leader 缓存
+            workflowCache.evictUserCache(userId);
         } catch (Exception e) {
-            log.warn("Failed to evict workflow cache for user: {}", userId);
+            log.warn("Failed to evict workflow cache for user: {}, error: {}", userId, e.getMessage());
         }
     }
 

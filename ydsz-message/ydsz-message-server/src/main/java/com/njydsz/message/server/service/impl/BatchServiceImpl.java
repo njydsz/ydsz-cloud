@@ -13,7 +13,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.security.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.message.domain.dto.batch.BatchProgressVO;
 import com.njydsz.message.domain.dto.batch.BatchSendRequestDTO;
@@ -99,7 +99,7 @@ public class BatchServiceImpl implements BatchService {
         batch.setSkipped(0);
         batch.setStatus("PENDING");
         batch.setSenderId(dto.getSenderId());
-        batch.setTenantId(TenantContext.getTenantId());
+        batch.setTenantId(TenantContextHolder.getTenantId());
         msgBatchMapper.insert(batch);
         log.info("[Batch] 批次已创建: batchId={} total={} channel={}", batchId, requests.size(), dto.getChannel());
 

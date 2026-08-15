@@ -5,7 +5,7 @@ import java.util.Set;
 
 import org.springframework.http.HttpStatus;
 
-import com.njydsz.common.auth.i18n.PermissionMessageResolver;
+import com.njydsz.common.exception.code.SecurityExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.enums.ExceptionCategory;
 import com.njydsz.common.exception.enums.ExceptionLevel;
@@ -29,6 +29,15 @@ import lombok.Getter;
  *   <li>grantedPermissions：当前用户已有的权限（调试用）</li>
  * </ul>
  *
+ * <p>错误码使用 {@link SecurityExceptionCode} 统一枚举，按权限类型映射：
+ * <ul>
+ *   <li>MENU → {@link SecurityExceptionCode#PERMISSION_DENIED_MENU C01061}</li>
+ *   <li>BUTTON → {@link SecurityExceptionCode#PERMISSION_DENIED_BUTTON C01062}</li>
+ *   <li>API → {@link SecurityExceptionCode#PERMISSION_DENIED_API C01063}</li>
+ *   <li>DATA → {@link SecurityExceptionCode#PERMISSION_DENIED_DATA C01064}</li>
+ *   <li>COLUMN → {@link SecurityExceptionCode#PERMISSION_DENIED_COLUMN C01065}</li>
+ * </ul>
+ *
  * <p><b>使用示例：</b>
  * <pre>{@code
  * throw PermissionDeniedException.denied()
@@ -45,6 +54,7 @@ import lombok.Getter;
  * @since 1.0.0
  *
  * @see BusinessException
+ * @see SecurityExceptionCode
  */
 @Getter
 public class PermissionDeniedException extends BusinessException {
@@ -57,7 +67,7 @@ public class PermissionDeniedException extends BusinessException {
     private final transient Set<String> userRoles;
     /** 本次校验缺失/要求的权限集合；构造时传入 {@code null} 会被规范为不可变空集合。 */
     private final transient Set<String> requiredPermissions;
-    /** 被拒绝的权限类型（MENU/BUTTON/API/DATA/COLUMN），决定 HTTP 错误码与 i18n 文案键。 */
+    /** 被拒绝的权限类型（MENU/BUTTON/API/DATA/COLUMN），决定错误码映射。 */
     private final PermissionType permissionType;
     /** 被拒绝访问的资源标识，如接口路径或菜单编码。 */
     private final String resource;
@@ -67,33 +77,37 @@ public class PermissionDeniedException extends BusinessException {
     private final transient Set<String> grantedPermissions;
 
     /**
-     * 权限类型，决定权限校验维度与异常错误码映射。
+     * 权限类型，决定权限维度与异常错误码映射。
      *
-     * <p>每种类型携带中文描述与 i18n 消息键，错误码映射见 {@link PermissionDeniedException#buildCode}：
-     * 菜单/按钮/接口/数据/列权限分别对应 {@code A03011}~{@code A03015}。
+     * <p>每种类型携带中文描述、i18n 消息键与 {@link SecurityExceptionCode} 映射。
      */
     public enum PermissionType {
-        MENU("菜单权限", "menu.permission"),
-        BUTTON("按钮权限", "button.permission"),
-        API("接口权限", "api.permission"),
-        DATA("数据权限", "data.permission"),
-        COLUMN("列权限", "column.permission");
+        MENU("菜单权限", "menu.permission", SecurityExceptionCode.PERMISSION_DENIED_MENU),
+        BUTTON("按钮权限", "button.permission", SecurityExceptionCode.PERMISSION_DENIED_BUTTON),
+        API("接口权限", "api.permission", SecurityExceptionCode.PERMISSION_DENIED_API),
+        DATA("数据权限", "data.permission", SecurityExceptionCode.PERMISSION_DENIED_DATA),
+        COLUMN("列权限", "column.permission", SecurityExceptionCode.PERMISSION_DENIED_COLUMN);
 
         @Getter
         private final String description;
         @Getter
         private final String messageKey;
+        @Getter
+        private final SecurityExceptionCode exceptionCode;
 
-        PermissionType(String description, String messageKey) {
+        PermissionType(String description, String messageKey, SecurityExceptionCode exceptionCode) {
             this.description = description;
             this.messageKey = messageKey;
+            this.exceptionCode = exceptionCode;
         }
     }
 
     private PermissionDeniedException(Builder builder) {
         super();
-        initFields(buildCode(builder.permissionType), null, new Object[]{});
-        setMessage(buildMessage(builder));
+        SecurityExceptionCode exceptionCode = builder.permissionType != null
+                ? builder.permissionType.getExceptionCode()
+                : SecurityExceptionCode.PERMISSION_DENIED;
+        initFields(exceptionCode.getCode(), exceptionCode.getKey(), new Object[]{});
         this.userId = builder.userId;
         this.userRoles = builder.userRoles != null
                 ? Collections.unmodifiableSet(builder.userRoles)
@@ -111,41 +125,19 @@ public class PermissionDeniedException extends BusinessException {
         setHttpStatus(HttpStatus.FORBIDDEN.value());
         setLevel(ExceptionLevel.WARN);
         setCategory(ExceptionCategory.SECURITY);
-    }
 
-    private static String buildCode(PermissionType type) {
-        if (type == null) {
-            return String.valueOf(HttpStatus.FORBIDDEN.value());
-        }
-        switch (type) {
-            case MENU:
-                return "A03011";
-            case BUTTON:
-                return "A03012";
-            case API:
-                return "A03013";
-            case DATA:
-                return "A03014";
-            case COLUMN:
-                return "A03015";
-            default:
-                return String.valueOf(HttpStatus.FORBIDDEN.value());
-        }
+        // 拼接上下文消息（在 i18n 解析基础词后追加上下文细节）
+        setMessage(buildMessage(builder));
     }
 
     private static String buildMessage(Builder builder) {
-        // 使用 i18n 解析基础消息
-        String lang = builder.language != null ? builder.language : "zh-CN";
-        String baseKey = builder.permissionType != null
-                ? "permission.denied." + builder.permissionType.name().toLowerCase()
-                : "permission.denied";
-        String baseMsg = PermissionMessageResolver.resolve(baseKey, lang);
-
+        // 基础消息已包含 i18n 文案（由 messageKey 解析），这里追加结构化上下文便于排查
         StringBuilder sb = new StringBuilder();
-        sb.append(baseMsg);
-
+        // 占位基础描述：使用 permissionType 的描述，若 getMessage 已走 i18n 会被覆盖
         if (builder.permissionType != null) {
-            sb.append(" [").append(builder.permissionType.getDescription()).append("]");
+            sb.append(builder.permissionType.getDescription()).append("拒绝");
+        } else {
+            sb.append("权限拒绝");
         }
 
         if (builder.userId != null) {
@@ -179,7 +171,7 @@ public class PermissionDeniedException extends BusinessException {
      * 创建权限拒绝异常的构建器。
      *
      * <p>通过链式调用 {@code userId}/{@code requiredPermissions} 等方法填充上下文，最后调用 {@link Builder#build()} 抛出异常。
-     * 构造出的异常固定为 HTTP 403，错误码按 {@link PermissionType} 映射（如 API 为 {@code A03013}）。</p>
+     * 构造出的异常固定为 HTTP 403，错误码按 {@link PermissionType} 映射（如 API 为 {@code C01063}）。</p>
      *
      * @return 异常构建器实例
      */
@@ -201,19 +193,6 @@ public class PermissionDeniedException extends BusinessException {
         private String resource;
         private String checkMode;
         private Set<String> grantedPermissions;
-        /** i18n 语言标识，默认 {@code "zh-CN"}。 */
-        private String language = "zh-CN";
-
-        /**
-         * 设置 i18n 语言标识。
-         *
-         * @param language 语言标识，如 {@code "zh-CN"} / {@code "en-US"}；默认 {@code "zh-CN"}
-         * @return 当前构建器，支持链式调用
-         */
-        public Builder language(String language) {
-            this.language = language;
-            return this;
-        }
 
         /**
          * 设置触发拒绝的用户标识。
@@ -229,7 +208,7 @@ public class PermissionDeniedException extends BusinessException {
         /**
          * 设置当前用户所拥有的角色集合。
          *
-         * @param userRoles 角色编码集合（如 {@code ["ROLE_ADMIN"]}），用于展示“实际拥有”的权限上下文
+         * @param userRoles 角色编码集合（如 {@code ["ROLE_ADMIN"]}），用于展示"实际拥有"的权限上下文
          * @return 当前构建器，支持链式调用
          */
         public Builder userRoles(Set<String> userRoles) {
@@ -249,9 +228,9 @@ public class PermissionDeniedException extends BusinessException {
         }
 
         /**
-         * 设置权限类型（决定 HTTP 错误码映射）。
+         * 设置权限类型（决定错误码映射）。
          *
-         * @param permissionType 权限类型，如 API / 菜单 / 数据；决定异常错误码（如 API 映射 {@code A03013}）
+         * @param permissionType 权限类型，如 API / 菜单 / 数据；决定异常错误码（如 API 映射 {@code C01063}）
          * @return 当前构建器，支持链式调用
          */
         public Builder permissionType(PermissionType permissionType) {

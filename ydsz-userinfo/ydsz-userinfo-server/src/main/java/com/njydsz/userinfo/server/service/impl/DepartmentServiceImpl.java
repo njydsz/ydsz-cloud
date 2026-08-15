@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +28,7 @@ import com.njydsz.userinfo.infra.mapper.DepartmentMapper;
 import com.njydsz.userinfo.infra.mapper.UserDeptMapper;
 import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 import com.njydsz.userinfo.server.service.DepartmentService;
+import com.njydsz.userinfo.server.service.WorkflowApproverCacheService;
 import com.njydsz.common.domain.tree.TreeBuilder;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -84,6 +86,8 @@ public class DepartmentServiceImpl implements DepartmentService {
     private final RedisStringOps redisStringOps;
     /** 领域事件发布器 */
     private final UserDomainEventPublisher eventPublisher;
+    /** 工作流审批人缓存服务（懒加载，避免与 DepartmentService 构造循环依赖） */
+    private final ObjectProvider<WorkflowApproverCacheService> workflowCacheProvider;
 
     /**
      * {@inheritDoc}
@@ -165,8 +169,9 @@ public class DepartmentServiceImpl implements DepartmentService {
         boolean result = departmentMapper.updateById(entity) > 0;
 
         if (result) {
-            // 部门变更后失效缓存
+            // 部门变更后失效缓存（部门树 + 部门负责人工作流缓存）
             evictDeptTreeCache();
+            evictDeptLeaderWorkflowCache(entity);
             // 发布部门更新领域事件
             eventPublisher.publishDepartmentChanged(entity, "UPDATED");
         }
@@ -204,8 +209,9 @@ public class DepartmentServiceImpl implements DepartmentService {
         boolean result = departmentMapper.deleteById(id) > 0;
 
         if (result) {
-            // 部门变更后失效缓存
+            // 部门变更后失效缓存（部门树 + 部门负责人工作流缓存）
             evictDeptTreeCache();
+            evictDeptLeaderWorkflowCache(entity);
             // 发布部门删除领域事件
             eventPublisher.publishDepartmentChanged(entity, "DELETED");
         }
@@ -273,6 +279,28 @@ public class DepartmentServiceImpl implements DepartmentService {
             log.debug("Department tree cache evicted");
         } catch (Exception e) {
             log.warn("Failed to evict department tree cache: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * 失效部门负责人工作流缓存
+     *
+     * <p>部门负责人（{@code leader_id}）变更后，工作流 {@code dept:xxx} 审批人展开
+     * 使用的缓存必须失效，避免审批人解析到旧负责人。通过懒加载
+     * {@link WorkflowApproverCacheService} 委托处理，避免硬编码缓存 key。
+     *
+     * @param entity 已变更的部门实体（含 ID）
+     */
+    private void evictDeptLeaderWorkflowCache(Department entity) {
+        WorkflowApproverCacheService workflowCache = workflowCacheProvider.getIfAvailable();
+        if (workflowCache == null) {
+            return;
+        }
+        try {
+            workflowCache.evictDeptLeaderCache(entity.getId());
+        } catch (Exception e) {
+            log.warn("Failed to evict dept leader workflow cache: deptId={}, error={}",
+                    entity.getId(), e.getMessage());
         }
     }
 

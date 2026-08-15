@@ -9,7 +9,7 @@ import org.springframework.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.security.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.receipt.ReceiptCallbackDTO;
 import com.njydsz.message.domain.entity.receipt.MsgReceipt;
 import com.njydsz.message.infra.mapper.receipt.MsgReceiptMapper;
@@ -70,7 +70,7 @@ public class ReceiptServiceImpl implements ReceiptService {
             entity.setProviderCode(dto.getProviderCode());
             entity.setProviderMsg(dto.getProviderMsg());
             entity.setRawResponse(dto.getRawResponse());
-            entity.setTenantId(TenantContext.getTenantId());
+            entity.setTenantId(TenantContextHolder.getTenantId());
             msgReceiptMapper.insert(entity);
             // 联动更新日志回执状态
             try {

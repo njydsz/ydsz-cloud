@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
-import com.njydsz.common.security.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.socket.constant.WebSocketConstants;
 import com.njydsz.common.socket.offline.OfflineMessageStore;
 import com.njydsz.common.json.YdszJson;
@@ -176,7 +176,7 @@ public class OfflineMessageService implements OfflineMessageStore {
                 return;
             }
             LocalDateTime now = LocalDateTime.now();
-            String tenantId = TenantContext.getTenantId();
+            String tenantId = TenantContextHolder.getTenantId();
             // P3-6: 先构建全部实体（预生成 ID），再批量 insert
             List<MsgOffline> entities = new ArrayList<>(overflowMessages.size());
             for (String json : overflowMessages) {

@@ -8,7 +8,7 @@ import org.springframework.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.security.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.dto.config.PreferenceUpsertDTO;
 import com.njydsz.message.domain.entity.config.MsgPreference;
@@ -73,7 +73,7 @@ public class PreferenceServiceImpl implements PreferenceService {
             entity.setDigestFrequency(dto.getDigestFrequency());
             entity.setLocale(dto.getLocale());
             entity.setExtra(dto.getExtra());
-            entity.setTenantId(TenantContext.getTenantId());
+            entity.setTenantId(TenantContextHolder.getTenantId());
             msgPreferenceMapper.insert(entity);
             log.info("[Preference] 新建偏好: user={} channel={} bizType={}", dto.getUserId(), dto.getChannel(), bizType);
             return entity;

@@ -23,7 +23,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.queue.constant.YdszMessageTopics;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.security.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.entity.core.MsgLog;
@@ -220,7 +220,7 @@ public class MessageConsumer implements RocketMQListener<String> {
             logDO.setMsgId(msgId);
             logDO.setTopic(YdszMessageTopics.TOPIC_MESSAGE);
             logDO.setReconsumeTimes(0);
-            logDO.setTenantId(TenantContext.getTenantId());
+            logDO.setTenantId(TenantContextHolder.getTenantId());
             msgLogMapper.insert(logDO);
         } catch (Exception logEx) {
             log.warn("[MessageConsumer] 记录失败日志异常: messageId={} err={}",

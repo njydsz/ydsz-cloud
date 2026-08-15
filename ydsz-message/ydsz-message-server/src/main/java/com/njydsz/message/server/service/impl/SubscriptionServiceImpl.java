@@ -9,7 +9,7 @@ import org.springframework.util.StringUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.security.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.config.SubscriptionUpsertDTO;
 import com.njydsz.message.domain.entity.config.MsgSubscription;
 import com.njydsz.message.domain.enums.config.SubscriptionStatusEnum;
@@ -73,7 +73,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             entity.setStatus(status);
             entity.setRoleScope(dto.getRoleScope());
             entity.setExtra(dto.getExtra());
-            entity.setTenantId(TenantContext.getTenantId());
+            entity.setTenantId(TenantContextHolder.getTenantId());
             msgSubscriptionMapper.insert(entity);
             log.info("[Subscription] 新建订阅: user={} topic={} channel={}", dto.getUserId(), dto.getTopicCode(), dto.getChannel());
             return entity;
@@ -204,7 +204,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
             entity.setChannel(channel);
             entity.setStatus(SubscriptionStatusEnum.UNSUBSCRIBED.name());
             entity.setUnsubscribedAt(LocalDateTime.now());
-            entity.setTenantId(TenantContext.getTenantId());
+            entity.setTenantId(TenantContextHolder.getTenantId());
             msgSubscriptionMapper.insert(entity);
             log.info("[Subscription] 退订(新建记录): user={} topic={} channel={}", userId, topicCode, channel);
             return entity;

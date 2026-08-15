@@ -12,7 +12,7 @@ import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.security.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.message.domain.dto.canary.CanaryUpsertDTO;
 import com.njydsz.message.domain.entity.canary.MsgCanary;
@@ -68,7 +68,7 @@ public class CanaryServiceImpl implements CanaryService {
             entity.setExperimentChannel(dto.getExperimentChannel());
             entity.setStatus(StringUtils.hasText(dto.getStatus()) ? dto.getStatus() : "ENABLED");
             entity.setDescription(dto.getDescription());
-            entity.setTenantId(TenantContext.getTenantId());
+            entity.setTenantId(TenantContextHolder.getTenantId());
             msgCanaryMapper.insert(entity);
             log.info("[Canary] 新建灰度桶: key={} percentage={} expTpl={} expChan={}",
                     dto.getCanaryKey(), percentage, dto.getExperimentTemplateCode(), dto.getExperimentChannel());
