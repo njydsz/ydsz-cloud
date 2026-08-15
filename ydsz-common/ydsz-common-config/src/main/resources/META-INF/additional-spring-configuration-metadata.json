@@ -8,7 +8,12 @@
     {
       "name": "ydsz.config.change-monitor.snapshot-old-values",
       "type": "java.lang.Boolean",
-      "description": "是否在变更通知前快照旧值（默认 true）。"
+      "description": "是否在变更通知前快照旧值（默认 true，false 可减少内存开销）。"
+    },
+    {
+      "name": "ydsz.config.cli.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 CLI 加密工具 Bean（默认 true）。"
     },
     {
       "name": "ydsz.config.cli.algorithm",
@@ -16,9 +21,24 @@
       "description": "CLI 加密工具使用的算法（默认 PBEWithHMACSHA512AndAES_256）。"
     },
     {
+      "name": "ydsz.config.cli.key-obtention-iterations",
+      "type": "java.lang.Integer",
+      "description": "密钥派生迭代次数（默认 1000，与 Jasypt 一致）。"
+    },
+    {
+      "name": "ydsz.config.cli.pool-size",
+      "type": "java.lang.Integer",
+      "description": "加密器池大小（默认 4）。"
+    },
+    {
       "name": "ydsz.config.health.enabled",
       "type": "java.lang.Boolean",
-      "description": "是否启用配置健康检查（默认 true）。"
+      "description": "是否启用配置加密健康检查（默认 true）。"
+    },
+    {
+      "name": "ydsz.config.health.cache-ttl-ms",
+      "type": "java.lang.Long",
+      "description": "健康检查缓存 TTL 毫秒数（默认 5000，设为 0 禁用缓存）。"
     }
   ]
 }

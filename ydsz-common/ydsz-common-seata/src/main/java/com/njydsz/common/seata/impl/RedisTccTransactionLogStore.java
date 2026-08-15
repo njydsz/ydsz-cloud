@@ -135,6 +135,50 @@ public class RedisTccTransactionLogStore implements TccTransactionLogStore {
     }
 
     /**
+     * 查询超时未完成的分支事务数量（高效计数，不加载完整日志）
+     *
+     * <p>使用 SCAN 遍历 Redis，仅统计超时未完成的分支数，
+     * 避免加载完整事务日志到内存，降低健康检查的性能开销。
+     *
+     * @param threshold 超时阈值，早于此时间的 TRIED 状态分支需要恢复
+     * @return 超时未完成的分支事务数量
+     */
+    @Override
+    public long countTimeoutPending(LocalDateTime threshold) {
+        long count = 0L;
+        String pattern = keyPrefix + "*";
+        ScanOptions options = ScanOptions.scanOptions()
+                .match(pattern)
+                .count(SCAN_BATCH_SIZE)
+                .build();
+        Cursor<String> cursor = redisTemplate.scan(options);
+        try {
+            while (cursor.hasNext()) {
+                String key = cursor.next();
+                Object statusObj = redisTemplate.opsForHash().get(key, FIELD_STATUS);
+                if (statusObj == null || !TccBranchStatus.TRIED.name().equals(statusObj.toString())) {
+                    continue;
+                }
+                Object tryCompletedObj = redisTemplate.opsForHash().get(key, FIELD_TRY_COMPLETED_AT);
+                if (tryCompletedObj == null) {
+                    continue;
+                }
+                try {
+                    LocalDateTime tryCompletedAt = LocalDateTime.parse(tryCompletedObj.toString(), TS_FMT);
+                    if (tryCompletedAt.isBefore(threshold)) {
+                        count++;
+                    }
+                } catch (Exception e) {
+                    log.debug("Failed to parse tryCompletedAt for key={}, skip", key);
+                }
+            }
+        } finally {
+            cursor.close();
+        }
+        return count;
+    }
+
+    /**
      * 根据 XID 和分支 ID 从 Redis 查询事务日志
      *
      * @param xid      全局事务 ID
