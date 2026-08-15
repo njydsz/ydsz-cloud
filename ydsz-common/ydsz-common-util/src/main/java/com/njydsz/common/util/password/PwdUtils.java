@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import com.njydsz.common.util.api.Experimental;
 import com.njydsz.common.util.security.DigestUtils;
 
 /**
@@ -20,6 +21,7 @@ import com.njydsz.common.util.security.DigestUtils;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Experimental("零采用；密码策略 SPI 略复杂，待简化")
 @Slf4j
 public final class PwdUtils {
 

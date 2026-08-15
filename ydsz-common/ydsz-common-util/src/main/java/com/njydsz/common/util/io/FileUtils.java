@@ -14,6 +14,8 @@ import org.apache.commons.io.IOUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.util.api.Experimental;
+
 /**
  * 文件操作工具类
  *
@@ -29,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author ydsz-team
  * @since 4.0.0
  */
+@Experimental("零采用；常规文件操作建议优先使用 JDK NIO Files API")
 @Slf4j
 public final class FileUtils {
 

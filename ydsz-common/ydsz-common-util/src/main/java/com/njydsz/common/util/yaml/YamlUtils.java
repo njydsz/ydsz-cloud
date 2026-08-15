@@ -5,6 +5,7 @@ import org.yaml.snakeyaml.Yaml;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.exception.JsonException;
+import com.njydsz.common.util.api.Experimental;
 
 /**
  * 统一 YAML 转换工具类（基于 SnakeYAML）
@@ -17,9 +18,13 @@ import com.njydsz.common.json.exception.JsonException;
  * 创建新实例；{@link DumperOptions} 为可共享的配置对象，静态复用安全。
  *
  * @author ydsz-team
- *
  * @since 1.0.0
+ *
+ * @deprecated 替代方案：优先使用 JSON 实现跨语言数据交换，避免 SnakeYAML 反序列化 RCE 风险。
+ *             仅在有明确 YAML 需求时使用；计划在 5.0.0 移除（需要时改用 Jackson YAMLFactory）。
  */
+@Deprecated
+@Experimental("零采用；SnakeYAML 反序列化 RCE 风险，不推荐使用")
 public final class YamlUtils {
 
     /**
