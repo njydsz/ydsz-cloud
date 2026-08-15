@@ -199,14 +199,53 @@ public class FeignResponseInterceptor implements ResponseInterceptor {
         }
 
         if (metrics != null) {
+            int statusCode = response != null ? response.status() : 0;
             metrics.recordFailure(
                     serviceName,
                     httpMethod,
-                    response != null ? response.status() : 0,
+                    statusCode,
                     duration,
                     e.getClass().getSimpleName()
             );
+            // 记录响应体大小（失败响应也有 body，如错误提示）
+            if (response != null) {
+                metrics.recordResponseBodySize(serviceName, httpMethod, statusCode, resolveBodySize(response));
+            }
         }
+    }
+
+    /**
+     * 解析响应体大小（字节）。
+     *
+     * <p>优先从 Content-Length 头获取（省 IO），若无则通过 body().length() 获取。
+     * 若均不可用返回 -1 表示未知。
+     *
+     * @param response Feign Response 对象
+     * @return 响应体大小（字节），未知时返回 -1
+     */
+    private long resolveBodySize(Response response) {
+        if (response == null) {
+            return -1;
+        }
+        // 优先从 Content-Length 头获取
+        String contentLength = response.headers() != null
+                ? response.headers().getOrDefault("Content-Length", null)
+                : null;
+        if (contentLength != null && !contentLength.isEmpty()) {
+            try {
+                return Long.parseLong(contentLength);
+            } catch (NumberFormatException ignored) {
+                // fallback to body length
+            }
+        }
+        // 兜底：通过 body 对象获取长度
+        if (response.body() != null) {
+            int length = response.body().length();
+            if (length >= 0) {
+                return length;
+            }
+        }
+        return -1;
     }
 
     /**
