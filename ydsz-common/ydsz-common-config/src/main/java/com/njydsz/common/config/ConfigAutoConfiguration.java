@@ -43,6 +43,7 @@ import com.njydsz.common.config.hotreload.ConfigChangeListener;
  *       snapshot-old-values: true
  *     health:
  *       enabled: true
+ *       cache-ttl-ms: 5000
  * }</pre>
  *
  * @author ydsz-team
@@ -62,7 +63,7 @@ public class ConfigAutoConfiguration {
      *
      * @param environment         Spring 环境
      * @param publisher           事件发布器
-     * @param changeMonitorProps  变更监控配置
+     * @param configProperties    配置属性
      * @param listenersProvider   所有 ConfigChangeListener Bean
      * @return ConfigChangeBridge 实例
      */
@@ -93,7 +94,8 @@ public class ConfigAutoConfiguration {
      *
      * <p>检查 Jasypt 主密码是否配置、ENC() 属性是否存在，暴露到 Actuator /health 端点。
      *
-     * @param environment Spring 环境
+     * @param environment       Spring 环境
+     * @param configProperties  配置属性（含 cacheTtlMs）
      * @return ConfigEncryptHealthIndicator 实例
      */
     @Bean
@@ -102,8 +104,10 @@ public class ConfigAutoConfiguration {
     @ConditionalOnProperty(prefix = "ydsz.config.health", name = "enabled",
             havingValue = "true", matchIfMissing = true)
     public ConfigEncryptHealthIndicator configEncryptHealthIndicator(
-            ConfigurableEnvironment environment) {
-        log.info("[Config] 配置加密健康检查已启用");
-        return new ConfigEncryptHealthIndicator(environment);
+            ConfigurableEnvironment environment,
+            ConfigProperties configProperties) {
+        long cacheTtlMs = configProperties.getHealth().getCacheTtlMs();
+        log.info("[Config] 配置加密健康检查已启用，cacheTtlMs={}", cacheTtlMs);
+        return new ConfigEncryptHealthIndicator(environment, cacheTtlMs);
     }
 }

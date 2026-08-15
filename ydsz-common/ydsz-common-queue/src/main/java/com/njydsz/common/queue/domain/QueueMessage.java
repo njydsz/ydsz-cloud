@@ -7,10 +7,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import com.njydsz.common.json.annotation.JsonClass;
-import com.njydsz.common.queue.compress.MessageCompressor;
-import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.annotation.JsonClass;
+import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.common.util.string.StringUtils;
 
 import lombok.AllArgsConstructor;
@@ -44,7 +43,7 @@ import lombok.NoArgsConstructor;
  *   <li>traceId: 分布式追踪ID，用于日志关联和问题排查</li>
  *   <li>retryCount: 重试计数，记录消息被重试的次数</li>
  *   <li>timestamp: 消息创建时间戳</li>
- *   <li>priority: 消息优先级，数值越小优先级越高</li>
+ *   <li>messageGroupKey: 消息分组键，用于顺序消息场景（仅部分 MQ 支持）</li>
  * </ul>
  *
  * @author ydsz-team
@@ -59,17 +58,13 @@ public class QueueMessage implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private static final DateTimeFormatter TIMESTAMP_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+    private static final DateTimeFormatter TIMESTAMP_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
 
     /**
      * 反序列化 payload 最大长度限制（16MB），防止恶意超大消息导致 OOM
      */
     private static final int MAX_PAYLOAD_LENGTH = 16 * 1024 * 1024;
-
-    /**
-     * 消息压缩阈值（超过此大小的 payload 在 toPayload 时自动压缩）
-     */
-    private static final int COMPRESS_THRESHOLD = 4 * 1024;
 
     /**
      * 消息体内容
@@ -78,53 +73,39 @@ public class QueueMessage implements Serializable {
 
     /**
      * 消息头信息
-     * <p>用于传递元数据，如消息类型、来源系统、自定义属性等
      *
-     * <p><b>序列化说明：</b>该字段为 {@code transient}，不参与 JSON 序列化。
-     * 消息在跨服务传输时，headers 不会随 payload 一起传递。如需传递元数据，
-     * 请将其编码到 body 中或使用独立的传输通道。
+     * <p>用于传递元数据，如消息类型、来源系统、自定义属性等。
      */
-    private transient Map<String, String> headers;
+    private Map<String, String> headers;
 
     /**
      * 分布式追踪ID
-     * <p>用于在分布式系统中关联日志链路，支持手动设置或自动生成
+     *
+     * <p>用于在分布式系统中关联日志链路，支持手动设置或自动生成。
      */
     private String traceId;
 
     /**
      * 重试计数
-     * <p>记录消息被消费失败后重试的次数，初始值为0
+     *
+     * <p>记录消息被消费失败后重试的次数，初始值为 0。
      */
     private Integer retryCount;
 
     /**
      * 消息创建时间戳
-     * <p>格式：yyyy-MM-dd HH:mm:SSS
+     *
+     * <p>格式：yyyy-MM-dd HH:mm:ss.SSS
      */
     private String timestamp;
 
     /**
-     * 消息优先级
-     * <p>数值越小优先级越高，默认为 Integer.MAX_VALUE
-     */
-    private Integer priority;
-
-    /**
-     * 消息过期时间（单位：毫秒）
-     * <p>可选字段，用于设置消息的 TTL，0 表示永不过期
-     */
-    private Long expireMillis;
-
-    /**
-     * 消息序号
-     * <p>用于顺序消息场景，保证同一消息组内的消息按序号顺序处理
-     */
-    private Long sequenceNumber;
-
-    /**
      * 消息分组键
-     * <p>用于顺序消息场景，相同分组键的消息会被路由到同一队列分区，保证顺序性
+     *
+     * <p>用于顺序消息场景，相同分组键的消息会被路由到同一队列分区，保证顺序性。
+     * 仅 Kafka / RocketMQ 等部分 MQ 原生支持，其他引擎忽略此字段。
+     *
+     * @see com.njydsz.common.queue.enums.QueueType#supportsSequential()
      */
     private String messageGroupKey;
 
@@ -141,56 +122,63 @@ public class QueueMessage implements Serializable {
         message.setTraceId(generateTraceId());
         message.setRetryCount(0);
         message.setTimestamp(formatNow());
-        message.setPriority(Integer.MAX_VALUE);
-        message.setExpireMillis(0L);
         return message;
     }
 
     /**
      * 创建带优先级的消息
      *
+     * <p>注意：消息优先级仅部分 MQ 引擎原生支持，Other engines 将忽略此设置。
+     * 如需跨引擎兼容，请使用消息头传递优先级信息。
+     *
      * @param body     消息体内容
-     * @param priority 优先级（数值越小优先级越高）
+     * @param priority 优先级（数值越小优先级越高，仅部分 MQ 原生支持）
      * @return 构建好的 QueueMessage 实例
+     * @deprecated 使用 {@link #addHeader(String, String)} 传递优先级信息更通用
      */
-    public static QueueMessage of(String body, int priority) {
+    @Deprecated
+    public static QueueMessage ofWithPriority(String body, int priority) {
         QueueMessage message = of(body);
-        message.setPriority(priority);
+        message.addHeader("priority", String.valueOf(priority));
         return message;
     }
 
     /**
      * 创建带过期时间的消息
      *
-     * @param body        消息体内容
-     * @param expireTime  过期时间数值
-     * @param timeUnit    时间单位
+     * <p>注意：消息过期仅部分 MQ 引擎原生支持。如需跨引擎兼容，
+     * 请在消费端根据 timestamp 字段自行判断是否过期。
+     *
+     * @param body       消息体内容
+     * @param expireTime 过期时间数值
+     * @param timeUnit   时间单位
      * @return 构建好的 QueueMessage 实例
      */
-    public static QueueMessage of(String body, long expireTime, TimeUnit timeUnit) {
+    public static QueueMessage ofWithExpire(String body, long expireTime, TimeUnit timeUnit) {
         QueueMessage message = of(body);
-        message.setExpireMillis(timeUnit.toMillis(expireTime));
+        message.addHeader("expireMillis", String.valueOf(timeUnit.toMillis(expireTime)));
         return message;
     }
 
     /**
      * 创建完整配置的消息
      *
-     * @param body       消息体内容
-     * @param headers    消息头信息
-     * @param traceId    追踪ID
-     * @param retryCount 重试次数
+     * @param body             消息体内容
+     * @param headers          消息头信息
+     * @param traceId          追踪ID
+     * @param retryCount       重试次数
+     * @param messageGroupKey  消息分组键（用于顺序消息场景，可为 null）
      * @return 构建好的 QueueMessage 实例
      */
-    public static QueueMessage of(String body, Map<String, String> headers, String traceId, Integer retryCount) {
+    public static QueueMessage of(String body, Map<String, String> headers, String traceId,
+                                   Integer retryCount, String messageGroupKey) {
         QueueMessage message = new QueueMessage();
         message.setBody(body);
         message.setHeaders(headers == null ? new HashMap<>(4) : new HashMap<>(headers));
         message.setTraceId(StringUtils.isNotBlank(traceId) ? traceId : generateTraceId());
         message.setRetryCount(retryCount == null ? 0 : retryCount);
         message.setTimestamp(formatNow());
-        message.setPriority(Integer.MAX_VALUE);
-        message.setExpireMillis(0L);
+        message.setMessageGroupKey(messageGroupKey);
         return message;
     }
 
@@ -224,13 +212,7 @@ public class QueueMessage implements Serializable {
         if (StringUtils.isBlank(message.getTimestamp())) {
             message.setTimestamp(formatNow());
         }
-        if (message.getPriority() == null) {
-            message.setPriority(Integer.MAX_VALUE);
-        }
-        if (message.getExpireMillis() == null) {
-            message.setExpireMillis(0L);
-        }
-        return MessageCompressor.compressIfNeeded(YdszJson.toJson(message), COMPRESS_THRESHOLD);
+        return YdszJson.toJson(message);
     }
 
     /**
@@ -246,7 +228,6 @@ public class QueueMessage implements Serializable {
         if (StringUtils.isBlank(payload)) {
             return null;
         }
-        payload = MessageCompressor.decompressIfNeeded(payload);
         if (payload.length() > MAX_PAYLOAD_LENGTH) {
             throw new IllegalArgumentException(
                     "消息 payload 超过最大长度限制: " + payload.length() + " > " + MAX_PAYLOAD_LENGTH);
@@ -268,12 +249,6 @@ public class QueueMessage implements Serializable {
             }
             if (StringUtils.isBlank(message.getTimestamp())) {
                 message.setTimestamp(formatNow());
-            }
-            if (message.getPriority() == null) {
-                message.setPriority(Integer.MAX_VALUE);
-            }
-            if (message.getExpireMillis() == null) {
-                message.setExpireMillis(0L);
             }
             return message;
         } catch (Exception ex) {
@@ -310,43 +285,28 @@ public class QueueMessage implements Serializable {
     }
 
     /**
-     * 检查消息是否已过期
+     * 检查消息是否已过期（基于消息头中的 expireMillis 字段和 timestamp 字段）
+     *
+     * <p>如果未设置 expireMillis 或 timestamp，返回 false（永不过期）。
      *
      * @return true 如果已过期，false 如果未过期或没有设置过期时间
      */
     public boolean isExpired() {
-        if (this.expireMillis == null || this.expireMillis <= 0) {
-            return false;
-        }
-        if (StringUtils.isBlank(this.timestamp)) {
+        String expireHeader = getHeader("expireMillis");
+        if (expireHeader == null || StringUtils.isBlank(this.timestamp)) {
             return false;
         }
         try {
+            long expireMillis = Long.parseLong(expireHeader);
+            if (expireMillis <= 0) {
+                return false;
+            }
             LocalDateTime createTime = LocalDateTime.parse(this.timestamp, TIMESTAMP_FORMATTER);
-            LocalDateTime expireTime = createTime.plusNanos(this.expireMillis * 1_000_000);
+            LocalDateTime expireTime = createTime.plusNanos(expireMillis * 1_000_000);
             return LocalDateTime.now().isAfter(expireTime);
         } catch (Exception ex) {
             return false;
         }
-    }
-
-    /**
-     * 检查消息是否为高优先级
-     *
-     * @param threshold 优先级阈值，默认 Integer.MAX_VALUE
-     * @return true 如果优先级高于阈值
-     */
-    public boolean isHighPriority(int threshold) {
-        return this.priority != null && this.priority < threshold;
-    }
-
-    /**
-     * 检查消息是否为高优先级（使用默认阈值）
-     *
-     * @return true 如果优先级高于 1000
-     */
-    public boolean isHighPriority() {
-        return isHighPriority(1000);
     }
 
     /**
@@ -356,19 +316,6 @@ public class QueueMessage implements Serializable {
      */
     public boolean isSequential() {
         return messageGroupKey != null && !messageGroupKey.isEmpty();
-    }
-
-    /**
-     * 设置顺序消息属性
-     *
-     * @param messageGroupKey 消息分组键，相同分组的消息保证顺序
-     * @param sequenceNumber  消息序号，用于组内排序
-     * @return 当前消息实例，支持链式调用
-     */
-    public QueueMessage setSequential(String messageGroupKey, Long sequenceNumber) {
-        this.messageGroupKey = messageGroupKey;
-        this.sequenceNumber = sequenceNumber;
-        return this;
     }
 
     /**
@@ -385,7 +332,8 @@ public class QueueMessage implements Serializable {
 
     /**
      * 重置消息状态
-     * <p>清除重试计数，更新时间戳和追踪ID
+     *
+     * <p>清除重试计数，更新时间戳和追踪ID。
      *
      * @return 当前消息实例，支持链式调用
      */
@@ -399,15 +347,14 @@ public class QueueMessage implements Serializable {
     /**
      * 获取消息摘要信息
      *
-     * <p>用于日志记录和问题排查
+     * <p>用于日志记录和问题排查。
      *
      * @return 格式化的摘要字符串
      */
     public String getSummary() {
-        return String.format("[traceId=%s, retry=%d, priority=%d, bodyLen=%d]",
+        return String.format("[traceId=%s, retry=%d, bodyLen=%d]",
                 this.traceId,
                 this.retryCount,
-                this.priority,
                 this.body == null ? 0 : this.body.length());
     }
 
@@ -437,8 +384,7 @@ public class QueueMessage implements Serializable {
                 ", traceId='" + traceId + '\'' +
                 ", retryCount=" + retryCount +
                 ", timestamp='" + timestamp + '\'' +
-                ", priority=" + priority +
-                ", expireMillis=" + expireMillis +
+                ", messageGroupKey='" + messageGroupKey + '\'' +
                 '}';
     }
 }

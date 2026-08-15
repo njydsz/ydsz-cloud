@@ -7,34 +7,30 @@ import java.util.concurrent.LinkedBlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.common.audit.core.AuditStorage;
+import com.njydsz.common.audit.core.AuditWriter;
 import com.njydsz.common.audit.domain.AuditLog;
 
 /**
  * 默认审计日志存储实现
- * 通过内存队列缓存审计日志，适用于开发和测试环境
+ * <p>
+ * 通过内存队列缓存审计日志，仅用于开发和测试环境。
+ * 生产环境应使用 {@link JdbcAuditStorage} 持久化到数据库。
+ * </p>
  *
  * @author ydsz-team
  * @since 1.0.0
- *
  */
-public class DefaultAuditStorage implements AuditStorage {
+public class DefaultAuditStorage implements AuditWriter {
 
     private static final Logger log = LoggerFactory.getLogger(DefaultAuditStorage.class);
 
-    /**
-     * 默认最大容量
-     */
+    /** 默认最大容量 */
     private static final int DEFAULT_MAX_CAPACITY = 10000;
 
-    /**
-     * 有界阻塞队列，限制内存中审计日志的最大数量
-     */
+    /** 有界阻塞队列，限制内存中审计日志的最大数量 */
     private final BlockingQueue<AuditLog> queue;
 
-    /**
-     * 队列最大容量
-     */
+    /** 队列最大容量 */
     private final int maxCapacity;
 
     /**
@@ -46,6 +42,7 @@ public class DefaultAuditStorage implements AuditStorage {
 
     /**
      * 使用指定最大容量构造
+     *
      * @param maxCapacity 最大容量
      */
     public DefaultAuditStorage(int maxCapacity) {
@@ -54,19 +51,17 @@ public class DefaultAuditStorage implements AuditStorage {
     }
 
     @Override
-    public void save(AuditLog auditLog) {
+    public void write(AuditLog auditLog) {
         if (auditLog == null) {
             log.warn("【审计存储】审计日志为空,跳过保存");
             return;
         }
         // 尝试将日志加入队列，队列满时丢弃最旧日志
         if (!queue.offer(auditLog)) {
-            // 队列已满，移除最旧的并重新尝试
             AuditLog dropped = queue.poll();
             if (dropped != null) {
                 log.warn("【审计存储】队列已满(容量={})，丢弃最旧日志: {}", maxCapacity, dropped);
             }
-            // 再次尝试插入
             if (!queue.offer(auditLog)) {
                 log.error("【审计存储】队列已满且无法插入新日志，该日志被丢弃: {}", auditLog);
             }
@@ -75,18 +70,24 @@ public class DefaultAuditStorage implements AuditStorage {
     }
 
     @Override
-    public void saveBatch(List<AuditLog> auditLogs) {
+    public void writeBatch(List<AuditLog> auditLogs) {
         if (auditLogs == null || auditLogs.isEmpty()) {
             log.warn("【审计存储】审计日志列表为空,跳过保存");
             return;
         }
         for (AuditLog auditLog : auditLogs) {
-            save(auditLog);
+            write(auditLog);
         }
+    }
+
+    @Override
+    public String getType() {
+        return "DEFAULT";
     }
 
     /**
      * 获取当前队列中的日志数量
+     *
      * @return 队列大小
      */
     public int size() {
@@ -95,6 +96,7 @@ public class DefaultAuditStorage implements AuditStorage {
 
     /**
      * 获取最大容量
+     *
      * @return 最大容量
      */
     public int getMaxCapacity() {
@@ -103,14 +105,10 @@ public class DefaultAuditStorage implements AuditStorage {
 
     /**
      * 获取队列中排队的日志（用于消费）
+     *
      * @return 审计日志
      */
     public AuditLog poll() {
         return queue.poll();
-    }
-
-    @Override
-    public String getType() {
-        return "DEFAULT";
     }
 }

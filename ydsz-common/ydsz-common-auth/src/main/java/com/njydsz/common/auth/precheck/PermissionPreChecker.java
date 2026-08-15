@@ -27,43 +27,17 @@ import lombok.extern.slf4j.Slf4j;
  * <p>在业务逻辑执行前预先校验用户是否拥有所需权限，返回详细的预检结果。
  * 与直接抛出异常不同，预检结果可以由业务方自行决定如何处理。
  *
- * <p><b>与切面校验的区别：</b>
- * <ul>
- *   <li>切面校验：校验失败直接抛出异常，打断请求</li>
- *   <li>预检服务：返回详细的预检结果，业务方自行决定处理方式</li>
- * </ul>
- *
- * <p><b>使用场景：</b>
- * <ul>
- *   <li>前端根据预检结果动态显示/隐藏操作按钮</li>
- *   <li>批量操作前检查用户是否有权限执行</li>
- *   <li>权限变更前的模拟校验</li>
- *   <li>微服务间调用前的权限校验</li>
- * </ul>
- *
- * <p><b>使用示例：</b>
- * <pre>{@code
- * // 检查用户是否有某个 API 权限
- * PermissionCheckResult result = preChecker.checkApiPermissions("sys:user:add");
- * if (result.isCheckPassed()) {
- *     userService.addUser(userDTO);
- * } else {
- *     return Response.error("您没有新增用户的权限");
- * }
- *
- * // 批量检查多个权限
- * PermissionCheckResult result = preChecker.checkPermissions(
- *     PermissionType.API,
- *     Set.of("sys:user:add", "sys:user:edit"),
- *     PermissionCheckMode.ALL
- * );
- * }</pre>
+ * <p><b>废弃原因：</b>与 {@link RbacPermissionEvaluator} 功能高度重叠。
+ * 预检能力已整合到 {@link RbacPermissionEvaluator} 中，通过 {@code check*} 方法返回结果对象。
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 自 3.0.0 起标记废弃，计划 4.0.0 移除。
+ *             迁移目标：{@link RbacPermissionEvaluator}。
  *
  * @see PermissionCheckResult
  */
+@Deprecated(forRemoval = true, since = "3.0.0")
 @Slf4j
 @Service
 @RequiredArgsConstructor
