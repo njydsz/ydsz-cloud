@@ -163,3 +163,4 @@ public final class UrlPathMatcher {
         return pattern.indexOf('*') >= 0 || pattern.indexOf('?') >= 0;
     }
 }
+

@@ -15,7 +15,6 @@ import com.njydsz.common.lock.metrics.LockMetrics;
 import com.njydsz.common.lock.notify.LockReleaseNotifier;
 import com.njydsz.common.lock.scheduler.LockWatchDog;
 import com.njydsz.common.util.id.IdGenerator;
-import org.springframework.beans.factory.ObjectProvider;
 
 
 /**

@@ -137,6 +137,7 @@ public final class SequencedCollections {
      *
      * @param map 有序 Map
      * @return 首 entry 或 {@code Optional.empty()}
+     * @param K K
      */
     public static <K, V> java.util.Optional<Map.Entry<K, V>> firstEntry(Map<K, V> map) {
         if (map == null || map.isEmpty()) {
@@ -154,6 +155,7 @@ public final class SequencedCollections {
      *
      * @param map 有序 Map
      * @return 末 entry 或 {@code Optional.empty()}
+     * @param K K
      */
     public static <K, V> java.util.Optional<Map.Entry<K, V>> lastEntry(Map<K, V> map) {
         if (map == null || map.isEmpty()) {
@@ -175,6 +177,7 @@ public final class SequencedCollections {
      *
      * @param map 源 Map
      * @return 反转后的 Map
+     * @param K K
      */
     @SuppressWarnings("unchecked")
     public static <K, V> Map<K, V> reversed(Map<K, V> map) {
@@ -209,4 +212,5 @@ public final class SequencedCollections {
         return Collections.unmodifiableSet(set);
     }
 }
+
 

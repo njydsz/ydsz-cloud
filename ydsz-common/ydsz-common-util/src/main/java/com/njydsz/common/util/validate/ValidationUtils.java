@@ -304,3 +304,4 @@ public final class ValidationUtils {
         return sum % LUHN_MOD == 0;
     }
 }
+

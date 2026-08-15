@@ -107,3 +107,4 @@ public final class WorkerIdAllocatorChain implements WorkerIdAllocator {
         return chain;
     }
 }
+

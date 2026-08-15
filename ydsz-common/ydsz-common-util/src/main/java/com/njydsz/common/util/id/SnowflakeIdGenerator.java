@@ -116,6 +116,7 @@ public class SnowflakeIdGenerator {
      * @param allocator    WorkerId 分配策略链
      * @param sequenceBits 序列号位数（1-${@link #MAX_SEQUENCE_BITS}）
      * @throws IllegalArgumentException 当 sequenceBits 超出范围时
+     * @return 处理后的结果
      */
     public SnowflakeIdGenerator(SnowflakeProperties properties, WorkerIdAllocator allocator, int sequenceBits) {
         if (sequenceBits < 1 || sequenceBits > MAX_SEQUENCE_BITS) {
@@ -165,6 +166,7 @@ public class SnowflakeIdGenerator {
      *
      * @param properties Snowflake 配置属性
      * @param allocator  WorkerId 分配策略链
+     * @return 处理后的结果
      */
     public SnowflakeIdGenerator(SnowflakeProperties properties, WorkerIdAllocator allocator) {
         this(properties, allocator, DEFAULT_SEQUENCE_BITS);
@@ -175,6 +177,7 @@ public class SnowflakeIdGenerator {
      * 适用于非 Spring 托管场景（如单元测试、独立工具）。
      *
      * <p>使用默认序列号位数（{@value #DEFAULT_SEQUENCE_BITS} 位）。
+     * @return 处理后的结果
      */
     public SnowflakeIdGenerator() {
         this(new SnowflakeProperties(), WorkerIdAllocatorChain.defaults());
@@ -187,6 +190,7 @@ public class SnowflakeIdGenerator {
      *
      * @param epoch 起始纪元时间戳（毫秒）
      * @since 4.0.0
+     * @return 处理后的结果
      */
     public SnowflakeIdGenerator(long epoch) {
         this(createPropertiesWithEpoch(epoch), WorkerIdAllocatorChain.defaults());
@@ -198,6 +202,7 @@ public class SnowflakeIdGenerator {
      * @param epoch        起始纪元时间戳（毫秒）
      * @param sequenceBits 序列号位数（1-${@link #MAX_SEQUENCE_BITS}）
      * @since 4.0.0
+     * @return 处理后的结果
      */
     public SnowflakeIdGenerator(long epoch, int sequenceBits) {
         this(createPropertiesWithEpoch(epoch), WorkerIdAllocatorChain.defaults(), sequenceBits);
@@ -538,5 +543,6 @@ public class SnowflakeIdGenerator {
         return epoch;
     }
 }
+
 
 

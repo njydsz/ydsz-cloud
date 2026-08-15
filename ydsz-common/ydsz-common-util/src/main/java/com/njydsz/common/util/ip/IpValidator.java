@@ -63,6 +63,8 @@ public final class IpValidator {
 
     /**
      * 校验 IPv4 地址格式。
+     * @param ip ip
+     * @return 处理后的结果
      */
     public static boolean validIpv4(String ip) {
         if (StringUtils.isEmpty(ip)) {
@@ -73,6 +75,8 @@ public final class IpValidator {
 
     /**
      * 校验 IPv6 地址格式是否合法。
+     * @param ip ip
+     * @return 处理后的结果
      */
     public static boolean validIpv6(String ip) {
         if (StringUtils.isEmpty(ip)) {
@@ -83,6 +87,8 @@ public final class IpValidator {
 
     /**
      * 判断 IP 是否为内网地址（通过 {@link InetAddress#isSiteLocalAddress()} 判断）。
+     * @param ip ip
+     * @return 处理后的结果
      */
     public static boolean isInternalIp(String ip) {
         if (isUnknown(ip) || LOCALHOST_IPV4.equals(ip)) {
@@ -101,6 +107,8 @@ public final class IpValidator {
 
     /**
      * 判断 IP 是否为私有地址（前缀匹配 RFC 1918 IPv4 和 IPv6 ULA/链路本地）。
+     * @param ip ip
+     * @return 处理后的结果
      */
     public static boolean isPrivateIp(String ip) {
         if (isUnknown(ip)) {
@@ -122,6 +130,8 @@ public final class IpValidator {
 
     /**
      * 规范化 IPv4/IPv6 混合地址，用于统一存储与比对。
+     * @param ip ip
+     * @return 处理后的结果
      */
     public static String normalizeIp(String ip) {
         if (isUnknown(ip)) {
@@ -138,6 +148,8 @@ public final class IpValidator {
      *
      * <p>JDK 的 {@link InetAddress#getHostAddress()} 返回全 8 组形式（不压缩），
      * 本方法在此基础上折叠最长的连续全零组为 {@code ::}。
+     * @param ipv6 ipv6
+     * @return 处理后的结果
      */
     public static String normalizeIpv6(String ipv6) {
         if (StringUtils.isEmpty(ipv6)) {
@@ -226,6 +238,8 @@ public final class IpValidator {
 
     /**
      * 识别 IP 地址的类型。
+     * @param ip ip
+     * @return 处理后的结果
      */
     public static IpType getIpType(String ip) {
         if (isUnknown(ip)) {
@@ -254,5 +268,6 @@ public final class IpValidator {
         LOCALHOST, PRIVATE_IPV4, PRIVATE_IPV6, PUBLIC_IPV4, PUBLIC_IPV6, UNKNOWN, INVALID
     }
 }
+
 
 

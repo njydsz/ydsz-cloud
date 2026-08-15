@@ -84,6 +84,7 @@ public final class ExecutorUtils {
      *     .daemon(true)
      *     .build();
      * }</pre>
+     * @return 处理后的结果
      */
     public static ThreadPoolBuilder builder() {
         return new ThreadPoolBuilder();
@@ -178,6 +179,8 @@ public final class ExecutorUtils {
 
     /**
      * 创建固定大小线程池
+     * @param nThreads 线程数
+     * @return 处理后的结果
      */
     public static ExecutorService newFixedThreadPool(int nThreads) {
         return newFixedThreadPool(nThreads, null);
@@ -185,6 +188,9 @@ public final class ExecutorUtils {
 
     /**
      * 创建固定大小线程池
+     * @param nThreads 线程数
+     * @param threadNamePrefix 线程名前缀
+     * @return 处理后的结果
      */
     public static ExecutorService newFixedThreadPool(int nThreads, String threadNamePrefix) {
         return new ThreadPoolExecutor(
@@ -200,6 +206,7 @@ public final class ExecutorUtils {
 
     /**
      * 创建缓存线程池
+     * @return 处理后的结果
      */
     public static ExecutorService newCachedThreadPool() {
         return newCachedThreadPool(null);
@@ -207,6 +214,8 @@ public final class ExecutorUtils {
 
     /**
      * 创建缓存线程池
+     * @param threadNamePrefix 线程名前缀
+     * @return 处理后的结果
      */
     public static ExecutorService newCachedThreadPool(String threadNamePrefix) {
         return new ThreadPoolExecutor(
@@ -222,6 +231,7 @@ public final class ExecutorUtils {
 
     /**
      * 创建单线程池
+     * @return 处理后的结果
      */
     public static ExecutorService newSingleThreadExecutor() {
         return newSingleThreadExecutor(null);
@@ -229,6 +239,8 @@ public final class ExecutorUtils {
 
     /**
      * 创建单线程池
+     * @param threadNamePrefix 线程名前缀
+     * @return 处理后的结果
      */
     public static ExecutorService newSingleThreadExecutor(String threadNamePrefix) {
         return new ThreadPoolExecutor(
@@ -246,6 +258,7 @@ public final class ExecutorUtils {
 
     /**
      * 创建 CPU 密集型线程池（核心数 + 1，有界队列）
+     * @return 处理后的结果
      */
     public static ExecutorService newCpuBoundThreadPool() {
         return newCpuBoundThreadPool(null);
@@ -253,6 +266,8 @@ public final class ExecutorUtils {
 
     /**
      * 创建 CPU 密集型线程池（核心数 + 1，有界队列）
+     * @param threadNamePrefix 线程名前缀
+     * @return 处理后的结果
      */
     public static ExecutorService newCpuBoundThreadPool(String threadNamePrefix) {
         return newCpuBoundThreadPool(threadNamePrefix, DEFAULT_QUEUE_CAPACITY);
@@ -263,6 +278,7 @@ public final class ExecutorUtils {
      *
      * @param threadNamePrefix 线程名前缀
      * @param queueCapacity    队列容量
+     * @return 处理后的结果
      */
     public static ExecutorService newCpuBoundThreadPool(String threadNamePrefix, int queueCapacity) {
         int corePoolSize = CPU_CORES + 1;
@@ -525,6 +541,9 @@ public final class ExecutorUtils {
 
     /**
      * 创建守护线程池
+     * @param nThreads 线程数
+     * @param threadNamePrefix 线程名前缀
+     * @return 处理后的结果
      */
     public static ExecutorService newDaemonFixedThreadPool(int nThreads, String threadNamePrefix) {
         return new ThreadPoolExecutor(
@@ -543,6 +562,7 @@ public final class ExecutorUtils {
      *
      * @param nThreads   线程池大小
      * @param comparator 任务优先级比较器
+     * @return 处理后的结果
      */
     public static ExecutorService newPriorityThreadPool(int nThreads, Comparator<Runnable> comparator) {
         BlockingQueue<Runnable> queue = new PriorityBlockingQueue<>(DEFAULT_QUEUE_CAPACITY,
@@ -560,6 +580,8 @@ public final class ExecutorUtils {
 
     /**
      * 创建定时线程池
+     * @param corePoolSize 核心线程数
+     * @return 处理后的结果
      */
     public static ScheduledExecutorService newScheduledThreadPool(int corePoolSize) {
         return newScheduledThreadPool(corePoolSize, null);
@@ -567,6 +589,9 @@ public final class ExecutorUtils {
 
     /**
      * 创建定时线程池
+     * @param corePoolSize 核心线程数
+     * @param threadNamePrefix 线程名前缀
+     * @return 处理后的结果
      */
     public static ScheduledExecutorService newScheduledThreadPool(int corePoolSize, String threadNamePrefix) {
         return new ScheduledThreadPoolExecutor(
@@ -580,6 +605,8 @@ public final class ExecutorUtils {
 
     /**
      * 创建线程工厂
+     * @param namePrefix namePrefix
+     * @return 处理后的结果
      */
     public static ThreadFactory createThreadFactory(String namePrefix) {
         return createThreadFactory(namePrefix, false);
@@ -587,6 +614,8 @@ public final class ExecutorUtils {
 
     /**
      * 创建守护线程工厂
+     * @param namePrefix namePrefix
+     * @return 处理后的结果
      */
     public static ThreadFactory createDaemonThreadFactory(String namePrefix) {
         return createThreadFactory(namePrefix, true);
@@ -597,6 +626,7 @@ public final class ExecutorUtils {
      *
      * @param namePrefix 线程名前缀，为空时使用默认格式
      * @param daemon     是否为守护线程
+     * @return 处理后的结果
      */
     public static ThreadFactory createThreadFactory(String namePrefix, boolean daemon) {
         String finalPrefix = (namePrefix != null && !namePrefix.isEmpty())
@@ -635,6 +665,11 @@ public final class ExecutorUtils {
     /**
      * Submit a task with actual timeout enforcement.
      * If the task does not complete within the specified timeout, it will be cancelled.
+     * @param executor 执行器
+     * @param task 任务
+     * @param timeout 超时时间
+     * @param unit 时间单位
+     * @return 处理后的结果
      */
     public static <T> T submitWithTimeout(ExecutorService executor, Callable<T> task, long timeout, TimeUnit unit) {
         if (executor == null || task == null) {
@@ -661,6 +696,10 @@ public final class ExecutorUtils {
 
     /**
      * 优雅关闭线程池
+     * @param executor 执行器
+     * @param timeout 超时时间
+     * @param unit 时间单位
+     * @return 处理后的结果
      */
     public static boolean shutdownGracefully(ExecutorService executor, long timeout, TimeUnit unit) {
         if (executor == null) {
@@ -681,5 +720,6 @@ public final class ExecutorUtils {
         }
     }
 }
+
 
 

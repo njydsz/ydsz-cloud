@@ -86,6 +86,7 @@ public class MeteredThreadPoolExecutor extends ThreadPoolExecutor {
      * @param threadFactory 线程工厂
      * @param handler 拒绝策略
      * @param meterRegistry Micrometer Registry（为 null 时不注册指标，仍可使用慢任务检测和异常统计）
+     * @return 处理后的结果
      */
     public MeteredThreadPoolExecutor(String poolName,
                                       int corePoolSize,
@@ -109,6 +110,15 @@ public class MeteredThreadPoolExecutor extends ThreadPoolExecutor {
 
     /**
      * 构造可观测线程池（无 Micrometer，仅基础统计能力）。
+     * @param poolName 线程池名称
+     * @param corePoolSize 核心线程数
+     * @param maximumPoolSize 最大线程数
+     * @param keepAliveTime 空闲线程存活时间
+     * @param unit 时间单位
+     * @param workQueue 工作队列
+     * @param threadFactory 线程工厂
+     * @param handler 拒绝策略
+     * @return 处理后的结果
      */
     public MeteredThreadPoolExecutor(String poolName,
                                       int corePoolSize,
@@ -265,6 +275,7 @@ public class MeteredThreadPoolExecutor extends ThreadPoolExecutor {
 
     /**
      * 获取累计拒绝任务数。
+     * @return 处理后的结果
      */
     public long getRejectedCount() {
         return rejectedCount.get();
@@ -272,6 +283,7 @@ public class MeteredThreadPoolExecutor extends ThreadPoolExecutor {
 
     /**
      * 获取累计失败任务数。
+     * @return 处理后的结果
      */
     public long getFailedTaskCount() {
         return failedTaskCount.get();
@@ -279,6 +291,7 @@ public class MeteredThreadPoolExecutor extends ThreadPoolExecutor {
 
     /**
      * 获取累计慢任务数。
+     * @return 处理后的结果
      */
     public long getSlowTaskCount() {
         return slowTaskCount.get();
@@ -286,6 +299,7 @@ public class MeteredThreadPoolExecutor extends ThreadPoolExecutor {
 
     /**
      * 获取累计总任务数。
+     * @return 处理后的结果
      */
     public long getTotalTaskCount() {
         return totalTaskCount.get();
@@ -293,6 +307,7 @@ public class MeteredThreadPoolExecutor extends ThreadPoolExecutor {
 
     /**
      * 获取线程池名称。
+     * @return 处理后的结果
      */
     public String getPoolName() {
         return poolName;
@@ -392,5 +407,6 @@ public class MeteredThreadPoolExecutor extends ThreadPoolExecutor {
                 '}';
     }
 }
+
 
 

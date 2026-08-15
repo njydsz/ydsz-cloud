@@ -58,3 +58,4 @@ public class SnowflakeIdBean {
         return new SnowflakeIdGenerator(properties, allocator, sequenceBits);
     }
 }
+

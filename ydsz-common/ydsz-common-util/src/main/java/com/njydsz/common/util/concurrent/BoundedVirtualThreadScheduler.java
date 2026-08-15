@@ -54,6 +54,7 @@ public final class BoundedVirtualThreadScheduler {
      * 构造有界虚拟线程调度器。
      *
      * @param maxConcurrency 最大并发虚拟线程数（建议值：IO 密集场景 100-1000，CPU 密集场景 ≤ CPU 核心数）
+     * @return 处理后的结果
      */
     public BoundedVirtualThreadScheduler(int maxConcurrency) {
         this(maxConcurrency, true);
@@ -64,6 +65,7 @@ public final class BoundedVirtualThreadScheduler {
      *
      * @param maxConcurrency 最大并发虚拟线程数
      * @param fair           是否使用公平模式（true = 先提交先执行）
+     * @return 处理后的结果
      */
     public BoundedVirtualThreadScheduler(int maxConcurrency, boolean fair) {
         if (maxConcurrency <= 0) {
@@ -142,6 +144,7 @@ public final class BoundedVirtualThreadScheduler {
 
     /**
      * 获取当前正在使用的并发数。
+     * @return 处理后的结果
      */
     public int activeCount() {
         return maxConcurrency - concurrencyLimiter.availablePermits();
@@ -154,5 +157,6 @@ public final class BoundedVirtualThreadScheduler {
                 ", shutdown=" + shutdown + '}';
     }
 }
+
 
 

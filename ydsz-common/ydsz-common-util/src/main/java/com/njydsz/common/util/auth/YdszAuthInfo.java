@@ -202,3 +202,4 @@ public abstract class YdszAuthInfo implements AuthInfo {
         return editableColumnsByTable;
     }
 }
+

@@ -110,3 +110,4 @@ public final class HttpTokenUtils {
         return StringUtils.isNotEmpty(getToken(request));
     }
 }
+

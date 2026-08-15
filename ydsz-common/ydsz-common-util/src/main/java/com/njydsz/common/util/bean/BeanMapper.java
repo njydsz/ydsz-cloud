@@ -94,6 +94,7 @@ public final class BeanMapper {
      * @param <T>         Bean 类型
      * @return 填充后的 Bean 实例
      * @since 4.0.0
+     * @param String String
      */
     @SuppressWarnings("unchecked")
     public static <T> T toBeanInternal(Map<String, Object> map, Class<T> targetClass) {
@@ -474,6 +475,7 @@ public final class BeanMapper {
 
         /**
          * 获取原始类型（擦除泛型后的 Class）。
+         * @return 处理后的结果
          */
         @SuppressWarnings("unchecked")
         public Class<T> getRawType() {
@@ -530,6 +532,7 @@ public final class BeanMapper {
      * @return 填充后的 Bean 实例
      * @throws IllegalArgumentException 入参为 null、targetClass 无无参构造器、或实例化失败
      * @since 4.0.0
+     * @param String String
      */
     public static <T> T toBean(Map<String, Object> source, Class<T> targetClass) {
         Objects.requireNonNull(targetClass, "targetClass must not be null");
@@ -611,6 +614,7 @@ public final class BeanMapper {
      * @param <T>         目标类型泛型
      * @return 转换后的对象；source 为 null 时返回 null
      * @since 4.0.0
+     * @param String String
      */
     public static <T> T toBeanOrRecord(Map<String, Object> source, Class<T> targetClass) {
         Objects.requireNonNull(source, "source must not be null");
@@ -647,6 +651,7 @@ public final class BeanMapper {
      * @param valueType 值类型
      * @return 转换后的 Map
      * @since 4.0.0
+     * @param Map Map
      */
     public static Map<String, Object> convertMapWithType(Map<?, ?> rawMap, Type valueType) {
         Map<String, Object> result = new LinkedHashMap<>(rawMap.size());
@@ -707,6 +712,7 @@ public final class BeanMapper {
      * @param <T>   目标类型
      * @return 填充后的实例
      * @since 4.0.0
+     * @param String String
      */
     public static <T> T instantiateRecord(Map<String, Object> map, Class<T> clazz) {
         RecordComponent[] components = clazz.getRecordComponents();
@@ -875,5 +881,6 @@ public final class BeanMapper {
         return result;
     }
 }
+
 
 

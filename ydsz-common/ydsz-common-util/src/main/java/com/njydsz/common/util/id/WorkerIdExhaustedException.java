@@ -16,3 +16,4 @@ public class WorkerIdExhaustedException extends RuntimeException {
         super(message, cause);
     }
 }
+

@@ -35,6 +35,7 @@ public class TrustedProxyConfiguration {
      * 构造器
      *
      * @param trustedIps 可信代理 IP 集合 或空集合）；null 自动转为空集合
+     * @return 处理后的结果
      */
     public TrustedProxyConfiguration(Set<String> trustedIps) {
         this.trustedIps = (trustedIps == null || trustedIps.isEmpty())
@@ -61,3 +62,4 @@ public class TrustedProxyConfiguration {
         return trustedIps.contains(ip);
     }
 }
+

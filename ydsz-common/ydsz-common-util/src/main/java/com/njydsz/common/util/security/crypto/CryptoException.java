@@ -19,3 +19,4 @@ public class CryptoException extends RuntimeException {
         super(message, cause);
     }
 }
+

@@ -77,3 +77,4 @@ public final class RandomUtils {
         return ThreadLocalRandom.current().nextDouble() < probability;
     }
 }
+

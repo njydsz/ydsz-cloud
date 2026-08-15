@@ -34,6 +34,7 @@ public class SnowflakeHealthIndicator implements HealthIndicator {
      * Bean 不存在时，health 方法返回 unknown 而非报错。
      *
      * @param idGeneratorProvider SnowflakeIdGenerator Bean provider（可选）
+     * @return 处理后的结果
      */
     public SnowflakeHealthIndicator(ObjectProvider<SnowflakeIdGenerator> idGeneratorProvider) {
         this.idGeneratorProvider = idGeneratorProvider;
@@ -82,3 +83,4 @@ public class SnowflakeHealthIndicator implements HealthIndicator {
         }
     }
 }
+

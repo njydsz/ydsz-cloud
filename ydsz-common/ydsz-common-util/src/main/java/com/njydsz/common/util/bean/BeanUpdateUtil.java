@@ -101,3 +101,4 @@ public final class BeanUpdateUtil {
         return ignored.toArray(new String[0]);
     }
 }
+

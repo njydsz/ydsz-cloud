@@ -156,3 +156,4 @@ public interface AuthInfo {
     @Nonnull
     Map<String, Set<String>> getEditableColumnsByTable();
 }
+

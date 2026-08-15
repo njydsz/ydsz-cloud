@@ -79,3 +79,4 @@ public final class NetworkInterfaceUtils {
         return ips;
     }
 }
+

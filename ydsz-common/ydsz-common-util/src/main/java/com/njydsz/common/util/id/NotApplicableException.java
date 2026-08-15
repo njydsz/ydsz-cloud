@@ -20,3 +20,4 @@ public class NotApplicableException extends RuntimeException {
         super(message, cause);
     }
 }
+

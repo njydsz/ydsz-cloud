@@ -43,3 +43,4 @@ public interface WorkerIdAllocator {
         return getClass().getSimpleName();
     }
 }
+

@@ -23,6 +23,7 @@ public class ClockBackwardException extends RuntimeException {
      * @param backwardMillis 回拨毫秒数
      * @param lastTimestamp  上次生成 ID 的时间戳
      * @param currentTime    当前时间戳
+     * @return 处理后的结果
      */
     public ClockBackwardException(long backwardMillis, long lastTimestamp, long currentTime) {
         super(String.format("Clock moved backwards by %d ms. Last timestamp: %d, current: %d",
@@ -59,3 +60,4 @@ public class ClockBackwardException extends RuntimeException {
         return currentTime;
     }
 }
+

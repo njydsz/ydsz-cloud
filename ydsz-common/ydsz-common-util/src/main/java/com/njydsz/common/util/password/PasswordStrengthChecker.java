@@ -105,3 +105,4 @@ public interface PasswordStrengthChecker {
         VERY_STRONG
     }
 }
+

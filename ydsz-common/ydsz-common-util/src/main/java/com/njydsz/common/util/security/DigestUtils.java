@@ -179,6 +179,8 @@ public final class DigestUtils {
 
     /**
      * 计算 SHA-256 散列（Hex 格式）
+     * @param input 输入
+     * @return 处理后的结果
  */
     public static String sha256Hex(byte[] input) {
         return HexFormat.of().formatHex(sha256(input));
@@ -186,6 +188,8 @@ public final class DigestUtils {
 
     /**
      * 计算 SHA-256 散列（字符串）
+     * @param input 输入
+     * @return 处理后的结果
  */
     public static String sha256Hex(String input) {
         if (input == null) {
@@ -216,6 +220,8 @@ public final class DigestUtils {
 
     /**
      * 计算 SHA-512 散列
+     * @param input 输入
+     * @return 处理后的结果
  */
     public static byte[] sha512(byte[] input) {
         return digest(input, "SHA-512", null, 1);
@@ -223,6 +229,8 @@ public final class DigestUtils {
 
     /**
      * 计算 SHA-512 散列（Hex 格式）
+     * @param input 输入
+     * @return 处理后的结果
  */
     public static String sha512Hex(byte[] input) {
         return HexFormat.of().formatHex(sha512(input));
@@ -230,6 +238,8 @@ public final class DigestUtils {
 
     /**
      * 计算 SHA-512 散列（字符串）
+     * @param input 输入
+     * @return 处理后的结果
  */
     public static String sha512Hex(String input) {
         if (input == null) {
@@ -240,6 +250,9 @@ public final class DigestUtils {
 
     /**
      * 计算 HMAC-SHA256（带密钥的散列）
+     * @param input 输入
+     * @param key 键
+     * @return 处理后的结果
  */
     public static byte[] hmacSha256(byte[] input, byte[] key) {
         try {
@@ -254,6 +267,9 @@ public final class DigestUtils {
 
     /**
      * 计算 HMAC-SHA256（Hex 格式）
+     * @param input 输入
+     * @param key 键
+     * @return 处理后的结果
  */
     public static String hmacSha256Hex(byte[] input, byte[] key) {
         return HexFormat.of().formatHex(hmacSha256(input, key));
@@ -261,6 +277,9 @@ public final class DigestUtils {
 
     /**
      * 计算 HMAC-SHA256（字符串）
+     * @param input 输入
+     * @param key 键
+     * @return 处理后的结果
  */
     public static String hmacSha256Hex(String input, String key) {
         if (input == null || key == null) {
@@ -274,6 +293,11 @@ public final class DigestUtils {
 
     /**
      * PBKDF2 密钥派生（推荐用于密码存储）
+     * @param password password
+     * @param salt 盐值
+     * @param iterations 迭代次数
+     * @param keyLength keyLength
+     * @return 处理后的结果
  */
     public static byte[] pbkdf2(char[] password, byte[] salt, int iterations, int keyLength) {
         try {
@@ -287,6 +311,11 @@ public final class DigestUtils {
 
     /**
      * PBKDF2 密钥派生（Hex 格式）
+     * @param password password
+     * @param salt 盐值
+     * @param iterations 迭代次数
+     * @param keyLength keyLength
+     * @return 处理后的结果
  */
     public static String pbkdf2Hex(char[] password, byte[] salt, int iterations, int keyLength) {
         return HexFormat.of().formatHex(pbkdf2(password, salt, iterations, keyLength));
@@ -294,6 +323,9 @@ public final class DigestUtils {
 
     /**
      * 验证散列值是否匹配（时序恒定比较，防止时序攻击）
+     * @param expected expected
+     * @param actual actual
+     * @return 处理后的结果
  */
     public static boolean verifyDigest(byte[] expected, byte[] actual) {
         if (expected == null || actual == null) {
@@ -304,6 +336,9 @@ public final class DigestUtils {
 
     /**
      * 验证 Hex 格式的散列值是否匹配
+     * @param expectedHex expectedHex
+     * @param actualHex actualHex
+     * @return 处理后的结果
      */
     public static boolean verifyDigestHex(String expectedHex, String actualHex) {
         if (expectedHex == null || actualHex == null) {
@@ -422,5 +457,6 @@ public final class DigestUtils {
         }
     }
 }
+
 
 

@@ -49,6 +49,7 @@ public final class MapUtils {
      *
      * @param map Map 对象
      * @return 如果为 null 或 empty 返回 true
+     * @param Map Map
      */
     public static boolean isEmpty(Map<?, ?> map) {
         return map == null || map.isEmpty();
@@ -58,6 +59,9 @@ public final class MapUtils {
      * 判断 Map 是否不为空（null 安全）
      *
      * @see #isEmpty(Map)
+     * @param Map Map
+     * @param map 映射
+     * @return 处理后的结果
      */
     public static boolean isNotEmpty(Map<?, ?> map) {
         return !isEmpty(map);
@@ -71,6 +75,7 @@ public final class MapUtils {
      * @param map Map 对象
      * @param key 键
      * @return String 值（调用 toString），map 为空或 key 不存在返回 null
+     * @param Map Map
      */
     public static String getString(Map<?, ?> map, Object key) {
         Object value = map != null ? map.get(key) : null;
@@ -83,6 +88,7 @@ public final class MapUtils {
      * @param map Map 对象
      * @param key 键
      * @return Integer 值，转换失败返回 null
+     * @param Map Map
      */
     public static Integer getInteger(Map<?, ?> map, Object key) {
         Object value = map != null ? map.get(key) : null;
@@ -95,6 +101,7 @@ public final class MapUtils {
      * @param map Map 对象
      * @param key 键
      * @return Long 值，转换失败返回 null
+     * @param Map Map
      */
     public static Long getLong(Map<?, ?> map, Object key) {
         Object value = map != null ? map.get(key) : null;
@@ -107,6 +114,7 @@ public final class MapUtils {
      * @param map Map 对象
      * @param key 键
      * @return Boolean 值，转换失败返回 null
+     * @param Map Map
      */
     public static Boolean getBoolean(Map<?, ?> map, Object key) {
         Object value = map != null ? map.get(key) : null;
@@ -119,6 +127,7 @@ public final class MapUtils {
      * @param map Map 对象
      * @param key 键
      * @return Map 值，非 Map 类型返回 null
+     * @param Map Map
      */
     public static Map<?, ?> getMap(Map<?, ?> map, Object key) {
         Object value = map != null ? map.get(key) : null;
@@ -131,6 +140,7 @@ public final class MapUtils {
      * @param map Map 对象
      * @param key 键
      * @return List 值，非 List 类型返回 null
+     * @param Map Map
      */
     public static List<?> getList(Map<?, ?> map, Object key) {
         Object value = map != null ? map.get(key) : null;
@@ -151,6 +161,7 @@ public final class MapUtils {
      *
      * @param map 原始 Map（可为 null）
      * @return 转换后的 Map；入参为 null 时返回空 Map
+     * @param Map Map
      */
     public static Map<String, Object> toStringObjectMap(Map<?, ?> map) {
         if (map == null) {
@@ -220,6 +231,7 @@ public final class MapUtils {
      * @param map 原始 Map
      * @param key 键
      * @return List of Map；不可变空 List 表示取不到
+     * @param String String
      */
     public static List<Map<String, Object>> getListOfMaps(Map<String, Object> map, String key) {
         if (isEmpty(map) || key == null) {
@@ -271,6 +283,7 @@ public final class MapUtils {
      * @param <T>         目标类型泛型
      * @return 转换后的对象；source 为 null 时返回 null
      * @since 3.0.0
+     * @param String String
      */
     public static <T> T toBean(Map<String, Object> source, Class<T> targetClass) {
         return BeanMapper.toBean(source, targetClass);
@@ -306,6 +319,7 @@ public final class MapUtils {
      * @param <T>   目标类型泛型
      * @return 填充后的实例
      * @since 3.0.0
+     * @param String String
      */
     public static <T> T toBeanOrRecord(Map<String, Object> map, Class<T> clazz) {
         return BeanMapper.toBeanOrRecord(map, clazz);
@@ -436,5 +450,6 @@ public final class MapUtils {
         return null;
     }
 }
+
 
 

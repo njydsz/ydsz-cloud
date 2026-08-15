@@ -58,6 +58,8 @@ public final class StringUtils {
 
     /**
      * 判断字符串是否不为 null 且不为空字符串
+     * @param cs cs
+     * @return 处理后的结果
      */
     public static boolean isNotEmpty(CharSequence cs) {
         return !isEmpty(cs);
@@ -65,6 +67,8 @@ public final class StringUtils {
 
     /**
      * 判断字符串是否为 null、空字符串或只包含空白字符
+     * @param cs cs
+     * @return 处理后的结果
      */
     public static boolean isBlank(CharSequence cs) {
         if (cs == null || cs.length() == 0) {
@@ -80,6 +84,8 @@ public final class StringUtils {
 
     /**
      * 判断字符串是否不为 null、不为空字符串且包含非空白字符
+     * @param cs cs
+     * @return 处理后的结果
      */
     public static boolean isNotBlank(CharSequence cs) {
         return !isBlank(cs);
@@ -90,6 +96,8 @@ public final class StringUtils {
      * <p>hasText("hello") -> true</p>
      * <p>hasText("   ") -> false</p>
      * <p>hasText(null) -> false</p>
+     * @param cs cs
+     * @return 处理后的结果
      */
     public static boolean hasText(CharSequence cs) {
         return isNotBlank(cs);
@@ -100,6 +108,8 @@ public final class StringUtils {
      *
      * <p>注意：对 CharSequence 判断长度是否为 0（与 {@link #isEmpty(CharSequence)} 语义一致），
      * 不按空白字符判空。如需按空白判空请使用 {@link #isBlank(CharSequence)}。
+     * @param obj obj
+     * @return 处理后的结果
      */
     public static boolean isEmpty(Object obj) {
         if (obj == null) {
@@ -128,6 +138,8 @@ public final class StringUtils {
 
     /**
      * 判断对象是否不为空
+     * @param obj obj
+     * @return 处理后的结果
      */
     public static boolean isNotEmpty(Object obj) {
         return !isEmpty(obj);
@@ -137,6 +149,9 @@ public final class StringUtils {
 
     /**
      * 如果字符串为 null 或空白，返回默认值
+     * @param str 字符串
+     * @param defaultStr defaultStr
+     * @return 处理后的结果
      */
     public static String defaultIfBlank(CharSequence str, String defaultStr) {
         return isBlank(str) ? defaultStr : str.toString();
@@ -231,6 +246,8 @@ public final class StringUtils {
     /**
      * 驼峰命名转下划线命名
      * <p>userName -> user_name</p>
+     * @param s s
+     * @return 处理后的结果
      */
     public static String toUnderScoreCase(String s) {
         if (s == null) {
@@ -266,6 +283,9 @@ public final class StringUtils {
      * 参数不足时保留占位符、参数多余时忽略。
      *
      * @since 1.0.0
+     * @param pattern 格式模式
+     * @param arguments arguments
+     * @return 处理后的结果
      */
     public static String format(String pattern, Object... arguments) {
         if (pattern == null) {
@@ -346,5 +366,6 @@ public final class StringUtils {
     private static final String BYTE_SPACE = " ";
     private static final String WHITESPACE_REGEX = "\\s+";
 }
+
 
 

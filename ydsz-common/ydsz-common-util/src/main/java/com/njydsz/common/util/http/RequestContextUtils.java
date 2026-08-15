@@ -65,3 +65,4 @@ public final class RequestContextUtils {
         return RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes;
     }
 }
+

@@ -90,3 +90,4 @@ public class SnowflakeProperties {
     @Max(13)
     private Integer sequenceBits;
 }
+

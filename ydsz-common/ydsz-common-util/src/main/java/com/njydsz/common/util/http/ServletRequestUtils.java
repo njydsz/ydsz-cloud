@@ -180,6 +180,10 @@ public final class ServletRequestUtils {
 
     /**
      * 获取请求参数（带默认值）。
+     * @param request request
+     * @param name 名称
+     * @param defaultValue defaultValue
+     * @return 处理后的结果
      */
     public static String getParam(HttpServletRequest request, String name, String defaultValue) {
         String value = getParam(request, name);
@@ -208,6 +212,10 @@ public final class ServletRequestUtils {
 
     /**
      * 获取整数请求参数（带默认值）。
+     * @param request request
+     * @param name 名称
+     * @param defaultValue defaultValue
+     * @return 处理后的结果
      */
     public static Integer getIntParam(HttpServletRequest request, String name, Integer defaultValue) {
         Integer value = getIntParam(request, name);
@@ -236,6 +244,9 @@ public final class ServletRequestUtils {
 
     /**
      * 获取布尔型请求参数。
+     * @param request request
+     * @param name 名称
+     * @return 处理后的结果
      */
     public static Boolean getBooleanParam(HttpServletRequest request, String name) {
         String value = getParam(request, name);
@@ -249,6 +260,8 @@ public final class ServletRequestUtils {
 
     /**
      * 获取请求方法（GET/POST/PUT/DELETE 等）。
+     * @param request request
+     * @return 处理后的结果
      */
     public static String getMethod(HttpServletRequest request) {
         if (request == null) {
@@ -259,6 +272,8 @@ public final class ServletRequestUtils {
 
     /**
      * 获取请求 URI（不含 QueryString）。
+     * @param request request
+     * @return 处理后的结果
      */
     public static String getUri(HttpServletRequest request) {
         if (request == null) {
@@ -269,6 +284,8 @@ public final class ServletRequestUtils {
 
     /**
      * 获取完整请求 URL（含协议、域名、端口、路径，不含 QueryString）。
+     * @param request request
+     * @return 处理后的结果
      */
     public static String getRequestUrl(HttpServletRequest request) {
         if (request == null) {
@@ -279,6 +296,8 @@ public final class ServletRequestUtils {
 
     /**
      * 判断是否为 AJAX 请求（X-Requested-With: XMLHttpRequest）。
+     * @param request request
+     * @return 处理后的结果
      */
     public static boolean isAjaxRequest(HttpServletRequest request) {
         if (request == null) {
@@ -290,6 +309,8 @@ public final class ServletRequestUtils {
 
     /**
      * 判断是否为 JSON 请求（Content-Type 包含 application/json）。
+     * @param request request
+     * @return 处理后的结果
      */
     public static boolean isJsonRequest(HttpServletRequest request) {
         if (request == null) {
@@ -306,6 +327,8 @@ public final class ServletRequestUtils {
      * URL 编码（UTF-8）。
      *
      * <p>使用 JDK 标准 {@link URLEncoder}，适用于 QueryString、application/x-www-form-urlencoded 场景。
+     * @param str 字符串
+     * @return 处理后的结果
      */
     public static String urlEncode(String str) {
         if (str == null) {
@@ -318,6 +341,8 @@ public final class ServletRequestUtils {
      * URL 解码（UTF-8）。
      *
      * <p>使用 JDK 标准 {@link URLDecoder}，适用于 QueryString 解析场景。
+     * @param str 字符串
+     * @return 处理后的结果
      */
     public static String urlDecode(String str) {
         if (str == null) {
@@ -326,5 +351,6 @@ public final class ServletRequestUtils {
         return URLDecoder.decode(str, StandardCharsets.UTF_8);
     }
 }
+
 
 
