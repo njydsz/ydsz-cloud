@@ -161,25 +161,36 @@ public class AuditAutoConfiguration {
 
     /**
      * 审计专用异步线程池
-     * 与主业务线程池隔离，避免审计 IO 影响核心链路。     *
+     * <p>与主业务线程池隔离，避免审计 IO 影响核心链路。
+     *
+     * <p>拒绝策略说明：使用 {@link ThreadPoolExecutor.DiscardOldestPolicy}，当队列满时丢弃队列头部最旧日志，
+     * 保证最新的审计日志优先入队，避免 {@link ThreadPoolExecutor.CallerRunsPolicy} 阻塞主业务线程。
+     *
      * <p>通过 {@code @ConditionalOnMissingBean} 允许业务方通过
      * {@code ydsz.thread.pools.auditAsyncExecutor} 注入统一管理线程池覆盖本默认实现。
      *
      * @param properties 审计配置属性
      * @return 异步执行器
      */
+    // CHECKSTYLE.OFF: ThreadPoolCreate — 审计模块基础设置线程池，豁免规范 15.4；业务方可通过 ydsz.thread.pools.auditAsyncExecutor 覆盖
     @Bean("auditAsyncExecutor")
     @ConditionalOnMissingBean(name = "auditAsyncExecutor")
     public Executor auditAsyncExecutor(AuditProperties properties) {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(properties.getCorePoolSize());
-        executor.setMaxPoolSize(properties.getMaxPoolSize());
-        executor.setQueueCapacity(properties.getExecutorQueueCapacity());
+        int corePoolSize = properties.getCorePoolSize() > 0 ? properties.getCorePoolSize() : 2;
+        int maxPoolSize = properties.getMaxPoolSize() > 0 ? properties.getMaxPoolSize() : 4;
+        int queueCapacity = properties.getAsync().getExecutorQueueCapacity();
+        executor.setCorePoolSize(corePoolSize);
+        executor.setMaxPoolSize(maxPoolSize);
+        executor.setQueueCapacity(queueCapacity);
         // 符合云顶编码规范 15.4.4 命名约定：ydsz-{module}-{biz}-
         executor.setThreadNamePrefix("ydsz-audit-async-");
-        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardOldestPolicy());
         executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setAwaitTerminationSeconds(30);
         executor.initialize();
+        log.info("初始化审计异步线程池: core={}, max={}, queue={}, rejectPolicy=DiscardOldest",
+                corePoolSize, maxPoolSize, queueCapacity);
         return executor;
     }
 

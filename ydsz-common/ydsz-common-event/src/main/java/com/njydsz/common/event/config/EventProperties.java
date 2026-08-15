@@ -107,4 +107,10 @@ public class EventProperties {
 
     /** 检测到 NoopEventPublishGateway 时是否启动失败（生产环境应设为 true） */
     private boolean failOnNoop = true;
+
+    /** 是否在事务提交后将领域事件发布为 Spring 事件（供进程内 @EventListener 订阅） */
+    private boolean enableDomainEventPublish = true;
+
+    /** Outbox 队列深度统计缓存时间（秒），减少 countByStatus 全表扫描频率 */
+    private long statusCountCacheSeconds = 5;
 }

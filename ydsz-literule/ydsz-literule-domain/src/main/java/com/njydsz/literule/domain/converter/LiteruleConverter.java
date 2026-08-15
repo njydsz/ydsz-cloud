@@ -1,4 +1,4 @@
-package com.njydsz.literule.domain.converter;
+﻿package com.njydsz.literule.domain.converter;
 
 import java.util.List;
 
@@ -27,8 +27,8 @@ import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.api.RuleEngineStats;
 import com.njydsz.literule.api.RulePack;
 import com.njydsz.literule.api.RuleResult;
-import com.njydsz.literule.api.expr.ExpressionFunctionDef;
-import com.njydsz.literule.api.expr.ExpressionValidationResult;
+import com.njydsz.literule.api.expression.ExpressionFunctionDef;
+import com.njydsz.literule.api.expression.ExpressionValidationResult;
 import com.njydsz.literule.domain.vo.DecisionTableVO;
 import com.njydsz.literule.domain.vo.RuleABPolicyVO;
 import com.njydsz.literule.domain.vo.RuleABRollbackVO;

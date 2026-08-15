@@ -11,6 +11,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -40,15 +41,16 @@ import com.njydsz.common.json.YdszJson;
  *   <li>支持事件 Schema 版本号和内容类型</li>
  *   <li>支持消息优先级（0-9，正确处理 priority=0）</li>
  *   <li>同步投递模式（事务提交后立即投递）</li>
+ *   <li>事务内事件发布（afterCommit 发布 Spring 事件供进程内订阅）</li>
  * </ul>
  *
- * <p>使用示例：
+ * <p><b>使用示例：</b>
  * <pre>{@code
- * @Service
+ * &#64;Service
  * public class OrderService {
  *     private final OutboxService outboxService;
  *
- *     @Transactional
+ *     &#64;Transactional
  *     public void createOrder(OrderCreateDTO dto) {
  *         Order order = orderMapper.insert(dto);
  *
@@ -63,6 +65,8 @@ import com.njydsz.common.json.YdszJson;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @since 1.6.0 新增 ApplicationEventPublisher 注入和事务内事件发布能力，
+ *             修复 CrossModuleEventListener 订阅链路断裂问题
  */
 public class OutboxService {
 
@@ -77,23 +81,32 @@ public class OutboxService {
 
     /** 同步投递网关（可选，仅 enableSyncPublish=true 时注入） */
     private final EventPublishGateway syncPublishGateway;
+
     /** 分布式 ID 生成器 */
     private final SnowflakeIdGenerator snowflakeIdGenerator;
 
+    /** Spring 事件发布器 */
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
+     * 构造函数
+     *
      * @param outboxRepository   Outbox 仓储
      * @param properties         事件配置属性
      * @param syncPublishGateway 同步投递网关（可选）
+     * @param snowflakeIdGenerator 分布式 ID 生成器
+     * @param eventPublisher     Spring 事件发布器
      */
     public OutboxService(OutboxRepository outboxRepository,
                          EventProperties properties,
                          EventPublishGateway syncPublishGateway,
-            SnowflakeIdGenerator snowflakeIdGenerator) {
+                         SnowflakeIdGenerator snowflakeIdGenerator,
+                         ApplicationEventPublisher eventPublisher) {
         this.outboxRepository = outboxRepository;
         this.properties = properties;
         this.syncPublishGateway = syncPublishGateway;
         this.snowflakeIdGenerator = snowflakeIdGenerator;
+        this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -209,7 +222,7 @@ public class OutboxService {
      *
      * <p>此方法自动填充以下字段：
      * <ul>
-     *   <li>id - UUID</li>
+     *   <li>id - 雪花 ID</li>
      *   <li>tenantId - 从 RequestContext 获取</li>
      *   <li>traceId - 从 RequestContext / MDC 获取</li>
      *   <li>deduplicationId - 若显式指定则使用；若 auto-dedup=true 则基于内容自动生成</li>
@@ -269,9 +282,54 @@ public class OutboxService {
                 message.getAggregateType(), message.getAggregateId(),
                 message.getTenantId(), message.getPriority());
 
+        // 注册事务提交后的事件发布回调
+        if (properties.isEnableDomainEventPublish()) {
+            registerDomainEventPublishCallback(message);
+        }
+
         // 注册同步投递回调（事务提交后立即投递）
         if (properties.isEnableSyncPublish() && syncPublishGateway != null) {
             registerSyncPublishCallback(message);
+        }
+    }
+
+    /**
+     * 注册事务提交后的领域事件发布回调
+     *
+     * <p>事务提交成功后发布 {@link OutboxMessage} 作为 Spring 事件，
+     * 供进程内 {@code @EventListener} 订阅（如 CrossModuleEventListener）。
+     * 事务回滚时不触发，确保只发布已持久化的消息。
+     *
+     * @param message Outbox 消息
+     */
+    private void registerDomainEventPublishCallback(OutboxMessage message) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            // 无事务上下文，直接发布
+            doPublishDomainEvent(message);
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                doPublishDomainEvent(message);
+            }
+        });
+    }
+
+    /**
+     * 发布领域事件到 Spring 事件总线
+     *
+     * @param message Outbox 消息
+     */
+    private void doPublishDomainEvent(OutboxMessage message) {
+        try {
+            eventPublisher.publishEvent(message);
+            log.debug("Domain event published to Spring event bus: id={}, type={}",
+                    message.getId(), message.getEventType());
+        } catch (Exception e) {
+            // 事件发布失败不影响主流程（异步投递由轮询器兜底）
+            log.warn("Failed to publish domain event to Spring event bus: id={}, type={}, err={}",
+                    message.getId(), message.getEventType(), e.getMessage());
         }
     }
 

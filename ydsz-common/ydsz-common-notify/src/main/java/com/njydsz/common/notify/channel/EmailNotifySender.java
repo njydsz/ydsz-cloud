@@ -29,7 +29,6 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.notify.config.NotifyProperties;
 import com.njydsz.common.notify.core.NotifySendResult;
-import com.njydsz.common.notify.dedup.NotifyDedupService;
 import com.njydsz.common.notify.enums.NotifyChannel;
 import com.njydsz.common.notify.metrics.NotifyMetrics;
 import com.njydsz.common.notify.security.DkimSigner;
@@ -92,8 +91,6 @@ public class EmailNotifySender implements NotifyChannelStrategy {
     private final ObjectProvider<EmailTrackingService> trackingServiceProvider;
     /** 可选：DKIM 签名器（P2-9） */
     private final ObjectProvider<DkimSigner> dkimSignerProvider;
-    /** 可选：去重服务（P3-13） */
-    private final ObjectProvider<NotifyDedupService> dedupServiceProvider;
 
     /** 分布式 ID 生成器（用于邮件消息 ID；缺失时回退 UUID） */
     private final SnowflakeIdGenerator snowflakeIdGenerator;
@@ -109,7 +106,6 @@ public class EmailNotifySender implements NotifyChannelStrategy {
      * @param healthCheckerProvider SMTP 健康检查器（可选）
      * @param trackingServiceProvider 邮件追踪服务（可选）
      * @param dkimSignerProvider    DKIM 签名器（可选）
-     * @param dedupServiceProvider  去重服务（可选）
      * @param snowflakeIdGeneratorProvider 分布式 ID 生成器（可选）
      */
     public EmailNotifySender(
@@ -121,7 +117,6 @@ public class EmailNotifySender implements NotifyChannelStrategy {
             ObjectProvider<EmailSmtpHealthChecker> healthCheckerProvider,
             ObjectProvider<EmailTrackingService> trackingServiceProvider,
             ObjectProvider<DkimSigner> dkimSignerProvider,
-            ObjectProvider<NotifyDedupService> dedupServiceProvider,
             ObjectProvider<SnowflakeIdGenerator> snowflakeIdGeneratorProvider) {
         this.mailSender = mailSender;
         this.notifyProperties = notifyProperties;
@@ -131,7 +126,6 @@ public class EmailNotifySender implements NotifyChannelStrategy {
         this.healthCheckerProvider = healthCheckerProvider;
         this.trackingServiceProvider = trackingServiceProvider;
         this.dkimSignerProvider = dkimSignerProvider;
-        this.dedupServiceProvider = dedupServiceProvider;
         this.snowflakeIdGenerator = snowflakeIdGeneratorProvider.getIfAvailable();
     }
 
@@ -154,11 +148,6 @@ public class EmailNotifySender implements NotifyChannelStrategy {
         }
         if (!isValidEmail(receiver)) {
             return NotifySendResult.failure("收件人邮箱地址无效: " + receiver, getChannel().getName());
-        }
-        // P3-13：去重检查
-        if (isDuplicate(receiver, title, content)) {
-            log.debug("邮件去重命中，跳过发送: to={}, subject={}", receiver, title);
-            return NotifySendResult.success("dedup-skipped", getChannel().getName());
         }
         // P0-2：SMTP 健康检查
         if (!isSmtpHealthy()) {
@@ -279,11 +268,6 @@ public class EmailNotifySender implements NotifyChannelStrategy {
         if (!isValidEmailList(message.getTo())) {
             return NotifySendResult.failure("收件人邮箱地址无效: " + message.getTo(), getChannel().getName());
         }
-        // P3-13：去重检查
-        if (isDuplicate(message.getTo(), message.getSubject(), message.getContent())) {
-            log.debug("邮件去重命中，跳过发送: to={}, subject={}", message.getTo(), message.getSubject());
-            return NotifySendResult.success("dedup-skipped", getChannel().getName());
-        }
         // P0-2：SMTP 健康检查
         if (!isSmtpHealthy()) {
             return NotifySendResult.failure("SMTP 服务不健康", getChannel().getName());
@@ -368,19 +352,6 @@ public class EmailNotifySender implements NotifyChannelStrategy {
     }
 
     // ==================== 集成辅助方法 ====================
-
-    /**
-     * P3-13：检查是否为重复邮件
-     *
-     * @param receiver 接收者
-     * @param title    标题
-     * @param content  内容
-     * @return true 表示是重复消息
-     */
-    private boolean isDuplicate(String receiver, String title, String content) {
-        NotifyDedupService dedupService = dedupServiceProvider.getIfAvailable();
-        return dedupService != null && dedupService.isDuplicate(receiver, title, content);
-    }
 
     /**
      * P0-2：检查 SMTP 是否健康

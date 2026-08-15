@@ -310,5 +310,20 @@ public interface FeignCircuitBreakerStrategy {
         public void setMaxDuration(long maxDuration) {
             this.maxDuration.set(maxDuration);
         }
+
+        /**
+         * 原子更新最大调用耗时——仅当新值大于当前值时写入。
+         *
+         * @param candidateDuration 候选耗时（毫秒）
+         */
+        public void updateMaxDuration(long candidateDuration) {
+            long prev;
+            do {
+                prev = maxDuration.get();
+                if (candidateDuration <= prev) {
+                    return;
+                }
+            } while (!maxDuration.compareAndSet(prev, candidateDuration));
+        }
     }
 }

@@ -1,4 +1,4 @@
-package com.njydsz.literule.domain.entity;
+﻿package com.njydsz.literule.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
@@ -13,7 +13,7 @@ import lombok.experimental.SuperBuilder;
  *
  * <p>映射 ydsz_rule_variable_def 表，存储规则表达式中可引用的变量元数据。
  * 由 {@link com.njydsz.project.literule.DatabaseVariableRegistry} 加载，
- * 供 {@link com.njydsz.literule.server.expr.ExpressionValidationService} 做 UNDEFINED_VARIABLE 校验。
+ * 供 {@link com.njydsz.literule.server.expression.ExpressionValidationService} 做 UNDEFINED_VARIABLE 校验。
  *
  * @author ydsz-team
  * @since 1.0.0

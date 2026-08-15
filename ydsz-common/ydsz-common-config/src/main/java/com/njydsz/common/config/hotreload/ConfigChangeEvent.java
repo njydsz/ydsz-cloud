@@ -1,5 +1,6 @@
 package com.njydsz.common.config.hotreload;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.springframework.context.ApplicationEvent;
@@ -39,10 +40,10 @@ public class ConfigChangeEvent extends ApplicationEvent {
     /**
      * 获取本次配置刷新的所有属性变更
      *
-     * @return 变更列表，如无变更则为空列表
+     * @return 不可变的变更列表，如无变更则为空列表
      */
     public List<ConfigChange> getChanges() {
-        return changes;
+        return Collections.unmodifiableList(changes);
     }
 
     /**

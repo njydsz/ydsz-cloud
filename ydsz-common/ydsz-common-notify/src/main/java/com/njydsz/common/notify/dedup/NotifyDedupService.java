@@ -101,11 +101,11 @@ public class NotifyDedupService {
     public void clearDedup(String receiver, String title, String content) {
         String fingerprint = computeFingerprint(receiver, title, content);
         String redisKey = properties.getDedup().getRedisKeyPrefix() + fingerprint;
-        if (redisTemplate != null) {
+        if (redisStringOps != null) {
             try {
-                redisTemplate.delete(redisKey);
-            } catch (Exception ignored) {
-                log.debug("Caught exception (ignored): {}", ignored.getMessage());
+                redisStringOps.delete(redisKey);
+            } catch (Exception e) {
+                log.debug("[NotifyDedupService] Redis 去重清除失败，仅清除内存: {}", e.getMessage());
             }
         }
         memoryDedup.remove(fingerprint);

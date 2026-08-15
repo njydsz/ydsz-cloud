@@ -24,7 +24,6 @@ import com.njydsz.common.seata.impl.DbTccTransactionLogStore;
 import com.njydsz.common.seata.impl.LocalTransactionManager;
 import com.njydsz.common.seata.impl.RedisTccTransactionLogStore;
 import com.njydsz.common.seata.impl.SagaOrchestrator;
-import com.njydsz.common.seata.impl.SeataGlobalTransactionExecutor;
 import com.njydsz.common.seata.impl.SeataTransactionManager;
 import com.njydsz.common.seata.impl.TccTransactionManager;
 import com.njydsz.common.seata.impl.TccTransactionRecoveryScanner;
@@ -258,9 +257,9 @@ public class SeataAutoConfiguration {
     @ConditionalOnMissingBean(SeataHealthIndicator.class)
     public SeataHealthIndicator seataHealthIndicator(
             SeataProperties properties,
-            ObjectProvider<SeataGlobalTransactionExecutor> globalExecutorProvider,
+            ObjectProvider<SeataTransactionManager> seataTmProvider,
             ObjectProvider<TccTransactionLogStore> logStoreProvider) {
-        return new SeataHealthIndicator(properties, globalExecutorProvider, logStoreProvider);
+        return new SeataHealthIndicator(properties, seataTmProvider, logStoreProvider);
     }
 
     /**
@@ -282,7 +281,7 @@ public class SeataAutoConfiguration {
      * Seata AT 模式配置
      *
      * <p>当 Seata 在类路径且 {@code seata-at-enabled=true} 时注册
-     * {@link SeataGlobalTransactionExecutor} 和 {@link SeataTransactionManager}。
+     * {@link SeataTransactionManager}，使用 Seata 原生 API 实现 AT 模式。
      */
     @Configuration
     @ConditionalOnClass(name = "org.apache.seata.tm.api.GlobalTransactionContext")
@@ -290,30 +289,17 @@ public class SeataAutoConfiguration {
     public static class SeataAtConfiguration {
 
         /**
-         * 注册 Seata AT 全局事务执行器 Bean。
-         *
-         * <p>Seata 在类路径且 {@code seata-at-enabled=true} 时生效，封装 Seata 全局事务的开启/提交/回滚。
-         * 方法名 {@code seataSeataGlobalTransactionExecutor} 为历史遗留前缀；无自定义 Bean 时注册默认实现。
-         */
-        @Bean
-        @ConditionalOnMissingBean(SeataGlobalTransactionExecutor.class)
-        public SeataGlobalTransactionExecutor seataSeataGlobalTransactionExecutor() throws Exception {
-            return new SeataGlobalTransactionExecutor();
-        }
-
-        /**
          * 注册 Seata AT 事务管理器 Bean。
          *
-         * <p>基于 {@link SeataGlobalTransactionExecutor} 实现 AT 模式的事务编排，
+         * <p>使用 Seata 原生 {@link org.apache.seata.tm.api.GlobalTransactionContext} API，
          * 在 Seata AT 启用时装配；无自定义 Bean 时注册，供 {@link DistributedTransactionManager} 委派。
          */
         @Bean
         @ConditionalOnMissingBean(SeataTransactionManager.class)
         public SeataTransactionManager seataTransactionManager(
-                SeataGlobalTransactionExecutor globalExecutor,
                 ObjectProvider<SeataMetrics> metricsProvider,
                 ObjectProvider<TransactionAuditLogger> auditProvider) {
-            return new SeataTransactionManager(globalExecutor, metricsProvider, auditProvider);
+            return new SeataTransactionManager(metricsProvider, auditProvider);
         }
     }
 }

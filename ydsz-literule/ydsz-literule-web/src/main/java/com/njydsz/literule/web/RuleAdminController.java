@@ -1,4 +1,4 @@
-package com.njydsz.literule.web;
+﻿package com.njydsz.literule.web;
 
 import java.util.HashMap;
 import java.util.List;
@@ -29,8 +29,8 @@ import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.api.RuleEngine;
 import com.njydsz.literule.api.dto.ExpressionValidateDTO;
 import com.njydsz.literule.api.dto.RuleABTestDTO;
-import com.njydsz.literule.api.expr.ExpressionEvaluator;
-import com.njydsz.literule.api.expr.ExpressionValidationResult;
+import com.njydsz.literule.api.expression.ExpressionEvaluator;
+import com.njydsz.literule.api.expression.ExpressionValidationResult;
 import com.njydsz.literule.domain.vo.ExpressionValidationResultVO;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.domain.vo.RuleEngineStatsVO;
@@ -39,7 +39,7 @@ import com.njydsz.literule.domain.vo.RuleVersionDiffVO;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
 import com.njydsz.literule.server.config.ABTestService;
 import com.njydsz.literule.server.config.RuleAdminService;
-import com.njydsz.literule.server.expr.ExpressionValidationService;
+import com.njydsz.literule.server.expression.ExpressionValidationService;
 import com.njydsz.literule.server.spi.RuleVersion;
 import com.njydsz.literule.server.version.RuleVersionDiffService;
 

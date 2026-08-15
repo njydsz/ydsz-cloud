@@ -1,4 +1,4 @@
-package com.njydsz.literule.server.dsl;
+﻿package com.njydsz.literule.server.dsl;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,7 +12,7 @@ import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.api.RuleSeverity;
 import com.njydsz.literule.api.ScorecardDefinition;
-import com.njydsz.literule.api.expr.ExpressionEvaluator;
+import com.njydsz.literule.api.expression.ExpressionEvaluator;
 import com.njydsz.literule.server.impl.DecisionTableRule;
 import com.njydsz.literule.server.impl.ExpressionRule;
 import com.njydsz.literule.server.impl.ScorecardRule;

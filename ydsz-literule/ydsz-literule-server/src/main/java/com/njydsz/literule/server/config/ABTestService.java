@@ -1,4 +1,4 @@
-package com.njydsz.literule.server.config;
+﻿package com.njydsz.literule.server.config;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -6,7 +6,7 @@ import java.util.Map;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.api.RuleResult;
-import com.njydsz.literule.api.expr.ExpressionEvaluator;
+import com.njydsz.literule.api.expression.ExpressionEvaluator;
 import com.njydsz.literule.server.impl.ExpressionRule;
 
 import lombok.extern.slf4j.Slf4j;

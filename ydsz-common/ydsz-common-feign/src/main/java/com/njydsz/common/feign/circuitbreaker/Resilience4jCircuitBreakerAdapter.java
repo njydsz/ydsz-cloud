@@ -270,6 +270,16 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
         if (elapsedTime >= config.getSlowCallDurationThreshold().toMillis()) {
             m.incrementSlowCalls();
         }
+        // 指数移动平均计算平均耗时，避免历史数据无限累积导致均值僵化
+        long prevAvg = m.getAverageDuration();
+        if (prevAvg == 0L) {
+            m.setAverageDuration(elapsedTime);
+        } else {
+            // EMA 权重 0.1，新样本占 10%，历史均值占 90%
+            m.setAverageDuration(prevAvg + (elapsedTime - prevAvg) / 10);
+        }
+        // 原子更新最大耗时
+        m.updateMaxDuration(elapsedTime);
         long total = m.getTotalCalls();
         if (total > 0) {
             m.setFailureRate((double) m.getFailedCalls() / total * 100.0);

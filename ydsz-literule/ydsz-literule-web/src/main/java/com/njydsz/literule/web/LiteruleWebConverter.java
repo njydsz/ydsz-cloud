@@ -1,4 +1,4 @@
-package com.njydsz.literule.web;
+﻿package com.njydsz.literule.web;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -17,7 +17,7 @@ import com.njydsz.literule.domain.vo.RuleVersionDiffVO;
 import com.njydsz.literule.domain.vo.RuleVersionVO;
 import com.njydsz.literule.server.approval.ApprovalFlow;
 import com.njydsz.literule.server.approval.ApprovalRecord;
-import com.njydsz.literule.server.expr.ExpressionPreviewResult;
+import com.njydsz.literule.server.expression.ExpressionPreviewResult;
 import com.njydsz.literule.server.orchestrator.RuleChainGraph;
 import com.njydsz.literule.server.spi.RuleCategoryProvider.CategoryNode;
 import com.njydsz.literule.server.spi.RuleConflictDetectorProvider.RuleConflictInfo;

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,6 +55,10 @@ public class ConfigChangeBridge
     private static final String ENV_CHANGE_EVENT_CLASS =
             "org.springframework.cloud.context.environment.EnvironmentChangeEvent";
 
+    /** getKeys 方法反射缓存，避免重复查找 */
+    private static final java.util.concurrent.ConcurrentHashMap<Class<?>, java.lang.reflect.Method> GET_KEYS_METHOD_CACHE =
+            new java.util.concurrent.ConcurrentHashMap<>();
+
     private final ConfigurableEnvironment environment;
     private final ApplicationEventPublisher publisher;
     private final ConfigProperties.ChangeMonitor changeMonitorProps;
@@ -62,6 +67,12 @@ public class ConfigChangeBridge
     /** 刷新前的属性值快照（仅在 snapshotOldValues=true 时维护） */
     private final Map<String, String> snapshot = new ConcurrentHashMap<>();
 
+    /**
+     * @param environment         环境配置
+     * @param publisher           事件发布器
+     * @param changeMonitorProps  变更监控配置
+     * @param listeners           监听器列表（允许 null 或空列表）
+     */
     public ConfigChangeBridge(ConfigurableEnvironment environment,
                               ApplicationEventPublisher publisher,
                               ConfigProperties.ChangeMonitor changeMonitorProps,
@@ -69,7 +80,10 @@ public class ConfigChangeBridge
         this.environment = environment;
         this.publisher = publisher;
         this.changeMonitorProps = changeMonitorProps;
-        this.listeners = listeners != null ? listeners : List.of();
+        // 强制包装为线程安全集合，避免外部传入不可变列表导致 addListener 抛异常
+        this.listeners = listeners != null
+                ? new CopyOnWriteArrayList<>(listeners)
+                : new CopyOnWriteArrayList<>();
     }
 
     /**
@@ -170,16 +184,29 @@ public class ConfigChangeBridge
      * 从 EnvironmentChangeEvent 中提取变更的属性键集合
      *
      * <p>使用反射调用 {@code getKeys()} 方法，避免编译期硬依赖 Spring Cloud。
+     * Method 对象被缓存以优化性能。
      */
     private Set<String> extractChangedKeys(ApplicationEvent event) {
         try {
-            var method = event.getClass().getMethod("getKeys");
+            java.lang.reflect.Method method = GET_KEYS_METHOD_CACHE.computeIfAbsent(
+                    event.getClass(),
+                    clazz -> {
+                        try {
+                            return clazz.getMethod("getKeys");
+                        } catch (NoSuchMethodException e) {
+                            return null;
+                        }
+                    }
+            );
+            if (method == null) {
+                log.debug("[ConfigChangeBridge] 事件 {} 无 getKeys() 方法",
+                        event.getClass().getSimpleName());
+                return Set.of();
+            }
             Object keys = method.invoke(event);
             if (keys instanceof Set<?> set) {
                 return castToStringSet(set);
             }
-        } catch (NoSuchMethodException e) {
-            log.debug("[ConfigChangeBridge] 事件 {} 无 getKeys() 方法", event.getClass().getSimpleName());
         } catch (Exception e) {
             log.warn("[ConfigChangeBridge] 提取变更键失败: {}", e.getMessage());
         }

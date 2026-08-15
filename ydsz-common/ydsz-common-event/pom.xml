@@ -68,6 +68,12 @@
             <artifactId>micrometer-core</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- caffeine (for status count cache) -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+            <optional>true</optional>
+        </dependency>
         <!--
             RocketMQ Spring Boot Starter（optional，编译期可见，运行期不强制）
             提供 RocketMQTemplate 供 RocketMqEventPublishGateway 使用。

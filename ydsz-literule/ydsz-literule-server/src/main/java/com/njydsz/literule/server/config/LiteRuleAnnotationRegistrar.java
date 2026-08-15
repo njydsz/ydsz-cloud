@@ -1,4 +1,4 @@
-package com.njydsz.literule.server.config;
+﻿package com.njydsz.literule.server.config;
 
 import java.util.Map;
 import java.util.StringTokenizer;
@@ -12,7 +12,7 @@ import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.api.RuleEngine;
 import com.njydsz.literule.domain.annotation.LiteRule;
-import com.njydsz.literule.api.expr.ExpressionEvaluator;
+import com.njydsz.literule.api.expression.ExpressionEvaluator;
 import com.njydsz.literule.server.impl.ExpressionRule;
 
 import lombok.extern.slf4j.Slf4j;
