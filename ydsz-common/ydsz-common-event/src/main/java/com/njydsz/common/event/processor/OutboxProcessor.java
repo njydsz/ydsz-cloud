@@ -89,6 +89,11 @@ public class OutboxProcessor {
     private volatile boolean running = false;
 
     /**
+     * 创建 Outbox 处理器（使用默认自创建线程池）。
+     *
+     * <p>调度线程（单线程）和投递线程池均使用 {@code ydsz-} 前缀命名，
+     * 符合云顶编码规范 15.4.4 命名约定。
+     *
      * @param outboxRepository Outbox 仓储
      * @param publishGateway    投递网关
      * @param properties        事件配置属性
@@ -98,30 +103,33 @@ public class OutboxProcessor {
                            EventPublishGateway publishGateway,
                            EventProperties properties,
                            MeterRegistry meterRegistry) {
+        this(outboxRepository, publishGateway, properties, meterRegistry,
+                createDefaultScheduler(), createDefaultPublishExecutor(properties));
+    }
+
+    /**
+     * 创建 Outbox 处理器（使用外部注入的线程池）。
+     *
+     * <p>允许业务方注入自定义线程池以替换默认实现。
+     *
+     * @param outboxRepository Outbox 仓储
+     * @param publishGateway    投递网关
+     * @param properties        事件配置属性
+     * @param meterRegistry     Micrometer 指标注册器（可为 null）
+     * @param scheduler          外部注入的调度线程池
+     * @param publishExecutor    外部注入的投递线程池
+     */
+    public OutboxProcessor(OutboxRepository outboxRepository,
+                           EventPublishGateway publishGateway,
+                           EventProperties properties,
+                           MeterRegistry meterRegistry,
+                           ScheduledThreadPoolExecutor scheduler,
+                           ThreadPoolExecutor publishExecutor) {
         this.outboxRepository = outboxRepository;
         this.publishGateway = publishGateway;
         this.properties = properties;
-
-        // 调度线程（单线程，仅负责轮询和 claim）
-        this.scheduler = new ScheduledThreadPoolExecutor(1, r -> {
-            Thread t = new Thread(r, "outbox-scheduler");
-            t.setDaemon(true);
-            return t;
-        }, new ThreadPoolExecutor.CallerRunsPolicy());
-
-        // 投递线程池（可配置线程数，负责实际 MQ 发送）
-        int workerThreads = Math.max(1, properties.getWorkerThreads());
-        this.publishExecutor = new ThreadPoolExecutor(
-                workerThreads, workerThreads,
-                60L, TimeUnit.SECONDS,
-                new SynchronousQueue<>(),
-                r -> {
-                    Thread t = new Thread(r, "outbox-worker");
-                    t.setDaemon(true);
-                    return t;
-                },
-                new ThreadPoolExecutor.CallerRunsPolicy()
-        );
+        this.scheduler = scheduler;
+        this.publishExecutor = publishExecutor;
 
         if (meterRegistry != null) {
             this.publishSuccessCounter = Counter.builder("ydsz.outbox.publish.success")
@@ -419,5 +427,45 @@ public class OutboxProcessor {
         if (timer != null) {
             timer.record(durationNanos, TimeUnit.NANOSECONDS);
         }
+    }
+
+    /**
+     * 创建默认调度线程池（单线程，负责轮询和 claim）。
+     *
+     * <p>命名符合云顶编码规范 15.4.4 约定：ydsz-{module}-{biz}-。
+     *
+     * @return 默认调度线程池
+     */
+    static ScheduledThreadPoolExecutor createDefaultScheduler() {
+        ScheduledThreadPoolExecutor scheduler = new ScheduledThreadPoolExecutor(1, r -> {
+            Thread t = new Thread(r, "ydsz-outbox-scheduler");
+            t.setDaemon(true);
+            return t;
+        }, new ThreadPoolExecutor.CallerRunsPolicy());
+        scheduler.setRemoveOnCancelPolicy(true);
+        return scheduler;
+    }
+
+    /**
+     * 创建默认投递线程池（可配置线程数，负责实际 MQ 发送）。
+     *
+     * <p>使用 {@link SynchronousQueue} 实现自然的背压（worker 满时 CallerRuns）。
+     *
+     * @param properties 事件配置属性
+     * @return 默认投递线程池
+     */
+    static ThreadPoolExecutor createDefaultPublishExecutor(EventProperties properties) {
+        int workerThreads = Math.max(1, properties.getWorkerThreads());
+        return new ThreadPoolExecutor(
+                workerThreads, workerThreads,
+                60L, TimeUnit.SECONDS,
+                new SynchronousQueue<>(),
+                r -> {
+                    Thread t = new Thread(r, "ydsz-outbox-worker");
+                    t.setDaemon(true);
+                    return t;
+                },
+                new ThreadPoolExecutor.CallerRunsPolicy()
+        );
     }
 }

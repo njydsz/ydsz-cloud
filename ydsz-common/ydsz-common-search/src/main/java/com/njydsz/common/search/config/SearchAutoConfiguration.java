@@ -363,9 +363,10 @@ public class SearchAutoConfiguration {
                                                       SearchMetrics searchMetrics,
                                                       SearchAnalyticsService searchAnalyticsService,
                                                       SearchTextProcessor searchTextProcessor,
-                                                      BusinessRanker businessRanker) {
+                                                      BusinessRanker businessRanker,
+                                                      ThreadPoolTaskExecutor searchExecutor) {
         unifiedSearchServiceInstance = new UnifiedSearchService(engineRegistry, providerRegistry, properties,
-                searchMetrics, searchAnalyticsService, searchTextProcessor, businessRanker);
+                searchMetrics, searchAnalyticsService, searchTextProcessor, businessRanker, searchExecutor);
         return unifiedSearchServiceInstance;
     }
 
@@ -386,8 +387,10 @@ public class SearchAutoConfiguration {
     public IndexSyncService indexSyncService(SearchEngineRegistry engineRegistry,
                                               SearchProviderRegistry providerRegistry,
                                               SearchProperties properties,
-                                              SearchMetrics searchMetrics) {
-        indexSyncServiceInstance = new IndexSyncService(engineRegistry, providerRegistry, properties, searchMetrics);
+                                              SearchMetrics searchMetrics,
+                                              ThreadPoolTaskExecutor indexSyncExecutor) {
+        indexSyncServiceInstance = new IndexSyncService(engineRegistry, providerRegistry, properties, searchMetrics,
+                indexSyncExecutor);
         return indexSyncServiceInstance;
     }
 

@@ -75,6 +75,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- ydsz-common-lock (optional, @DistributedScheduled 保护定时清理任务) -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-lock</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!--获取文件类型 - Tika 作为默认实现-->
         <dependency>
             <groupId>org.apache.tika</groupId>

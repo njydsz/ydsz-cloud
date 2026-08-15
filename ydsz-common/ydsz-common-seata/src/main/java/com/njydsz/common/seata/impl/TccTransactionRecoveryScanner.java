@@ -3,6 +3,7 @@ package com.njydsz.common.seata.impl;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.seata.api.TccBranchStatus;
 import com.njydsz.common.seata.api.TccTransactionLog;
 import com.njydsz.common.seata.api.TccTransactionLogStore;
@@ -54,9 +55,11 @@ public class TccTransactionRecoveryScanner {
     /**
      * 定时扫描超时事务
      *
-     * <p>扫描间隔由 {@code ydsz.seata.recovery-scan-interval-ms} 控制（默认 10s）
+     * <p>扫描间隔由 {@code ydsz.seata.recovery-scan-interval-ms} 控制（默认 10s）。
+     * 通过 {@link DistributedScheduled} 保证多节点部署时仅一个节点执行恢复，避免重复 Cancel。
      */
     @Scheduled(fixedDelayString = "${ydsz.seata.recovery-scan-interval-ms:10000}")
+    @DistributedScheduled(lockKey = "seata:tcc-recovery-scan", leaseTime = 60)
     public void scan() {
         LocalDateTime threshold = LocalDateTime.now().minusNanos(
                 properties.getRecoveryTimeoutThresholdMs() * 1_000_000);

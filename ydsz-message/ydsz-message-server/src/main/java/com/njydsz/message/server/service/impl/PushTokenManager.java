@@ -9,8 +9,6 @@ import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
-import org.springframework.data.redis.core.RedisTemplate;
-
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.json.YdszJson;
@@ -48,7 +46,6 @@ public class PushTokenManager {
     private final RedisHashOps redisHashOps;
     private final RedisCollectionOps redisCollectionOps;
     private final RedisStringOps redisStringOps;
-    private final RedisTemplate<String, Object> redisTemplate;
 
     private static final String TOKENS_KEY_PREFIX = "push:tokens:";
     private static final String INVALID_KEY_PREFIX = "push:invalid:";
@@ -123,7 +120,7 @@ public class PushTokenManager {
      */
     public void removeToken(String userId, String deviceId) {
         String key = TOKENS_KEY_PREFIX + userId;
-        redisTemplate.opsForHash().delete(key, deviceId);
+        redisHashOps.hDel(key, deviceId);
         log.info("[PushToken] Token 移除: userId={} deviceId={}", userId, deviceId);
     }
 

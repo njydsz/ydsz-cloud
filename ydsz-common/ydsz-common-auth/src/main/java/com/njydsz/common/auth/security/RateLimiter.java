@@ -23,7 +23,11 @@ import com.njydsz.common.redis.service.RedisRateLimiter;
  * @author ydsz-team
  * @since 1.0.0
  * @see RedisRateLimiter
+ * @deprecated 自 v2.0.0 起，统一使用 {@link com.njydsz.common.tenant.ratelimit.TenantRateLimiter}
+ *             作为租户级限流门面。请使用 TenantRateLimiter 替代本类的功能。
+ *             参考：<a href="https://github.com/njydsz/ydsz-cloud/docs/ratelimit-migration-guide.md">限流迁移指南</a>
  */
+@Deprecated
 public class RateLimiter {
 
     private static final Logger log = LoggerFactory.getLogger(RateLimiter.class);

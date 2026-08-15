@@ -389,6 +389,57 @@ Redis 不可用时健康检查返回 DOWN，触发降级策略（若 `fallback-e
 7. **最大续期限制**：WatchDog 默认续期 100 次后停止，锁自动过期。若业务执行时间可能超长，需调大 `max-renew-times` 或拆分任务。
 8. **版本兼容**：配置前缀统一为 `ydsz.lock`，历史版本曾使用 `ydsz.distributed-lock` 前缀已废弃，不再支持。
 
+## 命名规范
+
+### 幂等键命名约定
+
+统一格式：`{namespace}:{domain}:{resource}:{action}`
+
+| 段 | 说明 | 示例 |
+|---|---|---|
+| `namespace` | 固定 `ydsz`，公司级前缀 | `ydsz` |
+| `domain` | 业务域 / 模块标识 | `workflow`、`cronjob`、`literule` |
+| `resource` | 领域资源（实体 / 聚合根） | `order`、`attachment`、`decision` |
+| `action` | 动词过去式或操作名 | `create`、`delete`、`publish` |
+
+**推荐示例：**
+
+```java
+@Idempotent(key = "ydsz:workflow:attachment:delete")
+@Idempotent(key = "ydsz:literule:trace:replay")
+@Idempotent(key = "ydsz:cronjob:glue:save")
+```
+
+### 命名原则
+
+1. **只标注写操作**：查询 / 分页 / 导出等只读接口不应使用 `@Idempotent`，避免无意义地膨胀幂等键集合
+2. **使用领域资源名**：优先使用领域模型名而非 Controller 类名（`attachment` 而非 `FlowAttachmentController`），保持键长稳定不受重构影响
+3. **禁止使用 `:lock` 后缀**：`@Idempotent` 本身已表达锁语义，`:lock` 后缀冗余
+4. **禁止使用缩写类名**：`FlowDefinitionController` 与 `FlowDefinitionDesignController` 不一致，应统一用资源名
+5. **SpEL 动态键**：同一资源同一操作但需区分租户/用户时，使用 SpEL 动态拼接：`key = "ydsz:order:create:" + #tenantId`
+6. **字符集**：小写字母、数字、冒号、连字符、下划线；禁止空格、控制字符、中文
+
+### 反例
+
+```java
+// ❌ 冗余 :lock 后缀 + 缩写类名
+@Idempotent(key = "ydsz:workflow:FlowDefinitionController:updateDefinition:lock")
+
+// ❌ 只读接口误用幂等
+@Idempotent(key = "ydsz:workflow:FlowCcController:pageCc:lock")
+
+// ❌ 前缀不统一
+@Idempotent(key = "ruleAdmin:publishPack")
+
+// ✅ 正确写法
+@Idempotent(key = "ydsz:literule:pack:publish")
+```
+
+### CI 规则
+
+`docs/checkstyle.xml` 已集成 `IdempotentKeyNamingCheck` 正则校验：所有 `@Idempotent(key = "...")` 参数值必须匹配正则 `^[\w:\-\.#$\{\}]+$` 且不以 `:lock` 结尾（SpEL 表达式除外）。执行 `mvn checkstyle:check` 即可校验。
+
 ## 变更记录
 
+- **v1.1.0**（2026-08-15）：新增「命名规范」章节，统一幂等键命名约定（`{namespace}:{domain}:{resource}:{action}`）；在 `docs/checkstyle.xml` 中新增 `@Idempotent` 键名正则校验规则。
 - **v1.0.0**（2026-08-02）：补全 `@RepeatSubmit` 防重提交、`@DistributedScheduled` 分布式调度、`LockLeakDetector` 锁泄漏检测、`LockKeyValidator` 键校验章节；完善配置项表与自动装配说明，新增编程式锁、读写锁、信号量使用示例。

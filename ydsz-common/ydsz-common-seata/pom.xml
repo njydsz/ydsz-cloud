@@ -75,6 +75,13 @@
             <artifactId>seata-spring-boot-starter</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- ydsz-common-lock (optional, @DistributedScheduled 保护 TCC 恢复扫描器) -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-lock</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Feign (optional, for XID propagation) -->
         <dependency>
             <groupId>io.github.openfeign</groupId>

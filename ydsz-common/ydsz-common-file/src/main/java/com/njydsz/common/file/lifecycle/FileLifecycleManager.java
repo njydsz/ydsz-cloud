@@ -7,6 +7,7 @@ import java.util.List;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import com.njydsz.common.file.domain.ListObjectsResult;
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.file.domain.ObjectMetadata;
 import com.njydsz.common.file.config.FileLifecycleProperties;
 import com.njydsz.common.file.storage.IFileStorage;
@@ -57,8 +58,10 @@ public class FileLifecycleManager {
      * 定时执行文件清理任务
      *
      * <p>根据配置的 cron 表达式定时触发，遍历所有规则并执行过期文件清理。
+     * 通过 {@link DistributedScheduled} 保证多节点部署时仅一个节点执行清理，避免重复删除。
      */
     @Scheduled(cron = "${ydsz.file.lifecycle.cron:0 0 2 * * ?}")
+    @DistributedScheduled(lockKey = "file:lifecycle-cleanup", leaseTime = 600)
     public void executeCleanup() {
         if (!lifecycleProperties.isEnabled()) {
             log.debug("文件生命周期清理未启用，跳过执行");

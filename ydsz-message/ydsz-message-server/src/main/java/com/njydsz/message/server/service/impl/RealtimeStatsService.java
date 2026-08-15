@@ -10,8 +10,6 @@ import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
-import org.springframework.data.redis.core.RedisTemplate;
-
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -43,7 +41,6 @@ public class RealtimeStatsService {
     private final RedisHashOps redisHashOps;
     private final RedisCollectionOps redisCollectionOps;
     private final RedisStringOps redisStringOps;
-    private final RedisTemplate<String, Object> redisTemplate;
 
     /**
      * 记录一次消息发送到实时统计。
@@ -56,7 +53,7 @@ public class RealtimeStatsService {
         try {
             String minuteKey = "ydsz:stats:realtime:" + LocalDateTime.now().format(MINUTE_FMT);
             // 按状态+通道计数
-            redisTemplate.opsForHash().increment(minuteKey, channel + ":" + status, 1);
+            redisHashOps.hIncr(minuteKey, channel + ":" + status, 1);
             redisStringOps.expire(minuteKey, Duration.ofHours(2));
             // 记录延迟到 Sorted Set（保留最近 10000 条用于分位数计算）
             if ("SUCCESS".equals(status) && costMs > 0) {
