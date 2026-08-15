@@ -68,6 +68,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-cache</artifactId>
         </dependency>
+        <!-- ydzs-common-redis -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-redis</artifactId>
+        </dependency>
 
         <!-- 测试依赖 -->
         <dependency>

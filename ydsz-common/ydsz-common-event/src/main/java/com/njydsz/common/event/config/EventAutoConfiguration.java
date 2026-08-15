@@ -22,7 +22,6 @@ import com.njydsz.common.event.gateway.EventPublishGateway;
 import com.njydsz.common.event.gateway.NoopEventPublishGateway;
 import com.njydsz.common.event.gateway.RocketMqEventPublishGateway;
 import com.njydsz.common.event.health.OutboxHealthIndicator;
-import com.njydsz.common.event.model.DatabaseDialect;
 import com.njydsz.common.event.processor.OutboxProcessor;
 import com.njydsz.common.event.repository.OutboxRepository;
 import com.njydsz.common.event.service.OutboxEventStore;
@@ -30,8 +29,6 @@ import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 
 import io.micrometer.core.instrument.MeterRegistry;
-
-import javax.sql.DataSource;
 
 /**
  * Outbox 事件模块自动配置
@@ -77,26 +74,19 @@ public class EventAutoConfiguration {
     /**
      * 创建 Outbox 仓储实例
      *
-     * @param jdbcTemplate       JDBC 模板
-     * @param properties         事件配置属性
-     * @param dataSourceProvider 数据源提供者（用于检测数据库方言）
+     * @param jdbcTemplate JDBC 模板
+     * @param properties   事件配置属性
      * @return Outbox 仓储实例
      */
     @Bean
     @ConditionalOnMissingBean
     public OutboxRepository outboxRepository(JdbcTemplate jdbcTemplate,
-                                              EventProperties properties,
-                                              ObjectProvider<DataSource> dataSourceProvider) {
-        DataSource dataSource = dataSourceProvider.getIfAvailable();
-        DatabaseDialect dialect = DatabaseDialect.UNKNOWN;
-        if (dataSource != null) {
-            dialect = DatabaseDialect.detect(dataSource);
-        }
-        OutboxRepository repository = new OutboxRepository(jdbcTemplate, properties.getTableName(), dialect);
+                                              EventProperties properties) {
+        OutboxRepository repository = new OutboxRepository(jdbcTemplate, properties.getTableName());
         // 设置 countByStatus 缓存 TTL
         repository.setCacheTtlMillis(properties.getStatusCountCacheSeconds() * 1000L);
-        log.info("Outbox repository initialized: table={}, dialect={}, cacheTtl={}s",
-                properties.getTableName(), dialect, properties.getStatusCountCacheSeconds());
+        log.info("Outbox repository initialized: table={}, cacheTtl={}s",
+                properties.getTableName(), properties.getStatusCountCacheSeconds());
         return repository;
     }
 
@@ -178,15 +168,13 @@ public class EventAutoConfiguration {
      * 创建 Outbox 健康检查指标
      *
      * @param outboxRepository Outbox 仓储
-     * @param properties       事件配置属性
      * @return Outbox 健康指标实例
      */
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
-    public OutboxHealthIndicator outboxHealthIndicator(OutboxRepository outboxRepository,
-                                                        EventProperties properties) {
-        return new OutboxHealthIndicator(outboxRepository, properties);
+    public OutboxHealthIndicator outboxHealthIndicator(OutboxRepository outboxRepository) {
+        return new OutboxHealthIndicator(outboxRepository);
     }
 
     /**

@@ -74,11 +74,8 @@ public class NotifyServiceImpl implements NotifyService {
     /** 去重服务（可选依赖，P0-6） */
     private final NotifyDedupService dedupService;
 
-    /** 消息聚合器（可选依赖，P0-7） */
+    /** 消息聚合器（可选依赖） */
     private final NotificationAggregator aggregator;
-
-    /** 发送处理链（Pipeline 模式） */
-    private final SendChain sendChain;
 
     /** 通知回执追踪器（可选依赖，骨架实现） */
     private NotifyReceiptTracker receiptTracker = new InMemoryNotifyReceiptTracker();
@@ -152,9 +149,6 @@ public class NotifyServiceImpl implements NotifyService {
         this.preferenceManager = preferenceManager;
         this.dedupService = dedupService;
         this.aggregator = aggregator;
-        this.sendChain = new SendChain(this.channelStrategies, rateLimiterManager,
-                circuitBreakerRegistry, dedupService, preferenceManager, metrics,
-                auditService, fallbackManager);
         log.info("[NotifyServiceImpl] 初始化完成, strategies={}, rateLimit={}, parallel={}, circuitBreaker={}, "
                         + "fallback={}, audit={}, metrics={}, preference={}, dedup={}, aggregator={}",
                 channelStrategies.size(), rateLimiterManager != null, parallelExecutor != null,
@@ -527,7 +521,7 @@ public class NotifyServiceImpl implements NotifyService {
     /**
      * 执行单条通知发送（含去重、熔断、限流、指标、审计、降级全链路）。
      *
-     * <p>通过 {@link SendChain} 发送处理链执行，链路步骤：去重 → 熔断 → 限流 → 执行 → 指标 → 审计 → 降级。
+     * <p>处理链路：去重 → 熔断 → 限流 → 执行 → 指标 → 审计 → 降级。
      *
      * @param channel       通知渠道
      * @param receiver      接收方
@@ -544,7 +538,7 @@ public class NotifyServiceImpl implements NotifyService {
                              NotifyType notifyType, String tenantId) {
         SendContext ctx = SendContext.forSend(channel, receiver, title, content,
                 userId, templateCode, notifyType, tenantId);
-        NotifySendResult result = sendChain.executeSend(ctx);
+        NotifySendResult result = executeSendPipeline(ctx);
         updateReceipt(result);
         return result;
     }
@@ -552,7 +546,7 @@ public class NotifyServiceImpl implements NotifyService {
     /**
      * 执行模板通知发送（含熔断、限流、指标、审计、降级全链路）。
      *
-     * <p>通过 {@link SendChain} 发送处理链执行，链路步骤：熔断 → 限流 → 执行 → 指标 → 审计 → 降级。
+     * <p>处理链路：熔断 → 限流 → 执行 → 指标 → 审计 → 降级。
      *
      * @param channel       通知渠道
      * @param receiver      接收方
@@ -567,9 +561,191 @@ public class NotifyServiceImpl implements NotifyService {
                                  String title, String tenantId) {
         SendContext ctx = SendContext.forTemplate(channel, receiver, templateCode,
                 templateParams, title, tenantId);
-        NotifySendResult result = sendChain.executeTemplate(ctx);
+        NotifySendResult result = executeTemplateSendPipeline(ctx);
         updateReceipt(result);
         return result;
+    }
+
+    // ==================== 发送处理链路（内联自 SendChain） ====================
+
+    /**
+     * 执行文本发送链路
+     *
+     * <p>步骤：去重 → 熔断 → 限流 → 执行 → 后置处理（指标、审计、降级）。
+     *
+     * @param ctx 发送上下文
+     * @return 发送结果
+     */
+    private NotifySendResult executeSendPipeline(SendContext ctx) {
+        // Step 1: 去重检查
+        SendContext context = applyDedup(ctx);
+        if (context.hasResult()) {
+            return context.sendResult();
+        }
+
+        // Step 2: 熔断检查
+        context = applyCircuitBreaker(context);
+        if (context.hasResult()) {
+            return context.sendResult();
+        }
+
+        // Step 3: 限流检查
+        context = applyRateLimit(context);
+        if (context.hasResult()) {
+            return context.sendResult();
+        }
+
+        // Step 4: 执行发送
+        context = executeChannelSend(context);
+
+        // Step 5: 后置处理（指标、审计、降级）
+        context = applyPostProcess(context);
+
+        return context.sendResult();
+    }
+
+    /**
+     * 执行模板发送链路
+     *
+     * <p>步骤：熔断 → 限流 → 执行 → 后置处理（指标、审计、降级）。
+     *
+     * @param ctx 发送上下文
+     * @return 发送结果
+     */
+    private NotifySendResult executeTemplateSendPipeline(SendContext ctx) {
+        SendContext context = ctx;
+
+        // Step 1: 熔断检查
+        context = applyCircuitBreaker(context);
+        if (context.hasResult()) {
+            return context.sendResult();
+        }
+
+        // Step 2: 限流检查
+        context = applyRateLimit(context);
+        if (context.hasResult()) {
+            return context.sendResult();
+        }
+
+        // Step 3: 执行模板发送
+        context = executeChannelTemplateSend(context);
+
+        // Step 4: 后置处理
+        context = applyPostProcess(context);
+
+        return context.sendResult();
+    }
+
+    /**
+     * 去重检查步骤
+     */
+    private SendContext applyDedup(SendContext ctx) {
+        if (dedupService == null) {
+            return ctx;
+        }
+        if (dedupService.isDuplicate(ctx.receiver(), ctx.title(), ctx.content())) {
+            log.debug("[NotifyServiceImpl] 去重命中，跳过发送: receiver={}, title={}",
+                    ctx.receiver(), ctx.title());
+            return ctx.withResult(NotifySendResult.success("dedup-skipped", ctx.channel().getName()));
+        }
+        return ctx;
+    }
+
+    /**
+     * 限流检查步骤
+     */
+    private SendContext applyRateLimit(SendContext ctx) {
+        if (rateLimiterManager == null || rateLimiterManager.tryAcquire(ctx.channel(), ctx.tenantId())) {
+            return ctx;
+        }
+        return ctx.withResult(NotifySendResult.failure(
+                "通知渠道限流触发，请稍后重试: " + ctx.channel().getName(), ctx.channel().getName()));
+    }
+
+    /**
+     * 执行渠道文本发送步骤
+     */
+    private SendContext executeChannelSend(SendContext ctx) {
+        NotifyChannelStrategy strategy = channelStrategies.get(ctx.channel());
+        if (strategy == null) {
+            recordCircuitFailure(ctx.channel());
+            return ctx.withResult(NotifySendResult.failure(
+                    "通知渠道未配置: " + ctx.channel().getName(), ctx.channel().getName()));
+        }
+
+        long startTime = System.nanoTime();
+        NotifySendResult result;
+        try {
+            result = strategy.send(ctx.receiver(), ctx.title(), ctx.content());
+        } catch (Exception e) {
+            result = NotifySendResult.failure(e.getMessage(), ctx.channel().getName());
+        }
+        long durationNanos = System.nanoTime() - startTime;
+
+        return ctx.withResult(result).withTiming(startTime, durationNanos);
+    }
+
+    /**
+     * 执行渠道模板发送步骤
+     */
+    private SendContext executeChannelTemplateSend(SendContext ctx) {
+        NotifyChannelStrategy strategy = channelStrategies.get(ctx.channel());
+        if (strategy == null) {
+            recordCircuitFailure(ctx.channel());
+            return ctx.withResult(NotifySendResult.failure(
+                    "通知渠道未配置: " + ctx.channel().getName(), ctx.channel().getName()));
+        }
+
+        long startTime = System.nanoTime();
+        NotifySendResult result;
+        try {
+            result = strategy.sendTemplate(ctx.receiver(), ctx.templateCode(), ctx.templateParams());
+        } catch (Exception e) {
+            result = NotifySendResult.failure(e.getMessage(), ctx.channel().getName());
+        }
+        long durationNanos = System.nanoTime() - startTime;
+
+        return ctx.withResult(result).withTiming(startTime, durationNanos);
+    }
+
+    /**
+     * 后置处理步骤：熔断记录、指标、审计、降级
+     */
+    private SendContext applyPostProcess(SendContext ctx) {
+        if (ctx.sendResult() == null) {
+            return ctx;
+        }
+
+        // 记录熔断结果
+        recordCircuitResult(ctx.channel(), ctx.sendResult().isSuccess());
+
+        // 指标采集
+        if (metrics != null) {
+            metrics.recordChannelSend(ctx.channel().getName(), ctx.sendResult().isSuccess(),
+                    ctx.templateCode());
+            if (!ctx.sendResult().isSuccess()) {
+                metrics.recordEmailFailure(ctx.channel().getName(), "send_error", "send_failure");
+            }
+        }
+
+        // 审计日志
+        if (auditService != null) {
+            auditService.audit(ctx.channel(), ctx.receiver(), ctx.title(),
+                    ctx.sendResult(), ctx.durationNanos() / 1_000_000, ctx.templateCode());
+        }
+
+        // 失败降级
+        if (!ctx.sendResult().isSuccess() && fallbackManager != null) {
+            log.info("[NotifyServiceImpl] 主渠道[{}]发送失败，尝试降级", ctx.channel().getName());
+            String fallbackTitle = ctx.title() != null ? ctx.title() : ctx.templateCode();
+            String fallbackContent = ctx.content() != null ? ctx.content()
+                    : (ctx.templateParams() != null ? String.valueOf(ctx.templateParams()) : "");
+            NotifySendResult fallbackResult = fallbackManager.fallbackSend(
+                    ctx.channel(), ctx.receiver(), fallbackTitle, fallbackContent);
+            return ctx.withResult(fallbackResult);
+        }
+
+        return ctx;
     }
 
     /**

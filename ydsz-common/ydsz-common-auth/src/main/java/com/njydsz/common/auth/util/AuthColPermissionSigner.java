@@ -24,29 +24,17 @@ import com.njydsz.common.util.string.StringUtils;
  * HMAC-SHA256(signData, appSecret)
  * </pre>
  *
- * <p><b>使用场景：</b>
- * <ul>
- *   <li>客户端：在发送列权限数据前，使用 AppSecret 对数据做签名，并通过 X-Col-Permission-Sign Header 传递</li>
- *   <li>服务端：收到请求后，使用相同的 AppSecret 重新计算签名并与传入签名对比，不匹配则拒绝请求</li>
- * </ul>
- *
- * <p><b>安全约束：</b>
- * <ul>
- *   <li>签名密钥必须保密，建议通过配置中心或环境变量注入</li>
- *   <li>签名校验失败时抛出 SecurityException，并记录安全审计日志</li>
- *   <li>密钥为空时跳过签名校验（仅建议开发/测试环境使用）</li>
- *   <li>签名包含时间戳和 nonce，可防重放攻击（需在配置中开启签名校验）</li>
- * </ul>
- *
- * <p><b>注意事项：</b>
- * <p>列权限数据实际由服务端从 Redis 或 ColumnPermissionResolver 加载，客户端透传的 Header
- * 仅用于 Feign 调用下游服务时传递权限信息。在服务端已有独立权限数据源的场景下，签名校验收益有限。
- * 建议仅在开放 API 或跨网络边界调用时开启。
+ * <p><b>废弃原因：</b>
+ * 列权限数据实际由服务端从 Redis 或 ColumnPermissionResolver 加载，客户端透传的 Header
+ * 仅用于 Feign 调用下游服务时传递权限信息。在服务端已有独立权限数据源的场景下，签名校验收益有限，
+ * 但增加了前端对接复杂度。列权限应由服务端独立决策，不依赖客户端透传。
  *
  * @author ydsz-team
  * @since 1.0.0
- *
+ * @deprecated 自 3.0.0 起标记废弃，计划 4.0.0 移除。
+ *             列权限应由服务端独立决策，无需客户端签名校验。
  */
+@Deprecated(forRemoval = true, since = "3.0.0")
 public class AuthColPermissionSigner {
 
     private static final Logger log = LoggerFactory.getLogger(AuthColPermissionSigner.class);

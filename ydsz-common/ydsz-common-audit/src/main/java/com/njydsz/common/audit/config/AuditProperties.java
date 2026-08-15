@@ -318,11 +318,6 @@ public class AuditProperties {
          */
         private long shutdownTimeout = 30;
 
-        /**
-         * Disruptor WaitStrategy 策略名称（可选值：blocking / sleeping / yielding，默认 blocking）
-         */
-        private String waitStrategy = "blocking";
-
         public int getBatchSize() {
             return batchSize;
         }
@@ -413,14 +408,6 @@ public class AuditProperties {
 
         public void setShutdownTimeout(long shutdownTimeout) {
             this.shutdownTimeout = shutdownTimeout;
-        }
-
-        public String getWaitStrategy() {
-            return waitStrategy;
-        }
-
-        public void setWaitStrategy(String waitStrategy) {
-            this.waitStrategy = waitStrategy;
         }
     }
 }

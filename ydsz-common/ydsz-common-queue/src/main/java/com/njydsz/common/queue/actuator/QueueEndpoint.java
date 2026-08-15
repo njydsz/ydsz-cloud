@@ -58,9 +58,9 @@ public class QueueEndpoint {
     @ReadOperation
     public Map<String, Object> queuesSummary() {
         Map<String, Object> result = new HashMap<>();
-        result.put("queueType", queueProperties.resolvedType().getValue());
+        result.put("queueType", queueProperties.getResolvedType().getValue());
         result.put("enabled", queueProperties.isEnabled());
-        result.put("streamGroup", queueProperties.resolvedStreamGroup());
+        result.put("streamGroup", queueProperties.getStreamGroup());
         result.put("managedQueues", queueManager.getQueueCount());
         return result;
     }
@@ -80,15 +80,15 @@ public class QueueEndpoint {
         // 根据队列类型返回特定配置
         switch (queueType.toLowerCase()) {
             case "stream":
-                detail.put("streamGroup", queueProperties.resolvedStreamGroup());
-                detail.put("streamConsumer", queueProperties.resolvedStreamConsumer());
-                detail.put("streamRetryMax", queueProperties.resolvedStreamRetryMax());
-                detail.put("streamBatchSize", queueProperties.resolvedStreamBatchSize());
-                detail.put("streamBlockMillis", queueProperties.resolvedStreamBlockMillis());
-                detail.put("deadLetterSuffix", queueProperties.resolvedStreamDeadLetterSuffix());
+                detail.put("streamGroup", queueProperties.getStreamGroup());
+                detail.put("streamConsumer", queueProperties.getStreamConsumer());
+                detail.put("streamRetryMax", queueProperties.getStreamRetryMax());
+                detail.put("streamBatchSize", queueProperties.getStreamBatchSize());
+                detail.put("streamBlockMillis", queueProperties.getStreamBlockMillis());
+                detail.put("deadLetterSuffix", queueProperties.getStreamDeadLetterSuffix());
                 break;
             case "list":
-                detail.put("listBlockTimeoutSeconds", queueProperties.resolvedListBlockTimeoutSeconds());
+                detail.put("listBlockTimeoutSeconds", queueProperties.getListBlockTimeoutSeconds());
                 break;
             case "pubsub":
                 detail.put("note", "PubSub 模式无额外配置，仅支持广播消费");
@@ -99,15 +99,9 @@ public class QueueEndpoint {
         }
 
         // 死信队列配置
-        detail.put("deadLetterRetryEnabled", queueProperties.resolvedDeadLetterRetryEnabled());
-        detail.put("deadLetterMaxRetries", queueProperties.resolvedDeadLetterMaxRetries());
-        detail.put("deadLetterRetryInterval", queueProperties.resolvedDeadLetterRetryInterval());
-
-        // 熔断器配置
-        QueueProperties.CircuitBreakerConfig circuitBreaker = queueProperties.getCircuitBreaker();
-        detail.put("circuitBreakerEnabled", circuitBreaker.isEnabled());
-        detail.put("circuitBreakerFailureThreshold", circuitBreaker.getFailureThreshold());
-        detail.put("circuitBreakerTimeoutMillis", circuitBreaker.getOpenStateTimeoutMillis());
+        detail.put("deadLetterRetryEnabled", queueProperties.isDeadLetterRetryEnabled());
+        detail.put("deadLetterMaxRetries", queueProperties.getDeadLetterMaxRetries());
+        detail.put("deadLetterRetryInterval", queueProperties.getDeadLetterRetryInterval());
 
         return detail;
     }

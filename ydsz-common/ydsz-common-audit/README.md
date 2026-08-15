@@ -2,7 +2,7 @@
 
 > YDSZ 操作审计框架（L5 业务服务层）
 
-提供 `@Audit` 声明式 AOP 审计、事件驱动异步落库、Disruptor 高性能批写、3 种分表策略、变更差异计算（before/after）、敏感字段脱敏、审计查询服务、Micrometer 指标桥接、健康检查等能力，是 YDSZ 项目合规审计与操作轨迹记录的统一基座。
+提供 `@Audit` 声明式 AOP 审计、事件驱动异步落库、LinkedBlockingQueue 批量写入、3 种分表策略、敏感字段脱敏、审计查询服务、Micrometer 指标桥接、健康检查等能力，是 YDSZ 项目合规审计与操作轨迹记录的统一基座。
 
 ## 模块定位
 
@@ -11,7 +11,7 @@
 | **层级** | L5 业务服务层 |
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 为所有业务服务提供操作审计、合规追踪、审计轨迹记录能力（AOP + 异步批写 + 分表 + 差异计算） |
-| **依赖** | common-core、common-util、common-exception、common-json；可选依赖 spring-jdbc、disruptor、micrometer-core、spring-boot-actuator、spring-boot-health、spring-webmvc |
+| **依赖** | common-core、common-util、common-exception、common-json；可选依赖 spring-jdbc、micrometer-core、spring-boot-actuator、spring-boot-health、spring-webmvc |
 | **版本** | 1.0.0 |
 
 ## 核心能力
@@ -37,7 +37,6 @@
 | `AuditRecorder` | 审计记录器接口（record / recordAsync / recordBatch） |
 | `DefaultAuditRecorder` | 默认同步记录器（阻塞业务主链路，仅用于低 QPS 场景） |
 | `AsyncAuditRecorder` | 异步记录器（LinkedBlockingQueue + 线程池 + 批量刷盘 + 兜底降级） |
-| `DisruptorAuditRecorder` | Disruptor 高性能批写记录器（无锁环形缓冲区，classpath 存在 `com.lmax.disruptor.Disruptor` 时优先使用） |
 | `AuditFallbackWriter` | 降级写入器（主存储失败时落到本地文件 / 日志） |
 
 ### 4. 审计存储
@@ -199,7 +198,6 @@ public class Application {
 | `batch-size` | 100 | 批量写入阈值（条数，达到后立即触发刷盘） |
 | `batch-interval-millis` | 5000 | 批量写入间隔（毫秒，超过此间隔即使未满也会写入） |
 | `queue-capacity` | 10000 | 异步队列最大容量（满后按 `async-reject-policy` 处理） |
-| `wait-strategy` | blocking | Disruptor WaitStrategy：`blocking` / `sleeping` / `yielding` |
 
 ## 使用示例
 
@@ -276,26 +274,7 @@ public class ProjectUpdateService {
 }
 ```
 
-### 4. 启用 Disruptor 高性能批写
-
-```yaml
-ydsz:
-  audit:
-    enabled: true
-    async: true                         # 启用异步记录器
-    sharding:
-      enabled: true
-      type: monthly
-      base-table-name: sys_audit_log
-    async:
-      batch-size: 100
-      queue-capacity: 10000
-      wait-strategy: blocking           # Disruptor WaitStrategy
-```
-
-> classpath 中存在 `com.lmax.disruptor.Disruptor` 时自动优先使用 `DisruptorAuditRecorder`，否则降级为 `AsyncAuditRecorder`（LinkedBlockingQueue）。
-
-### 5. 数据导出审计事件
+### 4. 数据导出审计事件
 
 ```java
 import com.njydsz.common.audit.event.DataExportAuditEvent;
@@ -315,7 +294,7 @@ eventPublisher.publishEvent(
 
 | SPI 接口 | 用途 | 实现方 |
 |---|---|---|
-| `AuditRecorder` | 审计记录器抽象（同步 / 异步 / 批量） | `DefaultAuditRecorder`（同步）、`AsyncAuditRecorder`（LinkedBlockingQueue）、`DisruptorAuditRecorder`（Disruptor 无锁环形缓冲区） |
+| `AuditRecorder` | 审计记录器抽象（同步 / 异步 / 批量） | `DefaultAuditRecorder`（同步）、`AsyncAuditRecorder`（LinkedBlockingQueue） |
 | `AuditStorage` | 审计存储策略抽象 | `DefaultAuditStorage`（控制台输出）、`JdbcAuditStorage`（JDBC 持久化） |
 | `TableShardingStrategy` | 分表策略抽象 | `YearlyShardingStrategy`、`MonthlyShardingStrategy`（默认）、`DailyShardingStrategy` |
 | `AuditQueryService` | 审计日志查询服务抽象 | `DefaultAuditQueryService`（JDBC + 跨分表 UNION ALL） |
@@ -347,15 +326,13 @@ eventPublisher.publishEvent(
 ## 注意事项
 
 1. **存储降级**：classpath 中无 `DataSource` 时，`AuditStorage` 自动降级为 `DefaultAuditStorage`（控制台输出），生产环境务必配置 JDBC 存储。
-2. **Disruptor 优先**：classpath 中存在 `com.lmax.disruptor.Disruptor`（optional 依赖）时，自动优先使用 `DisruptorAuditRecorder`（无锁环形缓冲区），否则降级为 `AsyncAuditRecorder`（LinkedBlockingQueue）。
-3. **异步记录器需 DataSource + YdszJson**：`asyncAuditRecorder` Bean 要求 classpath 存在 `DataSource` 和 `com.njydsz.common.json.YdszJson`，否则降级为 `DefaultAuditRecorder`（同步）。
 4. **分表键固定为时间戳**：分表策略根据操作时间计算目标表名，跨分表查询走 `getTableNamesInRange` 枚举后 UNION ALL 合并。
 5. **敏感参数双维度脱敏**：`AuditProperties.sensitiveParams`（参数名维度）+ `@MaskField`（字段名维度）共同生效，默认覆盖 password / token / secret / apiKey / privateKey 等 11 个常见敏感词。
 6. **优雅停机**：`AuditAutoConfiguration` 通过 `@PreDestroy` 调用 `AsyncAuditRecorder.shutdown()`，确保队列中剩余日志全部写入；超时由 `async-shutdown-timeout` 控制。
 7. **队列满拒绝策略**：默认 `DISCARD_OLDEST`（丢弃最旧日志），可配置为 `DISCARD_NEWEST` 或 `CALLER_RUNS`（调用者阻塞等待）。健康检查会累计 `droppedCount`。
 8. **审计专用线程池隔离**：`auditAsyncExecutor` 与主业务线程池隔离，避免审计 IO 阻塞核心链路；线程名前缀 `audit-async-`。
 9. **事件驱动解耦**：`AuditEventListener` 同步监听 `AuditEvent`，委托 `AuditRecorder` 异步批量写入。业务方也可手动 `publishEvent(OperationLogEvent)` / `publishEvent(DataExportAuditEvent)` 触发审计，无需 `@Audit` 注解。
-10. **可选依赖降级**：`spring-jdbc` / `disruptor` / `micrometer-core` / `spring-boot-actuator` / `spring-boot-health` 均为 optional，未引入时对应能力自动降级或不可用。
+10. **可选依赖降级**：`spring-jdbc` / `micrometer-core` / `spring-boot-actuator` / `spring-boot-health` 均为 optional，未引入时对应能力自动降级或不可用。
 
 ## 变更记录
 

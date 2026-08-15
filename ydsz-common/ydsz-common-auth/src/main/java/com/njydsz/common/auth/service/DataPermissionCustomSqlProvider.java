@@ -8,43 +8,17 @@ import com.njydsz.common.auth.model.DataScopeInfo;
  * <p>用于在某些复杂业务场景下，通过自定义 SQL 条件来控制数据访问范围。
  * 实现此接口后，可通过 {@link DataScopeInfo#getCustomSqlCondition()} 获取自定义 SQL。
  *
- * <p><b>使用场景：</b>
- * <ul>
- *   <li>基于复杂组织架构的数据权限控制</li>
- *   <li>基于业务属性（如项目类型、区域）的数据权限控制</li>
- *   <li>需要动态计算数据范围的场景</li>
- *   <li>跨表关联的数据权限控制</li>
- * </ul>
- *
- * <p><b>实现示例：</b>
- * <pre>{@code
- * @Component
- * public class ProjectDataPermissionProvider implements DataPermissionCustomSqlProvider {
- *
- *     @Override
- *     public String provideCustomSql(DataScopeInfo dataScopeInfo, String tableAlias) {
- *         if (!"custom".equals(dataScopeInfo.getScope())) {
- *             return null;
- *         }
- *         return String.format(
- *             " EXISTS (SELECT 1 FROM project_member pm " +
- *             " WHERE pm.project_id = %s.project_id AND pm.user_id = %s) ",
- *             tableAlias, dataScopeInfo.getUserId()
- *         );
- *     }
- *
- *     @Override
- *     public int getOrder() {
- *         return Ordered.HIGHEST_PRECEDENCE;
- *     }
- * }
- * }</pre>
+ * <p><b>废弃原因：</b>自定义 SQL 拼接存在 SQL 注入风险，且职责已超出认证鉴权模块边界。
+ * 复杂数据权限建议通过数据库视图或独立数据权限服务实现。
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 自 3.0.0 起标记废弃，计划 4.0.0 移除。
+ *             复杂数据权限建议使用数据库视图或独立数据权限服务实现。
  *
  * @see DataScopeInfo
  */
+@Deprecated(forRemoval = true, since = "3.0.0")
 public interface DataPermissionCustomSqlProvider {
 
     /**

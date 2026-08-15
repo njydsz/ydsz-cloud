@@ -12,7 +12,9 @@ import org.slf4j.LoggerFactory;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 自 3.0.0 起标记废弃，随 {@link SecurityAuditPublisher} 一并移除。
  */
+@Deprecated(forRemoval = true, since = "3.0.0")
 public class DefaultSecurityAuditPublisher implements SecurityAuditPublisher {
 
     private static final Logger auditLog = LoggerFactory.getLogger("SECURITY_AUDIT");

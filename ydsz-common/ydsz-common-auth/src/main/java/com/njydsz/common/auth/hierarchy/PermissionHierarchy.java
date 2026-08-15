@@ -10,13 +10,16 @@ import java.util.Set;
  *
  * <p>使用 {@link Map} 而非字符串拼接，实现 O(1) 查找。
  *
- * <p><b>迁移说明：</b>此类现在作为静态门面（Facade）委托给 Spring Bean
+ * <p><b>迁移说明：</b>此类作为静态门面（Facade）委托给 Spring Bean
  * {@link PermissionHierarchyService}。新代码建议直接注入 {@link PermissionHierarchyService}
- * 以支持按租户隔离。静态方法仅向后兼容，使用默认租户 {@link PermissionHierarchyService#DEFAULT_TENANT_ID}。
+ * 以支持按租户隔离，符合 Spring 依赖注入原则。
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 自 3.0.0 起标记废弃，计划 4.0.0 移除。
+ *             迁移目标：直接注入 {@link PermissionHierarchyService}。
  */
+@Deprecated(forRemoval = true, since = "3.0.0")
 public final class PermissionHierarchy {
 
     /**

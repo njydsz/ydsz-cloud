@@ -45,6 +45,10 @@ import java.util.concurrent.TimeUnit;
  * }
  * }</pre>
  *
+ * <p><b>规范说明</b>：本工厂方法内部使用 {@link Executors} 创建原始线程池后，
+ * 统一包装为 {@link SeataDecoratorExecutorService} 以透传 XID 上下文。
+ * 所有工厂方法均返回 Seata 感知的执行器，语义一致。
+ *
  * @author ydsz-team
  * @since 1.3.0
  */
@@ -64,13 +68,16 @@ public final class SeataExecutors {
      * @param threadNamePrefix 线程名前缀
      * @return 已包装 SeataTaskDecorator 的线程池
      */
+    // CHECKSTYLE.OFF: ExecutorsUsage - SeataExecutors 工厂方法豁免：创建后立即包装为 SeataDecoratorExecutorService
     public static ExecutorService newFixedThreadPool(int nThreads, String threadNamePrefix) {
-        return java.util.concurrent.Executors.newFixedThreadPool(nThreads, r -> {
-            Thread t = new Thread(r, threadNamePrefix + "-" + System.nanoTime());
-            t.setDaemon(true);
-            return t;
-        });
+        return new SeataDecoratorExecutorService(
+                Executors.newFixedThreadPool(nThreads, r -> {
+                    Thread t = new Thread(r, threadNamePrefix + "-" + System.nanoTime());
+                    t.setDaemon(true);
+                    return t;
+                }));
     }
+    // CHECKSTYLE.ON: ExecutorsUsage
 
     /**
      * 创建 Seata 感知的单线程线程池
@@ -78,6 +85,7 @@ public final class SeataExecutors {
      * @param threadNamePrefix 线程名前缀
      * @return 已包装 SeataTaskDecorator 的线程池
      */
+    // CHECKSTYLE.OFF: ExecutorsUsage - SeataExecutors 工厂方法豁免：创建后立即包装为 SeataDecoratorExecutorService
     public static ExecutorService newSingleThreadExecutor(String threadNamePrefix) {
         return new SeataDecoratorExecutorService(
                 Executors.newSingleThreadExecutor(r -> {
@@ -86,6 +94,7 @@ public final class SeataExecutors {
                     return t;
                 }));
     }
+    // CHECKSTYLE.ON: ExecutorsUsage
 
     /**
      * 创建 Seata 感知的可缓存线程池
@@ -93,6 +102,7 @@ public final class SeataExecutors {
      * @param threadNamePrefix 线程名前缀
      * @return 已包装 SeataTaskDecorator 的线程池
      */
+    // CHECKSTYLE.OFF: ExecutorsUsage - SeataExecutors 工厂方法豁免：创建后立即包装为 SeataDecoratorExecutorService
     public static ExecutorService newCachedThreadPool(String threadNamePrefix) {
         return new SeataDecoratorExecutorService(
                 Executors.newCachedThreadPool(r -> {
@@ -101,6 +111,7 @@ public final class SeataExecutors {
                     return t;
                 }));
     }
+    // CHECKSTYLE.ON: ExecutorsUsage
 
     /**
      * 创建 Seata 感知的自定义线程池
@@ -113,6 +124,7 @@ public final class SeataExecutors {
      * @param threadNamePrefix 线程名前缀
      * @return 已包装 SeataTaskDecorator 的线程池
      */
+    // CHECKSTYLE.OFF: ExecutorsUsage - SeataExecutors 工厂方法豁免：创建后立即包装为 SeataDecoratorExecutorService
     public static ExecutorService newThreadPool(
             int corePoolSize,
             int maximumPoolSize,
@@ -128,6 +140,7 @@ public final class SeataExecutors {
                             return t;
                         }));
     }
+    // CHECKSTYLE.ON: ExecutorsUsage
 
     /**
      * 将 Executor 包装为 Seata 感知的执行器
@@ -137,7 +150,7 @@ public final class SeataExecutors {
      * @param executor 原始执行器
      * @return 包装后的 Seata 感知执行器
      */
-    public static Executor decorator(Executor executor) {
+    public static Executor decorate(Executor executor) {
         if (executor == null) {
             throw new IllegalArgumentException("Executor must not be null");
         }

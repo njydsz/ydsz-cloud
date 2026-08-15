@@ -9,7 +9,6 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 import com.njydsz.common.audit.config.AuditProperties;
 import com.njydsz.common.audit.core.AsyncAuditRecorder;
 import com.njydsz.common.audit.core.AuditRecorder;
-import com.njydsz.common.audit.core.DisruptorAuditRecorder;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -77,16 +76,6 @@ public class AuditHealthIndicator implements HealthIndicator {
             details.put("queueFullCount", queueFullCount);
 
             builder = buildHealthStatus(usageRatio, queueFullCount, details);
-        } else if (auditRecorder instanceof DisruptorAuditRecorder disruptorRecorder) {
-            long queueFullCount = disruptorRecorder.getQueueFullWarnCount();
-            long successCount = disruptorRecorder.getSuccessCount();
-            long failureCount = disruptorRecorder.getFailureCount();
-            details.put("queueFullCount", queueFullCount);
-            details.put("successCount", successCount);
-            details.put("failureCount", failureCount);
-
-            // Disruptor 有失败记录则标记为 DOWN
-            builder = failureCount > 0 ? Health.down() : Health.up();
         } else {
             // 默认（DefaultAuditRecorder 或自定义实现）
             builder = Health.up();

@@ -1,6 +1,5 @@
 package com.njydsz.common.queue.config;
 
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -20,34 +19,24 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
-import com.njydsz.common.queue.controller.DeadLetterQueueController;
-import com.njydsz.common.queue.controller.TraceQueryController;
 import com.njydsz.common.queue.actuator.QueueEndpoint;
 import com.njydsz.common.queue.dedup.DedupCleanupScheduler;
 import com.njydsz.common.queue.dedup.MessageDeduplicator;
 import com.njydsz.common.queue.health.QueueHealthIndicator;
 import com.njydsz.common.queue.manager.QueueManager;
 import com.njydsz.common.queue.metrics.QueueMetricsBinder;
-import com.njydsz.common.queue.queue.IMessageQueue;
 import com.njydsz.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.common.queue.queue.MessageQueueFactory;
-import com.njydsz.common.queue.enums.QueueType;
 import com.njydsz.common.queue.scheduler.DeadLetterRetryScheduler;
 import com.njydsz.common.queue.service.DeadLetterQueueService;
 import com.njydsz.common.queue.service.impl.DeadLetterQueueServiceImpl;
 import com.njydsz.common.queue.service.impl.NoOpDeadLetterQueueService;
-import com.njydsz.common.queue.trace.DefaultMessageTraceRecorder;
-import com.njydsz.common.queue.trace.MessageTraceAspect;
-import com.njydsz.common.queue.trace.MessageTraceFilter;
-import com.njydsz.common.queue.trace.MessageTraceRecorder;
-import com.njydsz.common.queue.trace.RedisMessageTraceRecorder;
-import com.njydsz.common.queue.topology.MultiMQTopology;
-import com.njydsz.common.queue.topology.TopologyType;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 import io.micrometer.core.instrument.MeterRegistry;
 
 import lombok.extern.slf4j.Slf4j;
+
 /**
  * 消息队列自动配置类
  *
@@ -96,7 +85,8 @@ public class QueueConfiguration {
 
     /**
      * 初始化验证
-     * <p>在 Spring 容器初始化完成后验证配置的基本有效性
+     *
+     * <p>在 Spring 容器初始化完成后验证配置的基本有效性。
      */
     @PostConstruct
     public void init() {
@@ -105,10 +95,10 @@ public class QueueConfiguration {
             log.info("[Queue] 消息队列配置初始化，Redis 连接：复用 ydsz-common-redis");
         } else {
             log.info("[Queue] 消息队列配置初始化，Redis 连接：自建 JedisPool（{}:{}）",
-                    queueProperties.resolvedHost(),
-                    queueProperties.resolvedPort());
-            log.info("[Queue] 提示：推荐引入 ydsz-common-redis 模块以复用 Redis 连接，" +
-                    "通过 spring.data.redis.* 配置连接信息");
+                    queueProperties.getHost(),
+                    queueProperties.getPort());
+            log.info("[Queue] 提示：推荐引入 ydsz-common-redis 模块以复用 Redis 连接，"
+                    + "通过 spring.data.redis.* 配置连接信息");
         }
         log.debug("[Queue] 队列配置详情：{}", queueProperties);
     }
@@ -146,25 +136,31 @@ public class QueueConfiguration {
     @Bean("queueConsumerExecutor")
     @ConditionalOnMissingBean(name = "queueConsumerExecutor")
     public ExecutorService queueConsumerExecutor(QueueProperties queueProperties) {
-        QueueProperties.ExecutorConfig cfg = queueProperties.resolvedConsumerExecutor();
+        int coreSize = queueProperties.getConsumerExecutorCoreSize();
+        int maxSize = queueProperties.getConsumerExecutorMaxSize();
+        int queueCapacity = queueProperties.getConsumerExecutorQueueCapacity();
+        int awaitTerminationSeconds = queueProperties.getConsumerExecutorAwaitTerminationSeconds();
+        String threadNamePrefix = queueProperties.getConsumerExecutorThreadNamePrefix();
+
         // CHECKSTYLE.OFF: ThreadPoolCreate
         // 兜底线程池：仅当 ydsz-common-thread 未提供 queueConsumerExecutor Bean 时生效。
         // 生产环境应通过 ydsz.thread.pools.queueConsumerExecutor 配置统一管理。
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         // CHECKSTYLE.ON: ThreadPoolCreate
-        executor.setCorePoolSize(cfg.getCoreSize());
-        executor.setMaxPoolSize(cfg.getMaxSize());
-        executor.setQueueCapacity(cfg.getQueueCapacity());
+        executor.setCorePoolSize(coreSize);
+        executor.setMaxPoolSize(maxSize);
+        executor.setQueueCapacity(queueCapacity);
+
         // 符合云顶编码规范 15.4.4 命名约定：ydsz-{module}-{biz}-
-        String prefix = cfg.getThreadNamePrefix();
-        executor.setThreadNamePrefix(prefix.startsWith("ydsz-") ? prefix : "ydsz-" + prefix);
+        executor.setThreadNamePrefix(threadNamePrefix.startsWith("ydsz-")
+                ? threadNamePrefix : "ydsz-" + threadNamePrefix);
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         executor.setWaitForTasksToCompleteOnShutdown(true);
-        executor.setAwaitTerminationSeconds(cfg.getAwaitTerminationSeconds());
+        executor.setAwaitTerminationSeconds(awaitTerminationSeconds);
         executor.initialize();
         log.info("[Queue] 创建兜底异步消费者线程池，core={}, max={}, queue={}, prefix={} "
                 + "(生产环境推荐使用 ydsz-common-thread 统一管理)",
-                cfg.getCoreSize(), cfg.getMaxSize(), cfg.getQueueCapacity(), executor.getThreadNamePrefix());
+                coreSize, maxSize, queueCapacity, executor.getThreadNamePrefix());
         return executor.getThreadPoolExecutor();
     }
 
@@ -225,7 +221,7 @@ public class QueueConfiguration {
     public DeadLetterRetryScheduler deadLetterRetryScheduler(DeadLetterQueueService deadLetterQueueService) {
         if (deadLetterQueueService == null
                 || deadLetterQueueService instanceof NoOpDeadLetterQueueService
-                || !queueProperties.resolvedDeadLetterRetryEnabled()) {
+                || !queueProperties.getDeadLetterRetryEnabled()) {
             log.info("[Queue] 死信队列自动重试已禁用，跳过调度器创建");
             return null;
         }
@@ -236,7 +232,7 @@ public class QueueConfiguration {
                 r -> new Thread(r, "ydsz-queue-dlq-retry"));
         // CHECKSTYLE.ON: ThreadPoolCreate
         log.info("[Queue] 创建死信队列自动重试调度器，间隔: {}ms, 抖动: {}%",
-                queueProperties.resolvedDeadLetterRetryInterval(),
+                queueProperties.getDeadLetterRetryInterval(),
                 queueProperties.getDeadLetterRetryJitterPercent());
         return new DeadLetterRetryScheduler(deadLetterQueueService, queueProperties, scheduler);
     }
@@ -247,7 +243,7 @@ public class QueueConfiguration {
      * 创建内存消息去重器（单实例场景）
      *
      * <p>当 ydsz.queue.dedup-enabled=true 且 RedisTemplate 不可用时创建。
-     * 分布式场景应使用 RedisMessageDeduplicator。
+     * 分布式场景应使用 ydsz-common-redis 的 RedisMessageDeduplicator。
      *
      * @return 内存去重器实例
      */
@@ -255,7 +251,7 @@ public class QueueConfiguration {
     @ConditionalOnMissingBean(MessageDeduplicator.class)
     @ConditionalOnProperty(prefix = "ydsz.queue", name = "dedup-enabled", havingValue = "true")
     public MessageDeduplicator messageDeduplicator() {
-        long window = queueProperties.resolvedDedupWindowMillis();
+        long window = queueProperties.getDedupWindowMillis();
         log.info("[Queue] 创建内存消息去重器，窗口: {}ms", window);
         return new MessageDeduplicator(window);
     }
@@ -276,125 +272,6 @@ public class QueueConfiguration {
         return new DedupCleanupScheduler(messageDeduplicator);
     }
 
-    // ==================== 消息轨迹相关配置 ====================
-
-    /**
-     * 创建消息轨迹记录器
-     *
-     * <p>根据配置的后端类型创建对应的记录器实例：
-     * <ul>
-     *   <li>memory: 基于内存的 LRU 缓存实现</li>
-     *   <li>redis: 基于 Redis Hash 的持久化实现</li>
-     * </ul>
-     *
-     * @return 消息轨迹记录器实例
-     */
-    @Bean
-    @ConditionalOnMissingBean(MessageTraceRecorder.class)
-    @ConditionalOnProperty(prefix = "ydsz.queue.trace", name = "enabled", havingValue = "true")
-    public MessageTraceRecorder messageTraceRecorder() {
-        String backend = queueProperties.getTrace().resolvedBackend();
-        int ttlMinutes = queueProperties.getTrace().getTtlMinutes();
-
-        if ("redis".equalsIgnoreCase(backend)) {
-            RedisTemplate<String, Object> redisTemplate = redisTemplateProvider.getIfAvailable();
-            if (redisTemplate != null) {
-                log.info("[Queue] 创建 Redis 消息轨迹记录器，TTL: {} 分钟", ttlMinutes);
-                return new RedisMessageTraceRecorder(redisTemplate, ttlMinutes);
-            }
-            log.warn("[Queue] Redis 消息轨迹后端已配置但 RedisTemplate 不可用，回退到内存模式");
-        }
-
-        int maxCapacity = queueProperties.getTrace().getMaxCapacity();
-        log.info("[Queue] 创建内存消息轨迹记录器，容量: {}, TTL: {} 分钟", maxCapacity, ttlMinutes);
-        return new DefaultMessageTraceRecorder(maxCapacity, ttlMinutes);
-    }
-
-    /**
-     * 创建消息轨迹 AOP 切面
-     *
-     * <p>拦截 IMessagePublisher.publish() 方法，自动记录消息发送轨迹。
-     *
-     * @param traceRecorder 消息轨迹记录器
-     * @return AOP 切面实例
-     */
-    @Bean
-    @ConditionalOnProperty(prefix = "ydsz.queue.trace", name = "enabled", havingValue = "true")
-    public MessageTraceAspect messageTraceAspect(MessageTraceRecorder traceRecorder) {
-        log.info("[Queue] 注册消息轨迹 AOP 切面");
-        return new MessageTraceAspect(traceRecorder);
-    }
-
-    /**
-     * 创建消息队列链路追踪过滤器
-     *
-     * <p>从 HTTP 请求头中提取 traceId 并注入到 MDC 和 RequestContext，
-     * 确保 REST API 调用消息发布者时 traceId 能够全链路传递。
-     *
-     * <p>当 MessageTraceRecorder 和 Servlet API 均可用时自动注册。
-     *
-     * @return 链路追踪过滤器实例
-     */
-    @Bean
-    @ConditionalOnBean(MessageTraceRecorder.class)
-    @ConditionalOnClass(name = "jakarta.servlet.Filter")
-    public MessageTraceFilter messageTraceFilter() {
-        log.info("[Queue] 注册消息队列链路追踪过滤器");
-        return new MessageTraceFilter();
-    }
-
-    /**
-     * 注册消息轨迹查询 REST API
-     *
-     * <p>提供按消息ID或链路追踪ID查询消息轨迹的 REST 接口，
-     * 用于问题排查和全链路追踪可视化。
-     *
-     * @param traceRecorder 消息轨迹记录器
-     * @return 轨迹查询控制器实例
-     */
-    @Bean
-    @ConditionalOnBean(MessageTraceRecorder.class)
-    @ConditionalOnClass(name = "org.springframework.web.bind.annotation.RestController")
-    @ConditionalOnMissingBean(TraceQueryController.class)
-    public TraceQueryController traceQueryController(MessageTraceRecorder traceRecorder) {
-        log.info("[Queue] 注册消息轨迹查询 REST API");
-        return new TraceQueryController(traceRecorder);
-    }
-
-    // ==================== 健康检查配置 ====================
-
-    /**
-     * 创建多 MQ 组合拓扑实例
-     *
-     * <p>当 ydsz.queue.multi-topology.enabled=true 时，根据配置创建多 MQ 拓扑实例。
-     * 支持主备切换、扇出和多源聚合三种拓扑模式。
-     *
-     * @param messageQueueProvider 消息队列提供者
-     * @return 多 MQ 拓扑实例（禁用时返回 null）
-     */
-    @Bean
-    @ConditionalOnMissingBean(MultiMQTopology.class)
-    @ConditionalOnProperty(prefix = "ydsz.queue.multi-topology", name = "enabled", havingValue = "true")
-    public MultiMQTopology multiMQTopology(IMessageQueueProvider messageQueueProvider) {
-        QueueProperties.MultiTopologyConfig config = queueProperties.getMultiTopology();
-        TopologyType type = config.resolvedType();
-        List<QueueType> participantTypes = config.resolvedParticipants();
-        String topologyName = config.getTopologyName();
-
-        if (participantTypes.size() < 2) {
-            log.warn("[Queue] 多 MQ 拓扑配置参与者不足 2 个，跳过拓扑创建: {}", config.getParticipants());
-            return null;
-        }
-
-        log.info("[Queue] 创建多 MQ 拓扑，名称: {}, 类型: {}, 参与者: {}", topologyName, type, participantTypes);
-
-        List<IMessageQueue> participants = participantTypes.stream()
-                .map(messageQueueProvider::createMessageQueue)
-                .toList();
-
-        return new MultiMQTopology(topologyName, type, participants);
-    }
-
     // ==================== 健康检查配置 ====================
 
     /**
@@ -411,25 +288,6 @@ public class QueueConfiguration {
     public QueueHealthIndicator queueHealthIndicator() {
         log.info("[Queue] 创建消息队列健康检查器");
         return new QueueHealthIndicator(queueProperties, redisStringOpsProvider);
-    }
-
-    // ==================== REST API 配置 ====================
-
-    /**
-     * 注册死信队列管理 REST API
-     *
-     * <p>当 DeadLetterQueueService 和 spring-web 在 classpath 中时自动注册。
-     *
-     * @param deadLetterQueueService 死信队列服务
-     * @return 死信队列控制器实例
-     */
-    @Bean
-    @ConditionalOnBean(DeadLetterQueueService.class)
-    @ConditionalOnClass(name = "org.springframework.web.bind.annotation.RestController")
-    @ConditionalOnMissingBean(DeadLetterQueueController.class)
-    public DeadLetterQueueController deadLetterQueueController(DeadLetterQueueService deadLetterQueueService) {
-        log.info("[Queue] 注册死信队列管理 REST API");
-        return new DeadLetterQueueController(deadLetterQueueService);
     }
 
     // ==================== Actuator 端点配置 ====================

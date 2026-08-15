@@ -33,6 +33,11 @@
             <groupId>io.projectreactor.netty</groupId>
             <artifactId>reactor-netty-http</artifactId>
         </dependency>
+        <!-- ydzs-common-redis -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-redis</artifactId>
+        </dependency>
         <!-- P2-2: 单元测试依赖（JUnit Jupiter + Mockito + AssertJ） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -1,36 +1,33 @@
 package com.njydsz.common.queue.config;
 
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.validation.constraints.Min;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import com.njydsz.common.queue.enums.QueueType;
-import org.springframework.data.redis.core.RedisTemplate;
-
-import com.njydsz.common.queue.queue.IMessageQueueProvider;
-import com.njydsz.common.queue.queue.MessageQueueFactory;
-import com.njydsz.common.queue.rate.ConsumerRateLimiter;
-import com.njydsz.common.queue.topology.TopologyType;
 
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 消息队列配置类
+ * 消息队列配置属性类
  *
- * <p>支持通过 Nacos 进行动态配置，配置前缀为 {@code ydsz.queue}。
- * 支持通过 {@link MessageQueueFactory} 创建消息队列实例，复用 ydsz-common-redis 连接。
+ * <p>绑定前缀为 {@code ydsz.queue} 的 YAML 配置，提供消息队列引擎的连接参数、
+ * 消费策略、死信队列、消息去重等配置项的声明式管理。
  *
- * <p><b>连接复用：</b>
- * <p>当提供 RedisTemplate 时，Redis 队列
- * 优先复用 ydsz-common-redis 的连接，避免重复创建 JedisPool。
+ * <p>支持通过 Nacos 动态推送配置变更，Spring Boot 自动热加载生效。
+ *
+ * <p><b>最小配置示例：</b>
+ * <pre>{@code
+ * ydsz:
+ *   queue:
+ *     enabled: true
+ *     type: STREAM
+ * }</pre>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -41,19 +38,19 @@ import lombok.extern.slf4j.Slf4j;
 public class QueueProperties {
 
     /**
-     * 队列是否启用
+     * 是否启用消息队列模块
      */
     private boolean enabled = true;
 
     /**
-     * 队列类型（支持通过枚举名称或 value 自动识别）
-     * <p>支持的值：LIST, PUBSUB, STREAM, KAFKA, ROCKET, RABBIT, ACTIVE
+     * 队列引擎类型
+     *
+     * <p>支持：STREAM / KAFKA / ROCKET / LIST(已废弃) / PUBSUB(已废弃) / RABBIT(已废弃) / ACTIVE(已废弃)
      */
     private QueueType type;
 
     /**
-     * 队列类型字符串（用于兼容旧配置）
-     * <p>该字段仅用于配置解析，实际使用应通过 getType() 获取枚举值。
+     * 队列类型字符串（兼容旧配置）
      */
     private String typeStr;
 
@@ -68,17 +65,17 @@ public class QueueProperties {
     private int port = 6379;
 
     /**
-     * Redis 密码（也用于非 Redis 队列的通用密码配置）
+     * Redis 密码
      */
     private String password;
 
     /**
-     * Redis 用户名（用于非 Redis 队列的通用用户名配置）
+     * Redis 用户名
      */
     private String username;
 
     /**
-     * 超时时间（毫秒）
+     * 连接超时时间（毫秒）
      */
     @Min(1)
     private int timeout = 3000;
@@ -89,7 +86,7 @@ public class QueueProperties {
     private long listBlockTimeoutSeconds = 5;
 
     /**
-     * Stream 队列消费者组
+     * Stream 队列消费者组名称
      */
     private String streamGroup = "group-1";
 
@@ -99,12 +96,12 @@ public class QueueProperties {
     private String streamConsumer = "consumer-1";
 
     /**
-     * Stream 队列重试最大次数
+     * Stream 队列消费失败最大重试次数
      */
     private int streamRetryMax = 3;
 
     /**
-     * Stream 队列阻塞时间（毫秒）
+     * Stream 队列阻塞读取时间（毫秒）
      */
     private long streamBlockMillis = 2000;
 
@@ -119,28 +116,53 @@ public class QueueProperties {
     private String streamDeadLetterSuffix = ":dlq";
 
     /**
-     * 消费者限流速率（每秒允许处理的消息数，默认 0 表示不限流）
+     * 消费者限流速率（每秒消息数，0=不限流）
      */
     private int consumerRateLimitPerSecond = 0;
 
     /**
-     * 是否启用死信队列自动重试（默认true）
+     * 异步消费者线程池核心线程数
+     */
+    private int consumerExecutorCoreSize = 2;
+
+    /**
+     * 异步消费者线程池最大线程数
+     */
+    private int consumerExecutorMaxSize = 16;
+
+    /**
+     * 异步消费者线程池任务队列容量
+     */
+    private int consumerExecutorQueueCapacity = 256;
+
+    /**
+     * 异步消费者线程池线程名前缀
+     */
+    private String consumerExecutorThreadNamePrefix = "queue-consumer-";
+
+    /**
+     * 异步消费者线程池优雅停机等待秒数
+     */
+    private int consumerExecutorAwaitTerminationSeconds = 30;
+
+    /**
+     * 是否启用死信队列自动重试
      */
     private boolean deadLetterRetryEnabled = true;
 
     /**
-     * 死信队列最大重试次数（默认3）
+     * 死信队列最大重试次数
      */
     @Min(1)
     private int deadLetterMaxRetries = 3;
 
     /**
-     * 死信队列重试间隔毫秒（默认60000）
+     * 死信队列重试间隔（毫秒）
      */
     private long deadLetterRetryInterval = 60000;
 
     /**
-     * 死信队列重试抖动百分比（默认30，范围 0-100，0=无抖动）
+     * 死信队列重试抖动百分比（0-100，0=无抖动）
      *
      * <p>多实例部署时，各实例在基础延迟上附加 [0, interval * jitterPercent / 100] 的随机抖动，
      * 避免所有实例同时扫描死信队列造成惊群。
@@ -148,7 +170,7 @@ public class QueueProperties {
     private int deadLetterRetryJitterPercent = 30;
 
     /**
-     * 是否启用消息去重（默认 false，分布式场景推荐使用 RedisMessageDeduplicator）
+     * 是否启用消息去重（默认 false，分布式场景推荐使用 ydsz-common-redis 的 RedisMessageDeduplicator）
      */
     private boolean dedupEnabled = false;
 
@@ -158,505 +180,67 @@ public class QueueProperties {
     private long dedupWindowMillis = 300_000L;
 
     /**
-     * 熔断器配置
+     * 配置初始化校验
+     *
+     * <p>在 Spring 容器初始化完成后验证配置的基本有效性。
      */
-    private CircuitBreakerConfig circuitBreaker = new CircuitBreakerConfig();
-
-    /**
-     * 消息去重解析后的窗口
-     */
-    public long resolvedDedupWindowMillis() {
-        return dedupWindowMillis > 0 ? dedupWindowMillis : 300_000L;
+    @PostConstruct
+    public void validate() {
+        if (type == null && (typeStr == null || typeStr.trim().isEmpty())) {
+            throw new IllegalStateException("ydsz.queue.type 必须配置有效的队列引擎类型");
+        }
+        if (port <= 0 || port > 65535) {
+            throw new IllegalArgumentException("ydsz.queue.port 无效: " + port);
+        }
+        if (timeout <= 0) {
+            throw new IllegalArgumentException("ydsz.queue.timeout 必须大于 0");
+        }
+        if (deadLetterMaxRetries <= 0) {
+            throw new IllegalArgumentException("ydsz.queue.deadLetterMaxRetries 必须大于 0");
+        }
+        if (deadLetterRetryInterval <= 0) {
+            throw new IllegalArgumentException("ydsz.queue.deadLetterRetryInterval 必须大于 0");
+        }
+        if (deadLetterRetryJitterPercent < 0 || deadLetterRetryJitterPercent > 100) {
+            throw new IllegalArgumentException("ydsz.queue.deadLetterRetryJitterPercent 必须在 0-100 之间");
+        }
+        if (dedupWindowMillis <= 0) {
+            throw new IllegalArgumentException("ydsz.queue.dedupWindowMillis 必须大于 0");
+        }
     }
 
     /**
-     * 解析后的队列类型
+     * 获取解析后的队列类型
      *
-     * <p>优先返回 {@link #type} 枚举值；若为 null 则惰性解析 {@link #typeStr}。
-     * 本方法不修改 {@link #type} 字段，保证幂等性。
+     * <p>优先返回 {@link #type} 枚举值；若为 null 则从 {@link #typeStr} 解析。
+     *
+     * @return 队列类型枚举
+     * @throws IllegalStateException 当 type 和 typeStr 均为空时抛出
      */
-    public QueueType resolvedType() {
+    public QueueType getResolvedType() {
         if (type != null) {
             return type;
         }
         if (typeStr != null && !typeStr.trim().isEmpty()) {
             return QueueType.fromValue(typeStr);
         }
-        throw new IllegalStateException("队列类型不能为空");
+        throw new IllegalStateException("队列类型不能为空，请配置 ydsz.queue.type");
     }
 
     /**
-     * 解析后的主机地址
-     */
-    public String resolvedHost() {
-        return host != null ? host : "127.0.0.1";
-    }
-
-    /**
-     * 解析后的端口
-     */
-    public int resolvedPort() {
-        return port > 0 ? port : 6379;
-    }
-
-    /**
-     * 解析后的超时时间
-     */
-    public int resolvedTimeout() {
-        return timeout > 0 ? timeout : 3000;
-    }
-
-    /**
-     * 解析后的用户名
-     */
-    public String resolvedUsername() {
-        return username;
-    }
-
-    /**
-     * 解析后的密码
-     */
-    public String resolvedPassword() {
-        return password;
-    }
-
-    /**
-     * 解析后的 List 阻塞超时时间
-     */
-    public long resolvedListBlockTimeoutSeconds() {
-        return listBlockTimeoutSeconds > 0 ? listBlockTimeoutSeconds : 5;
-    }
-
-    /**
-     * 解析后的 Stream 消费者组
-     */
-    public String resolvedStreamGroup() {
-        return streamGroup != null && !streamGroup.isEmpty() ? streamGroup : "group-1";
-    }
-
-    /**
-     * 解析后的 Stream 消费者名称
-     */
-    public String resolvedStreamConsumer() {
-        return streamConsumer != null && !streamConsumer.isEmpty() ? streamConsumer : "consumer-1";
-    }
-
-    /**
-     * 解析后的 Stream 重试最大次数
-     */
-    public int resolvedStreamRetryMax() {
-        return streamRetryMax >= 0 ? streamRetryMax : 3;
-    }
-
-    /**
-     * 解析后的 Stream 阻塞时间
-     */
-    public long resolvedStreamBlockMillis() {
-        return streamBlockMillis > 0 ? streamBlockMillis : 2000;
-    }
-
-    /**
-     * 解析后的 Stream 批量拉取大小
-     */
-    public int resolvedStreamBatchSize() {
-        return streamBatchSize > 0 ? streamBatchSize : 10;
-    }
-
-    /**
-     * 解析后的 Stream 死信队列后缀
-     */
-    public String resolvedStreamDeadLetterSuffix() {
-        return streamDeadLetterSuffix != null && !streamDeadLetterSuffix.isEmpty()
-                ? streamDeadLetterSuffix : ":dlq";
-    }
-
-    /**
-     * 解析后的死信队列自动重试开关
-     */
-    public boolean resolvedDeadLetterRetryEnabled() {
-        return deadLetterRetryEnabled;
-    }
-
-    /**
-     * 解析后的死信队列最大重试次数
-     */
-    public int resolvedDeadLetterMaxRetries() {
-        return deadLetterMaxRetries > 0 ? deadLetterMaxRetries : 3;
-    }
-
-    /**
-     * 解析后的死信队列重试间隔
-     */
-    public long resolvedDeadLetterRetryInterval() {
-        return deadLetterRetryInterval > 0 ? deadLetterRetryInterval : 60000;
-    }
-
-    /**
-     * 解析后的死信队列重试抖动百分比
-     */
-    public int getDeadLetterRetryJitterPercent() {
-        return deadLetterRetryJitterPercent;
-    }
-
-    /**
-     * 解析后的消费者限流速率
-     */
-    public int resolvedConsumerRateLimitPerSecond() {
-        return consumerRateLimitPerSecond > 0 ? consumerRateLimitPerSecond : 0;
-    }
-
-    /**
-     * 创建消费者限流器实例
+     * 获取解析后的参与者 MQ 类型列表（逗号分隔字符串转枚举列表）
      *
-     * @return 限流器实例，当 consumerRateLimitPerSecond <= 0 时返回空操作限流器
+     * @param participants 逗号分隔的 MQ 类型字符串，如 "STREAM,KAFKA"
+     * @return MQ 类型枚举列表
      */
-    public ConsumerRateLimiter createRateLimiter() {
-        return new ConsumerRateLimiter(resolvedConsumerRateLimitPerSecond());
-    }
-
-    /**
-     * 异步消费者线程池配置
-     */
-    private ExecutorConfig consumerExecutor = new ExecutorConfig();
-
-    /**
-     * 熔断器配置项
-     */
-    @Data
-    public static class CircuitBreakerConfig {
-        /**
-         * 是否启用熔断器（默认 true）
-         */
-        private boolean enabled = true;
-
-        /**
-         * 连续失败阈值（默认 10 次）
-         */
-        private int failureThreshold = 10;
-
-        /**
-         * 熔断开启后的恢复等待时间（毫秒，默认 60000 = 1 分钟）
-         */
-        private long openStateTimeoutMillis = 60_000L;
-    }
-
-    /**
-     * 异步消费者线程池配置项
-     */
-    @Data
-    public static class ExecutorConfig {
-        /**
-         * 核心线程数（默认 2）
-         */
-        private int coreSize = 2;
-
-        /**
-         * 最大线程数（默认 16）
-         */
-        private int maxSize = 16;
-
-        /**
-         * 任务队列容量（默认 256）
-         */
-        private int queueCapacity = 256;
-
-        /**
-         * 线程名前缀
-         */
-        private String threadNamePrefix = "ydsz-queue-consumer-";
-
-        /**
-         * 优雅停机等待秒数（默认 30）
-         */
-        private int awaitTerminationSeconds = 30;
-    }
-
-    /**
-     * 解析后的消费者线程池配置
-     */
-    public ExecutorConfig resolvedConsumerExecutor() {
-        return consumerExecutor != null ? consumerExecutor : new ExecutorConfig();
-    }
-
-    /**
-     * 多 MQ 组合拓扑配置
-     */
-    private MultiTopologyConfig multiTopology = new MultiTopologyConfig();
-
-    /**
-     * 消息轨迹配置
-     */
-    private TraceConfig trace = new TraceConfig();
-
-    /**
-     * 消息轨迹配置项
-     */
-    @Data
-    public static class TraceConfig {
-        /**
-         * 是否启用消息轨迹（默认false）
-         */
-        private boolean enabled = false;
-
-        /**
-         * 轨迹存储后端类型（memory/redis，默认memory）
-         */
-        private String backend = "memory";
-
-        /**
-         * 轨迹过期时间（分钟，默认30）
-         */
-        private int ttlMinutes = 30;
-
-        /**
-         * 内存后端最大缓存条目数（默认1000）
-         */
-        private int maxCapacity = 1000;
-
-        /**
-         * 解析后的后端类型
-         */
-        public String resolvedBackend() {
-            return backend != null && !backend.isEmpty() ? backend : "memory";
-        }
-    }
-
-    /**
-     * 多 MQ 组合拓扑配置项
-     */
-    @Data
-    public static class MultiTopologyConfig {
-        /**
-         * 是否启用多 MQ 拓扑（默认 false）
-         */
-        private boolean enabled = false;
-
-        /**
-         * 拓扑类型（primary-backup / fan-out / aggregation）
-         */
-        private String type = "primary-backup";
-
-        /**
-         * 参与拓扑的 MQ 类型列表（逗号分隔, 如 "STREAM,KAFKA"）
-         */
-        private String participants = "";
-
-        /**
-         * 拓扑名称（用于日志和监控标识）
-         */
-        private String topologyName = "default";
-
-        /**
-         * 解析后的拓扑类型
-         *
-         * @return 拓扑类型枚举
-         */
-        public TopologyType resolvedType() {
-            return TopologyType.fromValue(type);
-        }
-
-        /**
-         * 解析后的参与者 MQ 类型列表
-         *
-         * @return MQ 类型枚举列表
-         */
-        public List<QueueType> resolvedParticipants() {
-            if (participants == null || participants.trim().isEmpty()) {
-                return List.of();
-            }
-            return Arrays.stream(participants.split(","))
-                    .map(String::trim)
-                    .filter(s -> !s.isEmpty())
-                    .map(QueueType::fromValue)
-                    .toList();
-        }
-    }
-
-    /**
-     * 解析队列配置项
-     *
-     * @param configStr 格式: "KAFKA:host:9092:topicName" 或 "STREAM:127.0.0.1:6379:myGroup"
-     * @return 解析后的配置对象
-     */
-    public static QueueProperties parse(String configStr) {
-        QueueProperties properties = new QueueProperties();
-        properties.setEnabled(true);
-
-        if (configStr == null || configStr.isEmpty()) {
-            throw new IllegalArgumentException("队列配置字符串不能为空");
-        }
-
-        String[] parts = configStr.split(":", 4);
-        if (parts.length < 2) {
-            throw new IllegalArgumentException("队列配置格式错误，应为: TYPE:HOST:PORT:...");
-        }
-
-        properties.setType(QueueType.valueOf(parts[0].toUpperCase()));
-        if (parts.length >= 2) {
-            properties.setHost(parts[1]);
-        }
-        if (parts.length >= 3) {
-            properties.setPort(Integer.parseInt(parts[2]));
-        }
-        if (parts.length >= 4) {
-            Map<String, String> args = parseKeyValueArgs(parts[3]);
-            applyArgs(properties, args);
-        }
-
-        return properties;
-    }
-
-    private static Map<String, String> parseKeyValueArgs(String argsStr) {
-        return Arrays.stream(argsStr.split("&"))
-                .map(s -> s.split("="))
-                .filter(a -> a.length == 2)
-                .collect(Collectors.toMap(
-                        a -> a[0].trim(),
-                        a -> a[1].trim()
-                ));
-    }
-
-    private static void applyArgs(QueueProperties properties, Map<String, String> args) {
-        if (args.containsKey("group")) {
-            properties.setStreamGroup(args.get("group"));
-        }
-        if (args.containsKey("consumer")) {
-            properties.setStreamConsumer(args.get("consumer"));
-        }
-        if (args.containsKey("retryMax")) {
-            properties.setStreamRetryMax(Integer.parseInt(args.get("retryMax")));
-        }
-        if (args.containsKey("blockMillis")) {
-            properties.setStreamBlockMillis(Long.parseLong(args.get("blockMillis")));
-        }
-        if (args.containsKey("batchSize")) {
-            properties.setStreamBatchSize(Integer.parseInt(args.get("batchSize")));
-        }
-        if (args.containsKey("password")) {
-            properties.setPassword(args.get("password"));
-        }
-        if (args.containsKey("timeout")) {
-            properties.setTimeout(Integer.parseInt(args.get("timeout")));
-        }
-    }
-
-    /**
-     * 构建消息队列工厂实例（复用 ydsz-common-redis 连接，推荐）
-     *
-     * @param redisTemplate    Redis 模板实例
-     * @param consumerExecutor 异步消费者线程池
-     * @return 消息队列工厂
-     */
-    public IMessageQueueProvider buildFactory(RedisTemplate<String, Object> redisTemplate,
-                                              ExecutorService consumerExecutor) {
-        log.info("构建消息队列工厂（复用 ydsz-common-redis 连接）");
-        return new MessageQueueFactory(this, redisTemplate, consumerExecutor);
-    }
-
-    @Override
-    public String toString() {
-        String typeStr = type != null ? type.getValue() : "null";
-        return "QueueProperties{type=" + typeStr +
-                ", host='" + resolvedHost() + '\'' +
-                ", port=" + resolvedPort() +
-                ", timeout=" + resolvedTimeout() +
-                (username != null ? ", username='" + username + '\'' : "") +
-                (password != null ? ", password=***" : "") +
-                "}";
-    }
-
-    /**
-     * 打印多队列配置调试信息
-     *
-     * @param multiTypes 队列类型列表
-     * @param multiConfigs 队列配置映射
-     */
-    public void printDebugInfo(List<QueueType> multiTypes,
-                               Map<String, QueueProperties> multiConfigs) {
-        log.debug("=== QueueProperties 调试信息 ===");
-        log.debug("当前实例: {}", this);
-        log.debug("多队列类型: {}", multiTypes);
-        log.debug("多队列配置: {}", multiConfigs);
-        if (multiConfigs != null) {
-            multiConfigs.forEach((key, config) ->
-                    log.debug("配置[{}]: {}", key, config)
-            );
-        }
-        log.debug("=== 调试信息结束 ===");
-    }
-
-    /**
-     * 从 YAML 配置构建 QueueProperties 列表
-     *
-     * @param yamlConfigs 配置项列表
-     * @return QueueProperties 列表
-     */
-    public static List<QueueProperties> fromYamlConfigs(List<?> yamlConfigs) {
-        if (yamlConfigs == null || yamlConfigs.isEmpty()) {
+    public static List<QueueType> parseParticipants(String participants) {
+        if (participants == null || participants.trim().isEmpty()) {
             return List.of();
         }
-
-        return yamlConfigs.stream()
-                .map(obj -> {
-                    if (obj instanceof Map<?, ?> rawMap) {
-                        Map<String, Object> map = new LinkedHashMap<>();
-                        rawMap.forEach((k, v) -> map.put(String.valueOf(k), v));
-                        return fromMap(map);
-                    }
-                    throw new IllegalArgumentException("配置项必须是 Map 类型: " + obj);
-                })
+        return Arrays.stream(participants.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .map(QueueType::fromValue)
                 .toList();
-    }
-
-    private static QueueProperties fromMap(Map<String, Object> map) {
-        QueueProperties properties = new QueueProperties();
-        properties.setEnabled(true);
-
-        Object typeObj = map.get("type");
-        if (typeObj != null) {
-            properties.setType(QueueType.valueOf(String.valueOf(typeObj).toUpperCase()));
-        }
-
-        Object host = map.get("host");
-        if (host != null) {
-            properties.setHost(String.valueOf(host));
-        }
-
-        Object port = map.get("port");
-        if (port != null) {
-            properties.setPort(Integer.parseInt(String.valueOf(port)));
-        }
-
-        Object group = map.get("group");
-        if (group != null) {
-            properties.setStreamGroup(String.valueOf(group));
-        }
-
-        Object consumer = map.get("consumer");
-        if (consumer != null) {
-            properties.setStreamConsumer(String.valueOf(consumer));
-        }
-
-        Object password = map.get("password");
-        if (password != null) {
-            properties.setPassword(String.valueOf(password));
-        }
-
-        Object timeout = map.get("timeout");
-        if (timeout != null) {
-            properties.setTimeout(Integer.parseInt(String.valueOf(timeout)));
-        }
-
-        Object batch = map.get("batchSize");
-        if (batch != null) {
-            properties.setStreamBatchSize(Integer.parseInt(String.valueOf(batch)));
-        }
-
-        Object block = map.get("blockMillis");
-        if (block != null) {
-            properties.setStreamBlockMillis(Long.parseLong(String.valueOf(block)));
-        }
-
-        return properties;
     }
 }

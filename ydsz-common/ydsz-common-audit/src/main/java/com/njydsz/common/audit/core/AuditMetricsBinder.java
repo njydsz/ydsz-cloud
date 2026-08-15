@@ -113,9 +113,6 @@ public class AuditMetricsBinder implements MeterBinder {
         if (auditRecorder instanceof AsyncAuditRecorder asyncRecorder) {
             return (double) asyncRecorder.getQueueFullWarnCount();
         }
-        if (auditRecorder instanceof DisruptorAuditRecorder disruptorRecorder) {
-            return (double) disruptorRecorder.getQueueFullWarnCount();
-        }
         return 0.0;
     }
 

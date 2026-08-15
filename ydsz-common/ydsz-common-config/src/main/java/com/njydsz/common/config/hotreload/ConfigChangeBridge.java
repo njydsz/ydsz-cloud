@@ -1,9 +1,9 @@
 package com.njydsz.common.config.hotreload;
 
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,8 +28,8 @@ import com.njydsz.common.config.ConfigProperties;
  * {@code EnvironmentChangeEvent}（配置刷新后），自动 diff 属性变更并：
  * <ol>
  *   <li>发布 {@link ConfigChangeEvent} Spring 事件</li>
- *   <li>发布 {@link ConfigAuditEvent} 审计事件（含节点 IP、时间戳）</li>
- *   <li>通知所有 {@link ConfigChangeListener} 实现类（支持过滤）</li>
+ *   <li>记录审计日志（含节点 IP、变更数量）</li>
+ *   <li>通知所有 {@link ConfigChangeListener} 实现类</li>
  * </ol>
  *
  * <h3>工作原理</h3>
@@ -57,10 +57,6 @@ public class ConfigChangeBridge
             "org.springframework.cloud.context.refresh.RefreshEvent";
     private static final String ENV_CHANGE_EVENT_CLASS =
             "org.springframework.cloud.context.environment.EnvironmentChangeEvent";
-
-    /** getKeys 方法反射缓存，避免重复查找 */
-    private static final java.util.concurrent.ConcurrentHashMap<Class<?>, java.lang.reflect.Method> GET_KEYS_METHOD_CACHE =
-            new java.util.concurrent.ConcurrentHashMap<>();
 
     private static final String UNKNOWN_HOST = "unknown";
 
@@ -176,7 +172,7 @@ public class ConfigChangeBridge
             return;
         }
 
-        log.info("[ConfigChangeBridge] 检测到 {} 个属性变更", changes.size());
+        log.info("[ConfigChangeBridge] 检测到 {} 个属性变更, node={}", changes.size(), nodeIp);
         if (log.isDebugEnabled()) {
             for (ConfigChangeEvent.ConfigChange c : changes) {
                 log.debug("[ConfigChangeBridge] {} | {} -> {}", c.key(), c.oldValue(), c.newValue());
@@ -187,16 +183,15 @@ public class ConfigChangeBridge
         ConfigChangeEvent changeEvent = new ConfigChangeEvent(this, changes);
         publisher.publishEvent(changeEvent);
 
-        // 2. 发布审计事件
-        publisher.publishEvent(new ConfigAuditEvent(this, nodeIp, changes));
-
-        // 3. 通知监听器
+        // 2. 通知监听器
         for (ConfigChangeListener listener : listeners) {
-            try {
-                listener.onBatchChange(changes);
-            } catch (Exception e) {
-                log.warn("[ConfigChangeBridge] 监听器 {} 回调异常: {}",
-                        listener.getClass().getSimpleName(), e.getMessage(), e);
+            for (ConfigChangeEvent.ConfigChange c : changes) {
+                try {
+                    listener.onChange(c.key(), c.oldValue(), c.newValue());
+                } catch (Exception e) {
+                    log.warn("[ConfigChangeBridge] 监听器 {} 回调异常: {}",
+                            listener.getClass().getSimpleName(), e.getMessage(), e);
+                }
             }
         }
 
@@ -207,49 +202,28 @@ public class ConfigChangeBridge
     /**
      * 从 EnvironmentChangeEvent 中提取变更的属性键集合
      *
-     * <p>使用反射调用 {@code getKeys()} 方法，避免编译期硬依赖 Spring Cloud。
-     * Method 对象被缓存以优化性能。
+     * <p>通过反射调用 {@code getKeys()} 方法。由于 {@link #onApplicationEvent} 已通过类名
+     * 确认事件类型，且 Bean 创建时 {@code @ConditionalOnClass} 已保证 Spring Cloud 在 classpath 中，
+     * 因此反射调用是安全的。
      */
+    @SuppressWarnings("unchecked")
     private Set<String> extractChangedKeys(ApplicationEvent event) {
         try {
-            java.lang.reflect.Method method = GET_KEYS_METHOD_CACHE.computeIfAbsent(
-                    event.getClass(),
-                    clazz -> {
-                        try {
-                            return clazz.getMethod("getKeys");
-                        } catch (NoSuchMethodException e) {
-                            return null;
-                        }
-                    }
-            );
-            if (method == null) {
-                log.debug("[ConfigChangeBridge] 事件 {} 无 getKeys() 方法",
-                        event.getClass().getSimpleName());
-                return Set.of();
-            }
-            Object keys = method.invoke(event);
-            if (keys instanceof Set<?> set) {
-                return castToStringSet(set);
-            }
+            // 已知 event 是 EnvironmentChangeEvent，直接调用 getKeys()
+            Method getKeys = event.getClass().getMethod("getKeys");
+            Set<String> keys = (Set<String>) getKeys.invoke(event);
+            return keys != null ? keys : Set.of();
         } catch (Exception e) {
             log.warn("[ConfigChangeBridge] 提取变更键失败: {}", e.getMessage());
+            return Set.of();
         }
-        return Set.of();
-    }
-
-    /**
-     * 安全类型转换：Set&lt;?&gt; → Set&lt;String&gt;
-     */
-    private Set<String> castToStringSet(Set<?> set) {
-        Set<String> result = new LinkedHashSet<>();
-        for (Object item : set) {
-            result.add(String.valueOf(item));
-        }
-        return result;
     }
 
     /**
      * 快照当前 Environment 中所有可枚举属性源的属性值
+     *
+     * <p>仅当需要计算 oldValues 时才调用此方法。遍历整个 PropertySource 树
+     * 开销较大，因此默认通过 {@code snapshot-old-values} 配置控制是否启用。
      */
     private void takeSnapshot() {
         for (PropertySource<?> ps : environment.getPropertySources()) {
@@ -259,7 +233,7 @@ public class ConfigChangeBridge
                     if (value instanceof String strValue) {
                         snapshot.put(key, strValue);
                     } else if (value != null) {
-                        snapshot.put(key, String.valueOf(value));
+                        snapshot.put(key, value.toString());
                     }
                 }
             }

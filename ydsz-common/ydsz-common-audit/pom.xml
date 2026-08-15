@@ -78,12 +78,6 @@
             <artifactId>lombok</artifactId>
             <scope>provided</scope>
         </dependency>
-        <!-- LMAX Disruptor for high-performance async batch writing -->
-        <dependency>
-            <groupId>com.lmax</groupId>
-            <artifactId>disruptor</artifactId>
-            <optional>true</optional>
-        </dependency>
 
         <!-- spring-boot-actuator (optional for HealthIndicator) -->
         <dependency>

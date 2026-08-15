@@ -6,7 +6,6 @@ import java.util.Map;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 
-import com.njydsz.common.event.config.EventProperties;
 import com.njydsz.common.event.model.OutboxStatus;
 import com.njydsz.common.event.repository.OutboxRepository;
 
@@ -25,30 +24,32 @@ import com.njydsz.common.event.repository.OutboxRepository;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @since 1.7.0 移除对 EventProperties 的依赖，使用内置常量阈值
  */
 public class OutboxHealthIndicator implements HealthIndicator {
 
+    /** DEAD_LETTER 消息数健康阈值 */
+    private static final long DEAD_LETTER_THRESHOLD = 10L;
+
+    /** PENDING 消息数健康阈值 */
+    private static final long PENDING_THRESHOLD = 10000L;
+
     /** Outbox 仓储 */
     private final OutboxRepository outboxRepository;
-
-    /** 事件配置属性 */
-    private final EventProperties properties;
 
     /**
      * 构造函数
      *
      * @param outboxRepository Outbox 仓储
-     * @param properties       事件配置属性（用于读取告警阈值）
      */
-    public OutboxHealthIndicator(OutboxRepository outboxRepository, EventProperties properties) {
+    public OutboxHealthIndicator(OutboxRepository outboxRepository) {
         this.outboxRepository = outboxRepository;
-        this.properties = properties;
     }
 
     /**
      * 执行 Outbox 健康检查
      *
-     * <p>根据各状态消息数量与配置阈值比较，返回健康状态：
+     * <p>根据各状态消息数量与阈值比较，返回健康状态：
      * <ul>
      *   <li>UP - 消息积压在正常范围内</li>
      *   <li>DEGRADED - PENDING 或 PROCESSING 消息数超过阈值</li>
@@ -66,15 +67,12 @@ public class OutboxHealthIndicator implements HealthIndicator {
             long processing = statusCounts.getOrDefault(OutboxStatus.PROCESSING.name(), 0L);
             long deadLetter = statusCounts.getOrDefault(OutboxStatus.DEAD_LETTER.name(), 0L);
 
-            long deadLetterThreshold = properties.getDeadLetterAlertThreshold();
-            long pendingThreshold = properties.getPendingAlertThreshold();
-
             Health.Builder builder;
-            if (deadLetter > deadLetterThreshold) {
+            if (deadLetter > DEAD_LETTER_THRESHOLD) {
                 builder = Health.down();
-            } else if (pending > pendingThreshold) {
+            } else if (pending > PENDING_THRESHOLD) {
                 builder = Health.status("DEGRADED");
-            } else if (processing > pendingThreshold / 2) {
+            } else if (processing > PENDING_THRESHOLD / 2) {
                 builder = Health.status("DEGRADED");
             } else {
                 builder = Health.up();
@@ -84,8 +82,8 @@ public class OutboxHealthIndicator implements HealthIndicator {
                     .withDetail("pending", pending)
                     .withDetail("processing", processing)
                     .withDetail("deadLetter", deadLetter)
-                    .withDetail("pendingThreshold", pendingThreshold)
-                    .withDetail("deadLetterThreshold", deadLetterThreshold)
+                    .withDetail("pendingThreshold", PENDING_THRESHOLD)
+                    .withDetail("deadLetterThreshold", DEAD_LETTER_THRESHOLD)
                     .withDetail("timestamp", Instant.now().toString())
                     .build();
         } catch (Exception e) {

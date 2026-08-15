@@ -15,16 +15,11 @@ import java.util.concurrent.Callable;
  * // 步骤级超时 30 秒
  * SagaStep&lt;String&gt; step = SagaStep.of("freeze-inventory", action, compensation, 30000);
  *
- * // 使用 Builder 模式构建复杂步骤
- * SagaStep&lt;OrderResult&gt; step = SagaStep.&lt;OrderResult&gt;builder("create-order")
- *     .forwardAction(() -&gt; orderService.create(dto))
- *     .compensation(() -&gt; orderService.cancel(dto.getId()))
- *     .timeoutMs(60000)  // 60 秒超时
- *     .build();
+ * // 不可逆操作（最后一步）
+ * SagaStep&lt;OrderResult&gt; lastStep = SagaStep.terminal("create-order", () -&gt; orderService.create(dto), 60000);
  * }</pre>
  *
  * @param <T> 正向操作返回值类型
- *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -98,17 +93,6 @@ public class SagaStep<T> {
     }
 
     /**
-     * 创建 SagaStep Builder（P2-6 新增）
-     *
-     * @param name 步骤名称
-     * @param <T>  返回值类型
-     * @return Builder 实例
-     */
-    public static <T> Builder<T> builder(String name) {
-        return new Builder<>(name);
-    }
-
-    /**
      * 获取步骤名称
      *
      * @return 步骤名称
@@ -162,67 +146,5 @@ public class SagaStep<T> {
      */
     public boolean hasTimeout() {
         return timeoutMs > 0;
-    }
-
-    /**
-     * SagaStep Builder（P2-6 新增）
-     *
-     * <p>提供流式 API 构建 SagaStep，适用于复杂构造场景。
-     */
-    public static class Builder<T> {
-        private final String name;
-        private Callable<T> forwardAction;
-        private Runnable compensation;
-        private long timeoutMs = DEFAULT_TIMEOUT_MS;
-
-        private Builder(String name) {
-            this.name = name;
-        }
-
-        /**
-         * 设置正向操作（必填）
-         *
-         * @param forwardAction 正向操作
-         * @return this
-         */
-        public Builder<T> forwardAction(Callable<T> forwardAction) {
-            this.forwardAction = forwardAction;
-            return this;
-        }
-
-        /**
-         * 设置补偿操作（可选）
-         *
-         * @param compensation 补偿操作
-         * @return this
-         */
-        public Builder<T> compensation(Runnable compensation) {
-            this.compensation = compensation;
-            return this;
-        }
-
-        /**
-         * 设置超时时间（毫秒）
-         *
-         * @param timeoutMs 超时时间，0 表示不限制
-         * @return this
-         */
-        public Builder<T> timeoutMs(long timeoutMs) {
-            this.timeoutMs = Math.max(0, timeoutMs);
-            return this;
-        }
-
-        /**
-         * 构建 SagaStep
-         *
-         * @return SagaStep 实例
-         * @throws IllegalStateException 未设置 forwardAction 时抛出
-         */
-        public SagaStep<T> build() {
-            if (forwardAction == null) {
-                throw new IllegalStateException("forwardAction must not be null for step: " + name);
-            }
-            return new SagaStep<>(name, forwardAction, compensation, timeoutMs);
-        }
     }
 }

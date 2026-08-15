@@ -22,7 +22,6 @@ import io.micrometer.core.instrument.Timer;
  * <p><b>指标列表：</b>
  * <ul>
  *   <li>{@code safe_xss_attacks_total} - XSS 攻击次数</li>
- *   <li>{@code safe_sql_injection_total} - SQL 注入次数</li>
  *   <li>{@code safe_csrf_failures_total} - CSRF 验证失败次数</li>
  *   <li>{@code safe_rate_limit_triggered_total} - 限流触发次数</li>
  *   <li>{@code safe_illegal_access_total} - 非法访问次数</li>
@@ -44,7 +43,6 @@ public class SafeMetrics {
     private final MeterRegistry meterRegistry;
 
     private final AtomicLong xssAttacks = new AtomicLong(0);
-    private final AtomicLong sqlInjections = new AtomicLong(0);
     private final AtomicLong csrfFailures = new AtomicLong(0);
     private final AtomicLong rateLimitTriggered = new AtomicLong(0);
     private final AtomicLong illegalAccess = new AtomicLong(0);
@@ -80,7 +78,6 @@ public class SafeMetrics {
 
         switch (type) {
             case XSS_ATTACK -> incrementCounter("safe_xss_attacks_total", sourceIp, xssAttacks);
-            case SQL_INJECTION -> incrementCounter("safe_sql_injection_total", sourceIp, sqlInjections);
             case CSRF_ATTACK -> incrementCounter("safe_csrf_failures_total", sourceIp, csrfFailures);
             case RATE_LIMIT_TRIGGERED -> incrementCounter("safe_rate_limit_triggered_total", sourceIp, rateLimitTriggered);
             case ILLEGAL_ACCESS -> incrementCounter("safe_illegal_access_total", sourceIp, illegalAccess);
@@ -111,15 +108,6 @@ public class SafeMetrics {
      */
     public long getXssAttacksCount() {
         return xssAttacks.get();
-    }
-
-    /**
-     * 获取累计 SQL 注入次数
-     *
-     * @return 累计次数
-     */
-    public long getSqlInjectionCount() {
-        return sqlInjections.get();
     }
 
     /**

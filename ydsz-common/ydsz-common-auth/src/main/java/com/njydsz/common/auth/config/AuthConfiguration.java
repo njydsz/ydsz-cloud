@@ -275,17 +275,15 @@ public class AuthConfiguration {
      *
      * @param resolver                列权限解析器
      * @param desensitizationService  列脱敏服务
-     * @param properties              认证配置属性
      * @return 列权限切面实例
      */
     @Bean
     @ConditionalOnMissingBean
     public AuthColPermissionAspect authColPermissionAspect(
             ColumnPermissionResolver resolver,
-            ColumnDesensitizationService desensitizationService,
-            AuthProperties properties
+            ColumnDesensitizationService desensitizationService
     ) {
-        return new AuthColPermissionAspect(resolver, desensitizationService, properties);
+        return new AuthColPermissionAspect(resolver, desensitizationService);
     }
 
     /**
@@ -488,6 +486,9 @@ public class AuthConfiguration {
      * 初始化静态 {@link PermissionHierarchy} 门面，将其指向 Spring Bean。
      *
      * <p>在所有 Bean 就绪后调用，确保静态门面委托到正确的服务实例。
+     *
+     * <p><b>注意：</b>静态门面已标记废弃（{@link PermissionHierarchy}），
+     * 新代码应直接注入 {@link PermissionHierarchyService}。
      *
      * @param hierarchyService 权限层级服务（自动注入）
      */

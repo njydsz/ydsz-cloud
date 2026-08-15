@@ -14,11 +14,6 @@ public enum SecurityEventType {
     XSS_ATTACK,
 
     /**
-     * SQL 注入检测
-     */
-    SQL_INJECTION,
-
-    /**
      * CSRF 攻击检测
      */
     CSRF_ATTACK,

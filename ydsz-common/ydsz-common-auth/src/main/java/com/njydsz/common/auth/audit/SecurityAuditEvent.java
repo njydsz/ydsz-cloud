@@ -14,7 +14,9 @@ import java.util.UUID;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 自 3.0.0 起标记废弃，随 {@link SecurityAuditPublisher} 一并移除。
  */
+@Deprecated(forRemoval = true, since = "3.0.0")
 public final class SecurityAuditEvent {
 
     /** 事件唯一标识 */

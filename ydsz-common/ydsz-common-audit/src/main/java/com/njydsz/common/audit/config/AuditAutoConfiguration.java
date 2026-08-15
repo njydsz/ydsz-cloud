@@ -30,7 +30,6 @@ import com.njydsz.common.audit.core.AuditStorage;
 import com.njydsz.common.audit.core.AuditWriter;
 import com.njydsz.common.audit.core.DefaultAuditQueryService;
 import com.njydsz.common.audit.core.DefaultAuditRecorder;
-import com.njydsz.common.audit.core.DisruptorAuditRecorder;
 import com.njydsz.common.audit.health.AuditHealthIndicator;
 import com.njydsz.common.audit.sharding.DailyShardingStrategy;
 import com.njydsz.common.audit.sharding.MonthlyShardingStrategy;
@@ -233,8 +232,7 @@ public class AuditAutoConfiguration {
 
     /**
      * 创建异步审计记录器 Bean
-     * 当存在 AuditWriter 且未提供自定义 AuditRecorder 时，根据配置决定是否启用异步模式。
-     * 优先使用 Disruptor（如果 classpath 中存在），否则使用 LinkedBlockingQueue 实现。
+     * 当存在 AuditWriter 且未提供自定义 AuditRecorder 时，使用 LinkedBlockingQueue 实现异步批量写入。
      *
      * @param auditWriter 审计写入器
      * @param properties  审计配置属性
@@ -248,34 +246,12 @@ public class AuditAutoConfiguration {
     public AuditRecorder asyncAuditRecorder(AuditWriter auditWriter, AuditProperties properties) {
         AuditProperties.AsyncProperties asyncProps = properties.getAsync();
 
-        // 优先使用 Disruptor（如果 classpath 中存在）
-        if (isDisruptorAvailable()) {
-            log.info("初始化 Disruptor 审计记录器: DisruptorAuditRecorder, RingBuffer容量={}, 批量阈值={}, 写入器={}",
-                    asyncProps.getExecutorQueueCapacity(), asyncProps.getBatchSize(), auditWriter.getName());
-            DisruptorAuditRecorder recorder = new DisruptorAuditRecorder(auditWriter, properties, properties.getAsync().getWaitStrategy());
-            this.asyncAuditRecorder = null; // Disruptor 自己管理停机
-            return recorder;
-        }
-
-        // 降级使用 LinkedBlockingQueue 实现
         log.info("初始化异步审计记录器: AsyncAuditRecorder, 队列容量={}, 批量阈值={}, 刷新间隔={}ms, 写入器={}",
                 asyncProps.getExecutorQueueCapacity(), asyncProps.getBatchSize(), asyncProps.getBatchIntervalMillis(),
                 auditWriter.getName());
         AsyncAuditRecorder recorder = new AsyncAuditRecorder(auditWriter, properties);
         this.asyncAuditRecorder = recorder;
         return recorder;
-    }
-
-    /**
-     * 检查 Disruptor 是否在 classpath 中可用
-     */
-    private boolean isDisruptorAvailable() {
-        try {
-            Class.forName("com.lmax.disruptor.Disruptor");
-            return true;
-        } catch (ClassNotFoundException e) {
-            return false;
-        }
     }
 
     /**

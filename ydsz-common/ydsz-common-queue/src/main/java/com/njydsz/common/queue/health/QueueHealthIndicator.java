@@ -72,7 +72,7 @@ public class QueueHealthIndicator implements HealthIndicator {
             log.error("消息队列健康检查失败, type={}", type, e);
             return Health.down()
                     .withDetail("mqType", type.getValue())
-                    .withDetail("host", queueProperties.resolvedHost())
+                    .withDetail("host", queueProperties.getHost())
                     .withDetail("port", resolvePort(type))
                     .withDetail("error", e.getMessage())
                     .build();
@@ -84,7 +84,7 @@ public class QueueHealthIndicator implements HealthIndicator {
      */
     private QueueType resolveQueueType() {
         try {
-            return queueProperties.resolvedType();
+            return queueProperties.getResolvedType();
         } catch (Exception e) {
             return null;
         }
@@ -106,8 +106,8 @@ public class QueueHealthIndicator implements HealthIndicator {
 
         return Health.up()
                 .withDetail("mqType", "redis")
-                .withDetail("host", queueProperties.resolvedHost())
-                .withDetail("port", queueProperties.resolvedPort())
+                .withDetail("host", queueProperties.getHost())
+                .withDetail("port", queueProperties.getPort())
                 .withDetail("responseTimeMs", responseTime)
                 .withDetail("checkMethod", "redis-ping");
     }
@@ -116,7 +116,7 @@ public class QueueHealthIndicator implements HealthIndicator {
      * 检查非 Redis 中间件的 TCP 连通性
      */
     private Health.Builder checkMqConnectivity(QueueType type) {
-        String host = queueProperties.resolvedHost();
+        String host = queueProperties.getHost();
         int port = resolvePort(type);
 
         long startTime = System.currentTimeMillis();

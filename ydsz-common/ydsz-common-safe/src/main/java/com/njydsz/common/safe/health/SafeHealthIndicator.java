@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p><b>检测逻辑：</b>
  * <ul>
  *   <li>Redis 连通性（限流/CSRF Token/验证码存储依赖 Redis）</li>
- *   <li>各安全能力注册状态（XSS/SQL注入/CSRF/限流/IP访问控制/API签名/自动封禁/脱敏）</li>
+ *   <li>各安全能力注册状态（XSS/CSRF/限流/IP访问控制/API签名/自动封禁/脱敏）</li>
  * </ul>
  *
  * @author ydsz-team
@@ -70,7 +70,6 @@ public class SafeHealthIndicator implements HealthIndicator {
         // 安全能力清单（实际注册状态由 @ConditionalOnProperty 决定）
         Map<String, String> capabilities = new LinkedHashMap<>();
         capabilities.put("xss", "OWASP Sanitizer + configurable policies");
-        capabilities.put("sqlInjection", "regex detection + hot-reload");
         capabilities.put("csrf", "Synchronizer / Double Submit dual mode");
         capabilities.put("rateLimit", "Redis sliding window + local fallback");
         capabilities.put("ipAccess", "CIDR blacklist/whitelist + auto-block");

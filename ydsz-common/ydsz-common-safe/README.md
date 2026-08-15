@@ -2,7 +2,7 @@
 
 > YDSZ 统一安全防护基座（L5 业务服务层）
 
-提供 XSS 防护、SQL 注入防护、CSRF 双模式防护、敏感数据脱敏、限流（多维度 + 多算法）、验证码、AES-256-GCM 加密、API 签名验证、IP 黑白名单、安全事件自动响应、Micrometer 指标、安全审计日志等全栈 Web 安全能力，是 YDSZ 项目所有业务服务的统一安全基座。
+提供 XSS 防护、CSRF 双模式防护、敏感数据脱敏、限流（多维度 + 多算法）、验证码、AES-256-GCM 加密、API 签名验证、IP 黑白名单、安全事件自动响应、Micrometer 指标、安全审计日志等全栈 Web 安全能力，是 YDSZ 项目所有业务服务的统一安全基座。
 
 ## 模块定位
 
@@ -31,14 +31,7 @@
 | `XssValidator` / `@Xss` | 参数校验器与注解 |
 | `SafeJsonModule` | YdszJson 模块注册 |
 
-### 2. SQL 注入防护
-
-| 类 | 说明 |
-|---|---|
-| `SqlInjectionFilter` | SQL 注入过滤器（支持运行时热更新规则） |
-| `SqlInjectionProperties` | SQL 注入检测配置（外部化规则 + 白名单） |
-
-### 3. CSRF 防护
+### 2. CSRF 防护
 
 | 类 | 说明 |
 |---|---|
@@ -50,7 +43,7 @@
 | `InMemoryCsrfTokenRepository` | 内存存储实现（单机降级） |
 | `DefaultCsrfTokenGenerator` | 默认 Token 生成器 |
 
-### 4. 敏感数据脱敏
+### 3. 敏感数据脱敏
 
 | 类 / 注解 | 说明 |
 |---|---|
@@ -62,7 +55,7 @@
 | `SensitiveUtil` | 脱敏工具 |
 | `ColumnDesensitizationExecutor` | 列级脱敏执行器 |
 
-### 5. 限流（多维度 + 多算法）
+### 4. 限流（多维度 + 多算法）
 
 | 类 / 注解 | 说明 |
 |---|---|
@@ -83,7 +76,7 @@
 
 **支持的限流模式**（`RateLimitMode` 枚举）：`LOCAL`（本地，默认）、`CLUSTER`（集群 Redis）。
 
-### 6. 验证码
+### 5. 验证码
 
 | 类 | 说明 |
 |---|---|
@@ -97,7 +90,7 @@
 | `CaptchaRateLimiter` | 验证码获取限流器 |
 | `CaptchaResult` | 验证码结果模型 |
 
-### 7. 加密与签名
+### 6. 加密与签名
 
 | 类 | 说明 |
 |---|---|
@@ -106,7 +99,7 @@
 | `ApiSignatureFilter` | API 签名验证过滤器（timestamp + nonce + HMAC-SHA256） |
 | `ApiSignatureProperties` | API 签名配置 |
 
-### 8. 字段级加密（MyBatis 集成）
+### 7. 字段级加密（MyBatis 集成）
 
 | 类 / 注解 | 说明 |
 |---|---|
@@ -116,7 +109,7 @@
 | `DecryptFailureStrategy` | 解密失败策略（THROW / RETURN_MASKED / RETURN_ORIGINAL） |
 | `FieldEncryptionAutoConfiguration` | 字段加密自动配置 |
 
-### 9. IP 访问控制
+### 8. IP 访问控制
 
 | 类 | 说明 |
 |---|---|
@@ -124,7 +117,7 @@
 | `IpAccessService` | IP 访问控制服务（CIDR 网段 + Redis + 本地缓存） |
 | `IpAccessProperties` | IP 访问控制配置 |
 
-### 10. 安全事件自动响应
+### 9. 安全事件自动响应
 
 | 类 | 说明 |
 |---|---|
@@ -136,7 +129,7 @@
 | `DefaultSecurityAlertLogger` | 默认告警日志实现 |
 | `AutoBlockProperties` | 自动封禁配置（阈值 + 窗口） |
 
-### 11. 密码强度校验
+### 10. 密码强度校验
 
 | 类 | 说明 |
 |---|---|
@@ -548,7 +541,7 @@ ydsz:
 
 ## 注意事项
 
-1. **过滤器执行顺序**：`IpAccessFilter (HIGHEST_PRECEDENCE)` → `SecurityHeaderFilter (order=1)` → `XssFilter (order=2)` → `CsrfFilter (order=3)` → `SqlInjectionFilter (HIGHEST_PRECEDENCE+3)` → `RateLimitFilter (HIGHEST_PRECEDENCE+1)` → `ApiSignatureFilter (HIGHEST_PRECEDENCE+4)`。恶意 IP 在进入其他过滤器之前即被拦截。
+1. **过滤器执行顺序**：`IpAccessFilter (HIGHEST_PRECEDENCE)` → `SecurityHeaderFilter (order=1)` → `XssFilter (order=2)` → `CsrfFilter (order=3)` → `RateLimitFilter (HIGHEST_PRECEDENCE+1)` → `ApiSignatureFilter (HIGHEST_PRECEDENCE+4)`。恶意 IP 在进入其他过滤器之前即被拦截。
 2. **XSS 双模式互斥**：`mode=filter`（全局参数清洗）与 `mode=converter`（JSON 反序列化清洗）二选一，默认 `converter`，避免双重清洗。富文本场景建议 `filter` 模式 + 白名单标签。
 3. **CSRF 模式选择**：单体应用推荐 `SYNCHRONIZER`（服务端 Redis 存储 Token）；SPA / 微服务架构推荐 `DOUBLE_SUBMIT`（无状态，Cookie + Header 双重提交，无需 Redis）。
 4. **限流降级**：Redis 不可用时，集群限流自动降级为本地限流（`fallback-on-error=PASS` 默认放行，可改为 `BLOCK` 拒绝）。`@RateLimit` AOP 通过 `ydsz.ratelimit.aop-enabled` 控制。

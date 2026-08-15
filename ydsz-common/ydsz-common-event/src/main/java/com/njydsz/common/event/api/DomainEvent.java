@@ -1,7 +1,5 @@
 package com.njydsz.common.event.api;
 
-import java.io.Serializable;
-import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
@@ -9,6 +7,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import org.springframework.context.ApplicationEvent;
+
 import com.njydsz.common.util.id.IdGenerator;
 
 /**
@@ -48,10 +47,9 @@ import com.njydsz.common.util.id.IdGenerator;
  *              事件版本号无业务使用（非事件溯源）；上下文字段与 RequestContext 重复，
  *              改由消费/落库方在需要时自行解析。
  * @since 1.5.0 由 common-domain 迁入 common-event，事件抽象与 Outbox 实现统一归属事件模块
+ * @since 1.7.0 移除 Serializable 接口和 Builder 中的 clock 参数，回归简洁
  */
-public class DomainEvent extends ApplicationEvent implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+public class DomainEvent extends ApplicationEvent {
 
     /** 事件唯一标识 */
     private final String eventId;
@@ -166,9 +164,6 @@ public class DomainEvent extends ApplicationEvent implements Serializable {
         private String aggregateType;
         private final Map<String, Object> metadata = new HashMap<>();
 
-        /** Clock 用于控制事件时间，便于单元测试 */
-        private Clock clock = Clock.systemDefaultZone();
-
         private Builder() {
         }
 
@@ -187,7 +182,7 @@ public class DomainEvent extends ApplicationEvent implements Serializable {
 
         /**
          * 显式指定事件发生时间。
-         * <p>通常无需调用：{@link #build()} 会按 {@link #clock(Clock)} 取当前时间。
+         * <p>通常无需调用：{@link #build()} 会取当前系统时间。
          * 仅在补录历史事件、或事件溯源回放需还原原始时间时使用。
          *
          * @param occurredAt 事件发生时间；传 {@code null} 则退回自动取值
@@ -213,19 +208,6 @@ public class DomainEvent extends ApplicationEvent implements Serializable {
         /** 设置聚合根类型 */
         public Builder aggregateType(String aggregateType) {
             this.aggregateType = aggregateType;
-            return this;
-        }
-
-        /**
-         * 设置时间源，用于在单元测试中固定事件发生时间。
-         * <p>生产环境无需调用，默认使用 {@link Clock#systemDefaultZone()}。
-         *
-         * @param clock 时间源；传 {@code null} 时回退为系统默认时区时钟，不会抛异常
-         * @return 当前 Builder，便于链式调用
-         * @since 1.2.0
-         */
-        public Builder clock(Clock clock) {
-            this.clock = clock != null ? clock : Clock.systemDefaultZone();
             return this;
         }
 
@@ -259,7 +241,7 @@ public class DomainEvent extends ApplicationEvent implements Serializable {
          * 构建领域事件实例。
          *
          * <p>组装 Builder 已设置的字段并自动填充缺失项：eventId 缺省时生成 UUID，
-         * occurredAt 缺省时取当前时钟时间。构建完成后事件不可变（metadata 为不可变 Map）。
+         * occurredAt 缺省时取当前系统时间。构建完成后事件不可变（metadata 为不可变 Map）。
          *
          * @return 组装完成的领域事件
          * @throws EventBuildException 当 eventType 为 null 或空字符串时抛出，
@@ -270,7 +252,7 @@ public class DomainEvent extends ApplicationEvent implements Serializable {
                 throw new EventBuildException("eventType must not be null or empty");
             }
             String eid = eventId != null ? eventId : IdGenerator.nextIdStr();
-            LocalDateTime occurred = occurredAt != null ? occurredAt : LocalDateTime.now(clock);
+            LocalDateTime occurred = occurredAt != null ? occurredAt : LocalDateTime.now();
             return new DomainEvent(eid, occurred, eventType, aggregateId, aggregateType, metadata);
         }
     }

@@ -9,30 +9,18 @@ import com.njydsz.common.auth.service.impl.RedisRoleDataPermissionResolver;
  * <p>负责根据当前调用链上下文解析"当前用户可访问的数据范围"。
  * 默认实现基于 accessToken -> roleCode -> role-row-key 的 Redis 解析链路。
  *
- * <p><b>数据权限维度：</b>
- * <ul>
- *   <li>租户维度（TENANT）：按租户隔离数据</li>
- *   <li>集团维度（GROUP）：可访问集团下所有公司数据</li>
- *   <li>公司维度（COMPANY）：可访问公司及下属部门数据</li>
- *   <li>部门维度（DEPT）：可访问本部门及下级部门数据</li>
- *   <li>用户维度（USER）：仅可访问自己的数据</li>
- *   <li>项目维度（PROJECT）：可访问有权限的项目数据</li>
- *   <li>区域维度（REGION）：可访问有权限的区域数据</li>
- * </ul>
- *
- * <p><b>实现类注意事项：</b>
- * <ul>
- *   <li>解析结果应考虑多角色合并场景，取权限范围最大的</li>
- *   <li>应对解析结果做本地 TTL 缓存，降低 Redis 访问频率</li>
- *   <li>解析失败时应返回空对象而非 null</li>
- * </ul>
+ * <p><b>废弃原因：</b>与 {@link RolePermissionLoader} 职责重叠，
+ * 数据权限解析建议通过 {@link RolePermissionLoader} 或独立数据权限服务实现。
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 自 3.0.0 起标记废弃，计划 4.0.0 移除。
+ *             迁移目标：{@link RolePermissionLoader} 或独立数据权限服务。
  *
  * @see DataScopeInfo
  * @see RedisRoleDataPermissionResolver
  */
+@Deprecated(forRemoval = true, since = "3.0.0")
 public interface DataPermissionResolver {
 
     /**

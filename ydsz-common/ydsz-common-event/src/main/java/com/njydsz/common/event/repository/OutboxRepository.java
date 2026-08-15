@@ -20,7 +20,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 
-import com.njydsz.common.event.model.DatabaseDialect;
 import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.event.model.OutboxStatus;
 import com.njydsz.common.json.YdszJson;
@@ -56,9 +55,6 @@ public class OutboxRepository {
     /** Outbox 表名 */
     private final String tableName;
 
-    /** 数据库方言 */
-    private final DatabaseDialect dialect;
-
     /** 缓存 SimpleJdbcInsert 实例，避免每次 save 都查数据库元数据 */
     private final SimpleJdbcInsert jdbcInsert;
 
@@ -67,15 +63,13 @@ public class OutboxRepository {
      *
      * @param jdbcTemplate JDBC 模板
      * @param tableName    Outbox 表名（默认 ydsz_outbox），需通过正则校验防 SQL 注入
-     * @param dialect      数据库方言，用于适配不同数据库的 SQL 语法
      */
-    public OutboxRepository(JdbcTemplate jdbcTemplate, String tableName, DatabaseDialect dialect) {
+    public OutboxRepository(JdbcTemplate jdbcTemplate, String tableName) {
         if (tableName == null || !tableName.matches(TABLE_NAME_PATTERN)) {
             throw new IllegalArgumentException("Invalid table name: " + tableName);
         }
         this.jdbcTemplate = jdbcTemplate;
         this.tableName = tableName;
-        this.dialect = dialect != null ? dialect : DatabaseDialect.UNKNOWN;
         this.jdbcInsert = new SimpleJdbcInsert(jdbcTemplate).withTableName(tableName);
     }
 
@@ -176,7 +170,7 @@ public class OutboxRepository {
         String sql = "SELECT * FROM " + tableName
                 + " WHERE status = ? AND (next_retry_at IS NULL OR next_retry_at <= ?)"
                 + " ORDER BY priority DESC, created_at ASC"
-                + dialect.limitClause();
+                + " LIMIT ?";
         return jdbcTemplate.query(sql, OutboxRowMapper.INSTANCE,
                 OutboxStatus.PENDING.name(), Timestamp.from(Instant.now()), limit);
     }
@@ -442,7 +436,7 @@ public class OutboxRepository {
             params.add(eventTypeFilter);
         }
         sql.append(" ORDER BY created_at DESC");
-        sql.append(dialect.limitClause());
+        sql.append(" LIMIT ?");
         params.add(pageable.getPageSize());
         sql.append(" OFFSET ?");
         params.add(pageable.getOffset());

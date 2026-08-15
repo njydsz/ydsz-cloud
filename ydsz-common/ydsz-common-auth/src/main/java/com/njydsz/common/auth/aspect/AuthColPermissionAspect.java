@@ -31,7 +31,6 @@ import com.njydsz.common.auth.model.ColumnPermissionInfo;
 import com.njydsz.common.auth.model.ColumnScopeAware;
 import com.njydsz.common.auth.model.ColumnScopeInfo;
 import com.njydsz.common.auth.service.ColumnPermissionResolver;
-import com.njydsz.common.auth.util.AuthColPermissionSigner;
 import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
@@ -93,18 +92,12 @@ public class AuthColPermissionAspect {
 
     private final ColumnPermissionResolver resolver;
     private final ColumnDesensitizationService desensitizationService;
-    private final AuthColPermissionSigner signer;
     private final JsonMapper jsonMapper = new JsonMapper();
 
     public AuthColPermissionAspect(ColumnPermissionResolver resolver,
-                                   ColumnDesensitizationService desensitizationService,
-                                   AuthProperties properties) {
+                                   ColumnDesensitizationService desensitizationService) {
         this.resolver = resolver;
         this.desensitizationService = desensitizationService;
-        this.signer = new AuthColPermissionSigner(
-                properties.getColPermissionSignKey(),
-                properties.isColPermissionSignEnabled(),
-                properties.getColPermissionSignValiditySeconds());
     }
 
     /**
@@ -436,8 +429,6 @@ public class AuthColPermissionAspect {
     }
 
     private ColumnPermissionBundle buildColumnPermissionBundle(String table) {
-        verifyColumnPermissionSignIfPresent();
-
         Map<String, Set<String>> visibleColumnsByTable = resolveRuleMap(DataPermissionHeaderConstants.X_VISIBLE_COLUMNS,
                 AuthInfoUtils.getVisibleColumnsByTable());
         Map<String, Set<String>> editableColumnsByTable = resolveRuleMap(DataPermissionHeaderConstants.X_EDITABLE_COLUMNS,
@@ -528,22 +519,6 @@ public class AuthColPermissionAspect {
     private void applyExtraHeadersIfAbsent(ColumnScopeInfo scopeInfo) {
         forceSet(DataPermissionHeaderConstants.X_VISIBLE_COLUMNS, serializeRuleMap(scopeInfo.getVisibleColumnsByTable()));
         forceSet(DataPermissionHeaderConstants.X_EDITABLE_COLUMNS, serializeRuleMap(scopeInfo.getEditableColumnsByTable()));
-    }
-
-    private void verifyColumnPermissionSignIfPresent() {
-        if (!signer.isEnabled()) {
-            return;
-        }
-
-        String visibleColumns = RequestContext.getExtraHeader(DataPermissionHeaderConstants.X_VISIBLE_COLUMNS);
-        String editableColumns = RequestContext.getExtraHeader(DataPermissionHeaderConstants.X_EDITABLE_COLUMNS);
-        String receivedSign = RequestContext.getExtraHeader(DataPermissionHeaderConstants.X_COL_PERMISSION_SIGN);
-
-        if (StringUtils.isBlank(visibleColumns) && StringUtils.isBlank(editableColumns)) {
-            return;
-        }
-
-        signer.verifySign(visibleColumns, editableColumns, receivedSign);
     }
 
     private void forceSet(String headerName, String value) {
