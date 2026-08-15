@@ -12,6 +12,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.util.bean.BeanUpdateUtil;
 import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 import com.njydsz.userinfo.domain.dto.post.LanguagePostDTO;
@@ -47,10 +48,7 @@ public class LanguageServiceImpl implements LanguageService {
         QueryWrapper<Language> wrapper = buildQueryWrapper(query);
         Page<Language> mpPage = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
         IPage<Language> result = mapper.selectPage(mpPage, wrapper);
-        List<LanguageVO> vos = result.getRecords().stream()
-                .map(UserInfoConverter.INSTANT::entityToVO)
-                .collect(Collectors.toList());
-        return PageResponse.success(result.getTotal(), (long) query.getEffectivePageNum(), (long) query.getEffectivePageSize(), vos);
+        return PageResponses.success(result, UserInfoConverter.INSTANT::entityToVO);
     }
 
     @Override

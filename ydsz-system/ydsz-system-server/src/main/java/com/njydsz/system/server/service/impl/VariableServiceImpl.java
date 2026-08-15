@@ -13,6 +13,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.system.domain.dto.VariableDTO;
 import com.njydsz.system.domain.entity.Variable;
 import com.njydsz.system.domain.vo.VariableVO;
@@ -207,8 +208,7 @@ public class VariableServiceImpl implements VariableService {
         }
         wrapper.orderByDesc("created_at");
         IPage<Variable> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
-        List<VariableVO> vos = page.getRecords().stream().map(SystemConverter.INSTANT::entityToVO).collect(Collectors.toList());
-        return PageResponse.success(page.getTotal(), (long) pageNum, (long) pageSize, vos);
+        return PageResponses.success(page, SystemConverter.INSTANT::entityToVO);
     }
 
     /**

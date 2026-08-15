@@ -17,6 +17,7 @@ import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.system.domain.converter.SystemConverter;
 import com.njydsz.system.domain.dto.DictItemDTO;
@@ -24,7 +25,6 @@ import com.njydsz.system.domain.entity.DictItem;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.infra.mapper.DictItemMapper;
-import com.njydsz.system.server.config.SystemProperties;
 import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.service.DictItemService;
 import com.njydsz.system.server.service.DictVersionService;
@@ -72,7 +72,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p><b>设计要点：</b>
  * <ul>
- *   <li><b>缓存预热</b>：首次访问某 {@code typeCode} 时无缓存，穿透到 DB 查询（受空值哨兵保护）</li>
+ *   <li><b>缓存预热</b>：首次访问某 {@code typeCode} 时无缓存，穿透到 DB 查询（SpringYdszCache 自动缓存 null 值防穿透）</li>
  *   <li><b>版本快照一致性</b>：快照在字典项变更<b>前</b>由调用方抓取（{@link #createSnapshotVersion}），
  *       反映变更前的状态，可用于回滚</li>
  *   <li><b>SCAN 防阻塞</b>：缓存失效使用 {@code SCAN} 命令遍历模式匹配 key，
@@ -113,8 +113,6 @@ public class DictItemServiceImpl implements DictItemService {
     private final DictItemMapper mapper;
     /** 系统监控指标采集器 */
     private final SystemMetrics metrics;
-    /** 系统配置属性（含字典缓存 TTL 配置） */
-    private final SystemProperties properties;
     /** 字典版本服务，用于记录变更快照 */
     private final DictVersionService dictVersionService;
 
@@ -145,7 +143,7 @@ public class DictItemServiceImpl implements DictItemService {
      *
      * @param typeCode 字典类型编码
      * @param itemCode 字典项编码
-     * @return 字典项 VO，不存在时返回 null（受空值哨兵保护，短 TTL 内不会反复穿透到 DB）
+     * @return 字典项 VO，不存在时返回 null（SpringYdszCache 自动缓存 null 值防穿透）
      */
     @Override
     @Cacheable(value = CacheConstants.SYSTEM_DICT_ITEM_CACHE, key = "@cacheKeyBuilder.dictItem(#p0, #p1)")
@@ -238,8 +236,7 @@ public class DictItemServiceImpl implements DictItemService {
         }
         wrapper.orderByDesc("created_at");
         IPage<DictItem> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
-        List<DictItemVO> vos = page.getRecords().stream().map(SystemConverter.INSTANT::entityToVO).collect(Collectors.toList());
-        return PageResponse.success(page.getTotal(), page.getCurrent(), page.getSize(), vos);
+        return PageResponses.success(page, SystemConverter.INSTANT::entityToVO);
     }
 
     /**

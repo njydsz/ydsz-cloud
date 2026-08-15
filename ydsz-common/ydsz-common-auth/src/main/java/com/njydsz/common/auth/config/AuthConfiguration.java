@@ -52,6 +52,7 @@ import com.njydsz.common.auth.strategy.DefaultCacheKeyStrategy;
 import com.njydsz.common.auth.token.JwtTokenService;
 import com.njydsz.common.auth.token.TokenProperties;
 import com.njydsz.common.auth.token.TokenService;
+import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.redis.service.RedisRateLimiter;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
@@ -318,15 +319,25 @@ public class AuthConfiguration {
     /**
      * 创建 Token 黑名单服务。
      *
-     * @param redisStringOps Redis String 操作
-     * @param authProperties 认证配置属性
+     * <p>当 {@link DistributedLocker} 可用时（ydsz-common-lock 在 classpath 上），
+     * 使用其 {@code tryLock}/{@code unlock} 实现刷新锁，享有 Lua 原子释放与 WatchDog 续期能力；
+     * 否则降级为原生 {@code setIfAbsent} 操作。
+     *
+     * @param redisStringOps    Redis String 操作
+     * @param authProperties    认证配置属性
+     * @param lockerProvider    分布式锁提供者（可选）
      * @return Token 黑名单服务实例
      */
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnBean(RedisStringOps.class)
-    public TokenBlacklistService tokenBlacklistService(RedisStringOps redisStringOps, AuthProperties authProperties) {
-        return new TokenBlacklistService(redisStringOps, authProperties);
+    public TokenBlacklistService tokenBlacklistService(RedisStringOps redisStringOps, AuthProperties authProperties,
+                                                       ObjectProvider<DistributedLocker> lockerProvider) {
+        DistributedLocker locker = lockerProvider.getIfAvailable();
+        if (locker == null) {
+            log.info("[AuthConfiguration] DistributedLocker 不可用，TokenBlacklistService 刷新锁降级为原生 setIfAbsent");
+        }
+        return new TokenBlacklistService(locker, redisStringOps, authProperties);
     }
 
     /**

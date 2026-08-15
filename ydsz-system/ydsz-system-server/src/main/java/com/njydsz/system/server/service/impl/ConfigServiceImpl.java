@@ -20,6 +20,7 @@ import com.njydsz.common.auth.annotation.DataScope;
 import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.event.model.StandardEventTypes;
+import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
@@ -113,11 +114,7 @@ public class ConfigServiceImpl implements ConfigService {
         QueryWrapper<Config> wrapper = buildQueryWrapper(query);
         Page<Config> mpPage = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
         IPage<Config> result = configRepository.getConfigMapper().selectPage(mpPage, wrapper);
-        List<ConfigVO> vos = result.getRecords().stream()
-                .map(SystemConverter.INSTANT::entityToVO)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-        return PageResponse.success(result.getTotal(), result.getCurrent(), result.getSize(), vos);
+        return PageResponses.success(result, SystemConverter.INSTANT::entityToVO);
     }
 
     @Override

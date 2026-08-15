@@ -12,6 +12,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.system.domain.dto.DictTypeDTO;
 import com.njydsz.system.domain.entity.DictType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
@@ -109,11 +110,7 @@ public class DictServiceImpl implements DictService {
         QueryWrapper<DictType> wrapper = buildQueryWrapper(query);
         Page<DictType> mpPage = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
         IPage<DictType> result = dictRepository.getDictTypeMapper().selectPage(mpPage, wrapper);
-        List<DictTypeVO> vos = result.getRecords().stream()
-                .map(SystemConverter.INSTANT::entityToVO)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-        return PageResponse.success(result.getTotal(), result.getCurrent(), result.getSize(), vos);
+        return PageResponses.success(result, SystemConverter.INSTANT::entityToVO);
     }
 
     /**
