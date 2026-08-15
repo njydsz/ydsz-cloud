@@ -14,7 +14,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
 import org.springframework.core.Ordered;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -27,22 +26,18 @@ import com.njydsz.common.tenant.annotation.TenantColumnScanner;
 import com.njydsz.common.tenant.async.TenantContextTaskDecorator;
 import com.njydsz.common.tenant.datasource.TenantDataSourceFilter;
 import com.njydsz.common.tenant.datasource.TenantDataSourceRouter;
-import com.njydsz.common.tenant.datasource.resolver.ConfigurationResolver;
-import com.njydsz.common.tenant.datasource.resolver.DatasourceKeyResolver;
-import com.njydsz.common.tenant.datasource.resolver.NamingConventionResolver;
+import com.njydsz.common.tenant.datasource.DatasourceKeyResolver;
 import com.njydsz.common.tenant.feign.TenantContextFeignInterceptor;
 import com.njydsz.common.tenant.health.TenantHealthIndicator;
 import com.njydsz.common.tenant.interceptor.TenantInterceptorProvider;
-import com.njydsz.common.tenant.lifecycle.InMemoryTenantLifecycleManager;
-import com.njydsz.common.tenant.lifecycle.RedisTenantLifecycleManager;
-import com.njydsz.common.tenant.lifecycle.TenantLifecycleManager;
 import com.njydsz.common.tenant.metrics.TenantMetrics;
 import com.njydsz.common.tenant.ratelimit.TenantRateLimiter;
 import com.njydsz.common.tenant.validation.TenantIndexValidator;
 import com.njydsz.common.tenant.web.TenantContextWebFilter;
 
-import lombok.extern.slf4j.Slf4j;
 import io.micrometer.core.instrument.MeterRegistry;
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * 多租户自动装配。
  *
@@ -51,12 +46,15 @@ import io.micrometer.core.instrument.MeterRegistry;
  * <p>装配内容：
  * <ul>
  *   <li>{@link TenantInterceptorProvider} — SPI 注册 SQL 拦截器到 MybatisPlusInterceptor 链</li>
- *   <li>{@link TenantContextWebFilter} — Web 入口上下文设置 + MDC 日志注入（FilterRegistrationBean order=HIGHEST+100）</li>
- *   <li>{@link TenantContextFeignInterceptor} — Feign 跨服务透传（common-feign 在 classpath 时）</li>
- *   <li>{@link TenantContextTaskDecorator} — 异步传播（common-thread 在 classpath 时）</li>
- *   <li>{@link TenantDataSourceRouter} — ISOLATE_DB 数据源路由（mode=ISOLATE_DB 时）</li>
- *   <li>{@link TenantDataSourceFilter} — ISOLATE_DB Web 过滤器（mode=ISOLATE_DB 时）</li>
+ *   <li>{@link TenantContextWebFilter} — Web 入口上下文设置 + MDC 日志注入</li>
+ *   <li>{@link TenantContextFeignInterceptor} — Feign 跨服务透传</li>
+ *   <li>{@link TenantContextTaskDecorator} — 异步传播</li>
+ *   <li>{@link TenantDataSourceRouter} — ISOLATE_DB 数据源路由</li>
+ *   <li>{@link TenantDataSourceFilter} — ISOLATE_DB Web 过滤器</li>
  * </ul>
+ *
+ * <p><b>注意：</b>租户生命周期管理已迁移至独立模块 {@code ydsz-tenant-admin}，
+ * 不应在此声明。运行时隔离与运营域职责分离。
  *
  * <p>不引入 {@code common-tenant} 依赖或设为 false 时，
  * 无任何租户逻辑，{@code MpBaseEntity.tenantId} 字段被忽略。
@@ -74,7 +72,7 @@ public class TenantAutoConfiguration {
      * SPI 拦截器提供者：注册 TenantIsolationInterceptor 到 MybatisPlusInterceptor 链。
      *
      * @param properties 租户配置
-     * @param applicationContext Spring 上下文（传递给 LifecycleManagerHolder）
+     * @param applicationContext Spring 上下文
      * @return 拦截器提供者
      */
     @Bean
@@ -89,8 +87,6 @@ public class TenantAutoConfiguration {
                 properties.getSuperTenantId(),
                 properties.getSystemTenantId());
         SystemTenantContextRunner.init(properties.getSystemTenantId());
-        // 初始化生命周期管理器的 ApplicationContext 持有者
-        TenantLifecycleManager.LifecycleManagerHolder.init(applicationContext);
         return new TenantInterceptorProvider(properties, metricsProvider.getIfAvailable());
     }
 
@@ -100,7 +96,7 @@ public class TenantAutoConfiguration {
      * <p>扫描 classpath 中实体类上的 {@code @TenantColumn} + {@code @TableName} 注解，
      * 解析 per-table 租户列名映射。
      *
-     * <p>仅当 MyBatis-Plus 在 classpath 时注册（需要读取 {@code @TableName} 注解）。
+     * <p>仅当 MyBatis-Plus 在 classpath 时注册。
      *
      * @return 注解扫描器
      */
@@ -129,72 +125,31 @@ public class TenantAutoConfiguration {
     }
 
     // -----------------------------------------------------------------------
-    // 租户生命周期管理器（替代 @Component，统一注册入口）
+    // 租户数据源 Key 解析器（简化：单一实现支持配置映射 + 命名约定回退）
     // -----------------------------------------------------------------------
 
     /**
-     * 内存版租户生命周期兜底实现。
+     * 数据源 Key 解析器。
      *
-     * <p>当容器中不存在其他 {@link TenantLifecycleManager} 实现时启用。
+     * <p>内置实现同时支持：
+     * <ul>
+     *   <li>配置映射：从 {@code ydsz.tenant.datasource.mapping} 读取</li>
+     *   <li>命名约定回退：未配置时 {@code "tenant_" + tenantId}</li>
+     * </ul>
      *
-     * @param properties 租户配置（用于设置 @Autowired 字段，非构造注入）
-     * @return 内存版生命周期管理器
-     */
-    @Bean
-    @ConditionalOnMissingBean(TenantLifecycleManager.class)
-    public InMemoryTenantLifecycleManager inMemoryTenantLifecycleManager(TenantProperties properties) {
-        // properties 参数保证 TenantProperties 先于本 Bean 初始化；实际字段由 @Autowired 注入
-        return new InMemoryTenantLifecycleManager();
-    }
-
-    /**
-     * Redis 版租户生命周期实现（优先）。
-     *
-     * <p>仅当 classpath 中存在 {@code StringRedisTemplate} 时激活，
-     * 自动覆盖内存版成为主管理器。
-     *
-     * @param redisTemplate Redis 模板
-     * @return Redis 版生命周期管理器
-     */
-    @Bean
-    @ConditionalOnClass(name = "org.springframework.data.redis.core.StringRedisTemplate")
-    @ConditionalOnMissingBean
-    public RedisTenantLifecycleManager redisTenantLifecycleManager(
-            ObjectProvider<org.springframework.data.redis.core.StringRedisTemplate> redisTemplate) {
-        return new RedisTenantLifecycleManager(redisTemplate.getIfAvailable());
-    }
-
-    // -----------------------------------------------------------------------
-    // 租户数据源 Key 解析器（替代 @Component，统一注册入口）
-    // -----------------------------------------------------------------------
-
-    /**
-     * 配置映射型数据源解析器（Primary，有 mapping 配置时优先）。
+     * <p>业务模块可通过注册 {@code @Primary} Bean 覆盖此默认行为。
      *
      * @param properties 租户配置
-     * @return 配置映射解析器
+     * @return 数据源 Key 解析器
      */
     @Bean
-    @Primary
-    @ConditionalOnProperty(prefix = "ydsz.tenant.datasource", name = "mapping")
     @ConditionalOnMissingBean
-    public ConfigurationResolver configurationResolver(TenantProperties properties) {
-        return new ConfigurationResolver(properties, namingConventionResolver());
-    }
-
-    /**
-     * 命名约定兜底数据源解析器（始终注册）。
-     *
-     * @return 命名约定解析器
-     */
-    @Bean
-    @ConditionalOnMissingBean(DatasourceKeyResolver.class)
-    public NamingConventionResolver namingConventionResolver() {
-        return new NamingConventionResolver();
+    public DatasourceKeyResolver datasourceKeyResolver(TenantProperties properties) {
+        return new DefaultDatasourceKeyResolver(properties);
     }
 
     // -----------------------------------------------------------------------
-    // 租户诊断 / 校验（替代 @Component，统一注册入口）
+    // 租户诊断 / 校验
     // -----------------------------------------------------------------------
 
     /**
@@ -216,15 +171,15 @@ public class TenantAutoConfiguration {
     }
 
     /**
-     * Web 入口过滤器：从 JWT 解析租户上下文 + MDC 日志注入。
+     * Web 入口过滤器：从 JWT/Header 解析租户上下文 + MDC 日志注入。
      *
      * <p>使用 {@link FilterRegistrationBean} 包装，显式指定 order 为
      * {@code Ordered.HIGHEST_PRECEDENCE + 90}，确保在 ISOLATE_DB 数据源
-     * 路由过滤器（+100）之前执行，先解析租户上下文、后消费上下文。
+     * 路由过滤器（+100）之前执行。
      *
      * <p><b>Filter 链执行顺序：</b>
      * <ol>
-     *   <li>TenantContextWebFilter（+90）：解析租户上下文写入 RequestContext</li>
+     *   <li>TenantContextWebFilter（+90）：解析租户上下文写入 TenantContextHolder</li>
      *   <li>TenantDataSourceFilter（+100）：读取上下文切换数据源</li>
      * </ol>
      *
@@ -315,7 +270,6 @@ public class TenantAutoConfiguration {
      *
      * <p>允许不同租户有差异化的配置覆盖。
      *
-     * @param properties 租户配置
      * @return 配置提供者
      */
     @Bean
@@ -405,7 +359,7 @@ public class TenantAutoConfiguration {
             ObjectProvider<TenantMetrics> metricsProvider) {
         DatasourceKeyResolver resolver = keyResolverProvider.getIfAvailable();
         log.info("多租户 ISOLATE_DB 模式已启用，数据源路由器已注册，解析器={}",
-                resolver != null ? resolver.getClass().getSimpleName() : "naming-convention");
+                resolver != null ? resolver.getClass().getSimpleName() : "default");
         return new TenantDataSourceRouter(routingDataSource, properties, resolver,
                 metricsProvider.getIfAvailable());
     }
@@ -435,5 +389,55 @@ public class TenantAutoConfiguration {
         registration.addUrlPatterns("/*");
         registration.setName("tenantDataSourceFilter");
         return registration;
+    }
+
+    // -----------------------------------------------------------------------
+    // 内部数据源 Key 解析器实现（替代已被移除的 NamingConventionResolver 和 ConfigurationResolver）
+    // -----------------------------------------------------------------------
+
+    /**
+     * 默认数据源 Key 解析器实现。
+     *
+     * <p>支持配置映射 + 命名约定回退，替代原 {@code ConfigurationResolver} + {@code NamingConventionResolver}
+     * 分层 SPI，简化单一职责。
+     *
+     * <p><b>回退逻辑：</b>
+     * <ol>
+     *   <li>优先从 {@code ydsz.tenant.datasource.mapping} 配置读取租户→数据源映射</li>
+     *   <li>未命中时使用命名约定 {@code "tenant_" + tenantId}</li>
+     * </ol>
+     *
+     * @author ydsz-team
+     * @since 1.10.0
+     * @see DatasourceKeyResolver
+     */
+    static class DefaultDatasourceKeyResolver implements DatasourceKeyResolver {
+
+        private static final String DATASOURCE_PREFIX = "tenant_";
+
+        private final TenantProperties properties;
+
+        DefaultDatasourceKeyResolver(TenantProperties properties) {
+            this.properties = properties;
+        }
+
+        @Override
+        public String resolve(String tenantId) {
+            if (tenantId == null || tenantId.isEmpty()) {
+                return null;
+            }
+
+            // 优先从配置映射读取
+            Map<String, String> mapping = properties.getDatasourceMapping();
+            if (mapping != null && !mapping.isEmpty()) {
+                String key = mapping.get(tenantId);
+                if (key != null && !key.isEmpty()) {
+                    return key;
+                }
+            }
+
+            // 命名约定回退
+            return DATASOURCE_PREFIX + tenantId;
+        }
     }
 }

@@ -1,5 +1,6 @@
 package com.njydsz.common.thread.config;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -20,6 +21,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import com.njydsz.common.thread.config.ThreadPoolProperties.PoolConfig;
 import com.njydsz.common.thread.config.ThreadPoolProperties.RejectPolicy;
 
+import io.micrometer.core.instrument.MeterRegistry;
+
 /**
  * 线程池执行器工厂。
  *
@@ -28,11 +31,9 @@ import com.njydsz.common.thread.config.ThreadPoolProperties.RejectPolicy;
  * <p>v1.3.0 重构：从 {@link ThreadPoolAutoConfiguration} 内部类提取为独立组件，
  * 确保 {@code BeanDefinitionRegistryPostProcessor} 可在测试环境中正确运行。
  *
- * <p>v1.3.1 变更：
+ * <p>v1.4.0 变更：
  * <ul>
- *   <li>实现 {@link ApplicationContextAware} 接口，修复 TaskDecorator 因
- *       {@link ApplicationContext} 未注入而始终失效的问题</li>
- *   <li>自动装配 {@link TimedTaskDecorator} 实现任务耗时指标追踪</li>
+ *   <li>TimedTaskDecorator 自动注入，支持慢任务阈值传递</li>
  * </ul>
  *
  * @author ydsz-team
@@ -66,6 +67,10 @@ public class ThreadPoolExecutorFactory implements ApplicationContextAware, Initi
 
     /**
      * 创建虚拟线程池（JDK 21+）。
+     *
+     * @param name   线程池名称
+     * @param config 线程池配置
+     * @return 虚拟线程池 ExecutorService
      */
     public ExecutorService createVirtualExecutor(String name, PoolConfig config) {
         log.info("ydsz-thread: 创建虚拟线程池 [{}]", name);
@@ -77,10 +82,12 @@ public class ThreadPoolExecutorFactory implements ApplicationContextAware, Initi
     /**
      * 创建平台线程池。
      *
-     * <p>v1.3.0 变更：移除显式 {@code setBeanName} 调用（由 BeanDefinition 统一管理），
-     * 新增 TaskDecorator 支持。
+     * <p>v1.4.0 变更：自动装配 {@link com.njydsz.common.thread.metrics.TimedTaskDecorator}，
+     * 使用配置中指定的慢任务阈值。
      *
-     * <p>v1.3.1 变更：自动装配 {@link TimedTaskDecorator} 实现耗时追踪。
+     * @param name   线程池名称
+     * @param config 线程池配置
+     * @return 平台线程池
      */
     public ThreadPoolTaskExecutor createTaskExecutor(String name, PoolConfig config) {
         log.info("ydsz-thread: 创建线程池 [{}] (core={}, max={}, queue={})",
@@ -96,50 +103,115 @@ public class ThreadPoolExecutorFactory implements ApplicationContextAware, Initi
         executor.setAllowCoreThreadTimeOut(config.isAllowCoreThreadTimeOut());
         executor.setKeepAliveSeconds(config.getKeepAliveSeconds());
 
-        // TaskDecorator 支持：跨线程传播上下文
+        // TaskDecorator 支持：跨线程传播上下文 + 耗时追踪
         applyTaskDecorators(executor, name, config);
 
         executor.initialize();
         return executor;
     }
 
+    /**
+     * 应用 TaskDecorator 链，包括用户配置的装饰器和内置的 TimedTaskDecorator。
+     *
+     * @param executor 目标线程池
+     * @param name     线程池名称
+     * @param config   线程池配置
+     */
     private void applyTaskDecorators(ThreadPoolTaskExecutor executor, String name, PoolConfig config) {
-        List<String> decoratorBeanNames = config.getTaskDecoratorBeanNames();
-        if (decoratorBeanNames == null || decoratorBeanNames.isEmpty()) {
-            return;
-        }
         if (applicationContext == null) {
             log.warn("ydsz-thread: ApplicationContext 未注入，无法配置 TaskDecorator (pool={})", name);
             return;
         }
 
-        // 根据 Bean 名称解析 TaskDecorator
-        List<TaskDecorator> decorators = decoratorBeanNames.stream()
-                .filter(beanName -> {
-                    if (!applicationContext.containsBean(beanName)) {
-                        log.warn("ydsz-thread: TaskDecorator Bean [{}] 不存在，跳过 (pool={})", beanName, name);
-                        return false;
-                    }
-                    return true;
-                })
-                .map(beanName -> {
-                    Object bean = applicationContext.getBean(beanName);
-                    if (bean instanceof TaskDecorator) {
-                        return (TaskDecorator) bean;
-                    }
-                    log.warn("ydsz-thread: Bean [{}] 不是 TaskDecorator 类型，跳过 (pool={})", beanName, name);
-                    return null;
-                })
-                .filter(Objects::nonNull)
-                .toList();
+        List<TaskDecorator> decorators = new ArrayList<>();
 
+        // 1. 用户配置的 TaskDecorator（如 MDC、RequestContext 传播）
+        List<String> decoratorBeanNames = config.getTaskDecoratorBeanNames();
+        if (decoratorBeanNames != null && !decoratorBeanNames.isEmpty()) {
+            for (String beanName : decoratorBeanNames) {
+                decorators.addAll(resolveTaskDecorator(beanName, name));
+            }
+        }
+
+        // 2. TimedTaskDecorator（耗时追踪，始终存在）
+        decorators.add(createTimedTaskDecorator(name, config));
+
+        // 应用装饰器链
         if (!decorators.isEmpty()) {
-            // 应用一个或多个 TaskDecorator 的链式包装
             executor.setTaskDecorator(decorators.size() == 1
                     ? decorators.get(0)
                     : new CompositeTaskDecorator(decorators));
-            log.info("ydsz-thread: 已为线程池 [{}] 启用 TaskDecorator: {}", name, decoratorBeanNames);
+            log.info("ydsz-thread: 已为线程池 [{}] 启用 TaskDecorator: 用户={}, 耗时追踪=true",
+                    name, decoratorBeanNames == null ? 0 : decoratorBeanNames.size());
         }
+    }
+
+    /**
+     * 创建耗时追踪装饰器。
+     *
+     * <p>优先从容器中获取已注册的 ThreadPoolTimerMetrics Bean，
+     * 如果不存在则创建一个新的（仅用于非生产场景）。
+     *
+     * @param name   线程池名称
+     * @param config 线程池配置
+     * @return TimedTaskDecorator 实例
+     */
+    private com.njydsz.common.thread.metrics.TimedTaskDecorator createTimedTaskDecorator(
+            String name, PoolConfig config) {
+        com.njydsz.common.thread.metrics.ThreadPoolTimerMetrics timerMetrics = null;
+
+        // 尝试获取已注册的 ThreadPoolTimerMetrics Bean
+        String metricsBeanName = name + "ExecutorTimerMetrics";
+        if (applicationContext.containsBean(metricsBeanName)) {
+            Object bean = applicationContext.getBean(metricsBeanName);
+            if (bean instanceof com.njydsz.common.thread.metrics.ThreadPoolTimerMetrics) {
+                timerMetrics = (com.njydsz.common.thread.metrics.ThreadPoolTimerMetrics) bean;
+            }
+        }
+
+        // 如果没有预注册的 Bean，则创建一个（此时需要 MeterRegistry，可能为 null）
+        if (timerMetrics == null) {
+            MeterRegistry meterRegistry = null;
+            try {
+                meterRegistry = applicationContext.getBean(MeterRegistry.class);
+            } catch (Exception e) {
+                // Micrometer 不存在时，指标数据不注册，追踪仍然工作
+                log.debug("ydsz-thread: Micrometer MeterRegistry 不可用，耗时指标将不会被上报 (pool={})", name);
+            }
+            timerMetrics = com.njydsz.common.thread.metrics.ThreadPoolTimerMetrics
+                    .createIfMeterRegistryPresent(name, meterRegistry);
+        }
+
+        return new com.njydsz.common.thread.metrics.TimedTaskDecorator(
+                name, config.getSlowTaskThresholdMs(), timerMetrics);
+    }
+
+    /**
+     * 根据 Bean 名称解析 TaskDecorator。
+     *
+     * @param beanName TaskDecorator Bean 名称
+     * @param poolName 线程池名称（用于日志）
+     * @return TaskDecorator 列表（可能为空）
+     */
+    private List<TaskDecorator> resolveTaskDecorator(String beanName, String poolName) {
+        List<TaskDecorator> result = new ArrayList<>();
+        if (!applicationContext.containsBean(beanName)) {
+            log.warn("ydsz-thread: TaskDecorator Bean [{}] 不存在，跳过 (pool={})", beanName, poolName);
+            return result;
+        }
+        try {
+            Object bean = applicationContext.getBean(beanName);
+            if (bean instanceof TaskDecorator) {
+                result.add((TaskDecorator) bean);
+            } else {
+                log.warn("ydsz-thread: Bean [{}] 不是 TaskDecorator 类型，跳过 (pool={})",
+                        beanName, poolName);
+            }
+        } catch (Exception e) {
+            log.warn("ydsz-thread: 解析 TaskDecorator Bean [{}] 失败 (pool={}): {}",
+                    beanName, poolName, e.getMessage());
+        }
+        return result;
     }
 
     private RejectedExecutionHandler createRejectHandler(RejectPolicy policy) {
@@ -163,7 +235,8 @@ public class ThreadPoolExecutorFactory implements ApplicationContextAware, Initi
     /**
      * 组合式 TaskDecorator：将多个 TaskDecorator 串联执行。
      *
-     * <p>只有在用户配置了多个 TaskDecorator Bean 名称时才使用。
+     * <p>只有在用户配置了多个 TaskDecorator Bean 名称，
+     * 或需要组合用户装饰器与内置 TimedTaskDecorator 时使用。
      */
     public static class CompositeTaskDecorator implements TaskDecorator {
 

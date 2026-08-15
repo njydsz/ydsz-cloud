@@ -181,6 +181,22 @@ public class ThreadPoolProperties {
         private long slowTaskThresholdMs = 5000L;
 
         /**
+         * 是否启用详细指标（默认 false）。
+         * <p>启用后，除核心 5 项指标外，还会注册以下详细指标：
+         * <ul>
+         *   <li>{@code ydsz.executor.pool.max} - 线程池最大容量</li>
+         *   <li>{@code ydsz.executor.queue.remaining} - 工作队列剩余容量</li>
+         *   <li>{@code ydsz.executor.queue.usage} - 工作队列使用率（0.0 - 1.0）</li>
+         * </ul>
+         * <p>核心 5 项指标（active / pool.size / queue.size / completed / rejected）始终注册。
+         * <p>耗时指标（execution / queue.wait Timer）和慢任务计数器由
+         * {@code slow-task-threshold-ms} 控制，不受此选项影响。
+         *
+         * @since 1.4.0
+         */
+        private boolean enableDetailedMetrics = false;
+
+        /**
          * TaskDecorator Bean 名称列表（仅对 PLATFORM 类型生效）。
          * <p>用于跨线程传播上下文，例如 MDC 日志追踪 ID、RequestContext、SecurityContext 等。
          * 配置的 Bean 名称对应的 Bean 必须实现 {@link org.springframework.core.task.TaskDecorator} 接口。

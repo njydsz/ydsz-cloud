@@ -394,13 +394,7 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     delegate.put(key, value);
     long expireAt = computeExpiration(key, value);
     expirationMap.put(key, new ExpiryHolder(expireAt));
-    if (useTimerWheel) {
-      // 时间轮 O(1) 调度
-      timerWheel.schedule(key, expireAt);
-    } else {
-      // SkipList 桶索引
-      addToBucket(expireAt, key);
-    }
+    addToBucket(expireAt, key);
   }
 
   /**
@@ -491,9 +485,6 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
   @Override
   public V remove(K key) {
     expirationMap.remove(key);
-    if (useTimerWheel) {
-      timerWheel.cancel(key);
-    }
     // 桶模式中的残留条目由 cleanupExpired 自动清理，无需主动移除
     return delegate.remove(key);
   }
