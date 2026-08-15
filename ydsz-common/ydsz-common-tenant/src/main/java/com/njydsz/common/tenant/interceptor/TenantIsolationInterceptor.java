@@ -85,22 +85,27 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
      * SQL 改写缓存：缓存「原始 SQL + 完整租户字段签名」→ 改写后的 SQL。
      *
      * <p>使用 Caffeine 实现 LRU 淘汰 + TTL 过期，Key 包含完整租户字段签名
-     *（tenantId + companyId + deptId + ...），避免 MULTI 模式不同维度取值
+     * （tenantId + companyId + deptId + ...），避免 MULTI 模式不同维度取值
      * 命中错误缓存导致的跨租户数据泄露。
      *
      * <p>缓存上限 2000 条，10 分钟未访问自动过期。
      *
+     * <p><b>注意：</b>默认关闭，需通过 {@code ydsz.tenant.sql-cache.enabled=true} 开启。
+     *
      * @since 1.1.0 由 ConcurrentHashMap 迁移至 Caffeine（修复 P0-1 缓存 Key 不完整缺陷）
      */
-    private final Cache<String, String> sqlCache = Caffeine.newBuilder()
-            .maximumSize(2000)
-            .expireAfterAccess(Duration.ofMinutes(10))
-            .build();
+    private final Cache<String, String> sqlCache;
 
     public TenantIsolationInterceptor(TenantProperties properties, TenantMetrics metrics) {
         this.properties = properties;
         this.ignoreTables = properties.getNormalizedIgnoreTables();
         this.metrics = metrics;
+        this.sqlCache = properties.isSqlCacheEnabled()
+                ? Caffeine.newBuilder()
+                        .maximumSize(2000)
+                        .expireAfterAccess(Duration.ofMinutes(10))
+                        .build()
+                : null;
     }
 
     public TenantIsolationInterceptor(TenantProperties properties) {
@@ -118,8 +123,14 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
             if (!InterceptorIgnoreHelper.willIgnoreTenantLine(ms.getId())) {
                 PluginUtils.MPBoundSql mpBs = mpSh.mPBoundSql();
                 String originalSql = mpBs.sql();
-                String cacheKey = buildCacheKey(originalSql);
 
+                // 缓存未开启时直接走 JSqlParser 解析路径
+                if (sqlCache == null) {
+                    mpBs.sql(parserMulti(originalSql, null));
+                    return;
+                }
+
+                String cacheKey = buildCacheKey(originalSql);
                 String cachedSql = sqlCache.getIfPresent(cacheKey);
                 if (cachedSql != null) {
                     // 缓存命中
