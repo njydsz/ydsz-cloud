@@ -34,7 +34,7 @@ import java.time.LocalDateTime;
  */
 public class SeataHealthIndicator implements HealthIndicator {
 
-    private static final Logger log = LoggerFactory.getLogger(SeataHealthIndicator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SeataHealthIndicator.class);
 
     private final SeataProperties properties;
     private final ObjectProvider<SeataTransactionManager> seataTmProvider;
@@ -91,7 +91,7 @@ public class SeataHealthIndicator implements HealthIndicator {
             builder.withDetail("seataTc", "UP");
             builder.withDetail("currentGlobalXid", xid != null ? xid : "none");
         } catch (Exception e) {
-            log.error("Seata TC health check failed", e);
+            LOG.error("Seata TC health check failed", e);
             builder.withDetail("seataTc", "DOWN");
             builder.withDetail("seataTcError", e.getMessage());
             builder.down();

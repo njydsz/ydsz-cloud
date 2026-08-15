@@ -34,7 +34,7 @@ import com.njydsz.common.seata.api.TransactionContext;
 @Aspect
 public class TransactionModeAspect implements Ordered {
 
-    private static final Logger log = LoggerFactory.getLogger(TransactionModeAspect.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TransactionModeAspect.class);
 
     private final int order;
 
@@ -69,8 +69,8 @@ public class TransactionModeAspect implements Ordered {
 
         TransactionContext.setTransactionType(type, txName);
 
-        if (log.isDebugEnabled()) {
-            log.debug("[TxMode] Transaction type set: {}, method: {}", type, txName);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("[TxMode] Transaction type set: {}, method: {}", type, txName);
         }
 
         try {

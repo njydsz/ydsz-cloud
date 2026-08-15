@@ -75,7 +75,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnProperty(prefix = "ydsz.seata", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class SeataAutoConfiguration {
 
-    private static final Logger log = LoggerFactory.getLogger(SeataAutoConfiguration.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SeataAutoConfiguration.class);
 
     /**
      * TCC 事务日志存储（内存版，默认）
@@ -222,7 +222,7 @@ public class SeataAutoConfiguration {
         if (properties.isXidSignEnabled()) {
             String signKey = properties.getXidSignKey();
             if (signKey == null || signKey.isBlank()) {
-                log.warn("ydsz.seata.xid-sign-enabled=true but no xid-sign-key configured, XID signing disabled");
+                LOG.warn("ydsz.seata.xid-sign-enabled=true but no xid-sign-key configured, XID signing disabled");
                 return new NoopXidSigner();
             }
             return new HmacXidSigner(signKey);
@@ -338,7 +338,7 @@ public class SeataAutoConfiguration {
             ObjectProvider<XidPropagator> xidPropagatorProvider) {
         org.apache.rocketmq.client.producer.DefaultMQProducer producer = producerProvider.getIfAvailable();
         if (producer == null) {
-            log.warn("RocketMQ DefaultMQProducer not found, SeataMQSendTemplate disabled");
+            LOG.warn("RocketMQ DefaultMQProducer not found, SeataMQSendTemplate disabled");
             return null;
         }
         return new SeataMQSendTemplate(producer, xidPropagatorProvider);
