@@ -201,22 +201,22 @@ public class SqlInjectionFilter extends OncePerRequestFilter {
             return;
         }
 
-        // 读取并缓存 JSON/XML 请求体（解决 InputStream 只能读取一次的问题）
+        // 读取 JSON/XML 请求体（优先复用 SafeRequestBodyCacheFilter 已缓存的请求体）
         CachedBodyHttpServletRequestWrapper wrappedRequest = null;
         String bodyContent = null;
         String contentType = request.getContentType();
         if (contentType != null
-                && (contentType.contains("application/json") || contentType.contains("application/xml"))
-                && !(request instanceof CachedBodyHttpServletRequestWrapper)) {
-            try {
-                byte[] bodyBytes = request.getInputStream().readAllBytes();
+                && (contentType.contains("application/json") || contentType.contains("application/xml"))) {
+            byte[] bodyBytes = extractBodyBytes(request);
+            if (bodyBytes != null) {
                 bodyContent = new String(bodyBytes, StandardCharsets.UTF_8);
                 if (bodyContent.length() > MAX_BODY_DETECT_LENGTH) {
                     bodyContent = bodyContent.substring(0, MAX_BODY_DETECT_LENGTH);
                 }
-                wrappedRequest = new CachedBodyHttpServletRequestWrapper(request, bodyBytes);
-            } catch (IOException e) {
-                // 读取请求体失败，仅检测参数和请求头
+                // 仅在请求未被包装时才创建新包装器
+                if (!(request instanceof CachedBodyHttpServletRequestWrapper)) {
+                    wrappedRequest = new CachedBodyHttpServletRequestWrapper(request, bodyBytes);
+                }
             }
         }
 

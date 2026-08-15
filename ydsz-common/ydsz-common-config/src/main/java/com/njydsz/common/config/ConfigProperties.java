@@ -91,5 +91,12 @@ public class ConfigProperties {
 
         /** 是否启用配置加密健康检查（默认 true） */
         private boolean enabled = true;
+
+        /**
+         * 健康检查缓存 TTL（毫秒）。
+         * <p>在此时间内的重复请求直接返回上次结果，避免高频调用全量扫描属性。
+         * <p>默认 5000ms，设为 0 禁用缓存。
+         */
+        private long cacheTtlMs = 5000L;
     }
 }

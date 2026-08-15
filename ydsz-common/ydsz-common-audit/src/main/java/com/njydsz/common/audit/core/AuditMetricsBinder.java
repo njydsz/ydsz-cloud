@@ -1,12 +1,12 @@
 package com.njydsz.common.audit.core;
 
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.TimeUnit;
 
+import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.binder.MeterBinder;
 
-import java.util.concurrent.TimeUnit;
 /**
  * 审计模块 Micrometer 指标绑定器
  * <p>
@@ -29,16 +29,29 @@ import java.util.concurrent.TimeUnit;
  */
 public class AuditMetricsBinder implements MeterBinder {
 
+    /** 指标名称常量 */
+    private static final String METRIC_QUEUE_SIZE = "audit.queue.size";
+
+    private static final String METRIC_QUEUE_USAGE = "audit.queue.usage";
+
+    private static final String METRIC_QUEUE_FULL_COUNT = "audit.queue.full.count";
+
+    private static final String METRIC_RECORD_SUCCESS = "audit.record.success";
+
+    private static final String METRIC_RECORD_FAILURE = "audit.record.failure";
+
+    private static final String METRIC_WRITE_LATENCY = "audit.write.latency";
+
     /** 审计记录器 */
     private final AuditRecorder auditRecorder;
 
-    /** 累计成功写入数 */
-    private final AtomicLong successCount = new AtomicLong(0);
+    /** 累计成功写入数 Counter */
+    private Counter successCounter;
 
-    /** 累计失败写入数 */
-    private final AtomicLong failureCount = new AtomicLong(0);
+    /** 累计失败写入数 Counter */
+    private Counter failureCounter;
 
-    /** 批量写入延迟 Timer（延迟初始化，绑定到 MeterRegistry 后才可用） */
+    /** 批量写入延迟 Timer */
     private volatile Timer writeLatencyTimer;
 
     /**
@@ -53,15 +66,15 @@ public class AuditMetricsBinder implements MeterBinder {
     @Override
     public void bindTo(MeterRegistry registry) {
         // Gauge: 队列大小
-        registry.gauge("audit.queue.size", auditRecorder, recorder -> {
+        registry.gauge(METRIC_QUEUE_SIZE, auditRecorder, recorder -> {
             if (recorder instanceof AsyncAuditRecorder asyncRecorder) {
-                return asyncRecorder.getQueueSize();
+                return (double) asyncRecorder.getQueueSize();
             }
             return 0.0;
         });
 
         // Gauge: 队列使用率
-        registry.gauge("audit.queue.usage", auditRecorder, recorder -> {
+        registry.gauge(METRIC_QUEUE_USAGE, auditRecorder, recorder -> {
             if (recorder instanceof AsyncAuditRecorder asyncRecorder) {
                 return asyncRecorder.getQueueUsageRatio();
             }
@@ -69,27 +82,41 @@ public class AuditMetricsBinder implements MeterBinder {
         });
 
         // Counter: 队列满触发次数
-        registry.gauge("audit.queue.full.count", auditRecorder, recorder -> {
-            if (recorder instanceof AsyncAuditRecorder asyncRecorder) {
-                return (double) asyncRecorder.getQueueFullWarnCount();
-            }
-            if (recorder instanceof DisruptorAuditRecorder disruptorRecorder) {
-                return (double) disruptorRecorder.getQueueFullWarnCount();
-            }
-            return 0.0;
-        });
+        Counter.builder(METRIC_QUEUE_FULL_COUNT)
+                .description("审计队列满触发次数")
+                .register(registry)
+                .increment(getInitialQueueFullCount());
 
         // Counter: 累计成功写入数
-        registry.gauge("audit.record.success", successCount, AtomicLong::doubleValue);
+        successCounter = Counter.builder(METRIC_RECORD_SUCCESS)
+                .description("审计日志累计成功写入数")
+                .register(registry);
 
         // Counter: 累计失败写入数
-        registry.gauge("audit.record.failure", failureCount, AtomicLong::doubleValue);
+        failureCounter = Counter.builder(METRIC_RECORD_FAILURE)
+                .description("审计日志累计失败写入数")
+                .register(registry);
 
         // Timer: 批量写入延迟
-        writeLatencyTimer = Timer.builder("audit.write.latency")
+        writeLatencyTimer = Timer.builder(METRIC_WRITE_LATENCY)
                 .description("审计日志批量写入延迟")
                 .publishPercentiles(0.5, 0.9, 0.99)
                 .register(registry);
+    }
+
+    /**
+     * 获取初始队列满计数（用于 Counter 初始值设置）
+     *
+     * @return 初始计数值
+     */
+    private double getInitialQueueFullCount() {
+        if (auditRecorder instanceof AsyncAuditRecorder asyncRecorder) {
+            return (double) asyncRecorder.getQueueFullWarnCount();
+        }
+        if (auditRecorder instanceof DisruptorAuditRecorder disruptorRecorder) {
+            return (double) disruptorRecorder.getQueueFullWarnCount();
+        }
+        return 0.0;
     }
 
     /**
@@ -99,7 +126,9 @@ public class AuditMetricsBinder implements MeterBinder {
      * @param latencyNanos 写入延迟（纳秒）
      */
     public void recordSuccess(long count, long latencyNanos) {
-        successCount.addAndGet(count);
+        if (successCounter != null) {
+            successCounter.increment(count);
+        }
         if (writeLatencyTimer != null) {
             writeLatencyTimer.record(latencyNanos, TimeUnit.NANOSECONDS);
         }
@@ -111,24 +140,26 @@ public class AuditMetricsBinder implements MeterBinder {
      * @param count 写入失败的条数
      */
     public void recordFailure(long count) {
-        failureCount.addAndGet(count);
+        if (failureCounter != null) {
+            failureCounter.increment(count);
+        }
     }
 
     /**
-     * 获取累计成功写入数
+     * 获取累计成功写入数（用于健康检查）
      *
-     * @return 成功数
+     * @return 成功数，若 Counter 未初始化返回 0
      */
     public long getSuccessCount() {
-        return successCount.get();
+        return successCounter != null ? (long) successCounter.count() : 0L;
     }
 
     /**
-     * 获取累计失败写入数
+     * 获取累计失败写入数（用于健康检查）
      *
-     * @return 失败数
+     * @return 失败数，若 Counter 未初始化返回 0
      */
     public long getFailureCount() {
-        return failureCount.get();
+        return failureCounter != null ? (long) failureCounter.count() : 0L;
     }
 }

@@ -1,6 +1,7 @@
 package com.njydsz.common.auth.precheck;
 
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;

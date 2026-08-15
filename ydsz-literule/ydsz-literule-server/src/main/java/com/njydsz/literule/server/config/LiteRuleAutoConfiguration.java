@@ -56,7 +56,7 @@ import com.njydsz.literule.server.expression.EmptyVariableRegistry;
 import com.njydsz.literule.api.expression.ExpressionEvaluator;
 import com.njydsz.literule.server.expression.ExpressionValidationService;
 import com.njydsz.literule.server.expression.VariableRegistry;
-import com.njydsz.literule.server.expr.liteexpr.LiteExprEvaluator;
+import com.njydsz.literule.server.engine.liteexpr.LiteExprEvaluator;
 import com.njydsz.literule.server.health.LiteRuleHealthIndicator;
 import com.njydsz.literule.server.replay.ExecutionReplayService;
 import com.njydsz.literule.server.orchestrator.RuleChain;

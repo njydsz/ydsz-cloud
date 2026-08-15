@@ -80,12 +80,26 @@ public class NotifyRateLimiterManager {
     }
 
     /**
-     * 尝试获取指定渠道的发送许可
+     * 尝试获取指定渠道的发送许可（不限租户，全局共享限流）。
      *
      * @param channel 通知渠道
      * @return true 表示允许发送，false 表示被限流
      */
     public boolean tryAcquire(NotifyChannel channel) {
+        return tryAcquire(channel, null);
+    }
+
+    /**
+     * 尝试获取指定渠道的发送许可（支持多租户隔离）。
+     *
+     * <p>当 tenantId 不为空时，限流 key 包含租户维度，避免不同租户间互相限流。
+     * 当 tenantId 为空时，退化为全局共享限流（向后兼容）。
+     *
+     * @param channel  通知渠道
+     * @param tenantId 租户 ID（可为 null，表示全局共享）
+     * @return true 表示允许发送，false 表示被限流
+     */
+    public boolean tryAcquire(NotifyChannel channel, String tenantId) {
         if (channel == null) {
             return true;
         }
@@ -100,17 +114,18 @@ public class NotifyRateLimiterManager {
             return true;
         }
 
-        String key = buildKey(channel);
+        String key = buildKey(channel, tenantId);
         try {
             boolean acquired = redisRateLimiter.tryAcquireSlidingWindow(
                     key, limit.maxRequests, limit.window);
             if (!acquired) {
-                log.warn("[NotifyRateLimiter] 渠道限流触发 | channel={} | maxRequests={} | window={}s",
-                        channel, limit.maxRequests, limit.window.getSeconds());
+                log.warn("[NotifyRateLimiter] 渠道限流触发 | channel={} | tenantId={} | maxRequests={} | window={}s",
+                        channel, tenantId, limit.maxRequests, limit.window.getSeconds());
             }
             return acquired;
         } catch (Exception e) {
-            log.warn("[NotifyRateLimiter] 限流异常，降级放行 | channel={} | error={}", channel, e.getMessage());
+            log.warn("[NotifyRateLimiter] 限流异常，降级放行 | channel={} | tenantId={} | error={}",
+                    channel, tenantId, e.getMessage());
             return true;
         }
     }

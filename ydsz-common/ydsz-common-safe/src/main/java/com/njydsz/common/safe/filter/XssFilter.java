@@ -125,10 +125,14 @@ public class XssFilter extends OncePerRequestFilter {
      * 过滤器核心逻辑
      * <ol>
      *   <li>排除路径直接放行</li>
-     *   <li>JSON 请求体先缓存并执行 XSS 攻击检测，命中时发布安全事件</li>
+     *   <li>JSON 请求体执行 XSS 攻击检测，命中时发布安全事件</li>
      *   <li>非 JSON 请求遍历参数做 XSS 检测</li>
      *   <li>使用 {@link XssHttpServletRequestWrapper} 包装请求，自动清洗参数</li>
      * </ol>
+     *
+     * <p><b>请求体复用：</b>若请求已被 {@link SafeRequestBodyCacheFilter} 包装为
+     * {@link CachedBodyHttpServletRequestWrapper}，则直接复用已缓存的请求体，
+     * 不再重复读取 InputStream。
      *
      * @param request     HTTP 请求
      * @param response    HTTP 响应
@@ -145,20 +149,15 @@ public class XssFilter extends OncePerRequestFilter {
             return;
         }
 
-        // 对于 JSON 请求，缓存请求体以支持 XSS 检测和后续 Wrapper 读取
+        // 检测 JSON 请求体中的 XSS 攻击
         CachedRequestBody cachedBody = null;
         if (isJsonRequest(request)) {
-            try {
-                byte[] bodyBytes = request.getInputStream().readAllBytes();
+            byte[] bodyBytes = extractBodyBytes(request);
+            if (bodyBytes != null) {
                 cachedBody = new CachedRequestBody(bodyBytes);
-                // 使用缓存的请求体进行 XSS 检测
                 if (cachedBody.hasText() && EscapeUtils.containsXSS(cachedBody.getText())) {
                     publishEvent(request, cachedBody.getText());
                 }
-            } catch (IOException e) {
-                // 读取失败时 fail-closed：记录日志并抛出，避免后续 Wrapper 读取已消费的 InputStream 出错
-                log.warn("XSS 过滤器读取请求体失败 | URI: {} | 消息: {}", request.getRequestURI(), e.getMessage());
-                throw e;
             }
         } else {
             // 非 JSON 请求只检测参数
@@ -167,6 +166,27 @@ public class XssFilter extends OncePerRequestFilter {
 
         XssHttpServletRequestWrapper xssRequest = new XssHttpServletRequestWrapper(request, cachedBody);
         filterChain.doFilter(xssRequest, response);
+    }
+
+    /**
+     * 提取请求体字节数组。
+     *
+     * <p>优先从 {@link CachedBodyHttpServletRequestWrapper} 获取已缓存的请求体，
+     * 避免重复读取 InputStream；若请求未被包装，则直接读取 InputStream。
+     *
+     * @param request HTTP 请求
+     * @return 请求体字节数组；若无 body 或读取失败返回 null
+     */
+    private byte[] extractBodyBytes(HttpServletRequest request) {
+        if (request instanceof CachedBodyHttpServletRequestWrapper cachedWrapper) {
+            return cachedWrapper.getCachedBody();
+        }
+        try {
+            return request.getInputStream().readAllBytes();
+        } catch (IOException e) {
+            log.warn("XSS 过滤器读取请求体失败 | URI: {} | 消息: {}", request.getRequestURI(), e.getMessage());
+            return null;
+        }
     }
 
     /**
