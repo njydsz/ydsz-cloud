@@ -571,6 +571,9 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
     /**
      * 设置 PreparedStatement 参数
      *
+     * <p>使用明确类型的 setter 方法（setInt/setLong/setString），避免 setObject 导致数据库驱动类型推断不一致
+     * 而引发索引失效问题。
+     *
      * @param ps PreparedStatement
      * @param auditLog 审计日志
      * @throws SQLException SQL 异常
@@ -578,9 +581,9 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
     private void setPreparedStatementParams(PreparedStatement ps, AuditLog auditLog) throws SQLException {
         int i = 1;
         ps.setString(i++, auditLog.getId());
-        ps.setObject(i++, auditLog.getAuditType());
-        ps.setObject(i++, auditLog.getAction());
-        ps.setObject(i++, auditLog.getStatus());
+        setIntegerParam(ps, i++, auditLog.getAuditType());
+        setIntegerParam(ps, i++, auditLog.getAction());
+        setIntegerParam(ps, i++, auditLog.getStatus());
         ps.setString(i++, auditLog.getModule());
         ps.setString(i++, auditLog.getContent());
         ps.setString(i++, auditLog.getBusinessNo());
@@ -593,7 +596,7 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
         ps.setString(i++, auditLog.getRequestParams());
         ps.setString(i++, auditLog.getResponseResult());
         ps.setString(i++, auditLog.getErrorMessage());
-        ps.setObject(i++, auditLog.getCostTime());
+        setLongParam(ps, i++, auditLog.getCostTime());
         ps.setString(i++, auditLog.getAppId());
         ps.setString(i++, auditLog.getAppCode());
         ps.setString(i++, auditLog.getAppName());
@@ -602,6 +605,38 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
                 ? Timestamp.valueOf(auditLog.getOperationTime()) : new Timestamp(System.currentTimeMillis()));
         ps.setTimestamp(i, auditLog.getCreatedAt() != null
                 ? Timestamp.valueOf(auditLog.getCreatedAt()) : new Timestamp(System.currentTimeMillis()));
+    }
+
+    /**
+     * 设置 Integer 类型参数（null 值安全）
+     *
+     * @param ps PreparedStatement
+     * @param index 参数索引
+     * @param value 整数值
+     * @throws SQLException SQL 异常
+     */
+    private void setIntegerParam(PreparedStatement ps, int index, Integer value) throws SQLException {
+        if (value != null) {
+            ps.setInt(index, value);
+        } else {
+            ps.setNull(index, java.sql.Types.INTEGER);
+        }
+    }
+
+    /**
+     * 设置 Long 类型参数（null 值安全）
+     *
+     * @param ps PreparedStatement
+     * @param index 参数索引
+     * @param value 长整数值
+     * @throws SQLException SQL 异常
+     */
+    private void setLongParam(PreparedStatement ps, int index, Long value) throws SQLException {
+        if (value != null) {
+            ps.setLong(index, value);
+        } else {
+            ps.setNull(index, java.sql.Types.BIGINT);
+        }
     }
 
     /**

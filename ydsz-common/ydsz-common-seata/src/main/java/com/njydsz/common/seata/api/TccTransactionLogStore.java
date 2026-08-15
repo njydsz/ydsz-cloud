@@ -14,10 +14,11 @@ import java.util.Optional;
  *   <li><b>幂等</b>：Confirm/Cancel 前检查是否已为终态</li>
  * </ul>
  *
- * <p>提供两种实现：
+ * <p>提供三种实现：
  * <ul>
  *   <li>{@code InMemoryTccTransactionLogStore} - 内存实现，适用于单机/测试</li>
- *   <li>{@code JdbcTccTransactionLogStore} - 数据库实现，适用于生产环境（需配套 DDL）</li>
+ *   <li>{@code RedisTccTransactionLogStore} - Redis 实现，适用于生产环境（跨服务共享）</li>
+ *   <li>{@code DbTccTransactionLogStore} - 数据库实现，适用于生产环境（强持久化）</li>
  * </ul>
  *
  * @author ydsz-team
@@ -57,6 +58,17 @@ public interface TccTransactionLogStore {
      * @return 超时分支列表
      */
     List<TccTransactionLog> findTimeoutPending(LocalDateTime threshold);
+
+    /**
+     * 查询超时未完成的分支事务数量（P0-2 新增）
+     *
+     * <p>相比 {@link #findTimeoutPending}，此方法仅返回计数而不加载完整事务日志，
+     * 适用于健康检查、监控等仅需计数的场景，避免全量加载带来的内存和性能开销。
+     *
+     * @param threshold 超时阈值，早于此时间的 TRIED 状态分支需要恢复
+     * @return 超时未完成的分支事务数量
+     */
+    long countTimeoutPending(LocalDateTime threshold);
 
     /**
      * 删除已完成的分支事务日志（终态清理）

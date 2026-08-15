@@ -88,6 +88,20 @@ public class InMemoryTccTransactionLogStore implements TccTransactionLogStore {
     }
 
     /**
+     * 查询超时未完成的分支事务数量（高效计数，不加载完整日志）
+     *
+     * @param threshold 超时阈值，早于此时间的 TRIED 状态分支需要恢复
+     * @return 超时未完成的分支事务数量
+     */
+    @Override
+    public long countTimeoutPending(LocalDateTime threshold) {
+        return store.values().stream()
+                .filter(log -> log.getStatus() == TccBranchStatus.TRIED)
+                .filter(log -> log.getTryCompletedAt() != null && log.getTryCompletedAt().isBefore(threshold))
+                .count();
+    }
+
+    /**
      * 删除事务日志
      *
      * @param xid      全局事务 ID
