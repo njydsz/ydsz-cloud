@@ -101,6 +101,17 @@ import lombok.extern.slf4j.Slf4j;
  *       {@code flow:def:latest:{code}} TTL 5min（更新频率较高）</li>
  * </ul>
  *
+ * <p><b>P1-2 God Class 拆分规划：</b>本类约 2215 行，承担「定义侧」全部职责，
+ * 建议按以下子服务拆分（保留原接口，新服务通过组合模式接入）：
+ * <ul>
+ *   <li><b>FlowDefinitionDeployService</b> — 双模式部署（BPMN XML / JSON）+ 拓扑校验 + 三方写入</li>
+ *   <li><b>FlowDefinitionVersionService</b> — 版本管理（发布 / 停用 / 灰度 / 回滚 / 版本对比）</li>
+ *   <li><b>FlowDefinitionDesignService</b> — 设计器集成（坐标同步 / 协同编辑锁 / 表单字段权限 / SLA 配置）</li>
+ *   <li><b>FlowDefinitionQueryService</b> — 查询能力（已发布 / 最新版本 / 节点列表 / 分页列表）</li>
+ *   <li><b>FlowDefinitionImportExportService</b> — BPMN 2.0 zip 批量部署 + 单定义 JSON 导入导出</li>
+ *   <li><b>FlowDefinitionAnalysisService</b> — 变更影响分析（analyzeMigrationImpact / diffVersions）</li>
+ * </ul>
+ *
  * <p><b>多租户：</b>所有查询与写入均按 {@code tenantId} 隔离，DTO 显式传入优先，回退 {@code SecurityContext}，
  * 最后兜底 {@code "1"}（默认租户）。
  *

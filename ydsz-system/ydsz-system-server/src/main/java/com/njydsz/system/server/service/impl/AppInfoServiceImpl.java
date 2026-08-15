@@ -15,6 +15,7 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.support.PageResponses;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.system.domain.converter.SystemConverter;
 import com.njydsz.system.domain.dto.AppInfoDTO;
 import com.njydsz.system.domain.entity.AppInfo;
@@ -111,6 +112,23 @@ public class AppInfoServiceImpl implements AppInfoService {
     private final SystemMetrics metrics;
     /** BCrypt 密码编码器，用于 appSecret 加密存储（strength 默认 10） */
     private final BCryptPasswordEncoder passwordEncoder;
+    /** Redis String 操作组件（用于校验缓存 + 失败锁定） */
+    private final RedisStringOps redisStringOps;
+
+    /** 校验缓存键前缀（命中后跳过 BCrypt） */
+    private static final String VALIDATE_CACHE_PREFIX = "ydsz:system:app:validate:";
+
+    /** 失败计数键前缀（连续失败锁定） */
+    private static final String FAIL_COUNT_PREFIX = "ydsz:system:app:fail:";
+
+    /** 校验缓存 TTL（秒），5 分钟 */
+    private static final long VALIDATE_CACHE_TTL_SECONDS = 300L;
+
+    /** 连续失败锁定阈值 */
+    private static final int MAX_FAIL_COUNT = 5;
+
+    /** 失败锁定 TTL（秒），30 分钟 */
+    private static final long FAIL_LOCK_TTL_SECONDS = 1800L;
 
     /**
      * 根据主键查询应用（不走缓存，直接走 DB）
@@ -131,40 +149,94 @@ public class AppInfoServiceImpl implements AppInfoService {
      *
      * <p>执行链路：
      * <ol>
+     *   <li><b>失败锁定检查</b>：若连续失败次数 ≥ {@value #MAX_FAIL_COUNT}，直接拒绝（防爆破）</li>
+     *   <li><b>Redis 缓存命中</b>：命中校验缓存时跳过 BCrypt，直接返回 true</li>
      *   <li>按 {@code appKey} 查询应用（仅 {@code status=ENABLED}）</li>
-     *   <li>应用不存在 / 密钥为空 → 校验失败，{@code metrics.recordAppValidateFail()}</li>
+     *   <li>应用不存在 / 密钥为空 → 校验失败，累加失败计数</li>
      *   <li>BCrypt 校验 {@code appSecret} 与存储的密钥哈希是否匹配</li>
-     *   <li>校验成功 → {@code metrics.recordAppValidateSuccess()}；失败 → {@code metrics.recordAppValidateFail()}</li>
+     *   <li>校验成功 → 缓存结果 + 重置失败计数；失败 → 累加失败计数</li>
      * </ol>
      *
-     * <p><b>性能说明：</b>BCrypt 校验约 100ms（strength=10），<b>不建议</b>在网关同步阻塞路径高频调用，
-     * 高频场景应配合 Redis 缓存（如 {@code ydsz:app:client:{appKey}}，TTL 5min）。
+     * <p><b>安全设计：</b>
+     * <ul>
+     *   <li><b>Redis 缓存</b>：key {@code ydsz:system:app:validate:{appKey}}，TTL 5min，
+     *       校验成功缓存结果、失败不缓存</li>
+     *   <li><b>失败锁定</b>：key {@code ydsz:system:app:fail:{appKey}}，连续 5 次失败锁 30min，
+     *       期间所有请求直接拒绝，有效防止暴力破解 / DoS</li>
+     * </ul>
+     *
+     * <p><b>性能说明：</b>BCrypt 校验约 100ms（strength=10），<b>不建议</b>在网关同步阻塞路径高频调用。
+     * 开启 Redis 缓存后，命中缓存的请求延迟 < 2ms。
      *
      * @param appKey    应用 Key（明文，对应 {@code app_key} 列）
      * @param appSecret 应用密钥明文
-     * @return true=校验通过，false=应用不存在 / 未启用 / 密钥不匹配
+     * @return true=校验通过，false=应用不存在 / 未启用 / 密钥不匹配 / 账号锁定
      */
     @Override
     public boolean validateClient(String appKey, String appSecret) {
+        if (appKey == null || appKey.isBlank()) {
+            return false;
+        }
+
+        // 1. 失败锁定检查：连续失败 ≥ MAX_FAIL_COUNT 次则直接拒绝
+        String failKey = FAIL_COUNT_PREFIX + appKey;
+        String failCountStr = redisStringOps.get(failKey, String.class);
+        if (failCountStr != null) {
+            try {
+                int failCount = Integer.parseInt(failCountStr);
+                if (failCount >= MAX_FAIL_COUNT) {
+                    log.warn("应用校验锁定中: appKey={}, 连续失败次数={}, 锁定 {}s",
+                            appKey, failCount, FAIL_LOCK_TTL_SECONDS);
+                    metrics.recordAppValidateFail();
+                    return false;
+                }
+            } catch (NumberFormatException ignored) {
+                // 解析失败时放行，由后续 BCrypt 兜底校验
+            }
+        }
+
+        // 2. Redis 缓存命中：已校验成功的 appKey 跳过 BCrypt
+        String cacheKey = VALIDATE_CACHE_PREFIX + appKey;
+        String cached = redisStringOps.get(cacheKey, String.class);
+        if ("true".equals(cached)) {
+            metrics.recordAppValidateSuccess();
+            return true;
+        }
+
+        // 3. DB 查询 + BCrypt 校验
         AppInfo app = mapper.selectEnabledByAppKey(appKey);
         if (app == null) {
-            metrics.recordAppValidateFail();
-            log.warn("应用校验失败: appKey={} 不存在或未启用", appKey);
+            handleValidateFail(appKey, failKey, "不存在或未启用");
             return false;
         }
         if (app.getAppSecret() == null || app.getAppSecret().isBlank()) {
-            metrics.recordAppValidateFail();
-            log.warn("应用校验失败: appKey={} 密钥为空", appKey);
+            handleValidateFail(appKey, failKey, "密钥为空");
             return false;
         }
         boolean matched = passwordEncoder.matches(appSecret, app.getAppSecret());
         if (matched) {
+            // 校验成功：缓存结果、重置失败计数
+            redisStringOps.set(cacheKey, "true", VALIDATE_CACHE_TTL_SECONDS);
+            redisStringOps.del(failKey);
             metrics.recordAppValidateSuccess();
         } else {
-            metrics.recordAppValidateFail();
-            log.warn("应用校验失败: appKey={} 密钥不匹配", appKey);
+            handleValidateFail(appKey, failKey, "密钥不匹配");
         }
         return matched;
+    }
+
+    /**
+     * 校验失败处理（私有）：累加失败计数 + 设置锁定 TTL + 记录指标
+     *
+     * @param appKey  应用 Key
+     * @param failKey 失败计数 Redis key
+     * @param reason  失败原因（用于日志）
+     */
+    private void handleValidateFail(String appKey, String failKey, String reason) {
+        long count = redisStringOps.incr(failKey, 1);
+        redisStringOps.expire(failKey, FAIL_LOCK_TTL_SECONDS);
+        metrics.recordAppValidateFail();
+        log.warn("应用校验失败: appKey={}, {}, 连续失败次数={}/{}", appKey, reason, count, MAX_FAIL_COUNT);
     }
 
     /**

@@ -306,11 +306,13 @@ public class RedisConfiguration {
     /**
      * 注册 Hash 结构操作封装（hGet/hSet/hMGet/hDel 等）。
      *
-     * <p>指标采集器同样为可选依赖，缺失时降级不采集。其余装配条件同 {@link #redisStringOps}。
+     * <p>指标采集器同样为可选依赖，缺失时降级不采集。租户 Key 前缀器同样可选。
+     * 其余装配条件同 {@link #redisStringOps}。
      *
      * @param redisTemplate  基础模板，不会为 null
      * @param redisProperties 全局配置，不会为 null
      * @param metricsProvider 指标采集器供应方，可能为 null
+     * @param tenantPrefixerProvider 租户 Key 前缀器提供者，可能返回 null
      * @return Hash 操作封装实例
      */
     @Bean
@@ -318,18 +320,21 @@ public class RedisConfiguration {
     @ConditionalOnBean(RedisTemplate.class)
     public RedisHashOps redisHashOps(RedisTemplate<String, Object> redisTemplate,
                                       RedisProperties redisProperties,
-                                      ObjectProvider<RedisMetricsCollector> metricsProvider) {
-        return new RedisHashOps(redisTemplate, redisProperties, metricsProvider.getIfAvailable());
+                                      ObjectProvider<RedisMetricsCollector> metricsProvider,
+                                      ObjectProvider<TenantRedisKeyPrefixer> tenantPrefixerProvider) {
+        return new RedisHashOps(redisTemplate, redisProperties, metricsProvider, tenantPrefixerProvider);
     }
 
     /**
      * 注册集合（List/Set/ZSet）操作封装（push/pop/sAdd/zRange 等）。
      *
-     * <p>指标采集器可选，缺失时降级不采集。其余装配条件同 {@link #redisStringOps}。
+     * <p>指标采集器可选，缺失时降级不采集。租户 Key 前缀器同样可选。
+     * 其余装配条件同 {@link #redisStringOps}。
      *
      * @param redisTemplate  基础模板，不会为 null
      * @param redisProperties 全局配置，不会为 null
      * @param metricsProvider 指标采集器供应方，可能为 null
+     * @param tenantPrefixerProvider 租户 Key 前缀器提供者，可能返回 null
      * @return 集合操作封装实例
      */
     @Bean
@@ -337,8 +342,9 @@ public class RedisConfiguration {
     @ConditionalOnBean(RedisTemplate.class)
     public RedisCollectionOps redisCollectionOps(RedisTemplate<String, Object> redisTemplate,
                                                    RedisProperties redisProperties,
-                                                   ObjectProvider<RedisMetricsCollector> metricsProvider) {
-        return new RedisCollectionOps(redisTemplate, redisProperties, metricsProvider.getIfAvailable());
+                                                   ObjectProvider<RedisMetricsCollector> metricsProvider,
+                                                   ObjectProvider<TenantRedisKeyPrefixer> tenantPrefixerProvider) {
+        return new RedisCollectionOps(redisTemplate, redisProperties, metricsProvider, tenantPrefixerProvider);
     }
 
     /**

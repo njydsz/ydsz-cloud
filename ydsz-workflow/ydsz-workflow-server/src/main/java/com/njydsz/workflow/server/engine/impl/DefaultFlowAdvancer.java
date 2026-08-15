@@ -22,6 +22,7 @@ import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.engine.FlowAdvancer;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
+import com.njydsz.workflow.server.engine.FlowSkipUtils;
 import com.njydsz.workflow.server.engine.FlowVariableStrategy;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.service.FlowDmnDecisionService;
@@ -628,24 +629,13 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     /**
      * P0-2: 从 FlowSkip.ext JSON 中提取 sourceRef（入边源节点编码）
      *
+     * <p>委托 {@link FlowSkipUtils#extractSourceNodeCode} 统一实现，避免三处重复。
+     *
      * @param skip 跳转边
      * @return 源节点编码，不存在时返回 null
      */
     private String extractSourceNodeCode(FlowSkip skip) {
-        if (skip.getExt() == null || skip.getExt().isBlank()) {
-            return null;
-        }
-        try {
-            Map<String, Object> ext = YdszJson.parseMap(skip.getExt());
-            if (ext == null) {
-                return null;
-            }
-            Object val = ext.get("sourceRef");
-            return val == null ? null : String.valueOf(val);
-        } catch (Exception e) {
-            log.warn("[Flow] 提取 sourceRef 失败, skipId={}, err={}", skip.getId(), e.getMessage());
-            return null;
-        }
+        return FlowSkipUtils.extractSourceNodeCode(skip);
     }
 
     /**

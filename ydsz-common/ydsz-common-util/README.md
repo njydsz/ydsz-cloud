@@ -98,9 +98,7 @@ byte[] ciphertext = sm4.encrypt(plaintextBytes, keyBytes, null);
 | IP 校验/CIDR | `IpValidator` / `CidrUtils` | IPv4/IPv6 校验、内网判断、CIDR 网段计算 |
 | 本机网络接口 | `NetworkInterfaceUtils` | 获取本机 IP、主机名、枚举所有非回环 IP |
 | 认证信息读取 | `AuthInfoUtils` | 用户 ID、租户 ID、数据权限维度 |
-| YAML 处理 | `YamlUtils` | 基于 snakeyaml |
 | 国际化消息 | `MessageUtils` | MessageSource 便捷读取 |
-| Spring 上下文 | `SpringContextHolder` | 静态 getBean（@Deprecated 4.0.0，推荐注入） |
 
 ### 按包结构查找工具
 
@@ -127,10 +125,8 @@ com.njydsz.common.util
 │                   AesUtils、AesGcmCrypto、国密工具（Sm2Utils/Sm3Utils/Sm4Utils）、BcProvider
 ├── security/crypto/ 加密提供者：CryptoProvider（SPI）、CryptoProviderRegistry、
 │                   AesGcmCryptoProvider、Sm4GcmCryptoProvider、Sm4CbcCryptoProvider
-├── spring/         Spring 集成：SpringContextHolder（@ Deprecated 4.0.0）
 ├── string/         字符串：StringUtils
 ├── validate/       业务校验：ValidationUtils
-└── yaml/           YAML：YamlUtils
 ```
 
 ---

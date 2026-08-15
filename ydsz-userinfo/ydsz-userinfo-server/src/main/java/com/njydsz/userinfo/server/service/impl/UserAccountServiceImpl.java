@@ -32,6 +32,7 @@ import com.njydsz.userinfo.infra.mapper.RoleMapper;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
 import com.njydsz.userinfo.infra.mapper.UserDeptMapper;
 import com.njydsz.userinfo.infra.mapper.UserRoleMapper;
+import com.njydsz.userinfo.server.auth.AuthService;
 import com.njydsz.userinfo.server.auth.PasswordPolicyValidator;
 import com.njydsz.userinfo.server.auth.UserPasswordHistoryService;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
@@ -112,6 +113,8 @@ public class UserAccountServiceImpl implements UserAccountService {
     private final PasswordPolicyValidator passwordPolicyValidator;
     /** 密码历史服务（用于防止密码重复使用） */
     private final UserPasswordHistoryService passwordHistoryService;
+    /** 认证服务（用于改密/禁用时会话驱逐） */
+    private final AuthService authService;
     /** 用户中心配置属性 */
     private final UserInfoProperties properties;
     private final ObjectProvider<SearchIndexEventBridge> searchIndexBridgeProvider;
@@ -317,6 +320,8 @@ public class UserAccountServiceImpl implements UserAccountService {
             // 记录新密码到历史
             passwordHistoryService.recordPasswordHistory(
                     dto.getUserId(), newPasswordHash, properties.getPasswordHistoryCount());
+            // P1-1: 改密后驱逐该用户全部旧会话，强制重新登录
+            authService.evictAllSessions(dto.getUserId());
         }
         return result;
     }
@@ -350,6 +355,8 @@ public class UserAccountServiceImpl implements UserAccountService {
             // 记录新密码到历史
             passwordHistoryService.recordPasswordHistory(
                     dto.getUserId(), newPasswordHash, properties.getPasswordHistoryCount());
+            // P1-1: 重置密码后驱逐该用户全部旧会话，强制重新登录
+            authService.evictAllSessions(dto.getUserId());
         }
         return result;
     }

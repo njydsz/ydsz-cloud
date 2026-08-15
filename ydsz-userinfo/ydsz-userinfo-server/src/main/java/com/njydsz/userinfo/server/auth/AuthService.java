@@ -33,4 +33,24 @@ public interface AuthService {
      * @return 新的登录结果
      */
     LoginVO refresh(String refreshToken);
+
+    /**
+     * 强制下线指定用户（踢人）。
+     *
+     * <p>将该用户全部活跃会话（Redis Set 中所有 accessToken）加入黑名单并清理索引。
+     * 供管理员调用，实现"强制某用户下线"能力。
+     *
+     * @param userId 用户 ID，不可为 null
+     */
+    void kickOutUser(String userId);
+
+    /**
+     * 驱逐指定用户的全部活跃会话（改密/禁用时调用）。
+     *
+     * <p>内部逻辑与 {@link #kickOutUser(String)} 相同，但语义上区分"管理员主动踢人"
+     * 与"业务操作触发会话失效"两种场景，便于审计日志区分。
+     *
+     * @param userId 用户 ID，不可为 null 或空
+     */
+    void evictAllSessions(String userId);
 }

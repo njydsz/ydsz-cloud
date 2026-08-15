@@ -13,9 +13,8 @@ import lombok.Setter;
  * 使 {@link BaseResponse} 不再承担分页职责，同时提供类型明确的返回对象，
  * 便于 Controller 声明 {@code PageResponse<UserVO>} 或 {@code BaseResponse<PageResponse<UserVO>>}。</p>
  *
- * <p>领域层分页结果载体请使用 {@code com.njydsz.common.domain.query.PageResponse}，
- * 本类是 API 响应信封。两者可组合使用，例如：
- * {@code PageResponse.success(total, pageNum, pageSize, domainPage.getRecords())}。</p>
+ * <p>本类是 API 响应信封，用于 Controller 层返回分页数据。
+ * 新代码请直接返回 {@code PageResponse<T>}。</p>
  *
  * <p><b>迁移提示：</b>{@link BaseResponse} 上的分页字段与 {@code successPage()/emptyPage()}
  * 方法已于 v1.9.3 移除。新代码请直接返回 {@code PageResponse<T>}。</p>

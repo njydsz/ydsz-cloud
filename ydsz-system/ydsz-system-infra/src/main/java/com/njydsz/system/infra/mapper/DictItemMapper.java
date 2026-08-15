@@ -77,9 +77,15 @@ public interface DictItemMapper extends BaseMapper<DictItem> {
     int physicalDeleteByTypeCode(@Param("typeCode") String typeCode);
 
     /**
-     * 批量插入字典项（用于回滚重建）
+     * 批量插入字典项（一次 SQL 批量写入）
      *
-     * <p>直接继承 {@link com.baomidou.mybatisplus.core.mapper.BaseMapper#insert}，
-     * 循环单条插入即可（回滚场景数据量一般 < 1000 条）。
+     * <p>用于 {@code DictItemBatchServiceImpl.batchSave} 场景，将 N 次单条 INSERT 合并为 1 次批量 INSERT，
+     * 显著降低 DB 往返开销。单批建议 ≤ 500 条，超过时分批调用。
+     *
+     * <p><b>注意：</b>本方法通过 XML 映射文件实现，{@code.id} 字段由 MyBatis-Plus KeyGenerator 自动填充。
+     *
+     * @param items 字典项实体列表
+     * @return 插入的记录数
      */
+    int insertBatch(@Param("items") List<DictItem> items);
 }

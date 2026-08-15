@@ -1,6 +1,8 @@
 package com.njydsz.workflow.server.engine;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.workflow.domain.entity.FlowNode;
 import com.njydsz.workflow.domain.entity.FlowSkip;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
@@ -21,8 +24,6 @@ import com.njydsz.workflow.server.config.FlowProperties;
 
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 /**
  * 流程定义元数据缓存服务
  *
@@ -274,16 +275,6 @@ public class FlowDefinitionCacheService {
     }
 
     private String extractSourceRef(FlowSkip skip) {
-        if (skip == null || skip.getExt() == null || skip.getExt().isBlank()) {
-            return null;
-        }
-        try {
-            Map<String, Object> extJson = YdszJson.parseMap(skip.getExt());
-            return extJson == null ? null : MapUtils.getString(extJson, "sourceRef");
-        } catch (Exception e) {
-            log.warn("[FlowCache] 解析 skip.ext 失败: skipId={} err={}",
-                    skip.getId(), e.getMessage());
-            return null;
-        }
+        return FlowSkipUtils.extractSourceNodeCode(skip);
     }
 }

@@ -206,6 +206,11 @@ public class RedisProperties {
     private CacheGuard cacheGuard = new CacheGuard();
 
     /**
+     * 多级缓存配置（L1 Caffeine + L2 Redis）
+     */
+    private MultiLevel multilevel = new MultiLevel();
+
+    /**
      * 客户端配置（连接池、SSL、读策略等）
      */
     @NestedConfigurationProperty
@@ -555,5 +560,36 @@ public class RedisProperties {
          * <p>超过该次数后 WatchDog 停止续期，防止业务线程卡死导致锁永不释放。
          */
         private int maxRenewTimes = 100;
+    }
+
+    /**
+     * 多级缓存配置类（L1 Caffeine + L2 Redis）
+     */
+    @Data
+    public static class MultiLevel {
+
+        /**
+         * 是否启用多级缓存
+         * <p>启用后，可通过 {@link com.njydsz.common.redis.service.multilevel.MultiLevelCacheProvider}
+         * 提供 L1+L2 二级缓存能力。
+         * <p>默认：false
+         */
+        private boolean enabled = false;
+
+        /**
+         * L1 Caffeine 缓存最大条目数
+         * <p>超过该数量时将按 LRU 策略淘汰。
+         * <p>默认：1000
+         */
+        @Min(1)
+        private long l1MaxSize = 1000L;
+
+        /**
+         * L1 Caffeine 缓存过期时间（秒）
+         * <p>建议为 L2 TTL 的 1/5 ~ 1/10，保证数据新鲜度。
+         * <p>默认：60（1 分钟）
+         */
+        @Min(1)
+        private long l1TtlSeconds = 60L;
     }
 }

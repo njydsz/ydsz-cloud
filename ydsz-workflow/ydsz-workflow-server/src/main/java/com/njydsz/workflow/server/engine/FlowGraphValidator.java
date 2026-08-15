@@ -12,7 +12,6 @@ import java.util.Set;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.entity.FlowNode;
 import com.njydsz.workflow.domain.entity.FlowSkip;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
@@ -199,25 +198,11 @@ public class FlowGraphValidator {
 
     /**
      * 从 FlowSkip.ext 中提取 sourceRef
+     *
+     * <p>委托 {@link FlowSkipUtils#extractSourceNodeCode} 统一实现，避免三处重复。
      */
     private String extractSourceRef(FlowSkip skip) {
-        // 优先从 ext JSON 的 sourceRef 字段获取
-        if (StringUtils.hasText(skip.getExt())) {
-            try {
-                Map<String, Object> ext = YdszJson.parseMap(skip.getExt());
-                if (ext != null) {
-                    Object src = ext.get("sourceRef");
-                    if (src != null) {
-                        return String.valueOf(src);
-                    }
-                }
-            } catch (Exception e) {
-                // ignore parse error
-                log.debug("[Flow-Validate] 解析 sourceRef 失败, ext={}, err={}", skip.getExt(), e.getMessage());
-            }
-        }
-        // 降级：部分老数据可能将 source 存在 skipName 或其他字段
-        return null;
+        return FlowSkipUtils.extractSourceNodeCode(skip);
     }
 
     /**

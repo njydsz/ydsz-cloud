@@ -5,9 +5,11 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.ObjectProvider;
+import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -52,7 +54,14 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>JWT Token 签发/刷新/吊销（使用 common-auth TokenService）</li>
  *   <li>用户角色按 user_role 关联表精确查询</li>
  *   <li>Micrometer 指标埋点（登录成功/失败/耗时）</li>
+ *   <li>会话管理：userId → Set&lt;accessToken&gt; 索引，支持强制下线</li>
  * </ul>
+ *
+ * <p><b>会话索引设计（P1-1）：</b>
+ * <pre>
+ *   userinfo:session:user:{userId}  →  Set&lt;accessToken&gt;   该用户所有活跃会话
+ *   {accessToken}                   →  Hash&lt;String, Object&gt;  单会话详情（用户信息）
+ * </pre>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -61,6 +70,9 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
+
+    /** 用户会话索引 Redis Key 前缀：userinfo:session:user:{userId} */
+    private static final String SESSION_KEY_PREFIX = "userinfo:session:user:";
 
     /** 用户账号 Mapper */
     private final UserAccountMapper userAccountMapper;
@@ -76,6 +88,8 @@ public class AuthServiceImpl implements AuthService {
     private final RedisHashOps redisHashOps;
     /** Redis 基础服务（用于会话 key 过期等操作） */
     private final RedisStringOps redisStringOps;
+    /** Redis 集合操作（用于 userId → Set&lt;accessToken&gt; 会话索引） */
+    private final RedisCollectionOps redisCollectionOps;
     /** 密码编码器（BCrypt） */
     private final PasswordEncoder passwordEncoder;
     /** 用户中心监控指标采集器 */
@@ -94,7 +108,7 @@ public class AuthServiceImpl implements AuthService {
     /**
      * {@inheritDoc}
      * <p>认证流程：验证码校验 → 用户查询 → 状态/锁定检查 → 密码校验（本地优先，失败回退 LDAP）
-     * → 角色加载 → JWT 签发 → Redis 会话存储 → 登录信息更新。
+     * → 角色加载 → JWT 签发 → Redis 会话存储 + 会话索引维护 → 登录信息更新。
      * <p>失败计数达到阈值时自动锁定账号，所有步骤均埋点 Micrometer 指标。
      *
      * @param loginDTO 登录请求（用户名、密码、可选验证码）
@@ -207,6 +221,11 @@ public class AuthServiceImpl implements AuthService {
         redisHashOps.hMSet(accessToken, sessionInfo);
         redisStringOps.expire(accessToken, Duration.ofSeconds(properties.getTokenTtlSeconds()));
 
+        // P1-1: 维护 userId → Set&lt;accessToken&gt; 会话索引
+        String sessionKey = buildSessionKey(user.getId());
+        redisCollectionOps.sAdd(sessionKey, accessToken);
+        redisStringOps.expire(sessionKey, Duration.ofSeconds(properties.getTokenTtlSeconds()));
+
         updateLoginSuccess(user, loginIp);
 
         // P1-3: 记录成功登录
@@ -236,7 +255,10 @@ public class AuthServiceImpl implements AuthService {
 
     /**
      * {@inheritDoc}
-     * <p>将 Token 加入黑名单并删除 Redis 会话，实现主动失效。
+     * <p>从会话索引中移除该 Token → 加入黑名单 → 删除 Redis 会话，实现主动失效。
+     *
+     * <p>P1-1 改进：先读取会话 Hash 获取 userId，再从 userId 对应的 Set 中移除该 token，
+     * 保持会话索引与实际活跃会话一致。
      *
      * @param accessToken 访问令牌，为空时直接返回
      */
@@ -245,6 +267,21 @@ public class AuthServiceImpl implements AuthService {
         if (accessToken == null || accessToken.isBlank()) {
             return;
         }
+
+        // P1-1: 从会话 Hash 中获取 userId，以便清理会话索引
+        String userId = null;
+        Object userIdObj = redisHashOps.hGet(accessToken, "userId");
+        if (userIdObj != null) {
+            userId = userIdObj.toString();
+        }
+
+        // P1-1: 从 userId → Set 索引中移除该 token
+        if (userId != null) {
+            String sessionKey = buildSessionKey(userId);
+            redisCollectionOps.sRem(sessionKey, accessToken);
+            log.info("Removed token from session index for user: {}", userId);
+        }
+
         tokenBlacklistService.addToBlacklist(accessToken);
         redisStringOps.del(accessToken);
         userInfoMetrics.recordLogout();
@@ -255,6 +292,7 @@ public class AuthServiceImpl implements AuthService {
      * {@inheritDoc}
      * <p>通过 refreshToken 换取新的 accessToken 和 refreshToken（token 轮换），
      * 旧 refreshToken 立即加入黑名单（一次性使用），防止 token 泄露后的长期滥用。
+     * <p>P1-1: 维护会话索引 —— 将旧 accessToken 从 Set 中移除，加入新 accessToken。
      *
      * @param refreshToken 刷新令牌
      * @return 新的登录响应（含新 accessToken 和新 refreshToken）
@@ -292,6 +330,11 @@ public class AuthServiceImpl implements AuthService {
         redisHashOps.hMSet(newAccessToken, sessionInfo);
         redisStringOps.expire(newAccessToken, Duration.ofSeconds(properties.getTokenTtlSeconds()));
 
+        // P1-1: 维护会话索引 —— 将新 token 加入 Set
+        String sessionKey = buildSessionKey(userInfo.getUserId());
+        redisCollectionOps.sAdd(sessionKey, newAccessToken);
+        redisStringOps.expire(sessionKey, Duration.ofSeconds(properties.getTokenTtlSeconds()));
+
         log.info("Token refreshed successfully for user: {}", userInfo.getUsername());
 
         LoginVO result = new LoginVO();
@@ -301,6 +344,20 @@ public class AuthServiceImpl implements AuthService {
         result.setExpiresIn(properties.getTokenTtlSeconds());
         result.setScope("read write");
         return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>读取 userId 对应 Set 中全部 accessToken，逐个加入黑名单并清理 Hash，
+     * <b>不</b>直接删除 Set Key（依赖 TTL 自然过期或后续 logout 调用）。
+     * 实际生产建议通过广播通知各节点清理本地缓存。
+     *
+     * @param userId 用户 ID
+     */
+    @Override
+    public void kickOutUser(String userId) {
+        evictAllSessions(userId);
+        log.info("User {} has been kicked out, all sessions invalidated", userId);
     }
 
     /**
@@ -361,5 +418,51 @@ public class AuthServiceImpl implements AuthService {
             log.warn("Failed to publish outbox event: type={}, id={}, error={}",
                     eventType, aggregateId, e.getMessage());
         }
+    }
+
+    /**
+     * 驱逐指定用户的全部活跃会话（改密/禁用/强制下线时调用）。
+     *
+     * <p>从 Redis Set 中读取所有 accessToken，逐个加入黑名单并删除 Hash，
+     * 最后删除 Set 索引 Key。操作不抛出异常，单条 token 失败不影响后续清理。
+     *
+     * @param userId 用户 ID，不可为 null 或空
+     */
+    public void evictAllSessions(String userId) {
+        if (userId == null || userId.isBlank()) {
+            return;
+        }
+        String sessionKey = buildSessionKey(userId);
+        try {
+            Set<String> tokens = redisCollectionOps.sMembers(sessionKey, String.class);
+            if (tokens.isEmpty()) {
+                log.debug("No active sessions found for user: {}", userId);
+                redisStringOps.del(sessionKey);
+                return;
+            }
+            for (String token : tokens) {
+                try {
+                    tokenBlacklistService.addToBlacklist(token);
+                    redisStringOps.del(token);
+                } catch (Exception e) {
+                    log.warn("Failed to evict session token for user: {}, error={}", userId, e.getMessage());
+                }
+            }
+            redisStringOps.del(sessionKey);
+            userInfoMetrics.recordLogout();
+            log.info("Evicted {} sessions for user: {}", tokens.size(), userId);
+        } catch (Exception e) {
+            log.warn("Failed to evict sessions for user: {}, error={}", userId, e.getMessage());
+        }
+    }
+
+    /**
+     * 构建用户会话索引 Redis Key。
+     *
+     * @param userId 用户 ID
+     * @return 格式为 {@code userinfo:session:user:{userId}}
+     */
+    private String buildSessionKey(String userId) {
+        return SESSION_KEY_PREFIX + userId;
     }
 }

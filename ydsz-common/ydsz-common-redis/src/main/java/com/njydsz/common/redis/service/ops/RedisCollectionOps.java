@@ -3,17 +3,19 @@ package com.njydsz.common.redis.service.ops;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 
 import com.njydsz.common.redis.config.RedisProperties;
 import com.njydsz.common.redis.metrics.RedisMetricsCollector;
+import com.njydsz.common.redis.tenant.TenantRedisKeyPrefixer;
 import com.njydsz.common.util.collection.CollectionUtils;
 
 /**
@@ -26,25 +28,54 @@ import com.njydsz.common.util.collection.CollectionUtils;
  * @since 1.0.0
  */
 @Slf4j
-@RequiredArgsConstructor
 public class RedisCollectionOps {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final RedisProperties redisProperties;
     private final RedisMetricsCollector metricsCollector;
+    private final TenantRedisKeyPrefixer tenantKeyPrefixer;
 
     /**
-     * 格式化 Key，添加统一前缀
+     * 构造 Redis 集合操作组件。
+     *
+     * @param redisTemplate      Redis 模板（必须）
+     * @param redisProperties    Redis 配置属性（必须）
+     * @param metricsProvider    指标采集器提供者（可选，未引入监控时传 null）
+     * @param tenantPrefixerProvider 租户 Key 前缀器提供者（可选，未启用多租户时传 null）
+     */
+    public RedisCollectionOps(RedisTemplate<String, Object> redisTemplate,
+                             RedisProperties redisProperties,
+                             ObjectProvider<RedisMetricsCollector> metricsProvider,
+                             ObjectProvider<TenantRedisKeyPrefixer> tenantPrefixerProvider) {
+        this.redisTemplate = Objects.requireNonNull(redisTemplate, "RedisTemplate 必须不为 null");
+        this.redisProperties = Objects.requireNonNull(redisProperties, "RedisProperties 必须不为 null");
+        this.metricsCollector = metricsProvider.getIfAvailable();
+        this.tenantKeyPrefixer = tenantPrefixerProvider.getIfAvailable();
+    }
+
+    /**
+     * 格式化 Key，添加统一前缀（租户前缀 + 应用前缀）。
+     *
+     * <p>前缀顺序：{@code {tenantId}:{appPrefix}:{originalKey}}。
+     *
+     * @param key 原始键
+     * @return 带前缀的键；未配置前缀或键为 null 时返回原值
      */
     private String formatKey(String key) {
         if (key == null) {
             return null;
         }
-        String prefix = redisProperties != null ? redisProperties.getKeyPrefix() : null;
-        if (prefix == null || prefix.isEmpty()) {
-            return key;
+        String result = key;
+        // 第一层：租户前缀（多租户隔离）
+        if (tenantKeyPrefixer != null) {
+            result = tenantKeyPrefixer.prefixKey(result);
         }
-        return prefix + ":" + key;
+        // 第二层：应用前缀（多应用共享 Redis）
+        String prefix = redisProperties != null ? redisProperties.getKeyPrefix() : null;
+        if (prefix != null && !prefix.isEmpty()) {
+            result = prefix + ":" + result;
+        }
+        return result;
     }
 
     /**

@@ -48,6 +48,7 @@ import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowSlaService;
 import com.njydsz.workflow.server.service.FlowTodoCountPushService;
+import com.njydsz.workflow.server.service.instance.AssigneeResolutionService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -58,6 +59,15 @@ import lombok.extern.slf4j.Slf4j;
  * <p>工作流引擎中<b>任务创建场景最复杂</b>的服务，承担 BPMN 2.0 中几乎所有节点类型的「创建运行时任务」
  * 职责。是从原 {@code FlowTaskCompleteServiceImpl}（单体实现）拆分的产物，
  * 是大厂 B 端工作流「灵活节点类型 + 智能审批人解析」的关键实现层。
+ *
+ * <p><b>P1-2 God Class 拆分规划：</b>本类承担职责过多（任务创建 + 办理人解析 + 委派改写 + 服务节点执行 + SLA + 推送），
+ * 正在逐步拆分。已完成与待完成子服务：
+ * <ul>
+ *   <li>[已完成] {@link AssigneeResolutionService} — 办理人解析（resolveAssignee / resolveInitiatorId）</li>
+ *   <li>[TODO] {@code DelegateRedirectService} — 长期授权委派改写（applyDelegateRedirect）</li>
+ *   <li>[TODO] {@code EmptyAssigneeStrategyService} — 审批人为空兜底策略（handleEmptyAssignee 四策略分发）</li>
+ *   <li>[TODO] {@code ServiceNodeExecuteService} — 服务节点 HTTP/SCRIPT/AUTO_PASS 执行（executeServiceNode）</li>
+ * </ul>
  *
  * <p><b>支持的任务创建场景：</b>
  * <ul>
@@ -181,6 +191,8 @@ public class FlowTaskCreateService {
     private final FlowEventSubscriptionService eventSubscriptionService;
     /** P2-3: Prometheus 指标（可能为 null：测试环境） */
     private final FlowMetrics flowMetrics;
+    /** P1-2: 办理人解析服务（从本类抽出，组合模式接入） */
+    private final AssigneeResolutionService assigneeResolutionService;
 
     // ============================== 公共创建入口 ==============================
 
@@ -1376,49 +1388,14 @@ public class FlowTaskCreateService {
      * 从流程变量中解析发起人 ID
      */
     private String resolveInitiatorId(Map<String, Object> variables) {
-        if (variables == null || variables.isEmpty()) {
-            return null;
-        }
-        Object val = variables.get("initiatorId");
-        if (val == null) {
-            val = variables.get("_initiatorId");
-        }
-        if (val == null) {
-            return null;
-        }
-        return String.valueOf(val);
+        return assigneeResolutionService.resolveInitiatorId(variables);
     }
 
     private void resolveAssignee(FlowRunTask task, FlowNode node,
                                   Map<String, Object> variables,
                                   FlowAssigneeDTO explicit,
                                   FlowInstance instance) {
-        String perm = node.getPermissionFlag();
-        if (explicit != null) {
-            task.setAssigneeType(explicit.getUserType());
-            task.setAssigneeId(explicit.getUserId());
-            task.setAssigneeName(explicit.getUserName());
-            return;
-        }
-        if (!StringUtils.hasText(perm)) {
-            task.setAssigneeType(FlowAssigneeType.INITIATOR.name());
-            task.setAssigneeId(instance != null && instance.getInitiatorId() != null
-                    ? String.valueOf(instance.getInitiatorId())
-                    : String.valueOf(task.getId()));
-            task.setAssigneeName("INITIATOR");
-            return;
-        }
-        String resolved = variableStrategy.resolveAssignee(perm, variables);
-        if (resolved == null) {
-            task.setAssigneeType(FlowAssigneeType.USER.name());
-            task.setAssigneeId(perm);
-            return;
-        }
-        // 多人取首段
-        String firstResolved = resolved.split(",")[0].trim();
-        task.setAssigneeType(FlowAssigneeType.USER.name());
-        task.setAssigneeId(firstResolved);
-        task.setAssigneeName("USER:" + firstResolved);
+        assigneeResolutionService.resolveAssignee(task, node, variables, explicit, instance);
     }
 
     /**
