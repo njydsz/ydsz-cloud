@@ -39,7 +39,7 @@ import com.njydsz.common.seata.context.XidContextHolder;
  */
 public class SeataTaskDecorator implements TaskDecorator {
 
-    private static final Logger log = LoggerFactory.getLogger(SeataTaskDecorator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SeataTaskDecorator.class);
 
     /**
      * 装饰 Runnable 任务，在执行前恢复 XID 上下文，执行后清除。
@@ -63,14 +63,14 @@ public class SeataTaskDecorator implements TaskDecorator {
             // 在子线程中恢复 XID 上下文
             if (xid != null) {
                 XidContextHolder.setXid(xid);
-                log.debug("XID restored in async thread: {}", xid);
+                LOG.debug("XID restored in async thread: {}", xid);
             }
             try {
                 runnable.run();
             } finally {
                 // 无论成功失败都解绑，防止线程复用污染
                 XidContextHolder.remove();
-                log.debug("XID unbound in async thread: {}", xid);
+                LOG.debug("XID unbound in async thread: {}", xid);
             }
         };
     }

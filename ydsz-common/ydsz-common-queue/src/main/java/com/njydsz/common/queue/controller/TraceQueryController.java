@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.njydsz.common.base.response.BaseResponse;
+import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.queue.trace.MessageTrace;
 import com.njydsz.common.queue.trace.MessageTraceRecorder;
 

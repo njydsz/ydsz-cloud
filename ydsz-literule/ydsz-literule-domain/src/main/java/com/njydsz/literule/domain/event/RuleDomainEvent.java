@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import com.njydsz.common.event.api.DomainEvent;
-import com.njydsz.common.event.api.ModuleEventTypes;
+import com.njydsz.common.event.api.DomainEventTypes;
 
 import lombok.Getter;
 import com.njydsz.common.util.id.IdGenerator;
@@ -14,12 +14,12 @@ import com.njydsz.common.util.id.IdGenerator;
  * 规则域领域事件。
  *
  * <p>封装规则生命周期事件，继承 {@link DomainEvent}，
- * 事件类型常量统一取自 {@link ModuleEventTypes}（RULE_PUBLISHED / RULE_DISABLED）。
+ * 事件类型常量统一取自 {@link DomainEventTypes}（RULE_PUBLISHED / RULE_DISABLED）。
  *
  * <p><b>发布方式：</b>
  * <pre>{@code
  * applicationEventPublisher.publishEvent(
- *     RuleDomainEvent.of(ModuleEventTypes.RULE_PUBLISHED, ruleId,
+ *     RuleDomainEvent.of(DomainEventTypes.RULE_PUBLISHED, ruleId,
  *         Map.of("ruleCode", "loan-approval")));
  * }</pre>
  *
@@ -40,7 +40,7 @@ public class RuleDomainEvent extends DomainEvent {
     /**
      * 构造规则域事件。
      *
-     * @param eventType    事件类型（取自 {@link ModuleEventTypes}）
+     * @param eventType    事件类型（取自 {@link DomainEventTypes}）
      * @param ruleId       规则 ID（映射为 aggregateId）
      * @param aggregateType 聚合根类型（RULE）
      * @param metadata     扩展元数据
@@ -55,7 +55,7 @@ public class RuleDomainEvent extends DomainEvent {
     /**
      * 便捷工厂：创建规则域事件。
      *
-     * @param eventType 事件类型（取自 {@link ModuleEventTypes}）
+     * @param eventType 事件类型（取自 {@link DomainEventTypes}）
      * @param ruleId    规则 ID
      * @param metadata  扩展元数据
      * @return 规则域事件实例

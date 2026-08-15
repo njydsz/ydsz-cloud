@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 
 import com.njydsz.common.event.api.DomainEvent;
-import com.njydsz.common.event.api.ModuleEventTypes;
+import com.njydsz.common.event.api.DomainEventTypes;
 
 import lombok.Getter;
 import com.njydsz.common.util.id.IdGenerator;
@@ -84,7 +84,7 @@ public class UnifiedAlertEvent extends DomainEvent {
                              String title, String content, String targetRole,
                              String targetUserIds, String pushChannels,
                              LocalDateTime triggeredAt, boolean recovery) {
-        super(IdGenerator.nextIdStr(), LocalDateTime.now(), ModuleEventTypes.UNIFIED_ALERT,
+        super(IdGenerator.nextIdStr(), LocalDateTime.now(), DomainEventTypes.UNIFIED_ALERT,
               sourceId, sourceModule,
               Collections.emptyMap());
         this.alertCode = alertCode;

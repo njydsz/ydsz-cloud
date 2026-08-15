@@ -12,7 +12,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.data.redis.connection.stream.ConsumerInfo;
 import org.springframework.data.redis.core.RedisTemplate;
 
 import com.njydsz.common.queue.group.ConsumerGroupEvent.EventType;

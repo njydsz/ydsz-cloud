@@ -1,7 +1,6 @@
 package com.njydsz.common.seata.mq;
 
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.rocketmq.client.producer.SendResult;
@@ -52,7 +51,7 @@ import com.njydsz.common.seata.api.XidPropagator;
  */
 public class SeataMQSendTemplate {
 
-    private static final Logger log = LoggerFactory.getLogger(SeataMQSendTemplate.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SeataMQSendTemplate.class);
 
     /**
      * 消息头 - 全局事务 ID
@@ -131,8 +130,8 @@ public class SeataMQSendTemplate {
         try {
             SendResult result = producer.send(msg);
             validateSendResult(result);
-            if (log.isDebugEnabled()) {
-                log.debug("[SeataMQ] Sent message: topic={}, tag={}, keys={}, msgId={}, xid={}",
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("[SeataMQ] Sent message: topic={}, tag={}, keys={}, msgId={}, xid={}",
                         topic, tag, keys, result.getMsgId(), getCurrentXid());
             }
             return result;

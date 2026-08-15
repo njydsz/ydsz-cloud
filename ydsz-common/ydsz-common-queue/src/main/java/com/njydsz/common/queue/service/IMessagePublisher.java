@@ -6,13 +6,9 @@ import com.njydsz.common.queue.domain.QueueMessage;
 import com.njydsz.common.queue.service.impl.RedisStreamPublisher;
 
 /**
- * 消息发布者接口（扁平化设计）
+ * 消息发布者接口
  *
- * <p>定义消息发布的核心操作。组合能力（批量发布、延迟发布、顺序消息发布等）
- * 已提取到 {@link MessagePublisherHelper} 工具类，实现接口职责单一。
- *
- * <p>实现类仅需覆盖核心方法 {@link #publish(String)}，
- * 即可获得 {@link MessagePublisherHelper} 提供的批量/顺序/延迟等组合能力。
+ * <p>定义消息发布的核心操作，支持单条发布、批量发布、延迟发布和顺序消息发布。
  *
  * <p><b>批量优化：</b>
  * 对于支持原生批量的队列实现（如 {@link RedisStreamPublisher}），
@@ -23,11 +19,17 @@ import com.njydsz.common.queue.service.impl.RedisStreamPublisher;
  * // 单条发布
  * publisher.publish("Hello World");
  *
- * // 批量发布（使用工具类）
- * MessagePublisherHelper.publishBatch(publisher, messages);
+ * // 发布 QueueMessage
+ * publisher.publish(queueMessage);
  *
- * // 顺序消息发布（使用工具类）
- * MessagePublisherHelper.publishSequential(publisher, sequentialMessage);
+ * // 批量发布
+ * publisher.publishBatch(messages);
+ *
+ * // 顺序消息发布
+ * publisher.publishSequential(sequentialMessage);
+ *
+ * // 延迟发布
+ * publisher.publishDelayed(message, 60000);
  * }</pre>
  *
  * <p><b>线程安全性：</b>
@@ -39,7 +41,7 @@ import com.njydsz.common.queue.service.impl.RedisStreamPublisher;
 public interface IMessagePublisher {
 
     /**
-     * 发布字符串消息（核心方法）
+     * 发布字符串消息
      *
      * <p>将字符串消息发布到队列通道。如果消息格式符合 QueueMessage JSON 结构，
      * 会被正确解析；否则会作为普通文本处理。
@@ -49,19 +51,44 @@ public interface IMessagePublisher {
     void publish(String message);
 
     /**
+     * 发布 QueueMessage 消息
+     *
+     * <p>将 {@link QueueMessage} 发布到队列通道，携带 headers、traceId 等元数据。
+     *
+     * @param message 待发布的消息，为 null 时静默忽略
+     */
+    void publish(QueueMessage message);
+
+    /**
      * 批量发布 QueueMessage 消息
      *
      * <p>将多条 QueueMessage 批量发布到队列通道。
      * 支持批量发送的队列实现（如 Redis Stream pipeline、Kafka batch、RocketMQ batch）
      * 可以覆盖此方法以利用原生批量 API 提升吞吐量。
      *
-     * <p>默认实现委托 {@link MessagePublisherHelper#publishBatch(IMessagePublisher, List)}。
-     *
-     * @param messages 待发布的消息列表
+     * @param messages 待发布的消息列表，为空或 null 时静默忽略
      */
-    default void publishBatch(List<QueueMessage> messages) {
-        MessagePublisherHelper.publishBatch(this, messages);
-    }
+    void publishBatch(List<QueueMessage> messages);
+
+    /**
+     * 发布顺序消息
+     *
+     * <p>保证相同 {@code groupKey} 的消息被路由到同一分区/队列，顺序消费。
+     *
+     * @param message 待发布的顺序消息，需携带 {@code groupKey} 和 {@code sequence}
+     */
+    void publishSequential(QueueMessage message);
+
+    /**
+     * 发布延迟消息
+     *
+     * <p>消息在指定延迟时间后才被消费者可见。仅 RocketMQ 原生支持 18 级延迟；
+     * 其他引擎调用此方法等同于立即发送。
+     *
+     * @param message     待发布的消息
+     * @param delayMillis 延迟时间（毫秒）
+     */
+    void publishDelayed(QueueMessage message, long delayMillis);
 
     /**
      * 获取发布者关联的通道名称

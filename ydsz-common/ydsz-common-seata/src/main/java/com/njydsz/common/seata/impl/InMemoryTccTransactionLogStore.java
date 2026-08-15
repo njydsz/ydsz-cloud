@@ -41,7 +41,7 @@ import com.njydsz.common.seata.api.TccTransactionLogStore;
  */
 public class InMemoryTccTransactionLogStore implements TccTransactionLogStore {
 
-    private static final Logger log = LoggerFactory.getLogger(InMemoryTccTransactionLogStore.class);
+    private static final Logger LOG = LoggerFactory.getLogger(InMemoryTccTransactionLogStore.class);
 
     /** 最大条目数，超过后清理过期日志 */
     private static final int MAX_ENTRIES = 10000;
@@ -215,7 +215,7 @@ public class InMemoryTccTransactionLogStore implements TccTransactionLogStore {
             }
         }
         if (removed > 0) {
-            log.debug("Cleaned up {} expired final-state TCC logs", removed);
+            LOG.debug("Cleaned up {} expired final-state TCC logs", removed);
         }
     }
 }

@@ -4,8 +4,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.model.OutboxMessage;
-import com.njydsz.common.event.model.StandardEventTypes;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.notify.core.NotifyService;
 import com.njydsz.common.notify.core.NotifyRequest;
@@ -20,14 +20,14 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>当前订阅：
  * <ul>
- *   <li>{@link StandardEventTypes#JOB_EXECUTION_FAILED} — 定时任务执行失败时发送告警通知</li>
- *   <li>{@link StandardEventTypes#AGENT_APPROVAL_REQUESTED} — Agent 审批请求时发送通知</li>
- *   <li>{@link StandardEventTypes#FLOW_INSTANCE_APPROVED} — 流程审批通过时通知发起人</li>
- *   <li>{@link StandardEventTypes#FLOW_INSTANCE_REJECTED} — 流程审批驳回时通知发起人</li>
- *   <li>{@link StandardEventTypes#FLOW_INSTANCE_TERMINATED} — 流程终止时通知参与人</li>
- *   <li>{@link StandardEventTypes#PROJECT_INITIATION_APPROVED} — 项目立项审批通过通知</li>
- *   <li>{@link StandardEventTypes#PROJECT_CONTRACT_SIGNED} — 合同签订通知</li>
- *   <li>{@link StandardEventTypes#JOB_TIMEOUT} — 定时任务超时告警</li>
+ *   <li>{@link DomainEventTypes#JOB_EXECUTION_FAILED} — 定时任务执行失败时发送告警通知</li>
+ *   <li>{@link DomainEventTypes#AGENT_APPROVAL_REQUESTED} — Agent 审批请求时发送通知</li>
+ *   <li>{@link DomainEventTypes#FLOW_INSTANCE_APPROVED} — 流程审批通过时通知发起人</li>
+ *   <li>{@link DomainEventTypes#FLOW_INSTANCE_REJECTED} — 流程审批驳回时通知发起人</li>
+ *   <li>{@link DomainEventTypes#FLOW_INSTANCE_TERMINATED} — 流程终止时通知参与人</li>
+ *   <li>{@link DomainEventTypes#PROJECT_INITIATION_APPROVED} — 项目立项审批通过通知</li>
+ *   <li>{@link DomainEventTypes#PROJECT_CONTRACT_SIGNED} — 合同签订通知</li>
+ *   <li>{@link DomainEventTypes#JOB_TIMEOUT} — 定时任务超时告警</li>
  * </ul>
  *
  * @author ydsz-team

@@ -4,8 +4,8 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.model.OutboxMessage;
-import com.njydsz.common.event.model.StandardEventTypes;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.server.service.FlowTaskTransferService;
 
@@ -17,9 +17,9 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>当前订阅：
  * <ul>
- *   <li>{@link StandardEventTypes#PROJECT_INITIATION_CREATED} — 项目立项创建时自动创建审批流程</li>
- *   <li>{@link StandardEventTypes#USER_DISABLED} — 用户禁用时转交待办任务</li>
- *   <li>{@link StandardEventTypes#ORG_STRUCTURE_CHANGED} — 组织架构变更时批量调整审批人</li>
+ *   <li>{@link DomainEventTypes#PROJECT_INITIATION_CREATED} — 项目立项创建时自动创建审批流程</li>
+ *   <li>{@link DomainEventTypes#USER_DISABLED} — 用户禁用时转交待办任务</li>
+ *   <li>{@link DomainEventTypes#ORG_STRUCTURE_CHANGED} — 组织架构变更时批量调整审批人</li>
  * </ul>
  *
  * @author ydsz-team

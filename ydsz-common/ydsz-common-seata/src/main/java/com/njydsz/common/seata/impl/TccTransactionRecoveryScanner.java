@@ -3,15 +3,15 @@ package com.njydsz.common.seata.impl;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.scheduling.annotation.Scheduled;
+
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.seata.api.TccBranchStatus;
 import com.njydsz.common.seata.api.TccTransactionLog;
 import com.njydsz.common.seata.api.TccTransactionLogStore;
 import com.njydsz.common.seata.config.SeataProperties;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.annotation.Scheduled;
 
 /**
  * TCC 事务恢复扫描器
@@ -35,7 +35,7 @@ import org.springframework.scheduling.annotation.Scheduled;
  */
 public class TccTransactionRecoveryScanner {
 
-    private static final Logger log = LoggerFactory.getLogger(TccTransactionRecoveryScanner.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TccTransactionRecoveryScanner.class);
 
     private final TccTransactionLogStore logStore;
     private final SeataProperties properties;
@@ -82,7 +82,7 @@ public class TccTransactionRecoveryScanner {
             return;
         }
 
-        log.info("TCC recovery scan found {} pending transactions (paged={}, batchSize={})",
+        LOG.info("TCC recovery scan found {} pending transactions (paged={}, batchSize={})",
                 pending.size(), properties.isRecoveryPagedMode(), properties.getRecoveryBatchSize());
 
         int successCount = 0;
@@ -93,14 +93,14 @@ public class TccTransactionRecoveryScanner {
                 successCount++;
             } catch (Exception e) {
                 failCount++;
-                log.error("TCC recovery failed for xid={}, branch={}", txLog.getXid(), txLog.getBranchId(), e);
+                LOG.error("TCC recovery failed for xid={}, branch={}", txLog.getXid(), txLog.getBranchId(), e);
             }
         }
 
         if (failCount > 0) {
-            log.warn("TCC recovery scan completed: success={}, fail={}", successCount, failCount);
+            LOG.warn("TCC recovery scan completed: success={}, fail={}", successCount, failCount);
         } else {
-            log.info("TCC recovery scan completed: success={}", successCount);
+            LOG.info("TCC recovery scan completed: success={}", successCount);
         }
     }
 
@@ -111,21 +111,21 @@ public class TccTransactionRecoveryScanner {
      */
     private void recover(TccTransactionLog txLog) {
         if (txLog.getRetryCount() >= properties.getTccRetryCount()) {
-            log.warn("TCC transaction exhausted retries, marking as cancelled: xid={}, branch={}, retries={}",
+            LOG.warn("TCC transaction exhausted retries, marking as cancelled: xid={}, branch={}, retries={}",
                     txLog.getXid(), txLog.getBranchId(), txLog.getRetryCount());
             logStore.updateStatus(txLog.getXid(), txLog.getBranchId(), TccBranchStatus.CANCELLED);
             return;
         }
 
         txLog.incrementRetryCount();
-        log.info("TCC recovery retry #{} for xid={}, branch={}",
+        LOG.info("TCC recovery retry #{} for xid={}, branch={}",
                 txLog.getRetryCount(), txLog.getXid(), txLog.getBranchId());
 
         try {
             recoveryHandler.recoverCancel(txLog);
             logStore.updateStatus(txLog.getXid(), txLog.getBranchId(), TccBranchStatus.CANCELLED);
         } catch (Exception e) {
-            log.error("TCC recovery Cancel failed: xid={}, branch={}, retry={}",
+            LOG.error("TCC recovery Cancel failed: xid={}, branch={}, retry={}",
                     txLog.getXid(), txLog.getBranchId(), txLog.getRetryCount(), e);
             txLog.setLastError(e.getMessage());
         }

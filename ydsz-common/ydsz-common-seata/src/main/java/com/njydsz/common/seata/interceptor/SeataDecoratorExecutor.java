@@ -21,7 +21,7 @@ import com.njydsz.common.seata.context.XidContextHolder;
  */
 class SeataDecoratorExecutor implements Executor {
 
-    private static final Logger log = LoggerFactory.getLogger(SeataDecoratorExecutor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SeataDecoratorExecutor.class);
 
     private final Executor delegate;
 
@@ -33,7 +33,7 @@ class SeataDecoratorExecutor implements Executor {
     public void execute(Runnable command) {
         // 捕获提交线程的 XID 并包装任务
         String capturedXid = XidContextHolder.getXid();
-        log.debug("Capturing XID for async execution: {}", capturedXid);
+        LOG.debug("Capturing XID for async execution: {}", capturedXid);
         delegate.execute(new SeataRunnable(command, capturedXid));
     }
 

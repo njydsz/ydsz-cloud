@@ -1,12 +1,11 @@
 package com.njydsz.common.seata.interceptor;
 
-import com.njydsz.common.seata.api.XidPropagator;
-
+import feign.RequestInterceptor;
+import feign.RequestTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import feign.RequestInterceptor;
-import feign.RequestTemplate;
+import com.njydsz.common.seata.api.XidPropagator;
 
 /**
  * Feign 请求拦截器 - 上游服务 XID 传播
@@ -24,7 +23,7 @@ import feign.RequestTemplate;
  */
 public class FeignXidRequestInterceptor implements RequestInterceptor {
 
-    private static final Logger log = LoggerFactory.getLogger(FeignXidRequestInterceptor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(FeignXidRequestInterceptor.class);
 
     private final XidPropagator xidPropagator;
 
@@ -47,7 +46,7 @@ public class FeignXidRequestInterceptor implements RequestInterceptor {
         String xid = xidPropagator.currentXid();
         if (xid != null) {
             template.header(XidPropagator.XID_HEADER, xidPropagator.serialize(xid));
-            log.debug("XID propagated via Feign: {}", xid);
+            LOG.debug("XID propagated via Feign: {}", xid);
         }
     }
 }

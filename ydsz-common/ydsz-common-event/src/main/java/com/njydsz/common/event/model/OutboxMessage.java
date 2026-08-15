@@ -110,6 +110,46 @@ public class OutboxMessage {
     private final String traceId;
 
     /**
+     * 从 Draft 创建 OutboxMessage 实体（添加系统管理字段）
+     *
+     * <p>工厂方法，用于将业务输入的 {@link OutboxMessageDraft} 转换为完整的持久化实体。
+     *
+     * @param draft       业务输入的 Draft（不可为 null）
+     * @param id           雪花 ID
+     * @param tenantId     租户 ID（可为 null）
+     * @param traceId      链路追踪 ID（可为 null）
+     * @param maxRetries   最大重试次数
+     * @param defaultPriority 默认优先级（当 draft.priority 为 null 时使用）
+     * @return OutboxMessage 实体
+     * @since 1.6.0
+     */
+    public static OutboxMessage fromDraft(OutboxMessageDraft draft, String id,
+                                           String tenantId, String traceId,
+                                           int maxRetries, int defaultPriority) {
+        Instant now = Instant.now();
+        return OutboxMessage.builder()
+                .id(id)
+                .aggregateType(draft.getAggregateType())
+                .aggregateId(draft.getAggregateId())
+                .eventType(draft.getEventType())
+                .payload(draft.getPayload())
+                .headers(draft.getHeaders())
+                .deduplicationId(draft.getDeduplicationId())
+                .schemaVersion(draft.getSchemaVersion())
+                .contentType(draft.getContentType())
+                .priority(draft.getPriority() != null ? draft.getPriority() : defaultPriority)
+                .status(OutboxStatus.PENDING)
+                .retryCount(0)
+                .maxRetries(maxRetries)
+                .nextRetryAt(now)
+                .tenantId(tenantId)
+                .traceId(traceId)
+                .createdAt(now)
+                .updatedAt(now)
+                .build();
+    }
+
+    /**
      * 标记为处理中
      *
      * <p>将状态从 PENDING 改为 PROCESSING，表示已被某个实例 claim，正在投递。

@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import com.njydsz.common.event.api.DomainEvent;
-import com.njydsz.common.event.api.ModuleEventTypes;
+import com.njydsz.common.event.api.DomainEventTypes;
 
 import lombok.Getter;
 import com.njydsz.common.util.id.IdGenerator;
@@ -14,13 +14,13 @@ import com.njydsz.common.util.id.IdGenerator;
  * Agent 域领域事件。
  *
  * <p>封装 Agent 执行生命周期事件，继承 {@link DomainEvent}，
- * 事件类型常量统一取自 {@link ModuleEventTypes}（AGENT_EXECUTION_STARTED /
+ * 事件类型常量统一取自 {@link DomainEventTypes}（AGENT_EXECUTION_STARTED /
  * AGENT_EXECUTION_COMPLETED / AGENT_EXECUTION_FAILED）。
  *
  * <p><b>发布方式：</b>
  * <pre>{@code
  * applicationEventPublisher.publishEvent(
- *     AgentDomainEvent.of(ModuleEventTypes.AGENT_EXECUTION_STARTED, executionId,
+ *     AgentDomainEvent.of(DomainEventTypes.AGENT_EXECUTION_STARTED, executionId,
  *         Map.of("agentCode", "chat-assistant")));
  * }</pre>
  *
@@ -41,7 +41,7 @@ public class AgentDomainEvent extends DomainEvent {
     /**
      * 构造 Agent 域事件。
      *
-     * @param eventType    事件类型（取自 {@link ModuleEventTypes}）
+     * @param eventType    事件类型（取自 {@link DomainEventTypes}）
      * @param executionId  执行 ID（映射为 aggregateId）
      * @param aggregateType 聚合根类型（AGENT / AGENT_EXECUTION）
      * @param metadata     扩展元数据
@@ -56,7 +56,7 @@ public class AgentDomainEvent extends DomainEvent {
     /**
      * 便捷工厂：创建 Agent 域事件。
      *
-     * @param eventType   事件类型（取自 {@link ModuleEventTypes}）
+     * @param eventType   事件类型（取自 {@link DomainEventTypes}）
      * @param executionId 执行 ID
      * @param metadata    扩展元数据
      * @return Agent 域事件实例

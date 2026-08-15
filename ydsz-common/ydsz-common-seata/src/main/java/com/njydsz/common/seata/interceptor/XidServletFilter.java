@@ -6,13 +6,11 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
-import com.njydsz.common.seata.api.XidPropagator;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.njydsz.common.seata.api.XidPropagator;
 
 /**
  * XID 接收过滤器 - 下游服务接收 XID
@@ -27,7 +25,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
  */
 public class XidServletFilter extends OncePerRequestFilter {
 
-    private static final Logger log = LoggerFactory.getLogger(XidServletFilter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(XidServletFilter.class);
 
     private final XidPropagator xidPropagator;
 
@@ -57,7 +55,7 @@ public class XidServletFilter extends OncePerRequestFilter {
         String xid = xidPropagator.deserialize(xidHeader);
         if (xid != null) {
             xidPropagator.bind(xid);
-            log.debug("XID received and bound: {}", xid);
+            LOG.debug("XID received and bound: {}", xid);
         }
         try {
             filterChain.doFilter(request, response);

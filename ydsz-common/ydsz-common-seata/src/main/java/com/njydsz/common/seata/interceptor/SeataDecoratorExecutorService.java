@@ -29,7 +29,7 @@ import com.njydsz.common.seata.context.XidContextHolder;
  */
 class SeataDecoratorExecutorService implements ExecutorService {
 
-    private static final Logger log = LoggerFactory.getLogger(SeataDecoratorExecutorService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SeataDecoratorExecutorService.class);
 
     private final ExecutorService delegate;
 

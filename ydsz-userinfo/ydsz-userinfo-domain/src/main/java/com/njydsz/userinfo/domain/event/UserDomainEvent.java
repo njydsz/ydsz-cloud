@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.Map;
 
 import com.njydsz.common.event.api.DomainEvent;
-import com.njydsz.common.event.api.ModuleEventTypes;
+import com.njydsz.common.event.api.DomainEventTypes;
 
 import lombok.Getter;
 import com.njydsz.common.util.id.IdGenerator;
@@ -14,13 +14,13 @@ import com.njydsz.common.util.id.IdGenerator;
  * 用户域领域事件。
  *
  * <p>封装用户模块的用户/角色/组织变更事件，继承 {@link DomainEvent}，
- * 事件类型常量统一取自 {@link ModuleEventTypes}（USER_CREATED / USER_UPDATED / USER_DELETED /
+ * 事件类型常量统一取自 {@link DomainEventTypes}（USER_CREATED / USER_UPDATED / USER_DELETED /
  * ROLE_CHANGED / DEPARTMENT_CHANGED）。
  *
  * <p><b>发布方式：</b>
  * <pre>{@code
  * applicationEventPublisher.publishEvent(
- *     UserDomainEvent.of(ModuleEventTypes.USER_CREATED, userId, Map.of("username", "admin")));
+ *     UserDomainEvent.of(DomainEventTypes.USER_CREATED, userId, Map.of("username", "admin")));
  * }</pre>
  *
  * <p><b>消费方式（推荐事务提交后）：</b>
@@ -40,7 +40,7 @@ public class UserDomainEvent extends DomainEvent {
     /**
      * 构造用户域事件。
      *
-     * @param eventType    事件类型（取自 {@link ModuleEventTypes}）
+     * @param eventType    事件类型（取自 {@link DomainEventTypes}）
      * @param userId       用户 ID（映射为 aggregateId）
      * @param aggregateType 聚合根类型（USER / ROLE / DEPARTMENT）
      * @param metadata     扩展元数据
@@ -55,7 +55,7 @@ public class UserDomainEvent extends DomainEvent {
     /**
      * 便捷工厂：创建用户域事件。
      *
-     * @param eventType  事件类型（取自 {@link ModuleEventTypes}）
+     * @param eventType  事件类型（取自 {@link DomainEventTypes}）
      * @param userId     用户 ID
      * @param metadata   扩展元数据
      * @return 用户域事件实例
