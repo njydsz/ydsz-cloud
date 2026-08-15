@@ -1,6 +1,7 @@
 package com.njydsz.common.json.serializer;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.njydsz.common.json.deserializer.JsonDeserializer;
@@ -73,6 +74,29 @@ public final class SerializerRegistry {
     }
 
     /**
+     * 仅当类型尚未注册时注册序列化器（等价于 {@code Map.putIfAbsent}）。
+     *
+     * <p>供模块系统（{@code JsonModuleRegistry}）在 {@code initialize()} 阶段回填
+     * 模块序列化器时使用，保证"先注册优先"语义：用户直接注册（{@link #register}）
+     * 的序列化器优先于模块注册，反之亦然，按注册时序决定。</p>
+     *
+     * @param type 目标类型
+     * @param serializer 序列化器
+     * @param <T> 类型参数
+     * @return 已存在（未被覆盖）的旧序列化器，若此前未注册返回 null
+     * @since 1.2.3
+     */
+    public <T> JsonSerializer<?> registerIfAbsent(Class<T> type, JsonSerializer<T> serializer) {
+        if (type == null) {
+            throw new IllegalArgumentException("Type cannot be null");
+        }
+        if (serializer == null) {
+            throw new IllegalArgumentException("Serializer cannot be null");
+        }
+        return serializers.putIfAbsent(type, serializer);
+    }
+
+    /**
      * 注册自定义反序列化器
      *
      * @param type 目标类型
@@ -87,6 +111,28 @@ public final class SerializerRegistry {
             throw new IllegalArgumentException("Deserializer cannot be null");
         }
         deserializers.put(type, deserializer);
+    }
+
+    /**
+     * 仅当类型尚未注册时注册反序列化器（等价于 {@code Map.putIfAbsent}）。
+     *
+     * <p>语义与 {@link #registerIfAbsent(Class, JsonSerializer)} 一致，用于模块系统
+     * 回填模块反序列化器。</p>
+     *
+     * @param type 目标类型
+     * @param deserializer 反序列化器
+     * @param <T> 类型参数
+     * @return 已存在（未被覆盖）的旧反序列化器，若此前未注册返回 null
+     * @since 1.2.3
+     */
+    public <T> JsonDeserializer<?> registerIfAbsent(Class<T> type, JsonDeserializer<T> deserializer) {
+        if (type == null) {
+            throw new IllegalArgumentException("Type cannot be null");
+        }
+        if (deserializer == null) {
+            throw new IllegalArgumentException("Deserializer cannot be null");
+        }
+        return deserializers.putIfAbsent(type, deserializer);
     }
 
     /**

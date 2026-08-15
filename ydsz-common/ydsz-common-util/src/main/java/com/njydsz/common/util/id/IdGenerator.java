@@ -1,6 +1,8 @@
 package com.njydsz.common.util.id;
 
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
 import lombok.extern.slf4j.Slf4j;
@@ -73,6 +75,9 @@ public final class IdGenerator {
     /** 失败重试冷却时间（毫秒），避免非 Spring 环境下每次生成 ID 都触发 getBean 查找 */
     private static final long FAILURE_COOLDOWN_MILLIS = 60_000L;
 
+    /** 首次降级标志，用于保证降级告警仅打印一次（避免日志风暴） */
+    private static final AtomicBoolean DEGRADED_WARNED = new AtomicBoolean(false);
+
     /**
      * 配置降级策略。
      *
@@ -94,7 +99,7 @@ public final class IdGenerator {
             return String.valueOf(gen.nextId());
         }
         if (fallbackToUuid) {
-            return java.util.UUID.randomUUID().toString().replace("-", "");
+            return UUID.randomUUID().toString().replace("-", "");
         }
         return Long.toString(ThreadLocalRandom.current().nextLong());
     }
@@ -110,7 +115,7 @@ public final class IdGenerator {
             return gen.nextId();
         }
         if (fallbackToUuid) {
-            return java.util.UUID.randomUUID().getMostSignificantBits() & Long.MAX_VALUE;
+            return UUID.randomUUID().getMostSignificantBits() & Long.MAX_VALUE;
         }
         return ThreadLocalRandom.current().nextLong();
     }
@@ -161,7 +166,10 @@ public final class IdGenerator {
      */
     private static void warnFallback(String reason) {
         lastFailureMillis = System.currentTimeMillis();
-        log.warn("{}。请确认已引入 ydsz-common-util 自动装配且未禁用 snowflake。", reason);
+        // 仅首次降级时打印 WARN（含调用方提示），后续由冷却期抑制，避免日志风暴
+        if (DEGRADED_WARNED.compareAndSet(false, true)) {
+            log.warn("{}。请确认已引入 ydsz-common-util 自动装配且未禁用 snowflake。" + "当前生成的 ID 为随机数，可能与 Snowflake 主键空间重叠！", reason);
+        }
     }
 
     /**
