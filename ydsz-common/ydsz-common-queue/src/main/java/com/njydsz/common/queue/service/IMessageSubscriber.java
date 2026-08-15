@@ -1,17 +1,19 @@
 package com.njydsz.common.queue.service;
 
-import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.queue.domain.QueueMessage;
+
 /**
- * 消息订阅者接口
+ * 消息订阅者接口（扁平化设计）
  *
- * <p>该接口定义了消息队列的消费者行为，包括同步消费和异步消费两种模式。
- * 实现类需要根据具体的消息中间件特性，实现相应的消费逻辑。
+ * <p>定义消息订阅的核心操作。组合能力（结构化消费、单次消费等）
+ * 已提取到 {@link MessageSubscriberHelper} 工具类，实现接口职责单一。
+ *
+ * <p>实现类仅需覆盖核心方法 {@link #subscribe()} 和 {@link #subscribeAsync(IMessageHandler)}，
+ * 即可获得 {@link MessageSubscriberHelper} 提供的结构化消费等组合能力。
  *
  * <p><b>同步消费：</b>
  * <ul>
  *   <li>{@link #subscribe()} - 阻塞式获取一条消息</li>
- *   <li>{@link #subscribeMessage()} - 获取一条消息（可自定义超时）</li>
  * </ul>
  *
  * <p><b>异步消费：</b>
@@ -33,12 +35,14 @@ import com.njydsz.common.queue.domain.QueueMessage;
  * subscriber.stop();
  * }</pre>
  *
- * <p><b>注意事项：</b>
- * <ul>
- *   <li>异步消费时，handler 中应处理好异常，避免消息重复消费</li>
- *   <li>stop() 方法应优雅停机，等待正在处理的消息完成</li>
- *   <li>subscribeMessage() 的同步消费应设置合理的超时时间</li>
- * </ul>
+ * <p><b>组合操作（通过 {@link MessageSubscriberHelper}）：</b>
+ * <pre>{@code
+ * // 消费结构化消息
+ * QueueMessage msg = MessageSubscriberHelper.subscribeMessage(subscriber);
+ *
+ * // 一次性消费并处理
+ * MessageSubscriberHelper.subscribeOnce(subscriber, handler);
+ * }</pre>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -60,60 +64,6 @@ public interface IMessageSubscriber {
      * @return 消费到的消息，无消息时返回 null
      */
     String subscribe();
-
-    /**
-     * 同步消费消息（返回结构化消息）
-     *
-     * <p>此方法为阻塞调用，将等待直到有一条消息可用。
-     * 返回 {@link QueueMessage} 对象，包含消息体及元数据。
-     *
-     * <p><b>使用场景：</b>
-     * <ul>
-     *   <li>需要访问消息头、优先级等元数据</li>
-     *   <li>需要重试计数、时间戳等信息</li>
-     * </ul>
-     *
-     * <p><b>示例：</b>
-     * <pre>{@code
-     * QueueMessage msg = subscriber.subscribeMessage();
-     * if (msg != null) {
-     *     log.info("Body: {}", msg.getBody());
-     *     log.info("Headers: {}", msg.getHeaders());
-     * }
-     * }</pre>
-     *
-     * @return 消费到的消息对象，无消息时返回 null
-     */
-    default QueueMessage subscribeMessage() {
-        String message = subscribe();
-        return message != null ? QueueMessage.fromPayload(message) : null;
-    }
-
-    /**
-     * 同步消费并处理单条消息（一次性消费）
-     *
-     * <p>此方法消费一条消息并立即调用 handler 处理。
-     * 如果 handler 处理失败，异常会向上抛出，消息可能被重新投递。
-     *
-     * <p><b>注意：</b>此方法只消费一条消息，不适合持续监听场景。
-     * 如需持续消费，请使用 {@link #subscribeAsync(IMessageHandler)}。
-     *
-     * @param handler 消息处理器，不能为 null
-     * @return 消息 traceId，消费失败或无消息时返回 null
-     * @throws RuntimeException 当 handler 处理失败时抛出
-     */
-    default String subscribeOnce(IMessageHandler handler) {
-        QueueMessage message = subscribeMessage();
-        if (message == null || handler == null) {
-            return null;
-        }
-        try {
-            handler.onMessage(message);
-            return message.getTraceId();
-        } catch (Exception e) {
-            throw SysException.builder().message("消息处理失败: " + e.getMessage()).cause(e).build();
-        }
-    }
 
     /**
      * 异步订阅消息

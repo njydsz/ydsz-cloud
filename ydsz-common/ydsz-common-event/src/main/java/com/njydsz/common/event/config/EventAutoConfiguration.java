@@ -116,10 +116,12 @@ public class EventAutoConfiguration {
                                        EventProperties properties,
                                        ObjectProvider<EventPublishGateway> gatewayProvider,
                                        SnowflakeIdGenerator snowflakeIdGenerator,
-                                       org.springframework.context.ApplicationEventPublisher eventPublisher) {
+                                       org.springframework.context.ApplicationEventPublisher eventPublisher,
+                                       JsonSchemaValidator schemaValidator,
+                                       JsonSchemaRegistry schemaRegistry) {
         EventPublishGateway syncGateway = properties.isEnableSyncPublish() ? gatewayProvider.getIfAvailable() : null;
         return new OutboxService(outboxRepository, properties, syncGateway,
-                snowflakeIdGenerator, eventPublisher);
+                snowflakeIdGenerator, eventPublisher, schemaValidator, schemaRegistry);
     }
 
     /**

@@ -105,6 +105,7 @@ public interface NotificationAggregator {
         private final String title;
         private final String content;
         private final int originalCount;
+        private final NotifyChannel channel;
 
         /**
          * 构造聚合消息
@@ -114,13 +115,27 @@ public interface NotificationAggregator {
          * @param originalCount 原始消息数量
          */
         public AggregatedMessage(String title, String content, int originalCount) {
+            this(title, content, originalCount, null);
+        }
+
+        /**
+         * 构造聚合消息（含渠道信息）
+         *
+         * @param title         聚合标题
+         * @param content       聚合内容
+         * @param originalCount 原始消息数量
+         * @param channel       通知渠道
+         */
+        public AggregatedMessage(String title, String content, int originalCount, NotifyChannel channel) {
             this.title = title;
             this.content = content;
             this.originalCount = originalCount;
+            this.channel = channel;
         }
 
         public String getTitle() { return title; }
         public String getContent() { return content; }
         public int getOriginalCount() { return originalCount; }
+        public NotifyChannel getChannel() { return channel; }
     }
 }

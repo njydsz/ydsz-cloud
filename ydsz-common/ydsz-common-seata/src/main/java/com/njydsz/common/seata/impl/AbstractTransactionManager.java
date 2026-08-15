@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.seata.api.DistributedTransactionManager;
 import com.njydsz.common.seata.audit.TransactionAuditLogger;
+import com.njydsz.common.seata.context.XidContextHolder;
 import com.njydsz.common.seata.metrics.SeataMetrics;
 
 import org.springframework.beans.factory.ObjectProvider;
@@ -15,11 +16,14 @@ import com.njydsz.common.util.id.IdGenerator;
  * 分布式事务管理器抽象基类。
  *
  * <p>提供 XID 生成与 ThreadLocal 传播、事务开始/完成的指标记录和审计日志等公共能力。
- * 子类（{@code SeataAtTransactionManager}、{@code TccTransactionManager}、{@code SagaOrchestrator}）
+ * 子类（{@code SeataTransactionManager}、{@code TccTransactionManager}、{@code SagaOrchestrator}）
  * 只需实现 {@link #getCurrentType()} 和具体的 begin/commit/rollback 逻辑。
  *
  * <p>通过 {@link ObjectProvider} 可选注入 {@link SeataMetrics} 和 {@link TransactionAuditLogger}，
  * 未配置时降级跳过指标和审计。
+ *
+ * <p><b>P2-3 修复</b>：XID 持有者从本类迁移至独立的 {@link XidContextHolder}，
+ * 解决与 {@code DefaultXidPropagator} 的循环依赖。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -27,9 +31,6 @@ import com.njydsz.common.util.id.IdGenerator;
 public abstract class AbstractTransactionManager implements DistributedTransactionManager {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractTransactionManager.class);
-
-    /** 线程级别的 XID 持有器，用于在事务执行期间传播 XID */
-    private static final ThreadLocal<String> XID_HOLDER = new ThreadLocal<>();
 
     private final ObjectProvider<SeataMetrics> metricsProvider;
     private final ObjectProvider<TransactionAuditLogger> auditProvider;
@@ -52,31 +53,6 @@ public abstract class AbstractTransactionManager implements DistributedTransacti
                                           ObjectProvider<TransactionAuditLogger> auditProvider) {
         this.metricsProvider = metricsProvider;
         this.auditProvider = auditProvider;
-    }
-
-    /**
-     * 获取当前线程的 XID（供 DefaultXidPropagator 委托使用）
-     *
-     * @return 当前线程的 XID，无事务上下文时返回 null
-     */
-    static String getXidFromHolder() {
-        return XID_HOLDER.get();
-    }
-
-    /**
-     * 设置当前线程的 XID（供 DefaultXidPropagator 委托使用）
-     *
-     * @param xid 全局事务 ID
-     */
-    static void setXidToHolder(String xid) {
-        XID_HOLDER.set(xid);
-    }
-
-    /**
-     * 清除当前线程的 XID（供 DefaultXidPropagator 委托使用）
-     */
-    static void removeXidFromHolder() {
-        XID_HOLDER.remove();
     }
 
     /**
@@ -166,7 +142,7 @@ public abstract class AbstractTransactionManager implements DistributedTransacti
      */
     protected String beginXid(String transactionName) {
         String xid = generateXid();
-        XID_HOLDER.set(xid);
+        XidContextHolder.setXid(xid);
         log.debug("Transaction started: name={}, xid={}, type={}", transactionName, xid, getCurrentType());
         recordStart(transactionName, xid);
         return xid;
@@ -176,7 +152,7 @@ public abstract class AbstractTransactionManager implements DistributedTransacti
      * 结束事务，清除当前线程的 XID 绑定
      */
     protected void endXid() {
-        XID_HOLDER.remove();
+        XidContextHolder.remove();
     }
 
     /**
@@ -186,6 +162,6 @@ public abstract class AbstractTransactionManager implements DistributedTransacti
      */
     @Override
     public String getCurrentXid() {
-        return XID_HOLDER.get();
+        return XidContextHolder.getXid();
     }
 }

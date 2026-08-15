@@ -69,6 +69,24 @@
             <artifactId>micrometer-core</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- jakarta validation (JSR-303, P2-2: configuration properties validation) -->
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- spring-boot-starter-validation (provides Validator for @ConfigurationProperties) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <!-- transmittable-thread-local (P1-1/P2-3: XID transparent transmission in thread pools) -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>transmittable-thread-local</artifactId>
+            <optional>true</optional>
+        </dependency>
         <!-- Seata (optional) -->
         <dependency>
             <groupId>org.apache.seata</groupId>

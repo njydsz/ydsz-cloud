@@ -5,13 +5,16 @@ import java.util.concurrent.Executor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.common.seata.impl.AbstractTransactionManager;
+import com.njydsz.common.seata.context.XidContextHolder;
 
 /**
  * Seata 感知的 Executor 包装器
  *
  * <p>将普通 Executor 包装为支持 XID 传递的执行器。
  * 用于装饰已有的 Executor 实例。
+ *
+ * <p><b>P2-3 修复</b>：改为依赖 {@link XidContextHolder}，
+ * 不再使用 {@code AbstractTransactionManager} 的包级私有方法。
  *
  * @author ydsz-team
  * @since 1.3.0
@@ -29,7 +32,7 @@ class SeataDecoratorExecutor implements Executor {
     @Override
     public void execute(Runnable command) {
         // 捕获提交线程的 XID 并包装任务
-        String capturedXid = AbstractTransactionManager.getXidFromHolder();
+        String capturedXid = XidContextHolder.getXid();
         log.debug("Capturing XID for async execution: {}", capturedXid);
         delegate.execute(new SeataRunnable(command, capturedXid));
     }
@@ -50,12 +53,12 @@ class SeataDecoratorExecutor implements Executor {
         @Override
         public void run() {
             if (capturedXid != null) {
-                AbstractTransactionManager.setXidToHolder(capturedXid);
+                XidContextHolder.setXid(capturedXid);
             }
             try {
                 delegate.run();
             } finally {
-                AbstractTransactionManager.removeXidFromHolder();
+                XidContextHolder.remove();
             }
         }
     }

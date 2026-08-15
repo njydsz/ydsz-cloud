@@ -1,12 +1,10 @@
 package com.njydsz.common.seata.interceptor;
 
-import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.task.TaskDecorator;
 
-import com.njydsz.common.seata.impl.AbstractTransactionManager;
+import com.njydsz.common.seata.context.XidContextHolder;
 
 /**
  * Seata XID 线程池任务装饰器
@@ -18,6 +16,9 @@ import com.njydsz.common.seata.impl.AbstractTransactionManager;
  *
  * <p>通过 Spring {@link TaskDecorator} 机制，在任务提交时捕获当前线程的 XID，
  * 在任务执行时恢复 XID 上下文，确保事务链路在异步线程中延续。
+ *
+ * <p><b>P2-3 修复</b>：改为依赖独立的 {@link XidContextHolder}，
+ * 不再使用 {@code AbstractTransactionManager} 的包级私有方法。
  *
  * <p>使用方式：
  * <pre>{@code
@@ -56,19 +57,19 @@ public class SeataTaskDecorator implements TaskDecorator {
     @Override
     public Runnable decorate(Runnable runnable) {
         // 捕获提交线程的 XID 上下文
-        String xid = AbstractTransactionManager.getXidFromHolder();
+        String xid = XidContextHolder.getXid();
 
         return () -> {
             // 在子线程中恢复 XID 上下文
             if (xid != null) {
-                AbstractTransactionManager.setXidToHolder(xid);
+                XidContextHolder.setXid(xid);
                 log.debug("XID restored in async thread: {}", xid);
             }
             try {
                 runnable.run();
             } finally {
                 // 无论成功失败都解绑，防止线程复用污染
-                AbstractTransactionManager.removeXidFromHolder();
+                XidContextHolder.remove();
                 log.debug("XID unbound in async thread: {}", xid);
             }
         };

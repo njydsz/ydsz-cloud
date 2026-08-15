@@ -11,6 +11,7 @@ import jakarta.validation.constraints.NotNull;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import com.njydsz.common.seata.api.TransactionType;
+import com.njydsz.common.seata.config.validator.ValidXidSignConfig;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -27,7 +28,7 @@ import lombok.Setter;
  *   <li>{@code tcc-retry-interval-ms} ≥ 100（避免重试过于频繁）</li>
  *   <li>{@code recovery-batch-size} ∈ [1, 1000]</li>
  *   <li>{@code recovery-timeout-threshold-ms} ≥ 5000（避免误扫描刚创建的事务）</li>
- *   <li>{@code xid-sign-enabled=true} 时 {@code xid-sign-key} 不能为空</li>
+ *   <li>{@code xid-sign-enabled=true} 时 {@code xid-sign-key} 不能为空且长度 ≥ 16</li>
  * </ul>
  *
  * <p><b>P2-7 修复</b>：补充 Seata 2.x 客户端关键配置参数，使业务可通过 application.yml 调整。
@@ -41,6 +42,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@ValidXidSignConfig
 @ConfigurationProperties(prefix = "ydsz.seata")
 public class SeataProperties {
 

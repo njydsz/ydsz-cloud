@@ -17,8 +17,15 @@ import java.util.Map;
 /**
  * 时间窗口消息聚合器实现（P2-3）
  *
- * <p>在配置的时间窗口内（默认 30 秒），将同一接收者、同一渠道的同类通知聚合为一条摘要。
+ * <p>在配置的时间窗口内（默认 30 秒），按聚合粒度将通知聚合为一条摘要。
  * P0 级别消息跳过聚合，立即发送。
+ *
+ * <p>聚合粒度由 {@link AggregationLevel} 控制：
+ * <ul>
+ *   <li>{@link AggregationLevel#BY_RECEIVER_CHANNEL_TEMPLATE} — 接收者+渠道+模板（最细）</li>
+ *   <li>{@link AggregationLevel#BY_RECEIVER_CHANNEL} — 接收者+渠道（中等）</li>
+ *   <li>{@link AggregationLevel#BY_RECEIVER} — 仅接收者（最粗）</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -27,23 +34,54 @@ public class TimeWindowAggregator implements NotificationAggregator {
 
     private static final Logger log = LoggerFactory.getLogger(TimeWindowAggregator.class);
 
+    /** 聚合粒度枚举 */
+    public enum AggregationLevel {
+        /** 按接收者+渠道+模板编码聚合（最细粒度，默认） */
+        BY_RECEIVER_CHANNEL_TEMPLATE,
+        /** 按接收者+渠道聚合（中等粒度，忽略模板差异） */
+        BY_RECEIVER_CHANNEL,
+        /** 仅按接收者聚合（最粗粒度，跨渠道汇总） */
+        BY_RECEIVER
+    }
+
+    private static final int DEFAULT_WINDOW_SECONDS = 30;
+    private static final int DEFAULT_MAX_COUNT = 100;
+    private static final int MAX_CONTENT_PREVIEW = 10;
+    private static final int CONTENT_TRUNCATE_LENGTH = 50;
+    private static final String KEY_SEPARATOR = "|";
+
     private final int aggregateWindowSeconds;
     private final int maxAggregateCount;
+    private final AggregationLevel aggregationLevel;
 
     /** 聚合缓冲区：key=receiver|channel|templateCode, value=待聚合消息列表 */
     private final ConcurrentMap<String, CopyOnWriteArrayList<PendingMessage>> buffer = new ConcurrentHashMap<>();
 
     /**
-     * 创建时间窗口聚合器
+     * 创建时间窗口聚合器（默认粒度：接收者+渠道+模板）
      *
      * @param aggregateWindowSeconds 聚合窗口（秒）
      * @param maxAggregateCount      单次聚合最大消息数
      */
     public TimeWindowAggregator(int aggregateWindowSeconds, int maxAggregateCount) {
-        this.aggregateWindowSeconds = aggregateWindowSeconds > 0 ? aggregateWindowSeconds : 30;
-        this.maxAggregateCount = maxAggregateCount > 0 ? maxAggregateCount : 100;
-        log.info("[TimeWindowAggregator] 初始化完成, window={}s, maxCount={}",
-                this.aggregateWindowSeconds, this.maxAggregateCount);
+        this(aggregateWindowSeconds, maxAggregateCount, AggregationLevel.BY_RECEIVER_CHANNEL_TEMPLATE);
+    }
+
+    /**
+     * 创建时间窗口聚合器（指定聚合粒度）
+     *
+     * @param aggregateWindowSeconds 聚合窗口（秒）
+     * @param maxAggregateCount      单次聚合最大消息数
+     * @param aggregationLevel       聚合粒度
+     */
+    public TimeWindowAggregator(int aggregateWindowSeconds, int maxAggregateCount,
+                                AggregationLevel aggregationLevel) {
+        this.aggregateWindowSeconds = aggregateWindowSeconds > 0 ? aggregateWindowSeconds : DEFAULT_WINDOW_SECONDS;
+        this.maxAggregateCount = maxAggregateCount > 0 ? maxAggregateCount : DEFAULT_MAX_COUNT;
+        this.aggregationLevel = aggregationLevel != null ? aggregationLevel
+                : AggregationLevel.BY_RECEIVER_CHANNEL_TEMPLATE;
+        log.info("[TimeWindowAggregator] 初始化完成, window={}s, maxCount={}, level={}",
+                this.aggregateWindowSeconds, this.maxAggregateCount, this.aggregationLevel);
     }
 
     /**
@@ -143,13 +181,13 @@ public class TimeWindowAggregator implements NotificationAggregator {
         StringBuilder sb = new StringBuilder();
         sb.append("您有 ").append(count).append(" 条通知汇总：\n\n");
 
-        int maxShow = Math.min(count, 10);
+        int maxShow = Math.min(count, MAX_CONTENT_PREVIEW);
         for (int i = 0; i < maxShow; i++) {
             PendingMessage msg = messages.get(i);
             sb.append(i + 1).append(". ").append(msg.getTitle());
             if (msg.getContent() != null && !msg.getContent().isEmpty()) {
-                String preview = msg.getContent().length() > 50
-                        ? msg.getContent().substring(0, 50) + "..."
+                String preview = msg.getContent().length() > CONTENT_TRUNCATE_LENGTH
+                        ? msg.getContent().substring(0, CONTENT_TRUNCATE_LENGTH) + "..."
                         : msg.getContent();
                 sb.append(": ").append(preview);
             }
@@ -168,7 +206,23 @@ public class TimeWindowAggregator implements NotificationAggregator {
         return aggregateWindowSeconds;
     }
 
+    /**
+     * 根据聚合粒度构建缓冲区 key
+     *
+     * @param receiver     接收者
+     * @param channel      通知渠道
+     * @param templateCode 模板编码
+     * @return 聚合 key
+     */
     private String buildKey(String receiver, NotifyChannel channel, String templateCode) {
-        return receiver + "|" + channel.name() + "|" + (templateCode != null ? templateCode : "default");
+        String effectiveTemplate = templateCode != null ? templateCode : "default";
+        return switch (aggregationLevel) {
+            case BY_RECEIVER_CHANNEL_TEMPLATE ->
+                    receiver + KEY_SEPARATOR + channel.name() + KEY_SEPARATOR + effectiveTemplate;
+            case BY_RECEIVER_CHANNEL ->
+                    receiver + KEY_SEPARATOR + channel.name();
+            case BY_RECEIVER ->
+                    receiver;
+        };
     }
 }

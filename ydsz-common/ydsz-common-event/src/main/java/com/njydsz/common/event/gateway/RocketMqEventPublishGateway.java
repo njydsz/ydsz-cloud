@@ -1,5 +1,6 @@
 package com.njydsz.common.event.gateway;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -149,7 +150,7 @@ public class RocketMqEventPublishGateway implements EventPublishGateway {
         List<Message> mqMessages = new ArrayList<>(batch.size());
         for (OutboxMessage msg : batch) {
             String destination = buildDestination(msg);
-            Message mqMsg = new Message(topic, destination.split(":")[1], msg.getPayload());
+            Message mqMsg = new Message(topic, destination.split(":")[1], msg.getPayload().getBytes(StandardCharsets.UTF_8));
             if (msg.getHeaders() != null) {
                 msg.getHeaders().forEach((k, v) -> mqMsg.putUserProperty(k, v));
             }

@@ -83,6 +83,16 @@ public class NotifyServiceImpl implements NotifyService {
     /** 通知回执追踪器（可选依赖，骨架实现） */
     private NotifyReceiptTracker receiptTracker = new InMemoryNotifyReceiptTracker();
 
+    /**
+     * 创建构建器（流式 API）
+     *
+     * @param strategyList 渠道策略列表
+     * @return 构建器实例
+     */
+    public static NotifyServiceImplBuilder builder(List<NotifyChannelStrategy> strategyList) {
+        return NotifyServiceImplBuilder.builder(strategyList);
+    }
+
     public NotifyServiceImpl(List<NotifyChannelStrategy> strategyList) {
         this(strategyList, null, null, null, null, null, null, null, null, null);
     }
@@ -490,18 +500,32 @@ public class NotifyServiceImpl implements NotifyService {
         }
         int sent = 0;
         for (Map.Entry<String, NotificationAggregator.AggregatedMessage> entry : pending.entrySet()) {
-            String[] parts = entry.getKey().split("\\|", 3);
-            if (parts.length < 2) {
-                continue;
-            }
-            String receiver = parts[0];
-            NotifyChannel channel;
-            try {
-                channel = NotifyChannel.valueOf(parts[1]);
-            } catch (IllegalArgumentException e) {
-                continue;
-            }
             NotificationAggregator.AggregatedMessage msg = entry.getValue();
+
+            // 优先使用 AggregatedMessage 中携带的渠道信息
+            NotifyChannel channel = msg.getChannel();
+            String receiver;
+
+            if (channel != null) {
+                receiver = extractReceiverFromKey(entry.getKey(), channel);
+            } else {
+                // 兼容旧格式：从 key 中解析渠道
+                String[] parts = entry.getKey().split("\\|", 3);
+                if (parts.length < 2) {
+                    continue;
+                }
+                receiver = parts[0];
+                try {
+                    channel = NotifyChannel.valueOf(parts[1]);
+                } catch (IllegalArgumentException e) {
+                    continue;
+                }
+            }
+
+            if (receiver == null || channel == null) {
+                continue;
+            }
+
             NotifyChannelStrategy strategy = channelStrategies.get(channel);
             if (strategy != null) {
                 strategy.send(receiver, msg.getTitle(), msg.getContent());
@@ -512,6 +536,24 @@ public class NotifyServiceImpl implements NotifyService {
             log.info("[NotifyServiceImpl] 聚合消息刷新完成, 发送 {} 条聚合消息", sent);
         }
         return sent;
+    }
+
+    /**
+     * 从聚合 key 中提取接收者（当渠道已确定时）
+     *
+     * @param key     聚合 key
+     * @param channel 已知渠道
+     * @return 接收者，解析失败返回 null
+     */
+    private String extractReceiverFromKey(String key, NotifyChannel channel) {
+        if (key == null || key.isEmpty()) {
+            return null;
+        }
+        // key 格式：receiver|channel|template 或 receiver|channel 或 receiver
+        if (key.contains("|")) {
+            return key.substring(0, key.indexOf('|'));
+        }
+        return key;
     }
 
     // ==================== 内部发送逻辑 ====================

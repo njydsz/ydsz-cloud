@@ -6,15 +6,26 @@ import org.springframework.beans.factory.ObjectProvider;
 
 import com.njydsz.common.seata.api.XidPropagator;
 import com.njydsz.common.seata.api.XidSigner;
+import com.njydsz.common.seata.context.XidContextHolder;
 
 /**
  * 默认 XID 传播器实现
  *
- * <p>使用 ThreadLocal 存储 XID，支持 HTTP Header 和 MQ 属性的序列化/反序列化。
+ * <p>使用独立的 {@link XidContextHolder} 存储 XID，支持 HTTP Header 和 MQ 属性的序列化/反序列化。
  * 通过 SPI 注入 {@link XidSigner} 实现签名校验，防止 XID 伪造注入。
  *
  * <p><b>P0-4 修复</b>：集成签名校验机制，当配置签名密钥时对 XID 进行 HMAC-SHA256 签名，
  * 下游服务验证签名有效后才绑定到上下文，防止恶意 XID 注入。
+ *
+ * <p><b>P2-3 修复</b>：不再委托 {@code AbstractTransactionManager} 包级私有方法，
+ * 改为直接依赖 {@link XidContextHolder}，消除循环依赖。
+ *
+ * <h3>XID 传播流程：</h3>
+ * <ol>
+ *   <li>上游服务：{@code currentXid()} 获取 XID → {@code serialize(xid)} 序列化（含签名）</li>
+ *   <li>HTTP Header：{@code X-XID} 或事务上下文特定 Header 传输</li>
+ *   <li>下游服务：{@code deserialize(header)} 反序列化（校验签名）→ {@code bind(xid)} 绑定到线程</li>
+ * </ol>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -90,14 +101,14 @@ public class DefaultXidPropagator implements XidPropagator {
     }
 
     /**
-     * 将 XID 绑定到当前线程（委托给 AbstractTransactionManager 的 ThreadLocal）
+     * 将 XID 绑定到当前线程的 {@link XidContextHolder}
      *
      * @param xid 全局事务 ID
      */
     @Override
     public void bind(String xid) {
         if (xid != null) {
-            AbstractTransactionManager.setXidToHolder(xid);
+            XidContextHolder.setXid(xid);
             log.debug("XID bound to current thread: {}", xid);
         }
     }
@@ -109,7 +120,7 @@ public class DefaultXidPropagator implements XidPropagator {
      */
     @Override
     public String currentXid() {
-        return AbstractTransactionManager.getXidFromHolder();
+        return XidContextHolder.getXid();
     }
 
     /**
@@ -117,7 +128,7 @@ public class DefaultXidPropagator implements XidPropagator {
      */
     @Override
     public void unbind() {
-        AbstractTransactionManager.removeXidFromHolder();
+        XidContextHolder.remove();
     }
 
     /**
