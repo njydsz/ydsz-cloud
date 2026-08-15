@@ -82,7 +82,7 @@ public interface TccTransactionDialectProvider {
     String getFindByXidBranchSql();
 
     /**
-     * 获取查询超时未完成事务的 SQL
+     * 获取查询超时未完成事务的 SQL（分页版本，P1-2 新增）
      *
      * <p>参数绑定顺序：
      * <ol>
@@ -90,9 +90,23 @@ public interface TccTransactionDialectProvider {
      *   <li>try_completed_at (TIMESTAMP) - 超时阈值</li>
      * </ol>
      *
-     * @return 查询超时未完成事务的 SQL
+     * @return 查询超时未完成事务的 SQL（无 LIMIT 分页）
      */
     String getFindTimeoutPendingSql();
+
+    /**
+     * 获取分页查询超时未完成事务的 SQL（P1-2 新增）
+     *
+     * <p>参数绑定顺序（以 MySQL 为例）：
+     * <ol>
+     *   <li>status (VARCHAR) - 应为 TRIED</li>
+     *   <li>try_completed_at (TIMESTAMP) - 超时阈值</li>
+     *   <li>limit (INT) - 单次返回最大记录数</li>
+     * </ol>
+     *
+     * @return 带回积分页的查询 SQL
+     */
+    String getFindTimeoutPendingPagedSql();
 
     /**
      * 获取统计超时未完成事务数量的 SQL

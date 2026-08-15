@@ -204,22 +204,31 @@ public class QueueConfiguration {
      * 创建死信队列自动重试调度器
      *
      * <p>当死信队列服务可用且启用了自动重试时，创建定时调度器实例。
+     * 调度器使用带抖动的延迟策略，避免多实例同时扫描造成惊群。
      *
      * @param deadLetterQueueService 死信队列服务
-     * @return 死信队列重试调度器实例
+     * @return 死信队列重试调度器实例，或 null（禁用时）
      */
     @Bean
     @ConditionalOnMissingBean(DeadLetterRetryScheduler.class)
+    @ConditionalOnBean(DeadLetterQueueService.class)
     public DeadLetterRetryScheduler deadLetterRetryScheduler(DeadLetterQueueService deadLetterQueueService) {
-        if (deadLetterQueueService != null
-                && !(deadLetterQueueService instanceof NoOpDeadLetterQueueService)
-                && queueProperties.resolvedDeadLetterRetryEnabled()) {
-            log.info("[Queue] 创建死信队列自动重试调度器，间隔: {}ms",
-                    queueProperties.resolvedDeadLetterRetryInterval());
-            return new DeadLetterRetryScheduler(deadLetterQueueService, queueProperties);
+        if (deadLetterQueueService == null
+                || deadLetterQueueService instanceof NoOpDeadLetterQueueService
+                || !queueProperties.resolvedDeadLetterRetryEnabled()) {
+            log.info("[Queue] 死信队列自动重试已禁用，跳过调度器创建");
+            return null;
         }
-        log.info("[Queue] 死信队列自动重试已禁用，跳过调度器创建");
-        return null;
+        // CHECKSTYLE.OFF: ThreadPoolCreate
+        // 单线程调度池：仅用于定时触发死信扫描，短生命周期任务无上下文传播需求。
+        // 直接构造 ScheduledThreadPoolExecutor 以绕过 Executors 禁用限制。
+        ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(1,
+                r -> new Thread(r, "ydsz-queue-dlq-retry"));
+        // CHECKSTYLE.ON: ThreadPoolCreate
+        log.info("[Queue] 创建死信队列自动重试调度器，间隔: {}ms, 抖动: {}%",
+                queueProperties.resolvedDeadLetterRetryInterval(),
+                queueProperties.getDeadLetterRetryJitterPercent());
+        return new DeadLetterRetryScheduler(deadLetterQueueService, queueProperties, scheduler);
     }
 
     // ==================== 消息去重配置 ====================

@@ -532,6 +532,61 @@ public class FeignProperties {
          * 默认值：{@code 3600}（1 小时）。
          */
         private int stateTtlSeconds = 3600;
+
+        /**
+         * 按服务名定制的熔断器参数覆盖。
+         *
+         * <p>Key 为服务名（FeignClient name），Value 为覆盖参数。
+         * 未配置的服务使用上方全局默认值。支持的覆盖字段包括：
+         * failureRateThreshold, slowCallRateThreshold, slowCallDurationThreshold,
+         * slidingWindowSize, waitDurationInOpenState。
+         *
+         * <pre>
+         * ydsz:
+         *   feign:
+         *     circuit-breaker:
+         *       failure-rate-threshold: 50
+         *       client-config:
+         *         message:
+         *           failure-rate-threshold: 30
+         *           slow-call-duration-threshold: 5000
+         *         user:
+         *           sliding-window-size: 200
+         * </pre>
+         */
+        private Map<String, CircuitBreakerClientConfig> clientConfig = new ConcurrentHashMap<>();
+    }
+
+    /**
+     * 单个服务的熔断器参数覆盖配置。
+     *
+     * <p>用于 {@link CircuitBreaker#clientConfig} 中按服务名定制熔断策略。
+     * 所有字段均为 null 时使用 CircuitBreaker 的对应全局默认值。
+     */
+    @Getter
+    @Setter
+    public static class CircuitBreakerClientConfig {
+
+        /** 失败率阈值覆盖（百分比），null 时使用全局值 */
+        private Float failureRateThreshold;
+
+        /** 慢调用率阈值覆盖（百分比），null 时使用全局值 */
+        private Float slowCallRateThreshold;
+
+        /** 慢调用阈值覆盖（毫秒），null 时使用全局值 */
+        private Integer slowCallDurationThreshold;
+
+        /** 滑动窗口大小覆盖，null 时使用全局值 */
+        private Integer slidingWindowSize;
+
+        /** 开启状态等待时间覆盖（秒），null 时使用全局值 */
+        private Integer waitDurationInOpenState;
+
+        /** 半开状态允许的最大调用数覆盖，null 时使用全局值 */
+        private Integer permittedNumberOfCallsInHalfOpenState;
+
+        /** 滑动窗口类型覆盖，null 时使用全局值 */
+        private String slidingWindowType;
     }
 
     /**
