@@ -459,6 +459,7 @@ String formatted = YdszJson.format(compactJson);
 | P0 | 补齐无界缓存上限 | `FieldMetadataLoader` 的 `JSON_VALUE_METHOD_CACHE` / `COMPUTED_PROPERTIES_CACHE` 与 `TypeFactory.typeCache` 由无界 Map 改为 `BoundedLruCache`（上限 1024），消除长期运行内存泄漏风险 |
 | P1 | ThreadLocal 生命周期治理 | 新增 `YdszJson.cleanupThread()` 统一清理 API（MQ / 定时任务 / RPC 线程在任务边界调用）；读取器对象池增加 64K 字符缓冲上限，防止超大报文撑爆池 |
 | P1 | Jackson 注解兼容桥（`JacksonAnnotationBridge`） | classpath 存在 `jackson-annotations` 时自动识别 Jackson 同名注解（`@JsonProperty` / `@JsonIgnore` / `@JsonAlias` / `@JsonIgnoreProperties` / `@JsonValue` 等），读写双向生效，**原生注解优先**；依赖缺失时零开销降级。解决 Jackson 迁移期 import 错包静默失效问题 |
+| P1 | 双注册表合并（`SerializerRegistry` 单一事实源） | `JsonModuleRegistry` 不再维护独立序列化器/反序列化器存储，模块序列化器在 `initialize()` 时写入全局唯一注册中心 `SerializerRegistry`（`registerIfAbsent`，先注册优先）；`clear()` / `reinitialize()` 仅清理模块来源（按类型集合精确移除，不误删用户直接注册）；查询点由"先 `SerializerRegistry` 后 `JsonModuleRegistry`"双查简化为单查，消除每个序列化/反序列化操作的双注册表兜底开销 |
 | P2 | `JsonModuleRegistry` 支持 ServiceLoader SPI | 非 Spring 环境通过 `META-INF/services` 自动发现模块；同类双注册（SPI + Spring Bean）自动去重 |
 | P2 | `JsonSchemaValidator` 标注 `@Deprecated` | 仅覆盖 Draft-07 高频子集（10 个关键字），完整规范支持请迁移 networknt/json-schema-validator；计划 2.0.0 移除 |
 
@@ -468,7 +469,7 @@ String formatted = YdszJson.format(compactJson);
 |------|-----------|
 | v1.0.0 → v1.1.0 | ⚠️ `JsonConfig.getInstance()` 标记 `@Deprecated`，推荐使用 `JsonConfig.copyOf()` / `install()` |
 | v1.1.0 → v1.2.0 | ✅ 向后兼容，无破坏性变更 |
-| v1.2.2 → v1.2.3 | ✅ 向后兼容：新增 `YdszJson.cleanupThread()` 等 API；多 Mapper 深度隔离为缺陷修复（原先多实例深度互相覆盖属未定义行为）；`JsonSchemaValidator` 标注 `@Deprecated` |
+| v1.2.2 → v1.2.3 | ✅ 向后兼容：新增 `YdszJson.cleanupThread()`、`SerializerRegistry.registerIfAbsent()/unregisterAll()` 等 API；多 Mapper 深度隔离为缺陷修复（原先多实例深度互相覆盖属未定义行为）；双注册表合并为单一事实源（`JsonModuleRegistry.getSerializer()` 现委托全局注册中心，语义等价于原先的"模块 + 直接注册"双查）；`JsonSchemaValidator` 标注 `@Deprecated` |
 | v1.2.0 → 未来版本 | 标注 `@Beta` 的 API 可能破坏性变更；标注 `@Deprecated` 的 API 将在下个主版本移除 |
 
 ### 与父 POM 版本对照（E-3）
