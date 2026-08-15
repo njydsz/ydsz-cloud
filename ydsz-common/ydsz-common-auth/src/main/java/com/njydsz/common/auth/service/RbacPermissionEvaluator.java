@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>按注解要求（AND/OR、权限类型）进行校验</li>
  * </ul>
  *
- * <p><b>注意：</b>本模块使用 ydsz-common-cache 做角色权限本地缓存（TTL 可配置，默认 30 分钟），
+ * <p><b>注意：</b>角色权限缓存由 {@link RolePermissionCacheService} 封装管理（TTL 可配置，默认 30 分钟），
  * 当 Redis 不可用时降级到本地缓存。仅对通配符权限的正则 Pattern 做轻量缓存以避免重复编译。
  *
  * <p><b>异常说明：</b>

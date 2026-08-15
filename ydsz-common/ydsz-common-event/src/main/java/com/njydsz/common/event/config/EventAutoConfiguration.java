@@ -88,8 +88,12 @@ public class EventAutoConfiguration {
         DatabaseDialect dialect = dataSource != null
                 ? DatabaseDialect.detect(dataSource)
                 : DatabaseDialect.UNKNOWN;
-        log.info("Outbox repository initialized: table={}, dialect={}", properties.getTableName(), dialect);
-        return new OutboxRepository(jdbcTemplate, properties.getTableName(), dialect);
+        OutboxRepository repository = new OutboxRepository(jdbcTemplate, properties.getTableName(), dialect);
+        // 设置 countByStatus 缓存 TTL
+        repository.setCacheTtlMillis(properties.getStatusCountCacheSeconds() * 1000L);
+        log.info("Outbox repository initialized: table={}, dialect={}, cacheTtl={}s",
+                properties.getTableName(), dialect, properties.getStatusCountCacheSeconds());
+        return repository;
     }
 
     /**

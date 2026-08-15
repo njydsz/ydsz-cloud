@@ -152,4 +152,24 @@ public class SeataProperties {
 
     /** 事务超时判定阈值（毫秒），超过此时间未 Confirm/Cancel 的事务将被恢复扫描处理 */
     private long recoveryTimeoutThresholdMs = 60000;
+
+    /**
+     * 恢复扫描单次处理最大事务数（P1-2 新增）
+     *
+     * <p>限制单次扫描循环处理的最大事务数量，避免一次处理过多导致：
+     * <ul>
+     *   <li>JVM 暂停时间过长，影响服务可用性</li>
+     *   <li>长事务持有分布式锁，阻塞其他节点</li>
+     * </ul>
+     */
+    private int recoveryBatchSize = 100;
+
+    /**
+     * 恢复扫描是否启用分页模式（P1-2 新增）
+     *
+     * <p>启用后每次扫描仅处理 {@link #recoveryBatchSize} 条记录，
+     * 下次扫描从上次结束位置继续，渐进式处理所有超时事务。
+     * 避免一次性加载全部超时事务到内存。
+     */
+    private boolean recoveryPagedMode = true;
 }

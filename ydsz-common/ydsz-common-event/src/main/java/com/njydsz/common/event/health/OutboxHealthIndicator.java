@@ -60,7 +60,8 @@ public class OutboxHealthIndicator implements HealthIndicator {
     @Override
     public Health health() {
         try {
-            Map<String, Long> statusCounts = outboxRepository.countByStatus();
+            // 使用缓存版本减少全表 COUNT 对 /actuator/health 端点的响应时间
+            Map<String, Long> statusCounts = outboxRepository.countByStatus(true);
             long pending = statusCounts.getOrDefault(OutboxStatus.PENDING.name(), 0L);
             long processing = statusCounts.getOrDefault(OutboxStatus.PROCESSING.name(), 0L);
             long deadLetter = statusCounts.getOrDefault(OutboxStatus.DEAD_LETTER.name(), 0L);

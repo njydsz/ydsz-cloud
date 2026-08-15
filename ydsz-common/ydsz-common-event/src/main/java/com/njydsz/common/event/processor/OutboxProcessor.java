@@ -242,8 +242,8 @@ public class OutboxProcessor {
      */
     void processBatch() {
         try {
-            // 更新队列深度缓存（供 Gauge 读取）
-            cachedStatusCounts = outboxRepository.countByStatus();
+            // 更新队列深度缓存（供 Gauge 读取），使用缓存版本减少 DB 压力
+            cachedStatusCounts = outboxRepository.countByStatus(true);
 
             List<OutboxMessage> messages = outboxRepository.findPending(properties.getBatchSize());
             if (messages.isEmpty()) {

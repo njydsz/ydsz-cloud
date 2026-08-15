@@ -36,6 +36,7 @@ import com.njydsz.common.auth.service.ColumnPermissionResolver;
 import com.njydsz.common.auth.service.DataPermissionResolver;
 import com.njydsz.common.auth.service.RbacPermissionEvaluator;
 import com.njydsz.common.auth.service.RbacUserInfoService;
+import com.njydsz.common.auth.service.RolePermissionCacheService;
 import com.njydsz.common.auth.service.RolePermissionLoader;
 import com.njydsz.common.auth.service.TokenBlacklistService;
 import com.njydsz.common.auth.warmup.PermissionWarmUpInitializer;
@@ -154,12 +155,28 @@ public class AuthConfiguration {
     }
 
     /**
+     * 创建角色权限缓存服务。
+     *
+     * <p>封装角色权限缓存的全部管理职责（缓存查询、写入、失效、反向索引），
+     * 使 {@link RbacPermissionEvaluator} 专注于权限校验逻辑。
+     *
+     * @param properties 认证配置属性
+     * @return 角色权限缓存服务实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public RolePermissionCacheService rolePermissionCacheService(AuthProperties properties) {
+        return new RolePermissionCacheService(properties);
+    }
+
+    /**
      * 创建权限评估器。
      *
-     * @param properties            认证配置属性
-     * @param userInfoService       用户信息服务
-     * @param rolePermissionLoader  角色权限加载器
-     * @param cacheKeyStrategy      缓存 Key 生成策略
+     * @param properties               认证配置属性
+     * @param userInfoService          用户信息服务
+     * @param rolePermissionLoader     角色权限加载器
+     * @param rolePermissionCacheService 角色权限缓存服务
+     * @param cacheKeyStrategy         缓存 Key 生成策略
      * @return 权限评估器实例
      */
     @Bean
@@ -168,10 +185,12 @@ public class AuthConfiguration {
             AuthProperties properties,
             RbacUserInfoService userInfoService,
             RolePermissionLoader rolePermissionLoader,
+            RolePermissionCacheService rolePermissionCacheService,
             CacheKeyStrategy cacheKeyStrategy,
             ObjectProvider<AuthMetricsCollector> metricsCollectorProvider
     ) {
-        RbacPermissionEvaluator evaluator = new RbacPermissionEvaluator(properties, userInfoService, rolePermissionLoader);
+        RbacPermissionEvaluator evaluator = new RbacPermissionEvaluator(
+                properties, userInfoService, rolePermissionLoader, rolePermissionCacheService);
         evaluator.setCacheKeyStrategy(cacheKeyStrategy);
         AuthMetricsCollector metricsCollector = metricsCollectorProvider.getIfAvailable();
         if (metricsCollector != null) {
