@@ -15,6 +15,7 @@ import com.njydsz.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.common.queue.service.IMessageHandler;
 import com.njydsz.common.queue.service.IMessageSubscriber;
 import com.njydsz.common.queue.handler.MethodMessageHandler;
+import com.njydsz.common.queue.service.MessageSubscriberHelper;
 
 import lombok.extern.slf4j.Slf4j;
 

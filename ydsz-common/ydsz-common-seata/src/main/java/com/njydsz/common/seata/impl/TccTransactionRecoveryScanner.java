@@ -148,8 +148,9 @@ public class TccTransactionRecoveryScanner {
          * 恢复时执行 Cancel
          *
          * @param txLog 超时事务日志
-         * @throws CancelException Cancel 执行异常
+         * @throws Exception Cancel 执行异常
          */
-        void recoverCancel(TccTransactionLog txLog) throws CancelException;
+        // CHECKSTYLE.OFF: IllegalThrows - 接口方法统一声明 Exception，调用方已 catch 处理
+        void recoverCancel(TccTransactionLog txLog) throws Exception;
     }
 }

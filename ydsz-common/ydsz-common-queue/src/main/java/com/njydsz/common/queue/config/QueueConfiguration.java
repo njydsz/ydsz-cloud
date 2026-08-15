@@ -31,7 +31,7 @@ import com.njydsz.common.queue.metrics.QueueMetricsBinder;
 import com.njydsz.common.queue.queue.IMessageQueue;
 import com.njydsz.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.common.queue.queue.MessageQueueFactory;
-import com.njydsz.common.queue.queue.QueueType;
+import com.njydsz.common.queue.enums.QueueType;
 import com.njydsz.common.queue.scheduler.DeadLetterRetryScheduler;
 import com.njydsz.common.queue.service.DeadLetterQueueService;
 import com.njydsz.common.queue.service.impl.DeadLetterQueueServiceImpl;

@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.domain.Range;
+import org.springframework.data.redis.connection.stream.Consumer;
 import org.springframework.data.redis.connection.stream.PendingMessage;
 import org.springframework.data.redis.connection.stream.PendingMessages;
 import org.springframework.data.redis.connection.stream.PendingMessagesSummary;
@@ -84,8 +86,9 @@ public class PendingEntryListCleaner {
                 Long count = entry.getValue();
                 if (count != null && count > 0) {
                     // 获取该消费者的 pending 消息
+                    Consumer consumer = Consumer.from(groupName, consumerName);
                     PendingMessages pendingMessages = redisTemplate.opsForStream()
-                            .pending(channel, groupName, consumerName, count.intValue());
+                            .pending(channel, consumer, Range.unbounded(), count);
                     if (pendingMessages != null) {
                         for (PendingMessage pending : pendingMessages) {
                             if (pending.getElapsedTimeSinceLastDelivery().compareTo(idleThreshold) > 0) {
@@ -93,7 +96,7 @@ public class PendingEntryListCleaner {
                                         .entryId(pending.getIdAsString())
                                         .consumerName(consumerName)
                                         .idleTimeMillis(pending.getElapsedTimeSinceLastDelivery().toMillis())
-                                        .deliveryCount(pending.getTotalDeliveryCount())
+                                        .deliveryCount((int) pending.getTotalDeliveryCount())
                                         .firstDeliveryTime(LocalDateTime.now().minus(
                                                 pending.getElapsedTimeSinceLastDelivery()))
                                         .build());
@@ -168,15 +171,16 @@ public class PendingEntryListCleaner {
 
             summary.getPendingMessagesPerConsumer().forEach((consumerName, count) -> {
                 if (count != null && count > 0) {
+                    Consumer consumer = Consumer.from(groupName, consumerName);
                     PendingMessages pendingMessages = redisTemplate.opsForStream()
-                            .pending(channel, groupName, consumerName, count.intValue());
+                            .pending(channel, consumer, Range.unbounded(), count);
                     if (pendingMessages != null) {
                         for (PendingMessage pm : pendingMessages) {
                             allPending.add(PendingEntryInfo.builder()
                                     .entryId(pm.getIdAsString())
                                     .consumerName(consumerName)
                                     .idleTimeMillis(pm.getElapsedTimeSinceLastDelivery().toMillis())
-                                    .deliveryCount(pm.getTotalDeliveryCount())
+                                    .deliveryCount((int) pm.getTotalDeliveryCount())
                                     .build());
                         }
                     }

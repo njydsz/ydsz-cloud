@@ -65,7 +65,7 @@ public class MethodMessageHandler implements IMessageHandler {
             // 尝试将 body 反序列化为 Map
             @SuppressWarnings("unchecked")
             Map<String, Object> bodyMap = message != null && message.getBody() != null
-                    ? YdszJson.fromJsonToMap(message.getBody())
+                    ? YdszJson.fromJsonToMap(message.getBody(), String.class, Object.class)
                     : null;
             method.invoke(bean, bodyMap);
         } else {
