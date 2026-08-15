@@ -1,6 +1,5 @@
 package com.njydsz.system.server.service.impl;
 
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,6 +8,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,21 +17,21 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.auth.annotation.DataScope;
+import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.event.model.StandardEventTypes;
 import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
+import com.njydsz.system.domain.converter.SystemConverter;
 import com.njydsz.system.domain.dto.ConfigDTO;
-import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.domain.entity.Config;
 import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
+import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.infra.repository.ConfigRepository;
-import com.njydsz.system.server.cache.SystemCacheKeys;
 import com.njydsz.system.server.config.SystemProperties;
 import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.service.ConfigService;
@@ -38,22 +39,20 @@ import com.njydsz.system.server.service.ConfigService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.system.domain.converter.SystemConverter;
-
 /**
  * 系统配置 Service 实现
  *
  * <p>对 {@link ConfigService} 接口的完整实现，是「系统配置中心」的核心业务逻辑层。
- * 集成 Redis 缓存、Micrometer 指标、缓存穿透防护和配置变更事件总线。
+ * 集成 ydsz-common-cache 本地缓存（Spring Cache 注解驱动）、Micrometer 指标和配置变更事件总线。
  *
  * <p><b>核心职责：</b>
  * <ul>
  *   <li><b>CRUD</b>：{@code page} / {@code getById} / {@code save} / {@code updateById} / {@code removeById}，
  *       全部走 {@code @Transactional} 事务保证</li>
  *   <li><b>缓存读</b>：{@code getConfigValue}（单 key） / {@code getConfigsByGroup}（组批量） —
- *       走 Redis 二级缓存 + 本地 Caffeine 一级缓存</li>
+ *       走 ydsz-common-cache 本地缓存（Spring Cache 注解驱动）</li>
  *   <li><b>公开配置</b>：{@code listPublicConfigs} — 前端「公开配置」接口数据源</li>
- *   <li><b>缓存穿透防护</b>：DB 不存在的 key 缓存「{@code __NULL__}」哨兵值 1min</li>
+ *   <li><b>缓存穿透防护</b>：ydsz-common-cache 内置 null 值缓存能力（allowNullValues=true）</li>
  *   <li><b>变更广播</b>：通过 {@code OutboxService} 发布 {@code ConfigChangeEvent}，
  *       订阅者可监听 {@code ydsz.workflow.sla-default-hours} 等关键配置变更</li>
  *   <li><b>搜索同步</b>：通过 {@link SearchIndexEventBridge} 同步配置变更到 ES 索引</li>
@@ -62,11 +61,12 @@ import com.njydsz.system.domain.converter.SystemConverter;
  *
  * <p><b>缓存设计：</b>
  * <ul>
- *   <li>单 key 缓存：{@code system:config:value:{configKey}}，TTL 取自配置（默认 5min）</li>
- *   <li>组批量缓存：{@code system:config:group:{configGroup}}，TTL 5min</li>
- *   <li>公开配置缓存：{@code system:config:public}，TTL 5min</li>
- *   <li>空值哨兵：{@code __NULL__}，TTL 1min（防恶意刷不存在 key）</li>
- *   <li>写操作触发 {@code @CacheEvict} 主动失效</li>
+ *   <li>缓存名称：{@link CacheConstants#SYSTEM_CONFIG_CACHE}（ydsz-common-cache 本地缓存）</li>
+ *   <li>单 key 缓存键：{@code value:{tenantId}:{configKey}}</li>
+ *   <li>组批量缓存键：{@code group:{tenantId}:{configGroup}}</li>
+ *   <li>公开配置缓存键：{@code public:{tenantId}}</li>
+ *   <li>TTL 与容量通过 {@code ydsz.cache.caches.system:config} YAML 配置</li>
+ *   <li>写操作触发 {@code @CacheEvict(allEntries=true)} 主动失效</li>
  * </ul>
  *
  * <p><b>事务边界：</b>所有写方法 {@code @Transactional(rollbackFor = Exception.class)}；
@@ -86,17 +86,6 @@ import com.njydsz.system.domain.converter.SystemConverter;
 @RequiredArgsConstructor
 public class ConfigServiceImpl implements ConfigService {
 
-    /** 单个配置值缓存键前缀：system:config:value:{configKey} */
-    private static final String CACHE_KEY_PREFIX = "system:config:value:";
-    /** 配置组缓存键前缀：system:config:group:{configGroup} */
-    private static final String CACHE_GROUP_PREFIX = "system:config:group:";
-    /** 公开配置列表缓存键：system:config:public */
-    private static final String CACHE_PUBLIC_KEY = "system:config:public";
-    /** 空值哨兵，用于防缓存穿透 */
-    private static final String NULL_SENTINEL = "__NULL__";
-    /** 空值哨兵 TTL（1 分钟） */
-    private static final Duration NULL_SENTINEL_TTL = Duration.ofMinutes(1);
-
     // 配置值校验常量
     private static final int MAX_STRING_LENGTH = 4096;
     private static final int MAX_JSON_LENGTH = 65536;
@@ -109,8 +98,6 @@ public class ConfigServiceImpl implements ConfigService {
 
     /** 系统配置仓储 */
     private final ConfigRepository configRepository;
-    /** Redis String 操作组件 */
-    private final RedisStringOps stringOps;
     /** 系统监控指标采集器 */
     private final SystemMetrics metrics;
     /** 系统配置属性 */

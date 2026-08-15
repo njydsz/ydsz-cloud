@@ -1,13 +1,19 @@
 package com.njydsz.common.core.trace;
 
+import java.security.SecureRandom;
 import java.util.HexFormat;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * TraceId 生成器（基于 ThreadLocalRandom + HexFormat）。
+ * TraceId 生成器（基于 ThreadLocalRandom / SecureRandom + HexFormat）。
  *
- * <p>使用 {@link ThreadLocalRandom}（线程本地伪随机数，无锁竞争）生成随机字节，
- * 经 {@link HexFormat} 格式化为小写十六进制字符串，保证分布式环境下高概率全局唯一。</p>
+ * <p>提供两套实现，适用于不同场景：</p>
+ * <ul>
+ *   <li>内部高性能路径：使用 {@link ThreadLocalRandom}（线程本地伪随机数，无锁竞争），
+ *       经 {@link HexFormat} 格式化为小写十六进制字符串</li>
+ *   <li>W3C 跨组织边界路径：使用 {@link SecureRandom}（密码学级熵源），
+ *       满足 W3C Trace Context 标准要求</li>
+ * </ul>
  *
  * <p>设计采用纯函数式风格：每次调用直接分配 byte 数组。
  * 在现代 JVM（ZGC/Shenandoah）下，16 字节的 TLAB 分配几乎零成本，
@@ -18,13 +24,15 @@ import java.util.concurrent.ThreadLocalRandom;
  *   <li>{@link #generateSortableTraceId()} 按时间排序，使用 ThreadLocal 序列号
  *       避免全局 CAS 争用；同毫秒内不同线程的序号彼此独立但均保序，整体趋势有序；
  *       无锁、线程本地，适合绝大多数场景</li>
+ *   <li>{@link #generateW3CTraceId()} / {@link #generateW3CSpanId()} 使用 {@link SecureRandom}，
+ *       密码学级安全但吞吐量略低，适用于跨组织 W3C 传播场景</li>
  * </ul>
  *
  * <h3>安全性说明</h3>
- * <p>TraceId 用于日志关联和链路追踪，非密码学用途。{@link ThreadLocalRandom} 满足"
- * 高概率全局唯一"的要求，碰撞概率约 2^-128。</p>
+ * <p>TraceId 用于日志关联和链路追踪，非密码学用途。两种实现碰撞概率均约 2^-128。</p>
  *
- * <p><b>线程安全：</b>{@link ThreadLocalRandom} 线程本地，天然线程安全。</p>
+ * <p><b>线程安全：</b>{@link ThreadLocalRandom} 线程本地天然安全；{@link SecureRandom} 内部同步，
+ * 多线程共享无竞争风险。</p>
  *
  * <h3>W3C TraceContext 支持</h3>
  * <p>提供符合 W3C Trace Context 标准的 spanId 生成和 traceparent header 构建方法，
@@ -35,13 +43,17 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public final class TraceIdGenerator {
 
+    /** traceId 字节长度（16 bytes = 128 bit = 32 hex 字符） */
     private static final int TRACE_ID_BYTES = 16;
+
+    /** spanId 字节长度（8 bytes = 64 bit = 16 hex 字符） */
     private static final int SPAN_ID_BYTES = 8;
 
-    /**
-     * 共享的 HexFormat 实例（线程安全，可重用）。
-     */
+    /** 共享的 HexFormat 实例（线程安全，可重用）。 */
     private static final HexFormat HEX_FORMAT = HexFormat.of();
+
+    /** 密码学安全随机数生成器（用于 W3C Trace Context 跨组织边界传播场景）。 */
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
     /**
      * 同一毫秒内的序号上限（14 bit，0~16383），允许单线程每毫秒最多 16384 次调用。
@@ -193,6 +205,45 @@ public final class TraceIdGenerator {
      * @see <a href="https://www.w3.org/TR/trace-context/">W3C Trace Context</a>
      */
     public record ParsedTraceparent(int version, String traceId, String spanId, int traceFlags) {
+    }
+
+    /**
+     * 生成符合 W3C Trace Context 标准的 32 位十六进制 TraceId。
+     *
+     * <p>使用 {@link SecureRandom} 生成 128 bit 密码学安全随机数，格式化为 32 位小写 hex。
+     * 适用于 W3C Trace Context 跨组织边界传播场景，提供最高级别的唯一性保障
+     * （碰撞概率约 2^-128）。</p>
+     *
+     * <p>与 {@link #generateSortableTraceId()} 的区别：</p>
+     * <ul>
+     *   <li>W3C 版使用 {@link SecureRandom}（密码学熵源，稍慢但更安全）</li>
+     *   <li>可排序版使用 {@link ThreadLocalRandom}（高性能，按时间有序）</li>
+     * </ul>
+     *
+     * @return 32 位小写十六进制字符串
+     * @since 4.2.0
+     * @see <a href="https://www.w3.org/TR/trace-context/">W3C Trace Context</a>
+     */
+    public static String generateW3CTraceId() {
+        byte[] bytes = new byte[TRACE_ID_BYTES];
+        SECURE_RANDOM.nextBytes(bytes);
+        return HEX_FORMAT.formatHex(bytes);
+    }
+
+    /**
+     * 生成符合 W3C Trace Context 标准的 16 位十六进制 SpanId。
+     *
+     * <p>使用 {@link SecureRandom} 生成 64 bit 密码学安全随机数，格式化为 16 位小写 hex。
+     * 与 {@link #generateW3CTraceId()} 配套使用，用于 W3C Trace Context 标准场景。</p>
+     *
+     * @return 16 位小写十六进制字符串
+     * @since 4.2.0
+     * @see <a href="https://www.w3.org/TR/trace-context/">W3C Trace Context</a>
+     */
+    public static String generateW3CSpanId() {
+        byte[] bytes = new byte[SPAN_ID_BYTES];
+        SECURE_RANDOM.nextBytes(bytes);
+        return HEX_FORMAT.formatHex(bytes);
     }
 
     /**
