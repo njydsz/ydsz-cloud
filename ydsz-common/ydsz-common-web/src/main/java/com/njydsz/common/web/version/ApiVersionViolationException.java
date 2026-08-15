@@ -30,7 +30,7 @@ public class ApiVersionViolationException extends BusinessException {
     /**
      * 最小版本号（仅供调试参考，违规信息主要承载于 {@link #getMessage()} 返回的字符串中）。
      */
-    private final int minVersion;
+    private final int minVersion = 0;
 
     // ==================== 构造函数（保持向后兼容） ====================
 

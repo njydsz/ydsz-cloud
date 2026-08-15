@@ -90,9 +90,8 @@ public class SimpleAgentExecutor implements AgentExecutor {
         String traceId = traceRecorder.startTrace(convId, "CHAT");
         log.info("[Simple-Agent] 执行: convId={}, traceId={}", convId, traceId);
 
-        String userInput = applyInputGuardrails(request.getUserInput(), traceId);
+        String userInput = guardrailService.applyInputGuardrails(request.getUserInput());
         if (userInput == null) {
-            agentMetrics.recordGuardrailRejection("input-guardrail", "input");
             traceRecorder.endTrace(traceId, "GUARDRAIL_REJECTED");
             ChatMessage msg = ChatMessage.assistant("抱歉，您的输入被安全护栏拒绝。", convId, TokenUsage.zero());
             return new ChatResponse(IdGenerator.nextIdStr(), "guardrail",
@@ -145,7 +144,7 @@ public class SimpleAgentExecutor implements AgentExecutor {
         traceRecorder.recordStep(traceId, "LLM_CALL",
                 "Simple chat", messages, response, llmDuration);
 
-        String output = applyOutputGuardrails(response.getContent(), traceId);
+        String output = guardrailService.applyOutputGuardrails(response.getContent());
 
         memory.save(convId, ChatMessage.user(userInput, convId));
         memory.save(convId, ChatMessage.assistant(output, convId, response.getUsage()));
@@ -174,9 +173,8 @@ public class SimpleAgentExecutor implements AgentExecutor {
         String responseId = IdGenerator.nextIdStr();
         String model = properties.getLlm().getDefaultModel();
 
-        String userInput = applyInputGuardrails(request.getUserInput(), traceId);
+        String userInput = guardrailService.applyInputGuardrails(request.getUserInput());
         if (userInput == null) {
-            agentMetrics.recordGuardrailRejection("input-guardrail", "input");
             traceRecorder.endTrace(traceId, "GUARDRAIL_REJECTED");
             chunkConsumer.accept(ChatChunk.content(responseId, model,
                     "抱歉，您的输入被安全护栏拒绝。"));
@@ -230,7 +228,7 @@ public class SimpleAgentExecutor implements AgentExecutor {
         traceRecorder.recordStep(traceId, "LLM_CALL", "Simple stream LLM call",
                 llmRequest, contentBuilder.toString(), duration);
 
-        String output = applyOutputGuardrails(contentBuilder.toString(), traceId);
+        String output = guardrailService.applyOutputGuardrails(contentBuilder.toString());
         memory.save(convId, ChatMessage.user(userInput, convId));
         memory.save(convId, ChatMessage.assistant(output, convId, usage[0]));
 
@@ -246,38 +244,5 @@ public class SimpleAgentExecutor implements AgentExecutor {
     @Override
     public boolean supports(String type) {
         return "chat".equalsIgnoreCase(type) || "simple".equalsIgnoreCase(type);
-    }
-
-    private String applyInputGuardrails(String input, String traceId) {
-        String sanitized = input;
-        for (InputGuardrail guard : inputGuardrails) {
-            GuardrailResult result = guard.check(sanitized);
-            if (result.isRejected()) {
-                traceRecorder.recordStep(traceId, "GUARDRAIL_REJECT_INPUT",
-                        guard.getName(), input, result.getReason(), 0);
-                return null;
-            }
-            if (result.getSanitizedInput() != null) {
-                sanitized = result.getSanitizedInput();
-            }
-        }
-        return sanitized;
-    }
-
-    private String applyOutputGuardrails(String output, String traceId) {
-        String sanitized = output;
-        for (OutputGuardrail guard : outputGuardrails) {
-            GuardrailResult result = guard.check(sanitized);
-            if (result.isRejected()) {
-                agentMetrics.recordGuardrailRejection(guard.getName(), "output");
-                traceRecorder.recordStep(traceId, "GUARDRAIL_REJECT_OUTPUT",
-                        guard.getName(), output, result.getReason(), 0);
-                return "抱歉，我无法回答这个问题。";
-            }
-            if (result.getSanitizedInput() != null) {
-                sanitized = result.getSanitizedInput();
-            }
-        }
-        return sanitized;
     }
 }

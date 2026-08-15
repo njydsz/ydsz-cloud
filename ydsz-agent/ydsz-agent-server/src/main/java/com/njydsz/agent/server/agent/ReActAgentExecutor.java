@@ -12,7 +12,6 @@ import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.agent.AgentExecutor;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
-import com.njydsz.agent.domain.guardrail.GuardrailResult;
 import com.njydsz.agent.domain.guardrail.InputGuardrail;
 import com.njydsz.agent.domain.guardrail.OutputGuardrail;
 import com.njydsz.agent.domain.model.ChatChunk;
@@ -24,6 +23,7 @@ import com.njydsz.agent.domain.model.ToolCall;
 import com.njydsz.agent.domain.tool.ToolRegistry;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
+import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.common.util.id.IdGenerator;
@@ -68,6 +68,8 @@ public class ReActAgentExecutor implements AgentExecutor {
     private final AgentMetrics agentMetrics;
     /** 成本分析服务（Token 用量核算，可为 null，调用处已做空判断） */
     private final CostAnalysisService costAnalysisService;
+    /** 护栏编排服务（统一驱动输入/输出护栏，消除重复逻辑） */
+    private final GuardrailService guardrailService;
 
     public ReActAgentExecutor(LlmClient llmClient, ConversationMemory memory,
                               ToolRegistry toolRegistry, AgentProperties properties,
@@ -75,7 +77,8 @@ public class ReActAgentExecutor implements AgentExecutor {
                               List<OutputGuardrail> outputGuardrails,
                               TraceRecorder traceRecorder,
                               AgentMetrics agentMetrics,
-                              CostAnalysisService costAnalysisService) {
+                              CostAnalysisService costAnalysisService,
+                              GuardrailService guardrailService) {
         this.llmClient = llmClient;
         this.memory = memory;
         this.toolRegistry = toolRegistry;
@@ -85,6 +88,7 @@ public class ReActAgentExecutor implements AgentExecutor {
         this.traceRecorder = traceRecorder;
         this.agentMetrics = agentMetrics;
         this.costAnalysisService = costAnalysisService;
+        this.guardrailService = guardrailService;
     }
 
     @Override
@@ -95,9 +99,8 @@ public class ReActAgentExecutor implements AgentExecutor {
         log.info("[ReAct] 开始执行: convId={}, traceId={}, maxIterations={}",
                 convId, traceId, request.getMaxIterations());
 
-        String userInput = applyInputGuardrails(request.getUserInput(), traceId);
+        String userInput = guardrailService.applyInputGuardrails(request.getUserInput());
         if (userInput == null) {
-            agentMetrics.recordGuardrailRejection("input-guardrail", "input");
             traceRecorder.endTrace(traceId, "GUARDRAIL_REJECTED");
             return buildRejectedResponse("输入被护栏拒绝");
         }
@@ -158,7 +161,7 @@ public class ReActAgentExecutor implements AgentExecutor {
                     messages, response, llmDuration);
 
             if (!response.hasToolCalls()) {
-                String output = applyOutputGuardrails(response.getContent(), traceId);
+                String output = guardrailService.applyOutputGuardrails(response.getContent());
                 memory.save(convId, ChatMessage.user(userInput, convId));
                 memory.save(convId, ChatMessage.assistant(output, convId, response.getUsage()));
                 traceRecorder.endTrace(traceId, "SUCCESS");
@@ -202,9 +205,8 @@ public class ReActAgentExecutor implements AgentExecutor {
         String model = properties.getLlm().getDefaultModel();
         TokenUsage totalUsage = TokenUsage.zero();
 
-        String userInput = applyInputGuardrails(request.getUserInput(), traceId);
+        String userInput = guardrailService.applyInputGuardrails(request.getUserInput());
         if (userInput == null) {
-            agentMetrics.recordGuardrailRejection("input-guardrail", "input");
             traceRecorder.endTrace(traceId, "GUARDRAIL_REJECTED");
             chunkConsumer.accept(ChatChunk.content(responseId, model,
                     "抱歉，您的输入被安全护栏拒绝。"));

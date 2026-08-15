@@ -70,9 +70,9 @@ import com.njydsz.cronjob.server.core.executor.GlobalConcurrencyController;
 import com.njydsz.cronjob.server.core.executor.JobNodeHeartbeat;
 import com.njydsz.cronjob.server.core.executor.TenantAwareExecutorPool;
 import com.njydsz.cronjob.server.core.handler.GlueJobHandler;
-import com.njydsz.cronjob.server.core.leader.FencingTokenManager;
 import com.njydsz.cronjob.server.core.handler.HttpJobHandler;
 import com.njydsz.cronjob.server.core.handler.ScriptJobHandler;
+import com.njydsz.cronjob.server.core.leader.FencingTokenManager;
 import com.njydsz.cronjob.server.core.logger.JobLoggerImpl;
 import com.njydsz.cronjob.server.core.logger.LogStreamManager;
 import com.njydsz.cronjob.server.core.map.MapTaskExecutor;
@@ -401,7 +401,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     /**
      * P0-1: 校验当前节点持有的 Fencing Token 是否仍然有效（防脑裂）。
      *
-     * <p>通过 {@link FacingTokenManager#isCurrentTokenValid(String)} 对比本地 Token 与
+     * <p>通过 {@link FencingTokenManager#isCurrentTokenValid(String)} 对比本地 Token 与
      * Redis 中的最新 Token。Token 无效时说明已发生 Leader 切换，当前节点应拒绝派发，
      * 防止多实例同时认为自己是主节点导致任务重复执行。
      *
@@ -607,6 +607,15 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
             }
         }
 
+        // P0-2: 全局并发控制 — 分片任务执行前获取全局并发配额
+        boolean globalConcurrencyAcquired = tryAcquireGlobalConcurrency();
+        if (!globalConcurrencyAcquired) {
+            log.warn("[Dispatcher] 全局并发已满, 拒绝执行分片: key={} shard={} triggerType={}",
+                    job.getJobKey(), shardIndex, triggerType);
+            releaseJobLock(lockKey);
+            return null;
+        }
+
         notifyTaskStart();
 
         JobLog log0 = new JobLog();
@@ -682,6 +691,9 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
                             lockKey, e.getMessage());
                 }
             }
+
+            // P0-2: 释放全局并发配额
+            releaseGlobalConcurrency();
 
             // P7-3: 记录执行结束（DECR 并发计数器）
             recordExecutionEnd(job.getTenantId());
@@ -1500,6 +1512,56 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         } catch (Exception e) {
             log.debug("[Dispatcher] recordExecutionEnd 失败(不影响主流程): tenant={} reason={}",
                     tenantId, e.getMessage());
+        }
+    }
+
+    /**
+     * P0-2: 尝试获取全局并发配额。
+     *
+     * <p>通过 {@link GlobalConcurrencyController#tryAcquire()} 原子递增全局并发计数器，
+     * 限制整个集群同时执行的任务总数。GlobalConcurrencyController 不可用时降级放行。
+     *
+     * @return true 获取成功或控制器不可用（降级放行）；false 全局并发已满
+     */
+    private boolean tryAcquireGlobalConcurrency() {
+        GlobalConcurrencyController controller = globalConcurrencyControllerProvider.getIfAvailable();
+        if (controller == null) {
+            return true;
+        }
+        return controller.tryAcquire();
+    }
+
+    /**
+     * P0-2: 释放全局并发配额。
+     *
+     * <p>通过 {@link GlobalConcurrencyController#release()} 原子递减全局并发计数器。
+     * GlobalConcurrencyController 不可用时安全跳过。
+     */
+    private void releaseGlobalConcurrency() {
+        GlobalConcurrencyController controller = globalConcurrencyControllerProvider.getIfAvailable();
+        if (controller == null) {
+            return;
+        }
+        controller.release();
+    }
+
+    /**
+     * 安全释放任务持有的分布式锁（Lua 脚本原子释放）。
+     *
+     * <p>在全局并发控制拒绝执行或需要提前退出时调用，避免锁泄漏。
+     *
+     * @param lockKey 锁 key（为 null 时跳过）
+     */
+    private void releaseJobLock(String lockKey) {
+        if (lockKey == null) {
+            return;
+        }
+        try {
+            redisTemplate.execute(RELEASE_LOCK_SCRIPT,
+                    Collections.singletonList(lockKey), INSTANCE_ID);
+        } catch (Exception e) {
+            log.warn("[Dispatcher] 释放分布式锁失败(将等待 TTL 自动过期): key={} reason={}",
+                    lockKey, e.getMessage());
         }
     }
 
