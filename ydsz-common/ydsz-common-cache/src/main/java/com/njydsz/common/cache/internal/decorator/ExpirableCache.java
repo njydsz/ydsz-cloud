@@ -39,7 +39,7 @@ import com.njydsz.common.cache.support.Expiry;
  * 过期缓存装饰器 — 为任意基础缓存叠加 TTL 过期能力
  *
  * <p>核心设计：淘汰策略（由底层缓存负责）与过期策略（由本装饰器负责）正交组合。
- * 用户可以在 LRU/TINYLFU/STRIPED 等任意淘汰策略上叠加 expireAfterWrite / expireAfterAccess /
+ * 用户可以在 TINYLFU/STRIPED 等任意淘汰策略上叠加 expireAfterWrite / expireAfterAccess /
  * 自定义 Expiry 过期策略。
  *
  * <p>工作原理：

@@ -21,17 +21,6 @@
       <groupId>com.njydsz</groupId>
       <artifactId>ydsz-common-util</artifactId>
     </dependency>
-    <!--common-json（统一 JSON 引擎，广播消息序列化）-->
-    <dependency>
-      <groupId>com.njydsz</groupId>
-      <artifactId>ydsz-common-json</artifactId>
-    </dependency>
-    <!--common-redis（多级缓存 L2 后端，可选）-->
-    <dependency>
-      <groupId>com.njydsz</groupId>
-      <artifactId>ydsz-common-redis</artifactId>
-      <optional>true</optional>
-    </dependency>
     <!--common-exception-->
     <dependency>
       <groupId>com.njydsz</groupId>
@@ -42,20 +31,6 @@
       <groupId>org.springframework</groupId>
       <artifactId>spring-context</artifactId>
       <scope>provided</scope>
-    </dependency>
-    <!-- Spring AOP（@Cached 注解切面） -->
-    <dependency>
-      <groupId>org.springframework</groupId>
-      <artifactId>spring-aop</artifactId>
-      <scope>provided</scope>
-      <optional>true</optional>
-    </dependency>
-    <!-- AspectJ Weaver（@Aspect / @Around 注解支持） -->
-    <dependency>
-      <groupId>org.aspectj</groupId>
-      <artifactId>aspectjweaver</artifactId>
-      <scope>provided</scope>
-      <optional>true</optional>
     </dependency>
     <!-- Spring Boot Autoconfigure -->
     <dependency>
@@ -109,33 +84,6 @@
       <artifactId>spring-boot-actuator-autoconfigure</artifactId>
       <scope>provided</scope>
       <optional>true</optional>
-    </dependency>
-    <!-- Resilience4j 降级/熔断（可选） -->
-    <dependency>
-      <groupId>io.github.resilience4j</groupId>
-      <artifactId>resilience4j-circuitbreaker</artifactId>
-      <scope>provided</scope>
-      <optional>true</optional>
-    </dependency>
-    <!-- Resilience4j 重试（可选，Resilience4jCacheLoader 依赖） -->
-    <dependency>
-      <groupId>io.github.resilience4j</groupId>
-      <artifactId>resilience4j-retry</artifactId>
-      <scope>provided</scope>
-      <optional>true</optional>
-    </dependency>
-    <!-- SkyWalking Trace（可选） -->
-    <dependency>
-      <groupId>org.apache.skywalking</groupId>
-      <artifactId>apm-toolkit-trace</artifactId>
-      <scope>provided</scope>
-      <optional>true</optional>
-    </dependency>
-    <!--lombok-->
-    <dependency>
-      <groupId>org.projectlombok</groupId>
-      <artifactId>lombok</artifactId>
-      <scope>provided</scope>
     </dependency>
     <!-- Test -->
     <dependency>

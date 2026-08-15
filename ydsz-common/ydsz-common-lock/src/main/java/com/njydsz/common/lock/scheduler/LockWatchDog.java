@@ -15,6 +15,7 @@ import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import com.njydsz.common.lock.annotation.LockType;
 import com.njydsz.common.lock.metrics.LockMetrics;
@@ -62,6 +63,16 @@ public class LockWatchDog {
      * 默认最大续期次数（约 30 分钟：100 次 * leaseTime/3 间隔，假设 leaseTime=30s 则 100*10s≈1000s）
      */
     private static final int DEFAULT_MAX_RENEW_TIMES = 100;
+
+    /**
+     * 泄漏告警阈值（续期次数占最大限制的比例）
+     */
+    private static final double LEAK_WARNING_RATIO = 0.8;
+
+    /**
+     * 泄漏检测间隔（毫秒）
+     */
+    private static final long LEAK_DETECT_INTERVAL_MS = 60_000L;
 
     /**
      * 统一的续期脚本服务（v1.2.0 引入，替代散落在各处的重复脚本）
@@ -344,6 +355,37 @@ public class LockWatchDog {
     public int getRenewCount(String lockKey) {
         WatchTask task = activeTasks.get(lockKey);
         return task != null ? task.renewCount : -1;
+    }
+
+    /**
+     * 周期扫描活跃续期任务，检测锁泄漏
+     *
+     * <p>当某把锁的续期次数超过最大续期限制的 80% 时，记录 WARN 日志；
+     * 达到最大续期限制时，记录 ERROR 日志。
+     */
+    @Scheduled(fixedDelay = LEAK_DETECT_INTERVAL_MS, initialDelay = LEAK_DETECT_INTERVAL_MS)
+    public void detectLockLeak() {
+        Map<String, WatchTask> activeTasksSnapshot = getActiveTasksSnapshot();
+        if (activeTasksSnapshot.isEmpty()) {
+            return;
+        }
+        int maxRenewTimesLocal = maxRenewTimes;
+        int warningThreshold = (int) (maxRenewTimesLocal * LEAK_WARNING_RATIO);
+        for (Map.Entry<String, WatchTask> entry : activeTasksSnapshot.entrySet()) {
+            String lockKey = entry.getKey();
+            WatchTask task = entry.getValue();
+            int renewCount = task.getRenewCount();
+            if (renewCount >= maxRenewTimesLocal) {
+                log.error("[ydsz-lock] [watchdog]锁续期次数已达最大限制，可能泄漏 | lockKey={} | renewCount={}/{} | leaseTime={}ms",
+                        lockKey, renewCount, maxRenewTimesLocal, task.getLeaseTime());
+            } else if (renewCount >= warningThreshold) {
+                log.warn("[ydsz-lock] [watchdog]锁续期次数接近最大限制，可能泄漏 | lockKey={} | renewCount={}/{} | leaseTime={}ms",
+                        lockKey, renewCount, maxRenewTimesLocal, task.getLeaseTime());
+            }
+        }
+        if (lockMetrics != null && !activeTasksSnapshot.isEmpty()) {
+            log.debug("[ydsz-lock] [watchdog]活跃续期任务数={} | maxRenewTimes={}", activeTasksSnapshot.size(), maxRenewTimesLocal);
+        }
     }
 
     /**

@@ -32,15 +32,15 @@ import jakarta.validation.constraints.NotNull;
  *     # per-cache 配置（覆盖全局默认）
  *     caches:
  *       users:
- *         type: LRU
+ *         type: TINYLFU
  *         maximum-size: 5000
  *         expire-after-write: 60
  *       orders:
- *         type: TINYLFU
+ *         type: STRIPED
  *         maximum-size: 20000
  *         expire-after-write: 10
  *       config:
- *         type: CONCURRENT
+ *         type: TINYLFU
  *         maximum-size: 100
  *         expire-after-write: 0
  * </pre>
@@ -82,15 +82,6 @@ public class YdszCacheProperties {
   /** 是否启用统计 */
   private boolean recordStats = true;
 
-  /** 是否使用弱引用键 */
-  private boolean weakKeys = false;
-
-  /** 是否使用弱引用值 */
-  private boolean weakValues = false;
-
-  /** 是否使用软引用值 */
-  private boolean softValues = false;
-
   /**
    * per-cache 配置映射
    *
@@ -108,9 +99,6 @@ public class YdszCacheProperties {
     private Long expireAfterAccess;
     private Long refreshAfterWrite;
     private Boolean recordStats;
-    private Boolean weakKeys;
-    private Boolean weakValues;
-    private Boolean softValues;
 
     public CacheType getType() {
       return type;
@@ -174,30 +162,6 @@ public class YdszCacheProperties {
 
     public void setRecordStats(Boolean recordStats) {
       this.recordStats = recordStats;
-    }
-
-    public Boolean getWeakKeys() {
-      return weakKeys;
-    }
-
-    public void setWeakKeys(Boolean weakKeys) {
-      this.weakKeys = weakKeys;
-    }
-
-    public Boolean getWeakValues() {
-      return weakValues;
-    }
-
-    public void setWeakValues(Boolean weakValues) {
-      this.weakValues = weakValues;
-    }
-
-    public Boolean getSoftValues() {
-      return softValues;
-    }
-
-    public void setSoftValues(Boolean softValues) {
-      this.softValues = softValues;
     }
   }
 
@@ -279,30 +243,6 @@ public class YdszCacheProperties {
 
   public void setRecordStats(boolean recordStats) {
     this.recordStats = recordStats;
-  }
-
-  public boolean isWeakKeys() {
-    return weakKeys;
-  }
-
-  public void setWeakKeys(boolean weakKeys) {
-    this.weakKeys = weakKeys;
-  }
-
-  public boolean isWeakValues() {
-    return weakValues;
-  }
-
-  public void setWeakValues(boolean weakValues) {
-    this.weakValues = weakValues;
-  }
-
-  public boolean isSoftValues() {
-    return softValues;
-  }
-
-  public void setSoftValues(boolean softValues) {
-    this.softValues = softValues;
   }
 
   public Map<String, CacheConfig> getCaches() {

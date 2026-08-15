@@ -375,14 +375,6 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
      * @param unit 时间单位
      * @return 设置成功返回过期时间的毫秒值，失败返回 0
      */
-    /**
-     * 设置键的过期时间（毫秒精度）
-     *
-     * @param key  Redis 键
-     * @param time 过期时间
-     * @param unit 时间单位
-     * @return 设置成功返回过期时间的毫秒值，失败返回 0
-     */
     public long pexpire(String key, long time, TimeUnit unit) {
         try {
             Boolean result = stringRedisTemplate.expire(key, Duration.ofMillis(unit.toMillis(time)));

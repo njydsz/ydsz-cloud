@@ -510,10 +510,6 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
                     lockMetrics.recordLockTimeout(getLockType().name());
                 }
                 long waitTimeMs = TimeUnit.NANOSECONDS.toMillis(elapsed);
-                // 记录超时统计数据
-                if (stats != null) {
-                    stats.recordWait(waitTimeMs, true);
-                }
                 // 触发锁超时事件
                 try {
                     lockEventListener.onLockAcquireTimeout(lockKey, getLockType(), waitTimeMs);
@@ -533,10 +529,6 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
         long waitTimeMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startTime);
         if (lockMetrics != null) {
             lockMetrics.recordWaitDuration(waitTimeMillis, getLockType().name());
-        }
-        // 记录成功统计数据
-        if (stats != null) {
-            stats.recordWait(waitTimeMillis, false);
         }
         // 触发锁获取成功事件
         try {

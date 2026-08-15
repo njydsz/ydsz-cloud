@@ -91,12 +91,6 @@ public class YdszCacheManager implements CacheManager, DisposableBean, Initializ
 
   private TimeUnit refreshAfterWriteTimeUnit = TimeUnit.MINUTES;
 
-  private boolean weakKeys = false;
-
-  private boolean weakValues = false;
-
-  private boolean softValues = false;
-
   private Function<String, Cache<Object, Object>> cacheBuilder;
 
   /** per-cache 配置映射 */
@@ -143,21 +137,6 @@ public class YdszCacheManager implements CacheManager, DisposableBean, Initializ
   public void setRefreshAfterWrite(long duration, TimeUnit timeUnit) {
     this.refreshAfterWrite = duration;
     this.refreshAfterWriteTimeUnit = timeUnit;
-  }
-
-  /** 设置是否使用弱引用键 */
-  public void setWeakKeys(boolean weakKeys) {
-    this.weakKeys = weakKeys;
-  }
-
-  /** 设置是否使用弱引用值 */
-  public void setWeakValues(boolean weakValues) {
-    this.weakValues = weakValues;
-  }
-
-  /** 设置是否使用软引用值 */
-  public void setSoftValues(boolean softValues) {
-    this.softValues = softValues;
   }
 
   /** 设置预定义的缓存名称 */
@@ -267,16 +246,6 @@ public class YdszCacheManager implements CacheManager, DisposableBean, Initializ
         perCache != null && perCache.getRecordStats() != null
             ? perCache.getRecordStats()
             : this.recordStats;
-    boolean effectiveWeakKeys =
-        perCache != null && perCache.getWeakKeys() != null ? perCache.getWeakKeys() : this.weakKeys;
-    boolean effectiveWeakValues =
-        perCache != null && perCache.getWeakValues() != null
-            ? perCache.getWeakValues()
-            : this.weakValues;
-    boolean effectiveSoftValues =
-        perCache != null && perCache.getSoftValues() != null
-            ? perCache.getSoftValues()
-            : this.softValues;
 
     CacheBuilder<Object, Object> builder =
         YdszCache.newBuilder()
@@ -284,16 +253,6 @@ public class YdszCacheManager implements CacheManager, DisposableBean, Initializ
             .initialCapacity(effectiveInitCapacity)
             .maximumSize(effectiveMaxSize)
             .recordStats(effectiveRecordStats);
-
-    if (effectiveWeakKeys) {
-      builder.weakKeys();
-    }
-    if (effectiveWeakValues) {
-      builder.weakValues();
-    }
-    if (effectiveSoftValues) {
-      builder.softValues();
-    }
 
     if (effectiveExpireAfterWrite > 0) {
       builder.expireAfterWrite(effectiveExpireAfterWrite, effectiveWriteTimeUnit);

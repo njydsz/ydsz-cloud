@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.NestedProperty;
 import org.springframework.validation.annotation.Validated;
 
 import lombok.Data;
@@ -53,18 +52,15 @@ public class JdbcProperties {
     /**
      * 慢 SQL 监控配置
      */
-    @NestedProperty
     private SlowSqlProperties slowSql = new SlowSqlProperties();
 
     /**
      * SQL 审计配置
      */
-    @NestedProperty
     private SqlAuditProperties sqlAudit = new SqlAuditProperties();
 
     /**
      * 安全查询配置（ORDER BY 注入防护 + 深度分页检测）
      */
-    @NestedProperty
     private SafeQueryProperties safeQuery = new SafeQueryProperties();
 }

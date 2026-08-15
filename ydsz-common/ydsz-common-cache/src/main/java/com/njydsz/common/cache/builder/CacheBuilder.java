@@ -395,7 +395,7 @@ public final class CacheBuilder<K, V> {
           expireAfterAccessDuration > 0 && expireAfterAccessUnit != null
               ? expireAfterAccessUnit.toNanos(expireAfterAccessDuration)
               : 0;
-      cache = new ExpirableCache<>(cache, writeNanos, accessNanos, expiry);
+      cache = new ExpirableCache<>(cache, writeNanos, accessNanos, expiry, 1);
     }
 
     // 写穿透装饰器
@@ -473,7 +473,6 @@ public final class CacheBuilder<K, V> {
     validate();
     Cache<K, V> baseCache = createBaseCache();
 
-    // ENHANCED_LOADING 类型已在 createBaseCache 中创建 EnhancedLoadingCache
     if (baseCache instanceof LoadingCache) {
       return (LoadingCache<K, V>) baseCache;
     }
