@@ -389,11 +389,8 @@ public class OutboxRepository {
         sql.append(" ORDER BY created_at DESC");
         sql.append(dialect.limitClause());
         params.add(pageable.getPageSize());
-        // OFFSET 支持（PostgreSQL / MySQL 统一）
-        if (dialect != DatabaseDialect.ORACLE) {
-            sql.append(" OFFSET ?");
-            params.add(pageable.getOffset());
-        }
+        sql.append(" OFFSET ?");
+        params.add(pageable.getOffset());
 
         List<OutboxMessage> messages = jdbcTemplate.query(sql.toString(),
                 OutboxRowMapper.INSTANCE,

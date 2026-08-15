@@ -67,4 +67,18 @@ public interface NotifyService {
      * @return 异步发送结果，包含成功/失败统计
      */
     CompletableFuture<NotifySendResult> parallelBatchSend(NotifyChannel channel, List<String> receivers, String title, String content);
+
+    /**
+     * 并行批量发送通知消息到多个接收者（返回结构化明细）
+     *
+     * <p>与 {@link #parallelBatchSend} 相同，但返回 {@link BatchSendResult} 包含每个接收者的
+     * 发送结果明细，便于业务方定位失败接收者并执行定向重试。
+     *
+     * @param channel   通知渠道
+     * @param receivers 接收者标识列表
+     * @param title     消息标题
+     * @param content   消息内容
+     * @return 异步批量发送结构化结果
+     */
+    CompletableFuture<BatchSendResult> parallelBatchSendDetailed(NotifyChannel channel, List<String> receivers, String title, String content);
 }
