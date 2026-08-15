@@ -259,8 +259,8 @@ public class ProjectExportService {
 ### 3. 变更差异计算（before / after）
 
 ```java
-import com.njydsz.common.audit.diff.DiffCalculator;
-import com.njydsz.common.audit.diff.DiffReport;
+import com.njydsz.common.util.diff.DiffCalculator;
+import com.njydsz.common.util.diff.DiffReport;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

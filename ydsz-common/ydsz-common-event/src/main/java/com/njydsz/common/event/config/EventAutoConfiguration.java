@@ -18,9 +18,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.njydsz.common.event.admin.OutboxAdminService;
 import com.njydsz.common.event.api.EventStore;
-import com.njydsz.common.event.api.JsonSchemaRegistry;
-import com.njydsz.common.event.api.JsonSchemaValidator;
-import com.njydsz.common.event.api.NoopJsonSchemaValidator;
 import com.njydsz.common.event.gateway.EventPublishGateway;
 import com.njydsz.common.event.gateway.NoopEventPublishGateway;
 import com.njydsz.common.event.gateway.RocketMqEventPublishGateway;
@@ -61,6 +58,7 @@ import javax.sql.DataSource;
  * @since 1.0.0
  * @since 1.6.0 将 {@code @Import(RocketMqGatewayConfiguration.class)} 改为嵌套 {@code @Configuration}，
  *             修复条件注解失效问题；新增类级 {@code @ConditionalOnMissingBean(EventStore.class)} 守卫
+ * @since 1.7.0 移除 JSON Schema 校验框架和同步投递模式的自动配置，精简职责
  */
 @AutoConfiguration
 @EnableConfigurationProperties(EventProperties.class)
@@ -90,9 +88,10 @@ public class EventAutoConfiguration {
                                               EventProperties properties,
                                               ObjectProvider<DataSource> dataSourceProvider) {
         DataSource dataSource = dataSourceProvider.getIfAvailable();
-        DatabaseDialect dialect = dataSource != null
-                ? DatabaseDialect.detect(dataSource)
-                : DatabaseDialect.UNKNOWN;
+        DatabaseDialect dialect = DatabaseDialect.UNKNOWN;
+        if (dataSource != null) {
+            dialect = DatabaseDialect.detect(dataSource);
+        }
         OutboxRepository repository = new OutboxRepository(jdbcTemplate, properties.getTableName(), dialect);
         // 设置 countByStatus 缓存 TTL
         repository.setCacheTtlMillis(properties.getStatusCountCacheSeconds() * 1000L);
@@ -104,24 +103,19 @@ public class EventAutoConfiguration {
     /**
      * 创建 Outbox 写入服务
      *
-     * @param outboxRepository      Outbox 仓储
-     * @param properties            事件配置属性
-     * @param gatewayProvider       投递网关提供者（用于同步投递模式）
-     * @param snowflakeIdGenerator  分布式 ID 生成器
+     * @param outboxRepository     Outbox 仓储
+     * @param properties           事件配置属性
+     * @param snowflakeIdGenerator 分布式 ID 生成器
+     * @param eventPublisher       Spring 事件发布器
      * @return Outbox 写入服务实例
      */
     @Bean
     @ConditionalOnMissingBean
     public OutboxService outboxService(OutboxRepository outboxRepository,
                                        EventProperties properties,
-                                       ObjectProvider<EventPublishGateway> gatewayProvider,
                                        SnowflakeIdGenerator snowflakeIdGenerator,
-                                       org.springframework.context.ApplicationEventPublisher eventPublisher,
-                                       JsonSchemaValidator schemaValidator,
-                                       JsonSchemaRegistry schemaRegistry) {
-        EventPublishGateway syncGateway = properties.isEnableSyncPublish() ? gatewayProvider.getIfAvailable() : null;
-        return new OutboxService(outboxRepository, properties, syncGateway,
-                snowflakeIdGenerator, eventPublisher, schemaValidator, schemaRegistry);
+                                       org.springframework.context.ApplicationEventPublisher eventPublisher) {
+        return new OutboxService(outboxRepository, properties, snowflakeIdGenerator, eventPublisher);
     }
 
     /**
@@ -157,10 +151,10 @@ public class EventAutoConfiguration {
     /**
      * 创建 Outbox 后台处理器
      *
-     * @param outboxRepository       Outbox 仓储
-     * @param publishGateway         投递网关
-     * @param properties             事件配置属性
-     * @param meterRegistryProvider  Micrometer 指标注册器提供者（可选）
+     * @param outboxRepository      Outbox 仓储
+     * @param publishGateway        投递网关
+     * @param properties            事件配置属性
+     * @param meterRegistryProvider Micrometer 指标注册器提供者（可选）
      * @return Outbox 后台处理器实例
      */
     @Bean(initMethod = "start")
@@ -205,33 +199,6 @@ public class EventAutoConfiguration {
     @ConditionalOnMissingBean
     public OutboxAdminService outboxAdminService(OutboxRepository outboxRepository) {
         return new OutboxAdminService(outboxRepository);
-    }
-
-    /**
-     * 创建 JSON Schema 注册中心
-     *
-     * <p>业务方可通过 {@link JsonSchemaRegistry#register} 方法注册事件类型的 Schema。
-     *
-     * @return Schema 注册中心实例
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public JsonSchemaRegistry jsonSchemaRegistry() {
-        return new JsonSchemaRegistry();
-    }
-
-    /**
-     * 创建默认的 JSON Schema 校验器（空实现）
-     *
-     * <p>当使用方未引入具体的 JSON Schema 库实现时，使用此空实现作为 fallback。
-     * 使用方可定义自己的 {@link JsonSchemaValidator} Bean 覆盖此默认实现。
-     *
-     * @return 空实现校验器
-     */
-    @Bean
-    @ConditionalOnMissingBean(JsonSchemaValidator.class)
-    public JsonSchemaValidator jsonSchemaValidator() {
-        return new NoopJsonSchemaValidator();
     }
 
     /**

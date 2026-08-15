@@ -148,6 +148,12 @@
             <scope>provided</scope>
         </dependency>
 
+        <!-- ydzs-common-json -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-json</artifactId>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

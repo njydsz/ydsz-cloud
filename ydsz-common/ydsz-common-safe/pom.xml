@@ -116,5 +116,15 @@
             <artifactId>mybatis-plus-core</artifactId>
             <optional>true</optional>
         </dependency>
+        <!--ydsz-common-json-->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-json</artifactId>
+        </dependency>
+        <!--ydsz-common-redis-->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-redis</artifactId>
+        </dependency>
     </dependencies>
 </project>

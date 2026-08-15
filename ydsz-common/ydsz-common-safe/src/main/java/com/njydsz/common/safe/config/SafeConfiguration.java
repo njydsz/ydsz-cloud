@@ -63,15 +63,13 @@ import com.njydsz.common.safe.sensitive.SensitiveDataAdvice;
  *   <li>XSS 过滤器：基于 OWASP 库的全局 HTTP 请求参数与 JSON 请求体清洗</li>
  *   <li>安全响应头：防止 XSS、点击劫持、MIME 嗅探等 Web 安全威胁</li>
  *   <li>CSRF 防护：基于 Token 机制，Redis 存储支持分布式</li>
- *   <li>SQL 注入防护：基于正则的请求参数拦截</li>
  *   <li>限流防护：基于 Redis 令牌桶的全局限流</li>
  *   <li>敏感数据脱敏：基于 Jackson 序列化器的字段级脱敏</li>
  *   <li>验证码：图形/算术验证码生成与验证</li>
  * </ul>
  *
- * <p><b>过滤器执行顺序：</b>SecurityHeaderFilter → XssFilter → SqlInjectionFilter
- * → CsrfFilter → RateLimitFilter。其中 RateLimitFilter 优先级最高，限流失败直接
- * 返回 429 而不再进入后续过滤器。</p>
+ * <p><b>过滤器执行顺序：</b>SecurityHeaderFilter → XssFilter → CsrfFilter → RateLimitFilter。
+ * 其中 RateLimitFilter 优先级最高，限流失败直接返回 429 而不再进入后续过滤器。</p>
  *
  * <p><b>注意：</b>防重复提交/幂等性功能由本模块的 Redis 限流能力提供。</p>
  *
@@ -521,35 +519,4 @@ public class SafeConfiguration {
         return registrationBean;
     }
 
-    /**
-     * 注册 SQL 注入防护过滤器
-     *
-     * <p>检测并拦截 HTTP 请求中的 SQL 注入攻击，保护应用安全。
-     * 仅在 {@code ydsz.safe.sql-injection.enabled=true} 时注册。
-     *
-     * <p>支持白名单配置：
-     * <ul>
-     *   <li>{@code ydsz.safe.sql-injection.whitelist-paths} - 白名单路径（Ant 风格，逗号分隔）</li>
-     *   <li>{@code ydsz.safe.sql-injection.whitelist-params} - 白名单参数名（逗号分隔）</li>
-     * </ul>
-     *
-     * @param eventPublisher  安全事件发布器
-     * @param whitelistPaths  白名单路径
-     * @param whitelistParams 白名单参数名
-     * @return SQL 注入过滤器注册 bean
-     */
-    @Bean
-    @ConditionalOnMissingBean(name = "sqlInjectionFilterRegistration")
-    @ConditionalOnProperty(prefix = "ydsz.safe.sql-injection", name = "enabled", havingValue = "true", matchIfMissing = true)
-    public FilterRegistrationBean<SqlInjectionFilter> sqlInjectionFilterRegistration(
-            SecurityEventPublisher eventPublisher,
-            @Value("${ydsz.safe.sql-injection.whitelist-paths:}") List<String> whitelistPaths,
-            @Value("${ydsz.safe.sql-injection.whitelist-params:}") List<String> whitelistParams) {
-        FilterRegistrationBean<SqlInjectionFilter> registrationBean = new FilterRegistrationBean<>(
-                new SqlInjectionFilter(true, eventPublisher, whitelistPaths, whitelistParams));
-        registrationBean.setName("sqlInjectionFilter");
-        registrationBean.addUrlPatterns("/*");
-        registrationBean.setOrder(Ordered.HIGHEST_PRECEDENCE + 3);
-        return registrationBean;
-    }
 }
