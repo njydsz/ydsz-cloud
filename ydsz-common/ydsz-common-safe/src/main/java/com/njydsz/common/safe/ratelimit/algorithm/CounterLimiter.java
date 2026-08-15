@@ -33,7 +33,9 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 存在窗口边界突刺问题，推荐使用 {@link TokenBucketLimiter}（支持突发流量、性能更优）
  */
+@Deprecated
 @Slf4j
 public class CounterLimiter implements RateLimiter {
 

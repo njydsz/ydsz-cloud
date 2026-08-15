@@ -6,8 +6,7 @@ import java.util.Map;
 /**
  * 流程条件表达式服务。
  *
- * <p>P1-3 引擎收敛：运行时条件评估统一使用 Aviator 引擎，SpEL 已废弃。
- * 本服务保留 SpEL 相关的构建/解析方法已标记 {@code @deprecated}，仅作历史数据兼容。
+ * <p>P1-3 引擎收敛：运行时条件评估统一使用 Aviator 引擎，SpEL 代码已全部移除。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -15,12 +14,10 @@ import java.util.Map;
 public interface FlowConditionExprService {
 
     /**
-     * 将结构化条件 JSON 转换为表达式字符串。
-     *
-     * <p>默认使用 Aviator 引擎。SpEL 引擎已废弃，传入 {@code "SPEL"} 将返回降级提示。
+     * 将结构化条件 JSON 转换为 Aviator 表达式字符串。
      *
      * @param conditionJson 结构化条件 JSON
-     * @param engine        表达式引擎：{@code AVIATOR}（默认）；{@code SPEL} 已废弃
+     * @param engine        表达式引擎（仅支持 {@code AVIATOR}）
      * @return 表达式字符串（如 {@code amount > 10000 && deptCode == 'SALES'}）
      */
     String buildExpression(String conditionJson, String engine);
@@ -32,7 +29,7 @@ public interface FlowConditionExprService {
      * 不支持嵌套括号或复杂函数调用。
      *
      * @param expression 表达式字符串
-     * @param engine     表达式引擎
+     * @param engine     表达式引擎（参数暂未使用，保留向前兼容）
      * @return 结构化条件 JSON
      */
     String parseExpression(String expression, String engine);
@@ -41,7 +38,7 @@ public interface FlowConditionExprService {
      * 校验表达式语法是否正确。
      *
      * @param expression 表达式字符串
-     * @param engine     表达式引擎
+     * @param engine     表达式引擎（参数暂未使用，保留向前兼容）
      * @return 校验结果 Map：{valid: true/false, error: "错误信息"}
      */
     Map<String, Object> validateExpression(String expression, String engine);
@@ -49,7 +46,7 @@ public interface FlowConditionExprService {
     /**
      * 获取可用的操作符列表。
      *
-     * @return 操作符列表
+     * @return 操作符列表，每项包含 {code, aviator} 两个字段
      */
     List<Map<String, String>> getOperators();
 
@@ -74,14 +71,14 @@ public interface FlowConditionExprService {
     List<Map<String, String>> getVariablesByDefinition(String definitionId);
 
     /**
-     * 预览/测试表达式执行结果。
+     * 预览/测试表达式执行结果（仅 Aviator）。
      *
      * <p>P1-4: 给定表达式和示例变量，返回表达式执行结果（true/false），
-     * 用于前端实时预览条件匹配效果。
+     * 用于前端实时预览条件匹配效果。仅支持 Aviator 引擎。
      *
      * @param expression 表达式字符串
      * @param variables  示例变量 Map
-     * @param engine     表达式引擎（默认 AVIATOR）
+     * @param engine     表达式引擎（仅支持 {@code AVIATOR}）
      * @return 执行结果：{result: true/false, error: null/"错误信息"}
      */
     Map<String, Object> previewExpression(String expression, Map<String, Object> variables, String engine);

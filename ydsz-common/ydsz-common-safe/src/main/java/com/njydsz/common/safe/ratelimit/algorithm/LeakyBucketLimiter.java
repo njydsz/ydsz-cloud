@@ -27,9 +27,10 @@ import lombok.extern.slf4j.Slf4j;
  * <p><b>与令牌桶的区别：</b>漏桶强制恒定速率输出（流量整形），不能像令牌桶那样支持突发流量。
  *
  * @author ydsz-team
- * @author ydsz-team
+ * @deprecated 令牌桶已覆盖漏桶所有场景且支持突发流量，推荐使用 {@link TokenBucketLimiter}
  * @since 1.0.0
  */
+@Deprecated
 @Slf4j
 public class LeakyBucketLimiter implements RateLimiter {
 

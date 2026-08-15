@@ -121,13 +121,14 @@ public final class XidContextHolder {
     /**
      * XID 上下文数据对象
      *
-     * <p>封装全局事务 ID、事务类型和事务名称，支持 TTL 透传。
+     * <p>封装全局事务 ID、事务类型、事务名称和开始时间，支持 TTL 透传。
      */
     public static final class XidContext {
 
         private String xid;
         private TransactionType type;
         private String name;
+        private long startTime;
 
         public String getXid() {
             return xid;
@@ -139,6 +140,14 @@ public final class XidContextHolder {
 
         public String getName() {
             return name;
+        }
+
+        public long getStartTime() {
+            return startTime;
+        }
+
+        public void setStartTime(long startTime) {
+            this.startTime = startTime;
         }
     }
 }

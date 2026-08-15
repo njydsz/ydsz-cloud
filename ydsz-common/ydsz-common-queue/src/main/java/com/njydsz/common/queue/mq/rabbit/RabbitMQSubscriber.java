@@ -77,7 +77,7 @@ public class RabbitMQSubscriber implements IMessageSubscriber {
         this.running = new AtomicBoolean(false);
         this.consumedCount = new AtomicLong(0);
         this.lastError = new AtomicReference<>();
-        this.rateLimiter = new ConsumerRateLimiter(properties.resolvedConsumerRateLimitPerSecond());
+        this.rateLimiter = new ConsumerRateLimiter(properties.getConsumerRateLimitPerSecond());
 
         ConnectionFactory factory = new ConnectionFactory();
         factory.setHost(properties.resolvedHost());

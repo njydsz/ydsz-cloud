@@ -241,7 +241,7 @@ public class FlowConditionExprServiceImpl implements FlowConditionExprService {
      * 表达式语法校验
      *
      * <p>当前实现仅做<b>轻量语法检查</b>：括号匹配、单引号 / 双引号偶数匹配。
-     * 完整语法校验需调用 Aviator {@code compile} / SpEL {@code SpelExpressionParser}，
+     * 完整语法校验需调用 Aviator {@code compile}，
      * 此处保留轻量校验作为「实时反馈」场景的快速响应。
      *
      * @param expression 表达式字符串

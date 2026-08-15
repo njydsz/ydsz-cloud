@@ -89,7 +89,9 @@ public class RedisPubSubSubscriber implements IMessageSubscriber {
         this.running = new AtomicBoolean(false);
         this.consumedCount = new AtomicLong(0);
         this.lastError = new AtomicReference<>();
-        this.rateLimiter = queueProperties != null ? queueProperties.createRateLimiter() : new ConsumerRateLimiter(0);
+        this.rateLimiter = queueProperties != null
+                ? new ConsumerRateLimiter(queueProperties.getConsumerRateLimitPerSecond())
+                : new ConsumerRateLimiter(0);
     }
 
     /**

@@ -69,7 +69,6 @@ public class LocalTransactionManager extends AbstractTransactionManager {
     @Override
     public <T> T execute(String transactionName, TransactionType type, Callable<T> action) throws Exception {
         String xid = beginXid(transactionName);
-        long startTime = System.currentTimeMillis();
         try {
             T result = transactionTemplate.execute(status -> {
                 try {
@@ -82,26 +81,22 @@ public class LocalTransactionManager extends AbstractTransactionManager {
                     throw e;
                 }
             });
-            long duration = System.currentTimeMillis() - startTime;
-            recordComplete(transactionName, xid, null, "success", duration, null);
             log.debug("Local transaction committed: name={}, xid={}", transactionName, xid);
+            endXid();
             return result;
         } catch (TransactionExecutionException e) {
-            long duration = System.currentTimeMillis() - startTime;
-            recordComplete(transactionName, xid, null, "fail", duration, e.getCause().getMessage());
             log.error("Local transaction rolled back: name={}, xid={}", transactionName, xid, e.getCause());
             Throwable cause = e.getCause();
             if (cause instanceof Exception) {
+                endXid(cause);
                 throw (Exception) cause;
             }
+            endXid(e);
             throw e;
         } catch (Exception e) {
-            long duration = System.currentTimeMillis() - startTime;
-            recordComplete(transactionName, xid, null, "fail", duration, e.getMessage());
             log.error("Local transaction rolled back: name={}, xid={}", transactionName, xid, e);
+            endXid(e);
             throw e;
-        } finally {
-            endXid();
         }
     }
 
@@ -120,7 +115,6 @@ public class LocalTransactionManager extends AbstractTransactionManager {
                                           Callable<T> action,
                                           Runnable compensation) throws Exception {
         String xid = beginXid(transactionName);
-        long startTime = System.currentTimeMillis();
         log.debug("Saga transaction started: name={}, xid={}", transactionName, xid);
         try {
             T result = transactionTemplate.execute(status -> {
@@ -134,28 +128,24 @@ public class LocalTransactionManager extends AbstractTransactionManager {
                     throw e;
                 }
             });
-            long duration = System.currentTimeMillis() - startTime;
-            recordComplete(transactionName, xid, null, "success", duration, null);
             log.debug("Saga transaction completed: name={}, xid={}", transactionName, xid);
+            endXid();
             return result;
         } catch (TransactionExecutionException e) {
-            long duration = System.currentTimeMillis() - startTime;
-            recordComplete(transactionName, xid, null, "fail", duration, e.getCause().getMessage());
             Throwable cause = e.getCause();
             log.error("Saga transaction failed, executing compensation: name={}, xid={}", transactionName, xid, cause);
             runCompensation(transactionName, xid, compensation);
             if (cause instanceof Exception ex) {
+                endXid(cause);
                 throw ex;
             }
+            endXid(e);
             throw e;
         } catch (Exception e) {
-            long duration = System.currentTimeMillis() - startTime;
-            recordComplete(transactionName, xid, null, "fail", duration, e.getMessage());
             log.error("Saga transaction failed, executing compensation: name={}, xid={}", transactionName, xid, e);
             runCompensation(transactionName, xid, compensation);
+            endXid(e);
             throw e;
-        } finally {
-            endXid();
         }
     }
 

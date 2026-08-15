@@ -77,7 +77,7 @@ public class RedisListMQ extends AbstractMessageQueue {
             throw BusinessException.builder().key("通道名称不能为空").build();
         }
         return new RedisListSubscriber(redisTemplate, channel,
-                (int) queueProperties.resolvedListBlockTimeoutSeconds(), 10000, queueProperties, consumerExecutor);
+                (int) queueProperties.getListBlockTimeoutSeconds(), 10000, queueProperties, consumerExecutor);
     }
 
     @Override

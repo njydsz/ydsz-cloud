@@ -70,7 +70,9 @@
 | `RateLimitMetricsCollector` | Micrometer 指标采集 |
 | `RateLimitService` | 限流服务封装 |
 
-**支持的限流算法**（`RateLimitAlgorithm` 枚举）：`TOKEN_BUCKET`（令牌桶，默认）、`SLIDING_WINDOW`（滑动窗口）、`LEAKY_BUCKET`（漏桶）、`FIXED_WINDOW`（固定窗口）、`COUNTER`（计数器）、`SLIDING_LOG`（滑动日志）、`CONCURRENCY`（并发数）。
+**支持的限流算法**（`RateLimitAlgorithm` 枚举）：`TOKEN_BUCKET`（令牌桶，推荐且默认）。
+
+> **收敛说明**：`COUNTER`、`SLIDING_WINDOW`、`LEAKY_BUCKET`、`CONCURRENCY` 已标记 `@Deprecated`，保留实现以兼容现有配置。新业务请统一使用 `TOKEN_BUCKET`（兼顾突发流量支持和实现简洁性）。
 
 **支持的限流维度**（`RateLimitDimension` 枚举）：`API`、`USER`、`IP`、`GLOBAL`、`HOT_PARAM`。
 
@@ -389,12 +391,12 @@ public class LoginController {
         return Result.success("ok");
     }
 
-    /** 集群限流：滑动窗口算法 */
+    /** 集群限流：令牌桶算法 */
     @PostMapping("/seckill")
     @RateLimit(resource = "seckill",
                threshold = 1000,
                mode = RateLimitMode.CLUSTER,
-               algorithm = RateLimitAlgorithm.SLIDING_WINDOW)
+               algorithm = RateLimitAlgorithm.TOKEN_BUCKET)
     public Result<String> seckill() {
         return Result.success("ok");
     }
@@ -511,7 +513,7 @@ ydsz:
 | `CsrfTokenRepository` | CSRF Token 存储接口 | `RedisCsrfTokenRepository`（@Primary）、`InMemoryCsrfTokenRepository` |
 | `CsrfTokenGenerator` | CSRF Token 生成接口 | `DefaultCsrfTokenGenerator` |
 | `ClusterRateLimiter` | 集群限流器接口 | `RedisClusterRateLimiter`（基于 StringRedisTemplate） |
-| `RateLimiter` | 限流算法接口 | `TokenBucketLimiter`、`SlidingWindowLimiter`、`LeakyBucketLimiter`、`CounterLimiter`、`ConcurrencyLimiter` |
+| `RateLimiter` | 限流算法接口 | `TokenBucketLimiter`（推荐）；`SlidingWindowLimiter`、`LeakyBucketLimiter`、`CounterLimiter`、`ConcurrencyLimiter`（已废弃） |
 | `SecurityAlertListener` | 安全告警监听器接口 | `DefaultSecurityAlertLogger` |
 
 ## 健康检查
@@ -554,4 +556,5 @@ ydsz:
 
 ## 变更记录
 
+- **v1.1.0**（2026-08-16）：限流算法收敛（废弃 COUNTER/SLIDING_WINDOW/LEAKY_BUCKET/CONCURRENCY，统一使用 TOKEN_BUCKET）；熔断器替换为 Resilience4j；移除 SQL 注入正则过滤器；补全 FieldEncryptionService 测试。
 - **v1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节，覆盖 14 项核心能力、10 个 Properties 配置类、9 个 SPI 接口、1 个 HealthIndicator。

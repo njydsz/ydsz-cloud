@@ -98,7 +98,7 @@ public class DeadLetterQueueServiceImpl implements DeadLetterQueueService {
             return false;
         }
 
-        int maxRetries = queueProperties.resolvedDeadLetterMaxRetries();
+        int maxRetries = queueProperties.getDeadLetterMaxRetries();
         int currentRetryCount = getRetryCount(topic, messageId);
 
         if (currentRetryCount >= maxRetries) {
@@ -115,7 +115,7 @@ public class DeadLetterQueueServiceImpl implements DeadLetterQueueService {
         }
 
         try {
-            IMessagePublisher publisher = queueProvider.createMessageQueue(queueProperties.resolvedType())
+            IMessagePublisher publisher = queueProvider.createMessageQueue(queueProperties.getResolvedType())
                     .createPublisher(topic);
             QueueMessage toPublish = queueMessage != null ? queueMessage : QueueMessage.of(dlqMessage.getMessageBody());
             publisher.publish(toPublish);

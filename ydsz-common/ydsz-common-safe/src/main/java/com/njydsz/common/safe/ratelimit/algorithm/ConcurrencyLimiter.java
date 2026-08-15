@@ -42,7 +42,9 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 并发隔离建议使用专用线程池 + ydsz-common-thread，限流场景推荐 {@link TokenBucketLimiter}
  */
+@Deprecated
 @Slf4j
 public class ConcurrencyLimiter implements RateLimiter {
 

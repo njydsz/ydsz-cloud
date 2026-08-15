@@ -141,15 +141,34 @@ public abstract class AbstractTransactionManager implements DistributedTransacti
     protected String beginXid(String transactionName) {
         String xid = generateXid();
         XidContextHolder.setXid(xid);
+        XidContextHolder.current().setStartTime(System.currentTimeMillis());
         log.debug("Transaction started: name={}, xid={}, type={}", transactionName, xid, getCurrentType());
         recordStart(transactionName, xid);
         return xid;
     }
 
     /**
-     * 结束事务，清除当前线程的 XID 绑定
+     * 结束事务（成功路径），记录指标和审计
      */
     protected void endXid() {
+        endXid(null);
+    }
+
+    /**
+     * 结束事务（带异常信息），记录指标和审计
+     *
+     * @param error 异常信息，成功时为 null
+     */
+    protected void endXid(Throwable error) {
+        XidContextHolder.XidContext ctx = XidContextHolder.current();
+        if (ctx != null) {
+            String transactionName = ctx.getName();
+            String xid = ctx.getXid();
+            long durationMs = System.currentTimeMillis() - ctx.getStartTime();
+            String result = error == null ? "success" : "fail";
+            recordComplete(transactionName, xid, null, result, durationMs,
+                    error != null ? error.getMessage() : null);
+        }
         XidContextHolder.remove();
     }
 

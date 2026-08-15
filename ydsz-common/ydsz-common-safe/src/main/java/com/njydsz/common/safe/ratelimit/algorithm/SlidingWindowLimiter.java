@@ -30,7 +30,9 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 复杂度收益不匹配，推荐使用 {@link TokenBucketLimiter}（同等效果、更低开销）
  */
+@Deprecated
 @Slf4j
 public class SlidingWindowLimiter implements RateLimiter {
 

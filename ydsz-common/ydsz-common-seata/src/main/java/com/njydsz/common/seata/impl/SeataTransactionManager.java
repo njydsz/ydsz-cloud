@@ -88,6 +88,8 @@ public class SeataTransactionManager extends AbstractTransactionManager {
 
             globalTx.commit();
             log.info("Seata AT transaction committed: name={}, xid={}, seataXid={}", transactionName, xid, seataXid);
+            endXid();
+            RootContext.unbind();
             return result;
         } catch (Exception e) {
             log.error("Seata AT transaction failed: name={}, xid={}, rolling back", transactionName, xid, e);
@@ -99,14 +101,9 @@ public class SeataTransactionManager extends AbstractTransactionManager {
                     log.error("Seata AT transaction rollback failed: name={}, xid={}", transactionName, xid, re);
                 }
             }
+            endXid(e);
+            RootContext.unbind();
             throw e;
-        } finally {
-            endXid();
-            // 解绑 Seata 上下文，防止线程复用污染
-            String seataXid = RootContext.unbind();
-            if (seataXid != null) {
-                log.debug("Seata XID unbound: {}", seataXid);
-            }
         }
     }
 
@@ -140,6 +137,8 @@ public class SeataTransactionManager extends AbstractTransactionManager {
 
             globalTx.commit();
             log.info("Seata AT+SAGA transaction completed: name={}, xid={}", transactionName, xid);
+            endXid();
+            RootContext.unbind();
             return result;
         } catch (Exception e) {
             log.error("Seata AT+SAGA transaction failed: name={}, xid={}, executing compensation",
@@ -159,10 +158,9 @@ public class SeataTransactionManager extends AbstractTransactionManager {
                     log.error("Business compensation failed: name={}, xid={}", transactionName, xid, ce);
                 }
             }
-            throw e;
-        } finally {
-            endXid();
+            endXid(e);
             RootContext.unbind();
+            throw e;
         }
     }
 
