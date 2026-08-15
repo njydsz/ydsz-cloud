@@ -112,72 +112,106 @@ ydsz:
       connect-timeout: 5000
       read-timeout: 10000
   # P0-1: 统一线程池配置（ydsz-common-thread）
+  # 参考：云顶编码规范 15.4 节
   thread:
     enabled: true
+    hot-update:
+      enabled: true
     pools:
       messageBatch:
         core-size: 2
         max-size: 4
         queue-capacity: 200
-        thread-name-prefix: msg-batch-
+        thread-name-prefix: ydsz-msg-batch-
         reject-policy: CALLER_RUNS
         await-termination-seconds: 60
         keep-alive-seconds: 60
+        slow-task-threshold-ms: 5000
+        task-decorator-bean-names:
+          - tenantContextTaskDecorator
       # 通道级 Bulkhead 线程池
       msgEmail:
         core-size: 5
         max-size: 20
         queue-capacity: 100
-        thread-name-prefix: msg-email-
+        thread-name-prefix: ydsz-msg-email-
         reject-policy: CALLER_RUNS
+        slow-task-threshold-ms: 8000
+        task-decorator-bean-names:
+          - tenantContextTaskDecorator
       msgSms:
         core-size: 10
         max-size: 30
         queue-capacity: 200
-        thread-name-prefix: msg-sms-
+        thread-name-prefix: ydsz-msg-sms-
         reject-policy: CALLER_RUNS
+        slow-task-threshold-ms: 5000
+        task-decorator-bean-names:
+          - tenantContextTaskDecorator
       msgDingtalk:
         core-size: 5
         max-size: 15
         queue-capacity: 100
-        thread-name-prefix: msg-dingtalk-
+        thread-name-prefix: ydsz-msg-dingtalk-
         reject-policy: CALLER_RUNS
+        slow-task-threshold-ms: 5000
+        task-decorator-bean-names:
+          - tenantContextTaskDecorator
       msgWecom:
         core-size: 5
         max-size: 15
         queue-capacity: 100
-        thread-name-prefix: msg-wecom-
+        thread-name-prefix: ydsz-msg-wecom-
         reject-policy: CALLER_RUNS
+        slow-task-threshold-ms: 5000
+        task-decorator-bean-names:
+          - tenantContextTaskDecorator
       msgWecomApp:
         core-size: 5
         max-size: 15
         queue-capacity: 100
-        thread-name-prefix: msg-wecom-app-
+        thread-name-prefix: ydsz-msg-wecom-app-
         reject-policy: CALLER_RUNS
+        slow-task-threshold-ms: 5000
+        task-decorator-bean-names:
+          - tenantContextTaskDecorator
       msgFeishu:
         core-size: 5
         max-size: 15
         queue-capacity: 100
-        thread-name-prefix: msg-feishu-
+        thread-name-prefix: ydsz-msg-feishu-
         reject-policy: CALLER_RUNS
+        slow-task-threshold-ms: 5000
+        task-decorator-bean-names:
+          - tenantContextTaskDecorator
       msgInapp:
         core-size: 3
         max-size: 10
         queue-capacity: 50
-        thread-name-prefix: msg-inapp-
+        thread-name-prefix: ydsz-msg-inapp-
         reject-policy: CALLER_RUNS
+        slow-task-threshold-ms: 3000
+        task-decorator-bean-names:
+          - tenantContextTaskDecorator
       msgPush:
         core-size: 3
         max-size: 10
         queue-capacity: 50
-        thread-name-prefix: msg-push-
+        thread-name-prefix: ydsz-msg-push-
         reject-policy: CALLER_RUNS
+        slow-task-threshold-ms: 3000
+        task-decorator-bean-names:
+          - tenantContextTaskDecorator
       msgWebhook:
         core-size: 5
         max-size: 15
         queue-capacity: 100
-        thread-name-prefix: msg-webhook-
+        thread-name-prefix: ydsz-msg-webhook-
         reject-policy: CALLER_RUNS
+        slow-task-threshold-ms: 10000
+        enable-detailed-metrics: true
+        task-decorator-bean-names:
+          - tenantContextTaskDecorator
 rocketmq:
   name-server: ${ROCKETMQ_NAME_SERVER:127.0.0.1:9876}
   producer:

@@ -1,14 +1,12 @@
 package com.njydsz.common.notify.ratelimit;
 
-import java.time.Instant;
+import java.time.Duration;
+import java.util.EnumMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.ReentrantLock;
 
 import com.njydsz.common.notify.config.NotifyProperties;
 import com.njydsz.common.notify.enums.NotifyChannel;
+import com.njydsz.common.redis.service.RedisRateLimiter;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -22,12 +20,12 @@ import lombok.extern.slf4j.Slf4j;
  * <ul>
  *   <li>全局默认：每个渠道 100次/分钟</li>
  *   <li>可配置：通过 {@link NotifyProperties.RateLimit} 自定义各渠道限流规则</li>
- *   <li>动态调整：支持运行时修改限流参数</li>
+ *   <li>算法：滑动窗口（基于 Redis + Lua 实现，支持多实例部署）</li>
  * </ul>
  *
- * <p><b>架构说明：</b>本类为纯内存实现（单实例部署）。
- * 多实例部署应使用 {@code com.njydsz.common.redis.service.RedisRateLimiter}
- * 的 {@code tryAcquireSlidingWindow()} 方法实现分布式滑动窗口限流。
+ * <p>P0-1 架构优化：从纯内存滑动窗口迁移为委托
+ * {@link RedisRateLimiter#tryAcquireSlidingWindow} 实现分布式限流，
+ * 消除多实例部署下内存限流器不一致问题。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -35,38 +33,49 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NotifyRateLimiterManager {
 
-    private final Map<NotifyChannel, SlidingWindowRateLimiter> channelLimiters = new ConcurrentHashMap<>();
-    private final NotifyProperties.RateLimit rateLimitConfig;
+    private final Map<NotifyChannel, ChannelLimit> channelLimits = new EnumMap<>(NotifyChannel.class);
+    private final RedisRateLimiter redisRateLimiter;
 
     /**
-     * 默认限流配置：100次/分钟
+     * 渠道限流参数封装
      */
-    private static final int DEFAULT_MAX_REQUESTS = 100;
-    private static final long DEFAULT_WINDOW_MILLIS = 60_000L;
+    private static class ChannelLimit {
+        final int maxRequests;
+        final Duration window;
+
+        ChannelLimit(int maxRequests, Duration window) {
+            this.maxRequests = maxRequests;
+            this.window = window;
+        }
+    }
 
     /**
      * 构造限流管理器
      *
      * @param rateLimitConfig 限流配置
+     * @param redisRateLimiter Redis 限流器（可选，不可用时降级为不限制）
      */
-    public NotifyRateLimiterManager(NotifyProperties.RateLimit rateLimitConfig) {
-        this.rateLimitConfig = rateLimitConfig;
-        initializeLimiters();
+    public NotifyRateLimiterManager(NotifyProperties.RateLimit rateLimitConfig,
+                                    RedisRateLimiter redisRateLimiter) {
+        this.redisRateLimiter = redisRateLimiter;
+        initializeLimits(rateLimitConfig);
     }
 
     /**
-     * 初始化各渠道的限流器
+     * 初始化各渠道的限流参数
      */
-    private void initializeLimiters() {
+    private void initializeLimits(NotifyProperties.RateLimit rateLimitConfig) {
+        if (rateLimitConfig == null) {
+            return;
+        }
         for (NotifyChannel channel : NotifyChannel.values()) {
-            int maxRequests = getMaxRequestsForChannel(channel);
-            long windowMillis = getWindowMillisForChannel(channel);
+            int maxRequests = getMaxRequestsForChannel(rateLimitConfig, channel);
+            long windowSeconds = getWindowSecondsForChannel(rateLimitConfig, channel);
 
-            SlidingWindowRateLimiter limiter = new SlidingWindowRateLimiter(maxRequests, windowMillis);
-            channelLimiters.put(channel, limiter);
+            channelLimits.put(channel, new ChannelLimit(maxRequests, Duration.ofSeconds(windowSeconds)));
 
-            log.info("[NotifyRateLimiter] 初始化渠道限流器 | channel={} | maxRequests={} | window={}ms",
-                    channel, maxRequests, windowMillis);
+            log.info("[NotifyRateLimiter] 初始化渠道限流参数 | channel={} | maxRequests={} | window={}s",
+                    channel, maxRequests, windowSeconds);
         }
     }
 
@@ -77,31 +86,33 @@ public class NotifyRateLimiterManager {
      * @return true 表示允许发送，false 表示被限流
      */
     public boolean tryAcquire(NotifyChannel channel) {
-        SlidingWindowRateLimiter limiter = channelLimiters.get(channel);
-        if (limiter == null) {
-            log.warn("[NotifyRateLimiter] 未找到渠道限流器，使用默认配置 | channel={}", channel);
-            limiter = channelLimiters.computeIfAbsent(channel, k ->
-                    new SlidingWindowRateLimiter(DEFAULT_MAX_REQUESTS, DEFAULT_WINDOW_MILLIS));
+        if (channel == null) {
+            return true;
+        }
+        if (redisRateLimiter == null) {
+            log.debug("[NotifyRateLimiter] RedisRateLimiter 不可用，降级放行 | channel={}", channel);
+            return true;
         }
 
-        boolean acquired = limiter.tryAcquire();
-        if (!acquired) {
-            log.warn("[NotifyRateLimiter] 渠道限流触发 | channel={} | currentRequests={} | config={}",
-                    channel, limiter.getCurrentRequestCount(), limiter.getConfigInfo());
+        ChannelLimit limit = channelLimits.get(channel);
+        if (limit == null) {
+            log.warn("[NotifyRateLimiter] 未找到渠道限流参数 | channel={}", channel);
+            return true;
         }
 
-        return acquired;
-    }
-
-    /**
-     * 获取指定渠道的当前请求数
-     *
-     * @param channel 通知渠道
-     * @return 当前窗口内的请求数
-     */
-    public int getCurrentRequestCount(NotifyChannel channel) {
-        SlidingWindowRateLimiter limiter = channelLimiters.get(channel);
-        return limiter != null ? limiter.getCurrentRequestCount() : 0;
+        String key = buildKey(channel);
+        try {
+            boolean acquired = redisRateLimiter.tryAcquireSlidingWindow(
+                    key, limit.maxRequests, limit.window);
+            if (!acquired) {
+                log.warn("[NotifyRateLimiter] 渠道限流触发 | channel={} | maxRequests={} | window={}s",
+                        channel, limit.maxRequests, limit.window.getSeconds());
+            }
+            return acquired;
+        } catch (Exception e) {
+            log.warn("[NotifyRateLimiter] 限流异常，降级放行 | channel={} | error={}", channel, e.getMessage());
+            return true;
+        }
     }
 
     /**
@@ -111,152 +122,37 @@ public class NotifyRateLimiterManager {
      * @return 配置描述
      */
     public String getChannelConfigInfo(NotifyChannel channel) {
-        SlidingWindowRateLimiter limiter = channelLimiters.get(channel);
-        return limiter != null ? limiter.getConfigInfo() : "未配置";
+        ChannelLimit limit = channelLimits.get(channel);
+        return limit != null
+                ? String.format("maxRequests=%d, window=%ds", limit.maxRequests, limit.window.getSeconds())
+                : "未配置";
     }
 
-    /**
-     * 获取渠道的最大请求数配置
-     */
-    private int getMaxRequestsForChannel(NotifyChannel channel) {
-        if (rateLimitConfig == null || rateLimitConfig.getChannelLimits() == null) {
-            return DEFAULT_MAX_REQUESTS;
-        }
+    private String buildKey(NotifyChannel channel) {
+        return "notify:channel:" + channel.name().toLowerCase();
+    }
 
-        NotifyProperties.ChannelRateLimit channelLimit = rateLimitConfig.getChannelLimits().get(channel);
-        if (channelLimit != null && channelLimit.getMaxRequests() > 0) {
-            return channelLimit.getMaxRequests();
+    private int getMaxRequestsForChannel(NotifyProperties.RateLimit rateLimitConfig, NotifyChannel channel) {
+        if (rateLimitConfig.getChannelLimits() != null) {
+            NotifyProperties.ChannelRateLimit channelLimit = rateLimitConfig.getChannelLimits().get(channel);
+            if (channelLimit != null && channelLimit.getMaxRequests() > 0) {
+                return channelLimit.getMaxRequests();
+            }
         }
-
         return rateLimitConfig.getDefaultMaxRequests() > 0
                 ? rateLimitConfig.getDefaultMaxRequests()
-                : DEFAULT_MAX_REQUESTS;
+                : 100;
     }
 
-    /**
-     * 获取渠道的窗口大小配置（毫秒）
-     */
-    private long getWindowMillisForChannel(NotifyChannel channel) {
-        if (rateLimitConfig == null || rateLimitConfig.getChannelLimits() == null) {
-            return DEFAULT_WINDOW_MILLIS;
+    private long getWindowSecondsForChannel(NotifyProperties.RateLimit rateLimitConfig, NotifyChannel channel) {
+        if (rateLimitConfig.getChannelLimits() != null) {
+            NotifyProperties.ChannelRateLimit channelLimit = rateLimitConfig.getChannelLimits().get(channel);
+            if (channelLimit != null && channelLimit.getWindowSeconds() > 0) {
+                return channelLimit.getWindowSeconds();
+            }
         }
-
-        NotifyProperties.ChannelRateLimit channelLimit = rateLimitConfig.getChannelLimits().get(channel);
-        if (channelLimit != null && channelLimit.getWindowSeconds() > 0) {
-            return channelLimit.getWindowSeconds() * 1000L;
-        }
-
         return rateLimitConfig.getDefaultWindowSeconds() > 0
-                ? rateLimitConfig.getDefaultWindowSeconds() * 1000L
-                : DEFAULT_WINDOW_MILLIS;
-    }
-
-    /**
-     * 基于滑动窗口的限流器（内存级，单实例部署）
-     *
-     * <p>使用滑动窗口算法实现限流控制，适用于通知发送等场景的频率限制。
-     * 相比固定窗口，滑动窗口能更平滑地控制请求速率，避免窗口边界处的突发流量。
-     *
-     * <p>使用 ReentrantLock 替代 synchronized，避免 JDK 21 虚拟线程被固定（VT pinning）。
-     */
-    private static class SlidingWindowRateLimiter {
-
-        private final long windowSizeMillis;
-        private final int maxRequests;
-        private final int subWindowCount;
-        private final long subWindowSizeMillis;
-        private final AtomicInteger[] subWindowCounts;
-        private final AtomicLong[] subWindowTimestamps;
-        private final ReentrantLock acquireLock = new ReentrantLock();
-
-        SlidingWindowRateLimiter(int maxRequests, long windowSizeMillis) {
-            this(maxRequests, windowSizeMillis, 10);
-        }
-
-        SlidingWindowRateLimiter(int maxRequests, long windowSizeMillis, int subWindowCount) {
-            if (maxRequests <= 0) {
-                throw new IllegalArgumentException("maxRequests must be positive");
-            }
-            if (windowSizeMillis <= 0) {
-                throw new IllegalArgumentException("windowSizeMillis must be positive");
-            }
-            if (subWindowCount <= 0) {
-                throw new IllegalArgumentException("subWindowCount must be positive");
-            }
-
-            this.maxRequests = maxRequests;
-            this.windowSizeMillis = windowSizeMillis;
-            this.subWindowCount = subWindowCount;
-            this.subWindowSizeMillis = windowSizeMillis / subWindowCount;
-
-            this.subWindowCounts = new AtomicInteger[subWindowCount];
-            this.subWindowTimestamps = new AtomicLong[subWindowCount];
-
-            for (int i = 0; i < subWindowCount; i++) {
-                subWindowCounts[i] = new AtomicInteger(0);
-                subWindowTimestamps[i] = new AtomicLong(0);
-            }
-        }
-
-        boolean tryAcquire() {
-            long now = Instant.now().toEpochMilli();
-            int currentIndex = (int) ((now / subWindowSizeMillis) % subWindowCount);
-
-            acquireLock.lock();
-            try {
-                cleanExpiredSubWindows(now);
-
-                int totalRequests = calculateTotalRequests(now);
-
-                if (totalRequests >= maxRequests) {
-                    log.debug("[RateLimiter] 限流触发 | currentRequests={} | maxRequests={} | windowSize={}ms",
-                            totalRequests, maxRequests, windowSizeMillis);
-                    return false;
-                }
-
-                subWindowCounts[currentIndex].incrementAndGet();
-                subWindowTimestamps[currentIndex].set(now);
-
-                return true;
-            } finally {
-                acquireLock.unlock();
-            }
-        }
-
-        int getCurrentRequestCount() {
-            long now = Instant.now().toEpochMilli();
-            return calculateTotalRequests(now);
-        }
-
-        String getConfigInfo() {
-            return String.format("maxRequests=%d, windowSize=%dms, subWindows=%d",
-                    maxRequests, windowSizeMillis, subWindowCount);
-        }
-
-        private void cleanExpiredSubWindows(long now) {
-            long windowStart = now - windowSizeMillis;
-
-            for (int i = 0; i < subWindowCount; i++) {
-                long timestamp = subWindowTimestamps[i].get();
-                if (timestamp < windowStart) {
-                    subWindowCounts[i].set(0);
-                    subWindowTimestamps[i].set(0);
-                }
-            }
-        }
-
-        private int calculateTotalRequests(long now) {
-            long windowStart = now - windowSizeMillis;
-            int total = 0;
-
-            for (int i = 0; i < subWindowCount; i++) {
-                long timestamp = subWindowTimestamps[i].get();
-                if (timestamp >= windowStart) {
-                    total += subWindowCounts[i].get();
-                }
-            }
-
-            return total;
-        }
+                ? rateLimitConfig.getDefaultWindowSeconds()
+                : 60;
     }
 }

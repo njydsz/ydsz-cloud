@@ -260,7 +260,21 @@ public enum CoreExceptionCode implements ExceptionCode {
      * 外部服务拒绝
      * @return 处理结果
      */
-    EXTERNAL_SERVICE_REJECTED("B02055", "external.service.rejected", 502, false, 0);
+    EXTERNAL_SERVICE_REJECTED("B02055", "external.service.rejected", 502, false, 0),
+
+    // ==================== 幂等/通知 ====================
+
+    /**
+     * 幂等拒绝（重复提交）
+     * @return 处理结果
+     */
+    IDEMPOTENT_REJECT("A07001", "idempotent.reject", 409, false, 0),
+
+    /**
+     * 通知发送失败
+     * @return 处理结果
+     */
+    NOTIFY_ERROR("B02056", "notify.error", 500, false, 0);
 
     // ==================== 字段定义 ====================
 
