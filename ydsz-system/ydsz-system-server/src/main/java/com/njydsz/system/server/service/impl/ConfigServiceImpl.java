@@ -127,6 +127,7 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     @Override
+    @CacheEvict(value = CacheConstants.SYSTEM_CONFIG_CACHE, allEntries = true)
     @Transactional(rollbackFor = Exception.class)
     public String save(ConfigDTO dto) {
         Config entity = toEntity(dto);
@@ -134,12 +135,13 @@ public class ConfigServiceImpl implements ConfigService {
         checkDuplicateKey(entity);
         validateConfigValue(entity.getConfigKey(), entity.getConfigValue(), entity.getValueType());
         configRepository.getConfigMapper().insert(entity);
-        evictCache(entity.getConfigKey(), entity.getConfigGroup());
+        publishConfigChangedEvent(entity.getConfigKey(), entity.getConfigGroup());
         indexUpsert(entity);
         return entity.getId();
     }
 
     @Override
+    @CacheEvict(value = CacheConstants.SYSTEM_CONFIG_CACHE, allEntries = true)
     @Transactional(rollbackFor = Exception.class)
     public boolean updateById(ConfigDTO dto) {
         Config entity = toEntity(dto);
@@ -147,19 +149,20 @@ public class ConfigServiceImpl implements ConfigService {
         validateConfigValue(entity.getConfigKey(), entity.getConfigValue(), entity.getValueType());
         boolean updated = configRepository.getConfigMapper().updateById(entity) > 0;
         if (updated) {
-            evictCache(entity.getConfigKey(), entity.getConfigGroup());
+            publishConfigChangedEvent(entity.getConfigKey(), entity.getConfigGroup());
             indexUpsert(entity);
         }
         return updated;
     }
 
     @Override
+    @CacheEvict(value = CacheConstants.SYSTEM_CONFIG_CACHE, allEntries = true)
     @Transactional(rollbackFor = Exception.class)
     public boolean removeById(String id) {
         Config entity = configRepository.getConfigMapper().selectById(id);
         boolean removed = configRepository.getConfigMapper().deleteById(id) > 0;
         if (removed && entity != null) {
-            evictCache(entity.getConfigKey(), entity.getConfigGroup());
+            publishConfigChangedEvent(entity.getConfigKey(), entity.getConfigGroup());
             indexDelete(id);
         }
         return removed;
@@ -197,27 +200,14 @@ public class ConfigServiceImpl implements ConfigService {
     // ============================== 业务查询 ==============================
 
     @Override
+    @Cacheable(value = CacheConstants.SYSTEM_CONFIG_CACHE,
+               key = "@cacheKeyBuilder.configValue(#p0)")
     public String getConfigValue(String configKey) {
         long start = System.nanoTime();
         try {
-            String cacheKey = SystemCacheKeys.of(CACHE_KEY_PREFIX, configKey);
-            String cached = stringOps.get(cacheKey, String.class);
-            if (cached != null) {
-                if (NULL_SENTINEL.equals(cached)) {
-                    metrics.recordConfigCacheHit();
-                    return null;
-                }
-                metrics.recordConfigCacheHit();
-                return cached;
-            }
             metrics.recordConfigCacheMiss();
             Config config = configRepository.getConfigMapper().selectByConfigKey(configKey);
-            if (config != null) {
-                stringOps.set(cacheKey, config.getConfigValue(), getCacheTtl());
-                return config.getConfigValue();
-            }
-            stringOps.set(cacheKey, NULL_SENTINEL, NULL_SENTINEL_TTL);
-            return null;
+            return config != null ? config.getConfigValue() : null;
         } finally {
             metrics.recordConfigRead(System.nanoTime() - start);
         }
@@ -225,42 +215,40 @@ public class ConfigServiceImpl implements ConfigService {
 
     @Override
     @DataScope(deptColumn = "dept_id", userColumn = "created_by")
+    @Cacheable(value = CacheConstants.SYSTEM_CONFIG_CACHE,
+               key = "@cacheKeyBuilder.configGroup(#p0)")
     public List<ConfigVO> getConfigsByGroup(String configGroup) {
-        String cacheKey = SystemCacheKeys.of(CACHE_GROUP_PREFIX, configGroup);
-        String cached = stringOps.get(cacheKey, String.class);
-        if (cached != null) {
-            metrics.recordConfigCacheHit();
-            return YdszJson.parseArray(cached, ConfigVO.class);
+        long start = System.nanoTime();
+        try {
+            metrics.recordConfigCacheMiss();
+            QueryWrapper<Config> wrapper = new QueryWrapper<>();
+            wrapper.eq("config_group", configGroup).eq("status", "ENABLED").orderByAsc("sort_order");
+            return configRepository.getConfigMapper().selectList(wrapper).stream()
+                    .map(SystemConverter.INSTANT::entityToVO)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+        } finally {
+            metrics.recordConfigRead(System.nanoTime() - start);
         }
-        metrics.recordConfigCacheMiss();
-        QueryWrapper<Config> wrapper = new QueryWrapper<>();
-        wrapper.eq("config_group", configGroup).eq("status", "ENABLED").orderByAsc("sort_order");
-        List<ConfigVO> vos = configRepository.getConfigMapper().selectList(wrapper).stream()
-                .map(SystemConverter.INSTANT::entityToVO)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-        stringOps.set(cacheKey, YdszJson.toJson(vos), getCacheTtl());
-        return vos;
     }
 
     @Override
     @DataScope(deptColumn = "dept_id", userColumn = "created_by")
+    @Cacheable(value = CacheConstants.SYSTEM_CONFIG_CACHE,
+               key = "@cacheKeyBuilder.configPublic()")
     public List<ConfigVO> listPublicConfigs() {
-        String cacheKey = SystemCacheKeys.of(CACHE_PUBLIC_KEY, "");
-        String cached = stringOps.get(cacheKey, String.class);
-        if (cached != null) {
-            metrics.recordConfigCacheHit();
-            return YdszJson.parseArray(cached, ConfigVO.class);
+        long start = System.nanoTime();
+        try {
+            metrics.recordConfigCacheMiss();
+            QueryWrapper<Config> wrapper = new QueryWrapper<>();
+            wrapper.eq("is_public", 1).eq("status", "ENABLED").orderByAsc("sort_order");
+            return configRepository.getConfigMapper().selectList(wrapper).stream()
+                    .map(SystemConverter.INSTANT::entityToVO)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+        } finally {
+            metrics.recordConfigRead(System.nanoTime() - start);
         }
-        metrics.recordConfigCacheMiss();
-        QueryWrapper<Config> wrapper = new QueryWrapper<>();
-        wrapper.eq("is_public", 1).eq("status", "ENABLED").orderByAsc("sort_order");
-        List<ConfigVO> vos = configRepository.getConfigMapper().selectList(wrapper).stream()
-                .map(SystemConverter.INSTANT::entityToVO)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-        stringOps.set(cacheKey, YdszJson.toJson(vos), getCacheTtl());
-        return vos;
     }
 
     // ============================== 私有方法 ==============================
@@ -453,24 +441,16 @@ public class ConfigServiceImpl implements ConfigService {
     }
 
     /**
-     * 失效配置相关缓存并广播变更事件。
+     * 广播配置变更事件（用于跨实例本地缓存失效感知）。
      *
-     * <p>依次删除单 key 缓存、分组缓存、公开配置缓存；
-     * 并通过可选的 {@code OutboxService} 追加 {@code CONFIG_CHANGED} 事件，
-     * 订阅方可感知配置变更（如热更新限流阈值）。事件发布失败仅告警，不影响主流程。
+     * <p>通过可选的 {@code OutboxService} 追加 {@code CONFIG_CHANGED} 事件，
+     * 订阅方（如其他实例的 {@code CrossModuleEventListener}）接收事件后清除本地缓存。
+     * 事件发布失败仅告警，不影响主流程。
      *
-     * @param configKey 配置键（为 null 时跳过单 key 缓存失效）
-     * @param configGroup 配置分组（为 null 时跳过分组缓存失效）
+     * @param configKey   配置键（为 null 时跳过）
+     * @param configGroup 配置分组（为 null 时跳过）
      */
-    private void evictCache(String configKey, String configGroup) {
-        if (configKey != null) {
-            stringOps.del(SystemCacheKeys.of(CACHE_KEY_PREFIX, configKey));
-        }
-        if (configGroup != null) {
-            stringOps.del(SystemCacheKeys.of(CACHE_GROUP_PREFIX, configGroup));
-        }
-        stringOps.del(SystemCacheKeys.of(CACHE_PUBLIC_KEY, ""));
-
+    private void publishConfigChangedEvent(String configKey, String configGroup) {
         OutboxService outboxService = outboxServiceProvider.getIfAvailable();
         if (outboxService != null) {
             try {
@@ -488,18 +468,5 @@ public class ConfigServiceImpl implements ConfigService {
                 log.warn("Failed to publish CONFIG_CHANGED event: error={}", e.getMessage());
             }
         }
-    }
-
-    /**
-     * 解析配置缓存 TTL。
-     *
-     * <p>取 {@code SystemProperties} 配置值；当配置非法（{@code <=0}）时回退到 5 分钟默认值，
-     * 防止错误配置导致缓存被立即淘汰而失去作用。
-     *
-     * @return 缓存过期时长
-     */
-    private Duration getCacheTtl() {
-        int minutes = properties.getConfig().getCacheTtlMinutes();
-        return Duration.ofMinutes(minutes > 0 ? minutes : 5);
     }
 }

@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -22,7 +22,7 @@ import lombok.experimental.SuperBuilder;
 @EqualsAndHashCode(callSuper = true)
 @SuperBuilder
 @TableName("nw_audit_log")
-public class AuditLog extends MpBaseEntity<String> implements Serializable {
+public class AuditLog extends MpBaseIdEntity<String> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 

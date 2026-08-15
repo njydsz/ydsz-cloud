@@ -30,8 +30,9 @@ import reactor.core.publisher.Mono;
  * <h3>Q3 修复说明</h3>
  * <p>历史版本使用 {@code SnowflakeIdGenerator} 生成十进制 traceId/spanId，
  * 不符合 W3C 要求的 32/16 位十六进制格式，导致下游链路追踪系统无法解析。
- * 本版本统一委托 {@link TraceIdGenerator}（32-hex 可排序 traceId + 16-hex spanId），
- * 与 {@link AccessLogGlobalFilter} / {@link AuthGlobalFilter} 的 traceId 生成口径一致。
+ * 本版本统一委托 {@link TraceIdGenerator} 的 W3C 专用方法
+ * （{@code generateW3CTraceId()} 32-hex + {@code generateW3CSpanId()} 16-hex），
+ * 使用密码学级熵源确保跨组织传播时的唯一性保障。</p>
  *
  * <h3>兼容性</h3>
  * <ul>
@@ -78,11 +79,11 @@ public class W3CTraceContextFilter implements GlobalFilter, Ordered {
         if (parsed != null) {
             // 延续上游 traceId，生成新 spanId（每跳新 span）
             traceId = parsed.traceId();
-            spanId = TraceIdGenerator.generateSpanId();
+            spanId = TraceIdGenerator.generateW3CSpanId();
         } else {
-            // 上游无合法 traceparent，生成新的 traceId + spanId
-            traceId = TraceIdGenerator.generateSortableTraceId();
-            spanId = TraceIdGenerator.generateSpanId();
+            // 上游无合法 traceparent，使用 SecureRandom 生成新的 32 位 hex traceId（W3C 规范）
+            traceId = TraceIdGenerator.generateW3CTraceId();
+            spanId = TraceIdGenerator.generateW3CSpanId();
         }
         String traceparent = TraceIdGenerator.traceparentHeader(traceId, spanId);
 

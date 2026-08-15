@@ -35,9 +35,11 @@ import com.njydsz.common.file.storage.DefaultStorageFactory;
 import com.njydsz.common.file.util.FileTypeValidator;
 import com.njydsz.common.file.virus.NoOpVirusScanner;
 import com.njydsz.common.file.virus.VirusScanner;
+import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 import io.micrometer.core.instrument.MeterRegistry;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -67,6 +69,7 @@ import lombok.extern.slf4j.Slf4j;
 @EnableScheduling
 @EnableConfigurationProperties({FileProperties.class, FileUploadProperties.class, FileLifecycleProperties.class})
 @ConditionalOnProperty(prefix = "ydsz.file", name = "enabled", havingValue = "true", matchIfMissing = true)
+@RequiredArgsConstructor
 public class FileConfiguration {
 
     /** 分片上传上下文过期时间（60 分钟） */
@@ -75,14 +78,8 @@ public class FileConfiguration {
     /** 分片上传上下文存储 */
     private final MultipartContextStore multipartContextStore;
 
-    /**
-     * 构造文件存储配置
-     *
-     * @param multipartContextStore 分片上传上下文存储
-     */
-    public FileConfiguration(MultipartContextStore multipartContextStore) {
-        this.multipartContextStore = multipartContextStore;
-    }
+    /** 分布式锁提供者（可选，ydsz-common-lock 在 classpath 时可用） */
+    private final ObjectProvider<DistributedLocker> lockerProvider;
 
     /**
      * 注册分片上传上下文存储
@@ -224,7 +221,7 @@ public class FileConfiguration {
         DefaultStorageFactory factory = new DefaultStorageFactory(fileProperties, fileUploadProperties);
         factory.setMultipartContextStore(multipartContextStore);
         factory.setCheckpointService(checkpointService);
-        UploadConcurrencyGuard guard = buildConcurrencyGuardIfEnabled(fileProperties, redisProvider.getIfAvailable());
+        UploadConcurrencyGuard guard = buildConcurrencyGuardIfEnabled(fileProperties, redisProvider.getIfAvailable(), lockerProvider);
         if (guard != null) factory.setConcurrencyGuard(guard);
         FileDedupService dedup = dedupProvider.getIfAvailable();
         if (dedup != null) factory.setFileDedupService(dedup);
@@ -240,15 +237,24 @@ public class FileConfiguration {
     /**
      * 构建上传并发保护器（仅在 Redis 可用且配置启用时创建）
      *
-     * @param props 文件存储配置
-     * @param redis Redis 模板实例
+     * <p>当 {@link DistributedLocker} 可用时（ydsz-common-lock 在 classpath 上），
+     * 使用其 {@code tryLock}/{@code unlock} 实现加锁 / 释放，享有 Lua 原子释放与 WatchDog 续期能力；
+     * 否则降级为原生 {@link StringRedisTemplate} 操作。
+     *
+     * @param props            文件存储配置
+     * @param redis            Redis 模板实例
+     * @param lockerProvider   分布式锁提供者（可选）
      * @return 并发保护器实例，不需要时返回 null
      */
-    private UploadConcurrencyGuard buildConcurrencyGuardIfEnabled(FileProperties props, StringRedisTemplate redis) {
+    private UploadConcurrencyGuard buildConcurrencyGuardIfEnabled(FileProperties props,\n                                                                   StringRedisTemplate redis,\n                                                                   ObjectProvider<DistributedLocker> lockerProvider) {
         if (redis == null) return null;
         var config = props.getConcurrencyControl();
         if (config == null || !config.isEnabled()) return null;
-        return new UploadConcurrencyGuard(redis, config);
+        DistributedLocker locker = lockerProvider.getIfAvailable();
+        if (locker == null) {
+            log.info("[FileConfiguration] DistributedLocker 不可用，UploadConcurrencyGuard 降级为原生 Redis 操作");
+        }
+        return new UploadConcurrencyGuard(locker, redis, config);
     }
 
     /**

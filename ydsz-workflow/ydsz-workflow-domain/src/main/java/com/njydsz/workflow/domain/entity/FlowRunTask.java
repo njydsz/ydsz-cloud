@@ -40,7 +40,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *
  * <p><b>SLA 催办（P1-6）：</b>
  * <ul>
- *   <li>{@code ydsznderCount}：已发送的催办次数（超过 {@code ydsznderCount} 配置后停止）</li>
+ *   <li>{@code urgeCount}：已发送的催办次数（超过配置上限后停止）</li>
  *   <li>{@code slaAction}：最终触发的动作（{@code REMIND} / {@code ESCALATE} / {@code AUTO_PASS} / {@code AUTO_REJECT}）</li>
  *   <li>{@code slaEscalated}：是否已升级（{@code 0} 否 / {@code 1} 是，避免重复升级）</li>
  * </ul>
@@ -158,10 +158,10 @@ public class FlowRunTask extends MpBaseEntity<String> {
     private Integer priority;
 
     /** 已发送的 SLA 催办次数 */
-    private Integer ydsznderCount;
+    private Integer urgeCount;
 
     /** 最近一次催办时间 */
-    private LocalDateTime lastYdszndedAt;
+    private LocalDateTime lastUrgedAt;
 
     /** 最终触发的 SLA 动作（{@code REMIND} / {@code ESCALATE} / {@code AUTO_PASS} / {@code AUTO_REJECT}） */
     private String slaAction;

@@ -1,7 +1,7 @@
 package com.njydsz.literule.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -21,7 +21,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_rule_version_history")
-public class RuleVersionHistory extends MpBaseEntity<String> {
+public class RuleVersionHistory extends MpBaseIdEntity<String> {
 
     /** 规则编码 */
     private String ruleCode;

@@ -10,6 +10,7 @@ import org.springframework.data.redis.core.script.DefaultRedisScript;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.config.FileProperties.ConcurrencyControl;
 import com.njydsz.common.file.exception.FileExceptionCode;
+import com.njydsz.common.lock.core.DistributedLocker;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -61,16 +62,28 @@ public class UploadConcurrencyGuard {
      */
     private static final long MAX_WAIT_SECONDS = 60;
 
+    /**
+     * 分布式锁接口（优先使用，来自 ydsz-common-lock）；为 null 时降级为原生 Redis 操作
+     */
+    private final DistributedLocker distributedLocker;
+
     private final StringRedisTemplate redisTemplate;
     private final ConcurrencyControl config;
 
     /**
-     * 创建并发保护器
+     * 创建并发保护器（使用 ydsz-common-lock 分布式锁）
      *
-     * @param redisTemplate Redis 模板
-     * @param config        并发控制配置
+     * <p>当 {@link DistributedLocker} 可用时，底层使用 common-lock 的 RedisReentrantLock
+     * 实现加锁 / 释放，享有 Lua 原子释放、WatchDog 续期等能力；
+     * 当 {@code distributedLocker == null} 时降级为原生 {@link StringRedisTemplate} 操作。
+     *
+     * @param distributedLocker 分布式锁接口（可为 null，null 时降级为原生 Redis 操作）
+     * @param redisTemplate     Redis 模板
+     * @param config            并发控制配置
      */
-    public UploadConcurrencyGuard(StringRedisTemplate redisTemplate, ConcurrencyControl config) {
+    public UploadConcurrencyGuard(DistributedLocker distributedLocker,
+                                  StringRedisTemplate redisTemplate, ConcurrencyControl config) {
+        this.distributedLocker = distributedLocker;
         this.redisTemplate = redisTemplate;
         this.config = config;
     }
@@ -102,7 +115,8 @@ public class UploadConcurrencyGuard {
     /**
      * 释放上传锁
      *
-     * <p>使用 Lua 脚本保证原子性：仅当锁值匹配时才删除。
+     * <p>当 {@link DistributedLocker} 可用时，委托其 {@code unlock} 实现（Lua 原子释放）；
+     * 否则降级为原生 Lua 脚本释放。
      *
      * @param objectKey  文件对象键
      * @param lockToken  获取锁时返回的令牌
@@ -113,28 +127,46 @@ public class UploadConcurrencyGuard {
         }
 
         String lockKey = LOCK_KEY_PREFIX + objectKey;
-        // Lua: if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end
+        if (distributedLocker != null) {
+            boolean released = distributedLocker.unlock(lockKey, lockToken);
+            if (released) {
+                log.debug("[UploadGuard] lock released (common-lock), key={}", lockKey);
+            }
+            return;
+        }
+        // 降级：原生 Lua 脚本释放
         String script = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
         Object result = redisTemplate.execute(
                 new DefaultRedisScript<>(script, Long.class),
                 Collections.singletonList(lockKey), lockToken);
         if (Long.valueOf(1).equals(result)) {
-            log.debug("[UploadGuard] lock released, key={}", lockKey);
+            log.debug("[UploadGuard] lock released (redis-fallback), key={}", lockKey);
         }
     }
 
     /**
-     * 非阻塞尝试获取锁（SETNX）
+     * 非阻塞尝试获取锁
+     *
+     * <p>当 {@link DistributedLocker} 可用时，委托其 {@code tryLock} 实现（Lua 原子操作 + WatchDog）；
+     * 否则降级为原生 {@link StringRedisTemplate#setIfAbsent} 操作。
      *
      * @param lockKey 锁键
      * @return 成功返回锁令牌，失败返回 null
      */
     private String tryAcquireNonBlocking(String lockKey) {
+        if (distributedLocker != null) {
+            String lockValue = distributedLocker.tryLock(lockKey, LOCK_EXPIRE_SECONDS, java.util.concurrent.TimeUnit.SECONDS);
+            if (lockValue != null) {
+                log.debug("[UploadGuard] lock acquired (common-lock), key={}", lockKey);
+            }
+            return lockValue;
+        }
+        // 降级：原生 Redis SET NX EX
         String lockValue = UUID.randomUUID().toString().replace("-", "");
         Boolean success = redisTemplate.opsForValue()
                 .setIfAbsent(lockKey, lockValue, Duration.ofSeconds(LOCK_EXPIRE_SECONDS));
         if (Boolean.TRUE.equals(success)) {
-            log.debug("[UploadGuard] lock acquired, key={}", lockKey);
+            log.debug("[UploadGuard] lock acquired (redis-fallback), key={}", lockKey);
             return lockValue;
         }
         return null;

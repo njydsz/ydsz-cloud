@@ -882,32 +882,6 @@ public final class BeanMapper {
         return convertValue(value, paramType, DEFAULT_DATE_FORMATTER, null);
     }
 
-    // ==================== 命名转换辅助 ====================
-
-    /**
-     * 下划线命名转驼峰（user_name → userName）。
-     *
-     * @param snake 下划线命名字符串
-     * @return 驼峰命名字符串
-     * @deprecated 命名转换已统一收敛至 {@link StringUtils#toCamelCase(String)}，请直接使用 StringUtils。
-     */
-    @Deprecated
-    public static String snakeToCamel(String snake) {
-        return StringUtils.toCamelCase(snake);
-    }
-
-    /**
-     * 驼峰命名转下划线（userName → user_name）。
-     *
-     * @param camel 驼峰命名字符串
-     * @return 下划线命名字符串
-     * @deprecated 命名转换已统一收敛至 {@link StringUtils#toUnderScoreCase(String)}，请直接使用 StringUtils。
-     */
-    @Deprecated
-    public static String camelToSnake(String camel) {
-        return StringUtils.toUnderScoreCase(camel);
-    }
-
     // ==================== 其他工具方法 ====================
 
     /**

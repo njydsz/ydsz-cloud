@@ -4,7 +4,7 @@ import java.io.Serial;
 import java.time.LocalDate;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -25,7 +25,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_job_daily_stats")
-public class JobDailyStats extends MpBaseEntity<String> {
+public class JobDailyStats extends MpBaseIdEntity<String> {
 
     @Serial
     private static final long serialVersionUID = 1L;

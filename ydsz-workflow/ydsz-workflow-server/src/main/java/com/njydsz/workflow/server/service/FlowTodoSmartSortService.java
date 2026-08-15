@@ -87,8 +87,8 @@ public class FlowTodoSmartSortService {
         }
 
         // 4. 催办次数
-        int ydsznderCount = task.getYdsznderCount() != null ? task.getYdsznderCount() : 0;
-        score += Math.min(ydsznderCount * REMINDER_SCORE, REMINDER_MAX_BONUS);
+        int urgeCount = task.getUrgeCount() != null ? task.getUrgeCount() : 0;
+        score += Math.min(urgeCount * REMINDER_SCORE, REMINDER_MAX_BONUS);
 
         return score;
     }

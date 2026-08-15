@@ -37,8 +37,8 @@
         <result column="duration_ms" property="durationMs"/>
         <result column="due_at" property="dueAt"/>
         <result column="priority" property="priority"/>
-        <result column="ydsznder_count" property="ydsznderCount"/>
-        <result column="last_ydsznded_at" property="lastYdszndedAt"/>
+        <result column="ydsznder_count" property="urgeCount"/>
+        <result column="last_ydsznded_at" property="lastUrgedAt"/>
         <result column="sla_action" property="slaAction"/>
         <result column="sla_escalated" property="slaEscalated"/>
         <result column="deleted" property="deleted"/>
@@ -289,7 +289,7 @@
                assignee_name   AS "assigneeName",
                due_at          AS "dueAt",
                EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - due_at)) / 3600.0 AS "overdueHours",
-               ydsznder_count  AS "ydsznderCount"
+               ydsznder_count  AS "urgeCount"
         FROM ydsz_flow_run_task
         WHERE due_at &lt; CURRENT_TIMESTAMP
           AND task_status IN ('PENDING', 'CLAIMED')
@@ -321,10 +321,10 @@
     </select>
 
     <!-- P1-6: 增加 SLA 催办计数 -->
-    <update id="incrementYdsznderCount">
+    <update id="incrementUrgeCount">
         UPDATE ydsz_flow_run_task
-        SET ydsznder_count = #{ydsznderCount},
-            last_ydsznded_at = #{lastYdszndedAt},
+        SET ydsznder_count = #{urgeCount},
+            last_ydsznded_at = #{lastUrgedAt},
             updated_by = 0,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id}

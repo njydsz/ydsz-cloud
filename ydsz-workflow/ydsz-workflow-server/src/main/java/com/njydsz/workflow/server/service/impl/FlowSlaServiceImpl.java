@@ -40,9 +40,9 @@ import lombok.extern.slf4j.Slf4j;
  * <ol>
  *   <li>cronjob 每 60s 扫描所有 {@code PENDING/CLAIMED} 且 {@code dueAt} 不为空的 task</li>
  *   <li>解析 {@code node.slaConfig} 配置：{@code timeoutMinutes} / {@code action} /
- *       {@code ydsznderIntervalMinutes} / {@code maxYdsznders} / {@code escalateUserId}</li>
- *   <li>未到 {@code dueAt}：跳过；超过 {@code dueAt} 但未到最终动作：根据 {@code maxYdsznders} 重复 REMIND</li>
- *   <li>超过 {@code dueAt} 且已超出 ydsznder 容忍窗口：执行最终动作（{@code ESCALATE / AUTO_PASS / AUTO_REJECT}）</li>
+ *       {@code urgeIntervalMinutes} / {@code maxUrges} / {@code escalateUserId}</li>
+ *   <li>未到 {@code dueAt}：跳过；超过 {@code dueAt} 但未到最终动作：根据 {@code maxUrges} 重复 REMIND</li>
+ *   <li>超过 {@code dueAt} 且已超出催办容忍窗口：执行最终动作（{@code ESCALATE / AUTO_PASS / AUTO_REJECT}）</li>
  *   <li>所有写操作都在 {@code REQUIRES_NEW} 子事务中，<b>单条失败不影响扫描主循环</b></li>
  * </ol>
  *
@@ -104,8 +104,8 @@ public class FlowSlaServiceImpl implements FlowSlaService {
      * <ul>
      *   <li>{@code timeoutMinutes} — 任务超时时间（必填）</li>
      *   <li>{@code action} — 超时动作（{@code REMIND/ESCALATE/AUTO_PASS/AUTO_REJECT}，默认 {@code REMIND}）</li>
-     *   <li>{@code ydsznderIntervalMinutes} — 提醒间隔（默认 60min）</li>
-     *   <li>{@code maxYdsznders} — 最大提醒次数（默认 3）</li>
+     *   <li>{@code urgeIntervalMinutes} — 提醒间隔（默认 60min）</li>
+     *   <li>{@code maxUrges} — 最大提醒次数（默认 3）</li>
      *   <li>{@code escalateUserId} — 升级目标用户 ID（{@code action=ESCALATE} 时必填）</li>
      *   <li>{@code autoComment} — 自动动作的审批意见</li>
      * </ul>
@@ -283,26 +283,26 @@ public class FlowSlaServiceImpl implements FlowSlaService {
             log.warn("[FlowSla] 未知 action: taskId={} action={}", fresh.getId(), actionStr);
             return false;
         }
-        int maxYdsznders = readInt(config, "maxYdsznders", DEFAULT_MAX_REMINDERS);
-        int ydsznderIntervalMin = readInt(config, "ydsznderIntervalMinutes",
+        int maxUrges = readInt(config, "maxUrges", DEFAULT_MAX_REMINDERS);
+        int urgeIntervalMin = readInt(config, "urgeIntervalMinutes",
                 DEFAULT_REMINDER_INTERVAL_MINUTES);
-        int currentYdsznders = fresh.getYdsznderCount() == null ? 0 : fresh.getYdsznderCount();
-        LocalDateTime lastYdszndedAt = fresh.getLastYdszndedAt();
+        int currentUrges = fresh.getUrgeCount() == null ? 0 : fresh.getUrgeCount();
+        LocalDateTime lastUrgedAt = fresh.getLastUrgedAt();
         // 4. 距离最后一次提醒未到间隔，不重复提醒
-        if (lastYdszndedAt != null
-                && Duration.between(lastYdszndedAt, now).toMinutes() < ydsznderIntervalMin) {
+        if (lastUrgedAt != null
+                && Duration.between(lastUrgedAt, now).toMinutes() < urgeIntervalMin) {
             return false;
         }
         // 5. 已达最大提醒次数：执行最终动作
-        if (currentYdsznders >= maxYdsznders) {
+        if (currentUrges >= maxUrges) {
             return executeFinalAction(fresh, node, action, config, now);
         }
         // 6. 未达最大提醒次数：先发一次提醒，再决定
-        boolean ydsznded = sendYdsznder(fresh, action, currentYdsznders + 1, maxYdsznders, now);
-        if (ydsznded) {
-            taskMapper.incrementYdsznderCount(fresh.getId(), currentYdsznders + 1, now);
+        boolean urged = sendUrge(fresh, action, currentUrges + 1, maxUrges, now);
+        if (urged) {
+            taskMapper.incrementUrgeCount(fresh.getId(), currentUrges + 1, now);
         }
-        return ydsznded;
+        return urged;
     }
 
     /**
@@ -310,16 +310,16 @@ public class FlowSlaServiceImpl implements FlowSlaService {
      *
      * @return true=已发送，false=跳过（无 assignee 等）
      */
-    private boolean sendYdsznder(FlowRunTask task, FlowSlaAction action, int newYdsznderCount,
-                                  int maxYdsznders, LocalDateTime now) {
+    private boolean sendUrge(FlowRunTask task, FlowSlaAction action, int newUrgeCount,
+                              int maxUrges, LocalDateTime now) {
         try {
             String title = "审批任务即将超时";
             String content = String.format("【%s】%s 已超过截止时间 %s，请尽快处理（第 %d/%d 次提醒）",
                     nullSafe(task.getFlowName()),
                     nullSafe(task.getNodeName()),
                     task.getDueAt(),
-                    newYdsznderCount,
-                    maxYdsznders);
+                    newUrgeCount,
+                    maxUrges);
             String receiverId = task.getAssigneeId();
             if (receiverId == null) {
                 log.warn("[FlowSla] 无法解析 assigneeId: taskId={} assigneeId={}",
@@ -328,7 +328,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
             }
             notificationService.notify("INAPP", receiverId, title, content, "WORKFLOW_TIMEOUT", "WARN");
             log.info("[FlowSla] 发送 SLA 提醒: taskId={} receiver={} count={}/{} action={}",
-                    task.getId(), receiverId, newYdsznderCount, maxYdsznders, action);
+                    task.getId(), receiverId, newUrgeCount, maxUrges, action);
             return true;
         } catch (Exception e) {
             log.warn("[FlowSla] 提醒发送失败: taskId={} err={}", task.getId(), e.getMessage());
@@ -455,8 +455,8 @@ public class FlowSlaServiceImpl implements FlowSlaService {
                 FlowRunTask afterTransfer = taskMapper.selectById(task.getId());
                 if (afterTransfer != null) {
                     afterTransfer.setSlaEscalated(1);
-                    afterTransfer.setYdsznderCount(0);
-                    afterTransfer.setLastYdszndedAt(null);
+                    afterTransfer.setUrgeCount(0);
+                    afterTransfer.setLastUrgedAt(null);
                     // 给新任务一个新的 dueAt（基于当前时间 + timeoutMinutes）
                     Integer timeoutMinutes = readInt(config, "timeoutMinutes",
                             DEFAULT_TIMEOUT_MINUTES);

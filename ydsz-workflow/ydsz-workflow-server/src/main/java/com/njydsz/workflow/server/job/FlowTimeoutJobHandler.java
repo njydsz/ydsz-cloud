@@ -136,7 +136,7 @@ public class FlowTimeoutJobHandler implements JobHandler {
      * <p>现统一委托给 {@link FlowSlaService#processOverdue(FlowRunTask)}，由 FlowSlaServiceImpl
      * 负责完整的 SLA 闭环处理（NOTIFY/ESCALATE/AUTO_PASS/AUTO_REJECT），包括：
      * <ul>
-     *   <li>提醒计数与间隔控制（ydsznderCount / lastYdszndedAt / maxYdsznders）</li>
+     *   <li>提醒计数与间隔控制（urgeCount / lastUrgedAt / maxUrges）</li>
      *   <li>最终动作分发（NOTIFY 保持任务活跃 / ESCALATE 转办 / AUTO_PASS 推进 / AUTO_REJECT 终止）</li>
      *   <li>REQUIRES_NEW 子事务隔离，单条失败不影响主循环</li>
      * </ul>

@@ -156,7 +156,7 @@ public class FlowNode extends MpBaseEntity<String> {
     /**
      * SLA 超时配置 JSON。
      *
-     * <p>格式：{@code {"timeoutMinutes":120,"action":"REMIND|ESCALATE|AUTO_PASS|AUTO_REJECT","ydsznderCount":3,"adminUserId":"xxx"}}。
+     * <p>格式：{@code {"timeoutMinutes":120,"action":"REMIND|ESCALATE|AUTO_PASS|AUTO_REJECT","maxUrges":3,"adminUserId":"xxx"}}。
      * 由 {@code SlaMonitorScheduler} 周期性扫描超时任务并触发对应动作。
      */
     private String slaConfig;

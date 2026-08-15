@@ -17,6 +17,7 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.userinfo.domain.dto.AssignPermissionsDTO;
 import com.njydsz.userinfo.domain.dto.RolePageQueryDTO;
@@ -90,8 +91,7 @@ public class RoleController {
     @Operation(summary = "分页查询角色列表")
     public PageResponse<List<RoleVO>> page(@Valid RolePageQueryDTO query) {
         Page<RoleVO> page = service.page(query);
-        return PageResponse.success(
-                page.getTotal(), page.getCurrent(), page.getSize(), page.getRecords());
+        return PageResponses.success(page);
     }
 
     /**

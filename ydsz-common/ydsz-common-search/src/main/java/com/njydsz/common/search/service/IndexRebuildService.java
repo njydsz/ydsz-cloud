@@ -33,21 +33,54 @@ public class IndexRebuildService {
 
     private final ThreadPoolTaskExecutor rebuildExecutor;
 
+    /**
+     * 创建索引重建服务（使用默认单线程线程池）。
+     *
+     * @param indexSyncService 索引同步服务
+     * @param engineRegistry 引擎注册表
+     * @param providerRegistry 提供者注册表
+     */
     public IndexRebuildService(IndexSyncService indexSyncService,
                                 SearchEngineRegistry engineRegistry,
                                 SearchProviderRegistry providerRegistry) {
+        this(indexSyncService, engineRegistry, providerRegistry, createDefaultRebuildExecutor());
+    }
+
+    /**
+     * 创建索引重建服务（使用外部注入的线程池）。
+     *
+     * @param indexSyncService 索引同步服务
+     * @param engineRegistry 引擎注册表
+     * @param providerRegistry 提供者注册表
+     * @param rebuildExecutor 外部注入的线程池
+     */
+    public IndexRebuildService(IndexSyncService indexSyncService,
+                                SearchEngineRegistry engineRegistry,
+                                SearchProviderRegistry providerRegistry,
+                                ThreadPoolTaskExecutor rebuildExecutor) {
         this.indexSyncService = indexSyncService;
         this.engineRegistry = engineRegistry;
         this.providerRegistry = providerRegistry;
+        this.rebuildExecutor = rebuildExecutor;
+    }
 
-        this.rebuildExecutor = new ThreadPoolTaskExecutor();
-        this.rebuildExecutor.setCorePoolSize(1);
-        this.rebuildExecutor.setMaxPoolSize(1);
-        this.rebuildExecutor.setQueueCapacity(1);
-        this.rebuildExecutor.setThreadNamePrefix("index-rebuild-");
-        this.rebuildExecutor.setDaemon(true);
-        this.rebuildExecutor.setWaitForTasksToCompleteOnShutdown(false);
-        this.rebuildExecutor.initialize();
+    /**
+     * 创建默认索引重建线程池（单线程，串行重建保证一致性）。
+     *
+     * <p>命名符合云顶编码规范 15.4.4 约定：ydsz-{module}-{biz}-。
+     *
+     * @return 默认重建线程池
+     */
+    static ThreadPoolTaskExecutor createDefaultRebuildExecutor() {
+        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        executor.setCorePoolSize(1);
+        executor.setMaxPoolSize(1);
+        executor.setQueueCapacity(1);
+        executor.setThreadNamePrefix("ydsz-index-rebuild-");
+        executor.setDaemon(true);
+        executor.setWaitForTasksToCompleteOnShutdown(false);
+        executor.initialize();
+        return executor;
     }
 
     /**

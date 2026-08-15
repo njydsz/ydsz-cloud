@@ -9,7 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 
 /**
  * P2-3 流程实例归档实体
@@ -45,7 +45,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @TableName("ydsz_flow_his_instance")
-public class FlowHisInstance extends MpBaseEntity<String> {
+public class FlowHisInstance extends MpBaseIdEntity<String> {
 
     @Serial
     private static final long serialVersionUID = 1L;

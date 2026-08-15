@@ -7,7 +7,7 @@ import java.time.format.DateTimeFormatter;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import org.springframework.data.redis.core.RedisTemplate;
+
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.cronjob.domain.entity.job.TenantQuota;
@@ -45,8 +45,6 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
     private final CronjobProperties cronjobProperties;
     /** P7-3: Redis String 操作（并发 + 日执行量） */
     private final RedisStringOps redisStringOps;
-    /** Redis Template（用于 opsForValue） */
-    private final RedisTemplate<String, Object> redisTemplate;
 
     /** Redis key 前缀：并发计数器 */
     private static final String CONCURRENT_KEY_PREFIX = "ydsz:quota:concurrent:";
@@ -177,8 +175,8 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
         String concurrentKey = CONCURRENT_KEY_PREFIX + tenantId;
         try {
             // DECR 并发计数器，保证不会为负
-            Long val = redisTemplate.opsForValue().decrement(concurrentKey);
-            if (val != null && val < 0L) {
+            long val = redisStringOps.decr(concurrentKey, 1);
+            if (val < 0L) {
                 // 防御性处理：如果 DECR 后为负数，重置为 0（可能因宕机导致计数器错乱）
                 log.warn("[Quota] 并发计数器为负数, 重置为 0: tenant={} value={}", tenantId, val);
                 redisStringOps.set(concurrentKey, "0");

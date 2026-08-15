@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
@@ -108,9 +109,9 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
      * 不经过代理，因此 {@code advance} 上的同键锁注解<b>不会</b>再次生效——这既避免了
      * 非可重入锁自死锁，也意味着 {@code advance} 的原子性在此路径下完全由本方法的锁保证。
      *
-     * <p><b>事务边界：</b>本方法自身不开事务，任务生成与状态回写各自落在
-     * {@code instanceService} 的方法事务内；若回写阶段失败，已生成的任务不会回滚，
-     * 需依赖对账任务修复。
+     * <p><b>事务边界：</b>本方法整体包在 {@code @Transactional} 事务中，任务生成与状态回写
+     * 在同一事务内提交，避免"任务已生成但状态未更新"的中间态。
+     * 异常态兜底由 {@code FlowConsistencyJobHandler} 对账任务负责扫描修复。
      *
      * @param instanceId 流程实例 ID，不可为 {@code null}
      * @return 推进后的实例视图，含当前待办任务列表
@@ -118,6 +119,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
      *                      流程定义缺少开始节点时抛出，错误码 {@link BaseResultCode#INTERNAL_ERROR}
      */
     @Override
+    @Transactional
     @YdszDistributedLock(key = "'flow:instance:op:' + #{#instanceId}", waitTime = 5, leaseTime = 60,
             message = "流程正在处理中，请稍后重试")
     public FlowInstanceViewDTO start(String instanceId) {

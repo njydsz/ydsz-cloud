@@ -53,6 +53,12 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-json</artifactId>
         </dependency>
+        <!-- ydsz-common-lock（optional, TokenBlacklistService 刷新锁使用 DistributedLocker） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-lock</artifactId>
+            <optional>true</optional>
+        </dependency>
         <!--servlet-->
         <dependency>
             <groupId>jakarta.servlet</groupId>

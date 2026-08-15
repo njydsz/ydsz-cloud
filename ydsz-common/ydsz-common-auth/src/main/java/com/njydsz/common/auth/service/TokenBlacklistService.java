@@ -3,6 +3,7 @@ package com.njydsz.common.auth.service;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Duration;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.auth.config.AuthProperties;
 import com.njydsz.common.auth.security.TokenBlacklistBloomFilter;
+import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
@@ -52,6 +54,14 @@ public class TokenBlacklistService {
     private static final String REFRESH_LOCK_KEY_PREFIX = "auth:token:refresh-lock:";
     private static final long REFRESH_LOCK_TTL_SECONDS = 10;
 
+    /**
+     * 分布式锁接口（优先使用，来自 ydsz-common-lock）；为 null 时降级为原生 setIfAbsent
+     */
+    private final DistributedLocker distributedLocker;
+
+    /** 分布式锁值持有表（refreshToken SHA-256 -> lockValue），配合 DistributedLocker 安全释放 */
+    private final ConcurrentHashMap<String, String> refreshLockValues = new ConcurrentHashMap<>();
+
     private final RedisStringOps redisStringOps;
     private final AuthProperties authProperties;
     private final TokenBlacklistBloomFilter bloomFilter;
@@ -61,10 +71,13 @@ public class TokenBlacklistService {
      *
      * <p>同时初始化 Bloom Filter，预期容量 100 万 token，约占 1.2 MB 内存。
      *
-     * @param redisStringOps Redis 字符串操作服务
-     * @param authProperties 认证配置（含黑名单开关与过期时间）
+     * @param distributedLocker 分布式锁接口（可为 null，null 时降级为原生 setIfAbsent 操作）
+     * @param redisStringOps    Redis 字符串操作服务
+     * @param authProperties    认证配置（含黑名单开关与过期时间）
      */
-    public TokenBlacklistService(RedisStringOps redisStringOps, AuthProperties authProperties) {
+    public TokenBlacklistService(DistributedLocker distributedLocker, RedisStringOps redisStringOps,
+                                 AuthProperties authProperties) {
+        this.distributedLocker = distributedLocker;
         this.redisStringOps = redisStringOps;
         this.authProperties = authProperties;
         this.bloomFilter = new TokenBlacklistBloomFilter(1_000_000);
@@ -141,7 +154,8 @@ public class TokenBlacklistService {
     /**
      * 尝试获取 Token 刷新分布式锁。
      *
-     * <p>使用 Redis SET NX EX 实现分布式锁（原子操作），确保同一 refresh_token 在并发场景下
+     * <p>当 {@link DistributedLocker} 可用时，使用其 {@code tryLock} 实现（Lua 原子操作 + WatchDog 续期）；
+     * 否则降级为原生 {@code setIfAbsent} 操作。确保同一 refresh_token 在并发场景下
      * 只能有一个请求成功刷新，防止重放攻击窗口。
      *
      * <p><b>降级策略：</b>Redis 异常时默认放行刷新请求（fail-open），避免 Redis 抖动
@@ -155,13 +169,25 @@ public class TokenBlacklistService {
             return false;
         }
         String lockKey = REFRESH_LOCK_KEY_PREFIX + DigestUtils.sha256Hex(refreshToken);
+        if (distributedLocker != null) {
+            String lockValue = distributedLocker.tryLock(lockKey, REFRESH_LOCK_TTL_SECONDS, java.util.concurrent.TimeUnit.SECONDS);
+            boolean acquired = lockValue != null;
+            if (acquired) {
+                refreshLockValues.putIfAbsent(lockKey, lockValue);
+                log.debug("获取刷新锁成功 (common-lock): key={}", lockKey);
+            } else {
+                log.warn("获取刷新锁失败 (common-lock)，已有其他请求正在刷新同一 token");
+            }
+            return acquired;
+        }
+        // 降级：原生 setIfAbsent
         try {
             Boolean acquired = redisStringOps.setIfAbsent(lockKey, "1", REFRESH_LOCK_TTL_SECONDS);
             if (Boolean.TRUE.equals(acquired)) {
-                log.debug("获取刷新锁成功: key={}", lockKey);
+                log.debug("获取刷新锁成功 (fallback): key={}", lockKey);
                 return true;
             }
-            log.warn("获取刷新锁失败，已有其他请求正在刷新同一 token");
+            log.warn("获取刷新锁失败 (fallback)，已有其他请求正在刷新同一 token");
             return false;
         } catch (Exception e) {
             log.error("获取刷新锁异常，降级为允许刷新: {}", e.getMessage());
@@ -172,8 +198,8 @@ public class TokenBlacklistService {
     /**
      * 释放 Token 刷新分布式锁。
      *
-     * <p>无论是否抛异常都静默处理，锁 10s 后会自动过期；
-     * 主要用于刷新成功后立即释放，避免短时间内的并发重试阻塞。
+     * <p>当 {@link DistributedLocker} 可用时，使用其 {@code unlock} 实现（Lua 原子释放）；
+     * 否则降级为原生 {@code del} 操作。
      *
      * @param refreshToken 刷新令牌
      */
@@ -182,6 +208,14 @@ public class TokenBlacklistService {
             return;
         }
         String lockKey = REFRESH_LOCK_KEY_PREFIX + DigestUtils.sha256Hex(refreshToken);
+        if (distributedLocker != null) {
+            String lockValue = refreshLockValues.remove(lockKey);
+            if (lockValue != null) {
+                distributedLocker.unlock(lockKey, lockValue);
+            }
+            return;
+        }
+        // 降级：原生 del
         try {
             redisStringOps.del(lockKey);
         } catch (Exception e) {

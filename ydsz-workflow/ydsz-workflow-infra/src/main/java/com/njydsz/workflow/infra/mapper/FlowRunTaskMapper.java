@@ -192,7 +192,7 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
      * <p>对标钉钉/飞书审批中心"超期任务"看板。超期时长 = now - due_at。
      * 返回 Map 字段对齐前端 OverdueTaskDTO：
      * taskId / instanceId / flowCode / flowName / title / nodeName / assigneeId / assigneeName /
-     * dueAt / overdueHours / ydsznderCount。
+     * dueAt / overdueHours / urgeCount。
      *
      * @param tenantId 租户 ID（可空）
      * @param limit    返回条数上限
@@ -218,14 +218,14 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
     /**
      * P1-6: 增加 SLA 催办计数
      *
-     * @param id             任务 ID
-     * @param ydsznderCount  新的催办计数
-     * @param lastYdszndedAt 最近催办时间
+     * @param id          任务 ID
+     * @param urgeCount   新的催办计数
+     * @param lastUrgedAt 最近催办时间
      * @return 受影响行数
      */
-    int incrementYdsznderCount(@Param("id") String id,
-                               @Param("ydsznderCount") int ydsznderCount,
-                               @Param("lastYdszndedAt") LocalDateTime lastYdszndedAt);
+    int incrementUrgeCount(@Param("id") String id,
+                           @Param("urgeCount") int urgeCount,
+                           @Param("lastUrgedAt") LocalDateTime lastUrgedAt);
 
     /**
      * P1-6: 标记 SLA 动作（用于审计：AUTO_PASS / AUTO_REJECT / ESCALATE 等）

@@ -93,7 +93,13 @@ public interface FlowAdvancer {
     }
 
     /**
-     * 解析退回时的目标节点（默认：当前节点的前驱节点）
+     * 解析退回时的目标节点。
+     *
+     * <p>取当前节点第一条入边的 sourceRef（前驱节点编码），无入边时退回到开始节点。
+     *
+     * @param definitionId    流程定义 ID
+     * @param currentNodeCode 当前节点编码
+     * @return 前驱节点编码，或开始节点编码（无前驱时）
      */
     String resolveRejectTarget(String definitionId, String currentNodeCode);
 

@@ -3,7 +3,6 @@ package com.njydsz.cronjob.server.core.executor;
 import java.time.Duration;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.cronjob.server.config.CronjobProperties;
@@ -48,7 +47,6 @@ import lombok.extern.slf4j.Slf4j;
 public class GlobalConcurrencyController {
 
     private final RedisStringOps redisStringOps;
-    private final RedisTemplate<String, Object> redisTemplate;
     private final CronjobProperties cronjobProperties;
 
     /** 全局并发计数器 Redis key */
@@ -75,7 +73,7 @@ public class GlobalConcurrencyController {
             }
             if (current > maxGlobal) {
                 // 超限，回滚
-                redisTemplate.opsForValue().decrement(GLOBAL_CONCURRENT_KEY);
+                redisStringOps.decr(GLOBAL_CONCURRENT_KEY, 1);
                 log.debug("[GlobalConcurrency] 全局并发已满, 拒绝: current={} max={}",
                         current, maxGlobal);
                 return false;
@@ -94,8 +92,8 @@ public class GlobalConcurrencyController {
      */
     public void release() {
         try {
-            Long current = redisTemplate.opsForValue().decrement(GLOBAL_CONCURRENT_KEY);
-            if (current != null && current < 0) {
+            long current = redisStringOps.decr(GLOBAL_CONCURRENT_KEY, 1);
+            if (current < 0) {
                 // 计数器为负，修正为 0
                 redisStringOps.set(GLOBAL_CONCURRENT_KEY, "0");
                 log.warn("[GlobalConcurrency] 计数器为负, 已修正为 0");
@@ -136,9 +134,8 @@ public class GlobalConcurrencyController {
      */
     public void calibrate(long actualRunningCount) {
         try {
-            Boolean acquired = redisTemplate.opsForValue()
-                    .setIfAbsent(CALIBRATION_LOCK_KEY, "1", Duration.ofSeconds(30));
-            if (!Boolean.TRUE.equals(acquired)) {
+            boolean acquired = redisStringOps.setIfAbsent(CALIBRATION_LOCK_KEY, "1", 30);
+            if (!acquired) {
                 return; // 其他节点正在校准
             }
             redisStringOps.set(GLOBAL_CONCURRENT_KEY, String.valueOf(actualRunningCount));

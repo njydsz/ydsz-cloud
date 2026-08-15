@@ -366,7 +366,7 @@ public class FlowMonitorDashboardController {
      *
      * @param limit 返回条数上限（默认 10，最大 100）
      * @return 超期任务列表：taskId / instanceId / flowCode / flowName / title / nodeName /
-     * assigneeId / assigneeName / dueAt / overdueHours / ydsznderCount
+     * assigneeId / assigneeName / dueAt / overdueHours / urgeCount
      */
     @GetMapping("/monitor/overdueTasks")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_MONITOR_VIEW)

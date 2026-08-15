@@ -11,8 +11,7 @@ import java.util.stream.Collectors;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
-
-import org.springframework.data.redis.core.RedisTemplate;
+import com.njydsz.common.redis.service.ops.RedisHashOps;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -118,8 +117,8 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
     /** Redis 集合操作组件（Set 存储合并组实例 ID 集合） */
     private final RedisCollectionOps redisCollectionOps;
 
-    /** Redis 模板（Hash 存储合并组元信息） */
-    private final RedisTemplate<String, Object> redisTemplate;
+    /** Redis Hash 操作组件（Hash 存储合并组元信息） */
+    private final RedisHashOps redisHashOps;
 
     /** Redis Key 前缀：合并组实例 ID 集合 */
     private static final String MERGE_GROUP_KEY = "ydsz:flow:merge:group:";
@@ -184,7 +183,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
         detail.put("flowCode", flowCodes.iterator().next());
         detail.put("instanceCount", String.valueOf(instanceIds.size()));
         detail.put("createdAt", String.valueOf(System.currentTimeMillis()));
-        redisTemplate.opsForHash().putAll(MERGE_GROUP_DETAIL_KEY + mergeGroupId, detail);
+        redisHashOps.hMSet(MERGE_GROUP_DETAIL_KEY + mergeGroupId, detail);
 
         log.info("[FlowMerge] 合并实例: groupId={} count={} flowCode={} operator={}",
                 mergeGroupId, instanceIds.size(), flowCodes.iterator().next(), operatorId);
@@ -281,8 +280,7 @@ public class FlowInstanceMergeServiceImpl implements FlowInstanceMergeService {
     @Override
     public Map<String, Object> getMergeGroup(String mergeGroupId) {
         Set<String> instanceIds = getGroupInstanceIds(mergeGroupId);
-        Map<Object, Object> detail = redisTemplate.opsForHash()
-                .entries(MERGE_GROUP_DETAIL_KEY + mergeGroupId);
+        Map<String, String> detail = redisHashOps.hGetAll(MERGE_GROUP_DETAIL_KEY + mergeGroupId, String.class);
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("mergeGroupId", mergeGroupId);

@@ -161,18 +161,22 @@ public class AuditAutoConfiguration {
 
     /**
      * 审计专用异步线程池
-     * 与主业务线程池隔离，避免审计 IO 影响核心链路
+     * 与主业务线程池隔离，避免审计 IO 影响核心链路。     *
+     * <p>通过 {@code @ConditionalOnMissingBean} 允许业务方通过
+     * {@code ydsz.thread.pools.auditAsyncExecutor} 注入统一管理线程池覆盖本默认实现。
      *
      * @param properties 审计配置属性
      * @return 异步执行器
      */
     @Bean("auditAsyncExecutor")
+    @ConditionalOnMissingBean(name = "auditAsyncExecutor")
     public Executor auditAsyncExecutor(AuditProperties properties) {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(properties.getCorePoolSize());
         executor.setMaxPoolSize(properties.getMaxPoolSize());
         executor.setQueueCapacity(properties.getExecutorQueueCapacity());
-        executor.setThreadNamePrefix("audit-async-");
+        // 符合云顶编码规范 15.4.4 命名约定：ydsz-{module}-{biz}-
+        executor.setThreadNamePrefix("ydsz-audit-async-");
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.initialize();

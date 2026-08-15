@@ -395,6 +395,19 @@ public class SearchAutoConfiguration {
     }
 
     /**
+     * 索引重建线程池 — 供 {@link IndexRebuildService} 使用（单线程，串行重建保证一致性）。
+     *
+     * <p>通过 {@code @ConditionalOnMissingBean} 允许业务方注入自定义线程池覆盖。
+     *
+     * @return 索引重建线程池
+     */
+    @Bean("indexRebuildExecutor")
+    @ConditionalOnMissingBean(name = "indexRebuildExecutor")
+    public ThreadPoolTaskExecutor indexRebuildExecutor() {
+        return IndexRebuildService.createDefaultRebuildExecutor();
+    }
+
+    /**
      * 装配索引重建服务，提供运维侧的全量/蓝绿重建入口。
      *
      * <p>该实例的线程池由 {@link #destroy()} 通过
@@ -409,8 +422,9 @@ public class SearchAutoConfiguration {
     @ConditionalOnMissingBean
     public IndexRebuildService indexRebuildService(IndexSyncService indexSyncService,
                                                     SearchEngineRegistry engineRegistry,
-                                                    SearchProviderRegistry providerRegistry) {
-        return new IndexRebuildService(indexSyncService, engineRegistry, providerRegistry);
+                                                    SearchProviderRegistry providerRegistry,
+                                                    ThreadPoolTaskExecutor indexRebuildExecutor) {
+        return new IndexRebuildService(indexSyncService, engineRegistry, providerRegistry, indexRebuildExecutor);
     }
 
     /**
@@ -506,7 +520,8 @@ public class SearchAutoConfiguration {
     /**
      * 容器关闭时集中回收搜索模块创建的全部线程池。
      *
-     * <p>本模块的服务均由 {@code new} 直接创建并自持线程池，
+     * <p>部分服务（如 {@link IndexSyncService}、{@link IndexRebuildService}）
+     * 在外部未注入线程池时会 fallback 创建默认线程池，
      * Spring 无法自动识别其销毁方法，故在此统一关闭，防止线程泄漏
      * 导致 JVM 无法退出。涉及四类线程池：统一搜索、索引同步、
      * PG 可用性探测、索引重建。

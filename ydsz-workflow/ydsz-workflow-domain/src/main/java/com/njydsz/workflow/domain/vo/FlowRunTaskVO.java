@@ -109,10 +109,10 @@ public class FlowRunTaskVO implements Serializable {
     private Integer priority;
 
     /** 催办次数 */
-    private Integer ydsznderCount;
+    private Integer urgeCount;
 
     /** 最后催办时间 */
-    private LocalDateTime lastYdszndedAt;
+    private LocalDateTime lastUrgedAt;
 
     /** SLA 动作 */
     private String slaAction;

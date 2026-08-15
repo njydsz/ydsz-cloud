@@ -1,10 +1,15 @@
 package com.njydsz.common.audit.exception;
 
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.custom.SysException;
+
 /**
  * 审计模块统一异常
  * <p>
  * 审计日志的产生、记录、查询、存储等任意环节失败时抛出。
- * 携带 {@code component}（审计组件名称）和 {@code errorCode}（错误码）便于问题定位。
+ * 继承 {@link SysException}，系统级错误码使用
+ * {@link CoreExceptionCode#DATABASE_ERROR}（B01053 / database.error / HTTP 500），
+ * 同时携带 {@code component}（审计组件名称）和 {@code errorCode}（业务错误码）便于问题定位。
  * </p>
  *
  * <p>该异常通常发生在以下场景：</p>
@@ -17,7 +22,7 @@ package com.njydsz.common.audit.exception;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class AuditException extends RuntimeException {
+public class AuditException extends SysException {
 
     private static final long serialVersionUID = 1L;
 
@@ -37,7 +42,10 @@ public class AuditException extends RuntimeException {
      * @param message 错误消息
      */
     public AuditException(String message) {
-        super(message);
+        super(CoreExceptionCode.DATABASE_ERROR);
+        initFields(CoreExceptionCode.DATABASE_ERROR.getCode(),
+                CoreExceptionCode.DATABASE_ERROR.getKey(), new Object[]{});
+        setMessage(message);
         this.component = null;
         this.errorCode = null;
     }
@@ -49,7 +57,10 @@ public class AuditException extends RuntimeException {
      * @param component 审计组件名称
      */
     public AuditException(String message, String component) {
-        super(message);
+        super(CoreExceptionCode.DATABASE_ERROR);
+        initFields(CoreExceptionCode.DATABASE_ERROR.getCode(),
+                CoreExceptionCode.DATABASE_ERROR.getKey(), new Object[]{});
+        setMessage(message);
         this.component = component;
         this.errorCode = null;
     }
@@ -62,7 +73,10 @@ public class AuditException extends RuntimeException {
      * @param errorCode 错误码
      */
     public AuditException(String message, String component, String errorCode) {
-        super(message);
+        super(CoreExceptionCode.DATABASE_ERROR);
+        initFields(CoreExceptionCode.DATABASE_ERROR.getCode(),
+                CoreExceptionCode.DATABASE_ERROR.getKey(), new Object[]{});
+        setMessage(message);
         this.component = component;
         this.errorCode = errorCode;
     }
@@ -74,7 +88,10 @@ public class AuditException extends RuntimeException {
      * @param cause   导致异常的原因
      */
     public AuditException(String message, Throwable cause) {
-        super(message, cause);
+        super(CoreExceptionCode.DATABASE_ERROR, cause);
+        initFields(CoreExceptionCode.DATABASE_ERROR.getCode(),
+                CoreExceptionCode.DATABASE_ERROR.getKey(), new Object[]{});
+        setMessage(message);
         this.component = null;
         this.errorCode = null;
     }
@@ -87,7 +104,10 @@ public class AuditException extends RuntimeException {
      * @param cause     导致异常的原因
      */
     public AuditException(String message, String component, Throwable cause) {
-        super(message, cause);
+        super(CoreExceptionCode.DATABASE_ERROR, cause);
+        initFields(CoreExceptionCode.DATABASE_ERROR.getCode(),
+                CoreExceptionCode.DATABASE_ERROR.getKey(), new Object[]{});
+        setMessage(message);
         this.component = component;
         this.errorCode = null;
     }
@@ -101,7 +121,10 @@ public class AuditException extends RuntimeException {
      * @param cause     导致异常的原因
      */
     public AuditException(String message, String component, String errorCode, Throwable cause) {
-        super(message, cause);
+        super(CoreExceptionCode.DATABASE_ERROR, cause);
+        initFields(CoreExceptionCode.DATABASE_ERROR.getCode(),
+                CoreExceptionCode.DATABASE_ERROR.getKey(), new Object[]{});
+        setMessage(message);
         this.component = component;
         this.errorCode = errorCode;
     }

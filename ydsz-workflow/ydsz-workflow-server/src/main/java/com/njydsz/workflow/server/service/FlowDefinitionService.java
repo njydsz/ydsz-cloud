@@ -221,7 +221,7 @@ public interface FlowDefinitionService {
      * @param definitionId 流程定义 ID
      * @param nodeCode     节点编码
      * @return slaConfig JSON 字符串（如
-     *   {@code {"timeoutMinutes":120,"action":"REMIND","ydsznderIntervalMinutes":60,"maxYdsznders":3,"escalateUserId":1}}），
+     *   {@code {"timeoutMinutes":120,"action":"REMIND","urgeIntervalMinutes":60,"maxUrges":3,"escalateUserId":1}}），
      *   未配置返回 null
      */
     String getSlaConfig(String definitionId, String nodeCode);

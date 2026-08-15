@@ -173,7 +173,7 @@ public interface WorkflowFacade {
      * 催办 — 向实例下所有待办任务的办理人发送催办通知
      *
      * <p>对标钉钉/飞书「催办」按钮。催办通过 IM 通道（钉钉/飞书/企微）发送提醒消息，
-     * 同时记录催办日志。催办频率受 SLA 配置的 {@code ydsznderCount} 上限控制。
+     * 同时记录催办日志。催办频率受 SLA 配置的 {@code maxUrges} 上限控制。
      *
      * @param instanceId 流程实例 ID
      * @param operatorId 催办人 ID
