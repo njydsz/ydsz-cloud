@@ -233,14 +233,17 @@ public class SendChain {
 
         // 指标采集
         if (metrics != null) {
-            metrics.record(ctx.channel(), ctx.sendResult().isSuccess(),
-                    ctx.durationNanos(), ctx.templateCode());
+            metrics.recordChannelSend(ctx.channel().getName(), ctx.sendResult().isSuccess(),
+                    ctx.templateCode());
+            if (!ctx.sendResult().isSuccess()) {
+                metrics.recordEmailFailure(ctx.channel().getName(), "send_error", "send_failure");
+            }
         }
 
         // 审计日志
         if (auditService != null) {
-            auditService.audit(ctx.channel(), ctx.receiver(), ctx.sendResult(),
-                    ctx.durationNanos() / 1_000_000, ctx.templateCode());
+            auditService.audit(ctx.channel(), ctx.receiver(), ctx.title(),
+                    ctx.sendResult(), ctx.durationNanos() / 1_000_000, ctx.templateCode());
         }
 
         // 失败降级

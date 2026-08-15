@@ -19,6 +19,7 @@ import com.njydsz.common.seata.api.TransactionType;
 import com.njydsz.common.seata.api.TccTransactionLogStore;
 import com.njydsz.common.seata.api.XidPropagator;
 import com.njydsz.common.seata.api.XidSigner;
+import com.njydsz.common.seata.aspect.TransactionModeAspect;
 import com.njydsz.common.seata.impl.DbTccTransactionLogStore;
 import com.njydsz.common.seata.impl.DefaultXidPropagator;
 import com.njydsz.common.seata.impl.HmacXidSigner;
@@ -308,6 +309,19 @@ public class SeataAutoConfiguration {
             ObjectProvider<SeataMetrics> metricsProvider,
             ObjectProvider<TransactionAuditLogger> auditProvider) {
         return new SagaOrchestrator(properties, metricsProvider, auditProvider);
+    }
+
+    /**
+     * 事务模式切面（P1-6 新增）
+     *
+     * <p>拦截 {@link com.njydsz.common.seata.annotation.TransactionalMode} 注解，
+     * 根据注解声明自动切换事务类型。
+     */
+    @Bean
+    @ConditionalOnMissingBean(TransactionModeAspect.class)
+    @ConditionalOnClass(name = "org.aspectj.lang.annotation.Aspect")
+    public TransactionModeAspect transactionModeAspect() {
+        return new TransactionModeAspect(-100); // 在 Spring 事务拦截器（默认 LOWEST_PRECEDENCE）之前执行
     }
 
     /**

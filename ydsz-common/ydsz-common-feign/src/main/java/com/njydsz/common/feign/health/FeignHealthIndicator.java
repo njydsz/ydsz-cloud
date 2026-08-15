@@ -1,9 +1,9 @@
 package com.njydsz.common.feign.health;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -21,20 +21,15 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Feign 模块健康检查指示器。
  *
- * <p>报告 Feign 熔断器状态及运行时探测结果，暴露 /actuator/health/feign 端点。
+ * <p>报告 Feign 熔断器配置状态及各服务运行时熔断探测结果，暴露 /actuator/health/feign 端点。
  *
  * <p><b>检测逻辑：</b>
  * <ul>
  *   <li>检查熔断器是否已初始化</li>
- *   <li>报告当前熔断器策略与配置</li>
- *   <li>运行时探测：对已知服务进行熔断状态探测（仅记录，不触发实际调用）</li>
+ *   <li>报告当前熔断器策略与全局配置</li>
+ *   <li>运行时探测：遍历所有已注册服务的熔断器状态（{@link FeignCircuitBreakerStrategy#getServiceNames()}）</li>
  *   <li>任一服务处于 OPEN/FORCED_OPEN 状态时，健康状态降为 DOWN</li>
- * </ul>
- *
- * <p><b>探测服务列表来源：</b>
- * <ul>
- *   <li>配置项 {@code ydsz.feign.health.probe-services} 显式指定</li>
- *   <li>若未配置，仅报告基础信息（不做服务级探测）</li>
+ *   <li>半开状态（HALF_OPEN）视为"降级但可用"，标记为 UNKNOWN</li>
  * </ul>
  *
  * @author ydsz-team
@@ -44,9 +39,6 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnClass(HealthIndicator.class)
 @ConditionalOnProperty(prefix = "ydsz.feign", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class FeignHealthIndicator implements HealthIndicator {
-
-    /** 需要进行运行时探测的服务列表配置键 */
-    private static final String PROBE_SERVICES_KEY = "ydsz.feign.health.probe-services";
 
     private final FeignProperties feignProperties;
     private final FeignCircuitBreakerStrategy circuitBreakerStrategy;
@@ -66,8 +58,13 @@ public class FeignHealthIndicator implements HealthIndicator {
     /**
      * 执行健康检查，返回 Feign 模块状态。
      *
-     * <p>若配置了探测服务列表，则对每个服务进行熔断状态运行时探测。
-     * 任一服务熔断器处于 OPEN 或 FORCED_OPEN 状态时返回 DOWN。
+     * <p>运行时探测各已注册服务的熔断器状态：
+     * <ul>
+     *   <li>所有服务 CLOSED → UP</li>
+     *   <li>有服务 OPEN/FORCED_OPEN → DOWN</li>
+     *   <li>有服务 HALF_OPEN（无 OPEN） → UNKNOWN</li>
+     *   <li>熔断器未初始化（circuitBreakerStrategy=null）→ UP（仅报告基础信息）</li>
+     * </ul>
      *
      * @return 健康检查结果
      */
@@ -85,22 +82,33 @@ public class FeignHealthIndicator implements HealthIndicator {
             if (circuitBreakerStrategy != null) {
                 builder.withDetail("circuitBreakerStrategy", circuitBreakerStrategy.getName());
 
-                // 运行时探测指定服务的熔断状态
-                List<String> probeServices = feignProperties.getRefresh().getExclude();
-                // 注：probeServices 配置在 refresh.exclude 不太合适，使用自定义配置更佳
-                // 由于 FeignProperties.Health 未定义独立的 probe-services 字段，
-                // 这里只对已初始化的熔断器做被动探测（通过 AllowRequest 方式）
+                // 运行时探测：获取所有已注册服务并检查熔断状态
+                Set<String> serviceNames = circuitBreakerStrategy.getServiceNames();
+                if (serviceNames != null && !serviceNames.isEmpty()) {
+                    boolean hasOpen = false;
+                    boolean hasHalfOpen = false;
+                    Map<String, Object> circuitDetails = new LinkedHashMap<>();
 
-                // 汇总已触发的熔断器状态
-                Map<String, Object> serviceCircuits = probeCircuitBreakerStates();
-                if (!serviceCircuits.isEmpty()) {
-                    builder.withDetail("serviceCircuits", serviceCircuits);
+                    for (String serviceName : serviceNames) {
+                        CircuitBreakerState state = circuitBreakerStrategy.getState(serviceName);
+                        circuitDetails.put(serviceName, state.name());
 
-                    // 若有任意服务处于 OPEN 或 FORCED_OPEN，降级为 DOWN
-                    boolean anyOpen = serviceCircuits.values().stream()
-                            .anyMatch(state -> "OPEN".equals(state) || "FORCED_OPEN".equals(state));
-                    if (anyOpen) {
+                        if (state == CircuitBreakerState.OPEN || state == CircuitBreakerState.FORCED_OPEN) {
+                            hasOpen = true;
+                        } else if (state == CircuitBreakerState.HALF_OPEN) {
+                            hasHalfOpen = true;
+                        }
+                    }
+
+                    builder.withDetail("circuitBreakerStates", circuitDetails);
+
+                    if (hasOpen) {
                         builder.down();
+                        log.warn("[FeignHealth] 检测到服务熔断器开启，健康状态降级为 DOWN，服务数={}", serviceNames.size());
+                    } else if (hasHalfOpen) {
+                        // 半开状态：有服务正在恢复中，标记为 UNKNOWN
+                        builder.status("UNKNOWN");
+                        log.info("[FeignHealth] 检测到服务半开状态（恢复中），健康状态标记为 UNKNOWN，服务数={}", serviceNames.size());
                     }
                 }
             } else {
@@ -118,16 +126,29 @@ public class FeignHealthIndicator implements HealthIndicator {
     }
 
     /**
-     * 探测已初始化的熔断器状态。
+     * 获取指定服务的熔断指标详情（供监控扩展使用）。
      *
-     * <p>由于 {@link FeignCircuitBreakerStrategy} 不暴露所有已知服务列表，
-     * 这里采用被动探测方式：通过 allowRequest 间接判断（不实际发起调用）。
-     *
-     * @return 各服务熔断状态映射
+     * @param serviceName 服务名称
+     * @return 熔断指标映射，若策略不可用返回空 Map
      */
-    private Map<String, Object> probeCircuitBreakerStates() {
-        // 当前实现：返回空 Map，等待 FeignCircuitBreakerStrategy 接口增强
-        // 后续可通过 Resilience4jCircuitBreakerAdapter.getServiceNames() 获取已注册服务列表
-        return new HashMap<>();
+    public Map<String, Object> getServiceMetricsDetail(String serviceName) {
+        Map<String, Object> detail = new HashMap<>();
+        if (circuitBreakerStrategy == null) {
+            return detail;
+        }
+
+        CircuitBreakerMetrics metrics = circuitBreakerStrategy.getMetrics(serviceName);
+        if (metrics != null) {
+            detail.put("totalCalls", metrics.getTotalCalls());
+            detail.put("successfulCalls", metrics.getSuccessfulCalls());
+            detail.put("failedCalls", metrics.getFailedCalls());
+            detail.put("slowCalls", metrics.getSlowCalls());
+            detail.put("failureRate", String.format("%.2f%%", metrics.getFailureRate()));
+            detail.put("slowCallRate", String.format("%.2f%%", metrics.getSlowCallRate()));
+            detail.put("averageDurationMs", metrics.getAverageDuration());
+            detail.put("maxDurationMs", metrics.getMaxDuration());
+        }
+        detail.put("state", circuitBreakerStrategy.getState(serviceName).name());
+        return detail;
     }
 }

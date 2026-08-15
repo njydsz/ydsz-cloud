@@ -27,6 +27,7 @@ import com.njydsz.common.audit.core.AuditMetricsBinder;
 import com.njydsz.common.audit.core.AuditQueryService;
 import com.njydsz.common.audit.core.AuditRecorder;
 import com.njydsz.common.audit.core.AuditStorage;
+import com.njydsz.common.audit.core.AuditWriter;
 import com.njydsz.common.audit.core.DefaultAuditQueryService;
 import com.njydsz.common.audit.core.DefaultAuditRecorder;
 import com.njydsz.common.audit.core.DisruptorAuditRecorder;
@@ -129,6 +130,29 @@ public class AuditAutoConfiguration {
     }
 
     /**
+     * 创建审计日志写入器 Bean
+     * <p>
+     * 将 {@link JdbcAuditStorage} 包装为 {@link AuditWriter} 供 Recorder 委托写入。
+     * 当未提供自定义 AuditWriter 时自动创建。
+     * </p>
+     *
+     * @param auditStorage 审计日志存储（通常是 JdbcAuditStorage）
+     * @return 审计日志写入器
+     */
+    @Bean
+    @ConditionalOnMissingBean(AuditWriter.class)
+    public AuditWriter auditWriter(AuditStorage auditStorage) {
+        if (auditStorage instanceof AuditWriter writer) {
+            log.info("初始化审计写入器: {}", writer.getName());
+            return writer;
+        }
+        // 非 JDBC 存储（如 DefaultAuditStorage）不支持高性能写入，抛出异常提示
+        throw new IllegalStateException(
+                "当前审计存储 " + auditStorage.getClass().getSimpleName() + " 未实现 AuditWriter 接口，"
+                + "无法提供高性能写入能力。请确保使用 JdbcAuditStorage 或自定义实现 AuditWriter。");
+    }
+
+    /**
      * 创建默认审计日志存储 Bean
      * 当系统中不存在 DataSource 时降级为控制台输出
      *
@@ -209,39 +233,35 @@ public class AuditAutoConfiguration {
 
     /**
      * 创建异步审计记录器 Bean
-     * 当存在 DataSource 且未提供自定义 AuditRecorder 时，根据配置决定是否启用异步模式
-     * 优先使用 Disruptor（如果 classpath 中存在），否则使用 LinkedBlockingQueue 实现
+     * 当存在 AuditWriter 且未提供自定义 AuditRecorder 时，根据配置决定是否启用异步模式。
+     * 优先使用 Disruptor（如果 classpath 中存在），否则使用 LinkedBlockingQueue 实现。
      *
-     * @param dataSource       数据源
-     * @param properties       审计配置属性
-     * @param shardingStrategy 分表策略（可选）
+     * @param auditWriter 审计写入器
+     * @param properties  审计配置属性
      * @return 异步审计记录器，若不满足条件则返回 null
      */
     @Bean
     @ConditionalOnMissingBean(AuditRecorder.class)
     @ConditionalOnProperty(prefix = "ydsz.audit", name = "async", havingValue = "true", matchIfMissing = true)
-    @ConditionalOnBean(DataSource.class)
+    @ConditionalOnBean(AuditWriter.class)
     @ConditionalOnClass(name = "com.njydsz.common.json.YdszJson")
-    public AuditRecorder asyncAuditRecorder(DataSource dataSource, AuditProperties properties,
-                                            TableShardingStrategy shardingStrategy) {
-        String baseTableName = properties.getShardingBaseTableName();
+    public AuditRecorder asyncAuditRecorder(AuditWriter auditWriter, AuditProperties properties) {
         AuditProperties.AsyncProperties asyncProps = properties.getAsync();
 
         // 优先使用 Disruptor（如果 classpath 中存在）
         if (isDisruptorAvailable()) {
-            log.info("初始化 Disruptor 审计记录器: DisruptorAuditRecorder, RingBuffer容量={}, 批量阈值={}, 分表策略={}",
-                    asyncProps.getExecutorQueueCapacity(), asyncProps.getBatchSize(),
-                    shardingStrategy != null ? shardingStrategy.getShardType() : "DISABLED");
-            DisruptorAuditRecorder recorder = new DisruptorAuditRecorder(dataSource, properties, shardingStrategy, baseTableName, properties.getAsync().getWaitStrategy());
+            log.info("初始化 Disruptor 审计记录器: DisruptorAuditRecorder, RingBuffer容量={}, 批量阈值={}, 写入器={}",
+                    asyncProps.getExecutorQueueCapacity(), asyncProps.getBatchSize(), auditWriter.getName());
+            DisruptorAuditRecorder recorder = new DisruptorAuditRecorder(auditWriter, properties, properties.getAsync().getWaitStrategy());
             this.asyncAuditRecorder = null; // Disruptor 自己管理停机
             return recorder;
         }
 
         // 降级使用 LinkedBlockingQueue 实现
-        log.info("初始化异步审计记录器: AsyncAuditRecorder, 队列容量={}, 批量阈值={}, 刷新间隔={}ms, 分表策略={}",
+        log.info("初始化异步审计记录器: AsyncAuditRecorder, 队列容量={}, 批量阈值={}, 刷新间隔={}ms, 写入器={}",
                 asyncProps.getExecutorQueueCapacity(), asyncProps.getBatchSize(), asyncProps.getBatchIntervalMillis(),
-                shardingStrategy != null ? shardingStrategy.getShardType() : "DISABLED");
-        AsyncAuditRecorder recorder = new AsyncAuditRecorder(dataSource, properties, shardingStrategy, baseTableName, auditFallbackWriter());
+                auditWriter.getName());
+        AsyncAuditRecorder recorder = new AsyncAuditRecorder(auditWriter, properties);
         this.asyncAuditRecorder = recorder;
         return recorder;
     }

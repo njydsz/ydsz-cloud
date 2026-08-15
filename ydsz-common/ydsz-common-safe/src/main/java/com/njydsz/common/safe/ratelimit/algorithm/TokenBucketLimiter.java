@@ -2,7 +2,7 @@ package com.njydsz.common.safe.ratelimit.algorithm;
 
 import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.StampedLock;
+import java.util.concurrent.locks.StampedLock;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.njydsz.common.safe.ratelimit.enums.RateLimitAlgorithm;

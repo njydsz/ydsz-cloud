@@ -171,6 +171,8 @@ public class FeignResponseInterceptor implements ResponseInterceptor {
                     response.status(),
                     duration
             );
+            // 记录响应体大小
+            metrics.recordResponseBodySize(serviceName, httpMethod, response.status(), resolveBodySize(response));
         }
     }
 
@@ -303,5 +305,20 @@ public class FeignResponseInterceptor implements ResponseInterceptor {
          * @param threshold  慢调用阈值（毫秒）
          */
         void recordSlowCall(String service, String method, long duration, long threshold);
+
+        /**
+         * 记录响应体大小（P3 可观测性增强）。
+         *
+         * <p>用于监控响应体分布，识别异常大响应或空响应。
+         * 默认实现为空操作，实现类可选择性覆盖。
+         *
+         * @param service     服务名称
+         * @param method      HTTP 方法
+         * @param status      HTTP 状态码
+         * @param bodySizeBytes 响应体大小（字节），若未知传 -1
+         */
+        default void recordResponseBodySize(String service, String method, int status, long bodySizeBytes) {
+            // 默认空操作，避免破坏现有实现
+        }
     }
 }
