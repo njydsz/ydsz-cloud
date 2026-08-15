@@ -273,6 +273,22 @@ public class DbTccTransactionLogStore implements TccTransactionLogStore {
     }
 
     /**
+     * 分页查询超时未完成的分支事务（P1-2 新增）
+     *
+     * <p>使用 LIMIT/OFFSET 分页，避免一次性加载全部超时事务到内存。
+     *
+     * @param threshold 超时阈值
+     * @param limit     单次返回最大记录数
+     * @return 超时分支列表
+     */
+    @Override
+    public List<TccTransactionLog> findTimeoutPendingPaged(LocalDateTime threshold, int limit) {
+        String sql = dialectProvider.getFindTimeoutPendingPagedSql();
+        return jdbcTemplate.query(sql, rowMapper,
+                TccBranchStatus.TRIED.name(), Timestamp.valueOf(threshold), limit);
+    }
+
+    /**
      * 查询超时未完成的分支事务数量（高效计数，不加载完整日志）
      *
      * <p>使用 {@code SELECT COUNT(*)} 直接获取计数，避免加载完整事务日志到内存。

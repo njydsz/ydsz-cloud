@@ -41,6 +41,10 @@ public class NotifyAuditService {
     /** 接收者脱敏掩码长度 */
     private static final int MASK_KEEP_LENGTH = 3;
 
+    private static final int MASK_MIN_LENGTH = 4;
+
+    private static final int MAX_ERROR_LENGTH = 500;
+
     /**
      * 审计通知发送结果
      *
@@ -109,10 +113,10 @@ public class NotifyAuditService {
             return receiver.substring(0, MASK_KEEP_LENGTH) + "***" + receiver.substring(atIndex);
         }
         if (receiver.length() >= 7) {
-            return receiver.substring(0, 3) + "****" + receiver.substring(receiver.length() - 4);
+            return receiver.substring(0, MASK_KEEP_LENGTH) + "****" + receiver.substring(receiver.length() - 4);
         }
-        if (receiver.length() > MASK_KEEP_LENGTH) {
-            return receiver.substring(0, MASK_KEEP_LENGTH) + "***";
+        if (receiver.length() > MASK_MIN_LENGTH) {
+            return receiver.substring(0, 2) + "***";
         }
         return "***";
     }
@@ -140,7 +144,7 @@ public class NotifyAuditService {
         if (error == null) {
             return "null";
         }
-        return error.length() > 500 ? error.substring(0, 500) + "..." : error;
+        return error.length() > MAX_ERROR_LENGTH ? error.substring(0, MAX_ERROR_LENGTH) + "..." : error;
     }
 
 }
