@@ -425,10 +425,11 @@ public class AgentAutoConfiguration {
                                      RagService ragService,
                                      TraceRecorder traceRecorder,
                                      AgentMetrics agentMetrics,
-                                     CostAnalysisService costAnalysisService) {
+                                     CostAnalysisService costAnalysisService,
+                                     GuardrailService guardrailService) {
         return new AgentFactory(llmClient, memory, toolRegistry, properties,
                 inputGuardrails, outputGuardrails, ragService,
-                traceRecorder, agentMetrics, costAnalysisService);
+                traceRecorder, agentMetrics, costAnalysisService, guardrailService);
     }
 
     /**

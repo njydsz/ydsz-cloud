@@ -11,7 +11,6 @@ import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.agent.AgentExecutor;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
-import com.njydsz.agent.domain.guardrail.GuardrailResult;
 import com.njydsz.agent.domain.guardrail.InputGuardrail;
 import com.njydsz.agent.domain.guardrail.OutputGuardrail;
 import com.njydsz.agent.domain.model.ChatChunk;
@@ -21,6 +20,7 @@ import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
+import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.common.util.id.IdGenerator;
@@ -55,6 +55,8 @@ public class SimpleAgentExecutor implements AgentExecutor {
     private final AgentMetrics agentMetrics;
     /** 成本分析服务（Token 用量核算） */
     private final CostAnalysisService costAnalysisService;
+    /** 护栏编排服务（统一驱动输入/输出护栏，消除重复逻辑） */
+    private final GuardrailService guardrailService;
 
     public SimpleAgentExecutor(LlmClient llmClient, ConversationMemory memory,
                                AgentProperties properties,
@@ -62,7 +64,8 @@ public class SimpleAgentExecutor implements AgentExecutor {
                                List<OutputGuardrail> outputGuardrails,
                                TraceRecorder traceRecorder,
                                AgentMetrics agentMetrics,
-                               CostAnalysisService costAnalysisService) {
+                               CostAnalysisService costAnalysisService,
+                               GuardrailService guardrailService) {
         this.llmClient = llmClient;
         this.memory = memory;
         this.properties = properties;
@@ -71,6 +74,7 @@ public class SimpleAgentExecutor implements AgentExecutor {
         this.traceRecorder = traceRecorder;
         this.agentMetrics = agentMetrics;
         this.costAnalysisService = costAnalysisService;
+        this.guardrailService = guardrailService;
     }
 
     /**

@@ -9,9 +9,10 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.FutureTask;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
@@ -100,6 +101,17 @@ public class ScriptRule implements Rule {
 
     /** 沙箱模式脚本执行超时时间（毫秒），防止死循环 */
     private static final long SANDBOX_TIMEOUT_MS = 5000;
+
+    /**
+     * 脚本执行虚拟线程池（P0-2）
+     *
+     * <p>使用 JDK 21 虚拟线程执行脚本规则，IO 阻塞时不占用平台线程资源。
+     * 每个任务分配一个虚拟线程，适合脚本引擎的异构负载。
+     *
+     * <p>虚拟线程为守护线程，不阻止 JVM 退出，无需显式 shutdown。
+     */
+    private static final java.util.concurrent.ExecutorService SCRIPT_EXECUTOR =
+            Executors.newVirtualThreadPerTaskExecutor();
 
     /** ScriptEngine 缓存（按语言名，全局共享，线程安全） */
     private static final Map<String, ScriptEngine> ENGINE_CACHE = new ConcurrentHashMap<>();
@@ -259,17 +271,14 @@ public class ScriptRule implements Rule {
             bindings.put("description", null);
 
             Object result;
-            // 第三层防御：沙箱模式下使用 FutureTask + 超时中断，防止死循环
+            // P0-2：沙箱模式下使用虚拟线程 + 超时中断，防止死循环
             if (sandboxEnabled) {
-                FutureTask<Object> future = new FutureTask<>((Callable<Object>) () -> compiledScript.eval(bindings));
-                Thread evalThread = new Thread(future, "literule-script-" + code);
-                evalThread.setDaemon(true);
-                evalThread.start();
+                CompletableFuture<Object> future = CompletableFuture.supplyAsync(
+                        () -> compiledScript.eval(bindings), SCRIPT_EXECUTOR);
                 try {
                     result = future.get(SANDBOX_TIMEOUT_MS, TimeUnit.MILLISECONDS);
                 } catch (TimeoutException te) {
                     future.cancel(true);
-                    evalThread.interrupt();
                     log.warn("[LiteRule] 脚本规则 {} 执行超时（{}ms），已中断", code, SANDBOX_TIMEOUT_MS);
                     return RuleResult.builder()
                             .ruleCode(code)
@@ -277,6 +286,27 @@ public class ScriptRule implements Rule {
                             .category(category)
                             .triggered(false)
                             .description("脚本执行超时（" + SANDBOX_TIMEOUT_MS + "ms），可能存在死循环")
+                            .triggeredAt(LocalDateTime.now())
+                            .elapsedMs(elapsedMs(start))
+                            .build();
+                } catch (ExecutionException ee) {
+                    log.warn("[LiteRule] 脚本规则 {} 执行异常: {}", code, ee.getCause().getMessage());
+                    return RuleResult.builder()
+                            .ruleCode(code)
+                            .ruleName(name)
+                            .category(category)
+                            .triggered(false)
+                            .triggeredAt(LocalDateTime.now())
+                            .elapsedMs(elapsedMs(start))
+                            .build();
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    log.warn("[LiteRule] 脚本规则 {} 执行被中断", code);
+                    return RuleResult.builder()
+                            .ruleCode(code)
+                            .ruleName(name)
+                            .category(category)
+                            .triggered(false)
                             .triggeredAt(LocalDateTime.now())
                             .elapsedMs(elapsedMs(start))
                             .build();
