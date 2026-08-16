@@ -2,6 +2,7 @@ package com.njydsz.common.file.storage;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLConnection;
@@ -433,7 +434,13 @@ public abstract class AbstractFileStorage implements IFileStorage {
 
         // 仅读取一次文件内容，后续秒传校验、病毒扫描、对象存储上传复用同一缓冲区，
         // 避免多次调用 MultipartFile.getInputStream() 带来的重复 IO 开销。
-        byte[] fileBytes = file.getBytes();
+        byte[] fileBytes;
+        try {
+            fileBytes = file.getBytes();
+        } catch (IOException e) {
+            log.error("[Storage] failed to read file bytes, object={}", resolvedObjectName, e);
+            throw new BusinessException(FileExceptionCode.FILE_UPLOAD_FAILED);
+        }
 
         // P0-1: File dedup check — 基于已缓冲的字节流计算秒传 hash，不重新读取上传流
         String dedupHash = null;

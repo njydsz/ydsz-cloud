@@ -125,7 +125,7 @@ public class UnifiedSearchService {
      * @param properties 搜索配置
      * @return 默认搜索线程池
      */
-    static ThreadPoolTaskExecutor createDefaultSearchExecutor(SearchProperties properties) {
+    public static ThreadPoolTaskExecutor createDefaultSearchExecutor(SearchProperties properties) {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(Math.max(2, properties.getIndex().getThreadPoolSize()));
         executor.setMaxPoolSize(Math.max(4, properties.getIndex().getThreadPoolSize() * 2));

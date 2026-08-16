@@ -1,5 +1,7 @@
 package com.njydsz.common.search.service;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -61,9 +63,16 @@ public interface ChineseTokenizer {
      *
      * <p>使用 Unicode 文本边界分析，不依赖外部词库，
      * 适合不想引入 jieba 依赖的轻量级场景。
+     *
+     * <p>通过反射访问 ICU4J BreakIterator，编译时无需 ICU4J 依赖。
      */
     @Slf4j
     class IcuTokenizer implements ChineseTokenizer {
+
+        private static final String BREAK_ITERATOR_CLASS = "com.ibm.icu.text.BreakIterator";
+
+        /** ICU4J BreakIterator.DONE 常量值（-1） */
+        private static final int DONE = -1;
 
         @Override
         public List<String> tokenize(String text) {
@@ -75,17 +84,40 @@ public interface ChineseTokenizer {
             if (text == null || text.isBlank()) {
                 return Collections.emptyList();
             }
-            List<String> tokens = new java.util.ArrayList<>();
-            com.ibm.icu.text.BreakIterator boundary = com.ibm.icu.text.BreakIterator.getWordInstance();
-            boundary.setText(text);
-            int start = boundary.first();
-            for (int end = boundary.next(); end != com.ibm.icu.text.BreakIterator.DONE; start = end, end = boundary.next()) {
-                String word = text.substring(start, end).trim().toLowerCase();
-                if (!word.isBlank() && !stopWords.contains(word) && word.length() > 1) {
-                    tokens.add(word);
+            try {
+                Class<?> breakIteratorClass = Class.forName(BREAK_ITERATOR_CLASS);
+                // BreakIterator.getWordInstance() - static method
+                Method getWordInstance = breakIteratorClass.getMethod("getWordInstance");
+                Object boundary = getWordInstance.invoke(null);
+
+                // boundary.setText(text)
+                Method setText = breakIteratorClass.getMethod("setText", String.class);
+                setText.invoke(boundary, text);
+
+                // boundary.first()
+                Method first = breakIteratorClass.getMethod("first");
+                int start = (int) first.invoke(boundary);
+
+                // boundary.next()
+                Method next = breakIteratorClass.getMethod("next");
+
+                List<String> tokens = new java.util.ArrayList<>();
+                int end;
+                while ((end = (int) next.invoke(boundary)) != DONE) {
+                    String word = text.substring(start, end).trim().toLowerCase();
+                    if (!word.isBlank() && !stopWords.contains(word) && word.length() > 1) {
+                        tokens.add(word);
+                    }
+                    start = end;
                 }
+                return tokens;
+            } catch (ClassNotFoundException e) {
+                log.warn("[IcuTokenizer] ICU4J 不可用，降级到简单分词: {}", e.getMessage());
+                return new SimpleTokenizer().tokenize(text, stopWords);
+            } catch (Exception e) {
+                log.warn("[IcuTokenizer] 分词失败，降级到简单分词: {}", e.getMessage());
+                return new SimpleTokenizer().tokenize(text, stopWords);
             }
-            return tokens;
         }
 
         @Override
@@ -135,9 +167,15 @@ public interface ChineseTokenizer {
      *
      * <p>基于 TF-IDF 和 HMM 模型的实际语义分词，
      * 支持关键词提取、词性标注等高级能力。
+     *
+     * <p>通过反射访问 jieba 分词器，编译时无需 jieba-analysis 依赖。
      */
     @Slf4j
     class JiebaTokenizer implements ChineseTokenizer {
+
+        private static final String JIEBA_SEGMENTER_CLASS = "com.huaban.analysis.jieba.JiebaSegmenter";
+        private static final String SEG_TOKEN_CLASS = "com.huaban.analysis.jieba.SegToken";
+        private static final String SEG_MODE_CLASS = "com.huaban.analysis.jieba.JiebaSegmenter$SegMode";
 
         private volatile boolean initialized = false;
 
@@ -147,7 +185,7 @@ public interface ChineseTokenizer {
                     if (!initialized) {
                         try {
                             // 触发 jieba 分词器静态初始化（加载词典）
-                            getClass().getClassLoader().loadClass("com.huaban.analysis.jieba.JiebaSegmenter");
+                            getClass().getClassLoader().loadClass(JIEBA_SEGMENTER_CLASS);
                             initialized = true;
                             log.info("[JiebaTokenizer] 分词器初始化完成");
                         } catch (ClassNotFoundException e) {
@@ -172,12 +210,26 @@ public interface ChineseTokenizer {
             }
             ensureInit();
             try {
-                com.huaban.analysis.jieba.JiebaSegmenter segmenter = new com.huaban.analysis.jieba.JiebaSegmenter();
-                List<com.huaban.analysis.jieba.SegToken> tokens = segmenter.process(text,
-                        com.huaban.analysis.jieba.JiebaSegmenter.SegMode.SEARCH);
+                Class<?> segmenterClass = Class.forName(JIEBA_SEGMENTER_CLASS);
+                Object segmenter = segmenterClass.getDeclaredConstructor().newInstance();
+
+                // 获取 SegMode.SEARCH
+                Class<?> segModeClass = Class.forName(SEG_MODE_CLASS);
+                Field searchField = segModeClass.getField("SEARCH");
+                Object searchMode = searchField.get(null);
+
+                // segmenter.process(text, SegMode.SEARCH)
+                Method processMethod = segmenterClass.getMethod("process", String.class, segModeClass);
+                @SuppressWarnings("unchecked")
+                List<Object> segTokens = (List<Object>) processMethod.invoke(segmenter, text, searchMode);
+
+                // 获取 SegToken.getWord() 方法
+                Class<?> segTokenClass = Class.forName(SEG_TOKEN_CLASS);
+                Method getWordMethod = segTokenClass.getMethod("getWord");
+
                 List<String> result = new java.util.ArrayList<>();
-                for (com.huaban.analysis.jieba.SegToken token : tokens) {
-                    String word = token.getWord().trim().toLowerCase();
+                for (Object token : segTokens) {
+                    String word = ((String) getWordMethod.invoke(token)).trim().toLowerCase();
                     if (!word.isBlank() && !stopWords.contains(word) && word.length() > 1) {
                         result.add(word);
                     }
@@ -196,8 +248,15 @@ public interface ChineseTokenizer {
             }
             ensureInit();
             try {
-                com.huaban.analysis.jieba.JiebaSegmenter segmenter = new com.huaban.analysis.jieba.JiebaSegmenter();
-                return segmenter.sentenceProcess(text).stream()
+                Class<?> segmenterClass = Class.forName(JIEBA_SEGMENTER_CLASS);
+                Object segmenter = segmenterClass.getDeclaredConstructor().newInstance();
+
+                // segmenter.sentenceProcess(text)
+                Method sentenceProcessMethod = segmenterClass.getMethod("sentenceProcess", String.class);
+                @SuppressWarnings("unchecked")
+                List<String> sentences = (List<String>) sentenceProcessMethod.invoke(segmenter, text);
+
+                return sentences.stream()
                         .map(String::toLowerCase)
                         .distinct()
                         .limit(topK)

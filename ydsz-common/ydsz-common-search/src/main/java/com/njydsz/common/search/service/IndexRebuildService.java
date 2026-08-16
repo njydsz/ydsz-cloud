@@ -71,7 +71,7 @@ public class IndexRebuildService {
      *
      * @return 默认重建线程池
      */
-    static ThreadPoolTaskExecutor createDefaultRebuildExecutor() {
+    public static ThreadPoolTaskExecutor createDefaultRebuildExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(1);
         executor.setMaxPoolSize(1);
