@@ -20,7 +20,6 @@ com.njydsz.common.exception.code.RateLimitExceptionCode
 # 通用基础设施（ydsz-common-*）
 # ===========================
 com.njydsz.common.file.exception.FileExceptionCode
-com.njydsz.common.excel.exception.ExcelExceptionCode
 com.njydsz.common.docs.exception.DocumentExceptionCode
 com.njydsz.common.jdbc.exception.JdbcExceptionCode
 com.njydsz.common.lock.exception.LockExceptionCode

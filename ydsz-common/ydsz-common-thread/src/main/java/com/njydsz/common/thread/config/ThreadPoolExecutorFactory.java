@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
+// CHECKSTYLE.OFF: IllegalImport — ThreadPoolExecutorFactory 为 ydsz-common-thread 线程池工厂（云顶规范 15.4 明确豁免模块），需直接构造托管线程池
 import java.util.concurrent.Executors;
+// CHECKSTYLE.ON: IllegalImport
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -89,7 +91,9 @@ public class ThreadPoolExecutorFactory implements ApplicationContextAware, Initi
     public ThreadPoolTaskExecutor createTaskExecutor(String name, PoolConfig config) {
         log.info("ydsz-thread: 创建线程池 [{}] (core={}, max={}, queue={})",
                 name, config.getCoreSize(), config.getMaxSize(), config.getQueueCapacity());
+        // CHECKSTYLE.OFF: RegexpSinglelineJava — 线程池工厂内部构造托管 ThreadPoolTaskExecutor（云顶规范 15.4 豁免模块）
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        // CHECKSTYLE.ON: RegexpSinglelineJava
         executor.setCorePoolSize(config.getCoreSize());
         executor.setMaxPoolSize(config.getMaxSize());
         executor.setQueueCapacity(config.getQueueCapacity());

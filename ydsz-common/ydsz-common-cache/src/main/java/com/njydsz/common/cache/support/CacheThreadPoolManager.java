@@ -114,9 +114,11 @@ public class CacheThreadPoolManager implements DisposableBean {
           }
         };
 
+    // CHECKSTYLE.OFF: RegexpSinglelineJava — CacheThreadPoolManager 为缓存线程池统一管理器（云顶规范 15.4 授权层）
     ScheduledThreadPoolExecutor executor =
         new ScheduledThreadPoolExecutor(coreSize, factory);
     executor.setRemoveOnCancelPolicy(true);
+    // CHECKSTYLE.ON: RegexpSinglelineJava
     log.info("缓存定时调度线程池已创建: name={}, coreSize={}", name, coreSize);
     return executor;
   }
@@ -136,6 +138,7 @@ public class CacheThreadPoolManager implements DisposableBean {
           }
         };
 
+    // CHECKSTYLE.OFF: RegexpSinglelineJava — CacheThreadPoolManager 为缓存线程池统一管理器（云顶规范 15.4 授权层）
     ThreadPoolExecutor executor =
         new ThreadPoolExecutor(
             coreSize,
@@ -145,6 +148,7 @@ public class CacheThreadPoolManager implements DisposableBean {
             new LinkedBlockingQueue<>(1024),
             factory,
             (r, exec) -> log.warn("缓存线程池队列已满，拒绝任务: pool={}", name));
+    // CHECKSTYLE.ON: RegexpSinglelineJava
 
     log.info("缓存线程池已创建: name={}, coreSize={}, maxSize={}", name, coreSize, maxSize);
     return executor;

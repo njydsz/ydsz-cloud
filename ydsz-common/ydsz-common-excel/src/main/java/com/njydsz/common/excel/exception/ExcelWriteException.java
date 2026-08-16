@@ -4,7 +4,7 @@ package com.njydsz.common.excel.exception;
  * Excel 写入异常类
  *
  * <p>封装 Excel 文件写入过程中的各类错误，包括文件创建失败、
- * 样式配置错误、数据写入错误等场景。异常码桥接至全局异常体系。</p>
+ * 样式配置错误、数据写入错误等场景。自包含的异常体系，不依赖全局异常处理模块。</p>
  *
  * <h3>使用示例</h3>
  * <pre>{@code
@@ -15,8 +15,8 @@ package com.njydsz.common.excel.exception;
  *         .doWrite(userList);
  * } catch (ExcelWriteException e) {
  *     log.error("写入失败 - 错误码: {}, 消息: {}", e.getCode(), e.getMessage(), e);
- *     // 获取全局 ExceptionCode 接口
- *     ExceptionCode ec = e.getExceptionCodeInterface();
+ *     // 获取异常码枚举
+ *     ExcelExceptionCode code = e.getExceptionCode();
  * }
  * }</pre>
  *

@@ -2,7 +2,9 @@ package com.njydsz.common.seata.interceptor;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
+// CHECKSTYLE.OFF: IllegalImport — SeataExecutors 为 Seata 感知线程池工厂（云顶规范 15.4 授权实现层），需直接使用 Executors 创建原始池并包装为 SeataDecoratorExecutorService
 import java.util.concurrent.Executors;
+// CHECKSTYLE.ON: IllegalImport
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -68,7 +70,7 @@ public final class SeataExecutors {
      * @param threadNamePrefix 线程名前缀
      * @return 已包装 SeataTaskDecorator 的线程池
      */
-    // CHECKSTYLE.OFF: ExecutorsUsage - SeataExecutors 工厂方法豁免：创建后立即包装为 SeataDecoratorExecutorService
+    // CHECKSTYLE.OFF: RegexpSinglelineJava - SeataExecutors 工厂方法豁免：创建后立即包装为 SeataDecoratorExecutorService
     public static ExecutorService newFixedThreadPool(int nThreads, String threadNamePrefix) {
         return new SeataDecoratorExecutorService(
                 Executors.newFixedThreadPool(nThreads, r -> {
@@ -77,7 +79,7 @@ public final class SeataExecutors {
                     return t;
                 }));
     }
-    // CHECKSTYLE.ON: ExecutorsUsage
+    // CHECKSTYLE.ON: RegexpSinglelineJava
 
     /**
      * 创建 Seata 感知的单线程线程池
@@ -85,7 +87,7 @@ public final class SeataExecutors {
      * @param threadNamePrefix 线程名前缀
      * @return 已包装 SeataTaskDecorator 的线程池
      */
-    // CHECKSTYLE.OFF: ExecutorsUsage - SeataExecutors 工厂方法豁免：创建后立即包装为 SeataDecoratorExecutorService
+    // CHECKSTYLE.OFF: RegexpSinglelineJava - SeataExecutors 工厂方法豁免：创建后立即包装为 SeataDecoratorExecutorService
     public static ExecutorService newSingleThreadExecutor(String threadNamePrefix) {
         return new SeataDecoratorExecutorService(
                 Executors.newSingleThreadExecutor(r -> {
@@ -94,7 +96,7 @@ public final class SeataExecutors {
                     return t;
                 }));
     }
-    // CHECKSTYLE.ON: ExecutorsUsage
+    // CHECKSTYLE.ON: RegexpSinglelineJava
 
     /**
      * 创建 Seata 感知的可缓存线程池
@@ -102,7 +104,7 @@ public final class SeataExecutors {
      * @param threadNamePrefix 线程名前缀
      * @return 已包装 SeataTaskDecorator 的线程池
      */
-    // CHECKSTYLE.OFF: ExecutorsUsage - SeataExecutors 工厂方法豁免：创建后立即包装为 SeataDecoratorExecutorService
+    // CHECKSTYLE.OFF: RegexpSinglelineJava - SeataExecutors 工厂方法豁免：创建后立即包装为 SeataDecoratorExecutorService
     public static ExecutorService newCachedThreadPool(String threadNamePrefix) {
         return new SeataDecoratorExecutorService(
                 Executors.newCachedThreadPool(r -> {
@@ -111,7 +113,7 @@ public final class SeataExecutors {
                     return t;
                 }));
     }
-    // CHECKSTYLE.ON: ExecutorsUsage
+    // CHECKSTYLE.ON: RegexpSinglelineJava
 
     /**
      * 创建 Seata 感知的自定义线程池
@@ -124,7 +126,7 @@ public final class SeataExecutors {
      * @param threadNamePrefix 线程名前缀
      * @return 已包装 SeataTaskDecorator 的线程池
      */
-    // CHECKSTYLE.OFF: ExecutorsUsage - SeataExecutors 工厂方法豁免：创建后立即包装为 SeataDecoratorExecutorService
+    // CHECKSTYLE.OFF: RegexpSinglelineJava - SeataExecutors 工厂方法豁免：创建后立即包装为 SeataDecoratorExecutorService
     public static ExecutorService newThreadPool(
             int corePoolSize,
             int maximumPoolSize,
@@ -140,7 +142,7 @@ public final class SeataExecutors {
                             return t;
                         }));
     }
-    // CHECKSTYLE.ON: ExecutorsUsage
+    // CHECKSTYLE.ON: RegexpSinglelineJava
 
     /**
      * 将 Executor 包装为 Seata 感知的执行器

@@ -161,9 +161,10 @@ public class WebSocketAutoConfiguration {
     public WebSocketAuthInterceptor webSocketAuthInterceptor(
             TokenService tokenService,
             ConnectionLimiter connectionLimiter,
-            WebSocketAuditService auditService) {
-        log.info("[WebSocket] 注册 JWT 握手鉴权拦截器 (含连接数检查 + 审计)");
-        return new WebSocketAuthInterceptor(tokenService, connectionLimiter, auditService);
+            WebSocketAuditService auditService,
+            WebSocketProperties properties) {
+        log.info("[WebSocket] 注册 JWT 握手鉴权拦截器 (含连接数检查 + 审计 + 网关透传 P1-5)");
+        return new WebSocketAuthInterceptor(tokenService, connectionLimiter, auditService, properties);
     }
 
     // ==================== 在线用户状态 + 多端策略 ====================

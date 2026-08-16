@@ -24,10 +24,8 @@ import com.njydsz.common.seata.context.XidContextHolder;
  * // 配置线程池时注入 TaskDecorator
  * @Bean("taskExecutor")
  * public Executor taskExecutor() {
- *     ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
- *     executor.setTaskDecorator(new SeataTaskDecorator());
- *     // ... 其他配置
- *     return executor;
+ *     // 从 ydsz.thread.pools.* 注入托管线程池（禁止业务代码自行 new 线程池，云顶规范 15.4），
+ *     // 仅通过 setTaskDecorator(new SeataTaskDecorator()) 注入 Seata 上下文装饰器即可。
  * }
  * }</pre>
  *

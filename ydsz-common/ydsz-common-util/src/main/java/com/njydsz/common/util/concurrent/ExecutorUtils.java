@@ -7,7 +7,6 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
@@ -52,6 +51,7 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  */
 @Slf4j
+// CHECKSTYLE.OFF: RegexpSinglelineJava — ExecutorUtils 为线程池工具类（云顶规范 15.4 授权实现层），统一封装线程池创建
 public final class ExecutorUtils {
 
     private static final int CPU_CORES = Runtime.getRuntime().availableProcessors();
@@ -722,3 +722,4 @@ public final class ExecutorUtils {
         }
     }
 }
+// CHECKSTYLE.ON: RegexpSinglelineJava

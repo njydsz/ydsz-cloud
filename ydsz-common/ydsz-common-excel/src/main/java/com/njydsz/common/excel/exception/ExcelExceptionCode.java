@@ -1,12 +1,9 @@
 package com.njydsz.common.excel.exception;
 
-import com.njydsz.common.exception.enums.ExceptionCode;
-import com.njydsz.common.exception.registry.YdszExceptionCode;
-
 /**
  * Excel 模块异常码枚举
  *
- * <p>实现 {@link ExceptionCode} 接口，桥接至全局异常体系。
+ * <p>自包含的错误码定义，不依赖全局异常体系。
  * 定义 Excel 读写过程中所有业务异常的错误码和国际化消息键。</p>
  *
  * <h3>错误码命名规范</h3>
@@ -17,11 +14,24 @@ import com.njydsz.common.exception.registry.YdszExceptionCode;
  *   <li>H04xxx - 配置异常</li>
  * </ul>
  *
+ * <h3>全局异常体系桥接</h3>
+ * <p>本枚举自包含定义，不直接实现全局 {@code ExceptionCode} 接口。
+ * 如需接入全局异常体系，可在调用方通过适配器模式桥接：</p>
+ * <pre>{@code
+ * // 适配器示例：将 ExcelExceptionCode 桥接到全局 ExceptionCode 接口
+ * ExceptionCode adapt(ExcelExceptionCode excelCode) {
+ *     return new ExceptionCode() {
+ *         public String getCode() { return excelCode.getCode(); }
+ *         public String getKey() { return excelCode.getKey(); }
+ *         // ...
+ *     };
+ * }
+ * }</pre>
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
-@YdszExceptionCode(module = "excel", description = "Excel 处理模块")
-public enum ExcelExceptionCode implements ExceptionCode {
+public enum ExcelExceptionCode {
 
     // ==================== 读取异常 H01xxx ====================
     READ_FILE_NOT_FOUND("H01001", "excel.read.fileNotFound"),
@@ -71,7 +81,6 @@ public enum ExcelExceptionCode implements ExceptionCode {
      *
      * @return 错误码
      */
-    @Override
     public String getCode() {
         return code;
     }
@@ -81,7 +90,6 @@ public enum ExcelExceptionCode implements ExceptionCode {
      *
      * @return 国际化消息 key
      */
-    @Override
     public String getKey() {
         return key;
     }
@@ -91,7 +99,6 @@ public enum ExcelExceptionCode implements ExceptionCode {
      *
      * @return 模块名称
      */
-    @Override
     public String getModule() {
         return "excel";
     }
@@ -101,7 +108,6 @@ public enum ExcelExceptionCode implements ExceptionCode {
      *
      * @return 默认消息描述
      */
-    @Override
     public String getMsg() {
         return key;
     }
@@ -113,7 +119,6 @@ public enum ExcelExceptionCode implements ExceptionCode {
      *
      * @return HTTP 状态码
      */
-    @Override
     public int getHttpStatus() {
         if (name().startsWith("CONFIG_")) {
             return 500;

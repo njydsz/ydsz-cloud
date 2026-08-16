@@ -27,6 +27,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
+import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.cronjob.api.client.CronjobServiceClient;
 import com.njydsz.literule.api.RuleEngine;
 import com.njydsz.literule.api.expression.ExpressionEngine;
@@ -511,6 +512,7 @@ public class LiteRuleAutoConfiguration {
                                               RuleConfigProvider configProvider,
                                               ObjectProvider<RuleVersionRepository> versionRepoProvider,
                                               ObjectProvider<RuleConfigBroadcaster> broadcasterProvider,
+                                              ObjectProvider<SearchIndexEventBridge> searchIndexEventBridgeProvider,
                                               ApplicationEventPublisher eventPublisher,
                                               LiteRuleProperties properties) {
         RuleAdminService service = new RuleAdminService(ruleEngine, evaluator, configProvider,
@@ -521,6 +523,8 @@ public class LiteRuleAutoConfiguration {
             service.setBroadcaster(broadcaster);
             log.info("[LiteRule] 分布式规则广播已启用");
         }
+        // 搜索索引同步（可选，未引入 common-search 时自动跳过）
+        service.setSearchIndexEventBridgeProvider(searchIndexEventBridgeProvider);
         // 冲突检测（1.4.0 起支持，仅在启用时装配检测器）
         if (properties.isConflictDetectionEnabled()) {
             RuleConflictDetector conflictDetector = new RuleConflictDetector(configProvider);

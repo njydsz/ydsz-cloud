@@ -10,7 +10,7 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <!-- L2 基础设施层模块：桥接 common-exception 全局异常体系 -->
+    <!-- L1 工具模块层：自包含的异常体系，不依赖全局异常处理模块 -->
     <properties>
         <l1.module.skip>true</l1.module.skip>
     </properties>
@@ -20,17 +20,6 @@
     <description>高性能 Excel 处理模块 — 双引擎架构（零 POI 快速路径 + POI 兼容路径）、MethodHandle 字段访问优化、公式注入防护</description>
 
     <dependencies>
-        <!-- ==================== 内部模块 ==================== -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-exception</artifactId>
-        </dependency>
-
-
         <!-- ==================== 第三方依赖 ==================== -->
         <!-- Apache POI -->
         <dependency>

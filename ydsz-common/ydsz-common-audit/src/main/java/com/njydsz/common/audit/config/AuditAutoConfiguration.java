@@ -145,7 +145,7 @@ public class AuditAutoConfiguration {
      * @param properties 审计配置属性
      * @return 异步执行器
      */
-    // CHECKSTYLE.OFF: ThreadPoolCreate — 审计模块基础设置线程池，豁免规范 15.4；业务方可通过 ydsz.thread.pools.auditAsyncExecutor 覆盖
+    // CHECKSTYLE.OFF: RegexpSinglelineJava — 审计模块基础设置线程池，豁免规范 15.4；业务方可通过 ydsz.thread.pools.auditAsyncExecutor 覆盖
     @Bean("auditAsyncExecutor")
     @ConditionalOnMissingBean(name = "auditAsyncExecutor")
     public Executor auditAsyncExecutor(AuditProperties properties) {
@@ -166,6 +166,7 @@ public class AuditAutoConfiguration {
                 corePoolSize, maxPoolSize, queueCapacity);
         return executor;
     }
+    // CHECKSTYLE.ON: RegexpSinglelineJava
 
     /**
      * 创建异步审计记录器 Bean
