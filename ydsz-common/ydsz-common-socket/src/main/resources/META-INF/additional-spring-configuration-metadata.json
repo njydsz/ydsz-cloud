@@ -185,6 +185,17 @@
       "type": "java.lang.Integer",
       "description": "每用户最大连接数。",
       "defaultValue": 5
+    },
+    {
+      "name": "ydsz.websocket.auth.gateway-secret",
+      "type": "java.lang.String",
+      "description": "网关共享密钥：网关转发 WS 请求时注入 X-Gateway-Secret 头，后端验证通过后才信任 X-User-Id 等头部（P1-5）。"
+    },
+    {
+      "name": "ydsz.websocket.auth.trusted-ips",
+      "type": "java.util.List<java.lang.String>",
+      "description": "受信任的来源 IP 列表（CIDR 或精确 IP），内网直连时可不依赖共享密钥（P1-5）。",
+      "defaultValue": []
     }
   ]
 }

@@ -1,6 +1,5 @@
 package com.njydsz.common.safe.ratelimit.circuitbreaker;
 
-import java.time.Duration;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import lombok.Getter;

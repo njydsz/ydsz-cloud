@@ -106,6 +106,9 @@ public class WebSocketProperties {
     /** 多端登录策略配置 */
     private MultiDevice multiDevice = new MultiDevice();
 
+    /** 网关透传认证配置（P1-5） */
+    private Auth auth = new Auth();
+
     /**
      * 心跳保活配置。
      *
@@ -236,5 +239,30 @@ public class WebSocketProperties {
         private String policy = "ALLOW_ALL";
         /** 每用户最大并发 Session 数 */
         private int maxSessionsPerUser = 5;
+    }
+
+    /**
+     * 网关透传认证配置（P1-5）。
+     *
+     * <p>当 WebSocket 请求经过网关时，浏览器无法在 WebSocket 升级请求中设置
+     * 自定义请求头（如 Authorization），因此网关在认证后注入 {@code X-User-Id}、
+     * {@code X-Username} 等头部透传用户身份。
+     *
+     * <p>安全机制：
+     * <ul>
+     *   <li>共享密钥：网关同时注入 {@code X-Gateway-Secret}，后端验证通过后才信任
+     *       {@code X-User-Id} 等头部，防止客户端伪造</li>
+     *   <li>IP 白名单：作为共享密钥的补充，当请求来源 IP 在白名单内时亦可信任
+     *       （适用于内网直连场景）</li>
+     *   <li>两种方式满足其一即可；均未配置时网关透传认证不可用，必须依赖 JWT</li>
+     * </ul>
+     */
+    @Data
+    public static class Auth {
+        /** 网关共享密钥：与网关侧配置一致，用于验证 X-User-* 头来自网关而非客户端伪造 */
+        private String gatewaySecret;
+
+        /** 受信任的来源 IP 列表（CIDR 或精确 IP），内网直连时可不依赖共享密钥 */
+        private List<String> trustedIps = List.of();
     }
 }

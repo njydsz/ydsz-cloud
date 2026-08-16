@@ -671,11 +671,12 @@
                 <version>${swagger-jakarta.version}</version>
             </dependency>
 
-            <!-- jjwt-orgjson（ydsz-common auth 模块使用 orgjson 而非 jackson） -->
+            <!-- jjwt-jackson（P2-1 依赖收敛）：统一 JSON 序列化 runtime，替代已废弃的 jjwt-orgjson -->
             <dependency>
                 <groupId>io.jsonwebtoken</groupId>
-                <artifactId>jjwt-orgjson</artifactId>
+                <artifactId>jjwt-jackson</artifactId>
                 <version>${jjwt.version}</version>
+                <scope>runtime</scope>
             </dependency>
 
             <!-- Sentinel flow control (optional, for advanced distributed rate limiting) -->

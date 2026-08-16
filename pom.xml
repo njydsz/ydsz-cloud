@@ -778,15 +778,11 @@
                 <version>${jjwt.version}</version>
                 <scope>runtime</scope>
             </dependency>
-            <dependency>
-                <groupId>io.jsonwebtoken</groupId>
-                <artifactId>jjwt-orgjson</artifactId>
-                <version>${jjwt.version}</version>
-                <scope>runtime</scope>
-            </dependency>
-
-
-
+            <!--
+                jjwt-orgjson 已废弃（P2-1 依赖收敛）：与 jjwt-jackson 双 JSON runtime 并存
+                会造成类路径冲突。项目统一使用 jjwt-jackson（业界标准，与 Jackson 生态一致）。
+                auth 模块如需 JSON 序列化 claims，直接依赖 jjwt-jackson。
+            -->
             <!-- BouncyCastle (MinIO 1.78 vs Spring Cloud 1.81.1，统一取高版本) -->
             <dependency>
                 <groupId>org.bouncycastle</groupId>

@@ -5,8 +5,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
+import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleDefinition;
@@ -53,6 +55,9 @@ public class RuleAdminService {
     /** 分布式广播器（可选，配置后支持多实例热加载一致性） */
     private RuleConfigBroadcaster broadcaster;
 
+    /** 搜索索引事件桥接器（可选，用于将规则变更同步到统一搜索索引） */
+    private ObjectProvider<SearchIndexEventBridge> searchIndexEventBridgeProvider;
+
     /** 当前节点标识（用于广播防循环） */
     private String nodeId;
 
@@ -96,6 +101,20 @@ public class RuleAdminService {
      */
     public void setBroadcaster(RuleConfigBroadcaster broadcaster) {
         this.broadcaster = broadcaster;
+    }
+
+    /**
+     * 设置搜索索引事件桥接器（可选）。
+     *
+     * <p>用于将规则创建/更新操作异步同步到 ydsz-common-search 统一搜索索引。
+     * 未引入 {@code ydsz-common-search} 时可不设置，同步自动跳过。
+     *
+     * @param searchIndexEventBridgeProvider 桥接器的惰性提供者
+     * @since 1.0.0
+     */
+    public void setSearchIndexEventBridgeProvider(
+            ObjectProvider<SearchIndexEventBridge> searchIndexEventBridgeProvider) {
+        this.searchIndexEventBridgeProvider = searchIndexEventBridgeProvider;
     }
 
     /**
@@ -324,6 +343,9 @@ public class RuleAdminService {
                 : RuleConfigRefreshEvent.ChangeType.CREATE;
         publishRefreshEvent(RuleConfigRefreshEvent.of(
                 saved.getCode(), changeType, operator));
+
+        // 同步到统一搜索索引（ydsz_search_index）
+        syncSearchIndex(saved);
 
         log.info("[LiteRule] 规则已保存: code={}, version={}, operator={}, broadcast={}",
                 saved.getCode(), saved.getVersion(), operator, broadcaster != null);

@@ -75,4 +75,15 @@ public final class WebSocketConstants {
 
     /** 握手请求中 JWT token 的请求头名 */
     public static final String WS_TOKEN_HEADER = "Authorization";
+
+    // ========== 网关透传认证头（P1-5） ==========
+
+    /** 网关透传的用户 ID 头（与 AuthHeaderConstants.X_USER_ID 保持一致） */
+    public static final String WS_GATEWAY_USER_ID_HEADER = "X-User-Id";
+
+    /** 网关透传的用户名头（与 AuthHeaderConstants.X_USERNAME 保持一致） */
+    public static final String WS_GATEWAY_USERNAME_HEADER = "X-Username";
+
+    /** 网关透传的共享密钥头，用于验证请求确实来自网关 */
+    public static final String WS_GATEWAY_SECRET_HEADER = "X-Gateway-Secret";
 }
