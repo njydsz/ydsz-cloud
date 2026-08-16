@@ -1,0 +1,22 @@
+{
+  "properties": [
+    {
+      "name": "ydsz.safe.ratelimit.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用限流（令牌桶算法 + 熔断器）。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.safe.ratelimit.aop-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 @RateLimit AOP 方法级限流。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.safe.ratelimit.metrics-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用限流指标采集（Micrometer）。",
+      "defaultValue": true
+    }
+  ]
+}

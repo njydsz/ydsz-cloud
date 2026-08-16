@@ -1,0 +1,16 @@
+{
+  "properties": [
+    {
+      "name": "ydsz.safe.api-signature.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 API 签名验证（timestamp + nonce + HMAC-SHA256）。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.safe.field-encrypt.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用字段加密（MyBatis TypeHandler）。",
+      "defaultValue": false
+    }
+  ]
+}
