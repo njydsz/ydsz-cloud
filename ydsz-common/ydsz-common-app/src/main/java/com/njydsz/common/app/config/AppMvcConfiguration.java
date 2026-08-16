@@ -1,5 +1,6 @@
 package com.njydsz.common.app.config;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -13,9 +14,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-
 import com.njydsz.common.app.advice.AppGlobalResponseAdvice;
 import com.njydsz.common.app.auth.AppAuthHandler;
+import com.njydsz.common.app.constant.AppFilterOrder;
 import com.njydsz.common.app.exception.AppExceptionHandler;
 import com.njydsz.common.app.filter.AppAuthFilter;
 import com.njydsz.common.app.filter.AppContentCachingFilter;
@@ -24,19 +25,16 @@ import com.njydsz.common.app.health.AppHealthIndicator;
 import com.njydsz.common.app.interceptor.AppRequestLogInterceptor;
 import com.njydsz.common.app.metrics.AppMetrics;
 import com.njydsz.common.auth.config.AuthFilterConfiguration;
-import com.njydsz.common.auth.handler.AuthHandler;
 import com.njydsz.common.auth.handler.AbstractAuthHandler;
+import com.njydsz.common.auth.handler.AuthHandler;
 import com.njydsz.common.auth.metrics.AuthMetrics;
 import com.njydsz.common.base.config.BaseAutoConfiguration;
 import com.njydsz.common.base.config.BaseMvcConfiguration;
 import com.njydsz.common.base.config.ConditionalOnPlatform;
 import com.njydsz.common.base.config.PlatformMode;
 import com.njydsz.common.base.constant.InterceptorOrder;
-import com.njydsz.common.app.constant.AppFilterOrder;
 import com.njydsz.common.safe.config.ApiSignatureProperties;
 import com.njydsz.common.safe.config.SafeConfiguration;
-
-import io.micrometer.core.instrument.MeterRegistry;
 
 /**
  * App 端 MVC 核心配置

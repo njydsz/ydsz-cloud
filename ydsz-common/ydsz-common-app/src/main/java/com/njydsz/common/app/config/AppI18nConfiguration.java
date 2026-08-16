@@ -1,7 +1,6 @@
 package com.njydsz.common.app.config;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-
 import com.njydsz.common.base.config.BaseI18nConfiguration;
 
 /**

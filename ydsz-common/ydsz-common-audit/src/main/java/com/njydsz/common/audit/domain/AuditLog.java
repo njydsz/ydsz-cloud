@@ -2,7 +2,6 @@ package com.njydsz.common.audit.domain;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

@@ -1,11 +1,10 @@
 package com.njydsz.agent.domain.json;
 
 import java.util.Map;
-
+import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.deserializer.JsonDeserializer;
 import com.njydsz.common.json.reader.JSONReader;
-import com.njydsz.agent.domain.model.TokenUsage;
 
 /**
  * {@link TokenUsage} 的 YdszJson 自定义反序列化器（验证 P1-1 反序列化引擎修复）。

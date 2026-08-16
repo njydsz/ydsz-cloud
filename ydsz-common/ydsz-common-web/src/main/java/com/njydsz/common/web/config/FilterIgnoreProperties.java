@@ -4,13 +4,10 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-
+import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import com.njydsz.common.auth.config.AuthFilterIgnoreProperties;
 import com.njydsz.common.auth.constant.FilterIgnoreConstants;
-
-import lombok.Data;
 
 /**
  * 过滤器忽略路径配置属性。

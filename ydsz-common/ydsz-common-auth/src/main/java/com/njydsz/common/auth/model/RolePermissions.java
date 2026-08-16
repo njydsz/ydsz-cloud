@@ -2,7 +2,6 @@ package com.njydsz.common.auth.model;
 
 import java.util.Collections;
 import java.util.Set;
-
 import com.njydsz.common.auth.service.RbacPermissionEvaluator;
 import com.njydsz.common.auth.service.RolePermissionLoader;
 

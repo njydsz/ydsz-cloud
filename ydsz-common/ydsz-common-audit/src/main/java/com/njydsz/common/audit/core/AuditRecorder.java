@@ -1,7 +1,6 @@
 package com.njydsz.common.audit.core;
 
 import java.util.List;
-
 import com.njydsz.common.audit.domain.AuditLog;
 /**
  * 审计记录器接口

@@ -1,7 +1,6 @@
 package com.njydsz.common.util.http;
 
 import jakarta.servlet.http.HttpServletRequest;
-
 import com.njydsz.common.util.internal.proxy.CoreConstants;
 import com.njydsz.common.util.string.StringUtils;
 

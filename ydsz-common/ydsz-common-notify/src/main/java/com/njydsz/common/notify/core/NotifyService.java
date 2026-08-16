@@ -2,7 +2,6 @@ package com.njydsz.common.notify.core;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-
 import com.njydsz.common.notify.enums.NotifyChannel;
 import com.njydsz.common.notify.enums.NotifyPriority;
 

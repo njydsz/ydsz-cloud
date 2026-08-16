@@ -3,15 +3,12 @@ package com.njydsz.cronjob.server.core.dispatch;
 import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.List;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-
 import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.domain.entity.job.JobNode;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 默认节点选择策略：最少负载优先。

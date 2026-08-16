@@ -12,10 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import com.njydsz.common.search.config.SearchProperties;
-
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.search.config.SearchProperties;
 
 /**
  * 搜索文本预处理器。

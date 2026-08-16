@@ -5,12 +5,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
-
-import com.njydsz.common.json.YdszJson;
-
-import com.njydsz.literule.api.RuleDefinition;
-
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.literule.api.RuleDefinition;
 
 /**
  * ZooKeeper 规则数据源（P1-5）

@@ -5,11 +5,10 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
+import net.sf.jsqlparser.schema.Table;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.jdbc.config.DataPermissionConfiguration;
@@ -17,8 +16,6 @@ import com.njydsz.common.jdbc.enums.InterceptTableStrategy;
 import com.njydsz.common.jdbc.permission.DataPermissionBypass;
 import com.njydsz.common.jdbc.permission.DataPermissionIgnore;
 import com.njydsz.common.util.string.StringUtils;
-
-import net.sf.jsqlparser.schema.Table;
 
 /**
  * 数据权限辅助工具类。

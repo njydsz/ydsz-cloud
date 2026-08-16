@@ -2,7 +2,6 @@ package com.njydsz.common.domain.query;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -11,10 +10,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-
 import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.json.annotation.JsonIgnore;
-
 import static lombok.AccessLevel.PROTECTED;
 
 /**

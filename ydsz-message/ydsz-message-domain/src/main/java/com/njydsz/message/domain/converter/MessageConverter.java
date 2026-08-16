@@ -1,11 +1,9 @@
 package com.njydsz.message.domain.converter;
 
 import java.util.List;
-
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
-
 import com.njydsz.message.domain.entity.batch.MsgAggregate;
 import com.njydsz.message.domain.entity.batch.MsgBatch;
 import com.njydsz.message.domain.entity.canary.MsgCanary;

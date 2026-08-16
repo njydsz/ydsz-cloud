@@ -4,10 +4,8 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import com.njydsz.common.core.constant.DataScopeConstants;
-
 import lombok.Getter;
+import com.njydsz.common.core.constant.DataScopeConstants;
 
 /**
  * 数据权限信息载体。

@@ -1,11 +1,9 @@
 package com.njydsz.message.domain.dto.config;
 
-import com.njydsz.common.safe.annotation.Xss;
-
-import com.njydsz.common.domain.query.PageQuery;
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import com.njydsz.common.domain.query.PageQuery;
+import com.njydsz.common.safe.annotation.Xss;
 
 /**
  * 退订记录分页查询 DTO（P1-5）。

@@ -2,12 +2,10 @@ package com.njydsz.agent.server.rag;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.ObjectProvider;
-
+import org.springframework.stereotype.Service;
 import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.rag.VectorStore;
 import com.njydsz.agent.infra.rag.HybridRetriever;

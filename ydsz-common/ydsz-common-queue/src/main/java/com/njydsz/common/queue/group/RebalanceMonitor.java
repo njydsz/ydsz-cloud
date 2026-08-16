@@ -10,14 +10,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.data.redis.connection.stream.PendingMessagesSummary;
 import org.springframework.data.redis.core.RedisTemplate;
-
 import com.njydsz.common.queue.group.ConsumerGroupEvent.EventType;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 消费组 Rebalance 监控器

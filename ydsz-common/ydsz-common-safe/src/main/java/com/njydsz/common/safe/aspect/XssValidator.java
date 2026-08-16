@@ -1,10 +1,8 @@
 package com.njydsz.common.safe.aspect;
 
 import java.util.regex.Pattern;
-
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-
 import com.njydsz.common.safe.annotation.Xss;
 import com.njydsz.common.util.string.StringUtils;
 

@@ -1,19 +1,15 @@
 package com.njydsz.cronjob.server.core.config;
 
 import java.util.concurrent.ThreadPoolExecutor;
-
+import com.alibaba.nacos.api.config.annotation.NacosConfigListener;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ObjectNode;
-
-import org.springframework.stereotype.Component;
-
-import com.alibaba.nacos.api.config.annotation.NacosConfigListener;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.dispatch.DefaultTaskDispatcher;
 import com.njydsz.cronjob.server.core.executor.TenantAwareExecutorPool;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 线程池热更新监听器（P0-4）。

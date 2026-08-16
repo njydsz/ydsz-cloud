@@ -1,7 +1,6 @@
 package com.njydsz.literule.api.expression;
 
 import java.util.List;
-
 import com.njydsz.literule.api.RuleContext;
 
 /**

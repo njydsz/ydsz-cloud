@@ -1,7 +1,6 @@
 package com.njydsz.cronjob.server.core.alert;
 
 import java.io.Serializable;
-
 import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
 
 /**

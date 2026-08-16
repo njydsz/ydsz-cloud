@@ -1,12 +1,10 @@
 package com.njydsz.common.seata.config;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-
 import com.njydsz.common.seata.api.DistributedTransactionManager;
 import com.njydsz.common.seata.api.TransactionType;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * SeataAutoConfiguration 集成测试

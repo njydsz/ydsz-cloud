@@ -1,11 +1,10 @@
-package com.njydsz.common.json.reader;
+﻿package com.njydsz.common.json.reader;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import com.njydsz.common.json.exception.JsonDeserializationException;
 
 /**
@@ -809,8 +808,7 @@ public final class JSONReader {
                     case '"': sb.append('"'); break;
                     case '\\': sb.append('\\'); break;
                     case '/': sb.append('/'); break;
-                    case 'n': sb.append('
-'); break;
+                    case 'n': sb.append('\\n'); break;
                     case 'r': sb.append('\r'); break;
                     case 't': sb.append('\t'); break;
                     case 'b': sb.append('\b'); break;

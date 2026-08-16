@@ -3,22 +3,19 @@ package com.njydsz.agent.web.controller;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.njydsz.agent.domain.gateway.LlmClient;
-import com.njydsz.agent.domain.tool.ToolRegistry;
-import com.njydsz.agent.infra.llm.LlmClientRouter;
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.permission.PermissionCodes;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import com.njydsz.agent.domain.gateway.LlmClient;
+import com.njydsz.agent.domain.tool.ToolRegistry;
+import com.njydsz.agent.infra.llm.LlmClientRouter;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.permission.PermissionCodes;
 
 /**
  * Agent 元数据查询 Controller（可用模型 / 已注册工具）

@@ -3,7 +3,6 @@ package com.njydsz.common.config.health;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
-
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.core.env.ConfigurableEnvironment;

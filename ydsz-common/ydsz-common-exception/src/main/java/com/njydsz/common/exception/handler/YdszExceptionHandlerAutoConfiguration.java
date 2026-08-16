@@ -13,7 +13,6 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
 import org.springframework.web.reactive.config.WebFluxConfigurer;
-
 import com.njydsz.common.exception.config.ExceptionProperties;
 import com.njydsz.common.exception.config.YdszExceptionCoreAutoConfiguration;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;

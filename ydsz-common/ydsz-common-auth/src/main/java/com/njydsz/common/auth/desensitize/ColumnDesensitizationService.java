@@ -2,10 +2,8 @@ package com.njydsz.common.auth.desensitize;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-
-import com.njydsz.common.json.tree.JsonNode;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
 import com.njydsz.common.auth.config.AuthProperties;
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.service.RbacUserInfoService;
@@ -13,12 +11,11 @@ import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.tree.JsonNode;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.safe.desensitize.ColumnDesensitizationContext;
 import com.njydsz.common.safe.desensitize.ColumnDesensitizationRule;
 import com.njydsz.common.util.string.StringUtils;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 字段脱敏服务。

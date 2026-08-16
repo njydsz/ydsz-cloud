@@ -2,7 +2,6 @@ package com.njydsz.common.seata.config.validator;
 
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-
 import com.njydsz.common.seata.config.SeataProperties;
 
 /**

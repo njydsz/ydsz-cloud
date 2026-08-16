@@ -1,7 +1,6 @@
 package com.njydsz.agent.domain.gateway;
 
 import java.util.function.Consumer;
-
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;

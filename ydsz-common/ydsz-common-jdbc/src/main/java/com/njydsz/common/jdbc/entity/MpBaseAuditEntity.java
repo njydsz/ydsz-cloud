@@ -2,15 +2,13 @@ package com.njydsz.common.jdbc.entity;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.njydsz.common.json.annotation.JsonFormat;
-
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import com.njydsz.common.json.annotation.JsonFormat;
 
 /**
  * MyBatis-Plus 增强版审计基础实体

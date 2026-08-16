@@ -3,14 +3,12 @@ package com.njydsz.cronjob.infra.mapper.log;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
-
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.cronjob.domain.entity.log.JobLog;
 
 /**

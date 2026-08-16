@@ -1,13 +1,10 @@
 package com.njydsz.common.socket.ratelimit;
 
 import java.util.concurrent.atomic.AtomicLong;
-
-
-import com.njydsz.common.socket.config.WebSocketProperties;
-import com.njydsz.common.socket.session.OnlineUserService;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.socket.config.WebSocketProperties;
+import com.njydsz.common.socket.session.OnlineUserService;
 
 /**
  * WebSocket 连接数限制器（P2-1）。

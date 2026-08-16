@@ -1,7 +1,6 @@
 package com.njydsz.common.tenant;
 
 import java.util.concurrent.Callable;
-
 import com.njydsz.common.tenant.TenantContextHolder;
 
 /**

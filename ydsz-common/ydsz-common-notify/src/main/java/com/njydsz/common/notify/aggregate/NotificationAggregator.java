@@ -2,7 +2,6 @@ package com.njydsz.common.notify.aggregate;
 
 import java.util.List;
 import java.util.Map;
-
 import com.njydsz.common.notify.enums.NotifyChannel;
 import com.njydsz.common.notify.enums.NotifyPriority;
 

@@ -8,11 +8,9 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.regex.Pattern;
-
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetHeaders;
 import jakarta.mail.internet.MimeMessage;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -25,8 +23,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-
-import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.notify.config.NotifyProperties;
 import com.njydsz.common.notify.core.NotifySendResult;
 import com.njydsz.common.notify.enums.NotifyChannel;
@@ -36,6 +32,7 @@ import com.njydsz.common.notify.security.EmailContentSanitizer;
 import com.njydsz.common.notify.security.EmailSmtpHealthChecker;
 import com.njydsz.common.notify.template.TemplateEngine;
 import com.njydsz.common.notify.tracking.EmailTrackingService;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
 
 /**
  * 邮件通知发送器

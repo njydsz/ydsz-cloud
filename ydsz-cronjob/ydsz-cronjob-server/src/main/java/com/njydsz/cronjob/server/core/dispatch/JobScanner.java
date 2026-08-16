@@ -10,19 +10,21 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.scheduling.support.CronExpression;
 import org.springframework.util.Assert;
-
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.server.config.CronjobProperties;
@@ -31,13 +33,6 @@ import com.njydsz.cronjob.server.core.leader.PartitionLeaderManager;
 import com.njydsz.cronjob.server.core.scheduler.AdaptiveBatchScheduler;
 import com.njydsz.cronjob.server.core.scheduler.CalendarScheduleFilter;
 import com.njydsz.cronjob.server.metrics.CronjobMetrics;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.context.ApplicationContext;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import java.util.concurrent.TimeUnit;
 /**
  * 任务扫描器（P1-7 Leader 模式专用）。
  *

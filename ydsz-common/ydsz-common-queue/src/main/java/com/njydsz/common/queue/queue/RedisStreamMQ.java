@@ -1,17 +1,14 @@
 package com.njydsz.common.queue.queue;
 
 import java.util.concurrent.ExecutorService;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
-
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.queue.config.QueueProperties;
 import com.njydsz.common.queue.service.IMessagePublisher;
 import com.njydsz.common.queue.service.IMessageSubscriber;
 import com.njydsz.common.queue.service.impl.RedisStreamPublisher;
 import com.njydsz.common.queue.service.impl.RedisStreamSubscriber;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 基于 Redis Stream 实现的消息队列

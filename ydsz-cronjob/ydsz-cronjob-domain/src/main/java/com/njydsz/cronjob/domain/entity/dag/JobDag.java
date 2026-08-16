@@ -2,16 +2,13 @@ package com.njydsz.cronjob.domain.entity.dag;
 
 import java.io.Serial;
 import java.time.LocalDateTime;
-
-import jakarta.validation.constraints.NotBlank;
-
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
-
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * DAG 工作流定义实体（ydsz_job_dag 表，P2 DAG 增强）。

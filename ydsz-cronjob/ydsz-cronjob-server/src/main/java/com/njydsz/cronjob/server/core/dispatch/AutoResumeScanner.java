@@ -2,25 +2,21 @@ package com.njydsz.cronjob.server.core.dispatch;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.support.CronExpression;
-
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
 import com.njydsz.cronjob.server.core.scheduler.SecondLevelScheduler;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import com.njydsz.common.lock.annotation.DistributedScheduled;
 
 /**
  * 熔断自动恢复扫描器（P1-5）。

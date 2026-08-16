@@ -3,17 +3,13 @@ package com.njydsz.common.notify.config;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
-import com.njydsz.common.notify.enums.NotifyChannel;
-
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import com.njydsz.common.notify.enums.NotifyChannel;
 
 /**
  * 通知模块配置属性类

@@ -1,11 +1,9 @@
 package com.njydsz.common.notify.core;
 
 import java.util.function.Supplier;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.notify.enums.NotifyChannel;
 

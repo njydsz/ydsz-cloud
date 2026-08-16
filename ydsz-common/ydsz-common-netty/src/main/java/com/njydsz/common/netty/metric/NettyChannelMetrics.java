@@ -1,12 +1,10 @@
 package com.njydsz.common.netty.metric;
 
 import java.util.concurrent.atomic.AtomicLong;
-
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
-
 import com.njydsz.common.netty.api.ConnectionMetrics;
 
 /**

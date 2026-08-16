@@ -14,18 +14,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.njydsz.common.json.annotation.JsonAlias;
 import com.njydsz.common.json.annotation.JsonCreator;
 import com.njydsz.common.json.annotation.JsonIgnore;
 import com.njydsz.common.json.annotation.JsonIgnoreProperties;
 import com.njydsz.common.json.annotation.JsonProperty;
-import com.njydsz.common.json.provider.JacksonAnnotationBridge;
 import com.njydsz.common.json.exception.JsonDeserializationException;
 import com.njydsz.common.json.provider.FieldMetadataLoader;
+import com.njydsz.common.json.provider.JacksonAnnotationBridge;
 import com.njydsz.common.json.util.BoundedLruCache;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Bean 反序列化读取器（FastJSON2 BeanDeserializer 移植版）

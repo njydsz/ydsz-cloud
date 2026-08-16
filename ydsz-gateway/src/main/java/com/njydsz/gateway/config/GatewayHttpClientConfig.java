@@ -1,16 +1,13 @@
 package com.njydsz.gateway.config;
 
 import java.time.Duration;
-
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
-
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 网关 HttpClient 连接池配置（P0-阶段二-6）

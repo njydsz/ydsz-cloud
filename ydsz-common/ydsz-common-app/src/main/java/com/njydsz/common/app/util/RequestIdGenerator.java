@@ -1,7 +1,6 @@
 package com.njydsz.common.app.util;
 
 import java.util.function.Supplier;
-
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 
 /**

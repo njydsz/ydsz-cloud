@@ -1,7 +1,6 @@
 package com.njydsz.common.app.filter;
 
 import jakarta.servlet.http.HttpServletRequest;
-
 import com.njydsz.common.app.config.AppTraceProperties;
 import com.njydsz.common.app.util.RequestIdGenerator;
 import com.njydsz.common.base.filter.BaseRequestIdResponseFilter;

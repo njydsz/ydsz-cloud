@@ -2,7 +2,6 @@ package com.njydsz.common.file.domain;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-
 import lombok.Data;
 
 /**

@@ -2,7 +2,6 @@ package com.njydsz.common.sentry.tracing.otel;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;

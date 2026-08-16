@@ -1,8 +1,7 @@
 package com.njydsz.common.auth.constant;
 
-import com.njydsz.common.exception.enums.ExceptionCode;
-
 import lombok.Getter;
+import com.njydsz.common.exception.enums.ExceptionCode;
 
 /**
  * 认证模块业务异常码。

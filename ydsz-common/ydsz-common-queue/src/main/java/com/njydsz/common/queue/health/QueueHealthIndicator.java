@@ -2,16 +2,13 @@ package com.njydsz.common.queue.health;
 
 import java.net.InetSocketAddress;
 import java.net.Socket;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-
 import com.njydsz.common.queue.config.QueueProperties;
 import com.njydsz.common.queue.enums.QueueType;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 消息队列健康检查

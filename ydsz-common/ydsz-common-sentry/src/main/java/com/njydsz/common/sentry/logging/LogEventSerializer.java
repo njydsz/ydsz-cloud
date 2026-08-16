@@ -2,7 +2,6 @@ package com.njydsz.common.sentry.logging;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.sentry.domain.LogEvent;
 

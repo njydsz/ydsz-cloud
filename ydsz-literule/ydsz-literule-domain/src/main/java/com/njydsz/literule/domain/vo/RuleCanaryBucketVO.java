@@ -1,10 +1,9 @@
 package com.njydsz.literule.domain.vo;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-
 import java.io.Serial;
 import java.io.Serializable;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import lombok.Data;
 
 /**

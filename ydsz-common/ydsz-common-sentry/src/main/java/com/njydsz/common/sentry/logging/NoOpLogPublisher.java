@@ -1,7 +1,6 @@
 package com.njydsz.common.sentry.logging;
 
 import java.util.List;
-
 import com.njydsz.common.sentry.domain.LogEvent;
 import com.njydsz.common.sentry.spi.LogPublisher;
 

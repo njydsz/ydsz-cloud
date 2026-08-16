@@ -6,13 +6,10 @@ import java.security.PrivateKey;
 import java.security.Signature;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
-
 import jakarta.mail.internet.InternetHeaders;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
-
 import com.njydsz.common.notify.config.NotifyProperties;
 
 /**

@@ -3,10 +3,8 @@ package com.njydsz.common.auth.config;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-
 import com.njydsz.common.auth.config.AuthFilterIgnoreProperties;
 import com.njydsz.common.auth.constant.FilterIgnoreConstants;
 import com.njydsz.common.util.http.UrlPathUtils;

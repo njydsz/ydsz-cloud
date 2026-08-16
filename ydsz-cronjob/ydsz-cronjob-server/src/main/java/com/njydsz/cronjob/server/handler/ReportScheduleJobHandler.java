@@ -2,17 +2,13 @@ package com.njydsz.cronjob.server.handler;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.tree.ObjectNode;
-
-import org.springframework.stereotype.Component;
-
-import com.njydsz.cronjob.domain.job.JobHandler;
-import com.njydsz.cronjob.server.service.job.ReportScheduleService;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.tree.ObjectNode;
+import com.njydsz.cronjob.domain.job.JobHandler;
+import com.njydsz.cronjob.server.service.job.ReportScheduleService;
 
 /**
  * 报表定时生成与分发 Job。

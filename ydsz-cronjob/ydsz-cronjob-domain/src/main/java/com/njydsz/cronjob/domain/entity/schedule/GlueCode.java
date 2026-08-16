@@ -1,14 +1,12 @@
 package com.njydsz.cronjob.domain.entity.schedule;
 
 import java.io.Serial;
-
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * GLUE 在线编码实体（P1-2 GLUE 在线编码，P1-7 多语言支持扩展）。

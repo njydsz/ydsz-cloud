@@ -1,7 +1,6 @@
 package com.njydsz.common.docs.parser;
 
 import java.io.InputStream;
-
 import com.njydsz.common.docs.domain.DocumentContent;
 import com.njydsz.common.docs.domain.ParseOptions;
 import com.njydsz.common.docs.enums.DocumentFormat;

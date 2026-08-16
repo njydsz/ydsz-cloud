@@ -1,13 +1,10 @@
 package com.njydsz.common.socket.session;
 
 import java.time.Duration;
-
-import org.springframework.data.redis.core.StringRedisTemplate;
-
-import com.njydsz.common.socket.constant.WebSocketConstants;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.common.socket.constant.WebSocketConstants;
 
 /**
  * 在线用户状态服务（Redis-based）。

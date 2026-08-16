@@ -3,7 +3,6 @@ package com.njydsz.common.jdbc.interceptor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;

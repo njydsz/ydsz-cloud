@@ -4,13 +4,10 @@ import java.util.Random;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
-
 import com.njydsz.common.queue.config.QueueProperties;
 import com.njydsz.common.queue.service.DeadLetterQueueService;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 死信队列自动重试调度器

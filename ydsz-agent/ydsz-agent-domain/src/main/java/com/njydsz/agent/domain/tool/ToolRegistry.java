@@ -1,7 +1,6 @@
 package com.njydsz.agent.domain.tool;
 
 import java.util.List;
-
 import com.njydsz.agent.domain.model.ToolCall;
 import com.njydsz.agent.domain.model.ToolDefinition;
 

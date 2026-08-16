@@ -3,7 +3,6 @@ package com.njydsz.common.sentry.tracing.otel;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
-
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessorBuilder;

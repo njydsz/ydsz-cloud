@@ -1,12 +1,10 @@
 package com.njydsz.literule.server.spi;
 
 import java.util.List;
-
+import lombok.extern.slf4j.Slf4j;
 import com.njydsz.cronjob.api.client.CronjobServiceClient;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleResult;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 定时任务触发动作处理器

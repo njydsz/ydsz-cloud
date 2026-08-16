@@ -3,16 +3,13 @@ package com.njydsz.common.socket.heartbeat;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.scheduling.annotation.Scheduled;
-
 import com.njydsz.common.socket.config.WebSocketProperties;
 import com.njydsz.common.socket.constant.WebSocketConstants;
 import com.njydsz.common.socket.session.OnlineUserService;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * WebSocket 心跳保活处理器。

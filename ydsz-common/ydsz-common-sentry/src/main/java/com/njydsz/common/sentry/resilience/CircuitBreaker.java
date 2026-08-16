@@ -2,7 +2,6 @@ package com.njydsz.common.sentry.resilience;
 
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.extern.slf4j.Slf4j;

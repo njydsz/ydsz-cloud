@@ -3,19 +3,16 @@ package com.njydsz.common.notify.health;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-
 import com.njydsz.common.notify.channel.NotifyChannelStrategy;
 import com.njydsz.common.notify.config.NotifyProperties;
 import com.njydsz.common.notify.core.NotifyCircuitBreakerRegistry;
 import com.njydsz.common.notify.core.NotifyRetryQueue;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 通知模块健康检查指示器

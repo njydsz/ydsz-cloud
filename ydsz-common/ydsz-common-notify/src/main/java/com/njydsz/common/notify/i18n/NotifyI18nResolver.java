@@ -1,14 +1,11 @@
 package com.njydsz.common.notify.i18n;
 
 import java.util.Locale;
-
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.njydsz.common.notify.preference.NotifyPreference;
 import com.njydsz.common.notify.preference.NotifyPreferenceManager;
-
-import java.util.Map;
 /**
  * 通知国际化语言解析器（P3-3）
  *

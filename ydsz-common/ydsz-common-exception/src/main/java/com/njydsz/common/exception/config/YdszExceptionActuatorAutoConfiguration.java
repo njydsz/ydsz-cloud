@@ -7,7 +7,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
-
 import com.njydsz.common.exception.code.ErrorCodeTable;
 import com.njydsz.common.exception.endpoint.ExceptionCodeDocEndpoint;
 import com.njydsz.common.exception.health.ExceptionHealthIndicator;

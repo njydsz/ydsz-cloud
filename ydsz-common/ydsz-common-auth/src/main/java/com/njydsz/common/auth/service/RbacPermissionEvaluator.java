@@ -2,12 +2,10 @@ package com.njydsz.common.auth.service;
 
 import java.util.*;
 import java.util.stream.Collectors;
-
 import jakarta.annotation.PreDestroy;
 import jakarta.servlet.http.HttpServletRequest;
-
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
-
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.annotation.AuthMenuPermission;
 import com.njydsz.common.auth.annotation.PermissionMode;
@@ -25,8 +23,6 @@ import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.string.StringUtils;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * RBAC 权限校验器。

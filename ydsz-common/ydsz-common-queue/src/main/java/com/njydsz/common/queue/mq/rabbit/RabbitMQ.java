@@ -2,15 +2,13 @@ package com.njydsz.common.queue.mq.rabbit;
 
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
-
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.queue.queue.AbstractMessageQueue;
 import com.njydsz.common.queue.service.IMessagePublisher;
 import com.njydsz.common.queue.service.IMessageSubscriber;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-
-import lombok.extern.slf4j.Slf4j;
 /**
  * RabbitMQ 消息队列
  *

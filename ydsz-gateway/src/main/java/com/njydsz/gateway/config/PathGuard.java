@@ -1,11 +1,11 @@
 package com.njydsz.gateway.config;
 
-import com.njydsz.common.core.constant.HeaderConstants;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.Set;
+import com.njydsz.common.core.constant.HeaderConstants;
 
 /**
  * 路径安全工具类

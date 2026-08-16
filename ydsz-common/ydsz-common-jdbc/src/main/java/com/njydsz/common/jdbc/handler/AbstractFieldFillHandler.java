@@ -1,9 +1,8 @@
 package com.njydsz.common.jdbc.handler;
 
+import net.sf.jsqlparser.expression.Expression;
 import com.njydsz.common.jdbc.config.InterceptConfig;
 import com.njydsz.common.jdbc.enums.FieldFillStrategyEnum;
-
-import net.sf.jsqlparser.expression.Expression;
 
 /**
  * 字段填充处理器抽象基类

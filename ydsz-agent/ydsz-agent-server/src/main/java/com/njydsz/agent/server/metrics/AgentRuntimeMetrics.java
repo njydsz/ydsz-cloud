@@ -2,12 +2,10 @@ package com.njydsz.agent.server.metrics;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-
-import com.njydsz.common.base.metrics.AbstractModuleMetrics;
-
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
+import com.njydsz.common.base.metrics.AbstractModuleMetrics;
 
 /**
  * Agent 平台运行态可观测指标（P2 增强）。

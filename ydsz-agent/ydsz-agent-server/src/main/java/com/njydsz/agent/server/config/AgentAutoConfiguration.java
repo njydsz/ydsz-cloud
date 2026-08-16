@@ -3,7 +3,9 @@ package com.njydsz.agent.server.config;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
-
+import io.micrometer.core.instrument.MeterRegistry;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -12,7 +14,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
-
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.guardrail.InputGuardrail;
@@ -23,15 +24,13 @@ import com.njydsz.agent.domain.rag.TextChunker;
 import com.njydsz.agent.domain.rag.VectorStore;
 import com.njydsz.agent.domain.tool.ToolRegistry;
 import com.njydsz.agent.domain.trace.TraceRecorder;
-import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.agent.infra.guardrail.PiiMaskingGuardrail;
 import com.njydsz.agent.infra.guardrail.PromptInjectionGuardrail;
 import com.njydsz.agent.infra.llm.LlmClientRouter;
 import com.njydsz.agent.infra.llm.OpenAiCompatibleClient;
 import com.njydsz.agent.infra.memory.RedisConversationMemory;
-import com.njydsz.agent.infra.rag.InMemoryVectorStore;
 import com.njydsz.agent.infra.rag.HybridRetriever;
+import com.njydsz.agent.infra.rag.InMemoryVectorStore;
 import com.njydsz.agent.infra.rag.OpenAiEmbeddingClient;
 import com.njydsz.agent.infra.rag.PgVectorStore;
 import com.njydsz.agent.infra.rag.SimpleTextChunker;
@@ -43,16 +42,12 @@ import com.njydsz.agent.server.agent.DagOrchestrationExecutor;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.chat.AgentRequestGuard;
 import com.njydsz.agent.server.chat.GuardrailService;
+import com.njydsz.agent.server.health.AgentHealthIndicator;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;
 import com.njydsz.agent.server.rag.RagService;
-
-import lombok.extern.slf4j.Slf4j;
-
-import io.micrometer.core.instrument.MeterRegistry;
-
-import com.njydsz.agent.server.health.AgentHealthIndicator;
-import org.springframework.beans.factory.ObjectProvider;
+import com.njydsz.common.redis.service.ops.RedisCollectionOps;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 /**
  * Agent 模块自动配置。
  *

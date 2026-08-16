@@ -1,7 +1,6 @@
 package com.njydsz.cronjob.server.core.dag;
 
 import java.util.Objects;
-
 import com.njydsz.common.json.annotation.JsonClass;
 import com.njydsz.common.json.annotation.JsonProperty;
 

@@ -1,7 +1,8 @@
 package com.njydsz.common.exception.custom;
 
 import java.util.Map;
-
+import lombok.ToString;
+import org.springframework.http.HttpStatus;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.code.ResultCode;
 import com.njydsz.common.exception.code.CoreExceptionCode;
@@ -9,10 +10,6 @@ import com.njydsz.common.exception.core.ExceptionInfo;
 import com.njydsz.common.exception.enums.ExceptionCategory;
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.enums.ExceptionLevel;
-
-import lombok.ToString;
-
-import org.springframework.http.HttpStatus;
 
 /**
  * 系统异常类

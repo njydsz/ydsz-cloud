@@ -1,10 +1,10 @@
 package com.njydsz.agent.domain.json;
 
+import com.njydsz.agent.domain.model.ChatMessage;
+import com.njydsz.agent.domain.model.ToolCall;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.serializer.JsonSerializer;
 import com.njydsz.common.json.writer.JSONWriter;
-import com.njydsz.agent.domain.model.ChatMessage;
-import com.njydsz.agent.domain.model.ToolCall;
 
 /**
  * {@link ChatMessage} 的 YdszJson 自定义序列化器（JsonModule SPI 落地 + OpenAI message 形状）。

@@ -1,7 +1,6 @@
 package com.njydsz.common.event.gateway;
 
 import java.util.List;
-
 import com.njydsz.common.event.model.OutboxMessage;
 
 /**

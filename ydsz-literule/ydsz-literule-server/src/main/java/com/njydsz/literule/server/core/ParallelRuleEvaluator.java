@@ -18,12 +18,10 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-
+import lombok.extern.slf4j.Slf4j;
 import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleResult;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 规则分组并行评估器（P2-3 高性能优化）

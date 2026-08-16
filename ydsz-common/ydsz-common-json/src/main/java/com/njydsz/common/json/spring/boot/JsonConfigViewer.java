@@ -1,13 +1,10 @@
 package com.njydsz.common.json.spring.boot;
 
 import java.lang.management.ManagementFactory;
-
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.njydsz.common.json.cache.BeanSerializerCache;
 import com.njydsz.common.json.cache.SerializerCache;
 import com.njydsz.common.json.internal.JsonConfig;

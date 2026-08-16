@@ -1,15 +1,13 @@
 package com.njydsz.common.safe.core;
 
 import java.util.Iterator;
-
+import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.json.tree.JsonNode;
 import com.njydsz.common.json.tree.ObjectNode;
 import com.njydsz.common.json.tree.TextNode;
 import com.njydsz.common.safe.xss.EscapeUtils;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * JSON Body XSS 清理器

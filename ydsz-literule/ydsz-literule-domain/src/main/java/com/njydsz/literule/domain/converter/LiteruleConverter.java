@@ -1,11 +1,19 @@
 package com.njydsz.literule.domain.converter;
 
 import java.util.List;
-
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
-
+import com.njydsz.literule.api.DecisionTableDefinition;
+import com.njydsz.literule.api.RuleDefinition;
+import com.njydsz.literule.api.RuleEngineStats;
+import com.njydsz.literule.api.RulePack;
+import com.njydsz.literule.api.RuleResult;
+import com.njydsz.literule.api.expression.ExpressionFunctionDef;
+import com.njydsz.literule.api.expression.ExpressionValidationResult;
+import com.njydsz.literule.domain.dto.post.DecisionTablePostDTO;
+import com.njydsz.literule.domain.dto.post.RuleTestCasePostDTO;
+import com.njydsz.literule.domain.dto.put.RuleABPolicyPutDTO;
 import com.njydsz.literule.domain.entity.DecisionTable;
 import com.njydsz.literule.domain.entity.RuleABPolicy;
 import com.njydsz.literule.domain.entity.RuleABRollback;
@@ -22,14 +30,10 @@ import com.njydsz.literule.domain.entity.RuleTemplate;
 import com.njydsz.literule.domain.entity.RuleTestCaseDO;
 import com.njydsz.literule.domain.entity.RuleVariableDef;
 import com.njydsz.literule.domain.entity.RuleVersionHistory;
-import com.njydsz.literule.api.DecisionTableDefinition;
-import com.njydsz.literule.api.RuleDefinition;
-import com.njydsz.literule.api.RuleEngineStats;
-import com.njydsz.literule.api.RulePack;
-import com.njydsz.literule.api.RuleResult;
-import com.njydsz.literule.api.expression.ExpressionFunctionDef;
-import com.njydsz.literule.api.expression.ExpressionValidationResult;
+import com.njydsz.literule.domain.vo.DecisionTableDefinitionVO;
 import com.njydsz.literule.domain.vo.DecisionTableVO;
+import com.njydsz.literule.domain.vo.ExpressionFunctionDefVO;
+import com.njydsz.literule.domain.vo.ExpressionValidationResultVO;
 import com.njydsz.literule.domain.vo.RuleABPolicyVO;
 import com.njydsz.literule.domain.vo.RuleABRollbackVO;
 import com.njydsz.literule.domain.vo.RuleCanaryBucketVO;
@@ -37,22 +41,16 @@ import com.njydsz.literule.domain.vo.RuleChainGraphVO;
 import com.njydsz.literule.domain.vo.RuleDecisionTreeVO;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.domain.vo.RuleDependencyVO;
+import com.njydsz.literule.domain.vo.RuleEngineStatsVO;
 import com.njydsz.literule.domain.vo.RuleExecutionTraceVO;
 import com.njydsz.literule.domain.vo.RulePackVO;
+import com.njydsz.literule.domain.vo.RuleResultVO;
 import com.njydsz.literule.domain.vo.RuleScorecardVO;
 import com.njydsz.literule.domain.vo.RuleScriptVO;
 import com.njydsz.literule.domain.vo.RuleTemplateVO;
 import com.njydsz.literule.domain.vo.RuleTestCaseVO;
 import com.njydsz.literule.domain.vo.RuleVariableDefVO;
 import com.njydsz.literule.domain.vo.RuleVersionHistoryVO;
-import com.njydsz.literule.domain.vo.DecisionTableDefinitionVO;
-import com.njydsz.literule.domain.vo.ExpressionFunctionDefVO;
-import com.njydsz.literule.domain.vo.ExpressionValidationResultVO;
-import com.njydsz.literule.domain.vo.RuleEngineStatsVO;
-import com.njydsz.literule.domain.vo.RuleResultVO;
-import com.njydsz.literule.domain.dto.post.RuleTestCasePostDTO;
-import com.njydsz.literule.domain.dto.post.DecisionTablePostDTO;
-import com.njydsz.literule.domain.dto.put.RuleABPolicyPutDTO;
 
 /**
  * literule 模块统一 MapStruct 转换器。

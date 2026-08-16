@@ -3,10 +3,11 @@ package com.njydsz.common.file.storage.platform;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
+import com.obs.services.ObsClient;
+import com.obs.services.ObsConfiguration;
+import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.config.FileProperties;
 import com.njydsz.common.file.config.FileUploadProperties;
@@ -18,11 +19,6 @@ import com.njydsz.common.file.domain.PolicyResult;
 import com.njydsz.common.file.exception.FileExceptionCode;
 import com.njydsz.common.file.storage.AbstractFileStorage;
 import com.njydsz.common.util.string.StringUtils;
-import com.obs.services.ObsClient;
-import com.obs.services.ObsConfiguration;
-import com.obs.services.model.*;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 华为云 OBS 对象存储实现。

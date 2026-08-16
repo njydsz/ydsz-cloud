@@ -2,7 +2,8 @@ package com.njydsz.common.cache.metrics;
 
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.binder.MeterBinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.SmartInitializingSingleton;
@@ -10,12 +11,8 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
-
-import com.njydsz.common.cache.spring.YdszCacheManager;
 import com.njydsz.common.cache.spring.SpringYdszCache;
-
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.binder.MeterBinder;
+import com.njydsz.common.cache.spring.YdszCacheManager;
 
 /**
  * 缓存可观测性自动配置

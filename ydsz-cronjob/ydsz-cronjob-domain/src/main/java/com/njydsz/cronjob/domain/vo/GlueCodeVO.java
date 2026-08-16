@@ -3,7 +3,6 @@ package com.njydsz.cronjob.domain.vo;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-
 import lombok.Data;
 
 /**

@@ -1,7 +1,6 @@
 package com.njydsz.common.json.provider;
 
 import java.util.Set;
-
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.parser.JsonParserUtil;
 import com.njydsz.common.json.provider.SerializationProvider.SerializationContext;

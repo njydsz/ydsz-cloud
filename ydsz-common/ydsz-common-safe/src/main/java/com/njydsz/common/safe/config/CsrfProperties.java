@@ -2,10 +2,8 @@ package com.njydsz.common.safe.config;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * CSRF 防护配置属性

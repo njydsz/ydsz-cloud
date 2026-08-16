@@ -1,7 +1,6 @@
 package com.njydsz.cronjob.server.service.log;
 
 import java.util.List;
-
 import com.njydsz.cronjob.domain.entity.log.JobLogContent;
 
 /**

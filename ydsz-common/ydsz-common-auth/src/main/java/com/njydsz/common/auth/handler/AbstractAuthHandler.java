@@ -10,13 +10,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
-import com.njydsz.common.auth.util.PermissionUtils;
 import com.njydsz.common.auth.model.AuthInfo;
 import com.njydsz.common.auth.model.YdszAuthInfo;
+import com.njydsz.common.auth.util.PermissionUtils;
 import com.njydsz.common.util.string.StringUtils;
 
 /**

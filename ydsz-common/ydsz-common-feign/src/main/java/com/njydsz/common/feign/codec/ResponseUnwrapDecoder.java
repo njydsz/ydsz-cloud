@@ -3,15 +3,12 @@ package com.njydsz.common.feign.codec;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.njydsz.common.core.response.BaseResponse;
-
 import feign.Response;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import com.njydsz.common.core.response.BaseResponse;
 
 /**
  * Feign 响应自动解包解码器

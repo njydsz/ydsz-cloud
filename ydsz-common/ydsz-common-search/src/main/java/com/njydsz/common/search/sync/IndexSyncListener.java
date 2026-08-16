@@ -1,15 +1,13 @@
 package com.njydsz.common.search.sync;
 
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
-
 import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.IndexOperation;
 import com.njydsz.common.search.service.IndexSyncService;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 索引同步事件监听器

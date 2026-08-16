@@ -6,11 +6,9 @@ import java.lang.management.MemoryUsage;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TimeZone;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-
 import com.njydsz.common.base.config.BaseSecurityHeadersProperties;
 import com.njydsz.common.base.config.DocProperties;
 

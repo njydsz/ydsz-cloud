@@ -2,15 +2,13 @@ package com.njydsz.common.safe.ratelimit.model;
 
 import java.io.Serializable;
 import java.time.Duration;
-
-import com.njydsz.common.safe.ratelimit.enums.RateLimitAlgorithm;
-import com.njydsz.common.safe.ratelimit.enums.RateLimitDimension;
-import com.njydsz.common.safe.ratelimit.enums.RateLimitMode;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.njydsz.common.safe.ratelimit.enums.RateLimitAlgorithm;
+import com.njydsz.common.safe.ratelimit.enums.RateLimitDimension;
+import com.njydsz.common.safe.ratelimit.enums.RateLimitMode;
 
 /**
  * 限流规则

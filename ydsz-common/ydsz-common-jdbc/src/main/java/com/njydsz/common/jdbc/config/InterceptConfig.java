@@ -2,10 +2,8 @@ package com.njydsz.common.jdbc.config;
 
 import java.util.HashSet;
 import java.util.Set;
-
-import com.njydsz.common.jdbc.enums.InterceptTableStrategy;
-
 import lombok.Data;
+import com.njydsz.common.jdbc.enums.InterceptTableStrategy;
 /**
  * SQL 拦截器配置类
  *

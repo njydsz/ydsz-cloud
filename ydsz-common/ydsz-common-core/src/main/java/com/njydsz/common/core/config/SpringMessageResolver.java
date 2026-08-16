@@ -1,11 +1,10 @@
 package com.njydsz.common.core.config;
 
-import com.njydsz.common.core.response.BaseResponse;
+import java.util.Locale;
 import org.springframework.context.MessageSource;
 import org.springframework.context.NoSuchMessageException;
 import org.springframework.context.i18n.LocaleContextHolder;
-
-import java.util.Locale;
+import com.njydsz.common.core.response.BaseResponse;
 
 /**
  * 基于 Spring {@link MessageSource} 的国际化消息解析器。

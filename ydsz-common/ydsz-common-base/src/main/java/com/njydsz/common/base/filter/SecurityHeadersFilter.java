@@ -2,15 +2,12 @@ package com.njydsz.common.base.filter;
 
 import java.io.IOException;
 import java.util.List;
-
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import org.jspecify.annotations.NonNull;
 import org.springframework.web.filter.OncePerRequestFilter;
-
 import com.njydsz.common.base.config.BaseSecurityHeadersProperties;
 import com.njydsz.common.util.http.UrlPathUtils;
 

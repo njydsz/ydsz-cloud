@@ -2,7 +2,6 @@ package com.njydsz.agent.infra.guardrail;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.njydsz.agent.domain.guardrail.GuardrailResult;
 import com.njydsz.agent.domain.guardrail.OutputGuardrail;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;

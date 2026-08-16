@@ -1,7 +1,6 @@
 package com.njydsz.common.jdbc.datasource.hint;
 
 import java.util.Optional;
-
 import org.springframework.core.NamedThreadLocal;
 
 /**

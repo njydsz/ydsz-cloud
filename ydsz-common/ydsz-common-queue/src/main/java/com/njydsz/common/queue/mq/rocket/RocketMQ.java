@@ -2,15 +2,12 @@ package com.njydsz.common.queue.mq.rocket;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-
+import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
-
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.queue.queue.AbstractMessageQueue;
 import com.njydsz.common.queue.service.IMessagePublisher;
 import com.njydsz.common.queue.service.IMessageSubscriber;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * RocketMQ 消息队列

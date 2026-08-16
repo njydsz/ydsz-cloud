@@ -1,12 +1,9 @@
 package com.njydsz.agent.server.debug;
 
 import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-
-import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.agent.domain.agent.AgentDefinition;
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.agent.AgentExecutor;
@@ -14,6 +11,7 @@ import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.infra.trace.InMemoryTraceRecorder;
 import com.njydsz.agent.server.agent.AgentFactory;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
 
 /**
  * Agent 调试服务

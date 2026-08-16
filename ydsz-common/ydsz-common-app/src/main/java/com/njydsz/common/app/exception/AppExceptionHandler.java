@@ -1,15 +1,13 @@
 package com.njydsz.common.app.exception;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
 import com.njydsz.common.app.annotation.AppApi;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.handler.BaseExceptionHandler;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 移动端 App 全局异常处理器

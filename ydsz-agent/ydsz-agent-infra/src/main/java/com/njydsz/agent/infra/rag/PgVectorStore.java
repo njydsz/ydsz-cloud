@@ -3,17 +3,13 @@ package com.njydsz.agent.infra.rag;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.njydsz.common.json.YdszJson;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
-
-import com.njydsz.agent.domain.rag.TextChunk;
-
 import com.njydsz.agent.domain.rag.EmbeddingClient;
+import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.rag.VectorStore;
+import com.njydsz.common.json.YdszJson;
 /**
  * PostgreSQL pgvector 向量存储实现
  *

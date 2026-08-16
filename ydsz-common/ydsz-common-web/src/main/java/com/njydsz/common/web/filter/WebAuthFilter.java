@@ -1,25 +1,21 @@
 package com.njydsz.common.web.filter;
 
 import java.util.Objects;
-
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
-
 import com.njydsz.common.auth.config.AuthFilterConfiguration;
+import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.auth.filter.BaseAuthFilter;
 import com.njydsz.common.auth.handler.AuthHandler;
-import com.njydsz.common.auth.constant.AuthHeaderConstants;
-import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.auth.model.AuthInfo;
+import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.common.util.string.StringUtils;
 import com.njydsz.common.web.auth.AuthHandlerFactory;
 import com.njydsz.common.web.metrics.WebMetrics;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Web 端认证过滤器

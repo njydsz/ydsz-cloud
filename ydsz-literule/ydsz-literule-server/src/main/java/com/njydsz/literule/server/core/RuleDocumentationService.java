@@ -3,7 +3,7 @@ package com.njydsz.literule.server.core;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
+import lombok.extern.slf4j.Slf4j;
 import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.api.RuleDocumentation;
 import com.njydsz.literule.api.RuleEffectivenessMetrics;
@@ -12,8 +12,6 @@ import com.njydsz.literule.api.RuleEngineStats;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
 import com.njydsz.literule.server.spi.RuleVersion;
 import com.njydsz.literule.server.spi.RuleVersionRepository;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 规则文档自动生成服务（P3-2）

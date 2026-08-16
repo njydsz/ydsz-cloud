@@ -1,7 +1,6 @@
 package com.njydsz.literule.server.core;
 
 import java.util.Map;
-
 import com.njydsz.literule.api.RuleResult;
 
 /**

@@ -1,39 +1,33 @@
 package com.njydsz.cronjob.server.core.handler;
 
-import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
-
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.util.StringUtils;
-
-import com.njydsz.cronjob.domain.job.JobExecutionContext;
-import com.njydsz.cronjob.domain.job.JobHandler;
-import com.njydsz.cronjob.domain.entity.schedule.GlueCode;
-import com.njydsz.cronjob.server.core.executor.SandboxScriptExecutor;
-import com.njydsz.cronjob.server.service.schedule.GlueCodeService;
-
-import groovy.lang.GroovyClassLoader;
-import lombok.extern.slf4j.Slf4j;
-
-import org.codehaus.groovy.control.CompilerConfiguration;
-import org.codehaus.groovy.control.customizers.SecureASTCustomizer;
-
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import groovy.lang.GroovyClassLoader;
+import lombok.extern.slf4j.Slf4j;
+import org.codehaus.groovy.control.CompilerConfiguration;
+import org.codehaus.groovy.control.customizers.SecureASTCustomizer;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.util.StringUtils;
+import com.njydsz.cronjob.domain.entity.schedule.GlueCode;
+import com.njydsz.cronjob.domain.job.JobExecutionContext;
+import com.njydsz.cronjob.domain.job.JobHandler;
+import com.njydsz.cronjob.server.core.executor.SandboxScriptExecutor;
+import com.njydsz.cronjob.server.service.schedule.GlueCodeService;
 /**
  * GLUE 在线编码任务处理器（P1-2 GLUE 在线编码，P1-7 多语言支持扩展）。
  *

@@ -1,51 +1,49 @@
 package com.njydsz.cronjob.domain.converter;
 
 import java.util.List;
-
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
-
-import com.njydsz.cronjob.domain.entity.schedule.GlueCode;
-import com.njydsz.cronjob.domain.entity.job.Job;
-import com.njydsz.cronjob.domain.entity.job.JobAlertLog;
-import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
-import com.njydsz.cronjob.domain.entity.job.JobArtifact;
+import com.njydsz.cronjob.domain.dto.post.AlertRulePostDTO;
+import com.njydsz.cronjob.domain.dto.post.JobDagPostDTO;
+import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
+import com.njydsz.cronjob.domain.dto.post.JobWebhookPostDTO;
+import com.njydsz.cronjob.domain.dto.put.AlertRulePutDTO;
+import com.njydsz.cronjob.domain.dto.put.JobDagPutDTO;
+import com.njydsz.cronjob.domain.dto.put.JobPutDTO;
+import com.njydsz.cronjob.domain.dto.put.JobWebhookPutDTO;
 import com.njydsz.cronjob.domain.entity.dag.JobDag;
 import com.njydsz.cronjob.domain.entity.dag.JobDagInstance;
 import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstance;
 import com.njydsz.cronjob.domain.entity.dag.JobDagVersion;
-import com.njydsz.cronjob.domain.entity.log.JobDailyStats;
+import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.domain.entity.job.JobAlertLog;
+import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
+import com.njydsz.cronjob.domain.entity.job.JobArtifact;
 import com.njydsz.cronjob.domain.entity.job.JobHistory;
-import com.njydsz.cronjob.domain.entity.log.JobLog;
-import com.njydsz.cronjob.domain.entity.log.JobLogContent;
 import com.njydsz.cronjob.domain.entity.job.JobNode;
 import com.njydsz.cronjob.domain.entity.job.JobTask;
 import com.njydsz.cronjob.domain.entity.job.JobWebhook;
+import com.njydsz.cronjob.domain.entity.log.JobDailyStats;
+import com.njydsz.cronjob.domain.entity.log.JobLog;
+import com.njydsz.cronjob.domain.entity.log.JobLogContent;
+import com.njydsz.cronjob.domain.entity.schedule.GlueCode;
 import com.njydsz.cronjob.domain.vo.GlueCodeVO;
-import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.domain.vo.JobAlertLogVO;
 import com.njydsz.cronjob.domain.vo.JobAlertRuleVO;
 import com.njydsz.cronjob.domain.vo.JobArtifactVO;
-import com.njydsz.cronjob.domain.vo.JobDagVO;
 import com.njydsz.cronjob.domain.vo.JobDagInstanceVO;
 import com.njydsz.cronjob.domain.vo.JobDagNodeInstanceVO;
+import com.njydsz.cronjob.domain.vo.JobDagVO;
 import com.njydsz.cronjob.domain.vo.JobDagVersionVO;
 import com.njydsz.cronjob.domain.vo.JobDailyStatsVO;
 import com.njydsz.cronjob.domain.vo.JobHistoryVO;
-import com.njydsz.cronjob.domain.vo.JobLogVO;
 import com.njydsz.cronjob.domain.vo.JobLogContentVO;
+import com.njydsz.cronjob.domain.vo.JobLogVO;
 import com.njydsz.cronjob.domain.vo.JobNodeVO;
 import com.njydsz.cronjob.domain.vo.JobTaskVO;
+import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.domain.vo.JobWebhookVO;
-import com.njydsz.cronjob.domain.dto.post.JobWebhookPostDTO;
-import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
-import com.njydsz.cronjob.domain.dto.post.JobDagPostDTO;
-import com.njydsz.cronjob.domain.dto.post.AlertRulePostDTO;
-import com.njydsz.cronjob.domain.dto.put.JobWebhookPutDTO;
-import com.njydsz.cronjob.domain.dto.put.JobPutDTO;
-import com.njydsz.cronjob.domain.dto.put.JobDagPutDTO;
-import com.njydsz.cronjob.domain.dto.put.AlertRulePutDTO;
 
 /**
  * cronjob 模块统一 MapStruct 转换器。

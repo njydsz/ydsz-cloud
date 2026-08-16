@@ -1,5 +1,7 @@
 package com.njydsz.common.safe.ratelimit.config;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -8,7 +10,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.StringRedisTemplate;
-
 import com.njydsz.common.safe.ratelimit.aop.RateLimitAspect;
 import com.njydsz.common.safe.ratelimit.cluster.ClusterRateLimiter;
 import com.njydsz.common.safe.ratelimit.cluster.RedisClusterRateLimiter;
@@ -17,9 +18,6 @@ import com.njydsz.common.safe.ratelimit.metrics.RateLimitMetricsCollector;
 import com.njydsz.common.safe.ratelimit.properties.RateLimitProperties;
 import com.njydsz.common.safe.ratelimit.provider.ConfigRuleProvider;
 import com.njydsz.common.safe.ratelimit.spi.RateLimitRuleProvider;
-
-import io.micrometer.core.instrument.MeterRegistry;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 限流模块自动配置

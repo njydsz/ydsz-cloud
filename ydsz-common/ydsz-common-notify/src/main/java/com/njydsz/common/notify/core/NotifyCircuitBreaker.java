@@ -2,10 +2,8 @@ package com.njydsz.common.notify.core;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.njydsz.common.notify.enums.NotifyChannel;
 
 /**

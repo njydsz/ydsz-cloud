@@ -1,12 +1,11 @@
 package com.njydsz.common.json.spring;
 
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.validation.annotation.Validated;
-
-import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
+import com.njydsz.common.json.naming.PropertyNamingStrategy;
 
 /**
  * YdszJson 配置属性。

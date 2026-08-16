@@ -2,16 +2,12 @@ package com.njydsz.common.queue.config;
 
 import java.util.Arrays;
 import java.util.List;
-
 import jakarta.annotation.PostConstruct;
 import jakarta.validation.constraints.Min;
-
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
-import com.njydsz.common.queue.enums.QueueType;
-
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import com.njydsz.common.queue.enums.QueueType;
 
 /**
  * 消息队列配置属性类

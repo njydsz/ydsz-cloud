@@ -1,19 +1,15 @@
 package com.njydsz.common.seata.health;
 
+import java.time.LocalDateTime;
+import org.apache.seata.core.context.RootContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-
 import com.njydsz.common.seata.api.TccTransactionLogStore;
 import com.njydsz.common.seata.config.SeataProperties;
 import com.njydsz.common.seata.impl.SeataTransactionManager;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import org.apache.seata.core.context.RootContext;
-
-import java.time.LocalDateTime;
 
 /**
  * 分布式事务健康检查

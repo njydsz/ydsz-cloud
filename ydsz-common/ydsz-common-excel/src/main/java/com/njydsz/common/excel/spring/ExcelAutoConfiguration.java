@@ -6,7 +6,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-
 import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.core.config.ExcelConfig;
 import com.njydsz.common.excel.helper.ExcelExportHelper;
@@ -60,6 +59,22 @@ public class ExcelAutoConfiguration {
     @ConditionalOnMissingBean
     public ExcelExportHelper excelExportHelper() {
         return new ExcelExportHelper();
+    }
+
+    /**
+     * 注册 Excel Web 导出支持 Bean。
+     *
+     * <p>提供直接将 Excel 写入 {@link jakarta.servlet.http.HttpServletResponse} 的便捷方法，
+     * 适用于 Controller 层直接下载场景，统一处理 Content-Type / Content-Disposition / 文件名编码。</p>
+     *
+     * @param config 基于配置属性构建的 ExcelConfig
+     * @return ExcelWebSupport 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnClass(name = "jakarta.servlet.http.HttpServletResponse")
+    public ExcelWebSupport excelWebSupport(ExcelConfig config) {
+        return new ExcelWebSupport(config);
     }
 
     /**

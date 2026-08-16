@@ -5,10 +5,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
-
-import com.njydsz.common.search.config.SearchProperties;
-
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.search.config.SearchProperties;
 
 /**
  * 搜索管道 — 可插拔的文本处理 Filter 链模式。

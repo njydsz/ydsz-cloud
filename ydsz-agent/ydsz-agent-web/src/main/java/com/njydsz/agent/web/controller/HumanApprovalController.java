@@ -1,27 +1,24 @@
 package com.njydsz.agent.web.controller;
 
 import java.util.List;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
+import com.njydsz.agent.domain.enums.AgentExceptionCode;
 import com.njydsz.agent.server.agent.HumanApprovalService;
 import com.njydsz.agent.server.agent.HumanApprovalService.ApprovalRequest;
-import com.njydsz.common.core.response.BaseResponse;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.agent.domain.enums.AgentExceptionCode;
 
 /**
  * Human-in-the-Loop 人工审批 REST API Controller。

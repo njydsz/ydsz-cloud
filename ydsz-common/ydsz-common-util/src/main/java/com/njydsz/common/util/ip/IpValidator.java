@@ -3,7 +3,6 @@ package com.njydsz.common.util.ip;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.regex.Pattern;
-
 import com.njydsz.common.util.string.StringUtils;
 
 /**

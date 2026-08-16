@@ -7,11 +7,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-
+import lombok.extern.slf4j.Slf4j;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.server.sdk.LiteRuleSdk;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 规则测试执行器

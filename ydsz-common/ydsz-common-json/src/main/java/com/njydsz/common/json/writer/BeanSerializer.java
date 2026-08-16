@@ -1,13 +1,12 @@
 package com.njydsz.common.json.writer;
 
+import java.lang.invoke.MethodHandle;
+import java.lang.reflect.Method;
+import java.util.Map;
 import com.njydsz.common.json.cache.FieldMeta;
 import com.njydsz.common.json.number.NumberUtils;
 import com.njydsz.common.json.provider.FieldMetadataLoader;
 import com.njydsz.common.json.provider.SerializationProvider;
-
-import java.lang.invoke.MethodHandle;
-import java.lang.reflect.Method;
-import java.util.Map;
 
 /**
  * Bean 专用序列化器
@@ -475,7 +474,7 @@ public final class BeanSerializer {
                     buf[pos++] = '\\';
                     buf[pos++] = '\\';
                     break;
-                case '\n':
+                case '\\n':
                     buf[pos++] = '\\';
                     buf[pos++] = 'n';
                     break;

@@ -2,13 +2,11 @@ package com.njydsz.common.safe.ratelimit.model;
 
 import java.io.Serializable;
 import java.time.Instant;
-
-import com.njydsz.common.safe.ratelimit.enums.RateLimitResult;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.njydsz.common.safe.ratelimit.enums.RateLimitResult;
 
 /**
  * 限流决策结果

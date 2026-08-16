@@ -4,26 +4,22 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.time.*;
-import java.time.temporal.TemporalAccessor;
+import java.sql.Date;
+import java.sql.Timestamp;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.time.temporal.TemporalAccessor;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.UUID;
-
 import com.njydsz.common.json.annotation.JsonClass;
 import com.njydsz.common.json.annotation.JsonView;
 import com.njydsz.common.json.cache.FieldMeta;
 import com.njydsz.common.json.cache.SerializerCache;
-import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.internal.JsonConfig;
+import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.util.BoundedLruCache;
 import com.njydsz.common.json.writer.JSONWriter;
-
-import java.sql.Date;
-import java.sql.Timestamp;
 /**
  * 类型特定的值写入器
  *
@@ -260,7 +256,7 @@ public final class ValueWriter {
                 case '\\': sb.append("\\\\"); break;
                 case '\b': sb.append("\\b"); break;
                 case '\f': sb.append("\\f"); break;
-                case '\n': sb.append("\\n"); break;
+                case '\\n': sb.append("\\n"); break;
                 case '\r': sb.append("\\r"); break;
                 case '\t': sb.append("\\t"); break;
                 default:
@@ -327,7 +323,7 @@ public final class ValueWriter {
             switch (c) {
                 case '"': sb.append("\\\""); break;
                 case '\\': sb.append("\\\\"); break;
-                case '\n': sb.append("\\n"); break;
+                case '\\n': sb.append("\\n"); break;
                 case '\r': sb.append("\\r"); break;
                 case '\t': sb.append("\\t"); break;
                 case '\b': sb.append("\\b"); break;

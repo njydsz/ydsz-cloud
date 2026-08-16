@@ -2,15 +2,12 @@ package com.njydsz.common.audit.health;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-
 import com.njydsz.common.audit.config.AuditProperties;
 import com.njydsz.common.audit.core.AuditRecorder;
 import com.njydsz.common.audit.core.HealthInfo;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 审计模块健康检查指示器

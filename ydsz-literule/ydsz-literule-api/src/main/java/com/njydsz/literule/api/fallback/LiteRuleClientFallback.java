@@ -2,16 +2,13 @@ package com.njydsz.literule.api.fallback;
 
 import java.util.List;
 import java.util.Map;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
-
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.client.LiteRuleClient;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * {@link LiteRuleClient} 的 FallbackFactory

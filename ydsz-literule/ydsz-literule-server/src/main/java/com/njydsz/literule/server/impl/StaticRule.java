@@ -1,7 +1,6 @@
 package com.njydsz.literule.server.impl;
 
 import java.util.function.Function;
-
 import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleResult;

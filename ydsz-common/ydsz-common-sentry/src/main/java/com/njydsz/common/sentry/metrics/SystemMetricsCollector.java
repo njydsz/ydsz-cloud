@@ -10,9 +10,7 @@ import java.lang.management.RuntimeMXBean;
 import java.lang.management.ThreadMXBean;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
-
 import lombok.extern.slf4j.Slf4j;
-
 import com.njydsz.common.sentry.spi.MetricsCollector;
 
 /**

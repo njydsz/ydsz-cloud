@@ -14,12 +14,9 @@ package com.njydsz.common.jdbc.config;
 
 import java.util.HashSet;
 import java.util.Set;
-
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
-import com.njydsz.common.jdbc.enums.InterceptTableStrategy;
-
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import com.njydsz.common.jdbc.enums.InterceptTableStrategy;
 
 /**
  * DataPermissionConfiguration 自动配置类，注册模块 Bean 并管理装配条件。

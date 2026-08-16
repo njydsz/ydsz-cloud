@@ -1,12 +1,10 @@
 package com.njydsz.common.util.message;
 
 import java.util.Locale;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.MessageSource;
-
 import com.njydsz.common.util.config.StaticBridge;
 import com.njydsz.common.util.internal.proxy.CoreConstants;
 import com.njydsz.common.util.internal.proxy.RequestContextProxy;

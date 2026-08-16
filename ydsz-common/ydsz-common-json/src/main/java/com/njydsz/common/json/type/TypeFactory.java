@@ -3,8 +3,6 @@ package com.njydsz.common.json.type;
 import java.lang.reflect.Array;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.*;
-
 import com.njydsz.common.json.util.BoundedLruCache;
 
 /**

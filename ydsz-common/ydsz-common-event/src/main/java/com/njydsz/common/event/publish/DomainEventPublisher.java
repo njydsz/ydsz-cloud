@@ -1,15 +1,13 @@
 package com.njydsz.common.event.publish;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
-
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.json.YdszJson;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 统一领域事件发布门面。

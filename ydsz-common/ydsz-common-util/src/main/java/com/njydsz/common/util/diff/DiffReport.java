@@ -4,10 +4,8 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
-
-import com.njydsz.common.json.YdszJson;
-
 import lombok.Getter;
+import com.njydsz.common.json.YdszJson;
 
 /**
  * 差异报告

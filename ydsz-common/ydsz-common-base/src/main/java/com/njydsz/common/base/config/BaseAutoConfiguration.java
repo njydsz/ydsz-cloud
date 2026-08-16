@@ -9,7 +9,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
-
+import org.springframework.core.env.Environment;
 import com.njydsz.common.base.constant.FilterOrder;
 import com.njydsz.common.base.filter.RequestBodySizeLimitFilter;
 import com.njydsz.common.base.filter.RequestContextCleanupFilter;
@@ -17,8 +17,6 @@ import com.njydsz.common.base.filter.SecurityHeadersFilter;
 import com.njydsz.common.base.filter.TraceFilter;
 import com.njydsz.common.base.health.BaseHealthIndicator;
 import com.njydsz.common.base.health.CoreHealthIndicator;
-
-import org.springframework.core.env.Environment;
 /**
  * Base 模块自动配置
  *

@@ -1,15 +1,13 @@
 package com.njydsz.common.safe.ratelimit.metrics;
 
 import java.util.concurrent.atomic.AtomicLong;
-
-import com.njydsz.common.safe.ratelimit.core.RateLimitManager;
-import com.njydsz.common.safe.ratelimit.enums.RateLimitResult;
-import com.njydsz.common.safe.ratelimit.model.RateLimitDecision;
-
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.safe.ratelimit.core.RateLimitManager;
+import com.njydsz.common.safe.ratelimit.enums.RateLimitResult;
+import com.njydsz.common.safe.ratelimit.model.RateLimitDecision;
 
 /**
  * 限流指标收集器

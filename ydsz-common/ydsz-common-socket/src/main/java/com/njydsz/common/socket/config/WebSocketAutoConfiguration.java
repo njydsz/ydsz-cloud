@@ -1,7 +1,8 @@
 package com.njydsz.common.socket.config;
 
 import java.util.List;
-
+import io.micrometer.core.instrument.MeterRegistry;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -13,15 +14,15 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
-
+import org.springframework.scheduling.annotation.Scheduled;
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.socket.audit.WebSocketAuditService;
 import com.njydsz.common.socket.auth.WebSocketAuthInterceptor;
 import com.njydsz.common.socket.cluster.WebSocketClusterMessage;
 import com.njydsz.common.socket.cluster.WebSocketClusterPublisher;
 import com.njydsz.common.socket.filter.MessageFilter;
-import com.njydsz.common.socket.heartbeat.WebSocketHeartbeatHandler;
 import com.njydsz.common.socket.health.WebSocketHealthIndicator;
+import com.njydsz.common.socket.heartbeat.WebSocketHeartbeatHandler;
 import com.njydsz.common.socket.interceptor.StompMessageInterceptor;
 import com.njydsz.common.socket.lifecycle.WebSocketConnectionListener;
 import com.njydsz.common.socket.metric.WebSocketMetrics;
@@ -31,21 +32,17 @@ import com.njydsz.common.socket.push.DefaultRealtimePushTemplate;
 import com.njydsz.common.socket.push.RealtimePushTemplate;
 import com.njydsz.common.socket.ratelimit.ConnectionLimiter;
 import com.njydsz.common.socket.ratelimit.WebSocketRateLimiter;
+import com.njydsz.common.socket.resilience.WebSocketCircuitBreaker;
 import com.njydsz.common.socket.retry.DeadLetterQueue;
 import com.njydsz.common.socket.retry.MessageRetryQueue;
 import com.njydsz.common.socket.retry.RedisDeadLetterQueue;
 import com.njydsz.common.socket.retry.RedisMessageRetryQueue;
 import com.njydsz.common.socket.retry.RetryableMessage;
-import com.njydsz.common.socket.resilience.WebSocketCircuitBreaker;
 import com.njydsz.common.socket.serialize.JsonMessageSerializer;
 import com.njydsz.common.socket.serialize.MessageSerializer;
 import com.njydsz.common.socket.session.LocalSessionRegistry;
 import com.njydsz.common.socket.session.OnlineUserService;
 import com.njydsz.common.socket.session.WebSocketSessionEventListener;
-import io.micrometer.core.instrument.MeterRegistry;
-import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.scheduling.annotation.Scheduled;
 /**
  * WebSocket 自动装配配置。
  *

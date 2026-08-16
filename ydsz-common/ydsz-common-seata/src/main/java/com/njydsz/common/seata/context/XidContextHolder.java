@@ -1,7 +1,6 @@
 package com.njydsz.common.seata.context;
 
 import com.alibaba.ttl.TransmittableThreadLocal;
-
 import com.njydsz.common.seata.api.TransactionType;
 
 /**

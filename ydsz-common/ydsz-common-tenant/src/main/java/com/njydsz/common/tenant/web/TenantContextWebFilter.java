@@ -6,19 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import org.slf4j.MDC;
-
-import com.njydsz.common.tenant.TenantContext;
-import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.common.tenant.config.TenantProperties;
-import com.njydsz.common.tenant.config.TenantProperties.TenantField;
-import com.njydsz.common.tenant.feign.TenantHeaderContract;
-import com.njydsz.common.tenant.metrics.TenantMetrics;
-import com.njydsz.common.core.context.BizContextKeys;
-import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.core.model.CurrentUser;
-
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -26,6 +13,16 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
+import com.njydsz.common.core.context.BizContextKeys;
+import com.njydsz.common.core.context.RequestContext;
+import com.njydsz.common.core.model.CurrentUser;
+import com.njydsz.common.tenant.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.common.tenant.config.TenantProperties;
+import com.njydsz.common.tenant.config.TenantProperties.TenantField;
+import com.njydsz.common.tenant.feign.TenantHeaderContract;
+import com.njydsz.common.tenant.metrics.TenantMetrics;
 
 /**
  * 租户上下文 Web 过滤器。

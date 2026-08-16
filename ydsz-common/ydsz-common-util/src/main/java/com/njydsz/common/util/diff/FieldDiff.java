@@ -1,7 +1,6 @@
 package com.njydsz.common.util.diff;
 
 import java.io.Serializable;
-
 import lombok.Data;
 
 /**

@@ -8,11 +8,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
-
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
-
 import com.njydsz.common.util.config.StaticBridge;
 import com.njydsz.common.util.ip.IpValidator;
 import com.njydsz.common.util.string.StringUtils;

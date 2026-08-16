@@ -1,8 +1,6 @@
 package com.njydsz.common.exception.event;
 import java.time.LocalDateTime;
-
 import org.springframework.context.ApplicationEvent;
-
 import com.njydsz.common.exception.enums.ExceptionCategory;
 
 /**

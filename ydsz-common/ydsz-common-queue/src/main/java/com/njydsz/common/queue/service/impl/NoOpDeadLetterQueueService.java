@@ -1,7 +1,6 @@
 package com.njydsz.common.queue.service.impl;
 
 import java.util.List;
-
 import com.njydsz.common.queue.service.DeadLetterQueueService;
 
 /**

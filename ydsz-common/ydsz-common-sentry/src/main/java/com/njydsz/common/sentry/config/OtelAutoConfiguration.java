@@ -2,7 +2,6 @@ package com.njydsz.common.sentry.config;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
@@ -19,7 +18,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
 import com.njydsz.common.sentry.tracing.otel.ErrorEventSpanProcessor;
 import com.njydsz.common.sentry.tracing.otel.OtelExporterFactory;
 import com.njydsz.common.sentry.tracing.otel.OtelResources;

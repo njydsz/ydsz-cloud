@@ -2,16 +2,13 @@ package com.njydsz.cronjob.domain.entity.job;
 
 import java.io.Serial;
 import java.time.LocalDateTime;
-
-import jakarta.validation.constraints.NotBlank;
-
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
-
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * 定时任务定义

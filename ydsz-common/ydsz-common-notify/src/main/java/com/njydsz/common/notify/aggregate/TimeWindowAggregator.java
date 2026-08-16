@@ -1,19 +1,16 @@
 package com.njydsz.common.notify.aggregate;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.njydsz.common.notify.enums.NotifyChannel;
 import com.njydsz.common.notify.enums.NotifyPriority;
-
-import java.util.HashMap;
-import java.util.Map;
 /**
  * 时间窗口消息聚合器实现（P2-3）
  *

@@ -4,17 +4,14 @@ import java.net.InetAddress;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
-
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
-
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.cronjob.domain.entity.job.JobNode;
 import com.njydsz.cronjob.infra.mapper.job.JobNodeMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 基于心跳表的节点发现策略（P1-1，向后兼容）。

@@ -3,7 +3,6 @@ package com.njydsz.common.sentry.config;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;

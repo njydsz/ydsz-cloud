@@ -1,13 +1,11 @@
 package com.njydsz.common.search.health;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-
 import com.njydsz.common.search.core.SearchEngineRegistry;
 import com.njydsz.common.search.metrics.SearchMetrics;
 import com.njydsz.common.search.service.SearchCacheService;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 搜索引擎健康检查

@@ -2,18 +2,15 @@ package com.njydsz.agent.server.rag;
 
 import java.time.ZoneId;
 import java.util.List;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-
 import com.njydsz.agent.domain.entity.AgentDefinitionDO;
 import com.njydsz.agent.infra.mapper.AgentDefinitionMapper;
 import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Agent 定义搜索提供者 — 将 Agent 定义数据注册到统一搜索体系。

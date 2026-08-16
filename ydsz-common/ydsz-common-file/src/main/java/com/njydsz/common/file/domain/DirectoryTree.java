@@ -1,7 +1,6 @@
 package com.njydsz.common.file.domain;
 
 import java.util.List;
-
 import lombok.Data;
 
 /**

@@ -4,20 +4,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-
-import com.njydsz.common.exception.code.ErrorCodeTable;
-import com.njydsz.common.exception.custom.AbstractYdszException;
-import com.njydsz.common.exception.custom.MessageSourceAccessor;
-import com.njydsz.common.exception.custom.MessageSourceHolder;
-import com.njydsz.common.exception.metrics.ExceptionMetrics;
-import com.njydsz.common.exception.registry.ExceptionCodeScanner;
-
 import io.micrometer.core.instrument.MeterRegistry;
-
 import jakarta.annotation.PostConstruct;
-
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -34,6 +23,12 @@ import org.springframework.validation.beanvalidation.LocalValidatorFactoryBean;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
 import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
+import com.njydsz.common.exception.code.ErrorCodeTable;
+import com.njydsz.common.exception.custom.AbstractYdszException;
+import com.njydsz.common.exception.custom.MessageSourceAccessor;
+import com.njydsz.common.exception.custom.MessageSourceHolder;
+import com.njydsz.common.exception.metrics.ExceptionMetrics;
+import com.njydsz.common.exception.registry.ExceptionCodeScanner;
 
 /**
  * 异常模块核心自动配置

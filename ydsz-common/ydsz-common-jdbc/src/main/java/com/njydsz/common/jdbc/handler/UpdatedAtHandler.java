@@ -1,10 +1,9 @@
 package com.njydsz.common.jdbc.handler;
 
-import com.njydsz.common.jdbc.config.FieldFillConfiguration;
-import com.njydsz.common.jdbc.enums.FieldFillStrategyEnum;
-
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.Function;
+import com.njydsz.common.jdbc.config.FieldFillConfiguration;
+import com.njydsz.common.jdbc.enums.FieldFillStrategyEnum;
 
 /**
  * 更新时间字段填充处理器

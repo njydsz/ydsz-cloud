@@ -3,9 +3,7 @@ package com.njydsz.common.core.trace;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
 import org.slf4j.MDC;
-
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
 

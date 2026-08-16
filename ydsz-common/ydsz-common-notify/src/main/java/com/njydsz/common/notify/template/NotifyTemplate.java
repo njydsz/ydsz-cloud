@@ -3,7 +3,6 @@ package com.njydsz.common.notify.template;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-
 import com.njydsz.common.notify.enums.NotifyChannel;
 
 /**

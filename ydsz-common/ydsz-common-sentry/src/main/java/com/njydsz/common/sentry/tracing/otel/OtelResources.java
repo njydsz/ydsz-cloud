@@ -3,7 +3,6 @@ package com.njydsz.common.sentry.tracing.otel;
 import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
-
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;

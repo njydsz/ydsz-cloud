@@ -1,9 +1,7 @@
 package com.njydsz.agent.web.controller;
 
 import java.util.List;
-import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import java.util.stream.Collectors;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,14 +10,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.njydsz.agent.api.dto.AgentTraceDetailDTO;
 import com.njydsz.agent.api.dto.AgentTraceListDTO;
+import com.njydsz.agent.domain.enums.AgentExceptionCode;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.trace.TraceRecorder.TraceStep;
 import com.njydsz.agent.infra.trace.InMemoryTraceRecorder.TraceMeta;
 import com.njydsz.agent.server.debug.AgentDebuggerService;
-import com.njydsz.agent.domain.enums.AgentExceptionCode;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -27,6 +24,7 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 /**
  * Agent 调试 REST API Controller。

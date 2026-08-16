@@ -8,7 +8,9 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-
+import io.micrometer.core.instrument.MeterRegistry;
+import jakarta.annotation.PreDestroy;
+import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -21,11 +23,13 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.cronjob.api.client.CronjobServiceClient;
 import com.njydsz.literule.api.RuleEngine;
+import com.njydsz.literule.api.expression.ExpressionEngine;
 import com.njydsz.literule.domain.model.MockModelInputProvider;
 import com.njydsz.literule.domain.model.ModelInputProvider;
 import com.njydsz.literule.domain.model.ModelInputRegistry;
@@ -52,46 +56,35 @@ import com.njydsz.literule.server.core.RuleEffectivenessService;
 import com.njydsz.literule.server.core.RuleLifecycleService;
 import com.njydsz.literule.server.core.RuleMetrics;
 import com.njydsz.literule.server.core.RuleTimeoutExecutor;
+import com.njydsz.literule.server.engine.liteexpr.AviatorExpressionEngine;
 import com.njydsz.literule.server.expression.EmptyVariableRegistry;
-import com.njydsz.literule.api.expression.ExpressionEngine;
 import com.njydsz.literule.server.expression.ExpressionValidationService;
 import com.njydsz.literule.server.expression.VariableRegistry;
-import com.njydsz.literule.server.engine.liteexpr.AviatorExpressionEngine;
 import com.njydsz.literule.server.health.LiteRuleHealthIndicator;
-import com.njydsz.literule.server.replay.ExecutionReplayService;
 import com.njydsz.literule.server.orchestrator.RuleChain;
+import com.njydsz.literule.server.replay.ExecutionReplayService;
 import com.njydsz.literule.server.sdk.LiteRuleSdk;
-
-import io.micrometer.core.instrument.MeterRegistry;
-
-import jakarta.annotation.PreDestroy;
-
-import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.annotation.Scheduled;
-
 import com.njydsz.literule.server.security.RulePermissionChecker;
 import com.njydsz.literule.server.spi.CronjobTriggerActionHandler;
+import com.njydsz.literule.server.spi.DbRuleSource;
 import com.njydsz.literule.server.spi.DecisionTableConfigProvider;
 import com.njydsz.literule.server.spi.DecisionTreeConfigProvider;
 import com.njydsz.literule.server.spi.DefaultAlertActionHandler;
 import com.njydsz.literule.server.spi.FactProvider;
 import com.njydsz.literule.server.spi.FactProviderRegistry;
-import com.njydsz.literule.server.spi.DbRuleSource;
 import com.njydsz.literule.server.spi.FileRuleSource;
-import com.njydsz.literule.server.spi.RuleSource;
-import com.njydsz.literule.server.spi.RuleSourceManager;
 import com.njydsz.literule.server.spi.RuleActionDispatcher;
 import com.njydsz.literule.server.spi.RuleActionHandler;
 import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
+import com.njydsz.literule.server.spi.RuleSource;
+import com.njydsz.literule.server.spi.RuleSourceManager;
 import com.njydsz.literule.server.spi.RuleVersionRepository;
 import com.njydsz.literule.server.spi.ScorecardConfigProvider;
 import com.njydsz.literule.server.spi.ScriptConfigProvider;
 import com.njydsz.literule.server.spi.TraceRecorder;
 import com.njydsz.literule.server.spi.WorkflowTriggerActionHandler;
 import com.njydsz.workflow.api.client.WorkflowServiceClient;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * LiteFlow 规则引擎自动配置。

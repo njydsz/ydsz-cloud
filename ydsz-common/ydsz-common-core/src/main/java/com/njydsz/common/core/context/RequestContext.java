@@ -6,10 +6,8 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.function.Supplier;
-
-import org.slf4j.MDC;
-
 import com.alibaba.ttl.TransmittableThreadLocal;
+import org.slf4j.MDC;
 import com.njydsz.common.core.constant.HeaderConstants;
 import static com.njydsz.common.core.context.BizContextKeys.KEY_EXTRA_HEADERS;
 import static com.njydsz.common.core.context.BizContextKeys.KEY_HTTP_REQUEST;

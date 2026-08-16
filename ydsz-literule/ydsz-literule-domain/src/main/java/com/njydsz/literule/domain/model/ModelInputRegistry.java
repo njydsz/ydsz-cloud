@@ -12,10 +12,8 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import com.njydsz.literule.api.RuleContext;
-
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.literule.api.RuleContext;
 
 /**
  * 模型输入注册中心（P3-1 规则+模型融合）

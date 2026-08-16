@@ -12,13 +12,11 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
 import javax.sql.DataSource;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
-
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.search.api.SearchAggregation;
 import com.njydsz.common.search.api.SearchFilter;
@@ -32,8 +30,6 @@ import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.IndexStrategy;
 import com.njydsz.common.search.core.SearchStrategy;
 import com.njydsz.common.search.core.SuggestStrategy;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 基于 PostgreSQL tsvector 的搜索策略实现。

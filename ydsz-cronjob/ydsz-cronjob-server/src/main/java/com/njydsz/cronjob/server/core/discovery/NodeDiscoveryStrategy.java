@@ -1,7 +1,6 @@
 package com.njydsz.cronjob.server.core.discovery;
 
 import java.util.List;
-
 import com.njydsz.cronjob.domain.entity.job.JobNode;
 
 /**

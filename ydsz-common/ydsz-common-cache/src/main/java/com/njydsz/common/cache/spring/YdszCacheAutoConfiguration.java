@@ -7,7 +7,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
-
 import com.njydsz.common.cache.health.CacheHealthIndicator;
 import com.njydsz.common.cache.health.SpringCacheHealthIndicator;
 import com.njydsz.common.cache.support.CacheThreadPoolManager;

@@ -2,12 +2,9 @@ package com.njydsz.gateway.config;
 
 import java.time.Instant;
 import java.util.Map;
-
-import org.springframework.beans.factory.ObjectProvider;
-
-import com.njydsz.common.notify.helper.NotifyHelper;
-
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
+import com.njydsz.common.notify.helper.NotifyHelper;
 
 /**
  * GAP-P1-1 + GAP-P1-2: 网关告警通知服务

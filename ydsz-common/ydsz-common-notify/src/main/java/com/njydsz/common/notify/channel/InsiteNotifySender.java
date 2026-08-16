@@ -3,20 +3,17 @@ package com.njydsz.common.notify.channel;
 import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
-
+import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
-
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.notify.config.NotifyProperties;
 import com.njydsz.common.notify.core.NotifySendResult;
 import com.njydsz.common.notify.enums.NotifyChannel;
-
-import lombok.Data;
 
 /**
  * 站内信通知发送器

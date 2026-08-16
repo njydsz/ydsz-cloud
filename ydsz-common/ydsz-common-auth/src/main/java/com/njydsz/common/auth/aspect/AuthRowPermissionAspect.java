@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -19,18 +18,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
-
 import com.njydsz.common.auth.annotation.AuthRowPermission;
+import com.njydsz.common.auth.context.AuthInfoUtils;
 import com.njydsz.common.auth.model.DataScopeAware;
 import com.njydsz.common.auth.model.DataScopeInfo;
 import com.njydsz.common.auth.service.impl.RedisRoleDataPermissionResolver;
 import com.njydsz.common.core.context.BizContextKeys;
+import com.njydsz.common.core.context.RequestContext;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
 import com.njydsz.common.jdbc.permission.DataPermissionContext;
 import com.njydsz.common.jdbc.permission.DataScopeContextHolder;
-import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.auth.context.AuthInfoUtils;
 import com.njydsz.common.util.string.StringUtils;
 
 /**

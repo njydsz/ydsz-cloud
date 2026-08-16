@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
+import lombok.extern.slf4j.Slf4j;
 import com.njydsz.literule.api.DecisionTableDefinition;
 import com.njydsz.literule.api.HitPolicy;
 import com.njydsz.literule.api.Rule;
@@ -18,8 +18,6 @@ import com.njydsz.literule.server.impl.ExpressionRule;
 import com.njydsz.literule.server.impl.ScorecardRule;
 import com.njydsz.literule.server.impl.ScriptRule;
 import com.njydsz.literule.server.orchestrator.RuleChain;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * DSL 模型到引擎可执行对象的转换器

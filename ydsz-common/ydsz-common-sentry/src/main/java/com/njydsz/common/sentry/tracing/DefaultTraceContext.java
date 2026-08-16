@@ -1,11 +1,9 @@
 package com.njydsz.common.sentry.tracing;
 
 
-import org.slf4j.MDC;
-
-import com.njydsz.common.sentry.spi.TraceContext;
-
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
+import com.njydsz.common.sentry.spi.TraceContext;
 import com.njydsz.common.util.id.IdGenerator;
 
 /**

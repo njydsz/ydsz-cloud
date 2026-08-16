@@ -11,12 +11,9 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.njydsz.common.json.YdszJson;
-
-import org.yaml.snakeyaml.Yaml;
-
 import lombok.extern.slf4j.Slf4j;
+import org.yaml.snakeyaml.Yaml;
+import com.njydsz.common.json.YdszJson;
 
 /**
  * LiteRule 声明式 DSL 解析器

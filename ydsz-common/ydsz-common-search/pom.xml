@@ -47,13 +47,6 @@
             <artifactId>ydsz-common-cache</artifactId>
             <optional>true</optional>
         </dependency>
-        <!--common-docs（文档内容索引，可选）-->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-docs</artifactId>
-            <optional>true</optional>
-        </dependency>
-
         <!-- Spring Context -->
         <dependency>
             <groupId>org.springframework</groupId>

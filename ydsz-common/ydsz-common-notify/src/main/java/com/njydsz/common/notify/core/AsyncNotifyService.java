@@ -3,12 +3,10 @@ package com.njydsz.common.notify.core;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Qualifier;
-
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.notify.enums.NotifyChannel;
 

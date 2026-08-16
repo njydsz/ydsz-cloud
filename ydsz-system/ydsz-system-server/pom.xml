@@ -131,11 +131,6 @@
             <artifactId>ydsz-userinfo-api</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <!-- P2-5: 统一 Excel 导入导出 -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-excel</artifactId>
-        </dependency>
         <!-- P0-2: 多租户隔离 -->
         <dependency>
             <groupId>com.njydsz</groupId>

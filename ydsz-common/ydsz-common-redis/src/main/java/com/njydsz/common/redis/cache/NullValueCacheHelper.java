@@ -2,10 +2,8 @@ package com.njydsz.common.redis.cache;
 
 import java.time.Duration;
 import java.util.function.Supplier;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
-
 import com.njydsz.common.json.YdszJson;
 
 /**

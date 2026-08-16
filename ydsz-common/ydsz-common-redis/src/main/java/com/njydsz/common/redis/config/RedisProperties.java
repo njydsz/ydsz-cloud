@@ -2,13 +2,11 @@ package com.njydsz.common.redis.config;
 
 import java.time.Duration;
 import java.util.Collection;
-
 import jakarta.validation.constraints.Min;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.validation.annotation.Validated;
-
 import com.njydsz.common.redis.enums.FailOpenPolicy;
 /**
  * Redis 配置属性类

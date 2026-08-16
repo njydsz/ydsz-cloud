@@ -4,13 +4,11 @@ import java.net.InetAddress;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.classic.spi.IThrowableProxy;
 import ch.qos.logback.classic.spi.StackTraceElementProxy;
 import ch.qos.logback.core.LayoutBase;
-
 import com.njydsz.common.sentry.domain.LogEvent;
 import com.njydsz.common.sentry.domain.LogLevel;
 

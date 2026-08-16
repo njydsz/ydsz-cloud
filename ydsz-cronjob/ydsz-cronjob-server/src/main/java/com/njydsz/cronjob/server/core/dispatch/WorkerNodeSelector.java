@@ -3,16 +3,13 @@ package com.njydsz.cronjob.server.core.dispatch;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
-
 import com.njydsz.cronjob.domain.entity.job.JobNode;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.discovery.NodeDiscoveryStrategy;
 import com.njydsz.cronjob.server.core.executor.JobNodeHeartbeat;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * P0-1: Worker 节点选择器（调度器-执行器分离）。

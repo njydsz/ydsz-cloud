@@ -2,15 +2,12 @@ package com.njydsz.cronjob.server.core.dispatch;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.njydsz.cronjob.domain.entity.job.Job;
-import com.njydsz.cronjob.infra.mapper.job.JobMapper;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 
 /**
  * 任务事务服务（P0-2: 修复 @Transactional 自调用失效）。

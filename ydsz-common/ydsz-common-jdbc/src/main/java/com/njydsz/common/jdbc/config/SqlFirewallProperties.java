@@ -2,10 +2,8 @@ package com.njydsz.common.jdbc.config;
 
 import java.util.HashSet;
 import java.util.Set;
-
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * SQL 防火墙配置属性

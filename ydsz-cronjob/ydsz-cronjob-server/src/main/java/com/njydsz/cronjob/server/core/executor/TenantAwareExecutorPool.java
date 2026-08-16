@@ -9,15 +9,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import jakarta.annotation.PreDestroy;
-
-import org.springframework.stereotype.Component;
-
-import com.njydsz.cronjob.server.config.CronjobProperties;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import com.njydsz.cronjob.server.config.CronjobProperties;
 
 /**
  * P2-5: 租户感知的线程池。

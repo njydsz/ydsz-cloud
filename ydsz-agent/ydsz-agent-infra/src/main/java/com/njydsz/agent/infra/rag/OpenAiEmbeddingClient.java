@@ -4,17 +4,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.tree.ArrayNode;
-import com.njydsz.common.json.tree.ObjectNode;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.client.RestClient;
-
 import com.njydsz.agent.domain.gateway.LlmException;
 import com.njydsz.agent.domain.rag.EmbeddingClient;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.tree.ArrayNode;
+import com.njydsz.common.json.tree.ObjectNode;
 
 /**
  * OpenAI 兼容 Embedding 客户端

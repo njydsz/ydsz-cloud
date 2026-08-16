@@ -3,15 +3,12 @@ package com.njydsz.cronjob.server.core.dispatch;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.util.List;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
-
 import com.njydsz.cronjob.domain.entity.job.JobNode;
 import com.njydsz.cronjob.server.core.discovery.NodeDiscoveryStrategy;
 import com.njydsz.cronjob.server.core.executor.JobNodeHeartbeat;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * P3-20: 智能路由（机房/CPU 负载感知）。

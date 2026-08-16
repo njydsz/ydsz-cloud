@@ -1,14 +1,12 @@
 package com.njydsz.common.tenant.health;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-
 import com.njydsz.common.tenant.config.TenantProperties;
 import com.njydsz.common.tenant.datasource.TenantDataSourceRouter;
 import com.njydsz.common.tenant.metrics.TenantMetrics;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 多租户健康检查。

@@ -2,7 +2,6 @@ package com.njydsz.common.safe.ratelimit.spi;
 
 import java.util.List;
 import java.util.Optional;
-
 import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
 
 /**

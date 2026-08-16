@@ -1,9 +1,7 @@
 package com.njydsz.common.file.storage;
 
 import java.io.InputStream;
-
 import org.springframework.web.multipart.MultipartFile;
-
 import com.njydsz.common.file.domain.UploadCheckpoint;
 
 /**

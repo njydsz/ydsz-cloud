@@ -1,16 +1,14 @@
 package com.njydsz.common.jdbc.interceptor;
 
 import com.baomidou.mybatisplus.extension.parser.JsqlParserSupport;
-import com.njydsz.common.jdbc.monitor.SqlAstCache;
-
+import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.delete.Delete;
 import net.sf.jsqlparser.statement.insert.Insert;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.update.Update;
-
-import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.jdbc.monitor.SqlAstCache;
 
 /**
  * 带缓存的 JSqlParserSupport 基类

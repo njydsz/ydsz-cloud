@@ -2,7 +2,6 @@ package com.njydsz.common.safe.desensitize;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -4,11 +4,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-
-import com.njydsz.common.util.security.DigestUtils;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.njydsz.common.util.security.DigestUtils;
 
 /**
  * 一致性 Hash 分片器（P2-16 分布式执行）

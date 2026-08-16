@@ -10,16 +10,15 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.ClientConfig;
 import com.qcloud.cos.auth.BasicCOSCredentials;
 import com.qcloud.cos.auth.COSCredentials;
 import com.qcloud.cos.http.HttpMethodName;
 import com.qcloud.cos.model.AbortMultipartUploadRequest;
-import com.qcloud.cos.model.CompleteMultipartUploadRequest;
 import com.qcloud.cos.model.COSObject;
 import com.qcloud.cos.model.COSObjectSummary;
+import com.qcloud.cos.model.CompleteMultipartUploadRequest;
 import com.qcloud.cos.model.CreateBucketRequest;
 import com.qcloud.cos.model.GeneratePresignedUrlRequest;
 import com.qcloud.cos.model.GetObjectRequest;
@@ -36,7 +35,6 @@ import com.qcloud.cos.model.PutObjectRequest;
 import com.qcloud.cos.model.UploadPartRequest;
 import com.qcloud.cos.region.Region;
 import lombok.extern.slf4j.Slf4j;
-
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.config.FileProperties;
 import com.njydsz.common.file.config.FileUploadProperties;

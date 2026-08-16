@@ -2,9 +2,7 @@ package com.njydsz.common.web.version;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import jakarta.servlet.http.HttpServletRequest;
-
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.mvc.condition.RequestCondition;
 

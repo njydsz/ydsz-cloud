@@ -7,14 +7,12 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import jakarta.servlet.http.HttpServletRequest;
-
-import com.njydsz.common.core.context.BizContextKeys;
-import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
-import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.constant.DataScopeConstants;
+import com.njydsz.common.core.context.BizContextKeys;
+import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.model.CurrentUser;
+import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
 import com.njydsz.common.util.http.RequestContextUtils;
 import com.njydsz.common.util.string.StringUtils;
 

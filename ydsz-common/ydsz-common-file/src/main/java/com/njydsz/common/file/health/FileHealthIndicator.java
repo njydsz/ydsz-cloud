@@ -2,12 +2,12 @@ package com.njydsz.common.file.health;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-
 import com.njydsz.common.file.config.FileProperties;
 import com.njydsz.common.file.metrics.FileMetrics;
 import com.njydsz.common.file.service.FileDedupService;
@@ -16,9 +16,6 @@ import com.njydsz.common.file.storage.IFileStorageProvider;
 import com.njydsz.common.file.storage.StorageRetryHelper;
 import com.njydsz.common.file.virus.VirusScanner;
 import com.njydsz.common.util.string.StringUtils;
-
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 存储后端健康检查指示器

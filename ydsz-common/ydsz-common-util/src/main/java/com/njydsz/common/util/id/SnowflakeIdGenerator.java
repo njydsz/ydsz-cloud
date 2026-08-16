@@ -5,9 +5,7 @@ import java.net.UnknownHostException;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.LockSupport;
-
 import lombok.extern.slf4j.Slf4j;
-
 import com.njydsz.common.util.security.DigestUtils;
 
 /**

@@ -3,10 +3,8 @@ package com.njydsz.common.auth.service.impl;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.njydsz.common.auth.config.AuthProperties;
 import com.njydsz.common.auth.model.DataScopeInfo;
 import com.njydsz.common.auth.service.RbacUserInfoService;

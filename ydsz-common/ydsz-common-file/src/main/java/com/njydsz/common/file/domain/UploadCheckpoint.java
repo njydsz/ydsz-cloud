@@ -3,12 +3,10 @@ package com.njydsz.common.file.domain;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.util.List;
-
-import com.njydsz.common.json.annotation.JsonIgnore;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.njydsz.common.json.annotation.JsonIgnore;
 
 /**
  * 分片上传检查点信息

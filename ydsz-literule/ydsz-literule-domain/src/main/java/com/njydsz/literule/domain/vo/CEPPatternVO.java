@@ -1,10 +1,8 @@
 package com.njydsz.literule.domain.vo;
 
-import java.util.List;
-
-import lombok.Data;
-
 import java.time.Duration;
+import java.util.List;
+import lombok.Data;
 
 /**
  * CEP（复杂事件处理）模式视图对象（VO）。

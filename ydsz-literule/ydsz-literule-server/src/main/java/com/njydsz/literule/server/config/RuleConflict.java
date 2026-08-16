@@ -1,7 +1,6 @@
 package com.njydsz.literule.server.config;
 
 import java.io.Serializable;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

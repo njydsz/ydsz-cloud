@@ -1,13 +1,13 @@
 package com.njydsz.gateway;
 
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
-
+import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import com.njydsz.common.auth.config.AuthProperties;
 import com.njydsz.common.auth.service.ReactiveTokenBlacklistService;
 import com.njydsz.common.notify.helper.NotifyHelper;
@@ -20,8 +20,6 @@ import com.njydsz.gateway.config.IpWhitelistProperties;
 import com.njydsz.gateway.config.RateLimitProperties;
 import com.njydsz.gateway.config.SecurityHeadersProperties;
 import com.njydsz.gateway.filter.AuthGlobalFilter;
-
-import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 
 /**
  * API 网关启动类

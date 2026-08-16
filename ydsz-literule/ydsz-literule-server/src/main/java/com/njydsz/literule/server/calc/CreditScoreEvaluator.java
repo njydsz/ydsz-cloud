@@ -2,7 +2,6 @@ package com.njydsz.literule.server.calc;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**

@@ -2,11 +2,9 @@ package com.njydsz.common.safe.alert;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
+import org.springframework.context.event.EventListener;
 import com.njydsz.common.safe.audit.SecurityAuditLogger;
 import com.njydsz.common.safe.metrics.SafeMetrics;
-
-import org.springframework.context.event.EventListener;
 /**
  * 安全事件监听器
  *

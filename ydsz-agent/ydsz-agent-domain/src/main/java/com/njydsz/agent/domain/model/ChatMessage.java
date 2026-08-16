@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-
 import com.njydsz.common.util.id.IdGenerator;
 /**
  * 对话消息值对象（对标 OpenAI Chat Completions message）

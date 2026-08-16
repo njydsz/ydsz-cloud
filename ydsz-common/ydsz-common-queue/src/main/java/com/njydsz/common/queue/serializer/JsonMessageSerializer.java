@@ -1,9 +1,8 @@
 package com.njydsz.common.queue.serializer;
 
+import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.queue.domain.QueueMessage;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * JSON 消息序列化器（默认实现）

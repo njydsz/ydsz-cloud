@@ -2,9 +2,9 @@ package com.njydsz.common.tenant;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 
 /**
  * 租户上下文值对象（不可变）。

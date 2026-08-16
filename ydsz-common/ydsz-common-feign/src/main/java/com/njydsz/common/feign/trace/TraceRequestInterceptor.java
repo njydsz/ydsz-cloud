@@ -1,12 +1,11 @@
 package com.njydsz.common.feign.trace;
 
+import feign.RequestInterceptor;
+import feign.RequestTemplate;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.trace.TraceIdPropagation;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.common.util.string.StringUtils;
-
-import feign.RequestInterceptor;
-import feign.RequestTemplate;
 
 /**
  * 链路追踪请求拦截器。

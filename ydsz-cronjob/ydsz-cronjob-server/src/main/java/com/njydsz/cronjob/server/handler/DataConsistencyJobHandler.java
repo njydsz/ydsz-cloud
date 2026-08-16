@@ -3,12 +3,10 @@ package com.njydsz.cronjob.server.handler;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
-
 import com.njydsz.cronjob.domain.job.JobHandler;
 
 /**

@@ -4,11 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.search.api.SearchFilter;
 import com.njydsz.common.search.api.SearchRequest;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 高级查询语法解析器 — 支持 AND/OR/NOT 布尔逻辑与括号分组。

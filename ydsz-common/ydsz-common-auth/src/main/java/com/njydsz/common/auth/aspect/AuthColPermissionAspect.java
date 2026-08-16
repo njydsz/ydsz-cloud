@@ -5,10 +5,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Parameter;
-import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -22,24 +20,23 @@ import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.SimpleEvaluationContext;
 import org.springframework.util.ReflectionUtils;
-
 import com.njydsz.common.auth.annotation.AuthColPermission;
 import com.njydsz.common.auth.config.AuthProperties;
+import com.njydsz.common.auth.context.AuthInfoUtils;
 import com.njydsz.common.auth.desensitize.ColumnDesensitizationService;
+import com.njydsz.common.auth.model.AuthInfo;
 import com.njydsz.common.auth.model.ColumnPermission;
 import com.njydsz.common.auth.model.ColumnPermissionInfo;
 import com.njydsz.common.auth.model.ColumnScopeAware;
 import com.njydsz.common.auth.model.ColumnScopeInfo;
 import com.njydsz.common.auth.service.ColumnPermissionResolver;
 import com.njydsz.common.core.context.BizContextKeys;
-import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.safe.desensitize.ColumnDesensitizationContext;
-import com.njydsz.common.safe.desensitize.ColumnDesensitizationExecutor;
+import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
 import com.njydsz.common.json.JsonMapper;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.auth.model.AuthInfo;
-import com.njydsz.common.auth.context.AuthInfoUtils;
+import com.njydsz.common.safe.desensitize.ColumnDesensitizationContext;
+import com.njydsz.common.safe.desensitize.ColumnDesensitizationExecutor;
 import com.njydsz.common.util.string.StringUtils;
 
 /**

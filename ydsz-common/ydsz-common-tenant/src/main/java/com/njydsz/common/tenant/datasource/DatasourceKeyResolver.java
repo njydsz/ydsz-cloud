@@ -1,7 +1,6 @@
 package com.njydsz.common.tenant.datasource;
 
 import java.util.Map;
-
 import com.njydsz.common.tenant.config.TenantProperties;
 
 /**

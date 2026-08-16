@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
-
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ListableBeanFactory;
@@ -26,7 +26,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
-
 import com.njydsz.common.notify.aggregate.NotificationAggregator;
 import com.njydsz.common.notify.aggregate.TimeWindowAggregator;
 import com.njydsz.common.notify.audit.NotifyAuditService;
@@ -40,10 +39,10 @@ import com.njydsz.common.notify.core.NotifyService;
 import com.njydsz.common.notify.core.NotifyServiceImpl;
 import com.njydsz.common.notify.core.PersistentNotifyRetryQueue;
 import com.njydsz.common.notify.core.TransactionalNotifyPublisher;
-import com.njydsz.common.notify.helper.NotifyHelper;
 import com.njydsz.common.notify.dedup.NotifyDedupService;
 import com.njydsz.common.notify.fallback.NotifyFallbackManager;
 import com.njydsz.common.notify.health.NotifyHealthIndicator;
+import com.njydsz.common.notify.helper.NotifyHelper;
 import com.njydsz.common.notify.i18n.NotifyI18nResolver;
 import com.njydsz.common.notify.i18n.NotifyI18nService;
 import com.njydsz.common.notify.metrics.NotifyMetrics;
@@ -62,8 +61,6 @@ import com.njydsz.common.redis.service.RedisRateLimiter;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.concurrent.ExecutorUtils;
-
-import io.micrometer.core.instrument.MeterRegistry;
 
 /**
  * 统一消息通知自动配置类

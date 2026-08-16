@@ -2,7 +2,6 @@ package com.njydsz.literule.api.dto;
 
 import java.util.List;
 import java.util.Map;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 

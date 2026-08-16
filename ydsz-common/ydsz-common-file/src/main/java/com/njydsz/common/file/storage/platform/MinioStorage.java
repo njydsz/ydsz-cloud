@@ -12,13 +12,14 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-
+import io.minio.http.Method;
+import io.minio.messages.Item;
+import lombok.extern.slf4j.Slf4j;
+import okhttp3.OkHttpClient;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.config.FileProperties;
-import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.file.config.FileUploadProperties;
 import com.njydsz.common.file.constant.FileConstant;
 import com.njydsz.common.file.domain.ChunkedUploadResult;
@@ -27,15 +28,9 @@ import com.njydsz.common.file.domain.ObjectMetadata;
 import com.njydsz.common.file.domain.PolicyResult;
 import com.njydsz.common.file.exception.FileExceptionCode;
 import com.njydsz.common.file.storage.AbstractFileStorage;
-import com.njydsz.common.util.string.StringUtils;
-
-import io.minio.*;
-import io.minio.http.Method;
-import io.minio.messages.Item;
-import lombok.extern.slf4j.Slf4j;
-import okhttp3.OkHttpClient;
-
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.id.IdGenerator;
+import com.njydsz.common.util.string.StringUtils;
 /**
  * MinIO 对象存储实现。
  *

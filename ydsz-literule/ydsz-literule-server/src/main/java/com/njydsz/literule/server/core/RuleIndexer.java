@@ -9,12 +9,10 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+import lombok.extern.slf4j.Slf4j;
 import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.api.RuleEnvironment;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 规则索引器（P0-1 轻量 RETE 优化，P1-2 倒排索引优化）

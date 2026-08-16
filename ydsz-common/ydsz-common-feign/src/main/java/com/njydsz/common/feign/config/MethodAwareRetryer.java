@@ -2,7 +2,6 @@ package com.njydsz.common.feign.config;
 
 import java.util.Locale;
 import java.util.Set;
-
 import feign.Request;
 import feign.RetryableException;
 import feign.Retryer;

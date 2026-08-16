@@ -2,7 +2,6 @@ package com.njydsz.common.tenant.config;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
 import com.njydsz.common.tenant.TenantContextHolder;
 
 /**

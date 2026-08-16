@@ -9,13 +9,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
-
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.JsonMapper;
-import com.njydsz.common.json.naming.PropertyNamingStrategy;
-import com.njydsz.common.json.tree.ArrayNode;
-import com.njydsz.common.json.tree.ObjectNode;
-
+import io.netty.channel.ChannelOption;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -26,7 +20,8 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-
+import reactor.netty.http.client.HttpClient;
+import reactor.netty.resources.ConnectionProvider;
 import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.gateway.LlmException;
 import com.njydsz.agent.domain.model.ChatChunk;
@@ -35,10 +30,11 @@ import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.domain.model.ToolCall;
-
-import io.netty.channel.ChannelOption;
-import reactor.netty.http.client.HttpClient;
-import reactor.netty.resources.ConnectionProvider;
+import com.njydsz.common.json.JsonMapper;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.naming.PropertyNamingStrategy;
+import com.njydsz.common.json.tree.ArrayNode;
+import com.njydsz.common.json.tree.ObjectNode;
 
 /**
  * OpenAI 兼容 LLM 客户端实现

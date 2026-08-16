@@ -3,7 +3,6 @@ package com.njydsz.common.sentry.tracing.otel;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
 import io.opentelemetry.sdk.trace.ReadableSpan;

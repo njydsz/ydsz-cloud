@@ -3,12 +3,10 @@ package com.njydsz.literule.server.spi;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import lombok.extern.slf4j.Slf4j;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.workflow.api.client.WorkflowServiceClient;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 工作流触发动作处理器

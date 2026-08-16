@@ -8,16 +8,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-
 import javax.sql.DataSource;
-
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.search.config.SearchProperties;
-import com.njydsz.common.search.core.IndexOperation;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.search.config.SearchProperties;
+import com.njydsz.common.search.core.IndexOperation;
 
 /**
  * 持久化死信队列 — 将索引写入失败的操作落库到 PostgreSQL。

@@ -2,24 +2,20 @@ package com.njydsz.cronjob.server.queue;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.queue.domain.QueueMessage;
 import com.njydsz.common.queue.enums.QueueType;
 import com.njydsz.common.queue.queue.IMessageQueue;
 import com.njydsz.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.common.queue.service.IMessagePublisher;
-import com.njydsz.common.json.YdszJson;
 import com.njydsz.cronjob.server.core.TaskCompletedEvent;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 定时任务执行结果队列发布者

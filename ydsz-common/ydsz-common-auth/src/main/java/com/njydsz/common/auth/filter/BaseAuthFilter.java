@@ -2,25 +2,21 @@ package com.njydsz.common.auth.filter;
 
 import java.io.IOException;
 import java.util.Set;
-
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.web.filter.OncePerRequestFilter;
-
 import com.njydsz.common.auth.config.AuthFilterConfiguration;
 import com.njydsz.common.auth.config.AuthFilterIgnoreProperties;
 import com.njydsz.common.auth.constant.FilterIgnoreConstants;
+import com.njydsz.common.auth.model.AuthInfo;
 import com.njydsz.common.auth.security.CsrfTokenValidator;
 import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.auth.model.AuthInfo;
 import com.njydsz.common.util.http.UrlPathUtils;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 认证过滤器抽象基类。

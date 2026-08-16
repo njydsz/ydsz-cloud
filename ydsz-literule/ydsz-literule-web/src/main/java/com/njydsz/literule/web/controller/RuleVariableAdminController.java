@@ -1,9 +1,10 @@
 package com.njydsz.literule.web.controller;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.stream.Collectors;
-
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,22 +14,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.literule.server.expression.ExpressionValidationService;
-import com.njydsz.literule.server.expression.VariableDefinition;
-import com.njydsz.literule.server.expression.VariableRegistry;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.literule.domain.vo.VariableDefinitionVO;
 import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
+import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.literule.domain.enums.LiteruleExceptionCode;
+import com.njydsz.literule.domain.vo.VariableDefinitionVO;
+import com.njydsz.literule.server.expression.ExpressionValidationService;
+import com.njydsz.literule.server.expression.VariableDefinition;
+import com.njydsz.literule.server.expression.VariableRegistry;
 
 /**
  * 规则变量管理 Controller

@@ -2,11 +2,9 @@ package com.njydsz.common.notify.core;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
-
 import com.njydsz.common.notify.enums.NotifyChannel;
 
 /**

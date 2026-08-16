@@ -1,5 +1,7 @@
 package com.njydsz.gateway.config;
 
+import com.alibaba.cloud.nacos.NacosConfigManager;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.route.RouteDefinitionRepository;
@@ -7,10 +9,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-
-import com.alibaba.cloud.nacos.NacosConfigManager;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Nacos 动态路由配置（P1-6 + P2-12 增强）

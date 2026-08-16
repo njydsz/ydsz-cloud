@@ -2,9 +2,7 @@ package com.njydsz.literule.api;
 
 import java.io.Serializable;
 import java.util.List;
-
 import jakarta.validation.constraints.NotBlank;
-
 import lombok.Builder;
 import lombok.Data;
 

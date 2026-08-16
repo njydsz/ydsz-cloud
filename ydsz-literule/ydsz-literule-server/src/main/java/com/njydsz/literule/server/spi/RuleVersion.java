@@ -2,7 +2,6 @@ package com.njydsz.literule.server.spi;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

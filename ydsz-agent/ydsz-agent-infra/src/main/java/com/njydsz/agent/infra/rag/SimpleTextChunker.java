@@ -2,14 +2,11 @@ package com.njydsz.agent.infra.rag;
 
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.rag.TextChunker;
-
-import java.util.Map;
 import com.njydsz.common.util.id.IdGenerator;
 /**
  * 固定大小分块器（带重叠）

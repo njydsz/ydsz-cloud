@@ -1,16 +1,13 @@
 package com.njydsz.common.socket.health;
 
 import java.util.concurrent.atomic.AtomicLong;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.data.redis.core.StringRedisTemplate;
-
 import com.njydsz.common.socket.config.WebSocketProperties;
 import com.njydsz.common.socket.resilience.WebSocketCircuitBreaker;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * WebSocket 模块健康检查（P0-1）。

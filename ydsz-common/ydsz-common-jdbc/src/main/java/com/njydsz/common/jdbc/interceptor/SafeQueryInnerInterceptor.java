@@ -5,20 +5,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.apache.ibatis.executor.statement.StatementHandler;
-import org.apache.ibatis.mapping.MappedStatement;
-import org.apache.ibatis.mapping.SqlCommandType;
-
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.executor.statement.StatementHandler;
+import org.apache.ibatis.mapping.MappedStatement;
+import org.apache.ibatis.mapping.SqlCommandType;
 import com.njydsz.common.domain.config.DomainProperties;
 import com.njydsz.common.domain.query.DeepPaginationException;
 import com.njydsz.common.domain.query.DeepPaginationRisk;
 import com.njydsz.common.exception.custom.SysException;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 安全查询拦截器（ORDER BY 注入防护 + 深度分页检测）。

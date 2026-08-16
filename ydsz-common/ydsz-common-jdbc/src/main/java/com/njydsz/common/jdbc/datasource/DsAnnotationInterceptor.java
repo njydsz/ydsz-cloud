@@ -2,7 +2,7 @@ package com.njydsz.common.jdbc.datasource;
 
 import java.lang.reflect.Method;
 import java.util.Arrays;
-
+import lombok.extern.slf4j.Slf4j;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.springframework.core.annotation.AnnotatedElementUtils;
@@ -10,10 +10,7 @@ import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
-
 import com.njydsz.common.jdbc.annotation.DS;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * @DS 注解拦截器

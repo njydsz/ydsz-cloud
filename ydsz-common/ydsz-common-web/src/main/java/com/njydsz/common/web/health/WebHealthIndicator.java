@@ -5,17 +5,14 @@ import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
+import nl.basjes.parse.useragent.UserAgentAnalyzer;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-
 import com.njydsz.common.web.config.WebCorsProperties;
 import com.njydsz.common.web.config.WebTraceProperties;
-
-import nl.basjes.parse.useragent.UserAgentAnalyzer;
 
 /**
  * Web 模块健康指标

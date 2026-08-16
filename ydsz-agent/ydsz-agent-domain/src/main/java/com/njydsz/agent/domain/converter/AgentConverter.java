@@ -1,15 +1,13 @@
 package com.njydsz.agent.domain.converter;
 
 import java.util.List;
-
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
-
-import com.njydsz.agent.domain.entity.AgentDefinitionDO;
-import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 import com.njydsz.agent.domain.dto.post.AgentDefinitionPostDTO;
 import com.njydsz.agent.domain.dto.put.AgentDefinitionPutDTO;
+import com.njydsz.agent.domain.entity.AgentDefinitionDO;
+import com.njydsz.agent.domain.vo.AgentDefinitionVO;
 
 /**
  * agent 模块统一 MapStruct 转换器。

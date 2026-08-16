@@ -2,9 +2,8 @@ package com.njydsz.cronjob.domain.dto.post;
 
 import java.io.Serial;
 import java.io.Serializable;
-import lombok.Data;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
 
 /**
  * JobWebhook 新增请求 DTO。

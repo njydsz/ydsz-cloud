@@ -2,10 +2,8 @@ package com.njydsz.common.safe.sensitive;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * 敏感数据脱敏配置属性

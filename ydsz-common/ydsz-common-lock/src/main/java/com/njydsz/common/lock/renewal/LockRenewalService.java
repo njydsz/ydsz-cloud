@@ -1,11 +1,9 @@
 package com.njydsz.common.lock.renewal;
 
 import java.util.Collections;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
-
 import com.njydsz.common.lock.annotation.LockType;
 
 

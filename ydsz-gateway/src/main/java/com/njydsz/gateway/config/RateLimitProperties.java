@@ -2,12 +2,10 @@ package com.njydsz.gateway.config;
 
 import java.util.List;
 import java.util.Map;
-
+import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.context.annotation.Configuration;
-
-import lombok.Data;
 
 /**
  * P2-15: 网关精细化限流配置属性

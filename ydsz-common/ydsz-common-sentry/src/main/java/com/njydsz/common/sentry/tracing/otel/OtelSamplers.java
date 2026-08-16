@@ -3,7 +3,6 @@ package com.njydsz.common.sentry.tracing.otel;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;

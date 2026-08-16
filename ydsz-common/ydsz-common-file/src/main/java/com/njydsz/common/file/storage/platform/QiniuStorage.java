@@ -16,18 +16,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.file.config.FileProperties;
-import com.njydsz.common.file.config.FileUploadProperties;
-import com.njydsz.common.file.constant.FileConstant;
-import com.njydsz.common.file.domain.ChunkedUploadResult;
-import com.njydsz.common.file.domain.ListObjectsResult;
-import com.njydsz.common.file.domain.ObjectMetadata;
-import com.njydsz.common.file.exception.FileExceptionCode;
-import com.njydsz.common.file.storage.AbstractFileStorage;
-import com.njydsz.common.file.storage.MultipartContextStore;
-import com.njydsz.common.util.string.StringUtils;
 import com.qiniu.common.QiniuException;
 import com.qiniu.http.Client;
 import com.qiniu.storage.ApiUploadV2AbortUpload;
@@ -40,8 +28,18 @@ import com.qiniu.storage.Region;
 import com.qiniu.storage.UploadManager;
 import com.qiniu.storage.model.FileInfo;
 import com.qiniu.util.Auth;
-
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.file.config.FileProperties;
+import com.njydsz.common.file.config.FileUploadProperties;
+import com.njydsz.common.file.constant.FileConstant;
+import com.njydsz.common.file.domain.ChunkedUploadResult;
+import com.njydsz.common.file.domain.ListObjectsResult;
+import com.njydsz.common.file.domain.ObjectMetadata;
+import com.njydsz.common.file.exception.FileExceptionCode;
+import com.njydsz.common.file.storage.AbstractFileStorage;
+import com.njydsz.common.file.storage.MultipartContextStore;
+import com.njydsz.common.util.string.StringUtils;
 
 /**
  * 七牛云 Kodo 对象存储实现。

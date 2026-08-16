@@ -2,10 +2,9 @@ package com.njydsz.common.feign.dto;
 
 import java.io.Serializable;
 import java.util.Map;
-
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 
 /**
  * 实时推送数据传输对象。

@@ -1,32 +1,30 @@
 package com.njydsz.cronjob.web.controller.job;
 
-import org.springframework.context.ApplicationContext;
-import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.njydsz.cronjob.domain.converter.CronjobConverter;
-import com.njydsz.cronjob.domain.job.MapContext;
-import com.njydsz.cronjob.domain.job.MapProcessor;
-import com.njydsz.cronjob.domain.job.ProcessResult;
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.lock.annotation.IdempotentExempt;
-import com.njydsz.common.util.id.TracerUtils;
-import com.njydsz.cronjob.server.core.dispatch.RemoteSubTaskRequest;
-import com.njydsz.cronjob.server.core.dispatch.RemoteTaskRequest;
-import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.njydsz.common.lock.annotation.Idempotent;
+import org.springframework.context.ApplicationContext;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.lock.annotation.IdempotentExempt;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.util.id.TracerUtils;
+import com.njydsz.cronjob.domain.converter.CronjobConverter;
+import com.njydsz.cronjob.domain.job.MapContext;
+import com.njydsz.cronjob.domain.job.MapProcessor;
+import com.njydsz.cronjob.domain.job.ProcessResult;
+import com.njydsz.cronjob.server.core.dispatch.RemoteSubTaskRequest;
+import com.njydsz.cronjob.server.core.dispatch.RemoteTaskRequest;
+import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
 
 /**
  * 内部任务执行接口 Controller（P1-4 远程派发接收端）。

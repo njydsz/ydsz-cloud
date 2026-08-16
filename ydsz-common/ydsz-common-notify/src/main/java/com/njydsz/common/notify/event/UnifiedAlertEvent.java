@@ -3,11 +3,9 @@ package com.njydsz.common.notify.event;
 import java.io.Serial;
 import java.time.LocalDateTime;
 import java.util.Collections;
-
+import lombok.Getter;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
-
-import lombok.Getter;
 import com.njydsz.common.util.id.IdGenerator;
 
 /**

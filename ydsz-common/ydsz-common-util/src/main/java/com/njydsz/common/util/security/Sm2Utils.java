@@ -17,7 +17,6 @@ import java.util.Base64;
 import java.util.HexFormat;
 import java.util.Objects;
 import javax.crypto.Cipher;
-
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.jcajce.provider.asymmetric.ec.BCECPublicKey;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;

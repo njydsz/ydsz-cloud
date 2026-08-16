@@ -6,10 +6,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-
 import com.njydsz.common.base.i18n.MessageResolverHolder;
 import com.njydsz.common.core.constant.PageConstants;
 

@@ -1,10 +1,8 @@
 package com.njydsz.common.queue.serializer;
 
 import java.lang.reflect.Method;
-
-import com.njydsz.common.queue.domain.QueueMessage;
-
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.queue.domain.QueueMessage;
 
 /**
  * Protobuf 消息序列化器（可选实现）

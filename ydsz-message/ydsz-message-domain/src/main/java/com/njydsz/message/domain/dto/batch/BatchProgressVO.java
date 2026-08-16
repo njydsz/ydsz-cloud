@@ -2,7 +2,6 @@ package com.njydsz.message.domain.dto.batch;
 
 
 import java.time.LocalDateTime;
-
 import lombok.Data;
 
 /**

@@ -2,9 +2,8 @@ package com.njydsz.common.safe.xss;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.njydsz.common.json.module.ModuleDeserializerRegistry;
 import com.njydsz.common.json.module.JsonModule;
+import com.njydsz.common.json.module.ModuleDeserializerRegistry;
 
 /**
  * Safe 模块 YdszJson SPI 注册。

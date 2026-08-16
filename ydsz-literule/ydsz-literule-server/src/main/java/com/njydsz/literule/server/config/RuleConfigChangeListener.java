@@ -1,9 +1,9 @@
 package com.njydsz.literule.server.config;
 
-import com.njydsz.common.config.hotreload.ConfigChangeListener;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import com.njydsz.common.config.hotreload.ConfigChangeListener;
 
 /**
  * LiteRule 配置变更监听器（P1-1：接入统一 ConfigChangeBridge）

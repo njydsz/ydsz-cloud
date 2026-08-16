@@ -3,12 +3,10 @@ package com.njydsz.common.notify.ratelimit;
 import java.time.Duration;
 import java.util.EnumMap;
 import java.util.Map;
-
+import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.notify.config.NotifyProperties;
 import com.njydsz.common.notify.enums.NotifyChannel;
 import com.njydsz.common.redis.service.RedisRateLimiter;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 通知渠道限流管理器

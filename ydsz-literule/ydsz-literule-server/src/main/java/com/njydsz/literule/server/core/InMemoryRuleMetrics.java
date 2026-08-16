@@ -1,10 +1,8 @@
 package com.njydsz.literule.server.core;
 
 import java.util.concurrent.atomic.AtomicLong;
-
-import com.njydsz.literule.api.RuleSeverity;
-
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.literule.api.RuleSeverity;
 
 /**
  * 内存版规则监控指标实现（降级/测试场景）。

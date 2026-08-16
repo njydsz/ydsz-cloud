@@ -1,13 +1,11 @@
 package com.njydsz.common.tenant.async;
 
 import java.util.Map;
-
+import org.springframework.core.task.TaskDecorator;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.tenant.TenantContext;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.tenant.config.TenantProperties;
-
-import org.springframework.core.task.TaskDecorator;
 
 /**
  * 线程池任务装饰器：自动传播租户上下文到异步线程。

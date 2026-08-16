@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-
 import com.njydsz.common.auth.model.RolePermissions;
 import com.njydsz.common.auth.service.impl.RedisRolePermissionLoader;
 

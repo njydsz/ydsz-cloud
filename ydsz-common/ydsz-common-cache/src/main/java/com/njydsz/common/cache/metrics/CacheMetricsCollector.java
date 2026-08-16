@@ -2,14 +2,12 @@ package com.njydsz.common.cache.metrics;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-
-import com.njydsz.common.cache.stats.CacheStats;
-
 import io.micrometer.core.instrument.FunctionCounter;
 import io.micrometer.core.instrument.FunctionTimer;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
+import com.njydsz.common.cache.stats.CacheStats;
 
 /**
  * 缓存指标收集器

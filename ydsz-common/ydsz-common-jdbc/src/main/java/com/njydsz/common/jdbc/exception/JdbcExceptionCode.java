@@ -1,9 +1,8 @@
 package com.njydsz.common.jdbc.exception;
 
+import lombok.Getter;
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.registry.YdszExceptionCode;
-
-import lombok.Getter;
 
 /**
  * JDBC 模块异常码

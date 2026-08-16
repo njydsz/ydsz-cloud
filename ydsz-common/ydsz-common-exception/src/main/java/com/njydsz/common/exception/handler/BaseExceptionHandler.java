@@ -5,7 +5,6 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -18,15 +17,12 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.server.ServerWebExchange;
-
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.config.ExceptionProperties;
 import com.njydsz.common.exception.core.ExceptionInfo;
-import com.njydsz.common.exception.trace.OtelTraceInfo;
-import com.njydsz.common.exception.trace.OtelTraceInfoExtractor;
 import com.njydsz.common.exception.custom.AbstractYdszException;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.enums.ExceptionCategory;
@@ -34,6 +30,8 @@ import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.enums.ExceptionLevel;
 import com.njydsz.common.exception.event.ExceptionHandledEvent;
 import com.njydsz.common.exception.metrics.ExceptionMetrics;
+import com.njydsz.common.exception.trace.OtelTraceInfo;
+import com.njydsz.common.exception.trace.OtelTraceInfoExtractor;
 import com.njydsz.common.exception.util.ExceptionDesensitizer;
 
 /**

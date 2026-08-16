@@ -4,12 +4,13 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
-
+import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.config.FileProperties;
 import com.njydsz.common.file.config.FileUploadProperties;
 import com.njydsz.common.file.exception.FileExceptionCode;
 import com.njydsz.common.file.metrics.FileMetrics;
+import com.njydsz.common.file.service.FileDedupService;
 import com.njydsz.common.file.storage.platform.CosStorage;
 import com.njydsz.common.file.storage.platform.LocalStorage;
 import com.njydsz.common.file.storage.platform.MinioStorage;
@@ -17,11 +18,8 @@ import com.njydsz.common.file.storage.platform.ObsStorage;
 import com.njydsz.common.file.storage.platform.OssStorage;
 import com.njydsz.common.file.storage.platform.QiniuStorage;
 import com.njydsz.common.file.storage.platform.S3Storage;
-import com.njydsz.common.file.service.FileDedupService;
 import com.njydsz.common.file.util.FileTypeValidator;
 import com.njydsz.common.file.virus.VirusScanner;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 默认文件存储工厂（实现 {@link IFileStorageProvider}）

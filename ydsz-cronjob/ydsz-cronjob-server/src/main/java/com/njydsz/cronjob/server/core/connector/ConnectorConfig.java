@@ -1,7 +1,6 @@
 package com.njydsz.cronjob.server.core.connector;
 
 import java.util.Map;
-
 import lombok.Data;
 
 /**

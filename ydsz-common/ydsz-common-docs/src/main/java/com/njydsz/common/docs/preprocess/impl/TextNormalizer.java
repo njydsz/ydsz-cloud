@@ -1,9 +1,7 @@
 package com.njydsz.common.docs.preprocess.impl;
 
 import java.text.Normalizer;
-
 import org.springframework.stereotype.Component;
-
 import com.njydsz.common.docs.domain.DocumentContent;
 import com.njydsz.common.docs.preprocess.DocumentPreprocessor;
 

@@ -1,9 +1,8 @@
 package com.njydsz.common.event.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * Outbox 事件模块配置属性

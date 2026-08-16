@@ -1,7 +1,6 @@
 package com.njydsz.common.json.internal;
 
 import java.io.Serializable;
-
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 
 /**

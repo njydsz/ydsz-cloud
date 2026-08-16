@@ -1,7 +1,6 @@
 package com.njydsz.literule.server.spi;
 
 import java.util.List;
-
 import com.njydsz.literule.domain.entity.RuleDependency;
 
 /**

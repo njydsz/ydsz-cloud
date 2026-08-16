@@ -3,12 +3,13 @@ package com.njydsz.cronjob.server.core.dispatch;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.StringUtils;
-
+import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.cronjob.domain.entity.dag.JobDag;
 import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.infra.mapper.dag.JobDagMapper;
@@ -17,10 +18,6 @@ import com.njydsz.cronjob.server.core.dag.DagDefinition;
 import com.njydsz.cronjob.server.core.dag.DagDefinitionCodec;
 import com.njydsz.cronjob.server.core.dag.DagNode;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import com.njydsz.common.lock.annotation.DistributedScheduled;
 
 /**
  * P2-10: 依赖巡检与自愈机制。

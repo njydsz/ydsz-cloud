@@ -2,13 +2,11 @@ package com.njydsz.common.auth.service.impl;
 
 import java.util.Collections;
 import java.util.Map;
-
+import lombok.RequiredArgsConstructor;
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.service.RbacUserInfoService;
 import com.njydsz.common.auth.util.AccessTokenUtils;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
-
-import lombok.RequiredArgsConstructor;
 
 /**
  * 基于 Redis 的 RBAC 用户信息服务实现。

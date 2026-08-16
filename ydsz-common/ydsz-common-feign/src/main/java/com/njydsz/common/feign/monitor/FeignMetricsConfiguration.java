@@ -1,10 +1,9 @@
 package com.njydsz.common.feign.monitor;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
-
-import io.micrometer.core.instrument.MeterRegistry;
 
 /**
  * Feign 指标采集配置。

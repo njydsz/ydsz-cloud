@@ -2,7 +2,6 @@ package com.njydsz.literule.api.expression;
 
 import java.io.Serializable;
 import java.util.List;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

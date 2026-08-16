@@ -1,11 +1,8 @@
 package com.njydsz.agent.web.controller;
 
 import java.util.List;
-import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import java.util.Map;
-
 import jakarta.validation.Valid;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -15,19 +12,19 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.njydsz.agent.api.dto.DocumentIngestDTO;
 import com.njydsz.agent.api.dto.RagQueryDTO;
 import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.server.rag.DocumentIngestionService;
 import com.njydsz.agent.server.rag.RagService;
-import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 /**
  * RAG 知识库管理 REST API Controller。

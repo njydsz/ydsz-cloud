@@ -2,9 +2,7 @@ package com.njydsz.gateway.config;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import com.njydsz.common.core.constant.HeaderConstants;
 
 /**

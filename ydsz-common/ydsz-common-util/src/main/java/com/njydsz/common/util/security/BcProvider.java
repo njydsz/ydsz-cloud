@@ -1,7 +1,6 @@
 package com.njydsz.common.util.security;
 
 import java.security.Security;
-
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 /**

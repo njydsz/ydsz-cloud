@@ -1,7 +1,6 @@
 package com.njydsz.common.queue.service;
 
 import java.util.List;
-
 import com.njydsz.common.queue.domain.QueueMessage;
 
 /**

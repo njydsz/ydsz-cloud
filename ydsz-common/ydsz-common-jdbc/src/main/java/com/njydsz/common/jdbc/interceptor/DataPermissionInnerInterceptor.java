@@ -2,23 +2,19 @@ package com.njydsz.common.jdbc.interceptor;
 
 import java.sql.Connection;
 import java.util.Set;
-
-import org.apache.ibatis.executor.statement.StatementHandler;
-import org.apache.ibatis.mapping.MappedStatement;
-
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
-import com.njydsz.common.jdbc.config.DataPermissionConfiguration;
-import com.njydsz.common.jdbc.monitor.SqlAstCache;
-import com.njydsz.common.jdbc.permission.DataPermissionContext;
-import com.njydsz.common.jdbc.permission.DataPermissionContextResolver;
-
+import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.statement.delete.Delete;
 import net.sf.jsqlparser.statement.insert.Insert;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.update.Update;
-
-import lombok.extern.slf4j.Slf4j;
+import org.apache.ibatis.executor.statement.StatementHandler;
+import org.apache.ibatis.mapping.MappedStatement;
+import com.njydsz.common.jdbc.config.DataPermissionConfiguration;
+import com.njydsz.common.jdbc.monitor.SqlAstCache;
+import com.njydsz.common.jdbc.permission.DataPermissionContext;
+import com.njydsz.common.jdbc.permission.DataPermissionContextResolver;
 
 /**
  * 数据权限拦截器抽象基类（行级 + 列级公共逻辑）

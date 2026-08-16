@@ -1,14 +1,11 @@
 package com.njydsz.cronjob.server.core.executor;
 
 import java.time.Duration;
-
-import com.njydsz.common.redis.service.ops.RedisStringOps;
-import org.springframework.stereotype.Component;
-
-import com.njydsz.cronjob.server.config.CronjobProperties;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.cronjob.server.config.CronjobProperties;
 
 /**
  * P2-16: 全局并发控制（Redis 全局并发计数器）。

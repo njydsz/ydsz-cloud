@@ -2,10 +2,8 @@ package com.njydsz.agent.api.dto;
 
 import java.io.Serializable;
 import java.util.List;
-
-import jakarta.validation.constraints.NotBlank;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
 
 /**
  * Agent 执行请求 DTO

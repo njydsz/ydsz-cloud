@@ -1,11 +1,9 @@
 package com.njydsz.common.event.gateway;
 
 import java.util.List;
-
-import com.njydsz.common.event.model.OutboxMessage;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.njydsz.common.event.model.OutboxMessage;
 
 /**
  * 空操作事件投递网关（降级实现）

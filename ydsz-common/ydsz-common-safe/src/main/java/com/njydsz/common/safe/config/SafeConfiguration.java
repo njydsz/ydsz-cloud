@@ -1,12 +1,10 @@
 package com.njydsz.common.safe.config;
 
 import java.util.List;
-
-import com.njydsz.common.safe.sensitive.SensitiveDataProperties;
+import io.micrometer.core.instrument.MeterRegistry;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import jakarta.annotation.PostConstruct;
-
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -21,10 +19,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.Ordered;
-import org.springframework.scheduling.annotation.EnableScheduling;
-
 import org.springframework.data.redis.core.StringRedisTemplate;
-
+import org.springframework.scheduling.annotation.EnableScheduling;
+import com.njydsz.common.json.spring.boot.JsonAutoConfiguration;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.safe.advice.XssRequestBodyAdvice;
 import com.njydsz.common.safe.alert.SafeAlertProperties;
@@ -32,32 +29,30 @@ import com.njydsz.common.safe.alert.SecurityEventAggregator;
 import com.njydsz.common.safe.alert.SecurityEventListener;
 import com.njydsz.common.safe.alert.SecurityEventPublisher;
 import com.njydsz.common.safe.audit.SecurityAuditLogger;
-import com.njydsz.common.safe.metrics.SafeMetrics;
+import com.njydsz.common.safe.captcha.CaptchaGenerator;
+import com.njydsz.common.safe.captcha.CaptchaProperties;
+import com.njydsz.common.safe.config.ApiSignatureProperties;
 import com.njydsz.common.safe.config.condition.XssConverterModeCondition;
-
-import io.micrometer.core.instrument.MeterRegistry;
 import com.njydsz.common.safe.config.condition.XssFilterModeCondition;
 import com.njydsz.common.safe.converter.XssJsonMessageConverter;
-import com.njydsz.common.json.spring.boot.JsonAutoConfiguration;
 import com.njydsz.common.safe.core.JsonBodyXssCleaner;
+import com.njydsz.common.safe.crypto.NonceCache;
 import com.njydsz.common.safe.csrf.CsrfTokenGenerator;
 import com.njydsz.common.safe.csrf.CsrfTokenRepository;
 import com.njydsz.common.safe.csrf.impl.DefaultCsrfTokenGenerator;
 import com.njydsz.common.safe.csrf.impl.InMemoryCsrfTokenRepository;
 import com.njydsz.common.safe.csrf.impl.RedisCsrfTokenRepository;
-import com.njydsz.common.safe.captcha.CaptchaGenerator;
-import com.njydsz.common.safe.captcha.CaptchaProperties;
+import com.njydsz.common.safe.filter.ApiSignatureFilter;
 import com.njydsz.common.safe.filter.CsrfFilter;
 import com.njydsz.common.safe.filter.IpAccessFilter;
 import com.njydsz.common.safe.filter.SafeRequestBodyCacheFilter;
 import com.njydsz.common.safe.filter.SecurityHeaderFilter;
 import com.njydsz.common.safe.filter.XssFilter;
 import com.njydsz.common.safe.ip.IpAccessService;
+import com.njydsz.common.safe.metrics.SafeMetrics;
 import com.njydsz.common.safe.password.PasswordStrengthValidator;
 import com.njydsz.common.safe.sensitive.SensitiveDataAdvice;
-import com.njydsz.common.safe.config.ApiSignatureProperties;
-import com.njydsz.common.safe.crypto.NonceCache;
-import com.njydsz.common.safe.filter.ApiSignatureFilter;
+import com.njydsz.common.safe.sensitive.SensitiveDataProperties;
 
 /**
  * 安全模块自动配置

@@ -1,7 +1,6 @@
 package com.njydsz.common.auth.service;
 
 import java.util.Map;
-
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.service.impl.RedisRbacUserInfoService;
 

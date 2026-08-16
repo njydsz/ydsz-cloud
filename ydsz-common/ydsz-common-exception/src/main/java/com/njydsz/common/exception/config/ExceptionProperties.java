@@ -1,7 +1,6 @@
 package com.njydsz.common.exception.config;
 import java.util.Collections;
 import java.util.List;
-
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;

@@ -2,7 +2,9 @@ package com.njydsz.common.file.config;
 
 import java.util.Collections;
 import java.util.concurrent.ExecutorService;
-
+import io.micrometer.core.instrument.MeterRegistry;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -12,7 +14,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.StringRedisTemplate;
-
 import com.njydsz.common.file.health.FileHealthIndicator;
 import com.njydsz.common.file.lifecycle.FileLifecycleManager;
 import com.njydsz.common.file.metrics.FileMetrics;
@@ -20,6 +21,7 @@ import com.njydsz.common.file.service.FileDedupService;
 import com.njydsz.common.file.storage.CheckpointService;
 import com.njydsz.common.file.storage.CheckpointStore;
 import com.njydsz.common.file.storage.DefaultCheckpointService;
+import com.njydsz.common.file.storage.DefaultStorageFactory;
 import com.njydsz.common.file.storage.DelegatingCheckpointStore;
 import com.njydsz.common.file.storage.DelegatingMultipartContextStore;
 import com.njydsz.common.file.storage.IFileStorageProvider;
@@ -30,16 +32,11 @@ import com.njydsz.common.file.storage.RedisCheckpointStore;
 import com.njydsz.common.file.storage.RedisMultipartContextStore;
 import com.njydsz.common.file.storage.StorageRetryHelper;
 import com.njydsz.common.file.storage.UploadConcurrencyGuard;
-import com.njydsz.common.file.storage.DefaultStorageFactory;
 import com.njydsz.common.file.util.FileTypeValidator;
 import com.njydsz.common.file.virus.NoOpVirusScanner;
 import com.njydsz.common.file.virus.VirusScanner;
 import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-
-import io.micrometer.core.instrument.MeterRegistry;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 文件存储自动配置类

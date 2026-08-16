@@ -2,7 +2,6 @@ package com.njydsz.common.queue.service;
 
 import java.io.Closeable;
 import java.util.List;
-
 import com.njydsz.common.queue.domain.QueueMessage;
 
 /**

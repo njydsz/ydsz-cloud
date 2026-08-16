@@ -2,7 +2,6 @@ package com.njydsz.literule.server.spi;
 
 import java.util.List;
 import java.util.Map;
-
 import com.njydsz.literule.api.RuleResult;
 
 /**

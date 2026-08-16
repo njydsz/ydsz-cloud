@@ -1,7 +1,6 @@
 package com.njydsz.common.auth.internal;
 
 import org.springframework.stereotype.Component;
-
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.lock.spi.CurrentUserIdResolver;
 import com.njydsz.common.security.LoginUser;

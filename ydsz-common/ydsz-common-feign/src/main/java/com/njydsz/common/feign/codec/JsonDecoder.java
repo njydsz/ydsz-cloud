@@ -1,17 +1,16 @@
 package com.njydsz.common.feign.codec;
 
-import com.njydsz.common.json.YdszJson;
-import feign.Response;
-import feign.codec.DecodeException;
-import feign.codec.Decoder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import feign.Response;
+import feign.codec.DecodeException;
+import feign.codec.Decoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import com.njydsz.common.json.YdszJson;
 
 /**
  * 基于 Jackson 的 Feign JSON 解码器。

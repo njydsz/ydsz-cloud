@@ -1,17 +1,15 @@
 package com.njydsz.literule.server.impl;
 
 import java.time.LocalDateTime;
-
+import lombok.Builder;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import com.njydsz.literule.api.DecisionTreeDefinition;
 import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.RuleSeverity;
 import com.njydsz.literule.api.expression.ExpressionEngine;
-
-import lombok.Builder;
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 决策树规则：基于树形条件判断结构逐层求值，到达叶子节点返回结果

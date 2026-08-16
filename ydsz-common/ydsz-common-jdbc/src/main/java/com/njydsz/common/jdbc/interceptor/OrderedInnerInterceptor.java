@@ -2,7 +2,7 @@ package com.njydsz.common.jdbc.interceptor;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-
+import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.BoundSql;
@@ -10,8 +10,6 @@ import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
 import org.springframework.core.Ordered;
-
-import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 
 /**
  * 带顺序的 {@link InnerInterceptor} 包装器

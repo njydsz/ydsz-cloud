@@ -2,12 +2,9 @@ package com.njydsz.common.safe.ratelimit.properties;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
-import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
-
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
 
 /**
  * 限流模块配置属性

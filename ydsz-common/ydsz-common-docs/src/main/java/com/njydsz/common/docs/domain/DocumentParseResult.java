@@ -1,7 +1,6 @@
 package com.njydsz.common.docs.domain;
 
 import java.time.Duration;
-
 import lombok.Builder;
 import lombok.Data;
 

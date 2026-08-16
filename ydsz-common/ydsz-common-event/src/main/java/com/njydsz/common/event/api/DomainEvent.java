@@ -5,9 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-
 import org.springframework.context.ApplicationEvent;
-
 import com.njydsz.common.util.id.IdGenerator;
 
 /**

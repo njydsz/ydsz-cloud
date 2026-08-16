@@ -10,7 +10,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.njydsz.common.json.annotation.JsonClass;
 import com.njydsz.common.json.annotation.JsonGetter;
 import com.njydsz.common.json.annotation.JsonIgnore;
@@ -24,8 +25,6 @@ import com.njydsz.common.json.annotation.JsonValue;
 import com.njydsz.common.json.cache.FieldMeta;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.util.BoundedLruCache;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 字段元数据加载器和注解处理器

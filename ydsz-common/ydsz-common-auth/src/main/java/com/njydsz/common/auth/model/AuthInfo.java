@@ -2,10 +2,8 @@ package com.njydsz.common.auth.model;
 
 import java.util.Map;
 import java.util.Set;
-
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-
 import com.njydsz.common.core.model.CurrentUser;
 
 /**

@@ -3,15 +3,13 @@ package com.njydsz.common.json.writer;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.number.NumberUtils;
-
-import java.nio.charset.StandardCharsets;
 /**
  * 高性能 JSON 写入器
  *
@@ -608,7 +606,7 @@ public final class JSONWriter {
             switch (c) {
                 case '"': externalSb.append("\\\""); break;
                 case '\\': externalSb.append("\\\\"); break;
-                case '\n': externalSb.append("\\n"); break;
+                case '\\n': externalSb.append("\\n"); break;
                 case '\r': externalSb.append("\\r"); break;
                 case '\t': externalSb.append("\\t"); break;
                 default:
@@ -656,7 +654,7 @@ public final class JSONWriter {
                     buf[pos++] = '\\';
                     buf[pos++] = '\\';
                     break;
-                case '\n':
+                case '\\n':
                     buf[pos++] = '\\';
                     buf[pos++] = 'n';
                     break;

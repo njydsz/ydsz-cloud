@@ -3,17 +3,14 @@ package com.njydsz.common.queue.queue;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
-
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.queue.config.QueueProperties;
 import com.njydsz.common.queue.service.IMessagePublisher;
 import com.njydsz.common.queue.service.IMessageSubscriber;
 import com.njydsz.common.queue.service.impl.RedisPubSubPublisher;
 import com.njydsz.common.queue.service.impl.RedisPubSubSubscriber;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 基于 Redis PubSub 实现的消息队列

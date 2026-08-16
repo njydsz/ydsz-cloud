@@ -2,7 +2,6 @@ package com.njydsz.common.notify.core;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-
 import com.njydsz.common.notify.aggregate.NotificationAggregator;
 import com.njydsz.common.notify.audit.NotifyAuditService;
 import com.njydsz.common.notify.channel.NotifyChannelStrategy;

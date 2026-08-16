@@ -2,12 +2,9 @@ package com.njydsz.cronjob.server.handler;
 
 import java.lang.management.ManagementFactory;
 import java.util.Map;
-
-import org.springframework.stereotype.Component;
-
-import com.njydsz.cronjob.domain.job.JobHandler;
-
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import com.njydsz.cronjob.domain.job.JobHandler;
 
 /**
  * 示例任务处理器 - 心跳上报

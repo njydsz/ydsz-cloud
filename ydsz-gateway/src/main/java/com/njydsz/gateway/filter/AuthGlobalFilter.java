@@ -2,12 +2,10 @@ package com.njydsz.gateway.filter;
 
 import java.util.Set;
 import java.util.UUID;
-
-import com.njydsz.common.json.YdszJson;
-
-import com.njydsz.gateway.config.GatewayFilterOrder;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -20,24 +18,22 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
-
+import reactor.core.publisher.Mono;
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.service.ReactiveTokenBlacklistService;
+import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.trace.TraceIdGenerator;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.safe.config.SecurityHeaderConfigurer;
 import com.njydsz.common.safe.config.SecurityHeaderProperties;
 import com.njydsz.common.safe.crypto.NonceCache;
 import com.njydsz.gateway.config.CachedJwtValidator;
 import com.njydsz.gateway.config.GatewayConstants;
+import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.config.InternalHeaderSigner;
 import com.njydsz.gateway.config.PathGuard;
 import com.njydsz.gateway.config.SecurityHeadersProperties;
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.trace.TraceIdGenerator;
-
-import jakarta.annotation.PostConstruct;
-import lombok.extern.slf4j.Slf4j;
-import reactor.core.publisher.Mono;
 
 /**
  * 认证全局过滤器（P0-C5 安全加固 + P0-2 密钥分离 + P0-6 nonce 防重放）

@@ -3,13 +3,11 @@ package com.njydsz.common.json.provider;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.util.Map;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.njydsz.common.json.annotation.JsonCreator;
 import com.njydsz.common.json.annotation.JsonProperty;
 import com.njydsz.common.json.parser.JsonParserUtil;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * {@link JsonCreator} 注解处理器。

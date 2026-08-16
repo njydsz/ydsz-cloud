@@ -1,9 +1,7 @@
 package com.njydsz.message.domain.dto.config;
 
-import com.njydsz.common.safe.annotation.Xss;
-
-
 import lombok.Data;
+import com.njydsz.common.safe.annotation.Xss;
 
 /**
  * 订阅关系新增/更新 DTO

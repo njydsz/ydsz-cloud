@@ -2,7 +2,6 @@ package com.njydsz.common.auth.service;
 
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
-
 import com.njydsz.common.auth.config.AuthProperties;
 import com.njydsz.common.auth.model.RolePermissions;
 import com.njydsz.common.cache.support.Expiry;

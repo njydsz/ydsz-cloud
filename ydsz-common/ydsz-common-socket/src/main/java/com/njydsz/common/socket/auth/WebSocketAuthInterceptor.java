@@ -1,7 +1,8 @@
 package com.njydsz.common.socket.auth;
 
 import java.util.Map;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
@@ -9,16 +10,12 @@ import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.util.StringUtils;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
-
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.safe.util.ClientIpResolver;
 import com.njydsz.common.socket.audit.WebSocketAuditService;
 import com.njydsz.common.socket.constant.WebSocketConstants;
 import com.njydsz.common.socket.ratelimit.ConnectionLimiter;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * WebSocket 握手鉴权拦截器（通用版）。

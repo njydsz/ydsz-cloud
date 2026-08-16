@@ -3,7 +3,6 @@ package com.njydsz.common.json.serializer;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
 import com.njydsz.common.json.deserializer.JsonDeserializer;
 
 /**

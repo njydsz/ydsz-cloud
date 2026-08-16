@@ -1,7 +1,6 @@
 package com.njydsz.common.socket.trace;
 
 import org.slf4j.MDC;
-
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.util.id.IdGenerator;
 

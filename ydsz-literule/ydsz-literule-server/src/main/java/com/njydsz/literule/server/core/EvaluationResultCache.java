@@ -7,11 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
-
+import lombok.extern.slf4j.Slf4j;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleResult;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 评估结果缓存（P2-3 高性能优化）

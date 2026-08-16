@@ -2,10 +2,8 @@ package com.njydsz.common.sentry;
 
 import java.time.Duration;
 import java.util.Map;
-
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-
 import com.njydsz.common.sentry.domain.AlertEvent;
 import com.njydsz.common.sentry.domain.SlaDefinition;
 import com.njydsz.common.sentry.spi.AlertPublisher;

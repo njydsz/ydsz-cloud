@@ -2,7 +2,6 @@ package com.njydsz.common.docs.domain;
 
 import lombok.Builder;
 import lombok.Data;
-
 import com.njydsz.common.docs.enums.DocumentFormat;
 import com.njydsz.common.docs.enums.PiiType;
 

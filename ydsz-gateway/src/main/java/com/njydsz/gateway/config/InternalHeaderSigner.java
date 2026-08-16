@@ -2,7 +2,6 @@ package com.njydsz.gateway.config;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HexFormat;
-
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 

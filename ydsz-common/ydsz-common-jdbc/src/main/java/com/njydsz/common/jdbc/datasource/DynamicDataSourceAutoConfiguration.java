@@ -2,9 +2,8 @@ package com.njydsz.common.jdbc.datasource;
 
 import java.util.HashMap;
 import java.util.Map;
-
 import javax.sql.DataSource;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.Advisor;
 import org.springframework.aop.support.DefaultPointcutAdvisor;
 import org.springframework.aop.support.annotation.AnnotationMatchingPointcut;
@@ -16,13 +15,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.context.annotation.Bean;
-
 import com.njydsz.common.jdbc.annotation.DS;
 import com.njydsz.common.jdbc.config.MultiDataSourcePoolCustomizer;
 import com.njydsz.common.jdbc.constant.DataSourceConstants;
 import com.njydsz.common.jdbc.health.DynamicDataSourceHealthIndicator;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 动态数据源自动配置

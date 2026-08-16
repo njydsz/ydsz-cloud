@@ -2,7 +2,6 @@ package com.njydsz.common.json.cache;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
 import com.njydsz.common.json.internal.JsonConfig;
 import com.njydsz.common.json.naming.PropertyNamingStrategy;
 import com.njydsz.common.json.util.BoundedLruCache;

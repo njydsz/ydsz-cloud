@@ -1,5 +1,6 @@
 package com.njydsz.common.auth.config;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -17,7 +18,6 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
-
 import com.njydsz.common.auth.aspect.AuthColPermissionAspect;
 import com.njydsz.common.auth.aspect.AuthPermissionAspect;
 import com.njydsz.common.auth.aspect.AuthRowPermissionAspect;
@@ -38,7 +38,6 @@ import com.njydsz.common.auth.service.RolePermissionLoader;
 import com.njydsz.common.auth.service.TokenBlacklistService;
 import com.njydsz.common.auth.service.impl.RedisRbacUserInfoService;
 import com.njydsz.common.auth.service.impl.RedisRoleColumnPermissionResolver;
-import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.auth.service.impl.RedisRoleDataPermissionResolver;
 import com.njydsz.common.auth.service.impl.RedisRolePermissionLoader;
 import com.njydsz.common.auth.strategy.CacheKeyStrategy;
@@ -49,8 +48,7 @@ import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-
-import io.micrometer.core.instrument.MeterRegistry;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
 /**
  * 认证授权模块配置类。
  *

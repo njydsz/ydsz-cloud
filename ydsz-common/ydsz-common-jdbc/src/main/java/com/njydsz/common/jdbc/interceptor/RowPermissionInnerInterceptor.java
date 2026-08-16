@@ -4,17 +4,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import org.apache.ibatis.mapping.SqlCommandType;
-
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import com.njydsz.common.core.constant.DataScopeConstants;
-import com.njydsz.common.jdbc.config.DataPermissionConfiguration;
-import com.njydsz.common.jdbc.monitor.SqlAstCache;
-import com.njydsz.common.jdbc.permission.DataPermissionContext;
-import com.njydsz.common.jdbc.permission.DataPermissionContextResolver;
-import com.njydsz.common.util.string.StringUtils;
-
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.LongValue;
@@ -25,14 +15,21 @@ import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.expression.operators.relational.InExpression;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
+import net.sf.jsqlparser.statement.delete.Delete;
 import net.sf.jsqlparser.statement.select.FromItem;
 import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.statement.select.ParenthesedSelect;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
-import net.sf.jsqlparser.statement.delete.Delete;
 import net.sf.jsqlparser.statement.select.SetOperationList;
 import net.sf.jsqlparser.statement.update.Update;
+import org.apache.ibatis.mapping.SqlCommandType;
+import com.njydsz.common.core.constant.DataScopeConstants;
+import com.njydsz.common.jdbc.config.DataPermissionConfiguration;
+import com.njydsz.common.jdbc.monitor.SqlAstCache;
+import com.njydsz.common.jdbc.permission.DataPermissionContext;
+import com.njydsz.common.jdbc.permission.DataPermissionContextResolver;
+import com.njydsz.common.util.string.StringUtils;
 
 /**
  * 行级数据权限拦截器

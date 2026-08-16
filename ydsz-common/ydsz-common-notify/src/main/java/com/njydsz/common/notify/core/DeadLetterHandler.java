@@ -1,7 +1,6 @@
 package com.njydsz.common.notify.core;
 
 import java.util.List;
-
 import com.njydsz.common.notify.enums.NotifyChannel;
 
 /**

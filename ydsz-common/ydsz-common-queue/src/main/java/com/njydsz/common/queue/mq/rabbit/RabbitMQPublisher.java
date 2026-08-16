@@ -5,16 +5,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReentrantLock;
-
-import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.queue.domain.QueueMessage;
-import com.njydsz.common.queue.service.IMessagePublisher;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.queue.domain.QueueMessage;
+import com.njydsz.common.queue.service.IMessagePublisher;
 
 /**
  * RabbitMQ 消息发布者

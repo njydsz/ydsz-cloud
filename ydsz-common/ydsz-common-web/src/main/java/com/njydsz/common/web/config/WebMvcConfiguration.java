@@ -1,5 +1,7 @@
 package com.njydsz.common.web.config;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import nl.basjes.parse.useragent.UserAgentAnalyzer;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -13,18 +15,17 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-
 import com.njydsz.common.auth.config.AuthFilterConfiguration;
 import com.njydsz.common.base.config.BaseAutoConfiguration;
 import com.njydsz.common.base.config.BaseMvcConfiguration;
 import com.njydsz.common.base.config.ConditionalOnPlatform;
 import com.njydsz.common.base.config.PlatformMode;
 import com.njydsz.common.base.constant.InterceptorOrder;
-import com.njydsz.common.web.constant.WebFilterOrder;
 import com.njydsz.common.safe.config.SafeConfiguration;
 import com.njydsz.common.safe.config.SecurityHeaderProperties;
 import com.njydsz.common.web.advice.GlobalResponseAdvice;
 import com.njydsz.common.web.auth.AuthHandlerFactory;
+import com.njydsz.common.web.constant.WebFilterOrder;
 import com.njydsz.common.web.filter.ContentCachingFilter;
 import com.njydsz.common.web.filter.SecurityHeaderFilter;
 import com.njydsz.common.web.filter.TraceIdResponseFilter;
@@ -32,9 +33,6 @@ import com.njydsz.common.web.filter.WebAuthFilter;
 import com.njydsz.common.web.health.WebHealthIndicator;
 import com.njydsz.common.web.interceptor.RequestLogInterceptor;
 import com.njydsz.common.web.metrics.WebMetrics;
-
-import io.micrometer.core.instrument.MeterRegistry;
-import nl.basjes.parse.useragent.UserAgentAnalyzer;
 
 /**
  * Web 端 MVC 核心配置。

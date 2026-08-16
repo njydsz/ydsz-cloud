@@ -1,7 +1,6 @@
 package com.njydsz.common.tenant.metrics;
 
 import java.util.concurrent.atomic.AtomicLong;
-
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;

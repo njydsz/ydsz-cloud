@@ -1,7 +1,6 @@
 package com.njydsz.agent.domain.conversation;
 
 import java.util.List;
-
 import com.njydsz.agent.domain.model.ChatMessage;
 
 /**

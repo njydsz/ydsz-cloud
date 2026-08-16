@@ -1,15 +1,12 @@
 package com.njydsz.common.seata.impl;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import org.springframework.beans.factory.ObjectProvider;
-
 import com.njydsz.common.seata.api.SagaStep;
 import com.njydsz.common.seata.api.TransactionType;
 import com.njydsz.common.seata.config.SeataProperties;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * SAGA 编排器集成测试

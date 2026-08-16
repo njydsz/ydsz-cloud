@@ -1,15 +1,13 @@
 package com.njydsz.agent.server.listener;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-
+import com.njydsz.agent.server.rag.RagService;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.model.OutboxMessage;
-import com.njydsz.agent.server.rag.RagService;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 跨模块事件监听器 — Agent 模块订阅其他模块的领域事件。

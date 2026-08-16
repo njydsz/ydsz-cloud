@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLConnection;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
@@ -20,14 +22,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
-
 import jakarta.servlet.http.HttpServletResponse;
-
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.multipart.MultipartFile;
-
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.callback.UploadProgressListener;
 import com.njydsz.common.file.config.FileProperties;
@@ -45,11 +44,8 @@ import com.njydsz.common.file.metrics.FileMetrics;
 import com.njydsz.common.file.service.FileDedupService;
 import com.njydsz.common.file.util.FileTypeValidator;
 import com.njydsz.common.file.virus.VirusScanner;
-import com.njydsz.common.util.string.StringUtils;
-
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.util.id.IdGenerator;
+import com.njydsz.common.util.string.StringUtils;
 
 /**
  * 文件存储抽象基类

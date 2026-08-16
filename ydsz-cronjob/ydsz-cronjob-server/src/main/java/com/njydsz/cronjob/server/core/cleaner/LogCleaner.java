@@ -1,14 +1,12 @@
 package com.njydsz.cronjob.server.core.cleaner;
 
 import java.time.LocalDateTime;
-
 import jakarta.annotation.PostConstruct;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-
 import com.njydsz.common.audit.storage.JdbcAuditStorage;
 import com.njydsz.cronjob.infra.mapper.job.JobAlertLogMapper;
 import com.njydsz.cronjob.infra.mapper.job.JobHistoryMapper;
@@ -17,8 +15,6 @@ import com.njydsz.cronjob.infra.mapper.log.JobLogContentMapper;
 import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 日志归档清理器（P2-2）。

@@ -1,16 +1,14 @@
 package com.njydsz.common.jdbc.handler;
 
 import java.util.Optional;
-
+import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.StringValue;
+import com.njydsz.common.core.context.BizContextKeys;
+import com.njydsz.common.core.context.RequestContext;
+import com.njydsz.common.core.model.CurrentUser;
 import com.njydsz.common.jdbc.config.FieldFillConfiguration;
 import com.njydsz.common.jdbc.constant.AuditFieldConstants;
 import com.njydsz.common.jdbc.enums.FieldFillStrategyEnum;
-import com.njydsz.common.core.model.CurrentUser;
-import com.njydsz.common.core.context.BizContextKeys;
-import com.njydsz.common.core.context.RequestContext;
-
-import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.expression.StringValue;
 
 /**
  * 更新人字段填充处理器

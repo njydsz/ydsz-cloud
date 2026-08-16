@@ -6,7 +6,6 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.HexFormat;
 import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -14,8 +13,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
-
-import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.config.EventProperties;
@@ -23,6 +20,7 @@ import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.event.model.OutboxStatus;
 import com.njydsz.common.event.repository.OutboxRepository;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
 
 /**
  * Outbox 写入服务

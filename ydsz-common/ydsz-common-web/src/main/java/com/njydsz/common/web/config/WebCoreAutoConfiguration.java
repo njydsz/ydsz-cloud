@@ -1,5 +1,6 @@
 package com.njydsz.common.web.config;
 
+import jakarta.servlet.Filter;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -9,10 +10,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
-
 import com.njydsz.common.web.filter.TenantMdcFilter;
-
-import jakarta.servlet.Filter;
 
 /**
  * 从 CoreAutoConfiguration 迁出的 Web 层自动配置。

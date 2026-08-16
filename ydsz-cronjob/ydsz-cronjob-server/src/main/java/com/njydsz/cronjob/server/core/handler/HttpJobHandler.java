@@ -7,18 +7,14 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.annotation.Configuration;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.JsonNode;
 import com.njydsz.common.json.tree.ObjectNode;
-
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.context.annotation.Configuration;
-
 import com.njydsz.cronjob.domain.job.JobHandler;
 import com.njydsz.cronjob.server.config.CronjobProperties;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * HTTP 任务处理器（P1-5）。

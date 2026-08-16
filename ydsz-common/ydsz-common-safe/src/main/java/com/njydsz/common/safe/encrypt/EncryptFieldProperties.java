@@ -2,10 +2,8 @@ package com.njydsz.common.safe.encrypt;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * 字段加密配置属性

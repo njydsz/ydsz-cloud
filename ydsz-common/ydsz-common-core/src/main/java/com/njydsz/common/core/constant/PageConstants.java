@@ -1,10 +1,8 @@
 package com.njydsz.common.core.constant;
 
 import java.util.concurrent.atomic.AtomicReference;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.njydsz.common.core.config.CoreProperties;
 
 /**

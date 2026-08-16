@@ -5,10 +5,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
-
-import com.njydsz.literule.api.RuleDefinition;
-
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.literule.api.RuleDefinition;
 
 /**
  * 规则数据源管理器（P1-5）

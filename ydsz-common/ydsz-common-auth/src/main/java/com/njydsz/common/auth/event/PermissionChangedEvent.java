@@ -2,7 +2,6 @@ package com.njydsz.common.auth.event;
 
 import java.io.Serializable;
 import java.util.Set;
-
 import org.springframework.context.ApplicationEvent;
 
 /**

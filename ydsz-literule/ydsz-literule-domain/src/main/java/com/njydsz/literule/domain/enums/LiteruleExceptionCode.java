@@ -1,8 +1,7 @@
 package com.njydsz.literule.domain.enums;
 
-import com.njydsz.common.exception.enums.ExceptionCode;
 import lombok.Getter;
-
+import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.registry.YdszExceptionCode;
 
 /**

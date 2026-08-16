@@ -3,7 +3,6 @@ package com.njydsz.common.seata.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
-
 import com.njydsz.common.seata.api.XidPropagator;
 import com.njydsz.common.seata.api.XidSigner;
 import com.njydsz.common.seata.context.XidContextHolder;

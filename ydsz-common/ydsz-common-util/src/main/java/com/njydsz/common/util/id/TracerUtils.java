@@ -1,11 +1,9 @@
 package com.njydsz.common.util.id;
 
 import java.lang.reflect.Method;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-
 import com.njydsz.common.util.internal.proxy.CoreConstants;
 import com.njydsz.common.util.internal.proxy.ParsedTraceparent;
 import com.njydsz.common.util.internal.proxy.RequestContextProxy;

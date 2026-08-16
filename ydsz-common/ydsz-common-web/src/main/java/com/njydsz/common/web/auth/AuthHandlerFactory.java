@@ -2,9 +2,7 @@ package com.njydsz.common.web.auth;
 
 import java.util.Collections;
 import java.util.Map;
-
 import org.springframework.stereotype.Component;
-
 import com.njydsz.common.auth.handler.AuthHandler;
 
 /**

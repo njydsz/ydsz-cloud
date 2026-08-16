@@ -1,11 +1,9 @@
 package com.njydsz.common.notify.core;
 
 import java.util.Optional;
-
+import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 内存实现的通知回执追踪器

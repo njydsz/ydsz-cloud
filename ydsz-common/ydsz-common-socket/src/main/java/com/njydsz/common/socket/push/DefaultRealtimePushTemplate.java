@@ -3,10 +3,9 @@ package com.njydsz.common.socket.push;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import com.njydsz.common.json.YdszJson;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.socket.audit.WebSocketAuditService;
 import com.njydsz.common.socket.cluster.WebSocketClusterMessage;
 import com.njydsz.common.socket.cluster.WebSocketClusterPublisher;
@@ -21,8 +20,6 @@ import com.njydsz.common.socket.retry.RetryableMessage;
 import com.njydsz.common.socket.serialize.MessageSerializer;
 import com.njydsz.common.socket.session.OnlineUserService;
 import com.njydsz.common.socket.trace.WebSocketTraceContext;
-
-import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.util.id.IdGenerator;
 
 /**
@@ -307,6 +304,9 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
      * <p>消息在客户端有有效期，超过 TTL 后客户端应忽略该消息。
      * TTL 信息包装在 payload 外层，格式为 {@code {"_ttlSeconds": N, "_expireAt": timestamp, "data": originalPayload}}。
      *
+     * <p><b>P0-1-fix</b>：修复双重序列化 Bug —— 将原始 payload 对象包装 TTL 后直接传入内部推送方法，
+     * 确保仅序列化一次（避免客户端收到被转义的 JSON 字符串而非对象）。
+     *
      * @param userId     用户 ID
      * @param type       消息类型
      * @param payload    消息负载
@@ -317,14 +317,37 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
         if (userId == null) {
             return;
         }
-        String payloadJson = messageSerializer.serialize(payload);
+        // 包装原始 payload 对象（非 JSON 字符串），确保后续仅序列化一次
+        Object wrappedPayload = wrapWithTtl(payload, ttlSeconds);
+        String payloadJson = messageSerializer.serialize(wrappedPayload);
         if (!applyFilters(userId, "USER", payloadJson)) {
             return;
         }
 
-        // 包装 payload 添加 TTL 信息
-        String wrappedJson = wrapWithTtl(payloadJson, ttlSeconds);
-        pushToUser(userId, type, wrappedJson);
+        String actualMessageId = generateMessageId();
+        String traceId = WebSocketTraceContext.getOrGenerateTraceId();
+
+        WebSocketClusterMessage msg = WebSocketClusterMessage.forUser(userId, type, payloadJson);
+        msg.setTraceId(traceId);
+        msg.setPriority(MessagePriority.NORMAL.name());
+
+        long start = System.currentTimeMillis();
+        boolean success;
+        if (!clusterPublisher.publish(msg)) {
+            success = localPushToUser(userId, payloadJson);
+            if (!success && retryQueue != null) {
+                enqueueRetry(actualMessageId, userId, type, payloadJson);
+            }
+        } else {
+            success = true;
+        }
+        long duration = System.currentTimeMillis() - start;
+
+        webSocketMetrics.recordPush("USER", success);
+        if (auditService != null) {
+            auditService.auditPush("USER", userId, null, success, duration,
+                    success ? null : "local push failed");
+        }
     }
 
     /**
@@ -566,26 +589,27 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
     /**
      * 包装消息添加 TTL 信息。
      *
-     * <p>在原始 payload 外层包裹 TTL 字段：
+     * <p>在原始 payload 对象外层包裹 TTL 字段（返回 Map 而非 JSON 字符串，
+     * 确保后续序列化仅执行一次，避免双重序列化导致的 JSON 转义问题）：
      * <pre>
      * {
      *   "_ttlSeconds": N,
      *   "_expireAt": timestamp,
-     *   "data": originalPayloadJson
+     *   "data": originalPayloadObject
      * }
      * </pre>
      *
-     * @param payloadJson 原始序列化后的消息 JSON
+     * @param payload     原始消息负载对象
      * @param ttlSeconds  有效期（秒）
-     * @return 包装后的 JSON 字符串（ttlSeconds ≤ 0 时返回原始值）
+     * @return 包装后的 Map 对象（ttlSeconds ≤ 0 时返回原始 payload）
      */
-    private String wrapWithTtl(String payloadJson, long ttlSeconds) {
+    private Object wrapWithTtl(Object payload, long ttlSeconds) {
         if (ttlSeconds <= 0) {
-            return payloadJson;
+            return payload;
         }
-        return YdszJson.toJson(Map.of("_ttlSeconds", ttlSeconds,
+        return Map.of("_ttlSeconds", ttlSeconds,
                 "_expireAt", System.currentTimeMillis() + ttlSeconds * 1000,
-                "data", payloadJson));
+                "data", payload);
     }
 
     /**

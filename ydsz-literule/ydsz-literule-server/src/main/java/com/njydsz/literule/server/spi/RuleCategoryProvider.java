@@ -4,10 +4,8 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.njydsz.literule.api.RuleDefinition;
-
 import lombok.Data;
+import com.njydsz.literule.api.RuleDefinition;
 
 /**
  * 规则目录树提供者 SPI

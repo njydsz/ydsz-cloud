@@ -1,12 +1,9 @@
 package com.njydsz.cronjob.server.core;
 
-import java.time.LocalDateTime;
-
-import com.njydsz.cronjob.domain.entity.log.JobLog;
-
-import lombok.extern.slf4j.Slf4j;
-
 import java.time.Duration;
+import java.time.LocalDateTime;
+import lombok.extern.slf4j.Slf4j;
+import com.njydsz.cronjob.domain.entity.log.JobLog;
 /**
  * P2-1: 任务执行记录器（从 DefaultTaskDispatcher 提取）。
  *

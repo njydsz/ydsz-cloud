@@ -2,15 +2,12 @@ package com.njydsz.common.auth.exception;
 
 import java.util.Collections;
 import java.util.Set;
-
+import lombok.Getter;
 import org.springframework.http.HttpStatus;
-
 import com.njydsz.common.exception.code.SecurityExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.exception.enums.ExceptionCategory;
 import com.njydsz.common.exception.enums.ExceptionLevel;
-
-import lombok.Getter;
 
 /**
  * 权限校验拒绝异常。

@@ -1,13 +1,13 @@
 package com.njydsz.agent.domain.json;
 
+import com.njydsz.agent.domain.model.ChatMessage;
+import com.njydsz.agent.domain.model.ChatRequest;
+import com.njydsz.agent.domain.model.TokenUsage;
+import com.njydsz.agent.domain.model.ToolCall;
+import com.njydsz.agent.domain.model.ToolDefinition;
 import com.njydsz.common.json.module.JsonModule;
 import com.njydsz.common.json.module.ModuleDeserializerRegistry;
 import com.njydsz.common.json.module.ModuleSerializerRegistry;
-import com.njydsz.agent.domain.model.ChatMessage;
-import com.njydsz.agent.domain.model.ChatRequest;
-import com.njydsz.agent.domain.model.ToolCall;
-import com.njydsz.agent.domain.model.ToolDefinition;
-import com.njydsz.agent.domain.model.TokenUsage;
 
 /**
  * Agent 模块 YdszJson SPI 注册。

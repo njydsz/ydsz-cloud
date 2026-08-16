@@ -3,19 +3,17 @@ package com.njydsz.common.lock.strategy;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.TaskScheduler;
-
 import com.njydsz.common.lock.RedisReadWriteLock;
 import com.njydsz.common.lock.RedisSemaphore;
 import com.njydsz.common.lock.annotation.LockType;
 import com.njydsz.common.lock.config.LockProperties;
 import com.njydsz.common.lock.core.AbstractRedisDistributedLock;
 import com.njydsz.common.lock.core.DistributedLocker;
-import com.njydsz.common.lock.core.LockWaitTimePolicy;
 import com.njydsz.common.lock.core.LockEventListener;
+import com.njydsz.common.lock.core.LockWaitTimePolicy;
 import com.njydsz.common.lock.impl.RedisFairLock;
 import com.njydsz.common.lock.impl.RedisMultiLock;
 import com.njydsz.common.lock.impl.RedisReentrantLock;

@@ -3,7 +3,6 @@ package com.njydsz.common.audit.annotation;
 import java.lang.annotation.*;
 
 import org.springframework.context.annotation.Import;
-
 import com.njydsz.common.audit.config.AuditAutoConfiguration;
 
 /**

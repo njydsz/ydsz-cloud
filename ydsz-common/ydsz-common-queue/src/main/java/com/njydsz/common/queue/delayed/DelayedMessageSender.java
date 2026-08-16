@@ -1,7 +1,6 @@
 package com.njydsz.common.queue.delayed;
 
 import java.util.concurrent.TimeUnit;
-
 import com.njydsz.common.queue.domain.QueueMessage;
 import com.njydsz.common.queue.service.IMessagePublisher;
 

@@ -1,7 +1,6 @@
 package com.njydsz.common.netty.event;
 
 import java.util.List;
-
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;

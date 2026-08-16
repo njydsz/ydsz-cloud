@@ -1,7 +1,7 @@
 package com.njydsz.common.seata.config;
 
 import java.time.Duration;
-
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -11,12 +11,14 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.PlatformTransactionManager;
-
 import com.njydsz.common.seata.api.DistributedTransactionManager;
-import com.njydsz.common.seata.api.TransactionType;
 import com.njydsz.common.seata.api.TccTransactionLogStore;
+import com.njydsz.common.seata.api.TransactionType;
 import com.njydsz.common.seata.api.XidPropagator;
 import com.njydsz.common.seata.api.XidSigner;
 import com.njydsz.common.seata.aspect.TransactionModeAspect;
@@ -39,13 +41,6 @@ import com.njydsz.common.seata.interceptor.XidServletFilter;
 import com.njydsz.common.seata.metrics.SeataMetrics;
 import com.njydsz.common.seata.mq.MqXidPropagator;
 import com.njydsz.common.seata.mq.RocketMqXidPropagator;
-
-import io.micrometer.core.instrument.MeterRegistry;
-
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.jdbc.core.JdbcTemplate;
-
-import org.springframework.context.annotation.Configuration;
 /**
  * 分布式事务自动配置
  *

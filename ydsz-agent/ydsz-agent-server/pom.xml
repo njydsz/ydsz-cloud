@@ -67,10 +67,6 @@
             <artifactId>ydsz-common-thread</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-docs</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>dynamic-datasource-spring-boot3-starter</artifactId>
         </dependency>
@@ -124,11 +120,6 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-config</artifactId>
-        </dependency>
-        <!-- P2-5: 统一 Excel 导入导出 -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-excel</artifactId>
         </dependency>
     </dependencies>
 </project>

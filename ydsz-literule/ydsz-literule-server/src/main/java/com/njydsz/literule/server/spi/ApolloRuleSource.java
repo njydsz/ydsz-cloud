@@ -4,12 +4,9 @@ import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
-
-import com.njydsz.common.json.YdszJson;
-
-import com.njydsz.literule.api.RuleDefinition;
-
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.literule.api.RuleDefinition;
 
 /**
  * Apollo 配置中心规则数据源（P1-5）

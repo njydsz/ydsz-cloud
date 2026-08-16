@@ -1,7 +1,6 @@
 package com.njydsz.common.docs.enums;
 
 import java.io.InputStream;
-
 import org.apache.tika.Tika;
 
 /**

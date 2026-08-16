@@ -3,9 +3,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 import lombok.Getter;
-
 import com.njydsz.common.exception.enums.ExceptionCode;
 
 /**

@@ -1,5 +1,6 @@
 package com.njydsz.common.safe.encrypt;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -7,12 +8,9 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
-
 import com.njydsz.common.safe.config.ApiSignatureProperties;
 import com.njydsz.common.safe.crypto.NonceCache;
 import com.njydsz.common.safe.filter.ApiSignatureFilter;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * API 签名自动配置

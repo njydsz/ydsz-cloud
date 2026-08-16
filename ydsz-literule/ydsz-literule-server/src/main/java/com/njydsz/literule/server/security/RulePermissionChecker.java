@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-
 import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
 

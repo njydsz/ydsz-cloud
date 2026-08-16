@@ -1,7 +1,6 @@
 package com.njydsz.common.exception.custom;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
 import com.njydsz.common.exception.enums.ExceptionCategory;
 import com.njydsz.common.exception.enums.ExceptionLevel;
 

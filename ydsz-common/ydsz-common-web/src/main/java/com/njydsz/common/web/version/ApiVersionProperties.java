@@ -1,7 +1,6 @@
 package com.njydsz.common.web.version;
 
 import lombok.Data;
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**

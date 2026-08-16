@@ -1,14 +1,12 @@
 package com.njydsz.common.feign.interceptor;
 
-import org.jspecify.annotations.Nullable;
-
-import com.njydsz.common.feign.circuitbreaker.FeignCircuitBreakerStrategy;
-import com.njydsz.common.util.string.StringUtils;
-
 import feign.InvocationContext;
 import feign.Response;
 import feign.ResponseInterceptor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
+import com.njydsz.common.feign.circuitbreaker.FeignCircuitBreakerStrategy;
+import com.njydsz.common.util.string.StringUtils;
 
 /**
  * Feign 响应拦截器

@@ -7,17 +7,13 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
 import java.time.Duration;
-
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.tree.ObjectNode;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Configuration;
-
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.tree.ObjectNode;
 import com.njydsz.cronjob.domain.entity.job.JobNode;
 import com.njydsz.cronjob.server.config.CronjobProperties;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 远程任务派发客户端（P1-4）。

@@ -1,7 +1,6 @@
 package com.njydsz.common.queue.queue;
 
 import java.util.concurrent.locks.ReentrantLock;
-
 import com.njydsz.common.queue.service.IMessagePublisher;
 import com.njydsz.common.queue.service.IMessageSubscriber;
 

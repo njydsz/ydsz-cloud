@@ -1,14 +1,12 @@
 package com.njydsz.agent.server.metrics;
 
 import java.util.concurrent.TimeUnit;
-
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import com.njydsz.agent.domain.gateway.LlmException;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.common.base.metrics.AbstractModuleMetrics;
-
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
 
 /**
  * Agent 模块 Micrometer 指标

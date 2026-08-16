@@ -1,7 +1,6 @@
 package com.njydsz.common.base.i18n;
 
 import java.util.concurrent.atomic.AtomicReference;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
