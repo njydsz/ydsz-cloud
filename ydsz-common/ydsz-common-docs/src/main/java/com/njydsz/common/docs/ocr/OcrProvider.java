@@ -20,7 +20,7 @@ import com.njydsz.common.docs.domain.DocumentMetadata;
 import com.njydsz.common.docs.domain.DocumentSection;
 import com.njydsz.common.docs.exception.DocumentException;
 import com.njydsz.common.docs.exception.DocumentExceptionCode;
-import com.njydsz.common.docs.util.TempFileManager;
+import com.njydsz.common.util.io.TempFileManager;
 
 /**
  * OCR 服务提供者

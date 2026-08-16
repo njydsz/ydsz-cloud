@@ -25,7 +25,7 @@ import com.njydsz.common.docs.enums.ParseProfile;
 import com.njydsz.common.docs.exception.DocumentException;
 import com.njydsz.common.docs.exception.DocumentExceptionCode;
 import com.njydsz.common.docs.parser.DocumentParser;
-import com.njydsz.common.docs.util.TempFileManager;
+import com.njydsz.common.util.io.TempFileManager;
 
 /**
  * PDF 文档解析器

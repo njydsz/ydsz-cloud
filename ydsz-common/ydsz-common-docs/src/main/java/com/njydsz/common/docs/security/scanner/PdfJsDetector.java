@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.docs.domain.SecurityScanResult;
 import com.njydsz.common.docs.enums.DocumentFormat;
 import com.njydsz.common.docs.enums.SecurityLevel;
-import com.njydsz.common.docs.util.TempFileManager;
+import com.njydsz.common.util.io.TempFileManager;
 
 /**
  * PDF 安全检测器

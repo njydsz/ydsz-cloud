@@ -29,7 +29,7 @@ import com.njydsz.common.docs.parser.registry.DocumentParserRegistry;
 import com.njydsz.common.docs.preprocess.pipeline.PreprocessPipeline;
 import com.njydsz.common.docs.security.pii.PiiDetector;
 import com.njydsz.common.docs.security.scanner.DocumentSecurityScanner;
-import com.njydsz.common.docs.util.TempFileManager;
+import com.njydsz.common.util.io.TempFileManager;
 
 /**
  * 文档处理统一服务门面

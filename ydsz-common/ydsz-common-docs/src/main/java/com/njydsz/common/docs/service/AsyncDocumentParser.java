@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.docs.config.DocsProperties;
 import com.njydsz.common.docs.domain.DocumentParseResult;
 import com.njydsz.common.docs.domain.ParseOptions;
-import com.njydsz.common.docs.util.TempFileManager;
+import com.njydsz.common.util.io.TempFileManager;
 
 /**
  * 异步文档解析器。
