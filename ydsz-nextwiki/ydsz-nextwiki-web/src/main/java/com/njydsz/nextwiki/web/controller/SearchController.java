@@ -5,10 +5,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
@@ -99,6 +101,41 @@ public class SearchController {
         SearchResultVO result = searchApplicationService.search(
                 request.getKeyword(), userId, scope, pageNum, pageSize);
         return BaseResponse.success(result);
+    }
+
+    /**
+     * 搜索自动补全建议。
+     *
+     * <p>委托 ydsz-common-search 的 SuggestionService 提供三层召回：
+     * 引擎前缀建议 → 热门搜索兜底 → Levenshtein 纠错。
+     * 搜索模块未引入时返回空列表。
+     *
+     * @param prefix 用户已输入的前缀
+     * @return 自动补全候选词列表
+     */
+    @GetMapping("/suggest")
+    @Operation(summary = "搜索自动补全")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SEARCH)
+    public BaseResponse<List<String>> suggest(@RequestParam String prefix) {
+        List<String> suggestions = searchApplicationService.autocomplete(prefix);
+        return BaseResponse.success(suggestions);
+    }
+
+    /**
+     * "您是不是要找"纠错建议。
+     *
+     * <p>委托 ydsz-common-search 的 SuggestionService 基于 Levenshtein 编辑距离纠错。
+     * 搜索模块未引入时返回空列表。
+     *
+     * @param keyword 用户输入的搜索词（通常为零结果查询词）
+     * @return 纠错候选词列表
+     */
+    @GetMapping("/did-you-mean")
+    @Operation(summary = "搜索纠错建议")
+    @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SEARCH)
+    public BaseResponse<List<String>> didYouMean(@RequestParam String keyword) {
+        List<String> corrections = searchApplicationService.didYouMean(keyword);
+        return BaseResponse.success(corrections);
     }
 
     /**

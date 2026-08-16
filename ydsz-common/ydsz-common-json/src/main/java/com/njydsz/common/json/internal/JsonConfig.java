@@ -102,6 +102,20 @@ public final class JsonConfig implements Serializable {
      *
      * <p>所有字段通过此构造函数一次性写入，之后不可修改。
      * 默认值由 {@link Builder} 预先填充。</p>
+     *
+     * @param namingStrategy            字段命名策略
+     * @param circularReferenceStrategy 循环引用处理策略
+     * @param writeNulls                是否输出 null 字段
+     * @param dateFormat                日期格式字符串
+     * @param serializeEnumUsingOrdinal 是否使用枚举序号序列化
+     * @param prettyPrint               是否格式化输出
+     * @param failOnError               遇错时是否抛出异常
+     * @param defaultDateFormat         默认日期解析格式
+     * @param maxJsonSize               最大 JSON 字节数上限
+     * @param maxDepth                  最大序列化深度
+     * @param maxGenericDepth           泛型递归深度上限
+     * @param useBigDecimal             是否使用 BigDecimal 解析浮点数
+     * @param wrapRootValue             是否启用根名称包裹
      */
     JsonConfig(
             PropertyNamingStrategy namingStrategy,
@@ -210,6 +224,10 @@ public final class JsonConfig implements Serializable {
 
     /**
      * 通知所有监听器配置已变更。
+     *
+     * @param oldConfig  旧配置实例
+     * @param newConfig  新配置实例
+     * @param newVersion 新版本号
      */
     private static void notifyConfigChanged(JsonConfig oldConfig, JsonConfig newConfig, long newVersion) {
         if (CHANGE_LISTENERS.isEmpty()) {
@@ -312,16 +330,28 @@ public final class JsonConfig implements Serializable {
         return prettyPrint;
     }
 
+    /**
+     * 是否遇错时抛出异常。
+     *
+     * @return {@code true} 抛异常，{@code false} 降级为容错输出
+     */
     public boolean isFailOnError() {
         return failOnError;
     }
 
+    /**
+     * 获取反序列化时未显式指定格式的日期默认解析模式。
+     *
+     * @return 日期默认解析模式串
+     */
     public String getDefaultDateFormat() {
         return defaultDateFormat;
     }
 
     /**
      * 获取最大 JSON 大小限制（字节）
+     *
+     * @return 最大 JSON 字节数上限
      */
     public long getMaxJsonSize() {
         return maxJsonSize;
@@ -329,6 +359,8 @@ public final class JsonConfig implements Serializable {
 
     /**
      * 获取最大序列化深度
+     *
+     * @return 最大嵌套深度
      */
     public int getMaxDepth() {
         return maxDepth;
@@ -459,6 +491,9 @@ public final class JsonConfig implements Serializable {
         private boolean useBigDecimal = false;
         private boolean wrapRootValue = false;
 
+        /**
+         * 私有构造函数，通过 {@link JsonConfig#builder()} 创建实例。
+         */
         private Builder() {
         }
 

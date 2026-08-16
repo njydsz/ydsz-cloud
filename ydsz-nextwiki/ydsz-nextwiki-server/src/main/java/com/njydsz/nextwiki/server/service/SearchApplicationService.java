@@ -91,6 +91,40 @@ public class SearchApplicationService {
         searchDomainService.rebuildAllIndices();
     }
 
+    /**
+     * 搜索自动补全建议（委托 ydsz-common-search 的 SuggestionService）。
+     *
+     * <p>底层召回三层：引擎前缀建议 → 热门搜索兜底 → Levenshtein 纠错。
+     * 搜索模块未引入时返回空列表。
+     *
+     * @param prefix 用户已输入的前缀
+     * @return 自动补全候选词列表；搜索模块不可用时返回空列表
+     */
+    public List<String> autocomplete(String prefix) {
+        SuggestionService suggestionService = suggestionServiceProvider.getIfAvailable();
+        if (suggestionService == null) {
+            return List.of();
+        }
+        return suggestionService.autocomplete(prefix);
+    }
+
+    /**
+     * "您是不是要找"纠错建议（委托 ydsz-common-search 的 SuggestionService）。
+     *
+     * <p>基于 Levenshtein 编辑距离按词长自适应纠错。
+     * 搜索模块未引入时返回空列表。
+     *
+     * @param keyword 用户输入的搜索词（通常为零结果查询词）
+     * @return 纠错候选词列表；搜索模块不可用时返回空列表
+     */
+    public List<String> didYouMean(String keyword) {
+        SuggestionService suggestionService = suggestionServiceProvider.getIfAvailable();
+        if (suggestionService == null) {
+            return List.of();
+        }
+        return suggestionService.didYouMean(keyword);
+    }
+
     // ==================== 私有方法 ====================
 
     /**

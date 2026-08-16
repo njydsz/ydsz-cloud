@@ -78,7 +78,7 @@ import com.njydsz.nextwiki.server.service.FileApplicationService;
  *   前端 (PC Web) → ydsz-gateway → ydsz-nextwiki-web (本 Controller)
  *                                            ↓
  *                                    ydsz-nextwiki-server.FileApplicationService
- *                                       └── NextwikiHealthIndicator (指标)
+ *                                       └── NextwikiMetrics (指标采集)
  *                                            ↓
  *                                    ydsz-nextwiki-infra Mapper
  *                                            ↓

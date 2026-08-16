@@ -1,34 +1,36 @@
 package com.njydsz.literule.server.core;
 
-import java.util.Arrays;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.sentry.resilience.CircuitBreaker;
 
 /**
- * 规则熔断器（基于错误率的滑动窗口熔断）
+ * 规则熔断器（基于 ydsz-common-sentry 统一熔断能力）。
  *
- * <p>每个规则编码独立维护一个熔断器，按以下策略工作：
+ * <p>每个规则编码独立维护一个熔断器，底层委托 sentry {@link CircuitBreaker}（Resilience4j），
+ * 提供滑动窗口失败率统计、状态自动流转、半开探测等标准熔断能力。
+ *
+ * <h3>v2.8 变更</h3>
+ * <p>自 v2.8 起，底层实现从自研滑动窗口改为委托 {@code ydsz-common-sentry} 的
+ * {@link CircuitBreaker} 封装（基于 Resilience4j），获得以下收益：
  * <ul>
- *   <li>评估次数达到 {@link #minEvaluations} 后开始计算错误率</li>
- *   <li>错误率超过 {@link #errorRateThreshold} 时进入 OPEN 状态，拒绝评估</li>
- *   <li>OPEN 状态持续 {@link #openStateMs} 毫秒后转为 HALF_OPEN，允许试探性评估</li>
- *   <li>HALF_OPEN 下评估成功则转为 CLOSED，失败则继续 OPEN</li>
+ *   <li>经过 10+ 年生产验证的稳定性</li>
+ *   <li>原生支持 Micrometer 指标导出</li>
+ *   <li>支持事件总线（状态变更 / 错误 / 成功事件）</li>
+ *   <li>符合编码规范第 27.5 节"禁止自建熔断器"的要求</li>
  * </ul>
- *
- * <p>滑动窗口（P2-5）：基于环形缓冲区记录最近 {@link #windowSize} 次评估结果，
- * 仅计算窗口内的错误率，避免历史成功稀释近期突发错误导致熔断器永不触发。
- * 对标 Resilience4j {@code BitSet} 滑动窗口实现。
  *
  * @since 1.0.0
  * @author ydsz-team
+ * @see com.njydsz.common.sentry.resilience.CircuitBreaker
  */
 @Slf4j
 public class RuleCircuitBreaker {
 
-    /** 熔断状态 */
+    /** 熔断状态（与 sentry CircuitBreaker.State 一一对应） */
     public enum State {
         /** 关闭：正常评估 */
         CLOSED,
@@ -38,75 +40,15 @@ public class RuleCircuitBreaker {
         HALF_OPEN
     }
 
-    /**
-     * 单个规则的熔断器状态
-     *
-     * <p>滑动窗口通过 {@code synchronized} 保护，原因：
-     * <ul>
-     *   <li>单规则评估的 {@code recordResult} 调用频率低（每次规则评估一次）</li>
-     *   <li>窗口操作涉及读-改-写（移除旧值、写入新值、更新计数器），需要原子性</li>
-     *   <li>相对于 ConcurrentHashMap 的 compute 原语，synchronized 更直观且无死锁风险</li>
-     * </ul>
-     */
-    private static class BreakerState {
-        final AtomicReference<State> state = new AtomicReference<>(State.CLOSED);
-        final AtomicLong openedAt = new AtomicLong(0);
-
-        /** 滑动窗口：true=失败，false=成功 */
-        final boolean[] window;
-        /** 下一个写入位置（环形） */
-        int head = 0;
-        /** 窗口内已写入的记录数（≤ window.length） */
-        int count = 0;
-        /** 窗口内失败数 */
-        int failures = 0;
-
-        BreakerState(int windowSize) {
-            this.window = new boolean[windowSize];
-        }
-
-        /** 记录一次评估结果到滑动窗口 */
-        synchronized void record(boolean success) {
-            // 窗口已满时，移除最旧记录
-            if (count == window.length) {
-                if (window[head]) {
-                    failures--;
-                }
-            } else {
-                count++;
-            }
-            window[head] = !success;
-            if (!success) {
-                failures++;
-            }
-            head = (head + 1) % window.length;
-        }
-
-        /** 当前窗口错误率（0~1.0）；样本不足返回 -1 */
-        synchronized double errorRate(int minSamples) {
-            if (count < minSamples) {
-                return -1;
-            }
-            return (double) failures / count;
-        }
-
-        /** 重置滑动窗口（HALF_OPEN → CLOSED 时调用） */
-        synchronized void resetWindow() {
-            head = 0;
-            count = 0;
-            failures = 0;
-            Arrays.fill(window, false);
-        }
-    }
-
     private final double errorRateThreshold;
     private final int minEvaluations;
     private final long openStateMs;
-    /** 滑动窗口大小（= minEvaluations，仅看最近 N 次评估） */
-    private final int windowSize;
 
-    /** 每个规则一个独立熔断器 */
-    private final ConcurrentMap<String, BreakerState> breakers = new ConcurrentHashMap<>();
+    /** 共享的 Resilience4j 注册表（所有规则共用配置模板） */
+    private final CircuitBreakerRegistry sharedRegistry;
+
+    /** 每个规则一个独立熔断器（sentry 封装） */
+    private final ConcurrentMap<String, CircuitBreaker> breakers = new ConcurrentHashMap<>();
 
     /**
      * 构造熔断器
@@ -125,7 +67,23 @@ public class RuleCircuitBreaker {
         this.errorRateThreshold = errorRateThreshold;
         this.minEvaluations = Math.max(1, minEvaluations);
         this.openStateMs = openStateMs;
-        this.windowSize = this.minEvaluations;
+
+        // 构建共享的 Resilience4j 配置
+        CircuitBreakerConfig config = CircuitBreakerConfig.custom()
+                .failureRateThreshold((float) errorRateThreshold)
+                .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
+                .slidingWindowSize(this.minEvaluations)
+                .waitDurationInOpenState(java.time.Duration.ofMillis(openStateMs))
+                .minimumNumberOfCalls(this.minEvaluations)
+                .permittedNumberOfCallsInHalfOpenState(1)
+                .automaticTransitionFromOpenToHalfOpenEnabled(true)
+                .recordException(e -> true)
+                .build();
+
+        this.sharedRegistry = CircuitBreakerRegistry.of(config);
+
+        log.info("[LiteRule-Breaker] 规则熔断器初始化完成: threshold={}, window={}, openStateMs={}",
+                errorRateThreshold, minEvaluations, openStateMs);
     }
 
     /**
@@ -135,27 +93,12 @@ public class RuleCircuitBreaker {
      * @return true=允许评估；false=已被熔断
      */
     public boolean allowEvaluate(String ruleCode) {
-        BreakerState state = breakers.get(ruleCode);
-        if (state == null) {
+        CircuitBreaker breaker = breakers.get(ruleCode);
+        if (breaker == null) {
             return true;
         }
-        State current = state.state.get();
-        if (current == State.CLOSED) {
-            return true;
-        }
-        if (current == State.OPEN) {
-            // 检查是否到了 HALF_OPEN 转换时间
-            long openedAt = state.openedAt.get();
-            if (System.currentTimeMillis() - openedAt >= openStateMs) {
-                if (state.state.compareAndSet(State.OPEN, State.HALF_OPEN)) {
-                    log.warn("[LiteRule-Breaker] 规则 {} 熔断器进入 HALF_OPEN 状态", ruleCode);
-                }
-                return true;
-            }
-            return false;
-        }
-        // HALF_OPEN：允许试探性评估
-        return true;
+        // sentry CircuitBreaker 的 canExecute 在 CLOSED/HALF_OPEN 时返回 true，OPEN 时返回 false
+        return breaker.getState() != State.OPEN;
     }
 
     /**
@@ -165,37 +108,24 @@ public class RuleCircuitBreaker {
      * @param success   是否成功（false 表示异常）
      */
     public void recordResult(String ruleCode, boolean success) {
-        BreakerState state = breakers.computeIfAbsent(ruleCode, k -> new BreakerState(windowSize));
+        CircuitBreaker breaker = breakers.computeIfAbsent(ruleCode,
+                k -> new CircuitBreaker("literule-" + k, sharedRegistry));
 
-        State current = state.state.get();
-        if (current == State.HALF_OPEN) {
-            if (success) {
-                // HALF_OPEN 成功 → CLOSED，重置滑动窗口
-                state.state.set(State.CLOSED);
-                state.resetWindow();
-                log.info("[LiteRule-Breaker] 规则 {} 熔断器已恢复 CLOSED", ruleCode);
-            } else {
-                // HALF_OPEN 失败 → 重新 OPEN
-                state.state.set(State.OPEN);
-                state.openedAt.set(System.currentTimeMillis());
-                log.warn("[LiteRule-Breaker] 规则 {} 熔断器重新 OPEN（HALF_OPEN 评估失败）", ruleCode);
-            }
-            return;
+        if (success) {
+            // 成功：通知 Resilience4j 记录成功（内部自动处理状态流转）
+            breaker.getDelegate().onSuccess(0, java.time.temporal.ChronoUnit.MILLIS);
+        } else {
+            // 失败：通知 Resilience4j 记录失败
+            breaker.getDelegate().onError(0, java.time.temporal.ChronoUnit.MILLIS,
+                    new RuntimeException("Rule evaluation failure"));
         }
 
-        // 记录到滑动窗口（CLOSED 状态）
-        state.record(success);
-
-        if (current == State.CLOSED) {
-            double errorRate = state.errorRate(minEvaluations);
-            if (errorRate >= 0 && errorRate >= errorRateThreshold) {
-                if (state.state.compareAndSet(State.CLOSED, State.OPEN)) {
-                    state.openedAt.set(System.currentTimeMillis());
-                    log.warn("[LiteRule-Breaker] 规则 {} 熔断器 OPEN（滑动窗口错误率 {}%, 窗口={}/{})",
-                            ruleCode, String.format("%.2f", errorRate * 100),
-                            state.failures, state.count);
-                }
-            }
+        // 记录状态变更日志（用于运维排查）
+        State currentState = breaker.getState();
+        if (currentState == State.OPEN) {
+            log.warn("[LiteRule-Breaker] 规则 {} 熔断器 OPEN", ruleCode);
+        } else if (currentState == State.HALF_OPEN) {
+            log.info("[LiteRule-Breaker] 规则 {} 熔断器 HALF_OPEN", ruleCode);
         }
     }
 
@@ -206,8 +136,8 @@ public class RuleCircuitBreaker {
      * @return 状态；规则未被评估过返回 CLOSED
      */
     public State getState(String ruleCode) {
-        BreakerState state = breakers.get(ruleCode);
-        return state == null ? State.CLOSED : state.state.get();
+        CircuitBreaker breaker = breakers.get(ruleCode);
+        return breaker == null ? State.CLOSED : breaker.getState();
     }
 
     /**
@@ -216,13 +146,18 @@ public class RuleCircuitBreaker {
      * @param ruleCode 规则编码
      */
     public void reset(String ruleCode) {
-        breakers.remove(ruleCode);
+        CircuitBreaker removed = breakers.remove(ruleCode);
+        if (removed != null) {
+            // 从 Resilience4j 注册表中移除，释放资源
+            sharedRegistry.remove("literule-" + ruleCode);
+        }
     }
 
     /**
      * 重置全部熔断器
      */
     public void resetAll() {
+        breakers.keySet().forEach(this::reset);
         breakers.clear();
     }
 }

@@ -87,6 +87,9 @@ public final class BeanSerializerInfo {
 
         /**
          * 获取 String 类型字段值
+         *
+         * @param obj 目标对象实例
+         * @return 字段值，若获取失败返回 null
          */
         public String getStringValue(Object obj) {
             try {
@@ -98,6 +101,9 @@ public final class BeanSerializerInfo {
 
         /**
          * 获取 int 类型字段值
+         *
+         * @param obj 目标对象实例
+         * @return 字段值，若获取失败返回 0
          */
         public int getIntValue(Object obj) {
             try {
@@ -109,6 +115,9 @@ public final class BeanSerializerInfo {
 
         /**
          * 获取 long 类型字段值
+         *
+         * @param obj 目标对象实例
+         * @return 字段值，若获取失败返回 0L
          */
         public long getLongValue(Object obj) {
             try {
@@ -120,6 +129,9 @@ public final class BeanSerializerInfo {
 
         /**
          * 获取 double 类型字段值
+         *
+         * @param obj 目标对象实例
+         * @return 字段值，若获取失败返回 0.0
          */
         public double getDoubleValue(Object obj) {
             try {
@@ -131,6 +143,9 @@ public final class BeanSerializerInfo {
 
         /**
          * 获取 boolean 类型字段值
+         *
+         * @param obj 目标对象实例
+         * @return 字段值，若获取失败返回 false
          */
         public boolean getBooleanValue(Object obj) {
             try {
@@ -142,6 +157,9 @@ public final class BeanSerializerInfo {
 
         /**
          * 获取 Object 类型字段值
+         *
+         * @param obj 目标对象实例
+         * @return 字段值，若获取失败返回 null
          */
         public Object getObjectValue(Object obj) {
             try {

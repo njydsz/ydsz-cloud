@@ -161,6 +161,10 @@ public final class FieldMeta {
 
     /**
      * 构造函数
+     *
+     * @param field    Java 反射字段对象
+     * @param jsonName JSON 字段名（经命名策略处理后的名称）
+     * @param ordinal  序列化优先级
      */
     public FieldMeta(Field field, String jsonName, int ordinal) {
         this.field = field;
@@ -270,7 +274,12 @@ public final class FieldMeta {
         return TYPE_CODE_DEFAULT;
     }
 
-    /** 计算字段类型对应的 FieldTypeCode（统一类型码，向后兼容的 int 码仍通过 computeSerializeTypeCode 保留） */
+    /**
+     * 计算字段类型对应的 FieldTypeCode（统一类型码，向后兼容的 int 码仍通过 computeSerializeTypeCode 保留）
+     *
+     * @param type 字段类型
+     * @return 对应的 FieldTypeCode 枚举值
+     */
     private static FieldTypeCode computeFieldTypeCode(Class<?> type) {
         if (type == String.class) return FieldTypeCode.STRING;
         if (type == int.class || type == Integer.class) return FieldTypeCode.INT;
@@ -489,8 +498,8 @@ JsonSerializationException.SERIALIZATION_ERROR,
     /**
      * 获取 boolean 类型字段值（超快路径 - 无 try-catch）
      *
-     * @param obj 对象实例
-     * @return 字段值，如果失败返回 false
+     * @param obj 目标对象实例
+     * @return 字段值，若获取失败返回 false
      */
     public boolean getBooleanValueFast(Object obj) {
         try {
@@ -502,6 +511,9 @@ JsonSerializationException.SERIALIZATION_ERROR,
 
     /**
      * 设置字段值（MethodHandle 优化）
+     *
+     * @param obj   目标对象实例
+     * @param value 要设置的字段值
      */
     public void setValue(Object obj, Object value) {
         // 优先使用 VarHandle（避免装箱）
@@ -531,6 +543,8 @@ JsonSerializationException.SERIALIZATION_ERROR,
 
     /**
      * 是否是 String 类型
+     *
+     * @return 若字段类型为 String 返回 true，否则返回 false
      */
     public boolean isStringType() {
         return type == String.class;
@@ -538,6 +552,8 @@ JsonSerializationException.SERIALIZATION_ERROR,
 
     /**
      * 是否是日期类型
+     *
+     * @return 若字段类型为 Date、LocalDate 或 LocalDateTime 返回 true，否则返回 false
      */
     public boolean isDateType() {
         return type == Date.class || type == LocalDate.class || type == LocalDateTime.class;
@@ -545,6 +561,9 @@ JsonSerializationException.SERIALIZATION_ERROR,
 
     /**
      * 格式化日期值
+     *
+     * @param value 日期字段值
+     * @return 格式化后的日期字符串，若值为 null 返回 null
      */
     public String formatDateValue(Object value) {
         if (value == null) return null;
@@ -570,6 +589,9 @@ JsonSerializationException.SERIALIZATION_ERROR,
 
     /**
      * 解析日期值
+     *
+     * @param json JSON 字符串
+     * @return 解析后的日期对象，若解析失败返回原始字符串
      */
     public Object parseDateValue(String json) {
         if (json == null || json.equals("null")) return null;

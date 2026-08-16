@@ -297,6 +297,7 @@ public class JsonMapper {
      * <p>通过 {@link SerializationContext#from(JsonRuntimeConfig)} 一次性创建并关联上下文，
      * 避免逐个字段赋值。调用方需负责清理（使用现有清理机制）。</p>
      *
+     * @param runtimeConfig 预计算运行时配置
      * @since 1.1.0
      */
     static void installSerializationContext(JsonRuntimeConfig runtimeConfig) {
@@ -306,6 +307,8 @@ public class JsonMapper {
 
     /**
      * 恢复配置快照（ThreadLocal 序列化参数）。
+     *
+     * @param snapshot 配置快照（为 null 表示无需恢复）
      */
     private void restoreConfig(ThreadLocalSnapshot snapshot) {
         if (snapshot != null) {
@@ -1003,6 +1006,7 @@ public class JsonMapper {
          * 设置字段命名策略。
          *
          * @param strategy 命名策略（如 SNAKE_CASE / LOWER_CAMEL_CASE），不可为 {@code null}
+         * @return 当前 Builder 实例
          */
         public Builder namingStrategy(PropertyNamingStrategy strategy) {
             configBuilder.namingStrategy(strategy);
@@ -1013,6 +1017,7 @@ public class JsonMapper {
          * 设置日期类型序列化格式。
          *
          * @param dateFormat SimpleDateFormat 模式串；空串或 {@code null} 表示使用默认格式
+         * @return 当前 Builder 实例
          */
         public Builder dateFormat(String dateFormat) {
             configBuilder.dateFormat(dateFormat);
@@ -1023,6 +1028,7 @@ public class JsonMapper {
          * 设置是否输出 null 字段。
          *
          * @param writeNulls {@code true} 保留 null 字段，{@code false} 跳过 null 字段
+         * @return 当前 Builder 实例
          */
         public Builder writeNulls(boolean writeNulls) {
             configBuilder.writeNulls(writeNulls);
@@ -1033,6 +1039,7 @@ public class JsonMapper {
          * 设置是否格式化（缩进）输出。
          *
          * @param prettyPrint {@code true} 启用美化输出
+         * @return 当前 Builder 实例
          */
         public Builder prettyPrint(boolean prettyPrint) {
             configBuilder.prettyPrint(prettyPrint);
@@ -1043,6 +1050,7 @@ public class JsonMapper {
          * 设置循环引用处理策略。
          *
          * @param strategy {@code REF} 输出引用路径 / {@code IGNORE} 忽略 / {@code ERROR} 抛异常
+         * @return 当前 Builder 实例
          */
         public Builder circularReferenceStrategy(JsonConfig.CircularReferenceStrategy strategy) {
             configBuilder.circularReferenceStrategy(strategy);
@@ -1053,6 +1061,7 @@ public class JsonMapper {
          * 设置枚举序列化方式。
          *
          * @param ordinal {@code true} 用枚举 ordinal 序号，{@code false} 用 name 名称
+         * @return 当前 Builder 实例
          */
         public Builder serializeEnumUsingOrdinal(boolean ordinal) {
             configBuilder.serializeEnumUsingOrdinal(ordinal);
@@ -1063,6 +1072,7 @@ public class JsonMapper {
          * 设置是否将浮点数解析为 BigDecimal 以保留精度。
          *
          * @param useBigDecimal {@code true} 启用（金融等高精度场景推荐）
+         * @return 当前 Builder 实例
          */
         public Builder useBigDecimal(boolean useBigDecimal) {
             configBuilder.useBigDecimal(useBigDecimal);
@@ -1073,6 +1083,7 @@ public class JsonMapper {
          * 设置是否启用根名称包裹。
          *
          * @param wrapRootValue {@code true} 启用（配合 {@code @JsonRootName} 注解）
+         * @return 当前 Builder 实例
          */
         public Builder wrapRootValue(boolean wrapRootValue) {
             configBuilder.wrapRootValue(wrapRootValue);
@@ -1083,6 +1094,7 @@ public class JsonMapper {
          * 设置序列化遇错时是否抛出异常。
          *
          * @param failOnError {@code true} 抛异常，{@code false} 降级为容错输出
+         * @return 当前 Builder 实例
          */
         public Builder failOnError(boolean failOnError) {
             configBuilder.failOnError(failOnError);
@@ -1093,6 +1105,7 @@ public class JsonMapper {
          * 设置单次 JSON 处理的最大字节数上限。
          *
          * @param maxJsonSize 上限（字节），超过将抛出 {@link JsonException}
+         * @return 当前 Builder 实例
          */
         public Builder maxJsonSize(long maxJsonSize) {
             configBuilder.maxJsonSize(maxJsonSize);
@@ -1103,6 +1116,7 @@ public class JsonMapper {
          * 设置序列化/反序列化的最大嵌套深度。
          *
          * @param maxDepth 最大深度，防止过深结构导致栈溢出
+         * @return 当前 Builder 实例
          */
         public Builder maxDepth(int maxDepth) {
             configBuilder.maxDepth(maxDepth);
@@ -1113,6 +1127,7 @@ public class JsonMapper {
          * 设置泛型递归深度上限。
          *
          * @param maxGenericDepth 最大深度，防止嵌套泛型参数递归过深导致栈溢出，默认 64
+         * @return 当前 Builder 实例
          */
         public Builder maxGenericDepth(int maxGenericDepth) {
             configBuilder.maxGenericDepth(maxGenericDepth);

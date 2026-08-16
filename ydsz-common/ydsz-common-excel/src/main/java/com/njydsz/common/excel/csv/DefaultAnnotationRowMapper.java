@@ -2,10 +2,11 @@ package com.njydsz.common.excel.csv;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -41,6 +42,9 @@ import com.njydsz.common.excel.tabular.TabularRowMapper;
  * @since 1.0.0
  */
 public class DefaultAnnotationRowMapper<T> implements TabularRowMapper<T> {
+
+    private static final DateTimeFormatter DATE_TIME_FORMATTER =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final Class<T> clazz;
     private final List<String> headers;
@@ -212,7 +216,8 @@ public class DefaultAnnotationRowMapper<T> implements TabularRowMapper<T> {
         }
         if (targetType == Date.class) {
             try {
-                return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(value);
+                LocalDateTime ldt = LocalDateTime.parse(value, DATE_TIME_FORMATTER);
+                return Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
             } catch (Exception ex) {
                 return new Date(Long.parseLong(value));
             }
@@ -232,7 +237,8 @@ public class DefaultAnnotationRowMapper<T> implements TabularRowMapper<T> {
             return value.toString();
         }
         if (value instanceof Date) {
-            return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(value);
+            return DATE_TIME_FORMATTER.format(
+                    ((Date) value).toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
         }
         return value.toString();
     }

@@ -12,7 +12,6 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import com.njydsz.common.file.storage.IFileStorageProvider;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.server.health.NextwikiHealthIndicator;
-import com.njydsz.nextwiki.server.metrics.NextwikiMetrics;
 
 /**
  * NextWiki 基础设施配置
@@ -40,9 +39,8 @@ public class AsyncConfig {
     @ConditionalOnMissingBean(NextwikiHealthIndicator.class)
     public NextwikiHealthIndicator nextwikiHealthIndicator(
             FileNodeRepository fileNodeRepository,
-            NextwikiMetrics nextwikiMetrics,
             ObjectProvider<IFileStorageProvider> fileStorageProvider) {
-        NextwikiHealthIndicator indicator = new NextwikiHealthIndicator(fileNodeRepository, nextwikiMetrics);
+        NextwikiHealthIndicator indicator = new NextwikiHealthIndicator(fileNodeRepository);
         IFileStorageProvider provider = fileStorageProvider.getIfAvailable();
         if (provider != null) {
             indicator.setFileStorageProvider(provider);

@@ -50,6 +50,10 @@ public final class SerializerCache {
 
     /**
      * 配置变更回调：检测命名策略或日期格式等影响字段元数据的配置变更，自动清理缓存。
+     *
+     * @param oldConfig 变更前的配置对象，首次回调时为 null
+     * @param newConfig 变更后的配置对象
+     * @param newVersion 新配置版本号
      */
     private static void onConfigChanged(JsonConfig oldConfig, JsonConfig newConfig, long newVersion) {
         // 仅当影响字段元数据的配置发生变更时才清理
@@ -83,6 +87,10 @@ public final class SerializerCache {
 
     /**
      * 缓存字段元数据（按命名策略隔离）
+     *
+     * @param clazz    目标类
+     * @param strategy 命名策略
+     * @param metas    字段元数据数组
      */
     public static void putFieldMeta(Class<?> clazz, PropertyNamingStrategy strategy, FieldMeta[] metas) {
         FIELD_META_CACHE
@@ -99,6 +107,8 @@ public final class SerializerCache {
 
     /**
      * 获取外层缓存大小（已加载的 Class 数量）
+     *
+     * @return 已缓存的 Class 数量
      */
     public static int size() {
         return FIELD_META_CACHE.size();
@@ -106,6 +116,9 @@ public final class SerializerCache {
 
     /**
      * 获取指定 Class 的命名策略维度缓存条目数
+     *
+     * @param clazz 目标类
+     * @return 该 Class 下已缓存的命名策略数量，未缓存返回 0
      */
     public static int strategySize(Class<?> clazz) {
         ConcurrentMap<PropertyNamingStrategy, FieldMeta[]> strategyMap = FIELD_META_CACHE.get(clazz);

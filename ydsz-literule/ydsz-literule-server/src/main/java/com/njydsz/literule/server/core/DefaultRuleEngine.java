@@ -18,6 +18,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
+import com.njydsz.common.sentry.SentryObservation;
+import com.njydsz.common.sentry.domain.AlertEvent;
+import com.njydsz.common.sentry.domain.AlertSeverity;
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleContext;
@@ -1473,11 +1476,22 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
             v.setTotalElapsedMs(v.getTotalElapsedMs() + elapsedMs);
             return v;
         });
-        // P2-4 慢规则告警：超过阈值时上报监控指标 + WARN 日志
+        // P2-4 慢规则告警：超过阈值时上报监控指标 + sentry 告警收敛
         if (slowRuleThresholdMs > 0 && elapsedMs >= slowRuleThresholdMs) {
             if (metrics != null) {
                 metrics.recordSlowRule(ruleCode, elapsedMs, slowRuleThresholdMs);
             }
+            // 慢规则告警 → sentry 告警收敛（P2 性能事件）
+            SentryObservation.alert(AlertEvent.builder()
+                    .name("literule.slow_rule")
+                    .severity(AlertSeverity.P2)
+                    .summary("慢规则检测：规则 " + ruleCode + " 评估耗时超阈值")
+                    .description("规则评估耗时 " + elapsedMs + "ms，超过阈值 " + slowRuleThresholdMs + "ms")
+                    .category("performance")
+                    .labels(Map.of("rule_code", ruleCode,
+                            "elapsed_ms", String.valueOf(elapsedMs),
+                            "threshold_ms", String.valueOf(slowRuleThresholdMs)))
+                    .build());
             log.warn("[LiteRule-SlowRule] rule={}, elapsed={}ms, threshold={}ms",
                     ruleCode, elapsedMs, slowRuleThresholdMs);
         }

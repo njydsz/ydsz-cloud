@@ -149,6 +149,9 @@ public final class NumberUtils {
 
     /**
      * 计算整数的字符表示长度
+     *
+     * @param value 整数值
+     * @return 字符表示长度
      */
     public static int sizeOfInt(int value) {
         if (value < 0) {
@@ -170,6 +173,9 @@ public final class NumberUtils {
 
     /**
      * 计算长整数的字符表示长度
+     *
+     * @param value 长整数值
+     * @return 字符表示长度
      */
     public static int sizeOfLong(long value) {
         if (value < 0) {

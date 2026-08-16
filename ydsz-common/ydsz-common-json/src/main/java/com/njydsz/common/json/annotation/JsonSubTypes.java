@@ -29,6 +29,8 @@ public @interface JsonSubTypes {
 
     /**
      * 子类型列表
+     *
+     * @return 子类型注解数组，定义基类的所有可能子类型映射
      */
     JsonSubType[] value();
 }

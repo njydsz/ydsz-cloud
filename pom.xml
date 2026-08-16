@@ -1221,11 +1221,19 @@
                 </execution>
             </executions>
         </plugin>
-        <!-- Maven Enforcer：构建期依赖治理——禁止新增 Jackson / 旧 FastJSON 直接依赖 -->
+        <!-- Maven Enforcer：构建期依赖治理——禁止新增 Jackson / 旧 FastJSON 直接依赖、禁止业务模块直接使用 POI -->
         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-enforcer-plugin</artifactId>
             <version>3.5.0</version>
+            <dependencies>
+                <!-- extra-enforcer-rules 提供 bannedImports 能力 -->
+                <dependency>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>extra-enforcer-rules</artifactId>
+                    <version>1.8.0</version>
+                </dependency>
+            </dependencies>
             <executions>
                 <execution>
                     <id>enforce-json-ecosystem</id>
@@ -1271,6 +1279,17 @@
                             <!-- 6. 重复类检测（防止多模块导出同名类） -->
                             <banDuplicatePomDependencyVersions/>
                             <reactorModuleConvergence/>
+                            <!-- 7. 业务模块禁止直接使用 Apache POI API（common-excel / common-docs 除外） -->
+                            <bannedImports>
+                                <bannedImports>
+                                    <bannedImport>org.apache.poi.**</bannedImport>
+                                </bannedImports>
+                                <excludeModules>
+                                    <excludeModule>ydsz-common-excel</excludeModule>
+                                    <excludeModule>ydsz-common-docs</excludeModule>
+                                </excludeModules>
+                                <message>[ydsz-banned] 业务模块禁止直接 import org.apache.poi.* API。所有 Excel 操作必须通过 ydsz-common-excel 模块（ExcelFacade / ExcelExportHelper / ExcelWebSupport）完成。详见云顶编码规范第 20.6 节。</message>
+                            </bannedImports>
                         </rules>
                         <fail>true</fail>
                     </configuration>

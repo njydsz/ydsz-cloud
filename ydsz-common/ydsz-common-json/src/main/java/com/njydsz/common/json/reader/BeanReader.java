@@ -6,6 +6,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -821,23 +822,22 @@ public final class BeanReader<T> {
             return new Date(Long.parseLong(s));
         } catch (NumberFormatException ignored) {
         }
+        List<DateTimeFormatter> candidates = new ArrayList<>();
         if (pattern != null) {
             try {
-                return new java.text.SimpleDateFormat(pattern).parse(s);
+                candidates.add(DateTimeFormatter.ofPattern(pattern));
             } catch (Exception ignored) {
             }
         }
-        try {
-            return new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(s);
-        } catch (Exception ignored) {
-        }
-        try {
-            return new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(s);
-        } catch (Exception ignored) {
-        }
-        try {
-            return new java.text.SimpleDateFormat("yyyy-MM-dd").parse(s);
-        } catch (Exception ignored) {
+        candidates.add(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"));
+        candidates.add(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+        candidates.add(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        for (DateTimeFormatter fmt : candidates) {
+            try {
+                LocalDateTime ldt = LocalDateTime.parse(s, fmt);
+                return Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
+            } catch (Exception ignored) {
+            }
         }
         return null;
     }

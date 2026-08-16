@@ -24,6 +24,8 @@ public @interface JsonSubType {
 
     /**
      * 子类型类
+     *
+     * @return 具体的子类类型
      */
     Class<?> value();
 
@@ -31,6 +33,8 @@ public @interface JsonSubType {
      * 类型标识名称
      *
      * <p>JSON 中 type 属性的值，用于反序列化时识别具体子类</p>
+     *
+     * @return 类型标识名称
      */
     String name();
 }

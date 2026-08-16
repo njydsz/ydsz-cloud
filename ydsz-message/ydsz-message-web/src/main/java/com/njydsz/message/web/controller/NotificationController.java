@@ -2,6 +2,7 @@ package com.njydsz.message.web.controller.core;
 
 import java.util.List;
 import java.util.Map;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -22,11 +24,14 @@ import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.common.feign.dto.RealtimePushDTO;
+import com.njydsz.common.feign.MessageResult;
+import com.njydsz.common.feign.dto.BroadcastRequestDTO;
+import com.njydsz.common.feign.dto.PushRealtimeRequestDTO;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.socket.trace.WebSocketTraceContext;
 import com.njydsz.message.domain.converter.MessageConverter;
 import com.njydsz.message.domain.dto.core.NotificationQueryDTO;
 import com.njydsz.message.domain.dto.core.NotificationSendDTO;
@@ -215,7 +220,7 @@ public class NotificationController {
     public BaseResponse<Map<String, Object>> push(
             @RequestParam String userId,
             @RequestParam String type,
-            @Valid @RequestBody RealtimePushDTO payload) {
+            @Valid @RequestBody PushRealtimeRequestDTO payload) {
         Object bizData = payload != null ? payload.getData() : null;
         realtimePushService.pushToUser(userId, type, bizData);
         return BaseResponse.success(Map.of("success", true, "userId", userId, "type", type));
@@ -224,19 +229,38 @@ public class NotificationController {
     /**
      * 广播（实时推送至所有在线用户）。
      *
-     * @param type    推送类型
-     * @param payload 推送数据
-     * @return 统一响应结果，包含广播结果信息
+     * <p>P0-3-fix：请求体使用 {@link BroadcastRequestDTO}，将 topic 并入 body，
+     * 返回 {@link MessageResult} 使调用方可感知推送结果。
+     *
+     * @param request 广播请求（topic、data、可选 messageId）
+     * @return 统一响应结果，包含 traceId 用于链路追踪
      */
     @Operation(summary = "广播(实时推送所有在线用户)")
     @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_BROADCAST)
     @Idempotent(key = "ydsz:message:NotificationController:broadcast:lock", ttlSeconds = 5)
     @Audit(module = "通知管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
     @PostMapping("/broadcast")
-    public BaseResponse<Map<String, Object>> broadcast(
-            @RequestParam String type,
-            @Valid @RequestBody Object payload) {
-        realtimePushService.broadcast(type, payload);
-        return BaseResponse.success(Map.of("success", true, "type", type));
+    public BaseResponse<MessageResult> broadcast(@Valid @RequestBody BroadcastRequestDTO request) {
+        realtimePushService.broadcast(request.getTopic(), request.getData());
+        String traceId = WebSocketTraceContext.getTraceId();
+        return BaseResponse.success(MessageResult.ok(request.getTopic(), traceId));
+    }
+
+    /**
+     * 单播实时推送（供 Feign 远程调用）。
+     *
+     * <p>P0-3-fix：新增端点，支持工作流、定时任务等模块通过 Feign 单播推送。
+     *
+     * @param request 单播请求（userId、type、data、可选 messageId）
+     * @return 统一响应结果，包含 traceId 用于链路追踪
+     */
+    @Operation(summary = "单播实时推送(Feign远程调用)")
+    @AuthApiPermission(apiCodes = PermissionCodes.NOTIF_PUSH)
+    @Idempotent(key = "ydsz:message:NotificationController:push-realtime:lock", ttlSeconds = 5)
+    @PostMapping("/push-realtime")
+    public BaseResponse<MessageResult> pushRealtime(@Valid @RequestBody PushRealtimeRequestDTO request) {
+        realtimePushService.pushToUser(request.getUserId(), request.getType(), request.getData());
+        String traceId = WebSocketTraceContext.getTraceId();
+        return BaseResponse.success(MessageResult.ok(request.getType(), traceId));
     }
 }

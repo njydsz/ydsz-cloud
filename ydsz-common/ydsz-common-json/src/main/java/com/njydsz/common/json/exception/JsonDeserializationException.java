@@ -220,6 +220,9 @@ public class JsonDeserializationException extends JsonException {
 
     /**
      * 从 JSON 字符串和位置计算行列号和上下文片段。
+     *
+     * @param json     原始 JSON 字符串
+     * @param position 字符位置
      */
     private void computeLineColumn(String json, int position) {
         if (json == null || position < 0 || position >= json.length()) {
@@ -255,6 +258,11 @@ public class JsonDeserializationException extends JsonException {
 
     /**
      * 增强 error message，附加行列号信息。
+     *
+     * @param message  原始错误消息
+     * @param position 字符位置
+     * @param json     原始 JSON 字符串
+     * @return 增强后的错误消息，包含行列号信息
      */
     private static String enrichMessage(String message, int position, String json) {
         if (json == null || position < 0) {

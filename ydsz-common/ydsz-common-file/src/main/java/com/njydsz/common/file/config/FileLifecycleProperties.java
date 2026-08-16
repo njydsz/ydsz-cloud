@@ -34,8 +34,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "ydsz.file.lifecycle")
 public class FileLifecycleProperties {
 
-    /** 是否启用文件生命周期清理（默认关闭） */
-    private boolean enabled = false;
+    /** 是否启用文件生命周期清理（默认启用，业务模块可通过 ydsz.file.lifecycle.enabled=false 关闭） */
+    private boolean enabled = true;
 
     /** 定时清理的 Cron 表达式（默认每天凌晨 2 点执行） */
     private String cron = "0 0 2 * * ?";
