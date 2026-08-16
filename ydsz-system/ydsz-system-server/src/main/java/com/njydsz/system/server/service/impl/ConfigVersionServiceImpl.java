@@ -21,7 +21,7 @@ import com.njydsz.system.domain.entity.Config;
 import com.njydsz.system.domain.entity.ConfigVersion;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.ConfigVersionVO;
-import com.njydsz.system.infra.mapper.ConfigVersionMapper;
+import com.njydsz.system.infra.repository.ConfigVersionRepository;
 import com.njydsz.system.infra.repository.ConfigRepository;
 import com.njydsz.system.server.service.ConfigVersionService;
 
@@ -62,8 +62,8 @@ import com.njydsz.system.server.service.ConfigVersionService;
 @RequiredArgsConstructor
 public class ConfigVersionServiceImpl implements ConfigVersionService {
 
-  /** 配置版本 Mapper（继承 {@code ydsz_config_version} 表 CRUD） */
-  private final ConfigVersionMapper configVersionMapper;
+  /** 配置版本仓储（封装 {@code ydsz_config_version} 表访问） */
+  private final ConfigVersionRepository configVersionRepository;
 
   /** 配置仓储（用于回滚时更新配置项） */
   private final ConfigRepository configRepository;
@@ -81,7 +81,7 @@ public class ConfigVersionServiceImpl implements ConfigVersionService {
    */
   @Override
   public List<ConfigVersionVO> listByResourceKey(String resourceKey) {
-    return configVersionMapper.listByResourceKey(resourceKey).stream()
+    return configVersionRepository.getConfigVersionMapper().listByResourceKey(resourceKey).stream()
         .map(SystemConverter.INSTANT::entityToVO)
         .collect(Collectors.toList());
   }
@@ -121,7 +121,7 @@ public class ConfigVersionServiceImpl implements ConfigVersionService {
     entity.setChangeLog(changeLog);
     entity.setSnapshotJson(snapshotJson);
     entity.setEffectiveDate(LocalDateTime.now());
-    configVersionMapper.insert(entity);
+    configVersionRepository.getConfigVersionMapper().insert(entity);
     return entity.getId();
   }
 
@@ -143,7 +143,7 @@ public class ConfigVersionServiceImpl implements ConfigVersionService {
   public String rollbackTo(String resourceKey, String targetVersion, String operatorId) {
     // 1. 查询目标版本
     ConfigVersion targetVersionEntity =
-        configVersionMapper.selectByKeyAndVersion(resourceKey, targetVersion);
+        configVersionRepository.getConfigVersionMapper().selectByKeyAndVersion(resourceKey, targetVersion);
     if (targetVersionEntity == null) {
       throw BusinessException.of(SystemExceptionCode.CONFIG_VERSION_NOT_FOUND)
           .data("resourceKey", resourceKey)
@@ -207,7 +207,7 @@ public class ConfigVersionServiceImpl implements ConfigVersionService {
     newVersionEntity.setChangeLog(changeLog);
     newVersionEntity.setSnapshotJson(rollbackSnapshot);
     newVersionEntity.setEffectiveDate(LocalDateTime.now());
-    configVersionMapper.insert(newVersionEntity);
+    configVersionRepository.getConfigVersionMapper().insert(newVersionEntity);
 
     // 5. 失效缓存
     cacheManager.getCache(CacheConstants.SYSTEM_CONFIG_CACHE).clear();

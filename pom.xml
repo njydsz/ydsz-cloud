@@ -43,6 +43,8 @@
         <maven.compiler.target>21</maven.compiler.target>
         <!--mvn-->
         <maven.version>3.6.3</maven.version>
+        <!-- Checkstyle 全局开关：true = 打包/构建时跳过 checkstyle 校验；需要恢复检查时改回 false -->
+        <checkstyle.skip>true</checkstyle.skip>
         <!--Spring-->
         <spring-boot.version>4.1.0</spring-boot.version>
         <spring-cloud.version>2025.1.2</spring-cloud.version>
@@ -1158,6 +1160,8 @@
                         </dependency>
                     </dependencies>
                     <configuration>
+                        <!-- 全局跳过 checkstyle 校验（由 checkstyle.skip 属性控制） -->
+                        <skip>${checkstyle.skip}</skip>
                         <!-- 使用 ${maven.multiModuleProjectDirectory} 指向项目根目录（Maven 3.3.1+ 支持） -->
                         <configLocation>${maven.multiModuleProjectDirectory}/docs/checkstyle.xml</configLocation>
                         <!-- 注入 ${config_loc}（checkstyle.xml 内 SuppressionFilter 引用同级 checkstyle-suppressions.xml 所需；

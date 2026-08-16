@@ -24,7 +24,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.system.domain.dto.DictItemDTO;
 import com.njydsz.system.domain.entity.DictItem;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
-import com.njydsz.system.infra.mapper.DictItemMapper;
+import com.njydsz.system.infra.repository.DictRepository;
 import com.njydsz.system.server.service.DictItemBatchService;
 import com.njydsz.system.server.service.DictVersionService;
 
@@ -55,8 +55,8 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
   /** MyBatis-Plus SqlSessionFactory（用于获取 IdentifierGenerator 预生成主键） */
   private final SqlSessionFactory sqlSessionFactory;
 
-  /** 字典项 Mapper（用于批量插入 + 唯一性校验） */
-  private final DictItemMapper dictItemMapper;
+  /** 字典仓储（用于批量插入 + 唯一性校验） */
+  private final DictRepository dictRepository;
 
   /** 字典版本服务（用于创建批量快照） */
   private final DictVersionService dictVersionService;
@@ -110,7 +110,7 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
     List<DictItem> entities = items.stream().map(this::toEntityWithId).collect(Collectors.toList());
 
     // 5. 批量插入
-    dictItemMapper.insertBatch(entities);
+    dictRepository.getDictItemMapper().insertBatch(entities);
 
     // 6. 单次缓存失效（清空整个字典项缓存，与 DictItemServiceImpl @CacheEvict(allEntries = true) 行为一致）
     cacheManager.getCache(CacheConstants.SYSTEM_DICT_ITEM_CACHE).clear();
@@ -156,7 +156,7 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
       index++;
       QueryWrapper<DictItem> checkWrapper = new QueryWrapper<>();
       checkWrapper.eq("type_code", item.getTypeCode()).eq("item_code", item.getItemCode());
-      if (dictItemMapper.selectCount(checkWrapper) > 0) {
+      if (dictRepository.getDictItemMapper().selectCount(checkWrapper) > 0) {
         throw BusinessException.of(SystemExceptionCode.DICT_ITEM_CODE_DUPLICATE)
             .data(
                 "reason",
@@ -176,7 +176,7 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
    * @param changeLog 变更说明
    */
   private void createSnapshotVersion(String typeCode, String version, String changeLog) {
-    List<DictItem> snapshot = dictItemMapper.listEnabledByTypeCode(typeCode);
+    List<DictItem> snapshot = dictRepository.getDictItemMapper().listEnabledByTypeCode(typeCode);
     String snapshotJson = YdszJson.toJson(snapshot);
     dictVersionService.createVersion(typeCode, version, changeLog, snapshotJson);
   }

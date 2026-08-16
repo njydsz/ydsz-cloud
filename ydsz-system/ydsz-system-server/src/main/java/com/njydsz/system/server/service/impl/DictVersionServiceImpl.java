@@ -21,8 +21,8 @@ import com.njydsz.system.domain.entity.DictItem;
 import com.njydsz.system.domain.entity.DictVersion;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.DictVersionVO;
-import com.njydsz.system.infra.mapper.DictItemMapper;
-import com.njydsz.system.infra.mapper.DictVersionMapper;
+import com.njydsz.system.infra.repository.DictRepository;
+import com.njydsz.system.infra.repository.DictVersionRepository;
 import com.njydsz.system.server.service.DictVersionService;
 
 /**
@@ -90,11 +90,11 @@ import com.njydsz.system.server.service.DictVersionService;
 @RequiredArgsConstructor
 public class DictVersionServiceImpl implements DictVersionService {
 
-  /** 字典版本 Mapper（继承 {@code ydsz_dict_version} 表 CRUD） */
-  private final DictVersionMapper mapper;
+  /** 字典版本 Repository（继承 {@code ydsz_dict_version} 表 CRUD） */
+  private final DictVersionRepository dictVersionRepository;
 
-  /** 字典项 Mapper（用于回滚时删除/重建字典项） */
-  private final DictItemMapper dictItemMapper;
+  /** 字典项 Repository（用于回滚时删除/重建字典项） */
+  private final DictRepository dictRepository;
 
   /** Redis String 操作组件（用于失效缓存） */
   private final RedisStringOps stringOps;
@@ -126,7 +126,7 @@ public class DictVersionServiceImpl implements DictVersionService {
    */
   @Override
   public List<DictVersionVO> listByTypeCode(String typeCode) {
-    return mapper.listByTypeCode(typeCode).stream()
+    return dictVersionRepository.getDictVersionMapper().listByTypeCode(typeCode).stream()
         .map(SystemConverter.INSTANT::entityToVO)
         .collect(Collectors.toList());
   }
@@ -161,7 +161,7 @@ public class DictVersionServiceImpl implements DictVersionService {
     entity.setChangeLog(changeLog);
     entity.setSnapshotJson(snapshotJson);
     entity.setEffectiveDate(LocalDateTime.now());
-    mapper.insert(entity);
+    dictVersionRepository.getDictVersionMapper().insert(entity);
     return entity.getId();
   }
 
@@ -183,7 +183,7 @@ public class DictVersionServiceImpl implements DictVersionService {
   public String rollbackTo(String typeCode, String targetVersion, String operatorId) {
     // 1. 查询目标版本
     DictVersion targetVersionEntity =
-        mapper.selectOne(
+        dictVersionRepository.getDictVersionMapper().selectOne(
             new QueryWrapper<DictVersion>()
                 .eq("type_code", typeCode)
                 .eq("version", targetVersion)
@@ -196,13 +196,13 @@ public class DictVersionServiceImpl implements DictVersionService {
 
     // 2. 查询当前字典项作为回滚前快照（用于审计回溯）
     List<DictItem> currentItems =
-        dictItemMapper.selectList(
+        dictRepository.getDictItemMapper().selectList(
             new QueryWrapper<DictItem>().eq("type_code", typeCode).eq("deleted", 0));
     String rollbackSnapshot =
         YdszJson.toJson(SystemConverter.INSTANT.dictItemListToVO(currentItems));
 
     // 3. 物理删除当前字典项
-    int deletedCount = dictItemMapper.physicalDeleteByTypeCode(typeCode);
+    int deletedCount = dictRepository.getDictItemMapper().physicalDeleteByTypeCode(typeCode);
     log.info("[DictVersion] 回滚准备: typeCode={}, 删除 {} 条现有字典项", typeCode, deletedCount);
 
     // 4. 反序列化目标快照并重建字典项
@@ -223,7 +223,7 @@ public class DictVersionServiceImpl implements DictVersionService {
             entity.setDescription(dto.getDescription());
             entity.setExtJson(dto.getExtJson());
             entity.setStatus(dto.getStatus());
-            dictItemMapper.insert(entity);
+            dictRepository.getDictItemMapper().insert(entity);
             insertedCount++;
           }
         }
@@ -250,7 +250,7 @@ public class DictVersionServiceImpl implements DictVersionService {
     newVersionEntity.setChangeLog(changeLog);
     newVersionEntity.setSnapshotJson(rollbackSnapshot);
     newVersionEntity.setEffectiveDate(LocalDateTime.now());
-    mapper.insert(newVersionEntity);
+    dictVersionRepository.getDictVersionMapper().insert(newVersionEntity);
 
     // 6. 失效缓存
     evictCache(typeCode);

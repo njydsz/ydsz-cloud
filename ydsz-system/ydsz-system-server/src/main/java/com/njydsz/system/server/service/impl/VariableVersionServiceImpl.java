@@ -21,8 +21,8 @@ import com.njydsz.system.domain.entity.Variable;
 import com.njydsz.system.domain.entity.VariableVersion;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.VariableVersionVO;
-import com.njydsz.system.infra.mapper.VariableMapper;
-import com.njydsz.system.infra.mapper.VariableVersionMapper;
+import com.njydsz.system.infra.repository.VariableRepository;
+import com.njydsz.system.infra.repository.VariableVersionRepository;
 import com.njydsz.system.server.service.VariableVersionService;
 
 /**
@@ -55,11 +55,11 @@ import com.njydsz.system.server.service.VariableVersionService;
 @RequiredArgsConstructor
 public class VariableVersionServiceImpl implements VariableVersionService {
 
-  /** 变量版本 Mapper（继承 {@code ydsz_variable_version} 表 CRUD） */
-  private final VariableVersionMapper variableVersionMapper;
+  /** 变量版本 Repository（封装 {@code ydsz_variable_version} 表访问） */
+  private final VariableVersionRepository variableVersionRepository;
 
-  /** 变量 Mapper（用于回滚时更新变量） */
-  private final VariableMapper variableMapper;
+  /** 变量 Repository（用于回滚时更新变量） */
+  private final VariableRepository variableRepository;
 
   /** Spring Cache 管理器（用于失效本地缓存） */
   private final CacheManager cacheManager;
@@ -74,7 +74,7 @@ public class VariableVersionServiceImpl implements VariableVersionService {
    */
   @Override
   public List<VariableVersionVO> listByResourceKey(String resourceKey) {
-    return variableVersionMapper.listByResourceKey(resourceKey).stream()
+    return variableVersionRepository.getVariableVersionMapper().listByResourceKey(resourceKey).stream()
         .map(SystemConverter.INSTANT::entityToVO)
         .collect(Collectors.toList());
   }
@@ -107,7 +107,7 @@ public class VariableVersionServiceImpl implements VariableVersionService {
     entity.setChangeLog(changeLog);
     entity.setSnapshotJson(snapshotJson);
     entity.setEffectiveDate(LocalDateTime.now());
-    variableVersionMapper.insert(entity);
+    variableVersionRepository.getVariableVersionMapper().insert(entity);
     return entity.getId();
   }
 
@@ -129,7 +129,7 @@ public class VariableVersionServiceImpl implements VariableVersionService {
   public String rollbackTo(String resourceKey, String targetVersion, String operatorId) {
     // 1. 查询目标版本
     VariableVersion targetVersionEntity =
-        variableVersionMapper.selectByKeyAndVersion(resourceKey, targetVersion);
+        variableVersionRepository.getVariableVersionMapper().selectByKeyAndVersion(resourceKey, targetVersion);
     if (targetVersionEntity == null) {
       throw BusinessException.of(SystemExceptionCode.VARIABLE_VERSION_NOT_FOUND)
           .data("resourceKey", resourceKey)
@@ -138,7 +138,7 @@ public class VariableVersionServiceImpl implements VariableVersionService {
 
     // 2. 查询当前变量作为回滚前快照（用于审计回溯）
     Variable currentVariable =
-        variableMapper.selectOne(
+        variableRepository.getVariableMapper().selectOne(
             new QueryWrapper<Variable>().eq("variable_key", resourceKey).eq("deleted", 0));
     String rollbackSnapshot = currentVariable != null ? YdszJson.toJson(currentVariable) : null;
 
@@ -153,7 +153,7 @@ public class VariableVersionServiceImpl implements VariableVersionService {
           currentVariable.setValueType(snapshotDTO.getValueType());
           currentVariable.setDescription(snapshotDTO.getDescription());
           currentVariable.setStatus(snapshotDTO.getStatus());
-          variableMapper.updateById(currentVariable);
+          variableRepository.getVariableMapper().updateById(currentVariable);
         } else {
           // 变量已被删除，重新插入
           Variable newVariable = new Variable();
@@ -162,7 +162,7 @@ public class VariableVersionServiceImpl implements VariableVersionService {
           newVariable.setValueType(snapshotDTO.getValueType());
           newVariable.setDescription(snapshotDTO.getDescription());
           newVariable.setStatus(snapshotDTO.getStatus());
-          variableMapper.insert(newVariable);
+          variableRepository.getVariableMapper().insert(newVariable);
         }
       } catch (Exception e) {
         log.error(
@@ -184,7 +184,7 @@ public class VariableVersionServiceImpl implements VariableVersionService {
     newVersionEntity.setChangeLog(changeLog);
     newVersionEntity.setSnapshotJson(rollbackSnapshot);
     newVersionEntity.setEffectiveDate(LocalDateTime.now());
-    variableVersionMapper.insert(newVersionEntity);
+    variableVersionRepository.getVariableVersionMapper().insert(newVersionEntity);
 
     // 5. 失效缓存
     cacheManager.getCache(CacheConstants.SYSTEM_VARIABLE_CACHE).clear();
