@@ -126,24 +126,6 @@ public class QueueMessage implements Serializable {
     }
 
     /**
-     * 创建带优先级的消息
-     *
-     * <p>注意：消息优先级仅部分 MQ 引擎原生支持，Other engines 将忽略此设置。
-     * 如需跨引擎兼容，请使用消息头传递优先级信息。
-     *
-     * @param body     消息体内容
-     * @param priority 优先级（数值越小优先级越高，仅部分 MQ 原生支持）
-     * @return 构建好的 QueueMessage 实例
-     * @deprecated 使用 {@link #addHeader(String, String)} 传递优先级信息更通用
-     */
-    @Deprecated
-    public static QueueMessage ofWithPriority(String body, int priority) {
-        QueueMessage message = of(body);
-        message.addHeader("priority", String.valueOf(priority));
-        return message;
-    }
-
-    /**
      * 创建带过期时间的消息
      *
      * <p>注意：消息过期仅部分 MQ 引擎原生支持。如需跨引擎兼容，

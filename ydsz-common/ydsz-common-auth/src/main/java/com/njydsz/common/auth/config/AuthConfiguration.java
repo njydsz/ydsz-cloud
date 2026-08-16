@@ -40,7 +40,6 @@ import com.njydsz.common.auth.service.RbacUserInfoService;
 import com.njydsz.common.auth.service.RolePermissionCacheService;
 import com.njydsz.common.auth.service.RolePermissionLoader;
 import com.njydsz.common.auth.service.TokenBlacklistService;
-import com.njydsz.common.auth.warmup.PermissionWarmUpInitializer;
 import com.njydsz.common.auth.service.impl.RedisRbacUserInfoService;
 import com.njydsz.common.auth.service.impl.RedisRoleColumnPermissionResolver;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
@@ -302,25 +301,6 @@ public class AuthConfiguration {
     }
 
     /**
-     * 权限缓存 Redis Pub/Sub 订阅容器。
-     *
-     * <p>当 {@link StringRedisTemplate} 可用时，监听 Redis 频道中的缓存失效消息，
-     * 收到其他实例发布的消息后清除本地权限缓存，实现多实例缓存同步。
-     *
-     * @param redisTemplate Redis 模板
-     * @param evaluator     权限评估器
-     * @return Redis 消息监听容器
-     * @deprecated 自 3.0.0 起标记废弃，迁移至 Redis Keyspace Notification。
-     */
-    @Deprecated
-    @Bean
-    @ConditionalOnBean(StringRedisTemplate.class)
-    public RedisMessageListenerContainer permissionCacheRedisSubscriber(
-            StringRedisTemplate redisTemplate, RbacPermissionEvaluator evaluator) {
-        return PermissionCacheInvalidationListener.createRedisSubscriber(redisTemplate, evaluator);
-    }
-
-    /**
      * Redis Keyspace Notification 权限缓存失效监听器。
      *
      * <p>当权限数据在 Redis 中被修改/删除时，通过 Keyspace Notification 精确触发缓存失效，
@@ -440,21 +420,6 @@ public class AuthConfiguration {
             RedisMessageListenerContainer redisMessageListenerContainer) {
         return new PermissionChangeCacheInvalidator(rolePermissionLoader, dataPermissionResolver,
                 columnPermissionResolver, redisMessageListenerContainer);
-    }
-
-    /**
-     * 创建权限预热初始化器 Bean
-     *
-     * @param properties 认证配置属性
-     * @param rolePermissionLoader 角色权限加载器
-     * @return PermissionWarmUpInitializer 实例
-     */
-    @Bean
-    @ConditionalOnMissingBean(PermissionWarmUpInitializer.class)
-    @ConditionalOnBean(RolePermissionLoader.class)
-    public PermissionWarmUpInitializer permissionWarmUpInitializer(
-            AuthProperties properties, RolePermissionLoader rolePermissionLoader) {
-        return new PermissionWarmUpInitializer(properties, rolePermissionLoader);
     }
 
     /**

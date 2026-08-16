@@ -82,10 +82,6 @@
         <!-- L5 业务服务层 -->
         <module>ydsz-common-auth</module>
         <module>ydsz-common-safe</module>
-        <module>ydsz-common-safe-starter</module>
-        <module>ydsz-common-safe-core</module>
-        <module>ydsz-common-safe-ratelimit</module>
-        <module>ydsz-common-safe-encrypt</module>
         <module>ydsz-common-feign</module>
         <module>ydsz-common-audit</module>
         <module>ydsz-common-notify</module>
@@ -177,26 +173,6 @@
             <dependency>
                 <groupId>com.njydsz</groupId>
                 <artifactId>ydsz-common-safe</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-safe-starter</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-safe-core</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-safe-ratelimit</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-safe-encrypt</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

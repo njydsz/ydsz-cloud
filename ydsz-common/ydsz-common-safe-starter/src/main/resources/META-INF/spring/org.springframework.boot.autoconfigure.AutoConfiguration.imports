@@ -1,5 +1,0 @@
-com.njydsz.common.safe.config.SafeConfiguration
-com.njydsz.common.safe.xss.XssAutoConfiguration
-com.njydsz.common.safe.ratelimit.config.RateLimitAutoConfiguration
-com.njydsz.common.safe.encrypt.FieldEncryptionAutoConfiguration
-com.njydsz.common.safe.encrypt.ApiSignatureAutoConfiguration

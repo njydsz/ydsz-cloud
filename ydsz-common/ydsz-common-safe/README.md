@@ -14,22 +14,6 @@
 | **依赖** | common-core、common-json、common-redis、common-util、common-exception、common-cache；可选依赖 micrometer-core、mybatis-plus-core、spring-boot-actuator、spring-boot-health |
 | **版本** | 1.0.0 |
 
-## 模块结构
-
-```
-ydsz-common-safe (兼容聚合包)
-├── ydzs-common-safe-starter (一键引入全部安全能力)
-├── ydzs-common-safe-core (XSS / CSRF / 安全头 / IP 访问 / 审计 / 指标 / 健康检查)
-├── ydzs-common-safe-ratelimit (令牌桶限流 / Resilience4j 熔断器 / Sentinel 扩展)
-└── ydzs-common-safe-encrypt (字段加密 / API 签名 / 防重放 Nonce)
-```
-
-**使用方式：**
-
-- **方式 1（推荐）**：引入 `ydsz-common-safe-starter` 一键获得完整安全能力
-- **方式 2（按需）**：仅引入 `ydsz-common-safe-core` + `ydsz-common-safe-ratelimit`（按需组合）
-- **方式 3（兼容）**：引入 `ydsz-common-safe`（等价于 starter，保持向后兼容）
-
 ## 核心能力
 
 ### 1. XSS 防护
@@ -546,6 +530,6 @@ ydsz:
 
 ## 变更记录
 
-- **v1.2.0**（2026-08-16）：模块拆分（safe → core + ratelimit + encrypt 三个独立子模块）；删除低价值模块（BotDetection、Captcha）；SecurityEventRingBuffer 标记 @Deprecated；限流算法收敛（废弃 COUNTER/SLIDING_WINDOW/LEAKY_BUCKET/CONCURRENCY，统一使用 TOKEN_BUCKET）；熔断器替换为 Resilience4j；移除 SQL 注入正则过滤器；配置前缀收敛（`ydsz.ratelimit` → `ydsz.safe.ratelimit`）；补全 FieldEncryptionService 测试。
+- **v1.2.0**（2026-08-16）：删除低价值模块（BotDetection、Captcha）；SecurityEventRingBuffer 标记 @Deprecated；限流算法收敛（废弃 COUNTER/SLIDING_WINDOW/LEAKY_BUCKET/CONCURRENCY，统一使用 TOKEN_BUCKET）；熔断器替换为 Resilience4j；移除 SQL 注入正则过滤器；配置前缀收敛（`ydsz.ratelimit` → `ydsz.safe.ratelimit`）；引入 Sentinel 限流扩展；建立度量标准（SLO/指标/热更新）；补全 FieldEncryptionService 测试。
 - **v1.1.0**（2026-08-16）：限流算法收敛（废弃 COUNTER/SLIDING_WINDOW/LEAKY_BUCKET/CONCURRENCY，统一使用 TOKEN_BUCKET）；熔断器替换为 Resilience4j；移除 SQL 注入正则过滤器；配置前缀收敛（`ydsz.ratelimit` → `ydsz.safe.ratelimit`）；补全 FieldEncryptionService 测试。
 - **v1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节，覆盖 14 项核心能力、10 个 Properties 配置类、9 个 SPI 接口、1 个 HealthIndicator。
