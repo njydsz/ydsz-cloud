@@ -2,7 +2,10 @@ package com.njydsz.common.sentry;
 
 import java.time.Duration;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+
+import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.sentry.domain.AlertEvent;
 import com.njydsz.common.sentry.domain.SlaDefinition;
@@ -47,7 +50,11 @@ import com.njydsz.common.sentry.spi.TraceContext;
  * @see AlertPublisher
  * @see SlaCollector
  */
+@Slf4j
 public final class SentryObservation {
+
+    /** 是否已完成初始化（register 已被调用） */
+    private static final AtomicBoolean INITIALIZED = new AtomicBoolean(false);
 
     /**
      * SPI 聚合持有者（懒加载）
@@ -147,6 +154,26 @@ public final class SentryObservation {
         bundle.setLogging(logPublisher);
         bundle.setAlerting(alertPublisher);
         bundle.setSla(slaCollector);
+        INITIALIZED.set(true);
+    }
+
+    /**
+     * 检查门面是否已完成初始化，未初始化时输出告警日志。
+     *
+     * <p>SentryObservation 需由 {@code SelfMonitorAutoConfiguration} 在 {@code @PostConstruct}
+     * 中调用 {@link #register} 完成 SPI 注册。业务方在容器启动完成前（如静态初始化块、
+     * {@code @PostConstruct} 早于自监控配置时）调用本门面方法会走到 no-op 分支，
+     * 此处通过日志提醒开发者排查注册时序。
+     *
+     * @return {@code true} 表示已初始化
+     */
+    private static boolean checkInitialized() {
+        if (INITIALIZED.get()) {
+            return true;
+        }
+        log.warn("[Sentry] SentryObservation 未完成初始化，本次调用将 no-op。" +
+                "请检查 SelfMonitorAutoConfiguration 是否正确装配");
+        return false;
     }
 
     // ==================== Metrics ====================
@@ -162,6 +189,8 @@ public final class SentryObservation {
         MetricsCollector collector = Holder.INSTANCE.metrics();
         if (collector != null) {
             collector.incrementCounter(name, description, tags);
+        } else {
+            checkInitialized();
         }
     }
 
@@ -177,6 +206,8 @@ public final class SentryObservation {
         MetricsCollector collector = Holder.INSTANCE.metrics();
         if (collector != null) {
             collector.incrementCounter(name, description, tags, amount);
+        } else {
+            checkInitialized();
         }
     }
 
@@ -203,6 +234,8 @@ public final class SentryObservation {
             if (collector != null) {
                 long tookMillis = System.currentTimeMillis() - start;
                 collector.recordTimer(name, description, tags, Duration.ofMillis(tookMillis));
+            } else {
+                checkInitialized();
             }
         }
     }
@@ -241,6 +274,8 @@ public final class SentryObservation {
         MetricsCollector collector = Holder.INSTANCE.metrics();
         if (collector != null) {
             collector.setGauge(name, description, tags, value);
+        } else {
+            checkInitialized();
         }
     }
 
@@ -253,7 +288,11 @@ public final class SentryObservation {
      */
     public static String traceId() {
         TraceContext context = Holder.INSTANCE.trace();
-        return context != null ? context.getTraceId() : null;
+        if (context == null) {
+            checkInitialized();
+            return null;
+        }
+        return context.getTraceId();
     }
 
     /**
@@ -263,7 +302,11 @@ public final class SentryObservation {
      */
     public static String spanId() {
         TraceContext context = Holder.INSTANCE.trace();
-        return context != null ? context.getSpanId() : null;
+        if (context == null) {
+            checkInitialized();
+            return null;
+        }
+        return context.getSpanId();
     }
 
     /**
@@ -286,6 +329,8 @@ public final class SentryObservation {
         TraceContext context = Holder.INSTANCE.trace();
         if (context != null) {
             context.tag(key, value);
+        } else {
+            checkInitialized();
         }
     }
 
@@ -299,7 +344,11 @@ public final class SentryObservation {
      */
     public static boolean alert(AlertEvent event) {
         AlertPublisher publisher = Holder.INSTANCE.alerting();
-        return publisher != null && publisher.publish(event);
+        if (publisher == null) {
+            checkInitialized();
+            return false;
+        }
+        return publisher.publish(event);
     }
 
     // ==================== SLA ====================
@@ -313,6 +362,8 @@ public final class SentryObservation {
         SlaCollector collector = Holder.INSTANCE.sla();
         if (collector != null) {
             collector.register(definition);
+        } else {
+            checkInitialized();
         }
     }
 
@@ -328,6 +379,8 @@ public final class SentryObservation {
         SlaCollector collector = Holder.INSTANCE.sla();
         if (collector != null) {
             collector.record(name, stepName, tookMillis, success);
+        } else {
+            checkInitialized();
         }
     }
 

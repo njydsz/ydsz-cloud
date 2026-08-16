@@ -1,5 +1,5 @@
 # Auto detect text files and perform LF normalization
-* text=elat
+* text=auto
 
 # Java source files
 *.java text eol=lf

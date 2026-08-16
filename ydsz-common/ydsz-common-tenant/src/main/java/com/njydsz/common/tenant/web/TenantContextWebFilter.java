@@ -17,7 +17,7 @@ import com.njydsz.common.tenant.feign.TenantHeaderContract;
 import com.njydsz.common.tenant.metrics.TenantMetrics;
 import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.core.model.AuthInfo;
+import com.njydsz.common.core.model.CurrentUser;
 
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
@@ -229,7 +229,7 @@ public class TenantContextWebFilter implements Filter {
             return null;
         }
         Object authObj = RequestContext.get(BizContextKeys.KEY_AUTH_INFO);
-        if (!(authObj instanceof AuthInfo auth)) {
+        if (!(authObj instanceof CurrentUser auth)) {
             return null;
         }
         switch (claim) {
@@ -238,17 +238,35 @@ public class TenantContextWebFilter implements Filter {
             case "uniqueId":
             case "userId":
                 return auth.getUniqueId();
-            case "companyIds": {
-                Set<String> ids = auth.getHasPermissionCompanyIds();
-                return ids == null || ids.isEmpty() ? null : String.join(",", ids);
-            }
-            case "deptIds": {
-                Set<String> ids = auth.getHasPermissionDeptIds();
-                return ids == null || ids.isEmpty() ? null : String.join(",", ids);
-            }
+            case "companyIds":
+            case "deptIds":
+                // 权限 ID 集合适用于 auth 模块的 YdszAuthInfo，通过反射获取
+                return invokeGetPermissionIds(authObj, claim);
             default:
                 return null;
         }
+    }
+
+    /**
+     * 通过反射获取权限 ID 集合（避免编译期对 auth 模块的依赖）。
+     *
+     * @param authObj 认证信息对象
+     * @param claim claim 名（companyIds 或 deptIds）
+     * @return 逗号拼接的 ID 集合；不可用时返回 null
+     */
+    private String invokeGetPermissionIds(Object authObj, String claim) {
+        try {
+            String methodName = "getHasPermission"
+                    + claim.substring(0, 1).toUpperCase() + claim.substring(1);
+            java.lang.reflect.Method method = authObj.getClass().getMethod(methodName);
+            Object result = method.invoke(authObj);
+            if (result instanceof Set<?> ids && !ids.isEmpty()) {
+                return String.join(",", ids.stream().map(Object::toString).toList());
+            }
+        } catch (Exception e) {
+            // 静默降级，返回 null
+        }
+        return null;
     }
 
     private boolean isAnonUrl(String requestUri) {

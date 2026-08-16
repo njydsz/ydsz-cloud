@@ -5,6 +5,8 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PreDestroy;
@@ -31,7 +33,14 @@ import com.njydsz.common.sentry.spi.MetricsCollector;
  *   <li>{@link MicrometerMetricsCollector}：Micrometer 指标采集（优先）</li>
  *   <li>{@link InMemoryMetricsCollector}：内存指标采集（降级）</li>
  *   <li>{@link SystemMetricsCollector}：系统资源指标（CPU/内存/磁盘/GC）</li>
- *   <li>{@link CircuitBreaker}：ELK/Loki 通道独立熔断器</li>
+ *   <li>{@link CircuitBreaker}：ELK/Loki 通道独立熔断器（基于 Resilience4j）</li>
+ * </ul>
+ *
+ * <h3>v2.0.0 变更</h3>
+ * <ul>
+ *   <li>CircuitBreaker 底层替换为 Resilience4j，移除自实现滑动窗口</li>
+ *   <li>新增 {@link CircuitBreakerRegistry} 共享 Bean，统一管理熔断器配置</li>
+ *   <li>Resilience4j 已自动导出 Micrometer 指标，移除手动 Gauge 绑定</li>
  * </ul>
  *
  * @author ydsz-team
@@ -104,6 +113,36 @@ public class MetricsAutoConfiguration {
     }
 
     /**
+     * 注册共享的 Resilience4j CircuitBreakerRegistry。
+     *
+     * <p>使用 Sentry 配置的默认熔断参数创建全局 Registry，
+     * 所有熔断器（ELK/Loki 通道）共享此 Registry 以便统一管理指标与事件。
+     *
+     * <p>Resilience4j 的熔断器指标会自动导出到 Micrometer（如果 MeterRegistry 可用），
+     * 指标前缀为 {@code resilience4j.circuitbreaker}，无需手动绑定 Gauge。
+     *
+     * @param properties 监控配置
+     * @return 共享的 CircuitBreakerRegistry
+     */
+    @Bean
+    @ConditionalOnMissingBean(CircuitBreakerRegistry.class)
+    @ConditionalOnClass(CircuitBreakerRegistry.class)
+    public CircuitBreakerRegistry circuitBreakerRegistry(SentryProperties properties) {
+        SentryProperties.CircuitBreakerConfig cb = properties.getMetrics().getCircuitBreaker();
+        CircuitBreakerConfig config = CircuitBreakerConfig.custom()
+                .failureRateThreshold(cb.getFailureRateThreshold())
+                .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.TIME_BASED)
+                .slidingWindowSize(cb.getSlidingWindowSize())
+                .waitDurationInOpenState(java.time.Duration.ofSeconds(cb.getHalfOpenAfterSeconds()))
+                .minimumNumberOfCalls(10)
+                .permittedNumberOfCallsInHalfOpenState(1)
+                .automaticTransitionFromOpenToHalfOpenEnabled(true)
+                .recordException(e -> true)
+                .build();
+        return CircuitBreakerRegistry.of(config);
+    }
+
+    /**
      * 为 ELK（Logstash）日志通道装配独立熔断器。
      *
      * @param properties 监控配置
@@ -134,35 +173,6 @@ public class MetricsAutoConfiguration {
         return new CircuitBreaker("loki",
                 cb.getFailureRateThreshold(), cb.getSlidingWindowSize(),
                 cb.getHalfOpenAfterSeconds() * 1000L);
-    }
-
-    /**
-     * 把容器内所有熔断器的状态与失败计数绑定为 Micrometer Gauge。
-     *
-     * @param circuitBreakers       容器内全部熔断器
-     * @param meterRegistryProvider Micrometer 注册中心提供者
-     */
-    @Bean
-    @ConditionalOnClass(MeterRegistry.class)
-    public void circuitBreakerMetricsBinder(
-            ObjectProvider<CircuitBreaker> circuitBreakers,
-            ObjectProvider<MeterRegistry> meterRegistryProvider) {
-        MeterRegistry registry = meterRegistryProvider.getIfAvailable();
-        if (registry != null) {
-            circuitBreakers.stream().forEach(cb -> {
-                String name = cb.getName();
-                Gauge.builder("ydsz.sentry.circuitbreaker.state", cb,
-                        st -> st.getState().ordinal())
-                        .description("熔断器状态 (0=CLOSED,1=OPEN,2=HALF_OPEN)")
-                        .tag("name", name)
-                        .register(registry);
-                Gauge.builder("ydsz.sentry.circuitbreaker.failures", cb,
-                        CircuitBreaker::getFailureCount)
-                        .description("熔断器失败计数")
-                        .tag("name", name)
-                        .register(registry);
-            });
-        }
     }
 
     /**

@@ -11,9 +11,9 @@ import java.lang.management.ThreadMXBean;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.njydsz.common.sentry.spi.MetricsCollector;
-
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.sentry.spi.MetricsCollector;
 
 /**
  * 系统资源指标采集器

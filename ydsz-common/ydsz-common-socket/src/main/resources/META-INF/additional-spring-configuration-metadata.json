@@ -91,12 +91,6 @@
       "defaultValue": "30d"
     },
     {
-      "name": "ydsz.websocket.offline.db-persist-threshold",
-      "type": "java.lang.Integer",
-      "description": "Redis 溢出后的数据库持久化阈值。",
-      "defaultValue": 50
-    },
-    {
       "name": "ydsz.websocket.rate-limit.enabled",
       "type": "java.lang.Boolean",
       "description": "是否启用速率限制。",
@@ -169,18 +163,6 @@
       "defaultValue": 60000
     },
     {
-      "name": "ydsz.websocket.ack.enabled",
-      "type": "java.lang.Boolean",
-      "description": "是否启用 ACK 确认。",
-      "defaultValue": false
-    },
-    {
-      "name": "ydsz.websocket.ack.timeout",
-      "type": "java.time.Duration",
-      "description": "ACK 超时时间。",
-      "defaultValue": "30s"
-    },
-    {
       "name": "ydsz.websocket.multi-device.policy",
       "type": "java.lang.String",
       "description": "多端登录策略：ALLOW_ALL / MUTEX / NEW_REPLACE_OLD。",
@@ -202,42 +184,6 @@
       "name": "ydsz.websocket.connection-limit.max-per-user-connections",
       "type": "java.lang.Integer",
       "description": "每用户最大连接数。",
-      "defaultValue": 5
-    },
-    {
-      "name": "ydsz.websocket.compression.enabled",
-      "type": "java.lang.Boolean",
-      "description": "是否启用消息压缩。",
-      "defaultValue": false
-    },
-    {
-      "name": "ydsz.websocket.compression.min-size",
-      "type": "java.lang.Integer",
-      "description": "触发压缩的最小消息大小（字节）。",
-      "defaultValue": 1024
-    },
-    {
-      "name": "ydsz.websocket.slow-connection.enabled",
-      "type": "java.lang.Boolean",
-      "description": "是否启用慢连接检测。",
-      "defaultValue": true
-    },
-    {
-      "name": "ydsz.websocket.slow-connection.threshold-ms",
-      "type": "java.lang.Long",
-      "description": "慢连接阈值（毫秒）。",
-      "defaultValue": 5000
-    },
-    {
-      "name": "ydsz.websocket.multi-device.policy",
-      "type": "java.lang.String",
-      "description": "多端登录策略：ALLOW_ALL / MUTEX / NEW_REPLACE_OLD。",
-      "defaultValue": "ALLOW_ALL"
-    },
-    {
-      "name": "ydsz.websocket.multi-device.max-sessions-per-user",
-      "type": "java.lang.Integer",
-      "description": "每用户最大并发 Session 数。",
       "defaultValue": 5
     }
   ]

@@ -35,7 +35,6 @@ import lombok.Data;
  *       enabled: true
  *       max-cache: 100
  *       ttl: 30d
- *       db-persist-threshold: 50
  *     rate-limit:
  *       enabled: false
  *       max-per-user-per-minute: 60
@@ -55,12 +54,6 @@ import lombok.Data;
  *     connection-limit:
  *       max-global-connections: 10000
  *       max-per-user-connections: 5
- *     compression:
- *       enabled: false
- *       min-size: 1024
- *     slow-connection:
- *       enabled: true
- *       threshold-ms: 5000
  * }</pre>
  *
  * @author ydsz-team
@@ -109,17 +102,8 @@ public class WebSocketProperties {
     /** 消息重试配置 */
     private Retry retry = new Retry();
 
-    /** ACK 确认配置 */
-    private Ack ack = new Ack();
-
     /** 连接数限制配置 */
     private ConnectionLimit connectionLimit = new ConnectionLimit();
-
-    /** 消息压缩配置 */
-    private Compression compression = new Compression();
-
-    /** 慢连接检测配置 */
-    private SlowConnection slowConnection = new SlowConnection();
 
     /** 多端登录策略配置 */
     private MultiDevice multiDevice = new MultiDevice();
@@ -158,7 +142,7 @@ public class WebSocketProperties {
      * 离线消息补偿配置。
      *
      * <p>接收方离线期间缓存待投递消息，上线后拉取补投；缓存超出上限时
-     * 溢出到数据库持久化，防止 Redis 内存被离线消息打满。
+     * 丢弃最旧消息，防止 Redis 内存被离线消息打满。
      */
     @Data
     public static class Offline {
@@ -168,8 +152,6 @@ public class WebSocketProperties {
         private int maxCache = 100;
         /** 缓存 TTL */
         private Duration ttl = Duration.ofDays(30);
-        /** Redis 溢出后的数据库持久化阈值 */
-        private int dbPersistThreshold = 50;
     }
 
     /**
@@ -227,20 +209,6 @@ public class WebSocketProperties {
     }
 
     /**
-     * ACK 确认配置。
-     *
-     * <p>客户端收到消息后回执 ACK，服务端在超时时间内未收到回执的
-     * 消息将被视为未送达，进而触发重试或转入离线存储。
-     */
-    @Data
-    public static class Ack {
-        /** 是否启用 ACK 确认 */
-        private boolean enabled = false;
-        /** ACK 超时时间 */
-        private Duration timeout = Duration.ofSeconds(30);
-    }
-
-    /**
      * 连接数限制配置。
      *
      * <p>在握手阶段对全局与单用户连接数设限，防止连接数超载导致
@@ -252,34 +220,6 @@ public class WebSocketProperties {
         private int maxGlobalConnections = 10000;
         /** 每用户最大连接数 */
         private int maxPerUserConnections = 5;
-    }
-
-    /**
-     * 消息压缩配置。
-     *
-     * <p>超过最小大小阈值的推送消息先压缩再发送，降低带宽与 Redis 存储开销；
-     * 对极小消息压缩收益有限，默认关闭以避免 CPU 浪费。
-     */
-    @Data
-    public static class Compression {
-        /** 是否启用消息压缩 */
-        private boolean enabled = false;
-        /** 触发压缩的最小消息大小（字节） */
-        private int minSize = 1024;
-    }
-
-    /**
-     * 慢连接检测配置。
-     *
-     * <p>检测处理耗时超过阈值的连接并告警/干预，识别异常客户端
-     * 或网络抖动导致的慢消费，防止其拖慢整体推送吞吐。
-     */
-    @Data
-    public static class SlowConnection {
-        /** 是否启用慢连接检测 */
-        private boolean enabled = true;
-        /** 慢连接阈值（毫秒） */
-        private long thresholdMs = 5000L;
     }
 
     /**

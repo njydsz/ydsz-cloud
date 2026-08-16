@@ -1,22 +1,23 @@
 package com.njydsz.common.sentry.resilience;
 
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 熔断降级保护器
+ * 熔断降级保护器（基于 Resilience4j）。
  *
- * <p>基于时间桶滑动窗口统计失败率，达到阈值后触发熔断。
- * 使用 AtomicReference + CAS 确保 HALF_OPEN 状态下仅单个探测请求通过。
- *
- * <p>滑动窗口实现：将窗口时长平均划分为若干桶，每个桶记录一个时间片内的成功/失败次数。
- * 统计时累加所有有效桶的数据，桶过期后会被清零复用，
- * 避免固定窗口边界处失败率被忽略的问题（如窗口末尾的连续失败
- * 与下一窗口开头的连续失败不会因分母重置而被稀释）。
+ * <p>底层委托 Resilience4j {@link io.github.resilience4j.circuitbreaker.CircuitBreaker}，
+ * 提供滑动窗口失败率统计、状态自动流转、半开探测等标准熔断能力。
+ * 与自实现版本（v1.x）相比：
+ * <ul>
+ *   <li>经过 10+ 年生产验证，无 CAS 竞态 / 桶取模临界点问题</li>
+ *   <li>原生支持 Micrometer 指标导出，无需手动绑定 Gauge</li>
+ *   <li>支持事件总线（状态变更 / 错误 / 成功事件）</li>
+ * </ul>
  *
  * <p>状态流转：
  * <ul>
@@ -27,13 +28,13 @@ import lombok.extern.slf4j.Slf4j;
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 2.0.0
  */
 @Slf4j
 public class CircuitBreaker {
 
     /**
-     * 熔断状态枚举。
+     * 熔断状态枚举（与 Resilience4j CircuitBreaker.State 一一对应）。
      *
      * <ul>
      *   <li>{@link #CLOSED}：正常放行请求</li>
@@ -50,172 +51,42 @@ public class CircuitBreaker {
         HALF_OPEN
     }
 
-    /** 桶数量（固定 10 桶，每桶覆盖窗口时长的 1/10） */
-    private static final int BUCKET_COUNT = 10;
-    /** 触发熔断所需最少样本数 */
-    private static final int MINIMUM_CALLS = BUCKET_COUNT;
-
-    /**
-     * 滑动窗口的单个时间桶。
-     *
-     * <p>每个桶覆盖 {@code windowDurationMillis / BUCKET_COUNT} 毫秒的时间片，
-     * 记录该时间片内的成功与失败次数。
-     */
-    private static class Bucket {
-
-        /** 桶的起始时间戳（毫秒），0 表示从未使用 */
-        private final AtomicLong startTimeMillis = new AtomicLong(0);
-        /** 成功次数 */
-        private final AtomicInteger successes = new AtomicInteger(0);
-        /** 失败次数 */
-        private final AtomicInteger failures = new AtomicInteger(0);
-
-        /**
-         * 在当前时间记录一次调用结果。
-         *
-         * <p>如果桶已过期（当前时间超出桶覆盖的时间片范围），自动清零后从头累计。
-         *
-         * @param now           当前时间戳（毫秒）
-         * @param bucketDuration 每个桶的时间跨度（毫秒）
-         * @param success       调用是否成功
-         */
-        void record(long now, long bucketDuration, boolean success) {
-            long start = startTimeMillis.get();
-            if (start == 0 || now - start >= bucketDuration) {
-                // 桶未初始化或已过期，尝试重置
-                if (startTimeMillis.compareAndSet(start, now)) {
-                    successes.set(success ? 1 : 0);
-                    failures.set(success ? 0 : 1);
-                    return;
-                }
-                // 其他线程已重置，继续往下累加
-                start = startTimeMillis.get();
-            }
-            if (now - start < bucketDuration) {
-                if (success) {
-                    successes.incrementAndGet();
-                } else {
-                    failures.incrementAndGet();
-                }
-            }
-        }
-
-        /**
-         * 判断桶是否在指定窗口时间内（未过期）。
-         *
-         * @param now           当前时间戳（毫秒）
-         * @param bucketDuration 每个桶的时间跨度（毫秒）
-         * @return {@code true} 表示桶在窗口内
-         */
-        boolean isValid(long now, long bucketDuration) {
-            long start = startTimeMillis.get();
-            return start > 0 && now - start < bucketDuration;
-        }
-
-        int getSuccesses() {
-            return successes.get();
-        }
-
-        int getFailures() {
-            return failures.get();
-        }
-    }
-
-    /** 滑动窗口计数器 */
-    private static class SlidingWindowCounter {
-
-        /** 桶数组 */
-        private final Bucket[] buckets;
-        /** 滑动窗口总时长（毫秒） */
-        private final long windowDurationMillis;
-        /** 单个桶的时间跨度（毫秒） */
-        private final long bucketDurationMillis;
-
-        SlidingWindowCounter(int bucketCount, long windowDurationMillis) {
-            this.buckets = new Bucket[bucketCount];
-            for (int i = 0; i < bucketCount; i++) {
-                buckets[i] = new Bucket();
-            }
-            this.windowDurationMillis = windowDurationMillis;
-            this.bucketDurationMillis = windowDurationMillis / bucketCount;
-        }
-
-        /**
-         * 记录一次调用结果
-         *
-         * @param success 是否成功
-         */
-        void record(boolean success) {
-            long now = System.currentTimeMillis();
-            // 通过时间取模选择桶索引，实现循环复用
-            int index = (int) ((now / bucketDurationMillis) % buckets.length);
-            buckets[index].record(now, bucketDurationMillis, success);
-        }
-
-        /**
-         * 获取窗口内总请求数
-         *
-         * @return 总请求数
-         */
-        int getTotalCount() {
-            long now = System.currentTimeMillis();
-            int total = 0;
-            for (Bucket bucket : buckets) {
-                if (bucket.isValid(now, bucketDurationMillis)) {
-                    total += bucket.getSuccesses() + bucket.getFailures();
-                }
-            }
-            return total;
-        }
-
-        /**
-         * 获取窗口内失败请求数
-         *
-         * @return 失败请求数
-         */
-        int getFailureCount() {
-            long now = System.currentTimeMillis();
-            int failures = 0;
-            for (Bucket bucket : buckets) {
-                if (bucket.isValid(now, bucketDurationMillis)) {
-                    failures += bucket.getFailures();
-                }
-            }
-            return failures;
-        }
-
-        /**
-         * 获取窗口内失败率
-         *
-         * @return 失败率（0.0~1.0），无请求时返回 0.0
-         */
-        double getFailureRate() {
-            int total = getTotalCount();
-            if (total == 0) {
-                return 0.0;
-            }
-            return (double) getFailureCount() / total;
-        }
-    }
-
     private final String name;
-    private final double failureRateThreshold;
-    private final SlidingWindowCounter windowCounter;
-    private final long halfOpenAfterMillis;
-
-    private final AtomicReference<State> state = new AtomicReference<>(State.CLOSED);
-    private volatile long lastFailureTime = 0;
-    private final AtomicInteger halfOpenProbeInProgress = new AtomicInteger(0);
+    private final io.github.resilience4j.circuitbreaker.CircuitBreaker delegate;
 
     public CircuitBreaker(String name, double failureRateThreshold,
-                          int slidingWindowSize, long halfOpenAfterMillis) {
+                          int slidingWindowSizeSeconds, long halfOpenAfterMillis) {
         this.name = name;
-        this.failureRateThreshold = failureRateThreshold;
-        // slidingWindowSize 作为窗口秒数，转换为毫秒作为窗口总时长
-        this.windowCounter = new SlidingWindowCounter(BUCKET_COUNT, slidingWindowSize * 1000L);
-        this.halfOpenAfterMillis = halfOpenAfterMillis;
-        log.info("[Sentry] CircuitBreaker '{}' 初始化: threshold={}, window={}s, halfOpenAfter={}ms",
-                name, failureRateThreshold, slidingWindowSize, halfOpenAfterMillis);
+
+        CircuitBreakerConfig config = CircuitBreakerConfig.custom()
+                .failureRateThreshold((float) failureRateThreshold)
+                .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.TIME_BASED)
+                .slidingWindowSize(slidingWindowSizeSeconds)
+                .waitDurationInOpenState(java.time.Duration.ofMillis(halfOpenAfterMillis))
+                .minimumNumberOfCalls(10)
+                .permittedNumberOfCallsInHalfOpenState(1)
+                .automaticTransitionFromOpenToHalfOpenEnabled(true)
+                .recordException((Predicate<Throwable>) e -> true)
+                .build();
+
+        CircuitBreakerRegistry registry = CircuitBreakerRegistry.of(config);
+        this.delegate = registry.circuitBreaker(name);
+
+        log.info("[Sentry] CircuitBreaker '{}' 初始化完成: threshold={}, window={}s, halfOpenAfter={}ms",
+                name, failureRateThreshold, slidingWindowSizeSeconds, halfOpenAfterMillis);
+    }
+
+    /**
+     * 使用自定义 Registry 创建（供 Spring 容器管理的共享 Registry 场景）。
+     *
+     * @param name                      熔断器名称
+     * @param config                    Resilience4j 配置
+     * @param registry                  共享注册表
+     */
+    public CircuitBreaker(String name, CircuitBreakerConfig config, CircuitBreakerRegistry registry) {
+        this.name = name;
+        this.delegate = registry.circuitBreaker(name, config);
+        log.info("[Sentry] CircuitBreaker '{}' 初始化完成（共享 Registry）", name);
     }
 
     /**
@@ -230,7 +101,6 @@ public class CircuitBreaker {
             log.debug("[Sentry] CircuitBreaker '{}' 熔断中, 执行降级", name);
             return fallback.get();
         }
-
         try {
             T result = operation.get();
             onSuccess();
@@ -268,75 +138,22 @@ public class CircuitBreaker {
      * @return {@code true} 允许执行；{@code false} 应走降级
      */
     boolean canExecute() {
-        State currentState = state.get();
-        if (currentState == State.CLOSED) {
-            return true;
-        }
-        if (currentState == State.OPEN) {
-            long elapsed = System.currentTimeMillis() - lastFailureTime;
-            if (elapsed >= halfOpenAfterMillis) {
-                // CAS 确保仅有一个线程转换到 HALF_OPEN
-                if (state.compareAndSet(State.OPEN, State.HALF_OPEN)) {
-                    log.info("[Sentry] CircuitBreaker '{}' 进入半开状态", name);
-                    return true;
-                }
-                // CAS 失败说明其他线程已先转换，当前线程走降级
-                return false;
-            }
-            return false;
-        }
-        // HALF_OPEN: 仅允许一个探测请求
-        return halfOpenProbeInProgress.compareAndSet(0, 1);
+        return delegate.getState() != io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN
+                && delegate.getState() != io.github.resilience4j.circuitbreaker.CircuitBreaker.State.FORCED_OPEN;
     }
 
     /**
      * 记录一次成功调用。
      */
     private void onSuccess() {
-        State currentState = state.get();
-        if (currentState == State.HALF_OPEN) {
-            halfOpenProbeInProgress.set(0);
-            state.set(State.CLOSED);
-            log.info("[Sentry] CircuitBreaker '{}' 半开探测成功, 恢复 CLOSED", name);
-        } else if (currentState == State.CLOSED) {
-            windowCounter.record(true);
-            checkThreshold();
-        }
+        delegate.onSuccess(0, java.time.temporal.ChronoUnit.MILLIS);
     }
 
     /**
      * 记录一次失败调用。
      */
     private void onFailure() {
-        lastFailureTime = System.currentTimeMillis();
-        State currentState = state.get();
-        if (currentState == State.HALF_OPEN) {
-            halfOpenProbeInProgress.set(0);
-            state.set(State.OPEN);
-            log.warn("[Sentry] CircuitBreaker '{}' 半开探测失败, 恢复 OPEN", name);
-        } else if (currentState == State.CLOSED) {
-            windowCounter.record(false);
-            checkThreshold();
-        }
-    }
-
-    /**
-     * 检查失败率是否超过阈值。
-     *
-     * <p>样本数不足 {@link #MINIMUM_CALLS} 时不触发熔断，避免冷启动误触发。
-     */
-    private void checkThreshold() {
-        int total = windowCounter.getTotalCount();
-        if (total < MINIMUM_CALLS) {
-            return;
-        }
-        double rate = windowCounter.getFailureRate();
-        if (rate >= failureRateThreshold) {
-            if (state.compareAndSet(State.CLOSED, State.OPEN)) {
-                log.warn("[Sentry] CircuitBreaker '{}' 失败率 {:.2f}% 超过阈值 {}, 触发熔断",
-                        name, rate * 100, failureRateThreshold);
-            }
-        }
+        delegate.onError(0, java.time.temporal.ChronoUnit.MILLIS, new RuntimeException("CircuitBreaker recorded failure"));
     }
 
     /**
@@ -345,7 +162,17 @@ public class CircuitBreaker {
      * @return 当前状态（CLOSED / OPEN / HALF_OPEN）
      */
     public State getState() {
-        return state.get();
+        switch (delegate.getState()) {
+            case CLOSED:
+                return State.CLOSED;
+            case OPEN:
+            case FORCED_OPEN:
+                return State.OPEN;
+            case HALF_OPEN:
+                return State.HALF_OPEN;
+            default:
+                return State.CLOSED;
+        }
     }
 
     /**
@@ -363,7 +190,7 @@ public class CircuitBreaker {
      * @return 当前失败计数
      */
     public int getFailureCount() {
-        return windowCounter.getFailureCount();
+        return delegate.getMetrics().getNumberOfFailedCalls();
     }
 
     /**
@@ -372,6 +199,15 @@ public class CircuitBreaker {
      * @return 当前总计数
      */
     public int getTotalCount() {
-        return windowCounter.getTotalCount();
+        return delegate.getMetrics().getNumberOfBufferedCalls();
+    }
+
+    /**
+     * 获取底层 Resilience4j CircuitBreaker 实例（用于高级场景：事件订阅、指标导出）。
+     *
+     * @return Resilience4j CircuitBreaker 实例
+     */
+    public io.github.resilience4j.circuitbreaker.CircuitBreaker getDelegate() {
+        return delegate;
     }
 }

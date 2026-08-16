@@ -6,6 +6,7 @@ root = true
 
 [*]
 charset = utf-8
+end_of_line = lf
 insert_final_newline = true
 trim_trailing_whitespace = true
 
@@ -13,6 +14,7 @@ trim_trailing_whitespace = true
 [*.java]
 indent_style = space
 indent_size = 4
+end_of_line = lf
 
 # properties：4 空格缩进，UTF-8 编码（原始中文，不做 native2ascii 转换）
 [*.properties]

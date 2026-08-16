@@ -2,7 +2,7 @@
 
 > WebSocket 实时推送公共模块（L5 业务服务层）
 
-提供 WebSocket 集群广播（Redis Pub/Sub）、离线消息补偿、在线用户管理、JWT 握手鉴权、消息限流、实时推送模板、熔断降级、心跳保活、消息重试与死信队列、ACK 确认、消息压缩、慢连接检测、审计日志、分布式 traceId 跨节点传播、Micrometer 指标采集与 Actuator 健康检查等开箱即用能力，是所有业务模块实时推送的统一基座。
+提供 WebSocket 集群广播（Redis Pub/Sub）、离线消息补偿、在线用户管理、JWT 握手鉴权、消息限流、实时推送模板、熔断降级、心跳保活、消息重试与死信队列、审计日志、分布式 traceId 跨节点传播、Micrometer 指标采集与 Actuator 健康检查等开箱即用能力，是所有业务模块实时推送的统一基座。
 
 ## 模块定位
 
@@ -10,7 +10,7 @@
 |---|---|
 | **层级** | L5 业务服务层 |
 | **类型** | 公共依赖库（不独立部署） |
-| **作用** | 提供 WebSocket STOMP 端点、集群广播、离线消息、限流、熔断、重试、ACK、心跳保活、健康检查等能力 |
+| **作用** | 提供 WebSocket STOMP 端点、集群广播、离线消息、限流、熔断、重试、心跳保活、健康检查等能力 |
 | **依赖** | common-core、common-exception、common-json、common-auth（可选）；可选依赖 spring-boot-actuator、micrometer-core、spring-data-redis、common-redis |
 | **版本** | 1.0.0 |
 
@@ -23,7 +23,7 @@
 | `WebSocketAutoConfiguration` | 主自动配置类，`@EnableScheduling` 开启心跳与重试刷新定时任务，按依赖顺序注册全部 Bean |
 | `WebSocketClusterAutoConfiguration` | 集群自动配置类，注册 `WebSocketClusterPublisher` / `WebSocketClusterSubscriber` / `RedisMessageListenerContainer` |
 | `WebSocketConfigurer` | 实现 `WebSocketMessageBrokerConfigurer`，注册 STOMP 端点、SimpleBroker（`/topic` / `/queue`）、应用前缀 `/app`、消息大小限制、发送超时、入站通道拦截器 |
-| `WebSocketProperties` | 配置属性（`ydsz.websocket.*`），含端点、心跳、消息大小、集群、离线、限流、熔断、重试、ACK、连接限制、压缩、慢连接 12 个子配置 |
+| `WebSocketProperties` | 配置属性（`ydsz.websocket.*`），含端点、心跳、消息大小、集群、离线、限流、熔断、重试、连接限制 9 个子配置 |
 | `WebSocketConstants` | 常量定义（Redis key 前缀、推送类型等） |
 
 ### 2. 集群广播（Redis Pub/Sub）
@@ -31,7 +31,7 @@
 | 类 | 说明 |
 |---|---|
 | `WebSocketClusterPublisher` | 集群消息发布者，将推送指令发布到 Redis Channel；注入 traceId；熔断保护下失败返回 false 触发降级 |
-| `WebSocketClusterSubscriber` | 集群消息订阅者，订阅 Redis Channel；恢复 MDC traceId；解压消息后通过 `SimpMessagingTemplate` 推送到本地 session |
+| `WebSocketClusterSubscriber` | 集群消息订阅者，订阅 Redis Channel；恢复 MDC traceId；通过 `SimpMessagingTemplate` 推送到本地 session |
 | `WebSocketClusterMessage` | 集群消息实体（pushType / userId / topic / type / payloadJson / traceId / tags / priority）；提供 `forUser` / `forBroadcast` / `forTopic` 静态工厂 |
 
 ### 3. 在线用户管理
@@ -39,7 +39,7 @@
 | 类 | 说明 |
 |---|---|
 | `OnlineUserService` | 基于 Redis Hash（`ydsz:ws:online:{userId}`，field=sessionId，value=时间戳）的在线状态管理；多端 session 共存；TTL 默认 1h 由心跳续期；Redis 不可用时降级为 no-op |
-| `WebSocketSessionEventListener` | Session 事件监听器（上下线、离线补偿、心跳注册、慢连接检测通知、自定义 `WebSocketConnectionListener` 回调） |
+| `WebSocketSessionEventListener` | Session 事件监听器（上下线、离线补偿、心跳注册、自定义 `WebSocketConnectionListener` 回调） |
 | `MultiDevicePolicy` | 多端登录策略枚举（ALLOW_ALL / MUTEX / NEW_REPLACE_OLD） |
 | `WebSocketConnectionListener` | 连接生命周期监听器 SPI（详见 SPI 扩展点章节） |
 
@@ -50,21 +50,21 @@
 | 类 | 说明 |
 |---|---|
 | `OfflineMessageStore` | 离线消息存储接口（cacheOffline / drainOffline / countOffline） |
-| `RedisOfflineMessageStore` | 默认实现，Redis List + TTL + 熔断保护；Redis 不可用时降级为 no-op |
+| `RedisOfflineMessageStore` | 默认实现，Redis List + TTL + 熔断保护；超出 maxCache 时自动丢弃最旧消息；Redis 不可用时降级为 no-op |
 
 ### 5. 实时推送模板
 
 | 类 | 说明 |
 |---|---|
 | `RealtimePushTemplate` | 统一推送接口：单播（带/不带优先级）、广播、主题推送、带 TTL 推送、离线补偿推送、刷新重试队列 |
-| `DefaultRealtimePushTemplate` | 默认实现，推送流程：过滤器链 → 序列化 → 压缩 → 注入 traceId → 集群广播 → 失败降级本地推送 → 本地失败入重试队列 → 注册 ACK → 审计 + 指标 + 慢连接检测 |
+| `DefaultRealtimePushTemplate` | 默认实现，推送流程：过滤器链 → 序列化 → 注入 traceId → 集群广播 → 失败降级本地推送 → 本地失败入重试队列 → 审计 + 指标 |
 
 ### 6. 安全与限流
 
 | 类 | 说明 |
 |---|---|
 | `WebSocketAuthInterceptor` | JWT 握手鉴权拦截器（依赖 `TokenService`），含连接数限制 + 审计日志 |
-| `WebSocketRateLimiter` | 消息速率限制器（每用户/每 IP 每分钟），基于 Redis + 熔断保护；Redis 不可用时降级为 no-op |
+| `WebSocketRateLimiter` | 消息速率限制器（每用户/每 IP 每分钟），基于 Redis Lua 脚本实现滑动窗口限流 + 熔断保护；Redis 不可用时降级为 no-op |
 | `ConnectionLimiter` | 连接数限制器（全局 max + 每用户 max），基于 `OnlineUserService` 与 active 计数器 |
 
 ### 7. 消息可靠性
@@ -72,11 +72,10 @@
 | 类 | 说明 |
 |---|---|
 | `MessageRetryQueue` | 消息重试队列接口（enqueue / dequeueExpired / markSuccess / markFailed / getPendingCount） |
-| `RedisMessageRetryQueue` | Redis Sorted Set 实现的重试队列；Redis 不可用时降级为 no-op |
+| `RedisMessageRetryQueue` | Redis Sorted Set 实现的重试队列；支持指数退避策略；Redis 不可用时降级为 no-op |
 | `DeadLetterQueue` | 死信队列接口（enqueue / list / count） |
 | `RedisDeadLetterQueue` | Redis List 死信队列实现 |
 | `RetryableMessage` | 可重试消息实体（messageId / userId / type / payload / retryCount / nextRetryAt） |
-| `MessageAckService` | ACK 确认服务，Redis 不可用时降级为本地 `ConcurrentHashMap` 存储；提供 `cleanupExpiredLocalAcks` 清理过期记录 |
 
 ### 8. 熔断降级
 
@@ -88,18 +87,19 @@
 
 | 类 | 说明 |
 |---|---|
-| `WebSocketHeartbeatHandler` | `@Scheduled` 定时清理僵尸 Session（超过 `staleSessionTimeout` 未收到心跳则下线） |
+| `WebSocketHeartbeatHandler` | `@Scheduled` 定时清理僵尸 Session（超过 `staleSessionTimeout` 未收到心跳则下线）；Redis Sorted Set 存储 `userId:sessionId` 格式，集群级一致 |
 
 ### 10. 消息处理
 
 | 类 | 说明 |
 |---|---|
-| `MessageCompressor` | 消息压缩器（GZIP + Base64），超过 `min-size` 阈值自动压缩 |
 | `MessageSerializer` | 消息序列化器接口（SPI 扩展点） |
 | `JsonMessageSerializer` | 默认 JSON 序列化器实现 |
 | `MessageFilter` | 消息过滤器接口（SPI 扩展点），任一 Filter 返回 false 则跳过推送 |
 | `MessagePriority` | 消息优先级枚举（URGENT=1 / HIGH=2 / NORMAL=3 / LOW=4） |
 | `StompMessageInterceptor` | STOMP 入站通道拦截器，CONNECT 注入 traceId + SEND 限流 + 审计 |
+
+> **消息压缩建议**：推荐使用 WebSocket 协议层 permessage-deflate（RFC 7692）压缩，无需应用层 GZIP+Base64 编码。可在 `WebSocketConfigurer` 中通过 `setAllowedNativeHeaders` 或在反向代理层启用。
 
 ### 11. 可观测性
 
@@ -107,8 +107,7 @@
 |---|---|
 | `WebSocketMetrics` | Micrometer 指标采集（推送次数/耗时，按 type 与 result 分组）；MeterRegistry 不存在时降级为 no-op |
 | `WebSocketHealthIndicator` | Actuator 健康检查（详见健康检查章节） |
-| `WebSocketAuditService` | 审计日志服务，专用 Logger `WS_AUDIT` |
-| `SlowConnectionDetector` | 慢连接检测器（超过 `threshold-ms` 标记慢连接并上报指标） |
+| `WebSocketAuditService` | 审计日志服务，专用 Logger `WS_AUDIT`，同步输出结构化审计日志 |
 | `WebSocketTraceContext` | 链路追踪辅助工具，MDC traceId 跨节点传播 |
 
 ## 接入方式
@@ -197,7 +196,6 @@ public class NotificationService {
 | `ydsz.websocket.offline.enabled` | true | 是否启用离线消息补偿 |
 | `ydsz.websocket.offline.max-cache` | `100` | Redis 缓存最大条数 |
 | `ydsz.websocket.offline.ttl` | `30d` | 缓存 TTL |
-| `ydsz.websocket.offline.db-persist-threshold` | `50` | Redis 溢出后的数据库持久化阈值（业务方实现 DB 存储时使用） |
 
 ### `ydsz.websocket.rate-limit.*`
 
@@ -223,13 +221,8 @@ public class NotificationService {
 | `ydsz.websocket.retry.max-retries` | `3` | 最大重试次数 |
 | `ydsz.websocket.retry.retry-delay` | `5s` | 重试延迟 |
 | `ydsz.websocket.retry.dead-letter-enabled` | true | 是否启用死信队列 |
-
-### `ydsz.websocket.ack.*`
-
-| 配置 | 默认值 | 说明 |
-|---|---|---|
-| `ydsz.websocket.ack.enabled` | false | 是否启用 ACK 确认 |
-| `ydsz.websocket.ack.timeout` | `30s` | ACK 超时时间 |
+| `ydsz.websocket.retry.backoff-strategy` | `exponential` | 退避策略：fixed / exponential / exponential_with_jitter |
+| `ydsz.websocket.retry.max-retry-delay-ms` | `60000`（60s） | 最大重试延迟（毫秒），退避后不超过此值 |
 
 ### `ydsz.websocket.connection-limit.*`
 
@@ -237,20 +230,6 @@ public class NotificationService {
 |---|---|---|
 | `ydsz.websocket.connection-limit.max-global-connections` | `10000` | 全局最大连接数 |
 | `ydsz.websocket.connection-limit.max-per-user-connections` | `5` | 每用户最大连接数 |
-
-### `ydsz.websocket.compression.*`
-
-| 配置 | 默认值 | 说明 |
-|---|---|---|
-| `ydsz.websocket.compression.enabled` | false | 是否启用消息压缩 |
-| `ydsz.websocket.compression.min-size` | `1024`（1KB） | 触发压缩的最小消息大小（字节） |
-
-### `ydsz.websocket.slow-connection.*`
-
-| 配置 | 默认值 | 说明 |
-|---|---|---|
-| `ydsz.websocket.slow-connection.enabled` | true | 是否启用慢连接检测 |
-| `ydsz.websocket.slow-connection.threshold-ms` | `5000`（5s） | 慢连接阈值（毫秒） |
 
 > **规划中**：`ydsz.websocket.multi-device.policy` 与 `ydsz.websocket.multi-device.max-sessions-per-user` 已在 `additional-spring-configuration-metadata.json` 预留描述，但 `WebSocketProperties` 类中尚未实现。当前需业务方通过 `WebSocketConnectionListener` SPI 自行实现多端策略。
 
@@ -405,14 +384,15 @@ public class ProtobufMessageSerializer implements MessageSerializer {
 1. **Redis 不是必须依赖**：`OnlineUserService`、`OfflineMessageStore`、`MessageRetryQueue`、`WebSocketRateLimiter` 在 Redis 不可用时自动降级为 no-op。但多实例部署时**必须**引入 Redis，否则集群广播、跨节点在线状态、离线消息、重试队列都无法工作。
 2. **集群广播降级**：`WebSocketClusterPublisher.publish` 失败时返回 false，`DefaultRealtimePushTemplate` 自动降级为本地直接推送，保证消息不丢。
 3. **熔断器保护范围**：`WebSocketCircuitBreaker` 仅保护 Redis 相关操作（集群广播、限流器、离线消息存储），不保护 STOMP 推送本身。
-4. **重试队列定时刷新**：`WebSocketAutoConfiguration.RetryFlushTask` 通过 `@Scheduled(fixedDelay = 10000)` 每 10 秒刷新重试队列并清理过期本地 ACK 记录，业务方无需手动调用 `flushRetryMessages`。
+4. **重试队列定时刷新**：`WebSocketAutoConfiguration.RetryFlushTask` 通过 `@Scheduled(fixedDelay = 10000)` 每 10 秒刷新重试队列，业务方无需手动调用 `flushRetryMessages`。
 5. **STOMP 端点路径**：默认 `/ws`，前端需通过 SockJS + STOMP 客户端连接；`/app` 为应用前缀，`/topic` 与 `/queue` 为 SimpleBroker 前缀。
 6. **消息大小限制**：`ydsz.websocket.message-size-limit` 通过 `WebSocketConfigurer.configureWebSocketTransport` 设置到 STOMP 传输层，超过限制的客户端消息会被拒绝。
 7. **认证拦截器依赖**：`WebSocketAuthInterceptor` 仅在 `TokenService`（来自 common-auth）在 classpath 时才注册；未引入 common-auth 时跳过认证。
 8. **MultiDevicePolicy 当前是占位**：`MultiDevicePolicy` 枚举存在但 `OnlineUserService` 未强制限制 session 数量，业务方需通过 `WebSocketConnectionListener` 自行实现 MUTEX / NEW_REPLACE_OLD 策略。metadata 中预留的 `ydsz.websocket.multi-device.*` 配置项未在 `WebSocketProperties` 中实现。
 9. **`@EnableScheduling` 副作用**：本模块自动配置类已标注 `@EnableScheduling`，若业务模块也标注，Spring 会自动去重，无副作用。
-10. **ACK 默认关闭**：`ydsz.websocket.ack.enabled=false` 时 `MessageAckService` 不会注册为 Bean，`DefaultRealtimePushTemplate` 中 `ackService` 为 null，跳过 ACK 注册逻辑。
+10. **消息压缩推荐**：推荐使用 WebSocket 协议层 permessage-deflate（RFC 7692）压缩消息，无需应用层 GZIP+Base64 编码。可在反向代理层（如 Nginx）启用 `WebSocket` 压缩。
 
 ## 变更记录
 
+- **v1.1.0**（2026-08-16）：精简过度设计 — 移除 MessageCompressor（推荐使用 permessage-deflate）、SlowConnectionDetector（职责错位）、MessageAckService（半成品）；移除 LocalSessionRegistry Serializable 标记；修复 RateLimiter 原子性（Lua 脚本）；精简心跳机制（统一 Redis 存储，消除双重 TTL）；精简审计服务（移除自研异步框架）；精简熔断器（移除事件消费者）；移除未使用配置项（Compression、SlowConnection、Ack、dbPersistThreshold）
 - **v1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节

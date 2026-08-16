@@ -44,7 +44,7 @@ import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
  *
  * <h3>性能优化</h3>
  * <ul>
- *   <li>使用 {@link ASMFieldAccessor} 替代反射获取字段值</li>
+ *   <li>使用 MethodHandle 替代反射获取字段值</li>
  *   <li>行级缓冲（1MB），减少 ZIP 写入次数</li>
  *   <li>公式注入防护（{@link FormulaInjectionGuard}）</li>
  *   <li>支持 {@code @ExcelProperty.order()} 列序排序</li>
@@ -64,7 +64,6 @@ import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see ConcurrentExcelWriter
  * @see FormulaInjectionGuard
  * @see ASMFieldAccessor
  */
@@ -146,7 +145,7 @@ public class SuperFastExcelWriter {
      * 将数据序列化为 xlsx 并输出到 {@link WriteMetadata} 指定的目标。
      *
      * <p><b>执行顺序</b>：空数据短路返回 → 按 {@code clazz} 解析列元数据（列过滤、排序、
-     * ASM 访问器绑定）→ 按目标类型分派到文件或流写入。
+     * MethodHandle 访问器绑定）→ 按目标类型分派到文件或流写入。
      *
      * <p><b>目标选择</b>：依次判断 {@code filePath}、{@code file}、{@code outputStream}，
      * 取第一个非空者；写流时不关闭调用方传入的流，由调用方负责关闭。

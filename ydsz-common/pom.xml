@@ -106,6 +106,8 @@
         <module>ydsz-common-web</module>
         <module>ydsz-common-app</module>
         <module>ydsz-common-idempotent</module>
+        <module>ydsz-common-ratelimit</module>
+        <module>ydsz-common-base-doc</module>
     </modules>
 
     <dependencyManagement>
@@ -245,6 +247,16 @@
             <dependency>
                 <groupId>com.njydsz</groupId>
                 <artifactId>ydsz-common-idempotent</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz</groupId>
+                <artifactId>ydsz-common-ratelimit</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz</groupId>
+                <artifactId>ydsz-common-base-doc</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

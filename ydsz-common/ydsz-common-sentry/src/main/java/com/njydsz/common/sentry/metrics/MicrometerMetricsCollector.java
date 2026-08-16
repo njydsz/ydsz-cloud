@@ -5,8 +5,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.njydsz.common.sentry.spi.MetricsCollector;
-
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.Gauge;
@@ -15,6 +13,8 @@ import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.sentry.spi.MetricsCollector;
 
 /**
  * Micrometer 指标采集器。

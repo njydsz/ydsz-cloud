@@ -12,7 +12,7 @@ import com.njydsz.common.auth.handler.AuthHandler;
 import com.njydsz.common.auth.metrics.AuthMetrics;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.core.model.AuthInfo;
+import com.njydsz.common.auth.model.AuthInfo;
 
 import lombok.extern.slf4j.Slf4j;
 

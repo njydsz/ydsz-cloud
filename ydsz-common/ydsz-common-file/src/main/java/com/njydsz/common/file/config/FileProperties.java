@@ -133,6 +133,7 @@ public class FileProperties {
      * @deprecated 自 2.0.0 起仅保留 {@link #REJECT} 策略。WAIT 策略因可能导致线程池惊群效应已移除。
      *             计划于 3.0.0 版本移除此枚举。
      */
+    @Deprecated
     public enum ConcurrencyStrategy {
         /** 拒绝新上传（默认；并发冲突时快速失败） */
         REJECT,

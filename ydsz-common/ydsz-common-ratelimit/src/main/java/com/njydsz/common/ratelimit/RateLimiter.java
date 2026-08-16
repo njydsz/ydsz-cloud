@@ -1,4 +1,4 @@
-package com.njydsz.common.base.ratelimit;
+package com.njydsz.common.ratelimit;
 
 import java.time.Duration;
 
@@ -7,7 +7,7 @@ import java.time.Duration;
  *
  * <p>提供统一的限流检查能力，支持多种实现：
  * <ul>
- *   <li>{@code InMemoryRateLimiter} - 基于 Guava RateLimiter（或本地计数）的实现</li>
+ *   <li>{@code InMemoryRateLimiter} - 基于本地滑动窗口计数的实现</li>
  *   <li>{@code RedisRateLimiterAdapter} - 基于 Redis + Lua 的分布式实现（由 redis 模块提供）</li>
  * </ul>
  *

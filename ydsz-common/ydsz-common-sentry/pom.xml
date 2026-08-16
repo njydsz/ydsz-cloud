@@ -98,6 +98,13 @@
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
+        <!-- Resilience4j 熔断器（替代自实现 CircuitBreaker） -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-core</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
         <!-- Logback（结构化日志 Layout，可选） -->
         <dependency>
             <groupId>ch.qos.logback</groupId>

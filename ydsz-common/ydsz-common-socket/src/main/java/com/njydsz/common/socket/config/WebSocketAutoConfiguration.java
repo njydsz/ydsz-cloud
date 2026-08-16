@@ -448,20 +448,19 @@ public class WebSocketAutoConfiguration {
     /**
      * 注册重试刷新定时任务 Bean。
      *
-     * <p>周期性触发推送模板的重试消息重投与 ACK 过期本地回执清理，是异步投递补偿的执行入口；
+     * <p>周期性触发推送模板的重试消息重投，是异步投递补偿的执行入口；
      * 由 Spring 托管生命周期，无需手动启停。
      */
     @Bean
     public RetryFlushTask retryFlushTask(RealtimePushTemplate pushTemplate) {
         return new RetryFlushTask(pushTemplate);
-}
+    }
 
     /**
      * 重试刷新定时任务。
      *
-     * <p>由 Spring 调度线程周期性驱动：重投推送模板中待重试的消息，并清理
-     * ACK 服务的本地过期回执。作为异步投递的补偿执行入口，保证"至少一次"投递语义
-     * 下的延迟消息最终可达。
+     * <p>由 Spring 调度线程周期性驱动：重投推送模板中待重试的消息。
+     * 作为异步投递的补偿执行入口，保证延迟消息最终可达。
      */
     public static class RetryFlushTask {
         private final RealtimePushTemplate pushTemplate;
@@ -481,6 +480,7 @@ public class WebSocketAutoConfiguration {
             pushTemplate.flushRetryMessages();
         }
     }
+
     /**
      * No-op 集群发布者（集群未启用时的降级实现，始终返回 false 触发本地推送）。
      */

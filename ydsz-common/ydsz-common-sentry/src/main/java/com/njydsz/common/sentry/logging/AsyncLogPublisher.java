@@ -148,9 +148,15 @@ public class AsyncLogPublisher implements LogPublisher, AutoCloseable {
                 continue;
             }
             // 配额不足，计算还需等待的时间并阻塞等待
-            long waitTime = TOKEN_REFILL_PERIOD_MILLIS / maxRatePerSecond;
+            // 当 maxRatePerSecond > TOKEN_REFILL_PERIOD_MILLIS 时，单周期内需要多次补充，
+            // 此时 waitTime 计算为 0，应直接继续循环（不等待），由 refillTokens 按实际周期补充
+            long waitTime = maxRatePerSecond > 0
+                    ? TOKEN_REFILL_PERIOD_MILLIS / maxRatePerSecond
+                    : 1;
             if (waitTime <= 0) {
-                waitTime = 1;
+                // 限流粒度低于 1ms 时，不强制 sleep，避免实际限流速率被拉到 1000/s
+                // 依赖下一轮 refillTokens 按真实 elapsed 时间补充正确数量的令牌
+                continue;
             }
             if (System.currentTimeMillis() + waitTime > deadline) {
                 // 超过最大等待时间，允许透支发送

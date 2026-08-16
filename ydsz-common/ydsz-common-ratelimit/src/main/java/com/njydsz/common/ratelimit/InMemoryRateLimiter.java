@@ -1,4 +1,4 @@
-package com.njydsz.common.base.ratelimit;
+package com.njydsz.common.ratelimit;
 
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;

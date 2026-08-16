@@ -22,9 +22,8 @@ import lombok.extern.slf4j.Slf4j;
  * FIFO 顺序保留最近 {@link WebSocketProperties.Offline#getMaxCache()} 条，
  * TTL 由 {@link WebSocketProperties.Offline#getTtl()} 控制。
  *
- * <p>当 Redis 缓存超过 {@link WebSocketProperties.Offline#getDbPersistThreshold()} 时，
- * 通过 {@link OfflineOverflowHandler} SPI 回调业务侧持久化到数据库，
- * 防止 Redis 内存膨胀。业务侧可注入自定义 Handler 实现数据库溢出存储。
+ * <p>当 Redis 缓存超过 {@code maxCache} 时，自动丢弃最旧消息（LPUSH + TRIM），
+ * 防止 Redis 内存被离线消息打满。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -58,11 +57,6 @@ public class RedisOfflineMessageStore implements OfflineMessageStore {
         redisTemplate.opsForList().leftPush(key, json);
         redisTemplate.opsForList().trim(key, 0, properties.getOffline().getMaxCache() - 1);
         redisTemplate.expire(key, properties.getOffline().getTtl());
-
-        Long size = redisTemplate.opsForList().size(key);
-        if (size != null && size > properties.getOffline().getDbPersistThreshold()) {
-            log.warn("[WS-Offline] Redis 缓存超阈值,建议业务侧实现溢出持久化: userId={}, size={}", userId, size);
-        }
 
         log.debug("[WS-Offline] 缓存离线消息: userId={}, type={}", userId, type);
     }

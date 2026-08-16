@@ -35,7 +35,7 @@ import com.njydsz.common.excel.support.asm.ASMFieldAccessor.ObjectInstantiator;
  *   <li>SST 按需加载：共享字符串表流式解析，不一次性加载到内存</li>
  *   <li>大文件流式处理：sheet XML 通过临时文件管道传递，避免 OOM</li>
  *   <li>文件大小限制：通过 ExcelConfig.maxReadFileSizeMB 防止超大文件 OOM</li>
- *   <li>ASM 字段访问：使用 ASM 生成 Getter/Setter 替代反射</li>
+ *   <li>MethodHandle 字段访问：使用 MethodHandle 替代反射</li>
  * </ul>
  *
  * <h3>性能对比</h3>

@@ -1,7 +1,7 @@
 package com.njydsz.common.app.auth;
 
 import com.njydsz.common.auth.handler.AbstractAuthHandler;
-import com.njydsz.common.core.model.YdszAuthInfo;
+import com.njydsz.common.auth.model.YdszAuthInfo;
 
 /**
  * App 端认证信息处理器

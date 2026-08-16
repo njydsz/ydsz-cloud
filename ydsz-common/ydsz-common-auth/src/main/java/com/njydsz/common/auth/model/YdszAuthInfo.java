@@ -1,4 +1,4 @@
-package com.njydsz.common.core.model;
+package com.njydsz.common.auth.model;
 
 import java.util.Collections;
 import java.util.Map;
@@ -12,13 +12,11 @@ import lombok.Data;
  * ydsz系统统一认证上下文信息抽象基类
  *
  * <p>承载请求维度的全量身份与权限数据，在 WebAuthFilter / AppAuthFilter 解析请求头后写入
- * RequestContext（ydsz-common-core），
- * 供下游链路（SQL 拦截器、Feign 透传、数据权限切面等）随时获取。</p>
- *
- * <p>本基类定义于 core 模块（L2 基础设施层），common-auth 的子类可扩展更多认证特性。</p>
+ * RequestContext 供下游链路使用。</p>
  *
  * <h3>设计说明</h3>
  * <ul>
+ *   <li>实现 {@link AuthInfo}（继承 {@link com.njydsz.common.core.model.CurrentUser}）</li>
  *   <li>身份类型固定为字符串 {@code "company"}（公司级），不支持继承扩展</li>
  *   <li>服务类型由子类通过 {@link #getServiceTypeCode()} 实现区分（webService / appService）</li>
  *   <li>所有集合类型字段使用不可变空集合初始化，防止 NPE</li>

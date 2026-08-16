@@ -1,4 +1,4 @@
-package com.njydsz.common.base.ratelimit;
+package com.njydsz.common.ratelimit;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -13,7 +13,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 /**
  * 限流自动配置。
  *
- * <p>当 classpath 中存在 Spring MVC 且配置了 {@code ydsz.base.rate-limit.enabled=true} 时激活。
+ * <p>当 classpath 中存在 Spring MVC 且配置了 {@code ydsz.ratelimit.enabled=true} 时激活。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -21,7 +21,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @AutoConfiguration
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @ConditionalOnClass(name = "org.springframework.web.servlet.HandlerInterceptor")
-@ConditionalOnProperty(prefix = "ydsz.base.rate-limit", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.ratelimit", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class RateLimitAutoConfiguration {
 
     /**

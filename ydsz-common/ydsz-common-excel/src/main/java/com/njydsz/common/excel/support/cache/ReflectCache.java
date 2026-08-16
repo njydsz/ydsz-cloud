@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
-import com.njydsz.common.excel.support.pool.GlobalObjectPool;
 
 /**
  * 反射缓存 - 提升反射访问性能
@@ -22,7 +21,7 @@ import com.njydsz.common.excel.support.pool.GlobalObjectPool;
  *   <li>类字段缓存 - 缓存类的所有字段数组</li>
  *   <li>Setter 句柄缓存 - 缓存字段的 setter MethodHandle</li>
  *   <li>Getter 句柄缓存 - 缓存字段的 getter MethodHandle</li>
- *   <li>ASM Getter缓存 - 使用ASM字节码生成Getter访问器(最高性能)</li>
+ *   <li>FieldGetter 缓存 - 基于 MethodHandle 的高性能字段访问器</li>
  * </ul>
  *
  * <h3>设计模式</h3>
@@ -32,8 +31,8 @@ import com.njydsz.common.excel.support.pool.GlobalObjectPool;
  * </ul>
  *
  * <h3>性能优化</h3>
- * <p>使用 MethodHandle 和 ASM 字节码生成技术，获得极致性能表现。
- * ASM字节码生成的Getter访问器比传统反射快30倍，比MethodHandle快6倍。</p>
+ * <p>使用 MethodHandle 替代反射，获得接近直接调用的性能表现。
+ * MethodHandle 由 JVM 内联优化，比传统反射快约 6 倍。</p>
  *
  * <h3>使用示例</h3>
  * <pre>{@code
@@ -51,7 +50,7 @@ import com.njydsz.common.excel.support.pool.GlobalObjectPool;
  * MethodHandle getter = ReflectCache.getCachedGetter(User.class, "name");
  * String name = (String) getter.invoke(user);
  *
- * // 获取高性能 ASM Getter 访问器
+ * // 获取高性能 FieldGetter 访问器
  * FieldGetter fieldGetter = ReflectCache.getFieldGetter(User.class, field);
  * Object value = fieldGetter.get(user);
  *
@@ -62,7 +61,6 @@ import com.njydsz.common.excel.support.pool.GlobalObjectPool;
  * @see Field
  * @see MethodHandle
  * @see ASMFieldAccessor
- * @see GlobalObjectPool
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -199,10 +197,9 @@ public class ReflectCache {
     }
 
     /**
-     * 获取高性能ASM Getter访问器
+     * 获取高性能 FieldGetter 访问器
      *
-     * <p>优先使用ASM字节码生成的Getter访问器，
-     * 如果ASM生成失败则回退到MethodHandle。</p>
+     * <p>基于 MethodHandle 实现，比原生反射快约 6 倍。</p>
      *
      * @param clazz 目标类
      * @param field 目标字段
@@ -216,10 +213,9 @@ public class ReflectCache {
     }
 
     /**
-     * 获取高性能ASM Setter访问器
+     * 获取高性能 FieldSetter 访问器
      *
-     * <p>优先使用ASM字节码生成的Setter访问器，
-     * 如果ASM生成失败则回退到MethodHandle。</p>
+     * <p>基于 MethodHandle 实现，比原生反射快约 6 倍。</p>
      *
      * @param clazz 目标类
      * @param field 目标字段
@@ -233,10 +229,9 @@ public class ReflectCache {
     }
 
     /**
-     * 获取高性能ASM对象实例化器
+     * 获取对象实例化器
      *
-     * <p>优先使用ASM字节码生成的实例化器，
-     * 如果ASM生成失败则回退到反射Constructor。</p>
+     * <p>基于反射 Constructor 实现。</p>
      *
      * @param clazz 目标类
      * @return 对象实例化器

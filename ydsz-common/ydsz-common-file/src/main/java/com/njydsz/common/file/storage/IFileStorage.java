@@ -24,6 +24,9 @@ import com.njydsz.common.file.storage.platform.ObsStorage;
 import com.njydsz.common.file.storage.platform.OssStorage;
 import com.njydsz.common.file.storage.platform.QiniuStorage;
 import com.njydsz.common.file.storage.platform.S3Storage;
+
+/**
+ * 文件存储统一抽象接口
  * <p>
  * 抽象所有存储后端（local / minio / s3 / oss / cos / qiniu / obs）的同一操作语义，
  * 各实现类负责将本接口调用翻译为对应云厂商 SDK 的原生 API。业务层只需面向
