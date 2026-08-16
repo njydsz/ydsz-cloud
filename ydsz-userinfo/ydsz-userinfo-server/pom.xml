@@ -119,6 +119,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-tenant</artifactId>
         </dependency>
+        <!-- P2-1: 统一配置加密健康检查（ConfigEncryptHealthIndicator 自动激活） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-config</artifactId>
+        </dependency>
         <!-- P0-1: 单元测试基础设施 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

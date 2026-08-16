@@ -129,7 +129,7 @@
 
 | 类 | 说明 |
 |---|---|
-| `UnifiedAlertEvent` | 统一告警事件（跨渠道聚合告警） |
+| `UnifiedAlertEvent` | 统一告警事件（各模块发布后由 NotifyHelper 消费发送） |
 | `NotifyAuditService` | 通知审计服务（专用 logger `NOTIFY_AUDIT`，接收者脱敏，落结构化审计日志） |
 | `NotifyMetrics` | 通知指标采集（Micrometer，依赖缺失时降级为 no-op） |
 

@@ -99,6 +99,16 @@
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-redis</artifactId>
         </dependency>
+        <!-- P0-3: 统一 IP 访问控制（替代自建 InternalApiIpFilter，获得 CIDR + Redis + 自动封禁能力） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-safe</artifactId>
+        </dependency>
+        <!-- P0-3: RedisStringOps（IpAccessService 依赖） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-redis</artifactId>
+        </dependency>
         <!-- P2-3: 统一文件存储接入 -->
         <dependency>
             <groupId>com.njydsz</groupId>

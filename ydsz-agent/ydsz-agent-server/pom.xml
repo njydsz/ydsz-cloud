@@ -119,6 +119,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-tenant</artifactId>
         </dependency>
+        <!-- P2-1: 统一配置加密健康检查（ConfigEncryptHealthIndicator 自动激活） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-config</artifactId>
+        </dependency>
         <!-- P2-5: 统一 Excel 导入导出 -->
         <dependency>
             <groupId>com.njydsz</groupId>

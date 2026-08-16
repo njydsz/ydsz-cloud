@@ -7,7 +7,6 @@ import java.util.function.Consumer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.conversation.ConversationMemory;
@@ -25,11 +24,10 @@ import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;
+import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
-import com.njydsz.common.event.model.OutboxMessage;
-import com.njydsz.common.event.service.OutboxService;
+import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.common.json.YdszJson;
 
 /**
  * 对话服务
@@ -75,8 +73,8 @@ public class ChatService {
     private final CostAnalysisService costAnalysisService;
     /** 链路记录器 */
     private final TraceRecorder traceRecorder;
-    /** Outbox 事件服务（可选依赖） */
-    private final ObjectProvider<OutboxService> outboxServiceProvider;
+    /** 统一领域事件发布门面 */
+    private final DomainEventPublisher eventPublisher;
     /** 分布式 ID 生成器 */
     private final SnowflakeIdGenerator snowflakeIdGenerator;
 
@@ -87,7 +85,7 @@ public class ChatService {
                        AgentRuntimeMetrics runtimeMetrics,
                        CostAnalysisService costAnalysisService,
                        TraceRecorder traceRecorder,
-                       ObjectProvider<OutboxService> outboxServiceProvider,
+                       DomainEventPublisher eventPublisher,
                        SnowflakeIdGenerator snowflakeIdGenerator) {
         this.llmClient = llmClient;
         this.memory = memory;
@@ -102,7 +100,7 @@ public class ChatService {
         this.runtimeMetrics = runtimeMetrics;
         this.costAnalysisService = costAnalysisService;
         this.traceRecorder = traceRecorder;
-        this.outboxServiceProvider = outboxServiceProvider;
+        this.eventPublisher = eventPublisher;
         this.snowflakeIdGenerator = snowflakeIdGenerator;
     }
 
@@ -193,7 +191,12 @@ public class ChatService {
         log.info("[Chat] 对话完成: convId={}, tokens={}", convId,
                 response.getUsage() != null ? response.getUsage().getTotalTokens() : 0);
         traceRecorder.endTrace(traceId, "SUCCESS");
-        publishEvent(DomainEventTypes.CONVERSATION_CREATED, convId, response);
+        eventPublisher.publish(DomainEvent.builder()
+                .aggregateType("Conversation")
+                .aggregateId(convId)
+                .eventType(DomainEventTypes.CONVERSATION_CREATED)
+                .metadata("model", response.getModel())
+                .build());
         return new ChatResponse(response.getId(), response.getModel(),
                 assistantMsg, response.getUsage(), response.getFinishReason(), List.of());
     }
@@ -380,24 +383,4 @@ public class ChatService {
         return sanitized;
     }
 
-    /**
-     * 发布领域事件到 Outbox（可选依赖，不存在时安全降级）
-     */
-    private void publishEvent(String eventType, String aggregateId, Object payload) {
-        OutboxService outboxService = outboxServiceProvider.getIfAvailable();
-        if (outboxService == null) {
-            log.debug("[Chat] OutboxService not available, skipping event: type={}, id={}", eventType, aggregateId);
-            return;
-        }
-        try {
-            outboxService.appendToOutbox(OutboxMessage.builder()
-                    .aggregateType("Conversation")
-                    .aggregateId(aggregateId)
-                    .eventType(eventType)
-                    .payload(YdszJson.toJson(payload)));
-        } catch (Exception e) {
-            log.warn("[Chat] Failed to publish outbox event: type={}, id={}, error={}",
-                    eventType, aggregateId, e.getMessage());
-        }
-    }
 }
