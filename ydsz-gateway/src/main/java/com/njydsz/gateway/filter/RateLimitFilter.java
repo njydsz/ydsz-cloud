@@ -102,10 +102,17 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
     private volatile long instanceCountFetchedAt = 0;
 
     /**
-     * 令牌桶 Lua 脚本
+     * 令牌桶 Lua 脚本（秒精度版，适配 ReactiveStringRedisTemplate）
      *
-     * 参数: KEYS[1]=redis_key, ARGV[1]=replenishRate, ARGV[2]=burstCapacity, ARGV[3]=timestamp_seconds, ARGV[4]=requested_tokens
+     * <p>与 ydsz-common-redis 的 {@code RedisScriptConstants.TOKEN_BUCKET_LUA_MS} 算法同源，
+     * 差异：本脚本使用秒精度时间戳 + EXPIRE（秒 TTL），返回 {allowed, remaining, reset}；
+     * common-redis 版使用毫秒精度 + PEXPIRE（毫秒 TTL），返回 {allowed, tokens}。
+     * 修改任一版本时请保持算法语义一致（refill = elapsed * rate，cap at capacity）。
+     *
+     * <p>参数: KEYS[1]=redis_key, ARGV[1]=replenishRate, ARGV[2]=burstCapacity, ARGV[3]=timestamp_seconds, ARGV[4]=requested_tokens
      * 返回: {allowed(1/0), remaining_tokens, reset_seconds}
+     *
+     * @see com.njydsz.common.redis.constant.RedisScriptConstants#TOKEN_BUCKET_LUA_MS 同源脚本（毫秒版）
      */
     private static final String TOKEN_BUCKET_SCRIPT = """
             local rate = tonumber(ARGV[1])

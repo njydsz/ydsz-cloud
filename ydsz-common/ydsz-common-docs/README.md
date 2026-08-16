@@ -314,6 +314,16 @@ pdfDocumentParser.parseStreaming(inputStream, "large.pdf", pageContent -> {
 });
 ```
 
+## 已接入模块清单
+
+| 模块 | 接入能力 | 接入方式 | 依赖声明 | 接入时间 |
+|------|---------|---------|---------|---------|
+| ydsz-nextwiki | 文档解析（PDF/Office/HTML → 纯文本提取） | 注入 `DocumentService#parseAndPreprocess` | 显式声明 | v2.1.0 |
+| ydsz-agent | 文档解析 + RAG 知识库摄入 | 注入 `DocumentService` + `DocumentIngestionService` | 显式声明 | v2.1.0 |
+| ydsz-message | PII 脱敏（日志打印场景） | `SensitiveUtil#scanAndMask`（common-safe 传递） | 传递引入 | v2.1.0 |
+
+> **幽灵依赖检查**：本表用于 Pre-PR 审查时核对。`pom.xml` 中声明了 `ydsz-common-docs` 但无任何 Java 代码引用该模块的，视为幽灵依赖，需移除声明。
+
 ## SPI 扩展点
 
 | SPI 接口 | 用途 | 实现方 |

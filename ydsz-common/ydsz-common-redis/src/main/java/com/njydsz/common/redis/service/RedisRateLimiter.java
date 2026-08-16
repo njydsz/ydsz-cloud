@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import com.njydsz.common.redis.config.RedisProperties;
+import com.njydsz.common.redis.constant.RedisScriptConstants;
 import com.njydsz.common.redis.enums.FailOpenPolicy;
 
 /**
@@ -52,103 +53,6 @@ import com.njydsz.common.redis.enums.FailOpenPolicy;
 @Slf4j
 public class RedisRateLimiter {
 
-    /**
-     * 固定窗口限流 Lua 脚本
-     *
-     * <p>逻辑：INCR key，若值为 1 则设置过期时间；返回当前值。
-     * 原子性保证：Redis 单线程执行 Lua 脚本，INCR + EXPIRE 不会分裂。
-     */
-    private static final String FIXED_WINDOW_LUA =
-            "local current = redis.call('INCR', KEYS[1]) " +
-            "if current == 1 then " +
-            "  redis.call('EXPIRE', KEYS[1], ARGV[1]) " +
-            "end " +
-            "return current";
-
-    /**
-     * 令牌桶限流 Lua 脚本
-     *
-     * <p>逻辑：
-     * <ol>
-     *   <li>读取桶中当前令牌数与上次刷新时间</li>
-     *   <li>计算自上次刷新以来应补充的令牌数（rate * elapsed / period）</li>
-     *   <li>更新令牌数（不超过 capacity）</li>
-     *   <li>若令牌数 >= 1，扣减一个令牌并返回 1；否则返回 0</li>
-     * </ol>
-     * 使用 Hash 存储令牌桶状态：tokens, lastRefillMs
-     */
-    private static final String TOKEN_BUCKET_LUA =
-            "local key = KEYS[1] " +
-            "local capacity = tonumber(ARGV[1]) " +
-            "local rate = tonumber(ARGV[2]) " +
-            "local periodMs = tonumber(ARGV[3]) " +
-            "local now = tonumber(ARGV[4]) " +
-            "local requested = tonumber(ARGV[5]) " +
-            "local data = redis.call('HMGET', key, 'tokens', 'lastRefillMs') " +
-            "local tokens = tonumber(data[1]) " +
-            "local lastRefill = tonumber(data[2]) " +
-            "if tokens == nil then " +
-            "  tokens = capacity " +
-            "  lastRefill = now " +
-            "end " +
-            "local elapsed = now - lastRefill " +
-            "if elapsed > 0 then " +
-            "  local refill = math.floor(elapsed * rate / periodMs) " +
-            "  if refill > 0 then " +
-            "    tokens = math.min(capacity, tokens + refill) " +
-            "    lastRefill = now " +
-            "  end " +
-            "end " +
-            "local allowed = 0 " +
-            "if tokens >= requested then " +
-            "  tokens = tokens - requested " +
-            "  allowed = 1 " +
-            "end " +
-            "redis.call('HMSET', key, 'tokens', tokens, 'lastRefillMs', lastRefill) " +
-            "redis.call('PEXPIRE', key, math.ceil(periodMs * 2 / 1000) + 1) " +
-            "return {allowed, tokens}";
-
-    /**
-     * 分桶滑动窗口限流 Lua 脚本
-     *
-     * <p>使用 Hash 存储时间桶计数，替代 ZSET 存储每个请求的唯一 member。
-     * 内存占用恒定为 O(bucketCount)，不受请求数量影响。
-     *
-     * <p>逻辑：
-     * <ol>
-     *   <li>计算当前时间桶编号</li>
-     *   <li>删除超出窗口的旧桶</li>
-     *   <li>统计所有存活桶的总计数</li>
-     *   <li>若总计数 ≥ 限流阈值，拒绝并返回</li>
-     *   <li>递增当前桶计数，设置 Key 过期时间</li>
-     * </ol>
-     */
-    private static final String SLIDING_WINDOW_BUCKETED_LUA =
-            "local key = KEYS[1] " +
-            "local now = tonumber(ARGV[1]) " +
-            "local windowMs = tonumber(ARGV[2]) " +
-            "local limit = tonumber(ARGV[3]) " +
-            "local bucketCount = tonumber(ARGV[4]) " +
-            "local bucketSize = math.floor(windowMs / bucketCount) " +
-            "local currentBucket = math.floor(now / bucketSize) " +
-            "local fields = redis.call('HKEYS', key) " +
-            "for i = 1, #fields do " +
-            "  if tonumber(fields[i]) < currentBucket - bucketCount then " +
-            "    redis.call('HDEL', key, fields[i]) " +
-            "  end " +
-            "end " +
-            "local allValues = redis.call('HVALS', key) " +
-            "local totalCount = 0 " +
-            "for i = 1, #allValues do " +
-            "  totalCount = totalCount + tonumber(allValues[i]) " +
-            "end " +
-            "if totalCount >= limit then " +
-            "  return {0, totalCount} " +
-            "end " +
-            "redis.call('HINCRBY', key, currentBucket, 1) " +
-            "redis.call('PEXPIRE', key, windowMs + 1000) " +
-            "return {1, totalCount + 1}";
-
     private final RedisTemplate<String, Object> redisTemplate;
     private final RedisProperties redisProperties;
     private final FailOpenPolicy failOpenPolicy;
@@ -190,7 +94,7 @@ public class RedisRateLimiter {
             String formattedKey = formatKey(key);
             long windowSeconds = Math.max(1, window.toSeconds());
             DefaultRedisScript<?> script = getOrCreateScript(
-                    "fixed_window", FIXED_WINDOW_LUA, Long.class);
+                    "fixed_window", RedisScriptConstants.FIXED_WINDOW_LUA, Long.class);
             Object rawResult = redisTemplate.execute(script,
                     Collections.singletonList(formattedKey),
                     String.valueOf(windowSeconds));
@@ -228,7 +132,7 @@ public class RedisRateLimiter {
             long now = System.currentTimeMillis();
             long periodMs = period.toMillis();
             DefaultRedisScript<?> script = getOrCreateScript(
-                    "token_bucket", TOKEN_BUCKET_LUA, List.class);
+                    "token_bucket", RedisScriptConstants.TOKEN_BUCKET_LUA_MS, List.class);
             Object rawResult = redisTemplate.execute(script,
                     Collections.singletonList(formattedKey),
                     String.valueOf(capacity),
@@ -268,7 +172,7 @@ public class RedisRateLimiter {
             long windowMs = window.toMillis();
             int bucketCount = 10;
             DefaultRedisScript<?> script = getOrCreateScript(
-                    "sliding_window_bucketed", SLIDING_WINDOW_BUCKETED_LUA, List.class);
+                    "sliding_window_bucketed", RedisScriptConstants.SLIDING_WINDOW_BUCKETED_LUA, List.class);
             Object rawResult = redisTemplate.execute(script,
                     Collections.singletonList(formattedKey),
                     String.valueOf(now),

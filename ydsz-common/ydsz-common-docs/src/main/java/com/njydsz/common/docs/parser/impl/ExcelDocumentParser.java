@@ -1,18 +1,12 @@
 package com.njydsz.common.docs.parser.impl;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
-import com.njydsz.common.docs.convert.DocumentConverter;
+
 import com.njydsz.common.docs.domain.DocumentContent;
 import com.njydsz.common.docs.domain.DocumentMetadata;
 import com.njydsz.common.docs.domain.DocumentSection;
@@ -22,47 +16,54 @@ import com.njydsz.common.docs.enums.DocumentFormat;
 import com.njydsz.common.docs.exception.DocumentException;
 import com.njydsz.common.docs.exception.DocumentExceptionCode;
 import com.njydsz.common.docs.parser.DocumentParser;
+import com.njydsz.common.excel.core.ExcelFacade;
+import com.njydsz.common.excel.core.RawSheetData;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Excel 文档解析器（.xlsx / .xls）
- * <p>
- * 基于 Apache POI 解析 Excel 文档，提取所有 Sheet 的表格数据。
+ *
+ * <p>基于 {@link ExcelFacade#readAllSheets} 解析 Excel 文档，提取所有 Sheet 的表格数据。
+ * 统一处理 HSSF/XSSF 格式识别、空行过滤、单元格值转字符串，
+ * 消除直接使用 Apache POI DOM 模式（{@code WorkbookFactory.create}）的重复编码。</p>
+ *
+ * <p>第一行作为表头，后续行作为数据行。全空行自动过滤。
+ * 单元格值统一转为字符串，日期按 {@code yyyy-MM-dd HH:mm:ss} 格式输出，
+ * 数字为整数时去掉小数部分。</p>
+ *
+ * <p><b>页码语义借用：</b>Excel 无自然分页，此处将 Sheet 序号（从 1 起）
+ * 填入 {@code pageNumber}，{@code totalPages} 等于 Sheet 总数，
+ * 便于上层用统一的"按页定位"逻辑回溯内容来源。</p>
+ *
+ * <p><b>两处刻意的行为：</b>一是全空行被丢弃（POI 会把格式化过的空行也算作行，
+ * 保留会污染文本与行数统计）；二是 {@code sections} 恒为空列表——
+ * Excel 内容已由 {@code tables} 完整承载，再拆分节没有语义收益。
+ * 因此需要文档结构分节的下游（如分块器）对 Excel 结果只能依赖 {@code text}。</p>
+ *
+ * <p>整个工作簿以 DOM 方式载入内存，大文件内存占用约为文件体积的数倍，
+ * 需由上层按 {@code maxFileSizeMb} 提前拦截。</p>
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Slf4j
 @Component
-@ConditionalOnClass(name = "org.apache.poi.ss.usermodel.WorkbookFactory")
+@ConditionalOnClass(name = "com.njydsz.common.excel.core.ExcelFacade")
 public class ExcelDocumentParser implements DocumentParser {
 
     /**
      * 遍历工作簿全部 Sheet，将每张表提取为一个 {@link DocumentTable}。
      *
-     * <p>由 {@link WorkbookFactory} 依据流首魔数自动区分 XLS（HSSF）与 XLSX（XSSF），
-     * 无需调用方预先判别版本。单元格值统一交由
-     * {@link DocumentConverter#getCellValueAsString} 转字符串，公式单元格取缓存值而非重算。
-     *
-     * <p><b>页码语义借用：</b>Excel 无自然分页，此处将 Sheet 序号（从 1 起）
-     * 填入 {@code pageNumber}，{@code totalPages} 等于 Sheet 总数，
-     * 便于上层用统一的"按页定位"逻辑回溯内容来源。
-     *
-     * <p><b>两处刻意的行为：</b>一是全空行被丢弃（POI 会把格式化过的空行也算作行，
-     * 保留会污染文本与行数统计）；二是 {@code sections} 恒为空列表——
-     * Excel 内容已由 {@code tables} 完整承载，再拆分节没有语义收益。
-     * 因此需要文档结构分节的下游（如分块器）对 Excel 结果只能依赖 {@code text}。
-     *
-     * <p>整个工作簿以 DOM 方式载入内存，大文件内存占用约为文件体积的数倍，
-     * 需由上层按 {@code maxFileSizeMb} 提前拦截。
+     * <p>委托 {@link ExcelFacade#readAllSheets} 统一处理格式识别、空行过滤与单元格值转换，
+     * 本方法仅负责将 {@link RawSheetData} 转换为 {@link DocumentContent} 领域对象。</p>
      *
      * @param inputStream Excel 字节流，由调用方负责关闭；为 {@code null} 时视为空文档
      * @param fileName    原始文件名，仅写入元数据标题用于展示与排障
      * @param options     解析选项，本实现未使用，可传 {@code null}
      * @return 文档内容，每张非空 Sheet 对应一张表格，纯文本以 {@code === Sheet名 ===} 分隔各表
      * @throws DocumentException 入参流为 {@code null} 时错误码 {@code DOCUMENT_EMPTY}；
-     *                           读取失败时错误码 {@code PARSE_FAILED}。
-     *                           注意加密工作簿由 POI 抛出运行时异常，
-     *                           不会被转换为 {@code DOCUMENT_ENCRYPTED}
+     *                           读取失败时错误码 {@code PARSE_FAILED}
      */
     @Override
     public DocumentContent parse(InputStream inputStream, String fileName, ParseOptions options) {
@@ -70,53 +71,36 @@ public class ExcelDocumentParser implements DocumentParser {
             throw new DocumentException(DocumentExceptionCode.DOCUMENT_EMPTY);
         }
 
-        try (Workbook workbook = WorkbookFactory.create(inputStream)) {
+        try {
+            List<RawSheetData> sheets = ExcelFacade.readAllSheets(inputStream);
             List<DocumentTable> tables = new ArrayList<>();
             List<DocumentSection> sections = new ArrayList<>();
             StringBuilder fullText = new StringBuilder();
 
-            int sheetCount = workbook.getNumberOfSheets();
-            for (int s = 0; s < sheetCount; s++) {
-                Sheet sheet = workbook.getSheetAt(s);
-                String sheetName = sheet.getSheetName();
-
-                List<List<String>> rows = new ArrayList<>();
-                int maxCols = 0;
-
-                for (Row row : sheet) {
-                    List<String> cells = new ArrayList<>();
-                    int lastCol = row.getLastCellNum();
-                    maxCols = Math.max(maxCols, lastCol);
-
-                    for (int c = 0; c < lastCol; c++) {
-                        Cell cell = row.getCell(c);
-                        cells.add(DocumentConverter.getCellValueAsString(cell));
-                    }
-                    // 过滤空行
-                    if (cells.stream().anyMatch(v -> v != null && !v.isBlank())) {
-                        rows.add(cells);
-                    }
+            for (RawSheetData sheet : sheets) {
+                if (!sheet.hasData()) {
+                    continue;
                 }
 
-                if (!rows.isEmpty()) {
-                    tables.add(DocumentTable.builder()
-                            .caption(sheetName)
-                            .pageNumber(s + 1)
-                            .rowCount(rows.size())
-                            .colCount(maxCols)
-                            .rows(rows)
-                            .build());
+                int maxCols = sheet.columnCount();
+                tables.add(DocumentTable.builder()
+                        .caption(sheet.sheetName())
+                        .pageNumber(tables.size() + 1)
+                        .rowCount(sheet.rows().size())
+                        .colCount(maxCols)
+                        .rows(sheet.rows())
+                        .build());
 
-                    // 追加文本
-                    fullText.append("=== ").append(sheetName).append(" ===\n");
-                    for (List<String> row : rows) {
-                        fullText.append(String.join("\t", row)).append('\n');
-                    }
-                    fullText.append('\n');
+                // 追加文本
+                fullText.append("=== ").append(sheet.sheetName()).append(" ===\n");
+                for (List<String> row : sheet.rows()) {
+                    fullText.append(String.join("\t", row)).append('\n');
                 }
+                fullText.append('\n');
             }
 
             String text = fullText.toString();
+            int totalPages = sheets.size();
             return DocumentContent.builder()
                     .text(text)
                     .sections(sections)
@@ -126,10 +110,12 @@ public class ExcelDocumentParser implements DocumentParser {
                             .charCount(text.length())
                             .build())
                     .totalChars(text.length())
-                    .totalPages(sheetCount)
+                    .totalPages(totalPages)
                     .build();
 
-        } catch (IOException e) {
+        } catch (DocumentException e) {
+            throw e;
+        } catch (Exception e) {
             log.error("[ExcelDocumentParser] 解析失败: {}", fileName, e);
             throw new DocumentException(DocumentExceptionCode.PARSE_FAILED, e);
         }
@@ -139,7 +125,7 @@ public class ExcelDocumentParser implements DocumentParser {
      * 声明本解析器在注册中心占据的主格式槽位。
      *
      * <p>返回值仅代表注册键，实际受理范围以 {@link #supports(DocumentFormat)} 为准，
-     * 二者不等价：本类同时能处理旧版 XLS。
+     * 二者不等价：本类同时能处理旧版 XLS。</p>
      *
      * @return 恒为 {@link DocumentFormat#XLSX}
      */
@@ -151,11 +137,11 @@ public class ExcelDocumentParser implements DocumentParser {
     /**
      * 判定是否受理指定格式，覆写以扩大到新旧两代 Excel。
      *
-     * <p>覆盖父接口"仅等值匹配主格式"的默认实现：因为 {@link WorkbookFactory}
-     * 已屏蔽 HSSF/XSSF 差异，一套代码即可通吃，无需为 XLS 单独再写一个解析器。
+     * <p>覆盖父接口"仅等值匹配主格式"的默认实现：因为 {@link ExcelFacade#readAllSheets}
+     * 已屏蔽 HSSF/XSSF 差异，一套代码即可通吃，无需为 XLS 单独再写一个解析器。</p>
      *
      * <p>注意含宏的 {@link DocumentFormat#XLSM} <b>不在此列</b>，
-     * 需先经安全扫描器确认无害后由上层显式决策，避免宏文档被静默解析。
+     * 需先经安全扫描器确认无害后由上层显式决策，避免宏文档被静默解析。</p>
      *
      * @param format 待判定的文档格式，可为 {@code null}（返回 {@code false}）
      * @return 格式为 XLSX 或 XLS 时返回 {@code true}
