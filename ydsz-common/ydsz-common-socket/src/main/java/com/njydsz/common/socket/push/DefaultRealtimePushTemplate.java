@@ -155,10 +155,10 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
         if (userId == null) {
             return;
         }
-        String payloadJson = messageSerializer.serialize(payload);
-        if (!applyFilters(userId, "USER", payloadJson)) {
+        if (!applyFilters(PushContext.forUser(userId, type, payload, messageId, priority))) {
             return;
         }
+        String payloadJson = messageSerializer.serialize(payload);
 
         String actualMessageId = (messageId != null && !messageId.isEmpty()) ? messageId : generateMessageId();
         String traceId = WebSocketTraceContext.getOrGenerateTraceId();
@@ -235,10 +235,22 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
      */
     @Override
     public void broadcast(String type, Object payload) {
-        String payloadJson = messageSerializer.serialize(payload);
-        if (!applyFilters(null, "BROADCAST", payloadJson)) {
+        broadcast(type, payload, null);
+    }
+
+    /**
+     * 广播指定类型的消息到所有在线用户（带消息 ID，用于幂等去重）。
+     *
+     * @param type      消息类型
+     * @param payload   消息负载
+     * @param messageId 业务级消息唯一 ID
+     */
+    @Override
+    public void broadcast(String type, Object payload, String messageId) {
+        if (!applyFilters(PushContext.forBroadcast(type, payload, MessagePriority.NORMAL.name()))) {
             return;
         }
+        String payloadJson = messageSerializer.serialize(payload);
 
         String traceId = WebSocketTraceContext.getOrGenerateTraceId();
         WebSocketClusterMessage msg = WebSocketClusterMessage.forBroadcast(type, payloadJson);
@@ -271,10 +283,10 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
      */
     @Override
     public void pushToTopic(String topic, Object payload) {
-        String payloadJson = messageSerializer.serialize(payload);
-        if (!applyFilters(null, "TOPIC", payloadJson)) {
+        if (!applyFilters(PushContext.forTopic(topic, "TOPIC", payload, MessagePriority.NORMAL.name()))) {
             return;
         }
+        String payloadJson = messageSerializer.serialize(payload);
 
         String traceId = WebSocketTraceContext.getOrGenerateTraceId();
         WebSocketClusterMessage msg = WebSocketClusterMessage.forTopic(topic, null, payloadJson);
@@ -319,10 +331,10 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
         }
         // 包装原始 payload 对象（非 JSON 字符串），确保后续仅序列化一次
         Object wrappedPayload = wrapWithTtl(payload, ttlSeconds);
-        String payloadJson = messageSerializer.serialize(wrappedPayload);
-        if (!applyFilters(userId, "USER", payloadJson)) {
+        if (!applyFilters(PushContext.forUser(userId, type, wrappedPayload, MessagePriority.NORMAL.name()))) {
             return;
         }
+        String payloadJson = messageSerializer.serialize(wrappedPayload);
 
         String actualMessageId = generateMessageId();
         String traceId = WebSocketTraceContext.getOrGenerateTraceId();
@@ -419,6 +431,35 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
     }
 
     /**
+     * 向指定用户推送通知并返回结果（带业务级消息 ID + 离线补偿）。
+     *
+     * @param userId    用户 ID
+     * @param type      消息类型标签
+     * @param payload   消息内容
+     * @param messageId 业务级消息唯一 ID
+     * @return 推送结果
+     */
+    @Override
+    public PushResult pushToUserOfflineResult(String userId, String type, Object payload, String messageId) {
+        if (userId == null) {
+            return PushResult.failure(null, "INVALID_PARAM", "userId cannot be null");
+        }
+        String actualMessageId = (messageId != null && !messageId.isEmpty()) ? messageId : generateMessageId();
+        try {
+            if (onlineUserService.isOnline(userId)) {
+                pushToUserWithMessageId(userId, type, payload, actualMessageId);
+            } else {
+                offlineMessageStore.cacheOffline(userId, type, payload);
+                log.info("[WebSocket] 用户离线，消息已缓存: userId={}, type={}, messageId={}", userId, type, actualMessageId);
+            }
+            return PushResult.success(actualMessageId);
+        } catch (Exception e) {
+            log.warn("[WebSocket] 推送(离线补偿)失败: userId={}, err={}", userId, e.getMessage());
+            return PushResult.failure(actualMessageId, "PUSH_EXCEPTION", e.getMessage());
+        }
+    }
+
+    /**
      * 刷新重试队列（由定时任务调用）。
      *
      * <p>从重试队列中取出到期的重试消息，最多 100 条，
@@ -458,18 +499,16 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
     /**
      * 应用消息过滤器链。
      *
-     * <p>按顺序调用所有过滤器，任一过滤器返回 false 则拦截消息。
+     * <p>按顺序调用所有过滤器（基于 {@link PushContext}），任一过滤器返回 false 则拦截消息。
      *
-     * @param userId      用户 ID（可能为 null）
-     * @param pushType    推送类型（USER/BROADCAST/TOPIC）
-     * @param payloadJson 序列化后的消息 JSON
+     * @param context 推送上下文（含 userId / pushType / payload / priority 等）
      * @return 是否通过所有过滤器
      */
-    private boolean applyFilters(String userId, String pushType, String payloadJson) {
+    private boolean applyFilters(PushContext context) {
         for (MessageFilter filter : messageFilters) {
-            if (!filter.shouldSend(userId, pushType, payloadJson)) {
+            if (!filter.shouldSend(context)) {
                 log.info("[WebSocket] 消息被过滤器拦截: filter={}, userId={}, pushType={}",
-                        filter.getName(), userId, pushType);
+                        filter.getName(), context.userId(), context.pushType());
                 return false;
             }
         }

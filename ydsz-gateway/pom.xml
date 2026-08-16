@@ -85,9 +85,10 @@
             <artifactId>jjwt-impl</artifactId>
             <scope>runtime</scope>
         </dependency>
+        <!-- P2-1 依赖收敛：jjwt-orgjson 已废弃，统一使用 jjwt-jackson（与全仓一致） -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
-            <artifactId>jjwt-orgjson</artifactId>
+            <artifactId>jjwt-jackson</artifactId>
             <scope>runtime</scope>
         </dependency>
 

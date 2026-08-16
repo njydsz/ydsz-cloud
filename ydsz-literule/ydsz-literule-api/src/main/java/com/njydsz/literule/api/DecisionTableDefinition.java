@@ -22,7 +22,7 @@ import lombok.NoArgsConstructor;
  *   "hitPolicy": "FIRST",
  *   "conditionColumns": [
  *       {"name":"evmRedCount","label":"EVM 红灯数","type":"number"},
- *       {"name":"grossMargin","label":"毛利率","type":"number"}
+ *       {"name":"metricValue","label":"指标值","type":"number"}
  *   ],
  *   "actionColumns": [
  *       {"name":"severity","label":"严重度","type":"string"},
@@ -30,7 +30,7 @@ import lombok.NoArgsConstructor;
  *   ],
  *   "rows": [
  *       {"conditions":{"evmRedCount":">=3"},"actions":{"severity":"RED","title":"EVM 严重偏离"}},
- *       {"conditions":{"grossMargin":"<0.05"},"actions":{"severity":"YELLOW","title":"毛利率过低"}}
+ *       {"conditions":{"metricValue":"<0.05"},"actions":{"severity":"YELLOW","title":"指标值过低"}}
  *   ],
  *   "defaultActions": {"severity":"INFO","title":"正常"}
  * }

@@ -14,7 +14,7 @@
 
 ## L1-L6 分层架构
 
-本模块按 DDD 分层组织 **30 个子模块**，依赖方向严格自下而上（上层依赖下层，不可反向）：
+本模块按 DDD 分层组织 **28 个子模块**（L1-L6），依赖方向严格自下而上（上层依赖下层，不可反向）：
 
 ```
 L1 基础设施层  → ydsz-common-core
@@ -28,49 +28,52 @@ L5 业务服务层  → ydsz-common-auth, ydsz-common-safe, ydsz-common-feign,
                  ydsz-common-netty, ydsz-common-socket,
                  ydsz-common-search, ydsz-common-event,
                  ydsz-common-config, ydsz-common-seata, ydsz-common-sentry
-L6 应用层     → ydsz-common-base, ydsz-common-web, ydsz-common-app
+L6 应用层     → ydsz-common-base, ydsz-common-web
+                 （ydsz-common-app 已移出默认构建，经 -P app-profile 激活）
 ```
 
 ### 子模块职责速查
 
+> **说明（2026-08-16 审计校准）**：下表以 src/main/java 实际代码为准校准，删除/修正了原文档中不存在的「宣称能力」。原则：**文档只写已验证存在的能力**。
+
 | 层级 | 模块 | 职责 |
 |---|---|---|
-| L1 | [common-core](ydsz-common-core/README.md) | 统一响应/请求模型、TraceId、请求上下文、JobHandler、DAG、特性开关、重试模板、线程池监控 |
-| L2 | [common-util](ydsz-common-util/README.md) | 99 个工具类（JSON/加密/HTTP/IP/Spring/雪花 ID/Bean 拷贝 等） |
-| L2 | [common-json](ydsz-common-json/README.md) | 高性能 JSON 引擎（ASM 字节码、SIMD 向量化、Schema 校验、JsonPath、树模型） |
-| L3 | [common-domain](ydsz-common-domain/README.md) | DDD 基类（BaseEntity/AggregateRoot）、领域事件、规范模式、分页、树形结构 |
+| L1 | [common-core](ydsz-common-core/README.md) | 统一响应/请求模型、TraceId、请求上下文（TTL）、雪花 ID、Spring 工具封装、脚本引擎等工具 |
+| L2 | [common-util](ydsz-common-util/README.md) | 69 个工具类（JSON/加密/HTTP/IP/Spring/雪花 ID/Bean 拷贝 等） |
+| L2 | [common-json](ydsz-common-json/README.md) | JSON 引擎（Jackson 兼容门面）、JsonPatch、JsonHttpMessageConverter、Jackson 注解桥 |
+| L3 | [common-domain](ydsz-common-domain/README.md) | PageQuery 分页、TreeBuilder 树形结构、TypedId 类型化 ID、领域事件定义 |
 | L3 | [common-exception](ydsz-common-exception/README.md) | 统一异常体系、错误码管理、ProblemDetail (RFC 7807)、i18n、异常构建器 |
-| L4 | [common-jdbc](ydsz-common-jdbc/README.md) | MyBatis-Plus 增强、动态数据源、行/列权限、逻辑删除、乐观锁、租户隔离、字段填充 |
-| L4 | [common-redis](ydsz-common-redis/README.md) | Redis 6 种 ops + 9 种高级 ops、布隆过滤器、延迟队列、限流、缓存击穿防护 |
-| L4 | [common-lock](ydsz-common-lock/README.md) | 分布式锁（4 种实现）、@Idempotent 幂等、@YdszDistributedLock、WatchDog、读写锁、信号量 |
-| L4 | [common-cache](ydsz-common-cache/README.md) | 高性能多策略本地缓存框架（Window-TinyLFU/LRU/LFU/TTL/MultiLevel）、三防、熔断降级 |
-| L4 | [common-thread](ydsz-common-thread/README.md) | 共享线程池自动配置、线程池监控、健康检查 |
-| L4 | [common-tenant](ydsz-common-tenant/README.md) | 多租户隔离（SINGLE/MULTI/ISOLATE_DB）、SQL 改写、全链路上下文传播、租户限流/审计/指标 |
-| L5 | [common-auth](ydsz-common-auth/README.md) | JWT、RBAC 4 注解 + 3 切面、@DataScope 数据权限、TOTP 2FA、权限缓存热更新 |
-| L5 | [common-safe](ydsz-common-safe/README.md) | @Sensitive 7 种脱敏、@Xss、@RateLimit、CSRF、SQL 注入防护、验证码、安全事件告警 |
-| L5 | [common-feign](ydsz-common-feign/README.md) | OpenFeign 增强、统一编解码、ResponseUnwrapDecoder、Resilience4j 熔断、动态客户端 |
-| L5 | [common-audit](ydsz-common-audit/README.md) | @OperationLog + @Audit、事件驱动异步落库、Disruptor 高性能批写、4 种分片策略 |
+| L4 | [common-jdbc](ydsz-common-jdbc/README.md) | MyBatis-Plus 增强、自研动态数据源、行/列权限、逻辑删除、乐观锁、租户隔离、字段填充、SQL 安全拦截 |
+| L4 | [common-redis](ydsz-common-redis/README.md) | Redis 门面 ops（String/Hash/Geo/Stream/Pipeline/PubSub/事务）、三算法限流器、多级缓存提供者 |
+| L4 | [common-lock](ydsz-common-lock/README.md) | 分布式锁（Reentrant/Fair/Multi + Fallback）、@Idempotent 幂等（fail-open 可配置）、@YdszDistributedLock、WatchDog 续期、读写锁、信号量 |
+| L4 | [common-cache](ydsz-common-cache/README.md) | 本地缓存框架（Window-TinyLFU/Striped 两种策略）、WriteThrough 回写、过期清理、统计 |
+| L4 | [common-thread](ydsz-common-thread/README.md) | 共享线程池自动配置、线程池监控、健康检查、Nacos 热更新 |
+| L4 | [common-tenant](ydsz-common-tenant/README.md) | 多租户隔离（SINGLE/MULTI/SCHEMA）、SQL 改写（含 CTE/标量子查询）、全链路上下文传播、fail-closed 防护 |
+| L5 | [common-auth](ydsz-common-auth/README.md) | JWT、RBAC 4 注解 + 3 切面、@DataScope 数据权限（fail-closed）、权限缓存热更新 |
+| L5 | [common-safe](ydsz-common-safe/README.md) | @SensitiveData 脱敏（fail-closed）、@Sensitive、@RateLimit、CSRF、SQL 注入防护、验证码、安全事件告警、API 签名（query 入签） |
+| L5 | [common-feign](ydsz-common-feign/README.md) | OpenFeign 增强、统一编解码、ResponseUnwrapDecoder、Resilience4j 熔断（参数可配置）、动态客户端 |
+| L5 | [common-audit](ydsz-common-audit/README.md) | @OperationLog + @Audit、异步队列批量落库、时间分表（日/月/年）、磁盘兜底 |
 | L5 | [common-file](ydsz-common-file/README.md) | 7 种存储平台、分片上传、断点续传、文件去重（秒传）、文件类型安全检测 |
 | L5 | [common-notify](ydsz-common-notify/README.md) | 5 种通知渠道（邮件/短信/企微/钉钉/飞书）、SpEL 模板引擎、重试队列、DKIM 签名 |
-| L5 | [common-queue](ydsz-common-queue/README.md) | 5 种 MQ（Redis×3/Kafka/RocketMQ/RabbitMQ/ActiveMQ）、死信队列、消息轨迹、去重 |
-| L5 | [common-docs](ydsz-common-docs/README.md) | 8 种格式解析、预处理 Pipeline、安全扫描、PII 检测（5 种）、文本水印、PDF 脱敏、OCR |
-| L5 | [common-excel](ydsz-common-excel/README.md) | 高性能 Excel 读写（SAX 流式/SXSSF 大文件）、并发写入、模板填充、公式注入防护 |
+| L5 | [common-queue](ydsz-common-queue/README.md) | 6 种 MQ（Redis×3/Kafka/RocketMQ/RabbitMQ/ActiveMQ）、死信队列、消息轨迹、去重 |
+| L5 | [common-docs](ydsz-common-docs/README.md) | 文档解析（PDF/Word/Excel/PPT 等）、预处理 Pipeline、安全扫描、PII 检测、文本水印、PDF 脱敏、OCR |
+| L5 | [common-excel](ydsz-common-excel/README.md) | 高性能 Excel 读写（SAX 流式/SXSSF 大文件）、模板填充、公式注入防护、无类型全 Sheet 读取 |
 | L5 | [common-netty](ydsz-common-netty/README.md) | Netty TCP Server/Client 抽象、断线重连、心跳检测、SSL/TLS、LengthField 编解码 |
 | L5 | [common-socket](ydsz-common-socket/README.md) | WebSocket 实时推送、集群广播、离线消息存储、认证拦截、消息限流 |
-| L5 | [common-search](ydsz-common-search/README.md) | 统一搜索引擎（PG 全文检索/ES）、多 Provider 架构、搜索缓存、蓝绿重建、游标分页 |
+| L5 | [common-search](ydsz-common-search/README.md) | 统一搜索引擎（PG 全文检索 + 内存策略）、多 Provider 架构、搜索缓存、蓝绿重建、游标分页 |
 | L5 | [common-event](ydsz-common-event/README.md) | 事务性 Outbox 模式、可靠事件投递、Outbox 处理器、健康检查 |
-| L5 | [common-config](ydsz-common-config/README.md) | 敏感配置加密（AES-256-GCM、SHA-256 密钥派生、ENC() 格式） |
-| L5 | [common-seata](ydsz-common-seata/README.md) | Seata 分布式事务集成（AT/TCC/SAGA 模式） |
-| L5 | [common-sentry](ydsz-common-sentry/README.md) | 统一系统指标监控（ELK+Logstash / Loki+Alloy 双方案、SLA、告警收敛、Grafana 仪表盘） |
+| L5 | [common-config](ydsz-common-config/README.md) | 配置变更桥接（底层加解密由 jasypt-spring-boot-starter 承担）、配置健康检查 |
+| L5 | [common-seata](ydsz-common-seata/README.md) | Seata 分布式事务集成（AT/TCC/SAGA 模式）、XID 传播 |
+| L5 | [common-sentry](ydsz-common-sentry/README.md) | 统一系统指标监控（Micrometer）、告警事件、日志上报、SLA 指标、链路追踪桥 |
 | L6 | [common-base](ydsz-common-base/README.md) | HTTP 公共基座（CORS/时区/I18n/安全头/TraceId/请求日志/全局响应包装/OpenAPI） |
-| L6 | [common-web](ydsz-common-web/README.md) | **PC Web 端基座**（继承 base，叠加 Spring Security/WebAuthFilter/Session） |
-| L6 | [common-app](ydsz-common-app/README.md) | **移动端 App 基座**（继承 base，叠加 API 签名验证/AppAuthHandler） |
+| L6 | [common-web](ydsz-common-web/README.md) | **PC Web 端基座**（继承 base，叠加 Spring Security 异常处理 + WebAuthFilter/Session 无状态） |
+| L6 | [common-app](ydsz-common-app/README.md) | **移动端 App 基座**（已移出默认构建，经 `-P app-profile` 激活；暂无可消费方） |
 
 > **注意**：`common-web` 与 `common-app` 是两个**平行**的应用层入口，分别面向 PC Web 服务和移动端 App。后端微服务统一使用 `common-web`，`common-app` 仅用于未来移动端项目。
 
 ## 自动配置机制
 
-所有 30 个子模块统一使用 Spring Boot 3+ 的 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 机制自动装配（**不使用** `spring.factories`）。
+所有 28 个子模块（默认构建）统一使用 Spring Boot 3+ 的 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 机制自动装配（**不使用** `spring.factories`）。
 
 各服务的启动类通过 `@SpringBootApplication(scanBasePackages = {"com.njydsz.{service}", "com.njydsz.common"})` 扫描 common 包，激活自动配置。
 
@@ -330,7 +333,7 @@ ydsz-common/
 ## 构建
 
 ```bash
-# 仅构建 common 模块（含所有 30 个子模块）
+# 仅构建 common 模块（含所有 28 个子模块）
 cd ydsz-cloud
 mvn -pl ydsz-common -am clean install
 
@@ -353,6 +356,20 @@ mvn test
 - **首发版本**：v1.0.0（2026-06-30）
 - **当前版本**：v1.0.0-SNAPSHOT
 - **变更需走 PR + Code Review**
+
+## 安全基线（fail-closed 语义，2026-08-16 校准）
+
+以下安全组件按「宁可拒绝，不可泄露/越权」的 fail-closed 原则实现，行为变更需谨慎：
+
+| 组件 | 安全语义 | 变更点（2026-08-16） |
+|---|---|---|
+| `@SensitiveData` 脱敏 | 深度超限/处理异常抛 `SensitiveDataProcessingException`；角色豁免需认证上下文可信来源（当前一律脱敏） | 不再信任 `X-User-Role` 请求头；嵌套对象递归脱敏 |
+| 租户 SQL 改写 | 无租户上下文/字段缺失/INSERT-SELECT 无法对齐列数时抛 `TenantIsolationException` | 补 WITH CTE 与 WHERE/HAVING/selectItems 标量子查询注入 |
+| `@DataScope` 数据权限 | 未知 dataScope 规则返回 `AND 1 = 0`（无权限） | 由「不限制」改为「拒绝」 |
+| 分布式锁 | 可重入锁仅重入计数归零（锁键删除）才算完全释放，才停 WatchDog | 修复重入深度>1 时提前停犬缺陷 |
+| API 签名 | 签名串含规范化 query string；先验签后消费 nonce | 修复 GET 参数篡改与 nonce DoS 放大面 |
+| 幂等 `@Idempotent` | Redis 不可用时由 `ydsz.lock.idempotent.fail-open` 控制（默认 true 放行，false 拒绝） | 降级策略可配置化 |
+| 全局响应包装 | 跳过 SseEmitter/StreamingResponseBody/byte[]/ByteBuffer | 保护流式响应（如 AI 对话）不被 JSON 包装破坏 |
 
 ---
 

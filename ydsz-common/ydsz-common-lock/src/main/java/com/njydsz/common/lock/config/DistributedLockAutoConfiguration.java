@@ -245,15 +245,23 @@ public class DistributedLockAutoConfiguration {
     /**
      * 创建幂等策略 Bean
      *
-     * <p>基于 Redis SET NX EX 实现，Redis 不可用时降级放行。
+     * <p>基于 Redis SET NX EX 实现。Redis 不可用时的降级策略由
+     * {@code ydsz.lock.idempotent.fail-open} 控制：
+     * <ul>
+     *   <li>true（默认）：fail-open 放行，保证主流程可用（防重复点击场景）</li>
+     *   <li>false：fail-closed 拒绝请求，严格保证幂等语义（资金类强幂等场景）</li>
+     * </ul>
      *
      * @param stringRedisTemplate Redis 客户端
+     * @param lockProperties      锁配置属性（读取幂等降级策略）
      * @return IdempotentStrategy 实例
      */
     @Bean
     @ConditionalOnMissingBean
-    public IdempotentStrategy idempotentStrategy(StringRedisTemplate stringRedisTemplate) {
-        return new RedisIdempotentStrategy(stringRedisTemplate);
+    public IdempotentStrategy idempotentStrategy(StringRedisTemplate stringRedisTemplate,
+                                                 LockProperties lockProperties) {
+        boolean failOpen = lockProperties.getIdempotent().isFailOpen();
+        return new RedisIdempotentStrategy(stringRedisTemplate, failOpen);
     }
 
     /**

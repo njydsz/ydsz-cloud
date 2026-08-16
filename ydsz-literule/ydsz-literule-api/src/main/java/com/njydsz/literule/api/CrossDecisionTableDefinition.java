@@ -24,9 +24,9 @@ import lombok.NoArgsConstructor;
  * <p>结构示例（风险等级矩阵）：
  * <pre>
  *  rowDimension: "evmRedCount"（行维度：EVM 红灯数）
- *  columnDimension: "grossMargin"（列维度：毛利率）
+ *  columnDimension: "metricValue"（列维度：指标值）
  *
- *              grossMargin < 0.05   grossMargin [0.05, 0.15)   grossMargin >= 0.15
+ *              metricValue < 0.05   metricValue [0.05, 0.15)   metricValue >= 0.15
  *  evmRed >= 3   RED（高风险）          RED（高风险）              YELLOW（中风险）
  *  evmRed 1~2    YELLOW（中风险）       YELLOW（中风险）           INFO（正常）
  *  evmRed 0      INFO（正常）           INFO（正常）              INFO（正常）
@@ -38,16 +38,16 @@ import lombok.NoArgsConstructor;
  *   "matrixCode": "MTX_RISK",
  *   "matrixName": "风险等级矩阵",
  *   "rowDimension": "evmRedCount",
- *   "columnDimension": "grossMargin",
+ *   "columnDimension": "metricValue",
  *   "rowBuckets": [
  *     {"label":"EVM红灯>=3", "condition":">=3"},
  *     {"label":"EVM红灯1~2", "condition":"[1,3)"},
  *     {"label":"EVM红灯0", "condition":"0"}
  *   ],
  *   "columnBuckets": [
- *     {"label":"毛利率<0.05", "condition":"<0.05"},
- *     {"label":"毛利率0.05~0.15", "condition":"[0.05,0.15)"},
- *     {"label":"毛利率>=0.15", "condition":">=0.15"}
+ *     {"label":"指标值<0.05", "condition":"<0.05"},
+ *     {"label":"指标值0.05~0.15", "condition":"[0.05,0.15)"},
+ *     {"label":"指标值>=0.15", "condition":">=0.15"}
  *   ],
  *   "cells": {
  *     "0_0": {"severity":"RED","title":"高风险"},
@@ -93,7 +93,7 @@ public class CrossDecisionTableDefinition implements Serializable {
     /**
      * 列维度字段名（从 facts 中取值的键名）
      *
-     * <p>例如 "grossMargin" 表示从 facts.get("grossMargin") 获取列维度值
+     * <p>例如 "metricValue" 表示从 facts.get("metricValue") 获取列维度值
      */
     private String columnDimension;
 

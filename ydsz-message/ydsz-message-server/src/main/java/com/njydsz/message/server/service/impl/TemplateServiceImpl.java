@@ -6,11 +6,13 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.dto.template.TemplateAuditDTO;
@@ -47,6 +49,12 @@ public class TemplateServiceImpl implements TemplateService {
 
     /** 模板引擎（变量渲染） */
     private final TemplateEngine templateEngine;
+
+    /**
+     * 搜索索引事件桥接器（可选注入）。
+     * 用于在模板创建/更新/删除时异步同步到 ydsz-common-search 统一搜索索引。
+     */
+    private final ObjectProvider<SearchIndexEventBridge> searchIndexEventBridgeProvider;
 
     /**
      * 创建消息模板。
@@ -104,6 +112,7 @@ public class TemplateServiceImpl implements TemplateService {
         entity.setDescription(dto.getDescription());
         entity.setTenantId(tenantId);
         msgTemplateMapper.insert(entity);
+        syncSearchIndex(entity);
         log.info("[Template] 创建模板: code={} channel={} locale={}", dto.getTemplateCode(), dto.getChannel(), locale);
         return entity;
     }
@@ -165,6 +174,7 @@ public class TemplateServiceImpl implements TemplateService {
             entity.setDescription(dto.getDescription());
         }
         msgTemplateMapper.updateById(entity);
+        syncSearchIndex(entity);
         return entity;
     }
 
@@ -183,6 +193,7 @@ public class TemplateServiceImpl implements TemplateService {
                 .build();
         }
         msgTemplateMapper.deleteById(id);
+        deleteSearchIndex(id);
     }
 
     /**
@@ -381,6 +392,33 @@ public class TemplateServiceImpl implements TemplateService {
                 .resultCode(BaseResultCode.BAD_REQUEST)
                 .message("非法审核状态: " + value)
                 .build();
+        }
+    }
+
+    /**
+     * 将模板数据同步到统一搜索索引（ydsz_search_index）。
+     *
+     * <p>通过 {@link SearchIndexEventBridge} 异步写入，不阻塞主业务流程。
+     * 未引入 {@code ydsz-common-search} 时桥接器为空，跳过同步。
+     *
+     * @param template 消息模板实体
+     */
+    private void syncSearchIndex(MsgTemplate template) {
+        SearchIndexEventBridge bridge = searchIndexEventBridgeProvider.getIfAvailable();
+        if (bridge != null) {
+            bridge.indexUpsert("message_template", template);
+        }
+    }
+
+    /**
+     * 从统一搜索索引删除模板文档。
+     *
+     * @param id 模板 ID
+     */
+    private void deleteSearchIndex(String id) {
+        SearchIndexEventBridge bridge = searchIndexEventBridgeProvider.getIfAvailable();
+        if (bridge != null) {
+            bridge.indexDelete("message_template", id);
         }
     }
 }

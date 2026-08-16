@@ -57,6 +57,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-feign</artifactId>
         </dependency>
+        <!-- P2-7: 直接依赖 common-socket 推送 WebSocket 消息（替代 Feign 中转 message 模块） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-socket</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-audit</artifactId>

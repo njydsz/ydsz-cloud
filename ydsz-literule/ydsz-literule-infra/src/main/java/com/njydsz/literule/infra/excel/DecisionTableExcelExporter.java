@@ -23,11 +23,11 @@ import com.njydsz.literule.api.HitPolicy;
  * | HitPolicy: FIRST  | TableCode: DT_PROJECT_RISK | TableName: 项目风险等级决策表 |
  * | Category: RISK    | Description: ...          | Priority: 100              |
  * |----条件列----|----条件列----|----动作列----|----动作列----|
- * | C:evmRedCount | C:grossMargin | A:severity   | A:title      |
- * | EVM 红灯数    | 毛利率        | 严重度       | 标题         |
+ * | C:evmRedCount | C:metricValue | A:severity   | A:title      |
+ * | EVM 红灯数    | 指标值        | 严重度       | 标题         |
  * | number        | number        | string       | string       |
  * | &gt;=3          |               | RED          | EVM 严重偏离  |
- * |               | &lt;0.05       | YELLOW       | 毛利率过低    |
+ * |               | &lt;0.05       | YELLOW       | 指标值过低    |
  * | DEFAULT       |               | INFO         | 正常         |
  * </pre>
  *

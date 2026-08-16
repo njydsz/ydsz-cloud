@@ -120,6 +120,34 @@ public interface RealtimePushTemplate {
      */
     void pushToUserWithOffline(String userId, String type, Object payload, String messageId);
 
+    // ==================== P1-6: 补充缺失重载 ====================
+
+    /**
+     * 向指定用户推送通知并返回结果（带业务级消息 ID + 离线补偿）。
+     *
+     * <p>整合了推送结果返回、幂等去重、离线补偿三项能力，
+     * 适用于需要明确感知推送结果且不能丢失消息的关键业务场景。
+     *
+     * @param userId    用户 ID
+     * @param type      消息类型标签
+     * @param payload   消息内容
+     * @param messageId 业务级消息唯一 ID
+     * @return 推送结果（含是否成功、消息 ID、错误信息）
+     */
+    PushResult pushToUserOfflineResult(String userId, String type, Object payload, String messageId);
+
+    /**
+     * 广播指定类型的消息到所有在线用户（带消息 ID，用于幂等去重）。
+     *
+     * <p>适用于需要精确一次语义的广播场景（如系统公告），
+     * 框架侧按 {@code messageId} 去重，避免定时重试时重复广播。
+     *
+     * @param type      消息类型标签
+     * @param payload   消息内容
+     * @param messageId 业务级消息唯一 ID
+     */
+    void broadcast(String type, Object payload, String messageId);
+
     // ==================== 批量推送（P2-4） ====================
 
     /**

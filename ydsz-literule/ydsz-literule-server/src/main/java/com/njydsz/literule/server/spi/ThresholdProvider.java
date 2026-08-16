@@ -69,9 +69,9 @@ public interface ThresholdProvider {
     String KEY_SPI_YELLOW = "alert.spi.yellow";
     /** SPI 红色阈值 */
     String KEY_SPI_RED = "alert.spi.red";
-    /** 毛利黄色阈值 */
+    /** 指标黄色阈值 */
     String KEY_MARGIN_YELLOW = "alert.margin.yellow";
-    /** 毛利红色阈值 */
+    /** 指标红色阈值 */
     String KEY_MARGIN_RED = "alert.margin.red";
     /** Bench 闲置成本黄色阈值 */
     String KEY_BENCH_YELLOW_COST = "alert.bench.yellow.cost";

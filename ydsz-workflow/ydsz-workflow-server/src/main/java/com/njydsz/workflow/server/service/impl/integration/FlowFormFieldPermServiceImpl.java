@@ -54,7 +54,7 @@ import com.njydsz.workflow.server.service.FlowFormFieldPermService;
  *
  * <p><b>典型使用：</b>
  * <pre>{@code
- * // 场景：财务复核节点，合同金额字段只读，发票号字段必填
+ * // 场景：财务复核节点，金额字段只读，发票号字段必填
  * String config = """
  *     {
  *       "contractAmount": "READONLY",

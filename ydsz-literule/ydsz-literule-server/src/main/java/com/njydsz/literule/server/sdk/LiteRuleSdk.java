@@ -213,7 +213,7 @@ public class LiteRuleSdk {
         /**
          * 设置规则分类（category_path，用于目录树归类与按路径过滤）。
          *
-         * @param category 分类路径（如 {@code "risk/anti-fraud"}），可空
+         * @param category 分类路径（如 {@code "demo/group"}），可空
          * @return 当前 Builder（链式调用）
          */
         public RuleBuilder category(String category) {

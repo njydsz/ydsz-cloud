@@ -200,5 +200,20 @@ public class LockProperties {
          * <p>所有幂等键统一以此前缀开头，便于排查和清理
          */
         private String keyPrefix = "ydsz:idem:";
+
+        /**
+         * Redis 不可用时的降级策略，默认 {@code true}（fail-open 放行）
+         *
+         * <p>权衡说明：
+         * <ul>
+         *   <li>{@code true}（fail-open）：Redis 抖动时接口放行，幂等语义临时失效，
+         *       但保证业务主流程可用（适用于非关键幂等场景，如防重复点击）</li>
+         *   <li>{@code false}（fail-closed）：Redis 不可用时拒绝请求（抛异常），
+         *       幂等语义严格保证，但 Redis 故障会导致接口不可用（适用于资金类等强幂等场景）</li>
+         * </ul>
+         *
+         * <p>可通过配置 {@code ydsz.lock.idempotent.fail-open} 调整。
+         */
+        private boolean failOpen = true;
     }
 }

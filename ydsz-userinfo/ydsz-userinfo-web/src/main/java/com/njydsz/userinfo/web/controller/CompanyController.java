@@ -44,7 +44,7 @@ import com.njydsz.userinfo.server.service.CompanyService;
  * <p><b>与其它模块的关联：</b>
  * <ul>
  *   <li>用户多租户隔离：公司是租户的物理边界</li>
- *   <li>财务结算：{@code ydsz_finance} 跨公司利润分摊按公司维度</li>
+ *   <li>财务结算：{@code ydsz_finance} 跨公司数据按公司维度归集</li>
  * </ul>
  *
  * <p><b>安全特性：</b>

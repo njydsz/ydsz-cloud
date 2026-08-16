@@ -799,6 +799,8 @@
             <dependency>
                 <groupId>io.swagger.core.v3</groupId>
                 <artifactId>swagger-annotations</artifactId>
+                <!-- P2-1 依赖收敛：业务模块已统一使用 swagger-annotations-jakarta；
+                     此处保留 DM 管理仅用于约束 knife4j/springdoc 等传递依赖版本（javax 兼容） -->
                 <version>2.2.25</version>
             </dependency>
             <dependency>
@@ -1199,6 +1201,22 @@
             <artifactId>maven-surefire-plugin</artifactId>
             <configuration>
                 <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
+            </configuration>
+        </plugin>
+        <!-- Spotless：一键格式化（仅显式执行 mvn spotless:apply / spotless:check 时生效，未绑定任何构建阶段，不影响正常构建）
+             自动修复：行长>120 自动换行、通配符 import 展开为显式 import、移除未使用 import。
+             注意：import 分组顺序（checkstyle CustomImportOrder：java###第三方###com.njydsz###static）
+             由 IDE Optimize Imports（自定义布局）或 impsort-maven-plugin 收敛，spotless 仅做排序/展开。 -->
+        <plugin>
+            <groupId>com.diffplug.spotless</groupId>
+            <artifactId>spotless-maven-plugin</artifactId>
+            <version>2.43.0</version>
+            <configuration>
+                <java>
+                    <googleJavaFormat>
+                        <version>1.22.0</version>
+                    </googleJavaFormat>
+                </java>
             </configuration>
         </plugin>
         <!-- Checkstyle 源码检查：JSON 生态红线——业务代码禁止 import 第三方 JSON 库（Jackson/Fastjson/Gson）

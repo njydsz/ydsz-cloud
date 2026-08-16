@@ -219,18 +219,6 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
     }
   }
 
-  private void moveToProtected(Node<K, V> node) {
-    writeLock.lock();
-    try {
-      if (node.queue != 1) {
-        return;
-      }
-      doMoveToProtected(node);
-    } finally {
-      writeLock.unlock();
-    }
-  }
-
   private void doMoveToProtected(Node<K, V> node) {
     remove(node);
     node.queue = 2;
