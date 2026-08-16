@@ -36,7 +36,7 @@ public class ExcelTemplate {
     private final ExcelConfig config;
 
     public ExcelTemplate() {
-        this(ExcelConfig.getInstance());
+        this(ExcelConfig.defaults());
     }
 
     public ExcelTemplate(ExcelConfig config) {

@@ -1,4 +1,4 @@
-package com.njydsz.common.base.idempotent;
+package com.njydsz.common.idempotent;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -11,15 +11,14 @@ import java.util.concurrent.TimeUnit;
  * 幂等性注解。
  *
  * <p>标记在 Controller 方法上，确保同一业务键只执行一次写操作。
- * 基于 Redis SETNX 实现分布式幂等校验。
+ * 基于 Redis SETNX 或本地 ConcurrentHashMap 实现分布式/本地幂等校验。
  *
  * <p>工作原理：
  * <ol>
- *   <li>根据 SpEL 表达式解析幂等键（默认使用时间戳 + 方法签名）</li>
- *   <li>尝试 SETNX 写入 Redis，设置过期时间</li>
+ *   <li>根据 SpEL 表达式解析幂等键（默认使用方法签名）</li>
+ *   <li>尝试写入幂等键，设置过期时间</li>
  *   <li>写入成功 → 执行业务方法</li>
- *   <li>写入失败（键已存在）→ 抛出 IdempotentException</li>
- *   <li>业务执行完毕 → 保留幂等键直到过期（防止重复提交）</li>
+ *   <li>写入失败（键已存在）→ 返回 429 Too Many Requests</li>
  * </ol>
  *
  * <p>使用示例：

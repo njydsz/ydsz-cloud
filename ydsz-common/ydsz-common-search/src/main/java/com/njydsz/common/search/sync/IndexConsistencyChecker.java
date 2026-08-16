@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.njydsz.common.search.core.IndexStrategy;
 import com.njydsz.common.search.core.SearchEngineRegistry;
@@ -16,9 +17,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 索引一致性巡检器
- * <p>
- * 定时对比数据库文档数与索引文档数，检测索引丢失或冗余。
+ * 索引一致性巡检器。
+ *
+ * <p>定时对比数据库文档数与索引文档数，检测索引丢失或冗余。
  * 巡检结果通过日志输出，严重不一致时触发告警。
  *
  * @author ydsz-team
@@ -32,7 +33,7 @@ public class IndexConsistencyChecker {
     private final SearchProviderRegistry providerRegistry;
 
     /**
-     * 执行一致性巡检
+     * 执行一致性巡检。
      *
      * @param tenantId 租户 ID（可为 null，表示全部租户）
      * @return 巡检结果
@@ -58,7 +59,7 @@ public class IndexConsistencyChecker {
         for (SearchProvider<?> provider : providers) {
             String type = provider.getType();
             try {
-                long dbCount = provider.getAllDocumentIds(tenantId).size();
+                long dbCount = provider.loadAll(tenantId).size();
                 long indexCount = indexStrategy.count(type);
 
                 dbCounts.put(type, dbCount);
@@ -89,7 +90,7 @@ public class IndexConsistencyChecker {
     }
 
     /**
-     * 自动修复索引不一致（丢失文档重新索引，冗余文档删除）
+     * 自动修复索引不一致（丢失文档重新索引，冗余文档删除）。
      *
      * @param tenantId 租户 ID
      * @return 修复的文档总数
@@ -99,7 +100,9 @@ public class IndexConsistencyChecker {
         int repaired = 0;
 
         IndexStrategy indexStrategy = engineRegistry.getIndexStrategy().orElse(null);
-        if (indexStrategy == null) return 0;
+        if (indexStrategy == null) {
+            return 0;
+        }
 
         for (Map.Entry<String, Long> entry : report.missingFromIndex().entrySet()) {
             String type = entry.getKey();
@@ -108,15 +111,14 @@ public class IndexConsistencyChecker {
             if (rawProvider != null) {
                 try {
                     SearchProvider<Object> provider = ProviderTypeBridge.cast(rawProvider);
-                    List<String> dbIds = provider.getAllDocumentIds(tenantId);
                     Set<String> indexedIds = new HashSet<>(indexStrategy.getAllDocumentIds(type));
-                    for (String id : dbIds) {
-                        if (!indexedIds.contains(id)) {
-                            Object entity = provider.loadById(id);
-                            if (entity != null) {
-                                indexStrategy.index(provider.toIndexDocument(entity));
-                                repaired++;
-                            }
+                    // 使用 loadAll 一次性加载实体，避免 N+1 查询
+                    List<Object> entities = provider.loadAll(tenantId);
+                    for (Object entity : entities) {
+                        String docId = provider.toIndexDocument(entity).getId();
+                        if (docId != null && !indexedIds.contains(docId)) {
+                            indexStrategy.index(provider.toIndexDocument(entity));
+                            repaired++;
                         }
                     }
                 } catch (Exception e) {
@@ -129,9 +131,13 @@ public class IndexConsistencyChecker {
             String type = entry.getKey();
             log.info("[IndexConsistency] 清理冗余索引: type={}, orphan={}", type, entry.getValue());
             try {
-                SearchProvider<?> provider = providerRegistry.getProvider(type);
-                if (provider != null) {
-                    Set<String> dbIdSet = new HashSet<>(provider.getAllDocumentIds(tenantId));
+                SearchProvider<?> rawProvider = providerRegistry.getProvider(type);
+                if (rawProvider != null) {
+                    SearchProvider<Object> provider = ProviderTypeBridge.cast(rawProvider);
+                    Set<String> dbIdSet = provider.loadAll(tenantId).stream()
+                            .map(e -> provider.toIndexDocument(e).getId())
+                            .filter(id -> id != null)
+                            .collect(Collectors.toSet());
                     Set<String> indexedIds = new HashSet<>(indexStrategy.getAllDocumentIds(type));
                     for (String indexedId : indexedIds) {
                         if (!dbIdSet.contains(indexedId)) {
@@ -150,7 +156,7 @@ public class IndexConsistencyChecker {
     }
 
     /**
-     * 一致性巡检报告
+     * 一致性巡检报告。
      *
      * @param dbCounts        各类型数据库文档数
      * @param indexCounts     各类型索引文档数
@@ -163,6 +169,7 @@ public class IndexConsistencyChecker {
             Map<String, Long> missingFromIndex,
             Map<String, Long> orphanInIndex
     ) {
+
         /**
          * 判断索引与数据库是否一致。
          *

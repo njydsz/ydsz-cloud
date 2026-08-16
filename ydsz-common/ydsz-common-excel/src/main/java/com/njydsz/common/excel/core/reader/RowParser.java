@@ -53,6 +53,10 @@ public class RowParser {
     /** 转换器链 - 通过SPI机制管理类型转换 */
     private final ConverterChain converterChain;
 
+    private ExcelConfig getExcelConfig() {
+        return metadata.getExcelConfig() != null ? metadata.getExcelConfig() : ExcelConfig.defaults();
+    }
+
     /**
      * 构造行解析器
      *
@@ -311,7 +315,7 @@ public class RowParser {
      * 构建转换上下文
      */
     private ConvertContext buildConvertContext() {
-        ExcelConfig config = ExcelConfig.getInstance();
+        ExcelConfig config = getExcelConfig();
         return ConvertContext.builder()
             .rowIndex(context.getCurrentRow())
             .columnName(String.valueOf(context.getCurrentColumn()))
@@ -336,7 +340,7 @@ public class RowParser {
 
         if (cellType == CellType.STRING) {
             String str = cell.getStringCellValue();
-            if (ExcelConfig.getInstance().isAutomaticTrim()) {
+            if (getExcelConfig().isAutomaticTrim()) {
                 str = str.trim();
             }
             return str;

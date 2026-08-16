@@ -1,5 +1,6 @@
 package com.njydsz.common.sentry.tracing.otel;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
@@ -7,15 +8,12 @@ import java.util.function.Supplier;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.context.propagation.TextMapSetter;
-
 import lombok.extern.slf4j.Slf4j;
-
-import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
-import java.util.Collections;
 /**
  * YDSZ OpenTelemetry 全局访问点 + 上下文传播工具
  *

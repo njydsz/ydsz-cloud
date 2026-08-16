@@ -3,6 +3,7 @@ package com.njydsz.common.sentry.tracing.otel;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -13,10 +14,7 @@ import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.function.Supplier;
 /**
  * YDSZ Span 构建器（业务友好的 OTel API 封装）
  *

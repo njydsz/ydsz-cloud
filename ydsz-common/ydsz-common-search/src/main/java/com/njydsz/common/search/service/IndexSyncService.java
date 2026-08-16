@@ -398,8 +398,10 @@ public class IndexSyncService {
     }
 
     private <T> void rebuildProvider(SearchProvider<T> provider, String tenantId, AtomicInteger total) {
-        List<String> ids = provider.getAllDocumentIds(tenantId);
-        if (ids == null || ids.isEmpty()) return;
+        List<T> entities = provider.loadAll(tenantId);
+        if (entities == null || entities.isEmpty()) {
+            return;
+        }
 
         int batchSize = properties.getIndex().getRebuildBatchSize();
         Optional<IndexStrategy> indexStrategyOpt = engineRegistry.getIndexStrategy();
@@ -409,19 +411,18 @@ public class IndexSyncService {
         }
         IndexStrategy indexStrategy = indexStrategyOpt.get();
 
-        for (int i = 0; i < ids.size(); i += batchSize) {
-            int end = Math.min(i + batchSize, ids.size());
-            List<String> batch = ids.subList(i, end);
+        for (int i = 0; i < entities.size(); i += batchSize) {
+            int end = Math.min(i + batchSize, entities.size());
+            List<T> batch = entities.subList(i, end);
             List<IndexDocument> documents = new ArrayList<>();
-            for (String id : batch) {
+            for (T entity : batch) {
                 try {
-                    T entity = provider.loadById(id);
-                    if (entity != null) {
-                        IndexDocument doc = provider.toIndexDocument(entity);
-                        if (doc != null) documents.add(doc);
+                    IndexDocument doc = provider.toIndexDocument(entity);
+                    if (doc != null) {
+                        documents.add(doc);
                     }
                 } catch (Exception e) {
-                    log.warn("[IndexSync] 加载实体失败: type={}, id={}", provider.getType(), id, e);
+                    log.warn("[IndexSync] 转换索引文档失败: type={}", provider.getType(), e);
                 }
             }
             if (!documents.isEmpty()) {

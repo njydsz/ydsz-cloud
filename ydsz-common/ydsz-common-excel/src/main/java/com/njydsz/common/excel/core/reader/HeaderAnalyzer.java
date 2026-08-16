@@ -47,6 +47,10 @@ public class HeaderAnalyzer {
         this.metadata = metadata;
     }
 
+    private ExcelConfig getExcelConfig() {
+        return metadata.getExcelConfig() != null ? metadata.getExcelConfig() : ExcelConfig.defaults();
+    }
+
     /**
      * 分析类元数据,建立列与字段的映射
      *
@@ -122,7 +126,7 @@ public class HeaderAnalyzer {
 
                 String dateFormat = !annotation.dateFormat().isEmpty()
                     ? annotation.dateFormat()
-                    : ExcelConfig.getInstance().getDefaultDateFormat();
+                    : getExcelConfig().getDefaultDateFormat();
                 dateFormats.put(targetCol, dateFormat);
                 columnCount++;
             }
@@ -130,7 +134,7 @@ public class HeaderAnalyzer {
 
         ColumnMetadata[] columnMetadataArray = new ColumnMetadata[columnCount];
         int idx = 0;
-        boolean automaticTrim = ExcelConfig.getInstance().isAutomaticTrim();
+        boolean automaticTrim = getExcelConfig().isAutomaticTrim();
         for (Map.Entry<Integer, Field> entry : fieldMap.entrySet()) {
             int col = entry.getKey();
             Field field = entry.getValue();
@@ -178,7 +182,7 @@ public class HeaderAnalyzer {
         if (header.equals(fieldName)) {
             return true;
         }
-        if (ExcelConfig.getInstance().isAutomaticTrim()) {
+        if (getExcelConfig().isAutomaticTrim()) {
             return header.trim().equals(fieldName.trim());
         }
         return false;

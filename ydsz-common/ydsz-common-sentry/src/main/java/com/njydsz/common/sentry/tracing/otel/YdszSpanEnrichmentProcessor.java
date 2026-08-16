@@ -1,18 +1,16 @@
 package com.njydsz.common.sentry.tracing.otel;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.SpanProcessor;
-
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.HashMap;
-import java.util.List;
 import org.slf4j.MDC;
 /**
  * YDSZ Span 属性增强器

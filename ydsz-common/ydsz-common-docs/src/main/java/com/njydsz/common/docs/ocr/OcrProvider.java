@@ -22,6 +22,7 @@ import com.njydsz.common.docs.domain.DocumentMetadata;
 import com.njydsz.common.docs.domain.DocumentSection;
 import com.njydsz.common.docs.exception.DocumentException;
 import com.njydsz.common.docs.exception.DocumentExceptionCode;
+import com.njydsz.common.docs.util.TempFileManager;
 
 /**
  * OCR 服务提供者
@@ -44,6 +45,12 @@ public class OcrProvider {
 
     /** 默认最大渲染页数 */
     private static final int DEFAULT_MAX_PAGES = 20;
+
+    private final TempFileManager tempFileManager;
+
+    public OcrProvider(TempFileManager tempFileManager) {
+        this.tempFileManager = tempFileManager;
+    }
 
     /**
      * 渲染 PDF 页面为图片字节列表
@@ -70,8 +77,7 @@ public class OcrProvider {
         List<byte[]> images = new ArrayList<>();
 
         try {
-            tempFile = Files.createTempFile("ydsz-docs-ocr-", ".pdf");
-            inputStream.transferTo(Files.newOutputStream(tempFile));
+            tempFile = tempFileManager.createAndWrite("ydsz-docs-ocr-", ".pdf", inputStream);
 
             try (PDDocument document = Loader.loadPDF(tempFile.toFile())) {
                 PDFRenderer renderer = new PDFRenderer(document);
@@ -93,13 +99,7 @@ public class OcrProvider {
             log.error("[OcrProvider] 渲染失败: {}", fileName, e);
             throw new DocumentException(DocumentExceptionCode.PARSE_FAILED, e);
         } finally {
-            if (tempFile != null) {
-                try {
-                    Files.deleteIfExists(tempFile);
-                } catch (IOException ignored) {
-                    // 临时文件删除失败不影响主流程
-                }
-            }
+            tempFileManager.deleteTracked(tempFile);
         }
     }
 

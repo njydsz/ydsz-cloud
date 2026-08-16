@@ -147,7 +147,8 @@ public class WorkbookFactory {
             }
         }
 
-        int cacheSize = ExcelConfig.getInstance().getWriteCacheSize();
+        ExcelConfig excelConfig = metadata.getExcelConfig() != null ? metadata.getExcelConfig() : ExcelConfig.defaults();
+        int cacheSize = excelConfig.getWriteCacheSize();
         Integer dataSize = metadata.getDataSize();
 
         Workbook workbook;
@@ -156,7 +157,7 @@ public class WorkbookFactory {
                 workbook = new XSSFWorkbook();
                 log.debug("数据量较小 ({} < {}),使用 XSSFWorkbook", dataSize, cacheSize);
             } else {
-                int windowSize = ExcelConfig.getInstance().getWriteCacheSize();
+                int windowSize = excelConfig.getWriteCacheSize();
                 workbook = new SXSSFWorkbook(windowSize);
                 ((SXSSFWorkbook) workbook).setCompressTempFiles(true);
                 log.debug("使用 SXSSFWorkbook 流式写入，窗口大小：{}行", windowSize);

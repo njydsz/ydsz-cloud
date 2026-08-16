@@ -3,15 +3,6 @@ package com.njydsz.common.sentry.config;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.njydsz.common.sentry.tracing.otel.ErrorEventSpanProcessor;
-import com.njydsz.common.sentry.tracing.otel.OtelExporterFactory;
-import com.njydsz.common.sentry.tracing.otel.OtelResources;
-import com.njydsz.common.sentry.tracing.otel.OtelSamplers;
-import com.njydsz.common.sentry.tracing.otel.OtelSdkBuilder;
-import com.njydsz.common.sentry.tracing.otel.TailSamplingSpanProcessor;
-import com.njydsz.common.sentry.tracing.otel.YdszOpenTelemetry;
-import com.njydsz.common.sentry.tracing.otel.YdszSpanEnrichmentProcessor;
-
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
@@ -19,9 +10,7 @@ import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
-
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -30,6 +19,15 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import com.njydsz.common.sentry.tracing.otel.ErrorEventSpanProcessor;
+import com.njydsz.common.sentry.tracing.otel.OtelExporterFactory;
+import com.njydsz.common.sentry.tracing.otel.OtelResources;
+import com.njydsz.common.sentry.tracing.otel.OtelSamplers;
+import com.njydsz.common.sentry.tracing.otel.OtelSdkBuilder;
+import com.njydsz.common.sentry.tracing.otel.TailSamplingSpanProcessor;
+import com.njydsz.common.sentry.tracing.otel.YdszOpenTelemetry;
+import com.njydsz.common.sentry.tracing.otel.YdszSpanEnrichmentProcessor;
 
 /**
  * OpenTelemetry SDK 自动配置

@@ -278,7 +278,7 @@ public class FileConfiguration {
         if (locker == null) {
             log.info("[FileConfiguration] DistributedLocker 不可用，UploadConcurrencyGuard 降级为原生 Redis 操作");
         }
-        return new UploadConcurrencyGuard(locker, redis, config);
+        return new UploadConcurrencyGuard(locker, redis);
     }
 
     /**

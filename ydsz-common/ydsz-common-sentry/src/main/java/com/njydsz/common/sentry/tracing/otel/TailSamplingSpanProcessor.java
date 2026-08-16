@@ -1,8 +1,8 @@
 package com.njydsz.common.sentry.tracing.otel;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 
 import io.opentelemetry.api.trace.Span;
@@ -11,7 +11,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.SpanProcessor;
-
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;

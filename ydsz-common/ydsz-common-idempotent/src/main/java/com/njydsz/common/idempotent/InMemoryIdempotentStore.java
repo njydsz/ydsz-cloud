@@ -1,4 +1,4 @@
-package com.njydsz.common.base.idempotent;
+package com.njydsz.common.idempotent;
 
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;

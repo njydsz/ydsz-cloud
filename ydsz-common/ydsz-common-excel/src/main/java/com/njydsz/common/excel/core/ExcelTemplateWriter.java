@@ -190,6 +190,7 @@ public class ExcelTemplateWriter {
         if (prop != null && !prop.dateFormat().isEmpty()) {
             return prop.dateFormat();
         }
-        return ExcelConfig.getInstance().getDefaultDateFormat();
+        ExcelConfig config = metadata.getExcelConfig() != null ? metadata.getExcelConfig() : ExcelConfig.defaults();
+        return config.getDefaultDateFormat();
     }
 }

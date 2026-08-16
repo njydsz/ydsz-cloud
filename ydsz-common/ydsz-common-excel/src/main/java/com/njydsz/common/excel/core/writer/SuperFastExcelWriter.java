@@ -138,6 +138,10 @@ public class SuperFastExcelWriter {
         this.metadata = metadata;
     }
 
+    private ExcelConfig getExcelConfig() {
+        return metadata.getExcelConfig() != null ? metadata.getExcelConfig() : ExcelConfig.defaults();
+    }
+
     /**
      * 将数据序列化为 xlsx 并输出到 {@link WriteMetadata} 指定的目标。
      *
@@ -187,7 +191,7 @@ public class SuperFastExcelWriter {
              BufferedOutputStream bos = new BufferedOutputStream(fos, ZIP_BUFFER_SIZE);
              ZipOutputStream zipOut = new ZipOutputStream(bos)) {
 
-            zipOut.setLevel(ExcelConfig.getInstance().getCompressionLevel());
+            zipOut.setLevel(getExcelConfig().getCompressionLevel());
 
             ZipEntry entry = new ZipEntry("[Content_Types].xml");
             zipOut.putNextEntry(entry);
@@ -271,7 +275,7 @@ public class SuperFastExcelWriter {
     private void writeXlsxToStream(OutputStream os, List<?> list) throws Exception {
         ZipOutputStream zipOut = new ZipOutputStream(os);
         try {
-        zipOut.setLevel(ExcelConfig.getInstance().getCompressionLevel());
+        zipOut.setLevel(getExcelConfig().getCompressionLevel());
 
         zipOut.putNextEntry(new ZipEntry("[Content_Types].xml"));
         zipOut.write(CONTENT_TYPES_BYTES);
@@ -413,7 +417,7 @@ public class SuperFastExcelWriter {
     }
 
     private void writeStringCellInline(int col, String value) {
-        if (ExcelConfig.getInstance().isFormulaInjectionProtection()) {
+        if (getExcelConfig().isFormulaInjectionProtection()) {
             value = FormulaInjectionGuard.sanitizeFormulaInjection(value);
         }
         int strLen = value.length();
@@ -467,7 +471,7 @@ public class SuperFastExcelWriter {
     }
 
     private void writeStringCell(int col, String value, UltraFastSharedStrings ss) {
-        if (ExcelConfig.getInstance().isFormulaInjectionProtection()) {
+        if (getExcelConfig().isFormulaInjectionProtection()) {
             value = FormulaInjectionGuard.sanitizeFormulaInjection(value);
         }
         int strLen = value.length();
@@ -571,7 +575,7 @@ public class SuperFastExcelWriter {
 
     private void writeGenericCell(int col, Object value) {
         String strValue = value.toString();
-        if (ExcelConfig.getInstance().isFormulaInjectionProtection()) {
+        if (getExcelConfig().isFormulaInjectionProtection()) {
             strValue = FormulaInjectionGuard.sanitizeFormulaInjection(strValue);
         }
         ensureCapacity(64);

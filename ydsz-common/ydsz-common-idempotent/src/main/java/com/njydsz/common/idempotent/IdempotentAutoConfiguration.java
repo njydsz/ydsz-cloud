@@ -1,4 +1,4 @@
-package com.njydsz.common.base.idempotent;
+package com.njydsz.common.idempotent;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -13,7 +13,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 /**
  * 幂等性自动配置。
  *
- * <p>当 classpath 中存在 Spring MVC 且配置了 {@code ydsz.base.idempotent.enabled=true} 时激活。
+ * <p>当 classpath 中存在 Spring MVC 且配置了 {@code ydsz.idempotent.enabled=true} 时激活。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -21,7 +21,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @AutoConfiguration
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @ConditionalOnClass(name = "org.springframework.web.servlet.HandlerInterceptor")
-@ConditionalOnProperty(prefix = "ydsz.base.idempotent", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.idempotent", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class IdempotentAutoConfiguration {
 
     /**

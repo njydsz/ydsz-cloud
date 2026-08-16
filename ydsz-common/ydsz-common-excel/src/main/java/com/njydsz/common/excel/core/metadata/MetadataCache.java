@@ -99,7 +99,7 @@ public class MetadataCache {
             prop.field = field;
             prop.name = ann.value().isEmpty() ? field.getName() : ann.value();
             prop.dateFormat = ann.dateFormat().isEmpty()
-                ? ExcelConfig.getInstance().getDefaultDateFormat()
+                ? ExcelConfig.defaults().getDefaultDateFormat()
                 : ann.dateFormat();
             prop.width = ann.width() > 0 ? (short) ann.width() : null;
             prop.formula = ann.formula().isEmpty() ? null : ann.formula();

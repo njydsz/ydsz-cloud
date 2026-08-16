@@ -78,8 +78,8 @@ public class ValueFormatter {
 
         if (value instanceof String s) {
             String processedValue = automaticTrim ? s.trim() : s;
-            if (ExcelConfig.getInstance().isFormulaInjectionProtection()) {
-                processedValue = ExcelConfig.getInstance().sanitizeFormulaInjection(processedValue);
+            if (excelConfig.isFormulaInjectionProtection()) {
+                processedValue = excelConfig.sanitizeFormulaInjection(processedValue);
             }
             cell.setCellValue(processedValue);
         } else if (value instanceof Number n) {
@@ -104,8 +104,8 @@ public class ValueFormatter {
             cell.setCellValue(formatSqlDate(value, dateFormat));
         } else {
             String strValue = value.toString();
-            if (ExcelConfig.getInstance().isFormulaInjectionProtection()) {
-                strValue = ExcelConfig.getInstance().sanitizeFormulaInjection(strValue);
+            if (excelConfig.isFormulaInjectionProtection()) {
+                strValue = excelConfig.sanitizeFormulaInjection(strValue);
             }
             cell.setCellValue(strValue);
         }
@@ -143,7 +143,7 @@ public class ValueFormatter {
      * @return 格式化后的字符串
      */
     public String formatLocalDateTime(LocalDateTime ldt, String pattern) {
-        String fmt = pattern != null ? pattern : ExcelConfig.getInstance().getDefaultDateFormat();
+        String fmt = pattern != null ? pattern : excelConfig.getDefaultDateFormat();
         DateTimeFormatter formatter = getDateTimeFormatter(fmt);
         return ldt.format(formatter);
     }

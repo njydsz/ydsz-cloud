@@ -2,7 +2,6 @@ package com.njydsz.common.docs.security.scanner;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,10 +18,10 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.common.docs.config.DocsProperties;
 import com.njydsz.common.docs.domain.SecurityScanResult;
 import com.njydsz.common.docs.enums.DocumentFormat;
 import com.njydsz.common.docs.enums.SecurityLevel;
+import com.njydsz.common.docs.util.TempFileManager;
 
 /**
  * PDF 安全检测器
@@ -37,10 +36,13 @@ import com.njydsz.common.docs.enums.SecurityLevel;
 @ConditionalOnClass(name = "org.apache.pdfbox.Loader")
 public class PdfJsDetector implements DocumentSecurityScanner {
 
-    private final DocsProperties properties;
+    /** 默认最大安全扫描页数 */
+    private static final int DEFAULT_MAX_SCAN_PAGES = 0;
 
-    public PdfJsDetector(DocsProperties properties) {
-        this.properties = properties;
+    private final TempFileManager tempFileManager;
+
+    public PdfJsDetector(TempFileManager tempFileManager) {
+        this.tempFileManager = tempFileManager;
     }
 
     @Override
@@ -57,8 +59,7 @@ public class PdfJsDetector implements DocumentSecurityScanner {
         Path tempFile = null;
 
         try {
-            tempFile = Files.createTempFile("ydsz-docs-pdfscan-", ".pdf");
-            inputStream.transferTo(Files.newOutputStream(tempFile));
+            tempFile = tempFileManager.createAndWrite("ydsz-docs-pdfscan-", ".pdf", inputStream);
 
             try (PDDocument document = Loader.loadPDF(tempFile.toFile())) {
                 PDDocumentCatalog catalog = document.getDocumentCatalog();
@@ -89,7 +90,7 @@ public class PdfJsDetector implements DocumentSecurityScanner {
                 }
 
                 // 3. 检测每页中的可疑链接和 JavaScript
-                int maxScan = properties.getSecurityMaxScanPages();
+                int maxScan = DEFAULT_MAX_SCAN_PAGES;
                 int pageCount = maxScan > 0
                         ? Math.min(document.getNumberOfPages(), maxScan)
                         : document.getNumberOfPages();
@@ -138,13 +139,7 @@ public class PdfJsDetector implements DocumentSecurityScanner {
                     .errorMessage("PDF 解析失败: " + e.getMessage())
                     .build();
         } finally {
-            if (tempFile != null) {
-                try {
-                    Files.deleteIfExists(tempFile);
-                } catch (IOException ignored) {
-                    // 临时文件删除失败不影响主流程
-                }
-            }
+            tempFileManager.deleteTracked(tempFile);
         }
 
         SecurityLevel level = findings.isEmpty() ? SecurityLevel.SAFE

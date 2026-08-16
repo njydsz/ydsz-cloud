@@ -1,13 +1,12 @@
 package com.njydsz.common.socket.trace;
 
-import java.util.function.Supplier;
-
 import org.slf4j.MDC;
+
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.util.id.IdGenerator;
 
 /**
- * WebSocket 链路追踪辅助工具（P1-1）。
+ * WebSocket 链路追踪辅助工具。
  *
  * <p>提供 traceId 在 WebSocket 推送全链路中的传递能力。
  * 从 {@link RequestContext} / MDC 中获取当前 traceId，注入到集群广播消息中，
@@ -30,7 +29,7 @@ public final class WebSocketTraceContext {
     /**
      * 获取当前 traceId，不存在时生成新的。
      *
-     * <p>优先读取 {@link RequestContext}，未命中回退 MDC；生成后双写写入。</p>
+     * <p>优先读取 {@link RequestContext}，未命中回退 MDC；生成后双写写入。
      *
      * @return traceId
      */
@@ -46,7 +45,7 @@ public final class WebSocketTraceContext {
     /**
      * 获取当前 traceId。
      *
-     * <p>优先从 {@link RequestContext} 读取，未命中回退 MDC（兼容旧逻辑）。</p>
+     * <p>优先从 {@link RequestContext} 读取，未命中回退 MDC（兼容旧逻辑）。
      *
      * @return traceId，不存在时返回 null
      */
@@ -61,10 +60,10 @@ public final class WebSocketTraceContext {
     /**
      * 生成新的 traceId。
      *
-     * @return 8 字符短 traceId
+     * @return 全局唯一 traceId
      */
     public static String generateTraceId() {
-        return IdGenerator.nextIdStr().substring(0, 16);
+        return IdGenerator.nextIdStr();
     }
 
     /**
@@ -98,28 +97,6 @@ public final class WebSocketTraceContext {
         try {
             setTraceId(traceId);
             runnable.run();
-        } finally {
-            if (previousTraceId != null) {
-                setTraceId(previousTraceId);
-            } else {
-                clearTraceId();
-            }
-        }
-    }
-
-    /**
-     * 在指定 traceId 上下文中执行有返回值的操作。
-     *
-     * @param traceId  链路追踪 ID
-     * @param supplier 要执行的操作
-     * @param <T>      返回值类型
-     * @return 操作返回值
-     */
-    public static <T> T runWithTraceResult(String traceId, Supplier<T> supplier) {
-        String previousTraceId = getTraceId();
-        try {
-            setTraceId(traceId);
-            return supplier.get();
         } finally {
             if (previousTraceId != null) {
                 setTraceId(previousTraceId);

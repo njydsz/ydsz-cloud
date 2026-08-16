@@ -129,12 +129,16 @@ public class FileProperties {
 
     /**
      * 上传并发控制策略
+     *
+     * @deprecated 自 2.0.0 起仅保留 {@link #REJECT} 策略。WAIT 策略因可能导致线程池惊群效应已移除。
+     *             计划于 3.0.0 版本移除此枚举。
      */
     public enum ConcurrencyStrategy {
         /** 拒绝新上传（默认；并发冲突时快速失败） */
         REJECT,
 
-        /** 等待旧上传完成（并发冲突时阻塞等待） */
+        /** @deprecated WAIT 策略已废弃，设置后等价于 REJECT */
+        @Deprecated
         WAIT
     }
 
@@ -146,8 +150,5 @@ public class FileProperties {
 
         /** 是否启用并发控制（默认启用） */
         private boolean enabled = true;
-
-        /** 并发冲突处理策略（默认 REJECT） */
-        private ConcurrencyStrategy strategy = ConcurrencyStrategy.REJECT;
     }
 }

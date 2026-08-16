@@ -1,21 +1,19 @@
 package com.njydsz.common.sentry.tracing.otel;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
 import io.opentelemetry.sdk.trace.samplers.SamplingResult;
-import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.api.common.Attributes;
-
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-
-import io.opentelemetry.sdk.trace.data.LinkData;
-import java.util.List;
-import io.opentelemetry.api.trace.Span;
 /**
  * YDSZ 采样器工厂
  *

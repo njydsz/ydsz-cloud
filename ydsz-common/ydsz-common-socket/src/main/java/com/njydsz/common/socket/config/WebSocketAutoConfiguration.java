@@ -15,7 +15,6 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.njydsz.common.auth.token.TokenService;
-import com.njydsz.common.socket.ack.MessageAckService;
 import com.njydsz.common.socket.audit.WebSocketAuditService;
 import com.njydsz.common.socket.auth.WebSocketAuthInterceptor;
 import com.njydsz.common.socket.cluster.WebSocketClusterMessage;
@@ -26,7 +25,6 @@ import com.njydsz.common.socket.health.WebSocketHealthIndicator;
 import com.njydsz.common.socket.interceptor.StompMessageInterceptor;
 import com.njydsz.common.socket.lifecycle.WebSocketConnectionListener;
 import com.njydsz.common.socket.metric.WebSocketMetrics;
-import com.njydsz.common.socket.monitor.SlowConnectionDetector;
 import com.njydsz.common.socket.offline.OfflineMessageStore;
 import com.njydsz.common.socket.offline.RedisOfflineMessageStore;
 import com.njydsz.common.socket.push.DefaultRealtimePushTemplate;
@@ -58,13 +56,11 @@ import org.springframework.scheduling.annotation.Scheduled;
  *   <li>{@link WebSocketCircuitBreaker} — 熔断降级保护器</li>
  *   <li>{@link WebSocketAuditService} — 审计日志服务</li>
  *   <li>{@link MessageSerializer} — 消息序列化器</li>
- *   <li>{@link SlowConnectionDetector} — 慢连接检测器</li>
  *   <li>{@link ConnectionLimiter} — 连接数限制器</li>
  *   <li>{@link WebSocketAuthInterceptor} — JWT 握手鉴权</li>
  *   <li>{@link OnlineUserService} — 在线状态服务</li>
  *   <li>{@link OfflineMessageStore} — 离线消息存储（Redis 默认实现 + 熔断保护）</li>
  *   <li>{@link WebSocketHeartbeatHandler} — 心跳保活处理器</li>
- *   <li>{@link MessageAckService} — ACK 确认服务</li>
  *   <li>{@link MessageRetryQueue} — 消息重试队列</li>
  *   <li>{@link DeadLetterQueue} — 死信队列</li>
  *   <li>{@link WebSocketSessionEventListener} — 会话事件监听器</li>
@@ -131,23 +127,6 @@ public class WebSocketAutoConfiguration {
     public MessageSerializer messageSerializer() {
         log.info("[WebSocket] 注册 JsonMessageSerializer");
         return new JsonMessageSerializer();
-    }
-
-    // ==================== 慢连接检测 ====================
-
-    /**
-     * 创建慢连接检测器 Bean。
-     *
-     * @param properties    WebSocket 配置属性
-     * @param webSocketMetrics 指标收集器
-     * @return 慢连接检测器实例
-     */
-    @Bean
-    @ConditionalOnMissingBean(SlowConnectionDetector.class)
-    public SlowConnectionDetector slowConnectionDetector(
-            WebSocketProperties properties, WebSocketMetrics metrics) {
-        log.info("[WebSocket] 注册 SlowConnectionDetector (enabled={})", properties.getSlowConnection().isEnabled());
-        return new SlowConnectionDetector(properties, metrics);
     }
 
     // ==================== P2-1: 连接数限制 ====================
@@ -289,24 +268,6 @@ public class WebSocketAutoConfiguration {
         return new WebSocketHeartbeatHandler(properties, onlineUserService, redisTemplate);
     }
 
-    // ==================== P1-2: ACK 确认 ====================
-
-    /**
-     * 注册消息 ACK 确认服务 Bean。
-     *
-     * <p>追踪每条推送消息的客户端确认回执，未确认消息可被重试或转入离线存储，支撑"至少一次"投递语义。
-     * 仅在 ack 启用时创建；Redis 可选，缺失时仅内存维护。
-     */
-    @Bean
-    @ConditionalOnMissingBean(MessageAckService.class)
-    @ConditionalOnProperty(prefix = "ydsz.websocket.ack", name = "enabled", havingValue = "true")
-    public MessageAckService messageAckService(
-            @Autowired(required = false) StringRedisTemplate redisTemplate,
-            WebSocketProperties properties) {
-        log.info("[WebSocket] 注册 MessageAckService (timeout={})", properties.getAck().getTimeout());
-        return new MessageAckService(redisTemplate, properties);
-    }
-
     // ==================== P0-4: 重试队列 + 死信队列 ====================
 
     /**
@@ -373,13 +334,12 @@ public class WebSocketAutoConfiguration {
             @Autowired(required = false) WebSocketHeartbeatHandler heartbeatHandler,
             @Autowired(required = false) WebSocketAuditService auditService,
             @Autowired(required = false) List<WebSocketConnectionListener> connectionListeners,
-            @Autowired(required = false) SlowConnectionDetector slowConnectionDetector,
             WebSocketProperties properties,
             LocalSessionRegistry sessionRegistry) {
         log.info("[WebSocket] 注册 WebSocketSessionEventListener");
         return new WebSocketSessionEventListener(
                 onlineUserService, offlineMessageStore, messagingTemplate,
-                heartbeatHandler, auditService, slowConnectionDetector, connectionListeners,
+                heartbeatHandler, auditService, connectionListeners,
                 properties, sessionRegistry);
     }
 
@@ -473,8 +433,6 @@ public class WebSocketAutoConfiguration {
             WebSocketMetrics webSocketMetrics,
             MessageSerializer messageSerializer,
             @Autowired(required = false) WebSocketAuditService auditService,
-            @Autowired(required = false) SlowConnectionDetector slowConnectionDetector,
-            @Autowired(required = false) MessageAckService ackService,
             @Autowired(required = false) MessageRetryQueue retryQueue,
             @Autowired(required = false) List<MessageFilter> messageFilters) {
         log.info("[WebSocket] 注册 DefaultRealtimePushTemplate");
@@ -483,7 +441,7 @@ public class WebSocketAutoConfiguration {
                 clusterPublisher != null ? clusterPublisher : new NoOpClusterPublisher(),
                 onlineUserService, offlineMessageStore, webSocketMetrics,
                 messageSerializer, auditService,
-                slowConnectionDetector, ackService, retryQueue,
+                retryQueue,
                 messageFilters);
     }
 
@@ -494,10 +452,8 @@ public class WebSocketAutoConfiguration {
      * 由 Spring 托管生命周期，无需手动启停。
      */
     @Bean
-    public RetryFlushTask retryFlushTask(
-            RealtimePushTemplate pushTemplate,
-            @Autowired(required = false) MessageAckService ackService) {
-        return new RetryFlushTask(pushTemplate, ackService);
+    public RetryFlushTask retryFlushTask(RealtimePushTemplate pushTemplate) {
+        return new RetryFlushTask(pushTemplate);
 }
 
     /**
@@ -509,27 +465,22 @@ public class WebSocketAutoConfiguration {
      */
     public static class RetryFlushTask {
         private final RealtimePushTemplate pushTemplate;
-        private final MessageAckService ackService;
 
-        public RetryFlushTask(RealtimePushTemplate pushTemplate, MessageAckService ackService) {
+        public RetryFlushTask(RealtimePushTemplate pushTemplate) {
             this.pushTemplate = pushTemplate;
-            this.ackService = ackService;
-}
+        }
 
         /**
-         * 定时重投重试消息并清理过期本地 ACK。
+         * 定时重投重试消息。
          *
-         * <p>每 10 秒执行一次（{@code fixedDelay=10000}），驱动 {@link RealtimePushTemplate#flushRetryMessages()}
-         * 与 ACK 服务的本地过期回执回收，保障延迟消息最终可达。
+         * <p>每 10 秒执行一次（{@code fixedDelay=10000}），驱动 {@link RealtimePushTemplate#flushRetryMessages()}，
+         * 保障延迟消息最终可达。
          */
         @Scheduled(fixedDelay = 10000)
         public void flush() {
             pushTemplate.flushRetryMessages();
-            if (ackService != null) {
-                ackService.cleanupExpiredLocalAcks();
-}
-}
-}
+        }
+    }
     /**
      * No-op 集群发布者（集群未启用时的降级实现，始终返回 false 触发本地推送）。
      */

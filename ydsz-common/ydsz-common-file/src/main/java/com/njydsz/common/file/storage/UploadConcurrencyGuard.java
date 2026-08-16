@@ -8,7 +8,6 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.file.config.FileProperties.ConcurrencyControl;
 import com.njydsz.common.file.exception.FileExceptionCode;
 import com.njydsz.common.lock.core.DistributedLocker;
 
@@ -18,11 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  * 上传并发保护器
  *
  * <p>防止对同一文件（objectKey）的并发上传，避免数据竞争和覆盖问题。
- * 基于 Redis 实现，支持两种策略：
- * <ul>
- *   <li>{@code REJECT} - 已有上传正在进行时，直接拒绝新上传（默认）</li>
- *   <li>{@code WAIT} - 等待旧上传完成后，再执行新上传</li>
- * </ul>
+ * 基于 Redis 实现，当已有上传正在进行时，直接拒绝新上传（快速失败）。
  *
  * <p><b>使用方式：</b>
  * <pre>{@code
@@ -37,7 +32,6 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-team
  * @since 1.0.0
- *
  */
 @Slf4j
 public class UploadConcurrencyGuard {
@@ -53,22 +47,11 @@ public class UploadConcurrencyGuard {
     private static final long LOCK_EXPIRE_SECONDS = 300;
 
     /**
-     * WAIT 策略下每次等待的间隔（毫秒）
-     */
-    private static final long WAIT_INTERVAL_MILLIS = 100;
-
-    /**
-     * WAIT 策略下最大等待时间（秒）
-     */
-    private static final long MAX_WAIT_SECONDS = 60;
-
-    /**
      * 分布式锁接口（优先使用，来自 ydsz-common-lock）；为 null 时降级为原生 Redis 操作
      */
     private final DistributedLocker distributedLocker;
 
     private final StringRedisTemplate redisTemplate;
-    private final ConcurrencyControl config;
 
     /**
      * 创建并发保护器（使用 ydsz-common-lock 分布式锁）
@@ -79,13 +62,11 @@ public class UploadConcurrencyGuard {
      *
      * @param distributedLocker 分布式锁接口（可为 null，null 时降级为原生 Redis 操作）
      * @param redisTemplate     Redis 模板
-     * @param config            并发控制配置
      */
     public UploadConcurrencyGuard(DistributedLocker distributedLocker,
-                                  StringRedisTemplate redisTemplate, ConcurrencyControl config) {
+                                  StringRedisTemplate redisTemplate) {
         this.distributedLocker = distributedLocker;
         this.redisTemplate = redisTemplate;
-        this.config = config;
     }
 
     /**
@@ -93,7 +74,7 @@ public class UploadConcurrencyGuard {
      *
      * @param objectKey 文件对象键
      * @return 锁令牌，用于释放锁时校验
-     * @throws BusinessException 当配置为 REJECT 策略且已有上传正在进行时
+     * @throws BusinessException 当已有上传正在进行时快速失败
      */
     public String acquire(String objectKey) {
         if (objectKey == null || objectKey.isEmpty()) {
@@ -108,8 +89,9 @@ public class UploadConcurrencyGuard {
             return lockValue;
         }
 
-        // 锁已被持有，根据策略处理
-        return handleLockHeld(lockKey, lockValue);
+        // 锁已被持有，直接拒绝（快速失败）
+        log.warn("[UploadGuard] concurrent upload rejected, key={}", lockKey);
+        throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
     }
 
     /**
@@ -170,107 +152,5 @@ public class UploadConcurrencyGuard {
             return lockValue;
         }
         return null;
-    }
-
-    /**
-     * 处理锁已被持有的情况
-     *
-     * @param lockKey 锁键
-     * @param existingValue 已存在的锁值（用于日志）
-     * @return 获取锁后返回新令牌
-     * @throws BusinessException 当 REJECT 策略时直接拒绝
-     */
-    private String handleLockHeld(String lockKey, String existingValue) {
-        switch (config.getStrategy()) {
-            case REJECT:
-                log.warn("[UploadGuard] concurrent upload rejected, key={}", lockKey);
-                throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
-            case WAIT:
-                return waitForLock(lockKey);
-            default:
-                // 未知策略，默认拒绝
-                log.warn("[UploadGuard] unknown strategy, rejecting concurrent upload, key={}", lockKey);
-                throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
-        }
-    }
-
-    /**
-     * WAIT 策略：等待锁释放后重新获取。
-     *
-     * <p>优先使用 {@link DistributedLocker#tryLock(String, long, long, TimeUnit)} 的阻塞等待能力，
-     * 底层通过 Redisson 订阅锁释放事件通知来实现阻塞等待，避免 {@code Thread.sleep} 轮询占用工作线程。
-     *
-     * <p>当 {@link DistributedLocker} 不可用时，降级为带随机抖动的指数退避轮询，
-     * 减少并发场景下多线程同时重试产生的惊群效应。
-     *
-     * @param lockKey 锁键
-     * @return 获取锁后返回新令牌
-     * @throws BusinessException 等待超时或被中断时抛出
-     */
-    private String waitForLock(String lockKey) {
-        log.info("[UploadGuard] waiting for lock release, key={}", lockKey);
-
-        // 优先使用 common-lock 的阻塞等待（底层 Redisson pub/sub 监听锁释放事件，非轮询）
-        if (distributedLocker != null) {
-            try {
-                String lockValue = distributedLocker.tryLock(
-                        lockKey, MAX_WAIT_SECONDS, LOCK_EXPIRE_SECONDS, java.util.concurrent.TimeUnit.SECONDS);
-                if (lockValue != null) {
-                    log.info("[UploadGuard] lock acquired after blocking wait (common-lock), key={}", lockKey);
-                    return lockValue;
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                log.warn("[UploadGuard] interrupted while waiting for lock, key={}", lockKey);
-                throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
-            }
-            log.warn("[UploadGuard] wait timeout for lock (common-lock), key={}, timeout={}s", lockKey, MAX_WAIT_SECONDS);
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
-        }
-
-        // 降级：带随机抖动的指数退避轮询，避免惊群效应
-        return waitForLockWithBackoff(lockKey);
-    }
-
-    /**
-     * 降级方案：带随机抖动的指数退避轮询等待锁释放。
-     *
-     * <p>当 {@link DistributedLocker} 不可用时使用此方法。退避间隔从 {@code WAIT_INTERVAL_MILLIS} 起，
-     * 每次翻倍并附加随机抖动，最大不超过 {@code MAX_WAIT_SECONDS}。
-     *
-     * @param lockKey 锁键
-     * @return 获取锁后返回新令牌
-     * @throws BusinessException 等待超时或被中断时抛出
-     */
-    private String waitForLockWithBackoff(String lockKey) {
-        long maxWaitMillis = MAX_WAIT_SECONDS * 1000;
-        long elapsedMillis = 0;
-        long backoffMillis = WAIT_INTERVAL_MILLIS;
-        java.util.concurrent.ThreadLocalRandom random = java.util.concurrent.ThreadLocalRandom.current();
-
-        while (elapsedMillis < maxWaitMillis) {
-            try {
-                long jitter = random.nextLong(0, backoffMillis / 2 + 1);
-                Thread.sleep(Math.min(backoffMillis + jitter, maxWaitMillis - elapsedMillis));
-                elapsedMillis += backoffMillis;
-
-                String lockValue = tryAcquireNonBlocking(lockKey);
-                if (lockValue != null) {
-                    log.info("[UploadGuard] lock acquired after waiting (backoff), key={}, waited={}ms",
-                            lockKey, elapsedMillis);
-                    return lockValue;
-                }
-
-                // 指数退避，上限 5 秒
-                backoffMillis = Math.min(backoffMillis * 2, 5000L);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                log.warn("[UploadGuard] interrupted while waiting for lock, key={}", lockKey);
-                throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
-            }
-        }
-
-        log.warn("[UploadGuard] wait timeout for lock (backoff), key={}, timeout={}s", lockKey, MAX_WAIT_SECONDS);
-        throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
     }
 }

@@ -7,7 +7,6 @@ import com.njydsz.common.json.YdszJson;
 
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
-import com.njydsz.common.socket.ack.MessageAckService;
 import com.njydsz.common.socket.audit.WebSocketAuditService;
 import com.njydsz.common.socket.cluster.WebSocketClusterMessage;
 import com.njydsz.common.socket.cluster.WebSocketClusterPublisher;
@@ -15,7 +14,6 @@ import com.njydsz.common.socket.constant.WebSocketConstants;
 import com.njydsz.common.socket.enums.MessagePriority;
 import com.njydsz.common.socket.filter.MessageFilter;
 import com.njydsz.common.socket.metric.WebSocketMetrics;
-import com.njydsz.common.socket.monitor.SlowConnectionDetector;
 import com.njydsz.common.socket.offline.OfflineMessageStore;
 import com.njydsz.common.socket.retry.MessageRetryQueue;
 import com.njydsz.common.socket.retry.RedisMessageRetryQueue;
@@ -33,13 +31,12 @@ import com.njydsz.common.util.id.IdGenerator;
  * <p>推送流程：
  * <ol>
  *   <li>消息过滤器链检查（P3-5）</li>
- * <li>消息序列化（支持自定义协议）</li>
+ *   <li>消息序列化（支持自定义协议）</li>
  *   <li>注入 traceId</li>
  *   <li>通过集群广播发布（熔断保护 P0-2）</li>
  *   <li>Redis 发布失败时降级为本地直接推送</li>
  *   <li>本地推送失败时入重试队列（P0-4）</li>
- *   <li>注册 ACK 待确认记录（P1-2）</li>
- *   <li>记录审计日志 + 指标 + 慢连接检测（P2-2/P2-5）</li>
+ *   <li>记录审计日志 + 指标（P2-5）</li>
  * </ol>
  *
  * @author ydsz-team
@@ -55,8 +52,6 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
     private final WebSocketMetrics webSocketMetrics;
     private final MessageSerializer messageSerializer;
     private final WebSocketAuditService auditService;
-    private final SlowConnectionDetector slowConnectionDetector;
-    private final MessageAckService ackService;
     private final MessageRetryQueue retryQueue;
     private final List<MessageFilter> messageFilters;
 
@@ -68,8 +63,6 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
             WebSocketMetrics webSocketMetrics,
             MessageSerializer messageSerializer,
             WebSocketAuditService auditService,
-            SlowConnectionDetector slowConnectionDetector,
-            MessageAckService ackService,
             MessageRetryQueue retryQueue,
             List<MessageFilter> messageFilters) {
         this.messagingTemplate = messagingTemplate;
@@ -79,8 +72,6 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
         this.webSocketMetrics = webSocketMetrics;
         this.messageSerializer = messageSerializer;
         this.auditService = auditService;
-        this.slowConnectionDetector = slowConnectionDetector;
-        this.ackService = ackService;
         this.retryQueue = retryQueue;
         this.messageFilters = messageFilters != null ? messageFilters : List.of();
     }
@@ -192,15 +183,9 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
         long duration = System.currentTimeMillis() - start;
 
         webSocketMetrics.recordPush("USER", success);
-        if (slowConnectionDetector != null) {
-            slowConnectionDetector.recordPushDuration(userId, duration);
-        }
         if (auditService != null) {
             auditService.auditPush("USER", userId, null, success, duration,
                     success ? null : "local push failed");
-        }
-        if (ackService != null && success) {
-            ackService.registerPendingAck(actualMessageId, userId);
         }
     }
 
@@ -272,9 +257,6 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
         long duration = System.currentTimeMillis() - start;
 
         webSocketMetrics.recordPush("BROADCAST", success);
-        if (slowConnectionDetector != null) {
-            slowConnectionDetector.recordPushDuration(null, duration);
-        }
         if (auditService != null) {
             auditService.auditPush("BROADCAST", null, null, success, duration,
                     success ? null : "local broadcast failed");
@@ -311,9 +293,6 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
         long duration = System.currentTimeMillis() - start;
 
         webSocketMetrics.recordPush("TOPIC", success);
-        if (slowConnectionDetector != null) {
-            slowConnectionDetector.recordPushDuration(null, duration);
-        }
         if (auditService != null) {
             auditService.auditPush("TOPIC", null, topic, success, duration,
                     success ? null : "local topic push failed");

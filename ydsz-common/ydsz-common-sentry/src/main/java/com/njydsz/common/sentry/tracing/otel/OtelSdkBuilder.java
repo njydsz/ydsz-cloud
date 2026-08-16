@@ -7,22 +7,19 @@ import java.util.ServiceLoader;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator;
 import io.opentelemetry.api.trace.Tracer;
+import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
-import io.opentelemetry.context.propagation.TextMapPropagator;
-import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
-
-import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator;
-
-import lombok.extern.slf4j.Slf4j;
-
 import io.opentelemetry.sdk.trace.samplers.Sampler;
+import lombok.extern.slf4j.Slf4j;
 /**
  * YDSZ OpenTelemetry SDK 构建器
  *
@@ -224,6 +221,7 @@ public final class OtelSdkBuilder {
      *
      * @param type Exporter 类型标识（如 otlp-grpc、zipkin 等）
      * @return 当前构建器
+     * @see OtelExporterFactory.SpanExporterProvider
      */
     public OtelSdkBuilder exporterFromSpi(String type) {
         ServiceLoader<OtelExporterFactory.SpanExporterProvider> loader =

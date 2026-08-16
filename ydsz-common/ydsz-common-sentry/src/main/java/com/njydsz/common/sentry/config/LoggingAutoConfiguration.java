@@ -4,9 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.annotation.PreDestroy;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
-
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -21,8 +20,6 @@ import com.njydsz.common.sentry.logging.ElkLogPublisher;
 import com.njydsz.common.sentry.logging.LokiLogPublisher;
 import com.njydsz.common.sentry.resilience.CircuitBreaker;
 import com.njydsz.common.sentry.spi.LogPublisher;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 日志发布器自动配置。

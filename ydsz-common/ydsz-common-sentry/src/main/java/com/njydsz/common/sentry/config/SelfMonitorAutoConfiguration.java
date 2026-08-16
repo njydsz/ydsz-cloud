@@ -2,6 +2,8 @@ package com.njydsz.common.sentry.config;
 
 import java.util.Map;
 
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -17,10 +19,6 @@ import com.njydsz.common.sentry.spi.LogPublisher;
 import com.njydsz.common.sentry.spi.MetricsCollector;
 import com.njydsz.common.sentry.spi.SlaCollector;
 import com.njydsz.common.sentry.spi.TraceContext;
-
-import jakarta.annotation.PostConstruct;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 自监控自动配置。

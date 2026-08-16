@@ -5,10 +5,11 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PreDestroy;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
-
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -21,10 +22,6 @@ import com.njydsz.common.sentry.metrics.MicrometerMetricsCollector;
 import com.njydsz.common.sentry.metrics.SystemMetricsCollector;
 import com.njydsz.common.sentry.resilience.CircuitBreaker;
 import com.njydsz.common.sentry.spi.MetricsCollector;
-
-import io.micrometer.core.instrument.Gauge;
-import io.micrometer.core.instrument.MeterRegistry;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 指标采集与熔断器自动配置。

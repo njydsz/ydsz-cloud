@@ -1,7 +1,8 @@
 package com.njydsz.common.sentry.config;
 
+import com.njydsz.common.notify.core.NotifyService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
-
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -14,9 +15,6 @@ import com.njydsz.common.sentry.alerting.DefaultAlertPublisher;
 import com.njydsz.common.sentry.alerting.NotifyAlertHandler;
 import com.njydsz.common.sentry.domain.AlertSeverity;
 import com.njydsz.common.sentry.spi.AlertPublisher;
-import com.njydsz.common.notify.core.NotifyService;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 告警自动配置。

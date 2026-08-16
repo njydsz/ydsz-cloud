@@ -1,4 +1,4 @@
-package com.njydsz.common.base.idempotent;
+package com.njydsz.common.idempotent;
 
 /**
  * 幂等性校验异常。

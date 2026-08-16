@@ -1,12 +1,11 @@
 package com.njydsz.common.sentry.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
-import lombok.Data;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * Sentry 配置属性

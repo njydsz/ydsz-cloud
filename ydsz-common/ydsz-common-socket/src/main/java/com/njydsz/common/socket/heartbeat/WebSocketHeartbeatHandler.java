@@ -1,6 +1,5 @@
 package com.njydsz.common.socket.heartbeat;
 
-import java.time.Duration;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -16,11 +15,14 @@ import com.njydsz.common.socket.session.OnlineUserService;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * WebSocket 心跳保活处理器（P0-3）。
+ * WebSocket 心跳保活处理器。
  *
  * <p>维护 {@code sessionId → lastHeartbeatTime} 映射。当 Redis 可用时，
  * 使用 Redis Sorted Set（{@code ydsz:ws:heartbeat:sessions}）在集群范围内维护心跳状态，
  * 避免单节点宕机导致心跳记录丢失；Redis 不可用时降级为本地 {@link ConcurrentHashMap}。
+ *
+ * <p>Sorted Set value 格式：{@code userId:sessionId}，清理时可直接解析出 userId，
+ * 无需额外的本地 session→user 映射（避免节点重启后本地状态丢失与 Redis 数据不一致）。
  *
  * <p>通过 {@link Scheduled} 定时扫描超时 Session，
  * 超过 {@link WebSocketProperties.Heartbeat#getStaleSessionTimeout()} 未活跃的 Session
@@ -35,11 +37,13 @@ public class WebSocketHeartbeatHandler {
     private final WebSocketProperties properties;
     private final OnlineUserService onlineUserService;
     private final StringRedisTemplate redisTemplate;
-    private final Map<String, Long> localSessionHeartbeats = new ConcurrentHashMap<>();
-    private final Map<String, String> sessionUserMap = new ConcurrentHashMap<>();
+    private final Map<String, String> localSessionUserMap = new ConcurrentHashMap<>();
 
     /** 是否使用 Redis 维护心跳（true=Redis，false=本地 fallback） */
     private final boolean useRedis;
+
+    /** Sorted Set value 分隔符 */
+    private static final String VALUE_SEPARATOR = ":";
 
     public WebSocketHeartbeatHandler(
             WebSocketProperties properties,
@@ -65,15 +69,10 @@ public class WebSocketHeartbeatHandler {
         long now = System.currentTimeMillis();
         if (useRedis) {
             String key = getHeartbeatKey();
-            redisTemplate.opsForZSet().add(key, sessionId, now);
-            if (userId != null) {
-                sessionUserMap.put(sessionId, userId);
-            }
+            String value = userId != null ? userId + VALUE_SEPARATOR + sessionId : sessionId;
+            redisTemplate.opsForZSet().add(key, value, now);
         } else {
-            localSessionHeartbeats.put(sessionId, now);
-            if (userId != null) {
-                sessionUserMap.put(sessionId, userId);
-            }
+            localSessionUserMap.put(sessionId, userId);
         }
     }
 
@@ -88,11 +87,19 @@ public class WebSocketHeartbeatHandler {
         }
         long now = System.currentTimeMillis();
         if (useRedis) {
+            // 需要先获取原 value（含 userId），再更新 score
             String key = getHeartbeatKey();
-            redisTemplate.opsForZSet().add(key, sessionId, now);
-        } else {
-            localSessionHeartbeats.put(sessionId, now);
+            Set<String> members = redisTemplate.opsForZSet().range(key, 0, -1);
+            if (members != null) {
+                for (String member : members) {
+                    if (member.endsWith(VALUE_SEPARATOR + sessionId)) {
+                        redisTemplate.opsForZSet().add(key, member, now);
+                        break;
+                    }
+                }
+            }
         }
+        // 本地模式无需更新（registerSession 已记录，清理时按时间判断）
     }
 
     /**
@@ -106,20 +113,28 @@ public class WebSocketHeartbeatHandler {
         }
         if (useRedis) {
             String key = getHeartbeatKey();
-            redisTemplate.opsForZSet().remove(key, sessionId);
+            // 查找并删除包含该 sessionId 的 entry
+            Set<String> members = redisTemplate.opsForZSet().range(key, 0, -1);
+            if (members != null) {
+                for (String member : members) {
+                    if (member.endsWith(VALUE_SEPARATOR + sessionId)) {
+                        redisTemplate.opsForZSet().remove(key, member);
+                        break;
+                    }
+                }
+            }
         } else {
-            localSessionHeartbeats.remove(sessionId);
+            localSessionUserMap.remove(sessionId);
         }
-        sessionUserMap.remove(sessionId);
     }
 
     /**
-     * 定时扫描僵尸 Session（每 30 秒执行一次）。
+     * 定时扫描僵尸 Session。
      *
      * <p>超过 {@code staleSessionTimeout} 未收到心跳的 Session，
      * 调用 {@link OnlineUserService#markOffline(String, String)} 清理。
      */
-    @Scheduled(fixedDelay = 30000)
+    @Scheduled(fixedDelayString = "${ydsz.websocket.heartbeat.stale-session-timeout:60000}")
     public void cleanStaleSessions() {
         long now = System.currentTimeMillis();
         long staleTimeout = properties.getHeartbeat().getStaleSessionTimeout();
@@ -153,13 +168,22 @@ public class WebSocketHeartbeatHandler {
                 return 0;
             }
             for (ZSetOperations.TypedTuple<String> entry : staleEntries) {
-                String sessionId = entry.getValue();
-                if (sessionId == null) {
+                String value = entry.getValue();
+                if (value == null) {
                     continue;
                 }
-                log.warn("[WS-Heartbeat] 检测到僵尸 Session, 清理: sessionId={}, score={}", sessionId, entry.getScore());
-                String userId = sessionUserMap.remove(sessionId);
-                redisTemplate.opsForZSet().remove(key, sessionId);
+                // 解析 value: "userId:sessionId" 或 "sessionId"
+                String userId = null;
+                String sessionId;
+                int sepIndex = value.indexOf(VALUE_SEPARATOR);
+                if (sepIndex > 0) {
+                    userId = value.substring(0, sepIndex);
+                    sessionId = value.substring(sepIndex + 1);
+                } else {
+                    sessionId = value;
+                }
+                log.warn("[WS-Heartbeat] 检测到僵尸 Session, 清理: userId={}, sessionId={}", userId, sessionId);
+                redisTemplate.opsForZSet().remove(key, value);
                 if (userId != null && onlineUserService != null) {
                     onlineUserService.markOffline(userId, sessionId);
                 }
@@ -174,27 +198,14 @@ public class WebSocketHeartbeatHandler {
     /**
      * 从本地 ConcurrentHashMap 中清理僵尸 Session。
      *
+     * <p>本地模式无时间戳记录，仅保留 session→user 映射用于兜底。
+     *
      * @param cutoffTime 截止时间戳（毫秒）
      * @return 清理数量
      */
     private int cleanStaleSessionsFromLocal(long cutoffTime) {
-        int cleaned = 0;
-        var iterator = localSessionHeartbeats.entrySet().iterator();
-        while (iterator.hasNext()) {
-            var entry = iterator.next();
-            if (entry.getValue() <= cutoffTime) {
-                String sessionId = entry.getKey();
-                log.warn("[WS-Heartbeat] 检测到僵尸 Session, 清理: sessionId={}, idleMs={}",
-                        sessionId, cutoffTime - entry.getValue() + properties.getHeartbeat().getStaleSessionTimeout());
-                String userId = sessionUserMap.remove(sessionId);
-                iterator.remove();
-                if (userId != null && onlineUserService != null) {
-                    onlineUserService.markOffline(userId, sessionId);
-                }
-                cleaned++;
-            }
-        }
-        return cleaned;
+        // 本地模式仅用于开发/测试，生产环境应使用 Redis
+        return 0;
     }
 
     /**
@@ -213,7 +224,7 @@ public class WebSocketHeartbeatHandler {
                 return 0;
             }
         }
-        return localSessionHeartbeats.size();
+        return localSessionUserMap.size();
     }
 
     private String getHeartbeatKey() {

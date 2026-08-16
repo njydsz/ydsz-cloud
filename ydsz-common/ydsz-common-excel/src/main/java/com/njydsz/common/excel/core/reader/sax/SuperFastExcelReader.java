@@ -88,7 +88,7 @@ public class SuperFastExcelReader {
      */
     public void read(InputStream inputStream) throws Exception {
         // 文件大小安全检查
-        ExcelConfig config = ExcelConfig.getInstance();
+        ExcelConfig config = ExcelConfig.defaults();
         int maxFileSizeMB = config.getMaxReadFileSizeMB();
 
         ZipInputStream zis = new ZipInputStream(inputStream);

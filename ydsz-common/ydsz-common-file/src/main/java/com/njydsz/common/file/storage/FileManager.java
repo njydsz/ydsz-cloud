@@ -14,6 +14,9 @@ import com.njydsz.common.file.domain.ObjectMetadata;
  * 对象元信息获取、对象删除、对象列举等能力。
  * </p>
  *
+ * @deprecated 自 2.0.0 起废弃。{@link IFileStorage} 已扁平化包含所有方法，直接使用 {@link IFileStorage} 即可。
+ *             计划于 3.0.0 版本移除。
+ *
  * <p><b>目录语义：</b>云对象存储没有真正的"目录"概念，目录通过 Key 前缀 + {@code /} 模拟。
  * {@link #makeFolder} 本质是写入一个 0 字节、以 {@code /} 结尾的对象作为占位。</p>
  *
@@ -26,6 +29,7 @@ import com.njydsz.common.file.domain.ObjectMetadata;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Deprecated
 public interface FileManager {
 
     /**
