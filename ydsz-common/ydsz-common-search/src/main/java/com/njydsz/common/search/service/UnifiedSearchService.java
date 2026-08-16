@@ -251,6 +251,9 @@ public class UnifiedSearchService {
                 long took = response.getTookMs();
                 metrics.recordSearch(took, response.getTotal());
                 analyticsService.recordSearch(request.getKeyword(), response.getTotal());
+                if (qualityTracker != null) {
+                    qualityTracker.recordSearchEvent(response.getTotal(), took);
+                }
                 cacheService.put(request, response);
 
                 // P5-13: 回填阶段耗时到响应（供前端/调试使用）

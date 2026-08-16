@@ -24,6 +24,12 @@
             <artifactId>ydsz-common-util</artifactId>
         </dependency>
 
+        <!-- 线程池编程式工厂 (ExecutorUtils) -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-thread</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-exception</artifactId>

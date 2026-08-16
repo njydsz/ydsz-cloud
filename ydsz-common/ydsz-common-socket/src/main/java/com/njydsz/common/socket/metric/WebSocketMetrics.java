@@ -8,12 +8,11 @@ import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
-import com.njydsz.common.netty.api.ConnectionMetrics;
 
 /**
  * WebSocket Micrometer 指标收集器（P1-4）。
  *
- * <p>实现 {@link ConnectionMetrics} 统一连接指标契约，注册以下指标：
+ * <p>实现 {@link NetworkMetrics} 顶层网络指标契约（P2-9），注册以下指标：
  * <ul>
  *   <li>{@code ydsz.websocket.channels.active}（Gauge）— 活跃连接数</li>
  *   <li>{@code ydsz.websocket.connections.total}（Counter）— 累计连接数</li>
@@ -29,7 +28,7 @@ import com.njydsz.common.netty.api.ConnectionMetrics;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class WebSocketMetrics implements ConnectionMetrics {
+public class WebSocketMetrics implements NetworkMetrics {
 
     private static final String METRIC_CHANNELS_ACTIVE = "ydsz.websocket.channels.active";
     private static final String METRIC_CONNECTIONS = "ydsz.websocket.connections.total";
@@ -75,7 +74,7 @@ public class WebSocketMetrics implements ConnectionMetrics {
         }
     }
 
-    // ==================== ConnectionMetrics 契约实现 ====================
+    // ==================== NetworkMetrics 契约实现 ====================
 
     /**
      * 递增活跃连接数。
