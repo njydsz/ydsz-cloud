@@ -806,32 +806,13 @@ public class JsonMapper {
         if (node == null) {
             return null;
         }
-        // F-2 直绑优化：标量 / Map / List / Object 目标类型直接从树取值，
+        // F-2 直绑优化：标量类型直接从树取值，
         // 跳过"树 → 字符串 → 再解析"的两次结构转换（对标 Jackson TokenBuffer）
-        if (clazz == String.class) {
-            return clazz.cast(node.asText());
+        if (isScalarType(clazz)) {
+            return toScalarValue(node, clazz);
         }
-        if (clazz == int.class || clazz == Integer.class) {
-            @SuppressWarnings("unchecked")
-            T result = (T) Integer.valueOf(node.asInt());
-            return result;
-        }
-        if (clazz == long.class || clazz == Long.class) {
-            @SuppressWarnings("unchecked")
-            T result = (T) Long.valueOf(node.asLong());
-            return result;
-        }
-        if (clazz == double.class || clazz == Double.class) {
-            @SuppressWarnings("unchecked")
-            T result = (T) Double.valueOf(node.asDouble());
-            return result;
-        }
-        if (clazz == boolean.class || clazz == Boolean.class) {
-            @SuppressWarnings("unchecked")
-            T result = (T) Boolean.valueOf(node.asBoolean());
-            return result;
-        }
-        if (clazz == Map.class || clazz == List.class || clazz == Object.class) {
+        // 容器类型直接从树转换
+        if (isContainerType(clazz)) {
             @SuppressWarnings("unchecked")
             T result = (T) TreeConverter.convertToJavaObject(node);
             return result;
@@ -864,6 +845,58 @@ public class JsonMapper {
         }
         String json = node.toString();
         return toObject(json, typeRef);
+    }
+
+    /**
+     * 判断是否为标量类型（可直接从 JsonNode 取值的基本类型）
+     *
+     * @param clazz 目标类型
+     * @return true 表示为标量类型
+     */
+    private static boolean isScalarType(Class<?> clazz) {
+        return clazz == String.class
+            || clazz == int.class || clazz == Integer.class
+            || clazz == long.class || clazz == Long.class
+            || clazz == double.class || clazz == Double.class
+            || clazz == boolean.class || clazz == Boolean.class;
+    }
+
+    /**
+     * 判断是否为容器类型（Map / List / Object）
+     *
+     * @param clazz 目标类型
+     * @return true 表示为容器类型
+     */
+    private static boolean isContainerType(Class<?> clazz) {
+        return clazz == Map.class || clazz == List.class || clazz == Object.class;
+    }
+
+    /**
+     * 从 JsonNode 提取标量值并转换为目标类型
+     *
+     * <p>调用方需确保 clazz 为标量类型（{@link #isScalarType(Class)} 返回 true）</p>
+     *
+     * @param node  JsonNode 树
+     * @param clazz 目标标量类型
+     * @param <T>   目标类型参数
+     * @return 转换后的标量值
+     */
+    @SuppressWarnings("unchecked")
+    private <T> T toScalarValue(JsonNode node, Class<T> clazz) {
+        if (clazz == String.class) {
+            return clazz.cast(node.asText());
+        }
+        if (clazz == int.class || clazz == Integer.class) {
+            return (T) Integer.valueOf(node.asInt());
+        }
+        if (clazz == long.class || clazz == Long.class) {
+            return (T) Long.valueOf(node.asLong());
+        }
+        if (clazz == double.class || clazz == Double.class) {
+            return (T) Double.valueOf(node.asDouble());
+        }
+        // boolean.class || Boolean.class
+        return (T) Boolean.valueOf(node.asBoolean());
     }
 
     /**
