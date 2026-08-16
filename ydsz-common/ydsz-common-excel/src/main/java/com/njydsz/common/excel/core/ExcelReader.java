@@ -318,7 +318,10 @@ public class ExcelReader {
      * @return 当前读取器实体
      */
     public ExcelReader use1904Windowing() {
-        ExcelConfig.getInstance().setUse1904Windowing(true);
+        ExcelConfig config = metadata.getExcelConfig();
+        if (config != null && !config.isUse1904Windowing()) {
+            log.warn("ExcelConfig 为不可变对象，use1904Windowing 设置应在构建配置时完成");
+        }
         return this;
     }
 
@@ -454,30 +457,33 @@ public class ExcelReader {
                 isXlsx = inputSourceDetector.detectXlsxFormat(metadata.getInputStream());
             }
 
+            ExcelConfig config = metadata.getExcelConfig() != null
+                    ? metadata.getExcelConfig() : ExcelConfig.defaults();
+
             if (filePath != null) {
                 File file = new File(filePath);
                 long fileSizeMB = file.length() / BYTES_PER_MB;
-                int maxFileSizeMB = ExcelConfig.getInstance().getMaxReadFileSizeMB();
+                int maxFileSizeMB = config.getMaxReadFileSizeMB();
                 if (fileSizeMB > maxFileSizeMB) {
                     throw ExcelReadException.fileTooLarge(fileSizeMB, maxFileSizeMB);
                 }
             } else if (metadata.getFile() != null) {
                 long fileSizeMB = metadata.getFile().length() / BYTES_PER_MB;
-                int maxFileSizeMB = ExcelConfig.getInstance().getMaxReadFileSizeMB();
+                int maxFileSizeMB = config.getMaxReadFileSizeMB();
                 if (fileSizeMB > maxFileSizeMB) {
                     throw ExcelReadException.fileTooLarge(fileSizeMB, maxFileSizeMB);
                 }
             }
 
             if (isXlsx && metadata.getClazz() != null) {
-                int thresholdMB = ExcelConfig.getInstance().getStreamingParseThresholdMB();
+                int thresholdMB = config.getStreamingParseThresholdMB();
                 long fileSizeMB = 0;
                 if (filePath != null) {
                     File file = new File(filePath);
                     fileSizeMB = file.length() / BYTES_PER_MB;
                 }
 
-                if (fileSizeMB >= thresholdMB || ExcelConfig.getInstance().isUseFastReader()) {
+                if (fileSizeMB >= thresholdMB || config.isUseFastReader()) {
                     useFastReader = true;
                     try (FileInputStream fis = new FileInputStream(
                             filePath != null ? filePath : metadata.getFile().getAbsolutePath())) {

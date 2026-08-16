@@ -17,6 +17,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 
 import com.njydsz.common.netty.client.AbstractNettyClient;
+import com.njydsz.common.netty.endpoint.NettyActuatorEndpoint;
 import com.njydsz.common.netty.event.ChannelEventDispatcher;
 import com.njydsz.common.netty.event.ChannelEventListener;
 import com.njydsz.common.netty.event.MessageDispatcher;
@@ -164,6 +165,29 @@ public class NettyAutoConfiguration {
             @Autowired(required = false) ApplicationContext applicationContext) {
         log.info("[Netty] 注册 MessageDispatcher（注解扫描模式）");
         return new MessageDispatcher(applicationContext);
+    }
+
+    /**
+     * Netty Actuator 端点（当 Actuator 在 classpath 时自动注册）。
+     *
+     * <p>暴露 {@code /actuator/netty} 端点，提供 Server 状态、EventLoop 池、指标摘要查询。
+     *
+     * @param servers       Netty Server 列表
+     * @param eventLoopPool EventLoop 池
+     * @param metrics       指标收集器
+     * @return Netty 端点
+     */
+    @Bean
+    @ConditionalOnMissingBean(NettyActuatorEndpoint.class)
+    @ConditionalOnClass(name = "org.springframework.boot.actuate.endpoint.annotation.Endpoint")
+    public NettyActuatorEndpoint nettyActuatorEndpoint(
+            @Autowired(required = false) List<AbstractNettyServer> servers,
+            NettyEventLoopPool eventLoopPool,
+            NettyChannelMetrics metrics) {
+        List<AbstractNettyServer> serverList =
+                servers != null ? servers : Collections.emptyList();
+        log.info("[Netty] 注册 NettyActuatorEndpoint, servers={}", serverList.size());
+        return new NettyActuatorEndpoint(serverList, eventLoopPool, metrics);
     }
 
     /**

@@ -7,8 +7,6 @@ import java.util.ServiceLoader;
 
 import javax.sql.DataSource;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import jakarta.annotation.PreDestroy;
 
 import org.springframework.beans.factory.ObjectProvider;
@@ -450,18 +448,22 @@ public class SearchAutoConfiguration {
     /**
      * 装配搜索建议服务，提供自动补全与拼写纠错能力。
      *
-     * <p>依赖主引擎实现 {@code SuggestStrategy}；
-     * 引擎不支持建议能力时服务仍可正常装配，只是所有查询返回空列表。
+     * <p>三层召回策略：引擎前缀建议 → 热门搜索兜底 → Levenshtein 纠错。
+     * 依赖主引擎实现 {@code SuggestStrategy}；
+     * 引擎不支持建议能力时服务仍可正常装配，只是引擎层查询返回空列表，
+     * 仍可从分析服务获取热门词兜底。
      *
-     * @param engineRegistry 引擎注册表，从中获取建议策略
-     * @param properties     搜索配置，提供建议条数上限 {@code suggestLimit}
+     * @param engineRegistry   引擎注册表，从中获取建议策略
+     * @param analyticsService 分析服务，提供热门搜索兜底
+     * @param properties       搜索配置，提供建议条数上限 {@code suggestLimit}
      * @return 建议服务实例，永不为 {@code null}
      */
     @Bean
     @ConditionalOnMissingBean
     public SuggestionService suggestionService(SearchEngineRegistry engineRegistry,
+                                                SearchAnalyticsService analyticsService,
                                                 SearchProperties properties) {
-        return new SuggestionService(engineRegistry, properties);
+        return new SuggestionService(engineRegistry, analyticsService, properties);
     }
 
     /**
