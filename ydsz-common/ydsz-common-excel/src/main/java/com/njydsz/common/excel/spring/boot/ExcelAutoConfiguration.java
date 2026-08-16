@@ -1,7 +1,5 @@
 package com.njydsz.common.excel.spring.boot;
 
-import java.util.zip.Deflater;
-
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -35,71 +33,87 @@ import io.micrometer.core.instrument.MeterRegistry;
 public class ExcelAutoConfiguration {
 
     /**
-     * 注册 ExcelConfig 单例，应用 Properties 配置
+     * 注册 {@link ExcelConfig} 单例，并应用 {@link ExcelProperties} 中的配置覆盖。
      *
-     * @param properties 配置属性
-     * @return ExcelConfig 实例
+     * <p>装配流程：
+     * <ol>
+     *   <li>以 {@link ExcelConfig#builder()} 构造 Builder，此时所有字段为 ExcelConfig 默认值；</li>
+     *   <li>对 {@link ExcelProperties} 中每个非 null 属性，通过链式调用覆盖 Builder 字段；</li>
+     *   <li>调用 {@link ExcelConfig.Builder#build()} 构建{@code ExcelConfig} 实例，
+     *       该方法内部复用 {@link ExcelConfig#setReadBufferSize(int)} 等同步 setter，
+     *       参数校验、volatile 写入的 happens-before 保证与原路径完全等价；</li>
+     *   <li>通过 {@link ExcelConfig#setInstance} 注入全局单例。</li>
+     * </ol>
+     *
+     * <p>Builder 用法把"装配阶段一次性赋值"语义显式化，避免启动后无意间改动字段；
+     * 默认compressionLevel 已在 Builder 初始化阶段使用 {@link Deflater#BEST_SPEED}，
+     * 与旧逻辑一致。
+     *
+     * @param properties ydsz.excel.* 配置属性
+     * @return 已装配单例的 {@link ExcelConfig} 实例
      */
     @Bean
     @ConditionalOnMissingBean
     public ExcelConfig excelConfig(ExcelProperties properties) {
-        ExcelConfig config = ExcelConfig.getInstance();
+        ExcelConfig.Builder builder = ExcelConfig.builder();
 
         if (properties.getReadBufferSize() != null) {
-            config.setReadBufferSize(properties.getReadBufferSize());
+            builder.readBufferSize(properties.getReadBufferSize());
         }
         if (properties.getWriteBufferSize() != null) {
-            config.setWriteBufferSize(properties.getWriteBufferSize());
+            builder.writeBufferSize(properties.getWriteBufferSize());
         }
         if (properties.getDefaultDateFormat() != null) {
-            config.setDefaultDateFormat(properties.getDefaultDateFormat());
+            builder.defaultDateFormat(properties.getDefaultDateFormat());
         }
         if (properties.getDefaultNumberFormat() != null) {
-            config.setDefaultNumberFormat(properties.getDefaultNumberFormat());
+            builder.defaultNumberFormat(properties.getDefaultNumberFormat());
         }
         if (properties.getAutomaticTrim() != null) {
-            config.setAutomaticTrim(properties.getAutomaticTrim());
+            builder.automaticTrim(properties.getAutomaticTrim());
+        }
+        if (properties.getMaxReadCacheSize() != null) {
+            builder.maxReadCacheSize(properties.getMaxReadCacheSize());
         }
         if (properties.getUseFastReader() != null) {
-            config.setUseFastReader(properties.getUseFastReader());
+            builder.useFastReader(properties.getUseFastReader());
         }
         if (properties.getUseFastWriter() != null) {
-            config.setUseFastWriter(properties.getUseFastWriter());
+            builder.useFastWriter(properties.getUseFastWriter());
         }
         if (properties.getStreamingParseThresholdMB() != null) {
-            config.setStreamingParseThresholdMB(properties.getStreamingParseThresholdMB());
+            builder.streamingParseThresholdMB(properties.getStreamingParseThresholdMB());
         }
         if (properties.getMaxReadFileSizeMB() != null) {
-            config.setMaxReadFileSizeMB(properties.getMaxReadFileSizeMB());
+            builder.maxReadFileSizeMB(properties.getMaxReadFileSizeMB());
         }
         if (properties.getMaxWriteFileSizeMB() != null) {
-            config.setMaxWriteFileSizeMB(properties.getMaxWriteFileSizeMB());
+            builder.maxWriteFileSizeMB(properties.getMaxWriteFileSizeMB());
         }
         if (properties.getCompressionLevel() != null) {
-            config.setCompressionLevel(properties.getCompressionLevel());
-        } else {
-            // 默认使用 BEST_SPEED
-            config.setCompressionLevel(Deflater.BEST_SPEED);
+            builder.compressionLevel(properties.getCompressionLevel());
         }
         if (properties.getFormulaInjectionProtection() != null) {
-            config.setFormulaInjectionProtection(properties.getFormulaInjectionProtection());
+            builder.formulaInjectionProtection(properties.getFormulaInjectionProtection());
         }
         if (properties.getStrictNumberConversion() != null) {
-            config.setStrictNumberConversion(properties.getStrictNumberConversion());
+            builder.strictNumberConversion(properties.getStrictNumberConversion());
         }
         if (properties.getUse1904Windowing() != null) {
-            config.setUse1904Windowing(properties.getUse1904Windowing());
+            builder.use1904Windowing(properties.getUse1904Windowing());
         }
         if (properties.getHeadRowNumber() != null) {
-            config.setHeadRowNumber(properties.getHeadRowNumber());
+            builder.headRowNumber(properties.getHeadRowNumber());
         }
         if (properties.getWriteCacheSize() != null) {
-            config.setWriteCacheSize(properties.getWriteCacheSize());
+            builder.writeCacheSize(properties.getWriteCacheSize());
         }
         if (properties.getValidationMode() != null) {
-            config.setValidationMode(properties.getValidationMode());
+            builder.validationMode(properties.getValidationMode());
         }
 
+        ExcelConfig config = builder.build();
+        ExcelConfig.setInstance(config);
         return config;
     }
 

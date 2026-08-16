@@ -451,4 +451,202 @@ public class ExcelConfig {
         }
         this.writeCacheSize = writeCacheSize;
     }
+
+    // ==================== Builder ====================
+
+    /**
+     * 创建新的 {@link Builder} 实例，以流式 API 一次性配置全部参数后构建 {@link ExcelConfig}。
+     *
+     * <p>典型用法:
+     * <pre>{@code
+     * ExcelConfig config = ExcelConfig.builder()
+         *     .readBufferSize(16384)
+         *     .writeBufferSize(16384)
+         *     .validationMode(ValidationMode.COLLECT_ALL)
+         *     .build();
+     * ExcelConfig.setInstance(config);
+     * }</pre>
+     *
+     * <p>构建后可通过 {@link #setInstance} 注入全局单例，也可以在启动阶段一次装配完毕，
+     * 从源头避免运行期意外改动单例字段，符合本类 Javadoc 中"启动阶段一次性配置完毕"的最佳实践。
+     *
+     * @return 新的 Builder 实例
+     */
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    /**
+     * {@link ExcelConfig} 的流式构建器。
+     *
+     * <p>各 setter 的语义、默认值与边界校验与 {@link ExcelConfig} 自身同名 setter 完全一致，
+     * 实际构建时通过 {@link ExcelConfig#setReadBufferSize(int)} 等同步方法写入，
+     * 因此锁保护、volatile 写入、参数校验与原来逐字段调用完全等价，
+     * 仅是把"构建阶段的一次性赋值"从运行时热路径剥离出来，避免无意的并发修改。
+     */
+    public static final class Builder {
+
+        private int readBufferSize = 8192;
+        private int writeBufferSize = 8192;
+        private boolean automaticTrim = true;
+        private String defaultDateFormat = "yyyy-MM-dd HH:mm:ss";
+        private String defaultNumberFormat = "#,##0.00";
+        private int maxReadCacheSize = 1024;
+        private int streamingParseThresholdMB = 10;
+        private boolean strictNumberConversion = false;
+        private int maxReadFileSizeMB = 100;
+        private int maxWriteFileSizeMB = 50;
+        private boolean formulaInjectionProtection = true;
+        private boolean useFastReader = true;
+        private boolean useFastWriter = true;
+        private int compressionLevel = Deflater.BEST_SPEED;
+        private boolean use1904Windowing = false;
+        private int headRowNumber = 1;
+        private int writeCacheSize = 100;
+        private ValidationMode validationMode = ValidationMode.FAIL_FAST;
+
+        private Builder() {
+        }
+
+        /** 读取缓冲区大小（字节），必须为正数。 */
+        public Builder readBufferSize(int readBufferSize) {
+            this.readBufferSize = readBufferSize;
+            return this;
+        }
+
+        /** 写入缓冲区大小（字节），必须为正数。 */
+        public Builder writeBufferSize(int writeBufferSize) {
+            this.writeBufferSize = writeBufferSize;
+            return this;
+        }
+
+        /** 自动去除字符串首尾空格，默认 {@code true}。 */
+        public Builder automaticTrim(boolean automaticTrim) {
+            this.automaticTrim = automaticTrim;
+            return this;
+        }
+
+        /** 默认日期模式串，不可为 {@code null} 或空。 */
+        public Builder defaultDateFormat(String defaultDateFormat) {
+            this.defaultDateFormat = defaultDateFormat;
+            return this;
+        }
+
+        /** 默认数字格式串，不可为 {@code null} 或空。 */
+        public Builder defaultNumberFormat(String defaultNumberFormat) {
+            this.defaultNumberFormat = defaultNumberFormat;
+            return this;
+        }
+
+        /** 最大读取缓存条目数，必须为正数。 */
+        public Builder maxReadCacheSize(int maxReadCacheSize) {
+            this.maxReadCacheSize = maxReadCacheSize;
+            return this;
+        }
+
+        /** 流式解析阈值（MB），必须为正数。 */
+        public Builder streamingParseThresholdMB(int streamingParseThresholdMB) {
+            this.streamingParseThresholdMB = streamingParseThresholdMB;
+            return this;
+        }
+
+        /** 数字转换失败时抛异常（严格模式），默认 {@code false}。 */
+        public Builder strictNumberConversion(boolean strictNumberConversion) {
+            this.strictNumberConversion = strictNumberConversion;
+            return this;
+        }
+
+        /** 最大可读文件大小（MB），必须为正数。 */
+        public Builder maxReadFileSizeMB(int maxReadFileSizeMB) {
+            this.maxReadFileSizeMB = maxReadFileSizeMB;
+            return this;
+        }
+
+        /** 最大可写文件大小（MB），必须为正数。 */
+        public Builder maxWriteFileSizeMB(int maxWriteFileSizeMB) {
+            this.maxWriteFileSizeMB = maxWriteFileSizeMB;
+            return this;
+        }
+
+        /** 启用公式注入防护，默认 {@code true}。 */
+        public Builder formulaInjectionProtection(boolean formulaInjectionProtection) {
+            this.formulaInjectionProtection = formulaInjectionProtection;
+            return this;
+        }
+
+        /** 启用快速读取引擎，默认 {@code true}。 */
+        public Builder useFastReader(boolean useFastReader) {
+            this.useFastReader = useFastReader;
+            return this;
+        }
+
+        /** 启用快速写入引擎，默认 {@code true}。 */
+        public Builder useFastWriter(boolean useFastWriter) {
+            this.useFastWriter = useFastWriter;
+            return this;
+        }
+
+        /** ZIP 压缩级别 [-1, 9]，默认 {@link Deflater#BEST_SPEED}。 */
+        public Builder compressionLevel(int compressionLevel) {
+            this.compressionLevel = compressionLevel;
+            return this;
+        }
+
+        /** 使用 1904 日期窗口（Mac 兼容），默认 {@code false}。 */
+        public Builder use1904Windowing(boolean use1904Windowing) {
+            this.use1904Windowing = use1904Windowing;
+            return this;
+        }
+
+        /** 默认表头行号（从 1 计），必须 &gt;= 1。 */
+        public Builder headRowNumber(int headRowNumber) {
+            this.headRowNumber = headRowNumber;
+            return this;
+        }
+
+        /** SXSSF 内存保留行数窗口，必须 &gt;= 1。 */
+        public Builder writeCacheSize(int writeCacheSize) {
+            this.writeCacheSize = writeCacheSize;
+            return this;
+        }
+
+        /** 数据校验模式，不可为 {@code null}。 */
+        public Builder validationMode(ValidationMode validationMode) {
+            this.validationMode = validationMode;
+            return this;
+        }
+
+        /**
+         * 构建 {@link ExcelConfig} 实例。
+         *
+         * <p>通过 {@link ExcelConfig#setReadBufferSize(int)} 等同步 setter 写入字段，
+         * 参数校验、volatile 写入的 happens-before 保证与原路径完全等价。
+         *
+         * @return 已装配全部字段的 {@link ExcelConfig} 新实例
+         */
+        public ExcelConfig build() {
+            ExcelConfig config = new ExcelConfig();
+            config.setReadBufferSize(this.readBufferSize);
+            config.setWriteBufferSize(this.writeBufferSize);
+            config.setAutomaticTrim(this.automaticTrim);
+            config.setDefaultDateFormat(this.defaultDateFormat);
+            config.setDefaultNumberFormat(this.defaultNumberFormat);
+            config.setMaxReadCacheSize(this.maxReadCacheSize);
+            config.setStreamingParseThresholdMB(this.streamingParseThresholdMB);
+            config.setStrictNumberConversion(this.strictNumberConversion);
+            config.setMaxReadFileSizeMB(this.maxReadFileSizeMB);
+            config.setMaxWriteFileSizeMB(this.maxWriteFileSizeMB);
+            config.setFormulaInjectionProtection(this.formulaInjectionProtection);
+            config.setUseFastReader(this.useFastReader);
+            config.setUseFastWriter(this.useFastWriter);
+            config.setCompressionLevel(this.compressionLevel);
+            config.setUse1904Windowing(this.use1904Windowing);
+            config.setHeadRowNumber(this.headRowNumber);
+            config.setWriteCacheSize(this.writeCacheSize);
+            synchronized (config) {
+                config.setValidationMode(this.validationMode);
+            }
+            return config;
+        }
+    }
 }

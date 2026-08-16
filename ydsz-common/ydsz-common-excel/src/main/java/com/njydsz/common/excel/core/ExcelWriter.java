@@ -513,6 +513,9 @@ public class ExcelWriter {
             this.sheet = currentSheet;
             context.setSheet(currentSheet);
 
+            dispatchAfterWorkbookCreate();
+            dispatchAfterSheetCreate();
+
             if (isMultiSheetWriting) {
                 currentRowIndex = metadata.getHeadRowNumber();
             } else if (append && currentRowIndex <= 0) {
@@ -530,6 +533,7 @@ public class ExcelWriter {
 
             if (!append) {
                 writeHead(headProperties);
+                dispatchAfterHeaderWrite(currentRowIndex - 1);
             }
 
             writeData(data);
@@ -578,6 +582,96 @@ public class ExcelWriter {
     boolean canWrite() {
         return !writeCompleted;
     }
+
+    // ==================== 生命周期回调分发 ====================
+
+    /** 快速短路：无注册回调时跳过所有分发逻辑 */
+    private boolean hasCallbacks() {
+        return !callbacks.isEmpty();
+    }
+
+    /**
+     * 分发 workbook/sheet 创建事件，各回调异常互不影响。
+     */
+    private void dispatchAfterWorkbookCreate() {
+        if (!hasCallbacks()) {
+            return;
+        }
+        for (WriteLifecycleHandler cb : callbacks) {
+            try {
+                cb.afterWorkbookCreate(workbook, sheet);
+            } catch (Exception e) {
+                log.warn("WriteLifecycleHandler.afterWorkbookCreate 异常，跳过", e);
+            }
+        }
+    }
+
+    private void dispatchAfterSheetCreate() {
+        if (!hasCallbacks()) {
+            return;
+        }
+        for (WriteLifecycleHandler cb : callbacks) {
+            try {
+                cb.afterSheetCreate(sheet);
+            } catch (Exception e) {
+                log.warn("WriteLifecycleHandler.afterSheetCreate 异常，跳过", e);
+            }
+        }
+    }
+
+    private void dispatchAfterHeaderWrite(int headerRow) {
+        if (!hasCallbacks()) {
+            return;
+        }
+        for (WriteLifecycleHandler cb : callbacks) {
+            try {
+                cb.afterHeaderWrite(sheet, headerRow);
+            } catch (Exception e) {
+                log.warn("WriteLifecycleHandler.afterHeaderWrite 异常，跳过", e);
+            }
+        }
+    }
+
+    private void dispatchAfterRowWrite(Row row, Object rowData, int rowIndex) {
+        if (!hasCallbacks()) {
+            return;
+        }
+        for (WriteLifecycleHandler cb : callbacks) {
+            try {
+                cb.afterRowWrite(row, rowData, rowIndex);
+            } catch (Exception e) {
+                log.warn("WriteLifecycleHandler.afterRowWrite 异常，跳过", e);
+            }
+        }
+    }
+
+    private void dispatchAfterCellWrite(Cell cell, Object value, int row, int col) {
+        if (!hasCallbacks()) {
+            return;
+        }
+        for (WriteLifecycleHandler cb : callbacks) {
+            try {
+                cb.afterCellWrite(cell, value, row, col);
+            } catch (Exception e) {
+                log.warn("WriteLifecycleHandler.afterCellWrite 异常，跳过", e);
+            }
+        }
+    }
+
+    private void dispatchBeforeWorkbookFlush() {
+        if (!hasCallbacks()) {
+            return;
+        }
+        for (WriteLifecycleHandler cb : callbacks) {
+            try {
+                cb.beforeWorkbookFlush(workbook);
+            } catch (Exception e) {
+                log.warn("WriteLifecycleHandler.beforeWorkbookFlush 异常，跳过", e);
+            }
+        }
+    }
+
+    // ==================== 内部方法 ====================
 
     /**
      * 标记写入完成
@@ -917,12 +1011,14 @@ public class ExcelWriter {
                 try {
                     Object value = property.getAsmFieldGetter().get(rowData);
                     valueFormatter.setCellValueFast(cell, value, property.getDateFormat());
+                    dispatchAfterCellWrite(cell, value, currentRowNum, colIndex);
                 } catch (Exception e) {
                     log.warn("获取字段值异常", e);
                     cell.setBlank();
                 }
             }
         }
+        dispatchAfterRowWrite(row, rowData, currentRowNum);
     }
 
     /**
@@ -954,12 +1050,14 @@ public class ExcelWriter {
                     WriteHeaderProperty property = metadata.getHeadList().get(i);
                     Object value = property.getAsmFieldGetter().get(rowData);
                     ultraFastCellWriter.writeFast(cell, value, precomputedProps.getDateFormat(i));
+                    dispatchAfterCellWrite(cell, value, currentRowNum, i);
                 } catch (Exception e) {
                     log.warn("获取字段值异常", e);
                     cell.setBlank();
                 }
             }
         }
+        dispatchAfterRowWrite(row, rowData, currentRowNum);
     }
 
     /**
@@ -1126,6 +1224,7 @@ public class ExcelWriter {
         IOException firstException = null;
 
         try {
+            dispatchBeforeWorkbookFlush();
             if (outputStream != null) {
                 workbook.write(outputStream);
                 outputStream.flush();

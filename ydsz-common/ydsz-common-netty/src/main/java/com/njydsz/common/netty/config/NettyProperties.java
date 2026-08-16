@@ -231,4 +231,57 @@ public class NettyProperties {
         /** 最大重试次数（-1 = 无限重试） */
         private int maxRetries = MAX_RETRIES_UNLIMITED;
     }
+
+    /** ByteBuf 内存池与水位线配置 */
+    private Allocator allocator = new Allocator();
+
+    /** 连接控制配置 */
+    private ConnectionControl connectionControl = new ConnectionControl();
+
+    /**
+     * ByteBuf 内存池配置。
+     *
+     * <p>高并发场景建议启用内存池（pooled=true, preferDirect=true），
+     * 减少 ByteBuffer 分配触发的 Young GC，提升吞吐量。
+     */
+    @Data
+    public static class Allocator {
+        /** 是否启用内存池 */
+        private boolean pooled = true;
+
+        /** 是否优先使用直接内存 */
+        private boolean preferDirect = true;
+
+        /** Direct Arena 数量（0 = 默认，高并发场景建议等于 Worker 线程数） */
+        @Min(0)
+        private int numDirectArenas = 0;
+
+        /** Page 大小（字节） */
+        @Min(4096)
+        private int pageSize = 8192;
+
+        /** 页拆分阶数（chunkSize = pageSize &lt;&lt; maxOrder） */
+        @Min(0)
+        private int maxOrder = 11;
+
+        /** 写缓冲区低水位线（字节） */
+        @Min(0)
+        private int writeBufferLowWaterMark = 32 * 1024;
+
+        /** 写缓冲区高水位线（字节） */
+        @Min(0)
+        private int writeBufferHighWaterMark = 64 * 1024;
+    }
+
+    /**
+     * 连接控制配置。
+     *
+     * <p>限制 Server 的最大连接数，防止恶意或异常客户端耗尽文件描述符和内存。
+     */
+    @Data
+    public static class ConnectionControl {
+        /** 最大连接数（0 表示不限制） */
+        @Min(0)
+        private int maxConnections = 0;
+    }
 }

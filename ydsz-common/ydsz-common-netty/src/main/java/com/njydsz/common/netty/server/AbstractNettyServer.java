@@ -207,9 +207,52 @@ public abstract class AbstractNettyServer {
                 .option(ChannelOption.SO_BACKLOG, properties.getSoBacklog())
                 .childOption(ChannelOption.SO_KEEPALIVE, properties.isSoKeepAlive())
                 .childOption(ChannelOption.TCP_NODELAY, properties.isTcpNoDelay())
+                .childOption(ChannelOption.ALLOCATOR, createByteBufAllocator())
+                .childOption(ChannelOption.WRITE_BUFFER_WATER_MARK, createWriteBufferWaterMark())
                 .childHandler(new ServerChannelInitializer(
-                        trafficHandler, connectionHandler, channelGroupManager));
+                        trafficHandler, connectionHandler, channelGroupManager,
+                        createConnectionLimitHandler()));
         return bootstrap;
+    }
+
+    /**
+     * 创建 ByteBuf 分配器（基于配置选择内存池或直接内存）。
+     *
+     * @return ByteBufAllocator 实例
+     */
+    private ByteBufAllocator createByteBufAllocator() {
+        NettyProperties.Allocator allocConfig = properties.getAllocator();
+        if (allocConfig.isPooled()) {
+            return new PooledByteBufAllocator(
+                    allocConfig.isPreferDirect(),
+                    allocConfig.getNumDirectArenas(),
+                    0,
+                    allocConfig.getPageSize(),
+                    allocConfig.getMaxOrder());
+        }
+        return new UnpooledByteBufAllocator(allocConfig.isPreferDirect());
+    }
+
+    /**
+     * 创建写缓冲区水位线。
+     *
+     * @return WriteBufferWaterMark 实例
+     */
+    private WriteBufferWaterMark createWriteBufferWaterMark() {
+        NettyProperties.Allocator allocConfig = properties.getAllocator();
+        return new WriteBufferWaterMark(
+                allocConfig.getWriteBufferLowWaterMark(),
+                allocConfig.getWriteBufferHighWaterMark());
+    }
+
+    /**
+     * 创建连接数限制 Handler（配置了 maxConnections 时生效）。
+     *
+     * @return ConnectionLimitHandler 实例，未配置时返回 {@code null}
+     */
+    private ConnectionLimitHandler createConnectionLimitHandler() {
+        int maxConn = properties.getConnectionControl().getMaxConnections();
+        return maxConn > 0 ? new ConnectionLimitHandler(maxConn) : null;
     }
 
     /**
