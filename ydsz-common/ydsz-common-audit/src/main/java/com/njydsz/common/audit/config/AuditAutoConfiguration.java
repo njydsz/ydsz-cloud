@@ -28,6 +28,7 @@ import com.njydsz.common.audit.core.AuditRecorder;
 import com.njydsz.common.audit.core.AuditWriter;
 import com.njydsz.common.audit.core.DefaultAuditQueryService;
 import com.njydsz.common.audit.core.DefaultAuditRecorder;
+import com.njydsz.common.audit.event.AuditEventListener;
 import com.njydsz.common.audit.health.AuditHealthIndicator;
 import com.njydsz.common.audit.storage.DefaultAuditStorage;
 import com.njydsz.common.audit.storage.JdbcAuditStorage;
@@ -48,6 +49,7 @@ import io.micrometer.core.instrument.MeterRegistry;
  *   <li>{@link AuditRecorder}：异步/同步审计记录器</li>
  *   <li>{@link AuditQueryService}：审计日志查询服务</li>
  *   <li>{@link AuditHealthIndicator}：健康检查指示器</li>
+ *   <li>{@link AuditEventListener}：审计事件监听器，消费业务模块发布的 OperationLogEvent / DataExportAuditEvent</li>
  * </ul>
  * </p>
  *
@@ -279,6 +281,31 @@ public class AuditAutoConfiguration {
     public AuditHealthIndicator auditHealthIndicator(AuditRecorder auditRecorder, AuditProperties properties) {
         log.info("初始化审计健康检查指示器: AuditHealthIndicator");
         return new AuditHealthIndicator(auditRecorder, properties);
+    }
+
+    /**
+     * 创建审计事件监听器 Bean
+     * <p>
+     * 消费业务模块通过 {@code ApplicationEventPublisher} 发布的
+     * {@link com.njydsz.common.audit.event.OperationLogEvent} 和
+     * {@link com.njydsz.common.audit.event.DataExportAuditEvent}，
+     * 转换为统一的 {@link com.njydsz.common.audit.domain.AuditLog} 并异步落库。
+     *
+     * <p>前置条件：业务主类或配置类需显式启用 {@code @EnableAsync}，
+     * 否则 {@code @Async("auditAsyncExecutor")} 注解不生效。
+     * 建议通过 {@link com.njydsz.common.audit.config.AuditAsyncConfiguration} 自动配置。
+     *
+     * @param auditRecorder        审计记录器
+     * @param snowflakeIdGenerator 分布式 ID 生成器
+     * @return 审计事件监听器
+     */
+    @Bean
+    @ConditionalOnMissingBean(AuditEventListener.class)
+    @ConditionalOnBean(AuditRecorder.class)
+    public AuditEventListener auditEventListener(AuditRecorder auditRecorder,
+                                                SnowflakeIdGenerator snowflakeIdGenerator) {
+        log.info("初始化审计事件监听器: AuditEventListener");
+        return new AuditEventListener(auditRecorder, snowflakeIdGenerator);
     }
 
     /**
