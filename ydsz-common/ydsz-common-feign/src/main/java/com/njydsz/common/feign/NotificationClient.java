@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.feign.dto.BroadcastRequestDTO;
+import com.njydsz.common.feign.dto.PushRealtimeRequestDTO;
 import com.njydsz.common.feign.dto.RealtimePushDTO;
 import com.njydsz.common.feign.fallback.NotificationClientFallbackFactory;
 

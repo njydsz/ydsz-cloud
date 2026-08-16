@@ -113,11 +113,5 @@
             <artifactId>ydsz-common-redis</artifactId>
         </dependency>
 
-        <!-- ydsz-common-netty（ConnectionMetrics 接口契约共享，optional） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-netty</artifactId>
-            <optional>true</optional>
-        </dependency>
     </dependencies>
 </project>
