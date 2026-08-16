@@ -17,7 +17,7 @@ import com.njydsz.common.auth.constant.FilterIgnoreConstants;
 import com.njydsz.common.auth.security.CsrfTokenValidator;
 import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.util.auth.AuthInfo;
+import com.njydsz.common.auth.model.AuthInfo;
 import com.njydsz.common.util.http.UrlPathUtils;
 
 import lombok.extern.slf4j.Slf4j;

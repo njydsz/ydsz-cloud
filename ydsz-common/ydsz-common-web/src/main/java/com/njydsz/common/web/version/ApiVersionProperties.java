@@ -1,7 +1,5 @@
 package com.njydsz.common.web.version;
 
-import java.util.List;
-
 import lombok.Data;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -9,7 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * API 版本管理配置属性。
  *
- * <p>P3-1: API 版本管理策略 — 支持版本演进、废弃管理和兼容性控制。
+ * <p>支持基于 URL 路径的 API 版本路由（如 {@code /v1/api/users}）。
  *
  * <h3>配置示例</h3>
  * <pre>{@code
@@ -17,14 +15,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *   api:
  *     version:
  *       enabled: true
- *       strategy: URL
  *       default-version: "1"
- *       header-name: X-API-Version
  *       current-version: v1
- *       deprecated-versions:
- *         - v0
- *       sunset-headers: true
- *       sunset-duration-days: 90
  * }</pre>
  *
  * @author ydsz-team
@@ -36,14 +28,11 @@ public class ApiVersionProperties {
 
     /**
      * 是否启用 API 版本路由。
+     *
      * <p>禁用后所有请求不进行版本匹配，直接放行。
+     * 默认 false，需显式开启。
      */
-    private boolean enabled = true;
-
-    /**
-     * 版本提取策略（URL / HEADER / ACCEPT）。
-     */
-    private VersionStrategy strategy = VersionStrategy.URL;
+    private boolean enabled = false;
 
     /**
      * 默认版本号（请求未携带版本信息时使用）。
@@ -51,34 +40,9 @@ public class ApiVersionProperties {
     private String defaultVersion = "1";
 
     /**
-     * 请求头名称（strategy=HEADER 时生效）。
-     */
-    private String headerName = "X-API-Version";
-
-    /**
      * 当前 API 版本（如 "v1"）。
      */
     private String currentVersion = "v1";
-
-    /**
-     * 已废弃的版本列表（这些版本的请求将返回 410 Gone）。
-     */
-    private List<String> deprecatedVersions = List.of();
-
-    /**
-     * 是否在响应头中添加 Deprecation/Sunset 头（RFC 8594）。
-     */
-    private boolean sunsetHeaders = true;
-
-    /**
-     * 默认废弃过渡期天数（超过此天数后版本将被移除）。
-     */
-    private int sunsetDurationDays = DEFAULT_SUNSET_DURATION_DAYS;
-
-    /**
-     * 废弃过渡期天数的默认常量值。
-     */
-    public static final int DEFAULT_SUNSET_DURATION_DAYS = 90;
 
     /**
      * 是否在启动时校验所有 @ApiVersion 注解的合法性。

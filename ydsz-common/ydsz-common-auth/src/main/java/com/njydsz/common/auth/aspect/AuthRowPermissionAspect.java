@@ -30,7 +30,7 @@ import com.njydsz.common.jdbc.permission.DataPermissionContext;
 import com.njydsz.common.jdbc.permission.DataScopeContextHolder;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.util.auth.AuthInfoUtils;
+import com.njydsz.common.auth.context.AuthInfoUtils;
 import com.njydsz.common.util.string.StringUtils;
 
 /**

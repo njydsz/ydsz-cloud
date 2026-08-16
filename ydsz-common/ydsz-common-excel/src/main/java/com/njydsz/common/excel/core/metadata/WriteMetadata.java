@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 import com.njydsz.common.excel.annotation.ExcelStyle;
+import com.njydsz.common.excel.core.config.ExcelConfig;
 import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
 /**
  * 写入元数据 - 封装Excel写入配置信息
@@ -36,6 +37,9 @@ public class WriteMetadata {
 
     /** 数据库导入场景的表头行号 */
     public static final int DEFAULT_DATABASE_HEAD_ROW_NUMBER = 0;
+
+    /** Excel 全局配置 */
+    private ExcelConfig excelConfig;
 
     /** 映射的源类类型 */
     private Class<?> clazz;
@@ -140,6 +144,14 @@ public class WriteMetadata {
         this.excelType = "xlsx";
         this.writeHiddenSheet = false;
         this.passwordProtected = false;
+    }
+
+    public ExcelConfig getExcelConfig() {
+        return excelConfig;
+    }
+
+    public void setExcelConfig(ExcelConfig excelConfig) {
+        this.excelConfig = excelConfig;
     }
 
     public Class<?> getClazz() {

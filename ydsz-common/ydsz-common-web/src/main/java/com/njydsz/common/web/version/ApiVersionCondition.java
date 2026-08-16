@@ -5,22 +5,18 @@ import java.util.regex.Pattern;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.mvc.condition.RequestCondition;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * API 版本路由条件
  *
- * <p>实现 Spring MVC 的 RequestCondition 接口，用于根据 API 版本进行路由匹配。
- * 支持 URL 路径模式、请求头模式和 Accept 头模式。
+ * <p>实现 Spring MVC 的 RequestCondition 接口，用于根据 URL 路径中的 API 版本进行路由匹配。
+ * 支持 URL 路径模式（如 {@code /v1/api/users}）。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
-@Slf4j
 public class ApiVersionCondition implements RequestCondition<ApiVersionCondition> {
 
     private final String version;
@@ -48,7 +44,7 @@ public class ApiVersionCondition implements RequestCondition<ApiVersionCondition
             return this;
         }
 
-        String requestVersion = extractVersion(request);
+        String requestVersion = extractVersionFromUrl(request);
         if (requestVersion == null) {
             // 未指定版本时使用默认版本
             requestVersion = properties.getDefaultVersion();
@@ -68,25 +64,6 @@ public class ApiVersionCondition implements RequestCondition<ApiVersionCondition
     }
 
     /**
-     * 从请求中提取版本号
-     *
-     * @param request HTTP 请求
-     * @return 版本号字符串，未找到返回 null
-     */
-    private String extractVersion(HttpServletRequest request) {
-        switch (properties.getStrategy()) {
-            case URL:
-                return extractVersionFromUrl(request);
-            case HEADER:
-                return extractVersionFromHeader(request);
-            case ACCEPT:
-                return extractVersionFromAccept(request);
-            default:
-                return null;
-        }
-    }
-
-    /**
      * 从 URL 路径提取版本号（/v1/api/users → "1"）
      */
     private String extractVersionFromUrl(HttpServletRequest request) {
@@ -97,31 +74,6 @@ public class ApiVersionCondition implements RequestCondition<ApiVersionCondition
         }
 
         Matcher matcher = VERSION_PATTERN.matcher(path);
-        if (matcher.find()) {
-            return matcher.group(1);
-        }
-        return null;
-    }
-
-    /**
-     * 从请求头提取版本号（X-API-Version: 1.0）
-     */
-    private String extractVersionFromHeader(HttpServletRequest request) {
-        return request.getHeader(properties.getHeaderName());
-    }
-
-    /**
-     * 从 Accept 头提取版本号（application/vnd.ydsz.v1+json）
-     */
-    private String extractVersionFromAccept(HttpServletRequest request) {
-        String accept = request.getHeader("Accept");
-        if (!StringUtils.hasText(accept)) {
-            return null;
-        }
-
-        // 匹配 application/vnd.ydsz.v1+json 或 application/vnd.ydsz.v1.0+json
-        Pattern pattern = Pattern.compile("application/vnd\\.ydsz\\.v(\\d+(?:\\.\\d+)?)");
-        Matcher matcher = pattern.matcher(accept);
         if (matcher.find()) {
             return matcher.group(1);
         }

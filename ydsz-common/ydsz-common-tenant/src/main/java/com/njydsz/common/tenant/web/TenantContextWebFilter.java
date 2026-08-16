@@ -15,7 +15,7 @@ import com.njydsz.common.tenant.config.TenantProperties;
 import com.njydsz.common.tenant.config.TenantProperties.TenantField;
 import com.njydsz.common.tenant.feign.TenantHeaderContract;
 import com.njydsz.common.tenant.metrics.TenantMetrics;
-import com.njydsz.common.util.auth.AuthInfoUtils;
+import com.njydsz.common.auth.context.AuthInfoUtils;
 
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;

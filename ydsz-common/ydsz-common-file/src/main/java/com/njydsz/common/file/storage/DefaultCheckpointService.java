@@ -231,7 +231,7 @@ public class DefaultCheckpointService implements CheckpointService {
             if (!actualMd5.equalsIgnoreCase(checkpoint.getFileMd5())) {
                 log.error("[Storage] validateFileMd5 mismatch, bucket={}, object={}, expected={}, actual={}",
                         bucketName, objectName, checkpoint.getFileMd5(), actualMd5);
-                throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+                throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
             }
             log.info("[Storage] validateFileMd5 success, bucket={}, object={}", bucketName, objectName);
         } catch (BusinessException e) {

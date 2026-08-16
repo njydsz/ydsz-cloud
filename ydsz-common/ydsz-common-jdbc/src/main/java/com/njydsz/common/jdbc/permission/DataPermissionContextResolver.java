@@ -14,7 +14,7 @@ import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.constant.DataScopeConstants;
-import com.njydsz.common.util.auth.AuthInfoUtils;
+import com.njydsz.common.auth.context.AuthInfoUtils;
 import com.njydsz.common.util.http.RequestContextUtils;
 import com.njydsz.common.util.string.StringUtils;
 

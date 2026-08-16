@@ -5,8 +5,8 @@ import java.util.Optional;
 import com.njydsz.common.jdbc.config.FieldFillConfiguration;
 import com.njydsz.common.jdbc.constant.AuditFieldConstants;
 import com.njydsz.common.jdbc.enums.FieldFillStrategyEnum;
-import com.njydsz.common.util.auth.AuthInfo;
-import com.njydsz.common.util.auth.AuthInfoUtils;
+import com.njydsz.common.auth.model.AuthInfo;
+import com.njydsz.common.auth.context.AuthInfoUtils;
 
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.StringValue;

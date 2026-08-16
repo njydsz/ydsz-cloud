@@ -15,8 +15,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import com.njydsz.common.auth.util.PermissionUtils;
-import com.njydsz.common.util.auth.AuthInfo;
-import com.njydsz.common.util.auth.YdszAuthInfo;
+import com.njydsz.common.auth.model.AuthInfo;
+import com.njydsz.common.auth.model.YdszAuthInfo;
 import com.njydsz.common.util.string.StringUtils;
 
 /**
@@ -25,7 +25,7 @@ import com.njydsz.common.util.string.StringUtils;
  * <p>提供通用的请求头解析逻辑，子类只需实现 {@link #createAuthInfo()} 返回具体的 AuthInfo 实现类。
  * 采用模板方法模式，统一的解析流程由本类管理，差异化实例创建由子类提供。
  *
- * <p>从 {@code com.njydsz.common.util.auth.AbstractAuthHandler} 迁移而来，
+ * <p>自 v2.0.0 起从 util 层迁移至 common-auth 服务层，
  * 已移除对旧版弃用类的继承依赖，新代码应继承本类。
  *
  * @author ydsz-team

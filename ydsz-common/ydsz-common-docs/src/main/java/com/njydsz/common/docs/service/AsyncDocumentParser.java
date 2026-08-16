@@ -1,91 +1,106 @@
 package com.njydsz.common.docs.service;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.function.Consumer;
 
-import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.docs.config.DocsProperties;
 import com.njydsz.common.docs.domain.DocumentParseResult;
 import com.njydsz.common.docs.domain.ParseOptions;
+import com.njydsz.common.docs.util.TempFileManager;
 
 /**
-     * 异步文档解析器。
+ * 异步文档解析器。
  *
- * <p>基于线程池实现文档异步解析，避免大文件解析阻塞请求线程。
- * 支持有界队列、超时控制和回调通知。
+ * <p>基于 Spring 托管的线程池实现文档异步解析，避免大文件解析阻塞请求线程。
  *
  * <h3>工作机制</h3>
  * <ol>
- *   <li>提交解析任务到有界线程池（{@link ThreadPoolExecutor}）</li>
- *   <li>队列满时拒绝并抛出 {@code RejectedExecutionException}</li>
+ *   <li>通过 Spring 注入的 {@link Executor} 提交解析任务</li>
+ *   <li>线程池配置由应用层统一管理（Bean 声明见使用方配置）</li>
  *   <li>解析完成后通过 {@link Consumer} 回调通知调用方</li>
- *   <li>支持 {@link Future} 超时取消（{@code timeout} 配置）</li>
+ *   <li>支持 {@link CompletableFuture#orTimeout} 超时控制</li>
  * </ol>
  *
- * <h3>资源管理</h3>
- * <p>通过 {@code @PreDestroy} 在应用关闭时优雅关闭线程池，
- * 等待最多 60s 完成已提交任务。
+ * <p><b>与自研实现的差异：</b>移除了原生 {@code ThreadPoolExecutor} 的手写管理、
+ * {@code @PreDestroy} 关闭逻辑和临时文件手动管理，统一交由 Spring 容器与
+ * {@link TempFileManager} 接管，降低本类的职责范围。
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see DocumentService
- * @see DocsProperties
  */
 @Slf4j
 @Component
 public class AsyncDocumentParser {
 
     private final DocumentService documentService;
-    private final ExecutorService executor;
+    private final Executor executor;
     private final long timeoutMs;
     private final DocsProperties properties;
+    private final TempFileManager tempFileManager;
 
-    public AsyncDocumentParser(DocumentService documentService, DocsProperties properties) {
+    public AsyncDocumentParser(
+            DocumentService documentService,
+            DocsProperties properties,
+            @Qualifier("docsAsyncExecutor") Executor executor,
+            TempFileManager tempFileManager) {
         this.documentService = documentService;
         this.properties = properties;
+        this.executor = executor;
+        this.tempFileManager = tempFileManager;
         this.timeoutMs = properties.getParseTimeoutSeconds() * 1000L;
-        this.executor = new ThreadPoolExecutor(properties.getAsyncPoolSize(), properties.getAsyncPoolSize(), 60L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(properties.getAsyncQueueCapacity()), r -> { Thread t = new Thread(r, "ydsz-docs-async-parser"); t.setDaemon(true); return t; }, new ThreadPoolExecutor.CallerRunsPolicy());
-        log.info("[AsyncDocumentParser] poolSize={} queueCapacity={} timeoutMs={}", properties.getAsyncPoolSize(), properties.getAsyncQueueCapacity(), timeoutMs);
-    }
-
-    /**
-     * 优雅关闭线程池。
-     *
-     * <p>由 Spring 容器在销毁时调用（{@code @PreDestroy}），
-     * 先调用 {@code shutdown()} 停止接收新任务，
-     * 等待最多 30 秒完成已提交任务；超时后调用 {@code shutdownNow()} 强制中断。
-     */
-    @PreDestroy
-    public void shutdown() {
-        log.info("[AsyncDocumentParser] Shutting down...");
-        executor.shutdown();
-        try {
-            if (!executor.awaitTermination(30, TimeUnit.SECONDS)) { executor.shutdownNow(); }
-        } catch (InterruptedException e) { executor.shutdownNow(); Thread.currentThread().interrupt(); }
+        log.info("[AsyncDocumentParser] executor={} timeoutMs={}", executor.getClass().getSimpleName(), timeoutMs);
     }
 
     /**
      * 获取当前线程池等待队列中的任务数量。
      *
-     * @return 队列中待执行的任务数；若线程池非 {@link ThreadPoolExecutor} 类型则返回 -1
+     * <p>当注入的 {@link Executor} 不支持队列探测时返回 -1。
+     *
+     * @return 队列中待执行的任务数；不支持时返回 -1
      */
-    public int getQueueSize() { return (executor instanceof ThreadPoolExecutor tpe) ? tpe.getQueue().size() : -1; }
+    public int getQueueSize() {
+        if (executor instanceof org.concurrent.ThreadPoolExecutor tpe) {
+            return tpe.getQueue().size();
+        }
+        // Spring 的 ThreadPoolTaskExecutor 内部包装
+        try {
+            org.springframework.core.task.TaskExecutor taskExecutor = (org.springframework.core.task.TaskExecutor) executor;
+            // 无法直接获取队列大小，返回 -1
+            return -1;
+        } catch (ClassCastException e) {
+            return -1;
+        }
+    }
 
     /**
      * 获取当前线程池中正在执行任务的工作线程数。
      *
-     * @return 活跃线程数；若线程池非 {@link ThreadPoolExecutor} 类型则返回 -1
+     * <p>当注入的 {@link Executor} 不支持活跃数探测时返回 -1。
+     *
+     * @return 活跃线程数；不支持时返回 -1
      */
-    public int getActiveCount() { return (executor instanceof ThreadPoolExecutor tpe) ? tpe.getActiveCount() : -1; }
+    public int getActiveCount() {
+        if (executor instanceof org.concurrent.ThreadPoolExecutor tpe) {
+            return tpe.getActiveCount();
+        }
+        try {
+            org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor taskExecutor =
+                    (org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor) executor;
+            return taskExecutor.getActiveCount();
+        } catch (ClassCastException e) {
+            return -1;
+        }
+    }
+
     /**
      * 异步解析文档。
      *
@@ -99,28 +114,40 @@ public class AsyncDocumentParser {
      * @return 异步解析结果，不会抛出异常（异常会被包装为失败的 {@link DocumentParseResult}）
      */
     public CompletableFuture<DocumentParseResult> parseAsync(InputStream inputStream, String fileName, ParseOptions options) {
-        return CompletableFuture.supplyAsync(() -> {
-            Path tempFile = null;
-            try {
-                tempFile = Files.createTempFile("ydsz-docs-async-", ".tmp");
-                inputStream.transferTo(Files.newOutputStream(tempFile));
-                try (InputStream fis = Files.newInputStream(tempFile)) { return documentService.parse(fis, fileName, options); }
-            } catch (IOException e) {
-                log.error("[AsyncDocumentParser] temp file error: {}", fileName, e);
-                return DocumentParseResult.builder().success(false).errorMessage("IO error: " + e.getMessage()).fileName(fileName).elapsed(Duration.ZERO).build();
-            } finally {
-                if (tempFile != null) {
-                    try {
-                        Files.deleteIfExists(tempFile);
-                    } catch (IOException ignored) {
-                        log.debug("Caught exception (ignored): {}", ignored.getMessage());
+        try {
+            return CompletableFuture.supplyAsync(() -> {
+                try {
+                    var tempFile = tempFileManager.createAndWrite("ydsz-docs-async-", ".tmp", inputStream);
+                    try (InputStream fis = java.nio.file.Files.newInputStream(tempFile)) {
+                        return documentService.parse(fis, fileName, options);
                     }
+                } catch (Exception e) {
+                    log.error("[AsyncDocumentParser] temp file error: {}", fileName, e);
+                    return DocumentParseResult.builder()
+                            .success(false)
+                            .errorMessage("IO error: " + e.getMessage())
+                            .fileName(fileName)
+                            .elapsed(Duration.ZERO)
+                            .build();
                 }
-            }
-        }, executor).orTimeout(timeoutMs, TimeUnit.MILLISECONDS).exceptionally(e -> {
-            log.error("[AsyncDocumentParser] async error: {}", fileName, e);
-            return DocumentParseResult.builder().success(false).errorMessage("timeout or error: " + e.getMessage()).fileName(fileName).elapsed(Duration.ZERO).build();
-        });
+            }, executor).orTimeout(timeoutMs, java.util.concurrent.TimeUnit.MILLISECONDS).exceptionally(e -> {
+                log.error("[AsyncDocumentParser] async error: {}", fileName, e);
+                return DocumentParseResult.builder()
+                        .success(false)
+                        .errorMessage("timeout or error: " + e.getMessage())
+                        .fileName(fileName)
+                        .elapsed(Duration.ZERO)
+                        .build();
+            });
+        } catch (RejectedExecutionException e) {
+            log.warn("[AsyncDocumentParser] 任务被拒绝（队列已满）: {}", fileName);
+            return CompletableFuture.completedFuture(DocumentParseResult.builder()
+                    .success(false)
+                    .errorMessage("async queue full")
+                    .fileName(fileName)
+                    .elapsed(Duration.ZERO)
+                    .build());
+        }
     }
 
     /**
@@ -136,7 +163,9 @@ public class AsyncDocumentParser {
      */
     public CompletableFuture<DocumentParseResult> parseAndPreprocessAsync(InputStream inputStream, String fileName, ParseOptions options) {
         return parseAsync(inputStream, fileName, options).thenApply(result -> {
-            if (result.isSuccess() && result.getContent() != null) { result.setContent(documentService.preprocess(result.getContent())); }
+            if (result.isSuccess() && result.getContent() != null) {
+                result.setContent(documentService.preprocess(result.getContent()));
+            }
             return result;
         });
     }
@@ -144,17 +173,15 @@ public class AsyncDocumentParser {
     /**
      * 批量异步解析文档。
      *
-     * <p>将多个文件并行提交到线程池解析，每批最大提交数量不超过队列容量，
-     * 避免队列积压导致 OOM。
+     * <p>将多个文件并行提交到线程池解析，返回与输入等长的 Future 列表。
+     * 队列溢出时该文件返回失败的 Future 而非截断整批。
      *
      * @param files   待解析文件列表
      * @param options 解析选项
      * @return 各文件的异步解析 Future 列表
      */
     public List<CompletableFuture<DocumentParseResult>> parseBatch(List<BatchFile> files, ParseOptions options) {
-        // 限制每批最大提交数量，避免队列积压
-        int batchSize = Math.min(files.size(), properties.getAsyncQueueCapacity());
-        return files.subList(0, batchSize).stream()
+        return files.stream()
                 .map(f -> parseAsync(f.inputStream(), f.fileName(), options))
                 .toList();
     }

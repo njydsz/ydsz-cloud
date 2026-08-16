@@ -1,7 +1,5 @@
 package com.njydsz.common.socket.session;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -22,10 +20,7 @@ import org.springframework.web.socket.WebSocketSession;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class LocalSessionRegistry implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 1L;
+public class LocalSessionRegistry {
 
     /** sessionId → WebSocketSession */
     private final Map<String, WebSocketSession> sessionMap = new ConcurrentHashMap<>();

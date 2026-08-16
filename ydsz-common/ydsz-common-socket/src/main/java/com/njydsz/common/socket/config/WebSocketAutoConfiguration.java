@@ -105,10 +105,12 @@ public class WebSocketAutoConfiguration {
                 cb.getHalfOpenAfter().toMillis());
     }
 
-    // ==================== P2-5: 审计日志 ====================
+    // ==================== 审计日志 ====================
 
     /**
      * 创建审计日志服务 Bean。
+     *
+     * <p>通过专用 Logger {@code WS_AUDIT} 输出结构化审计日志。
      *
      * @return 审计日志服务实例
      */

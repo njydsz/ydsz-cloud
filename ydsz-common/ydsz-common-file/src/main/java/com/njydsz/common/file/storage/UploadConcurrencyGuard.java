@@ -184,13 +184,13 @@ public class UploadConcurrencyGuard {
         switch (config.getStrategy()) {
             case REJECT:
                 log.warn("[UploadGuard] concurrent upload rejected, key={}", lockKey);
-                throw new BusinessException(FileExceptionCode.UPLOAD_CONCURRENT_CONFLICT);
+                throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
             case WAIT:
                 return waitForLock(lockKey);
             default:
                 // 未知策略，默认拒绝
                 log.warn("[UploadGuard] unknown strategy, rejecting concurrent upload, key={}", lockKey);
-                throw new BusinessException(FileExceptionCode.UPLOAD_CONCURRENT_CONFLICT);
+                throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
         }
     }
 
@@ -222,10 +222,10 @@ public class UploadConcurrencyGuard {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 log.warn("[UploadGuard] interrupted while waiting for lock, key={}", lockKey);
-                throw new BusinessException(FileExceptionCode.UPLOAD_CONCURRENT_CONFLICT);
+                throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
             }
             log.warn("[UploadGuard] wait timeout for lock (common-lock), key={}, timeout={}s", lockKey, MAX_WAIT_SECONDS);
-            throw new BusinessException(FileExceptionCode.UPLOAD_CONCURRENT_CONFLICT);
+            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
         }
 
         // 降级：带随机抖动的指数退避轮询，避免惊群效应
@@ -266,11 +266,11 @@ public class UploadConcurrencyGuard {
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 log.warn("[UploadGuard] interrupted while waiting for lock, key={}", lockKey);
-                throw new BusinessException(FileExceptionCode.UPLOAD_CONCURRENT_CONFLICT);
+                throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
             }
         }
 
         log.warn("[UploadGuard] wait timeout for lock (backoff), key={}, timeout={}s", lockKey, MAX_WAIT_SECONDS);
-        throw new BusinessException(FileExceptionCode.UPLOAD_CONCURRENT_CONFLICT);
+        throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
     }
 }

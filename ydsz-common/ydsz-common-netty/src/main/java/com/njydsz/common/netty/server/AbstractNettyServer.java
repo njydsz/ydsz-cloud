@@ -65,6 +65,18 @@ import com.njydsz.common.netty.transport.NativeTransportDetector;
 @Slf4j
 public abstract class AbstractNettyServer {
 
+    /** 默认 Page 大小（8KB） */
+    private static final int DEFAULT_PAGE_SIZE = 8192;
+
+    /** 默认页拆分阶数（chunkSize = 8KB << 11 = 16MB） */
+    private static final int DEFAULT_MAX_ORDER = 11;
+
+    /** 默认写缓冲区低水位线（32KB） */
+    private static final int DEFAULT_WRITE_BUFFER_LOW_WATER_MARK = 32 * 1024;
+
+    /** 默认写缓冲区高水位线（64KB） */
+    private static final int DEFAULT_WRITE_BUFFER_HIGH_WATER_MARK = 64 * 1024;
+
     static {
         // 强制 Netty 使用 SLF4J 日志门面
         InternalLoggerFactory.setDefaultFactory(Slf4JLoggerFactory.INSTANCE);
@@ -231,8 +243,8 @@ public abstract class AbstractNettyServer {
                     allocConfig.isPreferDirect(),
                     allocConfig.getNumDirectArenas(),
                     0,
-                    allocConfig.getPageSize(),
-                    allocConfig.getMaxOrder());
+                    DEFAULT_PAGE_SIZE,
+                    DEFAULT_MAX_ORDER);
         }
         return new UnpooledByteBufAllocator(allocConfig.isPreferDirect());
     }
@@ -243,10 +255,9 @@ public abstract class AbstractNettyServer {
      * @return WriteBufferWaterMark 实例
      */
     private WriteBufferWaterMark createWriteBufferWaterMark() {
-        NettyProperties.Allocator allocConfig = properties.getAllocator();
         return new WriteBufferWaterMark(
-                allocConfig.getWriteBufferLowWaterMark(),
-                allocConfig.getWriteBufferHighWaterMark());
+                DEFAULT_WRITE_BUFFER_LOW_WATER_MARK,
+                DEFAULT_WRITE_BUFFER_HIGH_WATER_MARK);
     }
 
     /**

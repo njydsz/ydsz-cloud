@@ -328,7 +328,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
     public void makeBucket(String bucketName) {
         String resolvedBucket = resolveBucketName(bucketName);
         if (StringUtils.isBlank(resolvedBucket)) {
-            throw new BusinessException(FileExceptionCode.BUCKET_NOT_FOUND);
+            throw new BusinessException(FileExceptionCode.BUCKET_ERROR);
         }
         if (!bucketExists(resolvedBucket)) {
             doMakeBucket(resolvedBucket);
@@ -392,7 +392,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
         } catch (Exception e) {
             log.error("[Storage] copyObject failed, src={}/{}, dest={}/{}, message={}",
                     resolvedSrcBucket, resolvedSrcObject, resolvedDestBucket, resolvedDestObject, e.getMessage());
-            throw new BusinessException(FileExceptionCode.OBJECT_COPY_FAILED);
+            throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
         }
     }
 
@@ -571,7 +571,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
         } catch (Exception e) {
             log.error("file delete failed, bucket={}, object={}, message={}",
                     resolvedBucket, resolvedObjectName, e.getMessage(), e);
-            throw new BusinessException(FileExceptionCode.FILE_DELETE_FAILED);
+            throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
         }
     }
 
@@ -657,7 +657,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
             } else {
                 log.error("[Storage] file download failed, bucket={}, object={}, message={}",
                         resolvedBucket, resolvedObjectName, e.getMessage(), e);
-                throw new BusinessException(FileExceptionCode.FILE_DOWNLOAD_FAILED);
+                throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
             }
         }
     }
@@ -699,7 +699,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
         } catch (Exception e) {
             log.error("[Storage] downloadAsStream failed, bucket={}, object={}, message={}",
                     resolvedBucket, resolvedObjectName, e.getMessage(), e);
-            throw new BusinessException(FileExceptionCode.FILE_DOWNLOAD_FAILED);
+            throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
         }
     }
 
@@ -793,7 +793,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
 
         MultipartContextStore.MultipartContextData context = multipartContextStore.get(uploadId);
         if (context == null || !resolvedObjectName.equals(context.objectName())) {
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
         }
 
         Set<Integer> uniqueParts = new HashSet<>(partNumbers);
@@ -806,7 +806,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
             boolean found = uploadedParts.stream()
                     .anyMatch(p -> p.partNumber() == partNumber);
             if (!found) {
-                throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+                throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
             }
         }
 
@@ -847,7 +847,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
             chunkedMd5DigestMap.remove(uploadId);
             log.error("[Storage] completeChunkedUpload failed, bucket={}, object={}, message={}",
                     resolvedBucket, resolvedObjectName, e.getMessage(), e);
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
         }
     }
 
@@ -1123,11 +1123,11 @@ public abstract class AbstractFileStorage implements IFileStorage {
      */
     protected void validatePartNumbers(List<Integer> partNumbers) {
         if (partNumbers == null || partNumbers.isEmpty()) {
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
         }
         for (Integer partNumber : partNumbers) {
             if (partNumber == null || partNumber <= 0) {
-                throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+                throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
             }
         }
     }
@@ -1164,7 +1164,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
         try (InputStream emptyStream = new ByteArrayInputStream(new byte[]{})) {
             doPutObject(bucketName, folderName, emptyStream, 0L, "application/directory");
         } catch (Exception e) {
-            throw new BusinessException(FileExceptionCode.FOLDER_CREATE_FAILED);
+            throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
         }
     }
 
@@ -1274,7 +1274,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
             if (listener != null) {
                 listener.onFailure(objectName, e);
             }
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
         }
     }
 

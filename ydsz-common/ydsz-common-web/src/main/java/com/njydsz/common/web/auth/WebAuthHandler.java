@@ -3,7 +3,7 @@ package com.njydsz.common.web.auth;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.auth.handler.AbstractAuthHandler;
-import com.njydsz.common.util.auth.YdszAuthInfo;
+import com.njydsz.common.auth.model.YdszAuthInfo;
 
 /**
  * Web 端认证信息处理器

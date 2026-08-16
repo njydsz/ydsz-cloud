@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import com.njydsz.common.docs.enums.ParseMode;
+import com.njydsz.common.docs.enums.ParseProfile;
 
 /**
  * 文档解析选项
@@ -20,6 +21,10 @@ public class ParseOptions {
     /** 解析模式，默认完整模式 */
     @Builder.Default
     private ParseMode mode = ParseMode.FULL;
+
+    /** 解析输出轮廓，控制返回数据的结构化程度 */
+    @Builder.Default
+    private ParseProfile profile = ParseProfile.STRUCTURED;
 
     /** 最大文件大小（字节），超过则拒绝解析，默认 50MB */
     @Builder.Default

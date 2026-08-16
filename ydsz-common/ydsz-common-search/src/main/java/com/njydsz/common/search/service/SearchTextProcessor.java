@@ -54,13 +54,14 @@ public class SearchTextProcessor {
         stopWords.addAll(DEFAULT_STOP_WORDS);
 
         // 加载同义词词典
-        if (properties.getSynonym().isEnabled()) {
-            loadSynonyms(properties.getSynonym().getFile());
+        if (properties.getTextProcessor().isSynonymEnabled()) {
+            loadSynonyms(properties.getTextProcessor().getSynonymFile());
         }
 
-        // P1-5: 加载拼音词典
-        if (properties.getPinyin().isEnabled() && properties.getPinyin().getFile() != null) {
-            loadPinyinDictionary(properties.getPinyin().getFile());
+        // 加载拼音词典
+        if (properties.getTextProcessor().isPinyinEnabled()
+                && properties.getTextProcessor().getPinyinFile() != null) {
+            loadPinyinDictionary(properties.getTextProcessor().getPinyinFile());
         }
 
         log.info("[SearchTextProcessor] 初始化完成: synonyms={}, stopWords={}, pinyin={}",
@@ -90,12 +91,12 @@ public class SearchTextProcessor {
         }
 
         // 同义词扩展
-        if (properties.getSynonym().isEnabled()) {
+        if (properties.getTextProcessor().isSynonymEnabled()) {
             result = expandSynonyms(result);
         }
 
         // 拼音转换（简单实现：保留原始中文 + 追加拼音）
-        if (properties.getPinyin().isEnabled()) {
+        if (properties.getTextProcessor().isPinyinEnabled()) {
             String pinyin = toPinyin(keyword);
             if (pinyin != null && !pinyin.isBlank() && !pinyin.equals(keyword)) {
                 result = result + " " + pinyin;

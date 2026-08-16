@@ -1,6 +1,6 @@
 package com.njydsz.common.base.auth;
 
-import com.njydsz.common.util.auth.YdszAuthInfo;
+import com.njydsz.common.auth.model.YdszAuthInfo;
 
 /**
  * 认证上下文信息基类（Web/App 共享）

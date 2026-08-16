@@ -75,18 +75,6 @@ public class NettyProperties {
     /** 最大重试次数：-1 表示无限重试 */
     private static final int MAX_RETRIES_UNLIMITED = -1;
 
-    /** 默认 Page 大小（8KB） */
-    private static final int DEFAULT_PAGE_SIZE = 8192;
-
-    /** 默认页拆分阶数（chunkSize = 8KB << 11 = 16MB） */
-    private static final int DEFAULT_MAX_ORDER = 11;
-
-    /** 默认写缓冲区低水位线（32KB） */
-    private static final int DEFAULT_WRITE_BUFFER_LOW_WATER_MARK = 32 * 1024;
-
-    /** 默认写缓冲区高水位线（64KB） */
-    private static final int DEFAULT_WRITE_BUFFER_HIGH_WATER_MARK = 64 * 1024;
-
     /** 默认最大重连延迟（60秒） */
     private static final long DEFAULT_MAX_DELAY_MS = 60000L;
 
@@ -284,22 +272,6 @@ public class NettyProperties {
         /** Direct Arena 数量（0 = 默认，高并发场景建议等于 Worker 线程数） */
         @Min(0)
         private int numDirectArenas = 0;
-
-        /** Page 大小（字节） */
-        @Min(4096)
-        private int pageSize = DEFAULT_PAGE_SIZE;
-
-        /** 页拆分阶数（chunkSize = pageSize << maxOrder） */
-        @Min(0)
-        private int maxOrder = DEFAULT_MAX_ORDER;
-
-        /** 写缓冲区低水位线（字节） */
-        @Min(0)
-        private int writeBufferLowWaterMark = DEFAULT_WRITE_BUFFER_LOW_WATER_MARK;
-
-        /** 写缓冲区高水位线（字节） */
-        @Min(0)
-        private int writeBufferHighWaterMark = DEFAULT_WRITE_BUFFER_HIGH_WATER_MARK;
     }
 
     /**

@@ -12,17 +12,15 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
  * API 版本路由自动配置
  *
  * <p>通过 {@link WebMvcRegistrations} 机制替换默认的 {@link RequestMappingHandlerMapping}，
- * 使用自定义的 {@link ApiVersionRequestMappingHandlerMapping} 支持基于版本的接口路由。
+ * 使用自定义的 {@link ApiVersionRequestMappingHandlerMapping} 支持基于 URL 路径的接口版本路由。
  *
- * <p>配置示例：
+ * <p><b>默认禁用，需显式开启。</b>配置示例：
  * <pre>
  * ydsz:
- *   web:
- *     api-version:
+ *   api:
+ *     version:
  *       enabled: true
- *       default-version: "1.0"
- *       strategy: URL  # URL / HEADER / ACCEPT
- *       validate: true  # 启动时校验 @ApiVersion 注解合法性
+ *       default-version: "1"
  * </pre>
  *
  * @author ydsz-team
@@ -32,7 +30,7 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
  */
 @AutoConfiguration
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
-@ConditionalOnProperty(prefix = "ydsz.web.api-version", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.api.version", name = "enabled", havingValue = "true", matchIfMissing = false)
 @EnableConfigurationProperties(ApiVersionProperties.class)
 public class ApiVersionAutoConfiguration implements WebMvcRegistrations {
 

@@ -44,6 +44,12 @@
             <artifactId>ydsz-common-exception</artifactId>
         </dependency>
 
+        <!-- 公共认证模块（BaseAuthInfo 继承自 auth.model.YdszAuthInfo） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-auth</artifactId>
+        </dependency>
+
         <!-- Micrometer Core（AbstractModuleMetrics 基类需要，optional 按需引入） -->
         <dependency>
             <groupId>io.micrometer</groupId>

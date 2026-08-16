@@ -89,7 +89,7 @@ public class SearchPipeline {
         Builder builder = builder();
         builder.addFilter(new NormalizerFilter());
 
-        if (properties.getSynonym().isEnabled()) {
+        if (properties.getTextProcessor().isSynonymEnabled()) {
             builder.addFilter(new SynonymExpansionFilter(properties));
         }
 

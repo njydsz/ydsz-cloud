@@ -38,8 +38,8 @@ import com.njydsz.common.safe.desensitize.ColumnDesensitizationContext;
 import com.njydsz.common.safe.desensitize.ColumnDesensitizationExecutor;
 import com.njydsz.common.json.JsonMapper;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.util.auth.AuthInfo;
-import com.njydsz.common.util.auth.AuthInfoUtils;
+import com.njydsz.common.auth.model.AuthInfo;
+import com.njydsz.common.auth.context.AuthInfoUtils;
 import com.njydsz.common.util.string.StringUtils;
 
 /**

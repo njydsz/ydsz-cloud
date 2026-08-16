@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.njydsz.common.excel.core.config.ExcelConfig;
+
 /**
  * 读取元数据 - 封装Excel读取配置信息
  *
@@ -29,6 +31,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @since 1.0.0
  */
 public class ReadMetadata {
+
+    /** Excel 全局配置 */
+    private ExcelConfig excelConfig;
 
     /** 映射的目标类类型 */
     private Class<?> clazz;

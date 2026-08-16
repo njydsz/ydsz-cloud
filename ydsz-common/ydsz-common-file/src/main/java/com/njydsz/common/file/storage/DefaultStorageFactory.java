@@ -204,7 +204,7 @@ public class DefaultStorageFactory implements IFileStorageProvider {
     @Override
     public IFileStorage getStorage() {
         String storageType = serverProperties.getType();
-        if (storageType == null || storageType.isBlank()) throw new BusinessException(FileExceptionCode.STORAGE_CONFIG_INVALID);
+        if (storageType == null || storageType.isBlank()) throw new BusinessException(FileExceptionCode.CONFIG_INVALID);
         return storageCache.computeIfAbsent(storageType, this::createStorage);
     }
 
@@ -240,7 +240,7 @@ public class DefaultStorageFactory implements IFileStorageProvider {
             case "cos": case "tencent-cos": storage = new CosStorage(serverProperties, fileUploadProperties); break;
             case "obs": case "huawei-obs": storage = new ObsStorage(serverProperties, fileUploadProperties); break;
             case "qiniu": storage = new QiniuStorage(serverProperties, fileUploadProperties); break;
-            default: throw new BusinessException(FileExceptionCode.STORAGE_CONFIG_INVALID);
+            default: throw new BusinessException(FileExceptionCode.CONFIG_INVALID);
         }
         return inject(storage);
     }

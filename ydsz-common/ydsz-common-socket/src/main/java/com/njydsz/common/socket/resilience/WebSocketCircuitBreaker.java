@@ -2,13 +2,12 @@ package com.njydsz.common.socket.resilience;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * WebSocket 模块轻量级熔断器（P0-2）。
+ * WebSocket 模块轻量级熔断器。
  *
  * <p>基于滑动窗口失败率统计，达到阈值后触发熔断。
  * 使用 {@link AtomicReference} + CAS 确保线程安全，
@@ -48,7 +47,6 @@ public class WebSocketCircuitBreaker {
     private final double failureRateThreshold;
     private final int slidingWindowSize;
     private final long halfOpenAfterMillis;
-    private final Consumer<CircuitBreakerEvent> eventConsumer;
 
     private final AtomicReference<State> state = new AtomicReference<>(State.CLOSED);
     private final AtomicInteger failureCount = new AtomicInteger(0);
@@ -57,35 +55,12 @@ public class WebSocketCircuitBreaker {
 
     public WebSocketCircuitBreaker(String name, double failureRateThreshold,
                                   int slidingWindowSize, long halfOpenAfterMillis) {
-        this(name, failureRateThreshold, slidingWindowSize, halfOpenAfterMillis, null);
-    }
-
-    public WebSocketCircuitBreaker(String name, double failureRateThreshold,
-                                  int slidingWindowSize, long halfOpenAfterMillis,
-                                  Consumer<CircuitBreakerEvent> eventConsumer) {
         this.name = name;
         this.failureRateThreshold = failureRateThreshold;
         this.slidingWindowSize = slidingWindowSize;
         this.halfOpenAfterMillis = halfOpenAfterMillis;
-        this.eventConsumer = eventConsumer;
         log.info("[WS-CircuitBreaker] '{}' 初始化: threshold={}, window={}, halfOpenAfter={}ms",
                 name, failureRateThreshold, slidingWindowSize, halfOpenAfterMillis);
-    }
-
-    /**
-     * 触发状态变更事件。
-     *
-     * @param from 原状态
-     * @param to   目标状态
-     */
-    private void fireEvent(State from, State to) {
-        if (eventConsumer != null && from != to) {
-            try {
-                eventConsumer.accept(CircuitBreakerEvent.of(name, from, to));
-            } catch (Exception e) {
-                log.warn("[WS-CircuitBreaker] 事件消费异常: {}", e.getMessage());
-            }
-        }
     }
 
     /**
@@ -113,6 +88,9 @@ public class WebSocketCircuitBreaker {
 
     /**
      * 执行无返回值操作。
+     *
+     * @param operation 受保护操作
+     * @param fallback  降级操作
      */
     public void execute(Runnable operation, Runnable fallback) {
         if (!tryAcquire()) {
@@ -142,7 +120,6 @@ public class WebSocketCircuitBreaker {
             long elapsed = System.currentTimeMillis() - lastFailureTime;
             if (elapsed >= halfOpenAfterMillis) {
                 if (state.compareAndSet(State.OPEN, State.HALF_OPEN)) {
-                    fireEvent(State.OPEN, State.HALF_OPEN);
                     log.info("[WS-CircuitBreaker] '{}' 进入半开状态", name);
                     return true;
                 }
@@ -155,10 +132,9 @@ public class WebSocketCircuitBreaker {
 
     private void onSuccess() {
         if (state.get() == State.HALF_OPEN) {
-            State previous = state.getAndSet(State.CLOSED);
+            state.set(State.CLOSED);
             failureCount.set(0);
             totalCount.set(0);
-            fireEvent(previous, State.CLOSED);
             log.info("[WS-CircuitBreaker] '{}' 半开探测成功, 恢复 CLOSED", name);
         } else {
             totalCount.incrementAndGet();
@@ -169,8 +145,7 @@ public class WebSocketCircuitBreaker {
     private void onFailure() {
         lastFailureTime = System.currentTimeMillis();
         if (state.get() == State.HALF_OPEN) {
-            State previous = state.getAndSet(State.OPEN);
-            fireEvent(previous, State.OPEN);
+            state.set(State.OPEN);
             log.warn("[WS-CircuitBreaker] '{}' 半开探测失败, 恢复 OPEN", name);
         } else {
             failureCount.incrementAndGet();
@@ -185,8 +160,7 @@ public class WebSocketCircuitBreaker {
             int failures = failureCount.get();
             double rate = (double) failures / total;
             if (rate >= failureRateThreshold) {
-                State previous = state.getAndSet(State.OPEN);
-                fireEvent(previous, State.OPEN);
+                state.set(State.OPEN);
                 log.warn("[WS-CircuitBreaker] '{}' 失败率 {}/{}={} 超过阈值 {}, 触发熔断",
                         name, failures, total, rate, failureRateThreshold);
             }
