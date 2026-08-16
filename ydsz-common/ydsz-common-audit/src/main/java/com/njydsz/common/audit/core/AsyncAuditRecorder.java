@@ -61,6 +61,9 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
   /** 告警日志节流间隔（毫秒），避免频繁刷日志 */
   private static final long WARN_LOG_THROTTLE_MS = 10_000L;
 
+  /** 队列使用率告警阈值（80%），超过则健康检查降级 */
+  private static final double QUEUE_USAGE_WARN_THRESHOLD = 0.8;
+
   /** 异步缓冲队列，有界队列支持背压控制 */
   private final BlockingQueue<AuditLog> queue;
 

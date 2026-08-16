@@ -89,12 +89,16 @@ public class PasswordPolicyValidator {
    */
   private void validateLength(String password, int minLength, int maxLength) {
     if (password == null || password.length() < minLength) {
-      throw new BusinessException(
-          UserInfoExceptionCode.PASSWORD_TOO_WEAK, new Object[] {"密码长度不能少于 " + minLength + " 个字符"});
+      throw BusinessException.builder()
+          .resultCode(UserInfoExceptionCode.PASSWORD_TOO_WEAK)
+          .message("密码长度不能少于 " + minLength + " 个字符")
+          .build();
     }
     if (password.length() > maxLength) {
-      throw new BusinessException(
-          UserInfoExceptionCode.PASSWORD_TOO_WEAK, new Object[] {"密码长度不能超过 " + maxLength + " 个字符"});
+      throw BusinessException.builder()
+          .resultCode(UserInfoExceptionCode.PASSWORD_TOO_WEAK)
+          .message("密码长度不能超过 " + maxLength + " 个字符")
+          .build();
     }
   }
 
@@ -108,9 +112,10 @@ public class PasswordPolicyValidator {
   private void validateCharacterCategories(String password, int minCategoryCount) {
     int categoryCount = countCharacterCategories(password);
     if (categoryCount < minCategoryCount) {
-      throw new BusinessException(
-          UserInfoExceptionCode.PASSWORD_TOO_WEAK,
-          "密码必须包含大写字母、小写字母、数字、特殊字符中的至少 " + minCategoryCount + " 种");
+      throw BusinessException.builder()
+          .resultCode(UserInfoExceptionCode.PASSWORD_TOO_WEAK)
+          .message("密码必须包含大写字母、小写字母、数字、特殊字符中的至少 " + minCategoryCount + " 种")
+          .build();
     }
   }
 
@@ -122,7 +127,10 @@ public class PasswordPolicyValidator {
    */
   private void validateNoRepeatChars(String password) {
     if (REPEAT_3.matcher(password).find()) {
-      throw new BusinessException(UserInfoExceptionCode.PASSWORD_TOO_WEAK, "密码不允许连续 3 个以上重复字符");
+      throw BusinessException.builder()
+          .resultCode(UserInfoExceptionCode.PASSWORD_TOO_WEAK)
+          .message("密码不允许连续 3 个以上重复字符")
+          .build();
     }
   }
 
@@ -136,7 +144,10 @@ public class PasswordPolicyValidator {
   private void validateNotContainUsername(String password, String username) {
     if (username != null && !username.isBlank()) {
       if (password.toLowerCase().contains(username.toLowerCase())) {
-        throw new BusinessException(UserInfoExceptionCode.PASSWORD_TOO_WEAK, "密码不能包含用户名");
+        throw BusinessException.builder()
+            .resultCode(UserInfoExceptionCode.PASSWORD_TOO_WEAK)
+            .message("密码不能包含用户名")
+            .build();
       }
     }
   }
@@ -157,8 +168,10 @@ public class PasswordPolicyValidator {
     int historyCount = properties.getPasswordHistoryCount();
     if (historyCount > 0
         && passwordHistoryService.isPasswordReused(userId, password, historyCount)) {
-      throw new BusinessException(
-          UserInfoExceptionCode.PASSWORD_REUSED, "不能使用最近 " + historyCount + " 次使用过的密码");
+      throw BusinessException.builder()
+          .resultCode(UserInfoExceptionCode.PASSWORD_REUSED)
+          .message("不能使用最近 " + historyCount + " 次使用过的密码")
+          .build();
     }
   }
 

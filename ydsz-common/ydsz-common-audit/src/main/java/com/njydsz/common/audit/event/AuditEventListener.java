@@ -144,7 +144,7 @@ public class AuditEventListener {
     auditLog.setAction(resolveActionCode(event.getAction()));
 
     // 业务关联
-    auditLog.setBusinessNo(event.getBizId());
+    auditLog.setBusinessNo(event.getBizType());
 
     // 请求上下文
     auditLog.setIpAddress(event.getClientIp());
@@ -189,7 +189,7 @@ public class AuditEventListener {
 
     auditLog.setAuditType(AuditType.OPERATION.getCode());
     auditLog.setAction(AuditAction.EXPORT.getCode());
-    auditLog.setBusinessNo(event.getBizId());
+    auditLog.setBusinessNo(event.getBizType());
 
     auditLog.setIpAddress(event.getClientIp());
     auditLog.setStatus(AuditStatus.SUCCESS.getCode());
