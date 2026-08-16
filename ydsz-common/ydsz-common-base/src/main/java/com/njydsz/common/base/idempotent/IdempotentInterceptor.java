@@ -1,5 +1,6 @@
 package com.njydsz.common.base.idempotent;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,7 +36,14 @@ import com.njydsz.common.core.response.BaseResponse;
  */
 public class IdempotentInterceptor implements HandlerInterceptor {
 
-    private static final Logger log = LoggerFactory.getLogger(IdempotentInterceptor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(IdempotentInterceptor.class);
+
+    /**
+     * HTTP 429 Too Many Requests
+     *
+     * <p>Jakarta Servlet API 未提供 {@code SC_TOO_MANY_REQUESTS} 常量，直接使用标准状态码值。
+     */
+    private static final int HTTP_TOO_MANY_REQUESTS = 429;
 
     private final IdempotentStore idempotentStore;
     private final ConcurrentHashMap<AnnotatedElementKey, Expression> expressionCache = new ConcurrentHashMap<>();
@@ -46,7 +54,7 @@ public class IdempotentInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response,
-                             Object handler) throws Exception {
+                             Object handler) throws IOException {
         if (!(handler instanceof HandlerMethod handlerMethod)) {
             return true;
         }
@@ -56,21 +64,24 @@ public class IdempotentInterceptor implements HandlerInterceptor {
             return true;
         }
 
-        String key = buildKey(request, handlerMethod, idempotent);
+        String generatedKey = key(request, handlerMethod, idempotent);
         Duration expire = Duration.ofMillis(idempotent.timeUnit().toMillis(idempotent.expire()));
 
-        if (idempotentStore.tryAcquire(key, expire)) {
+        if (idempotentStore.tryAcquire(generatedKey, expire)) {
             return true;
         }
 
         // 幂等键已存在，拒绝重复请求
-        log.debug("幂等性校验拒绝重复请求 | key={} | uri={}", key, request.getRequestURI());
+        LOG.debug("幂等性校验拒绝重复请求 | key={} | uri={}", generatedKey, request.getRequestURI());
         rejectRequest(response, idempotent.message());
         return false;
     }
 
     /**
      * 查找方法上的 @Idempotent 注解（优先方法级，其次类级）。
+     *
+     * @param handlerMethod 处理方法
+     * @return 幂等注解，未找到返回 null
      */
     private Idempotent findIdempotentAnnotation(HandlerMethod handlerMethod) {
         Method method = handlerMethod.getMethod();
@@ -84,6 +95,11 @@ public class IdempotentInterceptor implements HandlerInterceptor {
 
     /**
      * 构建幂等键。
+     *
+     * @param request        HTTP 请求
+     * @param handlerMethod  处理方法
+     * @param idempotent     幂等注解
+     * @return 生成的幂等键字符串
      */
     private String key(HttpServletRequest request, HandlerMethod handlerMethod,
                        Idempotent idempotent) {
@@ -95,7 +111,7 @@ public class IdempotentInterceptor implements HandlerInterceptor {
             try {
                 resolvedKey = parseSpel(spelKey, handlerMethod);
             } catch (Exception e) {
-                log.warn("SpEL 解析失败，使用方法签名作为幂等键 | spel={}", spelKey, e);
+                LOG.warn("SpEL 解析失败，使用方法签名作为幂等键 | spel={}", spelKey, e);
                 resolvedKey = defaultKey(handlerMethod);
             }
         } else {
@@ -107,6 +123,9 @@ public class IdempotentInterceptor implements HandlerInterceptor {
 
     /**
      * 默认幂等键：方法签名。
+     *
+     * @param handlerMethod 处理方法
+     * @return 方法签名形式的幂等键
      */
     private String defaultKey(HandlerMethod handlerMethod) {
         return handlerMethod.getBeanType().getName() + "#" + handlerMethod.getMethod().getName();
@@ -114,6 +133,10 @@ public class IdempotentInterceptor implements HandlerInterceptor {
 
     /**
      * 解析 SpEL 表达式（简化实现，仅支持 #paramName 和 #paramName.field）。
+     *
+     * @param spel           SpEL 表达式字符串
+     * @param handlerMethod  处理方法
+     * @return 解析后的键值
      */
     private String parseSpel(String spel, HandlerMethod handlerMethod) {
         // 简化实现：直接从 request 属性或参数中提取
@@ -131,6 +154,10 @@ public class IdempotentInterceptor implements HandlerInterceptor {
 
     /**
      * 从请求参数中提取值。
+     *
+     * @param expression    参数表达式
+     * @param handlerMethod 处理方法
+     * @return 提取的值，未找到返回 null
      */
     private String extractFromRequest(String expression, HandlerMethod handlerMethod) {
         // 简化实现：提取参数名并尝试从请求属性获取
@@ -140,9 +167,13 @@ public class IdempotentInterceptor implements HandlerInterceptor {
 
     /**
      * 拒绝重复请求。
+     *
+     * @param response HTTP 响应
+     * @param message  错误提示信息
+     * @throws IOException 如果写入响应失败
      */
-    private void rejectRequest(HttpServletResponse response, String message) throws Exception {
-        response.setStatus(HttpServletResponse.SC_TOO_MANY_REQUESTS);
+    private void rejectRequest(HttpServletResponse response, String message) throws IOException {
+        response.setStatus(HTTP_TOO_MANY_REQUESTS);
         response.setContentType("application/json;charset=UTF-8");
         BaseResponse<?> body = BaseResponse.error("IDEMPOTENT_REJECT", message);
         response.getWriter().write(body.toString());

@@ -108,10 +108,22 @@ public class RateLimitInterceptor implements HandlerInterceptor {
     /**
      * 拒绝限流请求。
      */
+    /**
+     * HTTP 429 Too Many Requests
+     *
+     * <p>Jakarta Servlet API 未提供 {@code SC_TOO_MANY_REQUESTS} 常量，直接使用标准状态码值。
+     */
+    private static final int HTTP_TOO_MANY_REQUESTS = 429;
+
+    /**
+     * 建议客户端等待的秒数（Retry-After 头）。
+     */
+    private static final String RETRY_AFTER_SECONDS = "1";
+
     private void rejectRequest(HttpServletResponse response, String message) throws Exception {
-        response.setStatus(HttpServletResponse.SC_TOO_MANY_REQUESTS);
+        response.setStatus(HTTP_TOO_MANY_REQUESTS);
         response.setContentType("application/json;charset=UTF-8");
-        response.setHeader("Retry-After", "1");
+        response.setHeader("Retry-After", RETRY_AFTER_SECONDS);
         BaseResponse<?> body = BaseResponse.error("RATE_LIMIT_REJECT", message);
         response.getWriter().write(body.toString());
     }

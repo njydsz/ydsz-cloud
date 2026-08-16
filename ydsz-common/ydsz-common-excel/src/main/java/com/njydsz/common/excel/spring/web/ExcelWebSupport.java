@@ -101,13 +101,9 @@ public class ExcelWebSupport {
                         "Excel 下载写入失败: " + fullFileName, e);
                 }
             });
-        } catch (IOException | ExcelWriteException e) {
+        } catch (ExcelWriteException e) {
             log.error("Excel 下载写入失败: fileName={}", fileName, e);
-            if (e instanceof ExcelWriteException) {
-                throw (ExcelWriteException) e;
-            }
-            throw new ExcelWriteException(ExcelExceptionCode.WRITE_IO_ERROR,
-                "Excel 下载写入失败: " + fileName, e);
+            throw e;
         }
     }
 }

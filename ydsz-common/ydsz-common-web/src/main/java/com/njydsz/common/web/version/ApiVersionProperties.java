@@ -100,3 +100,5 @@ public class ApiVersionProperties {
      * @since 1.0.0
      */
     private boolean flexibleMatching = false;
+
+}

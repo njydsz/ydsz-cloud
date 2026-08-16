@@ -51,9 +51,9 @@ public class PdfDocumentParser implements DocumentParser {
      * 这是应对大 PDF 的关键手段。临时文件在 {@code finally} 中必删，
      * 删除失败仅静默忽略（交由操作系统临时目录清理策略兜底），不影响解析结果。
      *
-     * <p><b>逐页而非整篇抽取：</b>为每页单独设置 {@link PDFTextStripper} 的起止页，
-     * 目的是让每段文本都能携带准确的 {@code pageNumber}，
-     * 供后续 PII 定位、安全审计精确回溯到具体页码。代价是文本抽取要跑 N 遍页面遍历。
+     * <p><b>单次全量抽取 + 换页符分割：</b>一次性调用 {@link PDFTextStripper#getText} 抽取全部文本，
+     * 再按 PDFBox 输出的换页符 {@code \f} 分割为各页内容，使每段文本仍携带准确的 {@code pageNumber}，
+     * 供后续 PII 定位、安全审计精确回溯到具体页码。相比逐页遍历，性能从 O(N) 抽取降至 O(1) 抽取。
      *
      * <p><b>加密文档快速失败：</b>检测到加密立即抛出，不尝试空密码解密。
      * 因为静默解密可能绕过文档所有者设定的访问控制，属于安全风险。
@@ -102,22 +102,24 @@ public class PdfDocumentParser implements DocumentParser {
             }
 
             PDFTextStripper stripper = new PDFTextStripper();
+            stripper.setStartPage(1);
+            stripper.setEndPage(pageCount);
 
+            String fullText = stripper.getText(document);
+
+            // 单次全量抽取后按换页符 \f 分割，保留页码信息（O(1) 抽取替代 O(N) 遍历）
             List<DocumentSection> sections = new ArrayList<>();
-            StringBuilder fullText = new StringBuilder();
-
-            for (int i = 0; i < pageCount; i++) {
-                stripper.setStartPage(i + 1);
-                stripper.setEndPage(i + 1);
-                String pageText = stripper.getText(document);
-
-                if (pageText != null && !pageText.isBlank()) {
-                    sections.add(DocumentSection.builder()
-                            .type("paragraph")
-                            .content(pageText.trim())
-                            .pageNumber(i + 1)
-                            .build());
-                    fullText.append(pageText);
+            if (fullText != null && !fullText.isEmpty()) {
+                String[] pageTexts = fullText.split("\f", -1);
+                for (int i = 0; i < pageTexts.length && i < pageCount; i++) {
+                    String pageText = pageTexts[i];
+                    if (pageText != null && !pageText.isBlank()) {
+                        sections.add(DocumentSection.builder()
+                                .type("paragraph")
+                                .content(pageText.trim())
+                                .pageNumber(i + 1)
+                                .build());
+                    }
                 }
             }
 

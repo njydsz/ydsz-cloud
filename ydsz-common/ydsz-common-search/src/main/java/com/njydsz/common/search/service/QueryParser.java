@@ -32,8 +32,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class QueryParser {
 
+    // 使用 Unicode 单词字符类别，支持中文/日文/韩文等字段名（如「状态:进行中」）
     private static final Pattern FIELD_VALUE_PATTERN =
-            Pattern.compile("(\\w+):(?:(\"[^\"]+\")|(\\S+))");
+            Pattern.compile("(\\p{L}+(?:[_]\\p{L}+)*):(?:(\"[^\"]+\")|(\\S+))");
 
     /**
      * 解析查询语句，提取结构化条件

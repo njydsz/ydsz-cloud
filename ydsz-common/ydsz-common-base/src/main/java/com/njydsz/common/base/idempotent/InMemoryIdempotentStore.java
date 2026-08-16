@@ -2,9 +2,7 @@ package com.njydsz.common.base.idempotent;
 
 import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +12,9 @@ import org.slf4j.LoggerFactory;
  *
  * <p>单节点部署时作为 Redis 不可用时的降级实现。
  *
+ * <p>采用懒清理策略：每次调用 {@link #tryAcquire} 时基于计数器触发清理，
+ * 无需独立调度线程，简化资源管理。
+ *
  * <p><b>注意：</b>此实现仅适用于单节点部署，分布式环境请使用 Redis 实现。
  *
  * @author ydsz-team
@@ -21,21 +22,17 @@ import org.slf4j.LoggerFactory;
  */
 public class InMemoryIdempotentStore implements IdempotentStore {
 
-    private static final Logger log = LoggerFactory.getLogger(InMemoryIdempotentStore.class);
+    private static final Logger LOG = LoggerFactory.getLogger(InMemoryIdempotentStore.class);
+
+    /**
+     * 触发一次过期键清理的调用间隔。
+     * <p>每 N 次 tryAcquire 调用触发一次全量扫描清理过期键。
+     */
+    private static final int CLEANUP_INTERVAL = 1000;
 
     private final ConcurrentHashMap<String, Long> expireMap = new ConcurrentHashMap<>();
 
-    private final ScheduledExecutorService cleanupScheduler =
-            Executors.newSingleThreadScheduledExecutor(r -> {
-                Thread t = new Thread(r, "idempotent-cleanup");
-                t.setDaemon(true);
-                return t;
-            });
-
-    public InMemoryIdempotentStore() {
-        // 启动定时清理任务，每 30 秒清理过期键
-        cleanupScheduler.scheduleWithFixedDelay(this::cleanup, 30, 30, TimeUnit.SECONDS);
-    }
+    private final AtomicLong callCounter = new AtomicLong(0);
 
     @Override
     public boolean tryAcquire(String key, Duration expire) {
@@ -45,12 +42,14 @@ public class InMemoryIdempotentStore implements IdempotentStore {
         long expireAt = System.currentTimeMillis() + expire.toMillis();
         Long previous = expireMap.putIfAbsent(key, expireAt);
         if (previous == null) {
+            tryCleanup();
             return true;
         }
         // 检查已存在的键是否已过期
         if (previous < System.currentTimeMillis()) {
             // 已过期，尝试替换
             if (expireMap.replace(key, previous, expireAt)) {
+                tryCleanup();
                 return true;
             }
         }
@@ -74,17 +73,22 @@ public class InMemoryIdempotentStore implements IdempotentStore {
     }
 
     /**
-     * 关闭清理调度器。
+     * 尝试触发清理：每 {@value #CLEANUP_INTERVAL} 次调用执行一次过期键回收。
      */
-    public void shutdown() {
-        cleanupScheduler.shutdownNow();
+    private void tryCleanup() {
+        if (callCounter.incrementAndGet() % CLEANUP_INTERVAL == 0) {
+            cleanup();
+        }
     }
 
+    /**
+     * 清理所有过期的幂等键。
+     */
     private void cleanup() {
         long now = System.currentTimeMillis();
         expireMap.entrySet().removeIf(entry -> entry.getValue() < now);
-        if (log.isDebugEnabled()) {
-            log.debug("幂等键清理完成，剩余 {} 个键", expireMap.size());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("幂等键清理完成，剩余 {} 个键", expireMap.size());
         }
     }
 }
