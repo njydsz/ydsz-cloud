@@ -95,7 +95,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * <p>非 null 且已注册 provider 时，引擎在评估前调用
      * {@link ModelInputRegistry#collectAllModelOutputs} 获取模型输出，
      * 合并到 {@link RuleContext} 的 facts 中（嵌套在 "model" key 下），
-     * 使规则表达式可通过 {@code model.<field>} 引用（如 {@code model.riskScore > 0.8}）。
+     * 使规则表达式可通过 {@code model.<field>} 引用（如 {@code model.score > 0.8}）。
      * 默认 null（向后兼容，不影响现有评估）。
      */
     private volatile ModelInputRegistry modelInputRegistry;
@@ -527,9 +527,9 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      * <p>当 {@link #modelInputRegistry} 非 null 且已注册 provider 时：
      * <ol>
      *   <li>调用 {@link ModelInputRegistry#collectAllModelOutputs} 获取模型输出
-     *       （key 带 "model." 前缀，如 "model.riskScore"）</li>
-     *   <li>将扁平 key 转换为嵌套结构 {@code {"model": {"riskScore": ..., ...}}}，
-     *       以兼容 LiteExpr 表达式 {@code model.riskScore} 的属性访问语法</li>
+     *       （key 带 "model." 前缀，如 "model.score"）</li>
+     *   <li>将扁平 key 转换为嵌套结构 {@code {"model": {"score": ..., ...}}}，
+     *       以兼容 LiteExpr 表达式 {@code model.score} 的属性访问语法</li>
      *   <li>合并到 facts 中，构建新的 {@link RuleContext}（保留原 scenario/source/traceId/tenantId/environment）</li>
      * </ol>
      *
@@ -564,7 +564,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
             }
             return context;
         }
-        // 扁平 key（"model.riskScore"）转换为嵌套结构（{"model": {"riskScore": ...}}）
+        // 扁平 key（"model.score"）转换为嵌套结构（{"model": {"score": ...}}）
         Map<String, Object> nestedModel = new LinkedHashMap<>();
         for (Map.Entry<String, Object> entry : modelOutputs.entrySet()) {
             String key = entry.getKey();

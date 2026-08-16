@@ -1,6 +1,10 @@
 package com.njydsz.common.json.annotation;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * Jackson 兼容注解：标记 getter 方法为 JSON 序列化属性。

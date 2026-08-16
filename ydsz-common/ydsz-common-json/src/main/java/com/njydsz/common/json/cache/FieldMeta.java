@@ -3,6 +3,7 @@ package com.njydsz.common.json.cache;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -18,7 +19,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.lang.reflect.Array;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -378,8 +378,12 @@ public final class FieldMeta {
      */
     private static int computeSerializeTypeCode(Class<?> type) {
         Integer code = SERIALIZE_TYPE_CODE_MAP.get(type);
-        if (code != null) return code;
-        if (type.isEnum()) return TYPE_CODE_BEAN;
+        if (code != null) {
+            return code;
+        }
+        if (type.isEnum()) {
+            return TYPE_CODE_BEAN;
+        }
         return TYPE_CODE_DEFAULT;
     }
 
@@ -391,8 +395,12 @@ public final class FieldMeta {
      */
     private static FieldTypeCode computeFieldTypeCode(Class<?> type) {
         FieldTypeCode code = FIELD_TYPE_CODE_MAP.get(type);
-        if (code != null) return code;
-        if (type.isEnum()) return FieldTypeCode.STRING;
+        if (code != null) {
+            return code;
+        }
+        if (type.isEnum()) {
+            return FieldTypeCode.STRING;
+        }
         return FieldTypeCode.NESTED_OBJECT;
     }
 
@@ -664,7 +672,9 @@ JsonSerializationException.SERIALIZATION_ERROR,
      * @return 格式化后的日期字符串，若值为 null 返回 null
      */
     public String formatDateValue(Object value) {
-        if (value == null) return null;
+        if (value == null) {
+            return null;
+        }
         // P2-1: 使用缓存的 DateTimeFormatter，避免每次 ofPattern 编译
         if (cachedFormatter == null) {
             return value.toString();
@@ -692,7 +702,9 @@ JsonSerializationException.SERIALIZATION_ERROR,
      * @return 解析后的日期对象，若解析失败返回原始字符串
      */
     public Object parseDateValue(String json) {
-        if (json == null || json.equals("null")) return null;
+        if (json == null || json.equals("null")) {
+            return null;
+        }
         // P2-1: 使用缓存的 DateTimeFormatter，避免每次 ofPattern 编译
         if (cachedFormatter == null) {
             return json;
@@ -750,10 +762,18 @@ JsonSerializationException.SERIALIZATION_ERROR,
      * @return 若值为空返回 true
      */
     private boolean isEmptyValue(Object value) {
-        if (value instanceof String s) return s.isEmpty();
-        if (value instanceof Collection<?> c) return c.isEmpty();
-        if (value instanceof Map<?, ?> m) return m.isEmpty();
-        if (value.getClass().isArray()) return Array.getLength(value) == 0;
+        if (value instanceof String s) {
+            return s.isEmpty();
+        }
+        if (value instanceof Collection<?> c) {
+            return c.isEmpty();
+        }
+        if (value instanceof Map<?, ?> m) {
+            return m.isEmpty();
+        }
+        if (value.getClass().isArray()) {
+            return Array.getLength(value) == 0;
+        }
         return false;
     }
 
@@ -764,8 +784,12 @@ JsonSerializationException.SERIALIZATION_ERROR,
      * @return 若值为默认值返回 true
      */
     private boolean isDefaultValue(Object value) {
-        if (value instanceof Number n && n.doubleValue() == 0.0) return true;
-        if (value instanceof Boolean b && !b) return true;
+        if (value instanceof Number n && n.doubleValue() == 0.0) {
+            return true;
+        }
+        if (value instanceof Boolean b && !b) {
+            return true;
+        }
         return false;
     }
 

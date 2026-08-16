@@ -3,6 +3,9 @@ package com.njydsz.common.json.provider;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import com.njydsz.common.json.annotation.JsonView;
 import com.njydsz.common.json.cache.FieldMeta;
 import com.njydsz.common.json.cache.SerializerCache;
@@ -169,8 +172,7 @@ public final class ValueFormatter {
                 return;
             }
             fields = filteredFields.toArray(new FieldMeta[0]);
-        }
-
+                }
         sb.append("{\n");
         boolean first = true;
         for (FieldMeta field : fields) {

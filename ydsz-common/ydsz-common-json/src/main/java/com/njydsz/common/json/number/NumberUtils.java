@@ -139,7 +139,7 @@ public final class NumberUtils {
 
         while (value > 0) {
             long q = value / 10;
-            int r = (int)(value - q * 10);
+            int r = (int) (value - q * 10);
             value = q;
             buf[charPos--] = DIGITS[r];
         }

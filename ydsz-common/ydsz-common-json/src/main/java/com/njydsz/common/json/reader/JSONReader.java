@@ -1105,7 +1105,8 @@ public final class JSONReader {
         char ch = buf[pos];
         while (ch <= ' ') { pos++; if (pos >= len) return null; ch = buf[pos]; }
         if (ch == '}') { pos++; return null; }
-        if (ch == ',') { pos++; while (pos < len) { ch = buf[pos]; if (ch == '"') break; pos++; } }\n        if (pos >= len || buf[pos] != '"') return null;
+        if (ch == ',') { pos++; while (pos < len) { ch = buf[pos]; if (ch == '"') break; pos++; } }
+        if (pos >= len || buf[pos] != '"') return null;
         String name = readString();
         // 消费冒号（含前置空白）
         while (pos < len && buf[pos] <= ' ') pos++;
@@ -1122,7 +1123,8 @@ public final class JSONReader {
         char ch = buf[pos];
         while (ch <= ' ') { pos++; if (pos >= len) return -1; ch = buf[pos]; }
         if (ch == '}') { pos++; return 0; }
-        if (ch == ',') { pos++; while (pos < len) { ch = buf[pos]; if (ch == '"') break; pos++; } }\n        if (pos >= len || buf[pos] != '"') return -1;
+        if (ch == ',') { pos++; while (pos < len) { ch = buf[pos]; if (ch == '"') break; pos++; } }
+        if (pos >= len || buf[pos] != '"') return -1;
         pos++;
         long hash = 0x811c9dc5;
         while (pos < len) {
@@ -1182,7 +1184,10 @@ public final class JSONReader {
                 char ch2 = buf[pos];
                 if (ch2 == '[') depth++;
                 else if (ch2 == ']') depth--;
-                else if (ch2 == '"') { skipStringValue(); continue; }\n                pos++;\n            }\n        } else if (ch == '"') { readString(); }
+                else if (ch2 == '"') { skipStringValue(); continue; }
+                pos++;
+            }
+        } else if (ch == '"') { readString(); }
         else if (ch == 't') pos += 4;
         else if (ch == 'f') pos += 5;
         else if (ch == 'n') pos += 4;

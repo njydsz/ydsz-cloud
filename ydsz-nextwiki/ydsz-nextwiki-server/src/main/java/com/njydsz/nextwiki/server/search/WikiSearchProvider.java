@@ -68,11 +68,18 @@ public class WikiSearchProvider implements SearchProvider<FileNode> {
             log.debug("[WikiSearchProvider] 加载标签失败: nodeId={}", node.getId(), e);
         }
 
+        // 填充全文内容：优先使用内存传递的提取内容（searchableContent），
+        // 否则仅索引元数据（文件名/路径/标签）。
+        // searchableContent 由 ContentExtractionApplicationService 解析后设置在 FileNode 上，
+        // 仅在索引同步流程中有效，不持久化到数据库。
+        String content = node.getSearchableContent();
+
         return IndexDocument.builder()
                 .id(node.getId())
                 .type("wiki")
                 .title(node.getName())
                 .subtitle(node.getPath())
+                .content(content)
                 .snippet(node.getPath())
                 .tags(tagNames)
                 .status(node.getShareStatus())

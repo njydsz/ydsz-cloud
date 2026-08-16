@@ -27,7 +27,7 @@ import lombok.NoArgsConstructor;
  * chains:
  *   - name: RISK_CHAIN
  *     type: THEN
- *     steps: [EVM_RED_ALERT, CREDIT_SCORE]
+ *     steps: [EVM_RED_ALERT, SCORECARD_DEMO]
  *
  *   - name: PARALLEL_CHECK
  *     type: WHEN

@@ -32,9 +32,9 @@ import com.njydsz.literule.api.RuleContext;
  *
  * <h3>key 命名规范</h3>
  * <p>{@link #collectAllModelOutputs} 返回的 Map 的 key 统一带 {@code "model."} 前缀，
- * 例如 {@code "model.riskScore"}、{@code "model.fraudProbability"}。
- * 规则引擎在合并到 facts 时会转换为嵌套结构 {@code {"model": {"riskScore": ...}}}，
- * 以兼容 LiteExpr 表达式 {@code model.riskScore} 的属性访问语法。
+ * 例如 {@code "model.score"}、{@code "model.probability"}。
+ * 规则引擎在合并到 facts 时会转换为嵌套结构 {@code {"model": {"score": ...}}}，
+ * 以兼容 LiteExpr 表达式 {@code model.score} 的属性访问语法。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -194,7 +194,7 @@ public class ModelInputRegistry {
      * 聚合所有已启用 provider 的输出
      *
      * <p>返回的 Map 的 key 统一带 {@code "model."} 前缀，
-     * 例如 {@code "model.riskScore"}、{@code "model.fraudProbability"}。
+     * 例如 {@code "model.score"}、{@code "model.probability"}。
      * 多个 provider 的输出会合并；同名字段后者覆盖前者（按注册顺序）。
      *
      * <p>异常处理：

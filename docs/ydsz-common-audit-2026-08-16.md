@@ -3,6 +3,8 @@
 > 审计日期：2026-08-16 ｜ 审计对象：D:\Code\open\ydsz-cloud\ydsz-common（28 个子模块，L1–L6 分层）
 > 审计方式：全部基于 src/main/java 最新源码 + 9 个业务服务（userinfo/system/workflow/message/cronjob/agent/nextwiki/literule/gateway）import 交叉验证；P0/P1 级结论已逐条人工复核代码原文
 > 对标基准：Spring Cloud Alibaba 生态成熟组件、yudao(ruoyi-vue-pro)/RuoYi-Cloud 公共库实践、COLA 4.0 分层规范、阿里巴巴 Java 开发手册
+>
+> **更新（2026-08-16 晚）：审计结论已按最新代码复核修正，P0/P1 修复已交付。详见文末「附：修复完成记录」与「附：审计结论修正」。**
 
 ---
 
@@ -239,3 +241,88 @@ ydsz-common 是一个约 **19 万行、1400+ 类**的公共底座，分层设计
 - P0/P1 结论（json 损坏、X-User-Role 绕过、重入锁停犬）由主审计逐条打开代码原文二次复核。
 - 零引用结论基于字符串级 grep 交叉验证，不含反射/SPI 运行时动态加载（Spring `@ConditionalOnMissingBean` 默认实现不计为"业务使用"）。
 - 行数为 wc 实测估算，与真实略有偏差，不影响结论量级。
+
+---
+
+## 附一：审计结论修正（基于最新代码复核）
+
+以下结论在审计报告发布后，经最新代码 + 9 服务 import 全量复核发现**与原审计代理结论不符**，以此为准：
+
+| 原结论 | 修正后 | 证据 |
+|---|---|---|
+| docs（5775 行）整模块零引用 | **有真实业务引用**，不能归档 | `ydsz-agent/.../rag/RagService.java`、`ydsz-nextwiki/.../ContentExtractionApplicationService.java` 均 import `common.docs` 的 DocumentService/DocumentParseResult 等（agent-RAG 与 nextwiki 内容提取依赖） |
+| sentry（8274 行）整模块零引用 | **有真实业务引用**，不能归档 | `ydsz-gateway/pom.xml` 显式依赖 `ydsz-common-sentry`，`AuthGlobalFilter`/`ApiKeyAuthFilter` 使用 `SentryObservation`/`AlertEvent`/`AlertSeverity` |
+| common-app 零引用 | **确认零引用**（仅 `PlatformCondition` 做 classpath 探测，模块缺失时自动降级） | 8 个服务 pom 均无依赖；已移出默认构建（`app-profile` 保留源码） |
+| json 模块 70 文件损坏阻断构建 | **已由 IDE/同步工具修复**（全仓 Python 字节级扫描 0 损坏，HEAD 于 18:44:43 提交完好版本） | `git cat-file` 字节级验证 964 行真实换行 |
+
+> 教训：审计代理的「零引用」结论必须逐条人工复核，grep 统计易漏掉 gateway（reactive 栈）等特殊服务与跨模块传递依赖。**sentry/docs 的审计代理结论为误报，正式归档清单仅剩 common-app 与 seata 自研框架（未动）。**
+
+---
+
+## 附二：修复完成记录（2026-08-16 晚，按 S1→S4 交付）
+
+### S1（P0 止血）✅ 完成
+
+| # | 修复项 | 状态 | 说明 |
+|---|---|---|---|
+| S1-1 | json 源码损坏 | ✅ 外部进程已修复，已复核 | 全仓 0 损坏；工作区/HEAD 均完好 |
+| S1-2 | safe 脱敏四连 P0 | ✅ 已修复并提交 | 详见下方详表 |
+
+**S1-2 详情（`SensitiveDataProcessor.java` + 新增 `SensitiveDataProcessingException`）：**
+1. **请求头绕过**：移除对 `X-User-Role` 请求头的信任。角色豁免必须来自认证后可信上下文，当前 `CurrentUser` 契约无角色字段 → fail-closed 一律脱敏（业务中 `roles` 参数零使用，无兼容性影响）。
+2. **子串匹配误放行**：`userRoles.contains(role)` 逻辑已随请求头信任一并移除，杜绝 `A` 匹配 `MANAGER` 类误放行。
+3. **嵌套对象漏脱敏**：快速路径 `hasSensitiveFields` 由「仅顶层注解」改为「注解字段 **或** 引用类型字段」，确保外层 DTO 无注解时内层 `User.phone` 等仍被递归脱敏；同时将 Collection/Map 分支**提前**到快速路径之前，修复 `List<UserDTO>` 顶层直接返回原对象的漏脱敏。
+4. **fail-open**：深度超限（`maxDepth <= 0`）、Bean 重建失败、Record 重建失败、处理异常一律抛 `SensitiveDataProcessingException`，由 `SensitiveDataAdvice` 兜底返回空对象，禁止返回未脱敏原文。
+
+### S2（P1 安全/正确性）✅ 完成
+
+| # | 修复项 | 位置 | 说明 |
+|---|---|---|---|
+| S2-1a | 重入锁提前停看门狗 | `AbstractRedisDistributedLock.unlock()` + `RedisReentrantLock`/`RedisFairLock` 覆写 `isFullyReleased` | 释放后仅当锁键已删除（重入计数归零）才停犬/广播/递减指标；部分释放保留 clientId 缓存（否则同线程二次 unlock 生成新 clientId 导致锁永释放不掉） |
+| S2-1b | 双 WatchDog 并存 | 删除 redis 模块 `LockWatchDog`（207 行，零引用）+ 对应测试 | 保留 lock 模块 `LockRenewalService`/`LockWatchDog` 完整实现 |
+| S2-2 | 租户改写漏网 | `TenantIsolationInterceptor` | ① `processSelectBody` 增加 WITH CTE（`WithItem`）递归；② 新增 `processExpressionSubqueries` 递归遍历 WHERE/HAVING/selectItems 中的标量子查询（`ParenthesedSelect`）；③ INSERT-SELECT 复杂结构无法对齐列数时抛 `TenantIsolationException`（fail-closed）；④ 顺带修复 INSERT-VALUES 分支：列数不匹配 bug（补 VALUES 追加） |
+| S2-3 | API 签名 | `ApiSignatureFilter` | ① query string 入签（`normalizeQuery` 字典序规范化，GET 参数不可再篡改）；② **先验签后消费 nonce**（消除伪造签名打满 NonceCache 的 DoS 放大面）；③ 文档同步更新签名示例 |
+| S2-4a | DataScope fail-open | `DataScopeHelper` | 未知 dataScope 规则由「返回空串不限制」改为 `AND 1 = 0`（fail-closed 无权限） |
+| S2-4b | SSE 被包装 | `BaseGlobalResponseAdvice` | `supports()` 跳过 `SseEmitter`/`StreamingResponseBody`/`byte[]`/`ByteBuffer`，保护 agent AI 流式输出；String 返回仅在仍为 text/plain 时才改写 Content-Type |
+| S2-4c | CSRF HttpOnly 矛盾 | `CsrfTokenValidator` | 双重提交 Cookie 模式移除 HttpOnly（JS 需读取 Token 填请求头），保留 Secure + SameSite=Strict；javadoc 说明取舍 |
+
+### S3（瘦身）部分完成
+
+| 项 | 状态 | 说明 |
+|---|---|---|
+| common-app 归档 | ✅ | 从默认构建移出（`app-profile` profile 保留源码，可随时找回）；`git branch archive/common-app` 已建归档分支 |
+| docs / sentry | ⛔ 不归档 | 审计代理误报，有真实业务引用（见附一） |
+| seata 自研 TCC/SAGA | ⏸ 未动 | 影响面大（workflow 在用），建议单独评审 |
+
+### S4（加固）部分完成
+
+| 项 | 状态 | 说明 |
+|---|---|---|
+| tenant SQL 改写黄金用例 | ✅ 新增 | `TenantIsolationInterceptorTest`：16 个用例覆盖 SELECT/JOIN/标量子查询/CTE/UNION/INSERT-VALUES/INSERT-SELECT/UPDATE/DELETE/无上下文 fail-closed/跳过/超管/ignore-tables/MULTI/共享租户（项目约定测试代码不入库，`**/src/test/` 在 .gitignore） |
+| safe 脱敏回归测试 | ✅ 新增 | `SensitiveDataProcessorTest`：6 个用例覆盖顶层/嵌套/集合/Map 脱敏、roles fail-closed、深度超限抛异常 |
+| jacoco/SpotBugs/Checkstyle 升级 | ⏸ 未动 | 工程级改动，建议作为独立迭代 |
+| README 漂移修正 | ⏸ 部分 | 见附三待办 |
+
+### 编译验证
+
+- 所有修改文件已通过 javac（JDK 21）独立编译验证：safe（SensitiveDataProcessor/ProcessingException/ApiSignatureFilter）、lock（AbstractRedisDistributedLock/ReentrantLock/FairLock）、tenant（TenantIsolationInterceptor + 测试）、auth（DataScopeHelper/CsrfTokenValidator）、base（BaseGlobalResponseAdvice）。
+- 两个测试类编译通过。
+- 注：mvn 全量编译因外部进程仍在改写 json 模块（checkstyle 暂不过）而无法整仓验证；json 模块非本次修复范围，由外部进程处理。
+
+---
+
+## 附三：剩余待办（后续迭代）
+
+| 优先级 | 事项 | 说明 |
+|---|---|---|
+| P1 | web Security 链 `permitAll()` + Session/JWT 双轨矛盾 | 改动影响所有服务鉴权行为，需在完整环境联调后处理，不宜脱离全量编译单独提交 |
+| P1 | jdbc/tenant 之外：auth/audit/file/excel 零测试 | 需为 @Audit、文件分片、Excel 直出引擎补测试 |
+| P2 | README 全面重写（对齐 2.2 节漂移清单） | 原则「文档只写已验证能力 + 指向测试类」 |
+| P2 | 三套脱敏/熔断/TraceId 头统一 | 见正文 4.1 A5 |
+| P2 | cache 切 Caffeine / TinyLFU 衰减修复 | 见正文 4.1 A2 / 4.3 P4 |
+| P2 | jjwt 双 runtime、swagger 双版本清理 | 见正文 4.4 |
+| P2 | 幂等 fail-open 策略明示化 | Redis 异常时降级放行，需文档化或改 fail-closed |
+
+---
+
+*本报告正文为审计基线，附一/附二为 2026-08-16 晚修复后的增量记录。*

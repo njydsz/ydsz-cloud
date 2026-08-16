@@ -70,10 +70,10 @@
 
     <modules>
         <!-- L1 工具模块层 -->
-        <module>ydsz-common-cache</module>
-        <module>ydsz-common-excel</module>
         <module>ydsz-common-json</module>
         <module>ydsz-common-util</module>
+        <module>ydsz-common-cache</module>
+        <module>ydsz-common-excel</module>
         <!-- L2 基础设施层 -->
         <module>ydsz-common-core</module>
         <!-- L3 基础服务层 -->
@@ -103,6 +103,7 @@
         <module>ydsz-common-sentry</module>
         <!-- L6 应用层 -->
         <module>ydsz-common-base</module>
+        <module>ydsz-common-app</module>
         <module>ydsz-common-web</module>
     </modules>
 

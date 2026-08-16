@@ -195,7 +195,7 @@ public class LiteRuleProperties {
      *
      * <p>启用后，规则引擎在评估前会调用所有已注册的 {@link com.njydsz.literule.domain.model.ModelInputProvider}
      * 获取模型输出，注入到 {@link com.njydsz.literule.api.RuleContext} 的 facts 中，
-     * 使规则表达式可通过 {@code model.<field>} 引用（如 {@code model.riskScore > 0.8}）。
+     * 使规则表达式可通过 {@code model.<field>} 引用（如 {@code model.score > 0.8}）。
      *
      * <p>对标滴滴 Newton、字节风控的"规则+模型融合"能力：
      * <ul>
@@ -502,7 +502,7 @@ public class LiteRuleProperties {
          * Mock 模型输出（仅当 {@link #mockEnabled}=true 时生效）
          *
          * <p>key 为模型字段名（无需 "model." 前缀），value 为数值/字符串/布尔。
-         * 未配置时使用 MockModelInputProvider 默认值（riskScore=0.75, fraudProbability=0.05）。
+         * 未配置时使用 MockModelInputProvider 默认值（modelScore=0.75, predictProbability=0.05）。
          */
         private Map<String, Object> mockOutputs = new LinkedHashMap<>();
     }

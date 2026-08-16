@@ -848,7 +848,7 @@ public class LiteRuleAutoConfiguration {
      * <p>当 {@code ydsz.literule.model.enabled=true} 时自动装配，聚合所有
      * {@link ModelInputProvider} Bean（包括可选的 {@link MockModelInputProvider}）。
      * 注册表会自动注入到 {@link DefaultRuleEngine}，使规则表达式可通过
-     * {@code model.<field>} 引用模型输出（如 {@code model.riskScore > 0.8}）。
+     * {@code model.<field>} 引用模型输出（如 {@code model.score > 0.8}）。
      *
      * <p>对标滴滴 Newton、字节风控的"规则+模型融合"能力：
      * <ul>
@@ -901,8 +901,8 @@ public class LiteRuleAutoConfiguration {
      *       enabled: true
      *       mock-enabled: true
      *       mock-outputs:
-     *         riskScore: 0.9
-     *         fraudProbability: 0.02
+ *         modelScore: 0.9
+ *         predictProbability: 0.02
      * </pre>
      *
      * @param properties 配置属性

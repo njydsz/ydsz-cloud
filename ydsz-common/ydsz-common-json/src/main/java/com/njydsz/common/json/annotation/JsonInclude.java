@@ -1,6 +1,10 @@
 package com.njydsz.common.json.annotation;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * 控制属性包含策略（参考 Jackson 的 @JsonInclude）。

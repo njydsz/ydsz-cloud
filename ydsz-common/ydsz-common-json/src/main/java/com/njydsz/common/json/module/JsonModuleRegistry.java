@@ -9,8 +9,10 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.njydsz.common.json.deserializer.JsonDeserializer;
 import com.njydsz.common.json.serializer.JsonSerializer;
 import com.njydsz.common.json.serializer.SerializerRegistry;
@@ -48,7 +50,7 @@ import com.njydsz.common.json.serializer.SerializerRegistry;
  */
 public final class JsonModuleRegistry {
 
-    private static final Logger log = LoggerFactory.getLogger(JsonModuleRegistry.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JsonModuleRegistry.class);
 
     private static volatile JsonModuleRegistry instance;
 
@@ -105,16 +107,16 @@ public final class JsonModuleRegistry {
             for (JsonModule module : loader) {
                 try {
                     registerModule(module);
-                    log.info("Discovered YdszJson module via ServiceLoader SPI: {} (priority={})",
+                    LOG.info("Discovered YdszJson module via ServiceLoader SPI: {} (priority={})",
                         module.getModuleName(), module.getPriority());
                 } catch (Exception e) {
-                    log.error("Failed to register SPI-discovered YdszJson module: {}",
+                    LOG.error("Failed to register SPI-discovered YdszJson module: {}",
                         module.getClass().getName(), e);
                 }
             }
         } catch (Exception e) {
             // ServiceLoader 基础设施异常（如非法配置文件）不阻断引擎初始化
-            log.warn("Failed to scan YdszJson modules via ServiceLoader SPI", e);
+            LOG.warn("Failed to scan YdszJson modules via ServiceLoader SPI", e);
         }
     }
 
@@ -132,19 +134,19 @@ public final class JsonModuleRegistry {
         }
         synchronized (this) {
             if (modules.contains(module)) {
-                log.warn("Module {} already registered, skipping", module.getModuleName());
+                LOG.warn("Module {} already registered, skipping", module.getModuleName());
                 return;
             }
             for (JsonModule existing : modules) {
                 if (existing.getClass() == module.getClass()) {
-                    log.warn("Module class {} already registered as {}, skipping duplicate",
+                    LOG.warn("Module class {} already registered as {}, skipping duplicate",
                         module.getClass().getName(), existing.getModuleName());
                     return;
                 }
             }
             modules.add(module);
             sortModulesByPriority();
-            log.info("Registered YdszJson module: {} (priority={})", module.getModuleName(), module.getPriority());
+            LOG.info("Registered YdszJson module: {} (priority={})", module.getModuleName(), module.getPriority());
         }
     }
 
@@ -173,7 +175,7 @@ public final class JsonModuleRegistry {
         if (springFactories == null || springFactories.isEmpty()) {
             return;
         }
-        log.info("Discovering {} YdszJson Spring Factory modules", springFactories.size());
+        LOG.info("Discovering {} YdszJson Spring Factory modules", springFactories.size());
         registerModules(springFactories);
     }
 
@@ -184,20 +186,20 @@ public final class JsonModuleRegistry {
      */
     public void initialize() {
         if (initialized) {
-            log.debug("JsonModuleRegistry already initialized");
+            LOG.debug("JsonModuleRegistry already initialized");
             return;
         }
         synchronized (this) {
             if (initialized) {
                 return;
             }
-            log.info("Initializing JsonModuleRegistry with {} modules", modules.size());
+            LOG.info("Initializing JsonModuleRegistry with {} modules", modules.size());
             for (JsonModule module : modules) {
                 try {
                     registerModuleSerializers(module);
                     registerModuleDeserializers(module);
                 } catch (Exception e) {
-                    log.error("Failed to initialize module: {}", module.getModuleName(), e);
+                    LOG.error("Failed to initialize module: {}", module.getModuleName(), e);
                 }
             }
             for (JsonModule module : modules) {
@@ -205,12 +207,12 @@ public final class JsonModuleRegistry {
                     try {
                         module.onRegisterComplete();
                     } catch (Exception e) {
-                        log.error("Failed to complete registration for module: {}", module.getModuleName(), e);
+                        LOG.error("Failed to complete registration for module: {}", module.getModuleName(), e);
                     }
                 }
             }
             initialized = true;
-            log.info("JsonModuleRegistry initialized successfully. Serializers: {}, Deserializers: {}",
+            LOG.info("JsonModuleRegistry initialized successfully. Serializers: {}, Deserializers: {}",
                     moduleSerializerTypes.size(), moduleDeserializerTypes.size());
         }
     }
@@ -225,11 +227,11 @@ public final class JsonModuleRegistry {
             JsonSerializer<?> serializer = entry.getValue();
             JsonSerializer<?> existing = global.registerIfAbsent(type, serializer);
             if (existing != null) {
-                log.debug("Serializer for type {} already exists (from module {}), skipping",
+                LOG.debug("Serializer for type {} already exists (from module {}), skipping",
                         type.getName(), module.getModuleName());
             } else {
                 moduleSerializerTypes.add(type);
-                log.debug("Registered serializer for type {} from module {}",
+                LOG.debug("Registered serializer for type {} from module {}",
                         type.getName(), module.getModuleName());
             }
         }
@@ -245,11 +247,11 @@ public final class JsonModuleRegistry {
             JsonDeserializer<?> deserializer = entry.getValue();
             JsonDeserializer<?> existing = global.registerIfAbsent(type, deserializer);
             if (existing != null) {
-                log.debug("Deserializer for type {} already exists (from module {}), skipping",
+                LOG.debug("Deserializer for type {} already exists (from module {}), skipping",
                         type.getName(), module.getModuleName());
             } else {
                 moduleDeserializerTypes.add(type);
-                log.debug("Registered deserializer for type {} from module {}",
+                LOG.debug("Registered deserializer for type {} from module {}",
                         type.getName(), module.getModuleName());
             }
         }
@@ -337,7 +339,7 @@ public final class JsonModuleRegistry {
             modules.clear();
             clearModuleRegistrations();
             initialized = false;
-            log.info("JsonModuleRegistry cleared");
+            LOG.info("JsonModuleRegistry cleared");
         }
     }
 

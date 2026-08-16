@@ -565,10 +565,15 @@ public final class JSONWriter {
             char c5 = str.charAt(i + 5);
             char c6 = str.charAt(i + 6);
             char c7 = str.charAt(i + 7);
-            // 合并检查：非 ASCII（> 127）或控制字符（< ' '）或特殊字符（" \）\n            // 使用位运算合并：只要任一字符不安全就返回 false\n            if ((c0 > 127 || c0 < ' ' || c0 == '"' || c0 == '\\') ||
-                (c1 > 127 || c1 < ' ' || c1 == '"' || c1 == '\\') ||\n                (c2 > 127 || c2 < ' ' || c2 == '"' || c2 == '\\') ||
-                (c3 > 127 || c3 < ' ' || c3 == '"' || c3 == '\\') ||\n                (c4 > 127 || c4 < ' ' || c4 == '"' || c4 == '\\') ||
-                (c5 > 127 || c5 < ' ' || c5 == '"' || c5 == '\\') ||\n                (c6 > 127 || c6 < ' ' || c6 == '"' || c6 == '\\') ||
+            // 合并检查：非 ASCII（> 127）或控制字符（< ' '）或特殊字符（" \）
+            // 使用位运算合并：只要任一字符不安全就返回 false
+            if ((c0 > 127 || c0 < ' ' || c0 == '"' || c0 == '\\') ||
+                (c1 > 127 || c1 < ' ' || c1 == '"' || c1 == '\\') ||
+                (c2 > 127 || c2 < ' ' || c2 == '"' || c2 == '\\') ||
+                (c3 > 127 || c3 < ' ' || c3 == '"' || c3 == '\\') ||
+                (c4 > 127 || c4 < ' ' || c4 == '"' || c4 == '\\') ||
+                (c5 > 127 || c5 < ' ' || c5 == '"' || c5 == '\\') ||
+                (c6 > 127 || c6 < ' ' || c6 == '"' || c6 == '\\') ||
                 (c7 > 127 || c7 < ' ' || c7 == '"' || c7 == '\\')) {
                 return false;
             }
@@ -621,7 +626,7 @@ public final class JSONWriter {
             switch (c) {
                 case '"': externalSb.append("\\\""); break;
                 case '\\': externalSb.append("\\\\"); break;
-                case '\\n': externalSb.append("\\n"); break;
+                case '\n': externalSb.append("\\n"); break;
                 case '\r': externalSb.append("\\r"); break;
                 case '\t': externalSb.append("\\t"); break;
                 default:

@@ -8,8 +8,10 @@ import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.entity.SearchIndex;
@@ -51,12 +53,32 @@ import com.njydsz.nextwiki.domain.vo.SearchResultVO;
 @RequiredArgsConstructor
 public class SearchDomainService {
 
+    /**
+     * 同步到统一搜索索引的最大内容长度（字符数）。
+     *
+     * <p>防止过大的文档全文写入索引导致存储膨胀。
+     * PG tsvector 索引对超长文本会自动截断，此处显式控制保证一致性。
+     */
+    private static final int MAX_SEARCHABLE_CONTENT_LENGTH = 100_000;
+
     /** 分布式 ID 生成器 */
     private final SnowflakeIdGenerator snowflakeIdGenerator;
 
     private final FileNodeRepository fileNodeRepository;
     private final TagRepository tagRepository;
     private final SearchIndexRepository searchIndexRepository;
+
+    /**
+     * 搜索索引事件桥接器（可选注入）。
+     *
+     * <p>将文件数据变更同步到 ydsz-common-search 统一搜索索引（ydsz_search_index）。
+     * 与 nw_search_index（本类维护的 DB 降级存储）共同构成双索引架构：
+     * <ul>
+     *   <li>{@code nw_search_index} — DB LIKE 降级索引，本类维护</li>
+     *   <li>{@code ydsz_search_index} — 统一搜索主索引，本桥接器维护</li>
+     * </ul>
+     */
+    private final ObjectProvider<SearchIndexEventBridge> searchIndexEventBridgeProvider;
 
     /**
      * 综合搜索（数据库分页，避免全量加载后内存分页）
@@ -115,7 +137,12 @@ public class SearchDomainService {
     /**
      * 索引同步（文件上传/更新后调用）
      * <p>
-     * 将文件节点信息写入 nw_search_index 表，供数据库 fallback 搜索使用。
+     * <b>双索引写入：</b>
+     * <ol>
+     *   <li>写入 {@code nw_search_index} 表（DB LIKE 降级索引）</li>
+     *   <li>通过 {@link SearchIndexEventBridge} 同步到 {@code ydsz_search_index}
+     *       （统一搜索主索引），仅当桥接器可用时执行</li>
+     * </ol>
      *
      * @param fileNodeId 文件节点ID
      * @param content    提取的文本内容（可为 null）
@@ -168,15 +195,60 @@ public class SearchDomainService {
         index.setDeleted(0);
 
         searchIndexRepository.upsert(index);
-        log.info("[SearchDomainService] 索引写入成功: fileNodeId={}", fileNodeId);
+        log.info("[SearchDomainService] nw_search_index 写入成功: fileNodeId={}", fileNodeId);
+
+        // 同步到统一搜索索引（ydsz_search_index），设置 searchableContent 以传递全文内容
+        syncSearchIndex(node, content);
     }
 
     /**
-     * 删除索引
+     * 删除索引（双索引删除）
+     * <p>
+     * 同时删除 nw_search_index 和统一搜索索引（ydsz_search_index）。
      */
     public void removeIndex(String fileNodeId) {
         log.info("[SearchDomainService] 删除索引: fileNodeId={}", fileNodeId);
         searchIndexRepository.deleteByFileNodeId(fileNodeId);
+        deleteSearchIndex(fileNodeId);
+    }
+
+    /**
+     * 将文件数据变更同步到统一搜索索引（ydsz_search_index）。
+     *
+     * <p>通过 {@link SearchIndexEventBridge} 异步写入。为传递提取的文档全文内容，
+     * 将 content 设置到 FileNode 的 transient 字段 {@code searchableContent} 上，
+     * 供 {@link com.njydsz.nextwiki.server.search.WikiSearchProvider#toIndexDocument} 读取。
+     *
+     * @param node    文件节点实体
+     * @param content 提取的文本内容
+     */
+    private void syncSearchIndex(FileNode node, String content) {
+        SearchIndexEventBridge bridge = searchIndexEventBridgeProvider.getIfAvailable();
+        if (bridge == null) {
+            return;
+        }
+        // 设置 transient 字段传递全文内容（不持久化，仅用于索引同步）
+        if (content != null && !content.isEmpty()) {
+            node.setSearchableContent(content.length() > MAX_SEARCHABLE_CONTENT_LENGTH
+                    ? content.substring(0, MAX_SEARCHABLE_CONTENT_LENGTH)
+                    : content);
+        }
+        bridge.indexUpsert("wiki", node);
+        log.debug("[SearchDomainService] 已同步到统一搜索索引: fileNodeId={}", node.getId());
+    }
+
+    /**
+     * 从统一搜索索引删除文档。
+     *
+     * @param fileNodeId 文件节点ID
+     */
+    private void deleteSearchIndex(String fileNodeId) {
+        SearchIndexEventBridge bridge = searchIndexEventBridgeProvider.getIfAvailable();
+        if (bridge == null) {
+            return;
+        }
+        bridge.indexDelete("wiki", fileNodeId);
+        log.debug("[SearchDomainService] 已从统一搜索索引删除: fileNodeId={}", fileNodeId);
     }
 
     /**

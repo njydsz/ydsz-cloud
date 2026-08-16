@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -13,6 +14,7 @@ import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.workflow.domain.dto.FlowDeployProcessDTO;
 import com.njydsz.workflow.domain.entity.FlowDefinition;
@@ -107,6 +109,11 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
     private final FlowTemplateMapper templateMapper;
     /** 流程定义服务，模板导入时调用 deploy 部署为草稿定义 */
     private final FlowDefinitionService definitionService;
+    /**
+     * 搜索索引事件桥接器（可选注入）。
+     * 用于在模板创建/更新时异步同步到 ydsz-common-search 统一搜索索引。
+     */
+    private final ObjectProvider<SearchIndexEventBridge> searchIndexEventBridgeProvider;
 
     /**
      * 按分类查询模板列表
@@ -322,6 +329,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
                 template.setParentTemplateId(existing.getParentTemplateId());
                 template.setIsLatest(1);
                 templateMapper.insert(template);
+                syncSearchIndex(template);
                 log.info("[FlowTemplate] 模板新版本已创建: templateCode={} version={} definitionId={}",
                         templateCode, newVersion, definitionId);
             } else {
@@ -341,6 +349,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
                 template.setInheritType("STANDALONE");
                 template.setIsLatest(1);
                 templateMapper.insert(template);
+                syncSearchIndex(template);
                 log.info("[FlowTemplate] 模板已创建: templateCode={} version=1 definitionId={}",
                         templateCode, definitionId);
             }
