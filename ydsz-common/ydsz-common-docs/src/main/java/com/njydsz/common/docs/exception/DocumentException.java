@@ -31,8 +31,7 @@ public class DocumentException extends BusinessException {
      * @param cause         导致此异常的原始原因
      */
     public DocumentException(ExceptionCode exceptionCode, Throwable cause) {
-        super(exceptionCode);
-        initCause(cause);
+        super(exceptionCode, cause);
     }
 
     /**
@@ -42,7 +41,8 @@ public class DocumentException extends BusinessException {
      * @param message       自定义异常消息
      */
     public DocumentException(ExceptionCode exceptionCode, String message) {
-        super(exceptionCode, message);
+        super(exceptionCode);
+        setMessage(message);
     }
 
     /**
@@ -53,7 +53,7 @@ public class DocumentException extends BusinessException {
      * @param cause         导致此异常的原始原因
      */
     public DocumentException(ExceptionCode exceptionCode, String message, Throwable cause) {
-        super(exceptionCode, message);
-        initCause(cause);
+        super(exceptionCode, cause);
+        setMessage(message);
     }
 }

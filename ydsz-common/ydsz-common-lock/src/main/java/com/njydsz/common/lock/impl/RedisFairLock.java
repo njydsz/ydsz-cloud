@@ -343,7 +343,6 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
         }
     }
 
-    @Override
     public int getQueuePosition(String lockKey, String lockValue) {
         String queueKey = getQueueKey(lockKey);
         try {
@@ -355,7 +354,6 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
         }
     }
 
-    @Override
     public int getQueueSize(String lockKey) {
         String queueKey = getQueueKey(lockKey);
         try {

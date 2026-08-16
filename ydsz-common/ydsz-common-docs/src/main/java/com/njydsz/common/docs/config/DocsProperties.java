@@ -56,4 +56,14 @@ public class DocsProperties {
 
     /** 高风险时是否阻止解析 */
     private boolean blockOnHighRisk = false;
+
+    /** 文本分块最大字符数 */
+    @Min(100)
+    @Max(10000)
+    private int maxChunkSize = 1000;
+
+    /** 文本分块重叠字符数 */
+    @Min(0)
+    @Max(1000)
+    private int chunkOverlap = 200;
 }

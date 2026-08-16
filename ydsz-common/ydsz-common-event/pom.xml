@@ -25,6 +25,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-exception</artifactId>
         </dependency>
+        <!-- util（SnowflakeIdGenerator / IdGenerator 分布式 ID 支持） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-util</artifactId>
+        </dependency>
         <!-- jdbc (for JdbcTemplate) -->
         <dependency>
             <groupId>org.springframework</groupId>
@@ -38,6 +43,11 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-domain</artifactId>
+        </dependency>
+        <!-- util (SnowflakeIdGenerator) -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-util</artifactId>
         </dependency>
         <!-- configuration processor -->
         <dependency>

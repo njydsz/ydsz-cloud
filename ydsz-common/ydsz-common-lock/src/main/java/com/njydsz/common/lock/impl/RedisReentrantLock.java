@@ -243,7 +243,6 @@ public class RedisReentrantLock extends AbstractRedisDistributedLock {
      * @param lockValue 锁的值（客户端标识）
      * @return 重入计数，未持有锁时返回 0
      */
-    @Override
     public int getHoldCount(String lockKey, String lockValue) {
         try {
             Long result = stringRedisTemplate.execute(
@@ -265,7 +264,6 @@ public class RedisReentrantLock extends AbstractRedisDistributedLock {
      * @param lockValue 锁的值（客户端标识）
      * @return true-当前线程持有该锁
      */
-    @Override
     public boolean isHeldByCurrentThread(String lockKey, String lockValue) {
         return getHoldCount(lockKey, lockValue) > 0;
     }

@@ -68,15 +68,18 @@
             <artifactId>spring-boot-autoconfigure</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- Spring Boot Actuator（Spring Boot 4.x: 端点 + 健康检查支持） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-actuator</artifactId>
+            <scope>provided</scope>
             <optional>true</optional>
         </dependency>
-        <!-- actuator-autoconfigure（ExcelHealthContributorConfiguration 需要 HealthContributorAutoConfiguration） -->
+        <!-- Spring Boot Actuator AutoConfigure（Spring Boot 4.x: 条件装配支持） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-actuator-autoconfigure</artifactId>
+            <scope>provided</scope>
             <optional>true</optional>
         </dependency>
         <!-- spring-boot-health (Spring Boot 4.x: health classes moved from actuator to health module) -->

@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.netty.config.NettyProperties;
 import com.njydsz.common.netty.event.ChannelEventDispatcher;
 import com.njydsz.common.netty.event.MessageDispatcher;
+import com.njydsz.common.netty.exception.NettyException;
 import com.njydsz.common.netty.handler.ConnectionEventHandler;
 import com.njydsz.common.netty.handler.IdleStateHandlerFactory;
 import com.njydsz.common.netty.handler.TrafficMonitoringHandler;

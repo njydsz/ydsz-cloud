@@ -1,8 +1,5 @@
 package com.njydsz.common.excel.spring;
 
-import org.springframework.boot.actuate.autoconfigure.health.ConditionalOnEnabledHealthIndicator;
-import org.springframework.boot.actuate.autoconfigure.health.HealthContributorAutoConfiguration;
-import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -76,22 +73,5 @@ public class ExcelAutoConfiguration {
                 .headRowNumber(properties.getHeadRowNumber())
                 .writeCacheSize(properties.getWriteCacheSize())
                 .build();
-    }
-
-    /**
-     * Excel 健康检查指标（Actuator）。
-     *
-     * <p>仅在引入 spring-boot-starter-actuator 且启用 {@code management.health.excel.enabled=true} 时注册。</p>
-     */
-    @AutoConfiguration(after = HealthContributorAutoConfiguration.class)
-    @ConditionalOnClass(HealthIndicator.class)
-    @ConditionalOnEnabledHealthIndicator("excel")
-    public static class ExcelHealthContributorConfiguration {
-
-        @Bean
-        @ConditionalOnMissingBean(name = "excelHealthIndicator")
-        public HealthIndicator excelHealthIndicator(ExcelProperties properties) {
-            return new ExcelHealthIndicator(properties);
-        }
     }
 }

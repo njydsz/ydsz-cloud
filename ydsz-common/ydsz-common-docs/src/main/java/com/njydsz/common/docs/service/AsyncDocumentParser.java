@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.function.Consumer;
 
 import lombok.extern.slf4j.Slf4j;
@@ -68,7 +69,7 @@ public class AsyncDocumentParser {
      * @return 队列中待执行的任务数；不支持时返回 -1
      */
     public int getQueueSize() {
-        if (executor instanceof org.concurrent.ThreadPoolExecutor tpe) {
+        if (executor instanceof ThreadPoolExecutor tpe) {
             return tpe.getQueue().size();
         }
         // Spring 的 ThreadPoolTaskExecutor 内部包装
@@ -89,7 +90,7 @@ public class AsyncDocumentParser {
      * @return 活跃线程数；不支持时返回 -1
      */
     public int getActiveCount() {
-        if (executor instanceof org.concurrent.ThreadPoolExecutor tpe) {
+        if (executor instanceof ThreadPoolExecutor tpe) {
             return tpe.getActiveCount();
         }
         try {
