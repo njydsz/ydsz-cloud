@@ -2,10 +2,10 @@ package com.njydsz.common.sentry.logging;
 
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.sentry.domain.LogEvent;
 import com.njydsz.common.sentry.spi.LogPublisher;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 双发日志发布器

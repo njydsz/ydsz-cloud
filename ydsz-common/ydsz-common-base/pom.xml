@@ -118,5 +118,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-json</artifactId>
         </dependency>
+
+        <!-- 幂等性模块（P1-1: 从 base 剥离为独立模块） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-idempotent</artifactId>
+        </dependency>
     </dependencies>
 </project>

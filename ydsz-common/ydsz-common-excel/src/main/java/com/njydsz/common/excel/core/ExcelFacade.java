@@ -12,7 +12,6 @@ import com.njydsz.common.excel.core.listener.ReadListener;
 import com.njydsz.common.excel.core.metadata.ReadMetadata;
 import com.njydsz.common.excel.core.metadata.WriteMetadata;
 import com.njydsz.common.excel.core.model.SheetData;
-import com.njydsz.common.excel.spring.DownloadContext;
 
 /**
  * Excel 门面类 — 整个框架的统一入口。
@@ -313,7 +312,7 @@ public class ExcelFacade {
 
 
 
-    // ==================== 快捷方法 ====================
+    // ==================== 模板写入 ====================
 
     /**
      * 基于模板写入Excel
@@ -327,98 +326,6 @@ public class ExcelFacade {
      */
     public static ExcelTemplateWriter writeWithTemplate(String templatePath, String outputPath, Class<?> clazz) {
         return new ExcelTemplateWriter(templatePath, outputPath, clazz);
-    }
-
-    /**
-     * 获取Excel文件的Sheet信息列表
-     *
-     * @param fileName 文件路径
-     * @return Sheet信息列表
-     */
-    public static List<ExcelSheetInfo> getSheetInfoList(String fileName) {
-        return ExcelSheetInfo.getSheetInfoList(fileName);
-    }
-
-    /**
-     * 获取Excel文件的Sheet数量
-     *
-     * @param fileName 文件路径
-     * @return Sheet数量
-     */
-    public static int getSheetCount(String fileName) {
-        return ExcelSheetInfo.getSheetCount(fileName);
-    }
-
-    /**
-     * 获取Excel文件的Sheet名称列表
-     *
-     * @param fileName 文件路径
-     * @return Sheet名称列表
-     */
-    public static List<String> getSheetNames(String fileName) {
-        return ExcelSheetInfo.getSheetNames(fileName);
-    }
-
-    /**
-     * 快捷写入方法 - 写入数据到指定文件
-     *
-     * @param fileName 目标文件路径
-     * @param clazz 数据对象类型
-     * @param data 要写入的数据
-     */
-    public static void write(String fileName, Class<?> clazz, Object data) {
-        write(fileName, clazz).sheet("sheet1").doWrite(data);
-    }
-
-    /**
-     * 快捷写入方法 - 写入数据到指定文件和 sheet
-     *
-     * @param fileName 目标文件路径
-     * @param clazz 数据对象类型
-     * @param data 要写入的数据
-     * @param sheetName sheet 名称
-     */
-    public static void write(String fileName, Class<?> clazz, Object data, String sheetName) {
-        write(fileName, clazz).sheet(sheetName).doWrite(data);
-    }
-
-    /**
-     * 快捷读取方法 - 读取文件并处理每行数据
-     *
-     * @param fileName 源文件路径
-     * @param clazz 数据映射类型
-     * @param listener 数据读取监听器
-     * @param <T> 泛型参数
-     */
-    public static <T> void read(String fileName, Class<T> clazz, ReadListener<T> listener) {
-        read(fileName, clazz).sheet().doRead(listener);
-    }
-
-    /**
-     * 快捷读取方法 - 从输入流读取并处理每行数据
-     *
-     * @param inputStream 源输入流
-     * @param clazz 数据映射类型
-     * @param listener 数据读取监听器
-     * @param <T> 泛型参数
-     */
-    public static <T> void read(InputStream inputStream, Class<T> clazz, ReadListener<T> listener) {
-        read(inputStream, clazz).sheet().doRead(listener);
-    }
-
-    // ==================== Web 下载辅助方法 ====================
-
-    /**
-     * 生成 Web 下载响应的工具方法
-     *
-     * <p>设置 HTTP 响应头，使浏览器正确处理 Excel 文件的下载</p>
-     *
-     * @param fileName 下载文件名
-     * @param isXlsx 是否为 xlsx 格式 (true=xlsx, false=xls)
-     */
-    public static void setWebResponse(String fileName, boolean isXlsx) {
-        DownloadContext.setFileName(
-            fileName + (isXlsx ? ".xlsx" : ".xls"));
     }
 
 }
