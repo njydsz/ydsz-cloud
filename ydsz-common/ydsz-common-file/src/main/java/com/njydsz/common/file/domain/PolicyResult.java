@@ -45,9 +45,9 @@ public class PolicyResult {
     private String objectKeyPrefix;
 
     /**
-     * 上传到期时间（Unix时间戳，秒）
+     * 上传到期时间（ISO 8601 格式，如 "2026-08-16T12:00:00Z"）
      */
-    private Long expiration;
+    private String expiration;
 
     /**
      * 上传区域（部分云厂商需要，如AWS）

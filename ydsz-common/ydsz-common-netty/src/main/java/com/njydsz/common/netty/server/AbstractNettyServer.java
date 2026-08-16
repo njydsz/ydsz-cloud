@@ -1,4 +1,4 @@
-package com.njydsz.common.netty.server;
+﻿package com.njydsz.common.netty.server;
 
 import com.njydsz.common.netty.config.NettyProperties;
 import com.njydsz.common.netty.event.ChannelEventDispatcher;

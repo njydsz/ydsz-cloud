@@ -296,7 +296,7 @@ public class MonitorService {
 
     public void alertOnHighError() {
         AlertEvent event = AlertEvent.builder()
-                .severity(AlertSeverity.CRITICAL)
+                .severity(AlertSeverity.P0)
                 .source("order-service")
                 .message("订单错误率超过阈值 5%")
                 .build();

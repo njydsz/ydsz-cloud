@@ -200,7 +200,6 @@ public class OtelAutoConfiguration {
             if (otelConfig.getErrorEvent().isEnabled()) {
                 ErrorEventSpanProcessor errorProcessor = new ErrorEventSpanProcessor(
                         new ErrorEventSpanProcessor.ErrorEventConfig());
-                errorProcessor.getClass(); // 引用以确保编译
                 builder.addProcessor(errorProcessor);
             }
 

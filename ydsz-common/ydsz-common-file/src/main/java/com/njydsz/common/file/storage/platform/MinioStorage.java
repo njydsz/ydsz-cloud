@@ -3,8 +3,10 @@ package com.njydsz.common.file.storage.platform;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -33,7 +35,6 @@ import io.minio.messages.Item;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 
-import io.minio.MinioClient;
 import com.njydsz.common.util.id.IdGenerator;
 /**
  * MinIO 对象存储实现。
@@ -488,13 +489,14 @@ public class MinioStorage extends AbstractFileStorage {
             int expirySeconds = expires != null ? expires :
                     (fileProperties.getTemporarySignatureExpiry() != null ? fileProperties.getTemporarySignatureExpiry() : 3600);
 
-            long expirationTime = System.currentTimeMillis() / 1000 + expirySeconds;
+            Instant expirationInstant = Instant.now().plusSeconds(expirySeconds);
+            String expirationStr = DateTimeFormatter.ISO_INSTANT.format(expirationInstant);
 
             Map<String, Object> policyMap = Map.of(
-                    "expiration", expirationTime,
+                    "expiration", expirationStr,
                     "conditions", List.of(
                             List.of("starts-with", "$key", resolvedPrefix),
-                            List.of("eq", "$bucket", resolvedBucket)));
+                            Map.of("bucket", resolvedBucket)));
             String policyJson = YdszJson.toJson(policyMap);
 
             String policyBase64 = Base64.getEncoder().encodeToString(policyJson.getBytes(StandardCharsets.UTF_8));
@@ -515,7 +517,7 @@ public class MinioStorage extends AbstractFileStorage {
             result.setSignature(signature);
             result.setBucket(resolvedBucket);
             result.setObjectKeyPrefix(resolvedPrefix);
-            result.setExpiration(expirationTime);
+            result.setExpiration(expirationStr);
             result.setEndpoint(resolvedEndpoint);
             return result;
         } catch (BusinessException e) {

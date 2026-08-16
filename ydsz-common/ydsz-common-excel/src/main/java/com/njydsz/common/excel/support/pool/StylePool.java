@@ -88,7 +88,9 @@ public class StylePool {
      * @return 对应的单元格样式，不会为 {@code null}
      */
     public CellStyle getOrCreateStyle(Workbook workbook, StyleKey key) {
-        String cacheKey = key.toCacheKey();
+        // 缓存键中加入 Workbook 身份，防止跨工作簿样式污染
+        // POI 不允许将一个 Workbook 创建的 CellStyle 应用到另一个 Workbook
+        String cacheKey = System.identityHashCode(workbook) + "|" + key.toCacheKey();
         CellStyle cached = styleCache.get(cacheKey);
         if (cached != null) {
             return cached;
@@ -163,13 +165,15 @@ public class StylePool {
      * @return 字体对象
      */
     private Font getOrCreateFont(Workbook workbook, String fontKey) {
-        Font cached = fontCache.get(fontKey);
+        // 字体同样绑定到 Workbook 身份，防止跨工作簿复用
+        String cacheKey = System.identityHashCode(workbook) + "|" + fontKey;
+        Font cached = fontCache.get(cacheKey);
         if (cached != null) {
             return cached;
         }
 
         Font font = workbook.createFont();
-        fontCache.put(fontKey, font);
+        fontCache.put(cacheKey, font);
         return font;
     }
 

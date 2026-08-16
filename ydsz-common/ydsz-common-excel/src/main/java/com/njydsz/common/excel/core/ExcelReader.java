@@ -12,17 +12,19 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.njydsz.common.excel.api.validator.DataValidator;
 import com.njydsz.common.excel.core.config.ExcelConfig;
 import com.njydsz.common.excel.core.context.AnalysisContext;
-import com.njydsz.common.excel.core.metrics.ExcelMetrics;
 import com.njydsz.common.excel.core.listener.ReadListener;
 import com.njydsz.common.excel.core.metadata.ReadMetadata;
-import com.njydsz.common.excel.api.validator.DataValidator;
+import com.njydsz.common.excel.core.metrics.ExcelMetrics;
 import com.njydsz.common.excel.core.reader.ColumnMetadata;
 import com.njydsz.common.excel.core.reader.HeaderAnalyzer;
 import com.njydsz.common.excel.core.reader.InputSourceDetector;
 import com.njydsz.common.excel.core.reader.RowParser;
 import com.njydsz.common.excel.core.reader.sax.SuperFastExcelReader;
+import com.njydsz.common.excel.exception.ExcelExceptionCode;
+import com.njydsz.common.excel.exception.ExcelReadException;
 import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
 
 /**
@@ -446,8 +448,7 @@ public class ExcelReader {
                 long fileSizeMB = file.length() / (1024 * 1024);
                 int maxFileSizeMB = ExcelConfig.getInstance().getMaxReadFileSizeMB();
                 if (fileSizeMB > maxFileSizeMB) {
-                    throw new IllegalArgumentException(
-                        "Excel文件过大: " + fileSizeMB + "MB > 最大限制 " + maxFileSizeMB + "MB");
+                    throw ExcelReadException.fileTooLarge(fileSizeMB, maxFileSizeMB);
                 }
             }
 
@@ -488,10 +489,18 @@ public class ExcelReader {
                 readXls();
             }
             ExcelMetrics.recordRead(Duration.ofNanos(System.nanoTime() - startTime), context.getCurrentRow(), useFastReader ? "fast" : "poi", true);
-        } catch (Exception e) {
-            log.error("Excel 读取异常", e);
+        } catch (ExcelReadException e) {
+            log.error("Excel 读取业务异常", e);
             ExcelMetrics.recordRead(Duration.ofNanos(System.nanoTime() - startTime), context.getCurrentRow(), useFastReader ? "fast" : "poi", false);
-            throw new RuntimeException("Excel 读取异常: " + e.getMessage(), e);
+            throw e;
+        } catch (OutOfMemoryError e) {
+            log.error("Excel 读取内存溢出", e);
+            ExcelMetrics.recordRead(Duration.ofNanos(System.nanoTime() - startTime), context.getCurrentRow(), useFastReader ? "fast" : "poi", false);
+            throw ExcelReadException.outOfMemory(e);
+        } catch (Exception e) {
+            log.error("Excel 读取未知异常", e);
+            ExcelMetrics.recordRead(Duration.ofNanos(System.nanoTime() - startTime), context.getCurrentRow(), useFastReader ? "fast" : "poi", false);
+            throw ExcelReadException.ioError(context.getCurrentRow(), e);
         }
     }
 
@@ -668,11 +677,16 @@ public class ExcelReader {
                 try {
                     DataValidator.validate(data, rowIndex);
                 } catch (Exception ve) {
-                    log.warn("Data validation failed, row={", rowIndex, ve);
+                    log.warn("Data validation failed, row={}", rowIndex, ve);
                     for (int i = 0; i < listenerCount; i++) {
                         ((ReadListener) listeners.get(i)).onError(context, ve);
                     }
                     continue;
+                }
+                // 每处理 1000 行触发一次进度回调
+                int currentDataRow = context.getCurrentRow();
+                if (currentDataRow % 1000 == 0) {
+                    notifyProgress(currentDataRow, lastRowNum);
                 }
                 if (batchSize > 0) {
                     if (batchBuffer == null) {
@@ -723,6 +737,25 @@ public class ExcelReader {
         }
         for (ReadListener<?> listener : listeners) {
             listener.onEnd(context);
+        }
+    }
+
+    /**
+     * 通知所有监听器读取进度
+     *
+     * <p>在解析大文件时定期回调，让监听器能够更新 UI 或记录日志。</p>
+     *
+     * @param current 当前已处理行号
+     * @param total   总行数（若未知则为 -1）
+     */
+    private void notifyProgress(int current, int total) {
+        for (ReadListener<?> listener : listeners) {
+            try {
+                ((ReadListener<Object>) listener).onProgress(context, current, total);
+            } catch (Exception e) {
+                log.warn("监听器进度回调异常, listener={}, current={}, total={}",
+                    listener.getName(), current, total, e);
+            }
         }
     }
 }

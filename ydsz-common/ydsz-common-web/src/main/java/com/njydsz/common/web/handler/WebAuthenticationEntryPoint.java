@@ -52,6 +52,8 @@ public class WebAuthenticationEntryPoint implements AuthenticationEntryPoint {
         String message = MessageUtils.getMessage(errorCode.getKey(), errorCode.getKey());
 
         BaseResponse<?> body = BaseResponse.error(errorCode.getCode(), message);
+        // 触发 traceId 懒加载，确保序列化时包含链路追踪 ID
+        body.getTraceId();
         response.getWriter().write(YdszJson.toJson(body));
     }
 }

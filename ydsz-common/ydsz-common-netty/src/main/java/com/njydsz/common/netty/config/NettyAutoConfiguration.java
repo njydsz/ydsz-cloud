@@ -1,4 +1,4 @@
-package com.njydsz.common.netty.config;
+﻿package com.njydsz.common.netty.config;
 
 import java.util.Collections;
 import java.util.List;
@@ -14,6 +14,9 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.netty.client.AbstractNettyClient;
 import com.njydsz.common.netty.event.ChannelEventDispatcher;
 import com.njydsz.common.netty.event.ChannelEventListener;
@@ -23,9 +26,6 @@ import com.njydsz.common.netty.metric.NettyChannelMetrics;
 import com.njydsz.common.netty.pool.NettyEventLoopPool;
 import com.njydsz.common.netty.server.AbstractNettyServer;
 import com.njydsz.common.netty.server.NettyServerLifecycle;
-
-import io.micrometer.core.instrument.MeterRegistry;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Netty 自动装配配置。

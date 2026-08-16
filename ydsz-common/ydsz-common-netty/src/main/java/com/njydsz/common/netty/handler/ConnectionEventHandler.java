@@ -1,11 +1,11 @@
-package com.njydsz.common.netty.handler;
-
-import com.njydsz.common.netty.metric.NettyChannelMetrics;
+﻿package com.njydsz.common.netty.handler;
 
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.netty.metric.NettyChannelMetrics;
 
 /**
  * 连接事件监控 Handler — 自动追踪 Channel 的创建与销毁。

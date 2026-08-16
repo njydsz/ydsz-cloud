@@ -44,7 +44,7 @@
 | `PreprocessPipeline` | 预处理管道（责任链模式，按顺序执行多个预处理器） |
 | `TextNormalizer` | 文本标准化（全角→半角 / Unicode NFC 规范化） |
 | `TextCleaner` | 文本清洗（去除不可见字符 / 多余空白 / BOM） |
-| `TextChunker` | 文本分块（按 token 数拆分，支持 overlap 重叠） |
+| `TextChunker` | 文本分块（按字符数拆分，支持 overlap 重叠） |
 
 ### 3. 安全扫描
 
@@ -226,7 +226,7 @@ public class ContractParseService {
 | `ydsz.docs.redact-enabled` | true | 脱敏开关 |
 | `ydsz.docs.async-pool-size` | 4 | 异步解析线程池大小（1-64） |
 | `ydsz.docs.async-queue-capacity` | 100 | 异步解析队列容量（1-10000） |
-| `ydsz.docs.max-chunk-size` | 2000 | 文本分块最大 token 数（100-100000） |
+| `ydsz.docs.max-chunk-size` | 2000 | 文本分块最大字符数（100-100000） |
 | `ydsz.docs.chunk-overlap` | 200 | 文本分块重叠量（0-10000） |
 | `ydsz.docs.security-max-scan-pages` | 50 | 安全扫描最大页数（0-500） |
 | `ydsz.docs.block-on-high-risk` | false | 高风险时是否阻止解析 |
@@ -248,7 +248,7 @@ ParseOptions options = ParseOptions.builder()
 
 DocumentParseResult result = documentService.parseAndPreprocess(inputStream, "contract.pdf", options);
 if (result.isSuccess()) {
-    String text = result.getContent().getRawText();
+    String text = result.getContent().getText();
     log.info("解析成功，耗时: {}ms", result.getElapsed().toMillis());
 }
 ```
@@ -280,8 +280,8 @@ import com.njydsz.common.docs.domain.PiiFinding;
 
 DocumentParseResult parseResult = documentService.parse(inputStream, "doc.pdf", options);
 List<PiiFinding> findings = documentService.detectPii(parseResult.getContent());
-findings.forEach(f -> log.info("发现 {}: {} -> {}",
-        f.getType(), f.getOriginalText(), f.getMaskedText()));
+findings.forEach(f -> log.info("发现 {}: 位置[{}] 脱敏值={}",
+        f.getType(), f.getStartIndex(), f.getMaskedValue()));
 ```
 
 ### 5. 异步解析

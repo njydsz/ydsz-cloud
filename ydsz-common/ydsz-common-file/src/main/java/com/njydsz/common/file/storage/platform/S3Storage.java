@@ -5,8 +5,10 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Comparator;
@@ -537,13 +539,14 @@ public class S3Storage extends AbstractFileStorage {
             int expirySeconds = expires != null ? expires :
                     (fileProperties.getTemporarySignatureExpiry() != null ? fileProperties.getTemporarySignatureExpiry() : 3600);
 
-            long expirationTime = System.currentTimeMillis() / 1000 + expirySeconds;
+            Instant expirationInstant = Instant.now().plusSeconds(expirySeconds);
+            String expirationStr = DateTimeFormatter.ISO_INSTANT.format(expirationInstant);
 
             Map<String, Object> policyMap = Map.of(
-                    "expiration", expirationTime,
+                    "expiration", expirationStr,
                     "conditions", List.of(
                             List.of("starts-with", "$key", resolvedPrefix),
-                            List.of("eq", "$bucket", resolvedBucket)));
+                            Map.of("bucket", resolvedBucket)));
             String policyJson = YdszJson.toJson(policyMap);
 
             String policyBase64 = Base64.getEncoder().encodeToString(policyJson.getBytes(StandardCharsets.UTF_8));
@@ -564,7 +567,7 @@ public class S3Storage extends AbstractFileStorage {
             result.setSignature(signature);
             result.setBucket(resolvedBucket);
             result.setObjectKeyPrefix(resolvedPrefix);
-            result.setExpiration(expirationTime);
+            result.setExpiration(expirationStr);
             result.setRegion(region);
             result.setEndpoint(resolvedEndpoint);
             return result;

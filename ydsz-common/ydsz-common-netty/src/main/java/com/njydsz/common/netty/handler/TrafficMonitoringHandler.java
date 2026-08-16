@@ -1,6 +1,4 @@
-package com.njydsz.common.netty.handler;
-
-import com.njydsz.common.netty.metric.NettyChannelMetrics;
+﻿package com.njydsz.common.netty.handler;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelDuplexHandler;
@@ -8,6 +6,8 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPromise;
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.netty.metric.NettyChannelMetrics;
 
 /**
  * 流量监控 Handler — 自动统计每条 Channel 的读写字节数。

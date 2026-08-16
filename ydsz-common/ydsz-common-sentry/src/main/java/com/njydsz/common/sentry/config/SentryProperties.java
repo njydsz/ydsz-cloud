@@ -116,7 +116,6 @@ public class SentryProperties {
         private int connectTimeoutMillis = 3000;
         private int readTimeoutMillis = 5000;
         private int maxRetryAttempts = 3;
-        private int circuitBreakerThreshold = 10;
     }
 
     /**
@@ -128,7 +127,6 @@ public class SentryProperties {
         private String url = "http://loki:3100";
         private int connectTimeoutSeconds = 5;
         private int maxRetryAttempts = 3;
-        private int circuitBreakerThreshold = 10;
     }
 
     /**

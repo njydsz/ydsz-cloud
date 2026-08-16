@@ -1,9 +1,7 @@
-package com.njydsz.common.netty.codec;
+﻿package com.njydsz.common.netty.codec;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-
-import com.njydsz.common.json.YdszJson;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandler;
@@ -11,6 +9,8 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 import io.netty.handler.codec.MessageToMessageDecoder;
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.json.YdszJson;
 
 /**
  * JSON 消息编解码器 — 基于 {@link YdszJson} 引擎实现消息序列化/反序列化。

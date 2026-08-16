@@ -78,7 +78,11 @@ public abstract class BaseGlobalResponseAdvice implements ResponseBodyAdvice<Obj
         if (body == null) {
             return BaseResponse.success();
         }
-        return BaseResponse.success((Serializable) body);
+        if (body instanceof Serializable) {
+            return BaseResponse.success((Serializable) body);
+        }
+        // 不可序列化对象降级为 toString()，避免 ClassCastException
+        return BaseResponse.success(body.toString());
     }
 
     /**

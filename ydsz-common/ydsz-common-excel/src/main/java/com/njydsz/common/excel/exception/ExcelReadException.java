@@ -134,6 +134,43 @@ public class ExcelReadException extends ExcelException {
         return ex;
     }
 
+    /**
+     * 创建文件过大的异常
+     *
+     * @param actualSizeMB 实际文件大小 (MB)
+     * @param maxSizeMB    最大允许大小 (MB)
+     * @return 文件过大异常实例
+     */
+    public static ExcelReadException fileTooLarge(long actualSizeMB, int maxSizeMB) {
+        return new ExcelReadException(ExcelExceptionCode.READ_FILE_TOO_LARGE,
+            String.format("Excel文件过大: %dMB, 超过最大限制 %dMB", actualSizeMB, maxSizeMB));
+    }
+
+    /**
+     * 创建读取 IO 错误的异常
+     *
+     * @param row 当前读取行号
+     * @param cause 原始异常
+     * @return IO 错误异常实例
+     */
+    public static ExcelReadException ioError(int row, Throwable cause) {
+        ExcelReadException ex = new ExcelReadException(ExcelExceptionCode.READ_IO_ERROR,
+            String.format("Excel读取IO异常: 当前行=%d", row), cause);
+        ex.setRowNumber(row);
+        return ex;
+    }
+
+    /**
+     * 创建内存溢出的异常
+     *
+     * @param cause 原始内存溢出错误
+     * @return 内存溢出异常实例
+     */
+    public static ExcelReadException outOfMemory(Throwable cause) {
+        return new ExcelReadException(ExcelExceptionCode.READ_OUT_OF_MEMORY,
+            "Excel文件过大导致内存溢出, 请限制读取行数或分批处理", cause);
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("ExcelReadException");

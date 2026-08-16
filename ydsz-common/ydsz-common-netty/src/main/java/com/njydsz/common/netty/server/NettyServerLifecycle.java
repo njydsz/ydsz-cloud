@@ -1,10 +1,10 @@
-package com.njydsz.common.netty.server;
+﻿package com.njydsz.common.netty.server;
 
 import java.util.List;
 
-import org.springframework.context.SmartLifecycle;
-
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.context.SmartLifecycle;
 
 /**
  * Netty Server Spring 生命周期管理器。

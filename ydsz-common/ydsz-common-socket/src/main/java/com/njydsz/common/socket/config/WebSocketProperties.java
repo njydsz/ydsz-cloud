@@ -121,6 +121,9 @@ public class WebSocketProperties {
     /** 慢连接检测配置 */
     private SlowConnection slowConnection = new SlowConnection();
 
+    /** 多端登录策略配置 */
+    private MultiDevice multiDevice = new MultiDevice();
+
     /**
      * 心跳保活配置。
      *
@@ -273,5 +276,23 @@ public class WebSocketProperties {
         private boolean enabled = true;
         /** 慢连接阈值（毫秒） */
         private long thresholdMs = 5000L;
+    }
+
+    /**
+     * 多端登录策略配置。
+     *
+     * <p>控制同一用户多设备同时在线的行为策略：
+     * <ul>
+     *   <li>ALLOW_ALL — 允许所有设备同时在线（默认）</li>
+     *   <li>MUTEX — 同一时刻仅允许一个设备在线，新连接建立时关闭旧连接</li>
+     *   <li>NEW_REPLACE_OLD — 新连接建立时踢出最早的连接</li>
+     * </ul>
+     */
+    @Data
+    public static class MultiDevice {
+        /** 多端登录策略：ALLOW_ALL / MUTEX / NEW_REPLACE_OLD */
+        private String policy = "ALLOW_ALL";
+        /** 每用户最大并发 Session 数 */
+        private int maxSessionsPerUser = 5;
     }
 }
