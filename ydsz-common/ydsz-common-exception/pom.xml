@@ -114,6 +114,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- springdoc-openapi (optional, ExceptionCodeOpenApiCustomizer 需要) -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

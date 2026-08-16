@@ -71,11 +71,10 @@
     <modules>
         <!-- L1 工具模块层 -->
         <module>ydsz-common-cache</module>
+        <module>ydsz-common-excel</module>
         <module>ydsz-common-json</module>
         <module>ydsz-common-util</module>
         <!-- L2 基础设施层 -->
-        <module>ydsz-common-excel</module>
-        <module>ydsz-common-excel-spring</module>
         <module>ydsz-common-core</module>
         <!-- L3 基础服务层 -->
         <module>ydsz-common-domain</module>
@@ -242,26 +241,6 @@
                 <version>${project.version}</version>
             </dependency>
             <!-- L6 基础设施层（YDSZ 特有） -->
-            <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-idempotent</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-ratelimit</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-base-doc</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz</groupId>
-                <artifactId>ydsz-common-base-i18n</artifactId>
-                <version>${project.version}</version>
-            </dependency>
             <dependency>
                 <groupId>com.njydsz</groupId>
                 <artifactId>ydsz-common-base</artifactId>

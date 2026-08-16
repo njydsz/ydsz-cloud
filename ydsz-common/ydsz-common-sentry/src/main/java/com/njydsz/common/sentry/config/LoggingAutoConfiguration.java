@@ -18,6 +18,7 @@ import com.njydsz.common.sentry.logging.AsyncLogPublisher;
 import com.njydsz.common.sentry.logging.DualLogPublisher;
 import com.njydsz.common.sentry.logging.ElkLogPublisher;
 import com.njydsz.common.sentry.logging.LokiLogPublisher;
+import com.njydsz.common.sentry.logging.NoOpLogPublisher;
 import com.njydsz.common.sentry.resilience.CircuitBreaker;
 import com.njydsz.common.sentry.spi.LogPublisher;
 
@@ -85,14 +86,11 @@ public class LoggingAutoConfiguration {
         }
 
         if (publishers.isEmpty()) {
-            log.warn("[Sentry] 未启用任何日志发布器, 使用 Loki 默认配置");
-            CircuitBreaker lokiCb = circuitBreakers.stream()
-                    .filter(cb -> "loki".equals(cb.getName()))
-                    .findFirst()
-                    .orElse(null);
-            publishers.add(new LokiLogPublisher(
-                    lokiConfig.getUrl(), lokiConfig.getConnectTimeoutSeconds(),
-                    lokiConfig.getMaxRetryAttempts(), lokiCb));
+            // v2.0.0 变更：不再隐式降级到 Loki，改为使用 NoOpLogPublisher
+            // 避免日志被意外发送到未配置的 Loki 实例
+            log.warn("[Sentry] 未启用任何日志发布器（elk.enabled=false, loki.enabled=false），"
+                    + "使用 NoOpLogPublisher，日志将不会上报到任何外部系统");
+            return NoOpLogPublisher.INSTANCE;
         }
 
         LogPublisher delegate;

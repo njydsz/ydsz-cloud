@@ -264,6 +264,18 @@ public class SearchService {
 | `ydsz.sentry.alerting.email-receiver` | - | 邮件告警接收者 |
 | `ydsz.sentry.sla.enabled` | true | 是否启用 SLA 框架 |
 
+## 配置验证
+
+v2.0.0 起，`SentryProperties` 通过 JSR-303 Bean Validation 约束配置合法范围，启动时自动校验：
+
+- **采样率**（`sampler-ratio`、`tail-sampling.record-ratio`）：必须在 0.0 ~ 1.0 之间
+- **端口类**（`elk.port`）：必须在 1 ~ 65535 之间
+- **超时/阈值类**（`connect-timeout`、`slow-threshold-millis`、`exporter-timeout-millis` 等）：均有上下限约束
+- **队列/批量大小**（`queue-capacity`、`batch-size`、`max-queue-size` 等）：防止资源耗尽
+- **静默期**（`silence-period-millis`）：1s ~ 3600s
+
+校验失败时 Spring Boot 会抛出 `BindException`，并在日志中输出具体字段和约束消息，快速定位配置错误。
+
 ## 使用示例
 
 ### 1. SLA 注解驱动
@@ -425,4 +437,14 @@ ydsz:
 
 ## 变更记录
 
+- **v2.0.0**（2026-08-16）：
+  - 配置验证：SentryProperties 添加 JSR-303 约束注解（@Min/@Max/@NotBlank），启动时自动校验
+  - OTel SDK 不再注册为 GlobalOpenTelemetry，改为 Spring Bean 依赖注入传播
+  - CircuitBreaker 替换为 Resilience4j 实现
+  - TailSamplingSpanProcessor 重构为 SpanEvaluationProcessor（明确仅做评估+通知，不做物理丢弃）
+  - SentryObservation 门面模式重构为 Spring Bean 委托
+  - 修复 AsyncLogPublisher 令牌桶除零隐患
+  - 采样策略对齐 OTel 标准：明确 parent-based 为推荐策略
+  - SLA 框架添加 Micrometer Observation 对齐说明
+  - 日志方案默认行为显式化：移除 Loki 隐式降级，改用 NoOpLogPublisher
 - **v1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节

@@ -353,6 +353,20 @@ public class ExcelWriter {
     }
 
     /**
+     * 设置 Excel 全局配置。
+     *
+     * <p>覆盖默认配置（日期格式、数字格式、fastWriter/fastReader 开关等）。
+     * 传入 {@code null} 时回退到 {@link ExcelConfig#defaults()}。</p>
+     *
+     * @param config Excel 全局配置，可为 {@code null}
+     * @return 当前写入器实例
+     */
+    public ExcelWriter config(ExcelConfig config) {
+        metadata.setExcelConfig(config);
+        return this;
+    }
+
+    /**
      * 追加写入模式
      *
      * <p>启用追加模式后,写入数据时会从已有数据的下一行开始写入,

@@ -16,8 +16,19 @@ import java.lang.annotation.Target;
  * public Long createProject(ProjectCreateDTO dto) { ... }
  * </pre>
  *
+ * <p><b>Micrometer Observation 对齐</b>：
+ * <ul>
+ *   <li>本注解提供步骤级 SLA 跟踪能力（通过 {@link SlaStep} 分解），
+ *       适用于需要精细化监控复杂业务流程的场景</li>
+ *   <li>如果仅需方法级耗时监控，推荐使用 Micrometer 的 {@code @Timed} 注解
+ *       （无需引入 ydsz-common-sentry 依赖）</li>
+ *   <li>两者可以协同使用：{@code @Timed} 用于全局方法级监控，
+ *       {@code @SlaMetric} 用于关键业务路径的步骤级 SLA</li>
+ * </ul>
+ *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 2.0.0
+ * @see SlaStep
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

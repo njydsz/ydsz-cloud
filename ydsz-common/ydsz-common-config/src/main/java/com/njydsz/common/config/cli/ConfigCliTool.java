@@ -178,7 +178,7 @@ public class ConfigCliTool {
         output.put("algorithm", algorithm);
         output.put("result", result);
         output.put("timestamp", Instant.now().toString());
-        System.out.println(YdszJson.toJsonString(output));
+        System.out.println(YdszJson.toJson(output));
     }
 
     /**
@@ -188,7 +188,7 @@ public class ConfigCliTool {
         Map<String, Object> output = new LinkedHashMap<>();
         output.put("error", message);
         output.put("timestamp", Instant.now().toString());
-        System.err.println(YdszJson.toJsonString(output));
+        System.err.println(YdszJson.toJson(output));
     }
 
     /**

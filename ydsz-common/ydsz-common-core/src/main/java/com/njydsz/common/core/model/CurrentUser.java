@@ -1,6 +1,6 @@
 package com.njydsz.common.core.model;
 
-import javax.annotation.Nullable;
+import org.springframework.lang.Nullable;
 
 /**
  * 当前用户极简身份契约

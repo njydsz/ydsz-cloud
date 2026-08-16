@@ -34,7 +34,7 @@ import org.springframework.core.env.Environment;
  * 实际配置由 Web/App 子模块通过 {@code @ConfigurationProperties} 注解提供具体前缀。
  * 若业务方直接使用 base 模块，请继承这些基类并指定自己的前缀。
  *
- * <p>文档相关健康指标已迁移至 {@code ydsz-common-base-doc} 模块。
+ * <p>文档相关健康指标由本模块内 {@code ydsz.common.base.config.DocAutoConfiguration} 提供。
  *
  * <p>横切点执行顺序参考 {@code docs/BASE_INTERCEPTOR_ORDER.md}。
  *

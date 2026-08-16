@@ -15,8 +15,16 @@ import com.njydsz.common.sentry.spi.SlaCollector;
  *
  * <p>拦截 {@link SlaMetric} 和 {@link SlaStep} 注解，自动采集执行耗时。
  *
+ * <p><b>与 Micrometer Observation 的协同</b>：
+ * <ul>
+ *   <li>本切面通过 AspectJ 实现，不依赖 Micrometer Observation API</li>
+ *   <li>如果项目已使用 Micrometer Observation，推荐使用 {@code TimedAspect} + {@code ObservationConvention}
+ *       实现方法级监控，本切面专注于步骤级 SLA 跟踪</li>
+ *   <li>两者可共存：Micrometer Observation 采集方法级指标，本切面采集步骤级 SLA 违反</li>
+ * </ul>
+ *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 2.0.0
  */
 @Slf4j
 @Aspect

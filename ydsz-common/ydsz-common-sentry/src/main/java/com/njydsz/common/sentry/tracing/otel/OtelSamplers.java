@@ -17,19 +17,27 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * YDSZ 采样器工厂
  *
- * <p>支持三种主流采样策略：
+ * <p>支持以下采样策略（按推荐优先级排序）：
  * <ol>
+ *   <li>{@link #parentBased(double)}：基于父 Span 决策（<b>生产环境首选</b>，保证分布式链路完整）</li>
  *   <li>{@link #alwaysOn()}：100% 采集（开发/调试用）</li>
  *   <li>{@link #alwaysOff()}：0% 采集（关闭追踪用）</li>
- *   <li>{@link #ratio(double)}：按比例采样（生产环境基础）</li>
- *   <li>{@link #parentBased(double)}：基于父 Span 决策（分布式一致性）</li>
- *   <li>{@link #composite(CompositeConfig)}：组合策略（按业务标签 / SpanKind / 服务名差异化）</li>
+ *   <li>{@link #ratio(double)}：按比例采样（无父 Span 场景）</li>
+ *   <li>{@link #composite(CompositeConfig)}：组合策略（按业务标签 / 服务名差异化，高级场景）</li>
  * </ol>
+ *
+ * <p><b>OTel 标准对齐</b>：
+ * <ul>
+ *   <li>{@link #parentBased(double)} 基于 OTel 官方 {@link Sampler#parentBased(Sampler)} 实现，
+ *       是分布式追踪的推荐采样策略</li>
+ *   <li>健康检查路径过滤推荐通过 {@code SpanProcessor} 实现（而非采样器），
+ *       避免在采样阶段访问 Span 属性</li>
+ * </ul>
  *
  * <p>对于错误 / 慢请求的标记与通知，可配合 {@link SpanEvaluationProcessor} 使用。
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 2.0.0
  */
 @Slf4j
 public final class OtelSamplers {
@@ -80,7 +88,22 @@ public final class OtelSamplers {
     }
 
     /**
-     * 组合采样器：根据服务名 / SpanKind / 属性差异化采样
+     * 组合采样器：根据服务名 / 灰度标签差异化采样。
+     *
+     * <p><b>适用场景</b>：需要按业务标签、服务名设置不同采样率的高级场景。
+     *
+     * <p><b>OTel 标准替代方案</b>：
+     * <ul>
+     *   <li>推荐使用 {@link #parentBased(double)} 作为基础采样策略（父 Span 跟随 + 根 Span 比例采样）</li>
+     *   <li>健康检查路径过滤推荐通过 {@code SpanProcessor#onEnd} 实现（避免在采样阶段访问 Span 属性）</li>
+     *   <li>灰度标签差异化采样可通过自定义 {@code SpanProcessor} 在 Span 结束时调整</li>
+     * </ul>
+     *
+     * <p>本采样器保留用于需要"单一采样器内完成差异化决策"的场景。
+     * 新项目中建议优先使用标准 {@code parent-based} + {@code SpanProcessor} 组合。
+     *
+     * @param config 组合采样配置
+     * @return 差异化采样器
      */
     public static Sampler composite(CompositeConfig config) {
         return new CompositeSampler(config);
@@ -90,6 +113,9 @@ public final class OtelSamplers {
     // 组合采样配置
     // ============================================================================
 
+    /**
+     * 组合采样配置（高级场景使用）。
+     */
     @Data
     @Builder
     public static class CompositeConfig {
@@ -111,6 +137,18 @@ public final class OtelSamplers {
     // 组合采样器实现
     // ============================================================================
 
+    /**
+     * 组合采样器实现（内部类）。
+     *
+     * <p>按以下优先级决策：
+     * <ol>
+     *   <li>健康检查路径 → DROP</li>
+     *   <li>父 Span 已采样 → RECORD（跟随父决策）</li>
+     *   <li>灰度标签命中 → 按灰度采样率</li>
+     *   <li>服务名命中 → 按服务采样率</li>
+     *   <li>默认采样率</li>
+     * </ol>
+     */
     @Slf4j
     static class CompositeSampler implements Sampler {
         private final CompositeConfig config;

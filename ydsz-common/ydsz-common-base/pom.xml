@@ -118,29 +118,5 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-json</artifactId>
         </dependency>
-
-        <!-- 幂等性模块（P1-1: 从 base 剥离为独立模块） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-idempotent</artifactId>
-        </dependency>
-
-        <!-- 限流模块（P1-2: 从 base 剥离为独立模块） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-ratelimit</artifactId>
-        </dependency>
-
-        <!-- 文档模块（P2-1: 从 base 剥离为独立模块） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-base-doc</artifactId>
-        </dependency>
-
-        <!-- 国际化模块（P2-1: 从 base 剥离为独立模块） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-base-i18n</artifactId>
-        </dependency>
     </dependencies>
 </project>

@@ -908,7 +908,7 @@ public class RedisStringOps {
             byte[][] rawKeys = formattedKeys.stream()
                     .map(k -> redisTemplate.getStringSerializer().serialize(k))
                     .toArray(byte[][]::new);
-            List<byte[]> rawResults = redisTemplate.executePipelined(
+            List<?> rawResults = redisTemplate.executePipelined(
                     (RedisCallback<Object>) connection -> {
                         for (byte[] rawKey : rawKeys) {
                             connection.stringCommands().get(rawKey);
@@ -921,7 +921,7 @@ public class RedisStringOps {
                 return Collections.emptyList();
             }
             return rawResults.stream()
-                    .map(b -> b == null ? null : new String(b, StandardCharsets.UTF_8))
+                    .map(b -> b instanceof byte[] bytes ? new String(bytes, StandardCharsets.UTF_8) : null)
                     .collect(Collectors.toList());
         } catch (Exception e) {
             recordError("multiGetPipelined", e);
