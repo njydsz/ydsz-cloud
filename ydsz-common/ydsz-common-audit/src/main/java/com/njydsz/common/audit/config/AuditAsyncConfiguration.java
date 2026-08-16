@@ -6,15 +6,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
 import org.springframework.aop.interceptor.SimpleAsyncUncaughtExceptionHandler;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Conditional;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
-
-import lombok.RequiredArgsConstructor;
 
 /**
  * 审计模块异步配置
@@ -27,6 +24,8 @@ import lombok.RequiredArgsConstructor;
  *   <li>通过 {@link AsyncConfigurer} 覆盖默认的 {@code SimpleAsyncTaskExecutor}，
  *       强制使用审计专用线程池 {@code auditAsyncExecutor}，避免线程无限制创建</li>
  *   <li>本配置类在审计模块启用时自动加载，业务方无需额外配置</li>
+ *   <li>使用 {@code @AutoConfiguration(after = AuditAutoConfiguration.class)} 确保线程池 Bean
+ *       先于本配置注册，满足异步框架初始化依赖</li>
  * </ul>
  *
  * <h3>与主业务线程池的隔离</h3>
@@ -39,7 +38,7 @@ import lombok.RequiredArgsConstructor;
 @AutoConfiguration(after = AuditAutoConfiguration.class)
 @ConditionalOnProperty(prefix = "ydsz.audit", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableAsync
-@RequiredArgsConstructor
+@EnableConfigurationProperties(AuditProperties.class)
 public class AuditAsyncConfiguration implements AsyncConfigurer {
 
     private static final Logger log = LoggerFactory.getLogger(AuditAsyncConfiguration.class);
@@ -47,16 +46,32 @@ public class AuditAsyncConfiguration implements AsyncConfigurer {
     private final Executor auditAsyncExecutor;
 
     /**
+     * 构造审计异步配置
+     *
+     * <p>使用 {@link ObjectProvider} 延迟解析 auditAsyncExecutor，
+     * 避免因 @ConditionalOnBean 在 @AutoConfiguration 排序阶段的限制导致注入失败。
+     *
+     * @param auditAsyncExecutorProvider 审计专用线程池提供者（延迟解析）
+     */
+    public AuditAsyncConfiguration(ObjectProvider<Executor> auditAsyncExecutorProvider) {
+        this.auditAsyncExecutor = auditAsyncExecutorProvider.getIfAvailable();
+        if (this.auditAsyncExecutor != null) {
+            log.info("[AuditAsync] 审计异步配置初始化完成 → auditAsyncExecutor 已绑定");
+        } else {
+            log.warn("[AuditAsync] auditAsyncExecutor 不可用，@Async 将使用 Spring 默认 SimpleAsyncTaskExecutor");
+        }
+    }
+
+    /**
      * 将审计专用线程池设为 @Async 默认执行器
      *
      * <p>当业务方未显式指定线程池名称时（即使用 @Async 不带参数），
      * 使用此线程池而非 Spring 默认的 SimpleAsyncTaskExecutor。
      *
-     * @return 默认异步任务执行器
+     * @return 默认异步任务执行器（可能为 null，表示使用 Spring 默认）
      */
     @Override
     public Executor getAsyncExecutor() {
-        log.debug("[AuditAsync] @Async 默认执行器配置完成 → auditAsyncExecutor");
         return auditAsyncExecutor;
     }
 

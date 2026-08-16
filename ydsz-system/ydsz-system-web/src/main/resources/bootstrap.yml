@@ -87,12 +87,26 @@ ydsz:
       enabled: true
       threshold-millis: 500
       alert-threshold-millis: 2000
-    # P2: SQL 审计（写操作落盘备查）
-    sql-audit:
+  # P2: SQL 审计（写操作落盘备查）
+  sql-audit:
+    enabled: true
+    audit-select: false
+    audit-insert: true
+    audit-update: true
+    audit-delete: true
+    log-parameters: true
+    max-parameter-length: 500
+
+  # P0-3: 内部 API IP 白名单（委托 ydsz-common-safe IpAccessService，支持 CIDR 网段）
+  # 迁移说明：原 ydsz.system.internal-api-ip-whitelist 精确匹配已升级为此统一配置
+  # 配置格式支持单个 IP（192.168.1.100）和 CIDR 网段（10.0.0.0/8）
+  safe:
+    ip-access:
       enabled: true
-      audit-select: false
-      audit-insert: true
-      audit-update: true
-      audit-delete: true
-      log-parameters: true
-      max-parameter-length: 500
+      mode: WHITELIST
+      static-whitelist:
+        - 10.0.0.0/8        # K8s 集群 Pod 网段
+        - 172.16.0.0/12     # Docker bridge 网段
+        # - 192.168.1.100   # 运维办公网单个 IP
+      excludes:
+        - /actuator/**
