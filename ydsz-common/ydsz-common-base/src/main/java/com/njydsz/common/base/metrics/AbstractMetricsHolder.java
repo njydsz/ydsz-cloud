@@ -44,7 +44,7 @@ import io.micrometer.core.instrument.Timer;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see AbstractModuleMetrics 若可使用 Spring Bean 注入，推荐优先选择 {@link AbstractModuleMetrics} 基类
+ * @see com.njydsz.common.sentry.adapter.SentryMetricsAdapter 若可使用 Spring Bean 注入，推荐优先选择 SentryMetricsAdapter 基类
  */
 public abstract class AbstractMetricsHolder {
 

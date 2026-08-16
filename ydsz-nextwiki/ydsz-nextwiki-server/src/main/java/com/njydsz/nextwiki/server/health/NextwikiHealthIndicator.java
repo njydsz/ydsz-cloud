@@ -14,7 +14,7 @@ import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
  * <p>职责：报告存储可用性、数据库连接状态。
  *
  * <p>健康检查与指标采集职责分离：所有业务指标（upload/download/delete/...）
- * 由 {@code NextwikiMetrics} 通过 {@link com.njydsz.common.base.metrics.AbstractModuleMetrics} 体系承载，
+ * 由 {@code NextwikiMetrics} 通过 {@link com.njydsz.common.sentry.adapter.SentryMetricsAdapter} 体系承载，
  * 本指标器不持有指标转发门面，违反云顶编码规范"业务模块优先使用 common 模块能力，
  * 不重复造轮子，不承担非自身职责"原则。
  *

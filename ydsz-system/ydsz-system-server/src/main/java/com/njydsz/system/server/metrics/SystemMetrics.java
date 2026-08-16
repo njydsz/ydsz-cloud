@@ -10,10 +10,10 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 /**
  * 系统模块 Micrometer 指标采集器
  *
- * <p>{@code ydsz-system} 微服务的 Prometheus 指标出口，继承 {@link AbstractModuleMetrics} 实现指标统一管理。
+ * <p>{@code ydsz-system} 微服务的 Prometheus 指标出口，继承 {@link SentryMetricsAdapter} 实现指标统一管理。
  * 通过 Spring Boot Actuator 在 {@code /actuator/prometheus} 端点暴露，供 Grafana / Prometheus 抓取。
  *
- * <p><b>架构优化（P0-2）：</b>继承 {@link AbstractModuleMetrics}，统一指标前缀 {@code ydsz_system_}，
+ * <p><b>架构优化（P0-2）：</b>继承 {@link SentryMetricsAdapter}，统一指标前缀 {@code ydsz_system_}，
  * 消除了 15 个手动 Counter / Timer 字段和构造器样板代码，<b>仅保留业务方法</b>。
  *
  * <p><b>暴露指标清单：</b>

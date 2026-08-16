@@ -6,8 +6,8 @@ import com.njydsz.literule.api.RuleSeverity;
  * 规则引擎监控指标接口。
  *
  * <p>P1-5: 从类重构为接口，解决 Java 单继承限制。
- * {@link MicrometerRuleMetrics} 可同时继承 {@code AbstractModuleMetrics} 和实现本接口，
- * 满足 ArchUnit R25 架构规则（所有 *Metrics 类必须继承 AbstractModuleMetrics）。
+ * {@link MicrometerRuleMetrics} 可同时继承 {@code SentryMetricsAdapter} 和实现本接口，
+ * 满足 ArchUnit R25 架构规则（所有 *Metrics 类必须继承 SentryMetricsAdapter）。
  *
  * <p>双轨制实现：
  * <ul>

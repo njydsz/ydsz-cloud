@@ -8,7 +8,7 @@ import io.micrometer.core.instrument.Tags;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
-import com.njydsz.common.base.metrics.AbstractModuleMetrics;
+import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
 
@@ -47,7 +47,7 @@ import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
  */
 @Slf4j
 @Component("cronjobMetrics")
-public class CronjobMetrics extends AbstractModuleMetrics {
+public class CronjobMetrics extends SentryMetricsAdapter {
 
     /** 上次查询运行中任务数的缓存值（30s TTL，避免高频 Gauge 回调压垮 DB） */
     private volatile Long cachedRunningCount = null;

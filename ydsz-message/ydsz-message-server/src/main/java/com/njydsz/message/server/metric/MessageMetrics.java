@@ -7,7 +7,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
-import com.njydsz.common.base.metrics.AbstractModuleMetrics;
+import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 
 /**
  * 消息发送监控指标。
@@ -15,7 +15,7 @@ import com.njydsz.common.base.metrics.AbstractModuleMetrics;
  * <p>基于 Micrometer {@link MeterRegistry} 采集发送计数、耗时、重试、死信、回执等指标，
  * 供 Prometheus / Grafana 监控。所有记录方法均 try-catch 降级，监控失败不影响业务。
  *
- * <p><b>P1-2 架构优化</b>：继承 {@link AbstractModuleMetrics}，消除重复的
+ * <p><b>P1-2 架构优化</b>：继承 {@link SentryMetricsAdapter}，消除重复的
  * Counter/Timer 缓存和降级模式代码。
  *
  * @author ydsz-team
@@ -24,7 +24,7 @@ import com.njydsz.common.base.metrics.AbstractModuleMetrics;
 @Slf4j
 @Component
 @ConditionalOnClass(MeterRegistry.class)
-public class MessageMetrics extends AbstractModuleMetrics {
+public class MessageMetrics extends SentryMetricsAdapter {
 
     public MessageMetrics(MeterRegistry meterRegistry) {
         super(meterRegistry, "ydsz.message.");

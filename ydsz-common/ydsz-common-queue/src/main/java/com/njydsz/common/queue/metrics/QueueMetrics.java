@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.LongAdder;
  * <p>与业务模块的 MessageMetrics（ydsz-message-server）职责分离：
  * <ul>
  *   <li><b>本类（QueueMetrics）</b>：队列技术层监控，不依赖 Spring/Micrometer，纯 POJO 实现。</li>
- *   <li><b>MessageMetrics</b>：业务层监控（继承 AbstractModuleMetrics + Micrometer），
+ *   <li><b>MessageMetrics</b>：业务层监控（继承 SentryMetricsAdapter + Micrometer），
  *       面向业务运营（send/retry/dead/receipt 等业务语义指标）。</li>
  * </ul>
  *

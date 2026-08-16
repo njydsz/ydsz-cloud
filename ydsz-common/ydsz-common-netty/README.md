@@ -426,5 +426,6 @@ ydsz:
 
 ## 变更记录
 
+- **v2.0.0**（2026-08-16）：移除 `MessageDispatcher` / `@MessageHandler`（原 v1.1.0 标记 @Deprecated，无活跃消费者），推荐使用 `SimpleChannelInboundHandler` + switch 策略模式
 - **v1.1.0**（2026-08-16）：`MessageDispatcher` / `@MessageHandler` 标记 @Deprecated（计划 v2.0.0 移除），推荐使用 `SimpleChannelInboundHandler` + switch 策略模式
 - **v1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节；完善配置项表、SPI 扩展点、健康检查、注意事项
