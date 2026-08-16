@@ -13,6 +13,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import com.njydsz.common.search.analytics.SearchAnalyticsService;
+import com.njydsz.common.search.analytics.SearchQualityTracker;
 import com.njydsz.common.search.api.SearchFilter;
 import com.njydsz.common.search.api.SearchHit;
 import com.njydsz.common.search.api.SearchRequest;
@@ -44,6 +45,7 @@ public class UnifiedSearchService {
     private final SearchCacheService cacheService;
     private final SearchMetrics metrics;
     private final SearchAnalyticsService analyticsService;
+    private final SearchQualityTracker qualityTracker;
     private final SearchTextProcessor textProcessor;
     private final ThreadPoolTaskExecutor searchExecutor;
     private final BusinessRanker ranker;
@@ -64,6 +66,7 @@ public class UnifiedSearchService {
      * @param properties       搜索配置
      * @param metrics          指标采集器
      * @param analyticsService 行为分析服务
+     * @param qualityTracker   搜索质量追踪器
      * @param textProcessor    查询文本预处理器
      * @param ranker           业务重排器
      * @param searchCacheService 共享搜索缓存服务
@@ -74,6 +77,7 @@ public class UnifiedSearchService {
                                 SearchProperties properties,
                                 SearchMetrics metrics,
                                 SearchAnalyticsService analyticsService,
+                                SearchQualityTracker qualityTracker,
                                 SearchTextProcessor textProcessor,
                                 BusinessRanker ranker,
                                 SearchCacheService searchCacheService,
@@ -83,6 +87,7 @@ public class UnifiedSearchService {
         this.properties = properties;
         this.metrics = metrics;
         this.analyticsService = analyticsService;
+        this.qualityTracker = qualityTracker;
         this.textProcessor = textProcessor;
         this.ranker = ranker;
         this.cacheService = searchCacheService;
@@ -102,6 +107,7 @@ public class UnifiedSearchService {
      * @param properties       搜索配置
      * @param metrics          指标采集器
      * @param analyticsService 行为分析服务
+     * @param qualityTracker   搜索质量追踪器
      * @param textProcessor    查询文本预处理器
      * @param ranker           业务重排器
      */
@@ -110,9 +116,10 @@ public class UnifiedSearchService {
                                 SearchProperties properties,
                                 SearchMetrics metrics,
                                 SearchAnalyticsService analyticsService,
+                                SearchQualityTracker qualityTracker,
                                 SearchTextProcessor textProcessor,
                                 BusinessRanker ranker) {
-        this(engineRegistry, providerRegistry, properties, metrics, analyticsService, textProcessor, ranker,
+        this(engineRegistry, providerRegistry, properties, metrics, analyticsService, qualityTracker, textProcessor, ranker,
                 new SearchCacheService(properties), createDefaultSearchExecutor(properties));
     }
 

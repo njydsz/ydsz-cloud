@@ -60,7 +60,7 @@ import com.njydsz.common.notify.tracking.EmailTrackingService;
 import com.njydsz.common.redis.service.RedisRateLimiter;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.common.util.concurrent.ExecutorUtils;
+import com.njydsz.common.thread.util.ExecutorUtils;
 
 /**
  * 统一消息通知自动配置类

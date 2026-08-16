@@ -360,6 +360,9 @@ public final class PermissionCodes {
     /** SYSTEM_SEARCH */
     public static final String SYSTEM_SEARCH = "system:search";
 
+    /** SYSTEM_SEARCH_DASHBOARD — 搜索运维看板（分析数据 + 质量指标） */
+    public static final String SYSTEM_SEARCH_DASHBOARD = "system:search:dashboard";
+
     // ==================== Agent 模块权限码 ====================
 
     /** AGENT_CREATE */

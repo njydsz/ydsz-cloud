@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import com.njydsz.common.audit.config.AuditProperties;
 import com.njydsz.common.audit.domain.AuditLog;
-import com.njydsz.common.util.concurrent.ExecutorUtils;
+import com.njydsz.common.thread.util.ExecutorUtils;
 
 /**
  * 异步批量审计记录器

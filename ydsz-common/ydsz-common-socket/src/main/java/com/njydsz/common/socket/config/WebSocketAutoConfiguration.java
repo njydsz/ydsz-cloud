@@ -333,12 +333,13 @@ public class WebSocketAutoConfiguration {
             @Autowired(required = false) WebSocketAuditService auditService,
             @Autowired(required = false) List<WebSocketConnectionListener> connectionListeners,
             WebSocketProperties properties,
-            LocalSessionRegistry sessionRegistry) {
-        log.info("[WebSocket] 注册 WebSocketSessionEventListener");
+            LocalSessionRegistry sessionRegistry,
+            @Autowired(required = false) WebSocketClusterPublisher clusterPublisher) {
+        log.info("[WebSocket] 注册 WebSocketSessionEventListener（含集群 KICK 同步）");
         return new WebSocketSessionEventListener(
                 onlineUserService, offlineMessageStore, messagingTemplate,
                 heartbeatHandler, auditService, connectionListeners,
-                properties, sessionRegistry);
+                properties, sessionRegistry, clusterPublisher);
     }
 
     // ==================== 指标收集器 ====================
