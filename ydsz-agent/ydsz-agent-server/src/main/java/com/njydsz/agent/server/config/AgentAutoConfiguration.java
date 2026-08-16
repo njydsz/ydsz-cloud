@@ -20,6 +20,7 @@ import com.njydsz.agent.domain.guardrail.InputGuardrail;
 import com.njydsz.agent.domain.guardrail.OutputGuardrail;
 import com.njydsz.agent.domain.json.AgentJsonModule;
 import com.njydsz.agent.domain.rag.EmbeddingClient;
+import com.njydsz.agent.domain.rag.Reranker;
 import com.njydsz.agent.domain.rag.TextChunker;
 import com.njydsz.agent.domain.rag.VectorStore;
 import com.njydsz.agent.domain.tool.ToolRegistry;
@@ -30,6 +31,7 @@ import com.njydsz.agent.infra.llm.LlmClientRouter;
 import com.njydsz.agent.infra.llm.OpenAiCompatibleClient;
 import com.njydsz.agent.infra.memory.RedisConversationMemory;
 import com.njydsz.agent.infra.rag.HybridRetriever;
+import com.njydsz.agent.infra.rag.IdentityReranker;
 import com.njydsz.agent.infra.rag.InMemoryVectorStore;
 import com.njydsz.agent.infra.rag.OpenAiEmbeddingClient;
 import com.njydsz.agent.infra.rag.PgVectorStore;
@@ -485,7 +487,7 @@ public class AgentAutoConfiguration {
     }
 
     /**
-     * 装配混合检索器（向量 + 全文，RRF 融合排序）。
+     * 装配混合检索器（向量 + 全文，RRF 融合排序 + 可选 Reranker 精排）。
      *
      * <p>构造期会探测全文检索所需的数据表是否存在，探测结果在实例生命周期内缓存：
      * 若启动时表尚未建好，本实例将<b>始终</b>退化为纯向量检索，后续补建表也不会自动恢复，
@@ -493,12 +495,29 @@ public class AgentAutoConfiguration {
      *
      * @param vectorStore  向量检索通路
      * @param jdbcTemplate 全文检索通路使用的数据源模板
+     * @param reranker     重排序器（可选，未配置时使用 IdentityReranker）
      * @return 混合检索器；仅在容器中不存在其他 {@link HybridRetriever} 时生效
      */
     @Bean
     @ConditionalOnMissingBean(HybridRetriever.class)
-    public HybridRetriever hybridRetriever(VectorStore vectorStore, JdbcTemplate jdbcTemplate) {
-        return new HybridRetriever(vectorStore, jdbcTemplate);
+    public HybridRetriever hybridRetriever(VectorStore vectorStore, JdbcTemplate jdbcTemplate,
+                                           ObjectProvider<Reranker> rerankerProvider) {
+        Reranker reranker = rerankerProvider.getIfAvailable();
+        return new HybridRetriever(vectorStore, jdbcTemplate, reranker);
+    }
+
+    /**
+     * 装配恒等 Reranker 作为默认实现（关闭精排时的兜底）。
+     *
+     * <p>业务侧提供自定义 {@link Reranker} 实现时，本 Bean 因 {@link ConditionalOnMissingBean}
+     * 不再生效，自定义实现会注入到 {@link HybridRetriever} 中。
+     *
+     * @return 恒等 Reranker
+     */
+    @Bean
+    @ConditionalOnMissingBean(Reranker.class)
+    public Reranker reranker() {
+        return new IdentityReranker();
     }
 
     /**

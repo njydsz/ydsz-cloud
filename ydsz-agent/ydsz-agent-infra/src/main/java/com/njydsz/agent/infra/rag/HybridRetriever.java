@@ -6,6 +6,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
+import com.njydsz.agent.domain.rag.Reranker;
 import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.rag.VectorStore;
 
@@ -36,12 +37,19 @@ public class HybridRetriever {
     private final VectorStore vectorStore;
     /** JDBC 模板 */
     private final JdbcTemplate jdbcTemplate;
+    /** 重排序器（可选，未配置时使用 IdentityReranker 兜底） */
+    private final Reranker reranker;
     /** 全文检索是否可用 */
     private final boolean fullTextAvailable;
 
     public HybridRetriever(VectorStore vectorStore, JdbcTemplate jdbcTemplate) {
+        this(vectorStore, jdbcTemplate, new IdentityReranker());
+    }
+
+    public HybridRetriever(VectorStore vectorStore, JdbcTemplate jdbcTemplate, Reranker reranker) {
         this.vectorStore = vectorStore;
         this.jdbcTemplate = jdbcTemplate;
+        this.reranker = reranker != null ? reranker : new IdentityReranker();
         this.fullTextAvailable = checkFullTextAvailability();
     }
 
@@ -75,9 +83,11 @@ public class HybridRetriever {
         }
 
         List<TextChunk> merged = rrfFuse(vectorResults, fullTextResults, topK);
-        log.info("[Hybrid-Retrieval] 混合检索完成: query='{}', vector={}, fulltext={}, merged={}",
-                truncate(query, 50), vectorResults.size(), fullTextResults.size(), merged.size());
-        return merged;
+        // 精排阶段：通过 Reranker 对融合结果做重排序，提升 Top-K 精确度
+        List<TextChunk> reranked = reranker.rerank(query, merged, topK);
+        log.info("[Hybrid-Retrieval] 混合检索完成: query='{}', vector={}, fulltext={}, merged={}, reranked={}",
+                truncate(query, 50), vectorResults.size(), fullTextResults.size(), merged.size(), reranked.size());
+        return reranked;
     }
 
     private List<TextChunk> rrfFuse(List<TextChunk> vectorResults, List<TextChunk> fullTextResults, int topK) {

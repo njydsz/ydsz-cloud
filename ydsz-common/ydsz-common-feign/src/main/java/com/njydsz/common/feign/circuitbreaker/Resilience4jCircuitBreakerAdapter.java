@@ -82,7 +82,7 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
 
             @Override
             public int getTotalCalls() {
-                return metrics.getNumberOfBufferedCalls() + metrics.getNumberOfNotPermittedCalls();
+                return (int) (metrics.getNumberOfBufferedCalls() + metrics.getNumberOfNotPermittedCalls());
             }
 
             @Override
@@ -102,7 +102,8 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
 
             @Override
             public long getAverageDuration() {
-                return metrics.getAverageDuration().toMillis();
+                // CircuitBreaker.Metrics 在 Resilience4j 2.x 中不提供平均耗时，返回 0
+                return 0L;
             }
         };
     }
