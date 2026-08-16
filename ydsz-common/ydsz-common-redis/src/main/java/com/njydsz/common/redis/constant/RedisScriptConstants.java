@@ -31,16 +31,19 @@ public final class RedisScriptConstants {
         throw new UnsupportedOperationException("Constants class");
     }
 
-    // ======================== 固定窗口 ========================
+    // ======================== INCR + EXPIRE 原子计数 ========================
 
     /**
-     * 固定窗口限流 Lua 脚本。
+     * 原子 INCR + EXPIRE Lua 脚本（固定窗口计数器）。
      *
      * <p>逻辑：INCR key，若值为 1 则设置过期时间；返回当前值。
      * 原子性保证：Redis 单线程执行 Lua 脚本，INCR + EXPIRE 不会分裂。
      *
      * <p>参数：KEYS[1]=key, ARGV[1]=window_seconds
      * <p>返回：current_count (Long)
+     *
+     * <p><b>适用场景：</b>固定窗口限流、WebSocket 消息频率统计、
+     * 任何需要"计数 + 自动过期"原子操作的场景。
      */
     public static final String FIXED_WINDOW_LUA =
             "local current = redis.call('INCR', KEYS[1]) " +
@@ -48,6 +51,13 @@ public final class RedisScriptConstants {
             "  redis.call('EXPIRE', KEYS[1], ARGV[1]) " +
             "end " +
             "return current";
+
+    /**
+     * {@link #FIXED_WINDOW_LUA} 的别名，语义同"带过期的原子递增"。
+     *
+     * <p>供 WebSocket 模块等业务侧明确表达"INCR + 首次创建 EXPIRE"语义时使用。
+     */
+    public static final String INCR_WITH_EXPIRE_LUA = FIXED_WINDOW_LUA;
 
     // ======================== 令牌桶（毫秒精度） ========================
 

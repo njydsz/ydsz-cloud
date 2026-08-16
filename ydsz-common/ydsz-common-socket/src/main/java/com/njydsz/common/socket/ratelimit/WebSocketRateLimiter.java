@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
+import com.njydsz.common.redis.constant.RedisScriptConstants;
 import com.njydsz.common.socket.config.WebSocketProperties;
 import com.njydsz.common.socket.resilience.WebSocketCircuitBreaker;
 
@@ -35,13 +36,13 @@ public class WebSocketRateLimiter {
     private static final String RATE_LIMIT_IP_PREFIX = "ydsz:ws:ratelimit:ip:";
     private static final Duration WINDOW = Duration.ofMinutes(1);
 
-    /** Lua 脚本：原子执行 INCR + 首次创建时 EXPIRE */
-    private static final String INCR_EXPIRE_SCRIPT =
-            "local current = redis.call('INCR', KEYS[1]) " +
-            "if current == 1 then " +
-            "    redis.call('EXPIRE', KEYS[1], ARGV[1]) " +
-            "end " +
-            "return current";
+    /**
+     * Lua 脚本：原子执行 INCR + 首次创建时 EXPIRE。
+     *
+     * <p>引用 ydzz-common-redis {@link RedisScriptConstants#INCR_WITH_EXPIRE_LUA}，
+     * 避免内联同源脚本导致的维护分散。
+     */
+    private static final String INCR_EXPIRE_SCRIPT = RedisScriptConstants.INCR_WITH_EXPIRE_LUA;
 
     private final StringRedisTemplate redisTemplate;
     private final WebSocketProperties properties;

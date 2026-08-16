@@ -23,8 +23,11 @@ import com.njydsz.message.server.metric.MessageMetrics;
  * 不再依赖 {@code @Component} 注解。
  *
  * <p>P1.3.0 重构：RealtimePushService 已改为委托 common-socket 的
- * RealtimePushTemplate，不再需要在此手动注册；WebSocketConfig / WebSocketClusterConfig
- * 已由 common-socket 自动装配接管。
+ * RealtimePushTemplate，不再需要在此手动注册。
+ *
+ * <p>P1-4: message 模块原 {@code WebSocketConfig} 已删除，
+ * {@code @EnableWebSocketMessageBroker} 与端点/Broker 配置统一由 common-socket 的
+ * {@code WebSocketConfigurer} 提供（组件扫描自动覆盖），消除重复配置。
  *
  * <p>ChannelRouter 为 {@code @Component}，由组件扫描自动注册，无需在此 @Bean。
  *

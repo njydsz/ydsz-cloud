@@ -110,12 +110,15 @@ public class WebAuthFilter extends BaseAuthFilter {
         if (StringUtils.isEmpty(serviceType)) {
             return "webService";
         }
+        // 白名单精确匹配：仅识别已注册的服务类型码，
+        // 未知值按默认 webService 处理，不向客户端暴露内部校验细节
         if ("appService".equals(serviceType)) {
             return "appService";
         }
         if ("webService".equals(serviceType)) {
             return "webService";
         }
-        throw new IllegalArgumentException("不支持的 X-Service-Type: " + serviceType);
+        log.warn("未识别的 X-Service-Type: {}，按默认 webService 处理", serviceType);
+        return "webService";
     }
 }

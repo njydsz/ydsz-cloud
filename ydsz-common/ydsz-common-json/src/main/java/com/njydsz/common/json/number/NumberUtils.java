@@ -33,6 +33,88 @@ public final class NumberUtils {
     /** 快速路径阈值：大于等于此值时使用两位数查表加速（100 * 656 = 65600 > 65536） */
     private static final int FAST_PATH_THRESHOLD = 65536;
 
+    // ==================== sizeOfInt / sizeOfSmallInt / sizeOfMediumInt 相关常量 ====================
+
+    /** 一位数上界阈值：小于此值时为 1 位数（10^1） */
+    private static final int INT_ONE_DIGIT_THRESHOLD = 10;
+
+    /** 一位数的字符表示长度 */
+    private static final int INT_ONE_DIGIT_SIZE = 1;
+
+    /** 两位数上界阈值：小于此值时为 2 位数（10^2） */
+    private static final int INT_TWO_DIGITS_THRESHOLD = 100;
+
+    /** 两位数的字符表示长度 */
+    private static final int INT_TWO_DIGITS_SIZE = 2;
+
+    /** 三位数上界阈值：小于此值时为 3 位数（10^3） */
+    private static final int INT_THREE_DIGITS_THRESHOLD = 1000;
+
+    /** 三位数的字符表示长度 */
+    private static final int INT_THREE_DIGITS_SIZE = 3;
+
+    /** 四位数上界阈值：小于此值时为 4 位数（10^4） */
+    private static final int INT_FOUR_DIGITS_THRESHOLD = 10000;
+
+    /** 四位数的字符表示长度 */
+    private static final int INT_FOUR_DIGITS_SIZE = 4;
+
+    /** 五位数上界阈值：小于此值时为 5 位数（10^5） */
+    private static final int INT_FIVE_DIGITS_THRESHOLD = 100000;
+
+    /** 五位数的字符表示长度 */
+    private static final int INT_FIVE_DIGITS_SIZE = 5;
+
+    /** 六位数上界阈值：小于此值时为 6 位数（10^6） */
+    private static final int INT_SIX_DIGITS_THRESHOLD = 1000000;
+
+    /** 六位数的字符表示长度 */
+    private static final int INT_SIX_DIGITS_SIZE = 6;
+
+    /** 七位数上界阈值：小于此值时为 7 位数（10^7） */
+    private static final int INT_SEVEN_DIGITS_THRESHOLD = 10000000;
+
+    /** 七位数的字符表示长度 */
+    private static final int INT_SEVEN_DIGITS_SIZE = 7;
+
+    /** 八位数上界阈值：小于此值时为 8 位数（10^8） */
+    private static final int INT_EIGHT_DIGITS_THRESHOLD = 100000000;
+
+    /** 八位数的字符表示长度 */
+    private static final int INT_EIGHT_DIGITS_SIZE = 8;
+
+    /** 最大九位数上界阈值：小于此值时为 9 位数（10^9） */
+    private static final int INT_NINE_DIGITS_THRESHOLD = 1000000000;
+
+    // ==================== sizeOfLong / sizeOfMediumLong / sizeOfLargeLong 相关常量 ====================
+
+    /** 十位数下界阈值：大于等于此值时为 10 位数（10^10） */
+    private static final long LONG_TEN_DIGITS_THRESHOLD = 10000000000L;
+
+    /** 十一位数上界阈值：小于此值时为 11 位数（10^11） */
+    private static final long LONG_ELEVEN_DIGITS_THRESHOLD = 100000000000L;
+
+    /** 十二位数上界阈值：小于此值时为 12 位数（10^12） */
+    private static final long LONG_TWELVE_DIGITS_THRESHOLD = 1000000000000L;
+
+    /** 十四位数上界阈值：小于此值时为 14 位数（10^14） */
+    private static final long LONG_FOURTEEN_DIGITS_THRESHOLD = 100000000000000L;
+
+    /** 十五位数上界阈值：小于此值时为 15 位数（10^15） */
+    private static final long LONG_FIFTEEN_DIGITS_THRESHOLD = 1000000000000000L;
+
+    /** 十六位数上界阈值：小于此值时为 16 位数（10^16） */
+    private static final long LONG_SIXTEEN_DIGITS_THRESHOLD = 10000000000000000L;
+
+    /** 十七位数上界阈值：小于此值时为 17 位数（10^17） */
+    private static final long LONG_SEVENTEEN_DIGITS_THRESHOLD = 100000000000000000L;
+
+    /** 十八位数上界阈值：小于此值时为 18 位数（10^18） */
+    private static final long LONG_EIGHTEEN_DIGITS_THRESHOLD = 1000000000000000000L;
+
+    /** 19 位十进制数可容纳的最大值（小于 Long.MAX_VALUE） */
+    private static final long LONG_19_DIGITS_MAX = 9223372036854775807L;
+
     static {
         for (int i = 0; i < 100; i++) {
             int tens = (i / 10) + '0';
@@ -155,16 +237,20 @@ public final class NumberUtils {
      */
     public static int sizeOfInt(int value) {
         if (value < 0) {
-            if (value == Integer.MIN_VALUE) { return MIN_INT_VALUE_DIGIT_COUNT; }
+            if (value == Integer.MIN_VALUE) {
+                return MIN_INT_VALUE_DIGIT_COUNT;
+            }
             value = -value;
         }
-        if (value < 10000) {
+        if (value < INT_FOUR_DIGITS_THRESHOLD) {
             return sizeOfSmallInt(value);
         }
-        if (value < 100000000) {
+        if (value < INT_EIGHT_DIGITS_THRESHOLD) {
             return sizeOfMediumInt(value);
         }
-        if (value < 1000000000) { return 9; }
+        if (value < INT_NINE_DIGITS_THRESHOLD) {
+            return 9;
+        }
         return 10;
     }
 
@@ -175,10 +261,16 @@ public final class NumberUtils {
      * @return 字符表示长度（1-4）
      */
     private static int sizeOfSmallInt(int value) {
-        if (value < 10) { return 1; }
-        if (value < 100) { return 2; }
-        if (value < 1000) { return 3; }
-        return 4;
+        if (value < INT_ONE_DIGIT_THRESHOLD) {
+            return INT_ONE_DIGIT_SIZE;
+        }
+        if (value < INT_TWO_DIGITS_THRESHOLD) {
+            return INT_TWO_DIGITS_SIZE;
+        }
+        if (value < INT_THREE_DIGITS_THRESHOLD) {
+            return INT_THREE_DIGITS_SIZE;
+        }
+        return INT_FOUR_DIGITS_SIZE;
     }
 
     /**
@@ -188,10 +280,16 @@ public final class NumberUtils {
      * @return 字符表示长度（5-8）
      */
     private static int sizeOfMediumInt(int value) {
-        if (value < 100000) { return 5; }
-        if (value < 1000000) { return 6; }
-        if (value < 10000000) { return 7; }
-        return 8;
+        if (value < INT_FIVE_DIGITS_THRESHOLD) {
+            return INT_FIVE_DIGITS_SIZE;
+        }
+        if (value < INT_SIX_DIGITS_THRESHOLD) {
+            return INT_SIX_DIGITS_SIZE;
+        }
+        if (value < INT_SEVEN_DIGITS_THRESHOLD) {
+            return INT_SEVEN_DIGITS_SIZE;
+        }
+        return INT_EIGHT_DIGITS_SIZE;
     }
 
     /**
@@ -202,13 +300,15 @@ public final class NumberUtils {
      */
     public static int sizeOfLong(long value) {
         if (value < 0) {
-            if (value == Long.MIN_VALUE) { return MIN_LONG_VALUE_DIGIT_COUNT; }
+            if (value == Long.MIN_VALUE) {
+                return MIN_LONG_VALUE_DIGIT_COUNT;
+            }
             value = -value;
         }
         if (value <= Integer.MAX_VALUE) {
             return sizeOfInt((int) value);
         }
-        if (value < 10000000000000L) {
+        if (value < LONG_FOURTEEN_DIGITS_THRESHOLD) {
             return sizeOfMediumLong(value);
         }
         return sizeOfLargeLong(value);
@@ -221,9 +321,15 @@ public final class NumberUtils {
      * @return 字符表示长度（10-13）
      */
     private static int sizeOfMediumLong(long value) {
-        if (value < 10000000000L) { return 10; }
-        if (value < 100000000000L) { return 11; }
-        if (value < 1000000000000L) { return 12; }
+        if (value < LONG_TEN_DIGITS_THRESHOLD) {
+            return 10;
+        }
+        if (value < LONG_ELEVEN_DIGITS_THRESHOLD) {
+            return 11;
+        }
+        if (value < LONG_TWELVE_DIGITS_THRESHOLD) {
+            return 12;
+        }
         return 13;
     }
 
@@ -234,12 +340,24 @@ public final class NumberUtils {
      * @return 字符表示长度（14-20）
      */
     private static int sizeOfLargeLong(long value) {
-        if (value < 100000000000000L) { return 14; }
-        if (value < 1000000000000000L) { return 15; }
-        if (value < 10000000000000000L) { return 16; }
-        if (value < 100000000000000000L) { return 17; }
-        if (value < 1000000000000000000L) { return 18; }
-        if (value < 9223372036854775807L) { return 19; }
+        if (value < LONG_FOURTEEN_DIGITS_THRESHOLD) {
+            return 14;
+        }
+        if (value < LONG_FIFTEEN_DIGITS_THRESHOLD) {
+            return 15;
+        }
+        if (value < LONG_SIXTEEN_DIGITS_THRESHOLD) {
+            return 16;
+        }
+        if (value < LONG_SEVENTEEN_DIGITS_THRESHOLD) {
+            return 17;
+        }
+        if (value < LONG_EIGHTEEN_DIGITS_THRESHOLD) {
+            return 18;
+        }
+        if (value < LONG_19_DIGITS_MAX) {
+            return 19;
+        }
         return MIN_LONG_VALUE_DIGIT_COUNT;
     }
 

@@ -63,10 +63,19 @@ public class WebSecurityConfiguration {
     /**
      * 构建 Web 安全过滤器链。
      *
-     * <p>关闭 CSRF（项目采用无状态 Bearer/Token 认证，无需 CSRF 防护）；会话策略设为
-     * {@code IF_REQUIRED} 保留框架默认；所有请求放行（{@code permitAll}），真正的鉴权由自定义
-     * {@code WebAuthFilter} 完成，本链仅负责将 401/403 异常处理器接入。
-     * 仅在容器中不存在其他 {@link SecurityFilterChain} 时装配，避免与业务安全配置冲突。
+     * <p>项目采用<b>无状态 JWT Bearer 认证</b>（由自定义 {@code WebAuthFilter} 完成鉴权），
+     * 因此本链：
+     * <ul>
+     *   <li>关闭 CSRF（无 Cookie 会话，无 CSRF 攻击面）</li>
+     *   <li>会话策略设为 {@code STATELESS}，与 JWT 无状态模型一致，不创建/使用 HttpSession</li>
+     *   <li>所有请求放行（{@code permitAll}）：真正的鉴权与 401/403 响应由自定义
+     *       {@code WebAuthFilter} 在链内完成，本链仅兜底接入异常处理器，避免业务侧
+     *       自定义 {@link SecurityFilterChain} 被覆盖</li>
+     * </ul>
+     *
+     * <p><b>注意：</b>若业务需接入 Spring Security 原生鉴权（如注解 {@code @PreAuthorize}），
+     * 应自行提供 {@link SecurityFilterChain}（本 Bean 通过 {@code @ConditionalOnMissingBean} 自动让位），
+     * 并在自定义链中配置真正的 {@code authorizeHttpRequests} 规则。
      *
      * @param http                    Spring Security 构建器
      * @param accessDeniedHandler     注入的 403 处理器（见 {@link #webAccessDeniedHandler()}）
@@ -80,7 +89,7 @@ public class WebSecurityConfiguration {
                                                     AccessDeniedHandler accessDeniedHandler,
                                                     AuthenticationEntryPoint authenticationEntryPoint) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth.anyRequest().permitAll())
                 .exceptionHandling(eh -> eh
                         .authenticationEntryPoint(authenticationEntryPoint)
