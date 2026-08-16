@@ -246,22 +246,18 @@ public class RabbitMQSubscriber implements IMessageSubscriber {
         return running.get();
     }
 
-    @Override
     public Object getChannel() {
         return queueName;
     }
 
-    @Override
     public String getConsumerId() {
         return queueName;
     }
 
-    @Override
     public int getConsumedCount() {
         return (int) consumedCount.get();
     }
 
-    @Override
     public Throwable getLastError() {
         return lastError.get();
     }

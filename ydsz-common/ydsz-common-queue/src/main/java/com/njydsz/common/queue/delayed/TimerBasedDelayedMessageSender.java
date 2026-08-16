@@ -105,8 +105,8 @@ public class TimerBasedDelayedMessageSender implements DelayedMessageSender, Dis
         // CHECKSTYLE.ON: ThreadPoolCreate
         pendingTasks.put(messageId, future);
 
-        log.debug("[DelayedMessage] 延时消息已调度，messageId={}, delay={}ms, channel={}",
-                messageId, delayMillis, publisher.getChannel());
+        log.debug("[DelayedMessage] 延时消息已调度，messageId={}, delay={}ms, publisher={}",
+                messageId, delayMillis, publisher.getClass().getSimpleName());
     }
 
     @Override

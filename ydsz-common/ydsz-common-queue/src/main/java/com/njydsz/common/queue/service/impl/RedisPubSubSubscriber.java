@@ -210,26 +210,6 @@ public class RedisPubSubSubscriber implements IMessageSubscriber {
         return running.get();
     }
 
-    @Override
-    public Object getChannel() {
-        return channel;
-    }
-
-    @Override
-    public String getConsumerId() {
-        return channel;
-    }
-
-    @Override
-    public int getConsumedCount() {
-        return (int) consumedCount.get();
-    }
-
-    @Override
-    public Throwable getLastError() {
-        return lastError.get();
-    }
-
     /**
      * 关闭 {@link RedisMessageListenerContainer}，释放 Redis SUBSCRIBE 连接。
      *

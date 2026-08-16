@@ -310,6 +310,31 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
     }
 
     /**
+     * 返回异步记录器的健康状态（含队列水位和丢弃计数）
+     *
+     * @return 健康信息
+     */
+    @Override
+    public HealthInfo health() {
+        double usageRatio = getQueueUsageRatio();
+        long queueFullCount = getQueueFullWarnCount();
+
+        HealthInfo info = HealthInfo.up()
+                .withDetail("queueSize", getQueueSize())
+                .withDetail("queueUsageRatio", String.format("%.1f%%", usageRatio * 100))
+                .withDetail("queueFullCount", queueFullCount);
+
+        if (usageRatio > QUEUE_USAGE_WARN_THRESHOLD) {
+            return HealthInfo.down(info.getDetails())
+                    .withDetail("error", "队列使用率超过80%，审计日志可能被丢弃");
+        }
+        if (queueFullCount > 0) {
+            info.withDetail("warning", "累计丢弃审计日志: " + queueFullCount + " 条");
+        }
+        return info;
+    }
+
+    /**
      * 设置队列满时的兜底策略
      *
      * @param strategy DISCARD_OLDEST（丢弃最旧）| DISCARD_NEWEST（丢弃最新）| CALLER_RUNS（调用者阻塞）

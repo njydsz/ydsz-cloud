@@ -159,22 +159,18 @@ public class KafkaMessageSubscriber implements IMessageSubscriber {
         return running.get();
     }
 
-    @Override
     public Object getChannel() {
         return topic;
     }
 
-    @Override
     public String getConsumerId() {
         return groupId;
     }
 
-    @Override
     public int getConsumedCount() {
         return (int) consumedCount.get();
     }
 
-    @Override
     public Throwable getLastError() {
         return lastError.get();
     }

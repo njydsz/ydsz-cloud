@@ -111,13 +111,11 @@ public class KafkaMessagePublisher implements IMessagePublisher {
         }
     }
 
-    @Override
     public void publishDelayed(QueueMessage message, long delayMillis) {
         log.warn("[Kafka] 延迟消息暂不支持，topic={}", topic);
         publish(message);
     }
 
-    @Override
     public void publishSequential(QueueMessage message) {
         if (message == null || !message.isSequential()) {
             throw new IllegalArgumentException("顺序消息必须设置 messageGroupKey");
@@ -191,12 +189,10 @@ public class KafkaMessagePublisher implements IMessagePublisher {
         }
     }
 
-    @Override
     public String getChannel() {
         return topic;
     }
 
-    @Override
     public boolean isActive() {
         return !closed && producer != null;
     }

@@ -1,7 +1,10 @@
 package com.njydsz.common.queue.service.impl;
 
+import java.util.List;
+
 import org.springframework.data.redis.core.RedisTemplate;
 
+import com.njydsz.common.queue.domain.QueueMessage;
 import com.njydsz.common.queue.service.IMessagePublisher;
 
 /**
@@ -40,7 +43,25 @@ public class RedisPubSubPublisher implements IMessagePublisher {
     }
 
     @Override
-    public String getChannel() {
-        return channel;
+    public void publish(QueueMessage message) {
+        if (message == null) {
+            return;
+        }
+        redisTemplate.convertAndSend(channel, QueueMessage.toPayload(message));
+    }
+
+    @Override
+    public void publishBatch(List<QueueMessage> messages) {
+        if (messages == null || messages.isEmpty()) {
+            return;
+        }
+        for (QueueMessage message : messages) {
+            publish(message);
+        }
+    }
+
+    @Override
+    public void close() {
+        // Redis PubSub 发布者无需显式关闭资源
     }
 }

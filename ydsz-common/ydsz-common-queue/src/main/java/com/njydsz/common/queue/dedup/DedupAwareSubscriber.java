@@ -82,26 +82,6 @@ public class DedupAwareSubscriber implements IMessageSubscriber {
         return delegate.isRunning();
     }
 
-    @Override
-    public Object getChannel() {
-        return delegate.getChannel();
-    }
-
-    @Override
-    public String getConsumerId() {
-        return delegate.getConsumerId();
-    }
-
-    @Override
-    public int getConsumedCount() {
-        return delegate.getConsumedCount();
-    }
-
-    @Override
-    public Throwable getLastError() {
-        return delegate.getLastError();
-    }
-
     /**
      * 获取被装饰的原始订阅者
      */

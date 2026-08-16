@@ -206,26 +206,6 @@ public class RedisStreamSubscriber implements IMessageSubscriber {
         return running.get();
     }
 
-    @Override
-    public Object getChannel() {
-        return channel;
-    }
-
-    @Override
-    public String getConsumerId() {
-        return consumer;
-    }
-
-    @Override
-    public int getConsumedCount() {
-        return (int) consumedCount.get();
-    }
-
-    @Override
-    public Throwable getLastError() {
-        return lastError.get();
-    }
-
     /**
      * 消费循环核心逻辑。
      *

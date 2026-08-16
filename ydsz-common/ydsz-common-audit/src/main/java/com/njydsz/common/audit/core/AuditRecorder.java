@@ -44,4 +44,15 @@ public interface AuditRecorder {
     default String getName() {
         return this.getClass().getSimpleName();
     }
+
+    /**
+     * 返回当前记录器的健康状态
+     *
+     * <p>默认实现返回 UP 状态，子类可覆盖以提供运行时指标（如队列水位、丢弃计数等）。
+     *
+     * @return 健康信息
+     */
+    default HealthInfo health() {
+        return HealthInfo.up();
+    }
 }

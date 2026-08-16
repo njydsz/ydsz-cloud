@@ -155,26 +155,6 @@ public class RedisListSubscriber implements IMessageSubscriber {
         return running.get();
     }
 
-    @Override
-    public Object getChannel() {
-        return channel;
-    }
-
-    @Override
-    public String getConsumerId() {
-        return channel;
-    }
-
-    @Override
-    public int getConsumedCount() {
-        return (int) consumedCount.get();
-    }
-
-    @Override
-    public Throwable getLastError() {
-        return lastError.get();
-    }
-
     /**
      * 获取备份队列当前长度
      *

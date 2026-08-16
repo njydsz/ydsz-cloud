@@ -189,7 +189,6 @@ public class RocketMQPublisher implements IMessagePublisher {
         return future;
     }
 
-    @Override
     public void publishDelayed(QueueMessage message, long delayMillis) {
         if (message == null) {
             throw BusinessException.builder().key("消息不能为空").build();
@@ -270,7 +269,6 @@ public class RocketMQPublisher implements IMessagePublisher {
         throw BusinessException.builder().key("RocketMQ 批量消息发布失败，已重试 " + maxRetryTimes + " 次：" + errorMsg).cause(lastException).build();
     }
 
-    @Override
     public void publishSequential(QueueMessage message) {
         if (message == null || !message.isSequential()) {
             throw BusinessException.builder().key("顺序消息必须设置 messageGroupKey").build();
@@ -311,12 +309,10 @@ public class RocketMQPublisher implements IMessagePublisher {
         throw BusinessException.builder().key("RocketMQ 顺序消息发布失败，已重试 " + maxRetryTimes + " 次：" + errorMsg).cause(lastException).build();
     }
 
-    @Override
     public String getChannel() {
         return topic;
     }
 
-    @Override
     public boolean isActive() {
         return !closed && producer != null;
     }

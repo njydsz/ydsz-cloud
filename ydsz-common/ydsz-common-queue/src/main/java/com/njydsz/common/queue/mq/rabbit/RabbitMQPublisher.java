@@ -2,6 +2,7 @@ package com.njydsz.common.queue.mq.rabbit;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -123,11 +124,19 @@ public class RabbitMQPublisher implements IMessagePublisher {
     }
 
     @Override
+    public void publishBatch(List<QueueMessage> messages) {
+        if (messages == null || messages.isEmpty() || closed) {
+            return;
+        }
+        for (QueueMessage message : messages) {
+            publish(message);
+        }
+    }
+
     public String getChannel() {
         return routingKey;
     }
 
-    @Override
     public boolean isActive() {
         return !closed && connection != null && connection.isOpen();
     }

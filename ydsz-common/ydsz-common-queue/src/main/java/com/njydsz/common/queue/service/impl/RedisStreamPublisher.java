@@ -14,6 +14,7 @@ import org.springframework.data.redis.core.SessionCallback;
 
 import com.njydsz.common.queue.domain.QueueMessage;
 import com.njydsz.common.queue.service.IMessagePublisher;
+import com.njydsz.common.queue.service.MessagePublisherHelper;
 
 /**
  * 基于 Redis Stream 的消息发布者。
@@ -175,10 +176,10 @@ public class RedisStreamPublisher implements IMessagePublisher {
     /**
      * {@inheritDoc}
      *
-     * @return 目标 Stream Key
+     * <p>Redis Stream 发布者无需显式关闭资源。
      */
     @Override
-    public String getChannel() {
-        return channel;
+    public void close() {
+        // Redis Stream 发布者无需显式关闭资源
     }
 }

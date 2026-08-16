@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 
 import com.njydsz.common.seata.annotation.TransactionalMode;
+import com.njydsz.common.seata.api.TransactionType;
 import com.njydsz.common.seata.context.XidContextHolder;
 
 /**
@@ -60,7 +61,7 @@ public class TransactionModeAspect implements Ordered {
     @Around(value = "execution(* *(..)) && (@annotation(annotation) || @within(annotation))",
             argNames = "joinPoint,annotation")
     public Object around(ProceedingJoinPoint joinPoint, TransactionalMode annotation) throws Throwable {
-        com.njydsz.common.seata.api.TransactionType type = annotation.value();
+        TransactionType type = annotation.value();
         String txName = annotation.name();
 
         if (txName.isEmpty()) {
