@@ -109,11 +109,7 @@
             <artifactId>ydsz-userinfo-api</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <!-- P1-2: 通知渠道（Agent 执行结果通知） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-notify</artifactId>
-        </dependency>
+        <!-- P1-2: 通知渠道（Agent 执行结果通知）—— 预留，待实现时引入 -->
         <!-- P1-2: 搜索 Provider SPI（知识库搜索） -->
         <dependency>
             <groupId>com.njydsz</groupId>

@@ -99,11 +99,7 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-sentry</artifactId>
         </dependency>
-        <!-- P2-2: 通知渠道（用户注册/密码修改/角色变更通知） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-notify</artifactId>
-        </dependency>
+        <!-- P2-2: 通知渠道（用户注册/密码修改/角色变更通知）—— 预留，待实现时引入 -->
         <!-- P2-3: 统一文件存储接入 -->
         <dependency>
             <groupId>com.njydsz</groupId>

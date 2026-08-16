@@ -51,6 +51,7 @@ import com.njydsz.common.safe.filter.SafeRequestBodyCacheFilter;
 import com.njydsz.common.safe.filter.SecurityHeaderFilter;
 import com.njydsz.common.safe.filter.XssFilter;
 import com.njydsz.common.safe.ip.IpAccessService;
+import com.njydsz.common.safe.password.PasswordStrengthValidator;
 import com.njydsz.common.safe.sensitive.SensitiveDataAdvice;
 import com.njydsz.common.safe.config.ApiSignatureProperties;
 import com.njydsz.common.safe.crypto.NonceCache;
@@ -490,6 +491,21 @@ public class SafeConfiguration {
     public NonceCache nonceCache() {
         log.info("注册防重放 Nonce 缓存");
         return new NonceCache();
+    }
+
+    /**
+     * P0-1: 注册密码强度校验器
+     *
+     * <p>统一封装 common-util 的 {@link PasswordStrengthChecker} SPI，
+     * 业务模块（注册/修改密码）注入此 Bean 校验密码强度，避免各自实现正则规则。
+     *
+     * @return 密码强度校验器实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(PasswordStrengthValidator.class)
+    public PasswordStrengthValidator passwordStrengthValidator() {
+        log.info("注册密码强度校验器 (默认最低强度: {})", PasswordStrengthValidator.DEFAULT_MIN_LEVEL);
+        return new PasswordStrengthValidator();
     }
 
     /**

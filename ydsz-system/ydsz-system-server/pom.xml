@@ -91,11 +91,7 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-sentry</artifactId>
         </dependency>
-        <!-- P2-2: 通知渠道（配置变更/字典变更通知） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-notify</artifactId>
-        </dependency>
+        <!-- P2-2: 通知渠道（配置变更/字典变更通知）—— 预留，待实现时引入 -->
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-crypto</artifactId>

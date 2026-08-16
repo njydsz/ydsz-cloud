@@ -34,6 +34,18 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>这种解耦符合大厂 B 端架构原则：<b>单一职责 + 服务化</b>，避免模块职责膨胀</li>
  * </ul>
  *
+ * <p><b>收敛对齐（ADR-001）：</b>
+ * <ul>
+ *   <li>本模块是工作流域的<b>通知适配器</b>，负责将工作流事件转为通知请求</li>
+ *   <li>通道字符串与 {@code NotifyChannel} 枚举的映射关系：
+ *       INAPP → {@code NotifyChannel.INSITE}（站内信）、
+ *       EMAIL → {@code NotifyChannel.EMAIL}、
+ *       WEBHOOK → {@code NotifyChannel.DINGTALK} / {@code NotifyChannel.FEISHU} /
+ *       {@code NotifyChannel.WECOM}</li>
+ *   <li>未来 ADR-001 完全落地后，可直接委托 {@code NotifyHelper} 发送，
+ *       届时本类可进一步精简</li>
+ * </ul>
+ *
  * <p><b>核心职责：</b>
  * <ul>
  *   <li><b>通知发送（{@link #notify}）</b>：将工作流事件（待办 / 抄送 / 超时 / 终止等）转发到

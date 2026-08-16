@@ -5,7 +5,17 @@ import java.util.Map;
 
 /**
  * 流程通知服务。
- * <p>向审批人发送任务通知。
+ *
+ * <p>向审批人发送任务通知。作为工作流域的<b>通知适配器</b>，
+ * 将工作流事件（待办/催办/抄送/完成/驳回/超时）转换为通知请求，
+ * 通过 {@code NotificationClient} Feign 契约投递。
+ *
+ * <p><b>通道映射（对齐 NotifyChannel 枚举）：</b>
+ * <ul>
+ *   <li>INAPP → NotifyChannel.INSITE（站内信）</li>
+ *   <li>EMAIL → NotifyChannel.EMAIL（邮件）</li>
+ *   <li>WEBHOOK → NotifyChannel.DINGTALK / FEISHU / WECOM（机器人）</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
