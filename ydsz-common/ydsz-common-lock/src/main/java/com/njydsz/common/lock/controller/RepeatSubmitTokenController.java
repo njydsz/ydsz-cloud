@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.idempotent.RepeatSubmitTokenService;
+import com.njydsz.common.lock.spi.CurrentUserIdResolver;
 
 
 /**
@@ -42,9 +43,12 @@ import com.njydsz.common.lock.idempotent.RepeatSubmitTokenService;
 public class RepeatSubmitTokenController {
 
     private final RepeatSubmitTokenService tokenService;
+    private final CurrentUserIdResolver userIdResolver;
 
-    public RepeatSubmitTokenController(RepeatSubmitTokenService tokenService) {
+    public RepeatSubmitTokenController(RepeatSubmitTokenService tokenService,
+                                        CurrentUserIdResolver userIdResolver) {
         this.tokenService = tokenService;
+        this.userIdResolver = userIdResolver;
     }
 
     /**
@@ -62,10 +66,11 @@ public class RepeatSubmitTokenController {
             @Parameter(description = "Token 有效期（毫秒），默认 60000")
             @RequestParam(defaultValue = "60000") long ttlMillis) {
         try {
-            String token = tokenService.generateToken(ttlMillis);
-            log.debug("[ydsz-lock] [repeat-submit] 生成 Token 成功 | ttl={}ms", ttlMillis);
+            String userId = userIdResolver.getCurrentUserId();
+            String token = tokenService.generateToken(userId, ttlMillis);
+            log.debug("[ydsz-lock] [repeat-submit] 生成 Token 成功 | userId={}, ttl={}ms", userId, ttlMillis);
             return BaseResponse.success(token);
-        } catch (IllegalStateException e) {
+        } catch (IllegalArgumentException e) {
             log.warn("[ydsz-lock] [repeat-submit] 生成 Token 失败 | cause={}", e.getMessage());
             return BaseResponse.error(BaseResultCode.UNAUTHORIZED, "用户未登录，无法生成 Token");
         }
