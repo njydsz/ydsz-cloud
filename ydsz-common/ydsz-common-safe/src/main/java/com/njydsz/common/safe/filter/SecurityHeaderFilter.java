@@ -2,6 +2,7 @@ package com.njydsz.common.safe.filter;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
@@ -12,10 +13,11 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import com.njydsz.common.safe.config.SecurityHeaderConfigurer;
 import com.njydsz.common.safe.config.SecurityHeaderProperties;
 import com.njydsz.common.util.http.UrlPathUtils;
 /**
- * 安全响应头过滤器
+ * 安全响应头过滤器（P1-1：委托 SecurityHeaderConfigurer 计算头策略）。
  *
  * <p>为 HTTP 响应添加安全相关的头部，防止常见 Web 安全威胁：
  * <ul>
@@ -24,6 +26,7 @@ import com.njydsz.common.util.http.UrlPathUtils;
  *   <li>点击劫持防护</li>
  *   <li>中间人攻击防护（HSTS）</li>
  *   <li>内容安全策略（CSP）</li>
+ *   <li>跨源隔离（COOP/COEP/CORP）</li>
  * </ul>
  *
  * <p><b>使用方式：</b>
@@ -33,31 +36,13 @@ import com.njydsz.common.util.http.UrlPathUtils;
  *   <li>建议尽可能早地执行，以确保安全头部被正确设置</li>
  * </ul>
  *
- * <p><b>安全头部说明：</b>
- * <pre>
- * X-Frame-Options: 防止点击劫持
- * X-Content-Type-Options: 防止 MIME 嗅探
- * X-XSS-Protection: XSS 过滤器（现代浏览器已支持 CSP）
- * Strict-Transport-Security: 强制 HTTPS
- * Content-Security-Policy: 内容安全策略
- * Referrer-Policy: Referer 头控制
- * Permissions-Policy: 浏览器功能策略
- * </pre>
- *
  * @author ydsz-team
  * @since 1.0.0
  *
  * @see SecurityHeaderProperties
+ * @see SecurityHeaderConfigurer
  */
 public class SecurityHeaderFilter implements Filter {
-
-    private static final String HEADER_X_FRAME_OPTIONS = "X-Frame-Options";
-    private static final String HEADER_X_CONTENT_TYPE_OPTIONS = "X-Content-Type-Options";
-    private static final String HEADER_X_XSS_PROTECTION = "X-XSS-Protection";
-    private static final String HEADER_STRICT_TRANSPORT_SECURITY = "Strict-Transport-Security";
-    private static final String HEADER_CONTENT_SECURITY_POLICY = "Content-Security-Policy";
-    private static final String HEADER_REFERRER_POLICY = "Referrer-Policy";
-    private static final String HEADER_PERMISSIONS_POLICY = "Permissions-Policy";
 
     private final SecurityHeaderProperties properties;
 
@@ -81,24 +66,16 @@ public class SecurityHeaderFilter implements Filter {
     }
 
     /**
-     * 添加安全响应头
+     * 添加安全响应头。
+     *
+     * <p>P1-1：委托 {@link SecurityHeaderConfigurer#computeHeaders(SecurityHeaderProperties)} 计算头策略，
+     * 确保 Servlet 栈与 WebFlux 栈（Gateway）使用同一套逻辑。
      *
      * @param response HTTP 响应对象
      */
     private void addSecurityHeaders(HttpServletResponse response) {
-        addHeaderIfNotEmpty(response, HEADER_X_FRAME_OPTIONS, properties.getFrameOptions());
-        addHeaderIfNotEmpty(response, HEADER_X_CONTENT_TYPE_OPTIONS, properties.getContentTypeOptions());
-        addHeaderIfNotEmpty(response, HEADER_X_XSS_PROTECTION, properties.getXssProtection());
-        addHeaderIfNotEmpty(response, HEADER_STRICT_TRANSPORT_SECURITY, properties.getHsts());
-        addHeaderIfNotEmpty(response, HEADER_CONTENT_SECURITY_POLICY, properties.getCsp());
-        addHeaderIfNotEmpty(response, HEADER_REFERRER_POLICY, properties.getReferrerPolicy());
-        addHeaderIfNotEmpty(response, HEADER_PERMISSIONS_POLICY, properties.getPermissionsPolicy());
-    }
-
-    private void addHeaderIfNotEmpty(HttpServletResponse response, String headerName, String headerValue) {
-        if (headerValue != null && !headerValue.trim().isEmpty()) {
-            response.setHeader(headerName, headerValue);
-        }
+        Map<String, String> headers = SecurityHeaderConfigurer.computeHeaders(properties);
+        headers.forEach(response::setHeader);
     }
 
     /**

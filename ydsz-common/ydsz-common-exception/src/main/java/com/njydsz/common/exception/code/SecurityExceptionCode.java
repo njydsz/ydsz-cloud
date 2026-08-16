@@ -124,7 +124,20 @@ public enum SecurityExceptionCode implements ExceptionCode {
      * 列权限拒绝
      * @return 处理结果
      */
-    PERMISSION_DENIED_COLUMN("C01065", "security.permission.denied.column", 403);
+    PERMISSION_DENIED_COLUMN("C01065", "security.permission.denied.column", 403),
+
+    // ==================== C01 密码安全 ====================
+
+    /**
+     * 密码强度不足（P0-1：注册/修改密码时强度校验失败）
+     * @return 处理结果
+     */
+    PASSWORD_TOO_WEAK("C01071", "security.password.too.weak", 400),
+    /**
+     * 密码与历史密码重复（P0-1：修改密码时与最近 N 条历史密码重复）
+     * @return 处理结果
+     */
+    PASSWORD_REUSED("C01072", "security.password.reused", 400);
 
     // ==================== 字段定义 ====================
 
