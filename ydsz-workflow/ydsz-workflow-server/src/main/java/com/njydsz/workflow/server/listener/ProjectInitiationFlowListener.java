@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.feign.NotificationClient;
-import com.njydsz.common.feign.dto.RealtimePushDTO;
+import com.njydsz.common.feign.dto.PushRealtimeRequestDTO;
 import com.njydsz.workflow.domain.entity.FlowInstance;
 import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
@@ -433,13 +433,17 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
             return;
         }
         try {
-            Map<String, Object> payload = new HashMap<>();
-            payload.put("title", title);
-            payload.put("content", content);
-            payload.put("taskId", taskId);
-            payload.put("type", "WORKFLOW_TASK");
-            RealtimePushDTO pushDTO = new RealtimePushDTO(payload);
-            notificationClient.pushRealtime(assigneeId, "NOTIFICATION", pushDTO);
+            Map<String, Object> data = new HashMap<>();
+            data.put("title", title);
+            data.put("content", content);
+            data.put("taskId", taskId);
+            data.put("type", "WORKFLOW_TASK");
+            PushRealtimeRequestDTO request = PushRealtimeRequestDTO.builder()
+                    .userId(assigneeId)
+                    .type("NOTIFICATION")
+                    .data(data)
+                    .build();
+            notificationClient.pushRealtime(request);
         } catch (Exception e) {
             log.warn("[FlowListener] IM 推送失败: assigneeId={} taskId={}: {}",
                     assigneeId, taskId, e.getMessage());

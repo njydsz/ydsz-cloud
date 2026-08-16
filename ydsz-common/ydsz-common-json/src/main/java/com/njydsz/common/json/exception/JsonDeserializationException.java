@@ -228,7 +228,7 @@ public class JsonDeserializationException extends JsonException {
         int lineNum = 1;
         int colNum = 1;
         for (int i = 0; i < position && i < json.length(); i++) {
-            if (json.charAt(i) == '\\n') {
+            if (json.charAt(i) == '\n') {
                 lineNum++;
                 colNum = 1;
             } else {
@@ -263,7 +263,7 @@ public class JsonDeserializationException extends JsonException {
         int lineNum = 1;
         int colNum = 1;
         for (int i = 0; i < position && i < json.length(); i++) {
-            if (json.charAt(i) == '\\n') {
+            if (json.charAt(i) == '\n') {
                 lineNum++;
                 colNum = 1;
             } else {

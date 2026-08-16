@@ -10,6 +10,7 @@ import com.njydsz.common.search.api.SearchHit;
 import com.njydsz.common.search.api.SearchRequest;
 import com.njydsz.common.search.api.SearchResponse;
 import com.njydsz.common.search.core.SearchEngineRegistry;
+import com.njydsz.common.search.service.SuggestionService;
 import com.njydsz.common.search.service.UnifiedSearchService;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.service.SearchDomainService;
@@ -48,6 +49,7 @@ public class SearchApplicationService {
     private final SearchDomainService searchDomainService;
     private final ObjectProvider<UnifiedSearchService> unifiedSearchServiceProvider;
     private final ObjectProvider<SearchEngineRegistry> engineRegistryProvider;
+    private final ObjectProvider<SuggestionService> suggestionServiceProvider;
 
     /**
      * 全文检索（按关键词在用户可见范围内分页搜索）。
