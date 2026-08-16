@@ -328,7 +328,9 @@ public class JsonMapper {
         try {
             return SerializationProvider.serialize(obj);
         } finally {
-            if (snapshot != null) restoreConfig(snapshot);
+            if (snapshot != null) {
+                restoreConfig(snapshot);
+            }
         }
     }
 
@@ -348,7 +350,9 @@ public class JsonMapper {
             try {
                 return SerializationProvider.format(obj);
             } finally {
-                if (snapshot != null) restoreConfig(snapshot);
+                if (snapshot != null) {
+                    restoreConfig(snapshot);
+                }
             }
         }
         return toJson(obj);
@@ -372,7 +376,9 @@ public class JsonMapper {
         try {
             return SerializationProvider.serializeWithView(obj, viewClass);
         } finally {
-            if (snapshot != null) restoreConfig(snapshot);
+            if (snapshot != null) {
+                restoreConfig(snapshot);
+            }
         }
     }
 
@@ -390,7 +396,9 @@ public class JsonMapper {
         try {
             return SerializationProvider.serializeToBytes(obj);
         } finally {
-            if (snapshot != null) restoreConfig(snapshot);
+            if (snapshot != null) {
+                restoreConfig(snapshot);
+            }
         }
     }
 
@@ -443,7 +451,9 @@ public class JsonMapper {
         try {
             return DeserializationProvider.deserialize(json, clazz);
         } finally {
-            if (snapshot != null) restoreConfig(snapshot);
+            if (snapshot != null) {
+                restoreConfig(snapshot);
+            }
         }
     }
 
@@ -464,7 +474,9 @@ public class JsonMapper {
         try {
             return DeserializationProvider.deserialize(json, type);
         } finally {
-            if (snapshot != null) restoreConfig(snapshot);
+            if (snapshot != null) {
+                restoreConfig(snapshot);
+            }
         }
     }
 
@@ -485,7 +497,9 @@ public class JsonMapper {
         try {
             return DeserializationProvider.deserialize(json, typeRef.getType());
         } finally {
-            if (snapshot != null) restoreConfig(snapshot);
+            if (snapshot != null) {
+                restoreConfig(snapshot);
+            }
         }
     }
 
@@ -507,7 +521,9 @@ public class JsonMapper {
         try {
             return DeserializationProvider.deserialize(bytes, clazz);
         } finally {
-            if (snapshot != null) restoreConfig(snapshot);
+            if (snapshot != null) {
+                restoreConfig(snapshot);
+            }
         }
     }
 
@@ -530,7 +546,9 @@ public class JsonMapper {
         try {
             return (T) DeserializationProvider.deserializeToObject(bytes, type);
         } finally {
-            if (snapshot != null) restoreConfig(snapshot);
+            if (snapshot != null) {
+                restoreConfig(snapshot);
+            }
         }
     }
 
@@ -584,10 +602,14 @@ public class JsonMapper {
             try {
                 return DeserializationProvider.deserialize(bytes, typeRef.getType());
             } finally {
-                if (snapshot != null) restoreConfig(snapshot);
+                if (snapshot != null) {
+                    restoreConfig(snapshot);
+                }
             }
         } catch (Exception e) {
-            if (e instanceof JsonException) throw (JsonException) e;
+            if (e instanceof JsonException) {
+                throw (JsonException) e;
+            }
             throw new JsonException("Failed to read from InputStream", e);
         }
     }
@@ -615,7 +637,9 @@ public class JsonMapper {
             }
             return new LinkedHashMap<String, Object>();
         } finally {
-            if (snapshot != null) restoreConfig(snapshot);
+            if (snapshot != null) {
+                restoreConfig(snapshot);
+            }
         }
     }
 
@@ -645,7 +669,9 @@ public class JsonMapper {
             }
             return new ArrayList<>();
         } finally {
-            if (snapshot != null) restoreConfig(snapshot);
+            if (snapshot != null) {
+                restoreConfig(snapshot);
+            }
         }
     }
 
@@ -872,7 +898,9 @@ public class JsonMapper {
                 SerializationProvider.setExcludedFields(previous);
             }
         } finally {
-            if (snapshot != null) restoreConfig(snapshot);
+            if (snapshot != null) {
+                restoreConfig(snapshot);
+            }
         }
     }
 
