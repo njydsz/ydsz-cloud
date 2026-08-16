@@ -6,10 +6,10 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -203,7 +203,7 @@ public class UserAccountServiceImpl implements UserAccountService {
    * @param value 查询值（可为 null 或空白）
    */
   private void applyLikeIfPresent(
-      LambdaQueryWrapper<UserAccount> wrapper, Function<UserAccount, String> column, String value) {
+      LambdaQueryWrapper<UserAccount> wrapper, SFunction<UserAccount, String> column, String value) {
     if (value != null && !value.isBlank()) {
       wrapper.like(column, value);
     }
@@ -217,7 +217,7 @@ public class UserAccountServiceImpl implements UserAccountService {
    * @param value 查询值（可为 null 或空白）
    */
   private void applyEqIfPresent(
-      LambdaQueryWrapper<UserAccount> wrapper, Function<UserAccount, String> column, String value) {
+      LambdaQueryWrapper<UserAccount> wrapper, SFunction<UserAccount, String> column, String value) {
     if (value != null && !value.isBlank()) {
       wrapper.eq(column, value);
     }
