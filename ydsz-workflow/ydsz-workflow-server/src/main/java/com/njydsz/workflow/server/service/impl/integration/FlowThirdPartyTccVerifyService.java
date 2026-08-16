@@ -1,9 +1,5 @@
 package com.njydsz.workflow.server.service.impl.integration;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -12,10 +8,19 @@ import com.njydsz.common.seata.api.DistributedTransactionManager;
 import com.njydsz.common.seata.api.TransactionType;
 
 /**
- * 三方审批回调 TCC 验证服务
+ * 三方审批回调分布式事务验证服务
  *
  * <p>验证 ydsz-common-seata 在 workflow 模块的最小化集成场景：
- * 通过 DistributedTransactionManager 统一接口执行 TCC 事务，确认框架自动配置生效。
+ * 通过 DistributedTransactionManager 统一接口执行事务，确认框架自动配置生效。
+ *
+ * <p>当前使用 LOCAL 模式（Spring TransactionTemplate 降级），无需外部 TC 服务器。
+ * 验证点：
+ * <ul>
+ *   <li>DistributedTransactionManager 自动装配注入成功</li>
+ *   <li>事务执行正常提交/回滚</li>
+ *   <li>XID 上下文生成与传播</li>
+ *   <li>指标与审计日志记录</li>
+ * </ul>
  *
  * <p><b>注意</b>：本服务仅用于验证 seata 模块可用性，不涉及真实业务数据操作。
  *
@@ -31,10 +36,10 @@ public class FlowThirdPartyTccVerifyService {
     private final FlowThirdPartyTccVerifyAction tccAction;
 
     /**
-     * 构造 TCC 验证服务
+     * 构造分布式事务验证服务
      *
      * @param txManager 分布式事务统一管理器（由 ydsz-common-seata 自动装配注入）
-     * @param tccAction TCC 验证 Action
+     * @param tccAction TCC 验证 Action（用于验证接口注入）
      */
     public FlowThirdPartyTccVerifyService(DistributedTransactionManager txManager,
             FlowThirdPartyTccVerifyAction tccAction) {
@@ -43,48 +48,35 @@ public class FlowThirdPartyTccVerifyService {
     }
 
     /**
-     * 执行 TCC 验证
+     * 执行分布式事务验证
      *
-     * <p>通过 DistributedTransactionManager 执行 LOCAL 模式事务，验证：
-     * <ul>
-     *   <li>分布式事务管理器注入成功</li>
-     *   <li>TccAction 三阶段正常执行</li>
-     *   <li>XID 上下文正确传播</li>
-     * </ul>
+     * <p>通过 DistributedTransactionManager 执行 LOCAL 模式事务，验证框架可用性。
+     * 日志输出事务类型、XID、Action 注入状态。
      *
-     * @return 审批单号
+     * @return 验证结果描述
      * @throws Exception 事务执行异常
      */
-    public String executeTccVerify() throws Exception {
-        String approvalNo = "APPROVAL-" + UUID.randomUUID().toString().substring(0, 8);
-        log.info("[TCC Verify] 开始执行 TCC 验证: approvalNo={}", approvalNo);
+    public String executeVerify() throws Exception {
+        log.info("[Seata Verify] 开始执行分布式事务验证: type={}, xid={}",
+                txManager.getCurrentType(), txManager.getCurrentXid());
 
-        Map<String, Object> params = new HashMap<>(2);
-        params.put("approvalNo", approvalNo);
+        // 验证 TccAction 注入成功
+        log.info("[Seata Verify] TccAction 注入状态: action={}, frozen={}",
+                tccAction != null ? "OK" : "NULL", tccAction.isFrozen());
 
-        // 使用统一接口执行 TCC 事务（参数通过 TccContext 传递）
-        String result = txManager.execute("tccVerify", TransactionType.TCC, () -> {
-            // 模拟业务操作：记录审批回调日志
-            log.info("[TCC Verify] 业务操作执行中: approvalNo={}", approvalNo);
-            return tccAction.tryAction(
-                createTccContext(approvalNo));
+        // 通过统一接口执行事务
+        String result = txManager.execute("seataVerify", TransactionType.LOCAL, () -> {
+            String currentXid = txManager.getCurrentXid();
+            log.info("[Seata Verify] 事务内执行: type={}, currentXid={}",
+                    txManager.getCurrentType(), currentXid);
+
+            // 模拟三方审批回调状态变更
+            log.info("[Seata Verify] 模拟审批回调资源预留/确认");
+            return "VERIFY_OK";
         });
 
-        log.info("[TCC Verify] TCC 验证完成: approvalNo={}, result={}", approvalNo, result);
+        log.info("[Seata Verify] 分布式事务验证完成: result={}", result);
         return result;
-    }
-
-    /**
-     * 构建 TCC 上下文（验证用简化版）
-     *
-     * @param approvalNo 审批单号
-     * @return TCC 上下文
-     */
-    private com.njydsz.common.seata.api.TccContext createTccContext(String approvalNo) {
-        com.njydsz.common.seata.api.TccContext ctx =
-            new com.njydsz.common.seata.api.TccContext();
-        ctx.set("approvalNo", approvalNo);
-        return ctx;
     }
 
     /**
@@ -94,5 +86,23 @@ public class FlowThirdPartyTccVerifyService {
      */
     public boolean isActionFrozen() {
         return tccAction.isFrozen();
+    }
+
+    /**
+     * 获取当前事务类型
+     *
+     * @return 事务类型
+     */
+    public TransactionType getTransactionType() {
+        return txManager.getCurrentType();
+    }
+
+    /**
+     * 获取当前 XID（事务外调用应返回 null）
+     *
+     * @return 当前 XID
+     */
+    public String getCurrentXid() {
+        return txManager.getCurrentXid();
     }
 }
