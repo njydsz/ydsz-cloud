@@ -182,15 +182,13 @@ ydsz:
     xss:
       enabled: true
       mode: converter                # filter / converter（默认 converter）
-    sql-injection:
-      enabled: true
     csrf:
       enabled: true
       mode: SYNCHRONIZER             # SYNCHRONIZER / DOUBLE_SUBMIT
     sensitive:
       enabled: true
-  ratelimit:
-    enabled: true
+    ratelimit:
+      enabled: true
 ```
 
 ### 3. 代码启用
@@ -234,16 +232,6 @@ public class Application {
 | `strict-level` | MEDIUM | 检测严格级别：`LOW` / `MEDIUM` / `HIGH` |
 | `excludes` | /error, /favicon.ico, /actuator/** | 排除路径列表 |
 
-### SQL 注入防护（`ydsz.safe.sql-injection`）
-
-| 配置 | 默认值 | 说明 |
-|---|---|---|
-| `enabled` | true | 是否启用 SQL 注入防护 |
-| `block-on-detect` | true | 检测到攻击时是否阻断请求 |
-| `custom-pattern` | 空 | 自定义检测正则（覆盖内置规则，支持热更新） |
-| `whitelist-paths` | 空 | 白名单路径（Ant 风格） |
-| `whitelist-params` | 空 | 白名单参数名 |
-
 ### CSRF 防护（`ydsz.safe.csrf`）
 
 | 配置 | 默认值 | 说明 |
@@ -286,7 +274,7 @@ public class Application {
 | `statistics-enabled` | false | 是否启用脱敏统计 |
 | `global-rules` | 空 | 全局脱敏规则列表（field-name / type / replace-char / enabled） |
 
-### 限流（`ydsz.ratelimit`）
+### 限流（`ydsz.safe.ratelimit`）
 
 | 配置 | 默认值 | 说明 |
 |---|---|---|
@@ -520,7 +508,7 @@ ydsz:
 
 | 端点 | 说明 | 触发条件 |
 |---|---|---|
-| `/actuator/health/safe` | 安全模块健康检查：Redis 连通性、各安全能力注册状态（XSS / SQL 注入 / CSRF / 限流 / IP 访问 / API 签名 / 脱敏 / 验证码 / 加密 / 指标 / 审计日志） | `ydsz.safe.enabled=true`（默认 true）+ classpath 存在 `HealthIndicator` |
+| `/actuator/health/safe` | 安全模块健康检查：Redis 连通性、各安全能力注册状态（XSS / CSRF / 限流 / IP 访问 / API 签名 / 脱敏 / 验证码 / 加密 / 指标 / 审计日志） | `ydsz.safe.enabled=true`（默认 true）+ classpath 存在 `HealthIndicator` |
 
 健康检查返回示例：
 
@@ -546,7 +534,7 @@ ydsz:
 1. **过滤器执行顺序**：`IpAccessFilter (HIGHEST_PRECEDENCE)` → `SecurityHeaderFilter (order=1)` → `XssFilter (order=2)` → `CsrfFilter (order=3)` → `RateLimitFilter (HIGHEST_PRECEDENCE+1)` → `ApiSignatureFilter (HIGHEST_PRECEDENCE+4)`。恶意 IP 在进入其他过滤器之前即被拦截。
 2. **XSS 双模式互斥**：`mode=filter`（全局参数清洗）与 `mode=converter`（JSON 反序列化清洗）二选一，默认 `converter`，避免双重清洗。富文本场景建议 `filter` 模式 + 白名单标签。
 3. **CSRF 模式选择**：单体应用推荐 `SYNCHRONIZER`（服务端 Redis 存储 Token）；SPA / 微服务架构推荐 `DOUBLE_SUBMIT`（无状态，Cookie + Header 双重提交，无需 Redis）。
-4. **限流降级**：Redis 不可用时，集群限流自动降级为本地限流（`fallback-on-error=PASS` 默认放行，可改为 `BLOCK` 拒绝）。`@RateLimit` AOP 通过 `ydsz.ratelimit.aop-enabled` 控制。
+4. **限流降级**：Redis 不可用时，集群限流自动降级为本地限流（`fallback-on-error=PASS` 默认放行，可改为 `BLOCK` 拒绝）。`@RateLimit` AOP 通过 `ydsz.safe.ratelimit.aop-enabled` 控制。
 5. **字段加密密钥轮换**：`@EncryptField(keyVersion=N)` 配合 `ydsz.safe.field-encryption.keys` 多版本密钥映射，支持平滑轮换。解密失败时按 `failure-strategy` 处理（默认 `THROW` fail-safe）。
 6. **自动封禁联动**：`SecurityEventAggregator` 监听安全事件，同一 IP 在 `window-seconds` 内触发超过 `threshold` 次事件时自动调用 `IpAccessService` 封禁 IP（需启用 `ydsz.safe.ip-access.enabled=true`）。
 7. **Redis 降级**：Redis 不可用时，限流 / CSRF Token / 验证码存储均降级为本地内存模式，健康检查会输出 warning 但状态仍为 UP。
@@ -556,5 +544,5 @@ ydsz:
 
 ## 变更记录
 
-- **v1.1.0**（2026-08-16）：限流算法收敛（废弃 COUNTER/SLIDING_WINDOW/LEAKY_BUCKET/CONCURRENCY，统一使用 TOKEN_BUCKET）；熔断器替换为 Resilience4j；移除 SQL 注入正则过滤器；补全 FieldEncryptionService 测试。
+- **v1.1.0**（2026-08-16）：限流算法收敛（废弃 COUNTER/SLIDING_WINDOW/LEAKY_BUCKET/CONCURRENCY，统一使用 TOKEN_BUCKET）；熔断器替换为 Resilience4j；移除 SQL 注入正则过滤器；配置前缀收敛（`ydsz.ratelimit` → `ydsz.safe.ratelimit`）；补全 FieldEncryptionService 测试。
 - **v1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节，覆盖 14 项核心能力、10 个 Properties 配置类、9 个 SPI 接口、1 个 HealthIndicator。

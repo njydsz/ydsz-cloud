@@ -29,10 +29,6 @@ import com.njydsz.common.audit.core.AuditWriter;
 import com.njydsz.common.audit.core.DefaultAuditQueryService;
 import com.njydsz.common.audit.core.DefaultAuditRecorder;
 import com.njydsz.common.audit.health.AuditHealthIndicator;
-import com.njydsz.common.audit.sharding.DailyShardingStrategy;
-import com.njydsz.common.audit.sharding.MonthlyShardingStrategy;
-import com.njydsz.common.audit.sharding.TableShardingStrategy;
-import com.njydsz.common.audit.sharding.YearlyShardingStrategy;
 import com.njydsz.common.audit.storage.DefaultAuditStorage;
 import com.njydsz.common.audit.storage.JdbcAuditStorage;
 import com.njydsz.common.audit.template.AuditTemplateProcessor;
@@ -50,7 +46,6 @@ import io.micrometer.core.instrument.MeterRegistry;
  *   <li>{@link AuditTemplateProcessor}：SpEL 模板解析器</li>
  *   <li>{@link AuditWriter}：审计日志写入器（JDBC / 控制台）</li>
  *   <li>{@link AuditRecorder}：异步/同步审计记录器</li>
- *   <li>{@link TableShardingStrategy}：分表策略</li>
  *   <li>{@link AuditQueryService}：审计日志查询服务</li>
  *   <li>{@link AuditHealthIndicator}：健康检查指示器</li>
  * </ul>
@@ -86,44 +81,22 @@ public class AuditAutoConfiguration {
     }
 
     /**
-     * 创建分表策略 Bean
-     * 当启用分表功能时自动创建
-     *
-     * @param properties 审计配置属性
-     * @return 分表策略，若未启用分表则返回 null
-     */
-    @Bean
-    @ConditionalOnProperty(prefix = "ydsz.audit.sharding", name = "enabled", havingValue = "true")
-    @ConditionalOnMissingBean(TableShardingStrategy.class)
-    public TableShardingStrategy tableShardingStrategy(AuditProperties properties) {
-        String type = properties.getShardingType();
-        log.info("初始化分表策略: type={}", type);
-        return switch (type.toLowerCase()) {
-            case "daily" -> new DailyShardingStrategy();
-            case "yearly" -> new YearlyShardingStrategy();
-            default -> new MonthlyShardingStrategy();
-        };
-    }
-
-    /**
      * 创建 JDBC 审计日志写入器 Bean
      * 当存在 DataSource 且未提供自定义 AuditWriter 时创建
      *
-     * @param dataSource       数据源
-     * @param shardingStrategy 分表策略（可选）
-     * @param properties       审计配置属性
+     * @param dataSource  数据源
+     * @param properties 审计配置属性
      * @return JDBC 审计日志写入器
      */
     @Bean
     @ConditionalOnMissingBean(AuditWriter.class)
     @ConditionalOnBean(DataSource.class)
-    public AuditWriter jdbcAuditWriter(DataSource dataSource,
-                                       TableShardingStrategy shardingStrategy,
-                                       AuditProperties properties) {
+    public AuditWriter jdbcAuditWriter(DataSource dataSource, AuditProperties properties) {
+        String shardingType = properties.isShardingEnabled() ? properties.getShardingType() : null;
         String baseTableName = properties.getShardingBaseTableName();
-        log.info("初始化 JDBC 审计日志写入器: JdbcAuditWriter, 分表策略={}, 基础表名={}",
-                shardingStrategy != null ? shardingStrategy.getShardType() : "DISABLED", baseTableName);
-        return new JdbcAuditStorage(dataSource, shardingStrategy, baseTableName);
+        log.info("初始化 JDBC 审计日志写入器: JdbcAuditWriter, 分表类型={}, 基础表名={}",
+                shardingType != null ? shardingType : "DISABLED", baseTableName);
+        return new JdbcAuditStorage(dataSource, shardingType, baseTableName);
     }
 
     /**
@@ -245,13 +218,12 @@ public class AuditAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(AuditQueryService.class)
     @ConditionalOnBean(DataSource.class)
-    public AuditQueryService auditQueryService(DataSource dataSource,
-                                               TableShardingStrategy shardingStrategy,
-                                               AuditProperties properties) {
+    public AuditQueryService auditQueryService(DataSource dataSource, AuditProperties properties) {
+        String shardingType = properties.isShardingEnabled() ? properties.getShardingType() : null;
         String baseTableName = properties.getShardingBaseTableName();
-        log.info("初始化默认审计查询服务: DefaultAuditQueryService, 分表策略={}",
-                shardingStrategy != null ? shardingStrategy.getShardType() : "DISABLED");
-        return new DefaultAuditQueryService(dataSource, shardingStrategy, baseTableName);
+        log.info("初始化默认审计查询服务: DefaultAuditQueryService, 分表类型={}",
+                shardingType != null ? shardingType : "DISABLED");
+        return new DefaultAuditQueryService(dataSource, shardingType, baseTableName);
     }
 
     /**

@@ -16,7 +16,7 @@ import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.njydsz.common.audit.domain.AuditLog;
-import com.njydsz.common.audit.sharding.TableShardingStrategy;
+import com.njydsz.common.audit.storage.TableNameResolver;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 
@@ -26,7 +26,7 @@ import com.njydsz.common.core.response.PageResponse;
  * <p>提供对 {@code sys_audit_log} 表的常用查询能力，
  * 包括按 ID、业务流水号、操作人、模块、审计类型、时间范围等维度查询。
  *
- * <p><b>分表支持：</b>当启用分表策略时，查询会自动根据时间范围路由到对应分表，
+ * <p><b>分表支持：</b>当启用分表时，查询会自动根据时间范围路由到对应分表，
  * 跨分表查询使用 UNION ALL 合并结果。
  *
  * @author ydsz-team
@@ -50,11 +50,8 @@ public class DefaultAuditQueryService implements AuditQueryService {
     /** JDBC 模板，用于执行数据库查询 */
     private final JdbcTemplate jdbcTemplate;
 
-    /** 分表策略（可为 null） */
-    private final TableShardingStrategy shardingStrategy;
-
-    /** 基础表名 */
-    private final String baseTableName;
+    /** 表名解析器（封装分表逻辑） */
+    private final TableNameResolver tableNameResolver;
 
     /** BeanPropertyRowMapper 缓存 */
     private final BeanPropertyRowMapper<AuditLog> rowMapper = BeanPropertyRowMapper.newInstance(AuditLog.class);
@@ -71,16 +68,15 @@ public class DefaultAuditQueryService implements AuditQueryService {
     /**
      * 构造默认审计查询服务（支持分表）
      *
-     * @param dataSource       数据源
-     * @param shardingStrategy 分表策略（可为 null）
-     * @param baseTableName    基础表名
+     * @param dataSource    数据源
+     * @param shardingType  分表类型（monthly/daily/yearly），为 null 表示不分表
+     * @param baseTableName 基础表名
      */
-    public DefaultAuditQueryService(DataSource dataSource, TableShardingStrategy shardingStrategy, String baseTableName) {
+    public DefaultAuditQueryService(DataSource dataSource, String shardingType, String baseTableName) {
         this.jdbcTemplate = new JdbcTemplate(Objects.requireNonNull(dataSource, "DataSource must not be null"));
-        this.shardingStrategy = shardingStrategy;
         String resolvedTableName = baseTableName != null ? baseTableName : DEFAULT_BASE_TABLE_NAME;
         validateTableName(resolvedTableName);
-        this.baseTableName = resolvedTableName;
+        this.tableNameResolver = new TableNameResolver(shardingType, resolvedTableName);
     }
 
     /**
@@ -104,11 +100,11 @@ public class DefaultAuditQueryService implements AuditQueryService {
             return null;
         }
         try {
-            if (shardingStrategy != null) {
+            if (tableNameResolver.isShardingEnabled()) {
                 // 跨分表查询：查询最近 N 个月的分表
                 LocalDateTime end = LocalDateTime.now();
                 LocalDateTime start = end.minusMonths(DEFAULT_QUERY_RANGE_MONTHS);
-                Set<String> tables = shardingStrategy.getTableNamesInRange(baseTableName, start, end);
+                Set<String> tables = tableNameResolver.resolveInRange(start, end);
                 for (String table : tables) {
                     AuditLog result = queryFromTable(table, "id = ? LIMIT 1", id);
                     if (result != null) {
@@ -117,8 +113,8 @@ public class DefaultAuditQueryService implements AuditQueryService {
                 }
                 return null;
             }
-            // baseTableName validated in constructor via validateTableName() — safe from SQL injection
-            String sql = buildSelectSql(baseTableName, "id = ? LIMIT 1", null);
+            // tableName validated in constructor via validateTableName() — safe from SQL injection
+            String sql = buildSelectSql(tableNameResolver.resolve(null), "id = ? LIMIT 1", null);
             return jdbcTemplate.queryForObject(sql, rowMapper, id);
         } catch (Exception e) {
             log.warn("查询审计日志失败, id={}", id, e);
@@ -346,8 +342,8 @@ public class DefaultAuditQueryService implements AuditQueryService {
      * 解析时间范围涉及的分表
      */
     private Set<String> resolveTables(LocalDateTime startTime, LocalDateTime endTime) {
-        if (shardingStrategy == null) {
-            return Collections.singleton(baseTableName);
+        if (!tableNameResolver.isShardingEnabled()) {
+            return Collections.singleton(tableNameResolver.resolve(null));
         }
         if (startTime == null) {
             startTime = LocalDateTime.now().minusMonths(DEFAULT_QUERY_RANGE_MONTHS);
@@ -355,7 +351,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
         if (endTime == null) {
             endTime = LocalDateTime.now();
         }
-        return shardingStrategy.getTableNamesInRange(baseTableName, startTime, endTime);
+        return tableNameResolver.resolveInRange(startTime, endTime);
     }
 
     /**
@@ -399,7 +395,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
      * 执行列表查询（公共方法，处理分表和非分表逻辑）
      */
     private List<AuditLog> executeListQuery(SqlContext ctx) {
-        if (shardingStrategy != null) {
+        if (tableNameResolver.isShardingEnabled()) {
             Set<String> tables = resolveTables(ctx.getStartTime(), ctx.getEndTime());
             if (tables.isEmpty()) {
                 return Collections.emptyList();
@@ -415,7 +411,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
             return jdbcTemplate.query(unionSql, rowMapper, ctx.getParamsArray());
         }
         // 非分表模式
-        String sql = buildSelectSql(baseTableName, null, null) + " WHERE " + buildWhereClause(ctx)
+        String sql = buildSelectSql(tableNameResolver.resolve(null), null, null) + " WHERE " + buildWhereClause(ctx)
                 + " ORDER BY operation_time DESC";
         return jdbcTemplate.query(sql, rowMapper, ctx.getParamsArray());
     }
@@ -424,7 +420,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
      * 执行带分页的列表查询
      */
     private List<AuditLog> executeListQueryWithLimit(SqlContext ctx) {
-        if (shardingStrategy != null) {
+        if (tableNameResolver.isShardingEnabled()) {
             Set<String> tables = resolveTables(ctx.getStartTime(), ctx.getEndTime());
             if (tables.size() == 1) {
                 String table = tables.iterator().next();
@@ -440,7 +436,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
             return jdbcTemplate.query(unionSql, rowMapper, ctx.getParamsArray());
         }
         // 非分表模式
-        String sql = buildSelectSqlWithLimit(baseTableName, buildWhereClause(ctx),
+        String sql = buildSelectSqlWithLimit(tableNameResolver.resolve(null), buildWhereClause(ctx),
                 ctx.getLimit(), ctx.getOffset());
         return jdbcTemplate.query(sql, rowMapper, ctx.getParamsArray());
     }
@@ -449,7 +445,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
      * 执行计数查询
      */
     private long executeCountQuery(SqlContext ctx) {
-        if (shardingStrategy != null) {
+        if (tableNameResolver.isShardingEnabled()) {
             Set<String> tables = resolveTables(ctx.getStartTime(), ctx.getEndTime());
             long total = 0;
             for (String table : tables) {
@@ -461,7 +457,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
             return total;
         }
         // 非分表模式
-        String sql = "SELECT COUNT(*) FROM " + baseTableName + " WHERE " + buildWhereClause(ctx);
+        String sql = "SELECT COUNT(*) FROM " + tableNameResolver.resolve(null) + " WHERE " + buildWhereClause(ctx);
         Long count = jdbcTemplate.queryForObject(sql, Long.class, ctx.getParamsArray());
         return count != null ? count : 0L;
     }
@@ -575,7 +571,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
      * 按操作人统计审计日志数量
      */
     private long countByOperator(String operatorId) {
-        String sql = "SELECT COUNT(*) FROM " + baseTableName + " WHERE operator_id = ?";
+        String sql = "SELECT COUNT(*) FROM " + tableNameResolver.resolve(null) + " WHERE operator_id = ?";
         Long count = jdbcTemplate.queryForObject(sql, Long.class, operatorId);
         return count != null ? count : 0L;
     }
@@ -584,7 +580,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
      * 按操作类型统计审计日志数量
      */
     private long countByAction(Integer action) {
-        String sql = "SELECT COUNT(*) FROM " + baseTableName + " WHERE action = ?";
+        String sql = "SELECT COUNT(*) FROM " + tableNameResolver.resolve(null) + " WHERE action = ?";
         Long count = jdbcTemplate.queryForObject(sql, Long.class, action);
         return count != null ? count : 0L;
     }
@@ -593,7 +589,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
      * 按实体类型统计审计日志数量
      */
     private long countByEntityType(String entityType) {
-        String sql = "SELECT COUNT(*) FROM " + baseTableName + " WHERE module = ?";
+        String sql = "SELECT COUNT(*) FROM " + tableNameResolver.resolve(null) + " WHERE module = ?";
         Long count = jdbcTemplate.queryForObject(sql, Long.class, entityType);
         return count != null ? count : 0L;
     }

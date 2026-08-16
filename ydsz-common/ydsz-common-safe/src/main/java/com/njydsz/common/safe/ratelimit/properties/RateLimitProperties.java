@@ -12,32 +12,33 @@ import lombok.Data;
 /**
  * 限流模块配置属性
  *
- * <p>前缀：{@code ydsz.ratelimit}
+ * <p>前缀：{@code ydsz.safe.ratelimit}
  *
  * <p>配置示例：
  * <pre>{@code
  * ydsz:
- *   ratelimit:
- *     enabled: true
- *     default-mode: LOCAL
- *     fallback-on-error: PASS
- *     metrics-enabled: true
- *     rules:
- *       - resource: user.login
- *         threshold: 5
- *         window-millis: 1000
- *         dimension: USER
- *       - resource: order.create
- *         threshold: 100
- *         algorithm: SLIDING_WINDOW
- *         mode: CLUSTER
+ *   safe:
+ *     ratelimit:
+ *       enabled: true
+ *       default-mode: LOCAL
+ *       fallback-on-error: PASS
+ *       metrics-enabled: true
+ *       rules:
+ *         - resource: user.login
+ *           threshold: 5
+ *           window-millis: 1000
+ *           dimension: USER
+ *         - resource: order.create
+ *           threshold: 100
+ *           algorithm: TOKEN_BUCKET
+ *           mode: CLUSTER
  * }</pre>
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Data
-@ConfigurationProperties(prefix = "ydsz.ratelimit")
+@ConfigurationProperties(prefix = "ydsz.safe.ratelimit")
 public class RateLimitProperties {
 
     /** 是否启用限流模块 */

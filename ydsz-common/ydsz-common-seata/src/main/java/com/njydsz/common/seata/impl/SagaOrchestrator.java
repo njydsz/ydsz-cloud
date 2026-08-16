@@ -139,6 +139,7 @@ public class SagaOrchestrator extends AbstractTransactionManager {
             }
 
             log.info("SAGA transaction completed: name={}, xid={}", transactionName, xid);
+            endXid();
             return lastResult;
 
         } catch (Exception e) {
@@ -163,6 +164,7 @@ public class SagaOrchestrator extends AbstractTransactionManager {
                 persistStateMachineLog(stateLog);
             }
 
+            endXid(e);
             throw e;
         }
     }
@@ -338,17 +340,29 @@ public class SagaOrchestrator extends AbstractTransactionManager {
 
     @Override
     public <T> T execute(String transactionName, TransactionType type, Callable<T> action) throws Exception {
-        return action.call();
+        String xid = beginXid(transactionName);
+        try {
+            T result = action.call();
+            endXid();
+            return result;
+        } catch (Exception e) {
+            endXid(e);
+            throw e;
+        }
     }
 
     @Override
     public <T> T executeWithCompensation(String transactionName, Callable<T> action, Runnable compensation) throws Exception {
+        String xid = beginXid(transactionName);
         try {
-            return action.call();
+            T result = action.call();
+            endXid();
+            return result;
         } catch (Exception e) {
             if (compensation != null) {
                 compensation.run();
             }
+            endXid(e);
             throw e;
         }
     }

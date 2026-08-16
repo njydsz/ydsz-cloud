@@ -139,12 +139,12 @@ public class TccTransactionManager extends AbstractTransactionManager
         try {
             T result = action.call();
             log.debug("TCC transaction completed: name={}, xid={}, type={}", transactionName, xid, type);
+            endXid();
             return result;
         } catch (Exception e) {
             log.error("TCC transaction failed: name={}, xid={}, type={}", transactionName, xid, type, e);
+            endXid(e);
             throw e;
-        } finally {
-            endXid();
         }
     }
 
@@ -167,13 +167,13 @@ public class TccTransactionManager extends AbstractTransactionManager
         try {
             T result = action.call();
             log.debug("TCC+SAGA transaction completed: name={}, xid={}", transactionName, xid);
+            endXid();
             return result;
         } catch (Exception e) {
             log.error("TCC+SAGA transaction failed, executing compensation: name={}, xid={}", transactionName, xid, e);
             runCompensation(transactionName, xid, compensation);
+            endXid(e);
             throw e;
-        } finally {
-            endXid();
         }
     }
 
@@ -207,6 +207,7 @@ public class TccTransactionManager extends AbstractTransactionManager
         try {
             if (logStore != null && isSuspended(xid, branchId)) {
                 log.warn("TCC Try skipped (suspension): already cancelled: xid={}, branch={}", xid, branchId);
+                endXid();
                 return null;
             }
             updateStatus(txLog, TccBranchStatus.TRYING);
@@ -219,18 +220,19 @@ public class TccTransactionManager extends AbstractTransactionManager
         } catch (Exception e) {
             log.error("TCC Try failed, executing Cancel: name={}, xid={}", transactionName, xid, e);
             executeCancelWithGuard(transactionName, xid, branchId, txLog, tccAction, context);
+            endXid(e);
             throw e;
-        } finally {
-            endXid();
         }
 
         log.info("TCC Confirm phase: name={}, xid={}, branch={}", transactionName, xid, branchId);
         try {
             executeConfirmWithRetry(transactionName, xid, branchId, txLog, tccAction, context);
             log.info("TCC transaction completed: name={}, xid={}", transactionName, xid);
+            endXid();
         } catch (Exception e) {
             log.error("TCC Confirm failed, executing Cancel: name={}, xid={}", transactionName, xid, e);
             executeCancelWithRetry(transactionName, xid, branchId, txLog, tccAction, context);
+            endXid(e);
             throw e;
         }
 
@@ -302,7 +304,7 @@ public class TccTransactionManager extends AbstractTransactionManager
         } catch (Exception e) {
             log.error("TCC Async Try failed, executing Cancel: name={}, xid={}", transactionName, xid, e);
             executeCancelWithGuard(transactionName, xid, branchId, txLog, tccAction, context);
-            endXid();
+            endXid(e);
             notifyCallback(callback, context, e);
             return CompletableFuture.failedFuture(e);
         }

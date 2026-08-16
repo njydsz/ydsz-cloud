@@ -19,7 +19,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import com.njydsz.common.audit.core.AuditWriteException;
 import com.njydsz.common.audit.core.AuditWriter;
 import com.njydsz.common.audit.domain.AuditLog;
-import com.njydsz.common.audit.sharding.TableShardingStrategy;
 
 /**
  * JDBC 审计日志存储实现
@@ -30,13 +29,6 @@ import com.njydsz.common.audit.sharding.TableShardingStrategy;
  *
  * <p><b>依赖说明：</b>本类使用 {@code javax.sql.DataSource}，该接口属于 JDK 标准库，
  * 不受 Jakarta EE 迁移影响，在 Spring Boot 3.x 中无需修改。</p>
- *
- * <p><b>多数据库方言支持：</b></p>
- * <ul>
- *   <li>MySQL：默认 INSERT VALUES 批量插入</li>
- *   <li>PostgreSQL：兼容标准批量插入</li>
- *   <li>Oracle：使用参数化批量插入</li>
- * </ul>
  *
  * <p><b>分表支持：</b></p>
  * <ul>
@@ -94,10 +86,9 @@ public class JdbcAuditStorage implements AuditWriter {
 
     /** 命名参数 JDBC 模板，用于执行参数化 SQL */
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
-    /** 分表策略（可为 null） */
-    private final TableShardingStrategy shardingStrategy;
-    /** 基础表名 */
-    private final String baseTableName;
+
+    /** 表名解析器（封装分表逻辑） */
+    private final TableNameResolver tableNameResolver;
 
     /** 表名白名单正则：仅允许字母、数字、下划线，禁止特殊字符 */
     private static final Pattern TABLE_NAME_PATTERN = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]{0,63}$");
@@ -123,32 +114,28 @@ public class JdbcAuditStorage implements AuditWriter {
     /**
      * 构造函数 - 支持分表策略
      *
-     * @param dataSource        数据源
-     * @param shardingStrategy  分表策略（可为 null）
-     * @param baseTableName     基础表名
+     * @param dataSource       数据源
+     * @param shardingType     分表类型（monthly/daily/yearly），为 null 表示不分表
+     * @param baseTableName    基础表名
      */
-    public JdbcAuditStorage(DataSource dataSource, TableShardingStrategy shardingStrategy, String baseTableName) {
-        this.namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(dataSource);
-        this.shardingStrategy = shardingStrategy;
-        this.baseTableName = baseTableName != null ? baseTableName : BASE_TABLE_NAME;
-        log.info("【审计存储】JdbcAuditStorage 初始化完成, 分表策略={}, 基础表名={}",
-                shardingStrategy != null ? shardingStrategy.getShardType() : "DISABLED", this.baseTableName);
+    public JdbcAuditStorage(DataSource dataSource, String shardingType, String baseTableName) {
+        this(new NamedParameterJdbcTemplate(dataSource), shardingType, baseTableName);
     }
 
     /**
      * 构造函数 - 支持分表策略（推荐方式，复用已有 NamedParameterJdbcTemplate）
      *
      * @param namedParameterJdbcTemplate Spring 管理的 NamedParameterJdbcTemplate
-     * @param shardingStrategy           分表策略（可为 null）
-     * @param baseTableName              基础表名
+     * @param shardingType              分表类型（monthly/daily/yearly），为 null 表示不分表
+     * @param baseTableName             基础表名
      */
     public JdbcAuditStorage(NamedParameterJdbcTemplate namedParameterJdbcTemplate,
-                            TableShardingStrategy shardingStrategy, String baseTableName) {
+                            String shardingType, String baseTableName) {
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
-        this.shardingStrategy = shardingStrategy;
-        this.baseTableName = baseTableName != null ? baseTableName : BASE_TABLE_NAME;
-        log.info("【审计存储】JdbcAuditStorage 初始化完成, 分表策略={}, 基础表名={}",
-                shardingStrategy != null ? shardingStrategy.getShardType() : "DISABLED", this.baseTableName);
+        String resolvedTableName = baseTableName != null ? baseTableName : BASE_TABLE_NAME;
+        this.tableNameResolver = new TableNameResolver(shardingType, resolvedTableName);
+        log.info("【审计存储】JdbcAuditStorage 初始化完成, 分表类型={}, 基础表名={}",
+                shardingType != null ? shardingType : "DISABLED", resolvedTableName);
     }
 
     // ====================== AuditWriter 实现 ======================
@@ -174,7 +161,7 @@ public class JdbcAuditStorage implements AuditWriter {
             return;
         }
         try {
-            if (shardingStrategy != null) {
+            if (tableNameResolver.isShardingEnabled()) {
                 saveBatchWithSharding(auditLogs);
             } else {
                 saveBatchNoSharding(auditLogs);
@@ -201,7 +188,7 @@ public class JdbcAuditStorage implements AuditWriter {
         for (int offset = 0; offset < total; offset += BATCH_SIZE) {
             int end = Math.min(offset + BATCH_SIZE, total);
             List<AuditLog> batch = auditLogs.subList(offset, end);
-            saveBatchStandard(baseTableName, batch);
+            saveBatchStandard(tableNameResolver.resolve(null), batch);
         }
     }
 
@@ -239,17 +226,11 @@ public class JdbcAuditStorage implements AuditWriter {
      * 根据审计日志解析目标表名
      */
     private String resolveTableName(AuditLog auditLog) {
-        if (shardingStrategy == null) {
-            return baseTableName;
-        }
         LocalDateTime time = auditLog.getOperationTime();
         if (time == null) {
             time = auditLog.getCreatedAt();
         }
-        if (time == null) {
-            time = LocalDateTime.now();
-        }
-        return shardingStrategy.getTableName(baseTableName, time);
+        return tableNameResolver.resolve(time);
     }
 
     /**
@@ -309,16 +290,19 @@ public class JdbcAuditStorage implements AuditWriter {
     // ====================== 工具方法 ======================
 
     /**
-     * 清理过期日志（无分表模式）
+     * 清理过期日志
+     *
+     * @param retentionDays 日志保留天数
+     * @return 清理的记录数
      */
     public int cleanExpiredLogs(int retentionDays) {
-        if (shardingStrategy == null) {
-            return cleanFromTable(baseTableName, retentionDays);
+        if (!tableNameResolver.isShardingEnabled()) {
+            return cleanFromTable(tableNameResolver.resolve(null), retentionDays);
         }
         int total = 0;
         LocalDateTime endTime = LocalDateTime.now();
         LocalDateTime startTime = endTime.minusDays(retentionDays);
-        Set<String> tables = shardingStrategy.getTableNamesInRange(baseTableName, startTime, endTime);
+        Set<String> tables = tableNameResolver.resolveInRange(startTime, endTime);
         for (String table : tables) {
             total += cleanFromTable(table, retentionDays);
         }
@@ -349,16 +333,20 @@ public class JdbcAuditStorage implements AuditWriter {
     }
 
     /**
-     * 获取分表策略
+     * 获取表名解析器
+     *
+     * @return 表名解析器实例
      */
-    public TableShardingStrategy getShardingStrategy() {
-        return shardingStrategy;
+    public TableNameResolver getTableNameResolver() {
+        return tableNameResolver;
     }
 
     /**
      * 获取基础表名
+     *
+     * @return 基础表名
      */
     public String getBaseTableName() {
-        return baseTableName;
+        return tableNameResolver.resolve(null);
     }
 }

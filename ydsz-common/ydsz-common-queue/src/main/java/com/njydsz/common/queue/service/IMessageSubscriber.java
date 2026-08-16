@@ -3,126 +3,65 @@ package com.njydsz.common.queue.service;
 import com.njydsz.common.queue.domain.QueueMessage;
 
 /**
- * 消息订阅者接口
+ * 消息订阅者接口（精简版）。
  *
- * <p>定义消息订阅的核心操作，支持同步消费、异步消费、结构化消费和一次性消费。
+ * <p>定义消息队列订阅者的核心能力：同步订阅、异步订阅、停止、状态查询。
+ * 组合操作（结构化消费、单次消费、状态查询等）由 {@link MessageSubscriberHelper} 提供。
  *
- * <p><b>线程安全性：</b>
- * 实现类应该是线程安全的，可以被多个线程共享使用。
+ * <p><b>线程安全：</b>subscribeAsync 启动消费线程后，stop() 应能安全中断。
+ *
+ * <p><b>使用示例：</b>
+ * <pre>{@code
+ * IMessageSubscriber subscriber = queue.createSubscriber("order-events");
+ *
+ * // 异步持续消费
+ * subscriber.subscribeAsync(msg -> {
+ *     log.info("Received: {}", msg.getBody());
+ * });
+ *
+ * // 同步阻塞消费
+ * String message = subscriber.subscribe();
+ * }</pre>
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see MessageSubscriberHelper
+ * @see IMessagePublisher
  */
 public interface IMessageSubscriber {
 
     /**
-     * 同步消费字符串消息（阻塞式）
+     * 同步订阅消息（阻塞等待）。
      *
      * <p>此方法为阻塞调用，将等待直到有一条消息可用。
-     * 适合单条消息处理或简单的拉取场景。
+     * 返回原始消息字符串，需要调用方自行反序列化。
      *
-     * @return 消费到的消息 payload，无消息时返回 null
+     * @return 消息字符串，无消息或中断时返回 null
      */
     String subscribe();
 
     /**
-     * 同步消费结构化消息（阻塞式）
+     * 异步订阅消息（启动后台消费线程）。
      *
-     * <p>消费一条消息并解析为 {@link QueueMessage}，携带 headers、traceId 等元数据。
-     * 默认实现调用 {@link #subscribe()} 后反序列化。
+     * <p>启动一个后台线程持续消费消息，每消费一条消息调用一次 handler。
+     * 消费失败时是否重试取决于具体实现。
      *
-     * @return 消费到的消息对象，无消息时返回 null
-     */
-    default QueueMessage subscribeMessage() {
-        String payload = subscribe();
-        if (payload == null) {
-            return null;
-        }
-        return QueueMessage.fromPayload(payload);
-    }
-
-    /**
-     * 异步订阅消息
-     *
-     * <p>启动后台线程（或线程池）持续监听消息并回调 handler。
-     * 此方法非阻塞，返回后消费者仍在后台运行。
-     *
-     * @param handler 消息处理回调，不能为 null
-     * @return 消费者 ID，可用于 {@link #stop()} 停止消费
+     * @param handler 消息处理回调，不可为 null
+     * @return 消费者 ID（用于日志追踪和 stop 操作）
      */
     String subscribeAsync(IMessageHandler handler);
 
     /**
-     * 一次性消费消息
+     * 停止订阅，释放消费线程和底层资源。
      *
-     * <p>消费一条消息后自动停止，适合定时拉取场景。
-     * 默认实现调用 {@link #subscribeAsync(IMessageHandler)} 并在第一条消息处理后停止。
-     *
-     * @param handler 消息处理回调
-     * @return 消费者 ID
+     * <p>停止后不可再订阅消息。重复调用 stop() 应安全（幂等）。
      */
-    default String subscribeOnce(IMessageHandler handler) {
-        String[] consumerId = new String[1];
-        consumerId[0] = subscribeAsync(message -> {
-            try {
-                handler.onMessage(message);
-            } finally {
-                stop();
-            }
-        });
-        return consumerId[0];
-    }
+    void stop();
 
     /**
-     * 获取底层传输通道
+     * 检查订阅者是否正在运行。
      *
-     * @return 底层通道对象
+     * @return true 如果订阅者处于运行状态
      */
-    default Object getChannel() {
-        return null;
-    }
-
-    /**
-     * 获取消费者 ID
-     *
-     * @return 消费者 ID
-     */
-    default String getConsumerId() {
-        return null;
-    }
-
-    /**
-     * 获取已消费消息数量
-     *
-     * @return 已消费成功消息数
-     */
-    default int getConsumedCount() {
-        return 0;
-    }
-
-    /**
-     * 获取最近一次消费失败的原因
-     *
-     * @return 最后一次异常，无异常时返回 null
-     */
-    default Throwable getLastError() {
-        return null;
-    }
-
-    /**
-     * 判断消费者是否正在运行
-     *
-     * @return 是否正在运行
-     */
-    default boolean isRunning() {
-        return false;
-    }
-
-    /**
-     * 优雅停机
-     *
-     * <p>停止后台消费线程，等待正在处理的消息完成。
-     */
-    default void stop() {
-    }
+    boolean isRunning();
 }

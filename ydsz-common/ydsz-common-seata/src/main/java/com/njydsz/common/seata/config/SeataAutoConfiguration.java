@@ -20,10 +20,10 @@ import com.njydsz.common.seata.api.TccTransactionLogStore;
 import com.njydsz.common.seata.api.XidPropagator;
 import com.njydsz.common.seata.api.XidSigner;
 import com.njydsz.common.seata.aspect.TransactionModeAspect;
+import com.njydsz.common.seata.audit.TransactionAuditLogger;
+import com.njydsz.common.seata.health.SeataHealthIndicator;
 import com.njydsz.common.seata.impl.DbTccTransactionLogStore;
 import com.njydsz.common.seata.impl.DefaultXidPropagator;
-import com.njydsz.common.seata.mq.MqXidPropagator;
-import com.njydsz.common.seata.mq.RocketMqXidPropagator;
 import com.njydsz.common.seata.impl.HmacXidSigner;
 import com.njydsz.common.seata.impl.InMemoryTccTransactionLogStore;
 import com.njydsz.common.seata.impl.LocalTransactionManager;
@@ -36,9 +36,9 @@ import com.njydsz.common.seata.impl.TccTransactionManager;
 import com.njydsz.common.seata.impl.TccTransactionRecoveryScanner;
 import com.njydsz.common.seata.interceptor.FeignXidRequestInterceptor;
 import com.njydsz.common.seata.interceptor.XidServletFilter;
-import com.njydsz.common.seata.audit.TransactionAuditLogger;
-import com.njydsz.common.seata.health.SeataHealthIndicator;
 import com.njydsz.common.seata.metrics.SeataMetrics;
+import com.njydsz.common.seata.mq.MqXidPropagator;
+import com.njydsz.common.seata.mq.RocketMqXidPropagator;
 
 import io.micrometer.core.instrument.MeterRegistry;
 

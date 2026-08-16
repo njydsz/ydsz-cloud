@@ -27,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p>启用条件：
  * <ul>
  *   <li>classpath 存在 {@link RateLimitManager}</li>
- *   <li>{@code ydsz.ratelimit.enabled=true}（默认 true）</li>
+ *   <li>{@code ydsz.safe.ratelimit.enabled=true}（默认 true）</li>
  * </ul>
  *
  * <p><b>注：</b>本类在 {@code AutoConfiguration.imports} 中注册，
@@ -40,7 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 @AutoConfiguration
 @EnableConfigurationProperties(RateLimitProperties.class)
 @ConditionalOnClass(RateLimitManager.class)
-@ConditionalOnProperty(prefix = "ydsz.ratelimit", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "ydsz.safe.ratelimit", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class RateLimitAutoConfiguration {
 
     /**
@@ -103,7 +103,7 @@ public class RateLimitAutoConfiguration {
     /**
      * 注册限流指标采集器（可选）。
      *
-     * <p>当 {@code ydsz.ratelimit.metrics-enabled=false} 或 classpath 无 {@code MeterRegistry} 时返回 null，
+     * <p>当 {@code ydsz.safe.ratelimit.metrics-enabled=false} 或 classpath 无 {@code MeterRegistry} 时返回 null，
      * 即不采集指标，不影响限流主链路。注入后作为监听器挂到 {@link RateLimitManager}，采集 Counter/Timer。
      *
      * @param properties              限流配置（metrics 开关）
@@ -136,7 +136,7 @@ public class RateLimitAutoConfiguration {
     /**
      * 注册方法级限流 AOP 切面（@RateLimit）。
      *
-     * <p>默认随限流模块启用（{@code ydsz.ratelimit.aop-enabled=true}）。拦截标注 {@code @RateLimit} 的方法，
+     * <p>默认随限流模块启用（{@code ydsz.safe.ratelimit.aop-enabled=true}）。拦截标注 {@code @RateLimit} 的方法，
      * 命中限流时抛 {@code RateLimitExceededException}。{@code @ConditionalOnMissingBean} 允许自定义覆盖。
      *
      * @param rateLimitManager 限流管理器（提供决策）
@@ -144,7 +144,7 @@ public class RateLimitAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    @ConditionalOnProperty(prefix = "ydsz.ratelimit", name = "aop-enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "ydsz.safe.ratelimit", name = "aop-enabled", havingValue = "true", matchIfMissing = true)
     public RateLimitAspect rateLimitAspect(RateLimitManager rateLimitManager) {
         log.info("Initializing rate limit AOP aspect");
         return new RateLimitAspect(rateLimitManager);
