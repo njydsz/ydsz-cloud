@@ -39,15 +39,20 @@ import com.njydsz.common.safe.util.ClientIpResolver;
  * <ol>
  *   <li>提取请求头中的 {@code X-Timestamp}、{@code X-Nonce}、{@code X-Signature}、{@code X-App-Id}</li>
  *   <li>校验时间戳偏移量（±{@link ApiSignatureProperties#getTimestampToleranceSeconds()} 秒），防止重放</li>
- *   <li>通过 {@link NonceCache} 校验 nonce 唯一性（原子操作），防止重复提交</li>
- *   <li>重组签名串：{@code method + "\n" + uri + "\n" + timestamp + "\n" + nonce + "\n" + bodySha256}</li>
- *   <li>使用 HMAC-SHA256 + appSecret 计算签名，与请求头签名比对</li>
+ *   <li>重组签名串（含规范化 Query String）：{@code method + "\n" + path + "\n" + normalizedQuery + "\n" + timestamp + "\n" + nonce + "\n" + bodySha256}</li>
+ *   <li>使用 HMAC-SHA256 + appSecret 计算签名，与请求头签名比对（常量时间比较）</li>
+ *   <li><b>先验签、后消费 nonce</b>：签名校验通过后才写入 nonce 缓存，
+ *       防止攻击者用伪造签名 + 随机 nonce 打满缓存导致合法请求被误判重放（DoS）</li>
  * </ol>
  *
  * <p><b>签名计算示例：</b>
  * <pre>{@code
- * String raw = "POST\n/api/v1/order/create\n1700000000000\nabc123\ne3b0c44298fc1c149afbf4c8996fb924..."
- * String signature = Base64(HMAC-SHA256(raw, appSecret))
+ * // GET 请求（无 query）：query 行固定为 `\n` 后的空串
+ * String raw = "GET\n/api/v1/order/detail\n\ne3b0c44298fc1c149afbf4c8996fb924..."
+ * // GET 请求（带 query，按 key 字典序排序后规范化）：
+ * String raw = "GET\n/api/v1/order/list\nid=1&page=2\ne3b0c44298fc1c149afbf4c8996fb924..."
+ * // POST 请求：
+ * String raw = "POST\n/api/v1/order/create\n\ne3b0c44298fc1c149afbf4c8996fb924..."
  * }</pre>
  *
  * <p><b>客户端使用：</b>
@@ -59,13 +64,16 @@ import com.njydsz.common.safe.util.ClientIpResolver;
  * // 2. 计算请求体 SHA-256
  * String bodySha256 = Hex(SHA256(requestBody));
  *
- * // 3. 重组签名串
- * String raw = method + "\n" + uri + "\n" + timestamp + "\n" + nonce + "\n" + bodySha256;
+ * // 3. 规范化 Query String：按 key 字典序排序，key=value 用 & 连接；无 query 为空串
+ * String normalizedQuery = normalizeQuery(request.getQueryString());
  *
- * // 4. HMAC-SHA256 签名
+ * // 4. 重组签名串
+ * String raw = method + "\n" + path + "\n" + normalizedQuery + "\n" + timestamp + "\n" + nonce + "\n" + bodySha256;
+ *
+ * // 5. HMAC-SHA256 签名
  * String signature = Base64(HMAC-SHA256(raw, appSecret));
  *
- * // 5. 设置请求头
+ * // 6. 设置请求头
  * request.setHeader("X-App-Id", appId);
  * request.setHeader("X-Timestamp", String.valueOf(timestamp));
  * request.setHeader("X-Nonce", nonce);
@@ -83,6 +91,8 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
 
     private static final String HMAC_SHA256 = "HmacSHA256";
     private static final String SHA_256 = "SHA-256";
+    private static final String QUERY_SEPARATOR = "&";
+    private static final String QUERY_KV_SEPARATOR = "=";
 
     private final ApiSignatureProperties properties;
     private final NonceCache nonceCache;
@@ -139,13 +149,6 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
             return;
         }
 
-        if (!nonceCache.verifyAndConsume(nonce)) {
-            log.warn("【API签名验证】Nonce 重复 | uri={}, nonce={}", request.getRequestURI(), nonce);
-            publishEvent(request, "Nonce replay detected: " + nonce);
-            reject(response, "Duplicate request");
-            return;
-        }
-
         byte[] bodyBytes = new byte[0];
         CachedBodyHttpServletRequestWrapper wrappedRequest = null;
         String contentType = request.getContentType();
@@ -157,9 +160,12 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
             }
         }
 
+        // 签名串包含规范化 Query String，防止 GET 参数被篡改
+        String normalizedQuery = normalizeQuery(request.getQueryString());
         String bodySha256 = sha256Hex(bodyBytes);
         String raw = request.getMethod() + "\n"
                 + request.getRequestURI() + "\n"
+                + normalizedQuery + "\n"
                 + timestamp + "\n"
                 + nonce + "\n"
                 + bodySha256;
@@ -172,7 +178,39 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
             return;
         }
 
+        // 先验签后消费 nonce：签名合法才写入缓存，防止伪造签名 + 随机 nonce 打满缓存（DoS）
+        if (!nonceCache.verifyAndConsume(nonce)) {
+            log.warn("【API签名验证】Nonce 重复 | uri={}, nonce={}", request.getRequestURI(), nonce);
+            publishEvent(request, "Nonce replay detected: " + nonce);
+            reject(response, "Duplicate request");
+            return;
+        }
+
         filterChain.doFilter(wrappedRequest != null ? wrappedRequest : request, response);
+    }
+
+    /**
+     * 规范化 Query String：按 key 字典序排序，{@code key=value} 用 {@code &} 连接。
+     *
+     * <p>服务端与客户端必须采用相同规则，否则同一请求两侧算出的签名不一致。
+     * 无 query 时返回空串（签名串中对应空行），保证 GET 参数被篡改时签名校验失败。
+     *
+     * @param queryString 原始 Query String，可为 null
+     * @return 规范化后的 Query String（无 query 时为空串）
+     */
+    private static String normalizeQuery(String queryString) {
+        if (!StringUtils.hasText(queryString)) {
+            return "";
+        }
+        List<String> pairs = new java.util.ArrayList<>();
+        for (String pair : queryString.split(QUERY_SEPARATOR)) {
+            if (!StringUtils.hasText(pair)) {
+                continue;
+            }
+            pairs.add(pair);
+        }
+        pairs.sort(String::compareTo);
+        return String.join(QUERY_SEPARATOR, pairs);
     }
 
     /**

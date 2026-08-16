@@ -6,11 +6,11 @@ import com.njydsz.literule.api.RuleContext;
 /**
  * 模型输入提供者 SPI（P3-1 规则+模型融合）
  *
- * <p>实现本接口可将外部模型（如风控评分模型、欺诈检测模型）的输出注入规则上下文，
+ * <p>实现本接口可将外部模型（如外部评分模型、预测模型）的输出注入规则上下文，
  * 供规则表达式引用。在表达式中通过 {@code model.<fieldName>} 访问模型输出，
- * 例如 {@code model.riskScore > 0.8}、{@code model.fraudProbability < 0.1}。
+ * 例如 {@code model.score > 0.8}、{@code model.probability < 0.1}。
  *
- * <p>对标滴滴 Newton、字节风控的"规则+模型融合"能力：
+ * <p>对标业界主流规则+模型融合引擎的"规则+模型融合"能力：
  * <ul>
  *   <li>规则兜底模型异常：模型不可用时降级为纯规则评估</li>
  *   <li>模型输出触发规则：模型输出作为规则条件输入，组合决策</li>
@@ -39,7 +39,7 @@ public interface ModelInputProvider {
      * 根据规则上下文获取模型输出
      *
      * <p>实现方可从 {@link RuleContext#getFacts()} 中读取特征数据，调用模型服务，
-     * 返回模型输出。返回的 Map 的 key 为模型字段名（如 "riskScore"），
+     * 返回模型输出。返回的 Map 的 key 为模型字段名（如 "score"），
      * value 为数值/字符串/布尔等。
      *
      * <p>注意：返回的 key 不应包含 "model." 前缀，前缀由

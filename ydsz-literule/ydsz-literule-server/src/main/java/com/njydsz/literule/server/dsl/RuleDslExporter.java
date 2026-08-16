@@ -19,7 +19,7 @@ import com.njydsz.literule.api.RuleDefinition;
  * <h3>使用示例</h3>
  * <pre>{@code
  * List<RuleDefinition> rules = ruleAdminService.listAll();
- * String yaml = RuleDslExporter.exportYaml(rules, "risk-rules", "风控规则集");
+ * String yaml = RuleDslExporter.exportYaml(rules, "demo-rules", "示例规则集");
  *
  * // 导出单条规则
  * RuleDefinition rule = ruleAdminService.getByCode("RISK_001");

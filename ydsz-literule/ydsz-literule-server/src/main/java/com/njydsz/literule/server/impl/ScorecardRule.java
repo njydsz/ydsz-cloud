@@ -17,7 +17,7 @@ import com.njydsz.literule.api.expression.ExpressionEngine;
 /**
  * 评分卡规则：基于多维度评分因子加权计算总分，按阈值区间或自定义评级映射决定严重度
  *
- * <p>典型应用场景：客户信用评级、供应商评级、项目风险评级。
+ * <p>典型应用场景：质量评级、健康度评级、风险评级等多维评分。
  *
  * <p><b>复杂评分卡增强（1.5.0）</b>：
  * <ul>
@@ -32,14 +32,14 @@ import com.njydsz.literule.api.expression.ExpressionEngine;
  * <p>使用示例（复杂评分卡）：
  * <pre>
  * ScorecardRule rule = ScorecardRule.builder()
- *     .code("CREDIT_SCORE")
- *     .name("客户信用评分")
- *     .category("RISK")
+ *     .code("SCORECARD_DEMO")
+ *     .name("评分卡示例")
+ *     .category("DEMO")
  *     .baseScore(100)
  *     .scoreDirection(ScorecardDefinition.ScoreDirection.DESCENDING)
  *     .minScore(0).maxScore(100)
- *     .factor(ScoreFactor.of("overdueCount > 3", -30, "逾期次数过多"))
- *     .factor(ScoreFactor.ofExpression("contractAmount > 1000000", "contractAmount * 0.001", 0.5, "大额合同动态扣分"))
+ *     .factor(ScoreFactor.of("metricA > 3", -30, "示例因子A 命中扣分"))
+ *     .factor(ScoreFactor.ofExpression("metricB > 1000000", "metricB * 0.001", 0.5, "示例因子B 动态扣分"))
  *     .redThreshold(60)
  *     .yellowThreshold(80)
  *     .build();

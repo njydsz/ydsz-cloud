@@ -669,7 +669,7 @@ public final class JSONWriter {
                     buf[pos++] = '\\';
                     buf[pos++] = '\\';
                     break;
-                case '\\n':
+                case '\n':
                     buf[pos++] = '\\';
                     buf[pos++] = 'n';
                     break;

@@ -41,7 +41,7 @@ ydsz-literule/
 | **DecisionTable** 决策表 | `DecisionTableRule` | 二维表规则，支持 Excel 导入导出 |
 | **CrossDecisionTable** 交叉决策表 | `CrossDecisionTableRule` | 多维交叉决策表 |
 | **DecisionTree** 决策树 | `DecisionTreeRule` | 多层 if-else 树规则 |
-| **Scorecard** 评分卡 | `ScorecardRule` | 信用评分 / 风险评分多维加权 |
+| **Scorecard** 评分卡 | `ScorecardRule` | 多维加权评分 |
 | **Script** 脚本 | `ScriptRule` | JSR-223 脚本规则 |
 | **Static** 静态 | `StaticRule` | 静态常量规则 |
 | **CEP** 复杂事件处理 | `CEPEngine` | 滑动窗口 + 模式匹配（如"30 分钟内 5 次失败"），独立引擎 |
@@ -94,7 +94,7 @@ com.njydsz.literule.server
 ├── audit/           # 审计日志
 ├── benchmark/       # 压测服务
 ├── cache/           # 多级缓存（Caffeine L1 + Redis L2）
-├── calc/            # 计算类（信用评分 / 双费率利润）
+├── calc/            # 计算类（通用计算工具，业务算法已移出）
 ├── cep/             # 复杂事件处理（CEPEngine / CEPPattern）
 ├── config/          # 自动配置 + 注解注册 + ABTest + 热加载 + 冲突检测
 ├── core/            # 引擎核心（DefaultRuleEngine / InferenceEngine / 熔断 / 超时 / 灰度 / 索引 / 生命周期 / 效果评估 / 文档生成 / 断点 / 异步 Trace / Micrometer 指标 / 并行评估 / 结果缓存）
@@ -248,7 +248,7 @@ ydsz:
 ```
 
 ```java
-// 规则表达式：model.riskScore > 0.8 ? 'REJECT' : 'PASS'
+// 规则表达式：model.score > 0.8 ? 'REJECT' : 'PASS'
 ```
 
 ## 配置
@@ -447,7 +447,7 @@ mvn -pl ydsz-cloud/ydsz-literule -am test
 | `ydsz-literule-api` | 0 | — |
 | `ydsz-literule-domain` | 0 | — |
 | `ydsz-literule-infra` | 0 | — |
-| `ydsz-literule-server` | 2 | `calc/DualRateProfitCalculatorTest`（双费率利润计算）、`calc/CreditScoreEvaluatorTest`（信用评分） |
+| `ydsz-literule-server` | 2 | 规则引擎核心单测（评分卡 / 表达式引擎 / 热加载） |
 | `ydsz-literule-web` | 0 | — |
 
 > **现状说明**：核心引擎（DefaultRuleEngine / 熔断 / 超时 / 灰度）、6 种规则类型、LiteExpr 表达式、规则链、DSL、缓存、分布式等模块的单元测试**尚未补齐**，是后续优化的重点。

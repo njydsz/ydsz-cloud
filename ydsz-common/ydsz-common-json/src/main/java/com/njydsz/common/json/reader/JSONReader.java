@@ -870,7 +870,7 @@ public final class JSONReader {
                     case '"': sb.append('"'); break;
                     case '\\': sb.append('\\'); break;
                     case '/': sb.append('/'); break;
-                    case 'n': sb.append('\\n'); break;
+                    case 'n': sb.append('\n'); break;
                     case 'r': sb.append('\r'); break;
                     case 't': sb.append('\t'); break;
                     case 'b': sb.append('\b'); break;

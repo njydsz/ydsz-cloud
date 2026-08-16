@@ -27,15 +27,15 @@ import lombok.NoArgsConstructor;
  *     title: "EVM 红灯 ${evmRedCount} 个"
  *     mutex_group: EVM_ALERTS
  *
- *   - code: CREDIT_SCORE
- *     name: 客户信用评分
+ *   - code: SCORECARD_DEMO
+ *     name: 评分卡示例
  *     type: scorecard
  *     base_score: 100
  *     direction: DESCENDING
  *     factors:
- *       - when: "overdueCount &gt; 3"
+ *       - when: "metricA &gt; 3"
  *         score: -30
- *         desc: "逾期过多"
+ *         desc: "示例因子A 命中扣分"
  *     grades:
  *       - label: A
  *         range: [90, 200]
@@ -44,7 +44,7 @@ import lombok.NoArgsConstructor;
  * chains:
  *   - name: RISK_CHAIN
  *     type: THEN
- *     steps: [EVM_RED_ALERT, CREDIT_SCORE]
+ *     steps: [EVM_RED_ALERT, SCORECARD_DEMO]
  *
  *   - name: CONDITIONAL_FLOW
  *     type: IF

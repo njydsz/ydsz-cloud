@@ -12,7 +12,9 @@ import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
 import com.baomidou.mybatisplus.extension.parser.JsqlParserSupport;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 import lombok.extern.slf4j.Slf4j;
+import net.sf.jsqlparser.expression.BinaryExpression;
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.NotExpression;
 import net.sf.jsqlparser.expression.StringValue;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
@@ -29,6 +31,7 @@ import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SelectItem;
 import net.sf.jsqlparser.statement.select.SetOperationList;
+import net.sf.jsqlparser.statement.select.WithItem;
 import net.sf.jsqlparser.statement.update.Update;
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.MappedStatement;
@@ -202,14 +205,46 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
         processSelectBody(select, values);
     }
 
+    /**
+     * 递归处理 Select 节点，注入租户条件。
+     *
+     * <p>覆盖以下结构：
+     * <ul>
+     *   <li>{@link PlainSelect}：主查询体（FROM/JOIN/WHERE/HAVING/selectItems）</li>
+     *   <li>{@link SetOperationList}：UNION/INTERSECT 等集合操作各分支</li>
+     *   <li>{@link WithItem}：WITH CTE 子查询（防止 CTE 引用漏注入）</li>
+     *   <li>{@link ParenthesedSelect}：括号子查询（FROM 子查询 / WHERE 标量子查询）</li>
+     * </ul>
+     *
+     * @param select Select 节点，可为 null
+     * @param values 租户字段值列表（已解析，非空）
+     */
     private void processSelectBody(Select select, List<TenantFieldValue> values) {
         if (select == null) {
             return;
+        }
+        // WITH CTE：递归处理每个 CTE 子查询，防止 CTE 引用漏注入租户条件
+        if (select.getWithItemsList() != null) {
+            for (WithItem withItem : select.getWithItemsList()) {
+                if (withItem.getSelect() != null) {
+                    processSelectBody(withItem.getSelect(), values);
+                }
+            }
         }
         if (select instanceof PlainSelect) {
             PlainSelect plain = (PlainSelect) select;
             applyTenantToFromItem(plain, values);
             applyTenantToJoins(plain, values);
+            // WHERE 条件中的标量子查询（如 WHERE id = (SELECT ...)）
+            processExpressionSubqueries(plain.getWhere(), values);
+            // HAVING 条件中的标量子查询
+            processExpressionSubqueries(plain.getHaving(), values);
+            // selectItems 中的标量子查询（如 SELECT (SELECT name FROM t2) FROM t1）
+            if (plain.getSelectItems() != null) {
+                for (SelectItem<?> selectItem : plain.getSelectItems()) {
+                    processExpressionSubqueries(selectItem.getExpression(), values);
+                }
+            }
             return;
         }
         if (select instanceof SetOperationList) {
@@ -218,6 +253,44 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
                 setOperationList.getSelects().forEach(it -> processSelectBody(it, values));
             }
         }
+    }
+
+    /**
+     * 递归遍历表达式树，处理其中嵌套的标量子查询（{@link ParenthesedSelect}）。
+     *
+     * <p>防止「WHERE 标量子查询 / HAVING 标量子查询 / selectItems 标量子查询」
+     * 中的子表漏注入租户条件，导致跨租户数据泄露。
+     *
+     * @param expr   表达式节点，可为 null
+     * @param values 租户字段值列表（已解析，非空）
+     */
+    private void processExpressionSubqueries(Expression expr, List<TenantFieldValue> values) {
+        if (expr == null) {
+            return;
+        }
+        if (expr instanceof ParenthesedSelect) {
+            ParenthesedSelect subSelect = (ParenthesedSelect) expr;
+            if (subSelect.getSelect() != null) {
+                processSelectBody(subSelect.getSelect(), values);
+            }
+            return;
+        }
+        if (expr instanceof BinaryExpression) {
+            BinaryExpression binary = (BinaryExpression) expr;
+            processExpressionSubqueries(binary.getLeftExpression(), values);
+            processExpressionSubqueries(binary.getRightExpression(), values);
+            return;
+        }
+        if (expr instanceof InExpression) {
+            InExpression in = (InExpression) expr;
+            processExpressionSubqueries(in.getLeftExpression(), values);
+            processExpressionSubqueries(in.getRightExpression(), values);
+            return;
+        }
+        if (expr instanceof NotExpression) {
+            processExpressionSubqueries(((NotExpression) expr).getExpression(), values);
+        }
+        // 其他表达式类型（Column/StringValue/LongValue 等）不包含子查询，无需处理
     }
 
     private void applyTenantToFromItem(PlainSelect plain, List<TenantFieldValue> values) {
@@ -276,11 +349,27 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
 
                 if (!hasColumn) {
                     columns.add(new Column(resolvedColumn));
-                    if (insert.getSelect() != null
-                        && insert.getSelect().getPlainSelect() != null
-                        && insert.getSelect().getPlainSelect().getSelectItems() != null) {
-                        insert.getSelect().getPlainSelect().getSelectItems()
-                            .add(new SelectItem<>(new StringValue(String.valueOf(tfv.value))));
+                    Select select = insert.getSelect();
+                    if (select != null) {
+                        // INSERT ... SELECT 形式：向 SELECT 列列表末尾追加租户字段值
+                        PlainSelect plainSelect = select.getPlainSelect();
+                        if (plainSelect != null && plainSelect.getSelectItems() != null) {
+                            plainSelect.getSelectItems()
+                                .add(new SelectItem<>(new StringValue(String.valueOf(tfv.value))));
+                        } else {
+                            // INSERT ... SELECT 使用复杂结构（集合操作/括号子查询）时无法对齐列数，
+                            // fail-closed：拒绝执行，防止租户字段漏注入导致跨租户数据写入
+                            throw new TenantIsolationException(
+                                "INSERT ... SELECT 语句结构无法对齐租户字段 [" + resolvedColumn
+                                + "] 的列数，已拒绝执行 SQL 以防跨租户数据写入。table="
+                                + table.getName() + ", sql=" + sql);
+                        }
+                    } else if (insert.getValues() != null
+                        && insert.getValues().getExpressions() != null) {
+                        // INSERT ... VALUES 形式：向 VALUES 列表末尾追加租户字段值，
+                        // 保持列数与值数一致，防止列数不匹配导致 SQL 执行失败
+                        insert.getValues().getExpressions()
+                            .add(new StringValue(String.valueOf(tfv.value)));
                     } else {
                         log.warn("INSERT 语句结构不支持自动注入 {}，table={}, sql={}",
                             resolvedColumn, table.getName(), sql);

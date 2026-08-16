@@ -10,7 +10,7 @@ import com.njydsz.literule.api.RuleContext;
  * 模拟模型输入提供者（P3-1 规则+模型融合）
  *
  * <p>用于开发/测试环境，返回固定/可配置的模型输出，避免依赖真实模型服务。
- * 通过配置文件控制输出值，便于模拟不同模型评分场景下的规则触发情况。
+ * 通过配置文件控制输出值，便于模拟不同模型输出场景下的规则触发情况。
  *
  * <h3>配置示例</h3>
  * <pre>
@@ -20,11 +20,11 @@ import com.njydsz.literule.api.RuleContext;
  *       enabled: true
  *       mock-enabled: true
  *       mock-outputs:
- *         riskScore: 0.75
- *         fraudProbability: 0.05
+ *         modelScore: 0.75
+ *         predictProbability: 0.05
  * </pre>
  *
- * <p>规则表达式可直接引用：{@code model.riskScore > 0.8}
+ * <p>规则表达式可直接引用：{@code model.modelScore > 0.8}
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -40,8 +40,8 @@ public class MockModelInputProvider implements ModelInputProvider {
 
     static {
         Map<String, Object> defaults = new LinkedHashMap<>();
-        defaults.put("riskScore", 0.75);
-        defaults.put("fraudProbability", 0.05);
+        defaults.put("modelScore", 0.75);
+        defaults.put("predictProbability", 0.05);
         DEFAULT_OUTPUTS = Collections.unmodifiableMap(defaults);
     }
 

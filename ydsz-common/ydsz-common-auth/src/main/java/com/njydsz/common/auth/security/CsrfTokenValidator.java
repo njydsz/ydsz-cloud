@@ -57,6 +57,15 @@ public class CsrfTokenValidator {
     /**
      * 设置 CSRF Cookie 到响应中。
      *
+     * <p><b>双重提交 Cookie 模式的约束：</b>CSRF Token 需要前端 JS 读取后放入
+     * {@code X-CSRF-Token} 请求头，因此该 Cookie <b>不能设置 HttpOnly</b>。
+     * 设置 HttpOnly 会导致 JS 无法读取 Token，双重提交校验永远失败，防护形同虚设。
+     *
+     * <p>安全取舍说明：该 Cookie 仅承载 CSRF 防护 Token，与认证凭证（JWT/Session）
+     * 相互独立。即使攻击者通过 XSS 窃取 CSRF Token，也无法直接用于认证。
+     * 若需 HttpOnly（如纯 Cookie 会话模式且由服务端自动注入 Token），请改为
+     * 同步 Token 模式并在校验时从服务端存储（如 Session/Redis）比对。
+     *
      * @param response HTTP 响应
      * @param token   CSRF Token
      */
@@ -64,7 +73,8 @@ public class CsrfTokenValidator {
         if (!enabled || token == null) {
             return;
         }
-        String cookie = String.format("%s=%s; Path=/; SameSite=Strict; Secure; HttpOnly",
+        // SameSite=Strict + Secure 保持；不设 HttpOnly（双重提交模式需 JS 可读）
+        String cookie = String.format("%s=%s; Path=/; SameSite=Strict; Secure",
                 CSRF_COOKIE_NAME, token);
         response.setHeader("Set-Cookie", cookie);
     }

@@ -1,6 +1,7 @@
 package com.njydsz.common.base.advice;
 
 import java.io.Serializable;
+import java.nio.ByteBuffer;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.MethodParameter;
@@ -12,6 +13,7 @@ import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.json.YdszJson;
 
@@ -50,7 +52,44 @@ public abstract class BaseGlobalResponseAdvice implements ResponseBodyAdvice<Obj
                 || Resource.class.isAssignableFrom(paramType)) {
             return false;
         }
+        // 跳过流式响应类型：SSE / StreamingResponseBody / byte[] / ByteBuffer
+        // 这些返回值由 Spring MVC 直接写回，包装会破坏流式协议（如 AI 对话流式输出）
+        if (isStreamingType(paramType)) {
+            return false;
+        }
         return true;
+    }
+
+    /**
+     * 判断返回类型是否为流式响应类型。
+     *
+     * <p>流式响应必须保持原始字节流/事件流输出，全局响应包装会导致：
+     * <ul>
+     *   <li>SSE（text/event-stream）被包装为 JSON，破坏事件流协议</li>
+     *   <li>{@link StreamingResponseBody} 被序列化为错误内容</li>
+     *   <li>文件下载（byte[]）被包装成 JSON 字符串</li>
+     * </ul>
+     *
+     * @param paramType 返回类型
+     * @return true-为流式类型，需跳过包装
+     */
+    private static boolean isStreamingType(Class<?> paramType) {
+        if (paramType == byte[].class || paramType == ByteBuffer.class) {
+            return true;
+        }
+        if (StreamingResponseBody.class.isAssignableFrom(paramType)) {
+            return true;
+        }
+        // SseEmitter 是泛型类，直接比较类名避免强依赖类型解析失败
+        Class<?> current = paramType;
+        while (current != null && current != Object.class) {
+            if ("org.springframework.web.servlet.mvc.method.annotation.SseEmitter"
+                    .equals(current.getName())) {
+                return true;
+            }
+            current = current.getSuperclass();
+        }
+        return false;
     }
 
     @Override
@@ -64,8 +103,12 @@ public abstract class BaseGlobalResponseAdvice implements ResponseBodyAdvice<Obj
             return body;
         }
         if (body instanceof String) {
-            // String 返回值默认 Content-Type 为 text/plain，需修正为 application/json
-            response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+            // 仅当 String 返回值仍为默认 text/plain 时修正为 application/json；
+            // 若 Controller 已显式指定（如 text/csv、text/html），保留原 Content-Type
+            MediaType contentType = selectedContentType;
+            if (contentType == null || MediaType.TEXT_PLAIN.isCompatibleWith(contentType)) {
+                response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+            }
             BaseResponse<String> result = wrapStringBody((String) body);
             try {
                 return YdszJson.toJson(result);

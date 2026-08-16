@@ -41,8 +41,8 @@ import com.njydsz.literule.server.impl.ExpressionRule;
  * <h3>链式 Builder 注册规则</h3>
  * <pre>{@code
  * sdk.rule("R002")
- *     .name("低利润告警")
- *     .condition("grossMargin < 0.05 && confirmedRevenue > 0")
+ *     .name("示例告警规则")
+ *     .condition("metricValue > 0.05 && flagEnabled > 0")
  *     .severity(RuleSeverity.YELLOW)
  *     .priority(10)
  *     .register();

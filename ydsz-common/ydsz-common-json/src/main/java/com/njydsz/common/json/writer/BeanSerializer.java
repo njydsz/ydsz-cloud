@@ -474,7 +474,7 @@ public final class BeanSerializer {
                     buf[pos++] = '\\';
                     buf[pos++] = '\\';
                     break;
-                case '\\n':
+                case '\n':
                     buf[pos++] = '\\';
                     buf[pos++] = 'n';
                     break;

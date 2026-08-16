@@ -23,6 +23,8 @@ import com.njydsz.common.auth.context.AuthContextUtils;
  *   <li>{@code DEPT_AND_CHILD} - 本部门及下级部门数据（{@code dept_id IN (...)}，使用 deptIds 列表）</li>
  *   <li>{@code SELF} - 仅本人数据（{@code initiator_id = ?}）</li>
  *   <li>{@code CUSTOM} - 自定义数据权限（使用 customDeptIds 列表）</li>
+ *   <li>未知规则 - <b>fail-closed</b>：返回 {@code AND 1 = 0}（无任何数据），
+ *       防止未识别的数据权限规则被当作「不限制」导致越权读取</li>
  * </ul>
  *
  * <p><b>使用示例：</b>
@@ -102,7 +104,10 @@ public final class DataScopeHelper {
                         .orElse("");
                 yield inList.isBlank() ? "" : " AND " + deptCol + " IN (" + inList + ")";
             }
-            default -> ""; // 未知规则 → 不限制（由业务侧自行处理）
+            // fail-closed：未知/未识别的数据权限规则按「无权限」处理，
+            // 返回一个恒为 false 的过滤条件，防止越权读取全量数据。
+            // 业务侧若需新增规则，必须在此显式注册后再使用。
+            default -> " AND 1 = 0";
         };
     }
 

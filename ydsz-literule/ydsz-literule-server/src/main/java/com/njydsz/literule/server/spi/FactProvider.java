@@ -10,8 +10,8 @@ import com.njydsz.literule.api.RuleContext;
  * 注入到 {@link RuleContext} 中供规则表达式引用。与 {@link com.njydsz.literule.domain.model.ModelInputProvider}
  * 的区别：
  * <ul>
- *   <li>{@code FactProvider} 采集业务事实数据（如项目预算、进度、合同金额等），直接合并到 facts 中</li>
- *   <li>{@code ModelInputProvider} 采集 ML 模型输出（如风控评分），以 {@code model.xxx} 前缀注入</li>
+ *   <li>{@code FactProvider} 采集业务事实数据（如指标数据、统计值、外部查询结果等），直接合并到 facts 中</li>
+ *   <li>{@code ModelInputProvider} 采集 ML 模型输出（如外部模型评分），以 {@code model.xxx} 前缀注入</li>
  * </ul>
  *
  * <h3>典型场景</h3>

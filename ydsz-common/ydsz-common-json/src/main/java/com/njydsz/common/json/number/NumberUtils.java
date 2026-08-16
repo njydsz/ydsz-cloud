@@ -158,17 +158,40 @@ public final class NumberUtils {
             if (value == Integer.MIN_VALUE) { return MIN_INT_VALUE_DIGIT_COUNT; }
             value = -value;
         }
+        if (value < 10000) {
+            return sizeOfSmallInt(value);
+        }
+        if (value < 100000000) {
+            return sizeOfMediumInt(value);
+        }
+        if (value < 1000000000) { return 9; }
+        return 10;
+    }
 
+    /**
+     * 计算 0-9999 范围内整数的字符表示长度
+     *
+     * @param value 整数值（0 &lt;= value &lt;= 9999）
+     * @return 字符表示长度（1-4）
+     */
+    private static int sizeOfSmallInt(int value) {
         if (value < 10) { return 1; }
         if (value < 100) { return 2; }
         if (value < 1000) { return 3; }
-        if (value < 10000) { return 4; }
+        return 4;
+    }
+
+    /**
+     * 计算 10000-99999999 范围内整数的字符表示长度
+     *
+     * @param value 整数值（10000 &lt;= value &lt;= 99999999）
+     * @return 字符表示长度（5-8）
+     */
+    private static int sizeOfMediumInt(int value) {
         if (value < 100000) { return 5; }
         if (value < 1000000) { return 6; }
         if (value < 10000000) { return 7; }
-        if (value < 100000000) { return 8; }
-        if (value < 1000000000) { return 9; }
-        return 10;
+        return 8;
     }
 
     /**
@@ -182,20 +205,35 @@ public final class NumberUtils {
             if (value == Long.MIN_VALUE) { return MIN_LONG_VALUE_DIGIT_COUNT; }
             value = -value;
         }
+        if (value <= Integer.MAX_VALUE) {
+            return sizeOfInt((int) value);
+        }
+        if (value < 10000000000000L) {
+            return sizeOfMediumLong(value);
+        }
+        return sizeOfLargeLong(value);
+    }
 
-        if (value < 10) { return 1; }
-        if (value < 100) { return 2; }
-        if (value < 1000) { return 3; }
-        if (value < 10000) { return 4; }
-        if (value < 100000) { return 5; }
-        if (value < 1000000) { return 6; }
-        if (value < 10000000) { return 7; }
-        if (value < 100000000) { return 8; }
-        if (value < 1000000000) { return 9; }
+    /**
+     * 计算 10000000000-9999999999999 范围内长整数的字符表示长度
+     *
+     * @param value 长整数值（10000000000L &lt;= value &lt;= 9999999999999L）
+     * @return 字符表示长度（10-13）
+     */
+    private static int sizeOfMediumLong(long value) {
         if (value < 10000000000L) { return 10; }
         if (value < 100000000000L) { return 11; }
         if (value < 1000000000000L) { return 12; }
-        if (value < 10000000000000L) { return 13; }
+        return 13;
+    }
+
+    /**
+     * 计算 10000000000000 及以上长整数的字符表示长度
+     *
+     * @param value 长整数值（value &gt;= 10000000000000L）
+     * @return 字符表示长度（14-20）
+     */
+    private static int sizeOfLargeLong(long value) {
         if (value < 100000000000000L) { return 14; }
         if (value < 1000000000000000L) { return 15; }
         if (value < 10000000000000000L) { return 16; }

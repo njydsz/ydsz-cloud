@@ -34,16 +34,16 @@ import lombok.NoArgsConstructor;
  * <p>JSON 示例（复杂评分卡）：
  * <pre>
  * {
- *   "ruleCode": "CREDIT_SCORE",
- *   "ruleName": "客户信用评分",
- *   "category": "RISK",
+ *   "ruleCode": "SCORECARD_DEMO",
+ *   "ruleName": "评分卡示例",
+ *   "category": "DEMO",
  *   "baseScore": 100,
  *   "scoreDirection": "DESCENDING",
  *   "minScore": 0,
  *   "maxScore": 100,
  *   "factors": [
- *     {"conditionExpression": "overdueCount > 3", "score": -30, "weight": 1.0, "description": "逾期次数过多"},
- *     {"conditionExpression": "contractAmount > 1000000", "scoreExpression": "contractAmount * 0.001", "weight": 0.5, "description": "大额合同动态扣分"}
+ *     {"conditionExpression": "metricA > 3", "score": -30, "weight": 1.0, "description": "示例因子A 命中扣分"},
+ *     {"conditionExpression": "metricB > 1000000", "scoreExpression": "metricB * 0.001", "weight": 0.5, "description": "示例因子B 动态扣分"}
  *   ],
  *   "grades": [
  *     {"label": "A", "minScore": 90, "maxScore": 200, "severity": "INFO"},
@@ -168,7 +168,7 @@ public class ScorecardDefinition implements Serializable {
      * 评分方向
      *
      * <ul>
-     *   <li>{@code DESCENDING}：分数越低风险越高（默认，如信用评分：100 分起评，扣分制）</li>
+     *   <li>{@code DESCENDING}：分数越低风险越高（默认，如评分卡：100 分起评，扣分制）</li>
      *   <li>{@code ASCENDING}：分数越高风险越高（如负债率评分：0 分起评，加分制）</li>
      * </ul>
      */
