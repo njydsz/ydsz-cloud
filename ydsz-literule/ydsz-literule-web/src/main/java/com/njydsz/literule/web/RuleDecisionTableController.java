@@ -63,7 +63,7 @@ import com.njydsz.common.excel.spring.ExcelWebSupport;
  */
 @Slf4j
 @RestController
-@RequestMapping("/ruleEngine/rules")
+@RequestMapping("/v1/rule-engine/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "决策表管理", description = "决策表 CRUD、评估与 Excel 导入导出")
@@ -81,7 +81,7 @@ public class RuleDecisionTableController {
     /**
      * 查询全部决策表
      */
-    @GetMapping("/decisionTables")
+    @GetMapping("/decision-tables")
     public BaseResponse<List<DecisionTableVO>> listDecisionTables() {
         return BaseResponse.success(LiteruleConverter.INSTANT.decisionTableListToVO(decisionTableMapper.selectList(null)));
     }
@@ -89,7 +89,7 @@ public class RuleDecisionTableController {
     /**
      * 查询单条决策表
      */
-    @GetMapping("/decisionTables/{tableCode}")
+    @GetMapping("/decision-tables/{tableCode}")
     public BaseResponse<DecisionTableVO> getDecisionTable(@PathVariable String tableCode) {
         DecisionTable dt = decisionTableMapper.selectOne(
             new LambdaQueryWrapper<DecisionTable>().eq(DecisionTable::getTableCode, tableCode));
@@ -102,7 +102,7 @@ public class RuleDecisionTableController {
     @Idempotent(key = "ruleAdmin:saveDecisionTable", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'saveDecisionTable'")
     @RateLimit(resource = "literule.rule_decision_table.saveDecisionTable", threshold = 50)
-    @PostMapping("/decisionTables")
+    @PostMapping("/decision-tables")
     public BaseResponse<DecisionTableVO> saveDecisionTable(@Valid @RequestBody DecisionTablePostDTO dto) {
         DecisionTable decisionTable = LiteruleConverter.INSTANT.postDtoToEntity(dto);
         if (decisionTable.getId() != null) {
@@ -119,7 +119,7 @@ public class RuleDecisionTableController {
     @Idempotent(key = "ruleAdmin:deleteDecisionTable", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'deleteDecisionTable'")
     @RateLimit(resource = "literule.rule_decision_table.deleteDecisionTable", threshold = 50)
-    @DeleteMapping("/decisionTables/{id}")
+    @DeleteMapping("/decision-tables/{id}")
     public BaseResponse<Void> deleteDecisionTable(@PathVariable String id) {
         decisionTableMapper.deleteById(id);
         return BaseResponse.success();
@@ -138,7 +138,7 @@ public class RuleDecisionTableController {
     @Idempotent(key = "ruleAdmin:evaluateDecisionTable", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
     @RateLimit(resource = "literule.rule_decision_table.evaluateDecisionTable", threshold = 50)
-    @PostMapping("/decisionTables/{tableCode}/evaluate")
+    @PostMapping("/decision-tables/{tableCode}/evaluate")
     public BaseResponse<List<Map<String, Object>>> evaluateDecisionTable(@PathVariable String tableCode,
                                                                    @RequestBody Map<String, Object> facts) {
         try {
@@ -157,7 +157,7 @@ public class RuleDecisionTableController {
      * @param tableCode 决策表编码
      * @return xlsx 文件流（Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet）
      */
-    @GetMapping("/decisionTables/{tableCode}/exportExcel")
+    @GetMapping("/decision-tables/{tableCode}/export-excel")
     @AuthApiPermission(apiCodes = "execution:rule:view")
     public void exportDecisionTableExcel(@PathVariable String tableCode, HttpServletResponse response) {
         DecisionTableAdminService svc = decisionTableAdminServiceProvider.getIfAvailable();
@@ -185,7 +185,7 @@ public class RuleDecisionTableController {
      */
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'importDecisionTableExcel'")
     @RateLimit(resource = "literule.rule_decision_table.importDecisionTableExcel", threshold = 50)
-    @PostMapping(value = "/decisionTables/importExcel", consumes = "multipart/form-data")
+    @PostMapping(value = "/decision-tables/import-excel", consumes = "multipart/form-data")
     @AuthApiPermission(apiCodes = "execution:rule:save")
     public BaseResponse<DecisionTableDefinitionVO> importDecisionTableExcel(
             @RequestParam("file") MultipartFile file,
@@ -217,7 +217,7 @@ public class RuleDecisionTableController {
      *
      * @return xlsx 模板文件流
      */
-    @GetMapping("/decisionTables/excelTemplate")
+    @GetMapping("/decision-tables/excel-template")
     @AuthApiPermission(apiCodes = "execution:rule:view")
     public void downloadDecisionTableExcelTemplate(HttpServletResponse response) {
         DecisionTableAdminService svc = decisionTableAdminServiceProvider.getIfAvailable();

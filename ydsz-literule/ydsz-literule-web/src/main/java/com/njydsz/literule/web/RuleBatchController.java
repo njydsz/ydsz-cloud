@@ -56,7 +56,7 @@ import com.njydsz.literule.server.spi.RuleChainGraphProvider;
  */
 @Slf4j
 @RestController
-@RequestMapping("/ruleEngine/rules")
+@RequestMapping("/v1/rule-engine/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则批量操作", description = "规则批量启停、优先级调整、分类调整与软删除")
@@ -130,7 +130,7 @@ public class RuleBatchController {
     @Idempotent(key = "ruleAdmin:batchToggle", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
     @RateLimit(resource = "literule.rule_batch.batchToggle", threshold = 50)
-    @PostMapping("/batchToggle")
+    @PostMapping("/batch-toggle")
     @AuthApiPermission(apiCodes = "execution:rule:toggle")
     public BaseResponse<Map<String, Object>> batchToggle(@Valid @RequestBody RuleBatchToggleDTO dto,
                                                    @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
@@ -173,7 +173,7 @@ public class RuleBatchController {
     @Idempotent(key = "ruleAdmin:batchPriority", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
     @RateLimit(resource = "literule.rule_batch.batchPriority", threshold = 50)
-    @PostMapping("/batchPriority")
+    @PostMapping("/batch-priority")
     public BaseResponse<Map<String, Object>> batchPriority(@Valid @RequestBody RuleBatchPriorityDTO dto,
                                                       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         List<String> ruleCodes = dto.getRuleCodes();
@@ -217,7 +217,7 @@ public class RuleBatchController {
     @Idempotent(key = "ruleAdmin:batchCategory", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
     @RateLimit(resource = "literule.rule_batch.batchCategory", threshold = 50)
-    @PostMapping("/batchCategory")
+    @PostMapping("/batch-category")
     public BaseResponse<Map<String, Object>> batchCategory(@Valid @RequestBody RuleBatchCategoryDTO dto,
                                                       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         List<String> ruleCodes = dto.getRuleCodes();

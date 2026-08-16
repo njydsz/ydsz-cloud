@@ -45,7 +45,7 @@ import com.njydsz.literule.server.spi.RuleCategoryProvider;
  */
 @Slf4j
 @RestController
-@RequestMapping("/ruleEngine/rules")
+@RequestMapping("/v1/rule-engine/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则目录树", description = "规则分类目录树与责任人管理")
@@ -61,7 +61,7 @@ public class RuleCategoryController {
      *
      * <p>树根为虚拟 ROOT，children 为一级分类。叶子节点或中间节点都包含该路径下的规则数与 Owner 列表。
      */
-    @GetMapping("/categoryTree")
+    @GetMapping("/category-tree")
     public BaseResponse<CategoryNodeVO> categoryTree() {
         return BaseResponse.success(LiteruleWebConverter.INSTANT.entityToVO(ruleCategoryProvider.buildTree()));
     }
@@ -71,7 +71,7 @@ public class RuleCategoryController {
      *
      * @param path 分类路径前缀，例如 "finance" / "finance/credit"
      */
-    @GetMapping("/byCategoryPath")
+    @GetMapping("/by-category-path")
     public BaseResponse<List<RuleDefinitionVO>> listByCategoryPath(
             @RequestParam(value = "path", required = false) String path) {
         return BaseResponse.success(ruleCategoryProvider.listDefinitionsByCategoryPath(path).stream().map(LiteruleConverter.INSTANT::entityToVO).toList());
@@ -80,7 +80,7 @@ public class RuleCategoryController {
     /**
      * 按 Owner 查询规则
      */
-    @GetMapping("/byOwner")
+    @GetMapping("/by-owner")
     public BaseResponse<List<RuleDefinitionVO>> listByOwner(
             @RequestParam(value = "owner") String owner) {
         return BaseResponse.success(ruleCategoryProvider.listDefinitionsByOwner(owner).stream().map(LiteruleConverter.INSTANT::entityToVO).toList());
@@ -107,7 +107,7 @@ public class RuleCategoryController {
     @Idempotent(key = "ruleAdmin:setCategoryPath", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'setCategoryPath'")
     @RateLimit(resource = "literule.rule_category.setCategoryPath", threshold = 50)
-    @PutMapping("/{ruleCode}/categoryPath")
+    @PutMapping("/{ruleCode}/category-path")
     public BaseResponse<Void> setCategoryPath(
             @PathVariable String ruleCode,
             @RequestParam(value = "path") String path,
