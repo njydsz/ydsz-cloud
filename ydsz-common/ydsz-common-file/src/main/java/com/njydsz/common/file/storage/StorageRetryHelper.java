@@ -30,14 +30,10 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>线程中断时立即退出重试循环</li>
  * </ul>
  *
- * @deprecated 自 2.0.0 起标记为迁移候选。建议迁移至 resilience4j Retry 组件，
- *             以获得Micrometer指标集成、配置热更新等能力。计划于 3.0.0 版本移除。
- *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Slf4j
-@Deprecated
 public class StorageRetryHelper {
 
     /** 最大退避时间（毫秒） */

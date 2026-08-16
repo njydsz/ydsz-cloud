@@ -11,9 +11,9 @@ import lombok.Getter;
  * <p>由操作日志切面（或业务代码）在需要记录用户操作行为时发布，
  * 由 {@code OperationLogListener} 异步消费并落库到 {@code ydsz_operation_log}。
  *
- * <p>与 {@code AuditEvent}（已移除，由切面直接注入 AuditRecorder 替代）的区别：
+ * <p>与早期基于 {@code AuditLog} 实体的审计事件相比：
  * <ul>
- *   <li>原 {@code AuditEvent} 携带 {@code AuditLog} 实体，面向通用审计链路</li>
+ *   <li>早期方案携带 {@code AuditLog} 实体，面向通用审计链路</li>
  *   <li>{@code OperationLogEvent} 面向操作日志表，字段与 {@code ydsz_operation_log} 对齐，
  *       额外包含 beforeData / afterData 变更差异</li>
  * </ul>

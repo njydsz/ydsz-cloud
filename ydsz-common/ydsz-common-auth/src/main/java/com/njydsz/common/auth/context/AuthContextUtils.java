@@ -11,11 +11,10 @@ import com.njydsz.common.security.LoginUser;
 import com.njydsz.common.tenant.TenantContextHolder;
 
 /**
- * 认证上下文便捷访问工具类（替代已废弃的 {@code AuthContext}）。
+ * 认证上下文便捷访问工具类。
  *
  * <p>自 v1.9.0 起，认证与权限上下文统一收口至 {@link RequestContext}。
- * 本类提供与历史 {@code AuthContext} 完全一致的静态便捷 API，内部全部委托
- * {@link RequestContext} 实现，供存量代码平滑迁移：
+ * 本类提供静态便捷 API，内部全部委托 {@link RequestContext} 实现：
  * <ul>
  *   <li>登录用户：{@link #getCurrentOrNull()} / {@link #getUserId()} / {@link #getUsername()}</li>
  *   <li>租户：{@link #getTenantIdOrDefault()} / {@link #getTenantId()}</li>

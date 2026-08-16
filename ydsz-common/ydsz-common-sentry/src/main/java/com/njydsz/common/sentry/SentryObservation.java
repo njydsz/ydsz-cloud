@@ -42,7 +42,7 @@ import com.njydsz.common.sentry.spi.TraceContext;
  * String traceId = SentryObservation.traceId();
  * }</pre>
  *
- * <p>v2.0.0 变更：内部委托从自实现 Holder + ServiceLoaderFacade 改为 Spring 容器中的
+ * <p>v2.0.0 变更：内部委托从自实现 Holder 改为 Spring 容器中的
  * {@link SentryService} Bean，解决静态门面测试困难、生命周期模糊问题。
  *
  * <p>业务方可选择：
@@ -106,29 +106,6 @@ public class SentryObservation implements ApplicationContextAware {
         log.warn("[Sentry] SentryObservation 未完成初始化，本次调用将 no-op。" +
                 "请检查 Spring 上下文是否正确装配 ydzs-common-sentry 模块");
         return false;
-    }
-
-    // ==================== 兼容旧版 register 方法 ====================
-
-    /**
-     * 注册 SPI 实现到门面。
-     *
-     * <p><b>已废弃</b>：v2.0.0 起 SPI 通过 Spring 构造器注入 {@link SentryService} 管理，
-     * 本方法仅作向后兼容占位，不再执行任何操作。
-     *
-     * @param metricsCollector 指标采集器（忽略）
-     * @param traceContext     链路追踪上下文（忽略）
-     * @param logPublisher     日志发布器（忽略）
-     * @param alertPublisher   告警发布器（忽略）
-     * @param slaCollector     SLA 采集器（忽略）
-     */
-    @Deprecated
-    public static void register(MetricsCollector metricsCollector,
-                                TraceContext traceContext,
-                                LogPublisher logPublisher,
-                                AlertPublisher alertPublisher,
-                                SlaCollector slaCollector) {
-        // v2.0.0: SPI 由 SentryService 构造器注入管理，此方法仅作向后兼容
     }
 
     // ==================== Metrics ====================

@@ -65,7 +65,8 @@ public class JdbcException extends BusinessException {
      * @param message       自定义消息
      */
     public JdbcException(JdbcExceptionCode exceptionCode, String message) {
-        super(exceptionCode, message);
+        super(exceptionCode);
+        initMessage(message);
     }
 
     /**
@@ -77,7 +78,8 @@ public class JdbcException extends BusinessException {
      * @param message       自定义消息
      */
     protected JdbcException(ExceptionCode exceptionCode, String message) {
-        super(exceptionCode, message);
+        super(exceptionCode);
+        initMessage(message);
     }
 
     /**
