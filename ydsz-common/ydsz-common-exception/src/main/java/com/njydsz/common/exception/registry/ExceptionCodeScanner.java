@@ -11,6 +11,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import com.njydsz.common.exception.code.ErrorCodeTable;
+import com.njydsz.common.exception.enums.ExceptionCategory;
 import com.njydsz.common.exception.enums.ExceptionCode;
 
 import lombok.extern.slf4j.Slf4j;

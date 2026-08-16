@@ -58,7 +58,7 @@ public class BatchBusinessException extends BusinessException {
      * 构造批量操作异常
      */
     private BatchBusinessException() {
-        super(CoreExceptionCode.BATCH_PARTIAL_SUCCESS, new Object[]{0, 0});
+        super(CoreExceptionCode.BATCH_PARTIAL_SUCCESS);
         setHttpStatus(207); // HTTP Multi-Status
     }
 

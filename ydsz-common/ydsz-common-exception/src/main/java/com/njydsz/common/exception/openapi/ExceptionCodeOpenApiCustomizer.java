@@ -97,15 +97,15 @@ public class ExceptionCodeOpenApiCustomizer implements OpenApiCustomizer {
                 continue;
             }
 
-            Schema<?> errorSchema = buildErrorResponseSchema(status);
+            Schema errorSchema = buildErrorResponseSchema(status);
+            errorSchema.addExample(buildExampleBody(status));
             String description = buildStatusDescription(status);
 
             ApiResponse response = new ApiResponse()
                     .description(description)
                     .content(new Content().addMediaType(
                             APPLICATION_PROBLEM_JSON,
-                            new MediaType().schema(errorSchema.addExample(
-                                    buildExampleBody(status)))));
+                            new MediaType().schema(errorSchema)));
 
             responses.addApiResponse(statusKey, response);
         }

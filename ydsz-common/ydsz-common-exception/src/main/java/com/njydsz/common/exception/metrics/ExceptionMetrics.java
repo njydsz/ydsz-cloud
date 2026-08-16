@@ -170,7 +170,7 @@ public class ExceptionMetrics {
         }
         try {
             String exceptionType = throwable.getClass().getSimpleName();
-            Timer.Builder<?> timerBuilder = Timer.builder(METRIC_HANDLER_DURATION)
+            Timer.Builder timerBuilder = Timer.builder(METRIC_HANDLER_DURATION)
                     .tag(TAG_TYPE, exceptionType);
             if (percentiles != null) {
                 timerBuilder.publishPercentiles(percentiles);
