@@ -1,0 +1,82 @@
+{
+  "properties": [
+    {
+      "name": "ydsz.safe.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用安全模块。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.safe.xss.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 XSS 防护过滤器。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.safe.xss.mode",
+      "type": "java.lang.String",
+      "description": "XSS 防护模式：filter（过滤器模式）或 converter（转换器模式）。",
+      "defaultValue": "filter"
+    },
+    {
+      "name": "ydsz.safe.csrf.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 CSRF 防护。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.safe.csrf.mode",
+      "type": "java.lang.String",
+      "description": "CSRF 防护模式：SYNCHRONIZER（同步令牌）或 DOUBLE_SUBMIT（双重提交 Cookie）。",
+      "defaultValue": "SYNCHRONIZER"
+    },
+    {
+      "name": "ydsz.safe.ip-access.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 IP 黑白名单访问控制。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.safe.sensitive.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用敏感数据脱敏。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.safe.security-headers.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用安全响应头过滤器。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.safe.api-signature.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 API 签名验证（timestamp + nonce + HMAC-SHA256）。",
+      "defaultValue": false
+    },
+    {
+      "name": "ydsz.safe.ratelimit.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用限流（令牌桶算法 + 熔断器）。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.safe.ratelimit.aop-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用 @RateLimit AOP 方法级限流。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.safe.ratelimit.metrics-enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用限流指标采集（Micrometer）。",
+      "defaultValue": true
+    },
+    {
+      "name": "ydsz.safe.field-encrypt.enabled",
+      "type": "java.lang.Boolean",
+      "description": "是否启用字段加密（MyBatis TypeHandler）。",
+      "defaultValue": false
+    }
+  ]
+}
