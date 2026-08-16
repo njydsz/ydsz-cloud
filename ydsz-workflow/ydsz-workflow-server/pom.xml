@@ -23,6 +23,11 @@
         </dependency>
         <!-- common-web 传递引入: common-base(→core/util/exception), common-auth, common-safe, common-redis -->
         <!-- common-jdbc 传递引入: common-domain -->
+        <!-- P1-A1: 显式声明 common-auth（使用 @AuthApiPermission / @DataScope / AuthContextUtils 等能力） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-auth</artifactId>
+        </dependency>
         <!-- ydsz-common-domain: explicit declaration for direct usage (JobHandler/DomainEvent/PageQuery, was transitive via common-jdbc) -->
         <dependency>
             <groupId>com.njydsz</groupId>
@@ -83,7 +88,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-search</artifactId>
         </dependency>
-        <!-- P0-2: 分布式事务（ydsz-common-seata 依赖已移除，待 P1 验证场景落地后重新引入） -->
+        <!-- P1-1: TCC 三方审批回调验证场景（ydsz-common-seata 验证） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-seata</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-web</artifactId>

@@ -19,10 +19,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.auth.annotation.DataScope;
 import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
-import com.njydsz.common.event.model.OutboxMessage;
+import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.jdbc.support.PageResponses;
-import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
@@ -104,8 +104,8 @@ public class ConfigServiceImpl implements ConfigService {
     private final SystemMetrics metrics;
     /** 系统配置属性 */
     private final SystemProperties properties;
-    /** Outbox 服务（可选依赖，用于发布配置变更事件） */
-    private final ObjectProvider<OutboxService> outboxServiceProvider;
+    /** 统一领域事件发布门面 */
+    private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
     private final ObjectProvider<SearchIndexEventBridge> searchIndexBridgeProvider;
 
     // ============================== CRUD ==============================
@@ -449,24 +449,15 @@ public class ConfigServiceImpl implements ConfigService {
      * @param configGroup 配置分组（为 null 时跳过）
      */
     private void publishConfigChangedEvent(String configKey, String configGroup) {
-        OutboxService outboxService = outboxServiceProvider.getIfAvailable();
-        if (outboxService != null) {
-            try {
-                Map<String, String> payload = new HashMap<>();
-                if (configKey != null) {
-                    payload.put("configKey", configKey);
-                }
-                if (configGroup != null) {
-                    payload.put("configGroup", configGroup);
-                }
-                outboxService.appendToOutbox(OutboxMessage.builder()
-                        .aggregateType("Config")
-                        .aggregateId(null)
-                        .eventType(DomainEventTypes.CONFIG_CHANGED)
-                        .payload(YdszJson.toJson(payload)));
-            } catch (Exception e) {
-                log.warn("Failed to publish CONFIG_CHANGED event: error={}", e.getMessage());
-            }
+        DomainEventPublisher publisher = eventPublisherProvider.getIfAvailable();
+        if (publisher != null) {
+            publisher.publish(DomainEvent.builder()
+                    .aggregateType("Config")
+                    .aggregateId(configKey)
+                    .eventType(DomainEventTypes.CONFIG_CHANGED)
+                    .metadata("configKey", configKey)
+                    .metadata("configGroup", configGroup)
+                    .build());
         }
     }
 }

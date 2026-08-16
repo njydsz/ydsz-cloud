@@ -19,7 +19,7 @@ import com.njydsz.message.infra.mapper.core.MsgLogMapper;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.config.RetryStrategyResolver;
 import com.njydsz.message.server.metric.MessageMetrics;
-import com.njydsz.message.server.tracing.MessageTraceContext;
+import com.njydsz.common.queue.trace.MessageTracer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -112,7 +112,7 @@ public class RetryScanner {
      */
     private MessageStatusEnum retryOnce(MsgLog logDO) {
         // P1-3: 进入追踪上下文，将 logDO.traceId 写入 MDC，确保重试日志可追溯
-        try (MessageTraceContext ctx = MessageTraceContext.enter(logDO.getTraceId())) {
+        try (MessageTracer.MessageTraceScope scope = MessageTracer.enter(logDO.getTraceId())) {
             // ① 流转到 SENDING
             logDO.setStatus(MessageStatusEnum.SENDING.name());
             msgLogMapper.updateById(logDO);

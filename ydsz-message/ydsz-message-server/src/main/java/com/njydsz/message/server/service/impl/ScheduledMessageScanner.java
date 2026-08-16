@@ -15,7 +15,7 @@ import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.metric.MessageMetrics;
-import com.njydsz.message.server.tracing.MessageTraceContext;
+import com.njydsz.common.queue.trace.MessageTracer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -99,7 +99,7 @@ public class ScheduledMessageScanner {
      * @param logDO 消息日志实体
      */
     private void sendScheduledMessage(MsgLog logDO) {
-        try (MessageTraceContext ctx = MessageTraceContext.enter(logDO.getTraceId())) {
+        try (MessageTracer.MessageTraceScope scope = MessageTracer.enter(logDO.getTraceId())) {
             logDO.setStatus(MessageStatusEnum.SENDING.name());
             msgLogMapper.updateById(logDO);
             long start = System.currentTimeMillis();

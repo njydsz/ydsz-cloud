@@ -75,8 +75,8 @@ import com.njydsz.message.server.template.TemplateVariableValidator;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.njydsz.common.event.model.OutboxMessage;
-import com.njydsz.common.event.service.OutboxService;
+import com.njydsz.common.event.api.DomainEvent;
+import com.njydsz.common.event.publish.DomainEventPublisher;
 
 /**
  * 消息服务实现（核心）。
@@ -161,7 +161,7 @@ public class MessageServiceImpl implements MessageService {
 
     /** P0-5: 聚合路径独立 Service（事务安全） */
     private final AggregatePersistenceService aggregatePersistenceService;
-    private final ObjectProvider<OutboxService> outboxServiceProvider;
+    private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
 
     @Override
     public MessageResult send(MessageRequest request) {
@@ -939,22 +939,17 @@ log.debug("[Message] 智能推送时间优化失败,降级立即发送: receiver
     }
 
     /**
-     * 发布领域事件到 Outbox（OutboxService 不可用时静默跳过）。
+     * 发布领域事件到 Outbox（DomainEventPublisher 不可用时静默跳过）。
      */
     private void publishEvent(String aggregateType, String aggregateId, String eventType, String payload) {
-        try {
-            OutboxService outboxService = outboxServiceProvider.getIfAvailable();
-            if (outboxService != null) {
-                outboxService.appendToOutbox(OutboxMessage.builder()
-                        .aggregateType(aggregateType)
-                        .aggregateId(aggregateId)
-                        .eventType(eventType)
-                        .payload(payload));
-            } else {
-                log.debug("[Outbox] OutboxService not configured, skip: type={} id={}", eventType, aggregateId);
-            }
-        } catch (Exception e) {
-            log.warn("[Outbox] Event publish failed: type={} id={} err={}", eventType, aggregateId, e.getMessage());
+        DomainEventPublisher publisher = eventPublisherProvider.getIfAvailable();
+        if (publisher != null) {
+            publisher.publish(DomainEvent.builder()
+                    .aggregateType(aggregateType)
+                    .aggregateId(aggregateId)
+                    .eventType(eventType)
+                    .metadata("payload", payload)
+                    .build());
         }
     }
 

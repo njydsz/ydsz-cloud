@@ -1,7 +1,5 @@
 package com.njydsz.common.feign.config;
 
-import java.time.Duration;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.hc.client5.http.config.RequestConfig;
@@ -15,24 +13,19 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 
 import com.njydsz.common.feign.aspect.FeignRequestInterceptor;
 import com.njydsz.common.feign.aspect.YdszFeignErrorDecoder;
 import com.njydsz.common.feign.aspect.YdszFeignLogger;
-import com.njydsz.common.feign.circuitbreaker.CircuitBreakerStatePersistence;
-import com.njydsz.common.feign.circuitbreaker.FeignCircuitBreakerStrategy;
 import com.njydsz.common.feign.codec.JsonDecoder;
 import com.njydsz.common.feign.codec.JsonEncoder;
 import com.njydsz.common.feign.codec.ResponseUnwrapDecoder;
 import com.njydsz.common.feign.compress.GzipRequestCompressInterceptor;
-import com.njydsz.common.feign.health.FeignHealthIndicator;
 import com.njydsz.common.feign.interceptor.BulkheadRequestInterceptor;
 import com.njydsz.common.feign.interceptor.FeignResponseInterceptor;
 import com.njydsz.common.feign.monitor.FeignResponseMetricsAdapter;
 import com.njydsz.common.feign.trace.TraceRequestInterceptor;
-import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 import feign.Feign;
 import feign.Logger;
@@ -46,8 +39,6 @@ import feign.codec.ErrorDecoder;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.boot.health.contributor.HealthIndicator;
-
 /**
  * YdszFeign 自动配置类。
  *
@@ -58,6 +49,9 @@ import org.springframework.boot.health.contributor.HealthIndicator;
  *   <li>日志增强：自定义日志格式，提升可观测性</li>
  *   <li>重试策略：指数退避重试，提升调用成功率</li>
  *   <li>超时控制：可配置连接超时和读取超时</li>
+ *   <li>链路追踪：注入 X-Trace-Id / W3C traceparent</li>
+ *   <li>信号量隔离：按服务维度限制并发</li>
+ *   <li>GZIP 压缩：大请求体自动压缩</li>
  * </ul>
  *
  * <p>配置生效条件：
@@ -155,19 +149,7 @@ public class FeignConfiguration {
     /**
      * 创建 Feign 重试器。
      * <p>
-     * 使用指数退避算法进行重试：
-     * <ul>
-     *   <li>初始延迟：{@code 100ms}</li>
-     *   <li>最大延迟：{@code 500ms}</li>
-     *   <li>延迟倍数：{@code 2.0}</li>
-     * </ul>
-     * <p>
-     * 仅对以下情况重试：
-     * <ul>
-     *   <li>连接超时</li>
-     *   <li>服务器错误（5xx）</li>
-     *   <li>指定 HTTP 方法的请求</li>
-     * </ul>
+     * 使用指数退避算法进行重试，仅对配置的 HTTP 方法白名单中的请求重试。
      *
      * @param feignProperties Feign 配置属性
      * @return Retryer 实例
@@ -262,7 +244,7 @@ public class FeignConfiguration {
         FeignProperties.Compress compressConfig = feignProperties.getCompress();
         return new GzipRequestCompressInterceptor(
                 compressConfig.getMinSize(),
-                compressConfig.getExcludedContentTypes()
+                compressConfig.getExcludedContentTypes().toArray(new String[0])
         );
     }
 
@@ -281,7 +263,6 @@ public class FeignConfiguration {
      *
      * @param feignProperties        Feign 配置属性
      * @param meterRegistryProvider Micrometer 注册器（可选）
-     * @param circuitBreakerProvider 熔断器策略（可选）
      * @param bulkheadProvider      Bulkhead 拦截器（可选，启用后用于在 finally 中释放许可）
      * @return FeignResponseInterceptor 实例
      */
@@ -289,9 +270,8 @@ public class FeignConfiguration {
     @ConditionalOnMissingBean(FeignResponseInterceptor.class)
     @ConditionalOnProperty(prefix = "ydsz.feign.response-interceptor", name = "enabled", havingValue = "true", matchIfMissing = true)
     public ResponseInterceptor feignResponseInterceptor(FeignProperties feignProperties,
-                                                          ObjectProvider<MeterRegistry> meterRegistryProvider,
-                                                          ObjectProvider<FeignCircuitBreakerStrategy> circuitBreakerProvider,
-                                                          ObjectProvider<BulkheadRequestInterceptor> bulkheadProvider) {
+                                                       ObjectProvider<MeterRegistry> meterRegistryProvider,
+                                                       ObjectProvider<BulkheadRequestInterceptor> bulkheadProvider) {
         boolean logEnabled = feignProperties.getResponseInterceptor().isLogEnabled();
         long slowCallThresholdMillis = feignProperties.getResponseInterceptor().getSlowCallThresholdMillis();
 
@@ -301,10 +281,9 @@ public class FeignConfiguration {
             metrics = new FeignResponseMetricsAdapter(meterRegistry);
         }
 
-        FeignCircuitBreakerStrategy circuitBreaker = circuitBreakerProvider.getIfAvailable();
         BulkheadRequestInterceptor bulkhead = bulkheadProvider.getIfAvailable();
 
-        return new FeignResponseInterceptor(metrics, logEnabled, slowCallThresholdMillis, circuitBreaker, bulkhead);
+        return new FeignResponseInterceptor(metrics, logEnabled, slowCallThresholdMillis, null, bulkhead);
     }
 
     /**
@@ -324,7 +303,8 @@ public class FeignConfiguration {
     @ConditionalOnProperty(prefix = "ydsz.feign.bulkhead", name = "enabled", havingValue = "true")
     public RequestInterceptor bulkheadRequestInterceptor(FeignProperties feignProperties) {
         FeignProperties.Bulkhead config = feignProperties.getBulkhead();
-        return new BulkheadRequestInterceptor(config);
+        return new BulkheadRequestInterceptor(config.getDefaultMaxConcurrent(),
+                config.getAcquireTimeoutMs(), config.getServiceMaxConcurrent());
     }
 
     /**
@@ -356,8 +336,8 @@ public class FeignConfiguration {
      *   <li>空闲连接回收：超过 keepAlive 时长未使用的连接自动关闭</li>
      *   <li>过期连接回收：超过连接生命周期（connectionTimeToLive）的连接自动关闭</li>
      *   <li>空闲连接校验：使用前对空闲连接进行探活，防止使用到已被服务端关闭的"僵尸连接"</li>
-     *   <li>禁用 Cookie 和自动重定向：Feign 调用不依赖会话状态</li>
-     *   <li>禁用自动重试：重试由 {@link Retryer} 统一控制，避免双层重试</li>
+     *   <li>禁止 Cookie 和自动重定向：Feign 调用不依赖会话状态</li>
+     *   <li>禁止自动重试：重试由 {@link Retryer} 统一控制，避免双层重试</li>
      * </ul>
      *
      * <p><b>设计说明：</b>经过调优的连接池配置可显著提升高并发场景下的吞吐量和稳定性。
@@ -384,100 +364,5 @@ public class FeignConfiguration {
                 .disableRedirectHandling()
                 .disableAutomaticRetries()
                 .build();
-    }
-
-    /**
-     * 创建动态 Feign 客户端工厂。
-     *
-     * <p>当启用动态配置刷新时（ydsz.feign.refresh.enabled=true），
-     * 通过该工厂管理 Feign 客户端实例的生命周期，支持配置热更新。
-     *
-     * @param feignProperties        Feign 配置属性
-     * @param loggerProvider         日志处理器
-     * @param errorDecoderProvider   错误解码器
-     * @param retryerProvider        重试器
-     * @param interceptorsProvider   请求拦截器列表
-     * @param decoderProvider        解码器
-     * @param encoderProvider        编码器
-     * @return DynamicFeignClientFactory 实例
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public DynamicFeignClientFactory dynamicFeignClientFactory(
-            FeignProperties feignProperties,
-            ObjectProvider<Logger> loggerProvider,
-            ObjectProvider<ErrorDecoder> errorDecoderProvider,
-            ObjectProvider<Retryer> retryerProvider,
-            ObjectProvider<List<RequestInterceptor>> interceptorsProvider,
-            ObjectProvider<Decoder> decoderProvider,
-            ObjectProvider<Encoder> encoderProvider) {
-        return new DynamicFeignClientFactory(
-                feignProperties,
-                loggerProvider,
-                errorDecoderProvider,
-                retryerProvider,
-                interceptorsProvider,
-                decoderProvider,
-                encoderProvider);
-    }
-
-    /**
-     * 创建 Feign 配置刷新监听器。
-     *
-     * <p>监听 Spring Cloud 的配置变更事件，当 Feign 相关配置发生变化时，
-     * 自动重建 Feign 客户端实例以应用新配置。
-     * 仅在 {@code spring-cloud-context} 可用时生效。
-     *
-     * @param applicationContext Spring 应用上下文
-     * @param clientFactory      动态 Feign 客户端工厂
-     * @return FeignConfigRefresher 实例
-     */
-    @Bean
-    @ConditionalOnClass(name = "org.springframework.cloud.context.environment.EnvironmentChangeEvent")
-    @ConditionalOnMissingBean
-    public FeignConfigRefresher feignConfigRefresher(
-            ApplicationContext applicationContext,
-            DynamicFeignClientFactory clientFactory) {
-        return new FeignConfigRefresher(applicationContext, clientFactory);
-    }
-
-    /**
-     * 注册 Feign 健康检查指示器。
-     *
-     * <p>暴露 /actuator/health/feign 端点，报告 Feign 客户端配置概要和熔断器状态。
-     *
-     * @param feignProperties              Feign 配置属性
-     * @param circuitBreakerStrategyProvider 熔断器策略提供者（可选）
-     * @return FeignHealthIndicator 实例
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnClass(HealthIndicator.class)
-    @ConditionalOnProperty(prefix = "ydsz.feign", name = "enabled", havingValue = "true", matchIfMissing = true)
-    public FeignHealthIndicator feignHealthIndicator(
-            FeignProperties feignProperties,
-            ObjectProvider<FeignCircuitBreakerStrategy> circuitBreakerStrategyProvider) {
-        return new FeignHealthIndicator(feignProperties, circuitBreakerStrategyProvider);
-    }
-
-    /**
-     * 注册熔断器状态持久化组件。
-     *
-     * <p>当 Redis 在 classpath 中时，将熔断状态持久化到 Redis，
-     * 应用重启后可恢复熔断状态。TTL 可通过
-     * {@code ydsz.feign.circuit-breaker.state-ttl-seconds} 配置。
-     *
-     * @param feignProperties      Feign 配置属性
-     * @param redisStringOpsProvider Redis String 操作提供者（可选）
-     * @return CircuitBreakerStatePersistence 实例
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnClass(RedisStringOps.class)
-    public CircuitBreakerStatePersistence circuitBreakerStatePersistence(
-            FeignProperties feignProperties,
-            ObjectProvider<RedisStringOps> redisStringOpsProvider) {
-        int ttlSeconds = feignProperties.getCircuitBreaker().getStateTtlSeconds();
-        return new CircuitBreakerStatePersistence(redisStringOpsProvider, Duration.ofSeconds(ttlSeconds));
     }
 }

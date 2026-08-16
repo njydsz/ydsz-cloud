@@ -29,10 +29,45 @@ import org.slf4j.LoggerFactory;
  */
 public final class SensitiveUtil {
 
+    private static final Logger log = LoggerFactory.getLogger(SensitiveUtil.class);
+
     private static final char ASTERISK = '*';
 
     /** 自定义脱敏 handler 注册表（name → masker） */
     private static final Map<String, Function<String, String>> CUSTOM_HANDLERS = new ConcurrentHashMap<>();
+
+    // ============================== 标准 PII 扫描正则（单一来源，全系统共享） ==============================
+
+    /**
+     * 标准 PII 扫描模式表。
+     *
+     * <p>所有需要从自由文本中自动发现 PII 的场景应使用此处统一维护的正则，
+     * 避免各模块自行维护导致升级遗漏（如手机号号段扩展需同步修改多处）。
+     *
+     * <p>顺序影响扫描优先级：先匹配长模式（身份证 18 位）再匹配短模式（手机号 11 位），
+     * 防止身份证前 17 位被手机号模式截断。
+     */
+    private static final Map<Pattern, SensitiveType> PII_SCAN_PATTERNS;
+
+    static {
+        Map<Pattern, SensitiveType> map = new LinkedHashMap<>();
+        // 身份证号：18 位（前 17 位数字 + 末位数字或 X），严格匹配
+        map.put(Pattern.compile("(?<![0-9])([1-9]\\d{5}(?:19|20)\\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\\d|3[01])\\d{3}[0-9Xx])(?![0-9])"),
+                SensitiveType.ID_CARD);
+        // 手机号：11 位数字，1 开头，第二位 3-9
+        map.put(Pattern.compile("(?<![0-9])(1[3-9]\\d{9})(?![0-9])"),
+                SensitiveType.PHONE);
+        // 银行卡号：16-19 位连续数字，62 开头
+        map.put(Pattern.compile("(?<![0-9])(6[2-9]\\d{14,17})(?![0-9])"),
+                SensitiveType.BANK_CARD);
+        // 邮箱地址
+        map.put(Pattern.compile("([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,})"),
+                SensitiveType.EMAIL);
+        // 护照号：G/E/K/S 开头 + 8 位数字
+        map.put(Pattern.compile("(?<![A-Z])([GEKS][1-9]\\d{7})(?!\\d)"),
+                SensitiveType.PASSPORT);
+        PII_SCAN_PATTERNS = map;
+    }
 
     private SensitiveUtil() {
     }
@@ -499,5 +534,68 @@ public final class SensitiveUtil {
 
     private static String repeat(char c, int count) {
         return String.valueOf(c).repeat(count);
+    }
+
+    // ============================== PII 自由文本扫描 + 脱敏（消除各模块重复正则） ==============================
+
+    /**
+     * 对自由文本执行 PII 扫描并脱敏（使用默认替换字符 *）。
+     *
+     * <p>扫描文本中的所有预定义 PII 模式（身份证、手机号、银行卡、邮箱、护照），
+     * 对匹配到的片段调用对应的脱敏方法。
+     *
+     * <p><b>设计目的（P1-3）：</b>
+     * <ul>
+     *   <li>消除 {@code FlowSensitiveMasker}、{@code PiiMaskingGuardrail} 等类中重复的正则定义</li>
+     *   <li>PII 扫描正则在此处统一维护，升级时只需修改一处</li>
+     *   <li>脱敏算法委托本类的标准方法，确保与 {@code @SensitiveData} 注解脱敏结果一致</li>
+     * </ul>
+     *
+     * <p><b>使用示例：</b>
+     * <pre>{@code
+     * // 在业务模块中使用（替代自建 PII 正则扫描）
+     * String safe = SensitiveUtil.scanAndMask("联系人：张三，手机：13800138000");
+     * // 结果："联系人：张三，手机：138****8000"
+     * }</pre>
+     *
+     * @param text 原始文本（可为 null）
+     * @return 脱敏后文本；输入为 null 时返回 null
+     */
+    public static String scanAndMask(String text) {
+        return scanAndMaskWith(text, ASTERISK);
+    }
+
+    /**
+     * 对自由文本执行 PII 扫描并脱敏（自定义替换字符）。
+     *
+     * @param text        原始文本（可为 null）
+     * @param replaceChar 替换字符（如 '*' 或 '#'）
+     * @return 脱敏后文本；输入为 null 时返回 null
+     * @see #scanAndMask(String)
+     */
+    public static String scanAndMaskWith(String text, char replaceChar) {
+        if (text == null || text.isEmpty()) {
+            return text;
+        }
+        String result = text;
+        try {
+            for (Map.Entry<Pattern, SensitiveType> entry : PII_SCAN_PATTERNS.entrySet()) {
+                Pattern pattern = entry.getKey();
+                SensitiveType type = entry.getValue();
+                Matcher matcher = pattern.matcher(result);
+                StringBuilder sb = new StringBuilder();
+                while (matcher.find()) {
+                    String raw = matcher.group(1);
+                    String masked = desensitize(raw, type, replaceChar);
+                    matcher.appendReplacement(sb, Matcher.quoteReplacement(masked));
+                }
+                matcher.appendTail(sb);
+                result = sb.toString();
+            }
+        } catch (Exception e) {
+            log.warn("[SensitiveUtil] PII 扫描脱敏异常，返回原文: err={}", e.getMessage());
+            return text;
+        }
+        return result;
     }
 }

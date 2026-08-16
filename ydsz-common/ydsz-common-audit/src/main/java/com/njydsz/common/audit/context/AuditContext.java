@@ -1,7 +1,11 @@
 package com.njydsz.common.audit.context;
 
+import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
@@ -23,10 +27,27 @@ import com.njydsz.common.core.context.RequestContext;
  * <p>通用字段（如 operatorId/operatorName）已从 {@link RequestContext} 获取，
  * 避免重复存储，保持数据一致性。</p>
  *
+ * <h3>operatorName 获取策略（v1.2.0 改进）</h3>
+ * <p>获取逻辑按优先级：
+ * <ol>
+ *   <li>尝试从 {@link BizContextKeys#KEY_LOGIN_USER} 获取用户对象，
+ *       通过反射调用 {@code getUsername()} 方法提取用户名（无需引入认证模块硬依赖）</li>
+ *   <li>若无法获取，尝试从 {@link RequestContext} 读取自定义字段 "username"</li>
+ *   <li>兜底返回 {@code null}（不影响审计记录落库，operatorName 字段可为空）</li>
+ * </ol>
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
 public class AuditContext {
+
+    private static final Logger log = LoggerFactory.getLogger(AuditContext.class);
+
+    /** 缓存反射 Method 对象，避免重复查找 */
+    private static volatile Method cachedUsernameMethod;
+
+    /** 缓存反射查找失败的 Class，避免重复尝试 */
+    private static final Class<?>[] FAILED_CLASSES = new Class<?>[0];
 
     /**
      * 获取当前线程的审计上下文
@@ -107,6 +128,80 @@ public class AuditContext {
     }
 
     /**
+     * 尝试从 RequestContext 获取操作人姓名
+     *
+     * <p>获取逻辑（按优先级）：
+     * <ol>
+     *   <li>读取 {@link BizContextKeys#KEY_LOGIN_USER} 中的用户对象，
+     *       通过反射调用 {@code getUsername()} 提取用户名</li>
+     *   <li>读取 RequestContext 中的 "username" 自定义字段（兜底兼容）</li>
+     *   <li>返回 {@code null}（不影响审计记录落库，operatorName 字段允许为空）</li>
+     * </ol>
+     *
+     * <p>设计说明：使用反射而非直接依赖 {@code AuthContextUtils} / {@code LoginUser}，
+     * 保持 audit 模块对 auth 模块的零硬依赖。当项目中引入 common-auth 时，
+     * AuthFilter 自动将 LoginUser 写入 RequestContext，此处即可获取到用户名；
+     * 未引入 common-auth 的项目（如纯定时任务、消息消费侧）返回 null，不报错。
+     *
+     * @return 操作人姓名；无法获取时返回 null
+     */
+    private static String resolveOperatorName() {
+        try {
+            // 策略 1：从 KEY_LOGIN_USER 获取（AuthContextUtils.setCurrent 写入的 LoginUser 对象）
+            Object loginUser = RequestContext.get(BizContextKeys.KEY_LOGIN_USER);
+            if (loginUser != null) {
+                String username = extractUsernameViaReflection(loginUser);
+                if (username != null && !username.isEmpty()) {
+                    return username;
+                }
+            }
+
+            // 策略 2：从自定义字段 "username" 获取（兜底兼容）
+            Object usernameObj = RequestContext.get("username");
+            if (usernameObj instanceof String && !((String) usernameObj).isEmpty()) {
+                return (String) usernameObj;
+            }
+        } catch (Exception e) {
+            log.debug("[AuditContext] 获取操作人姓名异常（非致命）: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * 通过反射从用户对象中提取用户名
+     *
+     * <p>尝试调用 {@code getUsername()} 方法。首次调用后缓存 Method 对象。
+     * 对于已知不含 getUsername() 方法的类型，跳过反射尝试（性能优化）。
+     *
+     * @param userObj 用户对象（如 LoginUser / UserInfo 等）
+     * @return 用户名；获取失败返回 null
+     */
+    private static String extractUsernameViaReflection(Object userObj) {
+        Class<?> clazz = userObj.getClass();
+
+        try {
+            Method method = cachedUsernameMethod;
+            if (method != null && method.getDeclaringClass().isAssignableFrom(clazz)) {
+                Object result = method.invoke(userObj);
+                return result instanceof String ? (String) result : null;
+            }
+
+            // 首次查找或 Method 不匹配当前 Class：重新查找
+            method = clazz.getMethod("getUsername");
+            method.setAccessible(true);
+            cachedUsernameMethod = method;
+            Object result = method.invoke(userObj);
+            return result instanceof String ? (String) result : null;
+        } catch (NoSuchMethodException e) {
+            // 该类不含 getUsername() 方法，返回 null
+            return null;
+        } catch (Exception e) {
+            log.debug("[AuditContext] 反射获取用户名失败: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
      * 审计上下文数据载体
      * <p>存储于 {@link BizContextKeys#KEY_AUDIT_DATA} 的审计上下文数据对象。
      * 通用字段（如 operatorId/operatorName）已从 {@link RequestContext} 获取。
@@ -180,17 +275,23 @@ public class AuditContext {
         }
 
         /**
-         * 获取操作人姓名。
+         * 获取操作人姓名
          *
-         * <p>ydsz-common-core 精简后 {@link RequestContext} 不再支持自定义字段透传
-         * （原通过 {@code RequestContext.put("username", ...)} 写入、此处读取），
-         * 返回 {@code null}，避免引入对认证模块的强依赖。
-         * 如需操作人姓名，可通过认证模块的 {@code AuthContextUtils.getUsername()} 获取。
+         * <p>v1.2.0 改进：不再固定返回 null，改为通过反射从 RequestContext 中提取。
+         * 当项目中存在 common-auth 模块并配置 AuthFilter 时，可自动获取到操作人姓名；
+         * 未引入 common-auth 或认证上下文中无用户信息时返回 null，不影响审计落库。
+         *
+         * <p>获取策略：
+         * <ol>
+         *   <li>反射读取 RequestContext 中 KEY_LOGIN_USER 对象的 getUsername()</li>
+         *   <li>兜底读取 RequestContext 中 "username" 自定义字段</li>
+         *   <li>均失败时返回 null</li>
+         * </ol>
          *
          * @return 操作人姓名；无法获取时返回 null
          */
         public String getOperatorName() {
-            return null;
+            return resolveOperatorName();
         }
 
         public Long getStartTime() {

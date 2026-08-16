@@ -5,16 +5,15 @@ import java.util.Map;
 
 import org.springframework.beans.factory.ObjectProvider;
 
-import com.njydsz.common.notify.core.NotifyRequest;
-import com.njydsz.common.notify.core.NotifyService;
-import com.njydsz.common.notify.enums.NotifyChannel;
+import com.njydsz.common.notify.helper.NotifyHelper;
 
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * GAP-P1-1 + GAP-P1-2: 网关告警通知服务
  *
- * <p>集成 ydsz-common-notify 的 NotifyService，在网关关键事件触发时发送实时 IM 通知。
+ * <p>集成 ydsz-common-notify 的 {@link NotifyHelper}，在网关关键事件触发时发送实时 IM 通知。
+ * 使用 {@code @Value} 注入告警目标 Webhook URL，未配置时不发送告警。
  *
  * <h3>告警场景</h3>
  * <ul>
@@ -24,7 +23,10 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>Redis 限流降级切换 — 限流熔断器打开</li>
  * </ul>
  *
- * <p>使用 ObjectProvider 实现可选依赖，当 NotifyService 不可用时不影响网关正常运行。
+ * <p>使用 ObjectProvider 实现可选依赖，当 NotifyHelper 不可用时不影响网关正常运行。
+ *
+ * <p><b>收敛说明</b>：使用 {@link NotifyHelper} 替代直接使用 {@code NotifyService} 或
+ * {@code NotificationClient} Feign。详见 {@code docs/module-review/ADR-001-notify-message-convergence.md}。
  *
  * @since 1.0.0
  * @author ydsz-team
@@ -32,8 +34,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class GatewayAlertService {
 
-    /** 告警通知服务（可选依赖） */
-    private final ObjectProvider<NotifyService> notifyServiceProvider;
+    /** 通知辅助类（可选依赖） */
+    private final ObjectProvider<NotifyHelper> notifyHelperProvider;
+
+    /** 告警目标 DingTalk Webhook URL（含 access_token） */
+    private final String alertWebhookUrl;
 
     /** 上次告警时间戳（简单限流，避免同一事件刷屏） */
     private volatile long lastRatelimitAlertTs = 0;
@@ -46,10 +51,13 @@ public class GatewayAlertService {
     /**
      * 构造网关告警服务
      *
-     * @param notifyServiceProvider 通知服务提供者（可选）
+     * @param notifyHelperProvider 通知辅助类提供者（可选）
+     * @param alertWebhookUrl      告警目标 Webhook URL
      */
-    public GatewayAlertService(ObjectProvider<NotifyService> notifyServiceProvider) {
-        this.notifyServiceProvider = notifyServiceProvider;
+    public GatewayAlertService(ObjectProvider<NotifyHelper> notifyHelperProvider,
+                               String alertWebhookUrl) {
+        this.notifyHelperProvider = notifyHelperProvider;
+        this.alertWebhookUrl = alertWebhookUrl;
     }
 
     /**
@@ -126,25 +134,22 @@ public class GatewayAlertService {
      * @param details 告警详情
      */
     private void sendAlert(String title, Map<String, String> details) {
-        NotifyService notifyService = notifyServiceProvider.getIfAvailable();
-        if (notifyService == null) {
-            log.debug("[GatewayAlert] NotifyService 不可用，跳过告警: {}", title);
+        NotifyHelper helper = notifyHelperProvider.getIfAvailable();
+        if (helper == null) {
+            log.debug("[GatewayAlert] NotifyHelper 不可用，跳过告警: {}", title);
+            return;
+        }
+        if (alertWebhookUrl == null || alertWebhookUrl.isBlank()) {
+            log.debug("[GatewayAlert] 未配置告警 Webhook URL，跳过告警: {}", title);
             return;
         }
 
-        try {
-            StringBuilder message = new StringBuilder();
-            message.append(title).append("\n");
-            details.forEach((k, v) -> message.append(k).append(": ").append(v).append("\n"));
+        StringBuilder message = new StringBuilder();
+        message.append(title).append("\n");
+        details.forEach((k, v) -> message.append(k).append(": ").append(v).append("\n"));
 
-            NotifyRequest request = NotifyRequest.of(
-                    NotifyChannel.DINGTALK, null, title, message.toString()).build();
-
-            notifyService.send(request);
-            log.info("[GatewayAlert] 告警已发送: {}", title);
-        } catch (Exception e) {
-            log.warn("[GatewayAlert] 告警发送失败: {} err={}", title, e.getMessage());
-        }
+        helper.sendDingTalk(alertWebhookUrl, title, message.toString());
+        log.info("[GatewayAlert] 告警已发送: {}", title);
     }
 
     /**

@@ -8,10 +8,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
-import com.njydsz.common.event.model.OutboxMessage;
-import com.njydsz.common.event.service.OutboxService;
-import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.json.tree.ArrayNode;
 
 import org.springframework.beans.factory.ObjectProvider;
@@ -81,8 +80,8 @@ public class AlertDispatcher {
     private final ObjectProvider<AlertDedupManager> alertDedupManagerProvider;
     /** P2-10: common-notify 通知助手（可选注入，IM 渠道直推） */
     private final ObjectProvider<NotifyHelper> notifyHelperProvider;
-    /** Outbox 事件服务（可选依赖，发布任务告警/执行结果领域事件） */
-    private final ObjectProvider<OutboxService> outboxServiceProvider;
+    /** 统一领域事件发布门面 */
+    private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
 
     private static final DateTimeFormatter TIME_FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -564,19 +563,15 @@ public class AlertDispatcher {
      * 发布领域事件到 Outbox（可选依赖，不存在时安全降级）
      */
     private void publishOutboxEvent(String eventType, String aggregateId, Object payload) {
-        OutboxService outboxService = outboxServiceProvider.getIfAvailable();
-        if (outboxService == null) {
+        DomainEventPublisher publisher = eventPublisherProvider.getIfAvailable();
+        if (publisher == null) {
             return;
         }
-        try {
-            outboxService.appendToOutbox(OutboxMessage.builder()
-                    .aggregateType("Job")
-                    .aggregateId(aggregateId)
-                    .eventType(eventType)
-                    .payload(YdszJson.toJson(payload)));
-        } catch (Exception e) {
-            log.warn("[AlertDispatcher] Failed to publish outbox event: type={}, id={}, error={}",
-                    eventType, aggregateId, e.getMessage());
-        }
+        publisher.publish(DomainEvent.builder()
+                .aggregateType("Job")
+                .aggregateId(aggregateId)
+                .eventType(eventType)
+                .metadata("data", payload)
+                .build());
     }
 }

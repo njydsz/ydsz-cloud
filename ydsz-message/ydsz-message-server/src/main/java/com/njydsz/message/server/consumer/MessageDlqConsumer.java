@@ -11,13 +11,13 @@ import org.springframework.stereotype.Component;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.njydsz.common.queue.constant.YdszMessageTopics;
 import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.queue.trace.MessageTracer;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
 import com.njydsz.message.server.metric.MessageMetrics;
-import com.njydsz.message.server.tracing.MessageTraceContext;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -76,7 +76,7 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
         }
 
         // P1-3: 死信处理进入追踪上下文（无原始 traceId 时自动生成）
-        try (MessageTraceContext ctx = MessageTraceContext.enter(null)) {
+        try (MessageTracer.MessageTraceScope scope = MessageTracer.enter(null)) {
             MessageRequest request = null;
             try {
                 request = YdszJson.fromJson(body, MessageRequest.class);

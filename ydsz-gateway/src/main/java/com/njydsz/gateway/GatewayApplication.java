@@ -5,11 +5,12 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 
 import com.njydsz.common.auth.config.AuthProperties;
 import com.njydsz.common.auth.service.ReactiveTokenBlacklistService;
-import com.njydsz.common.notify.core.NotifyService;
+import com.njydsz.common.notify.helper.NotifyHelper;
 import com.njydsz.common.safe.crypto.NonceCache;
 import com.njydsz.gateway.config.CorsProperties;
 import com.njydsz.gateway.config.GatewayAlertService;
@@ -150,18 +151,21 @@ public class GatewayApplication {
     /**
      * 注册网关告警通知服务，将入口层异常事件实时推送到运维 IM 群。
      *
-     * <p>集成 ydsz-common-notify 的 {@link NotifyService}，在限流触发、IP 黑名单命中、
+     * <p>集成 ydsz-common-notify 的 {@link NotifyHelper}，在限流触发、IP 黑名单命中、
      * 下游 502/504 等关键事件时发送钉钉/飞书通知，使入口层故障不必等待监控轮询即可被感知。
      *
-     * <p><b>降级策略：</b>{@link NotifyService} 未配置时以 {@link ObjectProvider} 形式
+     * <p><b>降级策略：</b>{@link NotifyHelper} 未配置时以 {@link ObjectProvider} 形式
      * 优雅缺省，告警静默丢弃而不影响请求主链路；告警发送为异步旁路，不阻塞转发。
      *
-     * @param notifyServiceProvider 通知渠道服务；未配置时告警降级为空操作
+     * @param notifyHelperProvider 通知辅助类；未配置时告警降级为空操作
+     * @param alertWebhookUrl      告警目标 DingTalk Webhook URL（含 access_token），
+     *                             未配置时不发送告警
      * @return 网关告警服务，供各过滤器在异常分支调用
      */
     @Bean
     public GatewayAlertService gatewayAlertService(
-            ObjectProvider<NotifyService> notifyServiceProvider) {
-        return new GatewayAlertService(notifyServiceProvider);
+            ObjectProvider<NotifyHelper> notifyHelperProvider,
+            @Value("${ydsz.gateway.alert.dingtalk-webhook:}") String alertWebhookUrl) {
+        return new GatewayAlertService(notifyHelperProvider, alertWebhookUrl);
     }
 }

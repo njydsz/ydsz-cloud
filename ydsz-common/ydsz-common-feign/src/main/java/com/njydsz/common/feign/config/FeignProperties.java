@@ -12,8 +12,8 @@ import lombok.Setter;
 
 /**
  * YdszFeign 模块核心配置属性类
- * 
- * <p>配置前缀：ydsz.feign，仅保留高频使用的核心配置项，其他能力使用Spring Cloud原生配置即可。
+ *
+ * <p>配置前缀：ydsz.feign，覆盖请求头透传、重试、超时、追踪、指标、熔断、隔离、压缩等全量能力。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -44,8 +44,20 @@ public class FeignProperties {
     /** 监控指标配置 */
     private final Metrics metrics = new Metrics();
 
-    /** 熔断器开关能力，具体熔断规则使用Resilience4j原生配置 */
+    /** 熔断器开关配置，具体熔断规则使用Resilience4j原生配置 */
     private final CircuitBreaker circuitBreaker = new CircuitBreaker();
+
+    /** 信号量隔离（Bulkhead）配置 */
+    private final Bulkhead bulkhead = new Bulkhead();
+
+    /** GZIP 请求压缩配置 */
+    private final Compress compress = new Compress();
+
+    /** HttpClient 连接池配置 */
+    private final Client client = new Client();
+
+    /** 响应拦截器配置 */
+    private final ResponseInterceptor responseInterceptor = new ResponseInterceptor();
 
     /**
      * 解析日志级别为Feign枚举值
@@ -99,6 +111,24 @@ public class FeignProperties {
 
         /** 最大重试次数（包含首次调用），默认3 */
         private int maxAttempts = 3;
+
+        /** 退避策略配置 */
+        private final Backoff backoff = new Backoff();
+
+        /** 可重试的 HTTP 方法白名单，默认仅 GET */
+        private Set<String> retryOnMethods = new LinkedHashSet<>(Arrays.asList("GET"));
+
+        /**
+         * 退避策略
+         */
+        @Getter
+        @Setter
+        public static class Backoff {
+            /** 初始延迟（毫秒），默认 100 */
+            private long delay = 100;
+            /** 最大延迟（毫秒），默认 500 */
+            private long maxDelay = 500;
+        }
     }
 
     /**
@@ -142,5 +172,84 @@ public class FeignProperties {
     public static class CircuitBreaker {
         /** 是否启用Resilience4j熔断能力，默认false */
         private boolean enabled = false;
+
+        /** 熔断状态 Redis 持久化 TTL（秒），默认 3600 */
+        private int stateTtlSeconds = 3600;
+    }
+
+    /**
+     * 信号量隔离（Bulkhead）配置
+     */
+    @Getter
+    @Setter
+    public static class Bulkhead {
+        /** 是否启用信号量隔离，默认false */
+        private boolean enabled = false;
+
+        /** 默认最大并发请求数，默认50 */
+        private int defaultMaxConcurrent = 50;
+
+        /** 获取许可超时时间（毫秒），默认100 */
+        private long acquireTimeoutMs = 100;
+
+        /** 按服务维度配置最大并发请求数 */
+        private java.util.Map<String, Integer> serviceMaxConcurrent = new java.util.HashMap<>();
+    }
+
+    /**
+     * GZIP 请求压缩配置
+     */
+    @Getter
+    @Setter
+    public static class Compress {
+        /** 是否启用GZIP压缩，默认false */
+        private boolean enabled = false;
+
+        /** 压缩触发阈值（字节），默认 1024 */
+        private int minSize = 1024;
+
+        /** 排除压缩的 Content-Type 列表 */
+        private Set<String> excludedContentTypes = new LinkedHashSet<>();
+    }
+
+    /**
+     * HttpClient 连接池配置
+     */
+    @Getter
+    @Setter
+    public static class Client {
+        /** 连接池最大连接数，默认 200 */
+        private int maxConnections = 200;
+
+        /** 每个路由的最大连接数，默认 50 */
+        private int maxPerRoute = 50;
+
+        /** 空闲连接保活时间（毫秒），默认 30000 */
+        private long keepAlive = 30000;
+
+        /** 连接空闲多久后校验（毫秒），默认 5000 */
+        private long validateAfterInactivity = 5000;
+
+        /** 连接最大存活时间（毫秒），默认 60000 */
+        private long connectionTimeToLive = 60000;
+    }
+
+    /**
+     * 响应拦截器配置
+     */
+    @Getter
+    @Setter
+    public static class ResponseInterceptor {
+        /** 是否启用响应拦截器，默认true */
+        private boolean enabled = true;
+
+        /** 是否启用响应日志，默认false */
+        private boolean logEnabled = false;
+
+        /** 是否启用响应时间指标采集，默认true */
+        private boolean metricsEnabled = true;
+
+        /** 慢调用阈值（毫秒），默认 3000 */
+        private long slowCallThresholdMillis = 3000;
     }
 }

@@ -23,7 +23,7 @@ import com.njydsz.message.server.config.RetryStrategyResolver;
 import com.njydsz.message.server.event.DeadLetterAlertEvent;
 import com.njydsz.message.server.metric.MessageMetrics;
 import com.njydsz.message.server.service.core.MessageLogService;
-import com.njydsz.message.server.tracing.MessageTraceContext;
+import com.njydsz.common.queue.trace.MessageTracer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -175,7 +175,7 @@ public class MessageLogServiceImpl implements MessageLogService {
                 .message("仅死信可手动重发,当前状态: " + current)
                 .build();
         }
-        try (MessageTraceContext ctx = MessageTraceContext.enter(entity.getTraceId())) {
+        try (MessageTracer.MessageTraceScope scope = MessageTracer.enter(entity.getTraceId())) {
             // 重置重试上下文
             entity.setRetryCount(0);
             entity.setErrorMessage(null);

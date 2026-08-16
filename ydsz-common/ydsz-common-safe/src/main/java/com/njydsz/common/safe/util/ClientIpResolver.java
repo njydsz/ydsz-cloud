@@ -1,6 +1,12 @@
 package com.njydsz.common.safe.util;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
 import com.njydsz.common.core.constant.HeaderConstants;
+import com.njydsz.common.util.ip.CidrUtils;
+import com.njydsz.common.util.ip.IpValidator;
+
 import jakarta.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
@@ -36,6 +42,29 @@ public final class ClientIpResolver {
     private static final Logger log = LoggerFactory.getLogger(ClientIpResolver.class);
     private static final String UNKNOWN = "unknown";
     private static final String DEFAULT_IP = "0.0.0.0";
+
+    /**
+     * 可信代理的 CIDR 网段定义（P2-4：与 ydsz-common-util 的 CidrUtils 对齐）。
+     *
+     * <p>包含：
+     * <ul>
+     *   <li>IPv4 回环：127.0.0.0/8</li>
+     *   <li>IPv4 私有地址（RFC 1918）：10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16</li>
+     *   <li>IPv6 回环：::1/128</li>
+     * </ul>
+     *
+     * <p>注意：Docker 默认网段 172.17.0.0/16 已被 172.16.0.0/12 覆盖。
+     */
+    private static final String[] TRUSTED_PROXY_CIDRS = {
+            "127.0.0.0/8",
+            "10.0.0.0/8",
+            "172.16.0.0/12",
+            "192.168.0.0/16",
+            "::1/128"
+    };
+
+    /** 可信代理判断缓存（IP → isTrusted），减少高频调用时的 CIDR 计算开销 */
+    private static final ConcurrentMap<String, Boolean> TRUSTED_PROXY_CACHE = new ConcurrentHashMap<>(128);
 
     private ClientIpResolver() {
     }

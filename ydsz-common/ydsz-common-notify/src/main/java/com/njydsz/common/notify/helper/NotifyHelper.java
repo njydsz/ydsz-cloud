@@ -28,6 +28,11 @@ import lombok.extern.slf4j.Slf4j;
  * // 简单站内通知
  * notifyHelper.sendInApp("user-123", "审批提醒", "您有一条待审批任务");
  *
+ * // IM 渠道通知
+ * notifyHelper.sendDingTalk(webhookUrl, "系统告警", "CPU 使用率超过 90%");
+ * notifyHelper.sendFeishu(webhookUrl, "系统告警", "CPU 使用率超过 90%");
+ * notifyHelper.sendWeCom(webhookUrl, "系统告警", "CPU 使用率超过 90%");
+ *
  * // 邮件通知
  * notifyHelper.sendEmail("user@example.com", "系统告警", "CPU 使用率超过 90%");
  *
@@ -105,6 +110,90 @@ public class NotifyHelper {
         } catch (Exception e) {
             log.warn("[NotifyHelper] 邮件发送异常: receiver={}, error={}",
                     emailAddress, e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 发送钉钉通知（通过 Webhook 发送文本消息到钉钉群机器人）。
+     *
+     * @param webhookUrl 钉钉群机器人的 Webhook URL（含 access_token）
+     * @param title      消息标题
+     * @param content    消息内容（Markdown 格式）
+     */
+    public void sendDingTalk(String webhookUrl, String title, String content) {
+        try {
+            NotifySendResult result = notifyService.send(
+                    NotifyChannel.DINGTALK, webhookUrl, title, content);
+            if (!result.isSuccess()) {
+                log.warn("[NotifyHelper] 钉钉通知发送失败: receiver={}, reason={}",
+                        webhookUrl, result.getErrorMessage());
+            }
+        } catch (Exception e) {
+            log.warn("[NotifyHelper] 钉钉通知发送异常: receiver={}, error={}",
+                    webhookUrl, e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 发送飞书通知（通过 Webhook 发送文本消息到飞书群机器人）。
+     *
+     * @param webhookUrl 飞书群机器人的 Webhook URL（含 key）
+     * @param title      消息标题
+     * @param content    消息内容
+     */
+    public void sendFeishu(String webhookUrl, String title, String content) {
+        try {
+            NotifySendResult result = notifyService.send(
+                    NotifyChannel.FEISHU, webhookUrl, title, content);
+            if (!result.isSuccess()) {
+                log.warn("[NotifyHelper] 飞书通知发送失败: receiver={}, reason={}",
+                        webhookUrl, result.getErrorMessage());
+            }
+        } catch (Exception e) {
+            log.warn("[NotifyHelper] 飞书通知发送异常: receiver={}, error={}",
+                    webhookUrl, e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 发送企业微信通知（通过 Webhook 发送文本消息到企业微信群机器人）。
+     *
+     * @param webhookUrl 企业微信群机器人的 Webhook URL（含 key）
+     * @param title      消息标题
+     * @param content    消息内容
+     */
+    public void sendWeCom(String webhookUrl, String title, String content) {
+        try {
+            NotifySendResult result = notifyService.send(
+                    NotifyChannel.WECOM, webhookUrl, title, content);
+            if (!result.isSuccess()) {
+                log.warn("[NotifyHelper] 企微通知发送失败: receiver={}, reason={}",
+                        webhookUrl, result.getErrorMessage());
+            }
+        } catch (Exception e) {
+            log.warn("[NotifyHelper] 企微通知发送异常: receiver={}, error={}",
+                    webhookUrl, e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 发送短信通知。
+     *
+     * @param phoneNumber 接收者手机号
+     * @param title       消息标题（部分运营商支持）
+     * @param content     消息内容（建议控制在 70 字以内）
+     */
+    public void sendSms(String phoneNumber, String title, String content) {
+        try {
+            NotifySendResult result = notifyService.send(
+                    NotifyChannel.SMS, phoneNumber, title, content);
+            if (!result.isSuccess()) {
+                log.warn("[NotifyHelper] 短信发送失败: receiver={}, reason={}",
+                        phoneNumber, result.getErrorMessage());
+            }
+        } catch (Exception e) {
+            log.warn("[NotifyHelper] 短信发送异常: receiver={}, error={}",
+                    phoneNumber, e.getMessage(), e);
         }
     }
 

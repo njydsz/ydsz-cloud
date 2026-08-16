@@ -4,10 +4,12 @@ import java.time.LocalDateTime;
 
 import jakarta.annotation.PostConstruct;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.audit.storage.JdbcAuditStorage;
 import com.njydsz.cronjob.infra.mapper.job.JobAlertLogMapper;
 import com.njydsz.cronjob.infra.mapper.job.JobHistoryMapper;
 import com.njydsz.cronjob.infra.mapper.job.JobTaskMapper;
@@ -16,7 +18,6 @@ import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -32,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>ydsz_job_alert_log：告警日志</li>
  *   <li>ydsz_job_task：MapReduce 子任务记录</li>
  *   <li>ydsz_job_history：任务配置历史版本</li>
+ *   <li>sys_audit_log：审计日志（v1.2.0 新增，由 ydsz-common-audit 模块提供清理能力）</li>
  * </ul>
  *
  * <h3>设计要点</h3>
@@ -42,6 +44,8 @@ import lombok.extern.slf4j.Slf4j;
  *       循环执行直至无过期数据，避免大事务锁表</li>
  *   <li><b>容错隔离</b>：单表清理异常不影响其他表，每表独立 try-catch</li>
  *   <li><b>硬删除</b>：使用 DELETE 物理删除，真正释放磁盘空间（非逻辑删除）</li>
+ *   <li><b>审计日志联动</b>：当容器中存在 {@link JdbcAuditStorage} Bean 时，
+ *       自动清理 sys_audit_log 中超过保留天数的记录，生命周期与审计配置一致</li>
  * </ul>
  *
  * <h3>对标</h3>
@@ -53,7 +57,6 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 @ConditionalOnBean(LeaderElector.class)
 public class LogCleaner {
 
@@ -65,10 +68,52 @@ public class LogCleaner {
     private final LeaderElector leaderElector;
     private final CronjobProperties cronjobProperties;
 
+    /**
+     * 审计日志存储（可选 Bean）。
+     *
+     * <p>当项目引入 ydsz-common-audit 模块时，Spring 容器中存在 {@link JdbcAuditStorage}，
+     * 定时清理任务会自动联动清理 sys_audit_log 表；未引入时静默跳过。
+     *
+     * <p>使用 {@code @Autowired(required = false)} 保持对 audit 模块的零硬依赖，
+     * 符合云顶编码规范「公共能力优先使用 common 模块，但不强制依赖」原则。
+     */
+    @Autowired(required = false)
+    private JdbcAuditStorage jdbcAuditStorage;
+
     /** 单表清理最大循环次数（防止异常情况下无限循环） */
     private static final int MAX_BATCH_LOOPS = 100;
 
     private String leaderRole;
+
+    /**
+     * 构造日志清理器
+     *
+     * <p>使用构造器注入核心依赖（LeaderElector 相关），保证启动时依赖校验。
+     * 审计日志存储使用字段注入（required=false），适配无 common-audit 的场景。
+     *
+     * @param jobLogMapper         任务日志 Mapper
+     * @param jobLogContentMapper  任务日志内容 Mapper
+     * @param jobAlertLogMapper    告警日志 Mapper
+     * @param jobTaskMapper        任务记录 Mapper
+     * @param jobHistoryMapper     任务历史 Mapper
+     * @param leaderElector        选举器
+     * @param cronjobProperties    定时任务配置
+     */
+    public LogCleaner(JobLogMapper jobLogMapper,
+                      JobLogContentMapper jobLogContentMapper,
+                      JobAlertLogMapper jobAlertLogMapper,
+                      JobTaskMapper jobTaskMapper,
+                      JobHistoryMapper jobHistoryMapper,
+                      LeaderElector leaderElector,
+                      CronjobProperties cronjobProperties) {
+        this.jobLogMapper = jobLogMapper;
+        this.jobLogContentMapper = jobLogContentMapper;
+        this.jobAlertLogMapper = jobAlertLogMapper;
+        this.jobTaskMapper = jobTaskMapper;
+        this.jobHistoryMapper = jobHistoryMapper;
+        this.leaderElector = leaderElector;
+        this.cronjobProperties = cronjobProperties;
+    }
 
     /**
      * 初始化清理器：解析 Leader 角色名并输出启用状态。
@@ -81,8 +126,9 @@ public class LogCleaner {
         this.leaderRole = cronjobProperties.getLeader().getRole();
         CronjobProperties.LogRetention cfg = cronjobProperties.getLogRetention();
         if (cronjobProperties.getLeader().isEnabled()) {
-            log.info("[LogCleaner] 初始化完成, role={} retentionDays={} batchSize={}",
-                    leaderRole, cfg.getRetentionDays(), cfg.getBatchSize());
+            log.info("[LogCleaner] 初始化完成, role={} retentionDays={} batchSize={} auditClean={}",
+                    leaderRole, cfg.getRetentionDays(), cfg.getBatchSize(),
+                    jdbcAuditStorage != null);
         } else {
             log.info("[LogCleaner] leader.enabled=false, 日志清理不启用");
         }
@@ -118,7 +164,37 @@ public class LogCleaner {
         totalCleaned += cleanTable("ydsz_job_task", before, batchSize, jobTaskMapper::cleanExpiredLogs);
         totalCleaned += cleanTable("ydsz_job_history", before, batchSize, jobHistoryMapper::cleanExpiredLogs);
 
+        // 审计日志清理（sys_audit_log）— 联动 ydsz-common-audit 模块能力
+        totalCleaned += cleanAuditLogs(cfg.getRetentionDays());
+
         log.info("[LogCleaner] 清理完成: totalCleaned={}", totalCleaned);
+    }
+
+    /**
+     * 清理审计日志表（sys_audit_log）中的过期记录。
+     *
+     * <p>委托 {@link JdbcAuditStorage#cleanExpiredLogs(int)} 执行物理删除，
+     * 保留天数与 cronjob 日志保留策略保持一致（可通过 ydsz.audit.retentionDays 独立配置）。
+     *
+     * <p>当 {@link JdbcAuditStorage} 不存在于容器时（项目未引入 common-audit 模块），静默跳过。
+     *
+     * @param retentionDays 日志保留天数
+     * @return 实际删除条数
+     */
+    private long cleanAuditLogs(int retentionDays) {
+        if (jdbcAuditStorage == null) {
+            return 0;
+        }
+        try {
+            int deleted = jdbcAuditStorage.cleanExpiredLogs(retentionDays);
+            if (deleted > 0) {
+                log.info("[LogCleaner] 审计日志表 sys_audit_log 清理完成: deleted={}", deleted);
+            }
+            return deleted;
+        } catch (Exception e) {
+            log.error("[LogCleaner] 审计日志表 sys_audit_log 清理异常: reason={}", e.getMessage(), e);
+            return 0;
+        }
     }
 
     /**

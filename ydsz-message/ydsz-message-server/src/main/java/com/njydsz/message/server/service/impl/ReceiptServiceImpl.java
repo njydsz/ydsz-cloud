@@ -15,7 +15,7 @@ import com.njydsz.message.domain.entity.receipt.MsgReceipt;
 import com.njydsz.message.infra.mapper.receipt.MsgReceiptMapper;
 import com.njydsz.message.server.service.core.MessageLogService;
 import com.njydsz.message.server.service.receipt.ReceiptService;
-import com.njydsz.message.server.tracing.MessageTraceContext;
+import com.njydsz.common.queue.trace.MessageTracer;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -61,7 +61,7 @@ public class ReceiptServiceImpl implements ReceiptService {
                 .build();
         }
         // P1-3: 回执回调进入追踪上下文（外部回调无原始 traceId，自动生成）
-        try (MessageTraceContext ctx = MessageTraceContext.enter(null)) {
+        try (MessageTracer.MessageTraceScope scope = MessageTracer.enter(null)) {
             MsgReceipt entity = new MsgReceipt();
             entity.setLogId(dto.getLogId());
             entity.setProviderTraceId(dto.getProviderTraceId());
