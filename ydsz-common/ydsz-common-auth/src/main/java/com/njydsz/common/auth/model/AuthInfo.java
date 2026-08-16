@@ -1,7 +1,9 @@
-package com.njydsz.common.util.auth;
+package com.njydsz.common.auth.model;
 
 import java.util.Map;
+
 import java.util.Set;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -16,12 +18,10 @@ import javax.annotation.Nullable;
  *   <li>列级数据权限：表级可见列规则、可编辑列规则（基于角色/岗位）</li>
  * </ul>
  *
- * <p>实现类应通过 RequestContext（MCP: ydsz-common-core）写入上下文，供全链路下游读取。
- * 当前模块通过 {@link com.njydsz.common.util.internal.proxy.RequestContextProxy} 反射访问，无编译期硬依赖。
- * 推荐使用实现类 {@link YdszAuthInfo}。
+ * <p>实现类应通过 RequestContext（ydsz-common-core）写入上下文，供全链路下游读取。
+ * 推荐使用实现类 {@link YdszAuthInfo}。</p>
  *
  * @see YdszAuthInfo
- * @see com.njydsz.common.util.internal.proxy.RequestContextProxy
  * @see AuthInfoUtils
  *
  * @author ydsz-team
@@ -84,7 +84,6 @@ public interface AuthInfo {
      * </ul>
      *
      * @return 数据范围类型编码
-     * @see com.njydsz.common.util.internal.proxy.RequestContextProxy
      */
     @Nullable
     String getDataScope();

@@ -98,7 +98,7 @@ public final class AuthInfoUtils {
      * 获取身份类型编码。
      *
      * @return 身份类型编码字符串；无上下文时返回 null
-     * @see com.njydsz.common.domain.constant.DataScopeConstants
+     * @see AuthInfo#getDataScope()
       */
     public static String getIdentityType() {
         AuthInfo auth = getAuthInfo();
@@ -121,7 +121,7 @@ public final class AuthInfoUtils {
      * <p>决定行级权限按哪个维度（tenant/group/company/dept/user/project/region）生效。
      *
      * @return 数据范围类型编码字符串；无上下文时返回 null
-     * @see com.njydsz.common.domain.constant.DataScopeConstants
+     * @see AuthInfo#getDataScope()
      */
     public static String getDataScope() {
         AuthInfo auth = getAuthInfo();

@@ -22,18 +22,18 @@ import com.njydsz.common.util.string.StringUtils;
  * <ul>
  *   <li>支持 SkyWalking {@code TraceContext} 集成（反射调用，无编译期硬依赖）</li>
  *   <li>支持 SLF4J MDC 上下文注入</li>
- *   <li>支持 {@link TraceIdGenerator#generateSortableTraceId()} 生成时间有序 TraceId</li>
+ *   <li>支持 {@link TraceIdGeneratorProxy#generateSortableTraceId()} 生成时间有序 TraceId</li>
  *   <li>支持 Span ID 父子关系管理</li>
  *   <li>支持线程间链路追踪上下文传递</li>
  *   <li>支持 W3C TraceContext {@code traceparent} 头的解析与注入（v4.2.0+）</li>
  * </ul>
  *
- * <p><b>统一上下文：</b>自 v2.0.0 起，traceId 读写统一收口至 {@link RequestContext}
- * （{@code TransmittableThreadLocal}，支持线程池自动传播），MDC 仅作为日志桥接双写，
- * 保证业务代码读取 {@link RequestContext#getTraceId()} 与日志输出保持一致。
+ * <p><b>统一上下文：</b>自 v2.0.0 起，traceId 读写统一收口至 {@link RequestContextProxy}
+ * （底层桥接 ydsz-common-core 的 RequestContext），MDC 仅作为日志桥接双写，
+ * 保证业务代码读取 {@link RequestContextProxy#getTraceId()} 与日志输出保持一致。
  *
  * <p><b>线程安全性：</b>所有方法均为静态无状态，线程安全。
- * 实际状态存储于 SLF4J {@link MDC} 与 {@link RequestContext}，由调用方保证清理。
+ * 实际状态存储于 SLF4J {@link MDC} 与 {@link RequestContextProxy}，由调用方保证清理。
  *
  * <p><b>使用示例：</b>
  * <pre>{@code
@@ -54,7 +54,7 @@ import com.njydsz.common.util.string.StringUtils;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see RequestContext
+ * @see RequestContextProxy
  */
 public final class TracerUtils {
 
@@ -119,7 +119,7 @@ public final class TracerUtils {
     /**
      * 获取链路追踪编号。
      * 1. 首先尝试获取 SkyWalking 的 TraceId（反射调用，无硬依赖）。
-     * 2. 如果不存在，则尝试从 {@link RequestContext} 中获取（统一上下文主源）。
+     * 2. 如果不存在，则尝试从 {@link RequestContextProxy} 中获取（统一上下文主源）。
      * 3. 如果都不存在，则尝试从 MDC 中获取（兼容非 Web / 旧逻辑场景）。
      * 4. 如果都不存在，则返回空字符串。
      *
@@ -155,7 +155,7 @@ public final class TracerUtils {
     }
 
     /**
-     * 生成新的 Trace ID（委托 core 的 {@link TraceIdGenerator}）。
+     * 生成新的 Trace ID（委托 {@link TraceIdGeneratorProxy}）。
      *
      * <p>core 层基于 {@code ThreadLocalRandom + HexFormat} 实现，无锁且性能
      * 优于 UUID v7（约 2.5x），输出格式同为 32 位十六进制，与 W3C TraceContext
@@ -168,7 +168,7 @@ public final class TracerUtils {
     }
 
     /**
-     * 将 Trace ID 注入到 MDC 与 {@link RequestContext}（双写，保证统一上下文一致）
+     * 将 Trace ID 注入到 MDC 与 {@link RequestContextProxy}（双写，保证统一上下文一致）
      *
      * @param traceId Trace ID
      */
@@ -275,7 +275,7 @@ public final class TracerUtils {
     }
 
     /**
-     * 清理 MDC 与 {@link RequestContext} 中的 Trace ID
+     * 清理 MDC 与 {@link RequestContextProxy} 中的 Trace ID
      */
     public static void clear() {
         MDC.remove(TRACE_ID_NAME);
@@ -284,7 +284,7 @@ public final class TracerUtils {
 
     /**
      * 清理所有追踪上下文（Trace ID、Span ID、Parent Span ID）
-     * <p>Trace ID 同时清理 {@link RequestContext}，Span ID / Parent Span ID 仅清理 MDC
+     * <p>Trace ID 同时清理 {@link RequestContextProxy}，Span ID / Parent Span ID 仅清理 MDC
      * （Span 属日志级诊断信息，不进入统一请求上下文）。</p>
      */
     public static void clearAll() {
@@ -354,7 +354,7 @@ public final class TracerUtils {
     // ==================== W3C TraceContext traceparent 编解码 ====================
 
     /**
-     * 解析 W3C {@code traceparent} 头并注入到当前线程的 MDC 与 {@link RequestContext}。
+     * 解析 W3C {@code traceparent} 头并注入到当前线程的 MDC 与 {@link RequestContextProxy}。
      *
      * <p>用于入口拦截器接收上游 W3C 格式的 {@code traceparent} header 后恢复链路上下文。
      * 注入成功后，{@link #getTraceId()} 与 {@link #getSpanId()} 可直接读取解析结果。</p>

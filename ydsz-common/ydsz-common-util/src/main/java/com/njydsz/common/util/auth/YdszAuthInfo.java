@@ -10,10 +10,12 @@ import lombok.Data;
 /**
  * ydsz系统统一认证上下文信息抽象基类。
  *
- * <p>承载请求维度的全量身份与权限数据，在 {@link com.njydsz.common.web.filter.WebAuthFilter}
- * / {@link com.njydsz.common.app.filter.AppAuthFilter} 解析请求头后写入
- * {@link com.njydsz.common.core.context.RequestContext}，
+ * <p>承载请求维度的全量身份与权限数据，在 WebAuthFilter / AppAuthFilter 解析请求头后写入
+ * RequestContext（MCP: ydsz-common-core），
  * 供下游链路（SQL 拦截器、Feign 透传、数据权限切面等）随时获取。
+ *
+ * <p>当前模块通过 {@link com.njydsz.common.util.internal.proxy.RequestContextProxy} 反射访问，
+ * 无编译期硬依赖。</p>
  *
  * <p>设计说明：
  * <ul>
@@ -44,7 +46,7 @@ import lombok.Data;
  *
  * @see WebAuthInfo
  * @see AppAuthInfo
- * @see com.njydsz.common.core.context.RequestContext
+ * @see com.njydsz.common.util.internal.proxy.RequestContextProxy
  * @see AuthInfoUtils
  *
  * @author ydsz-team
@@ -80,7 +82,7 @@ public abstract class YdszAuthInfo implements AuthInfo {
      *
      * <p>用于标识当前请求的数据权限粒度（如：tenant、group、company、dept、user、project、region、custom）。
      *
-     * @see com.njydsz.common.domain.constant.DataScopeConstants
+     * @see AuthInfo#getDataScope()
       */
     private String dataScope;
 
