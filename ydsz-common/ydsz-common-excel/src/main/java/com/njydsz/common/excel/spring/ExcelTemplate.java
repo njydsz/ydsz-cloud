@@ -52,7 +52,7 @@ public class ExcelTemplate {
      * @param <T>         data type
      */
     public <T> void read(InputStream inputStream, Class<T> clazz, ReadListener<T> listener) {
-        ExcelFacade.read(inputStream, clazz, listener);
+        ExcelFacade.read(inputStream, clazz).sheet().doRead(listener);
     }
 
     /**

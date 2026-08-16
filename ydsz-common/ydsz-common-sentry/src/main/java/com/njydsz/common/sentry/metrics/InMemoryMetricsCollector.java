@@ -7,9 +7,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.DoubleAdder;
 import java.util.concurrent.atomic.LongAdder;
 
-import com.njydsz.common.sentry.spi.MetricsCollector;
-
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.sentry.spi.MetricsCollector;
 
 /**
  * 内存降级指标采集器

@@ -197,7 +197,7 @@ public class ConcurrentExcelWriter {
         int totalSize = data.size();
         if (totalSize <= chunkSize) {
             String sheetName = resolveSheetName();
-            ExcelFacade.write(filePath, clazz, data, sheetName);
+            ExcelFacade.write(filePath, clazz).sheet(sheetName).doWrite(data);
             return;
         }
 
