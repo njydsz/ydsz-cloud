@@ -1,6 +1,5 @@
 package com.njydsz.common.excel.api.result;
 
-import com.njydsz.common.excel.core.ExcelFacade;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -10,6 +9,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+
+import com.njydsz.common.excel.core.ExcelFacade;
 
 /**
  * Excel读取结果封装类 - 结果模式实现

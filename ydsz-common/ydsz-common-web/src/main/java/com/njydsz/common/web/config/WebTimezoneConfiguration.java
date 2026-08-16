@@ -1,7 +1,8 @@
 package com.njydsz.common.web.config;
 
-import com.njydsz.common.base.config.BaseTimezoneConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+
+import com.njydsz.common.base.config.BaseTimezoneConfiguration;
 
 /**
  * Web 端时区配置。

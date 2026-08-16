@@ -1,8 +1,9 @@
 package com.njydsz.common.queue.trace;
 
+import org.slf4j.MDC;
+
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.util.id.TracerUtils;
-import org.slf4j.MDC;
 
 /**
  * 消息链路追踪上下文管理器

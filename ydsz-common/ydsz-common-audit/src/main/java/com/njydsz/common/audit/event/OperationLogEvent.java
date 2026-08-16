@@ -1,8 +1,8 @@
 package com.njydsz.common.audit.event;
 
+import org.springframework.context.ApplicationEvent;
 import lombok.Builder;
 import lombok.Getter;
-import org.springframework.context.ApplicationEvent;
 
 /**
  * 操作日志事件

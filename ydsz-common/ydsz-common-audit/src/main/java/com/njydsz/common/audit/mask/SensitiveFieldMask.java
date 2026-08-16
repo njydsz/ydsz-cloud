@@ -1,12 +1,14 @@
 package com.njydsz.common.audit.mask;
 
-import com.njydsz.common.json.YdszJson;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.json.YdszJson;
 
 /**
  * 敏感字段脱敏工具类

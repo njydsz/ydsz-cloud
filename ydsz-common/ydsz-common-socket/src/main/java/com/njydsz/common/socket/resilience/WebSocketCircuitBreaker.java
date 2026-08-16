@@ -1,8 +1,10 @@
 package com.njydsz.common.socket.resilience;
 
-import com.njydsz.common.safe.ratelimit.circuitbreaker.AbstractCircuitBreaker;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.safe.ratelimit.circuitbreaker.AbstractCircuitBreaker;
 
 /**
  * WebSocket 模块轻量级熔断器。

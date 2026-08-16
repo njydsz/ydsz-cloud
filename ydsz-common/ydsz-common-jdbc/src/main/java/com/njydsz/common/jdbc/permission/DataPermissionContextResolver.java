@@ -1,13 +1,5 @@
 package com.njydsz.common.jdbc.permission;
 
-import com.njydsz.common.core.constant.DataScopeConstants;
-import com.njydsz.common.core.context.BizContextKeys;
-import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.core.model.CurrentUser;
-import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
-import com.njydsz.common.util.http.RequestContextUtils;
-import com.njydsz.common.util.string.StringUtils;
-import jakarta.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -15,6 +7,16 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import com.njydsz.common.core.constant.DataScopeConstants;
+import com.njydsz.common.core.context.BizContextKeys;
+import com.njydsz.common.core.context.RequestContext;
+import com.njydsz.common.core.model.CurrentUser;
+import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
+import com.njydsz.common.util.http.RequestContextUtils;
+import com.njydsz.common.util.string.StringUtils;
 
 /**
  * 数据权限上下文解析器——SQL 拦截器的上游。

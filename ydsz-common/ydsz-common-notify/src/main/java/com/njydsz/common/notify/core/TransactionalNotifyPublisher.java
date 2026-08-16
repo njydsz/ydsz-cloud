@@ -1,11 +1,12 @@
 package com.njydsz.common.notify.core;
 
-import com.njydsz.common.notify.enums.NotifyChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
+
+import com.njydsz.common.notify.enums.NotifyChannel;
 
 /**
  * 事务安全通知发布器（P0-1）

@@ -1,19 +1,21 @@
 package com.njydsz.common.feign.aspect;
 
-import com.njydsz.common.feign.config.FeignProperties;
-import com.njydsz.common.feign.exception.BadRequestException;
-import com.njydsz.common.feign.exception.NotFoundException;
-import com.njydsz.common.feign.exception.OpenFeignException;
-import feign.Response;
-import feign.codec.ErrorDecoder;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
+import feign.Response;
+import feign.codec.ErrorDecoder;
+
+import com.njydsz.common.feign.config.FeignProperties;
+import com.njydsz.common.feign.exception.BadRequestException;
+import com.njydsz.common.feign.exception.NotFoundException;
+import com.njydsz.common.feign.exception.OpenFeignException;
 
 /**
  * YdszFeign 错误解码器。

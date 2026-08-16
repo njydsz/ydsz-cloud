@@ -1,7 +1,8 @@
 package com.njydsz.common.notify.core;
 
-import com.njydsz.common.notify.enums.NotifyChannel;
 import java.util.List;
+
+import com.njydsz.common.notify.enums.NotifyChannel;
 
 /**
  * 死信队列处理器接口（P0-2）

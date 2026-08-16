@@ -1,10 +1,11 @@
 package com.njydsz.userinfo.infra.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.userinfo.domain.entity.UserAccount;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+
+import com.njydsz.userinfo.domain.entity.UserAccount;
 
 /**
  * 用户账号 Mapper 接口

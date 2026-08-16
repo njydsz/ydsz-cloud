@@ -1,5 +1,13 @@
 package com.njydsz.common.docs.parser.impl;
 
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.stereotype.Component;
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.docs.domain.DocumentContent;
 import com.njydsz.common.docs.domain.DocumentMetadata;
 import com.njydsz.common.docs.domain.DocumentSection;
@@ -11,12 +19,6 @@ import com.njydsz.common.docs.exception.DocumentExceptionCode;
 import com.njydsz.common.docs.parser.DocumentParser;
 import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.core.RawSheetData;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.stereotype.Component;
 
 /**
  * Excel 文档解析器（.xlsx / .xls）

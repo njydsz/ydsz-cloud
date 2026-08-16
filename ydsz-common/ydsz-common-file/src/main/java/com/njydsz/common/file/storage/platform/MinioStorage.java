@@ -1,20 +1,5 @@
 package com.njydsz.common.file.storage.platform;
 
-import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.file.config.FileProperties;
-import com.njydsz.common.file.config.FileUploadProperties;
-import com.njydsz.common.file.constant.FileConstant;
-import com.njydsz.common.file.domain.ChunkedUploadResult;
-import com.njydsz.common.file.domain.ListObjectsResult;
-import com.njydsz.common.file.domain.ObjectMetadata;
-import com.njydsz.common.file.domain.PolicyResult;
-import com.njydsz.common.file.exception.FileExceptionCode;
-import com.njydsz.common.file.storage.AbstractFileStorage;
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.util.id.IdGenerator;
-import com.njydsz.common.util.string.StringUtils;
-import io.minio.http.Method;
-import io.minio.messages.Item;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -29,7 +14,25 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+
 import lombok.extern.slf4j.Slf4j;
+import io.minio.http.Method;
+import io.minio.messages.Item;
+
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.file.config.FileProperties;
+import com.njydsz.common.file.config.FileUploadProperties;
+import com.njydsz.common.file.constant.FileConstant;
+import com.njydsz.common.file.domain.ChunkedUploadResult;
+import com.njydsz.common.file.domain.ListObjectsResult;
+import com.njydsz.common.file.domain.ObjectMetadata;
+import com.njydsz.common.file.domain.PolicyResult;
+import com.njydsz.common.file.exception.FileExceptionCode;
+import com.njydsz.common.file.storage.AbstractFileStorage;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.util.id.IdGenerator;
+import com.njydsz.common.util.string.StringUtils;
+
 import okhttp3.OkHttpClient;
 
 /**

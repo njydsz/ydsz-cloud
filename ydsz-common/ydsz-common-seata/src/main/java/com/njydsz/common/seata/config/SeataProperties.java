@@ -1,16 +1,18 @@
 package com.njydsz.common.seata.config;
 
-import com.njydsz.common.seata.api.TransactionType;
-import com.njydsz.common.seata.config.validator.ValidXidSignConfig;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import java.util.HashMap;
-import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import com.njydsz.common.seata.api.TransactionType;
+import com.njydsz.common.seata.config.validator.ValidXidSignConfig;
 
 /**
  * 分布式事务配置属性

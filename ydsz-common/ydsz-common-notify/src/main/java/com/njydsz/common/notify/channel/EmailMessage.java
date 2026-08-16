@@ -3,6 +3,7 @@ package com.njydsz.common.notify.channel;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+
 import lombok.Builder;
 import lombok.Data;
 

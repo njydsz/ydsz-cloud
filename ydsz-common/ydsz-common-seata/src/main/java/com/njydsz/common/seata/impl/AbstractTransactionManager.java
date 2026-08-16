@@ -1,13 +1,14 @@
 package com.njydsz.common.seata.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
+
 import com.njydsz.common.seata.api.DistributedTransactionManager;
 import com.njydsz.common.seata.audit.TransactionAuditLogger;
 import com.njydsz.common.seata.context.XidContextHolder;
 import com.njydsz.common.seata.metrics.SeataMetrics;
 import com.njydsz.common.util.id.IdGenerator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.ObjectProvider;
 
 /**
  * 分布式事务管理器抽象基类。

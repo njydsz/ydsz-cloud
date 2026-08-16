@@ -1,9 +1,8 @@
 package com.njydsz.common.auth.listener;
 
-import com.njydsz.common.auth.service.RbacPermissionEvaluator;
-import com.njydsz.common.util.string.StringUtils;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -12,6 +11,9 @@ import org.springframework.data.redis.connection.Message;
 import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+
+import com.njydsz.common.auth.service.RbacPermissionEvaluator;
+import com.njydsz.common.util.string.StringUtils;
 
 /**
  * 基于 Redis Keyspace Notification 的权限缓存失效监听器。

@@ -49,12 +49,12 @@ public enum GatewayFilterOrder {
   IP_WHITELIST(5),
   /** WebSocket 认证过滤器 */
   WEBSOCKET_AUTH(8),
-    /** 主鉴权过滤器 */
-    AUTH(10),
-    /** 网关层粗粒度鉴权（RBAC）过滤器（P3-7） */
-    AUTHORIZATION(12),
-    /** API Key 认证过滤器 */
-    API_KEY_AUTH(15),
+  /** 主鉴权过滤器 */
+  AUTH(10),
+  /** 网关层粗粒度鉴权（RBAC）过滤器（P3-7） */
+  AUTHORIZATION(12),
+  /** API Key 认证过滤器 */
+  API_KEY_AUTH(15),
   /** 灰度路由标识注入过滤器 */
   GRAY_LOADBALANCER(20),
   /** 响应缓存过滤器 */

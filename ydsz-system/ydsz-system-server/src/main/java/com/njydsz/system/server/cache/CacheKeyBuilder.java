@@ -1,7 +1,8 @@
 package com.njydsz.system.server.cache;
 
-import com.njydsz.common.tenant.TenantContextHolder;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.common.tenant.TenantContextHolder;
 
 /**
  * 缓存键构造器（Spring Cache SpEL 调用入口）。

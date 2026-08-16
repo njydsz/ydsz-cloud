@@ -1,8 +1,7 @@
 package com.njydsz.gateway.config;
 
-import com.alibaba.cloud.nacos.NacosConfigManager;
 import java.util.concurrent.Executor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -13,6 +12,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import lombok.extern.slf4j.Slf4j;
+import com.alibaba.cloud.nacos.NacosConfigManager;
 
 /**
  * Nacos 动态路由配置（P1-6 + P2-12 增强）

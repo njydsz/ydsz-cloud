@@ -1,15 +1,16 @@
 package com.njydsz.userinfo.api.assembler;
 
-import com.njydsz.common.feign.assembler.NameAssembler;
-import com.njydsz.common.feign.assembler.NameAssemblerProperties;
-import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.userinfo.api.client.OrgQueryClient;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import com.njydsz.common.feign.assembler.NameAssembler;
+import com.njydsz.common.feign.assembler.NameAssemblerProperties;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.userinfo.api.client.OrgQueryClient;
 
 /**
  * {@link UserInfoNameAssembler} 自动配置。

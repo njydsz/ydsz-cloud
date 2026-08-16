@@ -1,12 +1,13 @@
 package com.njydsz.common.domain.query;
 
-import static lombok.AccessLevel.PROTECTED;
-
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
+import static lombok.AccessLevel.PROTECTED;
 
 /**
  * 查询对象基类型

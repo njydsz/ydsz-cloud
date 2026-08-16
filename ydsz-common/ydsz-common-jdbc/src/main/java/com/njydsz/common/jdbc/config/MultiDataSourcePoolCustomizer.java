@@ -1,18 +1,21 @@
 package com.njydsz.common.jdbc.config;
 
-import com.njydsz.common.jdbc.datasource.DynamicRoutingDataSource;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariConfigMXBean;
-import com.zaxxer.hikari.HikariDataSource;
 import java.util.List;
 import java.util.Map;
 import javax.sql.DataSource;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.SmartLifecycle;
+import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.jdbc.datasource.DynamicRoutingDataSource;
+
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariConfigMXBean;
+import com.zaxxer.hikari.HikariDataSource;
 
 /**
  * 多数据源连接池参数定制器

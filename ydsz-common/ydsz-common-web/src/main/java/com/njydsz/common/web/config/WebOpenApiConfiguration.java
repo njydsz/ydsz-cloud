@@ -1,7 +1,8 @@
 package com.njydsz.common.web.config;
 
-import com.njydsz.common.base.config.BaseOpenApiConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+
+import com.njydsz.common.base.config.BaseOpenApiConfiguration;
 
 /**
  * Web 端 OpenAPI 配置。

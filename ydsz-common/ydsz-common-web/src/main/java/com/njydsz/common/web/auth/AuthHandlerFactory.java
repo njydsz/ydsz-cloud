@@ -1,9 +1,11 @@
 package com.njydsz.common.web.auth;
 
-import com.njydsz.common.auth.handler.AuthHandler;
 import java.util.Collections;
 import java.util.Map;
+
 import org.springframework.stereotype.Component;
+
+import com.njydsz.common.auth.handler.AuthHandler;
 
 /**
  * Web 端认证处理器工厂

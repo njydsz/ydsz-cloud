@@ -1,6 +1,7 @@
 package com.njydsz.common.jdbc.entity;
 
 import java.io.Serializable;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

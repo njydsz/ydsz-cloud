@@ -1,12 +1,14 @@
 package com.njydsz.common.feign.compress;
 
-import com.njydsz.common.util.string.StringUtils;
-import feign.RequestInterceptor;
-import feign.RequestTemplate;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.zip.GZIPOutputStream;
+
+import feign.RequestInterceptor;
+import feign.RequestTemplate;
+
+import com.njydsz.common.util.string.StringUtils;
 
 /**
  * GZIP 请求压缩拦截器。

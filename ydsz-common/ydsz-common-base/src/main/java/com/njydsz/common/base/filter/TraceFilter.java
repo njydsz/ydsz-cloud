@@ -1,17 +1,19 @@
 package com.njydsz.common.base.filter;
 
-import com.njydsz.common.core.constant.HeaderConstants;
-import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.core.trace.TraceIdGenerator;
+import java.io.IOException;
+import java.util.regex.Pattern;
+
+import org.jspecify.annotations.NonNull;
+import org.slf4j.MDC;
+import org.springframework.web.filter.OncePerRequestFilter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.regex.Pattern;
-import org.jspecify.annotations.NonNull;
-import org.slf4j.MDC;
-import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.njydsz.common.core.constant.HeaderConstants;
+import com.njydsz.common.core.context.RequestContext;
+import com.njydsz.common.core.trace.TraceIdGenerator;
 
 /**
  * 链路追踪过滤器

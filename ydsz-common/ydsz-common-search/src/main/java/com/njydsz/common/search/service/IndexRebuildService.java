@@ -1,12 +1,14 @@
 package com.njydsz.common.search.service;
 
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.search.core.IndexStrategy;
 import com.njydsz.common.search.core.SearchEngineRegistry;
 import com.njydsz.common.search.provider.SearchProviderRegistry;
-import java.util.List;
-import java.util.Optional;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 /**
  * 索引重建服务接口。

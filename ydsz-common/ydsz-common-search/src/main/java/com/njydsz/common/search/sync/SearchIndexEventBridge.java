@@ -1,5 +1,10 @@
 package com.njydsz.common.search.sync;
 
+import java.util.Optional;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.IndexStrategy;
 import com.njydsz.common.search.core.SearchEngineRegistry;
@@ -7,9 +12,6 @@ import com.njydsz.common.search.metrics.SearchMetrics;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderRegistry;
 import com.njydsz.common.search.service.IndexSyncService;
-import java.util.Optional;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 搜索索引事件桥接器

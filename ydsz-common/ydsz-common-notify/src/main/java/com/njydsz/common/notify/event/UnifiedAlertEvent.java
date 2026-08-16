@@ -1,12 +1,14 @@
 package com.njydsz.common.notify.event;
 
-import com.njydsz.common.event.api.DomainEvent;
-import com.njydsz.common.event.api.DomainEventTypes;
-import com.njydsz.common.util.id.IdGenerator;
 import java.io.Serial;
 import java.time.LocalDateTime;
 import java.util.Collections;
+
 import lombok.Getter;
+
+import com.njydsz.common.event.api.DomainEvent;
+import com.njydsz.common.event.api.DomainEventTypes;
+import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * 统一告警事件 — 全局告警事件总线的标准事件载体。

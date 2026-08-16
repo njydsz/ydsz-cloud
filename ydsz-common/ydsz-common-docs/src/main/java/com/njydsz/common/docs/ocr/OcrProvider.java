@@ -1,11 +1,5 @@
 package com.njydsz.common.docs.ocr;
 
-import com.njydsz.common.docs.domain.DocumentContent;
-import com.njydsz.common.docs.domain.DocumentMetadata;
-import com.njydsz.common.docs.domain.DocumentSection;
-import com.njydsz.common.docs.exception.DocumentException;
-import com.njydsz.common.docs.exception.DocumentExceptionCode;
-import com.njydsz.common.util.io.TempFileManager;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -14,12 +8,20 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import javax.imageio.ImageIO;
-import lombok.extern.slf4j.Slf4j;
+
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
+import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.docs.domain.DocumentContent;
+import com.njydsz.common.docs.domain.DocumentMetadata;
+import com.njydsz.common.docs.domain.DocumentSection;
+import com.njydsz.common.docs.exception.DocumentException;
+import com.njydsz.common.docs.exception.DocumentExceptionCode;
+import com.njydsz.common.util.io.TempFileManager;
 
 /**
  * OCR 服务提供者

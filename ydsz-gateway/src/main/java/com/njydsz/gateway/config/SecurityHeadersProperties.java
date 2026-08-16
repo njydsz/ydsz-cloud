@@ -1,8 +1,8 @@
 package com.njydsz.gateway.config;
 
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
+import lombok.Data;
 
 /**
  * 网关安全响应头配置（P2-12）

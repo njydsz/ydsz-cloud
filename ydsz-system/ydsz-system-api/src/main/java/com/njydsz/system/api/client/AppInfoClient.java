@@ -1,12 +1,14 @@
 package com.njydsz.system.api.client;
 
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.feign.FeignClientConstants;
-import com.njydsz.system.api.fallback.AppInfoClientFallback;
 import java.util.Map;
+
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+
+import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.feign.FeignClientConstants;
+import com.njydsz.system.api.fallback.AppInfoClientFallback;
 
 /**
  * 应用密钥校验 Feign 客户端（供跨服务调用）。

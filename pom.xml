@@ -1160,6 +1160,9 @@
                     <configuration>
                         <!-- 使用 ${maven.multiModuleProjectDirectory} 指向项目根目录（Maven 3.3.1+ 支持） -->
                         <configLocation>${maven.multiModuleProjectDirectory}/docs/checkstyle.xml</configLocation>
+                        <!-- 注入 ${config_loc}（checkstyle.xml 内 SuppressionFilter 引用同级 checkstyle-suppressions.xml 所需；
+                             Eclipse/IDEA Checkstyle 插件自动提供该变量，Maven 侧需显式声明） -->
+                        <propertyExpansion>config_loc=${maven.multiModuleProjectDirectory}/docs</propertyExpansion>
                         <includeTestSourceDirectory>false</includeTestSourceDirectory>
                         <consoleOutput>true</consoleOutput>
                         <failOnViolation>true</failOnViolation>

@@ -1,7 +1,5 @@
 package com.njydsz.common.safe.ssrf;
 
-import com.njydsz.common.exception.code.SecurityExceptionCode;
-import com.njydsz.common.exception.custom.BusinessException;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -10,7 +8,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
+
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.exception.code.SecurityExceptionCode;
+import com.njydsz.common.exception.custom.BusinessException;
 
 /**
  * SSRF 防护校验器 — 防止服务端请求伪造攻击。

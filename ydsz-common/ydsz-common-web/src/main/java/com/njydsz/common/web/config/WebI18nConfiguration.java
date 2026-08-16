@@ -1,7 +1,8 @@
 package com.njydsz.common.web.config;
 
-import com.njydsz.common.base.config.BaseI18nConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+
+import com.njydsz.common.base.config.BaseI18nConfiguration;
 
 /**
  * Web 端国际化配置（ydsz-web）。

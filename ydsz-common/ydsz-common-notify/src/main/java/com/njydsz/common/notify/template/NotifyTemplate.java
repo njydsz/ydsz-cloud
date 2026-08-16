@@ -1,9 +1,10 @@
 package com.njydsz.common.notify.template;
 
-import com.njydsz.common.notify.enums.NotifyChannel;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+
+import com.njydsz.common.notify.enums.NotifyChannel;
 
 /**
  * 通知消息模板定义

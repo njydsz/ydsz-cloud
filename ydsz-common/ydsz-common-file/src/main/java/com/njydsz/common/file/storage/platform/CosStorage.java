@@ -1,16 +1,17 @@
 package com.njydsz.common.file.storage.platform;
 
-import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.file.config.FileProperties;
-import com.njydsz.common.file.config.FileUploadProperties;
-import com.njydsz.common.file.constant.FileConstant;
-import com.njydsz.common.file.domain.ChunkedUploadResult;
-import com.njydsz.common.file.domain.ListObjectsResult;
-import com.njydsz.common.file.domain.ObjectMetadata;
-import com.njydsz.common.file.domain.PolicyResult;
-import com.njydsz.common.file.exception.FileExceptionCode;
-import com.njydsz.common.file.storage.AbstractFileStorage;
-import com.njydsz.common.util.string.StringUtils;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import lombok.extern.slf4j.Slf4j;
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.ClientConfig;
 import com.qcloud.cos.auth.BasicCOSCredentials;
@@ -35,17 +36,18 @@ import com.qcloud.cos.model.PartSummary;
 import com.qcloud.cos.model.PutObjectRequest;
 import com.qcloud.cos.model.UploadPartRequest;
 import com.qcloud.cos.region.Region;
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.file.config.FileProperties;
+import com.njydsz.common.file.config.FileUploadProperties;
+import com.njydsz.common.file.constant.FileConstant;
+import com.njydsz.common.file.domain.ChunkedUploadResult;
+import com.njydsz.common.file.domain.ListObjectsResult;
+import com.njydsz.common.file.domain.ObjectMetadata;
+import com.njydsz.common.file.domain.PolicyResult;
+import com.njydsz.common.file.exception.FileExceptionCode;
+import com.njydsz.common.file.storage.AbstractFileStorage;
+import com.njydsz.common.util.string.StringUtils;
 
 /**
  * 腾讯云 COS 对象存储实现。

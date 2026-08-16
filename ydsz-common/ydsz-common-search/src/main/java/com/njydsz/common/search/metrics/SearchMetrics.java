@@ -1,12 +1,13 @@
 package com.njydsz.common.search.metrics;
 
+import java.time.Duration;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
+
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
-import java.time.Duration;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Supplier;
 
 /**
  * 搜索指标收集

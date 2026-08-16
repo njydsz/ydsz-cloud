@@ -1,9 +1,10 @@
 package com.njydsz.common.queue.dedup;
 
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.queue.domain.QueueMessage;
 import com.njydsz.common.queue.service.IMessageHandler;
 import com.njydsz.common.queue.service.IMessageSubscriber;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 幂等去重订阅者装饰器

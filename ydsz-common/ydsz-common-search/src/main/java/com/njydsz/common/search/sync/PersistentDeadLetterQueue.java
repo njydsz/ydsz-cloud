@@ -1,15 +1,17 @@
 package com.njydsz.common.search.sync;
 
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.search.core.IndexOperation;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 import javax.sql.DataSource;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.search.core.IndexOperation;
 
 /**
  * 持久化死信队列 — 将索引写入失败的操作落库到 PostgreSQL。

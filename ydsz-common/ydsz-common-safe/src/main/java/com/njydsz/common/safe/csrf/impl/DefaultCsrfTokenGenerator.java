@@ -1,15 +1,16 @@
 package com.njydsz.common.safe.csrf.impl;
 
-import com.njydsz.common.exception.code.CoreExceptionCode;
-import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.safe.csrf.CsrfToken;
-import com.njydsz.common.safe.csrf.CsrfTokenGenerator;
-import com.njydsz.common.safe.csrf.CsrfTokenRepository;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
+
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.safe.csrf.CsrfToken;
+import com.njydsz.common.safe.csrf.CsrfTokenGenerator;
+import com.njydsz.common.safe.csrf.CsrfTokenRepository;
 
 /**
  * 默认 CSRF 令牌生成器

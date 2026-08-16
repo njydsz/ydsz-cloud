@@ -1,8 +1,9 @@
 package com.njydsz.userinfo.domain.repository;
 
-import com.njydsz.userinfo.domain.entity.Role;
 import java.util.List;
 import java.util.Optional;
+
+import com.njydsz.userinfo.domain.entity.Role;
 
 /**
  * 角色聚合仓储接口。

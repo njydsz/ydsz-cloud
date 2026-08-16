@@ -1,9 +1,8 @@
 package com.njydsz.common.seata.mq;
 
-import com.njydsz.common.seata.api.XidPropagator;
-import com.njydsz.common.seata.context.XidContextHolder;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.client.producer.SendStatus;
 import org.apache.rocketmq.common.message.Message;
@@ -11,6 +10,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.messaging.MessagingException;
+
+import com.njydsz.common.seata.api.XidPropagator;
+import com.njydsz.common.seata.context.XidContextHolder;
 
 /**
  * RocketMQ XID 传播器实现

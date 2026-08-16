@@ -1,7 +1,8 @@
 package com.njydsz.common.feign.monitor;
 
-import com.njydsz.common.feign.interceptor.FeignResponseInterceptor;
 import io.micrometer.core.instrument.MeterRegistry;
+
+import com.njydsz.common.feign.interceptor.FeignResponseInterceptor;
 
 /**
  * Feign 响应指标 Micrometer 适配器。

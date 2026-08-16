@@ -1,5 +1,15 @@
 package com.njydsz.common.sentry.config;
 
+import java.util.Map;
+
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.Scheduled;
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.sentry.alerting.AlertConverger;
 import com.njydsz.common.sentry.logging.AsyncLogPublisher;
 import com.njydsz.common.sentry.spi.AlertPublisher;
@@ -7,14 +17,6 @@ import com.njydsz.common.sentry.spi.LogPublisher;
 import com.njydsz.common.sentry.spi.MetricsCollector;
 import com.njydsz.common.sentry.spi.SlaCollector;
 import com.njydsz.common.sentry.spi.TraceContext;
-import java.util.Map;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.scheduling.annotation.Scheduled;
 
 /**
  * 自监控自动配置。

@@ -1,9 +1,11 @@
 package com.njydsz.common.feign.circuitbreaker;
 
-import com.njydsz.common.redis.service.ops.RedisStringOps;
 import java.time.Duration;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.ObjectProvider;
+import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 /**
  * 熔断器状态 Redis 持久化。

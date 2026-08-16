@@ -1,8 +1,9 @@
 package com.njydsz.common.docs.security.scanner;
 
+import java.io.InputStream;
+
 import com.njydsz.common.docs.domain.SecurityScanResult;
 import com.njydsz.common.docs.enums.DocumentFormat;
-import java.io.InputStream;
 
 /**
  * 文档安全扫描器接口

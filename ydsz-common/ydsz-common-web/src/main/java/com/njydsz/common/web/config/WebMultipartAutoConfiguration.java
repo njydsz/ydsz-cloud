@@ -1,6 +1,5 @@
 package com.njydsz.common.web.config;
 
-import jakarta.servlet.MultipartConfigElement;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -12,6 +11,7 @@ import org.springframework.boot.servlet.MultipartConfigFactory;
 import org.springframework.boot.servlet.autoconfigure.MultipartAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.util.unit.DataSize;
+import jakarta.servlet.MultipartConfigElement;
 
 /**
  * Web 端 Multipart 自动配置

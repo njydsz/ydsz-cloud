@@ -1,11 +1,13 @@
 package com.njydsz.common.exception.core;
 
-import com.njydsz.common.exception.enums.ExceptionCode;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
 import lombok.Getter;
+
+import com.njydsz.common.exception.enums.ExceptionCode;
 
 /**
  * 异常响应信息封装类

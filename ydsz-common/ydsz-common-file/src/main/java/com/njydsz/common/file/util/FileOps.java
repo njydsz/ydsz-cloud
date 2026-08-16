@@ -1,6 +1,5 @@
 package com.njydsz.common.file.util;
 
-import com.njydsz.common.util.id.IdGenerator;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -9,7 +8,10 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDateTime;
 import java.util.Set;
+
 import org.springframework.web.multipart.MultipartFile;
+
+import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * 文件操作统一门面（ydsz-common-file 模块内置工具类）。

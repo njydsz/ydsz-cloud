@@ -1,9 +1,11 @@
 package com.njydsz.common.queue.service.impl;
 
+import java.util.List;
+
+import org.springframework.data.redis.core.RedisTemplate;
+
 import com.njydsz.common.queue.domain.QueueMessage;
 import com.njydsz.common.queue.service.IMessagePublisher;
-import java.util.List;
-import org.springframework.data.redis.core.RedisTemplate;
 
 /**
  * Redis Pub/Sub 模式发布者。

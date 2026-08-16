@@ -1,16 +1,18 @@
 package com.njydsz.common.base.filter;
 
-import com.njydsz.common.base.config.BaseTraceProperties;
-import com.njydsz.common.base.interceptor.RequestIdResolver;
-import com.njydsz.common.core.constant.HeaderConstants;
+import java.io.IOException;
+
+import org.jspecify.annotations.NonNull;
+import org.springframework.web.filter.OncePerRequestFilter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.NonNull;
-import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.njydsz.common.base.config.BaseTraceProperties;
+import com.njydsz.common.base.interceptor.RequestIdResolver;
+import com.njydsz.common.core.constant.HeaderConstants;
 
 /**
  * 请求ID响应头过滤器（Web/App 共享）

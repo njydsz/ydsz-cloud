@@ -9,7 +9,7 @@ import com.njydsz.message.server.metric.MessageMetrics;
 import com.njydsz.message.server.service.chain.SendContext;
 import com.njydsz.message.server.service.chain.SendHandler;
 import com.njydsz.message.server.service.config.PreferenceService;
-import java.time.Duration;
+import com.njydsz.message.server.service.impl.DndService;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import lombok.RequiredArgsConstructor;
@@ -76,19 +76,24 @@ public class PreferenceHandler implements SendHandler {
       return true;
     }
     if (stc != null && stc.isEnabled()) {
-      LocalDateTime nextTime = calculateDndEndTime(pref);
-      if (nextTime == null) {
+      LocalTime start = parseTime(pref.getDndStart());
+      LocalTime end = parseTime(pref.getDndEnd());
+      if (start == null || end == null) {
         messageMetrics.recordSend(channel, "DND_SKIPPED", 0);
         ctx.setErrorResult(MessageResult.fail(channel, "当前为免打扰时段"));
         return false;
       }
-      long deferHours = Duration.between(LocalDateTime.now(), nextTime).toHours();
-      if (deferHours > stc.getMaxDeferHours()) {
+      // P1-D3: 复用 DndService 统一的窗口结束时间计算
+      LocalDateTime now = LocalDateTime.now();
+      LocalDateTime windowEnd = DndService.resolveWindowEnd(now, start, end);
+      long buffer = stc.getDndBufferSeconds();
+      LocalDateTime nextTime = windowEnd.plusSeconds(buffer);
+      long deferSeconds = java.time.Duration.between(now, nextTime).getSeconds();
+      long maxDeferSeconds = stc.getMaxDeferHours() * 3600L;
+      if (deferSeconds > maxDeferSeconds) {
         log.info(
-            "[Message] DND 延迟超过阈值,丢弃: receiver={} defer={}h max={}h",
-            SensitiveUtil.scanAndMask(receiver),
-            deferHours,
-            stc.getMaxDeferHours());
+            "[Message] DND 延迟超过阈值,丢弃: receiver={} defer={}s max={}s",
+            SensitiveUtil.scanAndMask(receiver), deferSeconds, maxDeferSeconds);
         messageMetrics.recordSend(channel, "DND_DROPPED", 0);
         ctx.setErrorResult(MessageResult.fail(channel, "免打扰时段消息延迟过久,已丢弃"));
         return false;
@@ -114,7 +119,11 @@ public class PreferenceHandler implements SendHandler {
     return 500;
   }
 
-  /** 判断当前是否在 DND 免打扰时段。 */
+  /**
+   * 判断当前是否在 DND 免打扰时段。
+   *
+   * <p>P1-D3: 复用 {@link DndService#isInWindow} 实现，消除重复的跨天窗口判断逻辑。
+   */
   private boolean isInDndPeriod(MsgPreference pref) {
     String start = pref.getDndStart();
     String end = pref.getDndEnd();
@@ -122,47 +131,23 @@ public class PreferenceHandler implements SendHandler {
       return false;
     }
     try {
-      LocalTime now = LocalTime.now();
       LocalTime s = LocalTime.parse(start);
       LocalTime e = LocalTime.parse(end);
-      if (s.isBefore(e)) {
-        return !now.isBefore(s) && now.isBefore(e);
-      } else {
-        return !now.isBefore(s) || now.isBefore(e);
-      }
+      return DndService.isInWindow(LocalTime.now(), s, e);
     } catch (Exception ex) {
       log.warn("[Message] DND 时段解析失败: start={} end={} err={}", start, end, ex.getMessage());
       return false;
     }
   }
 
-  /** 计算 DND 结束时间（下次可发送时间）。 */
-  private LocalDateTime calculateDndEndTime(MsgPreference pref) {
-    String startStr = pref.getDndStart();
-    String endStr = pref.getDndEnd();
-    if (!StringUtils.hasText(startStr) || !StringUtils.hasText(endStr)) {
+  /** 安全解析时间字符串。 */
+  private LocalTime parseTime(String value) {
+    if (!StringUtils.hasText(value)) {
       return null;
     }
     try {
-      LocalTime now = LocalTime.now();
-      LocalTime start = LocalTime.parse(startStr);
-      LocalTime end = LocalTime.parse(endStr);
-      LocalDateTime todayEnd = LocalDateTime.now().toLocalDate().atTime(end);
-      LocalDateTime nextEnd;
-      if (start.isBefore(end)) {
-        nextEnd = todayEnd;
-      } else {
-        if (now.isBefore(end)) {
-          nextEnd = todayEnd;
-        } else {
-          nextEnd = todayEnd.plusDays(1);
-        }
-      }
-      MessageProperties.SmartTimingConfig stc = messageProperties.getSmartTiming();
-      long buffer = (stc != null) ? stc.getDndBufferSeconds() : 0L;
-      return nextEnd.plusSeconds(buffer);
+      return LocalTime.parse(value);
     } catch (Exception e) {
-      log.warn("[Message] DND 结束时间计算失败: start={} end={} err={}", startStr, endStr, e.getMessage());
       return null;
     }
   }

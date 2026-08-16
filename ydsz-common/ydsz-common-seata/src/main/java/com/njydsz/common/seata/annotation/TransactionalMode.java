@@ -1,10 +1,11 @@
 package com.njydsz.common.seata.annotation;
 
-import com.njydsz.common.seata.api.TransactionType;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import com.njydsz.common.seata.api.TransactionType;
 
 /**
  * 事务模式声明注解

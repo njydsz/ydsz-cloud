@@ -1,8 +1,9 @@
 package com.njydsz.common.seata.config.validator;
 
-import com.njydsz.common.seata.config.SeataProperties;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
+
+import com.njydsz.common.seata.config.SeataProperties;
 
 /**
  * XID 签名配置校验器

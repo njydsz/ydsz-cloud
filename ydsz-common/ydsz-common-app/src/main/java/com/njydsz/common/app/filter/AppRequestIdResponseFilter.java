@@ -1,10 +1,11 @@
 package com.njydsz.common.app.filter;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import com.njydsz.common.app.config.AppTraceProperties;
 import com.njydsz.common.app.util.RequestIdGenerator;
 import com.njydsz.common.base.filter.BaseRequestIdResponseFilter;
 import com.njydsz.common.core.context.RequestContext;
-import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * App 端请求 ID 响应头过滤器

@@ -1,6 +1,5 @@
 package com.njydsz.common.search.service;
 
-import com.njydsz.common.search.config.SearchProperties;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -13,7 +12,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.search.config.SearchProperties;
 
 /**
  * 搜索文本预处理器。

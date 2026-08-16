@@ -1,8 +1,9 @@
 package com.njydsz.common.auth.service;
 
+import java.util.Map;
+
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.service.impl.RedisRbacUserInfoService;
-import java.util.Map;
 
 /**
  * RBAC 用户信息加载器接口。

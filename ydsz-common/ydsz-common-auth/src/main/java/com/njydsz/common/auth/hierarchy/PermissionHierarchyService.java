@@ -1,12 +1,14 @@
 package com.njydsz.common.auth.hierarchy;
 
-import com.njydsz.common.auth.util.PermissionUtils;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
 import org.springframework.stereotype.Component;
+
+import com.njydsz.common.auth.util.PermissionUtils;
 
 /**
  * 权限继承层级管理器（Spring Bean）。

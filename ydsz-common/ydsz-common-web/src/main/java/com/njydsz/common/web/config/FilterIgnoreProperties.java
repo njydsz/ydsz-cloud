@@ -1,12 +1,14 @@
 package com.njydsz.common.web.config;
 
-import com.njydsz.common.auth.constant.FilterIgnoreConstants;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import lombok.Data;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import lombok.Data;
+
+import com.njydsz.common.auth.constant.FilterIgnoreConstants;
 
 /**
  * 过滤器忽略路径配置属性。

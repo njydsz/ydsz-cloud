@@ -1,14 +1,16 @@
 package com.njydsz.common.jdbc.datasource;
 
-import com.njydsz.common.jdbc.datasource.hint.HintManager;
-import com.njydsz.common.jdbc.datasource.hint.HintType;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.sql.DataSource;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
+import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.jdbc.datasource.hint.HintManager;
+import com.njydsz.common.jdbc.datasource.hint.HintType;
 
 /**
  * 动态路由数据源

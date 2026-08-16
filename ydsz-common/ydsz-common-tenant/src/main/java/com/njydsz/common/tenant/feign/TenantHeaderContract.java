@@ -1,7 +1,8 @@
 package com.njydsz.common.tenant.feign;
 
-import com.njydsz.common.tenant.config.TenantProperties.TenantField;
 import org.springframework.util.StringUtils;
+
+import com.njydsz.common.tenant.config.TenantProperties.TenantField;
 
 /**
  * Feign / WebFilter 跨服务 header 契约（共享解析规则）。

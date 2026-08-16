@@ -1,13 +1,14 @@
 package com.njydsz.system.server.listener;
 
-import com.njydsz.common.cache.constant.CacheConstants;
-import com.njydsz.common.event.model.OutboxMessage;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.cache.constant.CacheConstants;
+import com.njydsz.common.event.model.OutboxMessage;
 
 /**
  * 跨模块事件监听器 — System 模块订阅其他模块的领域事件。

@@ -1,9 +1,10 @@
 package com.njydsz.common.notify.aggregate;
 
-import com.njydsz.common.notify.enums.NotifyChannel;
-import com.njydsz.common.notify.enums.NotifyPriority;
 import java.util.List;
 import java.util.Map;
+
+import com.njydsz.common.notify.enums.NotifyChannel;
+import com.njydsz.common.notify.enums.NotifyPriority;
 
 /**
  * 通知聚合策略接口（P2-3）

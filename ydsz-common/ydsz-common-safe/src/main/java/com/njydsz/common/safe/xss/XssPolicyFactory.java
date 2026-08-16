@@ -2,6 +2,7 @@ package com.njydsz.common.safe.xss;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
 import org.owasp.html.PolicyFactory;
 import org.owasp.html.Sanitizers;
 

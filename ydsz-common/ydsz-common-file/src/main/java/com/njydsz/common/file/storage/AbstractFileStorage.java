@@ -1,25 +1,5 @@
 package com.njydsz.common.file.storage;
 
-import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.file.callback.UploadProgressListener;
-import com.njydsz.common.file.config.FileProperties;
-import com.njydsz.common.file.config.FileUploadProperties;
-import com.njydsz.common.file.constant.FileConstant;
-import com.njydsz.common.file.domain.BatchDeleteResult;
-import com.njydsz.common.file.domain.ChunkedUploadResult;
-import com.njydsz.common.file.domain.FileStorage;
-import com.njydsz.common.file.domain.ListObjectsResult;
-import com.njydsz.common.file.domain.ObjectMetadata;
-import com.njydsz.common.file.domain.PolicyResult;
-import com.njydsz.common.file.domain.UploadCheckpoint;
-import com.njydsz.common.file.exception.FileExceptionCode;
-import com.njydsz.common.file.metrics.FileMetrics;
-import com.njydsz.common.file.service.FileDedupService;
-import com.njydsz.common.file.util.FileTypeValidator;
-import com.njydsz.common.file.virus.VirusScanner;
-import com.njydsz.common.util.id.IdGenerator;
-import com.njydsz.common.util.string.StringUtils;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -42,9 +22,31 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.regex.Pattern;
+
+import org.springframework.web.multipart.MultipartFile;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.multipart.MultipartFile;
+
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.file.callback.UploadProgressListener;
+import com.njydsz.common.file.config.FileProperties;
+import com.njydsz.common.file.config.FileUploadProperties;
+import com.njydsz.common.file.constant.FileConstant;
+import com.njydsz.common.file.domain.BatchDeleteResult;
+import com.njydsz.common.file.domain.ChunkedUploadResult;
+import com.njydsz.common.file.domain.FileStorage;
+import com.njydsz.common.file.domain.ListObjectsResult;
+import com.njydsz.common.file.domain.ObjectMetadata;
+import com.njydsz.common.file.domain.PolicyResult;
+import com.njydsz.common.file.domain.UploadCheckpoint;
+import com.njydsz.common.file.exception.FileExceptionCode;
+import com.njydsz.common.file.metrics.FileMetrics;
+import com.njydsz.common.file.service.FileDedupService;
+import com.njydsz.common.file.util.FileTypeValidator;
+import com.njydsz.common.file.virus.VirusScanner;
+import com.njydsz.common.util.id.IdGenerator;
+import com.njydsz.common.util.string.StringUtils;
 
 /**
  * 文件存储抽象基类

@@ -1,16 +1,9 @@
 package com.njydsz.common.netty.server;
 
-import com.njydsz.common.netty.config.NettyProperties;
-import com.njydsz.common.netty.event.ChannelEventDispatcher;
-import com.njydsz.common.netty.handler.ChannelGroupManager;
-import com.njydsz.common.netty.handler.ConnectionEventHandler;
-import com.njydsz.common.netty.handler.ConnectionLimitHandler;
-import com.njydsz.common.netty.handler.IdleStateHandlerFactory;
-import com.njydsz.common.netty.handler.TrafficMonitoringHandler;
-import com.njydsz.common.netty.metric.NettyChannelMetrics;
-import com.njydsz.common.netty.pool.NettyEventLoopPool;
-import com.njydsz.common.netty.ssl.SslContextFactory;
-import com.njydsz.common.netty.transport.NativeTransportDetector;
+import java.net.BindException;
+import java.net.InetSocketAddress;
+
+import lombok.extern.slf4j.Slf4j;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -28,9 +21,18 @@ import io.netty.handler.traffic.ChannelTrafficShapingHandler;
 import io.netty.handler.traffic.GlobalTrafficShapingHandler;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.Slf4JLoggerFactory;
-import java.net.BindException;
-import java.net.InetSocketAddress;
-import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.netty.config.NettyProperties;
+import com.njydsz.common.netty.event.ChannelEventDispatcher;
+import com.njydsz.common.netty.handler.ChannelGroupManager;
+import com.njydsz.common.netty.handler.ConnectionEventHandler;
+import com.njydsz.common.netty.handler.ConnectionLimitHandler;
+import com.njydsz.common.netty.handler.IdleStateHandlerFactory;
+import com.njydsz.common.netty.handler.TrafficMonitoringHandler;
+import com.njydsz.common.netty.metric.NettyChannelMetrics;
+import com.njydsz.common.netty.pool.NettyEventLoopPool;
+import com.njydsz.common.netty.ssl.SslContextFactory;
+import com.njydsz.common.netty.transport.NativeTransportDetector;
 
 /**
  * Netty TCP Server 抽象基类。

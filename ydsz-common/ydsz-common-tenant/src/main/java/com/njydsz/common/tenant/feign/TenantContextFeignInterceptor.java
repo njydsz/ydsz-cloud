@@ -1,14 +1,16 @@
 package com.njydsz.common.tenant.feign;
 
-import com.njydsz.common.tenant.TenantContext;
-import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.common.tenant.config.TenantProperties.TenantField;
-import feign.RequestInterceptor;
-import feign.RequestTemplate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import lombok.extern.slf4j.Slf4j;
+import feign.RequestInterceptor;
+import feign.RequestTemplate;
+
+import com.njydsz.common.tenant.TenantContext;
+import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.common.tenant.config.TenantProperties.TenantField;
 
 /**
  * Feign 请求拦截器：跨服务透传全部租户字段。

@@ -1,11 +1,12 @@
 package com.njydsz.common.auth.service;
 
-import com.njydsz.common.auth.model.RolePermissions;
-import com.njydsz.common.auth.service.impl.RedisRolePermissionLoader;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+
+import com.njydsz.common.auth.model.RolePermissions;
+import com.njydsz.common.auth.service.impl.RedisRolePermissionLoader;
 
 /**
  * 角色权限加载器接口。

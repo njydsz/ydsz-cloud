@@ -1,9 +1,5 @@
 package com.njydsz.common.feign.interceptor;
 
-import com.alibaba.ttl.TransmittableThreadLocal;
-import com.njydsz.common.feign.config.FeignProperties;
-import feign.RequestInterceptor;
-import feign.RequestTemplate;
 import java.net.URI;
 import java.util.Collections;
 import java.util.HashMap;
@@ -11,8 +7,14 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.alibaba.ttl.TransmittableThreadLocal;
+import feign.RequestInterceptor;
+import feign.RequestTemplate;
+
+import com.njydsz.common.feign.config.FeignProperties;
 
 /**
  * Feign 请求并发隔离（Bulkhead）拦截器。

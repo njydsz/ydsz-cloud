@@ -1,9 +1,10 @@
 package com.njydsz.common.excel.core.config;
 
-import com.njydsz.common.excel.api.validator.DataValidator.ValidationMode;
-import com.njydsz.common.excel.core.security.FormulaInjectionGuard;
 import java.util.List;
 import java.util.zip.Deflater;
+
+import com.njydsz.common.excel.api.validator.DataValidator.ValidationMode;
+import com.njydsz.common.excel.core.security.FormulaInjectionGuard;
 
 /**
  * Excel 全局配置 — 不可变配置对象。

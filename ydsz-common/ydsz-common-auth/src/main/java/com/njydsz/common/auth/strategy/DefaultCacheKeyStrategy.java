@@ -1,8 +1,9 @@
 package com.njydsz.common.auth.strategy;
 
-import com.njydsz.common.util.security.DigestUtils;
 import java.util.Set;
 import java.util.TreeSet;
+
+import com.njydsz.common.util.security.DigestUtils;
 
 /**
  * 默认缓存 Key 生成策略。

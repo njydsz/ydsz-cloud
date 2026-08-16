@@ -1,7 +1,7 @@
 package com.njydsz.common.web.version;
 
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import lombok.Data;
 
 /**
  * API 版本管理配置属性。

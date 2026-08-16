@@ -1,5 +1,10 @@
 package com.njydsz.system.domain.converter;
 
+import java.util.List;
+
+import org.mapstruct.Mapper;
+import org.mapstruct.factory.Mappers;
+
 import com.njydsz.system.domain.entity.AppInfo;
 import com.njydsz.system.domain.entity.Config;
 import com.njydsz.system.domain.entity.DictItem;
@@ -18,9 +23,6 @@ import com.njydsz.system.domain.vo.TenantPlanMenuVO;
 import com.njydsz.system.domain.vo.TenantPlanVO;
 import com.njydsz.system.domain.vo.TenantVO;
 import com.njydsz.system.domain.vo.VariableVO;
-import java.util.List;
-import org.mapstruct.Mapper;
-import org.mapstruct.factory.Mappers;
 
 /**
  * 系统配置模块统一 MapStruct 转换器

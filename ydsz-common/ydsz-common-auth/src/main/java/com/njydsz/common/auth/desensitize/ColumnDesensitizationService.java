@@ -1,5 +1,14 @@
 package com.njydsz.common.auth.desensitize;
 
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
+import org.springframework.stereotype.Service;
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.auth.config.AuthProperties;
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.service.RbacUserInfoService;
@@ -12,13 +21,6 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.safe.desensitize.ColumnDesensitizationContext;
 import com.njydsz.common.safe.desensitize.ColumnDesensitizationRule;
 import com.njydsz.common.util.string.StringUtils;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
 /**
  * 字段脱敏服务。

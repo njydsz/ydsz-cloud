@@ -1,9 +1,10 @@
 package com.njydsz.gateway.config;
 
 import java.util.List;
-import lombok.Data;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
+import lombok.Data;
 
 /**
  * P3-7: 网关请求幂等性配置属性

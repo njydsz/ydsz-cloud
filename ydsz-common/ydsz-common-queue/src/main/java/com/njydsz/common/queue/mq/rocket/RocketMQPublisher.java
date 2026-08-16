@@ -1,13 +1,10 @@
 package com.njydsz.common.queue.mq.rocket;
 
-import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.queue.domain.QueueMessage;
-import com.njydsz.common.queue.service.IMessagePublisher;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.locks.ReentrantLock;
-import lombok.extern.slf4j.Slf4j;
+
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.client.producer.MessageQueueSelector;
 import org.apache.rocketmq.client.producer.SendCallback;
@@ -15,6 +12,11 @@ import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.client.producer.SendStatus;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.common.message.MessageQueue;
+import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.queue.domain.QueueMessage;
+import com.njydsz.common.queue.service.IMessagePublisher;
 
 /**
  * RocketMQ 消息发布者

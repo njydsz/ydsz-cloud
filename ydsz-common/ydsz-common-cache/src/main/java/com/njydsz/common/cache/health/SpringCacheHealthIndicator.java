@@ -1,9 +1,11 @@
 package com.njydsz.common.cache.health;
 
-import com.njydsz.common.cache.spring.YdszCacheManager;
 import java.util.Map;
+
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
+
+import com.njydsz.common.cache.spring.YdszCacheManager;
 
 /**
  * Spring Boot Actuator HealthIndicator 适配器 — 对接 {@link CacheHealthIndicator}

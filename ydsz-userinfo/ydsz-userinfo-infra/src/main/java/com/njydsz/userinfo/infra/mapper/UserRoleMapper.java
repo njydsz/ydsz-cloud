@@ -1,11 +1,13 @@
 package com.njydsz.userinfo.infra.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.userinfo.domain.entity.UserRole;
 import java.util.List;
+
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+
+import com.njydsz.userinfo.domain.entity.UserRole;
 
 /**
  * 用户-角色关联表 Mapper

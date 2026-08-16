@@ -1,9 +1,5 @@
 package com.njydsz.common.exception.config;
 
-import com.njydsz.common.exception.code.ErrorCodeTable;
-import com.njydsz.common.exception.endpoint.ExceptionCodeDocEndpoint;
-import com.njydsz.common.exception.health.ExceptionHealthIndicator;
-import com.njydsz.common.exception.metrics.ExceptionMetrics;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -12,6 +8,11 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
+
+import com.njydsz.common.exception.code.ErrorCodeTable;
+import com.njydsz.common.exception.endpoint.ExceptionCodeDocEndpoint;
+import com.njydsz.common.exception.health.ExceptionHealthIndicator;
+import com.njydsz.common.exception.metrics.ExceptionMetrics;
 
 /**
  * 异常模块 Actuator / 观测能力自动配置

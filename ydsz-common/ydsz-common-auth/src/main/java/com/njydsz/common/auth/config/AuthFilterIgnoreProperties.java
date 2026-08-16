@@ -3,6 +3,7 @@ package com.njydsz.common.auth.config;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**

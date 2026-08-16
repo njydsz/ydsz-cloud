@@ -1,18 +1,20 @@
 package com.njydsz.common.redis.service.multilevel;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
+
+import lombok.extern.slf4j.Slf4j;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.Expiry;
+
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.config.RedisProperties;
 import com.njydsz.common.redis.service.CacheProvider;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.string.StringUtils;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 多级缓存提供者（L1 Caffeine 本地缓存 + L2 Redis 远程缓存）

@@ -3,6 +3,7 @@ package com.njydsz.common.safe.ratelimit.model;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

@@ -1,15 +1,17 @@
 package com.njydsz.common.search.core;
 
-import com.njydsz.common.search.api.SearchRequest;
-import com.njydsz.common.search.api.SearchResponse;
-import com.njydsz.common.search.config.SearchProperties;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.search.api.SearchRequest;
+import com.njydsz.common.search.api.SearchResponse;
+import com.njydsz.common.search.config.SearchProperties;
 
 /**
  * 搜索引擎策略注册中心

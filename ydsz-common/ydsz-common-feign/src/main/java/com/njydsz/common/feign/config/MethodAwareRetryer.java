@@ -1,10 +1,11 @@
 package com.njydsz.common.feign.config;
 
+import java.util.Locale;
+import java.util.Set;
+
 import feign.Request;
 import feign.RetryableException;
 import feign.Retryer;
-import java.util.Locale;
-import java.util.Set;
 
 /**
  * 支持 HTTP 方法过滤的 Feign 重试器。

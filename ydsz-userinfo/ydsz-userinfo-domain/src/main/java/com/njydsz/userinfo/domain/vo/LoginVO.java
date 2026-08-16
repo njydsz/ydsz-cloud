@@ -1,8 +1,9 @@
 package com.njydsz.userinfo.domain.vo;
 
+import lombok.Data;
+
 import com.njydsz.common.safe.sensitive.SensitiveData;
 import com.njydsz.common.safe.sensitive.SensitiveType;
-import lombok.Data;
 
 /**
  * 登录结果 VO，遵循 OAuth2 Token Response 规范（RFC 6749 §5.1）。

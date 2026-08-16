@@ -1,10 +1,5 @@
 package com.njydsz.common.socket.config;
 
-import com.njydsz.common.socket.cluster.WebSocketClusterPublisher;
-import com.njydsz.common.socket.cluster.WebSocketClusterSubscriber;
-import com.njydsz.common.socket.resilience.WebSocketCircuitBreaker;
-import com.njydsz.common.socket.session.LocalSessionRegistry;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -15,6 +10,12 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.socket.cluster.WebSocketClusterPublisher;
+import com.njydsz.common.socket.cluster.WebSocketClusterSubscriber;
+import com.njydsz.common.socket.resilience.WebSocketCircuitBreaker;
+import com.njydsz.common.socket.session.LocalSessionRegistry;
 
 /**
  * WebSocket 集群广播自动装配。

@@ -1,12 +1,14 @@
 package com.njydsz.common.event.api;
 
-import com.njydsz.common.util.id.IdGenerator;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+
 import org.springframework.context.ApplicationEvent;
+
+import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * 领域事件基类 — 模块间事件契约的基础。

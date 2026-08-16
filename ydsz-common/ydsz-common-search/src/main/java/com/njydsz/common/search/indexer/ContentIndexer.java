@@ -1,8 +1,10 @@
 package com.njydsz.common.search.indexer;
 
-import com.njydsz.common.search.core.IndexDocument;
 import java.io.InputStream;
+
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.search.core.IndexDocument;
 
 /**
  * 内容索引器

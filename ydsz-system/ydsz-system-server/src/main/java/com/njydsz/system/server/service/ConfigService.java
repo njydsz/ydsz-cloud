@@ -1,10 +1,11 @@
 package com.njydsz.system.server.service;
 
+import java.util.List;
+
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.dto.ConfigDTO;
 import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.domain.vo.ConfigVO;
-import java.util.List;
 
 /**
  * 系统配置 Service 接口

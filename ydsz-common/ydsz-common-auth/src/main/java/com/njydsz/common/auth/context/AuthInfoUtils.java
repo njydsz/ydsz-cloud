@@ -1,13 +1,15 @@
 package com.njydsz.common.auth.context;
 
+import java.util.Collections;
+import java.util.Map;
+import java.util.Set;
+
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.auth.model.AuthInfo;
 import com.njydsz.common.auth.model.YdszAuthInfo;
 import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.core.context.RequestContext;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 认证信息快捷读取工具类

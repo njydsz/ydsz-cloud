@@ -1,8 +1,5 @@
 package com.njydsz.system.server.config;
 
-import com.njydsz.system.infra.mapper.ConfigMapper;
-import com.njydsz.system.infra.mapper.DictItemMapper;
-import com.njydsz.system.server.health.SystemHealthIndicator;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -11,6 +8,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
+import com.njydsz.system.infra.mapper.ConfigMapper;
+import com.njydsz.system.infra.mapper.DictItemMapper;
+import com.njydsz.system.server.health.SystemHealthIndicator;
 
 /**
  * 系统模块 Spring 配置

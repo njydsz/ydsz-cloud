@@ -9,7 +9,6 @@ import java.util.concurrent.TimeUnit;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 
 /**
@@ -35,7 +34,6 @@ import com.njydsz.cronjob.server.config.CronjobProperties;
  * @since 1.0.0
  */
 @Slf4j
-@Component
 @RequiredArgsConstructor
 public class CronjobThreadPoolRegistry {
 

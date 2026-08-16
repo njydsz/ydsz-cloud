@@ -1,11 +1,13 @@
 package com.njydsz.common.safe.password;
 
+import java.util.Locale;
+
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.exception.code.SecurityExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.password.PasswordStrengthChecker;
 import com.njydsz.common.util.password.PwdUtils;
-import java.util.Locale;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 密码强度校验器（P0-1：统一封装 common-util 的 PasswordStrengthChecker SPI）。

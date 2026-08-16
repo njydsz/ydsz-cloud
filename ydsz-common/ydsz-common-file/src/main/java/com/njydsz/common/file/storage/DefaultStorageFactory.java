@@ -1,5 +1,12 @@
 package com.njydsz.common.file.storage;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
+import java.util.function.Function;
+
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.config.FileProperties;
 import com.njydsz.common.file.config.FileUploadProperties;
@@ -15,11 +22,6 @@ import com.njydsz.common.file.storage.platform.QiniuStorage;
 import com.njydsz.common.file.storage.platform.S3Storage;
 import com.njydsz.common.file.util.FileTypeValidator;
 import com.njydsz.common.file.virus.VirusScanner;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ExecutorService;
-import java.util.function.Function;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 默认文件存储工厂（实现 {@link IFileStorageProvider}）

@@ -1,7 +1,8 @@
 package com.njydsz.common.tenant.datasource;
 
-import com.njydsz.common.tenant.config.TenantProperties;
 import java.util.Map;
+
+import com.njydsz.common.tenant.config.TenantProperties;
 
 /**
  * 租户数据源 Key 解析器 SPI。

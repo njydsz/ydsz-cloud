@@ -1,10 +1,12 @@
 package com.njydsz.common.app.config;
 
-import com.njydsz.common.app.util.RequestIdGenerator;
-import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import javax.annotation.PostConstruct;
+
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+
+import com.njydsz.common.app.util.RequestIdGenerator;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
 
 /**
  * RequestIdGenerator 静态工具类 Supplier 注册配置

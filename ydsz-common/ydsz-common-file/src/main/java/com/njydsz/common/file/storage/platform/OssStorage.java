@@ -1,18 +1,5 @@
 package com.njydsz.common.file.storage.platform;
 
-import com.aliyun.oss.ClientBuilderConfiguration;
-import com.aliyun.oss.OSS;
-import com.aliyun.oss.OSSClientBuilder;
-import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.file.config.FileProperties;
-import com.njydsz.common.file.config.FileUploadProperties;
-import com.njydsz.common.file.constant.FileConstant;
-import com.njydsz.common.file.domain.ChunkedUploadResult;
-import com.njydsz.common.file.domain.ListObjectsResult;
-import com.njydsz.common.file.domain.ObjectMetadata;
-import com.njydsz.common.file.exception.FileExceptionCode;
-import com.njydsz.common.file.storage.AbstractFileStorage;
-import com.njydsz.common.util.string.StringUtils;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.time.LocalDateTime;
@@ -23,7 +10,22 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import lombok.extern.slf4j.Slf4j;
+import com.aliyun.oss.ClientBuilderConfiguration;
+import com.aliyun.oss.OSS;
+import com.aliyun.oss.OSSClientBuilder;
+
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.file.config.FileProperties;
+import com.njydsz.common.file.config.FileUploadProperties;
+import com.njydsz.common.file.constant.FileConstant;
+import com.njydsz.common.file.domain.ChunkedUploadResult;
+import com.njydsz.common.file.domain.ListObjectsResult;
+import com.njydsz.common.file.domain.ObjectMetadata;
+import com.njydsz.common.file.exception.FileExceptionCode;
+import com.njydsz.common.file.storage.AbstractFileStorage;
+import com.njydsz.common.util.string.StringUtils;
 
 /**
  * 阿里云 OSS 对象存储实现。

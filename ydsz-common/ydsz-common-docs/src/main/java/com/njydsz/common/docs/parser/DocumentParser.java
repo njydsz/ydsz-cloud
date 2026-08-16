@@ -1,9 +1,10 @@
 package com.njydsz.common.docs.parser;
 
+import java.io.InputStream;
+
 import com.njydsz.common.docs.domain.DocumentContent;
 import com.njydsz.common.docs.domain.ParseOptions;
 import com.njydsz.common.docs.enums.DocumentFormat;
-import java.io.InputStream;
 
 /**
  * 文档解析器 SPI 接口

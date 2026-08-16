@@ -1,9 +1,11 @@
 package com.njydsz.common.jdbc.support;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.njydsz.common.core.response.PageResponse;
 import java.util.Collections;
 import java.util.List;
+
+import com.baomidou.mybatisplus.core.metadata.IPage;
+
+import com.njydsz.common.core.response.PageResponse;
 
 /**
  * MyBatis-Plus 分页结果转统一分页响应的转换工具。

@@ -1,8 +1,5 @@
 package com.njydsz.common.thread.util;
 
-import com.alibaba.ttl.TtlCallable;
-import com.alibaba.ttl.TtlRunnable;
-import com.alibaba.ttl.threadpool.TtlExecutors;
 import java.util.Comparator;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -10,10 +7,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-// CHECKSTYLE.OFF: IllegalImport — ExecutorUtils 为线程池编程式工厂（云顶规范 15.4 授权实现层），虚拟线程池需直接使用
-// Executors.newThreadPerTaskExecutor
 import java.util.concurrent.Executors;
-// CHECKSTYLE.ON: IllegalImport
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
@@ -27,7 +21,11 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import lombok.extern.slf4j.Slf4j;
+import com.alibaba.ttl.TtlCallable;
+import com.alibaba.ttl.TtlRunnable;
+import com.alibaba.ttl.threadpool.TtlExecutors;
 
 /**
  * 线程池编程式工厂工具类。

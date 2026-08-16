@@ -1,11 +1,13 @@
 package com.njydsz.common.notify.core;
 
-import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.notify.enums.NotifyChannel;
 import java.util.function.Supplier;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+
+import com.njydsz.common.core.context.RequestContext;
+import com.njydsz.common.notify.enums.NotifyChannel;
 
 /**
  * 通知链路追踪辅助工具（P1-1）

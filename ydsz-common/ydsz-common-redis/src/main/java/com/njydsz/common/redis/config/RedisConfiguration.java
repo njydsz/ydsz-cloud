@@ -1,21 +1,5 @@
 package com.njydsz.common.redis.config;
 
-import com.njydsz.common.redis.annotation.YdszCacheableAspect;
-import com.njydsz.common.redis.health.RedisHealthIndicator;
-import com.njydsz.common.redis.interceptor.RedisRetryInterceptor;
-import com.njydsz.common.redis.metrics.RedisMetricsCollector;
-import com.njydsz.common.redis.serializer.YdszJsonRedisSerializer;
-import com.njydsz.common.redis.service.RedisRateLimiter;
-import com.njydsz.common.redis.service.ops.RedisAdvancedOps;
-import com.njydsz.common.redis.service.ops.RedisCollectionOps;
-import com.njydsz.common.redis.service.ops.RedisGeoOps;
-import com.njydsz.common.redis.service.ops.RedisHashOps;
-import com.njydsz.common.redis.service.ops.RedisPubSubOps;
-import com.njydsz.common.redis.service.ops.RedisStreamOps;
-import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.common.redis.service.ops.RedisTransactionOps;
-import com.njydsz.common.redis.tenant.TenantRedisKeyPrefixer;
-import lombok.RequiredArgsConstructor;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -35,6 +19,23 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import lombok.RequiredArgsConstructor;
+
+import com.njydsz.common.redis.annotation.YdszCacheableAspect;
+import com.njydsz.common.redis.health.RedisHealthIndicator;
+import com.njydsz.common.redis.interceptor.RedisRetryInterceptor;
+import com.njydsz.common.redis.metrics.RedisMetricsCollector;
+import com.njydsz.common.redis.serializer.YdszJsonRedisSerializer;
+import com.njydsz.common.redis.service.RedisRateLimiter;
+import com.njydsz.common.redis.service.ops.RedisAdvancedOps;
+import com.njydsz.common.redis.service.ops.RedisCollectionOps;
+import com.njydsz.common.redis.service.ops.RedisGeoOps;
+import com.njydsz.common.redis.service.ops.RedisHashOps;
+import com.njydsz.common.redis.service.ops.RedisPubSubOps;
+import com.njydsz.common.redis.service.ops.RedisStreamOps;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.redis.service.ops.RedisTransactionOps;
+import com.njydsz.common.redis.tenant.TenantRedisKeyPrefixer;
 
 /**
  * Redis 配置类

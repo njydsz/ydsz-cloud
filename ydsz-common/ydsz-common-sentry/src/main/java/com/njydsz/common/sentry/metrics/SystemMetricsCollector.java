@@ -1,6 +1,5 @@
 package com.njydsz.common.sentry.metrics;
 
-import com.njydsz.common.sentry.spi.MetricsCollector;
 import java.io.File;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
@@ -11,7 +10,10 @@ import java.lang.management.RuntimeMXBean;
 import java.lang.management.ThreadMXBean;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
+
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.sentry.spi.MetricsCollector;
 
 /**
  * 系统资源指标采集器

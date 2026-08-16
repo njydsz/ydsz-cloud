@@ -1,12 +1,14 @@
 package com.njydsz.userinfo.server.auth;
 
+import java.util.regex.Pattern;
+
+import org.springframework.stereotype.Component;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
-import java.util.regex.Pattern;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 /**
  * 密码策略校验器。
@@ -79,11 +81,7 @@ public class PasswordPolicyValidator {
           UserInfoExceptionCode.PASSWORD_TOO_WEAK, new Object[] {"密码长度不能超过 " + maxLength + " 个字符"});
     }
 
-    int categoryCount = 0;
-    if (HAS_LOWER.matcher(password).find()) categoryCount++;
-    if (HAS_UPPER.matcher(password).find()) categoryCount++;
-    if (HAS_DIGIT.matcher(password).find()) categoryCount++;
-    if (HAS_SPECIAL.matcher(password).find()) categoryCount++;
+    int categoryCount = countCharacterCategories(password);
 
     if (categoryCount < minCategoryCount) {
       throw new BusinessException(
@@ -110,5 +108,28 @@ public class PasswordPolicyValidator {
             UserInfoExceptionCode.PASSWORD_REUSED, "不能使用最近 " + historyCount + " 次使用过的密码");
       }
     }
+  }
+
+  /**
+   * 统计密码包含的字符种类数。
+   *
+   * @param password 待检测密码
+   * @return 字符种类数（大写、小写、数字、特殊字符中满足的种类数量）
+   */
+  private static int countCharacterCategories(String password) {
+    int count = 0;
+    if (HAS_LOWER.matcher(password).find()) {
+      count++;
+    }
+    if (HAS_UPPER.matcher(password).find()) {
+      count++;
+    }
+    if (HAS_DIGIT.matcher(password).find()) {
+      count++;
+    }
+    if (HAS_SPECIAL.matcher(password).find()) {
+      count++;
+    }
+    return count;
   }
 }

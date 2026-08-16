@@ -1,9 +1,11 @@
 package com.njydsz.common.docs.preprocess.impl;
 
+import java.util.regex.Pattern;
+
+import org.springframework.stereotype.Component;
+
 import com.njydsz.common.docs.domain.DocumentContent;
 import com.njydsz.common.docs.preprocess.DocumentPreprocessor;
-import java.util.regex.Pattern;
-import org.springframework.stereotype.Component;
 
 /**
  * 文本清洗预处理器

@@ -1,7 +1,8 @@
 package com.njydsz.common.sentry.spi;
 
-import com.njydsz.common.sentry.domain.LogEvent;
 import java.util.List;
+
+import com.njydsz.common.sentry.domain.LogEvent;
 
 /**
  * "日志发布器 SPI"

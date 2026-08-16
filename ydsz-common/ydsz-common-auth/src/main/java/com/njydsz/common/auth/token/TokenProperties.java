@@ -1,9 +1,10 @@
 package com.njydsz.common.auth.token;
 
-import jakarta.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
-import lombok.Data;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import jakarta.annotation.PostConstruct;
+import lombok.Data;
 
 /**
  * Token 配置属性

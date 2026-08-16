@@ -1,10 +1,11 @@
 package com.njydsz.common.feign.circuitbreaker;
 
-import com.njydsz.common.feign.config.FeignProperties;
+import lombok.extern.slf4j.Slf4j;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.feign.config.FeignProperties;
 
 /**
  * Resilience4j 熔断器适配器。

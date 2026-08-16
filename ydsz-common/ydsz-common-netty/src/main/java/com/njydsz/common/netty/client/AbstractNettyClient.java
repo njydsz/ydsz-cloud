@@ -1,15 +1,9 @@
 package com.njydsz.common.netty.client;
 
-import com.njydsz.common.netty.config.NettyProperties;
-import com.njydsz.common.netty.event.ChannelEventDispatcher;
-import com.njydsz.common.netty.exception.NettyException;
-import com.njydsz.common.netty.handler.ConnectionEventHandler;
-import com.njydsz.common.netty.handler.IdleStateHandlerFactory;
-import com.njydsz.common.netty.handler.TrafficMonitoringHandler;
-import com.njydsz.common.netty.metric.NettyChannelMetrics;
-import com.njydsz.common.netty.pool.NettyEventLoopPool;
-import com.njydsz.common.netty.ssl.SslContextFactory;
-import com.njydsz.common.netty.transport.NativeTransportDetector;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import lombok.extern.slf4j.Slf4j;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -21,9 +15,17 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.handler.traffic.ChannelTrafficShapingHandler;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicBoolean;
-import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.netty.config.NettyProperties;
+import com.njydsz.common.netty.event.ChannelEventDispatcher;
+import com.njydsz.common.netty.exception.NettyException;
+import com.njydsz.common.netty.handler.ConnectionEventHandler;
+import com.njydsz.common.netty.handler.IdleStateHandlerFactory;
+import com.njydsz.common.netty.handler.TrafficMonitoringHandler;
+import com.njydsz.common.netty.metric.NettyChannelMetrics;
+import com.njydsz.common.netty.pool.NettyEventLoopPool;
+import com.njydsz.common.netty.ssl.SslContextFactory;
+import com.njydsz.common.netty.transport.NativeTransportDetector;
 
 /**
  * Netty TCP Client 抽象基类。

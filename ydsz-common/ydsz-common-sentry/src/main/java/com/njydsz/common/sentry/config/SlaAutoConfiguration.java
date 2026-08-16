@@ -1,15 +1,16 @@
 package com.njydsz.common.sentry.config;
 
-import com.njydsz.common.sentry.sla.DefaultSlaCollector;
-import com.njydsz.common.sentry.sla.SlaMetricAspect;
-import com.njydsz.common.sentry.spi.MetricsCollector;
-import com.njydsz.common.sentry.spi.SlaCollector;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import com.njydsz.common.sentry.sla.DefaultSlaCollector;
+import com.njydsz.common.sentry.sla.SlaMetricAspect;
+import com.njydsz.common.sentry.spi.MetricsCollector;
+import com.njydsz.common.sentry.spi.SlaCollector;
 
 /**
  * SLA 指标采集自动配置。

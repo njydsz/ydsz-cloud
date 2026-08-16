@@ -1,8 +1,9 @@
 package com.njydsz.common.queue.mq.kafka;
 
-import com.njydsz.common.queue.config.QueueProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import com.njydsz.common.queue.config.QueueProperties;
 
 /**
  * Kafka 消息队列配置属性

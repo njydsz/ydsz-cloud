@@ -1,12 +1,13 @@
 package com.njydsz.common.auth.annotation;
 
-import com.njydsz.common.auth.model.ColumnScopeAware;
-import com.njydsz.common.auth.model.ColumnScopeInfo;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import com.njydsz.common.auth.model.ColumnScopeAware;
+import com.njydsz.common.auth.model.ColumnScopeInfo;
 
 /**
  * 列级数据权限校验与过滤注解。

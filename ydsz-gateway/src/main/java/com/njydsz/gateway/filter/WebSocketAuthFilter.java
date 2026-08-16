@@ -1,17 +1,9 @@
 package com.njydsz.gateway.filter;
 
-import com.njydsz.common.auth.model.UserInfo;
-import com.njydsz.common.core.trace.TraceIdGenerator;
-import com.njydsz.gateway.config.CachedJwtValidator;
-import com.njydsz.gateway.config.GatewayConstants;
-import com.njydsz.gateway.config.GatewayFilterOrder;
-import com.njydsz.gateway.config.InternalHeaderSigner;
-import com.njydsz.gateway.config.PathGuard;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -21,7 +13,17 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
+
+import com.njydsz.common.auth.model.UserInfo;
+import com.njydsz.common.core.trace.TraceIdGenerator;
+import com.njydsz.gateway.config.CachedJwtValidator;
+import com.njydsz.gateway.config.GatewayConstants;
+import com.njydsz.gateway.config.GatewayFilterOrder;
+import com.njydsz.gateway.config.InternalHeaderSigner;
+import com.njydsz.gateway.config.PathGuard;
 
 /**
  * WebSocket 认证过滤器（P2-12 + P0-1 安全加固 + P0-4 Origin 校验）
@@ -97,8 +99,7 @@ public class WebSocketAuthFilter implements GlobalFilter, Ordered {
   /**
    * P3-7: 内部头签名密钥（与 {@link AuthGlobalFilter} 共用配置项）。
    *
-   * <p>WebSocket 与 HTTP 请求的签名密钥必须一致，否则下游服务无法统一校验。
-   * P3-7: 移除对 {@code ydsz.jwt.secret} 的回退依赖，必须独立配置。
+   * <p>WebSocket 与 HTTP 请求的签名密钥必须一致，否则下游服务无法统一校验。 P3-7: 移除对 {@code ydsz.jwt.secret} 的回退依赖，必须独立配置。
    */
   @Value("${ydsz.gateway.internal-sign-secret:}")
   private String internalSignSecret;

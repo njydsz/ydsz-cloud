@@ -1,13 +1,15 @@
 package com.njydsz.common.feign.codec;
 
-import com.njydsz.common.json.YdszJson;
+import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import feign.RequestTemplate;
 import feign.codec.EncodeException;
 import feign.codec.Encoder;
-import java.lang.reflect.Type;
-import java.nio.charset.StandardCharsets;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import com.njydsz.common.json.YdszJson;
 
 /**
  * 基于 Jackson 的 Feign JSON 编码器。

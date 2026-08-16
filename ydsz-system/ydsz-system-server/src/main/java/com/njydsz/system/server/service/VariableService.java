@@ -1,9 +1,10 @@
 package com.njydsz.system.server.service;
 
+import java.util.List;
+
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.dto.VariableDTO;
 import com.njydsz.system.domain.vo.VariableVO;
-import java.util.List;
 
 /**
  * 系统变量 Service 接口

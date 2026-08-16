@@ -1,8 +1,9 @@
 package com.njydsz.common.queue.service;
 
-import com.njydsz.common.queue.domain.QueueMessage;
 import java.io.Closeable;
 import java.util.List;
+
+import com.njydsz.common.queue.domain.QueueMessage;
 
 /**
  * 消息发布者接口（精简版）。

@@ -1,7 +1,5 @@
 package com.njydsz.common.safe.alert;
 
-import com.njydsz.common.safe.ip.IpAccessService;
-import jakarta.annotation.PreDestroy;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -10,10 +8,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
+import jakarta.annotation.PreDestroy;
+
+import com.njydsz.common.safe.ip.IpAccessService;
 
 /**
  * 安全事件自动响应聚合器

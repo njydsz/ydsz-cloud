@@ -1,5 +1,15 @@
 package com.njydsz.common.search.service;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.search.config.SearchProperties;
 import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.IndexOperation;
@@ -10,14 +20,6 @@ import com.njydsz.common.search.provider.ProviderTypeBridge;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderRegistry;
 import com.njydsz.common.search.sync.PersistentDeadLetterQueue;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicInteger;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 /**
  * 索引同步服务接口。

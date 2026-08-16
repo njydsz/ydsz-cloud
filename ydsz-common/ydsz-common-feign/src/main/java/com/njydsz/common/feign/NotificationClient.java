@@ -1,13 +1,14 @@
 package com.njydsz.common.feign;
 
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.feign.dto.BroadcastRequestDTO;
 import com.njydsz.common.feign.dto.PushRealtimeRequestDTO;
 import com.njydsz.common.feign.dto.RealtimePushDTO;
 import com.njydsz.common.feign.fallback.NotificationClientFallbackFactory;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 /**
  * 通知中心 Feign 客户端（通用通知能力）。

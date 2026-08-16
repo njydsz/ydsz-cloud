@@ -1,13 +1,15 @@
 package com.njydsz.common.socket.ratelimit;
 
+import java.time.Duration;
+
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.redis.constant.RedisScriptConstants;
 import com.njydsz.common.socket.config.WebSocketProperties;
 import com.njydsz.common.socket.resilience.WebSocketCircuitBreaker;
-import java.time.Duration;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
 
 /**
  * WebSocket 消息速率限制器（Redis-based）。

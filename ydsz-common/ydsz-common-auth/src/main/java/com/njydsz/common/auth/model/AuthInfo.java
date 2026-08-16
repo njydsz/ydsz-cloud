@@ -1,10 +1,11 @@
 package com.njydsz.common.auth.model;
 
-import com.njydsz.common.core.model.CurrentUser;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+
+import com.njydsz.common.core.model.CurrentUser;
 
 /**
  * 认证信息完整接口

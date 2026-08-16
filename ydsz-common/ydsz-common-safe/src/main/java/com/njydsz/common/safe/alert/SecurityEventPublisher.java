@@ -3,6 +3,7 @@ package com.njydsz.common.safe.alert;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
+
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;

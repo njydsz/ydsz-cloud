@@ -1,19 +1,21 @@
 package com.njydsz.common.exception.openapi;
 
-import com.njydsz.common.exception.code.ErrorCodeTable;
-import com.njydsz.common.exception.enums.ExceptionCode;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+import org.springdoc.core.customizers.OpenApiCustomizer;
+import org.springframework.context.MessageSource;
+import lombok.extern.slf4j.Slf4j;
 import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.media.StringSchema;
 import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.responses.ApiResponses;
-import java.util.Comparator;
-import java.util.LinkedHashSet;
-import java.util.Set;
-import lombok.extern.slf4j.Slf4j;
-import org.springdoc.core.customizers.OpenApiCustomizer;
-import org.springframework.context.MessageSource;
+
+import com.njydsz.common.exception.code.ErrorCodeTable;
+import com.njydsz.common.exception.enums.ExceptionCode;
 
 /**
  * SpringDoc OpenAPI 错误码文档自动增强器。

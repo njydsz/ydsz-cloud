@@ -1,11 +1,13 @@
 package com.njydsz.common.auth.model;
 
-import com.njydsz.common.auth.annotation.AuthColPermission;
-import com.njydsz.common.auth.service.ColumnPermissionResolver;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+
 import lombok.Getter;
+
+import com.njydsz.common.auth.annotation.AuthColPermission;
+import com.njydsz.common.auth.service.ColumnPermissionResolver;
 
 /**
  * 列权限信息载体。

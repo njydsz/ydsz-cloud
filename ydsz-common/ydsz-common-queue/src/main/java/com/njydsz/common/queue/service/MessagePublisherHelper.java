@@ -1,7 +1,8 @@
 package com.njydsz.common.queue.service;
 
-import com.njydsz.common.queue.domain.QueueMessage;
 import java.util.List;
+
+import com.njydsz.common.queue.domain.QueueMessage;
 
 /**
  * 发布者辅助工具类。

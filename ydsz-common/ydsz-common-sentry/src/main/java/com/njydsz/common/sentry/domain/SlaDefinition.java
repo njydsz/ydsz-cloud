@@ -3,6 +3,7 @@ package com.njydsz.common.sentry.domain;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+
 import lombok.Data;
 
 /**

@@ -1,15 +1,16 @@
 package com.njydsz.common.web.interceptor;
 
+import org.slf4j.Logger;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.base.interceptor.BaseRequestLogInterceptor;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.common.web.config.WebTraceProperties;
 import com.njydsz.common.web.metrics.WebMetrics;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 
 /**
  * Web 端请求日志拦截器

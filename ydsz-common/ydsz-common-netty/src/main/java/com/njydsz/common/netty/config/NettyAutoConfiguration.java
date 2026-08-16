@@ -1,18 +1,8 @@
 package com.njydsz.common.netty.config;
 
-import com.njydsz.common.netty.client.AbstractNettyClient;
-import com.njydsz.common.netty.endpoint.NettyActuatorEndpoint;
-import com.njydsz.common.netty.event.ChannelEventDispatcher;
-import com.njydsz.common.netty.event.ChannelEventListener;
-import com.njydsz.common.netty.health.NettyHealthIndicator;
-import com.njydsz.common.netty.metric.NettyChannelMetrics;
-import com.njydsz.common.netty.pool.NettyEventLoopPool;
-import com.njydsz.common.netty.server.AbstractNettyServer;
-import com.njydsz.common.netty.server.NettyServerLifecycle;
-import io.micrometer.core.instrument.MeterRegistry;
 import java.util.Collections;
 import java.util.List;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanPostProcessor;
@@ -22,6 +12,18 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import lombok.extern.slf4j.Slf4j;
+import io.micrometer.core.instrument.MeterRegistry;
+
+import com.njydsz.common.netty.client.AbstractNettyClient;
+import com.njydsz.common.netty.endpoint.NettyActuatorEndpoint;
+import com.njydsz.common.netty.event.ChannelEventDispatcher;
+import com.njydsz.common.netty.event.ChannelEventListener;
+import com.njydsz.common.netty.health.NettyHealthIndicator;
+import com.njydsz.common.netty.metric.NettyChannelMetrics;
+import com.njydsz.common.netty.pool.NettyEventLoopPool;
+import com.njydsz.common.netty.server.AbstractNettyServer;
+import com.njydsz.common.netty.server.NettyServerLifecycle;
 
 /**
  * Netty 自动装配配置。

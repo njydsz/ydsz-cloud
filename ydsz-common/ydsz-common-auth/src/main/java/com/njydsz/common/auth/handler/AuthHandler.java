@@ -1,8 +1,9 @@
 package com.njydsz.common.auth.handler;
 
-import com.njydsz.common.auth.model.AuthInfo;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+
+import com.njydsz.common.auth.model.AuthInfo;
 
 /**
  * 认证信息处理接口

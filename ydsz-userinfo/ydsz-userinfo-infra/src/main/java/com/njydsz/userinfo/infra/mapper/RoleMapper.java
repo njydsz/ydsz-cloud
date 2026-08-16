@@ -1,8 +1,9 @@
 package com.njydsz.userinfo.infra.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.userinfo.domain.entity.Role;
 import org.apache.ibatis.annotations.Mapper;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+
+import com.njydsz.userinfo.domain.entity.Role;
 
 /**
  * 角色 Mapper 接口

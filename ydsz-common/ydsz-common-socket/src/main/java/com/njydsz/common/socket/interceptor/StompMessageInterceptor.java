@@ -1,17 +1,18 @@
 package com.njydsz.common.socket.interceptor;
 
-import com.njydsz.common.socket.audit.WebSocketAuditService;
-import com.njydsz.common.socket.constant.WebSocketConstants;
-import com.njydsz.common.socket.ratelimit.WebSocketRateLimiter;
-import com.njydsz.common.socket.trace.WebSocketTraceContext;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.util.StringUtils;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.socket.audit.WebSocketAuditService;
+import com.njydsz.common.socket.constant.WebSocketConstants;
+import com.njydsz.common.socket.ratelimit.WebSocketRateLimiter;
+import com.njydsz.common.socket.trace.WebSocketTraceContext;
 
 /**
  * STOMP 消息拦截器（P3-1）。

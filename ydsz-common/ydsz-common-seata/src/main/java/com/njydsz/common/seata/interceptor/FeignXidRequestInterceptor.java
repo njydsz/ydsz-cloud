@@ -1,10 +1,11 @@
 package com.njydsz.common.seata.interceptor;
 
-import com.njydsz.common.seata.api.XidPropagator;
-import feign.RequestInterceptor;
-import feign.RequestTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import feign.RequestInterceptor;
+import feign.RequestTemplate;
+
+import com.njydsz.common.seata.api.XidPropagator;
 
 /**
  * Feign 请求拦截器 - 上游服务 XID 传播

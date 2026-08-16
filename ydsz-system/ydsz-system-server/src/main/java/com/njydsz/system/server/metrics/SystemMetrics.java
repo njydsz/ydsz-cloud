@@ -1,11 +1,13 @@
 package com.njydsz.system.server.metrics;
 
-import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
-import io.micrometer.core.instrument.MeterRegistry;
 import java.util.concurrent.TimeUnit;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
+import lombok.extern.slf4j.Slf4j;
+import io.micrometer.core.instrument.MeterRegistry;
+
+import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 
 /**
  * 系统模块 Micrometer 指标采集器

@@ -1,5 +1,13 @@
 package com.njydsz.common.file.storage;
 
+import java.io.InputStream;
+import java.time.Duration;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+
+import org.springframework.web.multipart.MultipartFile;
+import jakarta.servlet.http.HttpServletResponse;
+
 import com.njydsz.common.file.callback.UploadProgressListener;
 import com.njydsz.common.file.domain.BatchDeleteResult;
 import com.njydsz.common.file.domain.ChunkedUploadResult;
@@ -15,12 +23,6 @@ import com.njydsz.common.file.storage.platform.ObsStorage;
 import com.njydsz.common.file.storage.platform.OssStorage;
 import com.njydsz.common.file.storage.platform.QiniuStorage;
 import com.njydsz.common.file.storage.platform.S3Storage;
-import jakarta.servlet.http.HttpServletResponse;
-import java.io.InputStream;
-import java.time.Duration;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 文件存储统一抽象接口

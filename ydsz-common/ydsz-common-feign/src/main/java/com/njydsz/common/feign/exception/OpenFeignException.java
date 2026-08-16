@@ -1,8 +1,9 @@
 package com.njydsz.common.feign.exception;
 
+import lombok.Getter;
+
 import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.SysException;
-import lombok.Getter;
 
 /**
  * Feign 调用通用异常。

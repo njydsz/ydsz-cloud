@@ -1,18 +1,20 @@
 package com.njydsz.common.file.lifecycle;
 
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.scheduling.annotation.Scheduled;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.file.config.FileLifecycleProperties;
 import com.njydsz.common.file.domain.ListObjectsResult;
 import com.njydsz.common.file.domain.ObjectMetadata;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.List;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
 
 /**
  * 文件生命周期管理器

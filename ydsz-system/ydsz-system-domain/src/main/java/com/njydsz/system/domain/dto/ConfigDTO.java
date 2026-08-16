@@ -1,12 +1,13 @@
 package com.njydsz.system.domain.dto;
 
-import com.njydsz.common.safe.annotation.Xss;
-import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import io.swagger.v3.oas.annotations.media.Schema;
+
+import com.njydsz.common.safe.annotation.Xss;
 
 /**
  * 系统配置创建/更新 DTO

@@ -1,14 +1,15 @@
 package com.njydsz.common.audit.annotation;
 
-import com.njydsz.common.audit.aspect.AuditAspect;
-import com.njydsz.common.audit.enums.AuditAction;
-import com.njydsz.common.audit.enums.AuditType;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import com.njydsz.common.audit.aspect.AuditAspect;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * 审计日志方法标记注解

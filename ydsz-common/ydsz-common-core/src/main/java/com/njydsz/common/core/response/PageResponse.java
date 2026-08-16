@@ -1,10 +1,11 @@
 package com.njydsz.common.core.response;
 
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.code.ResultCode;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+
+import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.code.ResultCode;
 
 /**
  * 分页响应信封（{@link BaseResponse} 的子类型）。

@@ -1,15 +1,17 @@
 package com.njydsz.common.feign.aspect;
 
+import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import jakarta.servlet.http.HttpServletRequest;
+import feign.RequestInterceptor;
+import feign.RequestTemplate;
+
 import com.njydsz.common.feign.config.FeignProperties;
 import com.njydsz.common.util.http.RequestContextUtils;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.common.util.string.StringUtils;
-import feign.RequestInterceptor;
-import feign.RequestTemplate;
-import jakarta.servlet.http.HttpServletRequest;
-import java.util.Set;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Feign核心请求头透传拦截器

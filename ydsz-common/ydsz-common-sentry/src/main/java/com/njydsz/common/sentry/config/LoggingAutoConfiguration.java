@@ -1,5 +1,17 @@
 package com.njydsz.common.sentry.config;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import jakarta.annotation.PreDestroy;
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.sentry.logging.AsyncLogPublisher;
 import com.njydsz.common.sentry.logging.DualLogPublisher;
 import com.njydsz.common.sentry.logging.ElkLogPublisher;
@@ -7,16 +19,6 @@ import com.njydsz.common.sentry.logging.LokiLogPublisher;
 import com.njydsz.common.sentry.logging.NoOpLogPublisher;
 import com.njydsz.common.sentry.resilience.CircuitBreaker;
 import com.njydsz.common.sentry.spi.LogPublisher;
-import jakarta.annotation.PreDestroy;
-import java.util.ArrayList;
-import java.util.List;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 /**
  * 日志发布器自动配置。

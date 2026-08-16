@@ -1,10 +1,11 @@
 package com.njydsz.common.safe.xss;
 
-import com.njydsz.common.util.string.StringUtils;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.njydsz.common.util.string.StringUtils;
 
 /**
  * EscapeUtils - HTML 转义工具类 (基于标准化实现)

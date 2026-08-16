@@ -1,15 +1,17 @@
 package com.njydsz.common.sentry.health;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.boot.actuate.info.Info;
+import org.springframework.boot.actuate.info.InfoContributor;
+import lombok.RequiredArgsConstructor;
+
 import com.njydsz.common.sentry.logging.AsyncLogPublisher;
 import com.njydsz.common.sentry.logging.DualLogPublisher;
 import com.njydsz.common.sentry.spi.LogPublisher;
 import com.njydsz.common.sentry.spi.MetricsCollector;
 import com.njydsz.common.sentry.spi.TraceContext;
-import java.util.HashMap;
-import java.util.Map;
-import lombok.RequiredArgsConstructor;
-import org.springframework.boot.actuate.info.Info;
-import org.springframework.boot.actuate.info.InfoContributor;
 
 /**
  * Sentry 模块运行时元数据暴露。

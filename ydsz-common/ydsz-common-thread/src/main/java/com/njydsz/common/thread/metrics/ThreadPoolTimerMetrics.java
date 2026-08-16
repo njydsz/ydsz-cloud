@@ -1,10 +1,11 @@
 package com.njydsz.common.thread.metrics;
 
+import java.util.concurrent.TimeUnit;
+
+import org.springframework.lang.Nullable;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
-import java.util.concurrent.TimeUnit;
-import org.springframework.lang.Nullable;
 
 /**
  * 平台线程池耗时指标绑定器。

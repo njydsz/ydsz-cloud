@@ -1,8 +1,9 @@
 package com.njydsz.common.exception.code;
 
+import lombok.Getter;
+
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.registry.YdszExceptionCode;
-import lombok.Getter;
 
 /**
  * 限流模块异常码。

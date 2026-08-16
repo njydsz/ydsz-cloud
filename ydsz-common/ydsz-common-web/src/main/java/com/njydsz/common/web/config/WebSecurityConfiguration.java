@@ -1,7 +1,5 @@
 package com.njydsz.common.web.config;
 
-import com.njydsz.common.web.handler.WebAccessDeniedHandler;
-import com.njydsz.common.web.handler.WebAuthenticationEntryPoint;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -13,6 +11,9 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
+
+import com.njydsz.common.web.handler.WebAccessDeniedHandler;
+import com.njydsz.common.web.handler.WebAuthenticationEntryPoint;
 
 /**
  * Web 端安全配置。

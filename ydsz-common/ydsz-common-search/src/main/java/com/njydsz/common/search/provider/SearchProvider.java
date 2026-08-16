@@ -1,11 +1,12 @@
 package com.njydsz.common.search.provider;
 
+import java.util.Collections;
+import java.util.List;
+
 import com.njydsz.common.search.api.SearchFilter;
 import com.njydsz.common.search.api.SearchHit;
 import com.njydsz.common.search.api.SearchRequest;
 import com.njydsz.common.search.core.IndexDocument;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * 搜索数据提供者 SPI。

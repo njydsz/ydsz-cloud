@@ -1,10 +1,11 @@
 package com.njydsz.system.server.service;
 
+import java.util.List;
+
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.dto.DictTypeDTO;
 import com.njydsz.system.domain.query.DictPageQuery;
 import com.njydsz.system.domain.vo.DictTypeVO;
-import java.util.List;
 
 /**
  * 字典类型 Service 接口

@@ -1,9 +1,10 @@
 package com.njydsz.common.docs.domain;
 
-import com.njydsz.common.docs.enums.ParseMode;
-import com.njydsz.common.docs.enums.ParseProfile;
 import lombok.Builder;
 import lombok.Data;
+
+import com.njydsz.common.docs.enums.ParseMode;
+import com.njydsz.common.docs.enums.ParseProfile;
 
 /**
  * 文档解析选项

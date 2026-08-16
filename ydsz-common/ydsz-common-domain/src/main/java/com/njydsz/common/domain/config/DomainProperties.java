@@ -1,7 +1,7 @@
 package com.njydsz.common.domain.config;
 
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import lombok.Data;
 
 /**
  * Domain 模块统一配置属性。

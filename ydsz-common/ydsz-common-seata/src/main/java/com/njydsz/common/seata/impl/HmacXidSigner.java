@@ -1,6 +1,5 @@
 package com.njydsz.common.seata.impl;
 
-import com.njydsz.common.seata.api.XidSigner;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -8,8 +7,11 @@ import java.time.Instant;
 import java.util.Base64;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.njydsz.common.seata.api.XidSigner;
 
 /**
  * HMAC-SHA256 XID 签名器实现

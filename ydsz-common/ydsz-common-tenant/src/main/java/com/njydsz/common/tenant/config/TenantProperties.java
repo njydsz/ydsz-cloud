@@ -1,8 +1,5 @@
 package com.njydsz.common.tenant.config;
 
-import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -10,9 +7,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import lombok.Data;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+
+import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
 
 /**
  * 多租户配置属性。

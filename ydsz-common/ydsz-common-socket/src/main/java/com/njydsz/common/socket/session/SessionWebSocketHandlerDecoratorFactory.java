@@ -2,6 +2,7 @@ package com.njydsz.common.socket.session;
 
 import java.security.Principal;
 import java.util.Map;
+
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.WebSocketSession;

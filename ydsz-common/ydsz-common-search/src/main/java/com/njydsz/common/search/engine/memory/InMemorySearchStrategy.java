@@ -1,5 +1,13 @@
 package com.njydsz.common.search.engine.memory;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.search.api.SearchHit;
 import com.njydsz.common.search.api.SearchRequest;
 import com.njydsz.common.search.api.SearchResponse;
@@ -9,12 +17,6 @@ import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.IndexStrategy;
 import com.njydsz.common.search.core.SearchStrategy;
 import com.njydsz.common.search.core.SuggestStrategy;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 内存搜索策略（测试 / 降级用）。

@@ -1,6 +1,7 @@
 package com.njydsz.common.file.domain;
 
 import java.util.Map;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

@@ -1,5 +1,16 @@
 package com.njydsz.common.notify.core;
 
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.njydsz.common.notify.aggregate.NotificationAggregator;
 import com.njydsz.common.notify.audit.NotifyAuditService;
 import com.njydsz.common.notify.channel.NotifyChannelStrategy;
@@ -11,15 +22,6 @@ import com.njydsz.common.notify.fallback.NotifyFallbackManager;
 import com.njydsz.common.notify.metrics.NotifyMetrics;
 import com.njydsz.common.notify.preference.NotifyPreferenceManager;
 import com.njydsz.common.notify.ratelimit.NotifyRateLimiterManager;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 统一消息通知服务实现。

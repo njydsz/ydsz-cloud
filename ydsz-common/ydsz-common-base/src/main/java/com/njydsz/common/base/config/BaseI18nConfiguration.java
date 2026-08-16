@@ -1,16 +1,18 @@
 package com.njydsz.common.base.config;
 
-import com.njydsz.common.base.i18n.MessageResolverHolder;
-import com.njydsz.common.base.i18n.MessageResolverRegistry;
-import com.njydsz.common.base.i18n.SpringMessageResolver;
 import java.util.List;
 import java.util.Locale;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
+
+import com.njydsz.common.base.i18n.MessageResolverHolder;
+import com.njydsz.common.base.i18n.MessageResolverRegistry;
+import com.njydsz.common.base.i18n.SpringMessageResolver;
 
 /**
  * 国际化配置基类（Web/App 共享）

@@ -1,17 +1,18 @@
 package com.njydsz.common.sentry.config;
 
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.sentry.spi.MetricsCollector;
 import com.njydsz.common.sentry.spi.TraceContext;
 import com.njydsz.common.sentry.tracing.DefaultTraceContext;
 import com.njydsz.common.sentry.tracing.OpenTelemetryTraceContext;
 import com.njydsz.common.sentry.tracing.SkyWalkingTraceContext;
 import com.njydsz.common.sentry.tracing.SlowTraceDetector;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
 /**
  * 链路追踪自动配置。

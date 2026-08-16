@@ -2,9 +2,10 @@ package com.njydsz.gateway.config;
 
 import java.util.List;
 import java.util.Map;
-import lombok.Data;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
+import lombok.Data;
 
 /**
  * P3-7: 网关 API 版本管理配置属性

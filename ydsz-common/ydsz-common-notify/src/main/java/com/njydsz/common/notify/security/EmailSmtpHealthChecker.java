@@ -1,14 +1,16 @@
 package com.njydsz.common.notify.security;
 
-import com.njydsz.common.notify.config.NotifyProperties;
-import jakarta.mail.Session;
-import jakarta.mail.Transport;
 import java.util.Properties;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.StringUtils;
+import jakarta.mail.Session;
+import jakarta.mail.Transport;
+
+import com.njydsz.common.notify.config.NotifyProperties;
 
 /**
  * SMTP 连接池预热与健康探活（P0-2）

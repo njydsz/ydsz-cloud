@@ -1,8 +1,8 @@
 package com.njydsz.common.audit.config;
 
-import jakarta.validation.constraints.Min;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
+import jakarta.validation.constraints.Min;
 
 /**
  * 审计模块配置属性

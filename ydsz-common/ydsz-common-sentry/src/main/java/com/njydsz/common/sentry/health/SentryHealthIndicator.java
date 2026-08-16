@@ -1,14 +1,15 @@
 package com.njydsz.common.sentry.health;
 
+import org.springframework.boot.health.contributor.Health;
+import org.springframework.boot.health.contributor.HealthIndicator;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.sentry.logging.AsyncLogPublisher;
 import com.njydsz.common.sentry.logging.DualLogPublisher;
 import com.njydsz.common.sentry.spi.LogPublisher;
 import com.njydsz.common.sentry.spi.MetricsCollector;
 import com.njydsz.common.sentry.spi.TraceContext;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.health.contributor.Health;
-import org.springframework.boot.health.contributor.HealthIndicator;
 
 /**
  * Sentry 模块整体健康检查

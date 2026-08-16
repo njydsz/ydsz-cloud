@@ -1,11 +1,13 @@
 package com.njydsz.userinfo.domain.dto.put;
 
-import com.njydsz.common.safe.annotation.Xss;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import java.io.Serial;
 import java.io.Serializable;
+
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
+
+import com.njydsz.common.safe.annotation.Xss;
 
 /**
  * 角色修改请求 DTO。

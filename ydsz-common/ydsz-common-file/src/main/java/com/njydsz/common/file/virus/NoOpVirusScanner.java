@@ -1,6 +1,7 @@
 package com.njydsz.common.file.virus;
 
 import java.io.InputStream;
+
 import lombok.extern.slf4j.Slf4j;
 
 /**

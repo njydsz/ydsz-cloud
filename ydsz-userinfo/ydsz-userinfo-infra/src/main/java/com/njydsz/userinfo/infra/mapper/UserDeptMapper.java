@@ -1,8 +1,9 @@
 package com.njydsz.userinfo.infra.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.userinfo.domain.entity.UserDept;
 import org.apache.ibatis.annotations.Mapper;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+
+import com.njydsz.userinfo.domain.entity.UserDept;
 
 /**
  * 用户-部门关联表 Mapper

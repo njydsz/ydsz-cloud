@@ -1,13 +1,15 @@
 package com.njydsz.system.api.fallback;
 
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.cloud.openfeign.FallbackFactory;
+import org.springframework.stereotype.Component;
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.system.api.client.DictClient;
-import java.util.List;
-import java.util.Map;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.openfeign.FallbackFactory;
-import org.springframework.stereotype.Component;
 
 /**
  * {@link DictClient} 的 FallbackFactory。

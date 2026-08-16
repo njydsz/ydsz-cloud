@@ -1,12 +1,14 @@
 package com.njydsz.common.queue.annotation;
 
-import com.njydsz.common.queue.config.QueueConfiguration;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
 import org.springframework.context.annotation.Import;
+
+import com.njydsz.common.queue.config.QueueConfiguration;
 
 /**
  * 启用ydsz消息队列模块

@@ -1,18 +1,20 @@
 package com.njydsz.common.queue.domain;
 
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.annotation.JsonClass;
-import com.njydsz.common.util.id.TracerUtils;
-import com.njydsz.common.util.string.StringUtils;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.annotation.JsonClass;
+import com.njydsz.common.util.id.TracerUtils;
+import com.njydsz.common.util.string.StringUtils;
 
 /**
  * 统一消息模型

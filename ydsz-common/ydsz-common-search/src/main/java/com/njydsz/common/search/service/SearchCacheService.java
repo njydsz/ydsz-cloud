@@ -1,8 +1,5 @@
 package com.njydsz.common.search.service;
 
-import com.njydsz.common.search.api.SearchRequest;
-import com.njydsz.common.search.api.SearchResponse;
-import com.njydsz.common.search.config.SearchProperties;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.ArrayList;
@@ -12,7 +9,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.search.api.SearchRequest;
+import com.njydsz.common.search.api.SearchResponse;
+import com.njydsz.common.search.config.SearchProperties;
 
 /**
  * 搜索缓存服务接口。

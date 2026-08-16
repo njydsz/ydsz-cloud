@@ -1,19 +1,21 @@
 package com.njydsz.common.web.handler;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.exception.code.SecurityExceptionCode;
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.message.MessageUtils;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.web.AuthenticationEntryPoint;
 
 /**
  * Web 端认证失败统一处理入口点

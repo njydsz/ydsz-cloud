@@ -1,10 +1,8 @@
 package com.njydsz.common.config;
 
-import com.njydsz.common.config.health.ConfigEncryptHealthIndicator;
-import com.njydsz.common.config.hotreload.ConfigChangeBridge;
-import com.njydsz.common.config.hotreload.ConfigChangeListener;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -16,6 +14,10 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.ConfigurableEnvironment;
+
+import com.njydsz.common.config.health.ConfigEncryptHealthIndicator;
+import com.njydsz.common.config.hotreload.ConfigChangeBridge;
+import com.njydsz.common.config.hotreload.ConfigChangeListener;
 
 /**
  * 配置增强自动配置

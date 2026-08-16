@@ -1,6 +1,7 @@
 package com.njydsz.common.jdbc.permission;
 
 import java.util.function.Supplier;
+
 import org.springframework.core.NamedThreadLocal;
 
 /**

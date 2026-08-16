@@ -1,16 +1,18 @@
 package com.njydsz.common.safe.filter;
 
-import com.njydsz.common.safe.xss.EscapeUtils;
-import com.njydsz.common.util.string.StringUtils;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import jakarta.servlet.ReadListener;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+
+import com.njydsz.common.safe.xss.EscapeUtils;
+import com.njydsz.common.util.string.StringUtils;
 
 /**
  * XSS 过滤请求包装器

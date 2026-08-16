@@ -1,7 +1,8 @@
 package com.njydsz.common.queue.service.impl;
 
-import com.njydsz.common.queue.service.DeadLetterQueueService;
 import java.util.List;
+
+import com.njydsz.common.queue.service.DeadLetterQueueService;
 
 /**
  * 空操作死信队列（默认降级）。

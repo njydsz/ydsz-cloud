@@ -1,16 +1,18 @@
 package com.njydsz.common.docs.parser.registry;
 
-import com.njydsz.common.docs.enums.DocumentFormat;
-import com.njydsz.common.docs.exception.DocumentException;
-import com.njydsz.common.docs.exception.DocumentExceptionCode;
-import com.njydsz.common.docs.parser.DocumentParser;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Component;
+import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.docs.enums.DocumentFormat;
+import com.njydsz.common.docs.exception.DocumentException;
+import com.njydsz.common.docs.exception.DocumentExceptionCode;
+import com.njydsz.common.docs.parser.DocumentParser;
 
 /**
  * 文档解析器注册表

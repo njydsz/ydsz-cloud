@@ -1,10 +1,11 @@
 package com.njydsz.system.infra.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.system.domain.entity.AppInfo;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+
+import com.njydsz.system.domain.entity.AppInfo;
 
 /**
  * 应用信息 Mapper

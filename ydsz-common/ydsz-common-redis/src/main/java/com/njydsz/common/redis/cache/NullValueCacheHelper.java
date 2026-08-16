@@ -1,10 +1,12 @@
 package com.njydsz.common.redis.cache;
 
-import com.njydsz.common.json.YdszJson;
 import java.time.Duration;
 import java.util.function.Supplier;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.data.redis.core.StringRedisTemplate;
+import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.json.YdszJson;
 
 /**
  * 缓存空值保护工具类

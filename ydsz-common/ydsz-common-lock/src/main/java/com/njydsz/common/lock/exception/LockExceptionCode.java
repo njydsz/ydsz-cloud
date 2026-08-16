@@ -1,8 +1,9 @@
 package com.njydsz.common.lock.exception;
 
+import lombok.Getter;
+
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.registry.YdszExceptionCode;
-import lombok.Getter;
 
 /**
  * 分布式锁模块异常码枚举。

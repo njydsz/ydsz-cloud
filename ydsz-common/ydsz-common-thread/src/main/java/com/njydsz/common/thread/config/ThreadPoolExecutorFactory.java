@@ -1,17 +1,12 @@
 package com.njydsz.common.thread.config;
 
-import com.njydsz.common.thread.config.ThreadPoolProperties.PoolConfig;
-import com.njydsz.common.thread.config.ThreadPoolProperties.RejectPolicy;
-import io.micrometer.core.instrument.MeterRegistry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-// CHECKSTYLE.OFF: IllegalImport — ThreadPoolExecutorFactory 为 ydsz-common-thread 线程池工厂（云顶规范 15.4
-// 明确豁免模块），需直接构造托管线程池
 import java.util.concurrent.Executors;
-// CHECKSTYLE.ON: IllegalImport
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -21,6 +16,10 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.task.TaskDecorator;
 import org.springframework.lang.NonNull;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import io.micrometer.core.instrument.MeterRegistry;
+
+import com.njydsz.common.thread.config.ThreadPoolProperties.PoolConfig;
+import com.njydsz.common.thread.config.ThreadPoolProperties.RejectPolicy;
 
 /**
  * 线程池执行器工厂。

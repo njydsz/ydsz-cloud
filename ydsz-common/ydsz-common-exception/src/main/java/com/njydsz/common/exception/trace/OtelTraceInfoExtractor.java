@@ -2,8 +2,9 @@ package com.njydsz.common.exception.trace;
 
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.lang.Nullable;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * OpenTelemetry 链路追踪信息提取器。

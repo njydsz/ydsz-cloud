@@ -1,12 +1,7 @@
 package com.njydsz.common.socket.config;
 
-import com.njydsz.common.socket.auth.WebSocketAuthInterceptor;
-import com.njydsz.common.socket.interceptor.StompMessageInterceptor;
-import com.njydsz.common.socket.session.LocalSessionRegistry;
-import com.njydsz.common.socket.session.SessionWebSocketHandlerDecoratorFactory;
 import java.util.List;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
@@ -16,6 +11,13 @@ import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBr
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.socket.auth.WebSocketAuthInterceptor;
+import com.njydsz.common.socket.interceptor.StompMessageInterceptor;
+import com.njydsz.common.socket.session.LocalSessionRegistry;
+import com.njydsz.common.socket.session.SessionWebSocketHandlerDecoratorFactory;
 
 /**
  * WebSocket STOMP 配置类。

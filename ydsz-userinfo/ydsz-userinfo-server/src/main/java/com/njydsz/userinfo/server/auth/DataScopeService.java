@@ -5,10 +5,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 
 import com.njydsz.common.util.string.StringUtils;
 import com.njydsz.userinfo.domain.entity.Role;
@@ -155,10 +155,8 @@ public class DataScopeService {
     if (userRoles.isEmpty()) {
       return Collections.emptyList();
     }
-    List<String> roleIds = userRoles.stream()
-        .map(UserRole::getRoleId)
-        .distinct()
-        .collect(Collectors.toList());
+    List<String> roleIds =
+        userRoles.stream().map(UserRole::getRoleId).distinct().collect(Collectors.toList());
     LambdaQueryWrapper<Role> roleWrapper = new LambdaQueryWrapper<>();
     roleWrapper.in(Role::getId, roleIds);
     roleWrapper.eq(Role::getStatus, "ENABLED");

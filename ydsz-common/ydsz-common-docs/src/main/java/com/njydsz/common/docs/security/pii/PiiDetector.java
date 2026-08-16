@@ -1,9 +1,10 @@
 package com.njydsz.common.docs.security.pii;
 
+import java.util.List;
+
 import com.njydsz.common.docs.domain.DocumentContent;
 import com.njydsz.common.docs.domain.PiiFinding;
 import com.njydsz.common.docs.enums.PiiType;
-import java.util.List;
 
 /**
  * PII 检测器接口

@@ -1,9 +1,10 @@
 package com.njydsz.common.seata.interceptor;
 
-import com.njydsz.common.seata.context.XidContextHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.task.TaskDecorator;
+
+import com.njydsz.common.seata.context.XidContextHolder;
 
 /**
  * Seata XID 线程池任务装饰器

@@ -1,11 +1,7 @@
 package com.njydsz.common.redis.service.multilevel;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.njydsz.common.redis.config.RedisProperties;
-import com.njydsz.common.redis.service.CacheProvider;
-import com.njydsz.common.redis.service.ops.RedisStringOps;
 import java.util.Objects;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -13,6 +9,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import lombok.extern.slf4j.Slf4j;
+import com.github.benmanes.caffeine.cache.Caffeine;
+
+import com.njydsz.common.redis.config.RedisProperties;
+import com.njydsz.common.redis.service.CacheProvider;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 /**
  * 多级缓存自动配置

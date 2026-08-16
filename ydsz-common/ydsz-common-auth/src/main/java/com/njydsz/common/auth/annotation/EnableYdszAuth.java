@@ -1,13 +1,15 @@
 package com.njydsz.common.auth.annotation;
 
-import com.njydsz.common.auth.config.AuthConfiguration;
-import com.njydsz.common.auth.config.AuthFilterConfiguration;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
 import org.springframework.context.annotation.Import;
+
+import com.njydsz.common.auth.config.AuthConfiguration;
+import com.njydsz.common.auth.config.AuthFilterConfiguration;
 
 /**
  * 启用ydsz权限管控模块注解

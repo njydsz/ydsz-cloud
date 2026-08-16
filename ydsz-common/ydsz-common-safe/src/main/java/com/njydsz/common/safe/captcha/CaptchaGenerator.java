@@ -1,6 +1,5 @@
 package com.njydsz.common.safe.captcha;
 
-import com.njydsz.common.redis.service.ops.RedisStringOps;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
@@ -11,9 +10,12 @@ import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.Base64;
 import javax.imageio.ImageIO;
+
+import org.springframework.lang.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.lang.Nullable;
+
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 /**
  * 图形验证码生成器（P1-12：从 userinfo CaptchaService 提取，下沉到 common-safe）。

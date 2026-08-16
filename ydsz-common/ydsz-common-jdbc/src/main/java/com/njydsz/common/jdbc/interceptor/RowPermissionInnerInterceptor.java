@@ -1,17 +1,13 @@
 package com.njydsz.common.jdbc.interceptor;
 
-import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import com.njydsz.common.core.constant.DataScopeConstants;
-import com.njydsz.common.jdbc.config.DataPermissionConfiguration;
-import com.njydsz.common.jdbc.monitor.SqlAstCache;
-import com.njydsz.common.jdbc.permission.DataPermissionContext;
-import com.njydsz.common.jdbc.permission.DataPermissionContextResolver;
-import com.njydsz.common.util.string.StringUtils;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import org.apache.ibatis.mapping.SqlCommandType;
 import lombok.extern.slf4j.Slf4j;
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.StringValue;
@@ -29,7 +25,13 @@ import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SetOperationList;
 import net.sf.jsqlparser.statement.update.Update;
-import org.apache.ibatis.mapping.SqlCommandType;
+
+import com.njydsz.common.core.constant.DataScopeConstants;
+import com.njydsz.common.jdbc.config.DataPermissionConfiguration;
+import com.njydsz.common.jdbc.monitor.SqlAstCache;
+import com.njydsz.common.jdbc.permission.DataPermissionContext;
+import com.njydsz.common.jdbc.permission.DataPermissionContextResolver;
+import com.njydsz.common.util.string.StringUtils;
 
 /**
  * 行级数据权限拦截器

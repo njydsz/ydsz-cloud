@@ -1,10 +1,11 @@
 package com.njydsz.common.exception.registry;
 
-import com.njydsz.common.exception.enums.ExceptionCategory;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import com.njydsz.common.exception.enums.ExceptionCategory;
 
 /**
  * 标注模块错误码枚举类。

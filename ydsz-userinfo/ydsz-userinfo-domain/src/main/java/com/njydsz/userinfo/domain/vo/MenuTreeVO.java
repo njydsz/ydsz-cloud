@@ -1,6 +1,7 @@
 package com.njydsz.userinfo.domain.vo;
 
 import java.util.List;
+
 import lombok.Data;
 
 /**

@@ -1,13 +1,15 @@
 package com.njydsz.common.sentry.metrics;
 
-import com.njydsz.common.sentry.spi.MetricsCollector;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.DoubleAdder;
 import java.util.concurrent.atomic.LongAdder;
+
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.sentry.spi.MetricsCollector;
 
 /**
  * 内存降级指标采集器

@@ -1,9 +1,10 @@
 package com.njydsz.common.auth.event;
 
-import com.njydsz.common.auth.service.RbacPermissionEvaluator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
+
+import com.njydsz.common.auth.service.RbacPermissionEvaluator;
 
 /**
  * 权限变更事件监听器

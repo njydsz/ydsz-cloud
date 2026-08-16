@@ -1,8 +1,9 @@
 package com.njydsz.common.web.config;
 
-import com.njydsz.common.base.config.BaseCorsProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
+
+import com.njydsz.common.base.config.BaseCorsProperties;
 
 /**
  * Web 端 CORS 跨域配置属性

@@ -1,8 +1,9 @@
 package com.njydsz.common.queue.delayed;
 
+import java.util.concurrent.TimeUnit;
+
 import com.njydsz.common.queue.domain.QueueMessage;
 import com.njydsz.common.queue.service.IMessagePublisher;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 延时消息发送器接口

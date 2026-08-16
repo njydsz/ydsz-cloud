@@ -1,14 +1,16 @@
 package com.njydsz.common.notify.preference;
 
+import java.time.Duration;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.notify.enums.NotifyChannel;
 import com.njydsz.common.notify.enums.NotifyType;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import java.time.Duration;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 通知偏好管理器（P3-12）

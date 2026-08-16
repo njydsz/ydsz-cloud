@@ -1,12 +1,8 @@
 package com.njydsz.gateway.filter;
 
-import com.njydsz.common.audit.event.GatewayAuditEventBridge;
-import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
-import com.njydsz.gateway.config.GatewayConstants;
-import com.njydsz.gateway.config.GatewayFilterOrder;
 import java.time.Instant;
 import java.util.Set;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -16,7 +12,13 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
+
+import com.njydsz.common.audit.event.GatewayAuditEventBridge;
+import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
+import com.njydsz.gateway.config.GatewayConstants;
+import com.njydsz.gateway.config.GatewayFilterOrder;
 
 /**
  * P2-2: 审计日志过滤器

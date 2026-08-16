@@ -1,8 +1,9 @@
 package com.njydsz.common.util.validate;
 
-import com.njydsz.common.util.api.Experimental;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
+
+import com.njydsz.common.util.api.Experimental;
 
 /**
  * 业务校验工具类

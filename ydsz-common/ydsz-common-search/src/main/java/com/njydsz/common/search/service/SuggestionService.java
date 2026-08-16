@@ -1,16 +1,18 @@
 package com.njydsz.common.search.service;
 
-import com.njydsz.common.search.analytics.SearchAnalyticsService;
-import com.njydsz.common.search.api.SearchSuggestion;
-import com.njydsz.common.search.config.SearchProperties;
-import com.njydsz.common.search.core.SearchEngineRegistry;
-import com.njydsz.common.search.core.SuggestStrategy;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.search.analytics.SearchAnalyticsService;
+import com.njydsz.common.search.api.SearchSuggestion;
+import com.njydsz.common.search.config.SearchProperties;
+import com.njydsz.common.search.core.SearchEngineRegistry;
+import com.njydsz.common.search.core.SuggestStrategy;
 
 /**
  * 搜索建议服务。

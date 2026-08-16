@@ -1,9 +1,9 @@
 package com.njydsz.common.jdbc.config;
 
-import jakarta.validation.constraints.Min;
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
+import jakarta.validation.constraints.Min;
+import lombok.Data;
 
 /**
  * 慢 SQL 监控配置属性

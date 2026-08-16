@@ -1,14 +1,15 @@
 package com.njydsz.common.app.interceptor;
 
+import org.slf4j.Logger;
+import org.springframework.stereotype.Component;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.app.config.AppTraceProperties;
 import com.njydsz.common.app.util.RequestIdGenerator;
 import com.njydsz.common.base.interceptor.BaseRequestLogInterceptor;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
-import jakarta.servlet.http.HttpServletRequest;
-import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.springframework.stereotype.Component;
 
 /**
  * App 端请求日志拦截器

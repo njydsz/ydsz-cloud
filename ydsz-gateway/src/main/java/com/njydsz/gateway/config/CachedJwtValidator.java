@@ -1,13 +1,5 @@
 package com.njydsz.gateway.config;
 
-import com.njydsz.common.auth.model.UserInfo;
-import com.njydsz.common.auth.token.TokenService;
-import com.njydsz.common.cache.YdszCache;
-import com.njydsz.common.cache.api.Cache;
-import com.njydsz.common.cache.builder.CacheType;
-import com.njydsz.common.safe.sensitive.SensitiveUtil;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -19,7 +11,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -32,7 +24,17 @@ import org.springframework.data.redis.core.StreamOperations;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer;
 import org.springframework.data.redis.stream.StreamMessageListenerContainer.StreamMessageListenerContainerOptions;
 import org.springframework.stereotype.Component;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
+
+import com.njydsz.common.auth.model.UserInfo;
+import com.njydsz.common.auth.token.TokenService;
+import com.njydsz.common.cache.YdszCache;
+import com.njydsz.common.cache.api.Cache;
+import com.njydsz.common.cache.builder.CacheType;
+import com.njydsz.common.safe.sensitive.SensitiveUtil;
 
 /**
  * P3-7: JWT 校验结果缓存（Redis Stream 广播版）

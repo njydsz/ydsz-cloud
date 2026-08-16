@@ -2,6 +2,7 @@ package com.njydsz.common.domain.query;
 
 import java.io.Serializable;
 import java.util.Locale;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

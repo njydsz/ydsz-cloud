@@ -1,9 +1,5 @@
 package com.njydsz.common.cache.internal.concurrent;
 
-import com.njydsz.common.cache.api.CachePolicy;
-import com.njydsz.common.cache.internal.AbstractCache;
-import com.njydsz.common.cache.listener.RemovalCause;
-import com.njydsz.common.cache.stats.CacheStats;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -16,8 +12,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.njydsz.common.cache.api.CachePolicy;
+import com.njydsz.common.cache.internal.AbstractCache;
+import com.njydsz.common.cache.listener.RemovalCause;
+import com.njydsz.common.cache.stats.CacheStats;
 
 /**
  * 分段锁高性能缓存（采样 LRU 淘汰版）。

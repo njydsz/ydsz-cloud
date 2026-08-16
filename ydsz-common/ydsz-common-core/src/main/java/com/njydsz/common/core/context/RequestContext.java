@@ -1,14 +1,16 @@
 package com.njydsz.common.core.context;
 
-import com.alibaba.ttl.TransmittableThreadLocal;
-import com.njydsz.common.core.constant.HeaderConstants;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.function.Supplier;
+
 import org.slf4j.MDC;
+import com.alibaba.ttl.TransmittableThreadLocal;
+
+import com.njydsz.common.core.constant.HeaderConstants;
 
 /**
  * 请求上下文持有者

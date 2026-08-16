@@ -2,8 +2,9 @@ package com.njydsz.common.safe.config;
 
 import java.util.ArrayList;
 import java.util.List;
-import lombok.Data;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import lombok.Data;
 
 /**
  * IP 黑白名单配置属性

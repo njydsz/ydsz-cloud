@@ -1,5 +1,11 @@
 package com.njydsz.common.sentry;
 
+import java.time.Duration;
+import java.util.Map;
+
+import org.springframework.stereotype.Component;
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.sentry.domain.AlertEvent;
 import com.njydsz.common.sentry.domain.SlaDefinition;
 import com.njydsz.common.sentry.spi.AlertPublisher;
@@ -7,10 +13,6 @@ import com.njydsz.common.sentry.spi.LogPublisher;
 import com.njydsz.common.sentry.spi.MetricsCollector;
 import com.njydsz.common.sentry.spi.SlaCollector;
 import com.njydsz.common.sentry.spi.TraceContext;
-import java.time.Duration;
-import java.util.Map;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 /**
  * 可观测性服务（Spring Bean）。

@@ -1,11 +1,12 @@
 package com.njydsz.common.excel.core.reader;
 
-import com.njydsz.common.excel.core.metadata.ReadMetadata;
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
+
+import com.njydsz.common.excel.core.metadata.ReadMetadata;
 
 /**
  * 输入源检测器 - 负责检测输入源类型和格式

@@ -1,5 +1,26 @@
 package com.njydsz.gateway.filter;
 
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.gateway.filter.GatewayFilterChain;
+import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.core.Ordered;
+import org.springframework.core.io.buffer.DataBuffer;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.http.server.reactive.ServerHttpResponse;
+import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
+import reactor.core.publisher.Mono;
+
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.service.ReactiveTokenBlacklistService;
 import com.njydsz.common.core.code.BaseResultCode;
@@ -18,25 +39,6 @@ import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.config.InternalHeaderSigner;
 import com.njydsz.gateway.config.PathGuard;
 import com.njydsz.gateway.config.SecurityHeadersProperties;
-import jakarta.annotation.PostConstruct;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.gateway.filter.GatewayFilterChain;
-import org.springframework.cloud.gateway.filter.GlobalFilter;
-import org.springframework.core.Ordered;
-import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.http.server.reactive.ServerHttpResponse;
-import org.springframework.stereotype.Component;
-import org.springframework.web.server.ServerWebExchange;
-import reactor.core.publisher.Mono;
 
 /**
  * 认证全局过滤器（P0-C5 安全加固 + P0-2 密钥分离 + P0-6 nonce 防重放）
@@ -146,11 +148,10 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
   /**
    * P3-7: 内部头签名密钥（独立配置，禁止复用 JWT 密钥）。
    *
-   * <p>配置项：{@code ydsz.gateway.internal-sign-secret}
-   * <br>环境变量：{@code YDSZ_GATEWAY_INTERNAL_SIGN_SECRET}
+   * <p>配置项：{@code ydsz.gateway.internal-sign-secret} <br>
+   * 环境变量：{@code YDSZ_GATEWAY_INTERNAL_SIGN_SECRET}
    *
-   * <p>P3-7: 移除对 {@code ydsz.jwt.secret} 的回退依赖。
-   * 密钥必须独立配置，未配置时启动将输出 ERROR 日志并拒绝签名。
+   * <p>P3-7: 移除对 {@code ydsz.jwt.secret} 的回退依赖。 密钥必须独立配置，未配置时启动将输出 ERROR 日志并拒绝签名。
    */
   @Value("${ydsz.gateway.internal-sign-secret:}")
   private String internalSignSecret;

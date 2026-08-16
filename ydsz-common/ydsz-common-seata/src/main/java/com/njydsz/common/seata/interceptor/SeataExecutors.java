@@ -2,10 +2,7 @@ package com.njydsz.common.seata.interceptor;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
-// CHECKSTYLE.OFF: IllegalImport — SeataExecutors 为 Seata 感知线程池工厂（云顶规范 15.4 授权实现层），需直接使用 Executors
-// 创建原始池并包装为 SeataDecoratorExecutorService
 import java.util.concurrent.Executors;
-// CHECKSTYLE.ON: IllegalImport
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 

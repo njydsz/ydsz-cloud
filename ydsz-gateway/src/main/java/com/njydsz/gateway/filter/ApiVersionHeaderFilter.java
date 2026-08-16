@@ -1,13 +1,10 @@
 package com.njydsz.gateway.filter;
 
-import com.njydsz.gateway.config.ApiVersionProperties;
-import com.njydsz.gateway.config.GatewayFilterOrder;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -17,7 +14,12 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
+
+import com.njydsz.gateway.config.ApiVersionProperties;
+import com.njydsz.gateway.config.GatewayFilterOrder;
 
 /**
  * P3-7: API 版本响应头注入过滤器（增强版：版本协商 + 弃用管理）

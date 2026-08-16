@@ -1,15 +1,17 @@
 package com.njydsz.common.base.health;
 
-import com.njydsz.common.base.i18n.MessageResolverHolder;
-import com.njydsz.common.core.constant.PageConstants;
 import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
+
+import com.njydsz.common.base.i18n.MessageResolverHolder;
+import com.njydsz.common.core.constant.PageConstants;
 
 /**
  * 核心健康指标（CoreHealthIndicator）

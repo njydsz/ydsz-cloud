@@ -1,9 +1,10 @@
 package com.njydsz.userinfo.domain.dto;
 
-import com.njydsz.common.domain.query.PageQuery;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+
+import com.njydsz.common.domain.query.PageQuery;
 
 /**
  * 用户分页查询参数 DTO。

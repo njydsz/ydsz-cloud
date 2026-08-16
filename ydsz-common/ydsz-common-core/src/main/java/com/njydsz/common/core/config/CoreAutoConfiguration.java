@@ -1,10 +1,9 @@
 package com.njydsz.common.core.config;
 
-import com.njydsz.common.core.constant.PageConstants;
-import com.njydsz.common.core.response.BaseResponse;
 import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.SmartInitializingSingleton;
@@ -15,6 +14,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
+
+import com.njydsz.common.core.constant.PageConstants;
+import com.njydsz.common.core.response.BaseResponse;
 
 /**
  * Core 模块自动配置类。

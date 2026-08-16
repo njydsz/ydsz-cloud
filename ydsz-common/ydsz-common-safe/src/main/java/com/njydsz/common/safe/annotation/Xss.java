@@ -1,12 +1,14 @@
 package com.njydsz.common.safe.annotation;
 
-import com.njydsz.common.safe.aspect.XssValidator;
-import jakarta.validation.Constraint;
-import jakarta.validation.Payload;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import jakarta.validation.Constraint;
+import jakarta.validation.Payload;
+
+import com.njydsz.common.safe.aspect.XssValidator;
 
 /**
  * XSS 防护验证注解

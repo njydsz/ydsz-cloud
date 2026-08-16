@@ -1,5 +1,8 @@
 package com.njydsz.common.exception.custom;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import com.njydsz.common.core.code.ResultCode;
 import com.njydsz.common.exception.code.IExceptionResultCode;
 import com.njydsz.common.exception.core.ExceptionContext;
@@ -7,8 +10,6 @@ import com.njydsz.common.exception.core.ExceptionInfo;
 import com.njydsz.common.exception.enums.ExceptionCategory;
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.enums.ExceptionLevel;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * 异常抽象基类

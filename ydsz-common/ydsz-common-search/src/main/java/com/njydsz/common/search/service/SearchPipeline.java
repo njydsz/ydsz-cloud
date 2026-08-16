@@ -1,11 +1,13 @@
 package com.njydsz.common.search.service;
 
-import com.njydsz.common.search.config.SearchProperties;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
+
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.search.config.SearchProperties;
 
 /**
  * 搜索管道 — 可插拔的文本处理 Filter 链模式。

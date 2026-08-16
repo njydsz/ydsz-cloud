@@ -1,18 +1,5 @@
 package com.njydsz.common.queue.mq.rabbit;
 
-import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.queue.domain.QueueMessage;
-import com.njydsz.common.queue.rate.ConsumerRateLimiter;
-import com.njydsz.common.queue.service.IMessageHandler;
-import com.njydsz.common.queue.service.IMessageSubscriber;
-import com.njydsz.common.queue.trace.MessageTracer;
-import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.DefaultConsumer;
-import com.rabbitmq.client.Envelope;
-import com.rabbitmq.client.GetResponse;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -21,7 +8,22 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+
 import lombok.extern.slf4j.Slf4j;
+import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.DefaultConsumer;
+import com.rabbitmq.client.Envelope;
+import com.rabbitmq.client.GetResponse;
+
+import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.queue.domain.QueueMessage;
+import com.njydsz.common.queue.rate.ConsumerRateLimiter;
+import com.njydsz.common.queue.service.IMessageHandler;
+import com.njydsz.common.queue.service.IMessageSubscriber;
+import com.njydsz.common.queue.trace.MessageTracer;
 
 /**
  * RabbitMQ 消息订阅者

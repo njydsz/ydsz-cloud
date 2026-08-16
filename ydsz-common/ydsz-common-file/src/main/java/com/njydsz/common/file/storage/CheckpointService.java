@@ -1,8 +1,10 @@
 package com.njydsz.common.file.storage;
 
-import com.njydsz.common.file.domain.UploadCheckpoint;
 import java.io.InputStream;
+
 import org.springframework.web.multipart.MultipartFile;
+
+import com.njydsz.common.file.domain.UploadCheckpoint;
 
 /**
  * 分片上传检查点服务接口

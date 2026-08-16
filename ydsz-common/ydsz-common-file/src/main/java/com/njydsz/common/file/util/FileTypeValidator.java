@@ -1,15 +1,17 @@
 package com.njydsz.common.file.util;
 
-import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.file.exception.FileExceptionCode;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
+import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.file.exception.FileExceptionCode;
 
 /**
  * 文件类型校验器（Spring Bean）。

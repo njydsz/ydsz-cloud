@@ -1,7 +1,8 @@
 package com.njydsz.common.app.config;
 
-import com.njydsz.common.base.config.BaseOpenApiConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+
+import com.njydsz.common.base.config.BaseOpenApiConfiguration;
 
 /**
  * App 子模块 OpenAPI 配置。

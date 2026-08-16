@@ -1,8 +1,9 @@
 package com.njydsz.common.safe.ratelimit.spi;
 
-import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
 import java.util.List;
 import java.util.Optional;
+
+import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
 
 /**
  * 限流规则提供器

@@ -1,10 +1,11 @@
 package com.njydsz.common.notify.template;
 
-import com.njydsz.common.notify.exception.NotifyException;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+
+import com.njydsz.common.notify.exception.NotifyException;
 
 /**
  * 模板变量校验器（P3-2）

@@ -1,13 +1,5 @@
 package com.njydsz.userinfo.api.assembler;
 
-import com.njydsz.common.cache.api.Cache;
-import com.njydsz.common.cache.builder.CacheBuilder;
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.feign.assembler.NameAssembler;
-import com.njydsz.common.feign.assembler.NameAssemblerProperties;
-import com.njydsz.common.feign.assembler.NameType;
-import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.userinfo.api.client.OrgQueryClient;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -16,8 +8,18 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.ObjectProvider;
+import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.cache.api.Cache;
+import com.njydsz.common.cache.builder.CacheBuilder;
+import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.feign.assembler.NameAssembler;
+import com.njydsz.common.feign.assembler.NameAssemblerProperties;
+import com.njydsz.common.feign.assembler.NameType;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.userinfo.api.client.OrgQueryClient;
 
 /**
  * 基于 ydsz-userinfo 服务的 {@link NameAssembler} 默认实现。

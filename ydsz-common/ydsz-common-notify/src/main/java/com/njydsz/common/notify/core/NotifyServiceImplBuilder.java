@@ -1,5 +1,8 @@
 package com.njydsz.common.notify.core;
 
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+
 import com.njydsz.common.notify.aggregate.NotificationAggregator;
 import com.njydsz.common.notify.audit.NotifyAuditService;
 import com.njydsz.common.notify.channel.NotifyChannelStrategy;
@@ -8,8 +11,6 @@ import com.njydsz.common.notify.fallback.NotifyFallbackManager;
 import com.njydsz.common.notify.metrics.NotifyMetrics;
 import com.njydsz.common.notify.preference.NotifyPreferenceManager;
 import com.njydsz.common.notify.ratelimit.NotifyRateLimiterManager;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
 
 /**
  * {@link NotifyServiceImpl} 构建器

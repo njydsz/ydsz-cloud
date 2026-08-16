@@ -1,9 +1,8 @@
 package com.njydsz.common.safe.health;
 
-import com.njydsz.common.safe.metrics.SafeMetrics;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -12,6 +11,9 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.stereotype.Component;
+import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.safe.metrics.SafeMetrics;
 
 /**
  * 安全模块健康检查指示器

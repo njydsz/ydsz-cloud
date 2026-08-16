@@ -1,11 +1,12 @@
 package com.njydsz.common.web.config;
 
-import com.njydsz.common.base.config.BaseTraceProperties;
-import com.njydsz.common.web.filter.TraceIdResponseFilter;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+import com.njydsz.common.base.config.BaseTraceProperties;
+import com.njydsz.common.web.filter.TraceIdResponseFilter;
 
 /**
  * Web 端请求追踪/日志配置属性

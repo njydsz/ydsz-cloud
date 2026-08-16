@@ -1,11 +1,12 @@
 package com.njydsz.common.seata.impl;
 
-import com.njydsz.common.seata.api.XidPropagator;
-import com.njydsz.common.seata.api.XidSigner;
-import com.njydsz.common.seata.context.XidContextHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
+
+import com.njydsz.common.seata.api.XidPropagator;
+import com.njydsz.common.seata.api.XidSigner;
+import com.njydsz.common.seata.context.XidContextHolder;
 
 /**
  * 默认 XID 传播器实现

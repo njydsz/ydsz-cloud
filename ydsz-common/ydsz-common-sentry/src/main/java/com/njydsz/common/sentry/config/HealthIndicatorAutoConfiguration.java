@@ -1,12 +1,5 @@
 package com.njydsz.common.sentry.config;
 
-import com.njydsz.common.sentry.health.SentryHealthIndicator;
-import com.njydsz.common.sentry.health.SentryInfoContributor;
-import com.njydsz.common.sentry.health.SystemResourceHealthIndicator;
-import com.njydsz.common.sentry.metrics.SystemMetricsCollector;
-import com.njydsz.common.sentry.spi.LogPublisher;
-import com.njydsz.common.sentry.spi.MetricsCollector;
-import com.njydsz.common.sentry.spi.TraceContext;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -14,6 +7,14 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import com.njydsz.common.sentry.health.SentryHealthIndicator;
+import com.njydsz.common.sentry.health.SentryInfoContributor;
+import com.njydsz.common.sentry.health.SystemResourceHealthIndicator;
+import com.njydsz.common.sentry.metrics.SystemMetricsCollector;
+import com.njydsz.common.sentry.spi.LogPublisher;
+import com.njydsz.common.sentry.spi.MetricsCollector;
+import com.njydsz.common.sentry.spi.TraceContext;
 
 /**
  * 健康检查自动配置。

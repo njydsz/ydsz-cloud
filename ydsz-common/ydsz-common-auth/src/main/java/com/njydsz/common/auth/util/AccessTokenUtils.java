@@ -1,12 +1,13 @@
 package com.njydsz.common.auth.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import jakarta.servlet.http.HttpServletRequest;
+
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.auth.context.AuthInfoUtils;
 import com.njydsz.common.util.http.RequestContextUtils;
 import com.njydsz.common.util.string.StringUtils;
-import jakarta.servlet.http.HttpServletRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * AccessToken 获取工具类。

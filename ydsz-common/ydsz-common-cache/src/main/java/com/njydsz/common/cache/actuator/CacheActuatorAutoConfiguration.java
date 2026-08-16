@@ -1,7 +1,7 @@
 package com.njydsz.common.cache.actuator;
 
-import com.njydsz.common.cache.api.Cache;
 import java.util.Map;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnAvailableEndpoint;
@@ -11,6 +11,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+
+import com.njydsz.common.cache.api.Cache;
 
 /**
  * 缓存 Actuator 端点自动配置

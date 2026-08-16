@@ -1,10 +1,12 @@
 package com.njydsz.common.base.config;
 
-import com.njydsz.common.base.constant.DocConstants;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.Data;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import lombok.Data;
+
+import com.njydsz.common.base.constant.DocConstants;
 
 /**
  * 文档配置属性类

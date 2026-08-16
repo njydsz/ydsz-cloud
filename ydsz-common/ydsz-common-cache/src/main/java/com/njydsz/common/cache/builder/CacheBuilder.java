@@ -1,5 +1,8 @@
 package com.njydsz.common.cache.builder;
 
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
+
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.api.LoadingCache;
 import com.njydsz.common.cache.internal.concurrent.StripedConcurrentCache;
@@ -11,8 +14,6 @@ import com.njydsz.common.cache.listener.RemovalListener;
 import com.njydsz.common.cache.support.CacheLoader;
 import com.njydsz.common.cache.support.CacheWriter;
 import com.njydsz.common.cache.support.Expiry;
-import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 缓存构建器 - 参考 Caffeine 的流畅构建器

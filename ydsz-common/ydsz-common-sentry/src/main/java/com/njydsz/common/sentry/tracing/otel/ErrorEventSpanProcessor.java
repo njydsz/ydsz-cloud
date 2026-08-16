@@ -1,5 +1,10 @@
 package com.njydsz.common.sentry.tracing.otel;
 
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
@@ -7,10 +12,6 @@ import io.opentelemetry.sdk.trace.ReadWriteSpan;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Span 错误事件处理器

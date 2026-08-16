@@ -1,11 +1,12 @@
 package com.njydsz.common.sentry.alerting;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.notify.core.NotifyService;
 import com.njydsz.common.notify.enums.NotifyChannel;
 import com.njydsz.common.sentry.domain.AlertEvent;
 import com.njydsz.common.sentry.domain.AlertSeverity;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 告警通知处理器

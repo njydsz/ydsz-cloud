@@ -1,15 +1,11 @@
 package com.njydsz.common.docs.security.scanner;
 
-import com.njydsz.common.docs.domain.SecurityScanResult;
-import com.njydsz.common.docs.enums.DocumentFormat;
-import com.njydsz.common.docs.enums.SecurityLevel;
-import com.njydsz.common.util.io.TempFileManager;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import lombok.extern.slf4j.Slf4j;
+
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
@@ -20,6 +16,12 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
+import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.docs.domain.SecurityScanResult;
+import com.njydsz.common.docs.enums.DocumentFormat;
+import com.njydsz.common.docs.enums.SecurityLevel;
+import com.njydsz.common.util.io.TempFileManager;
 
 /**
  * PDF 安全检测器

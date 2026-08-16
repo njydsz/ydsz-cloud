@@ -1,12 +1,13 @@
 package com.njydsz.common.exception.core;
 
-import com.njydsz.common.exception.enums.ExceptionCategory;
-import com.njydsz.common.exception.enums.ExceptionLevel;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import com.njydsz.common.exception.enums.ExceptionCategory;
+import com.njydsz.common.exception.enums.ExceptionLevel;
 
 /**
  * 异常上下文，封装 level / category / snapshot / extData / timestamp 元数据。

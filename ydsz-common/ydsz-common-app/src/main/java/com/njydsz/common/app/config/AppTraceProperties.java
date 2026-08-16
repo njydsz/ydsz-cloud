@@ -1,9 +1,10 @@
 package com.njydsz.common.app.config;
 
-import com.njydsz.common.base.config.BaseTraceProperties;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import com.njydsz.common.base.config.BaseTraceProperties;
 
 /**
  * App 端请求追踪 / 日志配置属性

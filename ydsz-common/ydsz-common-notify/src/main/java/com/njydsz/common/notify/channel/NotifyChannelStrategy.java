@@ -1,14 +1,16 @@
 package com.njydsz.common.notify.channel;
 
-import com.njydsz.common.notify.core.NotifySendResult;
-import com.njydsz.common.notify.enums.NotifyChannel;
-import com.njydsz.common.notify.template.TemplateEngine;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+
+import com.njydsz.common.notify.core.NotifySendResult;
+import com.njydsz.common.notify.enums.NotifyChannel;
+import com.njydsz.common.notify.template.TemplateEngine;
 
 /**
  * 通知渠道策略接口。

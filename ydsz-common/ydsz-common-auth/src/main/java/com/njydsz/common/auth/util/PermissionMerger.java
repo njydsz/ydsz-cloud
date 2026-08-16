@@ -1,10 +1,11 @@
 package com.njydsz.common.auth.util;
 
-import com.njydsz.common.auth.model.RolePermissions;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import com.njydsz.common.auth.model.RolePermissions;
 
 /**
  * 权限合并工具类

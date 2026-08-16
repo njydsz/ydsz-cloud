@@ -1,9 +1,11 @@
 package com.njydsz.common.docs.domain;
 
-import com.njydsz.common.docs.enums.SecurityLevel;
 import java.util.List;
+
 import lombok.Builder;
 import lombok.Data;
+
+import com.njydsz.common.docs.enums.SecurityLevel;
 
 /**
  * 安全扫描结果

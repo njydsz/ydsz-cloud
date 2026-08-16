@@ -1,21 +1,23 @@
 package com.njydsz.common.sentry.adapter;
 
-import com.njydsz.common.sentry.SentryApplicationContextUtils;
-import com.njydsz.common.sentry.SentryService;
-import com.njydsz.common.sentry.metrics.MicrometerMetricsCollector;
-import com.njydsz.common.sentry.spi.MetricsCollector;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tags;
-import io.micrometer.core.instrument.Timer;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.function.ToDoubleFunction;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Tags;
+import io.micrometer.core.instrument.Timer;
+
+import com.njydsz.common.sentry.SentryApplicationContextUtils;
+import com.njydsz.common.sentry.SentryService;
+import com.njydsz.common.sentry.metrics.MicrometerMetricsCollector;
+import com.njydsz.common.sentry.spi.MetricsCollector;
 
 /**
  * Sentry 指标适配器（兼容 AbstractModuleMetrics 风格的迁移桥梁）。

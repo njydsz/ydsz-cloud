@@ -1,13 +1,15 @@
 package com.njydsz.common.sentry.tracing;
 
-import com.njydsz.common.sentry.spi.MetricsCollector;
-import com.njydsz.common.sentry.spi.TraceContext;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
+
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.sentry.spi.MetricsCollector;
+import com.njydsz.common.sentry.spi.TraceContext;
 
 /**
  * 慢追踪检测器

@@ -1,11 +1,5 @@
 package com.njydsz.common.auth.handler;
 
-import com.njydsz.common.auth.model.AuthInfo;
-import com.njydsz.common.auth.model.YdszAuthInfo;
-import com.njydsz.common.auth.util.PermissionUtils;
-import com.njydsz.common.util.string.StringUtils;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedHashMap;
@@ -15,6 +9,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import com.njydsz.common.auth.model.AuthInfo;
+import com.njydsz.common.auth.model.YdszAuthInfo;
+import com.njydsz.common.auth.util.PermissionUtils;
+import com.njydsz.common.util.string.StringUtils;
 
 /**
  * 认证信息处理抽象基类

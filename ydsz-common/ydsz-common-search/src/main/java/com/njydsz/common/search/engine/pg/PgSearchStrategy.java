@@ -1,5 +1,22 @@
 package com.njydsz.common.search.engine.pg;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import javax.sql.DataSource;
+
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.search.api.SearchAggregation;
 import com.njydsz.common.search.api.SearchFilter;
@@ -13,21 +30,6 @@ import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.IndexStrategy;
 import com.njydsz.common.search.core.SearchStrategy;
 import com.njydsz.common.search.core.SuggestStrategy;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
-import javax.sql.DataSource;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 
 /**
  * 基于 PostgreSQL tsvector 的搜索策略实现。

@@ -1,8 +1,9 @@
 package com.njydsz.system.infra.repository;
 
-import com.njydsz.system.infra.mapper.ConfigMapper;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import lombok.RequiredArgsConstructor;
+
+import com.njydsz.system.infra.mapper.ConfigMapper;
 
 /**
  * 系统配置仓储。

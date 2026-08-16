@@ -1,14 +1,16 @@
 package com.njydsz.common.docs.security.pii.impl;
 
-import com.njydsz.common.docs.domain.DocumentContent;
-import com.njydsz.common.docs.domain.PiiFinding;
-import com.njydsz.common.docs.enums.PiiType;
-import com.njydsz.common.docs.security.pii.PiiDetector;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import org.springframework.stereotype.Component;
+
+import com.njydsz.common.docs.domain.DocumentContent;
+import com.njydsz.common.docs.domain.PiiFinding;
+import com.njydsz.common.docs.enums.PiiType;
+import com.njydsz.common.docs.security.pii.PiiDetector;
 
 /**
  * 护照号码检测器（中国因私护照）

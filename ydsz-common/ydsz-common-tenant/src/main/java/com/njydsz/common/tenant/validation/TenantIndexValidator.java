@@ -1,6 +1,5 @@
 package com.njydsz.common.tenant.validation;
 
-import com.njydsz.common.tenant.config.TenantProperties;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
@@ -11,11 +10,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.sql.DataSource;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.tenant.config.TenantProperties;
 
 /**
  * 租户表索引校验器。

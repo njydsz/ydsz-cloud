@@ -1,17 +1,19 @@
 package com.njydsz.common.lock.impl;
 
-import com.njydsz.common.cache.YdszCache;
-import com.njydsz.common.cache.api.Cache;
-import com.njydsz.common.cache.builder.CacheType;
-import com.njydsz.common.lock.core.DistributedLocker;
-import com.njydsz.common.lock.core.LockDegradationCallback;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
+
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.cache.YdszCache;
+import com.njydsz.common.cache.api.Cache;
+import com.njydsz.common.cache.builder.CacheType;
+import com.njydsz.common.lock.core.DistributedLocker;
+import com.njydsz.common.lock.core.LockDegradationCallback;
 
 /**
  * 锁降级策略实现 - Redis 不可用时自动降级为本地 ReentrantLock

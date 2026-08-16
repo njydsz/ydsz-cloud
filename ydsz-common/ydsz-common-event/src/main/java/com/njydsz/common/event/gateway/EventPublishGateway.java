@@ -1,7 +1,8 @@
 package com.njydsz.common.event.gateway;
 
-import com.njydsz.common.event.model.OutboxMessage;
 import java.util.List;
+
+import com.njydsz.common.event.model.OutboxMessage;
 
 /**
  * 事件投递网关 SPI

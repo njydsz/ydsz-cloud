@@ -2,6 +2,7 @@ package com.njydsz.common.safe.ratelimit.circuitbreaker;
 
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
+
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 

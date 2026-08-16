@@ -1,8 +1,9 @@
 package com.njydsz.common.queue.mq.rabbit;
 
-import com.njydsz.common.queue.config.QueueProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import com.njydsz.common.queue.config.QueueProperties;
 
 /**
  * RabbitMQ 消息队列配置属性

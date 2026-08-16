@@ -1,12 +1,11 @@
 package com.njydsz.common.safe.advice;
 
-import com.njydsz.common.safe.config.SafeXssProperties;
-import com.njydsz.common.safe.core.JsonBodyXssCleaner;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +17,9 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.RequestBodyAdviceAdapter;
+
+import com.njydsz.common.safe.config.SafeXssProperties;
+import com.njydsz.common.safe.core.JsonBodyXssCleaner;
 
 /**
  * XSS 请求体拦截器

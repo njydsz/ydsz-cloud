@@ -1,9 +1,10 @@
 package com.njydsz.userinfo.domain.query;
 
-import com.njydsz.common.domain.query.PageQuery;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+
+import com.njydsz.common.domain.query.PageQuery;
 
 /**
  * 部门分页查询参数，继承 {@link PageQuery} 提供分页基础字段。

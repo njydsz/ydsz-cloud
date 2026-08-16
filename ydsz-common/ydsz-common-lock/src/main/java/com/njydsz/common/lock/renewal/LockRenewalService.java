@@ -1,10 +1,12 @@
 package com.njydsz.common.lock.renewal;
 
-import com.njydsz.common.lock.annotation.LockType;
 import java.util.Collections;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
+import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.lock.annotation.LockType;
 
 /**
  * 分布式锁续期 SPI 服务。

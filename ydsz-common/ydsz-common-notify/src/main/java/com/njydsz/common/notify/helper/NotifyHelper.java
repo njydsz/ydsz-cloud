@@ -1,11 +1,13 @@
 package com.njydsz.common.notify.helper;
 
+import java.util.List;
+
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.notify.core.NotifyRequest;
 import com.njydsz.common.notify.core.NotifySendResult;
 import com.njydsz.common.notify.core.NotifyService;
 import com.njydsz.common.notify.enums.NotifyChannel;
-import java.util.List;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 统一通知辅助类 — 封装 NotifyService 的常用发送模式。

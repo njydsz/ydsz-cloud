@@ -1,12 +1,13 @@
 package com.njydsz.common.auth.annotation;
 
-import com.njydsz.common.auth.model.DataScopeAware;
-import com.njydsz.common.auth.model.DataScopeInfo;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import com.njydsz.common.auth.model.DataScopeAware;
+import com.njydsz.common.auth.model.DataScopeInfo;
 
 /**
  * 行级数据权限校验与注入注解。

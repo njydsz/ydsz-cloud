@@ -1,9 +1,10 @@
 package com.njydsz.common.sentry.tracing;
 
+import org.slf4j.MDC;
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.sentry.spi.TraceContext;
 import com.njydsz.common.util.id.IdGenerator;
-import lombok.extern.slf4j.Slf4j;
-import org.slf4j.MDC;
 
 /**
  * 默认追踪上下文（降级方案）

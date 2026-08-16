@@ -1,9 +1,5 @@
 package com.njydsz.common.docs.service;
 
-import com.njydsz.common.docs.config.DocsProperties;
-import com.njydsz.common.docs.domain.DocumentParseResult;
-import com.njydsz.common.docs.domain.ParseOptions;
-import com.njydsz.common.util.io.TempFileManager;
 import java.io.InputStream;
 import java.time.Duration;
 import java.util.List;
@@ -12,9 +8,15 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.function.Consumer;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.docs.config.DocsProperties;
+import com.njydsz.common.docs.domain.DocumentParseResult;
+import com.njydsz.common.docs.domain.ParseOptions;
+import com.njydsz.common.util.io.TempFileManager;
 
 /**
  * 异步文档解析器。

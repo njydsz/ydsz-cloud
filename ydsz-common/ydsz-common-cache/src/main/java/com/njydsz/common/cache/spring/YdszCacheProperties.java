@@ -1,15 +1,17 @@
 package com.njydsz.common.cache.spring;
 
-import com.njydsz.common.cache.builder.CacheType;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+
+import com.njydsz.common.cache.builder.CacheType;
 
 /**
  * YdszCache Spring Boot 配置属性

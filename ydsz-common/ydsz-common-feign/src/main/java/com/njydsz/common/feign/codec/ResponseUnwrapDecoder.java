@@ -1,14 +1,16 @@
 package com.njydsz.common.feign.codec;
 
-import com.njydsz.common.core.response.BaseResponse;
-import feign.Response;
-import feign.codec.DecodeException;
-import feign.codec.Decoder;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import feign.Response;
+import feign.codec.DecodeException;
+import feign.codec.Decoder;
+
+import com.njydsz.common.core.response.BaseResponse;
 
 /**
  * Feign 响应自动解包解码器

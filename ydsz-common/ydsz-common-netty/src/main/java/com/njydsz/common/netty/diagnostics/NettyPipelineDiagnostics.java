@@ -1,10 +1,11 @@
 package com.njydsz.common.netty.diagnostics;
 
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelPipeline;
 import java.util.ArrayList;
 import java.util.List;
+
 import lombok.extern.slf4j.Slf4j;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelPipeline;
 
 /**
  * Netty Pipeline 诊断工具。

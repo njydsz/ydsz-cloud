@@ -1,11 +1,13 @@
 package com.njydsz.common.event.health;
 
-import com.njydsz.common.event.model.OutboxStatus;
-import com.njydsz.common.event.repository.OutboxRepository;
 import java.time.Instant;
 import java.util.Map;
+
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
+
+import com.njydsz.common.event.model.OutboxStatus;
+import com.njydsz.common.event.repository.OutboxRepository;
 
 /**
  * Outbox 健康检查指标

@@ -1,9 +1,10 @@
 package com.njydsz.common.exception.custom;
 
-import com.njydsz.common.exception.enums.ExceptionCategory;
-import com.njydsz.common.exception.enums.ExceptionLevel;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import com.njydsz.common.exception.enums.ExceptionCategory;
+import com.njydsz.common.exception.enums.ExceptionLevel;
 
 /**
  * 异常构建器抽象基类

@@ -1,16 +1,18 @@
 package com.njydsz.common.thread.config;
 
-import com.njydsz.common.thread.metrics.ThreadPoolMetrics;
-import com.njydsz.common.thread.metrics.VirtualThreadMetrics;
-import jakarta.validation.constraints.AssertTrue;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import lombok.Data;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
+import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import lombok.Data;
+
+import com.njydsz.common.thread.metrics.ThreadPoolMetrics;
+import com.njydsz.common.thread.metrics.VirtualThreadMetrics;
 
 /**
  * 统一线程池配置属性。

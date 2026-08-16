@@ -1,14 +1,16 @@
 package com.njydsz.gateway.config;
 
-import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
-import io.micrometer.core.instrument.MeterRegistry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
+import lombok.extern.slf4j.Slf4j;
+import io.micrometer.core.instrument.MeterRegistry;
+
+import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 
 /**
  * 网关自定义 Prometheus 指标。

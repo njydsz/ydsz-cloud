@@ -1,8 +1,9 @@
 package com.njydsz.common.web.config;
 
-import com.njydsz.common.web.filter.ContentCachingFilter;
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import lombok.Data;
+
+import com.njydsz.common.web.filter.ContentCachingFilter;
 
 /**
  * Web 端请求体缓存配置属性

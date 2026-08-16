@@ -1,5 +1,17 @@
 package com.njydsz.common.core.response;
 
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
+
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
+
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.code.ResultCode;
 import com.njydsz.common.core.constant.HeaderConstants;
@@ -7,16 +19,6 @@ import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.json.annotation.JsonClass;
 import com.njydsz.common.json.annotation.JsonInclude;
 import com.njydsz.common.json.annotation.JsonPropertyOrder;
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.experimental.SuperBuilder;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 /**
  * 统一API返回结果封装类

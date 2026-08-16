@@ -1,11 +1,12 @@
 package com.njydsz.common.auth.security;
 
-import com.njydsz.common.util.id.IdGenerator;
-import com.njydsz.common.util.string.StringUtils;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+
+import com.njydsz.common.util.id.IdGenerator;
+import com.njydsz.common.util.string.StringUtils;
 
 /**
  * CSRF Token 验证器（双重提交 Cookie 模式）。

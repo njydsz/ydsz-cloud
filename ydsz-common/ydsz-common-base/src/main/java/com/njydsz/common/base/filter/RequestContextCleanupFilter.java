@@ -1,13 +1,15 @@
 package com.njydsz.common.base.filter;
 
-import com.njydsz.common.core.context.RequestContext;
+import java.io.IOException;
+
+import org.slf4j.MDC;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
-import java.io.IOException;
-import org.slf4j.MDC;
+
+import com.njydsz.common.core.context.RequestContext;
 
 /**
  * 请求上下文清理过滤器（Web/App 共享）

@@ -1,7 +1,8 @@
 package com.njydsz.common.app.util;
 
-import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import java.util.function.Supplier;
+
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
 
 /**
  * 请求 ID 生成器

@@ -1,18 +1,20 @@
 package com.njydsz.common.search.sync;
 
-import com.njydsz.common.search.core.IndexStrategy;
-import com.njydsz.common.search.core.SearchEngineRegistry;
-import com.njydsz.common.search.provider.ProviderTypeBridge;
-import com.njydsz.common.search.provider.SearchProvider;
-import com.njydsz.common.search.provider.SearchProviderRegistry;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.search.core.IndexStrategy;
+import com.njydsz.common.search.core.SearchEngineRegistry;
+import com.njydsz.common.search.provider.ProviderTypeBridge;
+import com.njydsz.common.search.provider.SearchProvider;
+import com.njydsz.common.search.provider.SearchProviderRegistry;
 
 /**
  * 索引一致性巡检器。

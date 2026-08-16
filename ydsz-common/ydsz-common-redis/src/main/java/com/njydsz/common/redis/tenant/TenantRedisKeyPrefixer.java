@@ -1,6 +1,7 @@
 package com.njydsz.common.redis.tenant;
 
 import java.util.function.Supplier;
+
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 

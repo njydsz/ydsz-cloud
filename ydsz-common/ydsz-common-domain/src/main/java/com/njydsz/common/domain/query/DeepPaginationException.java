@@ -1,6 +1,7 @@
 package com.njydsz.common.domain.query;
 
 import java.io.Serializable;
+
 import lombok.Getter;
 
 /**

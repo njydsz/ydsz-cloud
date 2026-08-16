@@ -1,10 +1,11 @@
 package com.njydsz.common.auth.service;
 
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
+
 import com.njydsz.common.auth.config.AuthProperties;
 import com.njydsz.common.auth.model.RolePermissions;
 import com.njydsz.common.cache.support.Expiry;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 角色权限缓存过期策略。

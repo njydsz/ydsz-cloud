@@ -1,5 +1,13 @@
 package com.njydsz.common.queue.queue;
 
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.data.redis.core.RedisTemplate;
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.queue.config.QueueProperties;
 import com.njydsz.common.queue.enums.QueueType;
@@ -9,12 +17,6 @@ import com.njydsz.common.queue.mq.rabbit.RabbitMQ;
 import com.njydsz.common.queue.mq.rabbit.RabbitMQProperties;
 import com.njydsz.common.queue.mq.rocket.RocketMQ;
 import com.njydsz.common.queue.mq.rocket.RocketMQProperties;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.data.redis.core.RedisTemplate;
 
 /**
  * 消息队列工厂类

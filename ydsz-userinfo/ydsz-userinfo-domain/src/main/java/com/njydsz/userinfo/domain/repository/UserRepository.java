@@ -1,8 +1,9 @@
 package com.njydsz.userinfo.domain.repository;
 
-import com.njydsz.userinfo.domain.entity.UserAccount;
 import java.util.List;
 import java.util.Optional;
+
+import com.njydsz.userinfo.domain.entity.UserAccount;
 
 /**
  * 用户聚合仓储接口（DDD Repository Pattern）。

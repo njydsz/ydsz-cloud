@@ -1,7 +1,8 @@
 package com.njydsz.common.socket.serialize;
 
-import com.njydsz.common.json.YdszJson;
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.json.YdszJson;
 
 /**
  * JSON 消息序列化器默认实现（P3-5）。

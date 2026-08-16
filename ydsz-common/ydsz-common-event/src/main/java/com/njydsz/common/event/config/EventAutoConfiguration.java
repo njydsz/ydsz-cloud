@@ -1,17 +1,5 @@
 package com.njydsz.common.event.config;
 
-import com.njydsz.common.event.admin.OutboxAdminService;
-import com.njydsz.common.event.gateway.EventPublishGateway;
-import com.njydsz.common.event.gateway.NoopEventPublishGateway;
-import com.njydsz.common.event.gateway.RocketMqEventPublishGateway;
-import com.njydsz.common.event.health.OutboxHealthIndicator;
-import com.njydsz.common.event.processor.OutboxProcessor;
-import com.njydsz.common.event.repository.OutboxRepository;
-import com.njydsz.common.event.service.OutboxService;
-import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import io.micrometer.core.instrument.MeterRegistry;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -24,6 +12,19 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import io.micrometer.core.instrument.MeterRegistry;
+
+import com.njydsz.common.event.admin.OutboxAdminService;
+import com.njydsz.common.event.gateway.EventPublishGateway;
+import com.njydsz.common.event.gateway.NoopEventPublishGateway;
+import com.njydsz.common.event.gateway.RocketMqEventPublishGateway;
+import com.njydsz.common.event.health.OutboxHealthIndicator;
+import com.njydsz.common.event.processor.OutboxProcessor;
+import com.njydsz.common.event.repository.OutboxRepository;
+import com.njydsz.common.event.service.OutboxService;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
 
 /**
  * Outbox 事件模块自动配置

@@ -1,6 +1,21 @@
 package com.njydsz.system.server.service.impl;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.springframework.cache.CacheManager;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+
 import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.exception.custom.BusinessException;
@@ -12,19 +27,6 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.infra.mapper.DictItemMapper;
 import com.njydsz.system.server.service.DictItemBatchService;
 import com.njydsz.system.server.service.DictVersionService;
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.ibatis.session.SqlSessionFactory;
-import org.springframework.cache.CacheManager;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 字典项批量操作 Service 实现
@@ -36,8 +38,8 @@ import org.springframework.transaction.annotation.Transactional;
  * <ul>
  *   <li>批量插入：N 次单条 INSERT → 1 次批量 INSERT（{@link DictItemMapper#insertBatch}）
  *   <li>单次快照：N 次版本快照 → 每个 typeCode 1 次快照（批量前一次性抓取）
- *   <li>统一缓存失效：使用 {@link CacheManager} 清空本地缓存（{@link CacheConstants#SYSTEM_DICT_ITEM_CACHE}），
- *       与 {@link DictItemServiceImpl} 的 {@code @CacheEvict(allEntries = true)} 行为一致
+ *   <li>统一缓存失效：使用 {@link CacheManager} 清空本地缓存（{@link CacheConstants#SYSTEM_DICT_ITEM_CACHE}）， 与
+ *       {@link DictItemServiceImpl} 的 {@code @CacheEvict(allEntries = true)} 行为一致
  * </ul>
  *
  * <p><b>SQL 优化效果：</b>500 条数据从原来的 2000+ SQL 降低到 ~10 SQL（1 次唯一性校验 + 1 次快照 + 1 次批量插入 + 若干缓存失效）。

@@ -1,9 +1,10 @@
 package com.njydsz.common.notify.core;
 
-import com.njydsz.common.notify.enums.NotifyChannel;
-import com.njydsz.common.notify.enums.NotifyPriority;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+
+import com.njydsz.common.notify.enums.NotifyChannel;
+import com.njydsz.common.notify.enums.NotifyPriority;
 
 /**
  * 统一消息通知服务接口

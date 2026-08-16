@@ -1,11 +1,12 @@
 package com.njydsz.common.redis.enums;
 
-import com.njydsz.common.util.string.StringUtils;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import com.njydsz.common.util.string.StringUtils;
 
 /**
  * Redis Key 枚举类

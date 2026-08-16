@@ -1,19 +1,21 @@
 package com.njydsz.common.domain.query;
 
-import static lombok.AccessLevel.PROTECTED;
+import java.util.ArrayList;
+import java.util.List;
 
-import com.njydsz.common.core.constant.PageConstants;
-import com.njydsz.common.json.annotation.JsonIgnore;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import java.util.ArrayList;
-import java.util.List;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.core.constant.PageConstants;
+import com.njydsz.common.json.annotation.JsonIgnore;
+
+import static lombok.AccessLevel.PROTECTED;
 
 /**
  * 分页查询参数封装类。

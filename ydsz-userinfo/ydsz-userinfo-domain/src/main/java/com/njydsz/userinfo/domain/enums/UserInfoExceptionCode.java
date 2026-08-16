@@ -1,8 +1,9 @@
 package com.njydsz.userinfo.domain.enums;
 
+import lombok.Getter;
+
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.registry.YdszExceptionCode;
-import lombok.Getter;
 
 /**
  * 用户信息中心模块异常码枚举。

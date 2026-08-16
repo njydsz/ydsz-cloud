@@ -1,9 +1,11 @@
 package com.njydsz.gateway.config;
 
-import com.njydsz.common.core.constant.HeaderConstants;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import com.njydsz.common.core.constant.HeaderConstants;
 
 /**
  * 网关 CORS 跨域配置属性

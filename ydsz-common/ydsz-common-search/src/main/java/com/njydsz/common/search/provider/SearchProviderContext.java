@@ -1,6 +1,7 @@
 package com.njydsz.common.search.provider;
 
 import java.util.List;
+
 import lombok.Builder;
 import lombok.Data;
 

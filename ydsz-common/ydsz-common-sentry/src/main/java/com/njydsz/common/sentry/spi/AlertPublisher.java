@@ -1,7 +1,8 @@
 package com.njydsz.common.sentry.spi;
 
-import com.njydsz.common.sentry.domain.AlertEvent;
 import java.util.List;
+
+import com.njydsz.common.sentry.domain.AlertEvent;
 
 /**
  * 告警发布器 SPI

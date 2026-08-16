@@ -1,9 +1,11 @@
 package com.njydsz.common.tenant.config;
 
-import com.njydsz.common.tenant.annotation.TenantColumnScanner;
 import java.util.Map;
+
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+
+import com.njydsz.common.tenant.annotation.TenantColumnScanner;
 
 /**
  * 注解扫描结果回填器。

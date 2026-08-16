@@ -10,11 +10,13 @@ package com.njydsz.common.jdbc.config;
  * @author ydsz-team
  * @since 1.0.0
  */
-import com.njydsz.common.jdbc.enums.InterceptTableStrategy;
 import java.util.HashSet;
 import java.util.Set;
-import lombok.Data;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import lombok.Data;
+
+import com.njydsz.common.jdbc.enums.InterceptTableStrategy;
 
 /**
  * DataPermissionConfiguration 自动配置类，注册模块 Bean 并管理装配条件。

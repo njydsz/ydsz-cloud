@@ -1,9 +1,5 @@
 package com.njydsz.gateway.config;
 
-import com.alibaba.cloud.nacos.NacosConfigManager;
-import com.alibaba.nacos.api.config.listener.Listener;
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.type.JsonType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -11,13 +7,19 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.cloud.gateway.event.RefreshRoutesEvent;
 import org.springframework.cloud.gateway.route.RouteDefinition;
 import org.springframework.cloud.gateway.route.RouteDefinitionRepository;
 import org.springframework.context.ApplicationEventPublisher;
+import lombok.extern.slf4j.Slf4j;
+import com.alibaba.cloud.nacos.NacosConfigManager;
+import com.alibaba.nacos.api.config.listener.Listener;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.type.JsonType;
 
 /**
  * Nacos 动态路由仓库（P3-7 增强版：配置校验）

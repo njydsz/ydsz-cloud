@@ -1,8 +1,8 @@
 package com.njydsz.common.web.config;
 
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.util.unit.DataSize;
+import lombok.Data;
 
 /**
  * Web 端文件上传（Multipart）配置属性

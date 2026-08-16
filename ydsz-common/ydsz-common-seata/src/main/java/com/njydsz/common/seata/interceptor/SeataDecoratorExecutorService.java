@@ -1,6 +1,5 @@
 package com.njydsz.common.seata.interceptor;
 
-import com.njydsz.common.seata.context.XidContextHolder;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -10,8 +9,11 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.njydsz.common.seata.context.XidContextHolder;
 
 /**
  * Seata 感知的 ExecutorService 包装器

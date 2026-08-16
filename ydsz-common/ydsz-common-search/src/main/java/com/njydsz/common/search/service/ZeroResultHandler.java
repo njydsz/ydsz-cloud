@@ -1,12 +1,14 @@
 package com.njydsz.common.search.service;
 
+import java.util.Collections;
+import java.util.List;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.search.analytics.SearchAnalyticsService;
 import com.njydsz.common.search.api.SearchRequest;
 import com.njydsz.common.search.config.SearchProperties;
-import java.util.Collections;
-import java.util.List;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 零结果页体验优化处理器。

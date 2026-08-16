@@ -1,12 +1,13 @@
 package com.njydsz.common.safe.ratelimit.annotation;
 
-import com.njydsz.common.safe.ratelimit.enums.RateLimitAlgorithm;
-import com.njydsz.common.safe.ratelimit.enums.RateLimitDimension;
-import com.njydsz.common.safe.ratelimit.enums.RateLimitMode;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import com.njydsz.common.safe.ratelimit.enums.RateLimitAlgorithm;
+import com.njydsz.common.safe.ratelimit.enums.RateLimitDimension;
+import com.njydsz.common.safe.ratelimit.enums.RateLimitMode;
 
 /**
  * 限流注解

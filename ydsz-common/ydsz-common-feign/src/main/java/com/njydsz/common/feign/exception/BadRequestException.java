@@ -1,9 +1,10 @@
 package com.njydsz.common.feign.exception;
 
-import com.njydsz.common.exception.code.CoreExceptionCode;
-import com.njydsz.common.exception.custom.SysException;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import com.njydsz.common.exception.code.CoreExceptionCode;
+import com.njydsz.common.exception.custom.SysException;
 
 /**
  * 请求参数异常。

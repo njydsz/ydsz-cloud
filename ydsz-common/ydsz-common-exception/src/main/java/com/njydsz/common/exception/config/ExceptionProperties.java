@@ -1,12 +1,13 @@
 package com.njydsz.common.exception.config;
 
-import jakarta.validation.constraints.NotBlank;
 import java.util.Collections;
 import java.util.List;
-import lombok.Getter;
-import lombok.Setter;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
+import jakarta.validation.constraints.NotBlank;
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * 异常处理模块配置属性

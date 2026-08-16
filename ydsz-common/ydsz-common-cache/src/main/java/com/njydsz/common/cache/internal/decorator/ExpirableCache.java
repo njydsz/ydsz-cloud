@@ -1,13 +1,5 @@
 package com.njydsz.common.cache.internal.decorator;
 
-import com.njydsz.common.cache.api.Cache;
-import com.njydsz.common.cache.api.CachePolicy;
-import com.njydsz.common.cache.listener.RemovalCause;
-import com.njydsz.common.cache.listener.RemovalListener;
-import com.njydsz.common.cache.stats.CacheStats;
-import com.njydsz.common.cache.support.AsyncFunction;
-import com.njydsz.common.cache.support.CacheThreadPoolManager;
-import com.njydsz.common.cache.support.Expiry;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -30,8 +22,18 @@ import java.util.concurrent.atomic.LongAdder;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.njydsz.common.cache.api.Cache;
+import com.njydsz.common.cache.api.CachePolicy;
+import com.njydsz.common.cache.listener.RemovalCause;
+import com.njydsz.common.cache.listener.RemovalListener;
+import com.njydsz.common.cache.stats.CacheStats;
+import com.njydsz.common.cache.support.AsyncFunction;
+import com.njydsz.common.cache.support.CacheThreadPoolManager;
+import com.njydsz.common.cache.support.Expiry;
 
 /**
  * 过期缓存装饰器 — 为任意基础缓存叠加 TTL 过期能力
