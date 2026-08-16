@@ -42,6 +42,7 @@ import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
 import com.njydsz.userinfo.infra.mapper.UserRoleMapper;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
+import com.njydsz.userinfo.server.service.LoginAttemptContext;
 import com.njydsz.userinfo.server.service.LoginHistoryService;
 
 /**

@@ -102,7 +102,7 @@ public class AuditFallbackWriter {
    */
   public synchronized void writeToFallback(AuditLog auditLog) {
     if (diskFallbackFailed) {
-      LOG.error("【审计兜底】磁盘兜底已失效, 审计日志将丢失, id={}", AUDIT_LOG.getId());
+      LOG.error("【审计兜底】磁盘兜底已失效, 审计日志将丢失, id={}", auditLog.getId());
       return;
     }
 
@@ -119,7 +119,7 @@ public class AuditFallbackWriter {
       checkAndRollFile();
     } catch (IOException e) {
       diskFallbackFailed = true;
-      LOG.error("【审计兜底】磁盘兜底写入失败, 审计日志将丢失, id={}, error={}", AUDIT_LOG.getId(), e.getMessage(), e);
+      LOG.error("【审计兜底】磁盘兜底写入失败, 审计日志将丢失, id={}, error={}", auditLog.getId(), e.getMessage(), e);
       closeCurrentWriter();
     }
   }

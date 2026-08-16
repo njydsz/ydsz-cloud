@@ -127,40 +127,40 @@ public class AuditEventListener {
     AuditLog auditLog = new AuditLog();
 
     // 基础标识
-    AUDIT_LOG.setId(String.valueOf(snowflakeIdGenerator.nextId()));
-    AUDIT_LOG.setOperationTime(LocalDateTime.now());
-    AUDIT_LOG.setCreatedAt(LocalDateTime.now());
+    auditLog.setId(String.valueOf(snowflakeIdGenerator.nextId()));
+    auditLog.setOperationTime(LocalDateTime.now());
+    auditLog.setCreatedAt(LocalDateTime.now());
 
     // 操作人信息
-    AUDIT_LOG.setOperatorId(event.getUserId());
-    AUDIT_LOG.setOperatorName(event.getUsername());
+    auditLog.setOperatorId(event.getUserId());
+    auditLog.setOperatorName(event.getUsername());
 
     // 模块与内容
-    AUDIT_LOG.setModule(event.getModule());
-    AUDIT_LOG.setContent(truncate(event.getRequestUrl(), MAX_CONTENT_LENGTH));
+    auditLog.setModule(event.getModule());
+    auditLog.setContent(truncate(event.getRequestUrl(), MAX_CONTENT_LENGTH));
 
     // 审计类型与行为（默认 OPERATION，action 存储语义字符串）
-    AUDIT_LOG.setAuditType(AuditType.OPERATION.getCode());
-    AUDIT_LOG.setAction(resolveActionCode(event.getAction()));
+    auditLog.setAuditType(AuditType.OPERATION.getCode());
+    auditLog.setAction(resolveActionCode(event.getAction()));
 
     // 业务关联
-    AUDIT_LOG.setBusinessNo(event.getBizId());
+    auditLog.setBusinessNo(event.getBizId());
 
     // 请求上下文
-    AUDIT_LOG.setIpAddress(event.getClientIp());
-    AUDIT_LOG.setRequestParams(event.getParamsJson());
-    AUDIT_LOG.setResponseResult(event.getResponseJson());
+    auditLog.setIpAddress(event.getClientIp());
+    auditLog.setRequestParams(event.getParamsJson());
+    auditLog.setResponseResult(event.getResponseJson());
 
     // 状态映射：SUCCESS → 1, FAILED/其他 → 0
-    AUDIT_LOG.setStatus(
+    auditLog.setStatus(
         isSuccess(event.getStatus())
             ? AuditStatus.SUCCESS.getCode()
             : AuditStatus.FAILURE.getCode());
 
-    AUDIT_LOG.setErrorMessage(event.getErrorMessage());
-    AUDIT_LOG.setCostTime(event.getCostMs());
-    AUDIT_LOG.setTraceId(event.getTraceId());
-    AUDIT_LOG.setTenantId(event.getTenantId());
+    auditLog.setErrorMessage(event.getErrorMessage());
+    auditLog.setCostTime(event.getCostMs());
+    auditLog.setTraceId(event.getTraceId());
+    auditLog.setTenantId(event.getTenantId());
 
     return auditLog;
   }
@@ -174,27 +174,27 @@ public class AuditEventListener {
   private AuditLog convertFromDataExport(DataExportAuditEvent event) {
     AuditLog auditLog = new AuditLog();
 
-    AUDIT_LOG.setId(String.valueOf(snowflakeIdGenerator.nextId()));
-    AUDIT_LOG.setOperationTime(LocalDateTime.now());
-    AUDIT_LOG.setCreatedAt(LocalDateTime.now());
+    auditLog.setId(String.valueOf(snowflakeIdGenerator.nextId()));
+    auditLog.setOperationTime(LocalDateTime.now());
+    auditLog.setCreatedAt(LocalDateTime.now());
 
-    AUDIT_LOG.setOperatorId(event.getUserId());
-    AUDIT_LOG.setOperatorName(event.getUsername());
+    auditLog.setOperatorId(event.getUserId());
+    auditLog.setOperatorName(event.getUsername());
 
-    AUDIT_LOG.setModule(event.getExportModule());
-    AUDIT_LOG.setContent(
+    auditLog.setModule(event.getExportModule());
+    auditLog.setContent(
         (event.getRowCount() != null)
             ? "导出[" + event.getExportModule() + "]共" + event.getRowCount() + "行数据"
             : "导出[" + event.getExportModule() + "]");
 
-    AUDIT_LOG.setAuditType(AuditType.OPERATION.getCode());
-    AUDIT_LOG.setAction(AuditAction.EXPORT.getCode());
-    AUDIT_LOG.setBusinessNo(event.getBizId());
+    auditLog.setAuditType(AuditType.OPERATION.getCode());
+    auditLog.setAction(AuditAction.EXPORT.getCode());
+    auditLog.setBusinessNo(event.getBizId());
 
-    AUDIT_LOG.setIpAddress(event.getClientIp());
-    AUDIT_LOG.setStatus(AuditStatus.SUCCESS.getCode());
-    AUDIT_LOG.setTraceId(event.getTraceId());
-    AUDIT_LOG.setTenantId(event.getTenantId());
+    auditLog.setIpAddress(event.getClientIp());
+    auditLog.setStatus(AuditStatus.SUCCESS.getCode());
+    auditLog.setTraceId(event.getTraceId());
+    auditLog.setTenantId(event.getTenantId());
 
     return auditLog;
   }

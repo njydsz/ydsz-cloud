@@ -155,7 +155,7 @@ public class JdbcAuditStorage implements AuditWriter {
       Map<String, Object> params = buildParamMap(auditLog);
       namedParameterJdbcTemplate.update(sql, params);
     } catch (Exception e) {
-      throw new AuditWriteException("审计日志单条写入失败 id=" + AUDIT_LOG.getId(), e);
+      throw new AuditWriteException("审计日志单条写入失败 id=" + auditLog.getId(), e);
     }
   }
 
@@ -223,9 +223,9 @@ public class JdbcAuditStorage implements AuditWriter {
 
   /** 根据审计日志解析目标表名 */
   private String resolveTableName(AuditLog auditLog) {
-    LocalDateTime time = AUDIT_LOG.getOperationTime();
+    LocalDateTime time = auditLog.getOperationTime();
     if (time == null) {
-      time = AUDIT_LOG.getCreatedAt();
+      time = auditLog.getCreatedAt();
     }
     return tableNameResolver.resolve(time);
   }
@@ -262,32 +262,32 @@ public class JdbcAuditStorage implements AuditWriter {
   /** 构建 NamedParameterJdbcTemplate 参数 Map */
   private Map<String, Object> buildParamMap(AuditLog auditLog) {
     Map<String, Object> params = new HashMap<>(18);
-    params.put("id", AUDIT_LOG.getId());
-    params.put("auditType", AUDIT_LOG.getAuditType());
-    params.put("action", AUDIT_LOG.getAction());
-    params.put("status", AUDIT_LOG.getStatus());
-    params.put("module", AUDIT_LOG.getModule());
-    params.put("content", AUDIT_LOG.getContent());
-    params.put("businessNo", AUDIT_LOG.getBusinessNo());
-    params.put("operatorId", AUDIT_LOG.getOperatorId());
-    params.put("operatorName", AUDIT_LOG.getOperatorName());
-    params.put("ipAddress", AUDIT_LOG.getIpAddress());
-    params.put("requestParams", AUDIT_LOG.getRequestParams());
-    params.put("responseResult", AUDIT_LOG.getResponseResult());
-    params.put("errorMessage", AUDIT_LOG.getErrorMessage());
-    params.put("costTime", AUDIT_LOG.getCostTime());
-    params.put("appKey", AUDIT_LOG.getAppKey());
-    params.put("tenantId", AUDIT_LOG.getTenantId());
-    params.put("traceId", AUDIT_LOG.getTraceId());
+    params.put("id", auditLog.getId());
+    params.put("auditType", auditLog.getAuditType());
+    params.put("action", auditLog.getAction());
+    params.put("status", auditLog.getStatus());
+    params.put("module", auditLog.getModule());
+    params.put("content", auditLog.getContent());
+    params.put("businessNo", auditLog.getBusinessNo());
+    params.put("operatorId", auditLog.getOperatorId());
+    params.put("operatorName", auditLog.getOperatorName());
+    params.put("ipAddress", auditLog.getIpAddress());
+    params.put("requestParams", auditLog.getRequestParams());
+    params.put("responseResult", auditLog.getResponseResult());
+    params.put("errorMessage", auditLog.getErrorMessage());
+    params.put("costTime", auditLog.getCostTime());
+    params.put("appKey", auditLog.getAppKey());
+    params.put("tenantId", auditLog.getTenantId());
+    params.put("traceId", auditLog.getTraceId());
     params.put(
         "operationTime",
-        AUDIT_LOG.getOperationTime() != null
-            ? Timestamp.valueOf(AUDIT_LOG.getOperationTime())
+        auditLog.getOperationTime() != null
+            ? Timestamp.valueOf(auditLog.getOperationTime())
             : new Timestamp(System.currentTimeMillis()));
     params.put(
         "createdAt",
-        AUDIT_LOG.getCreatedAt() != null
-            ? Timestamp.valueOf(AUDIT_LOG.getCreatedAt())
+        auditLog.getCreatedAt() != null
+            ? Timestamp.valueOf(auditLog.getCreatedAt())
             : new Timestamp(System.currentTimeMillis()));
     return params;
   }
