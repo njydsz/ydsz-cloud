@@ -3,6 +3,8 @@ package com.njydsz.common.safe.config;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.springframework.http.server.reactive.ServerHttpResponse;
+
 /**
  * 安全响应头配置器（P1-1：从 Gateway AuthGlobalFilter 提取，供 WebFlux/Servlet 双栈共用）。
  *
@@ -89,6 +91,20 @@ public final class SecurityHeaderConfigurer {
         }
 
         return headers;
+    }
+
+    /**
+     * 将安全头写入 WebFlux 响应（Gateway 场景直接调用）。
+     *
+     * @param response   WebFlux 响应对象
+     * @param properties 安全头配置
+     */
+    public static void applyWebFluxHeaders(ServerHttpResponse response, SecurityHeaderProperties properties) {
+        if (response == null || properties == null) {
+            return;
+        }
+        Map<String, String> headers = computeHeaders(properties);
+        headers.forEach((name, value) -> response.getHeaders().add(name, value));
     }
 
     /**

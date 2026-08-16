@@ -24,6 +24,8 @@ import org.springframework.web.server.ServerWebExchange;
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.service.ReactiveTokenBlacklistService;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.safe.config.SecurityHeaderConfigurer;
+import com.njydsz.common.safe.config.SecurityHeaderProperties;
 import com.njydsz.common.safe.crypto.NonceCache;
 import com.njydsz.gateway.config.CachedJwtValidator;
 import com.njydsz.gateway.config.GatewayConstants;

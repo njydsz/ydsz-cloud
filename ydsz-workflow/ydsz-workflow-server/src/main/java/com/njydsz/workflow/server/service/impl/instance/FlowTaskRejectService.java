@@ -18,9 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
-import com.njydsz.common.event.model.OutboxMessage;
-import com.njydsz.common.event.service.OutboxService;
+import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
@@ -83,8 +83,8 @@ public class FlowTaskRejectService {
     private final FlowDefinitionCacheService definitionCacheService;
     /** P2-3: Prometheus 指标（可能为 null：测试环境） */
     private final FlowMetrics flowMetrics;
-    /** P0-2: 事务性 Outbox 事件服务（可选，未配置时为 null） */
-    private final ObjectProvider<OutboxService> outboxServiceProvider;
+    /** 统一领域事件发布门面（可选依赖，未配置时安全降级） */
+    private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
 
     /**
      * 驳回任务。
@@ -194,30 +194,26 @@ public class FlowTaskRejectService {
      * @param dto      任务操作 DTO（携带驳回原因、操作人等）
      */
     private void publishRejectedEvent(FlowInstance instance, FlowTaskOperateDTO dto) {
-        OutboxService outboxService = outboxServiceProvider.getIfAvailable();
-        if (outboxService == null) {
-            log.debug("[Flow] OutboxService 未配置，跳过 REJECTED 事件: instanceId={}", instance.getId());
+        DomainEventPublisher publisher = eventPublisherProvider.getIfAvailable();
+        if (publisher == null) {
+            log.debug("[Flow] DomainEventPublisher 未配置，跳过 REJECTED 事件: instanceId={}", instance.getId());
             return;
         }
-        try {
-            Map<String, Object> payload = new HashMap<>();
-            payload.put("instanceId", instance.getId());
-            payload.put("flowTitle", instance.getTitle() != null ? instance.getTitle() : instance.getFlowName());
-            payload.put("flowCode", instance.getFlowCode());
-            payload.put("businessType", instance.getBusinessType() != null ? instance.getBusinessType() : "");
-            payload.put("businessId", instance.getBusinessId() != null ? instance.getBusinessId() : "");
-            payload.put("initiatorId", instance.getInitiatorId() != null ? instance.getInitiatorId() : "");
-            payload.put("rejectReason", dto.getComment() != null ? dto.getComment() : "未提供原因");
-            payload.put("operatorId", dto.getUserId() != null ? dto.getUserId() : "");
-            outboxService.appendToOutbox(OutboxMessage.builder()
-                    .aggregateType("FlowInstance")
-                    .aggregateId(instance.getId())
-                    .eventType(DomainEventTypes.FLOW_INSTANCE_REJECTED)
-                    .payload(YdszJson.toJson(payload)));
-        } catch (Exception e) {
-            log.warn("[Flow] 发布 REJECTED Outbox 事件失败: instanceId={} err={}",
-                    instance.getId(), e.getMessage());
-        }
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("instanceId", instance.getId());
+        metadata.put("flowTitle", instance.getTitle() != null ? instance.getTitle() : instance.getFlowName());
+        metadata.put("flowCode", instance.getFlowCode());
+        metadata.put("businessType", instance.getBusinessType() != null ? instance.getBusinessType() : "");
+        metadata.put("businessId", instance.getBusinessId() != null ? instance.getBusinessId() : "");
+        metadata.put("initiatorId", instance.getInitiatorId() != null ? instance.getInitiatorId() : "");
+        metadata.put("rejectReason", dto.getComment() != null ? dto.getComment() : "未提供原因");
+        metadata.put("operatorId", dto.getUserId() != null ? dto.getUserId() : "");
+        publisher.publish(DomainEvent.builder()
+                .aggregateType("FlowInstance")
+                .aggregateId(instance.getId())
+                .eventType(DomainEventTypes.FLOW_INSTANCE_REJECTED)
+                .metadata(metadata)
+                .build());
     }
 
     /**

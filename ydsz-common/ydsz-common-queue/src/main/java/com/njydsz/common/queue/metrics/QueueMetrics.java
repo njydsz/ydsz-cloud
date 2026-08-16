@@ -4,35 +4,39 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
- * 消息队列监控指标
+ * 队列基础设施监控指标（技术维度）。
  *
- * <p>提供消息发布和消费的实时监控指标，包括：
+ * <p>提供队列 publish/consume 层面的通用技术监控，包括：
  * <ul>
  *   <li>发布 QPS / 消费 QPS</li>
- *   <li>发布延迟 / 消费延迟</li>
+ *   <li>发布延迟 / 消费延迟（avg/max）</li>
  *   <li>消息积压量</li>
  *   <li>成功/失败次数</li>
  * </ul>
  *
+ * <p>与业务模块的 MessageMetrics（ydsz-message-server）职责分离：
+ * <ul>
+ *   <li><b>本类（QueueMetrics）</b>：队列技术层监控，不依赖 Spring/Micrometer，纯 POJO 实现。</li>
+ *   <li><b>MessageMetrics</b>：业务层监控（继承 AbstractModuleMetrics + Micrometer），
+ *       面向业务运营（send/retry/dead/receipt 等业务语义指标）。</li>
+ * </ul>
+ *
  * <p><b>使用示例：</b>
  * <pre>{@code
- * MessageMetrics metrics = new MessageMetrics("my-queue");
+ * QueueMetrics metrics = new QueueMetrics("order-queue", "redis");
  *
  * // 在发布时记录
- * metrics.recordPublish(success, latencyMs);
+ * metrics.recordPublish(true, 15L);
  *
- * // 在消费时记录
- * metrics.recordConsume(success, latencyMs);
- *
- * // 获取监控数据
- * log.info("Publish QPS: {}", metrics.getAvgPublishQps());
- * log.info("Consume QPS: {}", metrics.getAvgConsumeQps());
+ * // 获取监控摘要
+ * log.info("Queue stats: {}", metrics.getSummary());
  * }</pre>
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see com.njydsz.common.queue.manager.QueueManager
  */
-public class MessageMetrics {
+public class QueueMetrics {
 
     private final String queueName;
     private final String queueType;
@@ -61,7 +65,7 @@ public class MessageMetrics {
      * @param queueName 队列名称
      * @param queueType 队列类型（如 redis, kafka 等）
      */
-    public MessageMetrics(String queueName, String queueType) {
+    public QueueMetrics(String queueName, String queueType) {
         this.queueName = queueName;
         this.queueType = queueType;
     }

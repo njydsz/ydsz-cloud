@@ -27,9 +27,9 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.context.RequestContext;
+import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
-import com.njydsz.common.event.model.OutboxMessage;
-import com.njydsz.common.event.service.OutboxService;
+import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.assembler.NameAssembler;
 import com.njydsz.common.feign.assembler.NameType;
@@ -206,8 +206,8 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
      */
     private final NameAssembler nameAssembler;
 
-    /** P0-2: 事务性 Outbox 事件服务（可选，未配置时为 null） */
-    private final ObjectProvider<OutboxService> outboxServiceProvider;
+    /** 统一领域事件发布门面（可选依赖，未配置时安全降级） */
+    private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
 
     /**
      * 启动流程实例
@@ -337,22 +337,20 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         // P0-2: 发布 Outbox 事件（跨模块可靠投递）
         // 语义修正：start() 发布 FLOW_INSTANCE_STARTED（流程启动），
         // 审批通过事件 FLOW_INSTANCE_APPROVED 由 complete() 发布，避免消息中心误发"审批通过通知"
-        OutboxService outboxService = outboxServiceProvider.getIfAvailable();
-        if (outboxService != null) {
-            outboxService.appendToOutbox(OutboxMessage.builder()
+        DomainEventPublisher publisher = eventPublisherProvider.getIfAvailable();
+        if (publisher != null) {
+            publisher.publish(DomainEvent.builder()
                     .aggregateType("FlowInstance")
                     .aggregateId(instanceId)
                     .eventType(DomainEventTypes.FLOW_INSTANCE_STARTED)
-                    .payload(YdszJson.toJson(Map.of(
-                            "instanceId", instanceId,
-                            "flowCode", dto.getFlowCode(),
-                            "flowName", def.getFlowName() != null ? def.getFlowName() : "",
-                            "businessType", dto.getBusinessType() != null ? dto.getBusinessType() : "",
-                            "businessId", dto.getBusinessId() != null ? dto.getBusinessId() : "",
-                            "initiatorId", dto.getInitiatorId() != null ? dto.getInitiatorId() : "",
-                            "tenantId", tenantId
-                    )))
-            );
+                    .metadata("instanceId", instanceId)
+                    .metadata("flowCode", dto.getFlowCode())
+                    .metadata("flowName", def.getFlowName() != null ? def.getFlowName() : "")
+                    .metadata("businessType", dto.getBusinessType() != null ? dto.getBusinessType() : "")
+                    .metadata("businessId", dto.getBusinessId() != null ? dto.getBusinessId() : "")
+                    .metadata("initiatorId", dto.getInitiatorId() != null ? dto.getInitiatorId() : "")
+                    .metadata("tenantId", tenantId)
+                    .build());
         }
 
         return instanceId;
@@ -1529,33 +1527,29 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
      */
     private void publishOutboxEvent(String eventType, String instanceId,
                                      FlowInstance instance, Object... kvPairs) {
-        OutboxService outboxService = outboxServiceProvider.getIfAvailable();
-        if (outboxService == null) {
-            log.debug("[Flow] OutboxService 未配置，跳过事件发布: type={} id={}", eventType, instanceId);
+        DomainEventPublisher publisher = eventPublisherProvider.getIfAvailable();
+        if (publisher == null) {
+            log.debug("[Flow] DomainEventPublisher 未配置，跳过事件发布: type={} id={}", eventType, instanceId);
             return;
         }
-        try {
-            Map<String, Object> payload = new HashMap<>();
-            payload.put("instanceId", instanceId);
-            if (instance != null) {
-                payload.put("flowCode", instance.getFlowCode() != null ? instance.getFlowCode() : "");
-                payload.put("tenantId", instance.getTenantId() != null ? instance.getTenantId() : "");
-            }
-            // 追加调用方提供的键值对
-            if (kvPairs != null) {
-                for (int i = 0; i + 1 < kvPairs.length; i += 2) {
-                    payload.put(String.valueOf(kvPairs[i]), kvPairs[i + 1]);
-                }
-            }
-            outboxService.appendToOutbox(OutboxMessage.builder()
-                    .aggregateType("FlowInstance")
-                    .aggregateId(instanceId)
-                    .eventType(eventType)
-                    .payload(YdszJson.toJson(payload)));
-        } catch (Exception e) {
-            log.warn("[Flow] 发布 Outbox 事件失败: type={} id={} err={}",
-                    eventType, instanceId, e.getMessage());
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("instanceId", instanceId);
+        if (instance != null) {
+            metadata.put("flowCode", instance.getFlowCode() != null ? instance.getFlowCode() : "");
+            metadata.put("tenantId", instance.getTenantId() != null ? instance.getTenantId() : "");
         }
+        // 追加调用方提供的键值对
+        if (kvPairs != null) {
+            for (int i = 0; i + 1 < kvPairs.length; i += 2) {
+                metadata.put(String.valueOf(kvPairs[i]), kvPairs[i + 1]);
+            }
+        }
+        publisher.publish(DomainEvent.builder()
+                .aggregateType("FlowInstance")
+                .aggregateId(instanceId)
+                .eventType(eventType)
+                .metadata(metadata)
+                .build());
     }
 
     /**

@@ -4,6 +4,7 @@ import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.feign.NotificationClient;
@@ -19,7 +20,8 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>降级策略：
  * <ul>
- *   <li>sendMessage：返回 error 而非 success(null)，让调用方明确感知服务不可用</li>
+ *   <li>sendMessage：返回
+ *       {@link FeignClientConstants#FEIGN_SERVICE_UNAVAILABLE} 错误码，让调用方明确感知服务不可用</li>
  *   <li>broadcast：静默忽略，不抛异常</li>
  * </ul>
  *
@@ -30,9 +32,6 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class NotificationClientFallbackFactory implements FallbackFactory<NotificationClient> {
 
-    /** 服务不可用错误码 */
-    private static final String SERVICE_UNAVAILABLE = "FEIGN-SYS-001";
-
     @Override
     public NotificationClient create(Throwable cause) {
         log.warn("[NotificationClient] 降级触发: {}", cause.getMessage());
@@ -42,7 +41,7 @@ public class NotificationClientFallbackFactory implements FallbackFactory<Notifi
                 log.warn("[NotificationClient] sendMessage 降级: receiver={}, subject={}, reason=消息中心服务不可用",
                         request == null ? null : request.getReceiver(),
                         request == null ? null : request.getSubject());
-                return BaseResponse.error(SERVICE_UNAVAILABLE, "消息中心服务不可用");
+                return BaseResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "消息中心服务不可用");
             }
 
             @Override

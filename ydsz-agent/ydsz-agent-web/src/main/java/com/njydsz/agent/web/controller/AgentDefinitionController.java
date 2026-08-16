@@ -23,7 +23,9 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.agent.domain.converter.AgentConverter;
 import com.njydsz.agent.domain.dto.post.AgentDefinitionPostDTO;
 import com.njydsz.agent.domain.dto.put.AgentDefinitionPutDTO;
@@ -78,6 +80,7 @@ public class AgentDefinitionController {
      *
      * @return 统一响应结果，data 为 Agent 定义 VO 列表
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.AGENT_VIEW)
     @Audit(module = "Agent定义", type = AuditType.OPERATION, action = AuditAction.QUERY, content = "'list'")
     @GetMapping
     public BaseResponse<List<AgentDefinitionVO>> list() {
@@ -90,6 +93,7 @@ public class AgentDefinitionController {
      * @param id Agent 定义主键（雪花算法字符串）
      * @return 统一响应结果，data 为 Agent 定义 VO；不存在时返回 error 响应
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.AGENT_VIEW)
     @Audit(module = "Agent定义", type = AuditType.OPERATION, action = AuditAction.QUERY, content = "'getById: ' + #id")
     @GetMapping("/{id}")
     public BaseResponse<AgentDefinitionVO> getById(@PathVariable String id) {
@@ -109,6 +113,7 @@ public class AgentDefinitionController {
      * @param code Agent 业务编码（全局唯一）
      * @return 统一响应结果，data 为 Agent 定义 VO；不存在时返回 error 响应
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.AGENT_VIEW)
     @Audit(module = "Agent定义", type = AuditType.OPERATION, action = AuditAction.QUERY, content = "'getByCode: ' + #code")
     @GetMapping("/code/{code}")
     public BaseResponse<AgentDefinitionVO> getByCode(@PathVariable String code) {
@@ -128,6 +133,7 @@ public class AgentDefinitionController {
      * @param dto Agent 定义创建请求体
      * @return 统一响应结果，data 为创建后的 Agent 定义 VO
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.AGENT_CREATE)
     @Audit(module = "Agent定义", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'create'")
     @Idempotent(key = "ydsz:agent:AgentDefinitionController:create:lock", ttlSeconds = 5)
     @RateLimit(resource = "agent.agentdefinition.create", threshold = 50)
@@ -146,6 +152,7 @@ public class AgentDefinitionController {
      * @param dto Agent 定义更新请求体（必须含 id）
      * @return 统一响应结果，data 为更新后的 Agent 定义 VO
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.AGENT_UPDATE)
     @Audit(module = "Agent定义", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'update'")
     @RateLimit(resource = "agent.agentdefinition.update", threshold = 50)
     @Idempotent(key = "ydsz:agent:AgentDefinitionController:update:lock", ttlSeconds = 5)
@@ -164,6 +171,7 @@ public class AgentDefinitionController {
      * @param id Agent 定义主键
      * @return 统一响应结果，data 为 true 表示删除成功，false 表示记录不存在
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.AGENT_DELETE)
     @Audit(module = "Agent定义", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'delete'")
     @Idempotent(key = "ydsz:agent:AgentDefinitionController:delete:lock", ttlSeconds = 5)
     @RateLimit(resource = "agent.agentdefinition.delete", threshold = 50)

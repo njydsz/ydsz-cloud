@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.njydsz.common.queue.metrics.MessageMetrics;
+import com.njydsz.common.queue.metrics.QueueMetrics;
 
 /**
  * 消息队列管理器
@@ -29,7 +29,7 @@ import com.njydsz.common.queue.metrics.MessageMetrics;
  * manager.register("order-queue", "redis", queue, metrics);
  *
  * // 查询监控
- * MessageMetrics metrics = manager.getMetrics("order-queue");
+ * QueueMetrics metrics = manager.getMetrics("order-queue");
  * log.info("Metrics: {}", metrics.getSummary());
  *
  * // 优雅停机
@@ -42,7 +42,7 @@ import com.njydsz.common.queue.metrics.MessageMetrics;
 public class QueueManager {
 
     private final Map<String, QueueEntry> queueRegistry = new ConcurrentHashMap<>();
-    private final Map<String, MessageMetrics> metricsRegistry = new ConcurrentHashMap<>();
+    private final Map<String, QueueMetrics> metricsRegistry = new ConcurrentHashMap<>();
 
     /**
      * 注册队列及其监控指标
@@ -52,7 +52,7 @@ public class QueueManager {
      * @param queue 队列实例（可为 null，仅用于管理用途）
      * @param metrics 监控指标实例
      */
-    public void register(String queueName, String queueType, AutoCloseable queue, MessageMetrics metrics) {
+    public void register(String queueName, String queueType, AutoCloseable queue, QueueMetrics metrics) {
         if (queueName == null || queueName.isEmpty()) {
             throw new IllegalArgumentException("队列名称不能为空");
         }
@@ -70,7 +70,7 @@ public class QueueManager {
      * @param queueName 队列名称
      * @return 监控指标，未注册时返回 null
      */
-    public MessageMetrics getMetrics(String queueName) {
+    public QueueMetrics getMetrics(String queueName) {
         return metricsRegistry.get(queueName);
     }
 
@@ -88,7 +88,7 @@ public class QueueManager {
      *
      * @return 监控指标集合（不可变）
      */
-    public Collection<MessageMetrics> getAllMetrics() {
+    public Collection<QueueMetrics> getAllMetrics() {
         return Collections.unmodifiableCollection(metricsRegistry.values());
     }
 
@@ -144,7 +144,7 @@ public class QueueManager {
         sb.append("=== QueueManager Global Summary ===\n");
         sb.append("Total queues: ").append(queueRegistry.size()).append("\n\n");
 
-        for (Map.Entry<String, MessageMetrics> entry : metricsRegistry.entrySet()) {
+        for (Map.Entry<String, QueueMetrics> entry : metricsRegistry.entrySet()) {
             sb.append(entry.getValue().getSummary()).append("\n");
         }
 

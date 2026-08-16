@@ -5,13 +5,17 @@ import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.workflow.api.client.WorkflowServiceClient;
 
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * WorkflowServiceClient 降级工厂
+ *
+ * <p>所有方法在服务不可用时统一返回
+ * {@link FeignClientConstants#FEIGN_SERVICE_UNAVAILABLE} 错误码，
+ * 禁止返回 success(null) 或 success()。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -26,17 +30,17 @@ public class WorkflowServiceClientFallback implements FallbackFactory<WorkflowSe
         return new WorkflowServiceClient() {
             @Override
             public BaseResponse<String> startProcess(Map<String, Object> body) {
-                return BaseResponse.error(BaseResultCode.SERVICE_UNAVAILABLE);
+                return BaseResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "工作流服务不可用");
             }
 
             @Override
             public BaseResponse<Map<String, Object>> getByBusiness(String businessType, String businessId) {
-                return BaseResponse.success(null);
+                return BaseResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "工作流服务不可用");
             }
 
             @Override
             public BaseResponse<Void> terminate(String processInstanceId, String reason) {
-                return BaseResponse.success();
+                return BaseResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "工作流服务不可用");
             }
         };
     }

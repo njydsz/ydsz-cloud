@@ -1,6 +1,5 @@
 package com.njydsz.system.api.fallback;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -8,6 +7,7 @@ import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.system.api.client.DictClient;
 
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * {@link DictClient} 的 FallbackFactory。
  *
- * <p>系统管理服务不可用时降级返回空值，仅记录 WARN 日志。
+ * <p>系统管理服务不可用时降级返回统一错误码
+ * ({@link FeignClientConstants#FEIGN_SERVICE_UNAVAILABLE})，仅记录 WARN 日志。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -33,13 +34,13 @@ public class DictClientFallback implements FallbackFactory<DictClient> {
                 log.warn("[DictClient] getDictItem 降级: typeCode={}, itemCode={}, reason=系统管理服务不可用",
                         request == null ? null : request.get("typeCode"),
                         request == null ? null : request.get("itemCode"));
-                return BaseResponse.success(null);
+                return BaseResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "系统管理服务不可用");
             }
 
             @Override
             public BaseResponse<List<String>> listDictItems(String typeCode) {
                 log.warn("[DictClient] listDictItems 降级: typeCode={}, reason=系统管理服务不可用", typeCode);
-                return BaseResponse.success(Collections.emptyList());
+                return BaseResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "系统管理服务不可用");
             }
         };
     }

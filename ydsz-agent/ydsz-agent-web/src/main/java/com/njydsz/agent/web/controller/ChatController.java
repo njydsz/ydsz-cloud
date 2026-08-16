@@ -34,10 +34,12 @@ import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.server.chat.AgentRequestGuard;
 import com.njydsz.agent.server.chat.ChatService;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.permission.PermissionCodes;
 
 /**
  * 对话 REST API Controller。
@@ -118,6 +120,7 @@ public class ChatController {
      * @param request 对话请求体（含 conversationId / message / systemPrompt / requestId）
      * @return 统一响应结果，data 为 {@link ChatResponseDTO}（含 content/model/usage）
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.AGENT_CHAT)
     @Audit(module = "对话管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'chat'")
     @Idempotent(key = "ydsz:agent:ChatController:chat:lock", ttlSeconds = 5)
     @RateLimit(resource = "agent.chat.chat", threshold = 50)
@@ -156,6 +159,7 @@ public class ChatController {
      * @param request 对话请求体
      * @return SseEmitter（Spring MVC 的 SSE 句柄）
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.AGENT_CHAT)
     @Audit(module = "对话管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'chatStream'")
     @Idempotent(key = "ydsz:agent:ChatController:chatStream:lock", ttlSeconds = 5)
     @RateLimit(resource = "agent.chat.chatStream", threshold = 50)
@@ -240,6 +244,7 @@ public class ChatController {
      * @param conversationId 会话 ID（{@code ydsz_chat_message.conversation_id}）
      * @return 统一响应结果，data 为 {@code [{id, role, content, createdAt}, ...]} 格式的列表
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.AGENT_CHAT)
     @Audit(module = "对话管理", type = AuditType.OPERATION, action = AuditAction.QUERY, content = "'history: ' + #conversationId")
     @GetMapping("/history")
     public BaseResponse<List<Map<String, Object>>> history(
@@ -265,6 +270,7 @@ public class ChatController {
      * @param conversationId 会话 ID
      * @return 统一响应结果
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.AGENT_CHAT)
     @Audit(module = "对话管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'clearHistory'")
     @Idempotent(key = "ydsz:agent:ChatController:clearHistory:lock", ttlSeconds = 5)
     @RateLimit(resource = "agent.chat.clearHistory", threshold = 50)

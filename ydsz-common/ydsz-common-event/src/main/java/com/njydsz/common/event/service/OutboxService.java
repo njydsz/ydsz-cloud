@@ -160,6 +160,37 @@ public class OutboxService {
     }
 
     /**
+     * 追加领域事件到 Outbox（便捷重载，自动序列化为 JSON payload）
+     *
+     * <p>等价于 {@link #appendToOutbox(OutboxMessage.OutboxMessageBuilder)} 的全构建方式，
+     * 避免调用方手动拼接 {@link OutboxMessageBuilder}。
+     *
+     * <p><b>使用示例：</b>
+     * <pre>{@code
+     * outboxService.appendToOutbox(DomainEvent.builder()
+     *     .aggregateType("Order")
+     *     .aggregateId(order.getId())
+     *     .eventType("OrderCreated")
+     *     .build());
+     * }</pre>
+     *
+     * @param event 领域事件
+     * @since 1.8.0
+     */
+    @Transactional
+    public void appendToOutbox(DomainEvent event) {
+        if (event == null) {
+            return;
+        }
+        appendToOutbox(OutboxMessage.builder()
+                .aggregateType(event.getAggregateType())
+                .aggregateId(event.getAggregateId())
+                .eventType(event.getEventType())
+                .payload(YdszJson.toJson(event))
+                .deduplicationId(event.getEventId()));
+    }
+
+    /**
      * 注册事务提交后的领域事件发布回调
      *
      * <p>事务提交成功后发布 {@link OutboxMessage} 作为 Spring 事件，

@@ -31,8 +31,10 @@ import com.njydsz.agent.server.chat.AgentRequestGuard;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -130,6 +132,7 @@ public class AgentController {
      * @param request Agent 执行请求体（含 agentCode / userInput / systemPrompt / maxIterations / enabledTools）
      * @return 统一响应结果，data 为 {@link ChatResponseDTO}（含 content/model/usage）
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.AGENT_EXECUTE)
     @Audit(module = "Agent管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'execute'")
     @Idempotent(key = "'agent:execute:' + #request.requestId", ttlSeconds = 5)
     @RateLimit(resource = "agent.agent.execute", threshold = 50)
@@ -167,6 +170,7 @@ public class AgentController {
      * @param request Agent 执行请求体
      * @return SseEmitter（Spring MVC 的 SSE 句柄）
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.AGENT_EXECUTE)
     @Audit(module = "Agent管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'executeStream'")
     @Idempotent(key = "'agent:execute:stream:' + #request.requestId", ttlSeconds = 5)
     @RateLimit(resource = "agent.agent.executeStream", threshold = 50)
