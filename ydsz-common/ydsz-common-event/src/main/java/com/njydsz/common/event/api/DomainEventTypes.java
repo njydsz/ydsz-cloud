@@ -61,9 +61,6 @@ public final class DomainEventTypes {
     /** 用户登录 */
     public static final String USER_LOGIN = "USER_LOGIN";
 
-    /** 用户登出 */
-    public static final String USER_LOGOUT = "USER_LOGOUT";
-
     /** 角色变更（消费方: ydsz-gateway → 权限缓存刷新） */
     public static final String ROLE_CHANGED = "ROLE_CHANGED";
 
@@ -92,32 +89,10 @@ public final class DomainEventTypes {
     /** 任务删除 */
     public static final String JOB_DELETED = "JOB_DELETED";
 
-    /** DAG 节点完成 */
-    public static final String DAG_NODE_COMPLETED = "DAG_NODE_COMPLETED";
-
-    // ==================== 权限变更事件（发布方: ydsz-system） ====================
-
-    /** 权限变更（消费方: ydsz-gateway → 权限缓存刷新） */
-    public static final String PERMISSION_CHANGED = "PERMISSION_CHANGED";
-
     // ==================== 配置变更事件（发布方: ydsz-system） ====================
 
     /** 系统配置变更（消费方: 各模块 → 配置热刷新） */
     public static final String CONFIG_CHANGED = "CONFIG_CHANGED";
-
-    /** 字典变更 */
-    public static final String DICT_CHANGED = "DICT_CHANGED";
-
-    /** 系统变量变更 */
-    public static final String VARIABLE_CHANGED = "VARIABLE_CHANGED";
-
-    // ==================== 审计事件（发布方: 各模块） ====================
-
-    /** 操作日志（消费方: ydsz-system → 审计日志持久化） */
-    public static final String OPERATION_LOG = "OPERATION_LOG";
-
-    /** 数据导出审计（消费方: ydsz-system → 导出审计记录） */
-    public static final String DATA_EXPORT_AUDIT = "DATA_EXPORT_AUDIT";
 
     // ==================== 项目事件（发布方: ydsz-project） ====================
 
@@ -126,12 +101,6 @@ public final class DomainEventTypes {
 
     /** 项目立项审批通过（消费方: ydsz-project → 状态机推进；ydsz-workflow → 流程归档） */
     public static final String PROJECT_INITIATION_APPROVED = "PROJECT_INITIATION_APPROVED";
-
-    /** 项目阶段变更 */
-    public static final String PROJECT_STAGE_CHANGED = "PROJECT_STAGE_CHANGED";
-
-    /** 项目关闭 */
-    public static final String PROJECT_CLOSED = "PROJECT_CLOSED";
 
     /** 项目合同签订 */
     public static final String PROJECT_CONTRACT_SIGNED = "PROJECT_CONTRACT_SIGNED";
@@ -161,9 +130,6 @@ public final class DomainEventTypes {
     /** 规则停用（消费方: ydsz-literule → 规则缓存清理） */
     public static final String RULE_DISABLED = "RULE_DISABLED";
 
-    /** 规则配置变更 */
-    public static final String RULE_CONFIG_CHANGED = "RULE_CONFIG_CHANGED";
-
     // ==================== 知识库事件（发布方: ydsz-nextwiki） ====================
 
     /** 文档变更（消费方: ydsz-agent → RAG 索引增量更新；ydsz-search → 全文索引刷新） */
@@ -180,11 +146,4 @@ public final class DomainEventTypes {
     /** 文件分享 */
     public static final String FILE_SHARED = "FILE_SHARED";
 
-    // ==================== 消息事件（发布方: ydsz-message） ====================
-
-    /** 消息发送 */
-    public static final String MESSAGE_SENT = "MESSAGE_SENT";
-
-    /** 消息撤回 */
-    public static final String MESSAGE_RECALLED = "MESSAGE_RECALLED";
 }

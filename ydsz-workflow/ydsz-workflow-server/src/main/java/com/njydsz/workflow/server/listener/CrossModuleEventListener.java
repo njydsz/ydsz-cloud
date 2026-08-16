@@ -41,7 +41,7 @@ public class CrossModuleEventListener {
      * @param message Outbox 消息，payload 包含项目编号、项目名称、项目经理等
      */
     @Async
-    @EventListener(condition = "#message.eventType == 'PROJECT_INITIATION_CREATED'")
+    @EventListener(condition = "#message.eventType == T(com.njydsz.common.event.api.DomainEventTypes).PROJECT_INITIATION_CREATED")
     public void onProjectInitiationCreated(OutboxMessage message) {
         log.info("[CrossModuleEventListener] 接收项目立项创建事件: projectId={}",
                 message.getAggregateId());
@@ -66,7 +66,7 @@ public class CrossModuleEventListener {
      * @param message Outbox 消息，payload 包含 userId、deptId 等
      */
     @Async
-    @EventListener(condition = "#message.eventType == 'USER_DISABLED'")
+    @EventListener(condition = "#message.eventType == T(com.njydsz.common.event.api.DomainEventTypes).USER_DISABLED")
     public void onUserDisabled(OutboxMessage message) {
         log.info("[CrossModuleEventListener] 接收用户禁用事件: userId={}",
                 message.getAggregateId());
@@ -90,7 +90,7 @@ public class CrossModuleEventListener {
      * @param message Outbox 消息，payload 包含 deptId、changeType 等
      */
     @Async
-    @EventListener(condition = "#message.eventType == 'ORG_STRUCTURE_CHANGED'")
+    @EventListener(condition = "#message.eventType == T(com.njydsz.common.event.api.DomainEventTypes).ORG_STRUCTURE_CHANGED")
     public void onOrgStructureChanged(OutboxMessage message) {
         log.info("[CrossModuleEventListener] 接收组织架构变更事件: aggregateId={}",
                 message.getAggregateId());

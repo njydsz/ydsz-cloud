@@ -90,31 +90,6 @@ public class SecurityHeaderProperties {
     private String frameOptions = "SAMEORIGIN";
 
     /**
-     * 严格传输安全头部
-     *
-     * <p>强制浏览器使用 HTTPS 连接。
-     * <ul>
-     *   <li>max-age：HSTS 缓存时间（秒）</li>
-     *   <li>includeSubDomains：应用于所有子域名</li>
-     *   <li>preload：支持 HSTS preload 列表</li>
-     * </ul>
-     */
-    private String hsts = "max-age=31536000; includeSubDomains";
-
-    /**
-     * 内容安全策略头部
-     *
-     * <p>防止 XSS、数据注入等攻击，限制资源加载来源。
-     * <p>常用配置示例：
-     * <ul>
-     *   <li>"default-src 'self'"：仅允许同源资源</li>
-     *   <li>"default-src 'self'; script-src 'self' 'unsafe-inline'"：允许内联脚本</li>
-     *   <li>"default-src 'self'; img-src 'self' data:; font-src 'self'"：自定义资源策略</li>
-     * </ul>
-     */
-    private String csp = "default-src 'self'";
-
-    /**
      * 引用策略头部
      *
      * <p>控制 Referer 头的发送策略。
@@ -134,6 +109,23 @@ public class SecurityHeaderProperties {
      */
     private String permissionsPolicy = "geolocation=(), microphone=(), camera=()";
 
+    // ============================== 子配置类（P1-1：与 Gateway SecurityHeadersProperties 对齐） ==============================
+
+    /** CSP (Content-Security-Policy) 配置 */
+    private CspConfig csp = new CspConfig();
+
+    /** HSTS (Strict-Transport-Security) 配置 */
+    private HstsConfig hsts = new HstsConfig();
+
+    /** COOP (Cross-Origin-Opener-Policy) 配置 */
+    private CoopConfig coop = new CoopConfig();
+
+    /** COEP (Cross-Origin-Embedder-Policy) 配置 */
+    private CoepConfig coep = new CoepConfig();
+
+    /** CORP (Cross-Origin-Resource-Policy) 配置 */
+    private CorpConfig corp = new CorpConfig();
+
     /**
      * 排除路径列表
      *
@@ -141,4 +133,70 @@ public class SecurityHeaderProperties {
      * 通常用于静态资源、文件下载等不需要安全头部的端点。
      */
     private List<String> excludes = new ArrayList<>();
+
+    /** CSP 配置 */
+    @Data
+    public static class CspConfig {
+        private boolean enabled = true;
+        /** 是否允许 unsafe-eval（仅开发环境） */
+        private boolean unsafeEval = false;
+        /** 显式 CSP 策略字符串（设置后忽略其他细粒度配置） */
+        private String policy;
+    }
+
+    /** HSTS 配置 */
+    @Data
+    public static class HstsConfig {
+        private boolean enabled = true;
+        /** HSTS max-age（秒） */
+        private long maxAge = 31536000;
+        /** 是否包含子域名 */
+        private boolean includeSubdomains = true;
+        /** 是否启用 preload */
+        private boolean preload = true;
+    }
+
+    /** COOP 配置 */
+    @Data
+    public static class CoopConfig {
+        private boolean enabled = true;
+        /** COOP 策略 */
+        private String policy = "same-origin";
+    }
+
+    /** COEP 配置 */
+    @Data
+    public static class CoepConfig {
+        private boolean enabled = true;
+        /** COEP 策略：unsafe-none（默认，兼容性好）| require-corp（严格） */
+        private String policy = "unsafe-none";
+    }
+
+    /** CORP 配置 */
+    @Data
+    public static class CorpConfig {
+        private boolean enabled = true;
+        /** CORP 策略 */
+        private String policy = "same-origin";
+    }
+
+    // ============================== 已废弃属性（保留向后兼容，建议迁移到子配置类） ==============================
+
+    /**
+     * 严格传输安全头部
+     *
+     * <p>强制浏览器使用 HTTPS 连接。
+     * @deprecated 自 1.1.0 起废弃，使用 {@link #hsts} 子配置类
+     */
+    @Deprecated
+    private String hstsDeprecated;
+
+    /**
+     * 内容安全策略头部
+     *
+     * <p>防止 XSS、数据注入等攻击，限制资源加载来源。
+     * @deprecated 自 1.1.0 起废弃，使用 {@link #csp} 子配置类
+     */
+    @Deprecated
+    private String cspDeprecated;
 }

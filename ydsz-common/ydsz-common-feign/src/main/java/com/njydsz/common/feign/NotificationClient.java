@@ -54,6 +54,6 @@ public interface NotificationClient {
      * @param topic   广播主题（如 "ALERT"、"TASK"）
      * @param payload 推送数据
      */
-    @PostMapping("/api/v1/message/broadcast")
+    @PostMapping(FeignClientConstants.MESSAGE_PATH_BROADCAST)
     void broadcast(String topic, RealtimePushDTO payload);
 }

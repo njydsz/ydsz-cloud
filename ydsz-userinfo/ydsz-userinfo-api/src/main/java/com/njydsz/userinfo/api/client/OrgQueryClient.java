@@ -47,7 +47,7 @@ public interface OrgQueryClient {
      * @param userId 用户 ID
      * @return 用户账号 VO（已脱敏，不含密码等敏感字段）
      */
-    @GetMapping("/api/internal/user/info")
+    @GetMapping(FeignClientConstants.USERINFO_PATH_USER_INFO)
     BaseResponse<UserAccountVO> queryUserById(@RequestParam String userId);
 
     /**
@@ -55,7 +55,7 @@ public interface OrgQueryClient {
      *
      * @return 部门树形 VO 列表（根节点列表，各节点含 children 子树）
      */
-    @GetMapping("/api/internal/dept/tree")
+    @GetMapping(FeignClientConstants.USERINFO_PATH_DEPT_TREE)
     BaseResponse<List<DepartmentTreeVO>> getDeptTree();
 
     /**
@@ -63,7 +63,7 @@ public interface OrgQueryClient {
      *
      * @return 部门 VO 列表
      */
-    @GetMapping("/api/internal/dept/list")
+    @GetMapping(FeignClientConstants.USERINFO_PATH_DEPT_LIST)
     BaseResponse<List<DepartmentVO>> getDeptList();
 
     /**
@@ -72,7 +72,7 @@ public interface OrgQueryClient {
      * @param roleCode 角色编码（如 HR/PM/SUPER_ADMIN）
      * @return 用户 ID 列表（String 形式，雪花算法字符串）
      */
-    @GetMapping("/api/internal/user/list-by-role")
+    @GetMapping(FeignClientConstants.USERINFO_PATH_USER_LIST_BY_ROLE)
     BaseResponse<List<String>> listUserIdsByRoleCode(@RequestParam String roleCode);
 
     /**
@@ -81,7 +81,7 @@ public interface OrgQueryClient {
      * @param userId 用户 ID
      * @return 角色编码列表
      */
-    @GetMapping("/api/internal/user/role-codes")
+    @GetMapping(FeignClientConstants.USERINFO_PATH_USER_ROLE_CODES)
     BaseResponse<List<String>> listRoleCodesByUserId(@RequestParam String userId);
 
     /**
@@ -90,7 +90,7 @@ public interface OrgQueryClient {
      * @param userId 用户 ID
      * @return 部门 ID 列表（String 形式）
      */
-    @GetMapping("/api/internal/user/dept-ids")
+    @GetMapping(FeignClientConstants.USERINFO_PATH_USER_DEPT_IDS)
     BaseResponse<List<String>> listDeptIdsByUserId(@RequestParam String userId);
 
     /**
@@ -99,7 +99,7 @@ public interface OrgQueryClient {
      * @param userId 用户 ID
      * @return 直属上级用户 ID，未设置时返回 null
      */
-    @GetMapping("/api/internal/user/leader")
+    @GetMapping(FeignClientConstants.USERINFO_PATH_USER_LEADER)
     BaseResponse<String> getLeaderByUserId(@RequestParam String userId);
 
     /**
@@ -108,7 +108,7 @@ public interface OrgQueryClient {
      * @param positionCode 岗位编码（如 PM/DEV/QA）
      * @return 用户 ID 列表
      */
-    @GetMapping("/api/internal/user/list-by-position")
+    @GetMapping(FeignClientConstants.USERINFO_PATH_USER_LIST_BY_POSITION)
     BaseResponse<List<String>> listUserIdsByPositionCode(@RequestParam String positionCode);
 
     /**
@@ -117,7 +117,7 @@ public interface OrgQueryClient {
      * @param deptId 部门 ID
      * @return 部门负责人用户 ID，未设置时返回 null
      */
-    @GetMapping("/api/internal/dept/leader-by-id")
+    @GetMapping(FeignClientConstants.USERINFO_PATH_DEPT_LEADER_BY_ID)
     BaseResponse<String> getDeptLeaderByDeptId(@RequestParam String deptId);
 
     /**
@@ -126,7 +126,7 @@ public interface OrgQueryClient {
      * @param deptCode 部门编码（如 TECH/HR）
      * @return 部门负责人用户 ID，未设置时返回 null
      */
-    @GetMapping("/api/internal/dept/leader-by-code")
+    @GetMapping(FeignClientConstants.USERINFO_PATH_DEPT_LEADER_BY_CODE)
     BaseResponse<String> getDeptLeaderByDeptCode(@RequestParam String deptCode);
 
     // ==================== NameAssembler 批量名称富化接口 ====================
@@ -140,7 +140,7 @@ public interface OrgQueryClient {
      * @param userIds 用户 ID 列表
      * @return userId → realName 映射；未命中的 userId 不出现在 Map 中
      */
-    @PostMapping("/api/internal/user/batch-names")
+    @PostMapping(FeignClientConstants.USERINFO_PATH_USER_BATCH_NAMES)
     BaseResponse<Map<String, String>> batchUserNames(@RequestBody List<String> userIds);
 
     /**
@@ -149,7 +149,7 @@ public interface OrgQueryClient {
      * @param deptIds 部门 ID 列表
      * @return deptId → deptName 映射
      */
-    @PostMapping("/api/internal/dept/batch-names")
+    @PostMapping(FeignClientConstants.USERINFO_PATH_DEPT_BATCH_NAMES)
     BaseResponse<Map<String, String>> batchDeptNames(@RequestBody List<String> deptIds);
 
     /**
@@ -158,7 +158,7 @@ public interface OrgQueryClient {
      * @param roleIds 角色 ID 列表
      * @return roleId → roleName 映射
      */
-    @PostMapping("/api/internal/role/batch-names")
+    @PostMapping(FeignClientConstants.USERINFO_PATH_ROLE_BATCH_NAMES)
     BaseResponse<Map<String, String>> batchRoleNames(@RequestBody List<String> roleIds);
 
     /**
@@ -167,7 +167,7 @@ public interface OrgQueryClient {
      * @param postIds 岗位 ID 列表
      * @return postId → postName 映射
      */
-    @PostMapping("/api/internal/post/batch-names")
+    @PostMapping(FeignClientConstants.USERINFO_PATH_POST_BATCH_NAMES)
     BaseResponse<Map<String, String>> batchPostNames(@RequestBody List<String> postIds);
 
     /**
@@ -176,6 +176,6 @@ public interface OrgQueryClient {
      * @param companyIds 公司 ID 列表
      * @return companyId → companyName 映射
      */
-    @PostMapping("/api/internal/company/batch-names")
+    @PostMapping(FeignClientConstants.USERINFO_PATH_COMPANY_BATCH_NAMES)
     BaseResponse<Map<String, String>> batchCompanyNames(@RequestBody List<String> companyIds);
 }

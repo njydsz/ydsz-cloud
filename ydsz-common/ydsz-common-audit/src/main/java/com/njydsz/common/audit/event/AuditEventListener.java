@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.event.TransactionalEventListener;
 
@@ -78,7 +77,7 @@ public class AuditEventListener {
      *
      * @param event 操作日志事件
      */
-    @TransactionalEventListener
+    @TransactionalEventListener(fallbackExecute = true)
     @Async("auditAsyncExecutor")
     public void onOperationLog(OperationLogEvent event) {
         if (event == null) {
@@ -101,7 +100,7 @@ public class AuditEventListener {
      *
      * @param event 数据导出审计事件
      */
-    @TransactionalEventListener
+    @TransactionalEventListener(fallbackExecute = true)
     @Async("auditAsyncExecutor")
     public void onDataExport(DataExportAuditEvent event) {
         if (event == null) {

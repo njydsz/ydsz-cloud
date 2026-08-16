@@ -6,6 +6,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.cache.constant.CacheConstants;
+import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.model.OutboxMessage;
 
 import lombok.RequiredArgsConstructor;
@@ -43,7 +44,7 @@ public class CrossModuleEventListener {
      * @param message Outbox 消息
      */
     @Async
-    @EventListener(condition = "#message.eventType == 'CONFIG_CHANGED'")
+    @EventListener(condition = "#message.eventType == T(com.njydsz.common.event.api.DomainEventTypes).CONFIG_CHANGED")
     public void onConfigChanged(OutboxMessage message) {
         log.info("[CrossModuleEventListener] 接收配置变更事件，清空本地配置缓存: configId={}",
                 message.getAggregateId());

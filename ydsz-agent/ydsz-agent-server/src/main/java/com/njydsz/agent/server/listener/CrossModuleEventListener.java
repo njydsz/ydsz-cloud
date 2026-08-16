@@ -4,6 +4,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.agent.server.rag.RagService;
 
@@ -34,7 +35,7 @@ public class CrossModuleEventListener {
      * @param message Outbox 消息
      */
     @Async
-    @EventListener(condition = "#message.eventType == 'FILE_UPLOADED'")
+    @EventListener(condition = "#message.eventType == T(com.njydsz.common.event.api.DomainEventTypes).FILE_UPLOADED")
     public void onFileUploaded(OutboxMessage message) {
         log.info("[CrossModuleEventListener] 接收文件上传事件: aggregateId={}, payload={}",
                 message.getAggregateId(), message.getPayload());

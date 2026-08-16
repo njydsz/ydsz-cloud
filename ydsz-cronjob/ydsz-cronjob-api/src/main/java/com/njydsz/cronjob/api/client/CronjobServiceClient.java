@@ -44,7 +44,7 @@ public interface CronjobServiceClient {
      * @param jobId 任务 ID
      * @return 执行日志 ID（触发失败时为 null）
      */
-    @PostMapping("/api/v1/cronjob/{id}/trigger")
+    @PostMapping(FeignClientConstants.CRONJOB_PATH_TRIGGER)
     BaseResponse<String> trigger(@PathVariable("id") String jobId);
 
     /**
@@ -54,7 +54,7 @@ public interface CronjobServiceClient {
      * @param holdLock 是否抢占分布式锁
      * @return 执行日志 ID
      */
-    @PostMapping("/api/v1/cronjob/{id}/trigger")
+    @PostMapping(FeignClientConstants.CRONJOB_PATH_TRIGGER)
     BaseResponse<String> trigger(@PathVariable("id") String jobId,
                            @RequestParam("holdLock") boolean holdLock);
 }

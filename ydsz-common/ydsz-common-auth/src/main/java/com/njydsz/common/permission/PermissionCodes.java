@@ -354,4 +354,54 @@ public final class PermissionCodes {
     /** SYSTEM_SEARCH */
     public static final String SYSTEM_SEARCH = "system:search";
 
+    // ==================== Agent 模块权限码 ====================
+
+    /** AGENT_CREATE */
+    public static final String AGENT_CREATE = "agent:definition:create";
+
+    /** AGENT_UPDATE */
+    public static final String AGENT_UPDATE = "agent:definition:update";
+
+    /** AGENT_DELETE */
+    public static final String AGENT_DELETE = "agent:definition:delete";
+
+    /** AGENT_VIEW */
+    public static final String AGENT_VIEW = "agent:definition:view";
+
+    /** AGENT_EXECUTE */
+    public static final String AGENT_EXECUTE = "agent:execute";
+
+    /** AGENT_CHAT */
+    public static final String AGENT_CHAT = "agent:chat";
+
+    /** AGENT_DAG_EXECUTE */
+    public static final String AGENT_DAG_EXECUTE = "agent:dag:execute";
+
+    /** AGENT_DAG_VALIDATE */
+    public static final String AGENT_DAG_VALIDATE = "agent:dag:validate";
+
+    /** AGENT_APPROVAL_VIEW */
+    public static final String AGENT_APPROVAL_VIEW = "agent:approval:view";
+
+    /** AGENT_APPROVAL_ACT */
+    public static final String AGENT_APPROVAL_ACT = "agent:approval:act";
+
+    /** AGENT_RAG_INGEST */
+    public static final String AGENT_RAG_INGEST = "agent:rag:ingest";
+
+    /** AGENT_RAG_SEARCH */
+    public static final String AGENT_RAG_SEARCH = "agent:rag:search";
+
+    /** AGENT_RAG_DELETE */
+    public static final String AGENT_RAG_DELETE = "agent:rag:delete";
+
+    /** AGENT_DEBUG_VIEW */
+    public static final String AGENT_DEBUG_VIEW = "agent:debug:view";
+
+    /** AGENT_DEBUG_REPLAY */
+    public static final String AGENT_DEBUG_REPLAY = "agent:debug:replay";
+
+    /** AGENT_METADATA_VIEW */
+    public static final String AGENT_METADATA_VIEW = "agent:metadata:view";
+
 }

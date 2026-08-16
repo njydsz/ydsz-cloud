@@ -131,6 +131,13 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-notify</artifactId>
         </dependency>
+        <!-- P1-C: 审计日志集成（EventBridge 桥接 Reactive → Servlet-AOP 审计链路） -->
+        <!-- provided 作用域避免传递 servlet 依赖（gateway 为 WebFlux 栈） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-audit</artifactId>
+            <scope>provided</scope>
+        </dependency>
         <!-- P2-3: 集成测试 + 混沌测试 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

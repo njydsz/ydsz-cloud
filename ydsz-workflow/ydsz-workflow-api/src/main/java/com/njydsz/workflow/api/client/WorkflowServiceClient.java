@@ -34,7 +34,7 @@ public interface WorkflowServiceClient {
      *
      * <p>对应自研引擎: POST /api/v1/workflow/engine/instance/start
      */
-    @PostMapping("/api/v1/workflow/engine/instance/start")
+    @PostMapping(FeignClientConstants.WORKFLOW_PATH_START)
     BaseResponse<String> startProcess(@RequestBody Map<String, Object> body);
 
     /**
@@ -42,7 +42,7 @@ public interface WorkflowServiceClient {
      *
      * <p>对应自研引擎: GET /api/v1/workflow/engine/instance/byBusiness
      */
-    @GetMapping("/api/v1/workflow/engine/instance/byBusiness")
+    @GetMapping(FeignClientConstants.WORKFLOW_PATH_GET_BY_BUSINESS)
     BaseResponse<Map<String, Object>> getByBusiness(@RequestParam("businessType") String businessType,
                                           @RequestParam("businessId") String businessId);
 
@@ -51,7 +51,7 @@ public interface WorkflowServiceClient {
      *
      * <p>对应自研引擎: POST /api/v1/workflow/engine/instance/{id}/terminate
      */
-    @PostMapping("/api/v1/workflow/engine/instance/{id}/terminate")
+    @PostMapping(FeignClientConstants.WORKFLOW_PATH_TERMINATE)
     BaseResponse<Void> terminate(@PathVariable("id") String processInstanceId,
                       @RequestParam(value = "reason", required = false) String reason);
 }

@@ -55,4 +55,91 @@ public final class FeignClientConstants {
 
     /** 消息发送路径 */
     public static final String MESSAGE_PATH_SEND = "/api/v1/message/send";
+
+    /** 消息广播路径 */
+    public static final String MESSAGE_PATH_BROADCAST = "/api/v1/message/broadcast";
+
+    // ======================== 定时任务服务路径常量 ========================
+
+    /** 定时任务触发路径 */
+    public static final String CRONJOB_PATH_TRIGGER = "/api/v1/cronjob/{id}/trigger";
+
+    // ======================== 规则引擎服务路径常量 ========================
+
+    /** 规则评估（dry-run）路径 */
+    public static final String LITERULE_PATH_DRY_RUN = "/ruleEngine/rules/dryRun";
+
+    /** 规则评估（正式）路径 */
+    public static final String LITERULE_PATH_EVALUATE = "/ruleEngine/rules/evaluate";
+
+    // ======================== 工作流服务路径常量 ========================
+
+    /** 流程启动路径 */
+    public static final String WORKFLOW_PATH_START = "/api/v1/workflow/engine/instance/start";
+
+    /** 按业务查询流程路径 */
+    public static final String WORKFLOW_PATH_GET_BY_BUSINESS = "/api/v1/workflow/engine/instance/byBusiness";
+
+    /** 流程终止路径 */
+    public static final String WORKFLOW_PATH_TERMINATE = "/api/v1/workflow/engine/instance/{id}/terminate";
+
+    // ======================== 用户中心内部 API 路径常量 ========================
+
+    /** 用户信息查询路径 */
+    public static final String USERINFO_PATH_USER_INFO = "/api/internal/user/info";
+
+    /** 部门树查询路径 */
+    public static final String USERINFO_PATH_DEPT_TREE = "/api/internal/dept/tree";
+
+    /** 部门列表查询路径 */
+    public static final String USERINFO_PATH_DEPT_LIST = "/api/internal/dept/list";
+
+    /** 按角色查询用户 ID 列表路径 */
+    public static final String USERINFO_PATH_USER_LIST_BY_ROLE = "/api/internal/user/list-by-role";
+
+    /** 查询用户角色编码列表路径 */
+    public static final String USERINFO_PATH_USER_ROLE_CODES = "/api/internal/user/role-codes";
+
+    /** 查询用户部门 ID 列表路径 */
+    public static final String USERINFO_PATH_USER_DEPT_IDS = "/api/internal/user/dept-ids";
+
+    /** 查询用户直属上级路径 */
+    public static final String USERINFO_PATH_USER_LEADER = "/api/internal/user/leader";
+
+    /** 按岗位查询用户 ID 列表路径 */
+    public static final String USERINFO_PATH_USER_LIST_BY_POSITION = "/api/internal/user/list-by-position";
+
+    /** 按部门 ID 查询负责人路径 */
+    public static final String USERINFO_PATH_DEPT_LEADER_BY_ID = "/api/internal/dept/leader-by-id";
+
+    /** 按部门编码查询负责人路径 */
+    public static final String USERINFO_PATH_DEPT_LEADER_BY_CODE = "/api/internal/dept/leader-by-code";
+
+    /** 批量查询用户名称路径 */
+    public static final String USERINFO_PATH_USER_BATCH_NAMES = "/api/internal/user/batch-names";
+
+    /** 批量查询部门名称路径 */
+    public static final String USERINFO_PATH_DEPT_BATCH_NAMES = "/api/internal/dept/batch-names";
+
+    /** 批量查询角色名称路径 */
+    public static final String USERINFO_PATH_ROLE_BATCH_NAMES = "/api/internal/role/batch-names";
+
+    /** 批量查询岗位名称路径 */
+    public static final String USERINFO_PATH_POST_BATCH_NAMES = "/api/internal/post/batch-names";
+
+    /** 批量查询公司名称路径 */
+    public static final String USERINFO_PATH_COMPANY_BATCH_NAMES = "/api/internal/company/batch-names";
+
+    // ======================== Feign 降级统一错误码 ========================
+
+    /**
+     * Feign 调用目标服务不可用时的统一错误码。
+     *
+     * <p>所有 FeignClient FallbackFactory 在服务降级时必须返回此错误码，
+     * 禁止返回 {@code BaseResponse.success(null)} 或 {@code BaseResponse.success(emptyList)}，
+     * 避免调用方误判为成功。
+     *
+     * <p>错误码与 {@link com.njydsz.common.core.code.BaseResultCode#SERVICE_UNAVAILABLE} 保持一致。
+     */
+    public static final String FEIGN_SERVICE_UNAVAILABLE = "B10202";
 }

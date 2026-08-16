@@ -3,6 +3,7 @@ package com.njydsz.gateway.filter;
 import java.time.Instant;
 import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
@@ -12,6 +13,7 @@ import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
+import com.njydsz.common.audit.event.GatewayAuditEventBridge;
 import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayFilterOrder;
@@ -41,22 +43,14 @@ import reactor.core.publisher.Mono;
  *   <li>用户设备（User-Agent / 客户端指纹）</li>
  * </ul>
  *
- * <h3>输出格式</h3>
- * <p>结构化 JSON 日志，便于 ELK/Loki 采集分析：
- * <pre>
- * {
- *   "eventType": "AUDIT",
- *   "timestamp": "2025-08-09T10:30:00Z",
- *   "userId": "u123456",
- *   "clientIp": "10.0.0.1",
- *   "method": "DELETE",
- *   "path": "/api/project/123",
- *   "statusCode": 200,
- *   "userAgent": "Mozilla/5.0...",
- *   "traceId": "abc123",
- *   "sensitivity": "HIGH"
- * }
- * </pre>
+ * <h3>审计链路（v1.2.0 双轨制）</h3>
+ * <p>自 v1.2.0 起，网关审计采用双轨输出：
+ * <ol>
+ *   <li><b>SLF4J 结构化日志</b>（保留）：输出到 ELK/Loki，用于日志检索与告警</li>
+ *   <li><b>审计事件桥接</b>（新增）：通过 {@link GatewayAuditEventBridge} 发布操作日志事件，
+ *       由 ydsz-common-audit 的 {@code AuditEventListener} 消费并落库到 sys_audit_log，
+ *       实现与业务模块审计数据的统一存储</li>
+ * </ol>
  *
  * <h3>执行顺序</h3>
  * <p>{@code HIGHEST_PRECEDENCE + 35}，在限流(+30)之后，
@@ -91,6 +85,18 @@ public class AuditLogFilter implements GlobalFilter, Ordered {
     );
 
     /**
+     * 网关审计事件桥接器（可选 Bean）。
+     *
+     * <p>当容器中存在 {@link GatewayAuditEventBridge} 时（项目引入 ydzz-common-audit），
+     * 审计事件会同步发布到 Spring 事件体系，最终落库到 sys_audit_log。
+     * 不存在时仅输出 SLF4J 结构化日志，保持对 audit 模块的松耦合。
+     *
+     * <p>使用 {@code @Autowired(required = false)} 适配无 common-audit 的项目。
+     */
+    @Autowired(required = false)
+    private GatewayAuditEventBridge gatewayAuditEventBridge;
+
+    /**
      * 审计日志过滤器入口
      *
      * <p>在请求完成后记录审计日志，使用 {@code then()} 确保
@@ -122,12 +128,16 @@ public class AuditLogFilter implements GlobalFilter, Ordered {
                     ? exchange.getResponse().getStatusCode().value() : 0;
             long duration = System.currentTimeMillis() - startTime;
 
-            writeAuditLog(exchange, method, path, statusCode, duration);
+            // 轨道 1：SLF4J 结构化日志（保留）
+            writeStructuredLog(exchange, method, path, statusCode, duration);
+
+            // 轨道 2：审计事件桥接（v1.2.0 新增，可选）
+            publishAuditEvent(exchange, method, path, statusCode, duration);
         }));
     }
 
     /**
-     * 写入审计日志
+     * 轨道 1：输出 SLF4J 结构化日志
      *
      * <p>使用 StringBuilder 手动构建 JSON，避免 Map + 反射开销。
      *
@@ -137,8 +147,8 @@ public class AuditLogFilter implements GlobalFilter, Ordered {
      * @param statusCode HTTP 状态码
      * @param duration   请求耗时（毫秒）
      */
-    private void writeAuditLog(ServerWebExchange exchange, HttpMethod method,
-                                String path, int statusCode, long duration) {
+    private void writeStructuredLog(ServerWebExchange exchange, HttpMethod method,
+                                      String path, int statusCode, long duration) {
         ServerHttpRequest request = exchange.getRequest();
 
         String userId = request.getHeaders().getFirst(GatewayConstants.HEADER_USER_ID);
@@ -182,6 +192,51 @@ public class AuditLogFilter implements GlobalFilter, Ordered {
             log.warn(auditLog);
         } else {
             log.info(auditLog);
+        }
+    }
+
+    /**
+     * 轨道 2：发布审计事件到 sys_audit_log
+     *
+     * <p>通过 {@link GatewayAuditEventBridge} 将网关审计数据桥接至 ydsz-common-audit 模块，
+     * 由模块内部的 {@code AuditEventListener} 异步消费并落库到 sys_audit_log 表。
+     * 实现网关与业务模块审计数据的统一存储。
+     *
+     * <p>当 {@link GatewayAuditEventBridge} 不存在于容器时（项目未引入 common-audit），静默跳过。
+     *
+     * @param exchange   服务器 Web 交换上下文
+     * @param method     HTTP 方法
+     * @param path       请求路径
+     * @param statusCode HTTP 状态码
+     * @param duration   请求耗时（毫秒）
+     */
+    private void publishAuditEvent(ServerWebExchange exchange, HttpMethod method,
+                                     String path, int statusCode, long duration) {
+        if (gatewayAuditEventBridge == null) {
+            return;
+        }
+
+        try {
+            ServerHttpRequest request = exchange.getRequest();
+            String userId = request.getHeaders().getFirst(GatewayConstants.HEADER_USER_ID);
+            String traceId = request.getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
+            String clientIp = extractClientIp(request);
+            String tenantId = request.getHeaders().getFirst(DataPermissionHeaderConstants.X_TENANT_ID);
+
+            // 发布审计事件（异步消费，不阻塞响应式线程）
+            gatewayAuditEventBridge.publishAuditEvent(
+                    userId,
+                    clientIp,
+                    method.name(),
+                    path,
+                    statusCode,
+                    duration,
+                    traceId,
+                    tenantId
+            ).subscribe();
+        } catch (Exception e) {
+            // 审计事件发布异常不影响主链路
+            log.debug("[AuditLogFilter] 审计事件发布异常（非致命）: {}", e.getMessage());
         }
     }
 

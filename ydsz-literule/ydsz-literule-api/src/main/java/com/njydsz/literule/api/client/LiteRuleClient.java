@@ -62,7 +62,7 @@ public interface LiteRuleClient {
      * @param facts    事实数据（如 {@code margin}, {@code threshold}, {@code overdueDays}）
      * @return 触发的规则结果列表（按严重度倒序），未触发任何规则时返回空列表
      */
-    @PostMapping("/ruleEngine/rules/dryRun")
+    @PostMapping(FeignClientConstants.LITERULE_PATH_DRY_RUN)
     BaseResponse<List<RuleResult>> dryRun(@RequestParam(value = "ruleCode", required = false) String ruleCode,
                                           @RequestBody Map<String, Object> facts);
 
@@ -84,7 +84,7 @@ public interface LiteRuleClient {
      * @return 触发的规则结果列表（按严重度倒序），未触发任何规则时返回空列表
      * @since 1.0.0
      */
-    @PostMapping("/ruleEngine/rules/evaluate")
+    @PostMapping(FeignClientConstants.LITERULE_PATH_EVALUATE)
     BaseResponse<List<RuleResult>> evaluate(@RequestParam(value = "ruleCode", required = false) String ruleCode,
                                              @RequestParam(value = "scenario", required = false) String scenario,
                                              @RequestBody Map<String, Object> facts);

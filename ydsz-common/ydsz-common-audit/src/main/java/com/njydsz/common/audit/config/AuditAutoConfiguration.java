@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -30,6 +31,7 @@ import com.njydsz.common.audit.core.AuditWriter;
 import com.njydsz.common.audit.core.DefaultAuditQueryService;
 import com.njydsz.common.audit.core.DefaultAuditRecorder;
 import com.njydsz.common.audit.event.AuditEventListener;
+import com.njydsz.common.audit.event.GatewayAuditEventBridge;
 import com.njydsz.common.audit.health.AuditHealthIndicator;
 import com.njydsz.common.audit.storage.DefaultAuditStorage;
 import com.njydsz.common.audit.storage.JdbcAuditStorage;
@@ -283,6 +285,28 @@ public class AuditAutoConfiguration {
     public AuditHealthIndicator auditHealthIndicator(AuditRecorder auditRecorder, AuditProperties properties) {
         log.info("初始化审计健康检查指示器: AuditHealthIndicator");
         return new AuditHealthIndicator(auditRecorder, properties);
+    }
+
+    /**
+     * 创建网关审计事件桥接器 Bean
+     *
+     * <p>供 Spring Cloud Gateway 等响应式组件使用，将 WebFlux 过滤器中采集的审计数据
+     * 安全发布到 Spring 事件体系，由 {@link AuditEventListener} 异步消费并落库。
+     *
+     * <p>使用场景：
+     * <ul>
+     *   <li>网关 GlobalFilter 通过本桥接器发布操作日志事件</li>
+     *   <li>其他响应式组件（如 WebFlux 端点）需要统一审计时使用</li>
+     * </ul>
+     *
+     * @param eventPublisher Spring 事件发布器
+     * @return 网关审计事件桥接器
+     */
+    @Bean
+    @ConditionalOnMissingBean(GatewayAuditEventBridge.class)
+    public GatewayAuditEventBridge gatewayAuditEventBridge(ApplicationEventPublisher eventPublisher) {
+        log.info("初始化网关审计事件桥接器: GatewayAuditEventBridge");
+        return new GatewayAuditEventBridge(eventPublisher);
     }
 
     /**
