@@ -10,6 +10,9 @@ import java.util.stream.Collectors;
 
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.safe.alert.SecurityEvent;
+import com.njydsz.common.safe.alert.SecurityEventType;
+import com.njydsz.common.safe.alert.SecurityEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -104,6 +107,8 @@ public class AuthServiceImpl implements AuthService {
     private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
     /** 登录历史服务（记录登录尝试，IP 封禁检查） */
     private final LoginHistoryService loginHistoryService;
+    /** P2-2: 安全事件发布器（登录失败时发布 BRUTE_FORCE 事件，驱动 SecurityEventAggregator 自动封禁） */
+    private final ObjectProvider<SecurityEventPublisher> securityEventPublisherProvider;
 
     /**
      * {@inheritDoc}
@@ -191,6 +196,8 @@ public class AuthServiceImpl implements AuthService {
             recordLoginFailure(user);
             loginHistoryService.recordLoginAttempt(user.getId(), username, loginIp,
                     "FAILED", "PASSWORD_INCORRECT", userAgent);
+            // P2-2: 发布 BRUTE_FORCE 安全事件，驱动 SecurityEventAggregator 滑动窗口计数 + 自动 IP 封禁
+            publishBruteForceEvent(loginIp, userAgent, username);
             userInfoMetrics.recordLoginFail();
             userInfoMetrics.stopTimer(sample);
             throw new BusinessException(UserInfoExceptionCode.PASSWORD_INCORRECT);
@@ -396,6 +403,34 @@ public class AuthServiceImpl implements AuthService {
      */
     private void updateLoginSuccess(UserAccount user, String loginIp) {
         userAccountMapper.resetLoginSuccess(user.getId(), loginIp);
+    }
+
+    /**
+     * P2-2: 发布 BRUTE_FORCE 安全事件
+     *
+     * <p>当密码校验失败时调用，将事件发布给 common-safe 的 {@link SecurityEventAggregator}。
+     * 聚合器基于滑动窗口统计同一 IP 的登录失败频率，超过阈值时自动封禁 IP。
+     *
+     * @param sourceIp  请求来源 IP
+     * @param userAgent 用户代理
+     * @param username  登录尝试的用户名
+     */
+    private void publishBruteForceEvent(String sourceIp, String userAgent, String username) {
+        SecurityEventPublisher publisher = securityEventPublisherProvider.getIfAvailable();
+        if (publisher == null) {
+            return;
+        }
+        if (sourceIp == null || sourceIp.isBlank()) {
+            return;
+        }
+        publisher.publish(new SecurityEvent(
+                SecurityEventType.BRUTE_FORCE,
+                "/auth/login",
+                sourceIp,
+                userAgent,
+                "Failed login for user: " + username,
+                SecurityEvent.Severity.MEDIUM
+        ));
     }
 
     /**

@@ -57,6 +57,29 @@ spring:
             refresh: true
 
 ydsz:
+  # P2-2: 安全事件自动响应（BRUTE_FORCE → 滑动窗口 → 自动 IP 封禁）
+  # 登录失败时 AuthServiceImpl 发布 BRUTE_FORCE 事件 → SecurityEventAggregator 统计
+  # → 同一 IP 窗口内超过阈值 → IpAccessService.block() → IpAccessFilter 拦截后续请求
+  safe:
+    ip-access:
+      enabled: true
+      mode: BLACKLIST
+    auto-block:
+      enabled: true
+      threshold: 10
+      window-seconds: 60
+
+  # P2-3: 字段级加密（@EncryptField 试点）
+  # 为 UserAccount.realName 提供 AES-256-GCM 字段级加密
+  # ⚠️ 生产环境密钥应通过 Nacos 加密配置或 K8s Secret 注入，禁止硬编码
+    field-encryption:
+      enabled: true
+      default-key-version: 1
+      failure-strategy: THROW
+      masked-value: "****"
+      keys:
+        1: "fbQujnuiM1o99Ds4mK8VqyeLgRyI25gtL8e+irNglLM="
+
   # P2-3: API 版本管理机制
   web:
     api-version:

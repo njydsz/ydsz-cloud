@@ -17,14 +17,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.njydsz.common.event.admin.OutboxAdminService;
-import com.njydsz.common.event.api.EventStore;
 import com.njydsz.common.event.gateway.EventPublishGateway;
 import com.njydsz.common.event.gateway.NoopEventPublishGateway;
 import com.njydsz.common.event.gateway.RocketMqEventPublishGateway;
 import com.njydsz.common.event.health.OutboxHealthIndicator;
 import com.njydsz.common.event.processor.OutboxProcessor;
 import com.njydsz.common.event.repository.OutboxRepository;
-import com.njydsz.common.event.service.OutboxEventStore;
 import com.njydsz.common.event.service.OutboxService;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 
@@ -48,20 +46,19 @@ import io.micrometer.core.instrument.MeterRegistry;
  *   <li>{@link RocketMqGatewayConfiguration} 作为嵌套 {@code @Configuration} 类，
  *       通过 {@code @ConditionalOnClass} / {@code @ConditionalOnBean} 条件控制加载</li>
  *   <li>当 RocketMQ 不在 classpath 时，整个嵌套配置类不加载，不会创建相关 Bean</li>
- *   <li>当用户自定义 {@link EventStore} Bean 时，本类整体不加载，避免半成品状态</li>
  * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
  * @since 1.6.0 将 {@code @Import(RocketMqGatewayConfiguration.class)} 改为嵌套 {@code @Configuration}，
- *             修复条件注解失效问题；新增类级 {@code @ConditionalOnMissingBean(EventStore.class)} 守卫
+ *             修复条件注解失效问题
  * @since 1.7.0 移除 JSON Schema 校验框架和同步投递模式的自动配置，精简职责
+ * @since 2.0.0 移除已废弃的 EventStore 接口支持，统一使用 DomainEventPublisher
  */
 @AutoConfiguration
 @EnableConfigurationProperties(EventProperties.class)
 @ConditionalOnProperty(prefix = "ydsz.event.outbox", name = "enabled", havingValue = "true", matchIfMissing = true)
 @ConditionalOnBean(JdbcTemplate.class)
-@ConditionalOnMissingBean(EventStore.class)
 public class EventAutoConfiguration {
 
     /** 日志实例 */
@@ -106,20 +103,6 @@ public class EventAutoConfiguration {
                                        SnowflakeIdGenerator snowflakeIdGenerator,
                                        org.springframework.context.ApplicationEventPublisher eventPublisher) {
         return new OutboxService(outboxRepository, properties, snowflakeIdGenerator, eventPublisher);
-    }
-
-    /**
-     * 创建领域事件存储适配器（实现 common-domain 的 EventStore SPI）
-     *
-     * <p>当容器中不存在其他 EventStore 实现时，自动注册基于 Outbox 的适配器。
-     *
-     * @param outboxService Outbox 写入服务
-     * @return Outbox 事件存储适配器实例
-     */
-    @Bean
-    public OutboxEventStore outboxEventStore(OutboxService outboxService) {
-        log.info("OutboxEventStore registered as default EventStore implementation");
-        return new OutboxEventStore(outboxService);
     }
 
     /**
