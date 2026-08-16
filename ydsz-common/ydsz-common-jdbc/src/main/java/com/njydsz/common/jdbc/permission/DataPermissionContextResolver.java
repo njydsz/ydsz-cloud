@@ -14,7 +14,8 @@ import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.constant.DataScopeConstants;
-import com.njydsz.common.core.model.CurrentUser;\nimport com.njydsz.common.util.http.RequestContextUtils;
+import com.njydsz.common.core.model.CurrentUser;
+import com.njydsz.common.util.http.RequestContextUtils;
 import com.njydsz.common.util.string.StringUtils;
 
 /**
@@ -105,7 +106,8 @@ public class DataPermissionContextResolver {
         DataPermissionContext context = new DataPermissionContext();
         context.setDataScope(resolveDataScope(resolveHeader(request, DataPermissionHeaderConstants.X_DATA_SCOPE)));
         // 安全增强：userId 优先从认证上下文（JWT）获取，不可伪造
-        Object authObj = RequestContext.get(BizContextKeys.KEY_AUTH_INFO);\n        String authUserId = authObj instanceof CurrentUser auth ? auth.getUniqueId() : null;
+        Object authObj = RequestContext.get(BizContextKeys.KEY_AUTH_INFO);
+        String authUserId = authObj instanceof CurrentUser auth ? auth.getUniqueId() : null;
         context.setUserId(trimToNull(authUserId != null ? authUserId : resolveHeader(request, DataPermissionHeaderConstants.X_UNIQUE_ID)));
         context.setCompanyIds(splitCsv(resolveHeader(request, DataPermissionHeaderConstants.X_COMPANY_IDS)));
         context.setDeptIds(splitCsv(resolveHeader(request, DataPermissionHeaderConstants.X_DEPT_IDS)));

@@ -6,7 +6,8 @@ import com.njydsz.common.jdbc.config.FieldFillConfiguration;
 import com.njydsz.common.jdbc.constant.AuditFieldConstants;
 import com.njydsz.common.jdbc.enums.FieldFillStrategyEnum;
 import com.njydsz.common.core.model.CurrentUser;
-import com.njydsz.common.auth.context.AuthInfoUtils;
+import com.njydsz.common.core.context.BizContextKeys;
+import com.njydsz.common.core.context.RequestContext;
 
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.StringValue;
@@ -61,11 +62,12 @@ public class UpdatedByHandler extends AbstractFieldFillHandler {
 
     @Override
     protected Expression doGetFieldFillValue() {
-        Object authObj = RequestContext.get(BizContextKeys.KEY_AUTH_INFO);\n        CurrentUser authInfo = authObj instanceof CurrentUser auth ? auth : null;
+        Object authObj = RequestContext.get(BizContextKeys.KEY_AUTH_INFO);
+        CurrentUser authInfo = authObj instanceof CurrentUser auth ? auth : null;
         // 非 Web 上下文（定时任务、MQ 消费）返回英文标识符 "system"，
         // 由上层 MessageSource 通过 key "audit.updated_by.system" 解析为展示文本
         String uniqueId = Optional.ofNullable(authInfo)
-                .map(AuthInfo::getUniqueId).orElse(AuditFieldConstants.UPDATED_BY_SYSTEM);
+                .map(CurrentUser::getUniqueId).orElse(AuditFieldConstants.UPDATED_BY_SYSTEM);
         return new StringValue(uniqueId);
     }
 

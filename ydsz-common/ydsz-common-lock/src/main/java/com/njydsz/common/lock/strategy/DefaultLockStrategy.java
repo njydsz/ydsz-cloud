@@ -14,6 +14,7 @@ import com.njydsz.common.lock.annotation.LockType;
 import com.njydsz.common.lock.config.LockProperties;
 import com.njydsz.common.lock.core.AbstractRedisDistributedLock;
 import com.njydsz.common.lock.core.DistributedLocker;
+import com.njydsz.common.lock.core.LockWaitTimePolicy;
 import com.njydsz.common.lock.core.LockEventListener;
 import com.njydsz.common.lock.impl.RedisFairLock;
 import com.njydsz.common.lock.impl.RedisMultiLock;

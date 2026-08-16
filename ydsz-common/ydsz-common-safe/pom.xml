@@ -104,5 +104,11 @@
             <groupId>com.alibaba.csp</groupId>
             <artifactId>sentinel-core</artifactId>
         </dependency>
+        <!-- MyBatis（EncryptTypeHandler 需要 BaseTypeHandler） -->
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis</artifactId>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 </project>

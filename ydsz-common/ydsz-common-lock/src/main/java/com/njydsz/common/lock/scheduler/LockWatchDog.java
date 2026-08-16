@@ -119,7 +119,7 @@ public class LockWatchDog {
     /**
      * 续期任务上下文
      */
-    static class WatchTask {
+    public static class WatchTask {
         final String clientId;
         final long leaseTime;
         final LockType lockType;
