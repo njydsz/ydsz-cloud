@@ -22,8 +22,8 @@ import com.njydsz.common.json.type.JsonType;
  * 文档导出器抽象基类
  *
  * <p>封装 HTML / Markdown / JSON 三种导出格式的公共逻辑，
- * 子类只需覆盖 {@link #generateHtmlContent(ApiDocInfo, String)} 和
- * {@link #generateMarkdownContent(String)} 方法提供差异化内容生成。
+ * 子类只需覆盖 {@link #generateContent(String, String)} 方法，
+ * 根据 format 参数（"html" / "markdown"）提供差异化内容生成。
  *
  * <p><b>注册方式：</b>本类为抽象类，不标注 {@code @Component}，
  * 由 {@code DocAutoConfiguration} 通过 {@code @Import} 注册具体子类。
@@ -63,69 +63,56 @@ public abstract class AbstractDocExporter implements DocExporter {
         this.docProperties = docProperties;
     }
 
-    // ==================== 抽象方法 ====================
+    // ==================== 模板方法（子类覆盖） ====================
 
     /**
-     * 生成 HTML 内容
+     * 根据格式生成文档内容（核心扩展点）。
      *
-     * @param docInfo 文档基本信息
-     * @param apiDocs OpenAPI 文档 JSON 字符串
-     * @return HTML 内容字符串
-     */
-    protected abstract String generateHtmlContent(ApiDocInfo docInfo, String apiDocs);
-
-    /**
-     * 生成 Markdown 内容
+     * <p>子类只需覆盖此方法，根据格式类型生成对应的内容字符串，
+     * 基类负责文件写入、目录创建、格式分发等通用逻辑。
      *
      * @param apiDocs OpenAPI 文档 JSON 字符串
-     * @return Markdown 内容字符串
+     * @param format  导出格式（html / markdown / json，小写）
+     * @return 生成的文档内容字符串
      */
-    protected abstract String generateMarkdownContent(String apiDocs);
+    protected abstract String generateContent(String apiDocs, String format);
 
     // ==================== 公共导出方法 ====================
-
-    @Override
-    public File exportToHtml(String apiDocs, String outputDir) throws IOException {
-        ensureOutputDirectory(outputDir);
-        File outputFile = new File(outputDir, "api-documentation.html");
-        ApiDocInfo docInfo = parseApiDocInfo(apiDocs);
-        String htmlContent = generateHtmlContent(docInfo, apiDocs);
-        Files.writeString(outputFile.toPath(), htmlContent);
-        logger.info("HTML 文档已导出: {}", outputFile.getAbsolutePath());
-        return outputFile;
-    }
-
-    @Override
-    public File exportToMarkdown(String apiDocs, String outputDir) throws IOException {
-        ensureOutputDirectory(outputDir);
-        File outputFile = new File(outputDir, "api-documentation.md");
-        String markdown = generateMarkdownContent(apiDocs);
-        Files.writeString(outputFile.toPath(), markdown);
-        logger.info("Markdown 文档已导出: {}", outputFile.getAbsolutePath());
-        return outputFile;
-    }
-
-    @Override
-    public File exportToJson(String apiDocs, String outputDir) throws IOException {
-        ensureOutputDirectory(outputDir);
-        File outputFile = new File(outputDir, "api-documentation.json");
-        Files.writeString(outputFile.toPath(), apiDocs);
-        logger.info("JSON 文档已导出: {}", outputFile.getAbsolutePath());
-        return outputFile;
-    }
 
     @Override
     public File export(String apiDocs, String outputDir, String format) throws IOException {
         if (format == null || format.isEmpty()) {
             throw new IllegalArgumentException("导出格式不能为空");
         }
-        String fmt = format.toLowerCase();
-        return switch (fmt) {
-            case "html" -> exportToHtml(apiDocs, outputDir);
-            case "markdown", "md" -> exportToMarkdown(apiDocs, outputDir);
-            case "json" -> exportToJson(apiDocs, outputDir);
-            default -> throw new IllegalArgumentException("不支持的导出格式: " + fmt);
-        };
+        ensureOutputDirectory(outputDir);
+
+        String normalizedFormat = format.toLowerCase();
+        String content;
+        String fileName;
+
+        switch (normalizedFormat) {
+            case "html" -> {
+                fileName = "api-documentation.html";
+                content = generateContent(apiDocs, "html");
+            }
+            case "markdown", "md" -> {
+                fileName = "api-documentation.md";
+                content = generateContent(apiDocs, "markdown");
+            }
+            case "json" -> {
+                fileName = "api-documentation.json";
+                content = apiDocs;
+            }
+            default -> {
+                fileName = "api-documentation." + normalizedFormat;
+                content = generateContent(apiDocs, normalizedFormat);
+            }
+        }
+
+        File outputFile = new File(outputDir, fileName);
+        Files.writeString(outputFile.toPath(), content);
+        logger.info("{} 文档已导出: {}", format.toUpperCase(), outputFile.getAbsolutePath());
+        return outputFile;
     }
 
     @Override

@@ -1,1 +1,4 @@
+# 云顶搜索模块自动配置入口列表 — 引擎模块拆分后各 Starter 在此注册自己的自动配置类
+# 格式：每行一个全限定类名，# 开头为注释，空行忽略
+
 com.njydsz.common.search.config.SearchAutoConfiguration

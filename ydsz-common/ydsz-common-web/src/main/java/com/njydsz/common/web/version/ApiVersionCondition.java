@@ -138,10 +138,19 @@ public class ApiVersionCondition implements RequestCondition<ApiVersionCondition
         if (requestVersion == null) {
             return false;
         }
-        // 支持主版本匹配（"1" 匹配 "1.0"）
-        return requestVersion.equals(version) ||
-               requestVersion.startsWith(version + ".") ||
-               version.startsWith(requestVersion + ".");
+        // 精确匹配
+        if (requestVersion.equals(version)) {
+            return true;
+        }
+        // 主版本前缀匹配：请求 "1.0" 匹配接口 "1"
+        if (requestVersion.startsWith(version + ".")) {
+            return true;
+        }
+        // 灵活匹配模式：双向匹配（开启时请求 "1" 也能匹配接口 "1.0"）
+        if (properties.isFlexibleMatching() && version.startsWith(requestVersion + ".")) {
+            return true;
+        }
+        return false;
     }
 
     /**

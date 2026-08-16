@@ -2,6 +2,7 @@ package com.njydsz.common.file.storage;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import org.springframework.web.multipart.MultipartFile;
 
@@ -60,6 +61,19 @@ public interface FileUploader {
      * @return 包含文件元信息的 FileStorage 对象
      */
     FileStorage upload(String bucketName, String objectName, MultipartFile file, UploadProgressListener listener);
+
+    /**
+     * 异步文件上传（非阻塞）。
+     *
+     * <p>内部使用专用线程池执行上传操作，不阻塞调用者线程，
+     * 适用于批量上传或需要并发处理多个上传请求的场景。
+     *
+     * @param bucketName  存储桶名称，传 null 时使用配置默认值
+     * @param objectName  对象路径
+     * @param file        待上传的 MultipartFile
+     * @return 异步上传结果，包含文件元信息的 CompletableFuture
+     */
+    CompletableFuture<FileStorage> uploadAsync(String bucketName, String objectName, MultipartFile file);
 
     /**
      * 分片上传第一步：初始化分片任务

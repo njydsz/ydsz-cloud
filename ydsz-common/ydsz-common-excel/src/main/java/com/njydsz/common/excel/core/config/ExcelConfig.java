@@ -3,6 +3,7 @@ package com.njydsz.common.excel.core.config;
 import java.util.List;
 import java.util.zip.Deflater;
 
+import com.njydsz.common.excel.api.validator.DataValidator.ValidationMode;
 import com.njydsz.common.excel.core.security.FormulaInjectionGuard;
 
 /**
@@ -84,6 +85,9 @@ public class ExcelConfig {
 
     /** SXSSF 写入缓存行数，默认100 */
     private volatile int writeCacheSize = 100;
+
+    /** 数据校验模式，默认 FAIL_FAST */
+    private volatile ValidationMode validationMode = ValidationMode.FAIL_FAST;
 
     /**
      * 私有构造函数，防止外部实例化。
@@ -406,6 +410,26 @@ public class ExcelConfig {
             throw new IllegalArgumentException("headRowNumber must be >= 1, got: " + headRowNumber);
         }
         this.headRowNumber = headRowNumber;
+    }
+
+    public ValidationMode getValidationMode() {
+        return validationMode;
+    }
+
+    /**
+     * 设置数据校验模式。
+     *
+     * <p>{@link ValidationMode#FAIL_FAST} 遇错即抛，适合单行即处理即丢弃的场景；
+     * {@link ValidationMode#COLLECT_ALL} 收集该行全字段错误后一次性抛出，
+     * 适合需要一次性反馈所有错误给用户的 UI 场景。
+     *
+     * @param mode 校验模式，不能为 {@code null}
+     */
+    public synchronized void setValidationMode(ValidationMode mode) {
+        if (mode == null) {
+            throw new IllegalArgumentException("validationMode must not be null");
+        }
+        this.validationMode = mode;
     }
 
     public int getWriteCacheSize() {

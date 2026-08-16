@@ -1,6 +1,13 @@
 # ydsz-common-excel
 
-> 高性能 Excel 读写引擎（L5 业务服务层）— 双引擎架构（零 POI 快速路径 + POI 兼容路径）、SAX 流式读、流式写、并发写、模板填充、ASM 字节码加速、列式存储（Parquet/ORC）、Tabular 统一 API、公式注入防护。
+> 高性能 Excel 读写引擎（L5 业务服务层）— 双引擎架构（零 POI 快速路径 + POI 兼容路径）、SAX 流式读、流式写、并发写、模板填充、ASM 字节码加速、列式存储、公式注入防护。
+
+**当前版本**：v1.0.0，**已实现核心能力**：XLS/XLSX 读写（双引擎）、Sheet 流式解析（大文件不 OOM）、并发写入（多线程分片预序列化）、模板填充、公式注入防护、Micrometer 指标采集、Spring Boot 自动装配 + Actuator 健康检查。
+
+**后续版本路线图**：
+- **v1.1.0**：Tabular 统一 API 落地（CSV/TSV Reader/Writer 实现）、JMH 性能回归基线
+- **v1.2.0**：xls 格式流式读取优化、DataValidator 注解全覆盖、模板严格模式（strictMode）
+- **v2.0.0**：Parquet/ORC 列式存储读写、动态合并单元格回调
 
 ## 模块定位
 
@@ -139,17 +146,19 @@ Parquet/ORC 类型映射详见 `ColumnarType` 类内表格。
 
 ### 9. Tabular 统一 API
 
-| 类 / 接口 | 说明 |
-|---|---|
-| `TabularFormat` | 统一格式枚举（EXCEL_XLS / EXCEL_XLSX / CSV / TSV / PARQUET / ORC，支持扩展名与 Content-Type 识别） |
-| `TabularReader<T>` | 统一读取接口（`open` → `readAll` → `close`，实现 Closeable） |
-| `TabularWriter<T>` | 统一写入接口（`open` → `write` / `writeAll` → `flush` → `close`） |
-| `TabularRowMapper<T>` | 统一行映射器（headers + toRow(String[]) + fromRow(T)） |
-| `TabularReadContext` | 读取上下文（format / headers / currentRowNumber / processedCount / errorCount / cancel） |
-| `TabularWriteContext` | 写入上下文（format / writtenCount / elapsed） |
-| `TabularReadListener<T>` | 读取监听器（onOpen / onRow / onBatch / onError / onClose） |
-| `TabularWriteListener` | 写入监听器 |
-| `DefaultAnnotationRowMapper<T>` | 基于注解的默认行映射器实现 |
+| 类 / 接口 | 说明 | 状态 |
+|---|---|---|
+| `TabularFormat` | 统一格式枚举（EXCEL_XLS / EXCEL_XLSX / CSV / TSV / PARQUET / ORC） | ✅ 已完成 |
+| `TabularReader<T>` | 统一读取接口 | ✅ 接口已完成，XLS/XLSX 实现可用 |
+| `TabularWriter<T>` | 统一写入接口 | ✅ 接口已完成，XLS/XLSX 实现可用 |
+| `TabularRowMapper<T>` | 统一行映射器 | ✅ 已完成 |
+| `TabularReadContext` | 读取上下文 | ✅ 已完成 |
+| `TabularWriteContext` | 写入上下文 | ✅ 已完成 |
+| `TabularReadListener<T>` | 读取监听器 | ✅ 已完成 |
+| `TabularWriteListener` | 写入监听器 | ✅ 已完成 |
+| CSV / TSV Reader/Writer | 文本分隔格式具体实现 | 🚧 v1.1.0 |
+| Parquet Reader/Writer | Parquet 列式存储读写 | 🚧 v2.0.0 |
+| ORC Reader/Writer | ORC 列式存储读写 | 🚧 v2.0.0 |
 
 ### 10. 事件回调
 

@@ -1,7 +1,5 @@
 package com.njydsz.common.socket.cluster;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -11,8 +9,11 @@ import lombok.NoArgsConstructor;
 /**
  * WebSocket 集群广播消息（Redis Pub/Sub 载荷）。
  *
- * <p>多实例部署下，推送指令封装为本对象发布到 Redis Channel，所有实例订阅后
+ * <p>多实例部署下，推送指令封装为本对象后序列化为 JSON 发布到 Redis Channel，所有实例订阅后
  * 各自推送到本地 WebSocket session，从而实现跨节点广播。
+ *
+ * <p>注意：本对象通过 {@code YdszJson} 进行 JSON 序列化后传输，
+ * 不依赖 Java 原生序列化，因此未实现 {@link java.io.Serializable} 接口。
  *
  * <p>推送类型：
  * <ul>
@@ -27,10 +28,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class WebSocketClusterMessage implements Serializable {
-
-    @Serial
-    private static final long serialVersionUID = 1L;
+public class WebSocketClusterMessage {
 
     /** 推送类型：USER / BROADCAST / TOPIC */
     private String pushType;
@@ -83,10 +81,11 @@ public class WebSocketClusterMessage implements Serializable {
      * 构造主题推送消息。
      *
      * @param topic       主题
+     * @param type        消息类型标签（可为 null）
      * @param payloadJson 消息内容 JSON
      * @return 集群推送消息
      */
-    public static WebSocketClusterMessage forTopic(String topic, String payloadJson) {
-        return new WebSocketClusterMessage("TOPIC", null, topic, null, payloadJson, null, null, null);
+    public static WebSocketClusterMessage forTopic(String topic, String type, String payloadJson) {
+        return new WebSocketClusterMessage("TOPIC", null, topic, type, payloadJson, null, null, null);
     }
 }

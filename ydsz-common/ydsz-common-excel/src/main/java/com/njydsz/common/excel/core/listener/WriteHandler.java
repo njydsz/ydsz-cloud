@@ -3,45 +3,41 @@ package com.njydsz.common.excel.core.listener;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.ConditionalFormattingRule;
 import org.apache.poi.ss.usermodel.DataValidation;
 import org.apache.poi.ss.usermodel.DataValidationConstraint;
 import org.apache.poi.ss.usermodel.DataValidationHelper;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.PatternFormatting;
+import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellRangeAddressList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Excel写入处理器 - 条件格式与数据验证工具类
+ * Excel 条件格式与数据验证工具类。
  *
- * <p>提供条件格式和数据验证的构建与应用方法，
- * 支持下拉列表、数字范围、日期验证等多种数据类型。</p>
+ * <p>提供静态工厂方法构造条件格式配置（{@link ConditionalFormattingConfig}）与
+ * 数据验证配置（{@link DataValidationConfig}），以及将它们应用到指定 Sheet 范围的方法。
+ * 支持下拉列表、数字范围、日期区间等多种 POI 验证类型。</p>
  *
- * <h3>核心功能</h3>
- * <ul>
- *   <li>条件格式构建与应用</li>
- *   <li>数据验证(下拉列表、数字范围、日期等)构建与应用</li>
- *   <li>POI颜色值解析</li>
- * </ul>
- *
- * <h3>使用示例</h3>
+ * <h3>典型用法</h3>
  * <pre>{@code
- * // 创建下拉列表验证
+ * // 下拉列表验证
  * DataValidationConfig listConfig = WriteHandler.createListValidation("是,否,待定");
  * WriteHandler.applyDataValidation(sheet, 1, 1000, 1, 1, listConfig);
  *
- * // 创建数字范围验证
+ * // 数字范围验证
  * DataValidationConfig numConfig = WriteHandler.createNumberBetweenValidation(0, 100);
  * WriteHandler.applyDataValidation(sheet, 1, 1000, 2, 2, numConfig);
  *
- * // 应用条件格式
- * List<ConditionalFormattingConfig> configs = WriteHandler.buildConditionalFormatting("A1>100", "RED", null);
+ * // 条件格式（值大于 100 标红）
+ * List<ConditionalFormattingConfig> configs =
+ *     WriteHandler.buildConditionalFormatting("A1>100", "RED", null);
  * WriteHandler.applyConditionalFormatting(sheet, 1, 1000, 0, 0, configs);
  * }</pre>
  *
- * @see WriteStyleHandler
- * @see CellStyle
  * @author ydsz-team
  * @since 1.0.0
  */

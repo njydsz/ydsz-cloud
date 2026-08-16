@@ -10,6 +10,10 @@ import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
 
+import com.njydsz.common.base.i18n.MessageResolverHolder;
+import com.njydsz.common.base.i18n.MessageResolverRegistry;
+import com.njydsz.common.base.i18n.SpringMessageResolver;
+
 /**
  * 国际化配置基类（Web/App 共享）
  *
@@ -21,6 +25,7 @@ import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
  *   <li>支持基于 {@code Accept-Language} 请求头的语言解析</li>
  *   <li>默认支持简体中文（zh_CN）和美式英语（en_US）</li>
  *   <li>默认编码 UTF-8，缺失 key 时回退到 code 而非抛出异常</li>
+ *   <li>通过 {@link MessageResolverRegistry} 桥接 Spring MessageSource 到框架 SPI</li>
  * </ul>
  *
  * <p><b>资源文件命名规范：</b>
@@ -79,5 +84,24 @@ public abstract class BaseI18nConfiguration {
         source.setDefaultEncoding("UTF-8");
         source.setUseCodeAsDefaultMessage(true);
         return source;
+    }
+
+    /**
+     * 注册消息解析器注册表。
+     *
+     * <p>桥接 Spring MessageSource 到框架统一的 MessageResolverHolder SPI，
+     * 同时支持 Spring 注入和程序化注册两种模式。
+     *
+     * @param messageSource Spring 消息源
+     * @return MessageResolverRegistry 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public MessageResolverRegistry messageResolverRegistry(MessageSource messageSource) {
+        MessageResolverRegistry registry = new MessageResolverRegistry();
+        registry.register(new SpringMessageResolver(messageSource));
+        // 同步注册到静态持有器，保证非 Spring 上下文也能访问
+        MessageResolverHolder.setResolverIfAbsent(new SpringMessageResolver(messageSource));
+        return registry;
     }
 }

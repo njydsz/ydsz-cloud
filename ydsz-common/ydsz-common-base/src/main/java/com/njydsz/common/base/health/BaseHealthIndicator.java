@@ -1,5 +1,8 @@
 package com.njydsz.common.base.health;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryUsage;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TimeZone;
@@ -76,6 +79,19 @@ public class BaseHealthIndicator implements HealthIndicator {
             details.put("doc.knife4jPath", docProperties.getKnife4jPath());
         }
 
+        // JVM 堆内存使用概况
+        MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
+        MemoryUsage heapUsage = memoryBean.getHeapMemoryUsage();
+        Map<String, Object> memoryDetails = new LinkedHashMap<>();
+        memoryDetails.put("usedMB", heapUsage.getUsed() / 1024 / 1024);
+        memoryDetails.put("committedMB", heapUsage.getCommitted() / 1024 / 1024);
+        memoryDetails.put("maxMB", heapUsage.getMax() / 1024 / 1024);
+        double usagePercent = heapUsage.getMax() > 0
+                ? Math.round((double) heapUsage.getUsed() / heapUsage.getMax() * 10000.0) / 100.0
+                : 0.0;
+        memoryDetails.put("usagePercent", usagePercent);
+        details.put("heapMemory", memoryDetails);
+
         // 健康判断：安全响应头在启用状态下 frameOptions 不为空
         boolean healthy = true;
         if (securityHeadersProperties.isEnabled()
@@ -90,6 +106,12 @@ public class BaseHealthIndicator implements HealthIndicator {
                 && !docProperties.getBasicAuth().isEnabled()) {
             healthy = false;
             details.put("warning", "生产环境文档已启用但 Basic 认证未开启");
+        }
+
+        // 堆内存使用率超过 95% 标记为 DOWN（OOM 风险）
+        if (usagePercent >= 95.0) {
+            healthy = false;
+            details.put("warning", "堆内存使用率超过 95%，存在 OOM 风险");
         }
 
         if (healthy) {

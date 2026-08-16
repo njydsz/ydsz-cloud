@@ -96,6 +96,9 @@ public class ExcelAutoConfiguration {
         if (properties.getWriteCacheSize() != null) {
             config.setWriteCacheSize(properties.getWriteCacheSize());
         }
+        if (properties.getValidationMode() != null) {
+            config.setValidationMode(properties.getValidationMode());
+        }
 
         return config;
     }

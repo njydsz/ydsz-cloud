@@ -2,8 +2,11 @@ package com.njydsz.common.excel.spring.boot;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
+
+import com.njydsz.common.excel.api.validator.DataValidator.ValidationMode;
 
 /**
  * Excel 模块配置属性
@@ -92,6 +95,9 @@ public class ExcelProperties {
 
     /** SXSSF 写入缓存行数 */
     private Integer writeCacheSize;
+
+    /** 数据校验模式（FAIL_FAST 或 COLLECT_ALL） */
+    private ValidationMode validationMode;
 
     // ==================== Getters & Setters ====================
 
@@ -221,5 +227,13 @@ public class ExcelProperties {
 
     public void setWriteCacheSize(Integer writeCacheSize) {
         this.writeCacheSize = writeCacheSize;
+    }
+
+    public ValidationMode getValidationMode() {
+        return validationMode;
+    }
+
+    public void setValidationMode(ValidationMode validationMode) {
+        this.validationMode = validationMode;
     }
 }

@@ -84,4 +84,19 @@ public class ApiVersionProperties {
      * @since 1.2.0
      */
     private boolean validate = true;
-}
+
+    /**
+     * 是否启用灵活匹配模式。
+     *
+     * <p>开启后支持主版本双向前缀匹配（"1" 匹配 "1.0"）。
+     * 默认 false，使用精确匹配 + 主版本前缀匹配即可覆盖大多数场景。
+     *
+     * <p><b>灵活匹配示例：</b>
+     * <ul>
+     *   <li>请求版本 "1" 匹配接口版本 "1.0" → true</li>
+     *   <li>请求版本 "1.0" 匹配接口版本 "1" → true</li>
+     * </ul>
+     *
+     * @since 1.0.0
+     */
+    private boolean flexibleMatching = false;

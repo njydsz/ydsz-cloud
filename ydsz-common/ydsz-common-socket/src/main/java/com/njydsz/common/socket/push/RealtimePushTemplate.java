@@ -1,5 +1,7 @@
 package com.njydsz.common.socket.push;
 
+import java.util.List;
+
 /**
  * 统一实时推送模板接口。
  *
@@ -117,4 +119,41 @@ public interface RealtimePushTemplate {
      * @param messageId 业务级消息唯一 ID
      */
     void pushToUserWithOffline(String userId, String type, Object payload, String messageId);
+
+    // ==================== 批量推送（P2-4） ====================
+
+    /**
+     * 批量向多个用户推送相同消息。
+     *
+     * <p>对每个用户逐一调用 {@link #pushToUser(String, String, Object)}，
+     * 适用于通知、公告等批量推送场景。
+     *
+     * @param userIds 用户 ID 列表
+     * @param type    消息类型标签
+     * @param payload 消息内容
+     */
+    void batchPushToUsers(List<String> userIds, String type, Object payload);
+
+    /**
+     * 批量向多个用户推送相同消息（带离线补偿）。
+     *
+     * <p>对每个用户执行在线/离线判断并推送或缓存。
+     *
+     * @param userIds 用户 ID 列表
+     * @param type    消息类型标签
+     * @param payload 消息内容
+     */
+    void batchPushToUsersWithOffline(List<String> userIds, String type, Object payload);
+
+    // ==================== 带返回值的推送（P2-5） ====================
+
+    /**
+     * 向指定用户推送通知并返回推送结果。
+     *
+     * @param userId  用户 ID
+     * @param type    消息类型标签
+     * @param payload 消息内容
+     * @return 推送结果（含是否成功、消息 ID、错误信息）
+     */
+    PushResult pushToUserWithResult(String userId, String type, Object payload);
 }

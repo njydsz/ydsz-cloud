@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.netty.event;
+package com.njydsz.common.netty.event;
 
 import java.lang.reflect.Method;
 import java.util.Map;

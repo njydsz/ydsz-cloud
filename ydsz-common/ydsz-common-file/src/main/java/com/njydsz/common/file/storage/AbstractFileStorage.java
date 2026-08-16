@@ -153,6 +153,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
     protected VirusScanner virusScanner;
     protected FileMetrics fileMetrics;
     protected StorageRetryHelper retryHelper;
+    protected FileTypeValidator fileTypeValidator;
 
     /**
      * 分片上传配置（可选，为空时不使用 MD5 校验）
@@ -173,6 +174,17 @@ public abstract class AbstractFileStorage implements IFileStorage {
     private static final ExecutorService DELETE_EXECUTOR =
             Executors.newFixedThreadPool(4, r -> {
                 Thread t = new Thread(r, "file-batch-delete-" + System.nanoTime());
+                t.setDaemon(true);
+                return t;
+            });
+
+    /**
+     * 异步上传专用线程池（8 线程，IO 密集型），
+     * 用于 {@link #uploadAsync} 非阻塞上传，避免占用 Tomcat 工作线程。
+     */
+    private static final ExecutorService ASYNC_UPLOAD_EXECUTOR =
+            Executors.newFixedThreadPool(8, r -> {
+                Thread t = new Thread(r, "file-async-upload-" + System.nanoTime());
                 t.setDaemon(true);
                 return t;
             });
@@ -245,6 +257,7 @@ public abstract class AbstractFileStorage implements IFileStorage {
     public void setVirusScanner(VirusScanner scanner) { this.virusScanner = scanner; }
     public void setFileMetrics(FileMetrics metrics) { this.fileMetrics = metrics; }
     public void setRetryHelper(StorageRetryHelper helper) { this.retryHelper = helper; }
+    public void setFileTypeValidator(FileTypeValidator validator) { this.fileTypeValidator = validator; }
 
     /**
      * 声明当前存储实现是否支持服务端复制（Server-Side Copy）。
@@ -409,7 +422,9 @@ public abstract class AbstractFileStorage implements IFileStorage {
             throw new BusinessException(FileExceptionCode.FILE_EMPTY);
         }
 
-        FileTypeValidator.validate(file);
+        if (fileTypeValidator != null) {
+            fileTypeValidator.validate(file);
+        }
 
         Long maxFileSize = fileProperties.getMaxFileSize();
         if (maxFileSize != null && maxFileSize > 0 && file.getSize() > maxFileSize) {
@@ -509,6 +524,13 @@ public abstract class AbstractFileStorage implements IFileStorage {
         } finally {
             releaseConcurrencyLock(resolvedObjectName, lockToken);
         }
+    }
+
+    @Override
+    public CompletableFuture<FileStorage> uploadAsync(String bucketName, String objectName, MultipartFile file) {
+        return CompletableFuture.supplyAsync(
+                () -> upload(bucketName, objectName, file, null),
+                ASYNC_UPLOAD_EXECUTOR);
     }
 
     @Override
@@ -949,15 +971,40 @@ public abstract class AbstractFileStorage implements IFileStorage {
         fileStorage.setSuffix(suffix);
         fileStorage.setSize(file.getSize());
         fileStorage.setIsDir(0);
-        fileStorage.setIsImage(isImageSuffix(suffix) ? 1 : 0);
-        fileStorage.setIsVideo(isVideoSuffix(suffix) ? 1 : 0);
-        fileStorage.setIsAudio(isAudioSuffix(suffix) ? 1 : 0);
-        fileStorage.setIsOffice(isOfficeSuffix(suffix) ? 1 : 0);
-        fileStorage.setIsCode(isCodeSuffix(suffix) ? 1 : 0);
-        fileStorage.setType(isCodeSuffix(suffix) ? "code" : suffix);
+        fileStorage.setType(inferFileType(suffix));
         fileStorage.setMimeType(detectMimeType(file));
         fileStorage.setUploadAt(LocalDateTime.now());
         return fileStorage;
+    }
+
+    /**
+     * 根据文件后缀推断文件分类类型。
+     *
+     * <p>用于前端图标渲染和业务分类，返回统一的分类标识字符串。
+     *
+     * @param suffix 文件后缀（不含点，小写）
+     * @return 文件分类（image / video / audio / office / code），未匹配时返回原始后缀
+     */
+    protected static String inferFileType(String suffix) {
+        if (suffix == null) {
+            return "unknown";
+        }
+        if (IMAGE_SUFFIXES.contains(suffix)) {
+            return "image";
+        }
+        if (VIDEO_SUFFIXES.contains(suffix)) {
+            return "video";
+        }
+        if (AUDIO_SUFFIXES.contains(suffix)) {
+            return "audio";
+        }
+        if (OFFICE_SUFFIXES.contains(suffix)) {
+            return "office";
+        }
+        if (CODE_SUFFIXES.contains(suffix)) {
+            return "code";
+        }
+        return suffix;
     }
 
     /**

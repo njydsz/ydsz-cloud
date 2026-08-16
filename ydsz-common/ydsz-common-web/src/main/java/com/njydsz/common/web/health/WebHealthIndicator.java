@@ -1,5 +1,8 @@
 package com.njydsz.common.web.health;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryUsage;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -24,7 +27,11 @@ import nl.basjes.parse.useragent.UserAgentAnalyzer;
  *   <li>Session 策略（Redis / None）</li>
  *   <li>User-Agent 解析器状态</li>
  *   <li>安全过滤器链状态</li>
+ *   <li>JVM 堆内存使用概况</li>
  * </ul>
+ *
+ * <p><b>运行时检查：</b>User-Agent 解析器可用性通过实际解析样例 UA 字符串验证，
+ * 确保懒加载 Bean 在被健康检查触发时能正确初始化。JVM 堆内存详情提供内存压力观测信号。
  *
  * @author ydsz-team
  * @see HealthIndicator
@@ -35,6 +42,9 @@ import nl.basjes.parse.useragent.UserAgentAnalyzer;
 public class WebHealthIndicator implements HealthIndicator {
 
     private static final int USER_AGENT_CACHE_SIZE = 10000;
+
+    private static final String SAMPLE_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            + "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
     private final WebCorsProperties corsProperties;
     private final WebTraceProperties traceProperties;
@@ -72,11 +82,34 @@ public class WebHealthIndicator implements HealthIndicator {
         details.put("sessionStrategy", sessionRedisEnabled ? "redis" : "none");
         details.put("securityEnabled", securityEnabled);
 
+        // User-Agent 解析器实际可用性检查（仅验证是否可初始化并正确解析）
         UserAgentAnalyzer analyzer = userAgentAnalyzerProvider.getIfAvailable();
-        details.put("userAgentAnalyzerEnabled", analyzer != null);
         if (analyzer != null) {
+            details.put("userAgentAnalyzerEnabled", true);
             details.put("userAgentCacheSize", USER_AGENT_CACHE_SIZE);
+            try {
+                analyzer.parse(SAMPLE_USER_AGENT);
+                details.put("userAgentParserWorking", true);
+            } catch (Exception e) {
+                details.put("userAgentParserWorking", false);
+                details.put("userAgentParserError", e.getMessage());
+            }
+        } else {
+            details.put("userAgentAnalyzerEnabled", false);
         }
+
+        // JVM 堆内存使用概况
+        MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
+        MemoryUsage heapUsage = memoryBean.getHeapMemoryUsage();
+        Map<String, Object> memoryDetails = new LinkedHashMap<>();
+        memoryDetails.put("usedMB", heapUsage.getUsed() / 1024 / 1024);
+        memoryDetails.put("committedMB", heapUsage.getCommitted() / 1024 / 1024);
+        memoryDetails.put("maxMB", heapUsage.getMax() / 1024 / 1024);
+        double usagePercent = heapUsage.getMax() > 0
+                ? Math.round((double) heapUsage.getUsed() / heapUsage.getMax() * 10000.0) / 100.0
+                : 0.0;
+        memoryDetails.put("usagePercent", usagePercent);
+        details.put("heapMemory", memoryDetails);
 
         return Health.up().withDetails(details).build();
     }

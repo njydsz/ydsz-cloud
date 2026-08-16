@@ -35,7 +35,19 @@ public class DefaultDocExporter extends AbstractDocExporter {
     }
 
     @Override
-    protected String generateHtmlContent(ApiDocInfo docInfo, String apiDocs) {
+    protected String generateContent(String apiDocs, String format) {
+        return switch (format) {
+            case "html" -> generateHtml(apiDocs);
+            case "markdown", "md" -> generateMarkdown(apiDocs);
+            default -> throw new IllegalArgumentException("不支持的导出格式: " + format);
+        };
+    }
+
+    /**
+     * 生成 HTML 内容
+     */
+    private String generateHtml(String apiDocs) {
+        ApiDocInfo docInfo = parseApiDocInfo(apiDocs);
         // 使用 StringBuilder 拼接，避免 String.format 遇到 JSON 中的 % 字符抛出 IllegalFormatException
         String escapedTitle = escapeHtml(docInfo.title());
         String escapedVersion = escapeHtml(docInfo.version());
@@ -73,8 +85,10 @@ public class DefaultDocExporter extends AbstractDocExporter {
         return html.toString();
     }
 
-    @Override
-    protected String generateMarkdownContent(String apiDocs) {
+    /**
+     * 生成 Markdown 内容
+     */
+    private String generateMarkdown(String apiDocs) {
         ApiDocInfo docInfo = parseApiDocInfo(apiDocs);
         StringBuilder md = new StringBuilder();
         md.append("# ").append(docInfo.title()).append("\n\n");

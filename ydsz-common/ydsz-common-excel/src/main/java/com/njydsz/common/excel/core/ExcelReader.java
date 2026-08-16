@@ -77,13 +77,12 @@ import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
  * }</pre>
  *
  * @author ydsz-team
- * @email ydsz-dev@ydszsoft.com
  * @version 1.0.0
+ * @since 1.0.0
  * @see ExcelFacade
  * @see ReadListener
  * @see ReadMetadata
  * @see AnalysisContext
- * @since 1.0.0
  */
 public class ExcelReader {
 
@@ -450,6 +449,12 @@ public class ExcelReader {
                 if (fileSizeMB > maxFileSizeMB) {
                     throw ExcelReadException.fileTooLarge(fileSizeMB, maxFileSizeMB);
                 }
+            } else if (metadata.getFile() != null) {
+                long fileSizeMB = metadata.getFile().length() / (1024 * 1024);
+                int maxFileSizeMB = ExcelConfig.getInstance().getMaxReadFileSizeMB();
+                if (fileSizeMB > maxFileSizeMB) {
+                    throw ExcelReadException.fileTooLarge(fileSizeMB, maxFileSizeMB);
+                }
             }
 
             if (isXlsx && metadata.getClazz() != null) {
@@ -675,7 +680,9 @@ public class ExcelReader {
             if (data != null && hasListeners) {
                 context.incrementRow();
                 try {
-                    DataValidator.validate(data, rowIndex);
+                    DataValidator.validate(
+                            data, rowIndex,
+                            ExcelConfig.getInstance().getValidationMode());
                 } catch (Exception ve) {
                     log.warn("Data validation failed, row={}", rowIndex, ve);
                     for (int i = 0; i < listenerCount; i++) {

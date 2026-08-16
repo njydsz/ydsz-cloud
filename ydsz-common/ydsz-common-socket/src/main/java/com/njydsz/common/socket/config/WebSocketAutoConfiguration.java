@@ -454,7 +454,7 @@ public class WebSocketAutoConfiguration {
     /**
      * 注册 WebSocket 健康检查指示器 Bean。
      *
-     * <p>暴露活跃连接数、Redis 可用性等健康度到 Actuator /health，供探活与告警；
+     * <p>暴露活跃连接数、Redis 可用性、熔断器状态等健康度到 Actuator /health，供探活与告警；
      * 依赖 Spring HealthIndicator 类存在时启用。无自定义 Bean 时注册默认实现。
      */
     @Bean
@@ -463,10 +463,11 @@ public class WebSocketAutoConfiguration {
     public HealthIndicator webSocketHealthIndicator(
             WebSocketProperties properties,
             WebSocketSessionEventListener eventListener,
-            @Autowired(required = false) StringRedisTemplate redisTemplate) {
+            @Autowired(required = false) StringRedisTemplate redisTemplate,
+            WebSocketCircuitBreaker circuitBreaker) {
         log.info("[WebSocket] 注册 WebSocketHealthIndicator");
         return new WebSocketHealthIndicator(properties,
-                eventListener.getActiveConnectionsCounter(), redisTemplate);
+                eventListener.getActiveConnectionsCounter(), redisTemplate, circuitBreaker);
     }
 
     // ==================== 统一推送模板 ====================

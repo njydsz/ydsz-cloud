@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.netty.codec;
+package com.njydsz.common.netty.codec;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;

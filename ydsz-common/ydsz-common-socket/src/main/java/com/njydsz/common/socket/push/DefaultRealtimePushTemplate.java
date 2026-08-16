@@ -1,5 +1,6 @@
 package com.njydsz.common.socket.push;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import com.njydsz.common.json.YdszJson;
@@ -314,7 +315,7 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
         }
 
         String traceId = WebSocketTraceContext.getOrGenerateTraceId();
-        WebSocketClusterMessage msg = WebSocketClusterMessage.forTopic(topic, payloadJson);
+        WebSocketClusterMessage msg = WebSocketClusterMessage.forTopic(topic, null, payloadJson);
         msg.setTraceId(traceId);
 
         long start = System.currentTimeMillis();
@@ -365,13 +366,79 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
     }
 
     /**
+     * 批量向多个用户推送相同消息。
+     *
+     * <p>对每个用户逐一调用 {@link #pushToUser(String, String, Object)}，
+     * 适用于通知、公告等批量推送场景。
+     *
+     * @param userIds 用户 ID 列表
+     * @param type    消息类型标签
+     * @param payload 消息内容
+     */
+    @Override
+    public void batchPushToUsers(List<String> userIds, String type, Object payload) {
+        if (userIds == null || userIds.isEmpty()) {
+            return;
+        }
+        for (String userId : userIds) {
+            try {
+                pushToUser(userId, type, payload);
+            } catch (Exception e) {
+                log.warn("[WebSocket] 批量推送单个用户失败: userId={}, err={}", userId, e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * 批量向多个用户推送相同消息（带离线补偿）。
+     *
+     * @param userIds 用户 ID 列表
+     * @param type    消息类型标签
+     * @param payload 消息内容
+     */
+    @Override
+    public void batchPushToUsersWithOffline(List<String> userIds, String type, Object payload) {
+        if (userIds == null || userIds.isEmpty()) {
+            return;
+        }
+        for (String userId : userIds) {
+            try {
+                pushToUserWithOffline(userId, type, payload);
+            } catch (Exception e) {
+                log.warn("[WebSocket] 批量推送(离线补偿)单个用户失败: userId={}, err={}", userId, e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * 向指定用户推送通知并返回推送结果。
+     *
+     * @param userId  用户 ID
+     * @param type    消息类型标签
+     * @param payload 消息内容
+     * @return 推送结果
+     */
+    @Override
+    public PushResult pushToUserWithResult(String userId, String type, Object payload) {
+        if (userId == null) {
+            return PushResult.failure(null, "INVALID_PARAM", "userId cannot be null");
+        }
+        try {
+            String messageId = generateMessageId();
+            pushToUser(userId, type, payload, messageId);
+            return PushResult.success(messageId);
+        } catch (Exception e) {
+            log.warn("[WebSocket] 推送失败: userId={}, err={}", userId, e.getMessage());
+            return PushResult.failure(null, "PUSH_EXCEPTION", e.getMessage());
+        }
+    }
+
+    /**
      * 刷新重试队列（由定时任务调用）。
      *
      * <p>从重试队列中取出到期的重试消息，最多 100 条，
      * 重新尝试推送。重试成功后标记为成功，失败后重试次数+1（最大 3 次），
      * 超过最大重试次数则标记为失败。
-     *
-     * @return 本次刷新处理的消息数量
      */
     @Override
     public void flushRetryMessages() {

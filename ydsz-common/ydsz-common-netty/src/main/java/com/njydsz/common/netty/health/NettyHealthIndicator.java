@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.netty.health;
+package com.njydsz.common.netty.health;
 
 import java.util.LinkedHashMap;
 import java.util.List;

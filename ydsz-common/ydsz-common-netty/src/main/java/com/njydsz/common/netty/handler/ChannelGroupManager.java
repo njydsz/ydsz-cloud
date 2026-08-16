@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.netty.handler;
+package com.njydsz.common.netty.handler;
 
 import java.util.ArrayList;
 import java.util.List;

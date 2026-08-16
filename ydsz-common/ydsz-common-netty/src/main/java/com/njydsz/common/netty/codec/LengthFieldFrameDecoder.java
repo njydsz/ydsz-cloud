@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.netty.codec;
+package com.njydsz.common.netty.codec;
 
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 

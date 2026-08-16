@@ -17,6 +17,7 @@ import com.njydsz.common.file.storage.platform.OssStorage;
 import com.njydsz.common.file.storage.platform.QiniuStorage;
 import com.njydsz.common.file.storage.platform.S3Storage;
 import com.njydsz.common.file.service.FileDedupService;
+import com.njydsz.common.file.util.FileTypeValidator;
 import com.njydsz.common.file.virus.VirusScanner;
 
 import lombok.extern.slf4j.Slf4j;
@@ -72,6 +73,9 @@ public class DefaultStorageFactory implements IFileStorageProvider {
 
     /** 重试助手 */
     private StorageRetryHelper retryHelper;
+
+    /** 文件类型校验器 */
+    private FileTypeValidator fileTypeValidator;
 
     /**
      * 构造存储工厂
@@ -155,6 +159,16 @@ public class DefaultStorageFactory implements IFileStorageProvider {
     }
 
     /**
+     * 设置文件类型校验器，并同步更新已创建的存储实例
+     *
+     * @param validator 文件类型校验器
+     */
+    public void setFileTypeValidator(FileTypeValidator validator) {
+        this.fileTypeValidator = validator;
+        storageCache.values().forEach(s -> { if (s instanceof AbstractFileStorage afs) afs.setFileTypeValidator(validator); });
+    }
+
+    /**
      * 获取当前配置对应的文件存储实例（单例）
      *
      * @return 文件存储实例
@@ -219,6 +233,7 @@ public class DefaultStorageFactory implements IFileStorageProvider {
             if (virusScanner != null) afs.setVirusScanner(virusScanner);
             if (fileMetrics != null) afs.setFileMetrics(fileMetrics);
             if (retryHelper != null) afs.setRetryHelper(retryHelper);
+            if (fileTypeValidator != null) afs.setFileTypeValidator(fileTypeValidator);
         }
         return storage;
     }

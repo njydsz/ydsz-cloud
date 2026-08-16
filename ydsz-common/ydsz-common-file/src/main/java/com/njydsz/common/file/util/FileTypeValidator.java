@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.common.exception.custom.BusinessException;
@@ -14,18 +15,18 @@ import com.njydsz.common.file.exception.FileExceptionCode;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 文件类型校验工具类
+ * 文件类型校验器（Spring Bean）。
  *
  * <p>基于文件 Magic Number（文件头签名）进行文件类型校验，防止恶意文件通过修改后缀名绕过安全检查。
  *
- * <p><b>校验策略：</b></p>
+ * <p><b>校验策略：</b>
  * <ul>
  *   <li>读取文件前若干字节（Magic Number）</li>
  *   <li>与已知文件类型的 Magic Number 进行匹配</li>
  *   <li>后缀名与 Magic Number 双重校验</li>
  * </ul>
  *
- * <p><b>支持类型：</b></p>
+ * <p><b>支持类型：</b>
  * <ul>
  *   <li>图片：JPEG、PNG、GIF、BMP、WEBP、SVG</li>
  *   <li>文档：PDF、DOCX、XLSX、PPTX、TXT</li>
@@ -33,53 +34,34 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>音频：MP3、WAV、FLAC</li>
  * </ul>
  *
- * <p><b>配置方法：</b></p>
- * <ul>
- *   <li>通过 {@link #init(boolean)} 配置开关（由 Spring 自动注入配置值）</li>
- *   <li>配置文件: {@code ydsz.file.check-magic-number=true|false}</li>
- *   <li>默认启用，关闭后仅基于后缀名白名单校验</li>
- * </ul>
+ * <p><b>配置方式：</b>通过构造器注入 {@code checkMagicNumber} 开关，
+ * 对应配置文件 {@code ydsz.file.check-magic-number=true|false}，默认启用。
  *
  * @author ydsz-team
  * @since 1.0.0
- *
  */
 @Slf4j
-public final class FileTypeValidator {
-
-    private FileTypeValidator() {
-        throw new UnsupportedOperationException();
-    }
+@Component
+public class FileTypeValidator {
 
     /**
-     * 是否启用 Magic Number 校验（默认启用，由配置文件 ydsz.file.check-magic-number 控制）
+     * 是否启用 Magic Number 校验（由配置文件 ydsz.file.check-magic-number 控制）
      */
-    private static volatile boolean checkMagicNumber = true;
-
-    /**
-     * 由 Spring 配置自动初始化开关状态
-     *
-     * @param enabled true 启用（默认），false 关闭
-     */
-    public static void init(boolean enabled) {
-        checkMagicNumber = enabled;
-        log.info("[FileTypeValidator] Magic Number 校验已{}（由配置文件控制）", enabled ? "启用" : "关闭");
-    }
-
-    /**
-     * 获取当前 Magic Number 校验开关状态（仅供内部/测试使用）
-     */
-    static boolean isEnabled() {
-        return checkMagicNumber;
-    }
+    private final boolean checkMagicNumberEnabled;
 
     /**
      * 后缀名到预期 Magic Number 类型的映射
      */
     private static final Map<String, String> EXT_MAGIC_MAP = new HashMap<>();
 
+    private static final Set<String> ALLOWED_UNKNOWN_EXTENSIONS = Set.of(
+            "txt", "md", "csv", "log", "json", "xml",
+            "java", "py", "sql", "sh", "php",
+            "ico", "doc", "xls", "ppt",
+            "mkv", "mov", "wmv", "3gp", "wma", "aac", "ogg", "mp3", "mp4"
+    );
+
     static {
-        // 后缀映射
         EXT_MAGIC_MAP.put("jpg", "JPEG");
         EXT_MAGIC_MAP.put("jpeg", "JPEG");
         EXT_MAGIC_MAP.put("png", "PNG");
@@ -98,23 +80,26 @@ public final class FileTypeValidator {
         EXT_MAGIC_MAP.put("flac", "FLAC");
     }
 
-    private static final Set<String> ALLOWED_UNKNOWN_EXTENSIONS = Set.of(
-            "txt", "md", "csv", "log", "json", "xml",
-            "java", "py", "sql", "sh", "php",
-            "ico", "doc", "xls", "ppt",
-            "mkv", "mov", "wmv", "3gp", "wma", "aac", "ogg", "mp3", "mp4"
-    );
+    /**
+     * 构造文件类型校验器
+     *
+     * @param checkMagicNumber 是否启用 Magic Number 校验
+     */
+    public FileTypeValidator(boolean checkMagicNumber) {
+        this.checkMagicNumberEnabled = checkMagicNumber;
+        log.info("[FileTypeValidator] Magic Number 校验已{}", checkMagicNumber ? "启用" : "关闭");
+    }
 
     /**
      * 校验 MultipartFile 的文件类型是否合法
      *
-     * <p>通过后缀名和 Magic Number 双重校验。</p>
-     * <p>对于未知后缀（不在 Magic Number 映射表中的），采用白名单机制放行；不在白名单中的后缀直接拒绝。</p>
+     * <p>通过后缀名和 Magic Number 双重校验。
+     * 对于未知后缀（不在 Magic Number 映射表中的），采用白名单机制放行；不在白名单中的后缀直接拒绝。
      *
      * @param file 上传的文件
      * @throws BusinessException 文件类型不合法时抛出
      */
-    public static void validate(MultipartFile file) {
+    public void validate(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new BusinessException(FileExceptionCode.FILE_EMPTY);
         }
@@ -139,7 +124,7 @@ public final class FileTypeValidator {
             return;
         }
 
-        if (!checkMagicNumber) {
+        if (!checkMagicNumberEnabled) {
             return;
         }
 
@@ -162,26 +147,12 @@ public final class FileTypeValidator {
     }
 
     /**
-     * 提取文件后缀名（不含点）
-     *
-     * @param filename 文件名
-     * @return 后缀名，无后缀返回空字符串
-     */
-    private static String extractSuffix(String filename) {
-        int dotIndex = filename.lastIndexOf('.');
-        if (dotIndex < 0 || dotIndex == filename.length() - 1) {
-            return "";
-        }
-        return filename.substring(dotIndex + 1).toLowerCase();
-    }
-
-    /**
      * 判断是否为图片文件（基于 Magic Number）
      *
      * @param file 上传的文件
      * @return true 如果是图片
      */
-    public static boolean isImage(MultipartFile file) {
+    public boolean isImage(MultipartFile file) {
         if (file == null || file.isEmpty()) {
             return false;
         }
@@ -199,5 +170,19 @@ public final class FileTypeValidator {
         } catch (IOException e) {
             return false;
         }
+    }
+
+    /**
+     * 提取文件后缀名（不含点）
+     *
+     * @param filename 文件名
+     * @return 后缀名，无后缀返回空字符串
+     */
+    private static String extractSuffix(String filename) {
+        int dotIndex = filename.lastIndexOf('.');
+        if (dotIndex < 0 || dotIndex == filename.length() - 1) {
+            return "";
+        }
+        return filename.substring(dotIndex + 1).toLowerCase();
     }
 }

@@ -71,7 +71,7 @@ public class AdvancedQueryParser {
      */
     public ParseResult parse(String rawQuery) {
         if (rawQuery == null || rawQuery.isBlank()) {
-            return new ParseResult("", new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
+            return new ParseResult("", new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
         }
 
         // 提取 field:value 结构化过滤

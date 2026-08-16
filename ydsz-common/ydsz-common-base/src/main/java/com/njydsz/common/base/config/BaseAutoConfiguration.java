@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
 
 import com.njydsz.common.base.constant.BaseFilterOrders;
+import com.njydsz.common.base.filter.RequestBodySizeLimitFilter;
 import com.njydsz.common.base.filter.RequestContextCleanupFilter;
 import com.njydsz.common.base.filter.SecurityHeadersFilter;
 import com.njydsz.common.base.filter.TraceFilter;
@@ -42,8 +43,28 @@ import org.springframework.core.env.Environment;
 @AutoConfiguration
 @ConditionalOnWebApplication
 @ConditionalOnProperty(prefix = "ydsz.base", name = "enabled", havingValue = "true", matchIfMissing = true)
-@EnableConfigurationProperties(BaseSecurityHeadersProperties.class)
+@EnableConfigurationProperties({BaseSecurityHeadersProperties.class, BaseRequestProperties.class})
 public class BaseAutoConfiguration {
+
+    /**
+     * 请求体大小限制过滤器
+     *
+     * <p>在请求到达 Controller 之前检查 Content-Length，
+     * 超过配置的阈值时直接返回 413 错误。
+     *
+     * @param properties 请求体配置属性
+     * @return FilterRegistrationBean
+     */
+    @Bean
+    @ConditionalOnProperty(prefix = "ydsz.base.request", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public FilterRegistrationBean<RequestBodySizeLimitFilter> requestBodySizeLimitFilter(BaseRequestProperties properties) {
+        FilterRegistrationBean<RequestBodySizeLimitFilter> registration = new FilterRegistrationBean<>();
+        registration.setFilter(new RequestBodySizeLimitFilter(properties.getMaxBodySize()));
+        registration.setOrder(Ordered.HIGHEST_PRECEDENCE + 5);
+        registration.addUrlPatterns("/*");
+        registration.setName("requestBodySizeLimitFilter");
+        return registration;
+    }
 
     /**
      * 链路追踪过滤器

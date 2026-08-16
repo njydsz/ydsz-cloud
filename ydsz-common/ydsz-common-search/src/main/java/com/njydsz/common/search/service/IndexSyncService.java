@@ -320,7 +320,7 @@ public class IndexSyncService {
             IndexOperation.IndexOperationBuilder opBuilder = IndexOperation.builder();
             opBuilder.type(record.docType());
 
-            IndexOperation.OpType opType = IndexOperation.OpType.valueOf(record.operation());
+            IndexOperation.OperationType opType = IndexOperation.OperationType.valueOf(record.operation());
             opBuilder.operation(opType);
 
             switch (opType) {
@@ -336,7 +336,7 @@ public class IndexSyncService {
                     if (record.documentJson() != null) {
                         List<IndexDocument> docs = com.njydsz.common.json.YdszJson.fromJson(
                                 record.documentJson(),
-                                new com.njydsz.common.json.YdszJson.TypeRef<List<IndexDocument>>() {});
+                                List.class, IndexDocument.class);
                         opBuilder.documents(docs);
                     }
                 }

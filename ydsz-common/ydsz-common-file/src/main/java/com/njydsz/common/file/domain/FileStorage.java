@@ -23,9 +23,8 @@ import lombok.Data;
  *   <li>{@link #suffix} - 文件扩展名（小写）</li>
  *   <li>{@link #dirIds} - 所属目录路径标识</li>
  *   <li>{@link #isDir} - 是否为目录（1=是，0=否）</li>
- *   <li>{@link #isImage} / {@link #isVideo} / {@link #isAudio} / {@link #isOffice} / {@link #isCode} - 文件类型标记</li>
  *   <li>{@link #size} - 文件大小（字节）</li>
- *   <li>{@link #type} - 文件分类（如 image、video、code 等）</li>
+ *   <li>{@link #type} - 文件分类（如 image、video、code 等，基于后缀动态推断，可用于前端图标渲染）</li>
  *   <li>{@link #uploadAt} - 上传时间</li>
  *   <li>{@link #source} - 文件来源（系统名 / 业务模块）</li>
  *   <li>{@link #mimeType} - MIME Type（如 image/png、application/pdf）</li>
@@ -68,21 +67,6 @@ public class FileStorage implements Serializable {
 
     /** 是否为目录（1=是，0=否） */
     private Integer isDir;
-
-    /** 是否为图片（1=是，0=否） */
-    private Integer isImage;
-
-    /** 是否为视频（1=是，0=否） */
-    private Integer isVideo;
-
-    /** 是否为音频（1=是，0=否） */
-    private Integer isAudio;
-
-    /** 是否为办公文档（1=是，0=否） */
-    private Integer isOffice;
-
-    /** 是否为代码文件（1=是，0=否） */
-    private Integer isCode;
 
     /** 文件大小（字节） */
     private Long size;

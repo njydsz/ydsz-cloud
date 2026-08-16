@@ -208,13 +208,25 @@ public class FileConfiguration {
      * @param retryHelperProvider  重试助手提供者
      * @return 文件存储提供者实例
      */
+    /**
+     * 注册文件类型校验器 Bean。
+     *
+     * @param fileProperties 文件存储配置
+     * @return 文件类型校验器实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(FileTypeValidator.class)
+    public FileTypeValidator fileTypeValidator(FileProperties fileProperties) {
+        return new FileTypeValidator(fileProperties.isCheckMagicNumber());
+    }
+
     @Bean
     @ConditionalOnMissingBean(IFileStorageProvider.class)
-    public IFileStorageProvider fileStorageProvider(FileProperties fileProperties, FileUploadProperties fileUploadProperties, MultipartContextStore multipartContextStore, CheckpointService checkpointService, ObjectProvider<StringRedisTemplate> redisProvider, ObjectProvider<FileDedupService> dedupProvider, ObjectProvider<VirusScanner> virusScannerProvider, ObjectProvider<FileMetrics> metricsProvider, ObjectProvider<StorageRetryHelper> retryHelperProvider) {
-        FileTypeValidator.init(fileProperties.isCheckMagicNumber());
+    public IFileStorageProvider fileStorageProvider(FileProperties fileProperties, FileUploadProperties fileUploadProperties, MultipartContextStore multipartContextStore, CheckpointService checkpointService, ObjectProvider<StringRedisTemplate> redisProvider, ObjectProvider<FileDedupService> dedupProvider, ObjectProvider<VirusScanner> virusScannerProvider, ObjectProvider<FileMetrics> metricsProvider, ObjectProvider<StorageRetryHelper> retryHelperProvider, FileTypeValidator fileTypeValidator) {
         DefaultStorageFactory factory = new DefaultStorageFactory(fileProperties, fileUploadProperties);
         factory.setMultipartContextStore(multipartContextStore);
         factory.setCheckpointService(checkpointService);
+        factory.setFileTypeValidator(fileTypeValidator);
         UploadConcurrencyGuard guard = buildConcurrencyGuardIfEnabled(fileProperties, redisProvider.getIfAvailable(), lockerProvider);
         if (guard != null) factory.setConcurrencyGuard(guard);
         FileDedupService dedup = dedupProvider.getIfAvailable();
@@ -240,7 +252,9 @@ public class FileConfiguration {
      * @param lockerProvider   分布式锁提供者（可选）
      * @return 并发保护器实例，不需要时返回 null
      */
-    private UploadConcurrencyGuard buildConcurrencyGuardIfEnabled(FileProperties props,\n                                                                   StringRedisTemplate redis,\n                                                                   ObjectProvider<DistributedLocker> lockerProvider) {
+    private UploadConcurrencyGuard buildConcurrencyGuardIfEnabled(FileProperties props,
+                                                                   StringRedisTemplate redis,
+                                                                   ObjectProvider<DistributedLocker> lockerProvider) {
         if (redis == null) return null;
         var config = props.getConcurrencyControl();
         if (config == null || !config.isEnabled()) return null;

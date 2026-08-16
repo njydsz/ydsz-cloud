@@ -112,7 +112,7 @@ public class FileDedupService {
             }
             // 文件已不存在，清理过期缓存
             log.info("[Dedup] stored file no longer exists, cleaning up cache, hash={}", hash);
-            redisStringOps.delete(key);
+            redisStringOps.del(key);
             return null;
         }
 

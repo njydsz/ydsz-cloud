@@ -3,7 +3,6 @@ package com.njydsz.common.socket.ack;
 import java.time.Duration;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -23,12 +22,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>定时扫描超时未 ACK 的消息，触发重试</li>
  * </ul>
  *
- * <p>当 Redis 不可用时降级为本地 {@link ConcurrentHashMap    public void cleanupExpiredLocalAcks() {
-        if (!localPendingAcks.isEmpty()) {
-            localPendingAcks.clear();
-}
-}
-} 存储。
+ * <p>当 Redis 不可用时降级为本地 {@link ConcurrentHashMap} 存储。
  *
  * @author ydsz-team
  * @since 1.0.0

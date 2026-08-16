@@ -1,20 +1,27 @@
 package com.njydsz.common.search.config;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.ServiceLoader;
 
 import javax.sql.DataSource;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import jakarta.annotation.PreDestroy;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.AutoConfigureOrder;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.core.Ordered;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -34,15 +41,20 @@ import com.njydsz.common.search.metrics.SearchMetrics;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderRegistry;
 import com.njydsz.common.search.service.BusinessRanker;
+import com.njydsz.common.search.service.EnhancedSuggestionService;
 import com.njydsz.common.search.service.IndexRebuildService;
 import com.njydsz.common.search.service.IndexSyncService;
 import com.njydsz.common.search.service.QueryParser;
 import com.njydsz.common.search.service.SearchCacheService;
+import com.njydsz.common.search.service.SearchPipeline;
 import com.njydsz.common.search.service.SearchTextProcessor;
 import com.njydsz.common.search.service.SuggestionService;
+import com.njydsz.common.search.service.TwoLevelSearchCacheService;
 import com.njydsz.common.search.service.UnifiedSearchService;
+import com.njydsz.common.search.service.ZeroResultHandler;
 import com.njydsz.common.search.sync.IndexConsistencyChecker;
 import com.njydsz.common.search.sync.IndexSyncListener;
+import com.njydsz.common.search.sync.PersistentDeadLetterQueue;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 
 import io.micrometer.core.instrument.MeterRegistry;
@@ -61,6 +73,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @AutoConfiguration
+@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 @ConditionalOnClass(SearchStrategy.class)
 @ConditionalOnProperty(prefix = "ydsz.search", name = "enabled", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(SearchProperties.class)
@@ -157,6 +170,52 @@ public class SearchAutoConfiguration {
     @ConditionalOnMissingBean(name = "memorySearchStrategy")
     public SearchStrategy memorySearchStrategy() {
         return new InMemorySearchStrategy();
+    }
+
+    // ==================== P2-13: 模块化引擎 Starter 支持 ====================
+
+    /**
+     * 引擎模块自动装配注册表 — 支持独立引擎 Starter 自我注册。
+     *
+     * <p>当需要拆分引擎为独立模块（ydsz-common-search-es、ydsz-common-search-pg 等）时，
+     * 每个 Starter 只需声明一个 {@code EngineStarterConfigurer} Bean，
+     * 该方法即会被调用以注册引擎的自动配置类。
+     *
+     * <p>设计原则：
+     * <ul>
+     *   <li>核心模块仅保留 PG + Memory（覆盖 80% 场景）</li>
+     *   <li>各引擎 Starter 自包含：依赖 + Condition + Strategy 一体化</li>
+     *   <li>业务按需引入引擎 Starter，减少不必要的依赖</li>
+     * </ul>
+     */
+    @Configuration
+    @Import(EngineStarterRegistry.class)
+    static class ModularEngineConfiguration {
+    }
+
+    /**
+     * 引擎启动器注册表 — 收集所有引擎模块贡献的自动配置。
+     *
+     * <p>通过 {@link org.springframework.context.annotation.ImportSelector} 机制，
+     * 动态发现 classpath 上所有实现了 {@link EngineStarterConfigurer} 的模块，
+     * 并将其 {@code ImportSelector} 导入 Spring 容器。
+     */
+    public static class EngineStarterRegistry implements org.springframework.context.annotation.ImportSelector {
+
+        @Override
+        public String[] selectImports(org.springframework.core.type.AnnotationMetadata metadata) {
+            // ServiceLoader 方式加载各引擎 Starter 的 EngineStarterConfigurer 实现
+            List<String> configClasses = new ArrayList<>();
+            ServiceLoader<EngineStarterConfigurer> loader = ServiceLoader.load(EngineStarterConfigurer.class);
+            for (EngineStarterConfigurer configurer : loader) {
+                for (org.springframework.context.annotation.ImportSelector selector : configurer.getImportSelectors()) {
+                    for (String className : selector.selectImports(metadata)) {
+                        configClasses.add(className);
+                    }
+                }
+            }
+            return configClasses.toArray(new String[0]);
+        }
     }
 
     // ==================== 线程池装配 ====================
@@ -388,9 +447,15 @@ public class SearchAutoConfiguration {
                                               SearchProviderRegistry providerRegistry,
                                               SearchProperties properties,
                                               SearchMetrics searchMetrics,
-                                              ThreadPoolTaskExecutor indexSyncExecutor) {
+                                              ThreadPoolTaskExecutor indexSyncExecutor,
+                                              ObjectProvider<PersistentDeadLetterQueue> persistentDlqProvider) {
         indexSyncServiceInstance = new IndexSyncService(engineRegistry, providerRegistry, properties, searchMetrics,
                 indexSyncExecutor);
+        // 数据源可用时注入 PostgreSQL 持久化死信队列，否则 IndexSyncService 内部回退到纯内存模式
+        PersistentDeadLetterQueue dlq = persistentDlqProvider.getIfAvailable();
+        if (dlq != null) {
+            indexSyncServiceInstance.setPersistentDlq(dlq);
+        }
         return indexSyncServiceInstance;
     }
 
@@ -442,6 +507,128 @@ public class SearchAutoConfiguration {
     public SuggestionService suggestionService(SearchEngineRegistry engineRegistry,
                                                 SearchProperties properties) {
         return new SuggestionService(engineRegistry, properties);
+    }
+
+    // ==================== P1/P2 新增服务装配 ====================
+
+    /**
+     * 装配二级缓存服务（Caffeine L1 + Redis L2）。
+     *
+     * <p>Redis 以惰性方式注入：可用时 L2 走 Redis（多节点共享、重启不丢），
+     * 不可用时退化为纯 Caffeine 单节点缓存（重启丢失）。
+     * 空结果使用更短的 TTL 缓存，避免无效查询持续命中。
+     *
+     * <p>特性：
+     * <ul>
+     *   <li>L1 Caffeine: 本地高性能，TTL 30 秒，容量 500</li>
+     *   <li>L2 Redis: 跨节点共享，TTL 5 分钟</li>
+     *   <li>空结果哨兵：最短 TTL（30 秒），减少缓存穿透</li>
+     *   <li>扫描式清理（SCAN），避免 KEYS 命令阻塞 Redis</li>
+     * </ul>
+     *
+     * @param properties     搜索配置
+     * @param redisProvider  Redis 的惰性提供者，缺失时退化为单级缓存
+     * @return 二级缓存服务实例，永不为 {@code null}
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnClass(name = "com.github.benmanes.caffeine.cache.Caffeine")
+    public TwoLevelSearchCacheService twoLevelSearchCacheService(ObjectProvider<StringRedisTemplate> redisProvider,
+                                                                 SearchProperties properties,
+                                                                 ObjectMapper objectMapper) {
+        return new TwoLevelSearchCacheService(redisProvider, properties, objectMapper);
+    }
+
+    /**
+     * 装配增强搜索建议服务，组合引擎补全、热门关键词与 Levenshtein 纠错。
+     *
+     * <p>相比 {@link SuggestionService} 增加三项能力：
+     * <ul>
+     *   <li>引擎 prefix suggestion + 热门词双源兜底</li>
+     *   <li>Levenshtein 编辑距离自动纠错</li>
+     *   <li>拼音首字母匹配（pinyin initial）</li>
+     * </ul>
+     *
+     * @param engineRegistry   引擎注册表
+     * @param properties       搜索配置
+     * @param redisProvider    Redis 的惰性提供者，缺失时热门词降级为空列表
+     * @return 增强建议服务实例，永不为 {@code null}
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public EnhancedSuggestionService enhancedSuggestionService(SearchEngineRegistry engineRegistry,
+                                                               SearchAnalyticsService searchAnalyticsService,
+                                                               SearchProperties properties) {
+        return new EnhancedSuggestionService(engineRegistry, searchAnalyticsService, properties);
+    }
+
+    /**
+     * 装配零结果引导处理器，返回「您是不是要找」「热门搜索」「去掉筛选条件」建议。
+     *
+     * <p>在搜索返回 0 条结果时，通过以下策略引导用户：
+     * <ul>
+     *   <li>did-you-mean: 基于编辑距离的拼写纠错候选</li>
+     *   <li>hot-keywords: 从 Redis 取当前热门搜索词兜底</li>
+     *   <li>suggest-remove-filter: 提示用户去掉非必要筛选条件扩大搜索范围</li>
+     * </ul>
+     *
+     * @param suggestionService 建议服务，用于生成纠错候选
+     * @param redisProvider     Redis 的惰性提供者，缺失时热门词降级为空列表
+     * @return 零结果引导处理器实例，永不为 {@code null}
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public ZeroResultHandler zeroResultHandler(SuggestionService suggestionService,
+                                                SearchAnalyticsService searchAnalyticsService,
+                                                SearchProperties properties) {
+        return new ZeroResultHandler(suggestionService, searchAnalyticsService, properties);
+    }
+
+    /**
+     * 装配搜索文本处理管道（Filter 链模式）。
+     *
+     * <p>通过可组合的过滤器实现搜索引擎归一化策略：
+     * <ol>
+     *   <li>Normalizer — 全半角转换、大小写归一、空白压缩</li>
+     *   <li>StopWord — 停用词过滤</li>
+     *   <li>Synonym — 同义词改写</li>
+     *   <li>ChineseToken — 中文分词（jieba/ICU/简单空格）</li>
+     *   <li>Pinyin — 拼音首字母提取</li>
+     * </ol>
+     *
+     * <p>过滤器可配置启用/禁用，执行顺序固定；每个 Filter 独立可测试。
+     *
+     * @param properties 搜索配置，控制各 Filter 的启用开关与词典路径
+     * @return 搜索管道实例，永不为 {@code null}
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public SearchPipeline searchPipeline(SearchProperties properties) {
+        return SearchPipeline.fromConfig(properties);
+    }
+
+    /**
+     * 装配 PostgreSQL 持久化死信队列。
+     *
+     * <p>索引同步失败的操作最终持久化到 {@code ydsz_search_dead_letter} 表，
+     * 应用重启不丢失，支持定时任务触发重放。
+     * 表结构定义位于 {@code db/ydsz_search_dead_letter.sql}，需由 DBA 或 Flyway 执行。
+     *
+     * <p>{@link javax.sql.DataSource} 以惰性方式注入，缺失时返回 {@code null}，
+     * {@link IndexSyncService} 会检测到并回退到纯内存死信队列。
+     *
+     * @param dataSourceProvider 数据源的惰性提供者，缺失时返回 {@code null}
+     * @return 持久化死信队列；数据源缺失时返回 {@code null}
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public PersistentDeadLetterQueue persistentDeadLetterQueue(ObjectProvider<DataSource> dataSourceProvider) {
+        DataSource ds = dataSourceProvider.getIfAvailable();
+        if (ds == null) {
+            log.info("[SearchAutoConfig] DataSource 不可用，持久化死信队列不装配（回退到纯内存模式）");
+            return null;
+        }
+        return new PersistentDeadLetterQueue(Optional.of(ds));
     }
 
     /**

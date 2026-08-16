@@ -495,10 +495,7 @@ public class ExcelWriter {
                 isXlsx = !metadata.getFilePath().toLowerCase().endsWith(".xls");
             }
 
-            boolean isDefaultSheetName = metadata.getSheetName() == null
-                    || "sheet1".equalsIgnoreCase(metadata.getSheetName());
-
-            if (useFastWriter && isXlsx && !append && isDefaultSheetName
+            if (useFastWriter && isXlsx && !append
                     && metadata.getClazz() != null && !isMultiSheetWriting) {
                 useFastPath = true;
                 SuperFastExcelWriter fastWriter = new SuperFastExcelWriter(metadata);

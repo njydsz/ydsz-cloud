@@ -96,14 +96,15 @@ public class RetryableMessage implements Serializable {
      *
      * @param messageId  消息 ID
      * @param topic      主题
+     * @param type       消息类型（可为 null）
      * @param payloadJson 消息内容
      * @param maxRetries 最大重试次数
      * @param retryDelayMs 重试延迟（毫秒）
      * @return 可重试消息
      */
-    public static RetryableMessage forTopic(String messageId, String topic,
+    public static RetryableMessage forTopic(String messageId, String topic, String type,
                                             String payloadJson, int maxRetries, long retryDelayMs) {
-        return new RetryableMessage(messageId, "TOPIC", null, topic, null, payloadJson,
+        return new RetryableMessage(messageId, "TOPIC", null, topic, type, payloadJson,
                 null, 0, maxRetries, System.currentTimeMillis() + retryDelayMs,
                 System.currentTimeMillis());
     }
