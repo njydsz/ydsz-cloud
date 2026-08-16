@@ -101,7 +101,7 @@ public interface RealtimePushTemplate {
      * @param payload   消息内容
      * @param messageId 业务级消息唯一 ID（非空时使用 {@code messageId} 替代随机 UUID）
      */
-    void pushToUser(String userId, String type, Object payload, String messageId);
+    void pushToUserWithMessageId(String userId, String type, Object payload, String messageId);
 
     /**
      * 向指定用户推送通知（带业务级消息 ID + 离线补偿）。

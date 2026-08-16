@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
@@ -34,7 +35,6 @@ import com.njydsz.common.docs.security.scanner.DocumentSecurityScannerComposite;
 import com.njydsz.common.docs.security.watermark.WatermarkProvider;
 import com.njydsz.common.docs.summary.DocumentSummarizer;
 
-import lombok.extern.slf4j.Slf4j;
 /**
  * 文档处理统一服务门面
  * <p>

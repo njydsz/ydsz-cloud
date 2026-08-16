@@ -8,6 +8,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
@@ -24,8 +25,6 @@ import com.njydsz.common.docs.enums.ParseMode;
 import com.njydsz.common.docs.exception.DocumentException;
 import com.njydsz.common.docs.exception.DocumentExceptionCode;
 import com.njydsz.common.docs.parser.DocumentParser;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * PDF 文档解析器

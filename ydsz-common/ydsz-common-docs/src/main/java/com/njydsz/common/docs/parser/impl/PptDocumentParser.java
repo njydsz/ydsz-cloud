@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.xslf.usermodel.XMLSlideShow;
 import org.apache.poi.xslf.usermodel.XSLFShape;
 import org.apache.poi.xslf.usermodel.XSLFSlide;
@@ -23,8 +24,6 @@ import com.njydsz.common.docs.enums.DocumentFormat;
 import com.njydsz.common.docs.exception.DocumentException;
 import com.njydsz.common.docs.exception.DocumentExceptionCode;
 import com.njydsz.common.docs.parser.DocumentParser;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * PowerPoint 文档解析器（.pptx）

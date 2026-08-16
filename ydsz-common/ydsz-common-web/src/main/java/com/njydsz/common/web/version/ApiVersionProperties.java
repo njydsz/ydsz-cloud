@@ -2,9 +2,9 @@ package com.njydsz.common.web.version;
 
 import java.util.List;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import lombok.Data;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * API 版本管理配置属性。
@@ -71,9 +71,14 @@ public class ApiVersionProperties {
     private boolean sunsetHeaders = true;
 
     /**
-     * 废弃过渡期天数（超过此天数后版本将被移除）。
+     * 默认废弃过渡期天数（超过此天数后版本将被移除）。
      */
-    private int sunsetDurationDays = 90;
+    private int sunsetDurationDays = DEFAULT_SUNSET_DURATION_DAYS;
+
+    /**
+     * 废弃过渡期天数的默认常量值。
+     */
+    public static final int DEFAULT_SUNSET_DURATION_DAYS = 90;
 
     /**
      * 是否在启动时校验所有 @ApiVersion 注解的合法性。

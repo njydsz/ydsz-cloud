@@ -3,6 +3,8 @@ package com.njydsz.common.docs.health;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
@@ -11,9 +13,6 @@ import com.njydsz.common.docs.config.DocsProperties;
 import com.njydsz.common.docs.parser.registry.DocumentParserRegistry;
 import com.njydsz.common.docs.security.pii.PiiDetectorComposite;
 import com.njydsz.common.docs.service.AsyncDocumentParser;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 文档处理模块健康指标

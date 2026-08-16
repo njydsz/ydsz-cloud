@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
@@ -22,8 +23,6 @@ import com.njydsz.common.docs.config.DocsProperties;
 import com.njydsz.common.docs.domain.SecurityScanResult;
 import com.njydsz.common.docs.enums.DocumentFormat;
 import com.njydsz.common.docs.enums.SecurityLevel;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * PDF 安全检测器

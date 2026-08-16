@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -24,8 +25,6 @@ import com.njydsz.common.docs.enums.DocumentFormat;
 import com.njydsz.common.docs.exception.DocumentException;
 import com.njydsz.common.docs.exception.DocumentExceptionCode;
 import com.njydsz.common.docs.parser.DocumentParser;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * CSV 文档解析器

@@ -5,12 +5,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.Comparator;
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.docs.domain.PiiFinding;
 import com.njydsz.common.docs.enums.DocumentFormat;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 纯文本脱敏器

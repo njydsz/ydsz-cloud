@@ -25,6 +25,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class IdempotentAutoConfiguration {
 
     /**
+     * 幂等性拦截器默认顺序。
+     * <p>数值越小优先级越高，100 确保在限流拦截器之后执行。
+     */
+    private static final int DEFAULT_INTERCEPTOR_ORDER = 100;
+
+    /**
      * 默认幂等键存储（本地内存实现）。
      *
      * <p>当 Redis 模块未引入时作为降级方案。
@@ -64,7 +70,7 @@ public class IdempotentAutoConfiguration {
                 if (interceptor != null) {
                     registry.addInterceptor(interceptor)
                             .addPathPatterns("/**")
-                            .order(100);
+                            .order(DEFAULT_INTERCEPTOR_ORDER);
                 }
             }
         };

@@ -7,13 +7,12 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.docs.domain.SecurityScanResult;
 import com.njydsz.common.docs.enums.DocumentFormat;
 import com.njydsz.common.docs.enums.SecurityLevel;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 文档安全扫描器组合实现

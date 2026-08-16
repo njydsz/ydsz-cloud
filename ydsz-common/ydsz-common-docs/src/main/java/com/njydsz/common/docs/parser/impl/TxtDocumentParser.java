@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.docs.domain.DocumentContent;
@@ -19,8 +20,6 @@ import com.njydsz.common.docs.enums.DocumentFormat;
 import com.njydsz.common.docs.exception.DocumentException;
 import com.njydsz.common.docs.exception.DocumentExceptionCode;
 import com.njydsz.common.docs.parser.DocumentParser;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 纯文本文档解析器

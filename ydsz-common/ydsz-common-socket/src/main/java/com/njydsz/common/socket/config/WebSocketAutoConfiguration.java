@@ -276,6 +276,8 @@ public class WebSocketAutoConfiguration {
                 public List<String> drainOffline(String userId) { return List.of(); }
                 @Override
                 public long countOffline(String userId) { return 0; }
+                @Override
+                public List<String> pageOffline(String userId, int offset, int limit) { return List.of(); }
             };
         }
         log.info("[WebSocket] 注册 RedisOfflineMessageStore");

@@ -46,6 +46,21 @@ public class WebHealthIndicator implements HealthIndicator {
     private static final String SAMPLE_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
             + "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
+    /**
+     * 字节到 MB 的换算因子
+     */
+    private static final int BYTES_PER_MB = 1024 * 1024;
+
+    /**
+     * 内存使用率百分比换算因子
+     */
+    private static final int PERCENTAGE_FACTOR = 100;
+
+    /**
+     * 百分比计算精度因子（保留两位小数）
+     */
+    private static final double PERCENTAGE_PRECISION = 100.0;
+
     private final WebCorsProperties corsProperties;
     private final WebTraceProperties traceProperties;
     private final ObjectProvider<UserAgentAnalyzer> userAgentAnalyzerProvider;
@@ -83,6 +98,20 @@ public class WebHealthIndicator implements HealthIndicator {
         details.put("securityEnabled", securityEnabled);
 
         // User-Agent 解析器实际可用性检查（仅验证是否可初始化并正确解析）
+        checkUserAgentAnalyzer(details);
+
+        // JVM 堆内存使用概况
+        collectHeapMemoryDetails(details);
+
+        return Health.up().withDetails(details).build();
+    }
+
+    /**
+     * 检查 User-Agent 解析器可用性
+     *
+     * @param details 健康详情映射
+     */
+    private void checkUserAgentAnalyzer(Map<String, Object> details) {
         UserAgentAnalyzer analyzer = userAgentAnalyzerProvider.getIfAvailable();
         if (analyzer != null) {
             details.put("userAgentAnalyzerEnabled", true);
@@ -97,20 +126,25 @@ public class WebHealthIndicator implements HealthIndicator {
         } else {
             details.put("userAgentAnalyzerEnabled", false);
         }
+    }
 
-        // JVM 堆内存使用概况
+    /**
+     * 采集 JVM 堆内存使用概况
+     *
+     * @param details 健康详情映射
+     */
+    private void collectHeapMemoryDetails(Map<String, Object> details) {
         MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
         MemoryUsage heapUsage = memoryBean.getHeapMemoryUsage();
         Map<String, Object> memoryDetails = new LinkedHashMap<>();
-        memoryDetails.put("usedMB", heapUsage.getUsed() / 1024 / 1024);
-        memoryDetails.put("committedMB", heapUsage.getCommitted() / 1024 / 1024);
-        memoryDetails.put("maxMB", heapUsage.getMax() / 1024 / 1024);
+        memoryDetails.put("usedMB", heapUsage.getUsed() / BYTES_PER_MB);
+        memoryDetails.put("committedMB", heapUsage.getCommitted() / BYTES_PER_MB);
+        memoryDetails.put("maxMB", heapUsage.getMax() / BYTES_PER_MB);
         double usagePercent = heapUsage.getMax() > 0
-                ? Math.round((double) heapUsage.getUsed() / heapUsage.getMax() * 10000.0) / 100.0
+                ? Math.round((double) heapUsage.getUsed() / heapUsage.getMax()
+                        * PERCENTAGE_FACTOR * PERCENTAGE_PRECISION) / PERCENTAGE_PRECISION
                 : 0.0;
         memoryDetails.put("usagePercent", usagePercent);
         details.put("heapMemory", memoryDetails);
-
-        return Health.up().withDetails(details).build();
     }
 }

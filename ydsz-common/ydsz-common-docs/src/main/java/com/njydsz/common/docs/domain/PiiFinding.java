@@ -1,9 +1,9 @@
 package com.njydsz.common.docs.domain;
 
-import com.njydsz.common.docs.enums.PiiType;
-
 import lombok.Builder;
 import lombok.Data;
+
+import com.njydsz.common.docs.enums.PiiType;
 
 /**
  * PII 发现结果

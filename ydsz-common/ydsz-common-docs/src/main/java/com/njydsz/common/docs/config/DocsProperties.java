@@ -1,12 +1,10 @@
 package com.njydsz.common.docs.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.validation.annotation.Validated;
-
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * 文档处理模块配置属性

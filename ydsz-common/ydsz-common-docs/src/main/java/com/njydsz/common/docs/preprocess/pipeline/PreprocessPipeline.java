@@ -3,14 +3,13 @@ package com.njydsz.common.docs.preprocess.pipeline;
 import java.util.Comparator;
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.docs.domain.DocumentContent;
 import com.njydsz.common.docs.metrics.DocsMetrics;
 import com.njydsz.common.docs.preprocess.DocumentPreprocessor;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 文档预处理流水线

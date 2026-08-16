@@ -4,18 +4,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.zip.ZipInputStream;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.docs.domain.SecurityScanResult;
 import com.njydsz.common.docs.enums.DocumentFormat;
 import com.njydsz.common.docs.enums.SecurityLevel;
-
-import lombok.extern.slf4j.Slf4j;
-
-import java.util.Set;
 
 /**
  * Office 宏检测器

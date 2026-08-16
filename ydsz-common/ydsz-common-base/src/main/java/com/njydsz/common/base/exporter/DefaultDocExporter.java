@@ -34,6 +34,11 @@ public class DefaultDocExporter extends AbstractDocExporter {
         super(docProperties);
     }
 
+    /**
+     * HTML 模板初始容量（字节），避免频繁扩容。
+     */
+    private static final int HTML_TEMPLATE_INITIAL_CAPACITY = 4096;
+
     @Override
     protected String generateContent(String apiDocs, String format) {
         return switch (format) {
@@ -45,6 +50,9 @@ public class DefaultDocExporter extends AbstractDocExporter {
 
     /**
      * 生成 HTML 内容
+     *
+     * @param apiDocs OpenAPI 文档 JSON 字符串
+     * @return HTML 格式文档内容
      */
     private String generateHtml(String apiDocs) {
         ApiDocInfo docInfo = parseApiDocInfo(apiDocs);
@@ -54,7 +62,7 @@ public class DefaultDocExporter extends AbstractDocExporter {
         String escapedDescription = escapeHtml(docInfo.description());
         String escapedApiDocs = escapeHtml(apiDocs);
 
-        StringBuilder html = new StringBuilder(4096);
+        StringBuilder html = new StringBuilder(HTML_TEMPLATE_INITIAL_CAPACITY);
         html.append("<!DOCTYPE html>\n");
         html.append("<html lang=\"zh-CN\">\n");
         html.append("<head>\n");
@@ -62,10 +70,15 @@ public class DefaultDocExporter extends AbstractDocExporter {
         html.append("    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n");
         html.append("    <title>").append(escapedTitle).append("</title>\n");
         html.append("    <style>\n");
-        html.append("        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f5f5f5; }\n");
-        html.append("        .container { max-width: 1200px; margin: 0 auto; background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }\n");
-        html.append("        h1 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 10px; }\n");
-        html.append("        pre { background-color: #f8f9fa; padding: 15px; border-radius: 4px; overflow-x: auto; }\n");
+        html.append("        body { font-family: Arial, sans-serif; margin: 20px; ")
+                .append("background-color: #f5f5f5; }\n");
+        html.append("        .container { max-width: 1200px; margin: 0 auto; ")
+                .append("background-color: white; padding: 20px; border-radius: 8px; ")
+                .append("box-shadow: 0 2px 4px rgba(0,0,0,0.1); }\n");
+        html.append("        h1 { color: #333; border-bottom: 2px solid #007bff; ")
+                .append("padding-bottom: 10px; }\n");
+        html.append("        pre { background-color: #f8f9fa; padding: 15px; ")
+                .append("border-radius: 4px; overflow-x: auto; }\n");
         html.append("        code { font-family: 'Courier New', monospace; }\n");
         html.append("        table { border-collapse: collapse; width: 100%; margin: 15px 0; }\n");
         html.append("        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }\n");
@@ -87,6 +100,9 @@ public class DefaultDocExporter extends AbstractDocExporter {
 
     /**
      * 生成 Markdown 内容
+     *
+     * @param apiDocs OpenAPI 文档 JSON 字符串
+     * @return Markdown 格式文档内容
      */
     private String generateMarkdown(String apiDocs) {
         ApiDocInfo docInfo = parseApiDocInfo(apiDocs);

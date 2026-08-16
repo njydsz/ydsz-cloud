@@ -7,11 +7,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.docs.domain.DocumentContent;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 文档摘要与关键词提取器

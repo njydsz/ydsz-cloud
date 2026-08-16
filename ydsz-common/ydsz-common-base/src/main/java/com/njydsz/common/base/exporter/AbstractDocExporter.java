@@ -36,7 +36,7 @@ import com.njydsz.common.json.type.JsonType;
  */
 public abstract class AbstractDocExporter implements DocExporter {
 
-    private static final Logger logger = LoggerFactory.getLogger(AbstractDocExporter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractDocExporter.class);
 
     /**
      * 支持的导出格式列表
@@ -111,7 +111,7 @@ public abstract class AbstractDocExporter implements DocExporter {
 
         File outputFile = new File(outputDir, fileName);
         Files.writeString(outputFile.toPath(), content);
-        logger.info("{} 文档已导出: {}", format.toUpperCase(), outputFile.getAbsolutePath());
+        LOG.info("{} 文档已导出: {}", format.toUpperCase(), outputFile.getAbsolutePath());
         return outputFile;
     }
 
@@ -144,12 +144,15 @@ public abstract class AbstractDocExporter implements DocExporter {
 
     /**
      * 确保输出目录存在
+     *
+     * @param outputDir 输出目录路径
+     * @throws IOException 如果创建目录失败
      */
     protected void ensureOutputDirectory(String outputDir) throws IOException {
         Path path = Paths.get(outputDir);
         if (!Files.exists(path)) {
             Files.createDirectories(path);
-            logger.debug("创建输出目录: {}", outputDir);
+            LOG.debug("创建输出目录: {}", outputDir);
         }
     }
 
@@ -157,6 +160,9 @@ public abstract class AbstractDocExporter implements DocExporter {
      * 从 OpenAPI JSON 文档中解析文档基本信息
      *
      * <p>优先使用 DocProperties 中的配置，若 JSON 文档中包含对应字段则覆盖。
+     *
+     * @param apiDocs OpenAPI 文档 JSON 字符串
+     * @return 解析后的文档基本信息
      */
     protected ApiDocInfo parseApiDocInfo(String apiDocs) {
         String title = docProperties.getInfo().getTitle();
@@ -178,7 +184,7 @@ public abstract class AbstractDocExporter implements DocExporter {
                 }
             }
         } catch (Exception e) {
-            logger.debug("解析API文档信息失败,使用默认值", e);
+            LOG.debug("解析API文档信息失败,使用默认值", e);
         }
 
         return new ApiDocInfo(title, version != null ? version : docProperties.getInfo().getVersion(), description);
@@ -188,6 +194,8 @@ public abstract class AbstractDocExporter implements DocExporter {
      * 解析文档版本号
      *
      * <p>优先级：DocProperties 配置 > applicationVersion > null
+     *
+     * @return 版本号字符串，未配置返回 null
      */
     protected String resolveVersion() {
         if (docProperties.getDocVersion() != null && !docProperties.getDocVersion().isBlank()) {
@@ -201,6 +209,9 @@ public abstract class AbstractDocExporter implements DocExporter {
 
     /**
      * 转义 HTML 特殊字符
+     *
+     * @param input 原始字符串
+     * @return 转义后的安全字符串
      */
     protected String escapeHtml(String input) {
         if (input == null) {
@@ -223,7 +234,7 @@ public abstract class AbstractDocExporter implements DocExporter {
         try {
             return YdszJson.fromJson(apiDocs, new JsonType<Map<String, Object>>() {});
         } catch (Exception e) {
-            logger.warn("解析 OpenAPI 文档失败: {}", e.getMessage());
+            LOG.warn("解析 OpenAPI 文档失败: {}", e.getMessage());
             return new LinkedHashMap<>();
         }
     }
@@ -232,6 +243,9 @@ public abstract class AbstractDocExporter implements DocExporter {
 
     /**
      * 安全转换为 Map<String, Object>
+     *
+     * @param value 待转换对象
+     * @return 转换后的 Map，类型不匹配返回 null
      */
     protected static Map<String, Object> asMap(Object value) {
         if (value instanceof Map<?, ?> raw) {
@@ -246,6 +260,9 @@ public abstract class AbstractDocExporter implements DocExporter {
 
     /**
      * 安全转换为 List<Map<String, Object>>
+     *
+     * @param value 待转换对象
+     * @return 转换后的 List，类型不匹配返回 null
      */
     protected static List<Map<String, Object>> asMapList(Object value) {
         if (value instanceof List<?> raw) {
@@ -263,6 +280,9 @@ public abstract class AbstractDocExporter implements DocExporter {
 
     /**
      * 安全转换为 List<String>
+     *
+     * @param value 待转换对象
+     * @return 转换后的 List，类型不匹配返回 null
      */
     protected static List<String> asStringList(Object value) {
         if (value instanceof List<?> raw) {
@@ -277,6 +297,9 @@ public abstract class AbstractDocExporter implements DocExporter {
 
     /**
      * 安全获取 Boolean 值
+     *
+     * @param value 待转换对象
+     * @return Boolean 值，类型不匹配返回 false
      */
     protected static boolean asBoolean(Object value) {
         return value instanceof Boolean b && b;
@@ -284,6 +307,10 @@ public abstract class AbstractDocExporter implements DocExporter {
 
     /**
      * 安全获取字符串值
+     *
+     * @param value          待转换对象
+     * @param defaultValue   默认值
+     * @return 字符串值，null 时返回默认值
      */
     protected static String asString(Object value, String defaultValue) {
         if (value == null) {

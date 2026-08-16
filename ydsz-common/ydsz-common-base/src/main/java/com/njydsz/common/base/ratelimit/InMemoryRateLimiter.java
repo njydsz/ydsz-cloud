@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
  */
 public class InMemoryRateLimiter implements RateLimiter {
 
-    private static final Logger log = LoggerFactory.getLogger(InMemoryRateLimiter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(InMemoryRateLimiter.class);
 
     private final ConcurrentHashMap<String, WindowCounter> counterMap = new ConcurrentHashMap<>();
 
@@ -62,8 +62,8 @@ public class InMemoryRateLimiter implements RateLimiter {
             long current = count.incrementAndGet();
             if (current > limit) {
                 count.decrementAndGet();
-                if (log.isDebugEnabled()) {
-                    log.debug("限流拒绝 | count={} | limit={}", current, limit);
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("限流拒绝 | count={} | limit={}", current, limit);
                 }
                 return false;
             }

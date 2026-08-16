@@ -28,6 +28,7 @@ import com.njydsz.common.excel.core.metadata.MetadataCache;
 import com.njydsz.common.excel.core.metadata.MetadataCache.CachedProperty;
 import com.njydsz.common.excel.core.metadata.MetadataCache.CachedWriteMetadata;
 import com.njydsz.common.excel.core.metadata.WriteMetadata;
+import com.njydsz.common.excel.core.listener.WriteLifecycleHandler;
 import com.njydsz.common.excel.core.metadata.WriteMetadata.WriteHeaderProperty;
 import com.njydsz.common.excel.core.writer.PrecomputedColumnProperties;
 import com.njydsz.common.excel.core.writer.StyleManager;
@@ -77,8 +78,8 @@ public class ExcelWriter {
     /** 写入上下文,记录当前写入状态 */
     private final WriteContext context;
 
-    /** 已注册的写入处理器列表 */
-    private final List<Object> handlers;
+    /** 已注册的写入生命周期回调列表 */
+    private final List<WriteLifecycleHandler> callbacks;
 
     /** Apache POI工作簿对象 */
     private Workbook workbook;
@@ -115,9 +116,9 @@ public class ExcelWriter {
     public ExcelWriter(WriteMetadata metadata) {
         this.metadata = metadata;
         this.context = new WriteContext(metadata);
-        this.handlers = new ArrayList<>();
         this.currentRowIndex = 0;
         this.append = false;
+        this.callbacks = new ArrayList<>();
         this.styleManager = new StyleManager(512);
         this.workbookFactory = new WorkbookFactory();
         this.valueFormatter = new ValueFormatter(metadata.getAutomaticTrim() != null ? metadata.getAutomaticTrim() : true);
@@ -329,8 +330,10 @@ public class ExcelWriter {
      * @param handler 写入处理器
      * @return 当前写入器实例
      */
-    public ExcelWriter registerWriteHandler(Object handler) {
-        this.handlers.add(handler);
+    public ExcelWriter registerWriteHandler(WriteLifecycleHandler handler) {
+        if (handler != null) {
+            this.callbacks.add(handler);
+        }
         return this;
     }
 

@@ -4,12 +4,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.docs.domain.DocumentContent;
 import com.njydsz.common.docs.domain.PiiFinding;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * PII 检测器组合实现

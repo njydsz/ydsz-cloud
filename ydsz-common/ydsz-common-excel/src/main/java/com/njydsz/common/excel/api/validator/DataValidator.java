@@ -1,7 +1,6 @@
 package com.njydsz.common.excel.api.validator;
 
 import java.lang.reflect.Field;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -344,21 +343,29 @@ public class DataValidator {
      */
     private static void validateNumberRange(ExcelProperty annotation, String fieldName,
                                             Number numVal, int rowNum) {
-        BigDecimal value = BigDecimal.valueOf(numVal.doubleValue());
+        double value = numVal.doubleValue();
 
         if (!annotation.minValue().isEmpty()) {
-            BigDecimal min = new BigDecimal(annotation.minValue());
-            if (value.compareTo(min) < 0) {
-                throw ExcelReadException.validationFailed(rowNum, fieldName, numVal,
-                        getErrorMessage(annotation, "字段值小于最小值: " + value + " < " + min));
+            try {
+                double min = Double.parseDouble(annotation.minValue());
+                if (Double.compare(value, min) < 0) {
+                    throw ExcelReadException.validationFailed(rowNum, fieldName, numVal,
+                            getErrorMessage(annotation, "字段值小于最小值: " + value + " < " + min));
+                }
+            } catch (NumberFormatException e) {
+                // min 值不是合法数字，跳过验证
             }
         }
 
         if (!annotation.maxValue().isEmpty()) {
-            BigDecimal max = new BigDecimal(annotation.maxValue());
-            if (value.compareTo(max) > 0) {
-                throw ExcelReadException.validationFailed(rowNum, fieldName, numVal,
-                        getErrorMessage(annotation, "字段值超过最大值: " + value + " > " + max));
+            try {
+                double max = Double.parseDouble(annotation.maxValue());
+                if (Double.compare(value, max) > 0) {
+                    throw ExcelReadException.validationFailed(rowNum, fieldName, numVal,
+                            getErrorMessage(annotation, "字段值超过最大值: " + value + " > " + max));
+                }
+            } catch (NumberFormatException e) {
+                // max 值不是合法数字，跳过验证
             }
         }
     }
@@ -375,21 +382,29 @@ public class DataValidator {
     private static void collectNumberRangeErrors(ExcelProperty annotation, String fieldName,
                                                  Number numVal, int rowNum,
                                                  List<ValidationError> errors) {
-        BigDecimal value = BigDecimal.valueOf(numVal.doubleValue());
+        double value = numVal.doubleValue();
 
         if (!annotation.minValue().isEmpty()) {
-            BigDecimal min = new BigDecimal(annotation.minValue());
-            if (value.compareTo(min) < 0) {
-                errors.add(new ValidationError(rowNum, fieldName, numVal,
-                        getErrorMessage(annotation, "字段值小于最小值: " + value + " < " + min)));
+            try {
+                double min = Double.parseDouble(annotation.minValue());
+                if (Double.compare(value, min) < 0) {
+                    errors.add(new ValidationError(rowNum, fieldName, numVal,
+                            getErrorMessage(annotation, "字段值小于最小值: " + value + " < " + min)));
+                }
+            } catch (NumberFormatException e) {
+                // min 值不是合法数字，跳过验证
             }
         }
 
         if (!annotation.maxValue().isEmpty()) {
-            BigDecimal max = new BigDecimal(annotation.maxValue());
-            if (value.compareTo(max) > 0) {
-                errors.add(new ValidationError(rowNum, fieldName, numVal,
-                        getErrorMessage(annotation, "字段值超过最大值: " + value + " > " + max)));
+            try {
+                double max = Double.parseDouble(annotation.maxValue());
+                if (Double.compare(value, max) > 0) {
+                    errors.add(new ValidationError(rowNum, fieldName, numVal,
+                            getErrorMessage(annotation, "字段值超过最大值: " + value + " > " + max)));
+                }
+            } catch (NumberFormatException e) {
+                // max 值不是合法数字，跳过验证
             }
         }
     }

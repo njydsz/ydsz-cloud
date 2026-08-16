@@ -9,14 +9,13 @@ import java.util.List;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
 
+import jakarta.annotation.PreDestroy;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.docs.config.DocsProperties;
 import com.njydsz.common.docs.domain.DocumentParseResult;
 import com.njydsz.common.docs.domain.ParseOptions;
-
-import jakarta.annotation.PreDestroy;
-import lombok.extern.slf4j.Slf4j;
 
 /**
      * 异步文档解析器。

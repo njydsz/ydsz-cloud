@@ -25,6 +25,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class RateLimitAutoConfiguration {
 
     /**
+     * 限流拦截器默认顺序。
+     * <p>数值越小优先级越高，50 确保在安全过滤器之后、业务拦截器之前执行。
+     */
+    private static final int DEFAULT_INTERCEPTOR_ORDER = 50;
+
+    /**
      * 默认限流器（本地实现）。
      *
      * <p>当 Redis 模块未引入时作为降级方案。
@@ -64,7 +70,7 @@ public class RateLimitAutoConfiguration {
                 if (interceptor != null) {
                     registry.addInterceptor(interceptor)
                             .addPathPatterns("/**")
-                            .order(50);
+                            .order(DEFAULT_INTERCEPTOR_ORDER);
                 }
             }
         };

@@ -8,9 +8,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.imageio.ImageIO;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
@@ -22,8 +22,6 @@ import com.njydsz.common.docs.domain.DocumentMetadata;
 import com.njydsz.common.docs.domain.DocumentSection;
 import com.njydsz.common.docs.exception.DocumentException;
 import com.njydsz.common.docs.exception.DocumentExceptionCode;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * OCR 服务提供者

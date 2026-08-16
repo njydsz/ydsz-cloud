@@ -24,12 +24,33 @@ import com.njydsz.common.base.config.DocProperties;
  *   <li>链路追踪是否启用（通过配置间接判断）</li>
  *   <li>文档功能状态</li>
  *   <li>CORS 配置安全性（通过基类属性判断）</li>
+ *   <li>JVM 堆内存使用概况</li>
  * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 public class BaseHealthIndicator implements HealthIndicator {
+
+    /**
+     * 字节到 MB 的换算因子
+     */
+    private static final int BYTES_PER_MB = 1024 * 1024;
+
+    /**
+     * 内存使用率百分比换算因子
+     */
+    private static final int PERCENTAGE_FACTOR = 100;
+
+    /**
+     * 百分比计算精度因子（保留两位小数）
+     */
+    private static final double PERCENTAGE_PRECISION = 100.0;
+
+    /**
+     * OOM 风险阈值：堆内存使用率超过此百分比判定为 DOWN
+     */
+    private static final double OOM_RISK_THRESHOLD_PERCENT = 95.0;
 
     /** 期望的时区 ID，从配置 {@code ydsz.base.timezone} 读取，默认 {@code Asia/Shanghai} */
     private final String expectedTimezone;
@@ -41,8 +62,8 @@ public class BaseHealthIndicator implements HealthIndicator {
      * 构造 Base 模块健康指标
      *
      * @param securityHeadersProperties 安全响应头配置
-     * @param docProperties 文档配置
-     * @param expectedTimezone 期望的时区 ID（从 {@code ydsz.base.timezone} 配置读取）
+     * @param docProperties             文档配置
+     * @param expectedTimezone          期望的时区 ID（从 {@code ydsz.base.timezone} 配置读取）
      */
     public BaseHealthIndicator(BaseSecurityHeadersProperties securityHeadersProperties,
                                DocProperties docProperties,
@@ -61,7 +82,8 @@ public class BaseHealthIndicator implements HealthIndicator {
         details.put("timezone", currentTimezone);
         details.put("timezone.expected", expectedTimezone);
         if (!expectedTimezone.equals(currentTimezone)) {
-            details.put("timezone.warning", "期望时区 " + expectedTimezone + " 与实际时区 " + currentTimezone + " 不一致");
+            details.put("timezone.warning",
+                    "期望时区 " + expectedTimezone + " 与实际时区 " + currentTimezone + " 不一致");
         }
 
         // 安全响应头状态
@@ -80,43 +102,84 @@ public class BaseHealthIndicator implements HealthIndicator {
         }
 
         // JVM 堆内存使用概况
-        MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
-        MemoryUsage heapUsage = memoryBean.getHeapMemoryUsage();
-        Map<String, Object> memoryDetails = new LinkedHashMap<>();
-        memoryDetails.put("usedMB", heapUsage.getUsed() / 1024 / 1024);
-        memoryDetails.put("committedMB", heapUsage.getCommitted() / 1024 / 1024);
-        memoryDetails.put("maxMB", heapUsage.getMax() / 1024 / 1024);
-        double usagePercent = heapUsage.getMax() > 0
-                ? Math.round((double) heapUsage.getUsed() / heapUsage.getMax() * 10000.0) / 100.0
-                : 0.0;
-        memoryDetails.put("usagePercent", usagePercent);
-        details.put("heapMemory", memoryDetails);
+        double heapUsagePercent = collectHeapMemoryDetails(details);
 
-        // 健康判断：安全响应头在启用状态下 frameOptions 不为空
-        boolean healthy = true;
-        if (securityHeadersProperties.isEnabled()
-                && (securityHeadersProperties.getFrameOptions() == null
-                || securityHeadersProperties.getFrameOptions().isBlank())) {
-            healthy = false;
-            details.put("warning", "安全响应头已启用但 frameOptions 为空");
-        }
-
-        // 文档启用但生产环境未配置 Basic 认证
-        if (docProperties.isEnabled() && docProperties.isProductionEnabled()
-                && !docProperties.getBasicAuth().isEnabled()) {
-            healthy = false;
-            details.put("warning", "生产环境文档已启用但 Basic 认证未开启");
-        }
-
-        // 堆内存使用率超过 95% 标记为 DOWN（OOM 风险）
-        if (usagePercent >= 95.0) {
-            healthy = false;
-            details.put("warning", "堆内存使用率超过 95%，存在 OOM 风险");
-        }
+        // 健康状态判定
+        boolean healthy = checkSecurityHeaders(details)
+                && checkDocSecurity(details)
+                && checkHeapMemory(details, heapUsagePercent);
 
         if (healthy) {
             return Health.up().withDetails(details).build();
         }
         return Health.down().withDetails(details).build();
+    }
+
+    /**
+     * 采集 JVM 堆内存使用概况到 details 中
+     *
+     * @param details 健康详情映射
+     * @return 堆内存使用率百分比
+     */
+    private double collectHeapMemoryDetails(Map<String, Object> details) {
+        MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
+        MemoryUsage heapUsage = memoryBean.getHeapMemoryUsage();
+        Map<String, Object> memoryDetails = new LinkedHashMap<>();
+        memoryDetails.put("usedMB", heapUsage.getUsed() / BYTES_PER_MB);
+        memoryDetails.put("committedMB", heapUsage.getCommitted() / BYTES_PER_MB);
+        memoryDetails.put("maxMB", heapUsage.getMax() / BYTES_PER_MB);
+        double usagePercent = heapUsage.getMax() > 0
+                ? Math.round((double) heapUsage.getUsed() / heapUsage.getMax()
+                        * PERCENTAGE_FACTOR * PERCENTAGE_PRECISION) / PERCENTAGE_PRECISION
+                : 0.0;
+        memoryDetails.put("usagePercent", usagePercent);
+        details.put("heapMemory", memoryDetails);
+        return usagePercent;
+    }
+
+    /**
+     * 检查安全响应头配置是否合法
+     *
+     * @param details 健康详情映射
+     * @return 配置合法返回 true
+     */
+    private boolean checkSecurityHeaders(Map<String, Object> details) {
+        if (securityHeadersProperties.isEnabled()
+                && (securityHeadersProperties.getFrameOptions() == null
+                || securityHeadersProperties.getFrameOptions().isBlank())) {
+            details.put("warning", "安全响应头已启用但 frameOptions 为空");
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * 检查文档安全配置：生产环境文档需开启 Basic 认证
+     *
+     * @param details 健康详情映射
+     * @return 配置合法返回 true
+     */
+    private boolean checkDocSecurity(Map<String, Object> details) {
+        if (docProperties.isEnabled() && docProperties.isProductionEnabled()
+                && !docProperties.getBasicAuth().isEnabled()) {
+            details.put("warning", "生产环境文档已启用但 Basic 认证未开启");
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * 检查堆内存使用率是否超过 OOM 风险阈值
+     *
+     * @param details       健康详情映射
+     * @param usagePercent  当前堆内存使用率百分比
+     * @return 未超过阈值返回 true
+     */
+    private boolean checkHeapMemory(Map<String, Object> details, double usagePercent) {
+        if (usagePercent >= OOM_RISK_THRESHOLD_PERCENT) {
+            details.put("warning", "堆内存使用率超过 95%，存在 OOM 风险");
+            return false;
+        }
+        return true;
     }
 }

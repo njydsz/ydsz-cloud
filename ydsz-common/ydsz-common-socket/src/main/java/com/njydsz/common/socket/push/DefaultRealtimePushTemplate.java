@@ -101,7 +101,7 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
      */
     @Override
     public void pushToUser(String userId, String type, Object payload) {
-        pushToUser(userId, type, payload, MessagePriority.NORMAL.name());
+        pushToUserWithMessageId(userId, type, payload, null);
     }
 
     /**
@@ -116,29 +116,17 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
      * @param messageId 业务级消息唯一 ID
      */
     @Override
-    public void pushToUser(String userId, String type, Object payload, String messageId) {
+    public void pushToUserWithMessageId(String userId, String type, Object payload, String messageId) {
         pushToUserInternal(userId, type, payload, MessagePriority.NORMAL.name(), messageId);
     }
 
     /**
      * 推送消息到指定用户（指定优先级）。
      *
-     * <p>推送流程：
-     * <ol>
-     *   <li>消息过滤器链检查（拦截黑名单/敏感内容）</li>
-     *   <li>序列化 + 压缩（超过阈值自动 GZIP）</li>
-     *   <li>注入 traceId（链路追踪）</li>
-     *   <li>通过集群广播发布（熔断保护）</li>
-     *   <li>Redis 发布失败时降级为本地直接推送</li>
-     *   <li>本地推送失败时入重试队列</li>
-     *   <li>注册 ACK 待确认记录</li>
-     *   <li>记录审计日志 + 指标 + 慢连接检测</li>
-     * </ol>
-     *
-     * @param userId   用户 ID（为 null 时直接返回）
+     * @param userId   用户 ID
      * @param type     消息类型
      * @param payload  消息负载
-     * @param priority 消息优先级（影响重试队列排序）
+     * @param priority 消息优先级
      */
     @Override
     public void pushToUser(String userId, String type, Object payload, String priority) {
@@ -160,14 +148,14 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
         }
         try {
             if (onlineUserService.isOnline(userId)) {
-                pushToUser(userId, type, payload, messageId);
+                pushToUserWithMessageId(userId, type, payload, messageId);
             } else {
                 offlineMessageStore.cacheOffline(userId, type, payload);
                 log.info("[WebSocket] 用户离线，消息已缓存: userId={}, type={}, messageId={}", userId, type, messageId);
             }
         } catch (Exception e) {
             log.warn("[WebSocket] 在线检查异常，降级直接推送: userId={}, err={}", userId, e.getMessage());
-            pushToUser(userId, type, payload, messageId);
+            pushToUserWithMessageId(userId, type, payload, messageId);
         }
     }
 
@@ -425,7 +413,7 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
         }
         try {
             String messageId = generateMessageId();
-            pushToUser(userId, type, payload, messageId);
+            pushToUserWithMessageId(userId, type, payload, messageId);
             return PushResult.success(messageId);
         } catch (Exception e) {
             log.warn("[WebSocket] 推送失败: userId={}, err={}", userId, e.getMessage());

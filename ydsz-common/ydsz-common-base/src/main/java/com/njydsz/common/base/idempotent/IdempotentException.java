@@ -1,7 +1,5 @@
 package com.njydsz.common.base.idempotent;
 
-import com.njydsz.common.exception.enums.ExceptionCode;
-
 /**
  * 幂等性校验异常。
  *

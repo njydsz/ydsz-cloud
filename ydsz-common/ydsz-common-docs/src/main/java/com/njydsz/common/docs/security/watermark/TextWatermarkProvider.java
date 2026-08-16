@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -25,8 +26,6 @@ import com.njydsz.common.docs.config.DocsProperties;
 import com.njydsz.common.docs.enums.DocumentFormat;
 import com.njydsz.common.docs.exception.DocumentException;
 import com.njydsz.common.docs.exception.DocumentExceptionCode;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * PDF 文本水印提供者
