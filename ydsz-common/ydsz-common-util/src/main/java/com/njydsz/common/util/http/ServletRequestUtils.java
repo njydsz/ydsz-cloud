@@ -1,9 +1,5 @@
 package com.njydsz.common.util.http;
 
-import com.njydsz.common.util.config.StaticBridge;
-import com.njydsz.common.util.ip.IpValidator;
-import com.njydsz.common.util.string.StringUtils;
-import jakarta.servlet.http.HttpServletRequest;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -11,8 +7,14 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.MediaType;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.util.config.StaticBridge;
+import com.njydsz.common.util.ip.IpValidator;
+import com.njydsz.common.util.string.StringUtils;
 
 /**
  * Servlet HTTP 请求解析工具类

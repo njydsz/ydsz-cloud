@@ -1,11 +1,13 @@
 package com.njydsz.common.util.diff;
 
-import com.njydsz.common.json.YdszJson;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+
 import lombok.Getter;
+
+import com.njydsz.common.json.YdszJson;
 
 /**
  * 差异报告

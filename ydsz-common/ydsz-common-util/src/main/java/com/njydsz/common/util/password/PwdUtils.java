@@ -1,15 +1,17 @@
 package com.njydsz.common.util.password;
 
-import com.njydsz.common.util.api.Experimental;
-import com.njydsz.common.util.security.DigestUtils;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.HexFormat;
 import java.util.Locale;
 import java.util.ServiceLoader;
 import java.util.regex.Pattern;
-import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.util.api.Experimental;
+import com.njydsz.common.util.security.DigestUtils;
 
 /**
  * 用户密码安全工具类（纯 JDK 实现 + Spring Security BCrypt）

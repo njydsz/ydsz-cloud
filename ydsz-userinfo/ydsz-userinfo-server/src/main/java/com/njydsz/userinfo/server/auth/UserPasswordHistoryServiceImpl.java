@@ -20,9 +20,9 @@ import org.springframework.stereotype.Service;
  * <p><b>性能考虑：</b>
  *
  * <ul>
- *   <li>BCrypt 比对耗时约 100ms（cost=10），历史密码比对相当于 N 次 BCrypt 校验</ *
- *   <li>建议 historyCount ≤ 5，避免影响用户体验
- *   <li>比对场景仅在密码修改/重置时触发，非高频接口
+ *   <li>BCrypt 比对耗时约 100ms（cost=10），历史密码比对相当于 N 次 BCrypt 校验</li>
+ *   <li>建议 historyCount ≤ 5，避免影响用户体验</li>
+ *   <li>比对场景仅在密码修改/重置时触发，非高频接口</li>
  * </ul>
  *
  * @author ydsz-team

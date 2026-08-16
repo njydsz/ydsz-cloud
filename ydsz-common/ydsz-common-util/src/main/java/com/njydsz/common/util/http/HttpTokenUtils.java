@@ -1,8 +1,9 @@
 package com.njydsz.common.util.http;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import com.njydsz.common.util.internal.proxy.CoreConstants;
 import com.njydsz.common.util.string.StringUtils;
-import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * HTTP Token 提取工具类

@@ -1,12 +1,13 @@
 package com.njydsz.common.util.config;
 
-import com.njydsz.common.util.message.MessageUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
+
+import com.njydsz.common.util.message.MessageUtils;
 
 /**
  * MessageSource 自动装配配置。

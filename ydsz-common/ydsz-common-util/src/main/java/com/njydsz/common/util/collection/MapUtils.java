@@ -1,10 +1,11 @@
 package com.njydsz.common.util.collection;
 
-import com.njydsz.common.util.bean.BeanMapper;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import com.njydsz.common.util.bean.BeanMapper;
 
 /**
  * Map 工具类

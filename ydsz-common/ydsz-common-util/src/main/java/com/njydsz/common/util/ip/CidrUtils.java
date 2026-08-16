@@ -1,11 +1,13 @@
 package com.njydsz.common.util.ip;
 
-import com.njydsz.common.util.string.StringUtils;
 import java.net.InetAddress;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.util.string.StringUtils;
 
 /**
  * CIDR 网段计算工具类。

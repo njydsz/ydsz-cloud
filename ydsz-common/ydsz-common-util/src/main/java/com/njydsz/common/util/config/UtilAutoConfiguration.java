@@ -1,14 +1,5 @@
 package com.njydsz.common.util.config;
 
-import com.njydsz.common.util.http.ServletRequestUtils;
-import com.njydsz.common.util.http.TrustedProxyConfiguration;
-import com.njydsz.common.util.id.IdGenerator;
-import com.njydsz.common.util.id.SnowflakeHealthIndicator;
-import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.common.util.id.SnowflakeProperties;
-import com.njydsz.common.util.id.WorkerIdAllocator;
-import com.njydsz.common.util.id.WorkerIdAllocatorChain;
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -18,6 +9,16 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import jakarta.annotation.PostConstruct;
+
+import com.njydsz.common.util.http.ServletRequestUtils;
+import com.njydsz.common.util.http.TrustedProxyConfiguration;
+import com.njydsz.common.util.id.IdGenerator;
+import com.njydsz.common.util.id.SnowflakeHealthIndicator;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.common.util.id.SnowflakeProperties;
+import com.njydsz.common.util.id.WorkerIdAllocator;
+import com.njydsz.common.util.id.WorkerIdAllocatorChain;
 
 /**
  * 通用工具类自动配置。
