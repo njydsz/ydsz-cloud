@@ -8,6 +8,7 @@ import java.lang.annotation.Target;
 
 import org.springframework.context.annotation.Import;
 
+import com.njydsz.common.feign.assembler.NameAssemblerAutoConfiguration;
 import com.njydsz.common.feign.config.FeignConfiguration;
 
 /**
@@ -20,6 +21,7 @@ import com.njydsz.common.feign.config.FeignConfiguration;
  *   <li>YdszJson 编解码</li>
  *   <li>链路追踪注入</li>
  *   <li>监控指标采集</li>
+ *   <li>名称富化（NameAssembler）</li>
  * </ul>
  *
  * <p>使用示例：
@@ -36,10 +38,11 @@ import com.njydsz.common.feign.config.FeignConfiguration;
  * @author ydsz-team
  * @since 1.0.0
  * @see FeignConfiguration
+ * @see NameAssemblerAutoConfiguration
  */
 @Documented
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@Import(FeignConfiguration.class)
+@Import({FeignConfiguration.class, NameAssemblerAutoConfiguration.class})
 public @interface EnableYdszFeign {
 }

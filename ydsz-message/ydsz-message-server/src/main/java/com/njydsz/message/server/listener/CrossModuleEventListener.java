@@ -7,10 +7,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.notify.core.NotifyService;
-import com.njydsz.common.notify.core.NotifyRequest;
-import com.njydsz.common.notify.enums.NotifyChannel;
-import com.njydsz.common.notify.enums.NotifyPriority;
+import com.njydsz.common.notify.helper.NotifyHelper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +27,10 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>{@link DomainEventTypes#JOB_TIMEOUT} — 定时任务超时告警</li>
  * </ul>
  *
+ * <p><b>收敛说明</b>：使用 {@link NotifyHelper} 替代直接调用 {@code NotifyService}，
+ * 符合 ADR-001 统一业务入口策略。
+ * 对于无明确接收人的事件（receiver=null），不再发送无效通知。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -38,7 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class CrossModuleEventListener {
 
-    private final NotifyService notifyService;
+    private final NotifyHelper notifyHelper;
 
     /**
      * 定时任务执行失败 — 发送告警通知
