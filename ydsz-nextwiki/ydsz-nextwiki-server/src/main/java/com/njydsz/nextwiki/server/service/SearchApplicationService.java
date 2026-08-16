@@ -18,11 +18,27 @@ import com.njydsz.nextwiki.domain.vo.SearchResultVO;
 /**
  * NextWiki 搜索应用服务。
  * <p>
- * 读路径优先走统一搜索引擎（PG/ES），引擎不可用时降级到 DB LIKE 查询。
- * 写入路径（索引重建）保持不变，由 {@link SearchDomainService} 直接落 nw_search_index 表。
+ * 读路径优先走统一搜索引擎（{@code ydsz-common-search}），引擎不可用时降级到 DB LIKE 查询。
+ *
+ * <p><b>搜索链路：</b>
+ * <pre>
+ *   用户请求 → SearchController → SearchApplicationService.search()
+ *       ↓
+ *   主路径：UnifiedSearchService → WikiSearchProvider（权限过滤 + 全文检索）
+ *       ↓
+ *   降级：SearchDomainService.search()（nw_search_index 表的 LIKE 查询）
+ * </pre>
+ *
+ * <p><b>索引同步链路：</b>
+ * <ul>
+ *   <li>增量同步：{@code FileOperatedEventListener} 调用 SearchIndexEventBridge → IndexSyncService</li>
+ *   <li>全量重建：{@code NextwikiScheduledJobs} 触发 → IndexRebuildService.rebuildAll()</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see com.njydsz.common.search.service.UnifiedSearchService 统一搜索服务
+ * @see com.njydsz.nextwiki.domain.service.SearchDomainService DB 降级搜索
  */
 @Slf4j
 @Service

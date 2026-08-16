@@ -4,16 +4,19 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.health.contributor.Health;
-import org.springframework.boot.health.contributor.HealthIndicator;
 import com.njydsz.common.file.storage.IFileStorageProvider;
 import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
-import com.njydsz.nextwiki.server.metrics.NextwikiMetrics;
 
 /**
  * NextWiki 健康检查。
  *
  * <p>职责：报告存储可用性、数据库连接状态。
+ *
+ * <p>健康检查与指标采集职责分离：所有业务指标（upload/download/delete/...）
+ * 由 {@code NextwikiMetrics} 通过 {@link com.njydsz.common.base.metrics.AbstractModuleMetrics} 体系承载，
+ * 本指标器不持有指标转发门面，违反云顶编码规范"业务模块优先使用 common 模块能力，
+ * 不重复造轮子，不承担非自身职责"原则。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -23,7 +26,6 @@ import com.njydsz.nextwiki.server.metrics.NextwikiMetrics;
 public class NextwikiHealthIndicator extends AbstractModuleHealthIndicator {
 
     private final FileNodeRepository fileNodeRepository;
-    private final NextwikiMetrics nextwikiMetrics;
 
     @Autowired(required = false)
     private IFileStorageProvider fileStorageProvider;
@@ -33,62 +35,6 @@ public class NextwikiHealthIndicator extends AbstractModuleHealthIndicator {
      */
     public void setFileStorageProvider(IFileStorageProvider fileStorageProvider) {
         this.fileStorageProvider = fileStorageProvider;
-    }
-
-    /**
-     * 转发文件上传埋点到 {@link NextwikiMetrics#recordUpload()}。
-     *
-     * <p>本类对外保留一组 {@code recordXxx} 方法，是为兼容早期只注入
-     * 健康检查器的调用方；新代码应直接依赖 {@link NextwikiMetrics}，
-     * 避免把指标采集职责与健康检查耦合在一起。
-     */
-    public void recordUpload() {
-        nextwikiMetrics.recordUpload();
-    }
-
-    /**
-     * 转发文件下载埋点到 {@link NextwikiMetrics#recordDownload()}。
-     *
-     * <p>兼容性门面方法，不参与健康检查判定，新代码请直接使用 {@link NextwikiMetrics}。
-     */
-    public void recordDownload() {
-        nextwikiMetrics.recordDownload();
-    }
-
-    /**
-     * 转发文件删除埋点到 {@link NextwikiMetrics#recordDelete()}。
-     *
-     * <p>兼容性门面方法，不参与健康检查判定，新代码请直接使用 {@link NextwikiMetrics}。
-     */
-    public void recordDelete() {
-        nextwikiMetrics.recordDelete();
-    }
-
-    /**
-     * 转发分享创建埋点到 {@link NextwikiMetrics#recordShare()}。
-     *
-     * <p>兼容性门面方法，不参与健康检查判定，新代码请直接使用 {@link NextwikiMetrics}。
-     */
-    public void recordShare() {
-        nextwikiMetrics.recordShare();
-    }
-
-    /**
-     * 转发搜索请求埋点到 {@link NextwikiMetrics#recordSearch()}。
-     *
-     * <p>兼容性门面方法，不参与健康检查判定，新代码请直接使用 {@link NextwikiMetrics}。
-     */
-    public void recordSearch() {
-        nextwikiMetrics.recordSearch();
-    }
-
-    /**
-     * 转发预览生成埋点到 {@link NextwikiMetrics#recordPreview()}。
-     *
-     * <p>兼容性门面方法，不参与健康检查判定，新代码请直接使用 {@link NextwikiMetrics}。
-     */
-    public void recordPreview() {
-        nextwikiMetrics.recordPreview();
     }
 
     /**

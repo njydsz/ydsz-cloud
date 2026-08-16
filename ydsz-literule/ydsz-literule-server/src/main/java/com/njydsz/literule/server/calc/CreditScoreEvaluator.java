@@ -47,7 +47,7 @@ public class CreditScoreEvaluator {
                 && overdueCount == 0) ? 30 : 0;
 
         // 1) 及时率 60 pts
-        BigDecimal timely = onTimeRate.multiply(new BigDecimal(60))
+        BigDecimal timely = onTimeRate.multiply(BigDecimal.valueOf(60))
                 .setScale(2, RoundingMode.HALF_UP);
 
         // 2) 合同规模 25 pts

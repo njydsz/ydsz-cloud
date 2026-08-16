@@ -18,11 +18,26 @@ public final class NumberUtils {
     /** 两位数查找表（存储两位数字的字符表示） */
     private static final int[] DIGIT_TENS = new int[100];
 
+    /** 位偏移量（用于将两个字符打包到一个 int 中高8位的移位值） */
+    private static final int BITS_PER_BYTE = 8;
+
+    /** 低8位掩码（用于提取打包 int 中低8位的字节值） */
+    private static final int LOW_BYTE_MASK = 0xff;
+
+    /** Integer.MIN_VALUE 的十进制字符串表示长度（"-2147483648" = 11 个字符） */
+    private static final int MIN_INT_VALUE_DIGIT_COUNT = 11;
+
+    /** Long.MIN_VALUE 的十进制字符串表示长度（"-9223372036854775808" = 20 个字符） */
+    private static final int MIN_LONG_VALUE_DIGIT_COUNT = 20;
+
+    /** 快速路径阈值：大于等于此值时使用两位数查表加速（100 * 656 = 65600 > 65536） */
+    private static final int FAST_PATH_THRESHOLD = 65536;
+
     static {
         for (int i = 0; i < 100; i++) {
             int tens = (i / 10) + '0';
             int ones = (i % 10) + '0';
-            DIGIT_TENS[i] = (tens << 8) | ones;
+            DIGIT_TENS[i] = (tens << BITS_PER_BYTE) | ones;
         }
     }
 
@@ -41,8 +56,8 @@ public final class NumberUtils {
         }
 
         if (value == Integer.MIN_VALUE) {
-            "-2147483648".getChars(0, 11, buf, off);
-            return 11;
+            "-2147483648".getChars(0, MIN_INT_VALUE_DIGIT_COUNT, buf, off);
+            return MIN_INT_VALUE_DIGIT_COUNT;
         }
 
         boolean negative = value < 0;
@@ -57,13 +72,13 @@ public final class NumberUtils {
         int charPos = off + size - 1;
 
         // 快速路径：两位数字查表
-        while (value >= 65536) {
+        while (value >= FAST_PATH_THRESHOLD) {
             int q = value / 100;
             int r = value - q * 100;
             value = q;
             int tmp = DIGIT_TENS[r];
-            buf[charPos--] = (char) (tmp & 0xff);
-            buf[charPos--] = (char) (tmp >> 8);
+            buf[charPos--] = (char) (tmp & LOW_BYTE_MASK);
+            buf[charPos--] = (char) (tmp >> BITS_PER_BYTE);
         }
 
         // 剩余部分
@@ -92,8 +107,8 @@ public final class NumberUtils {
         }
 
         if (value == Long.MIN_VALUE) {
-            "-9223372036854775808".getChars(0, 20, buf, off);
-            return 20;
+            "-9223372036854775808".getChars(0, MIN_LONG_VALUE_DIGIT_COUNT, buf, off);
+            return MIN_LONG_VALUE_DIGIT_COUNT;
         }
 
         boolean negative = value < 0;
@@ -113,13 +128,13 @@ public final class NumberUtils {
         int size = sizeOfLong(value);
         int charPos = off + size - 1;
 
-        while (value >= 65536) {
+        while (value >= FAST_PATH_THRESHOLD) {
             long q = value / 100;
             long r = value - q * 100;
             value = q;
             int tmp = DIGIT_TENS[(int) r];
-            buf[charPos--] = (char) (tmp & 0xff);
-            buf[charPos--] = (char) (tmp >> 8);
+            buf[charPos--] = (char) (tmp & LOW_BYTE_MASK);
+            buf[charPos--] = (char) (tmp >> BITS_PER_BYTE);
         }
 
         while (value > 0) {
@@ -137,7 +152,7 @@ public final class NumberUtils {
      */
     public static int sizeOfInt(int value) {
         if (value < 0) {
-            if (value == Integer.MIN_VALUE) { return 11; }
+            if (value == Integer.MIN_VALUE) { return MIN_INT_VALUE_DIGIT_COUNT; }
             value = -value;
         }
 
@@ -158,7 +173,7 @@ public final class NumberUtils {
      */
     public static int sizeOfLong(long value) {
         if (value < 0) {
-            if (value == Long.MIN_VALUE) { return 20; }
+            if (value == Long.MIN_VALUE) { return MIN_LONG_VALUE_DIGIT_COUNT; }
             value = -value;
         }
 
@@ -181,7 +196,7 @@ public final class NumberUtils {
         if (value < 100000000000000000L) { return 17; }
         if (value < 1000000000000000000L) { return 18; }
         if (value < 9223372036854775807L) { return 19; }
-        return 20;
+        return MIN_LONG_VALUE_DIGIT_COUNT;
     }
 
     private NumberUtils() {

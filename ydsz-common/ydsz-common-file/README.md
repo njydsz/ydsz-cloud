@@ -147,6 +147,41 @@ ydsz:
     domain: https://files.example.com
 ```
 
+### 2.1 配置基线与 Nacos 共享配置
+
+基础设施级配置（endpoint / bucket / domain / 存储类型）建议在 Nacos 共享配置 `ydsz-common.yaml` 中统一定义，所有业务模块继承而无需各自维护：
+
+```yaml
+# Nacos DataId: ydsz-common.yaml（Infrastructure Baseline）
+ydsz:
+  file:
+    type: minio
+    endpoint: ${MINIO_ENDPOINT:http://minio.ydsz.svc:9000}
+    bucket: ydsz-files
+    domain: https://files.njydsz.com
+    max-file-size: 104857600
+    part-size: 5242880
+    check-magic-number: true
+    concurrency-control:
+      enabled: true
+    health-check-interval-seconds: 30
+```
+
+业务模块仅在需要覆盖差异化项时才在本地 yml 中添加 `ydsz.file.*` 配置，如：
+
+```yaml
+# 业务模块本地仅覆盖差异化项
+ydsz:
+  file:
+    lifecycle:
+      enabled: true          # 此模块需要自动清理临时文件
+      rules:
+        - prefix: "import/"  # 导入临时文件 24h 过期
+          max-age-days: 1
+```
+
+> **注意**：在本地配置文件中声明 `ydsz.file.enabled=false` 可以关闭整个文件模块的自动装配，适用于不需要文件处理的开发/测试模块。
+
 ### 3. 启用模块
 
 `FileConfiguration` 通过 Spring Boot 自动装配机制注册（`@AutoConfiguration` + `@ConditionalOnProperty`），无需额外注解即可使用。
@@ -360,15 +395,42 @@ public class ClamAvVirusScanner implements VirusScanner {
 ## 注意事项
 
 1. **生产环境必须替换 NoOpVirusScanner**：默认装配的 `NoOpVirusScanner` 仅返回 CLEAN 占位，不真正扫描病毒。生产环境必须实现 `VirusScanner` 接口注册为 Spring Bean，否则存在安全风险。
-2. **Redis 不是必须依赖**：`MultipartContextStore` 与 `CheckpointStore` 优先使用 Redis，Redis 不可用时自动降级到内存 / 本地文件实现。多实例部署时必须引入 Redis，否则分片上传上下文无法跨实例共享。
-3. **分片大小默认 5MB**：与 S3 协议对齐，过小会增加请求数，过大降低并发度与失败恢复效率。可通过 `ydsz.file.part-size` 调整。
-4. **路径穿越防护**：`AbstractFileStorage.resolveObjectKey` 会拒绝空字节、`..` 路径穿越符（含 URL 编码 `%2e%2e`），并通过 `Paths.normalize()` 二次校验，业务层无需重复实现。
-5. **批量删除不保证原子性**：`batchDelete` 基于 `parallelStream` 并行执行，部分失败时已成功的对象不可恢复，业务方需根据 `BatchDeleteResult.getFailedMap()` 进行业务补偿。
-6. **并发保护策略**：`UploadConcurrencyGuard` 仅在 Redis 可用且 `ydsz.file.concurrency-control.enabled=true` 时生效；冲突时直接抛异常（REJECT 策略）。
-7. **生命周期清理 dry-run**：生产环境首次启用建议 `dry-run=true` 试运行，确认清理范围后再切换为 `false`。
-8. **`generateUploadPolicy` 与 `generatePresignedUploadUrl` 不是所有存储后端都支持**：默认抛 `UnsupportedOperationException`，各云存储实现类按需覆盖。
-9. **分片 MD5 校验默认关闭**：启用 `ydsz.file.upload.chunk-md5-check=true` 会增加内存与 CPU 开销，建议仅在高一致性场景启用。启用后流式累积 MD5 仅缓存 `MessageDigest` 状态（约 128 字节），不缓存原始分片数据，避免 OOM。
-10. **`FileConfiguration` 启用 `@EnableScheduling`**：引入本模块后会自动开启 Spring 调度，每小时清理过期分片上下文。若业务模块已有 `@EnableScheduling`，Spring 会自动去重，无副作用。
+11. **启用秒传必须配套 Bucket Lifecycle 策略**：`FileDedupService` 基于 SHA-256 的文件内容去重（30 天 TTL）实现秒传。秒传命中后返回的 URL 可能指向已物理删除的对象（如果存储端已配置了 Bucket Lifecycle 自动清理）。生产环境在启用秒传的同时必须在存储桶上配置 Lifecycle 策略：例如"30 天内未访问的对象自动转冷 / 删除"，避免"幽灵秒传"。
+12. **并发守卫 REJECT 策略需前端配合**：`UploadConcurrencyGuard` 在同一 objectKey 被并发上传时采用快速失败策略（抛 BusinessException，错误码 `FILE_CONCURRENT_UPLOAD`）。前端需要在 Controller 层捕获该异常并展示"文件正在上传中"的友好提示，避免直接暴露技术异常。
+3. **Redis 不是必须依赖**：`MultipartContextStore` 与 `CheckpointStore` 优先使用 Redis，Redis 不可用时自动降级到内存 / 本地文件实现。多实例部署时必须引入 Redis，否则分片上传上下文无法跨实例共享。
+4. **分片大小默认 5MB**：与 S3 协议对齐，过小会增加请求数，过大降低并发度与失败恢复效率。可通过 `ydsz.file.part-size` 调整。
+5. **路径穿越防护**：`AbstractFileStorage.resolveObjectKey` 会拒绝空字节、`..` 路径穿越符（含 URL 编码 `%2e%2e`），并通过 `Paths.normalize()` 二次校验，业务层无需重复实现。
+6. **批量删除不保证原子性**：`batchDelete` 基于 `parallelStream` 并行执行，部分失败时已成功的对象不可恢复，业务方需根据 `BatchDeleteResult.getFailedMap()` 进行业务补偿。
+7. **并发保护策略**：`UploadConcurrencyGuard` 仅在 Redis 可用且 `ydsz.file.concurrency-control.enabled=true` 时生效；冲突时直接抛异常（REJECT 策略）。
+8. **生命周期清理 dry-run**：生产环境首次启用建议 `dry-run=true` 试运行，确认清理范围后再切换为 `false`。
+9. **`generateUploadPolicy` 与 `generatePresignedUploadUrl` 不是所有存储后端都支持**：默认抛 `UnsupportedOperationException`，各云存储实现类按需覆盖。
+10. **分片 MD5 校验默认关闭**：启用 `ydsz.file.upload.chunk-md5-check=true` 会增加内存与 CPU 开销，建议仅在高一致性场景启用。启用后流式累积 MD5 仅缓存 `MessageDigest` 状态（约 128 字节），不缓存原始分片数据，避免 OOM。
+11. **`FileConfiguration` 启用 `@EnableScheduling`**：引入本模块后会自动开启 Spring 调度，每小时清理过期分片上下文。若业务模块已有 `@EnableScheduling`，Spring 会自动去重，无副作用。
+
+## 指标监控与 Grafana 看板
+
+`FileMetrics` 基于 Micrometer 自动采集以下 `file.*` 前缀的指标（MeterRegistry 为 null 时安全降级为 No-Op）：
+
+| 指标名 | 类型 | Tag | 说明 |
+|--------|------|-----|------|
+| `file.upload.count` | Counter | `storageType` | 上传总次数 |
+| `file.download.count` | Counter | `storageType` | 下载总次数 |
+| `file.delete.count` | Counter | `storageType` | 删除总次数 |
+| `file.dedup.hit` | Counter | - | 秒传命中次数 |
+| `file.dedup.miss` | Counter | - | 秒传未命中次数 |
+| `file.virus.detected` | Counter | `scanner` | 病毒检出次数 |
+| `file.upload.duration` | Timer | `storageType` | 上传耗时（P50/P95/P99） |
+| `file.download.duration` | Timer | `storageType` | 下载耗时 |
+| `file.upload.errors` | Counter | `code` | 按错误码分组的上传错误 |
+| `file.download.errors` | Counter | `code` | 按错误码分组的下载错误 |
+
+**接入 Prometheus + Grafana**：确认 `micrometer-registry-prometheus` 在 classpath 后，指标会自动暴露给 `/actuator/prometheus` 端点。建议创建专用 Dashboard 包含以下面板：
+
+1. 上传 / 下载 QPS 聚合图（`rate(file.upload.count[5m])`）
+2. 秒传命中率（`rate(file.dedup.hit[5m]) / (rate(file.dedup.hit[5m]) + rate(file.dedup.miss[5m]))`）
+3. 上传延迟 P95 / P99（`histogram_quantile(0.95, rate(file.upload.duration_bucket[5m]))`）
+4. 上传错误码分布（`sum by(code) (rate(file.upload.errors[5m]))`）
+5. 病毒检出计数器（`file.virus.detected`，仅在替换真实 VirusScanner 后有效）
 
 ## 变更记录
 

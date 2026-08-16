@@ -287,7 +287,15 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
                     String nonce = UUID.randomUUID().toString().replace("-", "");
                     // GAP-P0-3: 网关侧存储 nonce（下游服务也会调用 NonceCache.verifyAndConsume 双重校验）
                     if (!nonceCache.verifyAndConsume(nonce)) {
-                        // 理论上 UUID 不会碰撞，如果碰撞说明可能是重放攻击
+                        // P0-6: nonce 碰撞（疑似重放攻击）→ sentry 告警收敛
+                        SentryObservation.alert(AlertEvent.builder()
+                                .name("gateway.auth.nonce_replay")
+                                .severity(AlertSeverity.P1)
+                                .summary("Nonce 碰撞（疑似重放攻击）")
+                                .description("连续两次生成相同 nonce，可能为重放攻击")
+                                .category("security")
+                                .labels(Map.of("trace_id", traceId, "user_id", userIdStr))
+                                .build());
                         log.warn("[AuthFilter] Nonce 碰撞（疑似重放攻击）traceId={} userId={}", traceId, userIdStr);
                         return unauthorized(exchange, traceId, "error.REPLAY_DETECTED");
                     }

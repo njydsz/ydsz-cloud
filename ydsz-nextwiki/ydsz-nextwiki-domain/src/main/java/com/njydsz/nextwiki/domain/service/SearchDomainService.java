@@ -22,18 +22,29 @@ import com.njydsz.nextwiki.domain.vo.SearchResultVO;
 /**
  * 搜索领域服务
  * <p>
- * 提供基于数据库的文件名、路径、标签搜索（多维度组合）。
- * 当 Elasticsearch 可用时，由 {@code WikiSearchProvider} 覆盖为全文搜索。
+ * 维护 {@code nw_search_index} 表，提供基于数据库的文件名/路径/标签搜索能力。
  *
- * <p><b>搜索能力分级：</b>
+ * <p><b>职责定位（双索引架构）：</b>
  * <ul>
- *   <li>P0 - 基于文件名/路径的 LIKE 搜索（数据库）</li>
- *   <li>P1 - 多维度搜索：文件名 + 路径 + 标签</li>
- *   <li>P2 - 相关度排序、高亮、搜索建议</li>
+ *   <li>{@code nw_search_index} 表 — 搜索引擎不可用时的 <b>DB 降级存储</b>，
+ *       仅在统一搜索（{@code ydsz-common-search}）不可用时提供 LIKE 兜底</li>
+ *   <li>{@code ydsz_search_index} 表（{@code WikiSearchProvider} 维护）—
+ *       统一搜索引擎的主索引，支持全文检索、高亮、聚合、权重排序</li>
  * </ul>
+ *
+ * <p><b>搜索优先级：</b>
+ * <ol>
+ *   <li>统一搜索引擎（PG tsvector / 内存引擎）— {@link com.njydsz.common.search.service.UnifiedSearchService}</li>
+ *   <li>DB LIKE 降级 — 本类提供（仅在引擎不可用时触发）</li>
+ * </ol>
+ *
+ * <p><b>注意事项：</b>
+ * 增量索引写入由 {@code FileOperatedEventListener} 驱动，同时更新 nw_search_index 和统一搜索索引。
+ * 全量重建由 {@code NextwikiScheduledJobs} 触发，确保双索引数据一致性。
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see com.njydsz.nextwiki.server.search.WikiSearchProvider 统一搜索 Provider（主索引）
  */
 @Slf4j
 @Service

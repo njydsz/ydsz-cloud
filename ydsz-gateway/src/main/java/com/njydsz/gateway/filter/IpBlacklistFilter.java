@@ -1,5 +1,6 @@
 package com.njydsz.gateway.filter;
 
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,9 @@ import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.trace.TraceIdGenerator;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.sentry.SentryObservation;
+import com.njydsz.common.sentry.domain.AlertEvent;
+import com.njydsz.common.sentry.domain.AlertSeverity;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.config.GatewayIpUtils;
@@ -117,6 +121,17 @@ public class IpBlacklistFilter implements GlobalFilter, Ordered {
         // L1: 先查本地缓存
         Boolean cached = localCache.getIfPresent(clientIp);
         if (Boolean.TRUE.equals(cached)) {
+            // P2-11: 黑名单命中 → sentry 告警收敛（P2 安全事件）
+            SentryObservation.alert(AlertEvent.builder()
+                    .name("gateway.ip_blacklist.hit")
+                    .severity(AlertSeverity.P2)
+                    .summary("IP 黑名单命中（L1 缓存）")
+                    .description("恶意 IP 请求被网关拦截")
+                    .category("security")
+                    .labels(Map.of("ip", clientIp,
+                            "path", request.getURI().getPath(),
+                            "cache_level", "L1"))
+                    .build());
             log.warn("[IpBlacklist] L1 命中黑名单 ip={} path={}", clientIp, request.getURI().getPath());
             return forbidden(exchange, clientIp);
         }
@@ -133,6 +148,17 @@ public class IpBlacklistFilter implements GlobalFilter, Ordered {
                     localCache.put(clientIp, blacklisted);
 
                     if (Boolean.TRUE.equals(blacklisted)) {
+                        // P2-11: 黑名单命中 → sentry 告警收敛（P2 安全事件）
+                        SentryObservation.alert(AlertEvent.builder()
+                                .name("gateway.ip_blacklist.hit")
+                                .severity(AlertSeverity.P2)
+                                .summary("IP 黑名单命中（L2 Redis）")
+                                .description("恶意 IP 请求被网关拦截")
+                                .category("security")
+                                .labels(Map.of("ip", clientIp,
+                                        "path", request.getURI().getPath(),
+                                        "cache_level", "L2"))
+                                .build());
                         log.warn("[IpBlacklist] L2 命中黑名单 ip={} path={}", clientIp, request.getURI().getPath());
                         return forbidden(exchange, clientIp);
                     }

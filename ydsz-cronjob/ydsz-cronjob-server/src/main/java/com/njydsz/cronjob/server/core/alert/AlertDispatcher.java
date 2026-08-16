@@ -20,7 +20,7 @@ import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.feign.NotificationClient;
-import com.njydsz.common.feign.dto.RealtimePushDTO;
+import com.njydsz.common.feign.dto.BroadcastRequestDTO;
 import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.notify.helper.NotifyHelper;
 import com.njydsz.cronjob.domain.entity.job.JobAlertLog;
@@ -212,17 +212,22 @@ public class AlertDispatcher {
      */
     private void broadcastAlert(AlertContext context, JobAlertRule rule, boolean recovery) {
         try {
-            Map<String, Object> payload = new HashMap<>();
-            payload.put("alertCode", "CRONJOB-" + System.currentTimeMillis() + "-" + rule.getId());
-            payload.put("alertType", rule.getAlertType());
-            payload.put("alertLevel", rule.getAlertLevel());
-            payload.put("title", buildTitle(context, rule));
-            payload.put("content", buildContent(context, rule));
-            payload.put("sourceModule", "cronjob");
-            payload.put("sourceId", context.jobId());
-            payload.put("recovery", recovery);
-            payload.put("traceId", context.traceId());
-            notificationClient.broadcast("ALERT", new RealtimePushDTO(payload));
+            Map<String, Object> data = new HashMap<>();
+            data.put("alertCode", "CRONJOB-" + System.currentTimeMillis() + "-" + rule.getId());
+            data.put("alertType", rule.getAlertType());
+            data.put("alertLevel", rule.getAlertLevel());
+            data.put("title", buildTitle(context, rule));
+            data.put("content", buildContent(context, rule));
+            data.put("sourceModule", "cronjob");
+            data.put("sourceId", context.jobId());
+            data.put("recovery", recovery);
+            data.put("traceId", context.traceId());
+            BroadcastRequestDTO request = BroadcastRequestDTO.builder()
+                    .topic("ALERT")
+                    .data(data)
+                    .messageId("CRONJOB-" + rule.getId() + "-" + System.currentTimeMillis())
+                    .build();
+            notificationClient.broadcast(request);
         } catch (Exception e) {
             log.debug("[AlertDispatcher] 实时广播降级忽略: ruleId={} err={}",
                     rule.getId(), e.getMessage());

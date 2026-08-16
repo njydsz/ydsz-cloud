@@ -1,4 +1,4 @@
-package com.njydsz.common.json.parser;
+﻿package com.njydsz.common.json.parser;
 
 import java.math.BigDecimal;
 import com.njydsz.common.json.YdszJson;
@@ -703,7 +703,30 @@ public final class JsonParserUtil {
     /**
      * 检查字符数组片段是否包含转义字符，若包含则解码转义序列，否则直接返回子串。
      *
-     * <p>快速路径：先扫描是否有 '\' 字符，若无则直接 new String(chars, start, len)。</p>\n     * <p>慢速路径：复用 parseStringWithEscape 逻辑解码转义序列。</p>\n     *\n     * @param chars 字符数组\n     * @param start 起始位置\n     * @param length 长度\n     * @return 解码后的字符串\n     */\n    private static String decodeStringIfNeeded(char[] chars, int start, int length) {\n        for (int i = start; i < start + length; i++) {\n            if (chars[i] == '\\') {\n                return parseStringWithEscape(chars, start, start + length);\n            }\n        }\n        return new String(chars, start, length);\n    }\n\n    /**\n     * 解析字符串\n     */\n    /** package-private */ static String parseString(char[] chars, int pos) {\n        int len = chars.length;\n\n        if (chars[pos] != '"') {
+     * <p>快速路径：先扫描是否有 '\' 字符，若无则直接 new String(chars, start, len)。</p>
+     * <p>慢速路径：复用 parseStringWithEscape 逻辑解码转义序列。</p>
+     *
+     * @param chars 字符数组
+     * @param start 起始位置
+     * @param length 长度
+     * @return 解码后的字符串
+     */
+    private static String decodeStringIfNeeded(char[] chars, int start, int length) {
+        for (int i = start; i < start + length; i++) {
+            if (chars[i] == '\\') {
+                return parseStringWithEscape(chars, start, start + length);
+            }
+        }
+        return new String(chars, start, length);
+    }
+
+    /**
+     * 解析字符串
+     */
+    /** package-private */ static String parseString(char[] chars, int pos) {
+        int len = chars.length;
+
+        if (chars[pos] != '"') {
             throw new JsonDeserializationException("Expected '\"' at position " + pos, pos);
         }
         pos++; // 跳过起始引号

@@ -1,28 +1,42 @@
 package com.njydsz.nextwiki.server.service;
 
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Set;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+
+import com.njydsz.common.docs.domain.DocumentContent;
+import com.njydsz.common.docs.domain.DocumentParseResult;
+import com.njydsz.common.docs.enums.DocumentFormat;
+import com.njydsz.common.docs.service.DocumentService;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.service.SearchDomainService;
+
 /**
  * 内容提取服务。
- * <p>从 Office/PDF 中提取纯文本用于全文检索。
+ *
+ * <p>从 Office/PDF/纯文本中提取纯文本用于全文检索。
+ *
+ * <p><b>文档解析能力来源：</b>委托 {@link DocumentService} 执行，
+ * 复用 common-docs 模块统一的文档解析、格式检测与预处理能力，
+ * 避免在后端服务中重复维护格式后缀白名单与 HTML 清理逻辑。
+ *
+ * <p><b>能力对照：</b>
+ * <ul>
+ *   <li>后缀白名单：由 {@link DocumentFormat} 枚举统一管理，覆盖 16 种格式</li>
+ *   <li>PDF/Office 解析：由 {@link DocumentService#parse} 委托 Apache Tika / POI</li>
+ *   <li>HTML 标签清理：由 {@link DocumentService#preprocess} 流水线统一处理</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
  */
-
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -30,20 +44,17 @@ public class ContentExtractionApplicationService {
 
     private final FileNodeRepository fileNodeRepository;
     private final SearchDomainService searchDomainService;
+    private final DocumentService documentService;
 
     @Autowired(required = false)
     private IFileStorageProvider fileStorageProvider;
 
-    /** 直接可读取文本内容的文件后缀 */
-    private static final Set<String> TEXT_SUFFIXES = Set.of(
-            "txt", "md", "csv", "json", "xml", "html", "htm", "log", "properties", "yml", "yaml", "sql"
-    );
-
-    /** 最大提取文本长度（1MB） */
+    /** 最大提取文本长度（1MB），保护索引体积 */
     private static final int MAX_CONTENT_LENGTH = 1024 * 1024;
 
     /**
      * 异步提取文件内容并更新搜索索引（上传后管线入口）。
+     *
      * <p>由 {@code nextwikiTaskExecutor} 线程池异步执行，内部捕获全部异常仅记日志，
      * 避免阻塞主流程或导致上传事务回滚；真正的提取逻辑见 {@link #extractAndIndex}。
      *
@@ -64,14 +75,17 @@ public class ContentExtractionApplicationService {
 
     /**
      * 提取文件内容并写入搜索索引（同步核心逻辑）。
-     * <p>对纯文本类后缀（{@code TEXT_SUFFIXES}）直接读取内容；PDF/Office 等二进制文档当前未接入 Tika，
-     * 仅索引文件元数据。提取内容超 {@link #MAX_CONTENT_LENGTH} 时截断，避免索引体积膨胀。
+     *
+     * <p>通过 {@link DocumentService} 解析文档内容，支持 PDF / Office / 纯文本 / Markdown / HTML
+     * 等多种格式。解析成功后写入搜索索引；无内容提取时仍索引文件元数据。
+     *
+     * <p>提取内容超 {@link #MAX_CONTENT_LENGTH} 时截断，避免索引体积膨胀。
      *
      * @param fileNodeId 文件节点 ID
      * @param userId     操作人 ID
      * @return 无返回值
      * @note 节点不存在或非文件时静默返回；提取失败（如存储不可用）仅记 warn，不影响上传主流程
-     * @complexity O(contentLength)（读取 + 截取 + 索引写入）
+     * @complexity O(contentLength)（读取 + 解析 + 截取 + 索引写入）
      * @concurrency 无共享可变状态，可并发；幂等（重复索引以最新内容覆盖）
      */
     public void extractAndIndex(String fileNodeId, String userId) {
@@ -86,13 +100,17 @@ public class ContentExtractionApplicationService {
             return;
         }
 
-        String content = null;
-        if (TEXT_SUFFIXES.contains(suffix.toLowerCase())) {
-            content = extractTextContent(fileNode);
+        // 使用 DocumentFormat 统一格式检测（基于文件名），覆盖 16 种格式
+        String fileName = fileNode.getName();
+        if (DocumentFormat.fromFileName(fileName) == DocumentFormat.UNKNOWN) {
+            log.debug("[ContentExtractionApplicationService] 不支持的格式，仅索引元数据: fileNodeId={}, fileName={}",
+                    fileNodeId, fileName);
+            searchDomainService.indexFile(fileNodeId, null, userId);
+            return;
         }
-        // PDF/Office 等二进制文档需要集成 Tika（可选）
-        // if ("pdf".equals(suffix)) content = extractByTika(fileNode);
-        // if (OFFICE_SUFFIXES.contains(suffix)) content = extractByTika(fileNode);
+
+        // 调用 common-docs 统一解析
+        String content = parseDocumentContent(fileNode);
 
         if (content != null && !content.isEmpty()) {
             // 限制最大长度
@@ -109,55 +127,41 @@ public class ContentExtractionApplicationService {
     }
 
     /**
-     * 从纯文本文件中提取内容
+     * 通过 common-docs 解析文档内容。
+     *
+     * <p>委托 {@link DocumentService#parseAndPreprocess} 执行解析 + 预处理一体化流程，
+     * 内部自动选择对应格式的解析器（PDFBox / POI / Jsoup 等），并执行文本归一化、
+     * 清洗等预处理步骤。
+     *
+     * @param fileNode 文件节点（含存储定位信息）
+     * @return 解析后的纯文本内容；解析失败返回 {@code null}
      */
-    private String extractTextContent(FileNode fileNode) {
+    private String parseDocumentContent(FileNode fileNode) {
         IFileStorage storage = resolveStorage();
         if (storage == null) {
             return null;
         }
+
         try (InputStream is = storage.downloadAsStream(fileNode.getBucketName(), fileNode.getStorageKey())) {
-            byte[] bytes = is.readNBytes(MAX_CONTENT_LENGTH + 1);
-            if (bytes.length > MAX_CONTENT_LENGTH) {
-                bytes = Arrays.copyOf(bytes, MAX_CONTENT_LENGTH);
+            DocumentParseResult result = documentService.parseAndPreprocess(is, fileNode.getName(), null);
+
+            if (!result.isSuccess()) {
+                log.warn("[ContentExtractionApplicationService] 文档解析失败: fileNodeId={}, error={}",
+                        fileNode.getId(), result.getErrorMessage());
+                return null;
             }
-            String content = new String(bytes, StandardCharsets.UTF_8);
-            String suffix = fileNode.getSuffix();
-            if (suffix != null) {
-                suffix = suffix.toLowerCase();
-                if ("html".equals(suffix) || "htm".equals(suffix)) {
-                    content = stripHtmlTags(content);
-                }
+
+            DocumentContent content = result.getContent();
+            if (content == null || content.getText() == null || content.getText().isEmpty()) {
+                return null;
             }
-            return content;
+
+            return content.getText();
         } catch (Exception e) {
-            log.warn("[ContentExtractionApplicationService] 文本提取失败: fileNodeId={}, error={}",
+            log.warn("[ContentExtractionApplicationService] 文档解析异常: fileNodeId={}, error={}",
                     fileNode.getId(), e.getMessage());
             return null;
         }
-    }
-
-    /**
-     * P2-R1: HTML 标签清理增强（先移除 script/style 块再清理标签）
-     */
-    private String stripHtmlTags(String html) {
-        // 先移除 script 和 style 块（含内容）
-        String result = html;
-        result = result.replaceAll("(?is)<script[^>]*>.*?</script>", " ");
-        result = result.replaceAll("(?is)<style[^>]*>.*?</style>", " ");
-        // 移除 HTML 注释
-        result = result.replaceAll("(?is)<!--.*?-->", " ");
-        // 移除 CDATA 块
-        result = result.replaceAll("(?is)<!\\[CDATA\\[.*?\\]\\]>", " ");
-        // 移除所有 HTML 标签
-        result = result.replaceAll("<[^>]+>", " ");
-        // 解码常见 HTML 实体
-        result = result.replace("&amp;", "&").replace("&lt;", "<")
-                .replace("&gt;", ">").replace("&quot;", "\"")
-                .replace("&apos;", "'").replace("&nbsp;", " ");
-        // 压缩连续空白
-        result = result.replaceAll("\\s+", " ").trim();
-        return result;
     }
 
     private IFileStorage resolveStorage() {

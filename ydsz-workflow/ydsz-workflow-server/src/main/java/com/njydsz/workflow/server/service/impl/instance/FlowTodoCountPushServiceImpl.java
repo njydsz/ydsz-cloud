@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import com.njydsz.common.feign.NotificationClient;
-import com.njydsz.common.feign.dto.RealtimePushDTO;
+import com.njydsz.common.feign.dto.PushRealtimeRequestDTO;
 import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.service.FlowTodoCountPushService;
@@ -50,11 +50,16 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
         }
         try {
             long count = taskMapper.countTodoByAssignee(userId, null);
-            Map<String, Object> payload = new HashMap<>();
-            payload.put("userId", userId);
-            payload.put("todoCount", count);
-            payload.put("timestamp", System.currentTimeMillis());
-            notificationClient.pushRealtime(userId, TYPE_TODO_COUNT, new RealtimePushDTO(payload));
+            Map<String, Object> data = new HashMap<>();
+            data.put("userId", userId);
+            data.put("todoCount", count);
+            data.put("timestamp", System.currentTimeMillis());
+            PushRealtimeRequestDTO request = PushRealtimeRequestDTO.builder()
+                    .userId(userId)
+                    .type(TYPE_TODO_COUNT)
+                    .data(data)
+                    .build();
+            notificationClient.pushRealtime(request);
             log.debug("[FlowPush] 推送待办数: userId={} count={}", userId, count);
         } catch (Exception e) {
             log.warn("[FlowPush] 推送待办数失败: userId={} err={}", userId, e.getMessage());
@@ -76,17 +81,22 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
             return;
         }
         try {
-            Map<String, Object> payload = new HashMap<>();
-            payload.put("userId", userId);
-            payload.put("taskId", task.getId());
-            payload.put("taskTitle", task.getTitle());
-            payload.put("flowName", task.getFlowName());
-            payload.put("nodeName", task.getNodeName());
-            payload.put("businessType", task.getBusinessType());
-            payload.put("businessId", task.getBusinessId());
-            payload.put("dueAt", task.getDueAt());
-            payload.put("timestamp", System.currentTimeMillis());
-            notificationClient.pushRealtime(userId, TYPE_TASK_ASSIGNED, new RealtimePushDTO(payload));
+            Map<String, Object> data = new HashMap<>();
+            data.put("userId", userId);
+            data.put("taskId", task.getId());
+            data.put("taskTitle", task.getTitle());
+            data.put("flowName", task.getFlowName());
+            data.put("nodeName", task.getNodeName());
+            data.put("businessType", task.getBusinessType());
+            data.put("businessId", task.getBusinessId());
+            data.put("dueAt", task.getDueAt());
+            data.put("timestamp", System.currentTimeMillis());
+            PushRealtimeRequestDTO request = PushRealtimeRequestDTO.builder()
+                    .userId(userId)
+                    .type(TYPE_TASK_ASSIGNED)
+                    .data(data)
+                    .build();
+            notificationClient.pushRealtime(request);
             // 任务已分配时，同步推送最新待办数
             pushTodoCount(userId);
             log.info("[FlowPush] 推送任务分配: userId={} taskId={} flowName={}",
@@ -102,15 +112,20 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
             return;
         }
         try {
-            Map<String, Object> payload = new HashMap<>();
-            payload.put("userId", operatorUserId);
-            payload.put("taskId", task.getId());
-            payload.put("instanceId", task.getInstanceId());
-            payload.put("flowName", task.getFlowName());
-            payload.put("nodeName", task.getNodeName());
-            payload.put("timestamp", System.currentTimeMillis());
+            Map<String, Object> data = new HashMap<>();
+            data.put("userId", operatorUserId);
+            data.put("taskId", task.getId());
+            data.put("instanceId", task.getInstanceId());
+            data.put("flowName", task.getFlowName());
+            data.put("nodeName", task.getNodeName());
+            data.put("timestamp", System.currentTimeMillis());
             if (operatorUserId != null) {
-                notificationClient.pushRealtime(operatorUserId, TYPE_TASK_COMPLETED, new RealtimePushDTO(payload));
+                PushRealtimeRequestDTO request = PushRealtimeRequestDTO.builder()
+                        .userId(operatorUserId)
+                        .type(TYPE_TASK_COMPLETED)
+                        .data(data)
+                        .build();
+                notificationClient.pushRealtime(request);
                 // 完成后同步推送最新待办数
                 pushTodoCount(operatorUserId);
             }
@@ -128,16 +143,21 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
             return;
         }
         try {
-            Map<String, Object> payload = new HashMap<>();
-            payload.put("userId", operatorUserId);
-            payload.put("taskId", task.getId());
-            payload.put("instanceId", task.getInstanceId());
-            payload.put("flowName", task.getFlowName());
-            payload.put("nodeName", task.getNodeName());
-            payload.put("reason", reason);
-            payload.put("timestamp", System.currentTimeMillis());
+            Map<String, Object> data = new HashMap<>();
+            data.put("userId", operatorUserId);
+            data.put("taskId", task.getId());
+            data.put("instanceId", task.getInstanceId());
+            data.put("flowName", task.getFlowName());
+            data.put("nodeName", task.getNodeName());
+            data.put("reason", reason);
+            data.put("timestamp", System.currentTimeMillis());
             if (operatorUserId != null) {
-                notificationClient.pushRealtime(operatorUserId, TYPE_TASK_REJECTED, new RealtimePushDTO(payload));
+                PushRealtimeRequestDTO request = PushRealtimeRequestDTO.builder()
+                        .userId(operatorUserId)
+                        .type(TYPE_TASK_REJECTED)
+                        .data(data)
+                        .build();
+                notificationClient.pushRealtime(request);
                 pushTodoCount(operatorUserId);
             }
             log.info("[FlowPush] 推送任务驳回: taskId={} operator={} reason={}",
@@ -165,11 +185,16 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
         }
         try {
             long count = taskMapper.countTodoByAssignee(userId, null);
-            Map<String, Object> payload = new HashMap<>();
-            payload.put("userId", userId);
-            payload.put("todoCount", count);
-            payload.put("timestamp", System.currentTimeMillis());
-            notificationClient.pushRealtime(userId, TYPE_HEARTBEAT, new RealtimePushDTO(payload));
+            Map<String, Object> data = new HashMap<>();
+            data.put("userId", userId);
+            data.put("todoCount", count);
+            data.put("timestamp", System.currentTimeMillis());
+            PushRealtimeRequestDTO request = PushRealtimeRequestDTO.builder()
+                    .userId(userId)
+                    .type(TYPE_HEARTBEAT)
+                    .data(data)
+                    .build();
+            notificationClient.pushRealtime(request);
             log.debug("[FlowPush] 心跳保活推送: userId={} todoCount={}", userId, count);
         } catch (Exception e) {
             log.warn("[FlowPush] 心跳保活推送失败: userId={} err={}", userId, e.getMessage());

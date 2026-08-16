@@ -29,7 +29,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
-import com.njydsz.nextwiki.server.health.NextwikiHealthIndicator;
+import com.njydsz.nextwiki.server.metrics.NextwikiMetrics;
 import com.njydsz.nextwiki.server.service.FileApplicationService;
 
 /**
@@ -98,8 +98,8 @@ public class FileController {
 
     /** 文件应用服务（封装上传/移动/重命名/复制/删除等业务编排） */
     private final FileApplicationService fileApplicationService;
-    /** 健康指标采集器（记录上传/删除次数等关键指标） */
-    private final NextwikiHealthIndicator healthIndicator;
+    /** Micrometer 指标采集（记录上传/删除次数等关键指标） */
+    private final NextwikiMetrics nextwikiMetrics;
 
     /**
      * 上传文件（单文件模式）。
@@ -127,7 +127,7 @@ public class FileController {
             @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
         FileNodeVO result = fileApplicationService.upload(file, parentId, rename, versionRemark, userId);
-        healthIndicator.recordUpload();
+        nextwikiMetrics.recordUpload();
         return BaseResponse.success(result);
     }
 
@@ -253,7 +253,7 @@ public class FileController {
             @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
         fileApplicationService.delete(nodeId, userId);
-        healthIndicator.recordDelete();
+        nextwikiMetrics.recordDelete();
         return BaseResponse.success();
     }
 

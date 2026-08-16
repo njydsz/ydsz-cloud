@@ -32,7 +32,7 @@ import com.njydsz.common.safe.util.ClientIpResolver;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
-import com.njydsz.nextwiki.server.health.NextwikiHealthIndicator;
+import com.njydsz.nextwiki.server.metrics.NextwikiMetrics;
 import com.njydsz.nextwiki.server.service.DownloadApplicationService;
 import com.njydsz.nextwiki.server.service.DownloadApplicationService.DownloadContext;
 import com.njydsz.nextwiki.server.service.DownloadApplicationService.SignedDownloadContext;
@@ -95,8 +95,8 @@ public class DownloadController {
 
     /** 下载应用服务（封装下载上下文准备、签名 URL 生成、限流等） */
     private final DownloadApplicationService downloadApplicationService;
-    /** 健康指标采集器（记录下载次数） */
-    private final NextwikiHealthIndicator healthIndicator;
+    /** Micrometer 指标采集（记录下载次数） */
+    private final NextwikiMetrics nextwikiMetrics;
     /** 文件节点仓储（用于文件夹子节点递归查询） */
     private final FileNodeRepository fileNodeRepository;
 
@@ -136,7 +136,7 @@ public class DownloadController {
             throw new BusinessException(NextwikiExceptionCode.FILE_DOWNLOAD_FAILED);
         }
 
-        healthIndicator.recordDownload();
+        nextwikiMetrics.recordDownload();
         log.info("[DownloadController] 文件夹打包下载: folderId={}, userId={}", folderId, userId);
     }
 
@@ -235,7 +235,7 @@ public class DownloadController {
             storage.download(fileNode.getBucketName(), fileNode.getStorageKey(), response);
         }
 
-        healthIndicator.recordDownload();
+        nextwikiMetrics.recordDownload();
         log.info("[DownloadController] 文件下载: nodeId={}, userId={}, ip={}, range={}",
                 nodeId, userId, ip, rangeHeader);
     }

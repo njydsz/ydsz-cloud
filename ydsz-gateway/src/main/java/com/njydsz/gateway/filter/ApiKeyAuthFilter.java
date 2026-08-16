@@ -1,5 +1,6 @@
 package com.njydsz.gateway.filter;
 
+import java.util.Map;
 import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +21,9 @@ import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.trace.TraceIdGenerator;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.sentry.SentryObservation;
+import com.njydsz.common.sentry.domain.AlertEvent;
+import com.njydsz.common.sentry.domain.AlertSeverity;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayFilterOrder;
 
@@ -186,6 +190,15 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
         byte[] bytes = YdszJson.toJsonBytes(body);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
 
+        // P1-3: API Key 缺失 → sentry 告警收敛（P2 安全事件）
+        SentryObservation.alert(AlertEvent.builder()
+                .name("gateway.api_key.missing")
+                .severity(AlertSeverity.P2)
+                .summary("API Key 缺失")
+                .description("请求未提供有效的 API Key")
+                .category("security")
+                .labels(Map.of("path", exchange.getRequest().getURI().getPath()))
+                .build());
         log.warn("[ApiKeyAuth] API Key 缺失 path={}", exchange.getRequest().getURI().getPath());
         return response.writeWith(Mono.just(buffer));
     }
@@ -206,6 +219,16 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
         byte[] bytes = YdszJson.toJsonBytes(body);
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
 
+        // P1-3: API Key 无效 → sentry 告警收敛（P1 安全事件）
+        SentryObservation.alert(AlertEvent.builder()
+                .name("gateway.api_key.invalid")
+                .severity(AlertSeverity.P1)
+                .summary("API Key 无效")
+                .description("提供了无效的 API Key，可能是伪造或过期")
+                .category("security")
+                .labels(Map.of("api_key_masked", maskApiKey(apiKey),
+                        "path", exchange.getRequest().getURI().getPath()))
+                .build());
         log.warn("[ApiKeyAuth] API Key 无效 key={} path={}",
                 maskApiKey(apiKey), exchange.getRequest().getURI().getPath());
         return response.writeWith(Mono.just(buffer));
