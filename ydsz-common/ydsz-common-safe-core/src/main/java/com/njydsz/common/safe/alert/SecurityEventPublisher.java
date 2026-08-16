@@ -39,6 +39,13 @@ public class SecurityEventPublisher implements ApplicationEventPublisherAware {
     /** 最近一次发布耗时（纳秒），用于监控 */
     private volatile long lastPublishNanos;
 
+    /**
+     * 构造方法
+     *
+     * <p>使用 {@link SecurityEventRingBuffer} 保留最近事件的内存快照。
+     * 注意：RingBuffer 已标记 @Deprecated，计划在 v2.0 中替换为 Sentry/Prometheus 查询。
+     */
+    @SuppressWarnings("deprecation")
     public SecurityEventPublisher() {
         this.spiListeners = loadSpiListeners();
         this.ringBuffer = new SecurityEventRingBuffer();
