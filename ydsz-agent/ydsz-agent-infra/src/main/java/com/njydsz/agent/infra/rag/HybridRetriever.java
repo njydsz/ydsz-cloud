@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import com.njydsz.agent.domain.rag.Reranker;
 import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.rag.VectorStore;
+import com.njydsz.common.tenant.TenantContextHolder;
 
 /**
  * 混合检索器（Hybrid Retrieval）
@@ -21,6 +22,9 @@ import com.njydsz.agent.domain.rag.VectorStore;
  * score(d) = Σ 1 / (k + rank_i(d))
  * </pre>
  * <p>其中 k 为平滑常数（默认 60），rank_i(d) 为文档 d 在第 i 路检索中的排名（从 1 开始）。
+ *
+ * <p><b>多租户隔离（P0 修复）</b>：全文检索走 {@link JdbcTemplate} 原生 SQL，不经过
+ * MyBatis 租户拦截器，SQL 中需显式追加 {@code tenant_id} 过滤，防止跨租户文档被召回。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -41,15 +45,20 @@ public class HybridRetriever {
     private final Reranker reranker;
     /** 全文检索是否可用 */
     private final boolean fullTextAvailable;
+    /** 是否启用租户隔离 */
+    private final boolean tenantIsolationEnabled;
 
-    public HybridRetriever(VectorStore vectorStore, JdbcTemplate jdbcTemplate) {
-        this(vectorStore, jdbcTemplate, new IdentityReranker());
+    public HybridRetriever(VectorStore vectorStore, JdbcTemplate jdbcTemplate,
+                           boolean tenantIsolationEnabled) {
+        this(vectorStore, jdbcTemplate, new IdentityReranker(), tenantIsolationEnabled);
     }
 
-    public HybridRetriever(VectorStore vectorStore, JdbcTemplate jdbcTemplate, Reranker reranker) {
+    public HybridRetriever(VectorStore vectorStore, JdbcTemplate jdbcTemplate, Reranker reranker,
+                           boolean tenantIsolationEnabled) {
         this.vectorStore = vectorStore;
         this.jdbcTemplate = jdbcTemplate;
         this.reranker = reranker != null ? reranker : new IdentityReranker();
+        this.tenantIsolationEnabled = tenantIsolationEnabled;
         this.fullTextAvailable = checkFullTextAvailability();
     }
 
@@ -116,14 +125,24 @@ public class HybridRetriever {
 
     private List<TextChunk> fullTextSearch(String query, int topK) {
         try {
-            String sql = "SELECT id, content, document_id, document_title, source, " +
+            StringBuilder sql = new StringBuilder("SELECT id, content, document_id, document_title, source, " +
                     "chunk_index, token_count FROM " + TABLE_NAME + " " +
-                    "WHERE deleted = false AND content ILIKE ? " +
-                    "ORDER BY ts_rank(to_tsvector('simple', content), " +
-                    "plainto_tsquery('simple', ?)) DESC " +
-                    "LIMIT ?";
+                    "WHERE deleted = false AND content ILIKE ? ");
+            List<Object> params = new java.util.ArrayList<>();
             String pattern = "%" + query.replace("%", "\\%").replace("_", "\\_") + "%";
-            return jdbcTemplate.query(sql,
+            params.add(pattern);
+            // 多租户：全文检索走 JdbcTemplate，需显式追加租户过滤，避免跨租户召回
+            String tenantId = resolveTenantId();
+            if (tenantId != null) {
+                sql.append("AND tenant_id = ? ");
+                params.add(tenantId);
+            }
+            sql.append("ORDER BY ts_rank(to_tsvector('simple', content), " +
+                    "plainto_tsquery('simple', ?)) DESC " +
+                    "LIMIT ?");
+            params.add(query);
+            params.add(topK);
+            return jdbcTemplate.query(sql.toString(),
                     (rs, rowNum) -> new TextChunk(
                             rs.getString("id"),
                             rs.getString("content"),
@@ -135,11 +154,24 @@ public class HybridRetriever {
                             Map.of(),
                             null
                     ),
-                    pattern, query, topK);
+                    params.toArray());
         } catch (Exception e) {
             log.warn("[Hybrid-Retrieval] 全文检索失败，降级到纯向量检索: {}", e.getMessage());
             return List.of();
         }
+    }
+
+    /**
+     * 解析当前请求租户 ID；无需隔离时返回 null。
+     *
+     * @return 租户 ID；未启用隔离 / 无租户上下文 / 超管 / 跳过隔离时返回 null
+     */
+    private String resolveTenantId() {
+        if (!tenantIsolationEnabled || !TenantContextHolder.isPresent()
+                || TenantContextHolder.isSuperAdmin() || TenantContextHolder.isSkipIsolation()) {
+            return null;
+        }
+        return TenantContextHolder.getTenantId();
     }
 
     private boolean checkFullTextAvailability() {

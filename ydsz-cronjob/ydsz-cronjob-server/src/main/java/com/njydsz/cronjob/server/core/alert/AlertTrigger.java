@@ -1,12 +1,16 @@
 package com.njydsz.cronjob.server.core.alert;
 
+import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
 import com.njydsz.cronjob.infra.mapper.job.JobAlertRuleMapper;
+import com.njydsz.cronjob.server.config.CronjobProperties;
 
 /**
  * 告警触发器（P5 告警 + 监控）。
@@ -37,6 +41,31 @@ public class AlertTrigger {
 
     private final JobAlertRuleMapper jobAlertRuleMapper;
     private final ApplicationEventPublisher eventPublisher;
+    private final CronjobProperties cronjobProperties;
+
+    /**
+     * 告警规则本地缓存（P1-P5）。
+     *
+     * <p>Key: jobId（可为 null 表示全局规则缓存），Value: 规则列表。
+     * 使用 ConcurrentHashMap 实现线程安全，TTL 通过写入时间判断。
+     * 规则增删改时由 {@link #invalidateAlertRuleCache(String)} 手动失效。
+     */
+    private final ConcurrentHashMap<String, CacheEntry<List<JobAlertRule>>> ruleCache = new ConcurrentHashMap<>();
+
+    /** 缓存时间戳 + 条目（简化 TTL 实现，无需额外依赖） */
+    private static final class CacheEntry<T> {
+        final long expireAt;
+        final T value;
+
+        CacheEntry(T value, long ttlSeconds) {
+            this.value = value;
+            this.expireAt = System.currentTimeMillis() + ttlSeconds * 1000L;
+        }
+
+        boolean isExpired() {
+            return System.currentTimeMillis() > expireAt;
+        }
+    }
 
     /**
      * 触发告警：查询匹配规则并发布告警事件。
@@ -115,12 +144,60 @@ public class AlertTrigger {
 
     /**
      * 查询匹配的告警规则（含全局规则）。
+     *
+     * <p>P1-P5: 使用本地缓存减少高频告警场景下的 DB 查询压力。
+     * 缓存 TTL 通过 {@code ydsz.cronjob.alert.rule-cache-ttl-seconds} 配置（默认 60s）。
+     * 规则增删改时通过 {@link #invalidateAlertRuleCache(String)} 手动失效。
      */
     private List<JobAlertRule> findMatchingRules(AlertContext context) {
         if (context.jobId() != null) {
-            return jobAlertRuleMapper.selectByJobIdOrGlobal(context.jobId());
+            return getCachedOrLoad("job:" + context.jobId(),
+                    () -> jobAlertRuleMapper.selectByJobIdOrGlobal(context.jobId()));
         }
-        return jobAlertRuleMapper.selectAllEnabled();
+        return getCachedOrLoad("global",
+                jobAlertRuleMapper::selectAllEnabled);
+    }
+
+    /**
+     * 从缓存获取规则，未命中或已过期时从 DB 加载并缓存。
+     *
+     * @param key    缓存 key
+     * @param loader DB 加载器
+     * @return 规则列表
+     */
+    private List<JobAlertRule> getCachedOrLoad(String key,
+                                                java.util.function.Supplier<List<JobAlertRule>> loader) {
+        CacheEntry<List<JobAlertRule>> entry = ruleCache.get(key);
+        if (entry != null && !entry.isExpired()) {
+            return entry.value;
+        }
+        List<JobAlertRule> rules = loader.get();
+        if (rules == null) {
+            rules = Collections.emptyList();
+        }
+        int ttl = cronjobProperties.getAlert().getRuleCacheTtlSeconds();
+        ruleCache.put(key, new CacheEntry<>(rules, ttl));
+        return rules;
+    }
+
+    /**
+     * 手动失效告警规则缓存。
+     *
+     * <p>由 {@code AlertServiceImpl} 在规则新增/更新/删除后调用，
+     * 确保缓存的一致性。
+     *
+     * @param jobId 规则对应的 jobId（null 表示全局规则需全部失效）
+     */
+    public void invalidateAlertRuleCache(String jobId) {
+        if (jobId != null) {
+            ruleCache.remove("job:" + jobId);
+        } else {
+            // 无法区分具体 job，全量失效
+            ruleCache.clear();
+        }
+        // 全局规则缓存也需失效（因为 selectByJobIdOrGlobal 包含全局规则）
+        ruleCache.remove("global");
+        log.debug("[AlertTrigger] 告警规则缓存已失效: jobId={}", jobId);
     }
 
     /**

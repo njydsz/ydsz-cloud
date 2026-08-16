@@ -63,7 +63,7 @@ import com.njydsz.literule.server.config.RuleAdminService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/ruleEngine/rules")
+@RequestMapping("/v1/rule-engine/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则生命周期", description = "规则状态变更、审批与多级审批流")
@@ -101,7 +101,7 @@ public class RuleLifecycleController {
         def.setStatus(targetStatus);
         if (target == RuleStatus.PUBLISHED) {
             def.setReviewedBy(operator);
-            def.setReviewedAt(LocalDateTime.now().toString());
+            def.setReviewedAt(LocalDateTime.now());
             def.setReviewComment(comment);
         }
         return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(ruleAdminService.save(def, operator, "状态变更: " + current.getDesc() + " -> " + target.getDesc())));
@@ -144,7 +144,7 @@ public class RuleLifecycleController {
         // 记录审批留痕
         def.setStatus(RuleStatus.PUBLISHED.name());
         def.setReviewedBy(operator);
-        def.setReviewedAt(LocalDateTime.now().toString());
+        def.setReviewedAt(LocalDateTime.now());
         def.setReviewComment(comment);
         // 审批通过后默认启用（运营可后续手动 toggle 关闭）
         def.setEnabled(true);
@@ -192,7 +192,7 @@ public class RuleLifecycleController {
         // 记录驳回留痕
         def.setStatus(RuleStatus.ARCHIVED.name());
         def.setReviewedBy(operator);
-        def.setReviewedAt(LocalDateTime.now().toString());
+        def.setReviewedAt(LocalDateTime.now());
         def.setReviewComment("[驳回] " + reason);
         def.setEnabled(false);
 
@@ -226,7 +226,7 @@ public class RuleLifecycleController {
     @Idempotent(key = "ruleAdmin:submitReview", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'submitReview'")
     @RateLimit(resource = "literule.rule_lifecycle.submitReview", threshold = 50)
-    @PostMapping("/{ruleCode}/submitReview")
+    @PostMapping("/{ruleCode}/submit-review")
     @AuthApiPermission(apiCodes = "execution:rule:save")
     public BaseResponse<ApprovalRecordVO> submitReview(@PathVariable String ruleCode,
                                                 @Valid @RequestBody(required = false) RuleSubmitReviewDTO dto,
@@ -253,7 +253,7 @@ public class RuleLifecycleController {
     @Idempotent(key = "ruleAdmin:approveLevel", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'approveLevel'")
     @RateLimit(resource = "literule.rule_lifecycle.approveLevel", threshold = 50)
-    @PostMapping("/{ruleCode}/approveLevel")
+    @PostMapping("/{ruleCode}/approve-level")
     @AuthApiPermission(apiCodes = "execution:rule:approve")
     public BaseResponse<ApprovalRecordVO> approveLevel(@PathVariable String ruleCode,
                                                 @Valid @RequestBody RuleApproveDTO dto,
@@ -279,7 +279,7 @@ public class RuleLifecycleController {
     @Idempotent(key = "ruleAdmin:rejectLevel", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'rejectLevel'")
     @RateLimit(resource = "literule.rule_lifecycle.rejectLevel", threshold = 50)
-    @PostMapping("/{ruleCode}/rejectLevel")
+    @PostMapping("/{ruleCode}/reject-level")
     @AuthApiPermission(apiCodes = "execution:rule:approve")
     public BaseResponse<ApprovalRecordVO> rejectLevel(@PathVariable String ruleCode,
                                                @Valid @RequestBody RuleRejectDTO dto,
@@ -323,7 +323,7 @@ public class RuleLifecycleController {
      * @param ruleCode 规则编码
      * @return 审批记录；无审批记录时返回 null
      */
-    @GetMapping("/{ruleCode}/approvalStatus")
+    @GetMapping("/{ruleCode}/approval-status")
     public BaseResponse<ApprovalRecordVO> approvalStatus(@PathVariable String ruleCode) {
         RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
         if (svc == null) {
@@ -338,7 +338,7 @@ public class RuleLifecycleController {
      * @param approver 审批人工号
      * @return 待审批记录列表
      */
-    @GetMapping("/pendingApprovals")
+    @GetMapping("/pending-approvals")
     public BaseResponse<List<ApprovalRecordVO>> pendingApprovals(@RequestParam String approver) {
         RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
         if (svc == null) {
@@ -359,7 +359,7 @@ public class RuleLifecycleController {
     @Idempotent(key = "ruleAdmin:cancelReview", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'cancelReview'")
     @RateLimit(resource = "literule.rule_lifecycle.cancelReview", threshold = 50)
-    @PostMapping("/{ruleCode}/cancelReview")
+    @PostMapping("/{ruleCode}/cancel-review")
     @AuthApiPermission(apiCodes = "execution:rule:save")
     public BaseResponse<ApprovalRecordVO> cancelReview(@PathVariable String ruleCode,
                                                 @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
@@ -375,7 +375,7 @@ public class RuleLifecycleController {
      *
      * @return 审批流配置列表
      */
-    @GetMapping("/approvalFlows")
+    @GetMapping("/approval-flows")
     public BaseResponse<List<ApprovalFlowVO>> approvalFlows() {
         RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
         if (svc == null) {

@@ -1,10 +1,9 @@
 package com.njydsz.agent.server.metrics;
 
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import io.micrometer.core.instrument.Gauge;
+import java.util.concurrent.atomic.AtomicReference;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tags;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 
 /**
@@ -34,13 +33,16 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
  *   <li>{@code agent_human_approval_wait_duration_seconds} — 等待人工审批耗时</li>
  * </ul>
  *
- * <p><b>线程安全：</b>所有计数/计时通过 Micrometer {@link io.micrometer.core.instrument.Counter}
- * / {@link io.micrometer.core.instrument.Timer} 实现，{@link #activeConversations} 使用
- * {@link AtomicLong} 保证原子更新。
+ * <p><b>线程安全：</b>所有计数/计时通过 {@link SentryMetricsAdapter} 统一管理，
+ * {@link #activeConversationsRef} 使用 {@link AtomicReference} 保证原子更新。
+ *
+ * <p><b>符合《云顶编码规范》第 27.2.1 节</b>：禁止直接操作 MeterRegistry，
+ * 通过 {@link SentryMetricsAdapter} 桥接到 {@code MetricsCollector} 统一入口。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
+@ConditionalOnClass(MeterRegistry.class)
 public class AgentRuntimeMetrics extends SentryMetricsAdapter {
 
   // -----------------------------------------------------------------------
@@ -67,20 +69,19 @@ public class AgentRuntimeMetrics extends SentryMetricsAdapter {
   /** 当前活跃对话数（最近 N 分钟内有交互的会话）。通过 Gauge 上报。 */
   private final AtomicLong activeConversations = new AtomicLong(0);
 
+  /** Gauge 引用，用于动态更新活跃对话数。 */
+  private final AtomicReference<Double> activeConversationsRef = new AtomicReference<>(0.0);
+
   /**
    * 构造 Agent 运行态指标采集器。
    *
    * <p>注册 {@link #METRIC_ACTIVE_CONVERSATIONS} Gauge 到 Micrometer，
    * 后续指标通过调用方显式的 {@code recordXxx} 方法写入。
-   *
-   * @param meterRegistry Micrometer 注册中心
    */
-  public AgentRuntimeMetrics(MeterRegistry meterRegistry) {
-    super(meterRegistry, "agent_");
-    // 注册活跃对话 Gauge
-    Gauge.builder(prefix + METRIC_ACTIVE_CONVERSATIONS, activeConversations, AtomicLong::doubleValue)
-        .description("当前最近 N 分钟内有交互的会话数；会话超期无消息则自动回落")
-        .register(meterRegistry);
+  public AgentRuntimeMetrics() {
+      super("agent_");
+      // 注册活跃对话 Gauge（使用 AtomicReference 模式）
+      gaugeRef(METRIC_ACTIVE_CONVERSATIONS, activeConversationsRef, AtomicReference::get);
   }
 
   // -----------------------------------------------------------------------
@@ -197,6 +198,7 @@ public class AgentRuntimeMetrics extends SentryMetricsAdapter {
    */
   public void markConversationActive() {
     activeConversations.incrementAndGet();
+    activeConversationsRef.set((double) activeConversations.get());
   }
 
   /**
@@ -204,6 +206,7 @@ public class AgentRuntimeMetrics extends SentryMetricsAdapter {
    */
   public void markConversationInactive() {
     activeConversations.decrementAndGet();
+    activeConversationsRef.set((double) activeConversations.get());
   }
 
   /**
@@ -213,6 +216,7 @@ public class AgentRuntimeMetrics extends SentryMetricsAdapter {
    */
   public void reconcileActiveConversations(long realCount) {
     activeConversations.set(Math.max(0, realCount));
+    activeConversationsRef.set((double) Math.max(0, realCount));
   }
 
   /**
@@ -220,22 +224,23 @@ public class AgentRuntimeMetrics extends SentryMetricsAdapter {
    *
    * @param count 活跃会话数
    */
-    public void setActiveConversations(long count) {
-        activeConversations.set(Math.max(0, count));
-    }
+  public void setActiveConversations(long count) {
+      activeConversations.set(Math.max(0, count));
+      activeConversationsRef.set((double) Math.max(0, count));
+  }
 
-    /**
-     * 获取当前活跃对话数（Gauge 实时值）。
-     *
-     * @return 当前活跃会话数
-     */
-    public long getActiveConversations() {
-        return activeConversations.get();
-    }
+  /**
+   * 获取当前活跃对话数（Gauge 实时值）。
+   *
+   * @return 当前活跃会话数
+   */
+  public long getActiveConversations() {
+      return activeConversations.get();
+  }
 
-    // -----------------------------------------------------------------------
-    // 会话消息
-    // -----------------------------------------------------------------------
+  // -----------------------------------------------------------------------
+  // 会话消息
+  // -----------------------------------------------------------------------
 
   /**
    * 记录一条消息（用户、助手或系统消息）到累积计数器。

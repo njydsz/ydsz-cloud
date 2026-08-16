@@ -26,6 +26,7 @@ import org.springframework.core.Ordered;
  *   15  ApiKeyAuthFilter          API Key 认证
  *   20  GrayLoadBalancerRequestFilter 灰度标识注入
  *   25  ResponseCacheFilter       响应缓存
+ *   28  IdempotencyFilter         幂等性检查（P3-7）
  *   30  RateLimitFilter           限流
  *   35  AuditLogFilter            审计日志
  *   45  CircuitBreakerGlobalFilter 熔断（+100 之前、转发之前生效）
@@ -57,6 +58,8 @@ public enum GatewayFilterOrder {
     GRAY_LOADBALANCER(20),
     /** 响应缓存过滤器 */
     RESPONSE_CACHE(25),
+    /** 幂等性检查过滤器（P3-7） */
+    IDEMPOTENCY(28),
     /** 限流过滤器 */
     RATE_LIMIT(30),
     /** 审计日志过滤器 */

@@ -73,7 +73,7 @@ import com.njydsz.literule.server.cep.CEPPattern;
  */
 @Slf4j
 @RestController
-@RequestMapping("/ruleEngine/cep")
+@RequestMapping("/v1/rule-engine/cep")
 @RequiredArgsConstructor
 @Tag(name = "CEP 模式测试", description = "CEP 模式即时测试（注册临时模式 → 投递事件 → 收集命中 → 注销）")
 public class CEPTestController {

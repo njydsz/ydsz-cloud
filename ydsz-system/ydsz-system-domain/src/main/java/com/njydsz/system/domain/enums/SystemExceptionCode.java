@@ -15,7 +15,9 @@ import com.njydsz.common.exception.registry.YdszExceptionCode;
  *   <li>B90001-B90099 系统配置</li>
  *   <li>B91001-B91099 字典类型/字典项</li>
  *   <li>B92001-B92099 系统变量</li>
- *   <li>B93001-B93099 应用信息
+ *   <li>B93001-B93099 应用信息</li>
+ *   <li>B94001-B94099 租户管理</li>
+ *   <li>B95001-B95099 租户套餐</li>
  * </ul>
  *
  * @author ydsz-team
@@ -46,7 +48,17 @@ public enum SystemExceptionCode implements ExceptionCode {
 
     // ==================== B93001-B93099 应用信息 ====================
     APP_INFO_NOT_FOUND("B93001", "system.app.info.not.found", 404), // 应用信息不存在（资源未找到，HTTP 404）
-    APP_KEY_DUPLICATE("B93002", "system.app.key.duplicate"); // 应用 Key（client_id）在租户内重复，违反唯一约束
+    APP_KEY_DUPLICATE("B93002", "system.app.key.duplicate"), // 应用 Key（client_id）在租户内重复，违反唯一约束
+    APP_VALUE_TYPE_INVALID("B93003", "system.app.value.type.invalid"), // 应用配置值类型非法
+
+    // ==================== B94001-B94099 租户管理 ====================
+    TENANT_NOT_FOUND("B94001", "system.tenant.not.found", 404), // 租户不存在
+    TENANT_CODE_DUPLICATE("B94002", "system.tenant.code.duplicate"), // 租户编码全局重复
+    TENANT_PLAN_LINKED("B94003", "system.tenant.plan.linked"), // 套餐下存在关联租户，禁止删除
+
+    // ==================== B95001-B95099 租户套餐 ====================
+    TENANT_PLAN_NOT_FOUND("B95001", "system.tenant.plan.not.found", 404), // 套餐不存在
+    TENANT_PLAN_CODE_DUPLICATE("B95002", "system.tenant.plan.code.duplicate"); // 套餐编码全局重复
 
     /** 错误码 */
     private final String code;

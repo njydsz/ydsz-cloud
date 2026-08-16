@@ -441,8 +441,9 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     }
 
     // P1-8: 批量终止 + 子流程级联终止
+    // P1-1: 移除外部 @Transactional，改为 self 代理调用使每个 terminate 在独立事务中执行
+    // 避免长事务：原方案将所有 terminate 纳入单个大事务，循环体大时导致锁等待和长连接占用
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public int batchTerminate(List<String> instanceIds, String reason) {
         if (instanceIds == null || instanceIds.isEmpty()) {
             return 0;
@@ -450,7 +451,8 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         int count = 0;
         for (String instanceId : instanceIds) {
             try {
-                terminate(instanceId, reason);
+                // 通过 self 代理调用，确保 terminate() 的 @Transactional 生效（独立事务）
+                self.terminate(instanceId, reason);
                 count++;
                 // 级联终止子流程实例
                 List<FlowInstance> children = instanceMapper.selectList(
@@ -459,7 +461,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                                 .eq(FlowInstance::getFlowStatus, FlowInstanceStatus.RUNNING.name()));
                 for (FlowInstance child : children) {
                     try {
-                        terminate(child.getId(), "级联终止: " + reason);
+                        self.terminate(child.getId(), "级联终止: " + reason);
                         count++;
                     } catch (Exception e) {
                         log.warn("[Flow] 级联终止子流程失败: parentId={} childId={} err={}",

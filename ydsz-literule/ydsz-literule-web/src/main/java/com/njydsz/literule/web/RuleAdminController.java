@@ -266,7 +266,7 @@ public class RuleAdminController {
      */
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'traceExpression'")
     @RateLimit(resource = "literule.rule_admin.traceExpression", threshold = 50)
-    @PostMapping("/exprTrace")
+    @PostMapping("/expr-trace")
     public BaseResponse<ExpressionEngine.TraceResult> traceExpression(@RequestBody Map<String, Object> request) {
         String expression = (String) request.get("expression");
         Map<String, Object> facts = new HashMap<>();
@@ -318,7 +318,7 @@ public class RuleAdminController {
     @Idempotent(key = "ruleAdmin:validateBatch", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
     @RateLimit(resource = "literule.rule_admin.validateBatch", threshold = 50)
-    @PostMapping("/validateBatch")
+    @PostMapping("/validate-batch")
     public BaseResponse<Map<String, ExpressionValidationResult>> validateBatch(@RequestBody Map<String, String> request) {
         return BaseResponse.success(expressionValidationService.validateBatch(request));
     }

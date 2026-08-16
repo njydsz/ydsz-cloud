@@ -2,7 +2,7 @@ package com.njydsz.agent.server.metrics;
 
 import java.util.concurrent.TimeUnit;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import com.njydsz.agent.domain.gateway.LlmException;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
@@ -11,7 +11,8 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 /**
  * Agent 模块 Micrometer 指标
  *
- * <p>P2-3: 继承 {@link SentryMetricsAdapter} 统一指标命名前缀管理。
+ * <p>P2-3: 继承 {@link SentryMetricsAdapter} 统一指标命名前缀管理，
+ * 符合《云顶编码规范》第 27.2.1 节「禁止直接操作 MeterRegistry」的强制要求。
  *
  * <p>暴露以下 Prometheus 指标：
  * <ul>
@@ -24,19 +25,20 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
  * @author ydsz-team
  * @since 1.0.0
  */
+@ConditionalOnClass(MeterRegistry.class)
 public class AgentMetrics extends SentryMetricsAdapter {
 
     /** LLM 调用次数指标名 */
-    private static final String METRIC_LLM_CALLS = "agent_llm_calls_total";
+    private static final String METRIC_LLM_CALLS = "llm_calls_total";
     /** LLM 调用耗时指标名 */
-    private static final String METRIC_LLM_DURATION = "agent_llm_call_duration_seconds";
+    private static final String METRIC_LLM_DURATION = "llm_call_duration_seconds";
     /** LLM Token 消耗指标名 */
-    private static final String METRIC_LLM_TOKENS = "agent_llm_tokens_total";
+    private static final String METRIC_LLM_TOKENS = "llm_tokens_total";
     /** 安全护栏拒绝次数指标名 */
-    private static final String METRIC_GUARDRAIL_REJECTIONS = "agent_guardrail_rejections_total";
+    private static final String METRIC_GUARDRAIL_REJECTIONS = "guardrail_rejections_total";
 
-    public AgentMetrics(MeterRegistry meterRegistry) {
-        super(meterRegistry, "agent_");
+    public AgentMetrics() {
+        super("agent_");
     }
 
     /**
@@ -54,28 +56,26 @@ public class AgentMetrics extends SentryMetricsAdapter {
         String errorType = error instanceof LlmException le
                 ? le.getErrorType().name() : error != null ? "UNKNOWN" : "NONE";
 
-        registry.counter(METRIC_LLM_CALLS,
+        counter(METRIC_LLM_CALLS,
                 "provider", provider,
                 "model", model,
                 "status", status,
                 "error_type", errorType).increment();
 
-        Timer.builder(METRIC_LLM_DURATION)
-                .tag("provider", provider)
-                .tag("model", model)
-                .register(registry)
-                .record(durationMs, TimeUnit.MILLISECONDS);
+        timer(METRIC_LLM_DURATION,
+                "provider", provider,
+                "model", model).record(durationMs, TimeUnit.MILLISECONDS);
 
         if (response != null && response.getUsage() != null) {
             TokenUsage usage = response.getUsage();
-            registry.counter(METRIC_LLM_TOKENS,
+            incrementCounter(METRIC_LLM_TOKENS, usage.getPromptTokens(),
                     "provider", provider,
                     "model", model,
-                    "type", "prompt").increment(usage.getPromptTokens());
-            registry.counter(METRIC_LLM_TOKENS,
+                    "type", "prompt");
+            incrementCounter(METRIC_LLM_TOKENS, usage.getCompletionTokens(),
                     "provider", provider,
                     "model", model,
-                    "type", "completion").increment(usage.getCompletionTokens());
+                    "type", "completion");
         }
     }
 
@@ -94,28 +94,26 @@ public class AgentMetrics extends SentryMetricsAdapter {
         String errorType = error instanceof LlmException le
                 ? le.getErrorType().name() : error != null ? "UNKNOWN" : "NONE";
 
-        registry.counter(METRIC_LLM_CALLS,
+        counter(METRIC_LLM_CALLS,
                 "provider", provider,
                 "model", model,
                 "status", status,
                 "error_type", errorType,
                 "mode", "stream").increment();
 
-        Timer.builder(METRIC_LLM_DURATION)
-                .tag("provider", provider)
-                .tag("model", model)
-                .register(registry)
-                .record(durationMs, TimeUnit.MILLISECONDS);
+        timer(METRIC_LLM_DURATION,
+                "provider", provider,
+                "model", model).record(durationMs, TimeUnit.MILLISECONDS);
 
         if (tokenUsage != null) {
-            registry.counter(METRIC_LLM_TOKENS,
+            incrementCounter(METRIC_LLM_TOKENS, tokenUsage.getPromptTokens(),
                     "provider", provider,
                     "model", model,
-                    "type", "prompt").increment(tokenUsage.getPromptTokens());
-            registry.counter(METRIC_LLM_TOKENS,
+                    "type", "prompt");
+            incrementCounter(METRIC_LLM_TOKENS, tokenUsage.getCompletionTokens(),
                     "provider", provider,
                     "model", model,
-                    "type", "completion").increment(tokenUsage.getCompletionTokens());
+                    "type", "completion");
         }
     }
 
@@ -126,8 +124,8 @@ public class AgentMetrics extends SentryMetricsAdapter {
      * @param direction 方向（input/output）
      */
     public void recordGuardrailRejection(String guardName, String direction) {
-        registry.counter(METRIC_GUARDRAIL_REJECTIONS,
+        incrementCounter(METRIC_GUARDRAIL_REJECTIONS,
                 "guard", guardName,
-                "direction", direction).increment();
+                "direction", direction);
     }
 }

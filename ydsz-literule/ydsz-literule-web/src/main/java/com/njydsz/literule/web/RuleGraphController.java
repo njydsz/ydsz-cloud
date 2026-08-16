@@ -61,7 +61,7 @@ import com.njydsz.literule.server.spi.RuleChainGraphProvider;
  */
 @Slf4j
 @RestController
-@RequestMapping("/ruleEngine/rules")
+@RequestMapping("/v1/rule-engine/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则链画布", description = "规则链画布编辑、校验、Dry-run 与表达式函数市场")
@@ -159,7 +159,7 @@ public class RuleGraphController {
      */
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'previewExpression'")
     @RateLimit(resource = "literule.rule_graph.previewExpression", threshold = 50)
-    @PostMapping("/expressionPreview")
+    @PostMapping("/expression-preview")
     public BaseResponse<ExpressionPreviewResultVO> previewExpression(
             @RequestParam String expression,
             @RequestBody Map<String, Object> facts) {
@@ -179,7 +179,7 @@ public class RuleGraphController {
     @Idempotent(key = "ruleAdmin:dryRunGraph", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'dryRunGraph'")
     @RateLimit(resource = "literule.rule_graph.dryRunGraph", threshold = 50)
-    @PostMapping("/{ruleCode}/graph/dryRun")
+    @PostMapping("/{ruleCode}/graph/dry-run")
     public BaseResponse<List<RuleResultVO>> dryRunGraph(@PathVariable String ruleCode,
                                                  @RequestBody Map<String, Object> facts) {
         try {
@@ -200,7 +200,7 @@ public class RuleGraphController {
      * @param ruleCode 规则编码
      * @return 失效规则编码列表
      */
-    @GetMapping("/{ruleCode}/graph/invalidRefs")
+    @GetMapping("/{ruleCode}/graph/invalid-refs")
     public BaseResponse<List<StringVO>> invalidGraphRefs(@PathVariable String ruleCode) {
         return BaseResponse.success(graphExecutionProvider.collectInvalidReferences(ruleCode).stream().map(StringVO::new).toList());
     }
@@ -214,7 +214,7 @@ public class RuleGraphController {
      * @param engine 引擎类型（liteexpr/all），默认 all
      * @return 函数定义列表
      */
-    @GetMapping("/expressionFunctions")
+    @GetMapping("/expression-functions")
     public BaseResponse<List<ExpressionFunctionDefVO>> expressionFunctions(
             @RequestParam(value = "engine", defaultValue = "all") String engine) {
         List<ExpressionFunctionDef> all = ExpressionFunctionDef.defaults();

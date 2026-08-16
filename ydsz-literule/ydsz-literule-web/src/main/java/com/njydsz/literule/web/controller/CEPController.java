@@ -69,7 +69,7 @@ import com.njydsz.literule.server.cep.CEPPattern;
  */
 @Slf4j
 @RestController
-@RequestMapping("/ruleEngine/cep")
+@RequestMapping("/v1/rule-engine/cep")
 @RequiredArgsConstructor
 @Tag(name = "CEP 复杂事件处理", description = "模式管理 / 事件投递 / 命中查询 / 引擎状态")
 public class CEPController {
@@ -180,7 +180,7 @@ public class CEPController {
     @Idempotent(key = "cep:unregisterPattern", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "CEP管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'unregisterPattern'")
     @RateLimit(resource = "literule.c_e_p.unregisterPattern", threshold = 50)
-    @DeleteMapping("/patterns/{patternId}")
+    @DeleteMapping("/patterns/{pattern-id}")
     @Operation(summary = "注销 CEP 模式")
     public BaseResponse<Void> unregisterPattern(@PathVariable String patternId) {
         CEPEngine engine = cepEngineProvider.getIfAvailable();

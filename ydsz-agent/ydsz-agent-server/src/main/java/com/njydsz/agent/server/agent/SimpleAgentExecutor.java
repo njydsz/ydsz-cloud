@@ -19,6 +19,7 @@ import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
 import com.njydsz.agent.server.chat.GuardrailService;
+import com.njydsz.agent.server.chat.StreamingPiiMasker;
 import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.common.util.id.IdGenerator;
@@ -199,16 +200,32 @@ public class SimpleAgentExecutor implements AgentExecutor {
         long startTime = System.currentTimeMillis();
         StringBuilder contentBuilder = new StringBuilder();
         TokenUsage[] usage = {TokenUsage.zero()};
+        StreamingPiiMasker streamingMasker = new StreamingPiiMasker();
 
         try {
             llmClient.stream(llmRequest, chunk -> {
                 if (chunk.hasContent()) {
-                    contentBuilder.append(chunk.getDeltaContent());
+                    // P0: 流式增量 PII 脱敏——先脱敏后推送，避免已发出的 token 含敏感信息
+                    String maskedDelta = streamingMasker.mask(chunk.getDeltaContent());
+                    if (!maskedDelta.isEmpty()) {
+                        contentBuilder.append(maskedDelta);
+                        chunkConsumer.accept(ChatChunk.content(chunk.getId(), chunk.getModel(),
+                                maskedDelta, chunk.getDeltaToolCalls()));
+                    }
+                } else if (chunk.isFinished()) {
+                    String maskedRest = streamingMasker.flush();
+                    if (!maskedRest.isEmpty()) {
+                        contentBuilder.append(maskedRest);
+                        chunkConsumer.accept(ChatChunk.content(chunk.getId(), chunk.getModel(), maskedRest));
+                    }
+                    if (chunk.getUsage() != null) {
+                        usage[0] = chunk.getUsage();
+                    }
+                    chunkConsumer.accept(chunk);
+                } else {
+                    // 工具调用等非文本 chunk 原样转发
+                    chunkConsumer.accept(chunk);
                 }
-                if (chunk.isFinished() && chunk.getUsage() != null) {
-                    usage[0] = chunk.getUsage();
-                }
-                chunkConsumer.accept(chunk);
             });
         } catch (Exception e) {
             long duration = System.currentTimeMillis() - startTime;

@@ -29,7 +29,7 @@ import com.njydsz.literule.server.spi.RuleConflictDetectorProvider;
  */
 @Slf4j
 @RestController
-@RequestMapping("/ruleEngine/rules")
+@RequestMapping("/v1/rule-engine/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则冲突检测", description = "规则冲突检测")

@@ -72,6 +72,15 @@ public final class CacheConstants {
      */
     public static final String NEXTWIKI_FILE_ACL_CACHE = "nextwiki:file:acl";
 
+    /**
+     * NextWiki 存储配额缓存。
+     *
+     * <p>缓存键：{@code scopeType:scopeId}（如 {@code user:123456}）。
+     * 当配额用量变更（addUsage/subtractUsage）或配额设置变更（setQuota）时失效。
+     * TTL：30 分钟，确保用量显示在一定时间窗口内自动刷新。
+     */
+    public static final String NEXTWIKI_QUOTA_CACHE = "nextwiki:quota";
+
     // ============================== System 模块缓存 ==============================
 
     /**

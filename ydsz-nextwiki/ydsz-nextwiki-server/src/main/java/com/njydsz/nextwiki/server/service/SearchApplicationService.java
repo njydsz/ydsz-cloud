@@ -1,11 +1,14 @@
 package com.njydsz.nextwiki.server.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
+import com.njydsz.common.search.api.SearchFilter;
+import com.njydsz.common.search.api.SearchFilter.Operator;
 import com.njydsz.common.search.api.SearchHit;
 import com.njydsz.common.search.api.SearchRequest;
 import com.njydsz.common.search.api.SearchResponse;
@@ -128,11 +131,20 @@ public class SearchApplicationService {
     // ==================== 私有方法 ====================
 
     /**
-     * 通过统一搜索引擎执行检索，结果转换为 {@link SearchResultVO}。
+     * 通过统一搜索引擎执行检索（含高级筛选），结果转换为 {@link SearchResultVO}。
+     *
+     * @param unifiedSearch 统一搜索服务
+     * @param keyword       搜索关键词
+     * @param userId        操作人 ID
+     * @param page          页码
+     * @param pageSize      每页大小
+     * @param filters       高级筛选条件列表（可为 {@code null} 或空）
+     * @return 分页搜索结果
      */
     private SearchResultVO searchViaEngine(UnifiedSearchService unifiedSearch,
                                            String keyword, String userId,
-                                           int page, int pageSize) {
+                                           int page, int pageSize,
+                                           List<SearchFilter> filters) {
         SearchRequest request = SearchRequest.builder()
                 .keyword(keyword)
                 .types(List.of("wiki"))
@@ -140,18 +152,113 @@ public class SearchApplicationService {
                 .pageSize(pageSize)
                 .userId(userId)
                 .highlight(true)
+                .filters(filters != null ? filters : new ArrayList<>())
                 .build();
 
         try {
             SearchResponse response = unifiedSearch.search(request);
-            log.info("[SearchApplicationService] 引擎检索完成: keyword={}, total={}, tookMs={}, engine={}",
-                    keyword, response.getTotal(), response.getTookMs(), response.getEngine());
+            log.info("[SearchApplicationService] 引擎检索完成: keyword={}, total={}, tookMs={}, engine={}, filters={}",
+                    keyword, response.getTotal(), response.getTookMs(), response.getEngine(),
+                    request.getFilters().size());
             return convertResponse(response);
         } catch (Exception e) {
             log.warn("[SearchApplicationService] 引擎检索异常，降级 DB: keyword={}, error={}",
                     keyword, e.getMessage());
             return searchDomainService.search(keyword, userId, null, page, pageSize);
         }
+    }
+
+    /**
+     * 构建高级筛选条件列表。
+     *
+     * <p>将前端传入的筛选参数转换为搜索引擎的 {@link SearchFilter} 列表。
+     * 支持的筛选维度：
+     * <ul>
+     *   <li>文件类型：suffix IN (fileTypes)</li>
+     *   <li>时间范围：updated_at BETWEEN [startDate, endDate]</li>
+     *   <li>大小范围：size BETWEEN [minSize, maxSize]</li>
+     *   <li>标签：tags IN (tagNames)</li>
+     * </ul>
+     *
+     * @param fileTypes 文件后缀名列表
+     * @param startDate 更新时间起始
+     * @param endDate   更新时间截止
+     * @param minSize   文件大小下限
+     * @param maxSize   文件大小上限
+     * @param tags      标签名称列表
+     * @return 筛选条件列表（可为空，表示无额外筛选）
+     */
+    List<SearchFilter> buildSearchFilters(List<String> fileTypes,
+                                          String startDate, String endDate,
+                                          Long minSize, Long maxSize,
+                                          List<String> tags) {
+        List<SearchFilter> filters = new ArrayList<>();
+
+        // 文件类型筛选（suffix IN）
+        if (fileTypes != null && !fileTypes.isEmpty()) {
+            List<String> normalizedTypes = fileTypes.stream()
+                    .filter(t -> t != null && !t.isBlank())
+                    .map(String::toLowerCase)
+                    .map(t -> t.startsWith(".") ? t.substring(1) : t)
+                    .distinct()
+                    .collect(Collectors.toList());
+            if (!normalizedTypes.isEmpty()) {
+                filters.add(SearchFilter.builder()
+                        .field("suffix")
+                        .values(normalizedTypes)
+                        .operator(Operator.IN)
+                        .build());
+            }
+        }
+
+        // 时间范围筛选（updated_at >= startDate AND updated_at <= endDate）
+        if (startDate != null && !startDate.isBlank()) {
+            filters.add(SearchFilter.builder()
+                    .field("updated_at")
+                    .values(List.of(startDate))
+                    .operator(Operator.GTE)
+                    .build());
+        }
+        if (endDate != null && !endDate.isBlank()) {
+            filters.add(SearchFilter.builder()
+                    .field("updated_at")
+                    .values(List.of(endDate))
+                    .operator(Operator.LTE)
+                    .build());
+        }
+
+        // 大小范围筛选（size >= minSize AND size <= maxSize）
+        if (minSize != null && minSize > 0) {
+            filters.add(SearchFilter.builder()
+                    .field("size")
+                    .values(List.of(String.valueOf(minSize)))
+                    .operator(Operator.GTE)
+                    .build());
+        }
+        if (maxSize != null && maxSize > 0) {
+            filters.add(SearchFilter.builder()
+                    .field("size")
+                    .values(List.of(String.valueOf(maxSize)))
+                    .operator(Operator.LTE)
+                    .build());
+        }
+
+        // 标签筛选（tags IN）
+        if (tags != null && !tags.isEmpty()) {
+            List<String> normalizedTags = tags.stream()
+                    .filter(t -> t != null && !t.isBlank())
+                    .distinct()
+                    .collect(Collectors.toList());
+            if (!normalizedTags.isEmpty()) {
+                filters.add(SearchFilter.builder()
+                        .field("tags")
+                        .values(normalizedTags)
+                        .operator(Operator.IN)
+                        .build());
+            }
+        }
+
+        return filters;
     }
 
     /**

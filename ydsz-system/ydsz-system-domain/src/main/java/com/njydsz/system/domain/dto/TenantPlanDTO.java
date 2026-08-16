@@ -1,9 +1,7 @@
 package com.njydsz.system.domain.dto;
 
-import java.math.BigDecimal;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 import com.njydsz.common.safe.annotation.Xss;
@@ -17,7 +15,7 @@ import com.njydsz.common.safe.annotation.Xss;
  * <p><b>字段约束：</b>
  * <ul>
  *   <li>{@code planCode} — 套餐编码，全局唯一</li>
- *   <li>{@code price} — 套餐价格（元/月），使用 BigDecimal 精确计算</li>
+ *   <li>{@code planName} — 套餐名称</li>
  * </ul>
  *
  * @author ydsz-team
@@ -44,31 +42,10 @@ public class TenantPlanDTO {
     @Schema(description = "套餐名称")
     private String planName;
 
-    @NotBlank(message = "套餐类型不能为空")
-    @Schema(description = "套餐类型: BASIC/PROFESSIONAL/ENTERPRISE")
-    private String planType;
-
-    @NotNull(message = "套餐价格不能为空")
-    @Schema(description = "套餐价格（元/月）")
-    private BigDecimal price;
-
-    @NotNull(message = "套餐时长不能为空")
-    @Schema(description = "套餐时长（月）")
-    private Integer durationMonths;
-
-    @Schema(description = "最大用户数")
-    private Integer maxUsers;
-
-    @Schema(description = "最大存储容量（GB）")
-    private Long maxStorage;
-
     @Size(max = 512, message = "描述长度不能超过512")
     @Xss(message = "描述包含非法内容")
     @Schema(description = "套餐描述")
     private String description;
-
-    @Schema(description = "状态: ENABLED/DISABLED")
-    private String status;
 
     @Schema(description = "排序号")
     private Integer sortOrder;

@@ -346,16 +346,15 @@ public class AgentAutoConfiguration {
     /**
      * 装配 Agent 指标采集组件。
      *
-     * <p>向 Micrometer 上报调用次数、耗时、护栏拦截数、Token 用量等指标，
-     * 供 Prometheus 抓取并驱动告警。指标名带 Agent 前缀，避免与业务指标冲突。
+     * <p>通过 {@link SentryMetricsAdapter} 统一管理指标，符合《云顶编码规范》
+     * 第 27.2.1 节「禁止直接操作 MeterRegistry」的强制要求。
      *
-     * @param meterRegistry Micrometer 注册表，由 Spring Boot Actuator 提供
      * @return 指标组件；仅在容器中不存在其他 {@link AgentMetrics} 时生效
      */
     @Bean
     @ConditionalOnMissingBean(AgentMetrics.class)
-    public AgentMetrics agentMetrics(MeterRegistry meterRegistry) {
-        return new AgentMetrics(meterRegistry);
+    public AgentMetrics agentMetrics() {
+        return new AgentMetrics();
     }
 
     /**
@@ -364,13 +363,12 @@ public class AgentAutoConfiguration {
      * <p>覆盖 Agent 执行、工具调用、RAG 检索、流式 TTFT、会话活跃度、DAG 编排与人工审批
      * 等运行态场景，与基础 {@link AgentMetrics} 互补。指标名统一拼接 {@code agent_} 前缀。
      *
-     * @param meterRegistry Micrometer 注册表，由 Spring Boot Actuator 提供
      * @return 运行态指标组件
      */
     @Bean
     @ConditionalOnMissingBean(AgentRuntimeMetrics.class)
-    public AgentRuntimeMetrics agentRuntimeMetrics(MeterRegistry meterRegistry) {
-        return new AgentRuntimeMetrics(meterRegistry);
+    public AgentRuntimeMetrics agentRuntimeMetrics() {
+        return new AgentRuntimeMetrics();
     }
 
     /**

@@ -47,7 +47,7 @@ import com.njydsz.literule.server.spi.RuleDependencyProvider;
  */
 @Slf4j
 @RestController
-@RequestMapping("/ruleEngine/rules")
+@RequestMapping("/v1/rule-engine/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则依赖", description = "规则间依赖关系管理与级联禁用分析")
@@ -107,7 +107,7 @@ public class RuleDependencyController {
     /**
      * 查询级联禁用影响（disable ruleCode 时，需要级联禁用的规则列表）
      */
-    @GetMapping("/{ruleCode}/cascadingDisable")
+    @GetMapping("/{ruleCode}/cascading-disable")
     public BaseResponse<List<StringVO>> cascadingDisable(@PathVariable String ruleCode) {
         return BaseResponse.success(ruleDependencyProvider.cascadingDisable(ruleCode).stream().map(StringVO::new).toList());
     }

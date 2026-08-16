@@ -30,8 +30,8 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 @ConditionalOnClass(MeterRegistry.class)
 public class NextwikiMetrics extends SentryMetricsAdapter {
 
-    public NextwikiMetrics(MeterRegistry meterRegistry) {
-        super(meterRegistry, "ydsz_nextwiki_");
+    public NextwikiMetrics() {
+        super("ydsz_nextwiki_");
         log.info("[NextwikiMetrics] 初始化完成，指标前缀 ydsz_nextwiki_");
     }
 

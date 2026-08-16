@@ -50,14 +50,8 @@ public class MessageAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(MessageMetrics.class)
     @ConditionalOnClass(MeterRegistry.class)
-    public MessageMetrics messageMetrics(
-            ObjectProvider<MeterRegistry> meterRegistryProvider) {
-        MeterRegistry registry = meterRegistryProvider.getIfAvailable();
-        if (registry == null) {
-            // 降级使用 SimpleMeterRegistry（内存版）
-            registry = new SimpleMeterRegistry();
-        }
-        return new MessageMetrics(registry);
+    public MessageMetrics messageMetrics() {
+        return new MessageMetrics();
     }
 
     /**

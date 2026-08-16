@@ -1,11 +1,9 @@
 package com.njydsz.literule.server.core;
 
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tags;
-import io.micrometer.core.instrument.Timer;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 import com.njydsz.literule.api.RuleSeverity;
 
@@ -34,6 +32,7 @@ import com.njydsz.literule.api.RuleSeverity;
  * @since 1.1.0
  * @author ydsz-team
  */
+@ConditionalOnClass(MeterRegistry.class)
 public class MicrometerRuleMetrics extends SentryMetricsAdapter implements RuleMetrics {
 
     private final AtomicInteger lastTraceQueueSize = new AtomicInteger(0);
@@ -45,8 +44,8 @@ public class MicrometerRuleMetrics extends SentryMetricsAdapter implements RuleM
     private final AtomicLong totalTriggered = new AtomicLong(0);
     private final AtomicLong totalErrors = new AtomicLong(0);
 
-    public MicrometerRuleMetrics(MeterRegistry registry) {
-        super(registry, "ydsz_literule_");
+    public MicrometerRuleMetrics() {
+        super("ydsz_literule_");
         gaugeRef("trace_queue_size", lastTraceQueueSize, AtomicInteger::doubleValue);
         gaugeRef("registered_rules", lastRegisteredRules, AtomicInteger::doubleValue);
         gaugeRef("evaluated_rules", lastEvaluatedRules, AtomicInteger::doubleValue);

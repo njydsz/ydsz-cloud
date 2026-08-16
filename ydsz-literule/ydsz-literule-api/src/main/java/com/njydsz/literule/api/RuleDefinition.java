@@ -1,6 +1,7 @@
 package com.njydsz.literule.api;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -141,16 +142,16 @@ public class RuleDefinition implements Serializable {
     private String status = "PUBLISHED";
 
     /** 生效时间 */
-    private String effectiveFrom;
+    private LocalDateTime effectiveFrom;
 
     /** 失效时间 */
-    private String effectiveTo;
+    private LocalDateTime effectiveTo;
 
     /** 审核人 */
     private String reviewedBy;
 
     /** 审核时间 */
-    private String reviewedAt;
+    private LocalDateTime reviewedAt;
 
     /** 审核意见 */
     private String reviewComment;

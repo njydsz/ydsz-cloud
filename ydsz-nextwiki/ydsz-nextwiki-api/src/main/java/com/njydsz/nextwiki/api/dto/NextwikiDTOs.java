@@ -172,7 +172,15 @@ public final class NextwikiDTOs {
      * 搜索请求。
      *
      * <p>继承 {@link PageQuery} 获得分页参数（pageNum/pageSize）、排序、
-     * 深度分页风险评估等能力，新增搜索 keyword 和 scope 业务字段。
+     * 深度分页风险评估等能力，新增搜索 keyword、scope 以及高级筛选字段。
+     *
+     * <h4>高级筛选能力</h4>
+     * <ul>
+     *   <li>文件类型筛选：按后缀名过滤（如 pdf、docx、xlsx），支持多选</li>
+     *   <li>时间范围筛选：按更新时间范围过滤（startDate / endDate）</li>
+     *   <li>大小范围筛选：按文件大小范围过滤（minSize / maxSize，单位字节）</li>
+     *   <li>标签筛选：按标签名称过滤，满足任一即返回（OR 关系）</li>
+     * </ul>
      */
     @Data
     @SuperBuilder
@@ -189,6 +197,24 @@ public final class NextwikiDTOs {
 
         @Schema(description = "搜索范围: all / filename / content / tag")
         private String scope;
+
+        @Schema(description = "文件类型筛选（后缀名列表，如 pdf / docx / xlsx），为空表示不过滤")
+        private List<String> fileTypes;
+
+        @Schema(description = "更新时间起始（ISO 日期时间格式，包含），为空表示不限制")
+        private String startDate;
+
+        @Schema(description = "更新时间截止（ISO 日期时间格式，包含），为空表示不限制")
+        private String endDate;
+
+        @Schema(description = "文件大小下限（字节），为空表示不限制")
+        private Long minSize;
+
+        @Schema(description = "文件大小上限（字节），为空表示不限制")
+        private Long maxSize;
+
+        @Schema(description = "标签名称列表（OR 关系，满足任一即返回），为空表示不过滤")
+        private List<String> tags;
     }
 
     /**

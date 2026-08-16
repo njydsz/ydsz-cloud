@@ -42,7 +42,7 @@ import com.njydsz.literule.server.core.DefaultBreakpointHook;
  */
 @Slf4j
 @RestController
-@RequestMapping("/ruleEngine/breakpoints")
+@RequestMapping("/v1/rule-engine/breakpoints")
 @RequiredArgsConstructor
 @Tag(name = "规则断点调试", description = "断点管理、调试指令、上下文快照")
 public class BreakpointController {
@@ -151,7 +151,7 @@ public class BreakpointController {
     @Idempotent(key = "breakpoint:stepOver", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "断点管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'stepOver'")
     @RateLimit(resource = "literule.breakpoint.stepOver", threshold = 50)
-    @PostMapping("/{ruleCode}/stepOver")
+    @PostMapping("/{ruleCode}/step-over")
     public BaseResponse<Boolean> stepOver(@PathVariable String ruleCode) {
         DefaultBreakpointHook hook = breakpointHookProvider.getIfAvailable();
         if (hook == null) {

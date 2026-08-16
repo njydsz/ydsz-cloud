@@ -18,7 +18,6 @@ import com.njydsz.common.safe.annotation.Xss;
  * <ul>
  *   <li>{@code tenantCode} — 租户编码，全局唯一，最长 64 字符</li>
  *   <li>{@code tenantName} — 租户名称，最长 128 字符</li>
- *   <li>{@code status} — 状态： ENABLED / DISABLED / EXPIRED</li>
  * </ul>
  *
  * @author ydsz-team
@@ -47,8 +46,8 @@ public class TenantDTO {
 
     @Size(max = 64, message = "联系人长度不能超过64")
     @Xss(message = "联系人包含非法内容")
-    @Schema(description = "联系人")
-    private String contactPerson;
+    @Schema(description = "联系人姓名")
+    private String contactName;
 
     @Size(max = 32, message = "联系电话长度不能超过32")
     @Schema(description = "联系电话")
@@ -56,36 +55,20 @@ public class TenantDTO {
 
     @Email(message = "邮箱格式不正确")
     @Size(max = 128, message = "邮箱长度不能超过128")
-    @Schema(description = "邮箱")
-    private String email;
+    @Schema(description = "联系邮箱")
+    private String contactEmail;
 
-    @Size(max = 256, message = "地址长度不能超过256")
-    @Xss(message = "地址包含非法内容")
-    @Schema(description = "地址")
-    private String address;
+    @Schema(description = "关联套餐 ID")
+    private String planId;
+
+    @Schema(description = "订阅到期时间")
+    private LocalDateTime expireAt;
+
+    @Schema(description = "独立数据源标识")
+    private String datasourceKey;
 
     @Schema(description = "状态: ENABLED/DISABLED/EXPIRED")
     private String status;
-
-    @Schema(description = "套餐 ID")
-    private String planId;
-
-    @Schema(description = "到期时间")
-    private LocalDateTime expireAt;
-
-    @Schema(description = "用户配额")
-    private Integer maxUsers;
-
-    @Schema(description = "存储配额（GB）")
-    private Long maxStorage;
-
-    @Size(max = 256, message = "域名长度不能超过256")
-    @Schema(description = "自定义域名")
-    private String domain;
-
-    @Size(max = 512, message = "Logo URL 长度不能超过512")
-    @Schema(description = "租户 Logo URL")
-    private String logoUrl;
 
     @Size(max = 512, message = "备注长度不能超过512")
     @Xss(message = "备注包含非法内容")

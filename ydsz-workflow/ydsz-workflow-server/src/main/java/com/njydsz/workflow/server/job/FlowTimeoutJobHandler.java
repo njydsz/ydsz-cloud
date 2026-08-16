@@ -108,8 +108,8 @@ public class FlowTimeoutJobHandler implements JobHandler {
             subProcessErrors = 1;
         }
 
-        log.info("FlowTimeoutJobHandler: processed {} overdue tasks, {} subProcess timeouts",
-                processed, subProcessProcessed);
+        log.info("[FlowTimeout] 扫描完成: processed={} subProcessTimeouts={} costMs={}",
+                processed, subProcessProcessed, System.currentTimeMillis() - start);
         Map<String, Object> result = new HashMap<>();
         result.put("ok", true);
         result.put("total", overdueTasks == null ? 0 : overdueTasks.size());

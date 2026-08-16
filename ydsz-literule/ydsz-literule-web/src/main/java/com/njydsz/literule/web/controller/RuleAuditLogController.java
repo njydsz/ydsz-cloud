@@ -40,7 +40,7 @@ import com.njydsz.literule.server.audit.RuleAuditLogService.AuditAction;
  */
 @Slf4j
 @RestController
-@RequestMapping("/ruleEngine/audit")
+@RequestMapping("/v1/rule-engine/audit")
 @RequiredArgsConstructor
 @ConditionalOnBean(RuleAuditLogService.class)
 @Tag(name = "规则审计日志", description = "P3-5 规则操作审计日志查询 API")
@@ -71,7 +71,7 @@ public class RuleAuditLogController {
      * @param limit    返回条数（默认 50，最大 200）
      * @return 审计日志列表
      */
-    @GetMapping("/byRule/{ruleCode}")
+    @GetMapping("/by-rule/{ruleCode}")
     @Operation(summary = "按规则编码查询审计日志", description = "返回指定规则的全生命周期操作记录")
     public BaseResponse<List<AuditLogEntryVO>> byRuleCode(
             @PathVariable String ruleCode,
@@ -89,7 +89,7 @@ public class RuleAuditLogController {
      * @param limit    返回条数（默认 50，最大 200）
      * @return 审计日志列表
      */
-    @GetMapping("/byOperator")
+    @GetMapping("/by-operator")
     @Operation(summary = "按操作人查询审计日志", description = "返回指定操作人的审计日志")
     public BaseResponse<List<AuditLogEntryVO>> byOperator(
             @RequestParam("operator") String operator,
@@ -107,7 +107,7 @@ public class RuleAuditLogController {
      * @param limit  返回条数（默认 50，最大 200）
      * @return 审计日志列表
      */
-    @GetMapping("/byAction")
+    @GetMapping("/by-action")
     @Operation(summary = "按操作类型查询审计日志", description = "返回指定操作类型的审计日志")
     public BaseResponse<List<AuditLogEntryVO>> byAction(
             @RequestParam("action") String action,
@@ -132,7 +132,7 @@ public class RuleAuditLogController {
      * @param limit     返回条数（默认 50，最大 500）
      * @return 审计日志列表
      */
-    @GetMapping("/byTimeRange")
+    @GetMapping("/by-time-range")
     @Operation(summary = "按时间范围查询审计日志", description = "返回指定时间范围内的审计日志")
     public BaseResponse<List<AuditLogEntryVO>> byTimeRange(
             @RequestParam("startTime") String startTime,

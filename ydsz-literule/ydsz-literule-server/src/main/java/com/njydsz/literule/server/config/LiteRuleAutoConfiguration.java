@@ -357,7 +357,7 @@ public class LiteRuleAutoConfiguration {
      * 或无 Bean 注册时返回 null，天然支持可选依赖。
      */
     private void bindMicrometerIfAvailable(DefaultRuleEngine engine,
-                                             ObjectProvider<MeterRegistry> meterRegistryProvider) {
+                                            ObjectProvider<MeterRegistry> meterRegistryProvider) {
         MeterRegistry registry = meterRegistryProvider.getIfAvailable();
         if (registry == null) {
             log.debug("[LiteRule] MeterRegistry 未注入，使用内存计数器降级");
@@ -365,10 +365,10 @@ public class LiteRuleAutoConfiguration {
             return;
         }
         try {
-            RuleMetrics metrics = new MicrometerRuleMetrics(registry);
+            // P2: MicrometerRuleMetrics 继承 SentryMetricsAdapter，不再直传 MeterRegistry
+            RuleMetrics metrics = new MicrometerRuleMetrics();
             engine.setMetrics(metrics);
-            log.info("[LiteRule] Prometheus 监控指标已启用 (registry={})",
-                    registry.getClass().getSimpleName());
+            log.info("[LiteRule] Prometheus 监控指标已启用 (通过 SentryMetricsAdapter 桥接)");
         } catch (Exception e) {
             log.warn("[LiteRule] MicrometerRuleMetrics 桥接失败: {}", e.getMessage());
         }

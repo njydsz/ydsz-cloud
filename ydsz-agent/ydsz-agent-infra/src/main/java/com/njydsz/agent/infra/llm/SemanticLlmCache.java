@@ -10,6 +10,8 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import com.njydsz.agent.domain.model.ChatMessage;
+import com.njydsz.agent.domain.model.MessageRole;
 import com.njydsz.common.json.YdszJson;
 
 /**
@@ -143,24 +145,27 @@ public class SemanticLlmCache {
     /**
      * 从消息列表中提取 system prompt 和最新的 user message。
      *
+     * <p>P0 修复：原实现以 {@code instanceof Map} 解析消息，但实际消息类型为
+     * {@link ChatMessage} 领域对象，导致永远提取不到内容、缓存 key 恒定、跨会话串流。
+     * 现直接遍历 {@link ChatMessage}，按角色提取最后一条 system 与最后一条 user 内容。
+     *
      * @param messages 聊天消息列表
      * @return Map-entry 形式：key=systemPrompt, value=userMessage；提取失败时返回 null
      */
-    public static Map.Entry<String, String> extractCacheableContent(List<?> messages) {
+    public static Map.Entry<String, String> extractCacheableContent(List<ChatMessage> messages) {
         if (messages == null || messages.isEmpty()) {
             return null;
         }
         String systemPrompt = "";
         String latestUserMessage = "";
-        for (Object msgObj : messages) {
-            if (msgObj instanceof Map<?, ?> msg) {
-                Object role = msg.get("role");
-                Object content = msg.get("content");
-                if ("system".equals(role) && content != null) {
-                    systemPrompt = content.toString();
-                } else if ("user".equals(role) && content != null) {
-                    latestUserMessage = content.toString();
-                }
+        for (ChatMessage msg : messages) {
+            if (msg == null || msg.getContent() == null) {
+                continue;
+            }
+            if (msg.getRole() == MessageRole.SYSTEM) {
+                systemPrompt = msg.getContent();
+            } else if (msg.getRole() == MessageRole.USER) {
+                latestUserMessage = msg.getContent();
             }
         }
         return Map.entry(systemPrompt, latestUserMessage);

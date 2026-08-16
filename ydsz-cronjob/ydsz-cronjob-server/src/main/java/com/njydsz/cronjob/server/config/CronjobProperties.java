@@ -86,6 +86,34 @@ public class CronjobProperties {
     /** P3-12: 跨集群调度配置 */
     private Clusters clusters = new Clusters();
 
+    /**
+     * 集群级配置（P0-1 新增）。
+     *
+     * <p>提供全局并发控制器估算集群节点数的配置项，
+     * 当 {@link com.njydsz.cronjob.server.core.discovery.NodeDiscoveryStrategy} 不可用时作为回退值。
+     *
+     * <pre>{@code
+     * ydsz:
+     *   cronjob:
+     *     cluster:
+     *       max-nodes: 3
+     * }</pre>
+     */
+    @Data
+    public static class Cluster {
+        /**
+         * 集群最大节点数估算值（默认 3）。
+         *
+         * <p>当节点发现策略不可用时，用于计算全局并发上限：
+         * {@code maxGlobal = maxConcurrent × maxNodes}。
+         * 节点发现策略可用时自动使用实际在线节点数。
+         */
+        private int maxNodes = 3;
+    }
+
+    /** P0-1: 集群级配置 */
+    private Cluster cluster = new Cluster();
+
     /** P3-11: 脚本执行沙箱配置 */
     private Sandbox sandbox = new Sandbox();
 
@@ -419,6 +447,14 @@ public class CronjobProperties {
     public static class Alert {
         /** 告警扫描间隔（毫秒，默认 5 分钟） */
         private long scanIntervalMs = 300000L;
+
+        /**
+         * P1-P5: 告警规则本地缓存 TTL（秒，默认 60s）。
+         *
+         * <p>规则变更频率极低，本地缓存可大幅减少每次告警触发的 DB 查询。
+         * 缓存失效策略：TTL 自动过期 + 规则增删改操作手动失效。
+         */
+        private int ruleCacheTtlSeconds = 60;
     }
 
     /**

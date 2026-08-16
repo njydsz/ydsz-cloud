@@ -51,7 +51,7 @@ import com.njydsz.literule.server.spi.ABTestAutoRollbackProvider;
  */
 @Slf4j
 @RestController
-@RequestMapping("/ruleEngine/rules")
+@RequestMapping("/v1/rule-engine/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "AB Test 回滚", description = "AB Test 自动回滚策略配置与人工回滚")
@@ -63,7 +63,7 @@ public class RuleABPolicyController {
     /**
      * 获取规则的 AB Test 自动回滚策略（无配置时返回默认策略）
      */
-    @GetMapping("/{ruleCode}/abPolicy")
+    @GetMapping("/{ruleCode}/ab-policy")
     public BaseResponse<RuleABPolicyVO> getABPolicy(@PathVariable String ruleCode) {
         RuleABPolicy policy = abTestAutoRollbackProvider.getPolicy(ruleCode);
         return BaseResponse.success(LiteruleConverter.INSTANT.entityToVO(policy));
@@ -75,7 +75,7 @@ public class RuleABPolicyController {
     @Idempotent(key = "ruleAdmin:updateAbpolicy", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'updateABPolicy'")
     @RateLimit(resource = "literule.rule_a_b_policy.updateABPolicy", threshold = 50)
-    @PutMapping("/{ruleCode}/abPolicy")
+    @PutMapping("/{ruleCode}/ab-policy")
     public BaseResponse<Void> updateABPolicy(
             @PathVariable String ruleCode,
             @Valid @RequestBody RuleABPolicyPutDTO dto,
@@ -89,7 +89,7 @@ public class RuleABPolicyController {
     /**
      * 查询规则的回滚历史
      */
-    @GetMapping("/{ruleCode}/abRollbacks")
+    @GetMapping("/{ruleCode}/ab-rollbacks")
     public BaseResponse<List<RuleABRollbackVO>> listRollbackHistory(@PathVariable String ruleCode) {
         return BaseResponse.success(LiteruleConverter.INSTANT.ruleABRollbackListToVO(abTestAutoRollbackProvider.listRollbackHistory(ruleCode)));
     }
@@ -100,7 +100,7 @@ public class RuleABPolicyController {
     @Idempotent(key = "ruleAdmin:evaluateAb", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'evaluateAB'")
     @RateLimit(resource = "literule.rule_a_b_policy.evaluateAB", threshold = 50)
-    @PostMapping("/{ruleCode}/abEvaluate")
+    @PostMapping("/{ruleCode}/ab-evaluate")
     public BaseResponse<Boolean> evaluateAB(@PathVariable String ruleCode) {
         return BaseResponse.success(abTestAutoRollbackProvider.evaluateOne(ruleCode));
     }
@@ -113,7 +113,7 @@ public class RuleABPolicyController {
     @Idempotent(key = "ruleAdmin:manualRollback", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'manualRollback'")
     @RateLimit(resource = "literule.rule_a_b_policy.manualRollback", threshold = 50)
-    @PostMapping("/{ruleCode}/abRollback")
+    @PostMapping("/{ruleCode}/ab-rollback")
     public BaseResponse<RuleABRollbackVO> manualRollback(
             @PathVariable String ruleCode,
             @RequestParam(value = "reason", defaultValue = "MANUAL") String reason,

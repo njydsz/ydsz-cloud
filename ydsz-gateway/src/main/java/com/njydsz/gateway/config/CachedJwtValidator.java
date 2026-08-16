@@ -4,9 +4,9 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -21,7 +21,6 @@ import org.springframework.data.redis.connection.stream.Consumer;
 import org.springframework.data.redis.connection.stream.MapRecord;
 import org.springframework.data.redis.connection.stream.Offset;
 import org.springframework.data.redis.connection.stream.ReadOffset;
-import org.springframework.data.redis.connection.stream.RecordId;
 import org.springframework.data.redis.connection.stream.StreamOffset;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.data.redis.core.StreamOperations;
@@ -64,13 +63,8 @@ import com.njydsz.common.safe.sensitive.SensitiveUtil;
  *   <li>至少一次投递：消息持久化在 Stream 中，消费者故障恢复后可重读</li>
  *   <li>消息体为 SHA-256 摘要：不传输 JWT 明文，提升安全性</li>
  *   <li>消费者组协同：多个网关实例组成消费者组，消息仅被一个实例消费</li>
- *   <li>自动 ACK：处理成功后确认消息，失败时消息保留在 PEL 中</li>
+ *   <li>回环消息幂等：本实例发布的消息也会被自己消费，重复 invalidate 无副作用</li>
  * </ul>
- *
- * <h3>Keyspace Notification 秒级失效</h3>
- * <p>P3-7 新增：监听 Redis Keyspace Notification 的 key 删除/过期事件，
- * 当黑名单 key（{@code ydsz:blacklist:token:*}）被删除（手动移除黑名单）
- * 或过期时，秒级清除对应的 JWT 缓存。
  *
  * <h3>性能预期</h3>
  * <p>假设单实例 QPS=2000，90% 请求在 10 秒窗口内复用缓存，
@@ -112,11 +106,8 @@ public class CachedJwtValidator {
     /** P3-7: 消费者组名称 */
     private static final String CONSUMER_GROUP = "jwt-cache-consumers";
 
-    /** P3-7: 消费者名称前缀（每台实例不同） */
-    private static final String CONSUMER_NAME_PREFIX = "gateway-instance-";
-
-    /** P3-7: 黑名单 key 前缀（用于 Keyspace Notification 匹配） */
-    private static final String BLACKLIST_KEY_PREFIX = "ydsz:blacklist:token:";
+    /** P3-7: Stream 最大保留长度（自动裁剪旧消息） */
+    private static final long STREAM_MAX_LENGTH = 1_000;
 
     /** 本地缓存实例 */
     private final Cache<String, Optional<UserInfo>> claimsCache;
@@ -143,8 +134,8 @@ public class CachedJwtValidator {
         return t;
     });
 
-    /** P3-7: 当前实例标识 */
-    private final String instanceId = CONSUMER_NAME_PREFIX + System.nanoTime();
+    /** P3-7: hash -> token 反向索引（用于 Stream 消息反查失效 token） */
+    private final ConcurrentHashMap<String, String> hashToTokenMap = new ConcurrentHashMap<>();
 
     /**
      * 构造 JWT 缓存校验器
@@ -190,8 +181,6 @@ public class CachedJwtValidator {
 
     /**
      * P3-7: 启动后订阅 Redis Stream 失效广播频道（Consumer Group 模式）
-     *
-     * <p>替代原 Pub/Sub 模式，提供至少一次投递语义。
      */
     @PostConstruct
     public void subscribeInvalidationStream() {
@@ -214,7 +203,7 @@ public class CachedJwtValidator {
 
             // 订阅 Stream，使用 Consumer Group 模式
             streamListenerContainer.receive(
-                    Consumer.from(CONSUMER_GROUP, instanceId),
+                    Consumer.from(CONSUMER_GROUP, instanceId()),
                     StreamOffset.create(INVALIDATION_STREAM, ReadOffset.lastConsumed()),
                     this::handleStreamMessage
             );
@@ -224,25 +213,35 @@ public class CachedJwtValidator {
             // 启动定时任务：每 30 秒处理 pending 消息（ACK 失败重试）
             scheduler.scheduleAtFixedRate(this::processPendingMessages, 30, 30, TimeUnit.SECONDS);
 
-            log.info("[JwtCache] 已订阅失效广播 Stream stream={} group={} consumer={}",
-                    INVALIDATION_STREAM, CONSUMER_GROUP, instanceId);
+            log.info("[JwtCache] 已订阅失效广播 Stream stream={}, group={}, consumer={}",
+                    INVALIDATION_STREAM, CONSUMER_GROUP, instanceId());
         } catch (Exception e) {
             log.warn("[JwtCache] 订阅 Redis Stream 失效广播失败，降级为单实例模式: {}", e.getMessage());
         }
     }
 
     /**
+     * P3-7: 获取当前实例标识（基于纳秒时间戳）。
+     *
+     * @return 实例标识字符串
+     */
+    private String instanceId() {
+        return "gateway-" + Long.toHexString(System.nanoTime());
+    }
+
+    /**
      * P3-7: 创建消费者组（幂等）
+     *
+     * <p>消费者组从 Stream 最新位置开始消费。如果组已存在则忽略异常。
      */
     private void createConsumerGroup() {
         try {
             StreamOperations<String, String, String> ops = redisTemplate.opsForStream();
-            // 尝试创建消费者组（从最新消息开始消费）
-            ops.add(INVALIDATION_STREAM, Map.of("init", "group-create-marker"));
-            // 如果已存在会抛异常，忽略
+            ops.createGroup(INVALIDATION_STREAM, ReadOffset.latest(), CONSUMER_GROUP);
+            log.info("[JwtCache] 创建 Stream 消费者组成功 stream={}, group={}", INVALIDATION_STREAM, CONSUMER_GROUP);
         } catch (Exception e) {
             // 消费者组已存在，正常忽略
-            log.debug("[JwtCache] 消费者组已存在或创建成功: {}", e.getMessage());
+            log.debug("[JwtCache] 消费者组已存在: {}", e.getMessage());
         }
     }
 
@@ -255,8 +254,7 @@ public class CachedJwtValidator {
         try {
             String tokenHash = message.getValue().get("tokenHash");
             if (tokenHash != null && !tokenHash.isBlank()) {
-                // SHA-256 摘要匹配：本地缓存 key 为完整 token，需要通过 hash 反查
-                // 优化：存储时使用 hash 作为 key的映射
+                // 通过 hash 反查并失效本地缓存
                 invalidateByHash(tokenHash);
                 log.debug("[JwtCache] 收到 Stream 失效事件 hash={}", tokenHash);
             }
@@ -270,17 +268,24 @@ public class CachedJwtValidator {
     /**
      * P3-7: 通过 SHA-256 摘要使缓存失效
      *
+     * <p>优先从 hashToTokenMap 反向索引查找（O(1)），未命中时遍历缓存 key 计算 hash（O(n)，兜底）。
+     *
      * @param tokenHash Token 的 SHA-256 摘要
      */
     private void invalidateByHash(String tokenHash) {
-        // 由于缓存 key 是完整 token，需要遍历查找
-        // 优化：使用辅助映射 token -> hash，反向查找
-        claimsCache.getNativeCache().ifPresent(cache -> {
-            cache.asMap().forEach((token, value) -> {
-                if (sha256(token).equalsIgnoreCase(tokenHash)) {
-                    claimsCache.invalidate(token);
-                }
-            });
+        // 优先使用反向索引（O(1) 查找）
+        String token = hashToTokenMap.get(tokenHash);
+        if (token != null) {
+            claimsCache.invalidate(token);
+            hashToTokenMap.remove(tokenHash);
+            return;
+        }
+        // 兜底：遍历缓存匹配（首次广播时的 hash 可能尚未建立映射）
+        claimsCache.asMap().forEach((cachedToken, value) -> {
+            if (sha256(cachedToken).equalsIgnoreCase(tokenHash)) {
+                claimsCache.invalidate(cachedToken);
+                hashToTokenMap.remove(tokenHash);
+            }
         });
     }
 
@@ -289,19 +294,35 @@ public class CachedJwtValidator {
      */
     private void processPendingMessages() {
         try {
+            if (!isStreamAvailable()) {
+                return;
+            }
             StreamOperations<String, String, String> ops = redisTemplate.opsForStream();
-            // 获取当前消费者的 pending 消息
-            var pending = ops.pending(INVALIDATION_STREAM, Consumer.from(CONSUMER_GROUP, instanceId), 10, 100);
-            if (pending != null && !pending.isEmpty()) {
-                for (var entry : pending) {
-                    // 重试 ACK
-                    ops.acknowledge(INVALIDATION_STREAM, CONSUMER_GROUP, entry.getId());
-                    log.debug("[JwtCache] 已 ACK 延迟消息: {}", entry.getId());
+            // 获取当前消费者的 pending 消息列表
+            var pending = ops.pending(INVALIDATION_STREAM, Consumer.from(CONSUMER_GROUP, instanceId()), 10, 100);
+            if (pending != null && !pending.getTotalPendingMessages().equals(0L)) {
+                var pendingMessages = pending.getPendingMessages();
+                if (pendingMessages != null && !pendingMessages.isEmpty()) {
+                    for (var entry : pendingMessages) {
+                        // 重试 ACK（幂等操作）
+                        ops.acknowledge(INVALIDATION_STREAM, CONSUMER_GROUP, entry.getId());
+                        log.debug("[JwtCache] 已 ACK 延迟消息: {}", entry.getId());
+                    }
                 }
             }
         } catch (Exception e) {
             log.debug("[JwtCache] 处理 pending 消息异常: {}", e.getMessage());
         }
+    }
+
+    /**
+     * P3-7: 检查 Stream 是否可用
+     *
+     * @return true=可用
+     */
+    private boolean isStreamAvailable() {
+        return streamListenerContainer != null && streamListenerContainer.isRunning()
+                && redisTemplate != null;
     }
 
     /**
@@ -321,15 +342,6 @@ public class CachedJwtValidator {
      *
      * <p>优先从 Caffeine 缓存读取解析结果；缓存未命中时通过
      * {@link com.njydsz.common.cache.api.CacheProtectionGuard#getWithProtection} 执行解析。
-     *
-     * <h3>防击穿（P0-2 增强）</h3>
-     * <p>同一 Token 在缓存过期瞬间收到大量并发请求时，仅一个线程执行
-     * {@code validateAccessToken + parseAccessToken}，其余线程等待其完成后复用结果，
-     * 消除 JWT 解析的瞬时 CPU 尖峰。
-     *
-     * <h3>防穿透（P0-2 增强）</h3>
-     * <p>无效 Token 的解析结果以空值占位符短时缓存（2-5s 随机抖动），
-     * 防止攻击者用随机伪造 Token 反复穿透缓存打爆 JWT 解析。
      *
      * <p>P2-12: 同时记录 JWT 校验耗时到 GatewayMetrics（如果可用）。
      *
@@ -387,17 +399,12 @@ public class CachedJwtValidator {
     /**
      * P3-7: 失效单个 Token（黑名单加入后立即清除缓存）
      *
-     * <p>当 Token 被加入 Redis 黑名单时，调用此方法立即清除 Caffeine 缓存，无需等待 TTL 过期。
-     *
      * <p>P3-7: 多实例部署时，本方法同时：
      * <ol>
      *   <li>清除本实例的 Caffeine 缓存</li>
      *   <li>发布 SHA-256 摘要到 Redis Stream（不传输 JWT 明文）</li>
      *   <li>其他实例订阅到消息后清除各自的 Caffeine 缓存</li>
      * </ol>
-     *
-     * <p>调用时机：在 {@link com.njydsz.gateway.filter.AuthGlobalFilter} 中，
-     * 当检测到 Token 在黑名单中时调用。
      *
      * @param jwt 需要失效的 JWT Token
      */
@@ -427,8 +434,15 @@ public class CachedJwtValidator {
         }
         try {
             String tokenHash = sha256(jwt);
+            // 建立 hash → token 反向索引（用于其他实例快速反查）
+            hashToTokenMap.put(tokenHash, jwt);
+
             redisTemplate.opsForStream().add(INVALIDATION_STREAM,
                             Map.of("tokenHash", tokenHash, "ts", String.valueOf(System.currentTimeMillis())))
+                    .doOnSuccess(id -> {
+                        // 裁剪 Stream 长度，避免无限增长
+                        redisTemplate.opsForStream().trim(INVALIDATION_STREAM, STREAM_MAX_LENGTH);
+                    })
                     .onErrorResume(e -> {
                         log.warn("[JwtCache] Redis Stream 广播失效失败（其他实例将通过 TTL 过期）: {}", e.getMessage());
                         return Mono.empty();
@@ -452,7 +466,7 @@ public class CachedJwtValidator {
             return HexFormat.of().formatHex(hash);
         } catch (NoSuchAlgorithmException e) {
             // SHA-256 是 JVM 标准算法，理论上不会发生
-            return "sha256-unavailable-" + input.length();
+            return "sha256-unavailable-" + input.hashCode();
         }
     }
 
@@ -494,12 +508,10 @@ public class CachedJwtValidator {
 
     /**
      * 手动清除缓存（供 Nacos 配置刷新时调用）
-     *
-     * <p>P3-7: 多实例部署时仅清除本实例，其他实例通过 Stream 广播自然失效。
-     * 如需全量清除，可调用 {@link #broadcastInvalidateAll()} 广播清除事件。
      */
     public void invalidateAll() {
         claimsCache.invalidateAll();
+        hashToTokenMap.clear();
         log.info("[JwtCache] 缓存已手动清除");
     }
 }

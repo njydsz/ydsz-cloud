@@ -1,8 +1,6 @@
 package com.njydsz.message.server.metric;
 
 
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -26,8 +24,8 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 @ConditionalOnClass(MeterRegistry.class)
 public class MessageMetrics extends SentryMetricsAdapter {
 
-    public MessageMetrics(MeterRegistry meterRegistry) {
-        super(meterRegistry, "ydsz.message.");
+    public MessageMetrics() {
+        super("ydsz.message.");
     }
 
     /**

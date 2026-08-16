@@ -1,161 +1,229 @@
 package com.njydsz.gateway.config;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import com.njydsz.common.notify.helper.NotifyHelper;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.stereotype.Service;
+import com.njydsz.common.sentry.SentryObservation;
+import com.njydsz.common.sentry.domain.AlertEvent;
+import com.njydsz.common.sentry.domain.AlertSeverity;
 
 /**
- * GAP-P1-1 + GAP-P1-2: 网关告警通知服务
+ * P3-7: 网关层告警聚合与分级服务
  *
- * <p>集成 ydsz-common-notify 的 {@link NotifyHelper}，在网关关键事件触发时发送实时 IM 通知。
- * 使用 {@code @Value} 注入告警目标 Webhook URL，未配置时不发送告警。
- *
- * <h3>告警场景</h3>
+ * <p>在网关过滤器与 SentryObservation 之间增加一层本地告警聚合逻辑：
  * <ul>
- *   <li>限流连续触发 — 高 QPS / 攻击流量</li>
- *   <li>IP 黑名单连续命中 — 恶意 IP 访问</li>
- *   <li>下游服务 502/504 — 服务不可用</li>
- *   <li>Redis 限流降级切换 — 限流熔断器打开</li>
+ *   <li>分级路由：P0/P1 立即发送；P2 延迟聚合后发送；P3 仅记录日志</li>
+ *   <li>本地滑动窗口聚合：相同 {@code dedupKey} 的告警在窗口期内仅发送一次，
+ *       后续触发以计数器累加，减少告警风暴</li>
+ *   <li>自动flush：定时任务将窗口期内的聚合告警发送出去</li>
  * </ul>
  *
- * <p>使用 ObjectProvider 实现可选依赖，当 NotifyHelper 不可用时不影响网关正常运行。
+ * <h3>聚合策略</h3>
+ * <ul>
+ *   <li>窗口时长：60 秒</li>
+ *   <li>去重维度：{@link AlertEvent#dedupKey()}</li>
+ *   <li>聚合后消息格式："告警名称 在 60s 内触发 N 次"</li>
+ * </ul>
  *
- * <p><b>收敛说明</b>：使用 {@link NotifyHelper} 替代直接使用 {@code NotifyService} 或
- * {@code NotificationClient} Feign。详见 {@code docs/module-review/ADR-001-notify-message-convergence.md}。
+ * <h3>使用方式</h3>
+ * <p>网关过滤器统一通过 {@link #alert(AlertEvent)} 而非直接调用 SentryObservation。
  *
- * @since 1.0.0
+ * @since 3.7.0
  * @author ydsz-team
  */
 @Slf4j
+@Service
+@ConditionalOnClass(SentryObservation.class)
 public class GatewayAlertService {
 
-    /** 通知辅助类（可选依赖） */
-    private final ObjectProvider<NotifyHelper> notifyHelperProvider;
+    /** 聚合窗口时长（秒） */
+    private static final long AGGREGATION_WINDOW_SECONDS = 60;
 
-    /** 告警目标 DingTalk Webhook URL（含 access_token） */
-    private final String alertWebhookUrl;
+    /** P2 延迟发送前的最小触发次数（达到阈值才发送，过滤瞬时抖动） */
+    private static final int P2_MIN_TRIGGER_COUNT = 3;
 
-    /** 上次告警时间戳（简单限流，避免同一事件刷屏） */
-    private volatile long lastRatelimitAlertTs = 0;
-    private volatile long lastBlacklistAlertTs = 0;
-    private volatile long lastDownstreamAlertTs = 0;
+    /** 告警聚合记录 */
+    private final ConcurrentHashMap<String, AggregatedAlert> aggregatedAlerts = new ConcurrentHashMap<>();
 
-    /** 告警间隔（毫秒），同一类事件 60 秒内只通知一次 */
-    private static final long ALERT_INTERVAL_MS = 60_000L;
+    /** 定时 flush 线程池 */
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+        Thread t = new Thread(r, "gateway-alert-flush");
+        t.setDaemon(true);
+        return t;
+    });
 
     /**
      * 构造网关告警服务
      *
-     * @param notifyHelperProvider 通知辅助类提供者（可选）
-     * @param alertWebhookUrl      告警目标 Webhook URL
+     * <p>启动定时 flush 任务，每 30 秒检查并发送窗口期内的聚合告警。
      */
-    public GatewayAlertService(ObjectProvider<NotifyHelper> notifyHelperProvider,
-                               String alertWebhookUrl) {
-        this.notifyHelperProvider = notifyHelperProvider;
-        this.alertWebhookUrl = alertWebhookUrl;
+    public GatewayAlertService() {
+        scheduler.scheduleAtFixedRate(this::flushAggregatedAlerts, 30, 30, TimeUnit.SECONDS);
+        log.info("[GatewayAlert] 告警聚合服务初始化完成，聚合窗口={}s", AGGREGATION_WINDOW_SECONDS);
     }
 
     /**
-     * 限流触发告警
+     * P3-7: 发布网关告警（经分级和聚合处理后发送）
      *
-     * @param dimension 限流维度（IP/USER/TENANT）
-     * @param identity  限流标识
-     * @param path      请求路径
+     * @param event 告警事件
      */
-    public void alertRatelimitTriggered(String dimension, String identity, String path) {
-        long now = System.currentTimeMillis();
-        if (now - lastRatelimitAlertTs < ALERT_INTERVAL_MS) {
+    public void alert(AlertEvent event) {
+        if (event == null) {
             return;
         }
-        lastRatelimitAlertTs = now;
 
-        sendAlert("【高】网关限流触发",
-                Map.of(
-                        "维度", dimension,
-                        "标识", maskIdentity(identity),
-                        "路径", path,
-                        "时间", Instant.now().toString()
-                ));
+        try {
+            AlertSeverity severity = event.getSeverity();
+            if (severity == null) {
+                severity = AlertSeverity.P3;
+            }
+
+            switch (severity) {
+                case P0, P1 -> {
+                    // P0/P1：立即发送（经 Sentry 自身收敛）
+                    doAlert(event);
+                }
+                case P2 -> {
+                    // P2：本地窗口聚合（达到阈值才发送，过滤瞬时抖动）
+                    aggregateAndMaybeSend(event);
+                }
+                case P3 -> {
+                    // P3：仅记录，不通知
+                    log.debug("[GatewayAlert] P3 告警仅记录: name={} summary={}",
+                            event.getName(), event.getSummary());
+                }
+            }
+        } catch (Exception e) {
+            // 告警处理异常不应影响主流程
+            log.debug("[GatewayAlert] 告警处理异常: {}", e.getMessage());
+        }
     }
 
     /**
-     * IP 黑名单命中告警
+     * P3-7: 聚合 P2 告警并判断是否发送
      *
-     * @param clientIp 客户端 IP
-     * @param path     请求路径
+     * @param event 告警事件
      */
-    public void alertBlacklistHit(String clientIp, String path) {
-        long now = System.currentTimeMillis();
-        if (now - lastBlacklistAlertTs < ALERT_INTERVAL_MS) {
-            return;
-        }
-        lastBlacklistAlertTs = now;
+    private void aggregateAndMaybeSend(AlertEvent event) {
+        String dedupKey = event.dedupKey();
+        Instant now = Instant.now();
 
-        sendAlert("【严重】IP 黑名单命中",
-                Map.of(
-                        "IP", clientIp,
-                        "路径", path,
-                        "时间", Instant.now().toString()
-                ));
+        AggregatedAlert aggregated = aggregatedAlerts.computeIfAbsent(dedupKey, k -> {
+            AggregatedAlert newAlert = new AggregatedAlert();
+            newAlert.event = event;
+            newAlert.firstTriggeredAt = now;
+            newAlert.lastTriggeredAt = now;
+            return newAlert;
+        });
+
+        synchronized (aggregated) {
+            aggregated.count.incrementAndGet();
+            aggregated.lastTriggeredAt = now;
+
+            // 达到阈值立即发送
+            if (aggregated.count.get() >= P2_MIN_TRIGGER_COUNT && !aggregated.sent) {
+                aggregated.sent = true;
+                doAlert(buildAggregatedEvent(aggregated));
+            }
+        }
     }
 
     /**
-     * 下游服务不可用告警
+     * P3-7: 构建聚合后的告警事件
      *
-     * @param routeId    路由 ID
-     * @param targetUri  目标 URI
-     * @param statusCode HTTP 状态码
+     * @param aggregated 聚合记录
+     * @return 聚合后的告警事件
      */
-    public void alertDownstreamUnavailable(String routeId, String targetUri, int statusCode) {
-        long now = System.currentTimeMillis();
-        if (now - lastDownstreamAlertTs < ALERT_INTERVAL_MS) {
-            return;
-        }
-        lastDownstreamAlertTs = now;
+    private AlertEvent buildAggregatedEvent(AggregatedAlert aggregated) {
+        AlertEvent original = aggregated.event;
+        long secondsBetween = Duration.between(aggregated.firstTriggeredAt, aggregated.lastTriggeredAt).getSeconds();
 
-        sendAlert("【严重】下游服务不可用",
-                Map.of(
-                        "路由", routeId,
-                        "目标", targetUri,
-                        "状态码", String.valueOf(statusCode),
-                        "时间", Instant.now().toString()
-                ));
+        return AlertEvent.builder()
+                .name(original.getName())
+                .severity(original.getSeverity())
+                .summary(original.getSummary() + " (" + aggregated.count.get() + " 次/" + secondsBetween + "s)")
+                .description(original.getDescription())
+                .category(original.getCategory())
+                .labels(original.getLabels())
+                .value(original.getValue())
+                .runbookUrl(original.getRunbookUrl())
+                .build();
     }
 
     /**
-     * 发送告警通知
+     * P3-7: 定时 flush 聚合告警（将窗口期内未达到 P2 阈值的告警发送出去）
+     */
+    private void flushAggregatedAlerts() {
+        try {
+            Instant now = Instant.now();
+            Instant windowStart = now.minusSeconds(AGGREGATION_WINDOW_SECONDS);
+
+            aggregatedAlerts.entrySet().removeIf(entry -> {
+                AggregatedAlert aggregated = entry.getValue();
+                // 移除超出窗口期的记录
+                if (aggregated.firstTriggeredAt.isBefore(windowStart)) {
+                    // 如果未曾发送且有触发次数，发送一次汇总
+                    if (!aggregated.sent && aggregated.count.get() > 0) {
+                        doAlert(buildAggregatedEvent(aggregated));
+                    }
+                    return true;
+                }
+                return false;
+            });
+        } catch (Exception e) {
+            log.debug("[GatewayAlert] flush 聚合告警异常: {}", e.getMessage());
+        }
+    }
+
+    /**
+     * P3-7: 经 SentryObservation 发送告警
      *
-     * @param title   告警标题
-     * @param details 告警详情
+     * @param event 告警事件
      */
-    private void sendAlert(String title, Map<String, String> details) {
-        NotifyHelper helper = notifyHelperProvider.getIfAvailable();
-        if (helper == null) {
-            log.debug("[GatewayAlert] NotifyHelper 不可用，跳过告警: {}", title);
-            return;
+    private void doAlert(AlertEvent event) {
+        try {
+            SentryObservation.alert(event);
+            log.debug("[GatewayAlert] 告警已发送: name={} severity={}", event.getName(), event.getSeverity());
+        } catch (Exception e) {
+            log.warn("[GatewayAlert] 告警发送失败: {}", e.getMessage());
         }
-        if (alertWebhookUrl == null || alertWebhookUrl.isBlank()) {
-            log.debug("[GatewayAlert] 未配置告警 Webhook URL，跳过告警: {}", title);
-            return;
-        }
-
-        StringBuilder message = new StringBuilder();
-        message.append(title).append("\n");
-        details.forEach((k, v) -> message.append(k).append(": ").append(v).append("\n"));
-
-        helper.sendDingTalk(alertWebhookUrl, title, message.toString());
-        log.info("[GatewayAlert] 告警已发送: {}", title);
     }
 
     /**
-     * 身份标识脱敏
+     * P3-7: 关闭时 flush 剩余告警
      */
-    private String maskIdentity(String identity) {
-        if (identity == null || identity.length() <= 4) {
-            return "***";
+    @PreDestroy
+    public void destroy() {
+        try {
+            flushAggregatedAlerts();
+            scheduler.shutdownNow();
+        } catch (Exception e) {
+            log.debug("[GatewayAlert] 关闭异常: {}", e.getMessage());
         }
-        return identity.substring(0, 2) + "***" + identity.substring(identity.length() - 2);
+    }
+
+    /**
+     * 聚合告警记录
+     */
+    private static class AggregatedAlert {
+        /** 原始告警事件 */
+        AlertEvent event;
+        /** 首次触发时间 */
+        Instant firstTriggeredAt;
+        /** 最近触发时间 */
+        Instant lastTriggeredAt;
+        /** 触发次数 */
+        final AtomicInteger count = new AtomicInteger(0);
+        /** 是否已发送 */
+        volatile boolean sent;
     }
 }

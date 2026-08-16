@@ -55,6 +55,9 @@ public class TenantVO {
     @Schema(description = "独立数据源标识")
     private String datasourceKey;
 
+    @Schema(description = "状态: ENABLED/DISABLED/EXPIRED")
+    private String status;
+
     @Schema(description = "备注")
     private String remark;
 

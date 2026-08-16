@@ -14,6 +14,7 @@ import com.njydsz.cronjob.domain.entity.job.JobAlertLog;
 import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
 import com.njydsz.cronjob.infra.mapper.job.JobAlertLogMapper;
 import com.njydsz.cronjob.infra.mapper.job.JobAlertRuleMapper;
+import com.njydsz.cronjob.server.core.alert.AlertTrigger;
 import com.njydsz.cronjob.server.core.alert.AlertType;
 import com.njydsz.cronjob.server.service.alert.AlertService;
 
@@ -39,6 +40,8 @@ public class AlertServiceImpl implements AlertService {
     private final JobAlertRuleMapper jobAlertRuleMapper;
     /** 告警日志 Mapper（告警触发记录） */
     private final JobAlertLogMapper jobAlertLogMapper;
+    /** 告警触发器（用于规则变更时失效本地缓存） */
+    private final AlertTrigger alertTrigger;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -47,6 +50,8 @@ public class AlertServiceImpl implements AlertService {
         JobAlertRule rule = new JobAlertRule();
         applyDtoToEntity(dto, rule);
         jobAlertRuleMapper.insert(rule);
+        // P1-P5: 规则变更后失效本地缓存，确保新规则下次告警触发时加载
+        alertTrigger.invalidateAlertRuleCache(rule.getJobId());
         log.info("[Alert] 创建告警规则: ruleId={} ruleName={} alertType={}",
                 rule.getId(), rule.getRuleName(), rule.getAlertType());
         return rule.getId();
@@ -65,6 +70,8 @@ public class AlertServiceImpl implements AlertService {
         validateRuleConstraints(dto);
         applyDtoToEntity(dto, exists);
         jobAlertRuleMapper.updateById(exists);
+        // P1-P5: 规则变更后失效本地缓存
+        alertTrigger.invalidateAlertRuleCache(exists.getJobId());
         log.info("[Alert] 更新告警规则: ruleId={} ruleName={}", id, exists.getRuleName());
     }
 
@@ -78,7 +85,10 @@ public class AlertServiceImpl implements AlertService {
                 .message("error.cronjob.msg_alert_not_found")
                 .build();
         }
+        String jobId = exists.getJobId();
         jobAlertRuleMapper.deleteById(id);
+        // P1-P5: 规则变更后失效本地缓存
+        alertTrigger.invalidateAlertRuleCache(jobId);
         log.info("[Alert] 删除告警规则: ruleId={} ruleName={}", id, exists.getRuleName());
     }
 
@@ -117,6 +127,8 @@ public class AlertServiceImpl implements AlertService {
         }
         exists.setEnabled(enabled);
         jobAlertRuleMapper.updateById(exists);
+        // P1-P5: 规则变更后失效本地缓存
+        alertTrigger.invalidateAlertRuleCache(exists.getJobId());
         log.info("[Alert] 切换规则启用状态: ruleId={} enabled={}", id, enabled);
     }
 

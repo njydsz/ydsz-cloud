@@ -1,6 +1,7 @@
 package com.njydsz.literule.server.dsl;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import lombok.AllArgsConstructor;
@@ -164,10 +165,10 @@ public class RuleDslEntry implements Serializable {
     // ============ 生命周期 ============
 
     /** 生效时间 */
-    private String effectiveFrom;
+    private LocalDateTime effectiveFrom;
 
     /** 失效时间 */
-    private String effectiveTo;
+    private LocalDateTime effectiveTo;
 
     /**
      * 评分因子 DSL

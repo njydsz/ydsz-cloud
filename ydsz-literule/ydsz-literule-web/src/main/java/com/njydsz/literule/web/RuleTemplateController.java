@@ -43,7 +43,7 @@ import com.njydsz.literule.server.spi.RuleTemplateProvider;
  */
 @Slf4j
 @RestController
-@RequestMapping("/ruleEngine/rules")
+@RequestMapping("/v1/rule-engine/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则模板市场", description = "规则模板查询与一键导入")

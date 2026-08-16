@@ -46,30 +46,27 @@ public class CachedLlmClient implements LlmClient {
 
     @Override
     public ChatResponse chat(ChatRequest request) {
-        // 仅对可缓存请求查缓存
-        if (SemanticLlmCache.isCacheable(request.getTemperature(), hasTools(request))) {
-            Map.Entry<String, String> content = SemanticLlmCache.extractCacheableContent(request.getMessages());
-            if (content != null) {
-                SemanticLlmCache.CachedLlmResponse cached = cache.get(
-                        request.getModel(), content.getKey(), content.getValue());
-                if (cached != null) {
-                    log.info("[CachedLLM] 缓存命中，跳过 LLM 调用: model={}", request.getModel());
-                    return buildCachedResponse(request, cached);
-                }
+        boolean cacheable = SemanticLlmCache.isCacheable(request.getTemperature(), hasTools(request));
+        // 仅对可缓存请求提取缓存内容；user 消息为空视为提取失败，直接跳过缓存避免 key 恒定的串流风险
+        Map.Entry<String, String> cacheContent = cacheable
+                ? SemanticLlmCache.extractCacheableContent(request.getMessages()) : null;
+        if (cacheContent != null && !cacheContent.getValue().isBlank()) {
+            SemanticLlmCache.CachedLlmResponse cached = cache.get(
+                    request.getModel(), cacheContent.getKey(), cacheContent.getValue());
+            if (cached != null) {
+                log.info("[CachedLLM] 缓存命中，跳过 LLM 调用: model={}", request.getModel());
+                return buildCachedResponse(request, cached);
             }
         }
 
         // 缓存未命中或不可缓存，调用实际 LLM
         ChatResponse response = delegate.chat(request);
 
-        // 写入缓存
-        if (SemanticLlmCache.isCacheable(request.getTemperature(), hasTools(request)
-                && response.getContent() != null) {
-            Map.Entry<String, String> content = SemanticLlmCache.extractCacheableContent(request.getMessages());
-            if (content != null) {
-                cache.put(request.getModel(), content.getKey(), content.getValue(),
-                        response.getContent(), delegate.getProvider());
-            }
+        // 写入缓存：仅当可缓存、响应内容非空且提取到有效 user 消息时写入
+        if (cacheable && response.getContent() != null && !response.getContent().isBlank()
+                && cacheContent != null && !cacheContent.getValue().isBlank()) {
+            cache.put(request.getModel(), cacheContent.getKey(), cacheContent.getValue(),
+                    response.getContent(), delegate.getProvider());
         }
         return response;
     }

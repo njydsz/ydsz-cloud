@@ -221,9 +221,14 @@ public class SelfHealingScanner {
             if (retryCount == null) {
                 retryCount = 1L;
             }
-            // 设置 1 小时过期
+            // P0-BugFix: 仅在首次计数时设置过期，TTL = maxRedispatchRetries × scanIntervalSeconds × 2 + 1h
+            // 确保在达到最大重试次数前计数不会归零（原实现固定 1h 过期导致长周期任务重试计数失效）
             if (retryCount == 1) {
-                redisStringOps.expire(retryKey, Duration.ofHours(1));
+                long ttlSeconds = Math.max(
+                        Duration.ofHours(1).getSeconds(),
+                        config.getMaxRedispatchRetries() * config.getScanIntervalSeconds() * 2L
+                                + Duration.ofHours(1).getSeconds());
+                redisStringOps.expire(retryKey, Duration.ofSeconds(ttlSeconds));
             }
 
             if (retryCount > config.getMaxRedispatchRetries()) {

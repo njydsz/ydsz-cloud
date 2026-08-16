@@ -1,0 +1,410 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------< com.njydsz:ydsz-userinfo-server >-------------------
+[INFO] Building ydsz-userinfo-server 1.0.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- checkstyle:3.6.0:check (default-cli) @ ydsz-userinfo-server ---
+[INFO] 开始检查……
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\AuthService.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:10:1: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:17:1: 'com.njydsz.common.auth.model.UserInfo' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:120:5: 圈复杂度： 16 （最多： 10 ）。 [CyclomaticComplexity]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:120:5: 方法 login 138 行（最多： 80 行）。 [MethodLength]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:366: @return標籤應存在並具有說明。 [JavadocMethod]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:366:45: 'userId'需要Javadoc注释 @param 。 [JavadocMethod]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:392:49: 'user'需要Javadoc注释 @param 。 [JavadocMethod]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:401:49: 'user'需要Javadoc注释 @param 。 [JavadocMethod]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:401:62: 'loginIp'需要Javadoc注释 @param 。 [JavadocMethod]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:436:38: 'eventType'需要Javadoc注释 @param 。 [JavadocMethod]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:436:56: 'aggregateId'需要Javadoc注释 @param 。 [JavadocMethod]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:436:76: 'payload'需要Javadoc注释 @param 。 [JavadocMethod]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:13:1: 'lombok.RequiredArgsConstructor' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:16:1: 'com.njydsz.common.exception.custom.BusinessException' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:85: 本行字符数 121个，最多：120个。 [LineLength]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:113:56: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:115:49: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:115:70: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:115:91: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:116:58: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:116:67: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:116:71: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:119:29: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:120:49: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:120:70: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:120:91: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:121:41: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\DataScopeService.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\DataScopeService.java:3:8: 无用导入 - java.util.ArrayList 。 [UnusedImports]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\DataScopeService.java:7:1: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\DataScopeService.java:11:1: 'com.njydsz.common.util.string.StringUtils' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\DataScopeService.java:144: @return標籤應存在並具有說明。 [JavadocMethod]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\DataScopeService.java:144:45: 'userId'需要Javadoc注释 @param 。 [JavadocMethod]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\DataScopeService.java:156: 代码体中禁止使用全限定类名（FQN），必须在文件顶部 import 后使用简单名。参考：云顶编码规范 5.1 节 [RegexpSinglelineJava]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\DataScopeService.java:166: @return標籤應存在並具有說明。 [JavadocMethod]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\DataScopeService.java:166:35: 'scope'需要Javadoc注释 @param 。 [JavadocMethod]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\DataScopeService.java:190: @return標籤應存在並具有說明。 [JavadocMethod]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\DataScopeService.java:190:40: 'priority'需要Javadoc注释 @param 。 [JavadocMethod]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\DbRolePermissionLoader.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\DbRolePermissionLoader.java:8:1: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\DbRolePermissionLoader.java:12:1: 'com.njydsz.common.auth.model.RolePermissions' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\DbRolePermissionLoader.java:42:5: 圈复杂度： 11 （最多： 10 ）。 [CyclomaticComplexity]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\LdapAuthenticationProvider.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\LdapAuthenticationProvider.java:7:1: 'lombok.RequiredArgsConstructor' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\LdapAuthenticationProvider.java:11:1: 'com.njydsz.userinfo.server.config.LdapProperties' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\PasswordPolicyValidator.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\PasswordPolicyValidator.java:4:1: 'lombok.RequiredArgsConstructor' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\PasswordPolicyValidator.java:7:1: 'com.njydsz.common.exception.custom.BusinessException' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\PasswordPolicyValidator.java:62:5: 圈复杂度： 17 （最多： 10 ）。 [CyclomaticComplexity]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\PasswordPolicyValidator.java:78:9: 'if' 结构必须使用大括号 '{}'。 [NeedBraces]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\PasswordPolicyValidator.java:79:9: 'if' 结构必须使用大括号 '{}'。 [NeedBraces]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\PasswordPolicyValidator.java:80:9: 'if' 结构必须使用大括号 '{}'。 [NeedBraces]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\PasswordPolicyValidator.java:81:9: 'if' 结构必须使用大括号 '{}'。 [NeedBraces]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\UserInfoRbacService.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\UserInfoRbacService.java:5:1: 'lombok.RequiredArgsConstructor' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\UserInfoRbacService.java:8:1: 'com.njydsz.common.auth.model.UserInfo' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\UserPasswordHistoryService.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\UserPasswordHistoryService.java:3:8: 无用导入 - java.util.List 。 [UnusedImports]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\UserPasswordHistoryServiceImpl.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\UserPasswordHistoryServiceImpl.java:5:8: 无用导入 - java.util.Map 。 [UnusedImports]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\UserPasswordHistoryServiceImpl.java:6:1: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\UserPasswordHistoryServiceImpl.java:11:1: 'com.njydsz.common.util.id.SnowflakeIdGenerator' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\UserPasswordHistoryServiceImpl.java:22:61: 额外的 HTML 标签： </ *   <li>建议 historyCount ≤ 5，避免影响用户体验</li> 。 [JavadocStyle]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\UserPasswordHistoryServiceImpl.java:124: 代码体中禁止使用全限定类名（FQN），必须在文件顶部 import 后使用简单名。参考：云顶编码规范 5.1 节 [RegexpSinglelineJava]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\LdapProperties.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\LdapProperties.java:34:24: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\LdapProperties.java:43:36: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\UserInfoConfiguration.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\UserInfoConfiguration.java:13:1: 'com.njydsz.common.auth.token.TokenService' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\UserInfoMessageSourceConfiguration.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\UserInfoMessageSourceConfiguration.java:4:1: 'lombok.extern.slf4j.Slf4j' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\UserInfoMessageSourceConfiguration.java:75:32: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:6:1: 'lombok.Data' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:21: 本行字符数 132个，最多：120个。 [LineLength]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:22: 本行字符数 137个，最多：120个。 [LineLength]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:55:36: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:58:37: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:61:39: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:67:38: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:73:37: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:76:37: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:79:44: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:88:40: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\event\UserDomainEventPublisher.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\event\UserDomainEventPublisher.java:6:1: 'com.njydsz.common.event.api.DomainEvent' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\event\UserDomainEventPublisher.java:55: 代码体中禁止使用全限定类名（FQN），必须在文件顶部 import 后使用简单名。参考：云顶编码规范 5.1 节 [RegexpSinglelineJava]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\event\UserDomainEventPublisher.java:69: 代码体中禁止使用全限定类名（FQN），必须在文件顶部 import 后使用简单名。参考：云顶编码规范 5.1 节 [RegexpSinglelineJava]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\event\UserDomainEventPublisher.java:81: 代码体中禁止使用全限定类名（FQN），必须在文件顶部 import 后使用简单名。参考：云顶编码规范 5.1 节 [RegexpSinglelineJava]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\event\UserDomainEventPublisher.java:93: 代码体中禁止使用全限定类名（FQN），必须在文件顶部 import 后使用简单名。参考：云顶编码规范 5.1 节 [RegexpSinglelineJava]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\event\UserDomainEventPublisher.java:108: 代码体中禁止使用全限定类名（FQN），必须在文件顶部 import 后使用简单名。参考：云顶编码规范 5.1 节 [RegexpSinglelineJava]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\event\UserDomainEventPublisher.java:123: 代码体中禁止使用全限定类名（FQN），必须在文件顶部 import 后使用简单名。参考：云顶编码规范 5.1 节 [RegexpSinglelineJava]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\health\UserInfoHealthIndicator.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\health\UserInfoHealthIndicator.java:10:1: 'com.njydsz.common.auth.token.TokenService' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\metrics\UserInfoMetrics.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\metrics\UserInfoMetrics.java:8:1: 'com.njydsz.common.sentry.adapter.SentryMetricsAdapter' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\metrics\UserInfoMetrics.java:9:1: 导入语句'com.njydsz.common.redis.service.ops.RedisStringOps' 字典顺序错误。应在'com.njydsz.common.sentry.adapter.SentryMetricsAdapter'之前。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\search\UserinfoSearchProvider.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\search\UserinfoSearchProvider.java:6:1: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\search\UserinfoSearchProvider.java:10:1: 'com.njydsz.common.search.api.SearchFilter' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\search\UserinfoSearchProvider.java:91:33: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\search\UserinfoSearchProvider.java:103:33: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\search\UserinfoSearchProvider.java:107:33: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\CompanyDeptService.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\CompanyDeptService.java:4:1: 'com.njydsz.userinfo.domain.entity.CompanyDept' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\CompanyService.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\CompanyService.java:6:1: 'com.njydsz.userinfo.domain.dto.post.CompanyPostDTO' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\DepartmentService.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\DepartmentService.java:6:1: 'com.njydsz.userinfo.domain.dto.post.DepartmentPostDTO' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\CompanyDeptServiceImpl.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\CompanyDeptServiceImpl.java:4:1: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\CompanyDeptServiceImpl.java:9:1: 'com.njydsz.userinfo.domain.entity.CompanyDept' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\CompanyServiceImpl.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\CompanyServiceImpl.java:4:1: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\CompanyServiceImpl.java:9:1: 'com.njydsz.common.exception.custom.BusinessException' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\DepartmentServiceImpl.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\DepartmentServiceImpl.java:10:1: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\DepartmentServiceImpl.java:16:1: 'com.njydsz.common.domain.tree.TreeBuilder' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\DepartmentServiceImpl.java:231: 代码体中禁止使用全限定类名（FQN），必须在文件顶部 import 后使用简单名。参考：云顶编码规范 5.1 节 [RegexpSinglelineJava]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\DepartmentServiceImpl.java:231: 本行字符数 124个，最多：120个。 [LineLength]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\DepartmentServiceImpl.java:344: 本行字符数 140个，最多：120个。 [LineLength]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\LanguageServiceImpl.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\LanguageServiceImpl.java:5:1: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\LanguageServiceImpl.java:13:1: 'com.njydsz.common.core.response.PageResponse' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\LoginHistoryServiceImpl.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\LoginHistoryServiceImpl.java:5:1: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\LoginHistoryServiceImpl.java:9:1: 'com.njydsz.common.util.id.SnowflakeIdGenerator' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\LoginHistoryServiceImpl.java:44:17: 参数共： 6个，最多：5个。 [ParameterNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\MenuServiceImpl.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\MenuServiceImpl.java:5:1: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\MenuServiceImpl.java:10:1: 'com.njydsz.common.domain.tree.TreeBuilder' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\PostServiceImpl.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\PostServiceImpl.java:9:1: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\PostServiceImpl.java:14:1: 'com.njydsz.common.exception.custom.BusinessException' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\RoleServiceImpl.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\RoleServiceImpl.java:11:1: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\RoleServiceImpl.java:17:1: 'com.njydsz.common.auth.annotation.DataScope' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\RoleServiceImpl.java:300: 代码体中禁止使用全限定类名（FQN），必须在文件顶部 import 后使用简单名。参考：云顶编码规范 5.1 节 [RegexpSinglelineJava]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\RoleServiceImpl.java:351: 本行字符数 134个，最多：120个。 [LineLength]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\UserAccountServiceImpl.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\UserAccountServiceImpl.java:10:1: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\UserAccountServiceImpl.java:18:1: 'com.njydsz.common.auth.annotation.DataScope' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\UserAccountServiceImpl.java:144:5: 圈复杂度： 14 （最多： 10 ）。 [CyclomaticComplexity]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\UserAccountServiceImpl.java:416:44: 'userId'需要Javadoc注释 @param 。 [JavadocMethod]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\UserAccountServiceImpl.java:555: 本行字符数 141个，最多：120个。 [LineLength]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\UserDeptServiceImpl.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\UserDeptServiceImpl.java:4:1: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\UserDeptServiceImpl.java:9:1: 'com.njydsz.userinfo.domain.entity.UserDept' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\UserExcelServiceImpl.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\UserExcelServiceImpl.java:3:8: 无用导入 - java.io.ByteArrayOutputStream 。 [UnusedImports]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\UserExcelServiceImpl.java:7:1: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\UserExcelServiceImpl.java:11:1: 'com.njydsz.common.excel.core.ExcelFacade' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\UserExcelServiceImpl.java:137: @return標籤應存在並具有說明。 [JavadocMethod]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\UserExcelServiceImpl.java:137:55: 'inputStream'需要Javadoc注释 @param 。 [JavadocMethod]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\UserExcelServiceImpl.java:137:75: 'originalFilename'需要Javadoc注释 @param 。 [JavadocMethod]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\UserExcelServiceImpl.java:167:5: 圈复杂度： 14 （最多： 10 ）。 [CyclomaticComplexity]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\UserExcelServiceImpl.java:167:49: 'importDTO'需要Javadoc注释 @param 。 [JavadocMethod]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\UserPostServiceImpl.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\UserPostServiceImpl.java:4:1: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\UserPostServiceImpl.java:9:1: 'com.njydsz.userinfo.domain.entity.UserPost' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\LanguageService.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\LanguageService.java:4:1: 'com.njydsz.common.core.response.PageResponse' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\LoginHistoryService.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\LoginHistoryService.java:4:1: 'com.njydsz.userinfo.domain.entity.UserLoginHistory' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\LoginHistoryService.java:34:10: 参数共： 6个，最多：5个。 [ParameterNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\MenuService.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\MenuService.java:4:1: 'com.njydsz.userinfo.domain.dto.post.MenuPostDTO' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\PostService.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\PostService.java:6:1: 'com.njydsz.userinfo.domain.dto.post.PostPostDTO' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\RoleService.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\RoleService.java:6:1: 'com.baomidou.mybatisplus.extension.plugins.pagination.Page' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\RoleService.java:7:1: 'com.njydsz.userinfo.domain.dto.RolePageQueryDTO' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\UserAccountService.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\UserAccountService.java:6:1: 'com.baomidou.mybatisplus.extension.plugins.pagination.Page' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\UserAccountService.java:7:1: 'com.njydsz.userinfo.domain.dto.ChangePasswordDTO' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\UserDeptService.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\UserDeptService.java:4:1: 'com.njydsz.userinfo.domain.entity.UserDept' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\UserExcelService.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\UserExcelService.java:4:8: 无用导入 - java.util.List 。 [UnusedImports]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\UserExcelService.java:5:1: 'com.njydsz.userinfo.domain.dto.UserImportDTO' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\UserPostService.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\UserPostService.java:4:1: 'com.njydsz.userinfo.domain.entity.UserPost' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\WorkflowApproverCacheService.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\WorkflowApproverCacheService.java:6:1: 'lombok.RequiredArgsConstructor' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\WorkflowApproverCacheService.java:9:1: 'com.njydsz.common.json.YdszJson' 应该与以前的导入组分隔一个空行。 [CustomImportOrder]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\WorkflowApproverCacheService.java:73: 代码体中禁止使用全限定类名（FQN），必须在文件顶部 import 后使用简单名。参考：云顶编码规范 5.1 节 [RegexpSinglelineJava]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\WorkflowApproverCacheService.java:111: 代码体中禁止使用全限定类名（FQN），必须在文件顶部 import 后使用简单名。参考：云顶编码规范 5.1 节 [RegexpSinglelineJava]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\WorkflowApproverCacheService.java:161: 本行字符数 121个，最多：120个。 [LineLength]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\WorkflowApproverCacheService.java:194: 本行字符数 126个，最多：120个。 [LineLength]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\WorkflowApproverCacheService.java:227: 本行字符数 126个，最多：120个。 [LineLength]
+检查完成。
+[INFO] There are 193 errors reported by Checkstyle 9.3 with D:\Code\open\ydsz-cloud/docs/checkstyle.xml ruleset.
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\AuthService.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:[10,1] (imports) CustomImportOrder: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:[17,1] (imports) CustomImportOrder: 'com.njydsz.common.auth.model.UserInfo' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:[120,5] (metrics) CyclomaticComplexity: 圈复杂度： 16 （最多： 10 ）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:[120,5] (sizes) MethodLength: 方法 login 138 行（最多： 80 行）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:[366] (javadoc) JavadocMethod: @return標籤應存在並具有說明。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:[366,45] (javadoc) JavadocMethod: 'userId'需要Javadoc注释 @param 。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:[392,49] (javadoc) JavadocMethod: 'user'需要Javadoc注释 @param 。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:[401,49] (javadoc) JavadocMethod: 'user'需要Javadoc注释 @param 。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:[401,62] (javadoc) JavadocMethod: 'loginIp'需要Javadoc注释 @param 。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:[436,38] (javadoc) JavadocMethod: 'eventType'需要Javadoc注释 @param 。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:[436,56] (javadoc) JavadocMethod: 'aggregateId'需要Javadoc注释 @param 。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:[436,76] (javadoc) JavadocMethod: 'payload'需要Javadoc注释 @param 。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:[13,1] (imports) CustomImportOrder: 'lombok.RequiredArgsConstructor' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:[16,1] (imports) CustomImportOrder: 'com.njydsz.common.exception.custom.BusinessException' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:[85] (sizes) LineLength: 本行字符数 121个，最多：120个。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:[113,56] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:[115,49] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:[115,70] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:[115,91] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:[116,58] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:[116,67] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:[116,71] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:[119,29] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:[120,49] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:[120,70] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:[120,91] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:[121,41] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\DataScopeService.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\DataScopeService.java:[3,8] (imports) UnusedImports: 无用导入 - java.util.ArrayList 。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\DataScopeService.java:[7,1] (imports) CustomImportOrder: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\DataScopeService.java:[11,1] (imports) CustomImportOrder: 'com.njydsz.common.util.string.StringUtils' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\DataScopeService.java:[144] (javadoc) JavadocMethod: @return標籤應存在並具有說明。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\DataScopeService.java:[144,45] (javadoc) JavadocMethod: 'userId'需要Javadoc注释 @param 。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\DataScopeService.java:[156] (regexp) RegexpSinglelineJava: 代码体中禁止使用全限定类名（FQN），必须在文件顶部 import 后使用简单名。参考：云顶编码规范 5.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\DataScopeService.java:[166] (javadoc) JavadocMethod: @return標籤應存在並具有說明。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\DataScopeService.java:[166,35] (javadoc) JavadocMethod: 'scope'需要Javadoc注释 @param 。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\DataScopeService.java:[190] (javadoc) JavadocMethod: @return標籤應存在並具有說明。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\DataScopeService.java:[190,40] (javadoc) JavadocMethod: 'priority'需要Javadoc注释 @param 。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\DbRolePermissionLoader.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\DbRolePermissionLoader.java:[8,1] (imports) CustomImportOrder: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\DbRolePermissionLoader.java:[12,1] (imports) CustomImportOrder: 'com.njydsz.common.auth.model.RolePermissions' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\DbRolePermissionLoader.java:[42,5] (metrics) CyclomaticComplexity: 圈复杂度： 11 （最多： 10 ）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\LdapAuthenticationProvider.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\LdapAuthenticationProvider.java:[7,1] (imports) CustomImportOrder: 'lombok.RequiredArgsConstructor' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\LdapAuthenticationProvider.java:[11,1] (imports) CustomImportOrder: 'com.njydsz.userinfo.server.config.LdapProperties' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\PasswordPolicyValidator.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\PasswordPolicyValidator.java:[4,1] (imports) CustomImportOrder: 'lombok.RequiredArgsConstructor' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\PasswordPolicyValidator.java:[7,1] (imports) CustomImportOrder: 'com.njydsz.common.exception.custom.BusinessException' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\PasswordPolicyValidator.java:[62,5] (metrics) CyclomaticComplexity: 圈复杂度： 17 （最多： 10 ）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\PasswordPolicyValidator.java:[78,9] (blocks) NeedBraces: 'if' 结构必须使用大括号 '{}'。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\PasswordPolicyValidator.java:[79,9] (blocks) NeedBraces: 'if' 结构必须使用大括号 '{}'。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\PasswordPolicyValidator.java:[80,9] (blocks) NeedBraces: 'if' 结构必须使用大括号 '{}'。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\PasswordPolicyValidator.java:[81,9] (blocks) NeedBraces: 'if' 结构必须使用大括号 '{}'。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\UserInfoRbacService.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\UserInfoRbacService.java:[5,1] (imports) CustomImportOrder: 'lombok.RequiredArgsConstructor' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\UserInfoRbacService.java:[8,1] (imports) CustomImportOrder: 'com.njydsz.common.auth.model.UserInfo' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\UserPasswordHistoryService.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\UserPasswordHistoryService.java:[3,8] (imports) UnusedImports: 无用导入 - java.util.List 。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\UserPasswordHistoryServiceImpl.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\UserPasswordHistoryServiceImpl.java:[5,8] (imports) UnusedImports: 无用导入 - java.util.Map 。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\UserPasswordHistoryServiceImpl.java:[6,1] (imports) CustomImportOrder: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\UserPasswordHistoryServiceImpl.java:[11,1] (imports) CustomImportOrder: 'com.njydsz.common.util.id.SnowflakeIdGenerator' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\UserPasswordHistoryServiceImpl.java:[22,61] (javadoc) JavadocStyle: 额外的 HTML 标签： </ *   <li>建议 historyCount ≤ 5，避免影响用户体验</li> 。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\UserPasswordHistoryServiceImpl.java:[124] (regexp) RegexpSinglelineJava: 代码体中禁止使用全限定类名（FQN），必须在文件顶部 import 后使用简单名。参考：云顶编码规范 5.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\LdapProperties.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\LdapProperties.java:[34,24] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\LdapProperties.java:[43,36] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\UserInfoConfiguration.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\UserInfoConfiguration.java:[13,1] (imports) CustomImportOrder: 'com.njydsz.common.auth.token.TokenService' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\UserInfoMessageSourceConfiguration.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\UserInfoMessageSourceConfiguration.java:[4,1] (imports) CustomImportOrder: 'lombok.extern.slf4j.Slf4j' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\UserInfoMessageSourceConfiguration.java:[75,32] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:[6,1] (imports) CustomImportOrder: 'lombok.Data' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:[21] (sizes) LineLength: 本行字符数 132个，最多：120个。
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:[22] (sizes) LineLength: 本行字符数 137个，最多：120个。
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:[55,36] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:[58,37] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:[61,39] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:[67,38] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:[73,37] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:[76,37] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:[79,44] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:[88,40] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\event\UserDomainEventPublisher.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\event\UserDomainEventPublisher.java:[6,1] (imports) CustomImportOrder: 'com.njydsz.common.event.api.DomainEvent' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\event\UserDomainEventPublisher.java:[55] (regexp) RegexpSinglelineJava: 代码体中禁止使用全限定类名（FQN），必须在文件顶部 import 后使用简单名。参考：云顶编码规范 5.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\event\UserDomainEventPublisher.java:[69] (regexp) RegexpSinglelineJava: 代码体中禁止使用全限定类名（FQN），必须在文件顶部 import 后使用简单名。参考：云顶编码规范 5.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\event\UserDomainEventPublisher.java:[81] (regexp) RegexpSinglelineJava: 代码体中禁止使用全限定类名（FQN），必须在文件顶部 import 后使用简单名。参考：云顶编码规范 5.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\event\UserDomainEventPublisher.java:[93] (regexp) RegexpSinglelineJava: 代码体中禁止使用全限定类名（FQN），必须在文件顶部 import 后使用简单名。参考：云顶编码规范 5.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\event\UserDomainEventPublisher.java:[108] (regexp) RegexpSinglelineJava: 代码体中禁止使用全限定类名（FQN），必须在文件顶部 import 后使用简单名。参考：云顶编码规范 5.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\event\UserDomainEventPublisher.java:[123] (regexp) RegexpSinglelineJava: 代码体中禁止使用全限定类名（FQN），必须在文件顶部 import 后使用简单名。参考：云顶编码规范 5.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\health\UserInfoHealthIndicator.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\health\UserInfoHealthIndicator.java:[10,1] (imports) CustomImportOrder: 'com.njydsz.common.auth.token.TokenService' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\metrics\UserInfoMetrics.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\metrics\UserInfoMetrics.java:[8,1] (imports) CustomImportOrder: 'com.njydsz.common.sentry.adapter.SentryMetricsAdapter' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\metrics\UserInfoMetrics.java:[9,1] (imports) CustomImportOrder: 导入语句'com.njydsz.common.redis.service.ops.RedisStringOps' 字典顺序错误。应在'com.njydsz.common.sentry.adapter.SentryMetricsAdapter'之前。
+[ERROR] src\main\java\com\njydsz\userinfo\server\search\UserinfoSearchProvider.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\search\UserinfoSearchProvider.java:[6,1] (imports) CustomImportOrder: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\search\UserinfoSearchProvider.java:[10,1] (imports) CustomImportOrder: 'com.njydsz.common.search.api.SearchFilter' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\search\UserinfoSearchProvider.java:[91,33] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\search\UserinfoSearchProvider.java:[103,33] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\search\UserinfoSearchProvider.java:[107,33] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\CompanyDeptService.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\CompanyDeptService.java:[4,1] (imports) CustomImportOrder: 'com.njydsz.userinfo.domain.entity.CompanyDept' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\CompanyService.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\CompanyService.java:[6,1] (imports) CustomImportOrder: 'com.njydsz.userinfo.domain.dto.post.CompanyPostDTO' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\DepartmentService.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\DepartmentService.java:[6,1] (imports) CustomImportOrder: 'com.njydsz.userinfo.domain.dto.post.DepartmentPostDTO' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\CompanyDeptServiceImpl.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\CompanyDeptServiceImpl.java:[4,1] (imports) CustomImportOrder: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\CompanyDeptServiceImpl.java:[9,1] (imports) CustomImportOrder: 'com.njydsz.userinfo.domain.entity.CompanyDept' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\CompanyServiceImpl.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\CompanyServiceImpl.java:[4,1] (imports) CustomImportOrder: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\CompanyServiceImpl.java:[9,1] (imports) CustomImportOrder: 'com.njydsz.common.exception.custom.BusinessException' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\DepartmentServiceImpl.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\DepartmentServiceImpl.java:[10,1] (imports) CustomImportOrder: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\DepartmentServiceImpl.java:[16,1] (imports) CustomImportOrder: 'com.njydsz.common.domain.tree.TreeBuilder' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\DepartmentServiceImpl.java:[231] (regexp) RegexpSinglelineJava: 代码体中禁止使用全限定类名（FQN），必须在文件顶部 import 后使用简单名。参考：云顶编码规范 5.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\DepartmentServiceImpl.java:[231] (sizes) LineLength: 本行字符数 124个，最多：120个。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\DepartmentServiceImpl.java:[344] (sizes) LineLength: 本行字符数 140个，最多：120个。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\LanguageServiceImpl.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\LanguageServiceImpl.java:[5,1] (imports) CustomImportOrder: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\LanguageServiceImpl.java:[13,1] (imports) CustomImportOrder: 'com.njydsz.common.core.response.PageResponse' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\LoginHistoryServiceImpl.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\LoginHistoryServiceImpl.java:[5,1] (imports) CustomImportOrder: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\LoginHistoryServiceImpl.java:[9,1] (imports) CustomImportOrder: 'com.njydsz.common.util.id.SnowflakeIdGenerator' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\LoginHistoryServiceImpl.java:[44,17] (sizes) ParameterNumber: 参数共： 6个，最多：5个。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\MenuServiceImpl.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\MenuServiceImpl.java:[5,1] (imports) CustomImportOrder: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\MenuServiceImpl.java:[10,1] (imports) CustomImportOrder: 'com.njydsz.common.domain.tree.TreeBuilder' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\PostServiceImpl.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\PostServiceImpl.java:[9,1] (imports) CustomImportOrder: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\PostServiceImpl.java:[14,1] (imports) CustomImportOrder: 'com.njydsz.common.exception.custom.BusinessException' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\RoleServiceImpl.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\RoleServiceImpl.java:[11,1] (imports) CustomImportOrder: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\RoleServiceImpl.java:[17,1] (imports) CustomImportOrder: 'com.njydsz.common.auth.annotation.DataScope' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\RoleServiceImpl.java:[300] (regexp) RegexpSinglelineJava: 代码体中禁止使用全限定类名（FQN），必须在文件顶部 import 后使用简单名。参考：云顶编码规范 5.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\RoleServiceImpl.java:[351] (sizes) LineLength: 本行字符数 134个，最多：120个。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\UserAccountServiceImpl.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\UserAccountServiceImpl.java:[10,1] (imports) CustomImportOrder: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\UserAccountServiceImpl.java:[18,1] (imports) CustomImportOrder: 'com.njydsz.common.auth.annotation.DataScope' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\UserAccountServiceImpl.java:[144,5] (metrics) CyclomaticComplexity: 圈复杂度： 14 （最多： 10 ）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\UserAccountServiceImpl.java:[416,44] (javadoc) JavadocMethod: 'userId'需要Javadoc注释 @param 。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\UserAccountServiceImpl.java:[555] (sizes) LineLength: 本行字符数 141个，最多：120个。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\UserDeptServiceImpl.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\UserDeptServiceImpl.java:[4,1] (imports) CustomImportOrder: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\UserDeptServiceImpl.java:[9,1] (imports) CustomImportOrder: 'com.njydsz.userinfo.domain.entity.UserDept' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\UserExcelServiceImpl.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\UserExcelServiceImpl.java:[3,8] (imports) UnusedImports: 无用导入 - java.io.ByteArrayOutputStream 。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\UserExcelServiceImpl.java:[7,1] (imports) CustomImportOrder: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\UserExcelServiceImpl.java:[11,1] (imports) CustomImportOrder: 'com.njydsz.common.excel.core.ExcelFacade' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\UserExcelServiceImpl.java:[137] (javadoc) JavadocMethod: @return標籤應存在並具有說明。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\UserExcelServiceImpl.java:[137,55] (javadoc) JavadocMethod: 'inputStream'需要Javadoc注释 @param 。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\UserExcelServiceImpl.java:[137,75] (javadoc) JavadocMethod: 'originalFilename'需要Javadoc注释 @param 。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\UserExcelServiceImpl.java:[167,5] (metrics) CyclomaticComplexity: 圈复杂度： 14 （最多： 10 ）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\UserExcelServiceImpl.java:[167,49] (javadoc) JavadocMethod: 'importDTO'需要Javadoc注释 @param 。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\UserPostServiceImpl.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\UserPostServiceImpl.java:[4,1] (imports) CustomImportOrder: 'com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\UserPostServiceImpl.java:[9,1] (imports) CustomImportOrder: 'com.njydsz.userinfo.domain.entity.UserPost' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\LanguageService.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\LanguageService.java:[4,1] (imports) CustomImportOrder: 'com.njydsz.common.core.response.PageResponse' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\LoginHistoryService.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\LoginHistoryService.java:[4,1] (imports) CustomImportOrder: 'com.njydsz.userinfo.domain.entity.UserLoginHistory' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\LoginHistoryService.java:[34,10] (sizes) ParameterNumber: 参数共： 6个，最多：5个。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\MenuService.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\MenuService.java:[4,1] (imports) CustomImportOrder: 'com.njydsz.userinfo.domain.dto.post.MenuPostDTO' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\PostService.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\PostService.java:[6,1] (imports) CustomImportOrder: 'com.njydsz.userinfo.domain.dto.post.PostPostDTO' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\RoleService.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\RoleService.java:[6,1] (imports) CustomImportOrder: 'com.baomidou.mybatisplus.extension.plugins.pagination.Page' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\RoleService.java:[7,1] (imports) CustomImportOrder: 'com.njydsz.userinfo.domain.dto.RolePageQueryDTO' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\UserAccountService.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\UserAccountService.java:[6,1] (imports) CustomImportOrder: 'com.baomidou.mybatisplus.extension.plugins.pagination.Page' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\UserAccountService.java:[7,1] (imports) CustomImportOrder: 'com.njydsz.userinfo.domain.dto.ChangePasswordDTO' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\UserDeptService.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\UserDeptService.java:[4,1] (imports) CustomImportOrder: 'com.njydsz.userinfo.domain.entity.UserDept' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\UserExcelService.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\UserExcelService.java:[4,8] (imports) UnusedImports: 无用导入 - java.util.List 。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\UserExcelService.java:[5,1] (imports) CustomImportOrder: 'com.njydsz.userinfo.domain.dto.UserImportDTO' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\UserPostService.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\UserPostService.java:[4,1] (imports) CustomImportOrder: 'com.njydsz.userinfo.domain.entity.UserPost' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\WorkflowApproverCacheService.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\WorkflowApproverCacheService.java:[6,1] (imports) CustomImportOrder: 'lombok.RequiredArgsConstructor' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\WorkflowApproverCacheService.java:[9,1] (imports) CustomImportOrder: 'com.njydsz.common.json.YdszJson' 应该与以前的导入组分隔一个空行。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\WorkflowApproverCacheService.java:[73] (regexp) RegexpSinglelineJava: 代码体中禁止使用全限定类名（FQN），必须在文件顶部 import 后使用简单名。参考：云顶编码规范 5.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\WorkflowApproverCacheService.java:[111] (regexp) RegexpSinglelineJava: 代码体中禁止使用全限定类名（FQN），必须在文件顶部 import 后使用简单名。参考：云顶编码规范 5.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\WorkflowApproverCacheService.java:[161] (sizes) LineLength: 本行字符数 121个，最多：120个。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\WorkflowApproverCacheService.java:[194] (sizes) LineLength: 本行字符数 126个，最多：120个。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\WorkflowApproverCacheService.java:[227] (sizes) LineLength: 本行字符数 126个，最多：120个。
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  5.451 s
+[INFO] Finished at: 2026-08-16T21:53:20+08:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-checkstyle-plugin:3.6.0:check (default-cli) on project ydsz-userinfo-server: You have 193 Checkstyle violations. -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

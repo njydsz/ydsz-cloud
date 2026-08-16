@@ -25,7 +25,6 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.queue.constant.YdszMessageTopics;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.id.TracerUtils;
@@ -34,7 +33,6 @@ import com.njydsz.message.domain.dto.batch.BatchSendResult;
 import com.njydsz.message.domain.dto.core.MessageLogQueryDTO;
 import com.njydsz.message.domain.dto.core.MessageSendDTO;
 import com.njydsz.message.domain.dto.core.RichMediaContent;
-import com.njydsz.message.domain.entity.canary.MsgCanary;
 import com.njydsz.message.domain.entity.config.MsgPreference;
 import com.njydsz.message.domain.entity.config.MsgRouteRule;
 import com.njydsz.message.domain.entity.config.MsgTrace;
@@ -62,14 +60,11 @@ import com.njydsz.message.server.service.core.MessageQueryService;
 import com.njydsz.message.server.service.core.MessageSendService;
 import com.njydsz.message.server.service.core.MessageService;
 import com.njydsz.message.server.service.core.MessageTraceService;
-import com.njydsz.message.server.service.core.RateLimitService;
 import com.njydsz.message.server.service.impl.AggregatePersistenceService;
-import com.njydsz.message.server.service.impl.ChannelSuppressionEngine;
-import com.njydsz.message.server.service.impl.DndService;
-import com.njydsz.message.server.service.impl.EmailBounceHandler;
 import com.njydsz.message.server.service.impl.ParallelBatchSender;
-import com.njydsz.message.server.service.impl.SenderQuotaService;
 import com.njydsz.message.server.service.template.TemplateService;
+import com.njydsz.message.server.service.chain.SendContext;
+import com.njydsz.message.server.service.chain.SendPipeline;
 import com.njydsz.message.server.template.RichMediaRenderer;
 import com.njydsz.message.server.template.TemplateEngine;
 import com.njydsz.message.server.template.TemplateVariableValidator;
@@ -142,16 +137,8 @@ public class MessageServiceImpl implements MessageService {
     /** P2-3: 消息队列操作（可选,未配置 MQ 时为 null） */
     private final ObjectProvider<MessageQueueOperations> mqProducerProvider;
 
-    /** P2-13: 跨渠道抑制引擎 */
-    private final ChannelSuppressionEngine channelSuppressionEngine;
-    /** P2-16: 邮件退信处理 */
-    private final EmailBounceHandler emailBounceHandler;
-    /** P2-20: Sender 配额管理 */
-    private final SenderQuotaService senderQuotaService;
     /** P2-15: 并行批量发送器 */
     private final ParallelBatchSender parallelBatchSender;
-    /** P2-14: 时区感知 DND 服务 */
-    private final DndService dndService;
     /** P1-1: 发送 / 查询子服务（从本类拆分，降低 God Class 复杂度） */
     private final MessageSendService messageSendService;
     private final MessageQueryService messageQueryService;
@@ -159,6 +146,9 @@ public class MessageServiceImpl implements MessageService {
     /** P0-5: 聚合路径独立 Service（事务安全） */
     private final AggregatePersistenceService aggregatePersistenceService;
     private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
+
+    /** P1-H1: 发送管线编排引擎（Handler Chain 模式替代原 preprocess 方法） */
+    private final SendPipeline sendPipeline;
 
     @Override
     public MessageResult send(MessageRequest request) {
@@ -190,10 +180,11 @@ public class MessageServiceImpl implements MessageService {
             return MessageResult.fail(request.getChannel(), "级联深度超限");
         }
 
-        // ① 预处理: 通道校验 → 路由 → 灰度 → 订阅 → 偏好(DND) → 去重 → 抑制 → 限流 → 配额
-        SendContext ctx = preprocess(request);
-        if (ctx.result != null) {
-            return ctx.result;
+        // ① 预处理管线：通道校验 → 绑定 → 路由 → 灰度 → 订阅 → 偏好 → 去重 → 抑制 → 限流 → 配额
+        SendContext ctx = new SendContext();
+        sendPipeline.execute(request, ctx);
+        if (ctx.getErrorResult() != null) {
+            return ctx.getErrorResult();
         }
 
         // ② 渲染内容: 模板加载 → 变量填充 → 渲染 → 敏感词 → 富媒体
@@ -202,10 +193,10 @@ public class MessageServiceImpl implements MessageService {
         // P1-7: 消息内容大小限制
         int maxLen = messageProperties.getMaxContentLength();
         if (maxLen > 0 && rendered.content() != null && rendered.content().length() > maxLen) {
-            messageMetrics.recordSend(ctx.channel, "CONTENT_TOO_LARGE", 0);
+            messageMetrics.recordSend(ctx.getChannel(), "CONTENT_TOO_LARGE", 0);
             log.warn("[Message] 内容超长拒绝发送: length={} max={} channel={}",
-                    rendered.content().length(), maxLen, ctx.channel);
-            return MessageResult.fail(ctx.channel, "消息内容超过最大长度限制: "
+                    rendered.content().length(), maxLen, ctx.getChannel());
+            return MessageResult.fail(ctx.getChannel(), "消息内容超过最大长度限制: "
                     + rendered.content().length() + " > " + maxLen);
         }
 
@@ -221,11 +212,11 @@ public class MessageServiceImpl implements MessageService {
         // ⑤ 常规落库 PENDING
         msgLogMapper.insert(logDO);
         messageTraceService.recordTrace(logDO.getMsgId(),
-                MsgTrace.Node.PERSISTED, "SUCCESS", ctx.channel,
+                MsgTrace.Node.PERSISTED, "SUCCESS", ctx.getChannel(),
                 "消息已落库: status=" + logDO.getStatus());
 
         // ⑥ 通道分发 + 级联
-        MessageResult result = messageSendService.dispatch(logDO, ctx.matchedRule, ctx.receiver);
+        MessageResult result = messageSendService.dispatch(logDO, ctx.getMatchedRule(), ctx.getReceiver());
         if (result != null && result.isSuccess()) {
             triggerCascade(request, logDO, depth);
         }
@@ -233,203 +224,20 @@ public class MessageServiceImpl implements MessageService {
     }
 
     /**
-     * P1-3: 预处理阶段 —— 通道校验/路由/灰度/订阅/偏好/去重/抑制/限流/配额。
-     *
-     * <p>任一校验失败时设置 {@link SendContext#result} 并返回,调用方据此短路。
-     *
-     * @param request 消息请求(可能被路由/灰度切换 channel/templateCode)
-     * @return 预处理上下文(含最终 channel/receiver/bizType/templateCode/pref 等)
-     */
-    private SendContext preprocess(MessageRequest request) {
-        SendContext ctx = new SendContext();
-        String channel = request.getChannel();
-        if (!StringUtils.hasText(channel)) {
-            ctx.result = MessageResult.fail(null, "消息通道不能为空");
-            return ctx;
-        }
-        // ① 通道启用校验
-        if (!isChannelEnabled(channel)) {
-            log.warn("[Message] 通道未启用: {}", channel);
-            ctx.result = MessageResult.fail(channel, "通道未启用: " + channel);
-            return ctx;
-        }
-        // P0-2: 记录接收节点轨迹
-        messageTraceService.recordTrace(
-                StringUtils.hasText(request.getMessageId()) ? request.getMessageId()
-                        : (StringUtils.hasText(request.getBizId()) ? request.getBizId() : "unknown"),
-                MsgTrace.Node.RECEIVED, "SUCCESS", channel,
-                "消息已接收: channel=" + channel + " receiver=" + request.getReceiver());
-
-        // ② 路由（命中则覆盖 channel）
-        MsgRouteRule matchedRule = routeRuleService.match(request);
-        if (matchedRule != null && StringUtils.hasText(matchedRule.getTargetChannel())) {
-            channel = matchedRule.getTargetChannel();
-            request.setChannel(channel);
-        }
-        ctx.matchedRule = matchedRule;
-        ctx.channel = channel;
-        ctx.receiver = request.getReceiver();
-        ctx.bizType = request.getBizType();
-        ctx.templateCode = request.getTemplateCode();
-
-        // ①-2 P0-1: 用户通道绑定解析（receiver 是 userId 时自动解析为通道联系方式）
-        if (StringUtils.hasText(ctx.receiver) && StringUtils.hasText(channel)) {
-            String resolved = userChannelBindingService.resolveChannelUserId(ctx.receiver, channel);
-            if (resolved != null) {
-log.debug("[Message] P0-1 通道绑定解析: userId={} channel={} → channelUserId={}",
-                    SensitiveUtil.scanAndMask(ctx.receiver), channel, resolved);
-                request.setReceiver(resolved);
-                ctx.receiver = resolved;
-            }
-        }
-
-        // ③ 灰度命中差异化处理（P0-7）
-        if (StringUtils.hasText(ctx.templateCode) && StringUtils.hasText(ctx.receiver)) {
-            MsgCanary canary = canaryService.matchConfig(ctx.templateCode, ctx.receiver);
-            if (canary != null) {
-                ctx.canaryFlag = 1;
-                ctx.canaryKeyForLog = ctx.templateCode;
-                if (StringUtils.hasText(canary.getExperimentTemplateCode())) {
-                    log.info("[Message] 灰度命中切换模板: orig={} exp={}",
-                            ctx.templateCode, canary.getExperimentTemplateCode());
-                    request.setTemplateCode(canary.getExperimentTemplateCode());
-                    ctx.templateCode = canary.getExperimentTemplateCode();
-                }
-                if (StringUtils.hasText(canary.getExperimentChannel())) {
-                    log.info("[Message] 灰度命中切换通道: orig={} exp={}",
-                            channel, canary.getExperimentChannel());
-                    ctx.channel = canary.getExperimentChannel();
-                    request.setChannel(ctx.channel);
-                }
-            }
-        }
-
-        // ④ 订阅关系校验（P0-5）
-        if (StringUtils.hasText(ctx.receiver) && StringUtils.hasText(ctx.templateCode)
-                && subscriptionService.isBlocked(ctx.receiver, ctx.templateCode, ctx.channel)) {
-            log.info("[Message] 用户已退订,跳过发送: receiver={} topic={} channel={}",
-                    SensitiveUtil.scanAndMask(ctx.receiver), ctx.templateCode, ctx.channel);
-            messageMetrics.recordSend(ctx.channel, "BLOCKED", 0);
-            ctx.result = MessageResult.fail(ctx.channel, "用户已退订该消息");
-            return ctx;
-        }
-
-        // ⑤ 用户偏好（P0-6）：DND 时段 / locale / digestEnabled
-        ctx.pref = StringUtils.hasText(ctx.receiver)
-                ? preferenceService.getByUser(ctx.receiver, ctx.channel, ctx.bizType) : null;
-        if (ctx.pref != null && isInDndPeriod(ctx.pref)) {
-            MessageProperties.SmartTimingConfig stc = messageProperties.getSmartTiming();
-            boolean channelDisruptive = stc != null && stc.isDisruptive(ctx.channel);
-            boolean urgentBypass = stc != null && stc.isUrgentBypassDnd()
-                    && "URGENT".equals(resolvePriority(request));
-            if (!channelDisruptive) {
-                log.debug("[Message] 非打扰型通道绕过 DND: channel={}", ctx.channel);
-            } else if (urgentBypass) {
-                log.info("[Message] URGENT 消息绕过 DND: receiver={} channel={}", SensitiveUtil.scanAndMask(ctx.receiver), ctx.channel);
-            } else if (stc != null && stc.isEnabled()) {
-                LocalDateTime nextTime = calculateDndEndTime(ctx.pref);
-                if (nextTime == null) {
-                    messageMetrics.recordSend(ctx.channel, "DND_SKIPPED", 0);
-                    ctx.result = MessageResult.fail(ctx.channel, "当前为免打扰时段");
-                    return ctx;
-                }
-                long deferHours = Duration.between(LocalDateTime.now(), nextTime).toHours();
-                if (deferHours > stc.getMaxDeferHours()) {
-log.info("[Message] DND 延迟超过阈值,丢弃: receiver={} defer={}h max={}h",
-                    SensitiveUtil.scanAndMask(ctx.receiver), deferHours, stc.getMaxDeferHours());
-                    messageMetrics.recordSend(ctx.channel, "DND_DROPPED", 0);
-                    ctx.result = MessageResult.fail(ctx.channel, "免打扰时段消息延迟过久,已丢弃");
-                    return ctx;
-                }
-log.info("[Message] DND 延迟发送: receiver={} dnd={}~{} nextSendAt={}",
-                    SensitiveUtil.scanAndMask(ctx.receiver), ctx.pref.getDndStart(), ctx.pref.getDndEnd(), nextTime);
-                messageMetrics.recordSend(ctx.channel, "DND_DEFERRED", 0);
-                request.setScheduledAt(nextTime);
-            } else {
-                messageMetrics.recordSend(ctx.channel, "DND_SKIPPED", 0);
-                ctx.result = MessageResult.fail(ctx.channel, "当前为免打扰时段");
-                return ctx;
-            }
-        }
-
-        // ⑤-1b P2-14: 时区感知 DND 补充检查
-        if (StringUtils.hasText(ctx.receiver) && dndService.shouldDelay(ctx.receiver, resolvePriority(request))) {
-            log.info("[Message] P2-14 时区感知 DND 延迟发送: receiver={} channel={}", SensitiveUtil.scanAndMask(ctx.receiver), ctx.channel);
-            messageMetrics.recordSend(ctx.channel, "DND_DEFERRED", 0);
-        }
-
-        // ⑤-2 P2-1: 智能去重（SET NX EX）
-        ctx.dedupKey = buildDedupKey(request);
-        if (StringUtils.hasText(ctx.dedupKey) && !dedupService.tryAcquire(ctx.dedupKey)) {
-            log.info("[Message] 检测到重复消息,跳过发送: dedupKey={} receiver={}", ctx.dedupKey, SensitiveUtil.scanAndMask(ctx.receiver));
-            messageMetrics.recordSend(ctx.channel, "DEDUPED", 0);
-            ctx.result = MessageResult.fail(ctx.channel, "消息重复,已忽略");
-            return ctx;
-        }
-
-        // ⑤-3 P2-13: 跨渠道抑制
-        if (StringUtils.hasText(ctx.bizType) && StringUtils.hasText(request.getBizId())
-                && StringUtils.hasText(ctx.receiver)
-                && channelSuppressionEngine.shouldSuppress(ctx.bizType, request.getBizId(), ctx.receiver, ctx.channel)) {
-            log.info("[Message] 跨渠道抑制,跳过发送: bizType={} bizId={} receiver={} channel={}",
-                    ctx.bizType, request.getBizId(), SensitiveUtil.scanAndMask(ctx.receiver), ctx.channel);
-            messageMetrics.recordSend(ctx.channel, "SUPPRESSED", 0);
-            ctx.result = MessageResult.fail(ctx.channel, "跨渠道抑制: 已有其他渠道发送");
-            return ctx;
-        }
-
-        // ⑥ 限流 + 频率
-        if (!rateLimitService.tryAcquire(buildRateLimitKey(ctx.channel, ctx.bizType), 1)) {
-            messageMetrics.recordSend(ctx.channel, "FAILED", 0);
-            throw SysException.builder()
-                .resultCode(BaseResultCode.TOO_MANY_REQUESTS)
-                .message("发送限流，请稍后重试")
-                .build();
-        }
-        if (!rateLimitService.checkSendLimit(ctx.channel, ctx.receiver, ctx.templateCode,
-                TenantContextHolder.getTenantId(), request.getPriority())) {
-            messageMetrics.recordSend(ctx.channel, "RATE_LIMITED", 0);
-            throw SysException.builder()
-                .resultCode(BaseResultCode.TOO_MANY_REQUESTS)
-                .message("多维度限流：receiver/template/tenant 超限")
-                .build();
-        }
-        if (StringUtils.hasText(ctx.receiver)
-                && !rateLimitService.checkFrequency(ctx.receiver, ctx.channel, ctx.bizType)) {
-            messageMetrics.recordSend(ctx.channel, "FAILED", 0);
-            throw SysException.builder()
-                .resultCode(BaseResultCode.TOO_MANY_REQUESTS)
-                .message("发送频率超限")
-                .build();
-        }
-
-        // ⑥-4 P2-20: Sender 配额管理
-        String senderId = StringUtils.hasText(ctx.bizType) ? ctx.bizType : SystemConstants.SYSTEM_USER_ID;
-        if (!senderQuotaService.checkQuota(senderId, ctx.channel)) {
-            messageMetrics.recordSend(ctx.channel, "QUOTA_EXCEEDED", 0);
-            throw SysException.builder()
-                .resultCode(BaseResultCode.TOO_MANY_REQUESTS)
-                .message("发送方配额已用尽: senderId=" + senderId)
-                .build();
-        }
-        return ctx;
-    }
-
-    /**
-     * P1-3: 渲染阶段 —— 模板加载/变量填充/渲染/敏感词/富媒体。
+     * P1-H1: 渲染阶段 —— 模板加载/变量填充/渲染/敏感词/富媒体。
      *
      * @param request 消息请求
-     * @param ctx     预处理上下文
+     * @param ctx     管线上下文
      * @return 渲染后的 content/subject
      */
     private RenderedContent renderContent(MessageRequest request, SendContext ctx) {
         String content = request.getContent();
         String subject = request.getSubject();
-        String prefLocale = ctx.pref != null ? ctx.pref.getLocale() : null;
+        String prefLocale = ctx.getPreference() != null ? ctx.getPreference().getLocale() : null;
 
-        if (StringUtils.hasText(ctx.templateCode)) {
+        if (StringUtils.hasText(ctx.getTemplateCode())) {
             MsgTemplate template = templateService.loadByCodeAndChannel(
-                    ctx.templateCode, ctx.channel, prefLocale, TenantContextHolder.getTenantId());
+                    ctx.getTemplateCode(), ctx.getChannel(), prefLocale, TenantContextHolder.getTenantId());
             if (template == null) {
                 return new RenderedContent(content, subject, true);
             }
@@ -437,7 +245,7 @@ log.info("[Message] DND 延迟发送: receiver={} dnd={}~{} nextSendAt={}",
             if (StringUtils.hasText(template.getVariableDefs())) {
                 var varDefs = templateVariableValidator.parse(template.getVariableDefs());
                 if (!varDefs.isEmpty() && request.getParams() != null) {
-                    templateVariableValidator.validateAndFill(request.getParams(), varDefs, ctx.templateCode);
+                    templateVariableValidator.validateAndFill(request.getParams(), varDefs, ctx.getTemplateCode());
                 }
             }
             // P0-4: 变量数据源自动拉取
@@ -446,11 +254,11 @@ log.info("[Message] DND 延迟发送: receiver={} dnd={}~{} nextSendAt={}",
                 if (StringUtils.hasText(request.getBizId())) {
                     varCtx.put("bizId", request.getBizId());
                 }
-                if (StringUtils.hasText(ctx.bizType)) {
-                    varCtx.put("bizType", ctx.bizType);
+                if (StringUtils.hasText(ctx.getBizType())) {
+                    varCtx.put("bizType", ctx.getBizType());
                 }
-                varCtx.put("receiver", ctx.receiver);
-                variableSourceResolver.resolveVariables(ctx.templateCode, request.getParams(), varCtx);
+                varCtx.put("receiver", ctx.getReceiver());
+                variableSourceResolver.resolveVariables(ctx.getTemplateCode(), request.getParams(), varCtx);
             }
             if (StringUtils.hasText(template.getContent())) {
                 content = templateEngine.render(template.getContent(), request.getParams());
@@ -468,7 +276,7 @@ log.info("[Message] DND 延迟发送: receiver={} dnd={}~{} nextSendAt={}",
         // P1-2: 富媒体消息渲染
         RichMediaContent richMedia = richMediaRenderer.extractFromParams(request.getParams());
         if (richMedia != null) {
-            String renderedContent = switch (ctx.channel == null ? "" : ctx.channel.toUpperCase()) {
+            String renderedContent = switch (ctx.getChannel() == null ? "" : ctx.getChannel().toUpperCase()) {
                 case "EMAIL" -> richMediaRenderer.renderHtml(richMedia);
                 case "INAPP", "DINGTALK", "WECOM", "FEISHU" -> richMediaRenderer.renderMarkdown(richMedia);
                 case "SMS" -> richMediaRenderer.renderPlainText(richMedia);
@@ -489,29 +297,29 @@ log.info("[Message] DND 延迟发送: receiver={} dnd={}~{} nextSendAt={}",
      */
     private MsgLog buildLogDO(MessageRequest request, SendContext ctx, RenderedContent rendered) {
         MsgLog logDO = new MsgLog();
-        logDO.setChannel(ctx.channel);
-        logDO.setBizType(ctx.bizType);
+        logDO.setChannel(ctx.getChannel());
+        logDO.setBizType(ctx.getBizType());
         logDO.setBizId(request.getBizId());
-        logDO.setReceiver(ctx.receiver);
-        logDO.setTemplateCode(ctx.templateCode);
+        logDO.setReceiver(ctx.getReceiver());
+        logDO.setTemplateCode(ctx.getTemplateCode());
         logDO.setTemplateParams(YdszJson.toJson(request.getParams()));
         logDO.setContent(rendered.content);
         logDO.setStatus(MessageStatusEnum.PENDING.name());
         logDO.setPriority(resolvePriority(request));
         logDO.setSenderId(SystemConstants.SYSTEM_USER_ID);
-        logDO.setCanary(ctx.canaryFlag);
-        logDO.setCanaryKey(ctx.canaryKeyForLog);
+        logDO.setCanary(ctx.getCanaryFlag());
+        logDO.setCanaryKey(ctx.getCanaryKeyForLog);
         logDO.setRecallStatus(RecallStatusEnum.NONE.name());
         logDO.setReceiptStatus("NONE");
         logDO.setRetryCount(0);
         logDO.setTraceId(TracerUtils.getOrCreateTraceId());
         logDO.setMsgId(StringUtils.hasText(request.getMessageId()) ? request.getMessageId()
                 : String.valueOf(snowflakeIdGenerator.nextId()));
-        logDO.setDedupKey(ctx.dedupKey);
+        logDO.setDedupKey(ctx.getDedupKey());
         logDO.setParentMsgId(request.getParentMsgId());
         logDO.setScheduledAt(request.getScheduledAt());
-        if (ctx.matchedRule != null) {
-            logDO.setRouteRuleId(ctx.matchedRule.getId());
+        if (ctx.getMatchedRule() != null) {
+            logDO.setRouteRuleId(ctx.getMatchedRule().getId());
         }
         logDO.setTenantId(TenantContextHolder.getTenantId());
         return logDO;
@@ -533,7 +341,7 @@ log.info("[Message] DND 延迟发送: receiver={} dnd={}~{} nextSendAt={}",
     private MessageResult handleEarlyReturns(MessageRequest request, SendContext ctx, MsgLog logDO, RenderedContent rendered) {
         // 模板缺失: renderContent 标记 templateMissing=true 时直接返回失败
         if (rendered.templateMissing()) {
-            return MessageResult.fail(ctx.channel, "模板不存在: " + ctx.templateCode);
+            return MessageResult.fail(ctx.getChannel(), "模板不存在: " + ctx.getTemplateCode());
         }
         // ⑧-2 P0-3: 定时消息 —— scheduledAt 非空且在未来时,落库 SCHEDULED 不立即发送
         if (request.getScheduledAt() != null
@@ -541,15 +349,15 @@ log.info("[Message] DND 延迟发送: receiver={} dnd={}~{} nextSendAt={}",
             logDO.setStatus(MessageStatusEnum.SCHEDULED.name());
             msgLogMapper.insert(logDO);
             log.info("[Message] 定时消息已入库: msgId={} scheduledAt={} channel={}",
-                    logDO.getMsgId(), logDO.getScheduledAt(), ctx.channel);
-            return MessageResult.ok(ctx.channel, logDO.getMsgId());
+                    logDO.getMsgId(), logDO.getScheduledAt(), ctx.getChannel());
+            return MessageResult.ok(ctx.getChannel(), logDO.getMsgId());
         }
 
         // P1-1: 智能推送时间优化
-        if (request.getScheduledAt() == null && StringUtils.hasText(ctx.receiver)
+        if (request.getScheduledAt() == null && StringUtils.hasText(ctx.getReceiver())
                 && !"URGENT".equals(resolvePriority(request))) {
             try {
-                LocalDateTime optimalTime = deliveryTimeOptimizer.getOptimalDeliveryTime(ctx.receiver, ctx.channel);
+                LocalDateTime optimalTime = deliveryTimeOptimizer.getOptimalDeliveryTime(ctx.getReceiver(), ctx.getChannel());
                 if (optimalTime != null && optimalTime.isAfter(LocalDateTime.now().plusMinutes(5))) {
                     request.setScheduledAt(optimalTime);
                     logDO.setScheduledAt(optimalTime);
@@ -557,46 +365,29 @@ log.info("[Message] DND 延迟发送: receiver={} dnd={}~{} nextSendAt={}",
                     msgLogMapper.insert(logDO);
                     messageTraceService.recordTrace(logDO.getMsgId(),
                             MsgTrace.Node.SCHEDULED,
-                            "SUCCESS", ctx.channel, "智能定时: optimalAt=" + optimalTime);
+                            "SUCCESS", ctx.getChannel(), "智能定时: optimalAt=" + optimalTime);
 log.info("[Message] 智能定时推送: msgId={} receiver={} optimalAt={}",
-                    logDO.getMsgId(), SensitiveUtil.scanAndMask(ctx.receiver), optimalTime);
-                    return MessageResult.ok(ctx.channel, logDO.getMsgId());
+                    logDO.getMsgId(), SensitiveUtil.scanAndMask(ctx.getReceiver()), optimalTime);
+                    return MessageResult.ok(ctx.getChannel(), logDO.getMsgId());
                 }
             } catch (Exception e) {
 log.debug("[Message] 智能推送时间优化失败,降级立即发送: receiver={} err={}",
-                    SensitiveUtil.scanAndMask(ctx.receiver), e.getMessage());
+                    SensitiveUtil.scanAndMask(ctx.getReceiver()), e.getMessage());
             }
         }
 
         // P0-5: 聚合判断 —— 委托 AggregatePersistenceService 执行事务安全的原子操作
-        if (ctx.pref != null && Integer.valueOf(1).equals(ctx.pref.getDigestEnabled())
-                && StringUtils.hasText(ctx.bizType) && StringUtils.hasText(ctx.receiver)) {
+        if (ctx.getPreference() != null && Integer.valueOf(1).equals(ctx.getPreference().getDigestEnabled())
+                && StringUtils.hasText(ctx.getBizType()) && StringUtils.hasText(ctx.getReceiver())) {
             aggregatePersistenceService.persistAggregated(
-                    logDO, ctx.bizType, ctx.receiver, ctx.channel, logDO.getTenantId());
-            return MessageResult.ok(ctx.channel, logDO.getMsgId());
+                    logDO, ctx.getBizType(), ctx.getReceiver(), ctx.getChannel(), logDO.getTenantId());
+            return MessageResult.ok(ctx.getChannel(), logDO.getMsgId());
         }
         return null;
     }
 
     /**
-     * P1-3: 预处理阶段中间状态载体。
-     */
-    private static class SendContext {
-        String channel;
-        String receiver;
-        String bizType;
-        String templateCode;
-        MsgRouteRule matchedRule;
-        MsgPreference pref;
-        int canaryFlag;
-        String canaryKeyForLog;
-        String dedupKey;
-        /** 非 null 表示预处理短路(校验失败),调用方直接返回 */
-        MessageResult result;
-    }
-
-    /**
-     * P1-3: 渲染阶段产出。
+     * P1-H1: 渲染阶段产出。
      *
      * @param content      渲染后内容
      * @param subject      渲染后标题
@@ -688,111 +479,6 @@ log.debug("[Message] 智能推送时间优化失败,降级立即发送: receiver
     @Override
     public Page<MsgLog> pageLog(MessageLogQueryDTO query) {
         return messageQueryService.pageLog(query);
-    }
-
-    /**
-     * 判断通道是否启用：优先 ChannelRouter，回退 MessageProperties.channelEnabled。
-     */
-    private boolean isChannelEnabled(String channel) {
-        try {
-            if (channelRouter != null && !channelRouter.isChannelEnabled(channel)) {
-                return false;
-            }
-        } catch (Exception e) {
-            log.debug("[Message] ChannelRouter 判断异常,回退配置: {}", e.getMessage());
-        }
-        try {
-            Map<String, Boolean> enabled = messageProperties.getChannelEnabled();
-            if (enabled != null && enabled.containsKey(channel)) {
-                return Boolean.TRUE.equals(enabled.get(channel));
-            }
-        } catch (Exception e) {
-            log.debug("[Message] channelEnabled 配置读取异常: {}", e.getMessage());
-        }
-        return true;
-    }
-
-    /**
-     * 判断当前是否在 DND 免打扰时段（P0-6）。
-     * 支持跨天时段(如 22:00-08:00)。
-     */
-    private boolean isInDndPeriod(MsgPreference pref) {
-        if (pref == null || !Integer.valueOf(1).equals(pref.getDndEnabled())) {
-            return false;
-        }
-        String start = pref.getDndStart();
-        String end = pref.getDndEnd();
-        if (!StringUtils.hasText(start) || !StringUtils.hasText(end)) {
-            return false;
-        }
-        try {
-            LocalTime now = LocalTime.now();
-            LocalTime s = LocalTime.parse(start);
-            LocalTime e = LocalTime.parse(end);
-            if (s.isBefore(e)) {
-                // 同日时段(如 09:00-18:00)
-                return !now.isBefore(s) && now.isBefore(e);
-            } else {
-                // 跨天时段(如 22:00-08:00)
-                return !now.isBefore(s) || now.isBefore(e);
-            }
-        } catch (Exception ex) {
-            log.warn("[Message] DND 时段解析失败: start={} end={} err={}",
-                    start, end, ex.getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * P2-5: 计算免打扰时段的结束时间（即下次可发送时间，不含 buffer）。
-     *
-     * <p>支持跨天时段（如 22:00-08:00）：
-     * <ul>
-     *   <li>同日 DND（09:00-18:00）：结束时间为当天 end</li>
-     *   <li>跨天 DND（22:00-08:00），当前在 start 之后：结束时间为次日 end</li>
-     *   <li>跨天 DND（22:00-08:00），当前在 end 之前：结束时间为当天 end</li>
-     * </ul>
-     *
-     * @param pref 偏好配置（须已确认在 DND 时段内）
-     * @return DND 结束时间 + buffer，解析失败返回 null
-     */
-    private LocalDateTime calculateDndEndTime(MsgPreference pref) {
-        if (pref == null) {
-            return null;
-        }
-        String startStr = pref.getDndStart();
-        String endStr = pref.getDndEnd();
-        if (!StringUtils.hasText(startStr) || !StringUtils.hasText(endStr)) {
-            return null;
-        }
-        try {
-            LocalTime now = LocalTime.now();
-            LocalTime start = LocalTime.parse(startStr);
-            LocalTime end = LocalTime.parse(endStr);
-            LocalDateTime todayEnd = LocalDateTime.now().toLocalDate().atTime(end);
-            LocalDateTime nextEnd;
-            if (start.isBefore(end)) {
-                // 同日 DND（如 09:00-18:00）：结束时间为当天 end
-                nextEnd = todayEnd;
-            } else {
-                // 跨天 DND（如 22:00-08:00）
-                if (now.isBefore(end)) {
-                    // 当前在 end 之前（凌晨段）：结束时间为当天 end
-                    nextEnd = todayEnd;
-                } else {
-                    // 当前在 start 之后（夜晚段）：结束时间为次日 end
-                    nextEnd = todayEnd.plusDays(1);
-                }
-            }
-            // 附加 buffer 避免卡在 DND 结束瞬间的高峰
-            MessageProperties.SmartTimingConfig stc = messageProperties.getSmartTiming();
-            long buffer = (stc != null) ? stc.getDndBufferSeconds() : 0L;
-            return nextEnd.plusSeconds(buffer);
-        } catch (Exception e) {
-            log.warn("[Message] DND 结束时间计算失败: start={} end={} err={}",
-                    startStr, endStr, e.getMessage());
-            return null;
-        }
     }
 
     private String resolvePriority() {

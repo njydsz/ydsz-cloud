@@ -127,6 +127,69 @@ public class CostAnalysisService {
     }
 
     /**
+     * 按模型分组统计日期范围内的用量与成本。
+     *
+     * <p>P0 修复：对齐 {@link ObservabilityDashboardService} 的调用契约——原实现缺失
+     * 该重载与 {@link ModelCostStats} 类型，导致模块内 API 漂移。本方法按模型名聚合
+     * 用量与成本，供可观测性面板按模型分布展示。
+     *
+     * @param start 开始时间（含）
+     * @param end   结束时间（含）
+     * @return 模型名 → 用量成本统计（保序）
+     */
+    public Map<String, ModelCostStats> getStatsByModel(LocalDateTime start, LocalDateTime end) {
+        List<TokenUsageRecordDO> records = usageRecordMapper.selectList(
+                new QueryWrapper<TokenUsageRecordDO>()
+                        .ge("created_at", start)
+                        .le("created_at", end)
+                        .orderByAsc("created_at"));
+        Map<String, MutableCostStats> agg = new LinkedHashMap<>();
+        for (TokenUsageRecordDO record : records) {
+            String model = record.getModelName() != null ? record.getModelName() : "unknown";
+            MutableCostStats stats = agg.computeIfAbsent(model, k -> new MutableCostStats());
+            stats.promptTokens += record.getPromptTokens();
+            stats.completionTokens += record.getCompletionTokens();
+            stats.totalTokens += record.getTotalTokens();
+            stats.callCount++;
+            stats.totalCostUsd += record.getTotalTokens()
+                    * priceConfig.getPrice(record.getModelName()) / 1000.0;
+        }
+        Map<String, ModelCostStats> result = new LinkedHashMap<>();
+        agg.forEach((model, stats) -> result.put(model, new ModelCostStats(
+                stats.promptTokens, stats.completionTokens, stats.totalTokens,
+                stats.totalCostUsd, stats.callCount)));
+        return result;
+    }
+
+    /**
+     * 按模型用量与成本汇总（所有金额单位均为 USD）。
+     *
+     * @param promptTokens    提示词 Token 累计数
+     * @param completionTokens 补全 Token 累计数
+     * @param totalTokens     总 Token 累计数
+     * @param totalCostUsd    总成本（USD）
+     * @param callCount       请求次数
+     */
+    public record ModelCostStats(
+            long promptTokens,
+            long completionTokens,
+            long totalTokens,
+            double totalCostUsd,
+            long callCount) {
+    }
+
+    /**
+     * 可变统计累加器（仅用于 {@link #getStatsByModel(LocalDateTime, LocalDateTime)} 内部聚合）。
+     */
+    private static final class MutableCostStats {
+        private long promptTokens;
+        private long completionTokens;
+        private long totalTokens;
+        private double totalCostUsd;
+        private long callCount;
+    }
+
+    /**
      * 按模型用量与成本汇总（所有金额单位均为 USD）
      */
     public record ModelUsageStats(

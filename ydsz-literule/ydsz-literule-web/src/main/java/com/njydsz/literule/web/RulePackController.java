@@ -62,7 +62,7 @@ import com.njydsz.literule.server.spi.RulePackProvider.InstallResult;
  */
 @Slf4j
 @RestController
-@RequestMapping("/ruleEngine/rules")
+@RequestMapping("/v1/rule-engine/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则集市场", description = "规则集发布、安装、版本管理与压测")
@@ -228,7 +228,7 @@ public class RulePackController {
      */
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'stressTest'")
     @RateLimit(resource = "literule.rule_pack.stressTest", threshold = 50)
-    @PostMapping("/stressTest")
+    @PostMapping("/stress-test")
     @Operation(summary = "规则压测", description = "使用线程池并发执行 Dry-run，统计 QPS、P50/P95/P99 耗时、错误率")
     public BaseResponse<RuleStressTestService.StressTestResult> stressTest(
             @RequestBody Map<String, Object> request) {
@@ -279,7 +279,7 @@ public class RulePackController {
      *
      * @return 更新检查结果列表
      */
-    @GetMapping("/packs/updateCheck")
+    @GetMapping("/packs/update-check")
     @Operation(summary = "知识包更新检查", description = "对比已安装知识包与市场最新版本，返回有更新的包列表")
     public BaseResponse<List<PackUpdateInfoVO>> checkPackUpdates() {
         return BaseResponse.success(rulePackProvider.checkPackUpdates().stream().map(LiteruleWebConverter.INSTANT::entityToVO).toList());
@@ -293,7 +293,7 @@ public class RulePackController {
      */
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'batchUpdatePacks'")
     @RateLimit(resource = "literule.rule_pack.batchUpdatePacks", threshold = 50)
-    @PostMapping("/packs/batchUpdate")
+    @PostMapping("/packs/batch-update")
     @Operation(summary = "批量更新知识包", description = "将指定知识包列表更新到最新版本")
     public BaseResponse<List<InstallResultVO>> batchUpdatePacks(
             @RequestBody List<String> packCodes,

@@ -59,7 +59,7 @@ import com.njydsz.literule.server.config.RuleAdminService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/ruleEngine/rules")
+@RequestMapping("/v1/rule-engine/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则测试用例", description = "规则回归测试用例管理与批量执行")
@@ -76,7 +76,7 @@ public class RuleTestCaseController {
      * @param ruleCode 规则编码（可选）
      * @return 测试用例列表
      */
-    @GetMapping("/testCases")
+    @GetMapping("/test-cases")
     public BaseResponse<List<RuleTestCaseVO>> listTestCases(@RequestParam(required = false) String ruleCode) {
         LambdaQueryWrapper<RuleTestCaseDO> wrapper = new LambdaQueryWrapper<>();
         if (ruleCode != null && !ruleCode.isBlank()) {
@@ -95,7 +95,7 @@ public class RuleTestCaseController {
     @Idempotent(key = "ruleAdmin:saveTestCase", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'saveTestCase'")
     @RateLimit(resource = "literule.rule_test_case.saveTestCase", threshold = 50)
-    @PostMapping("/testCases")
+    @PostMapping("/test-cases")
     public BaseResponse<RuleTestCaseVO> saveTestCase(@Valid @RequestBody RuleTestCasePostDTO dto) {
         RuleTestCaseDO testCase = LiteruleConverter.INSTANT.postDtoToEntity(dto);
         if (testCase.getId() != null) {
@@ -115,7 +115,7 @@ public class RuleTestCaseController {
     @Idempotent(key = "ruleAdmin:deleteTestCase", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'deleteTestCase'")
     @RateLimit(resource = "literule.rule_test_case.deleteTestCase", threshold = 50)
-    @DeleteMapping("/testCases/{id}")
+    @DeleteMapping("/test-cases/{id}")
     public BaseResponse<Void> deleteTestCase(@PathVariable String id) {
         ruleTestCaseMapper.deleteById(id);
         return BaseResponse.success();
@@ -134,7 +134,7 @@ public class RuleTestCaseController {
     @Idempotent(key = "ruleAdmin:batchRunTestCases", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'postmapping'")
     @RateLimit(resource = "literule.rule_test_case.batchRunTestCases", threshold = 50)
-    @PostMapping("/testCases/batchRun")
+    @PostMapping("/test-cases/batch-run")
     public BaseResponse<Map<String, Object>> batchRunTestCases(@Valid @RequestBody TestCaseBatchRunDTO dto) {
         List<Long> ids = dto.getIds();
 

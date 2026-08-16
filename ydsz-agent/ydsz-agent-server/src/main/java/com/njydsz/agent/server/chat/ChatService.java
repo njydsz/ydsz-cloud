@@ -257,6 +257,7 @@ public class ChatService {
         // P2: 流式首 Token 测 TTFT
         final boolean[] firstTokenRecorded = {false};
 
+        StreamingPiiMasker streamingMasker = new StreamingPiiMasker();
         try {
             llmClient.stream(request, chunk -> {
                 if (!firstTokenRecorded[0] && chunk.hasContent()) {
@@ -265,17 +266,33 @@ public class ChatService {
                     firstTokenRecorded[0] = true;
                 }
                 if (chunk.hasContent()) {
-                    contentBuilder.append(chunk.getDeltaContent());
-                }
-                if (chunk.isFinished() && chunk.getUsage() != null) {
-                    usage[0] = chunk.getUsage();
-                    // P2: 记录完整流式调用结果
-                    long duration = System.currentTimeMillis() - startTime;
-                    if (!firstTokenRecorded[0]) {
-                        runtimeMetrics.recordTtft(provider, model, duration);
+                    // P0: 流式增量 PII 脱敏——先脱敏后推送，避免已发出的 token 含敏感信息
+                    String maskedDelta = streamingMasker.mask(chunk.getDeltaContent());
+                    if (!maskedDelta.isEmpty()) {
+                        contentBuilder.append(maskedDelta);
+                        chunkConsumer.accept(ChatChunk.content(chunk.getId(), chunk.getModel(),
+                                maskedDelta, chunk.getDeltaToolCalls()));
                     }
+                } else if (chunk.isFinished()) {
+                    // 冲刷剩余缓冲：确保尾部 PII 在流结束前完成脱敏
+                    String maskedRest = streamingMasker.flush();
+                    if (!maskedRest.isEmpty()) {
+                        contentBuilder.append(maskedRest);
+                        chunkConsumer.accept(ChatChunk.content(chunk.getId(), chunk.getModel(), maskedRest));
+                    }
+                    if (chunk.getUsage() != null) {
+                        usage[0] = chunk.getUsage();
+                        // P2: 记录完整流式调用结果
+                        long duration = System.currentTimeMillis() - startTime;
+                        if (!firstTokenRecorded[0]) {
+                            runtimeMetrics.recordTtft(provider, model, duration);
+                        }
+                    }
+                    chunkConsumer.accept(chunk);
+                } else {
+                    // 工具调用等非文本 chunk 原样转发
+                    chunkConsumer.accept(chunk);
                 }
-                chunkConsumer.accept(chunk);
             });
         } catch (Exception e) {
             long duration = System.currentTimeMillis() - startTime;

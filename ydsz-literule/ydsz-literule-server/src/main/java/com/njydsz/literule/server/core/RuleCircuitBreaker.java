@@ -2,6 +2,7 @@ package com.njydsz.literule.server.core;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.extern.slf4j.Slf4j;
@@ -97,8 +98,8 @@ public class RuleCircuitBreaker {
         if (breaker == null) {
             return true;
         }
-        // sentry CircuitBreaker 的 canExecute 在 CLOSED/HALF_OPEN 时返回 true，OPEN 时返回 false
-        return breaker.getState() != State.OPEN;
+        // 使用 sentry CircuitBreaker 统一 canExecute API
+        return breaker.canExecute();
     }
 
     /**
@@ -112,11 +113,11 @@ public class RuleCircuitBreaker {
                 k -> new CircuitBreaker("literule-" + k, sharedRegistry));
 
         if (success) {
-            // 成功：通知 Resilience4j 记录成功（内部自动处理状态流转）
-            breaker.getDelegate().onSuccess(0, java.time.temporal.ChronoUnit.MILLIS);
+            // 使用 sentry CircuitBreaker 统一 recordSuccess API
+            breaker.recordSuccess(0, TimeUnit.MILLISECONDS);
         } else {
-            // 失败：通知 Resilience4j 记录失败
-            breaker.getDelegate().onError(0, java.time.temporal.ChronoUnit.MILLIS,
+            // 使用 sentry CircuitBreaker 统一 recordFailure API
+            breaker.recordFailure(0, TimeUnit.MILLISECONDS,
                     new RuntimeException("Rule evaluation failure"));
         }
 

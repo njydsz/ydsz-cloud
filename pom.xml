@@ -1241,14 +1241,10 @@
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-enforcer-plugin</artifactId>
             <version>3.5.0</version>
-            <dependencies>
-                <!-- extra-enforcer-rules 提供 bannedImports 能力 -->
-                <dependency>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>extra-enforcer-rules</artifactId>
-                    <version>1.8.0</version>
-                </dependency>
-            </dependencies>
+            <!-- 说明：不再依赖 extra-enforcer-rules。原 bannedImports 规则（禁 POI）依赖该库，
+                 但公司 Nexus 代理的 extra-enforcer-rules-1.8.0.jar 不完整（缺 BannedImports 类），
+                 导致 enforcer 无法加载规则。POI 禁用检查由 docs/checkstyle.xml 的 IllegalImport
+                 （禁 org.apache.poi）在源码级等价覆盖，故此处移除依赖。 -->
             <executions>
                 <execution>
                     <id>enforce-json-ecosystem</id>
@@ -1269,7 +1265,10 @@
                             <!-- 3. 禁用有安全漏洞的旧 FastJSON 1.x -->
                             <bannedDependencies>
                                 <excludes>
-                                    <exclude>com.alibaba:fastjson</exclude>
+                                    <!-- 仅禁 fastjson 1.x（版本 1.*，存在安全漏洞）。fastjson2 的旧坐标
+                                         com.alibaba:fastjson:2.0.x（如 rocketmq-common 5.3.1 传递引入的 2.0.58）
+                                         属于安全的新版本，予以放行。 -->
+                                    <exclude>com.alibaba:fastjson:1.*</exclude>
                                     <exclude>com.alibaba:fastjson-spring-boot-starter</exclude>
                                 </excludes>
                                 <message>[ydsz-banned] 禁止使用 FastJSON 1.x，存在安全漏洞。如需 JSON 请使用 ydsz-common-json，基准测试用 fastjson2（scope=test）。</message>
@@ -1294,17 +1293,10 @@
                             <!-- 6. 重复类检测（防止多模块导出同名类） -->
                             <banDuplicatePomDependencyVersions/>
                             <reactorModuleConvergence/>
-                            <!-- 7. 业务模块禁止直接使用 Apache POI API（common-excel / common-docs 除外） -->
-                            <bannedImports>
-                                <bannedImports>
-                                    <bannedImport>org.apache.poi.**</bannedImport>
-                                </bannedImports>
-                                <excludeModules>
-                                    <excludeModule>ydsz-common-excel</excludeModule>
-                                    <excludeModule>ydsz-common-docs</excludeModule>
-                                </excludeModules>
-                                <message>[ydsz-banned] 业务模块禁止直接 import org.apache.poi.* API。所有 Excel 操作必须通过 ydsz-common-excel 模块（ExcelFacade / ExcelExportHelper / ExcelWebSupport）完成。详见云顶编码规范第 20.6 节。</message>
-                            </bannedImports>
+                            <!-- 7. 业务模块禁止直接使用 Apache POI API（common-excel / common-docs 除外）
+                                 说明：该检查由 docs/checkstyle.xml 的 IllegalImport（禁 org.apache.poi）在源码级覆盖。
+                                 原 bannedImports 规则依赖 extra-enforcer-rules，而该依赖在公司 Nexus 代理上不完整
+                                 （缺 BannedImports 类），故移除 enforcer 侧检查，保留 checkstyle 侧等价检查。 -->
                         </rules>
                         <fail>true</fail>
                     </configuration>

@@ -32,7 +32,8 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @EnableYdszAuth
 @EnableYdszSafe
 @EnableYdszFeign(basePackages = {"com.njydsz.workflow.api", "com.njydsz.common.feign", "com.njydsz.userinfo.api", "com.njydsz.literule.api", "com.njydsz.system.api", "com.njydsz.agent.api"})
-@MapperScan({"com.njydsz.workflow.infra.mapper", "com.njydsz.literule.infra.mapper"})
+// P1-1: 移除 literule Mapper 扫描，跨模块数据访问应通过 Feign 交互而非直接访问 Mapper
+@MapperScan({"com.njydsz.workflow.infra.mapper"})
 @EnableScheduling
 public class WorkflowApplication {
 
