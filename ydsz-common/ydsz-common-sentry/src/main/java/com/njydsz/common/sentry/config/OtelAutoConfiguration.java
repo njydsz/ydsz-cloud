@@ -23,7 +23,6 @@ import com.njydsz.common.sentry.tracing.otel.OtelExporterFactory;
 import com.njydsz.common.sentry.tracing.otel.OtelResources;
 import com.njydsz.common.sentry.tracing.otel.OtelSamplers;
 import com.njydsz.common.sentry.tracing.otel.OtelSdkBuilder;
-import com.njydsz.common.sentry.tracing.otel.OtelSdkInitializer;
 import com.njydsz.common.sentry.tracing.otel.SpanEvaluationProcessor;
 import com.njydsz.common.sentry.tracing.otel.YdszOpenTelemetry;
 import com.njydsz.common.sentry.tracing.otel.YdszSpanEnrichmentProcessor;

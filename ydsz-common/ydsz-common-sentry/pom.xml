@@ -102,8 +102,13 @@
         <dependency>
             <groupId>io.github.resilience4j</groupId>
             <artifactId>resilience4j-core</artifactId>
-            <scope>provided</scope>
-            <optional>true</optional>
+            <scope>compile</scope>
+        </dependency>
+        <!-- Resilience4j CircuitBreaker 模块（包含 CircuitBreakerConfig、CircuitBreakerRegistry 等类） -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-circuitbreaker</artifactId>
+            <scope>compile</scope>
         </dependency>
         <!-- Bean Validation（配置属性验证） -->
         <dependency>

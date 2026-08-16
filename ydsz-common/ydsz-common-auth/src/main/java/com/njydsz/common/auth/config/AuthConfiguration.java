@@ -391,6 +391,7 @@ public class AuthConfiguration {
         return new AuthHealthIndicator(redisConnectionFactory);
     }
 
+    /**
      * 创建权限缓存失效监听器 Bean（监听 Redis Pub/Sub 和 Spring 事件）
      *
      * @param rolePermissionLoader 角色权限加载器

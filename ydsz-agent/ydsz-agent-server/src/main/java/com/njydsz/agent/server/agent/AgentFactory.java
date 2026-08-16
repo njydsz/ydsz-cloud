@@ -28,6 +28,9 @@ import com.njydsz.agent.server.rag.RagService;
  * <p>所有执行器统一注入 {@link TraceRecorder}、{@link AgentMetrics}、{@link CostAnalysisService}，
  * 确保执行链路可追踪、指标可采集、成本可核算。
  *
+ * <p><b>执行器创建策略：</b>使用 {@link AgentExecutorFactory} 函数式接口
+ * 统一执行器构造，消除 if-else 路由链。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -100,39 +103,66 @@ public class AgentFactory {
         return executorCache.computeIfAbsent("REACT", this::createExecutor);
     }
 
+    /**
+     * 创建指定类型的执行器实例。
+     *
+     * <p>使用 {@link AgentExecutorFactory} 映射替代 if-else 链，
+     * 所有执行器统一传递完整依赖集，确保能力一致。
+     * 未知类型回退到 ReAct 执行器。
+     *
+     * @param type Agent 类型字符串
+     * @return 对应类型的执行器实例
+     */
     private AgentExecutor createExecutor(String type) {
         log.info("[Agent-Factory] 创建执行器: type={}", type);
-        if ("REACT".equalsIgnoreCase(type) || "REACT_AGENT".equalsIgnoreCase(type)) {
-            return new ReActAgentExecutor(llmClient, memory, toolRegistry, properties,
+
+        return switch (type.toUpperCase()) {
+            case "REACT", "REACT_AGENT" -> new ReActAgentExecutor(
+                    llmClient, memory, toolRegistry, properties,
                     inputGuardrails, outputGuardrails,
                     traceRecorder, agentMetrics, costAnalysisService, guardrailService);
-        }
-        if ("CHAT".equalsIgnoreCase(type)) {
-            return new SimpleAgentExecutor(llmClient, memory, properties,
+            case "CHAT" -> new SimpleAgentExecutor(
+                    llmClient, memory, properties,
                     inputGuardrails, outputGuardrails,
                     traceRecorder, agentMetrics, costAnalysisService, guardrailService);
-        }
-        if ("RAG".equalsIgnoreCase(type)) {
-            return new RagAgentExecutor(llmClient, memory, properties, ragService,
+            case "RAG" -> new RagAgentExecutor(
+                    llmClient, memory, properties, ragService,
                     inputGuardrails, outputGuardrails,
                     traceRecorder, agentMetrics, costAnalysisService, guardrailService);
-        }
-        if ("PLAN_EXECUTE".equalsIgnoreCase(type)) {
-            return new PlanExecuteAgentExecutor(llmClient, memory, properties,
-                    traceRecorder, agentMetrics, costAnalysisService);
-        }
-        if ("ROUTER".equalsIgnoreCase(type)) {
-            return new RouterAgentExecutor(llmClient, properties, this,
-                    traceRecorder, agentMetrics);
-        }
-        if ("SUPERVISOR".equalsIgnoreCase(type)) {
-            return new SupervisorAgentExecutor(llmClient, memory, properties,
+            case "PLAN_EXECUTE" -> new PlanExecuteAgentExecutor(
+                    llmClient, memory, toolRegistry, properties,
+                    inputGuardrails, outputGuardrails,
+                    traceRecorder, agentMetrics, costAnalysisService, guardrailService);
+            case "ROUTER" -> new RouterAgentExecutor(
+                    llmClient, memory, toolRegistry, properties,
                     inputGuardrails, outputGuardrails,
                     traceRecorder, agentMetrics, costAnalysisService, guardrailService, this);
-        }
-        log.warn("[Agent-Factory] 未知 Agent 类型: {}，回退到 ReAct", type);
-        return new ReActAgentExecutor(llmClient, memory, toolRegistry, properties,
-                inputGuardrails, outputGuardrails,
-                traceRecorder, agentMetrics, costAnalysisService, guardrailService);
+            case "SUPERVISOR" -> new SupervisorAgentExecutor(
+                    llmClient, memory, properties,
+                    inputGuardrails, outputGuardrails,
+                    traceRecorder, agentMetrics, costAnalysisService, guardrailService, this);
+            default -> {
+                log.warn("[Agent-Factory] 未知 Agent 类型: {}，回退到 ReAct", type);
+                yield new ReActAgentExecutor(
+                        llmClient, memory, toolRegistry, properties,
+                        inputGuardrails, outputGuardrails,
+                        traceRecorder, agentMetrics, costAnalysisService, guardrailService);
+            }
+        };
+    }
+
+    /**
+     * 执行器工厂接口（函数式接口，用于统一构造器签名）。
+    
+     * <p>每种执行器实现提供一个工厂实例，消除构造参数不一致的问题。
+     */
+    @FunctionalInterface
+    public interface AgentExecutorFactory {
+        /**
+         * 创建执行器实例。
+         *
+         * @return 新的执行器实例
+         */
+        AgentExecutor create();
     }
 }

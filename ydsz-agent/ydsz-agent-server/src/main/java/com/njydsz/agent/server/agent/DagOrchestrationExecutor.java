@@ -126,6 +126,9 @@ public class DagOrchestrationExecutor {
                 completed, failed, hasFailed);
     }
 
+    /** 默认节点超时（秒），当节点未配置 timeoutSeconds 时使用 */
+    private static final int DEFAULT_NODE_TIMEOUT_SECONDS = 60;
+
     /**
      * 执行单个节点的业务逻辑
      */
@@ -155,7 +158,9 @@ public class DagOrchestrationExecutor {
         }
 
         String input = buildNodeInput(node, userInput, results);
-        log.info("[DAG] 执行节点: id={}, type={}", node.getId(), node.getAgentType());
+        // 获取节点级超时配置（优先节点 config，其次全局默认）
+        int nodeTimeoutSeconds = getNodeTimeoutSeconds(node);
+        log.info("[DAG] 执行节点: id={}, type={}, timeout={}s", node.getId(), node.getAgentType(), nodeTimeoutSeconds);
 
         try {
             ChatRequest request = ChatRequest.builder()
@@ -168,17 +173,47 @@ public class DagOrchestrationExecutor {
                     .maxTokens(properties.getLlm().getMaxTokens())
                     .build();
 
-            ChatResponse response = llmClient.chat(request);
+            // 节点级超时：使用 CompletableFuture.orTimeout 为单个节点设置超时
+            ChatResponse response = CompletableFuture.supplyAsync(() -> llmClient.chat(request), executor)
+                    .orTimeout(nodeTimeoutSeconds, TimeUnit.SECONDS)
+                    .join();
+
             results.put(node.getId(), response.getContent());
             if (response.getUsage() != null) {
                 usages.put(node.getId(), response.getUsage());
             }
             completed.add(node.getId());
             log.info("[DAG] 节点完成: id={}", node.getId());
+        } catch (CompletionException e) {
+            if (e.getCause() instanceof TimeoutException) {
+                log.error("[DAG] 节点超时: id={}, timeout={}s", node.getId(), nodeTimeoutSeconds);
+                results.put(node.getId(), "[超时] 节点执行超过 " + nodeTimeoutSeconds + " 秒");
+            } else {
+                log.error("[DAG] 节点执行失败: id={}, error={}", node.getId(), e.getMessage(), e);
+            }
+            failed.add(node.getId());
         } catch (Exception e) {
             log.error("[DAG] 节点执行失败: id={}, error={}", node.getId(), e.getMessage(), e);
             failed.add(node.getId());
         }
+    }
+
+    /**
+     * 获取节点超时秒数。
+     *
+     * <p>优先从节点 {@code config.timeoutSeconds} 读取整数配置，
+     * 未配置时使用全局默认值 {@value DEFAULT_NODE_TIMEOUT_SECONDS}s。
+     *
+     * @param node DAG 节点
+     * @return 超时秒数
+     */
+    private int getNodeTimeoutSeconds(AgentDag.Node node) {
+        Object timeoutObj = node.getConfig().get("timeoutSeconds");
+        if (timeoutObj instanceof Number num) {
+            int timeout = num.intValue();
+            return timeout > 0 ? timeout : DEFAULT_NODE_TIMEOUT_SECONDS;
+        }
+        return DEFAULT_NODE_TIMEOUT_SECONDS;
     }
 
     /**
@@ -259,48 +294,22 @@ public class DagOrchestrationExecutor {
     }
 
     /**
-     * 简单条件求值（支持 contains/equals/startsWith 等字符串操作）
+     * 条件表达式求值。
+     *
+     * <p>委托给 {@link DagConditionEvaluator}，支持：
+     * <ul>
+     *   <li>变量引用：results['nodeId']</li>
+     *   <li>字符串方法：.contains() / .equals() / .startsWith() / .endsWith() / .isEmpty() / .isNotEmpty()</li>
+     *   <li>逻辑运算：&amp;&amp; / || / !</li>
+     *   <li>比较运算：== / !=</li>
+     * </ul>
+     *
+     * @param condition 条件表达式
+     * @param results   节点执行结果映射
+     * @return 求值结果
      */
     private boolean evaluateCondition(String condition, Map<String, String> results) {
-        if (condition == null || condition.isBlank()) {
-            return true;
-        }
-        try {
-            String expr = condition.trim();
-            if (expr.contains(".contains(")) {
-                int idx = expr.indexOf(".contains(\"");
-                String varPart = expr.substring(0, idx);
-                String valuePart = expr.substring(idx + 11, expr.indexOf("\")"));
-                String resolved = resolveVariable(varPart.trim(), results);
-                return resolved.contains(valuePart);
-            }
-            if (expr.contains(".equals(")) {
-                int idx = expr.indexOf(".equals(\"");
-                String varPart = expr.substring(0, idx);
-                String valuePart = expr.substring(idx + 9, expr.indexOf("\")"));
-                String resolved = resolveVariable(varPart.trim(), results);
-                return resolved.equals(valuePart);
-            }
-            if (expr.contains(".startsWith(")) {
-                int idx = expr.indexOf(".startsWith(\"");
-                String varPart = expr.substring(0, idx);
-                String valuePart = expr.substring(idx + 13, expr.indexOf("\")"));
-                String resolved = resolveVariable(varPart.trim(), results);
-                return resolved.startsWith(valuePart);
-            }
-            return Boolean.parseBoolean(expr);
-        } catch (Exception e) {
-            log.warn("[DAG] 条件求值失败: condition={}, error={}", condition, e.getMessage());
-            return false;
-        }
-    }
-
-    private String resolveVariable(String varExpr, Map<String, String> results) {
-        if (varExpr.startsWith("results['") || varExpr.startsWith("results[\"")) {
-            String nodeId = varExpr.substring(9, varExpr.length() - 2);
-            return results.getOrDefault(nodeId, "");
-        }
-        return results.getOrDefault(varExpr, varExpr);
+        return DagConditionEvaluator.evaluate(condition, results);
     }
 
     /**

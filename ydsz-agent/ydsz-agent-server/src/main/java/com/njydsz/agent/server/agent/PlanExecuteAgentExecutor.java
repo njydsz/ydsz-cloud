@@ -12,13 +12,17 @@ import com.njydsz.agent.domain.agent.AgentExecutor;
 import com.njydsz.agent.domain.agent.ExecutionPlan;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
+import com.njydsz.agent.domain.guardrail.InputGuardrail;
+import com.njydsz.agent.domain.guardrail.OutputGuardrail;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
+import com.njydsz.agent.domain.tool.ToolRegistry;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
+import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.common.util.id.IdGenerator;
@@ -47,22 +51,33 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
 
     private final LlmClient llmClient;
     private final ConversationMemory memory;
+    private final ToolRegistry toolRegistry;
     private final AgentProperties properties;
+    private final List<InputGuardrail> inputGuardrails;
+    private final List<OutputGuardrail> outputGuardrails;
     private final TraceRecorder traceRecorder;
     private final AgentMetrics agentMetrics;
     private final CostAnalysisService costAnalysisService;
+    private final GuardrailService guardrailService;
 
     public PlanExecuteAgentExecutor(LlmClient llmClient, ConversationMemory memory,
-                                     AgentProperties properties,
+                                     ToolRegistry toolRegistry, AgentProperties properties,
+                                     List<InputGuardrail> inputGuardrails,
+                                     List<OutputGuardrail> outputGuardrails,
                                      TraceRecorder traceRecorder,
                                      AgentMetrics agentMetrics,
-                                     CostAnalysisService costAnalysisService) {
+                                     CostAnalysisService costAnalysisService,
+                                     GuardrailService guardrailService) {
         this.llmClient = llmClient;
         this.memory = memory;
+        this.toolRegistry = toolRegistry;
         this.properties = properties;
+        this.inputGuardrails = inputGuardrails != null ? inputGuardrails : List.of();
+        this.outputGuardrails = outputGuardrails != null ? outputGuardrails : List.of();
         this.traceRecorder = traceRecorder;
         this.agentMetrics = agentMetrics;
         this.costAnalysisService = costAnalysisService;
+        this.guardrailService = guardrailService;
     }
 
     @Override

@@ -348,7 +348,7 @@
         <!-- ============================================ -->
 
         <!-- 禁止覆盖 finalize() 方法 -->
-        <module name="Finalize"/>
+        <module name="NoFinalizer"/>
 
         <!-- 禁止抛出 RuntimeException / Exception（Throwable 豁免：AOP 切面方法必须 throws Throwable 以透传 joinPoint.proceed() 异常） -->
         <module name="IllegalThrows">

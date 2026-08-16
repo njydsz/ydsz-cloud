@@ -368,8 +368,9 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
                         && insert.getValues().getExpressions() != null) {
                         // INSERT ... VALUES 形式：向 VALUES 列表末尾追加租户字段值，
                         // 保持列数与值数一致，防止列数不匹配导致 SQL 执行失败
-                        insert.getValues().getExpressions()
-                            .add(new StringValue(String.valueOf(tfv.value)));
+                        @SuppressWarnings("unchecked")
+                        List<Expression> valueExprs = (List<Expression>) insert.getValues().getExpressions();
+                        valueExprs.add(new StringValue(String.valueOf(tfv.value)));
                     } else {
                         log.warn("INSERT 语句结构不支持自动注入 {}，table={}, sql={}",
                             resolvedColumn, table.getName(), sql);

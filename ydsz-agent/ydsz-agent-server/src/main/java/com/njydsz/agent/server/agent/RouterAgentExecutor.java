@@ -7,12 +7,18 @@ import org.slf4j.LoggerFactory;
 import com.njydsz.agent.domain.agent.AgentDefinition;
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.agent.AgentExecutor;
+import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
+import com.njydsz.agent.domain.guardrail.InputGuardrail;
+import com.njydsz.agent.domain.guardrail.OutputGuardrail;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
+import com.njydsz.agent.domain.tool.ToolRegistry;
 import com.njydsz.agent.domain.trace.TraceRecorder;
+import com.njydsz.agent.server.analytics.CostAnalysisService;
+import com.njydsz.agent.server.chat.GuardrailService;
 import com.njydsz.agent.server.config.AgentProperties;
 import com.njydsz.agent.server.metrics.AgentMetrics;
 import com.njydsz.common.util.id.IdGenerator;
@@ -32,24 +38,47 @@ public class RouterAgentExecutor implements AgentExecutor {
 
     /** LLM 客户端（用于意图分类） */
     private final LlmClient llmClient;
+    /** 对话记忆 */
+    private final ConversationMemory memory;
+    /** 工具注册中心 */
+    private final ToolRegistry toolRegistry;
     /** Agent 配置属性 */
     private final AgentProperties properties;
+    /** 输入护栏列表 */
+    private final List<InputGuardrail> inputGuardrails;
+    /** 输出护栏列表 */
+    private final List<OutputGuardrail> outputGuardrails;
     /** Agent 工厂（用于创建路由到的子执行器） */
     private final AgentFactory agentFactory;
     /** 链路追踪记录器 */
     private final TraceRecorder traceRecorder;
     /** Agent 监控指标采集器 */
     private final AgentMetrics agentMetrics;
+    /** 成本分析服务 */
+    private final CostAnalysisService costAnalysisService;
+    /** 护栏编排服务 */
+    private final GuardrailService guardrailService;
 
-    public RouterAgentExecutor(LlmClient llmClient, AgentProperties properties,
-                                AgentFactory agentFactory,
+    public RouterAgentExecutor(LlmClient llmClient, ConversationMemory memory,
+                                ToolRegistry toolRegistry, AgentProperties properties,
+                                List<InputGuardrail> inputGuardrails,
+                                List<OutputGuardrail> outputGuardrails,
                                 TraceRecorder traceRecorder,
-                                AgentMetrics agentMetrics) {
+                                AgentMetrics agentMetrics,
+                                CostAnalysisService costAnalysisService,
+                                GuardrailService guardrailService,
+                                AgentFactory agentFactory) {
         this.llmClient = llmClient;
+        this.memory = memory;
+        this.toolRegistry = toolRegistry;
         this.properties = properties;
+        this.inputGuardrails = inputGuardrails != null ? inputGuardrails : List.of();
+        this.outputGuardrails = outputGuardrails != null ? outputGuardrails : List.of();
         this.agentFactory = agentFactory;
         this.traceRecorder = traceRecorder;
         this.agentMetrics = agentMetrics;
+        this.costAnalysisService = costAnalysisService;
+        this.guardrailService = guardrailService;
     }
 
     /**

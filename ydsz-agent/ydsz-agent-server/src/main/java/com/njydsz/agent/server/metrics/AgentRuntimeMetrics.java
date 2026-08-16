@@ -220,13 +220,22 @@ public class AgentRuntimeMetrics extends SentryMetricsAdapter {
    *
    * @param count 活跃会话数
    */
-  public void setActiveConversations(long count) {
-    activeConversations.set(Math.max(0, count));
-  }
+    public void setActiveConversations(long count) {
+        activeConversations.set(Math.max(0, count));
+    }
 
-  // -----------------------------------------------------------------------
-  // 会话消息
-  // -----------------------------------------------------------------------
+    /**
+     * 获取当前活跃对话数（Gauge 实时值）。
+     *
+     * @return 当前活跃会话数
+     */
+    public long getActiveConversations() {
+        return activeConversations.get();
+    }
+
+    // -----------------------------------------------------------------------
+    // 会话消息
+    // -----------------------------------------------------------------------
 
   /**
    * 记录一条消息（用户、助手或系统消息）到累积计数器。

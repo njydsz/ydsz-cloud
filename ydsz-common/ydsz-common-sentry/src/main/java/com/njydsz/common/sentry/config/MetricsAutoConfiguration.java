@@ -128,7 +128,7 @@ public class MetricsAutoConfiguration {
     public CircuitBreakerRegistry circuitBreakerRegistry(SentryProperties properties) {
         SentryProperties.CircuitBreakerConfig cb = properties.getMetrics().getCircuitBreaker();
         CircuitBreakerConfig config = CircuitBreakerConfig.custom()
-                .failureRateThreshold(cb.getFailureRateThreshold())
+                .failureRateThreshold((float) cb.getFailureRateThreshold())
                 .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.TIME_BASED)
                 .slidingWindowSize(cb.getSlidingWindowSize())
                 .waitDurationInOpenState(java.time.Duration.ofSeconds(cb.getHalfOpenAfterSeconds()))
