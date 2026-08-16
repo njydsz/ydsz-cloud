@@ -67,7 +67,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 @RequestMapping("/api/v1/agent/debug")
 public class DebugController {
 
-  private static final Logger log = LoggerFactory.getLogger(DebugController.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DebugController.class);
 
   /** Agent 调试服务（封装链路查询 + 重放能力） */
   private final AgentDebuggerService agentDebuggerService;
@@ -173,7 +173,7 @@ public class DebugController {
   @RateLimit(resource = "agent.debug.replayTrace", threshold = 50)
   @PostMapping("/trace/{traceId}/replay")
   public BaseResponse<String> replayTrace(@PathVariable String traceId) {
-    log.info("[Debug-API] 重放链路: traceId={}", traceId);
+    LOG.info("[Debug-API] 重放链路: traceId={}", traceId);
     TraceMeta meta = agentDebuggerService.getTraceMeta(traceId);
     if (meta == null) {
       return BaseResponse.error(AgentExceptionCode.TRACE_NOT_FOUND, "链路不存在或不支持重放: " + traceId);
@@ -186,7 +186,7 @@ public class DebugController {
     String userInput = steps.get(0).getContent();
     String conversationId = meta.getConversationId();
     String agentType = meta.getAgentId();
-    log.info(
+    LOG.info(
         "[Debug-API] 重放参数: convId={}, agentType={}, userInputLen={}",
         conversationId,
         agentType,

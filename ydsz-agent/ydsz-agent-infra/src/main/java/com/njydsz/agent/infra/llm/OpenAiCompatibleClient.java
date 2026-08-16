@@ -65,7 +65,7 @@ import com.njydsz.common.json.tree.ObjectNode;
  */
 public class OpenAiCompatibleClient implements LlmClient {
 
-  private static final Logger log = LoggerFactory.getLogger(OpenAiCompatibleClient.class);
+  private static final Logger LOG = LoggerFactory.getLogger(OpenAiCompatibleClient.class);
 
   /** 默认最大重试次数 */
   private static final int DEFAULT_MAX_RETRIES = 3;
@@ -156,7 +156,7 @@ public class OpenAiCompatibleClient implements LlmClient {
     for (int attempt = 0; attempt <= maxRetries; attempt++) {
       if (attempt > 0) {
         long delay = RETRY_DELAY_BASE_MS * attempt;
-        log.info("[LLM-{}] 重试 {}/{}: delay={}ms", provider, attempt, maxRetries, delay);
+        LOG.info("[LLM-{}] 重试 {}/{}: delay={}ms", provider, attempt, maxRetries, delay);
         try {
           Thread.sleep(delay);
         } catch (InterruptedException ie) {
@@ -184,7 +184,7 @@ public class OpenAiCompatibleClient implements LlmClient {
         if (!isRetryable(e) || attempt >= maxRetries) {
           throw e;
         }
-        log.warn(
+        LOG.warn(
             "[LLM-{}] 可重试错误 (attempt={}/{}): type={}, msg={}",
             provider,
             attempt + 1,
@@ -196,27 +196,27 @@ public class OpenAiCompatibleClient implements LlmClient {
         lastException =
             new LlmException("LLM 调用失败 (HTTP " + e.getStatusCode().value() + ")", errorType, e);
         if (errorType != LlmException.ErrorType.RATE_LIMITED || attempt >= maxRetries) {
-          log.error("[LLM-{}] 同步调用 HTTP 错误: status={}", provider, e.getStatusCode().value());
+          LOG.error("[LLM-{}] 同步调用 HTTP 错误: status={}", provider, e.getStatusCode().value());
           throw (LlmException) lastException;
         }
-        log.warn("[LLM-{}] 限流重试 (attempt={}/{})", provider, attempt + 1, maxRetries);
+        LOG.warn("[LLM-{}] 限流重试 (attempt={}/{})", provider, attempt + 1, maxRetries);
       } catch (ResourceAccessException e) {
         lastException =
             new LlmException(
                 "LLM 网络超时或连接拒绝: " + e.getMessage(), LlmException.ErrorType.NETWORK_TIMEOUT, e);
         if (attempt >= maxRetries) {
-          log.error("[LLM-{}] 同步调用网络异常: {}", provider, e.getMessage());
+          LOG.error("[LLM-{}] 同步调用网络异常: {}", provider, e.getMessage());
           throw (LlmException) lastException;
         }
-        log.warn("[LLM-{}] 网络重试 (attempt={}/{})", provider, attempt + 1, maxRetries);
+        LOG.warn("[LLM-{}] 网络重试 (attempt={}/{})", provider, attempt + 1, maxRetries);
       } catch (Exception e) {
         lastException = e;
         if (attempt >= maxRetries) {
-          log.error("[LLM-{}] 同步调用失败: {}", provider, e.getMessage(), e);
+          LOG.error("[LLM-{}] 同步调用失败: {}", provider, e.getMessage(), e);
           throw new LlmException(
               "LLM 调用失败: " + e.getMessage(), LlmException.ErrorType.PROVIDER_ERROR, e);
         }
-        log.warn("[LLM-{}] 未知错误重试 (attempt={}/{})", provider, attempt + 1, maxRetries);
+        LOG.warn("[LLM-{}] 未知错误重试 (attempt={}/{})", provider, attempt + 1, maxRetries);
       }
     }
     throw new LlmException("LLM 调用重试耗尽", LlmException.ErrorType.PROVIDER_ERROR, lastException);
@@ -256,21 +256,21 @@ public class OpenAiCompatibleClient implements LlmClient {
                   }
                 }
               })
-          .doOnError(e -> log.error("[LLM-{}] 流式调用失败: {}", provider, e.getMessage(), e))
+          .doOnError(e -> LOG.error("[LLM-{}] 流式调用失败: {}", provider, e.getMessage(), e))
           .blockLast();
       chunkConsumer.accept(ChatChunk.finish("", request.getModel(), "stop", null));
     } catch (LlmException e) {
       throw e;
     } catch (WebClientResponseException e) {
       LlmException.ErrorType errorType = mapHttpError(e.getStatusCode().value());
-      log.error("[LLM-{}] 流式调用 HTTP 错误: status={}", provider, e.getStatusCode().value());
+      LOG.error("[LLM-{}] 流式调用 HTTP 错误: status={}", provider, e.getStatusCode().value());
       throw new LlmException("LLM 流式调用失败 (HTTP " + e.getStatusCode().value() + ")", errorType, e);
     } catch (Exception e) {
       if (isTimeoutException(e)) {
-        log.error("[LLM-{}] 流式调用超时: {}", provider, e.getMessage());
+        LOG.error("[LLM-{}] 流式调用超时: {}", provider, e.getMessage());
         throw new LlmException("LLM 流式调用超时", LlmException.ErrorType.NETWORK_TIMEOUT, e);
       }
-      log.error("[LLM-{}] 流式调用异常: {}", provider, e.getMessage(), e);
+      LOG.error("[LLM-{}] 流式调用异常: {}", provider, e.getMessage(), e);
       throw new LlmException(
           "LLM 流式调用失败: " + e.getMessage(), LlmException.ErrorType.PROVIDER_ERROR, e);
     }
@@ -394,7 +394,7 @@ public class OpenAiCompatibleClient implements LlmClient {
       }
       return null;
     } catch (Exception e) {
-      log.warn("[LLM-{}] 解析 chunk 失败: {}", provider, e.getMessage());
+      LOG.warn("[LLM-{}] 解析 chunk 失败: {}", provider, e.getMessage());
       return null;
     }
   }

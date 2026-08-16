@@ -31,7 +31,7 @@ import com.njydsz.agent.server.rag.RagService;
  */
 public class AgentFactory {
 
-  private static final Logger log = LoggerFactory.getLogger(AgentFactory.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AgentFactory.class);
 
   /** LLM 客户端 */
   private final LlmClient llmClient;
@@ -109,7 +109,7 @@ public class AgentFactory {
    * @return 对应类型的执行器实例
    */
   private AgentExecutor createExecutor(String type) {
-    log.info("[Agent-Factory] 创建执行器: type={}", type);
+    LOG.info("[Agent-Factory] 创建执行器: type={}", type);
 
     return switch (type.toUpperCase()) {
       case "REACT", "REACT_AGENT" ->
@@ -173,7 +173,7 @@ public class AgentFactory {
               guardrailService,
               this);
       default -> {
-        log.warn("[Agent-Factory] 未知 Agent 类型: {}，回退到 ReAct", type);
+        LOG.warn("[Agent-Factory] 未知 Agent 类型: {}，回退到 ReAct", type);
         yield new ReActAgentExecutor(
             llmClient,
             memory,

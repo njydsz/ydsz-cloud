@@ -62,7 +62,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 @RequestMapping("/api/v1/agent/dag")
 public class DagController {
 
-  private static final Logger log = LoggerFactory.getLogger(DagController.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DagController.class);
 
   /** DAG DSL 解析器（YAML → AgentDag） */
   private final DagDslParser dslParser;
@@ -103,7 +103,7 @@ public class DagController {
   @PostMapping("/execute")
   public BaseResponse<DagOrchestrationExecutor.DagExecutionResult> execute(
       @Valid @RequestBody DagExecutionDTO request) {
-    log.info("[DAG-API] 收到编排请求: userInput={}", request.getUserInput());
+    LOG.info("[DAG-API] 收到编排请求: userInput={}", request.getUserInput());
 
     // 1. 解析 DSL（YAML → AgentDag 对象）
     AgentDag dag = dslParser.parse(request.getDsl());
@@ -140,7 +140,7 @@ public class DagController {
               "dagName", dag.getName(),
               "nodeCount", dag.getNodes().size()));
     } catch (Exception e) {
-      log.error("[DAG-API] DSL 解析失败, dsl={}, err={}", request.getDsl(), e.getMessage(), e);
+      LOG.error("[DAG-API] DSL 解析失败, dsl={}, err={}", request.getDsl(), e.getMessage(), e);
       // 解析失败时仍返回 success，由 valid 字段标识
       return BaseResponse.success(Map.of("valid", false, "error", e.getMessage()));
     }

@@ -29,7 +29,7 @@ import com.njydsz.common.util.id.IdGenerator;
  */
 public class SimpleTextChunker implements TextChunker {
 
-  private static final Logger log = LoggerFactory.getLogger(SimpleTextChunker.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SimpleTextChunker.class);
 
   /** 默认分块大小（字符数） */
   private static final int DEFAULT_CHUNK_SIZE = 500;
@@ -86,7 +86,7 @@ public class SimpleTextChunker implements TextChunker {
         chunks.add(createChunk(content, documentId, documentTitle, source, chunkIndex));
       }
     }
-    log.debug("[Chunker] 分块完成: docId={}, chunks={}", documentId, chunks.size());
+    LOG.debug("[Chunker] 分块完成: docId={}, chunks={}", documentId, chunks.size());
     return chunks;
   }
 

@@ -41,7 +41,7 @@ import com.njydsz.agent.domain.model.ChatResponse;
  */
 public class SummaryConversationMemory implements ConversationMemory {
 
-  private static final Logger log = LoggerFactory.getLogger(SummaryConversationMemory.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SummaryConversationMemory.class);
 
   /** 摘要前缀 */
   private static final String SUMMARY_PREFIX = "[对话摘要] ";
@@ -132,14 +132,14 @@ public class SummaryConversationMemory implements ConversationMemory {
         for (ChatMessage msg : recentMessages) {
           delegate.save(conversationId, msg);
         }
-        log.info(
+        LOG.info(
             "[Memory-Summary] 对话压缩完成: convId={}, compressed={}, kept={}",
             conversationId,
             oldMessages.size(),
             recentMessages.size());
       }
     } catch (Exception e) {
-      log.warn("[Memory-Summary] 对话压缩失败: convId={}, error={}", conversationId, e.getMessage());
+      LOG.warn("[Memory-Summary] 对话压缩失败: convId={}, error={}", conversationId, e.getMessage());
     }
   }
 

@@ -34,7 +34,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 @Service
 public class AgentDebuggerService {
 
-  private static final Logger log = LoggerFactory.getLogger(AgentDebuggerService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AgentDebuggerService.class);
 
   private final TraceRecorder traceRecorder;
   private final AgentFactory agentFactory;
@@ -58,7 +58,7 @@ public class AgentDebuggerService {
    * @return 链路步骤列表
    */
   public List<TraceRecorder.TraceStep> getTrace(String traceId) {
-    log.info("[Debugger] 查询链路: traceId={}", traceId);
+    LOG.info("[Debugger] 查询链路: traceId={}", traceId);
     return traceRecorder.getSteps(traceId);
   }
 
@@ -73,7 +73,7 @@ public class AgentDebuggerService {
    * @return 重放结果
    */
   public ChatResponse replay(String conversationId, String userInput, String agentType) {
-    log.info("[Debugger] 重放: convId={}, agentType={}", conversationId, agentType);
+    LOG.info("[Debugger] 重放: convId={}, agentType={}", conversationId, agentType);
 
     AgentDefinition def =
         new AgentDefinition(

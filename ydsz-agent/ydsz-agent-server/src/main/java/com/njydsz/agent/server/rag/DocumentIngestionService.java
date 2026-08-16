@@ -31,7 +31,7 @@ import com.njydsz.agent.domain.rag.VectorStore;
 @Service
 public class DocumentIngestionService {
 
-  private static final Logger log = LoggerFactory.getLogger(DocumentIngestionService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DocumentIngestionService.class);
   // Embedding 批量调用大小：单次最多 20 条，平衡吞吐与单次请求超时风险
   private static final int EMBED_BATCH_SIZE = 20;
 
@@ -56,7 +56,7 @@ public class DocumentIngestionService {
    * @return 摄入的文本块数
    */
   public int ingest(String documentId, String content, String documentTitle, String source) {
-    log.info(
+    LOG.info(
         "[RAG-Ingest] 开始摄入: docId={}, title={}, contentLen={}",
         documentId,
         documentTitle,
@@ -66,7 +66,7 @@ public class DocumentIngestionService {
 
     List<TextChunk> chunks = textChunker.chunk(content, documentId, documentTitle, source);
     if (chunks.isEmpty()) {
-      log.warn("[RAG-Ingest] 分块结果为空: docId={}", documentId);
+      LOG.warn("[RAG-Ingest] 分块结果为空: docId={}", documentId);
       return 0;
     }
 
@@ -81,7 +81,7 @@ public class DocumentIngestionService {
       }
     }
 
-    log.info("[RAG-Ingest] 摄入完成: docId={}, chunks={}", documentId, chunks.size());
+    LOG.info("[RAG-Ingest] 摄入完成: docId={}, chunks={}", documentId, chunks.size());
     return chunks.size();
   }
 
@@ -92,7 +92,7 @@ public class DocumentIngestionService {
    */
   public void delete(String documentId) {
     vectorStore.deleteByDocument(documentId);
-    log.info("[RAG-Ingest] 删除文档索引: docId={}", documentId);
+    LOG.info("[RAG-Ingest] 删除文档索引: docId={}", documentId);
   }
 
   /** 获取向量存储统计 */

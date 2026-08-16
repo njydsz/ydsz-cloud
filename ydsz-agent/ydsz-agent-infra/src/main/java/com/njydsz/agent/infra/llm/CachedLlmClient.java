@@ -34,7 +34,7 @@ import com.njydsz.agent.domain.model.TokenUsage;
  */
 public class CachedLlmClient implements LlmClient {
 
-  private static final Logger log = LoggerFactory.getLogger(CachedLlmClient.class);
+  private static final Logger LOG = LoggerFactory.getLogger(CachedLlmClient.class);
 
   /** 被装饰的实际 LLM 客户端 */
   private final LlmClient delegate;
@@ -57,7 +57,7 @@ public class CachedLlmClient implements LlmClient {
       SemanticLlmCache.CachedLlmResponse cached =
           cache.get(request.getModel(), cacheContent.getKey(), cacheContent.getValue());
       if (cached != null) {
-        log.info("[CachedLLM] 缓存命中，跳过 LLM 调用: model={}", request.getModel());
+        LOG.info("[CachedLLM] 缓存命中，跳过 LLM 调用: model={}", request.getModel());
         return buildCachedResponse(request, cached);
       }
     }
@@ -119,7 +119,8 @@ public class CachedLlmClient implements LlmClient {
     return new ChatResponse(
         "chatcmpl-cached-" + System.identityHashCode(cached),
         request.getModel(),
-        new com.njydsz.agent.domain.model.ChatMessage("assistant", cached.content(), null),
+        com.njydsz.agent.domain.model.ChatMessage.assistant(
+            cached.content(), null, TokenUsage.zero()),
         TokenUsage.zero(),
         "stop",
         List.of());

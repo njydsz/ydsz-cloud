@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class DagConditionEvaluator {
 
-  private static final Logger log = LoggerFactory.getLogger(DagConditionEvaluator.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DagConditionEvaluator.class);
 
   /** 私有构造器防止实例化 */
   private DagConditionEvaluator() {}
@@ -72,7 +72,7 @@ public final class DagConditionEvaluator {
       String expr = condition.trim();
       return evaluateExpression(expr, results);
     } catch (Exception e) {
-      log.warn("[DAG] 条件求值异常: condition={}, error={}", condition, e.getMessage());
+      LOG.warn("[DAG] 条件求值异常: condition={}, error={}", condition, e.getMessage());
       return false;
     }
   }

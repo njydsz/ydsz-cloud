@@ -71,7 +71,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 @RequestMapping("/api/v1/agent/rag")
 public class RagController {
 
-  private static final Logger log = LoggerFactory.getLogger(RagController.class);
+  private static final Logger LOG = LoggerFactory.getLogger(RagController.class);
 
   /** RAG 检索服务（封装向量相似度检索 + 引用构建 + 上下文拼装） */
   private final RagService ragService;
@@ -108,7 +108,7 @@ public class RagController {
   @Idempotent(key = "ydsz:agent:RagController:ingest:lock", ttlSeconds = 5)
   @PostMapping("/ingest")
   public BaseResponse<Map<String, Object>> ingest(@Valid @RequestBody DocumentIngestDTO request) {
-    log.info(
+    LOG.info(
         "[RAG-API] 摄入文档: docId={}, title={}", request.getDocumentId(), request.getDocumentTitle());
     int chunkCount =
         ingestionService.ingest(
@@ -186,7 +186,7 @@ public class RagController {
   @RateLimit(resource = "agent.rag.deleteDocument", threshold = 50)
   @DeleteMapping("/documents/{documentId}")
   public BaseResponse<Void> deleteDocument(@PathVariable String documentId) {
-    log.info("[RAG-API] 删除文档索引: documentId={}", documentId);
+    LOG.info("[RAG-API] 删除文档索引: documentId={}", documentId);
     ingestionService.delete(documentId);
     return BaseResponse.success();
   }

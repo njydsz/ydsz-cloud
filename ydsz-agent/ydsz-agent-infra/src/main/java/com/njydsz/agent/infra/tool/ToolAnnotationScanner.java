@@ -47,7 +47,7 @@ import com.njydsz.common.json.YdszJson;
  */
 public class ToolAnnotationScanner implements BeanPostProcessor {
 
-  private static final Logger log = LoggerFactory.getLogger(ToolAnnotationScanner.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ToolAnnotationScanner.class);
 
   /** 工具注册中心 */
   private final ToolRegistry toolRegistry;
@@ -101,7 +101,7 @@ public class ToolAnnotationScanner implements BeanPostProcessor {
     } else {
       toolRegistry.register(toolName, executor);
     }
-    log.info(
+    LOG.info(
         "[Tool-Scanner] 自动注册工具: {} (from {}.{}())",
         toolName,
         bean.getClass().getSimpleName(),

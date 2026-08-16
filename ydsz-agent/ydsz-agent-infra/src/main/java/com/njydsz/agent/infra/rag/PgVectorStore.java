@@ -49,7 +49,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
  */
 public class PgVectorStore implements VectorStore {
 
-  private static final Logger log = LoggerFactory.getLogger(PgVectorStore.class);
+  private static final Logger LOG = LoggerFactory.getLogger(PgVectorStore.class);
 
   /** JDBC 模板 */
   private final JdbcTemplate jdbcTemplate;
@@ -125,7 +125,7 @@ public class PgVectorStore implements VectorStore {
         chunk.getSource(),
         metadataJson,
         tenantId);
-    log.debug(
+    LOG.debug(
         "[VectorStore] 存储文本块: id={}, docId={}, tokens={}, tenantId={}",
         chunk.getId(),
         chunk.getDocumentId(),
@@ -172,7 +172,7 @@ public class PgVectorStore implements VectorStore {
           });
     }
     jdbcTemplate.batchUpdate(sql, batchArgs);
-    log.info("[VectorStore] 批量存储完成: {} 个文本块 (tenantId={})", chunks.size(), tenantId);
+    LOG.info("[VectorStore] 批量存储完成: {} 个文本块 (tenantId={})", chunks.size(), tenantId);
   }
 
   @Override
@@ -234,7 +234,7 @@ public class PgVectorStore implements VectorStore {
           },
           params.toArray());
     } catch (Exception e) {
-      log.warn("[VectorStore] 向量检索失败，降级返回空: {}", e.getMessage());
+      LOG.warn("[VectorStore] 向量检索失败，降级返回空: {}", e.getMessage());
       return List.of();
     }
   }
@@ -251,7 +251,7 @@ public class PgVectorStore implements VectorStore {
       jdbcTemplate.update(
           "DELETE FROM ydsz_agent_document_chunk WHERE document_id = ?", documentId);
     }
-    log.info("[VectorStore] 删除文档文本块: docId={}, tenantId={}", documentId, tenantId);
+    LOG.info("[VectorStore] 删除文档文本块: docId={}, tenantId={}", documentId, tenantId);
   }
 
   @Override
@@ -270,7 +270,7 @@ public class PgVectorStore implements VectorStore {
           jdbcTemplate.queryForObject("SELECT COUNT(*) FROM ydsz_agent_document_chunk", Long.class);
       return count != null ? count : 0;
     } catch (Exception e) {
-      log.warn("[VectorStore] 统计文本块数量失败, err={}", e.getMessage());
+      LOG.warn("[VectorStore] 统计文本块数量失败, err={}", e.getMessage());
       return 0;
     }
   }
@@ -286,7 +286,7 @@ public class PgVectorStore implements VectorStore {
       jdbcTemplate.queryForObject("SELECT 1 FROM ydsz_agent_document_chunk LIMIT 1", Integer.class);
       return true;
     } catch (Exception e) {
-      log.warn("[VectorStore] 可用性检查失败, err={}", e.getMessage());
+      LOG.warn("[VectorStore] 可用性检查失败, err={}", e.getMessage());
       return false;
     }
   }

@@ -33,7 +33,7 @@ import com.njydsz.agent.infra.mapper.TokenUsageRecordMapper;
  */
 public class CostAnalysisService {
 
-  private static final Logger log = LoggerFactory.getLogger(CostAnalysisService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(CostAnalysisService.class);
 
   /** Token 用量记录 Mapper */
   private final TokenUsageRecordMapper usageRecordMapper;
@@ -77,7 +77,7 @@ public class CostAnalysisService {
       usageRecordMapper.insert(record);
     } catch (Exception e) {
       // 用量记录失败不应影响主流程，仅记录日志
-      log.warn("[CostAnalysis] 用量记录失败: convId={}, model={}", conversationId, modelName, e);
+      LOG.warn("[CostAnalysis] 用量记录失败: convId={}, model={}", conversationId, modelName, e);
     }
   }
 

@@ -31,7 +31,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  */
 public class AgentRequestGuard {
 
-  private static final Logger log = LoggerFactory.getLogger(AgentRequestGuard.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AgentRequestGuard.class);
 
   private static final String IDEM_KEY_PREFIX = "ydsz:agent:idem:";
   private static final String RATE_KEY_PREFIX = "ydsz:agent:rate:";
@@ -66,7 +66,7 @@ public class AgentRequestGuard {
     String key = IDEM_KEY_PREFIX + requestId;
     Boolean acquired = stringOps.setIfAbsent(key, "1", IDEM_TTL.toSeconds());
     if (acquired == null || !acquired) {
-      log.warn("[Agent-Guard] 重复请求被拒绝: requestId={}", requestId);
+      LOG.warn("[Agent-Guard] 重复请求被拒绝: requestId={}", requestId);
       throw BusinessException.builder()
           .code("REQUEST_DUPLICATE")
           .message("重复请求，请勿在 60 秒内重复提交")
@@ -86,7 +86,7 @@ public class AgentRequestGuard {
       stringOps.expire(key, RATE_WINDOW.toSeconds());
     }
     if (count > MAX_REQUESTS_PER_MINUTE) {
-      log.warn("[Agent-Guard] 限流触发: userId={}, count={}", userId, count);
+      LOG.warn("[Agent-Guard] 限流触发: userId={}, count={}", userId, count);
       throw BusinessException.builder()
           .code("RATE_LIMIT_EXCEEDED")
           .message("请求过于频繁，每分钟最多 " + MAX_REQUESTS_PER_MINUTE + " 次")

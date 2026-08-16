@@ -36,7 +36,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
  */
 public class RedisConversationMemory implements ConversationMemory {
 
-  private static final Logger log = LoggerFactory.getLogger(RedisConversationMemory.class);
+  private static final Logger LOG = LoggerFactory.getLogger(RedisConversationMemory.class);
 
   /** Redis key 前缀 */
   private static final String KEY_PREFIX = "ydsz:agent:memory:";
@@ -144,7 +144,7 @@ public class RedisConversationMemory implements ConversationMemory {
     try {
       return Boolean.TRUE.equals(stringOps.hasKey(KEY_PREFIX + "health-check"));
     } catch (Exception e) {
-      log.warn("[Memory] Redis 连接检查失败: {}", e.getMessage());
+      LOG.warn("[Memory] Redis 连接检查失败: {}", e.getMessage());
       return false;
     }
   }
@@ -176,7 +176,7 @@ public class RedisConversationMemory implements ConversationMemory {
       return new ChatMessage(
           sm.id, role, sm.content, sm.conversationId, createdAt, null, null, usage);
     } catch (Exception e) {
-      log.warn("[Memory] 反序列化消息失败: {}", e.getMessage());
+      LOG.warn("[Memory] 反序列化消息失败: {}", e.getMessage());
       return null;
     }
   }

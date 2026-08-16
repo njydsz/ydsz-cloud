@@ -34,7 +34,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
  */
 public class HybridRetriever {
 
-  private static final Logger log = LoggerFactory.getLogger(HybridRetriever.class);
+  private static final Logger LOG = LoggerFactory.getLogger(HybridRetriever.class);
 
   /** RRF 平滑常数 */
   private static final int RRF_K = 60;
@@ -100,18 +100,18 @@ public class HybridRetriever {
       return List.of();
     }
     List<TextChunk> vectorResults = vectorStore.search(query, topK * 2, minScore * 0.5);
-    log.debug("[Hybrid-Retrieval] 向量检索: {} 条", vectorResults.size());
+    LOG.debug("[Hybrid-Retrieval] 向量检索: {} 条", vectorResults.size());
 
     List<TextChunk> fullTextResults = List.of();
     if (fullTextAvailable) {
       fullTextResults = fullTextSearch(query, topK * 2);
-      log.debug("[Hybrid-Retrieval] 全文检索: {} 条", fullTextResults.size());
+      LOG.debug("[Hybrid-Retrieval] 全文检索: {} 条", fullTextResults.size());
     }
 
     List<TextChunk> merged = rrfFuse(vectorResults, fullTextResults, topK);
     // 精排阶段：通过 Reranker 对融合结果做重排序，提升 Top-K 精确度
     List<TextChunk> reranked = reranker.rerank(query, merged, topK);
-    log.info(
+    LOG.info(
         "[Hybrid-Retrieval] 混合检索完成: query='{}', vector={}, fulltext={}, merged={}, reranked={}",
         truncate(query, 50),
         vectorResults.size(),
@@ -156,7 +156,7 @@ public class HybridRetriever {
       if (!fullTextAvailable) {
         return List.of();
       }
-      log.info("[Hybrid-Retrieval] 全文检索可用性恢复，已重新启用全文检索");
+      LOG.info("[Hybrid-Retrieval] 全文检索可用性恢复，已重新启用全文检索");
     }
     try {
       StringBuilder sql =
@@ -196,7 +196,7 @@ public class HybridRetriever {
                   null),
           params.toArray());
     } catch (Exception e) {
-      log.warn("[Hybrid-Retrieval] 全文检索失败，降级到纯向量检索: {}", e.getMessage());
+      LOG.warn("[Hybrid-Retrieval] 全文检索失败，降级到纯向量检索: {}", e.getMessage());
       return List.of();
     }
   }
@@ -226,7 +226,7 @@ public class HybridRetriever {
               Integer.class);
       return count != null && count > 0;
     } catch (Exception e) {
-      log.warn("[Hybrid-Retrieval] 全文检索可用性检查失败, DB可能不可用, err={}", e.getMessage());
+      LOG.warn("[Hybrid-Retrieval] 全文检索可用性检查失败, DB可能不可用, err={}", e.getMessage());
       return false;
     }
   }

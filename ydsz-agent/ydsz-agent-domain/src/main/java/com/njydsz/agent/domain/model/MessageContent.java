@@ -67,7 +67,8 @@ public final class MessageContent implements Serializable {
    * @return true 表示至少一个图片段落
    */
   public boolean hasImages() {
-    return parts.stream().anyMatch(p -> "image_url".equals(p.getType()));
+    // ContentPart 为 record，访问器为 type()（record 组件方法）
+    return parts.stream().anyMatch(p -> "image_url".equals(p.type()));
   }
 
   /**

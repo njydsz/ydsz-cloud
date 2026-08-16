@@ -44,7 +44,7 @@ import com.njydsz.common.json.YdszJson;
  */
 public class Text2SqlTool implements ToolExecutor {
 
-  private static final Logger log = LoggerFactory.getLogger(Text2SqlTool.class);
+  private static final Logger LOG = LoggerFactory.getLogger(Text2SqlTool.class);
 
   /** 系统提示词：指导 LLM 生成安全的 SQL */
   private static final String SQL_GEN_SYSTEM_PROMPT =
@@ -95,26 +95,26 @@ public class Text2SqlTool implements ToolExecutor {
     if (sql == null || sql.isBlank()) {
       return YdszJson.toJson(Map.of("error", "无法生成有效的 SQL 查询"));
     }
-    log.info("[Text2SQL] 生成 SQL: {}", sql);
+    LOG.info("[Text2SQL] 生成 SQL: {}", sql);
 
     // Step 2: 安全校验
     String validationError = validateSql(sql);
     if (validationError != null) {
-      log.warn("[Text2SQL] SQL 安全校验失败: {}", validationError);
+      LOG.warn("[Text2SQL] SQL 安全校验失败: {}", validationError);
       return YdszJson.toJson(Map.of("error", "SQL 安全校验失败: " + validationError));
     }
 
     // Step 3: 执行查询（Statement 级超时 + 行数上限，避免共享 JdbcTemplate 全局超时被污染）
     try {
       List<Map<String, Object>> rows = executeQuery(sql);
-      log.info("[Text2SQL] 查询完成: {} 行", rows.size());
+      LOG.info("[Text2SQL] 查询完成: {} 行", rows.size());
       return YdszJson.toJson(
           Map.of(
               "sql", sql,
               "rowCount", rows.size(),
               "data", rows));
     } catch (Exception e) {
-      log.error("[Text2SQL] SQL 执行失败: {}", e.getMessage());
+      LOG.error("[Text2SQL] SQL 执行失败: {}", e.getMessage());
       return YdszJson.toJson(Map.of("error", "SQL 执行失败: " + e.getMessage(), "sql", sql));
     }
   }
@@ -178,7 +178,7 @@ public class Text2SqlTool implements ToolExecutor {
         return response.getContent().trim().replaceAll("```sql", "").replaceAll("```", "").trim();
       }
     } catch (Exception e) {
-      log.error("[Text2SQL] LLM 调用失败: {}", e.getMessage());
+      LOG.error("[Text2SQL] LLM 调用失败: {}", e.getMessage());
     }
     return null;
   }

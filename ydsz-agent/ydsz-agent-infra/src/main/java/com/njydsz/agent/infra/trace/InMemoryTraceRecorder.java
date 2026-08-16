@@ -24,7 +24,7 @@ import com.njydsz.common.json.YdszJson;
  */
 public class InMemoryTraceRecorder implements TraceRecorder {
 
-  private static final Logger log = LoggerFactory.getLogger(InMemoryTraceRecorder.class);
+  private static final Logger LOG = LoggerFactory.getLogger(InMemoryTraceRecorder.class);
 
   /** 最大链路存储数 */
   private static final int MAX_TRACES = 1000;
@@ -48,7 +48,7 @@ public class InMemoryTraceRecorder implements TraceRecorder {
     traces.put(traceId, new ArrayList<>());
     traceStatus.put(traceId, "RUNNING");
     traceMetas.put(traceId, new TraceMeta(traceId, conversationId, agentId, LocalDateTime.now()));
-    log.info("[Trace] 开始链路: traceId={}, convId={}, agentId={}", traceId, conversationId, agentId);
+    LOG.info("[Trace] 开始链路: traceId={}, convId={}, agentId={}", traceId, conversationId, agentId);
     return traceId;
   }
 
@@ -78,7 +78,7 @@ public class InMemoryTraceRecorder implements TraceRecorder {
             outputJson,
             durationMs,
             LocalDateTime.now()));
-    log.debug(
+    LOG.debug(
         "[Trace] 记录步骤: traceId={}, step={}, type={}, {}ms", traceId, index, stepType, durationMs);
   }
 
@@ -93,7 +93,7 @@ public class InMemoryTraceRecorder implements TraceRecorder {
       meta.setTotalDurationMs(totalMs);
     }
     int stepCount = traces.getOrDefault(traceId, List.of()).size();
-    log.info("[Trace] 结束链路: traceId={}, status={}, steps={}", traceId, status, stepCount);
+    LOG.info("[Trace] 结束链路: traceId={}, status={}, steps={}", traceId, status, stepCount);
   }
 
   @Override
@@ -159,7 +159,7 @@ public class InMemoryTraceRecorder implements TraceRecorder {
                 traceStatus.remove(tid);
                 traceMetas.remove(tid);
               });
-      log.info("[Trace] 清理超容量链路: 清除 {} 条", toRemove);
+      LOG.info("[Trace] 清理超容量链路: 清除 {} 条", toRemove);
     }
   }
 

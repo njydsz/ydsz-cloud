@@ -35,7 +35,7 @@ import com.njydsz.common.util.id.IdGenerator;
 public class SimpleAgentExecutor implements AgentExecutor {
 
   /** 日志记录器 */
-  private static final Logger log = LoggerFactory.getLogger(SimpleAgentExecutor.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SimpleAgentExecutor.class);
 
   /** LLM 客户端 */
   private final LlmClient llmClient;
@@ -86,7 +86,7 @@ public class SimpleAgentExecutor implements AgentExecutor {
     String convId =
         request.getConversationId() != null ? request.getConversationId() : IdGenerator.nextIdStr();
     String traceId = traceRecorder.startTrace(convId, "CHAT");
-    log.info("[Simple-Agent] 执行: convId={}, traceId={}", convId, traceId);
+    LOG.info("[Simple-Agent] 执行: convId={}, traceId={}", convId, traceId);
 
     String userInput = guardrailService.applyInputGuardrails(request.getUserInput());
     if (userInput == null) {
@@ -161,7 +161,7 @@ public class SimpleAgentExecutor implements AgentExecutor {
     memory.save(convId, ChatMessage.assistant(output, convId, response.getUsage()));
 
     traceRecorder.endTrace(traceId, "SUCCESS");
-    log.info(
+    LOG.info(
         "[Simple-Agent] 完成: convId={}, tokens={}",
         convId,
         response.getUsage() != null ? response.getUsage().getTotalTokens() : 0);
@@ -184,7 +184,7 @@ public class SimpleAgentExecutor implements AgentExecutor {
     String convId =
         request.getConversationId() != null ? request.getConversationId() : IdGenerator.nextIdStr();
     String traceId = traceRecorder.startTrace(convId, "CHAT_STREAM");
-    log.info("[Simple-Agent-Stream] 流式执行: convId={}, traceId={}", convId, traceId);
+    LOG.info("[Simple-Agent-Stream] 流式执行: convId={}, traceId={}", convId, traceId);
 
     String responseId = IdGenerator.nextIdStr();
     String model = properties.getLlm().getDefaultModel();
@@ -276,7 +276,7 @@ public class SimpleAgentExecutor implements AgentExecutor {
     memory.save(convId, ChatMessage.assistant(output, convId, usage[0]));
 
     traceRecorder.endTrace(traceId, "SUCCESS");
-    log.info("[Simple-Agent-Stream] 完成: convId={}, tokens={}", convId, usage[0].getTotalTokens());
+    LOG.info("[Simple-Agent-Stream] 完成: convId={}, tokens={}", convId, usage[0].getTotalTokens());
   }
 
   @Override

@@ -25,7 +25,7 @@ import com.njydsz.common.json.tree.ObjectNode;
  */
 public class OpenAiEmbeddingClient implements EmbeddingClient {
 
-  private static final Logger log = LoggerFactory.getLogger(OpenAiEmbeddingClient.class);
+  private static final Logger LOG = LoggerFactory.getLogger(OpenAiEmbeddingClient.class);
 
   /** API 基础地址 */
   private final String baseUrl;
@@ -77,7 +77,7 @@ public class OpenAiEmbeddingClient implements EmbeddingClient {
               .body(String.class);
       return parseEmbeddings(responseJson);
     } catch (Exception e) {
-      log.error("[Embedding] 调用失败: {}", e.getMessage(), e);
+      LOG.error("[Embedding] 调用失败: {}", e.getMessage(), e);
       throw new LlmException(
           "Embedding 调用失败: " + e.getMessage(), LlmException.ErrorType.PROVIDER_ERROR, e);
     }

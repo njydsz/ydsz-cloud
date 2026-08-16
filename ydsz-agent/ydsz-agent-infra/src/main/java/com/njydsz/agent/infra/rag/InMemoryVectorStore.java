@@ -27,7 +27,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
  */
 public class InMemoryVectorStore implements VectorStore {
 
-  private static final Logger log = LoggerFactory.getLogger(InMemoryVectorStore.class);
+  private static final Logger LOG = LoggerFactory.getLogger(InMemoryVectorStore.class);
 
   /** 内存存储（线程安全） */
   private final List<TextChunk> store = new CopyOnWriteArrayList<>();
@@ -62,7 +62,7 @@ public class InMemoryVectorStore implements VectorStore {
     for (TextChunk chunk : chunks) {
       store(chunk);
     }
-    log.info("[Memory-VectorStore] 批量存储: {} 块, 总计: {}", chunks.size(), store.size());
+    LOG.info("[Memory-VectorStore] 批量存储: {} 块, 总计: {}", chunks.size(), store.size());
   }
 
   @Override

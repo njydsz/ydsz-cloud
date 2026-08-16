@@ -28,7 +28,7 @@ import com.njydsz.common.json.YdszJson;
  */
 public class SseMcpClientProvider implements McpClientProvider {
 
-  private static final Logger log = LoggerFactory.getLogger(SseMcpClientProvider.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SseMcpClientProvider.class);
 
   /** HTTP Client（线程安全，可复用） */
   private final HttpClient httpClient =
@@ -47,7 +47,7 @@ public class SseMcpClientProvider implements McpClientProvider {
       // 3. 解析工具列表
       return parseToolList(listResponse);
     } catch (Exception e) {
-      log.error("[MCP-SSE] 工具列表获取失败: server={}, error={}", server.getName(), e.getMessage(), e);
+      LOG.error("[MCP-SSE] 工具列表获取失败: server={}, error={}", server.getName(), e.getMessage(), e);
       return new ArrayList<>();
     }
   }
@@ -60,7 +60,7 @@ public class SseMcpClientProvider implements McpClientProvider {
       String callResponse = sendRequest(server, sessionId, "tools/call", params);
       return extractCallResult(callResponse);
     } catch (Exception e) {
-      log.error(
+      LOG.error(
           "[MCP-SSE] 工具调用失败: server={}, tool={}, error={}",
           server.getName(),
           toolName,
@@ -95,7 +95,7 @@ public class SseMcpClientProvider implements McpClientProvider {
                     .headers()
                     .firstValue("Mcp-Session-Id")
                     .orElse("session-" + System.currentTimeMillis());
-            log.info("[MCP-SSE] 会话初始化完成: server={}, sessionId={}", name, sessionId);
+            LOG.info("[MCP-SSE] 会话初始化完成: server={}, sessionId={}", name, sessionId);
             return sessionId;
           } catch (Exception e) {
             throw new RuntimeException("MCP 会话初始化失败: " + name, e);

@@ -35,7 +35,7 @@ import com.njydsz.common.json.YdszJson;
  */
 public class SemanticLlmCache {
 
-  private static final Logger log = LoggerFactory.getLogger(SemanticLlmCache.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SemanticLlmCache.class);
 
   private final StringRedisTemplate redisTemplate;
   private final Duration ttl;
@@ -62,11 +62,11 @@ public class SemanticLlmCache {
     try {
       String json = redisTemplate.opsForValue().get(key);
       if (json != null) {
-        log.debug("[SemanticCache] 缓存命中: key={}", key.substring(0, 16) + "...");
-        return YdszJson.toObject(json, CachedLlmResponse.class);
+        LOG.debug("[SemanticCache] 缓存命中: key={}", key.substring(0, 16) + "...");
+        return YdszJson.fromJson(json, CachedLlmResponse.class);
       }
     } catch (Exception e) {
-      log.warn("[SemanticCache] 缓存读取失败: {}", e.getMessage());
+      LOG.warn("[SemanticCache] 缓存读取失败: {}", e.getMessage());
     }
     return null;
   }
@@ -88,10 +88,10 @@ public class SemanticLlmCache {
           new CachedLlmResponse(response, provider, Instant.now().toEpochMilli());
       String json = YdszJson.toJson(cached);
       redisTemplate.opsForValue().set(key, json, ttl);
-      log.debug(
+      LOG.debug(
           "[SemanticCache] 缓存写入: key={}, ttl={}min", key.substring(0, 16) + "...", ttl.toMinutes());
     } catch (Exception e) {
-      log.warn("[SemanticCache] 缓存写入失败: {}", e.getMessage());
+      LOG.warn("[SemanticCache] 缓存写入失败: {}", e.getMessage());
     }
   }
 

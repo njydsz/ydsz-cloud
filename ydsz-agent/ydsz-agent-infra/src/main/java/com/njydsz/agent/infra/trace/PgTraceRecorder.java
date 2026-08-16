@@ -40,7 +40,7 @@ import com.njydsz.common.json.YdszJson;
  */
 public class PgTraceRecorder implements TraceRecorder {
 
-  private static final Logger log = LoggerFactory.getLogger(PgTraceRecorder.class);
+  private static final Logger LOG = LoggerFactory.getLogger(PgTraceRecorder.class);
 
   /** 输入/输出 JSON 最大长度（防止超长内容撑爆字段） */
   private static final int MAX_JSON_LENGTH = 8000;
@@ -73,7 +73,7 @@ public class PgTraceRecorder implements TraceRecorder {
     traceMapper.insert(trace);
     stepIndexes.put(traceId, new AtomicInteger(0));
     startTimes.put(traceId, System.currentTimeMillis());
-    log.info("[Trace] 开始链路: traceId={}, convId={}, agentId={}", traceId, conversationId, agentId);
+    LOG.info("[Trace] 开始链路: traceId={}, convId={}, agentId={}", traceId, conversationId, agentId);
     return traceId;
   }
 
@@ -101,7 +101,7 @@ public class PgTraceRecorder implements TraceRecorder {
             .durationMs(durationMs)
             .build();
     traceStepMapper.insert(step);
-    log.debug(
+    LOG.debug(
         "[Trace] 记录步骤: traceId={}, step={}, type={}, {}ms",
         traceId,
         nextIndex,
@@ -113,7 +113,7 @@ public class PgTraceRecorder implements TraceRecorder {
   public void endTrace(String traceId, String status) {
     AgentTraceDO trace = traceMapper.selectById(traceId);
     if (trace == null) {
-      log.warn("[Trace] 链路不存在，无法结束: traceId={}", traceId);
+      LOG.warn("[Trace] 链路不存在，无法结束: traceId={}", traceId);
       cleanup(traceId);
       return;
     }
@@ -125,7 +125,7 @@ public class PgTraceRecorder implements TraceRecorder {
     trace.setTotalDurationMs(totalMs);
     traceMapper.updateById(trace);
     cleanup(traceId);
-    log.info("[Trace] 结束链路: traceId={}, status={}, totalMs={}", traceId, status, totalMs);
+    LOG.info("[Trace] 结束链路: traceId={}, status={}, totalMs={}", traceId, status, totalMs);
   }
 
   @Override
@@ -161,7 +161,7 @@ public class PgTraceRecorder implements TraceRecorder {
     try {
       return YdszJson.toJson(obj);
     } catch (Exception e) {
-      log.warn("[Trace] 序列化失败: {}", e.getMessage());
+      LOG.warn("[Trace] 序列化失败: {}", e.getMessage());
       return obj.toString();
     }
   }

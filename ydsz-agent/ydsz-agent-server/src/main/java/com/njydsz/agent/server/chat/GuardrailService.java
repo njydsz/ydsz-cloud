@@ -31,7 +31,7 @@ import com.njydsz.agent.server.metrics.AgentMetrics;
  */
 public class GuardrailService {
 
-  private static final Logger log = LoggerFactory.getLogger(GuardrailService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(GuardrailService.class);
 
   private final List<InputGuardrail> inputGuardrails;
   private final List<OutputGuardrail> outputGuardrails;
@@ -67,7 +67,7 @@ public class GuardrailService {
     for (InputGuardrail guard : inputGuardrails) {
       GuardrailResult result = guard.check(sanitized);
       if (result.isRejected()) {
-        log.warn("[Guardrail] 输入护栏拒绝: guard={}, reason={}", guard.getName(), result.getReason());
+        LOG.warn("[Guardrail] 输入护栏拒绝: guard={}, reason={}", guard.getName(), result.getReason());
         metrics.recordGuardrailRejection(guard.getName(), "input");
         return null;
       }
@@ -89,7 +89,7 @@ public class GuardrailService {
     for (OutputGuardrail guard : outputGuardrails) {
       GuardrailResult result = guard.check(sanitized);
       if (result.isRejected()) {
-        log.warn("[Guardrail] 输出护栏拒绝: guard={}, reason={}", guard.getName(), result.getReason());
+        LOG.warn("[Guardrail] 输出护栏拒绝: guard={}, reason={}", guard.getName(), result.getReason());
         metrics.recordGuardrailRejection(guard.getName(), "output");
         return "抱歉，我无法回答这个问题。";
       }

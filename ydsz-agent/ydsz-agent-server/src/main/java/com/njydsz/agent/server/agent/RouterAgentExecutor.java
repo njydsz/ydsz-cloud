@@ -34,7 +34,7 @@ import com.njydsz.common.util.id.IdGenerator;
 public class RouterAgentExecutor implements AgentExecutor {
 
   /** 日志记录器 */
-  private static final Logger log = LoggerFactory.getLogger(RouterAgentExecutor.class);
+  private static final Logger LOG = LoggerFactory.getLogger(RouterAgentExecutor.class);
 
   /** LLM 客户端（用于意图分类） */
   private final LlmClient llmClient;
@@ -94,7 +94,7 @@ public class RouterAgentExecutor implements AgentExecutor {
     String convId =
         request.getConversationId() != null ? request.getConversationId() : IdGenerator.nextIdStr();
     String traceId = traceRecorder.startTrace(convId, "ROUTER");
-    log.info("[Router] 分析意图: convId={}, traceId={}", convId, traceId);
+    LOG.info("[Router] 分析意图: convId={}, traceId={}", convId, traceId);
 
     long routeStart = System.currentTimeMillis();
     String agentType = routeIntent(request.getUserInput());
@@ -107,7 +107,7 @@ public class RouterAgentExecutor implements AgentExecutor {
         request.getUserInput(),
         agentType,
         routeDuration);
-    log.info("[Router] 路由到: {} Agent", agentType);
+    LOG.info("[Router] 路由到: {} Agent", agentType);
 
     AgentExecutor executor =
         agentFactory.getExecutor(
@@ -138,7 +138,7 @@ public class RouterAgentExecutor implements AgentExecutor {
     String convId =
         request.getConversationId() != null ? request.getConversationId() : IdGenerator.nextIdStr();
     String traceId = traceRecorder.startTrace(convId, "ROUTER_STREAM");
-    log.info("[Router-Stream] 分析意图: convId={}, traceId={}", convId, traceId);
+    LOG.info("[Router-Stream] 分析意图: convId={}, traceId={}", convId, traceId);
 
     long routeStart = System.currentTimeMillis();
     String agentType = routeIntent(request.getUserInput());
@@ -151,7 +151,7 @@ public class RouterAgentExecutor implements AgentExecutor {
         request.getUserInput(),
         agentType,
         routeDuration);
-    log.info("[Router-Stream] 路由到: {} Agent", agentType);
+    LOG.info("[Router-Stream] 路由到: {} Agent", agentType);
 
     AgentExecutor executor =
         agentFactory.getExecutor(
@@ -237,7 +237,7 @@ public class RouterAgentExecutor implements AgentExecutor {
     } catch (Exception e) {
       agentMetrics.recordLlmCall(
           llmClient.getProvider(), properties.getLlm().getDefaultModel(), 0, null, e);
-      log.warn("[Router] 意图分析失败，降级到 CHAT: {}", e.getMessage());
+      LOG.warn("[Router] 意图分析失败，降级到 CHAT: {}", e.getMessage());
       return "CHAT";
     }
   }

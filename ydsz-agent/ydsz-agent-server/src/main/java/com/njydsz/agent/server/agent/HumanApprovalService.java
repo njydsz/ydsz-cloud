@@ -55,7 +55,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 @RequiredArgsConstructor
 public class HumanApprovalService {
 
-  private static final Logger log = LoggerFactory.getLogger(HumanApprovalService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(HumanApprovalService.class);
 
   /** 内存缓存上限，超过先清理过期项 */
   private static final int MAX_PENDING = 500;
@@ -95,7 +95,7 @@ public class HumanApprovalService {
     try {
       approvalMapper.insert(toDO(request));
     } catch (Exception e) {
-      log.warn("[HITL] 审批请求落库失败: id={}, error={}", approvalId, e.getMessage());
+      LOG.warn("[HITL] 审批请求落库失败: id={}, error={}", approvalId, e.getMessage());
     }
 
     // 发布审批请求事件，供执行器/通知中心订阅
@@ -109,10 +109,10 @@ public class HumanApprovalService {
               .metadata("conversationId", conversationId)
               .build());
     } catch (Exception e) {
-      log.warn("[HITL] 审批请求事件发布失败: id={}, error={}", approvalId, e.getMessage());
+      LOG.warn("[HITL] 审批请求事件发布失败: id={}, error={}", approvalId, e.getMessage());
     }
 
-    log.info(
+    LOG.info(
         "[HITL] 创建审批请求: id={}, convId={}, step={}", approvalId, conversationId, stepDescription);
     return approvalId;
   }
@@ -131,7 +131,7 @@ public class HumanApprovalService {
       }
       return result;
     } catch (Exception e) {
-      log.warn("[HITL] 查询待审批列表失败，回退内存缓存: {}", e.getMessage());
+      LOG.warn("[HITL] 查询待审批列表失败，回退内存缓存: {}", e.getMessage());
       return pendingApprovals.values().stream()
           .filter(r -> r.getStatus() == ApprovalStatus.PENDING)
           .toList();
@@ -153,7 +153,7 @@ public class HumanApprovalService {
       pendingApprovals.put(approvalId, request);
       return request;
     } catch (Exception e) {
-      log.warn("[HITL] 查询审批请求失败: id={}, error={}", approvalId, e.getMessage());
+      LOG.warn("[HITL] 查询审批请求失败: id={}, error={}", approvalId, e.getMessage());
       return null;
     }
   }
@@ -194,7 +194,7 @@ public class HumanApprovalService {
               .set(AgentApprovalDO::getStatus, ApprovalStatus.EXPIRED.name())
               .set(AgentApprovalDO::getResolvedAt, LocalDateTime.now()));
     } catch (Exception e) {
-      log.warn("[HITL] 过期审批清理失败: {}", e.getMessage());
+      LOG.warn("[HITL] 过期审批清理失败: {}", e.getMessage());
     }
     pendingApprovals
         .entrySet()
@@ -235,7 +235,7 @@ public class HumanApprovalService {
               .set(AgentApprovalDO::getComment, comment)
               .set(AgentApprovalDO::getResolvedAt, request.getResolvedAt()));
     } catch (Exception e) {
-      log.warn("[HITL] 审批结果落库失败: id={}, error={}", approvalId, e.getMessage());
+      LOG.warn("[HITL] 审批结果落库失败: id={}, error={}", approvalId, e.getMessage());
     }
 
     try {
@@ -248,10 +248,10 @@ public class HumanApprovalService {
               .metadata("approver", approver != null ? approver : "")
               .build());
     } catch (Exception e) {
-      log.warn("[HITL] 审批结果事件发布失败: id={}, error={}", approvalId, e.getMessage());
+      LOG.warn("[HITL] 审批结果事件发布失败: id={}, error={}", approvalId, e.getMessage());
     }
 
-    log.info("[HITL] 审批决策: id={}, status={}, approver={}", approvalId, newStatus, approver);
+    LOG.info("[HITL] 审批决策: id={}, status={}, approver={}", approvalId, newStatus, approver);
     return true;
   }
 
@@ -280,7 +280,7 @@ public class HumanApprovalService {
       try {
         context = YdszJson.fromJson(doItem.getContextJson(), Map.class);
       } catch (Exception e) {
-        log.warn("[HITL] 审批上下文反序列化失败: id={}", doItem.getId());
+        LOG.warn("[HITL] 审批上下文反序列化失败: id={}", doItem.getId());
       }
     }
     ApprovalRequest request =

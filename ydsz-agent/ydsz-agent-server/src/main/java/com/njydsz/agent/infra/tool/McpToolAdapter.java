@@ -29,7 +29,7 @@ import com.njydsz.agent.server.config.AgentProperties;
  */
 public class McpToolAdapter {
 
-  private static final Logger log = LoggerFactory.getLogger(McpToolAdapter.class);
+  private static final Logger LOG = LoggerFactory.getLogger(McpToolAdapter.class);
 
   /** MCP 工具名分隔符 */
   private static final String TOOL_NAME_SEPARATOR = "__";
@@ -62,9 +62,9 @@ public class McpToolAdapter {
       try {
         List<ToolDefinition> serverTools = discoverServerTools(server);
         allTools.addAll(serverTools);
-        log.info("[MCP] Server {} 发现 {} 个工具", server.getName(), serverTools.size());
+        LOG.info("[MCP] Server {} 发现 {} 个工具", server.getName(), serverTools.size());
       } catch (Exception e) {
-        log.error("[MCP] Server {} 工具发现失败: {}", server.getName(), e.getMessage(), e);
+        LOG.error("[MCP] Server {} 工具发现失败: {}", server.getName(), e.getMessage(), e);
       }
     }
     return allTools;

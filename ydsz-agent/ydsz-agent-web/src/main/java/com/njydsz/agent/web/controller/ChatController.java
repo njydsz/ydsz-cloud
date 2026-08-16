@@ -86,7 +86,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 @RequestMapping("/api/v1/agent")
 public class ChatController {
 
-  private static final Logger log = LoggerFactory.getLogger(ChatController.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ChatController.class);
 
   /** SSE 超时时间（毫秒） */
   private static final long SSE_TIMEOUT = 120_000L;
@@ -137,7 +137,7 @@ public class ChatController {
   @RateLimit(resource = "agent.chat.chat", threshold = 50)
   @PostMapping("/chat")
   public BaseResponse<ChatResponseDTO> chat(@Valid @RequestBody ChatRequestDTO request) {
-    log.info(
+    LOG.info(
         "[Chat-API] 同步对话请求: convId={}, msgLen={}",
         request.getConversationId(),
         request.getMessage().length());
@@ -182,7 +182,7 @@ public class ChatController {
   @RateLimit(resource = "agent.chat.chatStream", threshold = 50)
   @PostMapping(value = "/chat/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
   public SseEmitter chatStream(@Valid @RequestBody ChatRequestDTO request) {
-    log.info("[Chat-API] 流式对话请求: convId={}", request.getConversationId());
+    LOG.info("[Chat-API] 流式对话请求: convId={}", request.getConversationId());
     requestGuard.check(request.getRequestId(), null);
     SseEmitter emitter = new SseEmitter(SSE_TIMEOUT);
     AtomicBoolean active = new AtomicBoolean(true);
@@ -231,7 +231,7 @@ public class ChatController {
                                 .name("chunk"));
                       } catch (IOException e) {
                         active.set(false);
-                        log.warn("[Chat-API] SSE 发送失败，标记连接断开: {}", e.getMessage());
+                        LOG.warn("[Chat-API] SSE 发送失败，标记连接断开: {}", e.getMessage());
                       }
                     });
                 if (active.get()) {
@@ -242,7 +242,7 @@ public class ChatController {
                   emitter.complete();
                 }
               } catch (Exception e) {
-                log.error("[Chat-API] 流式对话异常: {}", e.getMessage(), e);
+                LOG.error("[Chat-API] 流式对话异常: {}", e.getMessage(), e);
                 if (active.get()) {
                   try {
                     emitter.send(

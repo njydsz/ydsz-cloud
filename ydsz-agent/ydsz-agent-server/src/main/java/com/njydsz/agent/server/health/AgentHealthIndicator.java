@@ -36,7 +36,7 @@ import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
  */
 public class AgentHealthIndicator extends AbstractModuleHealthIndicator {
 
-  private static final Logger log = LoggerFactory.getLogger(AgentHealthIndicator.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AgentHealthIndicator.class);
 
   /** LLM 客户端 */
   private final LlmClient llmClient;
@@ -140,7 +140,7 @@ public class AgentHealthIndicator extends AbstractModuleHealthIndicator {
     builder.withDetail("agentMetrics", metrics != null ? "UP" : "NOT_CONFIGURED");
 
     if (!allHealthy) {
-      log.warn("[Health] Agent 健康检查未通过，详见 health details");
+      LOG.warn("[Health] Agent 健康检查未通过，详见 health details");
       builder.down();
     }
   }

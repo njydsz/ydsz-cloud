@@ -45,7 +45,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 @RequiredArgsConstructor
 public class DagDslParser {
 
-  private static final Logger log = LoggerFactory.getLogger(DagDslParser.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DagDslParser.class);
   private final Yaml yaml = new Yaml(new SafeConstructor(new LoaderOptions()));
   private final SnowflakeIdGenerator snowflakeIdGenerator;
 
@@ -99,7 +99,7 @@ public class DagDslParser {
     }
 
     AgentDag dag = new AgentDag(String.valueOf(snowflakeIdGenerator.nextId()), name, nodes, edges);
-    log.info("[DagDslParser] 解析完成: name={}, nodes={}", name, nodes.size());
+    LOG.info("[DagDslParser] 解析完成: name={}, nodes={}", name, nodes.size());
     return dag;
   }
 

@@ -45,7 +45,7 @@ import com.njydsz.common.util.id.IdGenerator;
  */
 public class PlanExecuteAgentExecutor implements AgentExecutor {
 
-  private static final Logger log = LoggerFactory.getLogger(PlanExecuteAgentExecutor.class);
+  private static final Logger LOG = LoggerFactory.getLogger(PlanExecuteAgentExecutor.class);
   // 解析 LLM 返回的编号步骤列表：匹配行首「数字 + 分隔符(.、)、])」+ 步骤描述
   private static final Pattern STEP_PATTERN = Pattern.compile("(?m)^\\s*(\\d+)[.、)\\]]\\s*(.+)");
 
@@ -82,7 +82,7 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
     String convId =
         request.getConversationId() != null ? request.getConversationId() : IdGenerator.nextIdStr();
     String traceId = traceRecorder.startTrace(convId, "PLAN_EXECUTE");
-    log.info("[Plan-Execute] 开始: convId={}, traceId={}", convId, traceId);
+    LOG.info("[Plan-Execute] 开始: convId={}, traceId={}", convId, traceId);
 
     long planStart = System.currentTimeMillis();
     ExecutionPlan plan = generatePlan(request.getUserInput(), convId);
@@ -94,7 +94,7 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
         request.getUserInput(),
         plan,
         planDuration);
-    log.info("[Plan-Execute] 计划生成: steps={}", plan.getSteps().size());
+    LOG.info("[Plan-Execute] 计划生成: steps={}", plan.getSteps().size());
 
     plan.markExecuting();
     List<String> stepResults = new ArrayList<>();
@@ -107,7 +107,7 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
     while (stepIdx < plan.getSteps().size()) {
       ExecutionPlan.PlanStep step = plan.getSteps().get(stepIdx);
       step.markExecuting();
-      log.info(
+      LOG.info(
           "[Plan-Execute] 执行步骤 {}/{}: {}",
           stepIdx + 1,
           plan.getSteps().size(),
@@ -137,7 +137,7 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
         stepResponse = llmClient.chat(stepRequest);
       } catch (Exception e) {
         long stepDuration = System.currentTimeMillis() - stepStart;
-        log.warn(
+        LOG.warn(
             "[Plan-Execute] 步骤 {} 执行失败: {}, error={}",
             stepIdx + 1,
             step.getDescription(),
@@ -153,7 +153,7 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
 
         if (replanCount < maxReplans) {
           replanCount++;
-          log.info("[Plan-Execute] 触发重规划 {}/{}", replanCount, maxReplans);
+          LOG.info("[Plan-Execute] 触发重规划 {}/{}", replanCount, maxReplans);
           traceRecorder.recordStep(
               traceId,
               "REPLAN",
@@ -224,7 +224,7 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
     memory.save(convId, ChatMessage.user(request.getUserInput(), convId));
     memory.save(convId, ChatMessage.assistant(finalResponse.getContent(), convId, totalUsage));
 
-    log.info(
+    LOG.info(
         "[Plan-Execute] 完成: convId={}, steps={}, tokens={}, traceId={}",
         convId,
         plan.getSteps().size(),
@@ -333,10 +333,10 @@ public class PlanExecuteAgentExecutor implements AgentExecutor {
     try {
       ChatResponse replanResponse = llmClient.chat(replanRequest);
       ExecutionPlan newPlan = parsePlan(goal, replanResponse.getContent());
-      log.info("[Plan-Execute] 重规划成功: newSteps={}", newPlan.getSteps().size());
+      LOG.info("[Plan-Execute] 重规划成功: newSteps={}", newPlan.getSteps().size());
       return newPlan.getSteps();
     } catch (Exception e) {
-      log.warn("[Plan-Execute] 重规划失败: {}", e.getMessage());
+      LOG.warn("[Plan-Execute] 重规划失败: {}", e.getMessage());
       return List.of();
     }
   }

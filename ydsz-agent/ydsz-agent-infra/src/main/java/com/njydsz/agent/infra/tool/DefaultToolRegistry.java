@@ -25,7 +25,7 @@ import com.njydsz.common.json.YdszJson;
  */
 public class DefaultToolRegistry implements ToolRegistry {
 
-  private static final Logger log = LoggerFactory.getLogger(DefaultToolRegistry.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DefaultToolRegistry.class);
 
   /** 工具注册表（key=工具名） */
   private final Map<String, ToolRegistration> registry = new ConcurrentHashMap<>();
@@ -39,7 +39,7 @@ public class DefaultToolRegistry implements ToolRegistry {
             .executor(executor)
             .build();
     registry.put(name, registration);
-    log.info("[Tool-Registry] 注册工具: {}", name);
+    LOG.info("[Tool-Registry] 注册工具: {}", name);
   }
 
   /**
@@ -56,7 +56,7 @@ public class DefaultToolRegistry implements ToolRegistry {
    */
   public void register(ToolRegistration registration) {
     registry.put(registration.getName(), registration);
-    log.info(
+    LOG.info(
         "[Tool-Registry] 注册工具: {} (desc={})",
         registration.getName(),
         registration.getDefinition().getDescription());
@@ -65,25 +65,25 @@ public class DefaultToolRegistry implements ToolRegistry {
   @Override
   public void unregister(String name) {
     registry.remove(name);
-    log.info("[Tool-Registry] 注销工具: {}", name);
+    LOG.info("[Tool-Registry] 注销工具: {}", name);
   }
 
   @Override
   public String execute(ToolCall toolCall) {
     ToolRegistration registration = registry.get(toolCall.getName());
     if (registration == null) {
-      log.warn("[Tool-Registry] 工具未找到: {}", toolCall.getName());
+      LOG.warn("[Tool-Registry] 工具未找到: {}", toolCall.getName());
       return YdszJson.toJson(Map.of("error", "工具未找到: " + toolCall.getName()));
     }
     long startTime = System.currentTimeMillis();
     try {
       String result = registration.getExecutor().execute(toolCall.getArguments());
       long duration = System.currentTimeMillis() - startTime;
-      log.info("[Tool-Registry] 工具执行完成: {} ({}ms)", toolCall.getName(), duration);
+      LOG.info("[Tool-Registry] 工具执行完成: {} ({}ms)", toolCall.getName(), duration);
       return result;
     } catch (Exception e) {
       long duration = System.currentTimeMillis() - startTime;
-      log.error(
+      LOG.error(
           "[Tool-Registry] 工具执行失败: {} ({}ms): {}", toolCall.getName(), duration, e.getMessage(), e);
       return YdszJson.toJson(
           Map.of("error", "工具执行失败: " + e.getMessage(), "tool", toolCall.getName()));

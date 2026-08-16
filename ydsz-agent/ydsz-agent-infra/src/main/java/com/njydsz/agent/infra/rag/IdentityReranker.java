@@ -18,7 +18,7 @@ import com.njydsz.agent.domain.rag.TextChunk;
  */
 public class IdentityReranker implements Reranker {
 
-  private static final Logger log = LoggerFactory.getLogger(IdentityReranker.class);
+  private static final Logger LOG = LoggerFactory.getLogger(IdentityReranker.class);
 
   @Override
   public List<TextChunk> rerank(String query, List<TextChunk> chunks, int topK) {

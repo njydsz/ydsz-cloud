@@ -51,7 +51,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 @Service
 public class ChatService {
 
-  private static final Logger log = LoggerFactory.getLogger(ChatService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ChatService.class);
 
   /** LLM 客户端 */
   private final LlmClient llmClient;
@@ -128,7 +128,7 @@ public class ChatService {
     String convId =
         conversationId != null ? conversationId : String.valueOf(snowflakeIdGenerator.nextId());
     String traceId = traceRecorder.startTrace(convId, "CHAT");
-    log.info(
+    LOG.info(
         "[Chat] 同步对话: convId={}, traceId={}, messageLen={}", convId, traceId, userMessage.length());
 
     // P2: 运行态指标埋点 — 标记会话活跃
@@ -136,7 +136,7 @@ public class ChatService {
 
     String sanitizedInput = guardrailService.applyInputGuardrails(userMessage);
     if (sanitizedInput == null) {
-      log.warn("[Chat] 输入被安全护栏拒绝: convId={}", convId);
+      LOG.warn("[Chat] 输入被安全护栏拒绝: convId={}", convId);
       metrics.recordGuardrailRejection("input-guardrail", "input");
       traceRecorder.endTrace(traceId, "GUARDRAIL_REJECTED");
       ChatMessage rejectedMsg = ChatMessage.assistant("抱歉，您的输入被安全护栏拒绝。", convId, TokenUsage.zero());
@@ -179,7 +179,7 @@ public class ChatService {
       traceRecorder.endTrace(traceId, "FAILED");
       // P2: 运行态指标埋点 — 执行失败
       runtimeMetrics.recordExecution("simple", false, duration);
-      log.error("[Chat] LLM 调用失败，保存错误消息: convId={}, error={}", convId, e.getMessage());
+      LOG.error("[Chat] LLM 调用失败，保存错误消息: convId={}, error={}", convId, e.getMessage());
       ChatMessage errorMsg =
           ChatMessage.assistant("[错误] LLM 调用失败: " + e.getMessage(), convId, TokenUsage.zero());
       memory.save(convId, errorMsg);
@@ -199,7 +199,7 @@ public class ChatService {
     runtimeMetrics.recordMessage("assistant");
     runtimeMetrics.recordExecution("simple", true, duration);
 
-    log.info(
+    LOG.info(
         "[Chat] 对话完成: convId={}, tokens={}",
         convId,
         response.getUsage() != null ? response.getUsage().getTotalTokens() : 0);
@@ -238,7 +238,7 @@ public class ChatService {
     String convId =
         conversationId != null ? conversationId : String.valueOf(snowflakeIdGenerator.nextId());
     String traceId = traceRecorder.startTrace(convId, "CHAT_STREAM");
-    log.info(
+    LOG.info(
         "[Chat-Stream] 流式对话: convId={}, traceId={}, messageLen={}",
         convId,
         traceId,
@@ -249,7 +249,7 @@ public class ChatService {
 
     String sanitizedInput = guardrailService.applyInputGuardrails(userMessage);
     if (sanitizedInput == null) {
-      log.warn("[Chat-Stream] 流式输入被安全护栏拒绝: convId={}", convId);
+      LOG.warn("[Chat-Stream] 流式输入被安全护栏拒绝: convId={}", convId);
       metrics.recordGuardrailRejection("input-guardrail", "input");
       traceRecorder.recordStep(
           traceId,
@@ -338,7 +338,7 @@ public class ChatService {
       traceRecorder.endTrace(traceId, "FAILED");
       // P2: 运行态指标埋点 — 执行失败
       runtimeMetrics.recordExecution("simple", false, duration);
-      log.error("[Chat-Stream] 流式 LLM 调用失败，保存错误消息: convId={}, error={}", convId, e.getMessage());
+      LOG.error("[Chat-Stream] 流式 LLM 调用失败，保存错误消息: convId={}, error={}", convId, e.getMessage());
       memory.save(
           convId,
           ChatMessage.assistant("[错误] LLM 流式调用失败: " + e.getMessage(), convId, TokenUsage.zero()));
@@ -360,7 +360,7 @@ public class ChatService {
     runtimeMetrics.recordExecution("simple", true, duration);
 
     traceRecorder.endTrace(traceId, "SUCCESS");
-    log.info("[Chat-Stream] 流式对话完成: convId={}, tokens={}", convId, usage[0].getTotalTokens());
+    LOG.info("[Chat-Stream] 流式对话完成: convId={}, tokens={}", convId, usage[0].getTotalTokens());
   }
 
   /** 获取对话历史 */

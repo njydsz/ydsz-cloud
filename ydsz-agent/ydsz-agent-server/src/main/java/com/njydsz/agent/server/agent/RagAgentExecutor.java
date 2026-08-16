@@ -36,7 +36,7 @@ import com.njydsz.common.util.id.IdGenerator;
 public class RagAgentExecutor implements AgentExecutor {
 
   /** 日志记录器 */
-  private static final Logger log = LoggerFactory.getLogger(RagAgentExecutor.class);
+  private static final Logger LOG = LoggerFactory.getLogger(RagAgentExecutor.class);
 
   /** LLM 客户端 */
   private final LlmClient llmClient;
@@ -92,7 +92,7 @@ public class RagAgentExecutor implements AgentExecutor {
     String convId =
         request.getConversationId() != null ? request.getConversationId() : IdGenerator.nextIdStr();
     String traceId = traceRecorder.startTrace(convId, "RAG");
-    log.info("[RAG-Agent] 执行: convId={}, traceId={}", convId, traceId);
+    LOG.info("[RAG-Agent] 执行: convId={}, traceId={}", convId, traceId);
 
     String userInput = guardrailService.applyInputGuardrails(request.getUserInput());
     if (userInput == null) {
@@ -170,7 +170,7 @@ public class RagAgentExecutor implements AgentExecutor {
     memory.save(convId, ChatMessage.assistant(output, convId, response.getUsage()));
 
     traceRecorder.endTrace(traceId, "SUCCESS");
-    log.info(
+    LOG.info(
         "[RAG-Agent] 完成: convId={}, retrieved={}, tokens={}",
         convId,
         retrievedChunks.size(),
@@ -195,7 +195,7 @@ public class RagAgentExecutor implements AgentExecutor {
     String convId =
         request.getConversationId() != null ? request.getConversationId() : IdGenerator.nextIdStr();
     String traceId = traceRecorder.startTrace(convId, "RAG_STREAM");
-    log.info("[RAG-Agent-Stream] 流式执行: convId={}, traceId={}", convId, traceId);
+    LOG.info("[RAG-Agent-Stream] 流式执行: convId={}, traceId={}", convId, traceId);
 
     String userInput = guardrailService.applyInputGuardrails(request.getUserInput());
     if (userInput == null) {
@@ -278,7 +278,7 @@ public class RagAgentExecutor implements AgentExecutor {
     memory.save(convId, ChatMessage.assistant(output, convId, usage[0]));
 
     traceRecorder.endTrace(traceId, "SUCCESS");
-    log.info(
+    LOG.info(
         "[RAG-Agent-Stream] 完成: convId={}, retrieved={}, tokens={}",
         convId,
         retrievedChunks.size(),

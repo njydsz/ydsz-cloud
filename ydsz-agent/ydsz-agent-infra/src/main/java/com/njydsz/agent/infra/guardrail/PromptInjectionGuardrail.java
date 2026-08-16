@@ -25,7 +25,7 @@ import com.njydsz.agent.domain.guardrail.InputGuardrail;
  */
 public class PromptInjectionGuardrail implements InputGuardrail {
 
-  private static final Logger log = LoggerFactory.getLogger(PromptInjectionGuardrail.class);
+  private static final Logger LOG = LoggerFactory.getLogger(PromptInjectionGuardrail.class);
 
   /** Prompt 注入检测模式集合 */
   private static final Set<Pattern> INJECTION_PATTERNS =
@@ -55,7 +55,7 @@ public class PromptInjectionGuardrail implements InputGuardrail {
     }
     for (Pattern pattern : INJECTION_PATTERNS) {
       if (pattern.matcher(input).find()) {
-        log.warn("[Guardrail] 检测到 Prompt 注入: pattern={}", pattern.pattern());
+        LOG.warn("[Guardrail] 检测到 Prompt 注入: pattern={}", pattern.pattern());
         return GuardrailResult.reject("检测到潜在的 Prompt 注入攻击");
       }
     }

@@ -17,7 +17,7 @@ import com.njydsz.agent.domain.model.ChatRequest;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
 import com.njydsz.agent.domain.model.ToolCall;
-import com.njydsz.agent.domain.tool.ToolDefinition;
+import com.njydsz.agent.domain.model.ToolDefinition;
 import com.njydsz.agent.domain.tool.ToolRegistry;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
@@ -48,7 +48,7 @@ import com.njydsz.common.util.id.IdGenerator;
  */
 public class ReActAgentExecutor implements AgentExecutor {
 
-  private static final Logger log = LoggerFactory.getLogger(ReActAgentExecutor.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ReActAgentExecutor.class);
 
   /** LLM 客户端 */
   private final LlmClient llmClient;
@@ -98,7 +98,7 @@ public class ReActAgentExecutor implements AgentExecutor {
     String convId =
         request.getConversationId() != null ? request.getConversationId() : IdGenerator.nextIdStr();
     String traceId = traceRecorder.startTrace(convId, "REACT");
-    log.info(
+    LOG.info(
         "[ReAct] 开始执行: convId={}, traceId={}, maxIterations={}",
         convId,
         traceId,
@@ -176,7 +176,7 @@ public class ReActAgentExecutor implements AgentExecutor {
         memory.save(convId, ChatMessage.user(userInput, convId));
         memory.save(convId, ChatMessage.assistant(output, convId, response.getUsage()));
         traceRecorder.endTrace(traceId, "SUCCESS");
-        log.info(
+        LOG.info(
             "[ReAct] 完成: convId={}, iterations={}, tokens={}",
             convId,
             i + 1,
@@ -192,7 +192,7 @@ public class ReActAgentExecutor implements AgentExecutor {
 
       messages.add(response.getMessage());
       for (ToolCall toolCall : response.getToolCalls()) {
-        log.info("[ReAct] 执行工具: {}", toolCall.getName());
+        LOG.info("[ReAct] 执行工具: {}", toolCall.getName());
         long toolStart = System.currentTimeMillis();
         String result = toolRegistry.execute(toolCall);
         long toolDuration = System.currentTimeMillis() - toolStart;
@@ -211,7 +211,7 @@ public class ReActAgentExecutor implements AgentExecutor {
       }
     }
 
-    log.warn("[ReAct] 超过最大迭代次数: convId={}", convId);
+    LOG.warn("[ReAct] 超过最大迭代次数: convId={}", convId);
     traceRecorder.endTrace(traceId, "MAX_ITERATIONS");
     return buildMaxIterationsResponse(convId, totalUsage);
   }
@@ -221,7 +221,7 @@ public class ReActAgentExecutor implements AgentExecutor {
     String convId =
         request.getConversationId() != null ? request.getConversationId() : IdGenerator.nextIdStr();
     String traceId = traceRecorder.startTrace(convId, "REACT_STREAM");
-    log.info("[ReAct-Stream] 开始流式执行: convId={}, traceId={}", convId, traceId);
+    LOG.info("[ReAct-Stream] 开始流式执行: convId={}, traceId={}", convId, traceId);
 
     String responseId = IdGenerator.nextIdStr();
     String model = properties.getLlm().getDefaultModel();
@@ -315,7 +315,7 @@ public class ReActAgentExecutor implements AgentExecutor {
       }
     }
 
-    log.warn("[ReAct-Stream] 超过最大迭代次数: convId={}", convId);
+    LOG.warn("[ReAct-Stream] 超过最大迭代次数: convId={}", convId);
     traceRecorder.endTrace(traceId, "MAX_ITERATIONS");
     chunkConsumer.accept(ChatChunk.content(responseId, model, "\n\n抱歉，我已达到最大推理次数限制，无法完成此任务。"));
     chunkConsumer.accept(ChatChunk.finish(responseId, model, "max_iterations", totalUsage));

@@ -28,7 +28,7 @@ import com.njydsz.agent.server.metrics.AgentRuntimeMetrics;
 @Service
 public class ObservabilityDashboardService {
 
-  private static final Logger log = LoggerFactory.getLogger(ObservabilityDashboardService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ObservabilityDashboardService.class);
 
   private final AgentRuntimeMetrics runtimeMetrics;
   private final CostAnalysisService costAnalysisService;
@@ -45,7 +45,7 @@ public class ObservabilityDashboardService {
    * @return 面板数据 DTO
    */
   public DashboardOverviewDTO getOverview() {
-    log.info("[Observability] 查询面板概览数据");
+    LOG.info("[Observability] 查询面板概览数据");
 
     // 今日成本统计
     LocalDate today = LocalDate.now();
@@ -75,7 +75,7 @@ public class ObservabilityDashboardService {
    * @return 各模型的用量分布
    */
   public List<ModelUsageDTO> getModelUsageDistribution(int days) {
-    log.info("[Observability] 查询模型分布: last {} days", days);
+    LOG.info("[Observability] 查询模型分布: last {} days", days);
     LocalDate endDate = LocalDate.now().plusDays(1);
     LocalDate startDate = endDate.minusDays(days);
 

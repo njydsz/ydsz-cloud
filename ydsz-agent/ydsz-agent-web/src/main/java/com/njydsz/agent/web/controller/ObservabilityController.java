@@ -9,9 +9,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.njydsz.agent.server.observability.ObservabilityDashboardService;
 import com.njydsz.agent.server.observability.ObservabilityDashboardService.DashboardOverviewDTO;
 import com.njydsz.agent.server.observability.ObservabilityDashboardService.ModelUsageDTO;
-import com.njydsz.agent.server.observability.ObservabilityDashboardService;
 import com.njydsz.common.core.response.BaseResponse;
 
 /**
@@ -31,7 +31,7 @@ import com.njydsz.common.core.response.BaseResponse;
 @RequestMapping("/api/v1/agent/observability")
 public class ObservabilityController {
 
-  private static final Logger log = LoggerFactory.getLogger(ObservabilityController.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ObservabilityController.class);
 
   private final ObservabilityDashboardService dashboardService;
 
@@ -48,7 +48,7 @@ public class ObservabilityController {
    */
   @GetMapping("/overview")
   public BaseResponse<DashboardOverviewDTO> getOverview() {
-    log.info("[Observability-API] 查询面板概览");
+    LOG.info("[Observability-API] 查询面板概览");
     return BaseResponse.success(dashboardService.getOverview());
   }
 
@@ -64,7 +64,7 @@ public class ObservabilityController {
   public BaseResponse<List<ModelUsageDTO>> getModelUsage(
       @RequestParam(defaultValue = "7") int days) {
     int safeDays = Math.min(Math.max(days, 1), 30);
-    log.info("[Observability-API] 查询模型分布: days={}", safeDays);
+    LOG.info("[Observability-API] 查询模型分布: days={}", safeDays);
     return BaseResponse.success(dashboardService.getModelUsageDistribution(safeDays));
   }
 }

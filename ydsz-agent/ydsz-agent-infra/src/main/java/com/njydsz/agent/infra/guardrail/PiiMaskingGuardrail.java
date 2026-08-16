@@ -36,7 +36,7 @@ import com.njydsz.common.safe.sensitive.SensitiveUtil;
  */
 public class PiiMaskingGuardrail implements OutputGuardrail {
 
-  private static final Logger log = LoggerFactory.getLogger(PiiMaskingGuardrail.class);
+  private static final Logger LOG = LoggerFactory.getLogger(PiiMaskingGuardrail.class);
 
   @Override
   public GuardrailResult check(String output) {
@@ -46,7 +46,7 @@ public class PiiMaskingGuardrail implements OutputGuardrail {
     // P1-3: 委托 SensitiveUtil.scanAndMask() 统一扫描+脱敏
     String sanitized = SensitiveUtil.scanAndMask(output);
     if (!sanitized.equals(output)) {
-      log.info("[Guardrail] PII 脱敏处理完成");
+      LOG.info("[Guardrail] PII 脱敏处理完成");
     }
     return GuardrailResult.pass(output, sanitized);
   }

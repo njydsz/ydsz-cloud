@@ -102,7 +102,7 @@ import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 @Tag(name = "Agent 执行", description = "Agent 同步 / SSE 流式执行")
 public class AgentController {
 
-  private static final Logger log = LoggerFactory.getLogger(AgentController.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AgentController.class);
 
   /** SSE 超时时间（毫秒） */
   private static final long SSE_TIMEOUT = 120_000L;
@@ -151,7 +151,7 @@ public class AgentController {
   @Operation(summary = "同步执行 Agent", description = "等待完整响应后返回，适用于非实时对话场景")
   public BaseResponse<ChatResponseDTO> execute(
       @Valid @RequestBody AgentExecutionRequestDTO request) {
-    log.info(
+    LOG.info(
         "[Agent-API] 执行请求: agentCode={}, stream={}", request.getAgentCode(), request.isStream());
     requestGuard.check(request.getRequestId(), null);
     AgentExecutionRequest execReq = toExecutionRequest(request);
@@ -193,7 +193,7 @@ public class AgentController {
   @PostMapping(value = "/execute/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
   @Operation(summary = "流式执行 Agent（SSE）", description = "逐 chunk 推送 LLM 响应，支持心跳保活和断连检测")
   public SseEmitter executeStream(@Valid @RequestBody AgentExecutionRequestDTO request) {
-    log.info("[Agent-API] 流式执行请求: agentCode={}", request.getAgentCode());
+    LOG.info("[Agent-API] 流式执行请求: agentCode={}", request.getAgentCode());
     requestGuard.check(request.getRequestId(), null);
     SseEmitter emitter = new SseEmitter(SSE_TIMEOUT);
     AgentExecutionRequest execReq = toExecutionRequest(request);
@@ -238,7 +238,7 @@ public class AgentController {
                             emitter.send(SseEmitter.event().data(chunkData).name("chunk"));
                           } catch (IOException e) {
                             active.set(false);
-                            log.warn("[Agent-API] SSE 发送失败，标记连接断开: {}", e.getMessage());
+                            LOG.warn("[Agent-API] SSE 发送失败，标记连接断开: {}", e.getMessage());
                           }
                         });
                 if (active.get()) {
@@ -249,7 +249,7 @@ public class AgentController {
                   emitter.complete();
                 }
               } catch (Exception e) {
-                log.error("[Agent-API] 流式执行异常: {}", e.getMessage(), e);
+                LOG.error("[Agent-API] 流式执行异常: {}", e.getMessage(), e);
                 if (active.get()) {
                   try {
                     emitter.send(

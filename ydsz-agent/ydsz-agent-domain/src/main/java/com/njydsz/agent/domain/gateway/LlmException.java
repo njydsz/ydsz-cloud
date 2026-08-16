@@ -33,17 +33,27 @@ public class LlmException extends SysException {
     CANCELED
   }
 
+  /** 错误描述信息（SysException 精简构造器移除 String 入参后，由本类自行承载） */
+  private final String message;
+
   private final ErrorType errorType;
 
   public LlmException(String message, ErrorType errorType) {
-    super(message);
+    super();
+    this.message = message;
     this.errorType = errorType;
   }
 
   public LlmException(String message, ErrorType errorType, Throwable cause) {
-    super(message);
-    this.initCause(cause);
+    super();
+    this.message = message;
     this.errorType = errorType;
+    this.initCause(cause);
+  }
+
+  @Override
+  public String getMessage() {
+    return message != null ? message : super.getMessage();
   }
 
   public ErrorType getErrorType() {
@@ -57,7 +67,8 @@ public class LlmException extends SysException {
    */
   public AgentExceptionCode toAgentErrorCode() {
     return switch (errorType) {
-      case NETWORK_TIMEOUT, PROVIDER_ERROR, RATE_LIMITED, CANCELED -> AgentExceptionCode.LLM_CALL_FAILED;
+      case NETWORK_TIMEOUT, PROVIDER_ERROR, RATE_LIMITED, CANCELED ->
+          AgentExceptionCode.LLM_CALL_FAILED;
       case AUTH_FAILED, MODEL_NOT_FOUND -> AgentExceptionCode.LLM_PROVIDER_NOT_CONFIGURED;
       case INVALID_RESPONSE -> AgentExceptionCode.LLM_RESPONSE_INVALID;
     };
