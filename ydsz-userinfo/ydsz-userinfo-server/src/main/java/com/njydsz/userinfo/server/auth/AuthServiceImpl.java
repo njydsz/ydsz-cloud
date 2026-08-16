@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.ObjectProvider;
 import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,10 +28,9 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.vo.LoginVO;
 import com.njydsz.userinfo.infra.mapper.RoleMapper;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
+import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
-import com.njydsz.common.event.model.OutboxMessage;
-import com.njydsz.common.event.service.OutboxService;
-import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.userinfo.infra.mapper.UserRoleMapper;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
@@ -42,6 +40,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 
 /**
  * 认证服务实现。
@@ -101,8 +100,8 @@ public class AuthServiceImpl implements AuthService {
     private final CaptchaService captchaService;
     /** LDAP 认证提供者（可选依赖，未配置时为 null） */
     private final ObjectProvider<LdapAuthenticationProvider> ldapProviderProvider;
-    /** Outbox 事件服务（可选依赖，用于发布用户登录/登出领域事件） */
-    private final ObjectProvider<OutboxService> outboxServiceProvider;
+    /** 统一领域事件发布门面 */
+    private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
     /** 登录历史服务（记录登录尝试，IP 封禁检查） */
     private final LoginHistoryService loginHistoryService;
 

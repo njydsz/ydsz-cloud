@@ -45,7 +45,15 @@ public class SystemProperties {
     /** 应用密钥配置（{@code ydsz.system.app.*}） */
     private App app = new App();
 
-    /** 内部 API IP 白名单（空列表=不限制；支持 CIDR 与通配符） */
+    /**
+     * 内部 API IP 白名单（空列表=不限制）。
+     *
+     * @deprecated 自 1.1.0 起废弃，统一使用 {@code ydsz.safe.ip-access.static-whitelist}
+     *             配置（委托 ydsz-common-safe 的 {@code IpAccessService}），
+     *             获得 CIDR 网段匹配 + Redis 动态白名单 + 自动封禁联动能力。
+     *             当前保留仅作迁移期兼容，当此配置非空时使用精确匹配降级逻辑。
+     */
+    @Deprecated
     private List<String> internalApiIpWhitelist = new ArrayList<>();
 
     /**
