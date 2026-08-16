@@ -12,7 +12,7 @@
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 提供多存储后端统一抽象、分片上传、断点续传、秒传、病毒扫描、生命周期管理、健康检查等能力 |
 | **依赖** | common-core、common-exception、common-util；可选依赖 spring-boot-actuator、micrometer-core、spring-data-redis、common-redis |
-| **版本** | 1.0.0 |
+| **版本** | 1.1.0 |
 
 ## 核心能力
 
@@ -536,4 +536,15 @@ public class CephStorageRegisterConfig {
 
 ## 变更记录
 
+- **v1.1.0**（2026-08-16）：
+  - 新增 `FileOps` 门面工具类，提供文件名清洗、后缀提取、存储键生成、Path → MultipartFile 适配等通用能力
+  - 清理业务模块重复依赖：ydsz-system / ydsz-agent / ydsz-message / ydsz-userinfo / ydsz-literule 移除未使用的 ydsz-common-file pom 声明
+  - ydsz-nextwiki 移除直接 minio SDK 依赖、ydsz-cronjob 移除幽灵 minio 配置
+  - ydsz-workflow 误导性 Javadoc `FileStorageService` 更正为 `IFileStorageProvider`
+  - 默认启用生命周期清理（`FileLifecycleProperties.enabled` 默认值由 false 改为 true）
+  - 并发守卫快速失败语义补充前端配合说明
+  - 补充 Nacos 共享配置基线、秒传 Bucket Lifecycle 配套说明
+  - 补充 file.* 指标看板配置文档（Grafana 5 面板）
+  - 补充大文件断点续传接入指南（前后端三步 API + 异常清单）
+  - 补充 SPI 注册自定义存储后端示例（Ceph 配置示例）
 - **v1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节

@@ -248,10 +248,18 @@ public class NettyProperties {
      *
      * <p>默认不启用，业务需要基于注解的消息路由时显式开启。
      * 开启后自动扫描 Spring 容器中所有 {@code @MessageHandler} 注解方法。
+     *
+     * @deprecated 自 v1.1.0 起标记废弃，与 {@link com.njydsz.common.netty.event.MessageDispatcher} 同步废弃。
+     *             计划在 v2.0.0 移除，推荐使用 {@code SimpleChannelInboundHandler} 替代。
      */
     @Data
+    @Deprecated
     public static class Dispatcher {
-        /** 是否启用 MessageDispatcher 自动扫描 */
+        /**
+         * 是否启用 MessageDispatcher 自动扫描。
+         *
+         * @deprecated 自 v1.1.0 起标记废弃。
+         */
         private boolean enabled = false;
     }
 
