@@ -50,7 +50,7 @@
 
 | 类 | 说明 |
 |---|---|
-| `AppRequestLogInterceptor` | 请求日志拦截器（继承 `BaseRequestLogInterceptor`，`@Component`），`resolveRequestId` 优先从 `RequestHolder` 获取上游过滤器写入的值，缺失时调用 `RequestIdGenerator.generateId()` 兜底；`getLogger` 返回当前类持有的 `Logger` 实例；由 `AppMvcConfiguration.addInterceptors()` 显式注册，执行顺序 `BaseFilterOrders.INTERCEPTOR_REQUEST_LOG` |
+| `AppRequestLogInterceptor` | 请求日志拦截器（继承 `BaseRequestLogInterceptor`，`@Component`），`resolveRequestId` 优先从 `RequestHolder` 获取上游过滤器写入的值，缺失时调用 `RequestIdGenerator.generateId()` 兜底；`getLogger` 返回当前类持有的 `Logger` 实例；由 `AppMvcConfiguration.addInterceptors()` 显式注册，执行顺序 `InterceptorOrder.REQUEST_LOG` |
 | `BaseHttpInterceptor` | HTTP 通用拦截器（来自 `common-base`），作为拦截器链末端占位拦截器 |
 
 ### 5. 全局响应包装与异常处理（作用域隔离）

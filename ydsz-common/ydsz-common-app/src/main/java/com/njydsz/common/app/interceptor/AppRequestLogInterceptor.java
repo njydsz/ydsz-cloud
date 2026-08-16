@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
  * {@link RequestContext} 中复用上游写入的 RequestId）。
  *
  * <p><b>注册方式：</b>由 {@code AppMvcConfiguration.addInterceptors()} 显式注册，
- * 执行顺序由 {@code .order(BaseFilterOrders.INTERCEPTOR_REQUEST_LOG)} 控制。
+ * 执行顺序由 {@code .order(InterceptorOrder.REQUEST_LOG)} 控制。
  * 不使用 {@code @Order} 注解，因为该注解对 HandlerInterceptor 的排序无效。
  *
  * <p><b>线程安全性：</b>无状态拦截器，线程安全。

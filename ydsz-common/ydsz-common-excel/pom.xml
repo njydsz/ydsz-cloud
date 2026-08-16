@@ -10,17 +10,18 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
+    <!-- L1 工具层模块标识：激活 purity 检查 -->
+    <properties>
+        <l1.module.skip>false</l1.module.skip>
+    </properties>
+
     <artifactId>ydsz-common-excel</artifactId>
     <name>ydsz-common-excel</name>
     <description>高性能 Excel 处理模块 — 双引擎架构（零 POI 快速路径 + POI 兼容路径）、ASM 字节码优化、公式注入防护</description>
 
     <dependencies>
         <!-- ==================== 内部模块 ==================== -->
-        <!-- 公共异常模块（异常体系集成） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-exception</artifactId>
-        </dependency>
+        <!-- 注：L1 工具层不依赖 common-exception，异常类自包含于本模块 -->
 
         <!-- ==================== 第三方依赖 ==================== -->
         <!-- Apache POI -->

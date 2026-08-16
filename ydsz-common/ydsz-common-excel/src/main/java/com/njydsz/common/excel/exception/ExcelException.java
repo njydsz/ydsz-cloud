@@ -1,14 +1,10 @@
 package com.njydsz.common.excel.exception;
 
-import com.njydsz.common.exception.code.CoreExceptionCode;
-import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.exception.enums.ExceptionCode;
-
 /**
  * Excel 模块基础异常类
  *
- * <p>继承 {@link BusinessException}，与 common-exception 异常体系无缝集成。
- * 支持 i18n 消息解析、异常分类、HTTP 状态码映射等能力。</p>
+ * <p>L1 工具层自包含异常，继承 RuntimeException，不依赖 common-exception 全局体系。
+ * 支持错误码绑定、国际化消息键传播、上下文数据携带等能力。</p>
  *
  * <h3>异常层次</h3>
  * <ul>
@@ -28,82 +24,128 @@ import com.njydsz.common.exception.enums.ExceptionCode;
  * throw new ExcelException(ExcelExceptionCode.READ_CONVERSION_FAILED, "类型转换失败", e);
  * }</pre>
  *
+ * <p>下游 L2+ 异常体系若需桥接，可通过 {@link ExcelException#getCode()} 获取错误码，
+ * 转换为全局 ExceptionCode 类型。</p>
+ *
  * @author ydsz-team
  * @since 1.0.0
  * @see ExcelReadException
  * @see ExcelWriteException
  * @see ExcelExceptionCode
  */
-public class ExcelException extends BusinessException {
+public class ExcelException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
-    /** 错误上下文数据 */
+    /** 错误码枚举 */
+    private final ExcelExceptionCode exceptionCode;
+
+    /** 国际化消息键（冗余存储，用于 i18n 解析） */
+    private final String messageKey;
+
+    /** 错误上下文数据（可选，用于格式化消息） */
     private transient Object[] context;
 
     /**
-     * 构造 Excel 异常
+     * 构造 Excel 异常（使用通用错误码）。
      */
     public ExcelException() {
-        super();
+        super("Excel处理异常");
+        this.exceptionCode = ExcelExceptionCode.CONFIG_INVALID_PARAMETER;
+        this.messageKey = exceptionCode.getKey();
     }
 
     /**
-     * 构造带错误信息的 Excel 异常
+     * 构造带错误信息的 Excel 异常。
      *
      * @param message 错误描述
      */
     public ExcelException(String message) {
-        super();
-        setMessage(message);
+        super(message);
+        this.exceptionCode = ExcelExceptionCode.CONFIG_INVALID_PARAMETER;
+        this.messageKey = exceptionCode.getKey();
     }
 
     /**
-     * 构造带错误信息和原因的 Excel 异常
+     * 构造带错误信息和原因的 Excel 异常。
      *
      * @param message 错误描述
      * @param cause 原始异常
      */
     public ExcelException(String message, Throwable cause) {
-        super(CoreExceptionCode.FAIL, cause);
-        setMessage(message);
+        super(message, cause);
+        this.exceptionCode = ExcelExceptionCode.CONFIG_INVALID_PARAMETER;
+        this.messageKey = exceptionCode.getKey();
     }
 
     /**
-     * 构造带异常码的 Excel 异常
+     * 构造带异常码的 Excel 异常。
      *
      * @param exceptionCode 异常码枚举
      */
-    public ExcelException(ExceptionCode exceptionCode) {
-        super(exceptionCode);
+    public ExcelException(ExcelExceptionCode exceptionCode) {
+        super(exceptionCode != null ? exceptionCode.getKey() : "Excel处理异常");
+        this.exceptionCode = exceptionCode != null
+            ? exceptionCode : ExcelExceptionCode.CONFIG_INVALID_PARAMETER;
+        this.messageKey = this.exceptionCode.getKey();
     }
 
     /**
-     * 构造带异常码和自定义消息的 Excel 异常
+     * 构造带异常码和自定义消息的 Excel 异常。
      *
      * @param exceptionCode 异常码枚举
      * @param message 自定义错误描述
      */
-    public ExcelException(ExceptionCode exceptionCode, String message) {
-        super(exceptionCode);
-        setMessage(message);
+    public ExcelException(ExcelExceptionCode exceptionCode, String message) {
+        super(message);
+        this.exceptionCode = exceptionCode != null
+            ? exceptionCode : ExcelExceptionCode.CONFIG_INVALID_PARAMETER;
+        this.messageKey = this.exceptionCode.getKey();
     }
 
     /**
-     * 构造带异常码、自定义消息和原因的 Excel 异常
+     * 构造带异常码、自定义消息和原因的 Excel 异常。
      *
      * @param exceptionCode 异常码枚举
      * @param message 自定义错误描述
      * @param cause 原始异常
      */
-    public ExcelException(ExceptionCode exceptionCode, String message, Throwable cause) {
-        super(exceptionCode, cause);
-        this.messageKey = exceptionCode.getKey();
-        setMessage(message);
+    public ExcelException(ExcelExceptionCode exceptionCode, String message, Throwable cause) {
+        super(message, cause);
+        this.exceptionCode = exceptionCode != null
+            ? exceptionCode : ExcelExceptionCode.CONFIG_INVALID_PARAMETER;
+        this.messageKey = this.exceptionCode.getKey();
     }
 
     /**
-     * 获取错误上下文数据
+     * 获取异常码枚举。
+     *
+     * @return ExcelExceptionCode 枚举值
+     */
+    public ExcelExceptionCode getExceptionCode() {
+        return exceptionCode;
+    }
+
+    /**
+     * 获取异常码字符串。
+     *
+     * @return 异常码
+     */
+    public String getCode() {
+        return exceptionCode != null ? exceptionCode.getCode() : null;
+    }
+
+    /**
+     * 获取国际化消息键。
+     *
+     * @return 消息键
+     */
+    public String getMessageKey() {
+        return messageKey;
+    }
+
+    /**
+     * 获取错误上下文数据。
      *
      * @return 上下文数据数组
      */
@@ -112,7 +154,7 @@ public class ExcelException extends BusinessException {
     }
 
     /**
-     * 设置错误上下文数据
+     * 设置错误上下文数据。
      *
      * @param context 上下文数据数组
      */
@@ -121,13 +163,13 @@ public class ExcelException extends BusinessException {
     }
 
     /**
-     * 获取格式化的错误消息
+     * 获取格式化的错误消息（使用上下文数据格式化）。
      *
      * @return 格式化后的错误消息
      */
     public String getFormattedMessage() {
         String msg = getMessage();
-        if (context == null || context.length == 0) {
+        if (context == null || context.length == 0 || msg == null) {
             return msg;
         }
         try {

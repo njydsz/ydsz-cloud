@@ -6,8 +6,8 @@ import java.util.Set;
 
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.common.core.context.BizContextKeys;
-import com.njydsz.common.core.context.RequestContext;
+import com.njydsz.common.util.internal.proxy.CoreConstants;
+import com.njydsz.common.util.internal.proxy.RequestContextProxy;
 
 /**
  * 认证信息快捷读取工具类。
@@ -60,7 +60,7 @@ public final class AuthInfoUtils {
      * @see RequestContext#get(String)
       */
     public static AuthInfo getAuthInfo() {
-        Object value = RequestContext.get(BizContextKeys.KEY_AUTH_INFO);
+        Object value = RequestContextProxy.get(CoreConstants.KEY_AUTH_INFO);
         return value instanceof AuthInfo auth ? auth : null;
     }
 
@@ -237,7 +237,7 @@ public final class AuthInfoUtils {
      *
      */
     public static YdszAuthInfo getYdszAuthInfo() {
-        Object value = RequestContext.get(BizContextKeys.KEY_AUTH_INFO);
+        Object value = RequestContextProxy.get(CoreConstants.KEY_AUTH_INFO);
         return value instanceof YdszAuthInfo auth ? auth : null;
     }
 

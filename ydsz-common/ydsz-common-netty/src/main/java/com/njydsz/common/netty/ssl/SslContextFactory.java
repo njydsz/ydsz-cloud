@@ -3,7 +3,6 @@ package com.njydsz.common.netty.ssl;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.security.KeyStore;
-
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManagerFactory;
 

@@ -99,7 +99,9 @@
 
 | 类 | 说明 |
 |---|---|
-| `BaseFilterOrders` | 横切点执行顺序常量，定义 Filter/Interceptor/Advice 的 `order` 值；所有数字与 `docs/BASE_INTERCEPTOR_ORDER.md` 保持一致，修改前需先更新文档 |
+| `FilterOrder` | Servlet Filter 执行顺序常量，定义各 Filter 的 `order` 值（基于 `Ordered.HIGHEST_PRECEDENCE` 体系）；所有数字与 `docs/BASE_INTERCEPTOR_ORDER.md` 保持一致 |
+| `InterceptorOrder` | Spring MVC Interceptor 执行顺序常量，定义各 Interceptor 的 `order` 值（自然数体系） |
+| `AdviceOrder` | ControllerAdvice 执行顺序常量，定义各 Advice 的 `order` 值（自然数体系） |
 | `DocConstants` | OpenAPI 文档常量，集中维护 `OPENAPI_VERSION`（3.0.3）、`DEFAULT_API_DOCS_PATH`、`DEFAULT_KNIFE4J_PATH`、`DEFAULT_GROUP_NAME`、`DEFAULT_API_VERSION`（1.0.0）、格式标识、配置属性前缀等 |
 | `BaseAuthInfo` | 认证上下文信息抽象基类（继承 `YdszAuthInfo`），子类覆盖 `getServiceTypeCode()` 返回具体服务类型编码（"WEB"/"APP"/"API"），用于业务层区分请求来源 |
 
@@ -375,7 +377,7 @@ public class FlowMetrics extends AbstractModuleMetrics {
 4. **文档功能默认关闭**：出于安全考虑，`ydsz.doc.enabled` 默认为 `false`。生产环境建议保持关闭，或配合 `ydsz.doc.production-enabled=true` + `ydsz.doc.basic-auth.enabled=true` 进行认证保护。
 5. **CORS 安全校验**：`BaseCorsProperties.validateSecurity()` 在启动时检测不安全组合（`allowCredentials=true` 且 `*`、来源为空、过度开放），输出 WARN 日志。生产环境建议显式指定允许的域名、方法、头。
 6. **`ConfigRegistryEndpoint` 安全**：此端点暴露所有 `ydsz.*` 配置信息，生产环境应通过 `management.endpoint.config-registry.exposure` 控制访问权限，建议仅限内网访问。
-7. **横切点顺序约定**：所有 Filter/Interceptor/Advice 的 `order` 值定义在 `BaseFilterOrders` 常量类中，修改任何数字前请先更新 `docs/BASE_INTERCEPTOR_ORDER.md` 文档。
+7. **横切点顺序约定**：所有 Filter 的 `order` 值定义在 `FilterOrder` 常量类中，Interceptor 的 `order` 值定义在 `InterceptorOrder` 中，Advice 的 `order` 值定义在 `AdviceOrder` 中；修改任何数字前请先更新 `docs/BASE_INTERCEPTOR_ORDER.md` 文档。
 8. **`BaseAuthFilter` 清理职责**：`RequestHolder.remove()` 由 `BaseAuthFilter.doFilterInternal()` 的 finally 块负责清理，`BaseHttpInterceptor` 仅作为占位拦截器，不再重复调用清理逻辑。
 9. **`AbstractModuleMetrics` 前缀管理**：各业务模块的 Metrics 类继承本基类，通过构造器传入模块前缀（如 `ydsz_flow_`、`ydsz_msg_`），自动拼接到所有指标名称前，避免各模块硬编码重复字符串。
 

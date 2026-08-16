@@ -2,7 +2,7 @@ package com.njydsz.common.util.http;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import com.njydsz.common.core.constant.HeaderConstants;
+import com.njydsz.common.util.internal.proxy.CoreConstants;
 import com.njydsz.common.util.string.StringUtils;
 
 /**
@@ -27,7 +27,7 @@ import com.njydsz.common.util.string.StringUtils;
 public final class HttpTokenUtils {
 
     /** 标准 HTTP 授权头名称（引用 core HeaderConstants，避免重复定义） */
-    public static final String AUTHORIZATION_HEADER = HeaderConstants.AUTHORIZATION;
+    public static final String AUTHORIZATION_HEADER = CoreConstants.AUTHORIZATION;
 
     /** Ydsz 访问令牌自定义头名称（与 AuthHeaderConstants.X_ACCESS_TOKEN 值相同） */
     public static final String X_ACCESS_TOKEN_HEADER = "X-Access-Token";

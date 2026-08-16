@@ -1,5 +1,6 @@
 package com.njydsz.common.netty.client;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.netty.bootstrap.Bootstrap;
@@ -231,6 +232,32 @@ public abstract class AbstractNettyClient {
     public boolean sendSync(Object message, long timeoutMs) throws InterruptedException {
         ChannelFuture future = send(message);
         return future.await(timeoutMs) && future.isSuccess();
+    }
+
+    /**
+     * 异步发送消息（返回 {@link CompletableFuture}，支持链式组合）。
+     *
+     * <p>使用场景：需要异步等待发送结果与其他操作组合时。
+     * 注意：此方法仅保证消息写入 TCP 栈成功，不保证对端业务层处理完成。
+     *
+     * @param message 消息对象
+     * @return CompletableFuture，发送成功完成，失败时异常完成
+     * @throws NettyClientException Channel 未连接时抛出
+     */
+    public CompletableFuture<Void> sendAsync(Object message) {
+        if (channel == null || !channel.isActive()) {
+            throw new NettyClientException("Channel 未连接，请先调用 connect()");
+        }
+        CompletableFuture<Void> future = new CompletableFuture<>();
+        channel.writeAndFlush(message).addListener(f -> {
+            if (f.isSuccess()) {
+                future.complete(null);
+            } else {
+                future.completeExceptionally(
+                        new NettyClientException("消息发送失败: " + f.cause().getMessage(), f.cause()));
+            }
+        });
+        return future;
     }
 
     /**

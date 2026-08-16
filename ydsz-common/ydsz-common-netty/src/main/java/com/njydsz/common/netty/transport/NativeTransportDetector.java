@@ -17,8 +17,6 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import lombok.extern.slf4j.Slf4j;
 
-import com.njydsz.common.netty.transport.NettyTransportException;
-
 /**
  * 原生传输检测器 — 自动检测并选择最优的 Netty 传输方式。
  *

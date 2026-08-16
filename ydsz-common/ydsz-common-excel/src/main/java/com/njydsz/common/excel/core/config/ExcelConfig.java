@@ -486,131 +486,236 @@ public class ExcelConfig {
      */
     public static final class Builder {
 
-        private int readBufferSize = 8192;
-        private int writeBufferSize = 8192;
+        /** 默认读取/写入缓冲区大小（字节） */
+        private static final int DEFAULT_BUFFER_SIZE = 8192;
+        /** 默认最大读取缓存条目数 */
+        private static final int DEFAULT_MAX_READ_CACHE_SIZE = 1024;
+        /** 默认流式解析阈值（MB） */
+        private static final int DEFAULT_STREAMING_PARSE_THRESHOLD_MB = 10;
+        /** 默认最大读取文件大小（MB） */
+        private static final int DEFAULT_MAX_READ_FILE_SIZE_MB = 100;
+        /** 默认最大写入文件大小（MB） */
+        private static final int DEFAULT_MAX_WRITE_FILE_SIZE_MB = 50;
+        /** 默认表头行号（从 1 计） */
+        private static final int DEFAULT_HEAD_ROW_NUMBER = 1;
+        /** 默认 SXSSF 内存保留行数窗口 */
+        private static final int DEFAULT_WRITE_CACHE_SIZE = 100;
+
+        private int readBufferSize = DEFAULT_BUFFER_SIZE;
+        private int writeBufferSize = DEFAULT_BUFFER_SIZE;
         private boolean automaticTrim = true;
         private String defaultDateFormat = "yyyy-MM-dd HH:mm:ss";
         private String defaultNumberFormat = "#,##0.00";
-        private int maxReadCacheSize = 1024;
-        private int streamingParseThresholdMB = 10;
+        private int maxReadCacheSize = DEFAULT_MAX_READ_CACHE_SIZE;
+        private int streamingParseThresholdMB = DEFAULT_STREAMING_PARSE_THRESHOLD_MB;
         private boolean strictNumberConversion = false;
-        private int maxReadFileSizeMB = 100;
-        private int maxWriteFileSizeMB = 50;
+        private int maxReadFileSizeMB = DEFAULT_MAX_READ_FILE_SIZE_MB;
+        private int maxWriteFileSizeMB = DEFAULT_MAX_WRITE_FILE_SIZE_MB;
         private boolean formulaInjectionProtection = true;
         private boolean useFastReader = true;
         private boolean useFastWriter = true;
         private int compressionLevel = Deflater.BEST_SPEED;
         private boolean use1904Windowing = false;
-        private int headRowNumber = 1;
-        private int writeCacheSize = 100;
+        private int headRowNumber = DEFAULT_HEAD_ROW_NUMBER;
+        private int writeCacheSize = DEFAULT_WRITE_CACHE_SIZE;
         private ValidationMode validationMode = ValidationMode.FAIL_FAST;
 
         private Builder() {
         }
 
-        /** 读取缓冲区大小（字节），必须为正数。 */
+        /**
+         * 设置读取缓冲区大小。
+         *
+         * @param readBufferSize 缓冲区字节数，必须为正数
+         * @return 当前 Builder 实例，支持链式调用
+         */
         public Builder readBufferSize(int readBufferSize) {
             this.readBufferSize = readBufferSize;
             return this;
         }
 
-        /** 写入缓冲区大小（字节），必须为正数。 */
+        /**
+         * 设置写入缓冲区大小。
+         *
+         * @param writeBufferSize 缓冲区字节数，必须为正数
+         * @return 当前 Builder 实例，支持链式调用
+         */
         public Builder writeBufferSize(int writeBufferSize) {
             this.writeBufferSize = writeBufferSize;
             return this;
         }
 
-        /** 自动去除字符串首尾空格，默认 {@code true}。 */
+        /**
+         * 设置自动去除字符串首尾空格。
+         *
+         * @param automaticTrim {@code true} 表示自动去除，默认 {@code true}
+         * @return 当前 Builder 实例，支持链式调用
+         */
         public Builder automaticTrim(boolean automaticTrim) {
             this.automaticTrim = automaticTrim;
             return this;
         }
 
-        /** 默认日期模式串，不可为 {@code null} 或空。 */
+        /**
+         * 设置默认日期模式串。
+         *
+         * @param defaultDateFormat 日期模式串（如 {@code yyyy-MM-dd HH:mm:ss}），不可为 {@code null} 或空
+         * @return 当前 Builder 实例，支持链式调用
+         */
         public Builder defaultDateFormat(String defaultDateFormat) {
             this.defaultDateFormat = defaultDateFormat;
             return this;
         }
 
-        /** 默认数字格式串，不可为 {@code null} 或空。 */
+        /**
+         * 设置默认数字格式串。
+         *
+         * @param defaultNumberFormat 数字格式串（如 {@code #,##0.00}），不可为 {@code null} 或空
+         * @return 当前 Builder 实例，支持链式调用
+         */
         public Builder defaultNumberFormat(String defaultNumberFormat) {
             this.defaultNumberFormat = defaultNumberFormat;
             return this;
         }
 
-        /** 最大读取缓存条目数，必须为正数。 */
+        /**
+         * 设置读取过程最大缓存条目数。
+         *
+         * @param maxReadCacheSize 缓存条目数上限，必须为正数
+         * @return 当前 Builder 实例，支持链式调用
+         */
         public Builder maxReadCacheSize(int maxReadCacheSize) {
             this.maxReadCacheSize = maxReadCacheSize;
             return this;
         }
 
-        /** 流式解析阈值（MB），必须为正数。 */
+        /**
+         * 设置切换到流式解析的文件大小阈值。
+         *
+         * @param streamingParseThresholdMB 阈值，单位 MB，必须为正数
+         * @return 当前 Builder 实例，支持链式调用
+         */
         public Builder streamingParseThresholdMB(int streamingParseThresholdMB) {
             this.streamingParseThresholdMB = streamingParseThresholdMB;
             return this;
         }
 
-        /** 数字转换失败时抛异常（严格模式），默认 {@code false}。 */
+        /**
+         * 设置数字转换失败时是否抛出异常（严格模式）。
+         *
+         * @param strictNumberConversion {@code true} 表示严格模式，默认 {@code false}
+         * @return 当前 Builder 实例，支持链式调用
+         */
         public Builder strictNumberConversion(boolean strictNumberConversion) {
             this.strictNumberConversion = strictNumberConversion;
             return this;
         }
 
-        /** 最大可读文件大小（MB），必须为正数。 */
+        /**
+         * 设置允许读取的最大文件大小。
+         *
+         * @param maxReadFileSizeMB 文件大小上限，单位 MB，必须为正数
+         * @return 当前 Builder 实例，支持链式调用
+         */
         public Builder maxReadFileSizeMB(int maxReadFileSizeMB) {
             this.maxReadFileSizeMB = maxReadFileSizeMB;
             return this;
         }
 
-        /** 最大可写文件大小（MB），必须为正数。 */
+        /**
+         * 设置允许写入的最大文件大小。
+         *
+         * @param maxWriteFileSizeMB 文件大小上限，单位 MB，必须为正数
+         * @return 当前 Builder 实例，支持链式调用
+         */
         public Builder maxWriteFileSizeMB(int maxWriteFileSizeMB) {
             this.maxWriteFileSizeMB = maxWriteFileSizeMB;
             return this;
         }
 
-        /** 启用公式注入防护，默认 {@code true}。 */
+        /**
+         * 设置是否启用公式注入防护。
+         *
+         * @param formulaInjectionProtection {@code true} 表示启用，默认 {@code true}
+         * @return 当前 Builder 实例，支持链式调用
+         */
         public Builder formulaInjectionProtection(boolean formulaInjectionProtection) {
             this.formulaInjectionProtection = formulaInjectionProtection;
             return this;
         }
 
-        /** 启用快速读取引擎，默认 {@code true}。 */
+        /**
+         * 设置是否启用快速读取引擎。
+         *
+         * @param useFastReader {@code true} 表示启用，默认 {@code true}
+         * @return 当前 Builder 实例，支持链式调用
+         */
         public Builder useFastReader(boolean useFastReader) {
             this.useFastReader = useFastReader;
             return this;
         }
 
-        /** 启用快速写入引擎，默认 {@code true}。 */
+        /**
+         * 设置是否启用快速写入引擎。
+         *
+         * @param useFastWriter {@code true} 表示启用，默认 {@code true}
+         * @return 当前 Builder 实例，支持链式调用
+         */
         public Builder useFastWriter(boolean useFastWriter) {
             this.useFastWriter = useFastWriter;
             return this;
         }
 
-        /** ZIP 压缩级别 [-1, 9]，默认 {@link Deflater#BEST_SPEED}。 */
+        /**
+         * 设置 ZIP 压缩级别。
+         *
+         * @param compressionLevel 压缩级别，取值范围 [-1, 9]，默认 {@link Deflater#BEST_SPEED}
+         * @return 当前 Builder 实例，支持链式调用
+         */
         public Builder compressionLevel(int compressionLevel) {
             this.compressionLevel = compressionLevel;
             return this;
         }
 
-        /** 使用 1904 日期窗口（Mac 兼容），默认 {@code false}。 */
+        /**
+         * 设置是否使用 1904 日期窗口（Mac 兼容）。
+         *
+         * @param use1904Windowing {@code true} 表示启用，默认 {@code false}
+         * @return 当前 Builder 实例，支持链式调用
+         */
         public Builder use1904Windowing(boolean use1904Windowing) {
             this.use1904Windowing = use1904Windowing;
             return this;
         }
 
-        /** 默认表头行号（从 1 计），必须 &gt;= 1。 */
+        /**
+         * 设置默认表头行号。
+         *
+         * @param headRowNumber 表头行号（从 1 计），必须 &gt;= 1
+         * @return 当前 Builder 实例，支持链式调用
+         */
         public Builder headRowNumber(int headRowNumber) {
             this.headRowNumber = headRowNumber;
             return this;
         }
 
-        /** SXSSF 内存保留行数窗口，必须 &gt;= 1。 */
+        /**
+         * 设置 SXSSF 内存中保留的行数窗口。
+         *
+         * @param writeCacheSize 内存保留行数，必须 &gt;= 1
+         * @return 当前 Builder 实例，支持链式调用
+         */
         public Builder writeCacheSize(int writeCacheSize) {
             this.writeCacheSize = writeCacheSize;
             return this;
         }
 
-        /** 数据校验模式，不可为 {@code null}。 */
+        /**
+         * 设置数据校验模式。
+         *
+         * @param validationMode 校验模式，不可为 {@code null}
+         * @return 当前 Builder 实例，支持链式调用
+         */
         public Builder validationMode(ValidationMode validationMode) {
             this.validationMode = validationMode;
             return this;

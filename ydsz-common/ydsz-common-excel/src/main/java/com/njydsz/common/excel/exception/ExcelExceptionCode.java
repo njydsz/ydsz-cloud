@@ -1,13 +1,10 @@
 package com.njydsz.common.excel.exception;
 
-import com.njydsz.common.exception.enums.ExceptionCode;
-import com.njydsz.common.exception.registry.YdszExceptionCode;
-
 /**
  * Excel 模块异常码枚举
  *
  * <p>定义 Excel 读写过程中所有业务异常的错误码和国际化消息键。
- * 实现统一异常码接口，与 common-exception 模块无缝集成。</p>
+ * L1 工具层模块自包含的异常码定义，不依赖 common-exception 全局注册表。</p>
  *
  * <h3>错误码命名规范</h3>
  * <ul>
@@ -17,11 +14,12 @@ import com.njydsz.common.exception.registry.YdszExceptionCode;
  *   <li>H04xxx - 配置异常</li>
  * </ul>
  *
+ * <p>下游 L2+ 模块若需与全局异常体系对接，可通过 {@link ExcelException#toErrorCode()} 桥接。</p>
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
-@YdszExceptionCode(module = "excel", description = "Excel处理")
-public enum ExcelExceptionCode implements ExceptionCode {
+public enum ExcelExceptionCode {
 
     // ==================== 读取异常 H01xxx ====================
     READ_FILE_NOT_FOUND("H01001", "excel.read.fileNotFound"),
@@ -55,7 +53,10 @@ public enum ExcelExceptionCode implements ExceptionCode {
     CONFIG_INVALID_PARAMETER("H04001", "excel.config.invalidParameter"),
     CONFIG_BEAN_MAPPING("H04002", "excel.config.beanMapping");
 
+    /** 异常码 */
     private final String code;
+
+    /** 国际化消息键 */
     private final String key;
 
     ExcelExceptionCode(String code, String key) {
@@ -63,12 +64,20 @@ public enum ExcelExceptionCode implements ExceptionCode {
         this.key = key;
     }
 
-    @Override
+    /**
+     * 获取异常码。
+     *
+     * @return 异常码字符串
+     */
     public String getCode() {
         return code;
     }
 
-    @Override
+    /**
+     * 获取国际化消息键。
+     *
+     * @return 国际化消息 key
+     */
     public String getKey() {
         return key;
     }

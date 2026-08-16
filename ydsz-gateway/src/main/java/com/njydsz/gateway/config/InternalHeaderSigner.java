@@ -19,8 +19,6 @@ import javax.crypto.spec.SecretKeySpec;
  *   <li>{@code verify(..., nonce)}: 下游服务调用
  *       {@link com.njydsz.common.safe.crypto.NonceCache#verifyAndConsume(String)}
  *       校验 nonce 是否重复，配合时间戳窗口形成"一次性签名"</li>
- *   <li>保留旧的 {@code sign(...)} / {@code verify(...)} 重载以保证向后兼容，
- *       但新代码应使用带 nonce 的版本</li>
  * </ul>
  *
  * <h3>P2-12 已有能力</h3>
@@ -85,36 +83,6 @@ public final class InternalHeaderSigner {
     }
 
     /**
-     * P2-12: 验证内部头签名（无 nonce 版本，向后兼容）
-     *
-     * <p>下游服务在接收到网关注入的内部头后，应调用此方法验证签名合法性。
-     *
-     * @param secret      签名密钥（与网关相同）
-     * @param traceId     链路追踪 ID
-     * @param userId      用户 ID
-     * @param username    用户名
-     * @param roles       角色（CSV）
-     * @param permissions 权限（CSV）
-     * @param tsSeconds   时间戳（秒）
-     * @param receivedSig 收到的签名
-     * @return true=签名有效；false=签名无效或时间戳过期
-     */
-    public static boolean verify(String secret, String traceId, String userId,
-                                  String username, String roles, String permissions,
-                                  long tsSeconds, String receivedSig) {
-        // 先校验时间戳窗口
-        if (!validateTimestamp(tsSeconds)) {
-            return false;
-        }
-
-        // 重新计算签名（无 nonce）
-        String expectedSig = sign(secret, traceId, userId, username, roles, permissions, tsSeconds);
-
-        // 恒定时间比较，防计时攻击
-        return slowEquals(expectedSig, receivedSig);
-    }
-
-    /**
      * P0-6: 生成内部头签名（带 nonce 防重放）
      *
      * <p>payload 拼接顺序：traceId|userId|username|roles|permissions|tsSeconds|nonce
@@ -140,34 +108,6 @@ public final class InternalHeaderSigner {
                 permissions != null ? permissions : "",
                 String.valueOf(tsSeconds),
                 nonce != null ? nonce : "");
-
-        return hmacSha256(secret, payload);
-    }
-
-    /**
-     * P2-12: 生成内部头签名（向后兼容版本，不含 nonce）
-     *
-     * <p>payload 拼接顺序：traceId|userId|username|roles|permissions|tsSeconds
-     *
-     * @param secret      签名密钥
-     * @param traceId     链路追踪 ID
-     * @param userId      用户 ID
-     * @param username    用户名
-     * @param roles       角色（CSV）
-     * @param permissions 权限（CSV）
-     * @param tsSeconds   时间戳（秒）
-     * @return HMAC-SHA256 签名（十六进制）
-     */
-    public static String sign(String secret, String traceId, String userId,
-                              String username, String roles, String permissions,
-                              long tsSeconds) {
-        String payload = String.join("|",
-                traceId != null ? traceId : "",
-                userId != null ? userId : "",
-                username != null ? username : "",
-                roles != null ? roles : "",
-                permissions != null ? permissions : "",
-                String.valueOf(tsSeconds));
 
         return hmacSha256(secret, payload);
     }

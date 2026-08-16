@@ -585,7 +585,11 @@ public class ExcelWriter {
 
     // ==================== 生命周期回调分发 ====================
 
-    /** 快速短路：无注册回调时跳过所有分发逻辑 */
+    /**
+     * 判断当前是否有已注册的写入生命周期回调。
+     *
+     * @return {@code true} 表示已注册至少一个回调，{@code false} 表示无回调
+     */
     private boolean hasCallbacks() {
         return !callbacks.isEmpty();
     }

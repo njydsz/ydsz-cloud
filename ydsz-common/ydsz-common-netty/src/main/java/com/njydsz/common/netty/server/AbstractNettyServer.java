@@ -1,23 +1,18 @@
 package com.njydsz.common.netty.server;
 
-import com.njydsz.common.netty.config.NettyProperties;
-import com.njydsz.common.netty.event.ChannelEventDispatcher;
-import com.njydsz.common.netty.event.MessageDispatcher;
-import com.njydsz.common.netty.handler.ChannelGroupManager;
-import com.njydsz.common.netty.handler.ConnectionEventHandler;
-import com.njydsz.common.netty.handler.IdleStateHandlerFactory;
-import com.njydsz.common.netty.handler.TrafficMonitoringHandler;
-import com.njydsz.common.netty.metric.NettyChannelMetrics;
-import com.njydsz.common.netty.pool.NettyEventLoopPool;
-import com.njydsz.common.netty.ssl.SslContextFactory;
-import com.njydsz.common.netty.transport.NativeTransportDetector;
+import java.net.BindException;
+import java.net.InetSocketAddress;
 
 import io.netty.bootstrap.ServerBootstrap;
+import io.netty.buffer.ByteBufAllocator;
+import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.WriteBufferWaterMark;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.stream.ChunkedWriteHandler;
@@ -25,11 +20,20 @@ import io.netty.handler.traffic.ChannelTrafficShapingHandler;
 import io.netty.handler.traffic.GlobalTrafficShapingHandler;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.Slf4JLoggerFactory;
-
-import java.net.BindException;
-import java.net.InetSocketAddress;
-
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.netty.config.NettyProperties;
+import com.njydsz.common.netty.event.ChannelEventDispatcher;
+import com.njydsz.common.netty.event.MessageDispatcher;
+import com.njydsz.common.netty.handler.ChannelGroupManager;
+import com.njydsz.common.netty.handler.ConnectionEventHandler;
+import com.njydsz.common.netty.handler.ConnectionLimitHandler;
+import com.njydsz.common.netty.handler.IdleStateHandlerFactory;
+import com.njydsz.common.netty.handler.TrafficMonitoringHandler;
+import com.njydsz.common.netty.metric.NettyChannelMetrics;
+import com.njydsz.common.netty.pool.NettyEventLoopPool;
+import com.njydsz.common.netty.ssl.SslContextFactory;
+import com.njydsz.common.netty.transport.NativeTransportDetector;
 
 /**
  * Netty TCP Server 抽象基类。
@@ -311,33 +315,42 @@ public abstract class AbstractNettyServer {
     /**
      * Netty Server Channel 初始化器（从 start() 中拆分的独立内部类，提升可测试性）。
      *
-     * <p>添加通用 Handler 链：SSL → 流量整形 → 空闲检测 → 监控 → 业务 Handler。
+     * <p>添加通用 Handler 链：连接限制 → SSL → 流量整形 → 空闲检测 → 监控 → 业务 Handler。
      */
     private final class ServerChannelInitializer extends ChannelInitializer<SocketChannel> {
 
         private final TrafficMonitoringHandler trafficHandler;
         private final ConnectionEventHandler connectionHandler;
         private final ChannelGroupManager groupManager;
+        private final ConnectionLimitHandler connectionLimitHandler;
 
         /**
          * 构造初始化器。
          *
-         * @param trafficHandler    流量监控 Handler（可为 {@code null}）
-         * @param connectionHandler 连接事件 Handler（可为 {@code null}）
-         * @param groupManager      Channel 组管理器
+         * @param trafficHandler        流量监控 Handler（可为 {@code null}）
+         * @param connectionHandler     连接事件 Handler（可为 {@code null}）
+         * @param groupManager          Channel 组管理器
+         * @param connectionLimitHandler 连接数限制 Handler（可为 {@code null}）
          */
         ServerChannelInitializer(
                 TrafficMonitoringHandler trafficHandler,
                 ConnectionEventHandler connectionHandler,
-                ChannelGroupManager groupManager) {
+                ChannelGroupManager groupManager,
+                ConnectionLimitHandler connectionLimitHandler) {
             this.trafficHandler = trafficHandler;
             this.connectionHandler = connectionHandler;
             this.groupManager = groupManager;
+            this.connectionLimitHandler = connectionLimitHandler;
         }
 
         @Override
         protected void initChannel(SocketChannel ch) {
             ChannelPipeline pipeline = ch.pipeline();
+
+            // 连接数限制（Pipeline 最前端）
+            if (connectionLimitHandler != null) {
+                pipeline.addLast("connectionLimit", connectionLimitHandler);
+            }
 
             // SSL/TLS（复用已创建的 SslContext）
             if (sslContext != null) {

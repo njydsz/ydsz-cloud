@@ -20,6 +20,7 @@ import com.njydsz.common.excel.api.validator.DataValidator.ValidationMode;
  *     write-buffer-size: 16384
  *     default-date-format: "yyyy-MM-dd HH:mm:ss"
  *     automatic-trim: true
+ *     max-read-cache-size: 1024
  *     use-fast-reader: true
  *     use-fast-writer: true
  *     streaming-parse-threshold-mb: 10
@@ -53,6 +54,11 @@ public class ExcelProperties {
 
     /** 是否自动去除字符串首尾空格 */
     private Boolean automaticTrim;
+
+    /** 读取过程最大缓存条目数 */
+    @Min(64)
+    @Max(65536)
+    private Integer maxReadCacheSize;
 
     /** 是否使用快速解析器（零 POI 路径） */
     private Boolean useFastReader;
@@ -138,6 +144,14 @@ public class ExcelProperties {
 
     public void setAutomaticTrim(Boolean automaticTrim) {
         this.automaticTrim = automaticTrim;
+    }
+
+    public Integer getMaxReadCacheSize() {
+        return maxReadCacheSize;
+    }
+
+    public void setMaxReadCacheSize(Integer maxReadCacheSize) {
+        this.maxReadCacheSize = maxReadCacheSize;
     }
 
     public Boolean getUseFastReader() {

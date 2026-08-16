@@ -19,7 +19,8 @@ import com.njydsz.common.base.config.BaseAutoConfiguration;
 import com.njydsz.common.base.config.BaseMvcConfiguration;
 import com.njydsz.common.base.config.ConditionalOnPlatform;
 import com.njydsz.common.base.config.PlatformMode;
-import com.njydsz.common.base.constant.BaseFilterOrders;
+import com.njydsz.common.base.constant.FilterOrder;
+import com.njydsz.common.base.constant.InterceptorOrder;
 import com.njydsz.common.base.interceptor.BaseHttpInterceptor;
 import com.njydsz.common.safe.config.SafeConfiguration;
 import com.njydsz.common.safe.config.SecurityHeaderProperties;
@@ -89,11 +90,11 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(requestLogInterceptor)
                 .addPathPatterns("/**")
-                .order(BaseFilterOrders.INTERCEPTOR_REQUEST_LOG);
+                .order(InterceptorOrder.REQUEST_LOG);
 
         registry.addInterceptor(baseHttpInterceptor)
                 .addPathPatterns("/**")
-                .order(BaseFilterOrders.REQUEST_CONTEXT_CLEANUP);
+                .order(InterceptorOrder.REQUEST_CONTEXT_CLEANUP);
     }
 
     /**
@@ -127,7 +128,7 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
     /**
      * 注册请求体缓存过滤器（供后续组件多次读取 request body）。
      *
-     * <p>优先级由 {@code BaseFilterOrders.CONTENT_CACHING_FILTER} 决定；基于 {@code WebContentCacheProperties} 控制缓存上限。
+     * <p>优先级由 {@code FilterOrder.CONTENT_CACHING_FILTER} 决定；基于 {@code WebContentCacheProperties} 控制缓存上限。
      * {@code @ConditionalOnMissingBean(name)} 允许外部以同名 Bean 覆盖。
      *
      * @return 内容缓存过滤器注册 Bean
@@ -139,7 +140,7 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
                 new ContentCachingFilter(contentCacheProperties));
         bean.addUrlPatterns("/*");
         bean.setName("contentCachingFilter");
-        bean.setOrder(BaseFilterOrders.CONTENT_CACHING_FILTER);
+        bean.setOrder(FilterOrder.CONTENT_CACHING_FILTER);
         return bean;
     }
 
@@ -164,7 +165,7 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
         FilterRegistrationBean<WebAuthFilter> authFilterBean = new FilterRegistrationBean<>(authFilter);
         authFilterBean.addUrlPatterns("/*");
         authFilterBean.setName("webAuthFilter");
-        authFilterBean.setOrder(BaseFilterOrders.AUTH_FILTER);
+        authFilterBean.setOrder(FilterOrder.AUTH_FILTER);
         return authFilterBean;
     }
 
@@ -186,7 +187,7 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
         FilterRegistrationBean<SecurityHeaderFilter> bean = new FilterRegistrationBean<>(securityHeaderFilter);
         bean.addUrlPatterns("/*");
         bean.setName("securityHeaderFilter");
-        bean.setOrder(BaseFilterOrders.SECURITY_HEADER_FILTER);
+        bean.setOrder(FilterOrder.SECURITY_HEADER_FILTER);
         return bean;
     }
 
@@ -206,7 +207,7 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
         FilterRegistrationBean<TraceIdResponseFilter> bean = new FilterRegistrationBean<>(traceIdResponseFilter);
         bean.addUrlPatterns("/*");
         bean.setName("traceIdResponseFilter");
-        bean.setOrder(BaseFilterOrders.TRACE_ID_RESPONSE_FILTER);
+        bean.setOrder(FilterOrder.TRACE_ID_RESPONSE_FILTER);
         return bean;
     }
 

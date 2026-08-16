@@ -6,8 +6,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.core.trace.TraceIdGenerator;
+import com.njydsz.common.util.internal.proxy.CoreConstants;
+import com.njydsz.common.util.internal.proxy.ParsedTraceparent;
+import com.njydsz.common.util.internal.proxy.RequestContextProxy;
+import com.njydsz.common.util.internal.proxy.TraceIdGeneratorProxy;
 import com.njydsz.common.util.string.StringUtils;
 
 /**
@@ -129,7 +131,7 @@ public final class TracerUtils {
             return traceId;
         }
 
-        traceId = RequestContext.getTraceId();
+        traceId = RequestContextProxy.getTraceId();
         if (StringUtils.isNotEmpty(traceId)) {
             return traceId;
         }
@@ -162,7 +164,7 @@ public final class TracerUtils {
      * @return 新生成的 Trace ID（32 位十六进制）
      */
     public static String generateTraceId() {
-        return TraceIdGenerator.generateSortableTraceId();
+        return TraceIdGeneratorProxy.generateSortableTraceId();
     }
 
     /**
@@ -173,7 +175,7 @@ public final class TracerUtils {
     public static void setTraceId(String traceId) {
         if (StringUtils.isNotEmpty(traceId)) {
             MDC.put(TRACE_ID_NAME, traceId);
-            RequestContext.setTraceId(traceId);
+            RequestContextProxy.setTraceId(traceId);
         }
     }
 
@@ -248,7 +250,7 @@ public final class TracerUtils {
      * @return 16 位十六进制 Span ID
      */
     public static String generateSpanId() {
-        return TraceIdGenerator.generateSpanId();
+        return TraceIdGeneratorProxy.generateSpanId();
     }
 
     /**
@@ -277,7 +279,7 @@ public final class TracerUtils {
      */
     public static void clear() {
         MDC.remove(TRACE_ID_NAME);
-        RequestContext.remove(RequestContext.KEY_TRACE_ID);
+        RequestContextProxy.remove(CoreConstants.MDC_TRACE_ID_KEY);
     }
 
     /**
@@ -289,7 +291,7 @@ public final class TracerUtils {
         MDC.remove(TRACE_ID_NAME);
         MDC.remove(SPAN_ID_NAME);
         MDC.remove(PARENT_SPAN_ID_NAME);
-        RequestContext.remove(RequestContext.KEY_TRACE_ID);
+        RequestContextProxy.remove(CoreConstants.MDC_TRACE_ID_KEY);
     }
 
     /**
@@ -324,7 +326,7 @@ public final class TracerUtils {
                 setTraceId(originalTraceId);
             } else {
                 MDC.remove(TRACE_ID_NAME);
-                RequestContext.remove(RequestContext.KEY_TRACE_ID);
+                RequestContextProxy.remove(CoreConstants.MDC_TRACE_ID_KEY);
             }
             if (StringUtils.isNotEmpty(originalSpanId)) {
                 MDC.put(SPAN_ID_NAME, originalSpanId);
@@ -365,7 +367,7 @@ public final class TracerUtils {
      * @since 4.2.0
      */
     public static boolean injectTraceparent(String traceparent) {
-        TraceIdGenerator.ParsedTraceparent parsed = TraceIdGenerator.parseTraceparent(traceparent);
+        ParsedTraceparent parsed = TraceIdGeneratorProxy.parseTraceparent(traceparent);
         if (parsed == null) {
             return false;
         }
@@ -383,7 +385,7 @@ public final class TracerUtils {
      * @return 解析结果；格式非法返回 null
      * @since 4.2.0
      */
-    public static TraceIdGenerator.ParsedTraceparent parseTraceparent(String traceparent) {
-        return TraceIdGenerator.parseTraceparent(traceparent);
+    public static ParsedTraceparent parseTraceparent(String traceparent) {
+        return TraceIdGeneratorProxy.parseTraceparent(traceparent);
     }
 }

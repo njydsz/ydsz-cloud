@@ -17,6 +17,8 @@
 
     <properties>
         <jmh.version>1.37</jmh.version>
+        <!-- L1 工具层模块标识：激活 purity 检查 -->
+        <l1.module.skip>false</l1.module.skip>
     </properties>
 
     <dependencies>

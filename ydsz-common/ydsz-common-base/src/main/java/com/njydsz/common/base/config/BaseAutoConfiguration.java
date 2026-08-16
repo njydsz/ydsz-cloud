@@ -10,7 +10,7 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
 
-import com.njydsz.common.base.constant.BaseFilterOrders;
+import com.njydsz.common.base.constant.FilterOrder;
 import com.njydsz.common.base.filter.RequestBodySizeLimitFilter;
 import com.njydsz.common.base.filter.RequestContextCleanupFilter;
 import com.njydsz.common.base.filter.SecurityHeadersFilter;
@@ -90,7 +90,7 @@ public class BaseAutoConfiguration {
      * 安全响应头过滤器（base 模块兜底实现）
      *
      * <p>添加安全相关的 HTTP 响应头，防止常见安全漏洞。
-     * 执行顺序：{@link BaseFilterOrders#SECURITY_HEADER_FILTER}。
+     * 执行顺序：{@link FilterOrder#SECURITY_HEADER_FILTER}。
      *
      * <p><b>与 web/app/safe 模块的关系：</b>
      * Bean 名统一为 {@code securityHeaderFilter}，通过 {@code @ConditionalOnMissingBean} 保证：
@@ -105,7 +105,7 @@ public class BaseAutoConfiguration {
     public FilterRegistrationBean<SecurityHeadersFilter> securityHeaderFilter(BaseSecurityHeadersProperties properties) {
         FilterRegistrationBean<SecurityHeadersFilter> registration = new FilterRegistrationBean<>();
         registration.setFilter(new SecurityHeadersFilter(properties));
-        registration.setOrder(BaseFilterOrders.SECURITY_HEADER_FILTER);
+        registration.setOrder(FilterOrder.SECURITY_HEADER_FILTER);
         registration.addUrlPatterns("/*");
         registration.setName("securityHeaderFilter");
         return registration;

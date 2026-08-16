@@ -31,7 +31,8 @@ import com.njydsz.common.base.config.BaseAutoConfiguration;
 import com.njydsz.common.base.config.BaseMvcConfiguration;
 import com.njydsz.common.base.config.ConditionalOnPlatform;
 import com.njydsz.common.base.config.PlatformMode;
-import com.njydsz.common.base.constant.BaseFilterOrders;
+import com.njydsz.common.base.constant.FilterOrder;
+import com.njydsz.common.base.constant.InterceptorOrder;
 import com.njydsz.common.base.interceptor.BaseHttpInterceptor;
 import com.njydsz.common.safe.config.ApiSignatureProperties;
 import com.njydsz.common.safe.config.SafeConfiguration;
@@ -103,11 +104,11 @@ public class AppMvcConfiguration extends BaseMvcConfiguration {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(appRequestLogInterceptor)
                 .addPathPatterns("/**")
-                .order(BaseFilterOrders.INTERCEPTOR_REQUEST_LOG);
+                .order(InterceptorOrder.REQUEST_LOG);
 
         registry.addInterceptor(baseHttpInterceptor)
                 .addPathPatterns("/**")
-                .order(BaseFilterOrders.REQUEST_CONTEXT_CLEANUP);
+                .order(InterceptorOrder.REQUEST_CONTEXT_CLEANUP);
     }
 
     /**
@@ -121,7 +122,7 @@ public class AppMvcConfiguration extends BaseMvcConfiguration {
                 new AppContentCachingFilter(appContentCacheProperties));
         bean.addUrlPatterns("/*");
         bean.setName("appContentCachingFilter");
-        bean.setOrder(BaseFilterOrders.CONTENT_CACHING_FILTER);
+        bean.setOrder(FilterOrder.CONTENT_CACHING_FILTER);
         return bean;
     }
 
@@ -174,7 +175,7 @@ public class AppMvcConfiguration extends BaseMvcConfiguration {
         FilterRegistrationBean<AppAuthFilter> authFilterBean = new FilterRegistrationBean<>(appAuthFilter);
         authFilterBean.addUrlPatterns("/*");
         authFilterBean.setName("appAuthFilter");
-        authFilterBean.setOrder(BaseFilterOrders.AUTH_FILTER);
+        authFilterBean.setOrder(FilterOrder.AUTH_FILTER);
         return authFilterBean;
     }
 
@@ -190,7 +191,7 @@ public class AppMvcConfiguration extends BaseMvcConfiguration {
         FilterRegistrationBean<AppRequestIdResponseFilter> bean = new FilterRegistrationBean<>(requestIdResponseFilter);
         bean.addUrlPatterns("/*");
         bean.setName("appRequestIdResponseFilter");
-        bean.setOrder(BaseFilterOrders.TRACE_ID_RESPONSE_FILTER);
+        bean.setOrder(FilterOrder.TRACE_ID_RESPONSE_FILTER);
         return bean;
     }
 

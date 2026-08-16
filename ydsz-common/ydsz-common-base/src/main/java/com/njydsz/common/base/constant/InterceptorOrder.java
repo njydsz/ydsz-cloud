@@ -1,5 +1,7 @@
 package com.njydsz.common.base.constant;
 
+import org.springframework.core.Ordered;
+
 /**
  * Spring MVC Interceptor 执行顺序常量。
  *
@@ -44,4 +46,7 @@ public final class InterceptorOrder {
 
     /** 审计日志拦截器顺序 */
     public static final int AUDIT = 80;
+
+    /** RequestContextCleanupInterceptor - 请求结束清理 TTL（最低优先级） */
+    public static final int REQUEST_CONTEXT_CLEANUP = Ordered.LOWEST_PRECEDENCE;
 }

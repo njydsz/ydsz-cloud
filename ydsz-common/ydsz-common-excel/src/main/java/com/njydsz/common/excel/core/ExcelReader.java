@@ -1,13 +1,24 @@
 package com.njydsz.common.excel.core;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import org.apache.poi.hssf.usermodel.*;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +34,6 @@ import com.njydsz.common.excel.core.reader.HeaderAnalyzer;
 import com.njydsz.common.excel.core.reader.InputSourceDetector;
 import com.njydsz.common.excel.core.reader.RowParser;
 import com.njydsz.common.excel.core.reader.sax.SuperFastExcelReader;
-import com.njydsz.common.excel.exception.ExcelExceptionCode;
 import com.njydsz.common.excel.exception.ExcelReadException;
 import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
 
@@ -33,7 +43,7 @@ import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
  * <p>负责Excel文件的读取解析工作，支持.xls和.xlsx两种格式。
  * 采用用户模式(UserMode)进行读取，通过注解实现列与字段的映射关系。</p>
  *
- * <h2>读取流程</h2>
+ * <h3>读取流程</h3>
  * <ol>
  *   <li><b>格式识别</b> - 根据文件扩展名或输入流类型选择解析器</li>
  *   <li><b>Sheet定位</b> - 根据sheetName或sheetIndex获取目标Sheet</li>
@@ -42,7 +52,7 @@ import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
  *   <li><b>回调通知</b> - 触发监听器回调，通知每行数据的读取结果</li>
  * </ol>
  *
- * <h2>性能优化策略</h2>
+ * <h3>性能优化策略</h3>
  * <ul>
  *   <li>使用LinkedHashMap保持列顺序，避免HashMap的无序开销</li>
  *   <li>反射设置时提前调用setAccessible提高访问效率</li>
@@ -50,7 +60,7 @@ import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
  *   <li>日期格式缓存避免重复解析</li>
  * </ul>
  *
- * <h2>使用示例</h2>
+ * <h3>使用示例</h3>
  * <pre>{@code
  * // 示例1: 基本读取
  * ExcelFacade.read("demo.xlsx", User.class)
@@ -77,7 +87,6 @@ import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
  * }</pre>
  *
  * @author ydsz-team
- * @version 1.0.0
  * @since 1.0.0
  * @see ExcelFacade
  * @see ReadListener
@@ -88,6 +97,9 @@ public class ExcelReader {
 
     /** 日志记录器 */
     private static final Logger log = LoggerFactory.getLogger(ExcelReader.class);
+
+    /** 字节到MB的换算常量（1024 × 1024） */
+    private static final long BYTES_PER_MB = 1024L * 1024L;
 
     /** 读取配置元数据，包含文件路径、映射类型等配置信息 */
     private final ReadMetadata metadata;
@@ -444,13 +456,13 @@ public class ExcelReader {
 
             if (filePath != null) {
                 File file = new File(filePath);
-                long fileSizeMB = file.length() / (1024 * 1024);
+                long fileSizeMB = file.length() / BYTES_PER_MB;
                 int maxFileSizeMB = ExcelConfig.getInstance().getMaxReadFileSizeMB();
                 if (fileSizeMB > maxFileSizeMB) {
                     throw ExcelReadException.fileTooLarge(fileSizeMB, maxFileSizeMB);
                 }
             } else if (metadata.getFile() != null) {
-                long fileSizeMB = metadata.getFile().length() / (1024 * 1024);
+                long fileSizeMB = metadata.getFile().length() / BYTES_PER_MB;
                 int maxFileSizeMB = ExcelConfig.getInstance().getMaxReadFileSizeMB();
                 if (fileSizeMB > maxFileSizeMB) {
                     throw ExcelReadException.fileTooLarge(fileSizeMB, maxFileSizeMB);
@@ -462,7 +474,7 @@ public class ExcelReader {
                 long fileSizeMB = 0;
                 if (filePath != null) {
                     File file = new File(filePath);
-                    fileSizeMB = file.length() / (1024 * 1024);
+                    fileSizeMB = file.length() / BYTES_PER_MB;
                 }
 
                 if (fileSizeMB >= thresholdMB || ExcelConfig.getInstance().isUseFastReader()) {

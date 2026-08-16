@@ -20,11 +20,10 @@
             <artifactId>ydsz-common-core</artifactId>
         </dependency>
 
-        <!-- ydsz-common-util 通用工具模块，提供 SpringContextHolder -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-util</artifactId>
-        </dependency>
+        <!--
+            注：原依赖 ydsz-common-util 用于 SpringContextHolder，
+            经代码审计确认 exception 模块未引用任何 util 类，故移除。
+        -->
 
         <dependency>
             <groupId>org.springframework</groupId>
