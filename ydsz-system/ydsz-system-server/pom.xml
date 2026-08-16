@@ -37,6 +37,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-event</artifactId>
         </dependency>
+        <!-- P1-A1: 显式声明 common-auth（使用 @DataScope / @AuthApiPermission 等能力） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-auth</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-web</artifactId>

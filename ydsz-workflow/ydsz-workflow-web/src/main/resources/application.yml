@@ -46,10 +46,14 @@ ydsz:
       batch-size: 100
       max-retries: 5
       fail-on-noop: false
-  # P0-2: 分布式事务配置（Seata AT 模式，默认关闭，TC 就绪后开启）
+  # P1-1: 分布式事务配置（TCC 三方审批回调验证场景启用，LOCAL 模式降级）
   seata:
-    enabled: false
-    default-type: SEATA_AT
+    enabled: true
+    default-type: LOCAL
+    tcc-enabled: true
+    saga-enabled: true
+    seata-at-enabled: false
+    tcc-log-store: memory
   # P0-1: YdszJson ASM 预热（高频序列化 Bean，消除首次请求延迟尖峰）
   # P2-3: 启用流式输出（流程定义/实例列表等大 JSON 响应使用 chunked encoding）
   json:

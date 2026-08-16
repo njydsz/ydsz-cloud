@@ -122,13 +122,20 @@ public final class ClientIpResolver {
     }
 
     /**
-     * 判断 IP 是否为可信代理
+     * 判断 IP 是否为可信代理（P2-4：使用 CIDR 网段匹配替代手工前缀判断）。
      *
      * <p>可信代理包括：
      * <ul>
-     *   <li>本地回环：127.0.0.0/8, ::1</li>
-     *   <li>内网私有：10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16</li>
-     *   <li>Docker 默认网段：172.17.0.0/16</li>
+     *   <li>本地回环：127.0.0.0/8, ::1/128</li>
+     *   <li>内网私有（RFC 1918）：10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16</li>
+     * </ul>
+     *
+     * <p><b>P2-4 设计说明：</b>
+     * <ul>
+     *   <li>原实现使用手工字符串前缀匹配（startsWith "10." / "192.168." / "172." + 解析第二字节），
+     *       与 {@link com.njydsz.common.util.ip.CidrUtils} 的 CIDR 能力重叠</li>
+     *   <li>现统一委托 {@link CidrUtils#isInRange(String, String)}，获得标准 CIDR 计算能力</li>
+     *   <li>加入 {@link ConcurrentHashMap} 缓存（key=IP），减少高频调用时的重复计算</li>
      * </ul>
      *
      * @param ip IP 地址
@@ -138,20 +145,26 @@ public final class ClientIpResolver {
         if (ip == null || ip.isEmpty()) {
             return false;
         }
-        if ("127.0.0.1".equals(ip) || "0:0:0:0:0:0:0:1".equals(ip) || "::1".equals(ip)) {
+        Boolean cached = TRUSTED_PROXY_CACHE.get(ip);
+        if (cached != null) {
+            return cached;
+        }
+        boolean result = computeIsTrustedProxy(ip);
+        TRUSTED_PROXY_CACHE.putIfAbsent(ip, result);
+        return result;
+    }
+
+    /**
+     * 实际计算是否为可信代理（CIDR 网段匹配）。
+     */
+    private static boolean computeIsTrustedProxy(String ip) {
+        // IPv6 特殊形式（"0:0:0:0:0:0:0:1"）需归一化为 "::1"
+        if ("0:0:0:0:0:0:0:1".equals(ip)) {
             return true;
         }
-        if (ip.startsWith("10.") || ip.startsWith("192.168.")) {
-            return true;
-        }
-        if (ip.startsWith("172.")) {
-            try {
-                int secondOctet = Integer.parseInt(ip.split("\\.")[1]);
-                if (secondOctet >= 16 && secondOctet <= 31) {
-                    return true;
-                }
-            } catch (NumberFormatException | ArrayIndexOutOfBoundsException ignored) {
-                log.debug("Caught exception (ignored): {}", ignored.getMessage());
+        for (String cidr : TRUSTED_PROXY_CIDRS) {
+            if (CidrUtils.isInRange(ip, cidr)) {
+                return true;
             }
         }
         return false;
