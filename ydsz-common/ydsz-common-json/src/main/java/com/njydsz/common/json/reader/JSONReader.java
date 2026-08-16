@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.json.reader;
+package com.njydsz.common.json.reader;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -665,7 +665,15 @@ public final class JSONReader {
         for (int i = 0; i < fieldLen; i++) {
             if (buf[pos + i] != fieldName.charAt(i)) {
                 // 字段名不匹配：先跳过剩余字段名（到下一个 \"），再跳过 : 和值\n                while (pos < len && buf[pos] != '"') pos++;
-                if (pos < len && buf[pos] == '"') pos++; // 跳过结束引号\n                skipWhitespace();\n                if (pos < len && buf[pos] == ':') pos++;\n                skipValue();\n                return false;\n            }\n        }\n        pos += fieldLen;\n        if (pos < len && buf[pos] == '"') pos++;
+                if (pos < len && buf[pos] == '"') pos++; // 跳过结束引号
+                skipWhitespace();
+                if (pos < len && buf[pos] == ':') pos++;
+                skipValue();
+                return false;
+            }
+        }
+        pos += fieldLen;
+        if (pos < len && buf[pos] == '"') pos++;
         skipWhitespace();
         if (pos < len && buf[pos] == ':') pos++;
         return true;
@@ -783,10 +791,28 @@ public final class JSONReader {
                 char ch2 = buf[pos];
                 if (ch2 == '{') depth++;
                 else if (ch2 == '}') depth--;
-                else if (ch2 == '"') { skipStringValue(); continue; }\n                pos++;\n            }\n        } else if (ch == '[') {\n            pos++; int depth = 1;\n            while (depth > 0 && pos < len) {\n                char ch2 = buf[pos];\n                if (ch2 == '[') depth++;\n                else if (ch2 == ']') depth--;\n                else if (ch2 == '"') { skipStringValue(); continue; }
+                else if (ch2 == '"') { skipStringValue(); continue; }
                 pos++;
             }
-        } else if (ch == '"') {\n            readString();\n        } else {\n            while (pos < len) { char ch2 = buf[pos]; if (ch2 == ',' || ch2 == '}' || ch2 == ']' || ch2 <= ' ') break; pos++; }\n        }\n        return new String(buf, start, pos - start);\n    }\n\n    /**\n     * 读取并返回 JSON 字符串值（兼容单引号 {@code '\''} 与双引号 {@code '"'}）。
+        } else if (ch == '[') {
+            pos++; int depth = 1;
+            while (depth > 0 && pos < len) {
+                char ch2 = buf[pos];
+                if (ch2 == '[') depth++;
+                else if (ch2 == ']') depth--;
+                else if (ch2 == '"') { skipStringValue(); continue; }
+                pos++;
+            }
+        } else if (ch == '"') {
+            readString();
+        } else {
+            while (pos < len) { char ch2 = buf[pos]; if (ch2 == ',' || ch2 == '}' || ch2 == ']' || ch2 <= ' ') break; pos++; }
+        }
+        return new String(buf, start, pos - start);
+    }
+
+    /**
+     * 读取并返回 JSON 字符串值（兼容单引号 {@code '\''} 与双引号 {@code '"'}）。
      *
      * <p>先 {@code nextChar()} 定位引号，再委托 {@code readStringContent} 读取内容（自动处理转义）。
      * 非标准单引号由 SupportSingleQuotes 特性兼容。</p>
@@ -796,11 +822,47 @@ public final class JSONReader {
      */
     public String readString() {
         char quote = nextChar();
-        if (quote != '"' && quote != '\'') throw new IllegalStateException("Expected string, got: " + quote);\n        return readStringContent(quote);\n    }\n\n    /**\n     * 直接读取字符串值（跳过 skipWhitespace，在已定位到引号位置时使用）\n     *\n     * <p>ASM 反序列化器中 readFieldNameHash() 已跳过空白和冒号，\n     * 使用此方法避免重复的 skipWhitespace() 调用</p>\n     */\n    public String readStringDirect() {\n        if (pos >= len || buf[pos] != '"') {
+        if (quote != '"' && quote != '\'') throw new IllegalStateException("Expected string, got: " + quote);
+        return readStringContent(quote);
+    }
+
+    /**
+     * 直接读取字符串值（跳过 skipWhitespace，在已定位到引号位置时使用）
+     *
+     * <p>ASM 反序列化器中 readFieldNameHash() 已跳过空白和冒号，
+     * 使用此方法避免重复的 skipWhitespace() 调用</p>
+     */
+    public String readStringDirect() {
+        if (pos >= len || buf[pos] != '"') {
             return readString();
         }
         pos++;
-        return readStringContent('"');\n    }\n\n    /**\n     * 读取字符串内容（引号已跳过）\n     */\n    private String readStringContent(char quote) {\n        int start = pos;\n        int end = pos;\n        while (end < len) {\n            char ch = buf[end];\n            if (ch == quote) break;\n            if (ch == '\\') return readStringWithEscape(start);\n            end++;\n        }\n        if (end >= len) throw new IllegalStateException("Unexpected end of JSON string");\n        String result = new String(buf, start, end - start);\n        pos = end + 1;\n        return result;\n    }\n\n    private String readStringWithEscape(int start) {\n        StringBuilder sb = new StringBuilder(len - start);\n        while (pos < len) {\n            char ch = buf[pos++];\n            if (ch == '"') break;
+        return readStringContent('"');
+    }
+
+    /**
+     * 读取字符串内容（引号已跳过）
+     */
+    private String readStringContent(char quote) {
+        int start = pos;
+        int end = pos;
+        while (end < len) {
+            char ch = buf[end];
+            if (ch == quote) break;
+            if (ch == '\\') return readStringWithEscape(start);
+            end++;
+        }
+        if (end >= len) throw new IllegalStateException("Unexpected end of JSON string");
+        String result = new String(buf, start, end - start);
+        pos = end + 1;
+        return result;
+    }
+
+    private String readStringWithEscape(int start) {
+        StringBuilder sb = new StringBuilder(len - start);
+        while (pos < len) {
+            char ch = buf[pos++];
+            if (ch == '"') break;
             if (ch == '\\') {
                 if (pos >= len) throw new IllegalStateException("Unexpected end of JSON string");
                 char escaped = buf[pos++];
@@ -1065,7 +1127,53 @@ public final class JSONReader {
         long hash = 0x811c9dc5;
         while (pos < len) {
             ch = buf[pos];
-            if (ch == '"') { pos++; break; }\n            hash ^= ch;\n            hash *= 0x100000001b3L;\n            pos++;\n        }\n        while (pos < len && buf[pos] <= ' ') pos++;\n        if (pos < len && buf[pos] == ':') pos++;\n        while (pos < len && buf[pos] <= ' ') pos++;\n        return hash;\n    }\n\n    /**\n     * 计算字符串的 FNV-1a 哈希值（与 {@link #readFieldNameHash()} 同源算法）。\n     *\n     * <p>用于字段名预计算哈希，与解析时实时计算的 {@code readFieldNameHash()} 结果比对，\n     * 从而以 {@code long} 比较替代字符串相等判断，避免字段名 String 分配。\n     * 种子 {@code 0x811c9dc5}，乘子 {@code 0x100000001b3L}。</p>\n     *\n     * @param name 字段名\n     * @return FNV-1a 哈希值\n     */\n    public static long fnv1aHash(String name) {\n        long hash = 0x811c9dc5;\n        for (int i = 0; i < name.length(); i++) { hash ^= name.charAt(i); hash *= 0x100000001b3L; }\n        return hash;\n    }\n\n    public int getPosition() { return pos; }\n    public boolean isEnd() { return pos >= len; }\n\n    /**\n     * 跳过当前 JSON 值（不解析、不返回），将读取位置推进到值之后。\n     *\n     * <p>对象/数组按括号配对递归跳过（字符串内跳过转义），标量读取到逗号/括号/空白。\n     * 用于字段名未匹配时丢弃未知字段，保持容错。</p>\n     */\n    public void skipValue() {\n        skipWhitespace();\n        if (pos >= len) return;\n        char ch = buf[pos];\n        if (ch == '{') {\n            pos++; int depth = 1;\n            while (depth > 0 && pos < len) {\n                char ch2 = buf[pos];\n                if (ch2 == '{') depth++;\n                else if (ch2 == '}') depth--;\n                else if (ch2 == '"') { skipStringValue(); continue; }
+            if (ch == '"') { pos++; break; }
+            hash ^= ch;
+            hash *= 0x100000001b3L;
+            pos++;
+        }
+        while (pos < len && buf[pos] <= ' ') pos++;
+        if (pos < len && buf[pos] == ':') pos++;
+        while (pos < len && buf[pos] <= ' ') pos++;
+        return hash;
+    }
+
+    /**
+     * 计算字符串的 FNV-1a 哈希值（与 {@link #readFieldNameHash()} 同源算法）。
+     *
+     * <p>用于字段名预计算哈希，与解析时实时计算的 {@code readFieldNameHash()} 结果比对，
+     * 从而以 {@code long} 比较替代字符串相等判断，避免字段名 String 分配。
+     * 种子 {@code 0x811c9dc5}，乘子 {@code 0x100000001b3L}。</p>
+     *
+     * @param name 字段名
+     * @return FNV-1a 哈希值
+     */
+    public static long fnv1aHash(String name) {
+        long hash = 0x811c9dc5;
+        for (int i = 0; i < name.length(); i++) { hash ^= name.charAt(i); hash *= 0x100000001b3L; }
+        return hash;
+    }
+
+    public int getPosition() { return pos; }
+    public boolean isEnd() { return pos >= len; }
+
+    /**
+     * 跳过当前 JSON 值（不解析、不返回），将读取位置推进到值之后。
+     *
+     * <p>对象/数组按括号配对递归跳过（字符串内跳过转义），标量读取到逗号/括号/空白。
+     * 用于字段名未匹配时丢弃未知字段，保持容错。</p>
+     */
+    public void skipValue() {
+        skipWhitespace();
+        if (pos >= len) return;
+        char ch = buf[pos];
+        if (ch == '{') {
+            pos++; int depth = 1;
+            while (depth > 0 && pos < len) {
+                char ch2 = buf[pos];
+                if (ch2 == '{') depth++;
+                else if (ch2 == '}') depth--;
+                else if (ch2 == '"') { skipStringValue(); continue; }
                 pos++;
             }
         } else if (ch == '[') {
@@ -1092,7 +1200,13 @@ public final class JSONReader {
      * @since 1.0.0
      */
     public void skipStringValue() {
-        // 当前 pos 指向引号 "\n        pos++; // 跳过起始引号\n        while (pos < len) {\n            char c = buf[pos];\n            if (c == '\\') {\n                pos += 2; // 跳过转义字符和被转义的字符\n            } else if (c == '"') {
+        // 当前 pos 指向引号 "
+        pos++; // 跳过起始引号
+        while (pos < len) {
+            char c = buf[pos];
+            if (c == '\\') {
+                pos += 2; // 跳过转义字符和被转义的字符
+            } else if (c == '"') {
                 pos++; // 跳过结束引号
                 return;
             } else {
@@ -1159,4 +1273,49 @@ public final class JSONReader {
         skipWhitespace();
         if (pos >= len) return null;
         char ch = buf[pos];
-        if (ch == '"') return readString();\n        if (ch == '{') return readObjectMap(depth + 1);\n        if (ch == '[') return readArray(Object.class, depth + 1);\n        if (ch == 't') { pos += 4; return true; }\n        if (ch == 'f') { pos += 5; return false; }\n        if (ch == 'n') { pos += 4; return null; }\n        return readDouble();\n    }\n\n    /**\n     * 读取 JSON 对象并反序列化为 {@code Map<String, Object>}（通用 Map 反序列化）。\n     *\n     * <p>跳过前置空白并确认 {@code '{'}，逐对读取字段名与值（值经\n     * {@code readAnyValue} 按首字符推断类型）。用于目标类型未知的场景，\n     * 例如 {@code @JsonAnySetter} 的复杂对象或弱类型入参。</p>\n     *\n     * @return 反序列化得到的 Map\n     * @throws RuntimeException 当起始非 {@code '{'}\n     */\n    public Map<String, Object> readObjectMap() {\n        return readObjectMap(0);\n    }\n\n    private Map<String, Object> readObjectMap(int depth) {\n        if (depth > resolveMaxDepth()) {\n            throw new JsonDeserializationException("JSON nesting depth exceeds limit: " + depth, pos);\n        }\n        skipWhitespace();\n        if (pos >= len || buf[pos] != '{') throw new RuntimeException("Expected { at position " + pos);\n        pos++;\n        Map<String, Object> result = new HashMap<>();\n        while (pos < len) {\n            skipWhitespace();\n            if (pos >= len) break;\n            if (buf[pos] == '}') { pos++; return result; }\n            if (buf[pos] == ',') { pos++; continue; }\n            String key = readFieldNameFast();\n            if (key == null) break;\n            skipTo(':');\n            if (pos < len) pos++;\n            Object value = readAnyValue(depth + 1);\n            result.put(key, value);\n        }\n        return result;\n    }\n}\n
+        if (ch == '"') return readString();
+        if (ch == '{') return readObjectMap(depth + 1);
+        if (ch == '[') return readArray(Object.class, depth + 1);
+        if (ch == 't') { pos += 4; return true; }
+        if (ch == 'f') { pos += 5; return false; }
+        if (ch == 'n') { pos += 4; return null; }
+        return readDouble();
+    }
+
+    /**
+     * 读取 JSON 对象并反序列化为 {@code Map<String, Object>}（通用 Map 反序列化）。
+     *
+     * <p>跳过前置空白并确认 {@code '{'}，逐对读取字段名与值（值经
+     * {@code readAnyValue} 按首字符推断类型）。用于目标类型未知的场景，
+     * 例如 {@code @JsonAnySetter} 的复杂对象或弱类型入参。</p>
+     *
+     * @return 反序列化得到的 Map
+     * @throws RuntimeException 当起始非 {@code '{'}
+     */
+    public Map<String, Object> readObjectMap() {
+        return readObjectMap(0);
+    }
+
+    private Map<String, Object> readObjectMap(int depth) {
+        if (depth > resolveMaxDepth()) {
+            throw new JsonDeserializationException("JSON nesting depth exceeds limit: " + depth, pos);
+        }
+        skipWhitespace();
+        if (pos >= len || buf[pos] != '{') throw new RuntimeException("Expected { at position " + pos);
+        pos++;
+        Map<String, Object> result = new HashMap<>();
+        while (pos < len) {
+            skipWhitespace();
+            if (pos >= len) break;
+            if (buf[pos] == '}') { pos++; return result; }
+            if (buf[pos] == ',') { pos++; continue; }
+            String key = readFieldNameFast();
+            if (key == null) break;
+            skipTo(':');
+            if (pos < len) pos++;
+            Object value = readAnyValue(depth + 1);
+            result.put(key, value);
+        }
+        return result;
+    }
+}

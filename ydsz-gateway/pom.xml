@@ -138,6 +138,15 @@
             <artifactId>ydsz-common-audit</artifactId>
             <scope>provided</scope>
         </dependency>
+        <!--
+            P1-1: 接入 ydsz-common-thread 统一线程池管理
+              - Nacos 路由配置变更监听器线程池改为声明式配置（ydsz.thread.pools.nacosRouteListener）
+              - 移除 NacosRouteDefinitionRepository 中自建 new ThreadPoolExecutor（违反规范 15.4.1）
+        -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-thread</artifactId>
+        </dependency>
         <!-- P2-3: 集成测试 + 混沌测试 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

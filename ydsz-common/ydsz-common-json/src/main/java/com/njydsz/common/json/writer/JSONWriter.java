@@ -569,7 +569,16 @@ public final class JSONWriter {
                 (c1 > 127 || c1 < ' ' || c1 == '"' || c1 == '\\') ||\n                (c2 > 127 || c2 < ' ' || c2 == '"' || c2 == '\\') ||
                 (c3 > 127 || c3 < ' ' || c3 == '"' || c3 == '\\') ||\n                (c4 > 127 || c4 < ' ' || c4 == '"' || c4 == '\\') ||
                 (c5 > 127 || c5 < ' ' || c5 == '"' || c5 == '\\') ||\n                (c6 > 127 || c6 < ' ' || c6 == '"' || c6 == '\\') ||
-                (c7 > 127 || c7 < ' ' || c7 == '"' || c7 == '\\')) {\n                return false;\n            }\n            i += 8;\n        }\n\n        // 处理剩余字符\n        for (; i < len; i++) {\n            char c = str.charAt(i);\n            if (c > 127 || c < ' ' || c == '"' || c == '\\') {
+                (c7 > 127 || c7 < ' ' || c7 == '"' || c7 == '\\')) {
+                return false;
+            }
+            i += 8;
+        }
+
+        // 处理剩余字符
+        for (; i < len; i++) {
+            char c = str.charAt(i);
+            if (c > 127 || c < ' ' || c == '"' || c == '\\') {
                 return false;
             }
         }
@@ -588,7 +597,13 @@ public final class JSONWriter {
     public void writeStringDirectNoCheck(String str) {
         int len = str.length();
 
-        buf[pos++] = '"';\n\n        // ASCII 快速路径：使用 SIMD 风格字级检查\n        if (isAsciiSafe(str, len)) {\n            str.getChars(0, len, buf, pos);\n            pos += len;\n            buf[pos++] = '"';
+        buf[pos++] = '"';
+
+        // ASCII 快速路径：使用 SIMD 风格字级检查
+        if (isAsciiSafe(str, len)) {
+            str.getChars(0, len, buf, pos);
+            pos += len;
+            buf[pos++] = '"';
             return;
         }
 
