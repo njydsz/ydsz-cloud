@@ -1,1 +1,93 @@
-package com.njydsz.common.json.tree;\n\n/**\n * JSON 布尔节点\n *\n * <p>对标 Jackson BooleanNode，表示 JSON 中的布尔值（true/false）。\n * 采用单例模式，只创建两个实例：TRUE 和 FALSE。</p>\n *\n * <p><b>特性：</b></p>\n * <ul>\n *   <li>单例模式，只创建 TRUE 和 FALSE 两个实例</li>\n *   <li>不可变对象，线程安全</li>\n *   <li>自动装箱优化，避免频繁创建对象</li>\n * </ul>\n *\n * <p><b>使用示例：</b></p>\n * <pre>\n * BooleanNode trueNode = BooleanNode.of(true);\n * BooleanNode falseNode = BooleanNode.of(false);\n *\n * boolean value = trueNode.asBoolean(); // true\n * </pre>\n *\n * @author ydsz-team\n * @since 1.0.0\n */\npublic final class BooleanNode extends JsonNode {\n\n    private static final BooleanNode TRUE = new BooleanNode(true);\n    private static final BooleanNode FALSE = new BooleanNode(false);\n\n    private final boolean value;\n\n    private BooleanNode(boolean value) {\n        this.value = value;\n    }\n\n    /**\n     * 工厂方法：创建或获取布尔节点\n     *\n     * @param value 布尔值\n     * @return 对应的 BooleanNode 单例\n     */\n    public static BooleanNode of(boolean value) {\n        return value ? TRUE : FALSE;\n    }\n\n    @Override\n    public boolean isBoolean() {\n        return true;\n    }\n\n    @Override\n    public boolean asBoolean() {\n        return value;\n    }\n\n    @Override\n    public boolean asBoolean(boolean defaultValue) {\n        return value;\n    }\n\n    @Override\n    public String asText() {\n        return String.valueOf(value);\n    }\n\n    @Override\n    public Object asValue() {\n        return value;\n    }\n\n    @Override\n    public String toString() {\n        return String.valueOf(value);\n    }\n\n    @Override\n    public boolean equals(Object obj) {\n        if (this == obj) {\n            return true;\n        }\n        if (!(obj instanceof BooleanNode)) {\n            return false;\n        }\n        return value == ((BooleanNode) obj).value;\n    }\n\n    @Override\n    public int hashCode() {\n        return Boolean.hashCode(value);\n    }\n}\n
+package com.njydsz.common.json.tree;
+
+/**
+ * JSON 布尔节点
+ *
+ * <p>对标 Jackson BooleanNode，表示 JSON 中的布尔值（true/false）。
+ * 采用单例模式，只创建两个实例：TRUE 和 FALSE。</p>
+ *
+ * <p><b>特性：</b></p>
+ * <ul>
+ *   <li>单例模式，只创建 TRUE 和 FALSE 两个实例</li>
+ *   <li>不可变对象，线程安全</li>
+ *   <li>自动装箱优化，避免频繁创建对象</li>
+ * </ul>
+ *
+ * <p><b>使用示例：</b></p>
+ * <pre>
+ * BooleanNode trueNode = BooleanNode.of(true);
+ * BooleanNode falseNode = BooleanNode.of(false);
+ *
+ * boolean value = trueNode.asBoolean(); // true
+ * </pre>
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+public final class BooleanNode extends JsonNode {
+
+    private static final BooleanNode TRUE = new BooleanNode(true);
+    private static final BooleanNode FALSE = new BooleanNode(false);
+
+    private final boolean value;
+
+    private BooleanNode(boolean value) {
+        this.value = value;
+    }
+
+    /**
+     * 工厂方法：创建或获取布尔节点
+     *
+     * @param value 布尔值
+     * @return 对应的 BooleanNode 单例
+     */
+    public static BooleanNode of(boolean value) {
+        return value ? TRUE : FALSE;
+    }
+
+    @Override
+    public boolean isBoolean() {
+        return true;
+    }
+
+    @Override
+    public boolean asBoolean() {
+        return value;
+    }
+
+    @Override
+    public boolean asBoolean(boolean defaultValue) {
+        return value;
+    }
+
+    @Override
+    public String asText() {
+        return String.valueOf(value);
+    }
+
+    @Override
+    public Object asValue() {
+        return value;
+    }
+
+    @Override
+    public String toString() {
+        return String.valueOf(value);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof BooleanNode)) {
+            return false;
+        }
+        return value == ((BooleanNode) obj).value;
+    }
+
+    @Override
+    public int hashCode() {
+        return Boolean.hashCode(value);
+    }
+}

@@ -1,1 +1,868 @@
-package com.njydsz.common.json.writer;\n\nimport java.lang.reflect.Array;\nimport java.math.BigDecimal;\nimport java.math.BigInteger;\nimport java.util.Collection;\nimport java.util.List;\nimport java.util.Map;\nimport java.util.Set;\n\nimport com.njydsz.common.json.YdszJson;\nimport com.njydsz.common.json.number.NumberUtils;\n\nimport java.nio.charset.StandardCharsets;\n/**\n * 高性能 JSON 写入器\n *\n * <p>直接操作 char[] 数组，避免 StringBuilder 的方法调用开销</p>\n *\n * <p><b>性能优势：</b></p>\n * <ul>\n *   <li>减少 50-70% 的方法调用</li>\n *   <li>避免边界检查和同步开销</li>\n *   <li>直接内存写入，无中间层</li>\n * </ul>\n *\n * <p><b>Feature 系统：</b></p>\n * <p>通过 {@link Feature} 枚举控制序列化行为，参考 FastJSON2 和 Jackson 的 Feature 设计。\n * 使用 {@link #of(Feature...)} 或 {@link #of(Set)} 计算特性标志位。</p>\n *\n * @author ydsz-team\n * @since 1.0.0\n */\npublic final class JSONWriter {\n\n    /**\n     * 写入特性枚举\n     *\n     * <p>用于控制序列化行为，参考 FastJSON2 和 Jackson 的 Feature 设计。</p>\n     */\n    public enum Feature {\n        /**\n         * 输出 null 值字段\n         */\n        WriteNulls(false),\n\n        /**\n         * 格式化输出（Pretty Print）\n         */\n        PrettyPrint(false),\n\n        /**\n         * 将 BigDecimal 作为字符串写入（避免精度丢失，输出如 "1.23" 而非 1.23）\n         */\n        WriteBigDecimalAsString(false);\n\n        private final boolean enabledByDefault;\n\n        Feature(boolean enabledByDefault) {\n            this.enabledByDefault = enabledByDefault;\n        }\n\n        public boolean isEnabledByDefault() {\n            return enabledByDefault;\n        }\n\n        /**\n         * 判断该特性在给定特性组合值中是否已启用。\n         *\n         * @param features 特性组合位掩码（多个特性按位或的结果）\n         * @return {@code true} 表示该特性的位已置位启用\n         */\n        public boolean isEnabled(long features) {\n            return (features & (1L << ordinal())) != 0;\n        }\n\n        /**\n         * 返回该特性的位掩码（{@code 1L << ordinal()}）。\n         *\n         * <p>用于和特性组合值按位与（{@code features & mask}）判断是否启用，\n         * 或被 {@code of(...)} 按位或组合多个特性。位序依赖枚举声明顺序，\n         * 请勿随意调整枚举常量位置，否则会破坏已持久化/传输的特性位组合。</p>\n         *\n         * @return 64 位长整型位掩码\n         */\n        public long mask() {\n            return 1L << ordinal();\n        }\n    }\n\n    /**\n     * 计算特性值\n     */\n    public static long of(Feature... features) {\n        if (features == null) {\n            return 0;\n        }\n        long value = 0;\n        for (Feature feature : features) {\n            if (feature != null) {\n                value |= feature.mask();\n            }\n        }\n        return value;\n    }\n\n    /**\n     * 从集合计算特性值\n     */\n    public static long of(Set<Feature> features) {\n        if (features == null) {\n            return 0;\n        }\n        long value = 0;\n        for (Feature feature : features) {\n            if (feature != null) {\n                value |= feature.mask();\n            }\n        }\n        return value;\n    }\n\n    /** 字符缓冲区（public for ASM 序列化器直接访问，消除 getBuffer() 方法调用开销） */\n    public char[] buf;\n\n    /** 当前写入位置（public for ASM 序列化器直接访问，消除 getPosition()/setPosition() 方法调用开销） */\n    public int pos;\n\n    /** 特性标志位（Feature 枚举按位 OR 合并，参考 FastJSON2 / Jackson 设计） */\n    private long features;\n\n    /** 外部 StringBuilder（如果使用 StringBuilder 模式） */\n    private StringBuilder externalSb;\n\n    /** 默认缓冲区大小 4KB */\n    private static final int DEFAULT_BUF_SIZE = 4096;\n\n    /** 最大缓冲区大小 64MB */\n    private static final int MAX_BUF_SIZE = 67108864;\n\n    /** 缓冲区重置时的最大保留容量（超过此容量则缩容，避免线程池中长期持有大缓冲区） */\n    private static final int MAX_RESET_CAPACITY = 65536;\n\n    /**\n     * 构造函数（使用默认缓冲区大小）\n     */\n    public JSONWriter() {\n        this(DEFAULT_BUF_SIZE, 0L);\n    }\n\n    /**\n     * 构造函数（指定缓冲区大小）\n     *\n     * @param capacity 初始容量\n     */\n    public JSONWriter(int capacity) {\n        this(capacity, 0L);\n    }\n\n    /**\n     * 构造函数（指定缓冲区大小和预计算特性位）\n     *\n     * <p>通过传入预计算的 features 位掩码，避免运行时 ThreadLocal 查询开销。\n     * 参见 {@link #of(Feature...)} 或 {@link com.njydsz.common.json.internal.JsonRuntimeConfig}。</p>\n     *\n     * @param capacity 初始容量\n     * @param features 预计算的 Feature 位掩码（由调用方从 JsonRuntimeConfig 转换）\n     * @since 1.1.0\n     */\n    public JSONWriter(int capacity, long features) {\n        this.buf = new char[capacity];\n        this.pos = 0;\n        this.features = features;\n    }\n\n    /**\n     * 构造函数（使用默认缓冲区大小和预计算特性位）\n     *\n     * @param features 预计算的 Feature 位掩码\n     * @since 1.1.0\n     */\n    public JSONWriter(long features) {\n        this(DEFAULT_BUF_SIZE, features);\n    }\n\n    /**\n     * 构造函数（直接写入 StringBuilder，避免中间 char[] 转换）\n     *\n     * @param sb 外部 StringBuilder\n     */\n    public JSONWriter(StringBuilder sb) {\n        this(sb, 0L);\n    }\n\n    /**\n     * 构造函数（指定 StringBuilder 和预计算特性位）\n     *\n     * @param sb       外部 StringBuilder\n     * @param features 预计算的 Feature 位掩码\n     * @since 1.1.0\n     */\n    public JSONWriter(StringBuilder sb, long features) {\n        this.externalSb = sb;\n        this.buf = null;\n        this.pos = 0;\n        this.features = features;\n    }\n\n    /**\n     * 写入字符\n     */\n    public void write(char c) {\n        if (externalSb != null) {\n            externalSb.append(c);\n        } else {\n            ensureCapacity(1);\n            buf[pos++] = c;\n        }\n    }\n\n    /**\n     * 写入字符串\n     */\n    public void write(String str) {\n        if (externalSb != null) {\n            externalSb.append(str);\n        } else {\n            int len = str.length();\n            ensureCapacity(len);\n            str.getChars(0, len, buf, pos);\n            pos += len;\n        }\n    }\n\n    /**\n     * 写入字符数组\n     */\n    public void write(char[] chars, int off, int len) {\n        ensureCapacity(len);\n        System.arraycopy(chars, off, buf, pos, len);\n        pos += len;\n    }\n\n    /**\n     * 写入整数（使用 FastJSON2 快速算法）\n     */\n    public void writeInt(int value) {\n        if (externalSb != null) {\n            externalSb.append(value);\n        } else {\n            ensureCapacity(12);\n            pos += NumberUtils.writeInt(value, buf, pos);\n        }\n    }\n\n    /**\n     * 写入长整数（使用 FastJSON2 快速算法）\n     */\n    public void writeLong(long value) {\n        if (externalSb != null) {\n            externalSb.append(value);\n        } else {\n            ensureCapacity(22);\n            pos += NumberUtils.writeLong(value, buf, pos);\n        }\n    }\n\n    /**\n     * 写入浮点数（快速路径：整数部分直接写入，避免 Float.toString() 分配）\n     */\n    public void writeFloat(float value) {\n        if (externalSb != null) {\n            externalSb.append(value);\n            return;\n        }\n\n        if (Float.isNaN(value) || Float.isInfinite(value)) {\n            write("null");\n            return;\n        }\n\n        if (value == 0.0f && Float.floatToRawIntBits(value) < 0) {\n            write("-0.0");\n            return;\n        }\n\n        if (value > Integer.MIN_VALUE && value < Integer.MAX_VALUE) {\n            int intValue = (int) value;\n            if ((float) intValue == value) {\n                ensureCapacity(16);\n                pos += NumberUtils.writeInt(intValue, buf, pos);\n                buf[pos++] = '.';\n                buf[pos++] = '0';\n                return;\n            }\n        }\n\n        write(Float.toString(value));\n    }\n\n    /**\n     * 写入双精度浮点数（快速路径：避免 Double.toString() 的 String 分配）\n     *\n     * <p>优化策略：</p>\n     * <ul>\n     *   <li>精确整数：直接写入整数 + ".0"</li>\n     *   <li>2位小数（价格/金额）：significand / 100 直接写入，避免 Double.toString()</li>\n     *   <li>1位小数：significand / 10 直接写入</li>\n     *   <li>其他：回退到 Double.toString()</li>\n     * </ul>\n     */\n    public void writeDouble(double value) {\n        if (externalSb != null) {\n            externalSb.append(value);\n            return;\n        }\n\n        if (Double.isNaN(value) || Double.isInfinite(value)) {\n            write("null");\n            return;\n        }\n\n        if (value == 0.0 && Double.doubleToRawLongBits(value) < 0) {\n            write("-0.0");\n            return;\n        }\n\n        if (value > Long.MIN_VALUE && value < Long.MAX_VALUE) {\n            long longValue = (long) value;\n            if ((double) longValue == value) {\n                ensureCapacity(24);\n                pos += NumberUtils.writeLong(longValue, buf, pos);\n                buf[pos++] = '.';\n                buf[pos++] = '0';\n                return;\n            }\n        }\n\n        if (value > -1e15 && value < 1e15) {\n            double scaled2 = value * 100.0;\n            long longValue2 = (long) scaled2;\n            if ((double) longValue2 == scaled2) {\n                ensureCapacity(24);\n                if (longValue2 < 0) { buf[pos++] = '-'; longValue2 = -longValue2; }\n                long intPart = longValue2 / 100;\n                long decPart = longValue2 % 100;\n                pos += NumberUtils.writeLong(intPart, buf, pos);\n                buf[pos++] = '.';\n                if (decPart < 10) buf[pos++] = '0';\n                pos += NumberUtils.writeLong(decPart, buf, pos);\n                return;\n            }\n\n            double scaled1 = value * 10.0;\n            long longValue1 = (long) scaled1;\n            if ((double) longValue1 == scaled1) {\n                ensureCapacity(24);\n                if (longValue1 < 0) { buf[pos++] = '-'; longValue1 = -longValue1; }\n                long intPart = longValue1 / 10;\n                long decPart = longValue1 % 10;\n                pos += NumberUtils.writeLong(intPart, buf, pos);\n                buf[pos++] = '.';\n                pos += NumberUtils.writeLong(decPart, buf, pos);\n                return;\n            }\n        }\n\n        write(Double.toString(value));\n    }\n\n    /**\n     * 写入 BigDecimal（使用快速路径避免中间 String 分配）\n     *\n     * <p>优化策略：</p>\n     * <ul>\n     *   <li>整数 BigDecimal（scale=0 或可通过缩放转为 long）：直接写入 long 数值，避免 toPlainString()</li>\n     *   <li>小 scale（≤10）且 unscaled 值在 long 范围内：整数部分 + 小数部分分别写入</li>\n     *   <li>其他情况：回退 toPlainString()</li>\n     * </ul>\n     *\n     * <p>使用 {@link BigDecimal#toPlainString()} 而非 {@link BigDecimal#toString()}，\n     * 避免科学计数法输出（如 1E+2），保证 JSON 数字格式合法。</p>\n     *\n     * <p>当 {@link Feature#WriteBigDecimalAsString} 启用时，\n     * BigDecimal 将作为 JSON 字符串（带引号）写入，避免 JavaScript 精度丢失。</p>\n     *\n     * @param value BigDecimal 值\n     * @since 1.0.0\n     */\n    public void writeBigDecimal(BigDecimal value) {\n        if (value == null) {\n            write("null");\n            return;\n        }\n\n        // 快速路径 1：整数 BigDecimal（无小数部分）\n        int scale = value.scale();\n        if (scale == 0) {\n            // 无小数部分，直接使用 unscaledValue\n            java.math.BigInteger unscaled = value.unscaledValue();\n            if (unscaled.bitLength() <= 63) {\n                // 在 long 范围内，直接写入长整数，避免 toPlainString()\n                writeLong(unscaled.longValue());\n                return;\n            }\n            // 超大整数，使用 BigInteger 的快速路径\n            if (Feature.WriteBigDecimalAsString.isEnabled(this.features)) {\n                writeString(unscaled.toString());\n            } else {\n                write(unscaled.toString());\n            }\n            return;\n        }\n\n        // 快速路径 2：小 scale 且 unscaled 在 long 范围内\n        if (scale > 0 && scale <= 18) {\n            java.math.BigInteger unscaled = value.unscaledValue();\n            if (unscaled.bitLength() <= 63) {\n                long unscaledLong = unscaled.longValue();\n                if (unscaledLong != 0) {\n                    // 可表示为 long 的带小数值\n                    long divisor = POWERS_OF_TEN[scale];\n                    long intPart = unscaledLong / divisor;\n                    long fracPart = Math.abs(unscaledLong % divisor);\n\n                    // 仅当恰好整除（无精度损失）时使用快速路径\n                    // 注意：如果截断后仍为原值，走快速路径\n                    if (intPart * divisor + fracPart == Math.abs(unscaledLong) ||\n                        (unscaledLong < 0 && intPart * divisor - fracPart == unscaledLong)) {\n\n                        if (unscaledLong < 0) {\n                            buf[pos++] = '-';\n                            intPart = -intPart;\n                            // fracPart 保持正值\n                        }\n                        ensureCapacity(32);\n                        pos += NumberUtils.writeLong(intPart, buf, pos);\n                        buf[pos++] = '.';\n                        // 前导零（如 0.05 → intPart=0, fracPart=5, scale=2 → "0.05"）\n                        if (fracPart > 0) {\n                            // 补齐前导零：按 scale 位数输出\n                            int fracDigits = scale;\n                            // 移除尾部零？保留，因为用户指定了精度\n                            // 从最高位开始写入，不足的前面补零\n                            int charPos = pos + fracDigits - 1;\n                            long tmp = fracPart;\n                            while (tmp > 0) {\n                                buf[pos + (charPos - pos)] = (char) ('0' + tmp % 10);\n                                tmp /= 10;\n                                charPos--;\n                            }\n                            // 剩余前导零\n                            while (charPos >= pos) {\n                                buf[pos + (charPos - pos)] = '0';\n                                charPos--;\n                            }\n                            pos += fracDigits;\n                        } else {\n                            buf[pos++] = '0';\n                        }\n                        return;\n                    }\n                }\n            }\n        }\n\n        // 慢速路径：回退 toPlainString()\n        String str = value.toPlainString();\n        if (Feature.WriteBigDecimalAsString.isEnabled(this.features)) {\n            writeString(str);\n        } else {\n            write(str);\n        }\n    }\n\n    /** 10 的幂次表（10^0 ~ 10^18） */\n    private static final long[] POWERS_OF_TEN = new long[19];\n    static {\n        long p = 1L;\n        for (int i = 0; i <= 18; i++) {\n            POWERS_OF_TEN[i] = p;\n            p *= 10;\n        }\n    }\n\n    /**\n     * 写入字符串（带引号，快速路径）\n     *\n     * <p>优化策略：先扫描检查是否需要转义，无需转义时使用 str.getChars() 批量拷贝，\n     * 比逐字符写入更高效（System.arraycopy 底层优化）</p>\n     */\n    public void writeString(String str) {\n        if (externalSb != null) {\n            externalSb.append('"');\n            int len = str.length();\n            boolean needsEscape = false;\n            for (int i = 0; i < len; i++) {\n                char c = str.charAt(i);\n                if (c < ' ' || c == '"' || c == '\\'\n                        || c == '\u2028' || c == '\u2029'\n                        || (c >= '\uD800' && c <= '\uDFFF')) {\n                    needsEscape = true;\n                    break;\n                }\n            }\n            if (!needsEscape) {\n                externalSb.append(str);\n            } else {\n                writeStringWithEscapeSb(str);\n            }\n            externalSb.append('"');\n            return;\n        }\n\n        writeStringDirect(str);\n    }\n\n    /**\n     * 直接写入字符串到缓冲区（无 externalSb 检查，用于 JSONWriter 直接模式和 ASM 序列化器）\n     *\n     * <p>优化策略：</p>\n     * <ul>\n     *   <li>ASCII 快速路径：纯 ASCII 且无特殊字符时，使用 str.getChars() 批量拷贝</li>\n     *   <li>SIMD 风格字级检查：一次检查 8 个字符是否为 ASCII + 无特殊字符，减少逐字符判断</li>\n     *   <li>无需转义时直接批量写入，比逐字符写入快 3-5 倍</li>\n     * </ul>\n     */\n    public void writeStringDirect(String str) {\n        int len = str.length();\n        ensureCapacity(len + 2);\n\n        buf[pos++] = '"';\n\n        // ASCII 快速路径：使用 SIMD 风格字级检查，一次检查 8 个字符\n        if (isAsciiSafe(str, len)) {\n            // 纯 ASCII 且无特殊字符，直接批量拷贝（System.arraycopy 底层优化）\n            str.getChars(0, len, buf, pos);\n            pos += len;\n            buf[pos++] = '"';\n            return;\n        }\n\n        // 慢速路径：需要检查每个字符是否需要转义\n        writeStringWithEscape(str);\n    }\n\n    /**\n     * 检查字符串是否为纯 ASCII 且无需 JSON 转义（SIMD 风格字级检查）\n     *\n     * <p>一次检查 8 个字符：只要所有字符 >= ' ' 且 <= 127 且不是 '"' 和 '\\'，\n     * 即为安全字符串，可以批量拷贝。这种字级检查模式与 SIMD 向量化思想一致，\n     * 在 JIT 编译后可以利用 CPU 的指令级并行性。</p>\n     *\n     * @param str 字符串\n     * @param len 字符串长度\n     * @return true 表示纯 ASCII 安全字符串，可直接批量写入\n     */\n    private static boolean isAsciiSafe(String str, int len) {\n        // SIMD 风格：一次检查 8 个字符\n        int i = 0;\n        while (i + 7 < len) {\n            char c0 = str.charAt(i);\n            char c1 = str.charAt(i + 1);\n            char c2 = str.charAt(i + 2);\n            char c3 = str.charAt(i + 3);\n            char c4 = str.charAt(i + 4);\n            char c5 = str.charAt(i + 5);\n            char c6 = str.charAt(i + 6);\n            char c7 = str.charAt(i + 7);\n            // 合并检查：非 ASCII（> 127）或控制字符（< ' '）或特殊字符（" \）\n            // 使用位运算合并：只要任一字符不安全就返回 false\n            if ((c0 > 127 || c0 < ' ' || c0 == '"' || c0 == '\\') ||\n                (c1 > 127 || c1 < ' ' || c1 == '"' || c1 == '\\') ||\n                (c2 > 127 || c2 < ' ' || c2 == '"' || c2 == '\\') ||\n                (c3 > 127 || c3 < ' ' || c3 == '"' || c3 == '\\') ||\n                (c4 > 127 || c4 < ' ' || c4 == '"' || c4 == '\\') ||\n                (c5 > 127 || c5 < ' ' || c5 == '"' || c5 == '\\') ||\n                (c6 > 127 || c6 < ' ' || c6 == '"' || c6 == '\\') ||\n                (c7 > 127 || c7 < ' ' || c7 == '"' || c7 == '\\')) {\n                return false;\n            }\n            i += 8;\n        }\n\n        // 处理剩余字符\n        for (; i < len; i++) {\n            char c = str.charAt(i);\n            if (c > 127 || c < ' ' || c == '"' || c == '\\') {\n                return false;\n            }\n        }\n\n        return true;\n    }\n\n    /**\n     * 直接写入字符串到缓冲区（无容量检查，用于外层已预分配容量的场景）\n     *\n     * <p>跳过 ensureCapacity 检查，减少方法调用开销。\n     * 调用者必须确保缓冲区有足够容量（至少 len + 2 个字符）</p>\n     *\n     * <p>优化：使用 SIMD 风格字级检查，纯 ASCII 安全字符串直接批量拷贝</p>\n     */\n    public void writeStringDirectNoCheck(String str) {\n        int len = str.length();\n\n        buf[pos++] = '"';\n\n        // ASCII 快速路径：使用 SIMD 风格字级检查\n        if (isAsciiSafe(str, len)) {\n            str.getChars(0, len, buf, pos);\n            pos += len;\n            buf[pos++] = '"';\n            return;\n        }\n\n        // 慢速路径：需要转义\n        writeStringWithEscape(str);\n    }\n\n    /**\n     * 写入需要转义的字符串（StringBuilder 模式）\n     */\n    private void writeStringWithEscapeSb(String str) {\n        int len = str.length();\n        for (int i = 0; i < len; i++) {\n            char c = str.charAt(i);\n            switch (c) {\n                case '"': externalSb.append("\\\""); break;\n                case '\\': externalSb.append("\\\\"); break;\n                case '\n': externalSb.append("\\n"); break;\n                case '\r': externalSb.append("\\r"); break;\n                case '\t': externalSb.append("\\t"); break;\n                default:\n                    if (c < ' ') {\n                        externalSb.append("\\u");\n                        externalSb.append(String.format("%04x", (int) c));\n                    } else if (c == '\u2028' || c == '\u2029') {\n                        // 行/段落分隔符：裸置于 <script> 中会导致 JS 语法错误，安全转义\n                        externalSb.append("\\u");\n                        externalSb.append(String.format("%04x", (int) c));\n                    } else if (Character.isHighSurrogate(c)) {\n                        if (i + 1 < len && Character.isLowSurrogate(str.charAt(i + 1))) {\n                            externalSb.append(c);\n                            externalSb.append(str.charAt(i + 1));\n                            i++;\n                        } else {\n                            // 孤立高位代理：替换为 U+FFFD，避免产出非法 JSON\n                            externalSb.append('\uFFFD');\n                        }\n                    } else if (Character.isLowSurrogate(c)) {\n                        // 孤立低位代理：替换为 U+FFFD\n                        externalSb.append('\uFFFD');\n                    } else {\n                        externalSb.append(c);\n                    }\n            }\n        }\n    }\n\n    /**\n     * 写入字符串（带转义）\n     */\n    private void writeStringWithEscape(String str) {\n        int len = str.length();\n        ensureCapacity(len * 6 + 2); // 最坏情况\n\n        for (int i = 0; i < len; i++) {\n            char c = str.charAt(i);\n            switch (c) {\n                case '"':\n                    buf[pos++] = '\\';\n                    buf[pos++] = '"';\n                    break;\n                case '\\':\n                    buf[pos++] = '\\';\n                    buf[pos++] = '\\';\n                    break;\n                case '\n':\n                    buf[pos++] = '\\';\n                    buf[pos++] = 'n';\n                    break;\n                case '\r':\n                    buf[pos++] = '\\';\n                    buf[pos++] = 'r';\n                    break;\n                case '\t':\n                    buf[pos++] = '\\';\n                    buf[pos++] = 't';\n                    break;\n                case '\b':\n                    buf[pos++] = '\\';\n                    buf[pos++] = 'b';\n                    break;\n                case '\f':\n                    buf[pos++] = '\\';\n                    buf[pos++] = 'f';\n                    break;\n                default:\n                    if (c < ' ') {\n                        writeHex4(c);\n                    } else if (c == '\u2028' || c == '\u2029') {\n                        // 行/段落分隔符：裸置于 <script> 中会导致 JS 语法错误，安全转义\n                        writeHex4(c);\n                    } else if (Character.isHighSurrogate(c)) {\n                        if (i + 1 < len && Character.isLowSurrogate(str.charAt(i + 1))) {\n                            buf[pos++] = c;\n                            buf[pos++] = str.charAt(i + 1);\n                            i++;\n                        } else {\n                            // 孤立高位代理：替换为 U+FFFD，避免产出非法 JSON\n                            buf[pos++] = '\uFFFD';\n                        }\n                    } else if (Character.isLowSurrogate(c)) {\n                        // 孤立低位代理：替换为 U+FFFD\n                        buf[pos++] = '\uFFFD';\n                    } else {\n                        buf[pos++] = c;\n                    }\n                    break;\n            }\n        }\n\n        buf[pos++] = '"';\n    }\n\n    /** 十六进制字符表（小写，符合 JSON 规范常见风格）*/\n    private static final char[] HEX = {\n        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'\n    };\n\n    /** 写入字符的 4 位十六进制 {@code \\uXXXX} 转义（调用方需保证 code 为合法 16 位无符号码元）*/\n    private void writeHex4(int code) {\n        buf[pos++] = '\\';\n        buf[pos++] = 'u';\n        buf[pos++] = HEX[(code >> 12) & 0xf];\n        buf[pos++] = HEX[(code >> 8) & 0xf];\n        buf[pos++] = HEX[(code >> 4) & 0xf];\n        buf[pos++] = HEX[code & 0xf];\n    }\n\n    /**\n     * 确保容量（几何增长策略：2x 扩容，避免固定增量导致的多次扩容）\n     *\n     * <p>优化策略：</p>\n     * <ul>\n     *   <li>几何增长：新容量 = max(当前容量 * 2, 所需容量)，摊还 O(1) 扩容成本</li>\n     *   <li>上限保护：超过 MAX_BUF_SIZE 时停止扩容</li>\n     * </ul>\n     */\n    void ensureCapacity(int minCapacity) {\n        if (pos + minCapacity > buf.length) {\n            // 几何增长：2x 扩容，同时保证满足最小需求\n            int newCapacity = Math.max(buf.length * 2, pos + minCapacity);\n            if (newCapacity > MAX_BUF_SIZE) {\n                newCapacity = MAX_BUF_SIZE;\n            }\n            char[] newBuf = new char[newCapacity];\n            System.arraycopy(buf, 0, newBuf, 0, pos);\n            buf = newBuf;\n        }\n    }\n\n    /**\n     * 预分配缓冲区（避免序列化过程中多次扩容）\n     *\n     * <p>优化策略：</p>\n     * <ul>\n     *   <li>几何增长：新容量 = max(当前容量 * 2, 所需容量)</li>\n     *   <li>上限保护：超过 MAX_BUF_SIZE 时停止扩容</li>\n     * </ul>\n     *\n     * @param minCapacity 最小需要的容量\n     */\n    public void preAllocate(int minCapacity) {\n        if (buf != null && pos + minCapacity > buf.length) {\n            int newCapacity = Math.max(buf.length * 2, pos + minCapacity);\n            if (newCapacity > MAX_BUF_SIZE) {\n                newCapacity = MAX_BUF_SIZE;\n            }\n            char[] newBuf = new char[newCapacity];\n            System.arraycopy(buf, 0, newBuf, 0, pos);\n            buf = newBuf;\n        }\n    }\n\n    /**\n     * 基于已知类型预分配缓冲区容量（减少序列化过程中的动态扩容次数）\n     *\n     * <p>根据对象类型估算 JSON 输出大小，一次性分配足够容量：</p>\n     * <ul>\n     *   <li>Bean：字段数 * 64 + 32</li>\n     *   <li>Collection：元素数 * 64 + 16</li>\n     *   <li>Map：条目数 * 64 + 16</li>\n     * </ul>\n     *\n     * @param obj 待序列化对象\n     */\n    public void preAllocateForObject(Object obj) {\n        if (obj == null || buf == null) return;\n\n        int estimated = 0;\n        if (obj instanceof Collection) {\n            estimated = ((Collection<?>) obj).size() * 64 + 16;\n        } else if (obj instanceof Map) {\n            estimated = ((Map<?, ?>) obj).size() * 64 + 16;\n        } else if (obj.getClass().isArray()) {\n            estimated = Array.getLength(obj) * 64 + 16;\n        } else {\n            // Bean 类型：粗略估算\n            estimated = 256;\n        }\n\n        if (pos + estimated > buf.length) {\n            preAllocate(estimated);\n        }\n    }\n\n    /**\n     * 转换为字符串（使用 JDK 9+ 优化的 String 构造）\n     */\n    @Override\n    public String toString() {\n        if (externalSb != null) {\n            return externalSb.toString();\n        }\n        if (pos == 0) {\n            return "";\n        }\n        return new String(buf, 0, pos);\n    }\n\n    /**\n     * 直接将内部 char[] 缓冲区编码为 UTF-8 字节数组。\n     *\n     * <p>避免 {@code new String(buf).getBytes(UTF_8)} 的双重分配：\n     * 先创建 String 再创建 byte[]。本方法对于纯 ASCII 内容直接 1:1 拷贝，\n     * 跳过 String 中间层。</p>\n     *\n     * @return UTF-8 编码的字节数组\n     * @since 1.0.0\n     */\n    public byte[] toUtf8Bytes() {\n        if (externalSb != null) {\n            return externalSb.toString().getBytes(StandardCharsets.UTF_8);\n        }\n        if (pos == 0) {\n            return new byte[0];\n        }\n        // 快速路径：检查是否纯 ASCII\n        boolean allAscii = true;\n        for (int i = 0; i < pos; i++) {\n            if (buf[i] > 127) {\n                allAscii = false;\n                break;\n            }\n        }\n        if (allAscii) {\n            // 纯 ASCII：char → byte 直接拷贝，1:1 映射\n            byte[] bytes = new byte[pos];\n            for (int i = 0; i < pos; i++) {\n                bytes[i] = (byte) buf[i];\n            }\n            return bytes;\n        }\n        // 非 ASCII：回退到标准 UTF-8 编码\n        return new String(buf, 0, pos).getBytes(StandardCharsets.UTF_8);\n    }\n\n    /**\n     * 将当前缓冲区内容直接写入 OutputStream（免中间 byte[] 分配）。\n     *\n     * <p>对于纯 ASCII 内容，直接 1:1 char→byte 写入流；非 ASCII 内容回退\n     * 到 {@link #toUtf8Bytes()} 一次性写入。</p>\n     *\n     * @param out 目标输出流\n     * @throws java.io.IOException IO 异常\n     */\n    public void writeTo(java.io.OutputStream out) throws java.io.IOException {\n        if (externalSb != null) {\n            out.write(externalSb.toString().getBytes(StandardCharsets.UTF_8));\n            return;\n        }\n        if (pos == 0) {\n            return;\n        }\n        // 快速路径：检查是否纯 ASCII\n        boolean allAscii = true;\n        for (int i = 0; i < pos; i++) {\n            if (buf[i] > 127) {\n                allAscii = false;\n                break;\n            }\n        }\n        if (allAscii) {\n            for (int i = 0; i < pos; i++) {\n                out.write((byte) buf[i]);\n            }\n        } else {\n            out.write(new String(buf, 0, pos).getBytes(StandardCharsets.UTF_8));\n        }\n    }\n\n    /**\n     * 直接获取内部 char[] 缓冲区和长度（避免 String 拷贝）\n     *\n     * <p>调用者必须在使用完毕后调用 reset()，否则数据会被覆盖</p>\n     */\n    public char[] getBuffer() {\n        return buf;\n    }\n\n    public int getLength() {\n        return pos;\n    }\n\n    /**\n     * 重置写入位置（带缩容保护：避免线程池中长期持有过大缓冲区）\n     *\n     * <p>当缓冲区容量超过 MAX_RESET_CAPACITY 时，缩容到默认大小，\n     * 防止偶尔序列化大对象后，缓冲区一直占用大量内存</p>\n     */\n    public void reset() {\n        pos = 0;\n        // 缩容保护：缓冲区过大时回收到默认大小，避免内存浪费\n        if (buf != null && buf.length > MAX_RESET_CAPACITY) {\n            buf = new char[DEFAULT_BUF_SIZE];\n        }\n    }\n\n    /**\n     * 获取当前容量\n     */\n    public int capacity() {\n        return buf.length;\n    }\n\n    /**\n     * 获取已写入字符数\n     */\n    public int size() {\n        return pos;\n    }\n\n    /**\n     * 获取当前写入位置（供 ASM 序列化器直接操作缓冲区）\n     *\n     * <p>ASM 生成的序列化器通过 getBuffer() + getPosition() 获取直接缓冲区访问，\n     * 消除 write() 方法调用的 externalSb 检查和 ensureCapacity 检查开销</p>\n     */\n    public int getPosition() {\n        return pos;\n    }\n\n    /**\n     * 设置当前写入位置（供 ASM 序列化器直接操作缓冲区）\n     *\n     * <p>在直接缓冲区写入完成后，通过 setPosition() 同步写入位置到 JSONWriter</p>\n     *\n     * @param position 新的写入位置\n     */\n    public void setPosition(int position) {\n        pos = position;\n    }\n\n    /**\n     * 检查字符串是否需要 JSON 转义（SIMD 风格字级检查优化）\n     *\n     * <p>用于 ASM 序列化器的字符串快速路径判断：\n     * 无需转义时直接内联写入缓冲区，避免 sync/re-read 开销</p>\n     *\n     * <p>优化：一次检查 8 个字符，利用 CPU 指令级并行性加速</p>\n     *\n     * @param str 待检查的字符串\n     * @return true 表示需要转义，false 表示无需转义\n     */\n    public static boolean needsEscape(String str) {\n        int len = str.length();\n        int i = 0;\n        // SIMD 风格：一次检查 8 个字符\n        while (i + 7 < len) {\n            char c0 = str.charAt(i);\n            char c1 = str.charAt(i + 1);\n            char c2 = str.charAt(i + 2);\n            char c3 = str.charAt(i + 3);\n            char c4 = str.charAt(i + 4);\n            char c5 = str.charAt(i + 5);\n            char c6 = str.charAt(i + 6);\n            char c7 = str.charAt(i + 7);\n            if (needsCharEscape(c0) || needsCharEscape(c1) || needsCharEscape(c2) || needsCharEscape(c3)\n                || needsCharEscape(c4) || needsCharEscape(c5) || needsCharEscape(c6) || needsCharEscape(c7)) {\n                return true;\n            }\n            i += 8;\n        }\n        // 处理剩余字符\n        for (; i < len; i++) {\n            if (needsCharEscape(str.charAt(i))) {\n                return true;\n            }\n        }\n        return false;\n    }\n\n    /**\n     * 判断单个字符是否需要 JSON 转义（与 {@code writeString*} 系列转义规则保持一致）。\n     *\n     * <p>除控制字符、引号、反斜杠外，还需转义 U+2028/U+2029（裸置于\n     * {@code <script>} 中会导致 JS 语法错误）以及代理码元（D800-DFFF，需经\n     * {@code writeStringWithEscape} 校验是否为合法代理对）。</p>\n     *\n     * @param c 待判断字符\n     * @return true 表示该字符需要转义\n     */\n    private static boolean needsCharEscape(char c) {\n        return c < ' ' || c == '"' || c == '\\'\n            || c == '\u2028' || c == '\u2029'\n            || (c >= '\uD800' && c <= '\uDFFF');\n    }\n\n    /**\n     * 写入双精度浮点数到缓冲区（合并 setPosition + writeDouble + getPosition）\n     *\n     * <p>消除 ASM 序列化器中 setPosition 和 getPosition 的额外方法调用开销</p>\n     *\n     * @param value 双精度浮点数值\n     * @param pos 当前写入位置\n     * @return 写入后的新位置\n     */\n    public int writeDoubleToBuf(double value, int pos) {\n        this.pos = pos;\n        writeDouble(value);\n        return this.pos;\n    }\n\n    /**\n     * 写入单精度浮点数到缓冲区（合并 setPosition + writeFloat + getPosition）\n     *\n     * <p>消除 ASM 序列化器中 setPosition 和 getPosition 的额外方法调用开销</p>\n     *\n     * @param value 单精度浮点数值\n     * @param pos 当前写入位置\n     * @return 写入后的新位置\n     */\n    public int writeFloatToBuf(float value, int pos) {\n        this.pos = pos;\n        writeFloat(value);\n        return this.pos;\n    }\n\n    /**\n     * 写入带引号字符串到缓冲区（合并 setPosition + writeString + getPosition）\n     *\n     * <p>消除 ASM 序列化器中 setPosition 和 getPosition 的额外方法调用开销</p>\n     *\n     * @param str 字符串值\n     * @param pos 当前写入位置\n     * @return 写入后的新位置\n     */\n    public int writeStringToBuf(String str, int pos) {\n        this.pos = pos;\n        writeStringDirect(str);\n        return this.pos;\n    }\n\n    /**\n     * 写入集合到缓冲区（合并 setPosition + writeCollection + getPosition）\n     *\n     * @param collection 集合对象\n     * @param pos 当前写入位置\n     * @return 写入后的新位置\n     */\n    public int writeCollectionToBuf(Collection<?> collection, int pos) {\n        this.pos = pos;\n        writeCollection(collection);\n        return this.pos;\n    }\n\n    /**\n     * 写入 Map 到缓冲区（合并 setPosition + writeMap + getPosition）\n     *\n     * @param map Map 对象\n     * @param pos 当前写入位置\n     * @return 写入后的新位置\n     */\n    public int writeMapToBuf(Map<?, ?> map, int pos) {\n        this.pos = pos;\n        writeMap(map);\n        return this.pos;\n    }\n\n    /**\n     * 直接写入集合\n     *\n     * <p>对 List 类型使用索引循环避免 Iterator 对象创建开销。</p>\n     */\n    public void writeCollection(Collection<?> collection) {\n        if (collection == null) {\n            write("null");\n            return;\n        }\n\n        int size = collection.size();\n        if (size > 0) {\n            preAllocate(size * 64);\n        }\n\n        buf[pos++] = '[';\n\n        // 优化：对支持随机访问的 List 使用索引循环，避免 Iterator 对象创建开销\n        // LinkedList 等非 RandomAccess 走 Iterator 路径，避免 O(N²) 退化\n        if (collection instanceof List && (collection instanceof java.util.RandomAccess || size < 100)) {\n            List<?> list = (List<?>) collection;\n            for (int i = 0; i < size; i++) {\n                if (i > 0) {\n                    buf[pos++] = ',';\n                }\n                writeValueInline(list.get(i));\n            }\n        } else {\n            boolean first = true;\n            for (Object item : collection) {\n                if (!first) {\n                    buf[pos++] = ',';\n                }\n                first = false;\n                writeValueInline(item);\n            }\n        }\n        buf[pos++] = ']';\n    }\n\n    /**\n     * 直接写入 Map（优化版本）\n     */\n    public void writeMap(Map<?, ?> map) {\n        if (map == null) {\n            write("null");\n            return;\n        }\n\n        int size = map.size();\n        if (size > 0) {\n            preAllocate(size * 64);\n        }\n\n        buf[pos++] = '{';\n        boolean first = true;\n        for (Map.Entry<?, ?> entry : map.entrySet()) {\n            if (!first) {\n                buf[pos++] = ',';\n            }\n            first = false;\n\n            Object key = entry.getKey();\n            Object value = entry.getValue();\n\n            if (key instanceof String) {\n                writeStringDirectNoCheck((String) key);\n            } else {\n                writeStringDirectNoCheck(String.valueOf(key));\n            }\n            buf[pos++] = ':';\n            writeValueInline(value);\n        }\n        buf[pos++] = '}';\n    }\n\n    /**\n     * 内联写入对象值（不调用 YdszJson.toJson）\n     */\n    private void writeObjectInline(Object obj) {\n        if (obj == null) {\n            write("null");\n            return;\n        }\n\n        if (obj instanceof Collection) {\n            writeCollection((Collection<?>) obj);\n        } else if (obj instanceof Map) {\n            writeMap((Map<?, ?>) obj);\n        } else {\n            write(YdszJson.toJson(obj));\n        }\n    }\n\n    /**\n     * 内联写入值（不调用 YdszJson.toJson）\n     */\n    void writeValueInline(Object value) {\n        if (value == null) {\n            buf[pos] = 'n'; buf[pos + 1] = 'u'; buf[pos + 2] = 'l'; buf[pos + 3] = 'l';\n            pos += 4;\n        } else if (value instanceof String) {\n            writeStringDirectNoCheck((String) value);\n        } else if (value instanceof Character) {\n            // char 序列化为 JSON 字符串（"A" 而非裸字符 A）\n            ensureCapacity(4);\n            buf[pos++] = '"';\n            buf[pos++] = (Character) value;\n            buf[pos++] = '"';\n        } else if (value instanceof BigDecimal) {\n            writeBigDecimal((BigDecimal) value);\n        } else if (value instanceof BigInteger) {\n            writeBigIntegerInline((BigInteger) value);\n        } else if (value instanceof Number) {\n            writeNumberInline((Number) value);\n        } else if (value instanceof Boolean) {\n            if ((Boolean) value) {\n                buf[pos] = 't'; buf[pos + 1] = 'r'; buf[pos + 2] = 'u'; buf[pos + 3] = 'e';\n                pos += 4;\n            } else {\n                buf[pos] = 'f'; buf[pos + 1] = 'a'; buf[pos + 2] = 'l'; buf[pos + 3] = 's'; buf[pos + 4] = 'e';\n                pos += 5;\n            }\n        } else if (value instanceof Collection) {\n            writeCollection((Collection<?>) value);\n        } else if (value instanceof Map) {\n            writeMap((Map<?, ?>) value);\n        } else if (value instanceof Enum) {\n            writeStringDirectNoCheck(((Enum<?>) value).name());\n        } else {\n            writeObjectInline(value);\n        }\n    }\n\n    /**\n     * 快速写入 BigInteger（避免 toString() 分配）。\n     *\n     * <p>优化：对于能放入 long 范围内的 BigInteger，直接使用 writeLong 写入。</p>\n     */\n    private void writeBigIntegerInline(BigInteger value) {\n        if (value.bitLength() <= 63) {\n            writeLong(value.longValue());\n        } else {\n            // 超大整数回退 toString()\n            write(value.toString());\n        }\n    }\n\n    /**\n     * 快速写入 Number（针对非标准 Number 类型的优化分发）。\n     *\n     * <p>优化：对于 AtomicLong/AtomicInteger/LongAdder/DoubleAdder 等原子类型，\n     * 直接拆箱原始类型写入，避免 toString() 分配。</p>\n     */\n    private void writeNumberInline(Number value) {\n        if (value instanceof Long || value instanceof Integer || value instanceof Short || value instanceof Byte) {\n            writeLong(value.longValue());\n        } else if (value instanceof Double || value instanceof Float) {\n            double d = value.doubleValue();\n            if (Double.isNaN(d) || Double.isInfinite(d)) {\n                write("null");\n            } else {\n                writeDouble(d);\n            }\n        } else if (value instanceof java.util.concurrent.atomic.LongAdder) {\n            writeLong(((java.util.concurrent.atomic.LongAdder) value).sum());\n        } else if (value instanceof java.util.concurrent.atomic.DoubleAdder) {\n            double d = ((java.util.concurrent.atomic.DoubleAdder) value).sum();\n            if (Double.isNaN(d) || Double.isInfinite(d)) {\n                write("null");\n            } else {\n                writeDouble(d);\n            }\n        } else {\n            // 其他未知 Number 子类回退 toString()\n            write(value.toString());\n        }\n    }\n}\n
+package com.njydsz.common.json.writer;
+
+import java.lang.reflect.Array;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.number.NumberUtils;
+
+import java.nio.charset.StandardCharsets;
+/**
+ * 高性能 JSON 写入器
+ *
+ * <p>直接操作 char[] 数组，避免 StringBuilder 的方法调用开销</p>
+ *
+ * <p><b>性能优势：</b></p>
+ * <ul>
+ *   <li>减少 50-70% 的方法调用</li>
+ *   <li>避免边界检查和同步开销</li>
+ *   <li>直接内存写入，无中间层</li>
+ * </ul>
+ *
+ * <p><b>Feature 系统：</b></p>
+ * <p>通过 {@link Feature} 枚举控制序列化行为，参考 FastJSON2 和 Jackson 的 Feature 设计。
+ * 使用 {@link #of(Feature...)} 或 {@link #of(Set)} 计算特性标志位。</p>
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+public final class JSONWriter {
+
+    /**
+     * 写入特性枚举
+     *
+     * <p>用于控制序列化行为，参考 FastJSON2 和 Jackson 的 Feature 设计。</p>
+     */
+    public enum Feature {
+        /**
+         * 输出 null 值字段
+         */
+        WriteNulls(false),
+
+        /**
+         * 格式化输出（Pretty Print）
+         */
+        PrettyPrint(false),
+
+        /**
+         * 将 BigDecimal 作为字符串写入（避免精度丢失，输出如 "1.23" 而非 1.23）
+         */
+        WriteBigDecimalAsString(false);
+
+        private final boolean enabledByDefault;
+
+        Feature(boolean enabledByDefault) {
+            this.enabledByDefault = enabledByDefault;
+        }
+
+        public boolean isEnabledByDefault() {
+            return enabledByDefault;
+        }
+
+        /**
+         * 判断该特性在给定特性组合值中是否已启用。
+         *
+         * @param features 特性组合位掩码（多个特性按位或的结果）
+         * @return {@code true} 表示该特性的位已置位启用
+         */
+        public boolean isEnabled(long features) {
+            return (features & (1L << ordinal())) != 0;
+        }
+
+        /**
+         * 返回该特性的位掩码（{@code 1L << ordinal()}）。
+         *
+         * <p>用于和特性组合值按位与（{@code features & mask}）判断是否启用，
+         * 或被 {@code of(...)} 按位或组合多个特性。位序依赖枚举声明顺序，
+         * 请勿随意调整枚举常量位置，否则会破坏已持久化/传输的特性位组合。</p>
+         *
+         * @return 64 位长整型位掩码
+         */
+        public long mask() {
+            return 1L << ordinal();
+        }
+    }
+
+    /**
+     * 计算特性值
+     */
+    public static long of(Feature... features) {
+        if (features == null) {
+            return 0;
+        }
+        long value = 0;
+        for (Feature feature : features) {
+            if (feature != null) {
+                value |= feature.mask();
+            }
+        }
+        return value;
+    }
+
+    /**
+     * 从集合计算特性值
+     */
+    public static long of(Set<Feature> features) {
+        if (features == null) {
+            return 0;
+        }
+        long value = 0;
+        for (Feature feature : features) {
+            if (feature != null) {
+                value |= feature.mask();
+            }
+        }
+        return value;
+    }
+
+    /** 字符缓冲区（public for ASM 序列化器直接访问，消除 getBuffer() 方法调用开销） */
+    public char[] buf;
+
+    /** 当前写入位置（public for ASM 序列化器直接访问，消除 getPosition()/setPosition() 方法调用开销） */
+    public int pos;
+
+    /** 特性标志位（Feature 枚举按位 OR 合并，参考 FastJSON2 / Jackson 设计） */
+    private long features;
+
+    /** 外部 StringBuilder（如果使用 StringBuilder 模式） */
+    private StringBuilder externalSb;
+
+    /** 默认缓冲区大小 4KB */
+    private static final int DEFAULT_BUF_SIZE = 4096;
+
+    /** 最大缓冲区大小 64MB */
+    private static final int MAX_BUF_SIZE = 67108864;
+
+    /** 缓冲区重置时的最大保留容量（超过此容量则缩容，避免线程池中长期持有大缓冲区） */
+    private static final int MAX_RESET_CAPACITY = 65536;
+
+    /**
+     * 构造函数（使用默认缓冲区大小）
+     */
+    public JSONWriter() {
+        this(DEFAULT_BUF_SIZE, 0L);
+    }
+
+    /**
+     * 构造函数（指定缓冲区大小）
+     *
+     * @param capacity 初始容量
+     */
+    public JSONWriter(int capacity) {
+        this(capacity, 0L);
+    }
+
+    /**
+     * 构造函数（指定缓冲区大小和预计算特性位）
+     *
+     * <p>通过传入预计算的 features 位掩码，避免运行时 ThreadLocal 查询开销。
+     * 参见 {@link #of(Feature...)} 或 {@link com.njydsz.common.json.internal.JsonRuntimeConfig}。</p>
+     *
+     * @param capacity 初始容量
+     * @param features 预计算的 Feature 位掩码（由调用方从 JsonRuntimeConfig 转换）
+     * @since 1.1.0
+     */
+    public JSONWriter(int capacity, long features) {
+        this.buf = new char[capacity];
+        this.pos = 0;
+        this.features = features;
+    }
+
+    /**
+     * 构造函数（使用默认缓冲区大小和预计算特性位）
+     *
+     * @param features 预计算的 Feature 位掩码
+     * @since 1.1.0
+     */
+    public JSONWriter(long features) {
+        this(DEFAULT_BUF_SIZE, features);
+    }
+
+    /**
+     * 构造函数（直接写入 StringBuilder，避免中间 char[] 转换）
+     *
+     * @param sb 外部 StringBuilder
+     */
+    public JSONWriter(StringBuilder sb) {
+        this(sb, 0L);
+    }
+
+    /**
+     * 构造函数（指定 StringBuilder 和预计算特性位）
+     *
+     * @param sb       外部 StringBuilder
+     * @param features 预计算的 Feature 位掩码
+     * @since 1.1.0
+     */
+    public JSONWriter(StringBuilder sb, long features) {
+        this.externalSb = sb;
+        this.buf = null;
+        this.pos = 0;
+        this.features = features;
+    }
+
+    /**
+     * 写入字符
+     */
+    public void write(char c) {
+        if (externalSb != null) {
+            externalSb.append(c);
+        } else {
+            ensureCapacity(1);
+            buf[pos++] = c;
+        }
+    }
+
+    /**
+     * 写入字符串
+     */
+    public void write(String str) {
+        if (externalSb != null) {
+            externalSb.append(str);
+        } else {
+            int len = str.length();
+            ensureCapacity(len);
+            str.getChars(0, len, buf, pos);
+            pos += len;
+        }
+    }
+
+    /**
+     * 写入字符数组
+     */
+    public void write(char[] chars, int off, int len) {
+        ensureCapacity(len);
+        System.arraycopy(chars, off, buf, pos, len);
+        pos += len;
+    }
+
+    /**
+     * 写入整数（使用 FastJSON2 快速算法）
+     */
+    public void writeInt(int value) {
+        if (externalSb != null) {
+            externalSb.append(value);
+        } else {
+            ensureCapacity(12);
+            pos += NumberUtils.writeInt(value, buf, pos);
+        }
+    }
+
+    /**
+     * 写入长整数（使用 FastJSON2 快速算法）
+     */
+    public void writeLong(long value) {
+        if (externalSb != null) {
+            externalSb.append(value);
+        } else {
+            ensureCapacity(22);
+            pos += NumberUtils.writeLong(value, buf, pos);
+        }
+    }
+
+    /**
+     * 写入浮点数（快速路径：整数部分直接写入，避免 Float.toString() 分配）
+     */
+    public void writeFloat(float value) {
+        if (externalSb != null) {
+            externalSb.append(value);
+            return;
+        }
+
+        if (Float.isNaN(value) || Float.isInfinite(value)) {
+            write("null");
+            return;
+        }
+
+        if (value == 0.0f && Float.floatToRawIntBits(value) < 0) {
+            write("-0.0");
+            return;
+        }
+
+        if (value > Integer.MIN_VALUE && value < Integer.MAX_VALUE) {
+            int intValue = (int) value;
+            if ((float) intValue == value) {
+                ensureCapacity(16);
+                pos += NumberUtils.writeInt(intValue, buf, pos);
+                buf[pos++] = '.';
+                buf[pos++] = '0';
+                return;
+            }
+        }
+
+        write(Float.toString(value));
+    }
+
+    /**
+     * 写入双精度浮点数（快速路径：避免 Double.toString() 的 String 分配）
+     *
+     * <p>优化策略：</p>
+     * <ul>
+     *   <li>精确整数：直接写入整数 + ".0"</li>
+     *   <li>2位小数（价格/金额）：significand / 100 直接写入，避免 Double.toString()</li>
+     *   <li>1位小数：significand / 10 直接写入</li>
+     *   <li>其他：回退到 Double.toString()</li>
+     * </ul>
+     */
+    public void writeDouble(double value) {
+        if (externalSb != null) {
+            externalSb.append(value);
+            return;
+        }
+
+        if (Double.isNaN(value) || Double.isInfinite(value)) {
+            write("null");
+            return;
+        }
+
+        if (value == 0.0 && Double.doubleToRawLongBits(value) < 0) {
+            write("-0.0");
+            return;
+        }
+
+        if (value > Long.MIN_VALUE && value < Long.MAX_VALUE) {
+            long longValue = (long) value;
+            if ((double) longValue == value) {
+                ensureCapacity(24);
+                pos += NumberUtils.writeLong(longValue, buf, pos);
+                buf[pos++] = '.';
+                buf[pos++] = '0';
+                return;
+            }
+        }
+
+        if (value > -1e15 && value < 1e15) {
+            double scaled2 = value * 100.0;
+            long longValue2 = (long) scaled2;
+            if ((double) longValue2 == scaled2) {
+                ensureCapacity(24);
+                if (longValue2 < 0) { buf[pos++] = '-'; longValue2 = -longValue2; }
+                long intPart = longValue2 / 100;
+                long decPart = longValue2 % 100;
+                pos += NumberUtils.writeLong(intPart, buf, pos);
+                buf[pos++] = '.';
+                if (decPart < 10) buf[pos++] = '0';
+                pos += NumberUtils.writeLong(decPart, buf, pos);
+                return;
+            }
+
+            double scaled1 = value * 10.0;
+            long longValue1 = (long) scaled1;
+            if ((double) longValue1 == scaled1) {
+                ensureCapacity(24);
+                if (longValue1 < 0) { buf[pos++] = '-'; longValue1 = -longValue1; }
+                long intPart = longValue1 / 10;
+                long decPart = longValue1 % 10;
+                pos += NumberUtils.writeLong(intPart, buf, pos);
+                buf[pos++] = '.';
+                pos += NumberUtils.writeLong(decPart, buf, pos);
+                return;
+            }
+        }
+
+        write(Double.toString(value));
+    }
+
+    /**
+     * 写入 BigDecimal（使用快速路径避免中间 String 分配）
+     *
+     * <p>优化策略：</p>
+     * <ul>
+     *   <li>整数 BigDecimal（scale=0 或可通过缩放转为 long）：直接写入 long 数值，避免 toPlainString()</li>
+     *   <li>小 scale（≤10）且 unscaled 值在 long 范围内：整数部分 + 小数部分分别写入</li>
+     *   <li>其他情况：回退 toPlainString()</li>
+     * </ul>
+     *
+     * <p>使用 {@link BigDecimal#toPlainString()} 而非 {@link BigDecimal#toString()}，
+     * 避免科学计数法输出（如 1E+2），保证 JSON 数字格式合法。</p>
+     *
+     * <p>当 {@link Feature#WriteBigDecimalAsString} 启用时，
+     * BigDecimal 将作为 JSON 字符串（带引号）写入，避免 JavaScript 精度丢失。</p>
+     *
+     * @param value BigDecimal 值
+     * @since 1.0.0
+     */
+    public void writeBigDecimal(BigDecimal value) {
+        if (value == null) {
+            write("null");
+            return;
+        }
+
+        // 快速路径 1：整数 BigDecimal（无小数部分）
+        int scale = value.scale();
+        if (scale == 0) {
+            // 无小数部分，直接使用 unscaledValue
+            java.math.BigInteger unscaled = value.unscaledValue();
+            if (unscaled.bitLength() <= 63) {
+                // 在 long 范围内，直接写入长整数，避免 toPlainString()
+                writeLong(unscaled.longValue());
+                return;
+            }
+            // 超大整数，使用 BigInteger 的快速路径
+            if (Feature.WriteBigDecimalAsString.isEnabled(this.features)) {
+                writeString(unscaled.toString());
+            } else {
+                write(unscaled.toString());
+            }
+            return;
+        }
+
+        // 快速路径 2：小 scale 且 unscaled 在 long 范围内
+        if (scale > 0 && scale <= 18) {
+            java.math.BigInteger unscaled = value.unscaledValue();
+            if (unscaled.bitLength() <= 63) {
+                long unscaledLong = unscaled.longValue();
+                if (unscaledLong != 0) {
+                    // 可表示为 long 的带小数值
+                    long divisor = POWERS_OF_TEN[scale];
+                    long intPart = unscaledLong / divisor;
+                    long fracPart = Math.abs(unscaledLong % divisor);
+
+                    // 仅当恰好整除（无精度损失）时使用快速路径
+                    // 注意：如果截断后仍为原值，走快速路径
+                    if (intPart * divisor + fracPart == Math.abs(unscaledLong) ||
+                        (unscaledLong < 0 && intPart * divisor - fracPart == unscaledLong)) {
+
+                        if (unscaledLong < 0) {
+                            buf[pos++] = '-';
+                            intPart = -intPart;
+                            // fracPart 保持正值
+                        }
+                        ensureCapacity(32);
+                        pos += NumberUtils.writeLong(intPart, buf, pos);
+                        buf[pos++] = '.';
+                        // 前导零（如 0.05 → intPart=0, fracPart=5, scale=2 → "0.05"）
+                        if (fracPart > 0) {
+                            // 补齐前导零：按 scale 位数输出
+                            int fracDigits = scale;
+                            // 移除尾部零？保留，因为用户指定了精度
+                            // 从最高位开始写入，不足的前面补零
+                            int charPos = pos + fracDigits - 1;
+                            long tmp = fracPart;
+                            while (tmp > 0) {
+                                buf[pos + (charPos - pos)] = (char) ('0' + tmp % 10);
+                                tmp /= 10;
+                                charPos--;
+                            }
+                            // 剩余前导零
+                            while (charPos >= pos) {
+                                buf[pos + (charPos - pos)] = '0';
+                                charPos--;
+                            }
+                            pos += fracDigits;
+                        } else {
+                            buf[pos++] = '0';
+                        }
+                        return;
+                    }
+                }
+            }
+        }
+
+        // 慢速路径：回退 toPlainString()
+        String str = value.toPlainString();
+        if (Feature.WriteBigDecimalAsString.isEnabled(this.features)) {
+            writeString(str);
+        } else {
+            write(str);
+        }
+    }
+
+    /** 10 的幂次表（10^0 ~ 10^18） */
+    private static final long[] POWERS_OF_TEN = new long[19];
+    static {
+        long p = 1L;
+        for (int i = 0; i <= 18; i++) {
+            POWERS_OF_TEN[i] = p;
+            p *= 10;
+        }
+    }
+
+    /**
+     * 写入字符串（带引号，快速路径）
+     *
+     * <p>优化策略：先扫描检查是否需要转义，无需转义时使用 str.getChars() 批量拷贝，
+     * 比逐字符写入更高效（System.arraycopy 底层优化）</p>
+     */
+    public void writeString(String str) {
+        if (externalSb != null) {
+            externalSb.append('"');\n            int len = str.length();\n            boolean needsEscape = false;\n            for (int i = 0; i < len; i++) {\n                char c = str.charAt(i);\n                if (c < ' ' || c == '"' || c == '\\'
+                        || c == '\u2028' || c == '\u2029'
+                        || (c >= '\uD800' && c <= '\uDFFF')) {
+                    needsEscape = true;
+                    break;
+                }
+            }
+            if (!needsEscape) {
+                externalSb.append(str);
+            } else {
+                writeStringWithEscapeSb(str);
+            }
+            externalSb.append('"');\n            return;\n        }\n\n        writeStringDirect(str);\n    }\n\n    /**\n     * 直接写入字符串到缓冲区（无 externalSb 检查，用于 JSONWriter 直接模式和 ASM 序列化器）\n     *\n     * <p>优化策略：</p>\n     * <ul>\n     *   <li>ASCII 快速路径：纯 ASCII 且无特殊字符时，使用 str.getChars() 批量拷贝</li>\n     *   <li>SIMD 风格字级检查：一次检查 8 个字符是否为 ASCII + 无特殊字符，减少逐字符判断</li>\n     *   <li>无需转义时直接批量写入，比逐字符写入快 3-5 倍</li>\n     * </ul>\n     */\n    public void writeStringDirect(String str) {\n        int len = str.length();\n        ensureCapacity(len + 2);\n\n        buf[pos++] = '"';
+
+        // ASCII 快速路径：使用 SIMD 风格字级检查，一次检查 8 个字符
+        if (isAsciiSafe(str, len)) {
+            // 纯 ASCII 且无特殊字符，直接批量拷贝（System.arraycopy 底层优化）
+            str.getChars(0, len, buf, pos);
+            pos += len;
+            buf[pos++] = '"';\n            return;\n        }\n\n        // 慢速路径：需要检查每个字符是否需要转义\n        writeStringWithEscape(str);\n    }\n\n    /**\n     * 检查字符串是否为纯 ASCII 且无需 JSON 转义（SIMD 风格字级检查）\n     *\n     * <p>一次检查 8 个字符：只要所有字符 >= ' ' 且 <= 127 且不是 '"' 和 '\\'，
+     * 即为安全字符串，可以批量拷贝。这种字级检查模式与 SIMD 向量化思想一致，
+     * 在 JIT 编译后可以利用 CPU 的指令级并行性。</p>
+     *
+     * @param str 字符串
+     * @param len 字符串长度
+     * @return true 表示纯 ASCII 安全字符串，可直接批量写入
+     */
+    private static boolean isAsciiSafe(String str, int len) {
+        // SIMD 风格：一次检查 8 个字符
+        int i = 0;
+        while (i + 7 < len) {
+            char c0 = str.charAt(i);
+            char c1 = str.charAt(i + 1);
+            char c2 = str.charAt(i + 2);
+            char c3 = str.charAt(i + 3);
+            char c4 = str.charAt(i + 4);
+            char c5 = str.charAt(i + 5);
+            char c6 = str.charAt(i + 6);
+            char c7 = str.charAt(i + 7);
+            // 合并检查：非 ASCII（> 127）或控制字符（< ' '）或特殊字符（" \）\n            // 使用位运算合并：只要任一字符不安全就返回 false\n            if ((c0 > 127 || c0 < ' ' || c0 == '"' || c0 == '\\') ||
+                (c1 > 127 || c1 < ' ' || c1 == '"' || c1 == '\\') ||\n                (c2 > 127 || c2 < ' ' || c2 == '"' || c2 == '\\') ||
+                (c3 > 127 || c3 < ' ' || c3 == '"' || c3 == '\\') ||\n                (c4 > 127 || c4 < ' ' || c4 == '"' || c4 == '\\') ||
+                (c5 > 127 || c5 < ' ' || c5 == '"' || c5 == '\\') ||\n                (c6 > 127 || c6 < ' ' || c6 == '"' || c6 == '\\') ||
+                (c7 > 127 || c7 < ' ' || c7 == '"' || c7 == '\\')) {\n                return false;\n            }\n            i += 8;\n        }\n\n        // 处理剩余字符\n        for (; i < len; i++) {\n            char c = str.charAt(i);\n            if (c > 127 || c < ' ' || c == '"' || c == '\\') {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * 直接写入字符串到缓冲区（无容量检查，用于外层已预分配容量的场景）
+     *
+     * <p>跳过 ensureCapacity 检查，减少方法调用开销。
+     * 调用者必须确保缓冲区有足够容量（至少 len + 2 个字符）</p>
+     *
+     * <p>优化：使用 SIMD 风格字级检查，纯 ASCII 安全字符串直接批量拷贝</p>
+     */
+    public void writeStringDirectNoCheck(String str) {
+        int len = str.length();
+
+        buf[pos++] = '"';\n\n        // ASCII 快速路径：使用 SIMD 风格字级检查\n        if (isAsciiSafe(str, len)) {\n            str.getChars(0, len, buf, pos);\n            pos += len;\n            buf[pos++] = '"';
+            return;
+        }
+
+        // 慢速路径：需要转义
+        writeStringWithEscape(str);
+    }
+
+    /**
+     * 写入需要转义的字符串（StringBuilder 模式）
+     */
+    private void writeStringWithEscapeSb(String str) {
+        int len = str.length();
+        for (int i = 0; i < len; i++) {
+            char c = str.charAt(i);
+            switch (c) {
+                case '"': externalSb.append("\\\""); break;\n                case '\\': externalSb.append("\\\\"); break;\n                case '\n': externalSb.append("\\n"); break;\n                case '\r': externalSb.append("\\r"); break;\n                case '\t': externalSb.append("\\t"); break;\n                default:\n                    if (c < ' ') {\n                        externalSb.append("\\u");\n                        externalSb.append(String.format("%04x", (int) c));\n                    } else if (c == '\u2028' || c == '\u2029') {\n                        // 行/段落分隔符：裸置于 <script> 中会导致 JS 语法错误，安全转义\n                        externalSb.append("\\u");\n                        externalSb.append(String.format("%04x", (int) c));\n                    } else if (Character.isHighSurrogate(c)) {\n                        if (i + 1 < len && Character.isLowSurrogate(str.charAt(i + 1))) {\n                            externalSb.append(c);\n                            externalSb.append(str.charAt(i + 1));\n                            i++;\n                        } else {\n                            // 孤立高位代理：替换为 U+FFFD，避免产出非法 JSON\n                            externalSb.append('\uFFFD');\n                        }\n                    } else if (Character.isLowSurrogate(c)) {\n                        // 孤立低位代理：替换为 U+FFFD\n                        externalSb.append('\uFFFD');\n                    } else {\n                        externalSb.append(c);\n                    }\n            }\n        }\n    }\n\n    /**\n     * 写入字符串（带转义）\n     */\n    private void writeStringWithEscape(String str) {\n        int len = str.length();\n        ensureCapacity(len * 6 + 2); // 最坏情况\n\n        for (int i = 0; i < len; i++) {\n            char c = str.charAt(i);\n            switch (c) {\n                case '"':
+                    buf[pos++] = '\\';
+                    buf[pos++] = '"';\n                    break;\n                case '\\':\n                    buf[pos++] = '\\';\n                    buf[pos++] = '\\';\n                    break;\n                case '\n':\n                    buf[pos++] = '\\';\n                    buf[pos++] = 'n';\n                    break;\n                case '\r':\n                    buf[pos++] = '\\';\n                    buf[pos++] = 'r';\n                    break;\n                case '\t':\n                    buf[pos++] = '\\';\n                    buf[pos++] = 't';\n                    break;\n                case '\b':\n                    buf[pos++] = '\\';\n                    buf[pos++] = 'b';\n                    break;\n                case '\f':\n                    buf[pos++] = '\\';\n                    buf[pos++] = 'f';\n                    break;\n                default:\n                    if (c < ' ') {\n                        writeHex4(c);\n                    } else if (c == '\u2028' || c == '\u2029') {\n                        // 行/段落分隔符：裸置于 <script> 中会导致 JS 语法错误，安全转义\n                        writeHex4(c);\n                    } else if (Character.isHighSurrogate(c)) {\n                        if (i + 1 < len && Character.isLowSurrogate(str.charAt(i + 1))) {\n                            buf[pos++] = c;\n                            buf[pos++] = str.charAt(i + 1);\n                            i++;\n                        } else {\n                            // 孤立高位代理：替换为 U+FFFD，避免产出非法 JSON\n                            buf[pos++] = '\uFFFD';\n                        }\n                    } else if (Character.isLowSurrogate(c)) {\n                        // 孤立低位代理：替换为 U+FFFD\n                        buf[pos++] = '\uFFFD';\n                    } else {\n                        buf[pos++] = c;\n                    }\n                    break;\n            }\n        }\n\n        buf[pos++] = '"';
+    }
+
+    /** 十六进制字符表（小写，符合 JSON 规范常见风格）*/
+    private static final char[] HEX = {
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
+    };
+
+    /** 写入字符的 4 位十六进制 {@code \\uXXXX} 转义（调用方需保证 code 为合法 16 位无符号码元）*/
+    private void writeHex4(int code) {
+        buf[pos++] = '\\';
+        buf[pos++] = 'u';
+        buf[pos++] = HEX[(code >> 12) & 0xf];
+        buf[pos++] = HEX[(code >> 8) & 0xf];
+        buf[pos++] = HEX[(code >> 4) & 0xf];
+        buf[pos++] = HEX[code & 0xf];
+    }
+
+    /**
+     * 确保容量（几何增长策略：2x 扩容，避免固定增量导致的多次扩容）
+     *
+     * <p>优化策略：</p>
+     * <ul>
+     *   <li>几何增长：新容量 = max(当前容量 * 2, 所需容量)，摊还 O(1) 扩容成本</li>
+     *   <li>上限保护：超过 MAX_BUF_SIZE 时停止扩容</li>
+     * </ul>
+     */
+    void ensureCapacity(int minCapacity) {
+        if (pos + minCapacity > buf.length) {
+            // 几何增长：2x 扩容，同时保证满足最小需求
+            int newCapacity = Math.max(buf.length * 2, pos + minCapacity);
+            if (newCapacity > MAX_BUF_SIZE) {
+                newCapacity = MAX_BUF_SIZE;
+            }
+            char[] newBuf = new char[newCapacity];
+            System.arraycopy(buf, 0, newBuf, 0, pos);
+            buf = newBuf;
+        }
+    }
+
+    /**
+     * 预分配缓冲区（避免序列化过程中多次扩容）
+     *
+     * <p>优化策略：</p>
+     * <ul>
+     *   <li>几何增长：新容量 = max(当前容量 * 2, 所需容量)</li>
+     *   <li>上限保护：超过 MAX_BUF_SIZE 时停止扩容</li>
+     * </ul>
+     *
+     * @param minCapacity 最小需要的容量
+     */
+    public void preAllocate(int minCapacity) {
+        if (buf != null && pos + minCapacity > buf.length) {
+            int newCapacity = Math.max(buf.length * 2, pos + minCapacity);
+            if (newCapacity > MAX_BUF_SIZE) {
+                newCapacity = MAX_BUF_SIZE;
+            }
+            char[] newBuf = new char[newCapacity];
+            System.arraycopy(buf, 0, newBuf, 0, pos);
+            buf = newBuf;
+        }
+    }
+
+    /**
+     * 基于已知类型预分配缓冲区容量（减少序列化过程中的动态扩容次数）
+     *
+     * <p>根据对象类型估算 JSON 输出大小，一次性分配足够容量：</p>
+     * <ul>
+     *   <li>Bean：字段数 * 64 + 32</li>
+     *   <li>Collection：元素数 * 64 + 16</li>
+     *   <li>Map：条目数 * 64 + 16</li>
+     * </ul>
+     *
+     * @param obj 待序列化对象
+     */
+    public void preAllocateForObject(Object obj) {
+        if (obj == null || buf == null) return;
+
+        int estimated = 0;
+        if (obj instanceof Collection) {
+            estimated = ((Collection<?>) obj).size() * 64 + 16;
+        } else if (obj instanceof Map) {
+            estimated = ((Map<?, ?>) obj).size() * 64 + 16;
+        } else if (obj.getClass().isArray()) {
+            estimated = Array.getLength(obj) * 64 + 16;
+        } else {
+            // Bean 类型：粗略估算
+            estimated = 256;
+        }
+
+        if (pos + estimated > buf.length) {
+            preAllocate(estimated);
+        }
+    }
+
+    /**
+     * 转换为字符串（使用 JDK 9+ 优化的 String 构造）
+     */
+    @Override
+    public String toString() {
+        if (externalSb != null) {
+            return externalSb.toString();
+        }
+        if (pos == 0) {
+            return "";
+        }
+        return new String(buf, 0, pos);
+    }
+
+    /**
+     * 直接将内部 char[] 缓冲区编码为 UTF-8 字节数组。
+     *
+     * <p>避免 {@code new String(buf).getBytes(UTF_8)} 的双重分配：
+     * 先创建 String 再创建 byte[]。本方法对于纯 ASCII 内容直接 1:1 拷贝，
+     * 跳过 String 中间层。</p>
+     *
+     * @return UTF-8 编码的字节数组
+     * @since 1.0.0
+     */
+    public byte[] toUtf8Bytes() {
+        if (externalSb != null) {
+            return externalSb.toString().getBytes(StandardCharsets.UTF_8);
+        }
+        if (pos == 0) {
+            return new byte[0];
+        }
+        // 快速路径：检查是否纯 ASCII
+        boolean allAscii = true;
+        for (int i = 0; i < pos; i++) {
+            if (buf[i] > 127) {
+                allAscii = false;
+                break;
+            }
+        }
+        if (allAscii) {
+            // 纯 ASCII：char → byte 直接拷贝，1:1 映射
+            byte[] bytes = new byte[pos];
+            for (int i = 0; i < pos; i++) {
+                bytes[i] = (byte) buf[i];
+            }
+            return bytes;
+        }
+        // 非 ASCII：回退到标准 UTF-8 编码
+        return new String(buf, 0, pos).getBytes(StandardCharsets.UTF_8);
+    }
+
+    /**
+     * 将当前缓冲区内容直接写入 OutputStream（免中间 byte[] 分配）。
+     *
+     * <p>对于纯 ASCII 内容，直接 1:1 char→byte 写入流；非 ASCII 内容回退
+     * 到 {@link #toUtf8Bytes()} 一次性写入。</p>
+     *
+     * @param out 目标输出流
+     * @throws java.io.IOException IO 异常
+     */
+    public void writeTo(java.io.OutputStream out) throws java.io.IOException {
+        if (externalSb != null) {
+            out.write(externalSb.toString().getBytes(StandardCharsets.UTF_8));
+            return;
+        }
+        if (pos == 0) {
+            return;
+        }
+        // 快速路径：检查是否纯 ASCII
+        boolean allAscii = true;
+        for (int i = 0; i < pos; i++) {
+            if (buf[i] > 127) {
+                allAscii = false;
+                break;
+            }
+        }
+        if (allAscii) {
+            for (int i = 0; i < pos; i++) {
+                out.write((byte) buf[i]);
+            }
+        } else {
+            out.write(new String(buf, 0, pos).getBytes(StandardCharsets.UTF_8));
+        }
+    }
+
+    /**
+     * 直接获取内部 char[] 缓冲区和长度（避免 String 拷贝）
+     *
+     * <p>调用者必须在使用完毕后调用 reset()，否则数据会被覆盖</p>
+     */
+    public char[] getBuffer() {
+        return buf;
+    }
+
+    public int getLength() {
+        return pos;
+    }
+
+    /**
+     * 重置写入位置（带缩容保护：避免线程池中长期持有过大缓冲区）
+     *
+     * <p>当缓冲区容量超过 MAX_RESET_CAPACITY 时，缩容到默认大小，
+     * 防止偶尔序列化大对象后，缓冲区一直占用大量内存</p>
+     */
+    public void reset() {
+        pos = 0;
+        // 缩容保护：缓冲区过大时回收到默认大小，避免内存浪费
+        if (buf != null && buf.length > MAX_RESET_CAPACITY) {
+            buf = new char[DEFAULT_BUF_SIZE];
+        }
+    }
+
+    /**
+     * 获取当前容量
+     */
+    public int capacity() {
+        return buf.length;
+    }
+
+    /**
+     * 获取已写入字符数
+     */
+    public int size() {
+        return pos;
+    }
+
+    /**
+     * 获取当前写入位置（供 ASM 序列化器直接操作缓冲区）
+     *
+     * <p>ASM 生成的序列化器通过 getBuffer() + getPosition() 获取直接缓冲区访问，
+     * 消除 write() 方法调用的 externalSb 检查和 ensureCapacity 检查开销</p>
+     */
+    public int getPosition() {
+        return pos;
+    }
+
+    /**
+     * 设置当前写入位置（供 ASM 序列化器直接操作缓冲区）
+     *
+     * <p>在直接缓冲区写入完成后，通过 setPosition() 同步写入位置到 JSONWriter</p>
+     *
+     * @param position 新的写入位置
+     */
+    public void setPosition(int position) {
+        pos = position;
+    }
+
+    /**
+     * 检查字符串是否需要 JSON 转义（SIMD 风格字级检查优化）
+     *
+     * <p>用于 ASM 序列化器的字符串快速路径判断：
+     * 无需转义时直接内联写入缓冲区，避免 sync/re-read 开销</p>
+     *
+     * <p>优化：一次检查 8 个字符，利用 CPU 指令级并行性加速</p>
+     *
+     * @param str 待检查的字符串
+     * @return true 表示需要转义，false 表示无需转义
+     */
+    public static boolean needsEscape(String str) {
+        int len = str.length();
+        int i = 0;
+        // SIMD 风格：一次检查 8 个字符
+        while (i + 7 < len) {
+            char c0 = str.charAt(i);
+            char c1 = str.charAt(i + 1);
+            char c2 = str.charAt(i + 2);
+            char c3 = str.charAt(i + 3);
+            char c4 = str.charAt(i + 4);
+            char c5 = str.charAt(i + 5);
+            char c6 = str.charAt(i + 6);
+            char c7 = str.charAt(i + 7);
+            if (needsCharEscape(c0) || needsCharEscape(c1) || needsCharEscape(c2) || needsCharEscape(c3)
+                || needsCharEscape(c4) || needsCharEscape(c5) || needsCharEscape(c6) || needsCharEscape(c7)) {
+                return true;
+            }
+            i += 8;
+        }
+        // 处理剩余字符
+        for (; i < len; i++) {
+            if (needsCharEscape(str.charAt(i))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 判断单个字符是否需要 JSON 转义（与 {@code writeString*} 系列转义规则保持一致）。
+     *
+     * <p>除控制字符、引号、反斜杠外，还需转义 U+2028/U+2029（裸置于
+     * {@code <script>} 中会导致 JS 语法错误）以及代理码元（D800-DFFF，需经
+     * {@code writeStringWithEscape} 校验是否为合法代理对）。</p>
+     *
+     * @param c 待判断字符
+     * @return true 表示该字符需要转义
+     */
+    private static boolean needsCharEscape(char c) {
+        return c < ' ' || c == '"' || c == '\\'\n            || c == '\u2028' || c == '\u2029'\n            || (c >= '\uD800' && c <= '\uDFFF');\n    }\n\n    /**\n     * 写入双精度浮点数到缓冲区（合并 setPosition + writeDouble + getPosition）\n     *\n     * <p>消除 ASM 序列化器中 setPosition 和 getPosition 的额外方法调用开销</p>\n     *\n     * @param value 双精度浮点数值\n     * @param pos 当前写入位置\n     * @return 写入后的新位置\n     */\n    public int writeDoubleToBuf(double value, int pos) {\n        this.pos = pos;\n        writeDouble(value);\n        return this.pos;\n    }\n\n    /**\n     * 写入单精度浮点数到缓冲区（合并 setPosition + writeFloat + getPosition）\n     *\n     * <p>消除 ASM 序列化器中 setPosition 和 getPosition 的额外方法调用开销</p>\n     *\n     * @param value 单精度浮点数值\n     * @param pos 当前写入位置\n     * @return 写入后的新位置\n     */\n    public int writeFloatToBuf(float value, int pos) {\n        this.pos = pos;\n        writeFloat(value);\n        return this.pos;\n    }\n\n    /**\n     * 写入带引号字符串到缓冲区（合并 setPosition + writeString + getPosition）\n     *\n     * <p>消除 ASM 序列化器中 setPosition 和 getPosition 的额外方法调用开销</p>\n     *\n     * @param str 字符串值\n     * @param pos 当前写入位置\n     * @return 写入后的新位置\n     */\n    public int writeStringToBuf(String str, int pos) {\n        this.pos = pos;\n        writeStringDirect(str);\n        return this.pos;\n    }\n\n    /**\n     * 写入集合到缓冲区（合并 setPosition + writeCollection + getPosition）\n     *\n     * @param collection 集合对象\n     * @param pos 当前写入位置\n     * @return 写入后的新位置\n     */\n    public int writeCollectionToBuf(Collection<?> collection, int pos) {\n        this.pos = pos;\n        writeCollection(collection);\n        return this.pos;\n    }\n\n    /**\n     * 写入 Map 到缓冲区（合并 setPosition + writeMap + getPosition）\n     *\n     * @param map Map 对象\n     * @param pos 当前写入位置\n     * @return 写入后的新位置\n     */\n    public int writeMapToBuf(Map<?, ?> map, int pos) {\n        this.pos = pos;\n        writeMap(map);\n        return this.pos;\n    }\n\n    /**\n     * 直接写入集合\n     *\n     * <p>对 List 类型使用索引循环避免 Iterator 对象创建开销。</p>\n     */\n    public void writeCollection(Collection<?> collection) {\n        if (collection == null) {\n            write("null");\n            return;\n        }\n\n        int size = collection.size();\n        if (size > 0) {\n            preAllocate(size * 64);\n        }\n\n        buf[pos++] = '[';\n\n        // 优化：对支持随机访问的 List 使用索引循环，避免 Iterator 对象创建开销\n        // LinkedList 等非 RandomAccess 走 Iterator 路径，避免 O(N²) 退化\n        if (collection instanceof List && (collection instanceof java.util.RandomAccess || size < 100)) {\n            List<?> list = (List<?>) collection;\n            for (int i = 0; i < size; i++) {\n                if (i > 0) {\n                    buf[pos++] = ',';\n                }\n                writeValueInline(list.get(i));\n            }\n        } else {\n            boolean first = true;\n            for (Object item : collection) {\n                if (!first) {\n                    buf[pos++] = ',';\n                }\n                first = false;\n                writeValueInline(item);\n            }\n        }\n        buf[pos++] = ']';\n    }\n\n    /**\n     * 直接写入 Map（优化版本）\n     */\n    public void writeMap(Map<?, ?> map) {\n        if (map == null) {\n            write("null");\n            return;\n        }\n\n        int size = map.size();\n        if (size > 0) {\n            preAllocate(size * 64);\n        }\n\n        buf[pos++] = '{';\n        boolean first = true;\n        for (Map.Entry<?, ?> entry : map.entrySet()) {\n            if (!first) {\n                buf[pos++] = ',';\n            }\n            first = false;\n\n            Object key = entry.getKey();\n            Object value = entry.getValue();\n\n            if (key instanceof String) {\n                writeStringDirectNoCheck((String) key);\n            } else {\n                writeStringDirectNoCheck(String.valueOf(key));\n            }\n            buf[pos++] = ':';\n            writeValueInline(value);\n        }\n        buf[pos++] = '}';\n    }\n\n    /**\n     * 内联写入对象值（不调用 YdszJson.toJson）\n     */\n    private void writeObjectInline(Object obj) {\n        if (obj == null) {\n            write("null");\n            return;\n        }\n\n        if (obj instanceof Collection) {\n            writeCollection((Collection<?>) obj);\n        } else if (obj instanceof Map) {\n            writeMap((Map<?, ?>) obj);\n        } else {\n            write(YdszJson.toJson(obj));\n        }\n    }\n\n    /**\n     * 内联写入值（不调用 YdszJson.toJson）\n     */\n    void writeValueInline(Object value) {\n        if (value == null) {\n            buf[pos] = 'n'; buf[pos + 1] = 'u'; buf[pos + 2] = 'l'; buf[pos + 3] = 'l';\n            pos += 4;\n        } else if (value instanceof String) {\n            writeStringDirectNoCheck((String) value);\n        } else if (value instanceof Character) {\n            // char 序列化为 JSON 字符串（"A" 而非裸字符 A）\n            ensureCapacity(4);\n            buf[pos++] = '"';
+            buf[pos++] = (Character) value;
+            buf[pos++] = '"';\n        } else if (value instanceof BigDecimal) {\n            writeBigDecimal((BigDecimal) value);\n        } else if (value instanceof BigInteger) {\n            writeBigIntegerInline((BigInteger) value);\n        } else if (value instanceof Number) {\n            writeNumberInline((Number) value);\n        } else if (value instanceof Boolean) {\n            if ((Boolean) value) {\n                buf[pos] = 't'; buf[pos + 1] = 'r'; buf[pos + 2] = 'u'; buf[pos + 3] = 'e';\n                pos += 4;\n            } else {\n                buf[pos] = 'f'; buf[pos + 1] = 'a'; buf[pos + 2] = 'l'; buf[pos + 3] = 's'; buf[pos + 4] = 'e';\n                pos += 5;\n            }\n        } else if (value instanceof Collection) {\n            writeCollection((Collection<?>) value);\n        } else if (value instanceof Map) {\n            writeMap((Map<?, ?>) value);\n        } else if (value instanceof Enum) {\n            writeStringDirectNoCheck(((Enum<?>) value).name());\n        } else {\n            writeObjectInline(value);\n        }\n    }\n\n    /**\n     * 快速写入 BigInteger（避免 toString() 分配）。\n     *\n     * <p>优化：对于能放入 long 范围内的 BigInteger，直接使用 writeLong 写入。</p>\n     */\n    private void writeBigIntegerInline(BigInteger value) {\n        if (value.bitLength() <= 63) {\n            writeLong(value.longValue());\n        } else {\n            // 超大整数回退 toString()\n            write(value.toString());\n        }\n    }\n\n    /**\n     * 快速写入 Number（针对非标准 Number 类型的优化分发）。\n     *\n     * <p>优化：对于 AtomicLong/AtomicInteger/LongAdder/DoubleAdder 等原子类型，\n     * 直接拆箱原始类型写入，避免 toString() 分配。</p>\n     */\n    private void writeNumberInline(Number value) {\n        if (value instanceof Long || value instanceof Integer || value instanceof Short || value instanceof Byte) {\n            writeLong(value.longValue());\n        } else if (value instanceof Double || value instanceof Float) {\n            double d = value.doubleValue();\n            if (Double.isNaN(d) || Double.isInfinite(d)) {\n                write("null");\n            } else {\n                writeDouble(d);\n            }\n        } else if (value instanceof java.util.concurrent.atomic.LongAdder) {\n            writeLong(((java.util.concurrent.atomic.LongAdder) value).sum());\n        } else if (value instanceof java.util.concurrent.atomic.DoubleAdder) {\n            double d = ((java.util.concurrent.atomic.DoubleAdder) value).sum();\n            if (Double.isNaN(d) || Double.isInfinite(d)) {\n                write("null");\n            } else {\n                writeDouble(d);\n            }\n        } else {\n            // 其他未知 Number 子类回退 toString()\n            write(value.toString());\n        }\n    }\n}\n

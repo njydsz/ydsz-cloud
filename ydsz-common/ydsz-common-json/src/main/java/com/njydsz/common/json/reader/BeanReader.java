@@ -1,1 +1,770 @@
-package com.njydsz.common.json.reader;\n\nimport java.lang.reflect.Constructor;\nimport java.lang.reflect.Field;\nimport java.lang.reflect.Method;\nimport java.lang.reflect.Modifier;\nimport java.time.LocalDate;\nimport java.time.LocalDateTime;\nimport java.time.format.DateTimeFormatter;\nimport java.util.ArrayList;\nimport java.util.Collection;\nimport java.util.Date;\nimport java.util.HashMap;\nimport java.util.List;\nimport java.util.Map;\nimport java.util.concurrent.ConcurrentHashMap;\n\nimport com.njydsz.common.json.annotation.JsonAlias;\nimport com.njydsz.common.json.annotation.JsonCreator;\nimport com.njydsz.common.json.annotation.JsonIgnore;\nimport com.njydsz.common.json.annotation.JsonIgnoreProperties;\nimport com.njydsz.common.json.annotation.JsonProperty;\nimport com.njydsz.common.json.provider.JacksonAnnotationBridge;\nimport com.njydsz.common.json.exception.JsonDeserializationException;\nimport com.njydsz.common.json.provider.FieldMetadataLoader;\nimport com.njydsz.common.json.util.BoundedLruCache;\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\n\n/**\n * Bean 反序列化读取器（FastJSON2 BeanDeserializer 移植版）\n *\n * <p>预计算字段读取路径，直接 char[] 解析，消除 Map 中转，完整支持嵌套对象和集合</p>\n *\n * <p><b>性能优化：</b></p>\n * <ul>\n *   <li>字段哈希缓存，O(1) 快速字段匹配</li>\n *   <li>数值直接解析，避免 Double.parseDouble</li>\n *   <li>构造函数缓存，避免重复反射</li>\n *   <li>消除不必要的 skipWhitespace 调用</li>\n *   <li>嵌套对象递归解析，支持任意深度</li>\n *   <li>集合/Map 完整支持，自动类型推断</li>\n * </ul>\n *\n * @author ydsz-team\n * @since 1.0.0\n */\n@SuppressWarnings("deprecation")\npublic final class BeanReader<T> {\n\n    private static final Logger LOGGER = LoggerFactory.getLogger(BeanReader.class);\n\n    /** Bean 类型 */\n    public final Class<T> beanType;\n\n    /** 字段读取器数组*/\n    public final FieldReader[] fieldReaders;\n\n    /** 字段名哈希缓存*/\n    public final int[] fieldNameHashes;\n\n    /** 默认构造函数（@JsonCreator 模式下为 null）*/\n    public Constructor<T> defaultConstructor;\n\n    /** @JsonAnySetter 方法（null 表示无）*/\n    public final Method anySetterMethod;\n\n    /** @JsonCreator 标注的构造函数（null 表示使用默认构造函数） */\n    private final Constructor<?> creatorConstructor;\n\n    /** @JsonCreator 构造函数参数名映射（对应 JSON 字段名，null 表示未解析） */\n    private final String[] creatorParameterNames;\n\n    /**\n     * 构造函数\n     */\n    public BeanReader(Class<T> beanType) {\n        this.beanType = beanType;\n\n        // 检测 @JsonAnySetter 方法\n        this.anySetterMethod = FieldMetadataLoader.findAnySetterMethod(beanType);\n\n        // 解析构造函数：优先默认无参构造；否则查找 @JsonCreator 标注的构造\n        Constructor<?> creator = null;\n        String[] paramNames = null;\n        try {\n            this.defaultConstructor = beanType.getDeclaredConstructor();\n            this.defaultConstructor.setAccessible(true);\n        } catch (NoSuchMethodException e) {\n            // 无默认构造：尝试 @JsonCreator\n            Constructor<?>[] ctors = beanType.getDeclaredConstructors();\n            for (Constructor<?> ctor : ctors) {\n                if (ctor.getAnnotation(JsonCreator.class) != null) {\n                    creator = ctor;\n                    creator.setAccessible(true);\n                    // 解析参数名：优先 @JsonCreator(parameterNames=...)，否则参数上的 @JsonProperty\n                    JsonCreator ann = ctor.getAnnotation(JsonCreator.class);\n                    if (ann.parameterNames().length == ctor.getParameterCount()) {\n                        paramNames = ann.parameterNames();\n                    } else {\n                        java.lang.reflect.Parameter[] params = ctor.getParameters();\n                        paramNames = new String[params.length];\n                        for (int i = 0; i < params.length; i++) {\n                            JsonProperty jp = params[i].getAnnotation(JsonProperty.class);\n                            paramNames[i] = (jp != null && !jp.value().isEmpty()) ? jp.value() : params[i].getName();\n                        }\n                    }\n                    break;\n                }\n            }\n            if (creator == null) {\n                // 既无默认构造也无 @JsonCreator：抛出明确异常\n                throw new RuntimeException("No default constructor or @JsonCreator for " + beanType.getName(), e);\n            }\n        } catch (RuntimeException re) {\n            throw re;\n        } catch (Exception e) {\n            throw new RuntimeException("No default constructor for " + beanType.getName(), e);\n        }\n        this.creatorConstructor = creator;\n        this.creatorParameterNames = paramNames;\n\n        // 预计算字段读取器：遍历自身及所有父类字段（修复继承字段静默丢失，P0-②）\n        List<Field> fields = FieldMetadataLoader.collectDeclaredAndInheritedFields(beanType);\n        int count = 0;\n        for (Field field : fields) {\n            int mods = field.getModifiers();\n            if (!Modifier.isStatic(mods) && !Modifier.isTransient(mods) && !isIgnoredField(field)) {\n                count++;\n            }\n        }\n\n        this.fieldReaders = new FieldReader[count];\n        this.fieldNameHashes = new int[count];\n        int idx = 0;\n        for (Field field : fields) {\n            int mods = field.getModifiers();\n            if (Modifier.isStatic(mods) || Modifier.isTransient(mods) || isIgnoredField(field)) {\n                continue;\n            }\n            try {\n                field.setAccessible(true);\n                FieldReader fr = new FieldReader(field);\n                this.fieldReaders[idx] = fr;\n                this.fieldNameHashes[idx] = fr.jsonNameHash;\n                idx++;\n            } catch (Exception e) {\n                // 反射操作失败：记录告警而非静默丢弃，避免字段悄悄丢失（P1-⑦）\n                LOGGER.warn("BeanReader 跳过字段 {}.{}: {}", beanType.getName(), field.getName(), e.toString());\n            }\n        }\n    }\n\n    /**\n     * 从 JSONReader 反序列化出当前 Bean 类型的实例（反序列化主路径）。\n     *\n     * <p>定位到 {@code '{'} 后通过默认构造函数创建空对象，再逐字段按 hash 匹配\n     * {@link FieldReader} 并写入字段值。支持：\n     * <ul>\n     *   <li>{@code @JsonAlias} 别名字段匹配（按 aliasHashes 二次比对，避免 hash 碰撞误命中）；</li>\n     *   <li>{@code @JsonAnySetter}：未匹配字段经 {@link #parseValue} 解析后通过 anySetter 方法写入；</li>\n     *   <li>无 anySetter 时，未匹配字段调用 {@code reader.skipValue()} 跳过，保持容错。</li>\n     * </ul>\n     * </p>\n     *\n     * @param reader 已初始化的 JSONReader，调用结束后其读取位置推进到对象末尾\n     * @return 反序列化得到的 Bean 实例，非 null\n     * @throws RuntimeException 当 JSON 意外终止、目标类缺少默认构造函数或字段赋值失败\n     */\n    public T readObject(JSONReader reader) {\n        return readObject(reader, 0);\n    }\n\n    private T readObject(JSONReader reader, int depth) {\n        if (depth > JSONReader.DEFAULT_MAX_DEPTH) {\n            throw new JsonDeserializationException(\n                "JSON nesting depth exceeds limit: " + depth, reader.pos);\n        }\n\n        T obj;\n        // @JsonCreator 路径：先解析全部字段到临时 Map，读完再调用构造函数\n        if (creatorConstructor != null) {\n            Map<String, Object> pending = new HashMap<>();\n            Object parsed = readObjectFields(reader, depth, pending);\n            if (parsed != null) {\n                // 已通过默认构造 + 字段赋值完成（参数名未解析成功时降级）\n                return (T) parsed;\n            }\n            try {\n                Object[] args = new Object[creatorParameterNames.length];\n                for (int i = 0; i < creatorParameterNames.length; i++) {\n                    args[i] = pending.get(creatorParameterNames[i]);\n                }\n                return (T) creatorConstructor.newInstance(args);\n            } catch (Exception e) {\n                throw new RuntimeException("Failed to create via @JsonCreator for " + beanType.getName(), e);\n            }\n        }\n        try {\n            obj = defaultConstructor.newInstance();\n        } catch (Exception e) {\n            throw new RuntimeException("Failed to create " + beanType.getName(), e);\n        }\n\n        readObjectFieldsInto(reader, depth, obj, null);\n        return obj;\n    }\n\n    /**\n     * 通用字段扫描循环：将 JSON 字段写入目标对象，或（creator 模式）收集到 pending Map。\n     *\n     * @return creator 模式下：若参数名解析失败并降级为默认构造赋值则返回实例，否则 null\n     */\n    @SuppressWarnings("unchecked")\n    private T readObjectFields(JSONReader reader, int depth, Map<String, Object> pending) {\n        // 尝试用默认构造 + 字段赋值（若类实际存在默认构造则走此路径）\n        try {\n            T inst = (T) beanType.getDeclaredConstructor().newInstance();\n            readObjectFieldsInto(reader, depth, inst, pending);\n            return inst;\n        } catch (NoSuchMethodException | IllegalAccessException | InstantiationException e) {\n            // 无默认构造：仅收集字段到 pending，不创建实例\n            readObjectFieldsInto(reader, depth, null, pending);\n            return null;\n        } catch (Exception e) {\n            // 其他异常（如无默认构造）→ 仅收集\n            readObjectFieldsInto(reader, depth, null, pending);\n            return null;\n        }\n    }\n\n    /**\n     * 逐字段读取 JSON 对象内容。\n     *\n     * @param target  字段写入目标（null 时仅解析值放入 pending）\n     * @param pending 收集的字段值（JSON 字段名 → 解析值），可为 null\n     */\n    private void readObjectFieldsInto(JSONReader reader, int depth, T target, Map<String, Object> pending) {\n        reader.skipTo('{');\n        if (reader.pos >= reader.len) {\n            throw new RuntimeException("Unexpected end of JSON");\n        }\n        reader.pos++;\n\n        char[] buf = reader.buf;\n        int len = reader.len;\n\n        while (reader.pos < len) {\n            char ch = buf[reader.pos];\n            while (ch <= ' ') {\n                reader.pos++;\n                if (reader.pos >= len) return;\n                ch = buf[reader.pos];\n            }\n\n            if (ch == '}') {\n                reader.pos++;\n                return;\n            }\n\n            if (ch == ',') {\n                reader.pos++;\n                continue;\n            }\n\n            if (ch != '"') {\n                reader.pos++;\n                continue;\n            }\n\n            String fieldName = reader.readString();\n            if (fieldName == null) return;\n\n            reader.skipTo(':');\n            if (reader.pos < len) reader.pos++;\n\n            int hash = fieldName.hashCode();\n            boolean matched = false;\n            for (int i = 0; i < fieldReaders.length; i++) {\n                FieldReader fr = fieldReaders[i];\n                // 主匹配：jsonName（@JsonProperty 值或字段名）\n                if (fieldNameHashes[i] == hash && fr.jsonName.equals(fieldName)) {\n                    if (target != null) {\n                        fr.readValue(reader, target, depth);\n                    } else {\n                        pending.put(fr.fieldName, fr.readRawValue(reader));\n                    }\n                    matched = true;\n                    break;\n                }\n                // 回退匹配：原始 Java 字段名（当 @JsonProperty 设置但 JSON 仍用字段名时）\n                if (!matched && fr.fieldName.equals(fieldName)) {\n                    if (target != null) {\n                        fr.readValue(reader, target, depth);\n                    } else {\n                        pending.put(fr.fieldName, fr.readRawValue(reader));\n                    }\n                    matched = true;\n                    break;\n                }\n                // @JsonAlias 别名字段匹配（F-3 恢复）：按 aliasHashes 二次比对，避免 hash 碰撞误命中\n                if (!matched && fr.aliasHashes.length > 0) {\n                    for (int a = 0; a < fr.aliasHashes.length; a++) {\n                        if (fr.aliasHashes[a] == hash && fr.aliasNames[a].equals(fieldName)) {\n                            if (target != null) {\n                                fr.readValue(reader, target, depth);\n                            } else {\n                                pending.put(fr.fieldName, fr.readRawValue(reader));\n                            }\n                            matched = true;\n                            break;\n                        }\n                    }\n                }\n            }\n\n            if (!matched) {\n                if (anySetterMethod != null) {\n                    // @JsonAnySetter：将未匹配的属性通过方法写入\n                    String rawValue = reader.readRawValue().trim();\n                    try {\n                        Object parsedValue = parseValue(rawValue);\n                        if (target != null) {\n                            anySetterMethod.invoke(target, fieldName, parsedValue);\n                        } else {\n                            pending.put(fieldName, parsedValue);\n                        }\n                    } catch (Exception e) {\n                        // 调用失败时跳过该字段\n                    }\n                } else {\n                    reader.skipValue();\n                }\n            }\n        }\n    }\n\n    /**\n     * 将原始 JSON 值字符串解析为 Java 对象。\n     *\n     * <p>用于 @JsonAnySetter 路径，将未匹配字段的值解析为简单类型。</p>\n     *\n     * @param rawValue 原始 JSON 值字符串（如 {@code "hello"}, {@code 123}, {@code true}, {@code null}, {@code {...}}）\n     * @return 解析后的 Java 对象\n     */\n    private static Object parseValue(String rawValue) {\n        if (rawValue == null || rawValue.isEmpty() || "null".equals(rawValue)) {\n            return null;\n        }\n        char first = rawValue.charAt(0);\n        if (first == '"') {\n            // 去除首尾引号\n            return rawValue.substring(1, rawValue.length() - 1);\n        }\n        if (first == '{' || first == '[') {\n            // 复杂对象/数组，返回原始字符串\n            return rawValue;\n        }\n        if ("true".equals(rawValue) || "false".equals(rawValue)) {\n            return Boolean.parseBoolean(rawValue);\n        }\n        // 尝试数值解析\n        try {\n            if (rawValue.contains(".") || rawValue.contains("e") || rawValue.contains("E")) {\n                return Double.parseDouble(rawValue);\n            }\n            return Long.parseLong(rawValue);\n        } catch (NumberFormatException e) {\n            return rawValue;\n        }\n    }\n\n    /**\n     * 字段读取器（消除 MethodHandle，改用直接字段访问）\n     *\n     * <p>支持 @JsonProperty 重命名、@JsonAlias 别名匹配，以及 short/byte/char/\n     * Date/LocalDateTime/LocalDate/枚举/嵌套 Bean/Collection/Map 的完整反序列化。</p>\n     */\n    public static final class FieldReader {\n\n        /** Java 字段名（原始） */\n        public final String fieldName;\n        /** JSON 匹配名（@JsonProperty 值或字段名） */\n        public final String jsonName;\n        /** JSON 匹配名哈希 */\n        public final int jsonNameHash;\n        /** @JsonAlias 备用名称（不含主名称；空数组表示无别名） */\n        public final String[] aliasNames;\n        /** @JsonAlias 备用名称哈希（与 aliasNames 一一对应） */\n        public final int[] aliasHashes;\n        public final Class<?> fieldType;\n        public final Field field;\n        public final int typeCode;\n\n        /** @JsonFormat(pattern=...) 指定的日期格式（null 表示使用默认格式列表） */\n        public final String datePattern;\n\n        public FieldReader(Field field) {\n            this.field = field;\n            this.fieldName = field.getName();\n            this.fieldType = field.getType();\n            this.field.setAccessible(true);\n            this.typeCode = getTypeCode(fieldType);\n\n            // 加载 @JsonFormat：日期格式模式（序列化/反序列化共用）\n            com.njydsz.common.json.annotation.JsonFormat jsonFormat =\n                    field.getAnnotation(com.njydsz.common.json.annotation.JsonFormat.class);\n            this.datePattern = (jsonFormat != null && !jsonFormat.pattern().isEmpty())\n                    ? jsonFormat.pattern() : null;\n\n            // 加载 @JsonProperty：如果标注了且 value 非空，用 value 作为 JSON 匹配名；\n            // P1-8：未标注时回退 Jackson @JsonProperty.value（兼容桥，原生优先）\n            JsonProperty jsonProperty = field.getAnnotation(JsonProperty.class);\n            if (jsonProperty != null && !jsonProperty.value().isEmpty()) {\n                this.jsonName = jsonProperty.value();\n            } else {\n                String bridgeName = JacksonAnnotationBridge.propertyName(field);\n                this.jsonName = (bridgeName != null) ? bridgeName : this.fieldName;\n            }\n            this.jsonNameHash = this.jsonName.hashCode();\n\n            // F-3 恢复：加载 @JsonAlias 备用名称（仅反序列化匹配，序列化仍输出主名称）；\n            // P1-8：未标注时回退 Jackson @JsonAlias.value\n            com.njydsz.common.json.annotation.JsonAlias jsonAlias =\n                    field.getAnnotation(com.njydsz.common.json.annotation.JsonAlias.class);\n            String[] aliasValues = null;\n            if (jsonAlias != null && jsonAlias.value().length > 0) {\n                aliasValues = jsonAlias.value();\n            } else {\n                String[] bridgeAliases = JacksonAnnotationBridge.aliases(field);\n                if (bridgeAliases.length > 0) {\n                    aliasValues = bridgeAliases;\n                }\n            }\n            if (aliasValues != null) {\n                List<String> aliases = new ArrayList<>(aliasValues.length);\n                for (String alias : aliasValues) {\n                    if (alias != null && !alias.isEmpty() && !alias.equals(this.jsonName)) {\n                        aliases.add(alias);\n                    }\n                }\n                this.aliasNames = aliases.toArray(new String[0]);\n                this.aliasHashes = new int[this.aliasNames.length];\n                for (int i = 0; i < this.aliasNames.length; i++) {\n                    this.aliasHashes[i] = this.aliasNames[i].hashCode();\n                }\n            } else {\n                this.aliasNames = new String[0];\n                this.aliasHashes = new int[0];\n            }\n\n        }\n\n        /**\n         * 将 reader 当前位置的值按字段类型写入目标对象。\n         *\n         * <p>依据 {@code typeCode} 分发：基础类型直接读取并赋值；复杂类型（嵌套对象、\n         * List/Collection、Map、Date 等）递归委托或按类型转换。null 值统一处理。</p>\n         *\n         * @param reader 已定位到值起始的 JSONReader\n         * @param obj    目标 Bean 实例，字段值写入其中\n         */\n        @SuppressWarnings("deprecation")\n        public void readValue(JSONReader reader, Object obj) {\n            readValue(reader, obj, 0);\n        }\n\n        @SuppressWarnings("deprecation")\n        public void readValue(JSONReader reader, Object obj, int depth) {\n            try {\n                switch (typeCode) {\n                    case 1: // String\n                        if (reader.isNull()) {\n                            reader.readNull();\n                            field.set(obj, null);\n                        } else {\n                            field.set(obj, reader.readString());\n                        }\n                        break;\n                    case 2: // int / Integer\n                        if (reader.isNull()) {\n                            reader.readNull();\n                            if (fieldType == Integer.class) field.set(obj, null);\n                        } else {\n                            int val = reader.readInt();\n                            if (fieldType == int.class) {\n                                field.setInt(obj, val);\n                            } else {\n                                field.set(obj, Integer.valueOf(val));\n                            }\n                        }\n                        break;\n                    case 3: // long / Long\n                        if (reader.isNull()) {\n                            reader.readNull();\n                            if (fieldType == Long.class) field.set(obj, null);\n                        } else {\n                            long val = reader.readLong();\n                            if (fieldType == long.class) {\n                                field.setLong(obj, val);\n                            } else {\n                                field.set(obj, Long.valueOf(val));\n                            }\n                        }\n                        break;\n                    case 4: // double / Double\n                        if (reader.isNull()) {\n                            reader.readNull();\n                            if (fieldType == Double.class) field.set(obj, null);\n                        } else {\n                            double val = reader.readDouble();\n                            if (fieldType == double.class) {\n                                field.setDouble(obj, val);\n                            } else {\n                                field.set(obj, Double.valueOf(val));\n                            }\n                        }\n                        break;\n                    case 5: // float / Float\n                        if (reader.isNull()) {\n                            reader.readNull();\n                            if (fieldType == Float.class) field.set(obj, null);\n                        } else {\n                            float val = reader.readFloat();\n                            if (fieldType == float.class) {\n                                field.setFloat(obj, val);\n                            } else {\n                                field.set(obj, Float.valueOf(val));\n                            }\n                        }\n                        break;\n                    case 6: // boolean / Boolean\n                        if (reader.isNull()) {\n                            reader.readNull();\n                            if (fieldType == Boolean.class) field.set(obj, null);\n                        } else {\n                            boolean val = reader.readBoolean();\n                            if (fieldType == boolean.class) {\n                                field.setBoolean(obj, val);\n                            } else {\n                                field.set(obj, Boolean.valueOf(val));\n                            }\n                        }\n                        break;\n                    case 7: // short\n                        if (reader.isNull()) {\n                            reader.readNull();\n                            if (fieldType == Short.class) field.set(obj, null);\n                        } else {\n                            short val = (short) reader.readInt();\n                            if (fieldType == short.class) {\n                                field.setShort(obj, val);\n                            } else {\n                                field.set(obj, Short.valueOf(val));\n                            }\n                        }\n                        break;\n                    case 8: // byte\n                        if (reader.isNull()) {\n                            reader.readNull();\n                            if (fieldType == Byte.class) field.set(obj, null);\n                        } else {\n                            byte val = (byte) reader.readInt();\n                            if (fieldType == byte.class) {\n                                field.setByte(obj, val);\n                            } else {\n                                field.set(obj, Byte.valueOf(val));\n                            }\n                        }\n                        break;\n                    case 9: // char\n                        if (reader.isNull()) {\n                            reader.readNull();\n                            if (fieldType == Character.class) field.set(obj, null);\n                        } else {\n                            String s = reader.readString();\n                            if (s != null && s.length() > 0) {\n                                char val = s.charAt(0);\n                                if (fieldType == char.class) {\n                                    field.setChar(obj, val);\n                                } else {\n                                    field.set(obj, Character.valueOf(val));\n                                }\n                            }\n                        }\n                        break;\n                    default:\n                        // 复杂类型（嵌套对象、集合、Date 等）\n                        if (reader.isNull()) {\n                            reader.readNull();\n                            field.set(obj, null);\n                        } else if (fieldType == List.class || fieldType == ArrayList.class || Collection.class.isAssignableFrom(fieldType)) {\n                            List<Object> listValue = reader.readArray(Object.class);\n                            field.set(obj, listValue);\n                        } else if (fieldType == Map.class || fieldType == HashMap.class || Map.class.isAssignableFrom(fieldType)) {\n                            field.set(obj, reader.readObjectMap());\n                        } else if (fieldType == LocalDateTime.class) {\n                            String s = reader.readString();\n                            field.set(obj, parseLocalDateTime(s, datePattern));\n                        } else if (fieldType == LocalDate.class) {\n                            String s = reader.readString();\n                            field.set(obj, parseLocalDate(s, datePattern));\n                        } else if (fieldType == Date.class) {\n                            String s = reader.readString();\n                            field.set(obj, parseDate(s, datePattern));\n                        } else if (fieldType.isEnum()) {\n                            String s = reader.readString();\n                            field.set(obj, parseEnum(fieldType, s));\n                        } else {\n                            BeanReader<?> nestedReader = getOrCreateForType(fieldType);\n                            field.set(obj, nestedReader.readObject(reader, depth + 1));\n                        }\n                        break;\n                }\n            } catch (IllegalAccessException e) {\n                throw new RuntimeException("Failed to set field: " + fieldName, e);\n            }\n        }\n\n        private static int getTypeCode(Class<?> type) {\n            if (type == String.class) return 1;\n            if (type == int.class || type == Integer.class) return 2;\n            if (type == long.class || type == Long.class) return 3;\n            if (type == double.class || type == Double.class) return 4;\n            if (type == float.class || type == Float.class) return 5;\n            if (type == boolean.class || type == Boolean.class) return 6;\n            if (type == short.class || type == Short.class) return 7;\n            if (type == byte.class || type == Byte.class) return 8;\n            if (type == char.class || type == Character.class) return 9;\n            return 10;\n        }\n\n        /**\n         * 读取当前值并转换为适合 @JsonCreator 参数的类型。\n         *\n         * <p>不写入目标对象，仅按字段类型解析并返回原始值（字符串/数字/布尔），\n         * 供 {@link #readObjectFieldsInto} 的 creator 模式收集参数使用。</p>\n         *\n         * @param reader 已定位到值起始的 JSONReader\n         * @return 解析后的值\n         */\n        public Object readRawValue(JSONReader reader) {\n            try {\n                switch (typeCode) {\n                    case 1: // String\n                        return reader.isNull() ? null : reader.readString();\n                    case 2: // int\n                        return reader.isNull() ? null : reader.readInt();\n                    case 3: // long\n                        return reader.isNull() ? null : reader.readLong();\n                    case 4: // double\n                        return reader.isNull() ? null : reader.readDouble();\n                    case 5: // float\n                        return reader.isNull() ? null : reader.readFloat();\n                    case 6: // boolean\n                        return reader.isNull() ? null : reader.readBoolean();\n                    case 7: // short\n                        return reader.isNull() ? null : (short) reader.readInt();\n                    case 8: // byte\n                        return reader.isNull() ? null : (byte) reader.readInt();\n                    case 9: // char\n                        return reader.isNull() ? null : reader.readString();\n                    default:\n                        // 复杂类型：读取原始字符串，由 CreatorResolver/TypeConverter 转换\n                        return reader.isNull() ? null : reader.readRawValue().trim();\n                }\n            } catch (Exception e) {\n                return null;\n            }\n        }\n    }\n\n    /** BeanReader 缓存（有界 LRU，容量 1024，防止动态类加载场景下无界增长） */\n    private static final BoundedLruCache<Class<?>, BeanReader<?>> CACHE = new BoundedLruCache<>(1024);\n\n\n    /**\n     * 获取或创建指定 Bean 类型的读取器（全局缓存）。\n     *\n     * <p>{@link ConcurrentHashMap#computeIfAbsent} 保证每个 Class 仅被构造一次，\n     * 多线程下不会出现重复创建。BeanReader 的构建涉及反射扫描字段、缓存构造函数与\n     * 探测 {@code @JsonAnySetter}，开销较大，因此复用缓存对反序列化性能至关重要。</p>\n     *\n     * @param beanType 目标 Bean 类型，不可为 null（否则抛出 NPE）\n     * @param <T>      Bean 类型\n     * @return 对应类型的 BeanReader，非 null\n     */\n    public static <T> BeanReader<T> getOrCreate(Class<T> beanType) {\n        // computeIfAbsent ensures thread-safe single creation per Class\n        // Type safety: cache is keyed by Class, value created with same Class\n        return (BeanReader<T>) CACHE.computeIfAbsent(beanType, t -> new BeanReader<>(t));\n    }\n\n    /**\n     * 获取或创建指定 Bean 类型的读取器（非泛型入口）。\n     *\n     * <p>与 {@link #getOrCreate(Class)} 等价，但返回原始 {@code BeanReader<?>}，\n     * 适用于调用方仅持有运行时 {@link Class}（无具体泛型参数）的场景，例如\n     * {@link FieldReader#readValue} 解析嵌套对象时按字段类型递归获取读取器。\n     * 同样基于进程级 {@link ConcurrentHashMap} 缓存，保证每类型仅构建一次。</p>\n     *\n     * @param beanType 目标 Bean 类型，不可为 null（否则抛出 NPE）\n     * @return 对应类型的 BeanReader，非 null\n     */\n    public static BeanReader<?> getOrCreateForType(Class<?> beanType) {\n        return CACHE.computeIfAbsent(beanType, t -> new BeanReader<>(t));\n    }\n\n    /**\n     * 清空全局 BeanReader 缓存。\n     */\n    public static void clearCache() {\n        CACHE.clear();\n    }\n\n    // ==================== 日期/枚举解析辅助方法 ====================\n\n    /**\n     * 判断字段是否应在反序列化时被忽略。\n     *\n     * <p>规则（与序列化侧 {@code FieldMetadataLoader.loadFields} 对齐）：</p>\n     * <ol>\n     *   <li>字段级 {@code @JsonIgnore} → 忽略</li>\n     *   <li>类级 {@code @JsonIgnoreProperties} 中列出的字段名 → 忽略</li>\n     *   <li>P1-8：Jackson {@code @JsonIgnore} / {@code @JsonIgnoreProperties} 兜底\n     *       （兼容桥，原生注解优先）</li>\n     * </ol>\n     *\n     * @param field 目标字段\n     * @return true 表示忽略\n     */\n    private static boolean isIgnoredField(Field field) {\n        if (field.getAnnotation(JsonIgnore.class) != null) {\n            return true;\n        }\n        // P1-8：Jackson @JsonIgnore 兜底\n        if (JacksonAnnotationBridge.isIgnored(field)) {\n            return true;\n        }\n        // 类级 @JsonIgnoreProperties：忽略列表中包含字段名（含别名匹配）\n        JsonIgnoreProperties ignoreProps = field.getDeclaringClass().getAnnotation(JsonIgnoreProperties.class);\n        String[] ignoreNames = (ignoreProps != null && ignoreProps.value().length > 0)\n                ? ignoreProps.value() : JacksonAnnotationBridge.ignoreProperties(field.getDeclaringClass());\n        if (ignoreNames.length > 0) {\n            for (String name : ignoreNames) {\n                if (name.equals(field.getName())) {\n                    return true;\n                }\n            }\n        }\n        return false;\n    }\n\n    private static final DateTimeFormatter[] DATE_TIME_FORMATS = {\n        DateTimeFormatter.ISO_LOCAL_DATE_TIME,\n        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),\n        DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"),\n        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"),\n    };\n\n    private static final DateTimeFormatter[] DATE_FORMATS = {\n        DateTimeFormatter.ISO_LOCAL_DATE,\n        DateTimeFormatter.ofPattern("yyyy-MM-dd"),\n    };\n\n    @SuppressWarnings("deprecation")\n    private static LocalDateTime parseLocalDateTime(String s) {\n        return parseLocalDateTime(s, null);\n    }\n\n    @SuppressWarnings("deprecation")\n    private static LocalDateTime parseLocalDateTime(String s, String pattern) {\n        if (s == null || s.isEmpty()) return null;\n        // @JsonFormat 指定格式优先\n        if (pattern != null) {\n            try {\n                return LocalDateTime.parse(s, DateTimeFormatter.ofPattern(pattern));\n            } catch (Exception ignored) {\n            }\n        }\n        for (DateTimeFormatter fmt : DATE_TIME_FORMATS) {\n            try {\n                return LocalDateTime.parse(s, fmt);\n            } catch (Exception ignored) {\n            }\n        }\n        return null;\n    }\n\n    @SuppressWarnings("deprecation")\n    private static LocalDate parseLocalDate(String s) {\n        return parseLocalDate(s, null);\n    }\n\n    @SuppressWarnings("deprecation")\n    private static LocalDate parseLocalDate(String s, String pattern) {\n        if (s == null || s.isEmpty()) return null;\n        if (pattern != null) {\n            try {\n                return LocalDate.parse(s, DateTimeFormatter.ofPattern(pattern));\n            } catch (Exception ignored) {\n            }\n        }\n        for (DateTimeFormatter fmt : DATE_FORMATS) {\n            try {\n                return LocalDate.parse(s, fmt);\n            } catch (Exception ignored) {\n            }\n        }\n        return null;\n    }\n\n    @SuppressWarnings("deprecation")\n    private static Date parseDate(String s) {\n        return parseDate(s, null);\n    }\n\n    @SuppressWarnings("deprecation")\n    private static Date parseDate(String s, String pattern) {\n        if (s == null || s.isEmpty()) return null;\n        try {\n            return new Date(Long.parseLong(s));\n        } catch (NumberFormatException ignored) {\n        }\n        if (pattern != null) {\n            try {\n                return new java.text.SimpleDateFormat(pattern).parse(s);\n            } catch (Exception ignored) {\n            }\n        }\n        try {\n            return new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(s);\n        } catch (Exception ignored) {\n        }\n        try {\n            return new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(s);\n        } catch (Exception ignored) {\n        }\n        try {\n            return new java.text.SimpleDateFormat("yyyy-MM-dd").parse(s);\n        } catch (Exception ignored) {\n        }\n        return null;\n    }\n\n    @SuppressWarnings({"unchecked", "rawtypes"})\n    private static Object parseEnum(Class<?> enumType, String s) {\n        if (s == null || s.isEmpty()) return null;\n        try {\n            return Enum.valueOf((Class<Enum>) enumType, s);\n        } catch (IllegalArgumentException ignored) {\n            return null;\n        }\n    }\n}\n
+package com.njydsz.common.json.reader;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import com.njydsz.common.json.annotation.JsonAlias;
+import com.njydsz.common.json.annotation.JsonCreator;
+import com.njydsz.common.json.annotation.JsonIgnore;
+import com.njydsz.common.json.annotation.JsonIgnoreProperties;
+import com.njydsz.common.json.annotation.JsonProperty;
+import com.njydsz.common.json.provider.JacksonAnnotationBridge;
+import com.njydsz.common.json.exception.JsonDeserializationException;
+import com.njydsz.common.json.provider.FieldMetadataLoader;
+import com.njydsz.common.json.util.BoundedLruCache;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Bean 反序列化读取器（FastJSON2 BeanDeserializer 移植版）
+ *
+ * <p>预计算字段读取路径，直接 char[] 解析，消除 Map 中转，完整支持嵌套对象和集合</p>
+ *
+ * <p><b>性能优化：</b></p>
+ * <ul>
+ *   <li>字段哈希缓存，O(1) 快速字段匹配</li>
+ *   <li>数值直接解析，避免 Double.parseDouble</li>
+ *   <li>构造函数缓存，避免重复反射</li>
+ *   <li>消除不必要的 skipWhitespace 调用</li>
+ *   <li>嵌套对象递归解析，支持任意深度</li>
+ *   <li>集合/Map 完整支持，自动类型推断</li>
+ * </ul>
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+@SuppressWarnings("deprecation")
+public final class BeanReader<T> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(BeanReader.class);
+
+    /** Bean 类型 */
+    public final Class<T> beanType;
+
+    /** 字段读取器数组*/
+    public final FieldReader[] fieldReaders;
+
+    /** 字段名哈希缓存*/
+    public final int[] fieldNameHashes;
+
+    /** 默认构造函数（@JsonCreator 模式下为 null）*/
+    public Constructor<T> defaultConstructor;
+
+    /** @JsonAnySetter 方法（null 表示无）*/
+    public final Method anySetterMethod;
+
+    /** @JsonCreator 标注的构造函数（null 表示使用默认构造函数） */
+    private final Constructor<?> creatorConstructor;
+
+    /** @JsonCreator 构造函数参数名映射（对应 JSON 字段名，null 表示未解析） */
+    private final String[] creatorParameterNames;
+
+    /**
+     * 构造函数
+     */
+    public BeanReader(Class<T> beanType) {
+        this.beanType = beanType;
+
+        // 检测 @JsonAnySetter 方法
+        this.anySetterMethod = FieldMetadataLoader.findAnySetterMethod(beanType);
+
+        // 解析构造函数：优先默认无参构造；否则查找 @JsonCreator 标注的构造
+        Constructor<?> creator = null;
+        String[] paramNames = null;
+        try {
+            this.defaultConstructor = beanType.getDeclaredConstructor();
+            this.defaultConstructor.setAccessible(true);
+        } catch (NoSuchMethodException e) {
+            // 无默认构造：尝试 @JsonCreator
+            Constructor<?>[] ctors = beanType.getDeclaredConstructors();
+            for (Constructor<?> ctor : ctors) {
+                if (ctor.getAnnotation(JsonCreator.class) != null) {
+                    creator = ctor;
+                    creator.setAccessible(true);
+                    // 解析参数名：优先 @JsonCreator(parameterNames=...)，否则参数上的 @JsonProperty
+                    JsonCreator ann = ctor.getAnnotation(JsonCreator.class);
+                    if (ann.parameterNames().length == ctor.getParameterCount()) {
+                        paramNames = ann.parameterNames();
+                    } else {
+                        java.lang.reflect.Parameter[] params = ctor.getParameters();
+                        paramNames = new String[params.length];
+                        for (int i = 0; i < params.length; i++) {
+                            JsonProperty jp = params[i].getAnnotation(JsonProperty.class);
+                            paramNames[i] = (jp != null && !jp.value().isEmpty()) ? jp.value() : params[i].getName();
+                        }
+                    }
+                    break;
+                }
+            }
+            if (creator == null) {
+                // 既无默认构造也无 @JsonCreator：抛出明确异常
+                throw new RuntimeException("No default constructor or @JsonCreator for " + beanType.getName(), e);
+            }
+        } catch (RuntimeException re) {
+            throw re;
+        } catch (Exception e) {
+            throw new RuntimeException("No default constructor for " + beanType.getName(), e);
+        }
+        this.creatorConstructor = creator;
+        this.creatorParameterNames = paramNames;
+
+        // 预计算字段读取器：遍历自身及所有父类字段（修复继承字段静默丢失，P0-②）
+        List<Field> fields = FieldMetadataLoader.collectDeclaredAndInheritedFields(beanType);
+        int count = 0;
+        for (Field field : fields) {
+            int mods = field.getModifiers();
+            if (!Modifier.isStatic(mods) && !Modifier.isTransient(mods) && !isIgnoredField(field)) {
+                count++;
+            }
+        }
+
+        this.fieldReaders = new FieldReader[count];
+        this.fieldNameHashes = new int[count];
+        int idx = 0;
+        for (Field field : fields) {
+            int mods = field.getModifiers();
+            if (Modifier.isStatic(mods) || Modifier.isTransient(mods) || isIgnoredField(field)) {
+                continue;
+            }
+            try {
+                field.setAccessible(true);
+                FieldReader fr = new FieldReader(field);
+                this.fieldReaders[idx] = fr;
+                this.fieldNameHashes[idx] = fr.jsonNameHash;
+                idx++;
+            } catch (Exception e) {
+                // 反射操作失败：记录告警而非静默丢弃，避免字段悄悄丢失（P1-⑦）
+                LOGGER.warn("BeanReader 跳过字段 {}.{}: {}", beanType.getName(), field.getName(), e.toString());
+            }
+        }
+    }
+
+    /**
+     * 从 JSONReader 反序列化出当前 Bean 类型的实例（反序列化主路径）。
+     *
+     * <p>定位到 {@code '{'} 后通过默认构造函数创建空对象，再逐字段按 hash 匹配
+     * {@link FieldReader} 并写入字段值。支持：
+     * <ul>
+     *   <li>{@code @JsonAlias} 别名字段匹配（按 aliasHashes 二次比对，避免 hash 碰撞误命中）；</li>
+     *   <li>{@code @JsonAnySetter}：未匹配字段经 {@link #parseValue} 解析后通过 anySetter 方法写入；</li>
+     *   <li>无 anySetter 时，未匹配字段调用 {@code reader.skipValue()} 跳过，保持容错。</li>
+     * </ul>
+     * </p>
+     *
+     * @param reader 已初始化的 JSONReader，调用结束后其读取位置推进到对象末尾
+     * @return 反序列化得到的 Bean 实例，非 null
+     * @throws RuntimeException 当 JSON 意外终止、目标类缺少默认构造函数或字段赋值失败
+     */
+    public T readObject(JSONReader reader) {
+        return readObject(reader, 0);
+    }
+
+    private T readObject(JSONReader reader, int depth) {
+        if (depth > JSONReader.DEFAULT_MAX_DEPTH) {
+            throw new JsonDeserializationException(
+                "JSON nesting depth exceeds limit: " + depth, reader.pos);
+        }
+
+        T obj;
+        // @JsonCreator 路径：先解析全部字段到临时 Map，读完再调用构造函数
+        if (creatorConstructor != null) {
+            Map<String, Object> pending = new HashMap<>();
+            Object parsed = readObjectFields(reader, depth, pending);
+            if (parsed != null) {
+                // 已通过默认构造 + 字段赋值完成（参数名未解析成功时降级）
+                return (T) parsed;
+            }
+            try {
+                Object[] args = new Object[creatorParameterNames.length];
+                for (int i = 0; i < creatorParameterNames.length; i++) {
+                    args[i] = pending.get(creatorParameterNames[i]);
+                }
+                return (T) creatorConstructor.newInstance(args);
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to create via @JsonCreator for " + beanType.getName(), e);
+            }
+        }
+        try {
+            obj = defaultConstructor.newInstance();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create " + beanType.getName(), e);
+        }
+
+        readObjectFieldsInto(reader, depth, obj, null);
+        return obj;
+    }
+
+    /**
+     * 通用字段扫描循环：将 JSON 字段写入目标对象，或（creator 模式）收集到 pending Map。
+     *
+     * @return creator 模式下：若参数名解析失败并降级为默认构造赋值则返回实例，否则 null
+     */
+    @SuppressWarnings("unchecked")
+    private T readObjectFields(JSONReader reader, int depth, Map<String, Object> pending) {
+        // 尝试用默认构造 + 字段赋值（若类实际存在默认构造则走此路径）
+        try {
+            T inst = (T) beanType.getDeclaredConstructor().newInstance();
+            readObjectFieldsInto(reader, depth, inst, pending);
+            return inst;
+        } catch (NoSuchMethodException | IllegalAccessException | InstantiationException e) {
+            // 无默认构造：仅收集字段到 pending，不创建实例
+            readObjectFieldsInto(reader, depth, null, pending);
+            return null;
+        } catch (Exception e) {
+            // 其他异常（如无默认构造）→ 仅收集
+            readObjectFieldsInto(reader, depth, null, pending);
+            return null;
+        }
+    }
+
+    /**
+     * 逐字段读取 JSON 对象内容。
+     *
+     * @param target  字段写入目标（null 时仅解析值放入 pending）
+     * @param pending 收集的字段值（JSON 字段名 → 解析值），可为 null
+     */
+    private void readObjectFieldsInto(JSONReader reader, int depth, T target, Map<String, Object> pending) {
+        reader.skipTo('{');
+        if (reader.pos >= reader.len) {
+            throw new RuntimeException("Unexpected end of JSON");
+        }
+        reader.pos++;
+
+        char[] buf = reader.buf;
+        int len = reader.len;
+
+        while (reader.pos < len) {
+            char ch = buf[reader.pos];
+            while (ch <= ' ') {
+                reader.pos++;
+                if (reader.pos >= len) return;
+                ch = buf[reader.pos];
+            }
+
+            if (ch == '}') {
+                reader.pos++;
+                return;
+            }
+
+            if (ch == ',') {
+                reader.pos++;
+                continue;
+            }
+
+            if (ch != '"') {\n                reader.pos++;\n                continue;\n            }\n\n            String fieldName = reader.readString();\n            if (fieldName == null) return;\n\n            reader.skipTo(':');\n            if (reader.pos < len) reader.pos++;\n\n            int hash = fieldName.hashCode();\n            boolean matched = false;\n            for (int i = 0; i < fieldReaders.length; i++) {\n                FieldReader fr = fieldReaders[i];\n                // 主匹配：jsonName（@JsonProperty 值或字段名）\n                if (fieldNameHashes[i] == hash && fr.jsonName.equals(fieldName)) {\n                    if (target != null) {\n                        fr.readValue(reader, target, depth);\n                    } else {\n                        pending.put(fr.fieldName, fr.readRawValue(reader));\n                    }\n                    matched = true;\n                    break;\n                }\n                // 回退匹配：原始 Java 字段名（当 @JsonProperty 设置但 JSON 仍用字段名时）\n                if (!matched && fr.fieldName.equals(fieldName)) {\n                    if (target != null) {\n                        fr.readValue(reader, target, depth);\n                    } else {\n                        pending.put(fr.fieldName, fr.readRawValue(reader));\n                    }\n                    matched = true;\n                    break;\n                }\n                // @JsonAlias 别名字段匹配（F-3 恢复）：按 aliasHashes 二次比对，避免 hash 碰撞误命中\n                if (!matched && fr.aliasHashes.length > 0) {\n                    for (int a = 0; a < fr.aliasHashes.length; a++) {\n                        if (fr.aliasHashes[a] == hash && fr.aliasNames[a].equals(fieldName)) {\n                            if (target != null) {\n                                fr.readValue(reader, target, depth);\n                            } else {\n                                pending.put(fr.fieldName, fr.readRawValue(reader));\n                            }\n                            matched = true;\n                            break;\n                        }\n                    }\n                }\n            }\n\n            if (!matched) {\n                if (anySetterMethod != null) {\n                    // @JsonAnySetter：将未匹配的属性通过方法写入\n                    String rawValue = reader.readRawValue().trim();\n                    try {\n                        Object parsedValue = parseValue(rawValue);\n                        if (target != null) {\n                            anySetterMethod.invoke(target, fieldName, parsedValue);\n                        } else {\n                            pending.put(fieldName, parsedValue);\n                        }\n                    } catch (Exception e) {\n                        // 调用失败时跳过该字段\n                    }\n                } else {\n                    reader.skipValue();\n                }\n            }\n        }\n    }\n\n    /**\n     * 将原始 JSON 值字符串解析为 Java 对象。\n     *\n     * <p>用于 @JsonAnySetter 路径，将未匹配字段的值解析为简单类型。</p>\n     *\n     * @param rawValue 原始 JSON 值字符串（如 {@code "hello"}, {@code 123}, {@code true}, {@code null}, {@code {...}}）\n     * @return 解析后的 Java 对象\n     */\n    private static Object parseValue(String rawValue) {\n        if (rawValue == null || rawValue.isEmpty() || "null".equals(rawValue)) {\n            return null;\n        }\n        char first = rawValue.charAt(0);\n        if (first == '"') {
+            // 去除首尾引号
+            return rawValue.substring(1, rawValue.length() - 1);
+        }
+        if (first == '{' || first == '[') {
+            // 复杂对象/数组，返回原始字符串
+            return rawValue;
+        }
+        if ("true".equals(rawValue) || "false".equals(rawValue)) {
+            return Boolean.parseBoolean(rawValue);
+        }
+        // 尝试数值解析
+        try {
+            if (rawValue.contains(".") || rawValue.contains("e") || rawValue.contains("E")) {
+                return Double.parseDouble(rawValue);
+            }
+            return Long.parseLong(rawValue);
+        } catch (NumberFormatException e) {
+            return rawValue;
+        }
+    }
+
+    /**
+     * 字段读取器（消除 MethodHandle，改用直接字段访问）
+     *
+     * <p>支持 @JsonProperty 重命名、@JsonAlias 别名匹配，以及 short/byte/char/
+     * Date/LocalDateTime/LocalDate/枚举/嵌套 Bean/Collection/Map 的完整反序列化。</p>
+     */
+    public static final class FieldReader {
+
+        /** Java 字段名（原始） */
+        public final String fieldName;
+        /** JSON 匹配名（@JsonProperty 值或字段名） */
+        public final String jsonName;
+        /** JSON 匹配名哈希 */
+        public final int jsonNameHash;
+        /** @JsonAlias 备用名称（不含主名称；空数组表示无别名） */
+        public final String[] aliasNames;
+        /** @JsonAlias 备用名称哈希（与 aliasNames 一一对应） */
+        public final int[] aliasHashes;
+        public final Class<?> fieldType;
+        public final Field field;
+        public final int typeCode;
+
+        /** @JsonFormat(pattern=...) 指定的日期格式（null 表示使用默认格式列表） */
+        public final String datePattern;
+
+        public FieldReader(Field field) {
+            this.field = field;
+            this.fieldName = field.getName();
+            this.fieldType = field.getType();
+            this.field.setAccessible(true);
+            this.typeCode = getTypeCode(fieldType);
+
+            // 加载 @JsonFormat：日期格式模式（序列化/反序列化共用）
+            com.njydsz.common.json.annotation.JsonFormat jsonFormat =
+                    field.getAnnotation(com.njydsz.common.json.annotation.JsonFormat.class);
+            this.datePattern = (jsonFormat != null && !jsonFormat.pattern().isEmpty())
+                    ? jsonFormat.pattern() : null;
+
+            // 加载 @JsonProperty：如果标注了且 value 非空，用 value 作为 JSON 匹配名；
+            // P1-8：未标注时回退 Jackson @JsonProperty.value（兼容桥，原生优先）
+            JsonProperty jsonProperty = field.getAnnotation(JsonProperty.class);
+            if (jsonProperty != null && !jsonProperty.value().isEmpty()) {
+                this.jsonName = jsonProperty.value();
+            } else {
+                String bridgeName = JacksonAnnotationBridge.propertyName(field);
+                this.jsonName = (bridgeName != null) ? bridgeName : this.fieldName;
+            }
+            this.jsonNameHash = this.jsonName.hashCode();
+
+            // F-3 恢复：加载 @JsonAlias 备用名称（仅反序列化匹配，序列化仍输出主名称）；
+            // P1-8：未标注时回退 Jackson @JsonAlias.value
+            com.njydsz.common.json.annotation.JsonAlias jsonAlias =
+                    field.getAnnotation(com.njydsz.common.json.annotation.JsonAlias.class);
+            String[] aliasValues = null;
+            if (jsonAlias != null && jsonAlias.value().length > 0) {
+                aliasValues = jsonAlias.value();
+            } else {
+                String[] bridgeAliases = JacksonAnnotationBridge.aliases(field);
+                if (bridgeAliases.length > 0) {
+                    aliasValues = bridgeAliases;
+                }
+            }
+            if (aliasValues != null) {
+                List<String> aliases = new ArrayList<>(aliasValues.length);
+                for (String alias : aliasValues) {
+                    if (alias != null && !alias.isEmpty() && !alias.equals(this.jsonName)) {
+                        aliases.add(alias);
+                    }
+                }
+                this.aliasNames = aliases.toArray(new String[0]);
+                this.aliasHashes = new int[this.aliasNames.length];
+                for (int i = 0; i < this.aliasNames.length; i++) {
+                    this.aliasHashes[i] = this.aliasNames[i].hashCode();
+                }
+            } else {
+                this.aliasNames = new String[0];
+                this.aliasHashes = new int[0];
+            }
+
+        }
+
+        /**
+         * 将 reader 当前位置的值按字段类型写入目标对象。
+         *
+         * <p>依据 {@code typeCode} 分发：基础类型直接读取并赋值；复杂类型（嵌套对象、
+         * List/Collection、Map、Date 等）递归委托或按类型转换。null 值统一处理。</p>
+         *
+         * @param reader 已定位到值起始的 JSONReader
+         * @param obj    目标 Bean 实例，字段值写入其中
+         */
+        @SuppressWarnings("deprecation")
+        public void readValue(JSONReader reader, Object obj) {
+            readValue(reader, obj, 0);
+        }
+
+        @SuppressWarnings("deprecation")
+        public void readValue(JSONReader reader, Object obj, int depth) {
+            try {
+                switch (typeCode) {
+                    case 1: // String
+                        if (reader.isNull()) {
+                            reader.readNull();
+                            field.set(obj, null);
+                        } else {
+                            field.set(obj, reader.readString());
+                        }
+                        break;
+                    case 2: // int / Integer
+                        if (reader.isNull()) {
+                            reader.readNull();
+                            if (fieldType == Integer.class) field.set(obj, null);
+                        } else {
+                            int val = reader.readInt();
+                            if (fieldType == int.class) {
+                                field.setInt(obj, val);
+                            } else {
+                                field.set(obj, Integer.valueOf(val));
+                            }
+                        }
+                        break;
+                    case 3: // long / Long
+                        if (reader.isNull()) {
+                            reader.readNull();
+                            if (fieldType == Long.class) field.set(obj, null);
+                        } else {
+                            long val = reader.readLong();
+                            if (fieldType == long.class) {
+                                field.setLong(obj, val);
+                            } else {
+                                field.set(obj, Long.valueOf(val));
+                            }
+                        }
+                        break;
+                    case 4: // double / Double
+                        if (reader.isNull()) {
+                            reader.readNull();
+                            if (fieldType == Double.class) field.set(obj, null);
+                        } else {
+                            double val = reader.readDouble();
+                            if (fieldType == double.class) {
+                                field.setDouble(obj, val);
+                            } else {
+                                field.set(obj, Double.valueOf(val));
+                            }
+                        }
+                        break;
+                    case 5: // float / Float
+                        if (reader.isNull()) {
+                            reader.readNull();
+                            if (fieldType == Float.class) field.set(obj, null);
+                        } else {
+                            float val = reader.readFloat();
+                            if (fieldType == float.class) {
+                                field.setFloat(obj, val);
+                            } else {
+                                field.set(obj, Float.valueOf(val));
+                            }
+                        }
+                        break;
+                    case 6: // boolean / Boolean
+                        if (reader.isNull()) {
+                            reader.readNull();
+                            if (fieldType == Boolean.class) field.set(obj, null);
+                        } else {
+                            boolean val = reader.readBoolean();
+                            if (fieldType == boolean.class) {
+                                field.setBoolean(obj, val);
+                            } else {
+                                field.set(obj, Boolean.valueOf(val));
+                            }
+                        }
+                        break;
+                    case 7: // short
+                        if (reader.isNull()) {
+                            reader.readNull();
+                            if (fieldType == Short.class) field.set(obj, null);
+                        } else {
+                            short val = (short) reader.readInt();
+                            if (fieldType == short.class) {
+                                field.setShort(obj, val);
+                            } else {
+                                field.set(obj, Short.valueOf(val));
+                            }
+                        }
+                        break;
+                    case 8: // byte
+                        if (reader.isNull()) {
+                            reader.readNull();
+                            if (fieldType == Byte.class) field.set(obj, null);
+                        } else {
+                            byte val = (byte) reader.readInt();
+                            if (fieldType == byte.class) {
+                                field.setByte(obj, val);
+                            } else {
+                                field.set(obj, Byte.valueOf(val));
+                            }
+                        }
+                        break;
+                    case 9: // char
+                        if (reader.isNull()) {
+                            reader.readNull();
+                            if (fieldType == Character.class) field.set(obj, null);
+                        } else {
+                            String s = reader.readString();
+                            if (s != null && s.length() > 0) {
+                                char val = s.charAt(0);
+                                if (fieldType == char.class) {
+                                    field.setChar(obj, val);
+                                } else {
+                                    field.set(obj, Character.valueOf(val));
+                                }
+                            }
+                        }
+                        break;
+                    default:
+                        // 复杂类型（嵌套对象、集合、Date 等）
+                        if (reader.isNull()) {
+                            reader.readNull();
+                            field.set(obj, null);
+                        } else if (fieldType == List.class || fieldType == ArrayList.class || Collection.class.isAssignableFrom(fieldType)) {
+                            List<Object> listValue = reader.readArray(Object.class);
+                            field.set(obj, listValue);
+                        } else if (fieldType == Map.class || fieldType == HashMap.class || Map.class.isAssignableFrom(fieldType)) {
+                            field.set(obj, reader.readObjectMap());
+                        } else if (fieldType == LocalDateTime.class) {
+                            String s = reader.readString();
+                            field.set(obj, parseLocalDateTime(s, datePattern));
+                        } else if (fieldType == LocalDate.class) {
+                            String s = reader.readString();
+                            field.set(obj, parseLocalDate(s, datePattern));
+                        } else if (fieldType == Date.class) {
+                            String s = reader.readString();
+                            field.set(obj, parseDate(s, datePattern));
+                        } else if (fieldType.isEnum()) {
+                            String s = reader.readString();
+                            field.set(obj, parseEnum(fieldType, s));
+                        } else {
+                            BeanReader<?> nestedReader = getOrCreateForType(fieldType);
+                            field.set(obj, nestedReader.readObject(reader, depth + 1));
+                        }
+                        break;
+                }
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException("Failed to set field: " + fieldName, e);
+            }
+        }
+
+        private static int getTypeCode(Class<?> type) {
+            if (type == String.class) return 1;
+            if (type == int.class || type == Integer.class) return 2;
+            if (type == long.class || type == Long.class) return 3;
+            if (type == double.class || type == Double.class) return 4;
+            if (type == float.class || type == Float.class) return 5;
+            if (type == boolean.class || type == Boolean.class) return 6;
+            if (type == short.class || type == Short.class) return 7;
+            if (type == byte.class || type == Byte.class) return 8;
+            if (type == char.class || type == Character.class) return 9;
+            return 10;
+        }
+
+        /**
+         * 读取当前值并转换为适合 @JsonCreator 参数的类型。
+         *
+         * <p>不写入目标对象，仅按字段类型解析并返回原始值（字符串/数字/布尔），
+         * 供 {@link #readObjectFieldsInto} 的 creator 模式收集参数使用。</p>
+         *
+         * @param reader 已定位到值起始的 JSONReader
+         * @return 解析后的值
+         */
+        public Object readRawValue(JSONReader reader) {
+            try {
+                switch (typeCode) {
+                    case 1: // String
+                        return reader.isNull() ? null : reader.readString();
+                    case 2: // int
+                        return reader.isNull() ? null : reader.readInt();
+                    case 3: // long
+                        return reader.isNull() ? null : reader.readLong();
+                    case 4: // double
+                        return reader.isNull() ? null : reader.readDouble();
+                    case 5: // float
+                        return reader.isNull() ? null : reader.readFloat();
+                    case 6: // boolean
+                        return reader.isNull() ? null : reader.readBoolean();
+                    case 7: // short
+                        return reader.isNull() ? null : (short) reader.readInt();
+                    case 8: // byte
+                        return reader.isNull() ? null : (byte) reader.readInt();
+                    case 9: // char
+                        return reader.isNull() ? null : reader.readString();
+                    default:
+                        // 复杂类型：读取原始字符串，由 CreatorResolver/TypeConverter 转换
+                        return reader.isNull() ? null : reader.readRawValue().trim();
+                }
+            } catch (Exception e) {
+                return null;
+            }
+        }
+    }
+
+    /** BeanReader 缓存（有界 LRU，容量 1024，防止动态类加载场景下无界增长） */
+    private static final BoundedLruCache<Class<?>, BeanReader<?>> CACHE = new BoundedLruCache<>(1024);
+
+
+    /**
+     * 获取或创建指定 Bean 类型的读取器（全局缓存）。
+     *
+     * <p>{@link ConcurrentHashMap#computeIfAbsent} 保证每个 Class 仅被构造一次，
+     * 多线程下不会出现重复创建。BeanReader 的构建涉及反射扫描字段、缓存构造函数与
+     * 探测 {@code @JsonAnySetter}，开销较大，因此复用缓存对反序列化性能至关重要。</p>
+     *
+     * @param beanType 目标 Bean 类型，不可为 null（否则抛出 NPE）
+     * @param <T>      Bean 类型
+     * @return 对应类型的 BeanReader，非 null
+     */
+    public static <T> BeanReader<T> getOrCreate(Class<T> beanType) {
+        // computeIfAbsent ensures thread-safe single creation per Class
+        // Type safety: cache is keyed by Class, value created with same Class
+        return (BeanReader<T>) CACHE.computeIfAbsent(beanType, t -> new BeanReader<>(t));
+    }
+
+    /**
+     * 获取或创建指定 Bean 类型的读取器（非泛型入口）。
+     *
+     * <p>与 {@link #getOrCreate(Class)} 等价，但返回原始 {@code BeanReader<?>}，
+     * 适用于调用方仅持有运行时 {@link Class}（无具体泛型参数）的场景，例如
+     * {@link FieldReader#readValue} 解析嵌套对象时按字段类型递归获取读取器。
+     * 同样基于进程级 {@link ConcurrentHashMap} 缓存，保证每类型仅构建一次。</p>
+     *
+     * @param beanType 目标 Bean 类型，不可为 null（否则抛出 NPE）
+     * @return 对应类型的 BeanReader，非 null
+     */
+    public static BeanReader<?> getOrCreateForType(Class<?> beanType) {
+        return CACHE.computeIfAbsent(beanType, t -> new BeanReader<>(t));
+    }
+
+    /**
+     * 清空全局 BeanReader 缓存。
+     */
+    public static void clearCache() {
+        CACHE.clear();
+    }
+
+    // ==================== 日期/枚举解析辅助方法 ====================
+
+    /**
+     * 判断字段是否应在反序列化时被忽略。
+     *
+     * <p>规则（与序列化侧 {@code FieldMetadataLoader.loadFields} 对齐）：</p>
+     * <ol>
+     *   <li>字段级 {@code @JsonIgnore} → 忽略</li>
+     *   <li>类级 {@code @JsonIgnoreProperties} 中列出的字段名 → 忽略</li>
+     *   <li>P1-8：Jackson {@code @JsonIgnore} / {@code @JsonIgnoreProperties} 兜底
+     *       （兼容桥，原生注解优先）</li>
+     * </ol>
+     *
+     * @param field 目标字段
+     * @return true 表示忽略
+     */
+    private static boolean isIgnoredField(Field field) {
+        if (field.getAnnotation(JsonIgnore.class) != null) {
+            return true;
+        }
+        // P1-8：Jackson @JsonIgnore 兜底
+        if (JacksonAnnotationBridge.isIgnored(field)) {
+            return true;
+        }
+        // 类级 @JsonIgnoreProperties：忽略列表中包含字段名（含别名匹配）
+        JsonIgnoreProperties ignoreProps = field.getDeclaringClass().getAnnotation(JsonIgnoreProperties.class);
+        String[] ignoreNames = (ignoreProps != null && ignoreProps.value().length > 0)
+                ? ignoreProps.value() : JacksonAnnotationBridge.ignoreProperties(field.getDeclaringClass());
+        if (ignoreNames.length > 0) {
+            for (String name : ignoreNames) {
+                if (name.equals(field.getName())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static final DateTimeFormatter[] DATE_TIME_FORMATS = {
+        DateTimeFormatter.ISO_LOCAL_DATE_TIME,
+        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"),
+        DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"),
+        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"),
+    };
+
+    private static final DateTimeFormatter[] DATE_FORMATS = {
+        DateTimeFormatter.ISO_LOCAL_DATE,
+        DateTimeFormatter.ofPattern("yyyy-MM-dd"),
+    };
+
+    @SuppressWarnings("deprecation")
+    private static LocalDateTime parseLocalDateTime(String s) {
+        return parseLocalDateTime(s, null);
+    }
+
+    @SuppressWarnings("deprecation")
+    private static LocalDateTime parseLocalDateTime(String s, String pattern) {
+        if (s == null || s.isEmpty()) return null;
+        // @JsonFormat 指定格式优先
+        if (pattern != null) {
+            try {
+                return LocalDateTime.parse(s, DateTimeFormatter.ofPattern(pattern));
+            } catch (Exception ignored) {
+            }
+        }
+        for (DateTimeFormatter fmt : DATE_TIME_FORMATS) {
+            try {
+                return LocalDateTime.parse(s, fmt);
+            } catch (Exception ignored) {
+            }
+        }
+        return null;
+    }
+
+    @SuppressWarnings("deprecation")
+    private static LocalDate parseLocalDate(String s) {
+        return parseLocalDate(s, null);
+    }
+
+    @SuppressWarnings("deprecation")
+    private static LocalDate parseLocalDate(String s, String pattern) {
+        if (s == null || s.isEmpty()) return null;
+        if (pattern != null) {
+            try {
+                return LocalDate.parse(s, DateTimeFormatter.ofPattern(pattern));
+            } catch (Exception ignored) {
+            }
+        }
+        for (DateTimeFormatter fmt : DATE_FORMATS) {
+            try {
+                return LocalDate.parse(s, fmt);
+            } catch (Exception ignored) {
+            }
+        }
+        return null;
+    }
+
+    @SuppressWarnings("deprecation")
+    private static Date parseDate(String s) {
+        return parseDate(s, null);
+    }
+
+    @SuppressWarnings("deprecation")
+    private static Date parseDate(String s, String pattern) {
+        if (s == null || s.isEmpty()) return null;
+        try {
+            return new Date(Long.parseLong(s));
+        } catch (NumberFormatException ignored) {
+        }
+        if (pattern != null) {
+            try {
+                return new java.text.SimpleDateFormat(pattern).parse(s);
+            } catch (Exception ignored) {
+            }
+        }
+        try {
+            return new java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss").parse(s);
+        } catch (Exception ignored) {
+        }
+        try {
+            return new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(s);
+        } catch (Exception ignored) {
+        }
+        try {
+            return new java.text.SimpleDateFormat("yyyy-MM-dd").parse(s);
+        } catch (Exception ignored) {
+        }
+        return null;
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static Object parseEnum(Class<?> enumType, String s) {
+        if (s == null || s.isEmpty()) return null;
+        try {
+            return Enum.valueOf((Class<Enum>) enumType, s);
+        } catch (IllegalArgumentException ignored) {
+            return null;
+        }
+    }
+}

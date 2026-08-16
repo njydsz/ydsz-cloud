@@ -1,1 +1,570 @@
-package com.njydsz.common.json.provider;\n\nimport java.lang.reflect.Field;\nimport java.lang.reflect.Method;\nimport java.lang.reflect.Modifier;\nimport java.util.ArrayList;\nimport java.util.Arrays;\nimport java.util.HashMap;\nimport java.util.HashSet;\nimport java.util.List;\nimport java.util.Map;\nimport java.util.Set;\n\nimport com.njydsz.common.json.annotation.JsonClass;\nimport com.njydsz.common.json.annotation.JsonGetter;\nimport com.njydsz.common.json.annotation.JsonIgnore;\nimport com.njydsz.common.json.annotation.JsonIgnoreProperties;\nimport com.njydsz.common.json.annotation.JsonInclude;\nimport com.njydsz.common.json.annotation.JsonNaming;\nimport com.njydsz.common.json.annotation.JsonProperty;\nimport com.njydsz.common.json.annotation.JsonPropertyOrder;\nimport com.njydsz.common.json.annotation.JsonSetter;\nimport com.njydsz.common.json.annotation.JsonValue;\nimport com.njydsz.common.json.cache.FieldMeta;\nimport com.njydsz.common.json.naming.PropertyNamingStrategy;\nimport com.njydsz.common.json.util.BoundedLruCache;\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\n\n/**\n * 字段元数据加载器和注解处理器\n *\n * <p>从 SerializationProvider 中提取的字段元数据加载逻辑。</p>\n *\n * <p>负责：</p>\n * <ul>\n *   <li>加载类的字段元数据（loadFields）</li>\n *   <li>检测字段注解（hasFieldAnnotations）</li>\n *   <li>判断字段可见性（isFieldVisible）</li>\n *   <li>扫描 @JsonGetter/@JsonSetter 方法级注解，覆盖字段 JSON 名称映射</li>\n * </ul>\n *\n * @author ydsz-team\n * @since 1.0.0\n */\n@SuppressWarnings("deprecation")\npublic final class FieldMetadataLoader {\n\n    private static final Logger LOGGER = LoggerFactory.getLogger(FieldMetadataLoader.class);\n\n    /** 当前使用的命名策略（JsonMapper.applyRuntimeConfig 会写入，故需 public） */\n    public static final ThreadLocal<PropertyNamingStrategy> NAMING_STRATEGY =\n        ThreadLocal.withInitial(() -> PropertyNamingStrategy.LOWER_CAMEL_CASE);\n\n    /**\n     * @JsonValue 方法缓存（Class -> 标注了 @JsonValue 的 Method，哨兵值表示无）。\n     *\n     * <p>避免每次序列化都反射扫描方法列表。一个类最多只能有一个 @JsonValue 方法。</p>\n     *\n     * <p>P0-4：改为有界 LRU（容量 1024），防止动态类加载/热部署场景下无界增长。</p>\n     */\n    private static final BoundedLruCache<Class<?>, Method> JSON_VALUE_METHOD_CACHE =\n        new BoundedLruCache<>(1024);\n\n    /**\n     * 计算属性缓存（Class -> 计算属性方法列表）。\n     *\n     * <p>存储标注了 @JsonGetter 但没有对应字段的计算属性方法。\n     * 序列化时在字段写完后补充输出这些计算属性。</p>\n     *\n     * <p>P0-4：改为有界 LRU（容量 1024），防止动态类加载/热部署场景下无界增长。</p>\n     */\n    private static final BoundedLruCache<Class<?>, Method[]> COMPUTED_PROPERTIES_CACHE =\n        new BoundedLruCache<>(1024);\n\n    private FieldMetadataLoader() {\n        throw new UnsupportedOperationException();\n    }\n\n    /**\n     * 加载字段元数据\n     */\n    /**\n     * 收集类自身及其所有父类（不含 {@code Object}）的 declared 字段，子类字段在前。\n     *\n     * <p>修复仅使用 {@code getDeclaredFields()} 导致继承字段（如 MyBatis-Plus 基类\n     * {@code MpBaseEntity} 的 id / createTime 等）被静默丢弃的问题。同名子类字段优先，\n     * 父类同名被遮蔽字段跳过，避免重复 JSON key。</p>\n     *\n     * @param clazz 目标类\n     * @return 合并后的字段列表（子类在前）\n     * @since 1.1.0\n     */\n    public static List<Field> collectDeclaredAndInheritedFields(Class<?> clazz) {\n        List<Field> fields = new ArrayList<>();\n        Set<String> seen = new HashSet<>();\n        Class<?> current = clazz;\n        while (current != null && current != Object.class) {\n            for (Field f : current.getDeclaredFields()) {\n                if (seen.add(f.getName())) {\n                    fields.add(f);\n                }\n            }\n            current = current.getSuperclass();\n        }\n        return fields;\n    }\n\n    public static FieldMeta[] loadFields(Class<?> clazz) {\n        JsonClass classAnnotation = clazz.getAnnotation(JsonClass.class);\n\n        int annotationFieldCount = classAnnotation != null\n            ? classAnnotation.ignores().length + classAnnotation.includes().length + classAnnotation.ordering().length\n            : 0;\n\n        Set<String> ignores = new HashSet<>(annotationFieldCount);\n        Set<String> includes = null;\n        Map<String, Integer> ordering = new HashMap<>(annotationFieldCount);\n        PropertyNamingStrategy classNaming = NAMING_STRATEGY.get();\n\n        if (classAnnotation != null) {\n            if (classAnnotation.ignores().length > 0) {\n                ignores.addAll(Arrays.asList(classAnnotation.ignores()));\n            }\n            if (classAnnotation.includes().length > 0) {\n                includes = new HashSet<>(annotationFieldCount);\n                includes.addAll(Arrays.asList(classAnnotation.includes()));\n            }\n            if (classAnnotation.ordering().length > 0) {\n                for (int i = 0; i < classAnnotation.ordering().length; i++) {\n                    ordering.put(classAnnotation.ordering()[i], i);\n                }\n            }\n            if (classAnnotation.naming() != JsonClass.NamingStrategy.CAMEL_CASE) {\n                classNaming = classAnnotation.naming().toPropertyNamingStrategy();\n            }\n        }\n\n        JsonPropertyOrder propertyOrder = clazz.getAnnotation(JsonPropertyOrder.class);\n        Map<String, Integer> propertyOrderMapping = new HashMap<>();\n        boolean alphabeticSort = false;\n        if (propertyOrder != null) {\n            if (propertyOrder.value().length > 0) {\n                for (int i = 0; i < propertyOrder.value().length; i++) {\n                    propertyOrderMapping.put(propertyOrder.value()[i], i);\n                }\n            }\n            alphabeticSort = propertyOrder.alphabetic();\n        }\n\n        // Jackson 兼容：@JsonNaming 类级命名策略\n        JsonNaming jsonNaming = clazz.getAnnotation(JsonNaming.class);\n        if (jsonNaming != null) {\n            try {\n                classNaming = jsonNaming.value().getDeclaredConstructor().newInstance();\n            } catch (Exception e) {\n                LOGGER.warn("FieldMetadataLoader @JsonNaming 实例化失败，回退默认命名策略: {}", e.toString());\n            }\n        }\n\n        // 处理 @JsonIgnoreProperties 注解\n        JsonIgnoreProperties ignoreProperties = clazz.getAnnotation(JsonIgnoreProperties.class);\n        if (ignoreProperties != null) {\n            for (String name : ignoreProperties.value()) {\n                ignores.add(name);\n            }\n        }\n\n        // P1-8：Jackson 注解兼容桥——类级 @JsonIgnoreProperties 兜底（原生注解优先）\n        if (JacksonAnnotationBridge.isAvailable()) {\n            for (String name : JacksonAnnotationBridge.ignoreProperties(clazz)) {\n                ignores.add(name);\n            }\n        }\n\n        List<Field> declaredFields = collectDeclaredAndInheritedFields(clazz);\n        List<FieldMeta> fieldList = new ArrayList<>(declaredFields.size());\n\n        for (Field field : declaredFields) {\n            int mods = field.getModifiers();\n            if (Modifier.isStatic(mods) || Modifier.isTransient(mods)) {\n                continue;\n            }\n\n            if (!isFieldVisible(mods, field)) {\n                continue;\n            }\n\n            String fieldName = field.getName();\n\n            if (ignores.contains(fieldName)) {\n                continue;\n            }\n\n            JsonProperty jsonField = field.getAnnotation(JsonProperty.class);\n            JsonIgnore jacksonIgnore = field.getAnnotation(JsonIgnore.class);\n            if (jacksonIgnore != null) {\n                continue;\n            }\n            // P1-8：Jackson @JsonIgnore 兜底（原生注解优先）\n            if (jsonField == null && JacksonAnnotationBridge.isIgnored(field)) {\n                continue;\n            }\n\n            if (includes != null) {\n                String jsonFieldName = field.getName();\n                if (jsonField != null) {\n                    if (!jsonField.value().isEmpty()) {\n                        jsonFieldName = jsonField.value();\n                    } else if (classNaming != null) {\n                        jsonFieldName = classNaming.translate(field.getName());\n                    }\n                } else if (classNaming != null) {\n                    jsonFieldName = classNaming.translate(field.getName());\n                }\n                if (!includes.contains(jsonFieldName)) {\n                    continue;\n                }\n            }\n\n            String jsonName = fieldName;\n            int ordinal = ordering.getOrDefault(fieldName, fieldList.size());\n\n            if (propertyOrderMapping.containsKey(fieldName)) {\n                ordinal = propertyOrderMapping.get(fieldName);\n            }\n\n            if (jsonField != null && !jsonField.value().isEmpty()) {\n                jsonName = jsonField.value();\n            } else if (classNaming != null) {\n                jsonName = classNaming.translate(jsonName);\n            }\n\n            // P1-8：Jackson @JsonProperty.value 兜底重命名（原生注解未指定名称时生效）\n            if (jsonField == null) {\n                String bridgeName = JacksonAnnotationBridge.propertyName(field);\n                if (bridgeName != null) {\n                    jsonName = bridgeName;\n                }\n            }\n\n            try {\n                field.setAccessible(true);\n                fieldList.add(new FieldMeta(field, jsonName, ordinal));\n            } catch (Exception e) {\n                // 反射操作失败：告警而非静默丢弃，避免字段悄悄丢失（P1-⑦）\n                LOGGER.warn("FieldMetadataLoader 跳过字段 {}.{}: {}",\n                    clazz.getName(), field.getName(), e.toString());\n            }\n        }\n\n        if (alphabeticSort && propertyOrderMapping.isEmpty()) {\n            fieldList.sort((a, b) -> a.jsonName.compareTo(b.jsonName));\n        } else {\n            fieldList.sort((a, b) -> Integer.compare(a.ordinal, b.ordinal));\n        }\n\n        // 扫描 @JsonGetter/@JsonSetter 方法级注解，覆盖字段 JSON 名称映射\n        applyMethodAnnotations(clazz, fieldList, classNaming);\n\n        return fieldList.toArray(new FieldMeta[0]);\n    }\n\n    /**\n     * 扫描 @JsonGetter/@JsonSetter 方法级注解，覆盖字段 JSON 名称映射。\n     *\n     * <p>当 getter/setter 方法上标注了 @JsonGetter/@JsonSetter 且指定了 value 时，\n     * 将对应字段的 JSON 名称覆盖为注解指定的值。如果方法没有对应的字段\n     * （计算属性），当前版本跳过并记录 debug 日志。</p>\n     *\n     * @param clazz 被扫描的类\n     * @param fieldList 已加载的字段列表\n     * @param classNaming 类级命名策略\n     * @since 1.0.0\n     */\n    private static void applyMethodAnnotations(Class<?> clazz, List<FieldMeta> fieldList, PropertyNamingStrategy classNaming) {\n        // 构建字段名 -> 索引映射（用于替换 fieldList 中的元素）\n        Map<String, Integer> fieldIndex = new HashMap<>(fieldList.size());\n        for (int i = 0; i < fieldList.size(); i++) {\n            fieldIndex.put(fieldList.get(i).name, i);\n        }\n\n        for (Method method : clazz.getDeclaredMethods()) {\n            // @JsonGetter：覆盖序列化 JSON 名称\n            JsonGetter jsonGetter = method.getAnnotation(JsonGetter.class);\n            if (jsonGetter != null) {\n                String fieldName = inferFieldNameFromGetter(method.getName());\n                if (fieldName != null && fieldIndex.containsKey(fieldName)) {\n                    String newJsonName = jsonGetter.value().isEmpty() ? fieldName : jsonGetter.value();\n                    int idx = fieldIndex.get(fieldName);\n                    FieldMeta original = fieldList.get(idx);\n                    // 创建新的 FieldMeta，覆盖 jsonName\n                    FieldMeta replaced = createWithJsonName(original, newJsonName);\n                    if (replaced != null) {\n                        fieldList.set(idx, replaced);\n                    }\n                }\n            }\n\n            // @JsonSetter：覆盖反序列化 JSON 名称\n            JsonSetter jsonSetter = method.getAnnotation(JsonSetter.class);\n            if (jsonSetter != null) {\n                String fieldName = inferFieldNameFromSetter(method.getName());\n                if (fieldName != null && fieldIndex.containsKey(fieldName)) {\n                    String newJsonName = jsonSetter.value().isEmpty() ? fieldName : jsonSetter.value();\n                    int idx = fieldIndex.get(fieldName);\n                    FieldMeta original = fieldList.get(idx);\n                    // 如果 @JsonGetter 已经覆盖过，在此基础再覆盖\n                    String currentName = original.jsonName;\n                    if (!newJsonName.equals(currentName)) {\n                        FieldMeta replaced = createWithJsonName(original, newJsonName);\n                        if (replaced != null) {\n                            fieldList.set(idx, replaced);\n                        }\n                    }\n                }\n            }\n        }\n    }\n\n    /**\n     * 创建一个新的 FieldMeta，使用指定的 jsonName 替代原始的 jsonName。\n     *\n     * <p>由于 {@link FieldMeta} 的 {@code jsonName} 是 final 字段，\n     * 需要通过反射构造一个新的实例。如果创建失败返回 null（保持原始实例）。</p>\n     *\n     * @param original 原始 FieldMeta\n     * @param newJsonName 新的 JSON 名称\n     * @return 新的 FieldMeta 实例，或 null 如果创建失败\n     */\n    private static FieldMeta createWithJsonName(FieldMeta original, String newJsonName) {\n        try {\n            FieldMeta replaced = new FieldMeta(original.field, newJsonName, original.ordinal);\n            return replaced;\n        } catch (Exception e) {\n            LOGGER.warn("FieldMetadataLoader 重建 FieldMeta 失败，保留原实例 {}: {}",\n                original.field.getName(), e.toString());\n            return null;\n        }\n    }\n\n    /**\n     * 从 getter 方法名推断字段名（如 getName → name, isActive → active）。\n     *\n     * @param methodName 方法名\n     * @return 字段名，或 null 如果无法推断\n     */\n    private static String inferFieldNameFromGetter(String methodName) {\n        if (methodName.startsWith("get") && methodName.length() > 3) {\n            return Character.toLowerCase(methodName.charAt(3)) + methodName.substring(4);\n        }\n        if (methodName.startsWith("is") && methodName.length() > 2) {\n            return Character.toLowerCase(methodName.charAt(2)) + methodName.substring(3);\n        }\n        return null;\n    }\n\n    /**\n     * 从 setter 方法名推断字段名（如 setName → name）。\n     *\n     * @param methodName 方法名\n     * @return 字段名，或 null 如果无法推断\n     */\n    private static String inferFieldNameFromSetter(String methodName) {\n        if (methodName.startsWith("set") && methodName.length() > 3) {\n            return Character.toLowerCase(methodName.charAt(3)) + methodName.substring(4);\n        }\n        return null;\n    }\n\n    /**\n     * 哨兵值：表示类中无 @JsonValue 方法（ConcurrentHashMap 不允许 null value）。\n     */\n    private static final Method NO_JSON_VALUE_SENTINEL;\n    static {\n        try {\n            NO_JSON_VALUE_SENTINEL = FieldMetadataLoader.class\n                .getDeclaredMethod("findJsonValueMethod", Class.class);\n        } catch (NoSuchMethodException e) {\n            throw new InternalError(e);\n        }\n    }\n\n    /**\n     * 查找类中标注了 {@code @JsonValue} 的方法。\n     *\n     * <p>对标 Jackson {@code @JsonValue}：标注在方法上时，该方法的返回值\n     * 作为整个对象的 JSON 值（而非字段级序列化）。常用于枚举自定义序列化。</p>\n     *\n     * <p>一个类最多只能有一个 {@code @JsonValue} 方法。如果找到多个，使用第一个。\n     * 结果（含"无 @JsonValue 方法"的哨兵负缓存）会被缓存，后续调用直接返回缓存值。</p>\n     *\n     * <p>P0-4：{@link BoundedLruCache#computeIfAbsent} 的构建函数在锁外执行，\n     * {@code computeJsonValueMethod} 经父类递归调用本方法是安全的\n     * （不存在 CHM computeIfAbsent 的 Recursive update 问题）。</p>\n     *\n     * @param clazz 要扫描的类\n     * @return 标注了 {@code @JsonValue} 的 Method，未找到返回 null\n     * @since 1.0.0\n     */\n    public static Method findJsonValueMethod(Class<?> clazz) {\n        Method result = JSON_VALUE_METHOD_CACHE.computeIfAbsent(clazz, c -> {\n            Method method = computeJsonValueMethod(c);\n            return method != null ? method : NO_JSON_VALUE_SENTINEL;\n        });\n        return result == NO_JSON_VALUE_SENTINEL ? null : result;\n    }\n\n    /**\n     * 计算 @JsonValue 方法（不操作缓存，可安全递归调用）。\n     *\n     * <p>P1-8：原生 {@code @JsonValue} 未标注时回退扫描 Jackson {@code @JsonValue}\n     * （通过 {@link JacksonAnnotationBridge} 反射读取，原生注解优先）。</p>\n     */\n    private static Method computeJsonValueMethod(Class<?> clazz) {\n        for (Method method : clazz.getDeclaredMethods()) {\n            if (method.isAnnotationPresent(JsonValue.class)) {\n                method.setAccessible(true);\n                return method;\n            }\n        }\n        if (JacksonAnnotationBridge.isAvailable()) {\n            Method bridgeMethod = JacksonAnnotationBridge.findJsonValueMethod(clazz);\n            if (bridgeMethod != null) {\n                return bridgeMethod;\n            }\n        }\n        Class<?> superClass = clazz.getSuperclass();\n        if (superClass != null && superClass != Object.class) {\n            return findJsonValueMethod(superClass);\n        }\n        return null;\n    }\n\n    /**\n     * 检查类是否有 {@code @JsonValue} 方法。\n     *\n     * @param clazz 要检查的类\n     * @return true 如果类中存在 {@code @JsonValue} 标注的方法\n     * @since 1.0.0\n     */\n    public static boolean hasJsonValueMethod(Class<?> clazz) {\n        return findJsonValueMethod(clazz) != null;\n    }\n\n    /**\n     * 查找类中标注了 {@code @JsonAnyGetter} 的方法。\n     *\n     * <p><b>注意：</b> @JsonAnyGetter 注解已删除，此方法始终返回 null。\n     * 保留此方法以维持向后兼容的二进制接口。</p>\n     *\n     * @param clazz 要扫描的类\n     * @return 始终返回 null\n     */\n    public static Method findAnyGetterMethod(Class<?> clazz) {\n        return null;\n    }\n\n    /**\n     * 查找类中的计算属性方法（@JsonGetter 标注但没有对应字段的方法）。\n     *\n     * <p>对标 Jackson @JsonGetter 计算属性：标注在 getter 方法上，\n     * 方法返回值作为 JSON 属性输出，无需对应实际字段。</p>\n     *\n     * @param clazz 要扫描的类\n     * @return 计算属性方法数组，未找到返回空数组\n     * @since 1.0.0\n     */\n    public static Method[] findComputedProperties(Class<?> clazz) {\n        return COMPUTED_PROPERTIES_CACHE.computeIfAbsent(clazz, c -> {\n            List<Method> computed = new ArrayList<>();\n            // 获取已加载的字段名集合\n            Set<String> fieldNames = new HashSet<>();\n            Field[] fields = c.getDeclaredFields();\n            for (Field f : fields) {\n                int mods = f.getModifiers();\n                if (!Modifier.isStatic(mods) && !Modifier.isTransient(mods)) {\n                    fieldNames.add(f.getName());\n                }\n            }\n\n            for (Method method : c.getDeclaredMethods()) {\n                JsonGetter jsonGetter = method.getAnnotation(JsonGetter.class);\n                if (jsonGetter != null) {\n                    String inferredName = inferFieldNameFromGetter(method.getName());\n                    // 如果推断出的字段名不在已加载字段列表中，则为计算属性\n                    if (inferredName == null || !fieldNames.contains(inferredName)) {\n                        method.setAccessible(true);\n                        computed.add(method);\n                    }\n                }\n            }\n            return computed.isEmpty() ? new Method[0] : computed.toArray(new Method[0]);\n        });\n    }\n\n    /**\n     * 检查类是否有计算属性。\n     *\n     * @param clazz 要检查的类\n     * @return true 如果类中存在计算属性方法\n     * @since 1.0.0\n     */\n    public static boolean hasComputedProperties(Class<?> clazz) {\n        return findComputedProperties(clazz).length > 0;\n    }\n\n    /**\n     * 获取计算属性的 JSON 名称。\n     *\n     * @param method 标注了 @JsonGetter 的方法\n     * @return JSON 属性名\n     * @since 1.0.0\n     */\n    public static String getComputedPropertyName(Method method) {\n        JsonGetter jsonGetter = method.getAnnotation(JsonGetter.class);\n        if (jsonGetter != null && !jsonGetter.value().isEmpty()) {\n            return jsonGetter.value();\n        }\n        String inferred = inferFieldNameFromGetter(method.getName());\n        return inferred != null ? inferred : method.getName();\n    }\n\n    /**\n     * 查找类中标注了 {@code @JsonAnySetter} 的方法。\n     *\n     * <p><b>注意：</b> @JsonAnySetter 注解已删除，此方法始终返回 null。\n     * 保留此方法以维持向后兼容的二进制接口。</p>\n     *\n     * @param clazz 要扫描的类\n     * @return 始终返回 null\n     */\n    public static Method findAnySetterMethod(Class<?> clazz) {\n        return null;\n    }\n\n    /**\n     * 检查字段是否有影响序列化的注解（用于快速路径判定）。\n     *\n     * <p>检测以下需要特殊处理的注解/状态：</p>\n     * <ul>\n     *   <li>{@code @JsonFormat} 日期格式（{@link FieldMeta#isDateType()}）</li>\n     *   <li>{@code @JsonInclude} 非 ALWAYS 策略（{@link FieldMeta#includeStrategy}）</li>\n     * </ul>\n     */\n    public static boolean hasFieldAnnotations(FieldMeta[] fields) {\n        if (fields == null) return false;\n        for (FieldMeta field : fields) {\n            if (field.isDateType()\n                || field.includeStrategy != JsonInclude.Include.ALWAYS) {\n                return true;\n            }\n        }\n        return false;\n    }\n\n    /**\n     * 判断字段是否可见。\n     *\n     * <p>可见性策略由 @JsonVisibility 注解控制。由于该注解已删除，\n     * 默认策略为 ANY（所有字段可见）。</p>\n     *\n     * @param modifiers 字段修饰符\n     * @param field 字段对象\n     * @return 始终返回 true\n     */\n    public static boolean isFieldVisible(int modifiers, Field field) {\n        return true;\n    }\n}\n
+package com.njydsz.common.json.provider;
+
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import com.njydsz.common.json.annotation.JsonClass;
+import com.njydsz.common.json.annotation.JsonGetter;
+import com.njydsz.common.json.annotation.JsonIgnore;
+import com.njydsz.common.json.annotation.JsonIgnoreProperties;
+import com.njydsz.common.json.annotation.JsonInclude;
+import com.njydsz.common.json.annotation.JsonNaming;
+import com.njydsz.common.json.annotation.JsonProperty;
+import com.njydsz.common.json.annotation.JsonPropertyOrder;
+import com.njydsz.common.json.annotation.JsonSetter;
+import com.njydsz.common.json.annotation.JsonValue;
+import com.njydsz.common.json.cache.FieldMeta;
+import com.njydsz.common.json.naming.PropertyNamingStrategy;
+import com.njydsz.common.json.util.BoundedLruCache;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * 字段元数据加载器和注解处理器
+ *
+ * <p>从 SerializationProvider 中提取的字段元数据加载逻辑。</p>
+ *
+ * <p>负责：</p>
+ * <ul>
+ *   <li>加载类的字段元数据（loadFields）</li>
+ *   <li>检测字段注解（hasFieldAnnotations）</li>
+ *   <li>判断字段可见性（isFieldVisible）</li>
+ *   <li>扫描 @JsonGetter/@JsonSetter 方法级注解，覆盖字段 JSON 名称映射</li>
+ * </ul>
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+@SuppressWarnings("deprecation")
+public final class FieldMetadataLoader {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(FieldMetadataLoader.class);
+
+    /** 当前使用的命名策略（JsonMapper.applyRuntimeConfig 会写入，故需 public） */
+    public static final ThreadLocal<PropertyNamingStrategy> NAMING_STRATEGY =
+        ThreadLocal.withInitial(() -> PropertyNamingStrategy.LOWER_CAMEL_CASE);
+
+    /**
+     * @JsonValue 方法缓存（Class -> 标注了 @JsonValue 的 Method，哨兵值表示无）。
+     *
+     * <p>避免每次序列化都反射扫描方法列表。一个类最多只能有一个 @JsonValue 方法。</p>
+     *
+     * <p>P0-4：改为有界 LRU（容量 1024），防止动态类加载/热部署场景下无界增长。</p>
+     */
+    private static final BoundedLruCache<Class<?>, Method> JSON_VALUE_METHOD_CACHE =
+        new BoundedLruCache<>(1024);
+
+    /**
+     * 计算属性缓存（Class -> 计算属性方法列表）。
+     *
+     * <p>存储标注了 @JsonGetter 但没有对应字段的计算属性方法。
+     * 序列化时在字段写完后补充输出这些计算属性。</p>
+     *
+     * <p>P0-4：改为有界 LRU（容量 1024），防止动态类加载/热部署场景下无界增长。</p>
+     */
+    private static final BoundedLruCache<Class<?>, Method[]> COMPUTED_PROPERTIES_CACHE =
+        new BoundedLruCache<>(1024);
+
+    private FieldMetadataLoader() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * 加载字段元数据
+     */
+    /**
+     * 收集类自身及其所有父类（不含 {@code Object}）的 declared 字段，子类字段在前。
+     *
+     * <p>修复仅使用 {@code getDeclaredFields()} 导致继承字段（如 MyBatis-Plus 基类
+     * {@code MpBaseEntity} 的 id / createTime 等）被静默丢弃的问题。同名子类字段优先，
+     * 父类同名被遮蔽字段跳过，避免重复 JSON key。</p>
+     *
+     * @param clazz 目标类
+     * @return 合并后的字段列表（子类在前）
+     * @since 1.1.0
+     */
+    public static List<Field> collectDeclaredAndInheritedFields(Class<?> clazz) {
+        List<Field> fields = new ArrayList<>();
+        Set<String> seen = new HashSet<>();
+        Class<?> current = clazz;
+        while (current != null && current != Object.class) {
+            for (Field f : current.getDeclaredFields()) {
+                if (seen.add(f.getName())) {
+                    fields.add(f);
+                }
+            }
+            current = current.getSuperclass();
+        }
+        return fields;
+    }
+
+    public static FieldMeta[] loadFields(Class<?> clazz) {
+        JsonClass classAnnotation = clazz.getAnnotation(JsonClass.class);
+
+        int annotationFieldCount = classAnnotation != null
+            ? classAnnotation.ignores().length + classAnnotation.includes().length + classAnnotation.ordering().length
+            : 0;
+
+        Set<String> ignores = new HashSet<>(annotationFieldCount);
+        Set<String> includes = null;
+        Map<String, Integer> ordering = new HashMap<>(annotationFieldCount);
+        PropertyNamingStrategy classNaming = NAMING_STRATEGY.get();
+
+        if (classAnnotation != null) {
+            if (classAnnotation.ignores().length > 0) {
+                ignores.addAll(Arrays.asList(classAnnotation.ignores()));
+            }
+            if (classAnnotation.includes().length > 0) {
+                includes = new HashSet<>(annotationFieldCount);
+                includes.addAll(Arrays.asList(classAnnotation.includes()));
+            }
+            if (classAnnotation.ordering().length > 0) {
+                for (int i = 0; i < classAnnotation.ordering().length; i++) {
+                    ordering.put(classAnnotation.ordering()[i], i);
+                }
+            }
+            if (classAnnotation.naming() != JsonClass.NamingStrategy.CAMEL_CASE) {
+                classNaming = classAnnotation.naming().toPropertyNamingStrategy();
+            }
+        }
+
+        JsonPropertyOrder propertyOrder = clazz.getAnnotation(JsonPropertyOrder.class);
+        Map<String, Integer> propertyOrderMapping = new HashMap<>();
+        boolean alphabeticSort = false;
+        if (propertyOrder != null) {
+            if (propertyOrder.value().length > 0) {
+                for (int i = 0; i < propertyOrder.value().length; i++) {
+                    propertyOrderMapping.put(propertyOrder.value()[i], i);
+                }
+            }
+            alphabeticSort = propertyOrder.alphabetic();
+        }
+
+        // Jackson 兼容：@JsonNaming 类级命名策略
+        JsonNaming jsonNaming = clazz.getAnnotation(JsonNaming.class);
+        if (jsonNaming != null) {
+            try {
+                classNaming = jsonNaming.value().getDeclaredConstructor().newInstance();
+            } catch (Exception e) {
+                LOGGER.warn("FieldMetadataLoader @JsonNaming 实例化失败，回退默认命名策略: {}", e.toString());
+            }
+        }
+
+        // 处理 @JsonIgnoreProperties 注解
+        JsonIgnoreProperties ignoreProperties = clazz.getAnnotation(JsonIgnoreProperties.class);
+        if (ignoreProperties != null) {
+            for (String name : ignoreProperties.value()) {
+                ignores.add(name);
+            }
+        }
+
+        // P1-8：Jackson 注解兼容桥——类级 @JsonIgnoreProperties 兜底（原生注解优先）
+        if (JacksonAnnotationBridge.isAvailable()) {
+            for (String name : JacksonAnnotationBridge.ignoreProperties(clazz)) {
+                ignores.add(name);
+            }
+        }
+
+        List<Field> declaredFields = collectDeclaredAndInheritedFields(clazz);
+        List<FieldMeta> fieldList = new ArrayList<>(declaredFields.size());
+
+        for (Field field : declaredFields) {
+            int mods = field.getModifiers();
+            if (Modifier.isStatic(mods) || Modifier.isTransient(mods)) {
+                continue;
+            }
+
+            if (!isFieldVisible(mods, field)) {
+                continue;
+            }
+
+            String fieldName = field.getName();
+
+            if (ignores.contains(fieldName)) {
+                continue;
+            }
+
+            JsonProperty jsonField = field.getAnnotation(JsonProperty.class);
+            JsonIgnore jacksonIgnore = field.getAnnotation(JsonIgnore.class);
+            if (jacksonIgnore != null) {
+                continue;
+            }
+            // P1-8：Jackson @JsonIgnore 兜底（原生注解优先）
+            if (jsonField == null && JacksonAnnotationBridge.isIgnored(field)) {
+                continue;
+            }
+
+            if (includes != null) {
+                String jsonFieldName = field.getName();
+                if (jsonField != null) {
+                    if (!jsonField.value().isEmpty()) {
+                        jsonFieldName = jsonField.value();
+                    } else if (classNaming != null) {
+                        jsonFieldName = classNaming.translate(field.getName());
+                    }
+                } else if (classNaming != null) {
+                    jsonFieldName = classNaming.translate(field.getName());
+                }
+                if (!includes.contains(jsonFieldName)) {
+                    continue;
+                }
+            }
+
+            String jsonName = fieldName;
+            int ordinal = ordering.getOrDefault(fieldName, fieldList.size());
+
+            if (propertyOrderMapping.containsKey(fieldName)) {
+                ordinal = propertyOrderMapping.get(fieldName);
+            }
+
+            if (jsonField != null && !jsonField.value().isEmpty()) {
+                jsonName = jsonField.value();
+            } else if (classNaming != null) {
+                jsonName = classNaming.translate(jsonName);
+            }
+
+            // P1-8：Jackson @JsonProperty.value 兜底重命名（原生注解未指定名称时生效）
+            if (jsonField == null) {
+                String bridgeName = JacksonAnnotationBridge.propertyName(field);
+                if (bridgeName != null) {
+                    jsonName = bridgeName;
+                }
+            }
+
+            try {
+                field.setAccessible(true);
+                fieldList.add(new FieldMeta(field, jsonName, ordinal));
+            } catch (Exception e) {
+                // 反射操作失败：告警而非静默丢弃，避免字段悄悄丢失（P1-⑦）
+                LOGGER.warn("FieldMetadataLoader 跳过字段 {}.{}: {}",
+                    clazz.getName(), field.getName(), e.toString());
+            }
+        }
+
+        if (alphabeticSort && propertyOrderMapping.isEmpty()) {
+            fieldList.sort((a, b) -> a.jsonName.compareTo(b.jsonName));
+        } else {
+            fieldList.sort((a, b) -> Integer.compare(a.ordinal, b.ordinal));
+        }
+
+        // 扫描 @JsonGetter/@JsonSetter 方法级注解，覆盖字段 JSON 名称映射
+        applyMethodAnnotations(clazz, fieldList, classNaming);
+
+        return fieldList.toArray(new FieldMeta[0]);
+    }
+
+    /**
+     * 扫描 @JsonGetter/@JsonSetter 方法级注解，覆盖字段 JSON 名称映射。
+     *
+     * <p>当 getter/setter 方法上标注了 @JsonGetter/@JsonSetter 且指定了 value 时，
+     * 将对应字段的 JSON 名称覆盖为注解指定的值。如果方法没有对应的字段
+     * （计算属性），当前版本跳过并记录 debug 日志。</p>
+     *
+     * @param clazz 被扫描的类
+     * @param fieldList 已加载的字段列表
+     * @param classNaming 类级命名策略
+     * @since 1.0.0
+     */
+    private static void applyMethodAnnotations(Class<?> clazz, List<FieldMeta> fieldList, PropertyNamingStrategy classNaming) {
+        // 构建字段名 -> 索引映射（用于替换 fieldList 中的元素）
+        Map<String, Integer> fieldIndex = new HashMap<>(fieldList.size());
+        for (int i = 0; i < fieldList.size(); i++) {
+            fieldIndex.put(fieldList.get(i).name, i);
+        }
+
+        for (Method method : clazz.getDeclaredMethods()) {
+            // @JsonGetter：覆盖序列化 JSON 名称
+            JsonGetter jsonGetter = method.getAnnotation(JsonGetter.class);
+            if (jsonGetter != null) {
+                String fieldName = inferFieldNameFromGetter(method.getName());
+                if (fieldName != null && fieldIndex.containsKey(fieldName)) {
+                    String newJsonName = jsonGetter.value().isEmpty() ? fieldName : jsonGetter.value();
+                    int idx = fieldIndex.get(fieldName);
+                    FieldMeta original = fieldList.get(idx);
+                    // 创建新的 FieldMeta，覆盖 jsonName
+                    FieldMeta replaced = createWithJsonName(original, newJsonName);
+                    if (replaced != null) {
+                        fieldList.set(idx, replaced);
+                    }
+                }
+            }
+
+            // @JsonSetter：覆盖反序列化 JSON 名称
+            JsonSetter jsonSetter = method.getAnnotation(JsonSetter.class);
+            if (jsonSetter != null) {
+                String fieldName = inferFieldNameFromSetter(method.getName());
+                if (fieldName != null && fieldIndex.containsKey(fieldName)) {
+                    String newJsonName = jsonSetter.value().isEmpty() ? fieldName : jsonSetter.value();
+                    int idx = fieldIndex.get(fieldName);
+                    FieldMeta original = fieldList.get(idx);
+                    // 如果 @JsonGetter 已经覆盖过，在此基础再覆盖
+                    String currentName = original.jsonName;
+                    if (!newJsonName.equals(currentName)) {
+                        FieldMeta replaced = createWithJsonName(original, newJsonName);
+                        if (replaced != null) {
+                            fieldList.set(idx, replaced);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 创建一个新的 FieldMeta，使用指定的 jsonName 替代原始的 jsonName。
+     *
+     * <p>由于 {@link FieldMeta} 的 {@code jsonName} 是 final 字段，
+     * 需要通过反射构造一个新的实例。如果创建失败返回 null（保持原始实例）。</p>
+     *
+     * @param original 原始 FieldMeta
+     * @param newJsonName 新的 JSON 名称
+     * @return 新的 FieldMeta 实例，或 null 如果创建失败
+     */
+    private static FieldMeta createWithJsonName(FieldMeta original, String newJsonName) {
+        try {
+            FieldMeta replaced = new FieldMeta(original.field, newJsonName, original.ordinal);
+            return replaced;
+        } catch (Exception e) {
+            LOGGER.warn("FieldMetadataLoader 重建 FieldMeta 失败，保留原实例 {}: {}",
+                original.field.getName(), e.toString());
+            return null;
+        }
+    }
+
+    /**
+     * 从 getter 方法名推断字段名（如 getName → name, isActive → active）。
+     *
+     * @param methodName 方法名
+     * @return 字段名，或 null 如果无法推断
+     */
+    private static String inferFieldNameFromGetter(String methodName) {
+        if (methodName.startsWith("get") && methodName.length() > 3) {
+            return Character.toLowerCase(methodName.charAt(3)) + methodName.substring(4);
+        }
+        if (methodName.startsWith("is") && methodName.length() > 2) {
+            return Character.toLowerCase(methodName.charAt(2)) + methodName.substring(3);
+        }
+        return null;
+    }
+
+    /**
+     * 从 setter 方法名推断字段名（如 setName → name）。
+     *
+     * @param methodName 方法名
+     * @return 字段名，或 null 如果无法推断
+     */
+    private static String inferFieldNameFromSetter(String methodName) {
+        if (methodName.startsWith("set") && methodName.length() > 3) {
+            return Character.toLowerCase(methodName.charAt(3)) + methodName.substring(4);
+        }
+        return null;
+    }
+
+    /**
+     * 哨兵值：表示类中无 @JsonValue 方法（ConcurrentHashMap 不允许 null value）。
+     */
+    private static final Method NO_JSON_VALUE_SENTINEL;
+    static {
+        try {
+            NO_JSON_VALUE_SENTINEL = FieldMetadataLoader.class
+                .getDeclaredMethod("findJsonValueMethod", Class.class);
+        } catch (NoSuchMethodException e) {
+            throw new InternalError(e);
+        }
+    }
+
+    /**
+     * 查找类中标注了 {@code @JsonValue} 的方法。
+     *
+     * <p>对标 Jackson {@code @JsonValue}：标注在方法上时，该方法的返回值
+     * 作为整个对象的 JSON 值（而非字段级序列化）。常用于枚举自定义序列化。</p>
+     *
+     * <p>一个类最多只能有一个 {@code @JsonValue} 方法。如果找到多个，使用第一个。
+     * 结果（含"无 @JsonValue 方法"的哨兵负缓存）会被缓存，后续调用直接返回缓存值。</p>
+     *
+     * <p>P0-4：{@link BoundedLruCache#computeIfAbsent} 的构建函数在锁外执行，
+     * {@code computeJsonValueMethod} 经父类递归调用本方法是安全的
+     * （不存在 CHM computeIfAbsent 的 Recursive update 问题）。</p>
+     *
+     * @param clazz 要扫描的类
+     * @return 标注了 {@code @JsonValue} 的 Method，未找到返回 null
+     * @since 1.0.0
+     */
+    public static Method findJsonValueMethod(Class<?> clazz) {
+        Method result = JSON_VALUE_METHOD_CACHE.computeIfAbsent(clazz, c -> {
+            Method method = computeJsonValueMethod(c);
+            return method != null ? method : NO_JSON_VALUE_SENTINEL;
+        });
+        return result == NO_JSON_VALUE_SENTINEL ? null : result;
+    }
+
+    /**
+     * 计算 @JsonValue 方法（不操作缓存，可安全递归调用）。
+     *
+     * <p>P1-8：原生 {@code @JsonValue} 未标注时回退扫描 Jackson {@code @JsonValue}
+     * （通过 {@link JacksonAnnotationBridge} 反射读取，原生注解优先）。</p>
+     */
+    private static Method computeJsonValueMethod(Class<?> clazz) {
+        for (Method method : clazz.getDeclaredMethods()) {
+            if (method.isAnnotationPresent(JsonValue.class)) {
+                method.setAccessible(true);
+                return method;
+            }
+        }
+        if (JacksonAnnotationBridge.isAvailable()) {
+            Method bridgeMethod = JacksonAnnotationBridge.findJsonValueMethod(clazz);
+            if (bridgeMethod != null) {
+                return bridgeMethod;
+            }
+        }
+        Class<?> superClass = clazz.getSuperclass();
+        if (superClass != null && superClass != Object.class) {
+            return findJsonValueMethod(superClass);
+        }
+        return null;
+    }
+
+    /**
+     * 检查类是否有 {@code @JsonValue} 方法。
+     *
+     * @param clazz 要检查的类
+     * @return true 如果类中存在 {@code @JsonValue} 标注的方法
+     * @since 1.0.0
+     */
+    public static boolean hasJsonValueMethod(Class<?> clazz) {
+        return findJsonValueMethod(clazz) != null;
+    }
+
+    /**
+     * 查找类中标注了 {@code @JsonAnyGetter} 的方法。
+     *
+     * <p><b>注意：</b> @JsonAnyGetter 注解已删除，此方法始终返回 null。
+     * 保留此方法以维持向后兼容的二进制接口。</p>
+     *
+     * @param clazz 要扫描的类
+     * @return 始终返回 null
+     */
+    public static Method findAnyGetterMethod(Class<?> clazz) {
+        return null;
+    }
+
+    /**
+     * 查找类中的计算属性方法（@JsonGetter 标注但没有对应字段的方法）。
+     *
+     * <p>对标 Jackson @JsonGetter 计算属性：标注在 getter 方法上，
+     * 方法返回值作为 JSON 属性输出，无需对应实际字段。</p>
+     *
+     * @param clazz 要扫描的类
+     * @return 计算属性方法数组，未找到返回空数组
+     * @since 1.0.0
+     */
+    public static Method[] findComputedProperties(Class<?> clazz) {
+        return COMPUTED_PROPERTIES_CACHE.computeIfAbsent(clazz, c -> {
+            List<Method> computed = new ArrayList<>();
+            // 获取已加载的字段名集合
+            Set<String> fieldNames = new HashSet<>();
+            Field[] fields = c.getDeclaredFields();
+            for (Field f : fields) {
+                int mods = f.getModifiers();
+                if (!Modifier.isStatic(mods) && !Modifier.isTransient(mods)) {
+                    fieldNames.add(f.getName());
+                }
+            }
+
+            for (Method method : c.getDeclaredMethods()) {
+                JsonGetter jsonGetter = method.getAnnotation(JsonGetter.class);
+                if (jsonGetter != null) {
+                    String inferredName = inferFieldNameFromGetter(method.getName());
+                    // 如果推断出的字段名不在已加载字段列表中，则为计算属性
+                    if (inferredName == null || !fieldNames.contains(inferredName)) {
+                        method.setAccessible(true);
+                        computed.add(method);
+                    }
+                }
+            }
+            return computed.isEmpty() ? new Method[0] : computed.toArray(new Method[0]);
+        });
+    }
+
+    /**
+     * 检查类是否有计算属性。
+     *
+     * @param clazz 要检查的类
+     * @return true 如果类中存在计算属性方法
+     * @since 1.0.0
+     */
+    public static boolean hasComputedProperties(Class<?> clazz) {
+        return findComputedProperties(clazz).length > 0;
+    }
+
+    /**
+     * 获取计算属性的 JSON 名称。
+     *
+     * @param method 标注了 @JsonGetter 的方法
+     * @return JSON 属性名
+     * @since 1.0.0
+     */
+    public static String getComputedPropertyName(Method method) {
+        JsonGetter jsonGetter = method.getAnnotation(JsonGetter.class);
+        if (jsonGetter != null && !jsonGetter.value().isEmpty()) {
+            return jsonGetter.value();
+        }
+        String inferred = inferFieldNameFromGetter(method.getName());
+        return inferred != null ? inferred : method.getName();
+    }
+
+    /**
+     * 查找类中标注了 {@code @JsonAnySetter} 的方法。
+     *
+     * <p><b>注意：</b> @JsonAnySetter 注解已删除，此方法始终返回 null。
+     * 保留此方法以维持向后兼容的二进制接口。</p>
+     *
+     * @param clazz 要扫描的类
+     * @return 始终返回 null
+     */
+    public static Method findAnySetterMethod(Class<?> clazz) {
+        return null;
+    }
+
+    /**
+     * 检查字段是否有影响序列化的注解（用于快速路径判定）。
+     *
+     * <p>检测以下需要特殊处理的注解/状态：</p>
+     * <ul>
+     *   <li>{@code @JsonFormat} 日期格式（{@link FieldMeta#isDateType()}）</li>
+     *   <li>{@code @JsonInclude} 非 ALWAYS 策略（{@link FieldMeta#includeStrategy}）</li>
+     * </ul>
+     */
+    public static boolean hasFieldAnnotations(FieldMeta[] fields) {
+        if (fields == null) return false;
+        for (FieldMeta field : fields) {
+            if (field.isDateType()
+                || field.includeStrategy != JsonInclude.Include.ALWAYS) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 判断字段是否可见。
+     *
+     * <p>可见性策略由 @JsonVisibility 注解控制。由于该注解已删除，
+     * 默认策略为 ANY（所有字段可见）。</p>
+     *
+     * @param modifiers 字段修饰符
+     * @param field 字段对象
+     * @return 始终返回 true
+     */
+    public static boolean isFieldVisible(int modifiers, Field field) {
+        return true;
+    }
+}

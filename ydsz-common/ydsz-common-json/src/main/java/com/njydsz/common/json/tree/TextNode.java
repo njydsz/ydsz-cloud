@@ -1,1 +1,95 @@
-package com.njydsz.common.json.tree;\n\n/**\n * JSON 文本节点\n *\n * <p>对标 Jackson TextNode，表示一个 JSON 字符串值。\n * 内部持有 String 引用，提供类型转换方法。</p>\n *\n * <p><b>特性：</b></p>\n * <ul>\n *   <li>不可变对象，线程安全</li>\n *   <li>空字符串使用 EMPTY 单例，减少对象创建</li>\n *   <li>自动处理 null 值（转换为空字符串）</li>\n * </ul>\n *\n * <p><b>使用示例：</b></p>\n * <pre>\n * TextNode node = new TextNode("hello");\n * String value = node.asText(); // "hello"\n *\n * // 使用工厂方法\n * TextNode empty = TextNode.of(null); // 返回 EMPTY 单例\n * </pre>\n *\n * @author ydsz-team\n * @since 1.0.0\n */\npublic final class TextNode extends JsonNode {\n\n    private static final TextNode EMPTY = new TextNode("");\n\n    private final String value;\n\n    /**\n     * 创建文本节点\n     *\n     * @param value 文本值，null 会被转换为空字符串\n     */\n    public TextNode(String value) {\n        this.value = value != null ? value : "";\n    }\n\n    /**\n     * 工厂方法：创建文本节点\n     *\n     * <p>空字符串或 null 会返回预定义的 EMPTY 单例，减少对象创建。</p>\n     *\n     * @param value 文本值\n     * @return 文本节点实例\n     */\n    public static TextNode of(String value) {\n        return value != null && !value.isEmpty() ? new TextNode(value) : EMPTY;\n    }\n\n    @Override\n    public boolean isTextual() {\n        return true;\n    }\n\n    @Override\n    public String asText() {\n        return value;\n    }\n\n    @Override\n    public String asText(String defaultValue) {\n        return value.isEmpty() ? defaultValue : value;\n    }\n\n    @Override\n    public Object asValue() {\n        return value;\n    }\n\n    @Override\n    public String toString() {\n        StringBuilder sb = new StringBuilder();\n        sb.append('"');\n        for (int i = 0; i < value.length(); i++) {\n            char c = value.charAt(i);\n            switch (c) {\n                case '"': sb.append("\\\""); break;\n                case '\\': sb.append("\\\\"); break;\n                case '\n': sb.append("\\n"); break;\n                case '\r': sb.append("\\r"); break;\n                case '\t': sb.append("\\t"); break;\n                case '\b': sb.append("\\b"); break;\n                case '\f': sb.append("\\f"); break;\n                default:\n                    if (c < ' ') {\n                        sb.append("\\u");\n                        sb.append(String.format("%04x", (int) c));\n                    } else {\n                        sb.append(c);\n                    }\n            }\n        }\n        sb.append('"');\n        return sb.toString();\n    }\n\n    @Override\n    public boolean equals(Object obj) {\n        if (this == obj) {\n            return true;\n        }\n        if (!(obj instanceof TextNode)) {\n            return false;\n        }\n        return value.equals(((TextNode) obj).value);\n    }\n\n    @Override\n    public int hashCode() {\n        return value.hashCode();\n    }\n}\n
+package com.njydsz.common.json.tree;
+
+/**
+ * JSON 文本节点
+ *
+ * <p>对标 Jackson TextNode，表示一个 JSON 字符串值。
+ * 内部持有 String 引用，提供类型转换方法。</p>
+ *
+ * <p><b>特性：</b></p>
+ * <ul>
+ *   <li>不可变对象，线程安全</li>
+ *   <li>空字符串使用 EMPTY 单例，减少对象创建</li>
+ *   <li>自动处理 null 值（转换为空字符串）</li>
+ * </ul>
+ *
+ * <p><b>使用示例：</b></p>
+ * <pre>
+ * TextNode node = new TextNode("hello");
+ * String value = node.asText(); // "hello"
+ *
+ * // 使用工厂方法
+ * TextNode empty = TextNode.of(null); // 返回 EMPTY 单例
+ * </pre>
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+public final class TextNode extends JsonNode {
+
+    private static final TextNode EMPTY = new TextNode("");
+
+    private final String value;
+
+    /**
+     * 创建文本节点
+     *
+     * @param value 文本值，null 会被转换为空字符串
+     */
+    public TextNode(String value) {
+        this.value = value != null ? value : "";
+    }
+
+    /**
+     * 工厂方法：创建文本节点
+     *
+     * <p>空字符串或 null 会返回预定义的 EMPTY 单例，减少对象创建。</p>
+     *
+     * @param value 文本值
+     * @return 文本节点实例
+     */
+    public static TextNode of(String value) {
+        return value != null && !value.isEmpty() ? new TextNode(value) : EMPTY;
+    }
+
+    @Override
+    public boolean isTextual() {
+        return true;
+    }
+
+    @Override
+    public String asText() {
+        return value;
+    }
+
+    @Override
+    public String asText(String defaultValue) {
+        return value.isEmpty() ? defaultValue : value;
+    }
+
+    @Override
+    public Object asValue() {
+        return value;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append('"');\n        for (int i = 0; i < value.length(); i++) {\n            char c = value.charAt(i);\n            switch (c) {\n                case '"': sb.append("\\\""); break;
+                case '\\': sb.append("\\\\"); break;
+                case '
+': sb.append("\\n"); break;
+                case '\r': sb.append("\\r"); break;
+                case '\t': sb.append("\\t"); break;
+                case '\b': sb.append("\\b"); break;
+                case '\f': sb.append("\\f"); break;
+                default:
+                    if (c < ' ') {
+                        sb.append("\\u");
+                        sb.append(String.format("%04x", (int) c));
+                    } else {
+                        sb.append(c);
+                    }
+            }
+        }
+        sb.append('"');\n        return sb.toString();\n    }\n\n    @Override\n    public boolean equals(Object obj) {\n        if (this == obj) {\n            return true;\n        }\n        if (!(obj instanceof TextNode)) {\n            return false;\n        }\n        return value.equals(((TextNode) obj).value);\n    }\n\n    @Override\n    public int hashCode() {\n        return value.hashCode();\n    }\n}\n

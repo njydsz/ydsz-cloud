@@ -1,1 +1,124 @@
-package com.njydsz.common.json.tree;\n\nimport java.util.ArrayList;\nimport java.util.Iterator;\nimport java.util.LinkedHashMap;\nimport java.util.List;\nimport java.util.Map;\n\n/**\n * JSON 树模型转换器\n *\n * <p>将解析后的 Map/List 结构转换为 JsonNode 树模型，\n * 支持递归转换嵌套的 JSON 结构。</p>\n *\n * <p><b>支持的类型映射：</b></p>\n * <ul>\n *   <li>Map → ObjectNode</li>\n *   <li>List → ArrayNode</li>\n *   <li>String → TextNode</li>\n *   <li>Number → NumberNode</li>\n *   <li>Boolean → BooleanNode</li>\n *   <li>null → NullNode</li>\n * </ul>\n *\n * <p><b>使用示例：</b></p>\n * <pre>\n * Object parsed = JsonParserUtil.parse("{\"name\":\"John\"}");\n * JsonNode tree = TreeConverter.convertToJsonNode(parsed);\n * String name = tree.get("name").asText(); // "John"\n * </pre>\n *\n * @author ydsz-team\n * @since 1.0.0\n */\npublic final class TreeConverter {\n\n    private TreeConverter() {\n        throw new UnsupportedOperationException();\n    }\n\n    /**\n     * 将解析后的对象转换为 JsonNode 树\n     *\n     * @param value 解析后的对象（Map/List/String/Number/Boolean/null）\n     * @return JsonNode 树\n     */\n    public static JsonNode convertToJsonNode(Object value) {\n        if (value == null) {\n            return NullNode.getInstance();\n        }\n        if (value instanceof String) {\n            return TextNode.of((String) value);\n        }\n        if (value instanceof Number) {\n            return new NumberNode((Number) value);\n        }\n        if (value instanceof Boolean) {\n            return BooleanNode.of((Boolean) value);\n        }\n        if (value instanceof Map<?, ?> mapValue) {\n            Map<String, JsonNode> fields = new LinkedHashMap<>();\n            for (Map.Entry<?, ?> entry : mapValue.entrySet()) {\n                String key;\n                if (entry.getKey() instanceof String) {\n                    key = (String) entry.getKey();\n                } else {\n                    key = String.valueOf(entry.getKey());\n                }\n                fields.put(key, convertToJsonNode(entry.getValue()));\n            }\n            return new ObjectNode(fields);\n        }\n        if (value instanceof List<?> listValue) {\n            List<JsonNode> elements = new ArrayList<>();\n            for (Object item : listValue) {\n                elements.add(convertToJsonNode(item));\n            }\n            return new ArrayNode(elements);\n        }\n        return TextNode.of(value.toString());\n    }\n\n    /**\n     * 将 JsonNode 树转换为 Java 对象结构（Map/List/标量）。\n     *\n     * <p>F-2 直绑基础：{@code treeToValue} 据此跳过"树 → 字符串 → 再解析"的两次\n     * 结构转换（对标 Jackson TokenBuffer）。转换映射与 {@link #convertToJsonNode(Object)}\n     * 互逆：ObjectNode → Map、ArrayNode → List、叶子节点 → 对应标量、null → null。</p>\n     *\n     * @param node JsonNode 树\n     * @return 对应的 Java 对象结构\n     */\n    public static Object convertToJavaObject(JsonNode node) {\n        if (node == null || node.isNull()) {\n            return null;\n        }\n        if (node instanceof ObjectNode objectNode) {\n            Map<String, Object> map = new LinkedHashMap<>();\n            for (Map.Entry<String, JsonNode> entry : objectNode.entrySet()) {\n                map.put(entry.getKey(), convertToJavaObject(entry.getValue()));\n            }\n            return map;\n        }\n        if (node instanceof ArrayNode arrayNode) {\n            List<Object> list = new ArrayList<>(arrayNode.size());\n            Iterator<JsonNode> elements = arrayNode.elements();\n            while (elements.hasNext()) {\n                list.add(convertToJavaObject(elements.next()));\n            }\n            return list;\n        }\n        if (node instanceof NumberNode numberNode) {\n            return numberNode.numberValue();\n        }\n        if (node instanceof BooleanNode) {\n            return node.asBoolean();\n        }\n        if (node instanceof TextNode) {\n            return node.asText();\n        }\n        // 未知节点类型回退为字符串表示\n        return node.toString();\n    }\n}\n
+package com.njydsz.common.json.tree;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * JSON 树模型转换器
+ *
+ * <p>将解析后的 Map/List 结构转换为 JsonNode 树模型，
+ * 支持递归转换嵌套的 JSON 结构。</p>
+ *
+ * <p><b>支持的类型映射：</b></p>
+ * <ul>
+ *   <li>Map → ObjectNode</li>
+ *   <li>List → ArrayNode</li>
+ *   <li>String → TextNode</li>
+ *   <li>Number → NumberNode</li>
+ *   <li>Boolean → BooleanNode</li>
+ *   <li>null → NullNode</li>
+ * </ul>
+ *
+ * <p><b>使用示例：</b></p>
+ * <pre>
+ * Object parsed = JsonParserUtil.parse("{\"name\":\"John\"}");
+ * JsonNode tree = TreeConverter.convertToJsonNode(parsed);
+ * String name = tree.get("name").asText(); // "John"
+ * </pre>
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+public final class TreeConverter {
+
+    private TreeConverter() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * 将解析后的对象转换为 JsonNode 树
+     *
+     * @param value 解析后的对象（Map/List/String/Number/Boolean/null）
+     * @return JsonNode 树
+     */
+    public static JsonNode convertToJsonNode(Object value) {
+        if (value == null) {
+            return NullNode.getInstance();
+        }
+        if (value instanceof String) {
+            return TextNode.of((String) value);
+        }
+        if (value instanceof Number) {
+            return new NumberNode((Number) value);
+        }
+        if (value instanceof Boolean) {
+            return BooleanNode.of((Boolean) value);
+        }
+        if (value instanceof Map<?, ?> mapValue) {
+            Map<String, JsonNode> fields = new LinkedHashMap<>();
+            for (Map.Entry<?, ?> entry : mapValue.entrySet()) {
+                String key;
+                if (entry.getKey() instanceof String) {
+                    key = (String) entry.getKey();
+                } else {
+                    key = String.valueOf(entry.getKey());
+                }
+                fields.put(key, convertToJsonNode(entry.getValue()));
+            }
+            return new ObjectNode(fields);
+        }
+        if (value instanceof List<?> listValue) {
+            List<JsonNode> elements = new ArrayList<>();
+            for (Object item : listValue) {
+                elements.add(convertToJsonNode(item));
+            }
+            return new ArrayNode(elements);
+        }
+        return TextNode.of(value.toString());
+    }
+
+    /**
+     * 将 JsonNode 树转换为 Java 对象结构（Map/List/标量）。
+     *
+     * <p>F-2 直绑基础：{@code treeToValue} 据此跳过"树 → 字符串 → 再解析"的两次
+     * 结构转换（对标 Jackson TokenBuffer）。转换映射与 {@link #convertToJsonNode(Object)}
+     * 互逆：ObjectNode → Map、ArrayNode → List、叶子节点 → 对应标量、null → null。</p>
+     *
+     * @param node JsonNode 树
+     * @return 对应的 Java 对象结构
+     */
+    public static Object convertToJavaObject(JsonNode node) {
+        if (node == null || node.isNull()) {
+            return null;
+        }
+        if (node instanceof ObjectNode objectNode) {
+            Map<String, Object> map = new LinkedHashMap<>();
+            for (Map.Entry<String, JsonNode> entry : objectNode.entrySet()) {
+                map.put(entry.getKey(), convertToJavaObject(entry.getValue()));
+            }
+            return map;
+        }
+        if (node instanceof ArrayNode arrayNode) {
+            List<Object> list = new ArrayList<>(arrayNode.size());
+            Iterator<JsonNode> elements = arrayNode.elements();
+            while (elements.hasNext()) {
+                list.add(convertToJavaObject(elements.next()));
+            }
+            return list;
+        }
+        if (node instanceof NumberNode numberNode) {
+            return numberNode.numberValue();
+        }
+        if (node instanceof BooleanNode) {
+            return node.asBoolean();
+        }
+        if (node instanceof TextNode) {
+            return node.asText();
+        }
+        // 未知节点类型回退为字符串表示
+        return node.toString();
+    }
+}

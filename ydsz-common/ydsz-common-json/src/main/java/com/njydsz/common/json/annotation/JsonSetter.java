@@ -1,1 +1,37 @@
-package com.njydsz.common.json.annotation;\n\nimport java.lang.annotation.*;\n\n/**\n * Jackson 兼容注解：标记 setter 方法为 JSON 反序列化属性。\n *\n * <p>标注在 setter 方法上时，反序列化时将通过该方法设置属性值。\n * 可通过 {@code value} 指定 JSON 属性名，覆盖默认的字段名映射。</p>\n *\n * <p>使用示例：</p>\n * <pre><code>\n * public class User {\n *     private String name;\n *\n *     &#64;JsonSetter("user_name")\n *     public void setName(String name) {\n *         this.name = name != null ? name.trim() : null;\n *     }\n * }\n * </code></pre>\n *\n * @author ydsz-team\n * @since 1.0.0\n */\n@Target(ElementType.METHOD)\n@Retention(RetentionPolicy.RUNTIME)\n@Documented\npublic @interface JsonSetter {\n\n    /**\n     * JSON 属性名称（空字符串表示使用方法名推断）\n     *\n     * @return 属性名称\n     */\n    String value() default "";\n}\n
+package com.njydsz.common.json.annotation;
+
+import java.lang.annotation.*;
+
+/**
+ * Jackson 兼容注解：标记 setter 方法为 JSON 反序列化属性。
+ *
+ * <p>标注在 setter 方法上时，反序列化时将通过该方法设置属性值。
+ * 可通过 {@code value} 指定 JSON 属性名，覆盖默认的字段名映射。</p>
+ *
+ * <p>使用示例：</p>
+ * <pre><code>
+ * public class User {
+ *     private String name;
+ *
+ *     &#64;JsonSetter("user_name")
+ *     public void setName(String name) {
+ *         this.name = name != null ? name.trim() : null;
+ *     }
+ * }
+ * </code></pre>
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+@Target(ElementType.METHOD)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface JsonSetter {
+
+    /**
+     * JSON 属性名称（空字符串表示使用方法名推断）
+     *
+     * @return 属性名称
+     */
+    String value() default "";
+}

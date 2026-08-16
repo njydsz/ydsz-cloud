@@ -1,1 +1,36 @@
-package com.njydsz.common.json.deserializer;\n\nimport com.njydsz.common.json.reader.JSONReader;\n\n/**\n * 自定义反序列化器接口\n *\n * <p>允许用户注册自定义反序列化逻辑。</p>\n *\n * <p>使用示例：</p>\n * <pre>\n * public class CustomUserDeserializer implements JsonDeserializer&lt;User&gt; {\n *     public User deserialize(JSONDeserializer in) {\n *         in.beginObject();\n *         Long id = in.readNumber("id", Long.class);\n *         String name = in.readString("name");\n *         in.endObject();\n *         return new User(id, name);\n *     }\n * }\n * </pre>\n *\n * @param <T> 反序列化的目标类型\n * @author ydsz-team\n * @since 1.0.0\n */\npublic interface JsonDeserializer<T> {\n\n    /**\n     * 反序列化对象\n     *\n     * @param in 输入反序列化器（用于读取 JSON）\n     * @return 反序列化后的对象\n     */\n    T deserialize(JSONReader in);\n}\n
+package com.njydsz.common.json.deserializer;
+
+import com.njydsz.common.json.reader.JSONReader;
+
+/**
+ * 自定义反序列化器接口
+ *
+ * <p>允许用户注册自定义反序列化逻辑。</p>
+ *
+ * <p>使用示例：</p>
+ * <pre>
+ * public class CustomUserDeserializer implements JsonDeserializer&lt;User&gt; {
+ *     public User deserialize(JSONDeserializer in) {
+ *         in.beginObject();
+ *         Long id = in.readNumber("id", Long.class);
+ *         String name = in.readString("name");
+ *         in.endObject();
+ *         return new User(id, name);
+ *     }
+ * }
+ * </pre>
+ *
+ * @param <T> 反序列化的目标类型
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+public interface JsonDeserializer<T> {
+
+    /**
+     * 反序列化对象
+     *
+     * @param in 输入反序列化器（用于读取 JSON）
+     * @return 反序列化后的对象
+     */
+    T deserialize(JSONReader in);
+}

@@ -1,1 +1,897 @@
-package com.njydsz.common.json.provider;\n\nimport java.lang.reflect.Array;\nimport java.lang.reflect.Method;\nimport java.math.BigDecimal;\nimport java.math.BigInteger;\nimport java.time.*;\nimport java.time.temporal.TemporalAccessor;\nimport java.time.format.DateTimeFormatter;\nimport java.util.*;\nimport java.util.concurrent.ConcurrentHashMap;\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\nimport java.util.UUID;\n\nimport com.njydsz.common.json.annotation.JsonClass;\nimport com.njydsz.common.json.annotation.JsonView;\nimport com.njydsz.common.json.cache.FieldMeta;\nimport com.njydsz.common.json.cache.SerializerCache;\nimport com.njydsz.common.json.naming.PropertyNamingStrategy;\nimport com.njydsz.common.json.internal.JsonConfig;\nimport com.njydsz.common.json.util.BoundedLruCache;\nimport com.njydsz.common.json.writer.JSONWriter;\n\nimport java.sql.Date;\nimport java.sql.Timestamp;\n/**\n * 类型特定的值写入器\n *\n * <p>从 SerializationProvider 中提取的类型特定值写入逻辑。</p>\n *\n * <p><b>优化技术：</b></p>\n * <ul>\n *   <li>类型代码缓存 - 使用 ConcurrentHashMap 缓存类型代码，替代 instanceof 链</li>\n *   <li>小整数缓存 - 0-9999 的整数直接查表，避免 String.valueOf 开销</li>\n *   <li>快速字符串编码 - 两次遍历快速路径，减少转义判断开销</li>\n *   <li>循环引用检测 - 使用 IdentityHashMap 保证引用比较</li>\n * </ul>\n *\n * @author ydsz-team\n * @since 1.0.0\n */\n@SuppressWarnings("deprecation")\npublic final class ValueWriter {\n\n    private static final Logger LOGGER = LoggerFactory.getLogger(ValueWriter.class);\n    /** 小整数缓存（0-9999） */\n    static final String[] SMALL_INTS = new String[10000];\n\n    /** 类型代码枚举 */\n    static final byte TYPE_CODE_STRING = 1;\n    static final byte TYPE_CODE_INTEGER = 2;\n    static final byte TYPE_CODE_LONG = 3;\n    static final byte TYPE_CODE_DOUBLE = 4;\n    static final byte TYPE_CODE_FLOAT = 5;\n    static final byte TYPE_CODE_BOOLEAN = 6;\n    static final byte TYPE_CODE_CHARACTER = 7;\n    static final byte TYPE_CODE_SHORT = 8;\n    static final byte TYPE_CODE_BYTE = 9;\n    static final byte TYPE_CODE_ARRAY = 10;\n    static final byte TYPE_CODE_LIST = 11;\n    static final byte TYPE_CODE_MAP = 12;\n    static final byte TYPE_CODE_DATE = 13;\n    static final byte TYPE_CODE_BIGDECIMAL = 14;\n    static final byte TYPE_CODE_BIGINTEGER = 15;\n    static final byte TYPE_CODE_BEAN = 16;\n    static final byte TYPE_CODE_OPTIONAL = 17;\n    static final byte TYPE_CODE_UUID = 18;\n\n    /** 类型代码缓存（Class -> 类型代码） */\n    static final ConcurrentHashMap<Class<?>, Byte> TYPE_CODE_CACHE = new ConcurrentHashMap<>(256);\n\n    /** 十六进制字符表（用于 \\uXXXX 转义） */\n    private static final char[] HEX = "0123456789abcdef".toCharArray();\n\n    /**\n     * 追加 \\uXXXX 四位数十六进制转义（用于 U+2028/U+2029 等非 BMP 内特殊字符）。\n     */\n    private static void appendHex4(StringBuilder sb, char c) {\n        sb.append("\\u");\n        sb.append(HEX[(c >> 12) & 0xf]);\n        sb.append(HEX[(c >> 8) & 0xf]);\n        sb.append(HEX[(c >> 4) & 0xf]);\n        sb.append(HEX[c & 0xf]);\n    }\n\n    static {\n        for (int i = 0; i < 10000; i++) {\n            SMALL_INTS[i] = String.valueOf(i);\n        }\n\n        // 预填充常见类型\n        TYPE_CODE_CACHE.put(String.class, TYPE_CODE_STRING);\n        TYPE_CODE_CACHE.put(Integer.class, TYPE_CODE_INTEGER);\n        TYPE_CODE_CACHE.put(Long.class, TYPE_CODE_LONG);\n        TYPE_CODE_CACHE.put(Double.class, TYPE_CODE_DOUBLE);\n        TYPE_CODE_CACHE.put(Float.class, TYPE_CODE_FLOAT);\n        TYPE_CODE_CACHE.put(Boolean.class, TYPE_CODE_BOOLEAN);\n        TYPE_CODE_CACHE.put(Character.class, TYPE_CODE_CHARACTER);\n        TYPE_CODE_CACHE.put(Short.class, TYPE_CODE_SHORT);\n        TYPE_CODE_CACHE.put(Byte.class, TYPE_CODE_BYTE);\n        TYPE_CODE_CACHE.put(LocalDateTime.class, TYPE_CODE_DATE);\n        TYPE_CODE_CACHE.put(LocalDate.class, TYPE_CODE_DATE);\n        TYPE_CODE_CACHE.put(LocalTime.class, TYPE_CODE_DATE);\n        TYPE_CODE_CACHE.put(ZonedDateTime.class, TYPE_CODE_DATE);\n        TYPE_CODE_CACHE.put(OffsetDateTime.class, TYPE_CODE_DATE);\n        TYPE_CODE_CACHE.put(OffsetTime.class, TYPE_CODE_DATE);\n        TYPE_CODE_CACHE.put(Instant.class, TYPE_CODE_DATE);\n        TYPE_CODE_CACHE.put(Year.class, TYPE_CODE_DATE);\n        TYPE_CODE_CACHE.put(YearMonth.class, TYPE_CODE_DATE);\n        TYPE_CODE_CACHE.put(MonthDay.class, TYPE_CODE_DATE);\n        TYPE_CODE_CACHE.put(Date.class, TYPE_CODE_DATE);\n        TYPE_CODE_CACHE.put(Date.class, TYPE_CODE_DATE);\n        TYPE_CODE_CACHE.put(Timestamp.class, TYPE_CODE_DATE);\n        TYPE_CODE_CACHE.put(BigDecimal.class, TYPE_CODE_BIGDECIMAL);\n        TYPE_CODE_CACHE.put(BigInteger.class, TYPE_CODE_BIGINTEGER);\n        TYPE_CODE_CACHE.put(UUID.class, TYPE_CODE_UUID);\n    }\n\n    private ValueWriter() {\n        throw new UnsupportedOperationException();\n    }\n\n    /**\n     * 获取类型代码（带缓存）\n     */\n    static byte getTypeCode(Object obj) {\n        Class<?> clazz = obj.getClass();\n        Byte cached = TYPE_CODE_CACHE.get(clazz);\n        if (cached != null) {\n            return cached;\n        }\n\n        // 未命中缓存，计算类型代码\n        byte typeCode;\n        if (clazz.isArray()) {\n            typeCode = TYPE_CODE_ARRAY;\n        } else if (obj instanceof List) {\n            typeCode = TYPE_CODE_LIST;\n        } else if (obj instanceof Map) {\n            typeCode = TYPE_CODE_MAP;\n        } else {\n            typeCode = TYPE_CODE_BEAN;\n        }\n\n        TYPE_CODE_CACHE.put(clazz, typeCode);\n        return typeCode;\n    }\n\n    /**\n     * 写入值（类型代码优化版）\n     *\n     * <p>使用类型代码替代 instanceof 链，提高分支预测准确率。</p>\n     */\n    public static void writeValue(Object obj, StringBuilder sb) {\n        if (obj == null) {\n            sb.append("null");\n            return;\n        }\n\n        // JsonNode 树模型快速路径：直接走树模型 toString()，避免反射序列化损坏\n        if (obj instanceof com.njydsz.common.json.tree.JsonNode) {\n            sb.append(obj.toString());\n            return;\n        }\n\n        byte typeCode = getTypeCode(obj);\n        switch (typeCode) {\n            case TYPE_CODE_STRING:\n                writeString((String) obj, sb);\n                break;\n            case TYPE_CODE_INTEGER:\n                writeInt((Integer) obj, sb);\n                break;\n            case TYPE_CODE_LONG:\n                writeLong((Long) obj, sb);\n                break;\n            case TYPE_CODE_DOUBLE:\n                writeDouble((Double) obj, sb);\n                break;\n            case TYPE_CODE_FLOAT:\n                writeFloat((Float) obj, sb);\n                break;\n            case TYPE_CODE_BOOLEAN:\n                writeBoolean((Boolean) obj, sb);\n                break;\n            case TYPE_CODE_CHARACTER:\n                writeChar((Character) obj, sb);\n                break;\n            case TYPE_CODE_SHORT:\n            case TYPE_CODE_BYTE:\n                sb.append(obj);\n                break;\n            case TYPE_CODE_ARRAY:\n                writeArray(obj, sb);\n                break;\n            case TYPE_CODE_LIST:\n                writeListOptimized((List<?>) obj, sb);\n                break;\n            case TYPE_CODE_MAP:\n                writeMapOptimized((Map<?, ?>) obj, sb);\n                break;\n            case TYPE_CODE_DATE:\n                writeString(formatDateValue(obj), sb);\n                break;\n            case TYPE_CODE_BIGDECIMAL:\n                sb.append(((BigDecimal) obj).toPlainString());\n                break;\n            case TYPE_CODE_BIGINTEGER:\n                sb.append(((BigInteger) obj).toString());\n                break;\n            case TYPE_CODE_UUID:\n                writeString(obj.toString(), sb);\n                break;\n            default:\n                if (obj instanceof Optional<?> optional) {\n                    if (optional.isPresent()) {\n                        writeValue(optional.get(), sb);\n                    } else {\n                        sb.append("null");\n                    }\n                } else {\n                    writeBeanWithCycleDetection(obj, sb);\n                }\n        }\n    }\n\n    /**\n     * 写入字符串\n     */\n    public static void writeString(String str, StringBuilder sb) {\n        int len = str.length();\n        if (len == 0) {\n            sb.append("\"\"");\n            return;\n        }\n\n        int firstSpecial = -1;\n        for (int i = 0; i < len; i++) {\n            char c = str.charAt(i);\n            if (c < ' ' || c == '"' || c == '\\' || c == '\u2028' || c == '\u2029'\n                    || Character.isHighSurrogate(c) || Character.isLowSurrogate(c)) {\n                firstSpecial = i;\n                break;\n            }\n        }\n\n        if (firstSpecial == -1) {\n            sb.append('"');\n            sb.append(str);\n            sb.append('"');\n            return;\n        }\n\n        sb.append('"');\n        for (int i = 0; i < len; i++) {\n            char c = str.charAt(i);\n            switch (c) {\n                case '"': sb.append("\\\""); break;\n                case '\\': sb.append("\\\\"); break;\n                case '\b': sb.append("\\b"); break;\n                case '\f': sb.append("\\f"); break;\n                case '\n': sb.append("\\n"); break;\n                case '\r': sb.append("\\r"); break;\n                case '\t': sb.append("\\t"); break;\n                default:\n                    if (c < ' ') {\n                        // 快速 Unicode 转义（避免 String.format 开销）\n                        sb.append("\\u00");\n                        char h = (char)(c >> 4);\n                        char l = (char)(c & 0xf);\n                        sb.append((char)(h < 10 ? h + '0' : h - 10 + 'a'));\n                        sb.append((char)(l < 10 ? l + '0' : l - 10 + 'a'));\n                    } else if (c == '\u2028' || c == '\u2029') {\n                        // 行/段落分隔符：裸置于 <script> 中会导致 JS 语法错误，安全转义\n                        appendHex4(sb, c);\n                    } else if (Character.isHighSurrogate(c)) {\n                        if (i + 1 < len && Character.isLowSurrogate(str.charAt(i + 1))) {\n                            sb.append(c);\n                            sb.append(str.charAt(i + 1));\n                            i++;\n                        } else {\n                            // 孤立高位代理：替换为 U+FFFD\n                            sb.append('\uFFFD');\n                        }\n                    } else if (Character.isLowSurrogate(c)) {\n                        // 孤立低位代理：替换为 U+FFFD\n                        sb.append('\uFFFD');\n                    } else {\n                        sb.append(c);\n                    }\n            }\n        }\n        sb.append('"');\n    }\n\n    /**\n     * 写入字符串（FastJSON2 架构优化 - 两次遍历快速路径）\n     */\n    public static void writeStringInline(String str, StringBuilder sb) {\n        int len = str.length();\n\n        // 快速路径：检查是否需要转义\n        boolean needsEscape = false;\n        for (int i = 0; i < len; i++) {\n            char c = str.charAt(i);\n            if (c < ' ' || c == '"' || c == '\\' || c == '\u2028' || c == '\u2029'\n                    || Character.isHighSurrogate(c) || Character.isLowSurrogate(c)) {\n                needsEscape = true;\n                break;\n            }\n        }\n\n        if (!needsEscape) {\n            // 无转义，直接写入（最优路径）\n            sb.ensureCapacity(sb.length() + len + 2);\n            sb.append('"');\n            sb.append(str);\n            sb.append('"');\n            return;\n        }\n\n        // 慢速路径：需要转义（优化版 - 避免 String.format）\n        sb.append('"');\n        for (int i = 0; i < len; i++) {\n            char c = str.charAt(i);\n            switch (c) {\n                case '"': sb.append("\\\""); break;\n                case '\\': sb.append("\\\\"); break;\n                case '\n': sb.append("\\n"); break;\n                case '\r': sb.append("\\r"); break;\n                case '\t': sb.append("\\t"); break;\n                case '\b': sb.append("\\b"); break;\n                case '\f': sb.append("\\f"); break;\n                default:\n                    if (c < ' ') {\n                        // 快速 Unicode 转义（避免 String.format）\n                        sb.append("\\u00");\n                        char h = (char)(c >> 4);\n                        char l = (char)(c & 0xf);\n                        sb.append((char)(h < 10 ? h + '0' : h - 10 + 'a'));\n                        sb.append((char)(l < 10 ? l + '0' : l - 10 + 'a'));\n                    } else if (c == '\u2028' || c == '\u2029') {\n                        // 行/段落分隔符：裸置于 <script> 中会导致 JS 语法错误，安全转义\n                        appendHex4(sb, c);\n                    } else if (Character.isHighSurrogate(c)) {\n                        if (i + 1 < len && Character.isLowSurrogate(str.charAt(i + 1))) {\n                            sb.append(c);\n                            sb.append(str.charAt(i + 1));\n                            i++;\n                        } else {\n                            // 孤立高位代理：替换为 U+FFFD\n                            sb.append('\uFFFD');\n                        }\n                    } else if (Character.isLowSurrogate(c)) {\n                        // 孤立低位代理：替换为 U+FFFD\n                        sb.append('\uFFFD');\n                    } else {\n                        sb.append(c);\n                    }\n                    break;\n            }\n        }\n        sb.append('"');\n    }\n\n    /**\n     * 写入整数（FastJSON2 快速路径 - 直接写入字符数组）\n     */\n    public static void writeInt(int value, StringBuilder sb) {\n        if (value >= 0 && value < 10000) {\n            sb.append(SMALL_INTS[value]);\n            return;\n        }\n\n        sb.append(value);\n    }\n\n    /**\n     * 写入长整数（优化版）\n     */\n    public static void writeLong(long value, StringBuilder sb) {\n        if (value >= 0 && value < 10000) {\n            sb.append(SMALL_INTS[(int) value]);\n            return;\n        }\n\n        sb.append(value);\n    }\n\n    /**\n     * 写入双精度数（FastJSON2 架构优化）\n     */\n    public static void writeDouble(double value, StringBuilder sb) {\n        if (Double.isNaN(value) || Double.isInfinite(value)) {\n            sb.append("null");\n        } else {\n            // 快速路径：整数值直接输出\n            if (value == (long) value && Math.abs(value) < 1e15) {\n                sb.append((long) value).append(".0");\n            } else {\n                sb.append(Double.toString(value));\n            }\n        }\n    }\n\n    /**\n     * 直接写入 double（避免方法调用开销）\n     */\n    public static void writeDoubleDirect(double value, StringBuilder sb) {\n        if (value == Double.POSITIVE_INFINITY) {\n            sb.append("1.7976931348623157E308");\n        } else if (value == Double.NEGATIVE_INFINITY) {\n            sb.append("-1.7976931348623157E308");\n        } else if (Double.isNaN(value)) {\n            sb.append("0");\n        } else {\n            sb.append(value);\n        }\n    }\n\n    /**\n     * 写入浮点数（FastJSON2 架构优化）\n     */\n    public static void writeFloat(float value, StringBuilder sb) {\n        // 快速路径：整数值直接输出\n        if (value == (int) value && Math.abs(value) < 1e7) {\n            sb.append((int) value).append(".0");\n        } else {\n            sb.append(Float.toString(value));\n        }\n    }\n\n    /**\n     * 写入布尔值\n     */\n    public static void writeBoolean(boolean value, StringBuilder sb) {\n        sb.append(value ? "true" : "false");\n    }\n\n    /**\n     * 写入字符\n     */\n    public static void writeChar(char value, StringBuilder sb) {\n        sb.append('"').append(value).append('"');\n    }\n\n    /**\n     * 写入数组\n     */\n    public static void writeArray(Object array, StringBuilder sb) {\n        sb.append('[');\n        int len = Array.getLength(array);\n        for (int i = 0; i < len; i++) {\n            if (i > 0) sb.append(',');\n            writeValueDirect(Array.get(array, i), sb);\n        }\n        sb.append(']');\n    }\n\n    /**\n     * 写入 List（FastJSON2 架构优化 - 类型代码替代 instanceof 链）\n     */\n    public static void writeList(List<?> list, StringBuilder sb) {\n        int size = list.size();\n        sb.append('[');\n        for (int i = 0; i < size; i++) {\n            if (i > 0) sb.append(',');\n            Object item = list.get(i);\n            if (item == null) {\n                sb.append("null");\n            } else {\n                writeValueByTypeCodeFast(item, sb, getTypeCode(item));\n            }\n        }\n        sb.append(']');\n    }\n\n    /**\n     * 优化列表序列化（使用 JSONWriter 直接写入，避免创建中间 String）\n     */\n    public static void writeListOptimized(List<?> list, StringBuilder sb) {\n        JSONWriter writer = SerializationProvider.getFastWriterPool();\n        writer.reset();\n        writer.writeCollection(list);\n        sb.append(writer.toString());\n    }\n\n    /**\n     * 写入 Map（FastJSON2 架构优化 - 类型代码替代 instanceof 链）\n     */\n    public static void writeMapOptimized(Map<?, ?> map, StringBuilder sb) {\n        sb.append('{');\n        boolean first = true;\n        for (Map.Entry<?, ?> entry : map.entrySet()) {\n            if (!first) sb.append(',');\n            first = false;\n\n            Object key = entry.getKey();\n            if (key instanceof String) {\n                sb.append('"').append((String) key).append('"');\n            } else {\n                sb.append('"').append(String.valueOf(key)).append('"');\n            }\n\n            sb.append(':');\n\n            Object value = entry.getValue();\n            if (value == null) {\n                sb.append("null");\n            } else {\n                writeValueByTypeCodeFast(value, sb, getTypeCode(value));\n            }\n        }\n        sb.append('}');\n    }\n\n    /**\n     * 写入 Bean 对象（ASM 优化版本 - FastJSON2 核心架构）\n     */\n    public static void writeBean(Object obj, StringBuilder sb) {\n        Class<?> clazz = obj.getClass();\n        JsonClass classAnnotation = clazz.getAnnotation(JsonClass.class);\n\n        PropertyNamingStrategy strategy = FieldMetadataLoader.NAMING_STRATEGY.get();\n        FieldMeta[] fields = SerializerCache.getFieldMeta(clazz, strategy);\n        if (fields == null) {\n            fields = FieldMetadataLoader.loadFields(clazz);\n            SerializerCache.putFieldMeta(clazz, strategy, fields);\n        }\n\n        boolean hasFieldAnnotations = FieldMetadataLoader.hasFieldAnnotations(fields);\n\n        // 如果没有注解，使用优化方式\n        if (classAnnotation == null && !hasFieldAnnotations) {\n            writeBeanNoAnnotationOptimized(obj, sb, clazz, fields);\n            return;\n        }\n\n        boolean writeClassName = classAnnotation != null && classAnnotation.writeClassName();\n        String dateFormat = classAnnotation != null && !classAnnotation.dateFormat().isEmpty()\n                ? classAnnotation.dateFormat() : null;\n        boolean classWriteNulls = classAnnotation != null && classAnnotation.writeNulls();\n        boolean serializeEnumUsingOrdinal = classAnnotation != null && classAnnotation.serializeEnumUsingOrdinal();\n\n        sb.append('{');\n        boolean first = true;\n\n        if (writeClassName) {\n            sb.append("\"@class\":\"").append(clazz.getName()).append("\"");\n            first = false;\n        }\n\n        for (FieldMeta field : fields) {\n            // 列权限字段排除检查\n            if (SerializationProvider.isFieldExcluded(field.jsonName)) {\n                continue;\n            }\n\n            Class<?> currentView = SerializationProvider.getCurrentViewClass();\n            if (currentView != null) {\n                JsonView viewAnnotation = field.field.getAnnotation(JsonView.class);\n                if (viewAnnotation == null) {\n                    continue;\n                }\n                Class<?>[] viewClasses = viewAnnotation.value();\n                boolean visible = false;\n                for (Class<?> vc : viewClasses) {\n                    if (vc == currentView || vc.isAssignableFrom(currentView)) {\n                        visible = true;\n                        break;\n                    }\n                }\n                if (!visible) {\n                    continue;\n                }\n            }\n\n            try {\n                Object value = field.getValue(obj);\n\n                // null 字段是否输出：@JsonClass(writeNulls=true) 类级注解 或 全局/Mapper writeNulls 配置\n                // 此前仅读类注解，导致 JsonConfig/JsonMapper.Builder 的 writeNulls(true) 对 Bean 序列化无效\n                boolean shouldWriteNull = classWriteNulls || SerializationProvider.isWriteNulls();\n                if (value == null && !shouldWriteNull) {\n                    continue;\n                }\n\n                // @JsonInclude 策略：NON_EMPTY/NON_DEFAULT 等对非 null 值的过滤\n                // shouldSkipValue(null) 已由上方 shouldWriteNull 逻辑覆盖（writeNulls=true 时强制写出），\n                // 此处仅对非 null 值应用 NON_EMPTY/NON_DEFAULT 过滤，避免空字符串/空集合/默认值被写出\n                if (value != null && field.shouldSkipValue(value)) {\n                    continue;\n                }\n\n                if (!first) sb.append(',');\n                first = false;\n\n                String jsonName = field.jsonName;\n                sb.append('"').append(jsonName).append('"').append(':');\n\n                if (field.isDateType() && value != null) {\n                    String formattedDate = dateFormat != null && !dateFormat.isEmpty()\n                            ? formatDateWithPattern(value, dateFormat)\n                            : field.formatDateValue(value);\n                    writeString(formattedDate, sb);\n                } else if (value instanceof Enum) {\n                    if (serializeEnumUsingOrdinal) {\n                        sb.append(((Enum<?>) value).ordinal());\n                    } else {\n                        writeString(((Enum<?>) value).name(), sb);\n                    }\n                } else {\n                    writeValueDirect(value, sb);\n                }\n            } catch (Exception e) {\n                LOGGER.debug("Failed to serialize field {} of {}: {}", field.name, obj.getClass().getName(), e.getMessage());\n            }\n        }\n\n        // @JsonGetter 计算属性：输出没有对应字段的 @JsonGetter 方法返回值\n        Method[] computedProps = FieldMetadataLoader.findComputedProperties(clazz);\n        for (Method computedMethod : computedProps) {\n            try {\n                Object computedValue = computedMethod.invoke(obj);\n                if (computedValue != null) {\n                    if (!first) sb.append(',');\n                    first = false;\n                    String propName = FieldMetadataLoader.getComputedPropertyName(computedMethod);\n                    sb.append('"').append(propName).append("\":");\n                    writeValueDirect(computedValue, sb);\n                }\n            } catch (Exception e) {\n                LOGGER.debug("Failed to invoke @JsonGetter computed property {}: {}", computedMethod.getName(), e.getMessage());\n            }\n        }\n\n        sb.append('}');\n    }\n\n    /**\n     * Bean 无注解快速路径（FastJSON2 架构极致优化）\n     *\n     * <p>FastJSON2 核心优化技术：</p>\n     * <ul>\n     *   <li>预计算有效字段数组 - 避免运行时 shouldSkip 判断</li>\n     *   <li>类型代码直接索引 - 消除 switch 分支开销</li>\n     *   <li>StringBuilder 预分配 - 基于精确容量计算</li>\n     *   <li>方法调用最小化 - 减少间接方法调用</li>\n     *   <li>ASM 字节码生成 - 彻底消除反射开销</li>\n     * </ul>\n     */\n    public static void writeBeanNoAnnotationOptimized(Object obj, StringBuilder sb, Class<?> clazz, FieldMeta[] fields) {\n        PropertyNamingStrategy strategy = FieldMetadataLoader.NAMING_STRATEGY.get();\n        SerializationProvider.BeanSerializerInfo info = SerializationProvider.getOrCreateBeanSerializer(clazz, fields, strategy);\n\n        // 精确容量预分配\n        sb.ensureCapacity(info.estimatedSize);\n\n        sb.append('{');\n        boolean first = true;\n\n        // 直接遍历预计算的有效字段\n        for (FieldMeta field : info.validFields) {\n            int typeCode = field.serializeTypeCode;\n\n            switch (typeCode) {\n                case 1:  // String\n                    String strVal;\n                    try {\n                        strVal = (String) field.getter.invoke(obj);\n                    } catch (Throwable e) {\n                        strVal = null;\n                    }\n                    if (strVal != null) {\n                        if (!first) sb.append(',');\n                        first = false;\n                        sb.append(field.jsonKey);\n                        // 快速路径：内联字符串检查\n                        int len = strVal.length();\n                        boolean needsEscape = false;\n                        for (int i = 0; i < len; i++) {\n                            char c = strVal.charAt(i);\n                            if (c < ' ' || c == '"' || c == '\\') {\n                                needsEscape = true;\n                                break;\n                            }\n                        }\n                        if (!needsEscape) {\n                            sb.append('"');\n                            sb.append(strVal);\n                            sb.append('"');\n                        } else {\n                            writeStringInline(strVal, sb);\n                        }\n                    }\n                    break;\n                case 2:  // int/Integer\n                    int intVal;\n                    try {\n                        Integer val = (Integer) field.getter.invoke(obj);\n                        intVal = val == null ? 0 : val;\n                    } catch (Throwable e) {\n                        intVal = 0;\n                    }\n                    if (intVal != 0 || field.type == int.class) {\n                        if (!first) sb.append(',');\n                        first = false;\n                        sb.append(field.jsonKey);\n                        // 小整数快速路径\n                        if (intVal >= 0 && intVal < 10000) {\n                            sb.append(SMALL_INTS[intVal]);\n                        } else {\n                            sb.append(intVal);\n                        }\n                    }\n                    break;\n                case 3:  // long/Long\n                    long longVal;\n                    try {\n                        Long val = (Long) field.getter.invoke(obj);\n                        longVal = val == null ? 0L : val;\n                    } catch (Throwable e) {\n                        longVal = 0L;\n                    }\n                    if (longVal != 0L || field.type == long.class) {\n                        if (!first) sb.append(',');\n                        first = false;\n                        sb.append(field.jsonKey);\n                        // 小长整数快速路径\n                        if (longVal >= 0 && longVal < 10000) {\n                            sb.append(SMALL_INTS[(int) longVal]);\n                        } else {\n                            sb.append(longVal);\n                        }\n                    }\n                    break;\n                case 4:  // double/Double\n                    double doubleVal;\n                    try {\n                        Double val = (Double) field.getter.invoke(obj);\n                        doubleVal = val == null ? 0.0 : val;\n                    } catch (Throwable e) {\n                        doubleVal = 0.0;\n                    }\n                    if (doubleVal != 0.0 || field.type == double.class) {\n                        if (!first) sb.append(',');\n                        first = false;\n                        sb.append(field.jsonKey);\n                        sb.append(doubleVal);\n                    }\n                    break;\n                case 6:  // boolean/Boolean\n                    boolean boolVal;\n                    try {\n                        Boolean val = (Boolean) field.getter.invoke(obj);\n                        boolVal = val == null ? false : val;\n                    } catch (Throwable e) {\n                        boolVal = false;\n                    }\n                    if (!first) sb.append(',');\n                    first = false;\n                    sb.append(field.jsonKey);\n                    sb.append(boolVal ? "true" : "false");\n                    break;\n                default:\n                    Object value;\n                    try {\n                        value = field.getter.invoke(obj);\n                    } catch (Throwable e) {\n                        value = null;\n                    }\n                    if (value == null) {\n                        break;\n                    }\n                    if (!first) sb.append(',');\n                    first = false;\n                    sb.append(field.jsonKey);\n                    writeValueByTypeCodeFast(value, sb, (byte) typeCode);\n                    break;\n            }\n        }\n\n        sb.append('}');\n    }\n\n    /**\n     * 根据类型代码快速写入值（FastJSON2 架构 - 处理所有类型包括 Bean/List/Map）\n     *\n     * @param value 值\n     * @param sb StringBuilder\n     * @param typeCode 类型代码\n     */\n    public static void writeValueByTypeCodeFast(Object value, StringBuilder sb, byte typeCode) {\n        switch (typeCode) {\n            case TYPE_CODE_STRING:\n                writeString((String) value, sb);\n                break;\n            case TYPE_CODE_INTEGER:\n                writeInt((Integer) value, sb);\n                break;\n            case TYPE_CODE_LONG:\n                writeLong((Long) value, sb);\n                break;\n            case TYPE_CODE_DOUBLE:\n                writeDouble((Double) value, sb);\n                break;\n            case TYPE_CODE_FLOAT:\n                writeFloat((Float) value, sb);\n                break;\n            case TYPE_CODE_BOOLEAN:\n                writeBoolean((Boolean) value, sb);\n                break;\n            case TYPE_CODE_CHARACTER:\n                writeChar((Character) value, sb);\n                break;\n            case TYPE_CODE_SHORT:\n            case TYPE_CODE_BYTE:\n                sb.append(value);\n                break;\n            case TYPE_CODE_ARRAY:\n                writeArray(value, sb);\n                break;\n            case TYPE_CODE_LIST:\n                writeList((List<?>) value, sb);\n                break;\n            case TYPE_CODE_MAP:\n                writeMapOptimized((Map<?, ?>) value, sb);\n                break;\n            case TYPE_CODE_DATE:\n                writeString(formatDateValue(value), sb);\n                break;\n            case TYPE_CODE_BIGDECIMAL:\n                sb.append(((BigDecimal) value).toPlainString());\n                break;\n            case TYPE_CODE_BIGINTEGER:\n                sb.append(((BigInteger) value).toString());\n                break;\n            case TYPE_CODE_UUID:\n                writeString(value.toString(), sb);\n                break;\n            default:\n                if (value instanceof Optional<?> optional) {\n                    if (optional.isPresent()) {\n                        writeValueByTypeCodeFast(optional.get(), sb, getTypeCode(optional.get()));\n                    } else {\n                        sb.append("null");\n                    }\n                } else {\n                    writeBeanWithCycleDetection(value, sb);\n                }\n                break;\n        }\n    }\n\n    /**\n     * 格式化日期（带模式）\n     */\n    public static String formatDateWithPattern(Object value, String pattern) {\n        if (value == null) return null;\n        try {\n            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);\n            if (value instanceof TemporalAccessor temporal) {\n                return formatter.format(temporal);\n            } else if (value instanceof Date date) {\n                return date.toInstant()\n                        .atZone(ZoneId.systemDefault())\n                        .toLocalDateTime().format(formatter);\n            }\n        } catch (Exception e) {\n            LOGGER.debug("Failed to format date with pattern '{}': {}", pattern, e.getMessage());\n        }\n        return value.toString();\n    }\n\n    /**\n     * 日期格式化器缓存（有界 LRU 容量 128，防止动态 pattern 场景下无界增长）\n     */\n    private static final BoundedLruCache<String, DateTimeFormatter> FORMATTER_CACHE =\n        new BoundedLruCache<>(128);\n\n    /**\n     * 格式化日期/时间值为字符串（统一入口，支持全局日期格式配置）。\n     *\n     * <p>格式化优先级：\n     * <ol>\n     *   <li>{@link JsonConfig#getDateFormat()} 全局日期格式（非空时优先）</li>\n     *   <li>ISO 默认格式（toString）</li>\n     * </ol>\n     * 支持所有 java.time.* 和 java.util.Date 类型。</p>\n     *\n     * @param value 日期/时间值\n     * @return 格式化后的字符串\n     * @since 1.0.0\n     */\n    public static String formatDateValue(Object value) {\n        if (value == null) return null;\n\n        // 优先从当前线程的 SerializationContext 读取 dateFormat（支持 JsonMapper 独立配置）\n        String globalFormat = SerializationProvider.getDateFormat();\n        // 回退到全局单例配置\n        if (globalFormat == null || globalFormat.isEmpty()) {\n            globalFormat = JsonConfig.getInstance().getDateFormat();\n        }\n        if (globalFormat != null && !globalFormat.isEmpty()) {\n            DateTimeFormatter formatter = getCachedFormatter(globalFormat);\n            if (formatter != null) {\n                try {\n                    if (value instanceof TemporalAccessor temporal) {\n                        return formatter.format(temporal);\n                    } else if (value instanceof Date date) {\n                        return date.toInstant()\n                                .atZone(ZoneId.systemDefault())\n                                .toLocalDateTime()\n                                .format(formatter);\n                    }\n                } catch (Exception e) {\n                    // 格式化失败，回退到 toString\n                }\n            }\n        }\n\n        if (value instanceof TemporalAccessor temporal) {\n            return temporal.toString();\n        } else if (value instanceof Date date) {\n            return date.toInstant().toString();\n        }\n        return value.toString();\n    }\n\n    /**\n     * 获取缓存的 DateTimeFormatter（避免重复 ofPattern 调用）\n     */\n    private static DateTimeFormatter getCachedFormatter(String pattern) {\n        try {\n            return FORMATTER_CACHE.computeIfAbsent(pattern, DateTimeFormatter::ofPattern);\n        } catch (Exception e) {\n            return null;\n        }\n    }\n\n    /**\n     * 写入 @JsonUnwrapped 展开字段。\n     *\n     * <p>将嵌套对象的字段展开到父 JSON 对象中，可添加前缀/后缀。</p>\n     *\n     * @param nestedObj 嵌套对象\n     * @param field 带有 @JsonUnwrapped 注解的字段元数据\n     * @param sb JSON 字符串构建器\n     * @param first 是否为第一个字段\n     * @since 1.0.0\n     */\n    private static void writeUnwrappedFields(Object nestedObj, FieldMeta field,\n                                              StringBuilder sb, boolean first) {\n        Class<?> nestedClass = nestedObj.getClass();\n        PropertyNamingStrategy nestedStrategy = FieldMetadataLoader.NAMING_STRATEGY.get();\n        FieldMeta[] nestedFields = SerializerCache.getFieldMeta(nestedClass, nestedStrategy);\n        if (nestedFields == null) {\n            nestedFields = FieldMetadataLoader.loadFields(nestedClass);\n            SerializerCache.putFieldMeta(nestedClass, nestedStrategy, nestedFields);\n        }\n\n        for (FieldMeta nestedField : nestedFields) {\n            Object nestedValue;\n            try {\n                nestedValue = nestedField.getValue(nestedObj);\n            } catch (Exception e) {\n                continue;\n            }\n            if (nestedValue == null) {\n                continue;\n            }\n            if (!first) {\n                sb.append(',');\n            }\n            first = false;\n            sb.append('"').append(nestedField.jsonName).append("\":");\n            writeValueDirect(nestedValue, sb);\n        }\n    }\n\n    /**\n     * 写入格式化数字\n     */\n    public static void writeFormattedNumber(Number value, String format, StringBuilder sb) {\n        if (value instanceof Double || value instanceof Float) {\n            double d = value.doubleValue();\n            if (!format.isEmpty()) {\n                sb.append(String.format(format, d));\n            } else {\n                sb.append(d);\n            }\n        } else if (value instanceof Long) {\n            long l = value.longValue();\n            if (!format.isEmpty()) {\n                sb.append(String.format(format, l));\n            } else {\n                sb.append(l);\n            }\n        } else {\n            sb.append(value);\n        }\n    }\n\n    /**\n     * 写入 HTML 安全字符串\n     */\n    public static void writeHtmlSafeString(String value, StringBuilder sb) {\n        sb.append('"');\n        for (int i = 0; i < value.length(); i++) {\n            char c = value.charAt(i);\n            switch (c) {\n                case '<': sb.append("\\u003c"); break;\n                case '>': sb.append("\\u003e"); break;\n                case '&': sb.append("\\u0026"); break;\n                case '"': sb.append("\\\""); break;\n                case '\\': sb.append("\\\\"); break;\n                default: sb.append(c); break;\n            }\n        }\n        sb.append('"');\n    }\n\n    /**\n     * 写入 Bean 对象（带循环引用检测）\n     */\n    public static void writeBeanWithCycleDetection(Object obj, StringBuilder sb) {\n        Set<Object> current = SerializationProvider.getSerializingObjects();\n\n        if (current.contains(obj)) {\n            sb.append("{\"$ref\":\"cycle\"}");\n            return;\n        }\n\n        current.add(obj);\n        try {\n            writeBean(obj, sb);\n        } finally {\n            current.remove(obj);\n        }\n    }\n\n    /**\n     * 直接写入值（优化版，避免重复类型检查）\n     */\n    public static void writeValueDirect(Object obj, StringBuilder sb) {\n        if (obj == null) {\n            sb.append("null");\n            return;\n        }\n\n        Class<?> clazz = obj.getClass();\n\n        if (clazz == String.class) {\n            writeString((String) obj, sb);\n        } else if (clazz == Integer.class) {\n            writeInt((Integer) obj, sb);\n        } else if (clazz == Long.class) {\n            writeLong((Long) obj, sb);\n        } else if (clazz == Double.class) {\n            writeDouble((Double) obj, sb);\n        } else if (clazz == Float.class) {\n            writeFloat((Float) obj, sb);\n        } else if (clazz == Boolean.class) {\n            writeBoolean((Boolean) obj, sb);\n        } else if (clazz == Character.class) {\n            writeChar((Character) obj, sb);\n        } else if (clazz == UUID.class) {\n            writeString(obj.toString(), sb);\n        } else if (obj instanceof Optional<?> optional) {\n            if (optional.isPresent()) {\n                writeValueDirect(optional.get(), sb);\n            } else {\n                sb.append("null");\n            }\n        } else if (obj instanceof List) {\n            writeList((List<?>) obj, sb);\n        } else if (obj instanceof Map) {\n            writeMapOptimized((Map<?, ?>) obj, sb);\n        } else if (clazz.isArray()) {\n            writeArray(obj, sb);\n        } else if (obj instanceof TemporalAccessor || obj instanceof Date) {\n            writeString(formatDateValue(obj), sb);\n        } else {\n            writeBeanWithCycleDetection(obj, sb);\n        }\n    }\n}\n
+package com.njydsz.common.json.provider;
+
+import java.lang.reflect.Array;
+import java.lang.reflect.Method;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.time.*;
+import java.time.temporal.TemporalAccessor;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.util.UUID;
+
+import com.njydsz.common.json.annotation.JsonClass;
+import com.njydsz.common.json.annotation.JsonView;
+import com.njydsz.common.json.cache.FieldMeta;
+import com.njydsz.common.json.cache.SerializerCache;
+import com.njydsz.common.json.naming.PropertyNamingStrategy;
+import com.njydsz.common.json.internal.JsonConfig;
+import com.njydsz.common.json.util.BoundedLruCache;
+import com.njydsz.common.json.writer.JSONWriter;
+
+import java.sql.Date;
+import java.sql.Timestamp;
+/**
+ * 类型特定的值写入器
+ *
+ * <p>从 SerializationProvider 中提取的类型特定值写入逻辑。</p>
+ *
+ * <p><b>优化技术：</b></p>
+ * <ul>
+ *   <li>类型代码缓存 - 使用 ConcurrentHashMap 缓存类型代码，替代 instanceof 链</li>
+ *   <li>小整数缓存 - 0-9999 的整数直接查表，避免 String.valueOf 开销</li>
+ *   <li>快速字符串编码 - 两次遍历快速路径，减少转义判断开销</li>
+ *   <li>循环引用检测 - 使用 IdentityHashMap 保证引用比较</li>
+ * </ul>
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+@SuppressWarnings("deprecation")
+public final class ValueWriter {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ValueWriter.class);
+    /** 小整数缓存（0-9999） */
+    static final String[] SMALL_INTS = new String[10000];
+
+    /** 类型代码枚举 */
+    static final byte TYPE_CODE_STRING = 1;
+    static final byte TYPE_CODE_INTEGER = 2;
+    static final byte TYPE_CODE_LONG = 3;
+    static final byte TYPE_CODE_DOUBLE = 4;
+    static final byte TYPE_CODE_FLOAT = 5;
+    static final byte TYPE_CODE_BOOLEAN = 6;
+    static final byte TYPE_CODE_CHARACTER = 7;
+    static final byte TYPE_CODE_SHORT = 8;
+    static final byte TYPE_CODE_BYTE = 9;
+    static final byte TYPE_CODE_ARRAY = 10;
+    static final byte TYPE_CODE_LIST = 11;
+    static final byte TYPE_CODE_MAP = 12;
+    static final byte TYPE_CODE_DATE = 13;
+    static final byte TYPE_CODE_BIGDECIMAL = 14;
+    static final byte TYPE_CODE_BIGINTEGER = 15;
+    static final byte TYPE_CODE_BEAN = 16;
+    static final byte TYPE_CODE_OPTIONAL = 17;
+    static final byte TYPE_CODE_UUID = 18;
+
+    /** 类型代码缓存（Class -> 类型代码） */
+    static final ConcurrentHashMap<Class<?>, Byte> TYPE_CODE_CACHE = new ConcurrentHashMap<>(256);
+
+    /** 十六进制字符表（用于 \\uXXXX 转义） */
+    private static final char[] HEX = "0123456789abcdef".toCharArray();
+
+    /**
+     * 追加 \\uXXXX 四位数十六进制转义（用于 U+2028/U+2029 等非 BMP 内特殊字符）。
+     */
+    private static void appendHex4(StringBuilder sb, char c) {
+        sb.append("\\u");
+        sb.append(HEX[(c >> 12) & 0xf]);
+        sb.append(HEX[(c >> 8) & 0xf]);
+        sb.append(HEX[(c >> 4) & 0xf]);
+        sb.append(HEX[c & 0xf]);
+    }
+
+    static {
+        for (int i = 0; i < 10000; i++) {
+            SMALL_INTS[i] = String.valueOf(i);
+        }
+
+        // 预填充常见类型
+        TYPE_CODE_CACHE.put(String.class, TYPE_CODE_STRING);
+        TYPE_CODE_CACHE.put(Integer.class, TYPE_CODE_INTEGER);
+        TYPE_CODE_CACHE.put(Long.class, TYPE_CODE_LONG);
+        TYPE_CODE_CACHE.put(Double.class, TYPE_CODE_DOUBLE);
+        TYPE_CODE_CACHE.put(Float.class, TYPE_CODE_FLOAT);
+        TYPE_CODE_CACHE.put(Boolean.class, TYPE_CODE_BOOLEAN);
+        TYPE_CODE_CACHE.put(Character.class, TYPE_CODE_CHARACTER);
+        TYPE_CODE_CACHE.put(Short.class, TYPE_CODE_SHORT);
+        TYPE_CODE_CACHE.put(Byte.class, TYPE_CODE_BYTE);
+        TYPE_CODE_CACHE.put(LocalDateTime.class, TYPE_CODE_DATE);
+        TYPE_CODE_CACHE.put(LocalDate.class, TYPE_CODE_DATE);
+        TYPE_CODE_CACHE.put(LocalTime.class, TYPE_CODE_DATE);
+        TYPE_CODE_CACHE.put(ZonedDateTime.class, TYPE_CODE_DATE);
+        TYPE_CODE_CACHE.put(OffsetDateTime.class, TYPE_CODE_DATE);
+        TYPE_CODE_CACHE.put(OffsetTime.class, TYPE_CODE_DATE);
+        TYPE_CODE_CACHE.put(Instant.class, TYPE_CODE_DATE);
+        TYPE_CODE_CACHE.put(Year.class, TYPE_CODE_DATE);
+        TYPE_CODE_CACHE.put(YearMonth.class, TYPE_CODE_DATE);
+        TYPE_CODE_CACHE.put(MonthDay.class, TYPE_CODE_DATE);
+        TYPE_CODE_CACHE.put(Date.class, TYPE_CODE_DATE);
+        TYPE_CODE_CACHE.put(Date.class, TYPE_CODE_DATE);
+        TYPE_CODE_CACHE.put(Timestamp.class, TYPE_CODE_DATE);
+        TYPE_CODE_CACHE.put(BigDecimal.class, TYPE_CODE_BIGDECIMAL);
+        TYPE_CODE_CACHE.put(BigInteger.class, TYPE_CODE_BIGINTEGER);
+        TYPE_CODE_CACHE.put(UUID.class, TYPE_CODE_UUID);
+    }
+
+    private ValueWriter() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * 获取类型代码（带缓存）
+     */
+    static byte getTypeCode(Object obj) {
+        Class<?> clazz = obj.getClass();
+        Byte cached = TYPE_CODE_CACHE.get(clazz);
+        if (cached != null) {
+            return cached;
+        }
+
+        // 未命中缓存，计算类型代码
+        byte typeCode;
+        if (clazz.isArray()) {
+            typeCode = TYPE_CODE_ARRAY;
+        } else if (obj instanceof List) {
+            typeCode = TYPE_CODE_LIST;
+        } else if (obj instanceof Map) {
+            typeCode = TYPE_CODE_MAP;
+        } else {
+            typeCode = TYPE_CODE_BEAN;
+        }
+
+        TYPE_CODE_CACHE.put(clazz, typeCode);
+        return typeCode;
+    }
+
+    /**
+     * 写入值（类型代码优化版）
+     *
+     * <p>使用类型代码替代 instanceof 链，提高分支预测准确率。</p>
+     */
+    public static void writeValue(Object obj, StringBuilder sb) {
+        if (obj == null) {
+            sb.append("null");
+            return;
+        }
+
+        // JsonNode 树模型快速路径：直接走树模型 toString()，避免反射序列化损坏
+        if (obj instanceof com.njydsz.common.json.tree.JsonNode) {
+            sb.append(obj.toString());
+            return;
+        }
+
+        byte typeCode = getTypeCode(obj);
+        switch (typeCode) {
+            case TYPE_CODE_STRING:
+                writeString((String) obj, sb);
+                break;
+            case TYPE_CODE_INTEGER:
+                writeInt((Integer) obj, sb);
+                break;
+            case TYPE_CODE_LONG:
+                writeLong((Long) obj, sb);
+                break;
+            case TYPE_CODE_DOUBLE:
+                writeDouble((Double) obj, sb);
+                break;
+            case TYPE_CODE_FLOAT:
+                writeFloat((Float) obj, sb);
+                break;
+            case TYPE_CODE_BOOLEAN:
+                writeBoolean((Boolean) obj, sb);
+                break;
+            case TYPE_CODE_CHARACTER:
+                writeChar((Character) obj, sb);
+                break;
+            case TYPE_CODE_SHORT:
+            case TYPE_CODE_BYTE:
+                sb.append(obj);
+                break;
+            case TYPE_CODE_ARRAY:
+                writeArray(obj, sb);
+                break;
+            case TYPE_CODE_LIST:
+                writeListOptimized((List<?>) obj, sb);
+                break;
+            case TYPE_CODE_MAP:
+                writeMapOptimized((Map<?, ?>) obj, sb);
+                break;
+            case TYPE_CODE_DATE:
+                writeString(formatDateValue(obj), sb);
+                break;
+            case TYPE_CODE_BIGDECIMAL:
+                sb.append(((BigDecimal) obj).toPlainString());
+                break;
+            case TYPE_CODE_BIGINTEGER:
+                sb.append(((BigInteger) obj).toString());
+                break;
+            case TYPE_CODE_UUID:
+                writeString(obj.toString(), sb);
+                break;
+            default:
+                if (obj instanceof Optional<?> optional) {
+                    if (optional.isPresent()) {
+                        writeValue(optional.get(), sb);
+                    } else {
+                        sb.append("null");
+                    }
+                } else {
+                    writeBeanWithCycleDetection(obj, sb);
+                }
+        }
+    }
+
+    /**
+     * 写入字符串
+     */
+    public static void writeString(String str, StringBuilder sb) {
+        int len = str.length();
+        if (len == 0) {
+            sb.append("\"\"");
+            return;
+        }
+
+        int firstSpecial = -1;
+        for (int i = 0; i < len; i++) {
+            char c = str.charAt(i);
+            if (c < ' ' || c == '"' || c == '\\' || c == '\u2028' || c == '\u2029'\n                    || Character.isHighSurrogate(c) || Character.isLowSurrogate(c)) {\n                firstSpecial = i;\n                break;\n            }\n        }\n\n        if (firstSpecial == -1) {\n            sb.append('"');
+            sb.append(str);
+            sb.append('"');\n            return;\n        }\n\n        sb.append('"');
+        for (int i = 0; i < len; i++) {
+            char c = str.charAt(i);
+            switch (c) {
+                case '"': sb.append("\\\""); break;\n                case '\\': sb.append("\\\\"); break;\n                case '\b': sb.append("\\b"); break;\n                case '\f': sb.append("\\f"); break;\n                case '\n': sb.append("\\n"); break;\n                case '\r': sb.append("\\r"); break;\n                case '\t': sb.append("\\t"); break;\n                default:\n                    if (c < ' ') {\n                        // 快速 Unicode 转义（避免 String.format 开销）\n                        sb.append("\\u00");\n                        char h = (char)(c >> 4);\n                        char l = (char)(c & 0xf);\n                        sb.append((char)(h < 10 ? h + '0' : h - 10 + 'a'));\n                        sb.append((char)(l < 10 ? l + '0' : l - 10 + 'a'));\n                    } else if (c == '\u2028' || c == '\u2029') {\n                        // 行/段落分隔符：裸置于 <script> 中会导致 JS 语法错误，安全转义\n                        appendHex4(sb, c);\n                    } else if (Character.isHighSurrogate(c)) {\n                        if (i + 1 < len && Character.isLowSurrogate(str.charAt(i + 1))) {\n                            sb.append(c);\n                            sb.append(str.charAt(i + 1));\n                            i++;\n                        } else {\n                            // 孤立高位代理：替换为 U+FFFD\n                            sb.append('\uFFFD');\n                        }\n                    } else if (Character.isLowSurrogate(c)) {\n                        // 孤立低位代理：替换为 U+FFFD\n                        sb.append('\uFFFD');\n                    } else {\n                        sb.append(c);\n                    }\n            }\n        }\n        sb.append('"');
+    }
+
+    /**
+     * 写入字符串（FastJSON2 架构优化 - 两次遍历快速路径）
+     */
+    public static void writeStringInline(String str, StringBuilder sb) {
+        int len = str.length();
+
+        // 快速路径：检查是否需要转义
+        boolean needsEscape = false;
+        for (int i = 0; i < len; i++) {
+            char c = str.charAt(i);
+            if (c < ' ' || c == '"' || c == '\\' || c == '\u2028' || c == '\u2029'\n                    || Character.isHighSurrogate(c) || Character.isLowSurrogate(c)) {\n                needsEscape = true;\n                break;\n            }\n        }\n\n        if (!needsEscape) {\n            // 无转义，直接写入（最优路径）\n            sb.ensureCapacity(sb.length() + len + 2);\n            sb.append('"');
+            sb.append(str);
+            sb.append('"');\n            return;\n        }\n\n        // 慢速路径：需要转义（优化版 - 避免 String.format）\n        sb.append('"');
+        for (int i = 0; i < len; i++) {
+            char c = str.charAt(i);
+            switch (c) {
+                case '"': sb.append("\\\""); break;\n                case '\\': sb.append("\\\\"); break;\n                case '\n': sb.append("\\n"); break;\n                case '\r': sb.append("\\r"); break;\n                case '\t': sb.append("\\t"); break;\n                case '\b': sb.append("\\b"); break;\n                case '\f': sb.append("\\f"); break;\n                default:\n                    if (c < ' ') {\n                        // 快速 Unicode 转义（避免 String.format）\n                        sb.append("\\u00");\n                        char h = (char)(c >> 4);\n                        char l = (char)(c & 0xf);\n                        sb.append((char)(h < 10 ? h + '0' : h - 10 + 'a'));\n                        sb.append((char)(l < 10 ? l + '0' : l - 10 + 'a'));\n                    } else if (c == '\u2028' || c == '\u2029') {\n                        // 行/段落分隔符：裸置于 <script> 中会导致 JS 语法错误，安全转义\n                        appendHex4(sb, c);\n                    } else if (Character.isHighSurrogate(c)) {\n                        if (i + 1 < len && Character.isLowSurrogate(str.charAt(i + 1))) {\n                            sb.append(c);\n                            sb.append(str.charAt(i + 1));\n                            i++;\n                        } else {\n                            // 孤立高位代理：替换为 U+FFFD\n                            sb.append('\uFFFD');\n                        }\n                    } else if (Character.isLowSurrogate(c)) {\n                        // 孤立低位代理：替换为 U+FFFD\n                        sb.append('\uFFFD');\n                    } else {\n                        sb.append(c);\n                    }\n                    break;\n            }\n        }\n        sb.append('"');
+    }
+
+    /**
+     * 写入整数（FastJSON2 快速路径 - 直接写入字符数组）
+     */
+    public static void writeInt(int value, StringBuilder sb) {
+        if (value >= 0 && value < 10000) {
+            sb.append(SMALL_INTS[value]);
+            return;
+        }
+
+        sb.append(value);
+    }
+
+    /**
+     * 写入长整数（优化版）
+     */
+    public static void writeLong(long value, StringBuilder sb) {
+        if (value >= 0 && value < 10000) {
+            sb.append(SMALL_INTS[(int) value]);
+            return;
+        }
+
+        sb.append(value);
+    }
+
+    /**
+     * 写入双精度数（FastJSON2 架构优化）
+     */
+    public static void writeDouble(double value, StringBuilder sb) {
+        if (Double.isNaN(value) || Double.isInfinite(value)) {
+            sb.append("null");
+        } else {
+            // 快速路径：整数值直接输出
+            if (value == (long) value && Math.abs(value) < 1e15) {
+                sb.append((long) value).append(".0");
+            } else {
+                sb.append(Double.toString(value));
+            }
+        }
+    }
+
+    /**
+     * 直接写入 double（避免方法调用开销）
+     */
+    public static void writeDoubleDirect(double value, StringBuilder sb) {
+        if (value == Double.POSITIVE_INFINITY) {
+            sb.append("1.7976931348623157E308");
+        } else if (value == Double.NEGATIVE_INFINITY) {
+            sb.append("-1.7976931348623157E308");
+        } else if (Double.isNaN(value)) {
+            sb.append("0");
+        } else {
+            sb.append(value);
+        }
+    }
+
+    /**
+     * 写入浮点数（FastJSON2 架构优化）
+     */
+    public static void writeFloat(float value, StringBuilder sb) {
+        // 快速路径：整数值直接输出
+        if (value == (int) value && Math.abs(value) < 1e7) {
+            sb.append((int) value).append(".0");
+        } else {
+            sb.append(Float.toString(value));
+        }
+    }
+
+    /**
+     * 写入布尔值
+     */
+    public static void writeBoolean(boolean value, StringBuilder sb) {
+        sb.append(value ? "true" : "false");
+    }
+
+    /**
+     * 写入字符
+     */
+    public static void writeChar(char value, StringBuilder sb) {
+        sb.append('"').append(value).append('"');
+    }
+
+    /**
+     * 写入数组
+     */
+    public static void writeArray(Object array, StringBuilder sb) {
+        sb.append('[');
+        int len = Array.getLength(array);
+        for (int i = 0; i < len; i++) {
+            if (i > 0) sb.append(',');
+            writeValueDirect(Array.get(array, i), sb);
+        }
+        sb.append(']');
+    }
+
+    /**
+     * 写入 List（FastJSON2 架构优化 - 类型代码替代 instanceof 链）
+     */
+    public static void writeList(List<?> list, StringBuilder sb) {
+        int size = list.size();
+        sb.append('[');
+        for (int i = 0; i < size; i++) {
+            if (i > 0) sb.append(',');
+            Object item = list.get(i);
+            if (item == null) {
+                sb.append("null");
+            } else {
+                writeValueByTypeCodeFast(item, sb, getTypeCode(item));
+            }
+        }
+        sb.append(']');
+    }
+
+    /**
+     * 优化列表序列化（使用 JSONWriter 直接写入，避免创建中间 String）
+     */
+    public static void writeListOptimized(List<?> list, StringBuilder sb) {
+        JSONWriter writer = SerializationProvider.getFastWriterPool();
+        writer.reset();
+        writer.writeCollection(list);
+        sb.append(writer.toString());
+    }
+
+    /**
+     * 写入 Map（FastJSON2 架构优化 - 类型代码替代 instanceof 链）
+     */
+    public static void writeMapOptimized(Map<?, ?> map, StringBuilder sb) {
+        sb.append('{');
+        boolean first = true;
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
+            if (!first) sb.append(',');
+            first = false;
+
+            Object key = entry.getKey();
+            if (key instanceof String) {
+                sb.append('"').append((String) key).append('"');
+            } else {
+                sb.append('"').append(String.valueOf(key)).append('"');
+            }
+
+            sb.append(':');
+
+            Object value = entry.getValue();
+            if (value == null) {
+                sb.append("null");
+            } else {
+                writeValueByTypeCodeFast(value, sb, getTypeCode(value));
+            }
+        }
+        sb.append('}');
+    }
+
+    /**
+     * 写入 Bean 对象（ASM 优化版本 - FastJSON2 核心架构）
+     */
+    public static void writeBean(Object obj, StringBuilder sb) {
+        Class<?> clazz = obj.getClass();
+        JsonClass classAnnotation = clazz.getAnnotation(JsonClass.class);
+
+        PropertyNamingStrategy strategy = FieldMetadataLoader.NAMING_STRATEGY.get();
+        FieldMeta[] fields = SerializerCache.getFieldMeta(clazz, strategy);
+        if (fields == null) {
+            fields = FieldMetadataLoader.loadFields(clazz);
+            SerializerCache.putFieldMeta(clazz, strategy, fields);
+        }
+
+        boolean hasFieldAnnotations = FieldMetadataLoader.hasFieldAnnotations(fields);
+
+        // 如果没有注解，使用优化方式
+        if (classAnnotation == null && !hasFieldAnnotations) {
+            writeBeanNoAnnotationOptimized(obj, sb, clazz, fields);
+            return;
+        }
+
+        boolean writeClassName = classAnnotation != null && classAnnotation.writeClassName();
+        String dateFormat = classAnnotation != null && !classAnnotation.dateFormat().isEmpty()
+                ? classAnnotation.dateFormat() : null;
+        boolean classWriteNulls = classAnnotation != null && classAnnotation.writeNulls();
+        boolean serializeEnumUsingOrdinal = classAnnotation != null && classAnnotation.serializeEnumUsingOrdinal();
+
+        sb.append('{');
+        boolean first = true;
+
+        if (writeClassName) {
+            sb.append("\"@class\":\"").append(clazz.getName()).append("\"");
+            first = false;
+        }
+
+        for (FieldMeta field : fields) {
+            // 列权限字段排除检查
+            if (SerializationProvider.isFieldExcluded(field.jsonName)) {
+                continue;
+            }
+
+            Class<?> currentView = SerializationProvider.getCurrentViewClass();
+            if (currentView != null) {
+                JsonView viewAnnotation = field.field.getAnnotation(JsonView.class);
+                if (viewAnnotation == null) {
+                    continue;
+                }
+                Class<?>[] viewClasses = viewAnnotation.value();
+                boolean visible = false;
+                for (Class<?> vc : viewClasses) {
+                    if (vc == currentView || vc.isAssignableFrom(currentView)) {
+                        visible = true;
+                        break;
+                    }
+                }
+                if (!visible) {
+                    continue;
+                }
+            }
+
+            try {
+                Object value = field.getValue(obj);
+
+                // null 字段是否输出：@JsonClass(writeNulls=true) 类级注解 或 全局/Mapper writeNulls 配置
+                // 此前仅读类注解，导致 JsonConfig/JsonMapper.Builder 的 writeNulls(true) 对 Bean 序列化无效
+                boolean shouldWriteNull = classWriteNulls || SerializationProvider.isWriteNulls();
+                if (value == null && !shouldWriteNull) {
+                    continue;
+                }
+
+                // @JsonInclude 策略：NON_EMPTY/NON_DEFAULT 等对非 null 值的过滤
+                // shouldSkipValue(null) 已由上方 shouldWriteNull 逻辑覆盖（writeNulls=true 时强制写出），
+                // 此处仅对非 null 值应用 NON_EMPTY/NON_DEFAULT 过滤，避免空字符串/空集合/默认值被写出
+                if (value != null && field.shouldSkipValue(value)) {
+                    continue;
+                }
+
+                if (!first) sb.append(',');
+                first = false;
+
+                String jsonName = field.jsonName;
+                sb.append('"').append(jsonName).append('"').append(':');
+
+                if (field.isDateType() && value != null) {
+                    String formattedDate = dateFormat != null && !dateFormat.isEmpty()
+                            ? formatDateWithPattern(value, dateFormat)
+                            : field.formatDateValue(value);
+                    writeString(formattedDate, sb);
+                } else if (value instanceof Enum) {
+                    if (serializeEnumUsingOrdinal) {
+                        sb.append(((Enum<?>) value).ordinal());
+                    } else {
+                        writeString(((Enum<?>) value).name(), sb);
+                    }
+                } else {
+                    writeValueDirect(value, sb);
+                }
+            } catch (Exception e) {
+                LOGGER.debug("Failed to serialize field {} of {}: {}", field.name, obj.getClass().getName(), e.getMessage());
+            }
+        }
+
+        // @JsonGetter 计算属性：输出没有对应字段的 @JsonGetter 方法返回值
+        Method[] computedProps = FieldMetadataLoader.findComputedProperties(clazz);
+        for (Method computedMethod : computedProps) {
+            try {
+                Object computedValue = computedMethod.invoke(obj);
+                if (computedValue != null) {
+                    if (!first) sb.append(',');
+                    first = false;
+                    String propName = FieldMetadataLoader.getComputedPropertyName(computedMethod);
+                    sb.append('"').append(propName).append("\":");\n                    writeValueDirect(computedValue, sb);\n                }\n            } catch (Exception e) {\n                LOGGER.debug("Failed to invoke @JsonGetter computed property {}: {}", computedMethod.getName(), e.getMessage());\n            }\n        }\n\n        sb.append('}');\n    }\n\n    /**\n     * Bean 无注解快速路径（FastJSON2 架构极致优化）\n     *\n     * <p>FastJSON2 核心优化技术：</p>\n     * <ul>\n     *   <li>预计算有效字段数组 - 避免运行时 shouldSkip 判断</li>\n     *   <li>类型代码直接索引 - 消除 switch 分支开销</li>\n     *   <li>StringBuilder 预分配 - 基于精确容量计算</li>\n     *   <li>方法调用最小化 - 减少间接方法调用</li>\n     *   <li>ASM 字节码生成 - 彻底消除反射开销</li>\n     * </ul>\n     */\n    public static void writeBeanNoAnnotationOptimized(Object obj, StringBuilder sb, Class<?> clazz, FieldMeta[] fields) {\n        PropertyNamingStrategy strategy = FieldMetadataLoader.NAMING_STRATEGY.get();\n        SerializationProvider.BeanSerializerInfo info = SerializationProvider.getOrCreateBeanSerializer(clazz, fields, strategy);\n\n        // 精确容量预分配\n        sb.ensureCapacity(info.estimatedSize);\n\n        sb.append('{');\n        boolean first = true;\n\n        // 直接遍历预计算的有效字段\n        for (FieldMeta field : info.validFields) {\n            int typeCode = field.serializeTypeCode;\n\n            switch (typeCode) {\n                case 1:  // String\n                    String strVal;\n                    try {\n                        strVal = (String) field.getter.invoke(obj);\n                    } catch (Throwable e) {\n                        strVal = null;\n                    }\n                    if (strVal != null) {\n                        if (!first) sb.append(',');\n                        first = false;\n                        sb.append(field.jsonKey);\n                        // 快速路径：内联字符串检查\n                        int len = strVal.length();\n                        boolean needsEscape = false;\n                        for (int i = 0; i < len; i++) {\n                            char c = strVal.charAt(i);\n                            if (c < ' ' || c == '"' || c == '\\') {
+                                needsEscape = true;
+                                break;
+                            }
+                        }
+                        if (!needsEscape) {
+                            sb.append('"');\n                            sb.append(strVal);\n                            sb.append('"');
+                        } else {
+                            writeStringInline(strVal, sb);
+                        }
+                    }
+                    break;
+                case 2:  // int/Integer
+                    int intVal;
+                    try {
+                        Integer val = (Integer) field.getter.invoke(obj);
+                        intVal = val == null ? 0 : val;
+                    } catch (Throwable e) {
+                        intVal = 0;
+                    }
+                    if (intVal != 0 || field.type == int.class) {
+                        if (!first) sb.append(',');
+                        first = false;
+                        sb.append(field.jsonKey);
+                        // 小整数快速路径
+                        if (intVal >= 0 && intVal < 10000) {
+                            sb.append(SMALL_INTS[intVal]);
+                        } else {
+                            sb.append(intVal);
+                        }
+                    }
+                    break;
+                case 3:  // long/Long
+                    long longVal;
+                    try {
+                        Long val = (Long) field.getter.invoke(obj);
+                        longVal = val == null ? 0L : val;
+                    } catch (Throwable e) {
+                        longVal = 0L;
+                    }
+                    if (longVal != 0L || field.type == long.class) {
+                        if (!first) sb.append(',');
+                        first = false;
+                        sb.append(field.jsonKey);
+                        // 小长整数快速路径
+                        if (longVal >= 0 && longVal < 10000) {
+                            sb.append(SMALL_INTS[(int) longVal]);
+                        } else {
+                            sb.append(longVal);
+                        }
+                    }
+                    break;
+                case 4:  // double/Double
+                    double doubleVal;
+                    try {
+                        Double val = (Double) field.getter.invoke(obj);
+                        doubleVal = val == null ? 0.0 : val;
+                    } catch (Throwable e) {
+                        doubleVal = 0.0;
+                    }
+                    if (doubleVal != 0.0 || field.type == double.class) {
+                        if (!first) sb.append(',');
+                        first = false;
+                        sb.append(field.jsonKey);
+                        sb.append(doubleVal);
+                    }
+                    break;
+                case 6:  // boolean/Boolean
+                    boolean boolVal;
+                    try {
+                        Boolean val = (Boolean) field.getter.invoke(obj);
+                        boolVal = val == null ? false : val;
+                    } catch (Throwable e) {
+                        boolVal = false;
+                    }
+                    if (!first) sb.append(',');
+                    first = false;
+                    sb.append(field.jsonKey);
+                    sb.append(boolVal ? "true" : "false");
+                    break;
+                default:
+                    Object value;
+                    try {
+                        value = field.getter.invoke(obj);
+                    } catch (Throwable e) {
+                        value = null;
+                    }
+                    if (value == null) {
+                        break;
+                    }
+                    if (!first) sb.append(',');
+                    first = false;
+                    sb.append(field.jsonKey);
+                    writeValueByTypeCodeFast(value, sb, (byte) typeCode);
+                    break;
+            }
+        }
+
+        sb.append('}');
+    }
+
+    /**
+     * 根据类型代码快速写入值（FastJSON2 架构 - 处理所有类型包括 Bean/List/Map）
+     *
+     * @param value 值
+     * @param sb StringBuilder
+     * @param typeCode 类型代码
+     */
+    public static void writeValueByTypeCodeFast(Object value, StringBuilder sb, byte typeCode) {
+        switch (typeCode) {
+            case TYPE_CODE_STRING:
+                writeString((String) value, sb);
+                break;
+            case TYPE_CODE_INTEGER:
+                writeInt((Integer) value, sb);
+                break;
+            case TYPE_CODE_LONG:
+                writeLong((Long) value, sb);
+                break;
+            case TYPE_CODE_DOUBLE:
+                writeDouble((Double) value, sb);
+                break;
+            case TYPE_CODE_FLOAT:
+                writeFloat((Float) value, sb);
+                break;
+            case TYPE_CODE_BOOLEAN:
+                writeBoolean((Boolean) value, sb);
+                break;
+            case TYPE_CODE_CHARACTER:
+                writeChar((Character) value, sb);
+                break;
+            case TYPE_CODE_SHORT:
+            case TYPE_CODE_BYTE:
+                sb.append(value);
+                break;
+            case TYPE_CODE_ARRAY:
+                writeArray(value, sb);
+                break;
+            case TYPE_CODE_LIST:
+                writeList((List<?>) value, sb);
+                break;
+            case TYPE_CODE_MAP:
+                writeMapOptimized((Map<?, ?>) value, sb);
+                break;
+            case TYPE_CODE_DATE:
+                writeString(formatDateValue(value), sb);
+                break;
+            case TYPE_CODE_BIGDECIMAL:
+                sb.append(((BigDecimal) value).toPlainString());
+                break;
+            case TYPE_CODE_BIGINTEGER:
+                sb.append(((BigInteger) value).toString());
+                break;
+            case TYPE_CODE_UUID:
+                writeString(value.toString(), sb);
+                break;
+            default:
+                if (value instanceof Optional<?> optional) {
+                    if (optional.isPresent()) {
+                        writeValueByTypeCodeFast(optional.get(), sb, getTypeCode(optional.get()));
+                    } else {
+                        sb.append("null");
+                    }
+                } else {
+                    writeBeanWithCycleDetection(value, sb);
+                }
+                break;
+        }
+    }
+
+    /**
+     * 格式化日期（带模式）
+     */
+    public static String formatDateWithPattern(Object value, String pattern) {
+        if (value == null) return null;
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+            if (value instanceof TemporalAccessor temporal) {
+                return formatter.format(temporal);
+            } else if (value instanceof Date date) {
+                return date.toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDateTime().format(formatter);
+            }
+        } catch (Exception e) {
+            LOGGER.debug("Failed to format date with pattern '{}': {}", pattern, e.getMessage());
+        }
+        return value.toString();
+    }
+
+    /**
+     * 日期格式化器缓存（有界 LRU 容量 128，防止动态 pattern 场景下无界增长）
+     */
+    private static final BoundedLruCache<String, DateTimeFormatter> FORMATTER_CACHE =
+        new BoundedLruCache<>(128);
+
+    /**
+     * 格式化日期/时间值为字符串（统一入口，支持全局日期格式配置）。
+     *
+     * <p>格式化优先级：
+     * <ol>
+     *   <li>{@link JsonConfig#getDateFormat()} 全局日期格式（非空时优先）</li>
+     *   <li>ISO 默认格式（toString）</li>
+     * </ol>
+     * 支持所有 java.time.* 和 java.util.Date 类型。</p>
+     *
+     * @param value 日期/时间值
+     * @return 格式化后的字符串
+     * @since 1.0.0
+     */
+    public static String formatDateValue(Object value) {
+        if (value == null) return null;
+
+        // 优先从当前线程的 SerializationContext 读取 dateFormat（支持 JsonMapper 独立配置）
+        String globalFormat = SerializationProvider.getDateFormat();
+        // 回退到全局单例配置
+        if (globalFormat == null || globalFormat.isEmpty()) {
+            globalFormat = JsonConfig.getInstance().getDateFormat();
+        }
+        if (globalFormat != null && !globalFormat.isEmpty()) {
+            DateTimeFormatter formatter = getCachedFormatter(globalFormat);
+            if (formatter != null) {
+                try {
+                    if (value instanceof TemporalAccessor temporal) {
+                        return formatter.format(temporal);
+                    } else if (value instanceof Date date) {
+                        return date.toInstant()
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDateTime()
+                                .format(formatter);
+                    }
+                } catch (Exception e) {
+                    // 格式化失败，回退到 toString
+                }
+            }
+        }
+
+        if (value instanceof TemporalAccessor temporal) {
+            return temporal.toString();
+        } else if (value instanceof Date date) {
+            return date.toInstant().toString();
+        }
+        return value.toString();
+    }
+
+    /**
+     * 获取缓存的 DateTimeFormatter（避免重复 ofPattern 调用）
+     */
+    private static DateTimeFormatter getCachedFormatter(String pattern) {
+        try {
+            return FORMATTER_CACHE.computeIfAbsent(pattern, DateTimeFormatter::ofPattern);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * 写入 @JsonUnwrapped 展开字段。
+     *
+     * <p>将嵌套对象的字段展开到父 JSON 对象中，可添加前缀/后缀。</p>
+     *
+     * @param nestedObj 嵌套对象
+     * @param field 带有 @JsonUnwrapped 注解的字段元数据
+     * @param sb JSON 字符串构建器
+     * @param first 是否为第一个字段
+     * @since 1.0.0
+     */
+    private static void writeUnwrappedFields(Object nestedObj, FieldMeta field,
+                                              StringBuilder sb, boolean first) {
+        Class<?> nestedClass = nestedObj.getClass();
+        PropertyNamingStrategy nestedStrategy = FieldMetadataLoader.NAMING_STRATEGY.get();
+        FieldMeta[] nestedFields = SerializerCache.getFieldMeta(nestedClass, nestedStrategy);
+        if (nestedFields == null) {
+            nestedFields = FieldMetadataLoader.loadFields(nestedClass);
+            SerializerCache.putFieldMeta(nestedClass, nestedStrategy, nestedFields);
+        }
+
+        for (FieldMeta nestedField : nestedFields) {
+            Object nestedValue;
+            try {
+                nestedValue = nestedField.getValue(nestedObj);
+            } catch (Exception e) {
+                continue;
+            }
+            if (nestedValue == null) {
+                continue;
+            }
+            if (!first) {
+                sb.append(',');
+            }
+            first = false;
+            sb.append('"').append(nestedField.jsonName).append("\":");\n            writeValueDirect(nestedValue, sb);\n        }\n    }\n\n    /**\n     * 写入格式化数字\n     */\n    public static void writeFormattedNumber(Number value, String format, StringBuilder sb) {\n        if (value instanceof Double || value instanceof Float) {\n            double d = value.doubleValue();\n            if (!format.isEmpty()) {\n                sb.append(String.format(format, d));\n            } else {\n                sb.append(d);\n            }\n        } else if (value instanceof Long) {\n            long l = value.longValue();\n            if (!format.isEmpty()) {\n                sb.append(String.format(format, l));\n            } else {\n                sb.append(l);\n            }\n        } else {\n            sb.append(value);\n        }\n    }\n\n    /**\n     * 写入 HTML 安全字符串\n     */\n    public static void writeHtmlSafeString(String value, StringBuilder sb) {\n        sb.append('"');
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            switch (c) {
+                case '<': sb.append("\\u003c"); break;
+                case '>': sb.append("\\u003e"); break;
+                case '&': sb.append("\\u0026"); break;
+                case '"': sb.append("\\\""); break;\n                case '\\': sb.append("\\\\"); break;\n                default: sb.append(c); break;\n            }\n        }\n        sb.append('"');
+    }
+
+    /**
+     * 写入 Bean 对象（带循环引用检测）
+     */
+    public static void writeBeanWithCycleDetection(Object obj, StringBuilder sb) {
+        Set<Object> current = SerializationProvider.getSerializingObjects();
+
+        if (current.contains(obj)) {
+            sb.append("{\"$ref\":\"cycle\"}");
+            return;
+        }
+
+        current.add(obj);
+        try {
+            writeBean(obj, sb);
+        } finally {
+            current.remove(obj);
+        }
+    }
+
+    /**
+     * 直接写入值（优化版，避免重复类型检查）
+     */
+    public static void writeValueDirect(Object obj, StringBuilder sb) {
+        if (obj == null) {
+            sb.append("null");
+            return;
+        }
+
+        Class<?> clazz = obj.getClass();
+
+        if (clazz == String.class) {
+            writeString((String) obj, sb);
+        } else if (clazz == Integer.class) {
+            writeInt((Integer) obj, sb);
+        } else if (clazz == Long.class) {
+            writeLong((Long) obj, sb);
+        } else if (clazz == Double.class) {
+            writeDouble((Double) obj, sb);
+        } else if (clazz == Float.class) {
+            writeFloat((Float) obj, sb);
+        } else if (clazz == Boolean.class) {
+            writeBoolean((Boolean) obj, sb);
+        } else if (clazz == Character.class) {
+            writeChar((Character) obj, sb);
+        } else if (clazz == UUID.class) {
+            writeString(obj.toString(), sb);
+        } else if (obj instanceof Optional<?> optional) {
+            if (optional.isPresent()) {
+                writeValueDirect(optional.get(), sb);
+            } else {
+                sb.append("null");
+            }
+        } else if (obj instanceof List) {
+            writeList((List<?>) obj, sb);
+        } else if (obj instanceof Map) {
+            writeMapOptimized((Map<?, ?>) obj, sb);
+        } else if (clazz.isArray()) {
+            writeArray(obj, sb);
+        } else if (obj instanceof TemporalAccessor || obj instanceof Date) {
+            writeString(formatDateValue(obj), sb);
+        } else {
+            writeBeanWithCycleDetection(obj, sb);
+        }
+    }
+}

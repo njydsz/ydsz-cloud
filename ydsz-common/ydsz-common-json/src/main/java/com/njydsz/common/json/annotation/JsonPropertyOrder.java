@@ -1,1 +1,51 @@
-package com.njydsz.common.json.annotation;\n\nimport java.lang.annotation.ElementType;\nimport java.lang.annotation.Retention;\nimport java.lang.annotation.RetentionPolicy;\nimport java.lang.annotation.Target;\n\n/**\n * JSON 属性排序注解\n *\n * <p>用于控制序列化时字段的输出顺序，对标 Jackson @JsonPropertyOrder。</p>\n *\n * <p><b>使用示例：</b></p>\n * <pre>\n * // 按指定顺序输出\n * &#064;JsonPropertyOrder({"id", "name", "email"})\n * public class User {\n *     private String name;\n *     private Long id;\n *     private String email;\n * }\n * // 输出：{"id":1,"name":"John","email":"john@example.com"}\n *\n * // 字母排序\n * &#064;JsonPropertyOrder(alphabetic = true)\n * public class Product {\n *     private String name;\n *     private Double price;\n * }\n * // 输出：{"name":"iPhone","price":999.0}\n * </pre>\n *\n * @author ydsz-team\n * @since 1.0.0\n */\n@Retention(RetentionPolicy.RUNTIME)\n@Target(ElementType.TYPE)\npublic @interface JsonPropertyOrder {\n\n    /**\n     * 属性名称数组，按指定顺序输出\n     */\n    String[] value() default {};\n\n    /**\n     * 是否按字母顺序排序\n     *\n     * <p>如果 value 为空且 alphabetic=true，则按字母顺序排序输出。</p>\n     */\n    boolean alphabetic() default false;\n}\n
+package com.njydsz.common.json.annotation;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+/**
+ * JSON 属性排序注解
+ *
+ * <p>用于控制序列化时字段的输出顺序，对标 Jackson @JsonPropertyOrder。</p>
+ *
+ * <p><b>使用示例：</b></p>
+ * <pre>
+ * // 按指定顺序输出
+ * &#064;JsonPropertyOrder({"id", "name", "email"})
+ * public class User {
+ *     private String name;
+ *     private Long id;
+ *     private String email;
+ * }
+ * // 输出：{"id":1,"name":"John","email":"john@example.com"}
+ *
+ * // 字母排序
+ * &#064;JsonPropertyOrder(alphabetic = true)
+ * public class Product {
+ *     private String name;
+ *     private Double price;
+ * }
+ * // 输出：{"name":"iPhone","price":999.0}
+ * </pre>
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface JsonPropertyOrder {
+
+    /**
+     * 属性名称数组，按指定顺序输出
+     */
+    String[] value() default {};
+
+    /**
+     * 是否按字母顺序排序
+     *
+     * <p>如果 value 为空且 alphabetic=true，则按字母顺序排序输出。</p>
+     */
+    boolean alphabetic() default false;
+}

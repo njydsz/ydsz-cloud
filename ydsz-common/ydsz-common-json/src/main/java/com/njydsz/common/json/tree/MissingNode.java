@@ -1,1 +1,76 @@
-package com.njydsz.common.json.tree;\n\n/**\n * JSON 缺失节点\n *\n * <p>表示 JSON 中不存在的字段或索引，对标 Jackson MissingNode。\n * 当访问不存在的字段或数组索引时返回此节点。</p>\n *\n * <p><b>特性：</b></p>\n * <ul>\n *   <li>单例模式，全局唯一</li>\n *   <li>不可变对象，线程安全</li>\n *   <li>isMissing() 返回 true，用于区分 null 值</li>\n *   <li>asText() 返回空字符串，避免 NullPointerException</li>\n * </ul>\n *\n * <p><b>使用示例：</b></p>\n * <pre>\n * JsonNode node = ObjectNode.get("nonexistent");\n * node.isMissing(); // true\n * node.asText("");  // 返回默认值 ""\n * </pre>\n *\n * @author ydsz-team\n * @since 1.0.0\n */\npublic final class MissingNode extends JsonNode {\n\n    private static final MissingNode INSTANCE = new MissingNode();\n\n    private MissingNode() {}\n\n    /**\n     * 获取 MissingNode 单例实例\n     *\n     * @return MissingNode 单例\n     */\n    public static MissingNode getInstance() {\n        return INSTANCE;\n    }\n\n    @Override\n    public boolean isMissing() {\n        return true;\n    }\n\n    @Override\n    public String asText() {\n        return "";\n    }\n\n    @Override\n    public String asText(String defaultValue) {\n        return defaultValue;\n    }\n\n    @Override\n    public Object asValue() {\n        return null;\n    }\n\n    @Override\n    public String toString() {\n        return "";\n    }\n\n    @Override\n    public boolean equals(Object obj) {\n        return obj instanceof MissingNode;\n    }\n\n    @Override\n    public int hashCode() {\n        return 0;\n    }\n}\n
+package com.njydsz.common.json.tree;
+
+/**
+ * JSON 缺失节点
+ *
+ * <p>表示 JSON 中不存在的字段或索引，对标 Jackson MissingNode。
+ * 当访问不存在的字段或数组索引时返回此节点。</p>
+ *
+ * <p><b>特性：</b></p>
+ * <ul>
+ *   <li>单例模式，全局唯一</li>
+ *   <li>不可变对象，线程安全</li>
+ *   <li>isMissing() 返回 true，用于区分 null 值</li>
+ *   <li>asText() 返回空字符串，避免 NullPointerException</li>
+ * </ul>
+ *
+ * <p><b>使用示例：</b></p>
+ * <pre>
+ * JsonNode node = ObjectNode.get("nonexistent");
+ * node.isMissing(); // true
+ * node.asText("");  // 返回默认值 ""
+ * </pre>
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+public final class MissingNode extends JsonNode {
+
+    private static final MissingNode INSTANCE = new MissingNode();
+
+    private MissingNode() {}
+
+    /**
+     * 获取 MissingNode 单例实例
+     *
+     * @return MissingNode 单例
+     */
+    public static MissingNode getInstance() {
+        return INSTANCE;
+    }
+
+    @Override
+    public boolean isMissing() {
+        return true;
+    }
+
+    @Override
+    public String asText() {
+        return "";
+    }
+
+    @Override
+    public String asText(String defaultValue) {
+        return defaultValue;
+    }
+
+    @Override
+    public Object asValue() {
+        return null;
+    }
+
+    @Override
+    public String toString() {
+        return "";
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return obj instanceof MissingNode;
+    }
+
+    @Override
+    public int hashCode() {
+        return 0;
+    }
+}

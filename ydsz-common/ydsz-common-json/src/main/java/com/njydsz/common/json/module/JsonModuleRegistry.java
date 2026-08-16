@@ -1,1 +1,420 @@
-package com.njydsz.common.json.module;\n\nimport java.util.ArrayList;\nimport java.util.Collection;\nimport java.util.Collections;\nimport java.util.List;\nimport java.util.Map;\nimport java.util.ServiceLoader;\nimport java.util.Set;\nimport java.util.concurrent.ConcurrentHashMap;\nimport java.util.stream.Collectors;\n\nimport org.slf4j.Logger;\nimport org.slf4j.LoggerFactory;\n\nimport com.njydsz.common.json.deserializer.JsonDeserializer;\nimport com.njydsz.common.json.serializer.JsonSerializer;\nimport com.njydsz.common.json.serializer.SerializerRegistry;\n\n/**\n * YdszJson 模块注册中心\n *\n * <p>核心模块管理类，负责模块的注册、排序和查询。\n *\n * <p><b>设计特点：</b>\n * <ul>\n *   <li>模块化架构 - 类似 Jackson Module，支持可插拔扩展</li>\n *   <li>优先级排序 - 高优先级模块先注册，先注册的序列化器优先级更高</li>\n *   <li>Spring 集成 - 支持自动发现和注入 Spring Bean 形式的模块</li>\n *   <li>双重注册 - 分离序列化器和反序列化器注册</li>\n * </ul>\n *\n * <p><b>使用示例：</b>\n * <pre>\n * // 1. 手动注册模块\n * JsonModuleRegistry registry = JsonModuleRegistry.getInstance();\n * registry.registerModule(new UserModule());\n * registry.registerModule(new OrderModule());\n *\n * // 2. Spring Boot 环境自动注册\n * // 只需实现 JsonModule.SpringFactory 接口并添加 @Component 注解\n * // JsonSpringConfig 会自动发现并注册所有模块\n *\n * // 3. 获取序列化器\n * JsonSerializer serializer = registry.getSerializer(User.class);\n * </pre>\n *\n * @author ydsz-team\n * @since 1.0.0\n */\npublic final class JsonModuleRegistry {\n\n    private static final Logger log = LoggerFactory.getLogger(JsonModuleRegistry.class);\n\n    private static volatile JsonModuleRegistry instance;\n\n    /**\n     * 模块来源的序列化器类型集合（P1-6：单一事实源改造）。\n     *\n     * <p>模块注册的序列化器/反序列化器不再由本类独立维护，而是直接写入\n     * {@link SerializerRegistry}（全局唯一注册中心）；本集合仅记录"由模块注册"\n     * 的类型，供 {@link #clear()} / {@link #reinitialize()} 精确清理模块来源的\n     * 注册项，避免误删用户直接注册（{@code SerializerRegistry.register}）的序列化器。</p>\n     */\n    private final Set<Class<?>> moduleSerializerTypes = ConcurrentHashMap.newKeySet();\n\n    private final Set<Class<?>> moduleDeserializerTypes = ConcurrentHashMap.newKeySet();\n\n    private final List<JsonModule> modules = Collections.synchronizedList(new ArrayList<>());\n\n    private volatile boolean initialized = false;\n\n    private JsonModuleRegistry() {\n    }\n\n    /**\n     * 获取注册中心实例（单例）。\n     *\n     * <p>P2-9：首次创建时通过 {@link ServiceLoader} 自动发现并注册\n     * {@code META-INF/services/com.njydsz.common.json.module.JsonModule}\n     * 声明的模块，使非 Spring 环境（嵌入式引擎、命令行工具）具备与\n     * Spring 环境同等的模块自动注册能力。SPI 模块类与 Spring Bean\n     * 为同一类时按类去重，不会重复注册。</p>\n     *\n     * @return 注册中心实例\n     */\n    public static JsonModuleRegistry getInstance() {\n        if (instance == null) {\n            synchronized (JsonModuleRegistry.class) {\n                if (instance == null) {\n                    instance = new JsonModuleRegistry();\n                    instance.loadSpiModules();\n                }\n            }\n        }\n        return instance;\n    }\n\n    /**\n     * 通过 ServiceLoader 加载 SPI 娡块（仅单例首次创建时执行一次）。\n     *\n     * <p>单个模块实例化失败仅告警跳过，不影响其他模块与引擎启动。</p>\n     */\n    private void loadSpiModules() {\n        try {\n            ServiceLoader<JsonModule> loader = ServiceLoader.load(JsonModule.class);\n            for (JsonModule module : loader) {\n                try {\n                    registerModule(module);\n                    log.info("Discovered YdszJson module via ServiceLoader SPI: {} (priority={})",\n                        module.getModuleName(), module.getPriority());\n                } catch (Exception e) {\n                    log.error("Failed to register SPI-discovered YdszJson module: {}",\n                        module.getClass().getName(), e);\n                }\n            }\n        } catch (Exception e) {\n            // ServiceLoader 基础设施异常（如非法配置文件）不阻断引擎初始化\n            log.warn("Failed to scan YdszJson modules via ServiceLoader SPI", e);\n        }\n    }\n\n    /**\n     * 注册单个模块。\n     *\n     * <p>P2-9：按"实例相等或同类"去重——SPI 发现与 Spring Bean 注册\n     * 可能产生同一模块类的两个实例，重复注册仅告警跳过。</p>\n     *\n     * @param module 要注册的模块\n     */\n    public void registerModule(JsonModule module) {\n        if (module == null) {\n            throw new IllegalArgumentException("Module cannot be null");\n        }\n        synchronized (this) {\n            if (modules.contains(module)) {\n                log.warn("Module {} already registered, skipping", module.getModuleName());\n                return;\n            }\n            for (JsonModule existing : modules) {\n                if (existing.getClass() == module.getClass()) {\n                    log.warn("Module class {} already registered as {}, skipping duplicate",\n                        module.getClass().getName(), existing.getModuleName());\n                    return;\n                }\n            }\n            modules.add(module);\n            sortModulesByPriority();\n            log.info("Registered YdszJson module: {} (priority={})", module.getModuleName(), module.getPriority());\n        }\n    }\n\n    /**\n     * 批量注册模块\n     *\n     * @param modules 要注册的模块列表\n     */\n    public void registerModules(Collection<JsonModule> modules) {\n        if (modules == null || modules.isEmpty()) {\n            return;\n        }\n        for (JsonModule module : modules) {\n            registerModule(module);\n        }\n    }\n\n    /**\n     * 注册 Spring 工厂模块（自动发现）\n     *\n     * <p>Spring Boot 环境下，自动发现所有实现 {@link JsonModule.SpringFactory} 的 Bean</p>\n     *\n     * @param springFactories Spring 工厂模块实例\n     */\n    public void registerSpringFactories(Collection<JsonModule> springFactories) {\n        if (springFactories == null || springFactories.isEmpty()) {\n            return;\n        }\n        log.info("Discovering {} YdszJson Spring Factory modules", springFactories.size());\n        registerModules(springFactories);\n    }\n\n    /**\n     * 初始化所有模块。\n     *\n     * <p>按优先级从高到低依次调用模块的注册方法</p>\n     */\n    public void initialize() {\n        if (initialized) {\n            log.debug("JsonModuleRegistry already initialized");\n            return;\n        }\n        synchronized (this) {\n            if (initialized) {\n                return;\n            }\n            log.info("Initializing JsonModuleRegistry with {} modules", modules.size());\n            for (JsonModule module : modules) {\n                try {\n                    registerModuleSerializers(module);\n                    registerModuleDeserializers(module);\n                } catch (Exception e) {\n                    log.error("Failed to initialize module: {}", module.getModuleName(), e);\n                }\n            }\n            for (JsonModule module : modules) {\n                if (module.needsCompleteRegistration()) {\n                    try {\n                        module.onRegisterComplete();\n                    } catch (Exception e) {\n                        log.error("Failed to complete registration for module: {}", module.getModuleName(), e);\n                    }\n                }\n            }\n            initialized = true;\n            log.info("JsonModuleRegistry initialized successfully. Serializers: {}, Deserializers: {}",\n                    moduleSerializerTypes.size(), moduleDeserializerTypes.size());\n        }\n    }\n\n    private void registerModuleSerializers(JsonModule module) {\n        ModuleSerializerRegistry registry = new ModuleSerializerRegistry();\n        module.setSerializers(registry);\n        Map<Class<?>, JsonSerializer<?>> moduleSerializers = registry.getSerializers();\n        SerializerRegistry global = SerializerRegistry.getInstance();\n        for (Map.Entry<Class<?>, JsonSerializer<?>> entry : moduleSerializers.entrySet()) {\n            Class<?> type = entry.getKey();\n            JsonSerializer<?> serializer = entry.getValue();\n            JsonSerializer<?> existing = global.registerIfAbsent(type, serializer);\n            if (existing != null) {\n                log.debug("Serializer for type {} already exists (from module {}), skipping",\n                        type.getName(), module.getModuleName());\n            } else {\n                moduleSerializerTypes.add(type);\n                log.debug("Registered serializer for type {} from module {}",\n                        type.getName(), module.getModuleName());\n            }\n        }\n    }\n\n    private void registerModuleDeserializers(JsonModule module) {\n        ModuleDeserializerRegistry registry = new ModuleDeserializerRegistry();\n        module.setDeserializers(registry);\n        Map<Class<?>, JsonDeserializer<?>> moduleDeserializers = registry.getDeserializers();\n        SerializerRegistry global = SerializerRegistry.getInstance();\n        for (Map.Entry<Class<?>, JsonDeserializer<?>> entry : moduleDeserializers.entrySet()) {\n            Class<?> type = entry.getKey();\n            JsonDeserializer<?> deserializer = entry.getValue();\n            JsonDeserializer<?> existing = global.registerIfAbsent(type, deserializer);\n            if (existing != null) {\n                log.debug("Deserializer for type {} already exists (from module {}), skipping",\n                        type.getName(), module.getModuleName());\n            } else {\n                moduleDeserializerTypes.add(type);\n                log.debug("Registered deserializer for type {} from module {}",\n                        type.getName(), module.getModuleName());\n            }\n        }\n    }\n\n    private void sortModulesByPriority() {\n        modules.sort((a, b) -> Integer.compare(b.getPriority(), a.getPriority()));\n    }\n\n    /**\n     * 获取序列化器\n     *\n     * <p>P1-6：委托全局唯一注册中心 {@link SerializerRegistry}，模块与直接注册的\n     * 序列化器共用同一存储，返回结果不再区分来源。</p>\n     *\n     * @param type 目标类型\n     * @param <T> 类型参数\n     * @return 序列化器，如果未找到返回 null\n     */\n    public <T> JsonSerializer<T> getSerializer(Class<T> type) {\n        return SerializerRegistry.getInstance().get(type);\n    }\n\n    /**\n     * 获取反序列化器。\n     *\n     * <p>P1-6：委托全局唯一注册中心 {@link SerializerRegistry}，模块与直接注册的\n     * 反序列化器共用同一存储。</p>\n     *\n     * @param type 目标类型\n     * @param <T> 类型参数\n     * @return 反序列化器，如果未找到返回 null\n     */\n    public <T> JsonDeserializer<T> getDeserializer(Class<T> type) {\n        return SerializerRegistry.getInstance().getDeserializer(type);\n    }\n\n    /**\n     * 检查是否有指定类型的序列化器。\n     *\n     * @param type 目标类型\n     * @return 如果有返回 true\n     */\n    public boolean hasSerializer(Class<?> type) {\n        return SerializerRegistry.getInstance().hasSerializer(type);\n    }\n\n    /**\n     * 检查是否有指定类型的反序列化器\n     *\n     * @param type 目标类型\n     * @return 如果有返回 true\n     */\n    public boolean hasDeserializer(Class<?> type) {\n        return SerializerRegistry.getInstance().hasDeserializer(type);\n    }\n\n    /**\n     * 移除模块\n     *\n     * @param module 要移除的模块\n     * @return 如果成功移除返回 true\n     */\n    public boolean removeModule(JsonModule module) {\n        if (module == null) {\n            return false;\n        }\n        synchronized (this) {\n            boolean removed = modules.remove(module);\n            if (removed) {\n                reinitialize();\n            }\n            return removed;\n        }\n    }\n\n    /**\n     * 清空所有模块和注册。\n     *\n     * <p>P1-6：仅清理模块来源的序列化器/反序列化器（依据 {@code moduleSerializerTypes} /\n     * {@code moduleDeserializerTypes} 精确移除），用户直接注册的注册项不受影响。</p>\n     */\n    public void clear() {\n        synchronized (this) {\n            modules.clear();\n            clearModuleRegistrations();\n            initialized = false;\n            log.info("JsonModuleRegistry cleared");\n        }\n    }\n\n    /**\n     * 重新初始化。\n     *\n     * <p>清空模块来源的注册并重新注册所有模块。</p>\n     */\n    public void reinitialize() {\n        synchronized (this) {\n            clearModuleRegistrations();\n            initialized = false;\n            initialize();\n        }\n    }\n\n    /**\n     * 移除所有模块来源的序列化器/反序列化器注册项，并清空模块类型集合。\n     */\n    private void clearModuleRegistrations() {\n        SerializerRegistry global = SerializerRegistry.getInstance();\n        global.unregisterAll(moduleSerializerTypes);\n        global.unregisterAllDeserializers(moduleDeserializerTypes);\n        moduleSerializerTypes.clear();\n        moduleDeserializerTypes.clear();\n    }\n\n    /**\n     * 获取已注册模块数量。\n     *\n     * @return 模块数量\n     */\n    public int getModuleCount() {\n        return modules.size();\n    }\n\n    /**\n     * 获取已注册序列化器数量。\n     *\n     * <p>P1-6：返回全局唯一注册中心的序列化器总数（含用户直接注册与模块注册）。</p>\n     *\n     * @return 序列化器数量\n     */\n    public int getSerializerCount() {\n        return SerializerRegistry.getInstance().getSerializerCount();\n    }\n\n    /**\n     * 获取已注册反序列化器数量。\n     *\n     * <p>P1-6：返回全局唯一注册中心的反序列化器总数（含用户直接注册与模块注册）。</p>\n     *\n     * @return 反序列化器数量\n     */\n    public int getDeserializerCount() {\n        return SerializerRegistry.getInstance().getDeserializerCount();\n    }\n\n    /**\n     * 获取所有已注册模块\n     *\n     * @return 只读模块列表\n     */\n    public List<JsonModule> getModules() {\n        return Collections.unmodifiableList(new ArrayList<>(modules));\n    }\n\n    /**\n     * 获取模块名称列表\n     *\n     * @return 模块名称列表\n     */\n    public List<String> getModuleNames() {\n        return modules.stream()\n                .map(module -> module != null ? module.getModuleName() : null)\n                .collect(Collectors.toList());\n    }\n}\n
+package com.njydsz.common.json.module;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.ServiceLoader;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.njydsz.common.json.deserializer.JsonDeserializer;
+import com.njydsz.common.json.serializer.JsonSerializer;
+import com.njydsz.common.json.serializer.SerializerRegistry;
+
+/**
+ * YdszJson 模块注册中心
+ *
+ * <p>核心模块管理类，负责模块的注册、排序和查询。
+ *
+ * <p><b>设计特点：</b>
+ * <ul>
+ *   <li>模块化架构 - 类似 Jackson Module，支持可插拔扩展</li>
+ *   <li>优先级排序 - 高优先级模块先注册，先注册的序列化器优先级更高</li>
+ *   <li>Spring 集成 - 支持自动发现和注入 Spring Bean 形式的模块</li>
+ *   <li>双重注册 - 分离序列化器和反序列化器注册</li>
+ * </ul>
+ *
+ * <p><b>使用示例：</b>
+ * <pre>
+ * // 1. 手动注册模块
+ * JsonModuleRegistry registry = JsonModuleRegistry.getInstance();
+ * registry.registerModule(new UserModule());
+ * registry.registerModule(new OrderModule());
+ *
+ * // 2. Spring Boot 环境自动注册
+ * // 只需实现 JsonModule.SpringFactory 接口并添加 @Component 注解
+ * // JsonSpringConfig 会自动发现并注册所有模块
+ *
+ * // 3. 获取序列化器
+ * JsonSerializer serializer = registry.getSerializer(User.class);
+ * </pre>
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+public final class JsonModuleRegistry {
+
+    private static final Logger log = LoggerFactory.getLogger(JsonModuleRegistry.class);
+
+    private static volatile JsonModuleRegistry instance;
+
+    /**
+     * 模块来源的序列化器类型集合（P1-6：单一事实源改造）。
+     *
+     * <p>模块注册的序列化器/反序列化器不再由本类独立维护，而是直接写入
+     * {@link SerializerRegistry}（全局唯一注册中心）；本集合仅记录"由模块注册"
+     * 的类型，供 {@link #clear()} / {@link #reinitialize()} 精确清理模块来源的
+     * 注册项，避免误删用户直接注册（{@code SerializerRegistry.register}）的序列化器。</p>
+     */
+    private final Set<Class<?>> moduleSerializerTypes = ConcurrentHashMap.newKeySet();
+
+    private final Set<Class<?>> moduleDeserializerTypes = ConcurrentHashMap.newKeySet();
+
+    private final List<JsonModule> modules = Collections.synchronizedList(new ArrayList<>());
+
+    private volatile boolean initialized = false;
+
+    private JsonModuleRegistry() {
+    }
+
+    /**
+     * 获取注册中心实例（单例）。
+     *
+     * <p>P2-9：首次创建时通过 {@link ServiceLoader} 自动发现并注册
+     * {@code META-INF/services/com.njydsz.common.json.module.JsonModule}
+     * 声明的模块，使非 Spring 环境（嵌入式引擎、命令行工具）具备与
+     * Spring 环境同等的模块自动注册能力。SPI 模块类与 Spring Bean
+     * 为同一类时按类去重，不会重复注册。</p>
+     *
+     * @return 注册中心实例
+     */
+    public static JsonModuleRegistry getInstance() {
+        if (instance == null) {
+            synchronized (JsonModuleRegistry.class) {
+                if (instance == null) {
+                    instance = new JsonModuleRegistry();
+                    instance.loadSpiModules();
+                }
+            }
+        }
+        return instance;
+    }
+
+    /**
+     * 通过 ServiceLoader 加载 SPI 娡块（仅单例首次创建时执行一次）。
+     *
+     * <p>单个模块实例化失败仅告警跳过，不影响其他模块与引擎启动。</p>
+     */
+    private void loadSpiModules() {
+        try {
+            ServiceLoader<JsonModule> loader = ServiceLoader.load(JsonModule.class);
+            for (JsonModule module : loader) {
+                try {
+                    registerModule(module);
+                    log.info("Discovered YdszJson module via ServiceLoader SPI: {} (priority={})",
+                        module.getModuleName(), module.getPriority());
+                } catch (Exception e) {
+                    log.error("Failed to register SPI-discovered YdszJson module: {}",
+                        module.getClass().getName(), e);
+                }
+            }
+        } catch (Exception e) {
+            // ServiceLoader 基础设施异常（如非法配置文件）不阻断引擎初始化
+            log.warn("Failed to scan YdszJson modules via ServiceLoader SPI", e);
+        }
+    }
+
+    /**
+     * 注册单个模块。
+     *
+     * <p>P2-9：按"实例相等或同类"去重——SPI 发现与 Spring Bean 注册
+     * 可能产生同一模块类的两个实例，重复注册仅告警跳过。</p>
+     *
+     * @param module 要注册的模块
+     */
+    public void registerModule(JsonModule module) {
+        if (module == null) {
+            throw new IllegalArgumentException("Module cannot be null");
+        }
+        synchronized (this) {
+            if (modules.contains(module)) {
+                log.warn("Module {} already registered, skipping", module.getModuleName());
+                return;
+            }
+            for (JsonModule existing : modules) {
+                if (existing.getClass() == module.getClass()) {
+                    log.warn("Module class {} already registered as {}, skipping duplicate",
+                        module.getClass().getName(), existing.getModuleName());
+                    return;
+                }
+            }
+            modules.add(module);
+            sortModulesByPriority();
+            log.info("Registered YdszJson module: {} (priority={})", module.getModuleName(), module.getPriority());
+        }
+    }
+
+    /**
+     * 批量注册模块
+     *
+     * @param modules 要注册的模块列表
+     */
+    public void registerModules(Collection<JsonModule> modules) {
+        if (modules == null || modules.isEmpty()) {
+            return;
+        }
+        for (JsonModule module : modules) {
+            registerModule(module);
+        }
+    }
+
+    /**
+     * 注册 Spring 工厂模块（自动发现）
+     *
+     * <p>Spring Boot 环境下，自动发现所有实现 {@link JsonModule.SpringFactory} 的 Bean</p>
+     *
+     * @param springFactories Spring 工厂模块实例
+     */
+    public void registerSpringFactories(Collection<JsonModule> springFactories) {
+        if (springFactories == null || springFactories.isEmpty()) {
+            return;
+        }
+        log.info("Discovering {} YdszJson Spring Factory modules", springFactories.size());
+        registerModules(springFactories);
+    }
+
+    /**
+     * 初始化所有模块。
+     *
+     * <p>按优先级从高到低依次调用模块的注册方法</p>
+     */
+    public void initialize() {
+        if (initialized) {
+            log.debug("JsonModuleRegistry already initialized");
+            return;
+        }
+        synchronized (this) {
+            if (initialized) {
+                return;
+            }
+            log.info("Initializing JsonModuleRegistry with {} modules", modules.size());
+            for (JsonModule module : modules) {
+                try {
+                    registerModuleSerializers(module);
+                    registerModuleDeserializers(module);
+                } catch (Exception e) {
+                    log.error("Failed to initialize module: {}", module.getModuleName(), e);
+                }
+            }
+            for (JsonModule module : modules) {
+                if (module.needsCompleteRegistration()) {
+                    try {
+                        module.onRegisterComplete();
+                    } catch (Exception e) {
+                        log.error("Failed to complete registration for module: {}", module.getModuleName(), e);
+                    }
+                }
+            }
+            initialized = true;
+            log.info("JsonModuleRegistry initialized successfully. Serializers: {}, Deserializers: {}",
+                    moduleSerializerTypes.size(), moduleDeserializerTypes.size());
+        }
+    }
+
+    private void registerModuleSerializers(JsonModule module) {
+        ModuleSerializerRegistry registry = new ModuleSerializerRegistry();
+        module.setSerializers(registry);
+        Map<Class<?>, JsonSerializer<?>> moduleSerializers = registry.getSerializers();
+        SerializerRegistry global = SerializerRegistry.getInstance();
+        for (Map.Entry<Class<?>, JsonSerializer<?>> entry : moduleSerializers.entrySet()) {
+            Class<?> type = entry.getKey();
+            JsonSerializer<?> serializer = entry.getValue();
+            JsonSerializer<?> existing = global.registerIfAbsent(type, serializer);
+            if (existing != null) {
+                log.debug("Serializer for type {} already exists (from module {}), skipping",
+                        type.getName(), module.getModuleName());
+            } else {
+                moduleSerializerTypes.add(type);
+                log.debug("Registered serializer for type {} from module {}",
+                        type.getName(), module.getModuleName());
+            }
+        }
+    }
+
+    private void registerModuleDeserializers(JsonModule module) {
+        ModuleDeserializerRegistry registry = new ModuleDeserializerRegistry();
+        module.setDeserializers(registry);
+        Map<Class<?>, JsonDeserializer<?>> moduleDeserializers = registry.getDeserializers();
+        SerializerRegistry global = SerializerRegistry.getInstance();
+        for (Map.Entry<Class<?>, JsonDeserializer<?>> entry : moduleDeserializers.entrySet()) {
+            Class<?> type = entry.getKey();
+            JsonDeserializer<?> deserializer = entry.getValue();
+            JsonDeserializer<?> existing = global.registerIfAbsent(type, deserializer);
+            if (existing != null) {
+                log.debug("Deserializer for type {} already exists (from module {}), skipping",
+                        type.getName(), module.getModuleName());
+            } else {
+                moduleDeserializerTypes.add(type);
+                log.debug("Registered deserializer for type {} from module {}",
+                        type.getName(), module.getModuleName());
+            }
+        }
+    }
+
+    private void sortModulesByPriority() {
+        modules.sort((a, b) -> Integer.compare(b.getPriority(), a.getPriority()));
+    }
+
+    /**
+     * 获取序列化器
+     *
+     * <p>P1-6：委托全局唯一注册中心 {@link SerializerRegistry}，模块与直接注册的
+     * 序列化器共用同一存储，返回结果不再区分来源。</p>
+     *
+     * @param type 目标类型
+     * @param <T> 类型参数
+     * @return 序列化器，如果未找到返回 null
+     */
+    public <T> JsonSerializer<T> getSerializer(Class<T> type) {
+        return SerializerRegistry.getInstance().get(type);
+    }
+
+    /**
+     * 获取反序列化器。
+     *
+     * <p>P1-6：委托全局唯一注册中心 {@link SerializerRegistry}，模块与直接注册的
+     * 反序列化器共用同一存储。</p>
+     *
+     * @param type 目标类型
+     * @param <T> 类型参数
+     * @return 反序列化器，如果未找到返回 null
+     */
+    public <T> JsonDeserializer<T> getDeserializer(Class<T> type) {
+        return SerializerRegistry.getInstance().getDeserializer(type);
+    }
+
+    /**
+     * 检查是否有指定类型的序列化器。
+     *
+     * @param type 目标类型
+     * @return 如果有返回 true
+     */
+    public boolean hasSerializer(Class<?> type) {
+        return SerializerRegistry.getInstance().hasSerializer(type);
+    }
+
+    /**
+     * 检查是否有指定类型的反序列化器
+     *
+     * @param type 目标类型
+     * @return 如果有返回 true
+     */
+    public boolean hasDeserializer(Class<?> type) {
+        return SerializerRegistry.getInstance().hasDeserializer(type);
+    }
+
+    /**
+     * 移除模块
+     *
+     * @param module 要移除的模块
+     * @return 如果成功移除返回 true
+     */
+    public boolean removeModule(JsonModule module) {
+        if (module == null) {
+            return false;
+        }
+        synchronized (this) {
+            boolean removed = modules.remove(module);
+            if (removed) {
+                reinitialize();
+            }
+            return removed;
+        }
+    }
+
+    /**
+     * 清空所有模块和注册。
+     *
+     * <p>P1-6：仅清理模块来源的序列化器/反序列化器（依据 {@code moduleSerializerTypes} /
+     * {@code moduleDeserializerTypes} 精确移除），用户直接注册的注册项不受影响。</p>
+     */
+    public void clear() {
+        synchronized (this) {
+            modules.clear();
+            clearModuleRegistrations();
+            initialized = false;
+            log.info("JsonModuleRegistry cleared");
+        }
+    }
+
+    /**
+     * 重新初始化。
+     *
+     * <p>清空模块来源的注册并重新注册所有模块。</p>
+     */
+    public void reinitialize() {
+        synchronized (this) {
+            clearModuleRegistrations();
+            initialized = false;
+            initialize();
+        }
+    }
+
+    /**
+     * 移除所有模块来源的序列化器/反序列化器注册项，并清空模块类型集合。
+     */
+    private void clearModuleRegistrations() {
+        SerializerRegistry global = SerializerRegistry.getInstance();
+        global.unregisterAll(moduleSerializerTypes);
+        global.unregisterAllDeserializers(moduleDeserializerTypes);
+        moduleSerializerTypes.clear();
+        moduleDeserializerTypes.clear();
+    }
+
+    /**
+     * 获取已注册模块数量。
+     *
+     * @return 模块数量
+     */
+    public int getModuleCount() {
+        return modules.size();
+    }
+
+    /**
+     * 获取已注册序列化器数量。
+     *
+     * <p>P1-6：返回全局唯一注册中心的序列化器总数（含用户直接注册与模块注册）。</p>
+     *
+     * @return 序列化器数量
+     */
+    public int getSerializerCount() {
+        return SerializerRegistry.getInstance().getSerializerCount();
+    }
+
+    /**
+     * 获取已注册反序列化器数量。
+     *
+     * <p>P1-6：返回全局唯一注册中心的反序列化器总数（含用户直接注册与模块注册）。</p>
+     *
+     * @return 反序列化器数量
+     */
+    public int getDeserializerCount() {
+        return SerializerRegistry.getInstance().getDeserializerCount();
+    }
+
+    /**
+     * 获取所有已注册模块
+     *
+     * @return 只读模块列表
+     */
+    public List<JsonModule> getModules() {
+        return Collections.unmodifiableList(new ArrayList<>(modules));
+    }
+
+    /**
+     * 获取模块名称列表
+     *
+     * @return 模块名称列表
+     */
+    public List<String> getModuleNames() {
+        return modules.stream()
+                .map(module -> module != null ? module.getModuleName() : null)
+                .collect(Collectors.toList());
+    }
+}

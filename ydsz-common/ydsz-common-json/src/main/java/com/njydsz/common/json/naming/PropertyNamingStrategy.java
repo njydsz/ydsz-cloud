@@ -1,1 +1,116 @@
-package com.njydsz.common.json.naming;\n\nimport java.io.Serializable;\n\n/**\n * 命名策略接口（参考 Jackson 的 PropertyNamingStrategy）\n *\n * <p>用于转换 Java 属性名到 JSON 字段名。</p>\n *\n * <p><b>内置策略：</b></p>\n * <ul>\n *   <li>LOWER_CAMEL_CASE - 小驼峰（默认）</li>\n *   <li>LOWER_CASE - 全小写</li>\n *   <li>LOWER_CASE_WITH_UNDERSCORES - 下划线分隔</li>\n *   <li>LOWER_CASE_WITH_DASHES - 短横线分隔</li>\n *   <li>UPPER_CAMEL_CASE - 大驼峰</li>\n * </ul>\n *\n * <p><b>使用示例：</b></p>\n * <pre>\n * // 使用下划线命名策略\n * JsonConfig.getInstance().setNamingStrategy(\n *     PropertyNamingStrategy.SNAKE_CASE\n * );\n *\n * // 序列化结果：{"user_name":"John"}\n * User user = new User();\n * user.setUserName("John");\n * String json = YdszJson.toJson(user);\n * </pre>\n *\n * @author ydsz-team\n * @since 1.0.0\n */\npublic interface PropertyNamingStrategy extends Serializable {\n\n    /**\n     * 转换属性名为 JSON 字段名\n     *\n     * @param propertyName 属性名\n     * @return JSON 字段名\n     */\n    String translate(String propertyName);\n\n    /**\n     * 小驼峰命名（默认）\n     */\n    PropertyNamingStrategy LOWER_CAMEL_CASE = propertyName -> propertyName;\n\n    /**\n     * 全小写命名\n     */\n    PropertyNamingStrategy LOWER_CASE = propertyName -> propertyName.toLowerCase();\n\n    /**\n     * 下划线命名（SNAKE_CASE）\n     */\n    PropertyNamingStrategy SNAKE_CASE = propertyName -> {\n        if (propertyName == null || propertyName.isEmpty()) {\n            return propertyName;\n        }\n\n        StringBuilder result = new StringBuilder();\n        int len = propertyName.length();\n        for (int i = 0; i < len; i++) {\n            char c = propertyName.charAt(i);\n            if (Character.isUpperCase(c)) {\n                // 仅当前面是小写字母，或前面是大写且后面是小写（缩写词边界）时插入下划线\n                // 例如：userID → user_id，JSONParser → json_parser\n                if (i > 0 && (Character.isLowerCase(propertyName.charAt(i - 1))\n                        || (i + 1 < len && Character.isLowerCase(propertyName.charAt(i + 1))))) {\n                    result.append('_');\n                }\n                result.append(Character.toLowerCase(c));\n            } else {\n                result.append(c);\n            }\n        }\n        return result.toString();\n    };\n\n    /**\n     * 短横线命名（KEBAB-CASE）\n     */\n    PropertyNamingStrategy KEBAB_CASE = propertyName -> {\n        if (propertyName == null || propertyName.isEmpty()) {\n            return propertyName;\n        }\n\n        StringBuilder result = new StringBuilder();\n        int len = propertyName.length();\n        for (int i = 0; i < len; i++) {\n            char c = propertyName.charAt(i);\n            if (Character.isUpperCase(c)) {\n                if (i > 0 && (Character.isLowerCase(propertyName.charAt(i - 1))\n                        || (i + 1 < len && Character.isLowerCase(propertyName.charAt(i + 1))))) {\n                    result.append('-');\n                }\n                result.append(Character.toLowerCase(c));\n            } else {\n                result.append(c);\n            }\n        }\n        return result.toString();\n    };\n\n    /**\n     * 大驼峰命名（PascalCase）\n     */\n    PropertyNamingStrategy UPPER_CAMEL_CASE = propertyName -> {\n        if (propertyName == null || propertyName.isEmpty()) {\n            return propertyName;\n        }\n        return Character.toUpperCase(propertyName.charAt(0)) + propertyName.substring(1);\n    };\n}\n
+package com.njydsz.common.json.naming;
+
+import java.io.Serializable;
+
+/**
+ * 命名策略接口（参考 Jackson 的 PropertyNamingStrategy）
+ *
+ * <p>用于转换 Java 属性名到 JSON 字段名。</p>
+ *
+ * <p><b>内置策略：</b></p>
+ * <ul>
+ *   <li>LOWER_CAMEL_CASE - 小驼峰（默认）</li>
+ *   <li>LOWER_CASE - 全小写</li>
+ *   <li>LOWER_CASE_WITH_UNDERSCORES - 下划线分隔</li>
+ *   <li>LOWER_CASE_WITH_DASHES - 短横线分隔</li>
+ *   <li>UPPER_CAMEL_CASE - 大驼峰</li>
+ * </ul>
+ *
+ * <p><b>使用示例：</b></p>
+ * <pre>
+ * // 使用下划线命名策略
+ * JsonConfig.getInstance().setNamingStrategy(
+ *     PropertyNamingStrategy.SNAKE_CASE
+ * );
+ *
+ * // 序列化结果：{"user_name":"John"}
+ * User user = new User();
+ * user.setUserName("John");
+ * String json = YdszJson.toJson(user);
+ * </pre>
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+public interface PropertyNamingStrategy extends Serializable {
+
+    /**
+     * 转换属性名为 JSON 字段名
+     *
+     * @param propertyName 属性名
+     * @return JSON 字段名
+     */
+    String translate(String propertyName);
+
+    /**
+     * 小驼峰命名（默认）
+     */
+    PropertyNamingStrategy LOWER_CAMEL_CASE = propertyName -> propertyName;
+
+    /**
+     * 全小写命名
+     */
+    PropertyNamingStrategy LOWER_CASE = propertyName -> propertyName.toLowerCase();
+
+    /**
+     * 下划线命名（SNAKE_CASE）
+     */
+    PropertyNamingStrategy SNAKE_CASE = propertyName -> {
+        if (propertyName == null || propertyName.isEmpty()) {
+            return propertyName;
+        }
+
+        StringBuilder result = new StringBuilder();
+        int len = propertyName.length();
+        for (int i = 0; i < len; i++) {
+            char c = propertyName.charAt(i);
+            if (Character.isUpperCase(c)) {
+                // 仅当前面是小写字母，或前面是大写且后面是小写（缩写词边界）时插入下划线
+                // 例如：userID → user_id，JSONParser → json_parser
+                if (i > 0 && (Character.isLowerCase(propertyName.charAt(i - 1))
+                        || (i + 1 < len && Character.isLowerCase(propertyName.charAt(i + 1))))) {
+                    result.append('_');
+                }
+                result.append(Character.toLowerCase(c));
+            } else {
+                result.append(c);
+            }
+        }
+        return result.toString();
+    };
+
+    /**
+     * 短横线命名（KEBAB-CASE）
+     */
+    PropertyNamingStrategy KEBAB_CASE = propertyName -> {
+        if (propertyName == null || propertyName.isEmpty()) {
+            return propertyName;
+        }
+
+        StringBuilder result = new StringBuilder();
+        int len = propertyName.length();
+        for (int i = 0; i < len; i++) {
+            char c = propertyName.charAt(i);
+            if (Character.isUpperCase(c)) {
+                if (i > 0 && (Character.isLowerCase(propertyName.charAt(i - 1))
+                        || (i + 1 < len && Character.isLowerCase(propertyName.charAt(i + 1))))) {
+                    result.append('-');
+                }
+                result.append(Character.toLowerCase(c));
+            } else {
+                result.append(c);
+            }
+        }
+        return result.toString();
+    };
+
+    /**
+     * 大驼峰命名（PascalCase）
+     */
+    PropertyNamingStrategy UPPER_CAMEL_CASE = propertyName -> {
+        if (propertyName == null || propertyName.isEmpty()) {
+            return propertyName;
+        }
+        return Character.toUpperCase(propertyName.charAt(0)) + propertyName.substring(1);
+    };
+}

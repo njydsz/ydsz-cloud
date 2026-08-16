@@ -1,1 +1,86 @@
-package com.njydsz.common.json.spring.boot;\n\nimport java.util.Collections;\nimport java.util.LinkedHashSet;\nimport java.util.Set;\n\nimport org.springframework.boot.EnvironmentPostProcessor;\nimport org.springframework.boot.SpringApplication;\nimport org.springframework.core.env.ConfigurableEnvironment;\nimport org.springframework.core.env.Environment;\nimport org.springframework.core.env.MapPropertySource;\nimport org.springframework.core.env.PropertySource;\nimport org.springframework.util.StringUtils;\n\n/**\n * 可选排除 Spring Boot Jackson 自动配置（默认共存，A-3 修复）。\n *\n * <p>默认行为：<b>共存优先</b>——不触碰全局 Jackson 自动配置，springdoc-openapi /\n * actuator 等依赖 {@code ObjectMapper} Bean 的组件可正常工作；MVC 层通过\n * {@code JsonHttpMessageConverter} 的注册顺序已足以让业务接口走 YdszJson。</p>\n *\n * <p>当显式设置 {@code ydsz.json.disable-jackson-auto-configuration=true} 时，\n * 将 {@code org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration}\n * 追加到 {@code spring.autoconfigure.exclude}，Spring 容器不再注册 {@code ObjectMapper} Bean。</p>\n *\n * <p>EnvironmentPostProcessor 在 Spring Boot 启动早期执行，\n * 此时 {@code @ConfigurationProperties} 尚未绑定，因此直接从 {@link Environment} 读取原始属性值。</p>\n *\n * <p><b>合并逻辑（A-3 修复）：</b>遍历全部 PropertySource，收集各来源中已有的\n * {@code spring.autoconfigure.exclude} 值后统一合并，再以高优先级 {@link MapPropertySource}\n * 覆盖。原先仅读取 {@code getProperty()} 解析出的单个最高优先级值，会导致 base/profile\n * 等多个来源定义的 exclude 列表相互覆盖、条目丢失。</p>\n *\n * @author ydsz-team\n * @since 1.0.0\n */\npublic class JacksonExclusionEnvironmentPostProcessor implements EnvironmentPostProcessor {\n\n    private static final String PROPERTY_NAME = "ydsz.json.disable-jackson-auto-configuration";\n    private static final String EXCLUDE_PROPERTY = "spring.autoconfigure.exclude";\n    private static final String JACKSON_AUTO_CONFIGURATION =\n            "org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration";\n    private static final String PROPERTY_SOURCE_NAME = "ydszJsonJacksonExclusion";\n\n    @Override\n    public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {\n        // 默认共存：仅当显式开启时才排除 Jackson（A-3 修复：原先默认排除过于激进）\n        if (!Boolean.TRUE.equals(environment.getProperty(PROPERTY_NAME, Boolean.class, Boolean.FALSE))) {\n            return;\n        }\n\n        Set<String> excludes = collectExistingExcludes(environment);\n        excludes.add(JACKSON_AUTO_CONFIGURATION);\n\n        // 通过高优先级 PropertySource 覆盖 spring.autoconfigure.exclude（已合并全部来源）\n        String merged = String.join(",", excludes);\n        environment.getPropertySources()\n                .addFirst(new MapPropertySource(PROPERTY_SOURCE_NAME,\n                        Collections.singletonMap(EXCLUDE_PROPERTY, merged)));\n    }\n\n    /**\n     * 收集全部 PropertySource 中已有的 exclude 值，避免单一来源读取导致条目丢失。\n     *\n     * @param environment 配置环境\n     * @return 去重后的排除项集合（有序）\n     */\n    private Set<String> collectExistingExcludes(ConfigurableEnvironment environment) {\n        Set<String> excludes = new LinkedHashSet<>();\n        for (PropertySource<?> source : environment.getPropertySources()) {\n            if (!source.containsProperty(EXCLUDE_PROPERTY)) {\n                continue;\n            }\n            Object value = source.getProperty(EXCLUDE_PROPERTY);\n            if (value == null) {\n                continue;\n            }\n            for (String item : String.valueOf(value).split(",")) {\n                if (StringUtils.hasText(item)) {\n                    excludes.add(item.trim());\n                }\n            }\n        }\n        return excludes;\n    }\n}\n
+package com.njydsz.common.json.spring.boot;
+
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+import org.springframework.boot.EnvironmentPostProcessor;
+import org.springframework.boot.SpringApplication;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.env.PropertySource;
+import org.springframework.util.StringUtils;
+
+/**
+ * 可选排除 Spring Boot Jackson 自动配置（默认共存，A-3 修复）。
+ *
+ * <p>默认行为：<b>共存优先</b>——不触碰全局 Jackson 自动配置，springdoc-openapi /
+ * actuator 等依赖 {@code ObjectMapper} Bean 的组件可正常工作；MVC 层通过
+ * {@code JsonHttpMessageConverter} 的注册顺序已足以让业务接口走 YdszJson。</p>
+ *
+ * <p>当显式设置 {@code ydsz.json.disable-jackson-auto-configuration=true} 时，
+ * 将 {@code org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration}
+ * 追加到 {@code spring.autoconfigure.exclude}，Spring 容器不再注册 {@code ObjectMapper} Bean。</p>
+ *
+ * <p>EnvironmentPostProcessor 在 Spring Boot 启动早期执行，
+ * 此时 {@code @ConfigurationProperties} 尚未绑定，因此直接从 {@link Environment} 读取原始属性值。</p>
+ *
+ * <p><b>合并逻辑（A-3 修复）：</b>遍历全部 PropertySource，收集各来源中已有的
+ * {@code spring.autoconfigure.exclude} 值后统一合并，再以高优先级 {@link MapPropertySource}
+ * 覆盖。原先仅读取 {@code getProperty()} 解析出的单个最高优先级值，会导致 base/profile
+ * 等多个来源定义的 exclude 列表相互覆盖、条目丢失。</p>
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+public class JacksonExclusionEnvironmentPostProcessor implements EnvironmentPostProcessor {
+
+    private static final String PROPERTY_NAME = "ydsz.json.disable-jackson-auto-configuration";
+    private static final String EXCLUDE_PROPERTY = "spring.autoconfigure.exclude";
+    private static final String JACKSON_AUTO_CONFIGURATION =
+            "org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration";
+    private static final String PROPERTY_SOURCE_NAME = "ydszJsonJacksonExclusion";
+
+    @Override
+    public void postProcessEnvironment(ConfigurableEnvironment environment, SpringApplication application) {
+        // 默认共存：仅当显式开启时才排除 Jackson（A-3 修复：原先默认排除过于激进）
+        if (!Boolean.TRUE.equals(environment.getProperty(PROPERTY_NAME, Boolean.class, Boolean.FALSE))) {
+            return;
+        }
+
+        Set<String> excludes = collectExistingExcludes(environment);
+        excludes.add(JACKSON_AUTO_CONFIGURATION);
+
+        // 通过高优先级 PropertySource 覆盖 spring.autoconfigure.exclude（已合并全部来源）
+        String merged = String.join(",", excludes);
+        environment.getPropertySources()
+                .addFirst(new MapPropertySource(PROPERTY_SOURCE_NAME,
+                        Collections.singletonMap(EXCLUDE_PROPERTY, merged)));
+    }
+
+    /**
+     * 收集全部 PropertySource 中已有的 exclude 值，避免单一来源读取导致条目丢失。
+     *
+     * @param environment 配置环境
+     * @return 去重后的排除项集合（有序）
+     */
+    private Set<String> collectExistingExcludes(ConfigurableEnvironment environment) {
+        Set<String> excludes = new LinkedHashSet<>();
+        for (PropertySource<?> source : environment.getPropertySources()) {
+            if (!source.containsProperty(EXCLUDE_PROPERTY)) {
+                continue;
+            }
+            Object value = source.getProperty(EXCLUDE_PROPERTY);
+            if (value == null) {
+                continue;
+            }
+            for (String item : String.valueOf(value).split(",")) {
+                if (StringUtils.hasText(item)) {
+                    excludes.add(item.trim());
+                }
+            }
+        }
+        return excludes;
+    }
+}

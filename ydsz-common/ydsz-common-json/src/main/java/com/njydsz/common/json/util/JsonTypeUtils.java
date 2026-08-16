@@ -1,1 +1,64 @@
-package com.njydsz.common.json.util;\n\n/**\n * JSON 类型判断工具类（统一 isSimpleType / getTypeCode 等重复实现）。\n *\n * <p>此前 {@code BeanDeserializerEngine.isSimpleType()}、\n * {@code BeanReader} 等处独立实现了几乎相同的基本类型判断逻辑，此处统一为单一来源。</p>\n *\n * @author ydsz-team\n * @since 1.0.0\n */\npublic final class JsonTypeUtils {\n\n    private JsonTypeUtils() {\n        throw new UnsupportedOperationException("Utility class");\n    }\n\n    /**\n     * 判断类型是否为基本类型或其包装类、String。\n     *\n     * <p>统一替代 BeanDeserializerEngine、BeanReader 等处的重复实现。</p>\n     *\n     * @param type 待判断的类型\n     * @return 是基本类型返回 true\n     */\n    public static boolean isSimpleType(Class<?> type) {\n        return type.isPrimitive() ||\n               type == String.class ||\n               type == Integer.class || type == int.class ||\n               type == Long.class || type == long.class ||\n               type == Double.class || type == double.class ||\n               type == Float.class || type == float.class ||\n               type == Boolean.class || type == boolean.class ||\n               type == Short.class || type == short.class ||\n               type == Byte.class || type == byte.class ||\n               type == Character.class || type == char.class;\n    }\n\n    /**\n     * 获取类型码。\n     *\n     * <ul>\n     *   <li>1: int/Integer</li>\n     *   <li>2: long/Long</li>\n     *   <li>3: double/Double</li>\n     *   <li>4: float/Float</li>\n     *   <li>5: boolean/Boolean</li>\n     *   <li>6: String</li>\n     *   <li>0: 其他</li>\n     * </ul>\n     *\n     * @param type 目标类型\n     * @return 类型码\n     */\n    public static int getTypeCode(Class<?> type) {\n        if (type == int.class || type == Integer.class) return 1;\n        if (type == long.class || type == Long.class) return 2;\n        if (type == double.class || type == Double.class) return 3;\n        if (type == float.class || type == Float.class) return 4;\n        if (type == boolean.class || type == Boolean.class) return 5;\n        if (type == String.class) return 6;\n        return 0;\n    }\n}\n
+package com.njydsz.common.json.util;
+
+/**
+ * JSON 类型判断工具类（统一 isSimpleType / getTypeCode 等重复实现）。
+ *
+ * <p>此前 {@code BeanDeserializerEngine.isSimpleType()}、
+ * {@code BeanReader} 等处独立实现了几乎相同的基本类型判断逻辑，此处统一为单一来源。</p>
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+public final class JsonTypeUtils {
+
+    private JsonTypeUtils() {
+        throw new UnsupportedOperationException("Utility class");
+    }
+
+    /**
+     * 判断类型是否为基本类型或其包装类、String。
+     *
+     * <p>统一替代 BeanDeserializerEngine、BeanReader 等处的重复实现。</p>
+     *
+     * @param type 待判断的类型
+     * @return 是基本类型返回 true
+     */
+    public static boolean isSimpleType(Class<?> type) {
+        return type.isPrimitive() ||
+               type == String.class ||
+               type == Integer.class || type == int.class ||
+               type == Long.class || type == long.class ||
+               type == Double.class || type == double.class ||
+               type == Float.class || type == float.class ||
+               type == Boolean.class || type == boolean.class ||
+               type == Short.class || type == short.class ||
+               type == Byte.class || type == byte.class ||
+               type == Character.class || type == char.class;
+    }
+
+    /**
+     * 获取类型码。
+     *
+     * <ul>
+     *   <li>1: int/Integer</li>
+     *   <li>2: long/Long</li>
+     *   <li>3: double/Double</li>
+     *   <li>4: float/Float</li>
+     *   <li>5: boolean/Boolean</li>
+     *   <li>6: String</li>
+     *   <li>0: 其他</li>
+     * </ul>
+     *
+     * @param type 目标类型
+     * @return 类型码
+     */
+    public static int getTypeCode(Class<?> type) {
+        if (type == int.class || type == Integer.class) return 1;
+        if (type == long.class || type == Long.class) return 2;
+        if (type == double.class || type == Double.class) return 3;
+        if (type == float.class || type == Float.class) return 4;
+        if (type == boolean.class || type == Boolean.class) return 5;
+        if (type == String.class) return 6;
+        return 0;
+    }
+}

@@ -1,1 +1,473 @@
-package com.njydsz.common.json.provider;\n\nimport java.lang.reflect.Array;\nimport java.lang.reflect.GenericArrayType;\nimport java.lang.reflect.Method;\nimport java.lang.reflect.ParameterizedType;\nimport java.lang.reflect.Type;\nimport java.lang.reflect.WildcardType;\nimport java.math.BigDecimal;\nimport java.math.BigInteger;\nimport java.nio.charset.StandardCharsets;\nimport java.util.ArrayList;\nimport java.util.HashMap;\nimport java.util.HashSet;\nimport java.util.LinkedHashMap;\nimport java.util.LinkedHashSet;\nimport java.util.List;\nimport java.util.Map;\nimport java.util.Set;\nimport java.util.TreeMap;\nimport java.util.TreeSet;\nimport java.util.concurrent.ConcurrentHashMap;\n\nimport com.njydsz.common.json.annotation.JsonDeserialize;\nimport com.njydsz.common.json.deserializer.JsonDeserializer;\nimport com.njydsz.common.json.exception.JsonDeserializationException;\nimport com.njydsz.common.json.serializer.SerializerRegistry;\nimport com.njydsz.common.json.util.BoundedLruCache;\nimport com.njydsz.common.json.parser.JsonParserUtil;\nimport com.njydsz.common.json.reader.JSONReader;\n\n/**\n * YdszJson 反序列化提供者（零拷贝优化版）\n *\n * <p>架构层级：YdszJson => Provider => Parser</p>\n *\n * <p><b>核心优化：</b></p>\n * <ul>\n *   <li>零拷贝反序列化 - 直接解析 JSON 到对象字段，消除 Map 中转</li>\n *   <li>Constructor 缓存 - 避免每次反射获取</li>\n *   <li>HashMap 字段查找 - O(1) 替代 O(n)</li>\n *   <li>快速路径 - 简单对象（基本类型字段）直接内联解析</li>\n *   <li>JsonType 支持 - 泛型类型推断</li>\n *   <li>Builder 模式支持 - 链式构建对象</li>\n *   <li>Creator 模式支持 - 自定义构造函数反序列化</li>\n *   <li>多态类型支持 - @JsonTypeInfo 自动识别子类型</li>\n * </ul>\n *\n * <p><b>反序列化流程：</b></p>\n * <ol>\n *   <li>快速路径分派 - 基本类型直接解析，其余走 BeanDeserializerEngine</li>\n *   <li>执行解析 - ASM/BeanReader/Creator/Builder/ZeroCopy 多级降级</li>\n *   <li>类型转换 - 处理数字、字符串、日期等类型转换</li>\n * </ol>\n *\n * @author ydsz-team\n * @since 1.0.0\n */\n@SuppressWarnings("deprecation")\npublic final class DeserializationProvider {\n\n    private DeserializationProvider() {\n        throw new UnsupportedOperationException();\n    }\n\n    /**\n     * 从 UTF-8 字节数组反序列化（ASCII 快速路径）。\n     *\n     * <p>先扫描字节流判断是否为纯 ASCII：如果是，直接逐字节转 char[] 构造 String，\n     * 跳过 UTF-8 解码开销；非 ASCII 则回退 {@code new String(bytes, UTF_8)}。</p>\n     *\n     * <p>对标 FastJSON2 {@code JSON.parseObject(byte[], Class)} 和 Jackson\n     * {@code ObjectMapper.readValue(byte[], Class)} 的 byte[] 直接入参 API。</p>\n     *\n     * @param bytes UTF-8 编码的 JSON 字节数组\n     * @param clazz 目标类型\n     * @param <T> 类型参数\n     * @return 反序列化后的对象，bytes 为空时返回 null\n     * @since 1.0.0\n     */\n    public static <T> T deserialize(byte[] bytes, Class<T> clazz) {\n        if (bytes == null || bytes.length == 0) {\n            return null;\n        }\n        String json = bytesToAsciiFast(bytes);\n        return deserialize(json, clazz);\n    }\n\n    /**\n     * 从 UTF-8 字节数组反序列化（支持泛型 Type）。\n     *\n     * @param bytes UTF-8 编码的 JSON 字节数组\n     * @param type 目标类型\n     * @return 反序列化后的对象\n     * @since 1.0.0\n     */\n    public static Object deserializeToObject(byte[] bytes, Type type) {\n        if (bytes == null || bytes.length == 0) {\n            return null;\n        }\n        String json = bytesToAsciiFast(bytes);\n        return deserializeToObject(json, type);\n    }\n\n    /**\n     * 泛型桥接：从 UTF-8 字节数组反序列化为指定 Type。\n     *\n     * <p>调用方用此方法可保留泛型推断 {@code <T>}，内部委托 {@link #deserializeToObject(byte[], Type)}\n     * 并作 checked cast。unchecked 警告集中在桥接方法内（单处 {@code @SuppressWarnings}）。</p>\n     *\n     * @param bytes UTF-8 编码的 JSON 字节数组\n     * @param type  目标类型（{@link Class} 或 {@link java.lang.reflect.ParameterizedType}）\n     * @param <T>   类型参数\n     * @return 反序列化后的对象\n     */\n    @SuppressWarnings("unchecked")\n    public static <T> T deserialize(byte[] bytes, Type type) {\n        return (T) deserializeToObject(bytes, type);\n    }\n\n    /**\n     * 泛型桥接：从 JSON 字符串反序列化为指定 Type。\n     *\n     * <p>调用方用此方法可保留泛型推断，内部委托 {@link #deserializeToObject(String, Type)}。</p>\n     *\n     * @param json JSON 字符串\n     * @param type 目标类型\n     * @param <T>  类型参数\n     * @return 反序列化后的对象\n     */\n    @SuppressWarnings("unchecked")\n    public static <T> T deserialize(String json, Type type) {\n        return (T) deserializeToObject(json, type);\n    }\n\n    /**\n     * ASCII 快速路径：扫描字节流，若全为 ASCII（&lt; 128）则直接逐字节转 char[] 构造 String，\n     * 跳过 UTF-8 解码开销；非 ASCII 回退 {@code new String(bytes, UTF_8)}。\n     *\n     * @param bytes UTF-8 编码的字节流\n     * @return 对应的 JSON 字符串\n     */\n    private static String bytesToAsciiFast(byte[] bytes) {\n        int len = bytes.length;\n        // 快速扫描前 64 字节判断是否为纯 ASCII\n        int scanLen = Math.min(len, 64);\n        boolean ascii = true;\n        for (int i = 0; i < scanLen; i++) {\n            if (bytes[i] < 0) { ascii = false; break; }\n        }\n        // 如果前 64 字节为 ASCII，继续扫描剩余部分\n        if (ascii) {\n            for (int i = scanLen; i < len; i++) {\n                if (bytes[i] < 0) { ascii = false; break; }\n            }\n        }\n        if (ascii) {\n            // 纯 ASCII：直接逐字节转 char[]，跳过 UTF-8 解码\n            char[] chars = new char[len];\n            for (int i = 0; i < len; i++) {\n                chars[i] = (char) (bytes[i] & 0xFF);\n            }\n            return new String(chars);\n        }\n        // 非 ASCII：回退标准 UTF-8 解码\n        return new String(bytes, StandardCharsets.UTF_8);\n    }\n\n    /**\n     * 泛型反序列化递归深度计数器（ThreadLocal）。\n     *\n     * <p>防止恶意构造的嵌套泛型 JSON（如 {@code List<List<List<...>>>}）导致\n     * {@code deserializeToObject} 无限递归引发 StackOverflowError。\n     * 默认最大深度 64（对标 FastJSON2 maxTypeRecursionDepth=100），可通过\n     * {@link JSONReader#setMaxGenericDepth(int)} 调整。\n     */\n    private static final ThreadLocal<Integer> DESERIALIZE_DEPTH =\n        ThreadLocal.withInitial(() -> 0);\n\n    /**\n     * @JsonDeserialize 自定义反序列化器缓存（Class -> JsonDeserializer 实例）。\n     * 有界 LRU（容量 1024），防止无界增长。\n     */\n    private static final BoundedLruCache<Class<?>, JsonDeserializer<?>> CUSTOM_DESERIALIZER_CACHE =\n        new BoundedLruCache<>(1024);\n\n    /**\n     * 自定义反序列化器 deserialize 方法缓存（Class -> Method）。\n     *\n     * <p>由于 {@code JsonDeserializer<?>} 的 {@code deserialize(String, Class<?>)} 方法\n     * 无法直接以 {@code Class<T>} 参数调用（泛型类型参数 ? 未知），\n     * 使用 {@link Method#invoke(Object, Object...)} 进行反射调用，\n     * 避免 unchecked cast。{@code Method.invoke} 返回 {@code Object}，\n     * 调用方通过 {@code clazz.cast()} 执行 checked cast。</p>\n     *\n     * <p>有界 LRU（容量 1024），防止无界增长。</p>\n     */\n    private static final BoundedLruCache<Class<?>, Method> DESERIALIZE_METHOD_CACHE =\n        new BoundedLruCache<>(1024);\n\n    /**\n     * 检查类是否有 @JsonDeserialize 注解并获取自定义反序列化器。\n     *\n     * @param clazz 要检查的类\n     * @return 自定义反序列化器实例，或 null 如果没有\n     */\n    private static JsonDeserializer<?> getCustomDeserializer(Class<?> clazz) {\n        JsonDeserialize annotation = clazz.getAnnotation(JsonDeserialize.class);\n        if (annotation == null || annotation.using() == Void.class) {\n            return null;\n        }\n        try {\n            return CUSTOM_DESERIALIZER_CACHE.computeIfAbsent(clazz, c -> {\n                try {\n                    return (JsonDeserializer<?>) annotation.using().getDeclaredConstructor().newInstance();\n                } catch (Exception e) {\n                    throw new JsonDeserializationException(\n                        "Failed to instantiate custom deserializer: " + annotation.using().getName(),\n                        e\n                    );\n                }\n            });\n        } catch (JsonDeserializationException e) {\n            throw e;\n        } catch (Exception e) {\n            throw new JsonDeserializationException(\n                "Failed to instantiate custom deserializer: " + annotation.using().getName(),\n                e\n            );\n        }\n    }\n\n    /**\n     * 通过反射调用自定义反序列化器的 deserialize 方法。\n     *\n     * <p>使用 {@link Method#invoke(Object, Object...)} 避免泛型 unchecked cast。\n     * {@code Method.invoke} 返回 {@code Object}，调用方通过 {@code Class.cast()} 执行 checked cast。</p>\n     *\n     * @param deserializer 自定义反序列化器实例\n     * @param json JSON 字符串\n     * @param type 目标类型\n     * @return 反序列化后的对象\n     */\n    private static Object invokeCustomDeserializer(Object deserializer, String json, Class<?> type) {\n        // 新版接口（deserializer.JsonDeserializer）：直接使用 JSONReader 流式解析，零拷贝\n        if (deserializer instanceof com.njydsz.common.json.deserializer.JsonDeserializer) {\n            JSONReader reader = new JSONReader(json);\n            return ((com.njydsz.common.json.deserializer.JsonDeserializer<Object>) deserializer)\n                .deserialize(reader);\n        }\n        // 旧版接口（api.JsonDeserializer，deprecated）：接收完整 JSON 字符串\n        Method method = DESERIALIZE_METHOD_CACHE.computeIfAbsent(deserializer.getClass(), cls -> {\n            try {\n                Method m = cls.getMethod("deserialize", String.class, Class.class);\n                m.setAccessible(true);\n                return m;\n            } catch (NoSuchMethodException e) {\n                throw new JsonDeserializationException(\n                    "deserialize method not found on " + cls.getName()\n                        + " (neither new deserializer.JsonDeserializer nor old api.JsonDeserializer)",\n                    e\n                );\n            }\n        });\n        try {\n            return method.invoke(deserializer, json, type);\n        } catch (Exception e) {\n            throw new JsonDeserializationException(\n                "Custom deserializer failed: " + deserializer.getClass().getName(),\n                e\n            );\n        }\n    }\n\n    /**\n     * 反序列化 JSON 字符串（零拷贝优化版）\n     */\n    public static <T> T deserialize(String json, Class<T> clazz) {\n        if (json == null || json.isEmpty()) {\n            return null;\n        }\n\n        try {\n            // @JsonDeserialize 快速路径：如果类有自定义反序列化器，直接使用\n            Object customDeserializer = getCustomDeserializer(clazz);\n            if (customDeserializer == null) {\n                // P1-6：模块与直接注册的反序列化器已统一写入 SerializerRegistry（单一事实源），\n                // 直接查询全局注册中心，避免反向依赖 YdszJson（打破 YdszJson <-> DeserializationProvider 循环依赖，1.2.1）\n                customDeserializer = SerializerRegistry.getInstance().getDeserializer(clazz);\n            }\n            if (customDeserializer != null) {\n                Object result = invokeCustomDeserializer(customDeserializer, json, clazz);\n                return result != null ? clazz.cast(result) : null;\n            }\n\n            Class<?> actualType = resolvePolymorphicType(json, clazz);\n\n            // 深度限制由 JSONReader 在解析过程中通过 Feature.LimitDepth 实时维护，\n            // 超阈值即抛 JsonDeserializationException，无需在此预扫描（原实现存在 O(n) 双重扫描\n            // 且不区分字符串字面量中的 { } 的逻辑缺陷）\n            Object result = deserializeValue(json, actualType);\n            return result != null ? castResult(result, clazz) : null;\n        } catch (JsonDeserializationException e) {\n            // 已有上下文信息的异常直接抛出\n            if (e.getContextSnippet() != null) {\n                throw e;\n            }\n            throw JsonDeserializationException.parseError(json, e.getPosition());\n        } catch (Exception e) {\n            // 注入 JSON 上下文片段，帮助用户快速定位问题\n            throw new JsonDeserializationException(\n                JsonDeserializationException.PARSE_ERROR,\n                "Failed to deserialize JSON to " + clazz.getName() + ": " + e.getMessage(),\n                0, json);\n        }\n    }\n\n    /**\n     * 将反序列化结果安全转换为目标类型。\n     *\n     * <p>与 {@code clazz.cast(result)} 的区别：基本类型（int/long/double/float/boolean/char/byte/short）\n     * 的 {@code Class.cast} 无法接收装箱值（如 Integer），这里对基本类型做显式拆箱转换，\n     * 对引用类型仍走 {@code clazz.cast}。</p>\n     *\n     * @param result 反序列化结果（装箱对象）\n     * @param clazz  目标类型\n     * @param <T>    目标类型参数\n     * @return 转换后的目标类型值\n     */\n    @SuppressWarnings("unchecked")\n    private static <T> T castResult(Object result, Class<?> clazz) {\n        if (result == null) {\n            return null;\n        }\n        // 基本类型：显式拆箱（避免 Class.cast 对 primitive 抛 ClassCastException）\n        if (clazz == int.class) return (T) Integer.valueOf(((Number) result).intValue());\n        if (clazz == long.class) return (T) Long.valueOf(((Number) result).longValue());\n        if (clazz == double.class) return (T) Double.valueOf(((Number) result).doubleValue());\n        if (clazz == float.class) return (T) Float.valueOf(((Number) result).floatValue());\n        if (clazz == short.class) return (T) Short.valueOf(((Number) result).shortValue());\n        if (clazz == byte.class) return (T) Byte.valueOf(((Number) result).byteValue());\n        if (clazz == char.class) return (T) Character.valueOf(result.toString().charAt(0));\n        if (clazz == boolean.class) return (T) Boolean.valueOf((Boolean) result);\n        // 引用类型：标准 cast\n        return (T) clazz.cast(result);\n    }\n\n    private static Object deserializeValue(String json, Class<?> type) {\n        // 快速路径：基本类型直接判断（无需缓存查找开销）\n        if (type == String.class) return TypeConverter.parseStringValue(json);\n        if (type == Integer.class || type == int.class) return TypeConverter.parseIntValue(json);\n        if (type == Long.class || type == long.class) return TypeConverter.parseLongValue(json);\n        if (type == Double.class || type == double.class) return TypeConverter.parseDoubleValue(json);\n        if (type == Float.class || type == float.class) return TypeConverter.parseFloatValue(json);\n        if (type == Boolean.class || type == boolean.class) return TypeConverter.parseBooleanValue(json);\n        if (type == BigDecimal.class) return parseBigDecimal(json);\n        if (type == BigInteger.class) return parseBigInteger(json);\n        if (type == Object.class) return parseValue(json);\n        if (type == Map.class) return JsonParserUtil.parseObject(json);\n        if (type == List.class) return BeanDeserializerEngine.deserializeArrayZeroCopy(json, Object.class);\n\n        // Bean 类型：直接走 BeanDeserializerEngine 多级降级路径\n        // （ASM -> BeanReader -> Creator -> Builder -> ZeroCopy -> Map 降级）\n        // 注：原 STRATEGY_CACHE 已删除——所有非简单类型统一走 BEAN 路径，\n        // if-else 链已覆盖所有简单类型，缓存无策略分派价值，synchronizedMap 反而是性能瓶颈。\n        return BeanDeserializerEngine.deserializeBeanZeroCopyAsObject(json, type);\n    }\n\n    /**\n     * 从 JSON 片段解析 BigDecimal（保留任意精度）。\n     */\n    private static BigDecimal parseBigDecimal(String json) {\n        if (json == null || json.isBlank() || "null".equals(json.trim())) {\n            return null;\n        }\n        try {\n            return new BigDecimal(json.trim());\n        } catch (NumberFormatException e) {\n            throw new JsonDeserializationException(\n                JsonDeserializationException.PARSE_ERROR,\n                "Failed to parse BigDecimal from: " + json, 0, json);\n        }\n    }\n\n    /**\n     * 从 JSON 片段解析 BigInteger。\n     */\n    private static BigInteger parseBigInteger(String json) {\n        if (json == null || json.isBlank() || "null".equals(json.trim())) {\n            return null;\n        }\n        try {\n            return new BigInteger(json.trim());\n        } catch (NumberFormatException e) {\n            throw new JsonDeserializationException(\n                JsonDeserializationException.PARSE_ERROR,\n                "Failed to parse BigInteger from: " + json, 0, json);\n        }\n    }\n\n    /**\n     * 反序列化 JSON 字符串（带特性配置）\n     *\n     * <p><b>注意：</b>当前版本 {@code features} 参数仅用于 JSON 长度限制检查，\n     * 其他 Feature 配置尚未实现，保留参数位置以便后续扩展。\n     *\n     * @param json JSON 字符串\n     * @param clazz 目标类型\n     * @param features 特性标志（位运算值，当前仅用于长度限制检查）\n     * @param <T> 类型参数\n     * @return 反序列化后的对象\n     */\n    public static <T> T deserialize(String json, Class<T> clazz, long features) {\n        if (json == null || json.isEmpty()) {\n            return null;\n        }\n\n        // 安全检查：最大长度限制（防止 DoS 攻击）\n        if (json.length() > JSONReader.DEFAULT_MAX_JSON_LENGTH) {\n            throw new JsonDeserializationException(\n                JsonDeserializationException.PARSE_ERROR,\n                "JSON length limit exceeded: " + json.length() + " > " + JSONReader.DEFAULT_MAX_JSON_LENGTH\n            );\n        }\n\n        // 深度限制由 JSONReader 在解析过程中通过 Feature.LimitDepth 实时维护\n        return deserialize(json, clazz);\n    }\n\n    /**\n     * 解析多态类型\n     *\n     * <p>如果目标类有 @JsonTypeInfo 注解，则根据 JSON 中的类型属性值\n     * 识别具体子类型并返回。</p>\n     *\n     * @param json JSON 字符串\n     * @param baseType 基类\n     * @return 解析后的具体类型，如果不支持多态返回基类\n     */\n    private static Class<?> resolvePolymorphicType(String json, Class<?> baseType) {\n        return PolymorphicTypeResolver.resolveType(json, baseType);\n    }\n\n    private static Object parseValue(String json) {\n        json = json.trim();\n        int len = json.length();\n\n        // 快速路径：按长度和首字符分派，避免多次 equals/startsWith 调用\n        if (len == 0) {\n            return null;\n        }\n        char first = json.charAt(0);\n        switch (first) {\n            case 'n':\n                if (len == 4 && json.equals("null")) {\n                    return null;\n                }\n                break;\n            case 't':\n                if (len == 4 && json.equals("true")) {\n                    return Boolean.TRUE;\n                }\n                break;\n            case 'f':\n                if (len == 5 && json.equals("false")) {\n                    return Boolean.FALSE;\n                }\n                break;\n            case '{':\n                return JsonParserUtil.parseObject(json);\n            case '[':\n                return JsonParserUtil.parseArray(json);\n            case '"':\n                return TypeConverter.parseStringValue(json);\n            default:\n                break;\n        }\n\n        // 数字解析\n        try {\n            if (json.indexOf('.') >= 0 || json.indexOf('E') >= 0 || json.indexOf('e') >= 0) {\n                return Double.parseDouble(json);\n            }\n            return Long.parseLong(json);\n        } catch (NumberFormatException e) {\n            return json;\n        }\n    }\n\n    /**\n     * 反序列化 JSON 字符串（支持 Type）\n     *\n     * <p>支持 {@link Class}、{@link ParameterizedType}（List/Map/Set 泛型）等类型。\n     * 类型不匹配时立即抛出 {@link JsonDeserializationException}，包含期望类型和实际类型信息。</p>\n     *\n     * <p><b>返回 Object 而非泛型 T 的原因：</b>Java 泛型类型擦除导致从 {@link Type}\n     * 到 {@code T} 的转换无法在编译期验证（unchecked cast）。返回 {@code Object}\n     * 后由调用方通过 {@code Class.cast()} 执行运行时检查的 checked cast，\n     * 从根源消除 unchecked 警告。</p>\n     *\n     * @param json JSON 字符串\n     * @param type 目标类型\n     * @return 反序列化后的对象\n     * @throws JsonDeserializationException 如果 JSON 结构与目标类型不匹配\n     */\n    public static Object deserializeToObject(String json, Type type) {\n        if (json == null || json.isEmpty()) {\n            return null;\n        }\n\n        // 泛型递归深度保护：仅在非 Class 类型的泛型路径（ParameterizedType/GenericArrayType/WildcardType）中递增\n        boolean incrementDepth = !(type instanceof Class<?>);\n        if (incrementDepth) {\n            int currentDepth = DESERIALIZE_DEPTH.get();\n            // P0-3：优先读取线程级调用覆盖（JsonMapper 实例隔离），未设置回退静态全局值\n            int maxDepth = JSONReader.resolveCallMaxGenericDepth();\n            if (currentDepth >= maxDepth) {\n                throw new JsonDeserializationException(\n                    JsonDeserializationException.TYPE_MISMATCH,\n                    "Generic deserialization depth exceeded: " + currentDepth + " >= " + maxDepth\n                        + " (type: " + type + ")");\n            }\n            DESERIALIZE_DEPTH.set(currentDepth + 1);\n        }\n\n        try {\n            return deserializeToObjectInternal(json, type);\n        } finally {\n            if (incrementDepth) {\n                DESERIALIZE_DEPTH.set(DESERIALIZE_DEPTH.get() - 1);\n            }\n        }\n    }\n\n    /**\n     * 内部反序列化逻辑（实际委托给各类型分派）。\n     *\n     * <p>与 {@link #deserializeToObject(String, Type)} 分离，方便递归深度保护在入口处统一处理。\n     */\n    private static Object deserializeToObjectInternal(String json, Type type) {\n        if (type instanceof Class<?> clazz) {\n            Object result = deserializeValue(json, clazz);\n            return result;\n        }\n\n        if (type instanceof GenericArrayType gat) {\n            // 泛型数组类型（如 T[]）：先反序列化为 List，再转数组\n            Type componentType = gat.getGenericComponentType();\n            ParameterizedType listType = new ParameterizedType() {\n                @Override public Type[] getActualTypeArguments() { return new Type[]{componentType}; }\n                @Override public Type getRawType() { return List.class; }\n                @Override public Type getOwnerType() { return null; }\n            };\n            List<?> list = (List<?>) deserializeToObject(json, listType);\n            if (list == null) return null;\n            Class<?> componentClass = componentType instanceof Class<?> c ? c : Object.class;\n            Object array = Array.newInstance(componentClass, list.size());\n            for (int i = 0; i < list.size(); i++) {\n                Array.set(array, i, list.get(i));\n            }\n            return array;\n        }\n\n        if (type instanceof ParameterizedType pt) {\n            Type rawType = pt.getRawType();\n\n            if (rawType == List.class || rawType == ArrayList.class) {\n                Type elementType = pt.getActualTypeArguments()[0];\n                if (elementType instanceof Class<?> elementClass) {\n                    if (BeanDeserializerEngine.isSimpleType(elementClass)) {\n                        return BeanDeserializerEngine.deserializeArrayZeroCopy(json, elementClass);\n                    } else {\n                        return BeanDeserializerEngine.deserializeBeanListFast(json, elementClass);\n                    }\n                }\n            }\n\n            if (rawType == Map.class || rawType == HashMap.class\n                    || rawType == LinkedHashMap.class\n                    || rawType == TreeMap.class) {\n                Type[] typeArgs = pt.getActualTypeArguments();\n                Map<String, Object> parsed = JsonParserUtil.parseObject(json);\n                if (parsed == null) return null;\n                // 当 value 类型为已知简单类型时，转换解析结果（如 Long → Integer）\n                if (typeArgs.length == 2 && typeArgs[1] instanceof Class<?> valueClass) {\n                    if (valueClass != Object.class) {\n                        Map<String, Object> result = createMap(rawType);\n                        for (Map.Entry<String, Object> entry : parsed.entrySet()) {\n                            result.put(entry.getKey(),\n                                TypeConverter.convertValue(entry.getValue(), valueClass));\n                        }\n                        return result;\n                    }\n                }\n                return parsed;\n            }\n\n            if (rawType == Set.class || rawType == HashSet.class\n                    || rawType == LinkedHashSet.class\n                    || rawType == TreeSet.class) {\n                Type elementType = pt.getActualTypeArguments()[0];\n                if (elementType instanceof Class<?> elementClass) {\n                    if (BeanDeserializerEngine.isSimpleType(elementClass)) {\n                        List<?> list = BeanDeserializerEngine.deserializeArrayZeroCopy(json, elementClass);\n                        if (list == null) return null;\n                        return createSet(rawType, list);\n                    } else {\n                        List<?> list = BeanDeserializerEngine.deserializeBeanListFast(json, elementClass);\n                        if (list == null) return null;\n                        return createSet(rawType, list);\n                    }\n                }\n            }\n        }\n\n        if (type instanceof WildcardType wt) {\n            // WildcardType（如 ? extends Number）：取上界进行反序列化\n            Type[] upperBounds = wt.getUpperBounds();\n            if (upperBounds != null && upperBounds.length > 0) {\n                return deserializeToObject(json, upperBounds[0]);\n            }\n            // 无上界时回退到 Object\n            return parseValue(json);\n        }\n\n        // 兜底路径：根据 JSON 首字符决定解析为 List 或 Map\n        String trimmed = json.trim();\n        if (trimmed.startsWith("[")) {\n            return JsonParserUtil.parseArray(json);\n        }\n        return JsonParserUtil.parseObject(json);\n    }\n\n    /**\n     * 根据原始类型创建对应的 Set 实例并填充元素。\n     *\n     * @param rawType 原始类型（TreeSet/LinkedHashSet/HashSet）\n     * @param list 元素列表\n     * @return 填充好的 Set 实例\n     */\n    private static Set<Object> createSet(Type rawType, List<?> list) {\n        Set<Object> set;\n        if (rawType == TreeSet.class) {\n            set = new TreeSet<>();\n        } else if (rawType == LinkedHashSet.class) {\n            set = new LinkedHashSet<>(list.size());\n        } else {\n            set = new HashSet<>(list.size());\n        }\n        set.addAll(list);\n        return set;\n    }\n\n    /**\n     * 根据 rawType 创建对应的 Map 实例。\n     */\n    private static Map<String, Object> createMap(Type rawType) {\n        if (rawType == TreeMap.class) {\n            return new TreeMap<>();\n        } else if (rawType == LinkedHashMap.class) {\n            return new LinkedHashMap<>();\n        }\n        return new HashMap<>();\n    }\n\n    /**\n     * 清理当前线程的 ThreadLocal 对象。\n     *\n     * <p>在线程池环境中，应在任务完成后或线程归还前调用此方法，\n     * 防止 {@link #DESERIALIZE_DEPTH} 等 ThreadLocal 值在线程池中残留。</p>\n     *\n     * @since 1.2.1\n     */\n    public static void clearThreadLocals() {\n        DESERIALIZE_DEPTH.remove();\n    }\n}\n
+package com.njydsz.common.json.provider;
+
+import java.lang.reflect.Array;
+import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
+
+import com.njydsz.common.json.annotation.JsonDeserialize;
+import com.njydsz.common.json.deserializer.JsonDeserializer;
+import com.njydsz.common.json.exception.JsonDeserializationException;
+import com.njydsz.common.json.serializer.SerializerRegistry;
+import com.njydsz.common.json.util.BoundedLruCache;
+import com.njydsz.common.json.parser.JsonParserUtil;
+import com.njydsz.common.json.reader.JSONReader;
+
+/**
+ * YdszJson 反序列化提供者（零拷贝优化版）
+ *
+ * <p>架构层级：YdszJson => Provider => Parser</p>
+ *
+ * <p><b>核心优化：</b></p>
+ * <ul>
+ *   <li>零拷贝反序列化 - 直接解析 JSON 到对象字段，消除 Map 中转</li>
+ *   <li>Constructor 缓存 - 避免每次反射获取</li>
+ *   <li>HashMap 字段查找 - O(1) 替代 O(n)</li>
+ *   <li>快速路径 - 简单对象（基本类型字段）直接内联解析</li>
+ *   <li>JsonType 支持 - 泛型类型推断</li>
+ *   <li>Builder 模式支持 - 链式构建对象</li>
+ *   <li>Creator 模式支持 - 自定义构造函数反序列化</li>
+ *   <li>多态类型支持 - @JsonTypeInfo 自动识别子类型</li>
+ * </ul>
+ *
+ * <p><b>反序列化流程：</b></p>
+ * <ol>
+ *   <li>快速路径分派 - 基本类型直接解析，其余走 BeanDeserializerEngine</li>
+ *   <li>执行解析 - ASM/BeanReader/Creator/Builder/ZeroCopy 多级降级</li>
+ *   <li>类型转换 - 处理数字、字符串、日期等类型转换</li>
+ * </ol>
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+@SuppressWarnings("deprecation")
+public final class DeserializationProvider {
+
+    private DeserializationProvider() {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * 从 UTF-8 字节数组反序列化（ASCII 快速路径）。
+     *
+     * <p>先扫描字节流判断是否为纯 ASCII：如果是，直接逐字节转 char[] 构造 String，
+     * 跳过 UTF-8 解码开销；非 ASCII 则回退 {@code new String(bytes, UTF_8)}。</p>
+     *
+     * <p>对标 FastJSON2 {@code JSON.parseObject(byte[], Class)} 和 Jackson
+     * {@code ObjectMapper.readValue(byte[], Class)} 的 byte[] 直接入参 API。</p>
+     *
+     * @param bytes UTF-8 编码的 JSON 字节数组
+     * @param clazz 目标类型
+     * @param <T> 类型参数
+     * @return 反序列化后的对象，bytes 为空时返回 null
+     * @since 1.0.0
+     */
+    public static <T> T deserialize(byte[] bytes, Class<T> clazz) {
+        if (bytes == null || bytes.length == 0) {
+            return null;
+        }
+        String json = bytesToAsciiFast(bytes);
+        return deserialize(json, clazz);
+    }
+
+    /**
+     * 从 UTF-8 字节数组反序列化（支持泛型 Type）。
+     *
+     * @param bytes UTF-8 编码的 JSON 字节数组
+     * @param type 目标类型
+     * @return 反序列化后的对象
+     * @since 1.0.0
+     */
+    public static Object deserializeToObject(byte[] bytes, Type type) {
+        if (bytes == null || bytes.length == 0) {
+            return null;
+        }
+        String json = bytesToAsciiFast(bytes);
+        return deserializeToObject(json, type);
+    }
+
+    /**
+     * 泛型桥接：从 UTF-8 字节数组反序列化为指定 Type。
+     *
+     * <p>调用方用此方法可保留泛型推断 {@code <T>}，内部委托 {@link #deserializeToObject(byte[], Type)}
+     * 并作 checked cast。unchecked 警告集中在桥接方法内（单处 {@code @SuppressWarnings}）。</p>
+     *
+     * @param bytes UTF-8 编码的 JSON 字节数组
+     * @param type  目标类型（{@link Class} 或 {@link java.lang.reflect.ParameterizedType}）
+     * @param <T>   类型参数
+     * @return 反序列化后的对象
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T deserialize(byte[] bytes, Type type) {
+        return (T) deserializeToObject(bytes, type);
+    }
+
+    /**
+     * 泛型桥接：从 JSON 字符串反序列化为指定 Type。
+     *
+     * <p>调用方用此方法可保留泛型推断，内部委托 {@link #deserializeToObject(String, Type)}。</p>
+     *
+     * @param json JSON 字符串
+     * @param type 目标类型
+     * @param <T>  类型参数
+     * @return 反序列化后的对象
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> T deserialize(String json, Type type) {
+        return (T) deserializeToObject(json, type);
+    }
+
+    /**
+     * ASCII 快速路径：扫描字节流，若全为 ASCII（&lt; 128）则直接逐字节转 char[] 构造 String，
+     * 跳过 UTF-8 解码开销；非 ASCII 回退 {@code new String(bytes, UTF_8)}。
+     *
+     * @param bytes UTF-8 编码的字节流
+     * @return 对应的 JSON 字符串
+     */
+    private static String bytesToAsciiFast(byte[] bytes) {
+        int len = bytes.length;
+        // 快速扫描前 64 字节判断是否为纯 ASCII
+        int scanLen = Math.min(len, 64);
+        boolean ascii = true;
+        for (int i = 0; i < scanLen; i++) {
+            if (bytes[i] < 0) { ascii = false; break; }
+        }
+        // 如果前 64 字节为 ASCII，继续扫描剩余部分
+        if (ascii) {
+            for (int i = scanLen; i < len; i++) {
+                if (bytes[i] < 0) { ascii = false; break; }
+            }
+        }
+        if (ascii) {
+            // 纯 ASCII：直接逐字节转 char[]，跳过 UTF-8 解码
+            char[] chars = new char[len];
+            for (int i = 0; i < len; i++) {
+                chars[i] = (char) (bytes[i] & 0xFF);
+            }
+            return new String(chars);
+        }
+        // 非 ASCII：回退标准 UTF-8 解码
+        return new String(bytes, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * 泛型反序列化递归深度计数器（ThreadLocal）。
+     *
+     * <p>防止恶意构造的嵌套泛型 JSON（如 {@code List<List<List<...>>>}）导致
+     * {@code deserializeToObject} 无限递归引发 StackOverflowError。
+     * 默认最大深度 64（对标 FastJSON2 maxTypeRecursionDepth=100），可通过
+     * {@link JSONReader#setMaxGenericDepth(int)} 调整。
+     */
+    private static final ThreadLocal<Integer> DESERIALIZE_DEPTH =
+        ThreadLocal.withInitial(() -> 0);
+
+    /**
+     * @JsonDeserialize 自定义反序列化器缓存（Class -> JsonDeserializer 实例）。
+     * 有界 LRU（容量 1024），防止无界增长。
+     */
+    private static final BoundedLruCache<Class<?>, JsonDeserializer<?>> CUSTOM_DESERIALIZER_CACHE =
+        new BoundedLruCache<>(1024);
+
+    /**
+     * 自定义反序列化器 deserialize 方法缓存（Class -> Method）。
+     *
+     * <p>由于 {@code JsonDeserializer<?>} 的 {@code deserialize(String, Class<?>)} 方法
+     * 无法直接以 {@code Class<T>} 参数调用（泛型类型参数 ? 未知），
+     * 使用 {@link Method#invoke(Object, Object...)} 进行反射调用，
+     * 避免 unchecked cast。{@code Method.invoke} 返回 {@code Object}，
+     * 调用方通过 {@code clazz.cast()} 执行 checked cast。</p>
+     *
+     * <p>有界 LRU（容量 1024），防止无界增长。</p>
+     */
+    private static final BoundedLruCache<Class<?>, Method> DESERIALIZE_METHOD_CACHE =
+        new BoundedLruCache<>(1024);
+
+    /**
+     * 检查类是否有 @JsonDeserialize 注解并获取自定义反序列化器。
+     *
+     * @param clazz 要检查的类
+     * @return 自定义反序列化器实例，或 null 如果没有
+     */
+    private static JsonDeserializer<?> getCustomDeserializer(Class<?> clazz) {
+        JsonDeserialize annotation = clazz.getAnnotation(JsonDeserialize.class);
+        if (annotation == null || annotation.using() == Void.class) {
+            return null;
+        }
+        try {
+            return CUSTOM_DESERIALIZER_CACHE.computeIfAbsent(clazz, c -> {
+                try {
+                    return (JsonDeserializer<?>) annotation.using().getDeclaredConstructor().newInstance();
+                } catch (Exception e) {
+                    throw new JsonDeserializationException(
+                        "Failed to instantiate custom deserializer: " + annotation.using().getName(),
+                        e
+                    );
+                }
+            });
+        } catch (JsonDeserializationException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new JsonDeserializationException(
+                "Failed to instantiate custom deserializer: " + annotation.using().getName(),
+                e
+            );
+        }
+    }
+
+    /**
+     * 通过反射调用自定义反序列化器的 deserialize 方法。
+     *
+     * <p>使用 {@link Method#invoke(Object, Object...)} 避免泛型 unchecked cast。
+     * {@code Method.invoke} 返回 {@code Object}，调用方通过 {@code Class.cast()} 执行 checked cast。</p>
+     *
+     * @param deserializer 自定义反序列化器实例
+     * @param json JSON 字符串
+     * @param type 目标类型
+     * @return 反序列化后的对象
+     */
+    private static Object invokeCustomDeserializer(Object deserializer, String json, Class<?> type) {
+        // 新版接口（deserializer.JsonDeserializer）：直接使用 JSONReader 流式解析，零拷贝
+        if (deserializer instanceof com.njydsz.common.json.deserializer.JsonDeserializer) {
+            JSONReader reader = new JSONReader(json);
+            return ((com.njydsz.common.json.deserializer.JsonDeserializer<Object>) deserializer)
+                .deserialize(reader);
+        }
+        // 旧版接口（api.JsonDeserializer，deprecated）：接收完整 JSON 字符串
+        Method method = DESERIALIZE_METHOD_CACHE.computeIfAbsent(deserializer.getClass(), cls -> {
+            try {
+                Method m = cls.getMethod("deserialize", String.class, Class.class);
+                m.setAccessible(true);
+                return m;
+            } catch (NoSuchMethodException e) {
+                throw new JsonDeserializationException(
+                    "deserialize method not found on " + cls.getName()
+                        + " (neither new deserializer.JsonDeserializer nor old api.JsonDeserializer)",
+                    e
+                );
+            }
+        });
+        try {
+            return method.invoke(deserializer, json, type);
+        } catch (Exception e) {
+            throw new JsonDeserializationException(
+                "Custom deserializer failed: " + deserializer.getClass().getName(),
+                e
+            );
+        }
+    }
+
+    /**
+     * 反序列化 JSON 字符串（零拷贝优化版）
+     */
+    public static <T> T deserialize(String json, Class<T> clazz) {
+        if (json == null || json.isEmpty()) {
+            return null;
+        }
+
+        try {
+            // @JsonDeserialize 快速路径：如果类有自定义反序列化器，直接使用
+            Object customDeserializer = getCustomDeserializer(clazz);
+            if (customDeserializer == null) {
+                // P1-6：模块与直接注册的反序列化器已统一写入 SerializerRegistry（单一事实源），
+                // 直接查询全局注册中心，避免反向依赖 YdszJson（打破 YdszJson <-> DeserializationProvider 循环依赖，1.2.1）
+                customDeserializer = SerializerRegistry.getInstance().getDeserializer(clazz);
+            }
+            if (customDeserializer != null) {
+                Object result = invokeCustomDeserializer(customDeserializer, json, clazz);
+                return result != null ? clazz.cast(result) : null;
+            }
+
+            Class<?> actualType = resolvePolymorphicType(json, clazz);
+
+            // 深度限制由 JSONReader 在解析过程中通过 Feature.LimitDepth 实时维护，
+            // 超阈值即抛 JsonDeserializationException，无需在此预扫描（原实现存在 O(n) 双重扫描
+            // 且不区分字符串字面量中的 { } 的逻辑缺陷）
+            Object result = deserializeValue(json, actualType);
+            return result != null ? castResult(result, clazz) : null;
+        } catch (JsonDeserializationException e) {
+            // 已有上下文信息的异常直接抛出
+            if (e.getContextSnippet() != null) {
+                throw e;
+            }
+            throw JsonDeserializationException.parseError(json, e.getPosition());
+        } catch (Exception e) {
+            // 注入 JSON 上下文片段，帮助用户快速定位问题
+            throw new JsonDeserializationException(
+                JsonDeserializationException.PARSE_ERROR,
+                "Failed to deserialize JSON to " + clazz.getName() + ": " + e.getMessage(),
+                0, json);
+        }
+    }
+
+    /**
+     * 将反序列化结果安全转换为目标类型。
+     *
+     * <p>与 {@code clazz.cast(result)} 的区别：基本类型（int/long/double/float/boolean/char/byte/short）
+     * 的 {@code Class.cast} 无法接收装箱值（如 Integer），这里对基本类型做显式拆箱转换，
+     * 对引用类型仍走 {@code clazz.cast}。</p>
+     *
+     * @param result 反序列化结果（装箱对象）
+     * @param clazz  目标类型
+     * @param <T>    目标类型参数
+     * @return 转换后的目标类型值
+     */
+    @SuppressWarnings("unchecked")
+    private static <T> T castResult(Object result, Class<?> clazz) {
+        if (result == null) {
+            return null;
+        }
+        // 基本类型：显式拆箱（避免 Class.cast 对 primitive 抛 ClassCastException）
+        if (clazz == int.class) return (T) Integer.valueOf(((Number) result).intValue());
+        if (clazz == long.class) return (T) Long.valueOf(((Number) result).longValue());
+        if (clazz == double.class) return (T) Double.valueOf(((Number) result).doubleValue());
+        if (clazz == float.class) return (T) Float.valueOf(((Number) result).floatValue());
+        if (clazz == short.class) return (T) Short.valueOf(((Number) result).shortValue());
+        if (clazz == byte.class) return (T) Byte.valueOf(((Number) result).byteValue());
+        if (clazz == char.class) return (T) Character.valueOf(result.toString().charAt(0));
+        if (clazz == boolean.class) return (T) Boolean.valueOf((Boolean) result);
+        // 引用类型：标准 cast
+        return (T) clazz.cast(result);
+    }
+
+    private static Object deserializeValue(String json, Class<?> type) {
+        // 快速路径：基本类型直接判断（无需缓存查找开销）
+        if (type == String.class) return TypeConverter.parseStringValue(json);
+        if (type == Integer.class || type == int.class) return TypeConverter.parseIntValue(json);
+        if (type == Long.class || type == long.class) return TypeConverter.parseLongValue(json);
+        if (type == Double.class || type == double.class) return TypeConverter.parseDoubleValue(json);
+        if (type == Float.class || type == float.class) return TypeConverter.parseFloatValue(json);
+        if (type == Boolean.class || type == boolean.class) return TypeConverter.parseBooleanValue(json);
+        if (type == BigDecimal.class) return parseBigDecimal(json);
+        if (type == BigInteger.class) return parseBigInteger(json);
+        if (type == Object.class) return parseValue(json);
+        if (type == Map.class) return JsonParserUtil.parseObject(json);
+        if (type == List.class) return BeanDeserializerEngine.deserializeArrayZeroCopy(json, Object.class);
+
+        // Bean 类型：直接走 BeanDeserializerEngine 多级降级路径
+        // （ASM -> BeanReader -> Creator -> Builder -> ZeroCopy -> Map 降级）
+        // 注：原 STRATEGY_CACHE 已删除——所有非简单类型统一走 BEAN 路径，
+        // if-else 链已覆盖所有简单类型，缓存无策略分派价值，synchronizedMap 反而是性能瓶颈。
+        return BeanDeserializerEngine.deserializeBeanZeroCopyAsObject(json, type);
+    }
+
+    /**
+     * 从 JSON 片段解析 BigDecimal（保留任意精度）。
+     */
+    private static BigDecimal parseBigDecimal(String json) {
+        if (json == null || json.isBlank() || "null".equals(json.trim())) {
+            return null;
+        }
+        try {
+            return new BigDecimal(json.trim());
+        } catch (NumberFormatException e) {
+            throw new JsonDeserializationException(
+                JsonDeserializationException.PARSE_ERROR,
+                "Failed to parse BigDecimal from: " + json, 0, json);
+        }
+    }
+
+    /**
+     * 从 JSON 片段解析 BigInteger。
+     */
+    private static BigInteger parseBigInteger(String json) {
+        if (json == null || json.isBlank() || "null".equals(json.trim())) {
+            return null;
+        }
+        try {
+            return new BigInteger(json.trim());
+        } catch (NumberFormatException e) {
+            throw new JsonDeserializationException(
+                JsonDeserializationException.PARSE_ERROR,
+                "Failed to parse BigInteger from: " + json, 0, json);
+        }
+    }
+
+    /**
+     * 反序列化 JSON 字符串（带特性配置）
+     *
+     * <p><b>注意：</b>当前版本 {@code features} 参数仅用于 JSON 长度限制检查，
+     * 其他 Feature 配置尚未实现，保留参数位置以便后续扩展。
+     *
+     * @param json JSON 字符串
+     * @param clazz 目标类型
+     * @param features 特性标志（位运算值，当前仅用于长度限制检查）
+     * @param <T> 类型参数
+     * @return 反序列化后的对象
+     */
+    public static <T> T deserialize(String json, Class<T> clazz, long features) {
+        if (json == null || json.isEmpty()) {
+            return null;
+        }
+
+        // 安全检查：最大长度限制（防止 DoS 攻击）
+        if (json.length() > JSONReader.DEFAULT_MAX_JSON_LENGTH) {
+            throw new JsonDeserializationException(
+                JsonDeserializationException.PARSE_ERROR,
+                "JSON length limit exceeded: " + json.length() + " > " + JSONReader.DEFAULT_MAX_JSON_LENGTH
+            );
+        }
+
+        // 深度限制由 JSONReader 在解析过程中通过 Feature.LimitDepth 实时维护
+        return deserialize(json, clazz);
+    }
+
+    /**
+     * 解析多态类型
+     *
+     * <p>如果目标类有 @JsonTypeInfo 注解，则根据 JSON 中的类型属性值
+     * 识别具体子类型并返回。</p>
+     *
+     * @param json JSON 字符串
+     * @param baseType 基类
+     * @return 解析后的具体类型，如果不支持多态返回基类
+     */
+    private static Class<?> resolvePolymorphicType(String json, Class<?> baseType) {
+        return PolymorphicTypeResolver.resolveType(json, baseType);
+    }
+
+    private static Object parseValue(String json) {
+        json = json.trim();
+        int len = json.length();
+
+        // 快速路径：按长度和首字符分派，避免多次 equals/startsWith 调用
+        if (len == 0) {
+            return null;
+        }
+        char first = json.charAt(0);
+        switch (first) {
+            case 'n':
+                if (len == 4 && json.equals("null")) {
+                    return null;
+                }
+                break;
+            case 't':
+                if (len == 4 && json.equals("true")) {
+                    return Boolean.TRUE;
+                }
+                break;
+            case 'f':
+                if (len == 5 && json.equals("false")) {
+                    return Boolean.FALSE;
+                }
+                break;
+            case '{':
+                return JsonParserUtil.parseObject(json);
+            case '[':
+                return JsonParserUtil.parseArray(json);
+            case '"':\n                return TypeConverter.parseStringValue(json);\n            default:\n                break;\n        }\n\n        // 数字解析\n        try {\n            if (json.indexOf('.') >= 0 || json.indexOf('E') >= 0 || json.indexOf('e') >= 0) {\n                return Double.parseDouble(json);\n            }\n            return Long.parseLong(json);\n        } catch (NumberFormatException e) {\n            return json;\n        }\n    }\n\n    /**\n     * 反序列化 JSON 字符串（支持 Type）\n     *\n     * <p>支持 {@link Class}、{@link ParameterizedType}（List/Map/Set 泛型）等类型。\n     * 类型不匹配时立即抛出 {@link JsonDeserializationException}，包含期望类型和实际类型信息。</p>\n     *\n     * <p><b>返回 Object 而非泛型 T 的原因：</b>Java 泛型类型擦除导致从 {@link Type}\n     * 到 {@code T} 的转换无法在编译期验证（unchecked cast）。返回 {@code Object}\n     * 后由调用方通过 {@code Class.cast()} 执行运行时检查的 checked cast，\n     * 从根源消除 unchecked 警告。</p>\n     *\n     * @param json JSON 字符串\n     * @param type 目标类型\n     * @return 反序列化后的对象\n     * @throws JsonDeserializationException 如果 JSON 结构与目标类型不匹配\n     */\n    public static Object deserializeToObject(String json, Type type) {\n        if (json == null || json.isEmpty()) {\n            return null;\n        }\n\n        // 泛型递归深度保护：仅在非 Class 类型的泛型路径（ParameterizedType/GenericArrayType/WildcardType）中递增\n        boolean incrementDepth = !(type instanceof Class<?>);\n        if (incrementDepth) {\n            int currentDepth = DESERIALIZE_DEPTH.get();\n            // P0-3：优先读取线程级调用覆盖（JsonMapper 实例隔离），未设置回退静态全局值\n            int maxDepth = JSONReader.resolveCallMaxGenericDepth();\n            if (currentDepth >= maxDepth) {\n                throw new JsonDeserializationException(\n                    JsonDeserializationException.TYPE_MISMATCH,\n                    "Generic deserialization depth exceeded: " + currentDepth + " >= " + maxDepth\n                        + " (type: " + type + ")");\n            }\n            DESERIALIZE_DEPTH.set(currentDepth + 1);\n        }\n\n        try {\n            return deserializeToObjectInternal(json, type);\n        } finally {\n            if (incrementDepth) {\n                DESERIALIZE_DEPTH.set(DESERIALIZE_DEPTH.get() - 1);\n            }\n        }\n    }\n\n    /**\n     * 内部反序列化逻辑（实际委托给各类型分派）。\n     *\n     * <p>与 {@link #deserializeToObject(String, Type)} 分离，方便递归深度保护在入口处统一处理。\n     */\n    private static Object deserializeToObjectInternal(String json, Type type) {\n        if (type instanceof Class<?> clazz) {\n            Object result = deserializeValue(json, clazz);\n            return result;\n        }\n\n        if (type instanceof GenericArrayType gat) {\n            // 泛型数组类型（如 T[]）：先反序列化为 List，再转数组\n            Type componentType = gat.getGenericComponentType();\n            ParameterizedType listType = new ParameterizedType() {\n                @Override public Type[] getActualTypeArguments() { return new Type[]{componentType}; }\n                @Override public Type getRawType() { return List.class; }\n                @Override public Type getOwnerType() { return null; }\n            };\n            List<?> list = (List<?>) deserializeToObject(json, listType);\n            if (list == null) return null;\n            Class<?> componentClass = componentType instanceof Class<?> c ? c : Object.class;\n            Object array = Array.newInstance(componentClass, list.size());\n            for (int i = 0; i < list.size(); i++) {\n                Array.set(array, i, list.get(i));\n            }\n            return array;\n        }\n\n        if (type instanceof ParameterizedType pt) {\n            Type rawType = pt.getRawType();\n\n            if (rawType == List.class || rawType == ArrayList.class) {\n                Type elementType = pt.getActualTypeArguments()[0];\n                if (elementType instanceof Class<?> elementClass) {\n                    if (BeanDeserializerEngine.isSimpleType(elementClass)) {\n                        return BeanDeserializerEngine.deserializeArrayZeroCopy(json, elementClass);\n                    } else {\n                        return BeanDeserializerEngine.deserializeBeanListFast(json, elementClass);\n                    }\n                }\n            }\n\n            if (rawType == Map.class || rawType == HashMap.class\n                    || rawType == LinkedHashMap.class\n                    || rawType == TreeMap.class) {\n                Type[] typeArgs = pt.getActualTypeArguments();\n                Map<String, Object> parsed = JsonParserUtil.parseObject(json);\n                if (parsed == null) return null;\n                // 当 value 类型为已知简单类型时，转换解析结果（如 Long → Integer）\n                if (typeArgs.length == 2 && typeArgs[1] instanceof Class<?> valueClass) {\n                    if (valueClass != Object.class) {\n                        Map<String, Object> result = createMap(rawType);\n                        for (Map.Entry<String, Object> entry : parsed.entrySet()) {\n                            result.put(entry.getKey(),\n                                TypeConverter.convertValue(entry.getValue(), valueClass));\n                        }\n                        return result;\n                    }\n                }\n                return parsed;\n            }\n\n            if (rawType == Set.class || rawType == HashSet.class\n                    || rawType == LinkedHashSet.class\n                    || rawType == TreeSet.class) {\n                Type elementType = pt.getActualTypeArguments()[0];\n                if (elementType instanceof Class<?> elementClass) {\n                    if (BeanDeserializerEngine.isSimpleType(elementClass)) {\n                        List<?> list = BeanDeserializerEngine.deserializeArrayZeroCopy(json, elementClass);\n                        if (list == null) return null;\n                        return createSet(rawType, list);\n                    } else {\n                        List<?> list = BeanDeserializerEngine.deserializeBeanListFast(json, elementClass);\n                        if (list == null) return null;\n                        return createSet(rawType, list);\n                    }\n                }\n            }\n        }\n\n        if (type instanceof WildcardType wt) {\n            // WildcardType（如 ? extends Number）：取上界进行反序列化\n            Type[] upperBounds = wt.getUpperBounds();\n            if (upperBounds != null && upperBounds.length > 0) {\n                return deserializeToObject(json, upperBounds[0]);\n            }\n            // 无上界时回退到 Object\n            return parseValue(json);\n        }\n\n        // 兜底路径：根据 JSON 首字符决定解析为 List 或 Map\n        String trimmed = json.trim();\n        if (trimmed.startsWith("[")) {\n            return JsonParserUtil.parseArray(json);\n        }\n        return JsonParserUtil.parseObject(json);\n    }\n\n    /**\n     * 根据原始类型创建对应的 Set 实例并填充元素。\n     *\n     * @param rawType 原始类型（TreeSet/LinkedHashSet/HashSet）\n     * @param list 元素列表\n     * @return 填充好的 Set 实例\n     */\n    private static Set<Object> createSet(Type rawType, List<?> list) {\n        Set<Object> set;\n        if (rawType == TreeSet.class) {\n            set = new TreeSet<>();\n        } else if (rawType == LinkedHashSet.class) {\n            set = new LinkedHashSet<>(list.size());\n        } else {\n            set = new HashSet<>(list.size());\n        }\n        set.addAll(list);\n        return set;\n    }\n\n    /**\n     * 根据 rawType 创建对应的 Map 实例。\n     */\n    private static Map<String, Object> createMap(Type rawType) {\n        if (rawType == TreeMap.class) {\n            return new TreeMap<>();\n        } else if (rawType == LinkedHashMap.class) {\n            return new LinkedHashMap<>();\n        }\n        return new HashMap<>();\n    }\n\n    /**\n     * 清理当前线程的 ThreadLocal 对象。\n     *\n     * <p>在线程池环境中，应在任务完成后或线程归还前调用此方法，\n     * 防止 {@link #DESERIALIZE_DEPTH} 等 ThreadLocal 值在线程池中残留。</p>\n     *\n     * @since 1.2.1\n     */\n    public static void clearThreadLocals() {\n        DESERIALIZE_DEPTH.remove();\n    }\n}\n

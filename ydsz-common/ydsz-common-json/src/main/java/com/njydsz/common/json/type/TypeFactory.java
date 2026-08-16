@@ -1,1 +1,182 @@
-package com.njydsz.common.json.type;\n\nimport java.lang.reflect.Array;\nimport java.lang.reflect.ParameterizedType;\nimport java.lang.reflect.Type;\nimport java.util.*;\n\nimport com.njydsz.common.json.util.BoundedLruCache;\n\n/**\n * 类型工厂（参考 Jackson 的 TypeFactory）\n *\n * <p>用于构造和管理复杂的 Java 类型。</p>\n *\n * <p><b>主要功能：</b></p>\n * <ul>\n *   <li>构造泛型类型</li>\n *   <li>缓存已构造的类型</li>\n *   <li>类型解析和转换</li>\n * </ul>\n *\n * <p><b>使用示例：</b></p>\n * <pre>\n * // 构造 List&lt;User&gt; 类型\n * Type listType = TypeFactory.getInstance()\n *     .constructCollectionType(List.class, User.class);\n *\n * // 构造 Map&lt;String, User&gt; 类型\n * Type mapType = TypeFactory.getInstance()\n *     .constructMapType(Map.class, String.class, User.class);\n *\n * // 反序列化\n * List&lt;User&gt; users = YdszJson.fromJson(json, listType);\n * </pre>\n *\n * @author ydsz-team\n * @since 1.0.0\n */\npublic class TypeFactory {\n\n    /** 单例实例 */\n    private static final TypeFactory INSTANCE = new TypeFactory();\n\n    /**\n     * 类型缓存。\n     *\n     * <p>P0-4：改为有界 LRU（容量 1024）。键为类型名字符串组合，在动态代理、\n     * 脚本引擎等运行期生成类型场景下可能无界增长，与模块"全部缓存有界"的\n     * 内存安全策略保持一致。类型对象不可变，淘汰后重建无正确性影响。</p>\n     */\n    private final BoundedLruCache<String, Type> typeCache = new BoundedLruCache<>(1024);\n\n    private TypeFactory() {\n    }\n\n    /**\n     * 获取 TypeFactory 实例\n     *\n     * @return TypeFactory 实例\n     */\n    public static TypeFactory getInstance() {\n        return INSTANCE;\n    }\n\n    /**\n     * 构造集合类型\n     *\n     * @param collectionClass 集合类（List、Set 等）\n     * @param elementClass 元素类型\n     * @return 参数化类型\n     */\n    public Type constructCollectionType(Class<?> collectionClass, Class<?> elementClass) {\n        String key = collectionClass.getName() + "<" + elementClass.getName() + ">";\n        return typeCache.computeIfAbsent(key, k -> {\n            return new ParameterizedTypeImpl(null, collectionClass, elementClass);\n        });\n    }\n\n    /**\n     * 构造 Map 类型\n     *\n     * @param mapClass Map 类\n     * @param keyClass 键类型\n     * @param valueClass 值类型\n     * @return 参数化类型\n     */\n    public Type constructMapType(Class<?> mapClass, Class<?> keyClass, Class<?> valueClass) {\n        String key = mapClass.getName() + "<" + keyClass.getName() + "," + valueClass.getName() + ">";\n        return typeCache.computeIfAbsent(key, k -> {\n            return new ParameterizedTypeImpl(null, mapClass, keyClass, valueClass);\n        });\n    }\n\n    /**\n     * 构造数组类型\n     *\n     * @param elementClass 元素类型\n     * @return 数组类型\n     */\n    public Type constructArrayType(Class<?> elementClass) {\n        return Array.newInstance(elementClass, 0).getClass();\n    }\n\n    /**\n     * 清除类型缓存\n     */\n    public void clearCache() {\n        typeCache.clear();\n    }\n\n    /**\n     * 获取缓存大小\n     *\n     * @return 缓存的类型数量\n     */\n    public int getCacheSize() {\n        return typeCache.size();\n    }\n\n    /**\n     * 参数化类型实现\n     */\n    private static class ParameterizedTypeImpl implements ParameterizedType {\n        private final Type[] ownerType;\n        private final Type rawType;\n        private final Type[] actualTypeArguments;\n\n        public ParameterizedTypeImpl(Type ownerType, Type rawType, Type... actualTypeArguments) {\n            this.ownerType = ownerType != null ? new Type[]{ownerType} : null;\n            this.rawType = rawType;\n            this.actualTypeArguments = actualTypeArguments;\n        }\n\n        @Override\n        public Type[] getActualTypeArguments() {\n            return actualTypeArguments.clone();\n        }\n\n        @Override\n        public Type getRawType() {\n            return rawType;\n        }\n\n        @Override\n        public Type getOwnerType() {\n            return ownerType != null && ownerType.length > 0 ? ownerType[0] : null;\n        }\n\n        @Override\n        public boolean equals(Object o) {\n            if (this == o) return true;\n            if (!(o instanceof ParameterizedType)) return false;\n            ParameterizedType that = (ParameterizedType) o;\n            return Objects.equals(rawType, that.getRawType()) &&\n                   Arrays.equals(actualTypeArguments, that.getActualTypeArguments());\n        }\n\n        @Override\n        public int hashCode() {\n            return Objects.hash(rawType, Arrays.hashCode(actualTypeArguments));\n        }\n\n        @Override\n        public String toString() {\n            StringBuilder sb = new StringBuilder();\n            if (rawType instanceof Class) {\n                sb.append(((Class<?>) rawType).getName());\n            } else {\n                sb.append(rawType.getTypeName());\n            }\n            if (actualTypeArguments.length > 0) {\n                sb.append("<");\n                for (int i = 0; i < actualTypeArguments.length; i++) {\n                    if (i > 0) sb.append(",");\n                    sb.append(actualTypeArguments[i].getTypeName());\n                }\n                sb.append(">");\n            }\n            return sb.toString();\n        }\n    }\n}\n
+package com.njydsz.common.json.type;
+
+import java.lang.reflect.Array;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.*;
+
+import com.njydsz.common.json.util.BoundedLruCache;
+
+/**
+ * 类型工厂（参考 Jackson 的 TypeFactory）
+ *
+ * <p>用于构造和管理复杂的 Java 类型。</p>
+ *
+ * <p><b>主要功能：</b></p>
+ * <ul>
+ *   <li>构造泛型类型</li>
+ *   <li>缓存已构造的类型</li>
+ *   <li>类型解析和转换</li>
+ * </ul>
+ *
+ * <p><b>使用示例：</b></p>
+ * <pre>
+ * // 构造 List&lt;User&gt; 类型
+ * Type listType = TypeFactory.getInstance()
+ *     .constructCollectionType(List.class, User.class);
+ *
+ * // 构造 Map&lt;String, User&gt; 类型
+ * Type mapType = TypeFactory.getInstance()
+ *     .constructMapType(Map.class, String.class, User.class);
+ *
+ * // 反序列化
+ * List&lt;User&gt; users = YdszJson.fromJson(json, listType);
+ * </pre>
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+public class TypeFactory {
+
+    /** 单例实例 */
+    private static final TypeFactory INSTANCE = new TypeFactory();
+
+    /**
+     * 类型缓存。
+     *
+     * <p>P0-4：改为有界 LRU（容量 1024）。键为类型名字符串组合，在动态代理、
+     * 脚本引擎等运行期生成类型场景下可能无界增长，与模块"全部缓存有界"的
+     * 内存安全策略保持一致。类型对象不可变，淘汰后重建无正确性影响。</p>
+     */
+    private final BoundedLruCache<String, Type> typeCache = new BoundedLruCache<>(1024);
+
+    private TypeFactory() {
+    }
+
+    /**
+     * 获取 TypeFactory 实例
+     *
+     * @return TypeFactory 实例
+     */
+    public static TypeFactory getInstance() {
+        return INSTANCE;
+    }
+
+    /**
+     * 构造集合类型
+     *
+     * @param collectionClass 集合类（List、Set 等）
+     * @param elementClass 元素类型
+     * @return 参数化类型
+     */
+    public Type constructCollectionType(Class<?> collectionClass, Class<?> elementClass) {
+        String key = collectionClass.getName() + "<" + elementClass.getName() + ">";
+        return typeCache.computeIfAbsent(key, k -> {
+            return new ParameterizedTypeImpl(null, collectionClass, elementClass);
+        });
+    }
+
+    /**
+     * 构造 Map 类型
+     *
+     * @param mapClass Map 类
+     * @param keyClass 键类型
+     * @param valueClass 值类型
+     * @return 参数化类型
+     */
+    public Type constructMapType(Class<?> mapClass, Class<?> keyClass, Class<?> valueClass) {
+        String key = mapClass.getName() + "<" + keyClass.getName() + "," + valueClass.getName() + ">";
+        return typeCache.computeIfAbsent(key, k -> {
+            return new ParameterizedTypeImpl(null, mapClass, keyClass, valueClass);
+        });
+    }
+
+    /**
+     * 构造数组类型
+     *
+     * @param elementClass 元素类型
+     * @return 数组类型
+     */
+    public Type constructArrayType(Class<?> elementClass) {
+        return Array.newInstance(elementClass, 0).getClass();
+    }
+
+    /**
+     * 清除类型缓存
+     */
+    public void clearCache() {
+        typeCache.clear();
+    }
+
+    /**
+     * 获取缓存大小
+     *
+     * @return 缓存的类型数量
+     */
+    public int getCacheSize() {
+        return typeCache.size();
+    }
+
+    /**
+     * 参数化类型实现
+     */
+    private static class ParameterizedTypeImpl implements ParameterizedType {
+        private final Type[] ownerType;
+        private final Type rawType;
+        private final Type[] actualTypeArguments;
+
+        public ParameterizedTypeImpl(Type ownerType, Type rawType, Type... actualTypeArguments) {
+            this.ownerType = ownerType != null ? new Type[]{ownerType} : null;
+            this.rawType = rawType;
+            this.actualTypeArguments = actualTypeArguments;
+        }
+
+        @Override
+        public Type[] getActualTypeArguments() {
+            return actualTypeArguments.clone();
+        }
+
+        @Override
+        public Type getRawType() {
+            return rawType;
+        }
+
+        @Override
+        public Type getOwnerType() {
+            return ownerType != null && ownerType.length > 0 ? ownerType[0] : null;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof ParameterizedType)) return false;
+            ParameterizedType that = (ParameterizedType) o;
+            return Objects.equals(rawType, that.getRawType()) &&
+                   Arrays.equals(actualTypeArguments, that.getActualTypeArguments());
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(rawType, Arrays.hashCode(actualTypeArguments));
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            if (rawType instanceof Class) {
+                sb.append(((Class<?>) rawType).getName());
+            } else {
+                sb.append(rawType.getTypeName());
+            }
+            if (actualTypeArguments.length > 0) {
+                sb.append("<");
+                for (int i = 0; i < actualTypeArguments.length; i++) {
+                    if (i > 0) sb.append(",");
+                    sb.append(actualTypeArguments[i].getTypeName());
+                }
+                sb.append(">");
+            }
+            return sb.toString();
+        }
+    }
+}

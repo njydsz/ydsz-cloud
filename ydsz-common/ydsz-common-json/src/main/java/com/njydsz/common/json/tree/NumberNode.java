@@ -1,1 +1,147 @@
-package com.njydsz.common.json.tree;\n\n/**\n * JSON 数值节点\n *\n * <p>对标 Jackson NumberNode，表示一个 JSON 数字值。\n * 支持整数、浮点数、BigDecimal 等多种数值类型。</p>\n *\n * <p><b>特性：</b></p>\n * <ul>\n *   <li>不可变对象，线程安全</li>\n *   <li>支持 int、long、double、BigDecimal 等类型</li>\n *   <li>提供多种数值转换方法</li>\n * </ul>\n *\n * <p><b>使用示例：</b></p>\n * <pre>\n * NumberNode intNode = new NumberNode(42);\n * int value = intNode.asInt(); // 42\n *\n * NumberNode doubleNode = new NumberNode(3.14);\n * double pi = doubleNode.asDouble(); // 3.14\n * </pre>\n *\n * @author ydsz-team\n * @since 1.0.0\n */\npublic final class NumberNode extends JsonNode {\n\n    private final Number value;\n\n    /**\n     * 创建数值节点\n     *\n     * @param value 数值，支持 Integer、Long、Double、Float、BigDecimal 等\n     */\n    public NumberNode(Number value) {\n        if (value == null) {\n            throw new IllegalArgumentException("NumberNode value must not be null");\n        }\n        this.value = value;\n    }\n\n    @Override\n    public boolean isNumber() {\n        return true;\n    }\n\n    @Override\n    public String asText() {\n        return value.toString();\n    }\n\n    @Override\n    public String asText(String defaultValue) {\n        return asText();\n    }\n\n    @Override\n    public int asInt() {\n        return value.intValue();\n    }\n\n    @Override\n    public int asInt(int defaultValue) {\n        return value != null ? value.intValue() : defaultValue;\n    }\n\n    @Override\n    public long asLong() {\n        return value.longValue();\n    }\n\n    @Override\n    public long asLong(long defaultValue) {\n        return value != null ? value.longValue() : defaultValue;\n    }\n\n    @Override\n    public double asDouble() {\n        return value.doubleValue();\n    }\n\n    @Override\n    public double asDouble(double defaultValue) {\n        return value != null ? value.doubleValue() : defaultValue;\n    }\n\n    /**\n     * 获取原始数值对象\n     *\n     * @return 原始 Number 对象\n     */\n    public Number numberValue() {\n        return value;\n    }\n\n    @Override\n    public Object asValue() {\n        return value;\n    }\n\n    @Override\n    public String toString() {\n        return value != null ? value.toString() : "null";\n    }\n\n    @Override\n    public boolean equals(Object obj) {\n        if (this == obj) {\n            return true;\n        }\n        if (!(obj instanceof NumberNode)) {\n            return false;\n        }\n        NumberNode other = (NumberNode) obj;\n        // 处理 null value 的情况\n        if (value == null) {\n            return other.value == null;\n        }\n        if (other.value == null) {\n            return false;\n        }\n        // 数值归一比较：整数值按 long 比较，浮点数按 double 比较，\n        // 避免 Integer(1).equals(Long(1L)) = false 这类问题\n        if (isIntegral(value) && isIntegral(other.value)) {\n            return value.longValue() == other.value.longValue();\n        }\n        return Double.compare(value.doubleValue(), other.value.doubleValue()) == 0;\n    }\n\n    /**\n     * 判断 Number 是否为整数类型（含 BigInteger）。\n     */\n    private static boolean isIntegral(Number n) {\n        return n instanceof Integer || n instanceof Long\n            || n instanceof Short || n instanceof Byte\n            || n instanceof java.math.BigInteger\n            || n instanceof java.util.concurrent.atomic.AtomicInteger\n            || n instanceof java.util.concurrent.atomic.AtomicLong;\n    }\n\n    @Override\n    public int hashCode() {\n        return value.hashCode();\n    }\n}\n
+package com.njydsz.common.json.tree;
+
+/**
+ * JSON 数值节点
+ *
+ * <p>对标 Jackson NumberNode，表示一个 JSON 数字值。
+ * 支持整数、浮点数、BigDecimal 等多种数值类型。</p>
+ *
+ * <p><b>特性：</b></p>
+ * <ul>
+ *   <li>不可变对象，线程安全</li>
+ *   <li>支持 int、long、double、BigDecimal 等类型</li>
+ *   <li>提供多种数值转换方法</li>
+ * </ul>
+ *
+ * <p><b>使用示例：</b></p>
+ * <pre>
+ * NumberNode intNode = new NumberNode(42);
+ * int value = intNode.asInt(); // 42
+ *
+ * NumberNode doubleNode = new NumberNode(3.14);
+ * double pi = doubleNode.asDouble(); // 3.14
+ * </pre>
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+public final class NumberNode extends JsonNode {
+
+    private final Number value;
+
+    /**
+     * 创建数值节点
+     *
+     * @param value 数值，支持 Integer、Long、Double、Float、BigDecimal 等
+     */
+    public NumberNode(Number value) {
+        if (value == null) {
+            throw new IllegalArgumentException("NumberNode value must not be null");
+        }
+        this.value = value;
+    }
+
+    @Override
+    public boolean isNumber() {
+        return true;
+    }
+
+    @Override
+    public String asText() {
+        return value.toString();
+    }
+
+    @Override
+    public String asText(String defaultValue) {
+        return asText();
+    }
+
+    @Override
+    public int asInt() {
+        return value.intValue();
+    }
+
+    @Override
+    public int asInt(int defaultValue) {
+        return value != null ? value.intValue() : defaultValue;
+    }
+
+    @Override
+    public long asLong() {
+        return value.longValue();
+    }
+
+    @Override
+    public long asLong(long defaultValue) {
+        return value != null ? value.longValue() : defaultValue;
+    }
+
+    @Override
+    public double asDouble() {
+        return value.doubleValue();
+    }
+
+    @Override
+    public double asDouble(double defaultValue) {
+        return value != null ? value.doubleValue() : defaultValue;
+    }
+
+    /**
+     * 获取原始数值对象
+     *
+     * @return 原始 Number 对象
+     */
+    public Number numberValue() {
+        return value;
+    }
+
+    @Override
+    public Object asValue() {
+        return value;
+    }
+
+    @Override
+    public String toString() {
+        return value != null ? value.toString() : "null";
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof NumberNode)) {
+            return false;
+        }
+        NumberNode other = (NumberNode) obj;
+        // 处理 null value 的情况
+        if (value == null) {
+            return other.value == null;
+        }
+        if (other.value == null) {
+            return false;
+        }
+        // 数值归一比较：整数值按 long 比较，浮点数按 double 比较，
+        // 避免 Integer(1).equals(Long(1L)) = false 这类问题
+        if (isIntegral(value) && isIntegral(other.value)) {
+            return value.longValue() == other.value.longValue();
+        }
+        return Double.compare(value.doubleValue(), other.value.doubleValue()) == 0;
+    }
+
+    /**
+     * 判断 Number 是否为整数类型（含 BigInteger）。
+     */
+    private static boolean isIntegral(Number n) {
+        return n instanceof Integer || n instanceof Long
+            || n instanceof Short || n instanceof Byte
+            || n instanceof java.math.BigInteger
+            || n instanceof java.util.concurrent.atomic.AtomicInteger
+            || n instanceof java.util.concurrent.atomic.AtomicLong;
+    }
+
+    @Override
+    public int hashCode() {
+        return value.hashCode();
+    }
+}

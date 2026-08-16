@@ -1,1 +1,71 @@
-package com.njydsz.common.json.annotation;\n\nimport java.lang.annotation.ElementType;\nimport java.lang.annotation.Retention;\nimport java.lang.annotation.RetentionPolicy;\nimport java.lang.annotation.Target;\n\n/**\n * JSON 视图注解\n *\n * <p>用于按场景过滤字段，对标 Jackson @JsonView。</p>\n *\n * <p><b>使用场景：</b></p>\n * <ul>\n *   <li>列表视图：仅返回 ID 和名称</li>\n *   <li>详情视图：返回所有字段</li>\n *   <li>管理视图：返回敏感字段</li>\n * </ul>\n *\n * <p><b>使用示例：</b></p>\n * <pre>\n * // 定义视图类\n * public class UserViews {\n *     public static class List { }      // 列表视图\n *     public static class Detail { }    // 详情视图\n * }\n *\n * // 使用注解\n * public class User {\n *     &#064;JsonView(UserViews.List.class)\n *     private Long id;\n *\n *     &#064;JsonView(UserViews.List.class)\n *     private String name;\n *\n *     &#064;JsonView(UserViews.Detail.class)\n *     private String email;\n *\n *     &#064;JsonView(UserViews.Detail.class)\n *     private String phone;\n * }\n *\n * // 序列化 - 列表视图\n * String json = YdszJson.toJson(user, UserViews.List.class);\n * // 输出：{"id":1,"name":"John"}\n *\n * // 序列化 - 详情视图\n * String json = YdszJson.toJson(user, UserViews.Detail.class);\n * // 输出：{"id":1,"name":"John","email":"john@example.com","phone":"1234567890"}\n * </pre>\n *\n * <p><b>规范建议（R8）：</b>列表/详情接口的字段裁剪应统一使用 {@code @JsonView} +\n * {@code YdszJson.toJson(obj, ViewClass.class)}，<b>禁止</b>为不同视图创建多个 DTO 投影类。\n * 视图类应集中定义在 domain 模块的 {@code XxxViews} 中（如 {@code FlowViews.Summary}），\n * Controller 层通过 {@code @JsonView(ViewClass.class)} 或手动调用 {@code YdszJson.toJson} 指定视图。\n *\n * @author ydsz-team\n * @since 1.0.0\n */\n@Retention(RetentionPolicy.RUNTIME)\n@Target({ElementType.FIELD, ElementType.METHOD})\npublic @interface JsonView {\n\n    /**\n     * 视图类\n     *\n     * <p>指定该字段在哪些视图下可见。支持继承关系，\n     * 如果指定了父视图，子视图也会继承该可见性。</p>\n     */\n    Class<?>[] value();\n}\n
+package com.njydsz.common.json.annotation;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+/**
+ * JSON 视图注解
+ *
+ * <p>用于按场景过滤字段，对标 Jackson @JsonView。</p>
+ *
+ * <p><b>使用场景：</b></p>
+ * <ul>
+ *   <li>列表视图：仅返回 ID 和名称</li>
+ *   <li>详情视图：返回所有字段</li>
+ *   <li>管理视图：返回敏感字段</li>
+ * </ul>
+ *
+ * <p><b>使用示例：</b></p>
+ * <pre>
+ * // 定义视图类
+ * public class UserViews {
+ *     public static class List { }      // 列表视图
+ *     public static class Detail { }    // 详情视图
+ * }
+ *
+ * // 使用注解
+ * public class User {
+ *     &#064;JsonView(UserViews.List.class)
+ *     private Long id;
+ *
+ *     &#064;JsonView(UserViews.List.class)
+ *     private String name;
+ *
+ *     &#064;JsonView(UserViews.Detail.class)
+ *     private String email;
+ *
+ *     &#064;JsonView(UserViews.Detail.class)
+ *     private String phone;
+ * }
+ *
+ * // 序列化 - 列表视图
+ * String json = YdszJson.toJson(user, UserViews.List.class);
+ * // 输出：{"id":1,"name":"John"}
+ *
+ * // 序列化 - 详情视图
+ * String json = YdszJson.toJson(user, UserViews.Detail.class);
+ * // 输出：{"id":1,"name":"John","email":"john@example.com","phone":"1234567890"}
+ * </pre>
+ *
+ * <p><b>规范建议（R8）：</b>列表/详情接口的字段裁剪应统一使用 {@code @JsonView} +
+ * {@code YdszJson.toJson(obj, ViewClass.class)}，<b>禁止</b>为不同视图创建多个 DTO 投影类。
+ * 视图类应集中定义在 domain 模块的 {@code XxxViews} 中（如 {@code FlowViews.Summary}），
+ * Controller 层通过 {@code @JsonView(ViewClass.class)} 或手动调用 {@code YdszJson.toJson} 指定视图。
+ *
+ * @author ydsz-team
+ * @since 1.0.0
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.FIELD, ElementType.METHOD})
+public @interface JsonView {
+
+    /**
+     * 视图类
+     *
+     * <p>指定该字段在哪些视图下可见。支持继承关系，
+     * 如果指定了父视图，子视图也会继承该可见性。</p>
+     */
+    Class<?>[] value();
+}
