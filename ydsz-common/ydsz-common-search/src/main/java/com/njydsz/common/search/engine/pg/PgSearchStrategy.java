@@ -6,13 +6,10 @@ import java.sql.Timestamp;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -44,12 +41,13 @@ import lombok.extern.slf4j.Slf4j;
  * <p>利用 PostgreSQL 原生全文检索能力（tsvector / tsquery / GIN 索引），
  * 支持中文分词（zhparser/jieba）、高亮、相关性排序和时间衰减。
  *
- * <h3>架构变更（1.3.0）</h3>
+ * <p><b>职责边界</b>：本类作为主搜索引擎，仅负责 PostgreSQL 层的索引与查询。
+ * 内存降级搜索由 {@code InMemorySearchStrategy} 独立承担，不在本类中冗余实现。
+ *
+ * <h3>架构变更（refactor-v2）</h3>
  * <ul>
- *   <li>实现 {@link SearchStrategy} + {@link IndexStrategy} + {@link SuggestStrategy} 三个策略接口</li>
- *   <li>构造器不再自动建表，DDL 由独立 SQL 脚本执行</li>
- *   <li>{@code getSearchableText()} 逻辑从 IndexDocument 内化到此类</li>
- *   <li>字段权重从 {@link SearchProperties.PgConfig} 读取</li>
+ *   <li>移除内部 {@code memoryIndex} / {@code invertedIndex} 内存索引，统一由 InMemorySearchStrategy 承担</li>
+ *   <li>引擎不可用时 {@code search()} 返回空结果而非降级自搜，由 {@code SearchEngineRegistry} 统一降级</li>
  * </ul>
  *
  * @author ydsz-team
@@ -61,7 +59,6 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
     private static final String ENGINE_NAME = "pg";
     private static final String DEFAULT_SEARCH_CONFIG = "search_zh";
     private static final String FALLBACK_SEARCH_CONFIG = "simple";
-    private static final int MAX_MEMORY_INDEX_SIZE = 10000;
     private static final Set<String> ALLOWED_COLUMNS = Set.of(
             "id", "doc_type", "title", "subtitle", "content", "snippet",
             "tags", "status", "path", "tenant_id", "created_by", "created_at",
@@ -74,8 +71,6 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
     private final SearchProperties.PgConfig pgConfig;
     private final String indexTable;
     private volatile boolean available;
-    private final Map<String, IndexDocument> memoryIndex;
-    private final Map<String, Set<String>> invertedIndex;
     private final ThreadPoolTaskScheduler probeScheduler;
 
     public PgSearchStrategy(DataSource dataSource, SearchProperties.PgConfig pgConfig) {
@@ -88,17 +83,6 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
         this.indexTable = pgConfig.getIndexTable();
         this.searchConfig = detectSearchConfig();
         this.available = checkAvailability();
-        this.memoryIndex = Collections.synchronizedMap(new LinkedHashMap<>(256, 0.75f, true) {
-            @Override
-            protected boolean removeEldestEntry(Map.Entry<String, IndexDocument> eldest) {
-                if (size() > MAX_MEMORY_INDEX_SIZE) {
-                    removeFromInvertedIndex(eldest.getKey(), eldest.getValue());
-                    return true;
-                }
-                return false;
-            }
-        });
-        this.invertedIndex = new ConcurrentHashMap<>();
         this.probeScheduler = new ThreadPoolTaskScheduler();
         this.probeScheduler.setPoolSize(1);
         this.probeScheduler.setThreadNamePrefix("pg-search-probe-");
@@ -111,7 +95,8 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
     @Override
     public SearchResponse search(SearchRequest request) {
         if (!available) {
-            return searchInMemory(request);
+            log.info("[PgSearchStrategy] 引擎不可用，跳过搜索，由降级链处理: keyword={}", request.getKeyword());
+            return SearchResponse.empty(request.getPage(), request.getPageSize());
         }
         long start = System.currentTimeMillis();
         try {
@@ -197,7 +182,7 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
             selectSql.append(" FROM ").append(indexTable).append(where);
             queryParams.addAll(whereParams);
 
-            // P3-21: Keyset 分页支持 — 游标存在时使用键集分页替代 OFFSET
+            // Keyset 分页支持 — 游标存在时使用键集分页替代 OFFSET
             CursorParseResult cursorResult = null;
             boolean useKeysetPagination = false;
             if (request.getCursor() != null && !request.getCursor().isBlank()) {
@@ -239,7 +224,7 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
                 aggregations = executeAggregations(where, whereParams, request.getAggregations());
             }
 
-            // P3-21: 构建下一页游标
+            // 构建下一页游标
             String nextCursor = null;
             if (useKeysetPagination && hits.size() > fetchSize) {
                 // 多取了一条，说明有下一页
@@ -264,9 +249,9 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
                     .build();
 
         } catch (Exception e) {
-            log.error("[PgSearchStrategy] 搜索失败，降级到内存搜索: keyword={}", request.getKeyword(), e);
+            log.error("[PgSearchStrategy] 搜索失败: keyword={}", request.getKeyword(), e);
             this.available = false;
-            return searchInMemory(request);
+            return SearchResponse.empty(request.getPage(), request.getPageSize());
         }
     }
 
@@ -275,9 +260,6 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
         if (document == null || document.getId() == null) {
             return;
         }
-        String key = document.getType() + ":" + document.getId();
-        memoryIndex.put(key, document);
-        addToInvertedIndex(key, document);
         if (!available) {
             return;
         }
@@ -318,16 +300,20 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
         if (documents == null || documents.isEmpty()) {
             return;
         }
-        for (IndexDocument doc : documents) {
-            if (doc != null && doc.getId() != null) {
-                memoryIndex.put(doc.getType() + ":" + doc.getId(), doc);
-        addToInvertedIndex(doc.getType() + ":" + doc.getId(), doc);
-            }
-        }
         if (!available) {
             return;
         }
-        String sql = "INSERT INTO " + indexTable + " (id, doc_type, title, subtitle, content, snippet, tags, status, path, tenant_id, created_by, created_at, updated_by, updated_at, searchable_text, metadata, created_at_ts, updated_at_ts) VALUES (?, ?, ?, ?, ?, ?, ?::jsonb, ?, ?, ?, ?, ?, ?, ?, to_tsvector(?, ?), ?::jsonb, NOW(), NOW()) ON CONFLICT (id) DO UPDATE SET doc_type = EXCLUDED.doc_type, title = EXCLUDED.title, subtitle = EXCLUDED.subtitle, content = EXCLUDED.content, snippet = EXCLUDED.snippet, tags = EXCLUDED.tags, status = EXCLUDED.status, path = EXCLUDED.path, tenant_id = EXCLUDED.tenant_id, updated_by = EXCLUDED.updated_by, updated_at = EXCLUDED.updated_at, searchable_text = EXCLUDED.searchable_text, metadata = EXCLUDED.metadata, updated_at_ts = NOW()";
+        String sql = "INSERT INTO " + indexTable
+                + " (id, doc_type, title, subtitle, content, snippet, tags, status, path, tenant_id,"
+                + " created_by, created_at, updated_by, updated_at, searchable_text, metadata,"
+                + " created_at_ts, updated_at_ts)"
+                + " VALUES (?, ?, ?, ?, ?, ?, ?::jsonb, ?, ?, ?, ?, ?, ?, ?, to_tsvector(?, ?), ?::jsonb, NOW(), NOW())"
+                + " ON CONFLICT (id) DO UPDATE SET doc_type = EXCLUDED.doc_type, title = EXCLUDED.title,"
+                + " subtitle = EXCLUDED.subtitle, content = EXCLUDED.content, snippet = EXCLUDED.snippet,"
+                + " tags = EXCLUDED.tags, status = EXCLUDED.status, path = EXCLUDED.path,"
+                + " tenant_id = EXCLUDED.tenant_id, updated_by = EXCLUDED.updated_by,"
+                + " updated_at = EXCLUDED.updated_at, searchable_text = EXCLUDED.searchable_text,"
+                + " metadata = EXCLUDED.metadata, updated_at_ts = NOW()";
 
         int batchSize = 100;
         for (int i = 0; i < documents.size(); i += batchSize) {
@@ -367,8 +353,6 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
 
     @Override
     public void deleteIndex(String type, String documentId) {
-        memoryIndex.remove(type + ":" + documentId);
-        removeFromInvertedIndex(type + ":" + documentId, null);
         if (!available) {
             return;
         }
@@ -381,11 +365,6 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
 
     @Override
     public void deleteAllIndices(String type) {
-        if (type == null) {
-            memoryIndex.clear();
-        } else {
-            memoryIndex.entrySet().removeIf(e -> e.getKey().startsWith(type + ":"));
-        }
         if (!available) {
             return;
         }
@@ -410,21 +389,17 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
                     .build();
         }
         if (!available) {
-            List<String> suggestions = memoryIndex.values().stream()
-                    .map(IndexDocument::getTitle)
-                    .filter(t -> t != null && t.toLowerCase().contains(prefix.toLowerCase()))
-                    .distinct().limit(limit).toList();
             return SearchSuggestion.builder()
                     .type(SearchSuggestion.SuggestionType.AUTOCOMPLETE)
-                    .suggestions(suggestions)
+                    .suggestions(Collections.emptyList())
                     .originalInput(prefix)
                     .build();
         }
         try {
-            String sql = "SELECT DISTINCT title FROM " + indexTable +
-                    " WHERE title ILIKE ? ESCAPE '\\' ORDER BY title LIMIT ?";
-            List<String> suggestions = jdbcTemplate.queryForList(sql, String.class,
-                    prefix.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%", limit);
+            String sql = "SELECT DISTINCT title FROM " + indexTable
+                    + " WHERE title ILIKE ? ESCAPE '\\' ORDER BY title LIMIT ?";
+            String escapedPrefix = prefix.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%";
+            List<String> suggestions = jdbcTemplate.queryForList(sql, String.class, escapedPrefix, limit);
             return SearchSuggestion.builder()
                     .type(SearchSuggestion.SuggestionType.AUTOCOMPLETE)
                     .suggestions(suggestions)
@@ -485,9 +460,15 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
 
     private String buildSearchableText(IndexDocument doc) {
         StringBuilder sb = new StringBuilder();
-        if (doc.getTitle() != null) sb.append(doc.getTitle());
-        if (doc.getSubtitle() != null) sb.append(' ').append(doc.getSubtitle());
-        if (doc.getContent() != null) sb.append(' ').append(doc.getContent());
+        if (doc.getTitle() != null) {
+            sb.append(doc.getTitle());
+        }
+        if (doc.getSubtitle() != null) {
+            sb.append(' ').append(doc.getSubtitle());
+        }
+        if (doc.getContent() != null) {
+            sb.append(' ').append(doc.getContent());
+        }
         if (doc.getTags() != null) {
             for (String tag : doc.getTags()) {
                 sb.append(' ').append(tag);
@@ -496,7 +477,7 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
         return sb.toString();
     }
 
-    // ==================== P3-21: Keyset 分页辅助方法 ====================
+    // ==================== Keyset 分页辅助方法 ====================
 
     /**
      * 解析游标字符串。
@@ -529,6 +510,7 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
      * <p>从最后一个 hit 中提取 score 和 id，编码为 base64 字符串。
      *
      * @param lastHit 当前页最后一个结果
+     * @param sortField 排序字段（可选）
      * @return base64 编码的游标字符串，分数为 null 时返回 null
      */
     private String buildCursor(SearchHit lastHit, String sortField) {
@@ -555,7 +537,8 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
      * @param cursor      解析后的游标
      * @param request     搜索请求
      */
-    private void appendKeysetFilter(StringBuilder selectSql, List<Object> queryParams, CursorParseResult cursor, SearchRequest request) {
+    private void appendKeysetFilter(StringBuilder selectSql, List<Object> queryParams,
+                                    CursorParseResult cursor, SearchRequest request) {
         if (cursor == null) {
             return;
         }
@@ -623,139 +606,9 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
             log.info("[PgSearchStrategy] 索引表可用: table={}", indexTable);
             return true;
         } catch (Exception e) {
-            log.warn("[PgSearchStrategy] 索引表不可用，降级到内存索引: {}", e.getMessage());
+            log.warn("[PgSearchStrategy] 索引表不可用: {}", e.getMessage());
             return false;
         }
-    }
-
-    private void addToInvertedIndex(String docKey, IndexDocument doc) {
-        String text = buildSearchableText(doc);
-        if (text == null) return;
-        for (String token : text.toLowerCase().split("\\s+")) {
-            if (token.isBlank()) continue;
-            invertedIndex.computeIfAbsent(token, k -> ConcurrentHashMap.newKeySet()).add(docKey);
-        }
-    }
-
-    private void removeFromInvertedIndex(String docKey, IndexDocument doc) {
-        if (doc != null) {
-            String text = buildSearchableText(doc);
-            if (text != null) {
-                for (String token : text.toLowerCase().split("\\s+")) {
-                    Set<String> keys = invertedIndex.get(token);
-                    if (keys != null) {
-                        keys.remove(docKey);
-                        if (keys.isEmpty()) invertedIndex.remove(token);
-                    }
-                }
-            }
-        } else {
-            for (Set<String> keys : invertedIndex.values()) {
-                keys.remove(docKey);
-            }
-        }
-    }
-
-    private SearchResponse searchInMemory(SearchRequest request) {
-        long start = System.currentTimeMillis();
-        String keyword = request.getKeyword();
-        if (keyword == null || keyword.isBlank()) {
-            return SearchResponse.empty(request.getPage(), request.getPageSize());
-        }
-        String lowerKeyword = keyword.toLowerCase();
-        String[] queryTokens = lowerKeyword.split("\\s+");
-
-        Set<String> candidateKeys = null;
-        for (String token : queryTokens) {
-            Set<String> tokenKeys = new HashSet<>();
-            for (Map.Entry<String, Set<String>> entry : invertedIndex.entrySet()) {
-                if (entry.getKey().contains(token)) {
-                    tokenKeys.addAll(entry.getValue());
-                }
-            }
-            if (candidateKeys == null) {
-                candidateKeys = tokenKeys;
-            } else {
-                candidateKeys.retainAll(tokenKeys);
-            }
-        }
-
-        final Set<String> finalCandidates = candidateKeys;
-        List<SearchHit> allHits;
-        if (finalCandidates != null && !finalCandidates.isEmpty()) {
-            allHits = finalCandidates.stream()
-                    .map(memoryIndex::get)
-                    .filter(Objects::nonNull)
-                    .filter(doc -> {
-                        if (request.getTypes() != null && !request.getTypes().isEmpty()
-                                && !request.getTypes().contains(doc.getType())) {
-                            return false;
-                        }
-                        if (request.getTenantId() != null && !request.getTenantId().isBlank()
-                                && !request.getTenantId().equals(doc.getTenantId())) {
-                            return false;
-                        }
-                        return true;
-                    })
-                    .map(doc -> {
-                        SearchHit hit = SearchHit.builder()
-                                .id(doc.getId()).type(doc.getType()).title(doc.getTitle())
-                                .subtitle(doc.getSubtitle()).snippet(doc.getSnippet())
-                                .path(doc.getPath()).status(doc.getStatus()).tags(doc.getTags())
-                                .score(1.0f)
-                                .createdAt(doc.getCreatedAt() != null ? doc.getCreatedAt().toString() : null)
-                                .updatedAt(doc.getUpdatedAt() != null ? doc.getUpdatedAt().toString() : null)
-                                .build();
-                        if (request.isHighlight() && doc.getTitle() != null) {
-                            hit.setHighlight(simpleHighlight(doc.getTitle(), keyword,
-                                    request.getHighlightPreTag(), request.getHighlightPostTag()));
-                        }
-                        return hit;
-                    }).toList();
-        } else {
-            allHits = memoryIndex.values().stream()
-                    .filter(doc -> {
-                        if (request.getTypes() != null && !request.getTypes().isEmpty()
-                                && !request.getTypes().contains(doc.getType())) {
-                            return false;
-                        }
-                        if (request.getTenantId() != null && !request.getTenantId().isBlank()
-                                && !request.getTenantId().equals(doc.getTenantId())) {
-                            return false;
-                        }
-                        String text = buildSearchableText(doc);
-                        return text != null && text.toLowerCase().contains(lowerKeyword);
-                    })
-                    .map(doc -> {
-                        SearchHit hit = SearchHit.builder()
-                                .id(doc.getId()).type(doc.getType()).title(doc.getTitle())
-                                .subtitle(doc.getSubtitle()).snippet(doc.getSnippet())
-                                .path(doc.getPath()).status(doc.getStatus()).tags(doc.getTags())
-                                .score(1.0f)
-                                .createdAt(doc.getCreatedAt() != null ? doc.getCreatedAt().toString() : null)
-                                .updatedAt(doc.getUpdatedAt() != null ? doc.getUpdatedAt().toString() : null)
-                                .build();
-                        if (request.isHighlight() && doc.getTitle() != null) {
-                            hit.setHighlight(simpleHighlight(doc.getTitle(), keyword,
-                                    request.getHighlightPreTag(), request.getHighlightPostTag()));
-                        }
-                        return hit;
-                    }).toList();
-        }
-
-        long total = allHits.size();
-        int fromIndex = Math.min(request.getOffset(), allHits.size());
-        int toIndex = Math.min(fromIndex + request.getPageSize(), allHits.size());
-
-        return SearchResponse.builder()
-                .hits(allHits.subList(fromIndex, toIndex))
-                .total(total)
-                .page(request.getPage())
-                .pageSize(request.getPageSize())
-                .tookMs(System.currentTimeMillis() - start)
-                .engine(ENGINE_NAME + "-memory")
-                .degraded(true)
-                .build();
     }
 
     private List<SearchAggregation> executeAggregations(StringBuilder where, List<Object> params,
@@ -764,8 +617,8 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
         for (String field : aggFields) {
             try {
                 String safeField = sanitizeColumnName(field);
-                String sql = "SELECT " + safeField + " AS key, COUNT(1) AS count FROM " + indexTable +
-                        where + " GROUP BY " + safeField + " ORDER BY count DESC";
+                String sql = "SELECT " + safeField + " AS key, COUNT(1) AS count FROM " + indexTable
+                        + where + " GROUP BY " + safeField + " ORDER BY count DESC";
                 List<SearchAggregation.Bucket> buckets = jdbcTemplate.query(sql,
                         (rs, rowNum) -> SearchAggregation.Bucket.builder()
                                 .key(rs.getString("key")).count(rs.getLong("count")).build(),
@@ -779,13 +632,23 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
     }
 
     private void appendFilter(StringBuilder where, List<Object> params, SearchFilter filter) {
-        if (filter == null || filter.getField() == null) return;
+        if (filter == null || filter.getField() == null) {
+            return;
+        }
         String field = sanitizeColumnName(filter.getField());
         switch (filter.getOperator()) {
-            case EQ -> { where.append(" AND ").append(field).append(" = ?");
-                if (filter.getValues() != null && !filter.getValues().isEmpty()) params.add(filter.getValues().get(0)); }
-            case NE -> { where.append(" AND ").append(field).append(" != ?");
-                if (filter.getValues() != null && !filter.getValues().isEmpty()) params.add(filter.getValues().get(0)); }
+            case EQ -> {
+                where.append(" AND ").append(field).append(" = ?");
+                if (filter.getValues() != null && !filter.getValues().isEmpty()) {
+                    params.add(filter.getValues().get(0));
+                }
+            }
+            case NE -> {
+                where.append(" AND ").append(field).append(" != ?");
+                if (filter.getValues() != null && !filter.getValues().isEmpty()) {
+                    params.add(filter.getValues().get(0));
+                }
+            }
             case IN, NOT_IN -> {
                 if (filter.getValues() != null && !filter.getValues().isEmpty()) {
                     String op = filter.getOperator() == SearchFilter.Operator.IN ? "IN" : "NOT IN";
@@ -795,14 +658,30 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
                     params.addAll(filter.getValues());
                 }
             }
-            case GT -> { where.append(" AND ").append(field).append(" > ?");
-                if (filter.getValues() != null && !filter.getValues().isEmpty()) params.add(filter.getValues().get(0)); }
-            case LT -> { where.append(" AND ").append(field).append(" < ?");
-                if (filter.getValues() != null && !filter.getValues().isEmpty()) params.add(filter.getValues().get(0)); }
-            case GTE -> { where.append(" AND ").append(field).append(" >= ?");
-                if (filter.getValues() != null && !filter.getValues().isEmpty()) params.add(filter.getValues().get(0)); }
-            case LTE -> { where.append(" AND ").append(field).append(" <= ?");
-                if (filter.getValues() != null && !filter.getValues().isEmpty()) params.add(filter.getValues().get(0)); }
+            case GT -> {
+                where.append(" AND ").append(field).append(" > ?");
+                if (filter.getValues() != null && !filter.getValues().isEmpty()) {
+                    params.add(filter.getValues().get(0));
+                }
+            }
+            case LT -> {
+                where.append(" AND ").append(field).append(" < ?");
+                if (filter.getValues() != null && !filter.getValues().isEmpty()) {
+                    params.add(filter.getValues().get(0));
+                }
+            }
+            case GTE -> {
+                where.append(" AND ").append(field).append(" >= ?");
+                if (filter.getValues() != null && !filter.getValues().isEmpty()) {
+                    params.add(filter.getValues().get(0));
+                }
+            }
+            case LTE -> {
+                where.append(" AND ").append(field).append(" <= ?");
+                if (filter.getValues() != null && !filter.getValues().isEmpty()) {
+                    params.add(filter.getValues().get(0));
+                }
+            }
             case BETWEEN -> {
                 if (filter.getValues() != null && filter.getValues().size() >= 2) {
                     where.append(" AND ").append(field).append(" BETWEEN ? AND ?");
@@ -814,27 +693,29 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
     }
 
     private String sanitizeKeyword(String keyword) {
-        if (keyword == null) return null;
+        if (keyword == null) {
+            return null;
+        }
         String trimmed = keyword.trim();
-        if (trimmed.isEmpty()) return null;
-        if (trimmed.length() > 200) trimmed = trimmed.substring(0, 200);
+        if (trimmed.isEmpty()) {
+            return null;
+        }
+        if (trimmed.length() > 200) {
+            trimmed = trimmed.substring(0, 200);
+        }
         return trimmed;
     }
 
     private String sanitizeColumnName(String column) {
-        if (column == null) return "id";
+        if (column == null) {
+            return "id";
+        }
         String lower = column.toLowerCase();
-        if (ALLOWED_COLUMNS.contains(lower)) return lower;
+        if (ALLOWED_COLUMNS.contains(lower)) {
+            return lower;
+        }
         log.warn("[PgSearchStrategy] Column not in whitelist, fallback to id: {}", column);
         return "id";
-    }
-
-    private String simpleHighlight(String text, String keyword, String preTag, String postTag) {
-        if (text == null || keyword == null) return text;
-        int idx = text.toLowerCase().indexOf(keyword.toLowerCase());
-        if (idx < 0) return text;
-        return text.substring(0, idx) + preTag + text.substring(idx, idx + keyword.length()) + postTag
-                + text.substring(idx + keyword.length());
     }
 
     /**
@@ -870,24 +751,32 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
                 String tagsJson = rs.getString("tags");
                 if (tagsJson != null && !tagsJson.isBlank() && !tagsJson.equals("[]")) {
                     List<String> tags = YdszJson.parseArray(tagsJson, String.class);
-                    if (tags != null && !tags.isEmpty()) hit.setTags(tags);
+                    if (tags != null && !tags.isEmpty()) {
+                        hit.setTags(tags);
+                    }
                 }
             } catch (SQLException ignored) {
                 log.debug("Caught exception (ignored): {}", ignored.getMessage());
             }
             try {
                 var createdAt = rs.getTimestamp("created_at");
-                if (createdAt != null) hit.setCreatedAt(createdAt.toInstant().toString());
+                if (createdAt != null) {
+                    hit.setCreatedAt(createdAt.toInstant().toString());
+                }
             } catch (SQLException ignored) {
                 log.debug("Caught exception (ignored): {}", ignored.getMessage());
             }
             try {
                 var updatedAt = rs.getTimestamp("updated_at");
-                if (updatedAt != null) hit.setUpdatedAt(updatedAt.toInstant().toString());
+                if (updatedAt != null) {
+                    hit.setUpdatedAt(updatedAt.toInstant().toString());
+                }
             } catch (SQLException ignored) {
                 log.debug("Caught exception (ignored): {}", ignored.getMessage());
             }
-            if (withHighlight) hit.setHighlight(rs.getString("highlight"));
+            if (withHighlight) {
+                hit.setHighlight(rs.getString("highlight"));
+            }
             return hit;
         }
     }

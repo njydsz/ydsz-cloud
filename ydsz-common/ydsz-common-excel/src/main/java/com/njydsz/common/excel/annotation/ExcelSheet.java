@@ -12,8 +12,8 @@ import java.lang.annotation.*;
 /**
  * ExcelSheet注解 - Sheet页配置
  *
- * <p>用于配置Excel Sheet页的相关属性,包括名称、表头行号、日期格式等。
- * 该注解标注在Java类的类型级别。</p>
+ * <p>用于配置Excel Sheet页的相关属性，包括名称、表头行号、日期格式、
+ * 冻结窗格、合并单元格等。该注解标注在Java类的类型级别。</p>
  *
  * <h3>示例</h3>
  * <pre>{@code
@@ -75,13 +75,6 @@ public @interface ExcelSheet {
     int headRowNumber() default 1;
 
     /**
-     * 数据起始行号(预留)
-     *
-     * @return 数据起始行号
-     */
-    int dataRowNumber() default 0;
-
-    /**
      * 默认日期格式
      *
      * <p>当字段未单独指定dateFormat时,使用此默认值。
@@ -90,25 +83,6 @@ public @interface ExcelSheet {
      * @return 日期格式字符串
      */
     String dateFormat() default "";
-
-    /**
-     * Sheet保护密码
-     *
-     * <p>设置后Sheet将处于保护状态,需要密码才能编辑。
-     * 仅在写入时生效</p>
-     *
-     * @return 保护密码
-     */
-    String password() default "";
-
-    /**
-     * 是否加密
-     *
-     * <p>设置为true时,对Excel文件进行加密保护(预留功能)</p>
-     *
-     * @return true表示加密
-     */
-    boolean encrypted() default false;
 
     /**
      * 冻结窗格配置

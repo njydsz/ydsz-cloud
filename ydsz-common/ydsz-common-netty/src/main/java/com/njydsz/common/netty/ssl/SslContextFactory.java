@@ -11,6 +11,8 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.netty.exception.NettyException;
+
 /**
  * SSL/TLS 上下文工厂。
  *
@@ -84,10 +86,10 @@ public class SslContextFactory {
 
             log.info("[Netty-SSL] 服务端 SSL 上下文创建成功, needClientAuth={}", needClientAuth);
             return builder.build();
-        } catch (NettySslException e) {
+        } catch (NettyException e) {
             throw e;
         } catch (Exception e) {
-            throw new NettySslException("server", "创建服务端 SSL 上下文失败: " + e.getMessage(), e);
+            throw NettyException.ofSsl("server", "创建服务端 SSL 上下文失败: " + e.getMessage(), e);
         }
     }
 
@@ -106,10 +108,10 @@ public class SslContextFactory {
             }
             log.info("[Netty-SSL] 客户端 SSL 上下文创建成功");
             return builder.build();
-        } catch (NettySslException e) {
+        } catch (NettyException e) {
             throw e;
         } catch (Exception e) {
-            throw new NettySslException("client", "创建客户端 SSL 上下文失败: " + e.getMessage(), e);
+            throw NettyException.ofSsl("client", "创建客户端 SSL 上下文失败: " + e.getMessage(), e);
         }
     }
 
@@ -118,7 +120,7 @@ public class SslContextFactory {
      *
      * @param config 密钥库配置
      * @return KeyManagerFactory
-     * @throws NettySslException 加载失败时抛出
+     * @throws NettyException 加载失败时抛出
      */
     private static KeyManagerFactory loadKeyManagerFactory(SslStoreConfig config) {
         try {
@@ -127,7 +129,7 @@ public class SslContextFactory {
             kmf.init(keyStore, config.getPassword().toCharArray());
             return kmf;
         } catch (Exception e) {
-            throw new NettySslException("server", "加载密钥库失败: " + config.getPath(), e);
+            throw NettyException.ofSsl("server", "加载密钥库失败: " + config.getPath(), e);
         }
     }
 
@@ -136,7 +138,7 @@ public class SslContextFactory {
      *
      * @param config 信任库配置
      * @return TrustManagerFactory
-     * @throws NettySslException 加载失败时抛出
+     * @throws NettyException 加载失败时抛出
      */
     private static TrustManagerFactory loadTrustManagerFactory(SslStoreConfig config) {
         try {
@@ -146,7 +148,7 @@ public class SslContextFactory {
             tmf.init(trustStore);
             return tmf;
         } catch (Exception e) {
-            throw new NettySslException("server", "加载信任库失败: " + config.getPath(), e);
+            throw NettyException.ofSsl("server", "加载信任库失败: " + config.getPath(), e);
         }
     }
 
@@ -155,7 +157,7 @@ public class SslContextFactory {
      *
      * @param config 密钥库配置
      * @return KeyStore 实例
-     * @throws NettySslException 加载失败时抛出
+     * @throws NettyException 加载失败时抛出
      */
     private static KeyStore loadKeyStore(SslStoreConfig config) {
         try {
@@ -165,7 +167,7 @@ public class SslContextFactory {
             }
             return ks;
         } catch (Exception e) {
-            throw new NettySslException("server", "加载 KeyStore 失败: " + config.getPath(), e);
+            throw NettyException.ofSsl("server", "加载 KeyStore 失败: " + config.getPath(), e);
         }
     }
 
@@ -174,7 +176,7 @@ public class SslContextFactory {
      *
      * @param path 资源路径
      * @return InputStream
-     * @throws NettySslException 资源不存在或打开失败时抛出
+     * @throws NettyException 资源不存在或打开失败时抛出
      */
     private static InputStream openStream(String path) {
         try {
@@ -182,15 +184,15 @@ public class SslContextFactory {
                 String resource = path.substring("classpath:".length());
                 InputStream is = SslContextFactory.class.getClassLoader().getResourceAsStream(resource);
                 if (is == null) {
-                    throw new NettySslException("server", "Classpath 资源不存在: " + resource);
+                    throw NettyException.ofSsl("server", "Classpath 资源不存在: " + resource);
                 }
                 return is;
             }
             return new FileInputStream(path);
-        } catch (NettySslException e) {
+        } catch (NettyException e) {
             throw e;
         } catch (Exception e) {
-            throw new NettySslException("server", "打开 SSL 资源失败: " + path, e);
+            throw NettyException.ofSsl("server", "打开 SSL 资源失败: " + path, e);
         }
     }
 }

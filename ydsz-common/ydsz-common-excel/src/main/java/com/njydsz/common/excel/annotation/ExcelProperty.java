@@ -9,8 +9,8 @@ import java.lang.annotation.Target;
 /**
  * Excel 属性注解 — Java 字段与 Excel 列的映射关系。
  *
- * <p>是 {@code ydsz-common-excel} 最核心的注解之一，支持指定列名、列索引、
- * 日期格式、列宽、必填校验、数值范围、正则约束等属性。</p>
+ * <p>是 {@code ydsz-common-excel} 最核心的注解，支持指定列名、列索引、
+ * 日期格式、数字格式、列宽、排序顺序、公式及数据校验等属性。</p>
  *
  * <h3>映射优先级</h3>
  * <ol>
@@ -53,13 +53,6 @@ public @interface ExcelProperty {
     String value() default "";
 
     /**
-     * 多列名称（用于合并单元格等场景）。
-     *
-     * @return 多列名称数组
-     */
-    String[] valueArr() default {};
-
-    /**
      * 列索引（从 0 开始）。
      *
      * <p>指定后优先级最高，会忽略 {@link #value()} 的匹配逻辑。
@@ -68,20 +61,6 @@ public @interface ExcelProperty {
      * @return 列索引，-1 表示自动
      */
     int index() default -1;
-
-    /**
-     * 多列索引支持。
-     *
-     * @return 多列索引数组
-     */
-    int[] indexArr() default {};
-
-    /**
-     * 格式化字符串（预留）。
-     *
-     * @return 格式化字符串
-     */
-    String format() default "";
 
     /**
      * 日期格式。
@@ -147,36 +126,6 @@ public @interface ExcelProperty {
      * @return {@code true} 表示忽略
      */
     boolean ignore() default false;
-
-    /**
-     * 自定义转换器名称（预留）。
-     *
-     * @return 转换器名称
-     */
-    String converter() default "";
-
-    /**
-     * 自定义转换器类（预留，暂无实现）。
-     *
-     * <p>指定一个实现 {@code Converter} 接口的类，用于自定义类型转换逻辑。</p>
-     *
-     * @return 转换器类，默认 {@code void.class} 表示未指定
-     */
-    Class<?> converterClass() default void.class;
-
-    /**
-     * 多列名称（用于复杂映射场景）。
-     *
-     * @return 多列名称数组
-     */
-    String[] names() default {};
-
-    /**
-     * 多列排序顺序。
-     *
-     * @return 多列顺序数组
-     */
-    int[] orders() default {};
 
     /**
      * 公式表达式。

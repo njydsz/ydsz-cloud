@@ -25,8 +25,8 @@ import com.njydsz.common.file.config.FileConfiguration;
  *
  * <p><b>使用示例：</b></p>
  * <pre>{@code
- * @SpringBootApplication
- * @EnableYdszFile
+ * &#64;SpringBootApplication
+ * &#64;EnableYdszFile
  * public class Application {
  *     public static void main(String[] args) {
  *         SpringApplication.run(Application.class, args);
@@ -36,8 +36,11 @@ import com.njydsz.common.file.config.FileConfiguration;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 自 2.0.0 起废弃。{@link FileConfiguration} 通过 Spring Boot 自动装配机制自动注册，
+ *             无需显式声明此注解。计划于 3.0.0 版本移除。保留此注解仅为向前兼容。
  * @see FileConfiguration
  */
+@Deprecated
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

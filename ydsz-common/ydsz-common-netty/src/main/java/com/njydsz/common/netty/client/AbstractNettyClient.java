@@ -216,7 +216,7 @@ public abstract class AbstractNettyClient {
      */
     public ChannelFuture send(Object message) {
         if (channel == null || !channel.isActive()) {
-            throw new NettyClientException("Channel 未连接，请先调用 connect()");
+            throw new NettyException("Channel 未连接，请先调用 connect()");
         }
         return channel.writeAndFlush(message);
     }
@@ -242,11 +242,11 @@ public abstract class AbstractNettyClient {
      *
      * @param message 消息对象
      * @return CompletableFuture，发送成功完成，失败时异常完成
-     * @throws NettyClientException Channel 未连接时抛出
+     * @throws NettyException Channel 未连接时抛出
      */
     public CompletableFuture<Void> sendAsync(Object message) {
         if (channel == null || !channel.isActive()) {
-            throw new NettyClientException("Channel 未连接，请先调用 connect()");
+            throw new NettyException("Channel 未连接，请先调用 connect()");
         }
         CompletableFuture<Void> future = new CompletableFuture<>();
         channel.writeAndFlush(message).addListener(f -> {
@@ -254,7 +254,7 @@ public abstract class AbstractNettyClient {
                 future.complete(null);
             } else {
                 future.completeExceptionally(
-                        new NettyClientException("消息发送失败: " + f.cause().getMessage(), f.cause()));
+                        new NettyException("消息发送失败: " + f.cause().getMessage(), f.cause()));
             }
         });
         return future;
