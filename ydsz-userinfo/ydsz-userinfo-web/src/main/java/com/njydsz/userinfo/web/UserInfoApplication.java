@@ -25,7 +25,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @EnableYdszAudit
 @EnableYdszAuth
 @EnableYdszSafe
-@EnableYdszFeign(basePackages = {"com.njydsz.userinfo.api", "com.njydsz.common.feign"})
+@EnableYdszFeign
 @MapperScan("com.njydsz.userinfo.infra.mapper")
 @EnableScheduling
 public class UserInfoApplication {

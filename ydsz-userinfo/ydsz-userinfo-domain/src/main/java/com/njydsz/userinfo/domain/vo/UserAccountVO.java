@@ -88,9 +88,9 @@ public class UserAccountVO {
     vo.setPhone(entity.getPhone());
     vo.setEmail(entity.getEmail());
     vo.setAvatar(entity.getAvatar());
-    // status 字段：entity 为 EnableStatusEnum，VO 为 Integer（1=启用, 0=禁用）
+    // status 字段：entity 为 String，VO 为 Integer（1=启用, 0=禁用）
     vo.setStatus(
-        entity.getStatus() == EnableStatusEnum.ENABLED
+        entity.getStatusEnum() == EnableStatusEnum.ENABLED
             ? ENABLED_INT_VALUE
             : DISABLED_INT_VALUE);
     vo.setUserType(entity.getUserType());

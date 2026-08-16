@@ -21,6 +21,7 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
  *   <li>不允许连续重复字符（如 aaa、111）
  *   <li>不允许与用户名相同或包含用户名
  *   <li>不允许与最近 N 条历史密码重复（需配合 {@link UserPasswordHistoryService}）
+ *   <li>不允许使用弱密码字典中的常见密码（Top 1000）
  * </ul>
  *
  * @author ydsz-team
@@ -32,6 +33,7 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
 public class PasswordPolicyValidator {
 
   private final UserInfoProperties properties;
+  private final WeakPasswordDictionary weakPasswordDictionary;
 
   private static final Pattern HAS_LOWER = Pattern.compile("[a-z]");
   private static final Pattern HAS_UPPER = Pattern.compile("[A-Z]");
@@ -76,6 +78,7 @@ public class PasswordPolicyValidator {
     validateCharacterCategories(password, minCategoryCount);
     validateNoRepeatChars(password);
     validateNotContainUsername(password, username);
+    validateNotWeakPassword(password);
     validateNotReusedFromHistory(password, userId, passwordHistoryService);
   }
 
@@ -149,6 +152,21 @@ public class PasswordPolicyValidator {
             .message("密码不能包含用户名")
             .build();
       }
+    }
+  }
+
+  /**
+   * 校验密码不在弱密码字典中。
+   *
+   * @param password 待校验密码
+   * @throws BusinessException 密码在弱密码字典中时抛出
+   */
+  private void validateNotWeakPassword(String password) {
+    if (weakPasswordDictionary.isWeakPassword(password)) {
+      throw BusinessException.builder()
+          .resultCode(UserInfoExceptionCode.PASSWORD_TOO_WEAK)
+          .message("密码过于简单，请使用更复杂的密码")
+          .build();
     }
   }
 

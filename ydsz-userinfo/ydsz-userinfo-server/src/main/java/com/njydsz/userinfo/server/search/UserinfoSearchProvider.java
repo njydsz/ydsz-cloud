@@ -86,7 +86,7 @@ public class UserinfoSearchProvider implements SearchProvider<UserAccount> {
         .subtitle(entity.getUsername())
         .content(content.toString())
         .snippet(entity.getUserType())
-        .status(entity.getStatus() == null ? null : entity.getStatus().name())
+        .status(entity.getStatusEnum() == null ? null : entity.getStatusEnum().name())
         .path("/user/profile/" + entity.getId())
         .tenantId(entity.getTenantId())
         .createdBy(entity.getCreatedBy())

@@ -311,14 +311,14 @@ public class UserAccountServiceImpl implements UserAccountService {
     // 仅复制非 null 属性，避免覆盖已有值；额外忽略 id（主键不可变）
     BeanUpdateUtil.copyNonNull(dto, entity, "id");
     if (dto.getStatus() != null) {
-      entity.setStatus(dto.getStatus());
+      entity.setStatusEnum(dto.getStatus());
     }
     boolean result = userAccountMapper.updateById(entity) > 0;
     if (result) {
       indexUpsert(entity);
       eventPublisher.publishUserUpdated(entity);
       // P1-1: 用户被禁用时驱逐全部会话
-      if (entity.getStatus() == EnableStatusEnum.DISABLED) {
+      if (entity.getStatusEnum() == EnableStatusEnum.DISABLED) {
         authService.evictAllSessions(dto.getId());
         log.info("User {} disabled, all sessions evicted", dto.getId());
       }

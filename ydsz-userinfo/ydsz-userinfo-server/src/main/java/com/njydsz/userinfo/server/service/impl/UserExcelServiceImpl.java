@@ -2,7 +2,11 @@ package com.njydsz.userinfo.server.service.impl;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
@@ -74,7 +78,31 @@ public class UserExcelServiceImpl implements UserExcelService {
           importList.size(), 0, importList.size(), "导入数量超过上限 " + limit + " 行");
     }
 
-    // 3. 逐行处理
+    // 3. 预加载批量查询数据，避免 N+1（一次性查询所有用户名、部门编码、上级用户名）
+    Set<String> importUsernames =
+        importList.stream()
+            .map(UserImportDTO::getUsername)
+            .filter(s -> s != null && !s.isBlank())
+            .collect(Collectors.toSet());
+    Set<String> deptCodes =
+        importList.stream()
+            .map(UserImportDTO::getDeptCode)
+            .filter(s -> s != null && !s.isBlank())
+            .collect(Collectors.toSet());
+    Set<String> leaderUsernames =
+        importList.stream()
+            .map(UserImportDTO::getLeaderUsername)
+            .filter(s -> s != null && !s.isBlank())
+            .collect(Collectors.toSet());
+
+    // 批量查询已有用户名
+    Set<String> existingUsernames = queryExistingUsernames(importUsernames);
+    // 批量查询部门编码 → ID 映射
+    Map<String, String> deptCodeToIdMap = queryDeptCodeToIdMap(deptCodes);
+    // 批量查询上级用户名 → ID 映射
+    Map<String, String> leaderUsernameToIdMap = queryUsernameToIdMap(leaderUsernames);
+
+    // 4. 逐行处理
     int successCount = 0;
     int failCount = 0;
     List<String> failDetails = new ArrayList<>();
@@ -84,7 +112,7 @@ public class UserExcelServiceImpl implements UserExcelService {
       UserImportDTO importDTO = importList.get(i);
 
       try {
-        importSingleUser(importDTO);
+        importSingleUser(importDTO, existingUsernames, deptCodeToIdMap, leaderUsernameToIdMap);
         successCount++;
       } catch (Exception e) {
         failCount++;
@@ -173,12 +201,19 @@ public class UserExcelServiceImpl implements UserExcelService {
    * 导入单个用户。
    *
    * @param importDTO 用户导入 DTO
+   * @param existingUsernames 已存在的用户名集合（用于唯一性校验）
+   * @param deptCodeToIdMap 部门编码 → ID 映射
+   * @param leaderUsernameToIdMap 上级用户名 → ID 映射
    */
-  private void importSingleUser(UserImportDTO importDTO) {
+  private void importSingleUser(
+      UserImportDTO importDTO,
+      Set<String> existingUsernames,
+      Map<String, String> deptCodeToIdMap,
+      Map<String, String> leaderUsernameToIdMap) {
     validateRequiredFields(importDTO);
-    validateUsernameUnique(importDTO.getUsername());
-    String deptId = resolveDepartmentId(importDTO.getDeptCode());
-    String leaderId = resolveLeaderId(importDTO.getLeaderUsername());
+    validateUsernameUnique(importDTO.getUsername(), existingUsernames);
+    String deptId = resolveDepartmentId(importDTO.getDeptCode(), deptCodeToIdMap);
+    String leaderId = resolveLeaderId(importDTO.getLeaderUsername(), leaderUsernameToIdMap);
     passwordPolicyValidator.validate(importDTO.getPassword(), importDTO.getUsername());
     createUser(importDTO, deptId, leaderId);
   }
@@ -205,12 +240,11 @@ public class UserExcelServiceImpl implements UserExcelService {
    * 校验用户名唯一性。
    *
    * @param username 用户名
+   * @param existingUsernames 已存在的用户名集合
    * @throws BusinessException 用户名已存在时抛出
    */
-  private void validateUsernameUnique(String username) {
-    LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserAccount::getUsername, username);
-    if (userAccountMapper.selectCount(wrapper) > 0) {
+  private void validateUsernameUnique(String username, Set<String> existingUsernames) {
+    if (existingUsernames.contains(username)) {
       throw BusinessException.builder().message("用户名已存在").build();
     }
   }
@@ -219,40 +253,87 @@ public class UserExcelServiceImpl implements UserExcelService {
    * 根据部门编码解析部门 ID。
    *
    * @param deptCode 部门编码（可为空）
+   * @param deptCodeToIdMap 部门编码 → ID 映射
    * @return 部门 ID，部门编码为空时返回 null
    * @throws BusinessException 部门编码不存在时抛出
    */
-  private String resolveDepartmentId(String deptCode) {
+  private String resolveDepartmentId(String deptCode, Map<String, String> deptCodeToIdMap) {
     if (deptCode == null || deptCode.isBlank()) {
       return null;
     }
-    LambdaQueryWrapper<Department> deptWrapper = new LambdaQueryWrapper<>();
-    deptWrapper.eq(Department::getDeptCode, deptCode);
-    Department dept = departmentMapper.selectOne(deptWrapper);
-    if (dept == null) {
+    String deptId = deptCodeToIdMap.get(deptCode);
+    if (deptId == null) {
       throw BusinessException.builder().message("部门编码不存在: " + deptCode).build();
     }
-    return dept.getId();
+    return deptId;
   }
 
   /**
    * 根据上级用户名解析上级用户 ID。
    *
    * @param leaderUsername 上级用户名（可为空）
+   * @param leaderUsernameToIdMap 上级用户名 → ID 映射
    * @return 上级用户 ID，用户名为空时返回 null
    * @throws BusinessException 上级用户名不存在时抛出
    */
-  private String resolveLeaderId(String leaderUsername) {
+  private String resolveLeaderId(String leaderUsername, Map<String, String> leaderUsernameToIdMap) {
     if (leaderUsername == null || leaderUsername.isBlank()) {
       return null;
     }
-    LambdaQueryWrapper<UserAccount> leaderWrapper = new LambdaQueryWrapper<>();
-    leaderWrapper.eq(UserAccount::getUsername, leaderUsername);
-    UserAccount leader = userAccountMapper.selectOne(leaderWrapper);
-    if (leader == null) {
+    String leaderId = leaderUsernameToIdMap.get(leaderUsername);
+    if (leaderId == null) {
       throw BusinessException.builder().message("上级用户名不存在: " + leaderUsername).build();
     }
-    return leader.getId();
+    return leaderId;
+  }
+
+  /**
+   * 批量查询已存在的用户名。
+   *
+   * @param usernames 待检查的用户名集合
+   * @return 已存在的用户名集合
+   */
+  private Set<String> queryExistingUsernames(Set<String> usernames) {
+    if (usernames.isEmpty()) {
+      return new HashSet<>();
+    }
+    LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
+    wrapper.in(UserAccount::getUsername, usernames).select(UserAccount::getUsername);
+    return userAccountMapper.selectList(wrapper).stream()
+        .map(UserAccount::getUsername)
+        .collect(Collectors.toSet());
+  }
+
+  /**
+   * 批量查询部门编码 → ID 映射。
+   *
+   * @param deptCodes 部门编码集合
+   * @return 部门编码 → ID 映射
+   */
+  private Map<String, String> queryDeptCodeToIdMap(Set<String> deptCodes) {
+    if (deptCodes.isEmpty()) {
+      return new java.util.HashMap<>();
+    }
+    LambdaQueryWrapper<Department> wrapper = new LambdaQueryWrapper<>();
+    wrapper.in(Department::getDeptCode, deptCodes).select(Department::getDeptCode, Department::getId);
+    return departmentMapper.selectList(wrapper).stream()
+        .collect(Collectors.toMap(Department::getDeptCode, Department::getId));
+  }
+
+  /**
+   * 批量查询用户名 → ID 映射。
+   *
+   * @param usernames 用户名集合
+   * @return 用户名 → ID 映射
+   */
+  private Map<String, String> queryUsernameToIdMap(Set<String> usernames) {
+    if (usernames.isEmpty()) {
+      return new java.util.HashMap<>();
+    }
+    LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
+    wrapper.in(UserAccount::getUsername, usernames).select(UserAccount::getUsername, UserAccount::getId);
+    return userAccountMapper.selectList(wrapper).stream()
+        .collect(Collectors.toMap(UserAccount::getUsername, UserAccount::getId));
   }
 
   /**

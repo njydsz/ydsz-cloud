@@ -144,3 +144,4 @@ public class UserAccount extends MpBaseEntity<String> {
       this.status = statusEnum == EnableStatusEnum.ENABLED ? "1" : "0";
     }
   }
+}
