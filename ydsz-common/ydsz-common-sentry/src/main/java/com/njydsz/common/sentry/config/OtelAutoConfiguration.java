@@ -26,7 +26,7 @@ import com.njydsz.common.sentry.tracing.otel.OtelResources;
 import com.njydsz.common.sentry.tracing.otel.OtelSamplers;
 import com.njydsz.common.sentry.tracing.otel.OtelSdkBuilder;
 import com.njydsz.common.sentry.tracing.otel.OtelSdkInitializer;
-import com.njydsz.common.sentry.tracing.otel.TailSamplingSpanProcessor;
+import com.njydsz.common.sentry.tracing.otel.SpanEvaluationProcessor;
 import com.njydsz.common.sentry.tracing.otel.YdszOpenTelemetry;
 import com.njydsz.common.sentry.tracing.otel.YdszSpanEnrichmentProcessor;
 
@@ -37,7 +37,7 @@ import com.njydsz.common.sentry.tracing.otel.YdszSpanEnrichmentProcessor;
  * 注册到 GlobalOpenTelemetry。同时按需注册：
  * <ul>
  *   <li>{@link YdszSpanEnrichmentProcessor}：自动注入 YDSZ 业务属性</li>
- *   <li>{@link TailSamplingSpanProcessor}：尾部采样（错误/慢请求/灰度100%采集）</li>
+ *   <li>{@link SpanEvaluationProcessor}：Span 评估处理器（错误/慢请求/灰度标记）</li>
  *   <li>{@link ErrorEventSpanProcessor}：错误/慢 Span 事件发布</li>
  * </ul>
  *
@@ -209,11 +209,11 @@ public class OtelAutoConfiguration {
                                 .build()));
             }
 
-            // 3.2) Tail Sampling
+            // 3.2) Span Evaluation
             if (otelConfig.getTailSampling().isEnabled()) {
-                List<TailSamplingSpanProcessor.SamplingRule> rules = buildTailSamplingRules(
+                List<SpanEvaluationProcessor.SamplingRule> rules = buildTailSamplingRules(
                         otelConfig.getTailSampling());
-                builder.addProcessor(new TailSamplingSpanProcessor(
+                builder.addProcessor(new SpanEvaluationProcessor(
                         otelConfig.getTailSampling().getRecordRatio(), rules));
             }
 
@@ -286,26 +286,26 @@ public class OtelAutoConfiguration {
         }
     }
 
-    private static List<TailSamplingSpanProcessor.SamplingRule> buildTailSamplingRules(
+    private static List<SpanEvaluationProcessor.SamplingRule> buildTailSamplingRules(
             SentryProperties.TailSamplingConfig config) {
-        List<TailSamplingSpanProcessor.SamplingRule> rules = new ArrayList<>();
+        List<SpanEvaluationProcessor.SamplingRule> rules = new ArrayList<>();
         if (config.isErrorStatus()) {
-            rules.add(TailSamplingSpanProcessor.Rules.errorStatus());
+            rules.add(SpanEvaluationProcessor.Rules.errorStatus());
         }
         if (config.getSlowThresholdMillis() > 0) {
-            rules.add(TailSamplingSpanProcessor.Rules.slowRequest(config.getSlowThresholdMillis()));
+            rules.add(SpanEvaluationProcessor.Rules.slowRequest(config.getSlowThresholdMillis()));
         }
         if (config.getErrorCodePrefixes() != null && !config.getErrorCodePrefixes().isEmpty()) {
-            rules.add(TailSamplingSpanProcessor.Rules.errorCode(
+            rules.add(SpanEvaluationProcessor.Rules.errorCode(
                     config.getErrorCodePrefixes().toArray(new String[0])));
         }
         if (config.getGrayTags() != null && !config.getGrayTags().isEmpty()) {
             for (String tag : config.getGrayTags()) {
-                rules.add(TailSamplingSpanProcessor.Rules.grayTag(tag));
+                rules.add(SpanEvaluationProcessor.Rules.grayTag(tag));
             }
         }
         if (config.isPressureTraffic()) {
-            rules.add(TailSamplingSpanProcessor.Rules.pressureTraffic());
+            rules.add(SpanEvaluationProcessor.Rules.pressureTraffic());
         }
         return rules;
     }

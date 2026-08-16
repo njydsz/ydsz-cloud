@@ -105,6 +105,13 @@
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
+        <!-- Bean Validation（配置属性验证） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
         <!-- Logback（结构化日志 Layout，可选） -->
         <dependency>
             <groupId>ch.qos.logback</groupId>

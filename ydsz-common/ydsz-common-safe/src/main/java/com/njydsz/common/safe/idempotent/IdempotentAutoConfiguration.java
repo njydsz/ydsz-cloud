@@ -1,4 +1,4 @@
-package com.njydsz.common.idempotent;
+package com.njydsz.common.safe.idempotent;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;

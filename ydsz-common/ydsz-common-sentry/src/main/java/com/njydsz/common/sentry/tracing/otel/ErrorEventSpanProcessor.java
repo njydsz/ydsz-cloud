@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  * <ul>
  *   <li>Span 状态为 ERROR 且未携带 ydsz.error.code 属性</li>
  *   <li>HTTP 状态码 5xx 但 Span 状态仍为 OK（未正确标记）</li>
- *   <li>耗时超过指定阈值（已配 TailSamplingSpanProcessor.slowRequest，此处仅补齐告警）</li>
+ *   <li>耗时超过指定阈值（已配 SpanEvaluationProcessor.slowRequest，此处仅补齐告警）</li>
  * </ul>
  *
  * <p>业务方可注册 {@link ErrorEventListener} 接收告警事件。

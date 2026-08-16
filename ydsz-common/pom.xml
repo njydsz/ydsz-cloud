@@ -71,10 +71,11 @@
     <modules>
         <!-- L1 工具模块层 -->
         <module>ydsz-common-cache</module>
-        <module>ydsz-common-excel</module>
         <module>ydsz-common-json</module>
         <module>ydsz-common-util</module>
         <!-- L2 基础设施层 -->
+        <module>ydsz-common-excel</module>
+        <module>ydsz-common-excel-spring</module>
         <module>ydsz-common-core</module>
         <!-- L3 基础服务层 -->
         <module>ydsz-common-domain</module>
@@ -105,10 +106,6 @@
         <module>ydsz-common-base</module>
         <module>ydsz-common-web</module>
         <module>ydsz-common-app</module>
-        <module>ydsz-common-idempotent</module>
-        <module>ydsz-common-ratelimit</module>
-        <module>ydsz-common-base-doc</module>
-        <module>ydsz-common-base-i18n</module>
     </modules>
 
     <dependencyManagement>

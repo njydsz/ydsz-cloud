@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>{@link #composite(CompositeConfig)}：组合策略（按业务标签 / SpanKind / 服务名差异化）</li>
  * </ol>
  *
- * <p>对于错误 / 慢请求的 100% 采集，<b>必须</b>配合 {@link TailSamplingSpanProcessor} 使用。
+ * <p>对于错误 / 慢请求的标记与通知，可配合 {@link SpanEvaluationProcessor} 使用。
  *
  * @author ydsz-team
  * @since 1.0.0

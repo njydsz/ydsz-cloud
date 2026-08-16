@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
  * OpenTelemetrySdk sdk = OtelSdkBuilder.create()
  *     .resource(OtelResources.createDefault("ydsz-order"))
  *     .sampler(OtelSamplers.parentBased(0.1))
- *     .addProcessor(new TailSamplingSpanProcessor(0.05, samplingRules))
+ *     .addProcessor(new SpanEvaluationProcessor(0.05, samplingRules))
  *     .addProcessor(new YdszSpanEnrichmentProcessor(...))
  *     .exporter(otlpExporter)
  *     .build();

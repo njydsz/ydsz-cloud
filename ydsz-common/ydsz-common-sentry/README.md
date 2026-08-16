@@ -60,7 +60,7 @@
 | `YdszSpan` | Span 包装器 |
 | `YdszSpanEnrichmentProcessor` | Span 属性自动注入（MDC / RequestContext / env） |
 | `ErrorEventSpanProcessor` | 错误事件 Span 处理器 |
-| `TailSamplingSpanProcessor` | 尾部采样处理器（错误 100% / 慢请求 100% / 灰度标签 100% / 压测 100% / 其他按 ratio） |
+| `SpanEvaluationProcessor` | Span 评估处理器（错误/慢请求/灰度标签评估与通知，不做物理丢弃） |
 
 ### 4. SLA 框架
 
@@ -418,7 +418,7 @@ ydsz:
 3. **令牌桶限流**：`max-rate-per-second > 0` 时启用令牌桶限流，防止日志风暴打爆下游；设为 0 表示不限流。
 4. **告警静默期**：`silence-period-millis` 控制相同告警的最小间隔，避免告警风暴；收敛由 `AlertConverger` 实现（时间窗口 + 去重）。
 5. **OTel SDK 默认不启用**：`ydsz.sentry.tracing.otel.enabled=false`（默认），仅当显式启用时才初始化 OTel SDK；未启用时仅注册 `OpenTelemetryTraceContext` 但不导出 Span。
-6. **尾部采样需 OTel SDK**：`tail-sampling.enabled=true` 依赖 `OtelSdkBuilder` 初始化的 `TailSamplingSpanProcessor`，未启用 OTel SDK 时尾部采样配置无效。
+6. **Span 评估需 OTel SDK**：`tail-sampling.enabled=true` 依赖 `OtelSdkBuilder` 初始化的 `SpanEvaluationProcessor`，未启用 OTel SDK 时评估配置无效。
 7. **NotifyAlertHandler 可选**：`NotifyAlertHandler` 需 classpath 中存在 `common-notify` 的 `NotifyService`，未引入时告警仅记录日志不发送 IM 通知。
 8. **SlaMetricAspect 需 AOP**：`@SlaMetric` 注解需 classpath 中存在 AspectJ Weaver，未引入时注解不生效。
 9. **CircuitBreaker CAS 安全**：HALF_OPEN 状态下使用 AtomicInteger 保证仅单个探测请求通过，避免并发探测导致状态混乱。

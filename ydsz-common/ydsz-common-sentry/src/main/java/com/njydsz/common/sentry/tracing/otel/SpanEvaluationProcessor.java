@@ -16,36 +16,41 @@ import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 尾部采样 Span 处理器（Tail-Based Sampling）
+ * Span 评估处理器（Span Evaluation Processor）
  *
- * <p>传统头部采样（Head-Based Sampling）在请求入口就决定是否采样，无法覆盖以下场景：
+ * <p>对已结束的 Span 进行事后评估，通过规则引擎判断其是否属于"高价值 Span"
+ * （如错误请求、慢请求、灰度流量等），并通过 {@link DecisionListener} 通知下游消费。
+ *
+ * <p><b>设计说明</b>：
  * <ul>
- *   <li>错误请求 100% 采集（但头部采样可能丢弃）</li>
- *   <li>慢请求 100% 采集（同上）</li>
- *   <li>特定业务标签的请求 100% 采集</li>
+ *   <li>OTel SDK 的 {@link SpanProcessor#onStart} 一旦返回，Span 即被记录到内存，
+ *       {@link SpanProcessor#onEnd} 阶段无法真正"丢弃"已记录的 Span。
+ *       因此本处理器仅做评估与通知，不做物理丢弃。</li>
+ *   <li>如需真正的尾部采样（Tail-Based Sampling），应使用 OTel 官方的
+ *       {@code TailSamplingProcessor}（{@code opentelemetry-sdk-extension-incubator}）
+ *       或 {@code ParentBasedSampler} + {@code RateLimitingSampler} 组合。</li>
  * </ul>
  *
- * <p>本实现采用 <b>延迟决策 + 配额保护</b> 模式：
- * <ol>
- *   <li>所有 Span 先记录到 Ring Buffer（带时间窗口）</li>
- *   <li>Span 结束（{@code onEnd}）时根据策略评估：命中策略 → 标记为 {@link Decision#RECORD}</li>
- *   <li>未命中策略 → 走概率采样 / 丢弃</li>
- *   <li>整体采样率（{@code recordRatio}）防止 OOM</li>
- * </ol>
- *
- * <p><b>策略示例</b>：
+ * <p><b>典型用法</b>：
  * <ul>
- *   <li>HTTP 5xx 错误 100% 采集</li>
- *   <li>耗时 &gt; 3s 的慢请求 100% 采集</li>
- *   <li>错误码属于 P0 级别 100% 采集</li>
- *   <li>命中灰度标签的请求 100% 采集</li>
+ *   <li>统计错误率趋势（通过 {@link DecisionListener} 采集决策指标）</li>
+ *   <li>触发告警（错误 Span 通知 {@code AlertPublisher}）</li>
+ *   <li>记录审计日志（灰度流量 Span 写入审计表）</li>
+ * </ul>
+ *
+ * <p><b>规则示例</b>：
+ * <ul>
+ *   <li>HTTP 5xx 错误 100% 标记为 RECORD</li>
+ *   <li>耗时 &gt; 3s 的慢请求 100% 标记为 RECORD</li>
+ *   <li>错误码属于 P0 级别 100% 标记为 RECORD</li>
+ *   <li>命中灰度标签的请求 100% 标记为 RECORD</li>
  * </ul>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 2.0.0
  */
 @Slf4j
-public class TailSamplingSpanProcessor implements SpanProcessor {
+public class SpanEvaluationProcessor implements SpanProcessor {
 
     /** 总采样率（0.0 ~ 1.0），防止配额耗尽 */
     private final double recordRatio;
@@ -58,13 +63,13 @@ public class TailSamplingSpanProcessor implements SpanProcessor {
     /** 决策回调（用于测试 / 指标采集） */
     private final List<DecisionListener> listeners = new CopyOnWriteArrayList<>();
 
-    public TailSamplingSpanProcessor(double recordRatio, List<SamplingRule> rules) {
+    public SpanEvaluationProcessor(double recordRatio, List<SamplingRule> rules) {
         if (recordRatio < 0.0 || recordRatio > 1.0) {
             throw new IllegalArgumentException("recordRatio must be in [0.0, 1.0], got: " + recordRatio);
         }
         this.recordRatio = recordRatio;
         this.rules = rules == null ? List.of() : List.copyOf(rules);
-        log.info("[Sentry] TailSamplingSpanProcessor 初始化完成，recordRatio={}, rules={}",
+        log.info("[Sentry] SpanEvaluationProcessor 初始化完成，recordRatio={}, rules={}",
                 recordRatio, this.rules.size());
     }
 
@@ -86,11 +91,10 @@ public class TailSamplingSpanProcessor implements SpanProcessor {
 
         if (decision == Decision.RECORD) {
             recordedCount.incrementAndGet();
-        } else if (decision == Decision.DROP) {
-            // OTel SDK 当前不支持丢弃已结束的 Span（一旦 onStart 就会记录），
-            // 但通过决策回调允许上层做自定义过滤（如关闭 OTLP Exporter 对该 Span 的上报）
-            // 真实场景：可在 onStart 时给 Span 加上特定属性，在 Exporter 中过滤
         }
+        // 注意：OTel SDK 当前不支持丢弃已结束的 Span（一旦 onStart 就会记录），
+        // 此处仅做评估与通知，不做物理丢弃。
+        // 如需真正的尾部采样，请使用 OTel 官方的 TailSamplingProcessor。
     }
 
     @Override
@@ -216,7 +220,9 @@ public class TailSamplingSpanProcessor implements SpanProcessor {
      */
     public static class Rules {
 
-        private Rules() {}
+        private Rules() {
+            // 工具类，禁止实例化
+        }
 
         /**
          * 错误状态码规则（HTTP 5xx 或 Span 状态为 ERROR）

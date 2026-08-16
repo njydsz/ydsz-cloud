@@ -4,18 +4,27 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * Sentry 配置属性
  *
  * <p>配置前缀：{@code ydsz.sentry}
  *
+ * <p>各子配置通过 JSR-303 注解约束合法范围，启动时自动校验。
+ *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 2.0.0
  */
 @Data
+@Validated
 @ConfigurationProperties(prefix = "ydsz.sentry")
 public class SentryProperties {
 
@@ -23,27 +32,39 @@ public class SentryProperties {
     private boolean enabled = true;
 
     /** 应用名 */
+    @NotBlank(message = "应用名不能为空")
     private String appName = "ydsz";
 
     /** 主机名（auto 自动探测） */
     private String hostname = "auto";
 
     /** 环境 */
+    @NotBlank(message = "环境标识不能为空")
     private String profile = "dev";
 
     /** 指标配置 */
+    @Valid
+    @NotNull(message = "指标配置不能为空")
     private MetricsConfig metrics = new MetricsConfig();
 
     /** 日志配置 */
+    @Valid
+    @NotNull(message = "日志配置不能为空")
     private LoggingConfig logging = new LoggingConfig();
 
     /** 追踪配置 */
+    @Valid
+    @NotNull(message = "追踪配置不能为空")
     private TracingConfig tracing = new TracingConfig();
 
     /** 告警配置 */
+    @Valid
+    @NotNull(message = "告警配置不能为空")
     private AlertingConfig alerting = new AlertingConfig();
 
     /** SLA 配置 */
+    @Valid
+    @NotNull(message = "SLA 配置不能为空")
     private SlaConfig sla = new SlaConfig();
 
     /**

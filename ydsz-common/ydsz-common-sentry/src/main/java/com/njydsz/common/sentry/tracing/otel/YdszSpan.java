@@ -344,7 +344,7 @@ public final class YdszSpan {
          *
          * @param grayTag 灰度标签；{@code null} 或空串将被忽略
          * @return 当前 Builder，支持链式调用
-         * @see TailSamplingSpanProcessor
+         * @see SpanEvaluationProcessor
          */
         public Builder grayTag(String grayTag) {
             return setAttr(OtelSemConv.REMI_GRAY_TAG, grayTag);
