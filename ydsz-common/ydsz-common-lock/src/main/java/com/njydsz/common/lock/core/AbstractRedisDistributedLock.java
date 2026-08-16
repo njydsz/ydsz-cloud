@@ -336,9 +336,9 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
     /**
      * 释放锁
      *
-     * <p>通过 Lua 脚本原子性释放锁，释放成功后停止看门狗续期、减少活跃锁计数
-     * 并广播释放通知（唤醒其他等待线程），无论释放是否成功都会清理本地缓存，
-     * 防止线程池复用场景下的泄漏。
+     * <p>通过 Lua 脚本原子性释放锁。仅当锁<b>完全释放</b>（当前线程不再持有）时
+     * 才停止看门狗续期、减少活跃锁计数并广播释放通知；可重入锁在重入计数未归零时
+     * 仅递减计数，锁仍由当前线程持有，不得停止续期。
      *
      * @param lockKey   锁的键
      * @param lockValue 锁的值（客户端标识）
@@ -351,24 +351,29 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
             return false;
         }
         long holdStartTime = System.currentTimeMillis();
+        boolean released = false;
+        boolean fullyReleased = false;
         try {
-            boolean released = doReleaseLock(lockKey, lockValue);
+            released = doReleaseLock(lockKey, lockValue);
             if (released) {
-                if (lockWatchDog != null) {
-                    lockWatchDog.stopWatch(lockKey);
-                }
-                if (lockMetrics != null) {
-                    lockMetrics.decrementActiveLocks();
-                }
-                if (lockReleaseNotifier != null) {
-                    lockReleaseNotifier.notifyRelease(lockKey);
-                }
-                // 触发锁释放事件
-                long holdTimeMs = System.currentTimeMillis() - holdStartTime;
-                try {
-                    lockEventListener.onLockReleased(lockKey, lockValue, getLockType(), holdTimeMs);
-                } catch (Exception e) {
-                    log.warn("[ydsz-lock]锁释放事件监听异常 | lockKey={} | error={}", lockKey, e.getMessage());
+                fullyReleased = isFullyReleased(lockKey, lockValue);
+                if (fullyReleased) {
+                    if (lockWatchDog != null) {
+                        lockWatchDog.stopWatch(lockKey);
+                    }
+                    if (lockMetrics != null) {
+                        lockMetrics.decrementActiveLocks();
+                    }
+                    if (lockReleaseNotifier != null) {
+                        lockReleaseNotifier.notifyRelease(lockKey);
+                    }
+                    // 触发锁释放事件
+                    long holdTimeMs = System.currentTimeMillis() - holdStartTime;
+                    try {
+                        lockEventListener.onLockReleased(lockKey, lockValue, getLockType(), holdTimeMs);
+                    } catch (Exception e) {
+                        log.warn("[ydsz-lock]锁释放事件监听异常 | lockKey={} | error={}", lockKey, e.getMessage());
+                    }
                 }
             }
             return released;
@@ -376,10 +381,29 @@ public abstract class AbstractRedisDistributedLock implements DistributedLocker 
             log.error("[ydsz-lock]解锁异常 | lockKey={} | error={}", lockKey, e.getMessage(), e);
             return false;
         } finally {
-            // 无论解锁是否成功，始终清理本地缓存，防止线程池复用场景下的泄漏
-            clearClientId(lockKey);
-            clearLeaseTime(lockKey);
+            // 仅当锁完全释放或释放失败时才清理本地缓存，防止线程池复用场景下的泄漏；
+            // 可重入锁部分释放（重入计数未归零，锁仍由当前线程持有）时必须保留 clientId 缓存，
+            // 否则同一线程后续再次 unlock 会生成新 clientId，导致释放脚本校验失败、锁无法释放。
+            if (fullyReleased || !released) {
+                clearClientId(lockKey);
+                clearLeaseTime(lockKey);
+            }
         }
+    }
+
+    /**
+     * 判断锁释放后是否已完全释放（当前线程不再持有）
+     *
+     * <p>默认实现返回 true，适用于非重入锁（释放即完全释放）。
+     * 可重入锁需覆写本方法：仅当重入计数归零（锁键被删除）时才返回 true，
+     * 避免重入深度大于 1 时提前停止看门狗续期、误发释放通知。
+     *
+     * @param lockKey   锁的键
+     * @param lockValue 锁的值（客户端标识）
+     * @return true-锁已完全释放
+     */
+    protected boolean isFullyReleased(String lockKey, String lockValue) {
+        return true;
     }
 
     /**

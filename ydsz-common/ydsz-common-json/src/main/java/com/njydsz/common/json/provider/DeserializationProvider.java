@@ -470,4 +470,208 @@ public final class DeserializationProvider {
                 return JsonParserUtil.parseObject(json);
             case '[':
                 return JsonParserUtil.parseArray(json);
-            case '"':\n                return TypeConverter.parseStringValue(json);\n            default:\n                break;\n        }\n\n        // 数字解析\n        try {\n            if (json.indexOf('.') >= 0 || json.indexOf('E') >= 0 || json.indexOf('e') >= 0) {\n                return Double.parseDouble(json);\n            }\n            return Long.parseLong(json);\n        } catch (NumberFormatException e) {\n            return json;\n        }\n    }\n\n    /**\n     * 反序列化 JSON 字符串（支持 Type）\n     *\n     * <p>支持 {@link Class}、{@link ParameterizedType}（List/Map/Set 泛型）等类型。\n     * 类型不匹配时立即抛出 {@link JsonDeserializationException}，包含期望类型和实际类型信息。</p>\n     *\n     * <p><b>返回 Object 而非泛型 T 的原因：</b>Java 泛型类型擦除导致从 {@link Type}\n     * 到 {@code T} 的转换无法在编译期验证（unchecked cast）。返回 {@code Object}\n     * 后由调用方通过 {@code Class.cast()} 执行运行时检查的 checked cast，\n     * 从根源消除 unchecked 警告。</p>\n     *\n     * @param json JSON 字符串\n     * @param type 目标类型\n     * @return 反序列化后的对象\n     * @throws JsonDeserializationException 如果 JSON 结构与目标类型不匹配\n     */\n    public static Object deserializeToObject(String json, Type type) {\n        if (json == null || json.isEmpty()) {\n            return null;\n        }\n\n        // 泛型递归深度保护：仅在非 Class 类型的泛型路径（ParameterizedType/GenericArrayType/WildcardType）中递增\n        boolean incrementDepth = !(type instanceof Class<?>);\n        if (incrementDepth) {\n            int currentDepth = DESERIALIZE_DEPTH.get();\n            // P0-3：优先读取线程级调用覆盖（JsonMapper 实例隔离），未设置回退静态全局值\n            int maxDepth = JSONReader.resolveCallMaxGenericDepth();\n            if (currentDepth >= maxDepth) {\n                throw new JsonDeserializationException(\n                    JsonDeserializationException.TYPE_MISMATCH,\n                    "Generic deserialization depth exceeded: " + currentDepth + " >= " + maxDepth\n                        + " (type: " + type + ")");\n            }\n            DESERIALIZE_DEPTH.set(currentDepth + 1);\n        }\n\n        try {\n            return deserializeToObjectInternal(json, type);\n        } finally {\n            if (incrementDepth) {\n                DESERIALIZE_DEPTH.set(DESERIALIZE_DEPTH.get() - 1);\n            }\n        }\n    }\n\n    /**\n     * 内部反序列化逻辑（实际委托给各类型分派）。\n     *\n     * <p>与 {@link #deserializeToObject(String, Type)} 分离，方便递归深度保护在入口处统一处理。\n     */\n    private static Object deserializeToObjectInternal(String json, Type type) {\n        if (type instanceof Class<?> clazz) {\n            Object result = deserializeValue(json, clazz);\n            return result;\n        }\n\n        if (type instanceof GenericArrayType gat) {\n            // 泛型数组类型（如 T[]）：先反序列化为 List，再转数组\n            Type componentType = gat.getGenericComponentType();\n            ParameterizedType listType = new ParameterizedType() {\n                @Override public Type[] getActualTypeArguments() { return new Type[]{componentType}; }\n                @Override public Type getRawType() { return List.class; }\n                @Override public Type getOwnerType() { return null; }\n            };\n            List<?> list = (List<?>) deserializeToObject(json, listType);\n            if (list == null) return null;\n            Class<?> componentClass = componentType instanceof Class<?> c ? c : Object.class;\n            Object array = Array.newInstance(componentClass, list.size());\n            for (int i = 0; i < list.size(); i++) {\n                Array.set(array, i, list.get(i));\n            }\n            return array;\n        }\n\n        if (type instanceof ParameterizedType pt) {\n            Type rawType = pt.getRawType();\n\n            if (rawType == List.class || rawType == ArrayList.class) {\n                Type elementType = pt.getActualTypeArguments()[0];\n                if (elementType instanceof Class<?> elementClass) {\n                    if (BeanDeserializerEngine.isSimpleType(elementClass)) {\n                        return BeanDeserializerEngine.deserializeArrayZeroCopy(json, elementClass);\n                    } else {\n                        return BeanDeserializerEngine.deserializeBeanListFast(json, elementClass);\n                    }\n                }\n            }\n\n            if (rawType == Map.class || rawType == HashMap.class\n                    || rawType == LinkedHashMap.class\n                    || rawType == TreeMap.class) {\n                Type[] typeArgs = pt.getActualTypeArguments();\n                Map<String, Object> parsed = JsonParserUtil.parseObject(json);\n                if (parsed == null) return null;\n                // 当 value 类型为已知简单类型时，转换解析结果（如 Long → Integer）\n                if (typeArgs.length == 2 && typeArgs[1] instanceof Class<?> valueClass) {\n                    if (valueClass != Object.class) {\n                        Map<String, Object> result = createMap(rawType);\n                        for (Map.Entry<String, Object> entry : parsed.entrySet()) {\n                            result.put(entry.getKey(),\n                                TypeConverter.convertValue(entry.getValue(), valueClass));\n                        }\n                        return result;\n                    }\n                }\n                return parsed;\n            }\n\n            if (rawType == Set.class || rawType == HashSet.class\n                    || rawType == LinkedHashSet.class\n                    || rawType == TreeSet.class) {\n                Type elementType = pt.getActualTypeArguments()[0];\n                if (elementType instanceof Class<?> elementClass) {\n                    if (BeanDeserializerEngine.isSimpleType(elementClass)) {\n                        List<?> list = BeanDeserializerEngine.deserializeArrayZeroCopy(json, elementClass);\n                        if (list == null) return null;\n                        return createSet(rawType, list);\n                    } else {\n                        List<?> list = BeanDeserializerEngine.deserializeBeanListFast(json, elementClass);\n                        if (list == null) return null;\n                        return createSet(rawType, list);\n                    }\n                }\n            }\n        }\n\n        if (type instanceof WildcardType wt) {\n            // WildcardType（如 ? extends Number）：取上界进行反序列化\n            Type[] upperBounds = wt.getUpperBounds();\n            if (upperBounds != null && upperBounds.length > 0) {\n                return deserializeToObject(json, upperBounds[0]);\n            }\n            // 无上界时回退到 Object\n            return parseValue(json);\n        }\n\n        // 兜底路径：根据 JSON 首字符决定解析为 List 或 Map\n        String trimmed = json.trim();\n        if (trimmed.startsWith("[")) {\n            return JsonParserUtil.parseArray(json);\n        }\n        return JsonParserUtil.parseObject(json);\n    }\n\n    /**\n     * 根据原始类型创建对应的 Set 实例并填充元素。\n     *\n     * @param rawType 原始类型（TreeSet/LinkedHashSet/HashSet）\n     * @param list 元素列表\n     * @return 填充好的 Set 实例\n     */\n    private static Set<Object> createSet(Type rawType, List<?> list) {\n        Set<Object> set;\n        if (rawType == TreeSet.class) {\n            set = new TreeSet<>();\n        } else if (rawType == LinkedHashSet.class) {\n            set = new LinkedHashSet<>(list.size());\n        } else {\n            set = new HashSet<>(list.size());\n        }\n        set.addAll(list);\n        return set;\n    }\n\n    /**\n     * 根据 rawType 创建对应的 Map 实例。\n     */\n    private static Map<String, Object> createMap(Type rawType) {\n        if (rawType == TreeMap.class) {\n            return new TreeMap<>();\n        } else if (rawType == LinkedHashMap.class) {\n            return new LinkedHashMap<>();\n        }\n        return new HashMap<>();\n    }\n\n    /**\n     * 清理当前线程的 ThreadLocal 对象。\n     *\n     * <p>在线程池环境中，应在任务完成后或线程归还前调用此方法，\n     * 防止 {@link #DESERIALIZE_DEPTH} 等 ThreadLocal 值在线程池中残留。</p>\n     *\n     * @since 1.2.1\n     */\n    public static void clearThreadLocals() {\n        DESERIALIZE_DEPTH.remove();\n    }\n}\n
+            case '"':
+                return TypeConverter.parseStringValue(json);
+            default:
+                break;
+        }
+
+        // 数字解析
+        try {
+            if (json.indexOf('.') >= 0 || json.indexOf('E') >= 0 || json.indexOf('e') >= 0) {
+                return Double.parseDouble(json);
+            }
+            return Long.parseLong(json);
+        } catch (NumberFormatException e) {
+            return json;
+        }
+    }
+
+    /**
+     * 反序列化 JSON 字符串（支持 Type）
+     *
+     * <p>支持 {@link Class}、{@link ParameterizedType}（List/Map/Set 泛型）等类型。
+     * 类型不匹配时立即抛出 {@link JsonDeserializationException}，包含期望类型和实际类型信息。</p>
+     *
+     * <p><b>返回 Object 而非泛型 T 的原因：</b>Java 泛型类型擦除导致从 {@link Type}
+     * 到 {@code T} 的转换无法在编译期验证（unchecked cast）。返回 {@code Object}
+     * 后由调用方通过 {@code Class.cast()} 执行运行时检查的 checked cast，
+     * 从根源消除 unchecked 警告。</p>
+     *
+     * @param json JSON 字符串
+     * @param type 目标类型
+     * @return 反序列化后的对象
+     * @throws JsonDeserializationException 如果 JSON 结构与目标类型不匹配
+     */
+    public static Object deserializeToObject(String json, Type type) {
+        if (json == null || json.isEmpty()) {
+            return null;
+        }
+
+        // 泛型递归深度保护：仅在非 Class 类型的泛型路径（ParameterizedType/GenericArrayType/WildcardType）中递增
+        boolean incrementDepth = !(type instanceof Class<?>);
+        if (incrementDepth) {
+            int currentDepth = DESERIALIZE_DEPTH.get();
+            // P0-3：优先读取线程级调用覆盖（JsonMapper 实例隔离），未设置回退静态全局值
+            int maxDepth = JSONReader.resolveCallMaxGenericDepth();
+            if (currentDepth >= maxDepth) {
+                throw new JsonDeserializationException(
+                    JsonDeserializationException.TYPE_MISMATCH,
+                    "Generic deserialization depth exceeded: " + currentDepth + " >= " + maxDepth
+                        + " (type: " + type + ")");
+            }
+            DESERIALIZE_DEPTH.set(currentDepth + 1);
+        }
+
+        try {
+            return deserializeToObjectInternal(json, type);
+        } finally {
+            if (incrementDepth) {
+                DESERIALIZE_DEPTH.set(DESERIALIZE_DEPTH.get() - 1);
+            }
+        }
+    }
+
+    /**
+     * 内部反序列化逻辑（实际委托给各类型分派）。
+     *
+     * <p>与 {@link #deserializeToObject(String, Type)} 分离，方便递归深度保护在入口处统一处理。
+     */
+    private static Object deserializeToObjectInternal(String json, Type type) {
+        if (type instanceof Class<?> clazz) {
+            Object result = deserializeValue(json, clazz);
+            return result;
+        }
+
+        if (type instanceof GenericArrayType gat) {
+            // 泛型数组类型（如 T[]）：先反序列化为 List，再转数组
+            Type componentType = gat.getGenericComponentType();
+            ParameterizedType listType = new ParameterizedType() {
+                @Override public Type[] getActualTypeArguments() { return new Type[]{componentType}; }
+                @Override public Type getRawType() { return List.class; }
+                @Override public Type getOwnerType() { return null; }
+            };
+            List<?> list = (List<?>) deserializeToObject(json, listType);
+            if (list == null) return null;
+            Class<?> componentClass = componentType instanceof Class<?> c ? c : Object.class;
+            Object array = Array.newInstance(componentClass, list.size());
+            for (int i = 0; i < list.size(); i++) {
+                Array.set(array, i, list.get(i));
+            }
+            return array;
+        }
+
+        if (type instanceof ParameterizedType pt) {
+            Type rawType = pt.getRawType();
+
+            if (rawType == List.class || rawType == ArrayList.class) {
+                Type elementType = pt.getActualTypeArguments()[0];
+                if (elementType instanceof Class<?> elementClass) {
+                    if (BeanDeserializerEngine.isSimpleType(elementClass)) {
+                        return BeanDeserializerEngine.deserializeArrayZeroCopy(json, elementClass);
+                    } else {
+                        return BeanDeserializerEngine.deserializeBeanListFast(json, elementClass);
+                    }
+                }
+            }
+
+            if (rawType == Map.class || rawType == HashMap.class
+                    || rawType == LinkedHashMap.class
+                    || rawType == TreeMap.class) {
+                Type[] typeArgs = pt.getActualTypeArguments();
+                Map<String, Object> parsed = JsonParserUtil.parseObject(json);
+                if (parsed == null) return null;
+                // 当 value 类型为已知简单类型时，转换解析结果（如 Long → Integer）
+                if (typeArgs.length == 2 && typeArgs[1] instanceof Class<?> valueClass) {
+                    if (valueClass != Object.class) {
+                        Map<String, Object> result = createMap(rawType);
+                        for (Map.Entry<String, Object> entry : parsed.entrySet()) {
+                            result.put(entry.getKey(),
+                                TypeConverter.convertValue(entry.getValue(), valueClass));
+                        }
+                        return result;
+                    }
+                }
+                return parsed;
+            }
+
+            if (rawType == Set.class || rawType == HashSet.class
+                    || rawType == LinkedHashSet.class
+                    || rawType == TreeSet.class) {
+                Type elementType = pt.getActualTypeArguments()[0];
+                if (elementType instanceof Class<?> elementClass) {
+                    if (BeanDeserializerEngine.isSimpleType(elementClass)) {
+                        List<?> list = BeanDeserializerEngine.deserializeArrayZeroCopy(json, elementClass);
+                        if (list == null) return null;
+                        return createSet(rawType, list);
+                    } else {
+                        List<?> list = BeanDeserializerEngine.deserializeBeanListFast(json, elementClass);
+                        if (list == null) return null;
+                        return createSet(rawType, list);
+                    }
+                }
+            }
+        }
+
+        if (type instanceof WildcardType wt) {
+            // WildcardType（如 ? extends Number）：取上界进行反序列化
+            Type[] upperBounds = wt.getUpperBounds();
+            if (upperBounds != null && upperBounds.length > 0) {
+                return deserializeToObject(json, upperBounds[0]);
+            }
+            // 无上界时回退到 Object
+            return parseValue(json);
+        }
+
+        // 兜底路径：根据 JSON 首字符决定解析为 List 或 Map
+        String trimmed = json.trim();
+        if (trimmed.startsWith("[")) {
+            return JsonParserUtil.parseArray(json);
+        }
+        return JsonParserUtil.parseObject(json);
+    }
+
+    /**
+     * 根据原始类型创建对应的 Set 实例并填充元素。
+     *
+     * @param rawType 原始类型（TreeSet/LinkedHashSet/HashSet）
+     * @param list 元素列表
+     * @return 填充好的 Set 实例
+     */
+    private static Set<Object> createSet(Type rawType, List<?> list) {
+        Set<Object> set;
+        if (rawType == TreeSet.class) {
+            set = new TreeSet<>();
+        } else if (rawType == LinkedHashSet.class) {
+            set = new LinkedHashSet<>(list.size());
+        } else {
+            set = new HashSet<>(list.size());
+        }
+        set.addAll(list);
+        return set;
+    }
+
+    /**
+     * 根据 rawType 创建对应的 Map 实例。
+     */
+    private static Map<String, Object> createMap(Type rawType) {
+        if (rawType == TreeMap.class) {
+            return new TreeMap<>();
+        } else if (rawType == LinkedHashMap.class) {
+            return new LinkedHashMap<>();
+        }
+        return new HashMap<>();
+    }
+
+    /**
+     * 清理当前线程的 ThreadLocal 对象。
+     *
+     * <p>在线程池环境中，应在任务完成后或线程归还前调用此方法，
+     * 防止 {@link #DESERIALIZE_DEPTH} 等 ThreadLocal 值在线程池中残留。</p>
+     *
+     * @since 1.2.1
+     */
+    public static void clearThreadLocals() {
+        DESERIALIZE_DEPTH.remove();
+    }
+}

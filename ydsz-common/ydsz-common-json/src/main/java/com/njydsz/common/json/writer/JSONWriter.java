@@ -491,7 +491,12 @@ public final class JSONWriter {
      */
     public void writeString(String str) {
         if (externalSb != null) {
-            externalSb.append('"');\n            int len = str.length();\n            boolean needsEscape = false;\n            for (int i = 0; i < len; i++) {\n                char c = str.charAt(i);\n                if (c < ' ' || c == '"' || c == '\\'
+            externalSb.append('"');
+            int len = str.length();
+            boolean needsEscape = false;
+            for (int i = 0; i < len; i++) {
+                char c = str.charAt(i);
+                if (c < ' ' || c == '"' || c == '\\'
                         || c == '\u2028' || c == '\u2029'
                         || (c >= '\uD800' && c <= '\uDFFF')) {
                     needsEscape = true;
@@ -503,14 +508,46 @@ public final class JSONWriter {
             } else {
                 writeStringWithEscapeSb(str);
             }
-            externalSb.append('"');\n            return;\n        }\n\n        writeStringDirect(str);\n    }\n\n    /**\n     * 直接写入字符串到缓冲区（无 externalSb 检查，用于 JSONWriter 直接模式和 ASM 序列化器）\n     *\n     * <p>优化策略：</p>\n     * <ul>\n     *   <li>ASCII 快速路径：纯 ASCII 且无特殊字符时，使用 str.getChars() 批量拷贝</li>\n     *   <li>SIMD 风格字级检查：一次检查 8 个字符是否为 ASCII + 无特殊字符，减少逐字符判断</li>\n     *   <li>无需转义时直接批量写入，比逐字符写入快 3-5 倍</li>\n     * </ul>\n     */\n    public void writeStringDirect(String str) {\n        int len = str.length();\n        ensureCapacity(len + 2);\n\n        buf[pos++] = '"';
+            externalSb.append('"');
+            return;
+        }
+
+        writeStringDirect(str);
+    }
+
+    /**
+     * 直接写入字符串到缓冲区（无 externalSb 检查，用于 JSONWriter 直接模式和 ASM 序列化器）
+     *
+     * <p>优化策略：</p>
+     * <ul>
+     *   <li>ASCII 快速路径：纯 ASCII 且无特殊字符时，使用 str.getChars() 批量拷贝</li>
+     *   <li>SIMD 风格字级检查：一次检查 8 个字符是否为 ASCII + 无特殊字符，减少逐字符判断</li>
+     *   <li>无需转义时直接批量写入，比逐字符写入快 3-5 倍</li>
+     * </ul>
+     */
+    public void writeStringDirect(String str) {
+        int len = str.length();
+        ensureCapacity(len + 2);
+
+        buf[pos++] = '"';
 
         // ASCII 快速路径：使用 SIMD 风格字级检查，一次检查 8 个字符
         if (isAsciiSafe(str, len)) {
             // 纯 ASCII 且无特殊字符，直接批量拷贝（System.arraycopy 底层优化）
             str.getChars(0, len, buf, pos);
             pos += len;
-            buf[pos++] = '"';\n            return;\n        }\n\n        // 慢速路径：需要检查每个字符是否需要转义\n        writeStringWithEscape(str);\n    }\n\n    /**\n     * 检查字符串是否为纯 ASCII 且无需 JSON 转义（SIMD 风格字级检查）\n     *\n     * <p>一次检查 8 个字符：只要所有字符 >= ' ' 且 <= 127 且不是 '"' 和 '\\'，
+            buf[pos++] = '"';
+            return;
+        }
+
+        // 慢速路径：需要检查每个字符是否需要转义
+        writeStringWithEscape(str);
+    }
+
+    /**
+     * 检查字符串是否为纯 ASCII 且无需 JSON 转义（SIMD 风格字级检查）
+     *
+     * <p>一次检查 8 个字符：只要所有字符 >= ' ' 且 <= 127 且不是 '"' 和 '\\'，
      * 即为安全字符串，可以批量拷贝。这种字级检查模式与 SIMD 向量化思想一致，
      * 在 JIT 编译后可以利用 CPU 的指令级并行性。</p>
      *
@@ -569,9 +606,102 @@ public final class JSONWriter {
         for (int i = 0; i < len; i++) {
             char c = str.charAt(i);
             switch (c) {
-                case '"': externalSb.append("\\\""); break;\n                case '\\': externalSb.append("\\\\"); break;\n                case '\n': externalSb.append("\\n"); break;\n                case '\r': externalSb.append("\\r"); break;\n                case '\t': externalSb.append("\\t"); break;\n                default:\n                    if (c < ' ') {\n                        externalSb.append("\\u");\n                        externalSb.append(String.format("%04x", (int) c));\n                    } else if (c == '\u2028' || c == '\u2029') {\n                        // 行/段落分隔符：裸置于 <script> 中会导致 JS 语法错误，安全转义\n                        externalSb.append("\\u");\n                        externalSb.append(String.format("%04x", (int) c));\n                    } else if (Character.isHighSurrogate(c)) {\n                        if (i + 1 < len && Character.isLowSurrogate(str.charAt(i + 1))) {\n                            externalSb.append(c);\n                            externalSb.append(str.charAt(i + 1));\n                            i++;\n                        } else {\n                            // 孤立高位代理：替换为 U+FFFD，避免产出非法 JSON\n                            externalSb.append('\uFFFD');\n                        }\n                    } else if (Character.isLowSurrogate(c)) {\n                        // 孤立低位代理：替换为 U+FFFD\n                        externalSb.append('\uFFFD');\n                    } else {\n                        externalSb.append(c);\n                    }\n            }\n        }\n    }\n\n    /**\n     * 写入字符串（带转义）\n     */\n    private void writeStringWithEscape(String str) {\n        int len = str.length();\n        ensureCapacity(len * 6 + 2); // 最坏情况\n\n        for (int i = 0; i < len; i++) {\n            char c = str.charAt(i);\n            switch (c) {\n                case '"':
+                case '"': externalSb.append("\\\""); break;
+                case '\\': externalSb.append("\\\\"); break;
+                case '\n': externalSb.append("\\n"); break;
+                case '\r': externalSb.append("\\r"); break;
+                case '\t': externalSb.append("\\t"); break;
+                default:
+                    if (c < ' ') {
+                        externalSb.append("\\u");
+                        externalSb.append(String.format("%04x", (int) c));
+                    } else if (c == '\u2028' || c == '\u2029') {
+                        // 行/段落分隔符：裸置于 <script> 中会导致 JS 语法错误，安全转义
+                        externalSb.append("\\u");
+                        externalSb.append(String.format("%04x", (int) c));
+                    } else if (Character.isHighSurrogate(c)) {
+                        if (i + 1 < len && Character.isLowSurrogate(str.charAt(i + 1))) {
+                            externalSb.append(c);
+                            externalSb.append(str.charAt(i + 1));
+                            i++;
+                        } else {
+                            // 孤立高位代理：替换为 U+FFFD，避免产出非法 JSON
+                            externalSb.append('\uFFFD');
+                        }
+                    } else if (Character.isLowSurrogate(c)) {
+                        // 孤立低位代理：替换为 U+FFFD
+                        externalSb.append('\uFFFD');
+                    } else {
+                        externalSb.append(c);
+                    }
+            }
+        }
+    }
+
+    /**
+     * 写入字符串（带转义）
+     */
+    private void writeStringWithEscape(String str) {
+        int len = str.length();
+        ensureCapacity(len * 6 + 2); // 最坏情况
+
+        for (int i = 0; i < len; i++) {
+            char c = str.charAt(i);
+            switch (c) {
+                case '"':
                     buf[pos++] = '\\';
-                    buf[pos++] = '"';\n                    break;\n                case '\\':\n                    buf[pos++] = '\\';\n                    buf[pos++] = '\\';\n                    break;\n                case '\n':\n                    buf[pos++] = '\\';\n                    buf[pos++] = 'n';\n                    break;\n                case '\r':\n                    buf[pos++] = '\\';\n                    buf[pos++] = 'r';\n                    break;\n                case '\t':\n                    buf[pos++] = '\\';\n                    buf[pos++] = 't';\n                    break;\n                case '\b':\n                    buf[pos++] = '\\';\n                    buf[pos++] = 'b';\n                    break;\n                case '\f':\n                    buf[pos++] = '\\';\n                    buf[pos++] = 'f';\n                    break;\n                default:\n                    if (c < ' ') {\n                        writeHex4(c);\n                    } else if (c == '\u2028' || c == '\u2029') {\n                        // 行/段落分隔符：裸置于 <script> 中会导致 JS 语法错误，安全转义\n                        writeHex4(c);\n                    } else if (Character.isHighSurrogate(c)) {\n                        if (i + 1 < len && Character.isLowSurrogate(str.charAt(i + 1))) {\n                            buf[pos++] = c;\n                            buf[pos++] = str.charAt(i + 1);\n                            i++;\n                        } else {\n                            // 孤立高位代理：替换为 U+FFFD，避免产出非法 JSON\n                            buf[pos++] = '\uFFFD';\n                        }\n                    } else if (Character.isLowSurrogate(c)) {\n                        // 孤立低位代理：替换为 U+FFFD\n                        buf[pos++] = '\uFFFD';\n                    } else {\n                        buf[pos++] = c;\n                    }\n                    break;\n            }\n        }\n\n        buf[pos++] = '"';
+                    buf[pos++] = '"';
+                    break;
+                case '\\':
+                    buf[pos++] = '\\';
+                    buf[pos++] = '\\';
+                    break;
+                case '\n':
+                    buf[pos++] = '\\';
+                    buf[pos++] = 'n';
+                    break;
+                case '\r':
+                    buf[pos++] = '\\';
+                    buf[pos++] = 'r';
+                    break;
+                case '\t':
+                    buf[pos++] = '\\';
+                    buf[pos++] = 't';
+                    break;
+                case '\b':
+                    buf[pos++] = '\\';
+                    buf[pos++] = 'b';
+                    break;
+                case '\f':
+                    buf[pos++] = '\\';
+                    buf[pos++] = 'f';
+                    break;
+                default:
+                    if (c < ' ') {
+                        writeHex4(c);
+                    } else if (c == '\u2028' || c == '\u2029') {
+                        // 行/段落分隔符：裸置于 <script> 中会导致 JS 语法错误，安全转义
+                        writeHex4(c);
+                    } else if (Character.isHighSurrogate(c)) {
+                        if (i + 1 < len && Character.isLowSurrogate(str.charAt(i + 1))) {
+                            buf[pos++] = c;
+                            buf[pos++] = str.charAt(i + 1);
+                            i++;
+                        } else {
+                            // 孤立高位代理：替换为 U+FFFD，避免产出非法 JSON
+                            buf[pos++] = '\uFFFD';
+                        }
+                    } else if (Character.isLowSurrogate(c)) {
+                        // 孤立低位代理：替换为 U+FFFD
+                        buf[pos++] = '\uFFFD';
+                    } else {
+                        buf[pos++] = c;
+                    }
+                    break;
+            }
+        }
+
+        buf[pos++] = '"';
     }
 
     /** 十六进制字符表（小写，符合 JSON 规范常见风格）*/
@@ -863,6 +993,259 @@ public final class JSONWriter {
      * @return true 表示该字符需要转义
      */
     private static boolean needsCharEscape(char c) {
-        return c < ' ' || c == '"' || c == '\\'\n            || c == '\u2028' || c == '\u2029'\n            || (c >= '\uD800' && c <= '\uDFFF');\n    }\n\n    /**\n     * 写入双精度浮点数到缓冲区（合并 setPosition + writeDouble + getPosition）\n     *\n     * <p>消除 ASM 序列化器中 setPosition 和 getPosition 的额外方法调用开销</p>\n     *\n     * @param value 双精度浮点数值\n     * @param pos 当前写入位置\n     * @return 写入后的新位置\n     */\n    public int writeDoubleToBuf(double value, int pos) {\n        this.pos = pos;\n        writeDouble(value);\n        return this.pos;\n    }\n\n    /**\n     * 写入单精度浮点数到缓冲区（合并 setPosition + writeFloat + getPosition）\n     *\n     * <p>消除 ASM 序列化器中 setPosition 和 getPosition 的额外方法调用开销</p>\n     *\n     * @param value 单精度浮点数值\n     * @param pos 当前写入位置\n     * @return 写入后的新位置\n     */\n    public int writeFloatToBuf(float value, int pos) {\n        this.pos = pos;\n        writeFloat(value);\n        return this.pos;\n    }\n\n    /**\n     * 写入带引号字符串到缓冲区（合并 setPosition + writeString + getPosition）\n     *\n     * <p>消除 ASM 序列化器中 setPosition 和 getPosition 的额外方法调用开销</p>\n     *\n     * @param str 字符串值\n     * @param pos 当前写入位置\n     * @return 写入后的新位置\n     */\n    public int writeStringToBuf(String str, int pos) {\n        this.pos = pos;\n        writeStringDirect(str);\n        return this.pos;\n    }\n\n    /**\n     * 写入集合到缓冲区（合并 setPosition + writeCollection + getPosition）\n     *\n     * @param collection 集合对象\n     * @param pos 当前写入位置\n     * @return 写入后的新位置\n     */\n    public int writeCollectionToBuf(Collection<?> collection, int pos) {\n        this.pos = pos;\n        writeCollection(collection);\n        return this.pos;\n    }\n\n    /**\n     * 写入 Map 到缓冲区（合并 setPosition + writeMap + getPosition）\n     *\n     * @param map Map 对象\n     * @param pos 当前写入位置\n     * @return 写入后的新位置\n     */\n    public int writeMapToBuf(Map<?, ?> map, int pos) {\n        this.pos = pos;\n        writeMap(map);\n        return this.pos;\n    }\n\n    /**\n     * 直接写入集合\n     *\n     * <p>对 List 类型使用索引循环避免 Iterator 对象创建开销。</p>\n     */\n    public void writeCollection(Collection<?> collection) {\n        if (collection == null) {\n            write("null");\n            return;\n        }\n\n        int size = collection.size();\n        if (size > 0) {\n            preAllocate(size * 64);\n        }\n\n        buf[pos++] = '[';\n\n        // 优化：对支持随机访问的 List 使用索引循环，避免 Iterator 对象创建开销\n        // LinkedList 等非 RandomAccess 走 Iterator 路径，避免 O(N²) 退化\n        if (collection instanceof List && (collection instanceof java.util.RandomAccess || size < 100)) {\n            List<?> list = (List<?>) collection;\n            for (int i = 0; i < size; i++) {\n                if (i > 0) {\n                    buf[pos++] = ',';\n                }\n                writeValueInline(list.get(i));\n            }\n        } else {\n            boolean first = true;\n            for (Object item : collection) {\n                if (!first) {\n                    buf[pos++] = ',';\n                }\n                first = false;\n                writeValueInline(item);\n            }\n        }\n        buf[pos++] = ']';\n    }\n\n    /**\n     * 直接写入 Map（优化版本）\n     */\n    public void writeMap(Map<?, ?> map) {\n        if (map == null) {\n            write("null");\n            return;\n        }\n\n        int size = map.size();\n        if (size > 0) {\n            preAllocate(size * 64);\n        }\n\n        buf[pos++] = '{';\n        boolean first = true;\n        for (Map.Entry<?, ?> entry : map.entrySet()) {\n            if (!first) {\n                buf[pos++] = ',';\n            }\n            first = false;\n\n            Object key = entry.getKey();\n            Object value = entry.getValue();\n\n            if (key instanceof String) {\n                writeStringDirectNoCheck((String) key);\n            } else {\n                writeStringDirectNoCheck(String.valueOf(key));\n            }\n            buf[pos++] = ':';\n            writeValueInline(value);\n        }\n        buf[pos++] = '}';\n    }\n\n    /**\n     * 内联写入对象值（不调用 YdszJson.toJson）\n     */\n    private void writeObjectInline(Object obj) {\n        if (obj == null) {\n            write("null");\n            return;\n        }\n\n        if (obj instanceof Collection) {\n            writeCollection((Collection<?>) obj);\n        } else if (obj instanceof Map) {\n            writeMap((Map<?, ?>) obj);\n        } else {\n            write(YdszJson.toJson(obj));\n        }\n    }\n\n    /**\n     * 内联写入值（不调用 YdszJson.toJson）\n     */\n    void writeValueInline(Object value) {\n        if (value == null) {\n            buf[pos] = 'n'; buf[pos + 1] = 'u'; buf[pos + 2] = 'l'; buf[pos + 3] = 'l';\n            pos += 4;\n        } else if (value instanceof String) {\n            writeStringDirectNoCheck((String) value);\n        } else if (value instanceof Character) {\n            // char 序列化为 JSON 字符串（"A" 而非裸字符 A）\n            ensureCapacity(4);\n            buf[pos++] = '"';
+        return c < ' ' || c == '"' || c == '\\'
+            || c == '\u2028' || c == '\u2029'
+            || (c >= '\uD800' && c <= '\uDFFF');
+    }
+
+    /**
+     * 写入双精度浮点数到缓冲区（合并 setPosition + writeDouble + getPosition）
+     *
+     * <p>消除 ASM 序列化器中 setPosition 和 getPosition 的额外方法调用开销</p>
+     *
+     * @param value 双精度浮点数值
+     * @param pos 当前写入位置
+     * @return 写入后的新位置
+     */
+    public int writeDoubleToBuf(double value, int pos) {
+        this.pos = pos;
+        writeDouble(value);
+        return this.pos;
+    }
+
+    /**
+     * 写入单精度浮点数到缓冲区（合并 setPosition + writeFloat + getPosition）
+     *
+     * <p>消除 ASM 序列化器中 setPosition 和 getPosition 的额外方法调用开销</p>
+     *
+     * @param value 单精度浮点数值
+     * @param pos 当前写入位置
+     * @return 写入后的新位置
+     */
+    public int writeFloatToBuf(float value, int pos) {
+        this.pos = pos;
+        writeFloat(value);
+        return this.pos;
+    }
+
+    /**
+     * 写入带引号字符串到缓冲区（合并 setPosition + writeString + getPosition）
+     *
+     * <p>消除 ASM 序列化器中 setPosition 和 getPosition 的额外方法调用开销</p>
+     *
+     * @param str 字符串值
+     * @param pos 当前写入位置
+     * @return 写入后的新位置
+     */
+    public int writeStringToBuf(String str, int pos) {
+        this.pos = pos;
+        writeStringDirect(str);
+        return this.pos;
+    }
+
+    /**
+     * 写入集合到缓冲区（合并 setPosition + writeCollection + getPosition）
+     *
+     * @param collection 集合对象
+     * @param pos 当前写入位置
+     * @return 写入后的新位置
+     */
+    public int writeCollectionToBuf(Collection<?> collection, int pos) {
+        this.pos = pos;
+        writeCollection(collection);
+        return this.pos;
+    }
+
+    /**
+     * 写入 Map 到缓冲区（合并 setPosition + writeMap + getPosition）
+     *
+     * @param map Map 对象
+     * @param pos 当前写入位置
+     * @return 写入后的新位置
+     */
+    public int writeMapToBuf(Map<?, ?> map, int pos) {
+        this.pos = pos;
+        writeMap(map);
+        return this.pos;
+    }
+
+    /**
+     * 直接写入集合
+     *
+     * <p>对 List 类型使用索引循环避免 Iterator 对象创建开销。</p>
+     */
+    public void writeCollection(Collection<?> collection) {
+        if (collection == null) {
+            write("null");
+            return;
+        }
+
+        int size = collection.size();
+        if (size > 0) {
+            preAllocate(size * 64);
+        }
+
+        buf[pos++] = '[';
+
+        // 优化：对支持随机访问的 List 使用索引循环，避免 Iterator 对象创建开销
+        // LinkedList 等非 RandomAccess 走 Iterator 路径，避免 O(N²) 退化
+        if (collection instanceof List && (collection instanceof java.util.RandomAccess || size < 100)) {
+            List<?> list = (List<?>) collection;
+            for (int i = 0; i < size; i++) {
+                if (i > 0) {
+                    buf[pos++] = ',';
+                }
+                writeValueInline(list.get(i));
+            }
+        } else {
+            boolean first = true;
+            for (Object item : collection) {
+                if (!first) {
+                    buf[pos++] = ',';
+                }
+                first = false;
+                writeValueInline(item);
+            }
+        }
+        buf[pos++] = ']';
+    }
+
+    /**
+     * 直接写入 Map（优化版本）
+     */
+    public void writeMap(Map<?, ?> map) {
+        if (map == null) {
+            write("null");
+            return;
+        }
+
+        int size = map.size();
+        if (size > 0) {
+            preAllocate(size * 64);
+        }
+
+        buf[pos++] = '{';
+        boolean first = true;
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
+            if (!first) {
+                buf[pos++] = ',';
+            }
+            first = false;
+
+            Object key = entry.getKey();
+            Object value = entry.getValue();
+
+            if (key instanceof String) {
+                writeStringDirectNoCheck((String) key);
+            } else {
+                writeStringDirectNoCheck(String.valueOf(key));
+            }
+            buf[pos++] = ':';
+            writeValueInline(value);
+        }
+        buf[pos++] = '}';
+    }
+
+    /**
+     * 内联写入对象值（不调用 YdszJson.toJson）
+     */
+    private void writeObjectInline(Object obj) {
+        if (obj == null) {
+            write("null");
+            return;
+        }
+
+        if (obj instanceof Collection) {
+            writeCollection((Collection<?>) obj);
+        } else if (obj instanceof Map) {
+            writeMap((Map<?, ?>) obj);
+        } else {
+            write(YdszJson.toJson(obj));
+        }
+    }
+
+    /**
+     * 内联写入值（不调用 YdszJson.toJson）
+     */
+    void writeValueInline(Object value) {
+        if (value == null) {
+            buf[pos] = 'n'; buf[pos + 1] = 'u'; buf[pos + 2] = 'l'; buf[pos + 3] = 'l';
+            pos += 4;
+        } else if (value instanceof String) {
+            writeStringDirectNoCheck((String) value);
+        } else if (value instanceof Character) {
+            // char 序列化为 JSON 字符串（"A" 而非裸字符 A）
+            ensureCapacity(4);
+            buf[pos++] = '"';
             buf[pos++] = (Character) value;
-            buf[pos++] = '"';\n        } else if (value instanceof BigDecimal) {\n            writeBigDecimal((BigDecimal) value);\n        } else if (value instanceof BigInteger) {\n            writeBigIntegerInline((BigInteger) value);\n        } else if (value instanceof Number) {\n            writeNumberInline((Number) value);\n        } else if (value instanceof Boolean) {\n            if ((Boolean) value) {\n                buf[pos] = 't'; buf[pos + 1] = 'r'; buf[pos + 2] = 'u'; buf[pos + 3] = 'e';\n                pos += 4;\n            } else {\n                buf[pos] = 'f'; buf[pos + 1] = 'a'; buf[pos + 2] = 'l'; buf[pos + 3] = 's'; buf[pos + 4] = 'e';\n                pos += 5;\n            }\n        } else if (value instanceof Collection) {\n            writeCollection((Collection<?>) value);\n        } else if (value instanceof Map) {\n            writeMap((Map<?, ?>) value);\n        } else if (value instanceof Enum) {\n            writeStringDirectNoCheck(((Enum<?>) value).name());\n        } else {\n            writeObjectInline(value);\n        }\n    }\n\n    /**\n     * 快速写入 BigInteger（避免 toString() 分配）。\n     *\n     * <p>优化：对于能放入 long 范围内的 BigInteger，直接使用 writeLong 写入。</p>\n     */\n    private void writeBigIntegerInline(BigInteger value) {\n        if (value.bitLength() <= 63) {\n            writeLong(value.longValue());\n        } else {\n            // 超大整数回退 toString()\n            write(value.toString());\n        }\n    }\n\n    /**\n     * 快速写入 Number（针对非标准 Number 类型的优化分发）。\n     *\n     * <p>优化：对于 AtomicLong/AtomicInteger/LongAdder/DoubleAdder 等原子类型，\n     * 直接拆箱原始类型写入，避免 toString() 分配。</p>\n     */\n    private void writeNumberInline(Number value) {\n        if (value instanceof Long || value instanceof Integer || value instanceof Short || value instanceof Byte) {\n            writeLong(value.longValue());\n        } else if (value instanceof Double || value instanceof Float) {\n            double d = value.doubleValue();\n            if (Double.isNaN(d) || Double.isInfinite(d)) {\n                write("null");\n            } else {\n                writeDouble(d);\n            }\n        } else if (value instanceof java.util.concurrent.atomic.LongAdder) {\n            writeLong(((java.util.concurrent.atomic.LongAdder) value).sum());\n        } else if (value instanceof java.util.concurrent.atomic.DoubleAdder) {\n            double d = ((java.util.concurrent.atomic.DoubleAdder) value).sum();\n            if (Double.isNaN(d) || Double.isInfinite(d)) {\n                write("null");\n            } else {\n                writeDouble(d);\n            }\n        } else {\n            // 其他未知 Number 子类回退 toString()\n            write(value.toString());\n        }\n    }\n}\n
+            buf[pos++] = '"';
+        } else if (value instanceof BigDecimal) {
+            writeBigDecimal((BigDecimal) value);
+        } else if (value instanceof BigInteger) {
+            writeBigIntegerInline((BigInteger) value);
+        } else if (value instanceof Number) {
+            writeNumberInline((Number) value);
+        } else if (value instanceof Boolean) {
+            if ((Boolean) value) {
+                buf[pos] = 't'; buf[pos + 1] = 'r'; buf[pos + 2] = 'u'; buf[pos + 3] = 'e';
+                pos += 4;
+            } else {
+                buf[pos] = 'f'; buf[pos + 1] = 'a'; buf[pos + 2] = 'l'; buf[pos + 3] = 's'; buf[pos + 4] = 'e';
+                pos += 5;
+            }
+        } else if (value instanceof Collection) {
+            writeCollection((Collection<?>) value);
+        } else if (value instanceof Map) {
+            writeMap((Map<?, ?>) value);
+        } else if (value instanceof Enum) {
+            writeStringDirectNoCheck(((Enum<?>) value).name());
+        } else {
+            writeObjectInline(value);
+        }
+    }
+
+    /**
+     * 快速写入 BigInteger（避免 toString() 分配）。
+     *
+     * <p>优化：对于能放入 long 范围内的 BigInteger，直接使用 writeLong 写入。</p>
+     */
+    private void writeBigIntegerInline(BigInteger value) {
+        if (value.bitLength() <= 63) {
+            writeLong(value.longValue());
+        } else {
+            // 超大整数回退 toString()
+            write(value.toString());
+        }
+    }
+
+    /**
+     * 快速写入 Number（针对非标准 Number 类型的优化分发）。
+     *
+     * <p>优化：对于 AtomicLong/AtomicInteger/LongAdder/DoubleAdder 等原子类型，
+     * 直接拆箱原始类型写入，避免 toString() 分配。</p>
+     */
+    private void writeNumberInline(Number value) {
+        if (value instanceof Long || value instanceof Integer || value instanceof Short || value instanceof Byte) {
+            writeLong(value.longValue());
+        } else if (value instanceof Double || value instanceof Float) {
+            double d = value.doubleValue();
+            if (Double.isNaN(d) || Double.isInfinite(d)) {
+                write("null");
+            } else {
+                writeDouble(d);
+            }
+        } else if (value instanceof java.util.concurrent.atomic.LongAdder) {
+            writeLong(((java.util.concurrent.atomic.LongAdder) value).sum());
+        } else if (value instanceof java.util.concurrent.atomic.DoubleAdder) {
+            double d = ((java.util.concurrent.atomic.DoubleAdder) value).sum();
+            if (Double.isNaN(d) || Double.isInfinite(d)) {
+                write("null");
+            } else {
+                writeDouble(d);
+            }
+        } else {
+            // 其他未知 Number 子类回退 toString()
+            write(value.toString());
+        }
+    }
+}

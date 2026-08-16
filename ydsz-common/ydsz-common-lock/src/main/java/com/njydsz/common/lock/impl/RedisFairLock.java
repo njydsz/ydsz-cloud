@@ -303,6 +303,13 @@ public class RedisFairLock extends AbstractRedisDistributedLock {
     }
 
     @Override
+    protected boolean isFullyReleased(String lockKey, String lockValue) {
+        // 公平锁可重入：释放脚本仅在重入计数归零时才删除锁键。
+        // 键已不存在 = 完全释放；键仍存在 = 仍有重入计数（锁仍被当前线程持有）。
+        return !doIsLocked(lockKey);
+    }
+
+    @Override
     protected boolean doIsLocked(String lockKey) {
         try {
             return Boolean.TRUE.equals(stringRedisTemplate.hasKey(lockKey));

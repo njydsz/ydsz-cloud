@@ -263,7 +263,62 @@ public final class JsonParserUtil {
         char c = chars[pos];
 
         switch (c) {
-            case '"':\n                return parseStringFastWithPos(chars, pos, endPos);\n            case '{':\n                return parseObjectRecursiveWithPos(chars, pos, endPos, depth + 1);\n            case '[':\n                return parseArrayRecursiveWithPos(chars, pos, endPos, depth + 1);\n            case 't':\n                if (pos + 3 < chars.length && chars[pos + 1] == 'r'\n                        && chars[pos + 2] == 'u' && chars[pos + 3] == 'e') {\n                    endPos[0] = pos + 4;\n                    return Boolean.TRUE;\n                }\n                throw new JsonDeserializationException("Unexpected token starting with 't' at position " + pos, pos);\n            case 'f':\n                if (pos + 4 < chars.length && chars[pos + 1] == 'a'\n                        && chars[pos + 2] == 'l' && chars[pos + 3] == 's'\n                        && chars[pos + 4] == 'e') {\n                    endPos[0] = pos + 5;\n                    return Boolean.FALSE;\n                }\n                throw new JsonDeserializationException("Unexpected token starting with 'f' at position " + pos, pos);\n            case 'n':\n                if (pos + 3 < chars.length && chars[pos + 1] == 'u'\n                        && chars[pos + 2] == 'l' && chars[pos + 3] == 'l') {\n                    endPos[0] = pos + 4;\n                    return null;\n                }\n                throw new JsonDeserializationException("Unexpected token starting with 'n' at position " + pos, pos);\n            case '-':\n            case '0': case '1': case '2': case '3': case '4':\n            case '5': case '6': case '7': case '8': case '9':\n                return parseNumberFastWithPos(chars, pos, endPos);\n            default:\n                throw new JsonDeserializationException("Unexpected character at position " + pos + ": " + c, pos);\n        }\n    }\n\n    /** 兼容旧调用方（委托给 withPos 版本） */\n    private static final Object parseValue(char[] chars, int pos) {\n        int[] endPos = new int[1];\n        return parseValueWithPos(chars, pos, endPos, 1);\n    }\n\n    /**\n     * 快速解析字符串（返回值和结束位置）\n     */\n    private static String parseStringFastWithPos(char[] chars, int pos, int[] endPos) {\n        int len = chars.length;\n        pos++; // 跳过起始引号\n\n        int start = pos;\n        boolean hasEscape = false;\n\n        while (pos < len) {\n            char c = chars[pos];\n            if (c == '"') {
+            case '"':
+                return parseStringFastWithPos(chars, pos, endPos);
+            case '{':
+                return parseObjectRecursiveWithPos(chars, pos, endPos, depth + 1);
+            case '[':
+                return parseArrayRecursiveWithPos(chars, pos, endPos, depth + 1);
+            case 't':
+                if (pos + 3 < chars.length && chars[pos + 1] == 'r'
+                        && chars[pos + 2] == 'u' && chars[pos + 3] == 'e') {
+                    endPos[0] = pos + 4;
+                    return Boolean.TRUE;
+                }
+                throw new JsonDeserializationException("Unexpected token starting with 't' at position " + pos, pos);
+            case 'f':
+                if (pos + 4 < chars.length && chars[pos + 1] == 'a'
+                        && chars[pos + 2] == 'l' && chars[pos + 3] == 's'
+                        && chars[pos + 4] == 'e') {
+                    endPos[0] = pos + 5;
+                    return Boolean.FALSE;
+                }
+                throw new JsonDeserializationException("Unexpected token starting with 'f' at position " + pos, pos);
+            case 'n':
+                if (pos + 3 < chars.length && chars[pos + 1] == 'u'
+                        && chars[pos + 2] == 'l' && chars[pos + 3] == 'l') {
+                    endPos[0] = pos + 4;
+                    return null;
+                }
+                throw new JsonDeserializationException("Unexpected token starting with 'n' at position " + pos, pos);
+            case '-':
+            case '0': case '1': case '2': case '3': case '4':
+            case '5': case '6': case '7': case '8': case '9':
+                return parseNumberFastWithPos(chars, pos, endPos);
+            default:
+                throw new JsonDeserializationException("Unexpected character at position " + pos + ": " + c, pos);
+        }
+    }
+
+    /** 兼容旧调用方（委托给 withPos 版本） */
+    private static final Object parseValue(char[] chars, int pos) {
+        int[] endPos = new int[1];
+        return parseValueWithPos(chars, pos, endPos, 1);
+    }
+
+    /**
+     * 快速解析字符串（返回值和结束位置）
+     */
+    private static String parseStringFastWithPos(char[] chars, int pos, int[] endPos) {
+        int len = chars.length;
+        pos++; // 跳过起始引号
+
+        int start = pos;
+        boolean hasEscape = false;
+
+        while (pos < len) {
+            char c = chars[pos];
+            if (c == '"') {
                 endPos[0] = pos + 1; // 结束引号后
                 if (!hasEscape) {
                     return new String(chars, start, pos - start);
@@ -549,7 +604,13 @@ public final class JsonParserUtil {
             }
 
             // 解析字段名
-            if (chars[pos] != '"') {\n                throw new JsonDeserializationException("Expected '\"' at position " + pos, pos);\n            }\n            pos++; // 跳过起始引号\n\n            int fieldStart = pos;\n            while (pos < len && chars[pos] != '"') {
+            if (chars[pos] != '"') {
+                throw new JsonDeserializationException("Expected '\"' at position " + pos, pos);
+            }
+            pos++; // 跳过起始引号
+
+            int fieldStart = pos;
+            while (pos < len && chars[pos] != '"') {
                 if (chars[pos] == '\\') {
                     pos++; // 跳过转义字符
                 }
@@ -590,7 +651,62 @@ public final class JsonParserUtil {
         boolean inString = false;
         for (int i = start; i < len && chars[i] != ']'; i++) {
             char c = chars[i];
-            if (c == '"') {\n                inString = !inString;\n            } else if (!inString && c == ',') {\n                count++;\n            }\n        }\n        return count + 1;\n    }\n\n    /**\n     * 递归解析数组（从 char 数组的指定位置开始）\n     */\n    private static Object parseArrayRecursiveImpl(char[] chars, int start, int depth) {\n        if (depth > resolveMaxParseDepth()) {\n            throw new JsonDeserializationException("JSON nesting depth exceeds limit: " + depth, start);\n        }\n        int len = chars.length;\n        int estimatedSize = estimateArraySize(chars, start + 1);\n        List<Object> result = new ArrayList<>(Math.max(estimatedSize, 4));\n        int pos = start + 1;\n\n        while (pos < len) {\n            // 跳过空白\n            while (pos < len && chars[pos] <= ' ') {\n                pos++;\n            }\n\n            if (pos >= len) {\n                break;\n            }\n\n            // 检查是否结束\n            if (chars[pos] == ']') {\n                break;\n            }\n\n            // 跳过逗号\n            if (chars[pos] == ',') {\n                pos++;\n                continue;\n            }\n\n            // 解析值（返回解析终点，消除 getValueEndFast 二次扫描）\n            int[] endPos = new int[1];\n            Object value = parseValueWithPos(chars, pos, endPos, depth + 1);\n            result.add(value);\n            pos = endPos[0];\n        }\n\n        return result;\n    }\n\n    /**\n     * 检查字符数组片段是否包含转义字符，若包含则解码转义序列，否则直接返回子串。\n     *\n     * <p>快速路径：先扫描是否有 '\' 字符，若无则直接 new String(chars, start, len)。</p>\n     * <p>慢速路径：复用 parseStringWithEscape 逻辑解码转义序列。</p>\n     *\n     * @param chars 字符数组\n     * @param start 起始位置\n     * @param length 长度\n     * @return 解码后的字符串\n     */\n    private static String decodeStringIfNeeded(char[] chars, int start, int length) {\n        for (int i = start; i < start + length; i++) {\n            if (chars[i] == '\\') {\n                return parseStringWithEscape(chars, start, start + length);\n            }\n        }\n        return new String(chars, start, length);\n    }\n\n    /**\n     * 解析字符串\n     */\n    /** package-private */ static String parseString(char[] chars, int pos) {\n        int len = chars.length;\n\n        if (chars[pos] != '"') {
+            if (c == '"') {
+                inString = !inString;
+            } else if (!inString && c == ',') {
+                count++;
+            }
+        }
+        return count + 1;
+    }
+
+    /**
+     * 递归解析数组（从 char 数组的指定位置开始）
+     */
+    private static Object parseArrayRecursiveImpl(char[] chars, int start, int depth) {
+        if (depth > resolveMaxParseDepth()) {
+            throw new JsonDeserializationException("JSON nesting depth exceeds limit: " + depth, start);
+        }
+        int len = chars.length;
+        int estimatedSize = estimateArraySize(chars, start + 1);
+        List<Object> result = new ArrayList<>(Math.max(estimatedSize, 4));
+        int pos = start + 1;
+
+        while (pos < len) {
+            // 跳过空白
+            while (pos < len && chars[pos] <= ' ') {
+                pos++;
+            }
+
+            if (pos >= len) {
+                break;
+            }
+
+            // 检查是否结束
+            if (chars[pos] == ']') {
+                break;
+            }
+
+            // 跳过逗号
+            if (chars[pos] == ',') {
+                pos++;
+                continue;
+            }
+
+            // 解析值（返回解析终点，消除 getValueEndFast 二次扫描）
+            int[] endPos = new int[1];
+            Object value = parseValueWithPos(chars, pos, endPos, depth + 1);
+            result.add(value);
+            pos = endPos[0];
+        }
+
+        return result;
+    }
+
+    /**
+     * 检查字符数组片段是否包含转义字符，若包含则解码转义序列，否则直接返回子串。
+     *
+     * <p>快速路径：先扫描是否有 '\' 字符，若无则直接 new String(chars, start, len)。</p>\n     * <p>慢速路径：复用 parseStringWithEscape 逻辑解码转义序列。</p>\n     *\n     * @param chars 字符数组\n     * @param start 起始位置\n     * @param length 长度\n     * @return 解码后的字符串\n     */\n    private static String decodeStringIfNeeded(char[] chars, int start, int length) {\n        for (int i = start; i < start + length; i++) {\n            if (chars[i] == '\\') {\n                return parseStringWithEscape(chars, start, start + length);\n            }\n        }\n        return new String(chars, start, length);\n    }\n\n    /**\n     * 解析字符串\n     */\n    /** package-private */ static String parseString(char[] chars, int pos) {\n        int len = chars.length;\n\n        if (chars[pos] != '"') {
             throw new JsonDeserializationException("Expected '\"' at position " + pos, pos);
         }
         pos++; // 跳过起始引号
@@ -599,7 +715,8 @@ public final class JsonParserUtil {
 
         while (pos < len) {
             char c = chars[pos];
-            if (c == '"') {\n                // 结束引号\n                return sb.toString();\n            } else if (c == '\\') {\n                // 转义字符\n                pos++;\n                if (pos >= len) {\n                    throw new JsonDeserializationException("Unexpected end of string", pos);\n                }\n                char escaped = chars[pos];\n                switch (escaped) {\n                    case '"': sb.append('"'); break;\n                    case '\\': sb.append('\\'); break;\n                    case '/': sb.append('/'); break;\n                    case 'b': sb.append('\b'); break;\n                    case 'f': sb.append('\f'); break;\n                    case 'n': sb.append('\n'); break;\n                    case 'r': sb.append('\r'); break;\n                    case 't': sb.append('\t'); break;\n                    case 'u':\n                        // Unicode 转义\n                        if (pos + 4 >= len) {\n                            throw new JsonDeserializationException("Invalid unicode escape at position " + pos, pos);\n                        }\n                        String hex = new String(chars, pos + 1, 4);\n                        sb.append((char) Integer.parseInt(hex, 16));\n                        pos += 4;\n                        break;\n                    default:\n                        sb.append(escaped);\n                }\n            } else {\n                sb.append(c);\n            }\n            pos++;\n        }\n\n        throw new JsonDeserializationException("Unterminated string", len - 1);\n    }\n\n    /**\n     * 解析数字\n     */\n    /** package-private */ static Number parseNumber(char[] chars, int pos) {\n        int len = chars.length;\n        int start = pos;\n\n        // 跳过负号\n        if (pos < len && chars[pos] == '-') {\n            pos++;\n        }\n\n        // 解析整数部分\n        while (pos < len && chars[pos] >= '0' && chars[pos] <= '9') {\n            pos++;\n        }\n\n        // 检查小数\n        boolean isDecimal = false;\n        if (pos < len && chars[pos] == '.') {\n            isDecimal = true;\n            pos++;\n            while (pos < len && chars[pos] >= '0' && chars[pos] <= '9') {\n                pos++;\n            }\n        }\n\n        // 检查指数\n        if (pos < len && (chars[pos] == 'e' || chars[pos] == 'E')) {\n            isDecimal = true;\n            pos++;\n            if (pos < len && (chars[pos] == '+' || chars[pos] == '-')) {\n                pos++;\n            }\n            while (pos < len && chars[pos] >= '0' && chars[pos] <= '9') {\n                pos++;\n            }\n        }\n\n        String numStr = new String(chars, start, pos - start);\n        if (isDecimal) {\n            return Double.parseDouble(numStr);\n        } else {\n            try {\n                return Long.parseLong(numStr);\n            } catch (NumberFormatException e) {\n                return Double.parseDouble(numStr);\n            }\n        }\n    }\n\n    /**\n     * 获取值的结束位置（快速版，消除简单值的二次扫描）\n     *\n     * <p>对于 true/false/null 值，直接根据值类型计算结束位置，\n     * 无需调用 getValueEndPosition 重新扫描。</p>\n     *\n     * @param chars JSON 字符数组\n     * @param valueStart 值的起始位置\n     * @param value 已解析的值\n     * @param len 字符数组长度\n     * @return 值的结束位置\n     */\n    private static int getValueEndFast(char[] chars, int valueStart, Object value, int len) {\n        // 快速路径：布尔值和 null 直接计算长度\n        if (value == Boolean.TRUE) {\n            return valueStart + 4; // "true"\n        }\n        if (value == Boolean.FALSE) {\n            return valueStart + 5; // "false"\n        }\n        if (value == null && valueStart + 4 <= len && chars[valueStart] == 'n') {\n            return valueStart + 4; // "null"\n        }\n        // 复杂值（String/Number/Map/List）：需要扫描确定结束位置\n        return getValueEndPosition(chars, valueStart);\n    }\n\n    /**\n     * 获取值的结束位置\n     */\n    private static int getValueEndPosition(char[] chars, int pos) {\n        int len = chars.length;\n\n        // 跳过空白\n        while (pos < len && chars[pos] <= ' ') {\n            pos++;\n        }\n\n        if (pos >= len) {\n            return pos;\n        }\n\n        char c = chars[pos];\n\n        if (c == '"') {
+            if (c == '"') {\n                // 结束引号\n                return sb.toString();\n            } else if (c == '\\') {\n                // 转义字符\n                pos++;\n                if (pos >= len) {\n                    throw new JsonDeserializationException("Unexpected end of string", pos);\n                }\n                char escaped = chars[pos];\n                switch (escaped) {\n                    case '"': sb.append('"'); break;\n                    case '\\': sb.append('\\'); break;\n                    case '/': sb.append('/'); break;\n                    case 'b': sb.append('\b'); break;\n                    case 'f': sb.append('\f'); break;\n                    case 'n': sb.append('
+'); break;\n                    case 'r': sb.append('\r'); break;\n                    case 't': sb.append('\t'); break;\n                    case 'u':\n                        // Unicode 转义\n                        if (pos + 4 >= len) {\n                            throw new JsonDeserializationException("Invalid unicode escape at position " + pos, pos);\n                        }\n                        String hex = new String(chars, pos + 1, 4);\n                        sb.append((char) Integer.parseInt(hex, 16));\n                        pos += 4;\n                        break;\n                    default:\n                        sb.append(escaped);\n                }\n            } else {\n                sb.append(c);\n            }\n            pos++;\n        }\n\n        throw new JsonDeserializationException("Unterminated string", len - 1);\n    }\n\n    /**\n     * 解析数字\n     */\n    /** package-private */ static Number parseNumber(char[] chars, int pos) {\n        int len = chars.length;\n        int start = pos;\n\n        // 跳过负号\n        if (pos < len && chars[pos] == '-') {\n            pos++;\n        }\n\n        // 解析整数部分\n        while (pos < len && chars[pos] >= '0' && chars[pos] <= '9') {\n            pos++;\n        }\n\n        // 检查小数\n        boolean isDecimal = false;\n        if (pos < len && chars[pos] == '.') {\n            isDecimal = true;\n            pos++;\n            while (pos < len && chars[pos] >= '0' && chars[pos] <= '9') {\n                pos++;\n            }\n        }\n\n        // 检查指数\n        if (pos < len && (chars[pos] == 'e' || chars[pos] == 'E')) {\n            isDecimal = true;\n            pos++;\n            if (pos < len && (chars[pos] == '+' || chars[pos] == '-')) {\n                pos++;\n            }\n            while (pos < len && chars[pos] >= '0' && chars[pos] <= '9') {\n                pos++;\n            }\n        }\n\n        String numStr = new String(chars, start, pos - start);\n        if (isDecimal) {\n            return Double.parseDouble(numStr);\n        } else {\n            try {\n                return Long.parseLong(numStr);\n            } catch (NumberFormatException e) {\n                return Double.parseDouble(numStr);\n            }\n        }\n    }\n\n    /**\n     * 获取值的结束位置（快速版，消除简单值的二次扫描）\n     *\n     * <p>对于 true/false/null 值，直接根据值类型计算结束位置，\n     * 无需调用 getValueEndPosition 重新扫描。</p>\n     *\n     * @param chars JSON 字符数组\n     * @param valueStart 值的起始位置\n     * @param value 已解析的值\n     * @param len 字符数组长度\n     * @return 值的结束位置\n     */\n    private static int getValueEndFast(char[] chars, int valueStart, Object value, int len) {\n        // 快速路径：布尔值和 null 直接计算长度\n        if (value == Boolean.TRUE) {\n            return valueStart + 4; // "true"\n        }\n        if (value == Boolean.FALSE) {\n            return valueStart + 5; // "false"\n        }\n        if (value == null && valueStart + 4 <= len && chars[valueStart] == 'n') {\n            return valueStart + 4; // "null"\n        }\n        // 复杂值（String/Number/Map/List）：需要扫描确定结束位置\n        return getValueEndPosition(chars, valueStart);\n    }\n\n    /**\n     * 获取值的结束位置\n     */\n    private static int getValueEndPosition(char[] chars, int pos) {\n        int len = chars.length;\n\n        // 跳过空白\n        while (pos < len && chars[pos] <= ' ') {\n            pos++;\n        }\n\n        if (pos >= len) {\n            return pos;\n        }\n\n        char c = chars[pos];\n\n        if (c == '"') {
             // 字符串：找到结束引号
             pos++;
             while (pos < len) {
@@ -718,7 +835,14 @@ public final class JsonParserUtil {
             valueStart++;
         }
 
-        if (valueStart >= json.length() || json.charAt(valueStart) != '"') {\n            return null;\n        }\n        valueStart++; // 跳过起始引号\n\n        int valueEnd = valueStart;\n        boolean hasEscape = false;\n        while (valueEnd < json.length() && json.charAt(valueEnd) != '"') {
+        if (valueStart >= json.length() || json.charAt(valueStart) != '"') {
+            return null;
+        }
+        valueStart++; // 跳过起始引号
+
+        int valueEnd = valueStart;
+        boolean hasEscape = false;
+        while (valueEnd < json.length() && json.charAt(valueEnd) != '"') {
             if (json.charAt(valueEnd) == '\\') {
                 valueEnd++; // 跳过转义字符
                 hasEscape = true;
@@ -779,4 +903,71 @@ public final class JsonParserUtil {
         }
 
         char c = json.charAt(valueStart);
-        if (c == '"') {\n            return parseStringField(json, fieldName);\n        } else if (c == '{') {\n            int end = findEndPosition(json.toCharArray(), valueStart, '{', '}') + 1;\n            return parseObject(json.substring(valueStart, end));\n        } else if (c == '[') {\n            int end = findEndPosition(json.toCharArray(), valueStart, '[', ']') + 1;\n            return parseArray(json.substring(valueStart, end));\n        } else if (json.startsWith("true", valueStart)) {\n            return Boolean.TRUE;\n        } else if (json.startsWith("false", valueStart)) {\n            return Boolean.FALSE;\n        } else if (json.startsWith("null", valueStart)) {\n            return null;\n        } else {\n            // 数值\n            int valueEnd = valueStart;\n            while (valueEnd < json.length()\n                    && json.charAt(valueEnd) != ','\n                    && json.charAt(valueEnd) != '}'\n                    && json.charAt(valueEnd) != ']'\n                    && json.charAt(valueEnd) > ' ') {\n                valueEnd++;\n            }\n            String numStr = json.substring(valueStart, valueEnd);\n            try {\n                if (numStr.contains(".") || numStr.contains("e") || numStr.contains("E")) {\n                    return Double.parseDouble(numStr);\n                }\n                return Long.parseLong(numStr);\n            } catch (NumberFormatException e) {\n                return numStr;\n            }\n        }\n    }\n\n    /**\n     * 解析 JSON 数组（带类型参数，用于 ASM 降级）\n     */\n\n    public static <T> List<T> parseArray(String json, Class<T> clazz) {\n        List<Object> list = parseArray(json);\n        if (list == null) return null;\n        List<T> typedList = new ArrayList<>(list.size());\n        for (Object item : list) {\n            typedList.add(clazz.cast(item));\n        }\n        return typedList;\n    }\n\n    /**\n     * 解析 JSON 对象（带类型参数，用于 ASM 降级）\n     */\n\n    public static <T> T parseObject(String json, Class<T> clazz) {\n        // Map 及其子类直接 cast 返回\n        if (Map.class.isAssignableFrom(clazz)) {\n            Map<String, Object> map = parseObject(json);\n            if (map == null) return null;\n            return clazz.cast(map);\n        }\n        // 非 Map 类型：解析为 Map 后委托 YdszJson 反序列化为目标 Bean\n        Map<String, Object> map = parseObject(json);\n        if (map == null) return null;\n        return YdszJson.fromJson(\n            YdszJson.toJson(map), clazz);\n    }\n}\n
+        if (c == '"') {
+            return parseStringField(json, fieldName);
+        } else if (c == '{') {
+            int end = findEndPosition(json.toCharArray(), valueStart, '{', '}') + 1;
+            return parseObject(json.substring(valueStart, end));
+        } else if (c == '[') {
+            int end = findEndPosition(json.toCharArray(), valueStart, '[', ']') + 1;
+            return parseArray(json.substring(valueStart, end));
+        } else if (json.startsWith("true", valueStart)) {
+            return Boolean.TRUE;
+        } else if (json.startsWith("false", valueStart)) {
+            return Boolean.FALSE;
+        } else if (json.startsWith("null", valueStart)) {
+            return null;
+        } else {
+            // 数值
+            int valueEnd = valueStart;
+            while (valueEnd < json.length()
+                    && json.charAt(valueEnd) != ','
+                    && json.charAt(valueEnd) != '}'
+                    && json.charAt(valueEnd) != ']'
+                    && json.charAt(valueEnd) > ' ') {
+                valueEnd++;
+            }
+            String numStr = json.substring(valueStart, valueEnd);
+            try {
+                if (numStr.contains(".") || numStr.contains("e") || numStr.contains("E")) {
+                    return Double.parseDouble(numStr);
+                }
+                return Long.parseLong(numStr);
+            } catch (NumberFormatException e) {
+                return numStr;
+            }
+        }
+    }
+
+    /**
+     * 解析 JSON 数组（带类型参数，用于 ASM 降级）
+     */
+
+    public static <T> List<T> parseArray(String json, Class<T> clazz) {
+        List<Object> list = parseArray(json);
+        if (list == null) return null;
+        List<T> typedList = new ArrayList<>(list.size());
+        for (Object item : list) {
+            typedList.add(clazz.cast(item));
+        }
+        return typedList;
+    }
+
+    /**
+     * 解析 JSON 对象（带类型参数，用于 ASM 降级）
+     */
+
+    public static <T> T parseObject(String json, Class<T> clazz) {
+        // Map 及其子类直接 cast 返回
+        if (Map.class.isAssignableFrom(clazz)) {
+            Map<String, Object> map = parseObject(json);
+            if (map == null) return null;
+            return clazz.cast(map);
+        }
+        // 非 Map 类型：解析为 Map 后委托 YdszJson 反序列化为目标 Bean
+        Map<String, Object> map = parseObject(json);
+        if (map == null) return null;
+        return YdszJson.fromJson(
+            YdszJson.toJson(map), clazz);
+    }
+}

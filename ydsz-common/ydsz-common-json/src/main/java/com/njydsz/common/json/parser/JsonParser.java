@@ -185,4 +185,313 @@ public class JsonParser implements Closeable {
                 case ':':
                     // 跳过冒号（在字段名之后），读取值
                     return nextToken();
-                case '"':\n                    // 可能是字符串值或字段名\n                    reader.back(); // 回退让 readString 正常工作\n                    String value = reader.readString();\n                    // 判断是字段名还是值的依据：下一个非空白字符\n                    reader.skipWhitespace();\n                    if (!reader.isEnd() && reader.peek() == ':') {\n                        currentName = value;\n                        currentToken = JsonToken.FIELD_NAME;\n                    } else {\n                        textValue = value;\n                        currentToken = JsonToken.VALUE_STRING;\n                    }\n                    break;\n                case 't': // true\n                    if (reader.nextChar() == 'r' && reader.nextChar() == 'u' && reader.nextChar() == 'e') {\n                        currentToken = JsonToken.VALUE_TRUE;\n                    } else {\n                        throw new JsonException("Expected 'true'");\n                    }\n                    break;\n                case 'f': // false\n                    if (reader.nextChar() == 'a' && reader.nextChar() == 'l' && reader.nextChar() == 's' && reader.nextChar() == 'e') {\n                        currentToken = JsonToken.VALUE_FALSE;\n                    } else {\n                        throw new JsonException("Expected 'false'");\n                    }\n                    break;\n                case 'n': // null\n                    if (reader.nextChar() == 'u' && reader.nextChar() == 'l' && reader.nextChar() == 'l') {\n                        currentToken = JsonToken.VALUE_NULL;\n                    } else {\n                        throw new JsonException("Expected 'null'");\n                    }\n                    break;\n                default:\n                    if (c == '-' || (c >= '0' && c <= '9')) {\n                        reader.back();\n                        parseNumber();\n                    } else {\n                        throw new JsonException("Unexpected character: '" + c + "' at position " + reader.getPosition());\n                    }\n            }\n            return currentToken;\n        } catch (JsonException e) {\n            throw e;\n        } catch (Exception e) {\n            throw new JsonException("Parse error at position " + reader.getPosition() + ": " + e.getMessage(), e);\n        }\n    }\n\n    /**\n     * 解析数值（整数或浮点）。\n     */\n    private void parseNumber() {\n        StringBuilder sb = new StringBuilder();\n        boolean hasDot = false;\n        boolean hasExp = false;\n\n        // 负号\n        char c = reader.nextChar();\n        sb.append(c);\n\n        while (!reader.isEnd()) {\n            c = reader.nextChar();\n            if (c >= '0' && c <= '9') {\n                sb.append(c);\n            } else if (c == '.' && !hasDot && !hasExp) {\n                hasDot = true;\n                sb.append(c);\n            } else if ((c == 'e' || c == 'E') && !hasExp) {\n                hasExp = true;\n                sb.append(c);\n                // 指数符号\n                if (!reader.isEnd()) {\n                    char next = reader.peek();\n                    if (next == '+' || next == '-') {\n                        sb.append(reader.nextChar());\n                    }\n                }\n            } else {\n                // 数值结束\n                reader.back();\n                break;\n            }\n        }\n\n        String numStr = sb.toString();\n        textValue = numStr;\n        currentToken = (hasDot || hasExp) ? JsonToken.VALUE_NUMBER_FLOAT : JsonToken.VALUE_NUMBER_INT;\n    }\n\n    /**\n     * 获取当前 token。\n     *\n     * @return 当前 token，如果尚未调用 nextToken 则返回 NOT_AVAILABLE\n     */\n    public JsonToken currentToken() {\n        return currentToken;\n    }\n\n    /**\n     * 获取当前字段名（仅当 token 为 FIELD_NAME 时有效）。\n     *\n     * @return 当前字段名\n     */\n    public String getCurrentName() {\n        return currentName;\n    }\n\n    /**\n     * 获取当前位置（字符偏移）。\n     *\n     * @return 当前解析位置\n     */\n    public int getCurrentLocation() {\n        return reader.getPosition();\n    }\n\n    // ==================== Value Reading ====================\n\n    /**\n     * 获取当前 token 的文本表示。\n     *\n     * @return 文本值（字符串值去掉引号、数值的字符串形式、true/false/null）\n     */\n    public String getText() {\n        if (currentToken == JsonToken.FIELD_NAME) {\n            return currentName;\n        }\n        return textValue;\n    }\n\n    /**\n     * 获取字符串值（仅对 VALUE_STRING 有效）。\n     *\n     * @return 解码后的字符串值\n     */\n    public String getTextValue() {\n        return textValue;\n    }\n\n    /**\n     * 获取字符串值（适用任何 token，对数值做toString转换）。\n     *\n     * @return 字符串表示\n     */\n    public String getValueAsString() {\n        if (currentToken == JsonToken.VALUE_STRING || currentToken == JsonToken.FIELD_NAME) {\n            return textValue;\n        }\n        if (currentToken == JsonToken.VALUE_NULL || currentToken == null) {\n            return null;\n        }\n        if (currentToken == JsonToken.VALUE_TRUE) return "true";\n        if (currentToken == JsonToken.VALUE_FALSE) return "false";\n        return textValue != null ? textValue : currentToken.name();\n    }\n\n    /**\n     * 获取当前整数值。\n     *\n     * @return int 值\n     * @throws NumberFormatException 如果值无法转为 int\n     */\n    public int getIntValue() {\n        if (textValue != null) {\n            return Integer.parseInt(textValue);\n        }\n        if (currentToken == JsonToken.VALUE_TRUE) return 1;\n        if (currentToken == JsonToken.VALUE_FALSE) return 0;\n        throw new IllegalStateException("Not a number token: " + currentToken);\n    }\n\n    /**\n     * 获取当前长整数值。\n     *\n     * @return long 值\n     */\n    public long getLongValue() {\n        if (textValue != null) {\n            return Long.parseLong(textValue);\n        }\n        if (currentToken == JsonToken.VALUE_TRUE) return 1L;\n        if (currentToken == JsonToken.VALUE_FALSE) return 0L;\n        throw new IllegalStateException("Not a number token: " + currentToken);\n    }\n\n    /**\n     * 获取当前 double 值。\n     *\n     * @return double 值\n     */\n    public double getDoubleValue() {\n        if (textValue != null) {\n            return Double.parseDouble(textValue);\n        }\n        throw new IllegalStateException("Not a number token: " + currentToken);\n    }\n\n    /**\n     * 获取当前 BigDecimal 值。\n     *\n     * @return BigDecimal 值\n     */\n    public BigDecimal getDecimalValue() {\n        if (textValue != null) {\n            return new BigDecimal(textValue);\n        }\n        throw new IllegalStateException("Not a number token: " + currentToken);\n    }\n\n    /**\n     * 获取当前 BigInteger 值。\n     *\n     * @return BigInteger 值\n     */\n    public BigInteger getBigIntegerValue() {\n        if (textValue != null) {\n            return new BigInteger(textValue);\n        }\n        throw new IllegalStateException("Not a number token: " + currentToken);\n    }\n\n    /**\n     * 获取当前布尔值（仅对 VALUE_TRUE / VALUE_FALSE 有效）。\n     *\n     * @return true 或 false\n     */\n    public boolean getBooleanValue() {\n        if (currentToken == JsonToken.VALUE_TRUE) return true;\n        if (currentToken == JsonToken.VALUE_FALSE) return false;\n        throw new IllegalStateException("Not a boolean token: " + currentToken);\n    }\n\n    // ==================== Skip and Tree Reading ====================\n\n    /**\n     * 跳过当前值（不包含当前值本身已经消耗的 token）。\n     *\n     * <p>用于跳过不需要的节点，无论是原子值还是嵌套对象/数组。</p>\n     */\n    public void skipValue() {\n        reader.skipValue();\n        // 读取跳过后，当前 token 已失效，需要重新导航\n        currentToken = JsonToken.NOT_AVAILABLE;\n    }\n\n    /**\n     * 跳过当前对象的剩余部分（必须在 START_OBJECT 之后调用）。\n     *\n     * <p>一次性消费到匹配的 END_OBJECT。</p>\n     */\n    public void skipChildren() {\n        if (currentToken != JsonToken.START_OBJECT && currentToken != JsonToken.START_ARRAY) {\n            // 如果已经是原子值，什么都不做\n            return;\n        }\n        int depth = 1;\n        while (depth > 0 && !reader.isEnd()) {\n            char c = reader.nextChar();\n            if (c == '{' || c == '[') {\n                depth++;\n            } else if (c == '}' || c == ']') {\n                depth--;\n            }\n        }\n        currentToken = JsonToken.NOT_AVAILABLE;\n    }\n\n    /**\n     * 将当前节点（及其所有子节点）解析为 JsonNode 树。\n     *\n     * <p>当前位置应为 START_OBJECT、START_ARRAY 或值 token。\n     *\n     * @return 解析后的 JsonNode\n     */\n    public com.njydsz.common.json.tree.JsonNode readValueAsTree() {\n        try {\n            // 回退一个字符，因为当前 token 已经被读取但未消费 value\n            reader.back();\n            String rawValue = reader.readRawValue();\n            return com.njydsz.common.json.YdszJson.readTree(rawValue);\n        } catch (Exception e) {\n            throw new JsonException("Failed to read tree at position " + reader.getPosition(), e);\n        }\n    }\n\n    // ==================== Lifecycle ====================\n\n    /**\n     * 关闭解析器并释放资源。\n     */\n    @Override\n    public void close() throws IOException {\n        closed = true;\n        currentToken = null;\n        currentName = null;\n        textValue = null;\n    }\n\n    /**\n     * 检查解析器是否已关闭。\n     *\n     * @return true 如果已关闭\n     */\n    public boolean isClosed() {\n        return closed;\n    }\n}\n
+                case '"':
+                    // 可能是字符串值或字段名
+                    reader.back(); // 回退让 readString 正常工作
+                    String value = reader.readString();
+                    // 判断是字段名还是值的依据：下一个非空白字符
+                    reader.skipWhitespace();
+                    if (!reader.isEnd() && reader.peek() == ':') {
+                        currentName = value;
+                        currentToken = JsonToken.FIELD_NAME;
+                    } else {
+                        textValue = value;
+                        currentToken = JsonToken.VALUE_STRING;
+                    }
+                    break;
+                case 't': // true
+                    if (reader.nextChar() == 'r' && reader.nextChar() == 'u' && reader.nextChar() == 'e') {
+                        currentToken = JsonToken.VALUE_TRUE;
+                    } else {
+                        throw new JsonException("Expected 'true'");
+                    }
+                    break;
+                case 'f': // false
+                    if (reader.nextChar() == 'a' && reader.nextChar() == 'l' && reader.nextChar() == 's' && reader.nextChar() == 'e') {
+                        currentToken = JsonToken.VALUE_FALSE;
+                    } else {
+                        throw new JsonException("Expected 'false'");
+                    }
+                    break;
+                case 'n': // null
+                    if (reader.nextChar() == 'u' && reader.nextChar() == 'l' && reader.nextChar() == 'l') {
+                        currentToken = JsonToken.VALUE_NULL;
+                    } else {
+                        throw new JsonException("Expected 'null'");
+                    }
+                    break;
+                default:
+                    if (c == '-' || (c >= '0' && c <= '9')) {
+                        reader.back();
+                        parseNumber();
+                    } else {
+                        throw new JsonException("Unexpected character: '" + c + "' at position " + reader.getPosition());
+                    }
+            }
+            return currentToken;
+        } catch (JsonException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new JsonException("Parse error at position " + reader.getPosition() + ": " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 解析数值（整数或浮点）。
+     */
+    private void parseNumber() {
+        StringBuilder sb = new StringBuilder();
+        boolean hasDot = false;
+        boolean hasExp = false;
+
+        // 负号
+        char c = reader.nextChar();
+        sb.append(c);
+
+        while (!reader.isEnd()) {
+            c = reader.nextChar();
+            if (c >= '0' && c <= '9') {
+                sb.append(c);
+            } else if (c == '.' && !hasDot && !hasExp) {
+                hasDot = true;
+                sb.append(c);
+            } else if ((c == 'e' || c == 'E') && !hasExp) {
+                hasExp = true;
+                sb.append(c);
+                // 指数符号
+                if (!reader.isEnd()) {
+                    char next = reader.peek();
+                    if (next == '+' || next == '-') {
+                        sb.append(reader.nextChar());
+                    }
+                }
+            } else {
+                // 数值结束
+                reader.back();
+                break;
+            }
+        }
+
+        String numStr = sb.toString();
+        textValue = numStr;
+        currentToken = (hasDot || hasExp) ? JsonToken.VALUE_NUMBER_FLOAT : JsonToken.VALUE_NUMBER_INT;
+    }
+
+    /**
+     * 获取当前 token。
+     *
+     * @return 当前 token，如果尚未调用 nextToken 则返回 NOT_AVAILABLE
+     */
+    public JsonToken currentToken() {
+        return currentToken;
+    }
+
+    /**
+     * 获取当前字段名（仅当 token 为 FIELD_NAME 时有效）。
+     *
+     * @return 当前字段名
+     */
+    public String getCurrentName() {
+        return currentName;
+    }
+
+    /**
+     * 获取当前位置（字符偏移）。
+     *
+     * @return 当前解析位置
+     */
+    public int getCurrentLocation() {
+        return reader.getPosition();
+    }
+
+    // ==================== Value Reading ====================
+
+    /**
+     * 获取当前 token 的文本表示。
+     *
+     * @return 文本值（字符串值去掉引号、数值的字符串形式、true/false/null）
+     */
+    public String getText() {
+        if (currentToken == JsonToken.FIELD_NAME) {
+            return currentName;
+        }
+        return textValue;
+    }
+
+    /**
+     * 获取字符串值（仅对 VALUE_STRING 有效）。
+     *
+     * @return 解码后的字符串值
+     */
+    public String getTextValue() {
+        return textValue;
+    }
+
+    /**
+     * 获取字符串值（适用任何 token，对数值做toString转换）。
+     *
+     * @return 字符串表示
+     */
+    public String getValueAsString() {
+        if (currentToken == JsonToken.VALUE_STRING || currentToken == JsonToken.FIELD_NAME) {
+            return textValue;
+        }
+        if (currentToken == JsonToken.VALUE_NULL || currentToken == null) {
+            return null;
+        }
+        if (currentToken == JsonToken.VALUE_TRUE) return "true";
+        if (currentToken == JsonToken.VALUE_FALSE) return "false";
+        return textValue != null ? textValue : currentToken.name();
+    }
+
+    /**
+     * 获取当前整数值。
+     *
+     * @return int 值
+     * @throws NumberFormatException 如果值无法转为 int
+     */
+    public int getIntValue() {
+        if (textValue != null) {
+            return Integer.parseInt(textValue);
+        }
+        if (currentToken == JsonToken.VALUE_TRUE) return 1;
+        if (currentToken == JsonToken.VALUE_FALSE) return 0;
+        throw new IllegalStateException("Not a number token: " + currentToken);
+    }
+
+    /**
+     * 获取当前长整数值。
+     *
+     * @return long 值
+     */
+    public long getLongValue() {
+        if (textValue != null) {
+            return Long.parseLong(textValue);
+        }
+        if (currentToken == JsonToken.VALUE_TRUE) return 1L;
+        if (currentToken == JsonToken.VALUE_FALSE) return 0L;
+        throw new IllegalStateException("Not a number token: " + currentToken);
+    }
+
+    /**
+     * 获取当前 double 值。
+     *
+     * @return double 值
+     */
+    public double getDoubleValue() {
+        if (textValue != null) {
+            return Double.parseDouble(textValue);
+        }
+        throw new IllegalStateException("Not a number token: " + currentToken);
+    }
+
+    /**
+     * 获取当前 BigDecimal 值。
+     *
+     * @return BigDecimal 值
+     */
+    public BigDecimal getDecimalValue() {
+        if (textValue != null) {
+            return new BigDecimal(textValue);
+        }
+        throw new IllegalStateException("Not a number token: " + currentToken);
+    }
+
+    /**
+     * 获取当前 BigInteger 值。
+     *
+     * @return BigInteger 值
+     */
+    public BigInteger getBigIntegerValue() {
+        if (textValue != null) {
+            return new BigInteger(textValue);
+        }
+        throw new IllegalStateException("Not a number token: " + currentToken);
+    }
+
+    /**
+     * 获取当前布尔值（仅对 VALUE_TRUE / VALUE_FALSE 有效）。
+     *
+     * @return true 或 false
+     */
+    public boolean getBooleanValue() {
+        if (currentToken == JsonToken.VALUE_TRUE) return true;
+        if (currentToken == JsonToken.VALUE_FALSE) return false;
+        throw new IllegalStateException("Not a boolean token: " + currentToken);
+    }
+
+    // ==================== Skip and Tree Reading ====================
+
+    /**
+     * 跳过当前值（不包含当前值本身已经消耗的 token）。
+     *
+     * <p>用于跳过不需要的节点，无论是原子值还是嵌套对象/数组。</p>
+     */
+    public void skipValue() {
+        reader.skipValue();
+        // 读取跳过后，当前 token 已失效，需要重新导航
+        currentToken = JsonToken.NOT_AVAILABLE;
+    }
+
+    /**
+     * 跳过当前对象的剩余部分（必须在 START_OBJECT 之后调用）。
+     *
+     * <p>一次性消费到匹配的 END_OBJECT。</p>
+     */
+    public void skipChildren() {
+        if (currentToken != JsonToken.START_OBJECT && currentToken != JsonToken.START_ARRAY) {
+            // 如果已经是原子值，什么都不做
+            return;
+        }
+        int depth = 1;
+        while (depth > 0 && !reader.isEnd()) {
+            char c = reader.nextChar();
+            if (c == '{' || c == '[') {
+                depth++;
+            } else if (c == '}' || c == ']') {
+                depth--;
+            }
+        }
+        currentToken = JsonToken.NOT_AVAILABLE;
+    }
+
+    /**
+     * 将当前节点（及其所有子节点）解析为 JsonNode 树。
+     *
+     * <p>当前位置应为 START_OBJECT、START_ARRAY 或值 token。
+     *
+     * @return 解析后的 JsonNode
+     */
+    public com.njydsz.common.json.tree.JsonNode readValueAsTree() {
+        try {
+            // 回退一个字符，因为当前 token 已经被读取但未消费 value
+            reader.back();
+            String rawValue = reader.readRawValue();
+            return com.njydsz.common.json.YdszJson.readTree(rawValue);
+        } catch (Exception e) {
+            throw new JsonException("Failed to read tree at position " + reader.getPosition(), e);
+        }
+    }
+
+    // ==================== Lifecycle ====================
+
+    /**
+     * 关闭解析器并释放资源。
+     */
+    @Override
+    public void close() throws IOException {
+        closed = true;
+        currentToken = null;
+        currentName = null;
+        textValue = null;
+    }
+
+    /**
+     * 检查解析器是否已关闭。
+     *
+     * @return true 如果已关闭
+     */
+    public boolean isClosed() {
+        return closed;
+    }
+}

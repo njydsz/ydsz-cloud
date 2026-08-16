@@ -596,7 +596,16 @@ public final class JSONReader {
     }
 
     /**
-     * 快速读取字段名（假定当前已位于 {@code '"'} 引号处，不跳过前置空白）。\n     *\n     * <p>用于已定位到引号的高性能路径（如 ASM 反序列化器）；若当前字符非引号则直接返回 null，\n     * 不做任何字段名匹配尝试。等价于 {@code readString()} 的快捷版。</p>\n     *\n     * @return 字段名字符串，或 null（当前非字符串字段名）\n     */\n    public String readFieldNameFast() {\n        if (pos >= len) return null;\n        if (buf[pos] != '"') return null;
+     * 快速读取字段名（假定当前已位于 {@code '"'} 引号处，不跳过前置空白）。
+     *
+     * <p>用于已定位到引号的高性能路径（如 ASM 反序列化器）；若当前字符非引号则直接返回 null，
+     * 不做任何字段名匹配尝试。等价于 {@code readString()} 的快捷版。</p>
+     *
+     * @return 字段名字符串，或 null（当前非字符串字段名）
+     */
+    public String readFieldNameFast() {
+        if (pos >= len) return null;
+        if (buf[pos] != '"') return null;
         return readString();
     }
 
@@ -650,7 +659,13 @@ public final class JSONReader {
      */
     public boolean matchField(String fieldName) {
         skipWhitespace();
-        if (pos >= len || buf[pos] != '"') return false;\n        pos++;\n        int fieldLen = fieldName.length();\n        if (pos + fieldLen > len) return false;\n        for (int i = 0; i < fieldLen; i++) {\n            if (buf[pos + i] != fieldName.charAt(i)) {\n                // 字段名不匹配：先跳过剩余字段名（到下一个 \"），再跳过 : 和值\n                while (pos < len && buf[pos] != '"') pos++;
+        if (pos >= len || buf[pos] != '"') return false;
+        pos++;
+        int fieldLen = fieldName.length();
+        if (pos + fieldLen > len) return false;
+        for (int i = 0; i < fieldLen; i++) {
+            if (buf[pos + i] != fieldName.charAt(i)) {
+                // 字段名不匹配：先跳过剩余字段名（到下一个 \"），再跳过 : 和值\n                while (pos < len && buf[pos] != '"') pos++;
                 if (pos < len && buf[pos] == '"') pos++; // 跳过结束引号\n                skipWhitespace();\n                if (pos < len && buf[pos] == ':') pos++;\n                skipValue();\n                return false;\n            }\n        }\n        pos += fieldLen;\n        if (pos < len && buf[pos] == '"') pos++;
         skipWhitespace();
         if (pos < len && buf[pos] == ':') pos++;

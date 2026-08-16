@@ -167,6 +167,13 @@ public class RedisReentrantLock extends AbstractRedisDistributedLock {
     }
 
     @Override
+    protected boolean isFullyReleased(String lockKey, String lockValue) {
+        // 重入锁：释放脚本仅在重入计数归零时才删除 Hash 键。
+        // 键已不存在 = 完全释放；键仍存在 = 仍有重入计数（锁仍被当前线程持有）。
+        return !doIsLocked(lockKey);
+    }
+
+    @Override
     protected String doAcquireLock(String lockKey, String clientId, long leaseTime, TimeUnit timeUnit) {
         long leaseTimeMs = timeUnit.toMillis(leaseTime);
         try {

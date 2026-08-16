@@ -185,7 +185,13 @@ public final class BeanSerializer {
 
                         // 写入字符串值
                         int len = strVal.length();
-                        buf[pos++] = '"';\n\n                        // 快速路径：检查转义\n                        boolean needsEscape = false;\n                        for (int j = 0; j < len; j++) {\n                            char c = strVal.charAt(j);\n                            if (c < ' ' || c == '"' || c == '\\') {
+                        buf[pos++] = '"';
+
+                        // 快速路径：检查转义
+                        boolean needsEscape = false;
+                        for (int j = 0; j < len; j++) {
+                            char c = strVal.charAt(j);
+                            if (c < ' ' || c == '"' || c == '\\') {
                                 needsEscape = true;
                                 break;
                             }
@@ -199,9 +205,305 @@ public final class BeanSerializer {
                             pos = writeStringWithEscape(strVal, buf, pos);
                         }
 
-                        buf[pos++] = '"';\n                    }\n                    break;\n\n                case 2: // int/Integer\n                    int intVal;\n                    try {\n                        Integer val = (Integer) field.getter.invoke(obj);\n                        intVal = val == null ? 0 : val;\n                    } catch (Throwable e) {\n                        intVal = 0;\n                    }\n                    if (intVal != 0 || field.type == int.class) {\n                        if (!first) {\n                            buf[pos++] = ',';\n                        }\n                        first = false;\n\n                        int keyLen = field.jsonKeyLen;\n                        field.jsonKey.getChars(0, keyLen, buf, pos);\n                        pos += keyLen;\n\n                        pos += NumberUtils.writeInt(intVal, buf, pos);\n                    }\n                    break;\n\n                case 3: // long/Long\n                    long longVal;\n                    try {\n                        Long val = (Long) field.getter.invoke(obj);\n                        longVal = val == null ? 0L : val;\n                    } catch (Throwable e) {\n                        longVal = 0L;\n                    }\n                    if (longVal != 0L || field.type == long.class) {\n                        if (!first) {\n                            buf[pos++] = ',';\n                        }\n                        first = false;\n\n                        int keyLen = field.jsonKeyLen;\n                        field.jsonKey.getChars(0, keyLen, buf, pos);\n                        pos += keyLen;\n\n                        pos += NumberUtils.writeLong(longVal, buf, pos);\n                    }\n                    break;\n\n                case 4: // double/Double\n                    double doubleVal;\n                    try {\n                        Double val = (Double) field.getter.invoke(obj);\n                        doubleVal = val == null ? 0.0 : val;\n                    } catch (Throwable e) {\n                        doubleVal = 0.0;\n                    }\n                    if (doubleVal != 0.0 || field.type == double.class) {\n                        if (!first) {\n                            buf[pos++] = ',';\n                        }\n                        first = false;\n\n                        int keyLen = field.jsonKeyLen;\n                        field.jsonKey.getChars(0, keyLen, buf, pos);\n                        pos += keyLen;\n\n                        pos = writer.writeDoubleToBuf(doubleVal, pos);\n                    }\n                    break;\n\n                case 5: // float/Float\n                    float floatVal;\n                    try {\n                        Float val = (Float) field.getter.invoke(obj);\n                        floatVal = val == null ? 0.0f : val;\n                    } catch (Throwable e) {\n                        floatVal = 0.0f;\n                    }\n                    if (floatVal != 0.0f || field.type == float.class) {\n                        if (!first) {\n                            buf[pos++] = ',';\n                        }\n                        first = false;\n\n                        int keyLen = field.jsonKeyLen;\n                        field.jsonKey.getChars(0, keyLen, buf, pos);\n                        pos += keyLen;\n\n                        pos = writer.writeFloatToBuf(floatVal, pos);\n                    }\n                    break;\n\n                case 6: // boolean/Boolean\n                    boolean boolVal;\n                    try {\n                        Boolean val = (Boolean) field.getter.invoke(obj);\n                        boolVal = val != null && val;\n                    } catch (Throwable e) {\n                        boolVal = false;\n                    }\n                    if (boolVal || field.type == boolean.class) {\n                        if (!first) {\n                            buf[pos++] = ',';\n                        }\n                        first = false;\n\n                        int keyLen = field.jsonKeyLen;\n                        field.jsonKey.getChars(0, keyLen, buf, pos);\n                        pos += keyLen;\n\n                        if (boolVal) {\n                            buf[pos++] = 't';\n                            buf[pos++] = 'r';\n                            buf[pos++] = 'u';\n                            buf[pos++] = 'e';\n                        } else {\n                            buf[pos++] = 'f';\n                            buf[pos++] = 'a';\n                            buf[pos++] = 'l';\n                            buf[pos++] = 's';\n                            buf[pos++] = 'e';\n                        }\n                    }\n                    break;\n\n                case 13: // Date / LocalDate / LocalDateTime / LocalTime / Instant\n                case 14: // BigDecimal\n                case 15: // BigInteger\n                    Object dateOrNumVal;\n                    try {\n                        dateOrNumVal = field.getter.invoke(obj);\n                    } catch (Throwable e) {\n                        dateOrNumVal = null;\n                    }\n                    if (dateOrNumVal == null) {\n                        break;\n                    }\n                    if (!first) {\n                        buf[pos++] = ',';\n                    }\n                    first = false;\n\n                    int keyLen = field.jsonKeyLen;\n                    field.jsonKey.getChars(0, keyLen, buf, pos);\n                    pos += keyLen;\n\n                    // BigDecimal / BigInteger / Date 直接调用 JSONWriter 的写入方法，\n                    // 这些类型不涉及循环引用检测，无需递归进入 SerializationProvider\n                    writer.pos = pos;\n                    writer.writeValueInline(dateOrNumVal);\n                    pos = writer.pos;\n                    break;\n\n                default:\n                    Object value;\n                    try {\n                        value = field.getter.invoke(obj);\n                    } catch (Throwable e) {\n                        value = null;\n                    }\n                    if (value == null) {\n                        break;\n                    }\n                    if (!first) {\n                        buf[pos++] = ',';\n                    }\n                    first = false;\n\n                    int defaultKeyLen = field.jsonKeyLen;\n                    field.jsonKey.getChars(0, defaultKeyLen, buf, pos);\n                    pos += defaultKeyLen;\n\n                    writer.pos = pos;\n                    // 字段路径追踪：writeValueInline 可能递归进入子 Bean\n                    SerializationProvider.pushFieldPath(field.fieldName);\n                    try {\n                        writer.writeValueInline(value);\n                    } finally {\n                        SerializationProvider.popFieldPath();\n                    }\n                    pos = writer.pos;\n                    break;\n            }\n        }\n\n        // 写入 }\n        buf[pos++] = '}';\n        writer.pos = pos;\n\n        // @JsonAnyGetter：将 Map 中的键值对展开为顶层 JSON 属性\n        if (anyGetterMethod != null) {\n            writeAnyGetterProperties(obj, writer);\n        }\n    }\n\n    /**\n     * 写入 @JsonAnyGetter 返回的 Map 中的键值对作为顶层 JSON 属性。\n     *\n     * <p>在 } 之前插入逗号和新属性。需要回退 pos 以在 } 前插入内容。</p>\n     *\n     * @param obj 要序列化的 Bean 对象\n     * @param writer JSON 写入器\n     */\n    private void writeAnyGetterProperties(Object obj, JSONWriter writer) {\n        Map<?, ?> map;\n        try {\n            map = (Map<?, ?>) anyGetterMethod.invoke(obj);\n        } catch (Exception e) {\n            return; // 调用失败时静默跳过\n        }\n        if (map == null || map.isEmpty()) {\n            return;\n        }\n\n        // 回退 pos 以在 } 前插入内容\n        int pos = writer.pos - 1; // 回退到 } 的位置\n        char[] buf = writer.buf;\n\n        boolean firstAny = true;\n        for (Map.Entry<?, ?> entry : map.entrySet()) {\n            Object value = entry.getValue();\n            if (value == null) continue;\n\n            String key = String.valueOf(entry.getKey());\n            writer.ensureCapacity(32 + key.length() * 2);\n            buf = writer.buf; // ensureCapacity 可能重新分配\n\n            if (!firstAny) {\n                buf[pos++] = ',';\n            }\n            firstAny = false;\n            buf[pos++] = '"';
+                        buf[pos++] = '"';
+                    }
+                    break;
+
+                case 2: // int/Integer
+                    int intVal;
+                    try {
+                        Integer val = (Integer) field.getter.invoke(obj);
+                        intVal = val == null ? 0 : val;
+                    } catch (Throwable e) {
+                        intVal = 0;
+                    }
+                    if (intVal != 0 || field.type == int.class) {
+                        if (!first) {
+                            buf[pos++] = ',';
+                        }
+                        first = false;
+
+                        int keyLen = field.jsonKeyLen;
+                        field.jsonKey.getChars(0, keyLen, buf, pos);
+                        pos += keyLen;
+
+                        pos += NumberUtils.writeInt(intVal, buf, pos);
+                    }
+                    break;
+
+                case 3: // long/Long
+                    long longVal;
+                    try {
+                        Long val = (Long) field.getter.invoke(obj);
+                        longVal = val == null ? 0L : val;
+                    } catch (Throwable e) {
+                        longVal = 0L;
+                    }
+                    if (longVal != 0L || field.type == long.class) {
+                        if (!first) {
+                            buf[pos++] = ',';
+                        }
+                        first = false;
+
+                        int keyLen = field.jsonKeyLen;
+                        field.jsonKey.getChars(0, keyLen, buf, pos);
+                        pos += keyLen;
+
+                        pos += NumberUtils.writeLong(longVal, buf, pos);
+                    }
+                    break;
+
+                case 4: // double/Double
+                    double doubleVal;
+                    try {
+                        Double val = (Double) field.getter.invoke(obj);
+                        doubleVal = val == null ? 0.0 : val;
+                    } catch (Throwable e) {
+                        doubleVal = 0.0;
+                    }
+                    if (doubleVal != 0.0 || field.type == double.class) {
+                        if (!first) {
+                            buf[pos++] = ',';
+                        }
+                        first = false;
+
+                        int keyLen = field.jsonKeyLen;
+                        field.jsonKey.getChars(0, keyLen, buf, pos);
+                        pos += keyLen;
+
+                        pos = writer.writeDoubleToBuf(doubleVal, pos);
+                    }
+                    break;
+
+                case 5: // float/Float
+                    float floatVal;
+                    try {
+                        Float val = (Float) field.getter.invoke(obj);
+                        floatVal = val == null ? 0.0f : val;
+                    } catch (Throwable e) {
+                        floatVal = 0.0f;
+                    }
+                    if (floatVal != 0.0f || field.type == float.class) {
+                        if (!first) {
+                            buf[pos++] = ',';
+                        }
+                        first = false;
+
+                        int keyLen = field.jsonKeyLen;
+                        field.jsonKey.getChars(0, keyLen, buf, pos);
+                        pos += keyLen;
+
+                        pos = writer.writeFloatToBuf(floatVal, pos);
+                    }
+                    break;
+
+                case 6: // boolean/Boolean
+                    boolean boolVal;
+                    try {
+                        Boolean val = (Boolean) field.getter.invoke(obj);
+                        boolVal = val != null && val;
+                    } catch (Throwable e) {
+                        boolVal = false;
+                    }
+                    if (boolVal || field.type == boolean.class) {
+                        if (!first) {
+                            buf[pos++] = ',';
+                        }
+                        first = false;
+
+                        int keyLen = field.jsonKeyLen;
+                        field.jsonKey.getChars(0, keyLen, buf, pos);
+                        pos += keyLen;
+
+                        if (boolVal) {
+                            buf[pos++] = 't';
+                            buf[pos++] = 'r';
+                            buf[pos++] = 'u';
+                            buf[pos++] = 'e';
+                        } else {
+                            buf[pos++] = 'f';
+                            buf[pos++] = 'a';
+                            buf[pos++] = 'l';
+                            buf[pos++] = 's';
+                            buf[pos++] = 'e';
+                        }
+                    }
+                    break;
+
+                case 13: // Date / LocalDate / LocalDateTime / LocalTime / Instant
+                case 14: // BigDecimal
+                case 15: // BigInteger
+                    Object dateOrNumVal;
+                    try {
+                        dateOrNumVal = field.getter.invoke(obj);
+                    } catch (Throwable e) {
+                        dateOrNumVal = null;
+                    }
+                    if (dateOrNumVal == null) {
+                        break;
+                    }
+                    if (!first) {
+                        buf[pos++] = ',';
+                    }
+                    first = false;
+
+                    int keyLen = field.jsonKeyLen;
+                    field.jsonKey.getChars(0, keyLen, buf, pos);
+                    pos += keyLen;
+
+                    // BigDecimal / BigInteger / Date 直接调用 JSONWriter 的写入方法，
+                    // 这些类型不涉及循环引用检测，无需递归进入 SerializationProvider
+                    writer.pos = pos;
+                    writer.writeValueInline(dateOrNumVal);
+                    pos = writer.pos;
+                    break;
+
+                default:
+                    Object value;
+                    try {
+                        value = field.getter.invoke(obj);
+                    } catch (Throwable e) {
+                        value = null;
+                    }
+                    if (value == null) {
+                        break;
+                    }
+                    if (!first) {
+                        buf[pos++] = ',';
+                    }
+                    first = false;
+
+                    int defaultKeyLen = field.jsonKeyLen;
+                    field.jsonKey.getChars(0, defaultKeyLen, buf, pos);
+                    pos += defaultKeyLen;
+
+                    writer.pos = pos;
+                    // 字段路径追踪：writeValueInline 可能递归进入子 Bean
+                    SerializationProvider.pushFieldPath(field.fieldName);
+                    try {
+                        writer.writeValueInline(value);
+                    } finally {
+                        SerializationProvider.popFieldPath();
+                    }
+                    pos = writer.pos;
+                    break;
+            }
+        }
+
+        // 写入 }
+        buf[pos++] = '}';
+        writer.pos = pos;
+
+        // @JsonAnyGetter：将 Map 中的键值对展开为顶层 JSON 属性
+        if (anyGetterMethod != null) {
+            writeAnyGetterProperties(obj, writer);
+        }
+    }
+
+    /**
+     * 写入 @JsonAnyGetter 返回的 Map 中的键值对作为顶层 JSON 属性。
+     *
+     * <p>在 } 之前插入逗号和新属性。需要回退 pos 以在 } 前插入内容。</p>
+     *
+     * @param obj 要序列化的 Bean 对象
+     * @param writer JSON 写入器
+     */
+    private void writeAnyGetterProperties(Object obj, JSONWriter writer) {
+        Map<?, ?> map;
+        try {
+            map = (Map<?, ?>) anyGetterMethod.invoke(obj);
+        } catch (Exception e) {
+            return; // 调用失败时静默跳过
+        }
+        if (map == null || map.isEmpty()) {
+            return;
+        }
+
+        // 回退 pos 以在 } 前插入内容
+        int pos = writer.pos - 1; // 回退到 } 的位置
+        char[] buf = writer.buf;
+
+        boolean firstAny = true;
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
+            Object value = entry.getValue();
+            if (value == null) continue;
+
+            String key = String.valueOf(entry.getKey());
+            writer.ensureCapacity(32 + key.length() * 2);
+            buf = writer.buf; // ensureCapacity 可能重新分配
+
+            if (!firstAny) {
+                buf[pos++] = ',';
+            }
+            firstAny = false;
+            buf[pos++] = '"';
             key.getChars(0, key.length(), buf, pos);
             pos += key.length();
-            buf[pos++] = '"';\n            buf[pos++] = ':';\n\n            writer.pos = pos;\n            writer.writeValueInline(value);\n            pos = writer.pos;\n        }\n\n        buf[pos++] = '}';\n        writer.pos = pos;\n    }\n\n    /**\n     * 写入带转义的字符串到缓冲区\n     *\n     * <p>处理特殊字符的转义，生成合法的 JSON 字符串。</p>\n     *\n     * @param str 原始字符串\n     * @param buf 目标缓冲区\n     * @param pos 当前写入位置\n     * @return 写入后的新位置\n     */\n    private static int writeStringWithEscape(String str, char[] buf, int pos) {\n        int len = str.length();\n\n        for (int i = 0; i < len; i++) {\n            char c = str.charAt(i);\n            switch (c) {\n                case '"':
+            buf[pos++] = '"';
+            buf[pos++] = ':';
+
+            writer.pos = pos;
+            writer.writeValueInline(value);
+            pos = writer.pos;
+        }
+
+        buf[pos++] = '}';
+        writer.pos = pos;
+    }
+
+    /**
+     * 写入带转义的字符串到缓冲区
+     *
+     * <p>处理特殊字符的转义，生成合法的 JSON 字符串。</p>
+     *
+     * @param str 原始字符串
+     * @param buf 目标缓冲区
+     * @param pos 当前写入位置
+     * @return 写入后的新位置
+     */
+    private static int writeStringWithEscape(String str, char[] buf, int pos) {
+        int len = str.length();
+
+        for (int i = 0; i < len; i++) {
+            char c = str.charAt(i);
+            switch (c) {
+                case '"':
                     buf[pos++] = '\\';
-                    buf[pos++] = '"';\n                    break;\n                case '\\':\n                    buf[pos++] = '\\';\n                    buf[pos++] = '\\';\n                    break;\n                case '\n':\n                    buf[pos++] = '\\';\n                    buf[pos++] = 'n';\n                    break;\n                case '\r':\n                    buf[pos++] = '\\';\n                    buf[pos++] = 'r';\n                    break;\n                case '\t':\n                    buf[pos++] = '\\';\n                    buf[pos++] = 't';\n                    break;\n                default:\n                    if (c < ' ') {\n                        buf[pos++] = '\\';\n                        buf[pos++] = 'u';\n                        buf[pos++] = '0';\n                        buf[pos++] = '0';\n                        char h = (char) (c >> 4);\n                        char l = (char) (c & 0xf);\n                        buf[pos++] = (char) (h < 10 ? h + '0' : h - 10 + 'a');\n                        buf[pos++] = (char) (l < 10 ? l + '0' : l - 10 + 'a');\n                    } else {\n                        buf[pos++] = c;\n                    }\n                    break;\n            }\n        }\n\n        return pos;\n    }\n}\n
+                    buf[pos++] = '"';
+                    break;
+                case '\\':
+                    buf[pos++] = '\\';
+                    buf[pos++] = '\\';
+                    break;
+                case '\n':
+                    buf[pos++] = '\\';
+                    buf[pos++] = 'n';
+                    break;
+                case '\r':
+                    buf[pos++] = '\\';
+                    buf[pos++] = 'r';
+                    break;
+                case '\t':
+                    buf[pos++] = '\\';
+                    buf[pos++] = 't';
+                    break;
+                default:
+                    if (c < ' ') {
+                        buf[pos++] = '\\';
+                        buf[pos++] = 'u';
+                        buf[pos++] = '0';
+                        buf[pos++] = '0';
+                        char h = (char) (c >> 4);
+                        char l = (char) (c & 0xf);
+                        buf[pos++] = (char) (h < 10 ? h + '0' : h - 10 + 'a');
+                        buf[pos++] = (char) (l < 10 ? l + '0' : l - 10 + 'a');
+                    } else {
+                        buf[pos++] = c;
+                    }
+                    break;
+            }
+        }
+
+        return pos;
+    }
+}

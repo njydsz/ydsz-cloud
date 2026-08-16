@@ -263,7 +263,92 @@ public final class BeanReader<T> {
                 continue;
             }
 
-            if (ch != '"') {\n                reader.pos++;\n                continue;\n            }\n\n            String fieldName = reader.readString();\n            if (fieldName == null) return;\n\n            reader.skipTo(':');\n            if (reader.pos < len) reader.pos++;\n\n            int hash = fieldName.hashCode();\n            boolean matched = false;\n            for (int i = 0; i < fieldReaders.length; i++) {\n                FieldReader fr = fieldReaders[i];\n                // 主匹配：jsonName（@JsonProperty 值或字段名）\n                if (fieldNameHashes[i] == hash && fr.jsonName.equals(fieldName)) {\n                    if (target != null) {\n                        fr.readValue(reader, target, depth);\n                    } else {\n                        pending.put(fr.fieldName, fr.readRawValue(reader));\n                    }\n                    matched = true;\n                    break;\n                }\n                // 回退匹配：原始 Java 字段名（当 @JsonProperty 设置但 JSON 仍用字段名时）\n                if (!matched && fr.fieldName.equals(fieldName)) {\n                    if (target != null) {\n                        fr.readValue(reader, target, depth);\n                    } else {\n                        pending.put(fr.fieldName, fr.readRawValue(reader));\n                    }\n                    matched = true;\n                    break;\n                }\n                // @JsonAlias 别名字段匹配（F-3 恢复）：按 aliasHashes 二次比对，避免 hash 碰撞误命中\n                if (!matched && fr.aliasHashes.length > 0) {\n                    for (int a = 0; a < fr.aliasHashes.length; a++) {\n                        if (fr.aliasHashes[a] == hash && fr.aliasNames[a].equals(fieldName)) {\n                            if (target != null) {\n                                fr.readValue(reader, target, depth);\n                            } else {\n                                pending.put(fr.fieldName, fr.readRawValue(reader));\n                            }\n                            matched = true;\n                            break;\n                        }\n                    }\n                }\n            }\n\n            if (!matched) {\n                if (anySetterMethod != null) {\n                    // @JsonAnySetter：将未匹配的属性通过方法写入\n                    String rawValue = reader.readRawValue().trim();\n                    try {\n                        Object parsedValue = parseValue(rawValue);\n                        if (target != null) {\n                            anySetterMethod.invoke(target, fieldName, parsedValue);\n                        } else {\n                            pending.put(fieldName, parsedValue);\n                        }\n                    } catch (Exception e) {\n                        // 调用失败时跳过该字段\n                    }\n                } else {\n                    reader.skipValue();\n                }\n            }\n        }\n    }\n\n    /**\n     * 将原始 JSON 值字符串解析为 Java 对象。\n     *\n     * <p>用于 @JsonAnySetter 路径，将未匹配字段的值解析为简单类型。</p>\n     *\n     * @param rawValue 原始 JSON 值字符串（如 {@code "hello"}, {@code 123}, {@code true}, {@code null}, {@code {...}}）\n     * @return 解析后的 Java 对象\n     */\n    private static Object parseValue(String rawValue) {\n        if (rawValue == null || rawValue.isEmpty() || "null".equals(rawValue)) {\n            return null;\n        }\n        char first = rawValue.charAt(0);\n        if (first == '"') {
+            if (ch != '"') {
+                reader.pos++;
+                continue;
+            }
+
+            String fieldName = reader.readString();
+            if (fieldName == null) return;
+
+            reader.skipTo(':');
+            if (reader.pos < len) reader.pos++;
+
+            int hash = fieldName.hashCode();
+            boolean matched = false;
+            for (int i = 0; i < fieldReaders.length; i++) {
+                FieldReader fr = fieldReaders[i];
+                // 主匹配：jsonName（@JsonProperty 值或字段名）
+                if (fieldNameHashes[i] == hash && fr.jsonName.equals(fieldName)) {
+                    if (target != null) {
+                        fr.readValue(reader, target, depth);
+                    } else {
+                        pending.put(fr.fieldName, fr.readRawValue(reader));
+                    }
+                    matched = true;
+                    break;
+                }
+                // 回退匹配：原始 Java 字段名（当 @JsonProperty 设置但 JSON 仍用字段名时）
+                if (!matched && fr.fieldName.equals(fieldName)) {
+                    if (target != null) {
+                        fr.readValue(reader, target, depth);
+                    } else {
+                        pending.put(fr.fieldName, fr.readRawValue(reader));
+                    }
+                    matched = true;
+                    break;
+                }
+                // @JsonAlias 别名字段匹配（F-3 恢复）：按 aliasHashes 二次比对，避免 hash 碰撞误命中
+                if (!matched && fr.aliasHashes.length > 0) {
+                    for (int a = 0; a < fr.aliasHashes.length; a++) {
+                        if (fr.aliasHashes[a] == hash && fr.aliasNames[a].equals(fieldName)) {
+                            if (target != null) {
+                                fr.readValue(reader, target, depth);
+                            } else {
+                                pending.put(fr.fieldName, fr.readRawValue(reader));
+                            }
+                            matched = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!matched) {
+                if (anySetterMethod != null) {
+                    // @JsonAnySetter：将未匹配的属性通过方法写入
+                    String rawValue = reader.readRawValue().trim();
+                    try {
+                        Object parsedValue = parseValue(rawValue);
+                        if (target != null) {
+                            anySetterMethod.invoke(target, fieldName, parsedValue);
+                        } else {
+                            pending.put(fieldName, parsedValue);
+                        }
+                    } catch (Exception e) {
+                        // 调用失败时跳过该字段
+                    }
+                } else {
+                    reader.skipValue();
+                }
+            }
+        }
+    }
+
+    /**
+     * 将原始 JSON 值字符串解析为 Java 对象。
+     *
+     * <p>用于 @JsonAnySetter 路径，将未匹配字段的值解析为简单类型。</p>
+     *
+     * @param rawValue 原始 JSON 值字符串（如 {@code "hello"}, {@code 123}, {@code true}, {@code null}, {@code {...}}）
+     * @return 解析后的 Java 对象
+     */
+    private static Object parseValue(String rawValue) {
+        if (rawValue == null || rawValue.isEmpty() || "null".equals(rawValue)) {
+            return null;
+        }
+        char first = rawValue.charAt(0);
+        if (first == '"') {
             // 去除首尾引号
             return rawValue.substring(1, rawValue.length() - 1);
         }

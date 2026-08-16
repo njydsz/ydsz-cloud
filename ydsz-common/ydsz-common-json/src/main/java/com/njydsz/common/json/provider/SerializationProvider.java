@@ -472,7 +472,8 @@ public final class SerializationProvider {
             return true;
         }
         // 尝试从 JSON 键格式 "fieldName": 中提取纯名称
-        if (keyOrName.length() >= 3 && keyOrName.charAt(0) == '"') {\n            int end = keyOrName.indexOf('"', 1);
+        if (keyOrName.length() >= 3 && keyOrName.charAt(0) == '"') {
+            int end = keyOrName.indexOf('"', 1);
             if (end > 0) {
                 String name = keyOrName.substring(1, end);
                 return excluded.contains(name);

@@ -65,6 +65,48 @@ public final class FieldMeta {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FieldMeta.class);
 
+    /** 序列化类型码：默认/未知类型（与 ValueWriter 保持一致） */
+    private static final int TYPE_CODE_DEFAULT = 0;
+
+    /** 序列化类型码：String（与 ValueWriter.TYPE_CODE_STRING 保持一致） */
+    private static final int TYPE_CODE_STRING = 1;
+
+    /** 序列化类型码：Integer/int（与 ValueWriter.TYPE_CODE_INTEGER 保持一致） */
+    private static final int TYPE_CODE_INTEGER = 2;
+
+    /** 序列化类型码：Long/long（与 ValueWriter.TYPE_CODE_LONG 保持一致） */
+    private static final int TYPE_CODE_LONG = 3;
+
+    /** 序列化类型码：Double/double（与 ValueWriter.TYPE_CODE_DOUBLE 保持一致） */
+    private static final int TYPE_CODE_DOUBLE = 4;
+
+    /** 序列化类型码：Float/float（与 ValueWriter.TYPE_CODE_FLOAT 保持一致） */
+    private static final int TYPE_CODE_FLOAT = 5;
+
+    /** 序列化类型码：Boolean/boolean（与 ValueWriter.TYPE_CODE_BOOLEAN 保持一致） */
+    private static final int TYPE_CODE_BOOLEAN = 6;
+
+    /** 序列化类型码：Character/char（与 ValueWriter.TYPE_CODE_CHARACTER 保持一致） */
+    private static final int TYPE_CODE_CHARACTER = 7;
+
+    /** 序列化类型码：Short/short（与 ValueWriter.TYPE_CODE_SHORT 保持一致） */
+    private static final int TYPE_CODE_SHORT = 8;
+
+    /** 序列化类型码：Byte/byte（与 ValueWriter.TYPE_CODE_BYTE 保持一致） */
+    private static final int TYPE_CODE_BYTE = 9;
+
+    /** 序列化类型码：日期类型（与 ValueWriter.TYPE_CODE_DATE 保持一致） */
+    private static final int TYPE_CODE_DATE = 13;
+
+    /** 序列化类型码：BigDecimal（与 ValueWriter.TYPE_CODE_BIGDECIMAL 保持一致） */
+    private static final int TYPE_CODE_BIGDECIMAL = 14;
+
+    /** 序列化类型码：BigInteger（与 ValueWriter.TYPE_CODE_BIGINTEGER 保持一致） */
+    private static final int TYPE_CODE_BIGINTEGER = 15;
+
+    /** 序列化类型码：Bean/Enum（与 ValueWriter.TYPE_CODE_BEAN 保持一致） */
+    private static final int TYPE_CODE_BEAN = 16;
+
     /** 字段名 */
     public final String name;
 
@@ -210,24 +252,24 @@ public final class FieldMeta {
      * @return 类型代码
      */
     private static int computeSerializeTypeCode(Class<?> type) {
-        if (type == String.class) return 1;          // TYPE_CODE_STRING
-        if (type == int.class || type == Integer.class) return 2;  // TYPE_CODE_INTEGER
-        if (type == long.class || type == Long.class) return 3;    // TYPE_CODE_LONG
-        if (type == double.class || type == Double.class) return 4; // TYPE_CODE_DOUBLE
-        if (type == float.class || type == Float.class) return 5;  // TYPE_CODE_FLOAT
-        if (type == boolean.class || type == Boolean.class) return 6; // TYPE_CODE_BOOLEAN
-        if (type == char.class || type == Character.class) return 7; // TYPE_CODE_CHARACTER
-        if (type == short.class || type == Short.class) return 8;  // TYPE_CODE_SHORT
-        if (type == byte.class || type == Byte.class) return 9;    // TYPE_CODE_BYTE
-        if (type == BigDecimal.class) return 14;     // TYPE_CODE_BIGDECIMAL
-        if (type == BigInteger.class) return 15;     // TYPE_CODE_BIGINTEGER
-        if (type == Date.class) return 13;           // TYPE_CODE_DATE
-        if (type == LocalDate.class) return 13;      // TYPE_CODE_DATE
-        if (type == LocalDateTime.class) return 13;  // TYPE_CODE_DATE
-        if (type == LocalTime.class) return 13;      // TYPE_CODE_DATE
-        if (type == Instant.class) return 13;        // TYPE_CODE_DATE
-        if (type.isEnum()) return 16;                // TYPE_CODE_BEAN (enum falls to bean path)
-        return 0;
+        if (type == String.class) return TYPE_CODE_STRING;
+        if (type == int.class || type == Integer.class) return TYPE_CODE_INTEGER;
+        if (type == long.class || type == Long.class) return TYPE_CODE_LONG;
+        if (type == double.class || type == Double.class) return TYPE_CODE_DOUBLE;
+        if (type == float.class || type == Float.class) return TYPE_CODE_FLOAT;
+        if (type == boolean.class || type == Boolean.class) return TYPE_CODE_BOOLEAN;
+        if (type == char.class || type == Character.class) return TYPE_CODE_CHARACTER;
+        if (type == short.class || type == Short.class) return TYPE_CODE_SHORT;
+        if (type == byte.class || type == Byte.class) return TYPE_CODE_BYTE;
+        if (type == BigDecimal.class) return TYPE_CODE_BIGDECIMAL;
+        if (type == BigInteger.class) return TYPE_CODE_BIGINTEGER;
+        if (type == Date.class) return TYPE_CODE_DATE;
+        if (type == LocalDate.class) return TYPE_CODE_DATE;
+        if (type == LocalDateTime.class) return TYPE_CODE_DATE;
+        if (type == LocalTime.class) return TYPE_CODE_DATE;
+        if (type == Instant.class) return TYPE_CODE_DATE;
+        if (type.isEnum()) return TYPE_CODE_BEAN;
+        return TYPE_CODE_DEFAULT;
     }
 
     /** 计算字段类型对应的 FieldTypeCode（统一类型码，向后兼容的 int 码仍通过 computeSerializeTypeCode 保留） */

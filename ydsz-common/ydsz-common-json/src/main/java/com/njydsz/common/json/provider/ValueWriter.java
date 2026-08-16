@@ -238,13 +238,60 @@ public final class ValueWriter {
         int firstSpecial = -1;
         for (int i = 0; i < len; i++) {
             char c = str.charAt(i);
-            if (c < ' ' || c == '"' || c == '\\' || c == '\u2028' || c == '\u2029'\n                    || Character.isHighSurrogate(c) || Character.isLowSurrogate(c)) {\n                firstSpecial = i;\n                break;\n            }\n        }\n\n        if (firstSpecial == -1) {\n            sb.append('"');
+            if (c < ' ' || c == '"' || c == '\\' || c == '\u2028' || c == '\u2029'
+                    || Character.isHighSurrogate(c) || Character.isLowSurrogate(c)) {
+                firstSpecial = i;
+                break;
+            }
+        }
+
+        if (firstSpecial == -1) {
+            sb.append('"');
             sb.append(str);
-            sb.append('"');\n            return;\n        }\n\n        sb.append('"');
+            sb.append('"');
+            return;
+        }
+
+        sb.append('"');
         for (int i = 0; i < len; i++) {
             char c = str.charAt(i);
             switch (c) {
-                case '"': sb.append("\\\""); break;\n                case '\\': sb.append("\\\\"); break;\n                case '\b': sb.append("\\b"); break;\n                case '\f': sb.append("\\f"); break;\n                case '\n': sb.append("\\n"); break;\n                case '\r': sb.append("\\r"); break;\n                case '\t': sb.append("\\t"); break;\n                default:\n                    if (c < ' ') {\n                        // 快速 Unicode 转义（避免 String.format 开销）\n                        sb.append("\\u00");\n                        char h = (char)(c >> 4);\n                        char l = (char)(c & 0xf);\n                        sb.append((char)(h < 10 ? h + '0' : h - 10 + 'a'));\n                        sb.append((char)(l < 10 ? l + '0' : l - 10 + 'a'));\n                    } else if (c == '\u2028' || c == '\u2029') {\n                        // 行/段落分隔符：裸置于 <script> 中会导致 JS 语法错误，安全转义\n                        appendHex4(sb, c);\n                    } else if (Character.isHighSurrogate(c)) {\n                        if (i + 1 < len && Character.isLowSurrogate(str.charAt(i + 1))) {\n                            sb.append(c);\n                            sb.append(str.charAt(i + 1));\n                            i++;\n                        } else {\n                            // 孤立高位代理：替换为 U+FFFD\n                            sb.append('\uFFFD');\n                        }\n                    } else if (Character.isLowSurrogate(c)) {\n                        // 孤立低位代理：替换为 U+FFFD\n                        sb.append('\uFFFD');\n                    } else {\n                        sb.append(c);\n                    }\n            }\n        }\n        sb.append('"');
+                case '"': sb.append("\\\""); break;
+                case '\\': sb.append("\\\\"); break;
+                case '\b': sb.append("\\b"); break;
+                case '\f': sb.append("\\f"); break;
+                case '\n': sb.append("\\n"); break;
+                case '\r': sb.append("\\r"); break;
+                case '\t': sb.append("\\t"); break;
+                default:
+                    if (c < ' ') {
+                        // 快速 Unicode 转义（避免 String.format 开销）
+                        sb.append("\\u00");
+                        char h = (char)(c >> 4);
+                        char l = (char)(c & 0xf);
+                        sb.append((char)(h < 10 ? h + '0' : h - 10 + 'a'));
+                        sb.append((char)(l < 10 ? l + '0' : l - 10 + 'a'));
+                    } else if (c == '\u2028' || c == '\u2029') {
+                        // 行/段落分隔符：裸置于 <script> 中会导致 JS 语法错误，安全转义
+                        appendHex4(sb, c);
+                    } else if (Character.isHighSurrogate(c)) {
+                        if (i + 1 < len && Character.isLowSurrogate(str.charAt(i + 1))) {
+                            sb.append(c);
+                            sb.append(str.charAt(i + 1));
+                            i++;
+                        } else {
+                            // 孤立高位代理：替换为 U+FFFD
+                            sb.append('\uFFFD');
+                        }
+                    } else if (Character.isLowSurrogate(c)) {
+                        // 孤立低位代理：替换为 U+FFFD
+                        sb.append('\uFFFD');
+                    } else {
+                        sb.append(c);
+                    }
+            }
+        }
+        sb.append('"');
     }
 
     /**
@@ -257,13 +304,64 @@ public final class ValueWriter {
         boolean needsEscape = false;
         for (int i = 0; i < len; i++) {
             char c = str.charAt(i);
-            if (c < ' ' || c == '"' || c == '\\' || c == '\u2028' || c == '\u2029'\n                    || Character.isHighSurrogate(c) || Character.isLowSurrogate(c)) {\n                needsEscape = true;\n                break;\n            }\n        }\n\n        if (!needsEscape) {\n            // 无转义，直接写入（最优路径）\n            sb.ensureCapacity(sb.length() + len + 2);\n            sb.append('"');
+            if (c < ' ' || c == '"' || c == '\\' || c == '\u2028' || c == '\u2029'
+                    || Character.isHighSurrogate(c) || Character.isLowSurrogate(c)) {
+                needsEscape = true;
+                break;
+            }
+        }
+
+        if (!needsEscape) {
+            // 无转义，直接写入（最优路径）
+            sb.ensureCapacity(sb.length() + len + 2);
+            sb.append('"');
             sb.append(str);
-            sb.append('"');\n            return;\n        }\n\n        // 慢速路径：需要转义（优化版 - 避免 String.format）\n        sb.append('"');
+            sb.append('"');
+            return;
+        }
+
+        // 慢速路径：需要转义（优化版 - 避免 String.format）
+        sb.append('"');
         for (int i = 0; i < len; i++) {
             char c = str.charAt(i);
             switch (c) {
-                case '"': sb.append("\\\""); break;\n                case '\\': sb.append("\\\\"); break;\n                case '\n': sb.append("\\n"); break;\n                case '\r': sb.append("\\r"); break;\n                case '\t': sb.append("\\t"); break;\n                case '\b': sb.append("\\b"); break;\n                case '\f': sb.append("\\f"); break;\n                default:\n                    if (c < ' ') {\n                        // 快速 Unicode 转义（避免 String.format）\n                        sb.append("\\u00");\n                        char h = (char)(c >> 4);\n                        char l = (char)(c & 0xf);\n                        sb.append((char)(h < 10 ? h + '0' : h - 10 + 'a'));\n                        sb.append((char)(l < 10 ? l + '0' : l - 10 + 'a'));\n                    } else if (c == '\u2028' || c == '\u2029') {\n                        // 行/段落分隔符：裸置于 <script> 中会导致 JS 语法错误，安全转义\n                        appendHex4(sb, c);\n                    } else if (Character.isHighSurrogate(c)) {\n                        if (i + 1 < len && Character.isLowSurrogate(str.charAt(i + 1))) {\n                            sb.append(c);\n                            sb.append(str.charAt(i + 1));\n                            i++;\n                        } else {\n                            // 孤立高位代理：替换为 U+FFFD\n                            sb.append('\uFFFD');\n                        }\n                    } else if (Character.isLowSurrogate(c)) {\n                        // 孤立低位代理：替换为 U+FFFD\n                        sb.append('\uFFFD');\n                    } else {\n                        sb.append(c);\n                    }\n                    break;\n            }\n        }\n        sb.append('"');
+                case '"': sb.append("\\\""); break;
+                case '\\': sb.append("\\\\"); break;
+                case '\n': sb.append("\\n"); break;
+                case '\r': sb.append("\\r"); break;
+                case '\t': sb.append("\\t"); break;
+                case '\b': sb.append("\\b"); break;
+                case '\f': sb.append("\\f"); break;
+                default:
+                    if (c < ' ') {
+                        // 快速 Unicode 转义（避免 String.format）
+                        sb.append("\\u00");
+                        char h = (char)(c >> 4);
+                        char l = (char)(c & 0xf);
+                        sb.append((char)(h < 10 ? h + '0' : h - 10 + 'a'));
+                        sb.append((char)(l < 10 ? l + '0' : l - 10 + 'a'));
+                    } else if (c == '\u2028' || c == '\u2029') {
+                        // 行/段落分隔符：裸置于 <script> 中会导致 JS 语法错误，安全转义
+                        appendHex4(sb, c);
+                    } else if (Character.isHighSurrogate(c)) {
+                        if (i + 1 < len && Character.isLowSurrogate(str.charAt(i + 1))) {
+                            sb.append(c);
+                            sb.append(str.charAt(i + 1));
+                            i++;
+                        } else {
+                            // 孤立高位代理：替换为 U+FFFD
+                            sb.append('\uFFFD');
+                        }
+                    } else if (Character.isLowSurrogate(c)) {
+                        // 孤立低位代理：替换为 U+FFFD
+                        sb.append('\uFFFD');
+                    } else {
+                        sb.append(c);
+                    }
+                    break;
+            }
+        }
+        sb.append('"');
     }
 
     /**
@@ -529,13 +627,69 @@ public final class ValueWriter {
                     if (!first) sb.append(',');
                     first = false;
                     String propName = FieldMetadataLoader.getComputedPropertyName(computedMethod);
-                    sb.append('"').append(propName).append("\":");\n                    writeValueDirect(computedValue, sb);\n                }\n            } catch (Exception e) {\n                LOGGER.debug("Failed to invoke @JsonGetter computed property {}: {}", computedMethod.getName(), e.getMessage());\n            }\n        }\n\n        sb.append('}');\n    }\n\n    /**\n     * Bean 无注解快速路径（FastJSON2 架构极致优化）\n     *\n     * <p>FastJSON2 核心优化技术：</p>\n     * <ul>\n     *   <li>预计算有效字段数组 - 避免运行时 shouldSkip 判断</li>\n     *   <li>类型代码直接索引 - 消除 switch 分支开销</li>\n     *   <li>StringBuilder 预分配 - 基于精确容量计算</li>\n     *   <li>方法调用最小化 - 减少间接方法调用</li>\n     *   <li>ASM 字节码生成 - 彻底消除反射开销</li>\n     * </ul>\n     */\n    public static void writeBeanNoAnnotationOptimized(Object obj, StringBuilder sb, Class<?> clazz, FieldMeta[] fields) {\n        PropertyNamingStrategy strategy = FieldMetadataLoader.NAMING_STRATEGY.get();\n        SerializationProvider.BeanSerializerInfo info = SerializationProvider.getOrCreateBeanSerializer(clazz, fields, strategy);\n\n        // 精确容量预分配\n        sb.ensureCapacity(info.estimatedSize);\n\n        sb.append('{');\n        boolean first = true;\n\n        // 直接遍历预计算的有效字段\n        for (FieldMeta field : info.validFields) {\n            int typeCode = field.serializeTypeCode;\n\n            switch (typeCode) {\n                case 1:  // String\n                    String strVal;\n                    try {\n                        strVal = (String) field.getter.invoke(obj);\n                    } catch (Throwable e) {\n                        strVal = null;\n                    }\n                    if (strVal != null) {\n                        if (!first) sb.append(',');\n                        first = false;\n                        sb.append(field.jsonKey);\n                        // 快速路径：内联字符串检查\n                        int len = strVal.length();\n                        boolean needsEscape = false;\n                        for (int i = 0; i < len; i++) {\n                            char c = strVal.charAt(i);\n                            if (c < ' ' || c == '"' || c == '\\') {
+                    sb.append('"').append(propName).append("\":");
+                    writeValueDirect(computedValue, sb);
+                }
+            } catch (Exception e) {
+                LOGGER.debug("Failed to invoke @JsonGetter computed property {}: {}", computedMethod.getName(), e.getMessage());
+            }
+        }
+
+        sb.append('}');
+    }
+
+    /**
+     * Bean 无注解快速路径（FastJSON2 架构极致优化）
+     *
+     * <p>FastJSON2 核心优化技术：</p>
+     * <ul>
+     *   <li>预计算有效字段数组 - 避免运行时 shouldSkip 判断</li>
+     *   <li>类型代码直接索引 - 消除 switch 分支开销</li>
+     *   <li>StringBuilder 预分配 - 基于精确容量计算</li>
+     *   <li>方法调用最小化 - 减少间接方法调用</li>
+     *   <li>ASM 字节码生成 - 彻底消除反射开销</li>
+     * </ul>
+     */
+    public static void writeBeanNoAnnotationOptimized(Object obj, StringBuilder sb, Class<?> clazz, FieldMeta[] fields) {
+        PropertyNamingStrategy strategy = FieldMetadataLoader.NAMING_STRATEGY.get();
+        SerializationProvider.BeanSerializerInfo info = SerializationProvider.getOrCreateBeanSerializer(clazz, fields, strategy);
+
+        // 精确容量预分配
+        sb.ensureCapacity(info.estimatedSize);
+
+        sb.append('{');
+        boolean first = true;
+
+        // 直接遍历预计算的有效字段
+        for (FieldMeta field : info.validFields) {
+            int typeCode = field.serializeTypeCode;
+
+            switch (typeCode) {
+                case 1:  // String
+                    String strVal;
+                    try {
+                        strVal = (String) field.getter.invoke(obj);
+                    } catch (Throwable e) {
+                        strVal = null;
+                    }
+                    if (strVal != null) {
+                        if (!first) sb.append(',');
+                        first = false;
+                        sb.append(field.jsonKey);
+                        // 快速路径：内联字符串检查
+                        int len = strVal.length();
+                        boolean needsEscape = false;
+                        for (int i = 0; i < len; i++) {
+                            char c = strVal.charAt(i);
+                            if (c < ' ' || c == '"' || c == '\\') {
                                 needsEscape = true;
                                 break;
                             }
                         }
                         if (!needsEscape) {
-                            sb.append('"');\n                            sb.append(strVal);\n                            sb.append('"');
+                            sb.append('"');
+                            sb.append(strVal);
+                            sb.append('"');
                         } else {
                             writeStringInline(strVal, sb);
                         }
@@ -820,14 +974,51 @@ public final class ValueWriter {
                 sb.append(',');
             }
             first = false;
-            sb.append('"').append(nestedField.jsonName).append("\":");\n            writeValueDirect(nestedValue, sb);\n        }\n    }\n\n    /**\n     * 写入格式化数字\n     */\n    public static void writeFormattedNumber(Number value, String format, StringBuilder sb) {\n        if (value instanceof Double || value instanceof Float) {\n            double d = value.doubleValue();\n            if (!format.isEmpty()) {\n                sb.append(String.format(format, d));\n            } else {\n                sb.append(d);\n            }\n        } else if (value instanceof Long) {\n            long l = value.longValue();\n            if (!format.isEmpty()) {\n                sb.append(String.format(format, l));\n            } else {\n                sb.append(l);\n            }\n        } else {\n            sb.append(value);\n        }\n    }\n\n    /**\n     * 写入 HTML 安全字符串\n     */\n    public static void writeHtmlSafeString(String value, StringBuilder sb) {\n        sb.append('"');
+            sb.append('"').append(nestedField.jsonName).append("\":");
+            writeValueDirect(nestedValue, sb);
+        }
+    }
+
+    /**
+     * 写入格式化数字
+     */
+    public static void writeFormattedNumber(Number value, String format, StringBuilder sb) {
+        if (value instanceof Double || value instanceof Float) {
+            double d = value.doubleValue();
+            if (!format.isEmpty()) {
+                sb.append(String.format(format, d));
+            } else {
+                sb.append(d);
+            }
+        } else if (value instanceof Long) {
+            long l = value.longValue();
+            if (!format.isEmpty()) {
+                sb.append(String.format(format, l));
+            } else {
+                sb.append(l);
+            }
+        } else {
+            sb.append(value);
+        }
+    }
+
+    /**
+     * 写入 HTML 安全字符串
+     */
+    public static void writeHtmlSafeString(String value, StringBuilder sb) {
+        sb.append('"');
         for (int i = 0; i < value.length(); i++) {
             char c = value.charAt(i);
             switch (c) {
                 case '<': sb.append("\\u003c"); break;
                 case '>': sb.append("\\u003e"); break;
                 case '&': sb.append("\\u0026"); break;
-                case '"': sb.append("\\\""); break;\n                case '\\': sb.append("\\\\"); break;\n                default: sb.append(c); break;\n            }\n        }\n        sb.append('"');
+                case '"': sb.append("\\\""); break;
+                case '\\': sb.append("\\\\"); break;
+                default: sb.append(c); break;
+            }
+        }
+        sb.append('"');
     }
 
     /**

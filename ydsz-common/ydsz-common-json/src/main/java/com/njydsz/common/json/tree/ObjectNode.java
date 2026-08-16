@@ -226,7 +226,9 @@ public final class ObjectNode extends JsonNode {
                 sb.append(',');
             }
             first = false;
-            sb.append('"');\n            escapeJsonString(sb, entry.getKey());\n            sb.append('"');
+            sb.append('"');
+            escapeJsonString(sb, entry.getKey());
+            sb.append('"');
             sb.append(':');
             sb.append(entry.getValue().toString());
         }
@@ -246,4 +248,420 @@ public final class ObjectNode extends JsonNode {
         for (int i = 0; i < text.length(); i++) {
             char c = text.charAt(i);
             switch (c) {
-                case '"': sb.append("\\\""); break;\n                case '\\': sb.append("\\\\"); break;\n                case '\n': sb.append("\\n"); break;\n                case '\r': sb.append("\\r"); break;\n                case '\t': sb.append("\\t"); break;\n                case '\b': sb.append("\\b"); break;\n                case '\f': sb.append("\\f"); break;\n                default:\n                    if (c < 0x20) {\n                        sb.append(String.format("\\u%04x", (int) c));\n                    } else {\n                        sb.append(c);\n                    }\n            }\n        }\n    }\n\n    // ==================== Map-like 便捷 getter（FastJSON2/Gson 风格） ====================\n\n    /**\n     * 获取字符串值，不存在或 null 返回 null。\n     *\n     * @param name 字段名\n     * @return 字符串值\n     */\n    public String getString(String name) {\n        JsonNode node = fields.get(name);\n        if (node == null || node.isNull() || node.isMissing()) {\n            return null;\n        }\n        return node.asText();\n    }\n\n    /**\n     * 获取整数值，不存在或 null 返回 null。\n     *\n     * @param name 字段名\n     * @return 整数值\n     */\n    public Integer getInteger(String name) {\n        JsonNode node = fields.get(name);\n        if (node == null || node.isNull() || node.isMissing()) {\n            return null;\n        }\n        if (node.isNumber()) {\n            return node.asInt();\n        }\n        try {\n            return Integer.parseInt(node.asText());\n        } catch (NumberFormatException e) {\n            return null;\n        }\n    }\n\n    /**\n     * 获取 int 基本类型值（为 null 时返回 0）。\n     *\n     * @param name 字段名\n     * @return int 值\n     */\n    public int getIntValue(String name) {\n        Integer value = getInteger(name);\n        return value != null ? value : 0;\n    }\n\n    /**\n     * 获取长整数值，不存在或 null 返回 null。\n     *\n     * @param name 字段名\n     * @return 长整数值\n     */\n    public Long getLong(String name) {\n        JsonNode node = fields.get(name);\n        if (node == null || node.isNull() || node.isMissing()) {\n            return null;\n        }\n        if (node.isNumber()) {\n            return node.asLong();\n        }\n        try {\n            return Long.parseLong(node.asText());\n        } catch (NumberFormatException e) {\n            return null;\n        }\n    }\n\n    /**\n     * 获取 long 基本类型值（为 null 时返回 0）。\n     *\n     * @param name 字段名\n     * @return long 值\n     */\n    public long getLongValue(String name) {\n        Long value = getLong(name);\n        return value != null ? value : 0L;\n    }\n\n    /**\n     * 获取双精度浮点数值，不存在或 null 返回 null。\n     *\n     * @param name 字段名\n     * @return 双精度浮点数值\n     */\n    public Double getDouble(String name) {\n        JsonNode node = fields.get(name);\n        if (node == null || node.isNull() || node.isMissing()) {\n            return null;\n        }\n        if (node.isNumber()) {\n            return node.asDouble();\n        }\n        try {\n            return Double.parseDouble(node.asText());\n        } catch (NumberFormatException e) {\n            return null;\n        }\n    }\n\n    /**\n     * 获取 double 基本类型值（为 null 时返回 0）。\n     *\n     * @param name 字段名\n     * @return double 值\n     */\n    public double getDoubleValue(String name) {\n        Double value = getDouble(name);\n        return value != null ? value : 0.0;\n    }\n\n    /**\n     * 获取浮点数值，不存在或 null 返回 null。\n     *\n     * @param name 字段名\n     * @return Float 值\n     */\n    public Float getFloat(String name) {\n        Double value = getDouble(name);\n        return value != null ? value.floatValue() : null;\n    }\n\n    /**\n     * 获取 float 基本类型值（为 null 时返回 0）。\n     *\n     * @param name 字段名\n     * @return float 值\n     */\n    public float getFloatValue(String name) {\n        Float value = getFloat(name);\n        return value != null ? value : 0.0f;\n    }\n\n    /**\n     * 获取布尔值，不存在或 null 返回 null。\n     *\n     * @param name 字段名\n     * @return 布尔值\n     */\n    public Boolean getBoolean(String name) {\n        return nodeToBoolean(fields.get(name));\n    }\n\n    /**\n     * 获取 boolean 基本类型值（为 null 时返回 false）。\n     *\n     * @param name 字段名\n     * @return boolean 值\n     */\n    public boolean getBooleanValue(String name) {\n        Boolean value = getBoolean(name);\n        return value != null ? value : false;\n    }\n\n    /**\n     * 获取 BigDecimal 值，不存在或 null 返回 null。\n     *\n     * @param name 字段名\n     * @return BigDecimal 值\n     */\n    public BigDecimal getBigDecimal(String name) {\n        return nodeToBigDecimal(fields.get(name));\n    }\n\n    /**\n     * 获取 BigInteger 值，不存在或 null 返回 null。\n     *\n     * @param name 字段名\n     * @return BigInteger 值\n     */\n    public BigInteger getBigInteger(String name) {\n        return nodeToBigInteger(fields.get(name));\n    }\n\n    /**\n     * 获取嵌套对象节点（推荐使用的命名风格），不存在或非对象返回 null。\n     *\n     * @param name 字段名\n     * @return ObjectNode 实例\n     * @since 1.1.0\n     */\n    public ObjectNode getObjectNode(String name) {\n        JsonNode node = fields.get(name);\n        if (node instanceof ObjectNode objNode) {\n            return objNode;\n        }\n        return null;\n    }\n\n    /**\n     * 获取嵌套数组节点（推荐使用的命名风格），不存在或非数组返回 null。\n     *\n     * @param name 字段名\n     * @return ArrayNode 实例\n     * @since 1.1.0\n     */\n    public ArrayNode getArrayNode(String name) {\n        JsonNode node = fields.get(name);\n        if (node instanceof ArrayNode arrNode) {\n            return arrNode;\n        }\n        return null;\n    }\n\n    /**\n     * 获取节点并转换为指定类型。\n     *\n     * @param name 字段名\n     * @param clazz 目标类型\n     * @param <T> 类型参数\n     * @return 转换后的对象\n     */\n    public <T> T getObject(String name, Class<T> clazz) {\n        JsonNode node = fields.get(name);\n        if (node == null || node.isNull() || node.isMissing()) {\n            return null;\n        }\n        return YdszJson.fromJson(node.toString(), clazz);\n    }\n\n    /**\n     * 获取字符串值或默认值。\n     *\n     * @param name 字段名\n     * @param defaultValue 默认值\n     * @return 字符串值或默认值\n     */\n    public String getStringOrDefault(String name, String defaultValue) {\n        String value = getString(name);\n        return value != null ? value : defaultValue;\n    }\n\n    /**\n     * 获取整数值或默认值。\n     *\n     * @param name 字段名\n     * @param defaultValue 默认值\n     * @return 整数值或默认值\n     */\n    public Integer getIntegerOrDefault(String name, Integer defaultValue) {\n        Integer value = getInteger(name);\n        return value != null ? value : defaultValue;\n    }\n\n    /**\n     * 获取长整数值或默认值。\n     *\n     * @param name 字段名\n     * @param defaultValue 默认值\n     * @return 长整数值或默认值\n     */\n    public Long getLongOrDefault(String name, Long defaultValue) {\n        Long value = getLong(name);\n        return value != null ? value : defaultValue;\n    }\n\n    /**\n     * 获取布尔值或默认值。\n     *\n     * @param name 字段名\n     * @param defaultValue 默认值\n     * @return 布尔值或默认值\n     */\n    public Boolean getBooleanOrDefault(String name, Boolean defaultValue) {\n        Boolean value = getBoolean(name);\n        return value != null ? value : defaultValue;\n    }\n\n    // ==================== Map-like 查询 ====================\n\n    /**\n     * 是否包含指定字段。\n     *\n     * @param name 字段名\n     * @return 包含返回 true\n     */\n    public boolean containsKey(String name) {\n        return fields.containsKey(name);\n    }\n\n    /**\n     * 是否为空对象。\n     *\n     * @return 为空返回 true\n     */\n    public boolean isEmpty() {\n        return fields.isEmpty();\n    }\n\n    /**\n     * 获取所有字段名。\n     *\n     * @return 字段名集合\n     */\n    public Set<String> keySet() {\n        return Collections.unmodifiableSet(fields.keySet());\n    }\n\n    /**\n     * 获取所有字段值。\n     *\n     * @return 字段值集合\n     */\n    public Collection<JsonNode> values() {\n        return Collections.unmodifiableCollection(fields.values());\n    }\n\n    /**\n     * 获取字段 entry 集合。\n     *\n     * @return entry 集合\n     */\n    public Set<Map.Entry<String, JsonNode>> entrySet() {\n        return Collections.unmodifiableSet(fields.entrySet());\n    }\n\n    // ==================== 通用 put（支持任意值） ====================\n\n    /**\n     * 添加任意值字段（自动转换为 JsonNode）。\n     *\n     * @param name 字段名\n     * @param value 字段值，null 转换为 NullNode\n     * @return 当前对象节点（支持链式调用）\n     */\n    public ObjectNode put(String name, Object value) {\n        if (value == null) {\n            fields.put(name, NullNode.getInstance());\n        } else if (value instanceof JsonNode node) {\n            fields.put(name, node);\n        } else if (value instanceof String str) {\n            fields.put(name, new TextNode(str));\n        } else if (value instanceof Boolean bool) {\n            fields.put(name, BooleanNode.of(bool));\n        } else if (value instanceof Number num) {\n            fields.put(name, new NumberNode(num));\n        } else if (value instanceof Map<?, ?> map) {\n            fields.put(name, ObjectNode.fromMap(map));\n        } else if (value instanceof List<?> list) {\n            fields.put(name, ArrayNode.fromList(list));\n        } else {\n            fields.put(name, TreeConverter.convertToJsonNode(value));\n        }\n        return this;\n    }\n\n    // ==================== 转换 ====================\n\n    /**\n     * 转换为 JSON 字符串。\n     *\n     * @return JSON 字符串\n     */\n    public String toJsonString() {\n        return toString();\n    }\n\n    @Override\n    public boolean equals(Object obj) {\n        if (this == obj) {\n            return true;\n        }\n        if (!(obj instanceof ObjectNode)) {\n            return false;\n        }\n        return fields.equals(((ObjectNode) obj).fields);\n    }\n\n    @Override\n    public int hashCode() {\n        return fields.hashCode();\n    }\n\n    /**\n     * 从 Map 创建 ObjectNode。\n     *\n     * @param map 源 Map，null 返回空 ObjectNode\n     * @return ObjectNode 实例\n     * @since 1.0.0\n     */\n    public static ObjectNode fromMap(Map<?, ?> map) {\n        ObjectNode node = new ObjectNode();\n        if (map == null) {\n            return node;\n        }\n        for (Map.Entry<?, ?> entry : map.entrySet()) {\n            String key = entry.getKey() instanceof String ? (String) entry.getKey() : String.valueOf(entry.getKey());\n            Object value = entry.getValue();\n            if (value == null) {\n                node.fields.put(key, NullNode.getInstance());\n            } else if (value instanceof JsonNode) {\n                node.fields.put(key, (JsonNode) value);\n            } else {\n                node.fields.put(key, TreeConverter.convertToJsonNode(value));\n            }\n        }\n        return node;\n    }\n}\n
+                case '"': sb.append("\\\""); break;
+                case '\\': sb.append("\\\\"); break;
+                case '\n': sb.append("\\n"); break;
+                case '\r': sb.append("\\r"); break;
+                case '\t': sb.append("\\t"); break;
+                case '\b': sb.append("\\b"); break;
+                case '\f': sb.append("\\f"); break;
+                default:
+                    if (c < 0x20) {
+                        sb.append(String.format("\\u%04x", (int) c));
+                    } else {
+                        sb.append(c);
+                    }
+            }
+        }
+    }
+
+    // ==================== Map-like 便捷 getter（FastJSON2/Gson 风格） ====================
+
+    /**
+     * 获取字符串值，不存在或 null 返回 null。
+     *
+     * @param name 字段名
+     * @return 字符串值
+     */
+    public String getString(String name) {
+        JsonNode node = fields.get(name);
+        if (node == null || node.isNull() || node.isMissing()) {
+            return null;
+        }
+        return node.asText();
+    }
+
+    /**
+     * 获取整数值，不存在或 null 返回 null。
+     *
+     * @param name 字段名
+     * @return 整数值
+     */
+    public Integer getInteger(String name) {
+        JsonNode node = fields.get(name);
+        if (node == null || node.isNull() || node.isMissing()) {
+            return null;
+        }
+        if (node.isNumber()) {
+            return node.asInt();
+        }
+        try {
+            return Integer.parseInt(node.asText());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    /**
+     * 获取 int 基本类型值（为 null 时返回 0）。
+     *
+     * @param name 字段名
+     * @return int 值
+     */
+    public int getIntValue(String name) {
+        Integer value = getInteger(name);
+        return value != null ? value : 0;
+    }
+
+    /**
+     * 获取长整数值，不存在或 null 返回 null。
+     *
+     * @param name 字段名
+     * @return 长整数值
+     */
+    public Long getLong(String name) {
+        JsonNode node = fields.get(name);
+        if (node == null || node.isNull() || node.isMissing()) {
+            return null;
+        }
+        if (node.isNumber()) {
+            return node.asLong();
+        }
+        try {
+            return Long.parseLong(node.asText());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    /**
+     * 获取 long 基本类型值（为 null 时返回 0）。
+     *
+     * @param name 字段名
+     * @return long 值
+     */
+    public long getLongValue(String name) {
+        Long value = getLong(name);
+        return value != null ? value : 0L;
+    }
+
+    /**
+     * 获取双精度浮点数值，不存在或 null 返回 null。
+     *
+     * @param name 字段名
+     * @return 双精度浮点数值
+     */
+    public Double getDouble(String name) {
+        JsonNode node = fields.get(name);
+        if (node == null || node.isNull() || node.isMissing()) {
+            return null;
+        }
+        if (node.isNumber()) {
+            return node.asDouble();
+        }
+        try {
+            return Double.parseDouble(node.asText());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    /**
+     * 获取 double 基本类型值（为 null 时返回 0）。
+     *
+     * @param name 字段名
+     * @return double 值
+     */
+    public double getDoubleValue(String name) {
+        Double value = getDouble(name);
+        return value != null ? value : 0.0;
+    }
+
+    /**
+     * 获取浮点数值，不存在或 null 返回 null。
+     *
+     * @param name 字段名
+     * @return Float 值
+     */
+    public Float getFloat(String name) {
+        Double value = getDouble(name);
+        return value != null ? value.floatValue() : null;
+    }
+
+    /**
+     * 获取 float 基本类型值（为 null 时返回 0）。
+     *
+     * @param name 字段名
+     * @return float 值
+     */
+    public float getFloatValue(String name) {
+        Float value = getFloat(name);
+        return value != null ? value : 0.0f;
+    }
+
+    /**
+     * 获取布尔值，不存在或 null 返回 null。
+     *
+     * @param name 字段名
+     * @return 布尔值
+     */
+    public Boolean getBoolean(String name) {
+        return nodeToBoolean(fields.get(name));
+    }
+
+    /**
+     * 获取 boolean 基本类型值（为 null 时返回 false）。
+     *
+     * @param name 字段名
+     * @return boolean 值
+     */
+    public boolean getBooleanValue(String name) {
+        Boolean value = getBoolean(name);
+        return value != null ? value : false;
+    }
+
+    /**
+     * 获取 BigDecimal 值，不存在或 null 返回 null。
+     *
+     * @param name 字段名
+     * @return BigDecimal 值
+     */
+    public BigDecimal getBigDecimal(String name) {
+        return nodeToBigDecimal(fields.get(name));
+    }
+
+    /**
+     * 获取 BigInteger 值，不存在或 null 返回 null。
+     *
+     * @param name 字段名
+     * @return BigInteger 值
+     */
+    public BigInteger getBigInteger(String name) {
+        return nodeToBigInteger(fields.get(name));
+    }
+
+    /**
+     * 获取嵌套对象节点（推荐使用的命名风格），不存在或非对象返回 null。
+     *
+     * @param name 字段名
+     * @return ObjectNode 实例
+     * @since 1.1.0
+     */
+    public ObjectNode getObjectNode(String name) {
+        JsonNode node = fields.get(name);
+        if (node instanceof ObjectNode objNode) {
+            return objNode;
+        }
+        return null;
+    }
+
+    /**
+     * 获取嵌套数组节点（推荐使用的命名风格），不存在或非数组返回 null。
+     *
+     * @param name 字段名
+     * @return ArrayNode 实例
+     * @since 1.1.0
+     */
+    public ArrayNode getArrayNode(String name) {
+        JsonNode node = fields.get(name);
+        if (node instanceof ArrayNode arrNode) {
+            return arrNode;
+        }
+        return null;
+    }
+
+    /**
+     * 获取节点并转换为指定类型。
+     *
+     * @param name 字段名
+     * @param clazz 目标类型
+     * @param <T> 类型参数
+     * @return 转换后的对象
+     */
+    public <T> T getObject(String name, Class<T> clazz) {
+        JsonNode node = fields.get(name);
+        if (node == null || node.isNull() || node.isMissing()) {
+            return null;
+        }
+        return YdszJson.fromJson(node.toString(), clazz);
+    }
+
+    /**
+     * 获取字符串值或默认值。
+     *
+     * @param name 字段名
+     * @param defaultValue 默认值
+     * @return 字符串值或默认值
+     */
+    public String getStringOrDefault(String name, String defaultValue) {
+        String value = getString(name);
+        return value != null ? value : defaultValue;
+    }
+
+    /**
+     * 获取整数值或默认值。
+     *
+     * @param name 字段名
+     * @param defaultValue 默认值
+     * @return 整数值或默认值
+     */
+    public Integer getIntegerOrDefault(String name, Integer defaultValue) {
+        Integer value = getInteger(name);
+        return value != null ? value : defaultValue;
+    }
+
+    /**
+     * 获取长整数值或默认值。
+     *
+     * @param name 字段名
+     * @param defaultValue 默认值
+     * @return 长整数值或默认值
+     */
+    public Long getLongOrDefault(String name, Long defaultValue) {
+        Long value = getLong(name);
+        return value != null ? value : defaultValue;
+    }
+
+    /**
+     * 获取布尔值或默认值。
+     *
+     * @param name 字段名
+     * @param defaultValue 默认值
+     * @return 布尔值或默认值
+     */
+    public Boolean getBooleanOrDefault(String name, Boolean defaultValue) {
+        Boolean value = getBoolean(name);
+        return value != null ? value : defaultValue;
+    }
+
+    // ==================== Map-like 查询 ====================
+
+    /**
+     * 是否包含指定字段。
+     *
+     * @param name 字段名
+     * @return 包含返回 true
+     */
+    public boolean containsKey(String name) {
+        return fields.containsKey(name);
+    }
+
+    /**
+     * 是否为空对象。
+     *
+     * @return 为空返回 true
+     */
+    public boolean isEmpty() {
+        return fields.isEmpty();
+    }
+
+    /**
+     * 获取所有字段名。
+     *
+     * @return 字段名集合
+     */
+    public Set<String> keySet() {
+        return Collections.unmodifiableSet(fields.keySet());
+    }
+
+    /**
+     * 获取所有字段值。
+     *
+     * @return 字段值集合
+     */
+    public Collection<JsonNode> values() {
+        return Collections.unmodifiableCollection(fields.values());
+    }
+
+    /**
+     * 获取字段 entry 集合。
+     *
+     * @return entry 集合
+     */
+    public Set<Map.Entry<String, JsonNode>> entrySet() {
+        return Collections.unmodifiableSet(fields.entrySet());
+    }
+
+    // ==================== 通用 put（支持任意值） ====================
+
+    /**
+     * 添加任意值字段（自动转换为 JsonNode）。
+     *
+     * @param name 字段名
+     * @param value 字段值，null 转换为 NullNode
+     * @return 当前对象节点（支持链式调用）
+     */
+    public ObjectNode put(String name, Object value) {
+        if (value == null) {
+            fields.put(name, NullNode.getInstance());
+        } else if (value instanceof JsonNode node) {
+            fields.put(name, node);
+        } else if (value instanceof String str) {
+            fields.put(name, new TextNode(str));
+        } else if (value instanceof Boolean bool) {
+            fields.put(name, BooleanNode.of(bool));
+        } else if (value instanceof Number num) {
+            fields.put(name, new NumberNode(num));
+        } else if (value instanceof Map<?, ?> map) {
+            fields.put(name, ObjectNode.fromMap(map));
+        } else if (value instanceof List<?> list) {
+            fields.put(name, ArrayNode.fromList(list));
+        } else {
+            fields.put(name, TreeConverter.convertToJsonNode(value));
+        }
+        return this;
+    }
+
+    // ==================== 转换 ====================
+
+    /**
+     * 转换为 JSON 字符串。
+     *
+     * @return JSON 字符串
+     */
+    public String toJsonString() {
+        return toString();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof ObjectNode)) {
+            return false;
+        }
+        return fields.equals(((ObjectNode) obj).fields);
+    }
+
+    @Override
+    public int hashCode() {
+        return fields.hashCode();
+    }
+
+    /**
+     * 从 Map 创建 ObjectNode。
+     *
+     * @param map 源 Map，null 返回空 ObjectNode
+     * @return ObjectNode 实例
+     * @since 1.0.0
+     */
+    public static ObjectNode fromMap(Map<?, ?> map) {
+        ObjectNode node = new ObjectNode();
+        if (map == null) {
+            return node;
+        }
+        for (Map.Entry<?, ?> entry : map.entrySet()) {
+            String key = entry.getKey() instanceof String ? (String) entry.getKey() : String.valueOf(entry.getKey());
+            Object value = entry.getValue();
+            if (value == null) {
+                node.fields.put(key, NullNode.getInstance());
+            } else if (value instanceof JsonNode) {
+                node.fields.put(key, (JsonNode) value);
+            } else {
+                node.fields.put(key, TreeConverter.convertToJsonNode(value));
+            }
+        }
+        return node;
+    }
+}

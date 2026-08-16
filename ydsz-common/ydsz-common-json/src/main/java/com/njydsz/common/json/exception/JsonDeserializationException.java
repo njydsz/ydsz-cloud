@@ -19,6 +19,15 @@ public class JsonDeserializationException extends JsonException {
     public static final int PARSE_ERROR = 3005;
     public static final int VALIDATION_ERROR = 3006;
 
+    /** 长上下文片段半径：错误位置前后各取的字符数 */
+    private static final int LONG_CONTEXT_RADIUS = 40;
+
+    /** 短源码片段半径：错误位置前后各取的字符数 */
+    private static final int SHORT_SNIPPET_RADIUS = 20;
+
+    /** "[HERE]" 标记的预留长度，用于 StringBuilder 初始容量计算 */
+    private static final int HERE_MARKER_BUFFER = 10;
+
     /** 行号（1-based） */
     private int line = -1;
 
@@ -231,17 +240,17 @@ public class JsonDeserializationException extends JsonException {
         this.column = colNum;
 
         // 提取长上下文片段（前后各 40 字符）
-        int start = Math.max(0, position - 40);
-        int end = Math.min(json.length(), position + 40);
-        StringBuilder sb = new StringBuilder(end - start + 10);
+        int start = Math.max(0, position - LONG_CONTEXT_RADIUS);
+        int end = Math.min(json.length(), position + LONG_CONTEXT_RADIUS);
+        StringBuilder sb = new StringBuilder(end - start + HERE_MARKER_BUFFER);
         sb.append(json, start, position);
         sb.append("[HERE]");
         sb.append(json, position, end);
         this.contextSnippet = sb.toString();
 
         // 提取短源码片段（前后各 20 字符）
-        int snippetStart = Math.max(0, position - 20);
-        int snippetEnd = Math.min(json.length(), position + 20);
+        int snippetStart = Math.max(0, position - SHORT_SNIPPET_RADIUS);
+        int snippetEnd = Math.min(json.length(), position + SHORT_SNIPPET_RADIUS);
         this.sourceSnippet = json.substring(snippetStart, snippetEnd);
     }
 

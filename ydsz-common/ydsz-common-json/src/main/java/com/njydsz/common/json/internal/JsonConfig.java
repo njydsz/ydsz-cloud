@@ -62,6 +62,15 @@ public final class JsonConfig implements Serializable {
      */
     private static final List<ConfigChangeListener> CHANGE_LISTENERS = new CopyOnWriteArrayList<>();
 
+    /** 默认 JSON 最大字节数上限：10 MB */
+    private static final long DEFAULT_MAX_JSON_SIZE = 10L * 1024 * 1024;
+
+    /** 默认序列化/反序列化最大嵌套深度 */
+    private static final int DEFAULT_MAX_DEPTH = 256;
+
+    /** 默认泛型递归深度上限 */
+    private static final int DEFAULT_MAX_GENERIC_DEPTH = 64;
+
     /** 字段不可变（final），通过构造函数一次性赋值 */
     private final PropertyNamingStrategy namingStrategy;
 
@@ -445,9 +454,9 @@ public final class JsonConfig implements Serializable {
         private boolean prettyPrint = false;
         private boolean failOnError = false;
         private String defaultDateFormat = "yyyy-MM-dd'T'HH:mm:ss";
-        private long maxJsonSize = 10L * 1024 * 1024;
-        private int maxDepth = 256;
-        private int maxGenericDepth = 64;
+        private long maxJsonSize = DEFAULT_MAX_JSON_SIZE;
+        private int maxDepth = DEFAULT_MAX_DEPTH;
+        private int maxGenericDepth = DEFAULT_MAX_GENERIC_DEPTH;
         private boolean useBigDecimal = false;
         private boolean wrapRootValue = false;
 

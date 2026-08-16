@@ -9,6 +9,7 @@ import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -18,7 +19,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
-import com.njydsz.common.util.http.RequestContextUtils;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -39,10 +39,20 @@ import org.slf4j.LoggerFactory;
  *   <li>兼容不可变对象（返回新实例而非修改原对象）</li>
  * </ul>
  *
+ * <p><b>安全策略（fail-closed）：</b>自 v1.0.0 起，本处理器遵循「宁可拒绝响应，
+ * 不可泄露明文」原则：
+ * <ul>
+ *   <li>递归深度超限：抛出 {@link SensitiveDataProcessingException}，不再返回原始对象</li>
+ *   <li>对象重建失败：抛出 {@link SensitiveDataProcessingException}，不再降级返回原对象</li>
+ *   <li>角色豁免：不再信任任何客户端可注入的请求头（如 X-User-Role），
+ *       在认证上下文未提供可信角色来源前，角色白名单一律不生效（全部脱敏）</li>
+ * </ul>
+ *
  * @author ydsz-team
  * @since 1.0.0
  *
  * @see SensitiveData
+ * @see SensitiveDataProcessingException
  */
 public final class SensitiveDataProcessor {
 
@@ -54,7 +64,7 @@ public final class SensitiveDataProcessor {
     private static final int MAX_DEPTH = 10;
 
     /**
-     * 类是否有敏感字段缓存（P2-18 性能优化：快速跳过无注解类）
+     * 类是否包含敏感字段缓存（P2-18 性能优化：快速跳过无注解类）
      * Key: Class对象，Value: 是否包含 @SensitiveData 注解
      */
     private static final Map<Class<?>, Boolean> SENSITIVE_CLASS_CACHE = new ConcurrentHashMap<>();
@@ -94,19 +104,23 @@ public final class SensitiveDataProcessor {
     /**
      * 内部处理方法，支持深度限制和循环引用检测。
      *
-     * @param obj       待处理的对象
-     * @param maxDepth  最大递归深度
-     * @param visited   已处理对象集合，用于循环引用检测
+     * <p>fail-closed：深度超限或处理失败时抛出 {@link SensitiveDataProcessingException}，
+     * 禁止返回未脱敏的原始对象。
+     *
+     * @param obj      待处理的对象
+     * @param maxDepth 最大递归深度
+     * @param visited  已处理对象集合，用于循环引用检测
      * @return 脱敏后的对象副本
      */
-        private static <T> T processInternal(T obj, int maxDepth, IdentityHashMap<Object, Boolean> visited) {
+    private static <T> T processInternal(T obj, int maxDepth, IdentityHashMap<Object, Boolean> visited) {
         if (obj == null) {
             return null;
         }
 
         if (maxDepth <= 0) {
-            logger.debug("达到最大递归深度 {}, 跳过处理: {}", MAX_DEPTH, obj.getClass().getName());
-            return obj;
+            throw new SensitiveDataProcessingException(
+                    "敏感数据处理超过最大递归深度，为防深层敏感数据泄露已拒绝返回原始对象: "
+                            + obj.getClass().getName());
         }
 
         if (obj instanceof String) {
@@ -118,11 +132,6 @@ public final class SensitiveDataProcessor {
             return obj;
         }
 
-        // P2-18 性能优化：快速跳过不含 @SensitiveData 注解的类，避免不必要的反射
-        if (!hasSensitiveFields(clazz)) {
-            return obj;
-        }
-
         if (visited.containsKey(obj)) {
             logger.debug("检测到循环引用，跳过处理: {}", clazz.getName());
             return obj;
@@ -130,6 +139,7 @@ public final class SensitiveDataProcessor {
         visited.put(obj, Boolean.TRUE);
 
         try {
+            // 容器类型优先递归处理，确保容器内嵌套对象（即使容器类本身无注解）也能被脱敏
             if (obj instanceof Collection) {
                 Collection<Object> collection = (Collection<Object>) obj;
                 return (T) collection.stream()
@@ -146,23 +156,25 @@ public final class SensitiveDataProcessor {
                 return (T) result;
             }
 
+            // P2-18 性能优化：仅当类本身不含敏感字段且不含引用类型字段时才可快速跳过。
+            // 含引用字段的对象仍需递归处理，防止嵌套对象中的敏感字段漏脱敏。
+            if (!hasSensitiveFields(clazz)) {
+                return obj;
+            }
+
             // Handle Java Record types via constructor reflection
             if (clazz.isRecord()) {
                 return processRecord(obj, maxDepth - 1, visited);
             }
 
             return processBean(obj, maxDepth - 1, visited);
+        } catch (SensitiveDataProcessingException e) {
+            // 深度超限等已由具体方法抛出的安全异常，直接透传
+            throw e;
         } catch (Exception e) {
-            logger.warn("处理对象 {} 时发生异常，返回部分脱敏对象: {}", clazz.getName(), e.getMessage());
-            try {
-                if (clazz.isRecord()) {
-                    return processRecord(obj, maxDepth - 1, visited);
-                }
-                return processBean(obj, maxDepth - 1, visited);
-            } catch (Exception innerEx) {
-                logger.error("部分脱敏也失败: {}", innerEx.getMessage());
-                return obj;
-            }
+            // fail-closed：处理失败不再返回原始对象，防止未脱敏数据泄露
+            throw new SensitiveDataProcessingException(
+                    "敏感数据处理失败，为防数据泄露已拒绝返回原始对象: " + clazz.getName(), e);
         }
     }
 
@@ -178,7 +190,7 @@ public final class SensitiveDataProcessor {
      * @param <T>      Record 类型
      * @return 脱敏后的 Record 新实例
      */
-        private static <T> T processRecord(T record, int maxDepth, IdentityHashMap<Object, Boolean> visited) {
+    private static <T> T processRecord(T record, int maxDepth, IdentityHashMap<Object, Boolean> visited) {
         Class<?> clazz = record.getClass();
         RecordComponent[] components = clazz.getRecordComponents();
         if (components == null || components.length == 0) {
@@ -242,8 +254,9 @@ public final class SensitiveDataProcessor {
             canonicalConstructor.setAccessible(true);
             return (T) canonicalConstructor.newInstance(componentValues);
         } catch (Exception e) {
-            logger.warn("处理 Record {} 时发生异常，返回原对象: {}", clazz.getName(), e.getMessage());
-            return record;
+            // fail-closed：Record 重建失败不返回原对象，防止深层敏感数据泄露
+            throw new SensitiveDataProcessingException(
+                    "敏感数据处理失败，Record 重建异常: " + clazz.getName(), e);
         }
     }
 
@@ -259,7 +272,7 @@ public final class SensitiveDataProcessor {
      * @param <T>      Bean 类型
      * @return 脱敏后的 Bean 副本
      */
-        private static <T> T processBean(T bean, int maxDepth, IdentityHashMap<Object, Boolean> visited) {
+    private static <T> T processBean(T bean, int maxDepth, IdentityHashMap<Object, Boolean> visited) {
         if (bean == null) {
             return null;
         }
@@ -274,8 +287,9 @@ public final class SensitiveDataProcessor {
             // 无参构造器不可用，尝试全参构造器（支持不可变对象）
             result = tryCreateWithAllArgsConstructor(bean, clazz);
             if (result == null) {
-                logger.warn("Failed to create instance of {}, using original object", clazz.getName());
-                return bean;
+                // fail-closed：无法创建副本时拒绝返回原始对象
+                throw new SensitiveDataProcessingException(
+                        "敏感数据处理失败，无法创建脱敏副本: " + clazz.getName(), e);
             }
         }
 
@@ -309,9 +323,12 @@ public final class SensitiveDataProcessor {
                         Object processedValue = processInternal(fieldValue, maxDepth, visited);
                         field.set(result, processedValue);
                     }
+                } catch (SensitiveDataProcessingException e) {
+                    // 深度超限等安全异常直接透传，中断整个处理流程
+                    throw e;
                 } catch (Exception e) {
-                    logger.warn("Failed to process field {} in {}: {}",
-                            field.getName(), currentClass.getName(), e.getMessage());
+                    logger.warn("敏感数据字段处理失败: 类={}, 字段={}, 原因={}",
+                            currentClass.getName(), field.getName(), e.getMessage());
                 }
             }
             currentClass = currentClass.getSuperclass();
@@ -415,13 +432,16 @@ public final class SensitiveDataProcessor {
     }
 
     /**
-     * 检查类是否包含 @SensitiveData 注解字段（带缓存）
+     * 检查类是否包含 @SensitiveData 注解字段或引用类型字段（带缓存）
      *
      * <p>P2-18 性能优化：首次检查后缓存结果，后续直接从缓存读取，
      * 避免对不含敏感注解的类进行不必要的反射处理。
      *
+     * <p><b>安全说明：</b>除注解字段外，引用类型字段（嵌套对象/集合/Map）也必须返回 true，
+     * 以确保嵌套对象内部的敏感字段能被递归处理，防止「外层类无注解、内层对象有敏感字段」时漏脱敏。
+     *
      * @param clazz 待检查的类
-     * @return true 表示该类（或其父类）包含 @SensitiveData 注解字段
+     * @return true 表示该类（或其父类）包含 @SensitiveData 注解字段或引用类型字段
      */
     private static boolean hasSensitiveFields(Class<?> clazz) {
         return SENSITIVE_CLASS_CACHE.computeIfAbsent(clazz, SensitiveDataProcessor::doHasSensitiveFields);
@@ -437,6 +457,10 @@ public final class SensitiveDataProcessor {
                 if (field.isAnnotationPresent(SensitiveData.class)) {
                     return true;
                 }
+                // 引用类型字段（非简单类型）可能承载嵌套敏感数据，必须递归处理
+                if (!isSimpleType(field.getType())) {
+                    return true;
+                }
             }
             current = current.getSuperclass();
         }
@@ -448,7 +472,12 @@ public final class SensitiveDataProcessor {
      *
      * <p>当 {@code @SensitiveData(roles = {"ADMIN"})} 指定了角色白名单时，
      * 如果当前用户拥有白名单中的任一角色，则跳过脱敏（返回原始值）。
-     * 角色从 HTTP 请求头 {@code X-User-Role} 获取（逗号分隔）。
+     *
+     * <p><b>安全说明（fail-closed）：</b>角色信息必须来自认证后的可信上下文，
+     * 绝不信任客户端可注入的请求头（如 X-User-Role）。
+     * 当前认证上下文契约（{@code CurrentUser}）尚未提供角色字段，
+     * 因此角色白名单暂不生效——无任何角色来源时一律执行脱敏，
+     * 防止伪造请求头绕过脱敏导致敏感数据泄露。
      *
      * @param annotation 字段上的敏感数据注解
      * @return true 表示应执行脱敏，false 表示跳过（用户有豁免角色）
@@ -458,33 +487,11 @@ public final class SensitiveDataProcessor {
         if (roles == null || roles.length == 0) {
             return true;
         }
-        String userRoles = getCurrentUserRoles();
-        if (userRoles == null || userRoles.isEmpty()) {
-            return true;
-        }
-        for (String role : roles) {
-            if (userRoles.contains(role)) {
-                logger.debug("用户拥有豁免角色 {}，跳过脱敏", role);
-                return false;
-            }
-        }
+        // fail-closed：无可信角色来源（认证上下文未提供角色字段），一律脱敏
+        // TODO: 2026-08-20 待认证上下文扩展角色字段后，改为从 RequestContext 的
+        //       AuthInfo 读取当前用户角色集合，再做精确等值匹配（@ydsz-team）
+        logger.debug("角色白名单暂不生效（认证上下文未提供角色来源），按 fail-closed 执行脱敏: {}",
+                String.join(",", roles));
         return true;
-    }
-
-    /**
-     * 从当前 HTTP 请求中获取用户角色
-     *
-     * @return 用户角色字符串（逗号分隔），非 Web 环境返回 null
-     */
-    private static String getCurrentUserRoles() {
-        try {
-            jakarta.servlet.http.HttpServletRequest request = RequestContextUtils.getRequest();
-            if (request == null) {
-                return null;
-            }
-            return request.getHeader("X-User-Role");
-        } catch (Exception e) {
-            return null;
-        }
     }
 }

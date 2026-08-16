@@ -75,7 +75,11 @@ public final class TextNode extends JsonNode {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append('"');\n        for (int i = 0; i < value.length(); i++) {\n            char c = value.charAt(i);\n            switch (c) {\n                case '"': sb.append("\\\""); break;
+        sb.append('"');
+        for (int i = 0; i < value.length(); i++) {
+            char c = value.charAt(i);
+            switch (c) {
+                case '"': sb.append("\\\""); break;
                 case '\\': sb.append("\\\\"); break;
                 case '
 ': sb.append("\\n"); break;
@@ -92,4 +96,23 @@ public final class TextNode extends JsonNode {
                     }
             }
         }
-        sb.append('"');\n        return sb.toString();\n    }\n\n    @Override\n    public boolean equals(Object obj) {\n        if (this == obj) {\n            return true;\n        }\n        if (!(obj instanceof TextNode)) {\n            return false;\n        }\n        return value.equals(((TextNode) obj).value);\n    }\n\n    @Override\n    public int hashCode() {\n        return value.hashCode();\n    }\n}\n
+        sb.append('"');
+        return sb.toString();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof TextNode)) {
+            return false;
+        }
+        return value.equals(((TextNode) obj).value);
+    }
+
+    @Override
+    public int hashCode() {
+        return value.hashCode();
+    }
+}
