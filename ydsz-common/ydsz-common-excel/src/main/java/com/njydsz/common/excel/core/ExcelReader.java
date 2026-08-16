@@ -698,9 +698,11 @@ public class ExcelReader {
             if (data != null && hasListeners) {
                 context.incrementRow();
                 try {
+                    ExcelConfig config = metadata.getExcelConfig() != null
+                            ? metadata.getExcelConfig() : ExcelConfig.defaults();
                     DataValidator.validate(
                             data, rowIndex,
-                            ExcelConfig.getInstance().getValidationMode());
+                            config.getValidationMode());
                 } catch (Exception ve) {
                     log.warn("Data validation failed, row={}", rowIndex, ve);
                     for (int i = 0; i < listenerCount; i++) {

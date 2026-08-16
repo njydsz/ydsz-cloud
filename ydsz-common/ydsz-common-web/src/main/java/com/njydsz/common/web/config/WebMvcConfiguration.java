@@ -19,8 +19,8 @@ import com.njydsz.common.base.config.BaseAutoConfiguration;
 import com.njydsz.common.base.config.BaseMvcConfiguration;
 import com.njydsz.common.base.config.ConditionalOnPlatform;
 import com.njydsz.common.base.config.PlatformMode;
-import com.njydsz.common.base.constant.FilterOrder;
 import com.njydsz.common.base.constant.InterceptorOrder;
+import com.njydsz.common.web.constant.WebFilterOrder;
 import com.njydsz.common.safe.config.SafeConfiguration;
 import com.njydsz.common.safe.config.SecurityHeaderProperties;
 import com.njydsz.common.web.advice.GlobalResponseAdvice;
@@ -132,7 +132,7 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
                 new ContentCachingFilter(contentCacheProperties));
         bean.addUrlPatterns("/*");
         bean.setName("contentCachingFilter");
-        bean.setOrder(FilterOrder.CONTENT_CACHING_FILTER);
+        bean.setOrder(WebFilterOrder.CONTENT_CACHING_FILTER);
         return bean;
     }
 
@@ -157,7 +157,7 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
         FilterRegistrationBean<WebAuthFilter> authFilterBean = new FilterRegistrationBean<>(authFilter);
         authFilterBean.addUrlPatterns("/*");
         authFilterBean.setName("webAuthFilter");
-        authFilterBean.setOrder(FilterOrder.AUTH_FILTER);
+        authFilterBean.setOrder(WebFilterOrder.AUTH_FILTER);
         return authFilterBean;
     }
 
@@ -179,7 +179,7 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
         FilterRegistrationBean<SecurityHeaderFilter> bean = new FilterRegistrationBean<>(securityHeaderFilter);
         bean.addUrlPatterns("/*");
         bean.setName("securityHeaderFilter");
-        bean.setOrder(FilterOrder.SECURITY_HEADER_FILTER);
+        bean.setOrder(com.njydsz.common.base.constant.FilterOrder.SECURITY_HEADER_FILTER);
         return bean;
     }
 
@@ -199,7 +199,7 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
         FilterRegistrationBean<TraceIdResponseFilter> bean = new FilterRegistrationBean<>(traceIdResponseFilter);
         bean.addUrlPatterns("/*");
         bean.setName("traceIdResponseFilter");
-        bean.setOrder(FilterOrder.TRACE_ID_RESPONSE_FILTER);
+        bean.setOrder(WebFilterOrder.TRACE_ID_RESPONSE_FILTER);
         return bean;
     }
 

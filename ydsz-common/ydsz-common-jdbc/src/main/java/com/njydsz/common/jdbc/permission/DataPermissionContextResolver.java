@@ -14,8 +14,7 @@ import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.constant.DataScopeConstants;
-import com.njydsz.common.auth.context.AuthInfoUtils;
-import com.njydsz.common.util.http.RequestContextUtils;
+import com.njydsz.common.core.model.AuthInfo;\nimport com.njydsz.common.util.http.RequestContextUtils;
 import com.njydsz.common.util.string.StringUtils;
 
 /**
@@ -42,7 +41,7 @@ import com.njydsz.common.util.string.StringUtils;
  *
  * <h2>读取优先级（安全增强）</h2>
  * <ol>
- *   <li>认证上下文 {@link AuthInfoUtils}（JWT 解析，可信）— 用于 userId</li>
+ *   <li>认证上下文 AuthInfo（来自 ydsz-common-core，JWT 解析后填入）— 用于 userId</li>
  *   <li>真实 HttpServletRequest Header（常规 Web 请求 / Feign 透传）— 用于 ID 集合、列权限</li>
  *   <li>{@link RequestContext} extra headers（{@code @AuthRowPermission}/{@code @AuthColPermission} 写入的虚拟请求头）</li>
  * </ol>
@@ -106,7 +105,7 @@ public class DataPermissionContextResolver {
         DataPermissionContext context = new DataPermissionContext();
         context.setDataScope(resolveDataScope(resolveHeader(request, DataPermissionHeaderConstants.X_DATA_SCOPE)));
         // 安全增强：userId 优先从认证上下文（JWT）获取，不可伪造
-        String authUserId = AuthInfoUtils.getUniqueId();
+        Object authObj = RequestContext.get(BizContextKeys.KEY_AUTH_INFO);\n        String authUserId = authObj instanceof AuthInfo auth ? auth.getUniqueId() : null;
         context.setUserId(trimToNull(authUserId != null ? authUserId : resolveHeader(request, DataPermissionHeaderConstants.X_UNIQUE_ID)));
         context.setCompanyIds(splitCsv(resolveHeader(request, DataPermissionHeaderConstants.X_COMPANY_IDS)));
         context.setDeptIds(splitCsv(resolveHeader(request, DataPermissionHeaderConstants.X_DEPT_IDS)));

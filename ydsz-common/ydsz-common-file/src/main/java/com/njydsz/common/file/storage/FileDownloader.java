@@ -11,6 +11,9 @@ import jakarta.servlet.http.HttpServletResponse;
  * 公开/私有访问地址生成、预签名 URL 生成等能力。
  * </p>
  *
+ * @deprecated 自 2.0.0 起废弃。{@link IFileStorage} 已扁平化包含所有方法，直接使用 {@link IFileStorage} 即可。
+ *             计划于 3.0.0 版本移除。
+ *
  * <p><b>安全约束：</b></p>
  * <ul>
  *   <li>公开 URL（{@link #getPublicUrl}）会暴露文件地址，应仅用于公开资源（CDN 静态资源）</li>
@@ -30,6 +33,7 @@ import jakarta.servlet.http.HttpServletResponse;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Deprecated
 public interface FileDownloader {
 
     /**
@@ -66,10 +70,18 @@ public interface FileDownloader {
      *
      * @param bucketName  存储桶名称，传 null 时使用配置默认值
      * @param objectName  对象路径
-     * @return 私有签名 URL，仅在有效期内可访问；若存储类型不支持私有签名则抛出 F05001 异常
+     * @return 私有签名 URL，仅在有效期内可访问；若存储类型不支持私有签名则抛出异常
      */
     String getPrivateUrl(String bucketName, String objectName);
 
+    /**
+     * 流式下载（返回 InputStream）
+     * <p>适合作为图片代理、文件预览等业务内嵌场景。
+     *
+     * @param bucketName  存储桶名称，传 null 时使用配置默认值
+     * @param objectName  对象路径
+     * @return 文件输入流
+     */
     InputStream downloadAsStream(String bucketName, String objectName);
 
     /**

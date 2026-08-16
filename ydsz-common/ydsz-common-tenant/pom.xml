@@ -28,11 +28,6 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-util</artifactId>
         </dependency>
-        <!-- common-auth: TenantContextWebFilter 使用 AuthInfoUtils（认证上下文读取） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-auth</artifactId>
-        </dependency>
         <!-- common-domain: TenantAware interface -->
         <dependency>
             <groupId>com.njydsz</groupId>

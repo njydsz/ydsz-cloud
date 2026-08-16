@@ -15,7 +15,9 @@ import com.njydsz.common.tenant.config.TenantProperties;
 import com.njydsz.common.tenant.config.TenantProperties.TenantField;
 import com.njydsz.common.tenant.feign.TenantHeaderContract;
 import com.njydsz.common.tenant.metrics.TenantMetrics;
-import com.njydsz.common.auth.context.AuthInfoUtils;
+import com.njydsz.common.core.context.BizContextKeys;
+import com.njydsz.common.core.context.RequestContext;
+import com.njydsz.common.core.model.AuthInfo;
 
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
@@ -35,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
  * <ol>
  *   <li>HTTP header 取值（配置了 {@code header}）</li>
  *   <li>JWT claim 取值（配置了 {@code claim} 且 JWT 可用时，注意：此方式
- *       依赖静态工具 {@code AuthInfoUtils}，单元测试需 mock 该静态方法）</li>
+ *       直接读取 AuthInfo（来自 ydsz-common-core），单元测试需 mock 该静态方法）</li>
  *   <li>多值字段（{@code multiValue=true}）→ 逗号分隔解析为 List</li>
  * </ol>
  *
@@ -216,14 +218,37 @@ public class TenantContextWebFilter implements Filter {
      * 从 JWT claim 解析值。
      *
      * <p>提取为 protected 方法以便单元测试中通过子类覆盖，
-     * 避免 mock 静态工具 {@link AuthInfoUtils}。
+     * 避免对 common-auth 的编译依赖。
      *
      * @param claim JWT claim 名
      * @return claim 值，不存在返回 null
      * @since 1.10.0
      */
     protected String resolveClaimValue(String claim) {
-        return AuthInfoUtils.getClaim(claim);
+        if (claim == null || claim.isEmpty()) {
+            return null;
+        }
+        Object authObj = RequestContext.get(BizContextKeys.KEY_AUTH_INFO);
+        if (!(authObj instanceof AuthInfo auth)) {
+            return null;
+        }
+        switch (claim) {
+            case "tenantId":
+                return auth.getTenantId();
+            case "uniqueId":
+            case "userId":
+                return auth.getUniqueId();
+            case "companyIds": {
+                Set<String> ids = auth.getHasPermissionCompanyIds();
+                return ids == null || ids.isEmpty() ? null : String.join(",", ids);
+            }
+            case "deptIds": {
+                Set<String> ids = auth.getHasPermissionDeptIds();
+                return ids == null || ids.isEmpty() ? null : String.join(",", ids);
+            }
+            default:
+                return null;
+        }
     }
 
     private boolean isAnonUrl(String requestUri) {

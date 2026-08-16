@@ -1,7 +1,29 @@
 package com.njydsz.common.file.storage;
 
-/**
- * 文件存储统一抽象接口
+import java.io.InputStream;
+import java.time.Duration;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+
+import jakarta.servlet.http.HttpServletResponse;
+
+import org.springframework.web.multipart.MultipartFile;
+
+import com.njydsz.common.file.callback.UploadProgressListener;
+import com.njydsz.common.file.domain.BatchDeleteResult;
+import com.njydsz.common.file.domain.ChunkedUploadResult;
+import com.njydsz.common.file.domain.FileStorage;
+import com.njydsz.common.file.domain.ListObjectsResult;
+import com.njydsz.common.file.domain.ObjectMetadata;
+import com.njydsz.common.file.domain.PolicyResult;
+import com.njydsz.common.file.domain.UploadCheckpoint;
+import com.njydsz.common.file.storage.platform.CosStorage;
+import com.njydsz.common.file.storage.platform.LocalStorage;
+import com.njydsz.common.file.storage.platform.MinioStorage;
+import com.njydsz.common.file.storage.platform.ObsStorage;
+import com.njydsz.common.file.storage.platform.OssStorage;
+import com.njydsz.common.file.storage.platform.QiniuStorage;
+import com.njydsz.common.file.storage.platform.S3Storage;
  * <p>
  * 抽象所有存储后端（local / minio / s3 / oss / cos / qiniu / obs）的同一操作语义，
  * 各实现类负责将本接口调用翻译为对应云厂商 SDK 的原生 API。业务层只需面向

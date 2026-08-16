@@ -37,13 +37,27 @@ public class ValueFormatter {
     /** 是否自动去除字符串首尾空格 */
     private final boolean automaticTrim;
 
+    /** Excel 全局配置 */
+    private final ExcelConfig excelConfig;
+
     /**
      * 构造方法
      *
      * @param automaticTrim 是否自动去除字符串首尾空格
      */
     public ValueFormatter(boolean automaticTrim) {
+        this(automaticTrim, ExcelConfig.defaults());
+    }
+
+    /**
+     * 构造方法
+     *
+     * @param automaticTrim 是否自动去除字符串首尾空格
+     * @param excelConfig   Excel 全局配置
+     */
+    public ValueFormatter(boolean automaticTrim, ExcelConfig excelConfig) {
         this.automaticTrim = automaticTrim;
+        this.excelConfig = excelConfig != null ? excelConfig : ExcelConfig.defaults();
     }
 
     /**

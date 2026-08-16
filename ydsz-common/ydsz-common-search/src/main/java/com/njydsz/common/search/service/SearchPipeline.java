@@ -21,8 +21,7 @@ import lombok.extern.slf4j.Slf4j;
  * <ol>
  *   <li>{@link NormalizerFilter} — 标点清理、空白归一化、长度截断</li>
  *   <li>{@link StopWordFilter} — 停用词过滤</li>
- *   <li>{@link SynonymExpansionFilter} — 同义词扩展（可选）</li>
- *   <li>{@link TokenTypeFilter} — 中文分词（jieba / ICU4J）</li>
+ *   <li>{@link ChineseTokenFilter} — 中文分词（ICU4J）</li>
  * </ol>
  *
  * <p>使用示例：
@@ -88,11 +87,6 @@ public class SearchPipeline {
     public static SearchPipeline fromConfig(SearchProperties properties) {
         Builder builder = builder();
         builder.addFilter(new NormalizerFilter());
-
-        if (properties.getTextProcessor().isSynonymEnabled()) {
-            builder.addFilter(new SynonymExpansionFilter(properties));
-        }
-
         builder.addFilter(new ChineseTokenFilter(new ChineseTokenizer.IcuTokenizer()));
         return builder.build();
     }
@@ -217,31 +211,6 @@ public class SearchPipeline {
     }
 
     /**
-     * 同义词扩展过滤器：将同义词加入查询（OR 语义）。
-     */
-    @Slf4j
-    public static class SynonymExpansionFilter implements TextFilter {
-
-        private final SearchProperties properties;
-
-        public SynonymExpansionFilter(SearchProperties properties) {
-            this.properties = properties;
-        }
-
-        @Override
-        public String process(String text) {
-            // 简化实现：同义词扩展由 SearchTextProcessor 处理，此处占位
-            // 实际项目中可加载同义词词典进行改写
-            return text;
-        }
-
-        @Override
-        public String getName() {
-            return "SynonymExpansionFilter";
-        }
-    }
-
-    /**
      * 中文分词过滤器：使用分词器将连续中文拆分为独立词元。
      */
     @Slf4j
@@ -268,22 +237,4 @@ public class SearchPipeline {
         }
     }
 
-    /**
-     * 拼音首字母过滤器：支持拼音首字母搜索（如输入 "xm" → "项目"）。
-     */
-    @Slf4j
-    public static class PinyinInitialFilter implements TextFilter {
-
-        @Override
-        public String process(String text) {
-            // 简化实现：依赖 pinyin4j 或自定义拼音库
-            // 输入 "xm" 时附加 "项目" 的同音/拼音首字母建议
-            return text;
-        }
-
-        @Override
-        public String getName() {
-            return "PinyinInitialFilter";
-        }
-    }
 }

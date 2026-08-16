@@ -64,6 +64,7 @@ public class ConcurrentExcelWriter {
     private final String filePath;
     private final Class<?> clazz;
     private final List<?> data;
+    private ExcelConfig excelConfig = ExcelConfig.defaults();
     private int parallelism = Runtime.getRuntime().availableProcessors();
     private int chunkSize = 10000;
     private Set<String> excludeColumnFiledNames;
@@ -95,6 +96,17 @@ public class ConcurrentExcelWriter {
      */
     public static ConcurrentExcelWriter write(String filePath, Class<?> clazz, List<?> data) {
         return new ConcurrentExcelWriter(filePath, clazz, data);
+    }
+
+    /**
+     * 设置 Excel 全局配置。
+     *
+     * @param excelConfig 配置实例
+     * @return 当前写入器，便于链式调用
+     */
+    public ConcurrentExcelWriter excelConfig(ExcelConfig excelConfig) {
+        this.excelConfig = excelConfig != null ? excelConfig : ExcelConfig.defaults();
+        return this;
     }
 
     /**
@@ -326,7 +338,7 @@ public class ConcurrentExcelWriter {
 
     private void appendCellXml(StringBuilder sb, int col, int rowNum, Object value, FieldAccessorInfo info) {
         String cellRef = toCellRef(col) + rowNum;
-        boolean formulaProtection = ExcelConfig.getInstance().isFormulaInjectionProtection();
+        boolean formulaProtection = excelConfig.isFormulaInjectionProtection();
 
         if (value instanceof String s) {
             String processed = formulaProtection ? FormulaInjectionGuard.sanitizeFormulaInjection(s) : s;
@@ -376,7 +388,7 @@ public class ConcurrentExcelWriter {
              BufferedOutputStream bos = new BufferedOutputStream(fos, ZIP_BUFFER_SIZE);
              ZipOutputStream zipOut = new ZipOutputStream(bos)) {
 
-            zipOut.setLevel(ExcelConfig.getInstance().getCompressionLevel());
+            zipOut.setLevel(excelConfig.getCompressionLevel());
 
             zipOut.putNextEntry(new ZipEntry("[Content_Types].xml"));
             zipOut.write(CONTENT_TYPES);

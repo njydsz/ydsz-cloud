@@ -16,8 +16,10 @@ import com.njydsz.common.file.domain.UploadCheckpoint;
  * 文件上传器接口
  * <p>
  * 定义文件上传相关的核心操作，包括单文件上传、分片上传、断点续传、前端直传 Policy 等能力。
- * 该接口按 SRP 拆分自 {@link IFileStorage}，便于单独 Mock 与替换。
  * </p>
+ *
+ * @deprecated 自 2.0.0 起废弃。{@link IFileStorage} 已扁平化包含所有方法，直接使用 {@link IFileStorage} 即可。
+ *             计划于 3.0.0 版本移除。
  *
  * <p><b>分片上传流程：</b></p>
  * <ol>
@@ -38,6 +40,7 @@ import com.njydsz.common.file.domain.UploadCheckpoint;
  * @author ydsz-team
  * @since 1.0.0
  */
+@Deprecated
 public interface FileUploader {
 
     /**

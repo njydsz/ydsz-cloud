@@ -37,18 +37,4 @@ public interface OfflineMessageStore {
      * @return 离线消息数量
      */
     long countOffline(String userId);
-
-    /**
-     * 分页查询用户的离线消息（FIFO 顺序：最旧的消息在前）。
-     *
-     * <p>与 {@link #drainOffline(String)} 不同，本方法仅读取指定范围的离线消息，
-     * 不会清空缓存。适用于管理后台预览或客户端增量拉取场景。
-     *
-     * @param userId 用户 ID
-     * @param offset 起始偏移（0 起始，最旧的消息在 offset=0）
-     * @param limit  最多返回条数
-     * @return 离线消息 JSON 列表（最旧在前），无则返回空列表
-     * @throws IllegalArgumentException 当 offset &lt; 0 或 limit &lt;= 0 时
-     */
-    List<String> pageOffline(String userId, int offset, int limit);
 }
