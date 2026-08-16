@@ -30,7 +30,8 @@ public final class SerializerCache {
 
     /** 字段元数据缓存（双层：外层 Class -> 内层 命名策略 -> FieldMeta[]），
      *  外层有界 LRU（容量 1024），防止动态类加载场景下无界增长。 */
-    private static final BoundedLruCache<Class<?>, ConcurrentMap<PropertyNamingStrategy, FieldMeta[]>> FIELD_META_CACHE =
+    private static final BoundedLruCache<Class<?>, ConcurrentMap<PropertyNamingStrategy, FieldMeta[]>>
+        FIELD_META_CACHE =
         new BoundedLruCache<>(1024);
 
     /** 上次清理时的配置版本号（用于检测配置变更） */

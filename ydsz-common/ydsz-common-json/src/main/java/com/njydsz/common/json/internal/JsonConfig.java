@@ -501,6 +501,7 @@ public final class JsonConfig implements Serializable {
          * 设置字段命名策略。
          *
          * @param namingStrategy 命名策略（如 SNAKE_CASE / LOWER_CAMEL_CASE），不可为 {@code null}
+         * @return this（链式调用）
          */
         public Builder namingStrategy(PropertyNamingStrategy namingStrategy) {
             this.namingStrategy = namingStrategy;
@@ -511,6 +512,7 @@ public final class JsonConfig implements Serializable {
          * 设置循环引用处理策略。
          *
          * @param strategy {@code REF} 输出引用路径 / {@code IGNORE} 忽略 / {@code ERROR} 抛异常
+         * @return this（链式调用）
          */
         public Builder circularReferenceStrategy(CircularReferenceStrategy strategy) {
             this.circularReferenceStrategy = strategy;
@@ -521,6 +523,7 @@ public final class JsonConfig implements Serializable {
          * 设置是否输出 null 字段。
          *
          * @param writeNulls {@code true} 保留 null 字段，{@code false} 跳过 null 字段
+         * @return this（链式调用）
          */
         public Builder writeNulls(boolean writeNulls) {
             this.writeNulls = writeNulls;
@@ -531,6 +534,7 @@ public final class JsonConfig implements Serializable {
          * 设置日期类型序列化格式。
          *
          * @param dateFormat SimpleDateFormat 模式串；{@code null} 按空串处理（使用默认格式）
+         * @return this（链式调用）
          */
         public Builder dateFormat(String dateFormat) {
             this.dateFormat = dateFormat != null ? dateFormat : "";
@@ -541,6 +545,7 @@ public final class JsonConfig implements Serializable {
          * 设置枚举序列化方式。
          *
          * @param ordinal {@code true} 用枚举 ordinal 序号，{@code false} 用 name 名称
+         * @return this（链式调用）
          */
         public Builder serializeEnumUsingOrdinal(boolean ordinal) {
             this.serializeEnumUsingOrdinal = ordinal;
@@ -551,6 +556,7 @@ public final class JsonConfig implements Serializable {
          * 设置是否格式化（缩进）输出。
          *
          * @param prettyPrint {@code true} 启用美化输出
+         * @return this（链式调用）
          */
         public Builder prettyPrint(boolean prettyPrint) {
             this.prettyPrint = prettyPrint;
@@ -561,6 +567,7 @@ public final class JsonConfig implements Serializable {
          * 设置序列化遇错时是否抛出异常。
          *
          * @param failOnError {@code true} 抛异常，{@code false} 降级为容错输出
+         * @return this（链式调用）
          */
         public Builder failOnError(boolean failOnError) {
             this.failOnError = failOnError;
@@ -571,6 +578,7 @@ public final class JsonConfig implements Serializable {
          * 设置反序列化时未显式指定格式的日期默认解析模式。
          *
          * @param defaultDateFormat 日期默认解析模式串
+         * @return this（链式调用）
          */
         public Builder defaultDateFormat(String defaultDateFormat) {
             this.defaultDateFormat = defaultDateFormat;
@@ -581,6 +589,7 @@ public final class JsonConfig implements Serializable {
          * 设置单次 JSON 处理的最大字节数上限。
          *
          * @param maxJsonSize 上限（字节），超过将抛出 {@link JsonException}
+         * @return this（链式调用）
          */
         public Builder maxJsonSize(long maxJsonSize) {
             this.maxJsonSize = maxJsonSize;
@@ -591,6 +600,7 @@ public final class JsonConfig implements Serializable {
          * 设置序列化/反序列化的最大嵌套深度。
          *
          * @param maxDepth 最大深度，防止过深结构导致栈溢出
+         * @return this（链式调用）
          */
         public Builder maxDepth(int maxDepth) {
             this.maxDepth = maxDepth;
@@ -601,6 +611,7 @@ public final class JsonConfig implements Serializable {
          * 设置泛型递归深度上限。
          *
          * @param maxGenericDepth 最大深度，防止嵌套泛型参数递归过深导致栈溢出，默认 64
+         * @return this（链式调用）
          */
         public Builder maxGenericDepth(int maxGenericDepth) {
             this.maxGenericDepth = maxGenericDepth;
@@ -611,6 +622,7 @@ public final class JsonConfig implements Serializable {
          * 设置是否将浮点数解析为 BigDecimal 以保留精度。
          *
          * @param useBigDecimal {@code true} 启用（金融等高精度场景推荐）
+         * @return this（链式调用）
          */
         public Builder useBigDecimal(boolean useBigDecimal) {
             this.useBigDecimal = useBigDecimal;
@@ -621,6 +633,7 @@ public final class JsonConfig implements Serializable {
          * 设置是否启用根名称包裹。
          *
          * @param wrapRootValue {@code true} 启用（配合 {@code @JsonRootName} 注解）
+         * @return this（链式调用）
          */
         public Builder wrapRootValue(boolean wrapRootValue) {
             this.wrapRootValue = wrapRootValue;

@@ -1,14 +1,21 @@
 package com.njydsz.agent.server.rag;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
+
 import com.njydsz.agent.domain.rag.TextChunk;
 import com.njydsz.agent.domain.rag.VectorStore;
 import com.njydsz.agent.infra.rag.HybridRetriever;
+import com.njydsz.common.docs.domain.DocumentContent;
+import com.njydsz.common.docs.domain.DocumentParseResult;
+import com.njydsz.common.docs.enums.DocumentFormat;
+import com.njydsz.common.docs.service.DocumentService;
 
 /**
  * RAG 检索服务
@@ -20,6 +27,7 @@ import com.njydsz.agent.infra.rag.HybridRetriever;
  *   <li>{@link #retrieve} — 向量相似度检索</li>
  *   <li>{@link #buildContext} — 将检索结果拼接为 LLM 上下文文本</li>
  *   <li>{@link #retrieveAndBuild} — 检索 + 上下文组装一步到位</li>
+ *   <li>{@link #ingestByFileId} — 根据文件 ID 索引文档到 RAG 知识库</li>
  * </ul>
  *
  * @author ydsz-team
@@ -29,18 +37,29 @@ import com.njydsz.agent.infra.rag.HybridRetriever;
 public class RagService {
 
     private static final Logger log = LoggerFactory.getLogger(RagService.class);
-    // 默认返回 Top-5 召回；过小覆盖不足、过大引入噪声并增加上下文长度
+
+    /** 默认返回 Top-5 召回；过小覆盖不足、过大引入噪声并增加上下文长度 */
     private static final int DEFAULT_TOP_K = 5;
-    // 默认最小相似度阈值 0.7：低于此分数视为不相关，过滤低质召回
+
+    /** 默认最小相似度阈值 0.7：低于此分数视为不相关，过滤低质召回 */
     private static final double DEFAULT_MIN_SCORE = 0.7;
+
+    /** 最大提取文本长度（1MB），保护向量库体积 */
+    private static final int MAX_CONTENT_LENGTH = 1024 * 1024;
 
     private final VectorStore vectorStore;
     private final ObjectProvider<HybridRetriever> hybridRetrieverProvider;
+    private final DocumentService documentService;
+    private final DocumentIngestionService ingestionService;
 
     public RagService(VectorStore vectorStore,
-                      ObjectProvider<HybridRetriever> hybridRetrieverProvider) {
+                      ObjectProvider<HybridRetriever> hybridRetrieverProvider,
+                      DocumentService documentService,
+                      DocumentIngestionService ingestionService) {
         this.vectorStore = vectorStore;
         this.hybridRetrieverProvider = hybridRetrieverProvider;
+        this.documentService = documentService;
+        this.ingestionService = ingestionService;
     }
 
     /**
@@ -73,7 +92,7 @@ public class RagService {
             chunks = vectorStore.search(query, topK, minScore);
         }
         log.info("[RAG] 检索完成: query='{}', mode={}, results={}",
-                truncate(query, 50), hybridRetriever != null ? "hybrid" : "vector", chunks.size()); // 日志中查询仅保留前 50 字符，避免长文本刷屏
+                truncate(query, 50), hybridRetriever != null ? "hybrid" : "vector", chunks.size());
         return chunks;
     }
 
@@ -133,7 +152,7 @@ public class RagService {
                     chunk.getDocumentId(),
                     chunk.getDocumentTitle(),
                     chunk.getSource(),
-                    truncate(chunk.getContent(), 200))); // 引用摘要截取到 200 字符，供前端展示
+                    truncate(chunk.getContent(), 200)));
         }
         return citations;
     }
@@ -149,13 +168,68 @@ public class RagService {
      * 根据文件 ID 索引文档到 RAG 知识库（跨模块事件触发）。
      *
      * <p>当 nextwiki 模块发布 FILE_UPLOADED 事件时，Agent 模块监听并调用此方法。
-     * 实际实现需通过 Feign 调用 nextwiki 服务获取文件内容，再做文档解析和向量化。
+     * 流程：获取文件内容 → 解析文档（{@link DocumentService}）→ 分块/向量化/存储（{@link DocumentIngestionService}）。
      *
-     * @param fileId 文件 ID
+     * <p><b>文件获取说明：</b>当前通过 aggregateId（即 fileId）标识文件，
+     * 实际获取文件内容需调用 nextwiki 模块的 Feign API（待实现 {@code FileContentFeignClient}）。
+     * 在 Feign 客户端就绪前，可使用 {@link #ingestFromStream} 方法直接摄入已获取的文件流。
+     *
+     * @param fileId 文件 ID（对应 nextwiki 模块的文件节点 ID）
+     *
+     * @see #ingestFromStream(InputStream, String, String)
      */
     public void ingestByFileId(String fileId) {
         log.info("[RagService] 接收文件索引请求: fileId={}", fileId);
-        // TODO: 通过 Feign 调用 nextwiki 获取文件内容 → 文档解析 → 向量化 → 存入 VectorStore
+        // TODO: 通过 FileContentFeignClient 调用 nextwiki 获取文件内容后，
+        //  调用 ingestFromStream(stream, fileName, fileId) 完成摄入。
+        //  当前 Feign 客户端未实现，待 nextwiki 模块暴露文件内容 API 后补充。
+    }
+
+    /**
+     * 从文件流摄入文档到 RAG 知识库。
+     *
+     * <p>支持 PDF / Office / 纯文本 / Markdown / HTML 等多种格式，
+     * 由 {@link DocumentService#parseAndPreprocess} 自动检测格式并解析。
+     *
+     * <p>流程：文档解析 → 纯文本提取 → 分块 → 向量化 → 存入向量库。
+     *
+     * @param inputStream 文件输入流（调用方负责关闭）
+     * @param fileName    原始文件名（含后缀，用于格式检测）
+     * @param documentId 文档 ID（用于关联向量块）
+     * @return 摄入的文本块数；解析失败返回 0
+     */
+    public int ingestFromStream(InputStream inputStream, String fileName, String documentId) {
+        log.info("[RagService] 开始摄入文件流: fileName={}, documentId={}", fileName, documentId);
+
+        // 格式预检：快速跳过不支持的格式
+        if (DocumentFormat.fromFileName(fileName) == DocumentFormat.UNKNOWN) {
+            log.info("[RagService] 不支持的格式，跳过摄入: fileName={}", fileName);
+            return 0;
+        }
+
+        // 使用 common-docs 解析文档
+        DocumentParseResult parseResult = documentService.parseAndPreprocess(inputStream, fileName, null);
+        if (!parseResult.isSuccess()) {
+            log.warn("[RagService] 文档解析失败: fileName={}, error={}", fileName, parseResult.getErrorMessage());
+            return 0;
+        }
+
+        DocumentContent docContent = parseResult.getContent();
+        if (docContent == null || docContent.getText() == null || docContent.getText().isEmpty()) {
+            log.warn("[RagService] 文档内容为空: fileName={}", fileName);
+            return 0;
+        }
+
+        String text = docContent.getText();
+        // 限制最大长度
+        if (text.length() > MAX_CONTENT_LENGTH) {
+            text = text.substring(0, MAX_CONTENT_LENGTH);
+        }
+
+        // 委托 DocumentIngestionService 完成分块 + 向量化 + 存储
+        int count = ingestionService.ingest(documentId, text, fileName, "nextwiki");
+        log.info("[RagService] 文件流摄入完成: fileName={}, chunks={}", fileName, count);
+        return count;
     }
 
     /**

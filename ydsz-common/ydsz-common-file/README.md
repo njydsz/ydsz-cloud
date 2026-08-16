@@ -351,6 +351,77 @@ public class ClamAvVirusScanner implements VirusScanner {
 
 注册为 Spring Bean 后，`FileConfiguration` 通过 `@ConditionalOnMissingBean` 检测到已有实现，自动跳过 `NoOpVirusScanner` 装配。
 
+## 大文件断点续传接入指南
+
+本节面向需要支持 >100MB 大文件上传、弱网恢复、用户刷新页面后续传的业务场景（如 ydsz-nextwiki 的知识库附件上传、ydsz-cronjob 的报表分片上传）。
+
+### 前端职责（以 resumable.js / tus 为例）
+
+1. 文件分片（建议 5MB/片，与 `ydsz.file.part-size` 对齐）
+2. 计算整体文件 MD5（用于秒传预检和服务端最终校验）
+3. 调用后端接口获取 `UploadCheckpoint`，返回已上传分片列表
+4. 仅上传未完成的分片
+5. 全部上传完成后调用 complete 接口
+
+### 后端三步 API 设计
+
+**接口 1：初始化断点续传 POST /api/file/upload/init**
+
+```java
+@PostMapping("/upload/init")
+public Result<UploadCheckpoint> initChunked(
+        @RequestParam("file") MultipartFile file,
+        @RequestParam("objectName") String objectName) {
+    UploadCheckpoint cp = fileStorage.initChunkedUploadWithCheckpoint(null, objectName, file);
+    return Result.ok(cp);
+}
+```
+
+返回的 `UploadCheckpoint` 须保留到前端状态（localStorage / Pinia），含 `uploadId`、`totalChunks` 与 `chunkSize`。
+
+**接口 2：上传单分片 POST /api/file/upload/chunk**
+
+```java
+@PostMapping("/upload/chunk")
+public Result<Void> uploadChunk(
+        @RequestParam("file") MultipartFile chunk,
+        @RequestParam("uploadId") String uploadId,
+        @RequestParam("partNumber") int partNumber) {
+    fileStorage.uploadChunk(null, uploadId, partNumber, chunk);
+    return Result.ok();
+}
+```
+
+**接口 3：合并分片 POST /api/file/upload/complete**
+
+```java
+@PostMapping("/upload/complete")
+public Result<String> complete(
+        @RequestParam("uploadId") String uploadId,
+        @RequestParam("objectName") String objectName) {
+    String url = fileStorage.resumeChunkedUpload(checkpoint, null).getUrl();
+    fileStorage.deleteCheckpoint(checkpoint.getUploadId());
+    return Result.ok(url);
+}
+```
+
+### 异常处理清单
+
+| 异常情况 | 推荐策略 |
+|---------|---------|
+| 分片上传中浏览器关闭 | 依靠检查点 TTL（默认 24h）自动过期清理；下次打开页面后新 uploadId |
+| 检查点丢失但分片仍存在 | 调用 `storage.listMultipartUploads(bucket)` 清理孤立分片 |
+| MD5 校验失败 | `chunkMd5Check=true` 时 merge 阶段会抛 `FILE_MD5_MISMATCH`，前端提示用户重新上传 |
+| 同一用户并发上传同一文件 | 并发守卫拦截抛 `FILE_CONCURRENT_UPLOAD`，前端展示"文件正在上传中" |
+
+### 与简单分片上传的边界
+
+< 100MB：走普通 `upload()` 即可，无需断点续传
+100MB ~ 2GB：推荐使用本节的断点续传模式
+\> 2GB：建议改用对象存储的分片上传 SDK（如 MinIO 的 `putObject` 流式封装）或对接 tus 协议
+
+---
+
 ## SPI 扩展点
 
 | SPI 接口 | 用途 | 实现方 |
@@ -363,6 +434,37 @@ public class ClamAvVirusScanner implements VirusScanner {
 | `CheckpointService` | 检查点业务服务接口，封装序列化与校验逻辑 | 框架内置 `DefaultCheckpointService` |
 | `UploadProgressListener` | 上传进度回调接口 | 业务方实现，作为方法参数传入 |
 | `DefaultStorageFactory.register(type, provider)` | 通过代码注册自定义存储类型 | 业务方扩展（非 Bean 方式） |
+
+### SPI 注册自定义存储后端示例（v1.1 新增）
+
+以下示例演示如何通过 `DefaultStorageFactory.register()` 注册自研对象存储后端（如 Ceph Rook / 私有 S3 网关）：
+
+```java
+import com.njydsz.common.file.storage.DefaultStorageFactory;
+import com.njydsz.common.file.storage.IFileStorage;
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class CephStorageRegisterConfig {
+
+    @Autowired
+    private DefaultStorageFactory storageFactory;
+
+    @Autowired
+    private CephProperties cephProperties;  // 业务模块自定义配置类
+
+    @PostConstruct
+    public void registerCephStorage() {
+        storageFactory.register("ceph", provider -> new CephFileStorage(cephProperties));
+    }
+}
+```
+
+注册完成后，通过配置 `ydsz.file.type=ceph` 即可切换至自定义实现。详见 `DefaultStorageFactory` Javadoc。
+
+> **生产建议**：自研存储后端须完整实现 `IFileStorage` 的抽象方法族（含分片上传五步曲），并覆盖 `supportsServerSideCopy()` 与 `doCopyObject`，否则 `copyObject` 会走"下载+上传"降级路径，大文件场景性能下降。
 
 ## 健康检查
 

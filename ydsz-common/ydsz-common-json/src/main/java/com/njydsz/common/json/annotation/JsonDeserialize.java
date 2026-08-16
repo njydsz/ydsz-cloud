@@ -23,7 +23,8 @@ import java.lang.annotation.Target;
  *     private final long cents;
  * }
  *
- * public class MoneyDeserializer implements com.njydsz.common.json.deserializer.JsonDeserializer{@literal <}Money{@literal >} {
+ * public class MoneyDeserializer implements
+ *     com.njydsz.common.json.deserializer.JsonDeserializer{@literal <}Money{@literal >} {
  *     {@literal @}Override
  *     public Money deserialize(JSONReader reader) {
  *         return new Money(reader.readLong());

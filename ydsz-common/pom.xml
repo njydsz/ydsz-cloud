@@ -104,8 +104,21 @@
         <!-- L6 应用层 -->
         <module>ydsz-common-base</module>
         <module>ydsz-common-web</module>
-        <module>ydsz-common-app</module>
     </modules>
+
+    <!--
+        App 端基座模块（ydsz-common-app）当前无业务消费方。
+        保留模块源码与 dependencyManagement，但移出默认构建。
+        当有 App 端开发需求时，通过 -P app-profile 激活构建和集成验证。
+    -->
+    <profiles>
+        <profile>
+            <id>app-profile</id>
+            <modules>
+                <module>ydsz-common-app</module>
+            </modules>
+        </profile>
+    </profiles>
 
     <dependencyManagement>
         <dependencies>

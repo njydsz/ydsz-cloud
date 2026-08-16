@@ -212,7 +212,8 @@ public final class FieldMeta {
                 }
             } catch (Exception e) {
                 // 非法日期格式模式，formatDateValue/parseDateValue 会回退到 toString
-                LOGGER.debug("Invalid date format pattern '" + this.format + "' for field " + name + ": " + e.getMessage());
+                LOGGER.debug("Invalid date format pattern '{}' for field {}: {}",
+                    this.format, name, e.getMessage());
             }
         }
         this.cachedFormatter = formatter;

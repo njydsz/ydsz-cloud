@@ -23,7 +23,8 @@ import java.lang.annotation.Target;
  *     private final long cents;
  * }
  *
- * public class MoneySerializer implements com.njydsz.common.json.serializer.JsonSerializer{@literal <}Money{@literal >} {
+ * public class MoneySerializer implements
+ *     com.njydsz.common.json.serializer.JsonSerializer{@literal <}Money{@literal >} {
  *     {@literal @}Override
  *     public void serialize(Money value, JSONWriter out) {
  *         out.writeString(String.format("%.2f", value.getCents() / 100.0));

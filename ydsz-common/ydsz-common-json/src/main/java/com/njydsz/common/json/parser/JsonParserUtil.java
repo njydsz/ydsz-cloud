@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.json.parser;
+package com.njydsz.common.json.parser;
 
 import java.math.BigDecimal;
 import com.njydsz.common.json.YdszJson;
@@ -735,30 +735,381 @@ public final class JsonParserUtil {
 
         while (pos < len) {
             char c = chars[pos];
-            if (c == '"') {\n                // 结束引号\n                return sb.toString();\n            } else if (c == '\\') {\n                // 转义字符\n                pos++;\n                if (pos >= len) {\n                    throw new JsonDeserializationException("Unexpected end of string", pos);\n                }\n                char escaped = chars[pos];\n                switch (escaped) {\n                    case '"': sb.append('"'); break;\n                    case '\\': sb.append('\\'); break;\n                    case '/': sb.append('/'); break;\n                    case 'b': sb.append('\b'); break;\n                    case 'f': sb.append('\f'); break;\n                    case 'n': sb.append('\\n'); break;\n                    case 'r': sb.append('\r'); break;\n                    case 't': sb.append('\t'); break;\n                    case 'u':\n                        // Unicode 转义\n                        if (pos + 4 >= len) {\n                            throw new JsonDeserializationException("Invalid unicode escape at position " + pos, pos);\n                        }\n                        String hex = new String(chars, pos + 1, 4);\n                        sb.append((char) Integer.parseInt(hex, 16));\n                        pos += 4;\n                        break;\n                    default:\n                        sb.append(escaped);\n                }\n            } else {\n                sb.append(c);\n            }\n            pos++;\n        }\n\n        throw new JsonDeserializationException("Unterminated string", len - 1);\n    }\n\n    /**\n     * 解析数字\n     */\n    /** package-private */ static Number parseNumber(char[] chars, int pos) {\n        int len = chars.length;\n        int start = pos;\n\n        // 跳过负号\n        if (pos < len && chars[pos] == '-') {\n            pos++;\n        }\n\n        // 解析整数部分\n        while (pos < len && chars[pos] >= '0' && chars[pos] <= '9') {\n            pos++;\n        }\n\n        // 检查小数\n        boolean isDecimal = false;\n        if (pos < len && chars[pos] == '.') {\n            isDecimal = true;\n            pos++;\n            while (pos < len && chars[pos] >= '0' && chars[pos] <= '9') {\n                pos++;\n            }\n        }\n\n        // 检查指数\n        if (pos < len && (chars[pos] == 'e' || chars[pos] == 'E')) {\n            isDecimal = true;\n            pos++;\n            if (pos < len && (chars[pos] == '+' || chars[pos] == '-')) {\n                pos++;\n            }\n            while (pos < len && chars[pos] >= '0' && chars[pos] <= '9') {\n                pos++;\n            }\n        }\n\n        String numStr = new String(chars, start, pos - start);\n        if (isDecimal) {\n            return Double.parseDouble(numStr);\n        } else {\n            try {\n                return Long.parseLong(numStr);\n            } catch (NumberFormatException e) {\n                return Double.parseDouble(numStr);\n            }\n        }\n    }\n\n    /**\n     * 获取值的结束位置（快速版，消除简单值的二次扫描）\n     *\n     * <p>对于 true/false/null 值，直接根据值类型计算结束位置，\n     * 无需调用 getValueEndPosition 重新扫描。</p>\n     *\n     * @param chars JSON 字符数组\n     * @param valueStart 值的起始位置\n     * @param value 已解析的值\n     * @param len 字符数组长度\n     * @return 值的结束位置\n     */\n    private static int getValueEndFast(char[] chars, int valueStart, Object value, int len) {\n        // 快速路径：布尔值和 null 直接计算长度\n        if (value == Boolean.TRUE) {\n            return valueStart + 4; // "true"\n        }\n        if (value == Boolean.FALSE) {\n            return valueStart + 5; // "false"\n        }\n        if (value == null && valueStart + 4 <= len && chars[valueStart] == 'n') {\n            return valueStart + 4; // "null"\n        }\n        // 复杂值（String/Number/Map/List）：需要扫描确定结束位置\n        return getValueEndPosition(chars, valueStart);\n    }\n\n    /**\n     * 获取值的结束位置\n     */\n    private static int getValueEndPosition(char[] chars, int pos) {\n        int len = chars.length;\n\n        // 跳过空白\n        while (pos < len && chars[pos] <= ' ') {\n            pos++;\n        }\n\n        if (pos >= len) {\n            return pos;\n        }\n\n        char c = chars[pos];\n\n        if (c == '"') {
+            if (c == '"') {
+                // 结束引号
+                return sb.toString();
+            } else if (c == '\\') {
+                // 转义字符
+                pos++;
+                if (pos >= len) {
+                    throw new JsonDeserializationException("Unexpected end of string", pos);
+                }
+                char escaped = chars[pos];
+                switch (escaped) {
+                    case '"': sb.append('"'); break;
+                    case '\\': sb.append('\\'); break;
+                    case '/': sb.append('/'); break;
+                    case 'b': sb.append('\b'); break;
+                    case 'f': sb.append('\f'); break;
+                    case 'n': sb.append('\
+'); break;
+                    case 'r': sb.append('\r'); break;
+                    case 't': sb.append('\t'); break;
+                    case 'u':
+                        // Unicode 转义
+                        if (pos + 4 >= len) {
+                            throw new JsonDeserializationException("Invalid unicode escape at position " + pos, pos);
+                        }
+                        String hex = new String(chars, pos + 1, 4);
+                        sb.append((char) Integer.parseInt(hex, 16));
+                        pos += 4;
+                        break;
+                    default:
+                        sb.append(escaped);
+                }
+            } else {
+                sb.append(c);
+            }
+            pos++;
+        }
+
+        throw new JsonDeserializationException("Unterminated string", len - 1);
+    }
+
+    /**
+     * 解析数字
+     */
+    /** package-private */ static Number parseNumber(char[] chars, int pos) {
+        int len = chars.length;
+        int start = pos;
+
+        // 跳过负号
+        if (pos < len && chars[pos] == '-') {
+            pos++;
+        }
+
+        // 解析整数部分
+        while (pos < len && chars[pos] >= '0' && chars[pos] <= '9') {
+            pos++;
+        }
+
+        // 检查小数
+        boolean isDecimal = false;
+        if (pos < len && chars[pos] == '.') {
+            isDecimal = true;
+            pos++;
+            while (pos < len && chars[pos] >= '0' && chars[pos] <= '9') {
+                pos++;
+            }
+        }
+
+        // 检查指数
+        if (pos < len && (chars[pos] == 'e' || chars[pos] == 'E')) {
+            isDecimal = true;
+            pos++;
+            if (pos < len && (chars[pos] == '+' || chars[pos] == '-')) {
+                pos++;
+            }
+            while (pos < len && chars[pos] >= '0' && chars[pos] <= '9') {
+                pos++;
+            }
+        }
+
+        String numStr = new String(chars, start, pos - start);
+        if (isDecimal) {
+            return Double.parseDouble(numStr);
+        } else {
+            try {
+                return Long.parseLong(numStr);
+            } catch (NumberFormatException e) {
+                return Double.parseDouble(numStr);
+            }
+        }
+    }
+
+    /**
+     * 获取值的结束位置（快速版，消除简单值的二次扫描）
+     *
+     * <p>对于 true/false/null 值，直接根据值类型计算结束位置，
+     * 无需调用 getValueEndPosition 重新扫描。</p>
+     *
+     * @param chars JSON 字符数组
+     * @param valueStart 值的起始位置
+     * @param value 已解析的值
+     * @param len 字符数组长度
+     * @return 值的结束位置
+     */
+    private static int getValueEndFast(char[] chars, int valueStart, Object value, int len) {
+        // 快速路径：布尔值和 null 直接计算长度
+        if (value == Boolean.TRUE) {
+            return valueStart + 4; // "true"
+        }
+        if (value == Boolean.FALSE) {
+            return valueStart + 5; // "false"
+        }
+        if (value == null && valueStart + 4 <= len && chars[valueStart] == 'n') {
+            return valueStart + 4; // "null"
+        }
+        // 复杂值（String/Number/Map/List）：需要扫描确定结束位置
+        return getValueEndPosition(chars, valueStart);
+    }
+
+    /**
+     * 获取值的结束位置
+     */
+    private static int getValueEndPosition(char[] chars, int pos) {
+        int len = chars.length;
+
+        // 跳过空白
+        while (pos < len && chars[pos] <= ' ') {
+            pos++;
+        }
+
+        if (pos >= len) {
+            return pos;
+        }
+
+        char c = chars[pos];
+
+        if (c == '"') {
             // 字符串：找到结束引号
             pos++;
             while (pos < len) {
                 if (chars[pos] == '\\' && pos + 1 < len) {
                     pos += 2; // 跳过转义字符
-                } else if (chars[pos] == '"') {\n                    return pos + 1;\n                } else {\n                    pos++;\n                }\n            }\n        } else if (c == '{') {\n            // 对象：找到匹配的 }\n            return findEndPosition(chars, pos, '{', '}') + 1;\n        } else if (c == '[') {\n            // 数组：找到匹配的 ]\n            return findEndPosition(chars, pos, '[', ']') + 1;\n        } else {\n            // 基本类型：找到逗号、} 或 ]\n            while (pos < len) {\n                char ch = chars[pos];\n                if (ch == ',' || ch == '}' || ch == ']') {\n                    return pos;\n                }\n                pos++;\n            }\n        }\n\n        return pos;\n    }\n\n    /**\n     * 查找匹配的结束位置\n     */\n    private static int findEndPosition(char[] chars, int start, char openChar, char closeChar) {\n        int depth = 0;\n        int pos = start;\n        int len = chars.length;\n\n        while (pos < len) {\n            char c = chars[pos];\n            if (c == openChar) {\n                depth++;\n            } else if (c == closeChar) {\n                depth--;\n                if (depth == 0) {\n                    return pos;\n                }\n            } else if (c == '"') {
+                } else if (chars[pos] == '"') {
+                    return pos + 1;
+                } else {
+                    pos++;
+                }
+            }
+        } else if (c == '{') {
+            // 对象：找到匹配的 }
+            return findEndPosition(chars, pos, '{', '}') + 1;
+        } else if (c == '[') {
+            // 数组：找到匹配的 ]
+            return findEndPosition(chars, pos, '[', ']') + 1;
+        } else {
+            // 基本类型：找到逗号、} 或 ]
+            while (pos < len) {
+                char ch = chars[pos];
+                if (ch == ',' || ch == '}' || ch == ']') {
+                    return pos;
+                }
+                pos++;
+            }
+        }
+
+        return pos;
+    }
+
+    /**
+     * 查找匹配的结束位置
+     */
+    private static int findEndPosition(char[] chars, int start, char openChar, char closeChar) {
+        int depth = 0;
+        int pos = start;
+        int len = chars.length;
+
+        while (pos < len) {
+            char c = chars[pos];
+            if (c == openChar) {
+                depth++;
+            } else if (c == closeChar) {
+                depth--;
+                if (depth == 0) {
+                    return pos;
+                }
+            } else if (c == '"') {
                 // 跳过字符串
                 pos++;
-                while (pos < len && chars[pos] != '"') {\n                    if (chars[pos] == '\\' && pos + 1 < len) {\n                        pos += 2;\n                    } else {\n                        pos++;\n                    }\n                }\n            }\n            pos++;\n        }\n\n        throw new JsonDeserializationException("Unmatched bracket: " + openChar, pos);\n    }\n\n    /**\n     * 获取字符数组缓冲区（JIT 优化：final 方法）\n     */\n    private static final char[] getCharBuffer(String json) {\n        char[] buffer = CHAR_BUFFER.get();\n        if (buffer.length < json.length()) {\n            buffer = new char[json.length()];\n            CHAR_BUFFER.set(buffer);\n        }\n        json.getChars(0, json.length(), buffer, 0);\n        return buffer;\n    }\n\n    /**\n     * 快速跳过空白字符（向量化优化）\n     */\n    private static final int skipWhitespace(char[] chars, int pos) {\n        int len = chars.length;\n\n        // 向量化处理：一次检查 8 个字符\n        while (pos + 7 < len) {\n            boolean allWhitespace = true;\n            for (int i = 0; i < 8; i++) {\n                if (chars[pos + i] > ' ') {\n                    allWhitespace = false;\n                    pos += i;\n                    break;\n                }\n            }\n            if (!allWhitespace) {\n                break;\n            }\n            pos += 8;\n        }\n\n        // 处理剩余字符\n        while (pos < len && chars[pos] <= ' ') {\n            pos++;\n        }\n\n        return pos;\n    }\n\n    // ==================== ASM 反序列化器专用快速解析方法 ====================\n\n    /**\n     * 单遍扫描构建字段位置映射（优化 O(N*M) 为 O(N)）。\n     *\n     * <p>当 ASM 反序列化器需要解析多个字段时，传统方式对每个字段调用\n     * {@link #findFieldPosition} 导致 O(N*M) 复杂度。此方法单遍扫描 JSON，\n     * 一次性提取所有顶层字段名及其值起始位置，将复杂度降为 O(N+M)。</p>\n     *\n     * @param json JSON 字符串\n     * @return 字段名 -> 值起始位置（冒号后第一个非空白字符）的映射\n     * @since 1.0.0\n     */\n    public static Map<String, Integer> buildFieldPositionMap(String json) {\n        Map<String, Integer> fieldPositions = new HashMap<>(16);\n        int len = json.length();\n        int i = 0;\n        // 跳过前导空白\n        while (i < len && json.charAt(i) <= ' ') i++;\n        if (i >= len || json.charAt(i) != '{') return fieldPositions;\n        i++; // 跳过 '{'\n\n        while (i < len) {\n            // 跳过空白\n            while (i < len && json.charAt(i) <= ' ') i++;\n            if (i >= len) break;\n            if (json.charAt(i) == '}') break;\n            if (json.charAt(i) == ',') { i++; continue; }\n\n            // 读取字段名（带引号）\n            if (json.charAt(i) != '"') break;
+                while (pos < len && chars[pos] != '"') {
+                    if (chars[pos] == '\\' && pos + 1 < len) {
+                        pos += 2;
+                    } else {
+                        pos++;
+                    }
+                }
+            }
+            pos++;
+        }
+
+        throw new JsonDeserializationException("Unmatched bracket: " + openChar, pos);
+    }
+
+    /**
+     * 获取字符数组缓冲区（JIT 优化：final 方法）
+     */
+    private static final char[] getCharBuffer(String json) {
+        char[] buffer = CHAR_BUFFER.get();
+        if (buffer.length < json.length()) {
+            buffer = new char[json.length()];
+            CHAR_BUFFER.set(buffer);
+        }
+        json.getChars(0, json.length(), buffer, 0);
+        return buffer;
+    }
+
+    /**
+     * 快速跳过空白字符（向量化优化）
+     */
+    private static final int skipWhitespace(char[] chars, int pos) {
+        int len = chars.length;
+
+        // 向量化处理：一次检查 8 个字符
+        while (pos + 7 < len) {
+            boolean allWhitespace = true;
+            for (int i = 0; i < 8; i++) {
+                if (chars[pos + i] > ' ') {
+                    allWhitespace = false;
+                    pos += i;
+                    break;
+                }
+            }
+            if (!allWhitespace) {
+                break;
+            }
+            pos += 8;
+        }
+
+        // 处理剩余字符
+        while (pos < len && chars[pos] <= ' ') {
+            pos++;
+        }
+
+        return pos;
+    }
+
+    // ==================== ASM 反序列化器专用快速解析方法 ====================
+
+    /**
+     * 单遍扫描构建字段位置映射（优化 O(N*M) 为 O(N)）。
+     *
+     * <p>当 ASM 反序列化器需要解析多个字段时，传统方式对每个字段调用
+     * {@link #findFieldPosition} 导致 O(N*M) 复杂度。此方法单遍扫描 JSON，
+     * 一次性提取所有顶层字段名及其值起始位置，将复杂度降为 O(N+M)。</p>
+     *
+     * @param json JSON 字符串
+     * @return 字段名 -> 值起始位置（冒号后第一个非空白字符）的映射
+     * @since 1.0.0
+     */
+    public static Map<String, Integer> buildFieldPositionMap(String json) {
+        Map<String, Integer> fieldPositions = new HashMap<>(16);
+        int len = json.length();
+        int i = 0;
+        // 跳过前导空白
+        while (i < len && json.charAt(i) <= ' ') i++;
+        if (i >= len || json.charAt(i) != '{') return fieldPositions;
+        i++; // 跳过 '{'
+
+        while (i < len) {
+            // 跳过空白
+            while (i < len && json.charAt(i) <= ' ') i++;
+            if (i >= len) break;
+            if (json.charAt(i) == '}') break;
+            if (json.charAt(i) == ',') { i++; continue; }
+
+            // 读取字段名（带引号）
+            if (json.charAt(i) != '"') break;
             i++; // 跳过起始引号
             int nameStart = i;
-            while (i < len && json.charAt(i) != '"') {\n                if (json.charAt(i) == '\\') i++;\n                i++;\n            }\n            String fieldName = json.substring(nameStart, i);\n            i++; // 跳过结束引号\n\n            // 跳过冒号和空白\n            while (i < len && json.charAt(i) != ':') i++;\n            i++; // 跳过冒号\n            while (i < len && json.charAt(i) <= ' ') i++;\n\n            // 记录值起始位置\n            fieldPositions.put(fieldName, i);\n\n            // 跳过值（根据类型）\n            i = skipValue(json, i);\n        }\n        return fieldPositions;\n    }\n\n    /**\n     * 跳过 JSON 值，返回值结束后的下一个位置。\n     */\n    private static int skipValue(String json, int start) {\n        int len = json.length();\n        if (start >= len) return start;\n        char c = json.charAt(start);\n        if (c == '"') {
+            while (i < len && json.charAt(i) != '"') {
+                if (json.charAt(i) == '\\') i++;
+                i++;
+            }
+            String fieldName = json.substring(nameStart, i);
+            i++; // 跳过结束引号
+
+            // 跳过冒号和空白
+            while (i < len && json.charAt(i) != ':') i++;
+            i++; // 跳过冒号
+            while (i < len && json.charAt(i) <= ' ') i++;
+
+            // 记录值起始位置
+            fieldPositions.put(fieldName, i);
+
+            // 跳过值（根据类型）
+            i = skipValue(json, i);
+        }
+        return fieldPositions;
+    }
+
+    /**
+     * 跳过 JSON 值，返回值结束后的下一个位置。
+     */
+    private static int skipValue(String json, int start) {
+        int len = json.length();
+        if (start >= len) return start;
+        char c = json.charAt(start);
+        if (c == '"') {
             // 字符串值
             int i = start + 1;
             while (i < len) {
                 if (json.charAt(i) == '\\') { i += 2; continue; }
-                if (json.charAt(i) == '"') return i + 1;\n                i++;\n            }\n            return i;\n        } else if (c == '{' || c == '[') {\n            // 嵌套对象/数组：计算深度\n            int depth = 0;\n            boolean inString = false;\n            boolean escaped = false;\n            for (int i = start; i < len; i++) {\n                char ch = json.charAt(i);\n                if (inString) {\n                    if (escaped) { escaped = false; }\n                    else if (ch == '\\') { escaped = true; }\n                    else if (ch == '"') { inString = false; }
+                if (json.charAt(i) == '"') return i + 1;
+                i++;
+            }
+            return i;
+        } else if (c == '{' || c == '[') {
+            // 嵌套对象/数组：计算深度
+            int depth = 0;
+            boolean inString = false;
+            boolean escaped = false;
+            for (int i = start; i < len; i++) {
+                char ch = json.charAt(i);
+                if (inString) {
+                    if (escaped) { escaped = false; }
+                    else if (ch == '\\') { escaped = true; }
+                    else if (ch == '"') { inString = false; }
                 } else {
-                    if (ch == '"') { inString = true; }\n                    else if (ch == '{' || ch == '[') { depth++; }\n                    else if (ch == '}' || ch == ']') { depth--; if (depth == 0) return i + 1; }\n                }\n            }\n            return len;\n        } else {\n            // 基本类型（number/boolean/null）\n            int i = start;\n            while (i < len) {\n                char ch = json.charAt(i);\n                if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ') return i;\n                i++;\n            }\n            return i;\n        }\n    }\n    /**\n     * 在 JSON 中查找字段名的位置（跳过字符串值内部的文本）。\n     *\n     * <p>使用此方法替代 {@code json.indexOf(fieldJson)}，\n     * 避免 JSON 字符串值中包含类似字段名格式的文本时误匹配。</p>\n     *\n     * @param json JSON 字符串\n     * @param fieldJson 字段 JSON 片段（如 {@code "name":}）\n     * @return 字段位置，未找到返回 -1\n     */\n    static int findFieldPosition(String json, String fieldJson) {\n        int len = json.length();\n        int fieldLen = fieldJson.length();\n        boolean inString = false;\n        boolean escaped = false;\n        for (int i = 0; i <= len - fieldLen; i++) {\n            char c = json.charAt(i);\n            if (inString) {\n                if (escaped) {\n                    escaped = false;\n                } else if (c == '\\') {\n                    escaped = true;\n                } else if (c == '"') {
+                    if (ch == '"') { inString = true; }
+                    else if (ch == '{' || ch == '[') { depth++; }
+                    else if (ch == '}' || ch == ']') { depth--; if (depth == 0) return i + 1; }
+                }
+            }
+            return len;
+        } else {
+            // 基本类型（number/boolean/null）
+            int i = start;
+            while (i < len) {
+                char ch = json.charAt(i);
+                if (ch == ',' || ch == '}' || ch == ']' || ch <= ' ') return i;
+                i++;
+            }
+            return i;
+        }
+    }
+    /**
+     * 在 JSON 中查找字段名的位置（跳过字符串值内部的文本）。
+     *
+     * <p>使用此方法替代 {@code json.indexOf(fieldJson)}，
+     * 避免 JSON 字符串值中包含类似字段名格式的文本时误匹配。</p>
+     *
+     * @param json JSON 字符串
+     * @param fieldJson 字段 JSON 片段（如 {@code "name":}）
+     * @return 字段位置，未找到返回 -1
+     */
+    static int findFieldPosition(String json, String fieldJson) {
+        int len = json.length();
+        int fieldLen = fieldJson.length();
+        boolean inString = false;
+        boolean escaped = false;
+        for (int i = 0; i <= len - fieldLen; i++) {
+            char c = json.charAt(i);
+            if (inString) {
+                if (escaped) {
+                    escaped = false;
+                } else if (c == '\\') {
+                    escaped = true;
+                } else if (c == '"') {
                     inString = false;
                 }
             } else {
-                // 先检查是否匹配字段模式（fieldJson 以 '"' 开头），\n                // 再判断是否进入字符串值\n                if (c == fieldJson.charAt(0) && json.regionMatches(i, fieldJson, 0, fieldLen)) {\n                    return i;\n                } else if (c == '"') {
+                // 先检查是否匹配字段模式（fieldJson 以 '"' 开头），
+                // 再判断是否进入字符串值
+                if (c == fieldJson.charAt(0) && json.regionMatches(i, fieldJson, 0, fieldLen)) {
+                    return i;
+                } else if (c == '"') {
                     inString = true;
                 }
             }
