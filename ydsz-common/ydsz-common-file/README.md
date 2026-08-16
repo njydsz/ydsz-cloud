@@ -20,7 +20,7 @@
 
 | 类 | 说明 |
 |---|---|
-| `IFileStorage` | 文件存储统一接口，继承 `FileUploader` / `FileDownloader` / `FileManager` 三个子接口；内含 `PartInfo` record |
+| `IFileStorage` | 文件存储统一接口，内含上传/下载/管理全部能力；内含 `PartInfo` record |
 | `AbstractFileStorage` | 存储抽象基类，封装 bucketName 解析、路径穿越防护、分片校验、进度回调、并发锁、去重、病毒扫描、重试、指标采集等公共逻辑 |
 | `IFileStorageProvider` | 存储提供者接口，`getStorage()` 返回当前存储实现 |
 | `DefaultStorageFactory` | 默认工厂实现，按 `ydsz.file.type` 创建对应存储实例并单例缓存；支持 SPI 注册自定义存储类型 |
@@ -37,7 +37,6 @@
 
 | 类 | 说明 |
 |---|---|
-| `FileUploader` | 上传接口：普通上传、进度回调上传、分片上传三步曲、前端直传 Policy、断点续传、复制/移动对象、预签名上传 URL |
 | `UploadProgressListener` | 上传进度回调（onStart / onProgress / onSuccess / onFailure） |
 | `ChunkedUploadResult` | 分片上传初始化结果（含 uploadId） |
 | `PolicyResult` | 前端直传凭证（Policy / Signature） |
@@ -47,14 +46,12 @@
 
 | 类 | 说明 |
 |---|---|
-| `FileDownloader` | 下载接口：完整下载、范围下载（断点续传）、流式下载、公开 URL、私有 URL、预签名 URL |
 | `ObjectMetadata` | 对象元信息（size / contentType / eTag / lastModified） |
 
 ### 4. 管理能力
 
 | 类 | 说明 |
 |---|---|
-| `FileManager` | 管理接口：bucket / folder / object 存在判断、元信息查询、删除、批量删除、cursor 分页列举 |
 | `BatchDeleteResult` | 批量删除结果（成功列表 + 失败映射） |
 | `ListObjectsResult` | 列举结果（对象列表 + nextCursor） |
 | `DirectoryTree` | 目录树结构 |
@@ -124,7 +121,6 @@
 | `FileProperties` | 文件存储主配置属性（`ydsz.file.*`） |
 | `FileUploadProperties` | 分片上传配置属性（`ydsz.file.upload.*`） |
 | `FileLifecycleProperties` | 生命周期配置属性（`ydsz.file.lifecycle.*`） |
-| `@EnableYdszFile` | 模块启用注解，`@Import(FileConfiguration.class)` |
 
 ## 接入方式
 
@@ -151,23 +147,9 @@ ydsz:
     domain: https://files.example.com
 ```
 
-### 3. 启用模块（二选一）
+### 3. 启用模块
 
-```java
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import com.njydsz.common.file.annotation.EnableYdszFile;
-
-@SpringBootApplication
-@EnableYdszFile
-public class Application {
-    public static void main(String[] args) {
-        SpringApplication.run(Application.class, args);
-    }
-}
-```
-
-> 未标注 `@EnableYdszFile` 时，`FileConfiguration` 仍会通过 Spring Boot 自动装配机制注册（`@AutoConfiguration` + `@ConditionalOnProperty`），注解仅作显式启用声明。
+`FileConfiguration` 通过 Spring Boot 自动装配机制注册（`@AutoConfiguration` + `@ConditionalOnProperty`），无需额外注解即可使用。
 
 ## 配置项
 
@@ -195,7 +177,6 @@ public class Application {
 | `ydsz.file.checkpoint-dir` | 系统临时目录 | 断点续传检查点目录 |
 | `ydsz.file.check-magic-number` | true | 是否启用 Magic Number 文件头校验 |
 | `ydsz.file.concurrency-control.enabled` | true | 是否启用上传并发保护 |
-| `ydsz.file.concurrency-control.strategy` | `REJECT` | 并发冲突策略（REJECT / WAIT） |
 
 ### `ydsz.file.upload.*`（FileUploadProperties）
 
@@ -383,7 +364,7 @@ public class ClamAvVirusScanner implements VirusScanner {
 3. **分片大小默认 5MB**：与 S3 协议对齐，过小会增加请求数，过大降低并发度与失败恢复效率。可通过 `ydsz.file.part-size` 调整。
 4. **路径穿越防护**：`AbstractFileStorage.resolveObjectKey` 会拒绝空字节、`..` 路径穿越符（含 URL 编码 `%2e%2e`），并通过 `Paths.normalize()` 二次校验，业务层无需重复实现。
 5. **批量删除不保证原子性**：`batchDelete` 基于 `parallelStream` 并行执行，部分失败时已成功的对象不可恢复，业务方需根据 `BatchDeleteResult.getFailedMap()` 进行业务补偿。
-6. **并发保护策略**：`UploadConcurrencyGuard` 仅在 Redis 可用且 `ydsz.file.concurrency-control.enabled=true` 时生效；`REJECT` 策略下冲突时直接抛异常，`WAIT` 策略下阻塞等待但可能超时失败。
+6. **并发保护策略**：`UploadConcurrencyGuard` 仅在 Redis 可用且 `ydsz.file.concurrency-control.enabled=true` 时生效；冲突时直接抛异常（REJECT 策略）。
 7. **生命周期清理 dry-run**：生产环境首次启用建议 `dry-run=true` 试运行，确认清理范围后再切换为 `false`。
 8. **`generateUploadPolicy` 与 `generatePresignedUploadUrl` 不是所有存储后端都支持**：默认抛 `UnsupportedOperationException`，各云存储实现类按需覆盖。
 9. **分片 MD5 校验默认关闭**：启用 `ydsz.file.upload.chunk-md5-check=true` 会增加内存与 CPU 开销，建议仅在高一致性场景启用。启用后流式累积 MD5 仅缓存 `MessageDigest` 状态（约 128 字节），不缓存原始分片数据，避免 OOM。
