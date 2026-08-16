@@ -66,7 +66,7 @@ public class JdbcException extends BusinessException {
      */
     public JdbcException(JdbcExceptionCode exceptionCode, String message) {
         super(exceptionCode);
-        initMessage(message);
+        setMessage(message);
     }
 
     /**
@@ -79,7 +79,7 @@ public class JdbcException extends BusinessException {
      */
     protected JdbcException(ExceptionCode exceptionCode, String message) {
         super(exceptionCode);
-        initMessage(message);
+        setMessage(message);
     }
 
     /**

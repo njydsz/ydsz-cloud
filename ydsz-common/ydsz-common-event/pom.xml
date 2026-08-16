@@ -39,15 +39,10 @@
             <groupId>org.springframework</groupId>
             <artifactId>spring-tx</artifactId>
         </dependency>
-        <!-- domain (DomainEvent / EventStore SPI 集成) -->
+        <!-- domain (DomainEvent / EventStore SPI 集成） -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-domain</artifactId>
-        </dependency>
-        <!-- util (SnowflakeIdGenerator) -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-util</artifactId>
         </dependency>
         <!-- configuration processor -->
         <dependency>
