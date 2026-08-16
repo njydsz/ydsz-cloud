@@ -86,34 +86,73 @@ public final class NumberUtils {
     /** 最大九位数上界阈值：小于此值时为 9 位数（10^9） */
     private static final int INT_NINE_DIGITS_THRESHOLD = 1000000000;
 
+    /** 九位数的字符表示长度 */
+    private static final int INT_NINE_DIGITS_SIZE = 9;
+
+    /** 十位数的字符表示长度 */
+    private static final int INT_TEN_DIGITS_SIZE = 10;
+
     // ==================== sizeOfLong / sizeOfMediumLong / sizeOfLargeLong 相关常量 ====================
 
     /** 十位数下界阈值：大于等于此值时为 10 位数（10^10） */
     private static final long LONG_TEN_DIGITS_THRESHOLD = 10000000000L;
 
+    /** 十位数的字符表示长度 */
+    private static final int LONG_TEN_DIGITS_SIZE = 10;
+
     /** 十一位数上界阈值：小于此值时为 11 位数（10^11） */
     private static final long LONG_ELEVEN_DIGITS_THRESHOLD = 100000000000L;
+
+    /** 十一位数的字符表示长度 */
+    private static final int LONG_ELEVEN_DIGITS_SIZE = 11;
 
     /** 十二位数上界阈值：小于此值时为 12 位数（10^12） */
     private static final long LONG_TWELVE_DIGITS_THRESHOLD = 1000000000000L;
 
+    /** 十二位数的字符表示长度 */
+    private static final int LONG_TWELVE_DIGITS_SIZE = 12;
+
+    /** 十三位数的字符表示长度 */
+    private static final int LONG_THIRTEEN_DIGITS_SIZE = 13;
+
     /** 十四位数上界阈值：小于此值时为 14 位数（10^14） */
     private static final long LONG_FOURTEEN_DIGITS_THRESHOLD = 100000000000000L;
+
+    /** 十四位数的字符表示长度 */
+    private static final int LONG_FOURTEEN_DIGITS_SIZE = 14;
 
     /** 十五位数上界阈值：小于此值时为 15 位数（10^15） */
     private static final long LONG_FIFTEEN_DIGITS_THRESHOLD = 1000000000000000L;
 
+    /** 十五位数的字符表示长度 */
+    private static final int LONG_FIFTEEN_DIGITS_SIZE = 15;
+
     /** 十六位数上界阈值：小于此值时为 16 位数（10^16） */
     private static final long LONG_SIXTEEN_DIGITS_THRESHOLD = 10000000000000000L;
+
+    /** 十六位数的字符表示长度 */
+    private static final int LONG_SIXTEEN_DIGITS_SIZE = 16;
 
     /** 十七位数上界阈值：小于此值时为 17 位数（10^17） */
     private static final long LONG_SEVENTEEN_DIGITS_THRESHOLD = 100000000000000000L;
 
+    /** 十七位数的字符表示长度 */
+    private static final int LONG_SEVENTEEN_DIGITS_SIZE = 17;
+
     /** 十八位数上界阈值：小于此值时为 18 位数（10^18） */
     private static final long LONG_EIGHTEEN_DIGITS_THRESHOLD = 1000000000000000000L;
 
+    /** 十八位数的字符表示长度 */
+    private static final int LONG_EIGHTEEN_DIGITS_SIZE = 18;
+
+    /** 十九位数的字符表示长度 */
+    private static final int LONG_NINETEEN_DIGITS_SIZE = 19;
+
     /** 19 位十进制数可容纳的最大值（小于 Long.MAX_VALUE） */
     private static final long LONG_19_DIGITS_MAX = 9223372036854775807L;
+
+    /** 负号加两位数字的字符串长度（"-" + 2 digits = 3） */
+    private static final int NEGATIVE_TWO_DIGIT_LEN = 3;
 
     static {
         for (int i = 0; i < 100; i++) {
@@ -249,9 +288,9 @@ public final class NumberUtils {
             return sizeOfMediumInt(value);
         }
         if (value < INT_NINE_DIGITS_THRESHOLD) {
-            return 9;
+            return INT_NINE_DIGITS_SIZE;
         }
-        return 10;
+        return INT_TEN_DIGITS_SIZE;
     }
 
     /**
@@ -322,15 +361,15 @@ public final class NumberUtils {
      */
     private static int sizeOfMediumLong(long value) {
         if (value < LONG_TEN_DIGITS_THRESHOLD) {
-            return 10;
+            return LONG_TEN_DIGITS_SIZE;
         }
         if (value < LONG_ELEVEN_DIGITS_THRESHOLD) {
-            return 11;
+            return LONG_ELEVEN_DIGITS_SIZE;
         }
         if (value < LONG_TWELVE_DIGITS_THRESHOLD) {
-            return 12;
+            return LONG_TWELVE_DIGITS_SIZE;
         }
-        return 13;
+        return LONG_THIRTEEN_DIGITS_SIZE;
     }
 
     /**
@@ -341,22 +380,22 @@ public final class NumberUtils {
      */
     private static int sizeOfLargeLong(long value) {
         if (value < LONG_FOURTEEN_DIGITS_THRESHOLD) {
-            return 14;
+            return LONG_FOURTEEN_DIGITS_SIZE;
         }
         if (value < LONG_FIFTEEN_DIGITS_THRESHOLD) {
-            return 15;
+            return LONG_FIFTEEN_DIGITS_SIZE;
         }
         if (value < LONG_SIXTEEN_DIGITS_THRESHOLD) {
-            return 16;
+            return LONG_SIXTEEN_DIGITS_SIZE;
         }
         if (value < LONG_SEVENTEEN_DIGITS_THRESHOLD) {
-            return 17;
+            return LONG_SEVENTEEN_DIGITS_SIZE;
         }
         if (value < LONG_EIGHTEEN_DIGITS_THRESHOLD) {
-            return 18;
+            return LONG_EIGHTEEN_DIGITS_SIZE;
         }
         if (value < LONG_19_DIGITS_MAX) {
-            return 19;
+            return LONG_NINETEEN_DIGITS_SIZE;
         }
         return MIN_LONG_VALUE_DIGIT_COUNT;
     }
@@ -385,47 +424,104 @@ public final class NumberUtils {
         if (str == null || str.isEmpty()) {
             throw new NumberFormatException("null or empty string");
         }
-
         int len = str.length();
         char first = str.charAt(0);
-
-        // 快速路径：单数字（0-9）
         if (len == 1) {
-            if (first >= '0' && first <= '9') {
-                return first - '0';
-            }
-            throw new NumberFormatException("Invalid integer: " + str);
+            return parseSingleDigitInt(first, str);
         }
-
-        // 快速路径：负号 + 单数字
-        if (len == 2 && first == '-') {
-            char d = str.charAt(1);
-            if (d >= '0' && d <= '9') {
-                return -(d - '0');
-            }
-            throw new NumberFormatException("Invalid integer: " + str);
+        if (len == 2) {
+            return parseLen2Int(str, first);
         }
-
-        // 快速路径：两位数字（10-99），一次乘法避免循环
-        if (len == 2 && first >= '0' && first <= '9') {
-            char second = str.charAt(1);
-            if (second >= '0' && second <= '9') {
-                return (first - '0') * 10 + (second - '0');
-            }
-            throw new NumberFormatException("Invalid integer: " + str);
+        if (len == NEGATIVE_TWO_DIGIT_LEN && first == '-') {
+            return parseNegativeTwoDigitInt(str);
         }
+        return parseIntGeneral(str, len, first);
+    }
 
-        // 快速路径：负号 + 两位数字
-        if (len == 3 && first == '-') {
-            char d1 = str.charAt(1);
-            char d2 = str.charAt(2);
-            if (d1 >= '0' && d1 <= '9' && d2 >= '0' && d2 <= '9') {
-                return -((d1 - '0') * 10 + (d2 - '0'));
-            }
-            throw new NumberFormatException("Invalid integer: " + str);
+    /**
+     * 解析单数字整数快速路径
+     *
+     * @param first 首字符
+     * @param str 原始字符串（用于错误消息）
+     * @return 整数值
+     */
+    private static int parseSingleDigitInt(char first, String str) {
+        if (first >= '0' && first <= '9') {
+            return first - '0';
         }
+        throw new NumberFormatException("Invalid integer: " + str);
+    }
 
-        // 通用路径：使用 long 作为中间类型检测溢出
+    /**
+     * 解析长度为 2 的整数字符串（含正负两种情况）
+     *
+     * @param str 原始字符串
+     * @param first 首字符
+     * @return 整数值
+     */
+    private static int parseLen2Int(String str, char first) {
+        if (first == '-') {
+            return parseNegativeSingleDigitInt(str);
+        }
+        if (first >= '0' && first <= '9') {
+            return parseTwoDigitInt(first, str);
+        }
+        throw new NumberFormatException("Invalid integer: " + str);
+    }
+
+    /**
+     * 解析负号加单数字整数快速路径
+     *
+     * @param str 原始字符串
+     * @return 整数值
+     */
+    private static int parseNegativeSingleDigitInt(String str) {
+        char d = str.charAt(1);
+        if (d >= '0' && d <= '9') {
+            return -(d - '0');
+        }
+        throw new NumberFormatException("Invalid integer: " + str);
+    }
+
+    /**
+     * 解析两位正整数快速路径
+     *
+     * @param first 首字符（已确认是数字）
+     * @param str 原始字符串（用于错误消息）
+     * @return 整数值
+     */
+    private static int parseTwoDigitInt(char first, String str) {
+        char second = str.charAt(1);
+        if (second >= '0' && second <= '9') {
+            return (first - '0') * 10 + (second - '0');
+        }
+        throw new NumberFormatException("Invalid integer: " + str);
+    }
+
+    /**
+     * 解析负号加两位数字整数快速路径
+     *
+     * @param str 原始字符串
+     * @return 整数值
+     */
+    private static int parseNegativeTwoDigitInt(String str) {
+        char d1 = str.charAt(1);
+        char d2 = str.charAt(2);
+        if (d1 >= '0' && d1 <= '9' && d2 >= '0' && d2 <= '9') {
+            return -((d1 - '0') * 10 + (d2 - '0'));
+        }
+        throw new NumberFormatException("Invalid integer: " + str);
+    }
+
+    /**
+     * 通用路径解析整数（带溢出检测）
+     *
+     * @param str 原始字符串
+     * @param len 字符串长度
+     * @param first 首字符
+     * @return 整数值
+     */
+    private static int parseIntGeneral(String str, int len, char first) {
         boolean negative = false;
         int i = 0;
         if (first == '-') {
@@ -434,7 +530,6 @@ public final class NumberUtils {
         } else if (first == '+') {
             i = 1;
         }
-
         long result = 0;
         while (i < len) {
             char c = str.charAt(i);
@@ -442,16 +537,26 @@ public final class NumberUtils {
                 throw new NumberFormatException("Invalid integer: " + str);
             }
             result = result * 10 + (c - '0');
-            if (negative && -result < Integer.MIN_VALUE) {
-                throw new NumberFormatException("Integer overflow: " + str);
-            }
-            if (!negative && result > Integer.MAX_VALUE) {
-                throw new NumberFormatException("Integer overflow: " + str);
-            }
+            checkIntOverflow(result, negative, "Integer overflow: " + str);
             i++;
         }
-
         return negative ? (int) -result : (int) result;
+    }
+
+    /**
+     * 检查整数溢出
+     *
+     * @param result 当前累加结果
+     * @param negative 是否为负数
+     * @param errorMessage 溢出时的错误消息
+     */
+    private static void checkIntOverflow(long result, boolean negative, String errorMessage) {
+        if (negative && -result < Integer.MIN_VALUE) {
+            throw new NumberFormatException(errorMessage);
+        }
+        if (!negative && result > Integer.MAX_VALUE) {
+            throw new NumberFormatException(errorMessage);
+        }
     }
 
     /**
@@ -467,47 +572,104 @@ public final class NumberUtils {
         if (str == null || str.isEmpty()) {
             throw new NumberFormatException("null or empty string");
         }
-
         int len = str.length();
         char first = str.charAt(0);
-
-        // 快速路径：单数字（0-9）
         if (len == 1) {
-            if (first >= '0' && first <= '9') {
-                return first - '0';
-            }
-            throw new NumberFormatException("Invalid long: " + str);
+            return parseSingleDigitLong(first, str);
         }
-
-        // 快速路径：负号 + 单数字
-        if (len == 2 && first == '-') {
-            char d = str.charAt(1);
-            if (d >= '0' && d <= '9') {
-                return -(d - '0');
-            }
-            throw new NumberFormatException("Invalid long: " + str);
+        if (len == 2) {
+            return parseLen2Long(str, first);
         }
-
-        // 快速路径：两位数字（10-99），一次乘法避免循环
-        if (len == 2 && first >= '0' && first <= '9') {
-            char second = str.charAt(1);
-            if (second >= '0' && second <= '9') {
-                return (first - '0') * 10L + (second - '0');
-            }
-            throw new NumberFormatException("Invalid long: " + str);
+        if (len == NEGATIVE_TWO_DIGIT_LEN && first == '-') {
+            return parseNegativeTwoDigitLong(str);
         }
+        return parseLongGeneral(str, len, first);
+    }
 
-        // 快速路径：负号 + 两位数字
-        if (len == 3 && first == '-') {
-            char d1 = str.charAt(1);
-            char d2 = str.charAt(2);
-            if (d1 >= '0' && d1 <= '9' && d2 >= '0' && d2 <= '9') {
-                return -((d1 - '0') * 10L + (d2 - '0'));
-            }
-            throw new NumberFormatException("Invalid long: " + str);
+    /**
+     * 解析单数字长整数快速路径
+     *
+     * @param first 首字符
+     * @param str 原始字符串（用于错误消息）
+     * @return 长整数值
+     */
+    private static long parseSingleDigitLong(char first, String str) {
+        if (first >= '0' && first <= '9') {
+            return first - '0';
         }
+        throw new NumberFormatException("Invalid long: " + str);
+    }
 
-        // 通用路径：使用乘法展开循环，带溢出检测
+    /**
+     * 解析长度为 2 的长整数字符串（含正负两种情况）
+     *
+     * @param str 原始字符串
+     * @param first 首字符
+     * @return 长整数值
+     */
+    private static long parseLen2Long(String str, char first) {
+        if (first == '-') {
+            return parseNegativeSingleDigitLong(str);
+        }
+        if (first >= '0' && first <= '9') {
+            return parseTwoDigitLong(first, str);
+        }
+        throw new NumberFormatException("Invalid long: " + str);
+    }
+
+    /**
+     * 解析负号加单数字长整数快速路径
+     *
+     * @param str 原始字符串
+     * @return 长整数值
+     */
+    private static long parseNegativeSingleDigitLong(String str) {
+        char d = str.charAt(1);
+        if (d >= '0' && d <= '9') {
+            return -(d - '0');
+        }
+        throw new NumberFormatException("Invalid long: " + str);
+    }
+
+    /**
+     * 解析两位正长整数快速路径
+     *
+     * @param first 首字符（已确认是数字）
+     * @param str 原始字符串（用于错误消息）
+     * @return 长整数值
+     */
+    private static long parseTwoDigitLong(char first, String str) {
+        char second = str.charAt(1);
+        if (second >= '0' && second <= '9') {
+            return (first - '0') * 10L + (second - '0');
+        }
+        throw new NumberFormatException("Invalid long: " + str);
+    }
+
+    /**
+     * 解析负号加两位数字长整数快速路径
+     *
+     * @param str 原始字符串
+     * @return 长整数值
+     */
+    private static long parseNegativeTwoDigitLong(String str) {
+        char d1 = str.charAt(1);
+        char d2 = str.charAt(2);
+        if (d1 >= '0' && d1 <= '9' && d2 >= '0' && d2 <= '9') {
+            return -((d1 - '0') * 10L + (d2 - '0'));
+        }
+        throw new NumberFormatException("Invalid long: " + str);
+    }
+
+    /**
+     * 通用路径解析长整数（带溢出检测）
+     *
+     * @param str 原始字符串
+     * @param len 字符串长度
+     * @param first 首字符
+     * @return 长整数值
+     */
+    private static long parseLongGeneral(String str, int len, char first) {
         boolean negative = false;
         int i = 0;
         if (first == '-') {
@@ -516,7 +678,6 @@ public final class NumberUtils {
         } else if (first == '+') {
             i = 1;
         }
-
         long result = 0;
         long limit = Long.MAX_VALUE / 10;
         while (i < len) {
@@ -525,17 +686,30 @@ public final class NumberUtils {
                 throw new NumberFormatException("Invalid long: " + str);
             }
             int digit = c - '0';
-            if (result > limit || (result == limit && digit > Long.MAX_VALUE % 10)) {
-                // 特例：-Long.MIN_VALUE = -9223372036854775808，其绝对值刚好溢出 long
-                if (!(negative && i == len - 1 && result == limit && digit == (Long.MAX_VALUE % 10) + 1)) {
-                    throw new NumberFormatException("Long overflow: " + str);
-                }
-            }
+            checkLongOverflow(result, digit, negative, i, len, limit, "Long overflow: " + str);
             result = result * 10 + digit;
             i++;
         }
-
         return negative ? -result : result;
+    }
+
+    /**
+     * 检查长整数溢出
+     *
+     * @param result 当前累加结果
+     * @param digit 当前位数字
+     * @param negative 是否为负数
+     * @param i 当前索引
+     * @param len 字符串长度
+     * @param limit 溢出阈值（Long.MAX_VALUE / 10）
+     * @param errorMessage 溢出时的错误消息
+     */
+    private static void checkLongOverflow(long result, int digit, boolean negative, int i, int len, long limit, String errorMessage) {
+        if (result > limit || (result == limit && digit > Long.MAX_VALUE % 10)) {
+            if (!(negative && i == len - 1 && result == limit && digit == (Long.MAX_VALUE % 10) + 1)) {
+                throw new NumberFormatException(errorMessage);
+            }
+        }
     }
 
     /**
@@ -552,26 +726,58 @@ public final class NumberUtils {
         if (len == 0) {
             throw new NumberFormatException("empty input");
         }
-
         char first = chars[start];
-
-        // 快速路径：单数字
         if (len == 1) {
-            if (first >= '0' && first <= '9') {
-                return first - '0';
-            }
-            throw new NumberFormatException("Invalid integer at offset " + start);
+            return parseSingleDigitFromChars(first, start);
         }
+        if (len == 2) {
+            return parseLen2FromChars(chars, start, first);
+        }
+        return parseIntFromCharsGeneral(chars, start, len, first);
+    }
 
-        // 快速路径：两位数字
-        if (len == 2 && first >= '0' && first <= '9') {
+    /**
+     * 从 char[] 解析单数字整数快速路径
+     *
+     * @param first 首字符
+     * @param start 起始位置（用于错误消息）
+     * @return 整数值
+     */
+    private static int parseSingleDigitFromChars(char first, int start) {
+        if (first >= '0' && first <= '9') {
+            return first - '0';
+        }
+        throw new NumberFormatException("Invalid integer at offset " + start);
+    }
+
+    /**
+     * 从 char[] 解析长度为 2 的整数（含正负两种情况）
+     *
+     * @param chars 字符数组
+     * @param start 起始位置
+     * @param first 首字符
+     * @return 整数值
+     */
+    private static int parseLen2FromChars(char[] chars, int start, char first) {
+        if (first >= '0' && first <= '9') {
             char second = chars[start + 1];
             if (second >= '0' && second <= '9') {
                 return (first - '0') * 10 + (second - '0');
             }
         }
+        return parseIntFromCharsGeneral(chars, start, 2, first);
+    }
 
-        // 通用路径：使用 long 作为中间类型检测溢出
+    /**
+     * 通用路径从 char[] 解析整数（带溢出检测，遇到非数字字符停止）
+     *
+     * @param chars 字符数组
+     * @param start 起始位置
+     * @param len 字符数
+     * @param first 首字符
+     * @return 整数值
+     */
+    private static int parseIntFromCharsGeneral(char[] chars, int start, int len, char first) {
         boolean negative = false;
         int i = start;
         int end = start + len;
@@ -581,22 +787,17 @@ public final class NumberUtils {
         } else if (first == '+') {
             i++;
         }
-
         long result = 0;
         while (i < end) {
             char c = chars[i];
-            if (c < '0' || c > '9') { break; }
+            if (c < '0' || c > '9') {
+                break;
+            }
             int digit = c - '0';
             result = result * 10 + digit;
-            if (negative && -result < Integer.MIN_VALUE) {
-                throw new NumberFormatException("Integer overflow at offset " + start);
-            }
-            if (!negative && result > Integer.MAX_VALUE) {
-                throw new NumberFormatException("Integer overflow at offset " + start);
-            }
+            checkIntOverflow(result, negative, "Integer overflow at offset " + start);
             i++;
         }
-
         return negative ? (int) -result : (int) result;
     }
 
@@ -612,26 +813,58 @@ public final class NumberUtils {
         if (len == 0) {
             throw new NumberFormatException("empty input");
         }
-
         char first = chars[start];
-
-        // 快速路径：单数字
         if (len == 1) {
-            if (first >= '0' && first <= '9') {
-                return first - '0';
-            }
-            throw new NumberFormatException("Invalid long at offset " + start);
+            return parseSingleDigitFromCharsLong(first, start);
         }
+        if (len == 2) {
+            return parseLen2FromCharsLong(chars, start, first);
+        }
+        return parseLongFromCharsGeneral(chars, start, len, first);
+    }
 
-        // 快速路径：两位数字
-        if (len == 2 && first >= '0' && first <= '9') {
+    /**
+     * 从 char[] 解析单数字长整数快速路径
+     *
+     * @param first 首字符
+     * @param start 起始位置（用于错误消息）
+     * @return 长整数值
+     */
+    private static long parseSingleDigitFromCharsLong(char first, int start) {
+        if (first >= '0' && first <= '9') {
+            return first - '0';
+        }
+        throw new NumberFormatException("Invalid long at offset " + start);
+    }
+
+    /**
+     * 从 char[] 解析长度为 2 的长整数（含正负两种情况）
+     *
+     * @param chars 字符数组
+     * @param start 起始位置
+     * @param first 首字符
+     * @return 长整数值
+     */
+    private static long parseLen2FromCharsLong(char[] chars, int start, char first) {
+        if (first >= '0' && first <= '9') {
             char second = chars[start + 1];
             if (second >= '0' && second <= '9') {
                 return (first - '0') * 10L + (second - '0');
             }
         }
+        return parseLongFromCharsGeneral(chars, start, 2, first);
+    }
 
-        // 通用路径：带溢出检测
+    /**
+     * 通用路径从 char[] 解析长整数（带溢出检测，遇到非数字字符停止）
+     *
+     * @param chars 字符数组
+     * @param start 起始位置
+     * @param len 字符数
+     * @param first 首字符
+     * @return 长整数值
+     */
+    private static long parseLongFromCharsGeneral(char[] chars, int start, int len, char first) {
         boolean negative = false;
         int i = start;
         int end = start + len;
@@ -641,22 +874,18 @@ public final class NumberUtils {
         } else if (first == '+') {
             i++;
         }
-
         long result = 0;
         long limit = Long.MAX_VALUE / 10;
         while (i < end) {
             char c = chars[i];
-            if (c < '0' || c > '9') { break; }
-            int digit = c - '0';
-            if (result > limit || (result == limit && digit > Long.MAX_VALUE % 10)) {
-                if (!(negative && i == end - 1 && result == limit && digit == (Long.MAX_VALUE % 10) + 1)) {
-                    throw new NumberFormatException("Long overflow at offset " + start);
-                }
+            if (c < '0' || c > '9') {
+                break;
             }
+            int digit = c - '0';
+            checkLongOverflow(result, digit, negative, i, end, limit, "Long overflow at offset " + start);
             result = result * 10 + digit;
             i++;
         }
-
         return negative ? -result : result;
     }
 }

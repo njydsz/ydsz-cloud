@@ -14,8 +14,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.feign.NotificationClient;
-import com.njydsz.common.feign.dto.PushRealtimeRequestDTO;
+import com.njydsz.common.socket.push.RealtimePushTemplate;
 import com.njydsz.workflow.domain.entity.FlowInstance;
 import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
@@ -65,8 +64,8 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     private final FlowRunTaskMapper taskMapper;
     /** P1-3: 子流程服务（监听器作为子流程完成回调的入口） */
     private final FlowSubProcessService subProcessService;
-    /** P1-7: 实时推送 Feign 客户端（IM 渠道待办通知） */
-    private final NotificationClient notificationClient;
+    /** P2-7: 统一推送模板（直接推送，替代 Feign 中转 message 模块） */
+    private final RealtimePushTemplate pushTemplate;
     /** P0-7: 工作流 MQ 发布者（发布立项状态联动事件） */
     private final FlowQueuePublisher queuePublisher;
 
@@ -421,7 +420,8 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     /**
      * 推送实时消息给办理人（IM / WebSocket 渠道）。
      *
-     * <p>消息推送为非关键路径，失败仅记录日志，不影响任务创建。
+     * <p>P2-7: 直接调用 {@link RealtimePushTemplate} 推送，消除 Feign 中转开销。
+     * 消息推送为非关键路径，失败仅记录日志，不影响任务创建。
      *
      * @param assigneeId 办理人 ID
      * @param title      标题
@@ -438,12 +438,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
             data.put("content", content);
             data.put("taskId", taskId);
             data.put("type", "WORKFLOW_TASK");
-            PushRealtimeRequestDTO request = PushRealtimeRequestDTO.builder()
-                    .userId(assigneeId)
-                    .type("NOTIFICATION")
-                    .data(data)
-                    .build();
-            notificationClient.pushRealtime(request);
+            pushTemplate.pushToUserWithOffline(assigneeId, "NOTIFICATION", data);
         } catch (Exception e) {
             log.warn("[FlowListener] IM 推送失败: assigneeId={} taskId={}: {}",
                     assigneeId, taskId, e.getMessage());

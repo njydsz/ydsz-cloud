@@ -19,6 +19,7 @@ import lombok.NoArgsConstructor;
  *   <li>{@code USER}：推送到指定用户的个人频道 {@code /topic/user/{userId}/notifications}</li>
  *   <li>{@code BROADCAST}：推送到广播频道 {@code /topic/broadcast}</li>
  *   <li>{@code TOPIC}：推送到指定主题 {@code /topic/{topic}}</li>
+ *   <li>{@code KICK}：踢出指定用户在本节点的所有 Session（P2-8 多端策略集群同步）</li>
  * </ul>
  *
  * @author ydsz-team
@@ -53,6 +54,9 @@ public class WebSocketClusterMessage {
     /** 消息优先级（P1-4）：URGENT / HIGH / NORMAL / LOW */
     private String priority;
 
+    /** 踢出原因（pushType=KICK 时使用）：MULTI_DEVICE_POLICY / USER_LOGOUT 等 */
+    private String kickReason;
+
     /**
      * 构造用户推送消息。
      *
@@ -62,7 +66,7 @@ public class WebSocketClusterMessage {
      * @return 集群推送消息
      */
     public static WebSocketClusterMessage forUser(String userId, String type, String payloadJson) {
-        return new WebSocketClusterMessage("USER", userId, null, type, payloadJson, null, null, null);
+        return new WebSocketClusterMessage("USER", userId, null, type, payloadJson, null, null, null, null);
     }
 
     /**
@@ -73,7 +77,7 @@ public class WebSocketClusterMessage {
      * @return 集群推送消息
      */
     public static WebSocketClusterMessage forBroadcast(String type, String payloadJson) {
-        return new WebSocketClusterMessage("BROADCAST", null, null, type, payloadJson, null, null, null);
+        return new WebSocketClusterMessage("BROADCAST", null, null, type, payloadJson, null, null, null, null);
     }
 
     /**
@@ -85,6 +89,18 @@ public class WebSocketClusterMessage {
      * @return 集群推送消息
      */
     public static WebSocketClusterMessage forTopic(String topic, String type, String payloadJson) {
-        return new WebSocketClusterMessage("TOPIC", null, topic, type, payloadJson, null, null, null);
+        return new WebSocketClusterMessage("TOPIC", null, topic, type, payloadJson, null, null, null, null);
+    }
+
+    /**
+     * 构造踢出消息（P2-8：多端策略集群同步）。
+     *
+     * <p>发布到集群后，各节点收到消息时踢出指定用户在本节点的所有 Session。
+     *
+     * @param userId 待踢出的用户 ID
+     * @return 集群踢出消息
+     */
+    public static WebSocketClusterMessage forKick(String userId) {
+        return new WebSocketClusterMessage("KICK", userId, null, null, null, null, null, null, "MULTI_DEVICE_POLICY");
     }
 }

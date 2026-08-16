@@ -20,7 +20,7 @@ import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.feign.NotificationClient;
-import com.njydsz.common.feign.dto.BroadcastRequestDTO;
+import com.njydsz.common.socket.push.RealtimePushTemplate;
 import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.notify.helper.NotifyHelper;
 import com.njydsz.cronjob.domain.entity.job.JobAlertLog;
@@ -70,8 +70,10 @@ public class AlertDispatcher {
     private final JobAlertLogMapper jobAlertLogMapper;
     /** P6-2: Prometheus 指标收集器（可选注入，未配置时不记录指标） */
     private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
-    /** 统一通知客户端 */
+    /** 统一通知客户端（用于发送具体通道：EMAIL/SMS/IM 等，仍需经 message 模块路由） */
     private final NotificationClient notificationClient;
+    /** P2-7: 统一推送模板（直接广播到 WebSocket，替代 Feign 中转 message 模块） */
+    private final RealtimePushTemplate pushTemplate;
     /** P0-9: 告警智能降噪管理器（可选注入，仅 ydsz.cronjob.alert-dedup.enabled=true 时启用） */
     private final ObjectProvider<AlertDedupManager> alertDedupManagerProvider;
     /** P2-10: common-notify 通知助手（可选注入，IM 渠道直推） */
@@ -222,12 +224,8 @@ public class AlertDispatcher {
             data.put("sourceId", context.jobId());
             data.put("recovery", recovery);
             data.put("traceId", context.traceId());
-            BroadcastRequestDTO request = BroadcastRequestDTO.builder()
-                    .topic("ALERT")
-                    .data(data)
-                    .messageId("CRONJOB-" + rule.getId() + "-" + System.currentTimeMillis())
-                    .build();
-            notificationClient.broadcast(request);
+            String messageId = "CRONJOB-" + rule.getId() + "-" + System.currentTimeMillis();
+            pushTemplate.broadcast("ALERT", data, messageId);
         } catch (Exception e) {
             log.debug("[AlertDispatcher] 实时广播降级忽略: ruleId={} err={}",
                     rule.getId(), e.getMessage());

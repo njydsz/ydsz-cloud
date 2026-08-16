@@ -326,3 +326,70 @@ ydsz-common 是一个约 **19 万行、1400+ 类**的公共底座，分层设计
 ---
 
 *本报告正文为审计基线，附一/附二为 2026-08-16 晚修复后的增量记录。*
+
+---
+
+## 附四：第二轮修复记录（2026-08-16 19:36 场次，继续按优先级收口）
+
+### P1-1 web Security 链矛盾 ✅
+
+| 项 | 修复 |
+|---|---|
+| Session/JWT 双轨矛盾 | `WebSecurityConfiguration.securityFilterChain` 会话策略 `IF_REQUIRED` → `STATELESS`（业务零 HttpSession 依赖、nacos 未开启 `ydsz.web.session`，已确认安全）；javadoc 明确「鉴权由 WebAuthFilter 完成，Spring Security 链为兜底，业务可自行提供 SecurityFilterChain 覆盖」 |
+| X-Service-Type 客户端可控头 | `WebAuthFilter.resolveServiceTypeCode`：未知值不再抛 `IllegalArgumentException`，改为 warn + 默认 webService（白名单精确匹配，不向客户端暴露内部校验细节） |
+
+### P1-2 feign 熔断阈值硬编码 ✅
+
+- `FeignProperties.CircuitBreaker` 新增 7 个可配置项：failureRateThreshold / slowCallRateThreshold / slowCallDurationMs / waitDurationMs / minimumNumberOfCalls / slidingWindowSize（默认值与原硬编码一致，行为不破坏）
+- `Resilience4jCircuitBreakerAdapter.getOrCreate` 改为从配置读取，支持按环境调优
+
+### P2-1 依赖版本冲突收敛 ✅
+
+| 项 | 处理 |
+|---|---|
+| jjwt-jackson 与 jjwt-orgjson 双 runtime | 全仓统一为 **jjwt-jackson**：根 pom DM 移除 orgjson（留注释说明）；ydsz-common pom、auth pom、gateway pom 全部切换（gateway 无 jackson 直接依赖，jjwt-jackson runtime 传递引入，WebFlux 可用，已核实） |
+| swagger-annotations 2.2.25 与 jakarta 2.2.47 双版本 | 5 个业务 domain pom（agent/cronjob/literule/message/workflow）`swagger-annotations` → `swagger-annotations-jakarta`（同名包 `io.swagger.v3.oas.annotations`，Boot 3 生态应统一 jakarta 版）；根 pom DM 保留 javax 版条目仅为约束 knife4j/springdoc 传递版本，已加注释说明 |
+| 9 个 pom 已全部 XML 解析验证通过 | 无语法错误 |
+
+### P2-2 cache TinyLFU 衰减结论修正 ✅（审计误读修正）
+
+- **修正**：`FrequencySketch.reset()` 实际就是减半衰减（`(slot >>> 1) & resetHalveMask`），审计代理「衰减用 reset 而非 halve」结论系误读代码——**无需修复**
+- 真正修复：删除死代码 `moveToProtected()`（无任何调用方，`safeMoveToProtected` 已承担提升职责）；7 个空目录（annotation/export/lru/reference/weighted/multilevel/resilience/timer/util）为历史遗留空包，git 不跟踪空目录，无需操作
+
+### P2-3 幂等 fail-open 明示化 ✅
+
+- `LockProperties.Idempotent` 新增 `failOpen` 开关（默认 true，保持原行为）
+- `RedisIdempotentStrategy` 增加 `(template, failOpen)` 构造器：fail-open 放行（现状）；fail-closed 抛新增 `IdempotentUnavailableException`（资金类强幂等场景可配 `ydsz.lock.idempotent.fail-open=false`）
+- 装配类 `DistributedLockAutoConfiguration.idempotentStrategy` 从 LockProperties 读取开关
+
+### P2-4 README 漂移修正 ✅
+
+- 「30 个子模块」→「28 个（默认构建）+ common-app 经 app-profile 激活」
+- 职责速查表按代码事实重写：删除 10 项虚假宣称（ASM/SIMD、布隆过滤器、延迟队列、Disruptor、ES Provider、TOTP、DDD BaseEntity/规约、AES-256-GCM、JobHandler/DAG、MultiLevel 缓存），修正 util 数量（99→69）
+- 新增「安全基线（fail-closed 语义）」章节，记录本轮全部安全行为变更
+
+### 三套并存实现统一 ⏸（评估后暂缓，理由如下）
+
+- 脱敏三套：业务实体实测仅用 `@SensitiveData`（12+ 文件），`@Sensitive` 仅 safe 内部 + message 定制 → **保留两套注解 API（业务兼容），javadoc 已明确职责边界**，不做破坏性合并
+- 熔断三套：safe/socket/feign 各自熔断业务零直接引用（全部自动装配内部使用）→ 强制统一需改装配契约且无业务收益，**暂缓，文档化即可**
+- TraceId 两套头：`TRACE_ID_HEADER` 与 W3C traceparent 并存是兼容设计（老客户端可继续用），**暂缓**
+
+### 编译验证（第二轮）
+
+- feign（FeignProperties + Resilience4jCircuitBreakerAdapter）：javac 通过
+- web（WebSecurityConfiguration + WebAuthFilter）：javac 通过
+- cache（WindowTinyLFUCache 去死代码）：javac 通过
+- lock（RedisIdempotentStrategy + IdempotentUnavailableException + LockProperties + DistributedLockAutoConfiguration）：javac 通过
+- 9 个 pom XML 解析通过
+- 全部 6 项修复已确认进入 HEAD（git show 逐项验证），工作区无残留冲突
+
+### 剩余待办（明确不阻塞，需完整环境）
+
+| 事项 | 说明 |
+|---|---|
+| seata 自研 TCC/SAGA 框架（50 类，workflow 在用） | 建议单独立项评估：保留 or 切官方 starter，勿与本次安全修复混排 |
+| auth/audit/file/excel 补测试 | 工程量大，建议下一轮按模块逐个补齐 |
+| jacoco/SpotBugs/Checkstyle 引擎升级 | 工程规范建设，建议独立迭代 |
+| 三套并存统一（脱敏/熔断/TraceId） | 已评估暂缓，理由见上 |
+
+*本报告正文为审计基线，附一~附四为 2026-08-16 晚两轮修复后的增量记录。*

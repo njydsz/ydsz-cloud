@@ -12,6 +12,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 import com.njydsz.common.socket.audit.WebSocketAuditService;
+import com.njydsz.common.socket.cluster.WebSocketClusterMessage;
+import com.njydsz.common.socket.cluster.WebSocketClusterPublisher;
 import com.njydsz.common.socket.config.WebSocketProperties;
 import com.njydsz.common.socket.constant.WebSocketConstants;
 import com.njydsz.common.socket.heartbeat.WebSocketHeartbeatHandler;
@@ -44,6 +46,8 @@ public class WebSocketSessionEventListener {
     private final List<WebSocketConnectionListener> connectionListeners;
     private final WebSocketProperties properties;
     private final LocalSessionRegistry sessionRegistry;
+    /** P2-8: 集群广播发布者（多端策略踢出后同步到其他节点） */
+    private final WebSocketClusterPublisher clusterPublisher;
 
     /** 本节点活跃连接计数器（供 HealthIndicator 读取） */
     private final AtomicLong activeConnections = new AtomicLong(0);
@@ -58,7 +62,8 @@ public class WebSocketSessionEventListener {
             WebSocketAuditService auditService,
             List<WebSocketConnectionListener> connectionListeners,
             WebSocketProperties properties,
-            LocalSessionRegistry sessionRegistry) {
+            LocalSessionRegistry sessionRegistry,
+            WebSocketClusterPublisher clusterPublisher) {
         this.onlineUserService = onlineUserService;
         this.offlineMessageStore = offlineMessageStore;
         this.messagingTemplate = messagingTemplate;
@@ -67,6 +72,7 @@ public class WebSocketSessionEventListener {
         this.connectionListeners = connectionListeners != null ? connectionListeners : List.of();
         this.properties = properties;
         this.sessionRegistry = sessionRegistry;
+        this.clusterPublisher = clusterPublisher;
     }
 
     /**
@@ -171,7 +177,10 @@ public class WebSocketSessionEventListener {
     }
 
     /**
-     * 关闭旧 Session 并注销。
+     * 关闭旧 Session 并注销，同时发布集群 KICK 消息同步踢出其他节点。
+     *
+     * <p>P2-8：多端策略执行后，通过 Redis Pub/Sub 广播 KICK 消息，
+     * 其他节点收到后关闭同用户在本节点的 Session，消除集群盲区。
      *
      * @param userId    用户 ID
      * @param sessionId 待关闭的 Session ID
@@ -188,6 +197,26 @@ public class WebSocketSessionEventListener {
             }
         }
         sessionRegistry.unregister(userId, sessionId);
+        // P2-8: 集群同步踢出（Redis 发布失败不影响本地流程）
+        publishKickToCluster(userId);
+    }
+
+    /**
+     * P2-8: 发布集群 KICK 消息，通知其他节点踢出同用户 Session。
+     *
+     * @param userId 待踢出的用户 ID
+     */
+    private void publishKickToCluster(String userId) {
+        if (clusterPublisher == null || !properties.getCluster().isEnabled()) {
+            return;
+        }
+        try {
+            clusterPublisher.publish(WebSocketClusterMessage.forKick(userId));
+            log.debug("[WS-Session] 发布集群 KICK 消息: userId={}", userId);
+        } catch (Exception e) {
+            log.warn("[WS-Session] 发布集群 KICK 消息失败（本地已踢出，不影响本节点）: userId={}, err={}",
+                    userId, e.getMessage());
+        }
     }
 
     /**

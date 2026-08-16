@@ -144,6 +144,15 @@ public class ExcelException extends RuntimeException {
     }
 
     /**
+     * 获取 HTTP 状态码。
+     *
+     * @return HTTP 状态码，默认为 400
+     */
+    public int getHttpStatus() {
+        return exceptionCode != null ? exceptionCode.getHttpStatus() : 400;
+    }
+
+    /**
      * 获取国际化消息键。
      *
      * @return 消息键

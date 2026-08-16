@@ -20,6 +20,7 @@ import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.search.api.SearchRequest;
 import com.njydsz.common.search.api.SearchResponse;
+import com.njydsz.common.search.api.SearchSuggestion;
 import com.njydsz.common.search.service.UnifiedSearchService;
 
 /**
@@ -28,7 +29,12 @@ import com.njydsz.common.search.service.UnifiedSearchService;
  * <p>提供跨模块统一搜索入口，聚合 project / user / config / wiki / flow 等多个业务域的搜索结果，
  * 是大厂 B 端「一个搜索框搜全部」体验的服务端支撑。
  *
- * <p><b>接口路径：</b>{@code /api/v1/search}
+ * <p><b>接口路径：</b>
+ * <pre>
+ *   GET  /api/v1/search             - 全局搜索（跨模块聚合）
+ *   GET  /api/v1/search/suggest     - 搜索自动补全建议
+ *   GET  /api/v1/search/did-you-mean - "您是不是要找"纠错建议
+ * </pre>
  *
  * <p><b>核心职责：</b>
  * <ul>
@@ -39,6 +45,7 @@ import com.njydsz.common.search.service.UnifiedSearchService;
  *   <li><b>类型过滤</b>：通过 {@code types} 参数指定搜索的实体类型（如 {@code project,user,config}），
  *       不指定时搜索全部类型</li>
  *   <li><b>高亮 + 模糊匹配</b>：默认开启高亮（{@code highlight=true}）和模糊匹配（{@code fuzzy=true}）</li>
+ *   <li><b>自动补全 + 纠错</b>：{@code GET /suggest} 提供搜索框下拉提示，{@code GET /did-you-mean} 提供零结果纠错</li>
  * </ul>
  *
  * <p><b>权限要求：</b>{@link PermissionCodes#SYSTEM_SEARCH}（全局搜索权限码）
@@ -125,5 +132,37 @@ public class GlobalSearchController {
         }
 
         return BaseResponse.success(unifiedSearchService.search(builder.build()));
+    }
+
+    /**
+     * 搜索自动补全建议
+     *
+     * <p>根据用户已输入的前缀返回自动补全候选词，用于搜索框下拉提示。
+     * 委托 {@link UnifiedSearchService#suggest} 通过引擎前缀建议 + 热门搜索兜底三层召回。
+     *
+     * @param prefix 用户已输入的前缀（必填）
+     * @return 自动补全建议（含候选词列表）
+     */
+    @GetMapping("/suggest")
+    @Operation(summary = "搜索自动补全", description = "搜索框下拉自动补全建议")
+    @AuthApiPermission(apiCodes = PermissionCodes.SYSTEM_SEARCH)
+    public BaseResponse<SearchSuggestion> suggest(@RequestParam String prefix) {
+        return BaseResponse.success(unifiedSearchService.suggest(prefix));
+    }
+
+    /**
+     * "您是不是要找"纠错建议
+     *
+     * <p>在零结果场景下引导用户重新检索，基于 Levenshtein 编辑距离纠错。
+     * 委托 {@link UnifiedSearchService#didYouMean} 生成纠错候选词。
+     *
+     * @param keyword 用户输入的搜索词（通常为零结果查询词，必填）
+     * @return 纠错建议（含候选词列表）
+     */
+    @GetMapping("/did-you-mean")
+    @Operation(summary = "搜索纠错建议", description = "零结果时的 \"您是不是要找\" 纠错建议")
+    @AuthApiPermission(apiCodes = PermissionCodes.SYSTEM_SEARCH)
+    public BaseResponse<SearchSuggestion> didYouMean(@RequestParam String keyword) {
+        return BaseResponse.success(unifiedSearchService.didYouMean(keyword));
     }
 }

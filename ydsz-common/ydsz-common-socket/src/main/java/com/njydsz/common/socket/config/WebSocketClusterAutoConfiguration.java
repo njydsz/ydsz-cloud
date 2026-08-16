@@ -14,6 +14,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import com.njydsz.common.socket.cluster.WebSocketClusterPublisher;
 import com.njydsz.common.socket.cluster.WebSocketClusterSubscriber;
 import com.njydsz.common.socket.resilience.WebSocketCircuitBreaker;
+import com.njydsz.common.socket.session.LocalSessionRegistry;
 
 /**
  * WebSocket 集群广播自动装配。
@@ -58,13 +59,15 @@ public class WebSocketClusterAutoConfiguration {
      * 创建集群广播订阅者 Bean。
      *
      * @param messagingTemplate STOMP 消息模板
+     * @param sessionRegistry   本地 Session 注册表（P2-8 KICK 消息处理）
      * @return 集群广播订阅者实例
      */
     @Bean
     public WebSocketClusterSubscriber webSocketClusterSubscriber(
-            SimpMessagingTemplate messagingTemplate) {
-        log.info("[WS-Cluster] 注册 WebSocketClusterSubscriber");
-        return new WebSocketClusterSubscriber(messagingTemplate);
+            SimpMessagingTemplate messagingTemplate,
+            LocalSessionRegistry sessionRegistry) {
+        log.info("[WS-Cluster] 注册 WebSocketClusterSubscriber（含 KICK 处理器）");
+        return new WebSocketClusterSubscriber(messagingTemplate, sessionRegistry);
     }
 
     /**
