@@ -1,22 +1,19 @@
 package com.njydsz.message.server.config;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import org.springframework.boot.health.contributor.HealthIndicator;
-
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.health.MessageHealthIndicator;
 import com.njydsz.message.server.metric.MessageMetrics;
-
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 /**
  * 消息模块自动装配。

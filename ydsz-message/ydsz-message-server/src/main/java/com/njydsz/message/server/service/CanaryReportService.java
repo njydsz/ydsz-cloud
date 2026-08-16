@@ -2,7 +2,6 @@ package com.njydsz.message.server.service.canary;
 
 
 import java.time.LocalDateTime;
-
 import com.njydsz.message.domain.dto.canary.CanaryReportVO;
 
 /**

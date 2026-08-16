@@ -7,21 +7,23 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.njydsz.common.util.bean.BeanUpdateUtil;
-import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.domain.tree.TreeBuilder;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
-
+import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.util.bean.BeanUpdateUtil;
+import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 import com.njydsz.userinfo.domain.dto.post.DepartmentPostDTO;
 import com.njydsz.userinfo.domain.dto.put.DepartmentPutDTO;
 import com.njydsz.userinfo.domain.entity.Department;
 import com.njydsz.userinfo.domain.entity.UserDept;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
-import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
 import com.njydsz.userinfo.infra.mapper.DepartmentMapper;
@@ -29,12 +31,6 @@ import com.njydsz.userinfo.infra.mapper.UserDeptMapper;
 import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 import com.njydsz.userinfo.server.service.DepartmentService;
 import com.njydsz.userinfo.server.service.WorkflowApproverCacheService;
-import com.njydsz.common.domain.tree.TreeBuilder;
-
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 
 /**
  * 部门 Service 实现

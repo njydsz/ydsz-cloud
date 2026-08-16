@@ -1,10 +1,8 @@
 package com.njydsz.system.domain.converter;
 
 import java.util.List;
-
 import org.mapstruct.Mapper;
 import org.mapstruct.factory.Mappers;
-
 import com.njydsz.system.domain.entity.AppInfo;
 import com.njydsz.system.domain.entity.Config;
 import com.njydsz.system.domain.entity.DictItem;

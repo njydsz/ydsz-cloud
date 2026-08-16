@@ -1,16 +1,13 @@
 package com.njydsz.nextwiki.infra.repository;
 
 import java.util.List;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
-
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.entity.FileTag;
 import com.njydsz.nextwiki.domain.entity.Tag;
 import com.njydsz.nextwiki.domain.repository.TagRepository;
 import com.njydsz.nextwiki.infra.mapper.TagMapper;
-
-import lombok.RequiredArgsConstructor;
 
 /**
  * 标签仓储实现

@@ -1,24 +1,20 @@
 package com.njydsz.workflow.server.service.impl;
 
-import com.njydsz.common.lock.annotation.DistributedScheduled;
-import com.njydsz.common.util.collection.MapUtils;
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
-
 import org.springframework.stereotype.Service;
-
+import com.njydsz.common.lock.annotation.DistributedScheduled;
+import com.njydsz.common.util.collection.MapUtils;
 import com.njydsz.workflow.server.service.FlowAnalyticsService;
 import com.njydsz.workflow.server.service.FlowNotificationService;
 import com.njydsz.workflow.server.service.FlowReportService;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 审批数据周报/月报服务实现

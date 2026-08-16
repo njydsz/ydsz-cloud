@@ -5,23 +5,18 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
-import java.security.SecureRandom;
-
-import javax.imageio.ImageIO;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.security.SecureRandom;
 import java.util.Base64;
-
-import org.springframework.stereotype.Service;
-
-import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
-import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.userinfo.server.config.UserInfoProperties;
-
+import javax.imageio.ImageIO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
+import com.njydsz.userinfo.server.config.UserInfoProperties;
 
 /**
  * 图形验证码服务。

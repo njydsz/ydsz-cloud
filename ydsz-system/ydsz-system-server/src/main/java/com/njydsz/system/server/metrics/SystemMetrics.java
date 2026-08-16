@@ -1,14 +1,11 @@
 package com.njydsz.system.server.metrics;
 
 import java.util.concurrent.TimeUnit;
-
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.stereotype.Component;
-
-import com.njydsz.common.base.metrics.AbstractModuleMetrics;
-
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.stereotype.Component;
+import com.njydsz.common.base.metrics.AbstractModuleMetrics;
 
 /**
  * 系统模块 Micrometer 指标采集器

@@ -1,17 +1,16 @@
 package com.njydsz.userinfo.domain.entity;
 
+import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
-import com.njydsz.common.jdbc.handler.IntegerStringTypeHandler;
-import com.njydsz.common.safe.encrypt.EncryptField;
-import com.njydsz.common.safe.encrypt.EncryptTypeHandler;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-
-import java.time.LocalDateTime;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.common.jdbc.handler.IntegerStringTypeHandler;
+import com.njydsz.common.safe.encrypt.EncryptField;
+import com.njydsz.common.safe.encrypt.EncryptTypeHandler;
 
 /**
  * 用户账号实体

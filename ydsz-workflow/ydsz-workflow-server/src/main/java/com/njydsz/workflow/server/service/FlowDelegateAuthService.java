@@ -1,7 +1,6 @@
 package com.njydsz.workflow.server.service;
 
 import java.util.List;
-
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.workflow.domain.entity.FlowDelegateAuth;
 

@@ -1,14 +1,11 @@
 package com.njydsz.nextwiki.infra.repository;
 
 import java.util.List;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
-
 import com.njydsz.nextwiki.domain.entity.FileAcl;
 import com.njydsz.nextwiki.domain.repository.FileAclRepository;
 import com.njydsz.nextwiki.infra.mapper.FileAclMapper;
-
-import lombok.RequiredArgsConstructor;
 
 /**
  * 文件 ACL 仓储实现

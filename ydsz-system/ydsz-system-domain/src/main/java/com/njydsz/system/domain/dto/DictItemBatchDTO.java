@@ -1,7 +1,6 @@
 package com.njydsz.system.domain.dto;
 
 import java.util.List;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;

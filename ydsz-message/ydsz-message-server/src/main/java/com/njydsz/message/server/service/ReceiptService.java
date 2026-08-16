@@ -1,7 +1,6 @@
 package com.njydsz.message.server.service.receipt;
 
 import java.util.List;
-
 import com.njydsz.message.domain.dto.receipt.ReceiptCallbackDTO;
 import com.njydsz.message.domain.entity.receipt.MsgReceipt;
 

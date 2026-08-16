@@ -8,15 +8,19 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import com.njydsz.common.util.bean.BeanUpdateUtil;
-import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.auth.annotation.DataScope;
-
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.util.bean.BeanUpdateUtil;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 import com.njydsz.userinfo.domain.dto.RolePageQueryDTO;
 import com.njydsz.userinfo.domain.dto.post.RolePostDTO;
 import com.njydsz.userinfo.domain.dto.put.RolePutDTO;
@@ -24,20 +28,12 @@ import com.njydsz.userinfo.domain.entity.Role;
 import com.njydsz.userinfo.domain.entity.RolePermission;
 import com.njydsz.userinfo.domain.entity.UserRole;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
-import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.vo.RoleVO;
 import com.njydsz.userinfo.infra.mapper.RoleMapper;
 import com.njydsz.userinfo.infra.mapper.RolePermissionMapper;
 import com.njydsz.userinfo.infra.mapper.UserRoleMapper;
 import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 import com.njydsz.userinfo.server.service.RoleService;
-import com.njydsz.userinfo.domain.converter.UserInfoConverter;
-
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 角色 Service 实现

@@ -9,24 +9,26 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.queue.constant.YdszMessageTopics;
-import com.njydsz.common.core.constant.SystemConstants;
-import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.constant.PageConstants;
+import com.njydsz.common.core.constant.SystemConstants;
+import com.njydsz.common.event.api.DomainEvent;
+import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.queue.constant.YdszMessageTopics;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.id.TracerUtils;
-import com.njydsz.common.json.YdszJson;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.dto.batch.BatchSendResult;
 import com.njydsz.message.domain.dto.core.MessageLogQueryDTO;
@@ -56,12 +58,11 @@ import com.njydsz.message.server.service.config.UserChannelBindingService;
 import com.njydsz.message.server.service.config.VariableSourceResolver;
 import com.njydsz.message.server.service.core.DedupService;
 import com.njydsz.message.server.service.core.DeliveryTimeOptimizer;
+import com.njydsz.message.server.service.core.MessageQueryService;
+import com.njydsz.message.server.service.core.MessageSendService;
 import com.njydsz.message.server.service.core.MessageService;
 import com.njydsz.message.server.service.core.MessageTraceService;
 import com.njydsz.message.server.service.core.RateLimitService;
-import com.njydsz.message.server.service.core.MessageQueryService;
-import com.njydsz.message.server.service.core.MessageSendService;
-import com.njydsz.message.server.util.PiiMasker;
 import com.njydsz.message.server.service.impl.AggregatePersistenceService;
 import com.njydsz.message.server.service.impl.ChannelSuppressionEngine;
 import com.njydsz.message.server.service.impl.DndService;
@@ -72,11 +73,7 @@ import com.njydsz.message.server.service.template.TemplateService;
 import com.njydsz.message.server.template.RichMediaRenderer;
 import com.njydsz.message.server.template.TemplateEngine;
 import com.njydsz.message.server.template.TemplateVariableValidator;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import com.njydsz.common.event.api.DomainEvent;
-import com.njydsz.common.event.publish.DomainEventPublisher;
+import com.njydsz.common.safe.sensitive.SensitiveUtil;
 
 /**
  * 消息服务实现（核心）。
@@ -189,7 +186,7 @@ public class MessageServiceImpl implements MessageService {
         // P2-6: 级联深度保护(防御性,正常路径下 triggerCascade 已提前拦截)
         if (depth > MessageConstants.MAX_CASCADE_DEPTH) {
             log.warn("[Message] 级联深度超限,拒绝发送: depth={} max={} receiver={}",
-                    depth, MessageConstants.MAX_CASCADE_DEPTH, PiiMasker.maskReceiver(request.getReceiver()));
+                    depth, MessageConstants.MAX_CASCADE_DEPTH, SensitiveUtil.scanAndMask(request.getReceiver()));
             return MessageResult.fail(request.getChannel(), "级联深度超限");
         }
 
@@ -280,7 +277,7 @@ public class MessageServiceImpl implements MessageService {
             String resolved = userChannelBindingService.resolveChannelUserId(ctx.receiver, channel);
             if (resolved != null) {
 log.debug("[Message] P0-1 通道绑定解析: userId={} channel={} → channelUserId={}",
-                    PiiMasker.maskReceiver(ctx.receiver), channel, resolved);
+                    SensitiveUtil.scanAndMask(ctx.receiver), channel, resolved);
                 request.setReceiver(resolved);
                 ctx.receiver = resolved;
             }
@@ -311,7 +308,7 @@ log.debug("[Message] P0-1 通道绑定解析: userId={} channel={} → channelUs
         if (StringUtils.hasText(ctx.receiver) && StringUtils.hasText(ctx.templateCode)
                 && subscriptionService.isBlocked(ctx.receiver, ctx.templateCode, ctx.channel)) {
             log.info("[Message] 用户已退订,跳过发送: receiver={} topic={} channel={}",
-                    PiiMasker.maskReceiver(ctx.receiver), ctx.templateCode, ctx.channel);
+                    SensitiveUtil.scanAndMask(ctx.receiver), ctx.templateCode, ctx.channel);
             messageMetrics.recordSend(ctx.channel, "BLOCKED", 0);
             ctx.result = MessageResult.fail(ctx.channel, "用户已退订该消息");
             return ctx;
@@ -328,7 +325,7 @@ log.debug("[Message] P0-1 通道绑定解析: userId={} channel={} → channelUs
             if (!channelDisruptive) {
                 log.debug("[Message] 非打扰型通道绕过 DND: channel={}", ctx.channel);
             } else if (urgentBypass) {
-                log.info("[Message] URGENT 消息绕过 DND: receiver={} channel={}", PiiMasker.maskReceiver(ctx.receiver), ctx.channel);
+                log.info("[Message] URGENT 消息绕过 DND: receiver={} channel={}", SensitiveUtil.scanAndMask(ctx.receiver), ctx.channel);
             } else if (stc != null && stc.isEnabled()) {
                 LocalDateTime nextTime = calculateDndEndTime(ctx.pref);
                 if (nextTime == null) {
@@ -339,13 +336,13 @@ log.debug("[Message] P0-1 通道绑定解析: userId={} channel={} → channelUs
                 long deferHours = Duration.between(LocalDateTime.now(), nextTime).toHours();
                 if (deferHours > stc.getMaxDeferHours()) {
 log.info("[Message] DND 延迟超过阈值,丢弃: receiver={} defer={}h max={}h",
-                    PiiMasker.maskReceiver(ctx.receiver), deferHours, stc.getMaxDeferHours());
+                    SensitiveUtil.scanAndMask(ctx.receiver), deferHours, stc.getMaxDeferHours());
                     messageMetrics.recordSend(ctx.channel, "DND_DROPPED", 0);
                     ctx.result = MessageResult.fail(ctx.channel, "免打扰时段消息延迟过久,已丢弃");
                     return ctx;
                 }
 log.info("[Message] DND 延迟发送: receiver={} dnd={}~{} nextSendAt={}",
-                    PiiMasker.maskReceiver(ctx.receiver), ctx.pref.getDndStart(), ctx.pref.getDndEnd(), nextTime);
+                    SensitiveUtil.scanAndMask(ctx.receiver), ctx.pref.getDndStart(), ctx.pref.getDndEnd(), nextTime);
                 messageMetrics.recordSend(ctx.channel, "DND_DEFERRED", 0);
                 request.setScheduledAt(nextTime);
             } else {
@@ -357,14 +354,14 @@ log.info("[Message] DND 延迟发送: receiver={} dnd={}~{} nextSendAt={}",
 
         // ⑤-1b P2-14: 时区感知 DND 补充检查
         if (StringUtils.hasText(ctx.receiver) && dndService.shouldDelay(ctx.receiver, resolvePriority(request))) {
-            log.info("[Message] P2-14 时区感知 DND 延迟发送: receiver={} channel={}", PiiMasker.maskReceiver(ctx.receiver), ctx.channel);
+            log.info("[Message] P2-14 时区感知 DND 延迟发送: receiver={} channel={}", SensitiveUtil.scanAndMask(ctx.receiver), ctx.channel);
             messageMetrics.recordSend(ctx.channel, "DND_DEFERRED", 0);
         }
 
         // ⑤-2 P2-1: 智能去重（SET NX EX）
         ctx.dedupKey = buildDedupKey(request);
         if (StringUtils.hasText(ctx.dedupKey) && !dedupService.tryAcquire(ctx.dedupKey)) {
-            log.info("[Message] 检测到重复消息,跳过发送: dedupKey={} receiver={}", ctx.dedupKey, PiiMasker.maskReceiver(ctx.receiver));
+            log.info("[Message] 检测到重复消息,跳过发送: dedupKey={} receiver={}", ctx.dedupKey, SensitiveUtil.scanAndMask(ctx.receiver));
             messageMetrics.recordSend(ctx.channel, "DEDUPED", 0);
             ctx.result = MessageResult.fail(ctx.channel, "消息重复,已忽略");
             return ctx;
@@ -375,7 +372,7 @@ log.info("[Message] DND 延迟发送: receiver={} dnd={}~{} nextSendAt={}",
                 && StringUtils.hasText(ctx.receiver)
                 && channelSuppressionEngine.shouldSuppress(ctx.bizType, request.getBizId(), ctx.receiver, ctx.channel)) {
             log.info("[Message] 跨渠道抑制,跳过发送: bizType={} bizId={} receiver={} channel={}",
-                    ctx.bizType, request.getBizId(), PiiMasker.maskReceiver(ctx.receiver), ctx.channel);
+                    ctx.bizType, request.getBizId(), SensitiveUtil.scanAndMask(ctx.receiver), ctx.channel);
             messageMetrics.recordSend(ctx.channel, "SUPPRESSED", 0);
             ctx.result = MessageResult.fail(ctx.channel, "跨渠道抑制: 已有其他渠道发送");
             return ctx;
@@ -562,12 +559,12 @@ log.info("[Message] DND 延迟发送: receiver={} dnd={}~{} nextSendAt={}",
                             MsgTrace.Node.SCHEDULED,
                             "SUCCESS", ctx.channel, "智能定时: optimalAt=" + optimalTime);
 log.info("[Message] 智能定时推送: msgId={} receiver={} optimalAt={}",
-                    logDO.getMsgId(), PiiMasker.maskReceiver(ctx.receiver), optimalTime);
+                    logDO.getMsgId(), SensitiveUtil.scanAndMask(ctx.receiver), optimalTime);
                     return MessageResult.ok(ctx.channel, logDO.getMsgId());
                 }
             } catch (Exception e) {
 log.debug("[Message] 智能推送时间优化失败,降级立即发送: receiver={} err={}",
-                    PiiMasker.maskReceiver(ctx.receiver), e.getMessage());
+                    SensitiveUtil.scanAndMask(ctx.receiver), e.getMessage());
             }
         }
 

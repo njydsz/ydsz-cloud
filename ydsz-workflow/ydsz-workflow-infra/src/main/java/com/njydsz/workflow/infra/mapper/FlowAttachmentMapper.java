@@ -1,19 +1,17 @@
 package com.njydsz.workflow.infra.mapper;
 
 import java.util.List;
-
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
-
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.workflow.domain.entity.FlowAttachment;
 
 /**
  * 自建工作流引擎 - 审批附件 Mapper
  *
  * <p>对应数据表 <code>ydsz_flow_attachment</code>（P1-6 GAP-51），存储审批节点上传的附件。</p>
- * <p>附件走文件存储服务，DB 仅保存元数据（文件 ID/名称/大小/上传人），由 {@code FileStorageService} 负责上传/下载。
+ * <p>附件走文件存储服务，DB 仅保存元数据（文件 ID/名称/大小/上传人），由 {@code IFileStorageProvider} 负责上传/下载。
  *
  * <p><b>主要索引：</b>
  * <ul>

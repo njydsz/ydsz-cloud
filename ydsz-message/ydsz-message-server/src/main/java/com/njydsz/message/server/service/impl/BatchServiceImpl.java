@@ -3,13 +3,13 @@ package com.njydsz.message.server.service.impl.batch;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
@@ -17,15 +17,12 @@ import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.message.domain.dto.batch.BatchProgressVO;
 import com.njydsz.message.domain.dto.batch.BatchSendRequestDTO;
+import com.njydsz.message.domain.dto.batch.BatchSendResult;
 import com.njydsz.message.domain.entity.batch.MsgBatch;
 import com.njydsz.message.infra.mapper.batch.MsgBatchMapper;
 import com.njydsz.message.server.service.batch.BatchService;
 import com.njydsz.message.server.service.core.MessageService;
 import com.njydsz.message.server.service.impl.ParallelBatchSender;
-import com.njydsz.message.domain.dto.batch.BatchSendResult;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 消息批次服务实现。

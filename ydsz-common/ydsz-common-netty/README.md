@@ -55,8 +55,8 @@
 
 | 类 | 说明 |
 |---|---|
-| `@MessageHandler` | 消息处理器注解（标记方法为特定消息类型处理器，类似 Spring MVC `@RequestMapping`） |
-| `MessageDispatcher` | 消息分发器，扫描 `@MessageHandler` 注解方法，按消息 type 字段路由分发 |
+| `@MessageHandler` | ⚠️ **@Deprecated v1.1.0** — 消息处理器注解，无活跃消费者，计划 v2.0.0 移除 |
+| `MessageDispatcher` | ⚠️ **@Deprecated v1.1.0** — 消息分发器，无活跃消费者，计划 v2.0.0 移除 |
 | `ChannelEventDispatcher` | Channel 事件分发器（连接 / 断开 / 异常等事件分发到监听器） |
 | `ChannelEventListener` | Channel 事件监听器 SPI 接口，业务侧实现订阅 Channel 生命周期事件 |
 
@@ -158,6 +158,8 @@ public class MyTcpServer extends AbstractNettyServer {
 import com.njydsz.common.netty.client.AbstractNettyClient;
 import com.njydsz.common.netty.config.NettyProperties;
 import com.njydsz.common.netty.codec.LengthFieldCodec;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.socket.SocketChannel;
 import org.springframework.stereotype.Component;
 
@@ -172,6 +174,19 @@ public class MyTcpClient extends AbstractNettyClient {
     protected void initChannelPipeline(SocketChannel ch) {
         LengthFieldCodec.addToPipeline(ch.pipeline());
         ch.pipeline().addLast(new MyBusinessHandler());
+    }
+
+    /**
+     * 业务 Handler 示例 — 处理服务端下发的消息。
+     *
+     * <p>推荐使用 SimpleChannelInboundHandler 或 ChannelInboundHandlerAdapter，
+     * 在 channelRead 中按消息 type 字段做 switch 分发。
+     */
+    static class MyBusinessHandler extends ChannelInboundHandlerAdapter {
+        @Override
+        public void channelRead(ChannelHandlerContext ctx, Object msg) {
+            // 处理业务消息...
+        }
     }
 }
 ```
@@ -366,7 +381,7 @@ ydsz:
 | `AbstractNettyServer` | TCP Server 抽象基类，业务继承实现自定义 Pipeline | 业务模块实现 |
 | `AbstractNettyClient` | TCP Client 抽象基类，业务继承实现自定义 Pipeline | 业务模块实现 |
 | `ChannelEventListener` | Channel 事件监听器，业务实现订阅连接/断开/异常事件 | 业务模块实现 |
-| `@MessageHandler` | 消息处理器注解，业务标记方法处理特定 type 消息 | 业务模块实现 |
+| `@MessageHandler` | ⚠️ @Deprecated v1.1.0 — 计划 v2.0.0 移除 | — |
 | `JsonMessageCodec<T>` | JSON 消息编解码器，业务可扩展自定义编解码 | 框架内置 JSON 实现 |
 
 ## 健康检查

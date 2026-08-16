@@ -5,26 +5,27 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import jakarta.annotation.PreDestroy;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.ConsumeMode;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import com.njydsz.common.lock.idempotent.IdempotentStrategy;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Component;
-
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import org.springframework.util.StringUtils;
-import com.njydsz.common.queue.constant.YdszMessageTopics;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.lock.idempotent.IdempotentStrategy;
+import com.njydsz.common.queue.compress.MessageCompressor;
+import com.njydsz.common.queue.constant.YdszMessageTopics;
+import com.njydsz.common.queue.trace.MessageTracer;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
@@ -32,11 +33,6 @@ import com.njydsz.message.infra.mapper.core.MsgLogMapper;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.metric.MessageMetrics;
 import com.njydsz.message.server.service.core.MessageService;
-import com.njydsz.common.queue.compress.MessageCompressor;
-import com.njydsz.common.queue.trace.MessageTracer;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * RocketMQ 消息消费端。

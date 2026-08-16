@@ -1,17 +1,14 @@
 package com.njydsz.userinfo.server.service.impl;
 
 import java.util.List;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.njydsz.userinfo.domain.entity.UserDept;
-import com.njydsz.userinfo.infra.mapper.UserDeptMapper;
-import com.njydsz.userinfo.server.service.UserDeptService;
-
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import com.njydsz.userinfo.domain.entity.UserDept;
+import com.njydsz.userinfo.infra.mapper.UserDeptMapper;
+import com.njydsz.userinfo.server.service.UserDeptService;
 
 /**
  * 用户-部门关联服务实现。

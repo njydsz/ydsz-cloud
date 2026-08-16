@@ -1,7 +1,6 @@
 package com.njydsz.message.server.template;
 
 import java.util.List;
-
 import lombok.Data;
 
 /**

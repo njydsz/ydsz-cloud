@@ -1,18 +1,15 @@
 package com.njydsz.workflow.server.service.instance;
 
 import java.util.Map;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-
 import com.njydsz.workflow.domain.dto.FlowAssigneeDTO;
 import com.njydsz.workflow.domain.entity.FlowInstance;
 import com.njydsz.workflow.domain.entity.FlowNode;
 import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.domain.enums.FlowAssigneeType;
 import com.njydsz.workflow.server.engine.FlowVariableStrategy;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 办理人解析服务

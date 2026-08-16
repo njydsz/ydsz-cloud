@@ -2,13 +2,15 @@ package com.njydsz.message.web.controller.core;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.permission.PermissionCodes;
@@ -18,11 +20,6 @@ import com.njydsz.message.domain.dto.core.FunnelStatsVO;
 import com.njydsz.message.domain.dto.core.MessageStatsVO;
 import com.njydsz.message.domain.dto.receipt.ReceiptStatsVO;
 import com.njydsz.message.server.service.core.MessageStatsService;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 消息统计看板（Message Stats）Controller。

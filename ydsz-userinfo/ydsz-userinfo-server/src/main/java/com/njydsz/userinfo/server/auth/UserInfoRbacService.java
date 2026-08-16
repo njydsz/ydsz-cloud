@@ -2,16 +2,13 @@ package com.njydsz.userinfo.server.auth;
 
 import java.util.Collections;
 import java.util.Map;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.service.RbacUserInfoService;
 import com.njydsz.common.auth.util.AccessTokenUtils;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 用户信息 RBAC 服务实现。

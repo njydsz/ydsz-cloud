@@ -1,33 +1,30 @@
 package com.njydsz.message.web.controller.batch;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-
-import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.message.domain.converter.MessageConverter;
 import com.njydsz.message.domain.dto.batch.BatchProgressVO;
 import com.njydsz.message.domain.dto.batch.BatchSendRequestDTO;
 import com.njydsz.message.domain.vo.MsgBatchVO;
 import com.njydsz.message.server.service.batch.BatchService;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import com.njydsz.common.audit.annotation.Audit;
-import com.njydsz.common.audit.enums.AuditAction;
-import com.njydsz.common.audit.enums.AuditType;
 
 /**
  * 批量发送（Batch Send）Controller。

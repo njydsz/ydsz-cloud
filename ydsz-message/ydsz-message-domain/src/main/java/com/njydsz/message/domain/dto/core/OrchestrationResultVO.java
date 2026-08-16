@@ -1,7 +1,6 @@
 package com.njydsz.message.domain.dto.core;
 
 import java.util.Map;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

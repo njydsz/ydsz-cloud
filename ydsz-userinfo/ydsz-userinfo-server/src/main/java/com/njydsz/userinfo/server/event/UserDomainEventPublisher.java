@@ -1,8 +1,8 @@
 package com.njydsz.userinfo.server.event;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
-
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;
@@ -10,8 +10,6 @@ import com.njydsz.userinfo.domain.entity.Department;
 import com.njydsz.userinfo.domain.entity.Role;
 import com.njydsz.userinfo.domain.entity.UserAccount;
 import com.njydsz.userinfo.domain.event.UserDomainEvent;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 用户模块领域事件发布器。

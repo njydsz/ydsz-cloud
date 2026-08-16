@@ -59,6 +59,9 @@ public final class FeignClientConstants {
     /** 消息广播路径 */
     public static final String MESSAGE_PATH_BROADCAST = "/api/v1/message/broadcast";
 
+    /** 实时推送路径（单播） */
+    public static final String MESSAGE_PATH_PUSH_REALTIME = "/api/v1/message/push-realtime";
+
     // ======================== 定时任务服务路径常量 ========================
 
     /** 定时任务触发路径 */

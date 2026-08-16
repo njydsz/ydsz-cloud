@@ -2,18 +2,15 @@ package com.njydsz.userinfo.server.service.impl;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
-import org.springframework.stereotype.Service;
-
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.userinfo.domain.entity.UserLoginHistory;
 import com.njydsz.userinfo.infra.mapper.UserLoginHistoryMapper;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.service.LoginHistoryService;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 登录历史服务实现

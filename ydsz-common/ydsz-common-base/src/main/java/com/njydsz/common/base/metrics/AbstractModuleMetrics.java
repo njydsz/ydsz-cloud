@@ -36,7 +36,15 @@ import io.micrometer.core.instrument.Timer;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 自 v2.8 起废弃，迁移至 {@code ydsz-common-sentry} 的 {@code SentryObservation} 统一入口。
+ *             新模块禁止继承本类，已有模块应逐步迁移。迁移路径：
+ *             <ol>
+ *               <li>简单场景：直接调用 {@code SentryObservation.count/time/gauge}</li>
+ *               <li>复杂场景（已有大量继承子类）：先切换到 {@code SentryMetricsAdapter}，再渐进迁移到 sentry 入口</li>
+ *             </ol>
+ *             参见编码规范 <a href="docs/云顶编码规范.md#27-可观测性统一接入规范v28-新增">第 27 节</a>。
  */
+@Deprecated(since = "2.8", forRemoval = false)
 public abstract class AbstractModuleMetrics {
 
     /** Micrometer 指标注册中心 */

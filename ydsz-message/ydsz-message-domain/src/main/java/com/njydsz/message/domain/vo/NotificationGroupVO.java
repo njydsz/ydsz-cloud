@@ -1,7 +1,6 @@
 package com.njydsz.message.domain.vo;
 
 import java.time.LocalDateTime;
-
 import lombok.Data;
 
 /**

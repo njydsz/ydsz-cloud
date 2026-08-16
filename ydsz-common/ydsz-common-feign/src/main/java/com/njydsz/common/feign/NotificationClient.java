@@ -3,7 +3,9 @@ package com.njydsz.common.feign;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.feign.dto.BroadcastRequestDTO;
 import com.njydsz.common.feign.dto.RealtimePushDTO;
 import com.njydsz.common.feign.fallback.NotificationClientFallbackFactory;
 
@@ -23,6 +25,12 @@ import com.njydsz.common.feign.fallback.NotificationClientFallbackFactory;
  *   <li>工作流审批通知</li>
  *   <li>定时任务执行结果告警</li>
  *   <li>规则引擎触发通知</li>
+ * </ul>
+ *
+ * <p><b>P0-3-fix</b>：
+ * <ul>
+ *   <li>{@link #broadcast(BroadcastRequestDTO)} 将 topic 并入请求体，返回 {@link BaseResponse} 使调用方可感知结果</li>
+ *   <li>新增 {@link #pushRealtime(String, String, RealtimePushDTO)} 单播实时推送方法</li>
  * </ul>
  *
  * @author ydsz-team
@@ -49,10 +57,25 @@ public interface NotificationClient {
      * 实时广播推送（WebSocket/SSE）。
      *
      * <p>将消息广播到当前租户的在线用户，不经过消息中心持久化。
+     * topic 字段用于前端订阅过滤，messageId 用于幂等去重。
      *
-     * @param topic   广播主题（如 "ALERT"、"TASK"）
-     * @param payload 推送数据
+     * @param request 广播请求（topic、data、可选 messageId）
+     * @return 推送结果（成功时 traceId 可用于追踪）
      */
     @PostMapping(FeignClientConstants.MESSAGE_PATH_BROADCAST)
-    void broadcast(String topic, RealtimePushDTO payload);
+    BaseResponse<MessageResult> broadcast(@RequestBody BroadcastRequestDTO request);
+
+    /**
+     * 实时单播推送（WebSocket/SSE）。
+     *
+     * <p>将消息推送到指定用户的 WebSocket 连接，不经过消息中心持久化。
+     * 适用于工作流待办数推送、任务分配通知等场景。
+     *
+     * @param userId  目标用户 ID
+     * @param type    推送消息类型（如 "TODO_COUNT"、"TASK_ASSIGNED"）
+     * @param payload 推送数据
+     * @return 推送结果（成功时 traceId 可用于追踪）
+     */
+    @PostMapping(FeignClientConstants.MESSAGE_PATH_PUSH_REALTIME)
+    BaseResponse<MessageResult> pushRealtime(@RequestBody PushRealtimeRequestDTO request);
 }

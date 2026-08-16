@@ -1,15 +1,12 @@
 package com.njydsz.nextwiki.server.service;
 
 import java.util.List;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.njydsz.nextwiki.domain.entity.Tag;
-import com.njydsz.nextwiki.domain.service.TagDomainService;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import com.njydsz.nextwiki.domain.entity.Tag;
+import com.njydsz.nextwiki.domain.service.TagDomainService;
 
 /**
  * 标签应用服务。

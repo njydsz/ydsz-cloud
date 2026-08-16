@@ -1,4 +1,4 @@
-﻿package com.njydsz.common.json.parser;
+package com.njydsz.common.json.parser;
 
 import java.math.BigDecimal;
 import com.njydsz.common.json.YdszJson;

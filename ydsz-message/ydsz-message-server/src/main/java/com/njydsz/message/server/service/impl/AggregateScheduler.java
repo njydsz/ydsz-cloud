@@ -2,22 +2,19 @@ package com.njydsz.message.server.service.impl.batch;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.message.domain.entity.batch.MsgAggregate;
 import com.njydsz.message.domain.enums.batch.AggregateBatchStatusEnum;
 import com.njydsz.message.infra.mapper.batch.MsgAggregateMapper;
 import com.njydsz.message.server.service.batch.AggregateService;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 聚合批次调度器。

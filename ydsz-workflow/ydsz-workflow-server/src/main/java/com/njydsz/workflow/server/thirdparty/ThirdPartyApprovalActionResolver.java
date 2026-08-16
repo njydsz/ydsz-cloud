@@ -1,7 +1,6 @@
 package com.njydsz.workflow.server.thirdparty;
 
 import java.util.Map;
-
 import com.njydsz.workflow.domain.enums.ThirdPartyPlatform;
 
 /**

@@ -4,18 +4,18 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.IdWorker;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.IdWorker;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.common.core.constant.SystemConstants;
-import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.constant.PageConstants;
+import com.njydsz.common.core.constant.SystemConstants;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.core.NotificationQueryDTO;
@@ -29,9 +29,6 @@ import com.njydsz.message.server.realtime.RealtimePushService;
 import com.njydsz.message.server.service.core.NotificationService;
 import com.njydsz.message.server.service.impl.NotificationSearchService;
 import com.njydsz.message.server.service.receipt.RecallService;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 通知服务实现。

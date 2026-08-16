@@ -34,6 +34,7 @@ import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.cronjob.domain.entity.job.Job;
@@ -121,6 +122,14 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * 通过 ObjectProvider 可选注入，避免循环依赖且便于测试。
      */
     private final ObjectProvider<JobHistoryService> jobHistoryServiceProvider;
+
+    /**
+     * 搜索索引事件桥接器（可选注入）。
+     *
+     * <p>用于在任务数据变更时异步同步到 ydsz-common-search 统一搜索索引。
+     * 通过 ObjectProvider 可选注入，当搜索模块未引入时安全降级为无操作。
+     */
+    private final ObjectProvider<SearchIndexEventBridge> searchIndexEventBridgeProvider;
 
     /** 调度器 */
     private TaskScheduler taskScheduler;
@@ -294,6 +303,8 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             historyService.recordVersionChange(null, job, "CREATE",
                     job.getCreatedBy(), "任务创建");
         }
+        // 同步到统一搜索索引（ydsz-common-search）
+        syncSearchIndex("job", job);
         return job.getId();
     }
 
@@ -399,6 +410,8 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             historyService2.recordVersionChange(exists, exists, "UPDATE",
                     job.getUpdatedBy(), "任务更新");
         }
+        // 同步到统一搜索索引（ydsz-common-search）
+        syncSearchIndex("job", exists);
     }
 
     /**
@@ -427,6 +440,8 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             historyService3.recordVersionChange(j, null, "DELETE",
                     j.getUpdatedBy(), "任务删除");
         }
+        // 从统一搜索索引移除（ydsz-common-search）
+        deleteSearchIndex("job", id);
     }
 
     /**
@@ -1108,6 +1123,38 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
                     .eventType(eventType)
                     .metadata("payload", payload)
                     .build());
+        }
+    }
+
+    /**
+     * 同步实体到统一搜索索引。
+     *
+     * <p>委托 ydsz-common-search 的 {@link SearchIndexEventBridge} 异步写入索引，
+     * 搜索模块未引入时静默降级为无操作。
+     *
+     * @param type   实体类型标识（如 "job"）
+     * @param entity 业务实体
+     */
+    private void syncSearchIndex(String type, Job entity) {
+        SearchIndexEventBridge bridge = searchIndexEventBridgeProvider.getIfAvailable();
+        if (bridge != null) {
+            bridge.indexUpsert(type, entity);
+        }
+    }
+
+    /**
+     * 从统一搜索索引移除实体。
+     *
+     * <p>委托 ydsz-common-search 的 {@link SearchIndexEventBridge} 异步删除索引，
+     * 搜索模块未引入时静默降级为无操作。
+     *
+     * @param type   实体类型标识（如 "job"）
+     * @param id     实体 ID
+     */
+    private void deleteSearchIndex(String type, String id) {
+        SearchIndexEventBridge bridge = searchIndexEventBridgeProvider.getIfAvailable();
+        if (bridge != null) {
+            bridge.indexDelete(type, id);
         }
     }
 

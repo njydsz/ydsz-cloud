@@ -1,15 +1,12 @@
 package com.njydsz.userinfo.server.auth;
 
 import java.util.regex.Pattern;
-
-import org.springframework.stereotype.Component;
-
-import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
-import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.userinfo.server.config.UserInfoProperties;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
+import com.njydsz.userinfo.server.config.UserInfoProperties;
 
 /**
  * 密码策略校验器。

@@ -1,24 +1,22 @@
 package com.njydsz.message.server.producer;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-
+import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.queue.constant.QueueChannels;
 import com.njydsz.common.queue.constant.YdszMessageTopics;
-import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.queue.domain.QueueMessage;
 import com.njydsz.common.queue.enums.QueueType;
 import com.njydsz.common.queue.queue.IMessageQueue;
 import com.njydsz.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.common.queue.service.IMessagePublisher;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.common.json.YdszJson;
-
-import lombok.extern.slf4j.Slf4j;
 
 
 /**

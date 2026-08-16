@@ -1,7 +1,6 @@
 package com.njydsz.message.server.service.core;
 
 import java.util.List;
-
 import com.njydsz.message.domain.dto.core.UserReachProfileDTO;
 
 /**

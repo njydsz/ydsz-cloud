@@ -1,21 +1,18 @@
 package com.njydsz.workflow.web.controller.analytics;
 
 import java.time.LocalDateTime;
-
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.workflow.server.service.FlowAnalyticsService;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 审批数据分析 Controller（P2-2）

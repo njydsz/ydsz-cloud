@@ -2,10 +2,10 @@ package com.njydsz.nextwiki.server.service;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
-
 import com.njydsz.common.search.api.SearchHit;
 import com.njydsz.common.search.api.SearchRequest;
 import com.njydsz.common.search.api.SearchResponse;
@@ -14,9 +14,6 @@ import com.njydsz.common.search.service.UnifiedSearchService;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.service.SearchDomainService;
 import com.njydsz.nextwiki.domain.vo.SearchResultVO;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * NextWiki 搜索应用服务。

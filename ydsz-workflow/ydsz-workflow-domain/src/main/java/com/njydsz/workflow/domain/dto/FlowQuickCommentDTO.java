@@ -1,12 +1,10 @@
 package com.njydsz.workflow.domain.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-
-import com.njydsz.common.safe.annotation.Xss;
-
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import com.njydsz.common.safe.annotation.Xss;
 
 /**
  * 审批常用语 DTO

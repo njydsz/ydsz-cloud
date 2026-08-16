@@ -3,7 +3,12 @@ package com.njydsz.workflow.server.engine;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
+import com.googlecode.aviator.AviatorEvaluator;
+import com.googlecode.aviator.AviatorEvaluatorInstance;
+import com.googlecode.aviator.Expression;
+import com.googlecode.aviator.Feature;
+import com.googlecode.aviator.Options;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -12,16 +17,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
-
-import com.googlecode.aviator.AviatorEvaluator;
-import com.googlecode.aviator.AviatorEvaluatorInstance;
-import com.googlecode.aviator.Expression;
-import com.googlecode.aviator.Feature;
-import com.googlecode.aviator.Options;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.entity.FlowNode;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * P1-4: 服务节点执行器

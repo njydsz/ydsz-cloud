@@ -1,9 +1,7 @@
 package com.njydsz.message.server.event;
 
 import java.time.LocalDateTime;
-
 import org.springframework.context.ApplicationEvent;
-
 import com.njydsz.message.server.config.MessageProperties;
 
 /**

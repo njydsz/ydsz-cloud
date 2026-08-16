@@ -58,4 +58,42 @@ public class ExcelExportHelper {
     public <T> byte[] export(Class<T> dataClass, List<T> dataList) {
         return export("Sheet1", dataClass, dataList);
     }
+
+    /**
+     * 导出动态数据为 Excel 字节数组（自定义表头 + 动态数据行）。
+     *
+     * <p>适用于无固定 VO 类型的场景（如动态报表），
+     * 统一处理 ByteArrayOutputStream 创建、异常转换与日志记录，
+     * 消除各模块自建写入流水线的重复编码。</p>
+     *
+     * @param sheetName Sheet 名称
+     * @param headers   表头列表
+     * @param rows      数据行（每行为字段值列表）
+     * @return Excel 文件字节数组
+     */
+    public byte[] export(String sheetName, List<String> headers, List<List<Object>> rows) {
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            ExcelWriter writer = ExcelFacade.write(out)
+                    .head(headers)
+                    .headRowNumber(0)
+                    .sheet(sheetName);
+            writer.doWrite(rows);
+            writer.finish();
+            return out.toByteArray();
+        } catch (Exception e) {
+            log.error("[ExcelExportHelper] 动态导出失败: sheet={}, error={}", sheetName, e.getMessage(), e);
+            throw new RuntimeException("Excel 导出失败: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * 导出动态数据为 Excel 字节数组（默认 Sheet 名）。
+     *
+     * @param headers 表头列表
+     * @param rows    数据行
+     * @return Excel 文件字节数组
+     */
+    public byte[] export(List<String> headers, List<List<Object>> rows) {
+        return export("Sheet1", headers, rows);
+    }
 }

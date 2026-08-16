@@ -2,7 +2,6 @@ package com.njydsz.nextwiki.domain.event;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-
 import lombok.Builder;
 import lombok.Data;
 

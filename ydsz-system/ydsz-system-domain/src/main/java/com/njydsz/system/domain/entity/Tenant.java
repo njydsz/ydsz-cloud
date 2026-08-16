@@ -1,13 +1,12 @@
 package com.njydsz.system.domain.entity;
 
+import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-
-import java.time.LocalDateTime;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * 租户主表实体

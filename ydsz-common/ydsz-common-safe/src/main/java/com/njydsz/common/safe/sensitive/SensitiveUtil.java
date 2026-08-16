@@ -538,6 +538,82 @@ public final class SensitiveUtil {
     // ============================== PII 自由文本扫描 + 脱敏（消除各模块重复正则） ==============================
 
     /**
+     * PII 匹配位置信息。
+     *
+     * <p>记录单次正则命中的位置、原始值与类型，供需要定位的场景（如文档高亮、
+     * 结构化 PII 发现结果）使用。不可变对象，线程安全。
+     *
+     * @param startIndex 匹配起始下标（含）
+     * @param endIndex   匹配结束下标（不含）
+     * @param rawValue   匹配到的原始文本
+     * @param type       对应的 PII 类型
+     *
+     * @author ydsz-team
+     * @since 2.1.0
+     */
+    public record PiiMatch(int startIndex, int endIndex, String rawValue, SensitiveType type) {
+
+        /**
+         * 返回此匹配的脱敏结果（使用默认替换字符 *）。
+         *
+         * <p>委托 {@link SensitiveUtil#desensitize} 执行，确保与本工具类其他
+         * 脱敏路径结果一致。
+         *
+         * @return 脱敏后的文本；{@code rawValue} 为 {@code null} 或空时返回原值
+         */
+        public String masked() {
+            return desensitize(rawValue, type);
+        }
+    }
+
+    /**
+     * 对自由文本执行 PII 扫描，返回带位置信息的匹配列表（不脱敏）。
+     *
+     * <p>扫描文本中的所有预定义 PII 模式（身份证、手机号、银行卡、邮箱、护照），
+     * 返回每次命中的位置、原始值与类型。各模式独立扫描原文，结果按下标升序排列。
+     *
+     * <p><b>设计目的：</b>
+     * <ul>
+     *   <li>作为全系统 PII 扫描的唯一正则来源，消除各模块重复正则</li>
+     *   <li>供需要定位的场景使用：文档 PII 高亮、结构化发现结果等</li>
+     *   <li>与 {@link #scanAndMask} 共享同一套正则，保证结果一致</li>
+     * </ul>
+     *
+     * <p><b>使用示例：</b>
+     * <pre>{@code
+     * List<PiiMatch> matches = SensitiveUtil.scanWithPositions("联系人：张三，手机：13800138000");
+     * for (PiiMatch m : matches) {
+     *     System.out.println(m.type() + " at [" + m.startIndex() + "," + m.endIndex() + "): " + m.masked());
+     * }
+     * }</pre>
+     *
+     * @param text 原始文本（可为 null）
+     * @return 匹配列表（按下标升序）；输入为 null 或空时返回空列表，不返回 {@code null}
+     *
+     * @author ydsz-team
+     * @since 2.1.0
+     */
+    public static List<PiiMatch> scanWithPositions(String text) {
+        if (text == null || text.isEmpty()) {
+            return List.of();
+        }
+        List<PiiMatch> matches = new java.util.ArrayList<>();
+        for (Map.Entry<Pattern, SensitiveType> entry : PII_SCAN_PATTERNS.entrySet()) {
+            Pattern pattern = entry.getKey();
+            SensitiveType type = entry.getValue();
+            Matcher matcher = pattern.matcher(text);
+            while (matcher.find()) {
+                // 优先捕获 group(1)，不存在则取 group(0)
+                String raw = matcher.groupCount() >= 1 ? matcher.group(1) : matcher.group();
+                matches.add(new PiiMatch(matcher.start(), matcher.end(), raw, type));
+            }
+        }
+        // 按下标升序排列，便于下游按序处理
+        matches.sort(java.util.Comparator.comparingInt(PiiMatch::startIndex));
+        return matches;
+    }
+
+    /**
      * 对自由文本执行 PII 扫描并脱敏（使用默认替换字符 *）。
      *
      * <p>扫描文本中的所有预定义 PII 模式（身份证、手机号、银行卡、邮箱、护照），

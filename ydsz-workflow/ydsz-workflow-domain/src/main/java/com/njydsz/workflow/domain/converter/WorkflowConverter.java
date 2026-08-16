@@ -2,11 +2,11 @@ package com.njydsz.workflow.domain.converter;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
-
+import com.njydsz.workflow.domain.dto.post.FlowDelegateAuthPostDTO;
+import com.njydsz.workflow.domain.dto.put.FlowDelegateAuthPutDTO;
 import com.njydsz.workflow.domain.entity.FlowAdminRole;
 import com.njydsz.workflow.domain.entity.FlowAttachment;
 import com.njydsz.workflow.domain.entity.FlowAuditLog;
@@ -32,15 +32,13 @@ import com.njydsz.workflow.domain.entity.FlowThirdPartyAccount;
 import com.njydsz.workflow.domain.entity.FlowThirdPartyLog;
 import com.njydsz.workflow.domain.entity.FlowTimer;
 import com.njydsz.workflow.domain.entity.FlowUser;
-import com.njydsz.workflow.domain.dto.post.FlowDelegateAuthPostDTO;
-import com.njydsz.workflow.domain.dto.put.FlowDelegateAuthPutDTO;
 import com.njydsz.workflow.domain.vo.FlowAdminRoleVO;
 import com.njydsz.workflow.domain.vo.FlowAttachmentVO;
 import com.njydsz.workflow.domain.vo.FlowAuditLogVO;
 import com.njydsz.workflow.domain.vo.FlowAutoTriggerVO;
 import com.njydsz.workflow.domain.vo.FlowCategoryVO;
-import com.njydsz.workflow.domain.vo.FlowCcVO;
 import com.njydsz.workflow.domain.vo.FlowCcRuleVO;
+import com.njydsz.workflow.domain.vo.FlowCcVO;
 import com.njydsz.workflow.domain.vo.FlowCommentVO;
 import com.njydsz.workflow.domain.vo.FlowDefinitionVO;
 import com.njydsz.workflow.domain.vo.FlowDelegateAuthVO;

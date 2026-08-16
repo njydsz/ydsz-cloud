@@ -1,5 +1,6 @@
 package com.njydsz.gateway.filter;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import jakarta.annotation.PostConstruct;
@@ -28,6 +29,9 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.safe.config.SecurityHeaderConfigurer;
 import com.njydsz.common.safe.config.SecurityHeaderProperties;
 import com.njydsz.common.safe.crypto.NonceCache;
+import com.njydsz.common.sentry.SentryObservation;
+import com.njydsz.common.sentry.domain.AlertEvent;
+import com.njydsz.common.sentry.domain.AlertSeverity;
 import com.njydsz.gateway.config.CachedJwtValidator;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayFilterOrder;
@@ -191,6 +195,17 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         // P0-C5: 路径规范化，拦截 .. / // / %2e%2e 等穿越攻击
         String path = PathGuard.sanitize(rawPath);
         if (path == null) {
+            // P0-C5: 路径穿越攻击 → sentry 告警收敛（P1 安全事件）
+            String existingTraceId = request.getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
+            SentryObservation.alert(AlertEvent.builder()
+                    .name("gateway.auth.path_traversal")
+                    .severity(AlertSeverity.P1)
+                    .summary("拒绝路径穿越攻击")
+                    .description("客户端尝试路径穿越攻击，已被网关拦截")
+                    .category("security")
+                    .labels(Map.of("raw_path", rawPath,
+                            "trace_id", existingTraceId != null ? existingTraceId : "n/a"))
+                    .build());
             log.warn("[AuthFilter] 拒绝路径穿越攻击 rawPath={}", rawPath);
             return rejectPathTraversal(exchange);
         }

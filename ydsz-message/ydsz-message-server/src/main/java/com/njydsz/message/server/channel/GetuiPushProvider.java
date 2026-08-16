@@ -2,7 +2,7 @@ package com.njydsz.message.server.channel.push;
 
 import java.util.HashMap;
 import java.util.Map;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -12,16 +12,13 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
-
-import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.util.collection.MapUtils;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.message.domain.entity.template.MsgTemplate;
 import com.njydsz.message.server.config.MessageProperties;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 个推（GeTui）V2 推送服务商实现。

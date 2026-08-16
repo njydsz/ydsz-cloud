@@ -1,11 +1,9 @@
 package com.njydsz.message.server.realtime;
 
-import org.springframework.stereotype.Service;
-
-import com.njydsz.common.socket.push.RealtimePushTemplate;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import com.njydsz.common.socket.push.RealtimePushTemplate;
 
 /**
  * 实时推送服务（业务门面，委托给 common-socket 的 {@link RealtimePushTemplate}）。

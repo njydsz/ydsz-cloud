@@ -1,7 +1,6 @@
 package com.njydsz.message.server.service.config;
 
 import java.util.List;
-
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.message.domain.dto.config.UnsubscribeQueryDTO;
 import com.njydsz.message.domain.entity.config.MsgSubscription;

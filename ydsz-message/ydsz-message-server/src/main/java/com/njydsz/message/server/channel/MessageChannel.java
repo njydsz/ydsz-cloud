@@ -1,7 +1,6 @@
 package com.njydsz.message.server.channel;
 
 import java.util.Optional;
-
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.message.domain.dto.receipt.ReceiptResult;

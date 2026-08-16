@@ -1,7 +1,6 @@
 package com.njydsz.userinfo.server.service;
 
 import java.util.List;
-
 import com.njydsz.userinfo.domain.dto.post.MenuPostDTO;
 import com.njydsz.userinfo.domain.dto.put.MenuPutDTO;
 import com.njydsz.userinfo.domain.entity.Menu;

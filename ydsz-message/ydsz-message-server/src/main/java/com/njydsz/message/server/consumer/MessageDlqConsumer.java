@@ -1,26 +1,24 @@
 package com.njydsz.message.server.consumer;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import com.njydsz.common.lock.idempotent.IdempotentStrategy;
 import org.springframework.stereotype.Component;
-
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.njydsz.common.queue.constant.YdszMessageTopics;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.lock.idempotent.IdempotentStrategy;
+import com.njydsz.common.queue.constant.YdszMessageTopics;
 import com.njydsz.common.queue.trace.MessageTracer;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
 import com.njydsz.message.server.metric.MessageMetrics;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * RocketMQ 死信队列消费者。

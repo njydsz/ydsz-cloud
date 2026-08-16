@@ -1,15 +1,12 @@
 package com.njydsz.nextwiki.infra.repository;
 
 import java.util.List;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Repository;
-
 import com.njydsz.nextwiki.domain.entity.ShareLink;
 import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
 import com.njydsz.nextwiki.infra.mapper.ShareLinkMapper;
-
-import lombok.RequiredArgsConstructor;
 
 /**
  * 分享链接仓储实现

@@ -1,8 +1,7 @@
 package com.njydsz.message.infra.mapper.batch;
 
-import org.apache.ibatis.annotations.Mapper;
-
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
 import com.njydsz.message.domain.entity.batch.MsgBatch;
 
 /**

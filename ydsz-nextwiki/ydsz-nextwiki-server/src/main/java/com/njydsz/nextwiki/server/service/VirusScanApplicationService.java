@@ -4,15 +4,12 @@ import java.io.InputStream;
 import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-
-import org.springframework.stereotype.Service;
-
-import com.njydsz.nextwiki.server.config.NextwikiProperties;
-
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import com.njydsz.nextwiki.server.config.NextwikiProperties;
 
 /**
  * 病毒扫描应用服务

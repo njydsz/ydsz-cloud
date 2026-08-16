@@ -1,15 +1,12 @@
 package com.njydsz.nextwiki.infra.repository;
 
 import java.util.List;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Repository;
-
 import com.njydsz.nextwiki.domain.entity.TrashItem;
 import com.njydsz.nextwiki.domain.repository.TrashItemRepository;
 import com.njydsz.nextwiki.infra.mapper.TrashItemMapper;
-
-import lombok.RequiredArgsConstructor;
 
 /**
  * 回收站仓储实现

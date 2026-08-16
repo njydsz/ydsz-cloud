@@ -3,16 +3,14 @@ package com.njydsz.message.domain.entity.core;
 import java.io.Serial;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
-import com.njydsz.common.safe.sensitive.SensitiveData;
-import com.njydsz.common.safe.sensitive.SensitiveType;
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
+import com.njydsz.common.safe.sensitive.SensitiveData;
+import com.njydsz.common.safe.sensitive.SensitiveType;
 
 /**
  * 消息发送日志实体 — 全通道发送全量记录的事实表

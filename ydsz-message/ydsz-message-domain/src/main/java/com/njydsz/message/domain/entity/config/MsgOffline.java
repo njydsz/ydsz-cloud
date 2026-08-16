@@ -2,14 +2,12 @@ package com.njydsz.message.domain.entity.config;
 
 import java.io.Serial;
 import java.time.LocalDateTime;
-
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * P0-3: 离线消息持久化表。

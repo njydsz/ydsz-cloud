@@ -1,12 +1,12 @@
 package com.njydsz.message.server.service.impl.template;
 
 import java.util.List;
-
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
@@ -21,9 +21,6 @@ import com.njydsz.message.infra.mapper.template.MsgTemplateVersionMapper;
 import com.njydsz.message.server.service.core.MessageService;
 import com.njydsz.message.server.service.template.TemplateVersionService;
 import com.njydsz.message.server.template.TemplateEngine;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 消息模板版本服务实现。

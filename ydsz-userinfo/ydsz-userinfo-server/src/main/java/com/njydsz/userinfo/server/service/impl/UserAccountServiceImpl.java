@@ -7,26 +7,30 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.njydsz.common.auth.annotation.DataScope;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.util.bean.BeanUpdateUtil;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 import com.njydsz.userinfo.domain.dto.ChangePasswordDTO;
 import com.njydsz.userinfo.domain.dto.ResetPasswordDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountPageQueryDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
 import com.njydsz.userinfo.domain.entity.Role;
-import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.userinfo.domain.entity.UserAccount;
 import com.njydsz.userinfo.domain.entity.UserDept;
 import com.njydsz.userinfo.domain.entity.UserRole;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
-import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.infra.mapper.RoleMapper;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
@@ -36,16 +40,9 @@ import com.njydsz.userinfo.server.auth.AuthService;
 import com.njydsz.userinfo.server.auth.PasswordPolicyValidator;
 import com.njydsz.userinfo.server.auth.UserPasswordHistoryService;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
+import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 import com.njydsz.userinfo.server.service.UserAccountService;
 import com.njydsz.userinfo.server.service.WorkflowApproverCacheService;
-
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import com.njydsz.common.auth.annotation.DataScope;
-import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 
 /**
  * 用户账号 Service 实现

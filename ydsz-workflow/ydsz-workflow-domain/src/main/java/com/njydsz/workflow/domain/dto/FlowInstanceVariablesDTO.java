@@ -3,10 +3,8 @@ package com.njydsz.workflow.domain.dto;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Map;
-
-import jakarta.validation.constraints.NotNull;
-
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 /**

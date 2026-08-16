@@ -2,14 +2,12 @@ package com.njydsz.message.domain.entity.receipt;
 
 import java.io.Serial;
 import java.time.LocalDateTime;
-
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * 消息回执表: 服务商送达/已读/点击/失败回调记录

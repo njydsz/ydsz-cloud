@@ -2,7 +2,6 @@ package com.njydsz.message.server.channel.impl;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -10,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
-import com.njydsz.common.netty.codec.LengthFieldFrameDecoder;
+import com.njydsz.common.netty.codec.LengthFieldCodec;
 import com.njydsz.common.netty.config.NettyProperties;
 import com.njydsz.common.netty.server.AbstractNettyServer;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
@@ -19,10 +18,11 @@ import com.njydsz.message.server.channel.MessageChannel;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.codec.LengthFieldPrepender;
+import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.CharsetUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,10 +34,11 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>协议格式：Length(4B) + Payload(JSON)
  * <ul>
- *   <li>粘包/半包：通过 {@link LengthFieldFrameDecoder} 解决</li>
+ *   <li>粘包/半包：通过 {@link LengthFieldCodec} 一站式编解码解决</li>
  *   <li>消息编码：JSON（UTF-8）</li>
- *   <li>连接管理：通过 {@code channelIdMap} 维护 userId → Channel 映射</li>
- *   <li>推送方式：单推（按 userId 查找 Channel）+ 广播（通过 ChannelGroupManager）</li>
+ *   <li>连接管理：通过 {@link ChannelGroupManager} 维护 userId → Channel 分组映射</li>
+ *   <li>推送方式：单推（按 userId 查找分组）+ 广播（通过 ChannelGroupManager）</li>
+ *   <li>空闲检测：通过 IdleStateHandler 自动触发，业务侧处理 {@link IdleStateEvent}</li>
  * </ul>
  *
  * <p>配置项 {@code ydsz.message.tcp-push.enabled=true} 启用，
@@ -55,11 +56,8 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
     /** 通道类型 */
     private static final String CHANNEL_TYPE = "PUSH";
 
-    /** JSON 序列化器 */
-    // YdszJson as JSON engine
-
-    /** userId → ChannelHandlerContext 映射（用于定向推送） */
-    private final Map<String, ChannelHandlerContext> userChannelMap = new ConcurrentHashMap<>();
+    /** 用户分组前缀 */
+    private static final String USER_GROUP_PREFIX = "user:";
 
     /** TCP 推送服务端口 */
     private final int pushPort;
@@ -70,7 +68,7 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
     /**
      * 构造 TCP 推送通道。
      *
-     * @param properties Netty 配置
+     * @param properties            Netty 配置
      * @param snowflakeIdGenerator 分布式 ID 生成器
      */
     public TcpPushChannel(NettyProperties properties,
@@ -87,13 +85,10 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
 
     @Override
     protected void initChannelPipeline(SocketChannel ch) {
-        ch.pipeline()
-                // 粘包/半包解码：Length(4B) + Payload
-                .addLast(new LengthFieldFrameDecoder())
-                // 编码：自动添加 4B 长度前缀
-                .addLast(new LengthFieldPrepender(4))
-                // 业务 Handler
-                .addLast(new TcpPushServerHandler(this));
+        // 使用 LengthFieldCodec 一站式编解码（4B 长度 + Payload）
+        LengthFieldCodec.addToPipeline(ch.pipeline());
+        // 业务 Handler
+        ch.pipeline().addLast(new TcpPushServerHandler(this));
     }
 
     @Override
@@ -101,10 +96,12 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
         if (request.getReceiver() == null || request.getReceiver().isBlank()) {
             return MessageResult.fail(CHANNEL_TYPE, "推送接收人不能为空");
         }
-        String traceId = "PUSH-" + String.valueOf(snowflakeIdGenerator.nextId());
+        String traceId = "PUSH-" + snowflakeIdGenerator.nextId();
         String userId = request.getReceiver();
-        ChannelHandlerContext ctx = userChannelMap.get(userId);
-        if (ctx == null || !ctx.channel().isActive()) {
+        String groupKey = USER_GROUP_PREFIX + userId;
+
+        // 通过 ChannelGroupManager 按用户分组推送
+        if (channelGroupManager.groupSize(groupKey) == 0) {
             log.warn("[TCP-PUSH] 用户不在线,无法推送: userId={}", userId);
             return MessageResult.fail(CHANNEL_TYPE, "用户不在线: " + userId);
         }
@@ -121,7 +118,7 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
             pushData.put("timestamp", System.currentTimeMillis());
             String json = YdszJson.toJson(pushData);
             ByteBuf buf = Unpooled.copiedBuffer(json, CharsetUtil.UTF_8);
-            ctx.writeAndFlush(buf);
+            channelGroupManager.broadcastToGroup(groupKey, buf);
             log.info("[TCP-PUSH] 推送成功: userId={} traceId={} subject={}",
                     userId, traceId, request.getSubject());
             return MessageResult.ok(CHANNEL_TYPE, traceId);
@@ -134,36 +131,24 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
     /**
      * 注册用户连接。
      *
-     * @param userId 用户 ID
-     * @param ctx    Channel 上下文
-     */
-    void registerUser(String userId, ChannelHandlerContext ctx) {
-        userChannelMap.put(userId, ctx);
-        channelGroupManager.addToGroup("user:" + userId, ctx.channel());
-        log.info("[TCP-PUSH] 用户连接注册: userId={} channelId={} online={}",
-                userId, ctx.channel().id(), userChannelMap.size());
-    }
-
-    /**
-     * 注销用户连接。
+     * <p>将 Channel 加入用户分组，用于后续定向推送。
      *
-     * @param userId 用户 ID
+     * @param userId  用户 ID
+     * @param channel Netty Channel
      */
-    void unregisterUser(String userId) {
-        ChannelHandlerContext ctx = userChannelMap.remove(userId);
-        if (ctx != null) {
-            channelGroupManager.remove(ctx.channel());
-            log.info("[TCP-PUSH] 用户连接注销: userId={} online={}", userId, userChannelMap.size());
-        }
+    void registerUser(String userId, Channel channel) {
+        channelGroupManager.addToGroup(USER_GROUP_PREFIX + userId, channel);
+        log.info("[TCP-PUSH] 用户连接注册: userId={} channelId={} online={}",
+                userId, channel.id(), channelGroupManager.globalSize());
     }
 
     /**
      * 获取在线用户数。
      *
-     * @return 在线用户数
+     * @return 在线用户数（全局活跃 Channel 数）
      */
     public int getOnlineCount() {
-        return userChannelMap.size();
+        return channelGroupManager.globalSize();
     }
 
     /**
@@ -178,7 +163,8 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
     /**
      * TCP 推送服务端 Handler。
      *
-     * <p>处理客户端连接/断开、心跳保活、认证消息。
+     * <p>处理客户端连接/断开、空闲检测、认证消息。
+     * 空闲检测由 IdleStateHandler 自动触发，通过 {@link #userEventTriggered} 处理。
      */
     @Slf4j
     static class TcpPushServerHandler extends ChannelInboundHandlerAdapter {
@@ -198,10 +184,8 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
 
         @Override
         public void channelInactive(ChannelHandlerContext ctx) {
+            // ChannelGroupManager.remove 会自动从全局组和业务分组移除，并清理空分组
             server.channelGroupManager.remove(ctx.channel());
-            if (userId != null) {
-                server.unregisterUser(userId);
-            }
             log.debug("[TCP-PUSH] 连接断开: remote={}", ctx.channel().remoteAddress());
         }
 
@@ -218,7 +202,7 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
                     // 认证消息：注册 userId
                     this.userId = (String) data.get("userId");
                     if (userId != null) {
-                        server.registerUser(userId, ctx);
+                        server.registerUser(userId, ctx.channel());
                         // 回复认证成功
                         Map<String, Object> ack = new HashMap<>(2);
                         ack.put("type", "AUTH_ACK");
@@ -226,16 +210,36 @@ public class TcpPushChannel extends AbstractNettyServer implements MessageChanne
                         ctx.writeAndFlush(Unpooled.copiedBuffer(
                                 YdszJson.toJson(ack), CharsetUtil.UTF_8));
                     }
-                } else if ("PING".equals(type)) {
-                    // 心跳响应
-                    Map<String, Object> pong = new HashMap<>(2);
-                    pong.put("type", "PONG");
-                    pong.put("timestamp", System.currentTimeMillis());
-                    ctx.writeAndFlush(Unpooled.copiedBuffer(
-                            YdszJson.toJson(pong), CharsetUtil.UTF_8));
+                } else {
+                    log.debug("[TCP-PUSH] 收到业务消息: type={}", type);
                 }
             } catch (Exception e) {
                 log.warn("[TCP-PUSH] 消息解析失败: {}", e.getMessage(), e);
+            }
+        }
+
+        @Override
+        public void userEventTriggered(ChannelHandlerContext ctx, Object evt) {
+            if (evt instanceof IdleStateEvent event) {
+                switch (event.state()) {
+                    case READER_IDLE -> {
+                        log.info("[TCP-PUSH] 读空闲超时,关闭连接: remote={}",
+                                ctx.channel().remoteAddress());
+                        ctx.close();
+                    }
+                    case WRITER_IDLE -> {
+                        // 写空闲可选择发送心跳保活，此处仅记录
+                        log.debug("[TCP-PUSH] 写空闲: remote={}", ctx.channel().remoteAddress());
+                    }
+                    case ALL_IDLE -> {
+                        log.info("[TCP-PUSH] 读写空闲超时,关闭连接: remote={}",
+                                ctx.channel().remoteAddress());
+                        ctx.close();
+                    }
+                    default -> {
+                        // ignore
+                    }
+                }
             }
         }
 

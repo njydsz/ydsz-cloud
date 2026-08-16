@@ -1,7 +1,6 @@
 package com.njydsz.system.server.cache;
 
 import org.springframework.stereotype.Component;
-
 import com.njydsz.common.tenant.TenantContextHolder;
 
 /**

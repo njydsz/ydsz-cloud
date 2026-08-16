@@ -1,18 +1,15 @@
 package com.njydsz.nextwiki.infra.repository;
 
 import java.util.List;
-
-import org.springframework.stereotype.Repository;
-
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.nextwiki.domain.entity.SearchIndex;
 import com.njydsz.nextwiki.domain.repository.SearchIndexRepository;
 import com.njydsz.nextwiki.infra.mapper.SearchIndexMapper;
-
-import lombok.RequiredArgsConstructor;
 
 /**
  * 搜索索引仓储实现

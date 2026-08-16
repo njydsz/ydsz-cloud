@@ -3,16 +3,14 @@ package com.njydsz.nextwiki.api.dto;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
-
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-
-import com.njydsz.common.domain.query.PageQuery;
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import com.njydsz.common.domain.query.PageQuery;
 
 /**
  * 网盘知识库 API DTO 集合

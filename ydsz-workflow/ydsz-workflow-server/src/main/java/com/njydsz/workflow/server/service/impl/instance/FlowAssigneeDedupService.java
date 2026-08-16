@@ -3,14 +3,11 @@ package com.njydsz.workflow.server.service.impl.instance;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
 
 /**
  * P2-7: 跨节点办理人去重策略

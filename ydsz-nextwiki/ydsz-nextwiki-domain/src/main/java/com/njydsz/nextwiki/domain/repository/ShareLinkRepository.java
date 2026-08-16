@@ -1,7 +1,6 @@
 package com.njydsz.nextwiki.domain.repository;
 
 import java.util.List;
-
 import com.njydsz.nextwiki.domain.entity.ShareLink;
 
 /**

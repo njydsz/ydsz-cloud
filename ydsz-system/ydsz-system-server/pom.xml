@@ -110,11 +110,6 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-redis</artifactId>
         </dependency>
-        <!-- P2-3: 统一文件存储接入 -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-file</artifactId>
-        </dependency>
         <!-- P1-5: 统一线程池管理 -->
         <dependency>
             <groupId>com.njydsz</groupId>

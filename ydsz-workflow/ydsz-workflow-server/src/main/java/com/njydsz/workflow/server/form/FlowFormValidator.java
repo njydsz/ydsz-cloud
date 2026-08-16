@@ -1,19 +1,14 @@
 package com.njydsz.workflow.server.form;
 
-import com.njydsz.common.util.collection.MapUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-
 import com.njydsz.common.json.YdszJson;
-
-
-
-import lombok.extern.slf4j.Slf4j;
+import com.njydsz.common.util.collection.MapUtils;
 
 /**
  * 表单校验引擎（P0-3 表单引擎 MVP）

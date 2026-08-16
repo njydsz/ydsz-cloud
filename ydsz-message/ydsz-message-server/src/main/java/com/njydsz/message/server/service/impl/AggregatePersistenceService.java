@@ -1,16 +1,14 @@
 package com.njydsz.message.server.service.impl;
 
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import com.njydsz.message.domain.entity.batch.MsgAggregate;
-import com.njydsz.message.domain.entity.core.MsgLog;
-import com.njydsz.message.infra.mapper.core.MsgLogMapper;
-import com.njydsz.message.server.service.batch.AggregateService;
-import com.njydsz.message.domain.enums.core.MessageStatusEnum;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import com.njydsz.message.domain.entity.batch.MsgAggregate;
+import com.njydsz.message.domain.entity.core.MsgLog;
+import com.njydsz.message.domain.enums.core.MessageStatusEnum;
+import com.njydsz.message.infra.mapper.core.MsgLogMapper;
+import com.njydsz.message.server.service.batch.AggregateService;
 
 /**
  * P0-5: 聚合路径持久化独立 Service。

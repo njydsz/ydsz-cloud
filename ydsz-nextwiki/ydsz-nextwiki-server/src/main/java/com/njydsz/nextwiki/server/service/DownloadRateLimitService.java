@@ -1,18 +1,15 @@
 package com.njydsz.nextwiki.server.service;
 
 import java.time.Duration;
-
-import com.njydsz.common.redis.service.ops.RedisStringOps;
-import org.springframework.stereotype.Service;
-
-import com.njydsz.common.redis.service.RedisRateLimiter;
-import com.njydsz.nextwiki.server.config.NextwikiProperties;
-
-import org.apache.commons.codec.digest.DigestUtils;
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
+import org.springframework.stereotype.Service;
+import com.njydsz.common.redis.service.RedisRateLimiter;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.nextwiki.server.config.NextwikiProperties;
 
 /**
  * 下载限流与防盗链服务

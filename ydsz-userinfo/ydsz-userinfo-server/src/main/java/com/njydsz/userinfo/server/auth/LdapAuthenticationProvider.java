@@ -1,18 +1,14 @@
 package com.njydsz.userinfo.server.auth;
 
 import java.util.Hashtable;
-
 import javax.naming.Context;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
-
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Component;
-
-import com.njydsz.userinfo.server.config.LdapProperties;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
+import com.njydsz.userinfo.server.config.LdapProperties;
 
 /**
  * LDAP/ADFS 域账号认证服务。

@@ -38,6 +38,30 @@ public final class WebSocketConstants {
     /** 心跳 Redis Sorted Set key（score=最后心跳时间戳） */
     public static final String WS_HEARTBEAT_KEY = "ydsz:ws:heartbeat:sessions";
 
+    // ========== 离线消息常量 ==========
+
+    /**
+     * 离线消息 Redis 缓存最大条数（单用户）。
+     *
+     * <p>与 {@code WebSocketProperties.Offline.maxCache} 默认值保持一致。
+     */
+    public static final int WS_OFFLINE_MAX_CACHE = 100;
+
+    /**
+     * 离线消息 Redis 缓存 TTL（秒）。
+     *
+     * <p>默认 30 天，与 {@code WebSocketProperties.Offline.ttl} 默认值保持一致。
+     */
+    public static final long WS_OFFLINE_TTL_SECONDS = 2592000L;
+
+    /**
+     * 离线消息 DB 持久化阈值（单用户）。
+     *
+     * <p>当 Redis 缓存条数超过此阈值时，触发异步 DB 持久化以防止 Redis 内存溢出；
+     * 建议设置为 {@link #WS_OFFLINE_MAX_CACHE} 的 80%。
+     */
+    public static final int WS_OFFLINE_DB_PERSIST_THRESHOLD = 80;
+
     // ========== 握手属性 Key ==========
 
     /** WebSocket 握手属性中的 userId key */

@@ -3,10 +3,8 @@ package com.njydsz.workflow.server.engine;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Map;
-
-import com.njydsz.common.event.api.DomainEvent;
-
 import lombok.Getter;
+import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.util.id.IdGenerator;
 
 /**

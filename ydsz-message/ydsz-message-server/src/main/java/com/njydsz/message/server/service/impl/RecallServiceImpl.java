@@ -2,13 +2,13 @@ package com.njydsz.message.server.service.impl.receipt;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.message.domain.entity.config.MsgTrace;
@@ -22,9 +22,6 @@ import com.njydsz.message.server.service.core.MessageLogService;
 import com.njydsz.message.server.service.core.MessageTraceService;
 import com.njydsz.message.server.service.impl.MessageRecallPushService;
 import com.njydsz.message.server.service.receipt.RecallService;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 消息撤回服务实现。

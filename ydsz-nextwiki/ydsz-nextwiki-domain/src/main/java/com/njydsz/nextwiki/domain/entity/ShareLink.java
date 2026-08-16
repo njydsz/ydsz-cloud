@@ -2,13 +2,11 @@ package com.njydsz.nextwiki.domain.entity;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.SuperBuilder;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * 文件分享链接实体

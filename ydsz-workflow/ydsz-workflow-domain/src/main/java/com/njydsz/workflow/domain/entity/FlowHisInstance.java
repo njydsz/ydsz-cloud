@@ -2,9 +2,7 @@ package com.njydsz.workflow.domain.entity;
 
 import java.io.Serial;
 import java.time.LocalDateTime;
-
 import com.baomidou.mybatisplus.annotation.TableName;
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;

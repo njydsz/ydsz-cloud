@@ -94,11 +94,6 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-sentry</artifactId>
         </dependency>
-        <!-- P2-3: 统一文件存储接入 -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-file</artifactId>
-        </dependency>
         <!-- P0-3: 跨模块 Feign 客户端（Agent 调用用户信息服务） -->
         <dependency>
             <groupId>com.njydsz</groupId>

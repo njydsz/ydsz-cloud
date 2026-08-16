@@ -1,11 +1,9 @@
 package com.njydsz.workflow.server.service.impl.integration;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
-
 import com.njydsz.common.seata.api.TccAction;
 import com.njydsz.common.seata.api.TccContext;
 

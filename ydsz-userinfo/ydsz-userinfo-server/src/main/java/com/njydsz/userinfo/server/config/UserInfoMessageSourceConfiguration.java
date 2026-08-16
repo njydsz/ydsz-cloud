@@ -1,15 +1,13 @@
 package com.njydsz.userinfo.server.config;
 
 import java.util.Arrays;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.ReloadableResourceBundleMessageSource;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 用户中心模块 MessageSource 扩展配置

@@ -1,11 +1,9 @@
 package com.njydsz.system.infra.repository;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
-
 import com.njydsz.system.domain.entity.DictType;
 import com.njydsz.system.infra.mapper.DictTypeMapper;
-
-import lombok.RequiredArgsConstructor;
 
 /**
  * 字典类型仓储。

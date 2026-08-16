@@ -3,16 +3,14 @@ package com.njydsz.userinfo.server.auth;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.userinfo.domain.entity.UserPasswordHistory;
-import com.njydsz.userinfo.infra.mapper.UserPasswordHistoryMapper;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.userinfo.domain.entity.UserPasswordHistory;
+import com.njydsz.userinfo.infra.mapper.UserPasswordHistoryMapper;
 
 /**
  * 密码历史服务实现

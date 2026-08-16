@@ -2,14 +2,11 @@ package com.njydsz.message.server.service.batch;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import org.springframework.stereotype.Component;
-
-import com.njydsz.message.domain.entity.batch.MsgBatch;
-import com.njydsz.message.server.realtime.RealtimePushService;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import com.njydsz.message.domain.entity.batch.MsgBatch;
+import com.njydsz.message.server.realtime.RealtimePushService;
 
 /**
  * 批量发送进度推送服务。

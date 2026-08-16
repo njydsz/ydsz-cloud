@@ -1,7 +1,6 @@
 package com.njydsz.userinfo.server.service;
 
 import java.util.List;
-
 import com.njydsz.userinfo.domain.entity.UserPost;
 
 /**

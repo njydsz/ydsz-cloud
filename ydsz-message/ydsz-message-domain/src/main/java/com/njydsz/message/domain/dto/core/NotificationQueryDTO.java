@@ -1,9 +1,8 @@
 package com.njydsz.message.domain.dto.core;
 
-import com.njydsz.common.domain.query.PageQuery;
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import com.njydsz.common.domain.query.PageQuery;
 
 /**
  * 站内通知分页查询 DTO

@@ -2,16 +2,24 @@ package com.njydsz.common.docs.security.pii.impl;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
 import org.springframework.stereotype.Component;
+
 import com.njydsz.common.docs.domain.DocumentContent;
 import com.njydsz.common.docs.domain.PiiFinding;
 import com.njydsz.common.docs.enums.PiiType;
 import com.njydsz.common.docs.security.pii.PiiDetector;
+import com.njydsz.common.safe.sensitive.SensitiveType;
+import com.njydsz.common.safe.sensitive.SensitiveUtil;
 
 /**
  * 邮箱地址检测器
+ *
+ * <p><b>正则来源：</b>委托 {@link SensitiveUtil#scanWithPositions} 执行匹配，
+ * 与全系统 PII 扫描共享同一套正则，消除重复维护。
+ *
+ * <p>脱敏策略为"首字母 + *** + 完整域名"，与 {@link SensitiveUtil#email}
+ * 策略接近但保留了完整域名供安全审计与泄露溯源。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -19,19 +27,11 @@ import com.njydsz.common.docs.security.pii.PiiDetector;
 @Component
 public class EmailDetector implements PiiDetector {
 
-    private static final Pattern EMAIL_PATTERN = Pattern.compile(
-            "\\b[A-Za-z0-9._%+\\-]+@[A-Za-z0-9.\\-]+\\.[A-Za-z]{2,}\\b");
-
     /**
      * 扫描全文中的邮箱地址。
      *
-     * <p>采用简化正则而非 RFC 5322 完整文法：完整文法过于复杂且会引入
-     * 灾难性回溯风险，而实务中出现的邮箱几乎都符合"本地部分@域名.顶级域"的常见形态。
-     * 置信度给 0.95——邮箱结构特征强，误报概率低。
-     *
-     * <p><b>不识别的形式：</b>带引号的本地部分、IP 字面量域名
-     * （{@code user@[192.168.0.1]}）、以及 IDN 中文域名。
-     * 反之，形似邮箱的字符串（如 Maven 坐标、部分文件路径）可能被误报。
+     * <p>正则委托 {@link SensitiveUtil#scanWithPositions} 统一维护，
+     * 过滤出 {@link SensitiveType#EMAIL} 类型的匹配。
      *
      * <p>返回的下标基于预处理后的文本，脱敏时须使用同一份文本。
      *
@@ -46,15 +46,16 @@ public class EmailDetector implements PiiDetector {
 
         String text = content.getText();
         List<PiiFinding> findings = new ArrayList<>();
-        Matcher matcher = EMAIL_PATTERN.matcher(text);
 
-        while (matcher.find()) {
-            String matched = matcher.group();
+        for (SensitiveUtil.PiiMatch match : SensitiveUtil.scanWithPositions(text)) {
+            if (match.type() != SensitiveType.EMAIL) {
+                continue;
+            }
             findings.add(PiiFinding.builder()
                     .type(PiiType.EMAIL)
-                    .maskedValue(mask(matched))
-                    .startIndex(matcher.start())
-                    .endIndex(matcher.end())
+                    .maskedValue(mask(match.rawValue()))
+                    .startIndex(match.startIndex())
+                    .endIndex(match.endIndex())
                     .confidence(0.95)
                     .build());
         }

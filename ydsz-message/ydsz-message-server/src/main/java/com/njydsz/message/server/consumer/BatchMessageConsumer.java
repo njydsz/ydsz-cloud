@@ -1,22 +1,19 @@
 package com.njydsz.message.server.consumer;
 
 import java.util.List;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.ConsumeMode;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import com.njydsz.common.lock.idempotent.IdempotentStrategy;
 import org.springframework.stereotype.Component;
-
-import com.njydsz.common.queue.constant.YdszMessageTopics;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.lock.idempotent.IdempotentStrategy;
+import com.njydsz.common.queue.constant.YdszMessageTopics;
 import com.njydsz.message.server.service.core.MessageService;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * P1-11: 批量消息消费者。

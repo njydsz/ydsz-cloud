@@ -1,11 +1,10 @@
 package com.njydsz.userinfo.domain.vo;
 
 import java.time.LocalDateTime;
-
+import lombok.Data;
 import com.njydsz.common.safe.sensitive.SensitiveData;
 import com.njydsz.common.safe.sensitive.SensitiveType;
 import com.njydsz.userinfo.domain.entity.UserAccount;
-import lombok.Data;
 
 /**
  * 用户账号 VO，用于 Controller 返回，不包含密码、盐值等敏感字段。

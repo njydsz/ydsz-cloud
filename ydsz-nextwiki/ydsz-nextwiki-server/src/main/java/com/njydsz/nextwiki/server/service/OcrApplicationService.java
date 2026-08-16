@@ -4,15 +4,12 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-
-import org.springframework.stereotype.Service;
-
-import com.njydsz.nextwiki.server.config.NextwikiProperties;
-
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import com.njydsz.nextwiki.server.config.NextwikiProperties;
 
 /**
  * OCR 识别服务。

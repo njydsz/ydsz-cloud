@@ -3,11 +3,9 @@ package com.njydsz.userinfo.domain.event;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Map;
-
+import lombok.Getter;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
-
-import lombok.Getter;
 import com.njydsz.common.util.id.IdGenerator;
 
 /**

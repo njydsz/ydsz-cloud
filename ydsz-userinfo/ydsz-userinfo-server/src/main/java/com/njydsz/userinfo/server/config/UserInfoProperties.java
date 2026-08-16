@@ -3,10 +3,8 @@ package com.njydsz.userinfo.server.config;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * 用户信息中心配置属性

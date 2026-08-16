@@ -31,7 +31,10 @@ import java.lang.annotation.Target;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 自 v1.1.0 起标记废弃，与 {@link MessageDispatcher} 同步废弃。
+ *             推荐使用 {@code SimpleChannelInboundHandler<T>} + switch 策略模式。
  */
+@Deprecated(since = "1.1.0", forRemoval = true)
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface MessageHandler {

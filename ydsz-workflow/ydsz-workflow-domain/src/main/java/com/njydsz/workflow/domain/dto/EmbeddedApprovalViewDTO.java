@@ -5,15 +5,13 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-
-import com.njydsz.common.safe.sensitive.SensitiveData;
-import com.njydsz.common.safe.sensitive.SensitiveDataSerializer;
-import com.njydsz.common.safe.sensitive.SensitiveType;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.njydsz.common.safe.sensitive.SensitiveData;
+import com.njydsz.common.safe.sensitive.SensitiveDataSerializer;
+import com.njydsz.common.safe.sensitive.SensitiveType;
 
 /**
  * P2-2 嵌入式审批面板 DTO

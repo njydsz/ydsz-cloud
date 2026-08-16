@@ -1,9 +1,8 @@
 package com.njydsz.nextwiki.server.config;
 
+import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
-
-import lombok.Data;
 
 /**
  * 网盘知识库（NextWiki）全局配置（prefix = {@code nextwiki}）。

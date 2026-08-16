@@ -2,9 +2,9 @@ package com.njydsz.nextwiki.server.search;
 
 import java.time.ZoneId;
 import java.util.List;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-
 import com.njydsz.common.search.api.SearchFilter;
 import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.SearchField;
@@ -16,9 +16,6 @@ import com.njydsz.nextwiki.domain.entity.Tag;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.repository.SearchIndexRepository;
 import com.njydsz.nextwiki.domain.repository.TagRepository;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 知识库文件搜索提供者

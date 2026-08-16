@@ -2,7 +2,6 @@ package com.njydsz.userinfo.domain.repository;
 
 import java.util.List;
 import java.util.Optional;
-
 import com.njydsz.userinfo.domain.entity.Department;
 
 /**

@@ -1,12 +1,11 @@
 package com.njydsz.system.domain.query;
 
-import com.njydsz.common.domain.query.PageQuery;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import com.njydsz.common.domain.query.PageQuery;
 
 /**
  * 系统配置分页查询参数

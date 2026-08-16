@@ -1,10 +1,8 @@
 package com.njydsz.system.server.config;
 
 import java.util.List;
-
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * 系统模块配置属性

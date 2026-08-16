@@ -3,7 +3,6 @@ package com.njydsz.workflow.server.service.impl.integration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-
 import com.njydsz.common.seata.api.DistributedTransactionManager;
 import com.njydsz.common.seata.api.TransactionType;
 

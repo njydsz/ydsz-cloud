@@ -8,30 +8,30 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
-import org.apache.commons.codec.digest.DigestUtils;
-import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.domain.FileStorage;
+import com.njydsz.common.file.storage.IFileStorage;
+import com.njydsz.common.file.storage.IFileStorageProvider;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.annotation.LockType;
 import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.lock.strategy.LockStrategy;
-import com.njydsz.common.file.storage.IFileStorage;
-import com.njydsz.common.file.storage.IFileStorageProvider;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.entity.FileVersion;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
@@ -45,9 +45,6 @@ import com.njydsz.nextwiki.domain.service.TrashDomainService;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
 import com.njydsz.nextwiki.server.converter.NextwikiConverter;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 文件应用服务

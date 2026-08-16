@@ -43,7 +43,13 @@ import com.njydsz.common.json.YdszJson;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 自 v1.1.0 起标记废弃，无活跃消费者。推荐使用
+ *             {@code SimpleChannelInboundHandler<T>} + switch 策略模式替代。
+ *             计划在 v2.0.0 移除，请使用
+ *             <a href="https://github.com/njydsz/ydsz-cloud/blob/main/ydsz-common/ydsz-common-netty/README.md">README</a>
+ *             推荐的 {@code SimpleChannelInboundHandler} 模式。
  */
+@Deprecated(since = "1.1.0", forRemoval = true)
 @Slf4j
 public class MessageDispatcher extends ChannelInboundHandlerAdapter {
 

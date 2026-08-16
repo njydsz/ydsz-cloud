@@ -48,6 +48,10 @@
         </dependency>
         <dependency>
             <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-docs</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-notify</artifactId>
         </dependency>
         <!-- P0-2: 事务性 Outbox 事件模式 -->
@@ -75,10 +79,6 @@
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>dynamic-datasource-spring-boot3-starter</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.minio</groupId>
-            <artifactId>minio</artifactId>
         </dependency>
         <!-- commons-codec（DigestUtils 签名/摘要工具类，替代 hutool-all） -->
         <dependency>

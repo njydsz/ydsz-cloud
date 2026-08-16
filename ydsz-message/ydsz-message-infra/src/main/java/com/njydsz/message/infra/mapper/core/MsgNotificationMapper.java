@@ -1,11 +1,9 @@
 package com.njydsz.message.infra.mapper.core;
 
 import java.util.List;
-
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.njydsz.message.domain.entity.core.MsgNotification;
 
 /**

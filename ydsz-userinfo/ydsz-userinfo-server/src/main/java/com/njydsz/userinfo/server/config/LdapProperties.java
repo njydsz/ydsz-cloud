@@ -1,8 +1,7 @@
 package com.njydsz.userinfo.server.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * LDAP 认证配置属性。

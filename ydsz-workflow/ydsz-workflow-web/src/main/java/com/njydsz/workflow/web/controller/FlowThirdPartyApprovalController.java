@@ -2,7 +2,10 @@ package com.njydsz.workflow.web.controller.integration;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -10,10 +13,12 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.notify.signature.DingTalkSignatureUtil;
+import com.njydsz.common.notify.signature.FeishuSignatureUtil;
+import com.njydsz.common.notify.signature.WeComSignatureUtil;
 import com.njydsz.workflow.domain.dto.EmbeddedApprovalActionDTO;
 import com.njydsz.workflow.domain.entity.FlowThirdPartyAccount;
 import com.njydsz.workflow.domain.entity.FlowThirdPartyLog;
@@ -22,15 +27,7 @@ import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.service.FlowEmbeddedApprovalService;
 import com.njydsz.workflow.server.service.FlowThirdPartyAccountService;
 import com.njydsz.workflow.server.service.FlowThirdPartyLogService;
-import com.njydsz.common.notify.signature.DingTalkSignatureUtil;
-import com.njydsz.common.notify.signature.FeishuSignatureUtil;
 import com.njydsz.workflow.server.thirdparty.ThirdPartyApprovalActionResolver;
-import com.njydsz.common.notify.signature.WeComSignatureUtil;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 三方审批回调 Controller（P0-2）

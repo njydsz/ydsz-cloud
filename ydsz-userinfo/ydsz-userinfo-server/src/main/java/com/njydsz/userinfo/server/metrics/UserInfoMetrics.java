@@ -1,14 +1,12 @@
 package com.njydsz.userinfo.server.metrics;
 
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.stereotype.Component;
-
-import com.njydsz.common.base.metrics.AbstractModuleMetrics;
-import com.njydsz.common.redis.service.ops.RedisStringOps;
-
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.stereotype.Component;
+import com.njydsz.common.base.metrics.AbstractModuleMetrics;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 /**
  * Userinfo module Micrometer metrics.

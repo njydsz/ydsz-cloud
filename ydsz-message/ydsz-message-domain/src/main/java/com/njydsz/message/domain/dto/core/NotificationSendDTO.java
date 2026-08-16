@@ -1,12 +1,9 @@
 package com.njydsz.message.domain.dto.core;
 
-import com.njydsz.common.safe.annotation.Xss;
-
-
 import java.time.LocalDateTime;
 import java.util.List;
-
 import lombok.Data;
+import com.njydsz.common.safe.annotation.Xss;
 
 /**
  * 站内通知发送 DTO

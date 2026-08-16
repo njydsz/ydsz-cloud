@@ -1,9 +1,8 @@
 package com.njydsz.message.domain.enums;
 
-import com.njydsz.common.exception.registry.YdszExceptionCode;
-import com.njydsz.common.exception.enums.ExceptionCode;
-
 import lombok.Getter;
+import com.njydsz.common.exception.enums.ExceptionCode;
+import com.njydsz.common.exception.registry.YdszExceptionCode;
 
 /**
  * 消息中心模块异常码枚举。

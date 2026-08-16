@@ -1,16 +1,14 @@
 package com.njydsz.workflow.server.listener;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
-
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.model.OutboxMessage;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.server.service.FlowTaskTransferService;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 跨模块事件监听器 — Workflow 模块订阅其他模块的领域事件。

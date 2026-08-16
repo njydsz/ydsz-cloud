@@ -2,14 +2,14 @@ package com.njydsz.system.server.service.impl;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import com.njydsz.common.auth.annotation.DataScope;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
@@ -24,9 +24,6 @@ import com.njydsz.system.domain.vo.AppInfoVO;
 import com.njydsz.system.infra.mapper.AppInfoMapper;
 import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.service.AppInfoService;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 应用注册 Service 实现

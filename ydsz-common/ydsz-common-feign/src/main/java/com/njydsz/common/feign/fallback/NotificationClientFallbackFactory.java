@@ -3,12 +3,14 @@ package com.njydsz.common.feign.fallback;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
+
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.feign.NotificationClient;
-import com.njydsz.common.feign.dto.RealtimePushDTO;
+import com.njydsz.common.feign.dto.BroadcastRequestDTO;
+import com.njydsz.common.feign.dto.PushRealtimeRequestDTO;
 
 /**
  * {@link NotificationClient} 的降级工厂。
@@ -20,7 +22,8 @@ import com.njydsz.common.feign.dto.RealtimePushDTO;
  * <ul>
  *   <li>sendMessage：返回
  *       {@link FeignClientConstants#FEIGN_SERVICE_UNAVAILABLE} 错误码，让调用方明确感知服务不可用</li>
- *   <li>broadcast：静默忽略，不抛异常</li>
+ *   <li>broadcast：返回服务不可用错误（P0-3-fix 不再静默忽略，使调用方可感知）</li>
+ *   <li>pushRealtime：返回服务不可用错误</li>
  * </ul>
  *
  * @author ydsz-team
@@ -43,9 +46,17 @@ public class NotificationClientFallbackFactory implements FallbackFactory<Notifi
             }
 
             @Override
-            public void broadcast(String topic, RealtimePushDTO payload) {
+            public BaseResponse<MessageResult> broadcast(BroadcastRequestDTO request) {
+                String topic = request == null ? null : request.getTopic();
                 log.warn("[NotificationClient] broadcast 降级: topic={}, reason=消息中心服务不可用", topic);
-                // 广播场景静默忽略，不影响主流程
+                return BaseResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "消息中心服务不可用");
+            }
+
+            @Override
+            public BaseResponse<MessageResult> pushRealtime(PushRealtimeRequestDTO request) {
+                String userId = request == null ? null : request.getUserId();
+                log.warn("[NotificationClient] pushRealtime 降级: userId={}, reason=消息中心服务不可用", userId);
+                return BaseResponse.error(FeignClientConstants.FEIGN_SERVICE_UNAVAILABLE, "消息中心服务不可用");
             }
         };
     }

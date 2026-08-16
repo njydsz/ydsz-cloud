@@ -4,13 +4,10 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.message.domain.entity.config.MsgRouteRule;
 import com.njydsz.message.domain.entity.config.MsgTrace;
@@ -23,7 +20,7 @@ import com.njydsz.message.server.config.RetryStrategyResolver;
 import com.njydsz.message.server.metric.MessageMetrics;
 import com.njydsz.message.server.service.core.MessageTraceService;
 import com.njydsz.message.server.service.core.RateLimitService;
-import com.njydsz.message.server.util.PiiMasker;
+import com.njydsz.common.safe.sensitive.SensitiveUtil;
 
 /**
  * 消息发送与通道分发服务。
@@ -88,7 +85,7 @@ public class MessageSendService {
                     MsgTrace.Node.DISPATCH_SUCCESS,
                     "SUCCESS", channel, "发送成功: cost=" + cost + "ms");
             log.info("[Message] 发送成功: msgId={} channel={} receiver={} cost={}ms",
-                    logDO.getMsgId(), channel, PiiMasker.maskReceiver(receiver), cost);
+                    logDO.getMsgId(), channel, SensitiveUtil.scanAndMask(receiver), cost);
             return MessageResult.ok(channel, providerTraceId);
         } catch (Exception e) {
             long cost = System.currentTimeMillis() - start;
@@ -167,7 +164,7 @@ public class MessageSendService {
      */
     public MessageResult handleFailure(MsgLog logDO, Exception e, long cost) {
         int retryCount = logDO.getRetryCount() == null ? 0 : logDO.getRetryCount();
-        String maskedReceiver = PiiMasker.maskReceiver(logDO.getReceiver());
+        String maskedReceiver = SensitiveUtil.scanAndMask(logDO.getReceiver());
         if (!retryStrategyResolver.isMaxRetriesReached(retryCount, logDO.getChannel())) {
             logDO.setStatus(MessageStatusEnum.RETRY.name());
             logDO.setNextRetryAt(retryStrategyResolver.calcNextRetryAt(retryCount, logDO.getChannel()));

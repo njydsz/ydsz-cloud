@@ -1,20 +1,6 @@
 package com.njydsz.system.web.controller;
 
 import java.util.List;
-
-import com.njydsz.common.audit.annotation.Audit;
-import com.njydsz.common.audit.enums.AuditAction;
-import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.system.domain.dto.ConfigDTO;
-import com.njydsz.system.domain.query.ConfigPageQuery;
-import com.njydsz.system.domain.vo.ConfigVO;
-import com.njydsz.system.server.service.ConfigService;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -27,6 +13,17 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.system.domain.dto.ConfigDTO;
+import com.njydsz.system.domain.query.ConfigPageQuery;
+import com.njydsz.system.domain.vo.ConfigVO;
+import com.njydsz.system.server.service.ConfigService;
 
 /**
  * 系统配置 Controller

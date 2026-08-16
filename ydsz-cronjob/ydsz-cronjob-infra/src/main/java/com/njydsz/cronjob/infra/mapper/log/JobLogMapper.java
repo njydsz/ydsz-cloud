@@ -227,28 +227,4 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
     int cleanExpiredLogs(@Param("before") LocalDateTime before,
                          @Param("limit") int limit);
 
-    /**
-     * P2-9: 全文搜索任务日志（PostgreSQL tsvector全文索引）。
-     *
-     * <p>在 error_message + result_json + job_key 上构建 tsvector 进行全文检索，
-     * 支持 |（OR）、&amp;（AND）、!（NOT）操作符。
-     *
-     * @param query  搜索关键词（如 'timeout &amp; error'）
-     * @param limit  最多返回条数
-     * @return 匹配的日志列表
-     */
-    @Select("SELECT id, job_id, job_key, start_time, end_time, duration_ms, "
-            + "       status, error_message, params_json, result_json, trace_id, "
-            + "       trigger_type, lock_holder, exec_node_id, exec_thread_id, "
-            + "       shard_index, shard_total, "
-            + "       created_at, deleted "
-            + "FROM ydsz_job_log "
-            + "WHERE deleted = 0 "
-            + "  AND to_tsvector('english', coalesce(error_message,'') || ' ' || coalesce(result_json,'') || ' ' || coalesce(job_key,'')) "
-            + "      @@ to_tsquery('english', #{query}) "
-            + "ORDER BY ts_rank(to_tsvector('english', coalesce(error_message,'') || ' ' || coalesce(result_json,'') || ' ' || coalesce(job_key,'')), "
-            + "                  to_tsquery('english', #{query})) DESC "
-            + "LIMIT #{limit}")
-    List<JobLog> fullTextSearch(@Param("query") String query,
-                                   @Param("limit") int limit);
 }

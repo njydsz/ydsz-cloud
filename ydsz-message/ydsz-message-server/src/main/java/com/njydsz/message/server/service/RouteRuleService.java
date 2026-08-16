@@ -1,7 +1,6 @@
 package com.njydsz.message.server.service.config;
 
 import java.util.List;
-
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.feign.MessageRequest;

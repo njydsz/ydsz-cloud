@@ -81,6 +81,26 @@ public class ExcelWebSupport {
     }
 
     /**
+     * 将预渲染的 Excel 字节数组写入 HTTP 响应。
+     *
+     * <p>适用于服务层已生成 {@code byte[]} 的场景（如自定义导出逻辑），
+     * 统一处理 Content-Type / Content-Disposition / 文件名编码，消除 Controller 层手动拼接 HttpHeaders 的重复编码。</p>
+     *
+     * @param response  HTTP 响应
+     * @param bytes     Excel 文件字节数组
+     * @param filename  下载文件名（含扩展名）
+     * @throws IOException 写入失败时抛出
+     */
+    public void writeBytes(HttpServletResponse response, byte[] bytes, String filename) throws IOException {
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
+                "attachment; filename=" + encodeFilename(filename));
+        response.setContentLength(bytes.length);
+        response.getOutputStream().write(bytes);
+        response.getOutputStream().flush();
+    }
+
+    /**
      * 对文件名进行 URL 编码，处理中文等非 ASCII 字符。
      *
      * @param filename 文件名

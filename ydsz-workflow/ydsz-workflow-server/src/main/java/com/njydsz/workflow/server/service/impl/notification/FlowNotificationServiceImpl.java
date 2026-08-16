@@ -5,9 +5,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
@@ -15,9 +15,6 @@ import com.njydsz.common.feign.NotificationClient;
 import com.njydsz.common.feign.dto.NotificationFeignDTO;
 import com.njydsz.workflow.server.engine.FlowSensitiveMasker;
 import com.njydsz.workflow.server.service.FlowNotificationService;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 工作流消息通知服务实现 — 轻量适配器

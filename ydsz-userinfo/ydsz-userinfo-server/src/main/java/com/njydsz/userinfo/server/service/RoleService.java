@@ -3,13 +3,12 @@ package com.njydsz.userinfo.server.service;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.userinfo.domain.dto.RolePageQueryDTO;
 import com.njydsz.userinfo.domain.dto.post.RolePostDTO;
 import com.njydsz.userinfo.domain.dto.put.RolePutDTO;
 import com.njydsz.userinfo.domain.entity.Role;
 import com.njydsz.userinfo.domain.vo.RoleVO;
-import com.njydsz.userinfo.domain.dto.RolePageQueryDTO;
 
 /**
  * 角色 Service 接口

@@ -4,16 +4,13 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Base64;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.message.server.config.MessageProperties;
-
-import lombok.RequiredArgsConstructor;
 
 /**
  * 退订 token 工具（P1-5）。

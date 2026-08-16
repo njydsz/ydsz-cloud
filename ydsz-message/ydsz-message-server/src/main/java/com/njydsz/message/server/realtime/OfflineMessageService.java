@@ -6,24 +6,20 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import com.njydsz.common.redis.service.ops.RedisCollectionOps;
-import com.njydsz.common.redis.service.ops.RedisStringOps;
-
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
-
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
-import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.common.socket.constant.WebSocketConstants;
-import com.njydsz.common.socket.offline.OfflineMessageStore;
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.message.domain.entity.config.MsgOffline;
-import com.njydsz.message.infra.mapper.config.MsgOfflineMapper;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.redis.service.ops.RedisCollectionOps;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.socket.constant.WebSocketConstants;
+import com.njydsz.common.socket.offline.OfflineMessageStore;
+import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.message.domain.entity.config.MsgOffline;
+import com.njydsz.message.infra.mapper.config.MsgOfflineMapper;
 
 /**
  * 离线消息补偿服务（Redis + DB 双层存储）。

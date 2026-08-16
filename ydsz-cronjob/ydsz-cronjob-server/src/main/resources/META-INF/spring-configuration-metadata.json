@@ -1,39 +1,10 @@
 {
   "groups": [
     {
-      "name": "minio"
-    },
-    {
       "name": "xxl.job"
     }
   ],
   "properties": [
-    {
-      "name": "minio.endpoint",
-      "type": "java.lang.String",
-      "description": "MinIO Endpoint"
-    },
-    {
-      "name": "minio.access-key",
-      "type": "java.lang.String",
-      "description": "AccessKey"
-    },
-    {
-      "name": "minio.secret-key",
-      "type": "java.lang.String",
-      "description": "SecretKey"
-    },
-    {
-      "name": "minio.default-bucket",
-      "type": "java.lang.String",
-      "description": "Default Bucket"
-    },
-    {
-      "name": "minio.url-expire-seconds",
-      "type": "java.lang.Integer",
-      "description": "Pre-signed URL expire seconds",
-      "defaultValue": 3600
-    },
     {
       "name": "xxl.job.admin.addresses",
       "type": "java.lang.String",

@@ -2,23 +2,20 @@ package com.njydsz.message.server.service.impl.receipt;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.queue.trace.MessageTracer;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.receipt.ReceiptCallbackDTO;
 import com.njydsz.message.domain.entity.receipt.MsgReceipt;
 import com.njydsz.message.infra.mapper.receipt.MsgReceiptMapper;
 import com.njydsz.message.server.service.core.MessageLogService;
 import com.njydsz.message.server.service.receipt.ReceiptService;
-import com.njydsz.common.queue.trace.MessageTracer;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 回执服务实现。

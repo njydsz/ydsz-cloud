@@ -3,13 +3,13 @@ package com.njydsz.message.server.service.impl.receipt;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.message.domain.entity.core.MsgLog;
@@ -20,9 +20,6 @@ import com.njydsz.message.infra.mapper.core.MsgNotificationMapper;
 import com.njydsz.message.server.realtime.RealtimePushService;
 import com.njydsz.message.server.service.core.DeliveryTimeOptimizer;
 import com.njydsz.message.server.service.receipt.ReadStatusSyncService;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 已读状态同步服务实现。

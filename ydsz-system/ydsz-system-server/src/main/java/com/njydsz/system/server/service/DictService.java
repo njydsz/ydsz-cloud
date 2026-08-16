@@ -1,7 +1,6 @@
 package com.njydsz.system.server.service;
 
 import java.util.List;
-
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.dto.DictTypeDTO;
 import com.njydsz.system.domain.query.DictPageQuery;

@@ -5,13 +5,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-
-import org.springframework.stereotype.Service;
-
-import com.njydsz.message.server.realtime.RealtimePushService;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import com.njydsz.message.server.realtime.RealtimePushService;
 
 /**
  * P2-19: 消息撤回实时推送。

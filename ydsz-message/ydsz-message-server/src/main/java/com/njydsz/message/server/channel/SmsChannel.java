@@ -3,10 +3,9 @@ package com.njydsz.message.server.channel.impl;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.tenant.TenantContextHolder;
@@ -18,8 +17,6 @@ import com.njydsz.message.server.channel.MessageChannel;
 import com.njydsz.message.server.channel.sms.SmsProvider;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.service.template.TemplateService;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 短信通道门面（替换原 MockSmsChannel）。

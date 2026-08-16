@@ -1,8 +1,7 @@
 package com.njydsz.userinfo.domain.dto;
 
-import java.io.Serializable;
 import java.io.Serial;
-
+import java.io.Serializable;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 

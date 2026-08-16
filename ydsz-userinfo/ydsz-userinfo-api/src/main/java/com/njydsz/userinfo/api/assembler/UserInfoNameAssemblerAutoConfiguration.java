@@ -6,7 +6,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
 import com.njydsz.common.feign.assembler.NameAssembler;
 import com.njydsz.common.feign.assembler.NameAssemblerProperties;
 import com.njydsz.common.redis.service.ops.RedisStringOps;

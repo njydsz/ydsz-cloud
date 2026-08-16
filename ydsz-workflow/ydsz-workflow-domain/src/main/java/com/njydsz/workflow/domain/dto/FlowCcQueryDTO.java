@@ -1,12 +1,10 @@
 package com.njydsz.workflow.domain.dto;
 
 import java.io.Serial;
-
-import com.njydsz.common.domain.query.PageQuery;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import com.njydsz.common.domain.query.PageQuery;
 
 /**
  * 抄送查询 DTO

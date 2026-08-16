@@ -7,10 +7,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import org.springframework.stereotype.Service;
-
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
 import com.njydsz.message.domain.dto.core.ChannelStatsVO;
 import com.njydsz.message.domain.dto.core.CostStatsVO;
 import com.njydsz.message.domain.dto.core.FunnelStatsVO;
@@ -23,9 +23,6 @@ import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.service.core.MessageStatsService;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 消息统计服务实现。

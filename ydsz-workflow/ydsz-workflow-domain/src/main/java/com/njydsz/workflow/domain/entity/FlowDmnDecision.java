@@ -1,9 +1,7 @@
 package com.njydsz.workflow.domain.entity;
 
 import java.io.Serial;
-
 import com.baomidou.mybatisplus.annotation.TableName;
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;

@@ -3,7 +3,7 @@ package com.njydsz.userinfo.server.service;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.userinfo.domain.dto.ChangePasswordDTO;
 import com.njydsz.userinfo.domain.dto.ResetPasswordDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
@@ -11,8 +11,6 @@ import com.njydsz.userinfo.domain.dto.UserAccountPageQueryDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
 import com.njydsz.userinfo.domain.entity.UserAccount;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
-
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 /**
  * 用户账号 Service 接口

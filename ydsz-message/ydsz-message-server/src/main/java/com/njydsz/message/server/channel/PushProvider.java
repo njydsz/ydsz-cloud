@@ -1,7 +1,6 @@
 package com.njydsz.message.server.channel.push;
 
 import java.util.List;
-
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.message.domain.entity.template.MsgTemplate;

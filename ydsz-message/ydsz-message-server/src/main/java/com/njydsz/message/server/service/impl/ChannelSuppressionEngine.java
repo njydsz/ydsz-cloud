@@ -1,15 +1,11 @@
 package com.njydsz.message.server.service.impl;
 
 import java.time.Duration;
-
-import com.njydsz.common.redis.service.ops.RedisStringOps;
-
-import org.springframework.stereotype.Service;
-
-import com.njydsz.message.server.config.MessageProperties;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.message.server.config.MessageProperties;
 
 /**
  * P2-13: 跨渠道抑制引擎。

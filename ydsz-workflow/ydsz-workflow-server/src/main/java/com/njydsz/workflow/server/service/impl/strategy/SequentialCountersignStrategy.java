@@ -1,9 +1,8 @@
 package com.njydsz.workflow.server.service.impl.strategy;
 
 import java.util.List;
-
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
@@ -15,8 +14,6 @@ import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.infra.mapper.FlowUserMapper;
 import com.njydsz.workflow.server.service.impl.CountersignStrategy;
 import com.njydsz.workflow.server.service.impl.instance.FlowTaskArchiveService;
-
-import lombok.RequiredArgsConstructor;
 
 /**
  * 顺序会签策略。

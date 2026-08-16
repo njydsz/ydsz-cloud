@@ -2,17 +2,13 @@ package com.njydsz.workflow.server.job;
 
 import java.util.HashMap;
 import java.util.Map;
-
-import com.njydsz.common.json.YdszJson;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.cronjob.domain.job.JobHandler;
 import com.njydsz.workflow.server.config.FlowHistoryProperties;
 import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * P2-3 / P2-8 历史数据归档任务处理器

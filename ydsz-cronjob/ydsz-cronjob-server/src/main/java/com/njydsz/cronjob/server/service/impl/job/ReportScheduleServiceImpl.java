@@ -1,7 +1,6 @@
 package com.njydsz.cronjob.server.service.impl.job;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -17,7 +16,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.excel.core.ExcelFacade;
+import com.njydsz.common.excel.helper.ExcelExportHelper;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.feign.NotificationClient;
@@ -61,6 +60,8 @@ public class ReportScheduleServiceImpl implements ReportScheduleService {
     private final IFileStorageProvider fileStorageProvider;
     /** P1-8: 报表分发邮件通知（Feign 调用 message 模块，P1-5 统一为 NotificationClient） */
     private final NotificationClient notificationClient;
+    /** 统一 Excel 导出辅助类（P2-5: 替代自建 ByteArrayOutputStream + ExcelFacade.write() 重复编码） */
+    private final ExcelExportHelper excelExportHelper;
 
     @Override
     public void executeDailyReports() {
@@ -261,16 +262,16 @@ public class ReportScheduleServiceImpl implements ReportScheduleService {
     // ============================== Excel 生成 ==============================
 
     /**
-     * 使用 EasyExcel 生成 XLSX 字节流。
+     * 生成 XLSX 字节流。
+     *
+     * <p>委托 {@link ExcelExportHelper} 统一导出入口，
+     * 消除自建 {@code ByteArrayOutputStream + ExcelFacade.write()} 的重复编码。</p>
      */
     private byte[] writeExcel(String reportType, ReportData data) {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ExcelFacade.write(baos)
-                .head(data.headers)
-                .headRowNumber(0)
-                .sheet(reportType == null ? "报表" : reportType)
-                .doWrite(data.rows);
-        return baos.toByteArray();
+        return excelExportHelper.export(
+                reportType == null ? "报表" : reportType,
+                data.headers,
+                data.rows);
     }
 
     // ============================== 文件存储上传（P1-9: 委托 IFileStorage） ==============================

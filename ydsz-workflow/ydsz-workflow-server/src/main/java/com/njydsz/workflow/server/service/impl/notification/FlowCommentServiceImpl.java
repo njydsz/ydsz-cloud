@@ -7,12 +7,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.workflow.domain.dto.FlowCommentCreateDTO;
@@ -21,9 +21,6 @@ import com.njydsz.workflow.infra.mapper.FlowCommentMapper;
 import com.njydsz.workflow.server.engine.FlowSensitiveMasker;
 import com.njydsz.workflow.server.service.FlowCommentService;
 import com.njydsz.workflow.server.service.FlowNotificationService;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * P2-2: 流程评论 Service 实现

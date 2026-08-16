@@ -4,15 +4,13 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
-
-import com.njydsz.common.safe.sensitive.SensitiveData;
-import com.njydsz.common.safe.sensitive.SensitiveDataSerializer;
-import com.njydsz.common.safe.sensitive.SensitiveType;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.njydsz.common.safe.sensitive.SensitiveData;
+import com.njydsz.common.safe.sensitive.SensitiveDataSerializer;
+import com.njydsz.common.safe.sensitive.SensitiveType;
 
 /**
  * 流程实例视图 DTO（Feign 友好，姓名字段已标注 {@link SensitiveData} 脱敏）

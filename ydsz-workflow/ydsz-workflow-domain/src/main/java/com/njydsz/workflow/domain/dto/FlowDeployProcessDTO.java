@@ -3,9 +3,7 @@ package com.njydsz.workflow.domain.dto;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
-
 import jakarta.validation.constraints.NotBlank;
-
 import lombok.Data;
 
 /**

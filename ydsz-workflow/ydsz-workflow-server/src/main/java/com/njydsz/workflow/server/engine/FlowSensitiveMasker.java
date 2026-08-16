@@ -4,12 +4,9 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.springframework.stereotype.Component;
-
-import com.njydsz.common.safe.sensitive.SensitiveUtil;
-
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import com.njydsz.common.safe.sensitive.SensitiveUtil;
 
 /**
  * 敏感字段脱敏器（P0-1 落地，P1-3 优化）。

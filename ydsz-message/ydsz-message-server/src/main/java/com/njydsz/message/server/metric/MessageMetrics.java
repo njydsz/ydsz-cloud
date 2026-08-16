@@ -3,14 +3,11 @@ package com.njydsz.message.server.metric;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
-
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.stereotype.Component;
-
-import com.njydsz.common.base.metrics.AbstractModuleMetrics;
-
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.stereotype.Component;
+import com.njydsz.common.base.metrics.AbstractModuleMetrics;
 
 /**
  * 消息发送监控指标。

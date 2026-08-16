@@ -2,18 +2,14 @@ package com.njydsz.workflow.server.service.impl.instance;
 
 import java.time.Duration;
 import java.util.List;
-
-import com.njydsz.common.redis.service.ops.RedisStringOps;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Service;
-
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.workflow.server.service.FlowJoinTokenService;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 流程加签 Token 服务实现。

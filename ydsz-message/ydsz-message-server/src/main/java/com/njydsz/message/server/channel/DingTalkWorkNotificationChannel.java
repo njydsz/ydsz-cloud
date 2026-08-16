@@ -3,26 +3,22 @@ package com.njydsz.message.server.channel.impl;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
-
 import jakarta.annotation.PostConstruct;
-
-import com.njydsz.common.redis.service.ops.RedisStringOps;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
-
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
-import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.message.server.channel.MessageChannel;
 import com.njydsz.message.server.config.ChannelProperties;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 钉钉工作通知通道（企业内部应用）。

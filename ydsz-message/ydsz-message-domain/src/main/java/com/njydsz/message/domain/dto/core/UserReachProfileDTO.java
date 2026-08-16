@@ -1,11 +1,9 @@
 package com.njydsz.message.domain.dto.core;
 
-import com.njydsz.common.safe.annotation.Xss;
-
 import java.util.List;
 import java.util.Map;
-
 import lombok.Data;
+import com.njydsz.common.safe.annotation.Xss;
 
 /**
  * 用户触达画像 DTO。

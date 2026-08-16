@@ -2,12 +2,12 @@ package com.njydsz.workflow.server.service.impl.delegate;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
-
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.entity.FlowDelegateAuth;
 import com.njydsz.workflow.domain.entity.FlowRunTask;
@@ -16,9 +16,6 @@ import com.njydsz.workflow.infra.mapper.FlowDelegateAuthMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.service.FlowOfflineAutoForwardService;
 import com.njydsz.workflow.server.service.FlowTaskService;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 离线代理自动转发服务实现

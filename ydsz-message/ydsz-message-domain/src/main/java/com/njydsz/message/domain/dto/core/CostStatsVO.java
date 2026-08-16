@@ -3,7 +3,6 @@ package com.njydsz.message.domain.dto.core;
 
 import java.math.BigDecimal;
 import java.util.List;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 

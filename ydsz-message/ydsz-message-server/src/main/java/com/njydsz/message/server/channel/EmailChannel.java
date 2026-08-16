@@ -2,9 +2,8 @@ package com.njydsz.message.server.channel.impl;
 
 import java.util.Base64;
 import java.util.Map;
-
 import jakarta.mail.internet.MimeMessage;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
@@ -13,15 +12,12 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
-import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.message.server.channel.MessageChannel;
 import com.njydsz.message.server.service.receipt.ReadReceiptService;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 邮件通道实现。

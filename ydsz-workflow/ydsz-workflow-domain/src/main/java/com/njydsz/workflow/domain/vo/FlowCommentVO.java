@@ -2,8 +2,8 @@ package com.njydsz.workflow.domain.vo;
 
 import java.io.Serial;
 import java.io.Serializable;
-import lombok.Data;
 import java.time.LocalDateTime;
+import lombok.Data;
 
 /**
  * FlowComment 视图对象。

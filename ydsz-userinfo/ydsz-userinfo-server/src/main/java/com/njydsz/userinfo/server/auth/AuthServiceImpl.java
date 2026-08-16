@@ -7,43 +7,40 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import com.njydsz.common.redis.service.ops.RedisCollectionOps;
-import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.common.safe.alert.SecurityEvent;
-import com.njydsz.common.safe.alert.SecurityEventType;
-import com.njydsz.common.safe.alert.SecurityEventPublisher;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import io.micrometer.core.instrument.Timer;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.service.TokenBlacklistService;
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.event.api.DomainEvent;
+import com.njydsz.common.event.api.DomainEventTypes;
+import com.njydsz.common.event.publish.DomainEventPublisher;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisHashOps;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.safe.alert.SecurityEvent;
+import com.njydsz.common.safe.alert.SecurityEventPublisher;
+import com.njydsz.common.safe.alert.SecurityEventType;
 import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 import com.njydsz.userinfo.domain.dto.LoginDTO;
 import com.njydsz.userinfo.domain.entity.Role;
 import com.njydsz.userinfo.domain.entity.UserAccount;
 import com.njydsz.userinfo.domain.entity.UserRole;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
-import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.userinfo.domain.vo.LoginVO;
 import com.njydsz.userinfo.infra.mapper.RoleMapper;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
-import com.njydsz.common.event.api.DomainEvent;
-import com.njydsz.common.event.api.DomainEventTypes;
-import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.userinfo.infra.mapper.UserRoleMapper;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
 import com.njydsz.userinfo.server.service.LoginHistoryService;
-
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import io.micrometer.core.instrument.Timer;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
 
 /**
  * 认证服务实现。

@@ -6,10 +6,12 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,28 +21,21 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.storage.IFileStorage;
+import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.util.ClientIpResolver;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
+import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.server.health.NextwikiHealthIndicator;
 import com.njydsz.nextwiki.server.service.DownloadApplicationService;
 import com.njydsz.nextwiki.server.service.DownloadApplicationService.DownloadContext;
 import com.njydsz.nextwiki.server.service.DownloadApplicationService.SignedDownloadContext;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import com.njydsz.common.lock.annotation.Idempotent;
-
-import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 /**
  * 文件下载 REST API Controller。
  *

@@ -1,23 +1,21 @@
 package com.njydsz.workflow.server.config;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableScheduling;
-
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.workflow.infra.mapper.FlowCcMapper;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.health.FlowHealthIndicator;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
-
-import io.micrometer.core.instrument.MeterRegistry;
 
 /**
  * 工作流模块自动配置。

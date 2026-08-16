@@ -2,14 +2,11 @@ package com.njydsz.workflow.domain.dto;
 
 import java.io.Serial;
 import java.io.Serializable;
-
 import jakarta.validation.constraints.NotNull;
-
+import lombok.Data;
 import com.njydsz.common.safe.sensitive.SensitiveData;
 import com.njydsz.common.safe.sensitive.SensitiveDataSerializer;
 import com.njydsz.common.safe.sensitive.SensitiveType;
-
-import lombok.Data;
 
 /**
  * 办理人 DTO

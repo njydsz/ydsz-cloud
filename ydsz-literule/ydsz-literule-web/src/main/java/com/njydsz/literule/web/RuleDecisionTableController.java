@@ -1,19 +1,15 @@
 package com.njydsz.literule.web;
 
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,6 +39,7 @@ import com.njydsz.literule.domain.vo.DecisionTableDefinitionVO;
 import com.njydsz.literule.domain.vo.DecisionTableVO;
 import com.njydsz.literule.infra.mapper.DecisionTableMapper;
 import com.njydsz.literule.server.config.DecisionTableAdminService;
+import com.njydsz.common.excel.spring.ExcelWebSupport;
 
 /**
  * 决策表管理 Controller
@@ -78,6 +75,8 @@ public class RuleDecisionTableController {
     private final ObjectProvider<DecisionTableAdminService> decisionTableAdminServiceProvider;
     /** 决策表评估服务（SPI，由 project 模块提供实现） */
     private final DecisionTableEvalProvider decisionTableEvalProvider;
+    /** Excel Web 导出支持（统一 HTTP 下载入口） */
+    private final ExcelWebSupport excelWebSupport;
 
     /**
      * 查询全部决策表
@@ -160,18 +159,19 @@ public class RuleDecisionTableController {
      */
     @GetMapping("/decisionTables/{tableCode}/exportExcel")
     @AuthApiPermission(apiCodes = "execution:rule:view")
-    public ResponseEntity<byte[]> exportDecisionTableExcel(@PathVariable String tableCode) {
+    public void exportDecisionTableExcel(@PathVariable String tableCode, HttpServletResponse response) {
         DecisionTableAdminService svc = decisionTableAdminServiceProvider.getIfAvailable();
         if (svc == null) {
-            return ResponseEntity.internalServerError().build();
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            return;
         }
-        byte[] bytes = svc.exportExcel(tableCode);
-        String fileName = URLEncoder.encode(tableCode + ".xlsx", StandardCharsets.UTF_8);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.parseMediaType(
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
-        headers.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + fileName);
-        return ResponseEntity.ok().headers(headers).body(bytes);
+        try {
+            byte[] bytes = svc.exportExcel(tableCode);
+            excelWebSupport.writeBytes(response, bytes, tableCode + ".xlsx");
+        } catch (IOException e) {
+            log.warn("[DecisionTable] Excel 导出失败: tableCode={}, err={}", tableCode, e.getMessage());
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
@@ -219,17 +219,18 @@ public class RuleDecisionTableController {
      */
     @GetMapping("/decisionTables/excelTemplate")
     @AuthApiPermission(apiCodes = "execution:rule:view")
-    public ResponseEntity<byte[]> downloadDecisionTableExcelTemplate() {
+    public void downloadDecisionTableExcelTemplate(HttpServletResponse response) {
         DecisionTableAdminService svc = decisionTableAdminServiceProvider.getIfAvailable();
         if (svc == null) {
-            return ResponseEntity.internalServerError().build();
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            return;
         }
-        byte[] bytes = svc.exportExcelTemplate();
-        String fileName = URLEncoder.encode("decision-table-template.xlsx", StandardCharsets.UTF_8);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.parseMediaType(
-                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"));
-        headers.set(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + fileName);
-        return ResponseEntity.ok().headers(headers).body(bytes);
+        try {
+            byte[] bytes = svc.exportExcelTemplate();
+            excelWebSupport.writeBytes(response, bytes, "decision-table-template.xlsx");
+        } catch (IOException e) {
+            log.warn("[DecisionTable] Excel 模板导出失败: err={}", e.getMessage());
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
     }
 }

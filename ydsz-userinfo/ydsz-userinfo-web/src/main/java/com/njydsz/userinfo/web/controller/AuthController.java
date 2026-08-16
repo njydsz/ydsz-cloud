@@ -1,31 +1,29 @@
 package com.njydsz.userinfo.web.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
-import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
-import jakarta.servlet.http.HttpServletRequest;
-
-import com.njydsz.common.core.constant.HeaderConstants;
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.userinfo.domain.dto.LoginDTO;
-import com.njydsz.userinfo.domain.vo.LoginVO;
-import com.njydsz.userinfo.server.auth.AuthService;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
-import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.common.web.version.ApiVersion;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.core.constant.HeaderConstants;
+import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.web.version.ApiVersion;
+import com.njydsz.userinfo.domain.dto.LoginDTO;
+import com.njydsz.userinfo.domain.vo.LoginVO;
+import com.njydsz.userinfo.server.auth.AuthService;
 
 /**
  * 认证 Controller
