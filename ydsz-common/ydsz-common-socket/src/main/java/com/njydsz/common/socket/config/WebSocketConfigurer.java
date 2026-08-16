@@ -4,9 +4,11 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
+import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
 import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketTransportRegistration;
@@ -18,8 +20,13 @@ import com.njydsz.common.socket.session.SessionWebSocketHandlerDecoratorFactory;
 /**
  * WebSocket STOMP 配置类。
  *
- * <p>注册 STOMP 端点、配置消息代理（SimpleBroker /app 前缀）、
- * 设置传输参数（消息大小限制、发送超时）以及客户端入站通道拦截器。
+ * <p>持有 {@code @EnableWebSocketMessageBroker}，注册 STOMP 端点、配置消息代理
+ * （SimpleBroker /app 前缀、/user 单播前缀）、设置传输参数（消息大小限制、发送超时）
+ * 以及客户端入站通道拦截器。
+ *
+ * <p>P1-4: {@code @EnableWebSocketMessageBroker} 从业务模块迁移至 common-socket，
+ * 使所有依赖 common-socket 的模块获得统一的 WebSocket 基础设施，消除业务模块的重复配置。
+ * 通过 {@code ydsz.websocket.enabled} 属性控制是否启用，默认开启。
  *
  * <p>认证拦截器（{@link WebSocketAuthInterceptor}）和消息拦截器（{@link StompMessageInterceptor}）
  * 为可选依赖，未配置时降级跳过。
@@ -29,6 +36,8 @@ import com.njydsz.common.socket.session.SessionWebSocketHandlerDecoratorFactory;
  */
 @Slf4j
 @Configuration
+@EnableWebSocketMessageBroker
+@ConditionalOnProperty(prefix = "ydsz.websocket", name = "enabled", havingValue = "true", matchIfMissing = true)
 @RequiredArgsConstructor
 public class WebSocketConfigurer implements WebSocketMessageBrokerConfigurer {
 
@@ -73,6 +82,7 @@ public class WebSocketConfigurer implements WebSocketMessageBrokerConfigurer {
         registry.enableSimpleBroker("/topic", "/queue")
                 .setHeartbeatValue(new long[]{properties.getHeartbeat().getServerInterval(), properties.getHeartbeat().getClientInterval()});
         registry.setApplicationDestinationPrefixes("/app");
+        registry.setUserDestinationPrefix("/user");
 }
 
     /**

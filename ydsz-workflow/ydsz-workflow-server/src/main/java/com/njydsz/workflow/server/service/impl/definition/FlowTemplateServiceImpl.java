@@ -515,6 +515,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             newVer.setInheritType(source.getInheritType() != null ? source.getInheritType() : "STANDALONE");
             newVer.setIsLatest(1);
             templateMapper.insert(newVer);
+            syncSearchIndex(newVer);
 
             log.info("[FlowTemplate] 新版本已创建: templateCode={} oldVersion={} newVersion={} label={}",
                     templateCode, source.getVersion(), newVersion, newVer.getVersionLabel());
@@ -635,6 +636,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             newTemplate.setInheritType(inheritType);
             newTemplate.setIsLatest(1);
             templateMapper.insert(newTemplate);
+            syncSearchIndex(newTemplate);
 
             log.info("[FlowTemplate] 模板{}成功: source={} newCode={} parentId={} inheritType={}",
                     "CLONE".equals(inheritType) ? "克隆" : "继承",

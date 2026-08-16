@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.njydsz.common.notify.enums.NotifyChannel;
+import com.njydsz.common.safe.ratelimit.circuitbreaker.AbstractCircuitBreaker;
 
 /**
  * 渠道熔断器注册中心（P0-3）
@@ -88,8 +89,8 @@ public class NotifyCircuitBreakerRegistry {
      *
      * @return 渠道到熔断状态的映射
      */
-    public ConcurrentMap<NotifyChannel, NotifyCircuitBreaker.State> getAllStates() {
-        ConcurrentMap<NotifyChannel, NotifyCircuitBreaker.State> states = new ConcurrentHashMap<>();
+    public ConcurrentMap<NotifyChannel, AbstractCircuitBreaker.State> getAllStates() {
+        ConcurrentMap<NotifyChannel, AbstractCircuitBreaker.State> states = new ConcurrentHashMap<>();
         breakers.forEach((channel, breaker) -> states.put(channel, breaker.getState()));
         return states;
     }
