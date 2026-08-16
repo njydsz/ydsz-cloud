@@ -339,15 +339,19 @@ ParquetConfig config = ParquetConfig.builder()
 
 ### 6. Tabular 统一 API
 
+> **注意**：Tabular 统一 API 目前仅完成了 `TabularReader` / `TabularWriter` 接口定义和 `TabularFormat` 枚举，
+> 以及 XLS/XLSX 格式的底层实现。CSV / TSV / Parquet / ORC 的具体 Reader / Writer 实现尚在规划中，
+> 预期将在后续版本中逐步补齐。当前若需处理 CSV / TSV，可直接使用 `ExcelFacade.read()` 加载 `.csv` 文件，
+> 底层将自动根据扩展名选择对应的解析引擎。
+
 ```java
 import com.njydsz.common.excel.tabular.TabularFormat;
-import com.njydsz.common.excel.tabular.TabularReader;
-import com.njydsz.common.excel.tabular.TabularReadListener;
 
+// 识别文件格式
 TabularFormat format = TabularFormat.fromExtension("users.csv").orElseThrow();
-try (TabularReader<User> reader = csvReaderBuilder.format(format).build()) {
-    reader.open();
-    reader.readAll((ctx, user) -> System.out.println(user));
+if (format.isDelimited()) {
+    // CSV/TSV 格式 - 当前版本建议通过 ExcelFacade 读取
+    List<User> users = ExcelFacade.read("users.csv", User.class).doReadAll();
 }
 ```
 
