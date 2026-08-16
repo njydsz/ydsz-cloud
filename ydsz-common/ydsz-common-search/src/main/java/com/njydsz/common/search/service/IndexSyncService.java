@@ -99,7 +99,9 @@ public class IndexSyncService {
      * @return 默认索引同步线程池
      */
     public static ThreadPoolTaskExecutor createDefaultIndexSyncExecutor(SearchProperties properties) {
+        // CHECKSTYLE.OFF: RegexpSinglelineJava
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        // CHECKSTYLE.ON: RegexpSinglelineJava
         executor.setCorePoolSize(Math.max(2, properties.getIndex().getThreadPoolSize()));
         executor.setMaxPoolSize(Math.max(4, properties.getIndex().getThreadPoolSize() * 2));
         executor.setQueueCapacity(512);

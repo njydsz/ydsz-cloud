@@ -1,6 +1,11 @@
 package com.njydsz.common.auth.model;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * 列权限信息集合。

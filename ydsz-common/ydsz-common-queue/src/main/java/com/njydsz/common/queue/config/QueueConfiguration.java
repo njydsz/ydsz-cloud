@@ -137,11 +137,11 @@ public class QueueConfiguration {
         int awaitTerminationSeconds = queueProperties.getConsumerExecutorAwaitTerminationSeconds();
         String threadNamePrefix = queueProperties.getConsumerExecutorThreadNamePrefix();
 
-        // CHECKSTYLE.OFF: ThreadPoolCreate
+        // CHECKSTYLE.OFF: RegexpSinglelineJava
         // 兜底线程池：仅当 ydsz-common-thread 未提供 queueConsumerExecutor Bean 时生效。
         // 生产环境应通过 ydsz.thread.pools.queueConsumerExecutor 配置统一管理。
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        // CHECKSTYLE.ON: ThreadPoolCreate
+        // CHECKSTYLE.ON: RegexpSinglelineJava
         executor.setCorePoolSize(coreSize);
         executor.setMaxPoolSize(maxSize);
         executor.setQueueCapacity(queueCapacity);
@@ -220,12 +220,12 @@ public class QueueConfiguration {
             log.info("[Queue] 死信队列自动重试已禁用，跳过调度器创建");
             return null;
         }
-        // CHECKSTYLE.OFF: ThreadPoolCreate
+        // CHECKSTYLE.OFF: RegexpSinglelineJava
         // 单线程调度池：仅用于定时触发死信扫描，短生命周期任务无上下文传播需求。
         // 直接构造 ScheduledThreadPoolExecutor 以绕过 Executors 禁用限制。
         ScheduledExecutorService scheduler = new ScheduledThreadPoolExecutor(1,
                 r -> new Thread(r, "ydsz-queue-dlq-retry"));
-        // CHECKSTYLE.ON: ThreadPoolCreate
+        // CHECKSTYLE.ON: RegexpSinglelineJava
         log.info("[Queue] 创建死信队列自动重试调度器，间隔: {}ms, 抖动: {}%",
                 queueProperties.getDeadLetterRetryInterval(),
                 queueProperties.getDeadLetterRetryJitterPercent());

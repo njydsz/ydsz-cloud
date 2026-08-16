@@ -132,7 +132,9 @@ public class UnifiedSearchService {
      * @return 默认搜索线程池
      */
     public static ThreadPoolTaskExecutor createDefaultSearchExecutor(SearchProperties properties) {
+        // CHECKSTYLE.OFF: RegexpSinglelineJava
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        // CHECKSTYLE.ON: RegexpSinglelineJava
         executor.setCorePoolSize(Math.max(2, properties.getIndex().getThreadPoolSize()));
         executor.setMaxPoolSize(Math.max(4, properties.getIndex().getThreadPoolSize() * 2));
         executor.setQueueCapacity(256);

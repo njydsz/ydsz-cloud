@@ -2,7 +2,8 @@ package com.njydsz.common.excel.helper;
 
 import java.io.ByteArrayOutputStream;
 import java.util.List;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.core.ExcelWriter;
 
@@ -24,8 +25,9 @@ import com.njydsz.common.excel.core.ExcelWriter;
  * @author ydsz-team
  * @since 1.0.0
  */
-@Slf4j
 public class ExcelExportHelper {
+
+    private static final Logger log = LoggerFactory.getLogger(ExcelExportHelper.class);
 
     /**
      * 导出数据为 Excel 字节数组。

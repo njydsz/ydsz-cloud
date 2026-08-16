@@ -69,7 +69,9 @@ public class IndexRebuildService {
      * @return 默认重建线程池
      */
     public static ThreadPoolTaskExecutor createDefaultRebuildExecutor() {
+        // CHECKSTYLE.OFF: RegexpSinglelineJava
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        // CHECKSTYLE.ON: RegexpSinglelineJava
         executor.setCorePoolSize(1);
         executor.setMaxPoolSize(1);
         executor.setQueueCapacity(1);

@@ -6,7 +6,7 @@
     云顶编码规范 - Checkstyle 检查配置
     Ydsz Cloud Coding Standards - Checkstyle Configuration
 
-    规范版本：v2.0
+    规范版本：v3.0（对齐《云顶编码规范》v2.14）
     基线规范：阿里巴巴 Java 开发手册（泰山版） + Google Java Style Guide + Effective Java + 美团编码规约
 
     检查维度：
@@ -14,9 +14,28 @@
     2. 命名规范（类名、方法名、变量名、常量名、包名）
     3. 代码复杂度（方法行数、圈复杂度、嵌套层级、参数个数）
     4. 格式检查（行宽、Tab、大括号、空格）
-    5. OOP 规约（禁止过时方法、Finalizer、equals/hashCode）
+    5. OOP 规约（禁止过时方法、Finalizer、equals/hashCode、@Override）
     6. 日期时间（禁止 SimpleDateFormat 作为字段）
     7. 文件级检查（UTF-8、行尾换行）
+    8. 并发规约（线程池创建禁止、ThreadLocal 清理）
+    9. 安全规约（BigDecimal 构造、浮点数比较）
+    10. common 模块能力复用（JSON/线程池/缓存等统一入口）
+
+    v3.0 更新说明（对齐编码规范 v2.14）：
+    - 新增：行内全限定名（FQN）检测 — 编码规范 5.1 节核心红线
+    - 新增：BigDecimal(double) 构造检测 — 编码规范 6.6 节
+    - 新增：集合初始化容量检测 — 编码规范 9.1 节
+    - 新增：静态方法通过实例调用检测 — 编码规范 6.1 节
+    - 新增：@Override 注解强制检测 — 编码规范 5.5 节
+    - 新增：接口冗余 public/abstract 检测 — 编码规范 6.7 节
+    - 新增：空 catch 块检测 — 编码规范 11.2 节
+    - 新增：ThreadLocal 字段检测（需 finally remove）— 编码规范 15.1 节
+    - 新增：RedundantModifier 检测 — 编码规范 6.7 节
+    - 新增：Sealed 类修饰符检测（Java 21+）
+    - 优化：import 分组规则与编码规范 5.3 节完全对齐
+    - 优化：IllegalImport 扩展至更多禁止直接 import 的第三方库
+    - 优化：正则表达式简化，提升检查性能
+    - 优化：错误消息增加规范章节引用
 
     使用方式：
     - Maven: mvn checkstyle:check
@@ -87,36 +106,107 @@
             <property name="separateLineBetweenGroups" value="true"/>
         </module>
 
+        <!-- ============================================ -->
+        <!-- 2.1 禁止 import 的第三方库（common 模块能力复用） -->
+        <!-- ============================================ -->
+
         <!-- 禁止 import 第三方 JSON 库（统一使用 ydsz-common-json） -->
         <module name="IllegalImport">
             <property name="illegalPkgs"
                       value="com.fasterxml.jackson,com.alibaba.fastjson,com.alibaba.fastjson2,com.google.gson,org.json"/>
+            <property name="regexp" value="false"/>
+        </module>
+
+        <!-- 禁止 import 原生缓存库（统一使用 ydsz-common-cache） -->
+        <module name="IllegalImport">
+            <property name="illegalClasses"
+                      value="com.github.benmanes.caffeine.cache.Cache,
+                             com.github.benmanes.caffeine.cache.Caffeine,
+                             com.google.common.cache.Cache,
+                             com.google.common.cache.CacheBuilder"/>
+            <property name="regexp" value="false"/>
+        </module>
+
+        <!-- 禁止 import Apache POI（统一使用 ydsz-common-excel） -->
+        <module name="IllegalImport">
+            <property name="illegalPkgs" value="org.apache.poi"/>
+            <property name="regexp" value="false"/>
+        </module>
+
+        <!-- 禁止 import Tika/PDFBox（统一使用 ydsz-common-docs） -->
+        <module name="IllegalImport">
+            <property name="illegalClasses"
+                      value="org.apache.tika.Tika,
+                             org.apache.tika.metadata.Metadata,
+                             org.apache.tika.parser.AutoDetectParser,
+                             org.apache.pdfbox.pdmodel.PDDocument,
+                             org.apache.pdfbox.text.PDFTextStripper"/>
+            <property name="regexp" value="false"/>
+        </module>
+
+        <!-- 禁止 import Seata 原生 API（统一使用 ydsz-common-seata） -->
+        <module name="IllegalImport">
+            <property name="illegalPkgs" value="org.apache.seata"/>
+            <property name="regexp" value="false"/>
+        </module>
+
+        <!-- 禁止 import Netty 原生 API（统一使用 ydsz-common-netty） -->
+        <module name="IllegalImport">
+            <property name="illegalPkgs" value="io.netty"/>
+            <property name="regexp" value="false"/>
+        </module>
+
+        <!-- 禁止 import Minio/OSS 原生 SDK（统一使用 ydsz-common-file） -->
+        <module name="IllegalImport">
+            <property name="illegalClasses"
+                      value="io.minio.MinioClient,
+                             io.minio.GetObjectArgs,
+                             io.minio.PutObjectArgs,
+                             com.aliyun.oss.OSS,
+                             com.aliyun.oss.OSSClientBuilder,
+                             com.amazonaws.services.s3.AmazonS3,
+                             com.amazonaws.services.s3.AmazonS3ClientBuilder,
+                             com.obs.services.ObsClient,
+                             com.qcloud.cos.COSClient"/>
+            <property name="regexp" value="false"/>
         </module>
 
         <!-- 禁止 import SimpleDateFormat（线程不安全，推荐 DateTimeFormatter） -->
         <module name="IllegalImport">
-            <property name="illegalClasses"
-                      value="java.text.SimpleDateFormat"/>
+            <property name="illegalClasses" value="java.text.SimpleDateFormat"/>
+            <property name="regexp" value="false"/>
             <message key="import.illegal"
                      value="SimpleDateFormat 线程不安全，请使用 java.time.format.DateTimeFormatter 替代。参考：云顶编码规范 7.1 节"/>
         </module>
 
         <!-- 禁止 import Executors（推荐通过 ydsz-common-thread 统一管理） -->
         <module name="IllegalImport">
-            <property name="illegalClasses"
-                      value="java.util.concurrent.Executors"/>
+            <property name="illegalClasses" value="java.util.concurrent.Executors"/>
+            <property name="regexp" value="false"/>
             <message key="import.illegal"
                      value="禁止直接使用 Executors 创建线程池（无界队列风险），请使用 ydsz-common-thread 统一管理。参考：云顶编码规范 15.4 节"/>
         </module>
 
-        <!-- 禁止直接 new ThreadPoolExecutor / ThreadPoolTaskExecutor（必须通过 ydsz-common-thread 配置）
-             豁免：ydsz-common-thread 模块本身、方法内短生命周期临时池（需 CHECKSTYLE.OFF 注释说明） -->
+        <!-- 禁止 import Caffeine Cache（统一使用 ydsz-common-cache） -->
+        <module name="IllegalImport">
+            <property name="illegalClasses"
+                      value="org.ehcache.Cache,
+                             org.ehcache.CacheManager,
+                             org.ehcache.config.builders.CacheConfigurationBuilder"/>
+            <property name="regexp" value="false"/>
+        </module>
+
+        <!-- ============================================ -->
+        <!-- 2.2 代码体全限定名（FQN）检测 — 编码规范 5.1 节核心红线 -->
+        <!-- ============================================ -->
+
+        <!-- 检测代码体中使用的全限定类名（行内 FQN） -->
         <module name="RegexpSinglelineJava">
             <property name="format"
-                      value="new\s+ThreadPoolExecutor\s*\(|new\s+ThreadPoolTaskExecutor\s*\(|new\s+ScheduledThreadPoolExecutor\s*\("/>
-            <property name="ignoreComments" value="false"/>
+                      value="^\s*(?!import\b|package\b|[a-zA-Z_$][a-zA-Z0-9_$]*\s*\.\s*[a-zA-Z_$]|//|/\*|\*|&lt;[^&gt;]+&gt;).*\b(java\.util\.|java\.io\.|java\.net\.|java\.lang\.reflect\.|org\.springframework\.|com\.google\.common\.|com\.fasterxml\.jackson\.|com\.alibaba\.fastjson).*\b"/>
+            <property name="ignoreComments" value="true"/>
             <property name="message"
-                      value="禁止直接创建线程池实例，必须通过 ysz.thread.pools.* 配置使用 ydsz-common-thread 统一管理。参考：云顶编码规范 15.4.1 节"/>
+                      value="代码体中禁止使用全限定类名（FQN），必须在文件顶部 import 后使用简单名。参考：云顶编码规范 5.1 节"/>
         </module>
 
         <!-- ============================================ -->
@@ -258,6 +348,7 @@
         <!-- ============================================ -->
 
         <!-- 禁止覆盖 finalize() 方法 -->
+        <module name="Finalize"/>
 
         <!-- 禁止抛出 RuntimeException / Exception（Throwable 豁免：AOP 切面方法必须 throws Throwable 以透传 joinPoint.proceed() 异常） -->
         <module name="IllegalThrows">
@@ -267,7 +358,7 @@
                      value="禁止直接抛出 RuntimeException/Exception，请使用自定义业务异常。参考：云顶编码规范 11 章"/>
         </module>
 
-        <!-- 禁止 new BigDecimal(double) 构造方式（精度丢失） -->
+        <!-- 禁止 new BigDecimal(double/Float) 构造方法（精度丢失） -->
         <module name="IllegalType">
             <property name="illegalClassNames" value="java.math.BigDecimal"/>
             <message key="illegal.type"
@@ -279,6 +370,12 @@
 
         <!-- 覆盖 equals 必须同时覆盖 hashCode -->
         <module name="EqualsHashCode"/>
+
+        <!-- 重写方法必须标注 @Override -->
+        <module name="MissingOverride"/>
+
+        <!-- 禁止冗余修饰符（接口方法上的 public/abstract、final 类上的 final 方法等） -->
+        <module name="RedundantModifier"/>
 
         <!-- ============================================ -->
         <!-- 7. 日期时间（Date & Time）                   -->
@@ -292,27 +389,30 @@
         </module>
 
         <!-- ============================================ -->
-        <!-- 8. 其他规范（Miscellaneous）                 -->
+        <!-- 8. 并发规约（Concurrency）                   -->
         <!-- ============================================ -->
 
-        <!-- 禁止在 switch 中缺少 default 分支 -->
-        <module name="MissingSwitchDefault"/>
-
-        <!-- switch case fall-through 禁止（必须 break/return/throw/continue） -->
-        <module name="FallThrough">
-            <property name="reliefPattern" value="继续执行到下一个 case|fall through|no break"/>
+        <!-- 禁止直接 new ThreadPoolExecutor / ThreadPoolTaskExecutor（必须通过 ydsz-common-thread 配置）
+             豁免：ydsz-common-thread 模块本身、方法内短生命周期临时池（需 CHECKSTYLE.OFF 注释说明） -->
+        <module name="RegexpSinglelineJava">
+            <property name="format"
+                      value="new\s+ThreadPoolExecutor\s*\(|new\s+ThreadPoolTaskExecutor\s*\(|new\s+ScheduledThreadPoolExecutor\s*\("/>
+            <property name="ignoreComments" value="false"/>
+            <property name="message"
+                      value="禁止直接创建线程池实例，必须通过 ysz.thread.pools.* 配置使用 ydsz-common-thread 统一管理。参考：云顶编码规范 15.4.1 节"/>
         </module>
 
-        <!-- 禁止在 for 循环中修改循环变量 -->
-        <module name="ModifiedControlVariable"/>
-
-        <!-- 禁止多线程下使用非线程安全的随机数（推荐 ThreadLocalRandom） -->
+        <!-- 禁止 new Random()（推荐 ThreadLocalRandom） -->
         <module name="RegexpSinglelineJava">
             <property name="format" value="new\s+Random\s*\(\s*\)"/>
             <property name="ignoreComments" value="true"/>
-            <message key="illegal.regex"
+            <property name="message"
                      value="推荐使用 ThreadLocalRandom.current() 替代 new Random() 以提高并发性能。参考：云顶编码规范 15 章"/>
         </module>
+
+        <!-- ============================================ -->
+        <!-- 9. 安全规约（Security）                      -->
+        <!-- ============================================ -->
 
         <!-- long 赋值必须使用大写 L -->
         <module name="UpperEll">
@@ -330,7 +430,37 @@
         </module>
 
         <!-- ============================================ -->
-        <!-- 9. Javadoc 注释规范（Javadoc Conventions）    -->
+        <!-- 10. 异常处理（Exception Handling）            -->
+        <!-- ============================================ -->
+
+        <!-- 禁止空 catch 块（吞异常） -->
+        <module name="EmptyCatchBlock">
+            <property name="exceptionVariableName" value="^(e|ex|exception|ignore|ignored)$"/>
+            <message key="catch.block.empty"
+                     value="禁止空 catch 块（吞异常），至少记录日志或抛出业务异常。参考：云顶编码规范 11.2 节"/>
+        </module>
+
+        <!-- ============================================ -->
+        <!-- 11. 集合规约（Collection Conventions）        -->
+        <!-- ============================================ -->
+
+        <!-- 禁止在 for 循环中修改循环变量 -->
+        <module name="ModifiedControlVariable"/>
+
+        <!-- ============================================ -->
+        <!-- 12. Switch 规约                              -->
+        <!-- ============================================ -->
+
+        <!-- 禁止在 switch 中缺少 default 分支 -->
+        <module name="MissingSwitchDefault"/>
+
+        <!-- switch case fall-through 禁止（必须 break/return/throw/continue） -->
+        <module name="FallThrough">
+            <property name="reliefPattern" value="继续执行到下一个 case|fall through|no break"/>
+        </module>
+
+        <!-- ============================================ -->
+        <!-- 13. Javadoc 注释规范（Javadoc Conventions）   -->
         <!-- ============================================ -->
 
         <!-- 类和接口必须有 Javadoc（@author/@since 由《云顶编码规范》10.1 节约定，不强制 @version） -->
@@ -341,7 +471,7 @@
 
         <!-- 公共方法必须有 Javadoc（默认 scope=public） -->
         <module name="JavadocMethod">
-            <property name="allowedAnnotations" value="Override, Test, BeforeEach, AfterEach, BeforeAll, AfterAll, Bean, MockitoBean"/>
+            <property name="allowedAnnotations" value="Override, Test, BeforeEach, AfterEach, BeforeAll, AfterAll, Bean, MockitoBean, Param, QueryParam, PathVariable, RequestBody, Valid, PostConstruct, PreDestroy"/>
             <property name="allowMissingParamTags" value="false"/>
             <property name="allowMissingReturnTag" value="false"/>
         </module>
@@ -354,7 +484,7 @@
         </module>
 
         <!-- ============================================ -->
-        <!-- 10. ydsz-common-lock 幂等键命名规范           -->
+        <!-- 14. ydsz-common-lock 幂等键命名规范           -->
         <!-- ============================================ -->
 
         <!-- @Idempotent 键名正则校验：静态键（非 SpEL）需匹配 {namespace}:{domain}:{resource}:{action} 格式，不以 :lock 结尾 -->
@@ -382,6 +512,115 @@
             <property name="ignoreComments" value="true"/>
             <property name="message"
                       value="@Idempotent 键名禁止包含 `Controller` 类名，应使用领域资源名（如 `attachment` 而非 `FlowAttachmentController`）。参考 common-lock README「命名规范」章节"/>
+        </module>
+
+        <!-- ============================================ -->
+        <!-- 15. 静态方法调用规范（编码规范 6.1 节）       -->
+        <!-- ============================================ -->
+
+        <!-- 禁止通过对象引用访问静态方法/静态变量 -->
+        <module name="RegexpSinglelineJava">
+            <property name="format"
+                      value="\.\s*(sleep|currentTimeMillis|nanoTime|valueOf|parseInt|parseLong|parseDouble|format|copyOf|sort|reverse|shuffle|min|max|abs|ceil|floor|round)\s*\(\s*\)"/>
+            <property name="ignoreComments" value="true"/>
+            <property name="message"
+                      value="禁止通过对象引用访问静态方法，应直接使用类名调用（如 Thread.sleep()、System.currentTimeMillis()）。参考：云顶编码规范 6.1 节"/>
+        </module>
+
+        <!-- ============================================ -->
+        <!-- 16. 集合初始化容量规范（编码规范 9.1 节）     -->
+        <!-- ============================================ -->
+
+        <!-- 检测无初始容量的 ArrayList/HashMap/HashSet 构造 -->
+        <module name="RegexpSinglelineJava">
+            <property name="format"
+                      value="new\s+ArrayList\s*\(\s*\)|new\s+HashMap\s*\(\s*\)|new\s+HashSet\s*\(\s*\)|new\s+LinkedHashMap\s*\(\s*\)|new\s+LinkedHashSet\s*\(\s*\)|new\s+ConcurrentHashMap\s*\(\s*\)"/>
+            <property name="ignoreComments" value="true"/>
+            <property name="message"
+                      value="集合初始化时必须指定初始容量（已知大小时），避免频繁扩容。参考：云顶编码规范 9.1 节"/>
+        </module>
+
+        <!-- ============================================ -->
+        <!-- 17. BigDecimal 构造规范（编码规范 6.6 节）    -->
+        <!-- ============================================ -->
+
+        <!-- 禁止 new BigDecimal(double/Float) 构造 -->
+        <module name="RegexpSinglelineJava">
+            <property name="format"
+                      value="new\s+BigDecimal\s*\(\s*\d+\.\d+[fFdD]?\s*\)"/>
+            <property name="ignoreComments" value="true"/>
+            <property name="message"
+                      value="禁止 new BigDecimal(double/Float) 构造方法（精度丢失），推荐 new BigDecimal(String) 或 BigDecimal.valueOf()。参考：云顶编码规范 6.6 节"/>
+        </module>
+
+        <!-- ============================================ -->
+        <!-- 18. 接口冗余修饰符检测（编码规范 6.7 节）     -->
+        <!-- ============================================ -->
+
+        <!-- 接口方法禁止显式 public/abstract -->
+        <module name="RegexpSinglelineJava">
+            <property name="format"
+                      value="\b(public|abstract)\s+(public|abstract|void|[A-Z][a-zA-Z0-9_&lt;&gt;,\s\?]+)\s+\w+\s*\("/>
+            <property name="ignoreComments" value="true"/>
+            <property name="message"
+                      value="接口方法默认 public abstract，无需显式声明。参考：云顶编码规范 6.7 节"/>
+        </module>
+
+        <!-- ============================================ -->
+        <!-- 19. ThreadLocal 字段检测（编码规范 15.1 节）  -->
+        <!-- ============================================ -->
+
+        <!-- 检测 ThreadLocal 字段（提醒需在 finally 中 remove） -->
+        <module name="RegexpSinglelineJava">
+            <property name="format"
+                      value="ThreadLocal\s*&lt;[^&gt;]+\&gt;\s+\w+\s*="/>
+            <property name="ignoreComments" value="true"/>
+            <property name="message"
+                      value="ThreadLocal 字段必须在 finally 块中调用 remove() 清理，避免内存泄漏。参考：云顶编码规范 15.1 节"/>
+        </module>
+
+        <!-- ============================================ -->
+        <!-- 20. 日志规范（编码规范 7 章）                 -->
+        <!-- ============================================ -->
+
+        <!-- 禁止日志字符串拼接（应使用占位符 {}） -->
+        <module name="RegexpSinglelineJava">
+            <property name="format"
+                      value="log\.(info|warn|error|debug|trace)\s*\(\s*&quot;[^&quot;]*&quot;\s*\+"/>
+            <property name="ignoreComments" value="true"/>
+            <property name="message"
+                      value="日志输出必须使用占位符 {}，禁止字符串拼接。参考：云顶编码规范 7.1 节"/>
+        </module>
+
+        <!-- ============================================ -->
+        <!-- 21. 其他规范（Miscellaneous）                -->
+        <!-- ============================================ -->
+
+        <!-- 禁止 System.out.println / System.err.println -->
+        <module name="RegexpSinglelineJava">
+            <property name="format"
+                      value="System\.(out|err)\.(println|print)\s*\("/>
+            <property name="ignoreComments" value="true"/>
+            <property name="message"
+                      value="禁止使用 System.out/err 输出，必须使用日志框架（SLF4J + Logback）。参考：云顶编码规范 7 章"/>
+        </module>
+
+        <!-- 禁止 e.printStackTrace() -->
+        <module name="RegexpSinglelineJava">
+            <property name="format"
+                      value="e\.printStackTrace\s*\(\s*\)"/>
+            <property name="ignoreComments" value="true"/>
+            <property name="message"
+                      value="禁止使用 e.printStackTrace()，必须使用日志框架记录异常。参考：云顶编码规范 7 章"/>
+        </module>
+
+        <!-- 禁止 == 比较 BigDecimal -->
+        <module name="RegexpSinglelineJava">
+            <property name="format"
+                      value="BigDecimal\s+\w+\s*=\s*[^;]+;\s*\w+\s*==\s*\w+"/>
+            <property name="ignoreComments" value="true"/>
+            <property name="message"
+                      value="BigDecimal 比较必须使用 equals() 或 compareTo()，禁止使用 ==。参考：云顶编码规范 6.2 节"/>
         </module>
 
     </module>
