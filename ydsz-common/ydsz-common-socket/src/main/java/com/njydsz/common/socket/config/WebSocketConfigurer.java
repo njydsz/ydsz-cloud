@@ -60,11 +60,11 @@ public class WebSocketConfigurer implements WebSocketMessageBrokerConfigurer {
         var registration = registry.addEndpoint(properties.getEndpoint());
         if (properties.isSockJsEnabled()) {
             registration.withSockJS();
-}
+        }
         List<String> origins = properties.getAllowedOriginPatterns();
         if (origins != null && !origins.isEmpty()) {
             registration.setAllowedOriginPatterns(origins.toArray(new String[0]));
-}
+        }
         if (authInterceptor != null) {
             registration.addInterceptors(authInterceptor);
         }
@@ -83,7 +83,7 @@ public class WebSocketConfigurer implements WebSocketMessageBrokerConfigurer {
                 .setHeartbeatValue(new long[]{properties.getHeartbeat().getServerInterval(), properties.getHeartbeat().getClientInterval()});
         registry.setApplicationDestinationPrefixes("/app");
         registry.setUserDestinationPrefix("/user");
-}
+    }
 
     /**
      * 配置 WebSocket 传输参数。
@@ -110,6 +110,6 @@ public class WebSocketConfigurer implements WebSocketMessageBrokerConfigurer {
     public void configureClientInboundChannel(ChannelRegistration registration) {
         if (stompMessageInterceptor != null) {
             registration.interceptors(stompMessageInterceptor);
-}
-}
+        }
+    }
 }

@@ -62,10 +62,15 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
         if (registry.find(serviceName).isPresent()) {
             return registry.circuitBreaker(serviceName);
         }
+        // 熔断参数从配置读取（ydsz.feign.circuit-breaker.*），不再硬编码，支持按环境调优
+        FeignProperties.CircuitBreaker cbConfig = properties.getCircuitBreaker();
         CircuitBreakerConfig config = CircuitBreakerConfig.custom()
-                .failureRateThreshold(50)
-                .slowCallRateThreshold(80)
-                .slowCallDurationThreshold(java.time.Duration.ofSeconds(3))
+                .failureRateThreshold(cbConfig.getFailureRateThreshold())
+                .slowCallRateThreshold(cbConfig.getSlowCallRateThreshold())
+                .slowCallDurationThreshold(java.time.Duration.ofMillis(cbConfig.getSlowCallDurationMs()))
+                .waitDurationInOpenState(java.time.Duration.ofMillis(cbConfig.getWaitDurationMs()))
+                .minimumNumberOfCalls(cbConfig.getMinimumNumberOfCalls())
+                .slidingWindowSize(cbConfig.getSlidingWindowSize())
                 .build();
         return registry.circuitBreaker(serviceName, config);
     }

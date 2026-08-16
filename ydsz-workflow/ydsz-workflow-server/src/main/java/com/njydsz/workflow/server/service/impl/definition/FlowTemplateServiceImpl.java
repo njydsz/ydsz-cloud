@@ -772,6 +772,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             newVer.setInheritType("INHERIT");
             newVer.setIsLatest(1);
             templateMapper.insert(newVer);
+            syncSearchIndex(newVer);
 
             log.info("[FlowTemplate] 子模板同步父模板成功: childCode={} parentCode={} newVersion={} parentId={}",
                     childTemplateCode, parent.getTemplateCode(), newVersion, parentId);
@@ -1017,5 +1018,20 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
                 .replace(">", "&gt;")
                 .replace("\"", "&quot;")
                 .replace("'", "&apos;");
+    }
+
+    /**
+     * 将模板数据同步到统一搜索索引（ydsz_search_index）。
+     *
+     * <p>通过 {@link SearchIndexEventBridge} 异步写入，不阻塞主业务流程。
+     * 未引入 {@code ydsz-common-search} 时桥接器为空，跳过同步。
+     *
+     * @param template 流程模板实体
+     */
+    private void syncSearchIndex(FlowTemplate template) {
+        SearchIndexEventBridge bridge = searchIndexEventBridgeProvider.getIfAvailable();
+        if (bridge != null) {
+            bridge.indexUpsert("workflow", template);
+        }
     }
 }

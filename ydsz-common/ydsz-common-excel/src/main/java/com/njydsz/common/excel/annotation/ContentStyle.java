@@ -1,6 +1,10 @@
 package com.njydsz.common.excel.annotation;
 
-import java.lang.annotation.*;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * ContentStyle 注解：声明式标记单元格的内容样式。

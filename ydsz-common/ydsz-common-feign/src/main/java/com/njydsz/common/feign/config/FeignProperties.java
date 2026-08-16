@@ -173,6 +173,24 @@ public class FeignProperties {
 
         /** 熔断状态 Redis 持久化 TTL（秒），默认 3600 */
         private int stateTtlSeconds = 3600;
+
+        /** 失败率阈值（百分比），达到该值触发熔断，默认 50 */
+        private float failureRateThreshold = 50;
+
+        /** 慢调用率阈值（百分比），默认 80 */
+        private float slowCallRateThreshold = 80;
+
+        /** 慢调用时长阈值（毫秒），默认 3000 */
+        private long slowCallDurationMs = 3000;
+
+        /** 熔断打开后自动恢复的等待时长（毫秒），默认 10000 */
+        private long waitDurationMs = 10000;
+
+        /** 滑动窗口内最小调用次数（低于该值不判定熔断），默认 10 */
+        private int minimumNumberOfCalls = 10;
+
+        /** 滑动窗口大小，默认 20 */
+        private int slidingWindowSize = 20;
     }
 
     /**
