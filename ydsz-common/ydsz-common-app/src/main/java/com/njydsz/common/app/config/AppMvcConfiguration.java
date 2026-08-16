@@ -33,7 +33,6 @@ import com.njydsz.common.base.config.ConditionalOnPlatform;
 import com.njydsz.common.base.config.PlatformMode;
 import com.njydsz.common.base.constant.FilterOrder;
 import com.njydsz.common.base.constant.InterceptorOrder;
-import com.njydsz.common.base.interceptor.BaseHttpInterceptor;
 import com.njydsz.common.safe.config.ApiSignatureProperties;
 import com.njydsz.common.safe.config.SafeConfiguration;
 
@@ -65,7 +64,6 @@ import io.micrometer.core.instrument.MeterRegistry;
 @Import({AppGlobalResponseAdvice.class, AppExceptionHandler.class})
 public class AppMvcConfiguration extends BaseMvcConfiguration {
 
-    private final BaseHttpInterceptor baseHttpInterceptor;
     private final AppRequestLogInterceptor appRequestLogInterceptor;
     private final AppTraceProperties appTraceProperties;
     private final AppContentCacheProperties appContentCacheProperties;
@@ -75,20 +73,17 @@ public class AppMvcConfiguration extends BaseMvcConfiguration {
      * 构造方法
      *
      * @param appCorsProperties         App 端 CORS 配置属性
-     * @param baseHttpInterceptor       基础 HTTP 拦截器（请求上下文清理）
      * @param appRequestLogInterceptor  App 端请求日志拦截器
      * @param appTraceProperties        App 端 Trace / 请求追踪配置
      * @param appContentCacheProperties App 端请求体缓存配置
      * @param apiSignatureProperties    safe 模块的 API 签名配置（用于健康检查报告）
      */
     public AppMvcConfiguration(AppCorsProperties appCorsProperties,
-                               BaseHttpInterceptor baseHttpInterceptor,
                                AppRequestLogInterceptor appRequestLogInterceptor,
                                AppTraceProperties appTraceProperties,
                                AppContentCacheProperties appContentCacheProperties,
                                ApiSignatureProperties apiSignatureProperties) {
         super(appCorsProperties);
-        this.baseHttpInterceptor = baseHttpInterceptor;
         this.appRequestLogInterceptor = appRequestLogInterceptor;
         this.appTraceProperties = appTraceProperties;
         this.appContentCacheProperties = appContentCacheProperties;
@@ -105,10 +100,6 @@ public class AppMvcConfiguration extends BaseMvcConfiguration {
         registry.addInterceptor(appRequestLogInterceptor)
                 .addPathPatterns("/**")
                 .order(InterceptorOrder.REQUEST_LOG);
-
-        registry.addInterceptor(baseHttpInterceptor)
-                .addPathPatterns("/**")
-                .order(InterceptorOrder.REQUEST_CONTEXT_CLEANUP);
     }
 
     /**

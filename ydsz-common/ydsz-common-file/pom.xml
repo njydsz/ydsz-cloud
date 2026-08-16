@@ -231,6 +231,13 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-json</artifactId>
         </dependency>
-</dependencies>
+
+        <!-- ydsz-common-thread (optional, for managed thread pools - see 云顶编码规范 15.4 节) -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-thread</artifactId>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
 
 </project>
