@@ -112,10 +112,8 @@ public class GatewayApplication {
     /**
      * 注册 Reactive Token 黑名单服务，用于登出/踢线后的 JWT 即时失效。
      *
-     * <p>复用 ydsz-common-auth 的 TokenBlacklistBloomFilter + SHA-256 摘要 key，
+     * <p>复用 ydsz-common-auth 的 SHA-256 摘要 key，
      * 替代网关手写的 Redis 黑名单检查，保证网关与各业务服务的判定口径一致。
-     * 布隆过滤器先行拦截可避免绝大多数未注销 Token 回源 Redis；布隆过滤器存在
-     * 假阳性，命中后仍会回查 Redis 精确确认，因此不会误杀合法 Token。
      *
      * <p><b>降级策略：</b>Redis 不可用时按「放行」处理，优先保障可用性，
      * 已登出 Token 在此期间可能仍然有效，直至其自然过期。

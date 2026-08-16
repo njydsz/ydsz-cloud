@@ -8,7 +8,6 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 
 import com.njydsz.common.auth.config.AuthProperties;
-import com.njydsz.common.auth.security.TokenBlacklistBloomFilter;
 import com.njydsz.common.util.security.DigestUtils;
 
 import reactor.core.publisher.Mono;
@@ -22,14 +21,9 @@ import reactor.core.publisher.Mono;
  * <h3>与同步版本的区别</h3>
  * <ul>
  *   <li>Redis 操作使用 {@link ReactiveStringRedisTemplate}（非阻塞）</li>
- *   <li>Bloom Filter 前置过滤逻辑完全一致（内存操作，无需 reactive）</li>
  *   <li>key 前缀与同步版本一致：{@code auth:token:blacklist:} + SHA-256 摘要</li>
  *   <li>返回 {@code Mono<Boolean>} 适配 WebFlux 过滤器链</li>
  * </ul>
- *
- * <h3>Bloom Filter 优化</h3>
- * <p>当 Bloom Filter 返回 false 时，Token 一定不在黑名单中，直接返回 {@code Mono.just(false)}，
- * 避免 90%+ 的 Redis 查询。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -42,7 +36,6 @@ public class ReactiveTokenBlacklistService {
 
     private final ObjectProvider<ReactiveStringRedisTemplate> redisTemplateProvider;
     private final AuthProperties authProperties;
-    private final TokenBlacklistBloomFilter bloomFilter;
 
     /**
      * 构造 Reactive Token 黑名单服务
@@ -55,7 +48,6 @@ public class ReactiveTokenBlacklistService {
             AuthProperties authProperties) {
         this.redisTemplateProvider = redisTemplateProvider;
         this.authProperties = authProperties;
-        this.bloomFilter = new TokenBlacklistBloomFilter(1_000_000);
         log.info("[ReactiveTokenBlacklist] 初始化完成, blacklist.enabled={}",
                 authProperties.getBlacklist().isEnabled());
     }
@@ -66,8 +58,6 @@ public class ReactiveTokenBlacklistService {
      * <p>流程：
      * <ol>
      *   <li>如果黑名单功能未启用，直接返回 false</li>
-     *   <li>Bloom Filter 前置过滤：返回 false 时一定不在黑名单</li>
-     *   <li>Bloom Filter 返回 true 时查 Redis 确认（可能有误判）</li>
      *   <li>Redis 不可用时降级为放行（false），避免阻断流量</li>
      * </ol>
      *
@@ -82,12 +72,6 @@ public class ReactiveTokenBlacklistService {
             return Mono.just(false);
         }
 
-        // Bloom Filter 前置过滤
-        if (!bloomFilter.mightBeBlacklisted(token)) {
-            return Mono.just(false);
-        }
-
-        // Bloom Filter 可能命中，查 Redis 确认
         ReactiveStringRedisTemplate redisTemplate = redisTemplateProvider.getIfAvailable();
         if (redisTemplate == null) {
             log.warn("[ReactiveTokenBlacklist] Redis 未配置，降级为放行");
@@ -116,8 +100,6 @@ public class ReactiveTokenBlacklistService {
         if (token == null || token.isBlank()) {
             return Mono.empty();
         }
-
-        bloomFilter.addToBlacklist(token);
 
         ReactiveStringRedisTemplate redisTemplate = redisTemplateProvider.getIfAvailable();
         if (redisTemplate == null) {

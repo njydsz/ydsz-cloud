@@ -11,7 +11,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.common.auth.config.AuthProperties;
-import com.njydsz.common.auth.security.TokenBlacklistBloomFilter;
 import com.njydsz.common.lock.core.DistributedLocker;
 import com.njydsz.common.util.security.DigestUtils;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
@@ -33,7 +32,6 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * <ul>
  *   <li>使用 SHA-256 摘要后的 token 作为 Redis key，避免完整 JWT（500+ 字节）
  *       作为 key 浪费内存且可能超过 key 长度限制</li>
- *   <li>本地 Bloom Filter 前置过滤：99.99% 非黑名单 token 无需访问 Redis</li>
  * </ul>
  *
  * <p><b>激活条件：</b>当 {@link RedisStringOps} Bean 存在时自动激活，
@@ -43,7 +41,6 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * @since 1.0.0
  *
  * @see AuthProperties.Blacklist 黑名单配置
- * @see TokenBlacklistBloomFilter 本地 Bloom Filter
  */
 @Service
 @ConditionalOnBean(RedisStringOps.class)
@@ -64,12 +61,9 @@ public class TokenBlacklistService {
 
     private final RedisStringOps redisStringOps;
     private final AuthProperties authProperties;
-    private final TokenBlacklistBloomFilter bloomFilter;
 
     /**
      * 构造 Token 黑名单服务。
-     *
-     * <p>同时初始化 Bloom Filter，预期容量 100 万 token，约占 1.2 MB 内存。
      *
      * @param distributedLocker 分布式锁接口（可为 null，null 时降级为原生 setIfAbsent 操作）
      * @param redisStringOps    Redis 字符串操作服务
@@ -80,7 +74,6 @@ public class TokenBlacklistService {
         this.distributedLocker = distributedLocker;
         this.redisStringOps = redisStringOps;
         this.authProperties = authProperties;
-        this.bloomFilter = new TokenBlacklistBloomFilter(1_000_000);
     }
 
     /**
@@ -118,8 +111,6 @@ public class TokenBlacklistService {
         String key = buildBlacklistKey(token);
         long expire = authProperties.getBlacklist().getExpireSeconds();
         redisStringOps.set(key, "1", Duration.ofSeconds(expire));
-        // 同步加入 Bloom Filter，后续查询可前置过滤
-        bloomFilter.addToBlacklist(token);
         log.info("Token added to blacklist, expires in {}s", expire);
     }
 
@@ -141,10 +132,6 @@ public class TokenBlacklistService {
             return false;
         }
         if (token == null || token.isBlank()) {
-            return false;
-        }
-        // Bloom Filter 前置过滤：返回 false 时一定不在黑名单中，无需查 Redis
-        if (!bloomFilter.mightBeBlacklisted(token)) {
             return false;
         }
         String key = buildBlacklistKey(token);
