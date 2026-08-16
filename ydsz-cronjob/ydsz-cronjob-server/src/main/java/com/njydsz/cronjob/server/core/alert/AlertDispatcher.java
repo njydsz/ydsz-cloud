@@ -49,11 +49,10 @@ import lombok.extern.slf4j.Slf4j;
  *   <li><b>实时广播</b>：通过 NotificationClient Feign 广播告警到前端 WebSocket</li>
  * </ol>
  *
- * <p><b>P0-1-fix</b>：移除了原来发布 {@code UnifiedAlertEvent} 的逻辑。
- * 原实现既直接调用 {@code NotificationClient.sendMessage()} 发送告警消息，
- * 又发布 {@code UnifiedAlertEvent} 事件，而 {@code UnifiedAlertDispatcher} 消费该事件后
- * 会再次调用 {@code NotificationClient.sendMessage()}，导致同一告警被发送两次。
+ * <p><b>P0-1-fix</b>：原实现既直接调用 {@code NotificationClient.sendMessage()} 发送告警消息，
+ * 又通过 Spring 事件机制间接发送，导致同一告警被发送两次。
  * 现在改为直接调用 {@code NotificationClient.broadcast()} 实现实时广播，
+ * IM 补充通知委托 {@link NotifyHelper} 发送站内信，
  * 消息发送仅由本类执行一次。
  *
  * <p>使用 {@code @Async} 异步执行，避免阻塞任务执行主流程。
@@ -203,8 +202,7 @@ public class AlertDispatcher {
         log.info("[AlertDispatcher] 告警派发完成: ruleId={} ruleName={} channels={} failed={} status={} recovery={}",
                 rule.getId(), rule.getRuleName(), channels.size(), failedChannels.size(), status, recovery);
 
-        // P0-1-fix: 直接广播告警到前端（替代原来发布 UnifiedAlertEvent 导致的重复发送）
-        // 通知实时广播，由前端 WebSocket 推送给在线用户。
+        // 实时广播告警到前端，由前端 WebSocket 推送给在线用户。
         broadcastAlert(context, rule, recovery);
     }
 

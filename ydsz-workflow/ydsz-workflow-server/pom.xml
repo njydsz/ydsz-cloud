@@ -83,11 +83,7 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-search</artifactId>
         </dependency>
-        <!-- P0-2: 分布式事务（Seata AT 模式，跨服务事务场景启用） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-seata</artifactId>
-        </dependency>
+        <!-- P0-2: 分布式事务（ydsz-common-seata 依赖已移除，待 P1 验证场景落地后重新引入） -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-web</artifactId>

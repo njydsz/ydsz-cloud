@@ -551,7 +551,7 @@ public class JsonMapper {
             if (bytes.length == 0) {
                 return null;
             }
-            return fromJsonBytes(bytes, clazz);
+            return toObject(bytes, clazz);
         } catch (Exception e) {
             throw new JsonException("Failed to read from InputStream", e);
         }

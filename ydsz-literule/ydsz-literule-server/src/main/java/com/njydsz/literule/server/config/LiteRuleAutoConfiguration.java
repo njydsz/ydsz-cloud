@@ -1014,8 +1014,8 @@ public class LiteRuleAutoConfiguration {
      *
      * <p>当 {@code ydsz.literule.action.default-alert-enabled=true}（默认 true）时自动装配，
      * 将规则触发结果转换为 {@link DefaultAlertActionHandler.RuleTriggeredEvent} 并发布。
-     * 消费方可通过 {@code @EventListener} 监听此事件，转换为 {@code UnifiedAlertEvent}
-     * 由 common 模块的 {@code UnifiedAlertDispatcher} 统一发送通知。
+     * 消费方可通过 {@code @EventListener} 监听此事件，
+     * 委托 {@code NotifyHelper} 发送通知。
      *
      * @param eventPublisher Spring 事件发布器
      * @return DefaultAlertActionHandler 实例

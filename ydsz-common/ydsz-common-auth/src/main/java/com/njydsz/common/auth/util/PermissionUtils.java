@@ -7,7 +7,6 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.common.auth.hierarchy.PermissionHierarchy;
 import com.njydsz.common.util.string.StringUtils;
 
 /**
@@ -94,8 +93,8 @@ public final class PermissionUtils {
                 return true;
             }
         }
-        // 检查权限继承层级：拥有父权限自动拥有子权限
-        return PermissionHierarchy.hasPermission(granted, req, wildcardEnabled);
+        // 注意：权限继承层级检查已由调用方通过 PermissionHierarchyService 处理
+        return false;
     }
 
     /**

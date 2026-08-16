@@ -15,7 +15,8 @@ import com.njydsz.common.util.id.IdGenerator;
  *
  * <p>所有模块（project / cronjob / agent / workflow / literule）触发告警时，
  * 统一构造此事件并通过 Spring {@code ApplicationEventPublisher} 发布。
- * 由 {@code UnifiedAlertDispatcher} 统一消费并委托到 message 模块发送。
+ * 消费方通过 {@code @EventListener} 监听，
+ * 委托 {@code com.njydsz.common.notify.helper.NotifyHelper} 发送通知。
  *
  * <h3>设计原则</h3>
  * <ul>

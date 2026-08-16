@@ -135,6 +135,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-tenant</artifactId>
         </dependency>
+        <!-- P1-1: 配置变更监听桥接（ConfigChangeBridge 统一配置变更通知） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-config</artifactId>
+        </dependency>
         <!-- P2: JdbcHealthIndicator 自动注册（需要 actuator 在 classpath 上） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

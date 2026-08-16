@@ -51,7 +51,7 @@ public class SagaOrchestrator extends AbstractTransactionManager {
     private static final Logger log = LoggerFactory.getLogger(SagaOrchestrator.class);
 
     /** 步骤超时控制的共享调度线程池（单线程，按步骤提交延迟任务） */
-    // CHECKSTYLE.OFF: ThreadPoolCreate - SAGA 步骤超时控制专用短生命周期调度池，随服务关闭
+    // CHECKSTYLE.OFF: ThreadPoolCreate - SAGA 步骤超时控制专用短生命周期调度池，随 JVM 关闭
     private static final ScheduledExecutorService TIMEOUT_SCHEDULER =
             Executors.newSingleThreadScheduledExecutor(r -> {
                 Thread t = new Thread(r, "saga-step-timeout");
@@ -59,6 +59,15 @@ public class SagaOrchestrator extends AbstractTransactionManager {
                 return t;
             });
     // CHECKSTYLE.ON: ThreadPoolCreate
+
+    // 静态初始化块：注册 JVM 关闭钩子，确保线程池在应用退出时被关闭
+    static {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            if (TIMEOUT_SCHEDULER != null && !TIMEOUT_SCHEDULER.isShutdown()) {
+                TIMEOUT_SCHEDULER.shutdown();
+            }
+        }, "saga-step-timeout-shutdown"));
+    }
 
     private final SeataProperties properties;
     private final ObjectProvider<SagaStateMachineLogStore> stateMachineLogStoreProvider;

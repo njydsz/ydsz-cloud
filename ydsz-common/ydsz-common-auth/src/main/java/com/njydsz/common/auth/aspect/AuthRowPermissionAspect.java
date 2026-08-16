@@ -23,7 +23,7 @@ import org.springframework.http.HttpStatus;
 import com.njydsz.common.auth.annotation.AuthRowPermission;
 import com.njydsz.common.auth.model.DataScopeAware;
 import com.njydsz.common.auth.model.DataScopeInfo;
-import com.njydsz.common.auth.service.DataPermissionResolver;
+import com.njydsz.common.auth.service.impl.RedisRoleDataPermissionResolver;
 import com.njydsz.common.core.context.BizContextKeys;
 import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
 import com.njydsz.common.jdbc.permission.DataPermissionContext;
@@ -68,7 +68,7 @@ import com.njydsz.common.util.string.StringUtils;
  * @see AuthRowPermission
  * @see DataScopeInfo
  * @see DataScopeAware
- * @see DataPermissionResolver
+ * @see RedisRoleDataPermissionResolver
  */
 @Aspect
 @Order(11)
@@ -81,9 +81,9 @@ public class AuthRowPermissionAspect {
      */
     private final ConcurrentHashMap<Method, ResolvedRowPermission> annotationCache = new ConcurrentHashMap<>(256);
 
-    private final DataPermissionResolver resolver;
+    private final RedisRoleDataPermissionResolver resolver;
 
-    public AuthRowPermissionAspect(DataPermissionResolver resolver) {
+    public AuthRowPermissionAspect(RedisRoleDataPermissionResolver resolver) {
         this.resolver = resolver;
     }
 

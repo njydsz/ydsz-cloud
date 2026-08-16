@@ -15,7 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 
-import com.njydsz.common.auth.cache.LocalPermissionCache;
+import com.njydsz.common.auth.service.RolePermissionCacheService;
 import com.njydsz.common.auth.config.AuthProperties;
 import com.njydsz.common.auth.event.PermissionChangeNotifier;
 import com.njydsz.common.auth.hierarchy.PermissionHierarchyService;
@@ -65,7 +65,7 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
     private final AuthProperties properties;
     private final Cache<String, RolePermissions> cache;
     private final PermissionChangeNotifier notifier;
-    private final LocalPermissionCache<RolePermissions> localCache;
+    private final RolePermissionCacheService permissionCacheService;
     private final PermissionHierarchyService hierarchyService;
 
     /**
@@ -80,19 +80,19 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
 
     public RedisRolePermissionLoader(RedisStringOps redisStringOps, AuthProperties properties,
                                      PermissionChangeNotifier notifier,
-                                     LocalPermissionCache<RolePermissions> localCache) {
-        this(redisStringOps, properties, notifier, localCache, null);
+                                     RolePermissionCacheService permissionCacheService) {
+        this(redisStringOps, properties, notifier, permissionCacheService, null);
     }
 
     public RedisRolePermissionLoader(RedisStringOps redisStringOps, AuthProperties properties,
                                      PermissionChangeNotifier notifier,
-                                     LocalPermissionCache<RolePermissions> localCache,
+                                     RolePermissionCacheService permissionCacheService,
                                      PermissionHierarchyService hierarchyService) {
         this.redisStringOps = redisStringOps;
         this.properties = properties;
         this.cache = buildCache();
         this.notifier = notifier;
-        this.localCache = localCache;
+        this.permissionCacheService = permissionCacheService;
         this.hierarchyService = hierarchyService;
     }
 
@@ -142,7 +142,7 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
      *
      * <p>优先从本地缓存获取，缓存未命中时从 Redis 加载菜单/按钮/接口权限，
      * 加载成功后写入缓存并发布角色变更事件。
-     * <p>当 Redis 不可用时，自动降级到 LocalPermissionCache（如果已配置）。
+     * <p>当 Redis 不可用时，自动降级到 RolePermissionCacheService（如果已配置）。
      *
      * @param roleCode 角色编码
      * @return 角色权限集合，角色编码为空时返回空的 {@link RolePermissions}
@@ -158,10 +158,10 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
             return cached;
         }
 
-        // 如果 Redis 不可用，尝试从 LocalPermissionCache 降级获取
+        // 如果 Redis 不可用，尝试从 RolePermissionCacheService 降级获取
         if (!redisAvailable) {
-            if (localCache != null) {
-                RolePermissions localValue = localCache.get(role);
+            if (permissionCacheService != null) {
+                RolePermissions localValue = permissionCacheService.getCachedPermissions(role);
                 if (localValue != null) {
                     log.warn("【权限模块】Redis 不可用，从本地缓存获取角色权限: roleCode={}", roleCode);
                     return localValue;
@@ -191,9 +191,9 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
             registerPermissionHierarchy(buttonPerms);
             registerPermissionHierarchy(apiPerms);
 
-            // 同时写入 LocalPermissionCache，为后续 Redis 降级时提供兜底数据
-            if (localCache != null) {
-                localCache.put(role, loaded);
+            // 同时写入 RolePermissionCacheService，为后续 Redis 降级时提供兜底数据
+            if (permissionCacheService != null) {
+                permissionCacheService.cachePermissions(role, Set.of(role), loaded);
             }
 
             // 不在加载时发布变更事件，仅在权限数据实际变更时由业务代码调用 notifier
@@ -202,8 +202,8 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
             // Redis 异常时标记不可用，并降级到本地缓存
             log.error("【权限模块】Redis 加载权限异常，降级到本地缓存: roleCode={}, error={}", roleCode, e.getMessage(), e);
             redisAvailable = false;
-            if (localCache != null) {
-                RolePermissions localValue = localCache.get(role);
+            if (permissionCacheService != null) {
+                RolePermissions localValue = permissionCacheService.getCachedPermissions(role);
                 if (localValue != null) {
                     log.warn("【权限模块】降级成功，从本地缓存返回角色权限: roleCode={}", roleCode);
                     return localValue;
@@ -225,7 +225,7 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
      *   <li>对未缓存的角色，构建 menu-keys 和 api-keys 列表</li>
      *   <li>通过 Pipeline 一次性发送所有 GET 命令（1 次往返）</li>
      *   <li>解析每个角色的 JSON 数据，构建 RolePermissions</li>
-     *   <li>写入 Caffeine 缓存和 LocalPermissionCache</li>
+     *   <li>写入 Caffeine 缓存和 RolePermissionCacheService</li>
      * </ol>
      *
      * @param roleCodes 角色编码集合
@@ -315,8 +315,8 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
                         Collections.unmodifiableSet(apiPerms)
                 );
                 cache.put(role, loaded);
-                if (localCache != null) {
-                    localCache.put(role, loaded);
+                if (permissionCacheService != null) {
+                    permissionCacheService.cachePermissions(role, Set.of(role), loaded);
                 }
                 result.put(role, loaded);
             }

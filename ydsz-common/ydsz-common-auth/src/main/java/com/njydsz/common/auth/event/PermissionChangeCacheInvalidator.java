@@ -14,7 +14,7 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 
 import com.njydsz.common.auth.service.ColumnPermissionResolver;
-import com.njydsz.common.auth.service.DataPermissionResolver;
+import com.njydsz.common.auth.service.impl.RedisRoleDataPermissionResolver;
 import com.njydsz.common.auth.service.RolePermissionLoader;
 import com.njydsz.common.auth.service.impl.RedisRoleColumnPermissionResolver;
 import com.njydsz.common.auth.service.impl.RedisRoleDataPermissionResolver;
@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
  * <p><b>缓存失效策略：</b>
  * <ul>
  *   <li>ROLE_PERMISSION_CHANGED：清除 RolePermissionLoader 中的缓存</li>
- *   <li>ROLE_DATA_SCOPE_CHANGED：清除 DataPermissionResolver 中的缓存</li>
+ *   <li>ROLE_DATA_SCOPE_CHANGED：清除 RedisRoleDataPermissionResolver 中的缓存</li>
  *   <li>ROLE_COLUMN_PERMISSION_CHANGED：清除 ColumnPermissionResolver 中的缓存</li>
  *   <li>ROLE_DELETED：清除以上所有相关缓存</li>
  * </ul>
@@ -55,7 +55,7 @@ public class PermissionChangeCacheInvalidator {
     private static final String PERMISSION_CHANGE_CHANNEL = "ydsz-auth:permission:changed";
 
     private final RolePermissionLoader rolePermissionLoader;
-    private final DataPermissionResolver dataPermissionResolver;
+    private final RedisRoleDataPermissionResolver dataPermissionResolver;
     private final ColumnPermissionResolver columnPermissionResolver;
     private final RedisMessageListenerContainer redisMessageListenerContainer;
 

@@ -21,20 +21,16 @@ import org.springframework.scheduling.annotation.Scheduled;
 import com.njydsz.common.auth.aspect.AuthColPermissionAspect;
 import com.njydsz.common.auth.aspect.AuthPermissionAspect;
 import com.njydsz.common.auth.aspect.AuthRowPermissionAspect;
-import com.njydsz.common.auth.cache.LocalPermissionCache;
 import com.njydsz.common.auth.desensitize.ColumnDesensitizationService;
 import com.njydsz.common.auth.event.PermissionCacheInvalidationListener;
 import com.njydsz.common.auth.event.PermissionChangeCacheInvalidator;
 import com.njydsz.common.auth.event.PermissionChangeNotifier;
 import com.njydsz.common.auth.health.AuthHealthIndicator;
-import com.njydsz.common.auth.hierarchy.PermissionHierarchy;
 import com.njydsz.common.auth.hierarchy.PermissionHierarchyService;
 import com.njydsz.common.auth.listener.PermissionKeyspaceNotificationListener;
 import com.njydsz.common.auth.metrics.AuthMetricsCollector;
-import com.njydsz.common.auth.model.RolePermissions;
 import com.njydsz.common.auth.security.CsrfTokenValidator;
 import com.njydsz.common.auth.service.ColumnPermissionResolver;
-import com.njydsz.common.auth.service.DataPermissionResolver;
 import com.njydsz.common.auth.service.RbacPermissionEvaluator;
 import com.njydsz.common.auth.service.RbacUserInfoService;
 import com.njydsz.common.auth.service.RolePermissionCacheService;
@@ -58,14 +54,14 @@ import io.micrometer.core.instrument.MeterRegistry;
 /**
  * 认证授权模块配置类。
  *
- * <p>提供权限相关 Bean 的自动装配，支持 Redis 降级到本地缓存。
+ * <p>提供权限相关 Bean 的自动装配，支持 Redis 不可用时的降级策略。
  *
  * <p><b>核心功能：</b>
  * <ul>
  *   <li>权限评估器装配</li>
  *   <li>行级/列级权限解析器装配</li>
  *   <li>权限缓存失效监听器</li>
- *   <li>Redis 不可用时自动降级到本地缓存</li>
+ *   <li>Redis 不可用时自动降级处理</li>
  * </ul>
  *
  * @author ydsz-team
@@ -85,18 +81,13 @@ public class AuthConfiguration {
      */
     private static final long HEALTH_CHECK_INTERVAL_SECONDS = 60;
 
-    private final LocalPermissionCache<Object> localCache;
-
     private final ObjectProvider<RedisTemplate<String, Object>> redisTemplateProvider;
     private final ObjectProvider<RbacPermissionEvaluator> evaluatorProvider;
 
     public AuthConfiguration(ObjectProvider<RedisTemplate<String, Object>> redisTemplateProvider,
-                             ObjectProvider<RbacPermissionEvaluator> evaluatorProvider,
-                             AuthProperties properties) {
+                             ObjectProvider<RbacPermissionEvaluator> evaluatorProvider) {
         this.redisTemplateProvider = redisTemplateProvider;
         this.evaluatorProvider = evaluatorProvider;
-        this.localCache = new LocalPermissionCache<>("auth-local-cache",
-                properties.getLocalPermissionCacheMinutes());
     }
 
     /**
@@ -137,10 +128,10 @@ public class AuthConfiguration {
     @ConditionalOnBean(RedisStringOps.class)
     public RolePermissionLoader rolePermissionLoader(RedisStringOps redisStringOps, AuthProperties properties,
                                                       PermissionChangeNotifier notifier,
+                                                      RolePermissionCacheService permissionCacheService,
                                                       ObjectProvider<PermissionHierarchyService> hierarchyServiceProvider) {
-        LocalPermissionCache<RolePermissions> typedLocalCache = (LocalPermissionCache<RolePermissions>) (LocalPermissionCache<?>) localCache;
         PermissionHierarchyService hierarchyService = hierarchyServiceProvider.getIfAvailable();
-        return new RedisRolePermissionLoader(redisStringOps, properties, notifier, typedLocalCache, hierarchyService);
+        return new RedisRolePermissionLoader(redisStringOps, properties, notifier, permissionCacheService, hierarchyService);
     }
 
     /**
@@ -229,7 +220,7 @@ public class AuthConfiguration {
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnBean(RedisStringOps.class)
-    public DataPermissionResolver dataPermissionResolver(
+    public RedisRoleDataPermissionResolver dataPermissionResolver(
             RedisStringOps redisStringOps,
             AuthProperties properties,
             RbacUserInfoService userInfoService
@@ -245,7 +236,7 @@ public class AuthConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    public AuthRowPermissionAspect authRowPermissionAspect(DataPermissionResolver resolver) {
+    public AuthRowPermissionAspect authRowPermissionAspect(RedisRoleDataPermissionResolver resolver) {
         return new AuthRowPermissionAspect(resolver);
     }
 
@@ -415,7 +406,7 @@ public class AuthConfiguration {
     @ConditionalOnBean(RedisMessageListenerContainer.class)
     public PermissionChangeCacheInvalidator permissionChangeCacheInvalidator(
             RolePermissionLoader rolePermissionLoader,
-            DataPermissionResolver dataPermissionResolver,
+            RedisRoleDataPermissionResolver dataPermissionResolver,
             ColumnPermissionResolver columnPermissionResolver,
             RedisMessageListenerContainer redisMessageListenerContainer) {
         return new PermissionChangeCacheInvalidator(rolePermissionLoader, dataPermissionResolver,
@@ -423,39 +414,16 @@ public class AuthConfiguration {
     }
 
     /**
-     * 获取本地缓存实例，供降级使用。
-     *
-     * @return 本地缓存实例
-     */
-    public LocalPermissionCache<Object> getLocalCache() {
-        return localCache;
-    }
-
-    /**
-     * 初始化静态 {@link PermissionHierarchy} 门面，将其指向 Spring Bean。
-     *
-     * <p>在所有 Bean 就绪后调用，确保静态门面委托到正确的服务实例。
-     *
-     * <p><b>注意：</b>静态门面已标记废弃（{@link PermissionHierarchy}），
-     * 新代码应直接注入 {@link PermissionHierarchyService}。
-     *
-     * @param hierarchyService 权限层级服务（自动注入）
-     */
-    @jakarta.annotation.PostConstruct
-    public void initPermissionHierarchyFacade(PermissionHierarchyService hierarchyService) {
-        PermissionHierarchy.setService(hierarchyService);
-    }
-
-    /**
      * 定时健康检查 Redis 连通性。
      *
-     * <p>每分钟检查一次 Redis 连通状态，Redis 不可用时自动降级到本地缓存，
+     * <p>每分钟检查一次 Redis 连通状态，Redis 不可用时自动降级，
      * 并通知 RbacPermissionEvaluator 切换降级策略（ALLOW/DENY）。
      */
     @Scheduled(fixedRateString = "${ydsz.auth.health-check-interval:60000}")
     public void checkRedisHealth() {
         boolean redisOk = true;
         RedisTemplate<String, Object> redisTemplate = redisTemplateProvider.getIfAvailable();
+        RbacPermissionEvaluator evaluator = evaluatorProvider.getIfAvailable();
         if (redisTemplate == null) {
             log.debug("Redis 服务未配置，使用本地缓存兜底");
             redisOk = false;
@@ -468,7 +436,7 @@ public class AuthConfiguration {
                 } else {
                     try (var connection = connectionFactory.getConnection()) {
                         connection.ping();
-                        if (!localCache.isRedisAvailable()) {
+                        if (evaluator != null && !evaluator.isRedisAvailable()) {
                             log.info("Redis 健康检查恢复，切换回 Redis 缓存");
                         }
                     }
@@ -479,10 +447,7 @@ public class AuthConfiguration {
             }
         }
 
-        localCache.setRedisAvailable(redisOk);
-
         // 通知权限评估器切换降级策略
-        RbacPermissionEvaluator evaluator = evaluatorProvider.getIfAvailable();
         if (evaluator != null) {
             evaluator.setRedisAvailable(redisOk);
         }

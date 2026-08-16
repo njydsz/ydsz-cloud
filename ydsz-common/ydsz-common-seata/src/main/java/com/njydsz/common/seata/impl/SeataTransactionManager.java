@@ -23,7 +23,8 @@ import org.apache.seata.tm.api.GlobalTransactionContext;
  *
  * <p>设计说明：本管理器作为 ydsz-common-seata 框架与 Seata 原生 API 之间的适配器，
  * 提供统一的 {@link com.njydsz.common.seata.api.DistributedTransactionManager} 接口。
- * 业务代码推荐直接使用 Seata 原生 {@code @GlobalTransactional} 注解以获得最佳体验。
+ * <b>业务代码必须通过 {@code DistributedTransactionManager} 统一接口使用</b>，
+ * 禁止直接 import {@code org.apache.seata.*} 原生 API（参见《云顶编码规范》分布式事务章节）。
  *
  * <p>职责：
  * <ul>

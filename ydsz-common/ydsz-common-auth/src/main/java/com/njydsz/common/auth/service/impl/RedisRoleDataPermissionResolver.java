@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.auth.config.AuthProperties;
 import com.njydsz.common.auth.model.DataScopeInfo;
-import com.njydsz.common.auth.service.DataPermissionResolver;
 import com.njydsz.common.auth.service.RbacUserInfoService;
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
@@ -55,11 +54,10 @@ import com.njydsz.common.util.string.StringUtils;
  * @author ydsz-team
  * @since 1.0.0
  *
- * @see DataPermissionResolver
  * @see DataScopeInfo
  * @see YdszCache
  */
-public class RedisRoleDataPermissionResolver implements DataPermissionResolver {
+public class RedisRoleDataPermissionResolver {
 
     private static final Logger log = LoggerFactory.getLogger(RedisRoleDataPermissionResolver.class);
 
@@ -99,7 +97,6 @@ public class RedisRoleDataPermissionResolver implements DataPermissionResolver {
      *
      * @return 数据权限范围信息，无权限时返回空的 {@link DataScopeInfo}
      */
-    @Override
     public DataScopeInfo resolve() {
         String token = userInfoService.loadCurrentToken();
         if (StringUtils.isBlank(token)) {

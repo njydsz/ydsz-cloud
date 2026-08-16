@@ -72,6 +72,12 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- P0-1: 统一配置加密工具（使用 ConfigCliTool 替代重复的 Jasypt 加密器创建逻辑） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-config</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aspectj</artifactId>

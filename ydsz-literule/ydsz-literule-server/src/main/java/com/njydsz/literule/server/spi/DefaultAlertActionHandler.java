@@ -53,7 +53,7 @@ public class DefaultAlertActionHandler implements RuleActionHandler {
      * 规则触发事件
      *
      * <p>消费方通过 {@code @EventListener(RuleTriggeredEvent.class)} 监听，
-     * 转换为 {@code UnifiedAlertEvent} 统一发送通知。
+     * 手动转换为通知请求后通过 {@code NotifyHelper} 发送告警。
      */
     @Data
     public static class RuleTriggeredEvent {

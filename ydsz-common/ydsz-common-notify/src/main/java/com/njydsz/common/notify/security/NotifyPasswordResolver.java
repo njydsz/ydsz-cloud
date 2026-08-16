@@ -1,12 +1,11 @@
 package com.njydsz.common.notify.security;
 
+import com.njydsz.common.config.cli.ConfigCliTool;
+import com.njydsz.common.notify.config.NotifyProperties;
 import org.jasypt.encryption.pbe.PooledPBEStringEncryptor;
-import org.jasypt.encryption.pbe.config.SimpleStringPBEConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
-
-import com.njydsz.common.notify.config.NotifyProperties;
 
 /**
  * 通知模块密码解析器（P0-1：敏感信息加密）
@@ -16,6 +15,9 @@ import com.njydsz.common.notify.config.NotifyProperties;
  * {@code JASYPT_ENCRYPTOR_PASSWORD} 获取。
  *
  * <p><b>安全建议：</b>生产环境通过环境变量或 KMS 注入 jasyptKey，不要硬编码在配置文件中。
+ *
+ * <p><b>P0-1 重构说明：</b>加密器创建统一委托给 {@link ConfigCliTool#createEncryptor(String)}，
+ * 消除与 ydsz-common-config 模块的重复 Jasypt 参数配置，确保 CLI 与运行时的加密行为一致。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -86,6 +88,10 @@ public class NotifyPasswordResolver {
     /**
      * 懒加载初始化 Jasypt 加密器
      *
+     * <p>统一委托给 {@link ConfigCliTool#createEncryptor(String)} 创建加密器，
+     * 算法参数（PBEWithHMACSHA512AndAES_256 / 迭代次数 1000 / 池大小 4）由 common-config 统一管理，
+     * 此处不再重复配置。
+     *
      * @return PooledPBEStringEncryptor 实例，未配置密钥时返回 null
      */
     private PooledPBEStringEncryptor getEncryptor() {
@@ -110,20 +116,10 @@ public class NotifyPasswordResolver {
                 initialized = true;
                 return null;
             }
-            PooledPBEStringEncryptor enc = new PooledPBEStringEncryptor();
-            SimpleStringPBEConfig config = new SimpleStringPBEConfig();
-            config.setPassword(key);
-            config.setAlgorithm("PBEWITHHMACSHA512ANDAES_256");
-            config.setKeyObtentionIterations("1000");
-            config.setPoolSize("4");
-            config.setProviderName("SunJCE");
-            config.setSaltGeneratorClassName("org.jasypt.salt.RandomSaltGenerator");
-            config.setIvGeneratorClassName("org.jasypt.iv.RandomIvGenerator");
-            config.setStringOutputType("base64");
-            enc.setConfig(config);
-            encryptor = enc;
+            // P0-1: 委托 ConfigCliTool 创建加密器，消除重复 Jasypt 参数配置
+            encryptor = ConfigCliTool.createEncryptor(key);
             initialized = true;
-            log.info("[NotifyPasswordResolver] Jasypt 加密器初始化完成");
+            log.info("[NotifyPasswordResolver] Jasypt 加密器初始化完成（委托 ConfigCliTool）");
             return encryptor;
         }
     }
