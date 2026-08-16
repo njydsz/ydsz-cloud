@@ -259,8 +259,8 @@ public class UserExcelServiceImpl implements UserExcelService {
    * 创建用户。
    *
    * @param importDTO 用户导入 DTO
-   * @param deptId    部门 ID
-   * @param leaderId  上级用户 ID
+   * @param deptId 部门 ID
+   * @param leaderId 上级用户 ID
    */
   private void createUser(UserImportDTO importDTO, String deptId, String leaderId) {
     UserAccountCreateDTO createDTO = new UserAccountCreateDTO();

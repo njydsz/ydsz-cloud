@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -183,28 +184,43 @@ public class UserAccountServiceImpl implements UserAccountService {
   private LambdaQueryWrapper<UserAccount> buildPageQueryWrapper(UserAccountPageQueryDTO query) {
     LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
 
-    if (query.getUsername() != null && !query.getUsername().isBlank()) {
-      wrapper.like(UserAccount::getUsername, query.getUsername());
-    }
-    if (query.getRealName() != null && !query.getRealName().isBlank()) {
-      wrapper.like(UserAccount::getRealName, query.getRealName());
-    }
-    if (query.getPhone() != null && !query.getPhone().isBlank()) {
-      wrapper.like(UserAccount::getPhone, query.getPhone());
-    }
-    if (query.getEmail() != null && !query.getEmail().isBlank()) {
-      wrapper.like(UserAccount::getEmail, query.getEmail());
-    }
-    if (query.getStatus() != null) {
-      wrapper.eq(UserAccount::getStatus, String.valueOf(query.getStatus()));
-    }
-    if (query.getUserType() != null && !query.getUserType().isBlank()) {
-      wrapper.eq(UserAccount::getUserType, query.getUserType());
-    }
-    if (query.getCompanyId() != null && !query.getCompanyId().isBlank()) {
-      wrapper.eq(UserAccount::getCompanyId, query.getCompanyId());
-    }
+    applyLikeIfPresent(wrapper, UserAccount::getUsername, query.getUsername());
+    applyLikeIfPresent(wrapper, UserAccount::getRealName, query.getRealName());
+    applyLikeIfPresent(wrapper, UserAccount::getPhone, query.getPhone());
+    applyLikeIfPresent(wrapper, UserAccount::getEmail, query.getEmail());
+    String statusStr = query.getStatus() == null ? null : String.valueOf(query.getStatus());
+    applyEqIfPresent(wrapper, UserAccount::getStatus, statusStr);
+    applyEqIfPresent(wrapper, UserAccount::getUserType, query.getUserType());
+    applyEqIfPresent(wrapper, UserAccount::getCompanyId, query.getCompanyId());
     return wrapper;
+  }
+
+  /**
+   * 当值非空非空白时，应用 LIKE 条件。
+   *
+   * @param wrapper QueryWrapper
+   * @param column 实体字段 getter 方法引用
+   * @param value 查询值（可为 null 或空白）
+   */
+  private void applyLikeIfPresent(
+      LambdaQueryWrapper<UserAccount> wrapper, Function<UserAccount, String> column, String value) {
+    if (value != null && !value.isBlank()) {
+      wrapper.like(column, value);
+    }
+  }
+
+  /**
+   * 当值非空非空白时，应用 EQ 条件。
+   *
+   * @param wrapper QueryWrapper
+   * @param column 实体字段 getter 方法引用
+   * @param value 查询值（可为 null 或空白）
+   */
+  private void applyEqIfPresent(
+      LambdaQueryWrapper<UserAccount> wrapper, Function<UserAccount, String> column, String value) {
+    if (value != null && !value.isBlank()) {
+      wrapper.eq(column, value);
+    }
   }
 
   /**

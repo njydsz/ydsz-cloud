@@ -161,7 +161,10 @@ public class AuthServiceImpl implements AuthService {
     // 更新登录状态 + 审计
     updateLoginSuccess(user, loginIp);
     loginHistoryService.recordLoginAttempt(
-        user.getId(), user.getUsername(), loginIp, "SUCCESS", null, userAgent);
+        new LoginAttemptContext(user.getId(), user.getUsername(), loginIp),
+        "SUCCESS",
+        null,
+        userAgent);
     userInfoMetrics.recordLoginSuccess();
     userInfoMetrics.stopTimer(sample);
     publishEvent(DomainEventTypes.USER_LOGIN, user.getId(), user);
@@ -172,16 +175,16 @@ public class AuthServiceImpl implements AuthService {
   /**
    * 检查 IP 是否被封禁。
    *
-   * @param loginIp    登录来源 IP
-   * @param username   登录用户名（用于审计）
-   * @param userAgent  用户代理
+   * @param loginIp 登录来源 IP
+   * @param username 登录用户名（用于审计）
+   * @param userAgent 用户代理
    * @throws BusinessException IP 被封禁时抛出
    */
   private void checkIpNotBlocked(String loginIp, String username, String userAgent) {
     if (loginIp != null && !loginIp.isBlank() && loginHistoryService.isIpBlocked(loginIp)) {
       log.warn("Login attempt from blocked IP: {}, username: {}", loginIp, username);
       loginHistoryService.recordLoginAttempt(
-          null, username, loginIp, "FAILED", "IP_BLOCKED", userAgent);
+          new LoginAttemptContext(null, username, loginIp), "FAILED", "IP_BLOCKED", userAgent);
       userInfoMetrics.recordLoginFail();
       throw new BusinessException(UserInfoExceptionCode.IP_BLOCKED);
     }
@@ -206,8 +209,8 @@ public class AuthServiceImpl implements AuthService {
   /**
    * 查询用户并校验账号状态与锁定状态。
    *
-   * @param username  登录用户名
-   * @param loginIp   登录来源 IP
+   * @param username 登录用户名
+   * @param loginIp 登录来源 IP
    * @param userAgent 用户代理
    * @return 有效的用户账号实体
    * @throws BusinessException 用户不存在、已禁用或已锁定时抛出
@@ -219,21 +222,27 @@ public class AuthServiceImpl implements AuthService {
 
     if (user == null) {
       loginHistoryService.recordLoginAttempt(
-          null, username, loginIp, "FAILED", "USER_NOT_FOUND", userAgent);
+          new LoginAttemptContext(null, username, loginIp), "FAILED", "USER_NOT_FOUND", userAgent);
       userInfoMetrics.recordLoginFail();
       throw new BusinessException(UserInfoExceptionCode.PASSWORD_INCORRECT);
     }
 
     if ("0".equals(user.getStatus())) {
       loginHistoryService.recordLoginAttempt(
-          user.getId(), username, loginIp, "FAILED", "USER_DISABLED", userAgent);
+          new LoginAttemptContext(user.getId(), username, loginIp),
+          "FAILED",
+          "USER_DISABLED",
+          userAgent);
       userInfoMetrics.recordLoginFail();
       throw new BusinessException(UserInfoExceptionCode.USER_DISABLED);
     }
 
     if (user.getLockedUntil() != null && user.getLockedUntil().isAfter(LocalDateTime.now())) {
       loginHistoryService.recordLoginAttempt(
-          user.getId(), username, loginIp, "FAILED", "ACCOUNT_LOCKED", userAgent);
+          new LoginAttemptContext(user.getId(), username, loginIp),
+          "FAILED",
+          "ACCOUNT_LOCKED",
+          userAgent);
       userInfoMetrics.recordLoginFail();
       throw new BusinessException(UserInfoExceptionCode.ACCOUNT_LOCKED);
     }
@@ -244,13 +253,14 @@ public class AuthServiceImpl implements AuthService {
   /**
    * 校验密码（本地 BCrypt 优先，失败后回退 LDAP）。
    *
-   * @param user      用户账号
-   * @param password  明文密码
-   * @param loginIp   登录来源 IP
+   * @param user 用户账号
+   * @param password 明文密码
+   * @param loginIp 登录来源 IP
    * @param userAgent 用户代理
    * @throws BusinessException 密码校验失败时抛出
    */
-  private void authenticatePassword(UserAccount user, String password, String loginIp, String userAgent) {
+  private void authenticatePassword(
+      UserAccount user, String password, String loginIp, String userAgent) {
     String username = user.getUsername();
     boolean passwordMatched = passwordEncoder.matches(password, user.getPassword());
     if (!passwordMatched) {
@@ -266,7 +276,10 @@ public class AuthServiceImpl implements AuthService {
     if (!passwordMatched) {
       recordLoginFailure(user);
       loginHistoryService.recordLoginAttempt(
-          user.getId(), username, loginIp, "FAILED", "PASSWORD_INCORRECT", userAgent);
+          new LoginAttemptContext(user.getId(), username, loginIp),
+          "FAILED",
+          "PASSWORD_INCORRECT",
+          userAgent);
       publishBruteForceEvent(loginIp, userAgent, username);
       userInfoMetrics.recordLoginFail();
       throw new BusinessException(UserInfoExceptionCode.PASSWORD_INCORRECT);
@@ -276,7 +289,7 @@ public class AuthServiceImpl implements AuthService {
   /**
    * 签发 Token 并写入 Redis 会话。
    *
-   * @param user  登录用户
+   * @param user 登录用户
    * @param roles 用户角色列表
    * @return 访问令牌
    */
@@ -300,9 +313,9 @@ public class AuthServiceImpl implements AuthService {
    * 写入 Redis 会话（会话 Hash + 会话索引）。
    *
    * @param accessToken 访问令牌
-   * @param user        用户账号
-   * @param roleCodes   角色编码（逗号分隔）
-   * @param roleNames   角色名称（逗号分隔）
+   * @param user 用户账号
+   * @param roleCodes 角色编码（逗号分隔）
+   * @param roleNames 角色名称（逗号分隔）
    */
   private void storeRedisSession(
       String accessToken, UserAccount user, String roleCodes, String roleNames) {
@@ -323,8 +336,8 @@ public class AuthServiceImpl implements AuthService {
   /**
    * 构建登录结果 VO。
    *
-   * @param user        登录用户
-   * @param roles       用户角色列表
+   * @param user 登录用户
+   * @param roles 用户角色列表
    * @param accessToken 访问令牌
    * @return 登录结果 VO
    */

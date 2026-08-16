@@ -1,8 +1,10 @@
 package com.njydsz.userinfo.server.auth;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -35,6 +37,9 @@ import com.njydsz.userinfo.infra.mapper.RolePermissionMapper;
 @Service
 @RequiredArgsConstructor
 public class DbRolePermissionLoader implements RolePermissionLoader {
+
+  /** 权限分类数（MENU / BUTTON / API 三类）。 */
+  private static final int PERMISSION_CATEGORY_COUNT = 3;
 
   private final MenuMapper menuMapper;
   private final RoleMapper roleMapper;
@@ -118,7 +123,7 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
         menuPerms.add(permCode);
       }
     }
-    Map<String, Set<String>> result = new HashMap<>(3);
+    Map<String, Set<String>> result = new HashMap<>(PERMISSION_CATEGORY_COUNT);
     result.put("MENU", menuPerms);
     result.put("BUTTON", buttonPerms);
     result.put("API", apiPerms);

@@ -12,6 +12,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.userinfo.domain.entity.UserLoginHistory;
 import com.njydsz.userinfo.infra.mapper.UserLoginHistoryMapper;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
+import com.njydsz.userinfo.server.service.LoginAttemptContext;
 import com.njydsz.userinfo.server.service.LoginHistoryService;
 
 /**
@@ -46,21 +47,7 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
 
   @Override
   public void recordLoginAttempt(
-      String userId,
-      String username,
-      String loginIp,
-      String result,
-      String failReason,
-      String userAgent) {
-    recordLoginAttempt(new LoginAttemptContext(userId, username, loginIp), result, failReason, userAgent);
-  }
-
-  @Override
-  public void recordLoginAttempt(
-      LoginAttemptContext context,
-      String result,
-      String failReason,
-      String userAgent) {
+      LoginAttemptContext context, String result, String failReason, String userAgent) {
     try {
       UserLoginHistory history = new UserLoginHistory();
       history.setId(String.valueOf(snowflakeIdGenerator.nextId()));
