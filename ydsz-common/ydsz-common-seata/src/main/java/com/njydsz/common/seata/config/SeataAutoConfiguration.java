@@ -108,7 +108,7 @@ public class SeataAutoConfiguration {
             SeataProperties properties) {
         RedisTemplate<String, Object> redisTemplate = redisTemplateProvider.getIfAvailable();
         if (redisTemplate == null) {
-            log.warn("ydsz.seata.tcc-log-store=redis but no RedisTemplate available, fallback to InMemory");
+            LOG.warn("ydsz.seata.tcc-log-store=redis but no RedisTemplate available, fallback to InMemory");
             return new InMemoryTccTransactionLogStore();
         }
         Duration retention = Duration.ofHours(Math.max(1, properties.getTccLogRedisRetentionHours()));

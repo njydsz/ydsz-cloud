@@ -55,6 +55,7 @@
         <okhttp3.version>4.12.0</okhttp3.version>
         <hibernate-validator.version>9.1.0.Final</hibernate-validator.version>
         <resilience4j.version>2.4.0</resilience4j.version>
+        <sentinel.version>1.8.8</sentinel.version>
         <error-prone-annotations.version>2.49.0</error-prone-annotations.version>
         <fastjson2.version>2.0.62</fastjson2.version>
         <asm.version>9.7.1</asm.version>
@@ -680,6 +681,13 @@
                 <groupId>io.jsonwebtoken</groupId>
                 <artifactId>jjwt-orgjson</artifactId>
                 <version>${jjwt.version}</version>
+            </dependency>
+
+            <!-- Sentinel flow control (optional, for advanced distributed rate limiting) -->
+            <dependency>
+                <groupId>com.alibaba.csp</groupId>
+                <artifactId>sentinel-core</artifactId>
+                <version>${sentinel.version}</version>
             </dependency>
 
             <!-- ArchUnit 架构测试（P3-2: 编译期 enforce 禁止反模式，archunit-junit5 聚合 junit5-api + engine） -->

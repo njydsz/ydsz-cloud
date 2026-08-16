@@ -14,6 +14,8 @@ import org.springframework.stereotype.Component;
 
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.safe.metrics.SafeMetrics;
+
 /**
  * 安全模块健康检查指示器
  *
@@ -21,8 +23,9 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p><b>检测逻辑：</b>
  * <ul>
- *   <li>Redis 连通性（限流/CSRF Token/验证码存储依赖 Redis）</li>
- *   <li>各安全能力注册状态（XSS/CSRF/限流/IP访问控制/API签名/自动封禁/脱敏）</li>
+ *   <li>Redis 连通性（限流/CSRF Token 存储依赖 Redis）</li>
+ *   <li>各安全能力注册状态（XSS/CSRF/限流/IP访问控制/API签名/脱敏）</li>
+ *   <li>安全指标累计值（通过 {@link SafeMetrics} 采集）</li>
  * </ul>
  *
  * @author ydsz-team
@@ -35,9 +38,12 @@ import lombok.extern.slf4j.Slf4j;
 public class SafeHealthIndicator implements HealthIndicator {
 
     private final ObjectProvider<RedisConnectionFactory> redisConnectionFactoryProvider;
+    private final ObjectProvider<SafeMetrics> safeMetricsProvider;
 
-    public SafeHealthIndicator(ObjectProvider<RedisConnectionFactory> redisConnectionFactoryProvider) {
+    public SafeHealthIndicator(ObjectProvider<RedisConnectionFactory> redisConnectionFactoryProvider,
+                               ObjectProvider<SafeMetrics> safeMetricsProvider) {
         this.redisConnectionFactoryProvider = redisConnectionFactoryProvider;
+        this.safeMetricsProvider = safeMetricsProvider;
     }
 
     @Override
@@ -79,6 +85,16 @@ public class SafeHealthIndicator implements HealthIndicator {
         capabilities.put("metrics", "Micrometer Counter/Timer (optional)");
         capabilities.put("auditLog", "structured JSON + traceId");
         details.put("capabilities", capabilities);
+
+        // 安全指标累计值（SLO 监控数据）
+        SafeMetrics safeMetrics = safeMetricsProvider.getIfAvailable();
+        if (safeMetrics != null) {
+            Map<String, Long> metrics = new LinkedHashMap<>();
+            metrics.put("xssAttacks", safeMetrics.getXssAttacksCount());
+            metrics.put("csrfFailures", safeMetrics.getCsrfFailuresCount());
+            metrics.put("rateLimitTriggered", safeMetrics.getRateLimitTriggeredCount());
+            details.put("metrics", metrics);
+        }
 
         // 如果 Redis 不可用但其他能力仍可降级运行，状态为 UP with warning
         String redisStatus = (String) details.get("redis");

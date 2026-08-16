@@ -101,6 +101,13 @@
             <artifactId>feign-core</artifactId>
             <optional>true</optional>
         </dependency>
+        <!-- RocketMQ client (optional, for MqXidPropagator implementation) -->
+        <dependency>
+            <groupId>org.apache.rocketmq</groupId>
+            <artifactId>rocketmq-client</artifactId>
+            <version>${rocketmq-client.version}</version>
+            <optional>true</optional>
+        </dependency>
         <!-- spring-data-redis (optional, for RedisTccTransactionLogStore) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

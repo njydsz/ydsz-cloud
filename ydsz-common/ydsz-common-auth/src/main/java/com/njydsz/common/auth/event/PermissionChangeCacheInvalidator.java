@@ -46,7 +46,7 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  *
  * @see PermissionChangedEvent
- * @see PermissionChangePublisher
+ * @see PermissionChangeNotifier
  */
 @Slf4j
 @RequiredArgsConstructor

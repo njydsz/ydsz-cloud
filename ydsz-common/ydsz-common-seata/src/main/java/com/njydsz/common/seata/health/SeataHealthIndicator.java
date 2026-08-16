@@ -112,7 +112,7 @@ public class SeataHealthIndicator implements HealthIndicator {
         }
         LocalDateTime threshold = LocalDateTime.now().minusNanos(
                 properties.getRecoveryTimeoutThresholdMs() * 1_000_000);
-        int pendingCount = logStore.countTimeoutPending(threshold);
+        long pendingCount = logStore.countTimeoutPending(threshold);
         builder.withDetail("tccPendingTransactions", pendingCount);
         builder.withDetail("tccRecoveryScanIntervalMs", properties.getRecoveryScanIntervalMs());
 

@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>{@code sourceNodeId} — 发送方节点唯一标识，接收方忽略自身发出的消息</li>
  * </ul>
  *
- * <p>参考实现：auth 模块 PermissionChangePublisher / PermissionChangeCacheInvalidator
+ * <p>参考实现：auth 模块 PermissionChangeNotifier / PermissionChangeCacheInvalidator
  *
  * @since 1.0.0
  * @author ydsz-team

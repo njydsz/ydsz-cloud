@@ -26,7 +26,6 @@ import com.njydsz.common.auth.desensitize.ColumnDesensitizationService;
 import com.njydsz.common.auth.event.PermissionCacheInvalidationListener;
 import com.njydsz.common.auth.event.PermissionChangeCacheInvalidator;
 import com.njydsz.common.auth.event.PermissionChangeNotifier;
-import com.njydsz.common.auth.event.PermissionChangePublisher;
 import com.njydsz.common.auth.health.AuthHealthIndicator;
 import com.njydsz.common.auth.hierarchy.PermissionHierarchy;
 import com.njydsz.common.auth.hierarchy.PermissionHierarchyService;
@@ -423,23 +422,6 @@ public class AuthConfiguration {
         return new AuthHealthIndicator(redisConnectionFactory);
     }
 
-    /**
-     * 创建权限变更事件发布器 Bean（支持 Redis Pub/Sub 跨节点通知）
-     *
-     * @param applicationEventPublisher Spring 事件发布器
-     * @param redisTemplate Redis 模板
-     * @return PermissionChangePublisher 实例
-     */
-    @Bean
-    @ConditionalOnMissingBean(PermissionChangePublisher.class)
-    @ConditionalOnBean(RedisTemplate.class)
-    public PermissionChangePublisher permissionChangePublisher(
-            ApplicationEventPublisher applicationEventPublisher,
-            RedisTemplate<String, Object> redisTemplate) {
-        return new PermissionChangePublisher(applicationEventPublisher, redisTemplate);
-    }
-
-    /**
      * 创建权限缓存失效监听器 Bean（监听 Redis Pub/Sub 和 Spring 事件）
      *
      * @param rolePermissionLoader 角色权限加载器
