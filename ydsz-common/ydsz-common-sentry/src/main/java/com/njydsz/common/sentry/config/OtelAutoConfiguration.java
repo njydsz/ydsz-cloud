@@ -25,6 +25,7 @@ import com.njydsz.common.sentry.tracing.otel.OtelExporterFactory;
 import com.njydsz.common.sentry.tracing.otel.OtelResources;
 import com.njydsz.common.sentry.tracing.otel.OtelSamplers;
 import com.njydsz.common.sentry.tracing.otel.OtelSdkBuilder;
+import com.njydsz.common.sentry.tracing.otel.OtelSdkInitializer;
 import com.njydsz.common.sentry.tracing.otel.TailSamplingSpanProcessor;
 import com.njydsz.common.sentry.tracing.otel.YdszOpenTelemetry;
 import com.njydsz.common.sentry.tracing.otel.YdszSpanEnrichmentProcessor;
@@ -112,6 +113,28 @@ public class OtelAutoConfiguration {
     @ConditionalOnMissingBean
     public Tracer ydszDefaultTracer(OpenTelemetry openTelemetry) {
         return openTelemetry.getTracer("ydsz");
+    }
+
+    /**
+     * 提供 {@link OpenTelemetrySdk} Spring Bean。
+     *
+     * <p>由 {@link OtelSdkInitializer} 在 {@code initMethod} 阶段构建完成。
+     * 业务模块可通过 {@code @Resource(name = "ydszOpenTelemetrySdk")} 注入使用。
+     *
+     * <p>v2.0.0 变更：不再注册为 GlobalOpenTelemetry，改为 Spring Bean 依赖注入传播，
+     * 避免与 opentelemetry-spring-boot-starter 等第三方配置冲突。
+     *
+     * @return OpenTelemetrySdk 实例
+     */
+    @Bean(name = "ydszOpenTelemetrySdk", initMethod = "build", destroyMethod = "close")
+    @ConditionalOnMissingBean(name = "ydszOpenTelemetrySdk")
+    public OtelSdkInitializer otelSdkBean(
+            SentryProperties sentryProperties,
+            ObjectProvider<SpanExporter> exporterProvider,
+            ObjectProvider<List<SpanProcessor>> customProcessorsProvider) {
+
+        log.info("[Sentry] OtelSdkInitializer Bean 初始化：tracing.otel.enabled=true");
+        return new OtelSdkInitializer(sentryProperties, exporterProvider, customProcessorsProvider);
     }
 
     /**

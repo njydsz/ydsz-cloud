@@ -1,10 +1,13 @@
 package com.njydsz.common.excel.exception;
 
+import com.njydsz.common.exception.enums.ExceptionCode;
+import com.njydsz.common.exception.registry.YdszExceptionCode;
+
 /**
  * Excel 模块异常码枚举
  *
- * <p>定义 Excel 读写过程中所有业务异常的错误码和国际化消息键。
- * L1 工具层模块自包含的异常码定义，不依赖 common-exception 全局注册表。</p>
+ * <p>实现 {@link ExceptionCode} 接口，桥接至全局异常体系。
+ * 定义 Excel 读写过程中所有业务异常的错误码和国际化消息键。</p>
  *
  * <h3>错误码命名规范</h3>
  * <ul>
@@ -14,12 +17,11 @@ package com.njydsz.common.excel.exception;
  *   <li>H04xxx - 配置异常</li>
  * </ul>
  *
- * <p>下游 L2+ 模块若需与全局异常体系对接，可通过 {@link ExcelException#toErrorCode()} 桥接。</p>
- *
  * @author ydsz-team
  * @since 1.0.0
  */
-public enum ExcelExceptionCode {
+@YdszExceptionCode(module = "excel", description = "Excel 处理模块")
+public enum ExcelExceptionCode implements ExceptionCode {
 
     // ==================== 读取异常 H01xxx ====================
     READ_FILE_NOT_FOUND("H01001", "excel.read.fileNotFound"),
@@ -53,7 +55,7 @@ public enum ExcelExceptionCode {
     CONFIG_INVALID_PARAMETER("H04001", "excel.config.invalidParameter"),
     CONFIG_BEAN_MAPPING("H04002", "excel.config.beanMapping");
 
-    /** 异常码 */
+    /** 错误码 */
     private final String code;
 
     /** 国际化消息键 */
@@ -65,10 +67,11 @@ public enum ExcelExceptionCode {
     }
 
     /**
-     * 获取异常码。
+     * 获取错误码字符串。
      *
-     * @return 异常码字符串
+     * @return 错误码
      */
+    @Override
     public String getCode() {
         return code;
     }
@@ -78,7 +81,43 @@ public enum ExcelExceptionCode {
      *
      * @return 国际化消息 key
      */
+    @Override
     public String getKey() {
         return key;
+    }
+
+    /**
+     * 获取模块标识。
+     *
+     * @return 模块名称
+     */
+    @Override
+    public String getModule() {
+        return "excel";
+    }
+
+    /**
+     * 获取默认兜底消息。
+     *
+     * @return 默认消息描述
+     */
+    @Override
+    public String getMsg() {
+        return key;
+    }
+
+    /**
+     * HTTP 状态码映射。
+     *
+     * <p>读取/写入/转换异常映射为 400，配置异常映射为 500。</p>
+     *
+     * @return HTTP 状态码
+     */
+    @Override
+    public int getHttpStatus() {
+        if (name().startsWith("CONFIG_")) {
+            return 500;
+        }
+        return 400;
     }
 }

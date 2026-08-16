@@ -10,9 +10,9 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <!-- L1 工具层模块标识：激活 purity 检查 -->
+    <!-- L2 基础设施层模块：桥接 common-exception 全局异常体系 -->
     <properties>
-        <l1.module.skip>false</l1.module.skip>
+        <l1.module.skip>true</l1.module.skip>
     </properties>
 
     <artifactId>ydsz-common-excel</artifactId>
@@ -21,7 +21,15 @@
 
     <dependencies>
         <!-- ==================== 内部模块 ==================== -->
-        <!-- 注：L1 工具层不依赖 common-exception，异常类自包含于本模块 -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-exception</artifactId>
+        </dependency>
+
 
         <!-- ==================== 第三方依赖 ==================== -->
         <!-- Apache POI -->

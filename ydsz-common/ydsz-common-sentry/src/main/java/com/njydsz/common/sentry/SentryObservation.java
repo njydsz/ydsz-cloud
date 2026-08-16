@@ -3,9 +3,12 @@ package com.njydsz.common.sentry;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.stereotype.Component;
 
 import com.njydsz.common.sentry.domain.AlertEvent;
 import com.njydsz.common.sentry.domain.SlaDefinition;
@@ -39,11 +42,18 @@ import com.njydsz.common.sentry.spi.TraceContext;
  * String traceId = SentryObservation.traceId();
  * }</pre>
  *
- * <p>本类采用懒加载设计：首次调用时通过 {@link ServiceLoaderFacade} 发现 Spring 容器中的 Bean 实例，
- * 之后直接引用；所有方法均为线程安全且对底层 SPI 不可用的场景做了降级（no-op）。
+ * <p>v2.0.0 变更：内部委托从自实现 Holder + ServiceLoaderFacade 改为 Spring 容器中的
+ * {@link SentryService} Bean，解决静态门面测试困难、生命周期模糊问题。
+ *
+ * <p>业务方可选择：
+ * <ul>
+ *   <li>继续使用 {@link SentryObservation} 静态方法：向后兼容</li>
+ *   <li>直接注入 {@link SentryService}：享受 DI 能力与 Mock 测试便利</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @see SentryService
  * @see MetricsCollector
  * @see TraceContext
  * @see LogPublisher
@@ -51,119 +61,41 @@ import com.njydsz.common.sentry.spi.TraceContext;
  * @see SlaCollector
  */
 @Slf4j
-public final class SentryObservation {
+@Component
+public class SentryObservation implements ApplicationContextAware {
 
-    /** 是否已完成初始化（register 已被调用） */
+    /** 是否已完成初始化（Spring 上下文已注入） */
     private static final AtomicBoolean INITIALIZED = new AtomicBoolean(false);
 
-    /**
-     * SPI 聚合持有者（懒加载）
-     */
-    private static final class Holder {
+    /** Spring 上下文（静态持有，用于静态方法委托） */
+    private static volatile ApplicationContext applicationContext;
 
-        static final SpiBundle INSTANCE = ServiceLoaderFacade.load();
-    }
-
-    /**
-     * SPI 聚合对象，持有所有可观测性组件引用
-     */
-    private static final class SpiBundle {
-
-        private final AtomicReference<MetricsCollector> metrics = new AtomicReference<>();
-        private final AtomicReference<TraceContext> trace = new AtomicReference<>();
-        private final AtomicReference<LogPublisher> logging = new AtomicReference<>();
-        private final AtomicReference<AlertPublisher> alerting = new AtomicReference<>();
-        private final AtomicReference<SlaCollector> sla = new AtomicReference<>();
-
-        void setMetrics(MetricsCollector collector) {
-            if (collector != null) {
-                metrics.set(collector);
-            }
-        }
-
-        void setTrace(TraceContext context) {
-            if (context != null) {
-                trace.set(context);
-            }
-        }
-
-        void setLogging(LogPublisher publisher) {
-            if (publisher != null) {
-                logging.set(publisher);
-            }
-        }
-
-        void setAlerting(AlertPublisher publisher) {
-            if (publisher != null) {
-                alerting.set(publisher);
-            }
-        }
-
-        void setSla(SlaCollector collector) {
-            if (collector != null) {
-                sla.set(collector);
-            }
-        }
-
-        MetricsCollector metrics() {
-            return metrics.get();
-        }
-
-        TraceContext trace() {
-            return trace.get();
-        }
-
-        LogPublisher logging() {
-            return logging.get();
-        }
-
-        AlertPublisher alerting() {
-            return alerting.get();
-        }
-
-        SlaCollector sla() {
-            return sla.get();
-        }
-    }
-
-    private SentryObservation() {
-        // 静态门面，禁止实例化
-    }
-
-    // ==================== 初始化 ====================
-
-    /**
-     * 注册 SPI 实现到门面。
-     *
-     * <p>由 {@link SentryAutoConfiguration} 内部调用，业务模块无需关心注册时机。
-     *
-     * @param metricsCollector 指标采集器
-     * @param traceContext     链路追踪上下文
-     * @param logPublisher     日志发布器
-     * @param alertPublisher   告警发布器
-     * @param slaCollector     SLA 采集器
-     */
-    public static void register(MetricsCollector metricsCollector,
-                                TraceContext traceContext,
-                                LogPublisher logPublisher,
-                                AlertPublisher alertPublisher,
-                                SlaCollector slaCollector) {
-        SpiBundle bundle = Holder.INSTANCE;
-        bundle.setMetrics(metricsCollector);
-        bundle.setTrace(traceContext);
-        bundle.setLogging(logPublisher);
-        bundle.setAlerting(alertPublisher);
-        bundle.setSla(slaCollector);
+    @Override
+    public void setApplicationContext(ApplicationContext ctx) throws BeansException {
+        applicationContext = ctx;
         INITIALIZED.set(true);
+        log.info("[Sentry] SentryObservation 静态门面已通过 Spring 上下文初始化");
+    }
+
+    /**
+     * 获取 {@link SentryService} Bean。
+     *
+     * @return SentryService 实例，Spring 上下文不可用时返回 {@code null}
+     */
+    private static SentryService getService() {
+        if (applicationContext == null) {
+            return null;
+        }
+        try {
+            return applicationContext.getBean(SentryService.class);
+        } catch (BeansException e) {
+            log.debug("[Sentry] SentryService Bean 未找到（Spring 上下文未装配 ydsz-common-sentry）");
+            return null;
+        }
     }
 
     /**
      * 检查门面是否已完成初始化，未初始化时输出告警日志。
-     *
-     * <p>SentryObservation 需由 {@code SelfMonitorAutoConfiguration} 在 {@code @PostConstruct}
-     * 中调用 {@link #register} 完成 SPI 注册。业务方在容器启动完成前（如静态初始化块、
-     * {@code @PostConstruct} 早于自监控配置时）调用本门面方法会走到 no-op 分支，
-     * 此处通过日志提醒开发者排查注册时序。
      *
      * @return {@code true} 表示已初始化
      */
@@ -172,8 +104,31 @@ public final class SentryObservation {
             return true;
         }
         log.warn("[Sentry] SentryObservation 未完成初始化，本次调用将 no-op。" +
-                "请检查 SelfMonitorAutoConfiguration 是否正确装配");
+                "请检查 Spring 上下文是否正确装配 ydzs-common-sentry 模块");
         return false;
+    }
+
+    // ==================== 兼容旧版 register 方法 ====================
+
+    /**
+     * 注册 SPI 实现到门面。
+     *
+     * <p><b>已废弃</b>：v2.0.0 起 SPI 通过 Spring 构造器注入 {@link SentryService} 管理，
+     * 本方法仅作向后兼容占位，不再执行任何操作。
+     *
+     * @param metricsCollector 指标采集器（忽略）
+     * @param traceContext     链路追踪上下文（忽略）
+     * @param logPublisher     日志发布器（忽略）
+     * @param alertPublisher   告警发布器（忽略）
+     * @param slaCollector     SLA 采集器（忽略）
+     */
+    @Deprecated
+    public static void register(MetricsCollector metricsCollector,
+                                TraceContext traceContext,
+                                LogPublisher logPublisher,
+                                AlertPublisher alertPublisher,
+                                SlaCollector slaCollector) {
+        // v2.0.0: SPI 由 SentryService 构造器注入管理，此方法仅作向后兼容
     }
 
     // ==================== Metrics ====================
@@ -186,9 +141,9 @@ public final class SentryObservation {
      * @param tags        标签（可为 {@code null}）
      */
     public static void count(String name, String description, Map<String, String> tags) {
-        MetricsCollector collector = Holder.INSTANCE.metrics();
-        if (collector != null) {
-            collector.incrementCounter(name, description, tags);
+        SentryService service = getService();
+        if (service != null) {
+            service.count(name, description, tags);
         } else {
             checkInitialized();
         }
@@ -203,9 +158,9 @@ public final class SentryObservation {
      * @param amount      递增量
      */
     public static void count(String name, String description, Map<String, String> tags, double amount) {
-        MetricsCollector collector = Holder.INSTANCE.metrics();
-        if (collector != null) {
-            collector.incrementCounter(name, description, tags, amount);
+        SentryService service = getService();
+        if (service != null) {
+            service.count(name, description, tags, amount);
         } else {
             checkInitialized();
         }
@@ -221,23 +176,18 @@ public final class SentryObservation {
      * @param description 指标描述
      * @param tags        标签（可为 {@code null}）
      * @param operation   要执行的操作
+     * @param <T>         返回值类型
      * @return 操作的返回值
      * @throws Exception 操作执行中的异常
      */
     public static <T> T time(String name, String description, Map<String, String> tags,
-                             CheckedSupplier<T> operation) throws Exception {
-        MetricsCollector collector = Holder.INSTANCE.metrics();
-        long start = System.currentTimeMillis();
-        try {
-            return operation.get();
-        } finally {
-            if (collector != null) {
-                long tookMillis = System.currentTimeMillis() - start;
-                collector.recordTimer(name, description, tags, Duration.ofMillis(tookMillis));
-            } else {
-                checkInitialized();
-            }
+                             SentryService.CheckedSupplier<T> operation) throws Exception {
+        SentryService service = getService();
+        if (service != null) {
+            return service.time(name, description, tags, operation);
         }
+        checkInitialized();
+        return operation.get();
     }
 
     /**
@@ -250,15 +200,12 @@ public final class SentryObservation {
      */
     public static void time(String name, String description, Map<String, String> tags,
                             Runnable operation) {
-        MetricsCollector collector = Holder.INSTANCE.metrics();
-        long start = System.currentTimeMillis();
-        try {
+        SentryService service = getService();
+        if (service != null) {
+            service.time(name, description, tags, operation);
+        } else {
+            checkInitialized();
             operation.run();
-        } finally {
-            if (collector != null) {
-                long tookMillis = System.currentTimeMillis() - start;
-                collector.recordTimer(name, description, tags, Duration.ofMillis(tookMillis));
-            }
         }
     }
 
@@ -271,9 +218,9 @@ public final class SentryObservation {
      * @param value       值
      */
     public static void gauge(String name, String description, Map<String, String> tags, double value) {
-        MetricsCollector collector = Holder.INSTANCE.metrics();
-        if (collector != null) {
-            collector.setGauge(name, description, tags, value);
+        SentryService service = getService();
+        if (service != null) {
+            service.gauge(name, description, tags, value);
         } else {
             checkInitialized();
         }
@@ -287,12 +234,8 @@ public final class SentryObservation {
      * @return 当前 TraceId，未在追踪链路中时返回 {@code null}
      */
     public static String traceId() {
-        TraceContext context = Holder.INSTANCE.trace();
-        if (context == null) {
-            checkInitialized();
-            return null;
-        }
-        return context.getTraceId();
+        SentryService service = getService();
+        return service != null ? service.traceId() : null;
     }
 
     /**
@@ -301,12 +244,8 @@ public final class SentryObservation {
      * @return 当前 SpanId，未在追踪链路中时返回 {@code null}
      */
     public static String spanId() {
-        TraceContext context = Holder.INSTANCE.trace();
-        if (context == null) {
-            checkInitialized();
-            return null;
-        }
-        return context.getSpanId();
+        SentryService service = getService();
+        return service != null ? service.spanId() : null;
     }
 
     /**
@@ -315,8 +254,8 @@ public final class SentryObservation {
      * @return {@code true} 表示在追踪链路中
      */
     public static boolean isTracing() {
-        TraceContext context = Holder.INSTANCE.trace();
-        return context != null && context.isTracing();
+        SentryService service = getService();
+        return service != null && service.isTracing();
     }
 
     /**
@@ -326,9 +265,9 @@ public final class SentryObservation {
      * @param value 标签值
      */
     public static void tag(String key, String value) {
-        TraceContext context = Holder.INSTANCE.trace();
-        if (context != null) {
-            context.tag(key, value);
+        SentryService service = getService();
+        if (service != null) {
+            service.tag(key, value);
         } else {
             checkInitialized();
         }
@@ -343,12 +282,8 @@ public final class SentryObservation {
      * @return 是否真正发布成功
      */
     public static boolean alert(AlertEvent event) {
-        AlertPublisher publisher = Holder.INSTANCE.alerting();
-        if (publisher == null) {
-            checkInitialized();
-            return false;
-        }
-        return publisher.publish(event);
+        SentryService service = getService();
+        return service != null && service.alert(event);
     }
 
     // ==================== SLA ====================
@@ -359,9 +294,9 @@ public final class SentryObservation {
      * @param definition SLA 定义
      */
     public static void registerSla(SlaDefinition definition) {
-        SlaCollector collector = Holder.INSTANCE.sla();
-        if (collector != null) {
-            collector.register(definition);
+        SentryService service = getService();
+        if (service != null) {
+            service.registerSla(definition);
         } else {
             checkInitialized();
         }
@@ -376,29 +311,11 @@ public final class SentryObservation {
      * @param success    是否成功
      */
     public static void recordSla(String name, String stepName, long tookMillis, boolean success) {
-        SlaCollector collector = Holder.INSTANCE.sla();
-        if (collector != null) {
-            collector.record(name, stepName, tookMillis, success);
+        SentryService service = getService();
+        if (service != null) {
+            service.recordSla(name, stepName, tookMillis, success);
         } else {
             checkInitialized();
         }
-    }
-
-    // ==================== Functional Interface ====================
-
-    /**
-     * 可抛异常的 Supplier。
-     *
-     * @param <T> 返回值类型
-     */
-    @FunctionalInterface
-    public interface CheckedSupplier<T> {
-        /**
-         * 获取结果。
-         *
-         * @return 结果
-         * @throws Exception 执行异常
-         */
-        T get() throws Exception;
     }
 }

@@ -3,8 +3,9 @@ package com.njydsz.common.excel.exception;
 /**
  * Excel 模块基础异常类
  *
- * <p>L1 工具层自包含异常，继承 RuntimeException，不依赖 common-exception 全局体系。
- * 支持错误码绑定、国际化消息键传播、上下文数据携带等能力。</p>
+ * <p>继承 RuntimeException，绑定 {@link ExcelExceptionCode} 异常码枚举。
+ * ExcelExceptionCode 已实现 {@link com.njydsz.common.exception.enums.ExceptionCode} 接口，
+ * 桥接至全局异常体系，支持错误码注册、i18n 解析、HTTP 状态码映射等能力。</p>
  *
  * <h3>异常层次</h3>
  * <ul>
@@ -24,8 +25,9 @@ package com.njydsz.common.excel.exception;
  * throw new ExcelException(ExcelExceptionCode.READ_CONVERSION_FAILED, "类型转换失败", e);
  * }</pre>
  *
- * <p>下游 L2+ 异常体系若需桥接，可通过 {@link ExcelException#getCode()} 获取错误码，
- * 转换为全局 ExceptionCode 类型。</p>
+ * <h3>全局异常体系桥接</h3>
+ * <p>通过 {@link #getExceptionCode()} 获取 {@link ExcelExceptionCode}，
+ * 该枚举已实现 {@code ExceptionCode} 接口，可直接用于全局异常处理器的响应封装。</p>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -120,6 +122,9 @@ public class ExcelException extends RuntimeException {
     /**
      * 获取异常码枚举。
      *
+     * <p>返回的 {@link ExcelExceptionCode} 已实现 {@code ExceptionCode} 接口，
+     * 可直接用于全局异常处理器的响应封装。</p>
+     *
      * @return ExcelExceptionCode 枚举值
      */
     public ExcelExceptionCode getExceptionCode() {
@@ -133,6 +138,17 @@ public class ExcelException extends RuntimeException {
      */
     public String getCode() {
         return exceptionCode != null ? exceptionCode.getCode() : null;
+    }
+
+    /**
+     * 获取全局 ExceptionCode 接口实例。
+     *
+     * <p>便于下游统一按 {@code ExceptionCode} 接口处理，无需关心具体枚举类型。</p>
+     *
+     * @return ExceptionCode 接口实例
+     */
+    public com.njydsz.common.exception.enums.ExceptionCode getExceptionCodeInterface() {
+        return exceptionCode;
     }
 
     /**

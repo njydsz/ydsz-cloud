@@ -193,18 +193,16 @@ public final class OtelSdkBuilder {
                 .setPropagators(ContextPropagators.create(combinedPropagator))
                 .build();
 
-        // 6) 注册为 Global（仅当未注册时）
+        // 6) 不再注册为 GlobalOpenTelemetry（避免与 opentelemetry-spring-boot-starter 等第三方配置冲突）
+        // SDK 由 OtelAutoConfiguration 作为 Spring Bean 管理，通过依赖注入传播
         try {
             OpenTelemetry existing = GlobalOpenTelemetry.get();
-            if (existing == null || existing == OpenTelemetry.noop()) {
-                GlobalOpenTelemetry.set(sdk);
-                log.info("[Sentry] OTel SDK 已注册到 GlobalOpenTelemetry，propagators={}",
-                        combinedPropagator.getClass().getSimpleName());
-            } else {
-                log.warn("[Sentry] GlobalOpenTelemetry 已被占用，YDSZ SDK 未注册为全局。请检查是否已存在其他 OTel 配置。");
+            if (existing != null && existing != OpenTelemetry.noop()) {
+                log.info("[Sentry] GlobalOpenTelemetry 已被占用（{}），YDSZ SDK 仅作为 Spring Bean 注册，不覆盖全局。",
+                        existing.getClass().getSimpleName());
             }
-        } catch (IllegalStateException e) {
-            log.warn("[Sentry] GlobalOpenTelemetry 注册失败：{}", e.getMessage());
+        } catch (Exception e) {
+            log.debug("[Sentry] GlobalOpenTelemetry 检测异常：{}", e.getMessage());
         }
 
         log.info("[Sentry] OTel SDK 构建完成：resource={}, sampler={}, processors={}, hasExporter={}",

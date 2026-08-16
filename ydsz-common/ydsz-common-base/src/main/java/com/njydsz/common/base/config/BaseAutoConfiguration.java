@@ -15,7 +15,6 @@ import com.njydsz.common.base.filter.RequestBodySizeLimitFilter;
 import com.njydsz.common.base.filter.RequestContextCleanupFilter;
 import com.njydsz.common.base.filter.SecurityHeadersFilter;
 import com.njydsz.common.base.filter.TraceFilter;
-import com.njydsz.common.base.health.BaseHealthIndicator;
 import com.njydsz.common.base.health.CoreHealthIndicator;
 
 import org.springframework.core.env.Environment;
@@ -34,6 +33,8 @@ import org.springframework.core.env.Environment;
  * <p>注意：BaseCorsProperties 和 BaseTraceProperties 为抽象基类，
  * 实际配置由 Web/App 子模块通过 {@code @ConfigurationProperties} 注解提供具体前缀。
  * 若业务方直接使用 base 模块，请继承这些基类并指定自己的前缀。
+ *
+ * <p>文档相关健康指标已迁移至 {@code ydsz-common-base-doc} 模块。
  *
  * <p>横切点执行顺序参考 {@code docs/BASE_INTERCEPTOR_ORDER.md}。
  *
@@ -128,26 +129,6 @@ public class BaseAutoConfiguration {
         registration.addUrlPatterns("/*");
         registration.setName("requestContextCleanupFilter");
         return registration;
-    }
-
-    /**
-     * Base 模块健康指标
-     *
-     * <p>报告时区、安全响应头、文档功能等基础配置的运行状态。
-     * 仅在 classpath 中存在 {@code HealthIndicator} 类时激活。
-     *
-     * @param securityHeadersProperties 安全响应头配置
-     * @param docProperties 文档配置
-     * @return BaseHealthIndicator 实例
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnClass(name = "org.springframework.boot.health.contributor.HealthIndicator")
-    public BaseHealthIndicator baseHealthIndicator(BaseSecurityHeadersProperties securityHeadersProperties,
-                                                    DocProperties docProperties,
-                                                    Environment environment) {
-        String timezone = environment.getProperty("ydsz.base.timezone", "Asia/Shanghai");
-        return new BaseHealthIndicator(securityHeadersProperties, docProperties, timezone);
     }
 
     /**

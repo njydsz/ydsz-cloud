@@ -2,7 +2,6 @@ package com.njydsz.common.sentry.config;
 
 import java.util.Map;
 
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -11,7 +10,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 
-import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.sentry.alerting.AlertConverger;
 import com.njydsz.common.sentry.logging.AsyncLogPublisher;
 import com.njydsz.common.sentry.spi.AlertPublisher;
@@ -92,17 +90,6 @@ public class SelfMonitorAutoConfiguration {
             this.traceContext = traceContext;
             this.slaCollector = slaCollector;
             log.info("[Sentry] SentrySelfMonitor 初始化完成");
-        }
-
-        /**
-         * Bean 初始化完成后将 SPI 实现注册到 SentryObservation 门面，
-         * 使业务方通过静态方法即可使用可观测性能力。
-         */
-        @PostConstruct
-        public void initFacade() {
-            SentryObservation.register(metricsCollector, traceContext, logPublisher,
-                    alertPublisher, slaCollector);
-            log.info("[Sentry] SentryObservation facade 初始化完成");
         }
 
         /**
