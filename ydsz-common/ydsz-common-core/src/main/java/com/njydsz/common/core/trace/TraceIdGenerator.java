@@ -74,6 +74,19 @@ public final class TraceIdGenerator {
     }
 
     /**
+     * 生成 32 位十六进制 TraceId。
+     *
+     * <p>默认使用可排序版本（{@link #generateSortableTraceId()}），
+     * 按时间有序，适合日志关联和链路追踪场景。</p>
+     *
+     * @return 32 位小写十六进制字符串
+     * @since 1.0.0
+     */
+    public static String generateTraceId() {
+        return generateSortableTraceId();
+    }
+
+    /**
      * 生成按时间有序（可排序）的 32 位十六进制 TraceId（UUIDv7 风格）。
      *
      * <p>布局（16 bytes / 32 hex）：</p>

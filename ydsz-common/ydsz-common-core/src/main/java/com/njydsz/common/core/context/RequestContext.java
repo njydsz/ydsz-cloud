@@ -82,6 +82,24 @@ public final class RequestContext {
     public static final String KEY_API_VERSION = "apiVersion";
 
     /**
+     * 上下文键名：认证信息（与 {@link BizContextKeys#KEY_AUTH_INFO} 值一致）。
+     *
+     * <p>业务 Filter（认证模块）写入当前认证信息，业务代码通过此常量引用 key，
+     * 并强制转型为业务模块定义的 AuthInfo 类型。</p>
+     * @since 1.10.0
+     */
+    public static final String KEY_AUTH_INFO = BizContextKeys.KEY_AUTH_INFO;
+
+    /**
+     * 上下文键名：租户上下文（与 {@link BizContextKeys#KEY_TENANT_CONTEXT} 值一致）。
+     *
+     * <p>业务 Filter（租户模块）写入租户上下文信息，业务代码通过此常量引用 key，
+     * 并强制转型为业务模块定义的 TenantContext 类型。</p>
+     * @since 1.10.0
+     */
+    public static final String KEY_TENANT_CONTEXT = BizContextKeys.KEY_TENANT_CONTEXT;
+
+    /**
      * 请求上下文存储（懒初始化）。
      *
      * <p>使用 {@link TransmittableThreadLocal} 支持线程池场景下的上下文传递。
@@ -432,6 +450,20 @@ public final class RequestContext {
     public static RequestSnapshot getRequestSnapshot() {
         Object obj = get(BizContextKeys.KEY_HTTP_REQUEST);
         return obj instanceof RequestSnapshot ? (RequestSnapshot) obj : null;
+    }
+
+    /**
+     * 获取 HTTP 请求对象（向后兼容方法）。
+     *
+     * <p>替代已废弃的直接持有原生 {@code HttpServletRequest} 的方式，
+     * 现在返回 {@link RequestSnapshot} 不可变快照。</p>
+     *
+     * @return 请求快照；不存在时返回 null
+     * @since 1.10.0
+     * @see #getRequestSnapshot()
+     */
+    public static RequestSnapshot getHttpRequest() {
+        return getRequestSnapshot();
     }
 
     /**

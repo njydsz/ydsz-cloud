@@ -315,6 +315,65 @@ public final class MapUtils {
         return BeanMapper.toBeanOrRecord(map, clazz);
     }
 
+    // ==================== 命名转换方法 ====================
+
+    /**
+     * 下划线命名（snake_case）转驼峰命名（camelCase）。
+     *
+     * <p>示例：{@code user_name} → {@code userName}，{@code order_item_id} → {@code orderItemId}。</p>
+     *
+     * @param snake 下划线命名字符串
+     * @return 驼峰命名字符串；入参为 null 时返回 null
+     * @since 1.10.0
+     */
+    public static String snakeToCamel(String snake) {
+        if (snake == null || snake.isEmpty()) {
+            return snake;
+        }
+        StringBuilder sb = new StringBuilder(snake.length());
+        boolean upperNext = false;
+        for (int i = 0; i < snake.length(); i++) {
+            char c = snake.charAt(i);
+            if (c == '_') {
+                upperNext = true;
+            } else if (upperNext) {
+                sb.append(Character.toUpperCase(c));
+                upperNext = false;
+            } else {
+                sb.append(Character.toLowerCase(c));
+            }
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 驼峰命名（camelCase）转下划线命名（snake_case）。
+     *
+     * <p>示例：{@code userName} → {@code user_name}，{@code orderItemId} → {@code order_item_id}。</p>
+     *
+     * @param camel 驼峰命名字符串
+     * @return 下划线命名字符串（小写）；入参为 null 时返回 null
+     * @since 1.10.0
+     */
+    public static String camelToSnake(String camel) {
+        if (camel == null || camel.isEmpty()) {
+            return camel;
+        }
+        StringBuilder sb = new StringBuilder(camel.length() + 4);
+        for (int i = 0; i < camel.length(); i++) {
+            char c = camel.charAt(i);
+            if (Character.isUpperCase(c)) {
+                if (i > 0) {
+                    sb.append('_');
+                }
+                sb.append(Character.toLowerCase(c));
+            } else {
+                sb.append(c);
+            }
+        }
+        return sb.toString();
+    }
+
     // ==================== 类型转换辅助方法 ====================
 
     /**
