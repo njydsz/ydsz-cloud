@@ -12,12 +12,26 @@ import lombok.Data;
  *
  * <p>用于配置 CSRF 防护的行为。
  *
+ * <h3>P0-2: JWT Bearer Token 架构下 CSRF 默认关闭</h3>
+ * <p>ydsz-cloud 采用 JWT Bearer Token 认证（{@code Authorization: Bearer <JWT>}），
+ * 前端不依赖 Cookie 进行身份认证，因此<b>不存在 CSRF 威胁</b>（攻击者无法通过跨域脚本
+ * 强制浏览器添加自定义 Authorization 头）。
+ *
+ * <p><b>仅以下场景需要启用 CSRF：</b>
+ * <ul>
+ *   <li>存在基于 Cookie/Session 认证的端点（如后台管理系统使用 JSESSIONID）</li>
+ *   <li>第三方回调接口需要校验请求来源 Origin</li>
+ * </ul>
+ *
+ * <p>如确需启用，前端需在每次非 GET 请求中携带 CSRF 令牌（通过 Header 或 Parameter）。
+ *
  * <p><b>配置示例：</b>
  * <pre>{@code
  * ydsz:
  *   safe:
  *     csrf:
- *       enabled: true
+ *       enabled: false  # 默认 false（JWT 架构无需 CSRF）
+ *       # enabled: true  # 仅 Cookie 认证场景启用
  *       token-header: X-CSRF-TOKEN
  *       token-parameter: _csrf
  *       expiration-seconds: 3600
@@ -42,9 +56,15 @@ public class CsrfProperties {
     /**
      * 是否启用 CSRF 防护
      *
-     * <p>默认值为 true。
+     * <p><b>默认值为 false</b>。
+     *
+     * <p>ydsz-cloud 采用 JWT Bearer Token 架构，不存在 CSRF 威胁，默认关闭。
+     * 仅当存在 Cookie/Session 认证端点时启用。
+     *
+     * <p>启用后，所有非 GET 请求需在 Header ({@code X-CSRF-TOKEN}) 或
+     * 参数 ({@code _csrf}) 中携带 CSRF 令牌。
      */
-    private boolean enabled = true;
+    private boolean enabled = false;
 
     /**
      * CSRF 防护模式

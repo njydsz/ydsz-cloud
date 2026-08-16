@@ -392,6 +392,9 @@ public class SafeConfiguration {
      *   <li>其他请求：验证 CSRF 令牌有效性</li>
      * </ul>
      *
+     * <p>P0-2: 默认关闭（ydsz-cloud 采用 JWT Bearer Token 架构，不存在 CSRF 威胁）。
+     * 仅当存在 Cookie/Session 认证端点时通过 {@code ydsz.safe.csrf.enabled=true} 启用。
+     *
      * @param properties      CSRF 配置属性
      * @param tokenRepository CSRF 令牌存储库
      * @param tokenGenerator  CSRF 令牌生成器
@@ -399,7 +402,7 @@ public class SafeConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean(name = "csrfFilterRegistration")
-    @ConditionalOnProperty(prefix = "ydsz.safe.csrf", name = "enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "ydsz.safe.csrf", name = "enabled", havingValue = "true")
     public FilterRegistrationBean<CsrfFilter> csrfFilterRegistration(CsrfProperties properties, CsrfTokenRepository tokenRepository, CsrfTokenGenerator tokenGenerator) {
         FilterRegistrationBean<CsrfFilter> registrationBean = new FilterRegistrationBean<>(new CsrfFilter(properties, tokenRepository));
         registrationBean.setName("csrfFilter");
