@@ -236,6 +236,19 @@ public class MicrometerMetricsCollector implements MetricsCollector {
     }
 
     /**
+     * 获取 Micrometer MeterRegistry。
+     *
+     * <p>仅供 SentryMetricsAdapter 等内部组件在需要注册 Gauge 回调时使用，
+     * 业务代码不应直接操作此 MeterRegistry。
+     *
+     * @return Micrometer MeterRegistry 实例
+     * @since 2.1.0
+     */
+    public MeterRegistry getMeterRegistry() {
+        return meterRegistry;
+    }
+
+    /**
      * 获取内存降级采集器。
      *
      * <p>可用于查询降级期间的指标数据，或手动触发降级采集。

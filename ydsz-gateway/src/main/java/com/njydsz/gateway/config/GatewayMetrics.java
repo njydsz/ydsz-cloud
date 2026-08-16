@@ -6,18 +6,16 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tags;
-import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
 import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 
 /**
  * 网关自定义 Prometheus 指标。
  *
- * <p>P0-2 架构优化：继承 {@link SentryMetricsAdapter}，统一指标前缀 {@code ydsz_gateway_}，
- * 消除手动 ConcurrentHashMap Counter/Timer 缓存（Micrometer 内部已缓存），
- * 修复 {@code recordJwtValidationDuration} 每次创建新 Timer 的性能问题。
+ * <p>继承 {@link SentryMetricsAdapter}，统一指标前缀 {@code ydsz_gateway_}，
+ * 消除手动 ConcurrentHashMap Counter/Timer 缓存（Micrometer 内部已缓存）。
  *
  * <h3>指标清单（Prometheus 指标名 = 前缀 + 名称）</h3>
  * <ul>
@@ -32,11 +30,15 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
  * 与 FlowMetrics({@code ydsz_flow_*})、CronjobMetrics({@code ydsz_cronjob_*}) 等保持一致。
  * Grafana 看板需同步更新指标名。
  *
+ * <p><b>v2.1.0 变更</b>：删除 MeterRegistry 构造参数，改为继承 SentryMetricsAdapter
+ * 通过 MetricsCollector SPI 注册指标，符合《云顶编码规范》第 27.2.1 节。
+ *
  * @since 1.0.0
  * @author ydsz-team
  */
 @Slf4j
 @Component
+@ConditionalOnClass(MeterRegistry.class)
 public class GatewayMetrics extends SentryMetricsAdapter {
 
     /** 按 routeId 维护的熔断器状态引用（AtomicInteger 可变，Gauge 回调能读到最新值） */
@@ -48,25 +50,21 @@ public class GatewayMetrics extends SentryMetricsAdapter {
     /**
      * 构造网关指标组件。
      *
-     * <p>委托基类 {@link SentryMetricsAdapter} 以 {@code ydsz_gateway_} 为前缀注册 Micrometer 指标，
-     * 由 Micrometer 内部缓存 Timer / Counter 实例，避免每次调用重复创建。
-     *
-     * @param meterRegistry Micrometer 指标注册中心
+     * <p>委托基类 {@link SentryMetricsAdapter} 以 {@code ydsz_gateway_} 为前缀注册指标。
      */
-    public GatewayMetrics(MeterRegistry meterRegistry) {
-        super(meterRegistry, "ydsz_gateway_");
+    public GatewayMetrics() {
+        super("ydsz_gateway_");
         log.info("[GatewayMetrics] 自定义 Prometheus 指标初始化完成");
     }
 
     /**
-     * 记录请求延迟（使用基类 timer() 方法，Micrometer 内部缓存 Timer 实例）。
+     * 记录请求延迟（使用基类 timer() 方法）。
      */
     public void recordRequestDuration(String routeId, String method, int status, long durationMs) {
-        timer("request_duration_seconds",
+        recordTimer("request_duration_seconds", durationMs,
                 "route", safe(routeId),
                 "method", safe(method),
-                "status", String.valueOf(status))
-                .record(Duration.ofMillis(durationMs));
+                "status", String.valueOf(status));
     }
 
     /**
@@ -117,23 +115,18 @@ public class GatewayMetrics extends SentryMetricsAdapter {
     /**
      * 记录 JWT 校验耗时。
      *
-     * <p>P0-2 修复：原实现每次调用 {@code Timer.builder().register()} 创建新 Timer，
-     * 现委托基类 {@link #timer(String, String...)} 方法，Micrometer 内部缓存保证 Timer 复用。
-     *
      * @param durationMs 耗时（毫秒）
      * @param cached     是否命中缓存
      */
     public void recordJwtValidationDuration(long durationMs, boolean cached) {
-        timer("jwt_validation_duration_seconds", "cached", String.valueOf(cached))
-                .record(Duration.ofMillis(durationMs));
+        recordTimer("jwt_validation_duration_seconds", durationMs,
+                "cached", String.valueOf(cached));
     }
 
     /**
      * 设置熔断器状态。
      *
-     * <p>P0-2 修复：原实现每次传入 int 原始值（autobox 为不可变 Integer），
-     * Gauge 无法反映后续状态变更。现使用 {@link AtomicInteger} 可变引用，
-     * Gauge 回调时通过 {@code get()} 读取最新状态值。
+     * <p>使用 AtomicInteger 可变引用，Gauge 回调时通过 {@code get()} 读取最新状态值。
      *
      * @param routeId 路由 ID
      * @param state   状态（0=closed, 1=open, 2=half-open）
@@ -141,9 +134,8 @@ public class GatewayMetrics extends SentryMetricsAdapter {
     public void setCircuitBreakerState(String routeId, int state) {
         AtomicInteger ref = breakerStates.computeIfAbsent(routeId, k -> {
             AtomicInteger holder = new AtomicInteger(state);
-            registry.gauge(prefix + "circuit_breaker_state",
-                    Tags.of("route", safe(k)),
-                    holder, AtomicInteger::doubleValue);
+            // 通过 Adapter 提供的 gaugeRef 注册 Gauge
+            gaugeRef("circuit_breaker_state", holder, AtomicInteger::doubleValue, "route", safe(k));
             return holder;
         });
         ref.set(state);
@@ -154,7 +146,7 @@ public class GatewayMetrics extends SentryMetricsAdapter {
      *
      * <p>指标名：
      * <ul>
-     *   <li>{@code ydsz_gateway_jwt_cache_hit_total} — 缓存命中次数</li>
+     *   <li>{@code ydsz_gateway_jwt_cache_hit_rate} — 缓存命中次数</li>
      *   <li>{@code ydsz_gateway_jwt_cache_miss_total} — 缓存未命中次数</li>
      * </ul>
      * 命中率 = hit / (hit + miss)，Grafana 可通过 {@code rate()} 计算实时命中率。

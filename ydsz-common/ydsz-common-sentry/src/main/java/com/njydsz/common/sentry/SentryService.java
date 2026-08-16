@@ -158,6 +158,18 @@ public class SentryService {
         }
     }
 
+    /**
+     * 获取当前 MetricsCollector 实例。
+     *
+     * <p>供 SentryMetricsAdapter 等内部组件使用，使业务模块无需直接注入 MeterRegistry。
+     *
+     * @return MetricsCollector 实例，可能为 null
+     * @since 2.1.0
+     */
+    public MetricsCollector getMetricsCollector() {
+        return metricsCollector;
+    }
+
     // ==================== Tracing ====================
 
     /**

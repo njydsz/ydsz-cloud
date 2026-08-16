@@ -100,13 +100,7 @@ public class JsonAutoConfiguration {
                 case "LOWER_CAMEL_CASE" -> PropertyNamingStrategy.LOWER_CAMEL_CASE;
                 case "UPPER_CAMEL_CASE" -> PropertyNamingStrategy.UPPER_CAMEL_CASE;
                 case "LOWER_CASE" -> PropertyNamingStrategy.LOWER_CASE;
-                default -> {
-                    // 兼容旧文档中已删除的命名策略常量
-                    if ("LOWER_UNDERSCORE".equals(source.trim().toUpperCase())) {
-                        yield PropertyNamingStrategy.SNAKE_CASE;
-                    }
-                    yield PropertyNamingStrategy.LOWER_CAMEL_CASE;
-                }
+                default -> PropertyNamingStrategy.LOWER_CAMEL_CASE;
             };
         };
     }

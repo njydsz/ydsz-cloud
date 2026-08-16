@@ -2,7 +2,6 @@ package com.njydsz.common.json.provider;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
@@ -55,7 +54,6 @@ import com.njydsz.common.json.util.BoundedLruCache;
  * @author ydsz-team
  * @since 1.0.0
  */
-@SuppressWarnings("deprecation")
 public final class DeserializationProvider {
 
     private DeserializationProvider() {
@@ -184,20 +182,6 @@ public final class DeserializationProvider {
         new BoundedLruCache<>(1024);
 
     /**
-     * 自定义反序列化器 deserialize 方法缓存（Class -> Method）。
-     *
-     * <p>由于 {@code JsonDeserializer<?>} 的 {@code deserialize(String, Class<?>)} 方法
-     * 无法直接以 {@code Class<T>} 参数调用（泛型类型参数 ? 未知），
-     * 使用 {@link Method#invoke(Object, Object...)} 进行反射调用，
-     * 避免 unchecked cast。{@code Method.invoke} 返回 {@code Object}，
-     * 调用方通过 {@code clazz.cast()} 执行 checked cast。</p>
-     *
-     * <p>有界 LRU（容量 1024），防止无界增长。</p>
-     */
-    private static final BoundedLruCache<Class<?>, Method> DESERIALIZE_METHOD_CACHE =
-        new BoundedLruCache<>(1024);
-
-    /**
      * 检查类是否有 @JsonDeserialize 注解并获取自定义反序列化器。
      *
      * @param clazz 要检查的类
@@ -230,10 +214,10 @@ public final class DeserializationProvider {
     }
 
     /**
-     * 通过反射调用自定义反序列化器的 deserialize 方法。
+     * 通过 {@link JSONReader} 流式调用自定义反序列化器。
      *
-     * <p>使用 {@link Method#invoke(Object, Object...)} 避免泛型 unchecked cast。
-     * {@code Method.invoke} 返回 {@code Object}，调用方通过 {@code Class.cast()} 执行 checked cast。</p>
+     * <p>自定义反序列化器统一实现 {@link JsonDeserializer}，
+     * 直接写入 {@link JSONReader}，零拷贝、避免中间 String 分配。
      *
      * @param deserializer 自定义反序列化器实例
      * @param json JSON 字符串
@@ -241,34 +225,8 @@ public final class DeserializationProvider {
      * @return 反序列化后的对象
      */
     private static Object invokeCustomDeserializer(Object deserializer, String json, Class<?> type) {
-        // 新版接口（deserializer.JsonDeserializer）：直接使用 JSONReader 流式解析，零拷贝
-        if (deserializer instanceof com.njydsz.common.json.deserializer.JsonDeserializer) {
-            JSONReader reader = new JSONReader(json);
-            return ((com.njydsz.common.json.deserializer.JsonDeserializer<Object>) deserializer)
-                .deserialize(reader);
-        }
-        // 旧版接口（api.JsonDeserializer，deprecated）：接收完整 JSON 字符串
-        Method method = DESERIALIZE_METHOD_CACHE.computeIfAbsent(deserializer.getClass(), cls -> {
-            try {
-                Method m = cls.getMethod("deserialize", String.class, Class.class);
-                m.setAccessible(true);
-                return m;
-            } catch (NoSuchMethodException e) {
-                throw new JsonDeserializationException(
-                    "deserialize method not found on " + cls.getName()
-                        + " (neither new deserializer.JsonDeserializer nor old api.JsonDeserializer)",
-                    e
-                );
-            }
-        });
-        try {
-            return method.invoke(deserializer, json, type);
-        } catch (Exception e) {
-            throw new JsonDeserializationException(
-                "Custom deserializer failed: " + deserializer.getClass().getName(),
-                e
-            );
-        }
+        JSONReader reader = new JSONReader(json);
+        return ((JsonDeserializer<Object>) deserializer).deserialize(reader);
     }
 
     /**

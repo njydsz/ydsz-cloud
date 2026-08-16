@@ -32,6 +32,12 @@ public class AgentProperties {
     /** MCP 配置 */
     private Mcp mcp = new Mcp();
 
+    /** Text2SQL 配置 */
+    private Text2Sql text2sql = new Text2Sql();
+
+    /** LLM 语义缓存配置 */
+    private Cache cache = new Cache();
+
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
     public String getDefaultSystemPrompt() { return defaultSystemPrompt; }
@@ -44,6 +50,10 @@ public class AgentProperties {
     public void setRag(Rag rag) { this.rag = rag; }
     public Mcp getMcp() { return mcp; }
     public void setMcp(Mcp mcp) { this.mcp = mcp; }
+    public Text2Sql getText2sql() { return text2sql; }
+    public void setText2sql(Text2Sql text2sql) { this.text2sql = text2sql; }
+    public Cache getCache() { return cache; }
+    public void setCache(Cache cache) { this.cache = cache; }
 
     /**
      * LLM 相关配置组（默认 Provider、模型、密钥、价格等）。
@@ -192,6 +202,41 @@ public class AgentProperties {
         public void setEnabled(boolean enabled) { this.enabled = enabled; }
         public List<ServerInfo> getServers() { return servers; }
         public void setServers(List<ServerInfo> servers) { this.servers = servers; }
+    }
+
+    /**
+     * LLM 语义缓存配置组
+     *
+     * <p>基于 Redis 缓存 LLM 响应，对 deterministic (temperature=0) 请求生效。
+     */
+    public static class Cache {
+        /** 是否启用语义缓存 */
+        private boolean enabled = false;
+        /** 缓存 TTL（分钟） */
+        private int ttlMinutes = 60;
+        /** 最大缓存条目数 */
+        private int maxSize = 500;
+
+        public boolean isEnabled() { return enabled; }
+        public void setEnabled(boolean enabled) { this.enabled = enabled; }
+        public int getTtlMinutes() { return ttlMinutes; }
+        public void setTtlMinutes(int ttlMinutes) { this.ttlMinutes = ttlMinutes; }
+        public int getMaxSize() { return maxSize; }
+        public void setMaxSize(int maxSize) { this.maxSize = maxSize; }
+    }
+
+    /**
+     * Text2SQL 自然语言查询配置组
+     *
+     * <p>将用户的自然语言查询转换为 SQL 并执行，返回结构化数据。
+     * 包含多重安全护栏（仅 SELECT、SQL 注入检测、结果行数限制）。
+     */
+    public static class Text2Sql {
+        /** 是否启用 Text2SQL */
+        private boolean enabled = false;
+
+        public boolean isEnabled() { return enabled; }
+        public void setEnabled(boolean enabled) { this.enabled = enabled; }
     }
 
     /**

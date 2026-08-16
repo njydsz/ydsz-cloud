@@ -27,8 +27,10 @@ import com.njydsz.agent.domain.tool.ToolRegistry;
 import com.njydsz.agent.domain.trace.TraceRecorder;
 import com.njydsz.agent.infra.guardrail.PiiMaskingGuardrail;
 import com.njydsz.agent.infra.guardrail.PromptInjectionGuardrail;
+import com.njydsz.agent.infra.llm.CachedLlmClient;
 import com.njydsz.agent.infra.llm.LlmClientRouter;
 import com.njydsz.agent.infra.llm.OpenAiCompatibleClient;
+import com.njydsz.agent.infra.llm.SemanticLlmCache;
 import com.njydsz.agent.infra.memory.RedisConversationMemory;
 import com.njydsz.agent.infra.rag.HybridRetriever;
 import com.njydsz.agent.infra.rag.IdentityReranker;
@@ -39,11 +41,15 @@ import com.njydsz.agent.infra.rag.SimpleTextChunker;
 import com.njydsz.agent.infra.tool.DefaultToolRegistry;
 import com.njydsz.agent.infra.tool.McpToolAdapter;
 import com.njydsz.agent.infra.tool.SseMcpClientProvider;
+import com.njydsz.agent.infra.tool.Text2SqlTool;
 import com.njydsz.agent.infra.tool.ToolAnnotationScanner;
 import com.njydsz.agent.infra.mapper.PromptTemplateMapper;
 import com.njydsz.agent.infra.mapper.PromptVersionMapper;
 import com.njydsz.agent.infra.mapper.TokenUsageRecordMapper;
+import com.njydsz.agent.infra.mapper.AgentTraceMapper;
+import com.njydsz.agent.infra.mapper.AgentTraceStepMapper;
 import com.njydsz.agent.infra.trace.InMemoryTraceRecorder;
+import com.njydsz.agent.infra.trace.PgTraceRecorder;
 import com.njydsz.agent.server.agent.AgentFactory;
 import com.njydsz.agent.server.agent.DagOrchestrationExecutor;
 import com.njydsz.agent.server.analytics.CostAnalysisService;
@@ -109,7 +115,8 @@ public class AgentAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean(LlmClient.class)
-    public LlmClient llmClient(AgentProperties properties) {
+    public LlmClient llmClient(AgentProperties properties,
+                                ObjectProvider<org.springframework.data.redis.core.StringRedisTemplate> redisTemplateProvider) {
         LlmClientRouter router = new LlmClientRouter();
         AgentProperties.Llm llmConfig = properties.getLlm();
 
@@ -136,6 +143,22 @@ public class AgentAutoConfiguration {
                         llmConfig.getTimeoutSeconds());
                 router.register(client);
             }
+        }
+
+        // 启用语义缓存时包装路由器
+        if (properties.getCache().isEnabled()) {
+            org.springframework.data.redis.core.StringRedisTemplate redisTemplate =
+                    redisTemplateProvider.getIfAvailable();
+            if (redisTemplate != null) {
+                SemanticLlmCache cache = new SemanticLlmCache(
+                        redisTemplate,
+                        java.time.Duration.ofMinutes(properties.getCache().getTtlMinutes()),
+                        properties.getCache().getMaxSize());
+                log.info("[Agent] LLM 语义缓存已启用, ttl={}min, maxSize={}",
+                        properties.getCache().getTtlMinutes(), properties.getCache().getMaxSize());
+                return new CachedLlmClient(router, cache);
+            }
+            log.warn("[Agent] 语义缓存配置为开启但 RedisTemplate 不可用，跳过缓存");
         }
         return router;
     }
@@ -197,15 +220,25 @@ public class AgentAutoConfiguration {
     /**
      * 装配执行链路记录器，用于回放 Agent 的思考-行动步骤。
      *
-     * <p>默认使用内存实现（容量 1000 条、TTL 24 小时，超限按最旧淘汰），
-     * 仅适合开发调试与短周期排障；<b>重启即丢失、且多实例数据不互通</b>，
-     * 生产环境若需长期留存应覆盖为数据库或 APM 实现。
+     * <p>优先使用数据库实现（{@link PgTraceRecorder}），将链路数据持久化到
+     * {@code ydsz_agent_trace} 与 {@code ydsz_agent_trace_step} 表中，
+     * 支持跨重启保留、多实例共享与长期审计。
      *
-     * @return 链路记录器；仅在容器中不存在其他 {@link TraceRecorder} 时生效
+     * <p>仅在 JDBC 数据源不可用或 Mapper 未装配时降级为内存实现。
+     *
+     * @param traceMapper     链路主表 Mapper
+     * @param traceStepMapper 链路步骤表 Mapper
+     * @return 链路记录器
      */
     @Bean
     @ConditionalOnMissingBean(TraceRecorder.class)
-    public TraceRecorder traceRecorder() {
+    public TraceRecorder traceRecorder(AgentTraceMapper traceMapper,
+                                       AgentTraceStepMapper traceStepMapper) {
+        if (traceMapper != null && traceStepMapper != null) {
+            log.info("[Agent] 使用数据库链路记录器 PgTraceRecorder");
+            return new PgTraceRecorder(traceMapper, traceStepMapper);
+        }
+        log.info("[Agent] 降级使用内存链路记录器 InMemoryTraceRecorder");
         return new InMemoryTraceRecorder();
     }
 
@@ -422,6 +455,30 @@ public class AgentAutoConfiguration {
                 call -> adapter.executeTool(toolDef.getName(), call.getArguments())));
         log.info("[Agent] MCP 工具注册完成, serverCount={}", properties.getMcp().getServers().size());
         return adapter;
+    }
+
+    /**
+     * 装配 Text2SQL 工具，将自然语言转换为 SQL 查询并执行。
+     *
+     * <p>仅当 {@code ydsz.agent.text2sql.enabled=true} 时生效。
+     * 注册为名为 {@code text2sql_query} 的工具，LLM 可通过 Function Calling 调用。
+     *
+     * @param properties   Agent 配置，提供 Text2SQL 开关
+     * @param toolRegistry 目标工具注册中心
+     * @param jdbcTemplate JDBC 模板，用于执行查询
+     * @param llmClient    LLM 客户端，用于生成 SQL
+     * @return Text2SQL 工具 Bean
+     */
+    @Bean
+    @ConditionalOnProperty(prefix = "ydsz.agent.text2sql", name = "enabled", havingValue = "true")
+    public Text2SqlTool text2sqlTool(AgentProperties properties, ToolRegistry toolRegistry,
+                                     JdbcTemplate jdbcTemplate, LlmClient llmClient) {
+        Text2SqlTool tool = new Text2SqlTool(jdbcTemplate, llmClient, properties.getLlm().getDefaultModel());
+        toolRegistry.register(
+                "text2sql_query",
+                call -> tool.execute(call.getArguments()));
+        log.info("[Agent] Text2SQL 工具已注册: text2sql_query");
+        return tool;
     }
 
     /**

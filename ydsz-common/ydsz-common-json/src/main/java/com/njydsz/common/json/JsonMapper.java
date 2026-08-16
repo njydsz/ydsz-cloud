@@ -132,20 +132,6 @@ public class JsonMapper {
     }
 
     /**
-     * 通知 Mapper 配置已变更（兼容保留，当前实现为 no-op）。
-     *
-     * <p>历史上此方法用于重置 {@code configApplied} 优化标志。该优化因在共享 Mapper
-     * 场景下跨线程误共享 ThreadLocal 状态而被移除——现在每次序列化都会通过
-     * {@link ThreadLocalSnapshot} 显式保存/恢复配置，保证
-     * 多线程共享同一 {@code JsonMapper} 实例时配置正确隔离。</p>
-     *
-     * @since 1.0.0
-     */
-    public void configChanged() {
-        // no-op：每次序列化都会重新 apply 配置，无需显式通知
-    }
-
-    /**
      * 创建配置副本（独立实例，修改不影响原 Mapper）。
      *
      * <p>新的 Mapper 实例共享相同的运行时配置（不可变，安全共享），
@@ -1171,15 +1157,12 @@ public class JsonMapper {
          * 构建最终的 {@link JsonMapper} 实例。
          *
          * <p>将 Builder 上累积的全部配置项转换为 {@link JsonConfig}，
-         * 构造 {@code JsonMapper} 并触发 {@code configChanged()} 使新配置生效
-         * （例如清空 Bean 序列化缓存、刷新命名策略映射等）。</p>
+         * 构造 {@code JsonMapper} 实例。</p>
          *
          * @return 已应用全部构建配置的 JsonMapper 实例
          */
         public JsonMapper build() {
-            JsonMapper mapper = new JsonMapper(configBuilder.build());
-            mapper.configChanged();
-            return mapper;
+            return new JsonMapper(configBuilder.build());
         }
     }
 

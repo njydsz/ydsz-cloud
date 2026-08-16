@@ -6,9 +6,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tags;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 import com.njydsz.workflow.domain.entity.FlowInstance;
 import com.njydsz.workflow.domain.entity.FlowRunTask;
@@ -31,10 +31,14 @@ import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
  * <p>Bean 名称 = {@code flowMetrics}，由 Spring 容器管理。Mappers 通过 {@code @Autowired(required=false)}
  * 注入，避免监控指标对核心数据源造成循环依赖。
  *
+ * <p><b>v2.1.0 变更</b>：删除 MeterRegistry 构造参数，改为继承 SentryMetricsAdapter
+ * 通过 MetricsCollector SPI 注册指标，符合《云顶编码规范》第 27.2.1 节。
+ *
  * @since 1.0.0
  * @author ydsz-team
  */
 @Slf4j
+@ConditionalOnClass(MeterRegistry.class)
 public class FlowMetrics extends SentryMetricsAdapter {
 
     // ============================== Gauge 弱引用 mapper（避免循环依赖） ==============================
@@ -59,11 +63,10 @@ public class FlowMetrics extends SentryMetricsAdapter {
     private record GaugeSnapshot(long runningInstances, long pendingTasks,
                                  long overdueTasks, long unreadCc, long cachedAtNanos) {}
 
-    public FlowMetrics(MeterRegistry registry,
-                       ObjectProvider<FlowInstanceMapper> instanceMapperProvider,
+    public FlowMetrics(ObjectProvider<FlowInstanceMapper> instanceMapperProvider,
                        ObjectProvider<FlowRunTaskMapper> taskMapperProvider,
                        ObjectProvider<FlowCcMapper> ccMapperProvider) {
-        super(registry, "ydsz_flow_");
+        super("ydsz_flow_");
         this.instanceMapper = instanceMapperProvider.getIfAvailable();
         this.taskMapper = taskMapperProvider.getIfAvailable();
         this.ccMapper = ccMapperProvider.getIfAvailable();
@@ -405,18 +408,34 @@ public class FlowMetrics extends SentryMetricsAdapter {
     // Gauge：实时业务量
     // ===========================================
 
+    /** Gauge 值引用（用于动态更新） */
+    private final AtomicReference<Double> runningInstancesRef = new AtomicReference<>(0.0);
+    private final AtomicReference<Double> pendingTasksRef = new AtomicReference<>(0.0);
+    private final AtomicReference<Double> overdueTasksRef = new AtomicReference<>(0.0);
+    private final AtomicReference<Double> unreadCcRef = new AtomicReference<>(0.0);
+
     private void registerGauges() {
-        // 运行中实例数
-        registry.gauge("ydsz_flow_instance_running", Tags.empty(), this, m -> m.getGaugeSnapshot().runningInstances());
-
+        // 运行中实例数 — 使用 gaugeRef 注册可变引用
+        gaugeRef("instance_running", runningInstancesRef, AtomicReference::get);
         // 待办任务数
-        registry.gauge("ydsz_flow_task_pending", Tags.empty(), this, m -> m.getGaugeSnapshot().pendingTasks());
-
+        gaugeRef("task_pending", pendingTasksRef, AtomicReference::get);
         // 超期任务数
-        registry.gauge("ydsz_flow_task_overdue", Tags.empty(), this, m -> m.getGaugeSnapshot().overdueTasks());
-
+        gaugeRef("task_overdue", overdueTasksRef, AtomicReference::get);
         // 抄送未读数
-        registry.gauge("ydsz_flow_cc_unread", Tags.empty(), this, m -> m.getGaugeSnapshot().unreadCc());
+        gaugeRef("cc_unread", unreadCcRef, AtomicReference::get);
+    }
+
+    /**
+     * 刷新 Gauge 值（由定时任务调用）。
+     *
+     * <p>查询 DB 获取最新指标值并更新到 AtomicReference，Prometheus 抓取时自动读取。
+     */
+    public void refreshGauges() {
+        GaugeSnapshot snapshot = getGaugeSnapshot();
+        runningInstancesRef.set((double) snapshot.runningInstances());
+        pendingTasksRef.set((double) snapshot.pendingTasks());
+        overdueTasksRef.set((double) snapshot.overdueTasks());
+        unreadCcRef.set((double) snapshot.unreadCc());
     }
 
     /**

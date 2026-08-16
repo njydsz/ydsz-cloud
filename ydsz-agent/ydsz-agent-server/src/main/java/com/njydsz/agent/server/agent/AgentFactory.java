@@ -125,6 +125,11 @@ public class AgentFactory {
             return new RouterAgentExecutor(llmClient, properties, this,
                     traceRecorder, agentMetrics);
         }
+        if ("SUPERVISOR".equalsIgnoreCase(type)) {
+            return new SupervisorAgentExecutor(llmClient, memory, properties,
+                    inputGuardrails, outputGuardrails,
+                    traceRecorder, agentMetrics, costAnalysisService, guardrailService, this);
+        }
         log.warn("[Agent-Factory] 未知 Agent 类型: {}，回退到 ReAct", type);
         return new ReActAgentExecutor(llmClient, memory, toolRegistry, properties,
                 inputGuardrails, outputGuardrails,

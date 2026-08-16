@@ -1,7 +1,6 @@
 package com.njydsz.system.server.config;
 
 import java.io.IOException;
-import java.util.List;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -61,7 +60,6 @@ import com.njydsz.common.safe.util.ClientIpResolver;
 public class InternalApiIpFilter {
 
     private final IpAccessService ipAccessService;
-    private final SystemProperties properties;
 
     /**
      * 注册 IP 白名单过滤器
@@ -91,8 +89,7 @@ public class InternalApiIpFilter {
      *
      * <p><b>流程：</b>
      * <ol>
-     *   <li>读取旧版白名单配置（兼容期），若配置了旧版白名单则使用精确匹配降级逻辑</li>
-     *   <li>未配置旧版白名单时，委托 {@link IpAccessService#isAllowed(String)} 执行校验</li>
+     *   <li>委托 {@link IpAccessService#isAllowed(String)} 执行校验</li>
      *   <li>校验不通过则返回 403</li>
      *   <li>通过则继续 Filter 链</li>
      * </ol>
@@ -105,26 +102,13 @@ public class InternalApiIpFilter {
      */
     private void doFilter(HttpServletRequest request, HttpServletResponse response,
             FilterChain chain) throws IOException, ServletException {
-        // 兼容期：如果旧版白名单配置了精确 IP，使用降级匹配（平滑迁移）
-        List<String> legacyWhitelist = properties.getInternalApiIpWhitelist();
         String clientIp = ClientIpResolver.getClientIp(request);
-
-        if (legacyWhitelist != null && !legacyWhitelist.isEmpty()) {
-            // 旧版精确匹配逻辑（迁移兼容期保留，建议尽快升级到 IpAccessService）
-            if (!legacyWhitelist.contains(clientIp)) {
-                log.warn("Internal API access denied for IP: {} (legacy whitelist)", clientIp);
-                response.sendError(HttpServletResponse.SC_FORBIDDEN,
-                        "Access denied: IP not in whitelist");
-                return;
-            }
-        } else {
-            // P0-3: 委托 common-safe IpAccessService（支持 CIDR + Redis 动态白名单）
-            if (!ipAccessService.isAllowed(clientIp)) {
-                log.warn("Internal API access denied for IP: {} (IpAccessService)", clientIp);
-                response.sendError(HttpServletResponse.SC_FORBIDDEN,
-                        "Access denied: IP not in whitelist");
-                return;
-            }
+        // 委托 common-safe IpAccessService（支持 CIDR + Redis 动态白名单）
+        if (!ipAccessService.isAllowed(clientIp)) {
+            log.warn("Internal API access denied for IP: {} (IpAccessService)", clientIp);
+            response.sendError(HttpServletResponse.SC_FORBIDDEN,
+                    "Access denied: IP not in whitelist");
+            return;
         }
         chain.doFilter(request, response);
     }

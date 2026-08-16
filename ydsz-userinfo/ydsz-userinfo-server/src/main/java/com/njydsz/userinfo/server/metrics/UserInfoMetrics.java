@@ -11,11 +11,8 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 /**
  * Userinfo module Micrometer metrics.
  *
- * <p>P0-2 架构优化：继承 {@link SentryMetricsAdapter}，统一指标前缀 {@code ydsz_userinfo_}，
+ * <p>继承 {@link SentryMetricsAdapter}，统一指标前缀 {@code ydsz_userinfo_}，
  * 消除手动 Counter/Timer/Gauge 创建样板代码。
- *
- * <p>Exposes login counters (with result tag), auth duration timer, and online session gauge.
- * Integrated into AuthServiceImpl login chain.
  *
  * <p>Metric naming follows Micrometer convention (dots converted to underscores by Prometheus):
  * <ul>
@@ -28,6 +25,9 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  * <p>使用 Redis 原子计数器 {@code userinfo:session:total} 维护全局活跃会话总数，支持多实例
  * 部署场景下的准确统计。登录成功时 INCR，登出/驱逐时 DECR。Gauge 读取该计数器值，
  * 消除单节点 {@code AtomicLong} 无法跨实例聚合的问题。
+ *
+ * <p><b>v2.1.0 变更</b>：删除 MeterRegistry 构造参数，改为继承 SentryMetricsAdapter
+ * 通过 MetricsCollector SPI 注册指标，符合《云顶编码规范》第 27.2.1 节。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -42,10 +42,10 @@ public class UserInfoMetrics extends SentryMetricsAdapter {
 
     private final RedisStringOps redisStringOps;
 
-    public UserInfoMetrics(MeterRegistry meterRegistry, RedisStringOps redisStringOps) {
-        super(meterRegistry, "ydsz_userinfo_");
+    public UserInfoMetrics(RedisStringOps redisStringOps) {
+        super("ydsz_userinfo_");
         this.redisStringOps = redisStringOps;
-        gauge("online_sessions", this::getOnlineSessionsFromRedis);
+        log.info("[UserInfoMetrics] Micrometer 指标初始化完成");
     }
 
     /**
@@ -117,7 +117,7 @@ public class UserInfoMetrics extends SentryMetricsAdapter {
      * @return 认证耗时采样句柄（非 null），须交由 {@link #stopTimer} 关闭
      */
     public Timer.Sample startTimer() {
-        return Timer.start(registry);
+        return Timer.start();
     }
 
     /**
@@ -131,5 +131,14 @@ public class UserInfoMetrics extends SentryMetricsAdapter {
      */
     public void stopTimer(Timer.Sample sample) {
         sample.stop(timer("auth_duration_ms"));
+    }
+
+    /**
+     * 更新在线会话数 Gauge。
+     *
+     * <p>由定时任务或登录/登出事件触发，将当前在线会话数更新到 Prometheus Gauge。
+     */
+    public void updateOnlineSessionsGauge() {
+        gauge("online_sessions", getOnlineSessionsFromRedis());
     }
 }

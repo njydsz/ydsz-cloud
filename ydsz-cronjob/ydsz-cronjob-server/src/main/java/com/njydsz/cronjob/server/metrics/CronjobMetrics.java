@@ -2,11 +2,12 @@ package com.njydsz.cronjob.server.metrics;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tags;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
 import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 import com.njydsz.cronjob.domain.entity.log.JobLog;
@@ -47,6 +48,7 @@ import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
  */
 @Slf4j
 @Component("cronjobMetrics")
+@ConditionalOnClass(MeterRegistry.class)
 public class CronjobMetrics extends SentryMetricsAdapter {
 
     /** 上次查询运行中任务数的缓存值（30s TTL，避免高频 Gauge 回调压垮 DB） */
@@ -71,9 +73,11 @@ public class CronjobMetrics extends SentryMetricsAdapter {
      */
     private final JobLogMapper jobLogMapper;
 
-    public CronjobMetrics(MeterRegistry registry,
-                          ObjectProvider<JobLogMapper> jobLogMapperProvider) {
-        super(registry, "ydsz_cronjob_");
+    /** Gauge 值引用：运行中任务数 */
+    private final AtomicReference<Double> runningJobsRef = new AtomicReference<>(0.0);
+
+    public CronjobMetrics(ObjectProvider<JobLogMapper> jobLogMapperProvider) {
+        super("ydsz_cronjob_");
         this.jobLogMapper = jobLogMapperProvider.getIfAvailable();
         registerGauges();
         log.info("[CronjobMetrics] 初始化完成，Prometheus 端点可访问 /actuator/prometheus");
@@ -281,31 +285,39 @@ public class CronjobMetrics extends SentryMetricsAdapter {
     // ===========================================
 
     private void registerGauges() {
-        // 运行中任务数（查询 DB）
-        registry.gauge("ydsz_cronjob_job_running", Tags.empty(), this, m -> {
-            if (m.jobLogMapper == null) {
-                return 0d;
-            }
-            try {
-                Long count = m.queryRunningJobCount();
-                return count == null ? 0d : count.doubleValue();
-            } catch (Exception e) {
-                log.debug("[CronjobMetrics] gauge job_running 查询失败: {}", e.getMessage());
-                return 0d;
-            }
-        });
+        // 运行中任务数（通过 gaugeRef 注册可变引用，由 refreshRunningJobs 定期刷新）
+        gaugeRef("job_running", runningJobsRef, AtomicReference::get);
 
         // 上次扫描到的待触发任务数
-        registry.gauge("ydsz_cronjob_scanner_due_jobs", Tags.empty(), lastScanDueJobs);
+        gaugeRef("scanner_due_jobs", lastScanDueJobs, AtomicLong::doubleValue);
 
         // 扫描器扫描中标志
-        registry.gauge("ydsz_cronjob_scanner_scanning", Tags.empty(), scanningFlag);
+        gaugeRef("scanner_scanning", scanningFlag, AtomicLong::doubleValue);
 
         // P1-1: 自适应批量大小
-        registry.gauge("ydsz_cronjob_adaptive_batch_size", Tags.empty(), adaptiveBatchSize);
+        gaugeRef("adaptive_batch_size", adaptiveBatchSize, AtomicLong::doubleValue);
 
         // P1-1: 系统负载评分（0-1000，除以1000得到 0-1）
-        registry.gauge("ydsz_cronjob_system_load_score", Tags.empty(), systemLoadScore);
+        gaugeRef("system_load_score", systemLoadScore, AtomicLong::doubleValue);
+    }
+
+    /**
+     * 刷新运行中任务数 Gauge（由定时任务调用）。
+     *
+     * <p>查询 DB 获取最新运行中任务数并更新到 AtomicReference。
+     */
+    public void refreshRunningJobs() {
+        if (jobLogMapper == null) {
+            runningJobsRef.set(0.0);
+            return;
+        }
+        try {
+            Long count = queryRunningJobCount();
+            runningJobsRef.set(count == null ? 0.0 : count.doubleValue());
+        } catch (Exception e) {
+            log.debug("[CronjobMetrics] refresh job_running 查询失败: {}", e.getMessage());
+            runningJobsRef.set(0.0);
+        }
     }
 
     /**

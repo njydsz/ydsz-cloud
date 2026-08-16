@@ -1212,9 +1212,7 @@ public final class SerializationProvider {
      * 调用自定义序列化器，直接写入 JSONWriter 后输出字符串。
      *
      * <p>自定义序列化器统一实现 {@link com.njydsz.common.json.serializer.JsonSerializer}，
-     * 直接写入 {@link JSONWriter}，零拷贝、避免中间 String 分配。历史上曾兼容旧版
-     * {@code api.JsonSerializer}（String 返回版，已删除），需 {@code Method.invoke}
-     * 反射调用——旧接口已移除，此处简化为单一调用路径。</p>
+     * 直接写入 {@link JSONWriter}，零拷贝、避免中间 String 分配。</p>
      *
      * @param serializer 自定义序列化器实例
      * @param value 要序列化的对象
