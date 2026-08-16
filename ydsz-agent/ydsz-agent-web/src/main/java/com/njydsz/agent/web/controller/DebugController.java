@@ -23,8 +23,10 @@ import com.njydsz.agent.domain.enums.AgentExceptionCode;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.permission.PermissionCodes;
 
 /**
  * Agent 调试 REST API Controller。
@@ -80,6 +82,7 @@ public class DebugController {
      * @param limit 最大数量（默认 20，建议不超过 100）
      * @return 统一响应结果，data 为 {@link AgentTraceListDTO} 列表
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.AGENT_DEBUG_VIEW)
     @Audit(module = "调试管理", type = AuditType.OPERATION, action = AuditAction.QUERY, content = "'listTraces'")
     @GetMapping("/traces")
     public BaseResponse<List<AgentTraceListDTO>> listTraces(
@@ -110,6 +113,7 @@ public class DebugController {
      * @param traceId 链路 ID
      * @return 统一响应结果，data 为 {@link AgentTraceDetailDTO}（含 traceId / agentType / 步骤摘要 plan）
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.AGENT_DEBUG_VIEW)
     @Audit(module = "调试管理", type = AuditType.OPERATION, action = AuditAction.QUERY, content = "'getTrace: ' + #traceId")
     @GetMapping("/trace/{traceId}")
     public BaseResponse<AgentTraceDetailDTO> getTrace(@PathVariable String traceId) {
@@ -139,6 +143,7 @@ public class DebugController {
      * @param traceId 链路 ID
      * @return 统一响应结果，data 为重放后的 Agent 响应内容（字符串）
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.AGENT_DEBUG_REPLAY)
     @Audit(module = "调试管理", type = AuditType.OPERATION, action = AuditAction.CREATE,
             content = "'replayTrace: ' + #traceId")
     @Idempotent(key = "ydsz:agent:DebugController:replayTrace:lock", ttlSeconds = 5)

@@ -373,10 +373,11 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
     }
 
     /**
-     * 在响应头中注入 CSRF / 浏览器安全响应头
+     * P1-1: 安全头注入委托给 common-safe {@link SecurityHeaderConfigurer}，消除 Gateway 与 common-safe 的重复实现。
      *
-     * <h3>P2-12 增强项</h3>
-     * <p>通过 {@link SecurityHeadersProperties} 可配置化，新增 COOP/COEP/CORP 头。
+     * <p>历史版本在 Gateway 中硬编码 80 行安全头策略计算逻辑，与 common-safe 的
+     * {@code SecurityHeaderFilter} 存在策略不一致风险。现统一委托后，Gateway 侧
+     * 仅负责配置转换与 WebFlux 响应写入，策略计算集中在 common-safe。
      *
      * <h3>注入头清单</h3>
      * <ul>
@@ -392,7 +393,8 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
      *   <li>P2-12: Cross-Origin-Resource-Policy (CORP) — 限制资源跨域访问</li>
      * </ul>
      *
-     * <p>通过 chain.filter().then() 在下游链完成后注入,确保所有成功响应均携带安全头。
+     * <p><b>向后兼容：</b>仍使用 Gateway 原配置类 {@link SecurityHeadersProperties}，
+     * 内部转换为 common-safe 的 {@link SecurityHeaderProperties} 后调用。
      *
      * @param exchange 服务器 Web 交换上下文
      * @param result   下游过滤器链执行结果
@@ -400,84 +402,63 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
      */
     private Mono<Void> withSecurityHeaders(ServerWebExchange exchange, Mono<Void> result) {
         return result.then(Mono.fromRunnable(() -> {
-            ServerHttpResponse response = exchange.getResponse();
-
-            // 全局开关
             if (!securityHeadersProperties.isEnabled()) {
                 return;
             }
-
-            // 基础安全头
-            response.getHeaders().add("X-Content-Type-Options", "nosniff");
-            response.getHeaders().add("X-Frame-Options", "DENY");
-            response.getHeaders().add("X-XSS-Protection", "1; mode=block");
-            response.getHeaders().add("Referrer-Policy", "strict-origin-when-cross-origin");
-            response.getHeaders().add("X-CSRF-Protection", "1");
-
-            // CSP 策略: 限制脚本/样式/图片/连接来源
-            if (securityHeadersProperties.getCsp().isEnabled()) {
-                // P3-13: 移除 'unsafe-eval'（生产环境不需要，Vue 模板预编译）
-                //         移除 script-src 的 'unsafe-inline'（防 XSS 注入）
-                //         保留 style-src 的 'unsafe-inline'（Element Plus 运行时样式注入需要）
-                // - script-src: self（仅允许同源脚本）
-                // - style-src: self + unsafe-inline(Element Plus 样式注入)
-                // - img-src: self + data:(base64) + blob:(URL) + https:(CDN 图片)
-                // - connect-src: self + ws/wss(WebSocket) + https(API/Sentry)
-                // - font-src: self + data:(字体 base64)
-                // - frame-ancestors: none(防点击劫持)
-                // - base-uri: self(防 base 标签注入)
-                // - form-action: self(防表单提交到外部)
-                boolean unsafeEval = securityHeadersProperties.getCsp().isUnsafeEval();
-                String scriptSrc = unsafeEval
-                        ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
-                        : "script-src 'self'; ";
-                response.getHeaders().add("Content-Security-Policy",
-                    "default-src 'self'; "
-                    + scriptSrc
-                    + "style-src 'self' 'unsafe-inline'; "
-                    + "img-src 'self' data: blob: https:; "
-                    + "font-src 'self' data:; "
-                    + "connect-src 'self' ws: wss: https:; "
-                    + "frame-ancestors 'none'; "
-                    + "base-uri 'self'; "
-                    + "form-action 'self'");
-            }
-
-            // Permissions-Policy: 禁用不需要的浏览器 API
-            response.getHeaders().add("Permissions-Policy",
-                "camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=()");
-
-            // P2-12: COOP (Cross-Origin-Opener-Policy) — 防止窗口名攻击
-            if (securityHeadersProperties.getCoop().isEnabled()) {
-                response.getHeaders().add("Cross-Origin-Opener-Policy",
-                    securityHeadersProperties.getCoop().getPolicy());
-            }
-
-            // P2-12: COEP (Cross-Origin-Embedder-Policy) — 隔离跨域资源
-            if (securityHeadersProperties.getCoep().isEnabled()) {
-                response.getHeaders().add("Cross-Origin-Embedder-Policy",
-                    securityHeadersProperties.getCoep().getPolicy());
-            }
-
-            // P2-12: CORP (Cross-Origin-Resource-Policy) — 限制资源跨域访问
-            if (securityHeadersProperties.getCorp().isEnabled()) {
-                response.getHeaders().add("Cross-Origin-Resource-Policy",
-                    securityHeadersProperties.getCorp().getPolicy());
-            }
-
-            // HSTS (Strict-Transport-Security) — 强制 HTTPS
-            if (securityHeadersProperties.getHsts().isEnabled()) {
-                StringBuilder hstsValue = new StringBuilder()
-                    .append("max-age=").append(securityHeadersProperties.getHsts().getMaxAge());
-                if (securityHeadersProperties.getHsts().isIncludeSubdomains()) {
-                    hstsValue.append("; includeSubDomains");
-                }
-                if (securityHeadersProperties.getHsts().isPreload()) {
-                    hstsValue.append("; preload");
-                }
-                response.getHeaders().add("Strict-Transport-Security", hstsValue.toString());
-            }
+            // 将 Gateway 配置转换为 common-safe 统一配置后写入响应
+            SecurityHeaderProperties commonProps = toCommonProperties(securityHeadersProperties);
+            SecurityHeaderConfigurer.applyWebFluxHeaders(exchange.getResponse(), commonProps);
         }));
+    }
+
+    /**
+     * 将 Gateway {@link SecurityHeadersProperties} 转换为 common-safe {@link SecurityHeaderProperties}。
+     *
+     * <p>P1-1: 统一配置类，确保 Gateway 与业务服务使用同一套策略计算逻辑。
+     */
+    private static SecurityHeaderProperties toCommonProperties(SecurityHeadersProperties gatewayProps) {
+        SecurityHeaderProperties common = new SecurityHeaderProperties();
+        common.setEnabled(gatewayProps.isEnabled());
+        common.setXssProtection("1; mode=block");
+        common.setContentTypeOptions("nosniff");
+        common.setFrameOptions("DENY");
+        common.setReferrerPolicy("strict-origin-when-cross-origin");
+        common.setPermissionsPolicy("camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=()");
+
+        // 子配置类映射
+        if (gatewayProps.getCsp() != null) {
+            SecurityHeaderProperties.CspConfig commonCsp = new SecurityHeaderProperties.CspConfig();
+            commonCsp.setEnabled(gatewayProps.getCsp().isEnabled());
+            commonCsp.setUnsafeEval(gatewayProps.getCsp().isUnsafeEval());
+            common.setCsp(commonCsp);
+        }
+        if (gatewayProps.getHsts() != null) {
+            SecurityHeaderProperties.HstsConfig commonHsts = new SecurityHeaderProperties.HstsConfig();
+            commonHsts.setEnabled(gatewayProps.getHsts().isEnabled());
+            commonHsts.setMaxAge(gatewayProps.getHsts().getMaxAge());
+            commonHsts.setIncludeSubdomains(gatewayProps.getHsts().isIncludeSubdomains());
+            commonHsts.setPreload(gatewayProps.getHsts().isPreload());
+            common.setHsts(commonHsts);
+        }
+        if (gatewayProps.getCoop() != null) {
+            SecurityHeaderProperties.CoopConfig commonCoop = new SecurityHeaderProperties.CoopConfig();
+            commonCoop.setEnabled(gatewayProps.getCoop().isEnabled());
+            commonCoop.setPolicy(gatewayProps.getCoop().getPolicy());
+            common.setCoop(commonCoop);
+        }
+        if (gatewayProps.getCoep() != null) {
+            SecurityHeaderProperties.CoepConfig commonCoep = new SecurityHeaderProperties.CoepConfig();
+            commonCoep.setEnabled(gatewayProps.getCoep().isEnabled());
+            commonCoep.setPolicy(gatewayProps.getCoep().getPolicy());
+            common.setCoep(commonCoep);
+        }
+        if (gatewayProps.getCorp() != null) {
+            SecurityHeaderProperties.CorpConfig commonCorp = new SecurityHeaderProperties.CorpConfig();
+            commonCorp.setEnabled(gatewayProps.getCorp().isEnabled());
+            commonCorp.setPolicy(gatewayProps.getCorp().getPolicy());
+            common.setCorp(commonCorp);
+        }
+        return common;
     }
 
     /**

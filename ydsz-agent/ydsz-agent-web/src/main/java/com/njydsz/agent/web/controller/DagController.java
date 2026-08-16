@@ -17,10 +17,12 @@ import com.njydsz.agent.domain.agent.AgentDag;
 import com.njydsz.agent.server.agent.DagDslParser;
 import com.njydsz.agent.server.agent.DagOrchestrationExecutor;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.permission.PermissionCodes;
 
 /**
  * Agent DAG 编排 REST API Controller。
@@ -87,6 +89,7 @@ public class DagController {
      * @return 统一响应结果，data 为 {@link DagOrchestrationExecutor.DagExecutionResult}
      *         （含执行状态 / 各节点结果 / 最终输出）
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.AGENT_DAG_EXECUTE)
     @Audit(module = "DAG管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'execute'")
     @Idempotent(key = "ydsz:agent:DagController:execute:lock", ttlSeconds = 5)
     @RateLimit(resource = "agent.dag.execute", threshold = 50)
@@ -114,6 +117,7 @@ public class DagController {
      * @param request DAG 请求体（仅 dsl 字段被使用）
      * @return 统一响应结果，data 为 {@code {valid, dagName, nodeCount, error?}} Map
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.AGENT_DAG_VALIDATE)
     @Audit(module = "DAG管理", type = AuditType.OPERATION, action = AuditAction.QUERY, content = "'validate'")
     @Idempotent(key = "ydsz:agent:DagController:write:lock", ttlSeconds = 5)
     @PostMapping("/validate")

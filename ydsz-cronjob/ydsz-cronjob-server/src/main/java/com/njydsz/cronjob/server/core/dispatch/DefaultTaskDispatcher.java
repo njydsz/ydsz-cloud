@@ -24,9 +24,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
-import com.njydsz.common.event.model.OutboxMessage;
-import com.njydsz.common.event.service.OutboxService;
+import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.json.YdszJson;
 
 import jakarta.annotation.PostConstruct;
@@ -158,8 +158,8 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     private final ObjectProvider<LogStreamManager> logStreamManagerProvider;
     /** P0-8: 优先级抢占式调度器（可选注入，线程池满时抢占低优先级任务） */
     private final ObjectProvider<PreemptiveScheduler> preemptiveSchedulerProvider;
-    /** P0-2: 事务性 Outbox 事件服务（可选，未配置时为 null，用于跨模块可靠投递任务失败事件） */
-    private final ObjectProvider<OutboxService> outboxServiceProvider;
+    /** 统一领域事件发布门面（可选依赖，未配置时安全降级） */
+    private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
     /** P0-1: Fencing Token 管理器（可选注入，用于防脑裂校验） */
     private final ObjectProvider<FencingTokenManager> fencingTokenManagerProvider;
     /** P0-2: 全局并发控制器（可选注入，用于限制集群总并发） */
@@ -1233,31 +1233,27 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
      * @param log0 任务执行日志（携带 errorMessage / durationMs 等）
      */
     private void publishJobFailureOutboxEvent(Job job, JobLog log0) {
-        OutboxService outboxService = outboxServiceProvider.getIfAvailable();
-        if (outboxService == null) {
-            log.debug("[Dispatcher] OutboxService 未配置，跳过 JOB_EXECUTION_FAILED 事件: jobKey={}",
+        DomainEventPublisher publisher = eventPublisherProvider.getIfAvailable();
+        if (publisher == null) {
+            log.debug("[Dispatcher] DomainEventPublisher 未配置，跳过 JOB_EXECUTION_FAILED 事件: jobKey={}",
                     job.getJobKey());
             return;
         }
-        try {
-            Map<String, Object> payload = new HashMap<>();
-            payload.put("jobId", job.getId());
-            payload.put("jobKey", job.getJobKey());
-            payload.put("jobName", job.getJobName() != null ? job.getJobName() : "");
-            payload.put("logId", log0.getId());
-            payload.put("errorMessage", log0.getErrorMessage() != null ? log0.getErrorMessage() : "");
-            payload.put("triggerType", log0.getTriggerType() != null ? log0.getTriggerType() : "");
-            payload.put("durationMs", log0.getDurationMs());
-            payload.put("tenantId", job.getTenantId() != null ? job.getTenantId() : "");
-            outboxService.appendToOutbox(OutboxMessage.builder()
-                    .aggregateType("JobLog")
-                    .aggregateId(log0.getId())
-                    .eventType(DomainEventTypes.JOB_EXECUTION_FAILED)
-                    .payload(YdszJson.toJson(payload)));
-        } catch (Exception e) {
-            log.warn("[Dispatcher] 发布 JOB_EXECUTION_FAILED Outbox 事件失败: jobKey={} reason={}",
-                    job.getJobKey(), e.getMessage());
-        }
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("jobId", job.getId());
+        metadata.put("jobKey", job.getJobKey());
+        metadata.put("jobName", job.getJobName() != null ? job.getJobName() : "");
+        metadata.put("logId", log0.getId());
+        metadata.put("errorMessage", log0.getErrorMessage() != null ? log0.getErrorMessage() : "");
+        metadata.put("triggerType", log0.getTriggerType() != null ? log0.getTriggerType() : "");
+        metadata.put("durationMs", log0.getDurationMs());
+        metadata.put("tenantId", job.getTenantId() != null ? job.getTenantId() : "");
+        publisher.publish(DomainEvent.builder()
+                .aggregateType("JobLog")
+                .aggregateId(log0.getId())
+                .eventType(DomainEventTypes.JOB_EXECUTION_FAILED)
+                .metadata(metadata)
+                .build());
     }
 
     /**

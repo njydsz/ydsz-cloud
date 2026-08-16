@@ -4,8 +4,7 @@ import java.util.List;
 
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.EventStore;
-import com.njydsz.common.event.model.OutboxMessage;
-import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.event.service.OutboxService;
 
 /**
  * 基于 Outbox 的领域事件存储适配器
@@ -29,7 +28,10 @@ import com.njydsz.common.json.YdszJson;
  * @author ydsz-team
  * @since 1.0.0
  * @since 1.6.0 appendAll 使用批量插入优化性能
+ * @deprecated 1.8.0 使用 {@link com.njydsz.common.event.publish.DomainEventPublisher} 替代。
+ *             计划 2.0 随 {@link EventStore} 接口一并移除。
  */
+@Deprecated
 public class OutboxEventStore implements EventStore {
 
     /** Outbox 写入服务 */
@@ -51,12 +53,7 @@ public class OutboxEventStore implements EventStore {
      */
     @Override
     public void append(DomainEvent event) {
-        outboxService.appendToOutbox(OutboxMessage.builder()
-                .aggregateType(event.getAggregateType())
-                .aggregateId(event.getAggregateId())
-                .eventType(event.getEventType())
-                .payload(YdszJson.toJson(event))
-                .deduplicationId(event.getEventId()));
+        outboxService.appendToOutbox(event);
     }
 
     /**

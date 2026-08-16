@@ -16,14 +16,21 @@ import java.util.List;
  *       通过 Spring 条件装配（ConditionalOnMissingBean）注册</li>
  * </ul>
  *
+ * <p><b>废弃建议：</b>新代码不应再实现或注入本接口。
+ * 统一使用 {@link com.njydsz.common.event.publish.DomainEventPublisher} 发布领域事件，
+ * 或通过 {@link com.njydsz.common.event.service.OutboxService#appendToOutbox(com.njydsz.common.event.api.DomainEvent)} 写入 Outbox。
+ * 本接口保留仅为兼容 1.x 调用方，计划 2.0 移除。
+ *
  * @author ydsz-team
  * @since 1.0.0
  * @since 1.4.0 精简：移除 findByAggregate/findByType/findById/getLatestVersion
  *              四个从未被实现的事件溯源查询方法（原实现一律抛 UnsupportedOperationException）
  * @since 1.5.0 由 common-domain 迁入 common-event
+ * @deprecated 1.8.0 使用 {@link com.njydsz.common.event.publish.DomainEventPublisher} 替代
  *
  * @see DomainEvent
  */
+@Deprecated
 public interface EventStore {
 
     /**

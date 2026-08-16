@@ -25,6 +25,8 @@ import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.permission.PermissionCodes;
 
 /**
  * 任务配置历史版本 Controller（P1-6 任务版本管理）。
@@ -63,6 +65,7 @@ public class JobHistoryController {
      * @param jobId 任务 ID
      * @return 历史版本列表（含 version/createdBy/createdAt/changeReason）
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)
     @Operation(summary = "获取任务版本列表")
     @GetMapping("/versions")
     public BaseResponse<List<JobHistoryVO>> versions(@RequestParam String jobId) {
@@ -78,6 +81,7 @@ public class JobHistoryController {
      * @param version 版本号
      * @return 历史版本记录
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)
     @Operation(summary = "获取指定版本详情")
     @GetMapping("/detail")
     public BaseResponse<JobHistoryVO> detail(@RequestParam String jobId,
@@ -95,6 +99,7 @@ public class JobHistoryController {
      * @param version 目标版本号
      * @return 回滚后的任务定义
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_UPDATE)
     @Operation(summary = "回滚到指定版本")
     @Idempotent(key = "ydsz:cronjob:JobHistoryController:rollback:lock", ttlSeconds = 5)
     @RateLimit(resource = "cronjob.jobhistory.rollback", threshold = 50)
@@ -116,6 +121,7 @@ public class JobHistoryController {
      * @param v2    新版本号
      * @return 差异字段列表（含 field/oldValue/newValue/changeType）
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)
     @Operation(summary = "对比两个版本差异")
     @GetMapping("/compare")
     public BaseResponse<List<Map<String, Object>>> compare(@RequestParam String jobId,

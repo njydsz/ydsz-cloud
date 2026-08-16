@@ -19,6 +19,8 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.agent.domain.enums.AgentExceptionCode;
 
 /**
@@ -73,6 +75,7 @@ public class HumanApprovalController {
      *
      * @return 统一响应结果，data 为 {@link ApprovalRequest} 列表
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.AGENT_APPROVAL_VIEW)
     @Audit(module = "人工审批", type = AuditType.OPERATION, action = AuditAction.QUERY, content = "'listPending'")
     @GetMapping("/pending")
     public BaseResponse<List<ApprovalRequest>> listPending() {
@@ -85,6 +88,7 @@ public class HumanApprovalController {
      * @param id 审批请求 ID
      * @return 统一响应结果，data 为审批请求详情；不存在时返回 error 响应
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.AGENT_APPROVAL_VIEW)
     @Audit(module = "人工审批", type = AuditType.OPERATION, action = AuditAction.QUERY, content = "'getApproval: ' + #id")
     @GetMapping("/{id}")
     public BaseResponse<ApprovalRequest> getApproval(@PathVariable String id) {
@@ -106,6 +110,7 @@ public class HumanApprovalController {
      * @param comment  审批意见（可选）
      * @return 统一响应结果，data 为 true 表示审批成功；false 表示请求不存在或已处理
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.AGENT_APPROVAL_ACT)
     @Audit(module = "人工审批", type = AuditType.OPERATION, action = AuditAction.APPROVE, content = "'approve'")
     @Idempotent(key = "ydsz:agent:HumanApprovalController:approve:lock", ttlSeconds = 5)
     @PostMapping("/{id}/approve")
@@ -131,6 +136,7 @@ public class HumanApprovalController {
      * @param comment  拒绝原因/意见（可选，建议必填便于审计追溯）
      * @return 统一响应结果，data 为 true 表示拒绝成功；false 表示请求不存在或已处理
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.AGENT_APPROVAL_ACT)
     @Audit(module = "人工审批", type = AuditType.OPERATION, action = AuditAction.REJECT, content = "'reject'")
     @Idempotent(key = "ydsz:agent:HumanApprovalController:reject:lock", ttlSeconds = 5)
     @PostMapping("/{id}/reject")

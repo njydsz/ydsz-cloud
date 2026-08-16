@@ -25,7 +25,9 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.permission.PermissionCodes;
 
 /**
  * RAG 知识库管理 REST API Controller。
@@ -92,6 +94,7 @@ public class RagController {
      * @param request 文档摄入请求（documentId / documentTitle / content / source）
      * @return 统一响应结果，data 为 {@code {documentId, chunkCount, status}} Map
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.AGENT_RAG_INGEST)
     @Audit(module = "RAG管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'ingest'")
     @Idempotent(key = "ydsz:agent:RagController:ingest:lock", ttlSeconds = 5)
     @PostMapping("/ingest")
@@ -123,6 +126,7 @@ public class RagController {
      * @param request RAG 检索请求（query / topK / minScore / includeContext）
      * @return 统一响应结果，data 为 {@code {query, resultCount, citations, context}} Map
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.AGENT_RAG_SEARCH)
     @Audit(module = "RAG管理", type = AuditType.OPERATION, action = AuditAction.QUERY, content = "'search'")
     @PostMapping("/search")
     public BaseResponse<Map<String, Object>> search(@Valid @RequestBody RagQueryDTO request) {
@@ -154,6 +158,7 @@ public class RagController {
      * @param documentId 文档 ID
      * @return 统一响应结果
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.AGENT_RAG_DELETE)
     @Audit(module = "RAG管理", type = AuditType.OPERATION, action = AuditAction.DELETE, content = "'deleteDocument'")
     @Idempotent(key = "ydsz:agent:RagController:deleteDocument:lock", ttlSeconds = 5)
     @RateLimit(resource = "agent.rag.deleteDocument", threshold = 50)
@@ -172,6 +177,7 @@ public class RagController {
      *
      * @return 统一响应结果，data 为 {@link DocumentIngestionService.VectorStoreStats}
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.AGENT_RAG_SEARCH)
     @Audit(module = "RAG管理", type = AuditType.OPERATION, action = AuditAction.QUERY, content = "'stats'")
     @GetMapping("/stats")
     public BaseResponse<DocumentIngestionService.VectorStoreStats> stats() {

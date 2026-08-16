@@ -12,6 +12,8 @@ import com.njydsz.agent.domain.gateway.LlmClient;
 import com.njydsz.agent.domain.tool.ToolRegistry;
 import com.njydsz.agent.infra.llm.LlmClientRouter;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.permission.PermissionCodes;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -68,6 +70,7 @@ public class AgentMetadataController {
      *
      * @return 统一响应结果，data 为 {@code [{provider, available}, ...]} 格式的列表
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.AGENT_METADATA_VIEW)
     @GetMapping("/models")
     @Operation(summary = "获取可用模型列表", description = "返回当前 Agent 支持的 LLM Provider 列表")
     public BaseResponse<List<Map<String, Object>>> models() {
@@ -90,6 +93,7 @@ public class AgentMetadataController {
      *
      * @return 统一响应结果，data 为 {@code [{name, description}, ...]} 格式的列表
      */
+    @AuthApiPermission(apiCodes = PermissionCodes.AGENT_METADATA_VIEW)
     @GetMapping("/tools")
     @Operation(summary = "获取已注册工具列表", description = "返回工具注册中心中所有已注册工具的元数据")
     public BaseResponse<List<Map<String, Object>>> tools() {

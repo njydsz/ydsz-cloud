@@ -21,9 +21,9 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
-import com.njydsz.common.event.model.OutboxMessage;
-import com.njydsz.common.event.service.OutboxService;
+import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.file.domain.FileStorage;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.lock.annotation.LockType;
@@ -83,8 +83,8 @@ public class FileApplicationService {
     private final LockStrategy lockStrategy;
     private final VirusScanApplicationService virusScanApplicationService;
     private final ObjectProvider<SearchIndexEventBridge> searchIndexBridgeProvider;
-    /** Outbox 事件服务（可选依赖，发布文件上传/删除领域事件） */
-    private final ObjectProvider<OutboxService> outboxServiceProvider;
+    /** 统一领域事件发布门面（可选依赖，未配置时安全降级） */
+    private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
 
     private static final String LOCK_PREFIX = "nextwiki:lock:folder:";
     private static final long LOCK_LEASE_MS = 30_000L;
@@ -708,20 +708,16 @@ public class FileApplicationService {
      * 发布领域事件到 Outbox（可选依赖，不存在时安全降级）
      */
     private void publishOutboxEvent(String eventType, String aggregateId, Object payload) {
-        OutboxService outboxService = outboxServiceProvider.getIfAvailable();
-        if (outboxService == null) {
+        DomainEventPublisher publisher = eventPublisherProvider.getIfAvailable();
+        if (publisher == null) {
             return;
         }
-        try {
-            outboxService.appendToOutbox(OutboxMessage.builder()
-                    .aggregateType("FileNode")
-                    .aggregateId(aggregateId)
-                    .eventType(eventType)
-                    .payload(YdszJson.toJson(payload)));
-        } catch (Exception e) {
-            log.warn("Failed to publish outbox event: type={}, id={}, error={}",
-                    eventType, aggregateId, e.getMessage());
-        }
+        publisher.publish(DomainEvent.builder()
+                .aggregateType("FileNode")
+                .aggregateId(aggregateId)
+                .eventType(eventType)
+                .metadata("payload", payload)
+                .build());
     }
 
     /**
