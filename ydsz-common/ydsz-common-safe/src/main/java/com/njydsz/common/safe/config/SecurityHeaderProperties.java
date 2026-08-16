@@ -179,24 +179,4 @@ public class SecurityHeaderProperties {
         /** CORP 策略 */
         private String policy = "same-origin";
     }
-
-    // ============================== 已废弃属性（保留向后兼容，建议迁移到子配置类） ==============================
-
-    /**
-     * 严格传输安全头部
-     *
-     * <p>强制浏览器使用 HTTPS 连接。
-     * @deprecated 自 1.1.0 起废弃，使用 {@link #hsts} 子配置类
-     */
-    @Deprecated
-    private String hstsDeprecated;
-
-    /**
-     * 内容安全策略头部
-     *
-     * <p>防止 XSS、数据注入等攻击，限制资源加载来源。
-     * @deprecated 自 1.1.0 起废弃，使用 {@link #csp} 子配置类
-     */
-    @Deprecated
-    private String cspDeprecated;
 }

@@ -87,79 +87,11 @@ public class RedisClusterRateLimiter implements ClusterRateLimiter {
             + "  return {0, tokens}\n"
             + "end";
 
-    /**
-     * 滑动窗口 Lua 脚本
-     * <pre>
-     * local key = KEYS[1]
-     * local now = tonumber(ARGV[1])
-     * local windowMs = tonumber(ARGV[2])
-     * local limit = tonumber(ARGV[3])
-     * local member = ARGV[4]
-     * redis.call('ZREMRANGEBYSCORE', key, 0, now - windowMs)
-     * local count = redis.call('ZCARD', key)
-     * if count < limit then
-     *   redis.call('ZADD', key, now, member)
-     *   redis.call('PEXPIRE', key, windowMs)
-     *   return {1, limit - count - 1}
-     * else
-     *   return {0, 0}
-     * end
-     * </pre>
-     */
-    public static final String SLIDING_WINDOW_LUA = ""
-            + "local key = KEYS[1]\n"
-            + "local now = tonumber(ARGV[1])\n"
-            + "local windowMs = tonumber(ARGV[2])\n"
-            + "local limit = tonumber(ARGV[3])\n"
-            + "local member = ARGV[4]\n"
-            + "redis.call('ZREMRANGEBYSCORE', key, 0, now - windowMs)\n"
-            + "local count = redis.call('ZCARD', key)\n"
-            + "if count < limit then\n"
-            + "  redis.call('ZADD', key, now, member)\n"
-            + "  redis.call('PEXPIRE', key, windowMs)\n"
-            + "  return {1, limit - count - 1}\n"
-            + "else\n"
-            + "  return {0, 0}\n"
-            + "end";
-
-    /**
-     * 计数器 Lua 脚本（固定窗口）
-     * <pre>
-     * local key = KEYS[1]
-     * local windowMs = tonumber(ARGV[1])
-     * local limit = tonumber(ARGV[2])
-     * local current = redis.call('INCR', key)
-     * if current == 1 then
-     *   redis.call('PEXPIRE', key, windowMs)
-     * end
-     * if current <= limit then
-     *   return {1, limit - current}
-     * else
-     *   return {0, 0}
-     * end
-     * </pre>
-     */
-    public static final String COUNTER_LUA = ""
-            + "local key = KEYS[1]\n"
-            + "local windowMs = tonumber(ARGV[1])\n"
-            + "local limit = tonumber(ARGV[2])\n"
-            + "local current = redis.call('INCR', key)\n"
-            + "if current == 1 then\n"
-            + "  redis.call('PEXPIRE', key, windowMs)\n"
-            + "end\n"
-            + "if current <= limit then\n"
-            + "  return {1, limit - current}\n"
-            + "else\n"
-            + "  return {0, 0}\n"
-            + "end";
-
     /** Redis Key 前缀（默认值，可被 RateLimitProperties.clusterKeyPrefix 覆盖） */
     public static final String DEFAULT_KEY_PREFIX = "ydsz:ratelimit:";
 
     /** 令牌桶 RedisScript（返回 List：[passed, remaining]） */
     private static final DefaultRedisScript<List> TOKEN_BUCKET_SCRIPT = buildScript(TOKEN_BUCKET_LUA);
-    private static final DefaultRedisScript<List> SLIDING_WINDOW_SCRIPT = buildScript(SLIDING_WINDOW_LUA);
-    private static final DefaultRedisScript<List> COUNTER_SCRIPT = buildScript(COUNTER_LUA);
 
     /** Redis 客户端（可能为 null，表示 Redis 不可用） */
     private final StringRedisTemplate redisTemplate;
@@ -222,21 +154,11 @@ public class RedisClusterRateLimiter implements ClusterRateLimiter {
 
     /**
      * 根据算法选择 Lua 脚本
+     *
+     * <p>统一使用令牌桶算法。
      */
     private static DefaultRedisScript<List> selectScript(RateLimitAlgorithm algorithm) {
-        if (algorithm == null) {
-            return TOKEN_BUCKET_SCRIPT;
-        }
-        switch (algorithm) {
-            case SLIDING_WINDOW:
-                return SLIDING_WINDOW_SCRIPT;
-            case COUNTER:
-                return COUNTER_SCRIPT;
-            case TOKEN_BUCKET:
-            case LEAKY_BUCKET:
-            default:
-                return TOKEN_BUCKET_SCRIPT;
-        }
+        return TOKEN_BUCKET_SCRIPT;
     }
 
     /**
@@ -244,19 +166,6 @@ public class RedisClusterRateLimiter implements ClusterRateLimiter {
      */
     private Object[] buildArgs(RateLimitRule rule, RateLimitContext context) {
         long now = Instant.now().toEpochMilli();
-        RateLimitAlgorithm algorithm = rule.getAlgorithm();
-        if (algorithm == RateLimitAlgorithm.SLIDING_WINDOW) {
-            long windowMs = rule.getWindow() == null ? 1000L : rule.getWindow().toMillis();
-            double limit = rule.getThreshold();
-            String member = now + ":" + Thread.currentThread().getId() + ":" + System.nanoTime();
-            return new Object[]{String.valueOf(now), String.valueOf(windowMs), String.valueOf(limit), member};
-        }
-        if (algorithm == RateLimitAlgorithm.COUNTER) {
-            long windowMs = rule.getWindow() == null ? 1000L : rule.getWindow().toMillis();
-            double limit = rule.getThreshold();
-            return new Object[]{String.valueOf(windowMs), String.valueOf(limit)};
-        }
-        // TOKEN_BUCKET / LEAKY_BUCKET / default
         double rate = rule.getThreshold();
         long capacity = rule.getBurstCapacity() > 0 ? rule.getBurstCapacity() : (long) rule.getThreshold();
         double cost = 1.0;
