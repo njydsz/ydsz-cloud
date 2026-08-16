@@ -79,7 +79,7 @@ import com.njydsz.literule.server.version.RuleVersionDiffService;
  */
 @Slf4j
 @RestController
-@RequestMapping("/ruleEngine/rules")
+@RequestMapping("/v1/rule-engine/rules")
 @RequiredArgsConstructor
 @Validated
 @Tag(name = "规则引擎管理", description = "规则 CRUD、版本、dry-run、冲突检测、画布、模板市场、规则集市场")
@@ -177,7 +177,7 @@ public class RuleAdminController {
      * @return 结构化 Diff 结果
      * @since 1.0.0
      */
-    @GetMapping("/{ruleCode}/versionDiff")
+    @GetMapping("/{ruleCode}/version-diff")
     public BaseResponse<RuleVersionDiffVO> versionDiff(@PathVariable String ruleCode,
                                                 @RequestParam int oldVersion,
                                                 @RequestParam int newVersion) {
@@ -228,7 +228,7 @@ public class RuleAdminController {
     @Idempotent(key = "ruleAdmin:dryRun", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'dryRun'")
     @RateLimit(resource = "literule.rule_admin.dryRun", threshold = 50)
-    @PostMapping("/dryRun")
+    @PostMapping("/dry-run")
     public BaseResponse<List<RuleResultVO>> dryRun(@RequestParam(required = false) String ruleCode,
                                             @RequestBody Map<String, Object> facts) {
         return BaseResponse.success(ruleAdminService.dryRun(ruleCode, facts).stream().map(LiteruleConverter.INSTANT::entityToVO).toList());
@@ -289,7 +289,7 @@ public class RuleAdminController {
     @Idempotent(key = "ruleAdmin:validateExpression", ttlSeconds = 5, message = "请勿重复提交")
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'validateExpression'")
     @RateLimit(resource = "literule.rule_admin.validateExpression", threshold = 50)
-    @PostMapping("/validateExpression")
+    @PostMapping("/validate-expression")
     public BaseResponse<ExpressionValidationResultVO> validateExpression(@Valid @RequestBody ExpressionValidateDTO dto) {
         String expression = dto.getExpression();
         String type = dto.getType() == null ? "condition" : dto.getType();
@@ -335,7 +335,7 @@ public class RuleAdminController {
      */
     @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'abTest'")
     @RateLimit(resource = "literule.rule_admin.abTest", threshold = 50)
-    @PostMapping("/{ruleCode}/abTest")
+    @PostMapping("/{ruleCode}/ab-test")
     public BaseResponse<ABTestService.ABTestReport> abTest(@PathVariable String ruleCode,
                                                       @Valid @RequestBody RuleABTestDTO dto) {
         RuleDefinition currentDef = ruleAdminService.getByCode(ruleCode);

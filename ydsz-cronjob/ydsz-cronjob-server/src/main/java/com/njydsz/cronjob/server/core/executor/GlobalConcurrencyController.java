@@ -3,9 +3,11 @@ package com.njydsz.cronjob.server.core.executor;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.cronjob.server.config.CronjobProperties;
+import com.njydsz.cronjob.server.core.discovery.NodeDiscoveryStrategy;
 
 /**
  * P2-16: 全局并发控制（Redis 全局并发计数器）。
@@ -45,6 +47,8 @@ public class GlobalConcurrencyController {
 
     private final RedisStringOps redisStringOps;
     private final CronjobProperties cronjobProperties;
+    /** 节点发现策略（可选注入，用于动态获取在线节点数） */
+    private final ObjectProvider<NodeDiscoveryStrategy> nodeDiscoveryStrategyProvider;
 
     /** 全局并发计数器 Redis key */
     private static final String GLOBAL_CONCURRENT_KEY = "ydsz:job:global:concurrent";
@@ -53,16 +57,42 @@ public class GlobalConcurrencyController {
     private static final String CALIBRATION_LOCK_KEY = "ydsz:job:global:concurrent:calibration-lock";
 
     /**
+     * 估算集群中的在线节点数。
+     *
+     * <p>优先通过 {@link NodeDiscoveryStrategy#getOnlineNodes()} 获取实际在线节点数，
+     * 不可用时回退到配置值 {@code ydsz.cronjob.cluster.max-nodes}（默认 3）。
+     *
+     * @return 集群在线节点数（至少为 1）
+     */
+    private int estimateClusterNodeCount() {
+        NodeDiscoveryStrategy discovery = nodeDiscoveryStrategyProvider.getIfAvailable();
+        if (discovery != null) {
+            try {
+                int count = discovery.getOnlineNodes().size();
+                if (count > 0) {
+                    return count;
+                }
+            } catch (Exception e) {
+                log.debug("[GlobalConcurrency] 节点发现异常, 回退到配置值: reason={}", e.getMessage());
+            }
+        }
+        // 回退到配置值
+        return Math.max(1, cronjobProperties.getCluster().getMaxNodes());
+    }
+
+    /**
      * 尝试获取全局并发配额。
      *
      * <p>原子递增全局并发计数器，如果递增后超过最大值则回滚并返回 false。
+     * 全局并发上限 = 单节点并发 × 在线节点数（动态获取，回退到配置值）。
      *
      * @return true 获取成功；false 全局并发已满
      */
     public boolean tryAcquire() {
         int maxConcurrent = cronjobProperties.getExecutor().getMaxConcurrent();
-        // 集群级并发 = 单节点并发 × 节点数（估算），简化为配置值
-        int maxGlobal = maxConcurrent * 3; // 假设最多 3 个节点
+        // 集群级并发 = 单节点并发 × 在线节点数（动态获取，不再硬编码）
+        int nodeCount = estimateClusterNodeCount();
+        int maxGlobal = Math.max(maxConcurrent, maxConcurrent * nodeCount);
         try {
             Long current = redisStringOps.incr(GLOBAL_CONCURRENT_KEY, 1);
             if (current == null) {
@@ -71,8 +101,8 @@ public class GlobalConcurrencyController {
             if (current > maxGlobal) {
                 // 超限，回滚
                 redisStringOps.decr(GLOBAL_CONCURRENT_KEY, 1);
-                log.debug("[GlobalConcurrency] 全局并发已满, 拒绝: current={} max={}",
-                        current, maxGlobal);
+                log.debug("[GlobalConcurrency] 全局并发已满, 拒绝: current={} max={} nodes={}",
+                        current, maxGlobal, nodeCount);
                 return false;
             }
             return true;
@@ -117,10 +147,13 @@ public class GlobalConcurrencyController {
     /**
      * 获取全局并发上限配置值。
      *
+     * <p>动态计算：单节点并发 × 在线节点数（回退到配置值）。
+     *
      * @return 最大并发数
      */
     public int getMaxGlobalConcurrent() {
-        return cronjobProperties.getExecutor().getMaxConcurrent() * 3;
+        int maxConcurrent = cronjobProperties.getExecutor().getMaxConcurrent();
+        return Math.max(maxConcurrent, maxConcurrent * estimateClusterNodeCount());
     }
 
     /**

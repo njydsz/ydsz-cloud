@@ -1,6 +1,7 @@
 package com.njydsz.nextwiki.infra.repository;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -202,5 +203,23 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
     public List<FileNode> findByNameAndParent(String name, String parentId, String createdBy) {
         return fileNodeMapper.findByNameAndParent(name, parentId, createdBy,
                 TenantContextHolder.getTenantId());
+    }
+
+    @Override
+    public List<FileNode> findAllDescendantsByPath(String folderPath) {
+        return fileNodeMapper.selectAllDescendantsByPath(folderPath);
+    }
+
+    @Override
+    public List<FileNode> findAllDescendants(String folderId) {
+        FileNode folder = fileNodeMapper.selectById(folderId);
+        if (folder == null || !folder.isFolder()) {
+            return new ArrayList<>();
+        }
+        String path = folder.getPath();
+        if (path == null || path.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return fileNodeMapper.selectAllDescendantsByPath(path);
     }
 }

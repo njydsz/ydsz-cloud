@@ -258,28 +258,35 @@ public class FileController {
     }
 
     /**
-     * 复制文件到指定目录。
+     * 复制文件或文件夹到指定目录。
      *
-     * <p>复制会生成全新的文件节点和首版本，原文件不受影响。目标位置如有同名文件，
-     * 系统会自动追加后缀（如 {@code file(1).txt}）。注意：本接口仅支持文件复制，文件夹复制请使用分批调用 {@link #copy} 或
-     * 后续规划接口。
+     * <p>文件复制：生成全新的文件节点和首版本，与原文件共享同一存储对象（引用计数 +1）。
+     * <p>文件夹复制：递归复制目录下全部子节点（含子目录与文件），生成完整的目录树副本；
+     * 所有文件共享同一存储对象，不重复占用物理空间。
+     * <p>目标位置如有同名节点，文件会自动追加后缀（如 {@code file(1).txt}），文件夹保持原名。
      *
-     * @param nodeId         源文件节点 ID
+     * @param nodeId         源节点 ID（文件或文件夹）
      * @param targetParentId 目标父目录 ID
      * @param userId         当前用户 ID
-     * @return 统一响应结果，data 为新复制的文件节点信息
+     * @return 统一响应结果，data 为新复制的节点信息（文件或文件夹根节点）
      */
     @Audit(module = "文件管理", type = AuditType.FILE, action = AuditAction.CREATE, content = "'copy'")
     @Idempotent(key = "ydsz:nextwiki:FileController:copy:lock", ttlSeconds = 5)
     @PostMapping("/{nodeId}/copy")
-    @Operation(summary = "复制文件")
+    @Operation(summary = "复制文件或文件夹", description = "自动识别节点类型，文件直接复制，文件夹递归复制全部子节点")
     @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_FILE_COPY)
     public BaseResponse<FileNodeVO> copy(
             @PathVariable String nodeId,
             @RequestParam("targetParentId") String targetParentId,
             @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
 
-        FileNodeVO result = fileApplicationService.copy(nodeId, targetParentId, userId);
+        FileNodeVO sourceNode = fileApplicationService.getFileInfo(nodeId);
+        FileNodeVO result;
+        if (sourceNode != null && "folder".equals(sourceNode.getNodeType())) {
+            result = fileApplicationService.copyFolder(nodeId, targetParentId, userId);
+        } else {
+            result = fileApplicationService.copy(nodeId, targetParentId, userId);
+        }
         return BaseResponse.success(result);
     }
 }

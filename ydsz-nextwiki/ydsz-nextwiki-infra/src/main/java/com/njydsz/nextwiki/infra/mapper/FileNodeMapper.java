@@ -185,4 +185,17 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
             @Param("parentId") String parentId,
             @Param("createdBy") String createdBy,
             @Param("tenantId") String tenantId);
+
+    /**
+     * 查询文件夹下全部后代节点（按路径前缀匹配，不含文件夹自身）。
+     *
+     * <p>利用 LIKE 前缀匹配：路径为 {@code /root/documents/} 时，
+     * 所有后代节点路径均以该前缀开头。结果按 level 升序、sort 升序排列。
+     *
+     * @param folderPath 文件夹路径（需以 {@code /} 结尾）
+     * @return 全部后代节点列表，按层级升序排列
+     */
+    @Select("SELECT * FROM nw_file_node WHERE path LIKE CONCAT(#{folderPath}, '%') "
+            + "AND deleted = 0 ORDER BY level ASC, sort ASC")
+    List<FileNode> selectAllDescendantsByPath(@Param("folderPath") String folderPath);
 }

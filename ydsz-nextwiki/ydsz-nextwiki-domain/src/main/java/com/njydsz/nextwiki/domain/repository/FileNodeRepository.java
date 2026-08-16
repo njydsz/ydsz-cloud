@@ -153,6 +153,25 @@ public interface FileNodeRepository {
     List<FileNode> findByNameAndParent(String name, String parentId, String createdBy);
 
     /**
+     * 查询文件夹下全部后代节点（按路径前缀匹配，含全部层级子目录与文件）。
+     *
+     * <p>利用 {@code path} 字段前缀匹配：文件夹路径为 {@code /a/b/} 时，
+     * 所有后代节点路径均以该前缀开头。查询结果按层级升序排列。
+     *
+     * @param folderPath 文件夹路径（如 {@code /root/documents/}）
+     * @return 全部后代节点列表（不含文件夹自身），按层级升序排列
+     */
+    List<FileNode> findAllDescendantsByPath(String folderPath);
+
+    /**
+     * 根据文件夹 ID 查询其下全部后代节点（便捷方法，内部通过路径前缀匹配）。
+     *
+     * @param folderId 文件夹节点 ID
+     * @return 全部后代节点列表（不含文件夹自身）；文件夹不存在时返回空列表
+     */
+    List<FileNode> findAllDescendants(String folderId);
+
+    /**
      * 文件类型统计结果
      */
     record FileTypeStat(String suffix, int fileCount, long totalSize) {

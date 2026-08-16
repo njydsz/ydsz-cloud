@@ -120,6 +120,21 @@
           AND deleted = 0
     </select>
 
+    <!-- P1-1: 游标分页（Keyset Pagination）— 避免深度分页性能退化 -->
+    <select id="selectTodoByAssigneeCursor" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM ydsz_flow_run_task
+        WHERE assignee_id = #{assigneeId}
+          AND task_status IN ('PENDING', 'CLAIMED')
+          AND status = 'ENABLED'
+          AND deleted = 0
+          <if test="lastPriority != null">
+              AND (priority, created_at, id) &lt; (#{lastPriority}, #{lastCreatedAt}, #{lastId})
+          </if>
+        ORDER BY priority DESC, created_at ASC, id ASC
+        LIMIT #{limit}
+    </select>
+
     <select id="selectDoneByAssignee" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
         FROM ydsz_flow_run_task

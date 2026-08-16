@@ -13,8 +13,9 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
  * <p>{@code ydsz-system} 微服务的 Prometheus 指标出口，继承 {@link SentryMetricsAdapter} 实现指标统一管理。
  * 通过 Spring Boot Actuator 在 {@code /actuator/prometheus} 端点暴露，供 Grafana / Prometheus 抓取。
  *
- * <p><b>架构优化（P0-2）：</b>继承 {@link SentryMetricsAdapter}，统一指标前缀 {@code ydsz_system_}，
+ * <p><b>架构优化（P2）：</b>继承 {@link SentryMetricsAdapter}，统一指标前缀 {@code ydsz_system_}，
  * 消除了 15 个手动 Counter / Timer 字段和构造器样板代码，<b>仅保留业务方法</b>。
+ * 符合《云顶编码规范》第 27.2.1 节「禁止直接操作 MeterRegistry」。
  *
  * <p><b>暴露指标清单：</b>
  * <ul>
@@ -35,27 +36,21 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
  * </ul>
  *
  * <p><b>使用方式：</b>由 Service 层（如 {@code ConfigServiceImpl}）调用对应方法，
- * 框架自动注册到 {@link MeterRegistry}，无需手动管理 Counter / Timer 生命周期。
+ * 框架自动注册指标，无需手动管理 Counter / Timer 生命周期。
  *
  * <p><b>启用条件：</b>{@code @ConditionalOnClass(MeterRegistry.class)} — Micrometer 存在时启用
  *
  * @author ydsz-team
  * @since 1.0.0
  * @see SentryMetricsAdapter 通用指标基类（封装 Counter / Timer 样板代码）
- * @see io.micrometer.core.instrument.MeterRegistry Micrometer 指标注册中心
  */
 @Slf4j
 @Component
 @ConditionalOnClass(MeterRegistry.class)
 public class SystemMetrics extends SentryMetricsAdapter {
 
-    /**
-     * 构造器：初始化 Micrometer 注册中心 + 指标前缀
-     *
-     * @param meterRegistry Spring 注入的 Micrometer 注册中心
-     */
-    public SystemMetrics(MeterRegistry meterRegistry) {
-        super(meterRegistry, "ydsz_system_");
+    public SystemMetrics() {
+        super("ydsz_system_");
     }
 
     /**

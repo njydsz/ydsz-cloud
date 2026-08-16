@@ -637,17 +637,30 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         JobLoggerImpl jobLogger = new JobLoggerImpl(log0.getId(), job.getJobKey(),
                 jobLogContentServiceProvider.getIfAvailable(),
                 logStreamManagerProvider.getIfAvailable());
-        JobExecutionContext.setLogger(jobLogger);
         // P1-2: 设置任务上下文（jobId/jobKey），供 GlueJobHandler 等 handler 读取
         ShardingContext shardingCtx = new ShardingContext();
         shardingCtx.setJobId(job.getId());
         shardingCtx.setJobKey(job.getJobKey());
         shardingCtx.setLogId(log0.getId());
-        JobExecutionContext.setShardingContext(shardingCtx);
 
-        // P7-3: 记录执行开始（INCR 并发计数器 + 日执行计数器）
-        recordExecutionStart(job.getTenantId());
+        // P0-P1: 使用 try-with-resources 确保 ThreadLocal 必定清理，杜绝上下文串扰
+        try (ExecutionContextScope scope = ExecutionContextScope.of(jobLogger, shardingCtx)) {
+            // P7-3: 记录执行开始（INCR 并发计数器 + 日执行计数器）
+            recordExecutionStart(job.getTenantId());
 
+            executeShardCore(job, shardIndex, shardTotal, lockKey, triggerType, log0, jobLogger);
+        }
+        return log0.getId();
+    }
+
+    /**
+     * 执行分片核心逻辑（在线程上下文作用域内）。
+     *
+     * <p>从 {@link #executeShard} 拆分出来，使 try-with-resources 作用域清晰。
+     */
+    private void executeShardCore(Job job, int shardIndex, int shardTotal,
+                                   String lockKey, String triggerType,
+                                   JobLog log0, JobLoggerImpl jobLogger) {
         boolean success = false;
         Object result = null;
         try {
@@ -695,24 +708,18 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
             recordExecutionEnd(job.getTenantId());
 
             notifyTaskComplete();
-
-            // P1-2: 清理任务上下文
-            JobExecutionContext.clear();
         }
-        // P0-2: 刷新并清理在线日志器（在 finally 之后，不影响主流程）
+        // P0-2: 刷新并清理在线日志器（在作用域退出后、ThreadLocal 已清理）
         try {
             jobLogger.flush();
         } catch (Exception e) {
             log.warn("[Dispatcher] 刷新在线日志失败(不影响主流程): key={} shard={} reason={}",
                     job.getJobKey(), shardIndex, e.getMessage());
-        } finally {
-            JobExecutionContext.clear();
         }
         // P6-2: 记录分片执行指标
         recordJobMetrics(job, triggerType, success, log0);
         // P5: 触发告警（分片级别，失败告警 + 慢任务告警）
         triggerAlerts(job, success, log0);
-        return log0.getId();
     }
 
     /**
@@ -996,20 +1003,34 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         JobLoggerImpl jobLogger = new JobLoggerImpl(log0.getId(), job.getJobKey(),
                 jobLogContentServiceProvider.getIfAvailable(),
                 logStreamManagerProvider.getIfAvailable());
-        JobExecutionContext.setLogger(jobLogger);
         // P1-2: 设置任务上下文（jobId/jobKey），供 GlueJobHandler 等 handler 读取
         ShardingContext shardingCtx = new ShardingContext();
         shardingCtx.setJobId(job.getId());
         shardingCtx.setJobKey(job.getJobKey());
         shardingCtx.setLogId(log0.getId());
-        JobExecutionContext.setShardingContext(shardingCtx);
 
-        // P7-3: 记录执行开始（INCR 并发计数器 + 日执行计数器）
-        recordExecutionStart(job.getTenantId());
+        // P0-P1: 使用 try-with-resources 确保 ThreadLocal 必定清理，杜绝上下文串扰
+        try (ExecutionContextScope scope = ExecutionContextScope.of(jobLogger, shardingCtx)) {
+            // P7-3: 记录执行开始（INCR 并发计数器 + 日执行计数器）
+            recordExecutionStart(job.getTenantId());
 
-        // P3-13: 推送 TASK_STARTED WebHook 事件
-        dispatchWebhookEvent("TASK_STARTED", job, log0);
+            // P3-13: 推送 TASK_STARTED WebHook 事件
+            dispatchWebhookEvent("TASK_STARTED", job, log0);
 
+            executeAndFinalize(job, lockKey, triggerType, retryCount, log0, jobLogger, shardingCtx);
+        }
+        return log0.getId();
+    }
+
+    /**
+     * 执行任务核心逻辑并在作用域内完成收尾。
+     *
+     * <p>从 {@link #executeJob} 拆分出来，使 try-with-resources 作用域清晰，
+     * 同时保持原有执行语义（handler 调用 + 状态更新 + 事件发布）。
+     */
+    private void executeAndFinalize(Job job, String lockKey, String triggerType,
+                                     int retryCount, JobLog log0, JobLoggerImpl jobLogger,
+                                     ShardingContext shardingCtx) {
         boolean success = false;
         Object result = null;
         try {
@@ -1083,18 +1104,13 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
 
             // 通知心跳组件：任务结束
             notifyTaskComplete();
-
-            // P1-2: 清理任务上下文
-            JobExecutionContext.clear();
         }
-        // P0-2: 刷新并清理在线日志器（在 finally 之后，不影响主流程）
+        // P0-2: 刷新并清理在线日志器（在作用域退出后、ThreadLocal 已清理）
         try {
             jobLogger.flush();
         } catch (Exception e) {
             log.warn("[Dispatcher] 刷新在线日志失败(不影响主流程): key={} reason={}",
                     job.getJobKey(), e.getMessage());
-        } finally {
-            JobExecutionContext.clear();
         }
         // P6-2: 记录任务执行指标
         recordJobMetrics(job, triggerType, success, log0);
@@ -1112,7 +1128,6 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         if (!success) {
             scheduleRetryIfNeeded(job, holdLock, triggerType, retryCount);
         }
-        return log0.getId();
     }
 
     /**

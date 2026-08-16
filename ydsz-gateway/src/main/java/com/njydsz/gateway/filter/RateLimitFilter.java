@@ -34,7 +34,7 @@ import com.njydsz.gateway.config.GatewayMetrics;
 import com.njydsz.gateway.config.RateLimitProperties;
 
 /**
- * P2-15: 精细化限流全局过滤器
+ * P3-7: 精细化限流全局过滤器（三维度合并Lua脚本版）
  *
  * <p>基于 Redis + Lua 脚本实现的令牌桶限流，支持多维度：
  * <ul>
@@ -42,6 +42,11 @@ import com.njydsz.gateway.config.RateLimitProperties;
  *   <li>IP 级限流（按客户端 IP）</li>
  *   <li>租户级限流（按 X-Tenant-Id）</li>
  * </ul>
+ *
+ * <h3>P3-7 性能优化（三维度合并）</h3>
+ * <p>原实现使用 {@code Mono.zip} 并行发起 3 次 Redis 调用（每维度一次），
+ * 合并为单次 Redis 调用：在一个 Lua 脚本中完成三个维度的令牌桶计算，
+ * 减少 Redis 网络 IO 66%（3次→1次），降低 Redis 服务端压力。
  *
  * <h3>令牌桶算法</h3>
  * <p>使用 Redis Lua 脚本保证原子性：
@@ -68,7 +73,7 @@ import com.njydsz.gateway.config.RateLimitProperties;
  *   <li>{@code Retry-After}: 建议重试等待时间（秒）</li>
  * </ul>
  *
- * @since 1.0.0
+ * @since 3.7.0
  * @author ydsz-team
  */
 @Slf4j
@@ -102,73 +107,136 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
     private volatile long instanceCountFetchedAt = 0;
 
     /**
-     * 令牌桶 Lua 脚本（秒精度版，适配 ReactiveStringRedisTemplate）
+     * P3-7: 三维度合并令牌桶 Lua 脚本
      *
-     * <p>与 ydsz-common-redis 的 {@code RedisScriptConstants.TOKEN_BUCKET_LUA_MS} 算法同源，
-     * 差异：本脚本使用秒精度时间戳 + EXPIRE（秒 TTL），返回 {allowed, remaining, reset}；
-     * common-redis 版使用毫秒精度 + PEXPIRE（毫秒 TTL），返回 {allowed, tokens}。
-     * 修改任一版本时请保持算法语义一致（refill = elapsed * rate，cap at capacity）。
+     * <p>将 IP / 用户 / 租户三个维度的令牌桶计算合并为单次 Redis 调用，
+     * 减少 66% 的网络 IO。脚本内部定义 {@code token_bucket} 函数复用算法。
      *
-     * <p>参数: KEYS[1]=redis_key, ARGV[1]=replenishRate, ARGV[2]=burstCapacity, ARGV[3]=timestamp_seconds, ARGV[4]=requested_tokens
-     * 返回: {allowed(1/0), remaining_tokens, reset_seconds}
+     * <p>参数:
+     * <pre>
+     *   KEYS[1] = ip key         KEYS[2] = user key         KEYS[3] = tenant key
+     *   ARGV[1] = ip rate        ARGV[2] = ip capacity      ARGV[3] = ip enabled(1/0)
+     *   ARGV[4] = user rate      ARGV[5] = user capacity    ARGV[6] = user enabled(1/0)
+     *   ARGV[7] = tenant rate    ARGV[8] = tenant capacity  ARGV[9] = tenant enabled(1/0)
+     *   ARGV[10] = timestamp_seconds  ARGV[11] = requested_tokens
+     * </pre>
      *
-     * @see com.njydsz.common.redis.constant.RedisScriptConstants#TOKEN_BUCKET_LUA_MS 同源脚本（毫秒版）
+     * <p>返回: {ip_allowed, ip_remaining, ip_reset, user_allowed, user_remaining, user_reset, tenant_allowed, tenant_remaining, tenant_reset}
      */
-    private static final String TOKEN_BUCKET_SCRIPT = """
-            local rate = tonumber(ARGV[1])
-            local capacity = tonumber(ARGV[2])
-            local now = tonumber(ARGV[3])
-            local requested = tonumber(ARGV[4])
+    private static final String MERGED_TOKEN_BUCKET_SCRIPT = """
+            -- 令牌桶算法（单维度，内部复用）
+            local function token_bucket(key, rate, capacity, now, requested)
+                local bucket = redis.call('hmget', key, 'tokens', 'timestamp')
+                local tokens = tonumber(bucket[1])
+                local last_refill = tonumber(bucket[2])
 
-            local key = KEYS[1]
-            local bucket = redis.call('hmget', key, 'tokens', 'timestamp')
-            local tokens = tonumber(bucket[1])
-            local last_refill = tonumber(bucket[2])
+                if tokens == nil then
+                    tokens = capacity
+                    last_refill = now
+                end
 
-            if tokens == nil then
-                tokens = capacity
-                last_refill = now
+                -- 计算自上次填充以来应补充的令牌数
+                local elapsed = math.max(0, now - last_refill)
+                local refill = elapsed * rate
+                tokens = math.min(capacity, tokens + refill)
+
+                local allowed = 0
+                local remaining = tokens
+
+                if tokens >= requested then
+                    tokens = tokens - requested
+                    allowed = 1
+                    remaining = tokens
+                end
+
+                -- 写回桶状态，设置 TTL（2 倍填充时间，避免无限存储）
+                local ttl = math.ceil(capacity / rate * 2)
+                redis.call('hmset', key, 'tokens', tokens, 'timestamp', now)
+                redis.call('expire', key, ttl)
+
+                local reset = math.ceil((capacity - tokens) / rate)
+                return allowed, remaining, reset
             end
 
-            -- 计算自上次填充以来应补充的令牌数
-            local elapsed = math.max(0, now - last_refill)
-            local refill = elapsed * rate
-            tokens = math.min(capacity, tokens + refill)
+            -- 参数解析
+            local ip_key = KEYS[1]
+            local user_key = KEYS[2]
+            local tenant_key = KEYS[3]
 
-            local allowed = 0
-            local remaining = tokens
+            local ip_rate = tonumber(ARGV[1])
+            local ip_capacity = tonumber(ARGV[2])
+            local ip_enabled = tonumber(ARGV[3])
 
-            if tokens >= requested then
-                tokens = tokens - requested
-                allowed = 1
-                remaining = tokens
+            local user_rate = tonumber(ARGV[4])
+            local user_capacity = tonumber(ARGV[5])
+            local user_enabled = tonumber(ARGV[6])
+
+            local tenant_rate = tonumber(ARGV[7])
+            local tenant_capacity = tonumber(ARGV[8])
+            local tenant_enabled = tonumber(ARGV[9])
+
+            local now = tonumber(ARGV[10])
+            local requested = tonumber(ARGV[11])
+
+            -- 执行三维度检查（未启用维度默认放行）
+            local ip_allowed, ip_remaining, ip_reset = 1, 0, 0
+            local user_allowed, user_remaining, user_reset = 1, 0, 0
+            local tenant_allowed, tenant_remaining, tenant_reset = 1, 0, 0
+
+            if ip_enabled == 1 then
+                ip_allowed, ip_remaining, ip_reset = token_bucket(ip_key, ip_rate, ip_capacity, now, requested)
             end
 
-            -- 写回桶状态，设置 TTL（2 倍填充时间，避免无限存储）
-            local ttl = math.ceil(capacity / rate * 2)
-            redis.call('hmset', key, 'tokens', tokens, 'timestamp', now)
-            redis.call('expire', key, ttl)
+            if user_enabled == 1 then
+                user_allowed, user_remaining, user_reset = token_bucket(user_key, user_rate, user_capacity, now, requested)
+            end
 
-            local reset = math.ceil((capacity - tokens) / rate)
-            return {allowed, remaining, reset}
+            if tenant_enabled == 1 then
+                tenant_allowed, tenant_remaining, tenant_reset = token_bucket(tenant_key, tenant_rate, tenant_capacity, now, requested)
+            end
+
+            return {ip_allowed, ip_remaining, ip_reset, user_allowed, user_remaining, user_reset, tenant_allowed, tenant_remaining, tenant_reset}
             """;
 
     /**
-     * P0-1: 预编译 Lua 脚本（移除 @SuppressWarnings）
-     * <p>使用 List.class 而非 List<Long>.class（泛型擦除后等价），
-     * 避免未经检查的强制类型转换。
+     * P3-7: 预编译合并 Lua 脚本
      */
-    private final RedisScript<List> tokenBucketScript = RedisScript.of(
-            new ByteArrayResource(TOKEN_BUCKET_SCRIPT.getBytes(StandardCharsets.UTF_8)),
+    private final RedisScript<List> mergedTokenBucketScript = RedisScript.of(
+            new ByteArrayResource(MERGED_TOKEN_BUCKET_SCRIPT.getBytes(StandardCharsets.UTF_8)),
             List.class
     );
 
     /**
-     * 精细化限流核心过滤器：多维度令牌桶限流（IP / 用户 / 租户）。
+     * P3-7: 三维度合并限流结果
      *
-     * <p>限流关闭或白名单路径直接放行 → 提取客户端 IP / 用户 / 租户标识 →
-     * 三维度并行执行 Redis Lua 令牌桶检查，任一维度拒绝即返回 429。
-     * Redis 连续失败超过阈值时切换本地兜底令牌桶（P0-3）。
+     * @param ipAllowed        IP 维度是否放行
+     * @param ipRemaining      IP 维度剩余令牌
+     * @param ipReset          IP 维度重置时间
+     * @param userAllowed      用户维度是否放行
+     * @param userRemaining    用户维度剩余令牌
+     * @param userReset        用户维度重置时间
+     * @param tenantAllowed    租户维度是否放行
+     * @param tenantRemaining  租户维度剩余令牌
+     * @param tenantReset      租户维度重置时间
+     */
+    private record MergedRateLimitResult(
+            boolean ipAllowed, int ipRemaining, int ipReset,
+            boolean userAllowed, int userRemaining, int userReset,
+            boolean tenantAllowed, int tenantRemaining, int tenantReset
+    ) {
+        /**
+         * 是否全部维度放行
+         */
+        boolean allAllowed() {
+            return ipAllowed && userAllowed && tenantAllowed;
+        }
+    }
+
+    /**
+     * P3-7: 三维度合并限流核心过滤器（单次 Redis 调用）
+     *
+     * <p>替代原有的 Mono.zip 三维度并行方案，将三个维度的令牌桶计算
+     * 合并到单次 Redis Lua 脚本调用，减少 66% 网络 IO。
      *
      * @param exchange 服务器 Web 交换上下文
      * @param chain    网关过滤器链
@@ -192,127 +260,113 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
         String userId = request.getHeaders().getFirst(GatewayConstants.HEADER_USER_ID);
         String tenantId = request.getHeaders().getFirst(DataPermissionHeaderConstants.X_TENANT_ID);
 
-        // P2-5: 三维度并行检查，避免嵌套 flatMap 回调地狱
-        Mono<RateLimitResult> ipLimit = checkRateLimit("IP", clientIp,
-                properties.getPerIp().isEnabled(), properties.getPerIp().getDefaultQps(),
-                properties.getPerIp().getBurstCapacity(), "ydsz:ratelimit:ip:");
+        // P3-7: IP 白名单检查（合并脚本内不处理，避免白名单 IP 写入不必要的 Redis key）
+        boolean ipWhitelisted = properties.getPerIp().getWhitelist() != null
+                && clientIp != null && !clientIp.isEmpty()
+                && properties.getPerIp().getWhitelist().contains(clientIp);
 
-        Mono<RateLimitResult> userLimit = checkRateLimit("USER", userId,
-                properties.getPerUser().isEnabled(), resolveUserQps(exchange),
-                properties.getPerUser().getBurstCapacity(), "ydsz:ratelimit:user:");
-
-        Mono<RateLimitResult> tenantLimit = Mono.just(new RateLimitResult(true, 0, 0));
-        if (properties.getPerTenant().isEnabled() && tenantId != null) {
-            tenantLimit = checkRateLimit("TENANT", tenantId,
-                    properties.getPerTenant().isEnabled(),
-                    properties.getPerTenant().getDefaultQps(),
-                    properties.getPerTenant().getBurstCapacity(), "ydsz:ratelimit:tenant:");
-        }
-
-        // 并行执行三维度检查，任一失败即拒绝
-        return Mono.zip(ipLimit, userLimit, tenantLimit)
-                .flatMap(tuple -> {
-                    RateLimitResult ip = tuple.getT1();
-                    RateLimitResult user = tuple.getT2();
-                    RateLimitResult tenant = tuple.getT3();
-
-                    if (!ip.allowed()) {
+        // P3-7: 三维度合并限流检查（单次 Redis 调用）
+        return executeMergedTokenBucket(exchange, clientIp, userId, tenantId, ipWhitelisted, path)
+                .flatMap(result -> {
+                    if (result == null || result.allAllowed()) {
+                        return chain.filter(exchange);
+                    }
+                    // 按优先级返回第一个被拒绝的维度
+                    if (!result.ipAllowed()) {
                         return rejectWithRateLimit(exchange, "IP", clientIp,
-                                properties.getPerIp().getDefaultQps(), ip.resetSeconds());
+                                properties.getPerIp().getDefaultQps(), result.ipReset());
                     }
-                    if (!user.allowed()) {
+                    if (!result.userAllowed()) {
                         return rejectWithRateLimit(exchange, "USER", userId,
-                                resolveUserQps(exchange), user.resetSeconds());
+                                resolveUserQps(exchange), result.userReset());
                     }
-                    if (!tenant.allowed()) {
-                        return rejectWithRateLimit(exchange, "TENANT", tenantId,
-                                properties.getPerTenant().getDefaultQps(), tenant.resetSeconds());
-                    }
-                    return chain.filter(exchange);
+                    return rejectWithRateLimit(exchange, "TENANT", tenantId,
+                            properties.getPerTenant().getDefaultQps(), result.tenantReset());
                 });
     }
 
     /**
-     * P2-5: 统一限流检查方法（替代原有三个独立方法）
+     * P3-7: 执行三维度合并令牌桶限流检查（单次 Redis 调用）
      *
-     * @param dimension       限流维度（IP / USER / TENANT）
-     * @param identity        限流标识
-     * @param dimensionEnabled 该维度是否启用
-     * @param replenishRate   每秒填充速率
-     * @param burstCapacity   突发容量
-     * @param keyPrefix       Redis 键前缀
-     * @return 限流结果
+     * @param exchange      服务器 Web 交换上下文
+     * @param clientIp      客户端 IP
+     * @param userId        用户 ID
+     * @param tenantId      租户 ID
+     * @param ipWhitelisted IP 是否在白名单中
+     * @param path          请求路径（用于异常日志）
+     * @return 三维度合并限流结果
      */
-    private Mono<RateLimitResult> checkRateLimit(String dimension, String identity,
-                                                 boolean dimensionEnabled,
-                                                 int replenishRate, int burstCapacity,
-                                                 String keyPrefix) {
-        if (!dimensionEnabled || identity == null || identity.isEmpty()) {
-            return Mono.just(new RateLimitResult(true, 0, 0));
-        }
-
-        // IP 白名单检查
-        if ("IP".equals(dimension) && properties.getPerIp().getWhitelist() != null
-                && properties.getPerIp().getWhitelist().contains(identity)) {
-            return Mono.just(new RateLimitResult(true, 0, 0));
-        }
-
-        String key = keyPrefix + identity;
-        return executeTokenBucket(key, replenishRate, burstCapacity);
-    }
-
-    /**
-     * 执行令牌桶限流检查
-     *
-     * <p>P0-3: 当 Redis 连续失败超过阈值时切换到本地兜底模式。
-     * P0-1: 安全类型转换避免 unchecked cast。
-     * P3-6: 返回 RateLimitResult 携带实际 reset 值。
-     *
-     * @param key           Redis 键
-     * @param replenishRate 每秒填充速率
-     * @param burstCapacity 突发容量
-     * @return 限流结果
-     */
-    private Mono<RateLimitResult> executeTokenBucket(String key, int replenishRate, int burstCapacity) {
+    private Mono<MergedRateLimitResult> executeMergedTokenBucket(ServerWebExchange exchange,
+                                                                 String clientIp, String userId,
+                                                                 String tenantId, boolean ipWhitelisted,
+                                                                 String path) {
         // P0-3: Redis 熔断检查 — 连续失败超过阈值时走本地兜底
         if (redisFailureCount.get() >= CIRCUIT_THRESHOLD) {
             log.warn("[RateLimit] Redis 连续失败 {} 次，切换到本地兜底限流模式", redisFailureCount.get());
-            return Mono.just(localFallback(replenishRate, burstCapacity));
+            return Mono.just(localFallbackMerged());
+        }
+
+        // 构造三维度参数
+        boolean ipEnabled = properties.getPerIp().isEnabled() && !ipWhitelisted && clientIp != null && !clientIp.isEmpty();
+        boolean userEnabled = properties.getPerUser().isEnabled() && userId != null && !userId.isEmpty();
+        boolean tenantEnabled = properties.getPerTenant().isEnabled() && tenantId != null && !tenantId.isEmpty();
+
+        // 三维度全部未启用（或无对应标识），直接放行
+        if (!ipEnabled && !userEnabled && !tenantEnabled) {
+            return Mono.just(new MergedRateLimitResult(true, 0, 0, true, 0, 0, true, 0, 0));
         }
 
         long now = System.currentTimeMillis() / 1000;
-        List<String> keys = List.of(key);
+        String ipKey = "ydsz:ratelimit:ip:" + (clientIp != null ? clientIp : "");
+        String userKey = "ydsz:ratelimit:user:" + (userId != null ? userId : "");
+        String tenantKey = "ydsz:ratelimit:tenant:" + (tenantId != null ? tenantId : "");
+
+        List<String> keys = List.of(ipKey, userKey, tenantKey);
         List<Object> args = Arrays.asList(
-                String.valueOf(replenishRate),
-                String.valueOf(burstCapacity),
+                String.valueOf(properties.getPerIp().getDefaultQps()),
+                String.valueOf(properties.getPerIp().getBurstCapacity()),
+                ipEnabled ? "1" : "0",
+                String.valueOf(resolveUserQps(exchange)),
+                String.valueOf(properties.getPerUser().getBurstCapacity()),
+                userEnabled ? "1" : "0",
+                String.valueOf(properties.getPerTenant().getDefaultQps()),
+                String.valueOf(properties.getPerTenant().getBurstCapacity()),
+                tenantEnabled ? "1" : "0",
                 String.valueOf(now),
                 "1"
         );
 
-        return redisTemplate.execute(tokenBucketScript, keys, args)
+        return redisTemplate.execute(mergedTokenBucketScript, keys, args)
                 .next()
                 .map(result -> {
-                    if (result == null || result.isEmpty()) {
+                    if (result == null || result.size() < 9) {
                         redisFailureCount.incrementAndGet();
-                        return new RateLimitResult(true, 0, 0);
+                        return new MergedRateLimitResult(true, 0, 0, true, 0, 0, true, 0, 0);
                     }
                     // P0-1: 安全类型转换
-                    Long allowed = getLong(result, 0);
-                    Long remaining = getLong(result, 1);
-                    Long reset = getLong(result, 2);
-                    boolean allow = allowed != null && allowed == 1L;
+                    boolean ipAllowed = getLong(result, 0) != null && getLong(result, 0) == 1L;
+                    int ipRemaining = getLong(result, 1) != null ? getLong(result, 1).intValue() : 0;
+                    int ipReset = getLong(result, 2) != null ? getLong(result, 2).intValue() : 0;
+                    boolean userAllowed = getLong(result, 3) != null && getLong(result, 3) == 1L;
+                    int userRemaining = getLong(result, 4) != null ? getLong(result, 4).intValue() : 0;
+                    int userReset = getLong(result, 5) != null ? getLong(result, 5).intValue() : 0;
+                    boolean tenantAllowed = getLong(result, 6) != null && getLong(result, 6) == 1L;
+                    int tenantRemaining = getLong(result, 7) != null ? getLong(result, 7).intValue() : 0;
+                    int tenantReset = getLong(result, 8) != null ? getLong(result, 8).intValue() : 0;
+
                     redisFailureCount.set(0);
-                    return new RateLimitResult(allow,
-                            remaining != null ? remaining.intValue() : 0,
-                            reset != null ? reset.intValue() : 0);
+                    return new MergedRateLimitResult(
+                            ipAllowed, ipRemaining, ipReset,
+                            userAllowed, userRemaining, userReset,
+                            tenantAllowed, tenantRemaining, tenantReset);
                 })
                 .onErrorResume(e -> {
                     int count = redisFailureCount.incrementAndGet();
-                    log.warn("[RateLimit] Redis 限流检查异常 (连续 {} 次)，降级到本地兜底: key={} err={}",
-                            count, key, e.getMessage());
-                    return Mono.just(localFallback(replenishRate, burstCapacity));
+                    log.warn("[RateLimit] Redis 限流检查异常 (连续 {} 次)，降级到本地兜底: path={} err={}",
+                            count, path, e.getMessage());
+                    return Mono.just(localFallbackMerged());
                 })
-                .defaultIfEmpty(new RateLimitResult(true, 0, 0));
+                .defaultIfEmpty(new MergedRateLimitResult(true, 0, 0, true, 0, 0, true, 0, 0));
     }
 
     /**
@@ -340,20 +394,16 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
     }
 
     /**
-     * P0-3: 本地兜底限流（Redis 不可用时的降级策略）
+     * P3-7: 本地兜底限流（Redis 不可用时的降级策略，三维度合并返回）
      *
      * <p>P1-2 分布式协调增强：本地兜底按网关实例数自适应分摊配额。
-     * Redis 故障时无法共享计数（共享存储已不可用），行业标准做法是
-     * 各实例按 {@code replenishRate / instanceCount} 分摊，使集群总限流
-     * 效果接近配置值，避免"N 个实例 = N 倍配额"的稀释问题。
      */
-    private RateLimitResult localFallback(int replenishRate, int burstCapacity) {
-        // P1-2: 降级模式指标（Grafana 据此告警"限流降级中，请检查 Redis"）
+    private MergedRateLimitResult localFallbackMerged() {
         if (gatewayMetrics != null) {
             gatewayMetrics.incrementRatelimitFallback();
         }
-        int effectiveRate = resolveFallbackRate(replenishRate);
-        int effectiveCapacity = Math.max(1, burstCapacity / Math.max(1, getGatewayInstanceCount()));
+        int effectiveRate = resolveFallbackRate(properties.getPerIp().getDefaultQps());
+        int effectiveCapacity = Math.max(1, properties.getPerIp().getBurstCapacity() / Math.max(1, getGatewayInstanceCount()));
         long now = System.currentTimeMillis() / 1000;
         long elapsed = now - localBucketLastRefill;
         long refill = elapsed * effectiveRate;
@@ -373,7 +423,9 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
         int reset = effectiveRate > 0
                 ? (int) Math.ceil((double) (effectiveCapacity - tokens) / effectiveRate)
                 : properties.getResponseHeaders().getRetryAfter();
-        return new RateLimitResult(allowed, (int) tokens, reset);
+
+        // 本地兜底模式：三个维度共享一个令牌桶（降级模式下保持行为一致）
+        return new MergedRateLimitResult(allowed, (int) tokens, reset, allowed, (int) tokens, reset, allowed, (int) tokens, reset);
     }
 
     /**
@@ -406,12 +458,6 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
         cachedInstanceCount = count;
         instanceCountFetchedAt = now;
         return Math.max(1, count);
-    }
-
-    /**
-     * P3-6: 限流结果记录（携带 Lua 脚本返回的实际 reset 值）
-     */
-    private record RateLimitResult(boolean allowed, int remainingTokens, int resetSeconds) {
     }
 
     /**
@@ -507,7 +553,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
     /**
      * 过滤器顺序：在认证过滤器之后执行（需要 X-User-ID 头）
      *
-     * <p>P1-9: 原为 +20，与 {@link GrayLoadBalancerRequestFilter} 冲突，
+     * <p>P1-9: 原为 +20，与 {@link com.njydsz.gateway.filter.GrayLoadBalancerRequestFilter} 冲突，
      * 调整为 +30，确保灰度标识注入（+20）在限流之前完成。
      *
      * @return 顺序值

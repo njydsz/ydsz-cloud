@@ -1,12 +1,14 @@
 package com.njydsz.literule.domain.entity;
 
 import java.math.BigDecimal;
+
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * 规则集实体（P2-14）。
@@ -18,7 +20,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * 固化规则定义快照，保证历史版本内容可复现、可回滚。
  *
  * @author ydsz-team
- * @since 1.0.0 (P2-14)
+ * @since 1.0.0
  */
 @Data
 @SuperBuilder
@@ -74,4 +76,64 @@ public class RulePackDO extends MpBaseEntity<String> {
 
     /** 是否官方认证规则集（true=官方发布, false=社区贡献） */
     private Boolean official;
+
+    // ==================== 领域行为方法 ====================
+
+    /**
+     * 判断规则集是否可用（启用且非空）。
+     *
+     * @return true 表示可用
+     */
+    public boolean isAvailable() {
+        return Boolean.TRUE.equals(enabled);
+    }
+
+    /**
+     * 判断是否为官方认证规则集。
+     *
+     * @return true 表示官方发布
+     */
+    public boolean isOfficial() {
+        return Boolean.TRUE.equals(official);
+    }
+
+    /**
+     * 增加下载次数（原子操作安全由调用方保证）。
+     */
+    public void incrementDownloadCount() {
+        if (this.downloadCount == null) {
+            this.downloadCount = 1L;
+        } else {
+            this.downloadCount++;
+        }
+    }
+
+    /**
+     * 更新评分（限制在 0-5 范围内）。
+     *
+     * @param newRating 新评分值
+     * @throws IllegalArgumentException 当评分超出范围时
+     */
+    public void updateRating(BigDecimal newRating) {
+        if (newRating == null
+                || newRating.compareTo(BigDecimal.ZERO) < 0
+                || newRating.compareTo(new BigDecimal("5")) > 0) {
+            throw new IllegalArgumentException("评分必须在 0-5 之间: " + newRating);
+        }
+        this.rating = newRating;
+    }
+
+    /**
+     * 下架规则集。
+     */
+    public void delist() {
+        this.enabled = false;
+    }
+
+    /**
+     * 上架规则集。
+     */
+    public void list() {
+        this.enabled = true;
+    }
 }

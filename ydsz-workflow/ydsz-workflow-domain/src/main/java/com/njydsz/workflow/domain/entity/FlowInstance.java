@@ -1,14 +1,19 @@
 package com.njydsz.workflow.domain.entity;
 
 import java.io.Serial;
+import java.time.Duration;
 import java.time.LocalDateTime;
+
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.exception.core.BusinessException;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
+import com.njydsz.workflow.domain.enums.WorkflowExceptionCode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * 流程实例实体
@@ -132,4 +137,104 @@ public class FlowInstance extends MpBaseEntity<String> {
 
     /** 退回原因（最近一次 REJECT 操作的备注，重审时清空） */
     private String rejectReason;
+
+    // ============================== 充血模型行为方法 ==============================
+
+    /**
+     * 状态流转：从当前状态转换到目标状态
+     *
+     * <p>内置状态机校验，流转非法时抛出
+     * {@link WorkflowExceptionCode#INSTANCE_STATUS_INVALID}。
+     * 调用此方法后应持久化实体（由应用层 Service 在事务中完成）。
+     *
+     * @param target 目标状态，不可为 null
+     * @param operatorId 操作人 ID（用于审计）
+     * @throws BusinessException 状态流转非法或实例为终态时抛出
+     * @see FlowInstanceStatus#canTransitTo
+     */
+    public void transitTo(FlowInstanceStatus target, String operatorId) {
+        FlowInstanceStatus current = FlowInstanceStatus.valueOf(flowStatus);
+        if (!current.canTransitTo(target)) {
+            throw new BusinessException(WorkflowExceptionCode.INSTANCE_STATUS_INVALID,
+                    "流程实例状态流转非法: " + flowStatus + " -> " + target.name());
+        }
+        this.flowStatus = target.name();
+        if (target.isFinished()) {
+            this.endAt = LocalDateTime.now();
+            if (this.startAt != null) {
+                this.durationMs = Duration.between(this.startAt, this.endAt).toMillis();
+            }
+        }
+    }
+
+    /**
+     * 是否为终态实例
+     *
+     * <p>终态实例不允许再次变更状态（ROLLBACK 回滚场景由专门的 {@link #rollback} 方法处理）。
+     *
+     * @return true-终态（已完成/已终止/已驳回/已回滚）；false-运行中
+     */
+    public boolean isFinished() {
+        return FlowInstanceStatus.valueOf(flowStatus).isFinished();
+    }
+
+    /**
+     * 是否可挂起（仅 RUNNING 状态可挂起）
+     *
+     * @return true-可挂起
+     */
+    public boolean canSuspend() {
+        return FlowInstanceStatus.RUNNING.name().equals(flowStatus);
+    }
+
+    /**
+     * 是否可恢复（仅 SUSPENDED 状态可恢复）
+     *
+     * @return true-可恢复
+     */
+    public boolean canActivate() {
+        return FlowInstanceStatus.SUSPENDED.name().equals(flowStatus);
+    }
+
+    /**
+     * 是否已超期（存在 dueAt 且当前时间在 dueAt 之后）
+     *
+     * @return true-已超期
+     */
+    public boolean isOverdue() {
+        return dueAt != null && LocalDateTime.now().isAfter(dueAt);
+    }
+
+    /**
+     * 是否为子流程实例
+     *
+     * @return true-父流程实例 ID 不为空
+     */
+    public boolean isSubProcess() {
+        return parentInstanceId != null && !parentInstanceId.isBlank();
+    }
+
+    /**
+     * 标记实例为驳回状态
+     *
+     * <p>同时记录驳回原因。内部调用 {@link #transitTo} 做状态机校验。
+     *
+     * @param reason 驳回原因
+     * @param operatorId 操作人 ID
+     */
+    public void reject(String reason, String operatorId) {
+        this.rejectReason = reason;
+        transitTo(FlowInstanceStatus.REJECTED, operatorId);
+    }
+
+    /**
+     * 回滚已完成的实例（仅 COMPLETED 状态可回滚）
+     *
+     * <p>由发起人/管理员触发，流转到 ROLLED_BACK 终态。
+     *
+     * @param operatorId 操作人 ID
+     */
+    public void rollback(String operatorId) {
+        transitTo(FlowInstanceStatus.ROLLED_BACK, operatorId);
+    }
 }

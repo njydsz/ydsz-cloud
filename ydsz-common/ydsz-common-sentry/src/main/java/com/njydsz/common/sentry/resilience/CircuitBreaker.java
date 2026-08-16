@@ -1,6 +1,6 @@
 package com.njydsz.common.sentry.resilience;
 
-import java.time.temporal.ChronoUnit;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
@@ -146,14 +146,14 @@ public class CircuitBreaker {
      * 记录一次成功调用。
      */
     private void onSuccess() {
-        delegate.onSuccess(0, java.time.temporal.ChronoUnit.MILLIS);
+        delegate.onSuccess(0, TimeUnit.MILLISECONDS);
     }
 
     /**
      * 记录一次失败调用。
      */
     private void onFailure() {
-        delegate.onError(0, java.time.temporal.ChronoUnit.MILLIS, new RuntimeException("CircuitBreaker recorded failure"));
+        delegate.onError(0, TimeUnit.MILLISECONDS, new RuntimeException("CircuitBreaker recorded failure"));
     }
 
     /**
@@ -164,7 +164,7 @@ public class CircuitBreaker {
      * @param duration 耗时
      * @param unit     耗时单位
      */
-    public void recordSuccess(long duration, ChronoUnit unit) {
+    public void recordSuccess(long duration, TimeUnit unit) {
         delegate.onSuccess(duration, unit);
     }
 
@@ -177,7 +177,7 @@ public class CircuitBreaker {
      * @param unit      耗时单位
      * @param throwable 触发失败的异常（可为 null）
      */
-    public void recordFailure(long duration, ChronoUnit unit, Throwable throwable) {
+    public void recordFailure(long duration, TimeUnit unit, Throwable throwable) {
         delegate.onError(duration, unit,
                 throwable != null ? throwable : new RuntimeException("CircuitBreaker recorded failure"));
     }

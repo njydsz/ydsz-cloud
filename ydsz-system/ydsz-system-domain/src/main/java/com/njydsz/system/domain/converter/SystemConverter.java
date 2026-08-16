@@ -8,12 +8,18 @@ import com.njydsz.system.domain.entity.Config;
 import com.njydsz.system.domain.entity.DictItem;
 import com.njydsz.system.domain.entity.DictType;
 import com.njydsz.system.domain.entity.DictVersion;
+import com.njydsz.system.domain.entity.Tenant;
+import com.njydsz.system.domain.entity.TenantPlan;
+import com.njydsz.system.domain.entity.TenantPlanMenu;
 import com.njydsz.system.domain.entity.Variable;
 import com.njydsz.system.domain.vo.AppInfoVO;
 import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.domain.vo.DictTypeVO;
 import com.njydsz.system.domain.vo.DictVersionVO;
+import com.njydsz.system.domain.vo.TenantVO;
+import com.njydsz.system.domain.vo.TenantPlanVO;
+import com.njydsz.system.domain.vo.TenantPlanMenuVO;
 import com.njydsz.system.domain.vo.VariableVO;
 
 /**
@@ -40,13 +46,16 @@ import com.njydsz.system.domain.vo.VariableVO;
  * List<ConfigVO> vos = SystemConverter.INSTANT.configListToVO(entities);
  * }</pre>
  *
- * <p><b>覆盖范围（6 大实体 / 12 个方法）：</b>
+ * <p><b>覆盖范围（9 大实体 / 18 个方法）：</b>
  * <ul>
  *   <li>{@link AppInfo} → {@link AppInfoVO}</li>
  *   <li>{@link Config} → {@link ConfigVO}</li>
  *   <li>{@link DictItem} → {@link DictItemVO}</li>
  *   <li>{@link DictType} → {@link DictTypeVO}</li>
  *   <li>{@link DictVersion} → {@link DictVersionVO}</li>
+ *   <li>{@link Tenant} → {@link TenantVO}</li>
+ *   <li>{@link TenantPlan} → {@link TenantPlanVO}</li>
+ *   <li>{@link TenantPlanMenu} → {@link TenantPlanMenuVO}</li>
  *   <li>{@link Variable} → {@link VariableVO}</li>
  * </ul>
  *
@@ -152,6 +161,60 @@ public interface SystemConverter {
      * @return 字典版本 VO 列表
      */
     List<DictVersionVO> dictVersionListToVO(List<DictVersion> entities);
+
+    // ===== Tenant =====
+
+    /**
+     * 租户实体 → 租户 VO
+     *
+     * @param entity 租户实体
+     * @return 租户 VO
+     */
+    TenantVO entityToVO(Tenant entity);
+
+    /**
+     * 租户实体列表 → 租户 VO 列表
+     *
+     * @param entities 租户实体列表
+     * @return 租户 VO 列表
+     */
+    List<TenantVO> tenantListToVO(List<Tenant> entities);
+
+    // ===== TenantPlan =====
+
+    /**
+     * 套餐实体 → 套餐 VO
+     *
+     * @param entity 套餐实体
+     * @return 套餐 VO
+     */
+    TenantPlanVO entityToVO(TenantPlan entity);
+
+    /**
+     * 套餐实体列表 → 套餐 VO 列表
+     *
+     * @param entities 套餐实体列表
+     * @return 套餐 VO 列表
+     */
+    List<TenantPlanVO> planListToVO(List<TenantPlan> entities);
+
+    // ===== TenantPlanMenu =====
+
+    /**
+     * 套餐-菜单关联实体 → 套餐-菜单关联 VO
+     *
+     * @param entity 套餐-菜单关联实体
+     * @return 套餐-菜单关联 VO
+     */
+    TenantPlanMenuVO entityToVO(TenantPlanMenu entity);
+
+    /**
+     * 套餐-菜单关联实体列表 → 套餐-菜单关联 VO 列表
+     *
+     * @param entities 套餐-菜单关联实体列表
+     * @return 套餐-菜单关联 VO 列表
+     */
+    List<TenantPlanMenuVO> planMenuListToVO(List<TenantPlanMenu> entities);
 
     // ===== Variable =====
 

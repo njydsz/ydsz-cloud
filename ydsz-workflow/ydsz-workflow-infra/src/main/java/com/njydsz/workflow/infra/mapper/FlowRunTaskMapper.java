@@ -77,6 +77,30 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTask> {
                              @Param("tenantId") String tenantId);
 
     /**
+     * P1-1: 游标分页（Keyset Pagination）— 避免深度分页性能退化
+     *
+     * <p>基于上一页最后一条记录的 (priority, createdAt, id) 作为游标锚点，
+     * 查询下一页数据。相比 LIMIT/OFFSET 在大 offset 场景下有显著性能优势（O(1) vs O(N)）。
+     *
+     * <p><b>使用方式：</b>首次查询传 lastPriority=null, lastCreatedAt=null, lastId=null；
+     * 后续查询传上一页最后一条记录的对应字段值。
+     *
+     * @param assigneeId    办理人 ID
+     * @param tenantId      租户 ID
+     * @param lastPriority  上一页最后一条的 priority（首次查询传 null）
+     * @param lastCreatedAt 上一页最后一条的 createdAt（首次查询传 null）
+     * @param lastId        上一页最后一条的 id（首次查询传 null，用于打破平局）
+     * @param limit         每页大小
+     * @return 下一页任务列表
+     */
+    List<FlowRunTask> selectTodoByAssigneeCursor(@Param("assigneeId") String assigneeId,
+                                                  @Param("tenantId") String tenantId,
+                                                  @Param("lastPriority") Integer lastPriority,
+                                                  @Param("lastCreatedAt") LocalDateTime lastCreatedAt,
+                                                  @Param("lastId") String lastId,
+                                                  @Param("limit") int limit);
+
+    /**
      * 查用户已办
      */
     List<FlowRunTask> selectDoneByAssignee(@Param("assigneeId") String assigneeId,

@@ -4,7 +4,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -561,6 +563,159 @@ public class FileApplicationService {
         publishUploadEvent(saved, newName, userId);
         log.info("[FileApplicationService] 复制文件: sourceId={}, targetId={}", nodeId, saved.getId());
         return NextwikiConverter.INSTANT.entityToVO(saved);
+    }
+
+    /**
+     * 递归复制文件夹及其全部子节点（含子目录与文件）。
+     * <p>采用深度优先遍历，逐层复制节点；所有文件共享同一存储对象（引用计数 +1），
+     * 不重复占用物理空间。复制过程中维护旧新节点 ID 映射，确保父子关系正确重建。
+     *
+     * @param nodeId         源文件夹节点 ID
+     * @param targetParentId 目标父目录 ID
+     * @param userId         操作人 ID
+     * @return 复制出的新文件夹节点视图 {@link FileNodeVO}
+     * @throws BusinessException 无读权限、源节点不存在/非文件夹、配额不足、父目录非法时抛出
+     * @transaction {@code @Transactional(rollbackFor = Exception.class)}
+     * @complexity O(n)（n 为文件夹下全部子节点数）
+     * @concurrency 复制操作不加分布式锁，源数据读不加锁；目标父目录由调用方保证有效性
+     * @note 仅复制文件配额计数（不重复占存储）；复制后的文件夹节点默认去星标、私有状态
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public FileNodeVO copyFolder(String nodeId, String targetParentId, String userId) {
+        permissionService.checkRead(nodeId, userId);
+        FileNode sourceFolder = fileNodeRepository.findById(nodeId);
+        if (sourceFolder == null) {
+            throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
+        }
+        if (!sourceFolder.isFolder()) {
+            throw BusinessException.of(NextwikiExceptionCode.FILE_PARENT_NOT_FOLDER).data("nodeId", nodeId);
+        }
+
+        FileNode targetParent = resolveParentNode(targetParentId, userId);
+        String targetParentPath = targetParent.getPath() != null ? targetParent.getPath() : "/";
+        int targetParentLevel = targetParent.getLevel() != null ? targetParent.getLevel() + 1 : 1;
+
+        // 预统计待复制节点总数（用于配额预校验与进度参考）
+        List<FileNode> allDescendants = fileNodeRepository.findAllDescendants(nodeId);
+        long totalFileBytes = allDescendants.stream()
+                .filter(FileNode::isFile)
+                .filter(n -> n.getSize() != null)
+                .mapToLong(FileNode::getSize)
+                .sum();
+        long totalFileCount = allDescendants.stream().filter(FileNode::isFile).count();
+
+        // 配额预校验（复制仅增加文件数计数与引用的文件大小）
+        quotaDomainService.checkQuota("user", userId, totalFileBytes);
+
+        // 构建旧 ID → 新 ID 映射，确保子节点正确指向新父节点
+        Map<String, String> idMapping = new HashMap<>();
+
+        // 复制根文件夹节点
+        String newFolderId = String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "");
+        idMapping.put(nodeId, newFolderId);
+
+        String folderPath = targetParentPath.endsWith("/")
+                ? targetParentPath + sourceFolder.getName() + "/"
+                : targetParentPath + "/" + sourceFolder.getName() + "/";
+
+        FileNode newFolderNode = FileNode.builder()
+                .id(newFolderId)
+                .parentId(targetParent.getId())
+                .name(sourceFolder.getName())
+                .nodeType(FileNode.TYPE_FOLDER)
+                .suffix("")
+                .size(0L)
+                .storageKey(null)
+                .bucketName(null)
+                .mimeType(null)
+                .path(folderPath)
+                .level(targetParentLevel)
+                .sort(fileNodeRepository.findChildren(targetParent.getId()).size())
+                .currentVersion(0)
+                .fileHash(null)
+                .thumbnailKey(null)
+                .previewReady(false)
+                .starred(false)
+                .shareStatus("private")
+                .status("active")
+                .deleted(0)
+                .revision(0)
+                .build();
+        newFolderNode.setCreatedBy(userId);
+        newFolderNode.setUpdatedBy(userId);
+        fileNodeRepository.save(newFolderNode);
+
+        // 递归复制子节点（按层级升序处理，确保父节点先于子节点创建）
+        List<FileNode> sortedDescendants = allDescendants.stream()
+                .sorted((a, b) -> {
+                    int levelA = a.getLevel() != null ? a.getLevel() : 0;
+                    int levelB = b.getLevel() != null ? b.getLevel() : 0;
+                    return Integer.compare(levelA, levelB);
+                })
+                .collect(Collectors.toList());
+
+        for (FileNode descendant : sortedDescendants) {
+            String newId = String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "");
+            idMapping.put(descendant.getId(), newId);
+
+            String newParentId = idMapping.get(descendant.getParentId());
+            FileNode newParentNode = fileNodeRepository.findById(newParentId);
+            String newParentPath = newParentNode.getPath() != null ? newParentNode.getPath() : "/";
+            int newLevel = newParentNode.getLevel() != null ? newParentNode.getLevel() + 1 : 1;
+
+            String nodePath = newParentPath.endsWith("/")
+                    ? newParentPath + descendant.getName() + "/"
+                    : newParentPath + "/" + descendant.getName() + "/";
+
+            FileNode copyNode = FileNode.builder()
+                    .id(newId)
+                    .parentId(newParentId)
+                    .name(descendant.getName())
+                    .nodeType(descendant.getNodeType())
+                    .suffix(descendant.getSuffix())
+                    .size(descendant.getSize())
+                    .storageKey(descendant.getStorageKey())
+                    .bucketName(descendant.getBucketName())
+                    .mimeType(descendant.getMimeType())
+                    .path(nodePath)
+                    .level(newLevel)
+                    .sort(0)
+                    .currentVersion(descendant.getCurrentVersion())
+                    .fileHash(descendant.getFileHash())
+                    .thumbnailKey(descendant.getThumbnailKey())
+                    .previewReady(descendant.getPreviewReady())
+                    .starred(false)
+                    .shareStatus("private")
+                    .status("active")
+                    .deleted(0)
+                    .revision(0)
+                    .build();
+            copyNode.setCreatedBy(userId);
+            copyNode.setUpdatedBy(userId);
+            fileNodeRepository.save(copyNode);
+
+            // 文件引用计数 +1 + 创建版本引用
+            if (descendant.isFile()) {
+                if (descendant.getStorageKey() != null) {
+                    storageReferenceService.increment(descendant.getStorageKey());
+                }
+                versionDomainService.createVersion(newId, descendant.getStorageKey(),
+                        descendant.getSize(), descendant.getFileHash(),
+                        descendant.getMimeType(), "文件夹复制", userId);
+            }
+        }
+
+        // 批量增加配额（文件数 + 引用文件大小）
+        if (totalFileBytes > 0 || totalFileCount > 0) {
+            quotaDomainService.addUsage("user", userId, totalFileBytes, (int) Math.min(totalFileCount, Integer.MAX_VALUE));
+        }
+
+        // 发布复制事件
+        publishUploadEvent(newFolderNode, sourceFolder.getName(), userId);
+        log.info("[FileApplicationService] 复制文件夹完成: sourceId={}, newId={}, descendants={}",
+                nodeId, newFolderId, sortedDescendants.size());
+
+        return NextwikiConverter.INSTANT.entityToVO(newFolderNode);
     }
 
     /**
