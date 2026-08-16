@@ -1,21 +1,13 @@
 package com.njydsz.common.excel.core.listener;
 
-/**
- * ReadListener 类
- *
- * @author ydsz-team
- * @email ydsz-dev@ydszsoft.com
- * @version 1.0.0
- */
 import java.util.List;
 
 import com.njydsz.common.excel.core.context.AnalysisContext;
 
 /**
- * Excel读取监听器 - 数据读取回调接口
+ * Excel 读取监听器 — 数据读取回调接口
  *
- * <p>用于监听Excel读取过程中的关键事件,包括读取开始、数据行读取、读取结束等。
- * 每读取一行数据会触发onData回调,适合大数据量的流式处理场景。</p>
+ * <p>用于监听 Excel 读取过程中的关键事件，包括读取开始、数据行读取、读取结束等。 * 每读取一行数据会触发 {@link #onData} 回调，适合大数据量的流式处理场景。</p>
  *
  * <h3>事件触发顺序</h3>
  * <ol>

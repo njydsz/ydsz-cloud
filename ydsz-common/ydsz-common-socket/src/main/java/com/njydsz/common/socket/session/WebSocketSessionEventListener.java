@@ -13,6 +13,7 @@ import org.springframework.web.socket.messaging.SessionConnectedEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
 
 import com.njydsz.common.socket.audit.WebSocketAuditService;
+import com.njydsz.common.socket.config.WebSocketProperties;
 import com.njydsz.common.socket.constant.WebSocketConstants;
 import com.njydsz.common.socket.heartbeat.WebSocketHeartbeatHandler;
 import com.njydsz.common.socket.lifecycle.WebSocketConnectionListener;
@@ -46,6 +47,8 @@ public class WebSocketSessionEventListener {
     private final WebSocketAuditService auditService;
     private final SlowConnectionDetector slowConnectionDetector;
     private final List<WebSocketConnectionListener> connectionListeners;
+    private final WebSocketProperties properties;
+    private final LocalSessionRegistry sessionRegistry;
 
     /** 本节点活跃连接计数器（供 HealthIndicator 读取） */
     private final AtomicLong activeConnections = new AtomicLong(0);
@@ -59,7 +62,9 @@ public class WebSocketSessionEventListener {
             WebSocketHeartbeatHandler heartbeatHandler,
             WebSocketAuditService auditService,
             SlowConnectionDetector slowConnectionDetector,
-            List<WebSocketConnectionListener> connectionListeners) {
+            List<WebSocketConnectionListener> connectionListeners,
+            WebSocketProperties properties,
+            LocalSessionRegistry sessionRegistry) {
         this.onlineUserService = onlineUserService;
         this.offlineMessageStore = offlineMessageStore;
         this.messagingTemplate = messagingTemplate;
@@ -67,6 +72,8 @@ public class WebSocketSessionEventListener {
         this.auditService = auditService;
         this.slowConnectionDetector = slowConnectionDetector;
         this.connectionListeners = connectionListeners != null ? connectionListeners : List.of();
+        this.properties = properties;
+        this.sessionRegistry = sessionRegistry;
     }
 
     /**
@@ -94,6 +101,7 @@ public class WebSocketSessionEventListener {
         if (heartbeatHandler != null) {
             heartbeatHandler.registerSession(sessionId, userId);
         }
+        enforceMultiDevicePolicy(userId, sessionId);
         log.info("[WS-Session] 用户连接: userId={}, sessionId={}, localActive={}",
                 userId, sessionId, activeConnections.get());
         notifyConnected(userId, sessionId);
@@ -133,6 +141,63 @@ public class WebSocketSessionEventListener {
             slowConnectionDetector.cleanup(sessionId);
         }
         notifyDisconnected(userId, sessionId);
+    }
+
+    /**
+     * 执行多端登录策略校验。
+     *
+     * <p>根据配置的多端策略对旧 Session 进行清理：
+     * <ul>
+     *   <li>MUTEX — 关闭该用户在本节点的所有旧 Session</li>
+     *   <li>NEW_REPLACE_OLD — 超过最大 Session 数时关闭最早的 Session</li>
+     *   <li>ALLOW_ALL — 不做处理</li>
+     * </ul>
+     *
+     * @param userId    新连接的用户 ID
+     * @param sessionId 新连接的 Session ID
+     */
+    private void enforceMultiDevicePolicy(String userId, String sessionId) {
+        WebSocketProperties.MultiDevice multiDevice = properties.getMultiDevice();
+        String policy = multiDevice.getPolicy();
+        if ("ALLOW_ALL".equals(policy)) {
+            return;
+        }
+        int maxSessions = multiDevice.getMaxSessionsPerUser();
+        List<String> existingSessionIds = sessionRegistry.getSessionIds(userId);
+        if ("MUTEX".equals(policy)) {
+            for (String existingId : existingSessionIds) {
+                if (existingId.equals(sessionId)) {
+                    continue;
+                }
+                closeOldSession(userId, existingId);
+            }
+        } else if ("NEW_REPLACE_OLD".equals(policy)) {
+            int currentCount = existingSessionIds.size();
+            if (currentCount > maxSessions) {
+                String oldest = existingSessionIds.get(0);
+                closeOldSession(userId, oldest);
+            }
+        }
+    }
+
+    /**
+     * 关闭旧 Session 并注销。
+     *
+     * @param userId    用户 ID
+     * @param sessionId 待关闭的 Session ID
+     */
+    private void closeOldSession(String userId, String sessionId) {
+        org.springframework.web.socket.WebSocketSession oldSession = sessionRegistry.getSession(sessionId);
+        if (oldSession != null && oldSession.isOpen()) {
+            try {
+                oldSession.close(org.springframework.web.socket.CloseStatus.POLICY_VIOLATION);
+                log.info("[WS-Session] 多端策略关闭旧 Session: userId={}, sessionId={}", userId, sessionId);
+            } catch (Exception e) {
+                log.warn("[WS-Session] 关闭旧 Session 失败: userId={}, sessionId={}, err={}",
+                        userId, sessionId, e.getMessage());
+            }
+        }
+        sessionRegistry.unregister(userId, sessionId);
     }
 
     /**

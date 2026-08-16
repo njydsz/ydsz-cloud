@@ -115,12 +115,6 @@
       "defaultValue": 3
     },
     {
-      "name": "ydsz.sentry.logging.elk.circuit-breaker-threshold",
-      "type": "java.lang.Integer",
-      "description": "ELK 熔断器连续失败阈值。",
-      "defaultValue": 10
-    },
-    {
       "name": "ydsz.sentry.logging.loki.enabled",
       "type": "java.lang.Boolean",
       "description": "是否启用 Loki 日志发布器。",
@@ -143,12 +137,6 @@
       "type": "java.lang.Integer",
       "description": "Loki 最大重试次数。",
       "defaultValue": 3
-    },
-    {
-      "name": "ydsz.sentry.logging.loki.circuit-breaker-threshold",
-      "type": "java.lang.Integer",
-      "description": "Loki 熔断器连续失败阈值。",
-      "defaultValue": 10
     },
     {
       "name": "ydsz.sentry.logging.dual.fail-on-all-error",

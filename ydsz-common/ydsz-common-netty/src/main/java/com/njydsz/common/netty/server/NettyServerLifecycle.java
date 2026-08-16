@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.context.SmartLifecycle;
 
+import com.njydsz.common.netty.server.NettyServerException;
+
 /**
  * Netty Server Spring 生命周期管理器。
  *
@@ -52,13 +54,13 @@ public class NettyServerLifecycle implements SmartLifecycle {
                 Thread.currentThread().interrupt();
                 log.error("[Netty-Lifecycle] {} 启动被中断", server.getClass().getSimpleName(), e);
                 if (failFast) {
-                    throw new RuntimeException("Netty Server 启动被中断: "
+                    throw new NettyServerException("Netty Server 启动被中断: "
                             + server.getClass().getSimpleName(), e);
                 }
             } catch (Exception e) {
                 log.error("[Netty-Lifecycle] {} 启动失败", server.getClass().getSimpleName(), e);
                 if (failFast) {
-                    throw new RuntimeException("Netty Server 启动失败: "
+                    throw new NettyServerException("Netty Server 启动失败: "
                             + server.getClass().getSimpleName(), e);
                 }
             }

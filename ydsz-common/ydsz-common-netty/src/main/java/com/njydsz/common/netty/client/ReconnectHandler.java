@@ -47,6 +47,9 @@ import lombok.extern.slf4j.Slf4j;
 @ChannelHandler.Sharable
 public abstract class ReconnectHandler extends ChannelInboundHandlerAdapter {
 
+    /** 指数退避最大移位值（2^30 = 1,073,741,824 ms ≈ 12.4 天，防止位移溢出） */
+    private static final int MAX_BACKOFF_SHIFT = 30;
+
     private final long initialDelayMs;
     private final long maxDelayMs;
     private final int maxRetries;
@@ -90,7 +93,7 @@ public abstract class ReconnectHandler extends ChannelInboundHandlerAdapter {
      */
     public void scheduleReconnect() {
         int current = retryCount.incrementAndGet();
-        long delay = Math.min(initialDelayMs * (1L << Math.min(current - 1, 30)), maxDelayMs);
+        long delay = Math.min(initialDelayMs * (1L << Math.min(current - 1, MAX_BACKOFF_SHIFT)), maxDelayMs);
 
         log.info("[Netty-Reconnect] 计划重连: retry={}, delay={}ms", current, delay);
 

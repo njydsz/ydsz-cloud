@@ -119,6 +119,11 @@ public class FileProperties {
     /** 是否启用 Magic Number 文件头校验（默认启用；关闭后仅基于后缀名校验） */
     private boolean checkMagicNumber = true;
 
+    /** 健康检查缓存时间（秒，默认 30s）；在此时间内重复请求直接返回上次结果，避免高频轮询对存储后端造成压力 */
+    @Min(0)
+    @Max(300)
+    private int healthCheckIntervalSeconds = 30;
+
     /** 上传并发控制配置 */
     private ConcurrencyControl concurrencyControl = new ConcurrencyControl();
 

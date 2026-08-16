@@ -56,7 +56,27 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "ydsz.netty")
 public class NettyProperties {
 
-    /** Boss 线程数（接受连接） */
+    // ===== 默认常量定义 =====
+
+    /** 默认 SO_BACKLOG 队列大小 */
+    private static final int DEFAULT_SO_BACKLOG = 128;
+
+    /** 默认连接超时（毫秒） */
+    private static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 5000;
+
+    /** 默认优雅关闭超时（秒） */
+    private static final long DEFAULT_SHUTDOWN_TIMEOUT_SECONDS = 15L;
+
+    /** 默认读空闲超时（秒） */
+    private static final long DEFAULT_READER_IDLE_SECONDS = 60L;
+
+    /** 默认写空闲超时（秒） */
+    private static final long DEFAULT_WRITER_IDLE_SECONDS = 30L;
+
+    /** 最大重试次数：-1 表示无限重试 */
+    private static final int MAX_RETRIES_UNLIMITED = -1;
+
+    // ===== 配置字段 =====
     @Min(0)
     private int bossThreads = 1;
 
@@ -69,14 +89,14 @@ public class NettyProperties {
 
     /** SO_BACKLOG */
     @Min(1)
-    private int soBacklog = 128;
+    private int soBacklog = DEFAULT_SO_BACKLOG;
 
     /** TCP_NODELAY */
     private boolean tcpNoDelay = true;
 
     /** 连接超时（毫秒） */
     @Min(0)
-    private int connectTimeoutMillis = 5000;
+    private int connectTimeoutMillis = DEFAULT_CONNECT_TIMEOUT_MILLIS;
 
     /** 是否共享 EventLoopGroup（true=全局复用，false=每 Server/Client 独立） */
     private boolean sharedEventLoop = true;
@@ -87,7 +107,7 @@ public class NettyProperties {
 
     /** 优雅关闭超时（秒） */
     @Min(1)
-    private long shutdownTimeoutSeconds = 15L;
+    private long shutdownTimeoutSeconds = DEFAULT_SHUTDOWN_TIMEOUT_SECONDS;
 
     /** Server 启动失败时是否终止应用（fail-fast） */
     private boolean failFast = true;
@@ -132,10 +152,11 @@ public class NettyProperties {
     public static class Idle {
         /** 读空闲超时（秒），0 表示不检测 */
         @Min(0)
-        private long readerIdleSeconds = 60L;
+        private long readerIdleSeconds = DEFAULT_READER_IDLE_SECONDS;
+
         /** 写空闲超时（秒），0 表示不检测 */
         @Min(0)
-        private long writerIdleSeconds = 30L;
+        private long writerIdleSeconds = DEFAULT_WRITER_IDLE_SECONDS;
         /** 全双工空闲超时（秒），0 表示不检测 */
         @Min(0)
         private long allIdleSeconds = 0L;
@@ -208,6 +229,6 @@ public class NettyProperties {
         @Min(1000)
         private long maxDelayMs = 60000L;
         /** 最大重试次数（-1 = 无限重试） */
-        private int maxRetries = -1;
+        private int maxRetries = MAX_RETRIES_UNLIMITED;
     }
 }

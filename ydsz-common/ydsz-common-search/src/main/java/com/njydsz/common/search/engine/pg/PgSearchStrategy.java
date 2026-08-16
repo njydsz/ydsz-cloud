@@ -197,6 +197,17 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
             selectSql.append(" FROM ").append(indexTable).append(where);
             queryParams.addAll(whereParams);
 
+            // P3-21: Keyset 分页支持 — 游标存在时使用键集分页替代 OFFSET
+            CursorParseResult cursorResult = null;
+            boolean useKeysetPagination = false;
+            if (request.getCursor() != null && !request.getCursor().isBlank()) {
+                cursorResult = parseCursor(request.getCursor());
+                if (cursorResult != null) {
+                    useKeysetPagination = true;
+                    appendKeysetFilter(selectSql, queryParams, cursorResult, request);
+                }
+            }
+
             if (request.getSortBy() != null && !request.getSortBy().isBlank()) {
                 String direction = request.isAscending() ? "ASC" : "DESC";
                 selectSql.append(" ORDER BY ").append(sanitizeColumnName(request.getSortBy())).append(" ").append(direction);
@@ -207,9 +218,18 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
                 selectSql.append(" ORDER BY rank DESC, updated_at DESC");
             }
 
-            selectSql.append(" LIMIT ? OFFSET ?");
-            queryParams.add(request.getPageSize());
-            queryParams.add(request.getOffset());
+            // 限制最大返回数，防止异常游标拉取过多数据
+            int fetchSize = request.getPageSize();
+            if (useKeysetPagination) {
+                // keyset 分页时多取一条用于判断是否有下一页
+                selectSql.append(" LIMIT ?");
+                queryParams.add(fetchSize + 1);
+            } else {
+                selectSql.append(" LIMIT ? OFFSET ?");
+                queryParams.add(fetchSize);
+                queryParams.add(request.getOffset());
+            }
+
             List<SearchHit> hits = jdbcTemplate.query(selectSql.toString(),
                     new SearchHitRowMapper(request.isHighlight()), queryParams.toArray());
 
@@ -217,6 +237,19 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
             List<SearchAggregation> aggregations = Collections.emptyList();
             if (request.getAggregations() != null && !request.getAggregations().isEmpty()) {
                 aggregations = executeAggregations(where, whereParams, request.getAggregations());
+            }
+
+            // P3-21: 构建下一页游标
+            String nextCursor = null;
+            if (useKeysetPagination && hits.size() > fetchSize) {
+                // 多取了一条，说明有下一页
+                hits = hits.subList(0, fetchSize);
+                SearchHit lastHit = hits.get(hits.size() - 1);
+                nextCursor = buildCursor(lastHit, cursorResult.sortField);
+            } else if (!useKeysetPagination && request.getCursor() == null && hits.size() == request.getPageSize()) {
+                // 第一页且数据满页时，构建游标供下一页使用（深度分页优化）
+                SearchHit lastHit = hits.get(hits.size() - 1);
+                nextCursor = buildCursor(lastHit, null);
             }
 
             return SearchResponse.builder()
@@ -227,6 +260,7 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
                     .tookMs(took)
                     .aggregations(aggregations)
                     .engine(ENGINE_NAME)
+                    .nextCursor(nextCursor)
                     .build();
 
         } catch (Exception e) {
@@ -461,6 +495,98 @@ public class PgSearchStrategy implements SearchStrategy, IndexStrategy, SuggestS
         }
         return sb.toString();
     }
+
+    // ==================== P3-21: Keyset 分页辅助方法 ====================
+
+    /**
+     * 解析游标字符串。
+     *
+     * <p>游标格式：base64(score:id) 或 base64(sortValue:id:sortField)，
+     * 默认使用评分 + ID 作为键集分页锚点。
+     *
+     * @param cursor base64 编码的游标
+     * @return 解析结果，解析失败返回 null
+     */
+    private CursorParseResult parseCursor(String cursor) {
+        try {
+            String decoded = new String(java.util.Base64.getUrlDecoder().decode(cursor));
+            String[] parts = decoded.split(":", 3);
+            if (parts.length >= 2) {
+                double score = Double.parseDouble(parts[0]);
+                String id = parts[1];
+                String sortField = parts.length >= 3 ? parts[2] : null;
+                return new CursorParseResult(score, id, sortField);
+            }
+        } catch (Exception e) {
+            log.warn("[PgSearchStrategy] 游标解析失败，降级到 OFFSET: cursor={}", cursor, e);
+        }
+        return null;
+    }
+
+    /**
+     * 构建下一页游标。
+     *
+     * <p>从最后一个 hit 中提取 score 和 id，编码为 base64 字符串。
+     *
+     * @param lastHit 当前页最后一个结果
+     * @return base64 编码的游标字符串，分数为 null 时返回 null
+     */
+    private String buildCursor(SearchHit lastHit, String sortField) {
+        if (lastHit == null || lastHit.getScore() <= 0) {
+            return null;
+        }
+        String cursorValue = lastHit.getScore() + ":" + lastHit.getId();
+        if (sortField != null && !sortField.isBlank()) {
+            cursorValue += ":" + sortField;
+        }
+        return java.util.Base64.getUrlEncoder().withoutPadding()
+                .encodeToString(cursorValue.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    }
+
+    /**
+     * 追加 keyset 分页过滤条件（WHERE 子句）。
+     *
+     * <p>使用行值比较 (score, id) < (lastScore, lastId) 实现稳定的键集分页，
+     * 等价于 score < lastScore OR (score = lastScore AND id < lastId)，
+     * 确保分页结果不重复、不遗漏。
+     *
+     * @param selectSql   正在构建的 SQL
+     * @param queryParams 查询参数列表
+     * @param cursor      解析后的游标
+     * @param request     搜索请求
+     */
+    private void appendKeysetFilter(StringBuilder selectSql, List<Object> queryParams, CursorParseResult cursor, SearchRequest request) {
+        if (cursor == null) {
+            return;
+        }
+        if (request.getSortBy() != null && !request.getSortBy().isBlank()) {
+            // 自定义排序字段时使用字段 + ID 作为锚点
+            String direction = request.isAscending() ? ">" : "<";
+            selectSql.append(" AND (")
+                    .append(sanitizeColumnName(request.getSortBy()))
+                    .append(", id) ").append(direction)
+                    .append(" (?, ?)");
+            queryParams.add(cursor.score);
+            queryParams.add(cursor.id);
+        } else {
+            // 默认按评分排序时使用 (rank, id) 行值比较
+            selectSql.append(" AND (rank, id) < (?, ?)");
+            queryParams.add(cursor.score);
+            queryParams.add(cursor.id);
+        }
+    }
+
+    /**
+     * 游标解析结果。
+     *
+     * @param score     上一页最后一行的分数
+     * @param id        上一页最后一行的 ID
+     * @param sortField 排序字段（可选）
+     */
+    private record CursorParseResult(double score, String id, String sortField) {
+    }
+
+    // ==================== 引擎可用性与配置 ====================
 
     private void startRecoveryProbe() {
         probeScheduler.scheduleWithFixedDelay(() -> {

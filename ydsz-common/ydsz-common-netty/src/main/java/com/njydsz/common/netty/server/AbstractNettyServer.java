@@ -102,11 +102,35 @@ public abstract class AbstractNettyServer {
     /**
      * 启动 TCP Server。
      *
+     * <p>分阶段初始化：EventLoop → SSL → 流量整形 → Pipeline 配置 → 端口绑定。
+     *
      * @throws InterruptedException 启动被中断
      */
     public void start() throws InterruptedException {
         NettyEventLoopPool pool = getEventLoopPool();
 
+        initEventLoopGroups(pool);
+        initSslContext();
+        initGlobalTrafficShaping();
+
+        TrafficMonitoringHandler trafficHandler = createTrafficMonitoringHandler();
+        ConnectionEventHandler connectionHandler = createConnectionEventHandler();
+
+        ServerBootstrap bootstrap = configureServerBootstrap(pool, trafficHandler, connectionHandler);
+        bindServerPort(bootstrap);
+
+        log.info("[Netty-Server] {} 启动成功, 监听端口={}, ssl={}, trafficShaping={}",
+                getClass().getSimpleName(), port,
+                properties.getSsl().isEnabled(),
+                properties.getTrafficShaping().isEnabled());
+    }
+
+    /**
+     * 初始化 EventLoopGroup（共享或隔离模式）。
+     *
+     * @param pool EventLoop 池
+     */
+    private void initEventLoopGroups(NettyEventLoopPool pool) {
         if (properties.isSharedEventLoop()) {
             bossGroup = pool.acquireBossGroup(properties.getBossThreads());
             workerGroup = pool.acquireWorkerGroup(properties.getWorkerThreads());
@@ -114,20 +138,28 @@ public abstract class AbstractNettyServer {
             bossGroup = pool.createIsolatedBossGroup(properties.getBossThreads());
             workerGroup = pool.createIsolatedWorkerGroup(properties.getWorkerThreads());
         }
+    }
 
-        // SSL Context 一次性创建（避免每连接重建）
+    /**
+     * 初始化 SSL/TLS 上下文（如启用）。
+     */
+    private void initSslContext() {
         if (properties.getSsl().isEnabled()) {
-            sslContext = SslContextFactory.createServerContext(
-                    properties.getSsl().getKeyStore(),
-                    properties.getSsl().getKeyStorePassword(),
-                    properties.getSsl().getKeyStoreType(),
-                    properties.getSsl().getTrustStore(),
-                    properties.getSsl().getTrustStorePassword(),
-                    properties.getSsl().getTrustStoreType(),
-                    properties.getSsl().isNeedClientAuth());
+            NettyProperties.Ssl ssl = properties.getSsl();
+            SslContextFactory.SslStoreConfig keyStore = new SslContextFactory.SslStoreConfig(
+                    ssl.getKeyStore(), ssl.getKeyStorePassword(), ssl.getKeyStoreType());
+            SslContextFactory.SslStoreConfig trustStore = ssl.getTrustStore() != null
+                    ? new SslContextFactory.SslStoreConfig(
+                            ssl.getTrustStore(), ssl.getTrustStorePassword(), ssl.getTrustStoreType())
+                    : null;
+            sslContext = SslContextFactory.createServerContext(keyStore, trustStore, ssl.isNeedClientAuth());
         }
+    }
 
-        // 全局流量整形（限制整个 Server 总带宽）
+    /**
+     * 初始化全局流量整形器（全局模式时生效）。
+     */
+    private void initGlobalTrafficShaping() {
         if (properties.getTrafficShaping().isEnabled() && properties.getTrafficShaping().isGlobal()) {
             globalTrafficShapingHandler = new GlobalTrafficShapingHandler(
                     workerGroup,
@@ -135,12 +167,38 @@ public abstract class AbstractNettyServer {
                     properties.getTrafficShaping().getReadLimit(),
                     properties.getTrafficShaping().getCheckIntervalMs());
         }
+    }
 
-        // 可复用的监控 Handler（@Sharable）
-        TrafficMonitoringHandler trafficHandler =
-                metrics != null ? new TrafficMonitoringHandler(metrics) : null;
-        ConnectionEventHandler connectionHandler =
-                metrics != null ? new ConnectionEventHandler(metrics) : null;
+    /**
+     * 创建流量监控 Handler（指标收集器启用时）。
+     *
+     * @return 监控 Handler，未启用指标时返回 {@code null}
+     */
+    private TrafficMonitoringHandler createTrafficMonitoringHandler() {
+        return metrics != null ? new TrafficMonitoringHandler(metrics) : null;
+    }
+
+    /**
+     * 创建连接事件监控 Handler（指标收集器启用时）。
+     *
+     * @return 连接事件 Handler，未启用指标时返回 {@code null}
+     */
+    private ConnectionEventHandler createConnectionEventHandler() {
+        return metrics != null ? new ConnectionEventHandler(metrics) : null;
+    }
+
+    /**
+     * 配置 ServerBootstrap 参数与 Pipeline 初始化器。
+     *
+     * @param pool              EventLoop 池（用于获取传输类型）
+     * @param trafficHandler    流量监控 Handler（可为 {@code null}）
+     * @param connectionHandler 连接事件 Handler（可为 {@code null}）
+     * @return 已配置的 ServerBootstrap
+     */
+    private ServerBootstrap configureServerBootstrap(
+            NettyEventLoopPool pool,
+            TrafficMonitoringHandler trafficHandler,
+            ConnectionEventHandler connectionHandler) {
 
         ServerBootstrap bootstrap = new ServerBootstrap();
         bootstrap.group(bossGroup, workerGroup)
@@ -149,66 +207,18 @@ public abstract class AbstractNettyServer {
                 .option(ChannelOption.SO_BACKLOG, properties.getSoBacklog())
                 .childOption(ChannelOption.SO_KEEPALIVE, properties.isSoKeepAlive())
                 .childOption(ChannelOption.TCP_NODELAY, properties.isTcpNoDelay())
-                .childHandler(new ChannelInitializer<SocketChannel>() {
-                    @Override
-                    protected void initChannel(SocketChannel ch) {
-                        ChannelPipeline pipeline = ch.pipeline();
+                .childHandler(new ServerChannelInitializer(
+                        trafficHandler, connectionHandler, channelGroupManager));
+        return bootstrap;
+    }
 
-                        // SSL/TLS（复用已创建的 SslContext）
-                        if (sslContext != null) {
-                            pipeline.addLast("ssl", sslContext.newHandler(ch.alloc()));
-                        }
-
-                        // 全局流量整形
-                        if (globalTrafficShapingHandler != null) {
-                            pipeline.addLast("globalTraffic", globalTrafficShapingHandler);
-                        }
-
-                        // 空闲检测
-                        IdleStateHandlerFactory idleFactory = new IdleStateHandlerFactory(
-                                properties.getIdle().getReaderIdleSeconds(),
-                                properties.getIdle().getWriterIdleSeconds(),
-                                properties.getIdle().getAllIdleSeconds());
-                        pipeline.addLast("idleState", idleFactory.create());
-
-                        // Per-Channel 流量整形（非全局模式时）
-                        if (properties.getTrafficShaping().isEnabled()
-                                && !properties.getTrafficShaping().isGlobal()) {
-                            pipeline.addLast("trafficShaping", new ChannelTrafficShapingHandler(
-                                    properties.getTrafficShaping().getWriteLimit(),
-                                    properties.getTrafficShaping().getReadLimit(),
-                                    properties.getTrafficShaping().getCheckIntervalMs()));
-                        }
-
-                        // 大文件分块写支持
-                        pipeline.addLast("chunkedWrite", new ChunkedWriteHandler());
-
-                        // 指标监控 — 流量统计
-                        if (trafficHandler != null) {
-                            pipeline.addLast("trafficMonitor", trafficHandler);
-                        }
-
-                        // 连接事件监控（后置）
-                        if (connectionHandler != null) {
-                            pipeline.addLast("connectionEvent", connectionHandler);
-                        }
-
-                        if (channelEventDispatcher != null) {
-                            pipeline.addLast("channelEventDispatcher", channelEventDispatcher);
-                        }
-
-                        // 子类自定义 Pipeline
-                        initChannelPipeline(ch);
-
-                        if (messageDispatcher != null) {
-                            pipeline.addLast("messageDispatcher", messageDispatcher);
-                        }
-
-                        channelGroupManager.add(ch);
-                    }
-                });
-
-        // 端口绑定（P2-6: 友好错误提示）
+    /**
+     * 绑定端口并处理启动异常。
+     *
+     * @param bootstrap 已配置的 ServerBootstrap
+     * @throws InterruptedException 绑定被中断
+     */
+    private void bindServerPort(ServerBootstrap bootstrap) throws InterruptedException {
         try {
             serverChannel = bootstrap.bind(port).sync().channel();
         } catch (Exception e) {
@@ -219,10 +229,6 @@ public abstract class AbstractNettyServer {
             }
             throw e;
         }
-        log.info("[Netty-Server] {} 启动成功, 监听端口={}, ssl={}, trafficShaping={}",
-                getClass().getSimpleName(), port,
-                properties.getSsl().isEnabled(),
-                properties.getTrafficShaping().isEnabled());
     }
 
     /**
@@ -257,6 +263,91 @@ public abstract class AbstractNettyServer {
         }
 
         log.info("[Netty-Server] {} 已关闭", getClass().getSimpleName());
+    }
+
+    /**
+     * Netty Server Channel 初始化器（从 start() 中拆分的独立内部类，提升可测试性）。
+     *
+     * <p>添加通用 Handler 链：SSL → 流量整形 → 空闲检测 → 监控 → 业务 Handler。
+     */
+    private final class ServerChannelInitializer extends ChannelInitializer<SocketChannel> {
+
+        private final TrafficMonitoringHandler trafficHandler;
+        private final ConnectionEventHandler connectionHandler;
+        private final ChannelGroupManager groupManager;
+
+        /**
+         * 构造初始化器。
+         *
+         * @param trafficHandler    流量监控 Handler（可为 {@code null}）
+         * @param connectionHandler 连接事件 Handler（可为 {@code null}）
+         * @param groupManager      Channel 组管理器
+         */
+        ServerChannelInitializer(
+                TrafficMonitoringHandler trafficHandler,
+                ConnectionEventHandler connectionHandler,
+                ChannelGroupManager groupManager) {
+            this.trafficHandler = trafficHandler;
+            this.connectionHandler = connectionHandler;
+            this.groupManager = groupManager;
+        }
+
+        @Override
+        protected void initChannel(SocketChannel ch) {
+            ChannelPipeline pipeline = ch.pipeline();
+
+            // SSL/TLS（复用已创建的 SslContext）
+            if (sslContext != null) {
+                pipeline.addLast("ssl", sslContext.newHandler(ch.alloc()));
+            }
+
+            // 全局流量整形
+            if (globalTrafficShapingHandler != null) {
+                pipeline.addLast("globalTraffic", globalTrafficShapingHandler);
+            }
+
+            // 空闲检测
+            IdleStateHandlerFactory idleFactory = new IdleStateHandlerFactory(
+                    properties.getIdle().getReaderIdleSeconds(),
+                    properties.getIdle().getWriterIdleSeconds(),
+                    properties.getIdle().getAllIdleSeconds());
+            pipeline.addLast("idleState", idleFactory.create());
+
+            // Per-Channel 流量整形（非全局模式时）
+            if (properties.getTrafficShaping().isEnabled()
+                    && !properties.getTrafficShaping().isGlobal()) {
+                pipeline.addLast("trafficShaping", new ChannelTrafficShapingHandler(
+                        properties.getTrafficShaping().getWriteLimit(),
+                        properties.getTrafficShaping().getReadLimit(),
+                        properties.getTrafficShaping().getCheckIntervalMs()));
+            }
+
+            // 大文件分块写支持
+            pipeline.addLast("chunkedWrite", new ChunkedWriteHandler());
+
+            // 指标监控 — 流量统计
+            if (trafficHandler != null) {
+                pipeline.addLast("trafficMonitor", trafficHandler);
+            }
+
+            // 连接事件监控（后置）
+            if (connectionHandler != null) {
+                pipeline.addLast("connectionEvent", connectionHandler);
+            }
+
+            if (channelEventDispatcher != null) {
+                pipeline.addLast("channelEventDispatcher", channelEventDispatcher);
+            }
+
+            // 子类自定义 Pipeline
+            initChannelPipeline(ch);
+
+            if (messageDispatcher != null) {
+                pipeline.addLast("messageDispatcher", messageDispatcher);
+            }
+
+            groupManager.add(ch);
+        }
     }
 
     /**

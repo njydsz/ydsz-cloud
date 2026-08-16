@@ -17,6 +17,8 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.netty.transport.NettyTransportException;
+
 /**
  * 原生传输检测器 — 自动检测并选择最优的 Netty 传输方式。
  *
@@ -75,7 +77,7 @@ public final class NativeTransportDetector {
         }
 
         if ("enabled".equalsIgnoreCase(mode)) {
-            throw new IllegalStateException(
+            throw new NettyTransportException(
                     "原生传输已强制启用，但当前环境不支持 Epoll 或 KQueue");
         }
 

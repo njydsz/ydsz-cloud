@@ -29,6 +29,8 @@ import com.njydsz.common.auth.handler.AbstractAuthHandler;
 import com.njydsz.common.auth.metrics.AuthMetrics;
 import com.njydsz.common.base.config.BaseAutoConfiguration;
 import com.njydsz.common.base.config.BaseMvcConfiguration;
+import com.njydsz.common.base.config.ConditionalOnPlatform;
+import com.njydsz.common.base.config.PlatformMode;
 import com.njydsz.common.base.constant.BaseFilterOrders;
 import com.njydsz.common.base.interceptor.BaseHttpInterceptor;
 import com.njydsz.common.safe.config.ApiSignatureProperties;
@@ -55,6 +57,7 @@ import io.micrometer.core.instrument.MeterRegistry;
  * @since 1.0.0
  */
 @AutoConfiguration
+@ConditionalOnPlatform(PlatformMode.APP)
 @AutoConfigureBefore({BaseAutoConfiguration.class, SafeConfiguration.class})
 @EnableConfigurationProperties({AppCorsProperties.class, AppTraceProperties.class,
         AppContentCacheProperties.class})

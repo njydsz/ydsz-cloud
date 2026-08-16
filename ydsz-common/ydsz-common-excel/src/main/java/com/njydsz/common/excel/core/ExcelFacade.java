@@ -16,33 +16,14 @@ import com.njydsz.common.excel.core.model.SheetData;
 import com.njydsz.common.excel.spring.DownloadContext;
 
 /**
- * ExcelFacade - 高性能 Excel 处理工具
+ * Excel 门面类 — 整个框架的统一入口。
  *
- * <p>ExcelFacade 是整个框架的唯一入口类，提供简洁易用的 API 用于 Excel 文件的读取和写入操作。
+ * <p>封装读取 / 写入 / 模板填充 / 多 Sheet / Web 下载等全部能力。
  * 参照阿里巴巴 EasyExcel 的设计理念，注重性能优化和低内存占用。</p>
  *
- * <h2>核心特性</h2>
- * <ul>
- *   <li>低内存占用 - 基于 SAX 模式解析大文件 Excel</li>
- *   <li>流式写入 - 支持超大数据量的 Excel 写入</li>
- *   <li>注解驱动 - 通过简洁的注解配置实现字段映射</li>
- *   <li>类型安全 - 完善的数据类型转换机制</li>
- *   <li>Web 下载 - 便捷的 Web 环境 Excel 下载支持</li>
- * </ul>
- *
- * <h2>设计原则</h2>
- * <ul>
- *   <li>门面模式 - 统一入口，简化 API 调用</li>
- *   <li>构建器模式 - 链式调用，提升代码可读性</li>
- *   <li>策略模式 - 根据数据量自动选择最优写入策略</li>
- *   <li>观察者模式 - 监听器机制，支持数据流转处理</li>
- * </ul>
- *
- * <h2>使用示例</h2>
- *
- * <h3>读取 Excel</h3>
+ * <h3>使用示例</h3>
  * <pre>{@code
- * // 方式一：使用监听器读取
+ * // 读取
  * ExcelFacade.read("demo.xlsx", User.class)
  *     .sheet("用户数据")
  *     .doRead(new ReadListener<User>() {
@@ -52,29 +33,17 @@ import com.njydsz.common.excel.spring.DownloadContext;
  *         }
  *     });
  *
- * // 方式二：快捷读取
- * ExcelFacade.read("demo.xlsx", User.class, (context, data) -> {
- *     System.out.println(data);
- * });
- * }</pre>
- *
- * <h3>写入 Excel</h3>
- * <pre>{@code
- * // 方式一：使用构建器模式
+ * // 写入
  * ExcelFacade.write("output.xlsx", User.class)
  *     .sheet("用户列表")
  *     .doWrite(userList);
- *
- * // 方式二：快捷写入
- * ExcelFacade.write("output.xlsx", User.class, userList);
  * }</pre>
  *
  * @author ydsz-team
- * @email ydsz-dev@ydszsoft.com
  * @version 1.0.0
+ * @since 1.0.0
  * @see ExcelReader
  * @see ExcelWriter
- * @since 1.0.0
  */
 public class ExcelFacade {
 

@@ -411,20 +411,19 @@ public abstract class AbstractFileStorage implements IFileStorage {
 
         FileTypeValidator.validate(file);
 
-        // P0-6: maxFileSize validation
         Long maxFileSize = fileProperties.getMaxFileSize();
-        if (maxFileSize != null) {
-            if (maxFileSize > 0) {
-                if (file.getSize() > maxFileSize) {
-                    throw new BusinessException(FileExceptionCode.FILE_SIZE_EXCEEDED);
-                }
-            }
+        if (maxFileSize != null && maxFileSize > 0 && file.getSize() > maxFileSize) {
+            throw new BusinessException(FileExceptionCode.FILE_SIZE_EXCEEDED);
         }
 
-        // P0-1: File dedup check
+        // 仅读取一次文件内容，后续秒传校验、病毒扫描、对象存储上传复用同一缓冲区，
+        // 避免多次调用 MultipartFile.getInputStream() 带来的重复 IO 开销。
+        byte[] fileBytes = file.getBytes();
+
+        // P0-1: File dedup check — 基于已缓冲的字节流计算秒传 hash，不重新读取上传流
         String dedupHash = null;
         if (fileDedupService != null) {
-            try (InputStream dedupStream = file.getInputStream()) {
+            try (InputStream dedupStream = new ByteArrayInputStream(fileBytes)) {
                 dedupHash = fileDedupService.calculateHash(dedupStream);
                 String existingUrl = fileDedupService.checkExisting(file.getSize(), dedupHash);
                 if (existingUrl != null) {
@@ -435,18 +434,26 @@ public abstract class AbstractFileStorage implements IFileStorage {
                     return dedupResult;
                 }
                 if (fileMetrics != null) fileMetrics.recordDedupMiss();
-            } catch (BusinessException e) { throw e; } catch (Exception e) { log.warn("Dedup check failed", e); }
+            } catch (BusinessException e) {
+                throw e;
+            } catch (Exception e) {
+                log.warn("[Storage] dedup check failed, object={}, message={}", resolvedObjectName, e.getMessage());
+            }
         }
 
-        // P0-2: Virus scan
+        // P0-2: Virus scan — 基于已缓冲的字节流进行扫描，不重新读取上传流
         if (virusScanner != null) {
-            try (InputStream virusStream = file.getInputStream()) {
+            try (InputStream virusStream = new ByteArrayInputStream(fileBytes)) {
                 VirusScanner.ScanResult scanResult = virusScanner.scan(virusStream, file.getOriginalFilename());
                 if (scanResult == VirusScanner.ScanResult.INFECTED) {
                     if (fileMetrics != null) fileMetrics.recordVirusDetected();
                     throw new BusinessException(FileExceptionCode.FILE_VIRUS_DETECTED);
                 }
-            } catch (BusinessException e) { throw e; } catch (Exception e) { log.warn("Virus scan failed", e); }
+            } catch (BusinessException e) {
+                throw e;
+            } catch (Exception e) {
+                log.warn("[Storage] virus scan failed, object={}, message={}", resolvedObjectName, e.getMessage());
+            }
         }
 
         // 获取并发上传锁
@@ -461,13 +468,13 @@ public abstract class AbstractFileStorage implements IFileStorage {
         }
 
         long startTime = System.nanoTime();
-        try (InputStream inputStream = file.getInputStream()) {
+        try (InputStream uploadStream = new ByteArrayInputStream(fileBytes)) {
             if (retryHelper != null) {
                 retryHelper.executeRunnableWithRetry(() ->
-                        doPutObject(resolvedBucket, resolvedObjectName, inputStream,
+                        doPutObject(resolvedBucket, resolvedObjectName, uploadStream,
                                 file.getSize(), file.getContentType()), "upload");
             } else {
-                doPutObject(resolvedBucket, resolvedObjectName, inputStream,
+                doPutObject(resolvedBucket, resolvedObjectName, uploadStream,
                         file.getSize(), file.getContentType());
             }
 
@@ -477,13 +484,14 @@ public abstract class AbstractFileStorage implements IFileStorage {
             if (listener != null) {
                 listener.onSuccess(resolvedObjectName);
             }
-            // P0-1: Register hash for dedup
-            if (fileDedupService != null) {
-                if (dedupHash != null) {
-                    try { fileDedupService.registerHash(file.getSize(), dedupHash, fileStorage.getUrl()); } catch (Exception e) { log.warn("Dedup register failed", e); }
+            if (fileDedupService != null && dedupHash != null) {
+                try {
+                    fileDedupService.registerHash(file.getSize(), dedupHash,
+                            fileStorage.getUrl(), resolvedObjectName);
+                } catch (Exception e) {
+                    log.warn("[Storage] dedup register failed, object={}, message={}", resolvedObjectName, e.getMessage());
                 }
             }
-            // P0-3: Record upload metrics
             if (fileMetrics != null) fileMetrics.recordUpload(System.nanoTime() - startTime);
             return fileStorage;
         } catch (BusinessException e) {
@@ -806,34 +814,6 @@ public abstract class AbstractFileStorage implements IFileStorage {
     }
 
     private static final Pattern PATH_TRAVERSAL_PATTERN = Pattern.compile("(\\.\\.)|(%2e%2e)|(%2E%2E)");
-
-    /**
-     * 校验路径是否在安全目录范围内，防止目录穿越攻击
-     * <p>安全校验规则：
-     * <ul>
-     *   <li>使用 {@code Paths.normalize()} 规范化路径</li>
-     *   <li>校验规范化后的路径以 baseDir 为前缀</li>
-     *   <li>拒绝空字节、控制字符等异常输入</li>
-     * </ul>
-     *
-     * @param path    待校验的文件路径
-     * @param baseDir 允许的基础目录
-     * @return true 表示路径安全
-     */
-    protected static boolean isSafePath(String path, String baseDir) {
-        if (StringUtils.isBlank(path) || StringUtils.isBlank(baseDir)) {
-            return false;
-        }
-        try {
-            Path basePath = Paths.get(baseDir).normalize().toAbsolutePath();
-            Path resolvedPath = basePath.resolve(path).normalize().toAbsolutePath();
-            return resolvedPath.startsWith(basePath);
-        } catch (Exception e) {
-            log.warn("[Storage] path validation failed, path={}, baseDir={}, message={}",
-                    path, baseDir, e.getMessage());
-            return false;
-        }
-    }
 
     /**
      * 解析并校验对象路径，防止路径穿越攻击

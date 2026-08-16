@@ -216,10 +216,14 @@ public class WebSocketProperties {
         private boolean enabled = true;
         /** 最大重试次数 */
         private int maxRetries = 3;
-        /** 重试延迟 */
+        /** 重试延迟（基础延迟，退避策略的基准值） */
         private Duration retryDelay = Duration.ofSeconds(5);
         /** 是否启用死信队列 */
         private boolean deadLetterEnabled = true;
+        /** 退避策略：fixed / exponential / exponential_with_jitter */
+        private String backoffStrategy = "exponential";
+        /** 最大重试延迟（毫秒），退避后不超过此值 */
+        private long maxRetryDelayMs = 60000L;
     }
 
     /**

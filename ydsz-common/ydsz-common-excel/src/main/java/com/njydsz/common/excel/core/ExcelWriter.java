@@ -2,6 +2,7 @@ package com.njydsz.common.excel.core;
 
 import java.io.*;
 import java.lang.reflect.Field;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -9,7 +10,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.time.Duration;
 
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -573,18 +573,14 @@ public class ExcelWriter {
     /**
      * 检查是否可以进行写入
      *
-     * @return true 如果可以写入，false 如果已经完成过写入
+     * @return {@code true} 如果可以写入，{@code false} 如果已经完成过写入
      */
-    /** Package-private: check if write is still possible */
     boolean canWrite() {
         return !writeCompleted;
     }
 
     /**
      * 标记写入完成
- * @author ydsz-team
- * @email ydsz-dev@ydszsoft.com
- * @version 1.0.0
      */
     private void markWriteCompleted() {
         this.writeCompleted = true;

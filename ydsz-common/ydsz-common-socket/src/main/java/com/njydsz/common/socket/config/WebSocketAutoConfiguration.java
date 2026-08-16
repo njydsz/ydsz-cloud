@@ -42,6 +42,7 @@ import com.njydsz.common.socket.retry.RetryableMessage;
 import com.njydsz.common.socket.resilience.WebSocketCircuitBreaker;
 import com.njydsz.common.socket.serialize.JsonMessageSerializer;
 import com.njydsz.common.socket.serialize.MessageSerializer;
+import com.njydsz.common.socket.session.LocalSessionRegistry;
 import com.njydsz.common.socket.session.OnlineUserService;
 import com.njydsz.common.socket.session.WebSocketSessionEventListener;
 import io.micrometer.core.instrument.MeterRegistry;
@@ -204,7 +205,19 @@ public class WebSocketAutoConfiguration {
         return new WebSocketAuthInterceptor(tokenService, connectionLimiter, auditService);
     }
 
-    // ==================== 在线用户状态 ====================
+    // ==================== 在线用户状态 + 多端策略 ====================
+
+    /**
+     * 注册本地 Session 注册表 Bean。
+     *
+     * <p>维护本节点内 sessionId → WebSocketSession 的映射，
+     * 供多端登录策略执行时使用。
+     */
+    @Bean
+    @ConditionalOnMissingBean(LocalSessionRegistry.class)
+    public LocalSessionRegistry localSessionRegistry() {
+        return new LocalSessionRegistry();
+    }
 
     /**
      * 注册在线用户状态服务 Bean。
@@ -276,15 +289,19 @@ public class WebSocketAutoConfiguration {
      *
      * <p>定期探测并清理超时空闲会话，回收服务端资源、及时感知断线。
      * 依据配置 staleSessionTimeout 判定过期；无自定义 Bean 时注册默认实现。
+     *
+     * <p>Redis 存在时使用 Redis Sorted Set 维护集群级心跳，避免单节点宕机
+     * 导致心跳记录丢失；Redis 不可用时降级为本地 ConcurrentHashMap。
      */
     @Bean
     @ConditionalOnMissingBean(WebSocketHeartbeatHandler.class)
     public WebSocketHeartbeatHandler webSocketHeartbeatHandler(
             OnlineUserService onlineUserService,
-            WebSocketProperties properties) {
+            WebSocketProperties properties,
+            @Autowired(required = false) StringRedisTemplate redisTemplate) {
         log.info("[WebSocket] 注册 WebSocketHeartbeatHandler (staleTimeout={}ms)",
                 properties.getHeartbeat().getStaleSessionTimeout());
-        return new WebSocketHeartbeatHandler(properties, onlineUserService);
+        return new WebSocketHeartbeatHandler(properties, onlineUserService, redisTemplate);
     }
 
     // ==================== P1-2: ACK 确认 ====================
@@ -371,11 +388,14 @@ public class WebSocketAutoConfiguration {
             @Autowired(required = false) WebSocketHeartbeatHandler heartbeatHandler,
             @Autowired(required = false) WebSocketAuditService auditService,
             @Autowired(required = false) List<WebSocketConnectionListener> connectionListeners,
-            @Autowired(required = false) SlowConnectionDetector slowConnectionDetector) {
+            @Autowired(required = false) SlowConnectionDetector slowConnectionDetector,
+            WebSocketProperties properties,
+            LocalSessionRegistry sessionRegistry) {
         log.info("[WebSocket] 注册 WebSocketSessionEventListener");
         return new WebSocketSessionEventListener(
                 onlineUserService, offlineMessageStore, messagingTemplate,
-                heartbeatHandler, auditService, slowConnectionDetector, connectionListeners);
+                heartbeatHandler, auditService, slowConnectionDetector, connectionListeners,
+                properties, sessionRegistry);
     }
 
     // ==================== 指标收集器 ====================

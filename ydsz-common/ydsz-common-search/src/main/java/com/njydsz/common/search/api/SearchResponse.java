@@ -3,6 +3,7 @@ package com.njydsz.common.search.api;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
@@ -65,6 +66,10 @@ public class SearchResponse implements Serializable {
     /** P3-21: 下一页游标（为空表示无更多数据） */
     @Schema(description = "下一页游标")
     private String nextCursor;
+
+    /** P5-13: 各阶段耗时详情（毫秒），用于可观测性分析与性能诊断 */
+    @Schema(description = "各阶段耗时详情（毫秒）：textProcess/cacheQuery/engineQuery/ranking")
+    private Map<String, Long> timing;
 
     /**
      * 创建空响应

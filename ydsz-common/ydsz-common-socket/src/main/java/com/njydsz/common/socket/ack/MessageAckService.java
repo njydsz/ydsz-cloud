@@ -1,6 +1,8 @@
 package com.njydsz.common.socket.ack;
 
 import java.time.Duration;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -40,8 +42,8 @@ public class MessageAckService {
     private final StringRedisTemplate redisTemplate;
     private final WebSocketProperties properties;
 
-    /** 本地降级存储（Redis 不可用时使用） */
-    private final Set<String> localPendingAcks = ConcurrentHashMap.newKeySet();
+    /** 本地降级存储（Redis 不可用时使用） message → registerTime */
+    private final Map<String, Long> localPendingAcks = new ConcurrentHashMap<>();
 
     /**
      * 注册待 ACK 消息。
@@ -59,10 +61,10 @@ public class MessageAckService {
             if (redisTemplate != null) {
                 redisTemplate.opsForValue().set(key, userId != null ? userId : "", timeout);
             } else {
-                localPendingAcks.add(messageId);
+                localPendingAcks.put(messageId, System.currentTimeMillis());
             }
         } catch (Exception e) {
-            localPendingAcks.add(messageId);
+            localPendingAcks.put(messageId, System.currentTimeMillis());
             log.debug("[WS-ACK] Redis 不可用, 降级本地存储: messageId={}", messageId);
         }
     }
@@ -84,9 +86,9 @@ public class MessageAckService {
                 log.debug("[WS-ACK] 消息确认成功: messageId={}", messageId);
                 return true;
             }
-            return localPendingAcks.remove(messageId);
+            return localPendingAcks.remove(messageId) != null;
         } catch (Exception e) {
-            return localPendingAcks.remove(messageId);
+            return localPendingAcks.remove(messageId) != null;
         }
     }
 
@@ -107,21 +109,36 @@ public class MessageAckService {
                 return false;
             }
             if (redisTemplate == null) {
-                return !localPendingAcks.contains(messageId);
+                return !localPendingAcks.containsKey(messageId);
             }
             return true;
         } catch (Exception e) {
-            return !localPendingAcks.contains(messageId);
+            return !localPendingAcks.containsKey(messageId);
         }
     }
 
     /**
-     * 清理过期的本地 ACK 记录。
+     * 清理过期的本地 ACK 记录（基于时间戳滑动窗口）。
      *
-     * <p>定时调用此方法，清空本地降级存储中所有待确认记录，
-     * 防止内存无限增长。
+     * <p>仅移除超过 ACK 超时时间的记录，保留仍在超时窗口内的记录。
      */
     public void cleanupExpiredLocalAcks() {
-        localPendingAcks.clear();
-}
+        if (localPendingAcks.isEmpty()) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        long timeoutMs = properties.getAck().getTimeout().toMillis();
+        int cleaned = 0;
+        Iterator<Map.Entry<String, Long>> iterator = localPendingAcks.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<String, Long> entry = iterator.next();
+            if (now - entry.getValue() > timeoutMs) {
+                iterator.remove();
+                cleaned++;
+            }
+        }
+        if (cleaned > 0) {
+            log.info("[WS-ACK] 清理过期本地 ACK 记录: cleaned={}, remaining={}", cleaned, localPendingAcks.size());
+        }
+    }
 }

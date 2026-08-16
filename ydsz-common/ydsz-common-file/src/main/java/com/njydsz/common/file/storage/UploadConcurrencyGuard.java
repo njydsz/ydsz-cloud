@@ -195,27 +195,28 @@ public class UploadConcurrencyGuard {
     }
 
     /**
-     * WAIT 策略：等待锁释放后重新获取
+     * WAIT 策略：等待锁释放后重新获取。
+     *
+     * <p>优先使用 {@link DistributedLocker#tryLock(String, long, long, TimeUnit)} 的阻塞等待能力，
+     * 底层通过 Redisson 订阅锁释放事件通知来实现阻塞等待，避免 {@code Thread.sleep} 轮询占用工作线程。
+     *
+     * <p>当 {@link DistributedLocker} 不可用时，降级为带随机抖动的指数退避轮询，
+     * 减少并发场景下多线程同时重试产生的惊群效应。
      *
      * @param lockKey 锁键
      * @return 获取锁后返回新令牌
+     * @throws BusinessException 等待超时或被中断时抛出
      */
     private String waitForLock(String lockKey) {
-        long elapsedMillis = 0;
-        long maxWaitMillis = MAX_WAIT_SECONDS * 1000;
-
         log.info("[UploadGuard] waiting for lock release, key={}", lockKey);
 
-        while (elapsedMillis < maxWaitMillis) {
+        // 优先使用 common-lock 的阻塞等待（底层 Redisson pub/sub 监听锁释放事件，非轮询）
+        if (distributedLocker != null) {
             try {
-                // 短暂休眠后重试
-                Thread.sleep(WAIT_INTERVAL_MILLIS);
-                elapsedMillis += WAIT_INTERVAL_MILLIS;
-
-                String lockValue = tryAcquireNonBlocking(lockKey);
+                String lockValue = distributedLocker.tryLock(
+                        lockKey, MAX_WAIT_SECONDS, LOCK_EXPIRE_SECONDS, java.util.concurrent.TimeUnit.SECONDS);
                 if (lockValue != null) {
-                    log.info("[UploadGuard] lock acquired after waiting, key={}, waited={}ms",
-                            lockKey, elapsedMillis);
+                    log.info("[UploadGuard] lock acquired after blocking wait (common-lock), key={}", lockKey);
                     return lockValue;
                 }
             } catch (InterruptedException e) {
@@ -223,9 +224,53 @@ public class UploadConcurrencyGuard {
                 log.warn("[UploadGuard] interrupted while waiting for lock, key={}", lockKey);
                 throw new BusinessException(FileExceptionCode.UPLOAD_CONCURRENT_CONFLICT);
             }
+            log.warn("[UploadGuard] wait timeout for lock (common-lock), key={}, timeout={}s", lockKey, MAX_WAIT_SECONDS);
+            throw new BusinessException(FileExceptionCode.UPLOAD_CONCURRENT_CONFLICT);
         }
 
-        log.warn("[UploadGuard] wait timeout for lock, key={}, timeout={}s", lockKey, MAX_WAIT_SECONDS);
+        // 降级：带随机抖动的指数退避轮询，避免惊群效应
+        return waitForLockWithBackoff(lockKey);
+    }
+
+    /**
+     * 降级方案：带随机抖动的指数退避轮询等待锁释放。
+     *
+     * <p>当 {@link DistributedLocker} 不可用时使用此方法。退避间隔从 {@code WAIT_INTERVAL_MILLIS} 起，
+     * 每次翻倍并附加随机抖动，最大不超过 {@code MAX_WAIT_SECONDS}。
+     *
+     * @param lockKey 锁键
+     * @return 获取锁后返回新令牌
+     * @throws BusinessException 等待超时或被中断时抛出
+     */
+    private String waitForLockWithBackoff(String lockKey) {
+        long maxWaitMillis = MAX_WAIT_SECONDS * 1000;
+        long elapsedMillis = 0;
+        long backoffMillis = WAIT_INTERVAL_MILLIS;
+        java.util.concurrent.ThreadLocalRandom random = java.util.concurrent.ThreadLocalRandom.current();
+
+        while (elapsedMillis < maxWaitMillis) {
+            try {
+                long jitter = random.nextLong(0, backoffMillis / 2 + 1);
+                Thread.sleep(Math.min(backoffMillis + jitter, maxWaitMillis - elapsedMillis));
+                elapsedMillis += backoffMillis;
+
+                String lockValue = tryAcquireNonBlocking(lockKey);
+                if (lockValue != null) {
+                    log.info("[UploadGuard] lock acquired after waiting (backoff), key={}, waited={}ms",
+                            lockKey, elapsedMillis);
+                    return lockValue;
+                }
+
+                // 指数退避，上限 5 秒
+                backoffMillis = Math.min(backoffMillis * 2, 5000L);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.warn("[UploadGuard] interrupted while waiting for lock, key={}", lockKey);
+                throw new BusinessException(FileExceptionCode.UPLOAD_CONCURRENT_CONFLICT);
+            }
+        }
+
+        log.warn("[UploadGuard] wait timeout for lock (backoff), key={}, timeout={}s", lockKey, MAX_WAIT_SECONDS);
         throw new BusinessException(FileExceptionCode.UPLOAD_CONCURRENT_CONFLICT);
     }
 }

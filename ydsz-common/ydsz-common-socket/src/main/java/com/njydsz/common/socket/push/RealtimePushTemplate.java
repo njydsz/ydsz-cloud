@@ -87,4 +87,34 @@ public interface RealtimePushTemplate {
      * <p>定时调用此方法，拉取到期重试消息并重新推送。
      */
     void flushRetryMessages();
+
+    /**
+     * 向指定用户推送通知（带业务级消息 ID，用于幂等去重）。
+     *
+     * <p>业务方可提供业务级 {@code messageId}（如订单号 + 操作类型），
+     * 框架侧按 {@code messageId} 去重，避免网络抖动导致重试时重复推送。
+     *
+     * @param userId    用户 ID
+     * @param type      消息类型标签
+     * @param payload   消息内容
+     * @param messageId 业务级消息唯一 ID（非空时使用 {@code messageId} 替代随机 UUID）
+     */
+    void pushToUser(String userId, String type, Object payload, String messageId);
+
+    /**
+     * 向指定用户推送通知（带业务级消息 ID + 离线补偿）。
+     *
+     * <p>策略：
+     * <ul>
+     *   <li>用户在线：通过集群广播推送</li>
+     *   <li>用户离线：缓存到离线存储，待上线时补偿</li>
+     *   <li>{@code messageId} 用于去重，避免重试时重复推送</li>
+     * </ul>
+     *
+     * @param userId    用户 ID
+     * @param type      消息类型标签
+     * @param payload   消息内容
+     * @param messageId 业务级消息唯一 ID
+     */
+    void pushToUserWithOffline(String userId, String type, Object payload, String messageId);
 }

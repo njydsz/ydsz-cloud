@@ -17,6 +17,8 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import com.njydsz.common.auth.config.AuthFilterConfiguration;
 import com.njydsz.common.base.config.BaseAutoConfiguration;
 import com.njydsz.common.base.config.BaseMvcConfiguration;
+import com.njydsz.common.base.config.ConditionalOnPlatform;
+import com.njydsz.common.base.config.PlatformMode;
 import com.njydsz.common.base.constant.BaseFilterOrders;
 import com.njydsz.common.base.interceptor.BaseHttpInterceptor;
 import com.njydsz.common.safe.config.SafeConfiguration;
@@ -47,6 +49,7 @@ import nl.basjes.parse.useragent.UserAgentAnalyzer;
 
 @AutoConfiguration
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
+@ConditionalOnPlatform(PlatformMode.WEB)
 @AutoConfigureBefore({BaseAutoConfiguration.class, SafeConfiguration.class})
 @EnableConfigurationProperties({
         WebContentCacheProperties.class

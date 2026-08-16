@@ -1,35 +1,31 @@
 package com.njydsz.common.excel.core.config;
 
+import java.util.List;
 import java.util.zip.Deflater;
 
 import com.njydsz.common.excel.core.security.FormulaInjectionGuard;
 
 /**
- * ExcelFacade全局配置类
+ * ExcelFacade 全局配置类
  *
- * <p>采用单例模式管理全局配置,所有读写操作都会使用此配置。
- * 建议在项目初始化时通过{@link ExcelFacade#setConfiguration}进行配置。</p>
+ * <p>采用单例模式管理全局配置，所有读写操作都会使用此配置。
+ * 建议在项目初始化时通过 {@link ExcelAutoConfiguration} 进行配置。</p>
  *
- * <h3>配置项分类</h3>
+ * <h3>线程安全性</h3>
  * <ul>
- *   <li>缓冲配置 - readBufferSize、writeBufferSize</li>
- *   <li>格式配置 - defaultDateFormat、defaultNumberFormat</li>
- *   <li>性能配置 - maxReadCacheSize、streamingParseThresholdMB</li>
- *   <li>行为配置 - automaticTrim、use1904Windowing</li>
- *   <li>安全配置 - formulaInjectionProtection</li>
+ *   <li>单例引用的获取与替换（{@link #getInstance()} / {@link #setInstance}）
+ *       通过双重检查锁定与同步块保证可见性。</li>
+ *   <li>各配置项字段均声明为 {@code volatile}，setter 方法均加锁（{@code synchronized}），
+ *       运行期并发修改也能保证线程安全与立即可见（happens-before 顺序由锁与 volatile 共同保证）。</li>
+ *   <li>建议仍在启动阶段一次性配置完毕，避免运行期频繁改动的业务耦合。</li>
  * </ul>
  *
  * <h3>注意事项</h3>
  * <ul>
- *   <li><b>线程安全性</b>：仅单例的获取与替换（{@link #getInstance()} / {@link #setInstance}）
- *       通过双重检查锁定与同步块保证可见性；各配置项的 setter <b>均未加锁</b>，
- *       字段也非 {@code volatile}。应在应用启动阶段一次性配置完毕，
- *       运行期并发修改可能导致其他线程读到陈旧值。</li>
  *   <li>所有数值型 setter 均做了下界校验，非法入参直接抛
  *       {@link IllegalArgumentException} 并保持原值不变（快速失败，不做静默纠正）。</li>
  * </ul>
  *
- * @see ExcelFacade#setConfiguration
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -39,55 +35,55 @@ public class ExcelConfig {
     private static volatile ExcelConfig instance;
 
     /** 读取缓冲区大小(字节) */
-    private int readBufferSize = 8192;
+    private volatile int readBufferSize = 8192;
 
     /** 写入缓冲区大小(字节) */
-    private int writeBufferSize = 8192;
+    private volatile int writeBufferSize = 8192;
 
     /** 自动去除字符串首尾空格 */
-    private boolean automaticTrim = true;
+    private volatile boolean automaticTrim = true;
 
     /** 默认日期格式 */
-    private String defaultDateFormat = "yyyy-MM-dd HH:mm:ss";
+    private volatile String defaultDateFormat = "yyyy-MM-dd HH:mm:ss";
 
     /** 默认数字格式 */
-    private String defaultNumberFormat = "#,##0.00";
+    private volatile String defaultNumberFormat = "#,##0.00";
 
     /** 最大读取缓存大小 */
-    private int maxReadCacheSize = 1024;
+    private volatile int maxReadCacheSize = 1024;
 
     /** 启用流式解析的文件大小阈值(MB)，默认10MB */
-    private int streamingParseThresholdMB = 10;
+    private volatile int streamingParseThresholdMB = 10;
 
     /** 数字转换失败时是否抛出异常（严格模式），默认false（仅日志警告） */
-    private boolean strictNumberConversion = false;
+    private volatile boolean strictNumberConversion = false;
 
     /** 最大允许读取的文件大小(MB)，默认100MB，防止OOM */
-    private int maxReadFileSizeMB = 100;
+    private volatile int maxReadFileSizeMB = 100;
 
     /** 最大允许写入的文件大小(MB)，默认50MB */
-    private int maxWriteFileSizeMB = 50;
+    private volatile int maxWriteFileSizeMB = 50;
 
     /** 是否启用公式注入防护，默认true */
-    private boolean formulaInjectionProtection = true;
+    private volatile boolean formulaInjectionProtection = true;
 
     /** 是否启用快速读取引擎（SuperFastExcelReader），默认true */
-    private boolean useFastReader = true;
+    private volatile boolean useFastReader = true;
 
     /** 是否启用快速写入引擎（SuperFastExcelWriter），默认true */
-    private boolean useFastWriter = true;
+    private volatile boolean useFastWriter = true;
 
     /** ZIP压缩级别，默认BEST_SPEED(1)，范围-1~9 */
-    private int compressionLevel = Deflater.BEST_SPEED;
+    private volatile int compressionLevel = Deflater.BEST_SPEED;
 
     /** 是否使用1904日期窗口（Mac版Excel兼容），默认false */
-    private boolean use1904Windowing = false;
+    private volatile boolean use1904Windowing = false;
 
     /** 默认表头行号，默认1（从第1行开始） */
-    private int headRowNumber = 1;
+    private volatile int headRowNumber = 1;
 
     /** SXSSF 写入缓存行数，默认100 */
-    private int writeCacheSize = 100;
+    private volatile int writeCacheSize = 100;
 
     /**
      * 私有构造函数，防止外部实例化。
@@ -327,11 +323,11 @@ public class ExcelConfig {
     }
 
     /**
-     * 获取被视为公式注入风险的单元格起始字符集合。
+     * 获取被视为公式注入风险的单元格起始字符列表。
      *
-     * @return 危险前缀数组（如 {@code =}、{@code +}、{@code -}、{@code @}）
+     * @return 危险前缀列表（默认 {@code =}、{@code +}）
      */
-    public static String[] getFormulaInjectionPrefixes() {
+    public static List<String> getFormulaInjectionPrefixes() {
         return FormulaInjectionGuard.getFormulaInjectionPrefixes();
     }
 

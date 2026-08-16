@@ -35,6 +35,9 @@ public final class WebSocketConstants {
     /** 集群广播 Redis Channel */
     public static final String WS_CLUSTER_CHANNEL = "ydsz:ws:cluster:push";
 
+    /** 心跳 Redis Sorted Set key（score=最后心跳时间戳） */
+    public static final String WS_HEARTBEAT_KEY = "ydsz:ws:heartbeat:sessions";
+
     // ========== 离线消息配置 ==========
 
     /** 离线消息缓存最大条数（防止内存溢出，FIFO 淘汰） */

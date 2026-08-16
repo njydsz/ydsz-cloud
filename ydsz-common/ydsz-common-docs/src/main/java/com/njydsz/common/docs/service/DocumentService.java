@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
@@ -34,8 +35,6 @@ import com.njydsz.common.docs.security.watermark.WatermarkProvider;
 import com.njydsz.common.docs.summary.DocumentSummarizer;
 
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.stream.Collectors;
 /**
  * 文档处理统一服务门面
  * <p>
@@ -387,9 +386,11 @@ public class DocumentService {
             if (properties.isBlockOnHighRisk()
                     && scanResult.getSecurityLevel() != null
                     && scanResult.getSecurityLevel().ordinal() >= SecurityLevel.HIGH.ordinal()) {
+                log.warn("[DocumentService] 文档安全扫描未通过，已阻止解析: fileName={}, level={}",
+                        fileName, scanResult.getSecurityLevel());
                 return DocumentParseResult.builder()
                         .success(false)
-                        .errorMessage("high risk")
+                        .errorMessage("文档存在高危安全风险(" + scanResult.getSecurityLevel() + ")，已被安全策略阻止")
                         .fileName(fileName)
                         .elapsed(Duration.ZERO)
                         .build();

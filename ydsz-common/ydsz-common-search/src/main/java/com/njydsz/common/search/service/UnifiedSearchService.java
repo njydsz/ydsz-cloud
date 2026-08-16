@@ -7,8 +7,6 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -26,6 +24,9 @@ import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderContext;
 import com.njydsz.common.search.provider.SearchProviderRegistry;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreaker;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -50,12 +51,8 @@ public class UnifiedSearchService {
     private final ThreadPoolTaskExecutor searchExecutor;
     private final BusinessRanker ranker;
 
-    /** 熔断状态机：CLOSED（正常）→ OPEN（熔断）→ HALF_OPEN（半开探测）→ CLOSED */
-    private enum CircuitState { CLOSED, OPEN, HALF_OPEN }
-    private final AtomicReference<CircuitState> circuitState = new AtomicReference<>(CircuitState.CLOSED);
-    private volatile long circuitOpenTime = 0;
-    private final AtomicInteger consecutiveFailures = new AtomicInteger(0);
-    private final AtomicInteger halfOpenProbeCount = new AtomicInteger(0);
+    /** Resilience4j 熔断器 — 替代自研三态状态机，提供标准化指标输出与 HALF_OPEN 自动探测 */
+    private final CircuitBreaker circuitBreaker;
     private final Semaphore searchConcurrencyLimit;
 
     /**
@@ -92,6 +89,7 @@ public class UnifiedSearchService {
         this.cacheService = new SearchCacheService(properties);
         this.searchExecutor = searchExecutor;
         this.searchConcurrencyLimit = new Semaphore(properties.getMaxPageSize(), true);
+        this.circuitBreaker = createCircuitBreaker(properties);
     }
 
     /**
@@ -187,49 +185,78 @@ public class UnifiedSearchService {
                 return SearchResponse.empty(request.getPage(), request.getPageSize());
             }
 
+            // P5-13: 启动阶段计时器
+            SearchMetrics.SearchPhaseTimer phaseTimer = SearchMetrics.SearchPhaseTimer.start();
+
             if (textProcessor != null) {
                 String processed = textProcessor.process(request.getKeyword());
                 if (processed != null && !processed.isBlank()) {
                     request.setKeyword(processed);
                 }
             }
+            long textProcessMs = phaseTimer.lap();
+            metrics.recordTextProcess(textProcessMs);
 
-            if (isCircuitOpen()) {
-                log.warn("[UnifiedSearch] 熔断器开启，拒绝搜索");
+            // P4-12: 使用 Resilience4j 熔断器判断是否允许请求通过
+            if (circuitBreaker.getState() == io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN
+                    || circuitBreaker.getState() == io.github.resilience4j.circuitbreaker.CircuitBreaker.State.FORCED_OPEN) {
+                log.warn("[UnifiedSearch] 熔断器开启，拒绝搜索: state={}", circuitBreaker.getState());
                 return SearchResponse.empty(request.getPage(), request.getPageSize());
             }
             applyProviderFilters(request);
 
+            long cacheStart = System.nanoTime();
             SearchResponse cached = cacheService.get(request);
+            long cacheQueryMs = (System.nanoTime() - cacheStart) / 1_000_000;
+            metrics.recordCacheQuery(cacheQueryMs);
+
             if (cached != null) {
+                // 回填阶段耗时信息
+                cached.setTiming(java.util.Map.of(
+                        "textProcess", textProcessMs,
+                        "cacheQuery", cacheQueryMs,
+                        "engineQuery", 0L,
+                        "ranking", 0L));
                 return cached;
             }
 
             SearchResponse response;
             try {
+                // P4-12: 使用 CircuitBreaker 包装搜索执行，自动统计成功/失败
                 List<SearchProvider<?>> providers = providerRegistry.getProviders(request.getTypes());
-                if (providers.isEmpty() || providers.size() == 1) {
-                    response = searchWithTimeout(request);
-                } else {
-                    response = searchMultiType(request, providers);
-                }
+                long engineStart = System.nanoTime();
+                response = circuitBreaker.executeSupplier(() -> {
+                    if (providers.isEmpty() || providers.size() == 1) {
+                        return searchWithTimeout(request);
+                    } else {
+                        return searchMultiType(request, providers);
+                    }
+                });
+                long engineQueryMs = (System.nanoTime() - engineStart) / 1_000_000;
+                metrics.recordEngineQuery(engineQueryMs);
 
-                long took = response.getTookMs();
+                long rankingStart = System.nanoTime();
                 if (response.getHits() != null && !response.getHits().isEmpty()) {
                     response.setHits(ranker.reRank(response.getHits(), request));
                 }
+                long rankingMs = (System.nanoTime() - rankingStart) / 1_000_000;
+                metrics.recordRanking(rankingMs);
+
+                long took = response.getTookMs();
                 metrics.recordSearch(took, response.getTotal());
                 analyticsService.recordSearch(request.getKeyword(), response.getTotal());
-                closeCircuitIfHalfOpen();
                 cacheService.put(request, response);
-                consecutiveFailures.set(0);
+
+                // P5-13: 回填阶段耗时到响应（供前端/调试使用）
+                response.setTiming(java.util.Map.of(
+                        "textProcess", textProcessMs,
+                        "cacheQuery", cacheQueryMs,
+                        "engineQuery", engineQueryMs,
+                        "ranking", rankingMs));
 
             } catch (Exception e) {
-                log.error("[UnifiedSearch] 搜索失败: keyword={}", request.getKeyword(), e);
-                consecutiveFailures.incrementAndGet();
-                if (consecutiveFailures.get() >= properties.getCircuitBreaker().getFailureThreshold()) {
-                    openCircuit();
-                }
+                log.error("[UnifiedSearch] 搜索失败: keyword={}, circuitState={}",
+                        request.getKeyword(), circuitBreaker.getState(), e);
                 response = SearchResponse.empty(request.getPage(), request.getPageSize());
             }
 
@@ -418,35 +445,49 @@ public class UnifiedSearchService {
                 .build();
     }
 
-    private boolean isCircuitOpen() {
-        CircuitState state = circuitState.get();
-        if (state == CircuitState.CLOSED) return false;
-        if (state == CircuitState.OPEN) {
-            long waitMs = properties.getCircuitBreaker().getWaitDuration() * 1000L;
-            if (System.currentTimeMillis() - circuitOpenTime > waitMs) {
-                if (circuitState.compareAndSet(CircuitState.OPEN, CircuitState.HALF_OPEN)) {
-                    halfOpenProbeCount.set(0);
-                    return false;
-                }
-                return circuitState.get() == CircuitState.OPEN;
-            }
-            return true;
-        }
-        return halfOpenProbeCount.incrementAndGet() > properties.getCircuitBreaker().getHalfOpenRequests();
-    }
+    /**
+     * 创建 Resilience4j 熔断器实例。
+     *
+     * <p>使用搜索配置中的熔断参数，启动自定义滑动窗口统计。
+     * 配置包括：失败阈值、熔断等待时长、半开状态允许请求数。
+     *
+     * @param properties 搜索配置
+     * @return 配置好的 CircuitBreaker 实例
+     */
+    static CircuitBreaker createCircuitBreaker(SearchProperties properties) {
+        SearchProperties.CircuitBreakerConfig config = properties.getCircuitBreaker();
 
-    private void openCircuit() {
-        circuitState.set(CircuitState.OPEN);
-        circuitOpenTime = System.currentTimeMillis();
-        log.warn("[UnifiedSearch] 熔断器开启: failures={}", consecutiveFailures.get());
-    }
+        CircuitBreakerConfig cbConfig = CircuitBreakerConfig.custom()
+                // 基于计数率的熔断统计：滑动窗口大小为 10 次调用
+                .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
+                .slidingWindowSize(10)
+                // 失败率阈值达到 50% 时触发熔断
+                .failureRateThreshold(50)
+                // 熔断持续时间（秒）
+                .waitDurationInOpenState(java.time.Duration.ofSeconds(config.getWaitDuration()))
+                // 半开状态允许通过的请求数
+                .permittedNumberOfCallsInHalfOpenState(config.getHalfOpenRequests())
+                // 慢调用视为失败：搜索超过 80% 超时时长即视为慢调用
+                .slowCallRateThreshold(80)
+                .slowCallDurationThreshold(
+                        java.time.Duration.ofMillis(properties.getSearchTimeout() * 800L))
+                // 自动从 OPEN 转换到 HALF_OPEN
+                .automaticTransitionFromOpenToHalfOpenEnabled(true)
+                .build();
 
-    private void closeCircuitIfHalfOpen() {
-        if (circuitState.get() == CircuitState.HALF_OPEN) {
-            circuitState.set(CircuitState.CLOSED);
-            halfOpenProbeCount.set(0);
-            log.info("[UnifiedSearch] 熔断器恢复");
-        }
+        CircuitBreakerRegistry registry = CircuitBreakerRegistry.of(cbConfig);
+        CircuitBreaker breaker = registry.circuitBreaker("search-circuit-breaker");
+
+        // 注册状态变更监听器，输出结构化日志
+        breaker.getEventPublisher()
+                .onStateTransition(event -> log.warn("[UnifiedSearch] 熔断器状态变更: {} -> {}",
+                        event.getStateTransition().getFromState(),
+                        event.getStateTransition().getToState()))
+                .onError(event -> log.debug("[UnifiedSearch] 熔断器记录失败: {}",
+                        event.getThrowable().getMessage()))
+                .onSuccess(event -> log.debug("[UnifiedSearch] 熔断器记录成功"));
+
+        return breaker;
     }
 
     private SearchRequest copyRequest(SearchRequest original) {

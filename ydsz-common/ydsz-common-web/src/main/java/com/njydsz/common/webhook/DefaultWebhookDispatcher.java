@@ -16,6 +16,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -26,6 +28,13 @@ import com.njydsz.common.json.YdszJson;
  *
  * <p>使用内存 ConcurrentHashMap 管理订阅，RestTemplate 投递事件，
  * HMAC-SHA256 签名，简单重试（3 次指数退避）。
+ *
+ * <p>连接池优化：
+ * <ul>
+ *   <li>当 Apache HttpClient 在 classpath 时，使用 {@code HttpComponentsClientHttpRequestFactory} 启用连接池</li>
+ *   <li>否则降级为 {@code SimpleClientHttpRequestFactory}（无连接池）</li>
+ *   <li>连接超时、读取超时、最大连接数均通过 {@link WebhookProperties} 配置</li>
+ * </ul>
  *
  * <p>通过 {@code @ConditionalOnMissingBean} 注册，业务方可覆盖此 Bean
  * 提供自定义实现（如基于 Redis 持久化订阅、异步线程池投递等）。
@@ -44,10 +53,18 @@ public class DefaultWebhookDispatcher implements WebhookDispatcher {
     private static final int MAX_RETRIES = 3;
 
     private final Map<String, WebhookSubscription> subscriptions = new ConcurrentHashMap<>();
-    private final ObjectProvider<RestTemplate> restTemplateProvider;
+    private final RestTemplate restTemplate;
 
-    public DefaultWebhookDispatcher(ObjectProvider<RestTemplate> restTemplateProvider) {
-        this.restTemplateProvider = restTemplateProvider;
+    public DefaultWebhookDispatcher(ObjectProvider<RestTemplate> restTemplateProvider,
+                                    WebhookProperties webhookProperties) {
+        RestTemplate provided = restTemplateProvider.getIfAvailable();
+        if (provided != null) {
+            // 对外提供的 RestTemplate 配置连接池工厂
+            this.restTemplate = configureRestTemplate(provided, webhookProperties);
+        } else {
+            // 未提供 RestTemplate 时创建专用实例
+            this.restTemplate = createDedicatedRestTemplate(webhookProperties);
+        }
     }
 
     @Override
@@ -103,12 +120,6 @@ public class DefaultWebhookDispatcher implements WebhookDispatcher {
     }
 
     private void dispatchWithRetry(WebhookSubscription sub, String eventType, String jsonPayload) {
-        RestTemplate restTemplate = restTemplateProvider.getIfAvailable();
-        if (restTemplate == null) {
-            log.warn("[WebhookDispatcher] RestTemplate 未配置,跳过投递: id={} event={}",
-                    sub.getId(), eventType);
-            return;
-        }
         for (int attempt = 1; attempt <= MAX_RETRIES; attempt++) {
             try {
                 HttpHeaders headers = new HttpHeaders();
@@ -131,6 +142,59 @@ public class DefaultWebhookDispatcher implements WebhookDispatcher {
                 }
                 sleepBackoff(attempt);
             }
+        }
+    }
+
+    /**
+     * 配置 RestTemplate 的连接池工厂。
+     *
+     * <p>当 Apache HttpClient 在 classpath 时使用连接池实现，
+     * 否则降级为 SimpleClientHttpRequestFactory。
+     */
+    private RestTemplate configureRestTemplate(RestTemplate restTemplate,
+                                                WebhookProperties properties) {
+        ClientHttpRequestFactory factory = createRequestFactory(properties);
+        restTemplate.setRequestFactory(factory);
+        return restTemplate;
+    }
+
+    /**
+     * 创建专用 RestTemplate 实例。
+     */
+    private RestTemplate createDedicatedRestTemplate(WebhookProperties properties) {
+        return new RestTemplate(createRequestFactory(properties));
+    }
+
+    /**
+     * 创建请求工厂（优先使用 Apache HttpClient 连接池）。
+     */
+    private ClientHttpRequestFactory createRequestFactory(WebhookProperties properties) {
+        try {
+            // 尝试使用 Apache HttpClient 连接池
+            Class<?> httpClientFactoryClass = Class.forName(
+                    "org.springframework.http.client.HttpComponentsClientHttpRequestFactory");
+            Object factory = httpClientFactoryClass.getDeclaredConstructor().newInstance();
+            // 设置超时
+            httpClientFactoryClass.getMethod("setConnectTimeout", int.class)
+                    .invoke(factory, properties.getConnectTimeoutMs());
+            httpClientFactoryClass.getMethod("setReadTimeout", int.class)
+                    .invoke(factory, properties.getReadTimeoutMs());
+            log.info("[WebhookDispatcher] 使用 Apache HttpClient 连接池 | connectTimeout={}ms readTimeout={}ms",
+                    properties.getConnectTimeoutMs(), properties.getReadTimeoutMs());
+            return (ClientHttpRequestFactory) factory;
+        } catch (ClassNotFoundException e) {
+            // Apache HttpClient 不在 classpath，降级
+            log.info("[WebhookDispatcher] Apache HttpClient 不在 classpath，使用 SimpleClientHttpRequestFactory");
+            SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+            factory.setConnectTimeout(properties.getConnectTimeoutMs());
+            factory.setReadTimeout(properties.getReadTimeoutMs());
+            return factory;
+        } catch (Exception e) {
+            log.warn("[WebhookDispatcher] 创建连接池工厂失败，降级为 SimpleClientHttpRequestFactory", e);
+            SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+            factory.setConnectTimeout(properties.getConnectTimeoutMs());
+            factory.setReadTimeout(properties.getReadTimeoutMs());
+            return factory;
         }
     }
 

@@ -157,6 +157,18 @@
       "defaultValue": true
     },
     {
+      "name": "ydsz.websocket.retry.backoff-strategy",
+      "type": "java.lang.String",
+      "description": "退避策略：fixed / exponential / exponential_with_jitter。",
+      "defaultValue": "exponential"
+    },
+    {
+      "name": "ydsz.websocket.retry.max-retry-delay-ms",
+      "type": "java.lang.Long",
+      "description": "最大重试延迟（毫秒），退避后不超过此值。",
+      "defaultValue": 60000
+    },
+    {
       "name": "ydsz.websocket.ack.enabled",
       "type": "java.lang.Boolean",
       "description": "是否启用 ACK 确认。",
@@ -215,6 +227,18 @@
       "type": "java.lang.Long",
       "description": "慢连接阈值（毫秒）。",
       "defaultValue": 5000
+    },
+    {
+      "name": "ydsz.websocket.multi-device.policy",
+      "type": "java.lang.String",
+      "description": "多端登录策略：ALLOW_ALL / MUTEX / NEW_REPLACE_OLD。",
+      "defaultValue": "ALLOW_ALL"
+    },
+    {
+      "name": "ydsz.websocket.multi-device.max-sessions-per-user",
+      "type": "java.lang.Integer",
+      "description": "每用户最大并发 Session 数。",
+      "defaultValue": 5
     }
   ]
 }

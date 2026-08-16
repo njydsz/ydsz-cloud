@@ -2,6 +2,7 @@ package com.njydsz.common.excel.support.asm;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.ref.SoftReference;
 import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -67,13 +68,35 @@ public class ASMFieldAccessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ASMFieldAccessor.class);
 
-    private static final int MAX_GENERATED_CLASS_COUNT = 5000;
+    /**
+     * 动态生成的类数量上限，超过后降级到 MethodHandle / 反射模式。
+     *
+     * <p>可通过系统属性 {@code ydsz.excel.asm.max-class-count} 在启动时覆盖，
+     * 默认 5000。调高可获得更多 ASM 加速，但会占用更多 Metaspace。
+     */
+    private static final int MAX_GENERATED_CLASS_COUNT = resolveMaxClassCount();
 
     private static final AtomicInteger generatedClassCount = new AtomicInteger(0);
 
     private static volatile boolean fallbackToReflection = false;
 
     private static final GeneratedClassLoader CLASS_LOADER = new GeneratedClassLoader(ASMFieldAccessor.class.getClassLoader());
+
+    private static int resolveMaxClassCount() {
+        String prop = System.getProperty("ydsz.excel.asm.max-count");
+        if (prop != null) {
+            try {
+                int val = Integer.parseInt(prop);
+                if (val > 0) {
+                    LOGGER.info("ASM max class count overridden by system property: {}", val);
+                    return val;
+                }
+            } catch (NumberFormatException e) {
+                LOGGER.warn("Invalid system property ydsz.excel.asm.max-count={}, using default 5000", prop);
+            }
+        }
+        return 5000;
+    }
 
     /**
      * 自定义类加载器，用于加载 ASM 动态生成的访问器字节码。
@@ -91,13 +114,23 @@ public class ASMFieldAccessor {
         }
     }
 
-    private static final Map<String, GeneratedAccessor> ACCESSOR_CACHE =
+    /**
+     * 字段 Getter 缓存。值使用 {@link SoftReference} 包装以允许 GC 在内存不足时回收，
+     * 避免 Metaspace 泄漏；被回收的条目在下一次访问时自动重新生成。
+     */
+    private static final Map<String, SoftReference<GeneratedAccessor>> ACCESSOR_CACHE =
         new ConcurrentHashMap<>();
 
-    private static final Map<String, GeneratedSetter> SETTER_CACHE =
+    /**
+     * 字段 Setter 缓存。值使用 {@link SoftReference} 包装以允许 GC 在内存不足时回收。
+     */
+    private static final Map<String, SoftReference<GeneratedSetter>> SETTER_CACHE =
         new ConcurrentHashMap<>();
 
-    private static final Map<Class<?>, ObjectInstantiator> INSTANTIATOR_CACHE =
+    /**
+     * 对象实例化器缓存。值使用 {@link SoftReference} 包装以允许 GC 在内存不足时回收。
+     */
+    private static final Map<Class<?>, SoftReference<ObjectInstantiator>> INSTANTIATOR_CACHE =
         new ConcurrentHashMap<>();
 
     /**
@@ -158,17 +191,33 @@ public class ASMFieldAccessor {
      */
     public static FieldGetter getGetter(Class<?> clazz, Field field) {
         String key = clazz.getName() + "#" + field.getName();
-        GeneratedAccessor accessor = ACCESSOR_CACHE.computeIfAbsent(key, k -> {
-            if (fallbackToReflection) {
-                return createFallbackGetter(clazz, field);
+        SoftReference<GeneratedAccessor> ref = ACCESSOR_CACHE.get(key);
+        if (ref != null) {
+            GeneratedAccessor accessor = ref.get();
+            if (accessor != null) {
+                return accessor.getter;
             }
-            try {
-                return generateGetter(clazz, field);
-            } catch (Exception e) {
-                return createFallbackGetter(clazz, field);
-            }
-        });
-        return accessor.getter;
+            // SoftReference 已被 GC 回收，移除过期条目
+            ACCESSOR_CACHE.remove(key, ref);
+        }
+        // 未命中或已过期 — 重新生成
+        GeneratedAccessor newAccessor = createAccessor(clazz, field);
+        ACCESSOR_CACHE.put(key, new SoftReference<>(newAccessor));
+        return newAccessor.getter;
+    }
+
+    /**
+     * 创建 Getter 访问器（含 ASM 快速路径 + 降级逻辑）
+     */
+    private static GeneratedAccessor createAccessor(Class<?> clazz, Field field) {
+        if (fallbackToReflection) {
+            return createFallbackGetter(clazz, field);
+        }
+        try {
+            return generateGetter(clazz, field);
+        } catch (Exception e) {
+            return createFallbackGetter(clazz, field);
+        }
     }
 
     /**
@@ -182,17 +231,33 @@ public class ASMFieldAccessor {
      */
     public static FieldSetter getSetter(Class<?> clazz, Field field) {
         String key = clazz.getName() + "#" + field.getName() + "#setter";
-        GeneratedSetter setter = SETTER_CACHE.computeIfAbsent(key, k -> {
-            if (fallbackToReflection) {
-                return createFallbackSetter(clazz, field);
+        SoftReference<GeneratedSetter> ref = SETTER_CACHE.get(key);
+        if (ref != null) {
+            GeneratedSetter setter = ref.get();
+            if (setter != null) {
+                return setter.setter;
             }
-            try {
-                return generateSetter(clazz, field);
-            } catch (Exception e) {
-                return createFallbackSetter(clazz, field);
-            }
-        });
-        return setter.setter;
+            // SoftReference 已被 GC 回收，移除过期条目
+            SETTER_CACHE.remove(key, ref);
+        }
+        // 未命中或已过期 — 重新生成
+        GeneratedSetter newSetter = createSetter(clazz, field);
+        SETTER_CACHE.put(key, new SoftReference<>(newSetter));
+        return newSetter.setter;
+    }
+
+    /**
+     * 创建 Setter 访问器（含 ASM 快速路径 + 降级逻辑）
+     */
+    private static GeneratedSetter createSetter(Class<?> clazz, Field field) {
+        if (fallbackToReflection) {
+            return createFallbackSetter(clazz, field);
+        }
+        try {
+            return generateSetter(clazz, field);
+        } catch (Exception e) {
+            return createFallbackSetter(clazz, field);
+        }
     }
 
     /**
@@ -204,16 +269,33 @@ public class ASMFieldAccessor {
      * @return 对象实例化器
      */
     public static ObjectInstantiator getInstantiator(Class<?> clazz) {
-        return INSTANTIATOR_CACHE.computeIfAbsent(clazz, k -> {
-            if (fallbackToReflection) {
-                return createFallbackInstantiator(clazz);
+        SoftReference<ObjectInstantiator> ref = INSTANTIATOR_CACHE.get(clazz);
+        if (ref != null) {
+            ObjectInstantiator instantiator = ref.get();
+            if (instantiator != null) {
+                return instantiator;
             }
-            try {
-                return generateInstantiator(clazz);
-            } catch (Exception e) {
-                return createFallbackInstantiator(clazz);
-            }
-        });
+            // SoftReference 已被 GC 回收，移除过期条目
+            INSTANTIATOR_CACHE.remove(clazz, ref);
+        }
+        // 未命中或已过期 — 重新生成
+        ObjectInstantiator newInstantiator = createInstantiator(clazz);
+        INSTANTIATOR_CACHE.put(clazz, new SoftReference<>(newInstantiator));
+        return newInstantiator;
+    }
+
+    /**
+     * 创建实例化器（含 ASM 快速路径 + 降级逻辑）
+     */
+    private static ObjectInstantiator createInstantiator(Class<?> clazz) {
+        if (fallbackToReflection) {
+            return createFallbackInstantiator(clazz);
+        }
+        try {
+            return generateInstantiator(clazz);
+        } catch (Exception e) {
+            return createFallbackInstantiator(clazz);
+        }
     }
 
     private static boolean checkAndIncrementClassCount() {
@@ -586,6 +668,51 @@ public class ASMFieldAccessor {
         INSTANTIATOR_CACHE.clear();
         generatedClassCount.set(0);
         fallbackToReflection = false;
+    }
+
+    /**
+     * 返回当前活跃的 Getter 缓存条目数（已回收的软引用不被计入）。
+     *
+     * @return 有效引用个数
+     */
+    public static int getActiveAccessorCount() {
+        int count = 0;
+        for (SoftReference<GeneratedAccessor> ref : ACCESSOR_CACHE.values()) {
+            if (ref.get() != null) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /**
+     * 返回当前活跃的 Setter 缓存条目数（已回收的软引用不被计入）。
+     *
+     * @return 有效引用个数
+     */
+    public static int getActiveSetterCount() {
+        int count = 0;
+        for (SoftReference<GeneratedSetter> ref : SETTER_CACHE.values()) {
+            if (ref.get() != null) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /**
+     * 返回当前活跃的实例化器缓存条目数（已回收的软引用不被计入）。
+     *
+     * @return 有效引用个数
+     */
+    public static int getActiveInstantiatorCount() {
+        int count = 0;
+        for (SoftReference<ObjectInstantiator> ref : INSTANTIATOR_CACHE.values()) {
+            if (ref.get() != null) {
+                count++;
+            }
+        }
+        return count;
     }
 
     /**

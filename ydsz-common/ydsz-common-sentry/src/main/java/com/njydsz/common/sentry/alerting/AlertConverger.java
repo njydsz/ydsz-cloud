@@ -1,10 +1,11 @@
 package com.njydsz.common.sentry.alerting;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import org.springframework.scheduling.annotation.Scheduled;
 
 import com.njydsz.common.sentry.domain.AlertEvent;
 import com.njydsz.common.sentry.spi.AlertPublisher;
@@ -23,11 +24,18 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>静默期：告警触发后设置静默期，期内不重复通知</li>
  * </ul>
  *
+ * <p>静默记录使用有界 Map，超出上限时移除最早过期的条目，防止高基数告警导致内存泄漏。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Slf4j
 public class AlertConverger implements AlertPublisher {
+
+    /** 静默记录最大条目数 */
+    private static final int MAX_SILENCE_MAP_SIZE = 10000;
+    /** 触发清理的阈值（达到容量的 80%） */
+    private static final double CLEANUP_THRESHOLD_RATIO = 0.8;
 
     /** 下游告警发布器 */
     private final AlertPublisher delegate;
@@ -65,6 +73,7 @@ public class AlertConverger implements AlertPublisher {
 
         // 设置静默
         if (published) {
+            ensureSilenceMapCapacity();
             silenceMap.put(dedupKey, Instant.now());
         }
 
@@ -73,27 +82,82 @@ public class AlertConverger implements AlertPublisher {
 
     /**
      * 检查是否在静默期内
+     *
+     * @param dedupKey 告警去重键
+     * @return {@code true} 表示在静默期内
      */
     private boolean isSilenced(String dedupKey) {
         Instant lastFired = silenceMap.get(dedupKey);
         if (lastFired == null) {
             return false;
         }
-        return lastFired.plusMillis(silencePeriodMillis).isAfter(Instant.now());
+        if (lastFired.plusMillis(silencePeriodMillis).isAfter(Instant.now())) {
+            return true;
+        }
+        // 已过期，移除无效记录
+        silenceMap.remove(dedupKey);
+        return false;
     }
 
     /**
-     * 清理过期静默记录（定时调度，每 60 秒执行一次）
+     * 确保静默记录 Map 不超出容量上限。
+     *
+     * <p>当容量达到阈值的 80% 时，触发批量清理过期条目；
+     * 清理后仍超限，则移除最早过期的条目直到容量降至安全水位。
      */
-    @Scheduled(fixedDelay = 60000)
+    private void ensureSilenceMapCapacity() {
+        if (silenceMap.size() < MAX_SILENCE_MAP_SIZE * CLEANUP_THRESHOLD_RATIO) {
+            return;
+        }
+        // 先清理过期条目
+        cleanupExpiredSilence();
+        // 仍超限则强制移除最老的条目
+        while (silenceMap.size() >= MAX_SILENCE_MAP_SIZE) {
+            String oldestKey = findOldestEntry();
+            if (oldestKey == null) {
+                break;
+            }
+            silenceMap.remove(oldestKey);
+        }
+    }
+
+    /**
+     * 查找最早过期的条目 key
+     *
+     * @return 最老的 key，Map 为空时返回 {@code null}
+     */
+    private String findOldestEntry() {
+        String oldestKey = null;
+        Instant oldestTime = Instant.MAX;
+        for (Map.Entry<String, Instant> entry : silenceMap.entrySet()) {
+            if (entry.getValue().isBefore(oldestTime)) {
+                oldestTime = entry.getValue();
+                oldestKey = entry.getKey();
+            }
+        }
+        return oldestKey;
+    }
+
+    /**
+     * 清理过期静默记录。
+     *
+     * <p>遍历移除超过静默期的条目，防止 Map 无限增长。
+     */
     public void cleanupExpiredSilence() {
         Instant now = Instant.now();
-        silenceMap.entrySet().removeIf(entry ->
-                entry.getValue().plusMillis(silencePeriodMillis).isBefore(now));
+        List<String> expiredKeys = new ArrayList<>();
+        silenceMap.forEach((key, value) -> {
+            if (value.plusMillis(silencePeriodMillis).isBefore(now)) {
+                expiredKeys.add(key);
+            }
+        });
+        expiredKeys.forEach(silenceMap::remove);
     }
 
     /**
      * 获取静默中的告警数量
+     *
+     * @return 当前静默记录数
      */
     public int getActiveSilenceCount() {
         return silenceMap.size();
@@ -101,6 +165,8 @@ public class AlertConverger implements AlertPublisher {
 
     /**
      * 获取总告警数
+     *
+     * @return 累计告警总数
      */
     public int getTotalAlerts() {
         return totalAlerts.get();
@@ -108,6 +174,8 @@ public class AlertConverger implements AlertPublisher {
 
     /**
      * 获取被抑制的告警数
+     *
+     * @return 累计被抑制数
      */
     public int getSuppressedAlerts() {
         return suppressedAlerts.get();
@@ -115,6 +183,8 @@ public class AlertConverger implements AlertPublisher {
 
     /**
      * 获取告警抑制率
+     *
+     * @return 抑制率（0.0~1.0）
      */
     public double getSuppressionRate() {
         int total = totalAlerts.get();

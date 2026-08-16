@@ -118,7 +118,14 @@ public class RedisMessageRetryQueue implements MessageRetryQueue {
     }
 
     /**
-     * 增加重试计数并重新入队。
+     * 增加重试计数并重新入队（使用退避策略）。
+     *
+     * <p>退避策略：
+     * <ul>
+     *   <li>fixed — 固定延迟（每次相同）</li>
+     *   <li>exponential — 指数退避（delay * 2^retryCount）</li>
+     *   <li>exponential_with_jitter — 指数退避 + 随机抖动（避免雪崩）</li>
+     * </ul>
      *
      * @param message 原始消息
      */
@@ -127,8 +134,34 @@ public class RedisMessageRetryQueue implements MessageRetryQueue {
             return;
         }
         message.setRetryCount(message.getRetryCount() + 1);
-        long delayMs = properties.getRetry().getRetryDelay().toMillis();
+        long delayMs = calculateBackoffDelay(message.getRetryCount());
         message.setNextRetryAt(System.currentTimeMillis() + delayMs);
         enqueue(message);
+    }
+
+    /**
+     * 计算退避延迟（毫秒）。
+     *
+     * @param retryCount 当前重试次数（从 1 开始）
+     * @return 延迟毫秒数
+     */
+    private long calculateBackoffDelay(int retryCount) {
+        long baseDelayMs = properties.getRetry().getRetryDelay().toMillis();
+        long maxDelayMs = properties.getRetry().getMaxRetryDelayMs();
+        String strategy = properties.getRetry().getBackoffStrategy();
+
+        long delay;
+        switch (strategy) {
+            case "fixed" -> delay = baseDelayMs;
+            case "exponential" -> delay = baseDelayMs * (1L << (retryCount - 1));
+            case "exponential_with_jitter" -> {
+                long exponentialDelay = baseDelayMs * (1L << (retryCount - 1));
+                // 添加 ±10% 随机抖动
+                long jitter = (long) (exponentialDelay * 0.1 * Math.random());
+                delay = exponentialDelay + jitter - (exponentialDelay / 20);
+            }
+            default -> delay = baseDelayMs;
+        }
+        return Math.min(delay, maxDelayMs);
     }
 }

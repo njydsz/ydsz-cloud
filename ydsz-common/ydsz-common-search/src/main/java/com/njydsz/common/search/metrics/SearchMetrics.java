@@ -32,6 +32,10 @@ public class SearchMetrics {
     private Counter searchCounter;
     private Counter zeroResultCounter;
     private Timer searchTimer;
+    private Timer textProcessTimer;
+    private Timer cacheQueryTimer;
+    private Timer engineQueryTimer;
+    private Timer rankingTimer;
     private Counter indexOpCounter;
     private Counter indexFailedCounter;
 
@@ -52,6 +56,18 @@ public class SearchMetrics {
                 .register(meterRegistry);
         searchTimer = Timer.builder("ydsz.search.duration")
                 .description("Search duration")
+                .register(meterRegistry);
+        textProcessTimer = Timer.builder("ydsz.search.phase.text_process")
+                .description("Text processing phase duration")
+                .register(meterRegistry);
+        cacheQueryTimer = Timer.builder("ydsz.search.phase.cache_query")
+                .description("Cache query phase duration")
+                .register(meterRegistry);
+        engineQueryTimer = Timer.builder("ydsz.search.phase.engine_query")
+                .description("Engine query phase duration")
+                .register(meterRegistry);
+        rankingTimer = Timer.builder("ydsz.search.phase.ranking")
+                .description("Business ranking phase duration")
                 .register(meterRegistry);
         indexOpCounter = Counter.builder("ydsz.search.index_ops")
                 .description("Total index operations")
@@ -188,5 +204,105 @@ public class SearchMetrics {
      */
     public long getFailedIndexOps() {
         return failedIndexOps.get();
+    }
+
+    // ==================== P5-13: 阶段耗时记录 ====================
+
+    /**
+     * 记录文本预处理阶段耗时。
+     *
+     * @param durationMs 耗时毫秒
+     */
+    public void recordTextProcess(long durationMs) {
+        if (textProcessTimer != null) {
+            textProcessTimer.record(Duration.ofMillis(durationMs));
+        }
+    }
+
+    /**
+     * 记录缓存查询阶段耗时。
+     *
+     * @param durationMs 耗时毫秒
+     */
+    public void recordCacheQuery(long durationMs) {
+        if (cacheQueryTimer != null) {
+            cacheQueryTimer.record(Duration.ofMillis(durationMs));
+        }
+    }
+
+    /**
+     * 记录引擎查询阶段耗时。
+     *
+     * @param durationMs 耗时毫秒
+     */
+    public void recordEngineQuery(long durationMs) {
+        if (engineQueryTimer != null) {
+            engineQueryTimer.record(Duration.ofMillis(durationMs));
+        }
+    }
+
+    /**
+     * 记录业务排序阶段耗时。
+     *
+     * @param durationMs 耗时毫秒
+     */
+    public void recordRanking(long durationMs) {
+        if (rankingTimer != null) {
+            rankingTimer.record(Duration.ofMillis(durationMs));
+        }
+    }
+
+    /**
+     * 搜索阶段计时器 — 用于在单次搜索中精确测量各阶段耗时。
+     *
+     * <p>使用方法：
+     * <pre>{@code
+     * SearchPhaseTimer phaseTimer = SearchPhaseTimer.start();
+     * // ... 文本预处理 ...
+     * long textProcessMs = phaseTimer.lap();
+     * // ... 引擎查询 ...
+     * long engineMs = phaseTimer.lap();
+     * metrics.recordPhases(phaseTimer);
+     * }</pre>
+     */
+    public static class SearchPhaseTimer {
+        private final long baseTime;
+        private long lastLapTime;
+        private final java.util.List<Long> laps;
+
+        private SearchPhaseTimer() {
+            this.baseTime = System.nanoTime();
+            this.lastLapTime = baseTime;
+            this.laps = new java.util.ArrayList<>(4);
+        }
+
+        public static SearchPhaseTimer start() {
+            return new SearchPhaseTimer();
+        }
+
+        /**
+         * 记录一次分段计时，返回距上次 lap 的毫秒数。
+         */
+        public long lap() {
+            long now = System.nanoTime();
+            long elapsed = (now - lastLapTime) / 1_000_000;
+            lastLapTime = now;
+            laps.add(elapsed);
+            return elapsed;
+        }
+
+        /**
+         * 获取全部 lap 耗时（毫秒）。
+         */
+        public java.util.List<Long> getLaps() {
+            return java.util.List.copyOf(laps);
+        }
+
+        /**
+         * 获取总耗时（毫秒）。
+         */
+        public long getTotalMs() {
+            return (System.nanoTime() - baseTime) / 1_000_000;
+        }
     }
 }

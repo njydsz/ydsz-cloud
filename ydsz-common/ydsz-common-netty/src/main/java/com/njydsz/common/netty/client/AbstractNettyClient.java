@@ -79,7 +79,7 @@ public abstract class AbstractNettyClient {
      * @throws InterruptedException 连接被中断
      */
     public void connect() throws InterruptedException {
-        // P0-5: CAS 原子保护，避免并发重复连接
+        // CAS 原子保护，避免并发重复连接
         if (!connecting.compareAndSet(false, true)) {
             return;
         }
@@ -89,93 +89,100 @@ public abstract class AbstractNettyClient {
             }
 
             NettyEventLoopPool pool = getEventLoopPool();
-            if (properties.isSharedEventLoop()) {
-                workerGroup = pool.acquireWorkerGroup(properties.getWorkerThreads());
-            } else {
-                workerGroup = pool.createIsolatedWorkerGroup(properties.getWorkerThreads());
-            }
+            initWorkerGroup(pool);
+            initSslContext();
 
-            // SSL Context 一次性创建（避免每连接重建）
-            if (properties.getSsl().isEnabled() && sslContext == null) {
-                sslContext = SslContextFactory.createClientContext(
-                        properties.getSsl().getTrustStore(),
-                        properties.getSsl().getTrustStorePassword(),
-                        properties.getSsl().getTrustStoreType());
-            }
+            TrafficMonitoringHandler trafficHandler = createTrafficMonitoringHandler();
+            ConnectionEventHandler connectionHandler = createConnectionEventHandler();
 
-            // 可复用的监控 Handler（@Sharable）
-            TrafficMonitoringHandler trafficHandler =
-                    metrics != null ? new TrafficMonitoringHandler(metrics) : null;
-            ConnectionEventHandler connectionHandler =
-                    metrics != null ? new ConnectionEventHandler(metrics) : null;
+            Bootstrap bootstrap = configureBootstrap(pool, trafficHandler, connectionHandler);
+            doConnect(bootstrap);
 
-            Bootstrap bootstrap = new Bootstrap();
-            bootstrap.group(workerGroup)
-                    .channel(NativeTransportDetector.getSocketChannelClass(
-                            pool.getTransportType()))
-                    .option(ChannelOption.SO_KEEPALIVE, properties.isSoKeepAlive())
-                    .option(ChannelOption.TCP_NODELAY, properties.isTcpNoDelay())
-                    .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, properties.getConnectTimeoutMillis())
-                    .handler(new ChannelInitializer<SocketChannel>() {
-                        @Override
-                        protected void initChannel(SocketChannel ch) {
-                            ChannelPipeline pipeline = ch.pipeline();
-
-                            // SSL/TLS（复用已创建的 SslContext）
-                            if (sslContext != null) {
-                                pipeline.addLast("ssl", sslContext.newHandler(ch.alloc(), host, port));
-                            }
-
-                            // 空闲检测
-                            IdleStateHandlerFactory idleFactory = new IdleStateHandlerFactory(
-                                    properties.getIdle().getReaderIdleSeconds(),
-                                    properties.getIdle().getWriterIdleSeconds(),
-                                    properties.getIdle().getAllIdleSeconds());
-                            pipeline.addLast("idleState", idleFactory.create());
-
-                            // 流量整形
-                            if (properties.getTrafficShaping().isEnabled()) {
-                                pipeline.addLast("trafficShaping", new ChannelTrafficShapingHandler(
-                                        properties.getTrafficShaping().getWriteLimit(),
-                                        properties.getTrafficShaping().getReadLimit(),
-                                        properties.getTrafficShaping().getCheckIntervalMs()));
-                            }
-
-                            // 大文件分块写支持
-                            pipeline.addLast("chunkedWrite", new ChunkedWriteHandler());
-
-                            // 指标监控 — 流量统计
-                            if (trafficHandler != null) {
-                                pipeline.addLast("trafficMonitor", trafficHandler);
-                            }
-
-                            if (connectionHandler != null) {
-                                pipeline.addLast("connectionEvent", connectionHandler);
-                            }
-
-                            if (channelEventDispatcher != null) {
-                                pipeline.addLast("channelEventDispatcher", channelEventDispatcher);
-                            }
-
-                            // Pipeline
-                            initChannelPipeline(ch);
-
-                            if (messageDispatcher != null) {
-                                pipeline.addLast("messageDispatcher", messageDispatcher);
-                            }
-
-                            if (properties.getReconnect().isEnabled()) {
-                                pipeline.addLast("reconnect", createReconnectHandler());
-                            }
-                        }
-                    });
-
-            ChannelFuture future = bootstrap.connect(host, port).sync();
-            channel = future.channel();
             log.info("[Netty-Client] {} 连接成功: {}:{}", getClass().getSimpleName(), host, port);
         } finally {
             connecting.set(false);
         }
+    }
+
+    /**
+     * 初始化 Client Worker EventLoopGroup（共享或隔离模式）。
+     *
+     * @param pool EventLoop 池
+     */
+    private void initWorkerGroup(NettyEventLoopPool pool) {
+        if (properties.isSharedEventLoop()) {
+            workerGroup = pool.acquireWorkerGroup(properties.getWorkerThreads());
+        } else {
+            workerGroup = pool.createIsolatedWorkerGroup(properties.getWorkerThreads());
+        }
+    }
+
+    /**
+     * 初始化 SSL/TLS 上下文（如启用且未初始化）。
+     */
+    private void initSslContext() {
+        if (properties.getSsl().isEnabled() && sslContext == null) {
+            NettyProperties.Ssl ssl = properties.getSsl();
+            SslContextFactory.SslStoreConfig trustStore = ssl.getTrustStore() != null
+                    ? new SslContextFactory.SslStoreConfig(
+                            ssl.getTrustStore(), ssl.getTrustStorePassword(), ssl.getTrustStoreType())
+                    : null;
+            sslContext = SslContextFactory.createClientContext(trustStore);
+        }
+    }
+
+    /**
+     * 创建流量监控 Handler（指标收集器启用时）。
+     *
+     * @return 监控 Handler，未启用指标时返回 {@code null}
+     */
+    private TrafficMonitoringHandler createTrafficMonitoringHandler() {
+        return metrics != null ? new TrafficMonitoringHandler(metrics) : null;
+    }
+
+    /**
+     * 创建连接事件监控 Handler（指标收集器启用时）。
+     *
+     * @return 连接事件 Handler，未启用指标时返回 {@code null}
+     */
+    private ConnectionEventHandler createConnectionEventHandler() {
+        return metrics != null ? new ConnectionEventHandler(metrics) : null;
+    }
+
+    /**
+     * 配置 Bootstrap 参数与 Pipeline 初始化器。
+     *
+     * @param pool              EventLoop 池
+     * @param trafficHandler    流量监控 Handler（可为 {@code null}）
+     * @param connectionHandler 连接事件 Handler（可为 {@code null}）
+     * @return 已配置的 Bootstrap
+     */
+    private Bootstrap configureBootstrap(
+            NettyEventLoopPool pool,
+            TrafficMonitoringHandler trafficHandler,
+            ConnectionEventHandler connectionHandler) {
+
+        Bootstrap bootstrap = new Bootstrap();
+        bootstrap.group(workerGroup)
+                .channel(NativeTransportDetector.getSocketChannelClass(
+                        pool.getTransportType()))
+                .option(ChannelOption.SO_KEEPALIVE, properties.isSoKeepAlive())
+                .option(ChannelOption.TCP_NODELAY, properties.isTcpNoDelay())
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, properties.getConnectTimeoutMillis())
+                .handler(new ClientChannelInitializer(
+                        trafficHandler, connectionHandler));
+        return bootstrap;
+    }
+
+    /**
+     * 执行端口连接。
+     *
+     * @param bootstrap 已配置的 Bootstrap
+     * @throws InterruptedException 连接被中断
+     */
+    private void doConnect(Bootstrap bootstrap) throws InterruptedException {
+        ChannelFuture future = bootstrap.connect(host, port).sync();
+        channel = future.channel();
     }
 
     /**
@@ -208,7 +215,7 @@ public abstract class AbstractNettyClient {
      */
     public ChannelFuture send(Object message) {
         if (channel == null || !channel.isActive()) {
-            throw new IllegalStateException("Channel 未连接");
+            throw new NettyClientException("Channel 未连接，请先调用 connect()");
         }
         return channel.writeAndFlush(message);
     }
@@ -233,6 +240,82 @@ public abstract class AbstractNettyClient {
      */
     public boolean isConnected() {
         return channel != null && channel.isActive();
+    }
+
+    /**
+     * Netty Client Channel 初始化器（从 connect() 中拆分的独立内部类）。
+     *
+     * <p>添加通用 Handler 链：SSL → 空闲检测 → 流量整形 → 监控 → 业务 Handler → 重连。
+     */
+    private final class ClientChannelInitializer extends ChannelInitializer<SocketChannel> {
+
+        private final TrafficMonitoringHandler trafficHandler;
+        private final ConnectionEventHandler connectionHandler;
+
+        /**
+         * 构造初始化器。
+         *
+         * @param trafficHandler    流量监控 Handler（可为 {@code null}）
+         * @param connectionHandler 连接事件 Handler（可为 {@code null}）
+         */
+        ClientChannelInitializer(
+                TrafficMonitoringHandler trafficHandler,
+                ConnectionEventHandler connectionHandler) {
+            this.trafficHandler = trafficHandler;
+            this.connectionHandler = connectionHandler;
+        }
+
+        @Override
+        protected void initChannel(SocketChannel ch) {
+            ChannelPipeline pipeline = ch.pipeline();
+
+            // SSL/TLS（复用已创建的 SslContext）
+            if (sslContext != null) {
+                pipeline.addLast("ssl", sslContext.newHandler(ch.alloc(), host, port));
+            }
+
+            // 空闲检测
+            IdleStateHandlerFactory idleFactory = new IdleStateHandlerFactory(
+                    properties.getIdle().getReaderIdleSeconds(),
+                    properties.getIdle().getWriterIdleSeconds(),
+                    properties.getIdle().getAllIdleSeconds());
+            pipeline.addLast("idleState", idleFactory.create());
+
+            // 流量整形
+            if (properties.getTrafficShaping().isEnabled()) {
+                pipeline.addLast("trafficShaping", new ChannelTrafficShapingHandler(
+                        properties.getTrafficShaping().getWriteLimit(),
+                        properties.getTrafficShaping().getReadLimit(),
+                        properties.getTrafficShaping().getCheckIntervalMs()));
+            }
+
+            // 大文件分块写支持
+            pipeline.addLast("chunkedWrite", new ChunkedWriteHandler());
+
+            // 指标监控 — 流量统计
+            if (trafficHandler != null) {
+                pipeline.addLast("trafficMonitor", trafficHandler);
+            }
+
+            if (connectionHandler != null) {
+                pipeline.addLast("connectionEvent", connectionHandler);
+            }
+
+            if (channelEventDispatcher != null) {
+                pipeline.addLast("channelEventDispatcher", channelEventDispatcher);
+            }
+
+            // 子类自定义 Pipeline
+            initChannelPipeline(ch);
+
+            if (messageDispatcher != null) {
+                pipeline.addLast("messageDispatcher", messageDispatcher);
+            }
+
+            if (properties.getReconnect().isEnabled()) {
+                pipeline.addLast("reconnect", createReconnectHandler());
+            }
+        }
     }
 
     /**

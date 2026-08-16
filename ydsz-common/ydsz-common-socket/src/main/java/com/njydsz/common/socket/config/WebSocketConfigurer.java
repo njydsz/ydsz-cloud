@@ -81,7 +81,7 @@ public class WebSocketConfigurer implements WebSocketMessageBrokerConfigurer {
     /**
      * 配置 WebSocket 传输参数。
      *
-     * <p>设置消息大小限制和发送超时时间。
+     * <p>设置消息大小限制、发送超时时间以及 Session 追踪装饰器工厂。
      *
      * @param registration WebSocket 传输注册表
      */
@@ -89,7 +89,8 @@ public class WebSocketConfigurer implements WebSocketMessageBrokerConfigurer {
     public void configureWebSocketTransport(WebSocketTransportRegistration registration) {
         registration.setMessageSizeLimit(properties.getMessageSizeLimit());
         registration.setSendTimeLimit((int) properties.getSendTimeoutMs());
-}
+        registration.addDecoratorFactory(new SessionWebSocketHandlerDecoratorFactory(sessionRegistry));
+    }
 
     /**
      * 配置客户端入站通道拦截器。

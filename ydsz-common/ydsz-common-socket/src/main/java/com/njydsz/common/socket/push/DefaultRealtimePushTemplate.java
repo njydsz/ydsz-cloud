@@ -104,6 +104,22 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
     }
 
     /**
+     * 推送消息到指定用户（带业务级消息 ID，用于幂等去重）。
+     *
+     * <p>当 {@code messageId} 非空时，使用该值替代随机生成的 UUID，
+     * 便于业务方基于业务 ID（如订单号）实现幂等去重。
+     *
+     * @param userId    用户 ID
+     * @param type      消息类型
+     * @param payload   消息负载
+     * @param messageId 业务级消息唯一 ID
+     */
+    @Override
+    public void pushToUser(String userId, String type, Object payload, String messageId) {
+        pushToUserInternal(userId, type, payload, MessagePriority.NORMAL.name(), messageId);
+    }
+
+    /**
      * 推送消息到指定用户（指定优先级）。
      *
      * <p>推送流程：
@@ -125,6 +141,45 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
      */
     @Override
     public void pushToUser(String userId, String type, Object payload, String priority) {
+        pushToUserInternal(userId, type, payload, priority, null);
+    }
+
+    /**
+     * 推送消息到指定用户（带业务级消息 ID + 离线补偿）。
+     *
+     * @param userId    用户 ID
+     * @param type      消息类型
+     * @param payload   消息负载
+     * @param messageId 业务级消息唯一 ID
+     */
+    @Override
+    public void pushToUserWithOffline(String userId, String type, Object payload, String messageId) {
+        if (userId == null) {
+            return;
+        }
+        try {
+            if (onlineUserService.isOnline(userId)) {
+                pushToUser(userId, type, payload, messageId);
+            } else {
+                offlineMessageStore.cacheOffline(userId, type, payload);
+                log.info("[WebSocket] 用户离线，消息已缓存: userId={}, type={}, messageId={}", userId, type, messageId);
+            }
+        } catch (Exception e) {
+            log.warn("[WebSocket] 在线检查异常，降级直接推送: userId={}, err={}", userId, e.getMessage());
+            pushToUser(userId, type, payload, messageId);
+        }
+    }
+
+    /**
+     * 内部推送方法（支持外部传入 messageId）。
+     *
+     * @param userId    用户 ID
+     * @param type      消息类型
+     * @param payload   消息负载
+     * @param priority  优先级
+     * @param messageId 业务级消息 ID（为空时自动生成）
+     */
+    private void pushToUserInternal(String userId, String type, Object payload, String priority, String messageId) {
         if (userId == null) {
             return;
         }
@@ -133,7 +188,7 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
             return;
         }
 
-        String messageId = generateMessageId();
+        String actualMessageId = (messageId != null && !messageId.isEmpty()) ? messageId : generateMessageId();
         String traceId = WebSocketTraceContext.getOrGenerateTraceId();
 
         WebSocketClusterMessage msg = WebSocketClusterMessage.forUser(userId, type, payloadJson);
@@ -145,7 +200,7 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
         if (!clusterPublisher.publish(msg)) {
             success = localPushToUser(userId, payloadJson);
             if (!success && retryQueue != null) {
-                enqueueRetry(messageId, userId, type, payloadJson);
+                enqueueRetry(actualMessageId, userId, type, payloadJson);
             }
         } else {
             success = true;
@@ -161,7 +216,7 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
                     success ? null : "local push failed");
         }
         if (ackService != null && success) {
-            ackService.registerPendingAck(messageId, userId);
+            ackService.registerPendingAck(actualMessageId, userId);
         }
     }
 
