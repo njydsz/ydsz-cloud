@@ -29,6 +29,9 @@ public class AgentProperties {
     /** RAG 配置 */
     private Rag rag = new Rag();
 
+    /** MCP 配置 */
+    private Mcp mcp = new Mcp();
+
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
     public String getDefaultSystemPrompt() { return defaultSystemPrompt; }
@@ -39,6 +42,8 @@ public class AgentProperties {
     public void setMemory(Memory memory) { this.memory = memory; }
     public Rag getRag() { return rag; }
     public void setRag(Rag rag) { this.rag = rag; }
+    public Mcp getMcp() { return mcp; }
+    public void setMcp(Mcp mcp) { this.mcp = mcp; }
 
     /**
      * LLM 相关配置组（默认 Provider、模型、密钥、价格等）。
@@ -170,5 +175,49 @@ public class AgentProperties {
         public void setTopK(int topK) { this.topK = topK; }
         public double getMinScore() { return minScore; }
         public void setMinScore(double minScore) { this.minScore = minScore; }
+    }
+
+    /**
+     * MCP（Model Context Protocol）配置组
+     *
+     * <p>支持配置多个 MCP Server，自动发现并注册其工具到 {@link com.njydsz.agent.domain.tool.ToolRegistry}。
+     */
+    public static class Mcp {
+        /** 是否启用 MCP */
+        private boolean enabled = false;
+        /** MCP Server 列表 */
+        private List<ServerInfo> servers = new ArrayList<>();
+
+        public boolean isEnabled() { return enabled; }
+        public void setEnabled(boolean enabled) { this.enabled = enabled; }
+        public List<ServerInfo> getServers() { return servers; }
+        public void setServers(List<ServerInfo> servers) { this.servers = servers; }
+    }
+
+    /**
+     * MCP Server 连接信息
+     */
+    public static class ServerInfo {
+        /** Server 名称（唯一标识） */
+        private String name;
+        /** 传输类型（sse / stdio） */
+        private String transport = "sse";
+        /** SSE 端点 URL（transport=sse 时必填） */
+        private String url;
+        /** 调用超时（秒） */
+        private int timeoutSeconds = 30;
+        /** 是否启用 */
+        private boolean enabled = true;
+
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public String getTransport() { return transport; }
+        public void setTransport(String transport) { this.transport = transport; }
+        public String getUrl() { return url; }
+        public void setUrl(String url) { this.url = url; }
+        public int getTimeoutSeconds() { return timeoutSeconds; }
+        public void setTimeoutSeconds(int timeoutSeconds) { this.timeoutSeconds = timeoutSeconds; }
+        public boolean isEnabled() { return enabled; }
+        public void setEnabled(boolean enabled) { this.enabled = enabled; }
     }
 }

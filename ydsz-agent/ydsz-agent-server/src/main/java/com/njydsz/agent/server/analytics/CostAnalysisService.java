@@ -5,16 +5,27 @@ import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.njydsz.agent.domain.entity.TokenUsageRecordDO;
 import com.njydsz.agent.domain.model.TokenUsage;
+import com.njydsz.agent.infra.mapper.TokenUsageRecordMapper;
 import com.njydsz.common.util.id.IdGenerator;
+
 /**
  * Token 用量成本分析服务
  *
  * <p>记录每次 LLM 调用的 Token 用量，按模型统计、计算成本。
- * 线程安全：使用 {@link ConcurrentHashMap} 存储，支持并发写入。
+ * 数据存储使用数据库持久化，支持任意时间范围的用量查询。
+ *
+ * <h3>核心能力</h3>
+ * <ul>
+ *   <li>{@link #recordUsage} — 记录用量（异步写入数据库）</li>
+ *   <li>{@link #getStatsByModel} — 按日期范围统计模型用量</li>
+ *   <li>{@link #getModelPrice} — 查询模型单价</li>
+ *   <li>{@link #calculateTotalCost} — 计算日期范围内总成本</li>
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -22,22 +33,28 @@ import com.njydsz.common.util.id.IdGenerator;
 public class CostAnalysisService {
 
     private static final Logger log = LoggerFactory.getLogger(CostAnalysisService.class);
-    // 内存存储上限 1 万条：超出后写入时淘汰最旧记录（按 createdAt），防止长期运行 OOM
-    private static final int MAX_RECORDS = 10000;
 
-    private final TokenUsageRepository usageRepository = new TokenUsageRepository();
+    /** Token 用量记录 Mapper */
+    private final TokenUsageRecordMapper usageRecordMapper;
+
+    /** 模型价格配置 */
     private final ModelPriceConfig priceConfig;
 
-    public CostAnalysisService() {
+    public CostAnalysisService(TokenUsageRecordMapper usageRecordMapper) {
+        this.usageRecordMapper = usageRecordMapper;
         this.priceConfig = new ModelPriceConfig();
     }
 
-    public CostAnalysisService(Map<String, Double> modelPrices) {
+    public CostAnalysisService(TokenUsageRecordMapper usageRecordMapper,
+                                Map<String, Double> modelPrices) {
+        this.usageRecordMapper = usageRecordMapper;
         this.priceConfig = new ModelPriceConfig(modelPrices);
     }
 
     /**
      * 记录 Token 用量
+     *
+     * <p>将用量数据异步写入数据库，写入失败仅记录日志不阻塞主流程。
      *
      * @param conversationId 对话 ID
      * @param modelName      模型名称
@@ -47,31 +64,42 @@ public class CostAnalysisService {
         if (usage == null) {
             return;
         }
-        usageRepository.save(new TokenUsageRecord(
-                IdGenerator.nextIdStr(),
-                conversationId,
-                modelName,
-                usage.getPromptTokens(),
-                usage.getCompletionTokens(),
-                usage.getTotalTokens(),
-                LocalDateTime.now()));
+        try {
+            TokenUsageRecordDO record = TokenUsageRecordDO.builder()
+                    .conversationId(conversationId)
+                    .modelName(modelName)
+                    .promptTokens(usage.getPromptTokens())
+                    .completionTokens(usage.getCompletionTokens())
+                    .totalTokens(usage.getTotalTokens())
+                    .build();
+            usageRecordMapper.insert(record);
+        } catch (Exception e) {
+            // 用量记录失败不应影响主流程，仅记录日志
+            log.warn("[CostAnalysis] 用量记录失败: convId={}, model={}", conversationId, modelName, e);
+        }
     }
 
     /**
      * 按日期范围统计模型用量
      *
-     * @param start 开始日期
-     * @param end   结束日期
-     * @return 用量统计
+     * <p>从数据库查询指定日期范围内（左右均闭区间）的所有用量记录并汇总。
+     *
+     * @param start 开始日期（含）
+     * @param end   结束日期（含）
+     * @return 用量统计汇总
      */
     public ModelUsageStats getStatsByModel(LocalDate start, LocalDate end) {
-        List<TokenUsageRecord> records = usageRepository.queryByDateRange(start, end);
-        long prompt = records.stream().mapToLong(TokenUsageRecord::promptTokens).sum();
-        long completion = records.stream().mapToLong(TokenUsageRecord::completionTokens).sum();
-        long total = records.stream().mapToLong(TokenUsageRecord::totalTokens).sum();
+        List<TokenUsageRecordDO> records = usageRecordMapper.selectList(
+                new QueryWrapper<TokenUsageRecordDO>()
+                        .ge("created_at", start.atStartOfDay())
+                        .le("created_at", end.atTime(23, 59, 59))
+                        .orderByAsc("created_at"));
+        long prompt = records.stream().mapToLong(TokenUsageRecordDO::getPromptTokens).sum();
+        long completion = records.stream().mapToLong(TokenUsageRecordDO::getCompletionTokens).sum();
+        long total = records.stream().mapToLong(TokenUsageRecordDO::getTotalTokens).sum();
         double cost = records.stream().mapToDouble(r -> {
-            double price = priceConfig.getPrice(r.model());
-            return r.totalTokens() * price / 1000.0;
+            double price = priceConfig.getPrice(r.getModelName());
+            return r.getTotalTokens() * price / 1000.0;
         }).sum();
         return new ModelUsageStats(prompt, completion, total, cost, records.size());
     }
@@ -99,21 +127,8 @@ public class CostAnalysisService {
     }
 
     /**
-     * 单次对话的 Token 用量流水记录。
-     *
-     * @param id               流水记录 ID
-     * @param conversationId   所属对话 ID
-     * @param model            使用的模型标识
-     * @param promptTokens     提示词 Token 数
-     * @param completionTokens 补全 Token 数
-     * @param totalTokens      总 Token 数
-     * @param createdAt        记录创建时间
+     * 按模型用量与成本汇总（所有金额单位均为 USD）
      */
-    public record TokenUsageRecord(String id, String conversationId, String model,
-                                    long promptTokens, long completionTokens, long totalTokens,
-                                    LocalDateTime createdAt) {}
-
-    /** 按模型统计的用量与成本汇总（所有金额单位均为 USD） */
     public record ModelUsageStats(
             /** 提示词 Token 累计数 */
             long promptTokens,
@@ -124,124 +139,78 @@ public class CostAnalysisService {
             /** 总成本（USD） */
             double cost,
             /** 请求次数 */
-            long requestCount) {}
-
-    /**
-     * Token 用量存储（线程安全 + 容量限制）
-     */
-    public static class TokenUsageRepository {
-        private final Map<String, TokenUsageRecord> store = new ConcurrentHashMap<>();
-
-        /**
-         * 保存一条 Token 用量记录，并在超过容量上限时淘汰最旧记录。
-         *
-         * <p>存储为纯内存 Map，容量硬上限 {@code MAX_RECORDS}（1 万条）；
-         * 达到上限时按 {@code createdAt} 淘汰最旧的一条再写入，
-         * 保证长期运行不会 OOM，代价是<b>历史成本数据会滚动丢失</b>，
-         * 需要长周期账单请另行落库。
-         *
-         * <p><b>并发</b>：写入基于 {@link ConcurrentHashMap} 线程安全，
-         * 但"查最旧 + 删除 + 写入"三步非原子，高并发下实际条数可能短暂略微超过上限。
-         *
-         * @param record 用量记录，以其 {@code id} 为存储键，不可为 {@code null}
-         */
-        public void save(TokenUsageRecord record) {
-            if (store.size() >= MAX_RECORDS) {
-                String oldestKey = store.values().stream()
-                        .min((a, b) -> a.createdAt().compareTo(b.createdAt()))
-                        .map(TokenUsageRecord::id)
-                        .orElse(null);
-                if (oldestKey != null) {
-                    store.remove(oldestKey);
-                }
-            }
-            store.put(record.id(), record);
-        }
-
-        /**
-         * 按日期范围（左右均闭区间）全表扫描筛选用量记录。
-         *
-         * <p>无索引的内存全量遍历，复杂度 O(n)，n 受 {@code MAX_RECORDS} 限制，
-         * 因此耗时可控但不适合高频调用；结果<b>不保证顺序</b>，
-         * 调用方若需排序须自行处理。
-         *
-         * @param start 起始日期（含），不可为 {@code null}
-         * @param end   结束日期（含），不可为 {@code null}
-         * @return 命中的记录列表；无匹配时返回空列表而非 {@code null}
-         */
-        public List<TokenUsageRecord> queryByDateRange(LocalDate start, LocalDate end) {
-            return store.values().stream()
-                    .filter(r -> !r.createdAt().toLocalDate().isBefore(start)
-                            && !r.createdAt().toLocalDate().isAfter(end))
-                    .toList();
-        }
-
-        /**
-         * 返回当前驻留内存的用量记录条数，用于监控水位是否逼近 {@code MAX_RECORDS} 淘汰线。
-         *
-         * @return 记录条数，取值范围 [0, MAX_RECORDS] 附近（并发写入时可能瞬时略超）
-         */
-        public int count() {
-            return store.size();
-        }
+            long requestCount) {
     }
 
     /**
      * 模型价格配置
+     *
+     * <p>采用子串包含匹配策略，配置使用 LinkedHashMap 保序，越具体的键应排在越前面。
      */
     public static class ModelPriceConfig {
+
+        /** 未知模型兜底单价（USD / 千 Token） */
+        private static final double FALLBACK_PRICE = 0.001;
+
+        /** 默认：gpt-4o 单价（USD / 千 Token） */
+        private static final double DEFAULT_GPT4O = 0.0025;
+
+        /** 默认：gpt-4o-mini 单价（USD / 千 Token） */
+        private static final double DEFAULT_GPT4O_MINI = 0.00015;
+
+        /** 默认：gpt-4-turbo 单价（USD / 千 Token） */
+        private static final double DEFAULT_GPT4_TURBO = 0.01;
+
+        /** 默认：gpt-3.5-turbo 单价（USD / 千 Token） */
+        private static final double DEFAULT_GPT35_TURBO = 0.0005;
+
+        /** 默认：deepseek-chat 单价（USD / 千 Token） */
+        private static final double DEFAULT_DEEPSEEK = 0.00014;
+
         private final Map<String, Double> prices;
 
         public ModelPriceConfig() {
-            // 默认单价表：key=模型名前缀，value=USD / 千 Token（与 getModelPrice 的兜底逻辑一致）
             this(Map.of(
-                "gpt-4o", 0.0025,
-                "gpt-4o-mini", 0.00015,
-                "gpt-4-turbo", 0.01,
-                "gpt-3.5-turbo", 0.0005,
-                "deepseek-chat", 0.00014));
+                    "gpt-4o", DEFAULT_GPT4O,
+                    "gpt-4o-mini", DEFAULT_GPT4O_MINI,
+                    "gpt-4-turbo", DEFAULT_GPT4_TURBO,
+                    "gpt-3.5-turbo", DEFAULT_GPT35_TURBO,
+                    "deepseek-chat", DEFAULT_DEEPSEEK));
         }
 
         public ModelPriceConfig(Map<String, Double> customPrices) {
             if (customPrices != null && !customPrices.isEmpty()) {
                 this.prices = new LinkedHashMap<>(customPrices);
             } else {
-                // 自定义价格表为空时使用内置默认单价（USD / 千 Token）
                 this.prices = Map.of(
-                    "gpt-4o", 0.0025,
-                    "gpt-4o-mini", 0.00015,
-                    "gpt-4-turbo", 0.01,
-                    "gpt-3.5-turbo", 0.0005,
-                    "deepseek-chat", 0.00014);
+                        "gpt-4o", DEFAULT_GPT4O,
+                        "gpt-4o-mini", DEFAULT_GPT4O_MINI,
+                        "gpt-4-turbo", DEFAULT_GPT4_TURBO,
+                        "gpt-3.5-turbo", DEFAULT_GPT35_TURBO,
+                        "deepseek-chat", DEFAULT_DEEPSEEK);
             }
         }
 
         /**
-         * 解析模型单价（USD / 千 Token）。
+         * 解析模型单价（USD / 千 Token）
          *
-         * <p>采用<b>子串包含</b>而非精确匹配，以便 {@code gpt-4o-2024-08-06} 这类
-         * 带日期后缀的模型名也能命中 {@code gpt-4o} 配置。因此配置项的<b>先后顺序有意义</b>：
-         * 自定义价格表使用 {@link LinkedHashMap} 保序，越具体的键应排在越前面，
-         * 否则 {@code gpt-4o} 会抢先匹配掉 {@code gpt-4o-mini}。
-         *
-         * <p>模型名为空或全部未命中时返回兜底单价 {@code 0.001}，
-         * 而非 0 —— 避免未知模型的成本被静默统计为零导致预算误判。
+         * <p>采用子串包含匹配：{@code gpt-4o-2024-08-06} 可命中 {@code gpt-4o} 配置。
+         * 配置项先后顺序有意义，越具体的键应排在越前面。
          *
          * @param model 模型名称，允许为 {@code null} 或空白
          * @return 单价（USD / 千 Token），恒大于 0
          */
         public double getPrice(String model) {
-            // 模型名无法匹配任何配置时使用兜底单价 0.001 USD/千Token，避免成本统计为 0 造成误判
             if (model == null || model.isBlank()) {
-                return 0.001;
+                return FALLBACK_PRICE;
             }
+            String lowerModel = model.toLowerCase();
             for (Map.Entry<String, Double> entry : prices.entrySet()) {
-                if (model.toLowerCase().contains(entry.getKey())) {
+                if (lowerModel.contains(entry.getKey())) {
                     return entry.getValue();
                 }
             }
-            // 未命中特定模型配置同样回退到兜底单价
-            return 0.001;
+            return FALLBACK_PRICE;
         }
     }
 }

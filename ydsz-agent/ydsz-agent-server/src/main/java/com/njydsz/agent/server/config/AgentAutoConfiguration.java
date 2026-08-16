@@ -35,7 +35,12 @@ import com.njydsz.agent.infra.rag.OpenAiEmbeddingClient;
 import com.njydsz.agent.infra.rag.PgVectorStore;
 import com.njydsz.agent.infra.rag.SimpleTextChunker;
 import com.njydsz.agent.infra.tool.DefaultToolRegistry;
+import com.njydsz.agent.infra.tool.McpToolAdapter;
+import com.njydsz.agent.infra.tool.SseMcpClientProvider;
 import com.njydsz.agent.infra.tool.ToolAnnotationScanner;
+import com.njydsz.agent.infra.mapper.PromptTemplateMapper;
+import com.njydsz.agent.infra.mapper.PromptVersionMapper;
+import com.njydsz.agent.infra.mapper.TokenUsageRecordMapper;
 import com.njydsz.agent.infra.trace.InMemoryTraceRecorder;
 import com.njydsz.agent.server.agent.AgentFactory;
 import com.njydsz.agent.server.agent.DagOrchestrationExecutor;
@@ -340,19 +345,21 @@ public class AgentAutoConfiguration {
      * 因为匹配采用子串包含），否则使用内置默认单价。未命中任何配置的模型按兜底单价
      * {@code 0.001 USD/千 Token} 计费，以免未知模型成本被静默算作 0。
      *
-     * <p><b>容量约束</b>：用量记录存于内存且上限 1 万条，超限滚动淘汰最旧数据，
-     * 长周期账单需另行落库。
+     * <p>用量数据持久化到数据库（{@code ydsz_agent_token_usage} 表），
+     * 支持任意时间范围的用量查询，重启不丢失。
      *
-     * @param properties Agent 配置，提供 {@code llm.modelPrices} 单价表
+     * @param usageRecordMapper Token 用量记录 Mapper
+     * @param properties        Agent 配置，提供 {@code llm.modelPrices} 单价表
      * @return 成本分析服务；仅在容器中不存在其他 {@link CostAnalysisService} 时生效
      */
     @Bean
     @ConditionalOnMissingBean(CostAnalysisService.class)
-    public CostAnalysisService costAnalysisService(AgentProperties properties) {
+    public CostAnalysisService costAnalysisService(TokenUsageRecordMapper usageRecordMapper,
+                                                    AgentProperties properties) {
         Map<String, Double> prices = properties.getLlm().getModelPrices();
         return prices != null && !prices.isEmpty()
-                ? new CostAnalysisService(prices)
-                : new CostAnalysisService();
+                ? new CostAnalysisService(usageRecordMapper, prices)
+                : new CostAnalysisService(usageRecordMapper);
     }
 
     /**
@@ -390,6 +397,29 @@ public class AgentAutoConfiguration {
                                              List<OutputGuardrail> outputGuardrails,
                                              AgentMetrics agentMetrics) {
         return new GuardrailService(inputGuardrails, outputGuardrails, agentMetrics);
+    }
+
+    /**
+     * 装配 MCP 工具适配器，在应用启动时自动发现 MCP Server 的工具并注册到 ToolRegistry。
+     *
+     * <p>仅当 {@code ydsz.agent.mcp.enabled=true} 且配置了至少一个 Server 时生效。
+     * 工具名添加 Server 名称前缀（格式：{@code serverName__toolName}），避免多 Server 命名冲突。
+     *
+     * @param properties     Agent 配置，提供 MCP 开关与 Server 列表
+     * @param toolRegistry   目标工具注册中心
+     * @return MCP 工具适配器（作为 Spring Bean 存活，可供运行时重新发现）
+     */
+    @Bean
+    @ConditionalOnProperty(prefix = "ydsz.agent.mcp", name = "enabled", havingValue = "true")
+    public McpToolAdapter mcpToolAdapter(AgentProperties properties, ToolRegistry toolRegistry) {
+        SseMcpClientProvider clientProvider = new SseMcpClientProvider();
+        McpToolAdapter adapter = new McpToolAdapter(clientProvider, properties.getMcp());
+        // 启动时自动发现并注册 MCP 工具
+        adapter.discoverAllTools().forEach(toolDef -> toolRegistry.register(
+                toolDef.getName(),
+                call -> adapter.executeTool(toolDef.getName(), call.getArguments())));
+        log.info("[Agent] MCP 工具注册完成, serverCount={}", properties.getMcp().getServers().size());
+        return adapter;
     }
 
     /**
