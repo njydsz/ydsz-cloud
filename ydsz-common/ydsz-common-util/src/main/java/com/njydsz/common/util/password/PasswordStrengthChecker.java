@@ -1,8 +1,8 @@
 package com.njydsz.common.util.password;
 
 import java.util.Locale;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * 密码强度校验 SPI（Service Provider Interface）。

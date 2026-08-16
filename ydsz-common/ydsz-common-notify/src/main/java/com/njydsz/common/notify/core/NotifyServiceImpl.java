@@ -314,7 +314,7 @@ public class NotifyServiceImpl implements NotifyService {
           "通知渠道[" + channel.getName() + "]已熔断，请稍后重试", channel.getName());
     }
 
-    if (!tryAcquireRateLimit(channel)) {
+    if (!tryAcquireRateLimit(channel, null)) {
       return NotifySendResult.failure("通知渠道限流触发，请稍后重试: " + channel.getName(), channel.getName());
     }
 
@@ -348,7 +348,7 @@ public class NotifyServiceImpl implements NotifyService {
           NotifySendResult.failure("通知渠道[" + channel.getName() + "]已熔断，请稍后重试", channel.getName()));
     }
 
-    if (!tryAcquireRateLimit(channel)) {
+    if (!tryAcquireRateLimit(channel, null)) {
       return CompletableFuture.completedFuture(
           NotifySendResult.failure("通知渠道限流触发，请稍后重试: " + channel.getName(), channel.getName()));
     }
@@ -418,7 +418,7 @@ public class NotifyServiceImpl implements NotifyService {
           buildBatchErrorResult(
               receivers, "通知渠道[" + channel.getName() + "]已熔断，请稍后重试", channel.getName()));
     }
-    if (!tryAcquireRateLimit(channel)) {
+    if (!tryAcquireRateLimit(channel, null)) {
       return CompletableFuture.completedFuture(
           buildBatchErrorResult(
               receivers, "通知渠道限流触发，请稍后重试: " + channel.getName(), channel.getName()));
@@ -721,6 +721,16 @@ public class NotifyServiceImpl implements NotifyService {
       return ctx.withResult(NotifySendResult.success("dedup-skipped", ctx.channel().getName()));
     }
     return ctx;
+  }
+
+  /** 熔断检查步骤 */
+  private SendContext applyCircuitBreaker(SendContext ctx) {
+    if (circuitBreakerRegistry == null || circuitBreakerRegistry.tryAcquire(ctx.channel())) {
+      return ctx;
+    }
+    return ctx.withResult(
+        NotifySendResult.failure(
+            "通知渠道[" + ctx.channel().getName() + "]已熔断，请稍后重试", ctx.channel().getName()));
   }
 
   /** 限流检查步骤 */

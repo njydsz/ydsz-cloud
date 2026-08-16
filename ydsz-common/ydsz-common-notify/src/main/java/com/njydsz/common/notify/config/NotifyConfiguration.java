@@ -87,7 +87,7 @@ import com.njydsz.common.thread.util.ExecutorUtils;
     matchIfMissing = true)
 public class NotifyConfiguration {
 
-  private final Logger log = LoggerFactory.getLogger(NotifyConfiguration.class);
+  private static final Logger LOG = LoggerFactory.getLogger(NotifyConfiguration.class);
 
   /** 通知服务实例，供定时任务消费重试队列和聚合消息时使用 */
   private NotifyServiceImpl notifyServiceInstance;

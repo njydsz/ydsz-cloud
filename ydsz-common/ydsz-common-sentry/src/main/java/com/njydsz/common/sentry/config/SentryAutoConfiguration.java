@@ -1,10 +1,16 @@
 package com.njydsz.common.sentry.config;
 
+import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Import;
 import org.springframework.scheduling.annotation.EnableScheduling;
+
+import com.njydsz.common.sentry.SentryObservation;
+import com.njydsz.common.sentry.SentryService;
+import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 
 /**
  * Sentry 可观测性模块自动配置（总入口）。
@@ -47,5 +53,22 @@ import org.springframework.scheduling.annotation.EnableScheduling;
   OtelAutoConfiguration.class
 })
 public class SentryAutoConfiguration {
-  // 子配置类通过 @Import 引入，本类仅作为统一入口
+
+  private final ObjectProvider<SentryService> sentryServiceProvider;
+
+  /**
+   * 构造方法注入 ObjectProvider。
+   *
+   * @param sentryServiceProvider SentryService 提供者
+   */
+  public SentryAutoConfiguration(ObjectProvider<SentryService> sentryServiceProvider) {
+    this.sentryServiceProvider = sentryServiceProvider;
+  }
+
+  /** 注册 SentryService 的 Supplier，替代 ApplicationContextAware 静态查找。 */
+  @PostConstruct
+  public void registerSentryServiceSupplier() {
+    SentryObservation.setSentryServiceProvider(sentryServiceProvider::getIfAvailable);
+    SentryMetricsAdapter.setSentryServiceProvider(sentryServiceProvider::getIfAvailable);
+  }
 }

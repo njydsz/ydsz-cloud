@@ -97,7 +97,7 @@ public class NotifyDedupService {
     String redisKey = properties.getDedup().getRedisKeyPrefix() + fingerprint;
     if (redisStringOps != null) {
       try {
-        redisStringOps.delete(redisKey);
+        redisStringOps.del(redisKey);
       } catch (Exception e) {
         LOG.debug("[NotifyDedupService] Redis 去重清除失败，仅清除内存: {}", e.getMessage());
       }

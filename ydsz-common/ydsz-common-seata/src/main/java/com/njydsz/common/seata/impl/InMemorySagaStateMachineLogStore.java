@@ -25,14 +25,14 @@ public class InMemorySagaStateMachineLogStore implements SagaStateMachineLogStor
 
   @Override
   public void save(SagaStateMachineLog log) {
-    store.put(LOG.getXid(), log);
+    store.put(log.getXid(), log);
   }
 
   @Override
   public void updateState(String xid, SagaStateMachineLog.SagaState state) {
     SagaStateMachineLog log = store.get(xid);
     if (log != null) {
-      LOG.setState(state);
+      log.setState(state);
     }
   }
 
@@ -44,8 +44,8 @@ public class InMemorySagaStateMachineLogStore implements SagaStateMachineLogStor
   @Override
   public List<SagaStateMachineLog> findTimeoutPending(LocalDateTime threshold, int limit) {
     return store.values().stream()
-        .filter(log -> !LOG.getState().isFinal())
-        .filter(log -> LOG.getUpdatedAt().isBefore(threshold))
+        .filter(log -> !log.getState().isFinal())
+        .filter(log -> log.getUpdatedAt().isBefore(threshold))
         .limit(limit)
         .collect(Collectors.toList());
   }

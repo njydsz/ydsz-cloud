@@ -21,7 +21,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 
 import com.njydsz.common.queue.config.QueueProperties;
 import com.njydsz.common.queue.domain.QueueMessage;
-import com.njydsz.common.queue.metrics.MessageMetrics;
+import com.njydsz.common.queue.metrics.QueueMetrics;
 import com.njydsz.common.queue.rate.ConsumerRateLimiter;
 import com.njydsz.common.queue.recovery.ConsumerThreadGuard;
 import com.njydsz.common.queue.retry.RetryPolicy;
@@ -108,7 +108,7 @@ public class RedisStreamSubscriber implements IMessageSubscriber {
   private final AtomicReference<Throwable> lastError;
 
   /** 消费指标采集器（成功/失败/延迟） */
-  private final MessageMetrics messageMetrics;
+  private final QueueMetrics messageMetrics;
 
   /** 消费端限流器，防止下游被压垮 */
   private final ConsumerRateLimiter rateLimiter;
@@ -158,7 +158,7 @@ public class RedisStreamSubscriber implements IMessageSubscriber {
     this.running = new AtomicBoolean(false);
     this.consumedCount = new AtomicLong(0);
     this.lastError = new AtomicReference<>();
-    this.messageMetrics = new MessageMetrics(channel, "redis-stream");
+    this.messageMetrics = new QueueMetrics(channel, "redis-stream");
     this.rateLimiter = new ConsumerRateLimiter(queueProperties.getConsumerRateLimitPerSecond());
     this.consumerExecutor = consumerExecutor;
     this.retryPolicy = RetryPolicy.exponentialBackoff(retryMax, 1000L, 30000L);

@@ -17,7 +17,7 @@ import com.njydsz.common.queue.manager.QueueManager;
 /**
  * 消息队列指标到 Micrometer 的桥接器
  *
- * <p>将 {@link MessageMetrics} 统计信息注册为 Micrometer 指标， 支持与 Prometheus、Grafana 等可观测性平台集成。
+ * <p>将 {@link QueueMetrics} 统计信息注册为 Micrometer 指标， 支持与 Prometheus、Grafana 等可观测性平台集成。
  *
  * <p>注册的指标：
  *
@@ -95,7 +95,7 @@ public class QueueMetricsBinder implements MeterBinder {
       return;
     }
 
-    MessageMetrics metrics = queueManager.getMetrics(queueName);
+    QueueMetrics metrics = queueManager.getMetrics(queueName);
     if (metrics == null) {
       return;
     }
@@ -110,73 +110,73 @@ public class QueueMetricsBinder implements MeterBinder {
   }
 
   private void registerFunctionCounters(
-      MeterRegistry registry, MessageMetrics metrics, Iterable<Tag> tags) {
+      MeterRegistry registry, QueueMetrics metrics, Iterable<Tag> tags) {
     FunctionCounter.builder(
-            METRIC_PREFIX + ".publish.success", metrics, MessageMetrics::getPublishSuccessCount)
+            METRIC_PREFIX + ".publish.success", metrics, QueueMetrics::getPublishSuccessCount)
         .tags(tags)
         .description("消息发布成功总数")
         .register(registry);
 
     FunctionCounter.builder(
-            METRIC_PREFIX + ".publish.fail", metrics, MessageMetrics::getPublishFailCount)
+            METRIC_PREFIX + ".publish.fail", metrics, QueueMetrics::getPublishFailCount)
         .tags(tags)
         .description("消息发布失败总数")
         .register(registry);
 
     FunctionCounter.builder(
-            METRIC_PREFIX + ".consume.success", metrics, MessageMetrics::getConsumeSuccessCount)
+            METRIC_PREFIX + ".consume.success", metrics, QueueMetrics::getConsumeSuccessCount)
         .tags(tags)
         .description("消息消费成功总数")
         .register(registry);
 
     FunctionCounter.builder(
-            METRIC_PREFIX + ".consume.fail", metrics, MessageMetrics::getConsumeFailCount)
+            METRIC_PREFIX + ".consume.fail", metrics, QueueMetrics::getConsumeFailCount)
         .tags(tags)
         .description("消息消费失败总数")
         .register(registry);
   }
 
-  private void registerGauges(MeterRegistry registry, MessageMetrics metrics, Iterable<Tag> tags) {
-    Gauge.builder(METRIC_PREFIX + ".publish.qps", metrics, MessageMetrics::getAvgPublishQps)
+  private void registerGauges(MeterRegistry registry, QueueMetrics metrics, Iterable<Tag> tags) {
+    Gauge.builder(METRIC_PREFIX + ".publish.qps", metrics, QueueMetrics::getAvgPublishQps)
         .tags(tags)
         .description("平均发布 QPS")
         .register(registry);
 
     Gauge.builder(
-            METRIC_PREFIX + ".publish.latency.avg", metrics, MessageMetrics::getAvgPublishLatency)
+            METRIC_PREFIX + ".publish.latency.avg", metrics, QueueMetrics::getAvgPublishLatency)
         .tags(tags)
         .description("平均发布延迟（毫秒）")
         .register(registry);
 
     Gauge.builder(
-            METRIC_PREFIX + ".publish.latency.max", metrics, MessageMetrics::getMaxPublishLatency)
+            METRIC_PREFIX + ".publish.latency.max", metrics, QueueMetrics::getMaxPublishLatency)
         .tags(tags)
         .description("最大发布延迟（毫秒）")
         .register(registry);
 
-    Gauge.builder(METRIC_PREFIX + ".consume.qps", metrics, MessageMetrics::getAvgConsumeQps)
+    Gauge.builder(METRIC_PREFIX + ".consume.qps", metrics, QueueMetrics::getAvgConsumeQps)
         .tags(tags)
         .description("平均消费 QPS")
         .register(registry);
 
     Gauge.builder(
-            METRIC_PREFIX + ".consume.latency.avg", metrics, MessageMetrics::getAvgConsumeLatency)
+            METRIC_PREFIX + ".consume.latency.avg", metrics, QueueMetrics::getAvgConsumeLatency)
         .tags(tags)
         .description("平均消费延迟（毫秒）")
         .register(registry);
 
     Gauge.builder(
-            METRIC_PREFIX + ".consume.latency.max", metrics, MessageMetrics::getMaxConsumeLatency)
+            METRIC_PREFIX + ".consume.latency.max", metrics, QueueMetrics::getMaxConsumeLatency)
         .tags(tags)
         .description("最大消费延迟（毫秒）")
         .register(registry);
 
-    Gauge.builder(METRIC_PREFIX + ".backlog", metrics, MessageMetrics::getBacklogCount)
+    Gauge.builder(METRIC_PREFIX + ".backlog", metrics, QueueMetrics::getBacklogCount)
         .tags(tags)
         .description("当前消息积压量")
         .register(registry);
 
-    Gauge.builder(METRIC_PREFIX + ".uptime", metrics, MessageMetrics::getElapsedSeconds)
+    Gauge.builder(METRIC_PREFIX + ".uptime", metrics, QueueMetrics::getElapsedSeconds)
         .tags(tags)
         .description("队列运行时长（秒）")
         .register(registry);

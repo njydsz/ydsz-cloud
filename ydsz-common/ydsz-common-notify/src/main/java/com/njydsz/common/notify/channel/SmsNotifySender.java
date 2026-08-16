@@ -255,7 +255,8 @@ public class SmsNotifySender implements NotifyChannelStrategy {
    * @param templateParams 模板参数对象
    * @return 参数映射
    */
-  private Map<String, Object> extractParams(Object templateParams) {
+  @Override
+  public Map<String, Object> extractParams(Object templateParams) {
     if (templateParams instanceof Map<?, ?> rawMap) {
       Map<String, Object> params = new HashMap<>();
       for (Map.Entry<?, ?> entry : rawMap.entrySet()) {

@@ -33,6 +33,7 @@ import com.njydsz.userinfo.domain.entity.Role;
 import com.njydsz.userinfo.domain.entity.UserAccount;
 import com.njydsz.userinfo.domain.entity.UserDept;
 import com.njydsz.userinfo.domain.entity.UserRole;
+import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.infra.mapper.RoleMapper;
@@ -188,11 +189,25 @@ public class UserAccountServiceImpl implements UserAccountService {
     applyLikeIfPresent(wrapper, UserAccount::getRealName, query.getRealName());
     applyLikeIfPresent(wrapper, UserAccount::getPhone, query.getPhone());
     applyLikeIfPresent(wrapper, UserAccount::getEmail, query.getEmail());
-    String statusStr = query.getStatus() == null ? null : String.valueOf(query.getStatus());
-    applyEqIfPresent(wrapper, UserAccount::getStatus, statusStr);
+    applyStatusIfPresent(wrapper, query.getStatus());
     applyEqIfPresent(wrapper, UserAccount::getUserType, query.getUserType());
     applyEqIfPresent(wrapper, UserAccount::getCompanyId, query.getCompanyId());
     return wrapper;
+  }
+
+  /**
+   * 当状态非空时，将字符串状态转换为枚举后应用 EQ 条件。
+   *
+   * @param wrapper QueryWrapper
+   * @param status  状态字符串（{@code "ENABLED"}/{@code "DISABLED"}，可为 null）
+   */
+  private void applyStatusIfPresent(LambdaQueryWrapper<UserAccount> wrapper, String status) {
+    if (status != null && !status.isBlank()) {
+      EnableStatusEnum statusEnum = EnableStatusEnum.parse(status);
+      if (statusEnum != null) {
+        wrapper.eq(UserAccount::getStatus, statusEnum);
+      }
+    }
   }
 
   /**
@@ -262,7 +277,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     UserAccount entity = UserInfoConverter.INSTANT.createDtoToEntity(dto);
     String passwordHash = passwordEncoder.encode(dto.getPassword());
     entity.setPassword(passwordHash);
-    entity.setStatus("1");
+    entity.setStatusEnum(EnableStatusEnum.ENABLED);
     entity.setLoginFailCount(0);
     if (dto.getTenantId() == null || dto.getTenantId().isBlank()) {
       entity.setTenantId("1");
@@ -296,14 +311,14 @@ public class UserAccountServiceImpl implements UserAccountService {
     // 仅复制非 null 属性，避免覆盖已有值；额外忽略 id（主键不可变）
     BeanUpdateUtil.copyNonNull(dto, entity, "id");
     if (dto.getStatus() != null) {
-      entity.setStatus(String.valueOf(dto.getStatus()));
+      entity.setStatus(dto.getStatus());
     }
     boolean result = userAccountMapper.updateById(entity) > 0;
     if (result) {
       indexUpsert(entity);
       eventPublisher.publishUserUpdated(entity);
       // P1-1: 用户被禁用时驱逐全部会话
-      if ("0".equals(entity.getStatus())) {
+      if (entity.getStatus() == EnableStatusEnum.DISABLED) {
         authService.evictAllSessions(dto.getId());
         log.info("User {} disabled, all sessions evicted", dto.getId());
       }

@@ -34,7 +34,7 @@ public class UserAccountPageQueryDTO extends PageQuery {
   /** 邮箱（模糊查询） */
   private String email;
 
-  /** 账号状态（{@code "1"}=启用 / {@code "0"}=禁用，精确匹配） */
+  /** 账号状态（{@code "ENABLED"}=启用 / {@code "DISABLED"}=禁用，继承自 BaseQuery） */
   private String status;
 
   /** 用户类型（精确匹配，如 PLATFORM/TENANT_ADMIN/REGULAR） */

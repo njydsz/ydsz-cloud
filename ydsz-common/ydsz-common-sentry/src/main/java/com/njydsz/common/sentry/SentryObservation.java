@@ -2,20 +2,13 @@ package com.njydsz.common.sentry;
 
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeansException;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.sentry.domain.AlertEvent;
 import com.njydsz.common.sentry.domain.SlaDefinition;
-import com.njydsz.common.sentry.spi.AlertPublisher;
-import com.njydsz.common.sentry.spi.LogPublisher;
-import com.njydsz.common.sentry.spi.MetricsCollector;
-import com.njydsz.common.sentry.spi.SlaCollector;
-import com.njydsz.common.sentry.spi.TraceContext;
 
 /**
  * 可观测性统一 API 门面（Facade）。
@@ -53,27 +46,33 @@ import com.njydsz.common.sentry.spi.TraceContext;
  * @author ydsz-team
  * @since 1.0.0
  * @see SentryService
- * @see MetricsCollector
- * @see TraceContext
- * @see LogPublisher
- * @see AlertPublisher
- * @see SlaCollector
+ * @see com.njydsz.common.sentry.spi.MetricsCollector
+ * @see com.njydsz.common.sentry.spi.TraceContext
+ * @see com.njydsz.common.sentry.spi.LogPublisher
+ * @see com.njydsz.common.sentry.spi.AlertPublisher
+ * @see com.njydsz.common.sentry.spi.SlaCollector
  */
 @Slf4j
 @Component
-public class SentryObservation implements ApplicationContextAware {
+public class SentryObservation {
 
   /** 是否已完成初始化（Spring 上下文已注入） */
   private static final AtomicBoolean INITIALIZED = new AtomicBoolean(false);
 
-  /** Spring 上下文（静态持有，用于静态方法委托） */
-  private static volatile ApplicationContext applicationContext;
+  /** SentryService 提供者（由 SentryAutoConfiguration 注册） */
+  private static volatile Supplier<SentryService> sentryServiceProvider;
 
-  @Override
-  public void setApplicationContext(ApplicationContext ctx) throws BeansException {
-    applicationContext = ctx;
+  /**
+   * 注册 SentryService 的 Supplier。
+   *
+   * <p>由 {@code SentryAutoConfiguration} 在容器初始化时调用，传入 ObjectProvider 风格的 Supplier。
+   *
+   * @param supplier SentryService 提供者，非空
+   */
+  public static void setSentryServiceProvider(Supplier<SentryService> supplier) {
+    sentryServiceProvider = supplier;
     INITIALIZED.set(true);
-    log.info("[Sentry] SentryObservation 静态门面已通过 Spring 上下文初始化");
+    log.info("[Sentry] SentryObservation 静态门面已通过 Supplier 初始化");
   }
 
   /**
@@ -82,15 +81,11 @@ public class SentryObservation implements ApplicationContextAware {
    * @return SentryService 实例，Spring 上下文不可用时返回 {@code null}
    */
   private static SentryService getService() {
-    if (applicationContext == null) {
+    Supplier<SentryService> supplier = sentryServiceProvider;
+    if (supplier == null) {
       return null;
     }
-    try {
-      return applicationContext.getBean(SentryService.class);
-    } catch (BeansException e) {
-      log.debug("[Sentry] SentryService Bean 未找到（Spring 上下文未装配 ydsz-common-sentry）");
-      return null;
-    }
+    return supplier.get();
   }
 
   /**

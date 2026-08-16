@@ -35,6 +35,7 @@ import com.njydsz.userinfo.domain.dto.LoginDTO;
 import com.njydsz.userinfo.domain.entity.Role;
 import com.njydsz.userinfo.domain.entity.UserAccount;
 import com.njydsz.userinfo.domain.entity.UserRole;
+import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.LoginVO;
 import com.njydsz.userinfo.infra.mapper.RoleMapper;
@@ -228,7 +229,7 @@ public class AuthServiceImpl implements AuthService {
       throw new BusinessException(UserInfoExceptionCode.PASSWORD_INCORRECT);
     }
 
-    if ("0".equals(user.getStatus())) {
+    if (user.getStatusEnum() == EnableStatusEnum.DISABLED) {
       loginHistoryService.recordLoginAttempt(
           new LoginAttemptContext(user.getId(), username, loginIp),
           "FAILED",

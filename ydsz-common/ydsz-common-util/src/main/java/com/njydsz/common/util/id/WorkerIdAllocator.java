@@ -1,6 +1,6 @@
 package com.njydsz.common.util.id;
 
-import javax.annotation.Nonnull;
+import jakarta.annotation.Nonnull;
 
 /**
  * WorkerId 分配策略——负责为当前实例分配唯一 workerId（0 ≤ id < 1024）。

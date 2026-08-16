@@ -45,6 +45,12 @@
             <artifactId>ydsz-common-event</artifactId>
         </dependency>
 
+        <!-- 熔断器基类 AbstractCircuitBreaker（通知渠道熔断保护） -->
+        <dependency>
+            <groupId>com.njydsz</groupId>
+            <artifactId>ydsz-common-safe</artifactId>
+        </dependency>
+
 
         <dependency>
             <groupId>org.springframework.boot</groupId>

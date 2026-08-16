@@ -97,7 +97,7 @@ public class SendChain {
     }
 
     // Step 4: 执行发送
-    context = executeSend(context);
+    context = executeTextSend(context);
 
     // Step 5: 后置处理（指标、审计、降级）
     context = applyPostProcess(context);
@@ -171,7 +171,7 @@ public class SendChain {
   }
 
   /** 执行文本发送步骤 */
-  private SendContext executeSend(SendContext ctx) {
+  private SendContext executeTextSend(SendContext ctx) {
     NotifyChannelStrategy strategy = channelStrategies.get(ctx.channel());
     if (strategy == null) {
       recordCircuitFailure(ctx.channel());

@@ -7,6 +7,7 @@ import lombok.Data;
 import com.njydsz.common.safe.sensitive.SensitiveData;
 import com.njydsz.common.safe.sensitive.SensitiveType;
 import com.njydsz.userinfo.domain.entity.UserAccount;
+import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 
 /**
  * 用户账号 VO，用于 Controller 返回，不包含密码、盐值等敏感字段。
@@ -18,6 +19,12 @@ import com.njydsz.userinfo.domain.entity.UserAccount;
  */
 @Data
 public class UserAccountVO {
+
+  /** 启用状态对应的整数值（1=启用）。 */
+  private static final int ENABLED_INT_VALUE = 1;
+
+  /** 禁用状态对应的整数值（0=禁用）。 */
+  private static final int DISABLED_INT_VALUE = 0;
 
   /** 用户唯一标识 */
   private String id;
@@ -81,8 +88,11 @@ public class UserAccountVO {
     vo.setPhone(entity.getPhone());
     vo.setEmail(entity.getEmail());
     vo.setAvatar(entity.getAvatar());
-    // status 字段：DB 为字符串 "0"/"1"，VO 为 Integer
-    vo.setStatus(entity.getStatus() != null ? Integer.parseInt(entity.getStatus()) : null);
+    // status 字段：entity 为 EnableStatusEnum，VO 为 Integer（1=启用, 0=禁用）
+    vo.setStatus(
+        entity.getStatus() == EnableStatusEnum.ENABLED
+            ? ENABLED_INT_VALUE
+            : DISABLED_INT_VALUE);
     vo.setUserType(entity.getUserType());
     vo.setCompanyId(entity.getCompanyId());
     vo.setTenantId(entity.getTenantId());

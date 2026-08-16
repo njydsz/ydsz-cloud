@@ -1,7 +1,7 @@
 package com.njydsz.common.util.security.crypto;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 
 /**
  * 对称加密算法统一契约。

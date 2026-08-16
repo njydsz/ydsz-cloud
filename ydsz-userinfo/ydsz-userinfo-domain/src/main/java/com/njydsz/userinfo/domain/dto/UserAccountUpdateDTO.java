@@ -7,6 +7,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
+
 /**
  * 用户更新请求 DTO。
  *
@@ -42,8 +44,8 @@ public class UserAccountUpdateDTO implements Serializable {
   @Size(max = 255, message = "头像URL长度不能超过 255 个字符")
   private String avatar;
 
-  /** 账号状态（{@code "1"}=启用 / {@code "0"}=禁用） */
-  private String status;
+  /** 账号状态（{@link EnableStatusEnum#ENABLED}=启用 / {@link EnableStatusEnum#DISABLED}=禁用） */
+  private EnableStatusEnum status;
 
   /** 用户类型（{@code PLATFORM}=平台用户 / {@code TENANT_ADMIN}=租户管理员 / {@code REGULAR}=普通用户） */
   private String userType;

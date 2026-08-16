@@ -13,6 +13,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.common.jdbc.handler.IntegerStringTypeHandler;
 import com.njydsz.common.safe.encrypt.EncryptField;
 import com.njydsz.common.safe.encrypt.EncryptTypeHandler;
+import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 
 /**
  * 用户账号实体
@@ -85,10 +86,10 @@ public class UserAccount extends MpBaseEntity<String> {
   private String avatar;
 
   /**
-   * 账号状态（0=禁用, 1=启用，DB 整数列）
+   * 账号状态（0=禁用, 1=启用，DB 整数列）。
    *
-   * <p>通过 {@link IntegerStringTypeHandler} 实现 String↔Integer 双向转换。 业务代码建议使用字符串 {@code "0"}/{@code
-   * "1"}，由 TypeHandler 在持久化层转换。
+   * <p>通过基类 {@link MpBaseEntity#getStatus()} 的 IntegerStringTypeHandler 实现 String↔Integer 双向转换。
+   * 业务代码建议通过 {@link #getStatusEnum()} / {@link #setStatusEnum(EnableStatusEnum)} 使用枚举类型。
    */
   @TableField(value = "status", typeHandler = IntegerStringTypeHandler.class)
   private String status;
@@ -119,4 +120,27 @@ public class UserAccount extends MpBaseEntity<String> {
 
   /** 岗位编码（如 PM/DEV/QA/SA，支持 position: 审批人展开） */
   private String positionCode;
-}
+
+  /**
+   * 获取状态枚举（从 String "0"/"1" 解析）。
+   *
+   * <p>{@code "1"} → {@link EnableStatusEnum#ENABLED}，{@code "0"} → {@link EnableStatusEnum#DISABLED}。
+   *
+   * @return 状态枚举，无法解析时返回 null
+   */
+  public EnableStatusEnum getStatusEnum() {
+    return EnableStatusEnum.parse(this.status);
+  }
+
+  /**
+   * 从枚举设置状态（转为 String "0"/"1" 存储）。
+   *
+   * @param statusEnum 状态枚举，为 null 时清除状态
+   */
+  public void setStatusEnum(EnableStatusEnum statusEnum) {
+    if (statusEnum == null) {
+      this.status = null;
+    } else {
+      this.status = statusEnum == EnableStatusEnum.ENABLED ? "1" : "0";
+    }
+  }

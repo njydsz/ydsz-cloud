@@ -6,6 +6,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,18 @@ public class BatchTaskService {
 
   /** 任务状态存储（生产环境可替换为 Redis 或 DB 持久化） */
   private final Map<String, BatchTaskStatus> taskStore = new ConcurrentHashMap<>();
+
+  /** FileApplicationService 提供者（延迟查找避免循环依赖） */
+  private final ObjectProvider<FileApplicationService> fileServiceProvider;
+
+  /**
+   * 构造方法注入 ObjectProvider。
+   *
+   * @param fileServiceProvider FileApplicationService 提供者
+   */
+  public BatchTaskService(ObjectProvider<FileApplicationService> fileServiceProvider) {
+    this.fileServiceProvider = fileServiceProvider;
+  }
 
   /**
    * 提交批量删除任务（异步执行）。
@@ -164,12 +177,12 @@ public class BatchTaskService {
   }
 
   /**
-   * 获取 FileApplicationService（通过代理注入避免循环依赖）。
+   * 获取 FileApplicationService（通过 ObjectProvider 延迟查找避免循环依赖）。
    *
    * <p>延迟查找解决 @Async 中的循环引用问题。
    */
   private FileApplicationService getService() {
-    return ApplicationContextProvider.getBean(FileApplicationService.class);
+    return fileServiceProvider.getIfAvailable();
   }
 
   /** 批量任务状态实体。 */

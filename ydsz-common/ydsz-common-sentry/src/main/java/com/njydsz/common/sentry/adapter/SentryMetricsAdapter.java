@@ -14,7 +14,6 @@ import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.njydsz.common.sentry.SentryApplicationContextUtils;
 import com.njydsz.common.sentry.SentryService;
 import com.njydsz.common.sentry.metrics.MicrometerMetricsCollector;
 import com.njydsz.common.sentry.spi.MetricsCollector;
@@ -71,6 +70,20 @@ public abstract class SentryMetricsAdapter {
   /** Gauge 引用缓存，用于动态更新 Gauge 值 */
   private final Map<String, AtomicReference<Double>> gaugeRefCache = new ConcurrentHashMap<>();
 
+  /** SentryService 提供者（由 SentryAutoConfiguration 注册） */
+  private static volatile Supplier<SentryService> sentryServiceProvider;
+
+  /**
+   * 注册 SentryService 的 Supplier。
+   *
+   * <p>由 {@code SentryAutoConfiguration} 在容器初始化时调用，传入 ObjectProvider 风格的 Supplier。
+   *
+   * @param supplier SentryService 提供者，非空
+   */
+  public static void setSentryServiceProvider(Supplier<SentryService> supplier) {
+    sentryServiceProvider = supplier;
+  }
+
   /**
    * 生成带标签的缓存 key。
    *
@@ -106,11 +119,24 @@ public abstract class SentryMetricsAdapter {
    * @return MetricsCollector 实例，可能为 null（Sentry 模块未装配时）
    */
   protected MetricsCollector getMetricsCollector() {
-    SentryService service = SentryServiceHolder.getInstance();
+    SentryService service = getSentryService();
     if (service == null) {
       return null;
     }
     return service.getMetricsCollector();
+  }
+
+  /**
+   * 获取 SentryService 实例。
+   *
+   * @return SentryService 实例，可能为 null
+   */
+  private static SentryService getSentryService() {
+    Supplier<SentryService> supplier = sentryServiceProvider;
+    if (supplier == null) {
+      return null;
+    }
+    return supplier.get();
   }
 
   /**
@@ -319,13 +345,6 @@ public abstract class SentryMetricsAdapter {
       map.put(tags[i], tags[i + 1]);
     }
     return map;
-  }
-
-  /** SentryService 静态持有者（通过 Spring 上下文获取）。 */
-  private static class SentryServiceHolder {
-    static SentryService getInstance() {
-      return SentryApplicationContextUtils.getBean(SentryService.class);
-    }
   }
 
   /**

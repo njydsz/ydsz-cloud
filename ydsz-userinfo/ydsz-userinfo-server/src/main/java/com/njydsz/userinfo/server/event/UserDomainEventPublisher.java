@@ -80,7 +80,7 @@ public class UserDomainEventPublisher {
         UserDomainEvent.of(
             DomainEventTypes.USER_UPDATED,
             user.getId(),
-            Map.of("username", user.getUsername(), "status", user.getStatus())));
+            Map.of("username", user.getUsername(), "status", String.valueOf(user.getStatus()))));
   }
 
   /**
