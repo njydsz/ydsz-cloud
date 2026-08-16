@@ -23,12 +23,26 @@ public enum EnableStatusEnum implements BaseStatusEnum<EnableStatusEnum> {
   /**
    * 解析字符串为枚举值（大小写不敏感，容忍 null 与空串）。
    *
-   * @param value 状态字符串（如 "ENABLED"）
+   * <p>兼容两种格式：
+   *
+   * <ul>
+   *   <li>标准格式：{@code "ENABLED"} / {@code "DISABLED"}（所有实体统一使用此格式）
+   *   <li>遗留格式：{@code "0"}（禁用）/ {@code "1"}（启用）—— UserAccount 表的历史兼容，新代码应使用枚举字面量
+   * </ul>
+   *
+   * @param value 状态字符串（如 "ENABLED"、"0"、"1"）
    * @return 枚举值，无法解析时返回 null
    */
   public static EnableStatusEnum parse(String value) {
     if (value == null || value.isBlank()) {
       return null;
+    }
+    // 遗留 0/1 兼容（UserAccount 表历史数据）
+    if ("0".equals(value)) {
+      return DISABLED;
+    }
+    if ("1".equals(value)) {
+      return ENABLED;
     }
     try {
       return EnableStatusEnum.valueOf(value.toUpperCase());

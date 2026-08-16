@@ -26,7 +26,6 @@ import com.njydsz.workflow.server.engine.FlowAdvancer;
 import com.njydsz.workflow.server.engine.FlowDefinitionCacheService;
 import com.njydsz.workflow.server.engine.FlowSkipUtils;
 import com.njydsz.workflow.server.engine.FlowVariableStrategy;
-import com.njydsz.workflow.server.service.FlowDmnDecisionService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowJoinTokenService;
 import com.njydsz.workflow.server.service.FlowRoutingService;
@@ -64,9 +63,6 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
    */
   private final FlowRoutingService routingService;
 
-  /** P0-1: DMN 决策表服务（可选注入，未启用时为 null） */
-  private final FlowDmnDecisionService dmnDecisionService;
-
   /** 统一配置属性 */
   private final FlowProperties flowProperties;
 
@@ -79,7 +75,6 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
       FlowRunTaskMapper taskMapper,
       FlowJoinTokenService joinTokenService,
       ObjectProvider<FlowRoutingService> routingServiceProvider,
-      ObjectProvider<FlowDmnDecisionService> dmnDecisionServiceProvider,
       FlowProperties flowProperties) {
     this.flowDefinitionCacheService = flowDefinitionCacheService;
     this.instanceMapper = instanceMapper;
@@ -89,7 +84,6 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     this.taskMapper = taskMapper;
     this.joinTokenService = joinTokenService;
     this.routingService = routingServiceProvider.getIfAvailable();
-    this.dmnDecisionService = dmnDecisionServiceProvider.getIfAvailable();
     this.flowProperties = flowProperties;
   }
 
@@ -536,7 +530,6 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
    * <p>评估优先级：
    *
    * <ol>
-   *   <li>P0-1: DMN 决策表（condition 以 {@code dmn:} 前缀时，如 {@code dmn:risk_level_decision}）
    *   <li>FlowRoutingService（literule Aviator 引擎）
    *   <li>DefaultFlowVariableStrategy（Aviator 引擎 + 正则降级兜底）
    * </ol>
@@ -549,28 +542,6 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
   public boolean evaluateSkipCondition(String condition, Map<String, Object> variables) {
     if (condition == null || condition.isBlank()) {
       return true;
-    }
-
-    // P0-1: DMN 决策表评估（condition 以 "dmn:" 前缀标识）
-    if (condition.startsWith("dmn:") && dmnDecisionService != null) {
-      String decisionCode = condition.substring(4).trim();
-      try {
-        // 从变量中提取租户 ID
-        String tenantId = flowProperties.getDefaultTenantId();
-        if (variables != null && variables.get("_tenantId") != null) {
-          tenantId = String.valueOf(variables.get("_tenantId"));
-        }
-        Map<String, Object> output = dmnDecisionService.evaluate(decisionCode, variables, tenantId);
-        boolean result = output != null && !output.isEmpty();
-        log.debug(
-            "[Flow] 使用 DMN 决策表评估条件: decision={} -> {} output={}", decisionCode, result, output);
-        return result;
-      } catch (Exception e) {
-        log.warn(
-            "[Flow] DMN 决策表评估失败，回退到 routingService: decision={} err={}",
-            decisionCode,
-            e.getMessage());
-      }
     }
 
     // 优先使用 literule FlowRoutingService 评估

@@ -18,21 +18,18 @@ import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 /**
  * 用户账号实体
  *
- * <p>对应数据库表 {@code ydsz_user_account}，存储系统用户账号信息。 是用户中心服务的核心实体，被各业务模块通过 Feign 远程查询。
+ * <p>对应数据库表 {@code ydsz_user_account}，存储系统用户账号信息。是用户中心服务的核心实体，被各业务模块通过 Feign 远程查询。
  *
  * <p><b>安全敏感字段：</b>
  *
  * <ul>
  *   <li>{@code password}：BCrypt 加密（cost=10），禁止明文存储与返回
  *   <li>{@code realName}：AES-256-GCM 字段级加密（{@code @EncryptField}），密文存储，明文仅在内存中出现
- *   <li>{@code phone} / {@code email}：使用 {@code SensitiveType.PHONE/EMAIL} 脱敏
+ *   <li>{@code phone} / {@code email}：敏感信息，返回时脱敏
  *   <li>{@code loginFailCount} / {@code lockedUntil}：登录失败保护，达到阈值自动锁定
  * </ul>
  *
- * <p><b>状态字段类型不统一说明：</b>user_account 表使用整数状态码（{@code 0=禁用, 1=启用}，历史遗留）， 而
- * Role/Menu/Department/Company/Post/Language.status 为 String（{@code "ENABLED"/"DISABLED"}）。 为兼容
- * {@link MpBaseEntity#getStatus()} 的 String 返回类型，本类 status 字段声明为 String， 并通过 {@link
- * IntegerStringTypeHandler} 在持久化时与整数列双向转换。
+ * <p><b>状态字段说明：</b>DB 列使用整数（0=禁用, 1=启用，历史遗留），通过 {@link IntegerStringTypeHandler} 自动转换为 String。 业务代码通过 {@link #getStatusEnum()} / {@link #setStatusEnum(EnableStatusEnum)} 使用枚举类型， {@link EnableStatusEnum#parse(String)} 兼容两种格式。
  *
  * <p><b>审批人展开支持：</b>
  *
@@ -42,8 +39,7 @@ import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
  *   <li>{@code positionCode}：岗位编码（PM/DEV/QA/SA），支持 {@code position:xxx} 展开
  * </ul>
  *
- * <p><b>索引设计：</b>唯一索引 {@code uk_username}（{@code username}）， 普通索引 {@code idx_phone}（{@code
- * phone}）、{@code idx_dept_id}（{@code dept_id}）。
+ * <p><b>索引设计：</b>唯一索引 {@code uk_username}（{@code username}），普通索引 {@code idx_phone}、{@code idx_dept_id}。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -86,10 +82,9 @@ public class UserAccount extends MpBaseEntity<String> {
   private String avatar;
 
   /**
-   * 账号状态（0=禁用, 1=启用，DB 整数列）。
+   * 账号状态（DB 整数列 0/1，通过 {@link IntegerStringTypeHandler} 自动转换为 String）。
    *
-   * <p>通过基类 {@link MpBaseEntity#getStatus()} 的 IntegerStringTypeHandler 实现 String↔Integer 双向转换。
-   * 业务代码建议通过 {@link #getStatusEnum()} / {@link #setStatusEnum(EnableStatusEnum)} 使用枚举类型。
+   * <p>业务代码建议通过 {@link #getStatusEnum()} / {@link #setStatusEnum(EnableStatusEnum)} 使用枚举类型。
    */
   @TableField(value = "status", typeHandler = IntegerStringTypeHandler.class)
   private String status;
