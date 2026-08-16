@@ -38,6 +38,7 @@ import com.njydsz.userinfo.domain.entity.UserRole;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.LoginVO;
+import com.njydsz.userinfo.infra.mapper.UserLoginHistoryMapper;
 import com.njydsz.userinfo.infra.mapper.RoleMapper;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
 import com.njydsz.userinfo.infra.mapper.UserRoleMapper;
@@ -125,8 +126,14 @@ public class AuthServiceImpl implements AuthService {
   /** 登录历史服务（记录登录尝试，IP 封禁检查） */
   private final LoginHistoryService loginHistoryService;
 
+  /** 登录历史 Mapper（用于风险评分查询） */
+  private final UserLoginHistoryMapper loginHistoryMapper;
+
   /** P2-2: 安全事件发布器（登录失败时发布 BRUTE_FORCE 事件，驱动 SecurityEventAggregator 自动封禁） */
   private final ObjectProvider<SecurityEventPublisher> securityEventPublisherProvider;
+
+  /** P3: 风险评分服务（评估登录风险等级，动态调整认证策略） */
+  private final RiskScoringService riskScoringService;
 
   /**
    * {@inheritDoc}
@@ -152,6 +159,9 @@ public class AuthServiceImpl implements AuthService {
 
     // 查询用户 + 状态/锁定校验
     UserAccount user = findAndValidateUser(loginDTO.getUsername(), loginIp, userAgent);
+
+    // P3: 登录风险评估（基于 IP、时间、设备、频率等多维度）
+    evaluateLoginRisk(user, loginIp, userAgent);
 
     // 密码校验（本地 + LDAP 回退）
     authenticatePassword(user, loginDTO.getPassword(), loginIp, userAgent);
@@ -250,6 +260,99 @@ public class AuthServiceImpl implements AuthService {
     }
 
     return user;
+  }
+
+  /**
+   * 评估登录风险等级。
+   *
+   * <p>基于多维度因素评估登录请求风险，高风险时触发额外验证或拒绝登录。
+   *
+   * @param user 用户账号
+   * @param loginIp 登录来源 IP
+   * @param userAgent 用户代理
+   * @throws BusinessException 风险等级为 CRITICAL 时拒绝登录
+   */
+  private void evaluateLoginRisk(UserAccount user, String loginIp, String userAgent) {
+    // 获取最近失败次数
+    int recentFailCount = getRecentFailCount(loginIp);
+    // 判断是否新设备
+    boolean isNewDevice = checkIfNewDevice(user.getId(), userAgent);
+    // 评估风险
+    RiskScoringService.RiskScore riskScore =
+        riskScoringService.evaluateRisk(
+            user.getUsername(), loginIp, userAgent, recentFailCount, isNewDevice);
+    log.info(
+        "Login risk evaluated: username={}, ip={}, score={}, level={}, factors={}",
+        user.getUsername(),
+        loginIp,
+        riskScore.score(),
+        riskScore.level(),
+        riskScore.factors());
+    // 极高风险：拒绝登录
+    if (riskScore.shouldReject()) {
+      log.warn(
+          "Login rejected due to critical risk: username={}, ip={}, score={}",
+          user.getUsername(),
+          loginIp,
+          riskScore.score());
+      loginHistoryService.recordLoginAttempt(
+          new LoginAttemptContext(user.getId(), user.getUsername(), loginIp),
+          "FAILED",
+          "RISK_CRITICAL",
+          userAgent);
+      throw new BusinessException(UserInfoExceptionCode.IP_BLOCKED);
+    }
+  }
+
+  /**
+   * 获取 IP 最近失败次数。
+   *
+   * @param loginIp IP 地址
+   * @return 最近 5 分钟内失败次数
+   */
+  private int getRecentFailCount(String loginIp) {
+    if (loginIp == null || loginIp.isBlank()) {
+      return 0;
+    }
+    try {
+      LocalDateTime since = LocalDateTime.now().minusMinutes(5);
+      LambdaQueryWrapper<com.njydsz.userinfo.domain.entity.UserLoginHistory> wrapper =
+          new LambdaQueryWrapper<>();
+      wrapper
+          .eq(com.njydsz.userinfo.domain.entity.UserLoginHistory::getLoginIp, loginIp)
+          .eq(com.njydsz.userinfo.domain.entity.UserLoginHistory::getLoginResult, "FAILED")
+          .ge(com.njydsz.userinfo.domain.entity.UserLoginHistory::getCreatedAt, since);
+      return Math.toIntExact(
+          loginHistoryMapper != null ? loginHistoryMapper.selectCount(wrapper) : 0);
+    } catch (Exception e) {
+      log.warn("Failed to get recent fail count: ip={}", loginIp);
+      return 0;
+    }
+  }
+
+  /**
+   * 检查是否为新设备。
+   *
+   * @param userId 用户 ID
+   * @param userAgent 用户代理
+   * @return true 如果是新设备
+   */
+  private boolean checkIfNewDevice(String userId, String userAgent) {
+    if (userAgent == null || userAgent.isBlank()) {
+      return false;
+    }
+    try {
+      LambdaQueryWrapper<com.njydsz.userinfo.domain.entity.UserLoginHistory> wrapper =
+          new LambdaQueryWrapper<>();
+      wrapper
+          .eq(com.njydsz.userinfo.domain.entity.UserLoginHistory::getUserId, userId)
+          .eq(com.njydsz.userinfo.domain.entity.UserLoginHistory::getLoginResult, "SUCCESS")
+          .eq(com.njydsz.userinfo.domain.entity.UserLoginHistory::getUserAgent, userAgent);
+      return loginHistoryMapper == null || loginHistoryMapper.selectCount(wrapper) == 0;
+    } catch (Exception e) {
+      log.warn("Failed to check new device: userId={}", userId);
+      return false;
+    }
   }
 
   /**

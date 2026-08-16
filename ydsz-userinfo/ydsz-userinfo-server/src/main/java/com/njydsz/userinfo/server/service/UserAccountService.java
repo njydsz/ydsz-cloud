@@ -197,4 +197,35 @@ public interface UserAccountService {
    * @return userId → realName 映射；未命中的 userId 不出现在 Map 中
    */
   Map<String, String> batchUserNames(Collection<String> userIds);
+
+  /**
+   * 批量删除用户（逻辑删除）。
+   *
+   * <p>事务内批量执行逻辑删除，任一失败触发完整回滚。
+   *
+   * @param ids 用户 ID 列表
+   * @return 成功删除的用户数量
+   * @throws com.njydsz.common.exception.BizException 用户不存在时抛出
+   */
+  int batchRemoveByIds(List<String> ids);
+
+  /**
+   * 批量启用用户账号。
+   *
+   * <p>事务内批量更新状态为启用，并驱逐全部会话。
+   *
+   * @param ids 用户 ID 列表
+   * @return 成功启用的用户数量
+   */
+  int batchEnable(List<String> ids);
+
+  /**
+   * 批量禁用用户账号。
+   *
+   * <p>事务内批量更新状态为禁用，并驱逐全部会话。
+   *
+   * @param ids 用户 ID 列表
+   * @return 成功禁用的用户数量
+   */
+  int batchDisable(List<String> ids);
 }

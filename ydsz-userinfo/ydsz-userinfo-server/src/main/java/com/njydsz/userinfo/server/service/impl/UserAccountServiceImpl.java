@@ -647,6 +647,89 @@ public class UserAccountServiceImpl implements UserAccountService {
     return result;
   }
 
+  /**
+   * {@inheritDoc}
+   *
+   * <p>批量逻辑删除用户，同时清理密码历史记录和发布删除事件。
+   */
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public int batchRemoveByIds(List<String> ids) {
+    if (ids == null || ids.isEmpty()) {
+      return 0;
+    }
+    int count = 0;
+    for (String id : ids) {
+      UserAccount entity = userAccountMapper.selectById(id);
+      if (entity == null || entity.getDeleted() == 1) {
+        throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
+      }
+      if (userAccountMapper.deleteById(id) > 0) {
+        indexDelete(id);
+        passwordHistoryService.clearHistoryByUserId(id);
+        eventPublisher.publishUserDeleted(id, entity.getUsername());
+        count++;
+      }
+    }
+    return count;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>批量启用用户账号，同时驱逐全部会话。
+   */
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public int batchEnable(List<String> ids) {
+    if (ids == null || ids.isEmpty()) {
+      return 0;
+    }
+    int count = 0;
+    for (String id : ids) {
+      UserAccount entity = userAccountMapper.selectById(id);
+      if (entity == null || entity.getDeleted() == 1) {
+        throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
+      }
+      entity.setStatusEnum(EnableStatusEnum.ENABLED);
+      if (userAccountMapper.updateById(entity) > 0) {
+        indexUpsert(entity);
+        eventPublisher.publishUserUpdated(entity);
+        count++;
+      }
+    }
+    return count;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>批量禁用用户账号，同时驱逐全部会话。
+   */
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public int batchDisable(List<String> ids) {
+    if (ids == null || ids.isEmpty()) {
+      return 0;
+    }
+    int count = 0;
+    for (String id : ids) {
+      UserAccount entity = userAccountMapper.selectById(id);
+      if (entity == null || entity.getDeleted() == 1) {
+        throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
+      }
+      entity.setStatusEnum(EnableStatusEnum.DISABLED);
+      if (userAccountMapper.updateById(entity) > 0) {
+        indexUpsert(entity);
+        eventPublisher.publishUserUpdated(entity);
+        // 禁用时驱逐全部会话
+        authService.evictAllSessions(id);
+        count++;
+      }
+    }
+    return count;
+  }
+
   private void indexUpsert(UserAccount entity) {
     SearchIndexEventBridge bridge = searchIndexBridgeProvider.getIfAvailable();
     if (bridge != null) {

@@ -28,6 +28,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.web.version.ApiVersion;
 import com.njydsz.userinfo.domain.dto.AssignRolesDTO;
+import com.njydsz.userinfo.domain.dto.BatchUserStatusDTO;
 import com.njydsz.userinfo.domain.dto.ChangePasswordDTO;
 import com.njydsz.userinfo.domain.dto.ResetPasswordDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
@@ -379,5 +380,68 @@ public class UserAccountController {
       @PathVariable String userId,
       @org.springframework.web.bind.annotation.RequestParam(defaultValue = "20") int limit) {
     return BaseResponse.success(loginHistoryService.getRecentLogins(userId, limit));
+  }
+
+  /**
+   * 批量删除用户
+   *
+   * <p>幂等保护 5 秒；限流 30 QPS；写审计日志。
+   *
+   * @param dto 批量操作 DTO（ids 列表）
+   * @return 成功删除的用户数量
+   */
+  @Audit(
+      module = "用户管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.DELETE,
+      content = "'批量删除用户: ' + #dto.ids.size() + ' 个'")
+  @Idempotent(key = "ydsz:userinfo:UserAccountController:batchRemove:lock", ttlSeconds = 5)
+  @RateLimit(resource = "userinfo.useraccount.batchRemove", threshold = 30)
+  @PostMapping("/batch-remove")
+  @Operation(summary = "批量删除用户")
+  public BaseResponse<Integer> batchRemove(@Valid @RequestBody BatchUserStatusDTO dto) {
+    return BaseResponse.success(service.batchRemoveByIds(dto.getIds()));
+  }
+
+  /**
+   * 批量启用用户账号
+   *
+   * <p>幂等保护 5 秒；限流 30 QPS；写审计日志。
+   *
+   * @param dto 批量操作 DTO（ids 列表）
+   * @return 成功启用的用户数量
+   */
+  @Audit(
+      module = "用户管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.UPDATE,
+      content = "'批量启用用户: ' + #dto.ids.size() + ' 个'")
+  @Idempotent(key = "ydsz:userinfo:UserAccountController:batchEnable:lock", ttlSeconds = 5)
+  @RateLimit(resource = "userinfo.useraccount.batchEnable", threshold = 30)
+  @PostMapping("/batch-enable")
+  @Operation(summary = "批量启用用户")
+  public BaseResponse<Integer> batchEnable(@Valid @RequestBody BatchUserStatusDTO dto) {
+    return BaseResponse.success(service.batchEnable(dto.getIds()));
+  }
+
+  /**
+   * 批量禁用用户账号
+   *
+   * <p>幂等保护 5 秒；限流 30 QPS；写审计日志。
+   *
+   * @param dto 批量操作 DTO（ids 列表）
+   * @return 成功禁用的用户数量
+   */
+  @Audit(
+      module = "用户管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.UPDATE,
+      content = "'批量禁用用户: ' + #dto.ids.size() + ' 个'")
+  @Idempotent(key = "ydsz:userinfo:UserAccountController:batchDisable:lock", ttlSeconds = 5)
+  @RateLimit(resource = "userinfo.useraccount.batchDisable", threshold = 30)
+  @PostMapping("/batch-disable")
+  @Operation(summary = "批量禁用用户")
+  public BaseResponse<Integer> batchDisable(@Valid @RequestBody BatchUserStatusDTO dto) {
+    return BaseResponse.success(service.batchDisable(dto.getIds()));
   }
 }

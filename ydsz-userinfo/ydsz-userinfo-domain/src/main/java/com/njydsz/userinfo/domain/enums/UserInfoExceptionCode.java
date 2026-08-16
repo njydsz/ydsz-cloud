@@ -83,6 +83,8 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   OAUTH2_CLIENT_INVALID("B30017", "userinfo.oauth2.client.invalid", 401),
   /** 回调地址不匹配 */
   OAUTH2_REDIRECT_URI_MISMATCH("B30018", "userinfo.oauth2.redirect.uri.mismatch", 401),
+  /** PKCE code_verifier 无效 */
+  OAUTH2_PKCE_VERIFIER_INVALID("B30020", "userinfo.oauth2.pkce.verifier.invalid", 401),
 
   // ==================== B31xxx 组织架构 ====================
   /** 部门不存在 */

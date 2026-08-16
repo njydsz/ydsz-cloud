@@ -9,12 +9,15 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.cache.api.Cache;
+import com.njydsz.common.cache.builder.CacheBuilder;
 import com.njydsz.common.domain.tree.TreeBuilder;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
@@ -78,6 +81,12 @@ public class DepartmentServiceImpl implements DepartmentService {
   /** 部门树缓存过期时间（秒）：10 分钟 */
   private static final long CACHE_TTL_DEPT_TREE = 600;
 
+  /** 部门树 L1 本地缓存最大条目数 */
+  private static final int L1_CACHE_MAX_SIZE = 50;
+
+  /** 部门树 L1 本地缓存过期时间（毫秒）：2 分钟 */
+  private static final long L1_CACHE_TTL_MILLIS = 120000;
+
   /** 部门 Mapper */
   private final DepartmentMapper departmentMapper;
 
@@ -87,11 +96,24 @@ public class DepartmentServiceImpl implements DepartmentService {
   /** Redis 服务 */
   private final RedisStringOps redisStringOps;
 
+  /** L1: 本地 Caffeine 缓存（部门树） */
+  private Cache<String, String> l1Cache;
+
   /** 领域事件发布器 */
   private final UserDomainEventPublisher eventPublisher;
 
   /** 工作流审批人缓存服务（懒加载，避免与 DepartmentService 构造循环依赖） */
   private final ObjectProvider<WorkflowApproverCacheService> workflowCacheProvider;
+
+  /** 初始化 L1 本地缓存 */
+  @PostConstruct
+  void initL1Cache() {
+    l1Cache =
+        CacheBuilder.<String, String>newBuilder()
+            .maximumSize(L1_CACHE_MAX_SIZE)
+            .expireAfterWrite(L1_CACHE_TTL_MILLIS, java.util.concurrent.TimeUnit.MILLISECONDS)
+            .build();
+  }
 
   /**
    * {@inheritDoc}
@@ -232,30 +254,44 @@ public class DepartmentServiceImpl implements DepartmentService {
   /**
    * {@inheritDoc}
    *
-   * <p>优先从 Redis 缓存读取部门树，缓存未命中时从数据库查询并构建树，然后写入缓存。
+   * <p>多级缓存策略：L1（Caffeine 本地缓存，2 分钟 TTL）→ L2（Redis 分布式缓存，10 分钟 TTL）→ DB。
    *
-   * <p>缓存 TTL 为 {@value #CACHE_TTL_DEPT_TREE} 秒。
+   * <p>缓存 TTL 为 {@value #CACHE_TTL_DEPT_TREE} 秒（L2）。
    *
    * @return 部门树形结构列表，空数据返回空列表
    */
   @Override
   public List<DepartmentTreeVO> tree() {
-    // 1. 尝试从缓存获取
+    // 1. 尝试从 L1 本地缓存获取
+    String l1Key = CACHE_KEY_DEPT_TREE;
+    String cachedJson = l1Cache.getIfPresent(l1Key);
+    if (cachedJson != null && !cachedJson.isBlank()) {
+      List<DepartmentTreeVO> cached =
+          YdszJson.fromJson(cachedJson, List.class, DepartmentTreeVO.class);
+      if (cached != null) {
+        log.debug("Department tree loaded from L1 cache");
+        return cached;
+      }
+    }
+
+    // 2. 尝试从 L2 Redis 缓存获取
     try {
-      String cachedJson = redisStringOps.get(CACHE_KEY_DEPT_TREE, String.class);
+      cachedJson = redisStringOps.get(CACHE_KEY_DEPT_TREE, String.class);
       if (cachedJson != null && !cachedJson.isBlank()) {
         List<DepartmentTreeVO> cached =
             YdszJson.fromJson(cachedJson, List.class, DepartmentTreeVO.class);
         if (cached != null) {
-          log.debug("Department tree loaded from cache");
+          log.debug("Department tree loaded from L2 cache");
+          // 回填 L1 缓存
+          l1Cache.put(l1Key, cachedJson);
           return cached;
         }
       }
     } catch (Exception e) {
-      log.warn("Failed to load department tree from cache, fallback to DB: {}", e.getMessage());
+      log.warn("Failed to load department tree from L2 cache, fallback to DB: {}", e.getMessage());
     }
 
-    // 2. 缓存未命中，查询数据库
+    // 3. 缓存未命中，查询数据库
     List<Department> all =
         departmentMapper.selectList(
             new LambdaQueryWrapper<Department>().eq(Department::getDeleted, 0));
@@ -272,9 +308,12 @@ public class DepartmentServiceImpl implements DepartmentService {
             DepartmentTreeVO::setChildren,
             DepartmentTreeVO::getSortOrder);
 
-    // 3. 写入缓存（异步异常不影响业务）
+    // 4. 写入多级缓存（异步异常不影响业务）
     try {
       String json = YdszJson.toJson(tree);
+      // 写入 L1
+      l1Cache.put(l1Key, json);
+      // 写入 L2
       redisStringOps.set(CACHE_KEY_DEPT_TREE, json, Duration.ofSeconds(CACHE_TTL_DEPT_TREE));
     } catch (Exception e) {
       log.warn("Failed to cache department tree: {}", e.getMessage());
@@ -286,12 +325,15 @@ public class DepartmentServiceImpl implements DepartmentService {
   /**
    * 失效部门树缓存
    *
-   * <p>部门创建/更新/删除时调用，确保缓存数据与数据库一致。
+   * <p>部门创建/更新/删除时调用，确保缓存数据与数据库一致。同时清除 L1 和 L2 缓存。
    */
   private void evictDeptTreeCache() {
     try {
+      // 清除 L1 本地缓存
+      l1Cache.invalidate(CACHE_KEY_DEPT_TREE);
+      // 清除 L2 Redis 缓存
       redisStringOps.del(CACHE_KEY_DEPT_TREE);
-      log.debug("Department tree cache evicted");
+      log.debug("Department tree cache evicted (L1 + L2)");
     } catch (Exception e) {
       log.warn("Failed to evict department tree cache: {}", e.getMessage());
     }
