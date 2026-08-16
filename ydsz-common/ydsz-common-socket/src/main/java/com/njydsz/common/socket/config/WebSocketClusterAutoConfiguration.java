@@ -13,7 +13,6 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import com.njydsz.common.socket.cluster.WebSocketClusterPublisher;
 import com.njydsz.common.socket.cluster.WebSocketClusterSubscriber;
-import com.njydsz.common.socket.compress.MessageCompressor;
 import com.njydsz.common.socket.resilience.WebSocketCircuitBreaker;
 
 import lombok.extern.slf4j.Slf4j;
@@ -25,8 +24,8 @@ import lombok.extern.slf4j.Slf4j;
  *
  * <p>自动注册：
  * <ul>
- *   <li>{@link WebSocketClusterPublisher} — Redis Pub/Sub 发布者（含熔断保护 P0-2）</li>
- *   <li>{@link WebSocketClusterSubscriber} — Redis Pub/Sub 订阅者（含消息解压 P2-3）</li>
+ *   <li>{@link WebSocketClusterPublisher} — Redis Pub/Sub 发布者（含熔断保护）</li>
+ *   <li>{@link WebSocketClusterSubscriber} — Redis Pub/Sub 订阅者</li>
  *   <li>{@link RedisMessageListenerContainer} — Redis 监听容器</li>
  * </ul>
  *
@@ -61,15 +60,13 @@ public class WebSocketClusterAutoConfiguration {
      * 创建集群广播订阅者 Bean。
      *
      * @param messagingTemplate STOMP 消息模板
-     * @param messageCompressor 消息压缩器
      * @return 集群广播订阅者实例
      */
     @Bean
     public WebSocketClusterSubscriber webSocketClusterSubscriber(
-            SimpMessagingTemplate messagingTemplate,
-            MessageCompressor messageCompressor) {
+            SimpMessagingTemplate messagingTemplate) {
         log.info("[WS-Cluster] 注册 WebSocketClusterSubscriber");
-        return new WebSocketClusterSubscriber(messagingTemplate, messageCompressor);
+        return new WebSocketClusterSubscriber(messagingTemplate);
     }
 
     /**

@@ -1,7 +1,6 @@
-package com.njydsz.common.auth.model;
+package com.njydsz.common.core.model;
 
 import java.util.Map;
-
 import java.util.Set;
 
 import javax.annotation.Nonnull;
@@ -14,18 +13,14 @@ import javax.annotation.Nullable;
  * <ul>
  *   <li>基础身份：用户语言、唯一标识、身份类型、服务类型、访问令牌</li>
  *   <li>行级数据权限：租户ID、数据范围类型（tenant/group/company/dept/user/project/region）</li>
- *   <li>行级数据权限维度ID集合：公司ID集合、部门ID集合、项目ID集合、区域ID集合</li>
  *   <li>列级数据权限：表级可见列规则、可编辑列规则（基于角色/岗位）</li>
  * </ul>
  *
- * <p>实现类应通过 RequestContext（ydsz-common-core）写入上下文，供全链路下游读取。
- * 推荐使用实现类 {@link YdszAuthInfo}。</p>
- *
- * @see YdszAuthInfo
- * @see AuthInfoUtils
+ * <p>本接口定义于 core 模块（L2 基础设施层），供所有层级引用。
+ * 实现类由 common-auth 提供（{@code com.njydsz.common.auth.model.YdszAuthInfo}）。</p>
  *
  * @author ydsz-team
- * @since 1.0.0
+ * @since 2.0.0
  */
 public interface AuthInfo {
 
@@ -75,12 +70,12 @@ public interface AuthInfo {
      * <p>决定行级权限按哪个维度生效：
      * <ul>
      *   <li>tenant：按租户维度过滤</li>
-     *   <li>group：按集团维度过滤（使用 companyIds）</li>
-     *   <li>company：按公司维度过滤（使用 deptIds）</li>
-     *   <li>dept：按部门维度过滤（使用 deptIds）</li>
-     *   <li>user：按用户维度过滤（使用 uniqueId）</li>
-     *   <li>project：按项目维度过滤（使用 projectIds）</li>
-     *   <li>region：按区域维度过滤（使用 regionIds）</li>
+     *   <li>group：按集团维度过滤</li>
+     *   <li>company：按公司维度过滤</li>
+     *   <li>dept：按部门维度过滤</li>
+     *   <li>user：按用户维度过滤</li>
+     *   <li>project：按项目维度过滤</li>
+     *   <li>region：按区域维度过滤</li>
      * </ul>
      *
      * @return 数据范围类型编码
@@ -90,8 +85,6 @@ public interface AuthInfo {
 
     /**
      * 获取租户ID
-     *
-     * <p>用于 TENANT 范围类型的行级权限过滤。
      *
      * @return 租户ID
      */
@@ -109,8 +102,6 @@ public interface AuthInfo {
     /**
      * 获取请求来源标识
      *
-     * <p>用于标识请求的来源渠道。
-     *
      * @return 请求来源
      */
     @Nullable
@@ -121,16 +112,6 @@ public interface AuthInfo {
      *
      * <p>格式：{@code table_name -> Set<column_name>}，key 为表名（小写），value 为允许查看的列名集合（小写）。
      *
-     * <p>示例：
-     * <pre>{@code
-     * {
-     *   "sys_user" -> {"id", "name", "email"},
-     *   "sys_role" -> {"id", "role_name"}
-     * }
-     * }</pre>
-     *
-     * <p>SQL 拦截器会据此过滤 SELECT 语句中的返回列。
-     *
      * @return 表名到可见列集合的映射；不允许返回 null，无规则时返回空 Map
      */
     @Nonnull
@@ -140,16 +121,6 @@ public interface AuthInfo {
      * 获取列级权限：表级可编辑列规则
      *
      * <p>格式：{@code table_name -> Set<column_name>}，key 为表名（小写），value 为允许写入的列名集合（小写）。
-     *
-     * <p>示例：
-     * <pre>{@code
-     * {
-     *   "sys_user" -> {"name", "email", "phone"},
-     *   "sys_role" -> {"role_name", "description"}
-     * }
-     * }</pre>
-     *
-     * <p>SQL 拦截器会据此过滤 INSERT/UPDATE 语句中的写入列；若无任何可编辑列则抛出异常阻断写入。
      *
      * @return 表名到可编辑列集合的映射；不允许返回 null，无规则时返回空 Map
      */

@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.njydsz.common.excel.core.config.ExcelConfig;
 import com.njydsz.common.excel.core.listener.ReadListener;
 import com.njydsz.common.excel.core.metadata.ReadMetadata;
 import com.njydsz.common.excel.core.metadata.WriteMetadata;
@@ -405,26 +404,6 @@ public class ExcelFacade {
      */
     public static <T> void read(InputStream inputStream, Class<T> clazz, ReadListener<T> listener) {
         read(inputStream, clazz).sheet().doRead(listener);
-    }
-
-    // ==================== 配置相关方法 ====================
-
-    /**
-     * 设置全局配置
-     *
-     * @param configuration ExcelConfiguration 配置实例
-     */
-    public static void setConfiguration(ExcelConfig configuration) {
-        ExcelConfig.setInstance(configuration);
-    }
-
-    /**
-     * 获取当前全局配置
-     *
-     * @return ExcelConfiguration 配置实例
-     */
-    public static ExcelConfig getConfiguration() {
-        return ExcelConfig.getInstance();
     }
 
     // ==================== Web 下载辅助方法 ====================

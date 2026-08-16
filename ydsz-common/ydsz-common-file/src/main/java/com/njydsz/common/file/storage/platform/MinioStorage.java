@@ -94,7 +94,7 @@ public class MinioStorage extends AbstractFileStorage {
                     .build();
         } catch (Exception e) {
             log.error("[Minio] MinioClient build failed: {}", e.getMessage());
-            throw new BusinessException(FileExceptionCode.STORAGE_CLIENT_BUILD_FAILED);
+            throw new BusinessException(FileExceptionCode.CONFIG_INVALID);
         }
     }
 
@@ -115,7 +115,7 @@ public class MinioStorage extends AbstractFileStorage {
             log.info("[Minio] make Bucket success bucketName:{}", bucketName);
         } catch (Exception e) {
             log.error("[Minio] make Bucket failed, bucket={}, message={}", bucketName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.BUCKET_CREATE_FAILED);
+            throw new BusinessException(FileExceptionCode.BUCKET_ERROR);
         }
     }
 
@@ -160,7 +160,7 @@ public class MinioStorage extends AbstractFileStorage {
             }
         } catch (Exception e) {
             log.error("[Minio] make Folder failed, folder={}, message={}", folderName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FOLDER_CREATE_FAILED);
+            throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
         }
     }
 
@@ -196,7 +196,7 @@ public class MinioStorage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[Minio] doGetObject failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FILE_DOWNLOAD_FAILED);
+            throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
         }
     }
 
@@ -210,7 +210,7 @@ public class MinioStorage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[Minio] doRemoveObject failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FILE_DELETE_FAILED);
+            throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
         }
     }
 
@@ -232,7 +232,7 @@ public class MinioStorage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[Minio] generate private url failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.PRIVATE_URL_GENERATE_FAILED);
+            throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
         }
     }
 
@@ -298,7 +298,7 @@ public class MinioStorage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[Minio] doCompleteMultipartUpload failed, object={}, message={}",
                     objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
         }
     }
 
@@ -372,7 +372,7 @@ public class MinioStorage extends AbstractFileStorage {
                     .build());
         } catch (Exception e) {
             log.error("Minio server-side copy failed: {} ", e.getMessage());
-            throw new BusinessException(FileExceptionCode.OBJECT_COPY_FAILED);
+            throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
         }
     }
 
@@ -460,7 +460,7 @@ public class MinioStorage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[Minio] doListObjects failed, bucket={}, prefix={}, message={}",
                     bucketName, prefix, e.getMessage());
-            throw new BusinessException(FileExceptionCode.OBJECT_LIST_FAILED);
+            throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
         }
     }
 

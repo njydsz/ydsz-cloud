@@ -13,7 +13,7 @@ import com.njydsz.common.auth.filter.BaseAuthFilter;
 import com.njydsz.common.auth.handler.AuthHandler;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
-import com.njydsz.common.auth.model.AuthInfo;
+import com.njydsz.common.core.model.AuthInfo;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.common.util.string.StringUtils;
 import com.njydsz.common.web.auth.AuthHandlerFactory;

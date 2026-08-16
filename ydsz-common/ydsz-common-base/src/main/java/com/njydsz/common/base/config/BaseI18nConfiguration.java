@@ -83,6 +83,7 @@ public abstract class BaseI18nConfiguration {
         source.setBasenames(getBasenames());
         source.setDefaultEncoding("UTF-8");
         source.setUseCodeAsDefaultMessage(true);
+        source.setDefaultLocale(Locale.SIMPLIFIED_CHINESE);
         return source;
     }
 

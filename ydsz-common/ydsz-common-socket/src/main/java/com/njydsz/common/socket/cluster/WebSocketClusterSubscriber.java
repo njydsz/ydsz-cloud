@@ -5,7 +5,6 @@ import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.socket.compress.MessageCompressor;
 import com.njydsz.common.socket.constant.WebSocketConstants;
 import com.njydsz.common.socket.trace.WebSocketTraceContext;
 
@@ -22,8 +21,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>{@code TOPIC}：推送到 {@code /topic/{topic}}</li>
  * </ul>
  *
- * <p>收到消息后从 {@link WebSocketClusterMessage#getTraceId()} 恢复 MDC traceId（P1-1），
- * 如果消息被压缩则解压（P2-3）。
+ * <p>收到消息后从 {@link WebSocketClusterMessage#getTraceId()} 恢复 MDC traceId。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -33,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 public class WebSocketClusterSubscriber implements MessageListener {
 
     private final SimpMessagingTemplate messagingTemplate;
-    private final MessageCompressor messageCompressor;
 
     @Override
     public void onMessage(Message message, byte[] pattern) {
@@ -69,9 +66,6 @@ public class WebSocketClusterSubscriber implements MessageListener {
     private void dispatchToLocal(WebSocketClusterMessage msg) {
         String pushType = msg.getPushType();
         String payloadJson = msg.getPayloadJson();
-        if (messageCompressor != null) {
-            payloadJson = messageCompressor.decompressIfNeeded(payloadJson);
-        }
         if ("USER".equals(pushType) && msg.getUserId() != null) {
             String destination = WebSocketConstants.WS_USER_DESTINATION_PREFIX
                     + msg.getUserId() + "/notifications";

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.njydsz.common.search.analytics.SearchAnalyticsService;
 import com.njydsz.common.search.api.SearchSuggestion;
 import com.njydsz.common.search.config.SearchProperties;
 import com.njydsz.common.search.core.SearchEngineRegistry;
@@ -14,22 +15,30 @@ import com.njydsz.common.search.core.SuggestStrategy;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 搜索建议服务接口。
- * <p>输入前缀返回候选词/热门词。
+ * 搜索建议服务。
+ *
+ * <p>整合三种策略提升搜索建议覆盖率：
+ * <ol>
+ *   <li><b>引擎前缀建议</b>：调用底层 SuggestStrategy 获取数据库候选</li>
+ *   <li><b>热门搜索兜底</b>：引擎结果不足时，从分析服务获取热门词推荐</li>
+ *   <li><b>Levenshtein 纠错</b>：零结果场景下按编辑距离生成「您是不是要找」</li>
+ * </ol>
  *
  * @author ydsz-team
  * @since 1.0.0
  */
-
-
 @Slf4j
 public class SuggestionService {
 
     private final SearchEngineRegistry engineRegistry;
+    private final SearchAnalyticsService analyticsService;
     private final SearchProperties properties;
 
-    public SuggestionService(SearchEngineRegistry engineRegistry, SearchProperties properties) {
+    public SuggestionService(SearchEngineRegistry engineRegistry,
+                             SearchAnalyticsService analyticsService,
+                             SearchProperties properties) {
         this.engineRegistry = engineRegistry;
+        this.analyticsService = analyticsService;
         this.properties = properties;
     }
 
@@ -41,6 +50,8 @@ public class SuggestionService {
      * 若数量不足 {@code suggestLimit}，第二轮用剩余候选去重补齐，
      * 以避免用户在输入过程中看到空下拉框。
      *
+     * <p>引擎结果不足时，从热门搜索中补充与输入相关的词。
+     *
      * <p><b>降级策略</b>：未注册 {@link SuggestStrategy}、或底层查询抛出任何异常时，
      * 均返回空列表并记 warn 日志，不向上抛异常——补全属于体验增强功能，不应阻断搜索。
      *
@@ -48,13 +59,20 @@ public class SuggestionService {
      * @return 候选词列表，最多 {@code ydsz.search.suggest-limit} 条；无结果时返回空列表而非 {@code null}
      */
     public List<String> autocomplete(String prefix) {
-        if (prefix == null || prefix.isBlank()) return Collections.emptyList();
+        if (prefix == null || prefix.isBlank()) {
+            return Collections.emptyList();
+        }
         try {
             Optional<SuggestStrategy> suggestStrategy = engineRegistry.getSuggestStrategy();
-            if (suggestStrategy.isEmpty()) return Collections.emptyList();
+            if (suggestStrategy.isEmpty()) {
+                return Collections.emptyList();
+            }
             String normalizedPrefix = prefix.trim().toLowerCase();
-            SearchSuggestion suggestion = suggestStrategy.get().suggest(normalizedPrefix, properties.getSuggestLimit() * 2);
             List<String> results = new ArrayList<>();
+
+            // 策略 1：引擎前缀建议
+            SearchSuggestion suggestion = suggestStrategy.get()
+                    .suggest(normalizedPrefix, properties.getSuggestLimit() * 2);
             if (suggestion != null && suggestion.getSuggestions() != null) {
                 for (String s : suggestion.getSuggestions()) {
                     if (s != null && !s.isBlank()) {
@@ -64,18 +82,30 @@ public class SuggestionService {
                         }
                     }
                 }
-            }
-            if (results.size() < properties.getSuggestLimit()) {
-                if (suggestion != null && suggestion.getSuggestions() != null) {
+                // 不足时用剩余候选补齐
+                if (results.size() < properties.getSuggestLimit()) {
                     for (String s : suggestion.getSuggestions()) {
                         if (s != null && !s.isBlank() && !results.contains(s)) {
                             results.add(s);
                         }
-                        if (results.size() >= properties.getSuggestLimit()) break;
+                        if (results.size() >= properties.getSuggestLimit()) {
+                            break;
+                        }
                     }
                 }
             }
-            return results.stream().limit(properties.getSuggestLimit()).collect(Collectors.toList());
+
+            // 策略 2：热门搜索兜底
+            if (results.size() < properties.getSuggestLimit()) {
+                int remainSlots = properties.getSuggestLimit() - results.size();
+                List<String> hotKeywords = getHotKeywordFallback(normalizedPrefix, results, remainSlots);
+                results.addAll(hotKeywords);
+            }
+
+            return results.stream()
+                    .distinct()
+                    .limit(properties.getSuggestLimit())
+                    .collect(Collectors.toList());
         } catch (Exception e) {
             log.warn("[SuggestionService] 自动补全失败: prefix={}", prefix, e);
             return Collections.emptyList();
@@ -90,8 +120,7 @@ public class SuggestionService {
      * 编辑距离阈值随词长放宽：长度 ≤2 允许 1，≤5 允许 2，更长允许 3，
      * 兼顾短词的精确性与长词的容错性。原词自身会被排除。
      *
-     * <p>编辑距离计算为 O(m×n) 时间、O(n) 空间的滚动数组实现，
-     * 候选量受 {@code suggestLimit * 3} 约束，单次调用开销可控。
+     * <p>引擎无结果时，从热门词中找相似的作为兜底。
      *
      * <p><b>降级策略</b>：未注册 {@link SuggestStrategy} 或底层异常时返回空列表并记 warn 日志，
      * 不向上抛异常。
@@ -100,16 +129,23 @@ public class SuggestionService {
      * @return 按相似度升序排列的纠错候选，最多 {@code suggestLimit} 条；无合适候选时返回空列表而非 {@code null}
      */
     public List<String> didYouMean(String keyword) {
-        if (keyword == null || keyword.isBlank()) return Collections.emptyList();
+        if (keyword == null || keyword.isBlank()) {
+            return Collections.emptyList();
+        }
         try {
             Optional<SuggestStrategy> suggestStrategy = engineRegistry.getSuggestStrategy();
-            if (suggestStrategy.isEmpty()) return Collections.emptyList();
-            String loosePrefix = keyword.length() > 2 ? keyword.substring(0, 2) : keyword;
-            SearchSuggestion suggestion = suggestStrategy.get().suggest(loosePrefix, properties.getSuggestLimit() * 3);
-            if (suggestion == null || suggestion.getSuggestions() == null) return Collections.emptyList();
-
+            if (suggestStrategy.isEmpty()) {
+                return Collections.emptyList();
+            }
             String normalizedKeyword = keyword.trim().toLowerCase();
-            return suggestion.getSuggestions().stream()
+            String loosePrefix = keyword.length() > 2 ? keyword.substring(0, 2) : keyword;
+            SearchSuggestion suggestion = suggestStrategy.get()
+                    .suggest(loosePrefix, properties.getSuggestLimit() * 3);
+            if (suggestion == null || suggestion.getSuggestions() == null) {
+                return Collections.emptyList();
+            }
+
+            List<String> candidates = suggestion.getSuggestions().stream()
                     .filter(s -> s != null && !s.isBlank() && !s.equalsIgnoreCase(keyword))
                     .sorted((a, b) -> Integer.compare(
                             levenshtein(normalizedKeyword, a.toLowerCase()),
@@ -117,8 +153,44 @@ public class SuggestionService {
                     .filter(s -> levenshtein(normalizedKeyword, s.toLowerCase()) <= maxEditDistance(keyword))
                     .limit(properties.getSuggestLimit())
                     .collect(Collectors.toList());
+
+            // 兜底：从热门词中找相似的
+            if (candidates.isEmpty()) {
+                candidates = analyticsService.getHotKeywords(20).stream()
+                        .map(SearchAnalyticsService.HotKeyword::keyword)
+                        .filter(k -> !k.equalsIgnoreCase(keyword))
+                        .sorted((a, b) -> Integer.compare(
+                                levenshtein(normalizedKeyword, a.toLowerCase()),
+                                levenshtein(normalizedKeyword, b.toLowerCase())))
+                        .limit(properties.getSuggestLimit())
+                        .collect(Collectors.toList());
+            }
+            return candidates;
         } catch (Exception e) {
             log.warn("[SuggestionService] 纠错建议失败: keyword={}", keyword, e);
+            return Collections.emptyList();
+        }
+    }
+
+    // ==================== 私有方法 ====================
+
+    /**
+     * 热门搜索兜底逻辑：返回与输入相关且已有的热门搜索词。
+     *
+     * @param prefix   归一化输入前缀
+     * @param existing 已有候选（用于去重）
+     * @param limit    返回上限
+     * @return 热门词列表
+     */
+    private List<String> getHotKeywordFallback(String prefix, List<String> existing, int limit) {
+        try {
+            return analyticsService.getHotKeywords(limit * 2).stream()
+                    .map(SearchAnalyticsService.HotKeyword::keyword)
+                    .filter(k -> !existing.contains(k))
+                    .filter(k -> k.toLowerCase().startsWith(prefix) || k.toLowerCase().contains(prefix))
+                    .limit(limit)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
             return Collections.emptyList();
         }
     }
@@ -126,12 +198,18 @@ public class SuggestionService {
     private int levenshtein(String s1, String s2) {
         int len1 = s1.length();
         int len2 = s2.length();
-        if (len1 == 0) return len2;
-        if (len2 == 0) return len1;
+        if (len1 == 0) {
+            return len2;
+        }
+        if (len2 == 0) {
+            return len1;
+        }
 
         int[] prev = new int[len2 + 1];
         int[] curr = new int[len2 + 1];
-        for (int j = 0; j <= len2; j++) prev[j] = j;
+        for (int j = 0; j <= len2; j++) {
+            prev[j] = j;
+        }
 
         for (int i = 1; i <= len1; i++) {
             curr[0] = i;
@@ -148,8 +226,12 @@ public class SuggestionService {
 
     private int maxEditDistance(String keyword) {
         int len = keyword.length();
-        if (len <= 2) return 1;
-        if (len <= 5) return 2;
+        if (len <= 2) {
+            return 1;
+        }
+        if (len <= 5) {
+            return 2;
+        }
         return 3;
     }
 }

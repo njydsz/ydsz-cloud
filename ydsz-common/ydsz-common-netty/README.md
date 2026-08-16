@@ -212,10 +212,61 @@ public class MyTcpClient extends AbstractNettyClient {
 | `ydsz.netty.traffic-shaping.read-limit` | 0 | 读限速（bytes/s，0=不限） |
 | `ydsz.netty.traffic-shaping.check-interval-ms` | 1000 | 检查间隔（毫秒） |
 | `ydsz.netty.traffic-shaping.global` | false | 是否全局流量整形（true=限制整个 Server 总带宽） |
+| `ydsz.netty.dispatcher.enabled` | false | 是否启用 MessageDispatcher 注解扫描（默认关闭，推荐使用 SimpleChannelInboundHandler） |
 
 ## 使用示例
 
-### 1. 消息分发（基于注解）
+### 1. 消息处理推荐模式
+
+**推荐：使用 `SimpleChannelInboundHandler<T>` + 策略模式（默认）**
+
+```java
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
+
+public class MyBusinessHandler extends SimpleChannelInboundHandler<MyMessage> {
+
+    @Override
+    protected void channelRead0(ChannelHandlerContext ctx, MyMessage msg) {
+        switch (msg.getType()) {
+            case "AUTH" -> handleAuth(ctx, msg);
+            case "PING" -> handlePing(ctx, msg);
+            case "ORDER" -> handleOrder(ctx, msg);
+            default -> log.warn("未知消息类型: {}", msg.getType());
+        }
+    }
+
+    private void handleAuth(ChannelHandlerContext ctx, MyMessage msg) { ... }
+    private void handlePing(ChannelHandlerContext ctx, MyMessage msg) { ... }
+    private void handleOrder(ChannelHandlerContext ctx, MyMessage msg) { ... }
+}
+```
+
+**适用场景：** 消息类型固定、业务逻辑集中在同一 Handler 内。性能最优（无反射/MethodHandle 开销），代码可读性高。
+
+**可选：使用 `@MessageHandler` 注解（需显式开启）**
+
+仅在以下场景考虑启用 `ydsz.netty.dispatcher.enabled=true`：
+
+- 消息类型动态扩展，希望通过添加方法即可支持新类型
+- 多个业务模块各自独立注册处理器，不希望集中在一个 Handler 中
+- 已有大量 `@MessageHandler` 注解方法，迁移成本过高
+
+```java
+import com.njydsz.common.netty.event.MessageHandler;
+import io.netty.channel.ChannelHandlerContext;
+import org.springframework.stereotype.Component;
+
+@Component
+public class MyMessageHandler {
+
+    @MessageHandler(type = "AUTH")
+    public void handleAuth(ChannelHandlerContext ctx, Map<String, Object> data) { ... }
+
+    @MessageHandler(type = "PING")
+    public void handlePing(ChannelHandlerContext ctx, Map<String, Object> data) { ... }
+}
+```
 
 ```java
 import com.njydsz.common.netty.event.MessageHandler;

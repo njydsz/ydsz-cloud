@@ -11,7 +11,6 @@ import com.njydsz.common.socket.ack.MessageAckService;
 import com.njydsz.common.socket.audit.WebSocketAuditService;
 import com.njydsz.common.socket.cluster.WebSocketClusterMessage;
 import com.njydsz.common.socket.cluster.WebSocketClusterPublisher;
-import com.njydsz.common.socket.compress.MessageCompressor;
 import com.njydsz.common.socket.constant.WebSocketConstants;
 import com.njydsz.common.socket.enums.MessagePriority;
 import com.njydsz.common.socket.filter.MessageFilter;
@@ -34,9 +33,8 @@ import com.njydsz.common.util.id.IdGenerator;
  * <p>推送流程：
  * <ol>
  *   <li>消息过滤器链检查（P3-5）</li>
- *   <li>消息序列化（P3-5，支持自定义协议）</li>
- *   <li>消息压缩（P2-3，超过阈值自动 GZIP）</li>
- *   <li>注入 traceId（P1-1）</li>
+ * <li>消息序列化（支持自定义协议）</li>
+ *   <li>注入 traceId</li>
  *   <li>通过集群广播发布（熔断保护 P0-2）</li>
  *   <li>Redis 发布失败时降级为本地直接推送</li>
  *   <li>本地推送失败时入重试队列（P0-4）</li>
@@ -56,7 +54,6 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
     private final OfflineMessageStore offlineMessageStore;
     private final WebSocketMetrics webSocketMetrics;
     private final MessageSerializer messageSerializer;
-    private final MessageCompressor messageCompressor;
     private final WebSocketAuditService auditService;
     private final SlowConnectionDetector slowConnectionDetector;
     private final MessageAckService ackService;
@@ -70,7 +67,6 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
             OfflineMessageStore offlineMessageStore,
             WebSocketMetrics webSocketMetrics,
             MessageSerializer messageSerializer,
-            MessageCompressor messageCompressor,
             WebSocketAuditService auditService,
             SlowConnectionDetector slowConnectionDetector,
             MessageAckService ackService,
@@ -82,7 +78,6 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
         this.offlineMessageStore = offlineMessageStore;
         this.webSocketMetrics = webSocketMetrics;
         this.messageSerializer = messageSerializer;
-        this.messageCompressor = messageCompressor;
         this.auditService = auditService;
         this.slowConnectionDetector = slowConnectionDetector;
         this.ackService = ackService;
@@ -172,7 +167,7 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
         if (userId == null) {
             return;
         }
-        String payloadJson = serializeAndCompress(payload);
+        String payloadJson = messageSerializer.serialize(payload);
         if (!applyFilters(userId, "USER", payloadJson)) {
             return;
         }
@@ -258,7 +253,7 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
      */
     @Override
     public void broadcast(String type, Object payload) {
-        String payloadJson = serializeAndCompress(payload);
+        String payloadJson = messageSerializer.serialize(payload);
         if (!applyFilters(null, "BROADCAST", payloadJson)) {
             return;
         }
@@ -297,7 +292,7 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
      */
     @Override
     public void pushToTopic(String topic, Object payload) {
-        String payloadJson = serializeAndCompress(payload);
+        String payloadJson = messageSerializer.serialize(payload);
         if (!applyFilters(null, "TOPIC", payloadJson)) {
             return;
         }
@@ -343,7 +338,7 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
         if (userId == null) {
             return;
         }
-        String payloadJson = serializeAndCompress(payload);
+        String payloadJson = messageSerializer.serialize(payload);
         if (!applyFilters(userId, "USER", payloadJson)) {
             return;
         }
@@ -457,23 +452,6 @@ public class DefaultRealtimePushTemplate implements RealtimePushTemplate {
     }
 
     // ==================== 内部辅助方法 ====================
-
-    /**
-     * 序列化并压缩消息负载。
-     *
-     * <p>先使用 {@link MessageSerializer} 序列化为 JSON，
-     * 然后使用 {@link MessageCompressor} 判断是否需要 GZIP 压缩。
-     *
-     * @param payload 原始消息对象
-     * @return 序列化并（可选）压缩后的 JSON 字符串
-     */
-    private String serializeAndCompress(Object payload) {
-        String json = messageSerializer.serialize(payload);
-        if (messageCompressor != null) {
-            json = messageCompressor.compressIfNeeded(json);
-        }
-        return json;
-    }
 
     /**
      * 应用消息过滤器链。

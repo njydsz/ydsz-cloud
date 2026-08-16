@@ -7,6 +7,8 @@ import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.netty.api.ConnectionMetrics;
+
 /**
  * Netty Channel 指标收集器。
  *
@@ -29,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
  * @since 1.0.0
  */
 @Slf4j
-public class NettyChannelMetrics {
+public class NettyChannelMetrics implements ConnectionMetrics {
 
     private static final String METRIC_CHANNELS_ACTIVE = "ydsz.netty.channels.active";
     private static final String METRIC_BYTES_READ = "ydsz.netty.bytes.read.total";
@@ -93,6 +95,7 @@ public class NettyChannelMetrics {
     /**
      * 递增活跃 Channel 数。
      */
+    @Override
     public void incrementActiveChannels() {
         activeChannels.incrementAndGet();
     }
@@ -100,6 +103,7 @@ public class NettyChannelMetrics {
     /**
      * 递减活跃 Channel 数（不会变为负数）。
      */
+    @Override
     public void decrementActiveChannels() {
         activeChannels.updateAndGet(curr -> Math.max(0, curr - 1));
     }
@@ -125,6 +129,7 @@ public class NettyChannelMetrics {
     /**
      * 递增消息接收计数。
      */
+    @Override
     public void incrementMessagesReceived() {
         if (messagesReceivedCounter != null) {
             messagesReceivedCounter.increment();
@@ -134,6 +139,7 @@ public class NettyChannelMetrics {
     /**
      * 递增消息发送计数。
      */
+    @Override
     public void incrementMessagesSent() {
         if (messagesSentCounter != null) {
             messagesSentCounter.increment();
@@ -143,6 +149,7 @@ public class NettyChannelMetrics {
     /**
      * 递增连接计数。
      */
+    @Override
     public void incrementConnections() {
         if (connectionsCounter != null) {
             connectionsCounter.increment();
@@ -152,6 +159,7 @@ public class NettyChannelMetrics {
     /**
      * 递增断开计数。
      */
+    @Override
     public void incrementDisconnections() {
         if (disconnectionsCounter != null) {
             disconnectionsCounter.increment();
@@ -181,6 +189,7 @@ public class NettyChannelMetrics {
      *
      * @return 活跃 Channel 数
      */
+    @Override
     public long getActiveChannels() {
         return activeChannels.get();
     }
@@ -190,6 +199,7 @@ public class NettyChannelMetrics {
      *
      * @return 读取字节数
      */
+    @Override
     public long getTotalBytesRead() {
         return totalBytesRead.get();
     }
@@ -199,6 +209,7 @@ public class NettyChannelMetrics {
      *
      * @return 写入字节数
      */
+    @Override
     public long getTotalBytesWritten() {
         return totalBytesWritten.get();
     }

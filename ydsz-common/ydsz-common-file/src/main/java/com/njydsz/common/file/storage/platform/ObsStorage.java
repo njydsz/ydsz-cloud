@@ -90,7 +90,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
                     obsConfig);
         } catch (Exception e) {
             log.error("[OBS] ObsClient build failed: {}", e.getMessage());
-            throw new BusinessException(FileExceptionCode.STORAGE_CLIENT_BUILD_FAILED);
+            throw new BusinessException(FileExceptionCode.CONFIG_INVALID);
         }
     }
 
@@ -114,7 +114,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
             }
         } catch (Exception e) {
             log.error("[OBS] make Bucket failed, bucket={}, message={}", bucketName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.BUCKET_CREATE_FAILED);
+            throw new BusinessException(FileExceptionCode.BUCKET_ERROR);
         }
     }
 
@@ -145,7 +145,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
         } catch (Exception e) {
             log.error("[OBS] make Folder failed, bucket={}, folder={}, message={}",
                     bucketName, folderName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FOLDER_CREATE_FAILED);
+            throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
         }
     }
 
@@ -185,7 +185,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
         } catch (Exception e) {
             log.error("[OBS] doGetObject failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FILE_DOWNLOAD_FAILED);
+            throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
         }
     }
 
@@ -197,7 +197,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
         } catch (Exception e) {
             log.error("[OBS] doRemoveObject failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FILE_DELETE_FAILED);
+            throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
         }
     }
 
@@ -237,7 +237,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
         } catch (Exception e) {
             log.error("[OBS] doInitiateMultipartUpload failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_INIT_FAILED);
+            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
         }
     }
 
@@ -277,7 +277,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
                     .map(partNumber -> {
                         Multipart multipart = uploadedPartMap.get(partNumber);
                         if (multipart == null || StringUtils.isBlank(multipart.getEtag())) {
-                            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+                            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
                         }
                         return new PartEtag(multipart.getEtag(), partNumber);
                     })
@@ -294,7 +294,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
         } catch (Exception e) {
             log.error("[OBS] doCompleteMultipartUpload failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
         }
     }
 
@@ -433,7 +433,7 @@ public class ObsStorage extends AbstractFileStorage implements AutoCloseable {
         } catch (Exception e) {
             log.error("[OBS] doListObjects failed, bucket={}, prefix={}, message={}",
                     bucketName, prefix, e.getMessage());
-            throw new BusinessException(FileExceptionCode.OBJECT_LIST_FAILED);
+            throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
         }
     }
 

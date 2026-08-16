@@ -5,7 +5,7 @@ import java.util.Optional;
 import com.njydsz.common.jdbc.config.FieldFillConfiguration;
 import com.njydsz.common.jdbc.constant.AuditFieldConstants;
 import com.njydsz.common.jdbc.enums.FieldFillStrategyEnum;
-import com.njydsz.common.auth.model.AuthInfo;
+import com.njydsz.common.core.model.AuthInfo;
 import com.njydsz.common.auth.context.AuthInfoUtils;
 
 import net.sf.jsqlparser.expression.Expression;
@@ -42,7 +42,7 @@ import net.sf.jsqlparser.expression.StringValue;
  * @since 1.0.0
  * @see UpdatedByHandler 更新人处理器
  * @see FieldFillConfiguration 字段填充配置
- * @see AuthInfoUtils 认证信息工具类
+ * @see RequestContext 请求上下文
  */
 public class CreatedByHandler extends AbstractFieldFillHandler {
 
@@ -57,7 +57,7 @@ public class CreatedByHandler extends AbstractFieldFillHandler {
 
     @Override
     protected Expression doGetFieldFillValue() {
-        AuthInfo authInfo = AuthInfoUtils.getAuthInfo();
+        Object authObj = RequestContext.get(BizContextKeys.KEY_AUTH_INFO);\n        AuthInfo authInfo = authObj instanceof AuthInfo auth ? auth : null;
         // 非 Web 上下文（定时任务、MQ 消费）返回英文标识符 "system"，
         // 由上层 MessageSource 通过 key "audit.created_by.system" 解析为展示文本
         String uniqueId = Optional.ofNullable(authInfo)

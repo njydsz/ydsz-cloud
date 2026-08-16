@@ -20,7 +20,6 @@ import com.njydsz.common.socket.audit.WebSocketAuditService;
 import com.njydsz.common.socket.auth.WebSocketAuthInterceptor;
 import com.njydsz.common.socket.cluster.WebSocketClusterMessage;
 import com.njydsz.common.socket.cluster.WebSocketClusterPublisher;
-import com.njydsz.common.socket.compress.MessageCompressor;
 import com.njydsz.common.socket.filter.MessageFilter;
 import com.njydsz.common.socket.heartbeat.WebSocketHeartbeatHandler;
 import com.njydsz.common.socket.health.WebSocketHealthIndicator;
@@ -56,24 +55,23 @@ import org.springframework.scheduling.annotation.Scheduled;
  *
  * <p>自动注册以下 Bean（按依赖顺序）：
  * <ul>
- *   <li>{@link WebSocketCircuitBreaker} — 熔断降级保护器（P0-2）</li>
- *   <li>{@link WebSocketAuditService} — 审计日志服务（P2-5）</li>
- *   <li>{@link MessageSerializer} — 消息序列化器（P3-5）</li>
- *   <li>{@link MessageCompressor} — 消息压缩器（P2-3）</li>
- *   <li>{@link SlowConnectionDetector} — 慢连接检测器（P2-2）</li>
- *   <li>{@link ConnectionLimiter} — 连接数限制器（P2-1）</li>
- *   <li>{@link WebSocketAuthInterceptor} — JWT 握手鉴权（P2-1 连接数检查 + P2-5 审计）</li>
+ *   <li>{@link WebSocketCircuitBreaker} — 熔断降级保护器</li>
+ *   <li>{@link WebSocketAuditService} — 审计日志服务</li>
+ *   <li>{@link MessageSerializer} — 消息序列化器</li>
+ *   <li>{@link SlowConnectionDetector} — 慢连接检测器</li>
+ *   <li>{@link ConnectionLimiter} — 连接数限制器</li>
+ *   <li>{@link WebSocketAuthInterceptor} — JWT 握手鉴权</li>
  *   <li>{@link OnlineUserService} — 在线状态服务</li>
  *   <li>{@link OfflineMessageStore} — 离线消息存储（Redis 默认实现 + 熔断保护）</li>
- *   <li>{@link WebSocketHeartbeatHandler} — 心跳保活处理器（P0-3）</li>
- *   <li>{@link MessageAckService} — ACK 确认服务（P1-2）</li>
- *   <li>{@link MessageRetryQueue} — 消息重试队列（P0-4）</li>
- *   <li>{@link DeadLetterQueue} — 死信队列（P0-4）</li>
+ *   <li>{@link WebSocketHeartbeatHandler} — 心跳保活处理器</li>
+ *   <li>{@link MessageAckService} — ACK 确认服务</li>
+ *   <li>{@link MessageRetryQueue} — 消息重试队列</li>
+ *   <li>{@link DeadLetterQueue} — 死信队列</li>
  *   <li>{@link WebSocketSessionEventListener} — 会话事件监听器</li>
  *   <li>{@link WebSocketMetrics} — Micrometer 指标</li>
  *   <li>{@link WebSocketRateLimiter} — 速率限制器</li>
- *   <li>{@link StompMessageInterceptor} — STOMP 消息拦截器（P3-1）</li>
- *   <li>{@link WebSocketHealthIndicator} — 健康检查（P0-1）</li>
+ *   <li>{@link StompMessageInterceptor} — STOMP 消息拦截器</li>
+ *   <li>{@link WebSocketHealthIndicator} — 健康检查</li>
  *   <li>{@link RealtimePushTemplate} — 统一推送模板</li>
  * </ul>
  *
@@ -135,22 +133,7 @@ public class WebSocketAutoConfiguration {
         return new JsonMessageSerializer();
     }
 
-    // ==================== P2-3: 消息压缩 ====================
-
-    /**
-     * 创建消息压缩器 Bean。
-     *
-     * @param properties WebSocket 配置属性
-     * @return 消息压缩器实例
-     */
-    @Bean
-    @ConditionalOnMissingBean(MessageCompressor.class)
-    public MessageCompressor messageCompressor(WebSocketProperties properties) {
-        log.info("[WebSocket] 注册 MessageCompressor (enabled={})", properties.getCompression().isEnabled());
-        return new MessageCompressor(properties);
-    }
-
-    // ==================== P2-2: 慢连接检测 ====================
+    // ==================== 慢连接检测 ====================
 
     /**
      * 创建慢连接检测器 Bean。
@@ -491,7 +474,6 @@ public class WebSocketAutoConfiguration {
             OfflineMessageStore offlineMessageStore,
             WebSocketMetrics webSocketMetrics,
             MessageSerializer messageSerializer,
-            MessageCompressor messageCompressor,
             @Autowired(required = false) WebSocketAuditService auditService,
             @Autowired(required = false) SlowConnectionDetector slowConnectionDetector,
             @Autowired(required = false) MessageAckService ackService,
@@ -502,7 +484,7 @@ public class WebSocketAutoConfiguration {
                 messagingTemplate,
                 clusterPublisher != null ? clusterPublisher : new NoOpClusterPublisher(),
                 onlineUserService, offlineMessageStore, webSocketMetrics,
-                messageSerializer, messageCompressor, auditService,
+                messageSerializer, auditService,
                 slowConnectionDetector, ackService, retryQueue,
                 messageFilters);
     }

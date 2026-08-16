@@ -6,6 +6,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
 import com.njydsz.common.excel.api.validator.DataValidator.ValidationMode;
+import com.njydsz.common.excel.core.config.ExcelConfig;
 
 /**
  * Excel 模块配置属性
@@ -248,5 +249,73 @@ public class ExcelProperties {
 
     public void setValidationMode(ValidationMode validationMode) {
         this.validationMode = validationMode;
+    }
+
+    /**
+     * 将 Spring Boot 配置属性转换为不可变的 {@link ExcelConfig}。
+     *
+     * <p>未配置的属性使用 ExcelConfig 默认值。</p>
+     *
+     * @return 构建完成的 {@link ExcelConfig} 实例
+     */
+    public ExcelConfig toExcelConfig() {
+        ExcelConfig.Builder builder = ExcelConfig.builder();
+
+        if (readBufferSize != null) {
+            builder.readBufferSize(readBufferSize);
+        }
+        if (writeBufferSize != null) {
+            builder.writeBufferSize(writeBufferSize);
+        }
+        if (defaultDateFormat != null) {
+            builder.defaultDateFormat(defaultDateFormat);
+        }
+        if (defaultNumberFormat != null) {
+            builder.defaultNumberFormat(defaultNumberFormat);
+        }
+        if (automaticTrim != null) {
+            builder.automaticTrim(automaticTrim);
+        }
+        if (maxReadCacheSize != null) {
+            builder.maxReadCacheSize(maxReadCacheSize);
+        }
+        if (useFastReader != null) {
+            builder.useFastReader(useFastReader);
+        }
+        if (useFastWriter != null) {
+            builder.useFastWriter(useFastWriter);
+        }
+        if (streamingParseThresholdMB != null) {
+            builder.streamingParseThresholdMB(streamingParseThresholdMB);
+        }
+        if (maxReadFileSizeMB != null) {
+            builder.maxReadFileSizeMB(maxReadFileSizeMB);
+        }
+        if (maxWriteFileSizeMB != null) {
+            builder.maxWriteFileSizeMB(maxWriteFileSizeMB);
+        }
+        if (compressionLevel != null) {
+            builder.compressionLevel(compressionLevel);
+        }
+        if (formulaInjectionProtection != null) {
+            builder.formulaInjectionProtection(formulaInjectionProtection);
+        }
+        if (strictNumberConversion != null) {
+            builder.strictNumberConversion(strictNumberConversion);
+        }
+        if (use1904Windowing != null) {
+            builder.use1904Windowing(use1904Windowing);
+        }
+        if (headRowNumber != null) {
+            builder.headRowNumber(headRowNumber);
+        }
+        if (writeCacheSize != null) {
+            builder.writeCacheSize(writeCacheSize);
+        }
+        if (validationMode != null) {
+            builder.validationMode(validationMode);
+        }
+
+        return builder.build();
     }
 }

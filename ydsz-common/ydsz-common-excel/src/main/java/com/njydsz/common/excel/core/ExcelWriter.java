@@ -237,7 +237,11 @@ public class ExcelWriter {
      * @return 当前写入器实例
      */
     public ExcelWriter use1904Windowing() {
-        ExcelConfig.getInstance().setUse1904Windowing(true);
+        ExcelConfig config = metadata.getExcelConfig();
+        if (config != null) {
+            // 不可变配置，仅记录日志提醒
+            log.warn("ExcelConfig 为不可变对象，use1904Windowing 设置应在构建配置时完成");
+        }
         return this;
     }
 
@@ -492,7 +496,9 @@ public class ExcelWriter {
                 metadata.setDataSize(((List<?>) data).size());
             }
 
-            boolean useFastWriter = ExcelConfig.getInstance().isUseFastWriter();
+            ExcelConfig config = metadata.getExcelConfig() != null
+                    ? metadata.getExcelConfig() : ExcelConfig.defaults();
+            boolean useFastWriter = config.isUseFastWriter();
             boolean isXlsx = true;
             if (metadata.getFilePath() != null) {
                 isXlsx = !metadata.getFilePath().toLowerCase().endsWith(".xls");
@@ -853,7 +859,9 @@ public class ExcelWriter {
             } else if (metadata.getDateFormat() != null && !metadata.getDateFormat().isEmpty()) {
                 property.setDateFormat(metadata.getDateFormat());
             } else {
-                property.setDateFormat(ExcelConfig.getInstance().getDefaultDateFormat());
+                ExcelConfig config = metadata.getExcelConfig() != null
+                        ? metadata.getExcelConfig() : ExcelConfig.defaults();
+                property.setDateFormat(config.getDefaultDateFormat());
             }
 
             if (ann.width() > 0) {

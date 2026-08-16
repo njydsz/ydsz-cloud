@@ -119,10 +119,10 @@ public class S3Storage extends AbstractFileStorage {
                     if (parts.length >= 2) {
                         this.region = parts[1];
                     } else {
-                        throw new BusinessException(FileExceptionCode.STORAGE_CONFIG_INVALID);
+                        throw new BusinessException(FileExceptionCode.CONFIG_INVALID);
                     }
                 } else {
-                    throw new BusinessException(FileExceptionCode.STORAGE_CONFIG_INVALID);
+                    throw new BusinessException(FileExceptionCode.CONFIG_INVALID);
                 }
             }
 
@@ -160,7 +160,7 @@ public class S3Storage extends AbstractFileStorage {
             throw e;
         } catch (Exception e) {
             log.error("[S3] S3Client build failed: {}", e.getMessage());
-            throw new BusinessException(FileExceptionCode.STORAGE_CLIENT_BUILD_FAILED);
+            throw new BusinessException(FileExceptionCode.CONFIG_INVALID);
         }
     }
 
@@ -200,7 +200,7 @@ public class S3Storage extends AbstractFileStorage {
             }
         } catch (Exception e) {
             log.error("[S3] make Bucket failed, bucket={}, message={}", bucketName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.BUCKET_CREATE_FAILED);
+            throw new BusinessException(FileExceptionCode.BUCKET_ERROR);
         }
     }
 
@@ -248,7 +248,7 @@ public class S3Storage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[S3] make Folder failed, bucket={}, folder={}, message={}",
                     bucketName, folderName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FOLDER_CREATE_FAILED);
+            throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
         }
     }
 
@@ -287,7 +287,7 @@ public class S3Storage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[S3] doGetObject failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FILE_DOWNLOAD_FAILED);
+            throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
         }
     }
 
@@ -302,7 +302,7 @@ public class S3Storage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[S3] doRemoveObject failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FILE_DELETE_FAILED);
+            throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
         }
     }
 
@@ -352,7 +352,7 @@ public class S3Storage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[S3] doInitiateMultipartUpload failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_INIT_FAILED);
+            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
         }
     }
 
@@ -395,7 +395,7 @@ public class S3Storage extends AbstractFileStorage {
             for (Integer partNumber : partNumbers) {
                 Part uploadedPart = uploadedPartMap.get(partNumber);
                 if (uploadedPart == null || StringUtils.isBlank(uploadedPart.eTag())) {
-                    throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+                    throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
                 }
                 completedParts.add(CompletedPart.builder()
                         .partNumber(partNumber)
@@ -417,7 +417,7 @@ public class S3Storage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[S3] doCompleteMultipartUpload failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
         }
     }
 
@@ -527,7 +527,7 @@ public class S3Storage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[S3] doListObjects failed, bucket={}, prefix={}, message={}",
                     bucketName, prefix, e.getMessage());
-            throw new BusinessException(FileExceptionCode.OBJECT_LIST_FAILED);
+            throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
         }
     }
 

@@ -120,6 +120,14 @@ public class ReadMetadata {
         this.currentReadRow = new AtomicInteger(0);
     }
 
+    public ExcelConfig getExcelConfig() {
+        return excelConfig;
+    }
+
+    public void setExcelConfig(ExcelConfig excelConfig) {
+        this.excelConfig = excelConfig;
+    }
+
     public Class<?> getClazz() {
         return clazz;
     }

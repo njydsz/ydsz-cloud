@@ -94,7 +94,7 @@ public class OssStorage extends AbstractFileStorage {
             this.endpoint = config.getEndpoint();
         } catch (Exception e) {
             log.error("[OSS] OSSClient build failed: {}", e.getMessage());
-            throw new BusinessException(FileExceptionCode.STORAGE_CLIENT_BUILD_FAILED);
+            throw new BusinessException(FileExceptionCode.CONFIG_INVALID);
         }
     }
 
@@ -117,7 +117,7 @@ public class OssStorage extends AbstractFileStorage {
             }
         } catch (Exception e) {
             log.error("[OSS] make Bucket failed, bucket={}, message={}", bucketName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.BUCKET_CREATE_FAILED);
+            throw new BusinessException(FileExceptionCode.BUCKET_ERROR);
         }
     }
 
@@ -147,7 +147,7 @@ public class OssStorage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[OSS] make Folder failed, bucket={}, folder={}, message={}",
                     bucketName, folderName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FOLDER_CREATE_FAILED);
+            throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
         }
     }
 
@@ -176,7 +176,7 @@ public class OssStorage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[OSS] doGetObject failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FILE_DOWNLOAD_FAILED);
+            throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
         }
     }
 
@@ -187,7 +187,7 @@ public class OssStorage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[OSS] doRemoveObject failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.FILE_DELETE_FAILED);
+            throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
         }
     }
 
@@ -219,7 +219,7 @@ public class OssStorage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[OSS] doInitiateMultipartUpload failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_INIT_FAILED);
+            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
         }
     }
 
@@ -259,7 +259,7 @@ public class OssStorage extends AbstractFileStorage {
             for (Integer partNumber : partNumbers) {
                 PartSummary uploadedPart = uploadedPartMap.get(partNumber);
                 if (uploadedPart == null || StringUtils.isBlank(uploadedPart.getETag())) {
-                    throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+                    throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
                 }
                 partETags.add(new PartETag(partNumber, uploadedPart.getETag()));
             }
@@ -274,7 +274,7 @@ public class OssStorage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[OSS] doCompleteMultipartUpload failed, bucket={}, object={}, message={}",
                     bucketName, objectName, e.getMessage());
-            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_COMPLETE_FAILED);
+            throw new BusinessException(FileExceptionCode.MULTIPART_UPLOAD_FAILED);
         }
     }
 
@@ -372,7 +372,7 @@ public class OssStorage extends AbstractFileStorage {
         } catch (Exception e) {
             log.error("[OSS] doListObjects failed, bucket={}, prefix={}, message={}",
                     bucketName, prefix, e.getMessage());
-            throw new BusinessException(FileExceptionCode.OBJECT_LIST_FAILED);
+            throw new BusinessException(FileExceptionCode.FILE_OPERATE_FAILED);
         }
     }
 
