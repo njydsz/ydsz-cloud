@@ -120,11 +120,7 @@ public final class SecurityHeaderConfigurer {
      * <p>旧版配置虽然未使用子配置类，但 HSTS 默认启用（通过旧版字符串非空判断）。
      */
     private static boolean isHstsEnabled(SecurityHeaderProperties properties) {
-        if (properties.getHsts() != null && properties.getHsts().isEnabled()) {
-            return true;
-        }
-        // 向后兼容：旧版字符串非空即视为启用
-        return properties.getHstsDeprecated() != null && !properties.getHstsDeprecated().isEmpty();
+        return properties.getHsts() != null && properties.getHsts().isEnabled();
     }
 
     /**
@@ -141,10 +137,6 @@ public final class SecurityHeaderConfigurer {
      */
     public static String buildCspPolicy(SecurityHeaderProperties properties) {
         if (properties.getCsp() == null || !properties.getCsp().isEnabled()) {
-            // 向后兼容：旧版字符串非空时直接使用
-            if (properties.getCspDeprecated() != null && !properties.getCspDeprecated().isEmpty()) {
-                return properties.getCspDeprecated();
-            }
             return "";
         }
         // 如果 csp 配置了 explicit policy，直接使用
@@ -187,10 +179,6 @@ public final class SecurityHeaderConfigurer {
                 hstsValue.append("; preload");
             }
             return hstsValue.toString();
-        }
-        // 向后兼容：旧版字符串直接使用
-        if (properties.getHstsDeprecated() != null && !properties.getHstsDeprecated().isEmpty()) {
-            return properties.getHstsDeprecated();
         }
         return "";
     }

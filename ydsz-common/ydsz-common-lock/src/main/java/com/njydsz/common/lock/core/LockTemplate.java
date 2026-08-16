@@ -5,6 +5,7 @@ import java.util.function.Supplier;
 
 import lombok.extern.slf4j.Slf4j;
 
+import com.njydsz.common.lock.annotation.LockType;
 import com.njydsz.common.lock.exception.DistributedLockException;
 import com.njydsz.common.lock.strategy.LockStrategy;
 
@@ -82,7 +83,7 @@ public class LockTemplate {
      * @throws DistributedLockException 锁获取失败时抛出
      */
     public <T> T execute(String lockKey, long waitTime, long leaseTime, TimeUnit timeUnit, Supplier<T> action) {
-        DistributedLocker lock = lockStrategy.getLock(lockKey);
+        DistributedLocker lock = lockStrategy.getLock(LockType.REENTRANT);
         String lockValue = acquireLock(lock, lockKey, waitTime, leaseTime, timeUnit);
 
         try {
@@ -151,7 +152,7 @@ public class LockTemplate {
      */
     private <T> T tryExecuteOrDefault(String lockKey, LockRequest request,
                                        Supplier<T> action, T defaultValue) {
-        DistributedLocker lock = lockStrategy.getLock(lockKey);
+        DistributedLocker lock = lockStrategy.getLock(LockType.REENTRANT);
         String lockValue;
         try {
             lockValue = request.waitTime() > 0

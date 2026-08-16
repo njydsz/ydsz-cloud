@@ -70,7 +70,13 @@ public class CircuitBreaker {
     public <T> RateLimitDecision tryAcquire(String resource, CircuitBreakerCallback<T> callback) {
         io.github.resilience4j.circuitbreaker.CircuitBreaker cb = getOrCreate(resource);
         try {
-            T result = cb.executeSupplier(callback::call);
+            T result = cb.executeSupplier(() -> {
+                try {
+                    return callback.call();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
             return RateLimitDecision.builder()
                     .resource(resource)
                     .result(RateLimitResult.PASS)
@@ -234,7 +240,7 @@ public class CircuitBreaker {
          * 转换为 Resilience4j CircuitBreakerConfig
          */
         io.github.resilience4j.circuitbreaker.CircuitBreakerConfig toResilience4jConfig() {
-            CircuitBreakerConfig.SlidingWindowType swType = this.slidingWindowType;
+            SlidingWindowType swType = this.slidingWindowType;
             return io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom()
                     .failureRateThreshold((float) (this.failureRateThreshold * 100))
                     .slowCallRateThreshold((float) (this.slowCallRateThreshold * 100))

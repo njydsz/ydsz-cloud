@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.NonNull;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.njydsz.common.safe.config.SecurityHeaderConfigurer;
 import com.njydsz.common.safe.config.SecurityHeaderProperties;
 import com.njydsz.common.util.http.UrlPathUtils;
 
@@ -63,8 +64,8 @@ public class BaseSecurityHeaderFilter extends OncePerRequestFilter {
         addHeaderIfNotEmpty(response, "X-Frame-Options", properties.getFrameOptions());
         addHeaderIfNotEmpty(response, "X-Content-Type-Options", properties.getContentTypeOptions());
         addHeaderIfNotEmpty(response, "X-XSS-Protection", properties.getXssProtection());
-        addHeaderIfNotEmpty(response, "Strict-Transport-Security", properties.getHsts());
-        addHeaderIfNotEmpty(response, "Content-Security-Policy", properties.getCsp());
+        addHeaderIfNotEmpty(response, "Strict-Transport-Security", SecurityHeaderConfigurer.buildHstsHeader(properties));
+        addHeaderIfNotEmpty(response, "Content-Security-Policy", SecurityHeaderConfigurer.buildCspPolicy(properties));
         addHeaderIfNotEmpty(response, "Referrer-Policy", properties.getReferrerPolicy());
         addHeaderIfNotEmpty(response, "Permissions-Policy", properties.getPermissionsPolicy());
     }

@@ -86,7 +86,7 @@ public class DistributedLockAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public LockEventListener lockEventListener(ObjectProvider<LockEventListener> listener) {
-        return listener.getIfAvailable(LockEventListener.NO_OP);
+        return listener.getIfAvailable(() -> LockEventListener.NO_OP);
     }
 
     /**

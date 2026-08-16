@@ -57,7 +57,7 @@ public class SentinelRateLimiter implements RateLimiter {
             entry = SphU.entry(resource);
             return RateLimitDecision.builder()
                     .result(RateLimitResult.PASS)
-                    .remaining(rule.getThreshold().intValue() - 1)
+                    .remaining((int) rule.getThreshold() - 1)
                     .threshold(rule.getThreshold())
                     .timestamp(Instant.now())
                     .reason("sentinel pass")

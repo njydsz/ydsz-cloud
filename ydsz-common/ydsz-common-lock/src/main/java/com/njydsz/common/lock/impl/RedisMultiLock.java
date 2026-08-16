@@ -20,6 +20,10 @@ import com.njydsz.common.lock.core.DistributedLocker;
 /**
  * Redis 多Key联锁实现 - 支持同时获取多个锁，原子性保证
  *
+ * <p>注意：本实现直接实现 {@link DistributedLocker} 接口（不继承 {@link
+ * com.njydsz.common.lock.core.AbstractRedisDistributedLock}），
+ * 因为多锁场景下续期逻辑需要直接操作 Redis 而非委托给子锁。
+ *
  * <p>用于需要同时锁定多个资源的场景（如：跨多实体的事务性操作）。
  * 所有锁必须全部获取成功才算成功，否则回滚已获取的所有锁，避免死锁。
  *
@@ -80,28 +84,38 @@ public class RedisMultiLock implements DistributedLocker {
     private final long renewIntervalSeconds;
 
     /**
+     * Redis 操作模板（用于续期操作）
+     */
+    private final StringRedisTemplate stringRedisTemplate;
+
+    /**
      * 构造多Key联锁（使用默认续期配置）
      *
-     * @param locks            底层分布式锁列表，至少需要 2 个锁
-     * @param renewalScheduler 续期调度器（由 Spring 管理）
+     * @param stringRedisTemplate Redis 操作模板
+     * @param locks               底层分布式锁列表，至少需要 2 个锁
+     * @param renewalScheduler    续期调度器（由 Spring 管理）
      */
-    public RedisMultiLock(List<DistributedLocker> locks, TaskScheduler renewalScheduler) {
-        this(locks, renewalScheduler, DEFAULT_MAX_RENEW_COUNT, DEFAULT_RENEW_INTERVAL_SECONDS);
+    public RedisMultiLock(StringRedisTemplate stringRedisTemplate, List<DistributedLocker> locks,
+                          TaskScheduler renewalScheduler) {
+        this(stringRedisTemplate, locks, renewalScheduler, DEFAULT_MAX_RENEW_COUNT, DEFAULT_RENEW_INTERVAL_SECONDS);
     }
 
     /**
      * 构造多Key联锁（可配置续期参数）
      *
-     * @param locks               底层分布式锁列表，至少需要 2 个锁
-     * @param renewalScheduler    续期调度器（由 Spring 管理）
-     * @param maxRenewCount       最大续期次数
+     * @param stringRedisTemplate  Redis 操作模板
+     * @param locks                底层分布式锁列表，至少需要 2 个锁
+     * @param renewalScheduler     续期调度器（由 Spring 管理）
+     * @param maxRenewCount        最大续期次数
      * @param renewIntervalSeconds 续期间隔（秒）
      */
-    public RedisMultiLock(List<DistributedLocker> locks, TaskScheduler renewalScheduler,
+    public RedisMultiLock(StringRedisTemplate stringRedisTemplate, List<DistributedLocker> locks,
+                          TaskScheduler renewalScheduler,
                           int maxRenewCount, long renewIntervalSeconds) {
         if (locks == null || locks.size() < 2) {
             throw new IllegalArgumentException("RedisMultiLock 至少需要 2 个底层锁");
         }
+        this.stringRedisTemplate = stringRedisTemplate;
         this.locks = Collections.unmodifiableList(new ArrayList<>(locks));
         this.renewalScheduler = renewalScheduler;
         this.maxRenewCount = maxRenewCount > 0 ? maxRenewCount : DEFAULT_MAX_RENEW_COUNT;
