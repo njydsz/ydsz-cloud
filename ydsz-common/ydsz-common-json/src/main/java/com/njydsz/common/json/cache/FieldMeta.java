@@ -16,6 +16,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -159,6 +160,64 @@ public final class FieldMeta {
     /** 缓存的 DateTimeFormatter（线程安全，避免每次 ofPattern 编译） */
     private final transient DateTimeFormatter cachedFormatter;
 
+    /** 序列化类型码查找表（避免 computeSerializeTypeCode 的 if-else 链） */
+    private static final Map<Class<?>, Integer> SERIALIZE_TYPE_CODE_MAP = new HashMap<>();
+
+    /** 字段类型码查找表（避免 computeFieldTypeCode 的 if-else 链） */
+    private static final Map<Class<?>, FieldTypeCode> FIELD_TYPE_CODE_MAP = new HashMap<>();
+
+    static {
+        SERIALIZE_TYPE_CODE_MAP.put(String.class, TYPE_CODE_STRING);
+        SERIALIZE_TYPE_CODE_MAP.put(int.class, TYPE_CODE_INTEGER);
+        SERIALIZE_TYPE_CODE_MAP.put(Integer.class, TYPE_CODE_INTEGER);
+        SERIALIZE_TYPE_CODE_MAP.put(long.class, TYPE_CODE_LONG);
+        SERIALIZE_TYPE_CODE_MAP.put(Long.class, TYPE_CODE_LONG);
+        SERIALIZE_TYPE_CODE_MAP.put(double.class, TYPE_CODE_DOUBLE);
+        SERIALIZE_TYPE_CODE_MAP.put(Double.class, TYPE_CODE_DOUBLE);
+        SERIALIZE_TYPE_CODE_MAP.put(float.class, TYPE_CODE_FLOAT);
+        SERIALIZE_TYPE_CODE_MAP.put(Float.class, TYPE_CODE_FLOAT);
+        SERIALIZE_TYPE_CODE_MAP.put(boolean.class, TYPE_CODE_BOOLEAN);
+        SERIALIZE_TYPE_CODE_MAP.put(Boolean.class, TYPE_CODE_BOOLEAN);
+        SERIALIZE_TYPE_CODE_MAP.put(char.class, TYPE_CODE_CHARACTER);
+        SERIALIZE_TYPE_CODE_MAP.put(Character.class, TYPE_CODE_CHARACTER);
+        SERIALIZE_TYPE_CODE_MAP.put(short.class, TYPE_CODE_SHORT);
+        SERIALIZE_TYPE_CODE_MAP.put(Short.class, TYPE_CODE_SHORT);
+        SERIALIZE_TYPE_CODE_MAP.put(byte.class, TYPE_CODE_BYTE);
+        SERIALIZE_TYPE_CODE_MAP.put(Byte.class, TYPE_CODE_BYTE);
+        SERIALIZE_TYPE_CODE_MAP.put(BigDecimal.class, TYPE_CODE_BIGDECIMAL);
+        SERIALIZE_TYPE_CODE_MAP.put(BigInteger.class, TYPE_CODE_BIGINTEGER);
+        SERIALIZE_TYPE_CODE_MAP.put(Date.class, TYPE_CODE_DATE);
+        SERIALIZE_TYPE_CODE_MAP.put(LocalDate.class, TYPE_CODE_DATE);
+        SERIALIZE_TYPE_CODE_MAP.put(LocalDateTime.class, TYPE_CODE_DATE);
+        SERIALIZE_TYPE_CODE_MAP.put(LocalTime.class, TYPE_CODE_DATE);
+        SERIALIZE_TYPE_CODE_MAP.put(Instant.class, TYPE_CODE_DATE);
+
+        FIELD_TYPE_CODE_MAP.put(String.class, FieldTypeCode.STRING);
+        FIELD_TYPE_CODE_MAP.put(int.class, FieldTypeCode.INT);
+        FIELD_TYPE_CODE_MAP.put(Integer.class, FieldTypeCode.INT);
+        FIELD_TYPE_CODE_MAP.put(long.class, FieldTypeCode.LONG);
+        FIELD_TYPE_CODE_MAP.put(Long.class, FieldTypeCode.LONG);
+        FIELD_TYPE_CODE_MAP.put(double.class, FieldTypeCode.DOUBLE);
+        FIELD_TYPE_CODE_MAP.put(Double.class, FieldTypeCode.DOUBLE);
+        FIELD_TYPE_CODE_MAP.put(float.class, FieldTypeCode.FLOAT);
+        FIELD_TYPE_CODE_MAP.put(Float.class, FieldTypeCode.FLOAT);
+        FIELD_TYPE_CODE_MAP.put(boolean.class, FieldTypeCode.BOOLEAN);
+        FIELD_TYPE_CODE_MAP.put(Boolean.class, FieldTypeCode.BOOLEAN);
+        FIELD_TYPE_CODE_MAP.put(char.class, FieldTypeCode.CHAR);
+        FIELD_TYPE_CODE_MAP.put(Character.class, FieldTypeCode.CHAR);
+        FIELD_TYPE_CODE_MAP.put(short.class, FieldTypeCode.SHORT);
+        FIELD_TYPE_CODE_MAP.put(Short.class, FieldTypeCode.SHORT);
+        FIELD_TYPE_CODE_MAP.put(byte.class, FieldTypeCode.BYTE);
+        FIELD_TYPE_CODE_MAP.put(Byte.class, FieldTypeCode.BYTE);
+        FIELD_TYPE_CODE_MAP.put(BigDecimal.class, FieldTypeCode.BIG_DECIMAL);
+        FIELD_TYPE_CODE_MAP.put(BigInteger.class, FieldTypeCode.BIG_INTEGER);
+        FIELD_TYPE_CODE_MAP.put(LocalDate.class, FieldTypeCode.DATE);
+        FIELD_TYPE_CODE_MAP.put(LocalDateTime.class, FieldTypeCode.DATE);
+        FIELD_TYPE_CODE_MAP.put(LocalTime.class, FieldTypeCode.DATE);
+        FIELD_TYPE_CODE_MAP.put(Instant.class, FieldTypeCode.DATE);
+        FIELD_TYPE_CODE_MAP.put(Date.class, FieldTypeCode.DATE);
+    }
+
     /**
      * 构造函数
      *
@@ -191,33 +250,85 @@ public final class FieldMeta {
         }
 
         // 加载 @JsonInclude 包含策略
-        JsonInclude includeAnnotation = field.getAnnotation(JsonInclude.class);
-        if (includeAnnotation == null) {
-            includeAnnotation = field.getDeclaringClass().getAnnotation(JsonInclude.class);
-        }
-        this.includeStrategy = includeAnnotation != null ? includeAnnotation.value() : JsonInclude.Include.ALWAYS;
+        this.includeStrategy = resolveIncludeStrategy(field);
 
         field.setAccessible(true);
 
         // 缓存 DateTimeFormatter（P2-1: 避免每次 formatDateValue/parseDateValue 重复编译模式）
-        DateTimeFormatter formatter = null;
-        if (this.format != null && !this.format.isEmpty()) {
-            try {
-                formatter = DateTimeFormatter.ofPattern(this.format);
-                if (this.timezone != null) {
-                    formatter = formatter.withZone(this.timezone);
-                }
-                if (this.locale != null) {
-                    formatter = formatter.withLocale(this.locale);
-                }
-            } catch (Exception e) {
-                // 非法日期格式模式，formatDateValue/parseDateValue 会回退到 toString
-                LOGGER.debug("Invalid date format pattern '{}' for field {}: {}",
-                    this.format, name, e.getMessage());
-            }
-        }
-        this.cachedFormatter = formatter;
+        this.cachedFormatter = createCachedFormatter(this.format, this.timezone, this.locale, name);
 
+        // 初始化 MethodHandle / VarHandle
+        MethodHandleBundle bundle = createMethodHandleBundle(field, name);
+        this.setter = bundle.setter;
+        this.getter = bundle.getter;
+        this.varHandle = bundle.varHandle;
+        this.serializeTypeCode = computeSerializeTypeCode(type);
+        this.typeCode = computeFieldTypeCode(type);
+        this.jsonKey = "\"" + jsonName + "\":";
+        this.jsonKeyLen = this.jsonKey.length();
+    }
+
+    /**
+     * 解析 @JsonInclude 包含策略。
+     *
+     * <p>优先使用字段级注解，若不存在则回退到类级注解，均未标注时默认 ALWAYS。</p>
+     *
+     * @param field Java 反射字段对象
+     * @return 包含策略枚举值
+     */
+    private static JsonInclude.Include resolveIncludeStrategy(Field field) {
+        JsonInclude includeAnnotation = field.getAnnotation(JsonInclude.class);
+        if (includeAnnotation == null) {
+            includeAnnotation = field.getDeclaringClass().getAnnotation(JsonInclude.class);
+        }
+        return includeAnnotation != null ? includeAnnotation.value() : JsonInclude.Include.ALWAYS;
+    }
+
+    /**
+     * 创建缓存的 DateTimeFormatter。
+     *
+     * <p>根据格式模式、时区和区域配置创建线程安全的 DateTimeFormatter 实例。
+     * 若格式模式为空或非法则返回 null，运行时回退到 toString。</p>
+     *
+     * @param format   日期格式模式（为空时返回 null）
+     * @param timezone 时区（可为 null）
+     * @param locale   区域（可为 null）
+     * @param fieldName 字段名（仅用于日志）
+     * @return 配置好的 DateTimeFormatter，或 null
+     */
+    private static DateTimeFormatter createCachedFormatter(
+            String format, ZoneId timezone, Locale locale, String fieldName) {
+        if (format == null || format.isEmpty()) {
+            return null;
+        }
+        try {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(format);
+            if (timezone != null) {
+                formatter = formatter.withZone(timezone);
+            }
+            if (locale != null) {
+                formatter = formatter.withLocale(locale);
+            }
+            return formatter;
+        } catch (Exception e) {
+            // 非法日期格式模式，formatDateValue/parseDateValue 会回退到 toString
+            LOGGER.debug("Invalid date format pattern '{}' for field {}: {}",
+                format, fieldName, e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 创建 MethodHandle/VarHandle 访问器。
+     *
+     * <p>优先使用 VarHandle（JDK 9+，避免原始类型装箱），
+     * VarHandle 不可用时回退到 MethodHandle，均失败时返回 null。</p>
+     *
+     * @param field Java 反射字段对象
+     * @param fieldName 字段名（仅用于日志）
+     * @return 包含 setter、getter、varHandle 的不可变载体
+     */
+    private static MethodHandleBundle createMethodHandleBundle(Field field, String fieldName) {
         MethodHandle s = null;
         MethodHandle g = null;
         VarHandle vh = null;
@@ -235,15 +346,24 @@ public final class FieldMeta {
             }
         } catch (Exception e) {
             // 反射操作失败，setter/getter 保持 null，运行时回退到 field.get/set
-            LOGGER.debug("Failed to unreflect field handles for " + name + ": " + e.getMessage());
+            LOGGER.debug("Failed to unreflect field handles for " + fieldName + ": " + e.getMessage());
         }
-        this.setter = s;
-        this.getter = g;
-        this.varHandle = vh;
-        this.serializeTypeCode = computeSerializeTypeCode(type);
-        this.typeCode = computeFieldTypeCode(type);
-        this.jsonKey = "\"" + jsonName + "\":";
-        this.jsonKeyLen = this.jsonKey.length();
+        return new MethodHandleBundle(s, g, vh);
+    }
+
+    /**
+     * MethodHandle/VarHandle 的不可变载体（用于从 createMethodHandleBundle 返回三个句柄）。
+     */
+    private static final class MethodHandleBundle {
+        final MethodHandle setter;
+        final MethodHandle getter;
+        final VarHandle varHandle;
+
+        MethodHandleBundle(MethodHandle setter, MethodHandle getter, VarHandle varHandle) {
+            this.setter = setter;
+            this.getter = getter;
+            this.varHandle = varHandle;
+        }
     }
 
     /**
@@ -255,22 +375,8 @@ public final class FieldMeta {
      * @return 类型代码
      */
     private static int computeSerializeTypeCode(Class<?> type) {
-        if (type == String.class) return TYPE_CODE_STRING;
-        if (type == int.class || type == Integer.class) return TYPE_CODE_INTEGER;
-        if (type == long.class || type == Long.class) return TYPE_CODE_LONG;
-        if (type == double.class || type == Double.class) return TYPE_CODE_DOUBLE;
-        if (type == float.class || type == Float.class) return TYPE_CODE_FLOAT;
-        if (type == boolean.class || type == Boolean.class) return TYPE_CODE_BOOLEAN;
-        if (type == char.class || type == Character.class) return TYPE_CODE_CHARACTER;
-        if (type == short.class || type == Short.class) return TYPE_CODE_SHORT;
-        if (type == byte.class || type == Byte.class) return TYPE_CODE_BYTE;
-        if (type == BigDecimal.class) return TYPE_CODE_BIGDECIMAL;
-        if (type == BigInteger.class) return TYPE_CODE_BIGINTEGER;
-        if (type == Date.class) return TYPE_CODE_DATE;
-        if (type == LocalDate.class) return TYPE_CODE_DATE;
-        if (type == LocalDateTime.class) return TYPE_CODE_DATE;
-        if (type == LocalTime.class) return TYPE_CODE_DATE;
-        if (type == Instant.class) return TYPE_CODE_DATE;
+        Integer code = SERIALIZE_TYPE_CODE_MAP.get(type);
+        if (code != null) return code;
         if (type.isEnum()) return TYPE_CODE_BEAN;
         return TYPE_CODE_DEFAULT;
     }
@@ -282,20 +388,9 @@ public final class FieldMeta {
      * @return 对应的 FieldTypeCode 枚举值
      */
     private static FieldTypeCode computeFieldTypeCode(Class<?> type) {
-        if (type == String.class) return FieldTypeCode.STRING;
-        if (type == int.class || type == Integer.class) return FieldTypeCode.INT;
-        if (type == long.class || type == Long.class) return FieldTypeCode.LONG;
-        if (type == double.class || type == Double.class) return FieldTypeCode.DOUBLE;
-        if (type == float.class || type == Float.class) return FieldTypeCode.FLOAT;
-        if (type == boolean.class || type == Boolean.class) return FieldTypeCode.BOOLEAN;
-        if (type == char.class || type == Character.class) return FieldTypeCode.CHAR;
-        if (type == short.class || type == Short.class) return FieldTypeCode.SHORT;
-        if (type == byte.class || type == Byte.class) return FieldTypeCode.BYTE;
-        if (type == BigDecimal.class) return FieldTypeCode.BIG_DECIMAL;
-        if (type == BigInteger.class) return FieldTypeCode.BIG_INTEGER;
-        if (type == LocalDate.class || type == LocalDateTime.class || type == LocalTime.class
-                || type == Instant.class || type == Date.class) return FieldTypeCode.DATE;
-        if (type.isEnum()) return FieldTypeCode.STRING; // enum 序列化为 String
+        FieldTypeCode code = FIELD_TYPE_CODE_MAP.get(type);
+        if (code != null) return code;
+        if (type.isEnum()) return FieldTypeCode.STRING;
         return FieldTypeCode.NESTED_OBJECT;
     }
 
@@ -624,24 +719,51 @@ JsonSerializationException.SERIALIZATION_ERROR,
      */
     public boolean shouldSkipValue(Object value) {
         if (value == null) {
-            return includeStrategy == JsonInclude.Include.NON_NULL
-                    || includeStrategy == JsonInclude.Include.NON_EMPTY
-                    || includeStrategy == JsonInclude.Include.NON_DEFAULT;
+            return isNullSkippingStrategy();
         }
-        switch (includeStrategy) {
-            case NON_EMPTY:
-                if (value instanceof String s) return s.isEmpty();
-                if (value instanceof Collection<?> c) return c.isEmpty();
-                if (value instanceof Map<?, ?> m) return m.isEmpty();
-                if (value.getClass().isArray()) return Array.getLength(value) == 0;
-                break;
-            case NON_DEFAULT:
-                if (value instanceof Number n && n.doubleValue() == 0.0) return true;
-                if (value instanceof Boolean b && !b) return true;
-                break;
-            default:
-                break;
+        if (includeStrategy == JsonInclude.Include.NON_EMPTY) {
+            return isEmptyValue(value);
         }
+        if (includeStrategy == JsonInclude.Include.NON_DEFAULT) {
+            return isDefaultValue(value);
+        }
+        return false;
+    }
+
+    /**
+     * 判断当前策略是否在值为 null 时跳过。
+     *
+     * @return 若 null 值应被跳过返回 true
+     */
+    private boolean isNullSkippingStrategy() {
+        return includeStrategy == JsonInclude.Include.NON_NULL
+                || includeStrategy == JsonInclude.Include.NON_EMPTY
+                || includeStrategy == JsonInclude.Include.NON_DEFAULT;
+    }
+
+    /**
+     * 判断值是否为空（String/Collection/Map/Array 的空判断）。
+     *
+     * @param value 字段值（非 null）
+     * @return 若值为空返回 true
+     */
+    private boolean isEmptyValue(Object value) {
+        if (value instanceof String s) return s.isEmpty();
+        if (value instanceof Collection<?> c) return c.isEmpty();
+        if (value instanceof Map<?, ?> m) return m.isEmpty();
+        if (value.getClass().isArray()) return Array.getLength(value) == 0;
+        return false;
+    }
+
+    /**
+     * 判断值是否为默认值（Number 为 0，Boolean 为 false）。
+     *
+     * @param value 字段值（非 null）
+     * @return 若值为默认值返回 true
+     */
+    private boolean isDefaultValue(Object value) {
+        if (value instanceof Number n && n.doubleValue() == 0.0) return true;
+        if (value instanceof Boolean b && !b) return true;
         return false;
     }
 

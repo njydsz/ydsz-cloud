@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.njydsz.common.excel.exception.ExcelReadException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DateUtil;
@@ -334,6 +335,151 @@ public class ExcelFacade {
      */
     public static ExcelTemplateWriter writeWithTemplate(String templatePath, String outputPath, Class<?> clazz) {
         return new ExcelTemplateWriter(templatePath, outputPath, clazz);
+    }
+
+    // ==================== 无类型全 Sheet 读取 ====================
+
+    /**
+     * 无类型读取全部 Sheet — 将 Excel 所有 Sheet 以原始字符串形式读出。
+     *
+     * <p>适用于无 VO 映射的文档解析场景（如 {@code ydsz-common-docs} 的 Excel 解析器），
+     * 统一处理 HSSF/XSSF 格式识别、空行过滤、单元格值转字符串，
+     * 消除业务模块直接使用 {@link WorkbookFactory} 的 POI DOM 模式。</p>
+     *
+     * <p>第一行作为表头（{@code headers}），后续行作为数据行（{@code rows}）。
+     * 全空行自动过滤。单元格值统一转为字符串，日期按 {@code yyyy-MM-dd HH:mm:ss} 格式输出，
+     * 数字为整数时去掉小数部分。</p>
+     *
+     * <p><b>注意：</b>本方法使用 DOM 方式载入工作簿，大文件内存占用约为文件体积的数倍。
+     * 调用方应按 {@code maxFileSizeMb} 提前拦截超大文件。</p>
+     *
+     * <h3>使用示例</h3>
+     * <pre>{@code
+     * List<RawSheetData> sheets = ExcelFacade.readAllSheets(inputStream);
+     * for (RawSheetData sheet : sheets) {
+     *     System.out.println("Sheet: " + sheet.sheetName());
+     *     System.out.println("Headers: " + sheet.headers());
+     *     for (List<String> row : sheet.rows()) {
+     *         System.out.println(row);
+     *     }
+     * }
+     * }</pre>
+     *
+     * @param inputStream Excel 字节流，由调用方负责关闭；为 {@code null} 时返回空列表
+     * @return 全部 Sheet 数据列表，永不为 {@code null}
+     * @throws ExcelReadException 读取失败时抛出
+     */
+    public static List<RawSheetData> readAllSheets(InputStream inputStream) {
+        if (inputStream == null) {
+            return new ArrayList<>();
+        }
+        try (Workbook workbook = WorkbookFactory.create(inputStream)) {
+            List<RawSheetData> result = new ArrayList<>();
+            int sheetCount = workbook.getNumberOfSheets();
+            for (int i = 0; i < sheetCount; i++) {
+                Sheet sheet = workbook.getSheetAt(i);
+                result.add(parseSheetData(sheet));
+            }
+            return result;
+        } catch (IOException e) {
+            throw new ExcelReadException("无类型全 Sheet 读取失败", e);
+        }
+    }
+
+    /**
+     * 将单个 Sheet 解析为 {@link RawSheetData}。
+     *
+     * <p>第一行作为表头，后续行作为数据行。全空行自动过滤。</p>
+     *
+     * @param sheet POI Sheet 对象
+     * @return 解析后的 Sheet 数据
+     */
+    private static RawSheetData parseSheetData(Sheet sheet) {
+        String sheetName = sheet.getSheetName();
+        List<String> headers = new ArrayList<>();
+        List<List<String>> rows = new ArrayList<>();
+
+        int rowCount = sheet.getPhysicalNumberOfRows();
+        if (rowCount == 0) {
+            return new RawSheetData(sheetName, headers, rows);
+        }
+
+        // 第一行作为表头
+        Row headerRow = sheet.getRow(0);
+        if (headerRow != null) {
+            int lastCol = headerRow.getLastCellNum();
+            for (int c = 0; c < lastCol; c++) {
+                Cell cell = headerRow.getCell(c);
+                headers.add(cell != null ? convertCellValueToString(cell) : "");
+            }
+        }
+
+        // 后续行作为数据行
+        for (int r = 1; r < rowCount; r++) {
+            Row row = sheet.getRow(r);
+            if (row == null) {
+                continue;
+            }
+            List<String> cells = new ArrayList<>();
+            int lastCol = row.getLastCellNum();
+            for (int c = 0; c < lastCol; c++) {
+                Cell cell = row.getCell(c);
+                cells.add(cell != null ? convertCellValueToString(cell) : "");
+            }
+            // 过滤空行
+            if (cells.stream().anyMatch(v -> v != null && !v.isBlank())) {
+                rows.add(cells);
+            }
+        }
+
+        return new RawSheetData(sheetName, headers, rows);
+    }
+
+    /**
+     * 将 POI 单元格值转换为字符串。
+     *
+     * <p>处理常见单元格类型（字符串、数字、布尔、公式），
+     * 日期按 {@code yyyy-MM-dd HH:mm:ss} 格式输出。数字为整数时去掉小数部分。</p>
+     *
+     * @param cell POI 单元格对象
+     * @return 单元格值的字符串表示；永不为 {@code null}
+     */
+    private static String convertCellValueToString(Cell cell) {
+        if (cell == null) {
+            return "";
+        }
+        CellType cellType = cell.getCellType();
+        return switch (cellType) {
+            case STRING -> {
+                String value = cell.getStringCellValue();
+                yield value != null ? value.trim() : "";
+            }
+            case NUMERIC -> {
+                if (DateUtil.isCellDateFormatted(cell)) {
+                    yield java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                            .format(cell.getLocalDateTimeCellValue());
+                }
+                double num = cell.getNumericCellValue();
+                if (num == Math.floor(num) && !Double.isInfinite(num)) {
+                    yield String.valueOf((long) num);
+                }
+                yield String.valueOf(num);
+            }
+            case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
+            case FORMULA -> {
+                try {
+                    String cached = cell.getStringCellValue();
+                    yield cached != null ? cached : "";
+                } catch (Exception e) {
+                    double num = cell.getNumericCellValue();
+                    if (num == Math.floor(num) && !Double.isInfinite(num)) {
+                        yield String.valueOf((long) num);
+                    }
+                    yield String.valueOf(num);
+                }
+            }
+            default -> "";
+        };
     }
 
 }
