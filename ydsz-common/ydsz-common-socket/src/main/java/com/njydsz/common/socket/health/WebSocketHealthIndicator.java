@@ -7,6 +7,7 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import com.njydsz.common.socket.config.WebSocketProperties;
+import com.njydsz.common.socket.resilience.WebSocketCircuitBreaker;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
  *   <li>{@code offline.enabled} — 离线消息存储是否启用</li>
  *   <li>{@code rateLimit.enabled} — 速率限制是否启用</li>
  *   <li>{@code heartbeat.serverInterval} — 服务端心跳间隔（ms）</li>
+ *   <li>{@code circuitBreaker.state} — 熔断器状态（CLOSED/OPEN/HALF_OPEN）</li>
  * </ul>
  *
  * @author ydsz-team
@@ -34,6 +36,7 @@ public class WebSocketHealthIndicator implements HealthIndicator {
     private final WebSocketProperties properties;
     private final AtomicLong activeConnections;
     private final StringRedisTemplate redisTemplate;
+    private final WebSocketCircuitBreaker circuitBreaker;
 
     @Override
     public Health health() {
@@ -58,7 +61,13 @@ public class WebSocketHealthIndicator implements HealthIndicator {
             builder.withDetail("heartbeat.staleSessionTimeoutMs", properties.getHeartbeat().getStaleSessionTimeout());
             builder.withDetail("messageSizeLimitBytes", properties.getMessageSizeLimit());
             builder.withDetail("sessionTtlSeconds", properties.getSessionTtlSeconds());
-            builder.withDetail("circuitBreaker.enabled", true);
+            if (circuitBreaker != null) {
+                builder.withDetail("circuitBreaker.enabled", true);
+                builder.withDetail("circuitBreaker.state", circuitBreaker.getState().name());
+            } else {
+                builder.withDetail("circuitBreaker.enabled", false);
+                builder.withDetail("circuitBreaker.state", "UNKNOWN");
+            }
 
             if (redisTemplate != null) {
                 builder.withDetail("onlineUserService", "redis-backed");

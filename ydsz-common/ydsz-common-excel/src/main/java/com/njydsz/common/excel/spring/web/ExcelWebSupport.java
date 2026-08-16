@@ -76,36 +76,38 @@ public class ExcelWebSupport {
     public static <T> void download(HttpServletResponse response, String fileName,
                                     Class<T> clazz, List<T> data, String sheetName,
                                     WriteHandler writeHandler) {
+        final String effectiveSheetName = sheetName;
+        final String fullFileName = fileName + ".xlsx";
         try {
             String encodedFileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8)
                     .replaceAll("\\+", "%20");
             response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
             response.setHeader("Content-Disposition",
-                    "attachment; filename*=UTF-8''" + encodedFileName + ".xlsx");
+                    "attachment; filename*=UTF-8''" + fullFileName);
 
-            // 设置下载上下文
-            DownloadContext.setFileName(fileName + ".xlsx");
-            if (sheetName != null) {
-                DownloadContext.setSheetName(sheetName);
-            }
-
-            // 先写入 ByteArrayOutputStream 获取 Content-Length，再写入 response
-            // 对于大文件场景（>10MB），建议使用 ExcelFacade.write(OutputStream) 直接流式写入
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ExcelFacade.write(baos, clazz)
-                    .sheet(sheetName != null ? sheetName : "Sheet1")
-                    .doWrite(data);
-            byte[] bytes = baos.toByteArray();
-            response.setContentLength(bytes.length);
-            response.getOutputStream().write(bytes);
-            response.getOutputStream().flush();
-        } catch (IOException e) {
+            // 使用 withContext 自动清理 ThreadLocal，防止线程池内存泄漏
+            DownloadContext.withContext(fullFileName, effectiveSheetName, () -> {
+                try {
+                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                    ExcelFacade.write(baos, clazz)
+                            .sheet(effectiveSheetName != null ? effectiveSheetName : "Sheet1")
+                            .doWrite(data);
+                    byte[] bytes = baos.toByteArray();
+                    response.setContentLength(bytes.length);
+                    response.getOutputStream().write(bytes);
+                    response.getOutputStream().flush();
+                } catch (IOException e) {
+                    throw new ExcelWriteException(ExcelExceptionCode.WRITE_IO_ERROR,
+                        "Excel 下载写入失败: " + fullFileName, e);
+                }
+            });
+        } catch (IOException | ExcelWriteException e) {
             log.error("Excel 下载写入失败: fileName={}", fileName, e);
+            if (e instanceof ExcelWriteException) {
+                throw (ExcelWriteException) e;
+            }
             throw new ExcelWriteException(ExcelExceptionCode.WRITE_IO_ERROR,
                 "Excel 下载写入失败: " + fileName, e);
-        } finally {
-            // 确保 ThreadLocal 被清理，防止线程池内存泄漏
-            DownloadContext.clear();
         }
     }
 }

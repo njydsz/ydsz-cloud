@@ -11,8 +11,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.annotation.Scheduled;
 
 import com.njydsz.common.file.health.FileHealthIndicator;
 import com.njydsz.common.file.lifecycle.FileLifecycleManager;
@@ -66,14 +64,10 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @AutoConfiguration
-@EnableScheduling
 @EnableConfigurationProperties({FileProperties.class, FileUploadProperties.class, FileLifecycleProperties.class})
 @ConditionalOnProperty(prefix = "ydsz.file", name = "enabled", havingValue = "true", matchIfMissing = true)
 @RequiredArgsConstructor
 public class FileConfiguration {
-
-    /** 分片上传上下文过期时间（60 分钟） */
-    private static final int MULTIPART_CONTEXT_TIMEOUT_MINUTES = 60;
 
     /** 分片上传上下文存储 */
     private final MultipartContextStore multipartContextStore;
@@ -279,14 +273,4 @@ public class FileConfiguration {
         return new FileHealthIndicator(provider, props, dedupProvider, virusScannerProvider, retryHelperProvider, metricsProvider);
     }
 
-    /**
-     * 定时清理过期的分片上传上下文（每小时执行一次）
-     */
-    @Scheduled(fixedRate = 3_600_000)
-    public void cleanExpiredMultipartContexts() {
-        if (multipartContextStore != null) {
-            multipartContextStore.cleanExpired(MULTIPART_CONTEXT_TIMEOUT_MINUTES);
-            log.debug("Cleaned expired multipart contexts.");
-        }
-    }
 }

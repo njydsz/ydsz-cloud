@@ -18,6 +18,7 @@ import com.njydsz.common.search.metrics.SearchMetrics;
 import com.njydsz.common.search.provider.ProviderTypeBridge;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderRegistry;
+import com.njydsz.common.search.sync.PersistentDeadLetterQueue;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -41,6 +42,9 @@ public class IndexSyncService {
 
     private static final int MAX_DLQ_SIZE = 10000;
     private final ConcurrentLinkedQueue<IndexOperation> deadLetterQueue = new ConcurrentLinkedQueue<>();
+
+    /** P6-14: 持久化死信队列（可选，依赖 ydsz-common-jdbc 提供的 DataSource） */
+    private PersistentDeadLetterQueue persistentDlq;
 
     /**
      * 创建索引同步服务（使用外部注入的线程池）。
@@ -80,6 +84,15 @@ public class IndexSyncService {
                             SearchMetrics metrics) {
         this(engineRegistry, providerRegistry, properties, metrics,
                 createDefaultIndexSyncExecutor(properties));
+    }
+
+    /**
+     * 设置持久化死信队列（可选，由装配层按需注入）。
+     *
+     * @param persistentDlq 持久化死信队列实例
+     */
+    public void setPersistentDlq(PersistentDeadLetterQueue persistentDlq) {
+        this.persistentDlq = persistentDlq;
     }
 
     /**
@@ -260,26 +273,78 @@ public class IndexSyncService {
     /**
      * 重放死信队列中的失败索引操作，用于故障恢复后的补偿。
      *
-     * <p>先将队列整体 poll 成快照再逐条重放，避免「重放失败又入队」导致的死循环；
-     * 重放仍失败的操作会重新进入死信队列，等待下一轮补偿。
+     * <p>处理顺序：先重放持久化 DB 中的死信（按创建顺序），再重放内存队列。
+     * DB 重放使用 SELECT FOR UPDATE SKIP LOCKED 保证多实例不冲突。
      *
-     * <p>死信队列是<b>纯内存</b>结构（{@link ConcurrentLinkedQueue}），
-     * 应用重启即丢失，且容量上限 10000 条，超出部分在入队时已被丢弃。
-     * 因此它只能兜住短时抖动，长时间故障后必须走全量重建。
-     *
-     * <p>同步阻塞执行，队列较大时耗时可观，通常由定时任务调度而非请求线程调用。
-     * 多线程并发调用是安全的（各自 poll 到不相交的快照），但会放大对引擎的瞬时压力。
+     * <p>DB 死信重放成功时更新状态为 RESOLVED，失败时递增 retry_count，
+     * 重试超过 5 次标记为 DISCARDED（需人工介入）。
      */
     public void retryDeadLetterQueue() {
+        // P6-14: 重放持久化 DB 死信
+        if (persistentDlq != null) {
+            try {
+                persistentDlq.replayPending(100, record -> {
+                    // 将 DlqRecord 转回 IndexOperation 并执行
+                    IndexOperation op = rebuildOperationFromDlq(record);
+                    if (op != null) {
+                        handleOperation(op);
+                    }
+                });
+            } catch (Exception e) {
+                log.error("[IndexSync] DB 死信重放失败: {}", e.getMessage(), e);
+            }
+        }
+
+        // 重放内存队列（向后兼容）
         List<IndexOperation> snapshot = new ArrayList<>();
         IndexOperation op;
         while ((op = deadLetterQueue.poll()) != null) {
             snapshot.add(op);
         }
-        if (snapshot.isEmpty()) return;
-        log.info("[IndexSync] 重试死信队列: size={}", snapshot.size());
-        for (IndexOperation operation : snapshot) {
-            handleOperation(operation);
+        if (!snapshot.isEmpty()) {
+            log.info("[IndexSync] 重试内存死信队列: size={}", snapshot.size());
+            for (IndexOperation operation : snapshot) {
+                handleOperation(operation);
+            }
+        }
+    }
+
+    /**
+     * 将 DB 死信记录重建为 IndexOperation。
+     *
+     * @param record DB 死信记录
+     * @return 索引操作，null 表示无法重建（记录被丢弃）
+     */
+    private IndexOperation rebuildOperationFromDlq(PersistentDeadLetterQueue.DlqRecord record) {
+        try {
+            IndexOperation.IndexOperationBuilder opBuilder = IndexOperation.builder();
+            opBuilder.type(record.docType());
+
+            IndexOperation.OpType opType = IndexOperation.OpType.valueOf(record.operation());
+            opBuilder.operation(opType);
+
+            switch (opType) {
+                case DELETE -> opBuilder.documentId(record.documentId());
+                case UPSERT -> {
+                    if (record.documentJson() != null) {
+                        IndexDocument doc = com.njydsz.common.json.YdszJson.fromJson(
+                                record.documentJson(), IndexDocument.class);
+                        opBuilder.document(doc);
+                    }
+                }
+                case BULK -> {
+                    if (record.documentJson() != null) {
+                        List<IndexDocument> docs = com.njydsz.common.json.YdszJson.fromJson(
+                                record.documentJson(),
+                                new com.njydsz.common.json.YdszJson.TypeRef<List<IndexDocument>>() {});
+                        opBuilder.documents(docs);
+                    }
+                }
+            }
+            return opBuilder.build();
+        } catch (Exception e) {
+            log.warn("[IndexSync] 死信记录重建失败（跳过）: id={}, op={}", record.id(), record.operation(), e);
+            return null;
         }
     }
 
@@ -319,7 +384,12 @@ public class IndexSyncService {
                     }
                 } else {
                     log.error("[IndexSync] 重试耗尽，加入死信队列", e);
-                    if (deadLetterQueue.size() < MAX_DLQ_SIZE) {
+                    // P6-14: 持久化到 DB（主路径），失败降级到内存
+                    boolean persisted = false;
+                    if (persistentDlq != null) {
+                        persisted = persistentDlq.enqueue(operation, e.getMessage());
+                    }
+                    if (!persisted && deadLetterQueue.size() < MAX_DLQ_SIZE) {
                         deadLetterQueue.add(operation);
                     }
                 }
