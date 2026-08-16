@@ -74,8 +74,7 @@ public class ShareController {
   /**
    * 创建文件分享链接（支持定向分享）。
    *
-   * <p>基于文件节点 ID 创建一条分享记录，并返回 shareCode（用于生成可访问的 URL）。
-   * 可选配置密码 / 提取码 / 过期时间 / 最大访问次数 / 目标用户 / 标题。
+   * <p>基于文件节点 ID 创建一条分享记录，并返回 shareCode（用于生成可访问的 URL）。 可选配置密码 / 提取码 / 过期时间 / 最大访问次数 / 目标用户 / 标题。
    *
    * @param request 创建分享请求
    * @param userId 当前用户 ID
@@ -97,23 +96,25 @@ public class ShareController {
     ShareLink result;
     // 有目标用户时使用定向分享模式
     if (request.getTargetUserIds() != null && !request.getTargetUserIds().isEmpty()) {
-      result = shareApplicationService.createShareWithTargets(
-          request.getFileNodeId(),
-          request.getShareType(),
-          request.getPassword(),
-          request.getExpireTime(),
-          request.getMaxAccessCount(),
-          request.getTargetUserIds(),
-          request.getTitle(),
-          userId);
+      result =
+          shareApplicationService.createShareWithTargets(
+              request.getFileNodeId(),
+              request.getShareType(),
+              request.getPassword(),
+              request.getExpireTime(),
+              request.getMaxAccessCount(),
+              request.getTargetUserIds(),
+              request.getTitle(),
+              userId);
     } else {
-      result = shareApplicationService.createShare(
-          request.getFileNodeId(),
-          request.getShareType(),
-          request.getPassword(),
-          request.getExpireTime(),
-          request.getMaxAccessCount(),
-          userId);
+      result =
+          shareApplicationService.createShare(
+              request.getFileNodeId(),
+              request.getShareType(),
+              request.getPassword(),
+              request.getExpireTime(),
+              request.getMaxAccessCount(),
+              userId);
     }
     return BaseResponse.success(result);
   }
@@ -121,8 +122,7 @@ public class ShareController {
   /**
    * 验证分享链接的访问权限。
    *
-   * <p>对外公开接口（无需登录），传入 shareCode + 提取码 + 密码进行三重校验。
-   * 验证通过后返回 {@link ShareLink}，同时记录访问日志。
+   * <p>对外公开接口（无需登录），传入 shareCode + 提取码 + 密码进行三重校验。 验证通过后返回 {@link ShareLink}，同时记录访问日志。
    *
    * @param request 验证请求（shareCode / extractCode / password）
    * @param httpRequest HTTP 请求（用于获取 IP 和 UA）
@@ -139,8 +139,7 @@ public class ShareController {
   @Operation(summary = "验证分享链接访问权限")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_VERIFY)
   public BaseResponse<ShareLink> verifyAccess(
-      @Valid @RequestBody NextwikiDTOs.VerifyShareRequest request,
-      HttpServletRequest httpRequest) {
+      @Valid @RequestBody NextwikiDTOs.VerifyShareRequest request, HttpServletRequest httpRequest) {
     ShareLink result =
         shareApplicationService.verifyAccess(
             request.getShareCode(), request.getExtractCode(), request.getPassword());
@@ -230,8 +229,7 @@ public class ShareController {
   @Operation(summary = "查询分享目标用户")
   @AuthApiPermission(apiCodes = PermissionCodes.NEXTWIKI_SHARE_VIEW)
   public BaseResponse<List<ShareRecipient>> getRecipients(
-      @PathVariable String shareId,
-      @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
+      @PathVariable String shareId, @RequestHeader(AuthHeaderConstants.X_USER_ID) String userId) {
     return BaseResponse.success(shareApplicationService.getRecipients(shareId));
   }
 

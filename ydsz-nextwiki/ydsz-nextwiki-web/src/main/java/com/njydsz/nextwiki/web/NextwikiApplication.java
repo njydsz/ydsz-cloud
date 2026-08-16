@@ -37,7 +37,6 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @EnableScheduling
 public class NextwikiApplication {
 
-
   public static void main(String[] args) {
     SpringApplication.run(NextwikiApplication.class, args);
   }

@@ -139,14 +139,14 @@ public class BatchController {
   /**
    * SSE 订阅批次进度（服务端推送）。
    *
-   * <p>建立 SSE 连接后，后端在批次处理过程中实时推送进度事件（progress / complete），
-   * 无需客户端轮询。超时时间 5 分钟，批次完成后自动关闭连接。
+   * <p>建立 SSE 连接后，后端在批次处理过程中实时推送进度事件（progress / complete）， 无需客户端轮询。超时时间 5 分钟，批次完成后自动关闭连接。
    *
    * <p>推事件类型：
+   *
    * <ul>
-   *   <li>{@code initial} — 连接建立时立即发送当前快照</li>
-   *   <li>{@code progress} — 处理过程中的进度更新（预留；当前版本在完整事件后触发）</li>
-   *   <li>{@code complete} — 批次处理完成，携带最终结果</li>
+   *   <li>{@code initial} — 连接建立时立即发送当前快照
+   *   <li>{@code progress} — 处理过程中的进度更新（预留；当前版本在完整事件后触发）
+   *   <li>{@code complete} — 批次处理完成，携带最终结果
    * </ul>
    *
    * @param batchId 批次 ID

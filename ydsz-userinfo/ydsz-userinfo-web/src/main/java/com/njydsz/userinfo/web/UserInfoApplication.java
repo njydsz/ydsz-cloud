@@ -30,7 +30,6 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @EnableScheduling
 public class UserInfoApplication {
 
-
   public static void main(String[] args) {
     SpringApplication.run(UserInfoApplication.class, args);
   }

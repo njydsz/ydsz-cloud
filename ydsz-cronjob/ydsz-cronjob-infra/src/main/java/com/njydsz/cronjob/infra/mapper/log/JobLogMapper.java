@@ -82,7 +82,7 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
    *
    * <p>返回的日志将触发 SLA_WARNING 预警，通知运维关注即将超时的任务。
    *
-   * @param now   当前时间
+   * @param now 当前时间
    * @param limit 最多返回条数
    * @return 达到 SLA 80% 预警线的日志列表
    */

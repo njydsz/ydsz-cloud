@@ -31,7 +31,6 @@ public class EmailContentSanitizer {
 
   private EmailContentSanitizer() {}
 
-
   private static final Logger LOG = LoggerFactory.getLogger(EmailContentSanitizer.class);
 
   /** OWASP HTML 安全策略：允许格式化、链接、图片、样式、表格 */

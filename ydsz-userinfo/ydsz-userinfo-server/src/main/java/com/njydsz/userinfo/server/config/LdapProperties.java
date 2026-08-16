@@ -28,6 +28,7 @@ public class LdapProperties {
 
   /** 默认 LDAP 端口（标准 LDAP）。 */
   private static final int DEFAULT_LDAP_PORT = 389;
+
   /** 默认连接超时（毫秒）。 */
   private static final int DEFAULT_CONNECT_TIMEOUT_MS = 5000;
 

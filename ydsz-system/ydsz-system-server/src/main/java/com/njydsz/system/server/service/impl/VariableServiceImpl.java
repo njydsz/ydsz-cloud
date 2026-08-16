@@ -17,13 +17,18 @@ import com.njydsz.common.auth.annotation.DataScope;
 import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.jdbc.support.PageResponses;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.system.domain.converter.SystemConverter;
 import com.njydsz.system.domain.dto.VariableDTO;
 import com.njydsz.system.domain.entity.Variable;
+import com.njydsz.system.domain.enums.ConfigValueType;
+import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.VariableVO;
 import com.njydsz.system.infra.mapper.VariableMapper;
 import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.service.VariableService;
+import com.njydsz.system.server.service.VariableVersionService;
 
 /**
  * 系统变量 Service 实现
@@ -108,6 +113,9 @@ public class VariableServiceImpl implements VariableService {
 
   /** 系统监控指标采集器 */
   private final SystemMetrics metrics;
+
+  /** 变量版本服务（写操作时创建版本快照） */
+  private final VariableVersionService variableVersionService;
 
   /**
    * 根据主键查询变量（不走缓存，直接走 DB）
@@ -221,6 +229,7 @@ public class VariableServiceImpl implements VariableService {
   @CacheEvict(value = CacheConstants.SYSTEM_VARIABLE_CACHE, allEntries = true)
   @Transactional(rollbackFor = Exception.class)
   public String save(VariableDTO dto) {
+    validateValueType(dto.getValueType());
     Variable entity = toEntity(dto);
     mapper.insert(entity);
     return entity.getId();
@@ -246,8 +255,25 @@ public class VariableServiceImpl implements VariableService {
   @CacheEvict(value = CacheConstants.SYSTEM_VARIABLE_CACHE, allEntries = true)
   @Transactional(rollbackFor = Exception.class)
   public boolean updateById(VariableDTO dto) {
+    validateValueType(dto.getValueType());
     Variable entity = toEntity(dto);
-    return mapper.updateById(entity) > 0;
+    // 版本快照：查询变更前状态
+    Variable before =
+        mapper.selectOne(
+            new QueryWrapper<Variable>()
+                .eq("variable_key", entity.getVariableKey())
+                .eq("deleted", 0));
+    String snapshotJson = before != null ? YdszJson.toJson(before) : null;
+    boolean updated = mapper.updateById(entity) > 0;
+    if (updated) {
+      // 创建版本快照（与变量变更同一事务）
+      variableVersionService.createVersion(
+          entity.getVariableKey(),
+          "v" + System.currentTimeMillis(),
+          "更新变量: " + entity.getVariableKey(),
+          snapshotJson);
+    }
+    return updated;
   }
 
   /**
@@ -271,7 +297,18 @@ public class VariableServiceImpl implements VariableService {
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
     Variable entity = mapper.selectById(id);
-    return mapper.deleteById(id) > 0;
+    // 版本快照：查询变更前状态
+    String snapshotJson = entity != null ? YdszJson.toJson(entity) : null;
+    boolean removed = mapper.deleteById(id) > 0;
+    if (removed && entity != null) {
+      // 创建版本快照（与变量变更同一事务）
+      variableVersionService.createVersion(
+          entity.getVariableKey(),
+          "v" + System.currentTimeMillis(),
+          "删除变量: " + entity.getVariableKey(),
+          snapshotJson);
+    }
+    return removed;
   }
 
   /**
@@ -291,5 +328,22 @@ public class VariableServiceImpl implements VariableService {
     entity.setDescription(dto.getDescription());
     entity.setStatus(dto.getStatus() != null ? dto.getStatus() : "ENABLED");
     return entity;
+  }
+
+  /**
+   * 校验变量值类型合法性。
+   *
+   * <p>委托 {@link ConfigValueType#validate} 完成，非法类型将抛出 {@link BusinessException}
+   *（{@link SystemExceptionCode#VARIABLE_VALUE_TYPE_INVALID}）阻止脏数据落库。
+   *
+   * @param valueType 值类型字符串
+   */
+  private void validateValueType(String valueType) {
+    try {
+      ConfigValueType.validate(valueType);
+    } catch (IllegalArgumentException e) {
+      throw BusinessException.of(SystemExceptionCode.VARIABLE_VALUE_TYPE_INVALID)
+          .data("valueType", valueType);
+    }
   }
 }

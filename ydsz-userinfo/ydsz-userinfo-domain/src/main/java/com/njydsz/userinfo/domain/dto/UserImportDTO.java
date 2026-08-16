@@ -29,15 +29,15 @@ import com.njydsz.common.excel.annotation.ExcelProperty;
 public class UserImportDTO {
 
   /** 登录用户名（必填） */
-  @ExcelProperty(value = "用户名", order = 1, required = true)
+  @ExcelProperty(value = "用户名", order = 1)
   private String username;
 
   /** 真实姓名（必填） */
-  @ExcelProperty(value = "真实姓名", order = 2, required = true)
+  @ExcelProperty(value = "真实姓名", order = 2)
   private String realName;
 
   /** 初始密码（必填） */
-  @ExcelProperty(value = "初始密码", order = 3, required = true)
+  @ExcelProperty(value = "初始密码", order = 3)
   private String password;
 
   /** 手机号（可选） */

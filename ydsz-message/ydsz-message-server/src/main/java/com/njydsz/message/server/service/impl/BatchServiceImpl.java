@@ -3,6 +3,7 @@ package com.njydsz.message.server.service.impl.batch;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
@@ -22,8 +23,8 @@ import com.njydsz.message.domain.dto.batch.BatchProgressVO;
 import com.njydsz.message.domain.dto.batch.BatchSendRequestDTO;
 import com.njydsz.message.domain.dto.batch.BatchSendResult;
 import com.njydsz.message.domain.entity.batch.MsgBatch;
-import com.njydsz.message.infra.mapper.batch.MsgBatchMapper;
 import com.njydsz.message.domain.event.BatchCompletedEvent;
+import com.njydsz.message.infra.mapper.batch.MsgBatchMapper;
 import com.njydsz.message.server.event.DomainEventPublisher;
 import com.njydsz.message.server.service.SseEmitterService;
 import com.njydsz.message.server.service.batch.BatchService;

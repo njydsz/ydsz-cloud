@@ -204,16 +204,11 @@ public class RecallServiceImpl implements RecallService {
         MsgTrace.Node.RECALLED,
         "SUCCESS",
         logDO.getChannel(),
-        "消息已撤回: msgId=" + msgId
-            + ", platformRecall=" + recallResult.platformRecallSucceeded());
+        "消息已撤回: msgId=" + msgId + ", platformRecall=" + recallResult.platformRecallSucceeded());
     // P2-A4: 发布消息撤回领域事件
     domainEventPublisher.publish(
         new MessageRecalledEvent(
-            logDO.getTenantId(),
-            msgId,
-            logDO.getChannel(),
-            true,
-            recallResult.failureReason()));
+            logDO.getTenantId(), msgId, logDO.getChannel(), true, recallResult.failureReason()));
     log.info(
         "[Recall] 按 msgId 撤回成功: msgId={} channel={} platformRecall={}",
         msgId,

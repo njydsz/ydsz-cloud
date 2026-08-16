@@ -28,8 +28,8 @@ public enum AlertType {
   /**
    * P2-F2: SLA 预警（任务执行耗时达到 SLA 承诺值的 80%，尚未超时）。
    *
-   * <p>软预警：通知运维关注即将超 SLA 的任务，不中断执行。
-   * 由 {@link com.njydsz.cronjob.server.core.dispatch.TimeoutMonitor} 周期性扫描触发。
+   * <p>软预警：通知运维关注即将超 SLA 的任务，不中断执行。 由 {@link
+   * com.njydsz.cronjob.server.core.dispatch.TimeoutMonitor} 周期性扫描触发。
    */
   SLA_WARNING;
 

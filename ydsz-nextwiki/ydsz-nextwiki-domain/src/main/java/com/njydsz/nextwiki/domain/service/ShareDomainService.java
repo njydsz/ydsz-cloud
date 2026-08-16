@@ -257,19 +257,26 @@ public class ShareDomainService {
   /**
    * 记录分享链接访问日志。
    *
-   * @param shareId    分享链接 ID
-   * @param shareCode  分享码
+   * @param shareId 分享链接 ID
+   * @param shareCode 分享码
    * @param fileNodeId 文件节点 ID
-   * @param visitorId  访问者 ID（可为空）
-   * @param visitorIp  访问者 IP
-   * @param userAgent  User-Agent
+   * @param visitorId 访问者 ID（可为空）
+   * @param visitorIp 访问者 IP
+   * @param userAgent User-Agent
    * @param accessType 访问类型（VIEW/DOWNLOAD/EDIT）
-   * @param status     访问状态（SUCCESS/FAIL）
+   * @param status 访问状态（SUCCESS/FAIL）
    * @param failReason 失败原因
    */
-  public void recordAccessLog(String shareId, String shareCode, String fileNodeId,
-      String visitorId, String visitorIp, String userAgent, String accessType,
-      String status, String failReason) {
+  public void recordAccessLog(
+      String shareId,
+      String shareCode,
+      String fileNodeId,
+      String visitorId,
+      String visitorIp,
+      String userAgent,
+      String accessType,
+      String status,
+      String failReason) {
     try {
       ShareAccessLog log =
           ShareAccessLog.builder()
@@ -289,8 +296,7 @@ public class ShareDomainService {
       shareAccessLogRepository.save(log);
     } catch (Exception e) {
       // 访问日志记录失败不应影响主流程
-      log.warn("[ShareDomainService] 记录访问日志失败: shareCode={}, error={}",
-          shareCode, e.getMessage());
+      log.warn("[ShareDomainService] 记录访问日志失败: shareCode={}, error={}", shareCode, e.getMessage());
     }
   }
 
@@ -407,7 +413,7 @@ public class ShareDomainService {
    * 查询分享链接的访问日志。
    *
    * @param shareId 分享链接 ID
-   * @param limit   返回条数限制
+   * @param limit 返回条数限制
    * @return 访问日志列表
    */
   public List<ShareAccessLog> getAccessLogs(String shareId, int limit) {

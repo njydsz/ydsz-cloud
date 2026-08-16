@@ -157,8 +157,7 @@ public class TimeoutMonitor {
   /**
    * P2-F2: 扫描达到 SLA 80% 预警线的日志（软预警，仅告警不中断）。
    *
-   * <p>对每条达到 80% slaMs 的日志触发 SLA_WARNING 预警，通知运维关注。
-   * 预警不修改日志状态、不释放锁，任务继续执行。
+   * <p>对每条达到 80% slaMs 的日志触发 SLA_WARNING 预警，通知运维关注。 预警不修改日志状态、不释放锁，任务继续执行。
    */
   private void scanApproachingSlaLogs(LocalDateTime now) {
     List<JobLog> approaching = jobLogMapper.selectApproachingSlaLogs(now, BATCH_SIZE);

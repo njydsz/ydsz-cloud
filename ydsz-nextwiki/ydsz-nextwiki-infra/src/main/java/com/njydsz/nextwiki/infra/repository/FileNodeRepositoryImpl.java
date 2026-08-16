@@ -225,8 +225,8 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
   }
 
   @Override
-  public List<FileNode> findColdCandidates(LocalDateTime threshold, String excludeSuffixes,
-      int limit) {
+  public List<FileNode> findColdCandidates(
+      LocalDateTime threshold, String excludeSuffixes, int limit) {
     List<String> excludeList = null;
     if (excludeSuffixes != null && !excludeSuffixes.isEmpty()) {
       excludeList = List.of(excludeSuffixes.toLowerCase().split(","));

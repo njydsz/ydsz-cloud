@@ -53,6 +53,12 @@ public class AppInfoVO {
   @Schema(description = "授权回调地址")
   private String redirectUrl;
 
+  @Schema(description = "OAuth2 授权范围（CSV）")
+  private String scopes;
+
+  @Schema(description = "IP 绑定白名单（CSV）")
+  private String boundIps;
+
   @Schema(description = "应用描述")
   private String description;
 

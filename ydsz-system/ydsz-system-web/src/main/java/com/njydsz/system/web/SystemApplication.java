@@ -31,7 +31,6 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @EnableScheduling
 public class SystemApplication {
 
-
   /**
    * 系统基础服务启动入口。
    *

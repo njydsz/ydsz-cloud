@@ -12,8 +12,7 @@ import java.io.Serial;
  */
 public class MessageRecalledEvent extends MessageDomainEvent {
 
-  @Serial
-  private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
   /** 通道 */
   private final String channel;

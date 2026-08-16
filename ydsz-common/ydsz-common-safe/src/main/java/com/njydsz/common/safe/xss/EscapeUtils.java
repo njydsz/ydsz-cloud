@@ -23,7 +23,6 @@ public class EscapeUtils {
 
   private EscapeUtils() {}
 
-
   /** 危险的 URL 协议列表，大小写不敏感匹配 */
   private static final String[] DANGEROUS_PROTOCOLS = {"javascript:", "data:", "vbscript:"};
 

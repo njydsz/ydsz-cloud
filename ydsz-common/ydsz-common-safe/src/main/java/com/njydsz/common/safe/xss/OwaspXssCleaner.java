@@ -22,7 +22,6 @@ public class OwaspXssCleaner {
 
   private OwaspXssCleaner() {}
 
-
   private static final PolicyFactory DEFAULT_POLICY =
       XssPolicyFactory.getPolicy(XssPolicyFactory.Policy.STANDARD);
 

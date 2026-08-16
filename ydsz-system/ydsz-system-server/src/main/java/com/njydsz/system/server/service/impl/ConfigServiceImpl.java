@@ -37,6 +37,7 @@ import com.njydsz.system.infra.repository.ConfigRepository;
 import com.njydsz.system.server.config.SystemProperties;
 import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.service.ConfigService;
+import com.njydsz.system.server.service.ConfigVersionService;
 
 /**
  * 系统配置 Service 实现
@@ -56,6 +57,8 @@ import com.njydsz.system.server.service.ConfigService;
  *   <li><b>变更广播</b>：通过 {@link DomainEventPublisher} 将 {@code CONFIG_CHANGED} 事件写入 Outbox 表， 与
  *       config 表写入共享同一事务（事务提交后由 {@code OutboxProcessor} 异步投递）， 订阅者可监听 {@code
  *       ydsz.workflow.sla-default-hours} 等关键配置变更
+ *   <li><b>版本快照</b>：通过 {@link ConfigVersionService} 在写操作（{@code updateById} / {@code
+ *       removeById}）时记录变更前快照， 支持版本回滚与变更审计
  *   <li><b>搜索同步</b>：通过 {@link SearchIndexEventBridge} 同步配置变更到 ES 索引
  *   <li><b>指标埋点</b>：通过 {@link com.njydsz.system.server.metrics.SystemMetrics} 暴露 Prometheus 指标
  * </ul>
@@ -109,6 +112,9 @@ public class ConfigServiceImpl implements ConfigService {
   /** 统一领域事件发布门面 */
   private final DomainEventPublisher eventPublisher;
 
+  /** 配置版本服务（写操作时创建版本快照） */
+  private final ConfigVersionService configVersionService;
+
   private final ObjectProvider<SearchIndexEventBridge> searchIndexBridgeProvider;
 
   // ============================== CRUD ==============================
@@ -135,6 +141,7 @@ public class ConfigServiceImpl implements ConfigService {
     validateValueType(entity.getValueType());
     checkDuplicateKey(entity);
     validateConfigValue(entity.getConfigKey(), entity.getConfigValue(), entity.getValueType());
+    // 版本快照：新建配置无需快照（变更前不存在）
     configRepository.getConfigMapper().insert(entity);
     publishConfigChangedEvent(entity.getConfigKey(), entity.getConfigGroup());
     indexUpsert(entity);
@@ -148,8 +155,24 @@ public class ConfigServiceImpl implements ConfigService {
     Config entity = toEntity(dto);
     validateValueType(entity.getValueType());
     validateConfigValue(entity.getConfigKey(), entity.getConfigValue(), entity.getValueType());
+    // 版本快照：查询变更前状态
+    Config before =
+        configRepository
+            .getConfigMapper()
+            .selectOne(
+                new QueryWrapper<Config>()
+                    .eq("config_key", entity.getConfigKey())
+                    .eq("deleted", 0));
+    String snapshotJson = before != null ? YdszJson.toJson(before) : null;
     boolean updated = configRepository.getConfigMapper().updateById(entity) > 0;
     if (updated) {
+      // 创建版本快照（与配置变更同一事务）
+      configVersionService.createVersion(
+          entity.getConfigKey(),
+          entity.getConfigGroup(),
+          "v" + System.currentTimeMillis(),
+          "更新配置: " + entity.getConfigKey(),
+          snapshotJson);
       publishConfigChangedEvent(entity.getConfigKey(), entity.getConfigGroup());
       indexUpsert(entity);
     }
@@ -161,8 +184,17 @@ public class ConfigServiceImpl implements ConfigService {
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
     Config entity = configRepository.getConfigMapper().selectById(id);
+    // 版本快照：查询变更前状态
+    String snapshotJson = entity != null ? YdszJson.toJson(entity) : null;
     boolean removed = configRepository.getConfigMapper().deleteById(id) > 0;
     if (removed && entity != null) {
+      // 创建版本快照（与配置变更同一事务）
+      configVersionService.createVersion(
+          entity.getConfigKey(),
+          entity.getConfigGroup(),
+          "v" + System.currentTimeMillis(),
+          "删除配置: " + entity.getConfigKey(),
+          snapshotJson);
       publishConfigChangedEvent(entity.getConfigKey(), entity.getConfigGroup());
       indexDelete(id);
     }
@@ -303,12 +335,18 @@ public class ConfigServiceImpl implements ConfigService {
   /**
    * 校验配置值类型合法性。
    *
-   * <p>委托 {@link ConfigValueType#validate} 完成， 非法类型将抛出 {@link IllegalArgumentException} 阻止脏数据落库。
+   * <p>委托 {@link ConfigValueType#validate} 完成，非法类型将抛出 {@link BusinessException}
+   *（{@link SystemExceptionCode#CONFIG_VALUE_TYPE_INVALID}）阻止脏数据落库。
    *
    * @param valueType 值类型字符串
    */
   private void validateValueType(String valueType) {
-    ConfigValueType.validate(valueType);
+    try {
+      ConfigValueType.validate(valueType);
+    } catch (IllegalArgumentException e) {
+      throw BusinessException.of(SystemExceptionCode.CONFIG_VALUE_TYPE_INVALID)
+          .data("valueType", valueType);
+    }
   }
 
   /**

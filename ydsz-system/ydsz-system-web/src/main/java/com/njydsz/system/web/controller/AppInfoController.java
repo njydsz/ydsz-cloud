@@ -42,7 +42,8 @@ import com.njydsz.system.server.service.AppInfoService;
  *   <li>{@code clientId}：应用唯一标识，颁发时生成，全局不可变
  *   <li>{@code clientSecret}：应用密钥，仅在「创建/重置」时返回明文，其余接口返回脱敏值
  *   <li>{@code scopes}：授权范围（CSV），如 {@code "user.read,order.write"}
- *   <li>{@code redirectUri}：授权码模式回调地址，需精确匹配
+ * <li>{@code scopes}：授权范围（CSV），如 {@code "user.read,order.write"}
+ *   <li>{@code boundIps}：IP 绑定白名单（CSV），如 {@code "192.168.1.0/24,10.0.0.1"}
  *   <li>{@code status}：应用状态（ENABLED / DISABLED / REVOKED）
  * </ul>
  *
@@ -122,7 +123,7 @@ public class AppInfoController {
       excludeParams = {"appSecret"})
   @Operation(summary = "创建应用")
   @RateLimit(resource = "system.appinfo.save", threshold = 50)
-  @Idempotent(key = "ydsz:system:AppInfoController:save:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:system:app-info:save:#userId", ttlSeconds = 5)
   @PostMapping
   public BaseResponse<String> save(@Valid @RequestBody AppInfoDTO dto) {
     return BaseResponse.success(service.save(dto));
@@ -144,7 +145,7 @@ public class AppInfoController {
       excludeParams = {"appSecret"})
   @Operation(summary = "更新应用")
   @RateLimit(resource = "system.appinfo.update", threshold = 50)
-  @Idempotent(key = "ydsz:system:AppInfoController:update:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:system:app-info:update:#userId", ttlSeconds = 5)
   @PutMapping
   public BaseResponse<Boolean> update(@Valid @RequestBody AppInfoDTO dto) {
     return BaseResponse.success(service.updateById(dto));
@@ -165,7 +166,7 @@ public class AppInfoController {
       content = "'删除应用: ' + #id")
   @Operation(summary = "删除应用")
   @RateLimit(resource = "system.appinfo.remove", threshold = 50)
-  @Idempotent(key = "ydsz:system:AppInfoController:remove:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:system:app-info:remove:#id", ttlSeconds = 5)
   @DeleteMapping("/{id}")
   public BaseResponse<Boolean> remove(@PathVariable String id) {
     return BaseResponse.success(service.removeById(id));

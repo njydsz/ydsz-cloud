@@ -80,8 +80,7 @@ public class ShareApplicationService {
       String title,
       String userId) {
     return shareDomainService.createShare(
-        fileNodeId, shareType, password, expireTime, maxAccessCount,
-        targetUserIds, title, userId);
+        fileNodeId, shareType, password, expireTime, maxAccessCount, targetUserIds, title, userId);
   }
 
   /**
@@ -172,11 +171,25 @@ public class ShareApplicationService {
    * @param status 访问状态
    * @param failReason 失败原因
    */
-  public void recordAccessLog(String shareId, String shareCode, String fileNodeId,
-      String visitorId, String visitorIp, String userAgent, String accessType,
-      String status, String failReason) {
+  public void recordAccessLog(
+      String shareId,
+      String shareCode,
+      String fileNodeId,
+      String visitorId,
+      String visitorIp,
+      String userAgent,
+      String accessType,
+      String status,
+      String failReason) {
     shareDomainService.recordAccessLog(
-        shareId, shareCode, fileNodeId, visitorId, visitorIp, userAgent,
-        accessType, status, failReason);
+        shareId,
+        shareCode,
+        fileNodeId,
+        visitorId,
+        visitorIp,
+        userAgent,
+        accessType,
+        status,
+        failReason);
   }
 }

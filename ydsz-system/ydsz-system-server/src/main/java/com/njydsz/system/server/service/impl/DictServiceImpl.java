@@ -179,12 +179,8 @@ public class DictServiceImpl implements DictService {
    *
    * <p>采用<b>逻辑删除</b>（{@code deleted=1} + {@code status=DISABLED}）， 不真正从 DB 删除，便于审计回溯。
    *
-   * <p><b>注意：</b>本方法<b>不</b>级联删除字典项，调用方需自行处理：
-   *
-   * <ol>
-   *   <li>先调用 {@link DictItemServiceImpl#removeById} 删除所有字典项
-   *   <li>再调用本方法删除类型
-   * </ol>
+   * <p><b>子项校验：</b>删除前校验该类型下是否存在字典项，若存在则抛出 {@link
+   * SystemExceptionCode#DICT_TYPE_HAS_ITEMS} 阻止删除，防止孤儿字典项。
    *
    * @param id 字典类型主键
    * @return true=删除成功，false=记录不存在
@@ -192,6 +188,22 @@ public class DictServiceImpl implements DictService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
+    DictType entity = dictRepository.getDictTypeMapper().selectById(id);
+    if (entity == null) {
+      return false;
+    }
+    // 子项校验：若该类型下存在字典项，阻止删除
+    Long itemCount =
+        dictRepository
+            .getDictItemMapper()
+            .selectCount(
+                new QueryWrapper<com.njydsz.system.domain.entity.DictItem>()
+                    .eq("type_code", entity.getTypeCode()));
+    if (itemCount != null && itemCount > 0) {
+      throw BusinessException.of(SystemExceptionCode.DICT_TYPE_HAS_ITEMS)
+          .data("typeCode", entity.getTypeCode())
+          .data("itemCount", itemCount);
+    }
     return dictRepository.getDictTypeMapper().deleteById(id) > 0;
   }
 

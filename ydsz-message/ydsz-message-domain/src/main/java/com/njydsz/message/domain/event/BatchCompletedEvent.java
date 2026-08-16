@@ -12,8 +12,7 @@ import java.io.Serial;
  */
 public class BatchCompletedEvent extends MessageDomainEvent {
 
-  @Serial
-  private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
   /** 总数 */
   private final int total;

@@ -99,9 +99,8 @@ public class Job extends MpBaseEntity<String> {
   /**
    * SLA 时效阈值（毫秒，P2-F2）。
    *
-   * <p>任务执行耗时的 SLA 承诺值，超过 80% 时发送预警，达到 100% 时发送告警。
-   * null 表示不进行 SLA 监控。与 timeoutMs 独立：timeoutMs 是硬超时（强制终止），
-   * slaMs 是软承诺（仅告警，不中断执行）。
+   * <p>任务执行耗时的 SLA 承诺值，超过 80% 时发送预警，达到 100% 时发送告警。 null 表示不进行 SLA 监控。与 timeoutMs 独立：timeoutMs
+   * 是硬超时（强制终止）， slaMs 是软承诺（仅告警，不中断执行）。
    *
    * <p>示例：slaMs=60000 表示承诺 60 秒内完成，48 秒时预警，60 秒时告警。
    */

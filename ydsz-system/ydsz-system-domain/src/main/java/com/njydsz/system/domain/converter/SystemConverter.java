@@ -7,6 +7,7 @@ import org.mapstruct.factory.Mappers;
 
 import com.njydsz.system.domain.entity.AppInfo;
 import com.njydsz.system.domain.entity.Config;
+import com.njydsz.system.domain.entity.ConfigVersion;
 import com.njydsz.system.domain.entity.DictItem;
 import com.njydsz.system.domain.entity.DictType;
 import com.njydsz.system.domain.entity.DictVersion;
@@ -14,8 +15,10 @@ import com.njydsz.system.domain.entity.Tenant;
 import com.njydsz.system.domain.entity.TenantPlan;
 import com.njydsz.system.domain.entity.TenantPlanMenu;
 import com.njydsz.system.domain.entity.Variable;
+import com.njydsz.system.domain.entity.VariableVersion;
 import com.njydsz.system.domain.vo.AppInfoVO;
 import com.njydsz.system.domain.vo.ConfigVO;
+import com.njydsz.system.domain.vo.ConfigVersionVO;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.domain.vo.DictTypeVO;
 import com.njydsz.system.domain.vo.DictVersionVO;
@@ -23,6 +26,7 @@ import com.njydsz.system.domain.vo.TenantPlanMenuVO;
 import com.njydsz.system.domain.vo.TenantPlanVO;
 import com.njydsz.system.domain.vo.TenantVO;
 import com.njydsz.system.domain.vo.VariableVO;
+import com.njydsz.system.domain.vo.VariableVersionVO;
 
 /**
  * 系统配置模块统一 MapStruct 转换器
@@ -150,6 +154,24 @@ public interface SystemConverter {
    */
   List<DictTypeVO> dictTypeListToVO(List<DictType> entities);
 
+  // ===== ConfigVersion =====
+
+  /**
+   * 配置版本实体 → 配置版本 VO
+   *
+   * @param entity 配置版本实体
+   * @return 配置版本 VO
+   */
+  ConfigVersionVO entityToVO(ConfigVersion entity);
+
+  /**
+   * 配置版本实体列表 → 配置版本 VO 列表
+   *
+   * @param entities 配置版本实体列表
+   * @return 配置版本 VO 列表
+   */
+  List<ConfigVersionVO> configVersionListToVO(List<ConfigVersion> entities);
+
   // ===== DictVersion =====
 
   /**
@@ -239,4 +261,22 @@ public interface SystemConverter {
    * @return 系统变量 VO 列表
    */
   List<VariableVO> variableListToVO(List<Variable> entities);
+
+  // ===== VariableVersion =====
+
+  /**
+   * 变量版本实体 → 变量版本 VO
+   *
+   * @param entity 变量版本实体
+   * @return 变量版本 VO
+   */
+  VariableVersionVO entityToVO(VariableVersion entity);
+
+  /**
+   * 变量版本实体列表 → 变量版本 VO 列表
+   *
+   * @param entities 变量版本实体列表
+   * @return 变量版本 VO 列表
+   */
+  List<VariableVersionVO> variableVersionListToVO(List<VariableVersion> entities);
 }

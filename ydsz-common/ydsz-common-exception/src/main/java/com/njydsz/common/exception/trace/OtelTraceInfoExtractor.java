@@ -29,7 +29,6 @@ public class OtelTraceInfoExtractor {
 
   private OtelTraceInfoExtractor() {}
 
-
   /** OTel Span 类全限定名（反射用） */
   private static final String OTEL_SPAN_CLASS = "io.opentelemetry.api.trace.Span";
 

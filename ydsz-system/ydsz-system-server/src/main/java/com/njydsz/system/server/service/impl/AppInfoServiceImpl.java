@@ -401,6 +401,8 @@ public class AppInfoServiceImpl implements AppInfoService {
     entity.setAppKey(dto.getAppKey());
     entity.setAppSecret(dto.getAppSecret());
     entity.setRedirectUrl(dto.getRedirectUrl());
+    entity.setScopes(dto.getScopes());
+    entity.setBoundIps(dto.getBoundIps());
     entity.setDescription(dto.getDescription());
     entity.setStatus(dto.getStatus() != null ? dto.getStatus() : "ENABLED");
     return entity;

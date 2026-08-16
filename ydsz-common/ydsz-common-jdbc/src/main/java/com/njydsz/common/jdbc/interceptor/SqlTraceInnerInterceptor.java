@@ -363,12 +363,12 @@ public class SqlTraceInnerInterceptor
           .append(rowsInfo);
 
       if (!parameters.isEmpty()) {
-        AUDIT_LOG.append(" | 参数: ").append(parameters);
+        auditLog.append(" | 参数: ").append(parameters);
       }
 
-      AUDIT_LOG.append(" | SQL: ").append(sql != null ? sql : "N/A");
+      auditLog.append(" | SQL: ").append(sql != null ? sql : "N/A");
 
-      AUDIT_LOG.info(AUDIT_LOG.toString());
+      AUDIT_LOG.info(auditLog.toString());
     } catch (Exception e) {
       AUDIT_LOG.warn("SQL审计日志记录失败", e);
     }

@@ -13,8 +13,7 @@ import java.time.LocalDateTime;
  */
 public class MessageScheduledEvent extends MessageDomainEvent {
 
-  @Serial
-  private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
   /** 计划发送时间 */
   private final LocalDateTime scheduledAt;

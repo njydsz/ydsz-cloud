@@ -40,7 +40,6 @@ public class AuditContext {
 
   private AuditContext() {}
 
-
   private static final Logger LOG = LoggerFactory.getLogger(AuditContext.class);
 
   /** 缓存反射 Method 对象，避免重复查找 */

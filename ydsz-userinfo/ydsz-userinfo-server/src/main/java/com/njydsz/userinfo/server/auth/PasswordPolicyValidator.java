@@ -82,7 +82,7 @@ public class PasswordPolicyValidator {
   /**
    * 校验密码长度。
    *
-   * @param password  待校验密码
+   * @param password 待校验密码
    * @param minLength 最小长度
    * @param maxLength 最大长度
    * @throws BusinessException 密码长度不在范围内时抛出
@@ -101,8 +101,8 @@ public class PasswordPolicyValidator {
   /**
    * 校验密码字符种类数。
    *
-   * @param password          待校验密码
-   * @param minCategoryCount  最少字符种类数
+   * @param password 待校验密码
+   * @param minCategoryCount 最少字符种类数
    * @throws BusinessException 字符种类不足时抛出
    */
   private void validateCharacterCategories(String password, int minCategoryCount) {
@@ -144,8 +144,8 @@ public class PasswordPolicyValidator {
   /**
    * 校验密码未在最近历史密码中重复使用。
    *
-   * @param password               待校验密码
-   * @param userId                 用户 ID
+   * @param password 待校验密码
+   * @param userId 用户 ID
    * @param passwordHistoryService 密码历史服务
    * @throws BusinessException 密码与历史密码重复时抛出
    */
@@ -155,7 +155,8 @@ public class PasswordPolicyValidator {
       return;
     }
     int historyCount = properties.getPasswordHistoryCount();
-    if (historyCount > 0 && passwordHistoryService.isPasswordReused(userId, password, historyCount)) {
+    if (historyCount > 0
+        && passwordHistoryService.isPasswordReused(userId, password, historyCount)) {
       throw new BusinessException(
           UserInfoExceptionCode.PASSWORD_REUSED, "不能使用最近 " + historyCount + " 次使用过的密码");
     }

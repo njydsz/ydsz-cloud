@@ -5,16 +5,14 @@ import java.io.Serial;
 /**
  * 消息被拦截（跳过）领域事件。
  *
- * <p>在消息被去重、限流、DND 等规则拦截时发布，携带拦截原因与处理阶段。
- * 用于审计与风控分析。
+ * <p>在消息被去重、限流、DND 等规则拦截时发布，携带拦截原因与处理阶段。 用于审计与风控分析。
  *
  * @author ydsz-team
  * @since 1.2.0
  */
 public class MessageSkippedEvent extends MessageDomainEvent {
 
-  @Serial
-  private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
   /** 拦截阶段（DEDUP / LIMIT / DND / PREFERENCE 等） */
   private final String skipReason;

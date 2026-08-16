@@ -33,7 +33,6 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @MapperScan("com.njydsz.agent.infra.mapper")
 public class AgentApplication {
 
-
   public static void main(String[] args) {
     SpringApplication.run(AgentApplication.class, args);
   }

@@ -71,7 +71,7 @@ public class InternalApiController {
    * @return 配置值字符串；不存在时返回 {@code null}（包装在 {@link BaseResponse} 中）
    */
   @RateLimit(resource = "system.internalapi.getConfig", threshold = 50)
-  @Idempotent(key = "ydsz:system:InternalApiController:getConfig:lock", ttlSeconds = 5)
+  @Idempotent(key = "'ydsz:system:internal-api:get-config:' + #request.key", ttlSeconds = 5)
   @PostMapping("/config/get")
   public BaseResponse<String> getConfig(@RequestBody Map<String, String> request) {
     return BaseResponse.success(configService.getConfigValue(request.get("key")));
@@ -88,7 +88,7 @@ public class InternalApiController {
    * @return 字典项展示值；不存在时返回 {@code null}（包装在 {@link BaseResponse} 中）
    */
   @RateLimit(resource = "system.internalapi.getDictItem", threshold = 50)
-  @Idempotent(key = "ydsz:system:InternalApiController:getDictItem:lock", ttlSeconds = 5)
+  @Idempotent(key = "'ydsz:system:internal-api:get-dict-item:' + #request.typeCode + ':' + #request.itemCode", ttlSeconds = 5)
   @PostMapping("/dict/item")
   public BaseResponse<String> getDictItem(@RequestBody Map<String, String> request) {
     DictItemVO vo =
@@ -107,7 +107,7 @@ public class InternalApiController {
    * @return 字典项展示值列表；类型不存在时返回空列表（包装在 {@link BaseResponse} 中）
    */
   @RateLimit(resource = "system.internalapi.listDictItems", threshold = 50)
-  @Idempotent(key = "ydsz:system:InternalApiController:listDictItems:lock", ttlSeconds = 5)
+  @Idempotent(key = "'ydsz:system:internal-api:list-dict-items:' + #typeCode", ttlSeconds = 5)
   @PostMapping("/dict/list")
   public BaseResponse<List<String>> listDictItems(@RequestParam("typeCode") String typeCode) {
     List<DictItemVO> items = dictItemService.listEnabledByTypeCode(typeCode);
@@ -131,7 +131,7 @@ public class InternalApiController {
    * @return 校验通过返回 {@code true}；应用不存在 / 未启用 / 密钥不匹配返回 {@code false} （包装在 {@link BaseResponse} 中）
    */
   @RateLimit(resource = "system.internalapi.validateClient", threshold = 50)
-  @Idempotent(key = "ydsz:system:InternalApiController:validateClient:lock", ttlSeconds = 5)
+  @Idempotent(key = "'ydsz:system:internal-api:validate-client:' + #request.appKey + ':' + #request.appSecret.hashCode()", ttlSeconds = 5)
   @PostMapping("/app/validate")
   public BaseResponse<Boolean> validateClient(@RequestBody Map<String, String> request) {
     return BaseResponse.success(

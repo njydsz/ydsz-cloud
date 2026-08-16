@@ -23,6 +23,8 @@ import com.njydsz.common.safe.annotation.Xss;
  *   <li>{@code appKey} — 客户端 ID（{@code client_id}），最长 128 字符
  *   <li>{@code appSecret} — 客户端密钥（{@code client_secret}），BCrypt 加密存储，最长 256 字符
  *   <li>{@code redirectUrl} — 授权回调地址，最长 512 字符，需 URL 合法
+ *   <li>{@code scopes} — OAuth2 授权范围（CSV），如 {@code "user.read,order.write"}
+ *   <li>{@code boundIps} — IP 绑定白名单（CSV），如 {@code "192.168.1.0/24,10.0.0.1"}，为空表示不限制
  *   <li>{@code status} — 启用状态：{@code ENABLED / DISABLED}
  * </ul>
  *
@@ -72,6 +74,16 @@ public class AppInfoDTO {
   @Xss(message = "回调地址包含非法内容")
   @Schema(description = "授权回调地址")
   private String redirectUrl;
+
+  @Size(max = 512, message = "授权范围长度不能超过512")
+  @Xss(message = "授权范围包含非法内容")
+  @Schema(description = "OAuth2 授权范围（CSV），如 user.read,order.write")
+  private String scopes;
+
+  @Size(max = 512, message = "IP 白名单长度不能超过512")
+  @Xss(message = "IP 白名单包含非法内容")
+  @Schema(description = "IP 绑定白名单（CSV），如 192.168.1.0/24,10.0.0.1")
+  private String boundIps;
 
   @Xss(message = "应用描述包含非法内容")
   @Schema(description = "应用描述")

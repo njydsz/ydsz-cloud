@@ -72,7 +72,7 @@ public class AuditEventListener {
    *
    * @param event 操作日志事件
    */
-  @TransactionalEventListener(fallbackExecute = true)
+  @TransactionalEventListener(fallbackExecution = true)
   @Async("auditAsyncExecutor")
   public void onOperationLog(OperationLogEvent event) {
     if (event == null) {
@@ -98,7 +98,7 @@ public class AuditEventListener {
    *
    * @param event 数据导出审计事件
    */
-  @TransactionalEventListener(fallbackExecute = true)
+  @TransactionalEventListener(fallbackExecution = true)
   @Async("auditAsyncExecutor")
   public void onDataExport(DataExportAuditEvent event) {
     if (event == null) {

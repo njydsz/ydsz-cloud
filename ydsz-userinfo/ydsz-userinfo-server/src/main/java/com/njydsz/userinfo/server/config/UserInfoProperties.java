@@ -58,20 +58,28 @@ public class UserInfoProperties {
 
   /** 默认 access_token 有效期：2 小时（7200 秒）。 */
   private static final long DEFAULT_TOKEN_TTL_SECONDS = 7200;
+
   /** 默认最大登录失败次数。 */
   private static final int DEFAULT_MAX_LOGIN_FAIL_COUNT = 5;
+
   /** 默认账号锁定时长：30 分钟。 */
   private static final int DEFAULT_LOCK_DURATION_MINUTES = 30;
+
   /** 默认图形验证码有效期：5 分钟（300 秒）。 */
   private static final long DEFAULT_CAPTCHA_TTL_SECONDS = 300;
+
   /** 默认密码最小长度。 */
   private static final int DEFAULT_PASSWORD_MIN_LENGTH = 8;
+
   /** 默认密码最大长度（BCrypt 72 字节截断限制）。 */
   private static final int DEFAULT_PASSWORD_MAX_LENGTH = 64;
+
   /** 默认密码最少字符种类数。 */
   private static final int DEFAULT_PASSWORD_MIN_CATEGORY_COUNT = 3;
+
   /** 默认 BCrypt 加密强度。 */
   private static final int DEFAULT_BCRYPT_STRENGTH = 10;
+
   /** 默认密码历史保留条数。 */
   private static final int DEFAULT_PASSWORD_HISTORY_COUNT = 5;
 

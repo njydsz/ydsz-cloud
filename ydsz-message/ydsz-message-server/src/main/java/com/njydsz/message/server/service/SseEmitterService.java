@@ -5,10 +5,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import org.springframework.stereotype.Service;
-import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
  * SSE 发射器服务（批次进度推送）。
@@ -16,9 +16,10 @@ import lombok.extern.slf4j.Slf4j;
  * <p>管理所有活跃的 SSE 连接，按 batchId 聚合，支持向特定批次的所有订阅者广播进度更新。
  *
  * <p>使用方式：
+ *
  * <ol>
- *   <li>客户端调用 {@code POST /api/v1/message/batch/progress/{batchId}/sse} 获取 SseEmitter</li>
- *   <li>后端在处理过程中调用 {@code broadcastProgress(batchId, progress)}</li>
+ *   <li>客户端调用 {@code POST /api/v1/message/batch/progress/{batchId}/sse} 获取 SseEmitter
+ *   <li>后端在处理过程中调用 {@code broadcastProgress(batchId, progress)}
  * </ol>
  *
  * @author ydsz-team
@@ -47,8 +48,7 @@ public class SseEmitterService {
   /**
    * 为指定批次创建新的 SSE 订阅（含初始快照）。
    *
-   * <p>建立连接后立即发送一条 initial 事件，携带当前进度快照，
-   * 客户端无需等待下一次推送即可渲染初始状态。
+   * <p>建立连接后立即发送一条 initial 事件，携带当前进度快照， 客户端无需等待下一次推送即可渲染初始状态。
    *
    * @param batchId 批次 ID
    * @param initialSnapshot 初始进度快照（可为 null）
@@ -83,18 +83,21 @@ public class SseEmitterService {
     }
 
     // 超时或连接关闭时清理
-    emitter.onTimeout(() -> {
-      log.debug("[SSE] 订阅超时: batchId={}", batchId);
-      removeSubscription(subscription);
-    });
-    emitter.onCompletion(() -> {
-      log.debug("[SSE] 订阅完成: batchId={}", batchId);
-      removeSubscription(subscription);
-    });
-    emitter.onError(e -> {
-      log.debug("[SSE] 订阅异常: batchId={} err={}", batchId, e.getMessage());
-      removeSubscription(subscription);
-    });
+    emitter.onTimeout(
+        () -> {
+          log.debug("[SSE] 订阅超时: batchId={}", batchId);
+          removeSubscription(subscription);
+        });
+    emitter.onCompletion(
+        () -> {
+          log.debug("[SSE] 订阅完成: batchId={}", batchId);
+          removeSubscription(subscription);
+        });
+    emitter.onError(
+        e -> {
+          log.debug("[SSE] 订阅异常: batchId={} err={}", batchId, e.getMessage());
+          removeSubscription(subscription);
+        });
 
     return emitter;
   }
@@ -143,9 +146,7 @@ public class SseEmitterService {
     }
   }
 
-  /**
-   * 清理无效订阅。
-   */
+  /** 清理无效订阅。 */
   private void removeSubscription(SseEmitterSubscription sub) {
     List<SseEmitterSubscription> subs = subscriptions.get(sub.batchId());
     if (subs != null) {

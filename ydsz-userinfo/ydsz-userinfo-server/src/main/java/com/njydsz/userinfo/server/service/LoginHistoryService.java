@@ -26,34 +26,13 @@ public interface LoginHistoryService {
   /**
    * 记录登录尝试。
    *
-   * @param userId     用户 ID（可能为 null，如用户名不存在时）
-   * @param username   用户名
-   * @param loginIp    登录 IP
-   * @param result     登录结果（SUCCESS / FAILED）
+   * @param context 登录尝试上下文（含 userId/username/loginIp）
+   * @param result 登录结果（SUCCESS / FAILED）
    * @param failReason 失败原因
-   * @param userAgent  用户代理
+   * @param userAgent 用户代理
    */
   void recordLoginAttempt(
-      String userId,
-      String username,
-      String loginIp,
-      String result,
-      String failReason,
-      String userAgent);
-
-  /**
-   * 记录登录尝试（参数对象版本）。
-   *
-   * @param context    登录尝试上下文（含 userId/username/loginIp）
-   * @param result     登录结果（SUCCESS / FAILED）
-   * @param failReason 失败原因
-   * @param userAgent  用户代理
-   */
-  void recordLoginAttempt(
-      LoginAttemptContext context,
-      String result,
-      String failReason,
-      String userAgent);
+      LoginAttemptContext context, String result, String failReason, String userAgent);
 
   /**
    * 检查 IP 是否被封禁

@@ -46,7 +46,6 @@ public class WriteHandler {
 
   private WriteHandler() {}
 
-
   private static final Logger LOG = LoggerFactory.getLogger(WriteHandler.class);
 
   /**

@@ -111,7 +111,7 @@ public class ConfigController {
       content = "'创建配置: ' + #dto.configKey")
   @Operation(summary = "创建配置")
   @RateLimit(resource = "system.config.save", threshold = 50)
-  @Idempotent(key = "ydsz:system:ConfigController:save:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:system:config:save:#userId", ttlSeconds = 5)
   @PostMapping
   public BaseResponse<String> save(@Valid @RequestBody ConfigDTO dto) {
     return BaseResponse.success(configService.save(dto));
@@ -134,7 +134,7 @@ public class ConfigController {
       content = "'更新配置: ' + #dto.configKey")
   @Operation(summary = "更新配置")
   @RateLimit(resource = "system.config.update", threshold = 50)
-  @Idempotent(key = "ydsz:system:ConfigController:update:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:system:config:update:#userId", ttlSeconds = 5)
   @PutMapping
   public BaseResponse<Boolean> update(@Valid @RequestBody ConfigDTO dto) {
     return BaseResponse.success(configService.updateById(dto));
@@ -157,7 +157,7 @@ public class ConfigController {
       content = "'删除配置: ' + #id")
   @Operation(summary = "删除配置")
   @RateLimit(resource = "system.config.remove", threshold = 50)
-  @Idempotent(key = "ydsz:system:ConfigController:remove:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:system:config:remove:#id", ttlSeconds = 5)
   @DeleteMapping("/{id}")
   public BaseResponse<Boolean> remove(@PathVariable String id) {
     return BaseResponse.success(configService.removeById(id));

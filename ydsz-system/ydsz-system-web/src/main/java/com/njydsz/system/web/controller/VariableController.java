@@ -133,7 +133,7 @@ public class VariableController {
       content = "'创建变量: ' + #dto.variableKey")
   @Operation(summary = "创建系统变量")
   @RateLimit(resource = "system.variable.save", threshold = 50)
-  @Idempotent(key = "ydsz:system:VariableController:save:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:system:variable:save:#userId", ttlSeconds = 5)
   @PostMapping
   public BaseResponse<String> save(@Valid @RequestBody VariableDTO dto) {
     return BaseResponse.success(service.save(dto));
@@ -154,7 +154,7 @@ public class VariableController {
       content = "'更新变量: ' + #dto.variableKey")
   @Operation(summary = "更新系统变量")
   @RateLimit(resource = "system.variable.update", threshold = 50)
-  @Idempotent(key = "ydsz:system:VariableController:update:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:system:variable:update:#userId", ttlSeconds = 5)
   @PutMapping
   public BaseResponse<Boolean> update(@Valid @RequestBody VariableDTO dto) {
     return BaseResponse.success(service.updateById(dto));
@@ -175,7 +175,7 @@ public class VariableController {
       content = "'删除变量: ' + #id")
   @Operation(summary = "删除系统变量")
   @RateLimit(resource = "system.variable.remove", threshold = 50)
-  @Idempotent(key = "ydsz:system:VariableController:remove:lock", ttlSeconds = 5)
+  @Idempotent(key = "ydsz:system:variable:remove:#id", ttlSeconds = 5)
   @DeleteMapping("/{id}")
   public BaseResponse<Boolean> remove(@PathVariable String id) {
     return BaseResponse.success(service.removeById(id));

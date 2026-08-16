@@ -1,19 +1,21 @@
 package com.njydsz.message.server.channel.recall;
 
-import com.njydsz.message.domain.entity.core.MsgLog;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.message.domain.entity.core.MsgLog;
+
 /**
  * 撤回通道路由器（P2-F2: 跨通道消息撤回能力扩展）。
  *
- * <p>根据消息日志的通道类型路由到对应的 {@link RecallChannel} 实现。
- * 当没有注册具体通道的撤回实现时，回退到 {@link DefaultRecallChannel}（仅 DB 标记）。
+ * <p>根据消息日志的通道类型路由到对应的 {@link RecallChannel} 实现。 当没有注册具体通道的撤回实现时，回退到 {@link DefaultRecallChannel}（仅
+ * DB 标记）。
  *
  * @author ydsz-team
  * @since 1.2.0
@@ -59,7 +61,8 @@ public class RecallChannelRouter implements InitializingBean {
     }
     String channel = log.getChannel();
     RecallChannel handler = channelMap.getOrDefault(channel, defaultRecallChannel);
-    log.debug("[RecallRouter] 路由撤回: channel={} handler={}", channel, handler.getClass().getSimpleName());
+    log.debug(
+        "[RecallRouter] 路由撤回: channel={} handler={}", channel, handler.getClass().getSimpleName());
     return handler.recall(log);
   }
 

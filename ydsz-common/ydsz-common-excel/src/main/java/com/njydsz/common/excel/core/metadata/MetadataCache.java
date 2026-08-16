@@ -45,7 +45,6 @@ public class MetadataCache {
 
   private MetadataCache() {}
 
-
   /** 元数据缓存: 类名 -> WriteMetadata */
   private static final Map<Class<?>, CachedWriteMetadata> METADATA_CACHE =
       new ConcurrentHashMap<>();

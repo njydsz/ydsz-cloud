@@ -60,7 +60,6 @@ public class ASMFieldAccessor {
 
   private ASMFieldAccessor() {}
 
-
   private static final Logger LOGGER = LoggerFactory.getLogger(ASMFieldAccessor.class);
 
   /** 字段 Getter 缓存 */

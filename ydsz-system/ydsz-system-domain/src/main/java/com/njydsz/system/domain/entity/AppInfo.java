@@ -49,6 +49,20 @@ public class AppInfo extends MpBaseEntity<String> {
   /** OAuth2 授权回调地址 */
   private String redirectUrl;
 
+  /**
+   * OAuth2 授权范围（CSV 格式，如 {@code "user.read,order.write"}）。
+   *
+   * <p>用于限制应用可访问的 API 权限范围，遵循最小权限原则。
+   */
+  private String scopes;
+
+  /**
+   * IP 绑定白名单（CSV 格式，如 {@code "192.168.1.0/24,10.0.0.1"}）。
+   *
+   * <p>仅允许白名单 IP 调用该应用的 API，增强安全性。为空表示不限制 IP。
+   */
+  private String boundIps;
+
   /** 应用描述 */
   private String description;
 }

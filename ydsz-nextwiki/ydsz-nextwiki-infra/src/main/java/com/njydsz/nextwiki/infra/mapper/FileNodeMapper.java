@@ -188,9 +188,9 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
   /**
    * 查询冷数据候选（长期未访问的文件）。
    *
-   * @param threshold       时间阈值（updated_at 早于此时间的文件）
+   * @param threshold 时间阈值（updated_at 早于此时间的文件）
    * @param excludeSuffixes 排除的后缀（逗号分隔，可为空）
-   * @param limit           返回数量限制
+   * @param limit 返回数量限制
    * @return 冷数据候选列表
    */
   @Select(

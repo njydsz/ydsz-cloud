@@ -44,9 +44,6 @@ import org.slf4j.LoggerFactory;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class SqlAuditJsonLogger {
 
-  private SqlAuditJsonLogger() {}
-
-
   /** 审计 JSON 日志专用 Logger，可独立配置 appender */
   private static final Logger AUDIT_JSON_LOG = LoggerFactory.getLogger("sql.audit.json");
 

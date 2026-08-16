@@ -33,7 +33,6 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @MapperScan("com.njydsz.cronjob.infra.mapper")
 public class CronjobApplication {
 
-
   /**
    * 应用入口方法
    *

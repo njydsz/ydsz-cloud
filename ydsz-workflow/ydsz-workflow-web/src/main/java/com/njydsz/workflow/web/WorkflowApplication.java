@@ -48,7 +48,6 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @EnableScheduling
 public class WorkflowApplication {
 
-
   public static void main(String[] args) {
     SpringApplication.run(WorkflowApplication.class, args);
   }

@@ -54,7 +54,6 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @MapperScan("com.njydsz.literule.infra.mapper")
 public class LiteruleApplication {
 
-
   /**
    * 应用入口方法
    *
