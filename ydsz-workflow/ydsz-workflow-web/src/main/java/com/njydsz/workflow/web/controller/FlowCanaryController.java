@@ -184,7 +184,7 @@ public class FlowCanaryController {
     public BaseResponse<List<Map<String, Object>>> rolloutLog(
             @PathVariable String flowCode,
             @RequestParam(required = false) String tenantId) {
-        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
         return BaseResponse.success(canaryService.listCanaryRolloutLog(flowCode, tid));
     }
 }

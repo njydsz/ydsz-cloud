@@ -12,6 +12,16 @@ import java.util.Set;
  * <p>按「表 → 列 → 规则」三级结构组织脱敏规则，支持多角色规则合并。
  * 上下文实例可变，非线程安全；多角色合并场景应在单线程内完成构建后共享只读视图。
  *
+ * <h3>P2-1: 脱敏体系使用指引</h3>
+ * <p>common-safe 提供两套字段级脱敏（JSON 序列化层）和一套列级脱敏（数据层）：
+ * <ul>
+ *   <li>{@code @Sensitive}：字段级脱敏，<b>推荐</b>，用于 JSON 响应输出</li>
+ *   <li>{@code @SensitiveData}：字段级脱敏，仅用于需要角色白名单的场景</li>
+ *   <li><b>本上下文 {@code ColumnDesensitizationContext}</b>：<b>列级脱敏</b>，
+ *       用于 SQL 查询结果集脱敏（数据层），通过 {@link ColumnDesensitizationExecutor} 执行。
+ *       与字段级注解互不干扰，可同时使用</li>
+ * </ul>
+ *
  * <p><b>典型用法：</b>
  * <pre>{@code
  * ColumnDesensitizationContext ctx = new ColumnDesensitizationContext();

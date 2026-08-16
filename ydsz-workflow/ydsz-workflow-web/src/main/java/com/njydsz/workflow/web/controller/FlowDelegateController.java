@@ -186,7 +186,7 @@ public class FlowDelegateController {
     public BaseResponse<List<FlowDelegateAuthVO>> listMyDelegateAuths(
             @RequestParam(required = false) String status) {
         String ownerId = AuthContextUtils.getUserId();
-        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault();
         return BaseResponse.success(WorkflowConverter.INSTANT.flowDelegateAuthListToVO(delegateAuthService.listMine(ownerId, tenantId, status)));
     }
 
@@ -200,7 +200,7 @@ public class FlowDelegateController {
     public BaseResponse<List<FlowDelegateAuthVO>> listAsDelegate(
             @RequestParam(required = false) String status) {
         String delegateUserId = AuthContextUtils.getUserId();
-        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault();
         return BaseResponse.success(WorkflowConverter.INSTANT.flowDelegateAuthListToVO(delegateAuthService.listAsDelegate(delegateUserId, tenantId, status)));
     }
 

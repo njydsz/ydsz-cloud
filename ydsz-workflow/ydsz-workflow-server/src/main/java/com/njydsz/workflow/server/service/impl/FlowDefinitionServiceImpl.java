@@ -222,7 +222,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         // P2-16: 多租户上下文 - DTO 显式传入优先，否则从 SecurityContext 获取，最后兜底 1L
         String tenantId = dto.getTenantId() != null
                 ? dto.getTenantId()
-                : AuthContextUtils.getTenantIdOrDefault("1");
+                : AuthContextUtils.getTenantIdOrDefault();
 
         // 1. 检查重名：同 flowCode + version + tenant 只能有一条
         FlowDefinition existing = definitionMapper.selectPublished(
@@ -592,7 +592,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             version = "1.0";
         }
         // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
-        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
         return definitionMapper.selectPublished(flowCode, version, tid);
     }
 
@@ -613,7 +613,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             key = "#flowCode + ':' + #tenantId", unless = "#result == null")
     public FlowDefinition getLatestByCode(String flowCode, String tenantId) {
         // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
-        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
         return definitionMapper.selectLatestByCode(flowCode, tid);
     }
 
@@ -718,7 +718,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 .build();
         }
         // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
-        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
         // 失效同 flowCode 的其他已发布版本
         definitionMapper.deactivateByFlowCode(flowCode, definitionId, tid);
         // 激活目标版本
@@ -1628,7 +1628,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 .message("zip 文件内容为空")
                 .build();
         }
-        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
 
         int successCount = 0;
         List<Map<String, String>> failedItems = new ArrayList<>();
@@ -2127,7 +2127,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 .message("flowCode 不能为空")
                 .build();
         }
-        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
 
         // 1. 查询当前激活版本
         FlowDefinition currentDef = definitionMapper.selectPublished(flowCode, null, tid);

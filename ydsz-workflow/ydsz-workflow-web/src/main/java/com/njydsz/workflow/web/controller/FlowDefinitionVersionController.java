@@ -171,7 +171,7 @@ public class FlowDefinitionVersionController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public BaseResponse<Map<String, Object>> rollbackDefinition(
             @RequestParam String flowCode) {
-        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault();
         return BaseResponse.success(definitionService.rollbackDefinition(flowCode, tenantId));
     }
 }

@@ -115,7 +115,7 @@ public class FlowTaskQueryController {
     @GetMapping("/task/overdue")
     public BaseResponse<List<FlowRunTaskVO>> overdue(@RequestParam(required = false) String assigneeId,
                                          @RequestParam(required = false) String tenantId) {
-        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
         return BaseResponse.success(WorkflowConverter.INSTANT.flowRunTaskListToVO(taskService.listOverdue(assigneeId, tid)));
     }
 
@@ -158,7 +158,7 @@ public class FlowTaskQueryController {
             @RequestParam(required = false) String tenantId,
             @RequestParam(defaultValue = "1") @Min(1) int pageNo,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
-        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
         PageResponse<List<FlowRunTask>> pageResult = taskService.listDoneByAssigneePageMulti(assigneeId, businessType,
                 flowCode, startTime, endTime, tid, pageNo, pageSize);
         List<FlowRunTask> tasks = pageResult.getData();
@@ -179,7 +179,7 @@ public class FlowTaskQueryController {
     public BaseResponse<List<Map<String, Object>>> nodeDurationStats(
             @RequestParam String flowCode,
             @RequestParam(required = false) String tenantId) {
-        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
         return BaseResponse.success(taskService.nodeDurationStats(flowCode, tid));
     }
 
@@ -192,7 +192,7 @@ public class FlowTaskQueryController {
     @GetMapping("/stats/overdue")
     public BaseResponse<List<FlowRunTaskVO>> statsOverdue(
             @RequestParam(required = false) String assigneeId) {
-        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault();
         return BaseResponse.success(WorkflowConverter.INSTANT.flowRunTaskListToVO(taskService.listOverdue(assigneeId, tenantId)));
     }
 }

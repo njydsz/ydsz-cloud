@@ -102,7 +102,7 @@ public class FlowDmnDecisionController {
     @AuthApiPermission
     @Operation(summary = "创建决策表")
     public BaseResponse<String> createDecision(@Valid @RequestBody CreateDecisionRequest request) {
-        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault();
         request.getDecision().setTenantId(tenantId);
         String id = dmnDecisionService.createDecision(request.getDecision(), request.getRules());
         return BaseResponse.success(id);
@@ -127,7 +127,7 @@ public class FlowDmnDecisionController {
     @Operation(summary = "更新决策表（仅草稿状态）")
     public BaseResponse<Void> updateDecision(@PathVariable String decisionId,
                                         @Valid @RequestBody CreateDecisionRequest request) {
-        request.getDecision().setTenantId(AuthContextUtils.getTenantIdOrDefault("1"));
+        request.getDecision().setTenantId(AuthContextUtils.getTenantIdOrDefault());
         dmnDecisionService.updateDecision(decisionId, request.getDecision(), request.getRules());
         return BaseResponse.success();
     }
@@ -200,7 +200,7 @@ public class FlowDmnDecisionController {
     @Operation(summary = "分页查询决策表列表")
     public BaseResponse<List<FlowDmnDecisionVO>> listDecisions(
             @RequestParam(required = false) String decisionCode) {
-        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault();
         return BaseResponse.success(WorkflowConverter.INSTANT.flowDmnDecisionListToVO(dmnDecisionService.listDecisions(decisionCode, tenantId)));
     }
 
@@ -217,7 +217,7 @@ public class FlowDmnDecisionController {
     @PostMapping("/evaluate")
     @Operation(summary = "评估决策表")
     public BaseResponse<Map<String, Object>> evaluate(@Valid @RequestBody EvaluateRequest request) {
-        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault();
         return BaseResponse.success(dmnDecisionService.evaluate(
                 request.getDecisionCode(), request.getVariables(), tenantId));
     }
@@ -235,7 +235,7 @@ public class FlowDmnDecisionController {
     @PostMapping("/evaluateByNode")
     @Operation(summary = "根据流程+节点评估绑定的决策表")
     public BaseResponse<Map<String, Object>> evaluateByNode(@Valid @RequestBody EvaluateByNodeRequest request) {
-        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault();
         return BaseResponse.success(dmnDecisionService.evaluateByNode(
                 request.getFlowCode(), request.getNodeCode(),
                 request.getVariables(), tenantId));

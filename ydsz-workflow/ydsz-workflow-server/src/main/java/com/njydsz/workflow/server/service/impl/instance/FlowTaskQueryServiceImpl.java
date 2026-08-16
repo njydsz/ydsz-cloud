@@ -110,7 +110,7 @@ public class FlowTaskQueryServiceImpl {
     @DataScope(deptColumn = "dept_id", userColumn = "assignee_id")
     public List<FlowRunTask> listTodoByAssignee(String assigneeId, String tenantId) {
         // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
-        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
         return taskMapper.selectTodoByAssignee(assigneeId, tid);
     }
 
@@ -126,7 +126,7 @@ public class FlowTaskQueryServiceImpl {
     public List<FlowRunTask> listTodoByUser(String userId, List<String> roleCodes,
                                             List<String> deptIds, String tenantId) {
         // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
-        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
         Set<FlowRunTask> result = new LinkedHashSet<>();
         // 1. 直接分配给该用户的任务
         result.addAll(taskMapper.selectTodoByAssignee(String.valueOf(userId), tid));
@@ -162,7 +162,7 @@ public class FlowTaskQueryServiceImpl {
     public List<FlowRunTask> listDoneByAssignee(String assigneeId, String tenantId) {
         // P0-3: 改查历史表
         // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
-        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
         List<FlowHisTask> hisTasks = hisTaskMapper.selectDoneByAssignee(assigneeId, tid);
         List<FlowRunTask> result = new ArrayList<>();
         for (FlowHisTask his : hisTasks) {
@@ -179,7 +179,7 @@ public class FlowTaskQueryServiceImpl {
     public PageResponse<List<FlowRunTask>> listTodoByAssigneePage(String assigneeId, String tenantId,
                                                           int page, int size) {
         // P2-17: 真分页（SQL LIMIT/OFFSET）
-        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
         int safePage = Math.max(1, page);
         int safeSize = size > 0 ? size : 20;
         int offset = (safePage - 1) * safeSize;
@@ -194,7 +194,7 @@ public class FlowTaskQueryServiceImpl {
     public PageResponse<List<FlowRunTask>> listDoneByAssigneePage(String assigneeId, String tenantId,
                                                           int page, int size) {
         // P2-17: 真分页（SQL LIMIT/OFFSET） — 走历史表
-        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
         int safePage = Math.max(1, page);
         int safeSize = size > 0 ? size : 20;
         int offset = (safePage - 1) * safeSize;
@@ -214,7 +214,7 @@ public class FlowTaskQueryServiceImpl {
                                                                String flowCode, LocalDateTime startTime,
                                                                LocalDateTime endTime, String tenantId,
                                                                int page, int size) {
-        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
         int safePage = Math.max(1, page);
         int safeSize = size > 0 ? size : 20;
         int offset = (safePage - 1) * safeSize;
@@ -242,7 +242,7 @@ public class FlowTaskQueryServiceImpl {
      * P2-32: 查询超期任务（dueAt < now 且状态为 PENDING/CLAIMED）
      */
     public List<FlowRunTask> listOverdue(String assigneeId, String tenantId) {
-        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
         return taskMapper.selectOverdue(assigneeId, tid);
     }
 
@@ -250,7 +250,7 @@ public class FlowTaskQueryServiceImpl {
      * P2-32: 统计超期任务数量
      */
     public long countOverdue(String assigneeId, String tenantId) {
-        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
         return taskMapper.countOverdue(assigneeId, tid);
     }
 
@@ -258,7 +258,7 @@ public class FlowTaskQueryServiceImpl {
      * P2-4: 统计待办任务总数（PENDING + CLAIMED）
      */
     public long countPending(String tenantId) {
-        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
         LambdaQueryWrapper<FlowRunTask> wrapper =
                 new LambdaQueryWrapper<>();
         wrapper.eq(FlowRunTask::getTenantId, tid)

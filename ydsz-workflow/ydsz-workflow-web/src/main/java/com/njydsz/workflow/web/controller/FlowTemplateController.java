@@ -290,7 +290,7 @@ public class FlowTemplateController {
     public BaseResponse<List<Map<String, Object>>> recommend(
             @RequestParam(defaultValue = "5") int topN) {
         String userId = AuthContextUtils.getUserId();
-        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault();
         return BaseResponse.success(recommendService.recommendTemplates(userId, tenantId, topN));
     }
 
@@ -307,7 +307,7 @@ public class FlowTemplateController {
             @RequestParam String businessType,
             @RequestParam(defaultValue = "5") int topN) {
         String userId = AuthContextUtils.getUserId();
-        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault();
         return BaseResponse.success(recommendService.recommendByBusinessType(userId, tenantId, businessType, topN));
     }
 }

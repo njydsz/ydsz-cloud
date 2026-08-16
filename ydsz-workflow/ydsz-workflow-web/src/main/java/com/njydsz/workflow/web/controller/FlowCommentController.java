@@ -96,7 +96,7 @@ public class FlowCommentController {
     public BaseResponse<String> addComment(@Valid @RequestBody FlowCommentCreateDTO dto) {
         String userId = AuthContextUtils.getUserId();
         String userName = AuthContextUtils.getUsername();
-        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault();
         return BaseResponse.success(commentService.addComment(dto, userId, userName, tenantId));
     }
 
@@ -109,7 +109,7 @@ public class FlowCommentController {
     @GetMapping("/instance/{instanceId}")
     @Operation(summary = "查询实例全部评论（树结构）")
     public BaseResponse<List<FlowCommentVO>> listByInstance(@PathVariable String instanceId) {
-        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault();
         return BaseResponse.success(WorkflowConverter.INSTANT.flowCommentListToVO(commentService.listByInstance(tenantId, instanceId)));
     }
 
@@ -122,7 +122,7 @@ public class FlowCommentController {
     @GetMapping("/root/{instanceId}")
     @Operation(summary = "查询实例一级评论")
     public BaseResponse<List<FlowCommentVO>> listRootComments(@PathVariable String instanceId) {
-        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault();
         return BaseResponse.success(WorkflowConverter.INSTANT.flowCommentListToVO(commentService.listRootComments(tenantId, instanceId)));
     }
 

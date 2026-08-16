@@ -8,6 +8,17 @@ import java.lang.annotation.*;
  * <p>标注在字段上，用于标记需要进行脱敏处理的敏感数据。
  * 支持多种脱敏策略，由 {@link SensitiveType} 定义。
  *
+ * <h3>P2-1: 脱敏体系使用指引</h3>
+ * <p>common-safe 提供两套字段级脱敏注解：
+ * <ul>
+ *   <li>{@code @Sensitive}（{@link com.njydsz.common.safe.desensitize.Sensitive}）：
+ *       <b>推荐</b>。简洁 API，覆盖 90%+ 场景，优先使用</li>
+ *   <li><b>本注解 {@code @SensitiveData}</b>：仅当需要<b>角色白名单</b>（admin/特定角色看原文）时使用。
+ *       需配合 {@code SensitiveDataAdvice} 或 {@code SensitiveDataSerializer}</li>
+ * </ul>
+ *
+ * <p>如无角色白名单需求，请优先使用 {@code @Sensitive}。
+ *
  * <p><b>使用示例：</b>
  * <pre>{@code
  * public class UserDTO {

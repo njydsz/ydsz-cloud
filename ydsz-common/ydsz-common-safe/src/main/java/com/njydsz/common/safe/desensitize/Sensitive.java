@@ -15,6 +15,17 @@ import java.lang.annotation.Target;
  * <p>与 {@link ColumnDesensitizationRule}（列级脱敏，数据库结果集脱敏）互补：
  * 本注解面向字段级（对象序列化），列级脱敏面向 SQL 查询结果。</p>
  *
+ * <h3>P2-1: 脱敏体系使用指引</h3>
+ * <p>common-safe 提供两套字段级脱敏注解，按场景选择：
+ * <ul>
+ *   <li><b>本注解 {@code @Sensitive}</b>：<b>推荐</b>。简洁 API，覆盖 90%+ 场景</li>
+ *   <li>{@code @SensitiveData}：仅当需要<b>角色白名单</b>（admin 看原文）时使用。
+ *       需配合 {@code SensitiveDataAdvice} 或 {@code SensitiveDataSerializer}</li>
+ * </ul>
+ *
+ * <p><b>数据层脱敏</b>（SQL 查询结果）使用 {@link ColumnDesensitizationContext}，
+ * 与字段级注解互不干扰，可同时使用。
+ *
  * <h3>支持的脱敏类型</h3>
  * <table>
  *   <tr><th>类型</th><th>示例（脱敏前）</th><th>示例（脱敏后）</th></tr>

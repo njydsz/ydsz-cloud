@@ -99,7 +99,7 @@ public class FlowAdvancedController {
     @GetMapping("/report/weekly")
     @Operation(summary = "P2-4: 获取周报数据")
     public BaseResponse<Map<String, Object>> weeklyReport() {
-        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault();
         return BaseResponse.success(reportService.generateWeeklyReport(tenantId));
     }
 
@@ -114,7 +114,7 @@ public class FlowAdvancedController {
     @GetMapping("/report/monthly")
     @Operation(summary = "P2-4: 获取月报数据")
     public BaseResponse<Map<String, Object>> monthlyReport() {
-        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault();
         return BaseResponse.success(reportService.generateMonthlyReport(tenantId));
     }
 
@@ -135,7 +135,7 @@ public class FlowAdvancedController {
     @Operation(summary = "P2-4: 推送周报")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Boolean> sendWeekly() {
-        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault();
         return BaseResponse.success(reportService.sendWeeklyReport(tenantId));
     }
 
@@ -155,7 +155,7 @@ public class FlowAdvancedController {
     @Operation(summary = "P2-4: 推送月报")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public BaseResponse<Boolean> sendMonthly() {
-        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault();
         return BaseResponse.success(reportService.sendMonthlyReport(tenantId));
     }
 
@@ -180,7 +180,7 @@ public class FlowAdvancedController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_TASK_OPERATE)
     public BaseResponse<StringVO> merge(@RequestParam List<String> instanceIds) {
         String userId = AuthContextUtils.getUserId();
-        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault();
         return BaseResponse.success(WorkflowConverter.INSTANT.entityToVO(mergeService.mergeInstances(instanceIds, userId, tenantId)));
     }
 
@@ -255,7 +255,7 @@ public class FlowAdvancedController {
     @Operation(summary = "P2-5: 查询可合并的实例列表")
     public BaseResponse<List<Map<String, Object>>> mergeable() {
         String userId = AuthContextUtils.getUserId();
-        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault();
         return BaseResponse.success(mergeService.listMergeable(userId, tenantId));
     }
 

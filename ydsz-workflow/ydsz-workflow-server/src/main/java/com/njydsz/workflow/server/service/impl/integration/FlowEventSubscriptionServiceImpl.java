@@ -165,7 +165,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
                 .message("messageName 不能为空")
                 .build();
         }
-        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
 
         List<FlowEventSubscription> subscriptions =
                 subscriptionMapper.selectWaitingByEvent(tid, "MESSAGE", messageName);
@@ -200,7 +200,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
                 .message("errorCode 不能为空")
                 .build();
         }
-        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
 
         List<FlowEventSubscription> subscriptions =
                 subscriptionMapper.selectWaitingByEvent(tid, "ERROR", errorCode);

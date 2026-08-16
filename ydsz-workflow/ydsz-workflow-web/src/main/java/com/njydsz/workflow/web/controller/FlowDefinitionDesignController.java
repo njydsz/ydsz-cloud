@@ -155,7 +155,7 @@ public class FlowDefinitionDesignController {
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_IMPORT)
     public BaseResponse<String> importDefinition(@RequestBody String json,
                                          @RequestParam(required = false) String tenantId) {
-        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
         return BaseResponse.success(definitionService.importDefinition(json, tid));
     }
 
@@ -172,7 +172,7 @@ public class FlowDefinitionDesignController {
     @Operation(summary = "流程模拟运行")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_DEFINITION_DEPLOY)
     public BaseResponse<List<Map<String, Object>>> simulate(@Valid @RequestBody FlowDefinitionSimulateDTO dto) {
-        String tid = AuthContextUtils.getTenantIdOrDefault("1");
+        String tid = AuthContextUtils.getTenantIdOrDefault();
         return BaseResponse.success(instanceService.simulate(dto.getFlowCode(),
                 String.valueOf(dto.getVersion()), dto.getVariables(), tid));
     }

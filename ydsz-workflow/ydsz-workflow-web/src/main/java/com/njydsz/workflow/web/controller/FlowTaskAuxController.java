@@ -241,7 +241,7 @@ public class FlowTaskAuxController {
         if (userId == null) {
             return BaseResponse.success(Map.of("userId", 0, "todoCount", 0));
         }
-        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault();
         // P0-1 修复：移除 countOverdue 死代码（结果被覆盖），直接用 listTodoByUser 计算待办数
         var tasks = taskService.listTodoByUser(userId, null, null, tenantId);
         long count = tasks == null ? 0 : tasks.size();

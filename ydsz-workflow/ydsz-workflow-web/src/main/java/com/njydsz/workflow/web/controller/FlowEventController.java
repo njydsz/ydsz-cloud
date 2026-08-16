@@ -91,7 +91,7 @@ public class FlowEventController {
             @RequestParam(required = false) String correlationKey,
             @RequestBody(required = false) String payload,
             @RequestParam(required = false) String tenantId) {
-        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
         return BaseResponse.success(eventSubscriptionService.correlateMessage(tid, messageName, correlationKey, payload));
     }
 
@@ -115,7 +115,7 @@ public class FlowEventController {
             @RequestParam(required = false) String instanceId,
             @RequestBody(required = false) String payload,
             @RequestParam(required = false) String tenantId) {
-        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
         return BaseResponse.success(eventSubscriptionService.throwError(tid, instanceId, errorCode, payload));
     }
 

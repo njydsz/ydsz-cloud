@@ -146,7 +146,7 @@ public class FlowInstanceQueryController {
             @RequestParam(required = false) LocalDateTime startTime,
             @RequestParam(required = false) LocalDateTime endTime,
             @RequestParam(required = false) String tenantId) {
-        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
         PageResponse<List<FlowInstance>> pageResult = instanceService.page(businessType, initiatorId, flowStatus,
                 startTime, endTime, tid, pageNo, pageSize);
         List<FlowInstance> instances = pageResult.getData();
@@ -183,7 +183,7 @@ public class FlowInstanceQueryController {
             @RequestParam(defaultValue = "1") @Min(1) int pageNum,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
         PageResponse<List<FlowInstance>> pageResult = instanceService.page(null, AuthContextUtils.getUserId(), status,
-                startTime, endTime, AuthContextUtils.getTenantIdOrDefault("1"),
+                startTime, endTime, AuthContextUtils.getTenantIdOrDefault(),
                 pageNum, pageSize);
         List<FlowInstance> instances = pageResult.getData();
         List<FlowInstanceVO> vos = WorkflowConverter.INSTANT.flowInstanceListToVO(instances);

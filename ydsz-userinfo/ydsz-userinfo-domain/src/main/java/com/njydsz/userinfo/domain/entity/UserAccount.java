@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import com.njydsz.common.jdbc.handler.IntegerStringTypeHandler;
+import com.njydsz.common.safe.encrypt.EncryptField;
+import com.njydsz.common.safe.encrypt.EncryptTypeHandler;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -20,6 +22,7 @@ import java.time.LocalDateTime;
  * <p><b>安全敏感字段：</b>
  * <ul>
  *   <li>{@code password}：BCrypt 加密（cost=10），禁止明文存储与返回</li>
+ *   <li>{@code realName}：AES-256-GCM 字段级加密（{@code @EncryptField}），密文存储，明文仅在内存中出现</li>
  *   <li>{@code phone} / {@code email}：使用 {@code SensitiveType.PHONE/EMAIL} 脱敏</li>
  *   <li>{@code loginFailCount} / {@code lockedUntil}：登录失败保护，达到阈值自动锁定</li>
  * </ul>
@@ -55,7 +58,20 @@ public class UserAccount extends MpBaseEntity<String> {
     /** 登录密码（BCrypt 加密，禁止明文存储/返回） */
     private String password;
 
-    /** 真实姓名 */
+    /**
+     * 真实姓名（AES-256-GCM 加密存储）
+     *
+     * <p>使用 common-safe 的 {@link EncryptField} + {@link EncryptTypeHandler} 实现字段级加密，
+     * 明文仅在应用内存中出现，数据库存储密文。解密由 TypeHandler 自动完成，业务代码无需感知。
+     *
+     * <p><b>注意：</b>加密字段不可用于 WHERE/LIKE 条件查询（AES-GCM 随机 IV 导致明文相同密文不同），
+     * 本字段仅用于 SELECT 展示，不参与条件检索。
+     *
+     * @see EncryptField
+     * @see EncryptTypeHandler
+     */
+    @TableField(typeHandler = EncryptTypeHandler.class)
+    @EncryptField
     private String realName;
 
     /** 手机号（用于短信验证/找回密码，脱敏返回） */

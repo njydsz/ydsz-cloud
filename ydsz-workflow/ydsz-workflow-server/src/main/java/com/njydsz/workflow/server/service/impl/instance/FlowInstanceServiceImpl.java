@@ -247,7 +247,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         // P2-16: 多租户上下文 - DTO 显式传入优先，否则从 SecurityContext 获取
         String tenantId = dto.getTenantId() != null
                 ? dto.getTenantId()
-                : AuthContextUtils.getTenantIdOrDefault("1");
+                : AuthContextUtils.getTenantIdOrDefault();
         FlowInstance existing = instanceMapper.selectByBusiness(
                 tenantId, dto.getBusinessType(), dto.getBusinessId());
         if (existing != null) {
@@ -378,7 +378,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     @Transactional(readOnly = true)
     public FlowInstance getByBusiness(String businessType, String businessId) {
         // P1-2: 增加 tenantId 过滤，防止跨租户串号；仅返回活跃实例（RUNNING/SUSPENDED）
-        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault();
         return instanceMapper.selectByBusiness(tenantId, businessType, businessId);
     }
 
@@ -1277,7 +1277,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 .build();
         }
         // 解析租户
-        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault("1");
+        String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
         // 查询已发布流程定义
         FlowDefinition def = definitionService.getPublished(flowCode, version, tid);
         if (def == null) {

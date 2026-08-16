@@ -86,7 +86,7 @@ public class FlowCcController {
     @Audit(module = "流程抄送", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'pageCc'")
     @AuthApiPermission(apiCodes = PermissionCodes.WORKFLOW_CC_VIEW)
     public BaseResponse<List<FlowCc>> pageCc(@Valid @RequestBody FlowCcQueryDTO query) {
-        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault();
         String userId = AuthContextUtils.getUserId();
         int pageNo = query.getPageNum();
         int pageSize = query.getPageSize();
@@ -101,7 +101,7 @@ public class FlowCcController {
      */
     @GetMapping("/cc/unreadCount")
     public BaseResponse<Long> ccUnreadCount() {
-        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault();
         String userId = AuthContextUtils.getUserId();
         return BaseResponse.success(ccService.countUnread(userId, tenantId));
     }
@@ -117,7 +117,7 @@ public class FlowCcController {
     @PostMapping("/cc/{id}/read")
     @Audit(module = "流程抄送", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'ccMarkRead'")
     public BaseResponse<Boolean> ccMarkRead(@PathVariable String id) {
-        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault();
         String userId = AuthContextUtils.getUserId();
         ccService.markRead(tenantId, userId, id);
         return BaseResponse.success(Boolean.TRUE);
@@ -133,7 +133,7 @@ public class FlowCcController {
     @PostMapping("/cc/readAll")
     @Audit(module = "流程抄送", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'ccMarkAllRead'")
     public BaseResponse<Integer> ccMarkAllRead() {
-        String tenantId = AuthContextUtils.getTenantIdOrDefault("1");
+        String tenantId = AuthContextUtils.getTenantIdOrDefault();
         String userId = AuthContextUtils.getUserId();
         return BaseResponse.success(ccService.markAllRead(tenantId, userId));
     }
