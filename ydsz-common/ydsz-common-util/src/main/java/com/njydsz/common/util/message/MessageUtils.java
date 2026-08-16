@@ -7,8 +7,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.MessageSource;
 
-import com.njydsz.common.util.auth.AuthInfoUtils;
 import com.njydsz.common.util.config.StaticBridge;
+import com.njydsz.common.util.internal.proxy.CoreConstants;
+import com.njydsz.common.util.internal.proxy.RequestContextProxy;
 import com.njydsz.common.util.string.StringUtils;
 
 /**
@@ -184,11 +185,18 @@ public final class MessageUtils {
     /**
      * 获取当前语言环境
      *
+     * <p>优先从认证上下文读取用户语言（通过反射代理访问 RequestContext），
+     * 不可用时降级为系统默认 Locale。
+     *
+     * <p><b>设计说明：</b>本方法通过反射获取 AuthInfo 对象的 userLanguage 属性，
+     * 避免 util 层对 common-auth 的编译期依赖，保持 L1 工具层纯净。
+     *
      * @return Locale 当前语言环境
      */
     private static Locale getLocale() {
         try {
-            String userLanguage = AuthInfoUtils.getUserLanguage();
+            Object langObj = RequestContextProxy.get(CoreConstants.KEY_AUTH_INFO);
+            String userLanguage = invokeGetUserLanguage(langObj);
             if (StringUtils.isBlank(userLanguage)) {
                 return Locale.getDefault();
             }
@@ -209,6 +217,28 @@ public final class MessageUtils {
         } catch (Exception e) {
             logger.warn("Failed to get user language, using default locale", e);
             return Locale.getDefault();
+        }
+    }
+
+    /**
+     * 通过反射调用对象的 getUserLanguage 方法（避免对 AuthInfo 的编译期依赖）。
+     *
+     * <p>L1 工具层禁止依赖 common-auth，本方法通过反射桥接获取用户语言。
+     *
+     * @param authObj 认证信息对象
+     * @return 用户语言码；获取失败返回 null
+     */
+    private static String invokeGetUserLanguage(Object authObj) {
+        if (authObj == null) {
+            return null;
+        }
+        try {
+            java.lang.reflect.Method method = authObj.getClass().getMethod("getUserLanguage");
+            Object result = method.invoke(authObj);
+            return result instanceof String str ? str : null;
+        } catch (Exception e) {
+            logger.debug("反射获取 userLanguage 失败: {}", e.getMessage());
+            return null;
         }
     }
 }

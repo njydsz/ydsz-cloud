@@ -6,21 +6,11 @@ import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
-import java.time.format.DateTimeFormatter;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DateUtil;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.apache.poi.xslf.usermodel.XMLSlideShow;
-import org.apache.poi.xslf.usermodel.XSLFSlide;
-import org.apache.poi.xslf.usermodel.XSLFTextShape;
-import org.apache.poi.xwpf.usermodel.XWPFDocument;
-import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
 
@@ -29,15 +19,15 @@ import com.njydsz.common.docs.domain.ParseOptions;
 import com.njydsz.common.docs.enums.DocumentFormat;
 import com.njydsz.common.docs.exception.DocumentException;
 import com.njydsz.common.docs.exception.DocumentExceptionCode;
-import com.njydsz.common.docs.parser.impl.PdfDocumentParser;
+import com.njydsz.common.docs.parser.registry.DocumentParserRegistry;
 
 /**
  * 文档格式转换器
  * <p>
  * 将 Office 文档（Word/Excel/PPT）和 PDF 转换为纯文本格式。
  * <p>
- * P2 功能：当前仅支持 Office→TXT 和 PDF→TXT 转换，
- * Office→PDF 转换需要 LibreOffice/OpenOffice 服务，留作后续扩展。
+ * 实现策略：优先委托已注册的 {@link DocumentParser} 获取结构化内容后提取文本，
+ * 避免重复实现 POI 解析逻辑；仅当解析器不可用时才使用内置轻量转换。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -47,10 +37,10 @@ import com.njydsz.common.docs.parser.impl.PdfDocumentParser;
 @ConditionalOnClass(name = "org.apache.poi.xwpf.usermodel.XWPFDocument")
 public class DocumentConverter {
 
-    private final PdfDocumentParser pdfParser;
+    private final DocumentParserRegistry parserRegistry;
 
-    public DocumentConverter(PdfDocumentParser pdfParser) {
-        this.pdfParser = pdfParser;
+    public DocumentConverter(DocumentParserRegistry parserRegistry) {
+        this.parserRegistry = parserRegistry;
     }
 
     /**
@@ -72,56 +62,50 @@ public class DocumentConverter {
     }
 
     /**
-     * 将 Office 文档转换为纯文本
+     * 将文档转换为纯文本字节流。
+     *
+     * <p>优先使用已注册的解析器获取 {@link DocumentContent#getText()}，
+     * 避免重复实现 Office 文档解析逻辑。解析器不可用时降级到内置轻量实现。
      */
     private byte[] convertToText(InputStream inputStream, String fileName, DocumentFormat sourceFormat) {
+        // 优先委托已注册解析器
+        if (parserRegistry.isSupported(sourceFormat)) {
+            try {
+                var parser = parserRegistry.getParser(sourceFormat);
+                DocumentContent content = parser.parse(inputStream, fileName, ParseOptions.builder().build());
+                String text = content.getText();
+                return text != null ? text.getBytes(StandardCharsets.UTF_8) : new byte[0];
+            } catch (Exception e) {
+                log.warn("[DocumentConverter] 委托解析器失败，降级到内置实现: {}", e.getMessage());
+            }
+        }
+
+        // 降级：内置轻量实现（仅 Excel 需要特殊处理，Word/PPT/PDF 已有解析器）
+        if (sourceFormat == DocumentFormat.XLSX || sourceFormat == DocumentFormat.XLS) {
+            return convertExcelToTextFallback(inputStream, fileName);
+        }
+
+        throw new DocumentException(DocumentExceptionCode.CONVERT_FAILED,
+                "不支持的源格式: " + sourceFormat);
+    }
+
+    /**
+     * Excel → 纯文本降级实现（解析器不可用时）。
+     *
+     * <p>此方法仅在解析器未注册时执行，作为兜底保障。
+     * 正常路径应委托 {@link com.njydsz.common.docs.parser.impl.ExcelDocumentParser}。
+     */
+    private byte[] convertExcelToTextFallback(InputStream inputStream, String fileName) {
         try (ByteArrayOutputStream output = new ByteArrayOutputStream();
              Writer writer = new OutputStreamWriter(output, StandardCharsets.UTF_8)) {
 
-            switch (sourceFormat) {
-                case DOCX -> convertWordToText(inputStream, writer);
-                case XLSX, XLS -> convertExcelToText(inputStream, writer);
-                case PDF -> convertPdfToText(inputStream, writer);
-                case PPTX -> convertPptToText(inputStream, writer);
-                default -> throw new DocumentException(DocumentExceptionCode.CONVERT_FAILED,
-                        "不支持的源格式: " + sourceFormat);
-            }
-
-            writer.flush();
-            return output.toByteArray();
-
-        } catch (IOException e) {
-            log.error("[DocumentConverter] 转换失败: {}", fileName, e);
-            throw new DocumentException(DocumentExceptionCode.CONVERT_FAILED, e);
-        }
-    }
-
-    /**
-     * Word → 纯文本
-     */
-    private void convertWordToText(InputStream input, Writer writer) throws IOException {
-        try (XWPFDocument doc = new XWPFDocument(input)) {
-            for (XWPFParagraph para : doc.getParagraphs()) {
-                String text = para.getText();
-                if (text != null && !text.isBlank()) {
-                    writer.write(text);
-                    writer.write('\n');
-                }
-            }
-        }
-    }
-
-    /**
-     * Excel → 纯文本
-     */
-    private void convertExcelToText(InputStream input, Writer writer) throws IOException {
-        try (Workbook workbook = WorkbookFactory.create(input)) {
+            var workbook = org.apache.poi.ss.usermodel.WorkbookFactory.create(inputStream);
             for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
-                Sheet sheet = workbook.getSheetAt(i);
+                var sheet = workbook.getSheetAt(i);
                 writer.write("=== ");
                 writer.write(sheet.getSheetName());
                 writer.write(" ===\n");
-                for (Row row : sheet) {
+                for (var row : sheet) {
                     StringBuilder sb = new StringBuilder();
                     for (int c = 0; c < row.getLastCellNum(); c++) {
                         if (c > 0) {
@@ -138,43 +122,23 @@ public class DocumentConverter {
                     }
                 }
             }
+            writer.flush();
+            return output.toByteArray();
+        } catch (IOException e) {
+            log.error("[DocumentConverter] Excel 降级转换失败: {}", fileName, e);
+            throw new DocumentException(DocumentExceptionCode.CONVERT_FAILED, e);
         }
     }
 
     /**
-     * PPT → 纯文本
-     */
-    private void convertPptToText(InputStream input, Writer writer) throws IOException {
-        try (XMLSlideShow ppt = new XMLSlideShow(input)) {
-            int pageNum = 0;
-            for (XSLFSlide slide : ppt.getSlides()) {
-                pageNum++;
-                writer.write("--- Slide ");
-                writer.write(String.valueOf(pageNum));
-                writer.write(" ---\n");
-                for (var shape : slide.getShapes()) {
-                    if (shape instanceof XSLFTextShape textShape) {
-                        String text = textShape.getText();
-                        if (text != null && !text.isBlank()) {
-                            writer.write(text);
-                            writer.write('\n');
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * PDF → 纯文本（委托 PdfDocumentParser）
-     */
-    private void convertPdfToText(InputStream input, Writer writer) throws IOException {
-        DocumentContent content = pdfParser.parse(input, "convert.pdf", ParseOptions.builder().build());
-        writer.write(content.getText());
-    }
-
-    /**
-     * 将单元格值转换为字符串（公共方法，供 DocumentConverter 和 ExcelDocumentParser 共享）
+     * 将 POI 单元格值转换为字符串。
+     *
+     * <p>处理常见单元格类型（字符串、数字、布尔、公式），
+     * 日期按 {@code yyyy-MM-dd HH:mm:ss} 格式输出。
+     * 数字为整数时去掉小数部分。
+     *
+     * @param cell POI 单元格对象，为 {@code null} 时返回空串
+     * @return 单元格值的字符串表示；永不为 {@code null}
      */
     public static String getCellValueAsString(Cell cell) {
         if (cell == null) {
@@ -185,7 +149,7 @@ public class DocumentConverter {
             case STRING -> cell.getStringCellValue().trim();
             case NUMERIC -> {
                 if (DateUtil.isCellDateFormatted(cell)) {
-                    yield DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                    yield java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
                             .format(cell.getLocalDateTimeCellValue());
                 }
                 double num = cell.getNumericCellValue();

@@ -21,7 +21,6 @@ import com.njydsz.common.base.config.ConditionalOnPlatform;
 import com.njydsz.common.base.config.PlatformMode;
 import com.njydsz.common.base.constant.FilterOrder;
 import com.njydsz.common.base.constant.InterceptorOrder;
-import com.njydsz.common.base.interceptor.BaseHttpInterceptor;
 import com.njydsz.common.safe.config.SafeConfiguration;
 import com.njydsz.common.safe.config.SecurityHeaderProperties;
 import com.njydsz.common.web.advice.GlobalResponseAdvice;
@@ -57,7 +56,6 @@ import nl.basjes.parse.useragent.UserAgentAnalyzer;
 })
 public class WebMvcConfiguration extends BaseMvcConfiguration {
 
-    private final BaseHttpInterceptor baseHttpInterceptor;
     private final AuthFilterConfiguration authFilterConfiguration;
     private final AuthHandlerFactory authHandlerFactory;
     private final WebTraceProperties webTraceProperties;
@@ -68,7 +66,6 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
     private final RequestLogInterceptor requestLogInterceptor;
 
     public WebMvcConfiguration(WebCorsProperties webCorsProperties,
-                               BaseHttpInterceptor baseHttpInterceptor,
                                AuthFilterConfiguration authFilterConfiguration,
                                AuthHandlerFactory authHandlerFactory,
                                WebTraceProperties webTraceProperties,
@@ -77,7 +74,6 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
                                ApplicationContext applicationContext) {
         super(webCorsProperties);
         this.webCorsProperties = webCorsProperties;
-        this.baseHttpInterceptor = baseHttpInterceptor;
         this.authFilterConfiguration = authFilterConfiguration;
         this.authHandlerFactory = authHandlerFactory;
         this.webTraceProperties = webTraceProperties;
@@ -91,10 +87,6 @@ public class WebMvcConfiguration extends BaseMvcConfiguration {
         registry.addInterceptor(requestLogInterceptor)
                 .addPathPatterns("/**")
                 .order(InterceptorOrder.REQUEST_LOG);
-
-        registry.addInterceptor(baseHttpInterceptor)
-                .addPathPatterns("/**")
-                .order(InterceptorOrder.REQUEST_CONTEXT_CLEANUP);
     }
 
     /**

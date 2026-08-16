@@ -20,7 +20,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Pattern;
@@ -169,26 +168,20 @@ public abstract class AbstractFileStorage implements IFileStorage {
             new ConcurrentHashMap<>();
 
     /**
-     * 批量删除专用线程池（4 线程，IO 密集型），
-     * 避免使用 ForkJoinPool.commonPool() 影响同 JVM 内其他 parallelStream。
+     * 批量删除专用线程池（由 ydsz-common-thread 统一管理）。
+     * Bean 名称 {@code fileDeleteExecutor}，通过 setter 注入。
+     * 未注入时使用 {@link CompletableFuture#runAsync(Runnable)} 作为降级。
+     *
+     * @see <a href="https://ydsz-cloud.github.io/docs/encoding-spec#15-4">云顶编码规范 15.4 节</a>
      */
-    private static final ExecutorService DELETE_EXECUTOR =
-            Executors.newFixedThreadPool(4, r -> {
-                Thread t = new Thread(r, "file-batch-delete-" + System.nanoTime());
-                t.setDaemon(true);
-                return t;
-            });
+    private transient ExecutorService deleteExecutor;
 
     /**
-     * 异步上传专用线程池（8 线程，IO 密集型），
-     * 用于 {@link #uploadAsync} 非阻塞上传，避免占用 Tomcat 工作线程。
+     * 异步上传专用线程池（由 ydsz-common-thread 统一管理）。
+     * Bean 名称 {@code fileUploadExecutor}，通过 setter 注入。
+     * 未注入时使用 {@link CompletableFuture#supplyAsync(java.util.function.Supplier)} 作为降级。
      */
-    private static final ExecutorService ASYNC_UPLOAD_EXECUTOR =
-            Executors.newFixedThreadPool(8, r -> {
-                Thread t = new Thread(r, "file-async-upload-" + System.nanoTime());
-                t.setDaemon(true);
-                return t;
-            });
+    private transient ExecutorService asyncUploadExecutor;
 
     protected AbstractFileStorage(FileProperties fileProperties) {
         this(fileProperties, null);
@@ -259,6 +252,24 @@ public abstract class AbstractFileStorage implements IFileStorage {
     public void setFileMetrics(FileMetrics metrics) { this.fileMetrics = metrics; }
     public void setRetryHelper(StorageRetryHelper helper) { this.retryHelper = helper; }
     public void setFileTypeValidator(FileTypeValidator validator) { this.fileTypeValidator = validator; }
+
+    /**
+     * 设置批量删除专用线程池（ydsz-common-thread 管理的 Bean）。
+     *
+     * @param executor 线程池实例，为 null 时降级为 {@link CompletableFuture#runAsync(Runnable)}
+     */
+    public void setDeleteExecutor(ExecutorService executor) {
+        this.deleteExecutor = executor;
+    }
+
+    /**
+     * 设置异步上传专用线程池（ydsz-common-thread 管理的 Bean）。
+     *
+     * @param executor 线程池实例，为 null 时降级为 {@link CompletableFuture#supplyAsync(java.util.function.Supplier)}
+     */
+    public void setAsyncUploadExecutor(ExecutorService executor) {
+        this.asyncUploadExecutor = executor;
+    }
 
     /**
      * 声明当前存储实现是否支持服务端复制（Server-Side Copy）。
@@ -535,9 +546,14 @@ public abstract class AbstractFileStorage implements IFileStorage {
 
     @Override
     public CompletableFuture<FileStorage> uploadAsync(String bucketName, String objectName, MultipartFile file) {
+        ExecutorService executor = asyncUploadExecutor;
+        if (executor != null) {
+            return CompletableFuture.supplyAsync(
+                    () -> upload(bucketName, objectName, file, null), executor);
+        }
+        // 降级：ydsz-common-thread 不可用时使用默认 ForkJoinPool
         return CompletableFuture.supplyAsync(
-                () -> upload(bucketName, objectName, file, null),
-                ASYNC_UPLOAD_EXECUTOR);
+                () -> upload(bucketName, objectName, file, null));
     }
 
     @Override
@@ -566,18 +582,22 @@ public abstract class AbstractFileStorage implements IFileStorage {
         }
         ConcurrentLinkedQueue<String> successList = new ConcurrentLinkedQueue<>();
         Map<String, String> failedMap = new ConcurrentHashMap<>();
-        // P0-8: Parallel batch delete using dedicated executor (not ForkJoinPool.commonPool)
+        // 使用 ydsz-common-thread 管理的线程池执行并行批量删除，未注入时降级为默认 ForkJoinPool
+        ExecutorService executor = deleteExecutor;
         List<CompletableFuture<Void>> futures = objectNames.stream()
-                .map(objectName -> CompletableFuture.runAsync(() -> {
-                    try {
-                        delete(bucketName, objectName);
-                        successList.add(objectName);
-                    } catch (Exception e) {
-                        String errorMsg = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
-                        failedMap.put(objectName, errorMsg);
-                        log.error("batch delete failed, object={}", objectName, e);
-                    }
-                }, DELETE_EXECUTOR))
+                .map(objectName -> {
+                    Runnable task = () -> {
+                        try {
+                            delete(bucketName, objectName);
+                            successList.add(objectName);
+                        } catch (Exception e) {
+                            String errorMsg = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+                            failedMap.put(objectName, errorMsg);
+                            log.error("batch delete failed, object={}", objectName, e);
+                        }
+                    };
+                    return executor != null ? CompletableFuture.runAsync(task, executor) : CompletableFuture.runAsync(task);
+                })
                 .toList();
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
         return new BatchDeleteResult(List.copyOf(successList), Map.copyOf(failedMap));

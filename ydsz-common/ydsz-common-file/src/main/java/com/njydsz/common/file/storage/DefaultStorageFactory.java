@@ -2,6 +2,7 @@ package com.njydsz.common.file.storage;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Function;
 
 import com.njydsz.common.exception.custom.BusinessException;
@@ -76,6 +77,12 @@ public class DefaultStorageFactory implements IFileStorageProvider {
 
     /** 文件类型校验器 */
     private FileTypeValidator fileTypeValidator;
+
+    /** 批量删除专用线程池（ydsz-common-thread 管理） */
+    private ExecutorService deleteExecutor;
+
+    /** 异步上传专用线程池（ydsz-common-thread 管理） */
+    private ExecutorService asyncUploadExecutor;
 
     /**
      * 构造存储工厂
@@ -169,6 +176,26 @@ public class DefaultStorageFactory implements IFileStorageProvider {
     }
 
     /**
+     * 设置批量删除专用线程池，并同步更新已创建的存储实例
+     *
+     * @param executor 批量删除线程池（ydsz-common-thread 管理的 Bean）
+     */
+    public void setDeleteExecutor(ExecutorService executor) {
+        this.deleteExecutor = executor;
+        storageCache.values().forEach(s -> { if (s instanceof AbstractFileStorage afs) afs.setDeleteExecutor(executor); });
+    }
+
+    /**
+     * 设置异步上传专用线程池，并同步更新已创建的存储实例
+     *
+     * @param executor 异步上传线程池（ydsz-common-thread 管理的 Bean）
+     */
+    public void setAsyncUploadExecutor(ExecutorService executor) {
+        this.asyncUploadExecutor = executor;
+        storageCache.values().forEach(s -> { if (s instanceof AbstractFileStorage afs) afs.setAsyncUploadExecutor(executor); });
+    }
+
+    /**
      * 获取当前配置对应的文件存储实例（单例）
      *
      * @return 文件存储实例
@@ -234,6 +261,8 @@ public class DefaultStorageFactory implements IFileStorageProvider {
             if (fileMetrics != null) afs.setFileMetrics(fileMetrics);
             if (retryHelper != null) afs.setRetryHelper(retryHelper);
             if (fileTypeValidator != null) afs.setFileTypeValidator(fileTypeValidator);
+            if (deleteExecutor != null) afs.setDeleteExecutor(deleteExecutor);
+            if (asyncUploadExecutor != null) afs.setAsyncUploadExecutor(asyncUploadExecutor);
         }
         return storage;
     }

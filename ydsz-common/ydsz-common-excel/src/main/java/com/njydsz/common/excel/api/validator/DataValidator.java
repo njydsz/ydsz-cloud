@@ -5,6 +5,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
 import com.njydsz.common.excel.annotation.ExcelProperty;
 import com.njydsz.common.excel.exception.ExcelReadException;
 import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
@@ -12,15 +17,14 @@ import com.njydsz.common.excel.support.asm.ASMFieldAccessor.FieldGetter;
 import com.njydsz.common.excel.support.cache.ReflectCache;
 
 /**
- * 数据验证器 — 读取数据时进行字段验证。
+ * 数据验证器 — 读取数据时基于 JSR-303 标准注解进行字段验证。
  *
- * <p>支持以下验证规则（通过 {@link ExcelProperty} 注解配置）：</p>
+ * <p>支持以下校验规则（通过 Jakarta Bean Validation 注解配置）：</p>
  * <ul>
- *   <li>{@code required} — 必填字段验证</li>
- *   <li>{@code maxLength} — 字符串最大长度验证</li>
- *   <li>{@code minValue / maxValue} — 数值范围验证</li>
- *   <li>{@code pattern} — 正则表达式验证</li>
- *   <li>{@code errorMessage} — 自定义验证错误消息</li>
+ *   <li>{@link NotNull} — 必填字段验证</li>
+ *   <li>{@link Size#max()} — 字符串最大长度验证</li>
+ *   <li>{@link Min} / {@link Max} — 数值范围验证</li>
+ *   <li>{@link jakarta.validation.constraints.Pattern} — 正则表达式验证</li>
  * </ul>
  *
  * <p>支持两种校验模式（通过 {@link ValidationMode} 选择）：</p>
@@ -33,13 +37,21 @@ import com.njydsz.common.excel.support.cache.ReflectCache;
  * <h3>使用示例</h3>
  * <pre>{@code
  * public class UserDTO {
- *     @ExcelProperty(value = "姓名", required = true, maxLength = 50)
+ *     @ExcelProperty(value = "姓名", order = 1)
+ *     @NotNull(message = "姓名不能为空")
+ *     @Size(max = 50, message = "姓名长度不能超过50")
  *     private String name;
  *
- *     @ExcelProperty(value = "年龄", minValue = "0", maxValue = "150")
+ *     @ExcelProperty(value = "年龄", order = 2)
+ *     @Min(value = 0, message = "年龄不能小于0")
+ *     @Max(value = 150, message = "年龄不能大于150")
  *     private Integer age;
  *
- *     @ExcelProperty(value = "邮箱", pattern = "^[\\w.-]+@[\\w.-]+\\.\\w+$")
+ *     @ExcelProperty(value = "邮箱", order = 3)
+ *     @jakarta.validation.constraints.Pattern(
+ *         regexp = "^[\\w.-]+@[\\w.-]+\\.\\w+$",
+ *         message = "邮箱格式不正确"
+ *     )
  *     private String email;
  * }
  *
@@ -54,9 +66,6 @@ import com.njydsz.common.excel.support.cache.ReflectCache;
  * @since 1.0.0
  */
 public class DataValidator {
-
-    /** 数值转换精度：使用 String 形式避免浮点误差 */
-    private static final int BYTE_TO_MB_SHIFT = 1024;
 
     private DataValidator() {
     }
@@ -178,7 +187,7 @@ public class DataValidator {
 
             try {
                 Object value = getter.get(obj);
-                validateFieldValue(annotation, fieldName, value, rowNum);
+                validateFieldValue(field, fieldName, value, rowNum);
             } catch (ExcelReadException e) {
                 throw e;
             } catch (Exception e) {
@@ -212,7 +221,7 @@ public class DataValidator {
 
             try {
                 Object value = getter.get(obj);
-                collectFieldErrors(annotation, fieldName, value, rowNum, errors);
+                collectFieldErrors(field, fieldName, value, rowNum, errors);
             } catch (Exception e) {
                 errors.add(new ValidationError(rowNum, fieldName, null,
                         "字段访问失败: " + e.getMessage()));
@@ -225,46 +234,49 @@ public class DataValidator {
     }
 
     /**
-     * 单字段校验 —— 根据 value 类型分派到具体规则（fail-fast 路径发现错误立即抛出）。
+     * 单字段校验 —— 根据 JSR-303 注解分派到具体规则（fail-fast 路径发现错误立即抛出）。
      *
-     * @param annotation 字段注解
-     * @param fieldName  字段中文名
-     * @param value      字段值（可能为 {@code null}）
-     * @param rowNum     行号
+     * @param field     字段对象
+     * @param fieldName 字段中文名
+     * @param value     字段值（可能为 {@code null}）
+     * @param rowNum    行号
      */
-    private static void validateFieldValue(ExcelProperty annotation, String fieldName,
-                                          Object value, int rowNum) {
-        if (annotation.required() && value == null) {
+    private static void validateFieldValue(Field field, String fieldName,
+                                           Object value, int rowNum) {
+        // @NotNull 必填校验
+        if (field.isAnnotationPresent(NotNull.class) && value == null) {
+            NotNull notNull = field.getAnnotation(NotNull.class);
             throw ExcelReadException.validationFailed(rowNum, fieldName, null,
-                    getErrorMessage(annotation, "字段为必填项"));
+                    notNull.message());
         }
 
         if (value == null) {
             return;
         }
 
-        validateStringRules(annotation, fieldName, value, rowNum);
+        validateStringRules(field, fieldName, value, rowNum);
 
         if (value instanceof Number numVal) {
-            validateNumberRange(annotation, fieldName, numVal, rowNum);
+            validateNumberRange(field, fieldName, numVal, rowNum);
         }
     }
 
     /**
      * 收集单字段所有校验错误到 errors 列表（collectAll 路径不立即抛出）。
      *
-     * @param annotation 字段注解
-     * @param fieldName  字段中文名
-     * @param value      字段值（可能为 {@code null}）
-     * @param rowNum     行号
-     * @param errors     错误收集器
+     * @param field     字段对象
+     * @param fieldName 字段中文名
+     * @param value     字段值（可能为 {@code null}）
+     * @param rowNum    行号
+     * @param errors    错误收集器
      */
-    private static void collectFieldErrors(ExcelProperty annotation, String fieldName,
-                                           Object value, int rowNum,
-                                           List<ValidationError> errors) {
-        if (annotation.required() && value == null) {
-            errors.add(new ValidationError(rowNum, fieldName, null,
-                    getErrorMessage(annotation, "字段为必填项")));
+    private static void collectFieldErrors(Field field, String fieldName,
+                                            Object value, int rowNum,
+                                            List<ValidationError> errors) {
+        // @NotNull 必填校验
+        if (field.isAnnotationPresent(NotNull.class) && value == null) {
+            NotNull notNull = field.getAnnotation(NotNull.class);
+            errors.add(new ValidationError(rowNum, fieldName, null, notNull.message()));
             return;
         }
 
@@ -272,100 +284,108 @@ public class DataValidator {
             return;
         }
 
-        collectStringRuleErrors(annotation, fieldName, value, rowNum, errors);
+        collectStringRuleErrors(field, fieldName, value, rowNum, errors);
 
         if (value instanceof Number numVal) {
-            collectNumberRangeErrors(annotation, fieldName, numVal, rowNum, errors);
+            collectNumberRangeErrors(field, fieldName, numVal, rowNum, errors);
         }
     }
 
     /**
      * 字符串相关规则校验（fail-fast）。
      *
-     * @param annotation 字段注解
-     * @param fieldName  字段中文名
-     * @param value      字段值（非 null）
-     * @param rowNum     行号
+     * @param field     字段对象
+     * @param fieldName 字段中文名
+     * @param value     字段值（非 null）
+     * @param rowNum    行号
      */
-    private static void validateStringRules(ExcelProperty annotation, String fieldName,
-                                            Object value, int rowNum) {
+    private static void validateStringRules(Field field, String fieldName,
+                                             Object value, int rowNum) {
         if (!(value instanceof String strVal)) {
             return;
         }
 
-        if (annotation.maxLength() >= 0 && strVal.length() > annotation.maxLength()) {
-            throw ExcelReadException.validationFailed(rowNum, fieldName, value,
-                    getErrorMessage(annotation,
-                            "字段长度超过最大限制: " + strVal.length() + " > " + annotation.maxLength()));
+        // @Size(max = N) 最大长度校验
+        if (field.isAnnotationPresent(Size.class)) {
+            Size size = field.getAnnotation(Size.class);
+            if (strVal.length() > size.max()) {
+                throw ExcelReadException.validationFailed(rowNum, fieldName, value,
+                        size.message());
+            }
         }
 
-        if (!annotation.pattern().isEmpty() && !Pattern.matches(annotation.pattern(), strVal)) {
-            throw ExcelReadException.validationFailed(rowNum, fieldName, value,
-                    getErrorMessage(annotation, "字段值不匹配正则: " + annotation.pattern()));
+        // @Pattern(regexp = "...") 正则校验
+        if (field.isAnnotationPresent(jakarta.validation.constraints.Pattern.class)) {
+            jakarta.validation.constraints.Pattern pattern =
+                    field.getAnnotation(jakarta.validation.constraints.Pattern.class);
+            if (!Pattern.matches(pattern.regexp(), strVal)) {
+                throw ExcelReadException.validationFailed(rowNum, fieldName, value,
+                        pattern.message());
+            }
         }
     }
 
     /**
      * 字符串相关规则校验错误收集。
      *
-     * @param annotation 字段注解
-     * @param fieldName  字段中文名
-     * @param value      字段值（非 null）
-     * @param rowNum     行号
-     * @param errors     错误收集器
+     * @param field     字段对象
+     * @param fieldName 字段中文名
+     * @param value     字段值（非 null）
+     * @param rowNum    行号
+     * @param errors    错误收集器
      */
-    private static void collectStringRuleErrors(ExcelProperty annotation, String fieldName,
-                                                Object value, int rowNum,
-                                                List<ValidationError> errors) {
+    private static void collectStringRuleErrors(Field field, String fieldName,
+                                                 Object value, int rowNum,
+                                                 List<ValidationError> errors) {
         if (!(value instanceof String strVal)) {
             return;
         }
 
-        if (annotation.maxLength() >= 0 && strVal.length() > annotation.maxLength()) {
-            errors.add(new ValidationError(rowNum, fieldName, value,
-                    getErrorMessage(annotation,
-                            "字段长度超过最大限制: " + strVal.length() + " > " + annotation.maxLength())));
+        // @Size(max = N) 最大长度校验
+        if (field.isAnnotationPresent(Size.class)) {
+            Size size = field.getAnnotation(Size.class);
+            if (strVal.length() > size.max()) {
+                errors.add(new ValidationError(rowNum, fieldName, value, size.message()));
+            }
         }
 
-        if (!annotation.pattern().isEmpty() && !Pattern.matches(annotation.pattern(), strVal)) {
-            errors.add(new ValidationError(rowNum, fieldName, value,
-                    getErrorMessage(annotation, "字段值不匹配正则: " + annotation.pattern())));
+        // @Pattern(regexp = "...") 正则校验
+        if (field.isAnnotationPresent(jakarta.validation.constraints.Pattern.class)) {
+            jakarta.validation.constraints.Pattern pattern =
+                    field.getAnnotation(jakarta.validation.constraints.Pattern.class);
+            if (!Pattern.matches(pattern.regexp(), strVal)) {
+                errors.add(new ValidationError(rowNum, fieldName, value, pattern.message()));
+            }
         }
     }
 
     /**
      * 数值范围验证（fail-fast 路径）。
      *
-     * @param annotation 字段注解
-     * @param fieldName  字段中文名
-     * @param numVal     数值（非 null）
-     * @param rowNum     行号
+     * @param field     字段对象
+     * @param fieldName 字段中文名
+     * @param numVal    数值（非 null）
+     * @param rowNum    行号
      */
-    private static void validateNumberRange(ExcelProperty annotation, String fieldName,
+    private static void validateNumberRange(Field field, String fieldName,
                                             Number numVal, int rowNum) {
         double value = numVal.doubleValue();
 
-        if (!annotation.minValue().isEmpty()) {
-            try {
-                double min = Double.parseDouble(annotation.minValue());
-                if (Double.compare(value, min) < 0) {
-                    throw ExcelReadException.validationFailed(rowNum, fieldName, numVal,
-                            getErrorMessage(annotation, "字段值小于最小值: " + value + " < " + min));
-                }
-            } catch (NumberFormatException e) {
-                // min 值不是合法数字，跳过验证
+        // @Min(value = N) 最小值校验
+        if (field.isAnnotationPresent(Min.class)) {
+            Min min = field.getAnnotation(Min.class);
+            if (Double.compare(value, min.value()) < 0) {
+                throw ExcelReadException.validationFailed(rowNum, fieldName, numVal,
+                        min.message());
             }
         }
 
-        if (!annotation.maxValue().isEmpty()) {
-            try {
-                double max = Double.parseDouble(annotation.maxValue());
-                if (Double.compare(value, max) > 0) {
-                    throw ExcelReadException.validationFailed(rowNum, fieldName, numVal,
-                            getErrorMessage(annotation, "字段值超过最大值: " + value + " > " + max));
-                }
-            } catch (NumberFormatException e) {
-                // max 值不是合法数字，跳过验证
+        // @Max(value = N) 最大值校验
+        if (field.isAnnotationPresent(Max.class)) {
+            Max max = field.getAnnotation(Max.class);
+            if (Double.compare(value, max.value()) > 0) {
+                throw ExcelReadException.validationFailed(rowNum, fieldName, numVal,
+                        max.message());
             }
         }
     }
@@ -373,38 +393,30 @@ public class DataValidator {
     /**
      * 数值范围验证（collectAll 路径，累积错误而非立即抛出）。
      *
-     * @param annotation 字段注解
-     * @param fieldName  字段中文名
-     * @param numVal     数值（非 null）
-     * @param rowNum     行号
-     * @param errors     错误收集器
+     * @param field     字段对象
+     * @param fieldName 字段中文名
+     * @param numVal    数值（非 null）
+     * @param rowNum    行号
+     * @param errors    错误收集器
      */
-    private static void collectNumberRangeErrors(ExcelProperty annotation, String fieldName,
+    private static void collectNumberRangeErrors(Field field, String fieldName,
                                                  Number numVal, int rowNum,
                                                  List<ValidationError> errors) {
         double value = numVal.doubleValue();
 
-        if (!annotation.minValue().isEmpty()) {
-            try {
-                double min = Double.parseDouble(annotation.minValue());
-                if (Double.compare(value, min) < 0) {
-                    errors.add(new ValidationError(rowNum, fieldName, numVal,
-                            getErrorMessage(annotation, "字段值小于最小值: " + value + " < " + min)));
-                }
-            } catch (NumberFormatException e) {
-                // min 值不是合法数字，跳过验证
+        // @Min(value = N) 最小值校验
+        if (field.isAnnotationPresent(Min.class)) {
+            Min min = field.getAnnotation(Min.class);
+            if (Double.compare(value, min.value()) < 0) {
+                errors.add(new ValidationError(rowNum, fieldName, numVal, min.message()));
             }
         }
 
-        if (!annotation.maxValue().isEmpty()) {
-            try {
-                double max = Double.parseDouble(annotation.maxValue());
-                if (Double.compare(value, max) > 0) {
-                    errors.add(new ValidationError(rowNum, fieldName, numVal,
-                            getErrorMessage(annotation, "字段值超过最大值: " + value + " > " + max)));
-                }
-            } catch (NumberFormatException e) {
-                // max 值不是合法数字，跳过验证
+        // @Max(value = N) 最大值校验
+        if (field.isAnnotationPresent(Max.class)) {
+            Max max = field.getAnnotation(Max.class);
+            if (Double.compare(value, max.value()) > 0) {
+                errors.add(new ValidationError(rowNum, fieldName, numVal, max.message()));
             }
         }
     }
@@ -427,16 +439,5 @@ public class DataValidator {
             sb.append(errors.get(i).toString());
         }
         return ExcelReadException.validationFailed(rowNum, "multiple", null, sb.toString());
-    }
-
-    /**
-     * 获取错误消息 —— 优先使用自定义消息。
-     *
-     * @param annotation     字段注解
-     * @param defaultMessage 默认错误描述
-     * @return 最终展示给用户的错误消息
-     */
-    private static String getErrorMessage(ExcelProperty annotation, String defaultMessage) {
-        return annotation.errorMessage().isEmpty() ? defaultMessage : annotation.errorMessage();
     }
 }

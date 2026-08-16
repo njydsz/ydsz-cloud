@@ -6,7 +6,6 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 
 import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.string.StringUtils;
 
@@ -16,8 +15,8 @@ import lombok.extern.slf4j.Slf4j;
  * 文件去重服务。
  *
  * <p>基于文件内容 Hash（SHA-256）实现秒传/重删。
- * 存储 Redis 映射时同时保存对象键，用于在命中缓存后验证文件实体是否仍然存在，
- * 避免生命周期清理导致的"幽灵秒传"（Redis 中有记录但对象已被物理删除）。
+ * Redis 映射设置 30 天 TTL，依赖存储端生命周期策略自动清理过期文件，
+ * 避免"幽灵秒传"（Redis 中有记录但对象已被物理删除）。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -35,11 +34,8 @@ public class FileDedupService {
 
     private final RedisStringOps redisStringOps;
 
-    private final IFileStorage fileStorage;
-
-    public FileDedupService(RedisStringOps redisStringOps, IFileStorage fileStorage) {
+    public FileDedupService(RedisStringOps redisStringOps) {
         this.redisStringOps = redisStringOps;
-        this.fileStorage = fileStorage;
     }
 
     /**
@@ -81,13 +77,13 @@ public class FileDedupService {
     /**
      * 检查文件是否已存在（秒传）。
      *
-     * <p>命中缓存后会通过 {@link IFileStorage#objectExists} 验证文件实体是否仍然存在。
-     * 若文件已被物理删除（生命周期清理等），自动清理过期的 Redis 映射并返回 {@code null}，
-     * 避免返回无效 URL。
+     * <p>基于 Redis 缓存映射判断文件是否已上传，命中即返回已存储的 URL。
+     * 依赖存储端生命周期策略（Bucket Lifecycle）自动清理过期文件，
+     * 无需额外调用存储 API 验证文件实体是否存在，减少一次远程 RPC。
      *
      * @param fileSize 文件大小（字节）
      * @param hash     文件 SHA-256 摘要
-     * @return 已存在的文件访问地址，验证失败或不存在时返回 {@code null}
+     * @return 已存在的文件访问地址，不存在时返回 {@code null}
      */
     public String checkExisting(long fileSize, String hash) {
         String key = buildDedupKey(fileSize, hash);
@@ -98,58 +94,23 @@ public class FileDedupService {
 
         // 解析存储值，分离 URL 和对象键
         String url = storedValue;
-        String objectKey = null;
         int sepIndex = storedValue.indexOf(VALUE_SEPARATOR);
         if (sepIndex >= 0) {
             url = storedValue.substring(0, sepIndex);
-            objectKey = storedValue.substring(sepIndex + VALUE_SEPARATOR.length());
         }
-
-        // 仅当存储了对象键且能验证文件存在时才返回 URL
-        if (objectKey != null) {
-            if (verifyObjectExists(objectKey)) {
-                return url;
-            }
-            // 文件已不存在，清理过期缓存
-            log.info("[Dedup] stored file no longer exists, cleaning up cache, hash={}", hash);
-            redisStringOps.del(key);
-            return null;
-        }
-
-        // 兼容旧格式（仅存储 URL 无对象键），无法验证直接返回
         return url;
-    }
-
-    /**
-     * 验证对象键在存储中是否仍然存在
-     *
-     * @param objectKey 对象键
-     * @return true 表示文件存在，false 表示不存在或验证失败
-     */
-    private boolean verifyObjectExists(String objectKey) {
-        try {
-            if (fileStorage == null) {
-                return true;
-            }
-            return fileStorage.objectExists(null, objectKey);
-        } catch (Exception e) {
-            log.warn("[Dedup] objectExists verification failed, objectKey={}, message={}",
-                    objectKey, e.getMessage());
-            // 验证出错时宁可多上传一次，也不要返回无效 URL
-            return true;
-        }
     }
 
     /**
      * 注册文件哈希映射。
      *
      * <p>将 URL 与对象键拼接存储，格式为 {@code url|||objectKey}，
-     * 以便后续 {@link #checkExisting} 能够验证文件实体是否仍然存在。
+     * 以便后续 {@link #checkExisting} 能够解析。
      *
      * @param fileSize  文件大小（字节）
      * @param hash      文件 SHA-256 摘要
      * @param filePath  文件访问 URL
-     * @param objectKey 存储对象键（用于后续存在性验证）
+     * @param objectKey 存储对象键
      */
     public void registerHash(long fileSize, String hash, String filePath, String objectKey) {
         String key = buildDedupKey(fileSize, hash);

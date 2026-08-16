@@ -1,6 +1,7 @@
 package com.njydsz.common.docs.health;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import lombok.RequiredArgsConstructor;
@@ -11,7 +12,7 @@ import org.springframework.boot.health.contributor.HealthIndicator;
 
 import com.njydsz.common.docs.config.DocsProperties;
 import com.njydsz.common.docs.parser.registry.DocumentParserRegistry;
-import com.njydsz.common.docs.security.pii.PiiDetectorComposite;
+import com.njydsz.common.docs.security.pii.PiiDetector;
 import com.njydsz.common.docs.service.AsyncDocumentParser;
 
 /**
@@ -26,7 +27,7 @@ import com.njydsz.common.docs.service.AsyncDocumentParser;
 public class DocsHealthIndicator implements HealthIndicator {
 
     private final DocumentParserRegistry parserRegistry;
-    private final PiiDetectorComposite piiDetector;
+    private final List<PiiDetector> piiDetectors;
     private final DocsProperties properties;
     private final AsyncDocumentParser asyncDocumentParser;
 
@@ -54,7 +55,7 @@ public class DocsHealthIndicator implements HealthIndicator {
         details.put("enabled", properties.isEnabled());
         details.put("maxFileSizeMb", properties.getMaxFileSizeMb());
         details.put("supportedFormats", parserRegistry.getSupportedFormats());
-        details.put("piiDetectors", piiDetector.getDetectors().stream()
+        details.put("piiDetectors", piiDetectors.stream()
                 .map(d -> d.getSupportedType().name()).toList());
         try {
             details.put("asyncQueueSize", asyncDocumentParser.getQueueSize());

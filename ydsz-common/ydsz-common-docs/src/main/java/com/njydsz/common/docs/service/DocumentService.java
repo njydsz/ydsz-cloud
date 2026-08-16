@@ -29,11 +29,9 @@ import com.njydsz.common.docs.ocr.OcrEngine;
 import com.njydsz.common.docs.ocr.OcrProvider;
 import com.njydsz.common.docs.parser.registry.DocumentParserRegistry;
 import com.njydsz.common.docs.preprocess.pipeline.PreprocessPipeline;
-import com.njydsz.common.docs.security.pii.PiiDetectorComposite;
-import com.njydsz.common.docs.security.redact.DocumentRedactor;
-import com.njydsz.common.docs.security.scanner.DocumentSecurityScannerComposite;
-import com.njydsz.common.docs.security.watermark.WatermarkProvider;
-import com.njydsz.common.docs.summary.DocumentSummarizer;
+import com.njydsz.common.docs.security.pii.PiiDetector;
+import com.njydsz.common.docs.security.scanner.DocumentSecurityScanner;
+import com.njydsz.common.docs.util.TempFileManager;
 
 /**
  * 文档处理统一服务门面
@@ -47,14 +45,7 @@ import com.njydsz.common.docs.summary.DocumentSummarizer;
  *   <li>{@link #scanSecurity} - 安全扫描</li>
  *   <li>{@link #detectPii} - PII 检测</li>
  *   <li>{@link #parseAndPreprocess} - 解析 + 预处理一体化</li>
- *   <li>{@link #convert} - 文档格式转换</li>
- *   <li>{@link #addWatermark} - 添加水印</li>
- *   <li>{@link #redact} - PII 脱敏</li>
- *   <li>{@link #ocrScan} - OCR 识别</li>
- *   <li>{@link #summarize} - 文档摘要</li>
- *   <li>{@link #extractKeywords} - 关键词提取</li>
  *   <li>{@link #parseWithSecurityCheck} - 解析 + 安全扫描一体化</li>
- *   <li>{@link #parseAndRedact} - 解析 + PII 检测 + 脱敏一体化</li>
  * </ul>
  *
  * @author ydsz-team
@@ -66,39 +57,33 @@ public class DocumentService {
 
     private final DocumentParserRegistry parserRegistry;
     private final PreprocessPipeline preprocessPipeline;
-    private final DocumentSecurityScannerComposite securityScanner;
-    private final PiiDetectorComposite piiDetector;
+    private final List<DocumentSecurityScanner> securityScanners;
+    private final List<PiiDetector> piiDetectors;
     private final DocsProperties properties;
     private final ObjectProvider<DocumentConverter> converterProvider;
-    private final ObjectProvider<WatermarkProvider> watermarkProvider;
-    private final ObjectProvider<DocumentRedactor> redactorProvider;
     private final ObjectProvider<OcrProvider> ocrProvider;
-    private final ObjectProvider<DocumentSummarizer> summarizerProvider;
     private final ObjectProvider<DocsMetrics> metricsProvider;
+    private final TempFileManager tempFileManager;
 
     public DocumentService(
             DocumentParserRegistry parserRegistry,
             PreprocessPipeline preprocessPipeline,
-            DocumentSecurityScannerComposite securityScanner,
-            PiiDetectorComposite piiDetector,
+            List<DocumentSecurityScanner> securityScanners,
+            List<PiiDetector> piiDetectors,
             DocsProperties properties,
             ObjectProvider<DocumentConverter> converterProvider,
-            ObjectProvider<WatermarkProvider> watermarkProvider,
-            ObjectProvider<DocumentRedactor> redactorProvider,
             ObjectProvider<OcrProvider> ocrProvider,
-            ObjectProvider<DocumentSummarizer> summarizerProvider,
-            ObjectProvider<DocsMetrics> metricsProvider) {
+            ObjectProvider<DocsMetrics> metricsProvider,
+            TempFileManager tempFileManager) {
         this.parserRegistry = parserRegistry;
         this.preprocessPipeline = preprocessPipeline;
-        this.securityScanner = securityScanner;
-        this.piiDetector = piiDetector;
+        this.securityScanners = securityScanners;
+        this.piiDetectors = piiDetectors;
         this.properties = properties;
         this.converterProvider = converterProvider;
-        this.watermarkProvider = watermarkProvider;
-        this.redactorProvider = redactorProvider;
         this.ocrProvider = ocrProvider;
-        this.summarizerProvider = summarizerProvider;
         this.metricsProvider = metricsProvider;
+        this.tempFileManager = tempFileManager;
     }
 
     /**
@@ -207,7 +192,7 @@ public class DocumentService {
                     .build();
         }
         DocumentFormat format = DocumentFormat.fromFileName(fileName);
-        SecurityScanResult result = securityScanner.scan(inputStream, fileName, format);
+        SecurityScanResult result = doScanSecurity(inputStream, fileName, format);
         recordSecurityScanMetric(result.getSecurityLevel());
         return result;
     }
@@ -222,7 +207,7 @@ public class DocumentService {
         if (!properties.isPiiDetectionEnabled()) {
             return List.of();
         }
-        List<PiiFinding> findings = piiDetector.detectAll(content);
+        List<PiiFinding> findings = doDetectPii(content);
         recordPiiMetric(findings);
         return findings;
     }
@@ -252,65 +237,6 @@ public class DocumentService {
     }
 
     /**
-     * 为文档叠加文字水印，常用于外发文件的溯源标记。
-     *
-     * <p>双重前置校验：功能开关 {@code docs.watermarkEnabled} 必须开启，
-     * 且容器中存在 {@link WatermarkProvider} 实现。任一不满足都抛异常而不是返回原文档，
-     * 防止调用方误以为已加水印而外发未标记文件。
-     *
-     * @param inputStream   源文档流，由调用方负责关闭
-     * @param fileName      原始文件名，用于推断格式
-     * @param watermarkText 水印文字内容
-     * @return 带水印的文档字节数组
-     * @throws DocumentException 功能被禁用、提供者未注册或加水印失败时抛出，
-     *                           错误码 {@code WATERMARK_FAILED}
-     */
-    public byte[] addWatermark(InputStream inputStream, String fileName, String watermarkText) {
-        if (!properties.isWatermarkEnabled()) {
-            throw new DocumentException(DocumentExceptionCode.WATERMARK_FAILED, "水印功能已禁用");
-        }
-        WatermarkProvider provider = watermarkProvider.getIfAvailable();
-        if (provider == null) {
-            throw new DocumentException(DocumentExceptionCode.WATERMARK_FAILED, "水印提供者未注册");
-        }
-        DocumentFormat format = DocumentFormat.fromFileName(fileName);
-        return provider.addWatermark(inputStream, fileName, format, watermarkText);
-    }
-
-    /**
-     * 按已定位的 PII 位置对文档做不可逆脱敏。
-     *
-     * <p>{@code findings} 通常来自 {@link #detectPii}，其中携带的偏移量必须与本次传入的
-     * 文档流严格对应，否则会遮盖错误区域。传空列表时行为由具体
-     * {@link DocumentRedactor} 决定，一般等价于原样输出。
-     *
-     * <p>脱敏能力按格式而异，格式不受支持时直接抛异常，绝不降级为"原样返回"——
-     * 静默返回未脱敏文档等同于数据泄露。
-     *
-     * @param inputStream 源文档流，由调用方负责关闭
-     * @param fileName    原始文件名，用于推断格式
-     * @param findings    待遮盖的 PII 位置列表
-     * @return 脱敏后的文档字节数组
-     * @throws DocumentException 功能被禁用、脱敏器未注册、格式不支持或执行失败时抛出，
-     *                           错误码 {@code TEXT_REDACT_FAILED}
-     */
-    public byte[] redact(InputStream inputStream, String fileName, List<PiiFinding> findings) {
-        if (!properties.isRedactEnabled()) {
-            throw new DocumentException(DocumentExceptionCode.TEXT_REDACT_FAILED, "脱敏功能已禁用");
-        }
-        DocumentRedactor redactor = redactorProvider.getIfAvailable();
-        if (redactor == null) {
-            throw new DocumentException(DocumentExceptionCode.TEXT_REDACT_FAILED, "脱敏器未注册");
-        }
-        DocumentFormat format = DocumentFormat.fromFileName(fileName);
-        if (!redactor.supports(format)) {
-            throw new DocumentException(DocumentExceptionCode.TEXT_REDACT_FAILED,
-                    "脱敏器不支持此格式: " + format);
-        }
-        return redactor.redact(inputStream, fileName, format, findings);
-    }
-
-    /**
      * 对扫描件 / 图片型文档执行 OCR 文字识别。
      *
      * <p>识别过程依赖外部 OCR 引擎（本地 Tesseract 或云厂商 API），
@@ -332,41 +258,6 @@ public class DocumentService {
     }
 
     /**
-     * 生成文档摘要。
-     *
-     * <p><b>降级策略</b>：摘要属于增强能力而非核心链路，
-     * 容器中未注册 {@link DocumentSummarizer}（如未接入大模型服务）时返回空串而不抛异常，
-     * 调用方应判断结果是否为空再决定展示逻辑。
-     *
-     * @param content 已解析的文档内容
-     * @return 摘要文本；能力不可用时返回空串，永不为 {@code null}
-     */
-    public String summarize(DocumentContent content) {
-        DocumentSummarizer summarizer = summarizerProvider.getIfAvailable();
-        if (summarizer == null) {
-            return "";
-        }
-        return summarizer.summarize(content);
-    }
-
-    /**
-     * 提取文档关键词，用于检索标签与相关推荐。
-     *
-     * <p><b>降级策略</b>：与 {@link #summarize} 一致，
-     * {@link DocumentSummarizer} 未注册时返回空列表而非抛异常。
-     *
-     * @param content 已解析的文档内容
-     * @return 关键词列表；能力不可用或无结果时返回空列表，永不为 {@code null}
-     */
-    public List<String> extractKeywords(DocumentContent content) {
-        DocumentSummarizer summarizer = summarizerProvider.getIfAvailable();
-        if (summarizer == null) {
-            return List.of();
-        }
-        return summarizer.extractKeywords(content);
-    }
-
-    /**
      * 解析 + 安全扫描一体化
      * <p>
      * 高风险时可阻止返回。
@@ -379,8 +270,7 @@ public class DocumentService {
     public DocumentParseResult parseWithSecurityCheck(InputStream inputStream, String fileName, ParseOptions options) {
         Path tempFile = null;
         try {
-            tempFile = Files.createTempFile("ydsz-docs-sec-", ".tmp");
-            inputStream.transferTo(Files.newOutputStream(tempFile));
+            tempFile = tempFileManager.createAndWrite("ydsz-docs-sec-", ".tmp", inputStream);
 
             SecurityScanResult scanResult = scanSecurity(Files.newInputStream(tempFile), fileName);
             if (properties.isBlockOnHighRisk()
@@ -404,40 +294,98 @@ public class DocumentService {
                     .elapsed(Duration.ZERO)
                     .build();
         } finally {
-            deleteTempFile(tempFile);
+            tempFileManager.deleteTracked(tempFile);
+        }
+    }
+
+    // ==================== Composite Logic (inlined) ====================
+
+    /**
+     * 执行安全扫描：遍历所有已注册的扫描器并聚合结果。
+     */
+    private SecurityScanResult doScanSecurity(InputStream inputStream, String fileName, DocumentFormat format) {
+        if (inputStream == null) {
+            return SecurityScanResult.builder()
+                    .securityLevel(SecurityLevel.SAFE)
+                    .findings(List.of())
+                    .success(false)
+                    .errorMessage("输入流为空")
+                    .build();
+        }
+
+        Path tempFile = null;
+        try {
+            tempFile = tempFileManager.createAndWrite("ydsz-docs-scan-", ".tmp", inputStream);
+
+            List<SecurityScanResult.SecurityFinding> allFindings = new java.util.ArrayList<>();
+            boolean allSuccess = true;
+            String lastError = null;
+
+            for (DocumentSecurityScanner scanner : securityScanners) {
+                try (InputStream fis = Files.newInputStream(tempFile)) {
+                    SecurityScanResult result = scanner.scan(fis, fileName, format);
+                    if (result.isSuccess()) {
+                        if (result.getFindings() != null) {
+                            allFindings.addAll(result.getFindings());
+                        }
+                    } else {
+                        allSuccess = false;
+                        lastError = result.getErrorMessage();
+                        log.warn("[DocumentService] 安全扫描器 {} 执行失败: {}",
+                                scanner.getName(), lastError);
+                    }
+                } catch (Exception e) {
+                    allSuccess = false;
+                    log.error("[DocumentService] 安全扫描器 {} 异常", scanner.getName(), e);
+                }
+            }
+
+            SecurityLevel level = allFindings.isEmpty() ? SecurityLevel.SAFE
+                    : allFindings.stream()
+                            .map(SecurityScanResult.SecurityFinding::getLevel)
+                            .max(Enum::compareTo)
+                            .orElse(SecurityLevel.SAFE);
+
+            return SecurityScanResult.builder()
+                    .securityLevel(level)
+                    .findings(allFindings)
+                    .success(allSuccess)
+                    .errorMessage(lastError)
+                    .build();
+
+        } catch (Exception e) {
+            log.error("[DocumentService] 安全扫描临时文件写入失败", e);
+            return SecurityScanResult.builder()
+                    .securityLevel(SecurityLevel.SAFE)
+                    .findings(List.of())
+                    .success(false)
+                    .errorMessage("IO 错误: " + e.getMessage())
+                    .build();
+        } finally {
+            tempFileManager.deleteTracked(tempFile);
         }
     }
 
     /**
-     * 解析 + PII 检测 + 脱敏一体化
-     *
-     * @param inputStream 文档输入流
-     * @param fileName    文件名
-     * @param options     解析选项
-     * @return 脱敏后的文档字节流
+     * 执行 PII 检测：遍历所有已注册的检测器并聚合结果。
      */
-    public byte[] parseAndRedact(InputStream inputStream, String fileName, ParseOptions options) {
-        Path tempFile = null;
-        try {
-            tempFile = Files.createTempFile("ydsz-docs-redact-", ".tmp");
-            inputStream.transferTo(Files.newOutputStream(tempFile));
-
-            DocumentParseResult parseResult = parse(Files.newInputStream(tempFile), fileName, options);
-            if (!parseResult.isSuccess() || parseResult.getContent() == null) {
-                return Files.readAllBytes(tempFile);
-            }
-            List<PiiFinding> findings = detectPii(parseResult.getContent());
-            if (findings.isEmpty()) {
-                return Files.readAllBytes(tempFile);
-            }
-            return redact(Files.newInputStream(tempFile), fileName, findings);
-        } catch (DocumentException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new DocumentException(DocumentExceptionCode.TEXT_REDACT_FAILED, e);
-        } finally {
-            deleteTempFile(tempFile);
+    private List<PiiFinding> doDetectPii(DocumentContent content) {
+        if (content == null || content.getText() == null) {
+            return List.of();
         }
+
+        List<PiiFinding> allFindings = new java.util.ArrayList<>();
+        for (PiiDetector detector : piiDetectors) {
+            try {
+                List<PiiFinding> findings = detector.detect(content);
+                if (findings != null) {
+                    allFindings.addAll(findings);
+                }
+            } catch (Exception e) {
+                log.error("[DocumentService] PII 检测器 {} 执行失败", detector.getSupportedType(), e);
+            }
+        }
+        return allFindings;
     }
 
     // ==================== Metrics Helpers ====================
@@ -462,16 +410,6 @@ public class DocumentService {
         DocsMetrics metrics = metricsProvider.getIfAvailable();
         if (metrics != null && level != null) {
             metrics.recordSecurityScan(level);
-        }
-    }
-
-    private void deleteTempFile(Path tempFile) {
-        if (tempFile != null) {
-            try {
-                Files.deleteIfExists(tempFile);
-            } catch (Exception ignored) {
-                // 临时文件删除失败不影响主流程
-            }
         }
     }
 }

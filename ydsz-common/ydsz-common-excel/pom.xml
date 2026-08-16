@@ -44,6 +44,13 @@
             <artifactId>asm-commons</artifactId>
         </dependency>
 
+        <!-- Jakarta Bean Validation API（JSR-303 标准校验） -->
+        <dependency>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- SLF4J -->
         <dependency>
             <groupId>org.slf4j</groupId>

@@ -68,16 +68,6 @@ public final class DocConstants {
     public static final String FORMAT_MARKDOWN = "markdown";
 
     /**
-     * SpringDoc 配置属性前缀
-     */
-    public static final String SPRINGDOC_PREFIX = "springdoc";
-
-    /**
-     * Knife4j 配置属性前缀
-     */
-    public static final String KNIFE4J_PREFIX = "knife4j";
-
-    /**
      * YDSZ 文档配置属性前缀
      */
     public static final String YDSZ_DOC_PREFIX = "ydsz.doc";

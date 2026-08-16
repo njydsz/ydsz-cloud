@@ -252,6 +252,21 @@ public class NettyProperties {
     /** 连接控制配置 */
     private ConnectionControl connectionControl = new ConnectionControl();
 
+    /** 消息分发器配置 */
+    private Dispatcher dispatcher = new Dispatcher();
+
+    /**
+     * 消息分发器配置。
+     *
+     * <p>默认不启用，业务需要基于注解的消息路由时显式开启。
+     * 开启后自动扫描 Spring 容器中所有 {@code @MessageHandler} 注解方法。
+     */
+    @Data
+    public static class Dispatcher {
+        /** 是否启用 MessageDispatcher 自动扫描 */
+        private boolean enabled = false;
+    }
+
     /**
      * ByteBuf 内存池配置。
      *

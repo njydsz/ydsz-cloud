@@ -44,22 +44,11 @@
             <artifactId>ydsz-common-exception</artifactId>
         </dependency>
 
-        <!-- 公共认证模块（AuthHeaderConstants OpenAPI header 定义） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-auth</artifactId>
-        </dependency>
-
-        <!-- 公共 JDBC 模块（DataPermissionHeaderConstants OpenAPI header 定义） -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-jdbc</artifactId>
-        </dependency>
-
-        <!-- Micrometer Core（AbstractModuleMetrics 基类需要） -->
+        <!-- Micrometer Core（AbstractModuleMetrics 基类需要，optional 按需引入） -->
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-core</artifactId>
+            <optional>true</optional>
         </dependency>
 
         <!-- Spring Boot Actuator（可选，用于 HealthIndicator） -->
@@ -94,13 +83,6 @@
         <dependency>
             <groupId>com.github.xiaoymin</groupId>
             <artifactId>knife4j-openapi3-spring-boot-starter</artifactId>
-            <optional>true</optional>
-        </dependency>
-
-        <!-- WebFlux 支持（可选） -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webflux</artifactId>
             <optional>true</optional>
         </dependency>
 

@@ -65,7 +65,12 @@
 | 类 | 说明 |
 |---|---|
 | `SslContextFactory` | SSL Context 工厂，证书加载 + 双向认证（server/client 上下文分离） |
-| `NettySslException` | SSL 异常（区分 server/client 上下文） |
+
+### 5.1 异常处理
+
+| 类 | 说明 |
+|---|---|
+| `NettyException` | Netty 模块统一异常，封装 Server/Client/SSL/Transport 各层错误，错误码 B01055 |
 
 ### 6. 线程池与传输
 

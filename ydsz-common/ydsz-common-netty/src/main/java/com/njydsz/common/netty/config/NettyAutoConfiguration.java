@@ -151,14 +151,18 @@ public class NettyAutoConfiguration {
     /**
      * 消息分发器（基于 @MessageHandler 注解自动路由消息）。
      *
+     * <p>仅当 {@code ydsz.netty.dispatcher.enabled=true} 时注册。
+     * 推荐业务侧使用 {@code SimpleChannelInboundHandler<T>} + 手写 switch 作为默认模式。
+     *
      * @param applicationContext Spring 应用上下文
      * @return 消息分发器
      */
     @Bean
     @ConditionalOnMissingBean(MessageDispatcher.class)
+    @ConditionalOnProperty(prefix = "ydsz.netty.dispatcher", name = "enabled", havingValue = "true")
     public MessageDispatcher messageDispatcher(
             @Autowired(required = false) ApplicationContext applicationContext) {
-        log.info("[Netty] 注册 MessageDispatcher");
+        log.info("[Netty] 注册 MessageDispatcher（注解扫描模式）");
         return new MessageDispatcher(applicationContext);
     }
 

@@ -1,6 +1,7 @@
 package com.njydsz.common.file.config;
 
 import java.util.Collections;
+import java.util.concurrent.ExecutorService;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -169,14 +170,13 @@ public class FileConfiguration {
      * 注册文件去重服务（秒传）
      *
      * @param redisStringOps Redis 字符串操作
-     * @param provider       文件存储提供者
      * @return 文件去重服务实例
      */
     @Bean
     @ConditionalOnBean({RedisStringOps.class})
     @ConditionalOnMissingBean(FileDedupService.class)
-    public FileDedupService fileDedupService(RedisStringOps redisStringOps, IFileStorageProvider provider) {
-        return new FileDedupService(redisStringOps, provider.getStorage());
+    public FileDedupService fileDedupService(RedisStringOps redisStringOps) {
+        return new FileDedupService(redisStringOps);
     }
 
     /**
@@ -222,7 +222,18 @@ public class FileConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(IFileStorageProvider.class)
-    public IFileStorageProvider fileStorageProvider(FileProperties fileProperties, FileUploadProperties fileUploadProperties, MultipartContextStore multipartContextStore, CheckpointService checkpointService, ObjectProvider<StringRedisTemplate> redisProvider, ObjectProvider<FileDedupService> dedupProvider, ObjectProvider<VirusScanner> virusScannerProvider, ObjectProvider<FileMetrics> metricsProvider, ObjectProvider<StorageRetryHelper> retryHelperProvider, FileTypeValidator fileTypeValidator) {
+    public IFileStorageProvider fileStorageProvider(FileProperties fileProperties,
+                                                    FileUploadProperties fileUploadProperties,
+                                                    MultipartContextStore multipartContextStore,
+                                                    CheckpointService checkpointService,
+                                                    ObjectProvider<StringRedisTemplate> redisProvider,
+                                                    ObjectProvider<FileDedupService> dedupProvider,
+                                                    ObjectProvider<VirusScanner> virusScannerProvider,
+                                                    ObjectProvider<FileMetrics> metricsProvider,
+                                                    ObjectProvider<StorageRetryHelper> retryHelperProvider,
+                                                    FileTypeValidator fileTypeValidator,
+                                                    ObjectProvider<ExecutorService> deleteExecutorProvider,
+                                                    ObjectProvider<ExecutorService> asyncUploadExecutorProvider) {
         DefaultStorageFactory factory = new DefaultStorageFactory(fileProperties, fileUploadProperties);
         factory.setMultipartContextStore(multipartContextStore);
         factory.setCheckpointService(checkpointService);
@@ -237,6 +248,11 @@ public class FileConfiguration {
         if (metrics != null) factory.setFileMetrics(metrics);
         StorageRetryHelper retryHelper = retryHelperProvider.getIfAvailable();
         if (retryHelper != null) factory.setRetryHelper(retryHelper);
+        // 注入 ydsz-common-thread 管理的线程池（Bean 名称：fileDeleteExecutor / fileUploadExecutor）
+        ExecutorService deleteExecutor = deleteExecutorProvider.getIfAvailable();
+        if (deleteExecutor != null) factory.setDeleteExecutor(deleteExecutor);
+        ExecutorService asyncUploadExecutor = asyncUploadExecutorProvider.getIfAvailable();
+        if (asyncUploadExecutor != null) factory.setAsyncUploadExecutor(asyncUploadExecutor);
         return factory;
     }
 

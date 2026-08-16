@@ -7,9 +7,8 @@ import java.util.Map;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
-import com.njydsz.common.auth.constant.AuthHeaderConstants;
+import com.njydsz.common.base.constant.HttpHeaderConstants;
 import com.njydsz.common.core.constant.HeaderConstants;
-import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.ExternalDocumentation;
@@ -104,19 +103,19 @@ public abstract class BaseOpenApiConfiguration {
     private Map<String, Header> createHeaderParams() {
         Map<String, Header> headers = new LinkedHashMap<>();
 
-        headers.put(AuthHeaderConstants.X_SERVICE_TYPE, createHeader("服务类型", false));
-        headers.put(AuthHeaderConstants.X_USER_LANGUAGE, createHeader("用户系统语言", false));
-        headers.put(DataPermissionHeaderConstants.X_UNIQUE_ID, createHeader("用户唯一ID", false));
-        headers.put(AuthHeaderConstants.X_ACCESS_TOKEN, createHeader("用户鉴权Token", false));
-        headers.put(AuthHeaderConstants.X_DISTINCT_ID, createHeader("设备唯一标识", false));
-        headers.put(DataPermissionHeaderConstants.X_DATA_SCOPE, createHeader("数据权限范围类型", false));
-        headers.put(DataPermissionHeaderConstants.X_TENANT_ID, createHeader("租户ID", false));
-        headers.put(DataPermissionHeaderConstants.X_COMPANY_IDS, createHeader("公司ID集合", false));
-        headers.put(DataPermissionHeaderConstants.X_DEPT_IDS, createHeader("部门ID集合", false));
-        headers.put(DataPermissionHeaderConstants.X_PROJECT_IDS, createHeader("项目ID集合", false));
-        headers.put(DataPermissionHeaderConstants.X_REGION_IDS, createHeader("区域ID集合", false));
-        headers.put(DataPermissionHeaderConstants.X_VISIBLE_COLUMNS, createHeader("列可见规则", false));
-        headers.put(DataPermissionHeaderConstants.X_EDITABLE_COLUMNS, createHeader("列可编辑规则", false));
+        headers.put(HttpHeaderConstants.X_SERVICE_TYPE, createHeader("服务类型", false));
+        headers.put(HttpHeaderConstants.X_USER_LANGUAGE, createHeader("用户系统语言", false));
+        headers.put(HttpHeaderConstants.X_UNIQUE_ID, createHeader("用户唯一ID", false));
+        headers.put(HttpHeaderConstants.X_ACCESS_TOKEN, createHeader("用户鉴权Token", false));
+        headers.put(HttpHeaderConstants.X_DISTINCT_ID, createHeader("设备唯一标识", false));
+        headers.put(HttpHeaderConstants.X_DATA_SCOPE, createHeader("数据权限范围类型", false));
+        headers.put(HttpHeaderConstants.X_TENANT_ID, createHeader("租户ID", false));
+        headers.put(HttpHeaderConstants.X_COMPANY_IDS, createHeader("公司ID集合", false));
+        headers.put(HttpHeaderConstants.X_DEPT_IDS, createHeader("部门ID集合", false));
+        headers.put(HttpHeaderConstants.X_PROJECT_IDS, createHeader("项目ID集合", false));
+        headers.put(HttpHeaderConstants.X_REGION_IDS, createHeader("区域ID集合", false));
+        headers.put(HttpHeaderConstants.X_VISIBLE_COLUMNS, createHeader("列可见规则", false));
+        headers.put(HttpHeaderConstants.X_EDITABLE_COLUMNS, createHeader("列可编辑规则", false));
         headers.put(HeaderConstants.X_REQUEST_SOURCE, createHeader("请求来源标识", false));
         headers.put(HeaderConstants.X_FORWARDED_FOR, createHeader("请求来源IP", false));
 

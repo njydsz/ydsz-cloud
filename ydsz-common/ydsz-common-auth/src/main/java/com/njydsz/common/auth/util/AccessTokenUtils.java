@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
-import com.njydsz.common.util.auth.AuthInfoUtils;
+import com.njydsz.common.auth.context.AuthInfoUtils;
 import com.njydsz.common.util.http.RequestContextUtils;
 import com.njydsz.common.util.string.StringUtils;
 

@@ -18,7 +18,7 @@ import lombok.Data;
  * ydsz:
  *   search:
  *     enabled: true
- *     primary: pg                    # 主引擎
+ *     primary: pg                    # 主引擎（pg / memory）
  *     fallbacks: [memory]            # 降级链
  *     page-size: 20
  *     search-timeout: 5
@@ -30,19 +30,11 @@ import lombok.Data;
  *       index-table: ydsz_search_index
  *       field-weights: { title: 1.0, subtitle: 0.7, content: 0.4, tags: 0.2 }
  *       time-decay-days: 0
- *     es:                            # ES 引擎特定配置
- *       host: localhost
- *       port: 9200
- *       index-name: ydsz_search
- *     redis:                         # RediSearch 引擎特定配置
- *       index-name: ydsz_search_idx
- *     solr:                          # Solr 引擎特定配置
- *       base-url: http://localhost:8983/solr
- *       core: ydsz_search
- *     opensearch:                    # OpenSearch 引擎特定配置
- *       host: localhost
- *       port: 9200
- *       index-name: ydsz_search
+ *     text-processor:                # 文本处理配置
+ *       synonym-enabled: false
+ *       synonym-file: classpath:synonyms.txt
+ *       pinyin-enabled: false
+ *       pinyin-file: classpath:pinyin.txt
  * </pre>
  *
  * @author ydsz-team
@@ -56,7 +48,7 @@ public class SearchProperties {
     /** 是否启用搜索服务 */
     private boolean enabled = true;
 
-    /** 主引擎名称（pg / memory / es / redis / solr / opensearch） */
+    /** 主引擎名称（pg / memory） */
     private String primary = "pg";
 
     /** 降级引擎链（按顺序尝试） */
@@ -116,34 +108,16 @@ public class SearchProperties {
     /** 索引配置 */
     private IndexConfig index = new IndexConfig();
 
-    /** 降级配置 */
-    private DegradeConfig degrade = new DegradeConfig();
-
     /** 熔断配置 */
     private CircuitBreakerConfig circuitBreaker = new CircuitBreakerConfig();
 
-    /** 同义词配置 */
-    private SynonymConfig synonym = new SynonymConfig();
-
-    /** 拼音配置 */
-    private PinyinConfig pinyin = new PinyinConfig();
+    /** 文本处理配置（同义词 / 拼音） */
+    private TextProcessorConfig textProcessor = new TextProcessorConfig();
 
     // ==================== 引擎特定配置 ====================
 
     /** PG 引擎配置 */
     private PgConfig pg = new PgConfig();
-
-    /** Elasticsearch 引擎配置 */
-    private EsConfig es = new EsConfig();
-
-    /** RediSearch 引擎配置 */
-    private RedisConfig redis = new RedisConfig();
-
-    /** Solr 引擎配置 */
-    private SolrConfig solr = new SolrConfig();
-
-    /** OpenSearch 引擎配置 */
-    private OpenSearchConfig opensearch = new OpenSearchConfig();
 
     // ==================== 通用内部类 ====================
 
@@ -159,7 +133,6 @@ public class SearchProperties {
      */
     @Data
     public static class IndexConfig {
-        private String syncMode = "event";
         private int batchSize = 100;
         private int rebuildBatchSize = 500;
         private int threadPoolSize = 4;
@@ -167,18 +140,6 @@ public class SearchProperties {
         @Max(10)
         private int maxRetries = 3;
         private long retryIntervalMs = 1000;
-    }
-
-    /**
-     * 搜索降级配置（引擎故障时回退到 LIKE 查询等降级策略）。
-     */
-    @Data
-    public static class DegradeConfig {
-        private boolean enabled = true;
-        private boolean fallbackToLike = true;
-        @Min(5)
-        @Max(300)
-        private int probeInterval = 30;
     }
 
     /**
@@ -196,24 +157,17 @@ public class SearchProperties {
     }
 
     /**
-     * 同义词扩展配置（文件路径与开关）。
+     * 文本处理配置（同义词扩展与拼音搜索）。
      */
     @Data
-    public static class SynonymConfig {
-        private boolean enabled = false;
-        private String file = "classpath:synonyms.txt";
+    public static class TextProcessorConfig {
+        private boolean synonymEnabled = false;
+        private String synonymFile = "classpath:synonyms.txt";
+        private boolean pinyinEnabled = false;
+        private String pinyinFile = "classpath:pinyin.txt";
     }
 
-    /**
-     * 拼音搜索配置（文件路径与开关）。
-     */
-    @Data
-    public static class PinyinConfig {
-        private boolean enabled = false;
-        private String file = "classpath:pinyin.txt";
-    }
-
-    /** 字段权重（各引擎通用） */
+    /** 字段权重（引擎通用） */
     @Data
     public static class FieldWeights {
         private double title = 1.0;
@@ -234,50 +188,5 @@ public class SearchProperties {
         private FieldWeights fieldWeights = new FieldWeights();
         /** 时间衰减半衰期（天），0 表示不衰减 */
         private double timeDecayDays = 0;
-    }
-
-    /**
-     * Elasticsearch 引擎连接与索引配置。
-     */
-    @Data
-    public static class EsConfig {
-        private String host = "localhost";
-        private int port = 9200;
-        private String scheme = "http";
-        private String indexName = "ydsz_search";
-        private FieldWeights fieldWeights = new FieldWeights();
-    }
-
-    /**
-     * Redis RediSearch 引擎配置。
-     */
-    @Data
-    public static class RedisConfig {
-        /** RediSearch 索引名称 */
-        private String indexName = "ydsz_search_idx";
-        /** Redis key 前缀（存储 Hash 数据） */
-        private String keyPrefix = "search:doc:";
-    }
-
-    /**
-     * Apache Solr 引擎连接配置。
-     */
-    @Data
-    public static class SolrConfig {
-        private String baseUrl = "http://localhost:8983/solr";
-        private String core = "ydsz_search";
-        private FieldWeights fieldWeights = new FieldWeights();
-    }
-
-    /**
-     * OpenSearch 引擎连接与索引配置。
-     */
-    @Data
-    public static class OpenSearchConfig {
-        private String host = "localhost";
-        private int port = 9200;
-        private String scheme = "http";
-        private String indexName = "ydsz_search";
-        private FieldWeights fieldWeights = new FieldWeights();
     }
 }

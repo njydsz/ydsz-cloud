@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
  * Excel 属性注解 — Java 字段与 Excel 列的映射关系。
  *
  * <p>是 {@code ydsz-common-excel} 最核心的注解，支持指定列名、列索引、
- * 日期格式、数字格式、列宽、排序顺序、公式及数据校验等属性。</p>
+ * 日期格式、数字格式、列宽、排序顺序及公式等属性。</p>
  *
  * <h3>映射优先级</h3>
  * <ol>
@@ -110,15 +110,6 @@ public @interface ExcelProperty {
     int order() default 0;
 
     /**
-     * 是否必填。
-     *
-     * <p>用于数据读取时的必填字段校验。</p>
-     *
-     * @return {@code true} 表示必填
-     */
-    boolean required() default false;
-
-    /**
      * 是否忽略该字段。
      *
      * <p>设置为 {@code true} 时，该字段不参与 Excel 映射。</p>
@@ -151,51 +142,4 @@ public @interface ExcelProperty {
      * @return 公式表达式字符串
      */
     String formula() default "";
-
-    // ==================== 数据验证属性 ====================
-
-    /**
-     * 字符串最大长度。
-     *
-     * <p>仅对 String 类型字段生效。设置为 {@code -1} 表示不限制。</p>
-     *
-     * @return 最大长度
-     */
-    int maxLength() default -1;
-
-    /**
-     * 数值最小值（字符串表示）。
-     *
-     * <p>仅对 Number 类型字段生效。为空字符串表示不限制。</p>
-     *
-     * @return 最小值
-     */
-    String minValue() default "";
-
-    /**
-     * 数值最大值（字符串表示）。
-     *
-     * <p>仅对 Number 类型字段生效。为空字符串表示不限制。</p>
-     *
-     * @return 最大值
-     */
-    String maxValue() default "";
-
-    /**
-     * 正则表达式验证。
-     *
-     * <p>仅对 String 类型字段生效。为空字符串表示不验证。</p>
-     *
-     * @return 正则表达式
-     */
-    String pattern() default "";
-
-    /**
-     * 自定义验证错误消息。
-     *
-     * <p>为空时使用默认错误消息。</p>
-     *
-     * @return 错误消息
-     */
-    String errorMessage() default "";
 }

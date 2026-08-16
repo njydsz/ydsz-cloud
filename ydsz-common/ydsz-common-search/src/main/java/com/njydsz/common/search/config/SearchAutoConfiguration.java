@@ -31,18 +31,13 @@ import com.njydsz.common.search.analytics.SearchAnalyticsService;
 import com.njydsz.common.search.analytics.SearchQualityTracker;
 import com.njydsz.common.search.core.SearchEngineRegistry;
 import com.njydsz.common.search.core.SearchStrategy;
-import com.njydsz.common.search.engine.es.ElasticsearchSearchStrategy;
 import com.njydsz.common.search.engine.memory.InMemorySearchStrategy;
-import com.njydsz.common.search.engine.opensearch.OpenSearchStrategy;
 import com.njydsz.common.search.engine.pg.PgSearchStrategy;
-import com.njydsz.common.search.engine.redis.RediSearchStrategy;
-import com.njydsz.common.search.engine.solr.SolrSearchStrategy;
 import com.njydsz.common.search.health.SearchHealthIndicator;
 import com.njydsz.common.search.metrics.SearchMetrics;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderRegistry;
 import com.njydsz.common.search.service.BusinessRanker;
-import com.njydsz.common.search.service.EnhancedSuggestionService;
 import com.njydsz.common.search.service.IndexRebuildService;
 import com.njydsz.common.search.service.IndexSyncService;
 import com.njydsz.common.search.service.QueryParser;
@@ -50,7 +45,6 @@ import com.njydsz.common.search.service.SearchCacheService;
 import com.njydsz.common.search.service.SearchPipeline;
 import com.njydsz.common.search.service.SearchTextProcessor;
 import com.njydsz.common.search.service.SuggestionService;
-import com.njydsz.common.search.service.TwoLevelSearchCacheService;
 import com.njydsz.common.search.service.UnifiedSearchService;
 import com.njydsz.common.search.service.ZeroResultHandler;
 import com.njydsz.common.search.sync.IndexConsistencyChecker;
@@ -64,14 +58,14 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 全文检索自动配置。
  *
- * <p>封装 Elasticsearch 客户端与索引模板管理：连接池、查询构造器、聚合分析、高亮。
+ * <p>封装 PostgreSQL 全文检索引擎与内存降级引擎，提供统一搜索入口。
  *
- * <p>通过 {@code ydsz.search.*} 配置 ES 集群地址、用户名/密码、连接超时等。
+ * <p>通过 {@code ydsz.search.*} 配置主引擎选择、缓存、降级策略等。
+ * 默认使用 PostgreSQL tsvector 引擎，不可用时自动降级到内存引擎。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
-
 @Slf4j
 @AutoConfiguration
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
@@ -90,26 +84,23 @@ public class SearchAutoConfiguration {
     // ==================== 引擎策略装配 ====================
 
     /**
-     * PG 引擎 — classpath 有 DataSource + JdbcTemplate 时激活
+     * PG 引擎 — classpath 有 DataSource + JdbcTemplate 时激活。     *
+     * <p>本项目默认引擎（{@code matchIfMissing = true}），未显式指定
+     * {@code ydsz.search.primary} 时即选用 PG，无需额外部署 ES 集群。
+     * 索引表与 GIN 索引由独立 SQL 脚本创建，本方法不做 DDL。
+     *
+     * <p><b>降级策略</b>：{@link DataSource} 不可用时返回
+     * {@link InMemorySearchStrategy} 并打 warn 日志，
+     * 保证应用能启动、搜索接口不报错，但结果仅来自内存索引且重启即失效。
+     *
+     * @param dataSourceProvider 数据源的惰性提供者，缺失时触发内存引擎降级
+     * @param properties         搜索配置，其中 {@code pg} 段提供索引表名与字段权重
+     * @return PG 搜索策略；数据源缺失时返回内存搜索策略，永不为 {@code null}
      */
     @Configuration
     @ConditionalOnClass({DataSource.class, JdbcTemplate.class})
     static class PgEngineConfiguration {
-        /**
-         * 装配基于 PostgreSQL tsvector 的默认搜索引擎。
-         *
-         * <p>本项目默认引擎（{@code matchIfMissing = true}），未显式指定
-         * {@code ydsz.search.primary} 时即选用 PG，无需额外部署 ES 集群。
-         * 索引表与 GIN 索引由独立 SQL 脚本创建，本方法不做 DDL。
-         *
-         * <p><b>降级策略</b>：{@link DataSource} 不可用时返回
-         * {@link InMemorySearchStrategy} 并打 warn 日志，
-         * 保证应用能启动、搜索接口不报错，但结果仅来自内存索引且重启即失效。
-         *
-         * @param dataSourceProvider 数据源的惰性提供者，缺失时触发内存引擎降级
-         * @param properties         搜索配置，其中 {@code pg} 段提供索引表名与字段权重
-         * @return PG 搜索策略；数据源缺失时返回内存搜索策略，永不为 {@code null}
-         */
+
         @Bean
         @ConditionalOnMissingBean(name = "pgSearchStrategy")
         @ConditionalOnProperty(prefix = "ydsz.search", name = "primary", havingValue = "pg", matchIfMissing = true)
@@ -125,47 +116,7 @@ public class SearchAutoConfiguration {
     }
 
     /**
-     * Elasticsearch 引擎 — 需手动配置 ydsz.search.primary=es
-     */
-    @Bean
-    @ConditionalOnMissingBean(name = "esSearchStrategy")
-    @ConditionalOnProperty(prefix = "ydsz.search", name = "primary", havingValue = "es")
-    public SearchStrategy esSearchStrategy(SearchProperties properties) {
-        return new ElasticsearchSearchStrategy(properties.getEs());
-    }
-
-    /**
-     * RediSearch 引擎
-     */
-    @Bean
-    @ConditionalOnMissingBean(name = "rediSearchStrategy")
-    @ConditionalOnProperty(prefix = "ydsz.search", name = "primary", havingValue = "redis")
-    public SearchStrategy rediSearchStrategy(SearchProperties properties) {
-        return new RediSearchStrategy(properties.getRedis());
-    }
-
-    /**
-     * Solr 引擎
-     */
-    @Bean
-    @ConditionalOnMissingBean(name = "solrSearchStrategy")
-    @ConditionalOnProperty(prefix = "ydsz.search", name = "primary", havingValue = "solr")
-    public SearchStrategy solrSearchStrategy(SearchProperties properties) {
-        return new SolrSearchStrategy(properties.getSolr());
-    }
-
-    /**
-     * OpenSearch 引擎
-     */
-    @Bean
-    @ConditionalOnMissingBean(name = "openSearchStrategy")
-    @ConditionalOnProperty(prefix = "ydsz.search", name = "primary", havingValue = "opensearch")
-    public SearchStrategy openSearchStrategy(SearchProperties properties) {
-        return new OpenSearchStrategy(properties.getOpensearch());
-    }
-
-    /**
-     * Memory 引擎 — 始终可用（降级兜底）
+     * Memory 引擎 — 始终可用（降级兜底）。
      */
     @Bean
     @ConditionalOnMissingBean(name = "memorySearchStrategy")
@@ -173,7 +124,7 @@ public class SearchAutoConfiguration {
         return new InMemorySearchStrategy();
     }
 
-    // ==================== P2-13: 模块化引擎 Starter 支持 ====================
+    // ==================== 模块化引擎 Starter 支持 ====================
 
     /**
      * 引擎模块自动装配注册表 — 支持独立引擎 Starter 自我注册。
@@ -274,7 +225,7 @@ public class SearchAutoConfiguration {
      * 装配搜索引擎注册表，按配置选出主引擎并管理多引擎间的降级顺序。
      *
      * <p>注入的是<b>全部</b>已装配的 {@link SearchStrategy}
-     * （PG / ES / Redis / Solr / OpenSearch / Memory 中被条件激活的那些），
+     * （PG / Memory 中被条件激活的那些），
      * 由注册表依据 {@code ydsz.search.primary} 挑选主引擎，
      * 主引擎不可用时按能力回退到内存引擎。
      *
@@ -296,8 +247,8 @@ public class SearchAutoConfiguration {
      * 因此<b>不同用户的权限过滤结果不会互相串数据</b>；
      * 容量与 TTL 由 {@code ydsz.search.cache-*} 配置。
      *
-     * <p>注意 {@link UnifiedSearchService} 内部另行 new 了一个独立缓存实例，
-     * 本 Bean 主要供健康检查与运维接口观测/清理使用。
+     * <p>本 Bean 作为全局共享的搜索缓存实例，供 {@link UnifiedSearchService}、
+     * 健康检查与运维接口统一使用。
      *
      * @param properties 搜索配置，提供缓存容量与过期时间
      * @return 缓存服务实例，永不为 {@code null}
@@ -401,7 +352,7 @@ public class SearchAutoConfiguration {
     /**
      * 装配统一搜索服务，作为业务方检索的唯一入口。
      *
-     * <p>内部会创建独立的搜索线程池与信号量限流器，
+     * <p>内部会创建独立的搜索信号量限流器，
      * 因此本方法额外把实例缓存到 {@code unifiedSearchServiceInstance} 字段，
      * 供 {@link #destroy()} 在容器关闭时回收线程池——
      * 由于该 Bean 未声明 {@code destroyMethod}，若不做此缓存线程池将泄漏。
@@ -413,6 +364,7 @@ public class SearchAutoConfiguration {
      * @param searchAnalyticsService 行为分析服务，沉淀热门词与零结果词
      * @param searchTextProcessor    查询文本预处理器
      * @param businessRanker         业务重排器
+     * @param searchCacheService     共享搜索缓存服务
      * @return 统一搜索服务实例，永不为 {@code null}
      */
     @Bean
@@ -424,9 +376,11 @@ public class SearchAutoConfiguration {
                                                       SearchAnalyticsService searchAnalyticsService,
                                                       SearchTextProcessor searchTextProcessor,
                                                       BusinessRanker businessRanker,
+                                                      SearchCacheService searchCacheService,
                                                       ThreadPoolTaskExecutor searchExecutor) {
         unifiedSearchServiceInstance = new UnifiedSearchService(engineRegistry, providerRegistry, properties,
-                searchMetrics, searchAnalyticsService, searchTextProcessor, businessRanker, searchExecutor);
+                searchMetrics, searchAnalyticsService, searchTextProcessor, businessRanker,
+                searchCacheService, searchExecutor);
         return unifiedSearchServiceInstance;
     }
 
@@ -508,59 +462,6 @@ public class SearchAutoConfiguration {
     public SuggestionService suggestionService(SearchEngineRegistry engineRegistry,
                                                 SearchProperties properties) {
         return new SuggestionService(engineRegistry, properties);
-    }
-
-    // ==================== P1/P2 新增服务装配 ====================
-
-    /**
-     * 装配二级缓存服务（Caffeine L1 + Redis L2）。
-     *
-     * <p>Redis 以惰性方式注入：可用时 L2 走 Redis（多节点共享、重启不丢），
-     * 不可用时退化为纯 Caffeine 单节点缓存（重启丢失）。
-     * 空结果使用更短的 TTL 缓存，避免无效查询持续命中。
-     *
-     * <p>特性：
-     * <ul>
-     *   <li>L1 Caffeine: 本地高性能，TTL 30 秒，容量 500</li>
-     *   <li>L2 Redis: 跨节点共享，TTL 5 分钟</li>
-     *   <li>空结果哨兵：最短 TTL（30 秒），减少缓存穿透</li>
-     *   <li>扫描式清理（SCAN），避免 KEYS 命令阻塞 Redis</li>
-     * </ul>
-     *
-     * @param properties     搜索配置
-     * @param redisProvider  Redis 的惰性提供者，缺失时退化为单级缓存
-     * @return 二级缓存服务实例，永不为 {@code null}
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    @ConditionalOnClass(name = "com.github.benmanes.caffeine.cache.Caffeine")
-    public TwoLevelSearchCacheService twoLevelSearchCacheService(ObjectProvider<StringRedisTemplate> redisProvider,
-                                                                 SearchProperties properties,
-                                                                 ObjectMapper objectMapper) {
-        return new TwoLevelSearchCacheService(redisProvider, properties, objectMapper);
-    }
-
-    /**
-     * 装配增强搜索建议服务，组合引擎补全、热门关键词与 Levenshtein 纠错。
-     *
-     * <p>相比 {@link SuggestionService} 增加三项能力：
-     * <ul>
-     *   <li>引擎 prefix suggestion + 热门词双源兜底</li>
-     *   <li>Levenshtein 编辑距离自动纠错</li>
-     *   <li>拼音首字母匹配（pinyin initial）</li>
-     * </ul>
-     *
-     * @param engineRegistry   引擎注册表
-     * @param properties       搜索配置
-     * @param redisProvider    Redis 的惰性提供者，缺失时热门词降级为空列表
-     * @return 增强建议服务实例，永不为 {@code null}
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public EnhancedSuggestionService enhancedSuggestionService(SearchEngineRegistry engineRegistry,
-                                                               SearchAnalyticsService searchAnalyticsService,
-                                                               SearchProperties properties) {
-        return new EnhancedSuggestionService(engineRegistry, searchAnalyticsService, properties);
     }
 
     /**

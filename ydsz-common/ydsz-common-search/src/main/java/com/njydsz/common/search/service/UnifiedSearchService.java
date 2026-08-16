@@ -56,7 +56,7 @@ public class UnifiedSearchService {
     private final Semaphore searchConcurrencyLimit;
 
     /**
-     * 创建统一搜索服务（使用外部注入的线程池）。
+     * 创建统一搜索服务（使用外部注入的线程池和共享缓存）。
      *
      * <p>推荐用法：由 {@code SearchAutoConfiguration} 注入通过
      * {@code ydsz.thread.pools.searchExecutor} 配置的统一管理线程池，
@@ -69,6 +69,7 @@ public class UnifiedSearchService {
      * @param analyticsService 行为分析服务
      * @param textProcessor    查询文本预处理器
      * @param ranker           业务重排器
+     * @param searchCacheService 共享搜索缓存服务
      * @param searchExecutor   外部注入的线程池（不可为 {@code null}）
      */
     public UnifiedSearchService(SearchEngineRegistry engineRegistry,
@@ -78,6 +79,7 @@ public class UnifiedSearchService {
                                 SearchAnalyticsService analyticsService,
                                 SearchTextProcessor textProcessor,
                                 BusinessRanker ranker,
+                                SearchCacheService searchCacheService,
                                 ThreadPoolTaskExecutor searchExecutor) {
         this.engineRegistry = engineRegistry;
         this.providerRegistry = providerRegistry;
@@ -86,7 +88,7 @@ public class UnifiedSearchService {
         this.analyticsService = analyticsService;
         this.textProcessor = textProcessor;
         this.ranker = ranker;
-        this.cacheService = new SearchCacheService(properties);
+        this.cacheService = searchCacheService;
         this.searchExecutor = searchExecutor;
         this.searchConcurrencyLimit = new Semaphore(properties.getMaxPageSize(), true);
         this.circuitBreaker = createCircuitBreaker(properties);
@@ -108,13 +110,13 @@ public class UnifiedSearchService {
      */
     public UnifiedSearchService(SearchEngineRegistry engineRegistry,
                                 SearchProviderRegistry providerRegistry,
-                                SearchProperties metrics,
-                                SearchMetrics searchMetrics,
+                                SearchProperties properties,
+                                SearchMetrics metrics,
                                 SearchAnalyticsService analyticsService,
                                 SearchTextProcessor textProcessor,
                                 BusinessRanker ranker) {
-        this(engineRegistry, providerRegistry, metrics, searchMetrics, analyticsService, textProcessor, ranker,
-                createDefaultSearchExecutor(metrics));
+        this(engineRegistry, providerRegistry, properties, metrics, analyticsService, textProcessor, ranker,
+                new SearchCacheService(properties), createDefaultSearchExecutor(properties));
     }
 
     /**
