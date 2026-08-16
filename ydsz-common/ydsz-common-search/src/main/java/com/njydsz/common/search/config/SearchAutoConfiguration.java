@@ -355,6 +355,7 @@ public class SearchAutoConfiguration {
      * @param properties             搜索配置：分页上限、超时、熔断阈值等
      * @param searchMetrics          指标采集器，上报耗时与命中数
      * @param searchAnalyticsService 行为分析服务，沉淀热门词与零结果词
+     * @param searchQualityTracker   搜索质量追踪器，统计 MRR/CTR/零结果率/延迟
      * @param searchTextProcessor    查询文本预处理器
      * @param businessRanker         业务重排器
      * @param searchCacheService     共享搜索缓存服务
@@ -367,12 +368,13 @@ public class SearchAutoConfiguration {
                                                       SearchProperties properties,
                                                       SearchMetrics searchMetrics,
                                                       SearchAnalyticsService searchAnalyticsService,
+                                                      SearchQualityTracker searchQualityTracker,
                                                       SearchTextProcessor searchTextProcessor,
                                                       BusinessRanker businessRanker,
                                                       SearchCacheService searchCacheService,
                                                       ThreadPoolTaskExecutor searchExecutor) {
         unifiedSearchServiceInstance = new UnifiedSearchService(engineRegistry, providerRegistry, properties,
-                searchMetrics, searchAnalyticsService, searchTextProcessor, businessRanker,
+                searchMetrics, searchAnalyticsService, searchQualityTracker, searchTextProcessor, businessRanker,
                 searchCacheService, searchExecutor);
         return unifiedSearchServiceInstance;
     }

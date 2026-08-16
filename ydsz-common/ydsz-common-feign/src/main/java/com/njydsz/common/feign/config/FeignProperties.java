@@ -250,6 +250,22 @@ public class FeignProperties {
         private long connectionTimeToLive = 60000;
     }
 
+    /** 错误解码配置 */
+    private final Error error = new Error();
+
+    /**
+     * 错误解码配置
+     */
+    @Getter
+    @Setter
+    public static class Error {
+        /** 是否在错误信息中包含响应体，默认false */
+        private boolean includeBody = false;
+
+        /** 响应体最大字节数，默认4096 */
+        private int maxBodyBytes = 4096;
+    }
+
     /**
      * 响应拦截器配置
      */

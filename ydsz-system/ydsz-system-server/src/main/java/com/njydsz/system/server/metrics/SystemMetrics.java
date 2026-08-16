@@ -5,7 +5,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
-import com.njydsz.common.base.metrics.AbstractModuleMetrics;
+import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 
 /**
  * 系统模块 Micrometer 指标采集器
@@ -41,13 +41,13 @@ import com.njydsz.common.base.metrics.AbstractModuleMetrics;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see AbstractModuleMetrics 通用指标基类（封装 Counter / Timer 样板代码）
+ * @see SentryMetricsAdapter 通用指标基类（封装 Counter / Timer 样板代码）
  * @see io.micrometer.core.instrument.MeterRegistry Micrometer 指标注册中心
  */
 @Slf4j
 @Component
 @ConditionalOnClass(MeterRegistry.class)
-public class SystemMetrics extends AbstractModuleMetrics {
+public class SystemMetrics extends SentryMetricsAdapter {
 
     /**
      * 构造器：初始化 Micrometer 注册中心 + 指标前缀

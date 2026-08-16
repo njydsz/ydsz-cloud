@@ -36,7 +36,7 @@ public final class FormulaInjectionGuard {
     /**
      * 解析系统属性中的危险前缀配置。
      *
-     * <p>系统属性 {@code ydz.excel.formula-injection-prefixes} 格式为逗号分隔，
+     * <p>系统属性 {@code ydsz.excel.formula-injection-prefixes} 格式为逗号分隔，
      * 如 {@code "=,+,@",-}。解析失败时回退到默认值 {@code ["=", "+"]}。</p>
      *
      * @return 不可变的危险前缀列表

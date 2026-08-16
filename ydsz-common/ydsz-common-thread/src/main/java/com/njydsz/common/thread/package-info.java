@@ -1,17 +1,23 @@
 /**
- * ydsz-common-thread 统一线程池管理模块。
+ * ydsz-common-thread 统一线程管理模块。
  *
  * <p><b>模块定位：</b>面向 Spring Boot 配置驱动的线程池生命周期管理，
  * 支持按业务隔离配置、Micrometer 指标暴露、优雅关闭、运行时动态调参。
+ * 同时提供编程式线程池工厂与可观测执行器。
  *
  * <p><b>与 ydsz-common-util 的职责边界：</b>
  * <ul>
- *   <li>本模块（thread）：提供 Spring 容器托管的线程池自动配置与监控。
- *       通过 {@code ydsz.thread.pools} 配置的线程池会被注册为 Spring Bean，
- *       自动绑定 Micrometer 指标、健康检查与优雅关闭钩子</li>
- *   <li>common-util：提供编程式并发工具（{@code ExecutorUtils} 静态工厂、
- *       {@code ThreadPoolMonitor} 等）。
- *       适用于非 Spring 场景、短生命周期线程池或需要手动注册监控的场景</li>
+ *   <li>本模块（thread）：集配置驱动托管、编程式工厂、可观测执行器于一体，
+ *       是线程池管理能力的唯一归属模块</li>
+ *   <li>common-util：仅保留限流、重试等通用并发工具（{@code RateLimiter}、{@code RetryUtils}），
+ *       不再包含线程池创建与监控能力</li>
+ * </ul>
+ *
+ * <p><b>v1.5.0 变更：</b>
+ * <ul>
+ *   <li>从 ydsz-common-util 迁入 {@code ExecutorUtils} 编程式线程池工厂</li>
+ *   <li>从 ydsz-common-util 迁入 {@code MeteredThreadPoolExecutor} 可观测线程池执行器</li>
+ *   <li>线程池管理能力统一收归本模块，ydsz-common-util 不再提供线程池相关能力</li>
  * </ul>
  *
  * <p><b>v1.4.0 变更：</b>

@@ -176,11 +176,6 @@ public class RedisProperties {
     private int nullValueTtlSeconds = 1800;
 
     /**
-     * 布隆过滤器配置
-     */
-    private BloomFilter bloomFilter = new BloomFilter();
-
-    /**
      * 可观测性配置
      */
     private Metrics metrics = new Metrics();
@@ -359,25 +354,6 @@ public class RedisProperties {
          */
         private FailOpenPolicy failOpenPolicy =
                 FailOpenPolicy.FAIL_CLOSED;
-    }
-
-    /**
-     * 布隆过滤器配置类
-     */
-    @Data
-    public static class BloomFilter {
-
-        /**
-         * 布隆过滤器故障处理策略（默认 FAIL_OPEN）
-         * <p>当 Redis 不可用时 mightContain 的处理策略：
-         * <ul>
-         *   <li>FAIL_OPEN: 返回 false（放行，可能导致缓存穿透）</li>
-         *   <li>FAIL_CLOSED: 返回 true（保守策略，阻止穿透）</li>
-         *   <li>FAIL_THROW: 抛出异常（由业务层处理）</li>
-         * </ul>
-         */
-        private FailOpenPolicy failMode =
-                FailOpenPolicy.FAIL_OPEN;
     }
 
     /**

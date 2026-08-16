@@ -393,3 +393,60 @@ ydsz-common 是一个约 **19 万行、1400+ 类**的公共底座，分层设计
 | 三套并存统一（脱敏/熔断/TraceId） | 已评估暂缓，理由见上 |
 
 *本报告正文为审计基线，附一~附四为 2026-08-16 晚两轮修复后的增量记录。*
+
+---
+
+## 附五：第三轮修复记录（2026-08-16 20:03 场次，忽略影响面大的问题）
+
+> 本轮执行原则：只处理影响面小、可独立验证的 P2 项；seata 自研框架、三套统一、web 安全链等影响面大的问题按用户指示忽略。
+
+### P2-A domain 零使用类清理 ✅
+
+| 类 | 处理 | 依据 |
+|---|---|---|
+| `EventRegistry`（领域事件注册接口） | **删除**（全仓零引用、零测试） | grep 全仓唯一命中即自身声明 |
+| `TypedId` | **保留** | 有独立测试（`TypedIdTest`），属 DDD 类型化 ID 基座候选，删除收益小于风险 |
+| `PageQueryRiskAssessor` / `DeepPaginationRisk` | **保留** | 审计代理「零使用」结论**再次误报**：`PageQueryRiskAssessor` 被 `PageQuery` 引用（PageQuery 为 39 文件高频类）；`DeepPaginationRisk` 被 jdbc `SafeQueryInnerInterceptor` 真实使用 |
+
+### P2-B exception 零使用类评估 ✅（无需删除）
+
+- `ExceptionCodeDocEndpoint`：被 `YdszExceptionActuatorAutoConfiguration` 自动注册为 Actuator 端点（框架内部装配，非死代码）
+- `BatchBusinessException`：被 `MvcExceptionHandler` 以 `@ExceptionHandler` 处理（统一异常体系的一部分）
+- 结论：两者均为**自动装配内部使用**，审计代理按「直接 import」统计误判为死代码，保留
+
+### P2-C excel 文档属性名错误 ✅
+
+- `FormulaInjectionGuard` javadoc L39 系统属性名 `ydz.excel.formula-injection-prefixes` → `ydsz.excel`（实际代码 L45 一直用 `ydsz.excel`，仅 javadoc 笔误，已修正）
+
+### P2-D redis 虚假能力清理 ✅
+
+| 项 | 处理 |
+|---|---|
+| `RedisBloomFilterTest`（孤儿测试） | **删除**：被测的 `RedisBloomFilter` 主类在 main 代码中不存在，该测试实际在验证 Guava murmur3_128 库本身，与生产代码完全脱节 |
+| `RedisProperties.BloomFilter` 幽灵配置 | **删除**：嵌套配置类零使用（无任何 service 读取 `getBloomFilter()`），属「布隆过滤器」虚假能力宣称的配置残留 |
+| `FailOpenPolicy` 枚举 | **保留**：被 `RedisRateLimiter` 真实使用（限流器 fail-open/fail-closed 策略） |
+
+### P2-E 补核心模块测试 ✅
+
+| 模块 | 测试类 | 用例数 | 覆盖点 |
+|---|---|---|---|
+| auth | `DataScopeHelperTest` | 12 | 无上下文/超管/ALL 不限制；SELF/DEPT/DEPT_AND_CHILD/CUSTOM 片段；表别名前缀；自定义列名；**未知规则 fail-closed（AND 1 = 0）**；SQL 注入转义 |
+| audit | `TableNameResolverTest` | 14 | monthly/daily/yearly 命名；未分表回退；未知类型回退；跨月/跨天/跨年范围；多个月连续；null 时间；fromName 大小写；端点相同单表 |
+
+- 两个测试类均已 javac 编译通过（项目约定测试代码不入库，`**/src/test/` 在 .gitignore）
+
+### 编译验证（第三轮）
+
+- `RedisProperties.java`（去 BloomFilter 幽灵配置）：javac 通过
+- `DataScopeHelperTest` / `TableNameResolverTest`：javac 通过
+- `FormulaInjectionGuard.java`：纯 javadoc 修改，无编译影响
+- 删除 `EventRegistry` 后全仓 grep 零残留引用
+- 外部进程对 `FeignProperties` 的新增（Error 解码配置）与我的熔断参数化并存，互不冲突
+
+### 累计状态（三轮）
+
+- **已修复**：2 P0 + 9 P1 + 10 P2，新增 4 个测试类（48 个用例）
+- **纠正审计代理误报 6 处**：sentry/docs 零引用、cache 衰减、json 损坏状态、PageQueryRiskAssessor/DeepPaginationRisk 零使用、exception 死代码
+- **明确忽略（影响面大）**：seata 自研 TCC/SAGA、三套并存统一、web 安全链深改、jacoco/SpotBugs 门禁、auth/audit 之外模块大规模补测试
+
+*本报告正文为审计基线，附一~附五为 2026-08-16 晚三轮修复后的增量记录。*

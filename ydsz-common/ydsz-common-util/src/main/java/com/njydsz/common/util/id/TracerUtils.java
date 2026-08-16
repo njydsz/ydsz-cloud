@@ -386,4 +386,40 @@ public final class TracerUtils {
     public static ParsedTraceparent parseTraceparent(String traceparent) {
         return TraceIdGeneratorProxy.parseTraceparent(traceparent);
     }
+
+    /**
+     * 获取当前 W3C {@code traceparent} 字符串。
+     *
+     * <p>基于当前线程的 Trace ID 和 Span ID 构造 W3C 格式的 traceparent 头，
+     * 用于跨服务调用时透传链路追踪上下文。</p>
+     *
+     * <p>格式：{@code 00-{32hex}-{16hex}-{flags}}。</p>
+     *
+     * @return W3C traceparent 字符串；如果没有有效的 Trace ID 则返回空字符串
+     * @since 4.2.0
+     */
+    public static String getCurrentTraceParent() {
+        String traceId = getTraceId();
+        if (StringUtils.isEmpty(traceId) || "Ignored_Trace".equalsIgnoreCase(traceId)) {
+            return "";
+        }
+        String spanId = getSpanId();
+        if (StringUtils.isEmpty(spanId)) {
+            spanId = generateSpanId();
+            setSpanId(spanId);
+        }
+        // 规范化 traceId 为 32 位十六进制
+        if (traceId.length() > 32) {
+            traceId = traceId.substring(traceId.length() - 32);
+        } else if (traceId.length() < 32) {
+            traceId = "0".repeat(32 - traceId.length()) + traceId;
+        }
+        // 规范化 spanId 为 16 位十六进制
+        if (spanId.length() > 16) {
+            spanId = spanId.substring(spanId.length() - 16);
+        } else if (spanId.length() < 16) {
+            spanId = "0".repeat(16 - spanId.length()) + spanId;
+        }
+        return "00-" + traceId + "-" + spanId + "-01";
+    }
 }

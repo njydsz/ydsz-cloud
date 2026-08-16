@@ -2,6 +2,9 @@
 
 > YDSZ 通用工具类库（L2 工具层）— 覆盖 ID 生成、加密/国密、HTTP、字符串、集合/Map、IP、并发、认证上下文、YAML、国际化消息等领域。
 
+> **注意**: 自 v4.1.0 起，线程池创建与监控能力（`ExecutorUtils`、`MeteredThreadPoolExecutor`）已迁移至 `ydsz-common-thread` 模块。
+> 本模块仅保留 `RateLimiter`（限流）、`RetryUtils`（重试）等通用并发工具。
+
 ---
 
 ## 快速开始
@@ -81,9 +84,7 @@ byte[] ciphertext = sm4.encrypt(plaintextBytes, keyBytes, null);
 | URL 白名单匹配（轻量） | `UrlPathUtils` | 单次线性匹配，Ant 风格 |
 | URL 白名单匹配（高性能） | `UrlPathMatcher` | 构建一次复用多次，精确 O(1) + 通配符 |
 | 可信代理判定 | `TrustedProxyConfiguration` | 防止 X-Forwarded-For 伪造，内网地址始终可信 |
-| 线程池创建 | `ExecutorUtils` | 支持 Fixed/Virtual/Scheduled/TTL 等 |
-| 线程池监控 | `MeteredThreadPoolExecutor` | Micrometer 指标自动注册 |
-| 有界虚拟线程调度 | `BoundedVirtualThreadScheduler` | Semaphore 背压控制 + 虚拟线程轻量优势 |
+| 线程池监控 | `ThreadPoolMonitor` | Micrometer 指标自动注册（由 ydsz-common-thread 提供能力） |
 | 限流 | `RateLimiter` | 单机令牌桶算法（阻塞/非阻塞/超时模式） |
 | 重试 | `RetryUtils` | 固定间隔 + 指数退避（含抖动），可自定义重试条件 |
 | 字符串判空/转换/截断 | `StringUtils` | null-safe 判空、驼峰/下划线互转、truncate/abbreviate/normalizeSpace |
@@ -108,8 +109,7 @@ com.njydsz.common.util
 ├── bean/           Bean 映射：BeanMapper（Map→Bean/Record）、BeanUpdateUtil（PATCH 语义）
 ├── collection/     集合工具：CollectionUtils、MapUtils（聚焦 Map 操作）、SequencedCollections
 ├── date/           日期时间：DateUtils（java.time API 封装）
-├── concurrent/     并发工具：ExecutorUtils、MeteredThreadPoolExecutor、BoundedVirtualThreadScheduler、
-│                   RateLimiter、RetryUtils
+├── diff/           字段 diff 工具：DiffCalculator、DiffReport、DiffField、FieldDiff
 ├── config/         自动配置：UtilAutoConfiguration、MessageSourceConfiguration
 ├── http/           HTTP 工具：ServletRequestUtils、HttpResponseUtils、HttpTokenUtils、
 │                   RequestContextUtils、UrlPathUtils、UrlPathMatcher、TrustedProxyConfiguration

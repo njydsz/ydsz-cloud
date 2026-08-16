@@ -25,12 +25,12 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.storage.IFileStorage;
 import com.njydsz.common.file.storage.IFileStorageProvider;
+import com.njydsz.common.file.util.FileOps;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
-import com.njydsz.nextwiki.server.util.NextwikiFileUtils;
 /**
  * WOPI 协议接口 Controller（P1-4 + P1-R5 + P2-R4）。
  *
@@ -76,7 +76,7 @@ import com.njydsz.nextwiki.server.util.NextwikiFileUtils;
  *       → ydsz-nextwiki-web (本 Controller)
  *         → ydsz-nextwiki-domain.FileNodeRepository
  *         → ydsz-common-file (IFileStorage 抽象)
- *         → ydsz-nextwiki-server.NextwikiFileUtils
+         → ydsz-common-file.FileOps
  * </pre>
  *
  * @author ydsz-team
@@ -199,7 +199,7 @@ public class WopiController {
         try {
             String storageKey = fileNode.getStorageKey();
             MultipartFile multipartFile =
-                    NextwikiFileUtils.toMultipartFile(
+                    FileOps.toMultipartFile(
                             writeTempFile(content), fileNode.getName(), fileNode.getMimeType());
             storage.upload(null, storageKey, multipartFile);
 

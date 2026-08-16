@@ -9,7 +9,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
-import com.njydsz.common.base.metrics.AbstractModuleMetrics;
+import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 import com.njydsz.workflow.domain.entity.FlowInstance;
 import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.infra.mapper.FlowCcMapper;
@@ -35,7 +35,7 @@ import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
  * @author ydsz-team
  */
 @Slf4j
-public class FlowMetrics extends AbstractModuleMetrics {
+public class FlowMetrics extends SentryMetricsAdapter {
 
     // ============================== Gauge 弱引用 mapper（避免循环依赖） ==============================
     /**

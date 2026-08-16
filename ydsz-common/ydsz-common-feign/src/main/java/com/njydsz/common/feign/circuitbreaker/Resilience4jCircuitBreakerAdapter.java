@@ -58,6 +58,55 @@ public class Resilience4jCircuitBreakerAdapter implements FeignCircuitBreakerStr
         cb.onError(durationMs, java.util.concurrent.TimeUnit.MILLISECONDS, throwable);
     }
 
+    @Override
+    public CircuitBreakerState getState(String serviceName) {
+        CircuitBreaker cb = getOrCreate(serviceName);
+        return switch (cb.getState()) {
+            case CLOSED -> CircuitBreakerState.CLOSED;
+            case OPEN -> CircuitBreakerState.OPEN;
+            case HALF_OPEN -> CircuitBreakerState.HALF_OPEN;
+            case FORCED_OPEN -> CircuitBreakerState.FORCED_OPEN;
+            default -> CircuitBreakerState.CLOSED;
+        };
+    }
+
+    @Override
+    public CircuitBreakerMetrics getMetrics(String serviceName) {
+        CircuitBreaker cb = getOrCreate(serviceName);
+        CircuitBreaker.Metrics metrics = cb.getMetrics();
+        return new CircuitBreakerMetrics() {
+            @Override
+            public float getFailureRate() {
+                return metrics.getFailureRate();
+            }
+
+            @Override
+            public int getTotalCalls() {
+                return metrics.getNumberOfBufferedCalls() + metrics.getNumberOfNotPermittedCalls();
+            }
+
+            @Override
+            public int getSuccessfulCalls() {
+                return metrics.getNumberOfSuccessfulCalls();
+            }
+
+            @Override
+            public int getFailedCalls() {
+                return metrics.getNumberOfFailedCalls();
+            }
+
+            @Override
+            public int getSlowCalls() {
+                return metrics.getNumberOfSlowCalls() + metrics.getNumberOfSlowFailedCalls() + metrics.getNumberOfSlowSuccessfulCalls();
+            }
+
+            @Override
+            public long getAverageDuration() {
+                return metrics.getAverageDuration().toMillis();
+            }
+        };
+    }
+
     private CircuitBreaker getOrCreate(String serviceName) {
         if (registry.find(serviceName).isPresent()) {
             return registry.circuitBreaker(serviceName);

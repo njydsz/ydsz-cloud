@@ -22,7 +22,6 @@ import io.netty.util.internal.logging.Slf4JLoggerFactory;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.netty.config.NettyProperties;
 import com.njydsz.common.netty.event.ChannelEventDispatcher;
-import com.njydsz.common.netty.event.MessageDispatcher;
 import com.njydsz.common.netty.handler.ChannelGroupManager;
 import com.njydsz.common.netty.handler.ConnectionEventHandler;
 import com.njydsz.common.netty.handler.ConnectionLimitHandler;
@@ -98,15 +97,6 @@ public abstract class AbstractNettyServer {
 
     /** 可选依赖 — Channel 事件分发器（由 NettyAutoConfiguration 通过 setter 注入） */
     private ChannelEventDispatcher channelEventDispatcher;
-
-    /**
-     * 可选依赖 — 消息分发器（由 NettyAutoConfiguration 通过 setter 注入）。
-     *
-     * @deprecated 自 v1.1.0 起标记废弃，与 {@link MessageDispatcher} 同步废弃。
-     *             推荐使用 {@code SimpleChannelInboundHandler<T>} + switch 策略模式。
-     */
-    @Deprecated
-    private MessageDispatcher messageDispatcher;
 
     /**
      * 构造 Netty TCP Server。
@@ -413,10 +403,6 @@ public abstract class AbstractNettyServer {
             // 子类自定义 Pipeline
             initChannelPipeline(ch);
 
-            if (messageDispatcher != null) {
-                pipeline.addLast("messageDispatcher", messageDispatcher);
-            }
-
             groupManager.add(ch);
         }
     }
@@ -521,17 +507,6 @@ public abstract class AbstractNettyServer {
 
     public void setChannelEventDispatcher(ChannelEventDispatcher channelEventDispatcher) {
         this.channelEventDispatcher = channelEventDispatcher;
-    }
-
-    /**
-     * 设置消息分发器。
-     *
-     * @param messageDispatcher 消息分发器
-     * @deprecated 自 v1.1.0 起标记废弃，与 {@link MessageDispatcher} 同步废弃。
-     */
-    @Deprecated
-    public void setMessageDispatcher(MessageDispatcher messageDispatcher) {
-        this.messageDispatcher = messageDispatcher;
     }
 
     /**

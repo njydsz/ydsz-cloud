@@ -1,5 +1,6 @@
 package com.njydsz.common.feign.interceptor;
 
+import java.util.Collection;
 import feign.InvocationContext;
 import feign.Response;
 import feign.ResponseInterceptor;
@@ -225,10 +226,14 @@ public class FeignResponseInterceptor implements ResponseInterceptor {
         if (response == null) {
             return -1;
         }
-        // 优先从 Content-Length 头获取
-        String contentLength = response.headers() != null
-                ? response.headers().getOrDefault("Content-Length", null)
-                : null;
+        // 优先从 Content-Length 头获取（Feign Response.headers() 返回 Map<String, Collection<String>>）
+        String contentLength = null;
+        if (response.headers() != null) {
+            Collection<String> values = response.headers().get("Content-Length");
+            if (values != null && !values.isEmpty()) {
+                contentLength = values.iterator().next();
+            }
+        }
         if (contentLength != null && !contentLength.isEmpty()) {
             try {
                 return Long.parseLong(contentLength);

@@ -118,9 +118,9 @@ public class OpenFeignException extends SysException {
      */
     public OpenFeignException(String code, String message, Throwable cause,
                               boolean enableSuppression, boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
+        super(CoreExceptionCode.NETWORK_ERROR, cause);
         this.code = code;
         this.data = null;
-        init(CoreExceptionCode.NETWORK_ERROR, new Object[]{}, getLevel(), getCategory());
+        setMessage(message);
     }
 }

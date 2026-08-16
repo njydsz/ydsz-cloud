@@ -6,13 +6,13 @@ import java.util.concurrent.atomic.AtomicLong;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
-import com.njydsz.common.base.metrics.AbstractModuleMetrics;
+import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 import com.njydsz.literule.api.RuleSeverity;
 
 /**
  * 基于 Micrometer 的规则监控指标实现。
  *
- * <p>P1-5: 继承 {@link AbstractModuleMetrics} 统一指标基类，满足 ArchUnit R25 架构规则。
+ * <p>P1-5: 继承 {@link SentryMetricsAdapter} 统一指标基类，满足 ArchUnit R25 架构规则。
  * 同时实现 {@link RuleMetrics} 接口，保持与规则引擎的依赖契约不变。
  *
  * <p>当 classpath 中存在 {@link MeterRegistry} 时，由 {@code LiteRuleAutoConfiguration}
@@ -34,7 +34,7 @@ import com.njydsz.literule.api.RuleSeverity;
  * @since 1.1.0
  * @author ydsz-team
  */
-public class MicrometerRuleMetrics extends AbstractModuleMetrics implements RuleMetrics {
+public class MicrometerRuleMetrics extends SentryMetricsAdapter implements RuleMetrics {
 
     private final AtomicInteger lastTraceQueueSize = new AtomicInteger(0);
     private final AtomicInteger lastRegisteredRules = new AtomicInteger(0);

@@ -119,9 +119,9 @@ public class BulkheadRequestInterceptor implements RequestInterceptor {
      * @param config Bulkhead 配置属性
      */
     public BulkheadRequestInterceptor(FeignProperties.Bulkhead config) {
-        this(config.getDefaultMaxConcurrentCalls(),
-             config.getAcquireTimeoutMillis(),
-             config.getClientConfig());
+        this(config.getDefaultMaxConcurrent(),
+             config.getAcquireTimeoutMs(),
+             config.getServiceMaxConcurrent());
     }
 
     /**

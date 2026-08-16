@@ -10,12 +10,12 @@ import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import com.njydsz.common.base.metrics.AbstractModuleMetrics;
+import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 
 /**
  * 网关自定义 Prometheus 指标。
  *
- * <p>P0-2 架构优化：继承 {@link AbstractModuleMetrics}，统一指标前缀 {@code ydsz_gateway_}，
+ * <p>P0-2 架构优化：继承 {@link SentryMetricsAdapter}，统一指标前缀 {@code ydsz_gateway_}，
  * 消除手动 ConcurrentHashMap Counter/Timer 缓存（Micrometer 内部已缓存），
  * 修复 {@code recordJwtValidationDuration} 每次创建新 Timer 的性能问题。
  *
@@ -37,7 +37,7 @@ import com.njydsz.common.base.metrics.AbstractModuleMetrics;
  */
 @Slf4j
 @Component
-public class GatewayMetrics extends AbstractModuleMetrics {
+public class GatewayMetrics extends SentryMetricsAdapter {
 
     /** 按 routeId 维护的熔断器状态引用（AtomicInteger 可变，Gauge 回调能读到最新值） */
     private final ConcurrentMap<String, AtomicInteger> breakerStates = new ConcurrentHashMap<>();
@@ -48,7 +48,7 @@ public class GatewayMetrics extends AbstractModuleMetrics {
     /**
      * 构造网关指标组件。
      *
-     * <p>委托基类 {@link AbstractModuleMetrics} 以 {@code ydsz_gateway_} 为前缀注册 Micrometer 指标，
+     * <p>委托基类 {@link SentryMetricsAdapter} 以 {@code ydsz_gateway_} 为前缀注册 Micrometer 指标，
      * 由 Micrometer 内部缓存 Timer / Counter 实例，避免每次调用重复创建。
      *
      * @param meterRegistry Micrometer 指标注册中心

@@ -6,12 +6,12 @@ import io.micrometer.core.instrument.Timer;
 import com.njydsz.agent.domain.gateway.LlmException;
 import com.njydsz.agent.domain.model.ChatResponse;
 import com.njydsz.agent.domain.model.TokenUsage;
-import com.njydsz.common.base.metrics.AbstractModuleMetrics;
+import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 
 /**
  * Agent 模块 Micrometer 指标
  *
- * <p>P2-3: 继承 {@link AbstractModuleMetrics} 统一指标命名前缀管理。
+ * <p>P2-3: 继承 {@link SentryMetricsAdapter} 统一指标命名前缀管理。
  *
  * <p>暴露以下 Prometheus 指标：
  * <ul>
@@ -24,7 +24,7 @@ import com.njydsz.common.base.metrics.AbstractModuleMetrics;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class AgentMetrics extends AbstractModuleMetrics {
+public class AgentMetrics extends SentryMetricsAdapter {
 
     /** LLM 调用次数指标名 */
     private static final String METRIC_LLM_CALLS = "agent_llm_calls_total";

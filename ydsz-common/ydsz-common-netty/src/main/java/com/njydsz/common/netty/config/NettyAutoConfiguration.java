@@ -18,7 +18,6 @@ import com.njydsz.common.netty.client.AbstractNettyClient;
 import com.njydsz.common.netty.endpoint.NettyActuatorEndpoint;
 import com.njydsz.common.netty.event.ChannelEventDispatcher;
 import com.njydsz.common.netty.event.ChannelEventListener;
-import com.njydsz.common.netty.event.MessageDispatcher;
 import com.njydsz.common.netty.health.NettyHealthIndicator;
 import com.njydsz.common.netty.metric.NettyChannelMetrics;
 import com.njydsz.common.netty.pool.NettyEventLoopPool;
@@ -148,27 +147,6 @@ public class NettyAutoConfiguration {
     }
 
     /**
-     * 消息分发器（基于 @MessageHandler 注解自动路由消息）。
-     *
-     * <p>仅当 {@code ydsz.netty.dispatcher.enabled=true} 时注册。
-     * 推荐业务侧使用 {@code SimpleChannelInboundHandler<T>} + 手写 switch 作为默认模式。
-     *
-     * @param applicationContext Spring 应用上下文
-     * @return 消息分发器
-     * @deprecated 自 v1.1.0 起标记废弃，与 {@link MessageDispatcher} 同步废弃。
-     *             计划在 v2.0.0 移除，请使用 {@code SimpleChannelInboundHandler} 替代。
-     */
-    @Bean
-    @ConditionalOnMissingBean(MessageDispatcher.class)
-    @ConditionalOnProperty(prefix = "ydsz.netty.dispatcher", name = "enabled", havingValue = "true")
-    @Deprecated
-    public MessageDispatcher messageDispatcher(
-            @Autowired(required = false) ApplicationContext applicationContext) {
-        log.info("[Netty] 注册 MessageDispatcher（注解扫描模式）");
-        return new MessageDispatcher(applicationContext);
-    }
-
-    /**
      * Netty Actuator 端点（当 Actuator 在 classpath 时自动注册）。
      *
      * <p>暴露 {@code /actuator/netty} 端点，提供 Server 状态、EventLoop 池、指标摘要查询。
@@ -203,8 +181,7 @@ public class NettyAutoConfiguration {
     public BeanPostProcessor nettyDependencyInjector(
             NettyChannelMetrics metrics,
             NettyEventLoopPool eventLoopPool,
-            @Autowired(required = false) ChannelEventDispatcher channelEventDispatcher,
-            @Autowired(required = false) MessageDispatcher messageDispatcher) {
+            @Autowired(required = false) ChannelEventDispatcher channelEventDispatcher) {
         return new BeanPostProcessor() {
             @Override
             public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {

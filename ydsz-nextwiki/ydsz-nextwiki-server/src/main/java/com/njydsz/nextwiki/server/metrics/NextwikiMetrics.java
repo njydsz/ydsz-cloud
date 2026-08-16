@@ -4,12 +4,12 @@ import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
-import com.njydsz.common.base.metrics.AbstractModuleMetrics;
+import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 
 /**
  * NextWiki Micrometer 指标采集。
  *
- * <p>P0-2 架构优化：继承 {@link AbstractModuleMetrics}，统一指标前缀 {@code ydsz_nextwiki_}，
+ * <p>P0-2 架构优化：继承 {@link SentryMetricsAdapter}，统一指标前缀 {@code ydsz_nextwiki_}，
  * 消除手动 Counter 创建和 {@code @PostConstruct} 样板代码。
  *
  * <p>暴露以下指标（通过 Spring Boot Actuator /actuator/prometheus）：
@@ -28,7 +28,7 @@ import com.njydsz.common.base.metrics.AbstractModuleMetrics;
 @Slf4j
 @Component
 @ConditionalOnClass(MeterRegistry.class)
-public class NextwikiMetrics extends AbstractModuleMetrics {
+public class NextwikiMetrics extends SentryMetricsAdapter {
 
     public NextwikiMetrics(MeterRegistry meterRegistry) {
         super(meterRegistry, "ydsz_nextwiki_");

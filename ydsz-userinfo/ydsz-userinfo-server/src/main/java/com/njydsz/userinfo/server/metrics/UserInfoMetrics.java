@@ -5,13 +5,13 @@ import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
-import com.njydsz.common.base.metrics.AbstractModuleMetrics;
+import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 /**
  * Userinfo module Micrometer metrics.
  *
- * <p>P0-2 架构优化：继承 {@link AbstractModuleMetrics}，统一指标前缀 {@code ydsz_userinfo_}，
+ * <p>P0-2 架构优化：继承 {@link SentryMetricsAdapter}，统一指标前缀 {@code ydsz_userinfo_}，
  * 消除手动 Counter/Timer/Gauge 创建样板代码。
  *
  * <p>Exposes login counters (with result tag), auth duration timer, and online session gauge.
@@ -35,7 +35,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 @Slf4j
 @Component
 @ConditionalOnClass(MeterRegistry.class)
-public class UserInfoMetrics extends AbstractModuleMetrics {
+public class UserInfoMetrics extends SentryMetricsAdapter {
 
     /** Redis 在线会话总数计数器 Key */
     private static final String SESSION_TOTAL_KEY = "userinfo:session:total";

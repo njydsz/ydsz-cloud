@@ -8,8 +8,9 @@
 |---|---|
 | **层级** | L4 基础数据层（`ydsz-common` 公共依赖） |
 | **类型** | 公共依赖库（不独立部署，随业务模块打包） |
-| **作用** | 为业务模块提供共享线程池的自动配置、运行时监控、健康检查与优雅关闭 |
-| **依赖** | `ydsz-common-core`（基础常量/上下文）；`spring-context`、`spring-boot`、`micrometer-core`（可选）、`spring-boot-actuator`/`spring-boot-health`（可选） |
+| **作用** | 为业务模块提供共享线程池的自动配置、运行时监控、健康检查与优雅关闭，以及编程式线程池工厂与可观测执行器 |
+| **依赖** | `ydsz-common-core`（基础常量/上下文）；`spring-context`、`spring-boot`、`micrometer-core`（可选）、`spring-boot-actuator`/`spring-boot-health`（可选）、`transmittable-thread-local`（可选，TTL 上下文透传） |
+| **提供能力** | ① 配置驱动线程池（`ydsz.thread.pools.<name>`） ② 编程式工厂（`ExecutorUtils`） ③ 可观测执行器（`MeteredThreadPoolExecutor`） |
 | **激活方式** | Spring Boot 自动装配（`AutoConfiguration.imports`），默认启用 |
 
 ## 快速开始（TL;DR）
@@ -332,13 +333,45 @@ ydsz.virtual.executor.completed{pool.name="virtual-io"}  1230.0
 | `ThreadHealthIndicator` | `@ConditionalOnMissingBean(name = "threadHealthIndicator")` | 业务方提供名为 `threadHealthIndicator` 的 Bean 即可替换默认健康检查实现 |
 | `ThreadPoolMetrics` | 由 `ThreadPoolRegistrar` 自动注册 | 使用 `ydsz.thread.enabled=false` 关闭自动配置，完全手动管理 |
 
+### 2. 编程式线程池工厂
+
+`com.njydsz.common.thread.util.ExecutorUtils` 提供静态工厂方法，适用于非 Spring 场景、短生命周期临时线程池或需要按需创建线程池的场景：
+
+```java
+// 创建 CPU 密集型线程池
+ExecutorService cpuPool = ExecutorUtils.newCpuBoundThreadPool("audit-cpu-");
+
+// 创建虚拟线程执行器（适用于 IO 密集）
+ExecutorService virtualPool = ExecutorUtils.newVirtualThreadExecutor("notify-virtual-");
+
+// 优雅关闭
+ExecutorUtils.shutdownGracefully(cpuPool, 30, TimeUnit.SECONDS);
+```
+
+详见 `ExecutorUtils` javadoc 中的「快速选择指南」表格。
+
+### 3. 可观测线程池执行器
+
+`com.njydsz.common.thread.executor.MeteredThreadPoolExecutor` 继承 `ThreadPoolExecutor`，提供 Micrometer 指标自动注册与慢任务检测，适用于编程式创建但仍需指标采集的场景：
+
+```java
+MeteredThreadPoolExecutor executor = new MeteredThreadPoolExecutor(
+    "order-process", 8, 16, 60, TimeUnit.SECONDS,
+    new LinkedBlockingQueue<>(1024),
+    new NamedThreadFactory("order"),
+    new ThreadPoolExecutor.CallerRunsPolicy(),
+    Metrics.globalRegistry);
+executor.enableSlowTaskDetection(1000);
+```
+
 ### 扩展建议
 
 如需自定义线程池行为（如自定义 `ThreadFactory`、`RejectedExecutionHandler`），建议：
 
-1. **不在本模块托管范围内创建线程池**：使用 `ydsz-common-util` 的 `ExecutorUtils` 静态工厂方法创建短生命周期线程池，业务自行管理生命周期
-2. **通过配置属性定制**：`ydsz.thread.pools.<name>.*` 已支持 `reject-policy`、`allow-core-thread-time-out`、`keep-alive-seconds`、`await-termination-seconds`、`task-decorator-bean-names` 等参数
-3. **覆盖健康检查**：提供自定义 `ThreadHealthIndicator` Bean（名为 `threadHealthIndicator`）替换默认实现
+1. **优先使用配置驱动**：`ydsz.thread.pools.<name>` 创建托管线程池
+2. **编程式补充**：使用本模块的 `ExecutorUtils` 或 `MeteredThreadPoolExecutor` 创建线程池
+3. **通过配置属性定制**：`ydsz.thread.pools.<name>.*` 已支持 `reject-policy`、`allow-core-thread-time-out`、`keep-alive-seconds`、`await-termination-seconds`、`task-decorator-bean-names` 等参数
+4. **覆盖健康检查**：提供自定义 `ThreadHealthIndicator` Bean（名为 `threadHealthIndicator`）替换默认实现
 
 ## 健康检查
 
@@ -449,28 +482,14 @@ ydsz.virtual.executor.completed{pool.name="virtual-io"}  1230.0
 - **慢任务阈值**：默认 5000ms 适用于大多数 IO 密集场景；AI Agent 等长耗时场景建议设置为 30000
 - **详细指标**：(pool.max / queue.remaining / queue.usage) 默认关闭，通过 `enable-detailed-metrics: true` 按需启用，可降低 Micrometer 指标内存开销约 40-60%
 
-### 与 common-util 的边界
-
-`ydsz-common-util` 模块也提供线程池相关能力，本模块与它**职责互补、不互相替代**：
-
-| 维度 | `ydsz-common-util` | `ydsz-common-thread`（本模块） |
-|---|---|---|
-| **`ExecutorUtils`** | 静态工厂方法（`newFixedThreadPool` / `newCachedThreadPool` / `newVirtualThreadExecutor` / `newCpuBoundThreadPool` 等），业务自行管理生命周期 | 不提供静态工厂，仅基于配置文件创建托管 Bean |
-| **生命周期** | 工厂方法返回的 `ExecutorService` 由调用方自行 shutdown | 随 Spring 容器统一优雅关闭 |
-| **健康检查** | 不提供 | 提供 `ThreadHealthIndicator`，仅检查 ydsz 管理的线程池 |
-| **虚拟线程** | `ExecutorUtils.newVirtualThreadExecutor()` 静态创建，不支持时回退到缓存池 | 配置 `type=VIRTUAL` 创建，不回退（要求 JDK 21+） |
-| **运行时可观测性** | 需手动注册后可采集 | 自动暴露核心 5 项+可选 3 项平台池指标 + 2 项虚拟池指标（含耗时 P50/P95/P99） |
-| **动态调参** | 不支持 | 支持通过 `ThreadPoolHotUpdateListener` 运行时调整参数（配置 `hot-update.enabled=true`） |
-
-**选用建议：**
-
-- 需要 Spring 容器托管、配置化、统一监控与关闭 → 用本模块（`ydsz-common-thread`）
-- 需要在非 Spring 场景或临时创建短生命周期线程池 → 用 `ExecutorUtils`
-- 已通过本模块托管的池无需再注册到 `ThreadPoolMonitor`，避免重复采集
 
 ## 变更记录
 
-- **v1.4.0**（2026-08-15）：
+- **v1.5.0**（2026-08-16）：
+  - **架构调整**：线程池管理能力统一归属 `ydsz-common-thread`，从 `ydsz-common-util` 迁入 `ExecutorUtils` 编程式工厂与 `MeteredThreadPoolExecutor` 可观测执行器
+  - `ydsz-common-util` 自 v4.1.0 起不再提供线程池创建与监控能力
+  - 新增 `com.njydsz.common.thread.util` 包（编程式工具）与 `com.njydsz.common.thread.executor` 包（执行器实现）
+  - `ydsz-common-audit`、`ydsz-common-notify` 模块同步更新 import 并新增 `ydsz-common-thread` 依赖
   - **修复 P0-2**：`TimedTaskDecorator` 移除全局静态 `ConcurrentMap`，改为不可变包装对象传递时间戳，消除 threadId 复用导致的串扰风险与内存泄漏
   - **修复 P0-3**：`ThreadHealthIndicator` 收紧扫描范围，仅检查 ydzs-common-thread 管理的 Bean（名称以 `"Executor"` 结尾），避免误纳业务自定义线程池导致误报
   - **修复 P1-1**：移除 `MeteredVirtualExecutorService` 中的 rejected 相关逻辑和 `VirtualThreadMetrics.rejected` 指标（JDK 21 虚拟线程从不拒绝任务，为不可达代码）

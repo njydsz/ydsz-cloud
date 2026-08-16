@@ -5,7 +5,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
-import com.njydsz.common.base.metrics.AbstractModuleMetrics;
+import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 
 /**
  * Agent 平台运行态可观测指标（P2 增强）。
@@ -41,7 +41,7 @@ import com.njydsz.common.base.metrics.AbstractModuleMetrics;
  * @author ydsz-team
  * @since 1.0.0
  */
-public class AgentRuntimeMetrics extends AbstractModuleMetrics {
+public class AgentRuntimeMetrics extends SentryMetricsAdapter {
 
   // -----------------------------------------------------------------------
   // 指标名常量

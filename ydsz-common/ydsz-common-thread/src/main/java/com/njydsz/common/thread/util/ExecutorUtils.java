@@ -7,7 +7,9 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+// CHECKSTYLE.OFF: IllegalImport — ExecutorUtils 为线程池编程式工厂（云顶规范 15.4 授权实现层），虚拟线程池需直接使用 Executors.newThreadPerTaskExecutor
 import java.util.concurrent.Executors;
+// CHECKSTYLE.ON: IllegalImport
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;

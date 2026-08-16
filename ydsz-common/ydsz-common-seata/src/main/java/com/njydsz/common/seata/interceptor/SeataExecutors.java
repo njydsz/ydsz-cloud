@@ -20,7 +20,8 @@ import java.util.concurrent.TimeUnit;
  *
  * <p>使用方式：
  * <pre>{@code
- * // 创建 Seata 感知的固定大小线程池
+ * // CHECKSTYLE.OFF: RegexpSinglelineJava - 以下为文档示例，非实际线程池创建
+ * // 创建 Seata 感知的固定大小线程池（详见下方工厂方法）
  * ExecutorService executor = SeataExecutors.newFixedThreadPool(10, "seata-async");
  *
  * // 使用
@@ -29,22 +30,16 @@ import java.util.concurrent.TimeUnit;
  *     String xid = XidContextHolder.getXid();
  *     // 执行业务逻辑...
  * });
+ * // CHECKSTYLE.ON: RegexpSinglelineJava
  * }</pre>
  *
- * <p>也支持包装已有的 Spring ThreadPoolTaskExecutor：
+ * <p>也支持装饰已有的 Spring {@link ThreadPoolTaskExecutor}：
  * <pre>{@code
- * @Bean("asyncExecutor")
- * public ThreadPoolTaskExecutor asyncExecutor() {
- *     ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
- *     executor.setCorePoolSize(10);
- *     executor.setMaxPoolSize(20);
- *     executor.setQueueCapacity(500);
- *     executor.setThreadNamePrefix("seata-async-");
- *     // 注入 SeataTaskDecorator
- *     executor.setTaskDecorator(new SeataTaskDecorator());
- *     executor.initialize();
- *     return executor;
- * }
+ * @Resource(name = "yourPoolExecutor")
+ * private ThreadPoolTaskExecutor asyncExecutor;
+ *
+ * // 装饰为 Seata 感知执行器（内部透传 XID，无需手动配置 TaskDecorator）
+ * Executor seataAware = SeataExecutors.decorate(asyncExecutor);
  * }</pre>
  *
  * <p><b>规范说明</b>：本工厂方法内部使用 {@link Executors} 创建原始线程池后，
