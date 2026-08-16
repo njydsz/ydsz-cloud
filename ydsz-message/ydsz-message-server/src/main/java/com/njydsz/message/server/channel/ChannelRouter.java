@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import jakarta.annotation.PostConstruct;
@@ -18,6 +17,7 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.sentry.resilience.CircuitBreaker;
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.metric.MessageMetrics;
@@ -75,12 +75,15 @@ public class ChannelRouter {
 
     /**
      * 收集所有 MessageChannel Bean 并按通道类型注册,同时为每个通道创建独立熔断器。
+     *
+     * <p>使用 {@link com.njydsz.common.sentry.resilience.CircuitBreaker} 封装 Resilience4j，
+     * 符合《云顶编码规范》：业务模块不得直接使用 Resilience4j。
      */
     @PostConstruct
     public void initChannels() {
         Map<String, MessageChannel> beans = applicationContext.getBeansOfType(MessageChannel.class);
-        CircuitBreakerConfig cbConfig = buildCircuitBreakerConfig();
-        CircuitBreakerRegistry registry = CircuitBreakerRegistry.of(cbConfig);
+        io.github.resilience4j.circuitbreaker.CircuitBreakerConfig r4jConfig = buildCircuitBreakerConfig();
+        CircuitBreakerRegistry r4jRegistry = CircuitBreakerRegistry.of(r4jConfig);
         for (MessageChannel channel : beans.values()) {
             String type = channel.channelType() == null ? "" : channel.channelType().trim().toUpperCase();
             if (type.isEmpty()) {
@@ -88,7 +91,8 @@ public class ChannelRouter {
                 continue;
             }
             channelCache.put(type, channel);
-            breakerCache.put(type, registry.circuitBreaker("ch-" + type, cbConfig));
+            // 使用 common-sentry CircuitBreaker 封装 Resilience4j，符合编码规范
+            breakerCache.put(type, new CircuitBreaker("ch-" + type, r4jConfig, r4jRegistry));
         }
         log.info("[ChannelRouter] 已注册 {} 个消息通道(含熔断器): {}", channelCache.size(), channelCache.keySet());
     }
@@ -128,7 +132,7 @@ public class ChannelRouter {
         MessageChannel target = route(channel);
         CircuitBreaker breaker = breakerCache.get(channel.trim().toUpperCase());
         // 熔断开启时快速失败,不调用真实通道
-        if (breaker != null && !breaker.tryAcquirePermission()) {
+        if (breaker != null && !breaker.canExecute()) {
             log.warn("[ChannelRouter] 通道熔断中,快速失败: channel={} state={}",
                     channel, breaker.getState());
             messageMetrics.recordChannelError(channel, "CIRCUIT_BREAKER");
@@ -144,9 +148,9 @@ public class ChannelRouter {
             // 业务失败(非异常)也计入熔断失败率
             if (breaker != null) {
                 if (result.isSuccess()) {
-                    breaker.onSuccess(cost, TimeUnit.MILLISECONDS);
+                    breaker.recordSuccess(cost, TimeUnit.MILLISECONDS);
                 } else {
-                    breaker.onError(cost, TimeUnit.MILLISECONDS,
+                    breaker.recordFailure(cost, TimeUnit.MILLISECONDS,
                             new RuntimeException(result.getErrorMessage()));
                     // P2-4: 记录通道级业务错误指标
                     messageMetrics.recordChannelError(channel, "BUSINESS_ERROR");
@@ -158,7 +162,7 @@ public class ChannelRouter {
         } catch (Exception e) {
             long cost = System.currentTimeMillis() - start;
             if (breaker != null) {
-                breaker.onError(cost, TimeUnit.MILLISECONDS, e);
+                breaker.recordFailure(cost, TimeUnit.MILLISECONDS, e);
             }
             // P2-4: 记录通道级异常指标
             messageMetrics.recordChannelError(channel, "EXCEPTION");

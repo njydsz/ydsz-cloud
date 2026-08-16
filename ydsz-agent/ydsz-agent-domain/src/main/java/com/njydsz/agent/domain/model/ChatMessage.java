@@ -27,6 +27,8 @@ public final class ChatMessage implements Serializable {
     private final MessageRole role;
     /** 消息内容 */
     private final String content;
+    /** 多模态内容（含文本+图片，用于 Vision 模型；为 null 表示纯文本） */
+    private final MessageContent multimodalContent;
     /** 所属对话 ID */
     private final String conversationId;
     /** 创建时间 */
@@ -41,9 +43,16 @@ public final class ChatMessage implements Serializable {
     public ChatMessage(String id, MessageRole role, String content, String conversationId,
                        LocalDateTime createdAt, List<ToolCall> toolCalls,
                        String toolCallId, TokenUsage tokenUsage) {
+        this(id, role, content, null, conversationId, createdAt, toolCalls, toolCallId, tokenUsage);
+    }
+
+    public ChatMessage(String id, MessageRole role, String content, MessageContent multimodalContent,
+                       String conversationId, LocalDateTime createdAt, List<ToolCall> toolCalls,
+                       String toolCallId, TokenUsage tokenUsage) {
         this.id = Objects.requireNonNull(id, "id 不能为 null");
         this.role = Objects.requireNonNull(role, "role 不能为 null");
         this.content = content;
+        this.multimodalContent = multimodalContent;
         this.conversationId = conversationId;
         this.createdAt = createdAt != null ? createdAt : LocalDateTime.now();
         this.toolCalls = toolCalls != null ? List.copyOf(toolCalls) : List.of();
@@ -107,6 +116,22 @@ public final class ChatMessage implements Serializable {
     }
 
     /**
+     * 创建用户多模态消息（文本 + 图片，用于 Vision 模型）。
+     *
+     * <p>发送给支持视觉的模型（如 gpt-4o、claude-3 等），
+     * 模型可同时理解文本与图片内容。
+     *
+     * @param multimodalContent 多模态内容（文本+图片段落）
+     * @param conversationId   所属对话 ID
+     * @return 用户消息实例（content 字段为 null，图片信息在 multimodalContent 中）
+     */
+    public static ChatMessage userWithContent(MessageContent multimodalContent, String conversationId) {
+        return new ChatMessage(IdGenerator.nextIdStr(),
+                MessageRole.USER, null, multimodalContent, conversationId,
+                LocalDateTime.now(), null, null, null);
+    }
+
+    /**
      * 创建工具角色消息（工具执行结果回填）。
      *
      * @param toolCallId     被执行的工具调用 ID（关联助手消息中的 toolCalls）
@@ -122,6 +147,7 @@ public final class ChatMessage implements Serializable {
     public String getId() { return id; }
     public MessageRole getRole() { return role; }
     public String getContent() { return content; }
+    public MessageContent getMultimodalContent() { return multimodalContent; }
     public String getConversationId() { return conversationId; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public List<ToolCall> getToolCalls() { return toolCalls; }

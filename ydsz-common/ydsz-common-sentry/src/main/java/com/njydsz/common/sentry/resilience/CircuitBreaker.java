@@ -1,5 +1,6 @@
 package com.njydsz.common.sentry.resilience;
 
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
@@ -136,7 +137,7 @@ public class CircuitBreaker {
      *
      * @return {@code true} 允许执行；{@code false} 应走降级
      */
-    boolean canExecute() {
+    public boolean canExecute() {
         return delegate.getState() != io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN
                 && delegate.getState() != io.github.resilience4j.circuitbreaker.CircuitBreaker.State.FORCED_OPEN;
     }
@@ -153,6 +154,32 @@ public class CircuitBreaker {
      */
     private void onFailure() {
         delegate.onError(0, java.time.temporal.ChronoUnit.MILLIS, new RuntimeException("CircuitBreaker recorded failure"));
+    }
+
+    /**
+     * 记录一次成功调用（带耗时）。
+     *
+     * <p>供业务模块在外部受控场景下精细记录耗时。
+     *
+     * @param duration 耗时
+     * @param unit     耗时单位
+     */
+    public void recordSuccess(long duration, TimeUnit unit) {
+        delegate.onSuccess(duration, unit.toChronoUnit());
+    }
+
+    /**
+     * 记录一次失败调用（带耗时和异常）。
+     *
+     * <p>供业务模块在外部受控场景下精细记录耗时与异常。
+     *
+     * @param duration  耗时
+     * @param unit      耗时单位
+     * @param throwable 触发失败的异常（可为 null）
+     */
+    public void recordFailure(long duration, TimeUnit unit, Throwable throwable) {
+        delegate.onError(duration, unit.toChronoUnit(),
+                throwable != null ? throwable : new RuntimeException("CircuitBreaker recorded failure"));
     }
 
     /**
