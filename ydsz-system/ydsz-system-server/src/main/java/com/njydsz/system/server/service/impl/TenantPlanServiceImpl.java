@@ -20,8 +20,8 @@ import com.njydsz.system.domain.entity.Tenant;
 import com.njydsz.system.domain.entity.TenantPlan;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.TenantPlanVO;
-import com.njydsz.system.infra.mapper.TenantMapper;
-import com.njydsz.system.infra.mapper.TenantPlanMapper;
+import com.njydsz.system.infra.repository.TenantRepository;
+import com.njydsz.system.infra.repository.TenantPlanRepository;
 import com.njydsz.system.server.service.TenantPlanService;
 
 /**
@@ -48,11 +48,11 @@ import com.njydsz.system.server.service.TenantPlanService;
 @RequiredArgsConstructor
 public class TenantPlanServiceImpl implements TenantPlanService {
 
-  /** 套餐 Mapper */
-  private final TenantPlanMapper planMapper;
+  /** 套餐 Repository */
+  private final TenantPlanRepository tenantPlanRepository;
 
-  /** 租户 Mapper（用于关联校验） */
-  private final TenantMapper tenantMapper;
+  /** 租户 Repository（用于关联校验） */
+  private final TenantRepository tenantRepository;
 
   /**
    * 按 ID 查询套餐
@@ -62,7 +62,7 @@ public class TenantPlanServiceImpl implements TenantPlanService {
    */
   @Override
   public TenantPlanVO getById(String id) {
-    TenantPlan entity = planMapper.selectById(id);
+    TenantPlan entity = tenantPlanRepository.getTenantPlanMapper().selectById(id);
     return SystemConverter.INSTANT.entityToVO(entity);
   }
 
@@ -86,7 +86,7 @@ public class TenantPlanServiceImpl implements TenantPlanService {
       wrapper.eq(TenantPlan::getStatus, status);
     }
     wrapper.orderByAsc(TenantPlan::getSortOrder);
-    IPage<TenantPlan> page = planMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+    IPage<TenantPlan> page = tenantPlanRepository.getTenantPlanMapper().selectPage(new Page<>(pageNum, pageSize), wrapper);
     return PageResponses.success(page, SystemConverter.INSTANT::entityToVO);
   }
 
@@ -102,7 +102,7 @@ public class TenantPlanServiceImpl implements TenantPlanService {
     LambdaQueryWrapper<TenantPlan> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(TenantPlan::getStatus, "ENABLED");
     wrapper.orderByAsc(TenantPlan::getSortOrder);
-    return planMapper.selectList(wrapper).stream()
+    return tenantPlanRepository.getTenantPlanMapper().selectList(wrapper).stream()
         .map(SystemConverter.INSTANT::entityToVO)
         .collect(Collectors.toList());
   }
@@ -120,12 +120,12 @@ public class TenantPlanServiceImpl implements TenantPlanService {
   public String save(TenantPlanDTO dto) {
     LambdaQueryWrapper<TenantPlan> checkWrapper = new LambdaQueryWrapper<>();
     checkWrapper.eq(TenantPlan::getPlanCode, dto.getPlanCode());
-    if (planMapper.selectCount(checkWrapper) > 0) {
+    if (tenantPlanRepository.getTenantPlanMapper().selectCount(checkWrapper) > 0) {
       throw BusinessException.of(SystemExceptionCode.TENANT_PLAN_CODE_DUPLICATE)
           .data("planCode", dto.getPlanCode());
     }
     TenantPlan entity = toEntity(dto);
-    planMapper.insert(entity);
+    tenantPlanRepository.getTenantPlanMapper().insert(entity);
     log.info("创建套餐成功: planCode={}, planId={}", dto.getPlanCode(), entity.getId());
     return entity.getId();
   }
@@ -144,12 +144,12 @@ public class TenantPlanServiceImpl implements TenantPlanService {
     LambdaQueryWrapper<TenantPlan> checkWrapper = new LambdaQueryWrapper<>();
     checkWrapper.eq(TenantPlan::getPlanCode, dto.getPlanCode());
     checkWrapper.ne(TenantPlan::getId, dto.getId());
-    if (planMapper.selectCount(checkWrapper) > 0) {
+    if (tenantPlanRepository.getTenantPlanMapper().selectCount(checkWrapper) > 0) {
       throw BusinessException.of(SystemExceptionCode.TENANT_PLAN_CODE_DUPLICATE)
           .data("planCode", dto.getPlanCode());
     }
     TenantPlan entity = toEntity(dto);
-    return planMapper.updateById(entity) > 0;
+    return tenantPlanRepository.getTenantPlanMapper().updateById(entity) > 0;
   }
 
   /**
@@ -167,10 +167,10 @@ public class TenantPlanServiceImpl implements TenantPlanService {
     // 关联校验：是否存在引用该套餐的租户
     LambdaQueryWrapper<Tenant> tenantWrapper = new LambdaQueryWrapper<>();
     tenantWrapper.eq(Tenant::getPlanId, id);
-    if (tenantMapper.selectCount(tenantWrapper) > 0) {
+    if (tenantRepository.getTenantMapper().selectCount(tenantWrapper) > 0) {
       throw BusinessException.of(SystemExceptionCode.TENANT_PLAN_LINKED).data("planId", id);
     }
-    return planMapper.deleteById(id) > 0;
+    return tenantPlanRepository.getTenantPlanMapper().deleteById(id) > 0;
   }
 
   /**

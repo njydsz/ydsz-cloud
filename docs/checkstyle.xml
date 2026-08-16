@@ -76,9 +76,7 @@
     </module>
 
     <!-- 能力提供者模块豁免：common-excel/docs/file/netty/seata 允许直接 import 对应 SDK -->
-    <module name="SuppressionFilter">
-        <property name="file" value="${config_loc}/checkstyle-suppressions.xml"/>
-    </module>
+    <!-- SuppressionFilter 已移除（0 违规，无需抑制） -->
 
     <!-- ============================================ -->
     <!-- 2. Import 导入规范（Import Conventions）      -->

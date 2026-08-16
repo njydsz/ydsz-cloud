@@ -22,7 +22,7 @@ import com.njydsz.system.domain.dto.AppInfoDTO;
 import com.njydsz.system.domain.entity.AppInfo;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.AppInfoVO;
-import com.njydsz.system.infra.mapper.AppInfoMapper;
+import com.njydsz.system.infra.repository.AppInfoRepository;
 import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.service.AppInfoService;
 
@@ -104,8 +104,8 @@ import com.njydsz.system.server.service.AppInfoService;
 @RequiredArgsConstructor
 public class AppInfoServiceImpl implements AppInfoService {
 
-  /** 应用注册 Mapper（继承 {@code ydsz_app_info} 表 CRUD） */
-  private final AppInfoMapper mapper;
+  /** 应用注册仓储（封装 {@code ydsz_app_info} 表 CRUD） */
+  private final AppInfoRepository appInfoRepository;
 
   /** 系统监控指标采集器 */
   private final SystemMetrics metrics;
@@ -141,7 +141,7 @@ public class AppInfoServiceImpl implements AppInfoService {
    */
   @Override
   public AppInfoVO getById(String id) {
-    AppInfo entity = mapper.selectById(id);
+    AppInfo entity = appInfoRepository.getAppInfoMapper().selectById(id);
     return SystemConverter.INSTANT.entityToVO(entity);
   }
 
@@ -206,7 +206,7 @@ public class AppInfoServiceImpl implements AppInfoService {
     }
 
     // 3. DB 查询 + BCrypt 校验
-    AppInfo app = mapper.selectEnabledByAppKey(appKey);
+    AppInfo app = appInfoRepository.getAppInfoMapper().selectEnabledByAppKey(appKey);
     if (app == null) {
       handleValidateFail(appKey, failKey, "不存在或未启用");
       return false;
@@ -266,7 +266,7 @@ public class AppInfoServiceImpl implements AppInfoService {
       wrapper.eq("status", status);
     }
     wrapper.orderByDesc("created_at");
-    IPage<AppInfo> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+    IPage<AppInfo> page = appInfoRepository.getAppInfoMapper().selectPage(new Page<>(pageNum, pageSize), wrapper);
     return PageResponses.success(page, SystemConverter.INSTANT::entityToVO);
   }
 
@@ -284,7 +284,7 @@ public class AppInfoServiceImpl implements AppInfoService {
   @Override
   @DataScope(deptColumn = "dept_id", userColumn = "created_by")
   public List<AppInfoVO> list() {
-    return mapper.selectList(null).stream()
+    return appInfoRepository.getAppInfoMapper().selectList(null).stream()
         .map(SystemConverter.INSTANT::entityToVO)
         .collect(Collectors.toList());
   }
@@ -314,7 +314,7 @@ public class AppInfoServiceImpl implements AppInfoService {
     // 唯一性校验：appKey 不能重复
     QueryWrapper<AppInfo> checkWrapper = new QueryWrapper<>();
     checkWrapper.eq("app_key", dto.getAppKey());
-    if (mapper.selectCount(checkWrapper) > 0) {
+    if (appInfoRepository.getAppInfoMapper().selectCount(checkWrapper) > 0) {
       throw BusinessException.of(SystemExceptionCode.APP_KEY_DUPLICATE)
           .data("appKey", dto.getAppKey());
     }
@@ -322,7 +322,7 @@ public class AppInfoServiceImpl implements AppInfoService {
     if (dto.getAppSecret() != null && !dto.getAppSecret().isBlank()) {
       entity.setAppSecret(passwordEncoder.encode(dto.getAppSecret()));
     }
-    mapper.insert(entity);
+    appInfoRepository.getAppInfoMapper().insert(entity);
     return entity.getId();
   }
 
@@ -363,7 +363,7 @@ public class AppInfoServiceImpl implements AppInfoService {
       // 不更新密钥时设为 null，MyBatis-Plus NOT_NULL 策略会跳过此字段
       entity.setAppSecret(null);
     }
-    return mapper.updateById(entity) > 0;
+    return appInfoRepository.getAppInfoMapper().updateById(entity) > 0;
   }
 
   /**
@@ -379,7 +379,7 @@ public class AppInfoServiceImpl implements AppInfoService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    return mapper.deleteById(id) > 0;
+    return appInfoRepository.getAppInfoMapper().deleteById(id) > 0;
   }
 
   /**

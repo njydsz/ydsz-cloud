@@ -25,7 +25,7 @@ import com.njydsz.system.domain.entity.Variable;
 import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.VariableVO;
-import com.njydsz.system.infra.mapper.VariableMapper;
+import com.njydsz.system.infra.repository.VariableRepository;
 import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.service.VariableService;
 import com.njydsz.system.server.service.VariableVersionService;
@@ -108,8 +108,8 @@ import com.njydsz.system.server.service.VariableVersionService;
 @RequiredArgsConstructor
 public class VariableServiceImpl implements VariableService {
 
-  /** 变量 Mapper（继承 {@code ydsz_variable} 表 CRUD） */
-  private final VariableMapper mapper;
+  /** 变量仓储 */
+  private final VariableRepository variableRepository;
 
   /** 系统监控指标采集器 */
   private final SystemMetrics metrics;
@@ -127,7 +127,7 @@ public class VariableServiceImpl implements VariableService {
    */
   @Override
   public VariableVO getById(String id) {
-    Variable entity = mapper.selectById(id);
+    Variable entity = variableRepository.getVariableMapper().selectById(id);
     return SystemConverter.INSTANT.entityToVO(entity);
   }
 
@@ -156,7 +156,7 @@ public class VariableServiceImpl implements VariableService {
       metrics.recordVariableCacheMiss();
       QueryWrapper<Variable> wrapper = new QueryWrapper<>();
       wrapper.eq("variable_key", variableKey).eq("status", "ENABLED");
-      Variable entity = mapper.selectOne(wrapper);
+      Variable entity = variableRepository.getVariableMapper().selectOne(wrapper);
       return entity != null ? entity.getVariableValue() : null;
     } finally {
       metrics.recordVariableRead(System.nanoTime() - start);
@@ -188,7 +188,7 @@ public class VariableServiceImpl implements VariableService {
       wrapper.eq("status", status);
     }
     wrapper.orderByDesc("created_at");
-    IPage<Variable> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+    IPage<Variable> page = variableRepository.getVariableMapper().selectPage(new Page<>(pageNum, pageSize), wrapper);
     return PageResponses.success(page, SystemConverter.INSTANT::entityToVO);
   }
 
@@ -206,7 +206,7 @@ public class VariableServiceImpl implements VariableService {
   @Override
   @DataScope(deptColumn = "dept_id", userColumn = "created_by")
   public List<VariableVO> list() {
-    return mapper.selectList(null).stream()
+    return variableRepository.getVariableMapper().selectList(null).stream()
         .map(SystemConverter.INSTANT::entityToVO)
         .collect(Collectors.toList());
   }
@@ -231,7 +231,7 @@ public class VariableServiceImpl implements VariableService {
   public String save(VariableDTO dto) {
     validateValueType(dto.getValueType());
     Variable entity = toEntity(dto);
-    mapper.insert(entity);
+    variableRepository.getVariableMapper().insert(entity);
     return entity.getId();
   }
 
@@ -259,12 +259,12 @@ public class VariableServiceImpl implements VariableService {
     Variable entity = toEntity(dto);
     // 版本快照：查询变更前状态
     Variable before =
-        mapper.selectOne(
+        variableRepository.getVariableMapper().selectOne(
             new QueryWrapper<Variable>()
                 .eq("variable_key", entity.getVariableKey())
                 .eq("deleted", 0));
     String snapshotJson = before != null ? YdszJson.toJson(before) : null;
-    boolean updated = mapper.updateById(entity) > 0;
+    boolean updated = variableRepository.getVariableMapper().updateById(entity) > 0;
     if (updated) {
       // 创建版本快照（与变量变更同一事务）
       variableVersionService.createVersion(
@@ -296,10 +296,10 @@ public class VariableServiceImpl implements VariableService {
   @CacheEvict(value = CacheConstants.SYSTEM_VARIABLE_CACHE, allEntries = true)
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    Variable entity = mapper.selectById(id);
+    Variable entity = variableRepository.getVariableMapper().selectById(id);
     // 版本快照：查询变更前状态
     String snapshotJson = entity != null ? YdszJson.toJson(entity) : null;
-    boolean removed = mapper.deleteById(id) > 0;
+    boolean removed = variableRepository.getVariableMapper().deleteById(id) > 0;
     if (removed && entity != null) {
       // 创建版本快照（与变量变更同一事务）
       variableVersionService.createVersion(
