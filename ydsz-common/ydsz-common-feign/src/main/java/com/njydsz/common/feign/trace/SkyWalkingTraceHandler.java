@@ -23,7 +23,7 @@ import com.njydsz.common.util.string.StringUtils;
  */
 public class SkyWalkingTraceHandler implements FeignTraceHandler {
 
-  private static final Logger log = LoggerFactory.getLogger(SkyWalkingTraceHandler.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SkyWalkingTraceHandler.class);
 
   /** SkyWalking ContextManager 类名（字符串引用，避免硬依赖） */
   private static final String SW_CONTEXT_MANAGER =
@@ -53,9 +53,9 @@ public class SkyWalkingTraceHandler implements FeignTraceHandler {
           lookup.findStatic(
               contextManagerClass, "getSegmentId", MethodType.methodType(String.class));
       swAvailable = true;
-      log.info("[SkyWalkingTraceHandler] SkyWalking agent 检测到，链路追踪将使用 SkyWalking");
+      LOG.info("[SkyWalkingTraceHandler] SkyWalking agent 检测到，链路追踪将使用 SkyWalking");
     } catch (Throwable e) {
-      log.debug("[SkyWalkingTraceHandler] SkyWalking agent 不可用，降级为 TracerUtils");
+      LOG.debug("[SkyWalkingTraceHandler] SkyWalking agent 不可用，降级为 TracerUtils");
     }
 
     this.getTraceIdMethod = traceIdMH;
@@ -99,7 +99,7 @@ public class SkyWalkingTraceHandler implements FeignTraceHandler {
           return traceId;
         }
       } catch (Throwable e) {
-        log.debug("获取 SkyWalking traceId 失败", e);
+        LOG.debug("获取 SkyWalking traceId 失败", e);
       }
     }
     return TracerUtils.getTraceId();
@@ -121,7 +121,7 @@ public class SkyWalkingTraceHandler implements FeignTraceHandler {
           return spanId;
         }
       } catch (Throwable e) {
-        log.debug("获取 SkyWalking spanId 失败", e);
+        LOG.debug("获取 SkyWalking spanId 失败", e);
       }
     }
     return TracerUtils.getSpanId();
@@ -135,8 +135,8 @@ public class SkyWalkingTraceHandler implements FeignTraceHandler {
   @Override
   public void onRequestStart(TraceContext context) {
     context.setStartTime(System.currentTimeMillis());
-    if (log.isDebugEnabled()) {
-      log.debug(
+    if (LOG.isDebugEnabled()) {
+      LOG.debug(
           "[SkyWalkingTraceHandler] Feign 请求开始, traceId={}, spanId={}, url={}",
           context.getTraceId(),
           context.getSpanId(),
@@ -147,8 +147,8 @@ public class SkyWalkingTraceHandler implements FeignTraceHandler {
   @Override
   public void onRequestSuccess(TraceContext context) {
     context.setEndTime(System.currentTimeMillis());
-    if (log.isDebugEnabled()) {
-      log.debug(
+    if (LOG.isDebugEnabled()) {
+      LOG.debug(
           "[SkyWalkingTraceHandler] Feign 请求成功, traceId={}, duration={}ms",
           context.getTraceId(),
           context.getElapsedTime());
@@ -158,7 +158,7 @@ public class SkyWalkingTraceHandler implements FeignTraceHandler {
   @Override
   public void onRequestFailure(TraceContext context, Throwable throwable) {
     context.setEndTime(System.currentTimeMillis());
-    log.warn(
+    LOG.warn(
         "[SkyWalkingTraceHandler] Feign 请求失败, traceId={}, duration={}ms, error={}",
         context.getTraceId(),
         context.getElapsedTime(),

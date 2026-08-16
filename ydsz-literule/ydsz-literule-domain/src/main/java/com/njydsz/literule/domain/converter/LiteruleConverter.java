@@ -1,5 +1,11 @@
 package com.njydsz.literule.domain.converter;
 
+import java.util.List;
+
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.factory.Mappers;
+
 import com.njydsz.literule.api.DecisionTableDefinition;
 import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.api.RuleEngineStats;
@@ -47,29 +53,25 @@ import com.njydsz.literule.domain.vo.RuleTemplateVO;
 import com.njydsz.literule.domain.vo.RuleTestCaseVO;
 import com.njydsz.literule.domain.vo.RuleVariableDefVO;
 import com.njydsz.literule.domain.vo.RuleVersionHistoryVO;
-import java.util.List;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
 
 /**
- * literule 模块统一 MapStruct 转换器。
+ * literule 模块统一 MapStruct 转换器（P2-2 重构为门面模式）。
  *
- * <p>承担轻量级规则引擎模块所有 Entity ↔ VO、DTO → Entity 的类型转换。 覆盖决策表、规则策略、规则回滚、灰度发布、规则链图、决策树、规则定义、
- * 规则依赖、执行轨迹、规则包、评分卡、规则脚本、规则模板、测试用例、 变量定义、版本历史等核心实体的转换。
- *
- * <p><b>设计要点：</b>
+ * <p>原"胖转换器"已按子域拆分为：
  *
  * <ul>
- *   <li>使用 MapStruct 注解处理器，编译期生成实现类，性能优于反射
- *   <li>通过 {@link #INSTANT} 单例访问，零依赖注入
- *   <li>同名字段自动映射；系统字段通过 @Mapping(ignore = true) 忽略
+ *   <li>{@link RuleCoreConverter} - 规则定义、规则结果、引擎统计
+ *   <li>{@link RuleComponentConverter} - 决策表、AB 策略、回滚、灰度桶、画布、决策树、评分卡、脚本、模板
+ *   <li>{@link RuleSupportConverter} - 依赖、执行轨迹、规则包、测试用例、变量定义、版本历史
  * </ul>
+ *
+ * <p>本类保留原有方法签名以兼容现有代码，内部委托给子转换器实现。 新代码建议直接使用对应的子转换器。
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @since 2.1.0 重构为门面模式，委托给子转换器
  */
-@Mapper
+@Mapper(uses = {RuleCoreConverter.class, RuleComponentConverter.class, RuleSupportConverter.class})
 public interface LiteruleConverter {
 
   LiteruleConverter INSTANT = Mappers.getMapper(LiteruleConverter.class);
@@ -155,8 +157,6 @@ public interface LiteruleConverter {
   List<RuleVersionHistoryVO> ruleVersionHistoryListToVO(List<RuleVersionHistory> entities);
 
   // ===== RuleDefinition (api) → RuleDefinitionVO =====
-  // 注意：api.RuleDefinition 与 domain.RuleDefinitionDO 字段结构不同，
-  // code/name 需映射到 ruleCode/ruleName；String↔LocalDateTime/List↔String 不兼容字段忽略。
   @Mapping(source = "code", target = "ruleCode")
   @Mapping(source = "name", target = "ruleName")
   @Mapping(target = "id", ignore = true)
@@ -173,8 +173,6 @@ public interface LiteruleConverter {
   RuleEngineStatsVO entityToVO(RuleEngineStats entity);
 
   // ===== RulePack (api) → RulePackVO =====
-  // api.RulePack 的 tags/ruleCodes 为 List<String>、ruleSnapshots 为 List<RuleDefinition>、
-  // rating 为 double，与 VO 的 String/BigDecimal 不兼容，忽略。
   @Mapping(target = "id", ignore = true)
   @Mapping(target = "tags", ignore = true)
   @Mapping(target = "ruleCodes", ignore = true)

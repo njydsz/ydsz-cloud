@@ -1,16 +1,17 @@
 package com.njydsz.message.server.service.chain.handler;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.service.chain.SendContext;
 import com.njydsz.message.server.service.chain.SendHandler;
 import com.njydsz.message.server.service.config.UserChannelBindingService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 /**
  * 用户通道绑定解析 Handler。

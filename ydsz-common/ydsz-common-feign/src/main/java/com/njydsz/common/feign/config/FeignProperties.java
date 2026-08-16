@@ -4,10 +4,10 @@ import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import feign.Logger;
 import lombok.Getter;
 import lombok.Setter;
-import feign.Logger;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * YdszFeign 模块核心配置属性类

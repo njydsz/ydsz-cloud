@@ -43,6 +43,9 @@ import com.njydsz.common.util.id.TracerUtils;
  */
 public class MessageTracer {
 
+  private MessageTracer() {}
+
+
   private static final String TRACE_ID_KEY = "traceId";
 
   // ==================== 静态方法（兼容旧 API） ====================

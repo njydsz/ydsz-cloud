@@ -3,6 +3,9 @@ package com.njydsz.common.exception.handler;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -18,9 +21,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.ConstraintViolationException;
 
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.exception.code.CoreExceptionCode;
@@ -49,7 +49,7 @@ import com.njydsz.common.exception.metrics.ExceptionMetrics;
 @RestControllerAdvice
 public class ValidationExceptionHandler extends BaseExceptionHandler {
 
-  private static final Logger log = LoggerFactory.getLogger(ValidationExceptionHandler.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ValidationExceptionHandler.class);
 
   private final MessageSource messageSource;
 
@@ -115,7 +115,7 @@ public class ValidationExceptionHandler extends BaseExceptionHandler {
   public BaseResponse<?> handleConstraintViolationException(
       ConstraintViolationException e, HttpServletRequest request) {
     recordMetrics(e);
-    log.warn("{}参数校验异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage());
+    LOG.warn("{}参数校验异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage());
     String message = extractConstraintViolationMessages(e);
     ExceptionInfo info =
         buildValidationInfo(message, request.getRequestURI(), extractTraceId(request));
@@ -137,7 +137,7 @@ public class ValidationExceptionHandler extends BaseExceptionHandler {
   public BaseResponse<?> handleMethodArgumentNotValidException(
       MethodArgumentNotValidException e, HttpServletRequest request) {
     recordMetrics(e);
-    log.warn(
+    LOG.warn(
         "{}请求体校验异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage());
     String message = extractBindingResultMessages(e.getBindingResult());
     ExceptionInfo info =
@@ -159,7 +159,7 @@ public class ValidationExceptionHandler extends BaseExceptionHandler {
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public BaseResponse<?> handleBindException(BindException e, HttpServletRequest request) {
     recordMetrics(e);
-    log.warn("{}表单绑定异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage());
+    LOG.warn("{}表单绑定异常 | 路径: {} | 消息: {}", getLogPrefix(), request.getRequestURI(), e.getMessage());
     String message = extractBindingResultMessages(e.getBindingResult());
     ExceptionInfo info =
         buildValidationInfo(message, request.getRequestURI(), extractTraceId(request));

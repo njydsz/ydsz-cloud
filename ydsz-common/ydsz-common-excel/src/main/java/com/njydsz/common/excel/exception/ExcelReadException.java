@@ -19,7 +19,7 @@ package com.njydsz.common.excel.exception;
  *             }
  *         });
  * } catch (ExcelReadException e) {
- *     log.error("读取失败 - 错误码: {}, 消息: {}", e.getCode(), e.getMessage(), e);
+ *     LOG.error("读取失败 - 错误码: {}, 消息: {}", e.getCode(), e.getMessage(), e);
  *     // 获取异常码枚举
  *     ExcelExceptionCode code = e.getExceptionCode();
  * }

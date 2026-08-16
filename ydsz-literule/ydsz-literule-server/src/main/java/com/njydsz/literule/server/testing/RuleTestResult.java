@@ -1,13 +1,15 @@
 package com.njydsz.literule.server.testing;
 
-import com.njydsz.literule.api.RuleResult;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import com.njydsz.literule.api.RuleResult;
 
 /**
  * 规则测试运行结果

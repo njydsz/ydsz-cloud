@@ -5,8 +5,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import com.njydsz.common.auth.constant.FilterIgnoreConstants;
 

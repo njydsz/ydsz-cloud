@@ -1,5 +1,23 @@
 package com.njydsz.literule.server.core;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
+
+import jakarta.annotation.PreDestroy;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
+
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.sentry.SentryObservation;
@@ -21,22 +39,6 @@ import com.njydsz.literule.server.spi.FactCollectionException;
 import com.njydsz.literule.server.spi.FactProviderRegistry;
 import com.njydsz.literule.server.spi.RuleActionDispatcher;
 import com.njydsz.literule.server.spi.TraceRecorder;
-import jakarta.annotation.PreDestroy;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Supplier;
-import lombok.extern.slf4j.Slf4j;
-import org.slf4j.MDC;
 
 /**
  * 默认规则引擎实现

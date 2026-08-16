@@ -1,8 +1,8 @@
 package com.njydsz.common.app.config;
 
+import jakarta.validation.constraints.Min;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
-import jakarta.validation.constraints.Min;
 
 /**
  * App 端请求体缓存配置属性

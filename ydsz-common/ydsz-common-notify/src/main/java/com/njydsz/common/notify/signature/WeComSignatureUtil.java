@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class WeComSignatureUtil {
 
-  private static final Logger log = LoggerFactory.getLogger(WeComSignatureUtil.class);
+  private static final Logger LOG = LoggerFactory.getLogger(WeComSignatureUtil.class);
 
   private static final String SHA_1 = "SHA-1";
 
@@ -56,7 +56,7 @@ public final class WeComSignatureUtil {
       String computed = toHexLower(digest);
       return constantTimeEquals(computed, signature.toLowerCase());
     } catch (Exception e) {
-      log.warn("[WeComSignatureUtil] 签名验证异常 timestamp={}: {}", timestamp, e.getMessage(), e);
+      LOG.warn("[WeComSignatureUtil] 签名验证异常 timestamp={}: {}", timestamp, e.getMessage(), e);
       return false;
     }
   }

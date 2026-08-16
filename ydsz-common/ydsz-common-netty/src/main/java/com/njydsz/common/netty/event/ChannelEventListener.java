@@ -14,7 +14,7 @@ import io.netty.channel.Channel;
  * public class MyChannelListener implements ChannelEventListener {
  *     @Override
  *     public void onChannelActive(Channel channel) {
- *         log.info("新连接: {}", channel.remoteAddress());
+ *         LOG.info("新连接: {}", channel.remoteAddress());
  *     }
  * }
  * }</pre>

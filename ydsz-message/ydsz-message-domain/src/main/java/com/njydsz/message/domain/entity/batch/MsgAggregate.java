@@ -1,13 +1,15 @@
 package com.njydsz.message.domain.entity.batch;
 
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import java.io.Serial;
 import java.time.LocalDateTime;
+
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * 聚合批次表: 同 aggregate_group+receiver 的消息按频率合并为摘要发送

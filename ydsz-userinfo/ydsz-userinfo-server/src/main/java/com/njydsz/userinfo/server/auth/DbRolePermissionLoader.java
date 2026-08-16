@@ -6,10 +6,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springframework.stereotype.Service;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import org.springframework.stereotype.Service;
 
 import com.njydsz.common.auth.model.RolePermissions;
 import com.njydsz.common.auth.service.RolePermissionLoader;
@@ -81,32 +81,47 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
       List<Menu> menus = menuMapper.selectList(menuWrapper);
 
       // 5. 按类型分类权限码
-      Set<String> menuPerms = new HashSet<>();
-      Set<String> buttonPerms = new HashSet<>();
-      Set<String> apiPerms = new HashSet<>();
-
-      for (Menu menu : menus) {
-        String permCode = menu.getPermissionCode();
-        if (permCode == null || permCode.isBlank()) {
-          continue;
-        }
-        String type = menu.getMenuType();
-        if ("BUTTON".equals(type)) {
-          buttonPerms.add(permCode);
-        } else if ("API".equals(type)) {
-          apiPerms.add(permCode);
-        } else {
-          menuPerms.add(permCode);
-        }
-      }
+      Map<String, Set<String>> categorized = categorizePermissions(menus);
 
       return new RolePermissions(
-          Collections.unmodifiableSet(menuPerms),
-          Collections.unmodifiableSet(buttonPerms),
-          Collections.unmodifiableSet(apiPerms));
+          Collections.unmodifiableSet(categorized.get("MENU")),
+          Collections.unmodifiableSet(categorized.get("BUTTON")),
+          Collections.unmodifiableSet(categorized.get("API")));
     } catch (Exception e) {
       log.error("Failed to load permissions for role: {}", roleCode, e);
       return RolePermissions.empty();
     }
+  }
+
+  /**
+   * 按菜单类型分类权限码。
+   *
+   * @param menus 菜单列表
+   * @return 分类后的权限码映射（MENU/BUTTON/API）
+   */
+  private Map<String, Set<String>> categorizePermissions(List<Menu> menus) {
+    Set<String> menuPerms = new HashSet<>();
+    Set<String> buttonPerms = new HashSet<>();
+    Set<String> apiPerms = new HashSet<>();
+
+    for (Menu menu : menus) {
+      String permCode = menu.getPermissionCode();
+      if (permCode == null || permCode.isBlank()) {
+        continue;
+      }
+      String type = menu.getMenuType();
+      if ("BUTTON".equals(type)) {
+        buttonPerms.add(permCode);
+      } else if ("API".equals(type)) {
+        apiPerms.add(permCode);
+      } else {
+        menuPerms.add(permCode);
+      }
+    }
+    Map<String, Set<String>> result = new HashMap<>(3);
+    result.put("MENU", menuPerms);
+    result.put("BUTTON", buttonPerms);
+    result.put("API", apiPerms);
+    return result;
   }
 }

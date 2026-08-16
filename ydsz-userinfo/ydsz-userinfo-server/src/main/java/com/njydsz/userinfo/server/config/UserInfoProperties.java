@@ -3,6 +3,7 @@ package com.njydsz.userinfo.server.config;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -55,41 +56,60 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @SuppressWarnings("checkstyle:MagicNumber")
 public class UserInfoProperties {
 
-  /** access_token 有效期（秒），默认 2 小时；超过此时间后客户端需使用 refresh_token 换发新 token */
-  private long tokenTtlSeconds = 7200;
+  /** 默认 access_token 有效期：2 小时（7200 秒）。 */
+  private static final long DEFAULT_TOKEN_TTL_SECONDS = 7200;
+  /** 默认最大登录失败次数。 */
+  private static final int DEFAULT_MAX_LOGIN_FAIL_COUNT = 5;
+  /** 默认账号锁定时长：30 分钟。 */
+  private static final int DEFAULT_LOCK_DURATION_MINUTES = 30;
+  /** 默认图形验证码有效期：5 分钟（300 秒）。 */
+  private static final long DEFAULT_CAPTCHA_TTL_SECONDS = 300;
+  /** 默认密码最小长度。 */
+  private static final int DEFAULT_PASSWORD_MIN_LENGTH = 8;
+  /** 默认密码最大长度（BCrypt 72 字节截断限制）。 */
+  private static final int DEFAULT_PASSWORD_MAX_LENGTH = 64;
+  /** 默认密码最少字符种类数。 */
+  private static final int DEFAULT_PASSWORD_MIN_CATEGORY_COUNT = 3;
+  /** 默认 BCrypt 加密强度。 */
+  private static final int DEFAULT_BCRYPT_STRENGTH = 10;
+  /** 默认密码历史保留条数。 */
+  private static final int DEFAULT_PASSWORD_HISTORY_COUNT = 5;
 
-  /** 最大登录失败次数：超过该次数自动锁定账号，默认 5 次 */
-  private int maxLoginFailCount = 5;
+  /** access_token 有效期（秒），默认 2 小时。 */
+  private long tokenTtlSeconds = DEFAULT_TOKEN_TTL_SECONDS;
 
-  /** 账号锁定时长（分钟），默认 30 分钟；锁定期间内即使密码正确也拒绝登录 */
-  private int lockDurationMinutes = 30;
+  /** 最大登录失败次数。 */
+  private int maxLoginFailCount = DEFAULT_MAX_LOGIN_FAIL_COUNT;
 
-  /** 登录时是否强制要求图形验证码，默认启用（生产环境建议保持 true） */
+  /** 账号锁定时长（分钟），默认 30 分钟。 */
+  private int lockDurationMinutes = DEFAULT_LOCK_DURATION_MINUTES;
+
+  /** 登录时是否强制要求图形验证码。 */
   private boolean captchaEnabled = true;
 
-  /** 图形验证码有效期（秒），默认 5 分钟；过期后需重新生成 */
-  private long captchaTtlSeconds = 300;
+  /** 图形验证码有效期（秒），默认 5 分钟。 */
+  private long captchaTtlSeconds = DEFAULT_CAPTCHA_TTL_SECONDS;
 
-  /** 健康检查是否启用，默认启用（影响 {@code /actuator/health} 中 userinfo 节点的可见性） */
+  /** 健康检查是否启用。 */
   private boolean healthEnabled = true;
 
-  /** 密码最小长度，默认 8 位（参考 NIST SP 800-63B 建议） */
-  private int passwordMinLength = 8;
+  /** 密码最小长度。 */
+  private int passwordMinLength = DEFAULT_PASSWORD_MIN_LENGTH;
 
-  /** 密码最大长度，默认 64 位（防止 DoS：BCrypt 72 字节截断） */
-  private int passwordMaxLength = 64;
+  /** 密码最大长度。 */
+  private int passwordMaxLength = DEFAULT_PASSWORD_MAX_LENGTH;
 
-  /** 密码最少字符种类数（大写/小写/数字/特殊字符），默认 3 类（推荐 ≥ 3） */
-  private int passwordMinCategoryCount = 3;
+  /** 密码最少字符种类数（大写/小写/数字/特殊字符）。 */
+  private int passwordMinCategoryCount = DEFAULT_PASSWORD_MIN_CATEGORY_COUNT;
 
-  /** BCrypt 加密强度（4-31），默认 10；值越大越慢越安全（每 +1 耗时约翻倍） */
-  private int bcryptStrength = 10;
+  /** BCrypt 加密强度（4-31）。 */
+  private int bcryptStrength = DEFAULT_BCRYPT_STRENGTH;
 
-  /** OAuth2 客户端注册表（clientId → 客户端配置），用于第三方应用接入 */
+  /** OAuth2 客户端注册表（clientId → 客户端配置）。 */
   private Map<String, OAuth2Client> oauth2Clients = new HashMap<>();
 
-  /** 密码历史记录保留条数，默认 5 条；设置为 0 则关闭历史密码校验 */
-  private int passwordHistoryCount = 5;
+  /** 密码历史记录保留条数。 */
+  private int passwordHistoryCount = DEFAULT_PASSWORD_HISTORY_COUNT;
 
   /**
    * OAuth2 客户端配置

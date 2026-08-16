@@ -1,5 +1,11 @@
 package com.njydsz.literule.server.sdk;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.api.RuleEngine;
@@ -7,11 +13,6 @@ import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.RuleSeverity;
 import com.njydsz.literule.api.expression.ExpressionEngine;
 import com.njydsz.literule.server.impl.ExpressionRule;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * LiteRule SDK 入口 —— 面向 Java 开发者的极简 API

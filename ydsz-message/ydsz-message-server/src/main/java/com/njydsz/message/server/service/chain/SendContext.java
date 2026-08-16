@@ -1,10 +1,12 @@
 package com.njydsz.message.server.service.chain;
 
+import java.time.LocalDateTime;
+
+import lombok.Data;
+
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.message.domain.entity.config.MsgPreference;
 import com.njydsz.message.domain.entity.config.MsgRouteRule;
-import java.time.LocalDateTime;
-import lombok.Data;
 
 /**
  * 消息发送管线上下文（贯穿整个发送链路）。

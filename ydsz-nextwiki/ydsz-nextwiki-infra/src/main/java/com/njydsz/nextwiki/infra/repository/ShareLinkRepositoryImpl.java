@@ -1,12 +1,14 @@
 package com.njydsz.nextwiki.infra.repository;
 
-import com.njydsz.nextwiki.domain.entity.ShareLink;
-import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
-import com.njydsz.nextwiki.infra.mapper.ShareLinkMapper;
 import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Repository;
+
+import com.njydsz.nextwiki.domain.entity.ShareLink;
+import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
+import com.njydsz.nextwiki.infra.mapper.ShareLinkMapper;
 
 /**
  * 分享链接仓储实现
@@ -115,5 +117,16 @@ public class ShareLinkRepositoryImpl implements ShareLinkRepository {
   @Override
   public void incrementAccessCount(String id) {
     shareLinkMapper.incrementAccessCount(id);
+  }
+
+  /**
+   * 查询即将到期的活跃分享链接（用于到期提醒）。
+   *
+   * @param withinHours 多少小时内即将到期
+   * @return 即将到期的分享链接列表（未发送过提醒的）
+   */
+  @Override
+  public List<ShareLink> findExpiringShares(int withinHours) {
+    return shareLinkMapper.selectExpiringShares(withinHours);
   }
 }

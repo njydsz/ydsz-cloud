@@ -8,6 +8,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -20,8 +22,6 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.config.AuditProperties;
@@ -70,7 +70,7 @@ import com.njydsz.common.util.string.StringUtils;
 @Aspect
 public class AuditAspect {
 
-  private static final Logger log = LoggerFactory.getLogger(AuditAspect.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AuditAspect.class);
 
   /** 默认参数序列化深度限制（3 层） */
   private static final int DEFAULT_MAX_SERIALIZE_DEPTH = 3;
@@ -163,7 +163,7 @@ public class AuditAspect {
         AuditLog auditLog = buildAuditLog(joinPoint, audit, context, result, exception, startTime);
         recordAuditLog(auditLog);
       } catch (Exception e) {
-        log.error("【审计切面】记录审计日志失败: {}", e.getMessage(), e);
+        LOG.error("【审计切面】记录审计日志失败: {}", e.getMessage(), e);
       } finally {
         AuditContext.clear();
       }
@@ -267,37 +267,37 @@ public class AuditAspect {
       long startTime) {
     AuditLog auditLog = new AuditLog();
 
-    auditLog.setId(String.valueOf(snowflakeIdGenerator.nextId()));
-    auditLog.setAuditType(audit.type().getCode());
-    auditLog.setAction(audit.action().getCode());
-    auditLog.setStatus(
+    AUDIT_LOG.setId(String.valueOf(snowflakeIdGenerator.nextId()));
+    AUDIT_LOG.setAuditType(audit.type().getCode());
+    AUDIT_LOG.setAction(audit.action().getCode());
+    AUDIT_LOG.setStatus(
         exception != null ? AuditStatus.FAILURE.getCode() : AuditStatus.SUCCESS.getCode());
-    auditLog.setModule(audit.module());
-    auditLog.setOperationTime(LocalDateTime.now());
-    auditLog.setCostTime(System.currentTimeMillis() - startTime);
+    AUDIT_LOG.setModule(audit.module());
+    AUDIT_LOG.setOperationTime(LocalDateTime.now());
+    AUDIT_LOG.setCostTime(System.currentTimeMillis() - startTime);
 
     if (StringUtils.isNotBlank(audit.content())) {
       Method method = getMethod(joinPoint);
       String content =
           templateProcessor.processTemplate(audit.content(), method, joinPoint.getArgs());
-      auditLog.setContent(content);
+      AUDIT_LOG.setContent(content);
     }
 
     if (context != null) {
-      auditLog.setIpAddress(context.getIpAddress());
-      auditLog.setBusinessNo(context.getBusinessNo());
-      auditLog.setOperatorId(context.getOperatorId());
-      auditLog.setOperatorName(context.getOperatorName());
+      AUDIT_LOG.setIpAddress(context.getIpAddress());
+      AUDIT_LOG.setBusinessNo(context.getBusinessNo());
+      AUDIT_LOG.setOperatorId(context.getOperatorId());
+      AUDIT_LOG.setOperatorName(context.getOperatorName());
 
       // 设置租户 ID（从 RequestContext 透传）
-      auditLog.setTenantId(context.getExtra("tenantId", String.class));
+      AUDIT_LOG.setTenantId(context.getExtra("tenantId", String.class));
       // 设置链路追踪 ID（已从 extraInfo 迁移到独立列）
-      auditLog.setTraceId(context.getExtra("traceId", String.class));
+      AUDIT_LOG.setTraceId(context.getExtra("traceId", String.class));
     }
 
     if (audit.recordRequest() && properties.isRecordRequest()) {
       String requestParams = buildRequestParams(joinPoint, audit.excludeParams());
-      auditLog.setRequestParams(requestParams);
+      AUDIT_LOG.setRequestParams(requestParams);
     }
 
     if (audit.recordResponse() && properties.isRecordResponse() && result != null) {
@@ -305,18 +305,18 @@ public class AuditAspect {
         String responseJson = YdszJson.toJson(result);
         responseJson = truncateWithWarning(responseJson, DEFAULT_MAX_SERIALIZE_LENGTH, "响应结果");
         String maskedResponse = maskSensitiveJson(responseJson, sensitiveParams);
-        auditLog.setResponseResult(maskedResponse);
+        AUDIT_LOG.setResponseResult(maskedResponse);
       } catch (Exception e) {
-        log.debug("【审计切面】序列化响应结果失败: {}", e.getMessage());
+        LOG.debug("【审计切面】序列化响应结果失败: {}", e.getMessage());
       }
     }
 
     if (exception != null) {
-      auditLog.setErrorMessage(exception.getClass().getName() + ": " + exception.getMessage());
+      AUDIT_LOG.setErrorMessage(exception.getClass().getName() + ": " + exception.getMessage());
     }
 
-    auditLog.setAppKey(properties.getAppKey());
-    auditLog.setCreatedAt(LocalDateTime.now());
+    AUDIT_LOG.setAppKey(properties.getAppKey());
+    AUDIT_LOG.setCreatedAt(LocalDateTime.now());
 
     return auditLog;
   }
@@ -351,14 +351,14 @@ public class AuditAspect {
               sb.append(masked).append(" ");
             }
           } catch (Exception ignored) {
-            log.trace("【审计切面】序列化参数失败: {}", ignored.getMessage());
+            LOG.trace("【审计切面】序列化参数失败: {}", ignored.getMessage());
           }
         }
       }
 
       return sb.toString().trim();
     } catch (Exception e) {
-      log.debug("【审计切面】构建请求参数失败: {}", e.getMessage());
+      LOG.debug("【审计切面】构建请求参数失败: {}", e.getMessage());
       return "";
     }
   }
@@ -425,12 +425,12 @@ public class AuditAspect {
     try {
       return YdszJson.toJson(obj);
     } catch (StackOverflowError e) {
-      log.warn("【审计切面】参数序列化发生 StackOverflow，已返回占位 JSON（建议检查对象循环引用）");
+      LOG.warn("【审计切面】参数序列化发生 StackOverflow，已返回占位 JSON（建议检查对象循环引用）");
       return "{\"_truncated\": true, \"_reason\": \"depth limit exceeded ("
           + DEFAULT_MAX_SERIALIZE_DEPTH
           + " levels)\"}";
     } catch (Exception e) {
-      log.warn("【审计切面】参数序列化失败: {}", e.getMessage());
+      LOG.warn("【审计切面】参数序列化失败: {}", e.getMessage());
       return "{\"_error\": \"serialization failed\"}";
     }
   }
@@ -450,7 +450,7 @@ public class AuditAspect {
     if (original.length() <= maxLength) {
       return original;
     }
-    log.warn(
+    LOG.warn(
         "【审计切面】{} 序列化结果超出长度限制({} bytes)，已截断: 原始长度={} bytes",
         fieldName,
         maxLength,
@@ -470,13 +470,13 @@ public class AuditAspect {
 
     try {
       auditRecorder.record(auditLog);
-      log.debug(
+      LOG.debug(
           "【审计切面】审计日志已记录: id={}, module={}, action={}",
-          auditLog.getId(),
-          auditLog.getModule(),
-          auditLog.getAction());
+          AUDIT_LOG.getId(),
+          AUDIT_LOG.getModule(),
+          AUDIT_LOG.getAction());
     } catch (Exception e) {
-      log.error("【审计切面】记录审计日志失败: {}", e.getMessage(), e);
+      LOG.error("【审计切面】记录审计日志失败: {}", e.getMessage(), e);
     }
   }
 
@@ -490,7 +490,7 @@ public class AuditAspect {
     try {
       return ((MethodSignature) joinPoint.getSignature()).getMethod();
     } catch (Exception e) {
-      log.debug("【审计切面】获取方法签名失败: {}", e.getMessage());
+      LOG.debug("【审计切面】获取方法签名失败: {}", e.getMessage());
       return null;
     }
   }

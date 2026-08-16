@@ -1,8 +1,9 @@
 package com.njydsz.message.infra.mapper.config;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.message.domain.entity.config.MsgFeedback;
 import org.apache.ibatis.annotations.Mapper;
+
+import com.njydsz.message.domain.entity.config.MsgFeedback;
 
 /**
  * 消息用户反馈 Mapper

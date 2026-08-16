@@ -47,7 +47,7 @@ import com.njydsz.common.excel.core.reader.SimpleCell;
 public class SheetXmlReader {
 
   /** 日志记录器 */
-  private static final Logger log = LoggerFactory.getLogger(SheetXmlReader.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SheetXmlReader.class);
 
   /** 共享字符串表读取器，用于解析 t="s" 类型的单元格 */
   private final SharedStringsReader ssReader;
@@ -139,13 +139,13 @@ public class SheetXmlReader {
         try {
           DataValidator.validate(rowData, currentRow);
         } catch (Exception ve) {
-          log.warn("Data validation failed at row {}: {}", currentRow, ve.getMessage());
+          LOG.warn("Data validation failed at row {}: {}", currentRow, ve.getMessage());
           for (ReadListener<?> listener : reader.listeners) {
             try {
               ReadListener<Object> typedListener = (ReadListener<Object>) listener;
               typedListener.onError(reader.context, ve);
             } catch (Exception ex) {
-              log.warn("Listener onError callback failed at row {}", currentRow, ex);
+              LOG.warn("Listener onError callback failed at row {}", currentRow, ex);
             }
           }
           rowData = null;
@@ -163,7 +163,7 @@ public class SheetXmlReader {
             ReadListener<Object> typedListener = (ReadListener<Object>) listener;
             typedListener.onData(reader.context, rowData);
           } catch (Exception e) {
-            log.warn("Listener onData callback failed at row {}", currentRow, e);
+            LOG.warn("Listener onData callback failed at row {}", currentRow, e);
           }
         }
       }
@@ -386,7 +386,7 @@ public class SheetXmlReader {
         try {
           colMeta.setter.set(rowData, convertedValue);
         } catch (Exception e) {
-          log.warn(
+          LOG.warn(
               "Failed to set field value at row={}, col={}, value={}",
               currentRow,
               col,

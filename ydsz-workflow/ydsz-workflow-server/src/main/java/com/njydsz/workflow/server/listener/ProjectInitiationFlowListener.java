@@ -1,5 +1,20 @@
 package com.njydsz.workflow.server.listener;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.socket.push.RealtimePushTemplate;
 import com.njydsz.workflow.domain.entity.FlowInstance;
@@ -11,19 +26,6 @@ import com.njydsz.workflow.server.engine.FlowWorkflowEvent;
 import com.njydsz.workflow.server.queue.FlowQueuePublisher;
 import com.njydsz.workflow.server.service.FlowNotificationService;
 import com.njydsz.workflow.server.service.FlowSubProcessService;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.slf4j.MDC;
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 /**
  * 项目立项流程事件监听器（业务侧示例 + 站内信触发器）

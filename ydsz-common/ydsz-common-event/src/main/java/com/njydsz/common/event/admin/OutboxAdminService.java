@@ -42,7 +42,7 @@ import com.njydsz.common.event.repository.OutboxRepository;
 public class OutboxAdminService {
 
   /** 日志实例 */
-  private static final Logger log = LoggerFactory.getLogger(OutboxAdminService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(OutboxAdminService.class);
 
   /** Outbox 仓储 */
   private final OutboxRepository outboxRepository;
@@ -88,10 +88,10 @@ public class OutboxAdminService {
     }
     int affected = outboxRepository.resetToPending(messageId, OutboxStatus.DEAD_LETTER);
     if (affected > 0) {
-      log.info("Dead letter message reset to PENDING: id={}", messageId);
+      LOG.info("Dead letter message reset to PENDING: id={}", messageId);
       return true;
     }
-    log.debug("Dead letter retry ignored (not found or not DEAD_LETTER): id={}", messageId);
+    LOG.debug("Dead letter retry ignored (not found or not DEAD_LETTER): id={}", messageId);
     return false;
   }
 
@@ -104,7 +104,7 @@ public class OutboxAdminService {
   @Transactional
   public int retryAllDeadLetters(String eventTypeFilter) {
     int count = outboxRepository.resetAllToPending(OutboxStatus.DEAD_LETTER, eventTypeFilter);
-    log.info("Bulk dead letter retry: count={}, filter={}", count, eventTypeFilter);
+    LOG.info("Bulk dead letter retry: count={}, filter={}", count, eventTypeFilter);
     return count;
   }
 
@@ -126,7 +126,7 @@ public class OutboxAdminService {
         outboxRepository.deleteIfTerminal(
             messageId, List.of(OutboxStatus.SENT, OutboxStatus.DEAD_LETTER));
     if (affected > 0) {
-      log.info("Terminated outbox message deleted: id={}", messageId);
+      LOG.info("Terminated outbox message deleted: id={}", messageId);
       return true;
     }
     return false;
@@ -147,7 +147,7 @@ public class OutboxAdminService {
     Instant cutoff = Instant.now().minusSeconds(retentionDays * 86400L);
     int deleted = outboxRepository.deleteSentBefore(cutoff);
     if (deleted > 0) {
-      log.info("Cleaned up {} sent outbox messages older than {} days", deleted, retentionDays);
+      LOG.info("Cleaned up {} sent outbox messages older than {} days", deleted, retentionDays);
     }
     return deleted;
   }

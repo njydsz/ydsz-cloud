@@ -5,9 +5,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.apache.ibatis.mapping.SqlCommandType;
-import lombok.extern.slf4j.Slf4j;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.StringValue;
@@ -25,6 +24,7 @@ import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SetOperationList;
 import net.sf.jsqlparser.statement.update.Update;
+import org.apache.ibatis.mapping.SqlCommandType;
 
 import com.njydsz.common.core.constant.DataScopeConstants;
 import com.njydsz.common.jdbc.config.DataPermissionConfiguration;

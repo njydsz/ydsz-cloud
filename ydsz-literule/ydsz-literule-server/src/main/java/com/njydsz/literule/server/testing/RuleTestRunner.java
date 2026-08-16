@@ -1,7 +1,5 @@
 package com.njydsz.literule.server.testing;
 
-import com.njydsz.literule.api.RuleResult;
-import com.njydsz.literule.server.sdk.LiteRuleSdk;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -9,7 +7,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.literule.api.RuleResult;
+import com.njydsz.literule.server.sdk.LiteRuleSdk;
 
 /**
  * 规则测试执行器

@@ -1,12 +1,14 @@
 package com.njydsz.nextwiki.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * 文件分享链接实体
@@ -59,4 +61,13 @@ public class ShareLink extends MpBaseEntity<String> implements Serializable {
 
   /** 分享密码（BCrypt 加密；空表示无密码） */
   private String password;
+
+  /** 分享目标类型：PUBLIC(公开) / USER(指定用户) / DEPT(部门) */
+  private String shareTargetType;
+
+  /** 到期提醒是否已发送 */
+  private Boolean reminderSent;
+
+  /** 分享标题（可选） */
+  private String title;
 }

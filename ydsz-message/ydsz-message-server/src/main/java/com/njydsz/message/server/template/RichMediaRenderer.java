@@ -1,11 +1,13 @@
 package com.njydsz.message.server.template;
 
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.message.domain.dto.core.RichMediaContent;
 import java.util.Map;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.message.domain.dto.core.RichMediaContent;
 
 /**
  * P1-2: 富媒体消息渲染器。

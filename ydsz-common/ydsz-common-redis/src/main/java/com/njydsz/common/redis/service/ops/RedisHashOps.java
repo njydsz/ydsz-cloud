@@ -12,9 +12,9 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.data.redis.core.RedisTemplate;
-import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.redis.config.RedisProperties;
 import com.njydsz.common.redis.metrics.RedisMetricsCollector;

@@ -47,7 +47,7 @@ import com.njydsz.common.seata.metrics.SeataMetrics;
  */
 public class SagaOrchestrator extends AbstractTransactionManager {
 
-  private static final Logger log = LoggerFactory.getLogger(SagaOrchestrator.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SagaOrchestrator.class);
 
   /** 步骤超时控制的共享调度线程池（单线程，按步骤提交延迟任务） */
   // CHECKSTYLE.OFF: ThreadPoolCreate - SAGA 步骤超时控制专用短生命周期调度池，随 JVM 关闭
@@ -122,7 +122,7 @@ public class SagaOrchestrator extends AbstractTransactionManager {
   public Object execute(String transactionName, List<? extends SagaStep<?>> steps)
       throws Exception {
     String xid = beginXid(transactionName);
-    log.info(
+    LOG.info(
         "SAGA transaction started: name={}, xid={}, steps={}", transactionName, xid, steps.size());
 
     // 创建状态机日志（如存储可用）
@@ -134,7 +134,7 @@ public class SagaOrchestrator extends AbstractTransactionManager {
     try {
       for (int i = 0; i < steps.size(); i++) {
         SagaStep<?> step = steps.get(i);
-        log.info(
+        LOG.info(
             "SAGA step {}/{} forward: name={}, xid={}", i + 1, steps.size(), step.getName(), xid);
 
         // 更新当前步骤状态
@@ -147,7 +147,7 @@ public class SagaOrchestrator extends AbstractTransactionManager {
 
         lastResult = executeStepWithTimeout(step, xid);
         completedSteps.add(step);
-        log.info(
+        LOG.info(
             "SAGA step {}/{} completed: name={}, xid={}", i + 1, steps.size(), step.getName(), xid);
       }
 
@@ -157,12 +157,12 @@ public class SagaOrchestrator extends AbstractTransactionManager {
         persistStateMachineLog(stateLog);
       }
 
-      log.info("SAGA transaction completed: name={}, xid={}", transactionName, xid);
+      LOG.info("SAGA transaction completed: name={}, xid={}", transactionName, xid);
       endXid();
       return lastResult;
 
     } catch (Exception e) {
-      log.error(
+      LOG.error(
           "SAGA transaction failed at step {}/{}, executing compensation: name={}, xid={}",
           completedSteps.size() + 1,
           steps.size(),
@@ -231,13 +231,13 @@ public class SagaOrchestrator extends AbstractTransactionManager {
     boolean allSuccess = true;
     for (SagaStep<?> step : reverseSteps) {
       if (!step.hasCompensation()) {
-        log.warn("SAGA step has no compensation, skipping: name={}, xid={}", step.getName(), xid);
+        LOG.warn("SAGA step has no compensation, skipping: name={}, xid={}", step.getName(), xid);
         continue;
       }
       int result = compensateStepWithRetry(step, xid);
       if (result < 0) {
         allSuccess = false;
-        log.error("SAGA compensation failed after retries: step={}, xid={}", step.getName(), xid);
+        LOG.error("SAGA compensation failed after retries: step={}, xid={}", step.getName(), xid);
       }
     }
     return allSuccess;
@@ -303,7 +303,7 @@ public class SagaOrchestrator extends AbstractTransactionManager {
       store.save(stateLog);
       return stateLog;
     } catch (Exception e) {
-      log.warn("Failed to persist SAGA state machine log, continuing without persistence", e);
+      LOG.warn("Failed to persist SAGA state machine log, continuing without persistence", e);
       return null;
     }
   }
@@ -315,7 +315,7 @@ public class SagaOrchestrator extends AbstractTransactionManager {
       try {
         store.save(stateLog);
       } catch (Exception e) {
-        log.warn("Failed to persist SAGA state: xid={}", stateLog.getXid(), e);
+        LOG.warn("Failed to persist SAGA state: xid={}", stateLog.getXid(), e);
       }
     }
   }
@@ -341,14 +341,14 @@ public class SagaOrchestrator extends AbstractTransactionManager {
     for (int attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         step.getCompensation().run();
-        log.info(
+        LOG.info(
             "SAGA compensation completed: step={}, xid={}, attempt={}",
             step.getName(),
             xid,
             attempt);
         return attempt;
       } catch (Exception e) {
-        log.warn(
+        LOG.warn(
             "SAGA compensation attempt {} failed: step={}, xid={}",
             attempt + 1,
             step.getName(),

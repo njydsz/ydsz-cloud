@@ -1,11 +1,13 @@
 package com.njydsz.nextwiki.server.service;
 
-import com.njydsz.nextwiki.server.config.NextwikiProperties;
 import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.stereotype.Service;
+
+import com.njydsz.nextwiki.server.config.NextwikiProperties;
 
 /**
  * CDN 加速服务。

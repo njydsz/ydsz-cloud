@@ -13,7 +13,7 @@ package com.njydsz.common.config.hotreload;
  * public class MyConfigListener implements ConfigChangeListener {
  *     &#64;Override
  *     public void onChange(String key, String oldValue, String newValue) {
- *         log.info("配置变更: {} | {} -> {}", key, oldValue, newValue);
+ *         LOG.info("配置变更: {} | {} -> {}", key, oldValue, newValue);
  *         // 响应配置变更，刷新本地缓存等
  *     }
  * }

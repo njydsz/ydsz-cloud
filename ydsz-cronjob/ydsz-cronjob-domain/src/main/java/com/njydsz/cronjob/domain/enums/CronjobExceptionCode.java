@@ -1,8 +1,9 @@
 package com.njydsz.cronjob.domain.enums;
 
+import lombok.Getter;
+
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.registry.YdszExceptionCode;
-import lombok.Getter;
 
 /**
  * 定时任务调度模块异常码枚举。
@@ -42,7 +43,7 @@ public enum CronjobExceptionCode implements ExceptionCode {
   // ==================== B92201-B92299 任务历史/版本 ====================
   JOB_HISTORY_NOT_FOUND("B92201", "cronjob.job.history.not.found", 404),
   JOB_VERSION_NOT_FOUND("B92202", "cronjob.job.version.not.found", 404),
-  JOB_LOG_NOT_FOUND("B92203", "cronjob.job.log.not.found", 404),
+  JOB_LOG_NOT_FOUND("B92203", "cronjob.job.LOG.not.found", 404),
 
   // ==================== B92301-B92399 告警规则/Webhook ====================
   ALERT_RULE_NOT_FOUND("B92301", "cronjob.alert.rule.not.found", 404),

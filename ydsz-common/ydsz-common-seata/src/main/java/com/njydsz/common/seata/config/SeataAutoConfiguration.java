@@ -2,6 +2,7 @@ package com.njydsz.common.seata.config;
 
 import java.time.Duration;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -16,7 +17,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.PlatformTransactionManager;
-import io.micrometer.core.instrument.MeterRegistry;
 
 import com.njydsz.common.seata.api.DistributedTransactionManager;
 import com.njydsz.common.seata.api.TccTransactionLogStore;

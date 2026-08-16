@@ -32,7 +32,7 @@ import com.njydsz.common.util.string.StringUtils;
  *
  * // 消费消息
  * subscriber.subscribe(msg -> {
- *     log.info("Message: {}", msg.getBody());
+ *     LOG.info("Message: {}", msg.getBody());
  * });
  * }</pre>
  *

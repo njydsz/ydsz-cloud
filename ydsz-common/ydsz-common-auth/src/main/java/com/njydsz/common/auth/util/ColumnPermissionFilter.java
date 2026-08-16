@@ -50,7 +50,7 @@ import org.springframework.cglib.beans.BeanCopier;
  */
 public final class ColumnPermissionFilter {
 
-  private static final Logger log = LoggerFactory.getLogger(ColumnPermissionFilter.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ColumnPermissionFilter.class);
 
   /** BeanCopier 实例缓存，按 Class 缓存避免重复生成字节码 */
   private static final ConcurrentMap<Class<?>, BeanCopier> COPIER_CACHE =
@@ -141,7 +141,7 @@ public final class ColumnPermissionFilter {
       }
       return target;
     } catch (Exception e) {
-      log.warn("浅拷贝失败，类 {}: {}", clazz.getName(), e.getMessage());
+      LOG.warn("浅拷贝失败，类 {}: {}", clazz.getName(), e.getMessage());
       return source;
     }
   }
@@ -156,7 +156,7 @@ public final class ColumnPermissionFilter {
     try {
       return BeanCopier.create(clazz, clazz, false);
     } catch (Exception e) {
-      log.debug("创建 BeanCopier 失败，类 {}: {}", clazz.getName(), e.getMessage());
+      LOG.debug("创建 BeanCopier 失败，类 {}: {}", clazz.getName(), e.getMessage());
       return null;
     }
   }
@@ -183,7 +183,7 @@ public final class ColumnPermissionFilter {
       try {
         field.set(target, null);
       } catch (IllegalAccessException e) {
-        log.debug("无法置空字段 {}: {}", field.getName(), e.getMessage());
+        LOG.debug("无法置空字段 {}: {}", field.getName(), e.getMessage());
       }
     }
   }

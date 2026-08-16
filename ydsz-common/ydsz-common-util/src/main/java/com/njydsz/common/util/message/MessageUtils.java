@@ -23,7 +23,7 @@ import com.njydsz.common.util.string.StringUtils;
  */
 public final class MessageUtils {
 
-  private static final Logger logger = LoggerFactory.getLogger(MessageUtils.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(MessageUtils.class);
 
   /**
    * MessageSource 桥接器（Spring 环境下由 {@link MessageSourceConfiguration} 注入）。
@@ -165,7 +165,7 @@ public final class MessageUtils {
       // 使用带 defaultMessage 的重载，未找到时返回 defaultMsg 而非抛 NoSuchMessageException
       return messageSource.getMessage(key, params, defaultMsg, locale);
     } catch (Exception e) {
-      logger.error("Get locale message error for key: {}", key, e);
+      LOGGER.error("Get locale message error for key: {}", key, e);
     }
     return defaultMsg;
   }
@@ -214,7 +214,7 @@ public final class MessageUtils {
           return Locale.getDefault();
       }
     } catch (Exception e) {
-      logger.warn("Failed to get user language, using default locale", e);
+      LOGGER.warn("Failed to get user language, using default locale", e);
       return Locale.getDefault();
     }
   }
@@ -236,7 +236,7 @@ public final class MessageUtils {
       Object result = method.invoke(authObj);
       return result instanceof String str ? str : null;
     } catch (Exception e) {
-      logger.debug("反射获取 userLanguage 失败: {}", e.getMessage());
+      LOGGER.debug("反射获取 userLanguage 失败: {}", e.getMessage());
       return null;
     }
   }

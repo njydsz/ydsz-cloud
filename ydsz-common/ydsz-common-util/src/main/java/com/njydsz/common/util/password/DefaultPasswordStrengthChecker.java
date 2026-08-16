@@ -46,7 +46,7 @@ import org.slf4j.LoggerFactory;
  */
 public class DefaultPasswordStrengthChecker implements PasswordStrengthChecker {
 
-  private static final Logger log = LoggerFactory.getLogger(DefaultPasswordStrengthChecker.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DefaultPasswordStrengthChecker.class);
 
   /** Bundle 基础名，用于国际化消息查找 */
   private static final String BUNDLE_BASE = "com.njydsz.common.util.password.messages";
@@ -221,7 +221,7 @@ public class DefaultPasswordStrengthChecker implements PasswordStrengthChecker {
     try (InputStream is =
         DefaultPasswordStrengthChecker.class.getResourceAsStream(classpathResource)) {
       if (is == null) {
-        log.debug("弱密码字典资源 {} 不存在，跳过加载", classpathResource);
+        LOG.debug("弱密码字典资源 {} 不存在，跳过加载", classpathResource);
         return result;
       }
       try (BufferedReader reader =
@@ -234,9 +234,9 @@ public class DefaultPasswordStrengthChecker implements PasswordStrengthChecker {
           }
         }
       }
-      log.info("从 {} 加载了 {} 条弱密码字典", classpathResource, result.size());
+      LOG.info("从 {} 加载了 {} 条弱密码字典", classpathResource, result.size());
     } catch (IOException e) {
-      log.warn("加载弱密码字典 {} 失败: {}", classpathResource, e.getMessage());
+      LOG.warn("加载弱密码字典 {} 失败: {}", classpathResource, e.getMessage());
     }
     return result;
   }

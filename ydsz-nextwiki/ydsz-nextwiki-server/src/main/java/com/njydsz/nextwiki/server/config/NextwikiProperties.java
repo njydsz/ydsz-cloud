@@ -64,6 +64,9 @@ public class NextwikiProperties {
   /** WOPI 在线编辑配置 */
   private WopiConfig wopi = new WopiConfig();
 
+  /** 冷数据归档配置 */
+  private ArchivalConfig archival = new ArchivalConfig();
+
   /**
    * 文件上传配置。
    *
@@ -215,5 +218,32 @@ public class NextwikiProperties {
 
     /** WOPI 访问令牌（用于校验编辑器回调请求） */
     private String accessToken = "";
+  }
+
+  /**
+   * 冷数据归档配置。
+   *
+   * <p>对于长期未访问的文件，自动标记为"冷数据"并迁移至低成本存储（如归档存储），
+   * 降低存储成本。冷数据访问时可能存在延迟（需解冻）。
+   */
+  @Data
+  public static class ArchivalConfig {
+    /** 冷数据归档开关 */
+    private boolean enabled = false;
+
+    /** 文件多少天未访问后视为冷数据 */
+    private int coldDaysThreshold = 90;
+
+    /** 归档批次大小（每次处理文件数） */
+    private int batchSize = 100;
+
+    /** 归档存储类型：GLACIER/DEEP_ARCHIVE/STANDARD_IA */
+    private String archiveStorageClass = "GLACIER";
+
+    /** 排除归档的文件后缀（逗号分隔） */
+    private String excludeExtensions = "tmp,cache";
+
+    /** 归档后是否保留元数据在热存储 */
+    private boolean retainMetadata = true;
   }
 }

@@ -1,15 +1,17 @@
 package com.njydsz.literule.api;
 
-import com.njydsz.common.util.id.IdGenerator;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * 规则评估结果

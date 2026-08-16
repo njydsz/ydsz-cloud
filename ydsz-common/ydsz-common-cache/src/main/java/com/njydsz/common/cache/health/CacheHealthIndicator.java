@@ -32,7 +32,7 @@ import com.njydsz.common.cache.stats.CacheStats;
  */
 public class CacheHealthIndicator {
 
-  private static final Logger log = LoggerFactory.getLogger(CacheHealthIndicator.class);
+  private static final Logger LOG = LoggerFactory.getLogger(CacheHealthIndicator.class);
 
   /** 健康状态枚举 */
   public enum Status {
@@ -60,7 +60,7 @@ public class CacheHealthIndicator {
    */
   public void registerCache(String name, Cache<?, ?> cache) {
     monitoredCaches.put(name, cache);
-    log.info("缓存健康监控已注册: {}", name);
+    LOG.info("缓存健康监控已注册: {}", name);
   }
 
   /** 注销缓存实例 */
@@ -144,7 +144,7 @@ public class CacheHealthIndicator {
         errorDetails.put("error", e.getMessage());
         details.put(cacheName, errorDetails);
         overallStatus = Status.DOWN;
-        log.warn("缓存健康检查异常: {}", cacheName, e);
+        LOG.warn("缓存健康检查异常: {}", cacheName, e);
       }
     }
 

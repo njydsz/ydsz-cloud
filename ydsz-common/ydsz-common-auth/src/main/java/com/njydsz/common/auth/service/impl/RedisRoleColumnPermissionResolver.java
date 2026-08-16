@@ -47,7 +47,7 @@ import com.njydsz.common.util.string.StringUtils;
  */
 public class RedisRoleColumnPermissionResolver implements ColumnPermissionResolver {
 
-  private static final Logger log =
+  private static final Logger LOG =
       LoggerFactory.getLogger(RedisRoleColumnPermissionResolver.class);
 
   private final RedisStringOps redisStringOps;
@@ -75,8 +75,8 @@ public class RedisRoleColumnPermissionResolver implements ColumnPermissionResolv
         .expireAfterWrite(ttlSeconds, TimeUnit.SECONDS)
         .removalListener(
             (String key, ColumnScopeInfo value, RemovalCause cause) -> {
-              if (log.isDebugEnabled()) {
-                log.debug("列权限缓存淘汰: roleCode={}, cause={}", key, cause);
+              if (LOG.isDebugEnabled()) {
+                LOG.debug("列权限缓存淘汰: roleCode={}, cause={}", key, cause);
               }
             })
         .build();
@@ -166,7 +166,7 @@ public class RedisRoleColumnPermissionResolver implements ColumnPermissionResolv
           parseTableColumns(object, "editableColumns", "editable");
       return new ColumnScopeInfo(visibleColumns, editableColumns);
     } catch (Exception e) {
-      log.warn("解析 role-col-key 失败：{}", json, e);
+      LOG.warn("解析 role-col-key 失败：{}", json, e);
       return ColumnScopeInfo.empty();
     }
   }

@@ -1,7 +1,8 @@
 package com.njydsz.cronjob.server.core.alert;
 
-import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
 import java.io.Serializable;
+
+import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
 
 /**
  * 告警事件（P5 告警 + 监控）。

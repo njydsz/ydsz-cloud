@@ -1,13 +1,15 @@
 package com.njydsz.workflow.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import java.io.Serial;
 import java.time.LocalDateTime;
+
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * 流程委派代理（长期授权）实体

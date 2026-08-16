@@ -55,7 +55,7 @@ import com.njydsz.common.notify.provider.SmsProvider;
 @ConditionalOnProperty(prefix = "ydsz.notify.sms", name = "enabled", havingValue = "true")
 public class SmsNotifySender implements NotifyChannelStrategy {
 
-  private static final Logger log = LoggerFactory.getLogger(SmsNotifySender.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SmsNotifySender.class);
 
   private final NotifyProperties.SmsConfig smsConfig;
   private final RestTemplate restTemplate;
@@ -80,7 +80,7 @@ public class SmsNotifySender implements NotifyChannelStrategy {
     this.virtualThreadExecutor = virtualThreadExecutor;
     this.smsProvider = smsProviderProvider.getIfAvailable();
     if (this.smsProvider != null) {
-      log.info("[SmsNotifySender] 使用 SmsProvider[{}] 委托发送", smsProvider.getProviderName());
+      LOG.info("[SmsNotifySender] 使用 SmsProvider[{}] 委托发送", smsProvider.getProviderName());
     }
   }
 
@@ -206,7 +206,7 @@ public class SmsNotifySender implements NotifyChannelStrategy {
             smsProvider.send(receiver, smsConfig.getSignName(), templateCode, templateParam);
         return convertResult(result);
       } catch (Exception e) {
-        log.error(
+        LOG.error(
             "[SmsNotifySender] SmsProvider 发送失败: phone={}, error={}", receiver, e.getMessage(), e);
         return NotifySendResult.failure(e.getMessage(), getChannel().getName());
       }
@@ -228,10 +228,10 @@ public class SmsNotifySender implements NotifyChannelStrategy {
           restTemplate.postForObject(
               smsConfig.getEndpoint(), new HttpEntity<>(json, headers), String.class);
 
-      log.debug("[SmsNotifySender] 短信发送成功: phone={}", receiver);
+      LOG.debug("[SmsNotifySender] 短信发送成功: phone={}", receiver);
       return parseSmsResponse(response);
     } catch (Exception e) {
-      log.error("[SmsNotifySender] 短信发送失败: phone={}, error={}", receiver, e.getMessage(), e);
+      LOG.error("[SmsNotifySender] 短信发送失败: phone={}, error={}", receiver, e.getMessage(), e);
       return NotifySendResult.failure(e.getMessage(), getChannel().getName());
     }
   }
@@ -285,7 +285,7 @@ public class SmsNotifySender implements NotifyChannelStrategy {
       String sign = Base64.getEncoder().encodeToString(signData);
       return (accessKey != null ? accessKey + ":" : "") + sign;
     } catch (Exception e) {
-      log.error("[SmsNotifySender] 签名构建失败: {}", e.getMessage());
+      LOG.error("[SmsNotifySender] 签名构建失败: {}", e.getMessage());
       return "";
     }
   }
@@ -311,7 +311,7 @@ public class SmsNotifySender implements NotifyChannelStrategy {
       String errorMsg = json.has("message") ? json.get("message").asText() : null;
       return NotifySendResult.failure(errorMsg != null ? errorMsg : "发送失败", getChannel().getName());
     } catch (Exception e) {
-      log.warn("[SmsNotifySender] 解析短信响应失败: {}", e.getMessage());
+      LOG.warn("[SmsNotifySender] 解析短信响应失败: {}", e.getMessage());
       return NotifySendResult.success("sent", getChannel().getName());
     }
   }

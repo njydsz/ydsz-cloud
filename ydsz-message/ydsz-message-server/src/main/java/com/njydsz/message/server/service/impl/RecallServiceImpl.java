@@ -1,27 +1,33 @@
 package com.njydsz.message.server.service.impl.receipt;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.message.domain.entity.config.MsgTrace;
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.entity.core.MsgNotification;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
+import com.njydsz.message.domain.event.MessageRecalledEvent;
 import com.njydsz.message.infra.mapper.core.MsgLogMapper;
 import com.njydsz.message.infra.mapper.core.MsgNotificationMapper;
+import com.njydsz.message.server.channel.recall.RecallChannel;
+import com.njydsz.message.server.channel.recall.RecallChannelRouter;
+import com.njydsz.message.server.event.DomainEventPublisher;
 import com.njydsz.message.server.realtime.RealtimePushService;
 import com.njydsz.message.server.service.core.MessageLogService;
 import com.njydsz.message.server.service.core.MessageTraceService;
 import com.njydsz.message.server.service.impl.MessageRecallPushService;
 import com.njydsz.message.server.service.receipt.RecallService;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 /**
  * 消息撤回服务实现。
@@ -55,6 +61,12 @@ public class RecallServiceImpl implements RecallService {
 
   /** 消息全链路追踪服务 */
   private final MessageTraceService messageTraceService;
+
+  /** P2-F2: 撤回通道路由器 */
+  private final RecallChannelRouter recallChannelRouter;
+
+  /** P2-A4: 领域事件发布器 */
+  private final DomainEventPublisher domainEventPublisher;
 
   /**
    * 撤回单条站内通知。
@@ -178,14 +190,35 @@ public class RecallServiceImpl implements RecallService {
     logDO.setRecallStatus(RecallStatusEnum.RECALLED.name());
     logDO.setRecallAt(LocalDateTime.now());
     msgLogMapper.updateById(logDO);
+
+    // P2-F2: 路由到通道对应的撤回实现
+    RecallChannel.RecallResult recallResult = recallChannelRouter.routeAndRecall(logDO);
+
     // P2-19: 推送撤回事件到前端（携带撤回原因/时间戳）
     if (StringUtils.hasText(logDO.getReceiver())) {
       messageRecallPushService.pushRecall(logDO.getReceiver(), msgId, "消息撤回");
     }
     // P0-2: 记录撤回轨迹
     messageTraceService.recordTrace(
-        msgId, MsgTrace.Node.RECALLED, "SUCCESS", logDO.getChannel(), "消息已撤回: msgId=" + msgId);
-    log.info("[Recall] 按 msgId 撤回成功: msgId={} channel={}", msgId, logDO.getChannel());
+        msgId,
+        MsgTrace.Node.RECALLED,
+        "SUCCESS",
+        logDO.getChannel(),
+        "消息已撤回: msgId=" + msgId
+            + ", platformRecall=" + recallResult.platformRecallSucceeded());
+    // P2-A4: 发布消息撤回领域事件
+    domainEventPublisher.publish(
+        new MessageRecalledEvent(
+            logDO.getTenantId(),
+            msgId,
+            logDO.getChannel(),
+            true,
+            recallResult.failureReason()));
+    log.info(
+        "[Recall] 按 msgId 撤回成功: msgId={} channel={} platformRecall={}",
+        msgId,
+        logDO.getChannel(),
+        recallResult.platformRecallSucceeded());
     return true;
   }
 

@@ -42,6 +42,7 @@ import com.njydsz.common.json.YdszJson;
  */
 public class ConfigCliTool {
 
+
   private static final String ENC_PREFIX = "ENC(";
   private static final String ENC_SUFFIX = ")";
   private static final String DEFAULT_ALGORITHM = "PBEWithHMACSHA512AndAES_256";

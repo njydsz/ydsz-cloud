@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
  */
 public class DiffCalculator {
 
-  private static final Logger log = LoggerFactory.getLogger(DiffCalculator.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DiffCalculator.class);
 
   /** 单例实例 */
   public static final DiffCalculator INSTANCE = new DiffCalculator();
@@ -108,7 +108,7 @@ public class DiffCalculator {
         diffs.add(
             FieldDiff.of(meta.field.getName(), label, oldStr, newStr, meta.annotation.sensitive()));
       } catch (Exception e) {
-        log.warn("计算字段差异失败: field={}", meta.field.getName(), e);
+        LOG.warn("计算字段差异失败: field={}", meta.field.getName(), e);
       }
     }
 
@@ -159,7 +159,7 @@ public class DiffCalculator {
           try {
             return c.getDeclaredConstructor().newInstance();
           } catch (Exception e) {
-            log.warn("实例化格式化器失败: {}", c.getName(), e);
+            LOG.warn("实例化格式化器失败: {}", c.getName(), e);
             return null;
           }
         });

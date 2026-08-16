@@ -1,10 +1,12 @@
 package com.njydsz.workflow.infra.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.workflow.domain.entity.FlowAdminRole;
 import java.util.List;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+
+import com.njydsz.workflow.domain.entity.FlowAdminRole;
 
 /**
  * 流程管理员角色 Mapper（P1-6）

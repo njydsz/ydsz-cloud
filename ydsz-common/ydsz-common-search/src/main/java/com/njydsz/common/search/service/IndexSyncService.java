@@ -7,8 +7,8 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.njydsz.common.search.config.SearchProperties;
 import com.njydsz.common.search.core.IndexDocument;

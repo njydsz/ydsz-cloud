@@ -53,7 +53,7 @@ import com.njydsz.common.cache.support.CacheThreadPoolManager;
 public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
     implements LoadingCache<K, V>, AutoCloseable {
 
-  private static final Logger log = LoggerFactory.getLogger(EnhancedLoadingCache.class);
+  private static final Logger LOG = LoggerFactory.getLogger(EnhancedLoadingCache.class);
 
   /**
    * 全局共享异步执行器（守护线程，不阻止 JVM 退出）
@@ -144,7 +144,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
         Thread.currentThread().interrupt();
       }
     }
-    log.info("EnhancedLoadingCache 共享资源已关闭");
+    LOG.info("EnhancedLoadingCache 共享资源已关闭");
   }
 
   /** 底层缓存 */
@@ -253,7 +253,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
       this.refreshScheduler = null;
     }
 
-    log.info(
+    LOG.info(
         "增强版加载缓存已创建，cache={}, loader={}, refreshInterval={}, recordStats={}",
         cache.getClass().getSimpleName(),
         loader.getClass().getSimpleName(),
@@ -271,7 +271,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
     refreshFuture =
         refreshScheduler.scheduleAtFixedRate(
             this::refreshAll, refreshIntervalMillis, refreshIntervalMillis, TimeUnit.MILLISECONDS);
-    log.info("自动刷新已启用，间隔={}ms", refreshIntervalMillis);
+    LOG.info("自动刷新已启用，间隔={}ms", refreshIntervalMillis);
   }
 
   /** 刷新所有缓存项 */
@@ -375,7 +375,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
         // 返回缓存中的旧值（如果存在），而非 null
         V oldValue = cache.getIfPresent(key);
         future.complete(oldValue);
-        log.warn("缓存加载失败, key={}, 返回旧值={}", key, oldValue != null, e);
+        LOG.warn("缓存加载失败, key={}, 返回旧值={}", key, oldValue != null, e);
         return oldValue;
       } finally {
         pendingLoads.remove(key, future);
@@ -406,7 +406,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
     try {
       return get(key);
     } catch (Exception e) {
-      log.error("缓存加载异常, key={}", key, e);
+      LOG.error("缓存加载异常, key={}", key, e);
       return null;
     }
   }
@@ -452,7 +452,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
               if (recordStats) {
                 loadExceptionCount.increment();
               }
-              log.warn("异步缓存加载失败, key={}", key, e);
+              LOG.warn("异步缓存加载失败, key={}", key, e);
               return null;
             });
   }
@@ -546,7 +546,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
         if (recordStats) {
           loadExceptionCount.increment();
         }
-        log.warn("批量缓存加载失败", e);
+        LOG.warn("批量缓存加载失败", e);
       }
     }
 
@@ -611,7 +611,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
             if (recordStats) {
               loadExceptionCount.increment();
             }
-            log.warn("刷新缓存失败, key={}", key, e);
+            LOG.warn("刷新缓存失败, key={}", key, e);
           }
         },
         executor);
@@ -756,6 +756,6 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
       refreshFuture.cancel(false);
       refreshFuture = null;
     }
-    log.info("增强版加载缓存已关闭");
+    LOG.info("增强版加载缓存已关闭");
   }
 }

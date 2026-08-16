@@ -1,8 +1,10 @@
 package com.njydsz.message.domain.dto.core;
 
-import com.njydsz.common.safe.annotation.Xss;
 import java.util.Map;
+
 import lombok.Data;
+
+import com.njydsz.common.safe.annotation.Xss;
 
 /**
  * 消息直接发送 DTO — 业务方调用消息中心的单条发送入口

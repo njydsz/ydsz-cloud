@@ -4,13 +4,13 @@ import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 
+import lombok.Data;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
-import lombok.Data;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.notify.config.NotifyProperties;
@@ -55,7 +55,7 @@ import com.njydsz.common.notify.enums.NotifyChannel;
 @ConditionalOnProperty(prefix = "ydsz.notify.insite", name = "enabled", havingValue = "true")
 public class InsiteNotifySender implements NotifyChannelStrategy {
 
-  private static final Logger log = LoggerFactory.getLogger(InsiteNotifySender.class);
+  private static final Logger LOG = LoggerFactory.getLogger(InsiteNotifySender.class);
 
   /** Redis Key 前缀 */
   private static final String KEY_PREFIX = "notify:insite:";
@@ -122,10 +122,10 @@ public class InsiteNotifySender implements NotifyChannelStrategy {
         redisTemplate.opsForList().trim(key, 0, insiteConfig.getMaxQueueSize() - 1);
       }
 
-      log.debug("[InsiteNotifySender] 站内信已存储: userId={}, msgId={}", receiver, message.getId());
+      LOG.debug("[InsiteNotifySender] 站内信已存储: userId={}, msgId={}", receiver, message.getId());
       return NotifySendResult.success(message.getId(), getChannel().getName());
     } catch (Exception e) {
-      log.error("[InsiteNotifySender] 站内信存储失败: userId={}, error={}", receiver, e.getMessage(), e);
+      LOG.error("[InsiteNotifySender] 站内信存储失败: userId={}, error={}", receiver, e.getMessage(), e);
       return NotifySendResult.failure(e.getMessage(), getChannel().getName());
     }
   }

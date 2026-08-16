@@ -7,10 +7,10 @@ import java.security.Signature;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.Base64;
 
+import jakarta.mail.internet.InternetHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
-import jakarta.mail.internet.InternetHeaders;
 
 import com.njydsz.common.notify.config.NotifyProperties;
 
@@ -46,7 +46,7 @@ import com.njydsz.common.notify.config.NotifyProperties;
  */
 public class DkimSigner {
 
-  private static final Logger log = LoggerFactory.getLogger(DkimSigner.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DkimSigner.class);
 
   /** DKIM-Signature 头名称 */
   public static final String DKIM_HEADER = "DKIM-Signature";
@@ -151,12 +151,12 @@ public class DkimSigner {
       String signatureBase64 = Base64.getEncoder().encodeToString(signature);
 
       String fullDkimHeader = dkimHeaderPartial + " " + signatureBase64;
-      log.debug(
+      LOG.debug(
           "[DkimSigner] DKIM 签名生成成功: domain={}, selector={}", dkim.getDomain(), dkim.getSelector());
       return fullDkimHeader;
 
     } catch (Exception e) {
-      log.error("[DkimSigner] DKIM 签名生成失败: {}", e.getMessage(), e);
+      LOG.error("[DkimSigner] DKIM 签名生成失败: {}", e.getMessage(), e);
       return null;
     }
   }
@@ -183,9 +183,9 @@ public class DkimSigner {
         PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
         KeyFactory keyFactory = KeyFactory.getInstance("RSA");
         privateKey = keyFactory.generatePrivate(keySpec);
-        log.info("[DkimSigner] RSA 私钥加载成功");
+        LOG.info("[DkimSigner] RSA 私钥加载成功");
       } catch (Exception e) {
-        log.error("[DkimSigner] RSA 私钥加载失败: {}", e.getMessage());
+        LOG.error("[DkimSigner] RSA 私钥加载失败: {}", e.getMessage());
         privateKey = null;
       }
       initialized = true;

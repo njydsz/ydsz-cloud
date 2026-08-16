@@ -4,11 +4,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.auth.metrics.AuthMetrics;
 
@@ -36,7 +36,7 @@ import com.njydsz.common.auth.metrics.AuthMetrics;
  */
 public class AppMetrics implements AuthMetrics {
 
-  private static final Logger log = LoggerFactory.getLogger(AppMetrics.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AppMetrics.class);
 
   /** 默认降级值，避免 null/空串污染指标基数 */
   private static final String UNKNOWN = "unknown";
@@ -60,9 +60,9 @@ public class AppMetrics implements AuthMetrics {
   public AppMetrics(MeterRegistry meterRegistry) {
     this.meterRegistry = meterRegistry;
     if (meterRegistry != null) {
-      log.info("App 模块 Micrometer 指标采集已初始化");
+      LOG.info("App 模块 Micrometer 指标采集已初始化");
     } else {
-      log.info("App 模块指标采集降级（MeterRegistry 不可用）");
+      LOG.info("App 模块指标采集降级（MeterRegistry 不可用）");
     }
   }
 

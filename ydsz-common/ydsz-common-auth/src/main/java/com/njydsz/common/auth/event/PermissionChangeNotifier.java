@@ -29,7 +29,7 @@ import org.springframework.core.OrderComparator;
  */
 public class PermissionChangeNotifier {
 
-  private static final Logger log = LoggerFactory.getLogger(PermissionChangeNotifier.class);
+  private static final Logger LOG = LoggerFactory.getLogger(PermissionChangeNotifier.class);
 
   private final ApplicationEventPublisher applicationEventPublisher;
 
@@ -38,7 +38,7 @@ public class PermissionChangeNotifier {
   public PermissionChangeNotifier(ApplicationEventPublisher applicationEventPublisher) {
     this.applicationEventPublisher = applicationEventPublisher;
     this.listeners = loadListeners();
-    log.info("PermissionChangeNotifier 初始化完成，加载 {} 个 SPI 监听器", listeners.size());
+    LOG.info("PermissionChangeNotifier 初始化完成，加载 {} 个 SPI 监听器", listeners.size());
   }
 
   /**
@@ -76,11 +76,11 @@ public class PermissionChangeNotifier {
    */
   public void notify(PermissionChangedEvent event) {
     if (event == null) {
-      log.warn("权限变更事件发布失败：event 不能为空");
+      LOG.warn("权限变更事件发布失败：event 不能为空");
       return;
     }
 
-    log.info("发布权限变更事件：{}", event);
+    LOG.info("发布权限变更事件：{}", event);
 
     // 发布 Spring 事件
     applicationEventPublisher.publishEvent(event);
@@ -90,7 +90,7 @@ public class PermissionChangeNotifier {
       try {
         listener.onPermissionChanged(event);
       } catch (Exception e) {
-        log.error(
+        LOG.error(
             "权限变更监听器处理异常: listener={}, event={}, error={}",
             listener.getClass().getName(),
             event,

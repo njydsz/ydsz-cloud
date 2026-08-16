@@ -1,5 +1,11 @@
 package com.njydsz.cronjob.domain.converter;
 
+import java.util.List;
+
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.factory.Mappers;
+
 import com.njydsz.cronjob.domain.dto.post.JobDagPostDTO;
 import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
 import com.njydsz.cronjob.domain.dto.post.JobWebhookPostDTO;
@@ -18,9 +24,9 @@ import com.njydsz.cronjob.domain.entity.job.JobHistory;
 import com.njydsz.cronjob.domain.entity.job.JobNode;
 import com.njydsz.cronjob.domain.entity.job.JobTask;
 import com.njydsz.cronjob.domain.entity.job.JobWebhook;
-import com.njydsz.cronjob.domain.entity.log.JobDailyStats;
-import com.njydsz.cronjob.domain.entity.log.JobLog;
-import com.njydsz.cronjob.domain.entity.log.JobLogContent;
+import com.njydsz.cronjob.domain.entity.LOG.JobDailyStats;
+import com.njydsz.cronjob.domain.entity.LOG.JobLog;
+import com.njydsz.cronjob.domain.entity.LOG.JobLogContent;
 import com.njydsz.cronjob.domain.entity.schedule.GlueCode;
 import com.njydsz.cronjob.domain.vo.GlueCodeVO;
 import com.njydsz.cronjob.domain.vo.JobAlertLogVO;
@@ -38,10 +44,6 @@ import com.njydsz.cronjob.domain.vo.JobNodeVO;
 import com.njydsz.cronjob.domain.vo.JobTaskVO;
 import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.domain.vo.JobWebhookVO;
-import java.util.List;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
 
 /**
  * cronjob 模块统一 MapStruct 转换器。

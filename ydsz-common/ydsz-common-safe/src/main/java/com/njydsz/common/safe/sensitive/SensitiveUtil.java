@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class SensitiveUtil {
 
-  private static final Logger log = LoggerFactory.getLogger(SensitiveUtil.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SensitiveUtil.class);
 
   private static final char ASTERISK = '*';
 
@@ -673,7 +673,7 @@ public final class SensitiveUtil {
         result = sb.toString();
       }
     } catch (Exception e) {
-      log.warn("[SensitiveUtil] PII 扫描脱敏异常，返回原文: err={}", e.getMessage());
+      LOG.warn("[SensitiveUtil] PII 扫描脱敏异常，返回原文: err={}", e.getMessage());
       return text;
     }
     return result;

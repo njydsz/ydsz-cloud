@@ -37,7 +37,7 @@ import com.njydsz.common.safe.core.JsonBodyXssCleaner;
     matchIfMissing = true)
 public class XssRequestBodyAdvice extends RequestBodyAdviceAdapter {
 
-  private static final Logger log = LoggerFactory.getLogger(XssRequestBodyAdvice.class);
+  private static final Logger LOG = LoggerFactory.getLogger(XssRequestBodyAdvice.class);
 
   private final JsonBodyXssCleaner xssCleaner;
 
@@ -79,7 +79,7 @@ public class XssRequestBodyAdvice extends RequestBodyAdviceAdapter {
     String cleanedJson = xssCleaner.clean(originalJson);
 
     if (!cleanedJson.equals(originalJson)) {
-      log.debug(
+      LOG.debug(
           "[XssRequestBodyAdvice] JSON Body XSS 过滤完成, URI: {}",
           parameter.getMethod() != null ? parameter.getMethod().getName() : "unknown");
     }

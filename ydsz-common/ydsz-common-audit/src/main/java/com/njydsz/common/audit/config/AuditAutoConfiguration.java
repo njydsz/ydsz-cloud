@@ -4,6 +4,9 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
 import javax.sql.DataSource;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import jakarta.annotation.PreDestroy;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -17,9 +20,6 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import jakarta.annotation.PreDestroy;
-import lombok.RequiredArgsConstructor;
-import io.micrometer.core.instrument.MeterRegistry;
 
 import com.njydsz.common.audit.aspect.AuditAspect;
 import com.njydsz.common.audit.core.AsyncAuditRecorder;
@@ -69,7 +69,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 @EnableAsync
 public class AuditAutoConfiguration {
 
-  private static final Logger log = LoggerFactory.getLogger(AuditAutoConfiguration.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AuditAutoConfiguration.class);
 
   /** 异步审计记录器引用，用于优雅停机时调用 shutdown */
   private AsyncAuditRecorder asyncAuditRecorder;
@@ -82,7 +82,7 @@ public class AuditAutoConfiguration {
   @Bean
   @ConditionalOnMissingBean(AuditTemplateProcessor.class)
   public AuditTemplateProcessor auditTemplateProcessor() {
-    log.info("初始化审计模板处理器: AuditTemplateProcessor");
+    LOG.info("初始化审计模板处理器: AuditTemplateProcessor");
     return new AuditTemplateProcessor();
   }
 
@@ -99,7 +99,7 @@ public class AuditAutoConfiguration {
   public AuditWriter jdbcAuditWriter(DataSource dataSource, AuditProperties properties) {
     String shardingType = properties.isShardingEnabled() ? properties.getShardingType() : null;
     String baseTableName = properties.getShardingBaseTableName();
-    log.info(
+    LOG.info(
         "初始化 JDBC 审计日志写入器: JdbcAuditWriter, 分表类型={}, 基础表名={}",
         shardingType != null ? shardingType : "DISABLED",
         baseTableName);
@@ -114,7 +114,7 @@ public class AuditAutoConfiguration {
   @Bean
   @ConditionalOnMissingBean(AuditWriter.class)
   public AuditWriter defaultAuditWriter() {
-    log.info("初始化默认审计日志写入器: DefaultAuditStorage(控制台输出)，未检测到 DataSource，降级使用控制台存储");
+    LOG.info("初始化默认审计日志写入器: DefaultAuditStorage(控制台输出)，未检测到 DataSource，降级使用控制台存储");
     return new DefaultAuditStorage();
   }
 
@@ -135,7 +135,7 @@ public class AuditAutoConfiguration {
       AuditProperties properties,
       AuditTemplateProcessor templateProcessor,
       SnowflakeIdGenerator snowflakeIdGenerator) {
-    log.info("初始化审计日志切面: AuditAspect, 存储策略={}", properties.getStorageType());
+    LOG.info("初始化审计日志切面: AuditAspect, 存储策略={}", properties.getStorageType());
     return new AuditAspect(auditRecorder, properties, templateProcessor, snowflakeIdGenerator);
   }
 
@@ -171,7 +171,7 @@ public class AuditAutoConfiguration {
     executor.setWaitForTasksToCompleteOnShutdown(true);
     executor.setAwaitTerminationSeconds((int) properties.getAsync().getShutdownTimeout());
     executor.initialize();
-    log.info(
+    LOG.info(
         "初始化审计异步线程池: core={}, max={}, queue={}, rejectPolicy=DiscardOldest",
         corePoolSize,
         maxPoolSize,
@@ -200,7 +200,7 @@ public class AuditAutoConfiguration {
   public AuditRecorder asyncAuditRecorder(AuditWriter auditWriter, AuditProperties properties) {
     AuditProperties.AsyncProperties asyncProps = properties.getAsync();
 
-    log.info(
+    LOG.info(
         "初始化异步审计记录器: AsyncAuditRecorder, 队列容量={}, 批量阈值={}, 刷新间隔={}ms, 写入器={}",
         asyncProps.getExecutorQueueCapacity(),
         asyncProps.getBatchSize(),
@@ -225,7 +225,7 @@ public class AuditAutoConfiguration {
       havingValue = "false",
       matchIfMissing = false)
   public AuditRecorder auditRecorder(AuditWriter auditWriter) {
-    log.info("初始化默认审计记录器: DefaultAuditRecorder");
+    LOG.info("初始化默认审计记录器: DefaultAuditRecorder");
     return new DefaultAuditRecorder(auditWriter);
   }
 
@@ -242,7 +242,7 @@ public class AuditAutoConfiguration {
   public AuditQueryService auditQueryService(DataSource dataSource, AuditProperties properties) {
     String shardingType = properties.isShardingEnabled() ? properties.getShardingType() : null;
     String baseTableName = properties.getShardingBaseTableName();
-    log.info(
+    LOG.info(
         "初始化默认审计查询服务: DefaultAuditQueryService, 分表类型={}",
         shardingType != null ? shardingType : "DISABLED");
     return new DefaultAuditQueryService(dataSource, shardingType, baseTableName);
@@ -278,9 +278,9 @@ public class AuditAutoConfiguration {
     MeterRegistry meterRegistry = meterRegistryProvider.getIfAvailable();
     if (meterRegistry != null) {
       binder.bindTo(meterRegistry);
-      log.info("初始化审计指标绑定器: AuditMetricsBinder, 已绑定到 MeterRegistry");
+      LOG.info("初始化审计指标绑定器: AuditMetricsBinder, 已绑定到 MeterRegistry");
     } else {
-      log.info("初始化审计指标绑定器: AuditMetricsBinder, MeterRegistry 不可用，指标未绑定");
+      LOG.info("初始化审计指标绑定器: AuditMetricsBinder, MeterRegistry 不可用，指标未绑定");
     }
     return binder;
   }
@@ -303,7 +303,7 @@ public class AuditAutoConfiguration {
   @ConditionalOnMissingBean(name = "auditHealthIndicator")
   public AuditHealthIndicator auditHealthIndicator(
       AuditRecorder auditRecorder, AuditProperties properties) {
-    log.info("初始化审计健康检查指示器: AuditHealthIndicator");
+    LOG.info("初始化审计健康检查指示器: AuditHealthIndicator");
     return new AuditHealthIndicator(auditRecorder, properties);
   }
 
@@ -326,7 +326,7 @@ public class AuditAutoConfiguration {
   @Bean
   @ConditionalOnMissingBean(GatewayAuditEventBridge.class)
   public GatewayAuditEventBridge gatewayAuditEventBridge(ApplicationEventPublisher eventPublisher) {
-    log.info("初始化网关审计事件桥接器: GatewayAuditEventBridge");
+    LOG.info("初始化网关审计事件桥接器: GatewayAuditEventBridge");
     return new GatewayAuditEventBridge(eventPublisher);
   }
 
@@ -349,7 +349,7 @@ public class AuditAutoConfiguration {
   @ConditionalOnBean(AuditRecorder.class)
   public AuditEventListener auditEventListener(
       AuditRecorder auditRecorder, SnowflakeIdGenerator snowflakeIdGenerator) {
-    log.info("初始化审计事件监听器: AuditEventListener");
+    LOG.info("初始化审计事件监听器: AuditEventListener");
     return new AuditEventListener(auditRecorder, snowflakeIdGenerator);
   }
 
@@ -357,7 +357,7 @@ public class AuditAutoConfiguration {
   @PreDestroy
   public void destroy() {
     if (asyncAuditRecorder != null) {
-      log.info("审计模块关闭中，执行异步记录器优雅停机...");
+      LOG.info("审计模块关闭中，执行异步记录器优雅停机...");
       asyncAuditRecorder.shutdown();
     }
   }

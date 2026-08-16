@@ -1,6 +1,14 @@
 package com.njydsz.userinfo.server.service.impl;
 
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
 import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.core.context.AnalysisContext;
 import com.njydsz.common.excel.core.listener.ReadListener;
@@ -18,12 +26,6 @@ import com.njydsz.userinfo.server.auth.PasswordPolicyValidator;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.service.UserAccountService;
 import com.njydsz.userinfo.server.service.UserExcelService;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
 /**
  * 用户 Excel 导入导出服务实现
@@ -137,7 +139,7 @@ public class UserExcelServiceImpl implements UserExcelService {
   /**
    * 读取 Excel 文件并解析为 UserImportDTO 列表。
    *
-   * @param inputStream      Excel 文件输入流
+   * @param inputStream Excel 文件输入流
    * @param originalFilename 原始文件名（用于错误日志）
    * @return 解析后的用户导入 DTO 列表
    */
@@ -173,7 +175,21 @@ public class UserExcelServiceImpl implements UserExcelService {
    * @param importDTO 用户导入 DTO
    */
   private void importSingleUser(UserImportDTO importDTO) {
-    // 1. 必填校验
+    validateRequiredFields(importDTO);
+    validateUsernameUnique(importDTO.getUsername());
+    String deptId = resolveDepartmentId(importDTO.getDeptCode());
+    String leaderId = resolveLeaderId(importDTO.getLeaderUsername());
+    passwordPolicyValidator.validate(importDTO.getPassword(), importDTO.getUsername());
+    createUser(importDTO, deptId, leaderId);
+  }
+
+  /**
+   * 校验必填字段。
+   *
+   * @param importDTO 用户导入 DTO
+   * @throws BusinessException 必填字段为空时抛出
+   */
+  private void validateRequiredFields(UserImportDTO importDTO) {
     if (importDTO.getUsername() == null || importDTO.getUsername().isBlank()) {
       throw BusinessException.builder().message("用户名不能为空").build();
     }
@@ -183,44 +199,70 @@ public class UserExcelServiceImpl implements UserExcelService {
     if (importDTO.getPassword() == null || importDTO.getPassword().isBlank()) {
       throw BusinessException.builder().message("初始密码不能为空").build();
     }
+  }
 
-    // 2. 用户名唯一性校验
+  /**
+   * 校验用户名唯一性。
+   *
+   * @param username 用户名
+   * @throws BusinessException 用户名已存在时抛出
+   */
+  private void validateUsernameUnique(String username) {
     LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserAccount::getUsername, importDTO.getUsername());
+    wrapper.eq(UserAccount::getUsername, username);
     if (userAccountMapper.selectCount(wrapper) > 0) {
       throw BusinessException.builder().message("用户名已存在").build();
     }
+  }
 
-    // 3. 部门编码校验
-    String deptId = null;
-    if (importDTO.getDeptCode() != null && !importDTO.getDeptCode().isBlank()) {
-      LambdaQueryWrapper<Department> deptWrapper = new LambdaQueryWrapper<>();
-      deptWrapper.eq(Department::getDeptCode, importDTO.getDeptCode());
-      Department dept = departmentMapper.selectOne(deptWrapper);
-      if (dept == null) {
-        throw BusinessException.builder().message("部门编码不存在: " + importDTO.getDeptCode()).build();
-      }
-      deptId = dept.getId();
+  /**
+   * 根据部门编码解析部门 ID。
+   *
+   * @param deptCode 部门编码（可为空）
+   * @return 部门 ID，部门编码为空时返回 null
+   * @throws BusinessException 部门编码不存在时抛出
+   */
+  private String resolveDepartmentId(String deptCode) {
+    if (deptCode == null || deptCode.isBlank()) {
+      return null;
     }
-
-    // 4. 上级用户校验
-    String leaderId = null;
-    if (importDTO.getLeaderUsername() != null && !importDTO.getLeaderUsername().isBlank()) {
-      LambdaQueryWrapper<UserAccount> leaderWrapper = new LambdaQueryWrapper<>();
-      leaderWrapper.eq(UserAccount::getUsername, importDTO.getLeaderUsername());
-      UserAccount leader = userAccountMapper.selectOne(leaderWrapper);
-      if (leader == null) {
-        throw BusinessException.builder()
-            .message("上级用户名不存在: " + importDTO.getLeaderUsername())
-            .build();
-      }
-      leaderId = leader.getId();
+    LambdaQueryWrapper<Department> deptWrapper = new LambdaQueryWrapper<>();
+    deptWrapper.eq(Department::getDeptCode, deptCode);
+    Department dept = departmentMapper.selectOne(deptWrapper);
+    if (dept == null) {
+      throw BusinessException.builder().message("部门编码不存在: " + deptCode).build();
     }
+    return dept.getId();
+  }
 
-    // 5. 密码策略校验
-    passwordPolicyValidator.validate(importDTO.getPassword(), importDTO.getUsername());
+  /**
+   * 根据上级用户名解析上级用户 ID。
+   *
+   * @param leaderUsername 上级用户名（可为空）
+   * @return 上级用户 ID，用户名为空时返回 null
+   * @throws BusinessException 上级用户名不存在时抛出
+   */
+  private String resolveLeaderId(String leaderUsername) {
+    if (leaderUsername == null || leaderUsername.isBlank()) {
+      return null;
+    }
+    LambdaQueryWrapper<UserAccount> leaderWrapper = new LambdaQueryWrapper<>();
+    leaderWrapper.eq(UserAccount::getUsername, leaderUsername);
+    UserAccount leader = userAccountMapper.selectOne(leaderWrapper);
+    if (leader == null) {
+      throw BusinessException.builder().message("上级用户名不存在: " + leaderUsername).build();
+    }
+    return leader.getId();
+  }
 
-    // 6. 创建用户
+  /**
+   * 创建用户。
+   *
+   * @param importDTO 用户导入 DTO
+   * @param deptId    部门 ID
+   * @param leaderId  上级用户 ID
+   */
+  private void createUser(UserImportDTO importDTO, String deptId, String leaderId) {
     UserAccountCreateDTO createDTO = new UserAccountCreateDTO();
     createDTO.setUsername(importDTO.getUsername());
     createDTO.setRealName(importDTO.getRealName());
@@ -230,7 +272,6 @@ public class UserExcelServiceImpl implements UserExcelService {
     createDTO.setDeptId(deptId);
     createDTO.setPositionCode(importDTO.getPositionCode());
     createDTO.setLeaderId(leaderId);
-
     userAccountService.create(createDTO);
   }
 }

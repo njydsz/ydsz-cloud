@@ -9,16 +9,16 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
-import org.jspecify.annotations.NonNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpMethod;
-import org.springframework.web.filter.OncePerRequestFilter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.jspecify.annotations.NonNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpMethod;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.njydsz.common.safe.config.CsrfProperties;
 import com.njydsz.common.safe.config.CsrfProperties.CsrfMode;
@@ -59,7 +59,7 @@ import com.njydsz.common.util.http.UrlPathUtils;
  */
 public class CsrfFilter extends OncePerRequestFilter {
 
-  private static final Logger logger = LoggerFactory.getLogger(CsrfFilter.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(CsrfFilter.class);
 
   /** 安全随机数生成器（Double Submit 模式使用） */
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
@@ -133,7 +133,7 @@ public class CsrfFilter extends OncePerRequestFilter {
 
     // Origin/Referer 校验（第二道防线，在 Token 校验之前执行）
     if (properties.isCheckOrigin() && !validateOrigin(httpRequest)) {
-      logger.warn(
+      LOGGER.warn(
           "CSRF Origin 校验失败 | URI: {} | Origin: {} | Referer: {}",
           httpRequest.getRequestURI(),
           httpRequest.getHeader("Origin"),
@@ -148,7 +148,7 @@ public class CsrfFilter extends OncePerRequestFilter {
     }
 
     if (!validateCsrfToken(httpRequest)) {
-      logger.warn("CSRF 验证失败: {}", httpRequest.getRequestURI());
+      LOGGER.warn("CSRF 验证失败: {}", httpRequest.getRequestURI());
       httpResponse.setStatus(HttpServletResponse.SC_FORBIDDEN);
       httpResponse.setHeader("X-Content-Type-Options", "nosniff");
       httpResponse.setContentType("application/json;charset=UTF-8");
@@ -341,7 +341,7 @@ public class CsrfFilter extends OncePerRequestFilter {
           && originHost.equalsIgnoreCase(serverName)
           && originPort == serverPort;
     } catch (URISyntaxException e) {
-      logger.debug("Origin 解析失败: {}", origin);
+      LOGGER.debug("Origin 解析失败: {}", origin);
       return false;
     }
   }
@@ -374,7 +374,7 @@ public class CsrfFilter extends OncePerRequestFilter {
         || cookieToken.isEmpty()
         || submittedToken == null
         || submittedToken.isEmpty()) {
-      logger.debug(
+      LOGGER.debug(
           "CSRF Double Submit: token missing | cookie={}, header={}",
           cookieToken != null ? "present" : "absent",
           headerToken != null ? "present" : "absent");
@@ -397,7 +397,7 @@ public class CsrfFilter extends OncePerRequestFilter {
     String token = tokenFromHeader != null ? tokenFromHeader : tokenFromParameter;
 
     if (token == null || token.isEmpty()) {
-      logger.debug("CSRF token not found in request");
+      LOGGER.debug("CSRF token not found in request");
       return false;
     }
 

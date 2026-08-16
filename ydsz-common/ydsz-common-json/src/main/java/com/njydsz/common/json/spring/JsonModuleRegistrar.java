@@ -18,7 +18,7 @@ import com.njydsz.common.json.module.JsonModuleRegistry;
  */
 public class JsonModuleRegistrar {
 
-  private static final Logger log = LoggerFactory.getLogger(JsonModuleRegistrar.class);
+  private static final Logger LOG = LoggerFactory.getLogger(JsonModuleRegistrar.class);
 
   private final List<JsonModule> springModules;
 
@@ -29,17 +29,17 @@ public class JsonModuleRegistrar {
   /** 执行模块注册。 */
   public void register() {
     if (springModules != null && !springModules.isEmpty()) {
-      log.info("发现 {} 个 YdszJson Spring Factory 模块", springModules.size());
+      LOG.info("发现 {} 个 YdszJson Spring Factory 模块", springModules.size());
       JsonModuleRegistry registry = JsonModuleRegistry.getInstance();
       registry.registerSpringFactories(springModules);
       registry.initialize();
-      log.info(
+      LOG.info(
           "YdszJson 模块注册完成 | 模块数量={} | 序列化器={} | 反序列化器={}",
           registry.getModuleCount(),
           registry.getSerializerCount(),
           registry.getDeserializerCount());
     } else {
-      log.debug("未发现 YdszJson Spring Factory 模块");
+      LOG.debug("未发现 YdszJson Spring Factory 模块");
     }
   }
 }

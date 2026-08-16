@@ -1,11 +1,12 @@
 package com.njydsz.nextwiki.server.service;
 
-import com.njydsz.nextwiki.domain.entity.StorageQuota;
-import com.njydsz.nextwiki.domain.service.QuotaDomainService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.njydsz.nextwiki.domain.entity.StorageQuota;
+import com.njydsz.nextwiki.domain.service.QuotaDomainService;
 
 /**
  * 配额应用服务。

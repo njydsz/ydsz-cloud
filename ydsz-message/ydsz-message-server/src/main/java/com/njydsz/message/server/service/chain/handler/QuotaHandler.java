@@ -1,5 +1,10 @@
 package com.njydsz.message.server.service.chain.handler;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.constant.SystemConstants;
 import com.njydsz.common.exception.custom.SysException;
@@ -8,10 +13,6 @@ import com.njydsz.message.server.metric.MessageMetrics;
 import com.njydsz.message.server.service.chain.SendContext;
 import com.njydsz.message.server.service.chain.SendHandler;
 import com.njydsz.message.server.service.impl.SenderQuotaService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
 
 /**
  * Sender 配额管理 Handler。

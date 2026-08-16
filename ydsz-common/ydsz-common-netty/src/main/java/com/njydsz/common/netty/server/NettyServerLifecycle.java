@@ -2,8 +2,8 @@ package com.njydsz.common.netty.server;
 
 import java.util.List;
 
-import org.springframework.context.SmartLifecycle;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.SmartLifecycle;
 
 import com.njydsz.common.netty.exception.NettyException;
 

@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.context.MessageSource;
 import org.springframework.core.io.Resource;
@@ -19,7 +20,6 @@ import org.springframework.core.type.classreading.MetadataReader;
 import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.core.type.classreading.SimpleMetadataReaderFactory;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
-import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.exception.code.ErrorCodeTable;
 import com.njydsz.common.exception.enums.ExceptionCategory;

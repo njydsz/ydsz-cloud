@@ -32,7 +32,7 @@ import java.util.concurrent.atomic.LongAdder;
  * metrics.recordPublish(true, 15L);
  *
  * // 获取监控摘要
- * log.info("Queue stats: {}", metrics.getSummary());
+ * LOG.info("Queue stats: {}", metrics.getSummary());
  * }</pre>
  *
  * @author ydsz-team

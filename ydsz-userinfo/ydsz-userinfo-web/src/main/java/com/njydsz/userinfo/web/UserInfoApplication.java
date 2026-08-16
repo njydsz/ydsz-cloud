@@ -1,14 +1,15 @@
 package com.njydsz.userinfo.web;
 
-import com.njydsz.common.audit.annotation.EnableYdszAudit;
-import com.njydsz.common.auth.annotation.EnableYdszAuth;
-import com.njydsz.common.feign.annotation.EnableYdszFeign;
-import com.njydsz.common.safe.annotation.EnableYdszSafe;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.scheduling.annotation.EnableScheduling;
+
+import com.njydsz.common.audit.annotation.EnableYdszAudit;
+import com.njydsz.common.auth.annotation.EnableYdszAuth;
+import com.njydsz.common.feign.annotation.EnableYdszFeign;
+import com.njydsz.common.safe.annotation.EnableYdszSafe;
 
 /**
  * 用户信息中心服务启动类。
@@ -28,6 +29,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @MapperScan("com.njydsz.userinfo.infra.mapper")
 @EnableScheduling
 public class UserInfoApplication {
+
 
   public static void main(String[] args) {
     SpringApplication.run(UserInfoApplication.class, args);

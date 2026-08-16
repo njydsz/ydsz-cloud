@@ -1,20 +1,22 @@
 package com.njydsz.cronjob.server.health;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
-import com.njydsz.cronjob.domain.entity.job.Job;
-import com.njydsz.cronjob.infra.mapper.job.JobMapper;
-import com.njydsz.cronjob.server.config.CronjobProperties;
-import com.njydsz.cronjob.server.core.leader.LeaderElector;
-import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+
+import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
+import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.infra.mapper.job.JobMapper;
+import com.njydsz.cronjob.server.config.CronjobProperties;
+import com.njydsz.cronjob.server.core.leader.LeaderElector;
+import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 
 /**
  * 定时任务调度引擎健康检查指标。

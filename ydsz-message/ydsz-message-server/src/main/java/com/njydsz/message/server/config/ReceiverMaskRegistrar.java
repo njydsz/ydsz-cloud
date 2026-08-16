@@ -1,10 +1,12 @@
 package com.njydsz.message.server.config;
 
-import com.njydsz.common.safe.sensitive.SensitiveUtil;
-import jakarta.annotation.PostConstruct;
 import java.util.regex.Pattern;
+
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.common.safe.sensitive.SensitiveUtil;
 
 /**
  * 接收人(receiver)智能脱敏注册器。

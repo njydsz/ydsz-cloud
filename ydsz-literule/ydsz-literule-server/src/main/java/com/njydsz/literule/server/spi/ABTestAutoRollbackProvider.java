@@ -1,8 +1,9 @@
 package com.njydsz.literule.server.spi;
 
+import java.util.List;
+
 import com.njydsz.literule.domain.entity.RuleABPolicy;
 import com.njydsz.literule.domain.entity.RuleABRollback;
-import java.util.List;
 
 /**
  * AB Test 自动回滚提供者 SPI

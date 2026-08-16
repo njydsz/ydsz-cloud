@@ -1,18 +1,20 @@
 package com.njydsz.literule.server.impl;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import lombok.Builder;
+import lombok.Data;
+import lombok.Singular;
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.RuleSeverity;
 import com.njydsz.literule.api.ScorecardDefinition;
 import com.njydsz.literule.api.expression.ExpressionEngine;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Singular;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 评分卡规则：基于多维度评分因子加权计算总分，按阈值区间或自定义评级映射决定严重度

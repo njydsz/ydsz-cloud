@@ -1,15 +1,6 @@
 package com.njydsz.cronjob.server.core.scheduler;
 
-import com.njydsz.cronjob.domain.entity.job.Job;
-import com.njydsz.cronjob.infra.mapper.job.JobMapper;
-import com.njydsz.cronjob.server.config.CronjobProperties;
-import com.njydsz.cronjob.server.core.dispatch.DefaultTaskDispatcher;
-import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
-import com.njydsz.cronjob.server.core.leader.LeaderElector;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 import java.util.List;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
@@ -18,13 +9,23 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
+
+import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.infra.mapper.job.JobMapper;
+import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.config.CronjobThreadPoolRegistry;
+import com.njydsz.cronjob.server.core.dispatch.DefaultTaskDispatcher;
+import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
+import com.njydsz.cronjob.server.core.leader.LeaderElector;
 
 /**
  * 秒级调度器（P0-3）。
@@ -103,17 +104,16 @@ public class SecondLevelScheduler {
     }
   }
 
-  /**
-   * P1-A2: 将调度线程池注册到 {@link CronjobThreadPoolRegistry}。
-   */
+  /** P1-A2: 将调度线程池注册到 {@link CronjobThreadPoolRegistry}。 */
   private void registerSchedulerPool() {
     CronjobThreadPoolRegistry registry = threadPoolRegistryProvider.getIfAvailable();
     if (registry == null || scheduler == null) {
       return;
     }
-    registry.register(CronjobThreadPoolRegistry.SECOND_LEVEL_SCHEDULER,
-            (ThreadPoolExecutor) scheduler);
-    log.info("[SecondLevelScheduler] 线程池已注册到注册表: {}", CronjobThreadPoolRegistry.SECOND_LEVEL_SCHEDULER);
+    registry.register(
+        CronjobThreadPoolRegistry.SECOND_LEVEL_SCHEDULER, (ThreadPoolExecutor) scheduler);
+    log.info(
+        "[SecondLevelScheduler] 线程池已注册到注册表: {}", CronjobThreadPoolRegistry.SECOND_LEVEL_SCHEDULER);
   }
 
   /** 优雅关闭线程池。 */

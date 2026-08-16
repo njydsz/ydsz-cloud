@@ -21,7 +21,7 @@ import com.njydsz.common.excel.converter.ConvertContext;
  */
 public class NumberConverter implements CellValueConverter {
 
-  private static final Logger log = LoggerFactory.getLogger(NumberConverter.class);
+  private static final Logger LOG = LoggerFactory.getLogger(NumberConverter.class);
 
   @Override
   public boolean supports(Class<?> targetType) {
@@ -153,8 +153,8 @@ public class NumberConverter implements CellValueConverter {
   }
 
   private void logConversionError(String targetType, String value, ConvertContext context) {
-    if (log.isDebugEnabled()) {
-      log.debug(
+    if (LOG.isDebugEnabled()) {
+      LOG.debug(
           "Excel单元格值 '{}' 无法转换为 {} 类型，行号:{}，列名:{}",
           value,
           targetType,

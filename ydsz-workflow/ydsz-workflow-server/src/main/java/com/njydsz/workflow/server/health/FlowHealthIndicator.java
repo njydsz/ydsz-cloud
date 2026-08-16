@@ -1,6 +1,13 @@
 package com.njydsz.workflow.server.health;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.health.contributor.Health;
+import org.springframework.boot.health.contributor.HealthIndicator;
+
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
 import com.njydsz.workflow.domain.entity.FlowInstance;
@@ -9,12 +16,6 @@ import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.health.contributor.Health;
-import org.springframework.boot.health.contributor.HealthIndicator;
 
 /**
  * 工作流模块健康检查。

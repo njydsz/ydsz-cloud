@@ -68,6 +68,9 @@ import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
  */
 public class ReflectCache {
 
+  private ReflectCache() {}
+
+
   /** 字段缓存: 类名#字段名 -> Field */
   private static final Map<String, Field> FIELD_CACHE = new ConcurrentHashMap<>();
 

@@ -27,7 +27,7 @@ import com.njydsz.common.seata.api.XidSigner;
  */
 public class HmacXidSigner implements XidSigner {
 
-  private static final Logger log = LoggerFactory.getLogger(HmacXidSigner.class);
+  private static final Logger LOG = LoggerFactory.getLogger(HmacXidSigner.class);
 
   /** HMAC-SHA256 算法名称 */
   private static final String HMAC_SHA256_ALGORITHM = "HmacSHA256";
@@ -73,7 +73,7 @@ public class HmacXidSigner implements XidSigner {
           + SEPARATOR
           + Base64.getEncoder().encodeToString(signature.getBytes(StandardCharsets.UTF_8));
     } catch (Exception e) {
-      log.error("Failed to sign XID", e);
+      LOG.error("Failed to sign XID", e);
       return xid; // 签名失败时降级返回原值
     }
   }
@@ -101,13 +101,13 @@ public class HmacXidSigner implements XidSigner {
     try {
       // 快速判断：如果不包含分隔符，说明是未签名的旧格式，直接返回
       if (!signedXid.contains(SEPARATOR)) {
-        log.debug("XID is in legacy unsigned format, accepting as-is");
+        LOG.debug("XID is in legacy unsigned format, accepting as-is");
         return signedXid.trim();
       }
 
       String[] parts = signedXid.split(SEPARATOR);
       if (parts.length != 3) {
-        log.warn("Invalid signed XID format, expected 3 parts, got {}", parts.length);
+        LOG.warn("Invalid signed XID format, expected 3 parts, got {}", parts.length);
         return null;
       }
 
@@ -121,7 +121,7 @@ public class HmacXidSigner implements XidSigner {
       long timestamp = Long.parseLong(timestampStr);
       long now = Instant.now().getEpochSecond();
       if (Math.abs(now - timestamp) > SIGNATURE_VALIDITY_SECONDS) {
-        log.warn("XID signature expired: timestamp={}, now={}", timestamp, now);
+        LOG.warn("XID signature expired: timestamp={}, now={}", timestamp, now);
         return null;
       }
 
@@ -129,13 +129,13 @@ public class HmacXidSigner implements XidSigner {
       String payload = xid + SEPARATOR + timestampStr;
       String expectedSignature = hmacSha256(payload);
       if (!signature.equals(expectedSignature)) {
-        log.warn("XID signature mismatch, rejecting");
+        LOG.warn("XID signature mismatch, rejecting");
         return null;
       }
 
       return xid;
     } catch (Exception e) {
-      log.warn("Failed to verify XID signature", e);
+      LOG.warn("Failed to verify XID signature", e);
       return null;
     }
   }

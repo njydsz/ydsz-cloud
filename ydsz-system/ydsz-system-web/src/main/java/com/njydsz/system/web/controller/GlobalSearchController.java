@@ -3,15 +3,15 @@ package com.njydsz.system.web.controller;
 import java.util.Arrays;
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -120,11 +120,13 @@ public class GlobalSearchController {
       @RequestHeader(value = "X-User-Admin", required = false) String adminHeader,
       @RequestParam(value = "types", required = false) String typesParam) {
 
+    // pageSize 服务端硬上限截断，防止深度分页 OOM
+    int safePageSize = Math.min(pageSize, MAX_PAGE_SIZE);
     SearchRequest.SearchRequestBuilder builder =
         SearchRequest.builder()
             .keyword(keyword)
             .page(page)
-            .pageSize(pageSize)
+            .pageSize(safePageSize)
             .userId(userId)
             .tenantId(tenantId)
             .roles(rolesHeader != null ? Arrays.asList(rolesHeader.split(",")) : List.of())
@@ -170,4 +172,7 @@ public class GlobalSearchController {
   public BaseResponse<SearchSuggestion> didYouMean(@RequestParam String keyword) {
     return BaseResponse.success(unifiedSearchService.didYouMean(keyword));
   }
+
+  /** 分页安全上限：防止 pageSize=999999 导致深度分页 OOM */
+  private static final int MAX_PAGE_SIZE = 500;
 }

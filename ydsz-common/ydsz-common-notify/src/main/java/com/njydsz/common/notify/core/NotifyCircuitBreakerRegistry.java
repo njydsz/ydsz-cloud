@@ -20,7 +20,7 @@ import com.njydsz.common.safe.ratelimit.circuitbreaker.AbstractCircuitBreaker;
  */
 public class NotifyCircuitBreakerRegistry {
 
-  private static final Logger log = LoggerFactory.getLogger(NotifyCircuitBreakerRegistry.class);
+  private static final Logger LOG = LoggerFactory.getLogger(NotifyCircuitBreakerRegistry.class);
 
   private final ConcurrentMap<NotifyChannel, NotifyCircuitBreaker> breakers =
       new ConcurrentHashMap<>();
@@ -42,7 +42,7 @@ public class NotifyCircuitBreakerRegistry {
   public NotifyCircuitBreakerRegistry(int failureThreshold, long recoveryTimeoutMs) {
     this.failureThreshold = failureThreshold;
     this.recoveryTimeoutMs = recoveryTimeoutMs;
-    log.info(
+    LOG.info(
         "[NotifyCircuitBreakerRegistry] 初始化完成, failureThreshold={}, recoveryTimeoutMs={}",
         failureThreshold,
         recoveryTimeoutMs);

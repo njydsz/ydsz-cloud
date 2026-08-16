@@ -1,0 +1,98 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------< com.njydsz:ydsz-userinfo-server >-------------------
+[INFO] Building ydsz-userinfo-server 1.0.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- checkstyle:3.6.0:check (default-cli) @ ydsz-userinfo-server ---
+[INFO] 开始检查……
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:141:3: 圈复杂度： 16 （最多： 10 ）。 [CyclomaticComplexity]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:141:3: 方法 login 137 行（最多： 80 行）。 [MethodLength]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\DataScopeService.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\DbRolePermissionLoader.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\DbRolePermissionLoader.java:43:3: 圈复杂度： 11 （最多： 10 ）。 [CyclomaticComplexity]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\LdapAuthenticationProvider.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\PasswordPolicyValidator.java:66:3: 圈复杂度： 13 （最多： 10 ）。 [CyclomaticComplexity]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\auth\UserPasswordHistoryServiceImpl.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\LdapProperties.java:36:22: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\LdapProperties.java:45:34: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\UserInfoMessageSourceConfiguration.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\UserInfoMessageSourceConfiguration.java:76:28: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:60:34: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:63:35: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:66:37: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:72:36: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:78:35: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:81:35: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:84:42: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:93:38: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节 [MagicNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\event\UserDomainEventPublisher.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\metrics\UserInfoMetrics.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\CompanyServiceImpl.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\DepartmentServiceImpl.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\LoginHistoryServiceImpl.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\LoginHistoryServiceImpl.java:48:15: 参数共： 6个，最多：5个。 [ParameterNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\MenuServiceImpl.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\PostServiceImpl.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\RoleServiceImpl.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\UserAccountServiceImpl.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\UserAccountServiceImpl.java:159:3: 圈复杂度： 14 （最多： 10 ）。 [CyclomaticComplexity]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\UserExcelServiceImpl.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\impl\UserExcelServiceImpl.java:177:3: 圈复杂度： 14 （最多： 10 ）。 [CyclomaticComplexity]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\LoginHistoryService.java:36:8: 参数共： 6个，最多：5个。 [ParameterNumber]
+[ERROR] D:\Code\open\ydsz-cloud\ydsz-userinfo\ydsz-userinfo-server\src\main\java\com\njydsz\userinfo\server\service\WorkflowApproverCacheService.java:1: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。 [NewlineAtEndOfFile]
+检查完成。
+[INFO] There are 37 errors reported by Checkstyle 9.3 with D:\Code\open\ydsz-cloud/docs/checkstyle.xml ruleset.
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:[141,3] (metrics) CyclomaticComplexity: 圈复杂度： 16 （最多： 10 ）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\AuthServiceImpl.java:[141,3] (sizes) MethodLength: 方法 login 137 行（最多： 80 行）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\CaptchaService.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\DataScopeService.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\DbRolePermissionLoader.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\DbRolePermissionLoader.java:[43,3] (metrics) CyclomaticComplexity: 圈复杂度： 11 （最多： 10 ）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\LdapAuthenticationProvider.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\PasswordPolicyValidator.java:[66,3] (metrics) CyclomaticComplexity: 圈复杂度： 13 （最多： 10 ）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\auth\UserPasswordHistoryServiceImpl.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\LdapProperties.java:[36,22] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\LdapProperties.java:[45,34] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\UserInfoMessageSourceConfiguration.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\UserInfoMessageSourceConfiguration.java:[76,28] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:[60,34] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:[63,35] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:[66,37] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:[72,36] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:[78,35] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:[81,35] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:[84,42] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\config\UserInfoProperties.java:[93,38] (coding) MagicNumber: 魔法值（Magic Number）必须定义为常量。参考：云顶编码规范 3.1 节
+[ERROR] src\main\java\com\njydsz\userinfo\server\event\UserDomainEventPublisher.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\metrics\UserInfoMetrics.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\CompanyServiceImpl.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\DepartmentServiceImpl.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\LoginHistoryServiceImpl.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\LoginHistoryServiceImpl.java:[48,15] (sizes) ParameterNumber: 参数共： 6个，最多：5个。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\MenuServiceImpl.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\PostServiceImpl.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\RoleServiceImpl.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\UserAccountServiceImpl.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\UserAccountServiceImpl.java:[159,3] (metrics) CyclomaticComplexity: 圈复杂度： 14 （最多： 10 ）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\UserExcelServiceImpl.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\impl\UserExcelServiceImpl.java:[177,3] (metrics) CyclomaticComplexity: 圈复杂度： 14 （最多： 10 ）。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\LoginHistoryService.java:[36,8] (sizes) ParameterNumber: 参数共： 6个，最多：5个。
+[ERROR] src\main\java\com\njydsz\userinfo\server\service\WorkflowApproverCacheService.java:[1] (misc) NewlineAtEndOfFile: 文件的预期行结尾为LF（\n），但检测到CRLF（\r\n）。
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  11.065 s
+[INFO] Finished at: 2026-08-16T22:23:58+08:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-checkstyle-plugin:3.6.0:check (default-cli) on project ydsz-userinfo-server: You have 37 Checkstyle violations. -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

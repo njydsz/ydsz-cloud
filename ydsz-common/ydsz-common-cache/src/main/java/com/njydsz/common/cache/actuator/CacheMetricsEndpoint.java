@@ -40,7 +40,7 @@ import com.njydsz.common.cache.stats.CacheStats;
 @Endpoint(id = "cache-metrics")
 public class CacheMetricsEndpoint {
 
-  private static final Logger log = LoggerFactory.getLogger(CacheMetricsEndpoint.class);
+  private static final Logger LOG = LoggerFactory.getLogger(CacheMetricsEndpoint.class);
 
   /** 被监控的缓存注册表（cacheName -> Cache） */
   private final Map<String, Cache<?, ?>> monitoredCaches;
@@ -57,7 +57,7 @@ public class CacheMetricsEndpoint {
    */
   public void registerCache(String name, Cache<?, ?> cache) {
     monitoredCaches.put(name, cache);
-    log.info("Actuator 端点已注册缓存: {}", name);
+    LOG.info("Actuator 端点已注册缓存: {}", name);
   }
 
   /**
@@ -149,20 +149,20 @@ public class CacheMetricsEndpoint {
       case "clear":
         try {
           cache.clear();
-          log.info("通过 Actuator 端点清空缓存: {}", cacheName);
+          LOG.info("通过 Actuator 端点清空缓存: {}", cacheName);
           return Map.of("success", true, "operation", "clear", "cache", cacheName);
         } catch (Exception e) {
-          log.warn("清空缓存异常: {}", cacheName, e);
+          LOG.warn("清空缓存异常: {}", cacheName, e);
           return Map.of("error", "Clear failed: " + e.getMessage());
         }
       case "resetStats":
         try {
           // 通过 policy 重置统计（如果底层缓存支持）
           cache.getStats(); // 触发统计刷新
-          log.info("通过 Actuator 端点重置缓存统计: {}", cacheName);
+          LOG.info("通过 Actuator 端点重置缓存统计: {}", cacheName);
           return Map.of("success", true, "operation", "resetStats", "cache", cacheName);
         } catch (Exception e) {
-          log.warn("重置统计异常: {}", cacheName, e);
+          LOG.warn("重置统计异常: {}", cacheName, e);
           return Map.of("error", "ResetStats failed: " + e.getMessage());
         }
       default:
@@ -209,7 +209,7 @@ public class CacheMetricsEndpoint {
       }
     } catch (Exception e) {
       metrics.put("error", "Failed to collect metrics: " + e.getMessage());
-      log.warn("收集缓存指标异常: {}", name, e);
+      LOG.warn("收集缓存指标异常: {}", name, e);
     }
 
     return metrics;

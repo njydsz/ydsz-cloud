@@ -14,6 +14,9 @@
         <result column="access_count" property="accessCount"/>
         <result column="status" property="status"/>
         <result column="password" property="password"/>
+        <result column="share_target_type" property="shareTargetType"/>
+        <result column="reminder_sent" property="reminderSent"/>
+        <result column="title" property="title"/>
         <result column="created_by" property="createdBy"/>
         <result column="created_at" property="createdAt"/>
         <result column="updated_by" property="updatedBy"/>
@@ -58,5 +61,16 @@
           AND deleted = 0
           AND revision = #{shareLink.revision}
     </update>
+
+    <select id="selectExpiringShares" resultMap="ShareLinkResult">
+        SELECT * FROM nw_share_link
+        WHERE status = 'active'
+          AND deleted = 0
+          AND expire_time IS NOT NULL
+          AND expire_time &gt;= NOW()
+          AND expire_time &lt;= NOW() + INTERVAL '#{withinHours} hours'
+          AND (reminder_sent = FALSE OR reminder_sent IS NULL)
+        ORDER BY expire_time ASC
+    </select>
 
 </mapper>

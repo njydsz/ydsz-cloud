@@ -1,13 +1,15 @@
 package com.njydsz.cronjob.infra.mapper.log;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.cronjob.domain.entity.log.JobLogContent;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+
+import com.njydsz.cronjob.domain.entity.LOG.JobLogContent;
 
 /**
  * 任务日志大字段 Mapper
@@ -28,7 +30,7 @@ import org.apache.ibatis.annotations.Select;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.cronjob.domain.entity.log.JobLogContent 日志内容实体
+ * @see com.njydsz.cronjob.domain.entity.LOG.JobLogContent 日志内容实体
  * @see com.njydsz.cronjob.server.service.JobLogService 日志 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */

@@ -13,11 +13,11 @@ import org.slf4j.LoggerFactory;
  */
 public class DefaultSecurityAlertLogger implements SecurityAlertListener {
 
-  private static final Logger log = LoggerFactory.getLogger(DefaultSecurityAlertLogger.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DefaultSecurityAlertLogger.class);
 
   @Override
   public void onSecurityEvent(SecurityEvent event) {
-    log.warn(
+    LOG.warn(
         "[SECURITY ALERT] type={}, severity={}, uri={}, ip={}, userAgent={}, payload={}, time={}",
         event.getEventType(),
         event.getSeverity(),

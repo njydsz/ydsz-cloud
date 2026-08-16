@@ -1,9 +1,10 @@
 package com.njydsz.workflow.domain.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
+
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 /**

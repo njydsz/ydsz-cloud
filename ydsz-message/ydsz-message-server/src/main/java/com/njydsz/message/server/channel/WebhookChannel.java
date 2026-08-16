@@ -1,11 +1,5 @@
 package com.njydsz.message.server.channel;
 
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.message.server.config.ChannelProperties;
-import jakarta.annotation.PostConstruct;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -14,6 +8,8 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -23,6 +19,12 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
+
+import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.common.feign.MessageResult;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.message.server.config.ChannelProperties;
 
 /**
  * Webhook 通道实现（P1-F1: 新增 HMAC-SHA256 签名验证）。

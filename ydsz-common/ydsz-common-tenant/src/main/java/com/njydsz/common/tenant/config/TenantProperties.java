@@ -8,11 +8,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.validation.annotation.Validated;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
 import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
 

@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.NonNull;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
@@ -11,7 +12,6 @@ import org.springframework.boot.actuate.endpoint.annotation.Selector;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.PropertySource;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 配置注册端点 — 暴露运行时配置信息。

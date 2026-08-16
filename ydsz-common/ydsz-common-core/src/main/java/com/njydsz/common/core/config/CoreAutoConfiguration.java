@@ -41,7 +41,7 @@ import com.njydsz.common.core.response.BaseResponse;
 @EnableConfigurationProperties(CoreProperties.class)
 public class CoreAutoConfiguration {
 
-  private static final Logger log = LoggerFactory.getLogger(CoreAutoConfiguration.class);
+  private static final Logger LOG = LoggerFactory.getLogger(CoreAutoConfiguration.class);
 
   /**
    * 注册 SpringMessageResolver 并注入到 BaseResponse。
@@ -74,8 +74,8 @@ public class CoreAutoConfiguration {
   public BaseResponse.MessageResolver resourceBundleMessageResolver() {
     ResourceBundleMessageResolver resolver = new ResourceBundleMessageResolver();
     BaseResponse.setResolverIfAbsent(resolver);
-    if (log.isDebugEnabled()) {
-      log.debug("JDK ResourceBundle message resolver registered as fallback for i18n.");
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("JDK ResourceBundle message resolver registered as fallback for i18n.");
     }
     return resolver;
   }

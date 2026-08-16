@@ -1,7 +1,8 @@
 package com.njydsz.cronjob.server.service.log;
 
-import com.njydsz.cronjob.domain.entity.log.JobLogContent;
 import java.util.List;
+
+import com.njydsz.cronjob.domain.entity.LOG.JobLogContent;
 
 /**
  * 任务执行日志内容 Service。

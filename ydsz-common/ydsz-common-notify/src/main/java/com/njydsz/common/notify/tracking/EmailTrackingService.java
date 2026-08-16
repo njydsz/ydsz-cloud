@@ -52,7 +52,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  */
 public class EmailTrackingService {
 
-  private static final Logger log = LoggerFactory.getLogger(EmailTrackingService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(EmailTrackingService.class);
 
   private static final String REDIS_KEY_OPEN_COUNT = "notify:track:open:count:";
   private static final String REDIS_KEY_OPEN_FIRST = "notify:track:open:first:";
@@ -144,13 +144,13 @@ public class EmailTrackingService {
         if (StringUtils.hasText(userAgent)) {
           redisStringOps.set(REDIS_KEY_OPEN_UA + trackingId, userAgent, REDIS_TTL);
         }
-        log.debug(
+        LOG.debug(
             "[EmailTrackingService] 打开事件已记录(Redis): trackingId={}, userAgent={}",
             trackingId,
             userAgent);
         return;
       } catch (Exception e) {
-        log.warn("[EmailTrackingService] Redis 记录打开事件失败，降级为内存: {}", e.getMessage());
+        LOG.warn("[EmailTrackingService] Redis 记录打开事件失败，降级为内存: {}", e.getMessage());
       }
     }
 
@@ -158,7 +158,7 @@ public class EmailTrackingService {
     memoryOpenCount.computeIfAbsent(trackingId, k -> new AtomicLong(0)).incrementAndGet();
     memoryFirstOpen.putIfAbsent(trackingId, now);
     memoryLastOpen.put(trackingId, now);
-    log.debug("[EmailTrackingService] 打开事件已记录(Memory): trackingId={}", trackingId);
+    LOG.debug("[EmailTrackingService] 打开事件已记录(Memory): trackingId={}", trackingId);
   }
 
   /**
@@ -173,7 +173,7 @@ public class EmailTrackingService {
         String count = redisStringOps.get(REDIS_KEY_OPEN_COUNT + trackingId, String.class);
         return count != null ? Long.parseLong(count) : 0;
       } catch (Exception e) {
-        log.debug("[EmailTrackingService] Redis 查询打开次数失败: {}", e.getMessage());
+        LOG.debug("[EmailTrackingService] Redis 查询打开次数失败: {}", e.getMessage());
       }
     }
     AtomicLong count = memoryOpenCount.get(trackingId);
@@ -241,11 +241,11 @@ public class EmailTrackingService {
         redisCollectionOps.rPush(REDIS_KEY_EVENT + trackingId, eventJson);
         redisStringOps.expire(REDIS_KEY_EVENT + trackingId, REDIS_TTL);
       } catch (Exception e) {
-        log.debug("[EmailTrackingService] Redis 存储事件失败: {}", e.getMessage());
+        LOG.debug("[EmailTrackingService] Redis 存储事件失败: {}", e.getMessage());
       }
     }
 
-    log.info("[EmailTrackingService] 追踪事件记录: trackingId={}, event={}", trackingId, event);
+    LOG.info("[EmailTrackingService] 追踪事件记录: trackingId={}, event={}", trackingId, event);
   }
 
   /**
@@ -259,7 +259,7 @@ public class EmailTrackingService {
         redisStringOps.incr(REDIS_KEY_CLICK_COUNT + trackingId, 1);
         return;
       } catch (Exception e) {
-        log.debug("[EmailTrackingService] Redis 记录点击失败: {}", e.getMessage());
+        LOG.debug("[EmailTrackingService] Redis 记录点击失败: {}", e.getMessage());
       }
     }
     memoryClickCount.computeIfAbsent(trackingId, k -> new AtomicLong(0)).incrementAndGet();
@@ -277,7 +277,7 @@ public class EmailTrackingService {
         String count = redisStringOps.get(REDIS_KEY_CLICK_COUNT + trackingId, String.class);
         return count != null ? Long.parseLong(count) : 0;
       } catch (Exception e) {
-        log.debug("[EmailTrackingService] Redis 查询点击次数失败: {}", e.getMessage());
+        LOG.debug("[EmailTrackingService] Redis 查询点击次数失败: {}", e.getMessage());
       }
     }
     AtomicLong count = memoryClickCount.get(trackingId);
@@ -296,7 +296,7 @@ public class EmailTrackingService {
         redisStringOps.set(REDIS_KEY_EVENT + "status:" + trackingId, status, REDIS_TTL);
         return;
       } catch (Exception e) {
-        log.debug("[EmailTrackingService] Redis 记录投递状态失败: {}", e.getMessage());
+        LOG.debug("[EmailTrackingService] Redis 记录投递状态失败: {}", e.getMessage());
       }
     }
     memoryDeliveryStatus.put(trackingId, status);
@@ -313,7 +313,7 @@ public class EmailTrackingService {
       try {
         return redisStringOps.get(REDIS_KEY_EVENT + "status:" + trackingId, String.class);
       } catch (Exception e) {
-        log.debug("[EmailTrackingService] Redis 查询投递状态失败: {}", e.getMessage());
+        LOG.debug("[EmailTrackingService] Redis 查询投递状态失败: {}", e.getMessage());
       }
     }
     return memoryDeliveryStatus.get(trackingId);

@@ -1,12 +1,14 @@
 package com.njydsz.nextwiki.infra.mapper;
 
+import java.util.List;
+
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.njydsz.nextwiki.domain.entity.SearchIndex;
-import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+
+import com.njydsz.nextwiki.domain.entity.SearchIndex;
 
 /**
  * 搜索索引 Mapper

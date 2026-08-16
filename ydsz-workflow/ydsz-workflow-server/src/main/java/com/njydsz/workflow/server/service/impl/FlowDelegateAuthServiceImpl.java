@@ -1,6 +1,19 @@
 package com.njydsz.workflow.server.service.impl;
 
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
 import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.response.BaseResponse;
@@ -15,17 +28,6 @@ import com.njydsz.workflow.infra.mapper.FlowDelegateAuthMapper;
 import com.njydsz.workflow.server.service.FlowDelegateAuthService;
 import com.njydsz.workflow.server.service.FlowOfflineAutoForwardService;
 import com.njydsz.workflow.server.service.impl.instance.FlowTaskAuditService;
-import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 /**
  * 流程委派代理（长期授权）服务实现

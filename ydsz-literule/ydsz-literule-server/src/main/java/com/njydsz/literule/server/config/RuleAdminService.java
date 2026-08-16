@@ -1,5 +1,15 @@
 package com.njydsz.literule.server.config;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.literule.api.RuleContext;
@@ -17,14 +27,6 @@ import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
 import com.njydsz.literule.server.spi.RuleVersion;
 import com.njydsz.literule.server.spi.RuleVersionRepository;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 规则管理服务
@@ -188,9 +190,8 @@ public class RuleAdminService {
   /**
    * 分页查询规则定义（P1-2 分页标准化）
    *
-   * <p>使用 MyBatis-Plus 分页拦截器，支持物理分页与排序委托。
-   * 分页参数通过 {@link com.njydsz.common.domain.query.PageQuery} 传入，
-   * 支持 pageNum/pageSize/orderItems/cursor 等分页能力。
+   * <p>使用 MyBatis-Plus 分页拦截器，支持物理分页与排序委托。 分页参数通过 {@link com.njydsz.common.domain.query.PageQuery}
+   * 传入， 支持 pageNum/pageSize/orderItems/cursor 等分页能力。
    *
    * @param pageQuery 分页查询参数
    * @return 分页结果（MyBatis-Plus IPage）
@@ -204,14 +205,12 @@ public class RuleAdminService {
     com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<RuleDefinitionDO> wrapper =
         new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
     // 默认按优先级升序、创建时间降序
-    wrapper.orderByAsc(RuleDefinitionDO::getPriority)
-           .orderByDesc(RuleDefinitionDO::getCreatedAt);
+    wrapper.orderByAsc(RuleDefinitionDO::getPriority).orderByDesc(RuleDefinitionDO::getCreatedAt);
     com.baomidou.mybatisplus.core.metadata.IPage<RuleDefinitionDO> doPage =
         ruleDefinitionMapper.selectPage(page, wrapper);
     // DO → RuleDefinition 转换
-    List<RuleDefinition> records = doPage.getRecords().stream()
-        .map(this::doToRuleDefinition)
-        .toList();
+    List<RuleDefinition> records =
+        doPage.getRecords().stream().map(this::doToRuleDefinition).toList();
     com.baomidou.mybatisplus.core.metadata.IPage<RuleDefinition> result =
         new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(
             doPage.getCurrent(), doPage.getSize(), doPage.getTotal());

@@ -1,11 +1,13 @@
 package com.njydsz.nextwiki.infra.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.nextwiki.domain.entity.ShareLink;
 import java.util.List;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
+
+import com.njydsz.nextwiki.domain.entity.ShareLink;
 
 /**
  * 分享链接 Mapper
@@ -79,4 +81,12 @@ public interface ShareLinkMapper extends BaseMapper<ShareLink> {
 
   /** 带 revision 乐观锁的更新（更新失败返回 0） */
   int updateWithRevision(@Param("shareLink") ShareLink shareLink);
+
+  /**
+   * 查询即将到期的活跃分享链接（未发送过提醒的）。
+   *
+   * @param withinHours 多少小时内即将到期
+   * @return 即将到期的分享链接列表
+   */
+  List<ShareLink> selectExpiringShares(@Param("withinHours") int withinHours);
 }

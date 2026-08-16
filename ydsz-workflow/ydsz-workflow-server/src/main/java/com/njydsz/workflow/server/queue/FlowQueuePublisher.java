@@ -1,5 +1,16 @@
 package com.njydsz.workflow.server.queue;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
+
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.queue.domain.QueueMessage;
 import com.njydsz.common.queue.enums.QueueType;
@@ -8,15 +19,6 @@ import com.njydsz.common.queue.queue.IMessageQueueProvider;
 import com.njydsz.common.queue.service.IMessagePublisher;
 import com.njydsz.workflow.server.engine.FlowEventContext;
 import com.njydsz.workflow.server.engine.FlowWorkflowEvent;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
-import java.util.HashMap;
-import java.util.Map;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
 
 /**
  * 工作流消息队列发布者

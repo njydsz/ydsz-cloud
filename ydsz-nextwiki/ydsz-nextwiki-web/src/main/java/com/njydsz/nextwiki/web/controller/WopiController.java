@@ -1,22 +1,13 @@
 package com.njydsz.nextwiki.web.controller;
 
-import com.njydsz.common.auth.constant.AuthHeaderConstants;
-import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.file.storage.IFileStorage;
-import com.njydsz.common.file.storage.IFileStorageProvider;
-import com.njydsz.common.file.util.FileOps;
-import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.nextwiki.domain.entity.FileNode;
-import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
-import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
-import com.njydsz.nextwiki.server.config.NextwikiProperties;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +19,17 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.njydsz.common.auth.constant.AuthHeaderConstants;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.file.storage.IFileStorage;
+import com.njydsz.common.file.storage.IFileStorageProvider;
+import com.njydsz.common.file.util.FileOps;
+import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.nextwiki.domain.entity.FileNode;
+import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
+import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
+import com.njydsz.nextwiki.server.config.NextwikiProperties;
 
 /**
  * WOPI 协议接口 Controller（P1-4 + P1-R5 + P2-R4）。

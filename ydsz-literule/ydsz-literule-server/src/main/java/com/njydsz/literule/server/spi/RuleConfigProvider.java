@@ -1,8 +1,9 @@
 package com.njydsz.literule.server.spi;
 
+import java.util.List;
+
 import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.api.RuleEnvironment;
-import java.util.List;
 
 /**
  * 规则配置提供者接口（SPI）

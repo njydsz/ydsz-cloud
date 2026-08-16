@@ -31,7 +31,7 @@ import com.njydsz.common.core.response.PageResponse;
  */
 public class DefaultAuditQueryService implements AuditQueryService {
 
-  private static final Logger log = LoggerFactory.getLogger(DefaultAuditQueryService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DefaultAuditQueryService.class);
 
   /** 默认基础表名 */
   private static final String DEFAULT_BASE_TABLE_NAME = "sys_audit_log";
@@ -115,7 +115,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
       String sql = buildSelectSql(tableNameResolver.resolve(null), "id = ? LIMIT 1", null);
       return jdbcTemplate.queryForObject(sql, rowMapper, id);
     } catch (Exception e) {
-      log.warn("查询审计日志失败, id={}", id, e);
+      LOG.warn("查询审计日志失败, id={}", id, e);
       return null;
     }
   }
@@ -130,7 +130,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
       ctx.addCondition("business_no = ?", businessNo);
       return executeListQuery(ctx);
     } catch (Exception e) {
-      log.warn("按业务流水号查询审计日志失败, businessNo={}", businessNo, e);
+      LOG.warn("按业务流水号查询审计日志失败, businessNo={}", businessNo, e);
       return Collections.emptyList();
     }
   }
@@ -147,7 +147,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
       ctx.setTimeRange(startTime, endTime);
       return executeListQuery(ctx);
     } catch (Exception e) {
-      log.warn("按操作人查询审计日志失败, operatorId={}", operatorId, e);
+      LOG.warn("按操作人查询审计日志失败, operatorId={}", operatorId, e);
       return Collections.emptyList();
     }
   }
@@ -163,7 +163,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
       ctx.setTimeRange(startTime, endTime);
       return executeListQuery(ctx);
     } catch (Exception e) {
-      log.warn("按模块查询审计日志失败, module={}", module, e);
+      LOG.warn("按模块查询审计日志失败, module={}", module, e);
       return Collections.emptyList();
     }
   }
@@ -180,7 +180,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
       ctx.setTimeRange(startTime, endTime);
       return executeListQuery(ctx);
     } catch (Exception e) {
-      log.warn("按审计类型查询审计日志失败, auditType={}", auditType, e);
+      LOG.warn("按审计类型查询审计日志失败, auditType={}", auditType, e);
       return Collections.emptyList();
     }
   }
@@ -192,7 +192,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
       ctx.setTimeRange(startTime, endTime);
       return executeListQuery(ctx);
     } catch (Exception e) {
-      log.warn("按时间范围查询审计日志失败", e);
+      LOG.warn("按时间范围查询审计日志失败", e);
       return Collections.emptyList();
     }
   }
@@ -217,7 +217,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
       List<AuditLog> records = executeListQueryWithLimit(ctx);
       return PageResponse.success(total, (long) page, (long) size, records);
     } catch (Exception e) {
-      log.warn("按时间范围分页查询审计日志失败", e);
+      LOG.warn("按时间范围分页查询审计日志失败", e);
       return emptyPageResult(page, size);
     }
   }
@@ -239,7 +239,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
       List<AuditLog> records = executeListQueryWithLimit(ctx);
       return PageResponse.success(total, (long) page, (long) size, records);
     } catch (Exception e) {
-      log.warn("按操作人分页查询审计日志失败, operatorId={}", operatorId, e);
+      LOG.warn("按操作人分页查询审计日志失败, operatorId={}", operatorId, e);
       return emptyPageResult(page, size);
     }
   }
@@ -261,7 +261,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
       List<AuditLog> records = executeListQueryWithLimit(ctx);
       return PageResponse.success(total, (long) page, (long) size, records);
     } catch (Exception e) {
-      log.warn("按操作类型分页查询审计日志失败, action={}", action, e);
+      LOG.warn("按操作类型分页查询审计日志失败, action={}", action, e);
       return emptyPageResult(page, size);
     }
   }
@@ -283,7 +283,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
       List<AuditLog> records = executeListQueryWithLimit(ctx);
       return PageResponse.success(total, (long) page, (long) size, records);
     } catch (Exception e) {
-      log.warn("按实体类型分页查询审计日志失败, entityType={}", entityType, e);
+      LOG.warn("按实体类型分页查询审计日志失败, entityType={}", entityType, e);
       return emptyPageResult(page, size);
     }
   }
@@ -306,7 +306,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
       ctx.addCondition("trace_id = ?", traceId);
       return executeListQuery(ctx);
     } catch (Exception e) {
-      log.warn("按追踪ID查询审计日志失败, traceId={}", traceId, e);
+      LOG.warn("按追踪ID查询审计日志失败, traceId={}", traceId, e);
       return Collections.emptyList();
     }
   }
@@ -336,7 +336,7 @@ public class DefaultAuditQueryService implements AuditQueryService {
       ctx.setTimeRange(startTime, endTime);
       return executeCountQuery(ctx);
     } catch (Exception e) {
-      log.warn("按条件统计审计日志数量失败", e);
+      LOG.warn("按条件统计审计日志数量失败", e);
       return 0L;
     }
   }

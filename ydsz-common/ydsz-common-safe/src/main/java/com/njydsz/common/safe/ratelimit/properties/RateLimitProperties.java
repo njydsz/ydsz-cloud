@@ -3,8 +3,8 @@ package com.njydsz.common.safe.ratelimit.properties;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
 

@@ -33,7 +33,7 @@ import org.springframework.expression.spel.support.SimpleEvaluationContext;
  */
 public class AuditTemplateProcessor {
 
-  private static final Logger log = LoggerFactory.getLogger(AuditTemplateProcessor.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AuditTemplateProcessor.class);
 
   /** 空字符串常量，用于模板解析结果为空时的默认返回值 */
   private static final String EMPTY_STRING = "";
@@ -105,7 +105,7 @@ public class AuditTemplateProcessor {
       Object value = expression.getValue(context);
       return value != null ? value.toString() : EMPTY_STRING;
     } catch (Exception e) {
-      log.warn("【审计模板】解析表达式失败, 模板={}, 错误={}", template, e.getMessage());
+      LOG.warn("【审计模板】解析表达式失败, 模板={}, 错误={}", template, e.getMessage());
       return template;
     }
   }
@@ -153,7 +153,7 @@ public class AuditTemplateProcessor {
    */
   public void clearCache() {
     expressionCache.clear();
-    log.info("【审计模板】表达式缓存已清理");
+    LOG.info("【审计模板】表达式缓存已清理");
   }
 
   /**

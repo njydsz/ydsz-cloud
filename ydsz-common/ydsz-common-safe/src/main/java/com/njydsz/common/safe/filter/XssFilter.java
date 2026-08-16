@@ -5,6 +5,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,10 +16,6 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 
 import com.njydsz.common.safe.alert.SafeAlertProperties;
 import com.njydsz.common.safe.alert.SecurityEvent;
@@ -60,7 +60,7 @@ import com.njydsz.common.util.http.UrlPathUtils;
 @Order(Ordered.HIGHEST_PRECEDENCE + 2)
 public class XssFilter extends OncePerRequestFilter {
 
-  private static final Logger log = LoggerFactory.getLogger(XssFilter.class);
+  private static final Logger LOG = LoggerFactory.getLogger(XssFilter.class);
 
   /** 默认 XSS 排除路径列表 */
   private static final List<String> DEFAULT_EXCLUDES = new ArrayList<>();
@@ -185,7 +185,7 @@ public class XssFilter extends OncePerRequestFilter {
     try {
       return request.getInputStream().readAllBytes();
     } catch (IOException e) {
-      log.warn("XSS 过滤器读取请求体失败 | URI: {} | 消息: {}", request.getRequestURI(), e.getMessage());
+      LOG.warn("XSS 过滤器读取请求体失败 | URI: {} | 消息: {}", request.getRequestURI(), e.getMessage());
       return null;
     }
   }

@@ -1,9 +1,9 @@
 package com.njydsz.common.jdbc.config;
 
+import lombok.Data;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
-import lombok.Data;
 
 /**
  * 分页拦截器配置类

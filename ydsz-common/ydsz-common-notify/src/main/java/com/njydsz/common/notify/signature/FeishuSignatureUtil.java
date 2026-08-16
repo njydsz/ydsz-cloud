@@ -18,7 +18,7 @@ import com.njydsz.common.util.security.DigestUtils;
  */
 public final class FeishuSignatureUtil {
 
-  private static final Logger log = LoggerFactory.getLogger(FeishuSignatureUtil.class);
+  private static final Logger LOG = LoggerFactory.getLogger(FeishuSignatureUtil.class);
 
   private FeishuSignatureUtil() {}
 
@@ -42,7 +42,7 @@ public final class FeishuSignatureUtil {
       String computed = DigestUtils.sha256Hex(data);
       return constantTimeEquals(computed, signature.toLowerCase());
     } catch (Exception e) {
-      log.warn("[FeishuSignatureUtil] 签名验证异常 timestamp={}: {}", timestamp, e.getMessage(), e);
+      LOG.warn("[FeishuSignatureUtil] 签名验证异常 timestamp={}: {}", timestamp, e.getMessage(), e);
       return false;
     }
   }

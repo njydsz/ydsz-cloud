@@ -1,8 +1,10 @@
 package com.njydsz.message.domain.dto.core;
 
-import com.njydsz.common.safe.annotation.Xss;
 import java.util.List;
+
 import lombok.Data;
+
+import com.njydsz.common.safe.annotation.Xss;
 
 /**
  * 消息编排流程 DTO。

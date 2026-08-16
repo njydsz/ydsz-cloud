@@ -23,7 +23,15 @@ public enum AlertType {
   FAIL_RATE,
 
   /** 时间窗口内 P95 耗时 &gt;= threshold（毫秒）。 */
-  DURATION_P95;
+  DURATION_P95,
+
+  /**
+   * P2-F2: SLA 预警（任务执行耗时达到 SLA 承诺值的 80%，尚未超时）。
+   *
+   * <p>软预警：通知运维关注即将超 SLA 的任务，不中断执行。
+   * 由 {@link com.njydsz.cronjob.server.core.dispatch.TimeoutMonitor} 周期性扫描触发。
+   */
+  SLA_WARNING;
 
   /**
    * 解析告警类型字符串，大小写不敏感。
@@ -45,10 +53,10 @@ public enum AlertType {
   /**
    * 判断该告警类型是否需要阈值。
    *
-   * @return FAIL / TIMEOUT 无需阈值；SLOW / FAIL_RATE / DURATION_P95 需要阈值
+   * @return FAIL / TIMEOUT / SLA_WARNING 无需阈值；SLOW / FAIL_RATE / DURATION_P95 需要阈值
    */
   public boolean requiresThreshold() {
-    return this != FAIL && this != TIMEOUT;
+    return this != FAIL && this != TIMEOUT && this != SLA_WARNING;
   }
 
   /**

@@ -1,7 +1,7 @@
 package com.njydsz.common.jdbc.interceptor;
 
-import lombok.extern.slf4j.Slf4j;
 import com.baomidou.mybatisplus.extension.parser.JsqlParserSupport;
+import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.delete.Delete;

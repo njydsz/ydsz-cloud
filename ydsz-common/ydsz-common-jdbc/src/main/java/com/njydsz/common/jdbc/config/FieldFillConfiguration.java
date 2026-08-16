@@ -1,8 +1,8 @@
 package com.njydsz.common.jdbc.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * 字段自动填充配置。

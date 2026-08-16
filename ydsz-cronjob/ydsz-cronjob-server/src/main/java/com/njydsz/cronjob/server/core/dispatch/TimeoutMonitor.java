@@ -1,5 +1,21 @@
 package com.njydsz.cronjob.server.core.dispatch;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
@@ -11,20 +27,6 @@ import com.njydsz.cronjob.server.core.alert.AlertTrigger;
 import com.njydsz.cronjob.server.core.alert.AlertType;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
 import com.njydsz.cronjob.server.metrics.CronjobMetrics;
-import jakarta.annotation.PostConstruct;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 任务执行超时监控器（P2-4）。
@@ -127,6 +129,12 @@ public class TimeoutMonitor {
   /** 执行一次超时扫描。 */
   private void doScan() {
     LocalDateTime now = LocalDateTime.now();
+    scanTimedOutLogs(now);
+    scanApproachingSlaLogs(now);
+  }
+
+  /** 扫描已超时的日志（硬超时，标记 TIMEOUT + 释放锁）。 */
+  private void scanTimedOutLogs(LocalDateTime now) {
     List<JobLog> timedOut = jobLogMapper.selectTimedOutLogs(now, BATCH_SIZE);
     if (timedOut.isEmpty()) {
       return;
@@ -143,6 +151,52 @@ public class TimeoutMonitor {
             e.getMessage(),
             e);
       }
+    }
+  }
+
+  /**
+   * P2-F2: 扫描达到 SLA 80% 预警线的日志（软预警，仅告警不中断）。
+   *
+   * <p>对每条达到 80% slaMs 的日志触发 SLA_WARNING 预警，通知运维关注。
+   * 预警不修改日志状态、不释放锁，任务继续执行。
+   */
+  private void scanApproachingSlaLogs(LocalDateTime now) {
+    List<JobLog> approaching = jobLogMapper.selectApproachingSlaLogs(now, BATCH_SIZE);
+    if (approaching.isEmpty()) {
+      return;
+    }
+    log.info("[TimeoutMonitor] 发现 {} 个任务达到 SLA 80% 预警线: role={}", approaching.size(), leaderRole);
+    for (JobLog log0 : approaching) {
+      try {
+        triggerSlaWarningAlert(log0, now);
+      } catch (Exception e) {
+        log.warn("[TimeoutMonitor] 触发 SLA 预警失败: logId={} reason={}", log0.getId(), e.getMessage());
+      }
+    }
+  }
+
+  /** P2-F2: 触发 SLA 80% 预警（软告警，不中断执行）。 */
+  private void triggerSlaWarningAlert(JobLog log0, LocalDateTime now) {
+    AlertTrigger alertTrigger = alertTriggerProvider.getIfAvailable();
+    if (alertTrigger == null) {
+      return;
+    }
+    long durationMs = Duration.between(log0.getStartTime(), now).toMillis();
+    try {
+      AlertContext context =
+          AlertContext.of(
+              AlertType.SLA_WARNING,
+              log0.getJobId(),
+              log0.getJobKey(),
+              null,
+              log0.getId(),
+              String.valueOf(durationMs),
+              "Task approaching SLA threshold (80% elapsed, duration=" + durationMs + "ms)",
+              log0.getTraceId(),
+              null);
+      alertTrigger.trigger(context);
+    } catch (Exception e) {
+      log.warn("[TimeoutMonitor] 触发 SLA 预警异常: logId={} reason={}", log0.getId(), e.getMessage());
     }
   }
 

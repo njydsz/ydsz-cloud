@@ -1,8 +1,9 @@
 package com.njydsz.message.domain.enums;
 
+import lombok.Getter;
+
 import com.njydsz.common.exception.enums.ExceptionCode;
 import com.njydsz.common.exception.registry.YdszExceptionCode;
-import lombok.Getter;
 
 /**
  * 消息中心模块异常码枚举。
@@ -36,7 +37,7 @@ public enum MessageExceptionCode implements ExceptionCode {
 
   // ==================== B91101-B91199 通知/消息日志 ====================
   NOTIFICATION_NOT_FOUND("B91101", "message.notification.not.found", 404),
-  MESSAGE_LOG_NOT_FOUND("B91102", "message.log.not.found", 404),
+  MESSAGE_LOG_NOT_FOUND("B91102", "message.LOG.not.found", 404),
   MESSAGE_SEND_FAILED("B91103", "message.send.failed", 500),
   MESSAGE_RECALL_FAILED("B91104", "message.recall.failed"),
 

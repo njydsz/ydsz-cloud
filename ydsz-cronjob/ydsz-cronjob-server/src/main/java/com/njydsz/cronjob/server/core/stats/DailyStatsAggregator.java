@@ -1,21 +1,23 @@
 package com.njydsz.cronjob.server.core.stats;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.cronjob.domain.entity.log.JobDailyStats;
 import com.njydsz.cronjob.infra.mapper.log.JobDailyStatsMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
-import jakarta.annotation.PostConstruct;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
 
 /**
  * 每日统计聚合器（P2-3 执行历史趋势可视化）。

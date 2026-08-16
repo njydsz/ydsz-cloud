@@ -1,11 +1,12 @@
 package com.njydsz.userinfo.server.service;
 
+import java.util.List;
+
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.userinfo.domain.dto.post.LanguagePostDTO;
 import com.njydsz.userinfo.domain.dto.put.LanguagePutDTO;
 import com.njydsz.userinfo.domain.query.LanguagePageQuery;
 import com.njydsz.userinfo.domain.vo.LanguageVO;
-import java.util.List;
 
 /**
  * 语言 Service 接口

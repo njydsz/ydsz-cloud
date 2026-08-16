@@ -30,7 +30,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  */
 public class NotifyDedupService {
 
-  private static final Logger log = LoggerFactory.getLogger(NotifyDedupService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(NotifyDedupService.class);
 
   private final NotifyProperties properties;
   private final RedisStringOps redisStringOps;
@@ -70,10 +70,10 @@ public class NotifyDedupService {
         if (Boolean.TRUE.equals(absent)) {
           return false;
         }
-        log.debug("[NotifyDedupService] 去重命中(Redis): fp={}", fingerprint);
+        LOG.debug("[NotifyDedupService] 去重命中(Redis): fp={}", fingerprint);
         return true;
       } catch (Exception e) {
-        log.debug("[NotifyDedupService] Redis 去重失败，降级为内存: {}", e.getMessage());
+        LOG.debug("[NotifyDedupService] Redis 去重失败，降级为内存: {}", e.getMessage());
       }
     }
 
@@ -83,7 +83,7 @@ public class NotifyDedupService {
     Long existing = memoryDedup.putIfAbsent(fingerprint, expireAt);
     if (existing != null) {
       if (existing > now) {
-        log.debug("[NotifyDedupService] 去重命中(Memory): fp={}", fingerprint);
+        LOG.debug("[NotifyDedupService] 去重命中(Memory): fp={}", fingerprint);
         return true;
       }
       memoryDedup.put(fingerprint, expireAt);
@@ -99,7 +99,7 @@ public class NotifyDedupService {
       try {
         redisStringOps.delete(redisKey);
       } catch (Exception e) {
-        log.debug("[NotifyDedupService] Redis 去重清除失败，仅清除内存: {}", e.getMessage());
+        LOG.debug("[NotifyDedupService] Redis 去重清除失败，仅清除内存: {}", e.getMessage());
       }
     }
     memoryDedup.remove(fingerprint);

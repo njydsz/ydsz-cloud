@@ -1,17 +1,5 @@
 package com.njydsz.workflow.web.controller.integration;
 
-import com.njydsz.common.audit.annotation.Audit;
-import com.njydsz.common.audit.enums.AuditAction;
-import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.auth.context.AuthContextUtils;
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.common.security.LoginUser;
-import com.njydsz.workflow.domain.dto.EmbeddedApprovalActionDTO;
-import com.njydsz.workflow.domain.dto.EmbeddedApprovalViewDTO;
-import com.njydsz.workflow.server.service.FlowEmbeddedApprovalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -25,6 +13,19 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.context.AuthContextUtils;
+import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.security.LoginUser;
+import com.njydsz.workflow.domain.dto.EmbeddedApprovalActionDTO;
+import com.njydsz.workflow.domain.dto.EmbeddedApprovalViewDTO;
+import com.njydsz.workflow.server.service.FlowEmbeddedApprovalService;
 
 /**
  * 嵌入式审批 Controller（P2-2）

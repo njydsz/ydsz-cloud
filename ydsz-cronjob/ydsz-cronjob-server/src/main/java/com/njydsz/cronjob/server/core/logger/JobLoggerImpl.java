@@ -1,15 +1,17 @@
 package com.njydsz.cronjob.server.core.logger;
 
-import com.njydsz.cronjob.domain.entity.log.JobLogContent;
-import com.njydsz.cronjob.domain.job.JobLogger;
-import com.njydsz.cronjob.server.service.log.JobLogContentService;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.cronjob.domain.entity.log.JobLogContent;
+import com.njydsz.cronjob.domain.job.JobLogger;
+import com.njydsz.cronjob.server.service.log.JobLogContentService;
 
 /**
  * 任务执行日志器实现（P0-2 在线日志白屏化）。

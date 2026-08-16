@@ -1,7 +1,7 @@
 package com.njydsz.common.safe.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * 安全事件自动响应配置属性

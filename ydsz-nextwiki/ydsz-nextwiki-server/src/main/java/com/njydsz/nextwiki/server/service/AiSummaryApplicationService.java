@@ -1,6 +1,5 @@
 package com.njydsz.nextwiki.server.service;
 
-import com.njydsz.nextwiki.server.config.NextwikiProperties;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -13,6 +12,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +24,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import com.njydsz.nextwiki.server.config.NextwikiProperties;
 
 /**
  * AI 文档摘要服务。

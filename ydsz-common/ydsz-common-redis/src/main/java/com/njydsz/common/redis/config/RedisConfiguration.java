@@ -1,5 +1,6 @@
 package com.njydsz.common.redis.config;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -19,7 +20,6 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
-import lombok.RequiredArgsConstructor;
 
 import com.njydsz.common.redis.annotation.YdszCacheableAspect;
 import com.njydsz.common.redis.health.RedisHealthIndicator;

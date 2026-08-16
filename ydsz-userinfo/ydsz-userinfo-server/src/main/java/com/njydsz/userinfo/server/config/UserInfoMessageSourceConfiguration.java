@@ -1,6 +1,7 @@
 package com.njydsz.userinfo.server.config;
 
 import java.util.Arrays;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -72,7 +73,7 @@ public class UserInfoMessageSourceConfiguration {
     ReloadableResourceBundleMessageSource source = new ReloadableResourceBundleMessageSource();
     source.setBasenames(allBasenames);
     source.setDefaultEncoding("UTF-8");
-    source.setCacheSeconds(5);
+    source.setCacheSeconds(CACHE_SECONDS);
     source.setFallbackToSystemLocale(false);
     source.setUseCodeAsDefaultMessage(true);
 

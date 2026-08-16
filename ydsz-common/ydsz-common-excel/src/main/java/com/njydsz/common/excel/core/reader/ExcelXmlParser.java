@@ -57,7 +57,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ExcelXmlParser {
 
-  private static final Logger log = LoggerFactory.getLogger(ExcelXmlParser.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ExcelXmlParser.class);
 
   /** XML 标签前缀：<row */
   private static final byte[] ROW_START = "<row".getBytes(StandardCharsets.UTF_8);
@@ -330,7 +330,7 @@ public class ExcelXmlParser {
       try {
         cellStyle = Integer.parseInt(styleStr);
       } catch (NumberFormatException e) {
-        log.debug("Caught exception (ignored): {}", e.getMessage());
+        LOG.debug("Caught exception (ignored): {}", e.getMessage());
       }
     }
 

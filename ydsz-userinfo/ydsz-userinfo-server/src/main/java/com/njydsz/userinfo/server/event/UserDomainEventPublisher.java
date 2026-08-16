@@ -1,4 +1,10 @@
-﻿package com.njydsz.userinfo.server.event;
+package com.njydsz.userinfo.server.event;
+
+import java.util.Map;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.stereotype.Component;
 
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
@@ -7,10 +13,6 @@ import com.njydsz.userinfo.domain.entity.Department;
 import com.njydsz.userinfo.domain.entity.Role;
 import com.njydsz.userinfo.domain.entity.UserAccount;
 import com.njydsz.userinfo.domain.event.UserDomainEvent;
-import java.util.Map;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.stereotype.Component;
 
 /**
  * 用户模块领域事件发布器。
@@ -92,8 +94,7 @@ public class UserDomainEventPublisher {
         DomainEventTypes.USER_DELETED,
         userId,
         "USER",
-        UserDomainEvent.of(
-            DomainEventTypes.USER_DELETED, userId, Map.of("username", username)));
+        UserDomainEvent.of(DomainEventTypes.USER_DELETED, userId, Map.of("username", username)));
   }
 
   /**
@@ -131,8 +132,7 @@ public class UserDomainEventPublisher {
             DomainEventTypes.ROLE_CHANGED,
             role.getId(),
             "ROLE",
-            Map.of(
-                "roleId", role.getId(), "roleCode", role.getRoleCode(), "action", action)));
+            Map.of("roleId", role.getId(), "roleCode", role.getRoleCode(), "action", action)));
   }
 
   /**

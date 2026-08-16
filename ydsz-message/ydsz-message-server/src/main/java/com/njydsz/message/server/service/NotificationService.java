@@ -1,11 +1,13 @@
 package com.njydsz.message.server.service.core;
 
+import java.util.List;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+
 import com.njydsz.message.domain.dto.core.NotificationQueryDTO;
 import com.njydsz.message.domain.dto.core.NotificationSendDTO;
 import com.njydsz.message.domain.entity.core.MsgNotification;
 import com.njydsz.message.domain.vo.NotificationGroupVO;
-import java.util.List;
 
 /**
  * 站内通知 Service 接口

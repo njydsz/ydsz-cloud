@@ -1,10 +1,12 @@
 package com.njydsz.literule.infra.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.literule.domain.entity.RuleDependency;
 import java.util.List;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+
+import com.njydsz.literule.domain.entity.RuleDependency;
 
 /**
  * 规则依赖关系 Mapper

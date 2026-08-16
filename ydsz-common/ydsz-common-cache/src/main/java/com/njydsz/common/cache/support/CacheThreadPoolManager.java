@@ -32,7 +32,7 @@ import org.springframework.beans.factory.DisposableBean;
  */
 public class CacheThreadPoolManager implements DisposableBean {
 
-  private static final Logger log = LoggerFactory.getLogger(CacheThreadPoolManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(CacheThreadPoolManager.class);
 
   /** 全局单例实例（供非 Spring 管理的组件使用） */
   private static volatile CacheThreadPoolManager instance;
@@ -116,7 +116,7 @@ public class CacheThreadPoolManager implements DisposableBean {
     ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(coreSize, factory);
     executor.setRemoveOnCancelPolicy(true);
     // CHECKSTYLE.ON: RegexpSinglelineJava
-    log.info("缓存定时调度线程池已创建: name={}, coreSize={}", name, coreSize);
+    LOG.info("缓存定时调度线程池已创建: name={}, coreSize={}", name, coreSize);
     return executor;
   }
 
@@ -144,10 +144,10 @@ public class CacheThreadPoolManager implements DisposableBean {
             TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(1024),
             factory,
-            (r, exec) -> log.warn("缓存线程池队列已满，拒绝任务: pool={}", name));
+            (r, exec) -> LOG.warn("缓存线程池队列已满，拒绝任务: pool={}", name));
     // CHECKSTYLE.ON: RegexpSinglelineJava
 
-    log.info("缓存线程池已创建: name={}, coreSize={}, maxSize={}", name, coreSize, maxSize);
+    LOG.info("缓存线程池已创建: name={}, coreSize={}, maxSize={}", name, coreSize, maxSize);
     return executor;
   }
 
@@ -165,7 +165,7 @@ public class CacheThreadPoolManager implements DisposableBean {
 
   @Override
   public void destroy() {
-    log.info("正在关闭所有缓存线程池，共 {} 个普通池 + {} 个调度池", pools.size(), scheduledPools.size());
+    LOG.info("正在关闭所有缓存线程池，共 {} 个普通池 + {} 个调度池", pools.size(), scheduledPools.size());
     pools.forEach((name, pool) -> gracefulShutdown(pool, name));
     scheduledPools.forEach((name, pool) -> gracefulShutdown(pool, name));
     pools.clear();
@@ -212,13 +212,13 @@ public class CacheThreadPoolManager implements DisposableBean {
       if (!pool.awaitTermination(10, TimeUnit.SECONDS)) {
         pool.shutdownNow();
         if (!pool.awaitTermination(5, TimeUnit.SECONDS)) {
-          log.warn("缓存线程池未能完全关闭: {}", name);
+          LOG.warn("缓存线程池未能完全关闭: {}", name);
         }
       }
     } catch (InterruptedException e) {
       pool.shutdownNow();
       Thread.currentThread().interrupt();
     }
-    log.info("缓存线程池已关闭: {}", name);
+    LOG.info("缓存线程池已关闭: {}", name);
   }
 }

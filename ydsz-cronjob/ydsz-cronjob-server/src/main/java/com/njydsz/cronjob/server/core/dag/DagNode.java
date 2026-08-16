@@ -1,8 +1,9 @@
 package com.njydsz.cronjob.server.core.dag;
 
+import java.util.Objects;
+
 import com.njydsz.common.json.annotation.JsonClass;
 import com.njydsz.common.json.annotation.JsonProperty;
-import java.util.Objects;
 
 /**
  * DAG 节点定义（P2 DAG 增强 + P1-5/P1-6 子工作流/审批节点）。

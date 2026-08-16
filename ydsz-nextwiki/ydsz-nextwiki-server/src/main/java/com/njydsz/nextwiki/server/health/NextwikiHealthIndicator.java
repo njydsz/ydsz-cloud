@@ -1,12 +1,13 @@
 package com.njydsz.nextwiki.server.health;
 
-import com.njydsz.common.file.storage.IFileStorageProvider;
-import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
-import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.health.contributor.Health;
+
+import com.njydsz.common.file.storage.IFileStorageProvider;
+import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
+import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 
 /**
  * NextWiki 健康检查。

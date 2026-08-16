@@ -20,7 +20,7 @@ import com.njydsz.common.event.model.OutboxMessage;
 public class NoopEventPublishGateway implements EventPublishGateway {
 
   /** 日志实例 */
-  private static final Logger log = LoggerFactory.getLogger(NoopEventPublishGateway.class);
+  private static final Logger LOG = LoggerFactory.getLogger(NoopEventPublishGateway.class);
 
   /**
    * 空操作投递（记录 WARN 日志但不实际投递）
@@ -30,7 +30,7 @@ public class NoopEventPublishGateway implements EventPublishGateway {
    */
   @Override
   public boolean publish(OutboxMessage message) {
-    log.warn(
+    LOG.warn(
         "NoopEventPublishGateway: message id={}, type={}, aggregate={}/{} not actually published",
         message.getId(),
         message.getEventType(),
@@ -48,7 +48,7 @@ public class NoopEventPublishGateway implements EventPublishGateway {
   @Override
   public List<Boolean> publishBatch(List<OutboxMessage> messages) {
     for (OutboxMessage message : messages) {
-      log.warn(
+      LOG.warn(
           "NoopEventPublishGateway: batch message id={}, type={} not actually published",
           message.getId(),
           message.getEventType());

@@ -24,7 +24,7 @@ import com.njydsz.common.notify.config.NotifyProperties;
  */
 public class NotifyPasswordResolver {
 
-  private static final Logger log = LoggerFactory.getLogger(NotifyPasswordResolver.class);
+  private static final Logger LOG = LoggerFactory.getLogger(NotifyPasswordResolver.class);
 
   private static final String ENC_PREFIX = "ENC(";
   private static final String ENC_SUFFIX = ")";
@@ -76,12 +76,12 @@ public class NotifyPasswordResolver {
     try {
       PooledPBEStringEncryptor enc = getEncryptor();
       if (enc == null) {
-        log.warn("[NotifyPasswordResolver] Jasypt 未配置，无法解密密码，返回原始密文");
+        LOG.warn("[NotifyPasswordResolver] Jasypt 未配置，无法解密密码，返回原始密文");
         return encryptedPassword;
       }
       return enc.decrypt(cipherText);
     } catch (Exception e) {
-      log.error("[NotifyPasswordResolver] 密码解密失败: {}", e.getMessage());
+      LOG.error("[NotifyPasswordResolver] 密码解密失败: {}", e.getMessage());
       throw new IllegalStateException("SMTP 密码解密失败，请检查 jasyptKey 配置", e);
     }
   }
@@ -112,7 +112,7 @@ public class NotifyPasswordResolver {
         key = System.getenv("JASYPT_ENCRYPTOR_PASSWORD");
       }
       if (!StringUtils.hasText(key)) {
-        log.warn(
+        LOG.warn(
             "[NotifyPasswordResolver] Jasypt 密钥未配置（jasyptKey 或 JASYPT_ENCRYPTOR_PASSWORD），跳过解密");
         initialized = true;
         return null;
@@ -120,7 +120,7 @@ public class NotifyPasswordResolver {
       // P0-1: 委托 ConfigCliTool 创建加密器，消除重复 Jasypt 参数配置
       encryptor = ConfigCliTool.createEncryptor(key);
       initialized = true;
-      log.info("[NotifyPasswordResolver] Jasypt 加密器初始化完成（委托 ConfigCliTool）");
+      LOG.info("[NotifyPasswordResolver] Jasypt 加密器初始化完成（委托 ConfigCliTool）");
       return encryptor;
     }
   }

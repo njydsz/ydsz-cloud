@@ -1,7 +1,8 @@
 package com.njydsz.nextwiki.domain.repository;
 
-import com.njydsz.nextwiki.domain.entity.FileVersion;
 import java.util.List;
+
+import com.njydsz.nextwiki.domain.entity.FileVersion;
 
 /**
  * 文件版本仓储接口

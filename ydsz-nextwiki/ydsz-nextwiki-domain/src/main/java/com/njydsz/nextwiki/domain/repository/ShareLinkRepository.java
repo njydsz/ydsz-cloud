@@ -1,7 +1,8 @@
 package com.njydsz.nextwiki.domain.repository;
 
-import com.njydsz.nextwiki.domain.entity.ShareLink;
 import java.util.List;
+
+import com.njydsz.nextwiki.domain.entity.ShareLink;
 
 /**
  * 分享链接仓储接口
@@ -71,4 +72,12 @@ public interface ShareLinkRepository {
    * @param id 分享链接 ID
    */
   void incrementAccessCount(String id);
+
+  /**
+   * 查询即将到期的活跃分享链接（用于到期提醒）。
+   *
+   * @param withinHours 多少小时内即将到期
+   * @return 即将到期的分享链接列表（未发送过提醒的）
+   */
+  List<ShareLink> findExpiringShares(int withinHours);
 }

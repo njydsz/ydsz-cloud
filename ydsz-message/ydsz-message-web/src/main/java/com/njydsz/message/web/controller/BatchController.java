@@ -1,5 +1,19 @@
 package com.njydsz.message.web.controller.batch;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -13,18 +27,8 @@ import com.njydsz.message.domain.converter.MessageConverter;
 import com.njydsz.message.domain.dto.batch.BatchProgressVO;
 import com.njydsz.message.domain.dto.batch.BatchSendRequestDTO;
 import com.njydsz.message.domain.vo.MsgBatchVO;
+import com.njydsz.message.server.service.SseEmitterService;
 import com.njydsz.message.server.service.batch.BatchService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 批量发送（Batch Send）Controller。
@@ -90,6 +94,9 @@ public class BatchController {
   /** 批量发送服务 */
   private final BatchService batchService;
 
+  /** SSE 发射器服务（P1-E2: 批次进度推送） */
+  private final SseEmitterService sseEmitterService;
+
   /**
    * 异步批量发送消息。
    *
@@ -127,5 +134,36 @@ public class BatchController {
   @GetMapping("/progress/{batchId}")
   public BaseResponse<BatchProgressVO> getProgress(@PathVariable String batchId) {
     return BaseResponse.success(batchService.getProgress(batchId));
+  }
+
+  /**
+   * SSE 订阅批次进度（服务端推送）。
+   *
+   * <p>建立 SSE 连接后，后端在批次处理过程中实时推送进度事件（progress / complete），
+   * 无需客户端轮询。超时时间 5 分钟，批次完成后自动关闭连接。
+   *
+   * <p>推事件类型：
+   * <ul>
+   *   <li>{@code initial} — 连接建立时立即发送当前快照</li>
+   *   <li>{@code progress} — 处理过程中的进度更新（预留；当前版本在完整事件后触发）</li>
+   *   <li>{@code complete} — 批次处理完成，携带最终结果</li>
+   * </ul>
+   *
+   * @param batchId 批次 ID
+   * @return SseEmitter 流
+   */
+  @Operation(summary = "SSE 订阅批次进度")
+  @AuthApiPermission(apiCodes = PermissionCodes.MESSAGE_LOG_VIEW)
+  @GetMapping(value = "/progress/{batchId}/sse", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+  public SseEmitter subscribeProgress(@PathVariable String batchId) {
+    // 先拉取当前进度作为初始快照，让客户端连接后立即可见状态
+    BatchProgressVO initialSnapshot = null;
+    try {
+      initialSnapshot = batchService.getProgress(batchId);
+    } catch (Exception e) {
+      // 批次不存在时仍返回 emitter，后续 complete 事件会通知错误
+      initialSnapshot = null;
+    }
+    return sseEmitterService.subscribe(batchId, initialSnapshot);
   }
 }

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.nextwiki.infra.mapper.ShareAccessLogMapper">
+
+    <resultMap id="ShareAccessLogResult" type="com.njydsz.nextwiki.domain.entity.ShareAccessLog">
+        <id column="id" property="id"/>
+        <result column="share_id" property="shareId"/>
+        <result column="share_code" property="shareCode"/>
+        <result column="file_node_id" property="fileNodeId"/>
+        <result column="visitor_id" property="visitorId"/>
+        <result column="visitor_name" property="visitorName"/>
+        <result column="visitor_ip" property="visitorIp"/>
+        <result column="user_agent" property="userAgent"/>
+        <result column="access_type" property="accessType"/>
+        <result column="access_status" property="accessStatus"/>
+        <result column="fail_reason" property="failReason"/>
+        <result column="created_at" property="accessTime"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="revision" property="revision"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <select id="selectByShareId" resultMap="ShareAccessLogResult">
+        SELECT * FROM nw_share_access_log
+        WHERE share_id = #{shareId} AND deleted = 0
+        ORDER BY created_at DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="countDailyAccess" resultType="java.util.Map">
+        SELECT TO_CHAR(created_at, 'YYYY-MM-DD') AS access_date,
+               COUNT(*) AS access_count
+        FROM nw_share_access_log
+        WHERE share_id = #{shareId}
+          AND deleted = 0
+          AND created_at &gt;= NOW() - INTERVAL '#{days} days'
+        GROUP BY TO_CHAR(created_at, 'YYYY-MM-DD')
+        ORDER BY access_date DESC
+    </select>
+
+</mapper>

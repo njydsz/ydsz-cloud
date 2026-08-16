@@ -1,9 +1,9 @@
 package com.njydsz.common.app.interceptor;
 
-import org.slf4j.Logger;
-import org.springframework.stereotype.Component;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.springframework.stereotype.Component;
 
 import com.njydsz.common.app.config.AppTraceProperties;
 import com.njydsz.common.app.util.RequestIdGenerator;

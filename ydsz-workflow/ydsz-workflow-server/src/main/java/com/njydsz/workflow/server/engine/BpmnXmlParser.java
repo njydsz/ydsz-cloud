@@ -1,13 +1,5 @@
 package com.njydsz.workflow.server.engine;
 
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.workflow.domain.entity.FlowNode;
-import com.njydsz.workflow.domain.entity.FlowSkip;
-import com.njydsz.workflow.domain.enums.FlowNodeType;
-import com.njydsz.workflow.domain.enums.FlowPerformType;
-import com.njydsz.workflow.domain.enums.FlowSkipType;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,6 +8,7 @@ import java.util.Map;
 import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
@@ -23,6 +16,15 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
+
+import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.workflow.domain.entity.FlowNode;
+import com.njydsz.workflow.domain.entity.FlowSkip;
+import com.njydsz.workflow.domain.enums.FlowNodeType;
+import com.njydsz.workflow.domain.enums.FlowPerformType;
+import com.njydsz.workflow.domain.enums.FlowSkipType;
 
 /**
  * BPMN 2.0 解析器

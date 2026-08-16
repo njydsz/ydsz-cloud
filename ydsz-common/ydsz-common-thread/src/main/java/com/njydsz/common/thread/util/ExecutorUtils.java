@@ -22,10 +22,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import lombok.extern.slf4j.Slf4j;
 import com.alibaba.ttl.TtlCallable;
 import com.alibaba.ttl.TtlRunnable;
 import com.alibaba.ttl.threadpool.TtlExecutors;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 线程池编程式工厂工具类。

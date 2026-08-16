@@ -32,7 +32,7 @@ import com.njydsz.common.notify.enums.NotifyPriority;
  */
 public class TimeWindowAggregator implements NotificationAggregator {
 
-  private static final Logger log = LoggerFactory.getLogger(TimeWindowAggregator.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TimeWindowAggregator.class);
 
   /** 聚合粒度枚举 */
   public enum AggregationLevel {
@@ -82,7 +82,7 @@ public class TimeWindowAggregator implements NotificationAggregator {
     this.maxAggregateCount = maxAggregateCount > 0 ? maxAggregateCount : DEFAULT_MAX_COUNT;
     this.aggregationLevel =
         aggregationLevel != null ? aggregationLevel : AggregationLevel.BY_RECEIVER_CHANNEL_TEMPLATE;
-    log.info(
+    LOG.info(
         "[TimeWindowAggregator] 初始化完成, window={}s, maxCount={}, level={}",
         this.aggregateWindowSeconds,
         this.maxAggregateCount,
@@ -124,12 +124,12 @@ public class TimeWindowAggregator implements NotificationAggregator {
 
     // 超过最大聚合数时触发即时 flush
     if (list.size() >= maxAggregateCount) {
-      log.debug("[TimeWindowAggregator] 缓冲区已满，触发即时聚合: key={}, count={}", key, list.size());
+      LOG.debug("[TimeWindowAggregator] 缓冲区已满，触发即时聚合: key={}, count={}", key, list.size());
       return false;
     }
 
     list.add(message);
-    log.debug("[TimeWindowAggregator] 消息加入聚合缓冲区: key={}, count={}", key, list.size());
+    LOG.debug("[TimeWindowAggregator] 消息加入聚合缓冲区: key={}, count={}", key, list.size());
     return true;
   }
 

@@ -1,16 +1,18 @@
 package com.njydsz.workflow.server.service.impl.integration;
 
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.workflow.server.service.FlowFormFieldPermService;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+
+import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.workflow.server.service.FlowFormFieldPermService;
 
 /**
  * 表单字段权限服务实现（P0-2 落地）

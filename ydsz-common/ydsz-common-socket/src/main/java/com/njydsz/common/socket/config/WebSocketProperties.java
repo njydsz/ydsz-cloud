@@ -3,8 +3,8 @@ package com.njydsz.common.socket.config;
 import java.time.Duration;
 import java.util.List;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * WebSocket 可配置化属性。

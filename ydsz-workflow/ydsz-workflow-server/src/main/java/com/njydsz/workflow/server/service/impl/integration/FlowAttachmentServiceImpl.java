@@ -1,5 +1,16 @@
 package com.njydsz.workflow.server.service.impl.integration;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
 import com.njydsz.common.auth.annotation.DataScope;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
@@ -9,15 +20,6 @@ import com.njydsz.workflow.domain.entity.FlowAttachment;
 import com.njydsz.workflow.infra.mapper.FlowAttachmentMapper;
 import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.service.FlowAttachmentService;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 /**
  * 审批附件服务实现

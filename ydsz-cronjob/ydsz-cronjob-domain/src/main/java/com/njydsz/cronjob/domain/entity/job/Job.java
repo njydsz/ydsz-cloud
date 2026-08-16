@@ -1,14 +1,16 @@
 package com.njydsz.cronjob.domain.entity.job;
 
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
-import jakarta.validation.constraints.NotBlank;
 import java.io.Serial;
 import java.time.LocalDateTime;
+
+import com.baomidou.mybatisplus.annotation.TableName;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * 定时任务定义
@@ -93,6 +95,17 @@ public class Job extends MpBaseEntity<String> {
 
   /** 任务超时时间（毫秒，null 表示不限超时） */
   private Long timeoutMs;
+
+  /**
+   * SLA 时效阈值（毫秒，P2-F2）。
+   *
+   * <p>任务执行耗时的 SLA 承诺值，超过 80% 时发送预警，达到 100% 时发送告警。
+   * null 表示不进行 SLA 监控。与 timeoutMs 独立：timeoutMs 是硬超时（强制终止），
+   * slaMs 是软承诺（仅告警，不中断执行）。
+   *
+   * <p>示例：slaMs=60000 表示承诺 60 秒内完成，48 秒时预警，60 秒时告警。
+   */
+  private Long slaMs;
 
   /**
    * 慢任务阈值（毫秒，P6-3）。

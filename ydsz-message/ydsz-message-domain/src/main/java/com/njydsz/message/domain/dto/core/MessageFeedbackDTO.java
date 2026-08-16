@@ -1,7 +1,8 @@
 package com.njydsz.message.domain.dto.core;
 
-import com.njydsz.common.safe.annotation.Xss;
 import lombok.Data;
+
+import com.njydsz.common.safe.annotation.Xss;
 
 /**
  * P1-4: 消息反馈请求 DTO

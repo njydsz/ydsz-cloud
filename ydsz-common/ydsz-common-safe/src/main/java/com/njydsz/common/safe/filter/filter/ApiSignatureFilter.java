@@ -8,15 +8,15 @@ import java.util.List;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 
 import com.njydsz.common.safe.alert.SecurityEvent;
 import com.njydsz.common.safe.alert.SecurityEventPublisher;
@@ -87,7 +87,7 @@ import com.njydsz.common.util.http.UrlPathUtils;
  */
 public class ApiSignatureFilter extends OncePerRequestFilter {
 
-  private static final Logger log = LoggerFactory.getLogger(ApiSignatureFilter.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ApiSignatureFilter.class);
 
   private static final String HMAC_SHA256 = "HmacSHA256";
   private static final String SHA_256 = "SHA-256";
@@ -131,7 +131,7 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
     if (!StringUtils.hasText(timestamp)
         || !StringUtils.hasText(nonce)
         || !StringUtils.hasText(signature)) {
-      log.warn("【API签名验证】缺少签名参数 | uri={}", request.getRequestURI());
+      LOG.warn("【API签名验证】缺少签名参数 | uri={}", request.getRequestURI());
       reject(response, "Missing signature parameters");
       return;
     }
@@ -147,7 +147,7 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
     long now = System.currentTimeMillis();
     long toleranceMillis = properties.getTimestampToleranceSeconds() * 1000;
     if (Math.abs(now - requestTimestamp) > toleranceMillis) {
-      log.warn(
+      LOG.warn(
           "【API签名验证】时间戳超出容差 | uri={}, ts={}, now={}",
           request.getRequestURI(),
           requestTimestamp,
@@ -186,7 +186,7 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
 
     String expectedSignature = hmacSha256Base64(raw, properties.getAppSecret());
     if (!constantTimeEquals(expectedSignature, signature)) {
-      log.warn("【API签名验证】签名校验失败 | uri={}", request.getRequestURI());
+      LOG.warn("【API签名验证】签名校验失败 | uri={}", request.getRequestURI());
       publishEvent(request, "Signature mismatch");
       reject(response, "Invalid signature");
       return;
@@ -194,7 +194,7 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
 
     // 先验签后消费 nonce：签名合法才写入缓存，防止伪造签名 + 随机 nonce 打满缓存（DoS）
     if (!nonceCache.verifyAndConsume(nonce)) {
-      log.warn("【API签名验证】Nonce 重复 | uri={}, nonce={}", request.getRequestURI(), nonce);
+      LOG.warn("【API签名验证】Nonce 重复 | uri={}, nonce={}", request.getRequestURI(), nonce);
       publishEvent(request, "Nonce replay detected: " + nonce);
       reject(response, "Duplicate request");
       return;
@@ -261,7 +261,7 @@ public class ApiSignatureFilter extends OncePerRequestFilter {
     try {
       return request.getInputStream().readAllBytes();
     } catch (IOException e) {
-      log.warn("【API签名验证】读取请求体失败 | uri={}", request.getRequestURI());
+      LOG.warn("【API签名验证】读取请求体失败 | uri={}", request.getRequestURI());
       return new byte[0];
     }
   }

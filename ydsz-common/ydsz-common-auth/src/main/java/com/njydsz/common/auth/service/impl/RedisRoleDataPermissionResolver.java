@@ -70,7 +70,7 @@ import com.njydsz.common.util.string.StringUtils;
  */
 public class RedisRoleDataPermissionResolver {
 
-  private static final Logger log = LoggerFactory.getLogger(RedisRoleDataPermissionResolver.class);
+  private static final Logger LOG = LoggerFactory.getLogger(RedisRoleDataPermissionResolver.class);
 
   private final RedisStringOps redisStringOps;
   private final AuthProperties properties;
@@ -97,8 +97,8 @@ public class RedisRoleDataPermissionResolver {
         .expireAfterWrite(ttlSeconds, TimeUnit.SECONDS)
         .removalListener(
             (String key, DataScopeInfo value, RemovalCause cause) -> {
-              if (log.isDebugEnabled()) {
-                log.debug("数据权限缓存淘汰: roleCode={}, cause={}", key, cause);
+              if (LOG.isDebugEnabled()) {
+                LOG.debug("数据权限缓存淘汰: roleCode={}, cause={}", key, cause);
               }
             })
         .build();
@@ -177,7 +177,7 @@ public class RedisRoleDataPermissionResolver {
           }
         }
       } catch (Exception e) {
-        log.warn("批量加载数据权限失败，降级到逐个加载: {}", e.getMessage());
+        LOG.warn("批量加载数据权限失败，降级到逐个加载: {}", e.getMessage());
         for (String role : uncachedRoles) {
           DataScopeInfo loaded = loadOne(role);
           if (loaded != null) {
@@ -248,7 +248,7 @@ public class RedisRoleDataPermissionResolver {
         return parseArray((ArrayNode) node);
       }
     } catch (Exception e) {
-      log.warn("解析 role-row-key 失败：{}", json, e);
+      LOG.warn("解析 role-row-key 失败：{}", json, e);
     }
     return null;
   }

@@ -6,11 +6,11 @@ import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import feign.Response;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.json.YdszJson;
 

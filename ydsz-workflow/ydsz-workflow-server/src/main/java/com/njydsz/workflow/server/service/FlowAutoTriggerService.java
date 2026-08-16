@@ -1,7 +1,8 @@
 package com.njydsz.workflow.server.service;
 
-import com.njydsz.workflow.domain.entity.FlowAutoTrigger;
 import java.util.List;
+
+import com.njydsz.workflow.domain.entity.FlowAutoTrigger;
 
 /**
  * 流程自动触发服务。

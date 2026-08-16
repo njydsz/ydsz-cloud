@@ -9,12 +9,12 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.event.config.EventProperties;
 import com.njydsz.common.event.gateway.EventPublishGateway;
@@ -47,7 +47,7 @@ import com.njydsz.common.event.repository.OutboxRepository;
 public class OutboxProcessor {
 
   /** 日志实例 */
-  private static final Logger log = LoggerFactory.getLogger(OutboxProcessor.class);
+  private static final Logger LOG = LoggerFactory.getLogger(OutboxProcessor.class);
 
   /** 位移量上限，防止 1L << retryCount 整数溢出 */
   private static final int MAX_SHIFT = 30;
@@ -224,7 +224,7 @@ public class OutboxProcessor {
           TimeUnit.HOURS);
     }
 
-    log.info(
+    LOG.info(
         "OutboxProcessor started: pollInterval={}s, batchSize={}, workerThreads={}, staleThreshold={}min",
         pollInterval,
         properties.getBatchSize(),
@@ -254,7 +254,7 @@ public class OutboxProcessor {
       publishExecutor.shutdownNow();
       Thread.currentThread().interrupt();
     }
-    log.info("OutboxProcessor stopped");
+    LOG.info("OutboxProcessor stopped");
   }
 
   /**
@@ -271,7 +271,7 @@ public class OutboxProcessor {
       if (messages.isEmpty()) {
         return;
       }
-      log.debug("Processing {} pending outbox messages", messages.size());
+      LOG.debug("Processing {} pending outbox messages", messages.size());
 
       // 批量 claim（单条 SQL）
       List<String> ids = messages.stream().map(OutboxMessage::getId).toList();
@@ -293,7 +293,7 @@ public class OutboxProcessor {
         }
       }
     } catch (Exception e) {
-      log.error("Error processing outbox batch", e);
+      LOG.error("Error processing outbox batch", e);
     }
   }
 
@@ -330,7 +330,7 @@ public class OutboxProcessor {
         if (Boolean.TRUE.equals(results.get(i))) {
           outboxRepository.markAsSent(message.getId());
           incrementCounter(publishSuccessCounter);
-          log.debug("Outbox message sent: id={}, type={}", message.getId(), message.getEventType());
+          LOG.debug("Outbox message sent: id={}, type={}", message.getId(), message.getEventType());
         } else {
           handleFailure(message, "Gateway returned false in batch");
         }
@@ -339,7 +339,7 @@ public class OutboxProcessor {
     } catch (Exception e) {
       recordTimer(batchPublishTimer, System.nanoTime() - startNanos);
       // 批量投递失败，降级为逐条投递
-      log.warn("Batch publish failed, falling back to single publish", e);
+      LOG.warn("Batch publish failed, falling back to single publish", e);
       for (OutboxMessage message : messages) {
         processSingle(message);
       }
@@ -360,7 +360,7 @@ public class OutboxProcessor {
       if (success) {
         outboxRepository.markAsSent(message.getId());
         incrementCounter(publishSuccessCounter);
-        log.debug("Outbox message sent: id={}, type={}", message.getId(), message.getEventType());
+        LOG.debug("Outbox message sent: id={}, type={}", message.getId(), message.getEventType());
       } else {
         handleFailure(message, "Gateway returned false");
       }
@@ -384,13 +384,13 @@ public class OutboxProcessor {
 
     if (message.getRetryCount() + 1 >= message.getMaxRetries()) {
       incrementCounter(deadLetterCounter);
-      log.warn(
+      LOG.warn(
           "Outbox message moved to dead letter: id={}, retryCount={}, error={}",
           message.getId(),
           message.getRetryCount() + 1,
           errorMessage);
     } else {
-      log.warn(
+      LOG.warn(
           "Outbox message publish failed, will retry: id={}, retryCount={}, backoff={}s, error={}",
           message.getId(),
           message.getRetryCount() + 1,
@@ -422,7 +422,7 @@ public class OutboxProcessor {
     try {
       outboxRepository.reclaimStaleProcessing(thresholdMinutes);
     } catch (Exception e) {
-      log.error("Error reclaiming stale processing messages", e);
+      LOG.error("Error reclaiming stale processing messages", e);
     }
   }
 
@@ -435,7 +435,7 @@ public class OutboxProcessor {
     Instant cutoff = Instant.now().minusSeconds(retentionDays * 86400L);
     int deleted = outboxRepository.deleteSentBefore(cutoff);
     if (deleted > 0) {
-      log.info("Cleaned up {} sent outbox messages older than {} days", deleted, retentionDays);
+      LOG.info("Cleaned up {} sent outbox messages older than {} days", deleted, retentionDays);
     }
   }
 

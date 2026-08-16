@@ -43,7 +43,7 @@ import com.njydsz.common.excel.support.cache.ReflectCache;
  */
 public class RowParser {
 
-  private static final Logger log = LoggerFactory.getLogger(RowParser.class);
+  private static final Logger LOG = LoggerFactory.getLogger(RowParser.class);
 
   /** 读取配置元数据 */
   private final ReadMetadata metadata;
@@ -145,7 +145,7 @@ public class RowParser {
 
       return obj;
     } catch (Exception e) {
-      log.error("创建对象实例异常", e);
+      LOG.error("创建对象实例异常", e);
       return null;
     }
   }

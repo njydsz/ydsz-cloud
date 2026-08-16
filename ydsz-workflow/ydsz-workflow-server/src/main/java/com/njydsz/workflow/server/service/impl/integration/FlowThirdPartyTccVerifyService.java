@@ -1,10 +1,11 @@
 package com.njydsz.workflow.server.service.impl.integration;
 
-import com.njydsz.common.seata.api.DistributedTransactionManager;
-import com.njydsz.common.seata.api.TransactionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import com.njydsz.common.seata.api.DistributedTransactionManager;
+import com.njydsz.common.seata.api.TransactionType;
 
 /**
  * 三方审批回调分布式事务验证服务
@@ -29,7 +30,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class FlowThirdPartyTccVerifyService {
 
-  private static final Logger log = LoggerFactory.getLogger(FlowThirdPartyTccVerifyService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(FlowThirdPartyTccVerifyService.class);
 
   private final DistributedTransactionManager txManager;
   private final FlowThirdPartyTccVerifyAction tccAction;
@@ -55,13 +56,13 @@ public class FlowThirdPartyTccVerifyService {
    * @throws Exception 事务执行异常
    */
   public String executeVerify() throws Exception {
-    log.info(
+    LOG.info(
         "[Seata Verify] 开始执行分布式事务验证: type={}, xid={}",
         txManager.getCurrentType(),
         txManager.getCurrentXid());
 
     // 验证 TccAction 注入成功
-    log.info(
+    LOG.info(
         "[Seata Verify] TccAction 注入状态: action={}, frozen={}",
         tccAction != null ? "OK" : "NULL",
         tccAction.isFrozen());
@@ -73,17 +74,17 @@ public class FlowThirdPartyTccVerifyService {
             TransactionType.LOCAL,
             () -> {
               String currentXid = txManager.getCurrentXid();
-              log.info(
+              LOG.info(
                   "[Seata Verify] 事务内执行: type={}, currentXid={}",
                   txManager.getCurrentType(),
                   currentXid);
 
               // 模拟三方审批回调状态变更
-              log.info("[Seata Verify] 模拟审批回调资源预留/确认");
+              LOG.info("[Seata Verify] 模拟审批回调资源预留/确认");
               return "VERIFY_OK";
             });
 
-    log.info("[Seata Verify] 分布式事务验证完成: result={}", result);
+    LOG.info("[Seata Verify] 分布式事务验证完成: result={}", result);
     return result;
   }
 

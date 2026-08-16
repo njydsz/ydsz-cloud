@@ -1,8 +1,5 @@
 package com.njydsz.workflow.server.engine.impl;
 
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.userinfo.api.client.OrgQueryClient;
-import com.njydsz.workflow.server.engine.FlowAssigneeResolver;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -11,9 +8,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.userinfo.api.client.OrgQueryClient;
+import com.njydsz.workflow.server.engine.FlowAssigneeResolver;
 
 /**
  * 基于 Feign 的办理人解析器（P1-5 / P2-2）

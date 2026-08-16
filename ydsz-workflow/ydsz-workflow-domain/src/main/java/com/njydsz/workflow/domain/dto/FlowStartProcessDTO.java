@@ -1,13 +1,15 @@
 package com.njydsz.workflow.domain.dto;
 
-import com.njydsz.common.safe.sensitive.SensitiveData;
-import com.njydsz.common.safe.sensitive.SensitiveType;
-import jakarta.validation.constraints.NotBlank;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
+
+import com.njydsz.common.safe.sensitive.SensitiveData;
+import com.njydsz.common.safe.sensitive.SensitiveType;
 
 /**
  * 自建工作流引擎 - 启动流程 DTO

@@ -1,5 +1,13 @@
 package com.njydsz.nextwiki.server.service;
 
+import java.io.InputStream;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+
 import com.njydsz.common.docs.domain.DocumentContent;
 import com.njydsz.common.docs.domain.DocumentParseResult;
 import com.njydsz.common.docs.enums.DocumentFormat;
@@ -9,12 +17,6 @@ import com.njydsz.common.file.storage.IFileStorageProvider;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.service.SearchDomainService;
-import java.io.InputStream;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
 
 /**
  * 内容提取服务。

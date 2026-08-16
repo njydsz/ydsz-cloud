@@ -1,6 +1,17 @@
 package com.njydsz.message.server.service.impl.receipt;
 
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.dto.receipt.ReceiptResult;
@@ -12,15 +23,6 @@ import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.channel.MessageChannel;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.service.core.MessageLogService;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
 
 /**
  * P2-9: 回执闭环调度器 —— 主动拉取回执 + 超时补偿。

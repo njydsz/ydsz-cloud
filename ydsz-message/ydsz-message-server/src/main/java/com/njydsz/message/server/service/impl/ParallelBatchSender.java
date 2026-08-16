@@ -1,8 +1,5 @@
 package com.njydsz.message.server.service.impl;
 
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
-import com.njydsz.message.domain.dto.batch.BatchSendResult;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -11,9 +8,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.common.feign.MessageResult;
+import com.njydsz.message.domain.dto.batch.BatchSendResult;
 
 /**
  * P2-15: 并行批量发送 + 流控。

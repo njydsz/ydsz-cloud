@@ -1,11 +1,13 @@
 package com.njydsz.workflow.infra.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.workflow.domain.entity.FlowComment;
 import java.util.List;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+
+import com.njydsz.workflow.domain.entity.FlowComment;
 
 /**
  * P2-2 流程评论 Mapper

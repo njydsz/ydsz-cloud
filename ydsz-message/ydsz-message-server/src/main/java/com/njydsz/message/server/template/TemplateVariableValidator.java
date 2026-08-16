@@ -1,14 +1,16 @@
 package com.njydsz.message.server.template;
 
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.exception.custom.SysException;
-import com.njydsz.common.json.YdszJson;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+
+import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.json.YdszJson;
 
 /**
  * 模板变量校验器（P0-3）。

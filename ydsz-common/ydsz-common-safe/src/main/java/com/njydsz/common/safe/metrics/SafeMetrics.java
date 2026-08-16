@@ -4,11 +4,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.safe.alert.SecurityEvent;
 import com.njydsz.common.safe.alert.SecurityEventType;
@@ -38,7 +38,7 @@ import com.njydsz.common.safe.alert.SecurityEventType;
  */
 public class SafeMetrics {
 
-  private static final Logger log = LoggerFactory.getLogger(SafeMetrics.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SafeMetrics.class);
 
   private final MeterRegistry meterRegistry;
 
@@ -57,9 +57,9 @@ public class SafeMetrics {
   public SafeMetrics(MeterRegistry meterRegistry) {
     this.meterRegistry = meterRegistry;
     if (meterRegistry != null) {
-      log.info("安全模块 Micrometer 指标采集已初始化");
+      LOG.info("安全模块 Micrometer 指标采集已初始化");
     } else {
-      log.info("安全模块指标采集降级为内存计数（MeterRegistry 不可用）");
+      LOG.info("安全模块指标采集降级为内存计数（MeterRegistry 不可用）");
     }
   }
 

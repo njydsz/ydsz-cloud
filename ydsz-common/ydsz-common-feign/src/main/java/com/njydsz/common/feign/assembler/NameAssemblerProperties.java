@@ -2,9 +2,9 @@ package com.njydsz.common.feign.assembler;
 
 import java.time.Duration;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * 名称富化组件配置属性。

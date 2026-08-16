@@ -1,13 +1,15 @@
 package com.njydsz.cronjob.infra.mapper.job;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.cronjob.domain.entity.job.JobHistory;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+
+import com.njydsz.cronjob.domain.entity.job.JobHistory;
 
 /**
  * 任务变更历史 Mapper

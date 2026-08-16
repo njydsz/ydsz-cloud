@@ -1,5 +1,8 @@
 package com.njydsz.common.event.config;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -12,9 +15,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
-import io.micrometer.core.instrument.MeterRegistry;
 
 import com.njydsz.common.event.admin.OutboxAdminService;
 import com.njydsz.common.event.gateway.EventPublishGateway;
@@ -65,7 +65,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 public class EventAutoConfiguration {
 
   /** 日志实例 */
-  private static final Logger log = LoggerFactory.getLogger(EventAutoConfiguration.class);
+  private static final Logger LOG = LoggerFactory.getLogger(EventAutoConfiguration.class);
 
   private OutboxProcessor outboxProcessor;
   private EventPublishGateway activeGateway;
@@ -84,7 +84,7 @@ public class EventAutoConfiguration {
     OutboxRepository repository = new OutboxRepository(jdbcTemplate, properties.getTableName());
     // 设置 countByStatus 缓存 TTL
     repository.setCacheTtlMillis(properties.getStatusCountCacheSeconds() * 1000L);
-    log.info(
+    LOG.info(
         "Outbox repository initialized: table={}, cacheTtl={}s",
         properties.getTableName(),
         properties.getStatusCountCacheSeconds());
@@ -121,7 +121,7 @@ public class EventAutoConfiguration {
   @Bean
   @ConditionalOnMissingBean(EventPublishGateway.class)
   public EventPublishGateway noopEventPublishGateway(EventProperties properties) {
-    log.warn(
+    LOG.warn(
         "No EventPublishGateway found, using NoopEventPublishGateway. "
             + "Messages will not be actually published to any message queue.");
     return new NoopEventPublishGateway();
@@ -221,7 +221,7 @@ public class EventAutoConfiguration {
   public static class RocketMqGatewayConfiguration {
 
     /** 日志实例 */
-    private static final Logger log = LoggerFactory.getLogger(RocketMqGatewayConfiguration.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RocketMqGatewayConfiguration.class);
 
     /**
      * 注册 RocketMQ 事件投递网关
@@ -233,7 +233,7 @@ public class EventAutoConfiguration {
     @ConditionalOnMissingBean(EventPublishGateway.class)
     public EventPublishGateway rocketMqEventPublishGateway(
         org.apache.rocketmq.spring.core.RocketMQTemplate rocketMQTemplate) {
-      log.info("RocketMqEventPublishGateway registered: topic=ydsz-outbox-events");
+      LOG.info("RocketMqEventPublishGateway registered: topic=ydsz-outbox-events");
       return new RocketMqEventPublishGateway(rocketMQTemplate, null);
     }
   }

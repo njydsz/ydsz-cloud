@@ -1,12 +1,13 @@
 package com.njydsz.message.api.fallback;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cloud.openfeign.FallbackFactory;
+import org.springframework.stereotype.Component;
+
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.message.api.client.MessageSendClient;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.openfeign.FallbackFactory;
-import org.springframework.stereotype.Component;
 
 /**
  * {@link MessageSendClient} 的 FallbackFactory。

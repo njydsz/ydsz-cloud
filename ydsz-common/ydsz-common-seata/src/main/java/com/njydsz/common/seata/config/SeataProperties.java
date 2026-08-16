@@ -3,13 +3,13 @@ package com.njydsz.common.seata.config;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import com.njydsz.common.seata.api.TransactionType;
 import com.njydsz.common.seata.config.validator.ValidXidSignConfig;

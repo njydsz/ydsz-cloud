@@ -1,13 +1,15 @@
 package com.njydsz.nextwiki.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * 网盘文件节点实体
@@ -101,6 +103,10 @@ public class FileNode extends MpBaseEntity<String> implements Serializable {
   /** 原始路径（删除前的完整路径，用于恢复） */
   @TableField("original_path")
   private String originalPath;
+
+  /** 存储类型：STANDARD / GLACIER / DEEP_ARCHIVE（冷数据归档） */
+  @TableField("storage_class")
+  private String storageClass;
 
   /**
    * 提取的文档全文内容（不持久化，仅用于内存传递到搜索索引）。

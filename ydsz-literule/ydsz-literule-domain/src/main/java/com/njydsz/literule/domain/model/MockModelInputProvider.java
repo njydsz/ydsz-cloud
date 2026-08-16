@@ -1,10 +1,12 @@
 package com.njydsz.literule.domain.model;
 
-import com.njydsz.literule.api.RuleContext;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.literule.api.RuleContext;
 
 /**
  * 模拟模型输入提供者（P3-1 规则+模型融合）

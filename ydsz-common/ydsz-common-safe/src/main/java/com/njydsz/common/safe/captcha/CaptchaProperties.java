@@ -1,7 +1,7 @@
 package com.njydsz.common.safe.captcha;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * 验证码配置属性（P1-12：统一验证码能力下沉到 common-safe）。

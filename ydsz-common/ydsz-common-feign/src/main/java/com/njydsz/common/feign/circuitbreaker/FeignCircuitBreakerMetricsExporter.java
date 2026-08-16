@@ -3,10 +3,10 @@ package com.njydsz.common.feign.circuitbreaker;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 熔断器指标导出到 Spring Boot Actuator Metrics。
@@ -32,7 +32,7 @@ import io.micrometer.core.instrument.MeterRegistry;
  */
 public class FeignCircuitBreakerMetricsExporter {
 
-  private static final Logger log =
+  private static final Logger LOG =
       LoggerFactory.getLogger(FeignCircuitBreakerMetricsExporter.class);
 
   private static final String PREFIX = "feign.circuit.breaker";
@@ -50,7 +50,7 @@ public class FeignCircuitBreakerMetricsExporter {
    */
   public FeignCircuitBreakerMetricsExporter(MeterRegistry meterRegistry) {
     this.meterRegistry = meterRegistry;
-    log.info("[FeignCircuitBreakerMetricsExporter] 熔断器指标导出已启用");
+    LOG.info("[FeignCircuitBreakerMetricsExporter] 熔断器指标导出已启用");
   }
 
   /**
@@ -168,7 +168,7 @@ public class FeignCircuitBreakerMetricsExporter {
         .description("Average call duration in milliseconds")
         .register(meterRegistry);
 
-    log.debug("[FeignCircuitBreakerMetricsExporter] 已自动注册服务指标: {}", serviceName);
+    LOG.debug("[FeignCircuitBreakerMetricsExporter] 已自动注册服务指标: {}", serviceName);
   }
 
   /**
@@ -178,7 +178,7 @@ public class FeignCircuitBreakerMetricsExporter {
    */
   public void unregisterServiceMetrics(String serviceName) {
     registeredServices.remove(serviceName);
-    log.debug("[FeignCircuitBreakerMetricsExporter] 已注销服务指标: {}", serviceName);
+    LOG.debug("[FeignCircuitBreakerMetricsExporter] 已注销服务指标: {}", serviceName);
   }
 
   /**

@@ -6,11 +6,11 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
+import feign.Response;
+import feign.codec.ErrorDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
-import feign.Response;
-import feign.codec.ErrorDecoder;
 
 import com.njydsz.common.feign.config.FeignProperties;
 import com.njydsz.common.feign.exception.BadRequestException;
@@ -57,7 +57,7 @@ import com.njydsz.common.feign.exception.OpenFeignException;
  */
 public class YdszFeignErrorDecoder implements ErrorDecoder {
 
-  private static final Logger log = LoggerFactory.getLogger(YdszFeignErrorDecoder.class);
+  private static final Logger LOG = LoggerFactory.getLogger(YdszFeignErrorDecoder.class);
 
   private final ErrorDecoder defaultErrorDecoder = new Default();
   private final FeignProperties feignProperties;
@@ -80,7 +80,7 @@ public class YdszFeignErrorDecoder implements ErrorDecoder {
    */
   @Override
   public Exception decode(String methodKey, Response response) {
-    log.debug("Feign 调用失败, method: {}, status: {}", methodKey, response.status());
+    LOG.debug("Feign 调用失败, method: {}, status: {}", methodKey, response.status());
 
     switch (response.status()) {
       case 400:
@@ -166,7 +166,7 @@ public class YdszFeignErrorDecoder implements ErrorDecoder {
       }
       return readResult.truncated ? body + "...(已截断)" : body;
     } catch (IOException ex) {
-      log.debug("读取 Feign 响应体失败", ex);
+      LOG.debug("读取 Feign 响应体失败", ex);
       return null;
     }
   }

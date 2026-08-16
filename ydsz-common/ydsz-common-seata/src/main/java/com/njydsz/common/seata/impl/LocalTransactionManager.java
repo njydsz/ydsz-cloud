@@ -25,7 +25,7 @@ import com.njydsz.common.seata.metrics.SeataMetrics;
  */
 public class LocalTransactionManager extends AbstractTransactionManager {
 
-  private static final Logger log = LoggerFactory.getLogger(LocalTransactionManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(LocalTransactionManager.class);
 
   private final TransactionTemplate transactionTemplate;
 
@@ -84,11 +84,11 @@ public class LocalTransactionManager extends AbstractTransactionManager {
                   throw e;
                 }
               });
-      log.debug("Local transaction committed: name={}, xid={}", transactionName, xid);
+      LOG.debug("Local transaction committed: name={}, xid={}", transactionName, xid);
       endXid();
       return result;
     } catch (TransactionExecutionException e) {
-      log.error(
+      LOG.error(
           "Local transaction rolled back: name={}, xid={}", transactionName, xid, e.getCause());
       Throwable cause = e.getCause();
       if (cause instanceof Exception) {
@@ -98,7 +98,7 @@ public class LocalTransactionManager extends AbstractTransactionManager {
       endXid(e);
       throw e;
     } catch (Exception e) {
-      log.error("Local transaction rolled back: name={}, xid={}", transactionName, xid, e);
+      LOG.error("Local transaction rolled back: name={}, xid={}", transactionName, xid, e);
       endXid(e);
       throw e;
     }
@@ -118,7 +118,7 @@ public class LocalTransactionManager extends AbstractTransactionManager {
   public <T> T executeWithCompensation(
       String transactionName, Callable<T> action, Runnable compensation) throws Exception {
     String xid = beginXid(transactionName);
-    log.debug("Saga transaction started: name={}, xid={}", transactionName, xid);
+    LOG.debug("Saga transaction started: name={}, xid={}", transactionName, xid);
     try {
       T result =
           transactionTemplate.execute(
@@ -134,12 +134,12 @@ public class LocalTransactionManager extends AbstractTransactionManager {
                   throw e;
                 }
               });
-      log.debug("Saga transaction completed: name={}, xid={}", transactionName, xid);
+      LOG.debug("Saga transaction completed: name={}, xid={}", transactionName, xid);
       endXid();
       return result;
     } catch (TransactionExecutionException e) {
       Throwable cause = e.getCause();
-      log.error(
+      LOG.error(
           "Saga transaction failed, executing compensation: name={}, xid={}",
           transactionName,
           xid,
@@ -152,7 +152,7 @@ public class LocalTransactionManager extends AbstractTransactionManager {
       endXid(e);
       throw e;
     } catch (Exception e) {
-      log.error(
+      LOG.error(
           "Saga transaction failed, executing compensation: name={}, xid={}",
           transactionName,
           xid,
@@ -170,9 +170,9 @@ public class LocalTransactionManager extends AbstractTransactionManager {
     }
     try {
       compensation.run();
-      log.info("Compensation completed: name={}, xid={}", transactionName, xid);
+      LOG.info("Compensation completed: name={}, xid={}", transactionName, xid);
     } catch (Exception ce) {
-      log.error("Compensation failed: name={}, xid={}", transactionName, xid, ce);
+      LOG.error("Compensation failed: name={}, xid={}", transactionName, xid, ce);
     }
   }
 

@@ -9,11 +9,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import jakarta.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Scheduled;
-import jakarta.annotation.PreDestroy;
 
 import com.njydsz.common.safe.ip.IpAccessService;
 
@@ -53,7 +53,7 @@ import com.njydsz.common.safe.ip.IpAccessService;
  */
 public class SecurityEventAggregator {
 
-  private static final Logger log = LoggerFactory.getLogger(SecurityEventAggregator.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SecurityEventAggregator.class);
 
   /** 封禁命令队列容量 */
   private static final int BLOCK_QUEUE_CAPACITY = 256;
@@ -103,7 +103,7 @@ public class SecurityEventAggregator {
     // CHECKSTYLE.ON: ThreadPoolCreate
     this.blockConsumerExecutor.submit(this::consumeBlockCommands);
 
-    log.info(
+    LOG.info(
         "安全事件自动响应聚合器初始化: enabled={}, threshold={}, window={}s", enabled, threshold, windowSeconds);
   }
 
@@ -119,7 +119,7 @@ public class SecurityEventAggregator {
         Thread.currentThread().interrupt();
         break;
       } catch (Exception e) {
-        log.error("【安全事件自动响应】封禁命令消费异常: {}", e.getMessage());
+        LOG.error("【安全事件自动响应】封禁命令消费异常: {}", e.getMessage());
       }
     }
   }
@@ -132,7 +132,7 @@ public class SecurityEventAggregator {
     try {
       ipAccessService.block(command.ip(), command.blockSeconds());
     } catch (Exception e) {
-      log.error("【安全事件自动响应】IP 自动封禁失败: ip={}, error={}", command.ip(), e.getMessage());
+      LOG.error("【安全事件自动响应】IP 自动封禁失败: ip={}, error={}", command.ip(), e.getMessage());
     }
   }
 
@@ -192,7 +192,7 @@ public class SecurityEventAggregator {
     blockedIpMap.put(ip, System.currentTimeMillis() + blockSeconds * 1000);
     autoBlockedCount.incrementAndGet();
 
-    log.warn(
+    LOG.warn(
         "【安全事件自动响应】IP {} 在 {} 秒内触发 {} 次安全事件（严重级别: {}），自动封禁 {} 秒",
         ip,
         windowSeconds,
@@ -203,7 +203,7 @@ public class SecurityEventAggregator {
     // 异步投递封禁命令，解耦事件处理链
     boolean offered = blockQueue.offer(new BlockCommand(ip, blockSeconds));
     if (!offered) {
-      log.warn("【安全事件自动响应】封禁命令队列已满，降级为同步执行: ip={}", ip);
+      LOG.warn("【安全事件自动响应】封禁命令队列已满，降级为同步执行: ip={}", ip);
       executeBlock(new BlockCommand(ip, blockSeconds));
     }
   }
@@ -247,8 +247,8 @@ public class SecurityEventAggregator {
 
     blockedIpMap.entrySet().removeIf(entry -> entry.getValue() < now);
 
-    if (cleanedEntries > 0 && log.isDebugEnabled()) {
-      log.debug(
+    if (cleanedEntries > 0 && LOG.isDebugEnabled()) {
+      LOG.debug(
           "【安全事件自动响应】清理过期事件记录: 清理IP={}, 活跃IP={}, 累计封禁={}",
           cleanedEntries,
           ipEventTimestamps.size(),

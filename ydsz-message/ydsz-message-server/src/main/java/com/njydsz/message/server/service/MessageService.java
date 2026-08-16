@@ -1,13 +1,15 @@
 package com.njydsz.message.server.service.core;
 
+import java.util.List;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.message.domain.dto.batch.BatchSendResult;
 import com.njydsz.message.domain.dto.core.MessageLogQueryDTO;
 import com.njydsz.message.domain.dto.core.MessageSendDTO;
 import com.njydsz.message.domain.entity.core.MsgLog;
-import java.util.List;
 
 /**
  * 消息发送 Service 接口（多渠道核心入口）

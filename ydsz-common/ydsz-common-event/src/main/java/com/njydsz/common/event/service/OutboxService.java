@@ -64,7 +64,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 public class OutboxService {
 
   /** 日志实例 */
-  private static final Logger log = LoggerFactory.getLogger(OutboxService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(OutboxService.class);
 
   /** Outbox 仓储 */
   private final OutboxRepository outboxRepository;
@@ -127,7 +127,7 @@ public class OutboxService {
 
     // 幂等去重检查（仅当有 deduplicationId 时）
     if (deduplicationId != null && outboxRepository.existsByDeduplicationId(deduplicationId)) {
-      log.info(
+      LOG.info(
           "Outbox message skipped (duplicate): aggregateType={}, aggregateId={}, eventType={}, "
               + "deduplicationId={}",
           partial.getAggregateType(),
@@ -152,7 +152,7 @@ public class OutboxService {
             .build();
 
     outboxRepository.save(message);
-    log.debug(
+    LOG.debug(
         "Outbox message appended: id={}, type={}, aggregate={}/{}, tenant={}",
         message.getId(),
         message.getEventType(),
@@ -228,13 +228,13 @@ public class OutboxService {
   private void doPublishDomainEvent(OutboxMessage message) {
     try {
       eventPublisher.publishEvent(message);
-      log.debug(
+      LOG.debug(
           "Domain event published to Spring event bus: id={}, type={}",
           message.getId(),
           message.getEventType());
     } catch (Exception e) {
       // 事件发布失败不影响主流程（异步投递由轮询器兜底）
-      log.warn(
+      LOG.warn(
           "Failed to publish domain event to Spring event bus: id={}, type={}, err={}",
           message.getId(),
           message.getEventType(),
@@ -374,7 +374,7 @@ public class OutboxService {
     }
 
     outboxRepository.saveBatch(messages);
-    log.debug("Batch appended {} outbox messages", messages.size());
+    LOG.debug("Batch appended {} outbox messages", messages.size());
 
     // 注册批量事件发布回调
     registerBatchDomainEventPublishCallback(messages);

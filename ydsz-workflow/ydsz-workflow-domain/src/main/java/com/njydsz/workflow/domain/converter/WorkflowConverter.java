@@ -1,5 +1,12 @@
 package com.njydsz.workflow.domain.converter;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.factory.Mappers;
+
 import com.njydsz.workflow.domain.dto.post.FlowDelegateAuthPostDTO;
 import com.njydsz.workflow.domain.dto.put.FlowDelegateAuthPutDTO;
 import com.njydsz.workflow.domain.entity.FlowAdminRole;
@@ -53,11 +60,6 @@ import com.njydsz.workflow.domain.vo.FlowThirdPartyLogVO;
 import com.njydsz.workflow.domain.vo.FlowTimerVO;
 import com.njydsz.workflow.domain.vo.FlowUserVO;
 import com.njydsz.workflow.domain.vo.StringVO;
-import java.util.List;
-import java.util.stream.Collectors;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
 
 /**
  * workflow 模块统一 MapStruct 转换器。

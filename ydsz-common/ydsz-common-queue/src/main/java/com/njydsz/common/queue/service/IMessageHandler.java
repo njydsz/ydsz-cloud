@@ -13,7 +13,7 @@ import com.njydsz.common.queue.domain.QueueMessage;
  * // Lambda 表达式方式
  * subscriber.subscribeAsync(message -> {
  *     String body = message.getBody();
- *     log.info("Received: {}", body);
+ *     LOG.info("Received: {}", body);
  * });
  *
  * // 方法引用方式
@@ -24,7 +24,7 @@ import com.njydsz.common.queue.domain.QueueMessage;
  *     @Override
  *     public void onMessage(QueueMessage message) throws Exception {
  *         // 业务处理逻辑
- *         log.info("Message: {}", message.getBody());
+ *         LOG.info("Message: {}", message.getBody());
  *     }
  * });
  * }</pre>

@@ -1,12 +1,14 @@
 package com.njydsz.message.domain.entity.canary;
 
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import java.io.Serial;
+
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * 灰度桶表: 按 canary_key(template_code/biz_type)做百分比灰度发布

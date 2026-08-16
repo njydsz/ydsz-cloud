@@ -47,7 +47,7 @@ import com.njydsz.common.notify.ratelimit.NotifyRateLimiterManager;
  */
 public class NotifyServiceImpl implements NotifyService {
 
-  private static final Logger log = LoggerFactory.getLogger(NotifyServiceImpl.class);
+  private static final Logger LOG = LoggerFactory.getLogger(NotifyServiceImpl.class);
 
   /** 纳秒到毫秒的转换系数 */
   private static final long NANOS_TO_MILLIS = 1_000_000L;
@@ -176,7 +176,7 @@ public class NotifyServiceImpl implements NotifyService {
     this.preferenceManager = preferenceManager;
     this.dedupService = dedupService;
     this.aggregator = aggregator;
-    log.info(
+    LOG.info(
         "[NotifyServiceImpl] 初始化完成, strategies={}, rateLimit={}, parallel={}, circuitBreaker={}, "
             + "fallback={}, audit={}, metrics={}, preference={}, dedup={}, aggregator={}",
         channelStrategies.size(),
@@ -244,14 +244,14 @@ public class NotifyServiceImpl implements NotifyService {
       try {
         NotifyType type = request.isTemplateRequest() ? NotifyType.TEMPLATE : NotifyType.TEXT;
         if (!preferenceManager.isAllowed(request.getUserId(), channel, type)) {
-          log.debug(
+          LOG.debug(
               "[NotifyServiceImpl] 用户偏好检查不通过，跳过发送: userId={}, channel={}",
               request.getUserId(),
               channel.getName());
           return NotifySendResult.failure("用户通知偏好不允许此渠道", channel.getName());
         }
       } catch (Exception e) {
-        log.debug("[NotifyServiceImpl] 偏好检查异常，继续发送: {}", e.getMessage());
+        LOG.debug("[NotifyServiceImpl] 偏好检查异常，继续发送: {}", e.getMessage());
       }
     }
 
@@ -265,7 +265,7 @@ public class NotifyServiceImpl implements NotifyService {
           request.getTitle(),
           request.getContent(),
           request.getPriority())) {
-        log.debug(
+        LOG.debug(
             "[NotifyServiceImpl] 消息已加入聚合缓冲区: channel={}, receiver={}",
             channel.getName(),
             request.getReceiver());
@@ -556,7 +556,7 @@ public class NotifyServiceImpl implements NotifyService {
       }
     }
     if (sent > 0) {
-      log.info("[NotifyServiceImpl] 聚合消息刷新完成, 发送 {} 条聚合消息", sent);
+      LOG.info("[NotifyServiceImpl] 聚合消息刷新完成, 发送 {} 条聚合消息", sent);
     }
     return sent;
   }
@@ -716,7 +716,7 @@ public class NotifyServiceImpl implements NotifyService {
       return ctx;
     }
     if (dedupService.isDuplicate(ctx.receiver(), ctx.title(), ctx.content())) {
-      log.debug(
+      LOG.debug(
           "[NotifyServiceImpl] 去重命中，跳过发送: receiver={}, title={}", ctx.receiver(), ctx.title());
       return ctx.withResult(NotifySendResult.success("dedup-skipped", ctx.channel().getName()));
     }
@@ -807,7 +807,7 @@ public class NotifyServiceImpl implements NotifyService {
 
     // 失败降级
     if (!ctx.sendResult().isSuccess() && fallbackManager != null) {
-      log.info("[NotifyServiceImpl] 主渠道[{}]发送失败，尝试降级", ctx.channel().getName());
+      LOG.info("[NotifyServiceImpl] 主渠道[{}]发送失败，尝试降级", ctx.channel().getName());
       String fallbackTitle = ctx.title() != null ? ctx.title() : ctx.templateCode();
       String fallbackContent =
           ctx.content() != null
@@ -834,7 +834,7 @@ public class NotifyServiceImpl implements NotifyService {
         receiptTracker.markFailed(result.getMessageId(), result.getErrorMessage());
       }
     } catch (Exception e) {
-      log.debug("[NotifyServiceImpl] 回执更新异常: {}", e.getMessage());
+      LOG.debug("[NotifyServiceImpl] 回执更新异常: {}", e.getMessage());
     }
   }
 
@@ -912,7 +912,7 @@ public class NotifyServiceImpl implements NotifyService {
         metrics.recordEmailFailure(channel.getName(), "send_error", "send_failure");
       }
     } catch (Exception e) {
-      log.debug("[NotifyServiceImpl] 指标记录异常: {}", e.getMessage());
+      LOG.debug("[NotifyServiceImpl] 指标记录异常: {}", e.getMessage());
     }
   }
 
@@ -943,7 +943,7 @@ public class NotifyServiceImpl implements NotifyService {
           Duration.ofNanos(durationNanos).toMillis(),
           templateCode);
     } catch (Exception e) {
-      log.debug("[NotifyServiceImpl] 审计日志记录异常: {}", e.getMessage());
+      LOG.debug("[NotifyServiceImpl] 审计日志记录异常: {}", e.getMessage());
     }
   }
 
@@ -962,7 +962,7 @@ public class NotifyServiceImpl implements NotifyService {
     try {
       return dedupService.isDuplicate(receiver, title, content);
     } catch (Exception e) {
-      log.debug("[NotifyServiceImpl] 去重检查异常: {}", e.getMessage());
+      LOG.debug("[NotifyServiceImpl] 去重检查异常: {}", e.getMessage());
       return false;
     }
   }

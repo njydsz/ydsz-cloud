@@ -1,15 +1,17 @@
 package com.njydsz.message.server.service.impl;
 
-import com.njydsz.common.redis.service.ops.RedisStringOps;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 /**
  * P2-14: 用户时区感知 DND（Do Not Disturb）服务。
@@ -88,8 +90,8 @@ public class DndService {
   /**
    * 统一 DND 决策入口。
    *
-   * <p>综合 Redis 免打扰配置与消息优先级给出决策：URGENT 消息始终放行；
-   * 在窗口内时根据相对当前时间与 {@code maxDeferSeconds} 的关系返回 DEFER 或 DROP。
+   * <p>综合 Redis 免打扰配置与消息优先级给出决策：URGENT 消息始终放行； 在窗口内时根据相对当前时间与 {@code maxDeferSeconds} 的关系返回 DEFER 或
+   * DROP。
    *
    * @param userId 用户 ID
    * @param channel 通道标识（仅用于日志，不影响决策）
@@ -129,12 +131,21 @@ public class DndService {
     if (deferSeconds > maxDeferSeconds) {
       log.info(
           "[DND] 延迟超过阈值,丢弃: userId={} channel={} defer={}s max={}s",
-          userId, channel, deferSeconds, maxDeferSeconds);
+          userId,
+          channel,
+          deferSeconds,
+          maxDeferSeconds);
       return DndResult.drop();
     }
     log.info(
         "[DND] 消息在免打扰时段内,延迟发送: userId={} channel={} now={} window={}~{} tz={} deferUntil={}",
-        userId, channel, now, config.startTime, config.endTime, config.timezone, windowEnd);
+        userId,
+        channel,
+        now,
+        config.startTime,
+        config.endTime,
+        config.timezone,
+        windowEnd);
     return DndResult.defer(windowEnd);
   }
 
@@ -245,15 +256,15 @@ public class DndService {
   /**
    * 计算 DND 窗口结束时间（下次可发送时间）。
    *
-   * <p>纯工具方法，无状态，线程安全。供 PreferenceHandler 等场景复用，
-   * 消除重复的跨天窗口结束时间计算逻辑。
+   * <p>纯工具方法，无状态，线程安全。供 PreferenceHandler 等场景复用， 消除重复的跨天窗口结束时间计算逻辑。
    *
    * @param now 当前时间
    * @param startTime 窗口开始时间
    * @param endTime 窗口结束时间
    * @return 窗口结束的 LocalDateTime
    */
-  public static LocalDateTime resolveWindowEnd(LocalDateTime now, LocalTime startTime, LocalTime endTime) {
+  public static LocalDateTime resolveWindowEnd(
+      LocalDateTime now, LocalTime startTime, LocalTime endTime) {
     LocalDateTime todayEnd = now.toLocalDate().atTime(endTime);
     if (startTime.isBefore(endTime)) {
       // 同天：若当前已过今日结束时间，则窗口结束为明日此时（不应发生）

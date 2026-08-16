@@ -2,6 +2,7 @@ package com.njydsz.literule.server.version;
 
 import java.io.Serializable;
 import java.util.List;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

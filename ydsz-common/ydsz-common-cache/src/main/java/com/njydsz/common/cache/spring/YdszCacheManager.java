@@ -58,7 +58,7 @@ import com.njydsz.common.cache.internal.loading.EnhancedLoadingCache;
  */
 public class YdszCacheManager implements CacheManager, DisposableBean, InitializingBean {
 
-  private static final Logger log = LoggerFactory.getLogger(YdszCacheManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(YdszCacheManager.class);
 
   private final Map<String, SpringYdszCache> cacheMap = new ConcurrentHashMap<>();
 
@@ -262,7 +262,7 @@ public class YdszCacheManager implements CacheManager, DisposableBean, Initializ
       builder.refreshAfterWrite(effectiveRefreshAfterWrite, effectiveRefreshTimeUnit);
     }
 
-    log.debug(
+    LOG.debug(
         "构建缓存: name={}, type={}, maxSize={}, expireAfterWrite={} {}",
         name,
         effectiveType,
@@ -276,7 +276,7 @@ public class YdszCacheManager implements CacheManager, DisposableBean, Initializ
   /** Spring 容器关闭时清理资源 */
   @Override
   public void destroy() {
-    log.info("YdszCacheManager 正在关闭...");
+    LOG.info("YdszCacheManager 正在关闭...");
 
     // 关闭所有可关闭的缓存实例
     synchronized (createdCaches) {
@@ -285,7 +285,7 @@ public class YdszCacheManager implements CacheManager, DisposableBean, Initializ
           try {
             ((AutoCloseable) cache).close();
           } catch (Exception e) {
-            log.warn("关闭缓存实例失败: {}", cache.getClass().getSimpleName(), e);
+            LOG.warn("关闭缓存实例失败: {}", cache.getClass().getSimpleName(), e);
           }
         }
       }
@@ -297,6 +297,6 @@ public class YdszCacheManager implements CacheManager, DisposableBean, Initializ
     // 关闭 EnhancedLoadingCache 共享资源
     EnhancedLoadingCache.shutdownSharedResources();
 
-    log.info("YdszCacheManager 已关闭");
+    LOG.info("YdszCacheManager 已关闭");
   }
 }

@@ -2,13 +2,13 @@ package com.njydsz.common.notify.security;
 
 import java.util.Properties;
 
+import jakarta.mail.Session;
+import jakarta.mail.Transport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.StringUtils;
-import jakarta.mail.Session;
-import jakarta.mail.Transport;
 
 import com.njydsz.common.notify.config.NotifyProperties;
 
@@ -30,7 +30,7 @@ import com.njydsz.common.notify.config.NotifyProperties;
  */
 public class EmailSmtpHealthChecker {
 
-  private static final Logger log = LoggerFactory.getLogger(EmailSmtpHealthChecker.class);
+  private static final Logger LOG = LoggerFactory.getLogger(EmailSmtpHealthChecker.class);
 
   private static final int MAX_FAILURE_STREAK = 3;
 
@@ -61,14 +61,14 @@ public class EmailSmtpHealthChecker {
       if (ok) {
         failureStreak = 0;
         if (!healthy) {
-          log.info("[EmailSmtpHealthChecker] SMTP 连接恢复, host={}", email.getSmtpHost());
+          LOG.info("[EmailSmtpHealthChecker] SMTP 连接恢复, host={}", email.getSmtpHost());
         }
         healthy = true;
       } else {
         onFailure(email);
       }
     } catch (Exception e) {
-      log.debug("[EmailSmtpHealthChecker] SMTP 探活异常: {}", e.getMessage());
+      LOG.debug("[EmailSmtpHealthChecker] SMTP 探活异常: {}", e.getMessage());
       onFailure(email);
     }
   }
@@ -108,7 +108,7 @@ public class EmailSmtpHealthChecker {
       transport.close();
       return true;
     } catch (Exception e) {
-      log.debug(
+      LOG.debug(
           "[EmailSmtpHealthChecker] SMTP 探测失败: host={}, port={}, error={}",
           email.getSmtpHost(),
           email.getSmtpPort(),
@@ -126,13 +126,13 @@ public class EmailSmtpHealthChecker {
     failureStreak++;
     if (failureStreak >= MAX_FAILURE_STREAK) {
       healthy = false;
-      log.error(
+      LOG.error(
           "[EmailSmtpHealthChecker] SMTP 连续 {} 次探活失败，标记为不健康, host={}, port={}",
           failureStreak,
           email.getSmtpHost(),
           email.getSmtpPort());
     } else {
-      log.warn(
+      LOG.warn(
           "[EmailSmtpHealthChecker] SMTP 探活失败 ({}/{}), host={}",
           failureStreak,
           MAX_FAILURE_STREAK,

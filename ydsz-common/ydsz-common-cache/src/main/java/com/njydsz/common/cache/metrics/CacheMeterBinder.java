@@ -5,8 +5,6 @@ import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import io.micrometer.core.instrument.FunctionCounter;
 import io.micrometer.core.instrument.FunctionTimer;
 import io.micrometer.core.instrument.Gauge;
@@ -15,6 +13,8 @@ import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.binder.MeterBinder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.cache.api.Cache;
 
@@ -47,7 +47,7 @@ import com.njydsz.common.cache.api.Cache;
  */
 public class CacheMeterBinder implements MeterBinder {
 
-  private static final Logger log = LoggerFactory.getLogger(CacheMeterBinder.class);
+  private static final Logger LOG = LoggerFactory.getLogger(CacheMeterBinder.class);
 
   private static final String METRIC_PREFIX = "cache";
   private static final String TAG_CACHE_NAME = "cache_name";
@@ -92,7 +92,7 @@ public class CacheMeterBinder implements MeterBinder {
             : cacheName;
     // 高基数保护：记录注册数量
     if (REGISTERED_NAMES.incrementAndGet() > MAX_REGISTERED_NAMES) {
-      log.warn("缓存指标注册数量超过阈值 {}，可能存在高基数问题。cacheName={}", MAX_REGISTERED_NAMES, this.cacheName);
+      LOG.warn("缓存指标注册数量超过阈值 {}，可能存在高基数问题。cacheName={}", MAX_REGISTERED_NAMES, this.cacheName);
     }
     this.cacheType = cacheType;
     // 预编译 Tags：在构造时一次性构建，避免每次 bindTo 都重复创建

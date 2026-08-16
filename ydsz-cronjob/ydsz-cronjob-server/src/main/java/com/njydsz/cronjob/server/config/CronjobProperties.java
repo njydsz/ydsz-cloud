@@ -3,6 +3,7 @@ package com.njydsz.cronjob.server.config;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
@@ -323,10 +324,16 @@ public class CronjobProperties {
      * P2-5: 线程池隔离策略。
      *
      * <ul>
-     *   <li>{@code none}（默认）：所有租户共享全局线程池
-     *   <li>{@code tenant}：按 tenantId 隔离，每个租户独立线程池
-     *   <li>{@code job_group}：按 jobGroup 隔离，每个分组独立线程池
+     *   <li>{@code none}（默认）：所有租户共享全局线程池。非 SaaS 场景推荐，配置简单， 全局池 + CallerRunsPolicy 提供自然背压；集群级并发由
+     *       {@link GlobalConcurrencyController} 限制
+     *   <li>{@code tenant}：按 tenantId 隔离，每个租户独立线程池。SaaS 多租户场景推荐， 彻底隔离 noisy
+     *       neighbor，但租户数过多时存在线程膨胀风险（租户数 × tenantPoolSize）
+     *   <li>{@code job_group}：按 jobGroup 隔离，每个分组独立线程池。 适合按业务域划分执行资源的场景（如核心业务 vs 离线任务）
      * </ul>
+     *
+     * <p><b>P1-O1 决策：</b>非 SaaS 场景保持 {@code none}（默认）。 全局线程池 + Semaphore（{@link
+     * GlobalConcurrencyController} 通过 Redis 计数器实现） 已足够控制并发，无需为单租户引入额外的线程池分裂开销。 SaaS 场景可按需启用 {@code
+     * tenant}，建议配合租户级上限防止线程爆炸。
      */
     private String isolationStrategy = "none";
 

@@ -1,13 +1,15 @@
 package com.njydsz.workflow.server.service;
 
-import com.njydsz.workflow.domain.entity.FlowRunTask;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import com.njydsz.workflow.domain.entity.FlowRunTask;
 
 /**
  * 待办智能排序服务。

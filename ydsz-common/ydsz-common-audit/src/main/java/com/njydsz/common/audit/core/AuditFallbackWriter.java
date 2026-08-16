@@ -39,7 +39,7 @@ import com.njydsz.common.json.YdszJson;
  */
 public class AuditFallbackWriter {
 
-  private static final Logger log = LoggerFactory.getLogger(AuditFallbackWriter.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AuditFallbackWriter.class);
 
   /** 磁盘兜底文件目录默认路径 */
   private static final String DEFAULT_FALLBACK_DIR =
@@ -102,7 +102,7 @@ public class AuditFallbackWriter {
    */
   public synchronized void writeToFallback(AuditLog auditLog) {
     if (diskFallbackFailed) {
-      log.error("【审计兜底】磁盘兜底已失效, 审计日志将丢失, id={}", auditLog.getId());
+      LOG.error("【审计兜底】磁盘兜底已失效, 审计日志将丢失, id={}", AUDIT_LOG.getId());
       return;
     }
 
@@ -119,7 +119,7 @@ public class AuditFallbackWriter {
       checkAndRollFile();
     } catch (IOException e) {
       diskFallbackFailed = true;
-      log.error("【审计兜底】磁盘兜底写入失败, 审计日志将丢失, id={}, error={}", auditLog.getId(), e.getMessage(), e);
+      LOG.error("【审计兜底】磁盘兜底写入失败, 审计日志将丢失, id={}, error={}", AUDIT_LOG.getId(), e.getMessage(), e);
       closeCurrentWriter();
     }
   }
@@ -132,7 +132,7 @@ public class AuditFallbackWriter {
   public void writeBatchToFallback(List<AuditLog> batch) {
     if (batch == null || batch.isEmpty() || diskFallbackFailed) {
       if (diskFallbackFailed && batch != null) {
-        log.error("【审计兜底】磁盘兜底已失效, {} 条审计日志将丢失", batch.size());
+        LOG.error("【审计兜底】磁盘兜底已失效, {} 条审计日志将丢失", batch.size());
       }
       return;
     }
@@ -165,7 +165,7 @@ public class AuditFallbackWriter {
           .sorted()
           .collect(Collectors.toList());
     } catch (IOException e) {
-      log.error("【审计兜底】扫描磁盘兜底目录失败, dir={}", fallbackDir, e);
+      LOG.error("【审计兜底】扫描磁盘兜底目录失败, dir={}", fallbackDir, e);
       return Collections.emptyList();
     }
   }
@@ -189,14 +189,14 @@ public class AuditFallbackWriter {
                 try {
                   return YdszJson.fromJson(line.trim(), AuditLog.class);
                 } catch (Exception e) {
-                  log.warn("【审计兜底】恢复日志行失败, file={}, error={}", file, e.getMessage());
+                  LOG.warn("【审计兜底】恢复日志行失败, file={}, error={}", file, e.getMessage());
                   return null;
                 }
               })
           .filter(Objects::nonNull)
           .collect(Collectors.toList());
     } catch (IOException e) {
-      log.error("【审计兜底】读取磁盘兜底文件失败, file={}", file, e);
+      LOG.error("【审计兜底】读取磁盘兜底文件失败, file={}", file, e);
       return Collections.emptyList();
     }
   }
@@ -209,9 +209,9 @@ public class AuditFallbackWriter {
   public void deleteFallbackFile(Path file) {
     try {
       Files.delete(file);
-      log.info("【审计兜底】磁盘兜底文件已恢复并删除, file={}", file);
+      LOG.info("【审计兜底】磁盘兜底文件已恢复并删除, file={}", file);
     } catch (IOException e) {
-      log.warn("【审计兜底】删除磁盘兜底文件失败, file={}, error={}", file, e.getMessage(), e);
+      LOG.warn("【审计兜底】删除磁盘兜底文件失败, file={}, error={}", file, e.getMessage(), e);
     }
   }
 
@@ -257,7 +257,7 @@ public class AuditFallbackWriter {
 
     long fileSize = Files.size(currentFilePath);
     if (fileSize >= MAX_FILE_SIZE_BYTES) {
-      log.info(
+      LOG.info(
           "【审计兜底】单文件大小已达上限({}MB), 触发滚动, file={}",
           MAX_FILE_SIZE_BYTES / (1024 * 1024),
           currentFilePath);
@@ -272,7 +272,7 @@ public class AuditFallbackWriter {
         currentWriter.flush();
         currentWriter.close();
       } catch (IOException e) {
-        log.warn("【审计兜底】关闭 BufferedWriter 失败, error={}", e.getMessage());
+        LOG.warn("【审计兜底】关闭 BufferedWriter 失败, error={}", e.getMessage());
       }
       currentWriter = null;
     }

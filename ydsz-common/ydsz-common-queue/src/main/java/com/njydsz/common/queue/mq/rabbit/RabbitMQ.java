@@ -3,9 +3,9 @@ package com.njydsz.common.queue.mq.rabbit;
 import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
-import lombok.extern.slf4j.Slf4j;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.queue.queue.AbstractMessageQueue;

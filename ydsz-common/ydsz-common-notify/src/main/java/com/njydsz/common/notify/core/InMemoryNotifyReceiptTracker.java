@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
  */
 public class InMemoryNotifyReceiptTracker implements NotifyReceiptTracker {
 
-  private static final Logger log = LoggerFactory.getLogger(InMemoryNotifyReceiptTracker.class);
+  private static final Logger LOG = LoggerFactory.getLogger(InMemoryNotifyReceiptTracker.class);
 
   private final ConcurrentHashMap<String, NotifyReceipt> receipts = new ConcurrentHashMap<>();
 
@@ -24,7 +24,7 @@ public class InMemoryNotifyReceiptTracker implements NotifyReceiptTracker {
   public NotifyReceipt createReceipt(String messageId, String channel, String receiver) {
     NotifyReceipt receipt = NotifyReceipt.pending(messageId, channel, receiver);
     receipts.put(messageId, receipt);
-    log.debug("[NotifyReceiptTracker] 回执已创建: messageId={}, channel={}", messageId, channel);
+    LOG.debug("[NotifyReceiptTracker] 回执已创建: messageId={}, channel={}", messageId, channel);
     return receipt;
   }
 
@@ -33,7 +33,7 @@ public class InMemoryNotifyReceiptTracker implements NotifyReceiptTracker {
     NotifyReceipt existing = receipts.get(messageId);
     if (existing != null) {
       receipts.put(messageId, existing.markDelivered());
-      log.debug("[NotifyReceiptTracker] 回执已投递: messageId={}", messageId);
+      LOG.debug("[NotifyReceiptTracker] 回执已投递: messageId={}", messageId);
     }
   }
 
@@ -42,7 +42,7 @@ public class InMemoryNotifyReceiptTracker implements NotifyReceiptTracker {
     NotifyReceipt existing = receipts.get(messageId);
     if (existing != null) {
       receipts.put(messageId, existing.markFailed(errorMessage));
-      log.debug("[NotifyReceiptTracker] 回执投递失败: messageId={}, error={}", messageId, errorMessage);
+      LOG.debug("[NotifyReceiptTracker] 回执投递失败: messageId={}, error={}", messageId, errorMessage);
     }
   }
 
@@ -51,7 +51,7 @@ public class InMemoryNotifyReceiptTracker implements NotifyReceiptTracker {
     NotifyReceipt existing = receipts.get(messageId);
     if (existing != null) {
       receipts.put(messageId, existing.markRead());
-      log.debug("[NotifyReceiptTracker] 回执已读: messageId={}", messageId);
+      LOG.debug("[NotifyReceiptTracker] 回执已读: messageId={}", messageId);
     }
   }
 
@@ -88,7 +88,7 @@ public class InMemoryNotifyReceiptTracker implements NotifyReceiptTracker {
       }
     }
     if (removed > 0) {
-      log.debug("[NotifyReceiptTracker] 清理过期回执: {} 条", removed);
+      LOG.debug("[NotifyReceiptTracker] 清理过期回执: {} 条", removed);
     }
     return removed;
   }

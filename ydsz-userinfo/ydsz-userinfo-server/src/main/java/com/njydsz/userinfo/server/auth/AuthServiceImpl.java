@@ -8,13 +8,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import io.micrometer.core.instrument.Timer;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import io.micrometer.core.instrument.Timer;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.service.TokenBlacklistService;
@@ -141,65 +141,117 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public LoginVO login(LoginDTO loginDTO) {
     Timer.Sample sample = userInfoMetrics.startTimer();
-
-    // P1-3: IP 封禁检查（在真实校验前拦截被禁 IP，避免被禁 IP 继续密码探测）
     String loginIp = loginDTO.getLoginIp();
     String userAgent = loginDTO.getUserAgent();
+
+    // IP 封禁检查 + 验证码校验
+    checkIpNotBlocked(loginIp, loginDTO.getUsername(), userAgent);
+    validateCaptchaIfEnabled(loginDTO);
+
+    // 查询用户 + 状态/锁定校验
+    UserAccount user = findAndValidateUser(loginDTO.getUsername(), loginIp, userAgent);
+
+    // 密码校验（本地 + LDAP 回退）
+    authenticatePassword(user, loginDTO.getPassword(), loginIp, userAgent);
+
+    // 加载角色 + 签发 Token + 存储会话
+    List<Role> roles = loadUserRoles(user.getId());
+    String accessToken = issueTokensAndCreateSession(user, roles);
+
+    // 更新登录状态 + 审计
+    updateLoginSuccess(user, loginIp);
+    loginHistoryService.recordLoginAttempt(
+        user.getId(), user.getUsername(), loginIp, "SUCCESS", null, userAgent);
+    userInfoMetrics.recordLoginSuccess();
+    userInfoMetrics.stopTimer(sample);
+    publishEvent(DomainEventTypes.USER_LOGIN, user.getId(), user);
+
+    return buildLoginResult(user, roles, accessToken);
+  }
+
+  /**
+   * 检查 IP 是否被封禁。
+   *
+   * @param loginIp    登录来源 IP
+   * @param username   登录用户名（用于审计）
+   * @param userAgent  用户代理
+   * @throws BusinessException IP 被封禁时抛出
+   */
+  private void checkIpNotBlocked(String loginIp, String username, String userAgent) {
     if (loginIp != null && !loginIp.isBlank() && loginHistoryService.isIpBlocked(loginIp)) {
-      log.warn("Login attempt from blocked IP: {}, username: {}", loginIp, loginDTO.getUsername());
+      log.warn("Login attempt from blocked IP: {}, username: {}", loginIp, username);
       loginHistoryService.recordLoginAttempt(
-          null, loginDTO.getUsername(), loginIp, "FAILED", "IP_BLOCKED", userAgent);
+          null, username, loginIp, "FAILED", "IP_BLOCKED", userAgent);
       userInfoMetrics.recordLoginFail();
-      userInfoMetrics.stopTimer(sample);
       throw new BusinessException(UserInfoExceptionCode.IP_BLOCKED);
     }
+  }
 
-    // 验证码校验（可配置开关）
+  /**
+   * 校验图形验证码（启用时）。
+   *
+   * @param loginDTO 登录请求 DTO
+   * @throws BusinessException 验证码为空或校验失败时抛出
+   */
+  private void validateCaptchaIfEnabled(LoginDTO loginDTO) {
     if (properties.isCaptchaEnabled()) {
       if (loginDTO.getCaptchaKey() == null || loginDTO.getCaptcha() == null) {
         userInfoMetrics.recordLoginFail();
-        userInfoMetrics.stopTimer(sample);
         throw new BusinessException(UserInfoExceptionCode.CAPTCHA_REQUIRED);
       }
       captchaService.validate(loginDTO.getCaptchaKey(), loginDTO.getCaptcha());
     }
+  }
 
-    String username = loginDTO.getUsername();
-    String password = loginDTO.getPassword();
-
+  /**
+   * 查询用户并校验账号状态与锁定状态。
+   *
+   * @param username  登录用户名
+   * @param loginIp   登录来源 IP
+   * @param userAgent 用户代理
+   * @return 有效的用户账号实体
+   * @throws BusinessException 用户不存在、已禁用或已锁定时抛出
+   */
+  private UserAccount findAndValidateUser(String username, String loginIp, String userAgent) {
     LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(UserAccount::getUsername, username);
     UserAccount user = userAccountMapper.selectOne(wrapper);
 
     if (user == null) {
-      // P0-4: 统一返回「用户名或密码错误」，避免通过响应差异枚举有效用户名；
-      // 真实原因（USER_NOT_FOUND）仅保留在审计日志中。
       loginHistoryService.recordLoginAttempt(
           null, username, loginIp, "FAILED", "USER_NOT_FOUND", userAgent);
       userInfoMetrics.recordLoginFail();
-      userInfoMetrics.stopTimer(sample);
       throw new BusinessException(UserInfoExceptionCode.PASSWORD_INCORRECT);
     }
 
-    // 账号状态检查（status 为 String: "0"=禁用, "1"=启用）
     if ("0".equals(user.getStatus())) {
       loginHistoryService.recordLoginAttempt(
           user.getId(), username, loginIp, "FAILED", "USER_DISABLED", userAgent);
       userInfoMetrics.recordLoginFail();
-      userInfoMetrics.stopTimer(sample);
       throw new BusinessException(UserInfoExceptionCode.USER_DISABLED);
     }
 
-    // 账号锁定检查
     if (user.getLockedUntil() != null && user.getLockedUntil().isAfter(LocalDateTime.now())) {
       loginHistoryService.recordLoginAttempt(
           user.getId(), username, loginIp, "FAILED", "ACCOUNT_LOCKED", userAgent);
       userInfoMetrics.recordLoginFail();
-      userInfoMetrics.stopTimer(sample);
       throw new BusinessException(UserInfoExceptionCode.ACCOUNT_LOCKED);
     }
 
-    // 密码校验 — 先尝试本地密码，失败后尝试 LDAP
+    return user;
+  }
+
+  /**
+   * 校验密码（本地 BCrypt 优先，失败后回退 LDAP）。
+   *
+   * @param user      用户账号
+   * @param password  明文密码
+   * @param loginIp   登录来源 IP
+   * @param userAgent 用户代理
+   * @throws BusinessException 密码校验失败时抛出
+   */
+  private void authenticatePassword(UserAccount user, String password, String loginIp, String userAgent) {
+    String username = user.getUsername();
     boolean passwordMatched = passwordEncoder.matches(password, user.getPassword());
     if (!passwordMatched) {
       LdapAuthenticationProvider ldapProvider = ldapProviderProvider.getIfAvailable();
@@ -215,14 +267,20 @@ public class AuthServiceImpl implements AuthService {
       recordLoginFailure(user);
       loginHistoryService.recordLoginAttempt(
           user.getId(), username, loginIp, "FAILED", "PASSWORD_INCORRECT", userAgent);
-      // P2-2: 发布 BRUTE_FORCE 安全事件，驱动 SecurityEventAggregator 滑动窗口计数 + 自动 IP 封禁
       publishBruteForceEvent(loginIp, userAgent, username);
       userInfoMetrics.recordLoginFail();
-      userInfoMetrics.stopTimer(sample);
       throw new BusinessException(UserInfoExceptionCode.PASSWORD_INCORRECT);
     }
+  }
 
-    List<Role> roles = loadUserRoles(user.getId());
+  /**
+   * 签发 Token 并写入 Redis 会话。
+   *
+   * @param user  登录用户
+   * @param roles 用户角色列表
+   * @return 访问令牌
+   */
+  private String issueTokensAndCreateSession(UserAccount user, List<Role> roles) {
     String roleCodes = roles.stream().map(Role::getRoleCode).collect(Collectors.joining(","));
     String roleNames = roles.stream().map(Role::getRoleName).collect(Collectors.joining(","));
 
@@ -234,8 +292,20 @@ public class AuthServiceImpl implements AuthService {
 
     String accessToken = tokenService.issueAccessToken(userInfo);
     String refreshToken = tokenService.issueRefreshToken(userInfo);
+    storeRedisSession(accessToken, user, roleCodes, roleNames);
+    return accessToken;
+  }
 
-    // Redis 会话存储（用于登出时主动失效 + 在线会话管理）
+  /**
+   * 写入 Redis 会话（会话 Hash + 会话索引）。
+   *
+   * @param accessToken 访问令牌
+   * @param user        用户账号
+   * @param roleCodes   角色编码（逗号分隔）
+   * @param roleNames   角色名称（逗号分隔）
+   */
+  private void storeRedisSession(
+      String accessToken, UserAccount user, String roleCodes, String roleNames) {
     Map<String, Object> sessionInfo = new HashMap<>();
     sessionInfo.put("userId", user.getId());
     sessionInfo.put("username", user.getUsername());
@@ -245,26 +315,26 @@ public class AuthServiceImpl implements AuthService {
     redisHashOps.hMSet(accessToken, sessionInfo);
     redisStringOps.expire(accessToken, Duration.ofSeconds(properties.getTokenTtlSeconds()));
 
-    // P1-1: 维护 userId → Set&lt;accessToken&gt; 会话索引
     String sessionKey = buildSessionKey(user.getId());
     redisCollectionOps.sAdd(sessionKey, accessToken);
     redisStringOps.expire(sessionKey, Duration.ofSeconds(properties.getTokenTtlSeconds()));
+  }
 
-    updateLoginSuccess(user, loginIp);
-
-    // P1-3: 记录成功登录
-    loginHistoryService.recordLoginAttempt(
-        user.getId(), username, loginIp, "SUCCESS", null, userAgent);
-
-    userInfoMetrics.recordLoginSuccess();
-    userInfoMetrics.stopTimer(sample);
-
-    // 发布用户登录领域事件到 Outbox
-    publishEvent(DomainEventTypes.USER_LOGIN, user.getId(), user);
+  /**
+   * 构建登录结果 VO。
+   *
+   * @param user        登录用户
+   * @param roles       用户角色列表
+   * @param accessToken 访问令牌
+   * @return 登录结果 VO
+   */
+  private LoginVO buildLoginResult(UserAccount user, List<Role> roles, String accessToken) {
+    String roleCodes = roles.stream().map(Role::getRoleCode).collect(Collectors.joining(","));
+    String roleNames = roles.stream().map(Role::getRoleName).collect(Collectors.joining(","));
 
     LoginVO result = new LoginVO();
     result.setAccessToken(accessToken);
-    result.setRefreshToken(refreshToken);
+    result.setRefreshToken(null);
     result.setTokenType("Bearer");
     result.setExpiresIn(properties.getTokenTtlSeconds());
     result.setScope("read write");
@@ -273,7 +343,6 @@ public class AuthServiceImpl implements AuthService {
     userInfoVO.setRoleCode(roleCodes);
     userInfoVO.setRoleName(roleNames);
     result.setUserInfo(userInfoVO);
-
     return result;
   }
 

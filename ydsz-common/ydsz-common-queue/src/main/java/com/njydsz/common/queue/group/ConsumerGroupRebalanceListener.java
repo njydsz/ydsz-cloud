@@ -18,7 +18,7 @@ package com.njydsz.common.queue.group;
  * <pre>{@code
  * rebalanceMonitor.addListener(event -> {
  *     if (event.getEventType() == ConsumerGroupEvent.EventType.CONSUMER_ADDED) {
- *         log.info("新消费者加入: {}", event.getConsumerName());
+ *         LOG.info("新消费者加入: {}", event.getConsumerName());
  *     }
  * });
  * }</pre>

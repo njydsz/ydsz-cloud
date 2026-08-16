@@ -3,8 +3,8 @@ package com.njydsz.common.file.config;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * 文件生命周期管理配置属性

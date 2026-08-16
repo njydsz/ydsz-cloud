@@ -1,11 +1,8 @@
 package com.njydsz.cronjob.server.aspect;
 
-import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.cronjob.server.annotation.TenantQuotaCheck;
-import com.njydsz.cronjob.server.annotation.TenantQuotaCheck.QuotaType;
-import com.njydsz.cronjob.server.service.job.TenantQuotaService;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
@@ -13,6 +10,11 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.cronjob.server.annotation.TenantQuotaCheck;
+import com.njydsz.cronjob.server.annotation.TenantQuotaCheck.QuotaType;
+import com.njydsz.cronjob.server.service.job.TenantQuotaService;
 
 /**
  * 租户配额检查切面（P0-5）。

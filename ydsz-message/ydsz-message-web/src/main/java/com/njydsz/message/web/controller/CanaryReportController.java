@@ -1,14 +1,10 @@
 package com.njydsz.message.web.controller.canary;
 
-import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.message.domain.dto.canary.CanaryReportVO;
-import com.njydsz.message.server.service.canary.CanaryReportService;
+import java.time.LocalDateTime;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -16,6 +12,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.permission.PermissionCodes;
+import com.njydsz.message.domain.dto.canary.CanaryReportVO;
+import com.njydsz.message.server.service.canary.CanaryReportService;
 
 /**
  * 灰度 A/B 报表（Canary Report）Controller。

@@ -1,9 +1,10 @@
 package com.njydsz.cronjob.domain.dto.dag;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotBlank;
 import java.io.Serial;
 import java.io.Serializable;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
 /**

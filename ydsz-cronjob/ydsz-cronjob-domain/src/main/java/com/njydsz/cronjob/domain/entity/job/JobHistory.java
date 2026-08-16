@@ -1,14 +1,16 @@
 package com.njydsz.cronjob.domain.entity.job;
 
-import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 import java.io.Serial;
 import java.time.LocalDateTime;
+
+import com.baomidou.mybatisplus.annotation.TableLogic;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 
 // 引入 fastjson2 仅用于 beforeSnapshot 字段的序列化说明, 实际序列化由 Service 层完成
 

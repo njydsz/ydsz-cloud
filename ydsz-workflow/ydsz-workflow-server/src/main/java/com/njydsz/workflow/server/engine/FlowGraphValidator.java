@@ -1,8 +1,5 @@
 package com.njydsz.workflow.server.engine;
 
-import com.njydsz.workflow.domain.entity.FlowNode;
-import com.njydsz.workflow.domain.entity.FlowSkip;
-import com.njydsz.workflow.domain.enums.FlowNodeType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -11,9 +8,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+
+import com.njydsz.workflow.domain.entity.FlowNode;
+import com.njydsz.workflow.domain.entity.FlowSkip;
+import com.njydsz.workflow.domain.enums.FlowNodeType;
 
 /**
  * P2-1: 流程定义图校验器

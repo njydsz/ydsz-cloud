@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Range;
 import org.springframework.data.redis.connection.RedisStreamCommands;
 import org.springframework.data.redis.connection.RedisStreamCommands.TrimOptions;
@@ -28,7 +29,6 @@ import org.springframework.data.redis.connection.stream.StreamRecords;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StreamOperations;
-import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.config.RedisProperties;

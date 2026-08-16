@@ -14,7 +14,7 @@ package com.njydsz.common.excel.exception;
  *         .headRowNumber(1)
  *         .doWrite(userList);
  * } catch (ExcelWriteException e) {
- *     log.error("写入失败 - 错误码: {}, 消息: {}", e.getCode(), e.getMessage(), e);
+ *     LOG.error("写入失败 - 错误码: {}, 消息: {}", e.getCode(), e.getMessage(), e);
  *     // 获取异常码枚举
  *     ExcelExceptionCode code = e.getExceptionCode();
  * }

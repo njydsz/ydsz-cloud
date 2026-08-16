@@ -56,7 +56,7 @@ import com.njydsz.common.seata.api.TccTransactionLogStore;
  */
 public class DbTccTransactionLogStore implements TccTransactionLogStore {
 
-  private static final Logger log = LoggerFactory.getLogger(DbTccTransactionLogStore.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DbTccTransactionLogStore.class);
 
   private final JdbcTemplate jdbcTemplate;
   private final String tableName;
@@ -112,7 +112,7 @@ public class DbTccTransactionLogStore implements TccTransactionLogStore {
       case "mysql":
         return new MysqlTransactionDialectProvider(tableName);
       default:
-        log.warn("Unknown dialect: {}, fallback to auto detection", dialect);
+        LOG.warn("Unknown dialect: {}, fallback to auto detection", dialect);
         return detectDialect(jdbcTemplate, tableName);
     }
   }
@@ -133,7 +133,7 @@ public class DbTccTransactionLogStore implements TccTransactionLogStore {
           (org.springframework.jdbc.core.ConnectionCallback<TccTransactionDialectProvider>)
               conn -> {
                 String databaseProductName = conn.getMetaData().getDatabaseProductName();
-                log.info(
+                LOG.info(
                     "Detected database product: {}, selecting dialect provider",
                     databaseProductName);
                 if (databaseProductName != null
@@ -144,7 +144,7 @@ public class DbTccTransactionLogStore implements TccTransactionLogStore {
                 return new MysqlTransactionDialectProvider(tableName);
               });
     } catch (Exception e) {
-      log.warn("Failed to detect database dialect, fallback to MySQL: {}", e.getMessage());
+      LOG.warn("Failed to detect database dialect, fallback to MySQL: {}", e.getMessage());
       return new MysqlTransactionDialectProvider(tableName);
     }
   }
@@ -217,8 +217,8 @@ public class DbTccTransactionLogStore implements TccTransactionLogStore {
         toTimestamp(txLog.getFinishedAt()),
         txLog.getRetryCount(),
         truncate(txLog.getLastError(), 1024));
-    if (log.isDebugEnabled()) {
-      log.debug(
+    if (LOG.isDebugEnabled()) {
+      LOG.debug(
           "TCC log saved: xid={}, branchId={}, status={}",
           txLog.getXid(),
           txLog.getBranchId(),
@@ -238,8 +238,8 @@ public class DbTccTransactionLogStore implements TccTransactionLogStore {
     String sql = dialectProvider.getUpdateStatusSql();
     Timestamp finishedAt = status.isFinal() ? Timestamp.valueOf(LocalDateTime.now()) : null;
     jdbcTemplate.update(sql, status.name(), finishedAt, xid, branchId);
-    if (log.isDebugEnabled()) {
-      log.debug("TCC log status updated: xid={}, branchId={}, status={}", xid, branchId, status);
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("TCC log status updated: xid={}, branchId={}, status={}", xid, branchId, status);
     }
   }
 
@@ -316,8 +316,8 @@ public class DbTccTransactionLogStore implements TccTransactionLogStore {
   public void delete(String xid, String branchId) {
     String sql = dialectProvider.getDeleteSql();
     jdbcTemplate.update(sql, xid, branchId);
-    if (log.isDebugEnabled()) {
-      log.debug("TCC log deleted: xid={}, branchId={}", xid, branchId);
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("TCC log deleted: xid={}, branchId={}", xid, branchId);
     }
   }
 
@@ -334,7 +334,7 @@ public class DbTccTransactionLogStore implements TccTransactionLogStore {
       try {
         logEntry.setStatus(TccBranchStatus.valueOf(status));
       } catch (IllegalArgumentException e) {
-        log.warn("Unknown TCC branch status in DB: {}, fallback to INIT", status);
+        LOG.warn("Unknown TCC branch status in DB: {}, fallback to INIT", status);
       }
     }
 

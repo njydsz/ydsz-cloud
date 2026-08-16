@@ -1235,7 +1235,7 @@
                         <!-- 与 docs/checkstyle.xml CustomImportOrder 对齐：java/javax ### 第三方 ### com.njydsz ### static
                              必须放在 googleJavaFormat 之后执行，否则会被 google 单组排序覆盖。
                              逗号分隔分组（组间空行），| 连接同组前缀，空字符串兜底未列举前缀，# 表示 static -->
-                        <order>java|javax,org|jakarta|lombok|io|com.baomidou|com.qcloud|com.alibaba|com.qiniu|com.rabbitmq|com.fasterxml|com.github|com.google|com.amazonaws|com.obs|com.huaweicloud|com.aliyun|software|net|reactor|feign|cn,com.njydsz,,\#</order>
+                        <order>java|javax,cn|com.alibaba|com.aliyun|com.amazonaws|com.baomidou|com.fasterxml|com.github|com.google|com.huaweicloud|com.obs|com.qcloud|com.qiniu|com.rabbitmq|com.sun|feign|io|jakarta|lombok|net|org|reactor|software,com.njydsz,,\#</order>
                     </importOrder>
                 </java>
             </configuration>

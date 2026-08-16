@@ -3,8 +3,8 @@ package com.njydsz.common.exception.trace;
 import java.lang.reflect.Method;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.springframework.lang.Nullable;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.lang.Nullable;
 
 /**
  * OpenTelemetry 链路追踪信息提取器。
@@ -26,6 +26,9 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class OtelTraceInfoExtractor {
+
+  private OtelTraceInfoExtractor() {}
+
 
   /** OTel Span 类全限定名（反射用） */
   private static final String OTEL_SPAN_CLASS = "io.opentelemetry.api.trace.Span";

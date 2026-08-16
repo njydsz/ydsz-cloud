@@ -1,5 +1,15 @@
 package com.njydsz.cronjob.web.controller.job;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationContext;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -15,15 +25,6 @@ import com.njydsz.cronjob.domain.job.ProcessResult;
 import com.njydsz.cronjob.server.core.dispatch.RemoteSubTaskRequest;
 import com.njydsz.cronjob.server.core.dispatch.RemoteTaskRequest;
 import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationContext;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 内部任务执行接口 Controller（P1-4 远程派发接收端）。

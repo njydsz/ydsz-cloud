@@ -66,7 +66,7 @@ import com.njydsz.common.thread.metrics.ThreadPoolMetrics;
 @ConditionalOnProperty(prefix = "ydsz.thread", name = "enabled", matchIfMissing = true)
 public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
 
-  private static final Logger log = LoggerFactory.getLogger(ThreadPoolAutoConfiguration.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ThreadPoolAutoConfiguration.class);
 
   /**
    * 延迟注入 ApplicationContext，支持 {@code ApplicationContextRunner} 测试场景。
@@ -78,7 +78,7 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
   @Override
   public void afterSingletonsInstantiated() {
     if (applicationContext != null) {
-      log.info(
+      LOG.info(
           "[ydsz-thread] 自动配置完成，已管理平台线程池: {}",
           applicationContext.getBeansOfType(ThreadPoolTaskExecutor.class).keySet());
     }
@@ -150,7 +150,7 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
   public static class ThreadPoolMetricsPostProcessor
       implements BeanPostProcessor, BeanFactoryAware {
 
-    private static final Logger log = LoggerFactory.getLogger(ThreadPoolMetricsPostProcessor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ThreadPoolMetricsPostProcessor.class);
 
     private BeanFactory beanFactory;
 
@@ -198,7 +198,7 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
         ThreadPoolExecutor threadPoolExecutor = executor.getThreadPoolExecutor();
         RejectedExecutionHandler currentHandler = threadPoolExecutor.getRejectedExecutionHandler();
         if (currentHandler == null) {
-          log.warn("ydsz-thread: 线程池 [{}] 拒绝策略为 null，跳过指标包装", beanName);
+          LOG.warn("ydsz-thread: 线程池 [{}] 拒绝策略为 null，跳过指标包装", beanName);
           return bean;
         }
 
@@ -209,12 +209,12 @@ public class ThreadPoolAutoConfiguration implements SmartInitializingSingleton {
 
         MeteredRejectedHandler meteredHandler = new MeteredRejectedHandler(currentHandler, metrics);
         threadPoolExecutor.setRejectedExecutionHandler(meteredHandler);
-        log.info(
+        LOG.info(
             "ydsz-thread: 已为线程池 [{}] 装配指标感知拒绝策略 ([{}] → MeteredRejectedHandler)",
             beanName,
             currentHandler.getClass().getSimpleName());
       } catch (Exception e) {
-        log.warn("ydsz-thread: 为线程池 [{}] 装配指标感知拒绝策略失败: {}", beanName, e.getMessage());
+        LOG.warn("ydsz-thread: 为线程池 [{}] 装配指标感知拒绝策略失败: {}", beanName, e.getMessage());
       }
 
       return bean;

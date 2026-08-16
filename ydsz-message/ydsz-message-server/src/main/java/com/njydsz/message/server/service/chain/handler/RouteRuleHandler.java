@@ -1,15 +1,16 @@
 package com.njydsz.message.server.service.chain.handler;
 
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.message.domain.entity.config.MsgRouteRule;
-import com.njydsz.message.server.service.chain.SendContext;
-import com.njydsz.message.server.service.chain.SendHandler;
-import com.njydsz.message.server.service.config.RouteRuleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+
+import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.message.domain.entity.config.MsgRouteRule;
+import com.njydsz.message.server.service.chain.SendContext;
+import com.njydsz.message.server.service.chain.SendHandler;
+import com.njydsz.message.server.service.config.RouteRuleService;
 
 /**
  * 路由规则匹配 Handler。

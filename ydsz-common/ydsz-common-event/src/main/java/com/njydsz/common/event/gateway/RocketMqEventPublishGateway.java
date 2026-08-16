@@ -37,7 +37,7 @@ import com.njydsz.common.event.model.OutboxMessage;
 public class RocketMqEventPublishGateway implements EventPublishGateway {
 
   /** 日志实例 */
-  private static final Logger log = LoggerFactory.getLogger(RocketMqEventPublishGateway.class);
+  private static final Logger LOG = LoggerFactory.getLogger(RocketMqEventPublishGateway.class);
 
   /** 默认 Topic 名称 */
   private static final String DEFAULT_TOPIC = "ydsz-outbox-events";
@@ -87,7 +87,7 @@ public class RocketMqEventPublishGateway implements EventPublishGateway {
       SendResult result = rocketMQTemplate.syncSend(destination, builder.build());
       boolean success = result != null && result.getSendStatus() == SendStatus.SEND_OK;
       if (success) {
-        log.debug(
+        LOG.debug(
             "RocketMQ publish OK: id={}, topic={}, tag={}, msgId={}",
             message.getId(),
             topic,
@@ -95,11 +95,11 @@ public class RocketMqEventPublishGateway implements EventPublishGateway {
             result != null ? result.getMsgId() : "N/A");
       } else {
         String status = result != null ? result.getSendStatus().name() : "null";
-        log.warn("RocketMQ publish failed: id={}, status={}", message.getId(), status);
+        LOG.warn("RocketMQ publish failed: id={}, status={}", message.getId(), status);
       }
       return success;
     } catch (Exception e) {
-      log.error(
+      LOG.error(
           "RocketMQ publish error: id={}, destination={}, error={}",
           message.getId(),
           destination,
@@ -135,7 +135,7 @@ public class RocketMqEventPublishGateway implements EventPublishGateway {
       }
     } catch (Exception e) {
       // 批量发送失败，降级为逐条投递
-      log.warn(
+      LOG.warn(
           "RocketMQ batch publish failed, falling back to single publish: err={}", e.getMessage());
       for (OutboxMessage message : messages) {
         results.add(publish(message));
@@ -179,10 +179,10 @@ public class RocketMqEventPublishGateway implements EventPublishGateway {
       for (int i = 0; i < batch.size(); i++) {
         results.add(true);
       }
-      log.debug("RocketMQ batch publish OK: count={}, topic={}", batch.size(), topic);
+      LOG.debug("RocketMQ batch publish OK: count={}, topic={}", batch.size(), topic);
     } else {
       // 批量失败，降级为逐条投递
-      log.warn(
+      LOG.warn(
           "RocketMQ batch publish returned non-OK status: {}, falling back to single",
           result != null ? result.getSendStatus() : "null");
       for (OutboxMessage msg : batch) {

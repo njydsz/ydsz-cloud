@@ -1,10 +1,10 @@
 package com.njydsz.common.sentry.tracing;
 
-import lombok.extern.slf4j.Slf4j;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
+import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.sentry.spi.TraceContext;
 

@@ -1,14 +1,16 @@
 package com.njydsz.cronjob.server.handler;
 
-import com.njydsz.common.search.service.IndexRebuildService;
-import com.njydsz.cronjob.domain.job.JobHandler;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.common.search.service.IndexRebuildService;
+import com.njydsz.cronjob.domain.job.JobHandler;
 
 /**
  * 搜索索引全量重建 Job。

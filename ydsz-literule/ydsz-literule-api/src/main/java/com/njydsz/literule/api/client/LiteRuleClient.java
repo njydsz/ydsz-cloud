@@ -1,15 +1,17 @@
 package com.njydsz.literule.api.client;
 
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.feign.FeignClientConstants;
-import com.njydsz.literule.api.RuleResult;
-import com.njydsz.literule.api.fallback.LiteRuleClientFallback;
 import java.util.List;
 import java.util.Map;
+
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+
+import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.feign.FeignClientConstants;
+import com.njydsz.literule.api.RuleResult;
+import com.njydsz.literule.api.fallback.LiteRuleClientFallback;
 
 /**
  * 规则引擎服务 Feign 客户端

@@ -1,10 +1,10 @@
 package com.njydsz.common.util.security.crypto;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
-import lombok.Getter;
-import lombok.Setter;
 
 /**
  * 加密算法配置属性。

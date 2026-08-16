@@ -60,7 +60,7 @@ import com.njydsz.common.seata.api.TransactionType;
  */
 public class TransactionAuditLogger {
 
-  private static final Logger auditLog = LoggerFactory.getLogger("SEATA_AUDIT");
+  private static final Logger AUDIT_LOG = LoggerFactory.getLogger("SEATA_AUDIT");
 
   /** MDC 中 traceId 的备选键名 */
   private static final String[] TRACE_ID_KEYS = {"traceId", "trace_id", "X-Trace-Id"};
@@ -84,7 +84,7 @@ public class TransactionAuditLogger {
       String result,
       long durationMs,
       String error) {
-    if (!auditLog.isInfoEnabled()) {
+    if (!AUDIT_LOG.isInfoEnabled()) {
       return;
     }
     Map<String, Object> audit = new LinkedHashMap<>();
@@ -107,7 +107,7 @@ public class TransactionAuditLogger {
     if (error != null) {
       audit.put("error", error);
     }
-    auditLog.info(YdszJson.toJson(audit));
+    AUDIT_LOG.info(YdszJson.toJson(audit));
   }
 
   /**

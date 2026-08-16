@@ -1,5 +1,17 @@
 package com.njydsz.message.web.controller.template;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
@@ -10,16 +22,6 @@ import com.njydsz.message.domain.enums.MessageExceptionCode;
 import com.njydsz.message.server.service.template.TemplateService;
 import com.njydsz.message.server.template.TemplateEngine;
 import com.njydsz.message.server.template.TemplateVariableValidator;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import java.util.HashMap;
-import java.util.Map;
-import lombok.RequiredArgsConstructor;
-import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 模板预览（Template Preview）Controller。

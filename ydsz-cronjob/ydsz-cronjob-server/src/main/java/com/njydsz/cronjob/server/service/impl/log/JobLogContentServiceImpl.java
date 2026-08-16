@@ -1,13 +1,15 @@
 package com.njydsz.cronjob.server.service.impl.log;
 
-import com.njydsz.cronjob.domain.entity.log.JobLogContent;
-import com.njydsz.cronjob.infra.mapper.log.JobLogContentMapper;
-import com.njydsz.cronjob.server.service.log.JobLogContentService;
 import java.util.Collections;
 import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import com.njydsz.cronjob.domain.entity.log.JobLogContent;
+import com.njydsz.cronjob.infra.mapper.log.JobLogContentMapper;
+import com.njydsz.cronjob.server.service.log.JobLogContentService;
 
 /**
  * 任务日志内容服务实现。

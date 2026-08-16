@@ -1,14 +1,5 @@
 package com.njydsz.nextwiki.web.controller;
 
-import com.njydsz.common.audit.annotation.Audit;
-import com.njydsz.common.audit.enums.AuditAction;
-import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.auth.constant.AuthHeaderConstants;
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.nextwiki.server.service.BatchImportApplicationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +10,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.auth.constant.AuthHeaderConstants;
+import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.permission.PermissionCodes;
+import com.njydsz.nextwiki.server.service.BatchImportApplicationService;
 
 /**
  * 批量导入 REST API Controller。

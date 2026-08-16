@@ -25,7 +25,7 @@ import com.njydsz.common.notify.preference.NotifyPreferenceManager;
  */
 public class NotifyI18nResolver {
 
-  private static final Logger log = LoggerFactory.getLogger(NotifyI18nResolver.class);
+  private static final Logger LOG = LoggerFactory.getLogger(NotifyI18nResolver.class);
 
   private static final String DEFAULT_LOCALE = "zh_CN";
 
@@ -59,12 +59,12 @@ public class NotifyI18nResolver {
         if (pref != null) {
           String lang = getUserLanguageFromPreference(pref);
           if (lang != null && !lang.isEmpty()) {
-            log.debug("[NotifyI18nResolver] 从用户偏好获取语言: userId={}, lang={}", userId, lang);
+            LOG.debug("[NotifyI18nResolver] 从用户偏好获取语言: userId={}, lang={}", userId, lang);
             return lang;
           }
         }
       } catch (Exception e) {
-        log.debug("[NotifyI18nResolver] 获取用户偏好失败: userId={}, error={}", userId, e.getMessage());
+        LOG.debug("[NotifyI18nResolver] 获取用户偏好失败: userId={}, error={}", userId, e.getMessage());
       }
     }
 
@@ -72,7 +72,7 @@ public class NotifyI18nResolver {
     if (acceptLanguage != null && !acceptLanguage.isEmpty()) {
       String lang = parseAcceptLanguage(acceptLanguage);
       if (lang != null) {
-        log.debug("[NotifyI18nResolver] 从 Accept-Language 获取语言: {}", lang);
+        LOG.debug("[NotifyI18nResolver] 从 Accept-Language 获取语言: {}", lang);
         return lang;
       }
     }
@@ -144,7 +144,7 @@ public class NotifyI18nResolver {
         };
       }
     } catch (Exception e) {
-      log.debug("[NotifyI18nResolver] 解析 Accept-Language 失败: {}", acceptLanguage);
+      LOG.debug("[NotifyI18nResolver] 解析 Accept-Language 失败: {}", acceptLanguage);
     }
     return null;
   }

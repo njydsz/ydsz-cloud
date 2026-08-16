@@ -56,7 +56,7 @@ import com.njydsz.common.seata.api.TccTransactionLogStore;
  */
 public class RedisTccTransactionLogStore implements TccTransactionLogStore {
 
-  private static final Logger log = LoggerFactory.getLogger(RedisTccTransactionLogStore.class);
+  private static final Logger LOG = LoggerFactory.getLogger(RedisTccTransactionLogStore.class);
 
   private static final DateTimeFormatter TS_FMT = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
@@ -106,8 +106,8 @@ public class RedisTccTransactionLogStore implements TccTransactionLogStore {
     Map<String, String> hash = toHash(txLog);
     redisTemplate.opsForHash().putAll(key, hash);
     redisTemplate.expire(key, retention.toSeconds(), TimeUnit.SECONDS);
-    if (log.isDebugEnabled()) {
-      log.debug("TCC log saved: key={}, status={}", key, txLog.getStatus());
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("TCC log saved: key={}, status={}", key, txLog.getStatus());
     }
   }
 
@@ -128,8 +128,8 @@ public class RedisTccTransactionLogStore implements TccTransactionLogStore {
       // 终态日志保留至 retention，到点自动过期
       redisTemplate.expire(key, retention.toSeconds(), TimeUnit.SECONDS);
     }
-    if (log.isDebugEnabled()) {
-      log.debug("TCC log status updated: key={}, status={}", key, status);
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("TCC log status updated: key={}, status={}", key, status);
     }
   }
 
@@ -164,7 +164,7 @@ public class RedisTccTransactionLogStore implements TccTransactionLogStore {
             count++;
           }
         } catch (Exception e) {
-          log.debug("Failed to parse tryCompletedAt for key={}, skip", key);
+          LOG.debug("Failed to parse tryCompletedAt for key={}, skip", key);
         }
       }
     } finally {
@@ -260,8 +260,8 @@ public class RedisTccTransactionLogStore implements TccTransactionLogStore {
     } finally {
       cursor.close();
     }
-    if (log.isDebugEnabled()) {
-      log.debug("TCC timeout pending scan: matched {} entries before {}", result.size(), threshold);
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("TCC timeout pending scan: matched {} entries before {}", result.size(), threshold);
     }
     return result;
   }
@@ -276,8 +276,8 @@ public class RedisTccTransactionLogStore implements TccTransactionLogStore {
   public void delete(String xid, String branchId) {
     String key = buildKey(xid, branchId);
     Boolean deleted = redisTemplate.delete(key);
-    if (log.isDebugEnabled()) {
-      log.debug("TCC log deleted: key={}, result={}", key, deleted);
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("TCC log deleted: key={}, result={}", key, deleted);
     }
   }
 
@@ -358,7 +358,7 @@ public class RedisTccTransactionLogStore implements TccTransactionLogStore {
       try {
         logEntry.setStatus(TccBranchStatus.valueOf(statusName));
       } catch (IllegalArgumentException e) {
-        log.warn("Unknown TCC branch status in Redis: {}, fallback to INIT", statusName);
+        LOG.warn("Unknown TCC branch status in Redis: {}, fallback to INIT", statusName);
       }
     }
 
@@ -375,7 +375,7 @@ public class RedisTccTransactionLogStore implements TccTransactionLogStore {
           logEntry.incrementRetryCount();
         }
       } catch (NumberFormatException e) {
-        log.warn("Invalid retryCount in Redis: {}", retryStr);
+        LOG.warn("Invalid retryCount in Redis: {}", retryStr);
       }
     }
 

@@ -50,7 +50,7 @@ import com.njydsz.common.thread.util.ExecutorUtils;
  */
 public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
 
-  private static final Logger log = LoggerFactory.getLogger(AsyncAuditRecorder.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AsyncAuditRecorder.class);
 
   /** 优雅停机超时时间（秒） */
   private static final long SHUTDOWN_TIMEOUT_SECONDS = 30;
@@ -112,7 +112,7 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
         asyncProps.getBatchIntervalMillis(),
         TimeUnit.MILLISECONDS);
 
-    log.info(
+    LOG.info(
         "【异步审计记录器】启动成功, 队列容量={}, 批量阈值={}, 刷新间隔={}ms, 写入器={}",
         asyncProps.getExecutorQueueCapacity(),
         asyncProps.getBatchSize(),
@@ -128,16 +128,16 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
   @Override
   public void recordAsync(AuditLog auditLog) {
     if (auditLog == null) {
-      log.warn("【异步审计记录器】审计日志为空, 跳过记录");
+      LOG.warn("【异步审计记录器】审计日志为空, 跳过记录");
       return;
     }
 
     if (!running.get()) {
-      log.warn("【异步审计记录器】记录器已停止, 尝试同步写入");
+      LOG.warn("【异步审计记录器】记录器已停止, 尝试同步写入");
       try {
         auditWriter.write(auditLog);
       } catch (Exception e) {
-        log.error("【异步审计记录器】同步写入失败", e);
+        LOG.error("【异步审计记录器】同步写入失败", e);
       }
       return;
     }
@@ -159,7 +159,7 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
     try {
       scheduler.submit(this::flushFromQueue);
     } catch (RejectedExecutionException e) {
-      log.debug("【异步审计记录器】刷新任务已被拒绝，可能调度器已关闭");
+      LOG.debug("【异步审计记录器】刷新任务已被拒绝，可能调度器已关闭");
     }
   }
 
@@ -177,16 +177,16 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
       queue.poll();
       boolean offered = queue.offer(auditLog);
       if (!offered) {
-        log.error("【异步审计记录器】队列已满, 丢弃最旧日志后仍然无法入队, id={}", auditLog.getId());
+        LOG.error("【异步审计记录器】队列已满, 丢弃最旧日志后仍然无法入队, id={}", AUDIT_LOG.getId());
       }
       return;
     }
 
     if ("DISCARD_NEWEST".equalsIgnoreCase(strategy)) {
-      log.error(
+      LOG.error(
           "【异步审计记录器】队列已满({}), 最新审计日志将被丢弃, id={}",
           asyncProps.getExecutorQueueCapacity(),
-          auditLog.getId());
+          AUDIT_LOG.getId());
       return;
     }
 
@@ -194,21 +194,21 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
       try {
         boolean success = queue.offer(auditLog, DEFAULT_BLOCK_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         if (!success) {
-          log.error(
+          LOG.error(
               "【异步审计记录器】阻塞等待超时({}ms), 队列仍未空出位置, 日志将被丢弃, id={}",
               DEFAULT_BLOCK_TIMEOUT_MS,
-              auditLog.getId());
+              AUDIT_LOG.getId());
           writeToFallback(auditLog);
         }
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
-        log.warn("【异步审计记录器】阻塞等待被中断, 尝试磁盘兜底, id={}", auditLog.getId());
+        LOG.warn("【异步审计记录器】阻塞等待被中断, 尝试磁盘兜底, id={}", AUDIT_LOG.getId());
         writeToFallback(auditLog);
       }
       return;
     }
 
-    log.error("【异步审计记录器】未知队列满策略: {}, 默认丢弃最新日志, id={}", strategy, auditLog.getId());
+    LOG.error("【异步审计记录器】未知队列满策略: {}, 默认丢弃最新日志, id={}", strategy, AUDIT_LOG.getId());
   }
 
   /** 队列满告警日志（带节流，避免频繁刷日志） */
@@ -218,7 +218,7 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
     if (elapsed >= WARN_LOG_THROTTLE_MS || warnCount <= 5) {
       lastWarnLogTime = now;
       double usageRatio = getQueueUsageRatio();
-      log.error(
+      LOG.error(
           "【异步审计记录器】队列已满! 容量={}, 当前={}, 使用率={}%, 策略={}, 累计触发={}",
           asyncProps.getExecutorQueueCapacity(),
           queue.size(),
@@ -275,7 +275,7 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
       return;
     }
 
-    log.info("【异步审计记录器】开始恢复磁盘兜底日志, 文件数={}", fallbackFiles.size());
+    LOG.info("【异步审计记录器】开始恢复磁盘兜底日志, 文件数={}", fallbackFiles.size());
 
     for (Path file : fallbackFiles) {
       List<AuditLog> logs = fallbackWriter.readFromFallbackFile(file);
@@ -286,13 +286,13 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
         if (offered) {
           recovered++;
         } else {
-          log.warn("【异步审计记录器】恢复时队列已满, 停止恢复, file={}", file);
+          LOG.warn("【异步审计记录器】恢复时队列已满, 停止恢复, file={}", file);
           break;
         }
       }
 
       fallbackWriter.deleteFallbackFile(file);
-      log.info("【异步审计记录器】磁盘兜底文件已恢复, file={}, recovered={}", file, recovered);
+      LOG.info("【异步审计记录器】磁盘兜底文件已恢复, file={}, recovered={}", file, recovered);
     }
   }
 
@@ -303,11 +303,11 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
     }
 
     if (!running.get()) {
-      log.warn("【异步审计记录器】记录器已停止, 尝试同步批量写入, count={}", auditLogs.size());
+      LOG.warn("【异步审计记录器】记录器已停止, 尝试同步批量写入, count={}", auditLogs.size());
       try {
         auditWriter.writeBatch(auditLogs);
       } catch (Exception e) {
-        log.error("【异步审计记录器】同步批量写入失败", e);
+        LOG.error("【异步审计记录器】同步批量写入失败", e);
       }
       return;
     }
@@ -365,7 +365,7 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
       throw new IllegalArgumentException("策略必须为 DISCARD_OLDEST、DISCARD_NEWEST 或 CALLER_RUNS");
     }
     asyncProps.setRejectPolicy(upper);
-    log.info("【异步审计记录器】队列满策略已设置为: {}", upper);
+    LOG.info("【异步审计记录器】队列满策略已设置为: {}", upper);
   }
 
   /**
@@ -375,7 +375,7 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
    */
   public void setDiskFallbackPath(String path) {
     fallbackWriter.setFallbackDir(path);
-    log.info("【异步审计记录器】磁盘兜底路径已设置为: {}", path);
+    LOG.info("【异步审计记录器】磁盘兜底路径已设置为: {}", path);
   }
 
   /** 从队列中批量取出审计日志并写入。 此方法由定时调度任务和队列满阈值触发调用。 */
@@ -411,9 +411,9 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
 
     try {
       auditWriter.writeBatch(batch);
-      log.debug("【异步审计记录器】批量写入成功, total={}", total);
+      LOG.debug("【异步审计记录器】批量写入成功, total={}", total);
     } catch (Exception e) {
-      log.warn("【异步审计记录器】批量写入失败, count={}, 尝试磁盘兜底写入", total, e);
+      LOG.warn("【异步审计记录器】批量写入失败, count={}, 尝试磁盘兜底写入", total, e);
       writeBatchToFallback(batch);
     }
   }
@@ -428,11 +428,11 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
 
     // 磁盘兜底已失效，尝试将日志重新放回队列尾部，避免数据永久丢失
     if (fallbackWriter.isDiskFallbackFailed()) {
-      log.warn("【异步审计记录器】磁盘兜底已失效, 尝试将失败批次重新放回队列尾部, count={}", batch.size());
+      LOG.warn("【异步审计记录器】磁盘兜底已失效, 尝试将失败批次重新放回队列尾部, count={}", batch.size());
       for (AuditLog auditLog : batch) {
         boolean offered = queue.offer(auditLog);
         if (!offered) {
-          log.error("【异步审计记录器】磁盘兜底失效且队列已满, 审计日志将丢失, id={}", auditLog.getId());
+          LOG.error("【异步审计记录器】磁盘兜底失效且队列已满, 审计日志将丢失, id={}", AUDIT_LOG.getId());
         }
       }
     }
@@ -441,26 +441,26 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
   /** 优雅停机 停止接收新日志，等待队列中剩余日志全部写入 */
   public void shutdown() {
     if (!running.compareAndSet(true, false)) {
-      log.warn("【异步审计记录器】记录器已处于停止状态");
+      LOG.warn("【异步审计记录器】记录器已处于停止状态");
       return;
     }
 
-    log.info("【异步审计记录器】开始优雅停机...");
+    LOG.info("【异步审计记录器】开始优雅停机...");
     scheduler.shutdown();
 
     try {
       if (!scheduler.awaitTermination(SHUTDOWN_TIMEOUT_SECONDS, TimeUnit.SECONDS)) {
-        log.warn("【异步审计记录器】优雅停机超时({}s), 强制退出", SHUTDOWN_TIMEOUT_SECONDS);
+        LOG.warn("【异步审计记录器】优雅停机超时({}s), 强制退出", SHUTDOWN_TIMEOUT_SECONDS);
         scheduler.shutdownNow();
       } else {
         // 确保队列中剩余日志全部写入
         flushRemaining();
-        log.info("【异步审计记录器】优雅停机完成, 队列剩余日志已全部写入");
+        LOG.info("【异步审计记录器】优雅停机完成, 队列剩余日志已全部写入");
       }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       scheduler.shutdownNow();
-      log.error("【异步审计记录器】优雅停机被中断", e);
+      LOG.error("【异步审计记录器】优雅停机被中断", e);
     }
   }
 
@@ -469,7 +469,7 @@ public class AsyncAuditRecorder implements AuditRecorder, DisposableBean {
     List<AuditLog> remaining = new ArrayList<>();
     queue.drainTo(remaining);
     if (!remaining.isEmpty()) {
-      log.info("【异步审计记录器】写入剩余 {} 条审计日志", remaining.size());
+      LOG.info("【异步审计记录器】写入剩余 {} 条审计日志", remaining.size());
       flushBatch(remaining);
     }
   }

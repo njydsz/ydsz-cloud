@@ -29,7 +29,7 @@ import com.njydsz.common.notify.template.TemplateEngine;
 @ConditionalOnProperty(prefix = "ydsz.notify.wecom", name = "webhook")
 public class WeComNotifySender implements NotifyChannelStrategy {
 
-  private static final Logger log = LoggerFactory.getLogger(WeComNotifySender.class);
+  private static final Logger LOG = LoggerFactory.getLogger(WeComNotifySender.class);
 
   private final String webhook;
   private final RestTemplate restTemplate;
@@ -88,19 +88,19 @@ public class WeComNotifySender implements NotifyChannelStrategy {
           int errcode = respJson.has("errcode") ? respJson.get("errcode").asInt(-1) : -1;
           if (errcode != 0) {
             String errmsg = respJson.has("errmsg") ? respJson.get("errmsg").asText() : "";
-            log.error("企业微信通知返回错误, errcode={}, errmsg={}", errcode, errmsg);
+            LOG.error("企业微信通知返回错误, errcode={}, errmsg={}", errcode, errmsg);
             return NotifySendResult.failure(
                 "企业微信响应错误: errcode=" + errcode + ", errmsg=" + errmsg, getChannel().getName());
           }
         } catch (Exception parseEx) {
-          log.warn("企业微信响应解析失败: {}, 按成功处理", parseEx.getMessage());
+          LOG.warn("企业微信响应解析失败: {}, 按成功处理", parseEx.getMessage());
         }
       }
 
-      log.debug("企业微信通知发送成功: {}", title);
+      LOG.debug("企业微信通知发送成功: {}", title);
       return NotifySendResult.success(response, getChannel().getName());
     } catch (Exception e) {
-      log.error("企业微信通知发送失败: {}", e.getMessage(), e);
+      LOG.error("企业微信通知发送失败: {}", e.getMessage(), e);
       return NotifySendResult.failure(e.getMessage(), getChannel().getName());
     }
   }

@@ -3,10 +3,10 @@ package com.njydsz.common.app.health;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.app.metrics.AppMetrics;
 import com.njydsz.common.safe.config.ApiSignatureProperties;

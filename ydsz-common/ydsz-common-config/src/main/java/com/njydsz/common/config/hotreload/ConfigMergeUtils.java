@@ -44,7 +44,7 @@ import com.njydsz.common.json.tree.JsonNode;
  */
 public final class ConfigMergeUtils {
 
-  private static final Logger log = LoggerFactory.getLogger(ConfigMergeUtils.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ConfigMergeUtils.class);
 
   private ConfigMergeUtils() {
     throw new UnsupportedOperationException("Utility class");
@@ -69,10 +69,10 @@ public final class ConfigMergeUtils {
       JsonNode patch = YdszJson.readTree(overrideConfig);
       JsonNode merged = JsonMergePatch.apply(base, patch);
       String result = merged.toString();
-      log.debug("[ConfigMerge] 配置合并完成: base keys={} → merged", baseConfig.length());
+      LOG.debug("[ConfigMerge] 配置合并完成: base keys={} → merged", baseConfig.length());
       return result;
     } catch (Exception e) {
-      log.warn("[ConfigMerge] 配置合并失败，降级返回 override: {}", e.getMessage());
+      LOG.warn("[ConfigMerge] 配置合并失败，降级返回 override: {}", e.getMessage());
       return overrideConfig;
     }
   }

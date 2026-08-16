@@ -6,6 +6,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import io.lettuce.core.ClientOptions;
+import io.lettuce.core.ReadFrom;
+import io.lettuce.core.cluster.ClusterClientOptions;
+import io.lettuce.core.cluster.ClusterTopologyRefreshOptions;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.springframework.data.redis.connection.RedisClusterConfiguration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -18,10 +22,6 @@ import org.springframework.data.redis.connection.lettuce.LettuceClientConfigurat
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettucePoolingClientConfiguration;
 import org.springframework.util.ClassUtils;
-import io.lettuce.core.ClientOptions;
-import io.lettuce.core.ReadFrom;
-import io.lettuce.core.cluster.ClusterClientOptions;
-import io.lettuce.core.cluster.ClusterTopologyRefreshOptions;
 
 /**
  * Redis 连接工厂配置器

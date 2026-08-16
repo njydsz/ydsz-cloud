@@ -37,7 +37,7 @@ import com.njydsz.common.seata.metrics.SeataMetrics;
  */
 public class SeataTransactionManager extends AbstractTransactionManager {
 
-  private static final Logger log = LoggerFactory.getLogger(SeataTransactionManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SeataTransactionManager.class);
 
   /** 构造 Seata AT 模式事务管理器（基础模式） */
   public SeataTransactionManager() {
@@ -73,14 +73,14 @@ public class SeataTransactionManager extends AbstractTransactionManager {
       throws Exception {
     String xid = beginXid(transactionName);
     GlobalTransaction globalTx = null;
-    log.info("Seata AT transaction started: name={}, xid={}", transactionName, xid);
+    LOG.info("Seata AT transaction started: name={}, xid={}", transactionName, xid);
 
     try {
       globalTx = GlobalTransactionContext.getCurrentOrCreate();
       globalTx.begin();
 
       String seataXid = RootContext.getXID();
-      log.debug(
+      LOG.debug(
           "Seata global transaction begun: name={}, xid={}, seataXid={}",
           transactionName,
           xid,
@@ -89,7 +89,7 @@ public class SeataTransactionManager extends AbstractTransactionManager {
       T result = action.call();
 
       globalTx.commit();
-      log.info(
+      LOG.info(
           "Seata AT transaction committed: name={}, xid={}, seataXid={}",
           transactionName,
           xid,
@@ -98,14 +98,14 @@ public class SeataTransactionManager extends AbstractTransactionManager {
       RootContext.unbind();
       return result;
     } catch (Exception e) {
-      log.error(
+      LOG.error(
           "Seata AT transaction failed: name={}, xid={}, rolling back", transactionName, xid, e);
       if (globalTx != null) {
         try {
           globalTx.rollback();
-          log.info("Seata AT transaction rolled back: name={}, xid={}", transactionName, xid);
+          LOG.info("Seata AT transaction rolled back: name={}, xid={}", transactionName, xid);
         } catch (Exception re) {
-          log.error(
+          LOG.error(
               "Seata AT transaction rollback failed: name={}, xid={}", transactionName, xid, re);
         }
       }
@@ -133,7 +133,7 @@ public class SeataTransactionManager extends AbstractTransactionManager {
       String transactionName, Callable<T> action, Runnable compensation) throws Exception {
     String xid = beginXid(transactionName);
     GlobalTransaction globalTx = null;
-    log.info("Seata AT+SAGA transaction started: name={}, xid={}", transactionName, xid);
+    LOG.info("Seata AT+SAGA transaction started: name={}, xid={}", transactionName, xid);
 
     try {
       globalTx = GlobalTransactionContext.getCurrentOrCreate();
@@ -142,12 +142,12 @@ public class SeataTransactionManager extends AbstractTransactionManager {
       T result = action.call();
 
       globalTx.commit();
-      log.info("Seata AT+SAGA transaction completed: name={}, xid={}", transactionName, xid);
+      LOG.info("Seata AT+SAGA transaction completed: name={}, xid={}", transactionName, xid);
       endXid();
       RootContext.unbind();
       return result;
     } catch (Exception e) {
-      log.error(
+      LOG.error(
           "Seata AT+SAGA transaction failed: name={}, xid={}, executing compensation",
           transactionName,
           xid,
@@ -156,7 +156,7 @@ public class SeataTransactionManager extends AbstractTransactionManager {
         try {
           globalTx.rollback();
         } catch (Exception re) {
-          log.error(
+          LOG.error(
               "Seata rollback failed before compensation: name={}, xid={}",
               transactionName,
               xid,
@@ -166,9 +166,9 @@ public class SeataTransactionManager extends AbstractTransactionManager {
       if (compensation != null) {
         try {
           compensation.run();
-          log.info("Business compensation completed: name={}, xid={}", transactionName, xid);
+          LOG.info("Business compensation completed: name={}, xid={}", transactionName, xid);
         } catch (Exception ce) {
-          log.error("Business compensation failed: name={}, xid={}", transactionName, xid, ce);
+          LOG.error("Business compensation failed: name={}, xid={}", transactionName, xid, ce);
         }
       }
       endXid(e);
@@ -198,7 +198,7 @@ public class SeataTransactionManager extends AbstractTransactionManager {
     try {
       return RootContext.getXID();
     } catch (Exception e) {
-      log.debug("Failed to get current Seata XID from RootContext", e);
+      LOG.debug("Failed to get current Seata XID from RootContext", e);
       return null;
     }
   }

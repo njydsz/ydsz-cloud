@@ -1,5 +1,13 @@
 package com.njydsz.message.server.service.chain.handler;
 
+import java.util.Map;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.message.domain.entity.config.MsgTrace;
@@ -8,12 +16,6 @@ import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.service.chain.SendContext;
 import com.njydsz.message.server.service.chain.SendHandler;
 import com.njydsz.message.server.service.core.MessageTraceService;
-import java.util.Map;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 /**
  * 通道启用校验 Handler。

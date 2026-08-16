@@ -2,15 +2,15 @@ package com.njydsz.common.safe.filter;
 
 import java.io.IOException;
 
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 import org.springframework.web.filter.OncePerRequestFilter;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * 统一请求体缓存过滤器
@@ -33,7 +33,7 @@ import jakarta.servlet.http.HttpServletResponse;
  */
 public class SafeRequestBodyCacheFilter extends OncePerRequestFilter {
 
-  private static final Logger log = LoggerFactory.getLogger(SafeRequestBodyCacheFilter.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SafeRequestBodyCacheFilter.class);
 
   /** 请求体最大缓存大小（10MB） */
   private static final int MAX_CACHEABLE_BODY_SIZE = 10 * 1024 * 1024;
@@ -60,7 +60,7 @@ public class SafeRequestBodyCacheFilter extends OncePerRequestFilter {
     // 检查 Content-Length 是否超过阈值
     int contentLength = request.getContentLength();
     if (contentLength > MAX_CACHEABLE_BODY_SIZE) {
-      log.debug("请求体过大，跳过缓存 | URI={}, size={}", request.getRequestURI(), contentLength);
+      LOG.debug("请求体过大，跳过缓存 | URI={}, size={}", request.getRequestURI(), contentLength);
       filterChain.doFilter(request, response);
       return;
     }
@@ -70,7 +70,7 @@ public class SafeRequestBodyCacheFilter extends OncePerRequestFilter {
           new CachedBodyHttpServletRequestWrapper(request, request.getInputStream().readAllBytes());
       filterChain.doFilter(wrappedRequest, response);
     } catch (IOException e) {
-      log.warn("统一请求体缓存读取失败 | URI={}", request.getRequestURI(), e);
+      LOG.warn("统一请求体缓存读取失败 | URI={}", request.getRequestURI(), e);
       // 读取失败时降级为原始请求，不影响后续过滤器
       filterChain.doFilter(request, response);
     }

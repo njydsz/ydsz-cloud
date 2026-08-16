@@ -1,15 +1,17 @@
 package com.njydsz.literule.domain.entity;
 
+import java.time.LocalDateTime;
+
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.Version;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
-import com.njydsz.literule.domain.enums.RuleStatusEnum;
-import java.time.LocalDateTime;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.literule.domain.enums.RuleStatusEnum;
 
 /**
  * LiteRule 规则定义 DO

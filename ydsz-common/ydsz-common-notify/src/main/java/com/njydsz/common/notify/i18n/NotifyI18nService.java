@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  */
 public class NotifyI18nService {
 
-  private static final Logger log = LoggerFactory.getLogger(NotifyI18nService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(NotifyI18nService.class);
 
   private static final String BASE_NAME = "i18n/notify_messages";
   private static final String DEFAULT_LOCALE = "zh_CN";
@@ -96,7 +96,7 @@ public class NotifyI18nService {
                 parts.length >= 2 ? Locale.of(parts[0], parts[1]) : Locale.of(parts[0]);
             return ResourceBundle.getBundle(BASE_NAME, javaLocale, getClass().getClassLoader());
           } catch (Exception e) {
-            log.debug("[NotifyI18nService] 资源文件未找到: locale={}", loc);
+            LOG.debug("[NotifyI18nService] 资源文件未找到: locale={}", loc);
             return null;
           }
         });

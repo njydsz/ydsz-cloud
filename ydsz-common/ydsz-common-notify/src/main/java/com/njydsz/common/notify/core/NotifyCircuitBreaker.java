@@ -33,7 +33,7 @@ import com.njydsz.common.safe.ratelimit.circuitbreaker.AbstractCircuitBreaker;
  */
 public class NotifyCircuitBreaker extends AbstractCircuitBreaker {
 
-  private static final Logger log = LoggerFactory.getLogger(NotifyCircuitBreaker.class);
+  private static final Logger LOG = LoggerFactory.getLogger(NotifyCircuitBreaker.class);
 
   private static final int DEFAULT_FAILURE_THRESHOLD = 5;
   private static final long DEFAULT_RECOVERY_TIMEOUT_MS = 60_000L;
@@ -77,14 +77,14 @@ public class NotifyCircuitBreaker extends AbstractCircuitBreaker {
   protected void onFailureRecord() {
     int failures = consecutiveFailures.incrementAndGet();
     if (failures >= (int) config.getFailureThreshold()) {
-      log.warn("[NotifyCircuitBreaker] 渠道[{}]连续失败 {} 次达到阈值", channel.getName(), failures);
+      LOG.warn("[NotifyCircuitBreaker] 渠道[{}]连续失败 {} 次达到阈值", channel.getName(), failures);
     }
   }
 
   @Override
   protected void resetStats() {
     consecutiveFailures.set(0);
-    log.info("[NotifyCircuitBreaker] 渠道[{}]熔断器恢复，切换到 CLOSED 状态", channel.getName());
+    LOG.info("[NotifyCircuitBreaker] 渠道[{}]熔断器恢复，切换到 CLOSED 状态", channel.getName());
   }
 
   /**

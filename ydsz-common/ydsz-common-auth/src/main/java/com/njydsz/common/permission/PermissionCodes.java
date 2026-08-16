@@ -200,6 +200,9 @@ public final class PermissionCodes {
   /** NEXTWIKI_FILE_UPLOAD */
   public static final String NEXTWIKI_FILE_UPLOAD = "nextwiki:file:upload";
 
+  /** NEXTWIKI_FILE_DOWNLOAD */
+  public static final String NEXTWIKI_FILE_DOWNLOAD = "nextwiki:file:download";
+
   /** NEXTWIKI_FILE_VERSION_ROLLBACK */
   public static final String NEXTWIKI_FILE_VERSION_ROLLBACK = "nextwiki:file:version:rollback";
 
@@ -241,6 +244,18 @@ public final class PermissionCodes {
 
   /** NEXTWIKI_SHARE_VERIFY */
   public static final String NEXTWIKI_SHARE_VERIFY = "nextwiki:share:verify";
+
+  /** NEXTWIKI_SHARE_VIEW */
+  public static final String NEXTWIKI_SHARE_VIEW = "nextwiki:share:view";
+
+  /** NEXTWIKI_SHARE_LOG_VIEW */
+  public static final String NEXTWIKI_SHARE_LOG_VIEW = "nextwiki:share:log:view";
+
+  /** NEXTWIKI_AI_SUMMARY */
+  public static final String NEXTWIKI_AI_SUMMARY = "nextwiki:ai:summary";
+
+  /** NEXTWIKI_AI_STATUS */
+  public static final String NEXTWIKI_AI_STATUS = "nextwiki:ai:status";
 
   /** NEXTWIKI_TAG_BIND */
   public static final String NEXTWIKI_TAG_BIND = "nextwiki:tag:bind";

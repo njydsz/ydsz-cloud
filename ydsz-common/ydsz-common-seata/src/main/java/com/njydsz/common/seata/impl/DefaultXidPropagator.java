@@ -32,7 +32,7 @@ import com.njydsz.common.seata.context.XidContextHolder;
  */
 public class DefaultXidPropagator implements XidPropagator {
 
-  private static final Logger log = LoggerFactory.getLogger(DefaultXidPropagator.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DefaultXidPropagator.class);
 
   private final ObjectProvider<XidSigner> signerProvider;
 
@@ -88,7 +88,7 @@ public class DefaultXidPropagator implements XidPropagator {
     if (signer != null) {
       String verified = signer.verify(header);
       if (verified == null) {
-        log.warn("XID signature verification failed, rejecting XID binding");
+        LOG.warn("XID signature verification failed, rejecting XID binding");
       }
       return verified;
     }
@@ -104,7 +104,7 @@ public class DefaultXidPropagator implements XidPropagator {
   public void bind(String xid) {
     if (xid != null) {
       XidContextHolder.setXid(xid);
-      log.debug("XID bound to current thread: {}", xid);
+      LOG.debug("XID bound to current thread: {}", xid);
     }
   }
 

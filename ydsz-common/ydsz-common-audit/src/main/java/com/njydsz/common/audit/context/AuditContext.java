@@ -38,7 +38,10 @@ import com.njydsz.common.core.context.RequestContext;
  */
 public class AuditContext {
 
-  private static final Logger log = LoggerFactory.getLogger(AuditContext.class);
+  private AuditContext() {}
+
+
+  private static final Logger LOG = LoggerFactory.getLogger(AuditContext.class);
 
   /** 缓存反射 Method 对象，避免重复查找 */
   private static volatile Method cachedUsernameMethod;
@@ -160,7 +163,7 @@ public class AuditContext {
         return (String) usernameObj;
       }
     } catch (Exception e) {
-      log.debug("[AuditContext] 获取操作人姓名异常（非致命）: {}", e.getMessage());
+      LOG.debug("[AuditContext] 获取操作人姓名异常（非致命）: {}", e.getMessage());
     }
     return null;
   }
@@ -193,7 +196,7 @@ public class AuditContext {
       // 该类不含 getUsername() 方法，返回 null
       return null;
     } catch (Exception e) {
-      log.debug("[AuditContext] 反射获取用户名失败: {}", e.getMessage());
+      LOG.debug("[AuditContext] 反射获取用户名失败: {}", e.getMessage());
       return null;
     }
   }

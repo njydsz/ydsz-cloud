@@ -1,13 +1,14 @@
 package com.njydsz.literule.api;
 
-import com.njydsz.common.core.constant.SystemConstants;
-import com.njydsz.common.util.id.IdGenerator;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.njydsz.common.core.constant.SystemConstants;
+import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * 规则评估上下文

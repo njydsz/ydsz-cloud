@@ -47,7 +47,7 @@ import com.njydsz.common.notify.enums.NotifyChannel;
  */
 public class NotifyFallbackManager {
 
-  private static final Logger log = LoggerFactory.getLogger(NotifyFallbackManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(NotifyFallbackManager.class);
 
   /** 最大降级尝试次数 */
   private static final int MAX_FALLBACK_ATTEMPTS = 3;
@@ -102,18 +102,18 @@ public class NotifyFallbackManager {
     int attempts = 0;
     for (NotifyChannel fallbackChannel : fallbackChain) {
       if (attempts >= MAX_FALLBACK_ATTEMPTS) {
-        log.warn("[NotifyFallbackManager] 达到最大降级次数({})，停止降级", MAX_FALLBACK_ATTEMPTS);
+        LOG.warn("[NotifyFallbackManager] 达到最大降级次数({})，停止降级", MAX_FALLBACK_ATTEMPTS);
         break;
       }
       attempts++;
 
       NotifyChannelStrategy strategy = strategyMap.get(fallbackChannel);
       if (strategy == null || !strategy.isEnabled()) {
-        log.debug("[NotifyFallbackManager] 降级渠道[{}]不可用，跳过", fallbackChannel.getName());
+        LOG.debug("[NotifyFallbackManager] 降级渠道[{}]不可用，跳过", fallbackChannel.getName());
         continue;
       }
 
-      log.info(
+      LOG.info(
           "[NotifyFallbackManager] 主渠道[{}]降级到[{}], receiver={}",
           primaryChannel.getName(),
           fallbackChannel.getName(),
@@ -121,18 +121,18 @@ public class NotifyFallbackManager {
       try {
         NotifySendResult result = strategy.send(receiver, title, content);
         if (result.isSuccess()) {
-          log.info(
+          LOG.info(
               "[NotifyFallbackManager] 降级发送成功: channel={}, receiver={}",
               fallbackChannel.getName(),
               receiver);
           return result;
         }
-        log.warn(
+        LOG.warn(
             "[NotifyFallbackManager] 降级渠道[{}]发送失败: {}",
             fallbackChannel.getName(),
             result.getErrorMessage());
       } catch (Exception e) {
-        log.error(
+        LOG.error(
             "[NotifyFallbackManager] 降级渠道[{}]发送异常: {}",
             fallbackChannel.getName(),
             e.getMessage(),

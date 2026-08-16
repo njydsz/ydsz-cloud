@@ -30,7 +30,7 @@ import com.njydsz.common.util.security.DigestUtils;
  */
 public class ReactiveTokenBlacklistService {
 
-  private static final Logger log = LoggerFactory.getLogger(ReactiveTokenBlacklistService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ReactiveTokenBlacklistService.class);
 
   private static final String BLACKLIST_KEY_PREFIX = "auth:token:blacklist:";
 
@@ -48,7 +48,7 @@ public class ReactiveTokenBlacklistService {
       AuthProperties authProperties) {
     this.redisTemplateProvider = redisTemplateProvider;
     this.authProperties = authProperties;
-    log.info(
+    LOG.info(
         "[ReactiveTokenBlacklist] 初始化完成, blacklist.enabled={}",
         authProperties.getBlacklist().isEnabled());
   }
@@ -76,7 +76,7 @@ public class ReactiveTokenBlacklistService {
 
     ReactiveStringRedisTemplate redisTemplate = redisTemplateProvider.getIfAvailable();
     if (redisTemplate == null) {
-      log.warn("[ReactiveTokenBlacklist] Redis 未配置，降级为放行");
+      LOG.warn("[ReactiveTokenBlacklist] Redis 未配置，降级为放行");
       return Mono.just(false);
     }
 
@@ -85,7 +85,7 @@ public class ReactiveTokenBlacklistService {
         .hasKey(key)
         .onErrorResume(
             e -> {
-              log.warn("[ReactiveTokenBlacklist] Redis 查询异常，降级为放行: {}", e.getMessage());
+              LOG.warn("[ReactiveTokenBlacklist] Redis 查询异常，降级为放行: {}", e.getMessage());
               return Mono.just(false);
             })
         .defaultIfEmpty(false);
@@ -115,7 +115,7 @@ public class ReactiveTokenBlacklistService {
     return redisTemplate
         .opsForValue()
         .set(key, "1", Duration.ofSeconds(expire))
-        .doOnSuccess(v -> log.info("[ReactiveTokenBlacklist] Token 已加入黑名单, expire={}s", expire))
+        .doOnSuccess(v -> LOG.info("[ReactiveTokenBlacklist] Token 已加入黑名单, expire={}s", expire))
         .then();
   }
 

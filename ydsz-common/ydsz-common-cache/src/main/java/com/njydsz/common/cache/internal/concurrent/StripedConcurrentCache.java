@@ -42,7 +42,7 @@ import com.njydsz.common.cache.stats.CacheStats;
  */
 public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
 
-  private static final Logger log = LoggerFactory.getLogger(StripedConcurrentCache.class);
+  private static final Logger LOG = LoggerFactory.getLogger(StripedConcurrentCache.class);
 
   /** 默认分段数 */
   private static final int DEFAULT_STRIPES = 32;
@@ -91,7 +91,7 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
       segs.add(new Segment<>(perSegmentCapacity, this));
     }
 
-    log.info(
+    LOG.info(
         "分段锁缓存已创建，maxSize={}, stripes={}, perSegmentCapacity={}",
         this.maxSize,
         actualStripes,
@@ -255,7 +255,7 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
                 }
                 int oldMaxSize = maxSize;
                 maxSize = (int) maximumSize;
-                log.info("StripedConcurrentCache 最大容量调整: {} -> {}", oldMaxSize, maxSize);
+                LOG.info("StripedConcurrentCache 最大容量调整: {} -> {}", oldMaxSize, maxSize);
                 if (maxSize < totalSize.get()) {
                   shrinkToCapacity();
                 }

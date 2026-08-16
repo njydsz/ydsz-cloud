@@ -1,6 +1,5 @@
 package com.njydsz.message.server.filter;
 
-import com.njydsz.message.server.config.MessageProperties;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -9,9 +8,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+
+import com.njydsz.message.server.config.MessageProperties;
 
 /**
  * 敏感词过滤器：对消息发送内容做敏感词替换。

@@ -1,15 +1,17 @@
 package com.njydsz.literule.server.expression;
 
-import com.njydsz.literule.api.RuleContext;
-import com.njydsz.literule.api.expression.ExpressionEngine;
-import com.njydsz.literule.api.expression.ExpressionValidationResult;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.literule.api.RuleContext;
+import com.njydsz.literule.api.expression.ExpressionEngine;
+import com.njydsz.literule.api.expression.ExpressionValidationResult;
 
 /**
  * 表达式校验服务

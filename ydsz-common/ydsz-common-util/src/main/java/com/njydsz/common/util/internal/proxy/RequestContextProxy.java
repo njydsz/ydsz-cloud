@@ -27,7 +27,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class RequestContextProxy {
 
-  private static final Logger log = LoggerFactory.getLogger(RequestContextProxy.class);
+  private static final Logger LOG = LoggerFactory.getLogger(RequestContextProxy.class);
 
   /** RequestContext 类全限定名 */
   private static final String REQUEST_CONTEXT_CLASS =
@@ -57,7 +57,7 @@ public final class RequestContextProxy {
             available = Boolean.TRUE;
           } catch (ClassNotFoundException e) {
             available = Boolean.FALSE;
-            log.debug("ydsz-common-core 不在 classpath 中，RequestContext 功能将降级为无操作");
+            LOG.debug("ydsz-common-core 不在 classpath 中，RequestContext 功能将降级为无操作");
           }
         }
       }
@@ -81,7 +81,7 @@ public final class RequestContextProxy {
       Method method = getCachedMethod("get", String.class);
       return method.invoke(null, key);
     } catch (Exception e) {
-      log.debug("调用 RequestContext.get({}) 失败: {}", key, e.getMessage());
+      LOG.debug("调用 RequestContext.get({}) 失败: {}", key, e.getMessage());
       return null;
     }
   }
@@ -101,7 +101,7 @@ public final class RequestContextProxy {
       Method method = getCachedMethod("getTraceId");
       return (String) method.invoke(null);
     } catch (Exception e) {
-      log.debug("调用 RequestContext.getTraceId() 失败: {}", e.getMessage());
+      LOG.debug("调用 RequestContext.getTraceId() 失败: {}", e.getMessage());
       return null;
     }
   }
@@ -121,7 +121,7 @@ public final class RequestContextProxy {
       Method method = getCachedMethod("setTraceId", String.class);
       method.invoke(null, traceId);
     } catch (Exception e) {
-      log.debug("调用 RequestContext.setTraceId({}) 失败: {}", traceId, e.getMessage());
+      LOG.debug("调用 RequestContext.setTraceId({}) 失败: {}", traceId, e.getMessage());
     }
   }
 
@@ -140,7 +140,7 @@ public final class RequestContextProxy {
       Method method = getCachedMethod("remove", String.class);
       method.invoke(null, key);
     } catch (Exception e) {
-      log.debug("调用 RequestContext.remove({}) 失败: {}", key, e.getMessage());
+      LOG.debug("调用 RequestContext.remove({}) 失败: {}", key, e.getMessage());
     }
   }
 
@@ -159,7 +159,7 @@ public final class RequestContextProxy {
       Method method = getCachedMethod("getRequestId");
       return (String) method.invoke(null);
     } catch (Exception e) {
-      log.debug("调用 RequestContext.getRequestId() 失败: {}", e.getMessage());
+      LOG.debug("调用 RequestContext.getRequestId() 失败: {}", e.getMessage());
       return null;
     }
   }
@@ -186,7 +186,7 @@ public final class RequestContextProxy {
             method.setAccessible(true);
             METHOD_CACHE.put(cacheKey, method);
           } catch (NoSuchMethodException | ClassNotFoundException e) {
-            log.debug("查找 RequestContext.{} 方法失败: {}", methodName, e.getMessage());
+            LOG.debug("查找 RequestContext.{} 方法失败: {}", methodName, e.getMessage());
             return null;
           }
         }

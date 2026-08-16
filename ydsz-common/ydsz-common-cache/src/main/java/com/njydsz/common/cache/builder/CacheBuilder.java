@@ -39,7 +39,7 @@ import com.njydsz.common.cache.support.Expiry;
  *     .type(CacheType.STRIPED)
  *     .maximumSize(10000)
  *     .recordStats()
- *     .removalListener((key, value, cause) -> log.info("removed: {}", key))
+ *     .removalListener((key, value, cause) -> LOG.info("removed: {}", key))
  *     .build();
  *
  * // 自动加载缓存

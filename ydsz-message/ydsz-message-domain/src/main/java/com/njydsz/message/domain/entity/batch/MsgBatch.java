@@ -1,19 +1,24 @@
 package com.njydsz.message.domain.entity.batch;
 
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import java.io.Serial;
 import java.time.LocalDateTime;
+
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * 消息发送批次实体：记录异步批量发送的批次状态与进度。
  *
  * <p>批次生命周期：PENDING（待处理）→ PROCESSING（处理中）→ COMPLETED（已完成）/ FAILED（失败）。 每次单条发送完成后更新
  * success/failed/skipped 计数，前端轮询查询进度。
+ *
+ * <p>P1-A3：payload 字段存放 JSON 序列化的消息请求列表，支持断点续传（{@code executeBatch(batchId)} 即可恢复）。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -71,4 +76,12 @@ public class MsgBatch extends MpBaseEntity<String> {
 
   /** 触发发送的用户 ID */
   private String senderId;
+
+  /**
+   * P1-A3: 消息请求列表 JSON（断点续传恢复用）。
+   *
+   * <p>submitBatch 时将 requests 序列化为 JSON 存入；executeBatch(batchId) 反序列化恢复。
+   */
+  @TableField("`payload`")
+  private String payload;
 }

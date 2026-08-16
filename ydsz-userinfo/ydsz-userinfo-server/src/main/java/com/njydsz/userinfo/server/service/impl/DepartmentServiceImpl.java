@@ -1,6 +1,20 @@
-﻿package com.njydsz.userinfo.server.service.impl;
+package com.njydsz.userinfo.server.service.impl;
+
+import java.time.Duration;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.njydsz.common.domain.tree.TreeBuilder;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
@@ -19,18 +33,6 @@ import com.njydsz.userinfo.infra.mapper.UserDeptMapper;
 import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 import com.njydsz.userinfo.server.service.DepartmentService;
 import com.njydsz.userinfo.server.service.WorkflowApproverCacheService;
-import java.time.Duration;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import Collectors;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 部门 Service 实现
@@ -242,7 +244,8 @@ public class DepartmentServiceImpl implements DepartmentService {
     try {
       String cachedJson = redisStringOps.get(CACHE_KEY_DEPT_TREE, String.class);
       if (cachedJson != null && !cachedJson.isBlank()) {
-        List<DepartmentTreeVO> cached = YdszJson.fromJson(cachedJson, List.class, DepartmentTreeVO.class);
+        List<DepartmentTreeVO> cached =
+            YdszJson.fromJson(cachedJson, List.class, DepartmentTreeVO.class);
         if (cached != null) {
           log.debug("Department tree loaded from cache");
           return cached;

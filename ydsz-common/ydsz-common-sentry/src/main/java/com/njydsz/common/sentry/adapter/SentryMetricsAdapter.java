@@ -7,12 +7,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.function.ToDoubleFunction;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.sentry.SentryApplicationContextUtils;
 import com.njydsz.common.sentry.SentryService;
@@ -57,7 +57,7 @@ import com.njydsz.common.sentry.spi.MetricsCollector;
  */
 public abstract class SentryMetricsAdapter {
 
-  private static final Logger log = LoggerFactory.getLogger(SentryMetricsAdapter.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SentryMetricsAdapter.class);
 
   /** 模块指标前缀（如 "ydsz_flow_" / "ydsz_msg_"） */
   protected final String prefix;

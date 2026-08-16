@@ -82,7 +82,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 @RestControllerAdvice
 public class SensitiveDataAdvice implements ResponseBodyAdvice<Object> {
 
-  private static final Logger log = LoggerFactory.getLogger(SensitiveDataAdvice.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SensitiveDataAdvice.class);
 
   private final SensitiveDataProperties configuration;
 
@@ -121,11 +121,11 @@ public class SensitiveDataAdvice implements ResponseBodyAdvice<Object> {
     }
 
     try {
-      log.debug("开始对返回值进行敏感数据脱敏: {}", returnType.getParameterType().getName());
+      LOG.debug("开始对返回值进行敏感数据脱敏: {}", returnType.getParameterType().getName());
       return SensitiveDataProcessor.process(body, configuration.getMaxDepth());
     } catch (Exception e) {
       // 脱敏失败返回空对象，防止原始未脱敏数据泄露
-      log.error("敏感数据脱敏处理失败，返回空对象以避免数据泄露: {}", e.getMessage(), e);
+      LOG.error("敏感数据脱敏处理失败，返回空对象以避免数据泄露: {}", e.getMessage(), e);
       return createEmptyObject(body.getClass());
     }
   }
@@ -135,7 +135,7 @@ public class SensitiveDataAdvice implements ResponseBodyAdvice<Object> {
     try {
       return clazz.getDeclaredConstructor().newInstance();
     } catch (Exception ex) {
-      log.error("创建空对象失败: {}", clazz.getName(), ex);
+      LOG.error("创建空对象失败: {}", clazz.getName(), ex);
       return null;
     }
   }

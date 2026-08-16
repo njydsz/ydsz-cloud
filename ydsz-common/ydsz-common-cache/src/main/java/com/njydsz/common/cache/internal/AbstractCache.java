@@ -41,7 +41,7 @@ import com.njydsz.common.cache.support.AsyncFunction;
 public abstract class AbstractCache<K, V> implements Cache<K, V> {
 
   /** 日志记录器 */
-  private static final Logger log = LoggerFactory.getLogger(AbstractCache.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AbstractCache.class);
 
   /** 命中计数器 */
   protected final LongAdder hitCount = new LongAdder();
@@ -90,7 +90,7 @@ public abstract class AbstractCache<K, V> implements Cache<K, V> {
       try {
         listener.onRemoval(key, value, cause);
       } catch (Exception e) {
-        log.warn("缓存删除监听器执行异常, key={}, cause={}", key, cause, e);
+        LOG.warn("缓存删除监听器执行异常, key={}, cause={}", key, cause, e);
       }
     }
   }

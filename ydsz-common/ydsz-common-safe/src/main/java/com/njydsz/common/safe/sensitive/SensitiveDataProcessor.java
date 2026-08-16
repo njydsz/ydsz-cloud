@@ -54,7 +54,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class SensitiveDataProcessor {
 
-  private static final Logger logger = LoggerFactory.getLogger(SensitiveDataProcessor.class);
+  private static final Logger LOGGER = LoggerFactory.getLogger(SensitiveDataProcessor.class);
 
   /** 默认最大递归深度 */
   private static final int MAX_DEPTH = 10;
@@ -129,7 +129,7 @@ public final class SensitiveDataProcessor {
     }
 
     if (visited.containsKey(obj)) {
-      logger.debug("检测到循环引用，跳过处理: {}", clazz.getName());
+      LOGGER.debug("检测到循环引用，跳过处理: {}", clazz.getName());
       return obj;
     }
     visited.put(obj, Boolean.TRUE);
@@ -317,7 +317,7 @@ public final class SensitiveDataProcessor {
           // 深度超限等安全异常直接透传，中断整个处理流程
           throw e;
         } catch (Exception e) {
-          logger.warn(
+          LOGGER.warn(
               "敏感数据字段处理失败: 类={}, 字段={}, 原因={}",
               currentClass.getName(),
               field.getName(),
@@ -363,7 +363,7 @@ public final class SensitiveDataProcessor {
         ctor.setAccessible(true);
         return ctor.newInstance(args);
       } catch (Exception e) {
-        logger.debug("使用构造器 {} 创建实例失败: {}", ctor, e.getMessage());
+        LOGGER.debug("使用构造器 {} 创建实例失败: {}", ctor, e.getMessage());
       }
     }
     return null;
@@ -473,7 +473,7 @@ public final class SensitiveDataProcessor {
     // fail-closed：无可信角色来源（认证上下文未提供角色字段），一律脱敏
     // TODO: 2026-08-20 待认证上下文扩展角色字段后，改为从 RequestContext 的
     //       AuthInfo 读取当前用户角色集合，再做精确等值匹配（@ydsz-team）
-    logger.debug("角色白名单暂不生效（认证上下文未提供角色来源），按 fail-closed 执行脱敏: {}", String.join(",", roles));
+    LOGGER.debug("角色白名单暂不生效（认证上下文未提供角色来源），按 fail-closed 执行脱敏: {}", String.join(",", roles));
     return true;
   }
 }

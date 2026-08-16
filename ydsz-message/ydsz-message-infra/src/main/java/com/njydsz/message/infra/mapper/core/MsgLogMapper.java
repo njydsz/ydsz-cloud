@@ -1,8 +1,9 @@
 package com.njydsz.message.infra.mapper.core;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.message.domain.entity.core.MsgLog;
 import org.apache.ibatis.annotations.Mapper;
+
+import com.njydsz.message.domain.entity.core.MsgLog;
 
 /**
  * 消息发送日志 Mapper

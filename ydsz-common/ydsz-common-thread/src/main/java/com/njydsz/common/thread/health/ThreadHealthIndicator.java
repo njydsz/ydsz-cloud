@@ -36,7 +36,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  */
 public class ThreadHealthIndicator implements HealthIndicator, ApplicationContextAware {
 
-  private static final Logger log = LoggerFactory.getLogger(ThreadHealthIndicator.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ThreadHealthIndicator.class);
 
   private ApplicationContext applicationContext;
 
@@ -112,7 +112,7 @@ public class ThreadHealthIndicator implements HealthIndicator, ApplicationContex
         details.put(beanName + ".threadNamePrefix", executor.getThreadNamePrefix());
         details.put(beanName + ".type", "PLATFORM");
       } catch (Exception e) {
-        log.warn("线程池 [{}] 健康检查失败", beanName, e);
+        LOG.warn("线程池 [{}] 健康检查失败", beanName, e);
         details.put(beanName + ".error", e.getMessage());
         anyDown = true;
       }
@@ -138,7 +138,7 @@ public class ThreadHealthIndicator implements HealthIndicator, ApplicationContex
       poolCount++;
       details.put(beanName + ".type", "VIRTUAL");
       details.put(beanName + ".alive", isAlive(es));
-      log.debug("线程池 [{}] 虚拟线程池健康检查完成", beanName);
+      LOG.debug("线程池 [{}] 虚拟线程池健康检查完成", beanName);
     }
 
     if (poolCount == 0) {
@@ -184,7 +184,7 @@ public class ThreadHealthIndicator implements HealthIndicator, ApplicationContex
     try {
       return !es.isShutdown();
     } catch (Exception e) {
-      log.debug("判断 ExecutorService 存活状态异常: {}", e.getMessage());
+      LOG.debug("判断 ExecutorService 存活状态异常: {}", e.getMessage());
       return false;
     }
   }

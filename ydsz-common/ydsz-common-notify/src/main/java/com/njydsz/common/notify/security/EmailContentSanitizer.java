@@ -29,7 +29,10 @@ import org.springframework.util.StringUtils;
  */
 public class EmailContentSanitizer {
 
-  private static final Logger log = LoggerFactory.getLogger(EmailContentSanitizer.class);
+  private EmailContentSanitizer() {}
+
+
+  private static final Logger LOG = LoggerFactory.getLogger(EmailContentSanitizer.class);
 
   /** OWASP HTML 安全策略：允许格式化、链接、图片、样式、表格 */
   private static final PolicyFactory EMAIL_POLICY =
@@ -52,7 +55,7 @@ public class EmailContentSanitizer {
     }
     OWASP_AVAILABLE = available;
     if (!available) {
-      log.warn("[EmailContentSanitizer] owasp-java-html-sanitizer 依赖不存在，降级为简单转义模式");
+      LOG.warn("[EmailContentSanitizer] owasp-java-html-sanitizer 依赖不存在，降级为简单转义模式");
     }
   }
 
@@ -70,7 +73,7 @@ public class EmailContentSanitizer {
       try {
         return EMAIL_POLICY.sanitize(htmlContent);
       } catch (Exception e) {
-        log.error("[EmailContentSanitizer] OWASP 清洗失败，降级为简单转义: {}", e.getMessage());
+        LOG.error("[EmailContentSanitizer] OWASP 清洗失败，降级为简单转义: {}", e.getMessage());
         return simpleEscape(htmlContent);
       }
     }

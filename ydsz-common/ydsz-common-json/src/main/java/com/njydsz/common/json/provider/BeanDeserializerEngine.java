@@ -43,7 +43,7 @@ import com.njydsz.common.json.util.JsonTypeUtils;
  */
 @SuppressWarnings("deprecation")
 final class BeanDeserializerEngine {
-  private static final Logger log = LoggerFactory.getLogger(BeanDeserializerEngine.class);
+  private static final Logger LOG = LoggerFactory.getLogger(BeanDeserializerEngine.class);
 
   private BeanDeserializerEngine() {
     throw new UnsupportedOperationException();
@@ -91,7 +91,7 @@ final class BeanDeserializerEngine {
         BeanReader<T> beanReader = BeanReader.getOrCreate(clazz);
         return beanReader.readObject(reader);
       } catch (Exception e) {
-        log.warn(
+        LOG.warn(
             "BeanReader deserialization failed for {}, falling back to creator/builder",
             clazz.getName(),
             e);
@@ -178,7 +178,7 @@ final class BeanDeserializerEngine {
     try {
       return JsonParserUtil.parseArray(json);
     } catch (Exception e) {
-      log.warn(
+      LOG.warn(
           "Array deserialization failed for {}, falling back to JsonParserUtil",
           elementClass.getName(),
           e);

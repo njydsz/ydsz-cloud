@@ -1,8 +1,9 @@
 package com.njydsz.literule.server.spi;
 
-import com.njydsz.literule.api.RuleResult;
 import java.util.List;
 import java.util.Map;
+
+import com.njydsz.literule.api.RuleResult;
 
 /**
  * 画布执行提供者 SPI

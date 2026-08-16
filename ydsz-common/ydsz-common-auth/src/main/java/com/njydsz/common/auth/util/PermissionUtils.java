@@ -39,7 +39,7 @@ import com.njydsz.common.util.string.StringUtils;
  */
 public final class PermissionUtils {
 
-  private static final Logger log = LoggerFactory.getLogger(PermissionUtils.class);
+  private static final Logger LOG = LoggerFactory.getLogger(PermissionUtils.class);
 
   /** 正则模式缓存最大容量 */
   private static final int MAX_PATTERN_CACHE_SIZE = 1024;
@@ -114,7 +114,7 @@ public final class PermissionUtils {
     }
     long colonCount = permissionCode.chars().filter(c -> c == ':').count();
     if (colonCount < 2) {
-      log.warn("权限码格式不符合三段式规范（领域:资源:操作）: {}，建议检查权限配置", permissionCode);
+      LOG.warn("权限码格式不符合三段式规范（领域:资源:操作）: {}，建议检查权限配置", permissionCode);
     }
   }
 

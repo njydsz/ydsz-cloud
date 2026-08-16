@@ -1,6 +1,13 @@
 package com.njydsz.message.server.service.impl.config;
 
+import java.util.List;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.tenant.TenantContextHolder;
@@ -9,11 +16,6 @@ import com.njydsz.message.domain.dto.config.PreferenceUpsertDTO;
 import com.njydsz.message.domain.entity.config.MsgPreference;
 import com.njydsz.message.infra.mapper.config.MsgPreferenceMapper;
 import com.njydsz.message.server.service.config.PreferenceService;
-import java.util.List;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 /**
  * 通知偏好服务实现。

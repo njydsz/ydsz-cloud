@@ -79,7 +79,7 @@ import com.njydsz.common.util.string.StringUtils;
 @Order(12)
 public class AuthColPermissionAspect {
 
-  private static final Logger log = LoggerFactory.getLogger(AuthColPermissionAspect.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AuthColPermissionAspect.class);
   private static final ColumnDesensitizationExecutor DESENSITIZER =
       ColumnDesensitizationExecutor.getInstance();
   private static final ExpressionParser SPEL_PARSER = new SpelExpressionParser();
@@ -181,7 +181,7 @@ public class AuthColPermissionAspect {
       String resolved = SPEL_PARSER.parseExpression(table).getValue(context, String.class);
       return resolved != null ? resolved : table;
     } catch (Exception e) {
-      log.warn("SpEL 解析表名失败: table={}, error={}", table, e.getMessage());
+      LOG.warn("SpEL 解析表名失败: table={}, error={}", table, e.getMessage());
       return table;
     }
   }
@@ -250,7 +250,7 @@ public class AuthColPermissionAspect {
       String json = jsonMapper.toJsonExcludeFields(returnValue, excludedFields);
       return YdszJson.fromJson(json, returnValue.getClass());
     } catch (Exception e) {
-      log.warn("列权限序列化过滤失败，降级到反射过滤: {}", e.getMessage());
+      LOG.warn("列权限序列化过滤失败，降级到反射过滤: {}", e.getMessage());
       // 降级：仍然使用反射方式过滤
       if (returnValue instanceof Collection) {
         List<Object> filtered = new ArrayList<>();
@@ -349,7 +349,7 @@ public class AuthColPermissionAspect {
     try {
       copy = shallowCopyByReflection(bean);
     } catch (Exception e) {
-      log.warn("列权限过滤深拷贝失败，降级到原始对象: {}", e.getMessage());
+      LOG.warn("列权限过滤深拷贝失败，降级到原始对象: {}", e.getMessage());
       copy = bean;
     }
 
@@ -363,7 +363,7 @@ public class AuthColPermissionAspect {
         try {
           field.set(copy, null);
         } catch (IllegalAccessException e) {
-          log.warn("无法过滤字段 {}: {}", field.getName(), e.getMessage());
+          LOG.warn("无法过滤字段 {}: {}", field.getName(), e.getMessage());
         }
       } else if (isDesensitizeEnabled(desensitizeCtx, table, columnName)) {
         Object value;
@@ -375,7 +375,7 @@ public class AuthColPermissionAspect {
             field.set(copy, desensitized);
           }
         } catch (IllegalAccessException e) {
-          log.warn("无法读取字段 {}: {}", field.getName(), e.getMessage());
+          LOG.warn("无法读取字段 {}: {}", field.getName(), e.getMessage());
         }
       }
     }
@@ -508,7 +508,7 @@ public class AuthColPermissionAspect {
       String userId = AuthInfoUtils.getUniqueId();
       return desensitizationService.loadByToken(userId, accessToken);
     } catch (Exception e) {
-      log.debug("构建脱敏上下文失败：{}", e.getMessage());
+      LOG.debug("构建脱敏上下文失败：{}", e.getMessage());
       return ColumnDesensitizationContext.empty();
     }
   }
@@ -676,7 +676,7 @@ public class AuthColPermissionAspect {
       setter.invoke(bean, filtered);
       return true;
     } catch (Exception e) {
-      log.warn("列权限过滤 records 失败: {}", e.getMessage());
+      LOG.warn("列权限过滤 records 失败: {}", e.getMessage());
       return false;
     }
   }
@@ -787,7 +787,7 @@ public class AuthColPermissionAspect {
       try {
         MAP_PUT_METHOD.invoke(map, key, value);
       } catch (Exception e) {
-        log.warn("无法向 Map 参数注入列权限: {}", e.getMessage());
+        LOG.warn("无法向 Map 参数注入列权限: {}", e.getMessage());
       }
     }
   }

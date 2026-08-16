@@ -1,7 +1,7 @@
 package com.njydsz.common.safe.alert;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * 安全告警配置属性

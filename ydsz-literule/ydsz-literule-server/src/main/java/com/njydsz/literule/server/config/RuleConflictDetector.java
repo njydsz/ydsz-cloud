@@ -1,8 +1,5 @@
 package com.njydsz.literule.server.config;
 
-import com.njydsz.literule.api.RuleDefinition;
-import com.njydsz.literule.api.RuleSeverity;
-import com.njydsz.literule.server.spi.RuleConfigProvider;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -10,8 +7,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.literule.api.RuleDefinition;
+import com.njydsz.literule.api.RuleSeverity;
+import com.njydsz.literule.server.spi.RuleConfigProvider;
 
 /**
  * 规则冲突检测器

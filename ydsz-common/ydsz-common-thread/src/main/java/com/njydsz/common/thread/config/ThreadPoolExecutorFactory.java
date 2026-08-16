@@ -7,6 +7,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -16,7 +17,6 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.task.TaskDecorator;
 import org.springframework.lang.NonNull;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import io.micrometer.core.instrument.MeterRegistry;
 
 import com.njydsz.common.thread.config.ThreadPoolProperties.PoolConfig;
 import com.njydsz.common.thread.config.ThreadPoolProperties.RejectPolicy;
@@ -40,7 +40,7 @@ import com.njydsz.common.thread.config.ThreadPoolProperties.RejectPolicy;
  */
 public class ThreadPoolExecutorFactory implements ApplicationContextAware, InitializingBean {
 
-  private static final Logger log = LoggerFactory.getLogger(ThreadPoolExecutorFactory.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ThreadPoolExecutorFactory.class);
 
   private ApplicationContext applicationContext;
 
@@ -60,7 +60,7 @@ public class ThreadPoolExecutorFactory implements ApplicationContextAware, Initi
   @Override
   public void afterPropertiesSet() {
     if (applicationContext == null) {
-      log.warn(
+      LOG.warn(
           "ydsz-thread: ThreadPoolExecutorFactory ApplicationContext 为 null，"
               + "TaskDecorator 配置将不可用");
     }
@@ -74,7 +74,7 @@ public class ThreadPoolExecutorFactory implements ApplicationContextAware, Initi
    * @return 虚拟线程池 ExecutorService
    */
   public ExecutorService createVirtualExecutor(String name, PoolConfig config) {
-    log.info("ydsz-thread: 创建虚拟线程池 [{}]", name);
+    LOG.info("ydsz-thread: 创建虚拟线程池 [{}]", name);
     return Executors.newThreadPerTaskExecutor(
         Thread.ofVirtual().name(config.getThreadNamePrefix(), 0).factory());
   }
@@ -89,7 +89,7 @@ public class ThreadPoolExecutorFactory implements ApplicationContextAware, Initi
    * @return 平台线程池
    */
   public ThreadPoolTaskExecutor createTaskExecutor(String name, PoolConfig config) {
-    log.info(
+    LOG.info(
         "ydsz-thread: 创建线程池 [{}] (core={}, max={}, queue={})",
         name,
         config.getCoreSize(),
@@ -125,7 +125,7 @@ public class ThreadPoolExecutorFactory implements ApplicationContextAware, Initi
   private void applyTaskDecorators(
       ThreadPoolTaskExecutor executor, String name, PoolConfig config) {
     if (applicationContext == null) {
-      log.warn("ydsz-thread: ApplicationContext 未注入，无法配置 TaskDecorator (pool={})", name);
+      LOG.warn("ydsz-thread: ApplicationContext 未注入，无法配置 TaskDecorator (pool={})", name);
       return;
     }
 
@@ -146,7 +146,7 @@ public class ThreadPoolExecutorFactory implements ApplicationContextAware, Initi
     if (!decorators.isEmpty()) {
       executor.setTaskDecorator(
           decorators.size() == 1 ? decorators.get(0) : new CompositeTaskDecorator(decorators));
-      log.info(
+      LOG.info(
           "ydsz-thread: 已为线程池 [{}] 启用 TaskDecorator: 用户={}, 耗时追踪=true",
           name,
           decoratorBeanNames == null ? 0 : decoratorBeanNames.size());
@@ -182,7 +182,7 @@ public class ThreadPoolExecutorFactory implements ApplicationContextAware, Initi
         meterRegistry = applicationContext.getBean(MeterRegistry.class);
       } catch (Exception e) {
         // Micrometer 不存在时，指标数据不注册，追踪仍然工作
-        log.debug("ydsz-thread: Micrometer MeterRegistry 不可用，耗时指标将不会被上报 (pool={})", name);
+        LOG.debug("ydsz-thread: Micrometer MeterRegistry 不可用，耗时指标将不会被上报 (pool={})", name);
       }
       timerMetrics =
           com.njydsz.common.thread.metrics.ThreadPoolTimerMetrics.createIfMeterRegistryPresent(
@@ -203,7 +203,7 @@ public class ThreadPoolExecutorFactory implements ApplicationContextAware, Initi
   private List<TaskDecorator> resolveTaskDecorator(String beanName, String poolName) {
     List<TaskDecorator> result = new ArrayList<>();
     if (!applicationContext.containsBean(beanName)) {
-      log.warn("ydsz-thread: TaskDecorator Bean [{}] 不存在，跳过 (pool={})", beanName, poolName);
+      LOG.warn("ydsz-thread: TaskDecorator Bean [{}] 不存在，跳过 (pool={})", beanName, poolName);
       return result;
     }
     try {
@@ -211,10 +211,10 @@ public class ThreadPoolExecutorFactory implements ApplicationContextAware, Initi
       if (bean instanceof TaskDecorator) {
         result.add((TaskDecorator) bean);
       } else {
-        log.warn("ydsz-thread: Bean [{}] 不是 TaskDecorator 类型，跳过 (pool={})", beanName, poolName);
+        LOG.warn("ydsz-thread: Bean [{}] 不是 TaskDecorator 类型，跳过 (pool={})", beanName, poolName);
       }
     } catch (Exception e) {
-      log.warn(
+      LOG.warn(
           "ydsz-thread: 解析 TaskDecorator Bean [{}] 失败 (pool={}): {}",
           beanName,
           poolName,

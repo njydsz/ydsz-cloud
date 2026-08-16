@@ -8,13 +8,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
-import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.docs.domain.DocumentContent;
 import com.njydsz.common.docs.domain.DocumentMetadata;

@@ -6,11 +6,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.ibatis.executor.statement.StatementHandler;
-import org.apache.ibatis.mapping.MappedStatement;
-import org.apache.ibatis.mapping.SqlCommandType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
@@ -28,6 +23,11 @@ import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SelectItem;
 import net.sf.jsqlparser.statement.select.Values;
 import net.sf.jsqlparser.statement.update.Update;
+import org.apache.ibatis.executor.statement.StatementHandler;
+import org.apache.ibatis.mapping.MappedStatement;
+import org.apache.ibatis.mapping.SqlCommandType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.jdbc.handler.FieldFillHandler;
 import com.njydsz.common.jdbc.monitor.SqlAstCache;
@@ -52,7 +52,7 @@ import com.njydsz.common.jdbc.monitor.SqlAstCache;
 public class CombinedFieldFillInterceptor extends CachingJsqlParserSupport
     implements InnerInterceptor {
 
-  private static final Logger log = LoggerFactory.getLogger(CombinedFieldFillInterceptor.class);
+  private static final Logger LOG = LoggerFactory.getLogger(CombinedFieldFillInterceptor.class);
 
   /** 字段填充处理器列表（不可变） */
   private final List<FieldFillHandler> handlers;
@@ -119,7 +119,7 @@ public class CombinedFieldFillInterceptor extends CachingJsqlParserSupport
       String column = handler.getFieldFillColumn();
       Expression fillValue = handler.getFieldFillValue();
       if (StringUtils.isBlank(column) || fillValue == null) {
-        log.warn(
+        LOG.warn(
             "字段填充配置异常：填充字段名或值为空，跳过处理。handler={}, 字段：{}",
             handler.getClass().getSimpleName(),
             column);
@@ -150,12 +150,12 @@ public class CombinedFieldFillInterceptor extends CachingJsqlParserSupport
       if (valueAdded) {
         columns.add(new Column(column));
         changed = true;
-        log.debug("INSERT 字段填充成功: table={}, column={}", tableName, column);
+        LOG.debug("INSERT 字段填充成功: table={}, column={}", tableName, column);
       }
     }
 
     if (!changed) {
-      log.debug("INSERT 字段填充未生效: table={}", tableName);
+      LOG.debug("INSERT 字段填充未生效: table={}", tableName);
     }
   }
 
@@ -179,7 +179,7 @@ public class CombinedFieldFillInterceptor extends CachingJsqlParserSupport
       String column = handler.getFieldFillColumn();
       Expression fillValue = handler.getFieldFillValue();
       if (StringUtils.isBlank(column) || fillValue == null) {
-        log.warn(
+        LOG.warn(
             "字段填充配置异常：填充字段名或值为空，跳过处理。handler={}, 字段：{}",
             handler.getClass().getSimpleName(),
             column);
@@ -189,7 +189,7 @@ public class CombinedFieldFillInterceptor extends CachingJsqlParserSupport
         continue;
       }
       update.addUpdateSet(new Column(column), fillValue);
-      log.debug("UPDATE 字段填充成功: table={}, column={}", tableName, column);
+      LOG.debug("UPDATE 字段填充成功: table={}, column={}", tableName, column);
     }
   }
 

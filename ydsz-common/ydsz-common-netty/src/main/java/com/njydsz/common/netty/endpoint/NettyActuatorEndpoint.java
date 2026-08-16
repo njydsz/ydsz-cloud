@@ -4,10 +4,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.actuate.endpoint.annotation.Selector;
-import lombok.RequiredArgsConstructor;
 
 import com.njydsz.common.netty.metric.NettyChannelMetrics;
 import com.njydsz.common.netty.pool.NettyEventLoopPool;

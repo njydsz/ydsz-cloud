@@ -63,5 +63,10 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-json</artifactId>
         </dependency>
+        <!-- P0-FIX: TransmittableThreadLocal（JobExecutionContext 线程池上下文传播） -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>transmittable-thread-local</artifactId>
+        </dependency>
     </dependencies>
 </project>

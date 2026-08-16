@@ -5,10 +5,10 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import net.sf.jsqlparser.schema.Table;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import net.sf.jsqlparser.schema.Table;
 
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
@@ -42,7 +42,7 @@ import com.njydsz.common.util.string.StringUtils;
  */
 final class DataPermissionHelper {
 
-  private static final Logger log = LoggerFactory.getLogger(DataPermissionHelper.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DataPermissionHelper.class);
 
   /** 有界缓存最大容量 10000，防止内存泄漏 */
   private static final int MAX_CACHE_SIZE = 10000;
@@ -156,7 +156,7 @@ final class DataPermissionHelper {
         }
       }
     } catch (ClassNotFoundException | SecurityException e) {
-      log.debug("无法检查数据权限注解: {} | 原因: {}", msId, e.getMessage());
+      LOG.debug("无法检查数据权限注解: {} | 原因: {}", msId, e.getMessage());
     }
     return false;
   }

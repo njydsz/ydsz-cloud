@@ -1,12 +1,13 @@
 package com.njydsz.message.api.client;
 
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.message.api.fallback.MessageSendClientFallback;
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 
 /**
  * 消息发送 Feign 客户端（供跨服务调用）。

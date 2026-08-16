@@ -36,7 +36,7 @@ import com.njydsz.common.cache.stats.CacheStats;
  */
 public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
 
-  private static final Logger log = LoggerFactory.getLogger(WindowTinyLFUCache.class);
+  private static final Logger LOG = LoggerFactory.getLogger(WindowTinyLFUCache.class);
 
   private final int maxSize;
   private final ConcurrentHashMap<K, Node<K, V>> data;
@@ -75,7 +75,7 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
     this.writeLock = rwLock.writeLock();
     this.totalCount = 0;
     this.shiftThreshold = Math.max(maxCapacity, 1000);
-    log.info(
+    LOG.info(
         "Window-TinyLFU 缓存已创建（Caffeine 架构，并发安全增强，周期性衰减机制），maxCapacity={}, shiftThreshold={}",
         maxCapacity,
         shiftThreshold);

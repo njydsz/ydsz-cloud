@@ -4,8 +4,8 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 
-import org.springframework.data.redis.core.StringRedisTemplate;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 import com.njydsz.common.util.string.StringUtils;
 

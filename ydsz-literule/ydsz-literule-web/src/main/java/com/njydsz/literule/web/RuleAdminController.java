@@ -1,5 +1,27 @@
 package com.njydsz.literule.web;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -30,26 +52,6 @@ import com.njydsz.literule.server.config.RuleAdminService;
 import com.njydsz.literule.server.expression.ExpressionValidationService;
 import com.njydsz.literule.server.spi.RuleVersion;
 import com.njydsz.literule.server.version.RuleVersionDiffService;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import jakarta.validation.Valid;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 规则管理核心 Controller
@@ -107,15 +109,12 @@ public class RuleAdminController {
    * @return 分页规则定义列表
    * @since 2.1.0
    */
-  @Operation(
-      summary = "分页查询规则定义",
-      description = "分页查询规则引擎中所有规则定义，支持按页码、页大小、排序字段进行分页")
+  @Operation(summary = "分页查询规则定义", description = "分页查询规则引擎中所有规则定义，支持按页码、页大小、排序字段进行分页")
   @ApiResponse(responseCode = "200", description = "分页规则定义列表")
   @GetMapping
   public com.njydsz.common.core.response.PageResponse<RuleDefinitionVO> list(PageQuery pageQuery) {
     return PageResponses.success(
-        ruleAdminService.pageRuleDefinitions(pageQuery),
-        LiteruleConverter.INSTANT::entityToVO);
+        ruleAdminService.pageRuleDefinitions(pageQuery), LiteruleConverter.INSTANT::entityToVO);
   }
 
   /**
@@ -124,9 +123,7 @@ public class RuleAdminController {
    * @param ruleCode 规则编码
    * @return 规则定义
    */
-  @Operation(
-      summary = "查询单条规则定义",
-      description = "根据规则编码查询单条规则定义的详细信息")
+  @Operation(summary = "查询单条规则定义", description = "根据规则编码查询单条规则定义的详细信息")
   @Parameter(name = "ruleCode", description = "规则编码", required = true)
   @ApiResponse(responseCode = "200", description = "规则定义详情")
   @GetMapping("/{ruleCode}")
@@ -143,9 +140,7 @@ public class RuleAdminController {
    * @param changeDesc 变更描述
    * @return 保存后的规则定义
    */
-  @Operation(
-      summary = "新增/更新规则",
-      description = "创建新规则或更新已有规则的定义（条件表达式、严重度、优先级等）")
+  @Operation(summary = "新增/更新规则", description = "创建新规则或更新已有规则的定义（条件表达式、严重度、优先级等）")
   @Parameter(name = "X-Operator", description = "操作人（Header）", required = false)
   @Parameter(name = "changeDesc", description = "变更描述", required = false)
   @ApiResponse(responseCode = "200", description = "保存后的规则定义")
@@ -175,9 +170,7 @@ public class RuleAdminController {
    * @param operator 操作人
    * @return 操作结果
    */
-  @Operation(
-      summary = "切换规则启停",
-      description = "启用或禁用指定编码的规则")
+  @Operation(summary = "切换规则启停", description = "启用或禁用指定编码的规则")
   @Parameter(name = "ruleCode", description = "规则编码", required = true)
   @ApiResponse(responseCode = "200", description = "操作成功")
   @Idempotent(key = "ruleAdmin:toggle", ttlSeconds = 5, message = "请勿重复提交")

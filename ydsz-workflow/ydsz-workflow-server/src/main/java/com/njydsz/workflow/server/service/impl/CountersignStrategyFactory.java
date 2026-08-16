@@ -1,13 +1,15 @@
 package com.njydsz.workflow.server.service.impl;
 
-import com.njydsz.workflow.domain.enums.FlowPerformType;
-import jakarta.annotation.PostConstruct;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.workflow.domain.enums.FlowPerformType;
 
 /**
  * 会签策略工厂。

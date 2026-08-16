@@ -33,7 +33,7 @@ import org.springframework.util.StringUtils;
  */
 public class HtmlTemplateRegistry {
 
-  private static final Logger log = LoggerFactory.getLogger(HtmlTemplateRegistry.class);
+  private static final Logger LOG = LoggerFactory.getLogger(HtmlTemplateRegistry.class);
 
   /** SpEL 占位符匹配模式 */
   private static final Pattern PLACEHOLDER_PATTERN = Pattern.compile("#\\{([^}]+)}");
@@ -52,7 +52,7 @@ public class HtmlTemplateRegistry {
       throw new IllegalArgumentException("模板编码不能为空");
     }
     templates.put(template.getCode(), template);
-    log.info("[HtmlTemplateRegistry] 模板已注册: code={}", template.getCode());
+    LOG.info("[HtmlTemplateRegistry] 模板已注册: code={}", template.getCode());
   }
 
   /**

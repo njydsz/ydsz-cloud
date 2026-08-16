@@ -71,7 +71,7 @@ public final class BeanMapper {
         "BeanMapper is a utility class and cannot be instantiated");
   }
 
-  private static final Logger log = LoggerFactory.getLogger(BeanMapper.class);
+  private static final Logger LOG = LoggerFactory.getLogger(BeanMapper.class);
 
   // ==================== 缓存与常量 ====================
 

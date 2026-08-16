@@ -1,16 +1,18 @@
 package com.njydsz.workflow.server.search;
 
+import java.time.ZoneId;
+import java.util.List;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
 import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.workflow.domain.entity.FlowTemplate;
 import com.njydsz.workflow.infra.mapper.FlowTemplateMapper;
-import java.time.ZoneId;
-import java.util.List;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 /**
  * 工作流模板搜索提供者 — 将流程模板数据注册到统一搜索体系。

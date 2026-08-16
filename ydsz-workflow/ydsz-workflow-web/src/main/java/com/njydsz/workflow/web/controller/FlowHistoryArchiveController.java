@@ -1,16 +1,11 @@
 package com.njydsz.workflow.web.controller.analytics;
 
-import com.njydsz.common.audit.annotation.Audit;
-import com.njydsz.common.audit.enums.AuditAction;
-import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
+import java.util.Map;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -19,6 +14,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
 
 /**
  * 流程历史数据归档管理 API（P2-8）

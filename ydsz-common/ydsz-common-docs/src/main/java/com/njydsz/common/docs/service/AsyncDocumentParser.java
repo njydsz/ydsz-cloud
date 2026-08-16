@@ -9,9 +9,9 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.function.Consumer;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
-import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.docs.config.DocsProperties;
 import com.njydsz.common.docs.domain.DocumentParseResult;

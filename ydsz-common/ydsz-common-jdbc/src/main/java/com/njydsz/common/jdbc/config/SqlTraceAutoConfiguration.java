@@ -1,13 +1,13 @@
 package com.njydsz.common.jdbc.config;
 
+import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
+import io.micrometer.core.instrument.MeterRegistry;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import lombok.extern.slf4j.Slf4j;
-import io.micrometer.core.instrument.MeterRegistry;
-import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 
 import com.njydsz.common.jdbc.interceptor.SqlTraceInnerInterceptor;
 

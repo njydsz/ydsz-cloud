@@ -3,9 +3,9 @@ package com.njydsz.common.auth.handler;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import jakarta.servlet.http.HttpServletRequest;
 
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.core.constant.HeaderConstants;
@@ -23,7 +23,7 @@ import com.njydsz.common.util.string.StringUtils;
  */
 public class ParsedAuthHeaders {
 
-  private static final Logger log = LoggerFactory.getLogger(ParsedAuthHeaders.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ParsedAuthHeaders.class);
 
   private final String language;
   private final String distinctId;

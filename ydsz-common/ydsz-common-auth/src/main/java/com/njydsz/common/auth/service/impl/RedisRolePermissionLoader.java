@@ -60,7 +60,7 @@ import com.njydsz.common.util.string.StringUtils;
  */
 public class RedisRolePermissionLoader implements RolePermissionLoader {
 
-  private static final Logger log = LoggerFactory.getLogger(RedisRolePermissionLoader.class);
+  private static final Logger LOG = LoggerFactory.getLogger(RedisRolePermissionLoader.class);
 
   private final RedisStringOps redisStringOps;
   private final AuthProperties properties;
@@ -108,9 +108,9 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
     if (this.redisAvailable != available) {
       this.redisAvailable = available;
       if (!available) {
-        log.warn("【权限模块】Redis 不可用，RedisRolePermissionLoader 已降级到本地缓存");
+        LOG.warn("【权限模块】Redis 不可用，RedisRolePermissionLoader 已降级到本地缓存");
       } else {
-        log.info("【权限模块】Redis 已恢复，RedisRolePermissionLoader 继续使用 Redis 加载权限");
+        LOG.info("【权限模块】Redis 已恢复，RedisRolePermissionLoader 继续使用 Redis 加载权限");
       }
     }
   }
@@ -134,8 +134,8 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
         .expireAfterWrite(ttlSeconds, TimeUnit.SECONDS)
         .removalListener(
             (String key, RolePermissions value, RemovalCause cause) -> {
-              if (log.isDebugEnabled()) {
-                log.debug("角色权限缓存淘汰: roleCode={}, cause={}", key, cause);
+              if (LOG.isDebugEnabled()) {
+                LOG.debug("角色权限缓存淘汰: roleCode={}, cause={}", key, cause);
               }
             })
         .build();
@@ -167,11 +167,11 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
       if (permissionCacheService != null) {
         RolePermissions localValue = permissionCacheService.getCachedPermissions(role);
         if (localValue != null) {
-          log.warn("【权限模块】Redis 不可用，从本地缓存获取角色权限: roleCode={}", roleCode);
+          LOG.warn("【权限模块】Redis 不可用，从本地缓存获取角色权限: roleCode={}", roleCode);
           return localValue;
         }
       }
-      log.warn("【权限模块】Redis 不可用且本地缓存无数据，返回空权限: roleCode={}", roleCode);
+      LOG.warn("【权限模块】Redis 不可用且本地缓存无数据，返回空权限: roleCode={}", roleCode);
       return RolePermissions.empty();
     }
 
@@ -204,12 +204,12 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
       return loaded;
     } catch (Exception e) {
       // Redis 异常时标记不可用，并降级到本地缓存
-      log.error("【权限模块】Redis 加载权限异常，降级到本地缓存: roleCode={}, error={}", roleCode, e.getMessage(), e);
+      LOG.error("【权限模块】Redis 加载权限异常，降级到本地缓存: roleCode={}, error={}", roleCode, e.getMessage(), e);
       redisAvailable = false;
       if (permissionCacheService != null) {
         RolePermissions localValue = permissionCacheService.getCachedPermissions(role);
         if (localValue != null) {
-          log.warn("【权限模块】降级成功，从本地缓存返回角色权限: roleCode={}", roleCode);
+          LOG.warn("【权限模块】降级成功，从本地缓存返回角色权限: roleCode={}", roleCode);
           return localValue;
         }
       }
@@ -326,7 +326,7 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
       }
 
     } catch (Exception e) {
-      log.error("【权限模块】批量加载角色权限异常，降级到逐个加载: error={}", e.getMessage(), e);
+      LOG.error("【权限模块】批量加载角色权限异常，降级到逐个加载: error={}", e.getMessage(), e);
       redisAvailable = false;
       // 降级到逐个加载
       for (String role : uncachedRoles) {
@@ -347,7 +347,7 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
     try {
       return YdszJson.readTree(jsonData);
     } catch (Exception e) {
-      log.warn("【权限模块】解析角色权限 JSON 失败: roleCode={}, error={}", roleCode, e.getMessage());
+      LOG.warn("【权限模块】解析角色权限 JSON 失败: roleCode={}, error={}", roleCode, e.getMessage());
       return null;
     }
   }
@@ -368,7 +368,7 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
         }
       }
     } catch (Exception e) {
-      log.debug("[RedisRolePermissionLoader] 批量解析 API 权限数据失败: {}", e.getMessage());
+      LOG.debug("[RedisRolePermissionLoader] 批量解析 API 权限数据失败: {}", e.getMessage());
     }
   }
 
@@ -393,7 +393,7 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
     } catch (BusinessException e) {
       throw e;
     } catch (Exception e) {
-      log.error("加载角色菜单权限失败：roleCode={}, error={}", roleCode, e.getMessage(), e);
+      LOG.error("加载角色菜单权限失败：roleCode={}, error={}", roleCode, e.getMessage(), e);
       throw BusinessException.builder()
           .code(String.valueOf(HttpStatus.FORBIDDEN.value()))
           .message("权限加载失败")
@@ -461,7 +461,7 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
     } catch (BusinessException e) {
       throw e;
     } catch (Exception e) {
-      log.error("加载角色接口权限失败：roleCode={}, error={}", roleCode, e.getMessage(), e);
+      LOG.error("加载角色接口权限失败：roleCode={}, error={}", roleCode, e.getMessage(), e);
       throw BusinessException.builder()
           .code(String.valueOf(HttpStatus.FORBIDDEN.value()))
           .message("权限加载失败")
@@ -485,7 +485,7 @@ public class RedisRolePermissionLoader implements RolePermissionLoader {
         }
       }
     } catch (Exception e) {
-      log.debug("[RedisRolePermissionLoader] 解析权限数据失败，将抛出异常: {}", e.getMessage());
+      LOG.debug("[RedisRolePermissionLoader] 解析权限数据失败，将抛出异常: {}", e.getMessage());
     }
     throw BusinessException.builder()
         .code(String.valueOf(HttpStatus.FORBIDDEN.value()))

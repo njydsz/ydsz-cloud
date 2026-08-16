@@ -1,16 +1,18 @@
 package com.njydsz.literule.server.cep;
 
-import com.njydsz.common.util.id.IdGenerator;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * 复杂事件（CEP）原子事件

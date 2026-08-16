@@ -7,17 +7,17 @@ import java.util.HashMap;
 import java.util.Map;
 import javax.crypto.SecretKey;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.JwtParserBuilder;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.JwtParserBuilder;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
 
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.service.TokenBlacklistService;
@@ -53,7 +53,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
     matchIfMissing = true)
 public class JwtTokenService implements TokenService {
 
-  private static final Logger log = LoggerFactory.getLogger(JwtTokenService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(JwtTokenService.class);
 
   private static final String CLAIM_USER_ID = "userId";
   private static final String CLAIM_USERNAME = "username";
@@ -116,7 +116,7 @@ public class JwtTokenService implements TokenService {
   @Override
   public boolean validateAccessToken(String token) {
     if (tokenBlacklistService != null && tokenBlacklistService.isBlacklisted(token)) {
-      log.warn("Access token is blacklisted");
+      LOG.warn("Access token is blacklisted");
       return false;
     }
     return validateToken(token, TOKEN_TYPE_ACCESS);
@@ -125,7 +125,7 @@ public class JwtTokenService implements TokenService {
   @Override
   public boolean validateRefreshToken(String token) {
     if (tokenBlacklistService != null && tokenBlacklistService.isBlacklisted(token)) {
-      log.warn("Refresh token is blacklisted");
+      LOG.warn("Refresh token is blacklisted");
       return false;
     }
     return validateToken(token, TOKEN_TYPE_REFRESH);
@@ -144,31 +144,31 @@ public class JwtTokenService implements TokenService {
   @Override
   public String refreshAccessToken(String refreshToken) {
     if (tokenBlacklistService != null && tokenBlacklistService.isBlacklisted(refreshToken)) {
-      log.warn("Refresh token is blacklisted");
+      LOG.warn("Refresh token is blacklisted");
       return null;
     }
     // 获取分布式锁，防止并发刷新导致重放攻击
     if (tokenBlacklistService != null
         && !tokenBlacklistService.tryAcquireRefreshLock(refreshToken)) {
-      log.warn("Refresh token 正在被其他请求刷新，拒绝并发刷新");
+      LOG.warn("Refresh token 正在被其他请求刷新，拒绝并发刷新");
       return null;
     }
     try {
       // 再次检查黑名单，防止在获取锁的间隙被其他请求加入黑名单
       if (tokenBlacklistService != null && tokenBlacklistService.isBlacklisted(refreshToken)) {
-        log.warn("Refresh token was blacklisted during lock acquisition");
+        LOG.warn("Refresh token was blacklisted during lock acquisition");
         return null;
       }
       UserInfo userInfo = parseRefreshToken(refreshToken);
       if (userInfo == null) {
-        log.warn("Refresh token validation failed");
+        LOG.warn("Refresh token validation failed");
         return null;
       }
       String newAccessToken = issueAccessToken(userInfo);
       // 颁发新 token 后将旧 refresh_token 加入黑名单，防止 refresh_token 重放攻击
       if (tokenBlacklistService != null && newAccessToken != null) {
         tokenBlacklistService.addToBlacklist(refreshToken);
-        log.warn("旧 refresh_token 已加入黑名单，防止重放");
+        LOG.warn("旧 refresh_token 已加入黑名单，防止重放");
       }
       return newAccessToken;
     } finally {
@@ -228,10 +228,10 @@ public class JwtTokenService implements TokenService {
       String tokenType = claims.get(CLAIM_TOKEN_TYPE, String.class);
       return expectedTokenType.equals(tokenType);
     } catch (JwtException e) {
-      log.debug("Token validation failed: {}", e.getMessage());
+      LOG.debug("Token validation failed: {}", e.getMessage());
       return false;
     } catch (Exception e) {
-      log.error("Token validation error", e);
+      LOG.error("Token validation error", e);
       return false;
     }
   }
@@ -242,7 +242,7 @@ public class JwtTokenService implements TokenService {
       Claims claims = parseClaims(token);
       String tokenType = claims.get(CLAIM_TOKEN_TYPE, String.class);
       if (!expectedTokenType.equals(tokenType)) {
-        log.warn("Token type mismatch: expected={}, actual={}", expectedTokenType, tokenType);
+        LOG.warn("Token type mismatch: expected={}, actual={}", expectedTokenType, tokenType);
         return null;
       }
 
@@ -253,10 +253,10 @@ public class JwtTokenService implements TokenService {
       userInfo.setRoleCode(claims.get(CLAIM_ROLE_CODE, String.class));
       return userInfo;
     } catch (JwtException e) {
-      log.debug("Token parse failed: {}", e.getMessage());
+      LOG.debug("Token parse failed: {}", e.getMessage());
       return null;
     } catch (Exception e) {
-      log.error("Token parse error", e);
+      LOG.error("Token parse error", e);
       return null;
     }
   }

@@ -1,13 +1,11 @@
 package com.njydsz.literule.server.distributed;
 
-import com.njydsz.literule.api.RuleEngine;
-import com.njydsz.literule.server.config.LiteRuleProperties;
-import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
-import jakarta.annotation.PreDestroy;
 import java.net.InetAddress;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+
+import jakarta.annotation.PreDestroy;
 import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +15,10 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import com.njydsz.literule.api.RuleEngine;
+import com.njydsz.literule.server.config.LiteRuleProperties;
+import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
 
 /**
  * LiteFlow 分布式模式自动配置。
@@ -32,7 +34,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnProperty(prefix = "ydsz.literule.distributed", name = "enabled", havingValue = "true")
 public class DistributedAutoConfiguration {
 
-  private static final Logger log = LoggerFactory.getLogger(DistributedAutoConfiguration.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DistributedAutoConfiguration.class);
 
   private ScheduledExecutorService scheduler;
 
@@ -66,7 +68,7 @@ public class DistributedAutoConfiguration {
     // 注册自身
     ClusterNode self = new ClusterNode(nodeId, nodeId);
     registry.register(self);
-    log.info("[Distributed] 节点注册表已初始化（self={}, type=Redis）", nodeId);
+    LOG.info("[Distributed] 节点注册表已初始化（self={}, type=Redis）", nodeId);
     return registry;
   }
 
@@ -79,7 +81,7 @@ public class DistributedAutoConfiguration {
     // 注册自身
     ClusterNode self = new ClusterNode(nodeId, nodeId);
     registry.register(self);
-    log.info("[Distributed] 节点注册表已初始化（self={}, type=InMemory）", nodeId);
+    LOG.info("[Distributed] 节点注册表已初始化（self={}, type=InMemory）", nodeId);
     return registry;
   }
 
@@ -97,7 +99,7 @@ public class DistributedAutoConfiguration {
         new RedisRuleConfigBroadcaster(redissonClient, nodeId, eventPublisher);
     // 启动时订阅 Topic
     broadcaster.subscribe();
-    log.info("[Distributed] 规则配置广播器已初始化（self={}, type=Redis）", nodeId);
+    LOG.info("[Distributed] 规则配置广播器已初始化（self={}, type=Redis）", nodeId);
     return broadcaster;
   }
 
@@ -106,7 +108,7 @@ public class DistributedAutoConfiguration {
   @ConditionalOnMissingBean
   public ConsistentHashSharder consistentHashSharder() {
     ConsistentHashSharder sharder = new ConsistentHashSharder();
-    log.info("[Distributed] 一致性 Hash 分片器已初始化（vnodes={}）", ConsistentHashSharder.DEFAULT_VNODES);
+    LOG.info("[Distributed] 一致性 Hash 分片器已初始化（vnodes={}）", ConsistentHashSharder.DEFAULT_VNODES);
     return sharder;
   }
 
@@ -145,14 +147,14 @@ public class DistributedAutoConfiguration {
             nodeRegistry.heartbeat(nodeId);
             engine.refreshNodes();
           } catch (Exception e) {
-            log.warn("[Distributed] 节点刷新失败: {}", e.getMessage());
+            LOG.warn("[Distributed] 节点刷新失败: {}", e.getMessage());
           }
         },
         heartbeatIntervalMs,
         refreshIntervalMs,
         TimeUnit.MILLISECONDS);
 
-    log.info(
+    LOG.info(
         "[Distributed] 分片感知规则引擎已初始化（self={}, clusterSize={}）", nodeId, engine.getClusterSize());
     return engine;
   }
@@ -167,7 +169,7 @@ public class DistributedAutoConfiguration {
   public void destroy() {
     if (scheduler != null) {
       scheduler.shutdown();
-      log.info("[Distributed] 节点刷新任务已关闭");
+      LOG.info("[Distributed] 节点刷新任务已关闭");
     }
   }
 }

@@ -2,11 +2,11 @@ package com.njydsz.common.netty.event;
 
 import java.util.List;
 
-import lombok.extern.slf4j.Slf4j;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Channel 事件分发器 — 将 Channel 连接/断开事件分发给所有注册的 {@link ChannelEventListener}。

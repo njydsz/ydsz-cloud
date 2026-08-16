@@ -2,8 +2,8 @@ package com.njydsz.system.domain.vo;
 
 import java.time.LocalDateTime;
 
-import lombok.Data;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
 
 /**
  * 租户 VO

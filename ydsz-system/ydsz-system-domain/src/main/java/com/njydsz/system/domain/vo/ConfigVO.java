@@ -1,7 +1,7 @@
 package com.njydsz.system.domain.vo;
 
-import lombok.Data;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
 
 /**
  * 系统配置 VO

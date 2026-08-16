@@ -21,7 +21,7 @@ import com.njydsz.common.util.id.IdGenerator;
  */
 public class InMemoryDeadLetterHandler implements DeadLetterHandler {
 
-  private static final Logger log = LoggerFactory.getLogger(InMemoryDeadLetterHandler.class);
+  private static final Logger LOG = LoggerFactory.getLogger(InMemoryDeadLetterHandler.class);
 
   private static final int MAX_DLQ_SIZE = 10000;
 
@@ -62,12 +62,12 @@ public class InMemoryDeadLetterHandler implements DeadLetterHandler {
     if (count.get() >= MAX_DLQ_SIZE) {
       deadLetterQueue.poll();
       count.decrementAndGet();
-      log.warn("[InMemoryDeadLetterHandler] 死信队列已满，丢弃最旧的消息");
+      LOG.warn("[InMemoryDeadLetterHandler] 死信队列已满，丢弃最旧的消息");
     }
 
     deadLetterQueue.offer(entry);
     count.incrementAndGet();
-    log.error(
+    LOG.error(
         "[InMemoryDeadLetterHandler] 消息移入死信队列: messageId={}, channel={}, receiver={}, attempts={}, error={}",
         messageId,
         channel.getName(),
@@ -113,7 +113,7 @@ public class InMemoryDeadLetterHandler implements DeadLetterHandler {
     if (toRemove != null) {
       deadLetterQueue.remove(toRemove);
       count.decrementAndGet();
-      log.info("[InMemoryDeadLetterHandler] 死信消息已移除等待重试: messageId={}", messageId);
+      LOG.info("[InMemoryDeadLetterHandler] 死信消息已移除等待重试: messageId={}", messageId);
       return true;
     }
     return false;

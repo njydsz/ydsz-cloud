@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
 
-import lombok.extern.slf4j.Slf4j;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.baggage.propagation.W3CBaggagePropagator;
@@ -18,6 +17,7 @@ import io.opentelemetry.sdk.trace.SdkTracerProviderBuilder;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * YDSZ OpenTelemetry SDK 构建器

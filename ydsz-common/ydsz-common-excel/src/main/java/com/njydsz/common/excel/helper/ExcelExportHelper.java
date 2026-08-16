@@ -29,7 +29,7 @@ import com.njydsz.common.excel.core.ExcelWriter;
  */
 public class ExcelExportHelper {
 
-  private static final Logger log = LoggerFactory.getLogger(ExcelExportHelper.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ExcelExportHelper.class);
 
   /**
    * 导出数据为 Excel 字节数组。
@@ -46,7 +46,7 @@ public class ExcelExportHelper {
       writer.finish();
       return out.toByteArray();
     } catch (Exception e) {
-      log.error("[ExcelExportHelper] 导出失败: sheet={}, error={}", sheetName, e.getMessage(), e);
+      LOG.error("[ExcelExportHelper] 导出失败: sheet={}, error={}", sheetName, e.getMessage(), e);
       throw new RuntimeException("Excel 导出失败: " + e.getMessage(), e);
     }
   }
@@ -79,7 +79,7 @@ public class ExcelExportHelper {
       writer.finish();
       return out.toByteArray();
     } catch (Exception e) {
-      log.error("[ExcelExportHelper] 动态导出失败: sheet={}, error={}", sheetName, e.getMessage(), e);
+      LOG.error("[ExcelExportHelper] 动态导出失败: sheet={}, error={}", sheetName, e.getMessage(), e);
       throw new RuntimeException("Excel 导出失败: " + e.getMessage(), e);
     }
   }

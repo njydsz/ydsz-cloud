@@ -1,6 +1,15 @@
 package com.njydsz.workflow.server.service.impl.notification;
 
+import java.util.Comparator;
+import java.util.List;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.tenant.TenantContextHolder;
@@ -8,13 +17,6 @@ import com.njydsz.workflow.domain.dto.FlowQuickCommentDTO;
 import com.njydsz.workflow.domain.entity.FlowQuickComment;
 import com.njydsz.workflow.infra.mapper.FlowQuickCommentMapper;
 import com.njydsz.workflow.server.service.FlowQuickCommentService;
-import java.util.Comparator;
-import java.util.List;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 /**
  * 审批常用语服务实现

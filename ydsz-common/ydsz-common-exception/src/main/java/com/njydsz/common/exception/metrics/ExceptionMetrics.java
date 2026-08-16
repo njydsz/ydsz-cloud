@@ -4,13 +4,13 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.exception.custom.AbstractYdszException;
 
@@ -44,7 +44,7 @@ import com.njydsz.common.exception.custom.AbstractYdszException;
  */
 public class ExceptionMetrics {
 
-  private static final Logger log = LoggerFactory.getLogger(ExceptionMetrics.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ExceptionMetrics.class);
 
   /** 异常计数指标名称 */
   public static final String METRIC_EXCEPTION_COUNT = "exception.count";
@@ -163,7 +163,7 @@ public class ExceptionMetrics {
       }
       timerBuilder.register(meterRegistry).record(durationMs, TimeUnit.MILLISECONDS);
     } catch (Exception e) {
-      log.warn("记录异常处理耗时指标失败: {}", e.getMessage());
+      LOG.warn("记录异常处理耗时指标失败: {}", e.getMessage());
     }
   }
 
@@ -194,7 +194,7 @@ public class ExceptionMetrics {
 
       builder.register(meterRegistry).increment();
     } catch (Exception e) {
-      log.warn("记录异常指标失败: {}", e.getMessage());
+      LOG.warn("记录异常指标失败: {}", e.getMessage());
     }
   }
 

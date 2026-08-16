@@ -9,8 +9,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import com.njydsz.common.docs.domain.DocumentContent;
 import com.njydsz.common.docs.domain.DocumentMetadata;

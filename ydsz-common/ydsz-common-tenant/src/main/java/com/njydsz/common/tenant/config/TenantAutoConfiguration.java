@@ -2,6 +2,8 @@ package com.njydsz.common.tenant.config;
 
 import javax.sql.DataSource;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -15,8 +17,6 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import lombok.extern.slf4j.Slf4j;
-import io.micrometer.core.instrument.MeterRegistry;
 
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.jdbc.datasource.DynamicRoutingDataSource;

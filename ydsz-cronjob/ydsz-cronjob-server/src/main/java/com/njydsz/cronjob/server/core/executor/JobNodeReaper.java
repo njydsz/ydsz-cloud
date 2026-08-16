@@ -1,15 +1,10 @@
 package com.njydsz.cronjob.server.core.executor;
 
-import com.njydsz.cronjob.domain.entity.log.JobLog;
-import com.njydsz.cronjob.infra.mapper.job.JobNodeMapper;
-import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
-import com.njydsz.cronjob.server.config.CronjobProperties;
-import com.njydsz.cronjob.server.core.LockKeyUtil;
-import com.njydsz.cronjob.server.core.leader.LeaderElector;
-import jakarta.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -18,6 +13,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scheduling.annotation.Scheduled;
+
+import com.njydsz.cronjob.domain.entity.log.JobLog;
+import com.njydsz.cronjob.infra.mapper.job.JobNodeMapper;
+import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
+import com.njydsz.cronjob.server.config.CronjobProperties;
+import com.njydsz.cronjob.server.core.LockKeyUtil;
+import com.njydsz.cronjob.server.core.leader.LeaderElector;
 
 /**
  * 僵尸节点回收器（P0-8） + 节点掉线故障转移（P1-3）。

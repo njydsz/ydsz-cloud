@@ -2,11 +2,11 @@ package com.njydsz.common.thread.metrics;
 
 import java.util.concurrent.atomic.LongAdder;
 
-import org.springframework.lang.NonNull;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.binder.MeterBinder;
+import org.springframework.lang.NonNull;
 
 /**
  * 虚拟线程池 Micrometer 指标绑定器。

@@ -9,12 +9,12 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.imageio.ImageIO;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
-import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.docs.domain.DocumentContent;
 import com.njydsz.common.docs.domain.DocumentMetadata;

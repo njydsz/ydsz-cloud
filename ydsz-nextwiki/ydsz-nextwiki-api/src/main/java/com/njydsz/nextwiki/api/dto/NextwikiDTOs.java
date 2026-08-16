@@ -1,18 +1,19 @@
 package com.njydsz.nextwiki.api.dto;
 
-import com.njydsz.common.domain.query.PageQuery;
+import java.io.Serializable;
+import java.time.LocalDateTime;
+import java.util.List;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-
-import java.io.Serializable;
-import java.time.LocalDateTime;
-import java.util.List;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.domain.query.PageQuery;
 
 /**
  * 网盘知识库 API DTO 集合
@@ -116,6 +117,12 @@ public final class NextwikiDTOs {
 
     @Schema(description = "最大访问次数（可选，null 表示不限）")
     private Integer maxAccessCount;
+
+    @Schema(description = "目标用户ID列表（定向分享，可为空）")
+    private List<String> targetUserIds;
+
+    @Schema(description = "分享标题（可选）")
+    private String title;
   }
 
   /** 验证分享访问请求 */
@@ -247,5 +254,59 @@ public final class NextwikiDTOs {
 
     @Schema(description = "标签颜色（如 #1890ff）")
     private String color;
+  }
+
+  /** AI 生成摘要请求 */
+  @Data
+  @Schema(description = "AI 生成摘要请求")
+  public static class GenerateSummaryRequest implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    @Schema(description = "文件节点ID")
+    @NotBlank(message = "文件节点ID不能为空")
+    private String fileNodeId;
+
+    @Schema(description = "摘要类型: brief(简短) / detailed(详细) / key_points(关键点)")
+    private String summaryType;
+
+    @Schema(description = "最大摘要字数")
+    private Integer maxLength;
+  }
+
+  /** AI 摘要结果 DTO */
+  @Data
+  @NoArgsConstructor
+  @Schema(description = "AI 摘要结果")
+  public static class SummaryResult implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    @Schema(description = "文件节点ID")
+    private String fileNodeId;
+
+    @Schema(description = "摘要内容")
+    private String summary;
+
+    @Schema(description = "摘要类型")
+    private String summaryType;
+
+    @Schema(description = "内容字数")
+    private Integer wordCount;
+
+    @Schema(description = "生成时间")
+    private LocalDateTime generatedAt;
+  }
+
+  /** 预签名 URL 请求 */
+  @Data
+  @Schema(description = "预签名 URL 请求")
+  public static class PresignedUrlRequest implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+    @Schema(description = "对象存储键（文件路径）")
+    @NotBlank(message = "对象键不能为空")
+    private String objectKey;
+
+    @Schema(description = "过期时间（秒，默认 3600）")
+    private Integer expireSeconds;
   }
 }

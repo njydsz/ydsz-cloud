@@ -4,12 +4,13 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+
 import lombok.Data;
 
 /**
  * JobDailyStats 视图对象。
  *
- * <p>用于 Controller 层返回任务每日统计趋势数据，对应实体 {@link com.njydsz.cronjob.domain.entity.log.JobDailyStats}。
+ * <p>用于 Controller 层返回任务每日统计趋势数据，对应实体 {@link com.njydsz.cronjob.domain.entity.LOG.JobDailyStats}。
  *
  * @author ydsz-team
  * @since 1.0.0

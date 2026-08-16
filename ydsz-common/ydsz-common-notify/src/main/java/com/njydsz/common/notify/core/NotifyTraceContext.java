@@ -21,7 +21,7 @@ import com.njydsz.common.notify.enums.NotifyChannel;
  */
 public final class NotifyTraceContext {
 
-  private static final Logger log = LoggerFactory.getLogger(NotifyTraceContext.class);
+  private static final Logger LOG = LoggerFactory.getLogger(NotifyTraceContext.class);
 
   /** MDC 中 traceId 的键名 */
   public static final String TRACE_ID_KEY = "traceId";
@@ -145,14 +145,14 @@ public final class NotifyTraceContext {
       NotifyChannel channel, String receiver, boolean success, long durationMs) {
     String traceId = getTraceId();
     if (success) {
-      log.info(
+      LOG.info(
           "[NotifyTrace] 通知发送成功: traceId={}, channel={}, receiver={}, durationMs={}",
           traceId,
           channel.getName(),
           receiver,
           durationMs);
     } else {
-      log.warn(
+      LOG.warn(
           "[NotifyTrace] 通知发送失败: traceId={}, channel={}, receiver={}, durationMs={}",
           traceId,
           channel.getName(),

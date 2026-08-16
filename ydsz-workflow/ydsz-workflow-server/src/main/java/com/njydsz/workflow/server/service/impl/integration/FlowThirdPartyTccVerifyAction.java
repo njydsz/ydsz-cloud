@@ -1,11 +1,13 @@
 package com.njydsz.workflow.server.service.impl.integration;
 
-import com.njydsz.common.seata.api.TccAction;
-import com.njydsz.common.seata.api.TccContext;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.common.seata.api.TccAction;
+import com.njydsz.common.seata.api.TccContext;
 
 /**
  * 三方审批回调 TCC 验证 Action
@@ -27,7 +29,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class FlowThirdPartyTccVerifyAction implements TccAction<String> {
 
-  private static final Logger log = LoggerFactory.getLogger(FlowThirdPartyTccVerifyAction.class);
+  private static final Logger LOG = LoggerFactory.getLogger(FlowThirdPartyTccVerifyAction.class);
 
   /** 模拟三方审批资源预留状态（验证用） */
   private final AtomicBoolean frozen = new AtomicBoolean(false);
@@ -44,10 +46,10 @@ public class FlowThirdPartyTccVerifyAction implements TccAction<String> {
   public String tryAction(TccContext ctx) {
     String xid = ctx.getXid();
     String approvalNo = ctx.get("approvalNo");
-    log.info("[TCC Verify] Try 阶段执行: xid={}, approvalNo={}", xid, approvalNo);
+    LOG.info("[TCC Verify] Try 阶段执行: xid={}, approvalNo={}", xid, approvalNo);
 
     frozen.set(true);
-    log.info("[TCC Verify] 资源已冻结: xid={}, frozen={}", xid, frozen.get());
+    LOG.info("[TCC Verify] 资源已冻结: xid={}, frozen={}", xid, frozen.get());
     return approvalNo;
   }
 
@@ -61,10 +63,10 @@ public class FlowThirdPartyTccVerifyAction implements TccAction<String> {
   @Override
   public void confirmAction(TccContext ctx) {
     String xid = ctx.getXid();
-    log.info("[TCC Verify] Confirm 阶段执行: xid={}", xid);
+    LOG.info("[TCC Verify] Confirm 阶段执行: xid={}", xid);
 
     frozen.set(false);
-    log.info("[TCC Verify] 资源已确认释放: xid={}, frozen={}", xid, frozen.get());
+    LOG.info("[TCC Verify] 资源已确认释放: xid={}, frozen={}", xid, frozen.get());
   }
 
   /**
@@ -77,10 +79,10 @@ public class FlowThirdPartyTccVerifyAction implements TccAction<String> {
   @Override
   public void cancelAction(TccContext ctx) {
     String xid = ctx.getXid();
-    log.info("[TCC Verify] Cancel 阶段执行: xid={}", xid);
+    LOG.info("[TCC Verify] Cancel 阶段执行: xid={}", xid);
 
     frozen.set(false);
-    log.info("[TCC Verify] 资源已回滚释放: xid={}, frozen={}", xid, frozen.get());
+    LOG.info("[TCC Verify] 资源已回滚释放: xid={}, frozen={}", xid, frozen.get());
   }
 
   /**

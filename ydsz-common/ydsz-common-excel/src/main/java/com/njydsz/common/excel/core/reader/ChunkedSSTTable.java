@@ -48,7 +48,7 @@ import com.njydsz.common.excel.support.cache.LRUCache;
  */
 public class ChunkedSSTTable {
 
-  private static final Logger log = LoggerFactory.getLogger(ChunkedSSTTable.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ChunkedSSTTable.class);
 
   /** 分块模式阈值：SST 数据超过 5MB 时启用分块加载 */
   private static final int CHUNK_THRESHOLD = 5 * 1024 * 1024;
@@ -198,7 +198,7 @@ public class ChunkedSSTTable {
       count++;
     }
     totalStrings = count;
-    log.debug("SST解析完成: {} 个字符串, 简单模式", totalStrings);
+    LOG.debug("SST解析完成: {} 个字符串, 简单模式", totalStrings);
   }
 
   private int findContentEnd(byte[] data, int start, int maxEnd) {
@@ -287,7 +287,7 @@ public class ChunkedSSTTable {
                           new String(
                               Arrays.copyOfRange(data, vStart, vEnd), StandardCharsets.UTF_8));
                 } catch (NumberFormatException e) {
-                  log.debug("Caught exception (ignored): {}", e.getMessage());
+                  LOG.debug("Caught exception (ignored): {}", e.getMessage());
                 }
               }
             }
@@ -302,7 +302,7 @@ public class ChunkedSSTTable {
       stringIndex++;
     }
 
-    log.debug("SST解析完成: {} 个字符串, 分块模式", totalStrings);
+    LOG.debug("SST解析完成: {} 个字符串, 分块模式", totalStrings);
   }
 
   /**
@@ -381,7 +381,7 @@ public class ChunkedSSTTable {
       try {
         raf.close();
       } catch (IOException e) {
-        log.debug("Caught exception (ignored): {}", e.getMessage());
+        LOG.debug("Caught exception (ignored): {}", e.getMessage());
       }
       raf = null;
     }

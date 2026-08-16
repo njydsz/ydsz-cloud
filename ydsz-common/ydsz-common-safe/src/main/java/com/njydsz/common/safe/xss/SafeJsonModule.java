@@ -20,7 +20,7 @@ import com.njydsz.common.json.module.ModuleDeserializerRegistry;
  */
 public class SafeJsonModule implements JsonModule, JsonModule.SpringFactory {
 
-  private static final Logger log = LoggerFactory.getLogger(SafeJsonModule.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SafeJsonModule.class);
 
   @Override
   public String getModuleName() {
@@ -30,7 +30,7 @@ public class SafeJsonModule implements JsonModule, JsonModule.SpringFactory {
   @Override
   public void setDeserializers(ModuleDeserializerRegistry registry) {
     registry.register(String.class, new XssStringDeserializer());
-    log.debug("[SafeJsonModule] XssStringDeserializer registered via JsonModule SPI");
+    LOG.debug("[SafeJsonModule] XssStringDeserializer registered via JsonModule SPI");
   }
 
   @Override

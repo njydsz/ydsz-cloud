@@ -1,5 +1,10 @@
 package com.njydsz.message.server.channel;
 
+import java.util.List;
+import java.util.Map;
+
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.json.JsonMapper;
@@ -8,9 +13,6 @@ import com.njydsz.common.notify.channel.NotifyChannelStrategy;
 import com.njydsz.common.notify.core.NotifySendResult;
 import com.njydsz.common.notify.enums.NotifyChannel;
 import com.njydsz.common.notify.template.TemplateEngine;
-import java.util.List;
-import java.util.Map;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 通道策略适配器：将消息服务的 {@link MessageChannel} 适配为 common-notify 的 {@link NotifyChannelStrategy}。

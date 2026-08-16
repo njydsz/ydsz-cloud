@@ -20,7 +20,7 @@ import org.springframework.context.i18n.LocaleContextHolder;
  */
 public class SpringMessageResolver implements MessageResolverHolder.MessageResolver {
 
-  private static final Logger log = LoggerFactory.getLogger(SpringMessageResolver.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SpringMessageResolver.class);
 
   private final MessageSource messageSource;
 
@@ -50,7 +50,7 @@ public class SpringMessageResolver implements MessageResolverHolder.MessageResol
       return message != null ? message : defaultValue;
     } catch (Exception e) {
       // DEBUG 级别记录，不影响正常流程，便于排查 i18n 配置问题
-      log.debug(
+      LOG.debug(
           "Failed to resolve i18n message for key '{}', locale '{}'. "
               + "Falling back to default value: {}",
           key,

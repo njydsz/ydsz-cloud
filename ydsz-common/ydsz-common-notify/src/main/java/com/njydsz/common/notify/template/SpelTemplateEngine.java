@@ -32,7 +32,7 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
  */
 public class SpelTemplateEngine implements TemplateEngine {
 
-  private static final Logger log = LoggerFactory.getLogger(SpelTemplateEngine.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SpelTemplateEngine.class);
 
   /** SpEL 表达式匹配模式，匹配 #{...} 格式的表达式 */
   private static final Pattern SPEL_PATTERN = Pattern.compile("#\\{([^}]+)}");
@@ -112,14 +112,14 @@ public class SpelTemplateEngine implements TemplateEngine {
           String replacement = value != null ? String.valueOf(value) : "";
           matcher.appendReplacement(sb, Matcher.quoteReplacement(replacement));
         } catch (ExpressionException e) {
-          log.debug("[SpelTemplateEngine] 表达式求值失败: {}, error={}", expressionStr, e.getMessage());
+          LOG.debug("[SpelTemplateEngine] 表达式求值失败: {}, error={}", expressionStr, e.getMessage());
           matcher.appendReplacement(sb, Matcher.quoteReplacement(matcher.group()));
         }
       }
       matcher.appendTail(sb);
       return sb.toString();
     } catch (Exception e) {
-      log.warn("[SpelTemplateEngine] 渲染失败: template={}, error={}", template, e.getMessage());
+      LOG.warn("[SpelTemplateEngine] 渲染失败: template={}, error={}", template, e.getMessage());
       return template;
     }
   }
@@ -142,7 +142,7 @@ public class SpelTemplateEngine implements TemplateEngine {
       expressionCache.putIfAbsent(expressionStr, parsed);
       return parsed;
     } catch (ExpressionException e) {
-      log.debug("[SpelTemplateEngine] 表达式语法错误，无法缓存: {}", expressionStr);
+      LOG.debug("[SpelTemplateEngine] 表达式语法错误，无法缓存: {}", expressionStr);
       return null;
     }
   }
@@ -190,7 +190,7 @@ public class SpelTemplateEngine implements TemplateEngine {
   @Override
   public void unregister(String templateId) {
     templates.remove(templateId);
-    log.info("[SpelTemplateEngine] 模板已移除: {}", templateId);
+    LOG.info("[SpelTemplateEngine] 模板已移除: {}", templateId);
   }
 
   /**

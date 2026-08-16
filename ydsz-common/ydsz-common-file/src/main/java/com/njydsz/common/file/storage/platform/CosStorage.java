@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import lombok.extern.slf4j.Slf4j;
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.ClientConfig;
 import com.qcloud.cos.auth.BasicCOSCredentials;
@@ -36,6 +35,7 @@ import com.qcloud.cos.model.PartSummary;
 import com.qcloud.cos.model.PutObjectRequest;
 import com.qcloud.cos.model.UploadPartRequest;
 import com.qcloud.cos.region.Region;
+import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.config.FileProperties;

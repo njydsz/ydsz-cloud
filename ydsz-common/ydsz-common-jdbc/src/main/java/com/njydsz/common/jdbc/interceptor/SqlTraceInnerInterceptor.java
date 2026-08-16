@@ -9,6 +9,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
+import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
+import io.micrometer.core.instrument.binder.MeterBinder;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.executor.statement.StatementHandler;
 import org.apache.ibatis.mapping.BoundSql;
@@ -23,13 +30,6 @@ import org.apache.ibatis.session.RowBounds;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
-import lombok.extern.slf4j.Slf4j;
-import io.micrometer.core.instrument.Counter;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
-import io.micrometer.core.instrument.binder.MeterBinder;
-import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
-import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
 
 import com.njydsz.common.jdbc.monitor.SqlFingerprint;
 
@@ -363,12 +363,12 @@ public class SqlTraceInnerInterceptor
           .append(rowsInfo);
 
       if (!parameters.isEmpty()) {
-        auditLog.append(" | 参数: ").append(parameters);
+        AUDIT_LOG.append(" | 参数: ").append(parameters);
       }
 
-      auditLog.append(" | SQL: ").append(sql != null ? sql : "N/A");
+      AUDIT_LOG.append(" | SQL: ").append(sql != null ? sql : "N/A");
 
-      AUDIT_LOG.info(auditLog.toString());
+      AUDIT_LOG.info(AUDIT_LOG.toString());
     } catch (Exception e) {
       AUDIT_LOG.warn("SQL审计日志记录失败", e);
     }

@@ -4,10 +4,10 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.scheduling.annotation.Scheduled;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import com.njydsz.common.file.config.FileLifecycleProperties;
 import com.njydsz.common.file.domain.ListObjectsResult;

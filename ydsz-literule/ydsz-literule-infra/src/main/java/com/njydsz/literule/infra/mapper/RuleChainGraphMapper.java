@@ -1,9 +1,10 @@
 package com.njydsz.literule.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.literule.domain.entity.RuleChainGraphDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+
+import com.njydsz.literule.domain.entity.RuleChainGraphDO;
 
 /**
  * 规则链 Mapper

@@ -6,8 +6,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.sql.DataSource;
 
-import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
 
 import com.njydsz.common.jdbc.datasource.hint.HintManager;
 import com.njydsz.common.jdbc.datasource.hint.HintType;

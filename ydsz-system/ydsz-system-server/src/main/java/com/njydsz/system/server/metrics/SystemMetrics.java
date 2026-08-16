@@ -2,10 +2,10 @@ package com.njydsz.system.server.metrics;
 
 import java.util.concurrent.TimeUnit;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
-import lombok.extern.slf4j.Slf4j;
-import io.micrometer.core.instrument.MeterRegistry;
 
 import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 

@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class CryptoUtils {
 
-  private static final Logger log = LoggerFactory.getLogger(CryptoUtils.class);
+  private static final Logger LOG = LoggerFactory.getLogger(CryptoUtils.class);
 
   private static final HexFormat HEX = HexFormat.of();
 
@@ -72,12 +72,12 @@ public final class CryptoUtils {
    */
   public static void setDefaultAlgorithm(String algorithm) {
     if (injectedAlgorithm != null) {
-      log.warn("CryptoUtils.setDefaultAlgorithm 已被调用过，忽略重复注入，保持原值: {}", injectedAlgorithm);
+      LOG.warn("CryptoUtils.setDefaultAlgorithm 已被调用过，忽略重复注入，保持原值: {}", injectedAlgorithm);
       return;
     }
     injectedAlgorithm = algorithm;
     defaultProvider = null;
-    log.info("CryptoUtils 默认算法已设置为: {}", algorithm);
+    LOG.info("CryptoUtils 默认算法已设置为: {}", algorithm);
   }
 
   // ==================== 字符串加密（Base64 编码） ====================

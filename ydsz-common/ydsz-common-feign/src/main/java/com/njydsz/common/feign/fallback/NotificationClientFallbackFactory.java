@@ -1,8 +1,8 @@
 package com.njydsz.common.feign.fallback;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
-import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.feign.FeignClientConstants;

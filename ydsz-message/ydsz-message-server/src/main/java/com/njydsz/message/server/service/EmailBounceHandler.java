@@ -1,13 +1,15 @@
 package com.njydsz.message.server.service.receipt;
 
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.njydsz.message.domain.entity.core.MsgLog;
-import com.njydsz.message.infra.mapper.core.MsgLogMapper;
 import java.time.LocalDateTime;
+
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+
+import com.njydsz.message.domain.entity.core.MsgLog;
+import com.njydsz.message.infra.mapper.core.MsgLogMapper;
 
 /**
  * 邮件退信处理器。

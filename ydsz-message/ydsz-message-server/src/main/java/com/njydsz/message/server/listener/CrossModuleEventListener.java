@@ -1,14 +1,15 @@
 package com.njydsz.message.server.listener;
 
-import com.njydsz.common.event.api.DomainEventTypes;
-import com.njydsz.common.event.model.OutboxMessage;
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.notify.helper.NotifyHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.common.event.api.DomainEventTypes;
+import com.njydsz.common.event.model.OutboxMessage;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.notify.helper.NotifyHelper;
 
 /**
  * 跨模块事件监听器 — 消息中心订阅其他模块的领域事件。

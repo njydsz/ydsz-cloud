@@ -41,7 +41,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  */
 public class ThreadPoolHotUpdateListener implements ApplicationContextAware {
 
-  private static final Logger log = LoggerFactory.getLogger(ThreadPoolHotUpdateListener.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ThreadPoolHotUpdateListener.class);
 
   /**
    * Bean 名称常量，供其他模块引用。
@@ -75,7 +75,7 @@ public class ThreadPoolHotUpdateListener implements ApplicationContextAware {
   @EventListener(ContextRefreshedEvent.class)
   public void onContextReady(ContextRefreshedEvent event) {
     Map<String, ThreadPoolTaskExecutor> executors = getExecutors();
-    log.info(
+    LOG.info(
         "[ThreadPoolHotUpdate] 热更新监听器就绪，当前共 {} 个平台线程池: {}", executors.size(), executors.keySet());
   }
 
@@ -91,11 +91,11 @@ public class ThreadPoolHotUpdateListener implements ApplicationContextAware {
   public void resizePool(String poolName, int newCoreSize, int newMaxSize) {
     ThreadPoolTaskExecutor executor = getExecutor(poolName);
     if (executor == null) {
-      log.warn("[ThreadPoolHotUpdate] 线程池 [{}] 不存在，跳过调整", poolName);
+      LOG.warn("[ThreadPoolHotUpdate] 线程池 [{}] 不存在，跳过调整", poolName);
       return;
     }
     if (newCoreSize < 1 || newMaxSize < 1 || newCoreSize > newMaxSize) {
-      log.warn("[ThreadPoolHotUpdate] 参数非法: core={}, max={}, 跳过", newCoreSize, newMaxSize);
+      LOG.warn("[ThreadPoolHotUpdate] 参数非法: core={}, max={}, 跳过", newCoreSize, newMaxSize);
       return;
     }
 
@@ -111,12 +111,12 @@ public class ThreadPoolHotUpdateListener implements ApplicationContextAware {
   public void updateRejectPolicy(String poolName, ThreadPoolProperties.RejectPolicy newPolicy) {
     ThreadPoolTaskExecutor executor = getExecutor(poolName);
     if (executor == null) {
-      log.warn("[ThreadPoolHotUpdate] 线程池 [{}] 不存在，跳过调整", poolName);
+      LOG.warn("[ThreadPoolHotUpdate] 线程池 [{}] 不存在，跳过调整", poolName);
       return;
     }
     RejectedExecutionHandler newHandler = createRejectHandler(newPolicy);
     executor.setRejectedExecutionHandler(newHandler);
-    log.info("[ThreadPoolHotUpdate] 线程池 [{}] 拒绝策略已更新为 {}", poolName, newPolicy);
+    LOG.info("[ThreadPoolHotUpdate] 线程池 [{}] 拒绝策略已更新为 {}", poolName, newPolicy);
   }
 
   /**
@@ -128,11 +128,11 @@ public class ThreadPoolHotUpdateListener implements ApplicationContextAware {
   public void updateThreadNamePrefix(String poolName, String newThreadPrefix) {
     ThreadPoolTaskExecutor executor = getExecutor(poolName);
     if (executor == null) {
-      log.warn("[ThreadPoolHotUpdate] 线程池 [{}] 不存在，跳过调整", poolName);
+      LOG.warn("[ThreadPoolHotUpdate] 线程池 [{}] 不存在，跳过调整", poolName);
       return;
     }
     executor.setThreadNamePrefix(newThreadPrefix);
-    log.info("[ThreadPoolHotUpdate] 线程池 [{}] 线程名前缀已更新为 {}（仅影响新线程）", poolName, newThreadPrefix);
+    LOG.info("[ThreadPoolHotUpdate] 线程池 [{}] 线程名前缀已更新为 {}（仅影响新线程）", poolName, newThreadPrefix);
   }
 
   /**
@@ -157,7 +157,7 @@ public class ThreadPoolHotUpdateListener implements ApplicationContextAware {
           pool.getQueue().size(),
           pool.getCompletedTaskCount());
     } catch (Exception e) {
-      log.warn("[ThreadPoolHotUpdate] 线程池 [{}] 快照获取失败: {}", poolName, e.getMessage());
+      LOG.warn("[ThreadPoolHotUpdate] 线程池 [{}] 快照获取失败: {}", poolName, e.getMessage());
       return null;
     }
   }
@@ -174,7 +174,7 @@ public class ThreadPoolHotUpdateListener implements ApplicationContextAware {
             (beanName, executor) -> {
               String poolName = resolvePoolName(beanName);
               if (poolName == null) {
-                log.debug(
+                LOG.debug(
                     "[ThreadPoolHotUpdate] Bean [{}] 不是 ydsz-common-thread 管理的线程池，跳过", beanName);
                 return;
               }
@@ -191,7 +191,7 @@ public class ThreadPoolHotUpdateListener implements ApplicationContextAware {
                         pool.getQueue().size(),
                         pool.getCompletedTaskCount()));
               } catch (Exception e) {
-                log.warn("[ThreadPoolHotUpdate] 线程池 [{}] 快照获取失败: {}", poolName, e.getMessage());
+                LOG.warn("[ThreadPoolHotUpdate] 线程池 [{}] 快照获取失败: {}", poolName, e.getMessage());
               }
             });
     return result;
@@ -241,7 +241,7 @@ public class ThreadPoolHotUpdateListener implements ApplicationContextAware {
       int oldMax = pool.getMaximumPoolSize();
 
       if (newCoreSize == oldCore && newMaxSize == oldMax) {
-        log.debug("[ThreadPoolHotUpdate] 线程池 [{}] 参数未变化, 跳过", poolName);
+        LOG.debug("[ThreadPoolHotUpdate] 线程池 [{}] 参数未变化, 跳过", poolName);
         return;
       }
 
@@ -254,7 +254,7 @@ public class ThreadPoolHotUpdateListener implements ApplicationContextAware {
         pool.setMaximumPoolSize(newMaxSize);
       }
 
-      log.info(
+      LOG.info(
           "[ThreadPoolHotUpdate] 线程池 [{}] 已调整: core={}→{}, max={}→{}, active={}, queue={}",
           poolName,
           oldCore,
@@ -264,7 +264,7 @@ public class ThreadPoolHotUpdateListener implements ApplicationContextAware {
           pool.getActiveCount(),
           pool.getQueue().size());
     } catch (Exception e) {
-      log.error("[ThreadPoolHotUpdate] 线程池 [{}] 调整失败: {}", poolName, e.getMessage(), e);
+      LOG.error("[ThreadPoolHotUpdate] 线程池 [{}] 调整失败: {}", poolName, e.getMessage(), e);
     }
   }
 

@@ -65,7 +65,7 @@ import com.njydsz.common.cache.support.Expiry;
  */
 public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
 
-  private static final Logger log = LoggerFactory.getLogger(ExpirableCache.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ExpirableCache.class);
 
   /**
    * 获取共享过期清理调度器
@@ -196,7 +196,7 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
                 cleanupIntervalSeconds,
                 cleanupIntervalSeconds,
                 TimeUnit.SECONDS);
-    log.info(
+    LOG.info(
         "ExpirableCache 已创建，delegate={}, expireAfterWrite={}ns, expireAfterAccess={}ns, expiry={}, jitter={}",
         delegate.getClass().getSimpleName(),
         expireAfterWriteNanos,
@@ -289,7 +289,7 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     try {
       cleanupExpiredByBuckets();
     } catch (Exception e) {
-      log.warn("ExpirableCache 清理任务异常", e);
+      LOG.warn("ExpirableCache 清理任务异常", e);
     }
   }
 
@@ -315,7 +315,7 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
       expiryBuckets.remove(bucket.getKey());
     }
     if (removed > 0) {
-      log.debug("ExpirableCache 桶清理过期条目: removed={}", removed);
+      LOG.debug("ExpirableCache 桶清理过期条目: removed={}", removed);
     }
   }
 
@@ -836,6 +836,6 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     if (cleanupFuture != null) {
       cleanupFuture.cancel(false);
     }
-    log.info("ExpirableCache 已关闭");
+    LOG.info("ExpirableCache 已关闭");
   }
 }

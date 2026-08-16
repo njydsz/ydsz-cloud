@@ -8,11 +8,11 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import lombok.extern.slf4j.Slf4j;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.njydsz.common.search.analytics.SearchAnalyticsService;
 import com.njydsz.common.search.analytics.SearchQualityTracker;

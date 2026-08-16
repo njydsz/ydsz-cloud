@@ -1,9 +1,10 @@
 package com.njydsz.literule.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.literule.domain.entity.RuleABPolicy;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+
+import com.njydsz.literule.domain.entity.RuleABPolicy;
 
 /**
  * 规则 A/B 策略 Mapper

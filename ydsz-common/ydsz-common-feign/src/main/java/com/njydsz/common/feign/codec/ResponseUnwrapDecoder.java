@@ -4,11 +4,11 @@ import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import feign.Response;
 import feign.codec.DecodeException;
 import feign.codec.Decoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.core.response.BaseResponse;
 
@@ -51,7 +51,7 @@ import com.njydsz.common.core.response.BaseResponse;
  */
 public class ResponseUnwrapDecoder implements Decoder {
 
-  private static final Logger log = LoggerFactory.getLogger(ResponseUnwrapDecoder.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ResponseUnwrapDecoder.class);
 
   /** 委托的实际解码器 */
   private final Decoder delegate;
@@ -75,7 +75,7 @@ public class ResponseUnwrapDecoder implements Decoder {
     // 1. 判断目标类型是否为 BaseResponse 或其子类
     if (isResponseType(type)) {
       // 目标类型是 BaseResponse，不解包，直接解码
-      log.debug("目标类型为 BaseResponse，不解包: {}", type);
+      LOG.debug("目标类型为 BaseResponse，不解包: {}", type);
       return delegate.decode(response, type);
     }
 
@@ -95,12 +95,12 @@ public class ResponseUnwrapDecoder implements Decoder {
       if (!isSuccess(wrapper)) {
         String code = wrapper.getCode();
         String msg = wrapper.getMsg();
-        log.warn("Feign 响应业务失败, code: {}, msg: {}", code, msg);
+        LOG.warn("Feign 响应业务失败, code: {}, msg: {}", code, msg);
         throw new FeignBusinessException(code, msg, response.request().url(), response.status());
       }
 
       Object data = wrapper.getData();
-      log.debug(
+      LOG.debug(
           "响应解包成功, 目标类型: {}, data 类型: {}",
           type,
           data != null ? data.getClass().getSimpleName() : "null");
@@ -108,7 +108,7 @@ public class ResponseUnwrapDecoder implements Decoder {
     }
 
     // 4. 解码结果不是 BaseResponse，直接返回
-    log.debug("解码结果非 BaseResponse，直接返回: {}", decoded.getClass());
+    LOG.debug("解码结果非 BaseResponse，直接返回: {}", decoded.getClass());
     return decoded;
   }
 

@@ -1,5 +1,12 @@
 package com.njydsz.literule.server.health;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.health.contributor.Health;
+
 import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
 import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.server.cep.CEPEngine;
@@ -8,11 +15,6 @@ import com.njydsz.literule.server.core.DefaultRuleEngine;
 import com.njydsz.literule.server.core.RuleCircuitBreaker;
 import com.njydsz.literule.server.core.RuleIndexer;
 import com.njydsz.literule.server.core.RuleMetrics;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.health.contributor.Health;
 
 /**
  * 规则引擎健康检查指标。

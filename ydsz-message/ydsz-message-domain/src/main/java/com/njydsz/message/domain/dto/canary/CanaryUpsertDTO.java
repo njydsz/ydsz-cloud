@@ -1,7 +1,8 @@
 package com.njydsz.message.domain.dto.canary;
 
-import com.njydsz.common.safe.annotation.Xss;
 import lombok.Data;
+
+import com.njydsz.common.safe.annotation.Xss;
 
 /**
  * 灰度桶新增/更新 DTO

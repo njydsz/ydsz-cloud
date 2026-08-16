@@ -1,8 +1,8 @@
 package com.njydsz.common.exception.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * 国际化配置属性

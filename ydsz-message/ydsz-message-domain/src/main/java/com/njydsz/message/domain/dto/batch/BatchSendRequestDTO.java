@@ -1,9 +1,11 @@
 package com.njydsz.message.domain.dto.batch;
 
-import com.njydsz.common.safe.annotation.Xss;
 import java.util.List;
 import java.util.Map;
+
 import lombok.Data;
+
+import com.njydsz.common.safe.annotation.Xss;
 
 /**
  * 批量发送请求 DTO。

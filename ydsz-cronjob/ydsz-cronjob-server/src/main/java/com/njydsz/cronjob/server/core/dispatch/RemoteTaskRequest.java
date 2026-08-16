@@ -1,11 +1,13 @@
 package com.njydsz.cronjob.server.core.dispatch;
 
-import com.njydsz.cronjob.domain.entity.job.Job;
 import java.io.Serial;
 import java.io.Serializable;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import com.njydsz.cronjob.domain.entity.job.Job;
 
 /**
  * 远程派发请求 DTO（P1-4）。

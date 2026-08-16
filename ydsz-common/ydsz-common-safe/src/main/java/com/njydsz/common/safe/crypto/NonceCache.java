@@ -43,7 +43,7 @@ import com.njydsz.common.cache.listener.RemovalCause;
  */
 public class NonceCache {
 
-  private static final Logger log = LoggerFactory.getLogger(NonceCache.class);
+  private static final Logger LOG = LoggerFactory.getLogger(NonceCache.class);
 
   /** 默认过期时间（秒），5 分钟 */
   private static final long DEFAULT_EXPIRE_SECONDS = 300;
@@ -83,13 +83,13 @@ public class NonceCache {
             .maximumSize(maxSize)
             .removalListener(
                 (String key, Long value, RemovalCause cause) -> {
-                  if (log.isDebugEnabled()) {
-                    log.debug("Nonce 缓存淘汰: key={}, cause={}", key, cause);
+                  if (LOG.isDebugEnabled()) {
+                    LOG.debug("Nonce 缓存淘汰: key={}, cause={}", key, cause);
                   }
                 })
             .build();
 
-    log.info("Nonce 缓存已初始化: expire={}s, maxSize={}", expireSeconds, maxSize);
+    LOG.info("Nonce 缓存已初始化: expire={}s, maxSize={}", expireSeconds, maxSize);
   }
 
   /**
@@ -187,7 +187,7 @@ public class NonceCache {
   /** 清空所有 nonce。 */
   public void clear() {
     cache.invalidateAll();
-    log.info("Nonce 缓存已清空");
+    LOG.info("Nonce 缓存已清空");
   }
 
   /**
@@ -242,7 +242,7 @@ public class NonceCache {
     long cleaned = before - after;
 
     if (cleaned > 0) {
-      log.info("Nonce 缓存定时清理完成: 清理前={}, 清理后={}, 清理数量={}", before, after, cleaned);
+      LOG.info("Nonce 缓存定时清理完成: 清理前={}, 清理后={}, 清理数量={}", before, after, cleaned);
     }
   }
 }

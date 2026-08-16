@@ -11,10 +11,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import lombok.extern.slf4j.Slf4j;
 import com.aliyun.oss.ClientBuilderConfiguration;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.OSSClientBuilder;
+import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.config.FileProperties;

@@ -1,12 +1,13 @@
 package com.njydsz.userinfo.server.service;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
 import com.njydsz.userinfo.domain.dto.post.CompanyPostDTO;
 import com.njydsz.userinfo.domain.dto.put.CompanyPutDTO;
 import com.njydsz.userinfo.domain.entity.Company;
 import com.njydsz.userinfo.domain.vo.CompanyVO;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 /**
  * 公司 Service 接口

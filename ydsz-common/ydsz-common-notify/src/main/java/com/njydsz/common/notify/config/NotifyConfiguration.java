@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ExecutorService;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ListableBeanFactory;
@@ -26,7 +27,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
-import io.micrometer.core.instrument.MeterRegistry;
 
 import com.njydsz.common.notify.aggregate.NotificationAggregator;
 import com.njydsz.common.notify.aggregate.TimeWindowAggregator;
@@ -107,7 +107,7 @@ public class NotifyConfiguration {
   @ConditionalOnMissingBean(NotifyPasswordResolver.class)
   @ConditionalOnProperty(prefix = "ydsz.notify.email", name = "enabled", havingValue = "true")
   public NotifyPasswordResolver notifyPasswordResolver(NotifyProperties properties) {
-    log.info("[NotifyConfiguration] NotifyPasswordResolver bean registered");
+    LOG.info("[NotifyConfiguration] NotifyPasswordResolver bean registered");
     return new NotifyPasswordResolver(properties);
   }
 
@@ -135,7 +135,7 @@ public class NotifyConfiguration {
     NotifyPasswordResolver resolver = passwordResolver.getIfAvailable();
     if (resolver != null && NotifyPasswordResolver.isEncrypted(password)) {
       password = resolver.resolvePassword(password);
-      log.info("[NotifyConfiguration] SMTP 密码已通过 Jasypt 解密");
+      LOG.info("[NotifyConfiguration] SMTP 密码已通过 Jasypt 解密");
     }
     sender.setPassword(password);
     sender.setDefaultEncoding(email.getEncoding());
@@ -170,7 +170,7 @@ public class NotifyConfiguration {
       }
     }
 
-    log.info(
+    LOG.info(
         "[NotifyConfiguration] JavaMailSender bean registered, host={}, port={}, ssl={}, starttls={}",
         email.getSmtpHost(),
         email.getSmtpPort(),
@@ -191,7 +191,7 @@ public class NotifyConfiguration {
   @ConditionalOnClass(JavaMailSender.class)
   @ConditionalOnProperty(prefix = "ydsz.notify.email", name = "enabled", havingValue = "true")
   public EmailSmtpHealthChecker emailSmtpHealthChecker(NotifyProperties properties) {
-    log.info("[NotifyConfiguration] EmailSmtpHealthChecker bean registered");
+    LOG.info("[NotifyConfiguration] EmailSmtpHealthChecker bean registered");
     return new EmailSmtpHealthChecker(properties);
   }
 
@@ -207,7 +207,7 @@ public class NotifyConfiguration {
   @ConditionalOnMissingBean(NotifyMetrics.class)
   public NotifyMetrics notifyMetrics(ObjectProvider<MeterRegistry> meterRegistryProvider) {
     MeterRegistry registry = meterRegistryProvider.getIfAvailable();
-    log.info(
+    LOG.info(
         "[NotifyConfiguration] NotifyMetrics bean registered, meterRegistry={}",
         registry != null ? registry.getClass().getSimpleName() : "null");
     return new NotifyMetrics(registry);
@@ -229,7 +229,7 @@ public class NotifyConfiguration {
       ObjectProvider<RedisCollectionOps> redisCollectionOpsProvider) {
     RedisStringOps redisStringOps = redisStringOpsProvider.getIfAvailable();
     RedisCollectionOps redisCollectionOps = redisCollectionOpsProvider.getIfAvailable();
-    log.info(
+    LOG.info(
         "[NotifyConfiguration] EmailTrackingService bean registered, redisStringOps={}, redisCollectionOps={}",
         redisStringOps != null,
         redisCollectionOps != null);
@@ -248,7 +248,7 @@ public class NotifyConfiguration {
   @ConditionalOnMissingBean(NotifyFallbackManager.class)
   public NotifyFallbackManager notifyFallbackManager(
       NotifyProperties properties, List<NotifyChannelStrategy> strategies) {
-    log.info(
+    LOG.info(
         "[NotifyConfiguration] NotifyFallbackManager bean registered, strategies={}",
         strategies != null ? strategies.size() : 0);
     return new NotifyFallbackManager(properties, strategies != null ? strategies : List.of());
@@ -264,7 +264,7 @@ public class NotifyConfiguration {
   @Bean
   @ConditionalOnMissingBean(HtmlTemplateRegistry.class)
   public HtmlTemplateRegistry htmlTemplateRegistry() {
-    log.info("[NotifyConfiguration] HtmlTemplateRegistry bean registered");
+    LOG.info("[NotifyConfiguration] HtmlTemplateRegistry bean registered");
     return new HtmlTemplateRegistry();
   }
 
@@ -279,7 +279,7 @@ public class NotifyConfiguration {
   @ConditionalOnMissingBean(DkimSigner.class)
   @ConditionalOnProperty(prefix = "ydsz.notify.email", name = "enabled", havingValue = "true")
   public DkimSigner dkimSigner(NotifyProperties properties) {
-    log.info("[NotifyConfiguration] DkimSigner bean registered");
+    LOG.info("[NotifyConfiguration] DkimSigner bean registered");
     return new DkimSigner(properties);
   }
 
@@ -295,7 +295,7 @@ public class NotifyConfiguration {
   public NotifyPreferenceManager notifyPreferenceManager(
       ObjectProvider<RedisStringOps> redisStringOpsProvider) {
     RedisStringOps redisStringOps = redisStringOpsProvider.getIfAvailable();
-    log.info(
+    LOG.info(
         "[NotifyConfiguration] NotifyPreferenceManager bean registered, redis={}",
         redisStringOps != null);
     return new NotifyPreferenceManager(redisStringOps);
@@ -313,7 +313,7 @@ public class NotifyConfiguration {
   public NotifyDedupService notifyDedupService(
       NotifyProperties properties, ObjectProvider<RedisStringOps> redisStringOpsProvider) {
     RedisStringOps redisStringOps = redisStringOpsProvider.getIfAvailable();
-    log.info(
+    LOG.info(
         "[NotifyConfiguration] NotifyDedupService bean registered, redis={}",
         redisStringOps != null);
     return new NotifyDedupService(properties, redisStringOps);
@@ -329,7 +329,7 @@ public class NotifyConfiguration {
   @Bean
   @ConditionalOnMissingBean(NotifyI18nService.class)
   public NotifyI18nService notifyI18nService() {
-    log.info("[NotifyConfiguration] NotifyI18nService bean registered");
+    LOG.info("[NotifyConfiguration] NotifyI18nService bean registered");
     return new NotifyI18nService();
   }
 
@@ -343,7 +343,7 @@ public class NotifyConfiguration {
   @ConditionalOnMissingBean(NotifyI18nResolver.class)
   public NotifyI18nResolver notifyI18nResolver(
       NotifyPreferenceManager preferenceManager, NotifyI18nService i18nService) {
-    log.info("[NotifyConfiguration] NotifyI18nResolver bean registered");
+    LOG.info("[NotifyConfiguration] NotifyI18nResolver bean registered");
     return new NotifyI18nResolver(preferenceManager, i18nService);
   }
 
@@ -358,7 +358,7 @@ public class NotifyConfiguration {
   @Bean
   @ConditionalOnMissingBean(NotifyCircuitBreakerRegistry.class)
   public NotifyCircuitBreakerRegistry notifyCircuitBreakerRegistry() {
-    log.info("[NotifyConfiguration] NotifyCircuitBreakerRegistry bean registered");
+    LOG.info("[NotifyConfiguration] NotifyCircuitBreakerRegistry bean registered");
     return new NotifyCircuitBreakerRegistry();
   }
 
@@ -372,7 +372,7 @@ public class NotifyConfiguration {
   @Bean
   @ConditionalOnMissingBean(DeadLetterHandler.class)
   public DeadLetterHandler notifyDeadLetterHandler() {
-    log.info("[NotifyConfiguration] InMemoryDeadLetterHandler bean registered");
+    LOG.info("[NotifyConfiguration] InMemoryDeadLetterHandler bean registered");
     return new InMemoryDeadLetterHandler();
   }
 
@@ -386,7 +386,7 @@ public class NotifyConfiguration {
   @Bean
   @ConditionalOnMissingBean(NotifyAuditService.class)
   public NotifyAuditService notifyAuditService() {
-    log.info("[NotifyConfiguration] NotifyAuditService bean registered");
+    LOG.info("[NotifyConfiguration] NotifyAuditService bean registered");
     return new NotifyAuditService();
   }
 
@@ -400,7 +400,7 @@ public class NotifyConfiguration {
   @Bean
   @ConditionalOnMissingBean(NotificationAggregator.class)
   public TimeWindowAggregator notifyAggregator() {
-    log.info("[NotifyConfiguration] TimeWindowAggregator bean registered");
+    LOG.info("[NotifyConfiguration] TimeWindowAggregator bean registered");
     return new TimeWindowAggregator(30, 100);
   }
 
@@ -414,7 +414,7 @@ public class NotifyConfiguration {
   @Bean
   @ConditionalOnMissingBean(TemplateVariableValidator.class)
   public TemplateVariableValidator templateVariableValidator() {
-    log.info("[NotifyConfiguration] TemplateVariableValidator bean registered");
+    LOG.info("[NotifyConfiguration] TemplateVariableValidator bean registered");
     return new TemplateVariableValidator();
   }
 
@@ -432,7 +432,7 @@ public class NotifyConfiguration {
   public AliyunSmsProvider aliyunSmsProvider(
       RestTemplate restTemplate, NotifyProperties properties) {
     NotifyProperties.SmsConfig sms = properties.getSms();
-    log.info(
+    LOG.info(
         "[NotifyConfiguration] AliyunSmsProvider bean registered, endpoint={}", sms.getEndpoint());
     return new AliyunSmsProvider(
         restTemplate, sms.getEndpoint(), sms.getAccessKeyId(), sms.getAccessKeySecret());
@@ -454,7 +454,7 @@ public class NotifyConfiguration {
       ObjectProvider<List<NotifyChannelStrategy>> strategiesProvider,
       ObjectProvider<NotifyRetryQueue> retryQueueProvider,
       ObjectProvider<NotifyCircuitBreakerRegistry> circuitBreakerProvider) {
-    log.info("[NotifyConfiguration] NotifyHealthIndicator bean registered");
+    LOG.info("[NotifyConfiguration] NotifyHealthIndicator bean registered");
     return new NotifyHealthIndicator(
         notifyProperties, strategiesProvider, retryQueueProvider, circuitBreakerProvider);
   }
@@ -492,7 +492,7 @@ public class NotifyConfiguration {
       NotifyProperties properties, ObjectProvider<RedisRateLimiter> redisRateLimiterProvider) {
     NotifyProperties.RateLimit rateLimitConfig = properties.getRateLimit();
     RedisRateLimiter redisRateLimiter = redisRateLimiterProvider.getIfAvailable();
-    log.info(
+    LOG.info(
         "[NotifyConfiguration] NotifyRateLimiterManager bean registered, redisRateLimiter={}, enabled={}, defaultMaxRequests={}, defaultWindowSeconds={}",
         redisRateLimiter != null,
         rateLimitConfig.isEnabled(),
@@ -530,7 +530,7 @@ public class NotifyConfiguration {
       for (NotifyChannelStrategy strategy : strategies) {
         strategy.setTemplateEngine(templateEngine);
       }
-      log.info("[NotifyConfiguration] TemplateEngine 已注入到 {} 个渠道策略", strategies.size());
+      LOG.info("[NotifyConfiguration] TemplateEngine 已注入到 {} 个渠道策略", strategies.size());
     }
 
     NotifyServiceImpl service =
@@ -577,7 +577,7 @@ public class NotifyConfiguration {
               retryConfig.getBatchSize(),
               retryConfig.getRedisKeyPrefix(),
               dlqHandler);
-      log.info(
+      LOG.info(
           "[NotifyConfiguration] PersistentNotifyRetryQueue bean registered, persistent=true, maxRetries={}, batchSize={}, redisKeyPrefix={}, dlq={}",
           retryConfig.getMaxRetries(),
           retryConfig.getBatchSize(),
@@ -592,7 +592,7 @@ public class NotifyConfiguration {
               retryConfig.getBatchSize(),
               null,
               dlqHandler);
-      log.info(
+      LOG.info(
           "[NotifyConfiguration] In-memory NotifyRetryQueue bean registered, persistent=false, maxRetries={}, batchSize={}, dlq={}",
           retryConfig.getMaxRetries(),
           retryConfig.getBatchSize(),
@@ -615,7 +615,7 @@ public class NotifyConfiguration {
       NotifyService notifyService,
       NotifyRetryQueue retryQueue,
       @Qualifier("notifyVirtualThreadExecutor") ExecutorService executor) {
-    log.info("[NotifyConfiguration] AsyncNotifyService bean registered");
+    LOG.info("[NotifyConfiguration] AsyncNotifyService bean registered");
     return new AsyncNotifyService(notifyService, retryQueue, executor);
   }
 
@@ -631,7 +631,7 @@ public class NotifyConfiguration {
   @ConditionalOnMissingBean(TransactionalNotifyPublisher.class)
   public TransactionalNotifyPublisher transactionalNotifyPublisher(
       AsyncNotifyService asyncNotifyService, ApplicationEventPublisher eventPublisher) {
-    log.info("[NotifyConfiguration] TransactionalNotifyPublisher bean registered");
+    LOG.info("[NotifyConfiguration] TransactionalNotifyPublisher bean registered");
     return new TransactionalNotifyPublisher(eventPublisher, asyncNotifyService);
   }
 
@@ -646,7 +646,7 @@ public class NotifyConfiguration {
   @Bean(destroyMethod = "shutdown")
   @ConditionalOnMissingBean(name = "notifyVirtualThreadExecutor")
   public ExecutorService notifyVirtualThreadExecutor() {
-    log.info("[NotifyConfiguration] 创建共享虚拟线程池 notifyVirtualThreadExecutor");
+    LOG.info("[NotifyConfiguration] 创建共享虚拟线程池 notifyVirtualThreadExecutor");
     return ExecutorUtils.newVirtualThreadExecutor("notify-virtual-");
   }
 
@@ -662,10 +662,10 @@ public class NotifyConfiguration {
     if (notifyServiceInstance != null
         && retryQueueInstance != null
         && retryQueueInstance.getQueueSize() > 0) {
-      log.debug("[NotifyRetryQueue] 开始消费重试队列, queueSize={}", retryQueueInstance.getQueueSize());
+      LOG.debug("[NotifyRetryQueue] 开始消费重试队列, queueSize={}", retryQueueInstance.getQueueSize());
       int processed = retryQueueInstance.retryBatch(notifyServiceInstance);
       if (processed > 0) {
-        log.info(
+        LOG.info(
             "[NotifyRetryQueue] 批量重试完成, queueSize={}, 本次处理={}",
             retryQueueInstance.getQueueSize(),
             processed);
@@ -695,7 +695,7 @@ public class NotifyConfiguration {
   @Bean
   @ConditionalOnMissingBean(NotifyHelper.class)
   public NotifyHelper notifyHelper(NotifyService notifyService) {
-    log.info("[NotifyConfiguration] NotifyHelper bean registered");
+    LOG.info("[NotifyConfiguration] NotifyHelper bean registered");
     return new NotifyHelper(notifyService);
   }
 }

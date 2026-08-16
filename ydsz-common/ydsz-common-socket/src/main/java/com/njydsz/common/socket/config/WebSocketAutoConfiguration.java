@@ -2,6 +2,8 @@ package com.njydsz.common.socket.config;
 
 import java.util.List;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -14,8 +16,6 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
-import lombok.extern.slf4j.Slf4j;
-import io.micrometer.core.instrument.MeterRegistry;
 
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.socket.audit.WebSocketAuditService;

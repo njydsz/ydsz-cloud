@@ -1,7 +1,7 @@
 package com.njydsz.system.infra.mapper;
 
-import org.apache.ibatis.annotations.Mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
 
 import com.njydsz.system.domain.entity.TenantPlan;
 

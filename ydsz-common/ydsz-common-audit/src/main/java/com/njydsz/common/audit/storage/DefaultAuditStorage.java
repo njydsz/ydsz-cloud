@@ -20,7 +20,7 @@ import com.njydsz.common.audit.domain.AuditLog;
  */
 public class DefaultAuditStorage implements AuditWriter {
 
-  private static final Logger log = LoggerFactory.getLogger(DefaultAuditStorage.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DefaultAuditStorage.class);
 
   /** 默认最大容量 */
   private static final int DEFAULT_MAX_CAPACITY = 10000;
@@ -49,26 +49,26 @@ public class DefaultAuditStorage implements AuditWriter {
   @Override
   public void write(AuditLog auditLog) {
     if (auditLog == null) {
-      log.warn("【审计存储】审计日志为空,跳过保存");
+      LOG.warn("【审计存储】审计日志为空,跳过保存");
       return;
     }
     // 尝试将日志加入队列，队列满时丢弃最旧日志
     if (!queue.offer(auditLog)) {
       AuditLog dropped = queue.poll();
       if (dropped != null) {
-        log.warn("【审计存储】队列已满(容量={})，丢弃最旧日志: {}", maxCapacity, dropped);
+        LOG.warn("【审计存储】队列已满(容量={})，丢弃最旧日志: {}", maxCapacity, dropped);
       }
       if (!queue.offer(auditLog)) {
-        log.error("【审计存储】队列已满且无法插入新日志，该日志被丢弃: {}", auditLog);
+        LOG.error("【审计存储】队列已满且无法插入新日志，该日志被丢弃: {}", auditLog);
       }
     }
-    log.debug("【审计日志】{}", auditLog);
+    LOG.debug("【审计日志】{}", auditLog);
   }
 
   @Override
   public void writeBatch(List<AuditLog> auditLogs) {
     if (auditLogs == null || auditLogs.isEmpty()) {
-      log.warn("【审计存储】审计日志列表为空,跳过保存");
+      LOG.warn("【审计存储】审计日志列表为空,跳过保存");
       return;
     }
     for (AuditLog auditLog : auditLogs) {

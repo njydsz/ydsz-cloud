@@ -1,9 +1,21 @@
 package com.njydsz.message.server.service.impl.batch;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
+
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.message.domain.dto.batch.BatchProgressVO;
@@ -11,18 +23,12 @@ import com.njydsz.message.domain.dto.batch.BatchSendRequestDTO;
 import com.njydsz.message.domain.dto.batch.BatchSendResult;
 import com.njydsz.message.domain.entity.batch.MsgBatch;
 import com.njydsz.message.infra.mapper.batch.MsgBatchMapper;
+import com.njydsz.message.domain.event.BatchCompletedEvent;
+import com.njydsz.message.server.event.DomainEventPublisher;
+import com.njydsz.message.server.service.SseEmitterService;
 import com.njydsz.message.server.service.batch.BatchService;
 import com.njydsz.message.server.service.core.MessageService;
 import com.njydsz.message.server.service.impl.ParallelBatchSender;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
 /**
  * 消息批次服务实现。
@@ -60,6 +66,12 @@ public class BatchServiceImpl implements BatchService {
 
   /** P1-3: 并行批量发送器 */
   private final ParallelBatchSender parallelBatchSender;
+
+  /** P1-E2: SSE 发射器服务（批次进度推送） */
+  private final SseEmitterService sseEmitterService;
+
+  /** P2-A4: 领域事件发布器 */
+  private final DomainEventPublisher domainEventPublisher;
 
   @Override
   public MsgBatch submitBatch(BatchSendRequestDTO dto) {
@@ -101,6 +113,8 @@ public class BatchServiceImpl implements BatchService {
     batch.setStatus("PENDING");
     batch.setSenderId(dto.getSenderId());
     batch.setTenantId(TenantContextHolder.getTenantId());
+    // P1-A3: 序列化请求列表存入 payload，支持后续断点续传
+    batch.setPayload(YdszJson.toJson(requests));
     msgBatchMapper.insert(batch);
     log.info(
         "[Batch] 批次已创建: batchId={} total={} channel={}",
@@ -168,17 +182,38 @@ public class BatchServiceImpl implements BatchService {
    */
   @Async("messageBatchExecutor")
   public void executeBatchAsync(String batchId, List<MessageRequest> requests) {
-    doExecuteBatch(batchId, requests);
+    // 首次执行：batch 计数为 0，使用增量累加模式（效果等同全量覆盖）
+    doExecuteBatch(batchId, requests, true);
   }
 
   /** 同步执行批次发送（async=false 时使用）。 */
   private void executeBatchSync(String batchId, List<MessageRequest> requests) {
-    doExecuteBatch(batchId, requests);
+    doExecuteBatch(batchId, requests, true);
   }
 
+  /** P1-A3: 反序列化 payload 为请求列表，异常时返回空列表。 */
+  private List<MessageRequest> parsePayload(String payload) {
+    if (!StringUtils.hasText(payload)) {
+      return new ArrayList<>();
+    }
+    try {
+      List<MessageRequest> requests = YdszJson.parseArray(payload, MessageRequest.class);
+      return requests != null ? requests : new ArrayList<>();
+    } catch (Exception e) {
+      log.warn("[Batch] payload 反序列化失败: {}", e.getMessage());
+      return new ArrayList<>();
+    }
+  }
+
+  /**
+   * P1-A3: 断点续传执行。
+   *
+   * <p>从 DB 读取批次 payload 恢复请求列表，仅处理尚未成功的部分（基于 success+failed+skipped 计数的偏移）； 若批次已完成或为终态则跳过。
+   *
+   * @param batchId 批次 ID
+   */
   @Override
   public void executeBatch(String batchId) {
-    // D-4: 从 DB 恢复请求列表（需 MsgBatch 新增 payload 字段存储 JSON 序列化的 requests）
     MsgBatch batch =
         msgBatchMapper.selectOne(
             new LambdaQueryWrapper<MsgBatch>().eq(MsgBatch::getBatchId, batchId).last("LIMIT 1"));
@@ -186,21 +221,43 @@ public class BatchServiceImpl implements BatchService {
       log.warn("[Batch] 批次不存在: {}", batchId);
       return;
     }
-    // D-4: 从 batchName 字段反序列化请求列表（临时方案，后续应新增 payload 列）
-    // TODO: MsgBatch 新增 payload TEXT 列后，改为 batch.getPayload()
-    log.warn(
-        "[Batch] executeBatch(batchId) 需 MsgBatch.payload 列支持，当前版本请使用 executeBatchAsync(batchId, requests)");
+    List<MessageRequest> allRequests = parsePayload(batch.getPayload());
+    if (allRequests.isEmpty()) {
+      log.warn("[Batch] 批次 payload 为空，无法恢复: {}", batchId);
+      return;
+    }
+    // 计算已处理偏移（断点续传起点）
+    int processed =
+        (batch.getSuccess() != null ? batch.getSuccess() : 0)
+            + (batch.getFailed() != null ? batch.getFailed() : 0)
+            + (batch.getSkipped() != null ? batch.getSkipped() : 0);
+    if (processed >= allRequests.size()) {
+      log.info(
+          "[Batch] 批次已全部处理完成，跳过: batchId={} processed={} total={}",
+          batchId,
+          processed,
+          allRequests.size());
+      return;
+    }
+    List<MessageRequest> remaining = allRequests.subList(processed, allRequests.size());
+    log.info(
+        "[Batch] 断点续传: batchId={} processed={} remaining={}", batchId, processed, remaining.size());
+    // 重置为 PROCESSING 并异步执行剩余请求
+    batch.setStatus("PROCESSING");
+    msgBatchMapper.updateById(batch);
+    executeBatchAsync(batchId, remaining);
   }
 
   /**
    * 执行批次发送核心逻辑。
    *
-   * <p>P1-3: 使用 ParallelBatchSender 并行发送，避免单线程逐条发送的性能瓶颈。
+   * <p>P1-3: 使用 ParallelBatchSender 并行发送，避免单线程逐条发送的性能瓶颈。 P1-A3: 支持断点续传（incremental=true）时增量累加计数。
    *
    * @param batchId 批次 ID
    * @param requests 消息请求列表
+   * @param incremental true 表示增量累加（断点续传），false 表示全量覆盖（首次执行）
    */
-  private void doExecuteBatch(String batchId, List<MessageRequest> requests) {
+  private void doExecuteBatch(String batchId, List<MessageRequest> requests, boolean incremental) {
     MsgBatch batch =
         msgBatchMapper.selectOne(
             new LambdaQueryWrapper<MsgBatch>().eq(MsgBatch::getBatchId, batchId).last("LIMIT 1"));
@@ -209,7 +266,9 @@ public class BatchServiceImpl implements BatchService {
       return;
     }
     batch.setStatus("PROCESSING");
-    batch.setStartedAt(LocalDateTime.now());
+    if (batch.getStartedAt() == null) {
+      batch.setStartedAt(LocalDateTime.now());
+    }
     msgBatchMapper.updateById(batch);
 
     // P1-3: 使用并行批量发送器
@@ -217,19 +276,72 @@ public class BatchServiceImpl implements BatchService {
     BatchSendResult batchResult =
         parallelBatchSender.sendBatch(requests, channel, messageService::send);
 
-    batch.setSuccess(batchResult.getSuccess());
-    batch.setFailed(batchResult.getFailed());
-    batch.setSkipped(batchResult.getSkipped());
+    // P1-A3: 断点续传时增量累加计数，首次执行时直接覆盖
+    if (incremental) {
+      batch.setSuccess(
+          (batch.getSuccess() != null ? batch.getSuccess() : 0) + batchResult.getSuccess());
+      batch.setFailed(
+          (batch.getFailed() != null ? batch.getFailed() : 0) + batchResult.getFailed());
+      batch.setSkipped(
+          (batch.getSkipped() != null ? batch.getSkipped() : 0) + batchResult.getSkipped());
+    } else {
+      batch.setSuccess(batchResult.getSuccess());
+      batch.setFailed(batchResult.getFailed());
+      batch.setSkipped(batchResult.getSkipped());
+    }
     batch.setStatus("COMPLETED");
     batch.setCompletedAt(LocalDateTime.now());
     msgBatchMapper.updateById(batch);
+    int totalProcessed =
+        (batch.getSuccess() != null ? batch.getSuccess() : 0)
+            + (batch.getFailed() != null ? batch.getFailed() : 0)
+            + (batch.getSkipped() != null ? batch.getSkipped() : 0);
     log.info(
-        "[Batch] 批次完成: batchId={} total={} success={} failed={} skipped={}",
+        "[Batch] 批次完成: batchId={} total={} success={} failed={} skipped={} mode={}",
         batchId,
-        requests.size(),
-        batchResult.getSuccess(),
-        batchResult.getFailed(),
-        batchResult.getSkipped());
+        totalProcessed,
+        batch.getSuccess(),
+        batch.getFailed(),
+        batch.getSkipped(),
+        incremental ? "RESUME" : "FULL");
+
+    // P1-E2: 向 SSE 订阅者广播完成事件
+    sseEmitterService.broadcastComplete(batchId, buildProgressSnapshot(batch));
+
+    // P2-A4: 发布批次完成领域事件
+    domainEventPublisher.publish(
+        new BatchCompletedEvent(
+            batch.getTenantId(),
+            batchId,
+            totalProcessed,
+            batch.getSuccess(),
+            batch.getFailed(),
+            batch.getSkipped(),
+            incremental ? "RESUME" : "FULL"));
+  }
+
+  /**
+   * P1-E2: 构建批次进度快照（用于 SSE 推送）。
+   *
+   * @param batch 批次实体
+   * @return 进度快照
+   */
+  private Map<String, Object> buildProgressSnapshot(MsgBatch batch) {
+    int success = batch.getSuccess() != null ? batch.getSuccess() : 0;
+    int failed = batch.getFailed() != null ? batch.getFailed() : 0;
+    int skipped = batch.getSkipped() != null ? batch.getSkipped() : 0;
+    int total = batch.getTotal() != null ? batch.getTotal() : 0;
+    int processed = success + failed + skipped;
+    double progressPercent = total > 0 ? Math.round(processed * 10000.0 / total) / 100.0 : 0.0;
+    return Map.of(
+        "batchId", batch.getBatchId(),
+        "status", batch.getStatus(),
+        "total", total,
+        "success", success,
+        "failed", failed,
+        "skipped", skipped,
+        "processed", processed,
+        "progressPercent", progressPercent);
   }
 
   /**

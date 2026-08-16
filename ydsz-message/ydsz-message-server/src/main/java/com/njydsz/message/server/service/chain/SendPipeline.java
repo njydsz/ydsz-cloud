@@ -1,13 +1,15 @@
 package com.njydsz.message.server.service.chain;
 
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.common.feign.MessageResult;
 
 /**
  * 消息发送管线编排引擎。

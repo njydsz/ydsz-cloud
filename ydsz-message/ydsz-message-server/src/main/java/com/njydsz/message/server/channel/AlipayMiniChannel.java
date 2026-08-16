@@ -1,18 +1,12 @@
 package com.njydsz.message.server.channel.impl;
 
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.type.JsonType;
-import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.message.server.channel.MessageChannel;
-import com.njydsz.message.server.config.MessageProperties;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpEntity;
@@ -22,6 +16,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
+
+import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.common.feign.MessageResult;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.type.JsonType;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.message.server.channel.MessageChannel;
+import com.njydsz.message.server.config.MessageProperties;
 
 /**
  * 支付宝小程序模板消息通道实现。

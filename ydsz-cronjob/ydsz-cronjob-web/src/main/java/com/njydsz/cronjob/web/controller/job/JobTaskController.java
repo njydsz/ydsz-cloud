@@ -1,7 +1,22 @@
 package com.njydsz.cronjob.web.controller.job;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.jdbc.support.PageResponses;
@@ -9,19 +24,6 @@ import com.njydsz.cronjob.domain.converter.CronjobConverter;
 import com.njydsz.cronjob.domain.entity.job.JobTask;
 import com.njydsz.cronjob.domain.vo.JobTaskVO;
 import com.njydsz.cronjob.infra.mapper.job.JobTaskMapper;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import lombok.RequiredArgsConstructor;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 
 /**
  * MapReduce 子任务查询 Controller（P0-4）。

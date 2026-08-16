@@ -23,7 +23,7 @@ import com.njydsz.common.queue.service.IMessageSubscriber;
  *
  * // 消费消息
  * subscriber.subscribe(message -> {
- *     log.info("Message: {}", message.getBody());
+ *     LOG.info("Message: {}", message.getBody());
  * });
  *
  * // 关闭队列释放资源

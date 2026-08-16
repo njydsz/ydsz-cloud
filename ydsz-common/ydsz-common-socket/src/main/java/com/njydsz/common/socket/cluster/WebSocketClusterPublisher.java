@@ -1,8 +1,8 @@
 package com.njydsz.common.socket.cluster;
 
-import org.springframework.data.redis.core.StringRedisTemplate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.socket.config.WebSocketProperties;

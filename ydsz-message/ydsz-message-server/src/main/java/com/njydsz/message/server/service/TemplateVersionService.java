@@ -1,10 +1,11 @@
 package com.njydsz.message.server.service.template;
 
+import java.util.List;
+
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.message.domain.dto.template.TemplatePreviewDTO;
 import com.njydsz.message.domain.dto.template.TemplateTestSendDTO;
 import com.njydsz.message.domain.entity.template.MsgTemplateVersion;
-import java.util.List;
 
 /**
  * 消息模板版本管理 Service

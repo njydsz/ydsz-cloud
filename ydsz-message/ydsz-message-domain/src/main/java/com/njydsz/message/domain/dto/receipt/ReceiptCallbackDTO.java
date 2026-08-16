@@ -1,7 +1,8 @@
 package com.njydsz.message.domain.dto.receipt;
 
-import com.njydsz.common.safe.annotation.Xss;
 import lombok.Data;
+
+import com.njydsz.common.safe.annotation.Xss;
 
 /**
  * 服务商回执回调 DTO

@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
  */
 public class MessageResolverRegistry {
 
-  private static final Logger log = LoggerFactory.getLogger(MessageResolverRegistry.class);
+  private static final Logger LOG = LoggerFactory.getLogger(MessageResolverRegistry.class);
 
   private final AtomicReference<MessageResolverHolder.MessageResolver> primaryResolver =
       new AtomicReference<>();
@@ -38,7 +38,7 @@ public class MessageResolverRegistry {
   public void register(MessageResolverHolder.MessageResolver resolver) {
     MessageResolverHolder.MessageResolver previous = primaryResolver.getAndSet(resolver);
     if (previous != null) {
-      log.debug("MessageResolver replaced");
+      LOG.debug("MessageResolver replaced");
     }
   }
 

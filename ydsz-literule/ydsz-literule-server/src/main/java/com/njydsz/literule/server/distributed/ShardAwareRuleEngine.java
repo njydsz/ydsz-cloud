@@ -1,15 +1,17 @@
 package com.njydsz.literule.server.distributed;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleEngine;
 import com.njydsz.literule.api.RuleEngineStats;
 import com.njydsz.literule.api.RuleResult;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * 分片感知的规则引擎装饰器（P2-16 分布式执行）
@@ -41,7 +43,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ShardAwareRuleEngine implements RuleEngine {
 
-  private static final Logger log = LoggerFactory.getLogger(ShardAwareRuleEngine.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ShardAwareRuleEngine.class);
 
   /** 被装饰的规则引擎 */
   private final RuleEngine delegate;
@@ -82,10 +84,10 @@ public class ShardAwareRuleEngine implements RuleEngine {
     if (count <= 1) {
       // 单节点或无节点：全部本地执行
       shardingEnabled = false;
-      log.info("[ShardEngine] 集群规模 ≤1，分片关闭，全部本地执行 (nodes={})", count);
+      LOG.info("[ShardEngine] 集群规模 ≤1，分片关闭，全部本地执行 (nodes={})", count);
     } else {
       shardingEnabled = true;
-      log.info("[ShardEngine] 集群规模={}，分片已启用，当前节点={}", count, nodeRegistry.getSelfNodeId());
+      LOG.info("[ShardEngine] 集群规模={}，分片已启用，当前节点={}", count, nodeRegistry.getSelfNodeId());
     }
   }
 
@@ -165,7 +167,7 @@ public class ShardAwareRuleEngine implements RuleEngine {
           results.add(result);
         }
       } catch (Exception e) {
-        log.warn("[ShardEngine] 规则 {} 执行异常: {}", rule.getCode(), e.getMessage());
+        LOG.warn("[ShardEngine] 规则 {} 执行异常: {}", rule.getCode(), e.getMessage());
       }
     }
     results.sort(

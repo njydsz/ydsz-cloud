@@ -1,17 +1,9 @@
 package com.njydsz.workflow.web.controller.ai;
 
-import com.njydsz.common.audit.annotation.Audit;
-import com.njydsz.common.audit.enums.AuditAction;
-import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.auth.context.AuthContextUtils;
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.workflow.server.service.FlowCanaryService;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import java.util.Map;
+
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -21,6 +13,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.auth.context.AuthContextUtils;
+import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.permission.PermissionCodes;
+import com.njydsz.workflow.server.service.FlowCanaryService;
 
 /**
  * 灰度发布 Controller

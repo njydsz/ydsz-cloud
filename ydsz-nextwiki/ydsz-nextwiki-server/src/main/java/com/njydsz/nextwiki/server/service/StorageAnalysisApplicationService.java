@@ -1,17 +1,19 @@
 package com.njydsz.nextwiki.server.service;
 
-import com.njydsz.nextwiki.domain.entity.FileNode;
-import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
-import com.njydsz.nextwiki.domain.repository.StorageQuotaRepository;
-import com.njydsz.nextwiki.domain.repository.TrashItemRepository;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import lombok.Builder;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import com.njydsz.nextwiki.domain.entity.FileNode;
+import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
+import com.njydsz.nextwiki.domain.repository.StorageQuotaRepository;
+import com.njydsz.nextwiki.domain.repository.TrashItemRepository;
 
 /**
  * 存储分析报表服务

@@ -5,6 +5,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -16,9 +19,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import jakarta.annotation.PostConstruct;
-import lombok.extern.slf4j.Slf4j;
-import io.micrometer.core.instrument.MeterRegistry;
 
 import com.njydsz.common.queue.actuator.QueueEndpoint;
 import com.njydsz.common.queue.dedup.DedupCleanupScheduler;

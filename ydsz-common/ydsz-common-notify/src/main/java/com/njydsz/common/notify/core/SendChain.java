@@ -27,7 +27,7 @@ import com.njydsz.common.notify.ratelimit.NotifyRateLimiterManager;
  */
 public class SendChain {
 
-  private static final Logger log = LoggerFactory.getLogger(SendChain.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SendChain.class);
 
   private final Map<NotifyChannel, NotifyChannelStrategy> channelStrategies;
   private final NotifyRateLimiterManager rateLimiterManager;
@@ -143,7 +143,7 @@ public class SendChain {
       return ctx;
     }
     if (dedupService.isDuplicate(ctx.receiver(), ctx.title(), ctx.content())) {
-      log.debug("[SendChain] 去重命中，跳过发送: receiver={}, title={}", ctx.receiver(), ctx.title());
+      LOG.debug("[SendChain] 去重命中，跳过发送: receiver={}, title={}", ctx.receiver(), ctx.title());
       return ctx.withResult(NotifySendResult.success("dedup-skipped", ctx.channel().getName()));
     }
     return ctx;
@@ -243,7 +243,7 @@ public class SendChain {
 
     // 失败降级
     if (!ctx.sendResult().isSuccess() && fallbackManager != null) {
-      log.info("[SendChain] 主渠道[{}]发送失败，尝试降级", ctx.channel().getName());
+      LOG.info("[SendChain] 主渠道[{}]发送失败，尝试降级", ctx.channel().getName());
       String fallbackTitle = ctx.title() != null ? ctx.title() : ctx.templateCode();
       String fallbackContent =
           ctx.content() != null

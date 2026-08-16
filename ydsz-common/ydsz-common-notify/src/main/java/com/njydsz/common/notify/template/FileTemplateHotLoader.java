@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
  */
 public class FileTemplateHotLoader implements TemplateHotLoader {
 
-  private static final Logger log = LoggerFactory.getLogger(FileTemplateHotLoader.class);
+  private static final Logger LOG = LoggerFactory.getLogger(FileTemplateHotLoader.class);
 
   private final Path templateDir;
 
@@ -56,14 +56,14 @@ public class FileTemplateHotLoader implements TemplateHotLoader {
   public List<NotifyTemplate> loadAll() {
     // TODO: 扫描目录下所有模板文件，解析并返回模板列表
     // 建议使用 WatchService 监听文件变更，避免轮询
-    log.debug("[FileTemplateHotLoader] loadAll from {}", templateDir);
+    LOG.debug("[FileTemplateHotLoader] loadAll from {}", templateDir);
     return List.of();
   }
 
   @Override
   public NotifyTemplate loadByCode(String templateCode) {
     // TODO: 根据编码加载对应模板文件
-    log.debug("[FileTemplateHotLoader] loadByCode: {}", templateCode);
+    LOG.debug("[FileTemplateHotLoader] loadByCode: {}", templateCode);
     return null;
   }
 

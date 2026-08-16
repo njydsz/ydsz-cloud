@@ -44,7 +44,7 @@ import com.njydsz.common.json.YdszJson;
 @ConditionalOnMissingBean(WebhookDispatcher.class)
 public class DefaultWebhookDispatcher implements WebhookDispatcher {
 
-  private static final Logger log = LoggerFactory.getLogger(DefaultWebhookDispatcher.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DefaultWebhookDispatcher.class);
 
   private static final String HMAC_ALGORITHM = "HmacSHA256";
   private static final String SIGNATURE_HEADER = "X-Webhook-Signature";
@@ -71,7 +71,7 @@ public class DefaultWebhookDispatcher implements WebhookDispatcher {
       return;
     }
     subscriptions.put(subscription.getId(), subscription);
-    log.info(
+    LOG.info(
         "[WebhookDispatcher] 注册订阅: id={} url={} events={}",
         subscription.getId(),
         subscription.getCallbackUrl(),
@@ -82,7 +82,7 @@ public class DefaultWebhookDispatcher implements WebhookDispatcher {
   public void unregister(String subscriptionId) {
     WebhookSubscription removed = subscriptions.remove(subscriptionId);
     if (removed != null) {
-      log.info("[WebhookDispatcher] 注销订阅: id={} url={}", subscriptionId, removed.getCallbackUrl());
+      LOG.info("[WebhookDispatcher] 注销订阅: id={} url={}", subscriptionId, removed.getCallbackUrl());
     }
   }
 
@@ -130,18 +130,18 @@ public class DefaultWebhookDispatcher implements WebhookDispatcher {
         }
         HttpEntity<String> entity = new HttpEntity<>(jsonPayload, headers);
         restTemplate.postForEntity(sub.getCallbackUrl(), entity, String.class);
-        log.debug(
+        LOG.debug(
             "[WebhookDispatcher] 投递成功: id={} event={} attempt={}", sub.getId(), eventType, attempt);
         return;
       } catch (Exception e) {
-        log.warn(
+        LOG.warn(
             "[WebhookDispatcher] 投递失败: id={} event={} attempt={} err={}",
             sub.getId(),
             eventType,
             attempt,
             e.getMessage());
         if (attempt >= MAX_RETRIES) {
-          log.error("[WebhookDispatcher] 投递最终失败: id={} event={}", sub.getId(), eventType, e);
+          LOG.error("[WebhookDispatcher] 投递最终失败: id={} event={}", sub.getId(), eventType, e);
           return;
         }
         sleepBackoff(attempt);
@@ -180,21 +180,21 @@ public class DefaultWebhookDispatcher implements WebhookDispatcher {
       httpClientFactoryClass
           .getMethod("setReadTimeout", int.class)
           .invoke(factory, properties.getReadTimeoutMs());
-      log.info(
+      LOG.info(
           "[WebhookDispatcher] 使用 Apache HttpClient 连接池 | connectTimeout={}ms readTimeout={}ms",
           properties.getConnectTimeoutMs(),
           properties.getReadTimeoutMs());
       return (ClientHttpRequestFactory) factory;
     } catch (ClassNotFoundException e) {
       // Apache HttpClient 不在 classpath，降级
-      log.info(
+      LOG.info(
           "[WebhookDispatcher] Apache HttpClient 不在 classpath，使用 SimpleClientHttpRequestFactory");
       SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
       factory.setConnectTimeout(properties.getConnectTimeoutMs());
       factory.setReadTimeout(properties.getReadTimeoutMs());
       return factory;
     } catch (Exception e) {
-      log.warn("[WebhookDispatcher] 创建连接池工厂失败，降级为 SimpleClientHttpRequestFactory", e);
+      LOG.warn("[WebhookDispatcher] 创建连接池工厂失败，降级为 SimpleClientHttpRequestFactory", e);
       SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
       factory.setConnectTimeout(properties.getConnectTimeoutMs());
       factory.setReadTimeout(properties.getReadTimeoutMs());
@@ -209,7 +209,7 @@ public class DefaultWebhookDispatcher implements WebhookDispatcher {
       byte[] raw = mac.doFinal(payload.getBytes(StandardCharsets.UTF_8));
       return java.util.Base64.getEncoder().encodeToString(raw);
     } catch (Exception e) {
-      log.warn("[WebhookDispatcher] 签名失败: {}", e.getMessage());
+      LOG.warn("[WebhookDispatcher] 签名失败: {}", e.getMessage());
       return "";
     }
   }

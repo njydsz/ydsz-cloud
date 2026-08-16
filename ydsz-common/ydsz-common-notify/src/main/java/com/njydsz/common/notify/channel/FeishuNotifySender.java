@@ -28,7 +28,7 @@ import com.njydsz.common.notify.template.TemplateEngine;
 @ConditionalOnProperty(prefix = "ydsz.notify.feishu", name = "webhook")
 public class FeishuNotifySender implements NotifyChannelStrategy {
 
-  private static final Logger log = LoggerFactory.getLogger(FeishuNotifySender.class);
+  private static final Logger LOG = LoggerFactory.getLogger(FeishuNotifySender.class);
 
   /** 飞书群机器人 Webhook 地址 */
   @Value("${ydsz.notify.feishu.webhook:}")
@@ -88,10 +88,10 @@ public class FeishuNotifySender implements NotifyChannelStrategy {
       String response =
           restTemplate.postForObject(
               webhook, new HttpEntity<>(json, NotifyChannelStrategy.jsonHeaders()), String.class);
-      log.debug("飞书通知发送成功: {}", title);
+      LOG.debug("飞书通知发送成功: {}", title);
       return NotifySendResult.success(response, getChannel().getName());
     } catch (Exception e) {
-      log.error("飞书通知发送失败: {}", e.getMessage(), e);
+      LOG.error("飞书通知发送失败: {}", e.getMessage(), e);
       return NotifySendResult.failure(e.getMessage(), getChannel().getName());
     }
   }

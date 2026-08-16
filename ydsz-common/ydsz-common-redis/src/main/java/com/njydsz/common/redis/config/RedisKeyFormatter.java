@@ -1,7 +1,7 @@
 package com.njydsz.common.redis.config;
 
-import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 /**
  * Redis Key 前缀格式化器

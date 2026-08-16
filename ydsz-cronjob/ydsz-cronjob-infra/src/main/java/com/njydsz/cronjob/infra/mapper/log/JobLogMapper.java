@@ -1,15 +1,17 @@
 package com.njydsz.cronjob.infra.mapper.log;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.cronjob.domain.entity.log.JobLog;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
+
+import com.njydsz.cronjob.domain.entity.LOG.JobLog;
 
 /**
  * 任务执行日志 Mapper
@@ -32,7 +34,7 @@ import org.apache.ibatis.annotations.Update;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.cronjob.domain.entity.log.JobLog 执行日志实体
+ * @see com.njydsz.cronjob.domain.entity.LOG.JobLog 执行日志实体
  * @see com.njydsz.cronjob.server.service.JobLogService 日志 Service
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
@@ -42,7 +44,7 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
   /**
    * 查询超时但未结束的 RUNNING 日志（P2-4）。
    *
-   * <p>JOIN ydsz_job 取 timeout_ms，筛选 {@code log.status='RUNNING'} 且 {@code log.start_time +
+   * <p>JOIN ydsz_job 取 timeout_ms，筛选 {@code LOG.status='RUNNING'} 且 {@code LOG.start_time +
    * job.timeout_ms < NOW()} 的记录。
    *
    * @param now 当前时间
@@ -65,6 +67,42 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
           + "ORDER BY l.start_time ASC "
           + "LIMIT #{limit}")
   List<JobLog> selectTimedOutLogs(@Param("now") LocalDateTime now, @Param("limit") int limit);
+
+  /**
+   * 查询正在执行但已达到 SLA 80% 预警线的日志（P2-F2 SLA 预警）。
+   *
+   * <p>筛选条件：
+   *
+   * <ul>
+   *   <li>{@code log.status = 'RUNNING'}（仍在执行中）
+   *   <li>{@code job.sla_ms IS NOT NULL AND job.sla_ms > 0}（配置了 SLA）
+   *   <li>{@code start_time + (sla_ms * 0.8) <= now}（已达到 80% 阈值）
+   *   <li>{@code start_time + sla_ms > now}（尚未达到 100%，避免与超时扫描重复）
+   * </ul>
+   *
+   * <p>返回的日志将触发 SLA_WARNING 预警，通知运维关注即将超时的任务。
+   *
+   * @param now   当前时间
+   * @param limit 最多返回条数
+   * @return 达到 SLA 80% 预警线的日志列表
+   */
+  @Select(
+      "SELECT l.id, l.job_id, l.job_key, l.log_date, l.start_time, l.end_time, "
+          + "       l.duration_ms, l.status, l.error_message, l.params_json, l.result_json, l.trace_id, "
+          + "       l.trigger_type, l.lock_holder, l.exec_node_id, l.exec_thread_id, "
+          + "       l.shard_index, l.shard_total, "
+          + "       l.created_at, l.deleted "
+          + "FROM ydsz_job_log l "
+          + "INNER JOIN ydsz_job j ON j.id = l.job_id AND j.deleted = 0 "
+          + "WHERE l.status = 'RUNNING' "
+          + "  AND l.deleted = 0 "
+          + "  AND j.sla_ms IS NOT NULL "
+          + "  AND j.sla_ms > 0 "
+          + "  AND l.start_time + ((j.sla_ms * 0.8) || ' milliseconds')::INTERVAL <= #{now} "
+          + "  AND l.start_time + (j.sla_ms || ' milliseconds')::INTERVAL > #{now} "
+          + "ORDER BY l.start_time ASC "
+          + "LIMIT #{limit}")
+  List<JobLog> selectApproachingSlaLogs(@Param("now") LocalDateTime now, @Param("limit") int limit);
 
   /**
    * 标记指定日志为超时（status=TIMEOUT，填充 end_time / duration_ms / error_message）。
@@ -92,12 +130,12 @@ public interface JobLogMapper extends BaseMapper<JobLog> {
    * <p>筛选条件：
    *
    * <ul>
-   *   <li>{@code log.status IN ('SUCCESS','FAILED','TIMEOUT')}（已结束的执行）
-   *   <li>{@code log.duration_ms IS NOT NULL}（耗时已记录）
-   *   <li>{@code log.duration_ms > job.slow_threshold_ms}（超过慢任务阈值）
+   *   <li>{@code LOG.status IN ('SUCCESS','FAILED','TIMEOUT')}（已结束的执行）
+   *   <li>{@code LOG.duration_ms IS NOT NULL}（耗时已记录）
+   *   <li>{@code LOG.duration_ms > job.slow_threshold_ms}（超过慢任务阈值）
    *   <li>{@code job.slow_threshold_ms IS NOT NULL AND > 0}（任务启用了慢任务检测）
-   *   <li>{@code log.created_at >= since}（仅扫描时间窗口内的日志，避免全表扫描）
-   *   <li>{@code log.is_slow = 0}（尚未标记为慢任务，保证幂等）
+   *   <li>{@code LOG.created_at >= since}（仅扫描时间窗口内的日志，避免全表扫描）
+   *   <li>{@code LOG.is_slow = 0}（尚未标记为慢任务，保证幂等）
    * </ul>
    *
    * <p>原通过 LEFT JOIN 慢日志表过滤已记录 log_id， 现改为直接检查 ydsz_job_log.is_slow 字段, 消除独立表关联。

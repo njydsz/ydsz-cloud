@@ -1,12 +1,5 @@
 package com.njydsz.cronjob.server.config;
 
-import com.njydsz.cronjob.domain.dag.SpELConditionEvaluator;
-import com.njydsz.cronjob.infra.mapper.job.JobMapper;
-import com.njydsz.cronjob.server.core.config.CronjobThreadPoolRegistry;
-import com.njydsz.cronjob.server.core.config.ThreadPoolMetricsEndpoint;
-import com.njydsz.cronjob.server.core.leader.LeaderElector;
-import com.njydsz.cronjob.server.health.CronjobHealthIndicator;
-import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnAvailableEndpoint;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -17,6 +10,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.scheduling.annotation.EnableScheduling;
+
+import com.njydsz.cronjob.domain.dag.SpELConditionEvaluator;
+import com.njydsz.cronjob.infra.mapper.job.JobMapper;
+import com.njydsz.cronjob.server.core.config.CronjobThreadPoolRegistry;
+import com.njydsz.cronjob.server.core.config.ThreadPoolMetricsEndpoint;
+import com.njydsz.cronjob.server.core.leader.LeaderElector;
+import com.njydsz.cronjob.server.health.CronjobHealthIndicator;
+import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 
 /**
  * 定时任务调度引擎自动配置类。
@@ -33,7 +34,11 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  */
 @Configuration
 @EnableScheduling
-@ConditionalOnProperty(prefix = "ydsz.cronjob", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(
+    prefix = "ydsz.cronjob",
+    name = "enabled",
+    havingValue = "true",
+    matchIfMissing = true)
 public class CronjobAutoConfiguration {
 
   /** P1-1: 健康检查 Bean 注册（统一模式，不使用 @Component） */
@@ -89,8 +94,8 @@ public class CronjobAutoConfiguration {
   /**
    * P1-A2: 注册线程池指标 Actuator 端点。
    *
-   * <p>暴露 {@code /actuator/threadpools} 端点，提供线程池运行时指标查询。
-   * 仅当 Spring Boot Actuator 在 classpath 中且 endpoint 启用时注册。
+   * <p>暴露 {@code /actuator/threadpools} 端点，提供线程池运行时指标查询。 仅当 Spring Boot Actuator 在 classpath 中且
+   * endpoint 启用时注册。
    *
    * @param registry 线程池注册表
    * @return ThreadPoolMetricsEndpoint 实例

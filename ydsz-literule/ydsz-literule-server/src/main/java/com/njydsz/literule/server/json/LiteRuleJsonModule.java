@@ -1,5 +1,7 @@
 package com.njydsz.literule.server.json;
 
+import org.springframework.stereotype.Component;
+
 import com.njydsz.common.json.module.JsonModule;
 import com.njydsz.common.json.module.ModuleDeserializerRegistry;
 import com.njydsz.common.json.module.ModuleSerializerRegistry;
@@ -13,7 +15,6 @@ import com.njydsz.literule.server.orchestrator.RuleChain;
 import com.njydsz.literule.server.orchestrator.RuleChainGraph;
 import com.njydsz.literule.server.orchestrator.RuleChainType;
 import com.njydsz.literule.server.orchestrator.RuleNode;
-import org.springframework.stereotype.Component;
 
 /**
  * LiteRule 模块 YdszJson SPI 注册 —— 统一规则 DSL 配置序列化策略。

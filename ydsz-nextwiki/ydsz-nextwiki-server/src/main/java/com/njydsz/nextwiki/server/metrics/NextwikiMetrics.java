@@ -1,10 +1,11 @@
 package com.njydsz.nextwiki.server.metrics;
 
-import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 
 /**
  * NextWiki Micrometer 指标采集。

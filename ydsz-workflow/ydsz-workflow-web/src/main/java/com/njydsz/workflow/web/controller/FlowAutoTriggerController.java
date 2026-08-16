@@ -1,20 +1,11 @@
 package com.njydsz.workflow.web.controller.integration;
 
-import com.njydsz.common.audit.annotation.Audit;
-import com.njydsz.common.audit.enums.AuditAction;
-import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.workflow.domain.converter.WorkflowConverter;
-import com.njydsz.workflow.domain.dto.FlowAutoTriggerCreateDTO;
-import com.njydsz.workflow.domain.vo.FlowAutoTriggerVO;
-import com.njydsz.workflow.server.service.FlowAutoTriggerService;
+import java.util.List;
+import java.util.Map;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import java.util.List;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
@@ -25,6 +16,17 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.workflow.domain.converter.WorkflowConverter;
+import com.njydsz.workflow.domain.dto.FlowAutoTriggerCreateDTO;
+import com.njydsz.workflow.domain.vo.FlowAutoTriggerVO;
+import com.njydsz.workflow.server.service.FlowAutoTriggerService;
 
 /**
  * 流程自动触发规则 HTTP API

@@ -32,7 +32,7 @@ import com.njydsz.common.cache.builder.CacheBuilder;
  *     .maximumSize(10000)
  *     .expireAfterWrite(30, TimeUnit.MINUTES)
  *     .recordStats()
- *     .removalListener((key, value, cause) -> log.info("removed: {}", key))
+ *     .removalListener((key, value, cause) -> LOG.info("removed: {}", key))
  *     .build();
  *
  * // 自动加载缓存

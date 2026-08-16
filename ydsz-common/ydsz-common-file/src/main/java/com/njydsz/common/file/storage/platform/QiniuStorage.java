@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import lombok.extern.slf4j.Slf4j;
 import com.qiniu.common.QiniuException;
 import com.qiniu.http.Client;
 import com.qiniu.storage.ApiUploadV2AbortUpload;
@@ -30,6 +29,7 @@ import com.qiniu.storage.Region;
 import com.qiniu.storage.UploadManager;
 import com.qiniu.storage.model.FileInfo;
 import com.qiniu.util.Auth;
+import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.file.config.FileProperties;

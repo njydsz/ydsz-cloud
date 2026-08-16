@@ -3,11 +3,11 @@ package com.njydsz.common.file.config;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.validation.annotation.Validated;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
 import com.njydsz.common.file.storage.StorageType;
 

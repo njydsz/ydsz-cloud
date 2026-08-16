@@ -1,16 +1,18 @@
-﻿package com.njydsz.userinfo.server.auth;
+package com.njydsz.userinfo.server.auth;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.userinfo.domain.entity.UserPasswordHistory;
-import com.njydsz.userinfo.infra.mapper.UserPasswordHistoryMapper;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.userinfo.domain.entity.UserPasswordHistory;
+import com.njydsz.userinfo.infra.mapper.UserPasswordHistoryMapper;
 
 /**
  * 密码历史服务实现
@@ -20,9 +22,9 @@ import org.springframework.stereotype.Service;
  * <p><b>性能考虑：</b>
  *
  * <ul>
- *   <li>BCrypt 比对耗时约 100ms（cost=10），历史密码比对相当于 N 次 BCrypt 校验</li>
- *   <li>建议 historyCount ≤ 5，避免影响用户体验</li>
- *   <li>比对场景仅在密码修改/重置时触发，非高频接口</li>
+ *   <li>BCrypt 比对耗时约 100ms（cost=10），历史密码比对相当于 N 次 BCrypt 校验
+ *   <li>建议 historyCount ≤ 5，避免影响用户体验
+ *   <li>比对场景仅在密码修改/重置时触发，非高频接口
  * </ul>
  *
  * @author ydsz-team
@@ -124,9 +126,7 @@ public class UserPasswordHistoryServiceImpl implements UserPasswordHistoryServic
     List<UserPasswordHistory> oldRecords = passwordHistoryMapper.selectList(deleteWrapper);
     if (!oldRecords.isEmpty()) {
       List<String> idsToDelete =
-          oldRecords.stream()
-              .map(UserPasswordHistory::getId)
-              .collect(Collectors.toList());
+          oldRecords.stream().map(UserPasswordHistory::getId).collect(Collectors.toList());
       passwordHistoryMapper.deleteBatchIds(idsToDelete);
       log.debug("Cleaned up {} old password records for user: {}", oldRecords.size(), userId);
     }

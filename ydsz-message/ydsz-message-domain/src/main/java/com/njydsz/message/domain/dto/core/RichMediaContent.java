@@ -1,6 +1,7 @@
 package com.njydsz.message.domain.dto.core;
 
 import java.util.List;
+
 import lombok.Data;
 
 /**

@@ -1,11 +1,11 @@
 package com.njydsz.common.lock.health;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.lock.metrics.LockMetrics;
 import com.njydsz.common.lock.scheduler.LockWatchDog;

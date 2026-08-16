@@ -3,9 +3,9 @@ package com.njydsz.common.lock.idempotent;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.StringUtils;
-import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.lock.annotation.RepeatSubmit;
 import com.njydsz.common.lock.spi.CurrentUserIdResolver;

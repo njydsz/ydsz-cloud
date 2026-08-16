@@ -1,7 +1,16 @@
 package com.njydsz.nextwiki.infra.repository;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.stereotype.Repository;
+
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.tenant.TenantContextHolder;
@@ -9,12 +18,6 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.infra.mapper.FileNodeMapper;
-import java.util.ArrayList;
-import java.util.List;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.OptimisticLockingFailureException;
-import org.springframework.stereotype.Repository;
 
 /**
  * 文件节点仓储实现
@@ -219,5 +222,20 @@ public class FileNodeRepositoryImpl implements FileNodeRepository {
       return new ArrayList<>();
     }
     return fileNodeMapper.selectAllDescendantsByPath(path);
+  }
+
+  @Override
+  public List<FileNode> findColdCandidates(LocalDateTime threshold, String excludeSuffixes,
+      int limit) {
+    List<String> excludeList = null;
+    if (excludeSuffixes != null && !excludeSuffixes.isEmpty()) {
+      excludeList = List.of(excludeSuffixes.toLowerCase().split(","));
+    }
+    return fileNodeMapper.selectColdCandidates(threshold, excludeSuffixes, excludeList, limit);
+  }
+
+  @Override
+  public long countColdNodes(LocalDateTime threshold) {
+    return fileNodeMapper.countColdNodes(threshold);
   }
 }

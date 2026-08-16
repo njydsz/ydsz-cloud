@@ -40,7 +40,7 @@ import com.njydsz.common.safe.xss.EscapeUtils;
  */
 public class XssJsonMessageConverter extends JsonHttpMessageConverter implements Ordered {
 
-  private static final Logger log = LoggerFactory.getLogger(XssJsonMessageConverter.class);
+  private static final Logger LOG = LoggerFactory.getLogger(XssJsonMessageConverter.class);
 
   /** 转换器优先级，设为最高优先级确保 XSS 过滤最先执行 */
   private static final int ORDER = Ordered.HIGHEST_PRECEDENCE + 10;
@@ -81,7 +81,7 @@ public class XssJsonMessageConverter extends JsonHttpMessageConverter implements
     String cleanedJson = EscapeUtils.cleanJsonValue(originalJson);
 
     if (!cleanedJson.equals(originalJson)) {
-      log.debug("[XssJsonMessageConverter] JSON Body XSS 过滤完成");
+      LOG.debug("[XssJsonMessageConverter] JSON Body XSS 过滤完成");
     }
 
     byte[] cleanedBytes = cleanedJson.getBytes(StandardCharsets.UTF_8);

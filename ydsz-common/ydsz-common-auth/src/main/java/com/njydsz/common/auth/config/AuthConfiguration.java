@@ -1,5 +1,6 @@
 package com.njydsz.common.auth.config;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -16,7 +17,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
-import io.micrometer.core.instrument.MeterRegistry;
 
 import com.njydsz.common.auth.aspect.AuthColPermissionAspect;
 import com.njydsz.common.auth.aspect.AuthPermissionAspect;
@@ -81,7 +81,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 })
 public class AuthConfiguration {
 
-  private static final Logger log = LoggerFactory.getLogger(AuthConfiguration.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AuthConfiguration.class);
 
   /** 本地缓存健康检查间隔（秒） */
   private static final long HEALTH_CHECK_INTERVAL_SECONDS = 60;
@@ -336,7 +336,7 @@ public class AuthConfiguration {
       ObjectProvider<DistributedLocker> lockerProvider) {
     DistributedLocker locker = lockerProvider.getIfAvailable();
     if (locker == null) {
-      log.info(
+      LOG.info(
           "[AuthConfiguration] DistributedLocker 不可用，TokenBlacklistService 刷新锁降级为原生 setIfAbsent");
     }
     return new TokenBlacklistService(locker, redisStringOps, authProperties);
@@ -448,24 +448,24 @@ public class AuthConfiguration {
     RedisTemplate<String, Object> redisTemplate = redisTemplateProvider.getIfAvailable();
     RbacPermissionEvaluator evaluator = evaluatorProvider.getIfAvailable();
     if (redisTemplate == null) {
-      log.debug("Redis 服务未配置，使用本地缓存兜底");
+      LOG.debug("Redis 服务未配置，使用本地缓存兜底");
       redisOk = false;
     } else {
       try {
         var connectionFactory = redisTemplate.getConnectionFactory();
         if (connectionFactory == null) {
-          log.debug("Redis 连接工厂未初始化，降级到本地缓存");
+          LOG.debug("Redis 连接工厂未初始化，降级到本地缓存");
           redisOk = false;
         } else {
           try (var connection = connectionFactory.getConnection()) {
             connection.ping();
             if (evaluator != null && !evaluator.isRedisAvailable()) {
-              log.info("Redis 健康检查恢复，切换回 Redis 缓存");
+              LOG.info("Redis 健康检查恢复，切换回 Redis 缓存");
             }
           }
         }
       } catch (Exception e) {
-        log.error("Redis 健康检查异常，降级到本地缓存: {}", e.getMessage());
+        LOG.error("Redis 健康检查异常，降级到本地缓存: {}", e.getMessage());
         redisOk = false;
       }
     }

@@ -1,12 +1,14 @@
 package com.njydsz.literule.server.core;
 
-import com.njydsz.common.sentry.resilience.CircuitBreaker;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
+
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.common.sentry.resilience.CircuitBreaker;
 
 /**
  * 规则熔断器（基于 ydsz-common-sentry 统一熔断能力）。

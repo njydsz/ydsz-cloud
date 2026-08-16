@@ -30,7 +30,7 @@ import com.njydsz.common.excel.core.style.WriteStyleHandler;
  */
 public class WorkbookFactory {
 
-  private static final Logger log = LoggerFactory.getLogger(WorkbookFactory.class);
+  private static final Logger LOG = LoggerFactory.getLogger(WorkbookFactory.class);
 
   /** 初始化工作簿的返回结果 */
   public static class WorkbookInitResult {
@@ -157,12 +157,12 @@ public class WorkbookFactory {
     if (isXlsx) {
       if (dataSize != null && dataSize < cacheSize) {
         workbook = new XSSFWorkbook();
-        log.debug("数据量较小 ({} < {}),使用 XSSFWorkbook", dataSize, cacheSize);
+        LOG.debug("数据量较小 ({} < {}),使用 XSSFWorkbook", dataSize, cacheSize);
       } else {
         int windowSize = excelConfig.getWriteCacheSize();
         workbook = new SXSSFWorkbook(windowSize);
         ((SXSSFWorkbook) workbook).setCompressTempFiles(true);
-        log.debug("使用 SXSSFWorkbook 流式写入，窗口大小：{}行", windowSize);
+        LOG.debug("使用 SXSSFWorkbook 流式写入，窗口大小：{}行", windowSize);
       }
     } else {
       workbook = new HSSFWorkbook();

@@ -82,7 +82,7 @@ import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
  */
 public class SuperFastExcelWriter {
 
-  private static final Logger log = LoggerFactory.getLogger(SuperFastExcelWriter.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SuperFastExcelWriter.class);
 
   private static final int ROW_BUFFER_SIZE = 1024 * 1024;
   private static final int ZIP_BUFFER_SIZE = 1024 * 1024;
@@ -287,7 +287,7 @@ public class SuperFastExcelWriter {
             .map(p -> p.toFile())
             .forEach(f -> f.delete());
       } catch (Exception e) {
-        log.warn("清理临时文件异常", e);
+        LOG.warn("清理临时文件异常", e);
       }
     }
   }
@@ -817,7 +817,7 @@ public class SuperFastExcelWriter {
         }
       }
     } catch (Exception e) {
-      log.warn("ASM field accessor creation failed, using reflection", e);
+      LOG.warn("ASM field accessor creation failed, using reflection", e);
     }
   }
 

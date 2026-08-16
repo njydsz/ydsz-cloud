@@ -1,5 +1,16 @@
 package com.njydsz.literule.server.core;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.literule.api.RetirementSuggestion;
 import com.njydsz.literule.api.RollbackPreview;
 import com.njydsz.literule.api.RuleDefinition;
@@ -11,15 +22,6 @@ import com.njydsz.literule.server.config.RuleAdminService;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
 import com.njydsz.literule.server.spi.RuleVersion;
 import com.njydsz.literule.server.spi.RuleVersionRepository;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 规则生命周期管理服务（P3-1）

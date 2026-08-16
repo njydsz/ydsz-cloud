@@ -4,9 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
@@ -14,6 +11,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.samplers.Sampler;
 import io.opentelemetry.sdk.trace.samplers.SamplingResult;
+import lombok.Builder;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * YDSZ 采样器工厂

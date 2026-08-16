@@ -3,7 +3,6 @@ package com.njydsz.common.netty.client;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import lombok.extern.slf4j.Slf4j;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
@@ -15,6 +14,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.stream.ChunkedWriteHandler;
 import io.netty.handler.traffic.ChannelTrafficShapingHandler;
+import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.netty.config.NettyProperties;
 import com.njydsz.common.netty.event.ChannelEventDispatcher;

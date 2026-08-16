@@ -1,5 +1,13 @@
 package com.njydsz.literule.server.core;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.util.id.RandomUtils;
 import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleContext;
@@ -7,12 +15,6 @@ import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.api.RuleResult;
 import com.njydsz.literule.api.expression.ExpressionEngine;
 import com.njydsz.literule.server.impl.ExpressionRule;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 规则灰度路由器

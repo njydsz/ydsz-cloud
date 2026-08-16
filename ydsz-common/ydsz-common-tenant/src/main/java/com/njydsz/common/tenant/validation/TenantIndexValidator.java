@@ -11,11 +11,11 @@ import java.util.Map;
 import java.util.Set;
 import javax.sql.DataSource;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.tenant.config.TenantProperties;
 

@@ -1,9 +1,9 @@
 package com.njydsz.common.sentry.health;
 
-import org.springframework.boot.health.contributor.Health;
-import org.springframework.boot.health.contributor.HealthIndicator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.health.contributor.Health;
+import org.springframework.boot.health.contributor.HealthIndicator;
 
 import com.njydsz.common.sentry.metrics.SystemMetricsCollector;
 

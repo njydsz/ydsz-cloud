@@ -1,8 +1,5 @@
 package com.njydsz.nextwiki.server.config;
 
-import com.njydsz.common.file.storage.IFileStorageProvider;
-import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
-import com.njydsz.nextwiki.server.health.NextwikiHealthIndicator;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -12,6 +9,10 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
+
+import com.njydsz.common.file.storage.IFileStorageProvider;
+import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
+import com.njydsz.nextwiki.server.health.NextwikiHealthIndicator;
 
 /**
  * NextWiki 基础设施配置

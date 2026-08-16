@@ -1,9 +1,23 @@
 package com.njydsz.message.server.service.impl.config;
 
+import java.time.Duration;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.expression.EvaluationContext;
+import org.springframework.expression.Expression;
+import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.common.domain.query.PageQuery;
@@ -17,18 +31,6 @@ import com.njydsz.message.domain.dto.config.RouteRuleUpsertDTO;
 import com.njydsz.message.domain.entity.config.MsgRouteRule;
 import com.njydsz.message.infra.mapper.config.MsgRouteRuleMapper;
 import com.njydsz.message.server.service.config.RouteRuleService;
-import java.time.Duration;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.expression.EvaluationContext;
-import org.springframework.expression.Expression;
-import org.springframework.expression.ExpressionParser;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 /**
  * 消息路由规则服务实现。
@@ -275,8 +277,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
   /**
    * 两级缓存加载启用规则列表。
    *
-   * <p>查询顺序：L1 本地缓存（Caffeine）→ L2 Redis → DB，每一层回填上层。 L1 仅 30 秒 TTL，
-   * 一致性由 CUD 操作主动失效 L1 + L2 保证。
+   * <p>查询顺序：L1 本地缓存（Caffeine）→ L2 Redis → DB，每一层回填上层。 L1 仅 30 秒 TTL， 一致性由 CUD 操作主动失效 L1 + L2 保证。
    *
    * @return 启用规则列表（按优先级升序）
    */

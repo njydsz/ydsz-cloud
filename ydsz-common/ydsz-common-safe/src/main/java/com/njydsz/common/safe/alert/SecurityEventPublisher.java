@@ -21,7 +21,7 @@ import org.springframework.context.ApplicationEventPublisherAware;
  */
 public class SecurityEventPublisher implements ApplicationEventPublisherAware {
 
-  private static final Logger log = LoggerFactory.getLogger(SecurityEventPublisher.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SecurityEventPublisher.class);
 
   private final List<SecurityAlertListener> spiListeners;
   private ApplicationEventPublisher applicationEventPublisher;
@@ -62,7 +62,7 @@ public class SecurityEventPublisher implements ApplicationEventPublisherAware {
       try {
         listener.onSecurityEvent(event);
       } catch (Exception e) {
-        log.warn("安全事件监听器处理异常: {}", listener.getClass().getName(), e);
+        LOG.warn("安全事件监听器处理异常: {}", listener.getClass().getName(), e);
       }
     }
 
@@ -83,7 +83,7 @@ public class SecurityEventPublisher implements ApplicationEventPublisherAware {
     ServiceLoader<SecurityAlertListener> loader = ServiceLoader.load(SecurityAlertListener.class);
     for (SecurityAlertListener listener : loader) {
       listeners.add(listener);
-      log.info("加载安全事件告警监听器: {}", listener.getClass().getName());
+      LOG.info("加载安全事件告警监听器: {}", listener.getClass().getName());
     }
     return listeners;
   }

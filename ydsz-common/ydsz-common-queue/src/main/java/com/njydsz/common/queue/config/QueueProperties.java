@@ -3,11 +3,11 @@ package com.njydsz.common.queue.config;
 import java.util.Arrays;
 import java.util.List;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import jakarta.annotation.PostConstruct;
 import jakarta.validation.constraints.Min;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import com.njydsz.common.queue.enums.QueueType;
 

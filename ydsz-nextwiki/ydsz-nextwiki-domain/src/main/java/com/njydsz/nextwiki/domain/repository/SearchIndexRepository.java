@@ -1,8 +1,9 @@
 package com.njydsz.nextwiki.domain.repository;
 
+import java.util.List;
+
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.nextwiki.domain.entity.SearchIndex;
-import java.util.List;
 
 /**
  * 搜索索引仓储接口

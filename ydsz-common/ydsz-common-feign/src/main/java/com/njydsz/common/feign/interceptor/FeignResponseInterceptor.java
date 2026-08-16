@@ -2,11 +2,11 @@ package com.njydsz.common.feign.interceptor;
 
 import java.util.Collection;
 
-import org.jspecify.annotations.Nullable;
-import lombok.extern.slf4j.Slf4j;
 import feign.InvocationContext;
 import feign.Response;
 import feign.ResponseInterceptor;
+import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 
 import com.njydsz.common.feign.circuitbreaker.FeignCircuitBreakerStrategy;
 import com.njydsz.common.util.string.StringUtils;

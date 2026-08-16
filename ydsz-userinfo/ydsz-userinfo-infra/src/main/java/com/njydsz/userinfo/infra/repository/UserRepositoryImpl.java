@@ -4,10 +4,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.stereotype.Repository;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import org.springframework.stereotype.Repository;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.userinfo.domain.entity.UserAccount;

@@ -1,15 +1,17 @@
 package com.njydsz.message.server.service.impl.receipt;
 
-import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.message.server.config.MessageProperties;
-import com.njydsz.message.server.service.receipt.ReadReceiptService;
 import java.time.Duration;
 import java.util.Base64;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+
+import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.message.server.config.MessageProperties;
+import com.njydsz.message.server.service.receipt.ReadReceiptService;
 
 /**
  * 全通道已读回执服务实现。

@@ -1,11 +1,13 @@
 package com.njydsz.workflow.server.engine;
 
-import com.njydsz.common.event.api.DomainEvent;
-import com.njydsz.common.util.id.IdGenerator;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Map;
+
 import lombok.Getter;
+
+import com.njydsz.common.event.api.DomainEvent;
+import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * 工作流事件（领域事件封装）。

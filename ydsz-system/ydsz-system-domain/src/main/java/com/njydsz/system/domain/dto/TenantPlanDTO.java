@@ -1,9 +1,9 @@
 package com.njydsz.system.domain.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
-import io.swagger.v3.oas.annotations.media.Schema;
 
 import com.njydsz.common.safe.annotation.Xss;
 

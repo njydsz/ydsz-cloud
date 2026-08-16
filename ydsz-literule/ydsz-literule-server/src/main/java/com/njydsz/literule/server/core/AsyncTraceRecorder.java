@@ -1,7 +1,5 @@
 package com.njydsz.literule.server.core;
 
-import com.njydsz.literule.api.RuleExecutionTrace;
-import com.njydsz.literule.server.spi.TraceRecorder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -9,7 +7,11 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.literule.api.RuleExecutionTrace;
+import com.njydsz.literule.server.spi.TraceRecorder;
 
 /**
  * 异步批量轨迹记录器

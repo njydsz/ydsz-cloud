@@ -1,16 +1,18 @@
 package com.njydsz.literule.server.search;
 
+import java.time.ZoneId;
+import java.util.List;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
 import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.literule.domain.entity.RuleDefinitionDO;
 import com.njydsz.literule.infra.mapper.RuleDefinitionMapper;
-import java.time.ZoneId;
-import java.util.List;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 /**
  * 规则定义搜索提供者 — 将规则定义数据注册到统一搜索体系。

@@ -1,8 +1,8 @@
 package com.njydsz.common.search.health;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.search.core.SearchEngineRegistry;
 import com.njydsz.common.search.metrics.SearchMetrics;

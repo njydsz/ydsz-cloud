@@ -44,7 +44,7 @@ import com.njydsz.common.util.security.DigestUtils;
 @ConditionalOnBean(RedisStringOps.class)
 public class TokenBlacklistService {
 
-  private static final Logger log = LoggerFactory.getLogger(TokenBlacklistService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TokenBlacklistService.class);
   private static final String BLACKLIST_KEY_PREFIX = "auth:token:blacklist:";
   private static final String REFRESH_LOCK_KEY_PREFIX = "auth:token:refresh-lock:";
   private static final long REFRESH_LOCK_TTL_SECONDS = 10;
@@ -109,7 +109,7 @@ public class TokenBlacklistService {
     String key = buildBlacklistKey(token);
     long expire = authProperties.getBlacklist().getExpireSeconds();
     redisStringOps.set(key, "1", Duration.ofSeconds(expire));
-    log.info("Token added to blacklist, expires in {}s", expire);
+    LOG.info("Token added to blacklist, expires in {}s", expire);
   }
 
   /**
@@ -160,9 +160,9 @@ public class TokenBlacklistService {
       boolean acquired = lockValue != null;
       if (acquired) {
         refreshLockValues.putIfAbsent(lockKey, lockValue);
-        log.debug("获取刷新锁成功 (common-lock): key={}", lockKey);
+        LOG.debug("获取刷新锁成功 (common-lock): key={}", lockKey);
       } else {
-        log.warn("获取刷新锁失败 (common-lock)，已有其他请求正在刷新同一 token");
+        LOG.warn("获取刷新锁失败 (common-lock)，已有其他请求正在刷新同一 token");
       }
       return acquired;
     }
@@ -170,13 +170,13 @@ public class TokenBlacklistService {
     try {
       Boolean acquired = redisStringOps.setIfAbsent(lockKey, "1", REFRESH_LOCK_TTL_SECONDS);
       if (Boolean.TRUE.equals(acquired)) {
-        log.debug("获取刷新锁成功 (fallback): key={}", lockKey);
+        LOG.debug("获取刷新锁成功 (fallback): key={}", lockKey);
         return true;
       }
-      log.warn("获取刷新锁失败 (fallback)，已有其他请求正在刷新同一 token");
+      LOG.warn("获取刷新锁失败 (fallback)，已有其他请求正在刷新同一 token");
       return false;
     } catch (Exception e) {
-      log.error("获取刷新锁异常，降级为允许刷新: {}", e.getMessage());
+      LOG.error("获取刷新锁异常，降级为允许刷新: {}", e.getMessage());
       return true;
     }
   }
@@ -204,7 +204,7 @@ public class TokenBlacklistService {
     try {
       redisStringOps.del(lockKey);
     } catch (Exception e) {
-      log.debug("释放刷新锁异常（锁会自动过期）: {}", e.getMessage());
+      LOG.debug("释放刷新锁异常（锁会自动过期）: {}", e.getMessage());
     }
   }
 }

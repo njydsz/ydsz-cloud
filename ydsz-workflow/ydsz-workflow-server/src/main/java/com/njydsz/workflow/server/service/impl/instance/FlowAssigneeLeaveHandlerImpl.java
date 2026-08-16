@@ -1,6 +1,15 @@
 package com.njydsz.workflow.server.service.impl.instance;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.entity.FlowDelegateAuth;
 import com.njydsz.workflow.domain.entity.FlowRunTask;
@@ -9,13 +18,6 @@ import com.njydsz.workflow.infra.mapper.FlowDelegateAuthMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.service.FlowAssigneeLeaveHandler;
 import com.njydsz.workflow.server.service.FlowTaskService;
-import java.time.LocalDateTime;
-import java.util.List;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 /**
  * 审批人离职/调岗自动处理服务实现（P1-1）

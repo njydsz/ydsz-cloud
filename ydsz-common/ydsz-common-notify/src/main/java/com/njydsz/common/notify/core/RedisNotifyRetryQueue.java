@@ -23,7 +23,7 @@ import com.njydsz.common.util.id.IdGenerator;
  */
 public class RedisNotifyRetryQueue implements NotifyRetryQueue {
 
-  private static final Logger log = LoggerFactory.getLogger(RedisNotifyRetryQueue.class);
+  private static final Logger LOG = LoggerFactory.getLogger(RedisNotifyRetryQueue.class);
 
   private static final int DEFAULT_MAX_RETRIES = 5;
   private static final int DEFAULT_BATCH_SIZE = 100;
@@ -119,7 +119,7 @@ public class RedisNotifyRetryQueue implements NotifyRetryQueue {
         queuedCount.incrementAndGet();
       }
 
-      log.warn(
+      LOG.warn(
           "[NotifyRetryQueue] 加入 Redis 重试队列, id={}, channel={}, receiver={}, retryCount={}",
           msg.id,
           channel.getName(),
@@ -127,7 +127,7 @@ public class RedisNotifyRetryQueue implements NotifyRetryQueue {
           msg.retryCount);
     } catch (Exception e) {
       droppedCount.incrementAndGet();
-      log.error(
+      LOG.error(
           "[NotifyRetryQueue] Redis offer 失败, channel={}, receiver={}, error={}",
           channel.getName(),
           receiver,
@@ -176,7 +176,7 @@ public class RedisNotifyRetryQueue implements NotifyRetryQueue {
           NotifySendResult result =
               notifyService.send(msg.channel, msg.receiver, msg.title, msg.content);
           if (result.isSuccess()) {
-            log.info(
+            LOG.info(
                 "[NotifyRetryQueue] Redis 重试成功, id={}, channel={}, receiver={}",
                 id,
                 msg.channel.getName(),
@@ -192,11 +192,11 @@ public class RedisNotifyRetryQueue implements NotifyRetryQueue {
         processed++;
       }
     } catch (Exception e) {
-      log.error("[NotifyRetryQueue] Redis retryBatch 失败, error={}", e.getMessage());
+      LOG.error("[NotifyRetryQueue] Redis retryBatch 失败, error={}", e.getMessage());
     }
 
     if (processed > 0) {
-      log.debug("[NotifyRetryQueue] Redis 批量重试完成, 处理消息数={}", processed);
+      LOG.debug("[NotifyRetryQueue] Redis 批量重试完成, 处理消息数={}", processed);
     }
     return processed;
   }
@@ -214,7 +214,7 @@ public class RedisNotifyRetryQueue implements NotifyRetryQueue {
     if (msg.retryCount > maxRetries) {
       permanentFailCount.incrementAndGet();
       stringRedisTemplate.opsForValue().increment(counterPermanent);
-      log.error(
+      LOG.error(
           "[NotifyRetryQueue] 重试超过最大次数，标记永久失败, id={}, channel={}, receiver={}, totalRetries={}",
           id,
           msg.channel.getName(),
@@ -238,7 +238,7 @@ public class RedisNotifyRetryQueue implements NotifyRetryQueue {
           String.valueOf(MSG_TTL_SECONDS),
           id);
 
-      log.warn(
+      LOG.warn(
           "[NotifyRetryQueue] 重试失败，重新入队 ({}/{}), id={}, channel={}, receiver={}, nextRetryIn={}ms",
           msg.retryCount,
           maxRetries,
@@ -247,7 +247,7 @@ public class RedisNotifyRetryQueue implements NotifyRetryQueue {
           msg.receiver,
           backoffMs);
     } catch (Exception e) {
-      log.error("[NotifyRetryQueue] 重新入队失败, id={}, error={}", id, e.getMessage());
+      LOG.error("[NotifyRetryQueue] 重新入队失败, id={}, error={}", id, e.getMessage());
     }
   }
 
@@ -269,7 +269,7 @@ public class RedisNotifyRetryQueue implements NotifyRetryQueue {
         return Integer.parseInt(val);
       }
     } catch (Exception e) {
-      log.warn("[NotifyRetryQueue] 读取 Redis 入队计数失败，降级返回本地计数 | error={}", e.getMessage());
+      LOG.warn("[NotifyRetryQueue] 读取 Redis 入队计数失败，降级返回本地计数 | error={}", e.getMessage());
     }
     return queuedCount.get();
   }
@@ -282,7 +282,7 @@ public class RedisNotifyRetryQueue implements NotifyRetryQueue {
         return Integer.parseInt(val);
       }
     } catch (Exception e) {
-      log.warn("[NotifyRetryQueue] 读取 Redis 永久失败计数失败，降级返回本地计数 | error={}", e.getMessage());
+      LOG.warn("[NotifyRetryQueue] 读取 Redis 永久失败计数失败，降级返回本地计数 | error={}", e.getMessage());
     }
     return permanentFailCount.get();
   }
@@ -295,7 +295,7 @@ public class RedisNotifyRetryQueue implements NotifyRetryQueue {
         return Integer.parseInt(val);
       }
     } catch (Exception e) {
-      log.warn("[NotifyRetryQueue] 读取 Redis 丢弃计数失败，降级返回本地计数 | error={}", e.getMessage());
+      LOG.warn("[NotifyRetryQueue] 读取 Redis 丢弃计数失败，降级返回本地计数 | error={}", e.getMessage());
     }
     return droppedCount.get();
   }

@@ -1,12 +1,13 @@
 package com.njydsz.workflow.server.service.impl.strategy;
 
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
+
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
 import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.domain.enums.FlowPerformType;
 import com.njydsz.workflow.server.service.impl.CountersignStrategy;
 import com.njydsz.workflow.server.service.impl.instance.FlowTaskArchiveService;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Component;
 
 /**
  * 或签策略。

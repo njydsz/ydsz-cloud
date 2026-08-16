@@ -27,7 +27,7 @@ import com.njydsz.common.auth.service.RbacPermissionEvaluator;
  */
 public class PermissionCacheInvalidationListener {
 
-  private static final Logger log =
+  private static final Logger LOG =
       LoggerFactory.getLogger(PermissionCacheInvalidationListener.class);
 
   private final RbacPermissionEvaluator permissionEvaluator;
@@ -43,7 +43,7 @@ public class PermissionCacheInvalidationListener {
    */
   @EventListener
   public void onPermissionChanged(PermissionChangedEvent event) {
-    log.info("接收到权限变更事件, type={}, roleCode={}", event.getChangeType(), event.getRoleCode());
+    LOG.info("接收到权限变更事件, type={}, roleCode={}", event.getChangeType(), event.getRoleCode());
 
     handleInvalidation(event.getChangeType(), event.getRoleCode());
   }
@@ -56,7 +56,7 @@ public class PermissionCacheInvalidationListener {
       case USER_ROLE_CHANGED:
         if (roleCode != null && !"ALL".equals(roleCode)) {
           permissionEvaluator.clearCachesByRoleCodes(roleCode);
-          log.info("已清理角色权限缓存: {}", roleCode);
+          LOG.info("已清理角色权限缓存: {}", roleCode);
         }
         break;
 
@@ -67,11 +67,11 @@ public class PermissionCacheInvalidationListener {
       case ROLE_DELETED:
       case ALL:
         permissionEvaluator.clearAllCaches();
-        log.info("已清理全部权限缓存");
+        LOG.info("已清理全部权限缓存");
         break;
 
       default:
-        log.warn("未知的权限变更类型: {}", changeType);
+        LOG.warn("未知的权限变更类型: {}", changeType);
     }
   }
 }

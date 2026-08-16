@@ -8,13 +8,13 @@ import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
 
+import com.alibaba.cloud.nacos.NacosConfigManager;
+import com.alibaba.nacos.api.config.listener.Listener;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.event.RefreshRoutesEvent;
 import org.springframework.cloud.gateway.route.RouteDefinition;
 import org.springframework.cloud.gateway.route.RouteDefinitionRepository;
 import org.springframework.context.ApplicationEventPublisher;
-import lombok.extern.slf4j.Slf4j;
-import com.alibaba.cloud.nacos.NacosConfigManager;
-import com.alibaba.nacos.api.config.listener.Listener;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

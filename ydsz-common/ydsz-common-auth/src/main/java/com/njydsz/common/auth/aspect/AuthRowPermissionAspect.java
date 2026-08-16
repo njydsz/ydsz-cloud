@@ -76,7 +76,7 @@ import com.njydsz.common.util.string.StringUtils;
 @Order(11)
 public class AuthRowPermissionAspect {
 
-  private static final Logger log = LoggerFactory.getLogger(AuthRowPermissionAspect.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AuthRowPermissionAspect.class);
 
   /** 缓存 Method -> ResolvedRowPermission 的映射，避免重复反射解析注解 */
   private final ConcurrentHashMap<Method, ResolvedRowPermission> annotationCache =
@@ -137,8 +137,8 @@ public class AuthRowPermissionAspect {
       DataPermissionContext context = adaptToDataPermissionContext(info);
       DataScopeContextHolder.set(context);
 
-      if (log.isDebugEnabled()) {
-        log.debug(
+      if (LOG.isDebugEnabled()) {
+        LOG.debug(
             "行权限注入: scope={}, companyIds={}, deptIds={}, contextInjected={}",
             info == null ? null : info.getScope(),
             info == null ? 0 : safeSize(info.getCompanyIds()),
@@ -262,7 +262,7 @@ public class AuthRowPermissionAspect {
         inject(arg, info, annotation.mapKey);
         return;
       }
-      log.warn("@AuthRowPermission(targetParamName=\"{}\") 未在方法中找到匹配参数，忽略注入", targetParam);
+      LOG.warn("@AuthRowPermission(targetParamName=\"{}\") 未在方法中找到匹配参数，忽略注入", targetParam);
       return;
     }
 

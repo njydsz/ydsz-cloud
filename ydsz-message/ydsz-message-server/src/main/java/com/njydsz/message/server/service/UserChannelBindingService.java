@@ -1,8 +1,9 @@
 package com.njydsz.message.server.service.config;
 
+import java.util.List;
+
 import com.njydsz.message.domain.dto.config.UserChannelBindingDTO;
 import com.njydsz.message.domain.entity.config.MsgUserChannel;
-import java.util.List;
 
 /**
  * 用户渠道绑定服务接口。

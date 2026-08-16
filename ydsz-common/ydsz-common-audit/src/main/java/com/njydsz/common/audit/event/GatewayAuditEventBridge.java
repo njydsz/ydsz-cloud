@@ -54,7 +54,7 @@ import reactor.core.publisher.Mono;
  */
 public class GatewayAuditEventBridge {
 
-  private static final Logger log = LoggerFactory.getLogger(GatewayAuditEventBridge.class);
+  private static final Logger LOG = LoggerFactory.getLogger(GatewayAuditEventBridge.class);
 
   private final ApplicationEventPublisher eventPublisher;
 
@@ -125,8 +125,8 @@ public class GatewayAuditEventBridge {
 
             eventPublisher.publishEvent(event);
 
-            if (log.isDebugEnabled()) {
-              log.debug(
+            if (LOG.isDebugEnabled()) {
+              LOG.debug(
                   "[GatewayAudit] 审计事件已发布: userId={}, method={}, path={}, status={}, duration={}ms",
                   userId,
                   method,
@@ -135,7 +135,7 @@ public class GatewayAuditEventBridge {
                   durationMs);
             }
           } catch (Exception e) {
-            log.error("[GatewayAudit] 发布审计事件异常: reason={}", e.getMessage(), e);
+            LOG.error("[GatewayAudit] 发布审计事件异常: reason={}", e.getMessage(), e);
           }
         });
   }

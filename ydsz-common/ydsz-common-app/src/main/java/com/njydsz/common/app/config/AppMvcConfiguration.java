@@ -1,5 +1,6 @@
 package com.njydsz.common.app.config;
 
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -13,7 +14,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import io.micrometer.core.instrument.MeterRegistry;
 
 import com.njydsz.common.app.advice.AppGlobalResponseAdvice;
 import com.njydsz.common.app.auth.AppAuthHandler;

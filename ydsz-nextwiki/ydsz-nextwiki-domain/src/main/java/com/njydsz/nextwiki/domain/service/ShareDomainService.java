@@ -1,21 +1,10 @@
 package com.njydsz.nextwiki.domain.service;
 
-import com.njydsz.common.cache.constant.CacheConstants;
-import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.nextwiki.domain.entity.FileAcl;
-import com.njydsz.nextwiki.domain.entity.FileNode;
-import com.njydsz.nextwiki.domain.entity.ShareLink;
-import com.njydsz.nextwiki.domain.enums.NextwikiEnums.ShareStatus;
-import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
-import com.njydsz.nextwiki.domain.event.FileOperatedEvent;
-import com.njydsz.nextwiki.domain.repository.FileAclRepository;
-import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
-import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -23,6 +12,23 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.njydsz.common.cache.constant.CacheConstants;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.nextwiki.domain.entity.FileAcl;
+import com.njydsz.nextwiki.domain.entity.FileNode;
+import com.njydsz.nextwiki.domain.entity.ShareLink;
+import com.njydsz.nextwiki.domain.entity.ShareRecipient;
+import com.njydsz.nextwiki.domain.enums.NextwikiEnums.ShareStatus;
+import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
+import com.njydsz.nextwiki.domain.event.FileOperatedEvent;
+import com.njydsz.nextwiki.domain.repository.FileAclRepository;
+import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
+import com.njydsz.nextwiki.domain.repository.ShareAccessLogRepository;
+import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
+import com.njydsz.nextwiki.domain.repository.ShareRecipientRepository;
 
 /**
  * NextWiki 分享领域服务。
@@ -47,6 +53,8 @@ public class ShareDomainService {
   private final RedisStringOps stringOps;
 
   private final BCryptPasswordEncoder passwordEncoder;
+  private final ShareAccessLogRepository shareAccessLogRepository;
+  private final ShareRecipientRepository shareRecipientRepository;
 
   /** P0-4: 防暴力破解配置 */
   private static final String KEY_SHARE_FAIL = "nextwiki:share:fail:";
@@ -63,6 +71,33 @@ public class ShareDomainService {
       LocalDateTime expireTime,
       Integer maxAccessCount,
       String userId) {
+    return createShare(
+        fileNodeId, shareType, password, expireTime, maxAccessCount, null, null, userId);
+  }
+
+  /**
+   * 创建分享链接（增强版，支持定向分享和自定义标题）。
+   *
+   * @param fileNodeId 文件节点 ID
+   * @param shareType 分享类型（view/download/edit）
+   * @param password 访问密码（可为空）
+   * @param expireTime 过期时间（可为空）
+   * @param maxAccessCount 最大访问次数（可为空）
+   * @param targetUserIds 目标用户 ID 列表（定向分享，可为空）
+   * @param title 分享标题（可为空）
+   * @param userId 创建者 ID
+   * @return 分享链接实体
+   */
+  @Transactional(rollbackFor = Exception.class)
+  public ShareLink createShare(
+      String fileNodeId,
+      String shareType,
+      String password,
+      LocalDateTime expireTime,
+      Integer maxAccessCount,
+      List<String> targetUserIds,
+      String title,
+      String userId) {
     FileNode fileNode = fileNodeRepository.findById(fileNodeId);
     if (fileNode == null) {
       throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND)
@@ -72,6 +107,10 @@ public class ShareDomainService {
     // 生成分享码和提取码
     String shareCode = String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "");
     String extractCode = generateExtractCode();
+
+    // 确定分享目标类型
+    String shareTargetType =
+        (targetUserIds != null && !targetUserIds.isEmpty()) ? "USER" : "PUBLIC";
 
     ShareLink shareLink =
         ShareLink.builder()
@@ -86,6 +125,9 @@ public class ShareDomainService {
             .status(ShareStatus.ACTIVE.getCode())
             .password(
                 password != null && !password.isEmpty() ? passwordEncoder.encode(password) : null)
+            .shareTargetType(shareTargetType)
+            .reminderSent(false)
+            .title(title)
             .revision(0)
             .deleted(0)
             .build();
@@ -94,6 +136,31 @@ public class ShareDomainService {
     shareLink.setUpdatedBy(userId);
 
     ShareLink saved = shareLinkRepository.save(shareLink);
+
+    // 处理定向分享目标用户
+    if (targetUserIds != null && !targetUserIds.isEmpty()) {
+      List<ShareRecipient> recipients = new ArrayList<>();
+      for (String targetUserId : targetUserIds) {
+        ShareRecipient recipient =
+            ShareRecipient.builder()
+                .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
+                .shareId(saved.getId())
+                .recipientType("USER")
+                .recipientId(targetUserId)
+                .status("ACTIVE")
+                .deleted(0)
+                .build();
+        recipient.setCreatedBy(userId);
+        recipient.setUpdatedBy(userId);
+        recipients.add(recipient);
+      }
+      shareRecipientRepository.saveBatch(recipients);
+      log.info(
+          "[ShareDomainService] 创建定向分享: fileNodeId={}, shareCode={}, recipients={}",
+          fileNodeId,
+          shareCode,
+          targetUserIds.size());
+    }
 
     // 更新文件节点的共享状态
     fileNode.setShareStatus("shared");
@@ -111,7 +178,11 @@ public class ShareDomainService {
             .extra(shareCode)
             .build());
 
-    log.info("[ShareDomainService] 创建分享: fileNodeId={}, shareCode={}", fileNodeId, shareCode);
+    log.info(
+        "[ShareDomainService] 创建分享: fileNodeId={}, shareCode={}, target={}",
+        fileNodeId,
+        shareCode,
+        shareTargetType);
     return saved;
   }
 
@@ -181,6 +252,71 @@ public class ShareDomainService {
     shareLinkRepository.incrementAccessCount(shareLink.getId());
 
     return shareLink;
+  }
+
+  /**
+   * 记录分享链接访问日志。
+   *
+   * @param shareId    分享链接 ID
+   * @param shareCode  分享码
+   * @param fileNodeId 文件节点 ID
+   * @param visitorId  访问者 ID（可为空）
+   * @param visitorIp  访问者 IP
+   * @param userAgent  User-Agent
+   * @param accessType 访问类型（VIEW/DOWNLOAD/EDIT）
+   * @param status     访问状态（SUCCESS/FAIL）
+   * @param failReason 失败原因
+   */
+  public void recordAccessLog(String shareId, String shareCode, String fileNodeId,
+      String visitorId, String visitorIp, String userAgent, String accessType,
+      String status, String failReason) {
+    try {
+      ShareAccessLog log =
+          ShareAccessLog.builder()
+              .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
+              .shareId(shareId)
+              .shareCode(shareCode)
+              .fileNodeId(fileNodeId)
+              .visitorId(visitorId)
+              .visitorIp(visitorIp)
+              .userAgent(userAgent)
+              .accessType(accessType)
+              .accessStatus(status)
+              .failReason(failReason)
+              .accessTime(LocalDateTime.now())
+              .deleted(0)
+              .build();
+      shareAccessLogRepository.save(log);
+    } catch (Exception e) {
+      // 访问日志记录失败不应影响主流程
+      log.warn("[ShareDomainService] 记录访问日志失败: shareCode={}, error={}",
+          shareCode, e.getMessage());
+    }
+  }
+
+  /**
+   * 查询即将到期的分享链接（用于到期提醒）。
+   *
+   * @param withinHours 多少小时内即将到期
+   * @return 即将到期的分享链接列表
+   */
+  public List<ShareLink> findExpiringShares(int withinHours) {
+    // 这里通过遍历所有活跃分享链接来查找即将到期的
+    // 生产环境可通过定时任务 + 数据库查询优化
+    return shareLinkRepository.findExpiringShares(withinHours);
+  }
+
+  /**
+   * 标记分享链接的到期提醒已发送。
+   *
+   * @param shareId 分享链接 ID
+   */
+  public void markReminderSent(String shareId) {
+    ShareLink shareLink = shareLinkRepository.findById(shareId);
+    if (shareLink != null) {
+      shareLink.setReminderSent(true);
+      shareLinkRepository.update(shareLink);
+    }
   }
 
   /** 撤销分享 */
@@ -265,6 +401,37 @@ public class ShareDomainService {
   /** 查询用户的分享列表 */
   public List<ShareLink> findByUserId(String userId) {
     return shareLinkRepository.findActiveSharesByUserId(userId);
+  }
+
+  /**
+   * 查询分享链接的访问日志。
+   *
+   * @param shareId 分享链接 ID
+   * @param limit   返回条数限制
+   * @return 访问日志列表
+   */
+  public List<ShareAccessLog> getAccessLogs(String shareId, int limit) {
+    return shareAccessLogRepository.findByShareId(shareId, limit);
+  }
+
+  /**
+   * 查询分享链接的目标用户列表。
+   *
+   * @param shareId 分享链接 ID
+   * @return 目标用户列表
+   */
+  public List<ShareRecipient> getRecipients(String shareId) {
+    return shareRecipientRepository.findByShareId(shareId);
+  }
+
+  /**
+   * 查询用户作为接收者的分享列表。
+   *
+   * @param recipientId 接收者用户 ID
+   * @return 分享接收记录列表
+   */
+  public List<ShareRecipient> getReceivedShares(String recipientId) {
+    return shareRecipientRepository.findByRecipientId(recipientId);
   }
 
   /** 设置文件所有者 */

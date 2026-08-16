@@ -1,16 +1,18 @@
 package com.njydsz.cronjob.server.core.dag;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ArrayNode;
 import com.njydsz.common.json.tree.ObjectNode;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 /**
  * DAG 定义 JSON 编解码器（P2 DAG 增强）。

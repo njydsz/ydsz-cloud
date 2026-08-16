@@ -477,8 +477,9 @@
             <property name="authorFormat" value="\S+"/>
         </module>
 
-        <!-- 公共方法必须有 Javadoc（默认 scope=public） -->
+        <!-- 公共方法必须有 Javadoc（checkstyle 9.x 中 scope 属性已移除，改用 accessModifiers 显式限定 public） -->
         <module name="JavadocMethod">
+            <property name="accessModifiers" value="public"/>
             <property name="allowedAnnotations" value="Override, Test, BeforeEach, AfterEach, BeforeAll, AfterAll, Bean, MockitoBean, Param, QueryParam, PathVariable, RequestBody, Valid, PostConstruct, PreDestroy"/>
             <property name="allowMissingParamTags" value="false"/>
             <property name="allowMissingReturnTag" value="false"/>

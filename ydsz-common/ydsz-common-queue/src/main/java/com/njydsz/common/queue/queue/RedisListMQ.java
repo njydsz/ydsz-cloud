@@ -2,8 +2,8 @@ package com.njydsz.common.queue.queue;
 
 import java.util.concurrent.ExecutorService;
 
-import org.springframework.data.redis.core.RedisTemplate;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.queue.config.QueueProperties;

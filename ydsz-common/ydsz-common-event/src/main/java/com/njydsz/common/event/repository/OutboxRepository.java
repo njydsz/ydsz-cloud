@@ -34,7 +34,7 @@ import com.njydsz.common.event.model.OutboxStatus;
 public class OutboxRepository {
 
   /** 日志实例 */
-  private static final Logger log = LoggerFactory.getLogger(OutboxRepository.class);
+  private static final Logger LOG = LoggerFactory.getLogger(OutboxRepository.class);
 
   /** 表名合法字符校验正则（防 SQL 注入） */
   private static final String TABLE_NAME_PATTERN = "^[a-zA-Z_][a-zA-Z0-9_]*$";
@@ -246,7 +246,7 @@ public class OutboxRepository {
             OutboxStatus.PROCESSING.name(),
             Timestamp.from(cutoff));
     if (affected > 0) {
-      log.warn(
+      LOG.warn(
           "Reclaimed {} stale PROCESSING messages older than {} minutes",
           affected,
           thresholdMinutes);

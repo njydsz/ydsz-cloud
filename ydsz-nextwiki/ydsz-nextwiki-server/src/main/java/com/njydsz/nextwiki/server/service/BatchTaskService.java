@@ -1,14 +1,16 @@
 package com.njydsz.nextwiki.server.service;
 
-import com.njydsz.nextwiki.server.service.FileApplicationService.BatchResult;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+
+import com.njydsz.nextwiki.server.service.FileApplicationService.BatchResult;
 
 /**
  * 批量任务异步执行服务。
@@ -21,8 +23,8 @@ import org.springframework.stereotype.Service;
  *   PENDING → RUNNING → COMPLETED / FAILED
  * </pre>
  *
- * <p><b>线程池：</b>使用 ydsz-common-thread 统一管理的线程池（{@code nextwikiTaskExecutor}），
- * 避免直接创建原生线程池（符合云顶编码规范 15.4 节）。
+ * <p><b>线程池：</b>使用 ydsz-common-thread 统一管理的线程池（{@code nextwikiTaskExecutor}）， 避免直接创建原生线程池（符合云顶编码规范
+ * 15.4 节）。
  *
  * @author ydsz-team
  * @since 1.0.0

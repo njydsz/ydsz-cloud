@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
 @MappedJdbcTypes(JdbcType.VARCHAR)
 public class EncryptTypeHandler extends BaseTypeHandler<String> {
 
-  private static final Logger log = LoggerFactory.getLogger(EncryptTypeHandler.class);
+  private static final Logger LOG = LoggerFactory.getLogger(EncryptTypeHandler.class);
 
   /**
    * 密文的最小字节长度：1 字节版本号 + 12 字节 IV + 16 字节 GCM Tag = 29 字节
@@ -189,20 +189,20 @@ public class EncryptTypeHandler extends BaseTypeHandler<String> {
     String masked = maskedValue;
     switch (strategy) {
       case RETURN_MASKED:
-        log.warn(
+        LOG.warn(
             "字段解密失败，返回打码值 | valueLen={}, cause={}",
             value == null ? 0 : value.length(),
             cause.getMessage());
         return masked;
       case RETURN_ORIGINAL:
-        log.warn(
+        LOG.warn(
             "字段解密失败，返回原值（failure-strategy=RETURN_ORIGINAL，建议尽快修复） | valueLen={}, cause={}",
             value == null ? 0 : value.length(),
             cause.getMessage());
         return value;
       case THROW:
       default:
-        log.error(
+        LOG.error(
             "字段解密失败，按 fail-safe 策略抛出异常 | valueLen={}", value == null ? 0 : value.length(), cause);
         throw new IllegalStateException("字段解密失败：密文可能被篡改或密钥版本缺失", cause);
     }

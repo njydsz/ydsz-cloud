@@ -1,14 +1,16 @@
 package com.njydsz.cronjob.server.core.config;
 
+import java.util.concurrent.ThreadPoolExecutor;
+
 import com.alibaba.nacos.api.config.annotation.NacosConfigListener;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ObjectNode;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.executor.TenantAwareExecutorPool;
-import java.util.concurrent.ThreadPoolExecutor;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
 
 /**
  * 线程池热更新监听器（P0-4）。
@@ -31,8 +33,8 @@ import org.springframework.stereotype.Component;
  *   <li>队列容量无法动态调整（BlockingQueue 不支持 resize），仅记录新值，下次创建线程池时生效
  *   <li>隔离策略变更时，清空旧的租户线程池缓存，下次 getExecutor 时按新策略创建
  *   <li>使用 try-catch 包裹，确保配置解析异常不影响应用启动
- *   <li><b>P1-A2:</b> 通过 {@link CronjobThreadPoolRegistry} 获取全局执行线程池引用，
- *       消除对 DefaultTaskDispatcher 的直接依赖和反射强耦合
+ *   <li><b>P1-A2:</b> 通过 {@link CronjobThreadPoolRegistry} 获取全局执行线程池引用， 消除对 DefaultTaskDispatcher
+ *       的直接依赖和反射强耦合
  * </ul>
  *
  * @author ydsz-team
@@ -212,8 +214,9 @@ public class ThreadPoolHotUpdateListener {
     try {
       ThreadPoolExecutor pool = threadPoolRegistry.get(CronjobThreadPoolRegistry.GLOBAL_EXECUTOR);
       if (pool == null) {
-        log.warn("[ThreadPoolHotUpdate] 全局线程池未注册, 跳过: poolName={}",
-                CronjobThreadPoolRegistry.GLOBAL_EXECUTOR);
+        log.warn(
+            "[ThreadPoolHotUpdate] 全局线程池未注册, 跳过: poolName={}",
+            CronjobThreadPoolRegistry.GLOBAL_EXECUTOR);
         return;
       }
       int newCore = Math.max(1, newMaxConcurrent);

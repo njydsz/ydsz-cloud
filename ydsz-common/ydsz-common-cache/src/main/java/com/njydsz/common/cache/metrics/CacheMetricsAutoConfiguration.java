@@ -3,6 +3,8 @@ package com.njydsz.common.cache.metrics;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.binder.MeterBinder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.SmartInitializingSingleton;
@@ -10,8 +12,6 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.binder.MeterBinder;
 
 import com.njydsz.common.cache.spring.SpringYdszCache;
 import com.njydsz.common.cache.spring.YdszCacheManager;
@@ -68,7 +68,7 @@ public class CacheMetricsAutoConfiguration {
   /** 缓存指标注册器 — 支持动态绑定新创建的缓存 */
   public static class CacheMetricsRegistrar implements SmartInitializingSingleton {
 
-    private static final Logger log = LoggerFactory.getLogger(CacheMetricsRegistrar.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CacheMetricsRegistrar.class);
 
     private final YdszCacheManager cacheManager;
     private final MeterRegistry meterRegistry;
@@ -91,7 +91,7 @@ public class CacheMetricsAutoConfiguration {
       for (String cacheName : cacheManager.getCacheNames()) {
         registerCache(cacheName);
       }
-      log.info("CacheMetricsRegistrar 已初始化, 已绑定 {} 个缓存的指标", registeredCacheNames.size());
+      LOG.info("CacheMetricsRegistrar 已初始化, 已绑定 {} 个缓存的指标", registeredCacheNames.size());
     }
 
     /**
@@ -111,7 +111,7 @@ public class CacheMetricsAutoConfiguration {
           new CacheMeterBinder(springCache.getNativeCache(), springCache.getName());
       binder.bindTo(meterRegistry);
       registeredCacheNames.add(cacheName);
-      log.debug("已注册缓存指标: {}", cacheName);
+      LOG.debug("已注册缓存指标: {}", cacheName);
     }
   }
 }

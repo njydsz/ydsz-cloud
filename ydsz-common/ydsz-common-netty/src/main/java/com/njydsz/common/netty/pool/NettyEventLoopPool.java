@@ -3,8 +3,8 @@ package com.njydsz.common.netty.pool;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import lombok.extern.slf4j.Slf4j;
 import io.netty.channel.EventLoopGroup;
+import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.netty.config.NettyProperties;
 import com.njydsz.common.netty.transport.NativeTransportDetector;

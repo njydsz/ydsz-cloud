@@ -4,13 +4,13 @@ import java.net.InetAddress;
 import java.util.HashMap;
 import java.util.Map;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.sdk.resources.Resource;
+import lombok.Builder;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * YDSZ Resource 工厂

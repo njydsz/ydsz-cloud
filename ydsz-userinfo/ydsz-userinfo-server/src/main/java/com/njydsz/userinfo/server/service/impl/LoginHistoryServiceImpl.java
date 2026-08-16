@@ -1,16 +1,18 @@
 package com.njydsz.userinfo.server.service.impl;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.userinfo.domain.entity.UserLoginHistory;
 import com.njydsz.userinfo.infra.mapper.UserLoginHistoryMapper;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.service.LoginHistoryService;
-import java.time.LocalDateTime;
-import java.util.List;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
 /**
  * 登录历史服务实现
@@ -50,12 +52,21 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
       String result,
       String failReason,
       String userAgent) {
+    recordLoginAttempt(new LoginAttemptContext(userId, username, loginIp), result, failReason, userAgent);
+  }
+
+  @Override
+  public void recordLoginAttempt(
+      LoginAttemptContext context,
+      String result,
+      String failReason,
+      String userAgent) {
     try {
       UserLoginHistory history = new UserLoginHistory();
       history.setId(String.valueOf(snowflakeIdGenerator.nextId()));
-      history.setUserId(userId);
-      history.setUsername(username);
-      history.setLoginIp(loginIp);
+      history.setUserId(context.userId());
+      history.setUsername(context.username());
+      history.setLoginIp(context.loginIp());
       history.setLoginResult(result);
       history.setFailReason(failReason);
       history.setUserAgent(userAgent);
@@ -65,8 +76,8 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
       // 登录历史记录失败不应影响登录主流程
       log.warn(
           "Failed to record login history: username={}, ip={}, error={}",
-          username,
-          loginIp,
+          context.username(),
+          context.loginIp(),
           e.getMessage());
     }
   }

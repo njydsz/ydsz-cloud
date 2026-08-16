@@ -1,9 +1,10 @@
 package com.njydsz.literule.server.impl;
 
+import java.util.function.Function;
+
 import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleResult;
-import java.util.function.Function;
 
 /**
  * 静态规则：包装 Java lambda 作为规则

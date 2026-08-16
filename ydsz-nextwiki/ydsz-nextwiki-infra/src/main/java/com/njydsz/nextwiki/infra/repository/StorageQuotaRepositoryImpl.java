@@ -1,11 +1,12 @@
 package com.njydsz.nextwiki.infra.repository;
 
-import com.njydsz.nextwiki.domain.entity.StorageQuota;
-import com.njydsz.nextwiki.domain.repository.StorageQuotaRepository;
-import com.njydsz.nextwiki.infra.mapper.StorageQuotaMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Repository;
+
+import com.njydsz.nextwiki.domain.entity.StorageQuota;
+import com.njydsz.nextwiki.domain.repository.StorageQuotaRepository;
+import com.njydsz.nextwiki.infra.mapper.StorageQuotaMapper;
 
 /**
  * 存储配额仓储实现

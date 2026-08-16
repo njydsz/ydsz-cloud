@@ -4,12 +4,12 @@ import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 通知模块指标埋点（P1-4：Micrometer 指标监控 + P1-2：维度增强）
@@ -32,7 +32,7 @@ import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
  */
 public class NotifyMetrics {
 
-  private static final Logger log = LoggerFactory.getLogger(NotifyMetrics.class);
+  private static final Logger LOG = LoggerFactory.getLogger(NotifyMetrics.class);
 
   private static final String METRIC_EMAIL_SENT = "notify_email_sent_total";
   private static final String METRIC_EMAIL_DURATION = "notify_email_duration_seconds";
@@ -66,10 +66,10 @@ public class NotifyMetrics {
   public NotifyMetrics(MeterRegistry meterRegistry) {
     if (!MICROMETER_AVAILABLE) {
       this.meterRegistry = null;
-      log.info("[NotifyMetrics] micrometer-core 依赖不存在，指标收集降级为 no-op");
+      LOG.info("[NotifyMetrics] micrometer-core 依赖不存在，指标收集降级为 no-op");
     } else {
       this.meterRegistry = meterRegistry != null ? meterRegistry : new SimpleMeterRegistry();
-      log.info(
+      LOG.info(
           "[NotifyMetrics] NotifyMetrics 初始化完成, registry={}",
           this.meterRegistry.getClass().getSimpleName());
     }

@@ -29,7 +29,7 @@ import org.springframework.scheduling.annotation.Scheduled;
  */
 public class DedupCleanupScheduler {
 
-  private static final Logger log = LoggerFactory.getLogger(DedupCleanupScheduler.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DedupCleanupScheduler.class);
 
   private final MessageDeduplicator memoryDeduplicator;
 
@@ -56,11 +56,11 @@ public class DedupCleanupScheduler {
       int afterCount = memoryDeduplicator.getRecordCount();
       int cleaned = beforeCount - afterCount;
       if (cleaned > 0) {
-        log.debug(
+        LOG.debug(
             "[DedupCleanupScheduler] 已清理 {} 条过期去重记录（{} -> {}）", cleaned, beforeCount, afterCount);
       }
     } catch (Exception e) {
-      log.warn("[DedupCleanupScheduler] 清理过期去重记录失败: {}", e.getMessage(), e);
+      LOG.warn("[DedupCleanupScheduler] 清理过期去重记录失败: {}", e.getMessage(), e);
     }
   }
 }

@@ -2,9 +2,9 @@ package com.njydsz.common.jdbc.config;
 
 import java.util.Set;
 
+import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
-import lombok.Data;
 
 /**
  * 安全查询配置属性（ORDER BY 注入防护 + 深度分页检测）

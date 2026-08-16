@@ -1,17 +1,19 @@
 package com.njydsz.workflow.server.engine.impl;
 
-import com.njydsz.literule.api.RuleContext;
-import com.njydsz.literule.api.expr.ExpressionEvaluator;
-import com.njydsz.workflow.server.engine.FlowVariableStrategy;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.literule.api.RuleContext;
+import com.njydsz.literule.api.expr.ExpressionEvaluator;
+import com.njydsz.workflow.server.engine.FlowVariableStrategy;
 
 /**
  * 默认流程变量表达式解析策略

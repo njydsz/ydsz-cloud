@@ -29,7 +29,7 @@ import org.springframework.context.i18n.LocaleContextHolder;
  */
 public final class MessageSourceHolder {
 
-  private static final Logger log = LoggerFactory.getLogger(MessageSourceHolder.class);
+  private static final Logger LOG = LoggerFactory.getLogger(MessageSourceHolder.class);
 
   private MessageSourceHolder() {
     // 工具类，禁止实例化
@@ -63,7 +63,7 @@ public final class MessageSourceHolder {
   public static void setResolver(MessageResolver newResolver) {
     resolver = newResolver;
     if (newResolver != null) {
-      log.debug("MessageSourceResolver 已注入，AbstractYdszException 的 getMessage() 将启用 i18n 解析");
+      LOG.debug("MessageSourceResolver 已注入，AbstractYdszException 的 getMessage() 将启用 i18n 解析");
     }
   }
 

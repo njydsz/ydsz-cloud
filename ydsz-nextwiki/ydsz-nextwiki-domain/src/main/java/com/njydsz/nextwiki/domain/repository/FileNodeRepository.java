@@ -1,9 +1,12 @@
 package com.njydsz.nextwiki.domain.repository;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.dao.OptimisticLockingFailureException;
+
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.nextwiki.domain.entity.FileNode;
-import java.util.List;
-import org.springframework.dao.OptimisticLockingFailureException;
 
 /**
  * 文件节点仓储接口
@@ -131,6 +134,24 @@ public interface FileNodeRepository {
    * @return 全部后代节点列表（不含文件夹自身）；文件夹不存在时返回空列表
    */
   List<FileNode> findAllDescendants(String folderId);
+
+  /**
+   * 查询冷数据候选（长期未访问的文件）。
+   *
+   * @param threshold       时间阈值（updated_at 早于此时间的文件）
+   * @param excludeSuffixes 排除的后缀（逗号分隔）
+   * @param limit           返回数量限制
+   * @return 冷数据候选列表
+   */
+  List<FileNode> findColdCandidates(LocalDateTime threshold, String excludeSuffixes, int limit);
+
+  /**
+   * 统计冷数据数量。
+   *
+   * @param threshold 时间阈值
+   * @return 冷数据数量
+   */
+  long countColdNodes(LocalDateTime threshold);
 
   /** 文件类型统计结果 */
   record FileTypeStat(String suffix, int fileCount, long totalSize) {}

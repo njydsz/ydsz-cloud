@@ -39,7 +39,7 @@ import com.njydsz.common.util.security.DigestUtils;
  */
 public class AliyunSmsProvider implements SmsProvider {
 
-  private static final Logger log = LoggerFactory.getLogger(AliyunSmsProvider.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AliyunSmsProvider.class);
 
   private final RestTemplate restTemplate;
   private final String endpoint;
@@ -88,7 +88,7 @@ public class AliyunSmsProvider implements SmsProvider {
           restTemplate.postForObject(endpoint, new HttpEntity<>(json, headers), String.class);
       return parseResponse(response);
     } catch (Exception e) {
-      log.error("[AliyunSmsProvider] 发送失败: phone={}, error={}", phoneNumber, e.getMessage(), e);
+      LOG.error("[AliyunSmsProvider] 发送失败: phone={}, error={}", phoneNumber, e.getMessage(), e);
       return SmsSendResult.failure("send_error", e.getMessage());
     }
   }
@@ -137,7 +137,7 @@ public class AliyunSmsProvider implements SmsProvider {
       String sign = Base64.getEncoder().encodeToString(signData);
       return (accessKey != null ? accessKey + ":" : "") + sign;
     } catch (Exception e) {
-      log.error("[AliyunSmsProvider] 签名失败: {}", e.getMessage());
+      LOG.error("[AliyunSmsProvider] 签名失败: {}", e.getMessage());
       return "";
     }
   }

@@ -35,7 +35,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class ColumnDesensitizationExecutor {
 
-  private static final Logger log = LoggerFactory.getLogger(ColumnDesensitizationExecutor.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ColumnDesensitizationExecutor.class);
 
   /** 默认脱敏占位符（规则为 null 或正则不匹配时使用） */
   private static final String DEFAULT_MASK = "***";
@@ -104,7 +104,7 @@ public final class ColumnDesensitizationExecutor {
       Pattern compiled = patternCache.computeIfAbsent(pattern, Pattern::compile);
       return compiled.matcher(value).replaceAll(replacement);
     } catch (Exception e) {
-      log.warn("脱敏正则处理失败：pattern={}, value={}, error={}", pattern, value, e.getMessage());
+      LOG.warn("脱敏正则处理失败：pattern={}, value={}, error={}", pattern, value, e.getMessage());
       return DEFAULT_MASK;
     }
   }

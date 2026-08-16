@@ -1,17 +1,19 @@
 package com.njydsz.message.server.service.archive.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.message.domain.entity.core.MsgLog;
-import com.njydsz.message.infra.mapper.core.MsgLogMapper;
-import com.njydsz.message.server.config.MessageProperties;
-import com.njydsz.message.server.service.archive.MessageArchiveService;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+
+import com.njydsz.message.domain.entity.core.MsgLog;
+import com.njydsz.message.infra.mapper.core.MsgLogMapper;
+import com.njydsz.message.server.config.MessageProperties;
+import com.njydsz.message.server.service.archive.MessageArchiveService;
 
 /**
  * 消息归档搜索服务实现（P0-5）。

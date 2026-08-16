@@ -1,9 +1,9 @@
 package com.njydsz.system.server.health;
 
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.health.contributor.Health;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.health.contributor.Health;
 
 import com.njydsz.common.redis.health.RedisHealthIndicator;
 import com.njydsz.common.web.health.AbstractModuleHealthIndicator;

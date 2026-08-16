@@ -1,6 +1,13 @@
 package com.njydsz.userinfo.server.health;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.health.contributor.Health;
+import org.springframework.boot.health.contributor.HealthIndicator;
+
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
@@ -8,12 +15,6 @@ import com.njydsz.userinfo.domain.entity.Role;
 import com.njydsz.userinfo.domain.entity.UserAccount;
 import com.njydsz.userinfo.infra.mapper.RoleMapper;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.health.contributor.Health;
-import org.springframework.boot.health.contributor.HealthIndicator;
 
 /**
  * 用户信息中心健康检查指标。

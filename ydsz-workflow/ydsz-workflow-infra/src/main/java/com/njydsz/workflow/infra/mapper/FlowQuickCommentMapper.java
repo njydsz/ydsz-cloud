@@ -1,8 +1,9 @@
 package com.njydsz.workflow.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.workflow.domain.entity.FlowQuickComment;
 import org.apache.ibatis.annotations.Mapper;
+
+import com.njydsz.workflow.domain.entity.FlowQuickComment;
 
 /**
  * 审批常用语 Mapper

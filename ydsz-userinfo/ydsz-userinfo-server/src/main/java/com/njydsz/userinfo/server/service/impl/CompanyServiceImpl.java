@@ -1,6 +1,13 @@
 package com.njydsz.userinfo.server.service.impl;
 
+import java.util.stream.Collectors;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.bean.BeanUpdateUtil;
 import com.njydsz.userinfo.domain.converter.UserInfoConverter;
@@ -11,11 +18,6 @@ import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.CompanyVO;
 import com.njydsz.userinfo.infra.mapper.CompanyMapper;
 import com.njydsz.userinfo.server.service.CompanyService;
-import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 公司 Service 实现

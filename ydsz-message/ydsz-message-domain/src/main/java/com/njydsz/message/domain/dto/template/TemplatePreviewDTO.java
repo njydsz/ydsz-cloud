@@ -1,8 +1,10 @@
 package com.njydsz.message.domain.dto.template;
 
-import com.njydsz.common.safe.annotation.Xss;
 import java.util.Map;
+
 import lombok.Data;
+
+import com.njydsz.common.safe.annotation.Xss;
 
 /**
  * 模板预览请求 DTO。

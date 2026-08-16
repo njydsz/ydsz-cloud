@@ -1,11 +1,12 @@
 package com.njydsz.userinfo.server.service;
 
+import java.util.List;
+
 import com.njydsz.userinfo.domain.dto.post.MenuPostDTO;
 import com.njydsz.userinfo.domain.dto.put.MenuPutDTO;
 import com.njydsz.userinfo.domain.entity.Menu;
 import com.njydsz.userinfo.domain.vo.MenuTreeVO;
 import com.njydsz.userinfo.domain.vo.MenuVO;
-import java.util.List;
 
 /**
  * 菜单/权限 Service 接口

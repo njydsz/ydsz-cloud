@@ -1,7 +1,7 @@
 package com.njydsz.userinfo.infra.mapper;
 
-import org.apache.ibatis.annotations.Mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
 
 import com.njydsz.userinfo.domain.entity.UserPasswordHistory;
 

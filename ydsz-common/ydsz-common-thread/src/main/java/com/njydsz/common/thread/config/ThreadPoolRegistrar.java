@@ -58,7 +58,7 @@ import com.njydsz.common.thread.metrics.VirtualThreadMetrics;
 public class ThreadPoolRegistrar
     implements BeanDefinitionRegistryPostProcessor, Ordered, ApplicationContextAware {
 
-  private static final Logger log = LoggerFactory.getLogger(ThreadPoolRegistrar.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ThreadPoolRegistrar.class);
 
   private final ThreadPoolProperties properties;
   private ApplicationContext applicationContext;
@@ -77,7 +77,7 @@ public class ThreadPoolRegistrar
   public void postProcessBeanDefinitionRegistry(@NonNull BeanDefinitionRegistry registry)
       throws BeansException {
     if (properties.getPools() == null || properties.getPools().isEmpty()) {
-      log.info("ydsz-thread: 未配置线程池，跳过动态注册");
+      LOG.info("ydsz-thread: 未配置线程池，跳过动态注册");
       return;
     }
 
@@ -98,7 +98,7 @@ public class ThreadPoolRegistrar
       String beanName = prefix + name + "Executor";
 
       if (registry.containsBeanDefinition(beanName)) {
-        log.warn("ydsz-thread: Bean [{}] 已存在，跳过注册（可能与业务 Bean 命名冲突）", beanName);
+        LOG.warn("ydsz-thread: Bean [{}] 已存在，跳过注册（可能与业务 Bean 命名冲突）", beanName);
         continue;
       }
 
@@ -162,7 +162,7 @@ public class ThreadPoolRegistrar
             .getBeanDefinition();
     registry.registerBeanDefinition(beanName, wrappedBd);
 
-    log.info(
+    LOG.info(
         "ydsz-thread: 注册虚拟线程池 [{}] (prefix={}, inner={}, metrics={}, wrapped={})",
         beanName,
         config.getThreadNamePrefix(),
@@ -220,7 +220,7 @@ public class ThreadPoolRegistrar
       registry.registerBeanDefinition(timerMetricsBeanName, timerMetricsBd);
     }
 
-    log.info(
+    LOG.info(
         "ydsz-thread: 注册线程池 [{}] (core={}, max={}, queue={}, prefix={}, "
             + "reject={}, slowTaskThreshold={}, taskDecorators={})",
         beanName,

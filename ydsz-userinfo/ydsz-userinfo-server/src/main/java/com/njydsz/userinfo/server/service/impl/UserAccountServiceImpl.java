@@ -1,7 +1,22 @@
 package com.njydsz.userinfo.server.service.impl;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.njydsz.common.auth.annotation.DataScope;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
@@ -30,19 +45,6 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 import com.njydsz.userinfo.server.service.UserAccountService;
 import com.njydsz.userinfo.server.service.WorkflowApproverCacheService;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 用户账号 Service 实现
@@ -158,6 +160,27 @@ public class UserAccountServiceImpl implements UserAccountService {
   @DataScope(deptColumn = "dept_id", userColumn = "id")
   public Page<UserAccountVO> page(UserAccountPageQueryDTO query) {
     Page<UserAccount> page = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
+    LambdaQueryWrapper<UserAccount> wrapper = buildPageQueryWrapper(query);
+    wrapper.orderByDesc(UserAccount::getCreatedAt);
+
+    Page<UserAccount> result = userAccountMapper.selectPage(page, wrapper);
+    Page<UserAccountVO> voPage =
+        new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
+    List<UserAccountVO> voList =
+        result.getRecords().stream()
+            .map(UserInfoConverter.INSTANT::entityToVO)
+            .collect(Collectors.toList());
+    voPage.setRecords(voList);
+    return voPage;
+  }
+
+  /**
+   * 构建分页查询条件（从 DTO 提取 LIKE/EQ 条件）。
+   *
+   * @param query 分页查询参数
+   * @return 填充好条件的 QueryWrapper
+   */
+  private LambdaQueryWrapper<UserAccount> buildPageQueryWrapper(UserAccountPageQueryDTO query) {
     LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
 
     if (query.getUsername() != null && !query.getUsername().isBlank()) {
@@ -181,17 +204,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     if (query.getCompanyId() != null && !query.getCompanyId().isBlank()) {
       wrapper.eq(UserAccount::getCompanyId, query.getCompanyId());
     }
-    wrapper.orderByDesc(UserAccount::getCreatedAt);
-
-    Page<UserAccount> result = userAccountMapper.selectPage(page, wrapper);
-    Page<UserAccountVO> voPage =
-        new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
-    List<UserAccountVO> voList =
-        result.getRecords().stream()
-            .map(UserInfoConverter.INSTANT::entityToVO)
-            .collect(Collectors.toList());
-    voPage.setRecords(voList);
-    return voPage;
+    return wrapper;
   }
 
   /**
@@ -431,8 +444,8 @@ public class UserAccountServiceImpl implements UserAccountService {
   /**
    * 清理指定用户的工作流审批人缓存。
    *
-   * <p>角色分配变更会同时影响「角色→用户列表」与「用户→上级」两类缓存，
-   * 这里统一委托 {@link WorkflowApproverCacheService} 处理，避免硬编码缓存 key。
+   * <p>角色分配变更会同时影响「角色→用户列表」与「用户→上级」两类缓存， 这里统一委托 {@link WorkflowApproverCacheService} 处理，避免硬编码缓存
+   * key。
    *
    * @param userId 用户 ID
    */

@@ -8,11 +8,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import com.alibaba.ttl.TransmittableThreadLocal;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.feign.config.FeignProperties;
 
@@ -53,7 +53,7 @@ import com.njydsz.common.feign.config.FeignProperties;
  */
 public class BulkheadRequestInterceptor implements RequestInterceptor {
 
-  private static final Logger log = LoggerFactory.getLogger(BulkheadRequestInterceptor.class);
+  private static final Logger LOG = LoggerFactory.getLogger(BulkheadRequestInterceptor.class);
 
   /** 默认最大并发请求数 */
   private static final int DEFAULT_MAX_CONCURRENT = 50;
@@ -147,7 +147,7 @@ public class BulkheadRequestInterceptor implements RequestInterceptor {
 
     try {
       if (!semaphore.tryAcquire(acquireTimeoutMillis, TimeUnit.MILLISECONDS)) {
-        log.warn("[Bulkhead] 服务 {} 并发请求超限({}), 快速失败", serviceName, maxConcurrent);
+        LOG.warn("[Bulkhead] 服务 {} 并发请求超限({}), 快速失败", serviceName, maxConcurrent);
         throw new RuntimeException(
             "Bulkhead full for service: " + serviceName + ", max concurrent: " + maxConcurrent);
       }
@@ -179,7 +179,7 @@ public class BulkheadRequestInterceptor implements RequestInterceptor {
         return current;
       }
       // 配置已变更，需要重建信号量（旧信号量等待自然释放后可被 GC）
-      log.info("[Bulkhead] 服务 {} 并发配置从 {} 变更为 {}, 重建信号量", serviceName, previousMax, maxConcurrent);
+      LOG.info("[Bulkhead] 服务 {} 并发配置从 {} 变更为 {}, 重建信号量", serviceName, previousMax, maxConcurrent);
     }
     Semaphore created = new Semaphore(maxConcurrent);
     bulkheads.put(serviceName, created);

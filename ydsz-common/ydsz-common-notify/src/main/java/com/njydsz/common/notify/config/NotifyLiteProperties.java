@@ -3,8 +3,8 @@ package com.njydsz.common.notify.config;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * 通知模块简化配置属性类

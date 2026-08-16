@@ -6,10 +6,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import org.slf4j.LoggerFactory;
 import feign.Logger;
 import feign.Request;
 import feign.Response;
+import org.slf4j.LoggerFactory;
 
 /**
  * YdszFeign 日志增强处理器。

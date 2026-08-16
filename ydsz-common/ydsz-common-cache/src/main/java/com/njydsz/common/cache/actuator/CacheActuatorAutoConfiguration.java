@@ -54,7 +54,7 @@ import com.njydsz.common.cache.api.Cache;
     matchIfMissing = true)
 public class CacheActuatorAutoConfiguration {
 
-  private static final Logger log = LoggerFactory.getLogger(CacheActuatorAutoConfiguration.class);
+  private static final Logger LOG = LoggerFactory.getLogger(CacheActuatorAutoConfiguration.class);
 
   /**
    * 创建缓存指标端点 Bean
@@ -68,7 +68,7 @@ public class CacheActuatorAutoConfiguration {
   public CacheMetricsEndpoint cacheMetricsEndpoint(Map<String, Cache<?, ?>> caches) {
     CacheMetricsEndpoint endpoint = new CacheMetricsEndpoint();
     caches.forEach((name, cache) -> endpoint.registerCache(name, cache));
-    log.info("CacheMetricsEndpoint 已注册，监控 {} 个缓存实例", caches.size());
+    LOG.info("CacheMetricsEndpoint 已注册，监控 {} 个缓存实例", caches.size());
     return endpoint;
   }
 }

@@ -128,6 +128,14 @@ public enum NextwikiExceptionCode implements ExceptionCode {
   /** 预览生成失败 */
   PREVIEW_GENERATION_FAILED("W08002", "nextwiki.preview.generation.failed", 500),
 
+  // AI 相关 W10xxx
+  /** AI 服务未启用或未配置 */
+  AI_SERVICE_DISABLED("W10001", "nextwiki.ai.service.disabled", 503),
+  /** AI 摘要生成失败 */
+  AI_SUMMARY_FAILED("W10002", "nextwiki.ai.summary.failed", 500),
+  /** AI 服务超时 */
+  AI_SERVICE_TIMEOUT("W10003", "nextwiki.ai.service.timeout", 504),
+
   // 系统错误 W09xxx
   /** 系统内部错误 */
   INTERNAL_ERROR("W09001", "nextwiki.internal.error", 500),

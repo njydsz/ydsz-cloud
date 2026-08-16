@@ -1,16 +1,12 @@
 package com.njydsz.message.server.service.config;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.common.tenant.TenantContextHolder;
-import com.njydsz.message.domain.entity.config.MsgVariableSource;
-import com.njydsz.message.infra.mapper.config.MsgVariableSourceMapper;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationContext;
@@ -18,6 +14,12 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestClient;
+
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
+import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.message.domain.entity.config.MsgVariableSource;
+import com.njydsz.message.infra.mapper.config.MsgVariableSourceMapper;
 
 /**
  * 变量数据源解析器。

@@ -25,7 +25,7 @@ import com.njydsz.common.excel.converter.ConvertContext;
  */
 public class DateConverter implements CellValueConverter {
 
-  private static final Logger log = LoggerFactory.getLogger(DateConverter.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DateConverter.class);
 
   private static final Map<String, DateTimeFormatter> FORMATTER_CACHE = new ConcurrentHashMap<>();
 
@@ -79,7 +79,7 @@ public class DateConverter implements CellValueConverter {
         LocalDateTime ldt = LocalDateTime.parse(dateStr, formatter);
         return new Date(ldt.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
       } catch (Exception ignored) {
-        log.debug("Caught exception (ignored): {}", ignored.getMessage());
+        LOG.debug("Caught exception (ignored): {}", ignored.getMessage());
       }
     }
     return null;

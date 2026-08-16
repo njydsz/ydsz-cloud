@@ -2,6 +2,7 @@ package com.njydsz.common.notify.template;
 
 import java.util.List;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -11,7 +12,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import lombok.RequiredArgsConstructor;
 
 /**
  * 通知模板引擎自动配置
@@ -39,7 +39,7 @@ import lombok.RequiredArgsConstructor;
     matchIfMissing = true)
 public class NotifyTemplateAutoConfiguration {
 
-  private static final Logger log = LoggerFactory.getLogger(NotifyTemplateAutoConfiguration.class);
+  private static final Logger LOG = LoggerFactory.getLogger(NotifyTemplateAutoConfiguration.class);
 
   /** 创建 SpEL 模板引擎 */
   @Bean
@@ -51,9 +51,9 @@ public class NotifyTemplateAutoConfiguration {
     TemplateVariableValidator validator = validatorProvider.getIfAvailable();
     if (validator != null) {
       engine.setVariableValidator(validator);
-      log.info("[NotifyTemplateAutoConfiguration] TemplateVariableValidator 已注入到 SpEL 模板引擎");
+      LOG.info("[NotifyTemplateAutoConfiguration] TemplateVariableValidator 已注入到 SpEL 模板引擎");
     }
-    log.info("[NotifyTemplateAutoConfiguration] 初始化 SpEL 模板引擎");
+    LOG.info("[NotifyTemplateAutoConfiguration] 初始化 SpEL 模板引擎");
     return engine;
   }
 
@@ -67,7 +67,7 @@ public class NotifyTemplateAutoConfiguration {
       List<NotifyTemplate> predefinedTemplates = predefinedTemplatesProvider.getIfAvailable();
       if (predefinedTemplates != null && !predefinedTemplates.isEmpty()) {
         templateEngine.registerAll(predefinedTemplates);
-        log.info(
+        LOG.info(
             "[NotifyTemplateAutoConfiguration] 预定义模板已注册: count={}", predefinedTemplates.size());
       }
     };

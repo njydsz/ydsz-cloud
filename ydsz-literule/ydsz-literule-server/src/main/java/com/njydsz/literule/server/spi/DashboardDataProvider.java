@@ -1,11 +1,12 @@
 package com.njydsz.literule.server.spi;
 
+import java.util.List;
+
 import com.njydsz.literule.api.dto.RuleDashboardDistributionVO;
 import com.njydsz.literule.api.dto.RuleDashboardOverviewVO;
 import com.njydsz.literule.api.dto.RuleDashboardRealtimeVO;
 import com.njydsz.literule.api.dto.RuleDashboardTopRuleVO;
 import com.njydsz.literule.api.dto.RuleDashboardTrendVO;
-import java.util.List;
 
 /**
  * 规则引擎监控大盘数据提供者 SPI

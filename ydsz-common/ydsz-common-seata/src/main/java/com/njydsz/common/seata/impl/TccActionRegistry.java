@@ -24,7 +24,7 @@ import com.njydsz.common.seata.api.TccAction;
  */
 public class TccActionRegistry implements ApplicationContextAware, InitializingBean {
 
-  private static final Logger log = LoggerFactory.getLogger(TccActionRegistry.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TccActionRegistry.class);
 
   private ApplicationContext applicationContext;
 
@@ -39,7 +39,7 @@ public class TccActionRegistry implements ApplicationContextAware, InitializingB
    */
   public void register(String beanName, TccAction<?> action) {
     actionMap.put(beanName, action);
-    log.debug("TccAction registered: beanName={}", beanName);
+    LOG.debug("TccAction registered: beanName={}", beanName);
   }
 
   /**
@@ -72,6 +72,6 @@ public class TccActionRegistry implements ApplicationContextAware, InitializingB
   public void afterPropertiesSet() {
     Map<String, TccAction> beans = applicationContext.getBeansOfType(TccAction.class);
     beans.forEach(this::register);
-    log.info("TccActionRegistry initialized: {} actions registered", actionMap.size());
+    LOG.info("TccActionRegistry initialized: {} actions registered", actionMap.size());
   }
 }

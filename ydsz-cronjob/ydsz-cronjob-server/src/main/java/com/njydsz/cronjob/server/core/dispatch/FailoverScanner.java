@@ -1,5 +1,21 @@
 package com.njydsz.cronjob.server.core.dispatch;
 
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.domain.entity.job.JobNode;
@@ -11,20 +27,6 @@ import com.njydsz.cronjob.server.core.LockKeyUtil;
 import com.njydsz.cronjob.server.core.discovery.NodeDiscoveryStrategy;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
 import com.njydsz.cronjob.server.metrics.CronjobMetrics;
-import jakarta.annotation.PostConstruct;
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
 
 /**
  * 失败自动转移扫描器（P1-4）。

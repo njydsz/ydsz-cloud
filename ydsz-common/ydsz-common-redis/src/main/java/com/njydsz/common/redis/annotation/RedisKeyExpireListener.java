@@ -17,7 +17,7 @@ import java.lang.annotation.Target;
  * <pre>{@code
  * @RedisKeyExpireListener(keyPattern = "order:lock:*")
  * public void onOrderLockExpired(String expiredKey) {
- *     log.info("订单锁已过期：{}", expiredKey);
+ *     LOG.info("订单锁已过期：{}", expiredKey);
  * }
  *
  * // 支持 SpEL 表达式引用配置

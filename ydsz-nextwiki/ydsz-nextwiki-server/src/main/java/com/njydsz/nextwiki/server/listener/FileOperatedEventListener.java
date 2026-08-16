@@ -1,5 +1,13 @@
 package com.njydsz.nextwiki.server.listener;
 
+import java.time.LocalDateTime;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
+
 import com.njydsz.common.notify.core.NotifyService;
 import com.njydsz.common.notify.enums.NotifyChannel;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
@@ -7,12 +15,6 @@ import com.njydsz.nextwiki.domain.event.FileOperatedEvent;
 import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
 import com.njydsz.nextwiki.domain.service.SearchDomainService;
 import com.njydsz.nextwiki.server.service.ContentExtractionApplicationService;
-import java.time.LocalDateTime;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
 
 /**
  * 文件操作事件异步监听器。

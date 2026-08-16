@@ -2,10 +2,10 @@ package com.njydsz.common.web.version;
 
 import java.lang.reflect.Method;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.web.servlet.mvc.condition.RequestCondition;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 支持 API 版本路由的 RequestMappingHandlerMapping

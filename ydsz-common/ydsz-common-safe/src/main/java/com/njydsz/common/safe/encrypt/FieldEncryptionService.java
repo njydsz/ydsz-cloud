@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
  */
 public class FieldEncryptionService {
 
-  private static final Logger log = LoggerFactory.getLogger(FieldEncryptionService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(FieldEncryptionService.class);
 
   private static final String ALGORITHM = "AES";
   private static final String TRANSFORMATION = "AES/GCM/NoPadding";
@@ -62,7 +62,7 @@ public class FieldEncryptionService {
                 "AES-256 密钥长度必须为 32 字节，当前版本 " + version + " 长度为 " + keyBytes.length);
           }
           keyMap.put(version, new SecretKeySpec(keyBytes, ALGORITHM));
-          log.info("加载加密密钥版本: {}", version);
+          LOG.info("加载加密密钥版本: {}", version);
         });
 
     if (!keyMap.containsKey(defaultKeyVersion)) {
@@ -104,7 +104,7 @@ public class FieldEncryptionService {
 
       return Base64.getEncoder().encodeToString(byteBuffer.array());
     } catch (Exception e) {
-      log.error("加密失败: keyVersion={}", keyVersion, e);
+      LOG.error("加密失败: keyVersion={}", keyVersion, e);
       throw new RuntimeException("加密失败", e);
     }
   }
@@ -152,7 +152,7 @@ public class FieldEncryptionService {
       byte[] plaintextBytes = cipher.doFinal(ciphertextBytes);
       return new String(plaintextBytes, StandardCharsets.UTF_8);
     } catch (Exception e) {
-      log.error("解密失败", e);
+      LOG.error("解密失败", e);
       throw new RuntimeException("解密失败", e);
     }
   }

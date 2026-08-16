@@ -1,6 +1,5 @@
 package com.njydsz.literule.server.engine.liteexpr;
 
-import com.njydsz.common.util.id.IdGenerator;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -12,6 +11,8 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+
+import com.njydsz.common.util.id.IdGenerator;
 
 /**
  * LiteExpr 内置函数库

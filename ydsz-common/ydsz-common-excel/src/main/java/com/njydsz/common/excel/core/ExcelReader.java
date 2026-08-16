@@ -98,7 +98,7 @@ import com.njydsz.common.excel.support.asm.ASMFieldAccessor;
 public class ExcelReader {
 
   /** 日志记录器 */
-  private static final Logger log = LoggerFactory.getLogger(ExcelReader.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ExcelReader.class);
 
   /** 字节到MB的换算常量（1024 × 1024） */
   private static final long BYTES_PER_MB = 1024L * 1024L;
@@ -314,7 +314,7 @@ public class ExcelReader {
   public ExcelReader use1904Windowing() {
     ExcelConfig config = metadata.getExcelConfig();
     if (config != null && !config.isUse1904Windowing()) {
-      log.warn("ExcelConfig 为不可变对象，use1904Windowing 设置应在构建配置时完成");
+      LOG.warn("ExcelConfig 为不可变对象，use1904Windowing 设置应在构建配置时完成");
     }
     return this;
   }
@@ -512,7 +512,7 @@ public class ExcelReader {
           useFastReader ? "fast" : "poi",
           true);
     } catch (ExcelReadException e) {
-      log.error("Excel 读取业务异常", e);
+      LOG.error("Excel 读取业务异常", e);
       ExcelMetrics.recordRead(
           Duration.ofNanos(System.nanoTime() - startTime),
           context.getCurrentRow(),
@@ -520,7 +520,7 @@ public class ExcelReader {
           false);
       throw e;
     } catch (OutOfMemoryError e) {
-      log.error("Excel 读取内存溢出", e);
+      LOG.error("Excel 读取内存溢出", e);
       ExcelMetrics.recordRead(
           Duration.ofNanos(System.nanoTime() - startTime),
           context.getCurrentRow(),
@@ -528,7 +528,7 @@ public class ExcelReader {
           false);
       throw ExcelReadException.outOfMemory(e);
     } catch (Exception e) {
-      log.error("Excel 读取未知异常", e);
+      LOG.error("Excel 读取未知异常", e);
       ExcelMetrics.recordRead(
           Duration.ofNanos(System.nanoTime() - startTime),
           context.getCurrentRow(),
@@ -698,7 +698,7 @@ public class ExcelReader {
       if (checkColumnCount) {
         int actualCount = row.getLastCellNum();
         if (expectedColumnCount != null && actualCount != expectedColumnCount.intValue()) {
-          log.warn("列数不匹配: 期望={}, 实际={}, 行号={}", expectedColumnCount, actualCount, rowIndex);
+          LOG.warn("列数不匹配: 期望={}, 实际={}, 行号={}", expectedColumnCount, actualCount, rowIndex);
         }
       }
 
@@ -714,7 +714,7 @@ public class ExcelReader {
                   : ExcelConfig.defaults();
           DataValidator.validate(data, rowIndex, config.getValidationMode());
         } catch (Exception ve) {
-          log.warn("Data validation failed, row={}", rowIndex, ve);
+          LOG.warn("Data validation failed, row={}", rowIndex, ve);
           for (int i = 0; i < listenerCount; i++) {
             ((ReadListener) listeners.get(i)).onError(context, ve);
           }
@@ -789,7 +789,7 @@ public class ExcelReader {
       try {
         ((ReadListener<Object>) listener).onProgress(context, current, total);
       } catch (Exception e) {
-        log.warn(
+        LOG.warn(
             "监听器进度回调异常, listener={}, current={}, total={}", listener.getName(), current, total, e);
       }
     }

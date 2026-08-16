@@ -1,12 +1,13 @@
 package com.njydsz.message.server.service.impl.core;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
 import com.njydsz.common.lock.idempotent.IdempotentStrategy;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.service.core.DedupService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
 /**
  * 智能去重服务实现（P2-1）。

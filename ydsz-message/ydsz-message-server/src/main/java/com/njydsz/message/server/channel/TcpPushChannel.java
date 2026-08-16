@@ -1,13 +1,8 @@
 package com.njydsz.message.server.channel.impl;
 
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.feign.MessageResult;
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.netty.codec.LengthFieldCodec;
-import com.njydsz.common.netty.config.NettyProperties;
-import com.njydsz.common.netty.server.AbstractNettyServer;
-import com.njydsz.common.util.id.SnowflakeIdGenerator;
-import com.njydsz.message.server.channel.MessageChannel;
+import java.util.HashMap;
+import java.util.Map;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -16,12 +11,19 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.CharsetUtil;
-import java.util.HashMap;
-import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.common.feign.MessageResult;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.netty.codec.LengthFieldCodec;
+import com.njydsz.common.netty.config.NettyProperties;
+import com.njydsz.common.netty.server.AbstractNettyServer;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
+import com.njydsz.message.server.channel.MessageChannel;
 
 /**
  * TCP 推送通道（基于 common-netty）。

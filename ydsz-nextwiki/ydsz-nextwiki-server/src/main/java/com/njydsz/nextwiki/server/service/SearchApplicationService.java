@@ -1,5 +1,14 @@
 package com.njydsz.nextwiki.server.service;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.stereotype.Service;
+
 import com.njydsz.common.search.api.SearchFilter;
 import com.njydsz.common.search.api.SearchFilter.Operator;
 import com.njydsz.common.search.api.SearchHit;
@@ -12,13 +21,6 @@ import com.njydsz.nextwiki.api.dto.NextwikiDTOs;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.service.SearchDomainService;
 import com.njydsz.nextwiki.domain.vo.SearchResultVO;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.stereotype.Service;
 
 /**
  * NextWiki 搜索应用服务。

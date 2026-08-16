@@ -140,9 +140,9 @@ public class InMemoryTccTransactionLogStore implements TccTransactionLogStore {
   @Override
   public List<TccTransactionLog> findTimeoutPending(LocalDateTime threshold) {
     return store.values().stream()
-        .filter(log -> log.getStatus() == TccBranchStatus.TRIED)
+        .filter(log -> LOG.getStatus() == TccBranchStatus.TRIED)
         .filter(
-            log -> log.getTryCompletedAt() != null && log.getTryCompletedAt().isBefore(threshold))
+            log -> LOG.getTryCompletedAt() != null && LOG.getTryCompletedAt().isBefore(threshold))
         .collect(Collectors.toList());
   }
 
@@ -156,9 +156,9 @@ public class InMemoryTccTransactionLogStore implements TccTransactionLogStore {
   @Override
   public List<TccTransactionLog> findTimeoutPendingPaged(LocalDateTime threshold, int limit) {
     return store.values().stream()
-        .filter(log -> log.getStatus() == TccBranchStatus.TRIED)
+        .filter(log -> LOG.getStatus() == TccBranchStatus.TRIED)
         .filter(
-            log -> log.getTryCompletedAt() != null && log.getTryCompletedAt().isBefore(threshold))
+            log -> LOG.getTryCompletedAt() != null && LOG.getTryCompletedAt().isBefore(threshold))
         .limit(limit)
         .collect(Collectors.toList());
   }
@@ -172,9 +172,9 @@ public class InMemoryTccTransactionLogStore implements TccTransactionLogStore {
   @Override
   public long countTimeoutPending(LocalDateTime threshold) {
     return store.values().stream()
-        .filter(log -> log.getStatus() == TccBranchStatus.TRIED)
+        .filter(log -> LOG.getStatus() == TccBranchStatus.TRIED)
         .filter(
-            log -> log.getTryCompletedAt() != null && log.getTryCompletedAt().isBefore(threshold))
+            log -> LOG.getTryCompletedAt() != null && LOG.getTryCompletedAt().isBefore(threshold))
         .count();
   }
 

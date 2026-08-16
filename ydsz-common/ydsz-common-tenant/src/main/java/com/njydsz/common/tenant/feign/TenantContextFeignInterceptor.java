@@ -4,9 +4,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import lombok.extern.slf4j.Slf4j;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
+import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.tenant.TenantContext;
 import com.njydsz.common.tenant.TenantContextHolder;

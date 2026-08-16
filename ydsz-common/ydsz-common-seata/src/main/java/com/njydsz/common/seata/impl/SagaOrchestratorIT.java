@@ -160,7 +160,7 @@ public final class SagaOrchestratorIT {
           () -> {
             throw new RuntimeException("动作失败");
           },
-          () -> log.add("compensated"));
+          () -> LOG.add("compensated"));
       throw new AssertionError("Should have thrown exception");
     } catch (Exception e) {
       assertThat(e.getMessage()).contains("动作失败");

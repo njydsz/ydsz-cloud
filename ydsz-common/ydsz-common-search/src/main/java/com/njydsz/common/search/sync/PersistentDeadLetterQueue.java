@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Optional;
 import javax.sql.DataSource;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.search.core.IndexOperation;

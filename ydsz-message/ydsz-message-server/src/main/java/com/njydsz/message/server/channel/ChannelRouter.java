@@ -1,5 +1,19 @@
 package com.njydsz.message.server.channel;
 
+import java.time.Duration;
+import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
+
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.MessageRequest;
@@ -9,18 +23,6 @@ import com.njydsz.common.sentry.resilience.CircuitBreaker;
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.metric.MessageMetrics;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
-import jakarta.annotation.PostConstruct;
-import java.time.Duration;
-import java.util.Collections;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Component;
 
 /**
  * 消息通道路由器。

@@ -1,19 +1,21 @@
 package com.njydsz.cronjob.server.core.handler;
 
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.json.tree.JsonNode;
-import com.njydsz.common.json.tree.ObjectNode;
-import com.njydsz.cronjob.domain.job.JobHandler;
-import com.njydsz.cronjob.server.config.CronjobProperties;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.Map;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Configuration;
+
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.tree.JsonNode;
+import com.njydsz.common.json.tree.ObjectNode;
+import com.njydsz.cronjob.domain.job.JobHandler;
+import com.njydsz.cronjob.server.config.CronjobProperties;
 
 /**
  * HTTP 任务处理器（P1-5）。

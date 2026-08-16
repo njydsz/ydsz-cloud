@@ -51,7 +51,7 @@ import com.njydsz.common.config.ConfigProperties;
  */
 public class ConfigChangeBridge implements ApplicationListener<ApplicationEvent> {
 
-  private static final Logger log = LoggerFactory.getLogger(ConfigChangeBridge.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ConfigChangeBridge.class);
 
   /** Spring Cloud 事件类名（用于运行时匹配，避免编译期硬依赖） */
   private static final String REFRESH_EVENT_CLASS =
@@ -144,7 +144,7 @@ public class ConfigChangeBridge implements ApplicationListener<ApplicationEvent>
     }
     snapshot.clear();
     takeSnapshot();
-    log.debug("[ConfigChangeBridge] 快照已采集，共 {} 个属性", snapshot.size());
+    LOG.debug("[ConfigChangeBridge] 快照已采集，共 {} 个属性", snapshot.size());
   }
 
   /** EnvironmentChangeEvent 处理：diff 计算变更并分发 */
@@ -169,10 +169,10 @@ public class ConfigChangeBridge implements ApplicationListener<ApplicationEvent>
       return;
     }
 
-    log.info("[ConfigChangeBridge] 检测到 {} 个属性变更, node={}", changes.size(), nodeIp);
-    if (log.isDebugEnabled()) {
+    LOG.info("[ConfigChangeBridge] 检测到 {} 个属性变更, node={}", changes.size(), nodeIp);
+    if (LOG.isDebugEnabled()) {
       for (ConfigChangeEvent.ConfigChange c : changes) {
-        log.debug("[ConfigChangeBridge] {} | {} -> {}", c.key(), c.oldValue(), c.newValue());
+        LOG.debug("[ConfigChangeBridge] {} | {} -> {}", c.key(), c.oldValue(), c.newValue());
       }
     }
 
@@ -186,7 +186,7 @@ public class ConfigChangeBridge implements ApplicationListener<ApplicationEvent>
         try {
           listener.onChange(c.key(), c.oldValue(), c.newValue());
         } catch (Exception e) {
-          log.warn(
+          LOG.warn(
               "[ConfigChangeBridge] 监听器 {} 回调异常: {}",
               listener.getClass().getSimpleName(),
               e.getMessage(),
@@ -213,7 +213,7 @@ public class ConfigChangeBridge implements ApplicationListener<ApplicationEvent>
       Set<String> keys = (Set<String>) getKeys.invoke(event);
       return keys != null ? keys : Set.of();
     } catch (Exception e) {
-      log.warn("[ConfigChangeBridge] 提取变更键失败: {}", e.getMessage());
+      LOG.warn("[ConfigChangeBridge] 提取变更键失败: {}", e.getMessage());
       return Set.of();
     }
   }

@@ -1,17 +1,19 @@
 package com.njydsz.cronjob.server.core.sharding;
 
-import com.njydsz.cronjob.domain.entity.job.JobNode;
-import com.njydsz.cronjob.server.core.discovery.NodeDiscoveryStrategy;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
+
+import com.njydsz.cronjob.domain.entity.job.JobNode;
+import com.njydsz.cronjob.server.core.discovery.NodeDiscoveryStrategy;
 
 /**
  * 负载感知智能分片策略（P1-2）。

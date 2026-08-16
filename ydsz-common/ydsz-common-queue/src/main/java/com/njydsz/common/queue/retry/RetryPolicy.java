@@ -150,7 +150,7 @@ public interface RetryPolicy {
    *         break;
    *     } catch (Exception e) {
    *         if (!state.tryIncrement()) {
-   *             log.error("消息重试次数已用尽");
+   *             LOG.error("消息重试次数已用尽");
    *             break;
    *         }
    *         Thread.sleep(state.getDelayMillis());

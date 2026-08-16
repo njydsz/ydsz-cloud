@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class CacheProtectionGuard {
 
-  private static final Logger log = LoggerFactory.getLogger(CacheProtectionGuard.class);
+  private static final Logger LOG = LoggerFactory.getLogger(CacheProtectionGuard.class);
 
   /**
    * Per-cache 实例注册表，使用 WeakHashMap 避免内存泄漏。 当 Cache 实例不再被引用时，对应的 CacheProtectionGuard 实例会被自动 GC 清理。
@@ -147,7 +147,7 @@ public final class CacheProtectionGuard {
           }
           return loaded;
         } catch (Exception e) {
-          log.warn("Cache loading failed for key={}", key, e);
+          LOG.warn("Cache loading failed for key={}", key, e);
           return null;
         } finally {
           guard.loadingFutures.remove(key, ourSignal);

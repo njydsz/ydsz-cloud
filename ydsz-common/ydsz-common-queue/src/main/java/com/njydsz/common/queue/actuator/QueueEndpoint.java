@@ -3,10 +3,10 @@ package com.njydsz.common.queue.actuator;
 import java.util.HashMap;
 import java.util.Map;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.actuate.endpoint.annotation.Selector;
-import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.queue.config.QueueProperties;
 import com.njydsz.common.queue.manager.QueueManager;

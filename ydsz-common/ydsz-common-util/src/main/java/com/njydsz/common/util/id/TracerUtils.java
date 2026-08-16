@@ -58,7 +58,7 @@ import com.njydsz.common.util.string.StringUtils;
  */
 public final class TracerUtils {
 
-  private static final Logger log = LoggerFactory.getLogger(TracerUtils.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TracerUtils.class);
 
   private static final String TRACE_ID_NAME = "traceId";
   private static final String SPAN_ID_NAME = "spanId";
@@ -96,7 +96,7 @@ public final class TracerUtils {
             skywalkingAvailable = true;
           } catch (ClassNotFoundException | NoSuchMethodException e) {
             skywalkingAvailable = false;
-            log.debug("SkyWalking TraceContext not available, trace ID will fallback to MDC only");
+            LOG.debug("SkyWalking TraceContext not available, trace ID will fallback to MDC only");
           }
           skywalkingChecked = true;
         }
@@ -108,7 +108,7 @@ public final class TracerUtils {
     try {
       return (String) skywalkingTraceIdMethod.invoke(null);
     } catch (Exception e) {
-      log.debug("SkyWalking TraceContext.traceId() invocation failed: {}", e.getMessage());
+      LOG.debug("SkyWalking TraceContext.traceId() invocation failed: {}", e.getMessage());
       return null;
     }
   }

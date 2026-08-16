@@ -3,14 +3,14 @@ package com.njydsz.common.queue.metrics;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import io.micrometer.core.instrument.FunctionCounter;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.binder.MeterBinder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.queue.manager.QueueManager;
 
@@ -48,7 +48,7 @@ import com.njydsz.common.queue.manager.QueueManager;
  */
 public class QueueMetricsBinder implements MeterBinder {
 
-  private static final Logger log = LoggerFactory.getLogger(QueueMetricsBinder.class);
+  private static final Logger LOG = LoggerFactory.getLogger(QueueMetricsBinder.class);
 
   private static final String METRIC_PREFIX = "queue";
   private static final String TAG_QUEUE_NAME = "queue_name";
@@ -78,7 +78,7 @@ public class QueueMetricsBinder implements MeterBinder {
     for (String queueName : queueManager.getAllQueueNames()) {
       bindQueueMetrics(registry, queueName);
     }
-    log.info("[QueueMetricsBinder] 已绑定 {} 个队列的 Micrometer 指标", registeredQueues.size());
+    LOG.info("[QueueMetricsBinder] 已绑定 {} 个队列的 Micrometer 指标", registeredQueues.size());
   }
 
   /**
@@ -106,7 +106,7 @@ public class QueueMetricsBinder implements MeterBinder {
     registerGauges(registry, metrics, tags);
 
     registeredQueues.put(queueName, Boolean.TRUE);
-    log.debug("[QueueMetricsBinder] 已注册队列指标: {}", queueName);
+    LOG.debug("[QueueMetricsBinder] 已注册队列指标: {}", queueName);
   }
 
   private void registerFunctionCounters(

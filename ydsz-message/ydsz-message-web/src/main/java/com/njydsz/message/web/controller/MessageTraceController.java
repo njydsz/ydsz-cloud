@@ -1,19 +1,21 @@
 package com.njydsz.message.web.controller.core;
 
-import com.njydsz.common.auth.annotation.AuthApiPermission;
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.permission.PermissionCodes;
-import com.njydsz.message.domain.entity.config.MsgTrace;
-import com.njydsz.message.server.service.core.MessageTraceService;
+import java.util.List;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.njydsz.common.auth.annotation.AuthApiPermission;
+import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.permission.PermissionCodes;
+import com.njydsz.message.domain.entity.config.MsgTrace;
+import com.njydsz.message.server.service.core.MessageTraceService;
 
 /**
  * 消息端到端追踪（Trace）Controller。

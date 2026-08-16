@@ -35,7 +35,7 @@ import com.njydsz.common.util.string.StringUtils;
  */
 public class PermissionKeyspaceNotificationListener {
 
-  private static final Logger log =
+  private static final Logger LOG =
       LoggerFactory.getLogger(PermissionKeyspaceNotificationListener.class);
 
   /** 匹配 role 相关 key 的正则，提取 roleCode。 支持自定义 key 前缀模式，默认匹配 ydsz-auth:role-* 格式。 */
@@ -70,7 +70,7 @@ public class PermissionKeyspaceNotificationListener {
       ChannelTopic topic = new ChannelTopic("__keyevent@0__:" + event);
       container.addMessageListener(messageListener, topic);
     }
-    log.info("Redis Keyspace Notification 权限缓存失效监听器已注册, events=[set, del, expired]");
+    LOG.info("Redis Keyspace Notification 权限缓存失效监听器已注册, events=[set, del, expired]");
   }
 
   /**
@@ -86,8 +86,8 @@ public class PermissionKeyspaceNotificationListener {
         String channel = new String(message.getChannel());
         String key = new String(message.getBody());
 
-        if (log.isDebugEnabled()) {
-          log.debug("收到 Redis Keyspace 事件: channel={}, key={}", channel, key);
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("收到 Redis Keyspace 事件: channel={}, key={}", channel, key);
         }
 
         // 匹配 role 相关 key
@@ -95,12 +95,12 @@ public class PermissionKeyspaceNotificationListener {
         if (matcher.find()) {
           String roleCode = matcher.group(1);
           if (StringUtils.isNotBlank(roleCode)) {
-            log.info("Redis Keyspace 事件触发权限缓存失效: key={}, roleCode={}", key, roleCode);
+            LOG.info("Redis Keyspace 事件触发权限缓存失效: key={}, roleCode={}", key, roleCode);
             permissionEvaluator.clearCachesByRoleCodes(roleCode);
           }
         }
       } catch (Exception e) {
-        log.error("处理 Redis Keyspace 事件异常: {}", e.getMessage(), e);
+        LOG.error("处理 Redis Keyspace 事件异常: {}", e.getMessage(), e);
       }
     }
   }

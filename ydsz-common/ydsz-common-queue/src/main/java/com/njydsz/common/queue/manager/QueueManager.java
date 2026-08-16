@@ -31,7 +31,7 @@ import com.njydsz.common.queue.metrics.QueueMetrics;
  *
  * // 查询监控
  * QueueMetrics metrics = manager.getMetrics("order-queue");
- * log.info("Metrics: {}", metrics.getSummary());
+ * LOG.info("Metrics: {}", metrics.getSummary());
  *
  * // 优雅停机
  * manager.shutdown();

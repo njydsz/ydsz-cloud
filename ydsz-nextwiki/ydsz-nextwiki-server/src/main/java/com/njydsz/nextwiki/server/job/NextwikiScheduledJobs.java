@@ -1,12 +1,13 @@
 package com.njydsz.nextwiki.server.job;
 
-import com.njydsz.common.lock.annotation.DistributedScheduled;
-import com.njydsz.nextwiki.domain.service.SearchDomainService;
-import com.njydsz.nextwiki.domain.service.TrashDomainService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.common.lock.annotation.DistributedScheduled;
+import com.njydsz.nextwiki.domain.service.SearchDomainService;
+import com.njydsz.nextwiki.domain.service.TrashDomainService;
 
 /**
  * NextWiki 定时任务

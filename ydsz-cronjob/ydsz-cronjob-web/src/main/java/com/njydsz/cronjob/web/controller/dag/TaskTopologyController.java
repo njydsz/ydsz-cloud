@@ -1,6 +1,20 @@
 package com.njydsz.cronjob.web.controller.dag;
 
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.njydsz.common.auth.annotation.AuthApiPermission;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.permission.PermissionCodes;
@@ -14,19 +28,9 @@ import com.njydsz.cronjob.infra.mapper.dag.JobDagInstanceMapper;
 import com.njydsz.cronjob.infra.mapper.dag.JobDagMapper;
 import com.njydsz.cronjob.infra.mapper.dag.JobDagNodeInstanceMapper;
 import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
+import com.njydsz.cronjob.server.core.dag.DagCytoscapeHelper;
 import com.njydsz.cronjob.server.core.dag.DagDefinition;
 import com.njydsz.cronjob.server.core.dag.DagDefinitionCodec;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 任务执行拓扑图后端 API Controller（P2-11）。
@@ -134,6 +138,61 @@ public class TaskTopologyController {
     topology.put("nodeInstances", nodeInstances);
 
     return BaseResponse.success(topology);
+  }
+
+  /**
+   * P1-E1: 查询 DAG 实例的 Cytoscape.js 兼容可视化数据。
+   *
+   * <p>返回可直接用于 Cytoscape.js 渲染的节点/边格式，每个节点包含实时状态颜色和形状信息。 前端无需额外转换即可渲染 DAG 执行拓扑图。
+   *
+   * <p>输出格式：
+   *
+   * <pre>{@code
+   * {
+   *   "nodes": [{"data": {"id":"a","label":"抽取","color":"#28a745","shape":"round-rectangle","status":"SUCCESS"}}],
+   *   "edges": [{"data": {"id":"edge_a_b","source":"a","target":"b"}}]
+   * }
+   * }</pre>
+   *
+   * @param dagInstanceId DAG 实例 ID
+   * @return Cytoscape.js 兼容的节点/边数据；实例不存在时返回 success(null)
+   */
+  @Operation(summary = "查询DAG实例Cytoscape.js可视化")
+  @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_JOB_VIEW)
+  @GetMapping("/dagInstance/{dagInstanceId}/cytoscape")
+  public BaseResponse<Map<String, Object>> getDagInstanceCytoscape(
+      @PathVariable String dagInstanceId) {
+    // 1. 加载 DAG 实例
+    JobDagInstance instance = dagInstanceMapper.selectById(dagInstanceId);
+    if (instance == null) {
+      log.debug("[TaskTopology] DAG 实例不存在: dagInstanceId={}", dagInstanceId);
+      return BaseResponse.success(null);
+    }
+
+    // 2. 加载 DAG 定义
+    JobDag dag = dagMapper.selectById(instance.getDagId());
+    DagDefinition definition =
+        dag != null ? dagDefinitionCodec.fromJson(dag.getDagDefinition()) : DagDefinition.empty();
+
+    // 3. 查询节点实例并构建状态映射
+    List<JobDagNodeInstance> nodeInstances =
+        dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
+    Map<String, String> statusMap = new HashMap<>();
+    Map<String, Long> durationMap = new HashMap<>();
+    for (JobDagNodeInstance ni : nodeInstances) {
+      if (ni.getJobKey() != null && ni.getNodeStatus() != null) {
+        statusMap.put(ni.getJobKey(), ni.getNodeStatus());
+      }
+      if (ni.getDurationMs() != null && ni.getDurationMs() > 0) {
+        durationMap.put(ni.getJobKey(), ni.getDurationMs());
+      }
+    }
+
+    // 4. 转换为 Cytoscape.js 格式
+    Map<String, Object> cytoscapeData =
+        DagCytoscapeHelper.toCytoscapeFormat(definition, statusMap, durationMap);
+
+    return BaseResponse.success(cytoscapeData);
   }
 
   /**

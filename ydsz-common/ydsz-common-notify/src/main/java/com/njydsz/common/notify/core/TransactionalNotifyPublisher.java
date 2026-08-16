@@ -50,7 +50,7 @@ import com.njydsz.common.notify.enums.NotifyChannel;
  */
 public class TransactionalNotifyPublisher {
 
-  private static final Logger log = LoggerFactory.getLogger(TransactionalNotifyPublisher.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TransactionalNotifyPublisher.class);
 
   private final ApplicationEventPublisher eventPublisher;
   private final AsyncNotifyService asyncNotifyService;
@@ -109,7 +109,7 @@ public class TransactionalNotifyPublisher {
     if (request == null) {
       return;
     }
-    log.debug(
+    LOG.debug(
         "[TransactionalNotifyPublisher] 发布事务后通知事件: channel={}, receiver={}",
         request.getChannel().getName(),
         request.getReceiver());
@@ -126,7 +126,7 @@ public class TransactionalNotifyPublisher {
   @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
   public void onAfterCommit(NotifyAfterCommitEvent event) {
     NotifyRequest request = event.getRequest();
-    log.info(
+    LOG.info(
         "[TransactionalNotifyPublisher] 事务已提交，开始发送通知: channel={}, receiver={}",
         request.getChannel().getName(),
         request.getReceiver());
@@ -142,7 +142,7 @@ public class TransactionalNotifyPublisher {
             request.getContent() != null ? request.getContent() : "");
       }
     } catch (Exception e) {
-      log.error(
+      LOG.error(
           "[TransactionalNotifyPublisher] 事务后通知发送异常: channel={}, receiver={}, error={}",
           request.getChannel().getName(),
           request.getReceiver(),

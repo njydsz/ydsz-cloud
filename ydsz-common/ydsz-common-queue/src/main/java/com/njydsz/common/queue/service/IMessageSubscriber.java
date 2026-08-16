@@ -14,7 +14,7 @@ package com.njydsz.common.queue.service;
  *
  * // 异步持续消费
  * subscriber.subscribeAsync(msg -> {
- *     log.info("Received: {}", msg.getBody());
+ *     LOG.info("Received: {}", msg.getBody());
  * });
  *
  * // 同步阻塞消费

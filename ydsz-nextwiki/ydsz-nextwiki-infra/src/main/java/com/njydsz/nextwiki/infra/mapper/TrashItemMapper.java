@@ -1,10 +1,12 @@
 package com.njydsz.nextwiki.infra.mapper;
 
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.nextwiki.domain.entity.TrashItem;
 import java.util.List;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+
+import com.njydsz.nextwiki.domain.entity.TrashItem;
 
 /**
  * 回收站 Mapper

@@ -33,7 +33,7 @@ import com.njydsz.common.safe.metrics.SafeMetrics;
  */
 public class SecurityEventListener {
 
-  private static final Logger log = LoggerFactory.getLogger(SecurityEventListener.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SecurityEventListener.class);
 
   private final SafeMetrics safeMetrics;
   private final SecurityAuditLogger auditLogger;
@@ -45,7 +45,7 @@ public class SecurityEventListener {
   public SecurityEventListener(SafeMetrics safeMetrics, SecurityAuditLogger auditLogger) {
     this.safeMetrics = safeMetrics;
     this.auditLogger = auditLogger;
-    log.info(
+    LOG.info(
         "安全事件监听器初始化: metrics={}, audit={}",
         safeMetrics != null ? "enabled" : "disabled",
         auditLogger != null ? "enabled" : "disabled");
@@ -66,7 +66,7 @@ public class SecurityEventListener {
       try {
         safeMetrics.recordSecurityEvent(event);
       } catch (Exception e) {
-        log.debug("安全事件指标采集失败: {}", e.getMessage());
+        LOG.debug("安全事件指标采集失败: {}", e.getMessage());
       }
     }
 
@@ -74,7 +74,7 @@ public class SecurityEventListener {
       try {
         auditLogger.log(event);
       } catch (Exception e) {
-        log.debug("安全审计日志记录失败: {}", e.getMessage());
+        LOG.debug("安全审计日志记录失败: {}", e.getMessage());
       }
     }
   }

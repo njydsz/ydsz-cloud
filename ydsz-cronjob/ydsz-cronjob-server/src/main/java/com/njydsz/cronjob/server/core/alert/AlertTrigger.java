@@ -1,15 +1,17 @@
 package com.njydsz.cronjob.server.core.alert;
 
-import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
-import com.njydsz.cronjob.infra.mapper.job.JobAlertRuleMapper;
-import com.njydsz.cronjob.server.config.CronjobProperties;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
+
+import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
+import com.njydsz.cronjob.infra.mapper.job.JobAlertRuleMapper;
+import com.njydsz.cronjob.server.config.CronjobProperties;
 
 /**
  * 告警触发器（P5 告警 + 监控）。

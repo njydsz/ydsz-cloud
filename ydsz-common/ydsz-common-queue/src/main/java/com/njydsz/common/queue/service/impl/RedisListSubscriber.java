@@ -5,8 +5,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.springframework.data.redis.core.RedisTemplate;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 
 import com.njydsz.common.queue.config.QueueProperties;
 import com.njydsz.common.queue.domain.QueueMessage;

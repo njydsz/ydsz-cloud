@@ -1,10 +1,5 @@
 package com.njydsz.message.server.producer;
 
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.queue.compress.MessageCompressor;
-import com.njydsz.common.queue.constant.YdszMessageTopics;
-import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
@@ -16,6 +11,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+
+import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.queue.compress.MessageCompressor;
+import com.njydsz.common.queue.constant.YdszMessageTopics;
+import com.njydsz.common.util.id.SnowflakeIdGenerator;
 
 /**
  * RocketMQ 消息生产者封装。

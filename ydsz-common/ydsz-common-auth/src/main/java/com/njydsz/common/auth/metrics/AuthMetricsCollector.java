@@ -5,14 +5,14 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 
 /**
  * 认证授权模块 Micrometer 指标采集器。
@@ -43,7 +43,7 @@ import io.micrometer.core.instrument.Timer;
 @ConditionalOnClass(MeterRegistry.class)
 public class AuthMetricsCollector implements AuthMetrics, PermissionMetrics {
 
-  private static final Logger log = LoggerFactory.getLogger(AuthMetricsCollector.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AuthMetricsCollector.class);
 
   /** 默认降级值，避免 null/空串污染指标基数 */
   private static final String UNKNOWN = "unknown";

@@ -1,14 +1,16 @@
 package com.njydsz.message.server.channel.impl;
 
+import java.util.List;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.message.server.channel.MessageChannel;
 import com.njydsz.message.server.channel.push.PushProvider;
 import com.njydsz.message.server.config.MessageProperties;
-import java.util.List;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 /**
  * APP 推送通道门面（替换原 MockPushChannel）。

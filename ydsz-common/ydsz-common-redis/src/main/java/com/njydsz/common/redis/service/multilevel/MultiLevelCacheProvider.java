@@ -5,10 +5,10 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
-import lombok.extern.slf4j.Slf4j;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.Expiry;
+import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.config.RedisProperties;

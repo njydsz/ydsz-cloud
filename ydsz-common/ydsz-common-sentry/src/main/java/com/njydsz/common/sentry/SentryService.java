@@ -3,8 +3,8 @@ package com.njydsz.common.sentry;
 import java.time.Duration;
 import java.util.Map;
 
-import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import com.njydsz.common.sentry.domain.AlertEvent;
 import com.njydsz.common.sentry.domain.SlaDefinition;

@@ -44,7 +44,10 @@ import org.slf4j.LoggerFactory;
  */
 public class WriteHandler {
 
-  private static final Logger log = LoggerFactory.getLogger(WriteHandler.class);
+  private WriteHandler() {}
+
+
+  private static final Logger LOG = LoggerFactory.getLogger(WriteHandler.class);
 
   /**
    * 单元格数据格式化器接口
@@ -321,7 +324,7 @@ public class WriteHandler {
             .getSheetConditionalFormatting()
             .addConditionalFormatting(new CellRangeAddress[] {range}, rule);
       } catch (Exception e) {
-        log.warn("应用条件格式失败: {}", config.getFormula(), e);
+        LOG.warn("应用条件格式失败: {}", config.getFormula(), e);
       }
     }
   }
@@ -357,7 +360,7 @@ public class WriteHandler {
 
       sheet.addValidationData(validation);
     } catch (Exception e) {
-      log.warn("应用数据验证失败", e);
+      LOG.warn("应用数据验证失败", e);
     }
   }
 

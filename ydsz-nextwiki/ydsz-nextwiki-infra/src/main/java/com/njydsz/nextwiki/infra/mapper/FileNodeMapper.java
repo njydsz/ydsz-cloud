@@ -1,14 +1,17 @@
 package com.njydsz.nextwiki.infra.mapper;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.njydsz.nextwiki.domain.entity.FileNode;
-import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
-import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
+
+import com.njydsz.nextwiki.domain.entity.FileNode;
+import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 
 /**
  * 文件节点 Mapper
@@ -181,4 +184,43 @@ public interface FileNodeMapper extends BaseMapper<FileNode> {
       "SELECT * FROM nw_file_node WHERE path LIKE CONCAT(#{folderPath}, '%') "
           + "AND deleted = 0 ORDER BY level ASC, sort ASC")
   List<FileNode> selectAllDescendantsByPath(@Param("folderPath") String folderPath);
+
+  /**
+   * 查询冷数据候选（长期未访问的文件）。
+   *
+   * @param threshold       时间阈值（updated_at 早于此时间的文件）
+   * @param excludeSuffixes 排除的后缀（逗号分隔，可为空）
+   * @param limit           返回数量限制
+   * @return 冷数据候选列表
+   */
+  @Select(
+      "<script>"
+          + "SELECT * FROM nw_file_node WHERE node_type = 'file' AND deleted = 0 "
+          + "AND updated_at &lt; #{threshold} "
+          + "AND (storage_class IS NULL OR storage_class = 'STANDARD') "
+          + "<if test='excludeSuffixes != null and excludeSuffixes != \"\"'>"
+          + "  AND suffix NOT IN "
+          + "  <foreach item='suffix' collection='excludeSuffixesList' open='(' separator=',' close=')'>"
+          + "    #{suffix}"
+          + "  </foreach>"
+          + "</if>"
+          + "ORDER BY updated_at ASC LIMIT #{limit}"
+          + "</script>")
+  List<FileNode> selectColdCandidates(
+      @Param("threshold") LocalDateTime threshold,
+      @Param("excludeSuffixes") String excludeSuffixes,
+      @Param("excludeSuffixesList") List<String> excludeSuffixesList,
+      @Param("limit") int limit);
+
+  /**
+   * 统计冷数据数量。
+   *
+   * @param threshold 时间阈值
+   * @return 冷数据数量
+   */
+  @Select(
+      "SELECT COUNT(*) FROM nw_file_node WHERE node_type = 'file' AND deleted = 0 "
+          + "AND updated_at &lt; #{threshold} "
+          + "AND (storage_class IS NULL OR storage_class = 'STANDARD')")
+  long countColdNodes(@Param("threshold") LocalDateTime threshold);
 }

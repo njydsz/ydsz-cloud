@@ -1,7 +1,8 @@
 package com.njydsz.nextwiki.domain.repository;
 
-import com.njydsz.nextwiki.domain.entity.TrashItem;
 import java.util.List;
+
+import com.njydsz.nextwiki.domain.entity.TrashItem;
 
 /**
  * 回收站仓储接口

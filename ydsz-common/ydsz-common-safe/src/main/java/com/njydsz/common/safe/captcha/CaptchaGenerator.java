@@ -11,9 +11,9 @@ import java.security.SecureRandom;
 import java.util.Base64;
 import javax.imageio.ImageIO;
 
-import org.springframework.lang.Nullable;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.lang.Nullable;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 

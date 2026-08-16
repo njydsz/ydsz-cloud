@@ -1,9 +1,10 @@
 package com.njydsz.workflow.server.service;
 
-import com.njydsz.workflow.domain.dto.InstanceMigrationDTO;
-import com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO;
 import java.util.List;
 import java.util.Map;
+
+import com.njydsz.workflow.domain.dto.InstanceMigrationDTO;
+import com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO;
 
 /**
  * 流程实例迁移服务。

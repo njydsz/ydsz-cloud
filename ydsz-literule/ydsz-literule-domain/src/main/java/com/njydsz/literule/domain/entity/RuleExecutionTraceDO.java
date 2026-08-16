@@ -1,14 +1,16 @@
 package com.njydsz.literule.domain.entity;
 
+import java.util.Map;
+
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
-import com.njydsz.common.jdbc.handler.JsonTypeHandler;
-import java.util.Map;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
+import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
+import com.njydsz.common.jdbc.handler.JsonTypeHandler;
 
 /**
  * 规则执行链路追踪实体

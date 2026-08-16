@@ -1,12 +1,14 @@
 package com.njydsz.literule.server.distributed;
 
-import com.njydsz.common.util.security.DigestUtils;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.njydsz.common.util.security.DigestUtils;
 
 /**
  * 一致性 Hash 分片器（P2-16 分布式执行）
@@ -36,7 +38,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ConsistentHashSharder {
 
-  private static final Logger log = LoggerFactory.getLogger(ConsistentHashSharder.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ConsistentHashSharder.class);
 
   /** 默认虚拟节点数 */
   public static final int DEFAULT_VNODES = 150;

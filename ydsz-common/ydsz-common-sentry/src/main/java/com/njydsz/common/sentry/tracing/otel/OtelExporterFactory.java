@@ -4,13 +4,13 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
 
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor;
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessorBuilder;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * OTLP SpanExporter 工厂

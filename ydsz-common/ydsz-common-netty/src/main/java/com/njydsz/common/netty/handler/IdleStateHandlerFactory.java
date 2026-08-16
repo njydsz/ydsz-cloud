@@ -2,8 +2,8 @@ package com.njydsz.common.netty.handler;
 
 import java.util.concurrent.TimeUnit;
 
-import lombok.RequiredArgsConstructor;
 import io.netty.handler.timeout.IdleStateHandler;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 空闲检测处理器工厂。

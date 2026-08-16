@@ -40,10 +40,12 @@ public class ChannelProperties {
      * 签名密钥（可选，P1-F1 新增）。
      *
      * <p>配置后在发送请求时自动添加 HMAC-SHA256 签名头：
+     *
      * <ul>
-     *   <li>签名内容：timestamp + "\n" + secret</li>
-     *   <li>请求头：X-Webhook-Timestamp / X-Webhook-Signature</li>
+     *   <li>签名内容：timestamp + "\n" + secret
+     *   <li>请求头：X-Webhook-Timestamp / X-Webhook-Signature
      * </ul>
+     *
      * 单次发送时也可通过 {@code params.webhookSecret} 覆盖。
      */
     private String secret = "";

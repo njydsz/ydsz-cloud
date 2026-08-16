@@ -1,8 +1,9 @@
 package com.njydsz.workflow.server.service;
 
+import java.util.List;
+
 import com.njydsz.workflow.domain.dto.FlowCategoryDTO;
 import com.njydsz.workflow.domain.entity.FlowCategory;
-import java.util.List;
 
 /**
  * 流程分类服务接口

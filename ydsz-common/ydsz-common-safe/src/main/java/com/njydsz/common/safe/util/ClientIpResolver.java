@@ -3,10 +3,10 @@ package com.njydsz.common.safe.util;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
-import jakarta.servlet.http.HttpServletRequest;
 
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.util.ip.CidrUtils;
@@ -39,7 +39,7 @@ import com.njydsz.common.util.ip.CidrUtils;
  */
 public final class ClientIpResolver {
 
-  private static final Logger log = LoggerFactory.getLogger(ClientIpResolver.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ClientIpResolver.class);
   private static final String UNKNOWN = "unknown";
   private static final String DEFAULT_IP = "0.0.0.0";
 

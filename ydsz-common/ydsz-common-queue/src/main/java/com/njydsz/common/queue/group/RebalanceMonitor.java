@@ -11,10 +11,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.data.redis.connection.stream.PendingMessagesSummary;
 import org.springframework.data.redis.core.RedisTemplate;
-import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.queue.group.ConsumerGroupEvent.EventType;
 

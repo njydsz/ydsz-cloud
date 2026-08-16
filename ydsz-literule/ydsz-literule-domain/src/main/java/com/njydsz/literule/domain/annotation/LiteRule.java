@@ -1,12 +1,14 @@
 package com.njydsz.literule.domain.annotation;
 
-import com.njydsz.literule.api.Rule;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
 import org.springframework.stereotype.Component;
+
+import com.njydsz.literule.api.Rule;
 
 /**
  * 声明式规则注解（P2-10）

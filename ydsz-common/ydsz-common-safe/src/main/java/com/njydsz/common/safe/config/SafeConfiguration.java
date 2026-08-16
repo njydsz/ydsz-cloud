@@ -1,5 +1,7 @@
 package com.njydsz.common.safe.config;
 
+import io.micrometer.core.instrument.MeterRegistry;
+import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -16,8 +18,6 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.Ordered;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import jakarta.annotation.PostConstruct;
-import io.micrometer.core.instrument.MeterRegistry;
 
 import com.njydsz.common.json.spring.boot.JsonAutoConfiguration;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
@@ -89,7 +89,7 @@ import com.njydsz.common.safe.sensitive.SensitiveDataProperties;
 })
 public class SafeConfiguration {
 
-  private static final Logger log = LoggerFactory.getLogger(SafeConfiguration.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SafeConfiguration.class);
 
   private final SafeXssProperties safeXssProperties;
   private final CsrfProperties csrfProperties;
@@ -118,25 +118,25 @@ public class SafeConfiguration {
    */
   @PostConstruct
   public void logStartupSummary() {
-    log.info("==================== [Safe Module] Effective Config Summary ====================");
-    log.info(
+    LOG.info("==================== [Safe Module] Effective Config Summary ====================");
+    LOG.info(
         "  XSS:            mode={}, enabled={}, strictLevel={}",
         safeXssProperties.getMode(),
         safeXssProperties.isEnabled(),
         safeXssProperties.getStrictLevel());
-    log.info(
+    LOG.info(
         "  CSRF:           mode={}, enabled={}, checkOrigin={}",
         csrfProperties.getMode(),
         csrfProperties.isEnabled(),
         csrfProperties.isCheckOrigin());
-    log.info("  Security Heads: enabled={}", securityHeaderProperties.isEnabled());
-    log.info("  Rate Limit:     see RateLimitAutoConfiguration for details");
-    log.info("  API Signature:  enabled={}", apiSignatureProperties.isEnabled());
-    log.info(
+    LOG.info("  Security Heads: enabled={}", securityHeaderProperties.isEnabled());
+    LOG.info("  Rate Limit:     see RateLimitAutoConfiguration for details");
+    LOG.info("  API Signature:  enabled={}", apiSignatureProperties.isEnabled());
+    LOG.info(
         "  IP Access:      enabled={}, mode={}",
         ipAccessProperties.isEnabled(),
         ipAccessProperties.getMode());
-    log.info("==============================================================================");
+    LOG.info("==============================================================================");
   }
 
   /**
@@ -216,7 +216,7 @@ public class SafeConfiguration {
   @Bean
   @ConditionalOnMissingBean(SafeMetrics.class)
   public SafeMetrics safeMetrics(ObjectProvider<MeterRegistry> meterRegistry) {
-    log.info("注册安全指标采集器");
+    LOG.info("注册安全指标采集器");
     return new SafeMetrics(meterRegistry.getIfAvailable());
   }
 
@@ -230,7 +230,7 @@ public class SafeConfiguration {
   @Bean
   @ConditionalOnMissingBean(SecurityAuditLogger.class)
   public SecurityAuditLogger securityAuditLogger() {
-    log.info("注册安全审计日志记录器");
+    LOG.info("注册安全审计日志记录器");
     return new SecurityAuditLogger();
   }
 
@@ -248,7 +248,7 @@ public class SafeConfiguration {
   @ConditionalOnMissingBean(SecurityEventListener.class)
   public SecurityEventListener securityEventListener(
       ObjectProvider<SafeMetrics> safeMetrics, ObjectProvider<SecurityAuditLogger> auditLogger) {
-    log.info("注册安全事件监听器（串联指标采集 + 审计日志）");
+    LOG.info("注册安全事件监听器（串联指标采集 + 审计日志）");
     return new SecurityEventListener(safeMetrics.getIfAvailable(), auditLogger.getIfAvailable());
   }
 
@@ -271,7 +271,7 @@ public class SafeConfiguration {
       matchIfMissing = true)
   public SecurityEventAggregator securityEventAggregator(
       AutoBlockProperties properties, ObjectProvider<IpAccessService> ipAccessService) {
-    log.info(
+    LOG.info(
         "注册安全事件自动响应聚合器: threshold={}, window={}s",
         properties.getThreshold(),
         properties.getWindowSeconds());
@@ -353,7 +353,7 @@ public class SafeConfiguration {
   @ConditionalOnMissingBean(XssJsonMessageConverter.class)
   @Conditional(XssConverterModeCondition.class)
   public XssJsonMessageConverter xssJsonMessageConverter(SafeXssProperties properties) {
-    log.info("注册 XSS JSON 消息转换器，模式: {}", properties.getMode());
+    LOG.info("注册 XSS JSON 消息转换器，模式: {}", properties.getMode());
     return new XssJsonMessageConverter();
   }
 
@@ -438,7 +438,7 @@ public class SafeConfiguration {
   @Bean
   @ConditionalOnMissingBean(SensitiveDataAdvice.class)
   public SensitiveDataAdvice sensitiveDataAdvice(SensitiveDataProperties configuration) {
-    log.info("注册敏感数据脱敏 AOP 拦截器，启用状态: {}", configuration.isEnabled());
+    LOG.info("注册敏感数据脱敏 AOP 拦截器，启用状态: {}", configuration.isEnabled());
     return new SensitiveDataAdvice(configuration);
   }
 
@@ -467,7 +467,7 @@ public class SafeConfiguration {
   @ConditionalOnProperty(prefix = "ydsz.safe.ip-access", name = "enabled", havingValue = "true")
   public IpAccessService ipAccessService(
       IpAccessProperties properties, RedisStringOps redisStringOps) {
-    log.info("注册 IP 访问控制服务: mode={}", properties.getMode());
+    LOG.info("注册 IP 访问控制服务: mode={}", properties.getMode());
     return new IpAccessService(properties, redisStringOps);
   }
 
@@ -509,7 +509,7 @@ public class SafeConfiguration {
   @Bean
   @ConditionalOnMissingBean(NonceCache.class)
   public NonceCache nonceCache() {
-    log.info("注册防重放 Nonce 缓存");
+    LOG.info("注册防重放 Nonce 缓存");
     return new NonceCache();
   }
 
@@ -524,7 +524,7 @@ public class SafeConfiguration {
   @Bean
   @ConditionalOnMissingBean(PasswordStrengthValidator.class)
   public PasswordStrengthValidator passwordStrengthValidator() {
-    log.info("注册密码强度校验器 (默认最低强度: {})", PasswordStrengthValidator.DEFAULT_MIN_LEVEL);
+    LOG.info("注册密码强度校验器 (默认最低强度: {})", PasswordStrengthValidator.DEFAULT_MIN_LEVEL);
     return new PasswordStrengthValidator();
   }
 
@@ -545,7 +545,7 @@ public class SafeConfiguration {
       matchIfMissing = true)
   public CaptchaGenerator captchaGenerator(
       RedisStringOps redisStringOps, CaptchaProperties properties) {
-    log.info(
+    LOG.info(
         "注册图形验证码生成器 (ttl={}s, length={})", properties.getTtlSeconds(), properties.getCodeLength());
     return new CaptchaGenerator(redisStringOps, properties);
   }

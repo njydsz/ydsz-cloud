@@ -1,16 +1,18 @@
 package com.njydsz.message.server.service.impl;
 
-import com.njydsz.common.redis.service.ops.RedisCollectionOps;
-import com.njydsz.common.redis.service.ops.RedisStringOps;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import com.njydsz.common.redis.service.ops.RedisCollectionOps;
+import com.njydsz.common.redis.service.ops.RedisStringOps;
 
 /**
  * P2-18: 站内通知全文搜索。

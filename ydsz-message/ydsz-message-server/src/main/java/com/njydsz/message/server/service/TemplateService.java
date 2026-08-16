@@ -1,11 +1,13 @@
 package com.njydsz.message.server.service.template;
 
+import java.util.Map;
+
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+
 import com.njydsz.message.domain.dto.template.TemplateAuditDTO;
 import com.njydsz.message.domain.dto.template.TemplateCreateDTO;
 import com.njydsz.message.domain.dto.template.TemplateQueryDTO;
 import com.njydsz.message.domain.entity.template.MsgTemplate;
-import java.util.Map;
 
 /**
  * 消息模板 Service 接口

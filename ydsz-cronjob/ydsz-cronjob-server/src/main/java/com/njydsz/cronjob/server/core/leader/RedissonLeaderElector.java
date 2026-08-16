@@ -1,14 +1,14 @@
 package com.njydsz.cronjob.server.core.leader;
 
-import com.njydsz.cronjob.server.config.CronjobProperties;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
@@ -19,6 +19,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
+
+import com.njydsz.cronjob.server.config.CronjobProperties;
 
 /**
  * 基于 Redisson 的 Leader 选举实现。

@@ -2,10 +2,10 @@ package com.njydsz.common.jdbc.config;
 
 import java.util.List;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.validation.annotation.Validated;
 import jakarta.validation.constraints.Min;
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
 /**
  * SQL 审计配置属性

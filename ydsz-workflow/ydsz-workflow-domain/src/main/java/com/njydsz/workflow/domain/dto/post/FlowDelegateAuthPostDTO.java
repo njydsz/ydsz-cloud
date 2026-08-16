@@ -1,13 +1,15 @@
 package com.njydsz.workflow.domain.dto.post;
 
-import com.njydsz.common.safe.sensitive.SensitiveData;
-import com.njydsz.common.safe.sensitive.SensitiveType;
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotNull;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+
+import com.njydsz.common.safe.sensitive.SensitiveData;
+import com.njydsz.common.safe.sensitive.SensitiveType;
 
 /**
  * FlowDelegateAuth 新增请求 DTO。

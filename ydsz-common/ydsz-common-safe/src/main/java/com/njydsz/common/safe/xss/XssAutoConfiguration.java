@@ -28,7 +28,7 @@ import com.njydsz.common.json.module.JsonModule;
     matchIfMissing = false)
 public class XssAutoConfiguration {
 
-  private static final Logger log = LoggerFactory.getLogger(XssAutoConfiguration.class);
+  private static final Logger LOG = LoggerFactory.getLogger(XssAutoConfiguration.class);
 
   /**
    * 注册 Safe JSON 模块（JsonModule SPI）。
@@ -39,7 +39,7 @@ public class XssAutoConfiguration {
    */
   @Bean
   public JsonModule safeJsonModule() {
-    log.debug("[XssAutoConfiguration] Registering SafeJsonModule via JsonModule SPI");
+    LOG.debug("[XssAutoConfiguration] Registering SafeJsonModule via JsonModule SPI");
     return new SafeJsonModule();
   }
 }

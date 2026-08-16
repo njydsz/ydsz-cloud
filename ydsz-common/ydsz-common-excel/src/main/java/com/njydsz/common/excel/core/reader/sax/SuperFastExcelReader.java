@@ -53,7 +53,7 @@ import com.njydsz.common.excel.support.asm.ASMFieldAccessor.ObjectInstantiator;
  */
 public class SuperFastExcelReader {
 
-  private static final Logger log = LoggerFactory.getLogger(SuperFastExcelReader.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SuperFastExcelReader.class);
 
   /** 中等文件大小阈值（字节），小于此值直接加载到内存 */
   private static final long IN_MEMORY_THRESHOLD = 10 * 1024 * 1024; // 10MB
@@ -132,7 +132,7 @@ public class SuperFastExcelReader {
               tempSheetFile = null;
             } else {
               sheetStream = new BufferedInputStream(Files.newInputStream(tempSheetFile));
-              log.debug("大文件模式: sheet XML 大小={}MB, 使用临时文件流式解析", actualSize / 1024 / 1024);
+              LOG.debug("大文件模式: sheet XML 大小={}MB, 使用临时文件流式解析", actualSize / 1024 / 1024);
             }
           } else {
             // 小文件：直接加载到内存
@@ -159,7 +159,7 @@ public class SuperFastExcelReader {
         try {
           Files.deleteIfExists(tempSheetFile);
         } catch (IOException e) {
-          log.warn("清理临时文件失败: {}", tempSheetFile, e);
+          LOG.warn("清理临时文件失败: {}", tempSheetFile, e);
         }
       }
       zis.close();

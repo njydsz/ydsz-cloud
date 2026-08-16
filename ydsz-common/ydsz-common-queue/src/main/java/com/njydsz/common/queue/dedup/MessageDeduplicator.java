@@ -28,7 +28,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * // 在消费消息前检查
  * QueueMessage message = subscriber.subscribeMessage();
  * if (deduplicator.isDuplicate(message.getTraceId())) {
- *     log.info("重复消息，跳过处理: {}", message.getTraceId());
+ *     LOG.info("重复消息，跳过处理: {}", message.getTraceId());
  *     return;
  * }
  *

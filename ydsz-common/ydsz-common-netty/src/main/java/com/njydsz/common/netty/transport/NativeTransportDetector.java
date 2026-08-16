@@ -1,6 +1,5 @@
 package com.njydsz.common.netty.transport;
 
-import lombok.extern.slf4j.Slf4j;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollEventLoopGroup;
@@ -16,6 +15,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.concurrent.DefaultThreadFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.netty.exception.NettyException;
 

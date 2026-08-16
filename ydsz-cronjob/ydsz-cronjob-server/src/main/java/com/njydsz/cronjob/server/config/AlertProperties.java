@@ -1,6 +1,7 @@
 package com.njydsz.cronjob.server.config;
 
 import java.time.Duration;
+
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;

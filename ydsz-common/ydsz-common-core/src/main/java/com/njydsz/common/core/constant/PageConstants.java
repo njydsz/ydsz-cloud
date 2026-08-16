@@ -35,7 +35,7 @@ public final class PageConstants {
     throw new UnsupportedOperationException("Utility class");
   }
 
-  private static final Logger log = LoggerFactory.getLogger(PageConstants.class);
+  private static final Logger LOG = LoggerFactory.getLogger(PageConstants.class);
 
   // ======================== 编译期常量（仅用于注解等场景） ========================
 
@@ -256,7 +256,7 @@ public final class PageConstants {
     long offset = (long) (normalizedPageNum - 1) * normalizedPageSize;
     // 深度分页预警：触发时打 WARN，提示改用游标分页，避免 DB 全表扫描性能骤降
     if (!isOffsetSafe(offset)) {
-      log.warn(
+      LOG.warn(
           "Deep pagination detected: offset={} exceeds MAX_SAFE_OFFSET={}, performance may degrade; "
               + "consider cursor-based (WHERE id > lastId) pagination instead.",
           offset,

@@ -7,8 +7,8 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.function.Supplier;
 
-import org.slf4j.MDC;
 import com.alibaba.ttl.TransmittableThreadLocal;
+import org.slf4j.MDC;
 
 import com.njydsz.common.core.constant.HeaderConstants;
 
@@ -633,11 +633,11 @@ public final class RequestContext {
    *
    * <pre>{@code
    * // 联调时输出完整上下文
-   * log.debug("Request context: {}", RequestContext.dump());
+   * LOG.debug("Request context: {}", RequestContext.dump());
    *
    * // 诊断特定键是否存在
    * if (!RequestContext.dump().containsKey(RequestContext.KEY_TENANT_ID)) {
-   *     log.warn("tenantId missing in request context");
+   *     LOG.warn("tenantId missing in request context");
    * }
    * }</pre>
    *

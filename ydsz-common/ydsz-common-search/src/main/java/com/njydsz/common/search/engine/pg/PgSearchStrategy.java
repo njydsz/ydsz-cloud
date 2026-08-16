@@ -12,10 +12,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.sql.DataSource;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
-import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.search.api.SearchAggregation;

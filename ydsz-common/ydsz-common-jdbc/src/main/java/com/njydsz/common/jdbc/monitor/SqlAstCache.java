@@ -4,12 +4,12 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.statement.Statement;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
 /**
  * JSqlParser AST 解析缓存（Spring Bean）

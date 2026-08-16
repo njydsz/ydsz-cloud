@@ -4,11 +4,11 @@ import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * 搜索聚合/分面结果

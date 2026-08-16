@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class TraceIdGeneratorProxy {
 
-  private static final Logger log = LoggerFactory.getLogger(TraceIdGeneratorProxy.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TraceIdGeneratorProxy.class);
 
   /** TraceIdGenerator 类全限定名 */
   private static final String GENERATOR_CLASS = "com.njydsz.common.core.trace.TraceIdGenerator";
@@ -58,7 +58,7 @@ public final class TraceIdGeneratorProxy {
             available = Boolean.TRUE;
           } catch (ClassNotFoundException e) {
             available = Boolean.FALSE;
-            log.debug("ydsz-common-core 不在 classpath 中，TraceId 将使用内置简易实现");
+            LOG.debug("ydsz-common-core 不在 classpath 中，TraceId 将使用内置简易实现");
           }
         }
       }
@@ -79,7 +79,7 @@ public final class TraceIdGeneratorProxy {
         Method method = getCachedMethod("generateSortableTraceId");
         return (String) method.invoke(null);
       } catch (Exception e) {
-        log.debug("调用 TraceIdGenerator.generateSortableTraceId() 失败，使用降级实现: {}", e.getMessage());
+        LOG.debug("调用 TraceIdGenerator.generateSortableTraceId() 失败，使用降级实现: {}", e.getMessage());
       }
     }
     return fallbackGenerateHex(TRACE_ID_LENGTH);
@@ -96,7 +96,7 @@ public final class TraceIdGeneratorProxy {
         Method method = getCachedMethod("generateSpanId");
         return (String) method.invoke(null);
       } catch (Exception e) {
-        log.debug("调用 TraceIdGenerator.generateSpanId() 失败，使用降级实现: {}", e.getMessage());
+        LOG.debug("调用 TraceIdGenerator.generateSpanId() 失败，使用降级实现: {}", e.getMessage());
       }
     }
     return fallbackGenerateHex(SPAN_ID_LENGTH);
@@ -122,7 +122,7 @@ public final class TraceIdGeneratorProxy {
         // 处理返回值为 core 模块 Record 类型的情况
         return convertToParsedTraceparent(result);
       } catch (Exception e) {
-        log.debug("调用 TraceIdGenerator.parseTraceparent() 失败: {}", e.getMessage());
+        LOG.debug("调用 TraceIdGenerator.parseTraceparent() 失败: {}", e.getMessage());
       }
     }
     // 降级实现：简单解析
@@ -150,7 +150,7 @@ public final class TraceIdGeneratorProxy {
         }
       }
     } catch (Exception e) {
-      log.debug("转换 ParsedTraceparent 失败: {}", e.getMessage());
+      LOG.debug("转换 ParsedTraceparent 失败: {}", e.getMessage());
     }
     return null;
   }

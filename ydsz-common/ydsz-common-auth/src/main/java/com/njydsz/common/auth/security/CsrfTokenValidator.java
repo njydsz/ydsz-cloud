@@ -1,9 +1,9 @@
 package com.njydsz.common.auth.security;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.common.util.string.StringUtils;
@@ -27,7 +27,7 @@ import com.njydsz.common.util.string.StringUtils;
  */
 public class CsrfTokenValidator {
 
-  private static final Logger log = LoggerFactory.getLogger(CsrfTokenValidator.class);
+  private static final Logger LOG = LoggerFactory.getLogger(CsrfTokenValidator.class);
 
   /** CSRF Token 请求头名称 */
   public static final String CSRF_HEADER_NAME = "X-CSRF-Token";
@@ -90,7 +90,7 @@ public class CsrfTokenValidator {
     String cookieToken = getCookieValue(request, CSRF_COOKIE_NAME);
 
     if (StringUtils.isBlank(headerToken) || StringUtils.isBlank(cookieToken)) {
-      log.debug(
+      LOG.debug(
           "CSRF Token 缺失: header={}, cookie={}",
           headerToken != null ? "present" : "missing",
           cookieToken != null ? "present" : "missing");
@@ -98,7 +98,7 @@ public class CsrfTokenValidator {
     }
 
     if (!constantTimeEquals(headerToken, cookieToken)) {
-      log.warn("CSRF Token 不匹配");
+      LOG.warn("CSRF Token 不匹配");
       return false;
     }
 

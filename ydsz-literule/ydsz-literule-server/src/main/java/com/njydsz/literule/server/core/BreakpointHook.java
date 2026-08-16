@@ -1,7 +1,8 @@
 package com.njydsz.literule.server.core;
 
-import com.njydsz.literule.api.RuleResult;
 import java.util.Map;
+
+import com.njydsz.literule.api.RuleResult;
 
 /**
  * 规则断点调试 Hook（P2-3）

@@ -1,5 +1,6 @@
 package com.njydsz.common.exception.handler;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -12,7 +13,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.server.ServerWebExchange;
-import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.config.ExceptionProperties;

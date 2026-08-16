@@ -37,7 +37,7 @@ import org.springframework.context.annotation.Role;
 @ConditionalOnProperty(prefix = "ydsz.thread.hot-update", name = "enabled", havingValue = "true")
 public class ThreadPoolHotUpdateAutoConfiguration {
 
-  private static final Logger log =
+  private static final Logger LOG =
       LoggerFactory.getLogger(ThreadPoolHotUpdateAutoConfiguration.class);
 
   /**
@@ -51,7 +51,7 @@ public class ThreadPoolHotUpdateAutoConfiguration {
   @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
   @ConditionalOnMissingBean(name = ThreadPoolHotUpdateListener.BEAN_NAME)
   public ThreadPoolHotUpdateListener threadPoolHotUpdateListener() {
-    log.info("[ydsz-thread] 热更新监听器已启用，可通过 ydsz.thread.hot-update.enabled=false 禁用");
+    LOG.info("[ydsz-thread] 热更新监听器已启用，可通过 ydsz.thread.hot-update.enabled=false 禁用");
     return new ThreadPoolHotUpdateListener();
   }
 }

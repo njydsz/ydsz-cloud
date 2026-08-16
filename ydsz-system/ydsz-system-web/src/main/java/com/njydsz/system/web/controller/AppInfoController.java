@@ -2,6 +2,11 @@ package com.njydsz.system.web.controller;
 
 import java.util.List;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,11 +16,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -85,7 +85,9 @@ public class AppInfoController {
       @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize,
       @Parameter(description = "应用名称模糊搜索") @RequestParam(required = false) String appName,
       @Parameter(description = "状态") @RequestParam(required = false) String status) {
-    PageResponse<List<AppInfoVO>> page = service.page(pageNum, pageSize, appName, status);
+    // pageSize 服务端硬上限截断，防止深度分页 OOM
+    int safePageSize = Math.min(pageSize, MAX_PAGE_SIZE);
+    PageResponse<List<AppInfoVO>> page = service.page(pageNum, safePageSize, appName, status);
     return PageResponse.success(
         page.getTotal(), page.getPageNum(), page.getPageSize(), page.getData());
   }
@@ -168,4 +170,7 @@ public class AppInfoController {
   public BaseResponse<Boolean> remove(@PathVariable String id) {
     return BaseResponse.success(service.removeById(id));
   }
+
+  /** 分页安全上限：防止 pageSize=999999 导致深度分页 OOM */
+  private static final int MAX_PAGE_SIZE = 500;
 }

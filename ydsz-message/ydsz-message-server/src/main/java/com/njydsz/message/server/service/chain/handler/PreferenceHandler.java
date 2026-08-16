@@ -1,5 +1,14 @@
 package com.njydsz.message.server.service.chain.handler;
 
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
+
 import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.feign.MessageResult;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
@@ -10,13 +19,6 @@ import com.njydsz.message.server.service.chain.SendContext;
 import com.njydsz.message.server.service.chain.SendHandler;
 import com.njydsz.message.server.service.config.PreferenceService;
 import com.njydsz.message.server.service.impl.DndService;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.annotation.Order;
-import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 /**
  * 用户偏好校验 Handler（DND 免打扰时段）。
@@ -93,7 +95,9 @@ public class PreferenceHandler implements SendHandler {
       if (deferSeconds > maxDeferSeconds) {
         log.info(
             "[Message] DND 延迟超过阈值,丢弃: receiver={} defer={}s max={}s",
-            SensitiveUtil.scanAndMask(receiver), deferSeconds, maxDeferSeconds);
+            SensitiveUtil.scanAndMask(receiver),
+            deferSeconds,
+            maxDeferSeconds);
         messageMetrics.recordSend(channel, "DND_DROPPED", 0);
         ctx.setErrorResult(MessageResult.fail(channel, "免打扰时段消息延迟过久,已丢弃"));
         return false;

@@ -2,11 +2,11 @@ package com.njydsz.common.audit.event;
 
 import java.time.LocalDateTime;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.transaction.event.TransactionalEventListener;
-import lombok.RequiredArgsConstructor;
 
 import com.njydsz.common.audit.core.AuditRecorder;
 import com.njydsz.common.audit.domain.AuditLog;
@@ -56,7 +56,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 @RequiredArgsConstructor
 public class AuditEventListener {
 
-  private static final Logger log = LoggerFactory.getLogger(AuditEventListener.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AuditEventListener.class);
 
   /** 内容字段最大长度（与数据库 VARCHAR(512) 对齐） */
   private static final int MAX_CONTENT_LENGTH = 512;
@@ -81,13 +81,13 @@ public class AuditEventListener {
     try {
       AuditLog auditLog = convertFromOperationLog(event);
       auditRecorder.record(auditLog);
-      log.debug(
+      LOG.debug(
           "[AuditEvent] 操作日志事件已消费: userId={}, module={}, action={}",
           event.getUserId(),
           event.getModule(),
           event.getAction());
     } catch (Exception e) {
-      log.error("[AuditEvent] 消费操作日志事件异常: reason={}", e.getMessage(), e);
+      LOG.error("[AuditEvent] 消费操作日志事件异常: reason={}", e.getMessage(), e);
     }
   }
 
@@ -107,13 +107,13 @@ public class AuditEventListener {
     try {
       AuditLog auditLog = convertFromDataExport(event);
       auditRecorder.record(auditLog);
-      log.debug(
+      LOG.debug(
           "[AuditEvent] 数据导出事件已消费: userId={}, module={}, rowCount={}",
           event.getUserId(),
           event.getExportModule(),
           event.getRowCount());
     } catch (Exception e) {
-      log.error("[AuditEvent] 消费数据导出事件异常: reason={}", e.getMessage(), e);
+      LOG.error("[AuditEvent] 消费数据导出事件异常: reason={}", e.getMessage(), e);
     }
   }
 
@@ -127,40 +127,40 @@ public class AuditEventListener {
     AuditLog auditLog = new AuditLog();
 
     // 基础标识
-    auditLog.setId(String.valueOf(snowflakeIdGenerator.nextId()));
-    auditLog.setOperationTime(LocalDateTime.now());
-    auditLog.setCreatedAt(LocalDateTime.now());
+    AUDIT_LOG.setId(String.valueOf(snowflakeIdGenerator.nextId()));
+    AUDIT_LOG.setOperationTime(LocalDateTime.now());
+    AUDIT_LOG.setCreatedAt(LocalDateTime.now());
 
     // 操作人信息
-    auditLog.setOperatorId(event.getUserId());
-    auditLog.setOperatorName(event.getUsername());
+    AUDIT_LOG.setOperatorId(event.getUserId());
+    AUDIT_LOG.setOperatorName(event.getUsername());
 
     // 模块与内容
-    auditLog.setModule(event.getModule());
-    auditLog.setContent(truncate(event.getRequestUrl(), MAX_CONTENT_LENGTH));
+    AUDIT_LOG.setModule(event.getModule());
+    AUDIT_LOG.setContent(truncate(event.getRequestUrl(), MAX_CONTENT_LENGTH));
 
     // 审计类型与行为（默认 OPERATION，action 存储语义字符串）
-    auditLog.setAuditType(AuditType.OPERATION.getCode());
-    auditLog.setAction(resolveActionCode(event.getAction()));
+    AUDIT_LOG.setAuditType(AuditType.OPERATION.getCode());
+    AUDIT_LOG.setAction(resolveActionCode(event.getAction()));
 
     // 业务关联
-    auditLog.setBusinessNo(event.getBizId());
+    AUDIT_LOG.setBusinessNo(event.getBizId());
 
     // 请求上下文
-    auditLog.setIpAddress(event.getClientIp());
-    auditLog.setRequestParams(event.getParamsJson());
-    auditLog.setResponseResult(event.getResponseJson());
+    AUDIT_LOG.setIpAddress(event.getClientIp());
+    AUDIT_LOG.setRequestParams(event.getParamsJson());
+    AUDIT_LOG.setResponseResult(event.getResponseJson());
 
     // 状态映射：SUCCESS → 1, FAILED/其他 → 0
-    auditLog.setStatus(
+    AUDIT_LOG.setStatus(
         isSuccess(event.getStatus())
             ? AuditStatus.SUCCESS.getCode()
             : AuditStatus.FAILURE.getCode());
 
-    auditLog.setErrorMessage(event.getErrorMessage());
-    auditLog.setCostTime(event.getCostMs());
-    auditLog.setTraceId(event.getTraceId());
-    auditLog.setTenantId(event.getTenantId());
+    AUDIT_LOG.setErrorMessage(event.getErrorMessage());
+    AUDIT_LOG.setCostTime(event.getCostMs());
+    AUDIT_LOG.setTraceId(event.getTraceId());
+    AUDIT_LOG.setTenantId(event.getTenantId());
 
     return auditLog;
   }
@@ -174,27 +174,27 @@ public class AuditEventListener {
   private AuditLog convertFromDataExport(DataExportAuditEvent event) {
     AuditLog auditLog = new AuditLog();
 
-    auditLog.setId(String.valueOf(snowflakeIdGenerator.nextId()));
-    auditLog.setOperationTime(LocalDateTime.now());
-    auditLog.setCreatedAt(LocalDateTime.now());
+    AUDIT_LOG.setId(String.valueOf(snowflakeIdGenerator.nextId()));
+    AUDIT_LOG.setOperationTime(LocalDateTime.now());
+    AUDIT_LOG.setCreatedAt(LocalDateTime.now());
 
-    auditLog.setOperatorId(event.getUserId());
-    auditLog.setOperatorName(event.getUsername());
+    AUDIT_LOG.setOperatorId(event.getUserId());
+    AUDIT_LOG.setOperatorName(event.getUsername());
 
-    auditLog.setModule(event.getExportModule());
-    auditLog.setContent(
+    AUDIT_LOG.setModule(event.getExportModule());
+    AUDIT_LOG.setContent(
         (event.getRowCount() != null)
             ? "导出[" + event.getExportModule() + "]共" + event.getRowCount() + "行数据"
             : "导出[" + event.getExportModule() + "]");
 
-    auditLog.setAuditType(AuditType.OPERATION.getCode());
-    auditLog.setAction(AuditAction.EXPORT.getCode());
-    auditLog.setBusinessNo(event.getBizId());
+    AUDIT_LOG.setAuditType(AuditType.OPERATION.getCode());
+    AUDIT_LOG.setAction(AuditAction.EXPORT.getCode());
+    AUDIT_LOG.setBusinessNo(event.getBizId());
 
-    auditLog.setIpAddress(event.getClientIp());
-    auditLog.setStatus(AuditStatus.SUCCESS.getCode());
-    auditLog.setTraceId(event.getTraceId());
-    auditLog.setTenantId(event.getTenantId());
+    AUDIT_LOG.setIpAddress(event.getClientIp());
+    AUDIT_LOG.setStatus(AuditStatus.SUCCESS.getCode());
+    AUDIT_LOG.setTraceId(event.getTraceId());
+    AUDIT_LOG.setTenantId(event.getTenantId());
 
     return auditLog;
   }

@@ -4,12 +4,12 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.ConcurrentHashMap;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 
 import com.njydsz.common.safe.ratelimit.enums.RateLimitResult;
 import com.njydsz.common.safe.ratelimit.model.RateLimitDecision;

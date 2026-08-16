@@ -1,10 +1,11 @@
 package com.njydsz.workflow.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.workflow.domain.entity.FlowThirdPartyAccount;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+
+import com.njydsz.workflow.domain.entity.FlowThirdPartyAccount;
 
 /**
  * 三方审批账号映射 Mapper

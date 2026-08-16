@@ -1,8 +1,9 @@
 package com.njydsz.message.server.service.config;
 
+import java.util.List;
+
 import com.njydsz.message.domain.dto.config.SubscriptionUpsertDTO;
 import com.njydsz.message.domain.entity.config.MsgSubscription;
-import java.util.List;
 
 /**
  * 订阅关系 Service

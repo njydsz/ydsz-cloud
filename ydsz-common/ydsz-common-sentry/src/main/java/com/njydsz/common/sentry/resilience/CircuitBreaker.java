@@ -4,9 +4,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import lombok.extern.slf4j.Slf4j;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 熔断降级保护器（基于 Resilience4j）。

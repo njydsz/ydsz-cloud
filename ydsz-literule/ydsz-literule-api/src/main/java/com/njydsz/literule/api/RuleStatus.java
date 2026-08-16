@@ -35,7 +35,7 @@ public enum RuleStatus {
   /** 已归档：规则已废弃，仅保留历史记录 */
   ARCHIVED("已归档");
 
-  private static final Logger log = LoggerFactory.getLogger(RuleStatus.class);
+  private static final Logger LOG = LoggerFactory.getLogger(RuleStatus.class);
 
   private final String desc;
 
@@ -61,7 +61,7 @@ public enum RuleStatus {
     try {
       return RuleStatus.valueOf(code.trim().toUpperCase());
     } catch (IllegalArgumentException e) {
-      log.warn("[RuleStatus] 枚举解析失败 code={}: {}", code, e.getMessage());
+      LOG.warn("[RuleStatus] 枚举解析失败 code={}: {}", code, e.getMessage());
       return null;
     }
   }

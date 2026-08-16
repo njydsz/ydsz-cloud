@@ -26,6 +26,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @SuppressWarnings("checkstyle:MagicNumber")
 public class LdapProperties {
 
+  /** 默认 LDAP 端口（标准 LDAP）。 */
+  private static final int DEFAULT_LDAP_PORT = 389;
+  /** 默认连接超时（毫秒）。 */
+  private static final int DEFAULT_CONNECT_TIMEOUT_MS = 5000;
+
   /** 是否启用 LDAP 认证 */
   private boolean enabled = false;
 
@@ -33,7 +38,7 @@ public class LdapProperties {
   private String host = "127.0.0.1";
 
   /** LDAP 端口 */
-  private int port = 389;
+  private int port = DEFAULT_LDAP_PORT;
 
   /** 域后缀（如 @ydszsoft） */
   private String domain = "";
@@ -42,7 +47,7 @@ public class LdapProperties {
   private String baseDn = "";
 
   /** 连接超时（毫秒） */
-  private int connectTimeoutMs = 5000;
+  private int connectTimeoutMs = DEFAULT_CONNECT_TIMEOUT_MS;
 
   /** 读取超时（毫秒） */
   private int readTimeoutMs = 10000;

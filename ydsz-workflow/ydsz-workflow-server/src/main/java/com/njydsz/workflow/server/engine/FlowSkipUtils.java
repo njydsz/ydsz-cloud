@@ -1,9 +1,11 @@
 package com.njydsz.workflow.server.engine;
 
+import java.util.Map;
+
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.entity.FlowSkip;
-import java.util.Map;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 流程跳转边（FlowSkip）工具类

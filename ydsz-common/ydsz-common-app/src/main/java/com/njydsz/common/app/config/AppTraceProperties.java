@@ -1,8 +1,8 @@
 package com.njydsz.common.app.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import com.njydsz.common.base.config.BaseTraceProperties;
 

@@ -28,7 +28,7 @@ import com.njydsz.common.util.id.IdGenerator;
  */
 public abstract class AbstractTransactionManager implements DistributedTransactionManager {
 
-  private static final Logger log = LoggerFactory.getLogger(AbstractTransactionManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AbstractTransactionManager.class);
 
   private final ObjectProvider<SeataMetrics> metricsProvider;
   private final ObjectProvider<TransactionAuditLogger> auditProvider;
@@ -146,7 +146,7 @@ public abstract class AbstractTransactionManager implements DistributedTransacti
     String xid = generateXid();
     XidContextHolder.setXid(xid);
     XidContextHolder.current().setStartTime(System.currentTimeMillis());
-    log.debug(
+    LOG.debug(
         "Transaction started: name={}, xid={}, type={}", transactionName, xid, getCurrentType());
     recordStart(transactionName, xid);
     return xid;

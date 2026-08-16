@@ -40,7 +40,7 @@ import com.njydsz.common.safe.alert.SecurityEvent;
  */
 public class SecurityAuditLogger {
 
-  private static final Logger auditLog = LoggerFactory.getLogger("SECURITY_AUDIT");
+  private static final Logger AUDIT_LOG = LoggerFactory.getLogger("SECURITY_AUDIT");
 
   /**
    * 解析当前链路 traceId：优先 {@link RequestContext}，回退 MDC 的 traceId / X-B3-TraceId。
@@ -85,7 +85,7 @@ public class SecurityAuditLogger {
             "userAgent", event.getUserAgent() != null ? event.getUserAgent() : "",
             "payload", event.getAttackPayload() != null ? event.getAttackPayload() : "");
 
-    auditLog.warn(YdszJson.toJson(logEntry));
+    AUDIT_LOG.warn(YdszJson.toJson(logEntry));
   }
 
   /**
@@ -109,6 +109,6 @@ public class SecurityAuditLogger {
       logEntry.put("details", details);
     }
 
-    auditLog.info(YdszJson.toJson(logEntry));
+    AUDIT_LOG.info(YdszJson.toJson(logEntry));
   }
 }

@@ -1,7 +1,7 @@
 package com.njydsz.system.infra.repository;
 
-import org.springframework.stereotype.Repository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Repository;
 
 import com.njydsz.system.infra.mapper.DictTypeMapper;
 

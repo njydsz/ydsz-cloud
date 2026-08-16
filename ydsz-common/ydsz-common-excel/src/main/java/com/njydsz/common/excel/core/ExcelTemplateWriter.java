@@ -46,7 +46,7 @@ import com.njydsz.common.excel.support.cache.ReflectCache;
  */
 public class ExcelTemplateWriter {
 
-  private static final Logger log = LoggerFactory.getLogger(ExcelTemplateWriter.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ExcelTemplateWriter.class);
 
   private final String templatePath;
   private final WriteMetadata metadata;
@@ -135,7 +135,7 @@ public class ExcelTemplateWriter {
             String dateFormat = getDateFormat(field);
             valueFormatter.setCellValueFast(cell, value, dateFormat);
           } catch (Exception e) {
-            log.warn("模板写入字段值异常", field.getName(), e);
+            LOG.warn("模板写入字段值异常", field.getName(), e);
             cell.setBlank();
           }
         }

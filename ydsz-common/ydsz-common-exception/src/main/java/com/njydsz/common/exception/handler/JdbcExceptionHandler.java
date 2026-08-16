@@ -3,6 +3,8 @@ package com.njydsz.common.exception.handler;
 import java.sql.BatchUpdateException;
 import java.sql.SQLException;
 
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.context.MessageSource;
@@ -13,8 +15,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import jakarta.servlet.http.HttpServletRequest;
-import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.exception.code.CoreExceptionCode;

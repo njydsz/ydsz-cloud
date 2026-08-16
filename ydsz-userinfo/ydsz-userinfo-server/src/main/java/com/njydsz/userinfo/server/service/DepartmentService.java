@@ -1,13 +1,14 @@
 package com.njydsz.userinfo.server.service;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
 import com.njydsz.userinfo.domain.dto.post.DepartmentPostDTO;
 import com.njydsz.userinfo.domain.dto.put.DepartmentPutDTO;
 import com.njydsz.userinfo.domain.entity.Department;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
 
 /**
  * 部门 Service 接口

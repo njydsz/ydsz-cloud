@@ -1,8 +1,8 @@
 package com.njydsz.common.auth.util;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import jakarta.servlet.http.HttpServletRequest;
 
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.auth.context.AuthInfoUtils;
@@ -26,7 +26,7 @@ import com.njydsz.common.util.string.StringUtils;
  */
 public class AccessTokenUtils {
 
-  private static final Logger log = LoggerFactory.getLogger(AccessTokenUtils.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AccessTokenUtils.class);
 
   private static final String BEARER_PREFIX = "Bearer ";
 
@@ -47,7 +47,7 @@ public class AccessTokenUtils {
 
     HttpServletRequest request = RequestContextUtils.getRequest();
     if (request == null) {
-      log.warn("HttpServletRequest 为空，无法获取 Token");
+      LOG.warn("HttpServletRequest 为空，无法获取 Token");
       return null;
     }
 

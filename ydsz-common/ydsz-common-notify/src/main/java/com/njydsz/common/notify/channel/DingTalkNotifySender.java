@@ -36,7 +36,7 @@ import com.njydsz.common.notify.template.TemplateEngine;
 @ConditionalOnProperty(prefix = "ydsz.notify.dingtalk", name = "webhook")
 public class DingTalkNotifySender implements NotifyChannelStrategy {
 
-  private static final Logger log = LoggerFactory.getLogger(DingTalkNotifySender.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DingTalkNotifySender.class);
 
   private static final String HMAC_SHA256_ALGORITHM = "HmacSHA256";
 
@@ -90,10 +90,10 @@ public class DingTalkNotifySender implements NotifyChannelStrategy {
       String response =
           restTemplate.postForObject(
               signedUrl, new HttpEntity<>(json, NotifyChannelStrategy.jsonHeaders()), String.class);
-      log.debug("钉钉通知发送成功: {}", title);
+      LOG.debug("钉钉通知发送成功: {}", title);
       return NotifySendResult.success(response, getChannel().getName());
     } catch (Exception e) {
-      log.error("钉钉通知发送失败: {}", e.getMessage(), e);
+      LOG.error("钉钉通知发送失败: {}", e.getMessage(), e);
       return NotifySendResult.failure(e.getMessage(), getChannel().getName());
     }
   }
@@ -121,7 +121,7 @@ public class DingTalkNotifySender implements NotifyChannelStrategy {
           URLEncoder.encode(Base64.getEncoder().encodeToString(signData), StandardCharsets.UTF_8);
       return url + (url.contains("?") ? "&" : "?") + "timestamp=" + timestamp + "&sign=" + sign;
     } catch (Exception e) {
-      log.error("钉钉 webhook 签名失败: {}", e.getMessage(), e);
+      LOG.error("钉钉 webhook 签名失败: {}", e.getMessage(), e);
       return url;
     }
   }

@@ -22,7 +22,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
  */
 public class NotifyPreferenceManager {
 
-  private static final Logger log = LoggerFactory.getLogger(NotifyPreferenceManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(NotifyPreferenceManager.class);
 
   private static final String REDIS_KEY_PREFIX = "notify:preference:";
   private static final Duration CACHE_TTL = Duration.ofHours(24);
@@ -64,7 +64,7 @@ public class NotifyPreferenceManager {
           return pref;
         }
       } catch (Exception e) {
-        log.debug("[NotifyPreferenceManager] Redis 查询偏好失败: {}", e.getMessage());
+        LOG.debug("[NotifyPreferenceManager] Redis 查询偏好失败: {}", e.getMessage());
       }
     }
     // 返回默认配置
@@ -88,7 +88,7 @@ public class NotifyPreferenceManager {
         String json = YdszJson.toJson(preference);
         redisStringOps.set(REDIS_KEY_PREFIX + preference.getUserId(), json, CACHE_TTL);
       } catch (Exception e) {
-        log.warn("[NotifyPreferenceManager] Redis 保存偏好失败: {}", e.getMessage());
+        LOG.warn("[NotifyPreferenceManager] Redis 保存偏好失败: {}", e.getMessage());
       }
     }
   }
@@ -104,7 +104,7 @@ public class NotifyPreferenceManager {
   public boolean isAllowed(String userId, NotifyChannel channel, NotifyType type) {
     NotifyPreference pref = getPreference(userId);
     if (pref.isDoNotDisturb()) {
-      log.debug("[NotifyPreferenceManager] 用户[{}]在免打扰时段", userId);
+      LOG.debug("[NotifyPreferenceManager] 用户[{}]在免打扰时段", userId);
       return false;
     }
     return pref.isAllowed(channel, type);

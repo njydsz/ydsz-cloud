@@ -24,7 +24,7 @@ import com.njydsz.common.notify.enums.NotifyChannel;
  */
 public class AsyncNotifyService {
 
-  private static final Logger log = LoggerFactory.getLogger(AsyncNotifyService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AsyncNotifyService.class);
 
   private final ExecutorService executor;
   private final NotifyService notifyService;
@@ -77,7 +77,7 @@ public class AsyncNotifyService {
             executor)
         .exceptionally(
             ex -> {
-              log.error(
+              LOG.error(
                   "[AsyncNotify] 异步发送异常, channel={}, receiver={}: {}",
                   channel.getName(),
                   receiver,
@@ -103,7 +103,7 @@ public class AsyncNotifyService {
             executor)
         .exceptionally(
             ex -> {
-              log.error(
+              LOG.error(
                   "[AsyncNotify] 异步发送异常, channel={}, receiver={}: {}",
                   request.getChannel().getName(),
                   request.getReceiver(),
@@ -146,7 +146,7 @@ public class AsyncNotifyService {
             executor)
         .exceptionally(
             ex -> {
-              log.error("[AsyncNotify] 异步批量发送异常: {}", ex.getMessage(), ex);
+              LOG.error("[AsyncNotify] 异步批量发送异常: {}", ex.getMessage(), ex);
               return NotifySendResult.failure("异步批量发送异常: " + ex.getMessage(), channel.getName());
             });
   }
@@ -158,7 +158,7 @@ public class AsyncNotifyService {
       NotifySendResult result = notifyService.send(channel, receiver, title, content);
       if (!result.isSuccess() && retryQueue != null) {
         retryQueue.offer(channel, receiver, title, content, result.getErrorMessage());
-        log.warn(
+        LOG.warn(
             "[AsyncNotify] 发送失败，已加入重试队列: channel={}, receiver={}, error={}",
             channel.getName(),
             receiver,
@@ -166,7 +166,7 @@ public class AsyncNotifyService {
       }
       return result;
     } catch (Exception e) {
-      log.error(
+      LOG.error(
           "[AsyncNotify] 发送异常: channel={}, receiver={}, error={}",
           channel.getName(),
           receiver,
@@ -191,7 +191,7 @@ public class AsyncNotifyService {
             request.getTitle() != null ? request.getTitle() : "",
             request.getContent() != null ? request.getContent() : "",
             error);
-        log.warn(
+        LOG.warn(
             "[AsyncNotify] 请求发送失败，已加入重试队列: channel={}, receiver={}, error={}",
             request.getChannel().getName(),
             request.getReceiver(),
@@ -199,7 +199,7 @@ public class AsyncNotifyService {
       }
       return result;
     } catch (Exception e) {
-      log.error(
+      LOG.error(
           "[AsyncNotify] 请求发送异常: channel={}, receiver={}, error={}",
           request.getChannel().getName(),
           request.getReceiver(),

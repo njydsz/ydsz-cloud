@@ -1,10 +1,5 @@
 package com.njydsz.nextwiki.server.service;
 
-import com.njydsz.common.file.storage.IFileStorage;
-import com.njydsz.common.file.storage.IFileStorageProvider;
-import com.njydsz.nextwiki.domain.entity.FileNode;
-import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
-import com.njydsz.nextwiki.server.config.NextwikiProperties;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
@@ -16,12 +11,19 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Set;
 import javax.imageio.ImageIO;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import com.njydsz.common.file.storage.IFileStorage;
+import com.njydsz.common.file.storage.IFileStorageProvider;
+import com.njydsz.nextwiki.domain.entity.FileNode;
+import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
+import com.njydsz.nextwiki.server.config.NextwikiProperties;
 
 /**
  * 缩略图服务。

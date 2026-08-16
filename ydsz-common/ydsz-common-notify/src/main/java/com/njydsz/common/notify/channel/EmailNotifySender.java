@@ -9,6 +9,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.regex.Pattern;
 
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.InternetHeaders;
+import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -21,9 +24,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.InternetHeaders;
-import jakarta.mail.internet.MimeMessage;
 
 import com.njydsz.common.notify.config.NotifyProperties;
 import com.njydsz.common.notify.core.NotifySendResult;
@@ -69,7 +69,7 @@ import com.njydsz.common.util.id.SnowflakeIdGenerator;
 @ConditionalOnProperty(prefix = "ydsz.notify.email", name = "enabled", havingValue = "true")
 public class EmailNotifySender implements NotifyChannelStrategy {
 
-  private static final Logger log = LoggerFactory.getLogger(EmailNotifySender.class);
+  private static final Logger LOG = LoggerFactory.getLogger(EmailNotifySender.class);
 
   /** 邮箱地址格式正则 */
   private static final Pattern EMAIL_PATTERN =
@@ -174,10 +174,10 @@ public class EmailNotifySender implements NotifyChannelStrategy {
       }
 
       success = true;
-      log.debug("邮件通知发送成功: to={}, subject={}", receiver, subject);
+      LOG.debug("邮件通知发送成功: to={}, subject={}", receiver, subject);
       return NotifySendResult.success("email-sent", getChannel().getName());
     } catch (Exception e) {
-      log.error("邮件通知发送失败: to={}, subject={}, error={}", receiver, title, e.getMessage(), e);
+      LOG.error("邮件通知发送失败: to={}, subject={}, error={}", receiver, title, e.getMessage(), e);
       recordFailure(e);
       return NotifySendResult.failure(e.getMessage(), getChannel().getName());
     } finally {
@@ -210,7 +210,7 @@ public class EmailNotifySender implements NotifyChannelStrategy {
           params.containsKey("subject") ? String.valueOf(params.get("subject")) : templateCode;
       return send(receiver, title, content);
     } catch (Exception e) {
-      log.error(
+      LOG.error(
           "邮件模板通知发送失败: to={}, template={}, error={}", receiver, templateCode, e.getMessage(), e);
       return NotifySendResult.failure(e.getMessage(), getChannel().getName());
     }
@@ -300,7 +300,7 @@ public class EmailNotifySender implements NotifyChannelStrategy {
           message);
 
       success = true;
-      log.debug(
+      LOG.debug(
           "高级邮件发送成功: to={}, subject={}, attachments={}, inlineResources={}",
           message.getTo(),
           subject,
@@ -308,7 +308,7 @@ public class EmailNotifySender implements NotifyChannelStrategy {
           message.getInlineResources() != null ? message.getInlineResources().size() : 0);
       return NotifySendResult.success(messageId, getChannel().getName());
     } catch (Exception e) {
-      log.error(
+      LOG.error(
           "高级邮件发送失败: to={}, subject={}, error={}",
           message.getTo(),
           message.getSubject(),
@@ -391,7 +391,7 @@ public class EmailNotifySender implements NotifyChannelStrategy {
     if (emailConfig().getSecurity() != null && emailConfig().getSecurity().isSanitizeHtml()) {
       String sanitized = EmailContentSanitizer.sanitize(content);
       if (!sanitized.equals(content)) {
-        log.debug("HTML 邮件内容已清洗 XSS");
+        LOG.debug("HTML 邮件内容已清洗 XSS");
       }
       return sanitized;
     }

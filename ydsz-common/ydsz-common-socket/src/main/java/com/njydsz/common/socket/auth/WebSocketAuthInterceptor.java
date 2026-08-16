@@ -3,6 +3,8 @@ package com.njydsz.common.socket.auth;
 import java.util.List;
 import java.util.Map;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
@@ -10,8 +12,6 @@ import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.util.StringUtils;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.token.TokenService;

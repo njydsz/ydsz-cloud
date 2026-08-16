@@ -1,15 +1,16 @@
 package com.njydsz.message.server.service.chain.handler;
 
-import com.njydsz.common.feign.MessageRequest;
-import com.njydsz.message.domain.entity.canary.MsgCanary;
-import com.njydsz.message.server.service.canary.CanaryService;
-import com.njydsz.message.server.service.chain.SendContext;
-import com.njydsz.message.server.service.chain.SendHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+
+import com.njydsz.common.feign.MessageRequest;
+import com.njydsz.message.domain.entity.canary.MsgCanary;
+import com.njydsz.message.server.service.canary.CanaryService;
+import com.njydsz.message.server.service.chain.SendContext;
+import com.njydsz.message.server.service.chain.SendHandler;
 
 /**
  * 灰度命中差异化处理 Handler。

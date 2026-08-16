@@ -1,18 +1,20 @@
 package com.njydsz.message.server.config;
 
-import com.njydsz.common.notify.channel.NotifyChannelStrategy;
-import com.njydsz.common.notify.enums.NotifyChannel;
-import com.njydsz.message.server.channel.MessageChannel;
-import com.njydsz.message.server.channel.NotifyChannelStrategyAdapter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.ListableBeanFactory;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Configuration;
+
+import com.njydsz.common.notify.channel.NotifyChannelStrategy;
+import com.njydsz.common.notify.enums.NotifyChannel;
+import com.njydsz.message.server.channel.MessageChannel;
+import com.njydsz.message.server.channel.NotifyChannelStrategyAdapter;
 
 /**
  * 通道桥接自动配置。

@@ -1,12 +1,5 @@
 package com.njydsz.literule.server.impl;
 
-import com.njydsz.literule.api.DecisionTableDefinition;
-import com.njydsz.literule.api.HitPolicy;
-import com.njydsz.literule.api.Rule;
-import com.njydsz.literule.api.RuleContext;
-import com.njydsz.literule.api.RuleResult;
-import com.njydsz.literule.api.RuleSeverity;
-import com.njydsz.literule.api.expression.ExpressionEngine;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -17,7 +10,16 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.literule.api.DecisionTableDefinition;
+import com.njydsz.literule.api.HitPolicy;
+import com.njydsz.literule.api.Rule;
+import com.njydsz.literule.api.RuleContext;
+import com.njydsz.literule.api.RuleResult;
+import com.njydsz.literule.api.RuleSeverity;
+import com.njydsz.literule.api.expression.ExpressionEngine;
 
 /**
  * 决策表规则：基于 DMN 风格的表格进行多条件匹配

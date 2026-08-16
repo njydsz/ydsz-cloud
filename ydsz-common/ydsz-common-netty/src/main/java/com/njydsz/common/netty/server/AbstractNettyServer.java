@@ -3,7 +3,6 @@ package com.njydsz.common.netty.server;
 import java.net.BindException;
 import java.net.InetSocketAddress;
 
-import lombok.extern.slf4j.Slf4j;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.ByteBufAllocator;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -21,6 +20,7 @@ import io.netty.handler.traffic.ChannelTrafficShapingHandler;
 import io.netty.handler.traffic.GlobalTrafficShapingHandler;
 import io.netty.util.internal.logging.InternalLoggerFactory;
 import io.netty.util.internal.logging.Slf4JLoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import com.njydsz.common.netty.config.NettyProperties;
 import com.njydsz.common.netty.event.ChannelEventDispatcher;

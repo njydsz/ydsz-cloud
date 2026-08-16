@@ -2,10 +2,10 @@ package com.njydsz.common.safe.ratelimit.decorator;
 
 import java.time.Instant;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.safe.ratelimit.model.RateLimitDecision;
 
@@ -39,7 +39,7 @@ import com.njydsz.common.safe.ratelimit.model.RateLimitDecision;
  */
 public class RateLimitResponseDecorator {
 
-  private static final Logger log = LoggerFactory.getLogger(RateLimitResponseDecorator.class);
+  private static final Logger LOG = LoggerFactory.getLogger(RateLimitResponseDecorator.class);
 
   /**
    * 为限流拒绝响应添加标准化头部
@@ -78,7 +78,7 @@ public class RateLimitResponseDecorator {
 
     } catch (Exception e) {
       // 头部设置失败不应影响主流程
-      log.debug("设置限流响应头失败: {}", e.getMessage());
+      LOG.debug("设置限流响应头失败: {}", e.getMessage());
     }
   }
 
@@ -102,7 +102,7 @@ public class RateLimitResponseDecorator {
             "X-RateLimit-Remaining", String.valueOf(Math.max(0, decision.getRemaining())));
       }
     } catch (Exception e) {
-      log.debug("设置限流通过响应头失败: {}", e.getMessage());
+      LOG.debug("设置限流通过响应头失败: {}", e.getMessage());
     }
   }
 }

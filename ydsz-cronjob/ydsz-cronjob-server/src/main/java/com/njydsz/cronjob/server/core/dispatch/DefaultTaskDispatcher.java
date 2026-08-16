@@ -1,6 +1,48 @@
 package com.njydsz.cronjob.server.core.dispatch;
 
+import java.lang.management.ManagementFactory;
+import java.net.InetAddress;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TimeZone;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.PriorityBlockingQueue;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+
+import com.alibaba.ttl.TtlRunnable;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.scheduling.TriggerContext;
+import org.springframework.scheduling.support.CronTrigger;
+import org.springframework.scheduling.support.SimpleTriggerContext;
+
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
@@ -41,45 +83,6 @@ import com.njydsz.cronjob.server.core.sharding.ShardingStrategy;
 import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 import com.njydsz.cronjob.server.service.job.TenantQuotaService;
 import com.njydsz.cronjob.server.service.log.JobLogContentService;
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
-import java.lang.management.ManagementFactory;
-import java.net.InetAddress;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.TimeZone;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.PriorityBlockingQueue;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.scheduling.TriggerContext;
-import org.springframework.scheduling.support.CronTrigger;
-import org.springframework.scheduling.support.SimpleTriggerContext;
 
 /**
  * 默认任务派发器：本地执行 + 分布式锁。
@@ -379,7 +382,9 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
                       e);
                 }
               });
-      executor.execute(priorityTask);
+      // P0-FIX: TTL 线程池传播，确保 JobExecutionContext 从调度线程传递到工作线程
+      Runnable ttlTask = TtlRunnable.get(priorityTask);
+      executor.execute(ttlTask);
       if (finalExecutor instanceof ThreadPoolExecutor tpe) {
         log.debug(
             "[Dispatcher] 任务异步派发: key={} triggerType={} pool={} active={} queue={}",
@@ -1910,8 +1915,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
   /**
    * P1-A2: 将本地创建的线程池注册到 {@link CronjobThreadPoolRegistry}。
    *
-   * <p>仅在注册表可用时执行（standalone 模式下可能未注册该 Bean）。
-   * 注册后 ThreadPoolHotUpdateListener 可直接通过注册表获取线程池引用，
+   * <p>仅在注册表可用时执行（standalone 模式下可能未注册该 Bean）。 注册后 ThreadPoolHotUpdateListener 可直接通过注册表获取线程池引用，
    * 消除反射耦合。
    */
   private void registerPoolsToRegistry() {
@@ -1925,9 +1929,10 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     if (retryScheduler instanceof ThreadPoolExecutor threadedPool) {
       registry.register(CronjobThreadPoolRegistry.RETRY_SCHEDULER, threadedPool);
     }
-    log.info("[ThreadPoolRegistry] 线程池已注册到注册表: global={} retry={}",
-            CronjobThreadPoolRegistry.GLOBAL_EXECUTOR,
-            CronjobThreadPoolRegistry.RETRY_SCHEDULER);
+    log.info(
+        "[ThreadPoolRegistry] 线程池已注册到注册表: global={} retry={}",
+        CronjobThreadPoolRegistry.GLOBAL_EXECUTOR,
+        CronjobThreadPoolRegistry.RETRY_SCHEDULER);
   }
 
   @PreDestroy

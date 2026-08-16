@@ -35,7 +35,7 @@ import com.njydsz.common.safe.config.IpAccessProperties;
  */
 public class IpAccessService {
 
-  private static final Logger log = LoggerFactory.getLogger(IpAccessService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(IpAccessService.class);
 
   private static final String BLACKLIST_SUFFIX = "blacklist";
   private static final String WHITELIST_SUFFIX = "whitelist";
@@ -65,7 +65,7 @@ public class IpAccessService {
     loadStaticList(properties.getStaticBlacklist(), staticBlacklistCidrs);
     loadStaticList(properties.getStaticWhitelist(), staticWhitelistCidrs);
 
-    log.info(
+    LOG.info(
         "IP 访问控制服务初始化: mode={}, staticBlacklist={}, staticWhitelist={}",
         properties.getMode(),
         staticBlacklistCidrs.size(),
@@ -124,7 +124,7 @@ public class IpAccessService {
     redisStringOps.set(
         key, "1", blockSeconds > 0 ? blockSeconds : properties.getDefaultBlockSeconds());
     blacklistCache.put(ip, true);
-    log.info(
+    LOG.info(
         "IP {} 已加入黑名单，封禁 {} 秒",
         ip,
         blockSeconds > 0 ? blockSeconds : properties.getDefaultBlockSeconds());
@@ -151,7 +151,7 @@ public class IpAccessService {
     String key = properties.getRedisKeyPrefix() + BLACKLIST_SUFFIX + ":" + ip;
     redisStringOps.del(key);
     blacklistCache.invalidate(ip);
-    log.info("IP {} 已从黑名单移除", ip);
+    LOG.info("IP {} 已从黑名单移除", ip);
   }
 
   /**
@@ -165,7 +165,7 @@ public class IpAccessService {
     }
     String key = properties.getRedisKeyPrefix() + WHITELIST_SUFFIX + ":" + ip;
     redisStringOps.set(key, "1");
-    log.info("IP {} 已加入白名单", ip);
+    LOG.info("IP {} 已加入白名单", ip);
   }
 
   /**
@@ -179,7 +179,7 @@ public class IpAccessService {
     }
     String key = properties.getRedisKeyPrefix() + WHITELIST_SUFFIX + ":" + ip;
     redisStringOps.del(key);
-    log.info("IP {} 已从白名单移除", ip);
+    LOG.info("IP {} 已从白名单移除", ip);
   }
 
   private boolean isInRedisBlacklist(String ip) {
@@ -210,7 +210,7 @@ public class IpAccessService {
       try {
         target.add(new CidrBlock(trimmed));
       } catch (Exception e) {
-        log.warn("无法解析 CIDR 规则: {} - {}", trimmed, e.getMessage());
+        LOG.warn("无法解析 CIDR 规则: {} - {}", trimmed, e.getMessage());
       }
     }
   }

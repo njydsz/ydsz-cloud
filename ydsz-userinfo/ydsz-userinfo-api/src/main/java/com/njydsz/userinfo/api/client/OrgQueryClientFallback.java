@@ -3,8 +3,8 @@ package com.njydsz.userinfo.api.client;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.feign.FeignClientConstants;

@@ -1,7 +1,8 @@
 package com.njydsz.userinfo.server.service;
 
-import com.njydsz.userinfo.domain.entity.UserPost;
 import java.util.List;
+
+import com.njydsz.userinfo.domain.entity.UserPost;
 
 /**
  * 用户-岗位 Service 接口

@@ -2,6 +2,7 @@ package com.njydsz.literule.domain.vo;
 
 import java.time.Duration;
 import java.util.List;
+
 import lombok.Data;
 
 /**

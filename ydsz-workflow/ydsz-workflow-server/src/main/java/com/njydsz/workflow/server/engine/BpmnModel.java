@@ -1,9 +1,10 @@
 package com.njydsz.workflow.server.engine;
 
-import com.njydsz.workflow.domain.entity.FlowNode;
-import com.njydsz.workflow.domain.entity.FlowSkip;
 import java.util.List;
 import java.util.Map;
+
+import com.njydsz.workflow.domain.entity.FlowNode;
+import com.njydsz.workflow.domain.entity.FlowSkip;
 
 /**
  * BPMN 2.0 解析结果

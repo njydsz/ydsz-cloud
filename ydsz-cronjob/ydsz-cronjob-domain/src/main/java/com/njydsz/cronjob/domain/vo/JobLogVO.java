@@ -3,12 +3,13 @@ package com.njydsz.cronjob.domain.vo;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+
 import lombok.Data;
 
 /**
  * JobLog 视图对象。
  *
- * <p>用于 Controller 层返回任务执行日志数据，对应实体 {@link com.njydsz.cronjob.domain.entity.log.JobLog}。
+ * <p>用于 Controller 层返回任务执行日志数据，对应实体 {@link com.njydsz.cronjob.domain.entity.LOG.JobLog}。
  *
  * @author ydsz-team
  * @since 1.0.0

@@ -1,10 +1,12 @@
 package com.njydsz.literule.api.dto;
 
-import com.njydsz.literule.api.RuleDefinition;
+import java.util.Map;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
-import java.util.Map;
 import lombok.Data;
+
+import com.njydsz.literule.api.RuleDefinition;
 
 /**
  * 规则 A/B 测试请求体 DTO

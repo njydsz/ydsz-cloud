@@ -6,10 +6,10 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * SQL 审计 JSON 格式日志输出器
@@ -43,6 +43,9 @@ import lombok.NoArgsConstructor;
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class SqlAuditJsonLogger {
+
+  private SqlAuditJsonLogger() {}
+
 
   /** 审计 JSON 日志专用 Logger，可独立配置 appender */
   private static final Logger AUDIT_JSON_LOG = LoggerFactory.getLogger("sql.audit.json");

@@ -4,16 +4,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.web.filter.OncePerRequestFilter;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 
 import com.njydsz.common.safe.alert.SecurityEvent;
 import com.njydsz.common.safe.alert.SecurityEventPublisher;
@@ -38,7 +38,7 @@ import com.njydsz.common.util.http.UrlPathUtils;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class IpAccessFilter extends OncePerRequestFilter {
 
-  private static final Logger log = LoggerFactory.getLogger(IpAccessFilter.class);
+  private static final Logger LOG = LoggerFactory.getLogger(IpAccessFilter.class);
 
   private final IpAccessService ipAccessService;
   private final SecurityEventPublisher eventPublisher;
@@ -74,7 +74,7 @@ public class IpAccessFilter extends OncePerRequestFilter {
 
     try {
       if (!ipAccessService.isAllowed(clientIp)) {
-        log.warn("【IP访问控制】IP 被拒绝 | ip={}, uri={}", clientIp, request.getRequestURI());
+        LOG.warn("【IP访问控制】IP 被拒绝 | ip={}, uri={}", clientIp, request.getRequestURI());
 
         if (eventPublisher != null) {
           SecurityEvent event =
@@ -94,7 +94,7 @@ public class IpAccessFilter extends OncePerRequestFilter {
         return;
       }
     } catch (Exception e) {
-      log.warn("【IP访问控制】检查异常，放行请求 | ip={}, error={}", clientIp, e.getMessage());
+      LOG.warn("【IP访问控制】检查异常，放行请求 | ip={}, error={}", clientIp, e.getMessage());
     }
 
     filterChain.doFilter(request, response);

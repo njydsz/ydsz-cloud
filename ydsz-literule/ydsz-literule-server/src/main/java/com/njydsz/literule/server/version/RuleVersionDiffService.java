@@ -1,11 +1,13 @@
 package com.njydsz.literule.server.version;
 
-import com.njydsz.literule.api.RuleDefinition;
-import com.njydsz.literule.api.RuleSeverity;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
 import lombok.extern.slf4j.Slf4j;
+
+import com.njydsz.literule.api.RuleDefinition;
+import com.njydsz.literule.api.RuleSeverity;
 
 /**
  * 规则版本 Diff 服务

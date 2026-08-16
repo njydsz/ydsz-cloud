@@ -3,6 +3,11 @@ package com.njydsz.system.web.controller;
 import java.util.List;
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -12,11 +17,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.tags.Tag;
 
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
@@ -93,8 +93,10 @@ public class DictItemController {
       @Parameter(description = "字典类型编码过滤") @RequestParam(required = false) String typeCode,
       @Parameter(description = "字典项编码模糊搜索") @RequestParam(required = false) String itemCode,
       @Parameter(description = "状态") @RequestParam(required = false) String status) {
+    // pageSize 服务端硬上限截断，防止深度分页 OOM
+    int safePageSize = Math.min(pageSize, MAX_PAGE_SIZE);
     PageResponse<List<DictItemVO>> page =
-        service.page(pageNum, pageSize, typeCode, itemCode, status);
+        service.page(pageNum, safePageSize, typeCode, itemCode, status);
     return PageResponse.success(
         page.getTotal(), page.getPageNum(), page.getPageSize(), page.getData());
   }
@@ -266,4 +268,7 @@ public class DictItemController {
       @Valid @RequestBody DictItemBatchDTO batchDTO) {
     return BaseResponse.success(batchService.batchSave(batchDTO.getItems()));
   }
+
+  /** 分页安全上限：防止 pageSize=999999 导致深度分页 OOM */
+  private static final int MAX_PAGE_SIZE = 500;
 }

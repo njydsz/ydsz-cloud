@@ -79,7 +79,7 @@ import com.njydsz.common.excel.support.cache.ReflectCache;
  */
 public class ExcelWriter {
 
-  private static final Logger log = LoggerFactory.getLogger(ExcelWriter.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ExcelWriter.class);
 
   /** 写入配置元数据 */
   private final WriteMetadata metadata;
@@ -251,7 +251,7 @@ public class ExcelWriter {
     ExcelConfig config = metadata.getExcelConfig();
     if (config != null) {
       // 不可变配置，仅记录日志提醒
-      log.warn("ExcelConfig 为不可变对象，use1904Windowing 设置应在构建配置时完成");
+      LOG.warn("ExcelConfig 为不可变对象，use1904Windowing 设置应在构建配置时完成");
     }
     return this;
   }
@@ -589,7 +589,7 @@ public class ExcelWriter {
           true);
 
     } catch (Exception e) {
-      log.error("Excel写入异常", e);
+      LOG.error("Excel写入异常", e);
       ExcelMetrics.recordWrite(
           Duration.ofNanos(System.nanoTime() - startTime),
           rowCount,
@@ -647,7 +647,7 @@ public class ExcelWriter {
       try {
         cb.afterWorkbookCreate(workbook, sheet);
       } catch (Exception e) {
-        log.warn("WriteLifecycleHandler.afterWorkbookCreate 异常，跳过", e);
+        LOG.warn("WriteLifecycleHandler.afterWorkbookCreate 异常，跳过", e);
       }
     }
   }
@@ -660,7 +660,7 @@ public class ExcelWriter {
       try {
         cb.afterSheetCreate(sheet);
       } catch (Exception e) {
-        log.warn("WriteLifecycleHandler.afterSheetCreate 异常，跳过", e);
+        LOG.warn("WriteLifecycleHandler.afterSheetCreate 异常，跳过", e);
       }
     }
   }
@@ -673,7 +673,7 @@ public class ExcelWriter {
       try {
         cb.afterHeaderWrite(sheet, headerRow);
       } catch (Exception e) {
-        log.warn("WriteLifecycleHandler.afterHeaderWrite 异常，跳过", e);
+        LOG.warn("WriteLifecycleHandler.afterHeaderWrite 异常，跳过", e);
       }
     }
   }
@@ -686,7 +686,7 @@ public class ExcelWriter {
       try {
         cb.afterRowWrite(row, rowData, rowIndex);
       } catch (Exception e) {
-        log.warn("WriteLifecycleHandler.afterRowWrite 异常，跳过", e);
+        LOG.warn("WriteLifecycleHandler.afterRowWrite 异常，跳过", e);
       }
     }
   }
@@ -699,7 +699,7 @@ public class ExcelWriter {
       try {
         cb.afterCellWrite(cell, value, row, col);
       } catch (Exception e) {
-        log.warn("WriteLifecycleHandler.afterCellWrite 异常，跳过", e);
+        LOG.warn("WriteLifecycleHandler.afterCellWrite 异常，跳过", e);
       }
     }
   }
@@ -712,7 +712,7 @@ public class ExcelWriter {
       try {
         cb.beforeWorkbookFlush(workbook);
       } catch (Exception e) {
-        log.warn("WriteLifecycleHandler.beforeWorkbookFlush 异常，跳过", e);
+        LOG.warn("WriteLifecycleHandler.beforeWorkbookFlush 异常，跳过", e);
       }
     }
   }
@@ -1068,7 +1068,7 @@ public class ExcelWriter {
           valueFormatter.setCellValueFast(cell, value, property.getDateFormat());
           dispatchAfterCellWrite(cell, value, currentRowNum, colIndex);
         } catch (Exception e) {
-          log.warn("获取字段值异常", e);
+          LOG.warn("获取字段值异常", e);
           cell.setBlank();
         }
       }
@@ -1107,7 +1107,7 @@ public class ExcelWriter {
           ultraFastCellWriter.writeFast(cell, value, precomputedProps.getDateFormat(i));
           dispatchAfterCellWrite(cell, value, currentRowNum, i);
         } catch (Exception e) {
-          log.warn("获取字段值异常", e);
+          LOG.warn("获取字段值异常", e);
           cell.setBlank();
         }
       }
@@ -1163,7 +1163,7 @@ public class ExcelWriter {
             ultraFastCellWriter.writeFast(cell, value, prop.dateFormat);
           }
         } catch (Exception e) {
-          log.warn("写入第{}行第{}列异常", rowNum + 1, j, e);
+          LOG.warn("写入第{}行第{}列异常", rowNum + 1, j, e);
           cell.setBlank();
         }
       }

@@ -52,7 +52,7 @@ import com.njydsz.common.config.hotreload.ConfigChangeListener;
 @EnableConfigurationProperties(ConfigProperties.class)
 public class ConfigAutoConfiguration {
 
-  private static final Logger log = LoggerFactory.getLogger(ConfigAutoConfiguration.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ConfigAutoConfiguration.class);
 
   /**
    * 配置变更桥接器
@@ -81,7 +81,7 @@ public class ConfigAutoConfiguration {
       ObjectProvider<List<ConfigChangeListener>> listenersProvider) {
 
     List<ConfigChangeListener> listeners = listenersProvider.getIfAvailable(List::of);
-    log.info("[Config] 配置变更桥接已启用，监听器数量: {}", listeners.size());
+    LOG.info("[Config] 配置变更桥接已启用，监听器数量: {}", listeners.size());
 
     return new ConfigChangeBridge(
         environment,
@@ -110,7 +110,7 @@ public class ConfigAutoConfiguration {
   public ConfigEncryptHealthIndicator configEncryptHealthIndicator(
       ConfigurableEnvironment environment, ConfigProperties configProperties) {
     long cacheTtlMs = configProperties.getHealth().getCacheTtlMs();
-    log.info("[Config] 配置加密健康检查已启用，cacheTtlMs={}", cacheTtlMs);
+    LOG.info("[Config] 配置加密健康检查已启用，cacheTtlMs={}", cacheTtlMs);
     return new ConfigEncryptHealthIndicator(environment, cacheTtlMs);
   }
 }

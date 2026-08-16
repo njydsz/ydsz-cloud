@@ -1,7 +1,8 @@
 package com.njydsz.message.server.service.canary;
 
-import com.njydsz.message.domain.dto.canary.CanaryReportVO;
 import java.time.LocalDateTime;
+
+import com.njydsz.message.domain.dto.canary.CanaryReportVO;
 
 /**
  * 灰度报告服务接口。

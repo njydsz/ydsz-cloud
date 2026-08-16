@@ -50,7 +50,7 @@ import org.springframework.context.event.ContextClosedEvent;
     matchIfMissing = true)
 public class WebGracefulShutdownAutoConfiguration {
 
-  private static final Logger log =
+  private static final Logger LOG =
       LoggerFactory.getLogger(WebGracefulShutdownAutoConfiguration.class);
 
   /**
@@ -91,16 +91,16 @@ public class WebGracefulShutdownAutoConfiguration {
               .getApplicationContext()
               .getEnvironment()
               .getProperty("server.servlet.context-path", "/");
-      log.info("[Shutdown] Web 服务已就绪 | port={} | contextPath={}", port, contextPath);
+      LOG.info("[Shutdown] Web 服务已就绪 | port={} | contextPath={}", port, contextPath);
     }
 
     private void handleContextClosed() {
-      log.info(
+      LOG.info(
           "[Shutdown] 应用上下文开始关闭，等待在飞请求完成" + "（受 spring.lifecycle.timeout-per-shutdown-phase 限制）");
     }
 
     private void handleApplicationFailed(ApplicationFailedEvent event) {
-      log.error("[Shutdown] 应用启动失败", event.getException());
+      LOG.error("[Shutdown] 应用启动失败", event.getException());
     }
   }
 }

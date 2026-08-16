@@ -14,7 +14,7 @@ import java.util.List;
  * <pre>
  * ValidationResult result = ValidationResult.success();
  * if (!result.isSuccess()) {
- *     log.error("JSON Schema 校验失败：{}", result.getErrors());
+ *     LOG.error("JSON Schema 校验失败：{}", result.getErrors());
  * }
  * </pre>
  *

@@ -1,7 +1,8 @@
 package com.njydsz.nextwiki.domain.repository;
 
-import com.njydsz.nextwiki.domain.entity.FileComment;
 import java.util.List;
+
+import com.njydsz.nextwiki.domain.entity.FileComment;
 
 /**
  * 文件评论仓储接口（P1-5）

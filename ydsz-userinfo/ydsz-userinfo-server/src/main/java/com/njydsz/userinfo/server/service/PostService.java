@@ -1,11 +1,12 @@
 package com.njydsz.userinfo.server.service;
 
-import com.njydsz.userinfo.domain.dto.post.PostPostDTO;
-import com.njydsz.userinfo.domain.dto.put.PostPutDTO;
-import com.njydsz.userinfo.domain.vo.PostVO;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+
+import com.njydsz.userinfo.domain.dto.post.PostPostDTO;
+import com.njydsz.userinfo.domain.dto.put.PostPutDTO;
+import com.njydsz.userinfo.domain.vo.PostVO;
 
 /**
  * 岗位 Service 接口

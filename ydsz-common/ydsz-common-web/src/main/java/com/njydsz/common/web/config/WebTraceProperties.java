@@ -1,9 +1,9 @@
 package com.njydsz.common.web.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.validation.annotation.Validated;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
 import com.njydsz.common.base.config.BaseTraceProperties;
 import com.njydsz.common.web.filter.TraceIdResponseFilter;

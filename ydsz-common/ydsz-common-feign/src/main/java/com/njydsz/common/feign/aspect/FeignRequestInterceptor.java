@@ -2,11 +2,11 @@ package com.njydsz.common.feign.aspect;
 
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import jakarta.servlet.http.HttpServletRequest;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
+import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.njydsz.common.feign.config.FeignProperties;
 import com.njydsz.common.util.http.RequestContextUtils;
@@ -26,7 +26,7 @@ import com.njydsz.common.util.string.StringUtils;
  */
 public class FeignRequestInterceptor implements RequestInterceptor {
 
-  private static final Logger log = LoggerFactory.getLogger(FeignRequestInterceptor.class);
+  private static final Logger LOG = LoggerFactory.getLogger(FeignRequestInterceptor.class);
 
   private final FeignProperties feignProperties;
 

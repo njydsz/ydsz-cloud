@@ -1,10 +1,12 @@
 package com.njydsz.literule.server.orchestrator;
 
+import java.util.List;
+
+import lombok.extern.slf4j.Slf4j;
+
 import com.njydsz.literule.api.Rule;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleResult;
-import java.util.List;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * RuleChain → Rule 适配器（P1-7）

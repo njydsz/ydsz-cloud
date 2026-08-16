@@ -2,13 +2,13 @@ package com.njydsz.common.base.interceptor;
 
 import java.util.concurrent.ThreadLocalRandom;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 
 import com.njydsz.common.base.config.BaseTraceProperties;
 import com.njydsz.common.safe.util.ClientIpResolver;
