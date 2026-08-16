@@ -210,9 +210,8 @@ public class AuditAutoConfiguration {
      * 创建默认审计查询服务 Bean
      * 需要 DataSource 才可用，用于从数据库查询审计日志
      *
-     * @param dataSource       数据源
-     * @param shardingStrategy 分表策略（可选）
-     * @param properties       审计配置属性
+     * @param dataSource  数据源
+     * @param properties  审计配置属性
      * @return 默认审计查询服务
      */
     @Bean

@@ -25,8 +25,9 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-team
  * @since 1.0.0
+ * @deprecated 建议使用 Redis Stream 替代
  */
-
+@Deprecated
 @Slf4j
 public class RedisListSubscriber implements IMessageSubscriber {
 

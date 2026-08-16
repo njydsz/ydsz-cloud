@@ -7,9 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.util.StringUtils;
 
-import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.lock.annotation.RepeatSubmit;
-import com.njydsz.common.security.LoginUser;
+import com.njydsz.common.lock.spi.CurrentUserIdResolver;
 
 
 /**
@@ -20,14 +19,18 @@ import com.njydsz.common.security.LoginUser;
  *
  * <p><b>工作流程：</b>
  * <ol>
- *   <li>前端调用 {@link #generateToken()} 获取 Token</li>
+ *   <li>前端调用 {@link #generateToken(String, long)} 获取 Token</li>
  *   <li>前端提交表单时携带 Token（通过 HTTP 请求头）</li>
- *   <li>后端调用 {@link #validateAndConsume(String)} 校验并消费 Token</li>
+ *   <li>后端调用 {@link #validateAndConsume(String, String)} 校验并消费 Token</li>
  *   <li>校验成功后 Token 自动删除，防止重复使用</li>
  * </ol>
  *
  * <p><b>Redis Key 格式：</b>
  * {@code ydsz:repeat:token:{userId}:{token}}
+ *
+ * <p><b>循环依赖修复（C2-1）：</b> 本类不再直接依赖 {@code ydsz-common-auth} 的
+ * {@code AuthContextUtils}，改为通过 {@link CurrentUserIdResolver} SPI 接口注入，
+ * 由上层业务模块（如 ydsz-common-auth）提供实现。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -42,6 +45,11 @@ public class RepeatSubmitTokenService {
 
     private final StringRedisTemplate redisTemplate;
 
+    /**
+     * 构造防重复提交 Token 服务
+     *
+     * @param redisTemplate Redis 字符串模板
+     */
     public RepeatSubmitTokenService(StringRedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
@@ -49,17 +57,16 @@ public class RepeatSubmitTokenService {
     /**
      * 生成防重复提交 Token
      *
-     * <p>为当前登录用户生成一个一次性 Token，有效期由调用方指定。
+     * <p>为指定用户生成一个一次性 Token，有效期由调用方指定。
      * Token 与用户 ID 绑定，确保同一用户只能使用自己生成的 Token。
      *
+     * @param userId    用户 ID（由调用方传入，已从 AuthContext 解析）
      * @param ttlMillis Token 有效期（毫秒）
      * @return 生成的 Token 字符串
-     * @throws IllegalStateException 当前用户未登录时抛出
      */
-    public String generateToken(long ttlMillis) {
-        String userId = getCurrentUserId();
+    public String generateToken(String userId, long ttlMillis) {
         if (!StringUtils.hasText(userId)) {
-            throw new IllegalStateException("生成防重复提交 Token 需要用户登录");
+            throw new IllegalArgumentException("生成防重复提交 Token 需要用户 ID");
         }
 
         String token = UUID.randomUUID().toString().replace("-", "");
@@ -82,18 +89,17 @@ public class RepeatSubmitTokenService {
      * 获取防重复提交间隔窗口
      *
      * <p>同一用户对同一业务方法在 {@code intervalMillis} 窗口内只允许提交一次。
-     * 基于 Redis {@code SET NX PX} 原子实现，配合 {@code @RepeatSubmit(interval=...)}
-     * 在 Token 校验前拦截快速双击。用户未登录时跳过检查（无法绑定用户维度）。
+     * 基于 Redis {@code SET NX PX} 原子实现。用户 ID 为空时跳过检查（无法绑定用户维度）。
      *
-     * @param businessKey    业务方法标识（如 "类名#方法名"）
+     * @param userId        用户 ID（为空则跳过校验）
+     * @param businessKey   业务方法标识（如 "类名#方法名"）
      * @param intervalMillis 间隔窗口（毫秒）
      * @return true-允许提交（窗口内首次），false-窗口内重复提交
      */
-    public boolean acquireInterval(String businessKey, long intervalMillis) {
+    public boolean acquireInterval(String userId, String businessKey, long intervalMillis) {
         if (!StringUtils.hasText(businessKey) || intervalMillis <= 0) {
             return true;
         }
-        String userId = getCurrentUserId();
         if (!StringUtils.hasText(userId)) {
             return true;
         }
@@ -111,20 +117,19 @@ public class RepeatSubmitTokenService {
      * 校验并消费 Token
      *
      * <p>校验 Token 是否有效（存在且未过期），校验成功后立即删除 Token。
-     * Token 与当前用户 ID 绑定，防止 Token 被盗用。
+     * Token 与用户 ID 绑定，防止 Token 被盗用。
      *
-     * @param token 待校验的 Token
+     * @param userId 用户 ID（由调用方传入）
+     * @param token  待校验的 Token
      * @return true=校验通过（Token 有效且已消费），false=校验失败
      */
-    public boolean validateAndConsume(String token) {
+    public boolean validateAndConsume(String userId, String token) {
         if (!StringUtils.hasText(token)) {
             log.warn("[ydsz-lock] [repeat-submit] Token 为空");
             return false;
         }
-
-        String userId = getCurrentUserId();
         if (!StringUtils.hasText(userId)) {
-            log.warn("[ydsz-lock] [repeat-submit] 用户未登录，无法校验 Token");
+            log.warn("[ydsz-lock] [repeat-submit] 用户 ID 为空，无法校验 Token");
             return false;
         }
 
@@ -149,15 +154,5 @@ public class RepeatSubmitTokenService {
      */
     private String buildRedisKey(String userId, String token) {
         return TOKEN_PREFIX + userId + ":" + token;
-    }
-
-    /**
-     * 获取当前登录用户 ID
-     *
-     * @return 用户 ID，未登录返回 null
-     */
-    private String getCurrentUserId() {
-        LoginUser loginUser = AuthContextUtils.getCurrentOrNull();
-        return loginUser != null ? loginUser.getUserId() : null;
     }
 }
