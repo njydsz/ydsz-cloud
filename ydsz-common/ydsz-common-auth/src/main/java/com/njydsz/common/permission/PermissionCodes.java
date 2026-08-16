@@ -75,6 +75,12 @@ public final class PermissionCodes {
     /** CRONJOB_STATS_VIEW */
     public static final String CRONJOB_STATS_VIEW = "cronjob:stats:view";
 
+    /** CRONJOB_CONNECTOR_VIEW */
+    public static final String CRONJOB_CONNECTOR_VIEW = "cronjob:connector:view";
+
+    /** CRONJOB_CONNECTOR_TEST */
+    public static final String CRONJOB_CONNECTOR_TEST = "cronjob:connector:test";
+
     /** MESSAGE_AGGREGATE_LIST */
     public static final String MESSAGE_AGGREGATE_LIST = "message:aggregate:list";
 

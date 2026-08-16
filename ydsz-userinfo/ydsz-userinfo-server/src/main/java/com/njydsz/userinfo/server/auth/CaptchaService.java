@@ -29,6 +29,9 @@ import lombok.extern.slf4j.Slf4j;
  * <p>生成 4 位字母数字混合验证码，存储到 Redis（TTL 可配置），
  * 提供 Base64 编码的 PNG 图片供前端展示。
  *
+ * <p>P1-12: 核心逻辑已下沉到 common-safe {@code CaptchaGenerator}，
+ * 本服务保留为薄封装，负责业务异常转换。
+ *
  * @author ydsz-team
  * @since 1.0.0
  */

@@ -45,6 +45,8 @@ import com.njydsz.common.safe.csrf.CsrfTokenRepository;
 import com.njydsz.common.safe.csrf.impl.DefaultCsrfTokenGenerator;
 import com.njydsz.common.safe.csrf.impl.InMemoryCsrfTokenRepository;
 import com.njydsz.common.safe.csrf.impl.RedisCsrfTokenRepository;
+import com.njydsz.common.safe.captcha.CaptchaGenerator;
+import com.njydsz.common.safe.captcha.CaptchaProperties;
 import com.njydsz.common.safe.filter.CsrfFilter;
 import com.njydsz.common.safe.filter.IpAccessFilter;
 import com.njydsz.common.safe.filter.SafeRequestBodyCacheFilter;
@@ -89,7 +91,8 @@ import com.njydsz.common.safe.filter.ApiSignatureFilter;
         SafeAlertProperties.class,
         ApiSignatureProperties.class,
         IpAccessProperties.class,
-        AutoBlockProperties.class
+        AutoBlockProperties.class,
+        CaptchaProperties.class
 })
 public class SafeConfiguration {
 
@@ -509,6 +512,23 @@ public class SafeConfiguration {
     public PasswordStrengthValidator passwordStrengthValidator() {
         log.info("注册密码强度校验器 (默认最低强度: {})", PasswordStrengthValidator.DEFAULT_MIN_LEVEL);
         return new PasswordStrengthValidator();
+    }
+
+    /**
+     * P1-12: 注册图形验证码生成器
+     *
+     * <p>提供验证码生成、图片绘制、Redis 存储、校验等能力。
+     * 需要 RedisStringOps 可用（验证码存储依赖 Redis）。
+     *
+     * @return 验证码生成器实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(CaptchaGenerator.class)
+    @ConditionalOnBean(RedisStringOps.class)
+    @ConditionalOnProperty(prefix = "ydsz.safe.captcha", name = "enabled", havingValue = "true", matchIfMissing = true)
+    public CaptchaGenerator captchaGenerator(RedisStringOps redisStringOps, CaptchaProperties properties) {
+        log.info("注册图形验证码生成器 (ttl={}s, length={})", properties.getTtlSeconds(), properties.getCodeLength());
+        return new CaptchaGenerator(redisStringOps, properties);
     }
 
     /**

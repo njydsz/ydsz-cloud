@@ -67,7 +67,7 @@ public class ConnectorController {
      * @return 已注册连接器类型列表
      */
     @Operation(summary = "查询已注册连接器类型")
-    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_CONNECTOR_VIEW)
     @GetMapping("/types")
     public BaseResponse<List<String>> types() {
         return BaseResponse.success(connectorManager.getRegisteredTypes());
@@ -84,7 +84,7 @@ public class ConnectorController {
      * @return true=连接成功，false=连接失败
      */
     @Operation(summary = "测试连接")
-    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_CONNECTOR_TEST)
     @RateLimit(resource = "cronjob.connector.testConnection", threshold = 50)
     @Idempotent(key = "ydsz:cronjob:ConnectorController:testConnection:lock", ttlSeconds = 5)
     @PostMapping("/test")
@@ -109,7 +109,7 @@ public class ConnectorController {
      * @return 远程任务列表（含名称/调度规则/Handler 等）
      */
     @Operation(summary = "查询远程任务列表")
-    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_STATS_VIEW)
+    @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_CONNECTOR_VIEW)
     @RateLimit(resource = "cronjob.connector.listRemoteTasks", threshold = 50)
     @Idempotent(key = "ydsz:cronjob:ConnectorController:listRemoteTasks:lock", ttlSeconds = 5)
     @PostMapping("/remote-tasks")
