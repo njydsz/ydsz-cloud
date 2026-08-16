@@ -12,10 +12,13 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 统一通知辅助类 — 封装 NotifyService 的常用发送模式。
  *
- * <p>P1-4: 消除各模块自建通知 Helper 的重复编码（如 CronjobNotifyHelper、FlowNotificationService），
+ * <p>ydsz-cloud 通知体系的<strong>统一业务入口</strong>。
+ * 消除各模块自建通知 Helper 的重复编码（如 CronjobNotifyHelper、FlowNotificationService），
  * 提供统一的便捷方法，支持简单通知、模板通知、系统告警等场景。
  *
- * <p>各业务模块直接注入此 Bean 即可，无需再各自封装通知逻辑。
+ * <p><b>架构定位</b>：业务模块直接注入此 Bean 即可，无需再各自封装通知逻辑，
+ * 也无需直接调用 {@code NotifyService} 或 {@code NotificationClient} Feign。
+ * 详见 {@code docs/module-review/ADR-001-notify-message-convergence.md}。
  *
  * <h3>使用示例</h3>
  * <pre>{@code

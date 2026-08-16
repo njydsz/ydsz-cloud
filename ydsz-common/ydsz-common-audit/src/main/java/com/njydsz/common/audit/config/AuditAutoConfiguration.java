@@ -17,6 +17,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import com.njydsz.common.audit.aspect.AuditAspect;
@@ -63,6 +64,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 @RequiredArgsConstructor
 @EnableConfigurationProperties(AuditProperties.class)
 @ConditionalOnProperty(prefix = "ydsz.audit", name = "enabled", havingValue = "true", matchIfMissing = true)
+@EnableAsync
 public class AuditAutoConfiguration {
 
     private static final Logger log = LoggerFactory.getLogger(AuditAutoConfiguration.class);
@@ -291,9 +293,8 @@ public class AuditAutoConfiguration {
      * {@link com.njydsz.common.audit.event.DataExportAuditEvent}，
      * 转换为统一的 {@link com.njydsz.common.audit.domain.AuditLog} 并异步落库。
      *
-     * <p>前置条件：业务主类或配置类需显式启用 {@code @EnableAsync}，
-     * 否则 {@code @Async("auditAsyncExecutor")} 注解不生效。
-     * 建议通过 {@link com.njydsz.common.audit.config.AuditAsyncConfiguration} 自动配置。
+     * <p>前置条件：本类已标注 {@code @EnableAsync}，
+     * {@code @Async("auditAsyncExecutor")} 注解自动生效。
      *
      * @param auditRecorder        审计记录器
      * @param snowflakeIdGenerator 分布式 ID 生成器

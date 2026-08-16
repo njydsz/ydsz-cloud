@@ -402,21 +402,17 @@ public class AuthServiceImpl implements AuthService {
      * 发布领域事件到 Outbox（可选依赖，不存在时安全降级）
      */
     private void publishEvent(String eventType, String aggregateId, Object payload) {
-        OutboxService outboxService = outboxServiceProvider.getIfAvailable();
-        if (outboxService == null) {
-            log.debug("OutboxService not available, skipping event: type={}, id={}", eventType, aggregateId);
+        DomainEventPublisher publisher = eventPublisherProvider.getIfAvailable();
+        if (publisher == null) {
+            log.debug("DomainEventPublisher not available, skipping event: type={}, id={}", eventType, aggregateId);
             return;
         }
-        try {
-            outboxService.appendToOutbox(OutboxMessage.builder()
-                    .aggregateType("UserAccount")
-                    .aggregateId(aggregateId)
-                    .eventType(eventType)
-                    .payload(YdszJson.toJson(payload)));
-        } catch (Exception e) {
-            log.warn("Failed to publish outbox event: type={}, id={}, error={}",
-                    eventType, aggregateId, e.getMessage());
-        }
+        publisher.publish(DomainEvent.builder()
+                .aggregateType("UserAccount")
+                .aggregateId(aggregateId)
+                .eventType(eventType)
+                .metadata("payload", payload)
+                .build());
     }
 
     /**
