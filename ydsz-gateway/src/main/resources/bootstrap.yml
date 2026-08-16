@@ -60,3 +60,15 @@ spring:
           - data-id: ydsz-gateway-routes.yaml
             group: ${spring.profiles.active}
             refresh: true
+
+# P1-1: Nacos 路由配置变更监听器托管线程池（ydsz-common-thread 统一管理，替代原自建 ThreadPoolExecutor）
+# 对应 Bean 名称: nacosRouteListenerExecutor（默认 beanNamePrefix 为空，命名规则为 key + "Executor"）
+ydsz:
+  thread:
+    pools:
+      nacosRouteListener:
+        core-size: 1
+        max-size: 1
+        queue-capacity: 1024
+        thread-name-prefix: nacos-route-listener-
+        reject-policy: CALLER_RUNS

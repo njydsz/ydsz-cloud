@@ -56,6 +56,14 @@ public abstract class AbstractNettyClient {
     private NettyEventLoopPool eventLoopPool;
 
     private ChannelEventDispatcher channelEventDispatcher;
+
+    /**
+     * 可选依赖 — 消息分发器。
+     *
+     * @deprecated 自 v1.1.0 起标记废弃，与 {@link MessageDispatcher} 同步废弃。
+     *             推荐使用 {@code SimpleChannelInboundHandler<T>} + switch 策略模式。
+     */
+    @Deprecated
     private MessageDispatcher messageDispatcher;
 
     /**
@@ -423,6 +431,13 @@ public abstract class AbstractNettyClient {
         this.channelEventDispatcher = channelEventDispatcher;
     }
 
+    /**
+     * 设置消息分发器。
+     *
+     * @param messageDispatcher 消息分发器
+     * @deprecated 自 v1.1.0 起标记废弃，与 {@link MessageDispatcher} 同步废弃。
+     */
+    @Deprecated
     public void setMessageDispatcher(MessageDispatcher messageDispatcher) {
         this.messageDispatcher = messageDispatcher;
     }

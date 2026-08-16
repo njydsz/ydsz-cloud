@@ -3,14 +3,9 @@ package com.njydsz.gateway.config;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import com.alibaba.cloud.nacos.NacosConfigManager;
 import com.alibaba.nacos.api.config.listener.Listener;
-import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.event.RefreshRoutesEvent;
 import org.springframework.cloud.gateway.route.RouteDefinition;
@@ -89,35 +84,31 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
     private final AtomicReference<List<RouteDefinition>> routeCache = new AtomicReference<>(Collections.emptyList());
 
     /**
-     * P0-6: 共享单线程 Executor（避免每次 listener 回调创建新线程池导致泄漏）
+     * P1-1: 路由配置变更监听器执行器（由 ydsz-common-thread 统一管理，配置项: ydsz.thread.pools.nacosRouteListener）。
+     * 若未配置托管线程池，构造时传入 null，由 Nacos 客户端使用默认线程执行回调，避免自建线程池（规范 15.4.1）。
      */
-    private final ExecutorService sharedExecutor = new ThreadPoolExecutor(
-            1, 1, 0L, TimeUnit.MILLISECONDS,
-            new LinkedBlockingQueue<>(1024),
-            r -> {
-                Thread t = new Thread(r, "nacos-route-listener");
-                t.setDaemon(true);
-                return t;
-            },
-            new ThreadPoolExecutor.CallerRunsPolicy());
+    private final Executor routeListenerExecutor;
 
     /**
      * 构造 Nacos 动态路由仓库
      *
-     * @param nacosConfigManager Nacos 配置管理器
-     * @param dataId             路由配置 DataId
-     * @param group              Nacos 配置 Group
-     * @param enabled            是否启用
-     * @param eventPublisher     Spring 事件发布器（用于触发路由刷新）
+     * @param nacosConfigManager    Nacos 配置管理器
+     * @param dataId                路由配置 DataId
+     * @param group                 Nacos 配置 Group
+     * @param enabled               是否启用
+     * @param eventPublisher        Spring 事件发布器（用于触发路由刷新）
+     * @param routeListenerExecutor 配置变更监听器执行器（ydsz-common-thread 托管；可为 null）
      */
     public NacosRouteDefinitionRepository(NacosConfigManager nacosConfigManager,
                                          String dataId, String group, boolean enabled,
-                                         ApplicationEventPublisher eventPublisher) {
+                                         ApplicationEventPublisher eventPublisher,
+                                         Executor routeListenerExecutor) {
         this.nacosConfigManager = nacosConfigManager;
         this.dataId = (dataId != null && !dataId.isBlank()) ? dataId : DEFAULT_DATA_ID;
         this.group = group;
         this.enabled = enabled;
         this.eventPublisher = eventPublisher;
+        this.routeListenerExecutor = routeListenerExecutor;
 
         // P2-12: 注册配置变更监听器
         if (enabled) {
@@ -209,7 +200,7 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
      *   <li>P0-5: 重新加载路由到内存缓存</li>
      *   <li>触发 {@code RefreshRoutesEvent} 通知 Spring Cloud Gateway 刷新路由表</li>
      * </ol>
-     * <p>P0-6: 使用共享 {@link #sharedExecutor} 替代每次创建新线程池。
+     * <p>P1-1: 监听器回调执行器由 {@link #routeListenerExecutor}（ydsz-common-thread 托管）提供，避免自建线程池。
      */
     private void registerConfigListener() {
         if (listenerRegistered) {
@@ -240,15 +231,16 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
                 /**
                  * 返回监听器回调执行的线程池。
                  *
-                 * <p>复用类级共享单线程 {@link #sharedExecutor}（守护线程），
-                 * 避免每次配置变更都新建线程池导致线程泄漏（P0-6）。
+                 * <p>返回类级 {@link #routeListenerExecutor}（由 ydsz-common-thread 托管，
+                 * 配置项 ydsz.thread.pools.nacosRouteListener），避免自建线程池（P1-1）。
+                 * 若该托管执行器未配置则为 null，由 Nacos 客户端使用默认线程。
                  *
-                 * @return 共享单线程执行器
+                 * @return 监听器回调执行器
                  */
                 @Override
                 public Executor getExecutor() {
-                    // P0-6: 返回共享 Executor，避免每次创建新线程池导致线程泄漏
-                    return sharedExecutor;
+                    // P1-1: 返回 ydsz-common-thread 托管执行器；若未配置则 null，由 Nacos 使用默认线程
+                    return routeListenerExecutor;
                 }
             });
             listenerRegistered = true;
@@ -258,14 +250,4 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
         }
     }
 
-    /**
-     * P0-2: 优雅关闭线程池，避免线程泄漏
-     */
-    @PreDestroy
-    public void shutdown() {
-        if (!sharedExecutor.isShutdown()) {
-            sharedExecutor.shutdown();
-            log.info("[NacosRoutes] 共享线程池已关闭");
-        }
-    }
 }

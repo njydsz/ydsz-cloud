@@ -20,24 +20,23 @@ import com.njydsz.common.lock.annotation.DistributedScheduled;
  * <p>支持基于规则的自动过期清理，按文件路径前缀配置不同的保留策略，
  * 定时扫描并清理过期文件。
  *
- * <p><b>配置示例（application.yml）：</b>
+ * <p><b>推荐规则模板（可在业务模块 yml 中按需选用）：</b>
  * <pre>{@code
  * ydsz:
  *   file:
  *     lifecycle:
- *       enabled: true
- *       cron: "0 0 2 * * ?"  # 每天凌晨2点执行
+ *       enabled: true          # 默认启用（v1.1+）
+ *       cron: "0 0 2 * * ?"    # 每天凌晨 2 点执行
+ *       dry-run: false         # 首次启用建议 true 试运行
  *       rules:
- *         - prefix: "temp/"
- *           maxAgeDays: 7
- *           action: delete
- *         - prefix: "logs/"
- *           maxAgeDays: 30
- *           action: delete
- *         - prefix: "archive/"
- *           maxAgeDays: 365
- *           action: delete
- *       dry-run: false
+ *         - prefix: "temp/"    # 导入/临时缓存 → 1 天
+ *           max-age-days: 1
+ *         - prefix: "preview/" # 预览缩略图 → 7 天
+ *           max-age-days: 7
+ *         - prefix: "logs/"    # 导出/日志文件 → 30 天
+ *           max-age-days: 30
+ *         - prefix: "archive/" # 归档文件 → 365 天
+ *           max-age-days: 365
  * }</pre>
  *
  * @author ydsz-team
