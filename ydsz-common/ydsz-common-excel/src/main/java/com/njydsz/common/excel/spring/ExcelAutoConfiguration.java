@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 
 import com.njydsz.common.excel.core.ExcelFacade;
 import com.njydsz.common.excel.core.config.ExcelConfig;
+import com.njydsz.common.excel.helper.ExcelExportHelper;
 
 /**
  * Excel 模块 Spring Boot 自动配置
@@ -45,6 +46,20 @@ public class ExcelAutoConfiguration {
     @ConditionalOnMissingBean
     public ExcelTemplate excelTemplate(ExcelConfig config) {
         return new ExcelTemplate(config);
+    }
+
+    /**
+     * 注册统一 Excel 导出辅助类 Bean。
+     *
+     * <p>各业务模块通过 {@code @Resource} 或 {@code @Autowired} 注入，
+     * 统一封装导出入口，消除各模块自建 {@code ByteArrayOutputStream + ExcelFacade.write()} 的重复编码。</p>
+     *
+     * @return ExcelExportHelper 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public ExcelExportHelper excelExportHelper() {
+        return new ExcelExportHelper();
     }
 
     /**
