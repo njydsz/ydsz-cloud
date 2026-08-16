@@ -1,5 +1,7 @@
 package com.njydsz.common.lock.exception;
 
+import java.time.LocalDateTime;
+
 import com.njydsz.common.exception.custom.BusinessException;
 
 
@@ -52,11 +54,6 @@ public class DistributedLockException extends BusinessException {
     private final String lockType;
 
     /**
-     * 异常发生时间戳（毫秒，自 Unix 纪元）
-     */
-    private final long timestamp;
-
-    /**
      * 构造分布式锁异常（向后兼容，无结构化上下文）
      *
      * @param message 异常消息
@@ -92,7 +89,7 @@ public class DistributedLockException extends BusinessException {
         this.errorCode = resolvedCode;
         this.lockKey = lockKey;
         this.lockType = null;
-        this.timestamp = System.currentTimeMillis();
+        setTimestamp(LocalDateTime.now());
         setMessage(message);
     }
 
@@ -114,7 +111,7 @@ public class DistributedLockException extends BusinessException {
         this.errorCode = resolvedCode;
         this.lockKey = lockKey;
         this.lockType = lockType;
-        this.timestamp = System.currentTimeMillis();
+        setTimestamp(LocalDateTime.now());
         setMessage(message);
     }
 
@@ -146,15 +143,6 @@ public class DistributedLockException extends BusinessException {
     }
 
     /**
-     * 获取异常发生时间戳
-     *
-     * @return 毫秒级时间戳
-     */
-    public long getTimestamp() {
-        return timestamp;
-    }
-
-    /**
      * 判断是否为超时类错误
      *
      * @return true-超时相关错误
@@ -182,7 +170,7 @@ public class DistributedLockException extends BusinessException {
         if (lockType != null) {
             sb.append(", lockType='").append(lockType).append('\'');
         }
-        sb.append(", timestamp=").append(timestamp);
+        sb.append(", timestamp=").append(getTimestamp());
         sb.append('}');
         return sb.toString();
     }
