@@ -108,6 +108,7 @@
         <module>ydsz-common-idempotent</module>
         <module>ydsz-common-ratelimit</module>
         <module>ydsz-common-base-doc</module>
+        <module>ydsz-common-base-i18n</module>
     </modules>
 
     <dependencyManagement>
@@ -257,6 +258,11 @@
             <dependency>
                 <groupId>com.njydsz</groupId>
                 <artifactId>ydsz-common-base-doc</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz</groupId>
+                <artifactId>ydsz-common-base-i18n</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

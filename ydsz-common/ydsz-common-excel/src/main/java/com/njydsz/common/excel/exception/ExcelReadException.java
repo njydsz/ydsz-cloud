@@ -4,7 +4,7 @@ package com.njydsz.common.excel.exception;
  * Excel 读取异常类
  *
  * <p>封装 Excel 文件读取过程中的各类错误，包括文件解析失败、
- * 数据类型转换错误、注解配置错误等场景。</p>
+ * 数据类型转换错误、注解配置错误等场景。异常码桥接至全局异常体系。</p>
  *
  * <h3>使用示例</h3>
  * <pre>{@code
@@ -20,6 +20,8 @@ package com.njydsz.common.excel.exception;
  *         });
  * } catch (ExcelReadException e) {
  *     log.error("读取失败 - 错误码: {}, 消息: {}", e.getCode(), e.getMessage(), e);
+ *     // 获取全局 ExceptionCode 接口
+ *     ExceptionCode ec = e.getExceptionCodeInterface();
  * }
  * }</pre>
  *
