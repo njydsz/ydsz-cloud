@@ -42,7 +42,7 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <!--mvn-->
-        <maven.version>3.13.0</maven.version>
+        <maven.version>3.6.3</maven.version>
         <!--Spring-->
         <spring-boot.version>4.1.0</spring-boot.version>
         <spring-cloud.version>2025.1.2</spring-cloud.version>
@@ -1239,9 +1239,9 @@
                             <requireJavaVersion>
                                 <version>[21,)</version>
                             </requireJavaVersion>
-                            <!-- 2. Maven 版本锁定：最低 3.13.0 -->
+                            <!-- 2. Maven 版本锁定：最低 ${maven.version} -->
                             <requireMavenVersion>
-                                <version>[3.13.0,)</version>
+                                <version>[${maven.version},)</version>
                             </requireMavenVersion>
                             <!-- 3. 禁用有安全漏洞的旧 FastJSON 1.x -->
                             <bannedDependencies>
