@@ -13,6 +13,7 @@ import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.lock.annotation.RepeatSubmit;
 import com.njydsz.common.lock.idempotent.RepeatSubmitTokenService;
+import com.njydsz.common.lock.spi.CurrentUserIdResolver;
 import com.njydsz.common.util.http.RequestContextUtils;
 
 
@@ -26,7 +27,7 @@ import com.njydsz.common.util.http.RequestContextUtils;
  * <ol>
  *   <li>前端先调用 {@code GET /repeat-submit/token} 获取一次性 Token</li>
  *   <li>前端提交表单时在请求头携带 {@code X-Repeat-Token}</li>
- *   <li>切面从请求头提取 Token，调用 {@link RepeatSubmitTokenService#validateAndConsume(String)} 校验</li>
+ *   <li>切面从请求头提取 Token，调用 {@link RepeatSubmitTokenService#validateAndConsume(String, String)} 校验</li>
  *   <li>校验通过则执行业务方法，失败则抛出 {@link BusinessException}</li>
  * </ol>
  *
@@ -46,9 +47,12 @@ import com.njydsz.common.util.http.RequestContextUtils;
 public class RepeatSubmitAspect {
 
     private final RepeatSubmitTokenService tokenService;
+    private final CurrentUserIdResolver userIdResolver;
 
-    public RepeatSubmitAspect(RepeatSubmitTokenService tokenService) {
+    public RepeatSubmitAspect(RepeatSubmitTokenService tokenService,
+                               CurrentUserIdResolver userIdResolver) {
         this.tokenService = tokenService;
+        this.userIdResolver = userIdResolver;
     }
 
     /**
@@ -78,18 +82,19 @@ public class RepeatSubmitAspect {
         }
 
         // 间隔窗口校验（用户维度 + 方法维度）：窗口内重复提交直接拒绝，不消费 Token
+        String userId = userIdResolver.getCurrentUserId();
         String businessKey = joinPoint.getSignature().getDeclaringTypeName()
                 + "#" + joinPoint.getSignature().getName();
-        if (!tokenService.acquireInterval(businessKey, repeatSubmit.interval())) {
-            log.warn("[ydsz-lock] [repeat-submit] 间隔窗口内重复提交 | businessKey={} | interval={}ms",
-                    businessKey, repeatSubmit.interval());
+        if (!tokenService.acquireInterval(userId, businessKey, repeatSubmit.interval())) {
+            log.warn("[ydsz-lock] [repeat-submit] 间隔窗口内重复提交 | userId={}, businessKey={} | interval={}ms",
+                    userId, businessKey, repeatSubmit.interval());
             throw BusinessException.builder()
                     .code(CoreExceptionCode.FAIL.getCode())
                     .message(repeatSubmit.message())
                     .build();
         }
 
-        boolean valid = tokenService.validateAndConsume(token);
+        boolean valid = tokenService.validateAndConsume(userId, token);
         if (!valid) {
             log.warn("[ydsz-lock] [repeat-submit] Token 无效或已过期 | header={}, token={}", headerName, token);
             throw BusinessException.builder()

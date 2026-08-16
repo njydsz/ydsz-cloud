@@ -45,8 +45,6 @@ import com.njydsz.common.safe.csrf.CsrfTokenRepository;
 import com.njydsz.common.safe.csrf.impl.DefaultCsrfTokenGenerator;
 import com.njydsz.common.safe.csrf.impl.InMemoryCsrfTokenRepository;
 import com.njydsz.common.safe.csrf.impl.RedisCsrfTokenRepository;
-import com.njydsz.common.safe.crypto.NonceCache;
-import com.njydsz.common.safe.filter.ApiSignatureFilter;
 import com.njydsz.common.safe.filter.CsrfFilter;
 import com.njydsz.common.safe.filter.IpAccessFilter;
 import com.njydsz.common.safe.filter.SafeRequestBodyCacheFilter;
@@ -64,8 +62,7 @@ import com.njydsz.common.safe.sensitive.SensitiveDataAdvice;
  *   <li>安全响应头：防止 XSS、点击劫持、MIME 嗅探等 Web 安全威胁</li>
  *   <li>CSRF 防护：基于 Token 机制，Redis 存储支持分布式</li>
  *   <li>限流防护：基于 Redis 令牌桶的全局限流</li>
- *   <li>敏感数据脱敏：基于 Jackson 序列化器的字段级脱敏</li>
- *   <li>验证码：图形/算术验证码生成与验证</li>
+ * <li>敏感数据脱敏：基于 Jackson 序列化器的字段级脱敏</li>
  * </ul>
  *
  * <p><b>过滤器执行顺序：</b>SecurityHeaderFilter → XssFilter → CsrfFilter → RateLimitFilter。
@@ -86,7 +83,6 @@ import com.njydsz.common.safe.sensitive.SensitiveDataAdvice;
         CsrfProperties.class,
         SensitiveDataProperties.class,
         SafeAlertProperties.class,
-        ApiSignatureProperties.class,
         IpAccessProperties.class,
         AutoBlockProperties.class
 })
@@ -98,7 +94,6 @@ public class SafeConfiguration {
     private final CsrfProperties csrfProperties;
     private final SecurityHeaderProperties securityHeaderProperties;
     private final IpAccessProperties ipAccessProperties;
-    private final ApiSignatureProperties apiSignatureProperties;
 
     /**
      * 构造方法，注入各子模块配置属性用于启动日志输出
@@ -106,13 +101,11 @@ public class SafeConfiguration {
     public SafeConfiguration(SafeXssProperties safeXssProperties,
                               CsrfProperties csrfProperties,
                               SecurityHeaderProperties securityHeaderProperties,
-                              IpAccessProperties ipAccessProperties,
-                              ApiSignatureProperties apiSignatureProperties) {
+                              IpAccessProperties ipAccessProperties) {
         this.safeXssProperties = safeXssProperties;
         this.csrfProperties = csrfProperties;
         this.securityHeaderProperties = securityHeaderProperties;
         this.ipAccessProperties = ipAccessProperties;
-        this.apiSignatureProperties = apiSignatureProperties;
     }
 
     /**
@@ -130,7 +123,6 @@ public class SafeConfiguration {
         log.info("  Security Heads: enabled={}", securityHeaderProperties.isEnabled());
         log.info("  Rate Limit:     see RateLimitAutoConfiguration for details");
         log.info("  IP Access:      enabled={}, mode={}", ipAccessProperties.isEnabled(), ipAccessProperties.getMode());
-        log.info("  API Signature:  enabled={}", apiSignatureProperties.isEnabled());
         log.info("==============================================================================");
     }
 
@@ -477,46 +469,5 @@ public class SafeConfiguration {
         return registrationBean;
     }
 
-    /**
-     * 注册防重放 Nonce 缓存
-     *
-     * <p>用于 API 签名验证的 nonce 防重放存储，基于 ydsz-common-cache 实现 TTL 自动过期。
-     * 定时清理任务每 60 秒执行一次（需宿主应用开启 {@code @EnableScheduling}）。
-     *
-     * @return Nonce 缓存实例
-     */
-    @Bean
-    @ConditionalOnMissingBean(NonceCache.class)
-    public NonceCache nonceCache() {
-        log.info("注册防重放 Nonce 缓存");
-        return new NonceCache();
-    }
-
-    /**
-     * 注册 API 签名验证过滤器
-     *
-     * <p>基于 {@code timestamp + nonce + signature} 三要素实现 API 请求防篡改和防重放。
-     * 使用 HMAC-SHA256 算法计算签名，确保请求在传输过程中未被篡改。
-     * 仅在 {@code ydsz.safe.api-signature.enabled=true} 时注册。
-     *
-     * @param properties     签名配置属性
-     * @param nonceCache     防重放 Nonce 缓存
-     * @param eventPublisher 安全事件发布器
-     * @return API 签名验证过滤器注册 bean
-     */
-    @Bean
-    @ConditionalOnMissingBean(name = "apiSignatureFilterRegistration")
-    @ConditionalOnProperty(prefix = "ydsz.safe.api-signature", name = "enabled", havingValue = "true")
-    public FilterRegistrationBean<ApiSignatureFilter> apiSignatureFilterRegistration(
-            ApiSignatureProperties properties,
-            NonceCache nonceCache,
-            SecurityEventPublisher eventPublisher) {
-        FilterRegistrationBean<ApiSignatureFilter> registrationBean = new FilterRegistrationBean<>(
-                new ApiSignatureFilter(properties, nonceCache, eventPublisher));
-        registrationBean.setName("apiSignatureFilter");
-        registrationBean.addUrlPatterns("/*");
-        registrationBean.setOrder(Ordered.HIGHEST_PRECEDENCE + 4);
-        return registrationBean;
-    }
 
 }

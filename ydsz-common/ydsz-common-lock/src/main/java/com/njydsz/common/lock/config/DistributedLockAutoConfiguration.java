@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -20,6 +21,7 @@ import com.njydsz.common.lock.aspect.DistributedScheduledAspect;
 import com.njydsz.common.lock.aspect.IdempotentAspect;
 import com.njydsz.common.lock.aspect.RepeatSubmitAspect;
 import com.njydsz.common.lock.aspect.YdszDistributedLockAspect;
+import com.njydsz.common.lock.controller.RepeatSubmitTokenController;
 import com.njydsz.common.lock.core.LockEventListener;
 import com.njydsz.common.lock.core.LockTemplate;
 import com.njydsz.common.lock.core.LockWaitTimePolicy;
@@ -31,6 +33,7 @@ import com.njydsz.common.lock.metrics.LockMetrics;
 import com.njydsz.common.lock.notify.LockReleaseNotifier;
 import com.njydsz.common.lock.renewal.LockRenewalService;
 import com.njydsz.common.lock.scheduler.LockWatchDog;
+import com.njydsz.common.lock.spi.CurrentUserIdResolver;
 import com.njydsz.common.lock.strategy.DefaultLockStrategy;
 import com.njydsz.common.lock.strategy.LockStrategy;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
@@ -310,18 +313,38 @@ public class DistributedLockAutoConfiguration {
     }
 
     /**
+     * 创建表单重复提交 Token 控制器 Bean
+     *
+     * <p>提供获取防重复提交 Token 的 REST 接口。
+     *
+     * @param tokenService   Token 服务
+     * @param userIdResolver 当前用户 ID 解析器（由业务层提供实现）
+     * @return RepeatSubmitTokenController 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
+    public RepeatSubmitTokenController repeatSubmitTokenController(
+            RepeatSubmitTokenService tokenService,
+            ObjectProvider<CurrentUserIdResolver> userIdResolver) {
+        return new RepeatSubmitTokenController(tokenService, userIdResolver.getIfAvailable());
+    }
+
+    /**
      * 创建表单重复提交 AOP 切面 Bean
      *
      * <p>拦截 {@link com.njydsz.common.lock.annotation.RepeatSubmit} 注解方法，
      * 基于 Token 令牌模式防止表单重复提交。
      *
      * @param repeatSubmitTokenService Token 服务
+     * @param userIdResolver           当前用户 ID 解析器（由业务层提供实现）
      * @return RepeatSubmitAspect 实例
      */
     @Bean
     @ConditionalOnMissingBean
-    public RepeatSubmitAspect repeatSubmitAspect(RepeatSubmitTokenService repeatSubmitTokenService) {
-        return new RepeatSubmitAspect(repeatSubmitTokenService);
+    public RepeatSubmitAspect repeatSubmitAspect(RepeatSubmitTokenService repeatSubmitTokenService,
+                                                 ObjectProvider<CurrentUserIdResolver> userIdResolver) {
+        return new RepeatSubmitAspect(repeatSubmitTokenService, userIdResolver.getIfAvailable());
     }
 
     /**

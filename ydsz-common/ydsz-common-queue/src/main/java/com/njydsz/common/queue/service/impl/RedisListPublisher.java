@@ -18,9 +18,7 @@ import com.njydsz.common.queue.service.IMessagePublisher;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @deprecated 建议使用 Redis Stream 替代
  */
-@Deprecated
 public class RedisListPublisher implements IMessagePublisher {
 
     private final RedisTemplate<String, Object> redisTemplate;

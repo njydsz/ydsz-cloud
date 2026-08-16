@@ -29,38 +29,29 @@ public enum QueueType {
      * Redis List 队列。
      *
      * <p>轻量级队列，基于 Redis 的 LPUSH/BRPOP 命令实现 FIFO。
-     * 不具备消息 ACK/重试/死信能力。
-     *
-     * @deprecated 建议使用 {@link #STREAM} 替代
+     * 适用于简单的任务队列场景，不支持消息确认、重试、死信等高级特性。
      */
-    @Deprecated
     LIST("list"),
 
     /**
-     * Redis Stream 队列（推荐）。
+     * Redis Stream 队列。
      *
-     * <p>支持消费组、消息确认、持久化等高级特性。
+     * <p>支持消费组、消息确认、持久化等高级特性，是 List 的升级版。
      */
     STREAM("stream"),
 
     /**
      * Redis PubSub 发布/订阅。
      *
-     * <p>支持多订阅者模式，但消息不持久化，订阅者离线时消息丢失。
-     *
-     * @deprecated 建议使用 {@link #STREAM} 替代
+     * <p>支持多订阅者模式，但消息不持久化，适合实时通知场景。
      */
-    @Deprecated
     PUBSUB("pubsub"),
 
     /**
      * RabbitMQ。
      *
      * <p>实现了 AMQP 协议的消息队列，支持丰富的路由功能。
-     *
-     * @deprecated 建议使用 {@link #KAFKA} 或 {@link #ROCKET} 替代
      */
-    @Deprecated
     RABBIT("rabbit"),
 
     /**

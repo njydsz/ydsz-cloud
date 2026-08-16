@@ -109,15 +109,10 @@
             <scope>provided</scope>
         </dependency>
         <!--
-            ydsz-common-auth（optional）
-            RepeatSubmitTokenService 通过 AuthContext 获取当前登录用户 ID。
-            标记 optional 避免循环依赖；消费方在 web 场景下需自行引入。
+            ydsz-common-auth 依赖已移除（C2 修复：循环依赖）。
+            RepeatSubmitTokenService 不再依赖 AuthContext，
+            改为通过 CurrentUserIdResolver SPI 接口获取用户 ID。
         -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-auth</artifactId>
-            <optional>true</optional>
-        </dependency>
         <!--ydsz-common-redis-->
         <dependency>
             <groupId>com.njydsz</groupId>

@@ -71,11 +71,10 @@ public class SafeHealthIndicator implements HealthIndicator {
         Map<String, String> capabilities = new LinkedHashMap<>();
         capabilities.put("xss", "OWASP Sanitizer + configurable policies");
         capabilities.put("csrf", "Synchronizer / Double Submit dual mode");
-        capabilities.put("rateLimit", "Redis sliding window + local fallback");
+        capabilities.put("rateLimit", "Token Bucket + Resilience4j Circuit Breaker");
         capabilities.put("ipAccess", "CIDR blacklist/whitelist + auto-block");
         capabilities.put("apiSignature", "timestamp + nonce + HMAC-SHA256");
         capabilities.put("sensitiveData", "18 types + role-based control");
-        capabilities.put("captcha", "image + arithmetic + slider");
         capabilities.put("crypto", "AES-256-GCM");
         capabilities.put("metrics", "Micrometer Counter/Timer (optional)");
         capabilities.put("auditLog", "structured JSON + traceId");
@@ -87,7 +86,7 @@ public class SafeHealthIndicator implements HealthIndicator {
             return Health.up()
                     .withDetail("module", "safe")
                     .withDetail("redis", redisStatus)
-                    .withDetail("warning", "Redis unavailable - rate limiting/CSRF/captcha degraded to local mode")
+                    .withDetail("warning", "Redis unavailable - rate limiting/CSRF degraded to local mode")
                     .withDetail("capabilities", capabilities)
                     .build();
         }

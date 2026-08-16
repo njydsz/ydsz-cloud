@@ -2,7 +2,7 @@
 
 > YDSZ 统一安全防护基座（L5 业务服务层）
 
-提供 XSS 防护、CSRF 双模式防护、敏感数据脱敏、限流（多维度 + 多算法）、验证码、AES-256-GCM 加密、API 签名验证、IP 黑白名单、安全事件自动响应、Micrometer 指标、安全审计日志等全栈 Web 安全能力，是 YDSZ 项目所有业务服务的统一安全基座。
+提供 XSS 防护、CSRF 双模式防护、敏感数据脱敏、限流（令牌桶 + 熔断器）、AES-256-GCM 加密、API 签名验证、IP 黑白名单、安全事件自动响应、Micrometer 指标、安全审计日志等全栈 Web 安全能力，是 YDSZ 项目所有业务服务的统一安全基座。
 
 ## 模块定位
 
@@ -287,20 +287,6 @@ public class Application {
 | `rules` | 空 | 规则列表（resource / threshold / window-millis / dimension / algorithm / mode） |
 | `hot-params` | 空 | 热点参数特殊配置 |
 
-### 验证码（`ydsz.safe.captcha`）
-
-| 配置 | 默认值 | 说明 |
-|---|---|---|
-| `enabled` | true | 是否启用验证码功能 |
-| `default-type` | IMAGE | 默认类型：`IMAGE` / `ARITHMETIC` / `SLIDER` |
-| `store-type` | LOCAL | 存储类型：`LOCAL` / `REDIS` |
-| `length` | 4 | 图形验证码长度 |
-| `width` | 120 | 图片宽度 |
-| `height` | 40 | 图片高度 |
-| `expire-seconds` | 120 | 验证码过期时间（秒） |
-| `slider-tolerance` | 5 | 滑块容差范围（像素） |
-| `redis-key-prefix` | captcha: | Redis Key 前缀 |
-
 ### IP 访问控制（`ydsz.safe.ip-access`）
 
 | 配置 | 默认值 | 说明 |
@@ -519,11 +505,11 @@ ydsz:
     "module": "safe",
     "redis": "connected",
     "redisResponseTimeMs": 3,
-    "warning": "Redis unavailable - rate limiting/CSRF/captcha degraded to local mode",
+    "warning": "Redis unavailable - rate limiting/CSRF degraded to local mode",
     "capabilities": {
       "xss": "OWASP Sanitizer + configurable policies",
       "csrf": "Synchronizer / Double Submit dual mode",
-      "rateLimit": "Redis sliding window + local fallback"
+      "rateLimit": "Token Bucket + Resilience4j Circuit Breaker"
     }
   }
 }
@@ -544,5 +530,6 @@ ydsz:
 
 ## 变更记录
 
+- **v1.2.0**（2026-08-16）：模块拆分（safe → core + ratelimit + encrypt 三个独立子模块）；删除低价值模块（BotDetection、Captcha）；SecurityEventRingBuffer 标记 @Deprecated；限流算法收敛（废弃 COUNTER/SLIDING_WINDOW/LEAKY_BUCKET/CONCURRENCY，统一使用 TOKEN_BUCKET）；熔断器替换为 Resilience4j；移除 SQL 注入正则过滤器；配置前缀收敛（`ydsz.ratelimit` → `ydsz.safe.ratelimit`）；补全 FieldEncryptionService 测试。
 - **v1.1.0**（2026-08-16）：限流算法收敛（废弃 COUNTER/SLIDING_WINDOW/LEAKY_BUCKET/CONCURRENCY，统一使用 TOKEN_BUCKET）；熔断器替换为 Resilience4j；移除 SQL 注入正则过滤器；配置前缀收敛（`ydsz.ratelimit` → `ydsz.safe.ratelimit`）；补全 FieldEncryptionService 测试。
 - **v1.0.0**（2026-08-02）：对标 common-jdbc 标准格式重构 README，补全全部 9 个章节，覆盖 14 项核心能力、10 个 Properties 配置类、9 个 SPI 接口、1 个 HealthIndicator。

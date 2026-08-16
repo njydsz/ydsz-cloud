@@ -19,7 +19,10 @@ import com.njydsz.common.safe.alert.SecurityEvent;
  *
  * @author ydsz-team
  * @since 1.2.0
+ * @deprecated 功能与 Micrometer 监控重复，建议直接使用 Sentry 或 Prometheus 查询安全事件历史。
+ *     计划在 v2.0 中移除。
  */
+@Deprecated
 public class SecurityEventRingBuffer {
 
     /** 默认缓冲区容量 */

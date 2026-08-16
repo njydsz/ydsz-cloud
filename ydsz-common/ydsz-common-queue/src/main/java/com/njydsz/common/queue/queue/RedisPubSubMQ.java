@@ -25,9 +25,7 @@ import lombok.extern.slf4j.Slf4j;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @deprecated 建议使用 {@link RedisStreamMQ} 替代，Redis Stream 支持持久化和消息确认
  */
-@Deprecated
 @Slf4j
 public class RedisPubSubMQ extends AbstractMessageQueue {
 
