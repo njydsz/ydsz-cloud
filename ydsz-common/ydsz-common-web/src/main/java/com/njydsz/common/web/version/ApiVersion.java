@@ -9,10 +9,10 @@ import java.lang.annotation.Target;
 /**
  * API 版本注解
  *
- * <p>标注在 Controller 类或方法上，指定该接口支持的 API 版本。
- * 支持基于 URL 路径（/v1/、/v2/）或 Accept 头的版本路由。
+ * <p>标注在 Controller 类或方法上，指定该接口支持的 API 版本。 支持基于 URL 路径（/v1/、/v2/）或 Accept 头的版本路由。
  *
  * <p><b>使用示例：</b>
+ *
  * <pre>{@code
  * @RestController
  * @RequestMapping("/api/users")
@@ -33,9 +33,10 @@ import java.lang.annotation.Target;
  * }</pre>
  *
  * <p><b>版本路由策略：</b>
+ *
  * <ul>
- *   <li>URL 路径模式：{@code /v1/api/users} → 匹配 @ApiVersion("1.0")</li>
- *   <li>Accept 头模式：{@code Accept: application/vnd.ydsz.v1+json} → 匹配 @ApiVersion("1.0")</li>
+ *   <li>URL 路径模式：{@code /v1/api/users} → 匹配 @ApiVersion("1.0")
+ *   <li>Accept 头模式：{@code Accept: application/vnd.ydsz.v1+json} → 匹配 @ApiVersion("1.0")
  * </ul>
  *
  * @author ydsz-team
@@ -46,16 +47,17 @@ import java.lang.annotation.Target;
 @Documented
 public @interface ApiVersion {
 
-    /**
-     * API 版本号
-     *
-     * <p>支持格式：
-     * <ul>
-     *   <li>主版本：{@code "1"}、{@code "2"}</li>
-     *   <li>次版本：{@code "1.0"}、{@code "2.1"}</li>
-     * </ul>
-     *
-     * @return 版本号字符串
-     */
-    String value();
+  /**
+   * API 版本号
+   *
+   * <p>支持格式：
+   *
+   * <ul>
+   *   <li>主版本：{@code "1"}、{@code "2"}
+   *   <li>次版本：{@code "1.0"}、{@code "2.1"}
+   * </ul>
+   *
+   * @return 版本号字符串
+   */
+  String value();
 }

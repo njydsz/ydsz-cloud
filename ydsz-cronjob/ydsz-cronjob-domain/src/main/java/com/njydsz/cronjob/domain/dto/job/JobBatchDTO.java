@@ -1,10 +1,10 @@
 package com.njydsz.cronjob.domain.dto.job;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotEmpty;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 
 /**
@@ -19,10 +19,9 @@ import lombok.Data;
 @Schema(description = "任务批量操作 DTO")
 public class JobBatchDTO implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
-    @NotEmpty(message = "任务 ID 列表不能为空")
-    @Schema(description = "任务 ID 列表", requiredMode = Schema.RequiredMode.REQUIRED)
-    private List<String> jobIds;
+  @NotEmpty(message = "任务 ID 列表不能为空")
+  @Schema(description = "任务 ID 列表", requiredMode = Schema.RequiredMode.REQUIRED)
+  private List<String> jobIds;
 }

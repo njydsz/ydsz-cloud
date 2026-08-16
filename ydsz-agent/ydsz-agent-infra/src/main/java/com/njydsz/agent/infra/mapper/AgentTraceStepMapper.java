@@ -1,8 +1,9 @@
 package com.njydsz.agent.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.agent.domain.entity.AgentTraceStepDO;
 import org.apache.ibatis.annotations.Mapper;
+
+import com.njydsz.agent.domain.entity.AgentTraceStepDO;
 
 /**
  * Agent 执行链路步骤 Mapper
@@ -13,5 +14,4 @@ import org.apache.ibatis.annotations.Mapper;
  * @since 1.0.0
  */
 @Mapper
-public interface AgentTraceStepMapper extends BaseMapper<AgentTraceStepDO> {
-}
+public interface AgentTraceStepMapper extends BaseMapper<AgentTraceStepDO> {}

@@ -19,10 +19,8 @@ import java.util.concurrent.atomic.AtomicInteger;
  *   <li>从全局静态 {@code Map<Cache, Set>} 改为 per-cache {@code Set<Object>}， 消除跨缓存实例的状态共享
  *   <li>使用 {@link ConcurrentHashMap} 支持高并发读写
  *   <li>外层 {@link WeakHashMap} 确保缓存实例 GC 后状态自动清理
- *   <li>有界化：每个缓存的空值键集合上限为 {@link #MAX_NULL_KEYS}（默认 10000），
- *       超过时自动清空重建，防止单缓存穿透攻击导致内存溢出
+ *   <li>有界化：每个缓存的空值键集合上限为 {@link #MAX_NULL_KEYS}（默认 10000）， 超过时自动清空重建，防止单缓存穿透攻击导致内存溢出
  * </ul>
- *
  *
  * @author ydsz-team
  * @since 1.0.0

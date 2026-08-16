@@ -14,28 +14,27 @@ import lombok.Data;
 @Data
 public class FlowAuditLogVO implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
-    private String id;
-    private String instanceId;
-    private String taskId;
-    private String flowCode;
-    private String businessType;
-    private String businessId;
-    private String nodeCode;
-    private String nodeName;
-    private String action;
-    private String operatorId;
-    private String operatorName;
-    private String targetId;
-    private String targetName;
-    private String comment;
-    private String commentType;
-    private LocalDateTime operatedAt;
-    private String providerTraceId;
-    private String createdBy;
-    private LocalDateTime createdAt;
-    private String updatedBy;
-    private LocalDateTime updatedAt;
+  private String id;
+  private String instanceId;
+  private String taskId;
+  private String flowCode;
+  private String businessType;
+  private String businessId;
+  private String nodeCode;
+  private String nodeName;
+  private String action;
+  private String operatorId;
+  private String operatorName;
+  private String targetId;
+  private String targetName;
+  private String comment;
+  private String commentType;
+  private LocalDateTime operatedAt;
+  private String providerTraceId;
+  private String createdBy;
+  private LocalDateTime createdAt;
+  private String updatedBy;
+  private LocalDateTime updatedAt;
 }

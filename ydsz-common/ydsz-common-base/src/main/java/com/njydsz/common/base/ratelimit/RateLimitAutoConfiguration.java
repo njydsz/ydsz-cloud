@@ -21,58 +21,65 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @AutoConfiguration
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
 @ConditionalOnClass(name = "org.springframework.web.servlet.HandlerInterceptor")
-@ConditionalOnProperty(prefix = "ydsz.base.ratelimit", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(
+    prefix = "ydsz.base.ratelimit",
+    name = "enabled",
+    havingValue = "true",
+    matchIfMissing = true)
 public class RateLimitAutoConfiguration {
 
-    /**
-     * 限流拦截器默认顺序。
-     * <p>数值越小优先级越高，50 确保在安全过滤器之后、业务拦截器之前执行。
-     */
-    private static final int DEFAULT_INTERCEPTOR_ORDER = 50;
+  /**
+   * 限流拦截器默认顺序。
+   *
+   * <p>数值越小优先级越高，50 确保在安全过滤器之后、业务拦截器之前执行。
+   */
+  private static final int DEFAULT_INTERCEPTOR_ORDER = 50;
 
-    /**
-     * 默认限流器（本地实现）。
-     *
-     * <p>当 Redis 模块未引入时作为降级方案。
-     *
-     * @return RateLimiter 实例
-     */
-    @Bean
-    @ConditionalOnMissingBean(RateLimiter.class)
-    public RateLimiter rateLimiter() {
-        return new InMemoryRateLimiter();
-    }
+  /**
+   * 默认限流器（本地实现）。
+   *
+   * <p>当 Redis 模块未引入时作为降级方案。
+   *
+   * @return RateLimiter 实例
+   */
+  @Bean
+  @ConditionalOnMissingBean(RateLimiter.class)
+  public RateLimiter rateLimiter() {
+    return new InMemoryRateLimiter();
+  }
 
-    /**
-     * 限流拦截器。
-     *
-     * @param rateLimiter 限流器
-     * @return RateLimitInterceptor 实例
-     */
-    @Bean
-    @ConditionalOnMissingBean(RateLimitInterceptor.class)
-    public RateLimitInterceptor rateLimitInterceptor(RateLimiter rateLimiter) {
-        return new RateLimitInterceptor(rateLimiter);
-    }
+  /**
+   * 限流拦截器。
+   *
+   * @param rateLimiter 限流器
+   * @return RateLimitInterceptor 实例
+   */
+  @Bean
+  @ConditionalOnMissingBean(RateLimitInterceptor.class)
+  public RateLimitInterceptor rateLimitInterceptor(RateLimiter rateLimiter) {
+    return new RateLimitInterceptor(rateLimiter);
+  }
 
-    /**
-     * 注册限流拦截器到 Spring MVC。
-     *
-     * @param interceptorProvider 拦截器提供者
-     * @return WebMvcConfigurer 实例
-     */
-    @Bean
-    public WebMvcConfigurer rateLimitWebMvcConfigurer(ObjectProvider<RateLimitInterceptor> interceptorProvider) {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addInterceptors(InterceptorRegistry registry) {
-                RateLimitInterceptor interceptor = interceptorProvider.getIfAvailable();
-                if (interceptor != null) {
-                    registry.addInterceptor(interceptor)
-                            .addPathPatterns("/**")
-                            .order(DEFAULT_INTERCEPTOR_ORDER);
-                }
-            }
-        };
-    }
+  /**
+   * 注册限流拦截器到 Spring MVC。
+   *
+   * @param interceptorProvider 拦截器提供者
+   * @return WebMvcConfigurer 实例
+   */
+  @Bean
+  public WebMvcConfigurer rateLimitWebMvcConfigurer(
+      ObjectProvider<RateLimitInterceptor> interceptorProvider) {
+    return new WebMvcConfigurer() {
+      @Override
+      public void addInterceptors(InterceptorRegistry registry) {
+        RateLimitInterceptor interceptor = interceptorProvider.getIfAvailable();
+        if (interceptor != null) {
+          registry
+              .addInterceptor(interceptor)
+              .addPathPatterns("/**")
+              .order(DEFAULT_INTERCEPTOR_ORDER);
+        }
+      }
+    };
+  }
 }

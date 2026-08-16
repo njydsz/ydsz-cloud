@@ -14,19 +14,18 @@ import lombok.Data;
 @Data
 public class FlowDmnRuleVO implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
-    private String id;
-    private String decisionId;
-    private Integer ruleOrder;
-    private String inputEntries;
-    private String outputEntries;
-    private String remark;
-    private Integer enabled;
-    private String providerTraceId;
-    private String createdBy;
-    private LocalDateTime createdAt;
-    private String updatedBy;
-    private LocalDateTime updatedAt;
+  private String id;
+  private String decisionId;
+  private Integer ruleOrder;
+  private String inputEntries;
+  private String outputEntries;
+  private String remark;
+  private Integer enabled;
+  private String providerTraceId;
+  private String createdBy;
+  private LocalDateTime createdAt;
+  private String updatedBy;
+  private LocalDateTime updatedAt;
 }

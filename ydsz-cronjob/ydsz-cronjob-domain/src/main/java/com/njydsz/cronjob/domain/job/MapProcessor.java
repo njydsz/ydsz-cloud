@@ -8,11 +8,11 @@ package com.njydsz.cronjob.domain.job;
  */
 public interface MapProcessor {
 
-    /**
-     * 处理任务
-     *
-     * @param ctx 任务上下文
-     * @return 处理结果
-     */
-    ProcessResult process(MapContext ctx);
+  /**
+   * 处理任务
+   *
+   * @param ctx 任务上下文
+   * @return 处理结果
+   */
+  ProcessResult process(MapContext ctx);
 }

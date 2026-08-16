@@ -1,5 +1,9 @@
 package com.njydsz.common.socket.cluster;
 
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.socket.constant.WebSocketConstants;
+import com.njydsz.common.socket.session.LocalSessionRegistry;
+import com.njydsz.common.socket.trace.WebSocketTraceContext;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.connection.Message;
@@ -7,19 +11,16 @@ import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.WebSocketSession;
-import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.socket.constant.WebSocketConstants;
-import com.njydsz.common.socket.session.LocalSessionRegistry;
-import com.njydsz.common.socket.trace.WebSocketTraceContext;
 
 /**
  * WebSocket 集群广播订阅者（Redis Pub/Sub -> 本地 STOMP 推送）。
  *
  * <p>订阅 Redis Channel，收到消息后根据推送类型将消息推送到本地 JVM 的 WebSocket session：
+ *
  * <ul>
- *   <li>{@code USER}：推送到 {@code /topic/user/{userId}/notifications}</li>
- *   <li>{@code BROADCAST}：推送到 {@code /topic/broadcast}</li>
- *   <li>{@code TOPIC}：推送到 {@code /topic/{topic}}</li>
+ *   <li>{@code USER}：推送到 {@code /topic/user/{userId}/notifications}
+ *   <li>{@code BROADCAST}：推送到 {@code /topic/broadcast}
+ *   <li>{@code TOPIC}：推送到 {@code /topic/{topic}}
  * </ul>
  *
  * <p>收到消息后从 {@link WebSocketClusterMessage#getTraceId()} 恢复 MDC traceId。
@@ -31,87 +32,97 @@ import com.njydsz.common.socket.trace.WebSocketTraceContext;
 @RequiredArgsConstructor
 public class WebSocketClusterSubscriber implements MessageListener {
 
-    private final SimpMessagingTemplate messagingTemplate;
-    /** P2-8: 本地 Session 注册表（KICK 消息处理时读取并关闭同用户 Session） */
-    private final LocalSessionRegistry sessionRegistry;
+  private final SimpMessagingTemplate messagingTemplate;
 
-    @Override
-    public void onMessage(Message message, byte[] pattern) {
-        if (message == null || message.getBody() == null) {
-            return;
-        }
-        String body = new String(message.getBody());
-        WebSocketClusterMessage clusterMsg;
-        try {
-            clusterMsg = YdszJson.fromJson(body, WebSocketClusterMessage.class);
-        } catch (Exception e) {
-            log.warn("[WS-Cluster] 消息解析失败,跳过: err={}", e.getMessage());
-            return;
-        }
-        if (clusterMsg == null) {
-            return;
-        }
-        WebSocketTraceContext.runWithTrace(clusterMsg.getTraceId(), () -> {
-            try {
-                dispatchToLocal(clusterMsg);
-            } catch (Exception e) {
-                log.warn("[WS-Cluster] 本地推送失败: type={} err={}",
-                        clusterMsg.getPushType(), e.getMessage());
-            }
+  /** P2-8: 本地 Session 注册表（KICK 消息处理时读取并关闭同用户 Session） */
+  private final LocalSessionRegistry sessionRegistry;
+
+  @Override
+  public void onMessage(Message message, byte[] pattern) {
+    if (message == null || message.getBody() == null) {
+      return;
+    }
+    String body = new String(message.getBody());
+    WebSocketClusterMessage clusterMsg;
+    try {
+      clusterMsg = YdszJson.fromJson(body, WebSocketClusterMessage.class);
+    } catch (Exception e) {
+      log.warn("[WS-Cluster] 消息解析失败,跳过: err={}", e.getMessage());
+      return;
+    }
+    if (clusterMsg == null) {
+      return;
+    }
+    WebSocketTraceContext.runWithTrace(
+        clusterMsg.getTraceId(),
+        () -> {
+          try {
+            dispatchToLocal(clusterMsg);
+          } catch (Exception e) {
+            log.warn(
+                "[WS-Cluster] 本地推送失败: type={} err={}", clusterMsg.getPushType(), e.getMessage());
+          }
         });
-    }
+  }
 
-    /**
-     * 将集群消息推送到本地 WebSocket session。
-     *
-     * @param msg 集群推送消息
-     */
-    private void dispatchToLocal(WebSocketClusterMessage msg) {
-        String pushType = msg.getPushType();
-        String payloadJson = msg.getPayloadJson();
-        if ("USER".equals(pushType) && msg.getUserId() != null) {
-            String destination = WebSocketConstants.WS_USER_DESTINATION_PREFIX
-                    + msg.getUserId() + "/notifications";
-            messagingTemplate.convertAndSend(destination, payloadJson);
-        } else if ("BROADCAST".equals(pushType)) {
-            messagingTemplate.convertAndSend(
-                    WebSocketConstants.WS_BROADCAST_DESTINATION, payloadJson);
-        } else if ("TOPIC".equals(pushType) && msg.getTopic() != null) {
-            messagingTemplate.convertAndSend(
-                    WebSocketConstants.WS_TOPIC_DESTINATION_PREFIX + msg.getTopic(),
-                    payloadJson);
-        } else if ("KICK".equals(pushType) && msg.getUserId() != null) {
-            handleKickLocally(msg);
-        } else {
-            log.warn("[WS-Cluster] 未知推送类型或参数缺失: type={} userId={} topic={}",
-                    pushType, msg.getUserId(), msg.getTopic());
-        }
+  /**
+   * 将集群消息推送到本地 WebSocket session。
+   *
+   * @param msg 集群推送消息
+   */
+  private void dispatchToLocal(WebSocketClusterMessage msg) {
+    String pushType = msg.getPushType();
+    String payloadJson = msg.getPayloadJson();
+    if ("USER".equals(pushType) && msg.getUserId() != null) {
+      String destination =
+          WebSocketConstants.WS_USER_DESTINATION_PREFIX + msg.getUserId() + "/notifications";
+      messagingTemplate.convertAndSend(destination, payloadJson);
+    } else if ("BROADCAST".equals(pushType)) {
+      messagingTemplate.convertAndSend(WebSocketConstants.WS_BROADCAST_DESTINATION, payloadJson);
+    } else if ("TOPIC".equals(pushType) && msg.getTopic() != null) {
+      messagingTemplate.convertAndSend(
+          WebSocketConstants.WS_TOPIC_DESTINATION_PREFIX + msg.getTopic(), payloadJson);
+    } else if ("KICK".equals(pushType) && msg.getUserId() != null) {
+      handleKickLocally(msg);
+    } else {
+      log.warn(
+          "[WS-Cluster] 未知推送类型或参数缺失: type={} userId={} topic={}",
+          pushType,
+          msg.getUserId(),
+          msg.getTopic());
     }
+  }
 
-    /**
-     * P2-8: 处理集群 KICK 消息，踢出指定用户在本节点的所有 Session。
-     *
-     * @param msg 集群踢出消息
-     */
-    private void handleKickLocally(WebSocketClusterMessage msg) {
-        String userId = msg.getUserId();
-        java.util.List<String> sessionIds = sessionRegistry.getSessionIds(userId);
-        if (sessionIds.isEmpty()) {
-            return;
-        }
-        for (String sessionId : sessionIds) {
-            WebSocketSession session = sessionRegistry.getSession(sessionId);
-            if (session != null && session.isOpen()) {
-                try {
-                    session.close(new CloseStatus(4001, "KICK:" + msg.getKickReason()));
-                    log.info("[WS-Cluster] 集群 KICK 关闭本地 Session: userId={}, sessionId={}, reason={}",
-                            userId, sessionId, msg.getKickReason());
-                } catch (Exception e) {
-                    log.warn("[WS-Cluster] 集群 KICK 关闭本地 Session 失败: userId={}, sessionId={}, err={}",
-                            userId, sessionId, e.getMessage());
-                }
-            }
-            sessionRegistry.unregister(userId, sessionId);
-        }
+  /**
+   * P2-8: 处理集群 KICK 消息，踢出指定用户在本节点的所有 Session。
+   *
+   * @param msg 集群踢出消息
+   */
+  private void handleKickLocally(WebSocketClusterMessage msg) {
+    String userId = msg.getUserId();
+    java.util.List<String> sessionIds = sessionRegistry.getSessionIds(userId);
+    if (sessionIds.isEmpty()) {
+      return;
     }
+    for (String sessionId : sessionIds) {
+      WebSocketSession session = sessionRegistry.getSession(sessionId);
+      if (session != null && session.isOpen()) {
+        try {
+          session.close(new CloseStatus(4001, "KICK:" + msg.getKickReason()));
+          log.info(
+              "[WS-Cluster] 集群 KICK 关闭本地 Session: userId={}, sessionId={}, reason={}",
+              userId,
+              sessionId,
+              msg.getKickReason());
+        } catch (Exception e) {
+          log.warn(
+              "[WS-Cluster] 集群 KICK 关闭本地 Session 失败: userId={}, sessionId={}, err={}",
+              userId,
+              sessionId,
+              e.getMessage());
+        }
+      }
+      sessionRegistry.unregister(userId, sessionId);
+    }
+  }
 }

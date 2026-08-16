@@ -1,5 +1,7 @@
 package com.njydsz.common.cache.health;
 
+import com.njydsz.common.cache.api.Cache;
+import com.njydsz.common.cache.stats.CacheStats;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -8,8 +10,6 @@ import java.util.OptionalLong;
 import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.njydsz.common.cache.api.Cache;
-import com.njydsz.common.cache.stats.CacheStats;
 
 /**
  * 缓存健康检查指示器
@@ -24,7 +24,6 @@ import com.njydsz.common.cache.stats.CacheStats;
  * </ul>
  *
  * <p>可适配为 Spring Boot Actuator HealthIndicator（如 spring-boot-health 在 classpath 中）。
- *
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -70,8 +69,7 @@ public class CacheHealthIndicator {
   /**
    * 设置命中率告警阈值
    *
-   * <p>当缓存命中率低于此阈值且访问样本数达到 {@link #setMinSampleSize(long)} 时，
-   * 健康状态标记为 WARN。
+   * <p>当缓存命中率低于此阈值且访问样本数达到 {@link #setMinSampleSize(long)} 时， 健康状态标记为 WARN。
    *
    * @param hitRateWarnThreshold 阈值（0.0 ~ 1.0），默认 0.3
    * @throws IllegalArgumentException 当阈值不在 (0, 1] 范围内时抛出
@@ -103,7 +101,7 @@ public class CacheHealthIndicator {
   /**
    * 设置命中率检查的最小访问样本数
    *
-   * <p访问量低于此数量时不判断命中率，避免冷启动阶段的误报。
+   * <p><p访问量低于此数量时不判断命中率，避免冷启动阶段的误报。
    *
    * @param minSampleSize 最小样本数，必须 ≥ 0，默认 100
    * @throws IllegalArgumentException 当样本数 < 0 时抛出
@@ -220,8 +218,7 @@ public class CacheHealthIndicator {
     /**
      * 返回各缓存维度的健康详情。
      *
-     * <p>键为缓存名称，值为该缓存的大小、命中率、容量使用率与告警信息；
-     * 末尾附 totalCaches 汇总字段。
+     * <p>键为缓存名称，值为该缓存的大小、命中率、容量使用率与告警信息； 末尾附 totalCaches 汇总字段。
      *
      * @return 健康详情映射，与注册顺序一致
      */

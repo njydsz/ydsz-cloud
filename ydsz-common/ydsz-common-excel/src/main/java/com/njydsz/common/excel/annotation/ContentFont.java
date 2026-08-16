@@ -9,7 +9,6 @@ package com.njydsz.common.excel.annotation;
  */
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -27,13 +26,13 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 public @interface ContentFont {
 
-    String fontName() default "Calibri";
+  String fontName() default "Calibri";
 
-    int fontSize() default 11;
+  int fontSize() default 11;
 
-    boolean bold() default false;
+  boolean bold() default false;
 
-    boolean italic() default false;
+  boolean italic() default false;
 
-    short color() default 0;
+  short color() default 0;
 }

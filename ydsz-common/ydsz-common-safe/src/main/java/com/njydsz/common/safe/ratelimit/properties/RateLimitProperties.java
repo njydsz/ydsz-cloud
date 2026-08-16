@@ -1,10 +1,10 @@
 package com.njydsz.common.safe.ratelimit.properties;
 
+import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
 
 /**
  * 限流模块配置属性
@@ -12,6 +12,7 @@ import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
  * <p>前缀：{@code ydsz.safe.ratelimit}
  *
  * <p>配置示例：
+ *
  * <pre>{@code
  * ydsz:
  *   safe:
@@ -38,27 +39,27 @@ import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
 @ConfigurationProperties(prefix = "ydsz.safe.ratelimit")
 public class RateLimitProperties {
 
-    /** 是否启用限流模块 */
-    private boolean enabled = true;
+  /** 是否启用限流模块 */
+  private boolean enabled = true;
 
-    /** 默认限流模式 */
-    private String defaultMode = "LOCAL";
+  /** 默认限流模式 */
+  private String defaultMode = "LOCAL";
 
-    /** 限流决策异常时降级策略：PASS（放行）/ BLOCK（拒绝） */
-    private String fallbackOnError = "PASS";
+  /** 限流决策异常时降级策略：PASS（放行）/ BLOCK（拒绝） */
+  private String fallbackOnError = "PASS";
 
-    /** 是否启用 Micrometer 指标 */
-    private boolean metricsEnabled = true;
+  /** 是否启用 Micrometer 指标 */
+  private boolean metricsEnabled = true;
 
-    /** 集群限流 Redis Key 前缀 */
-    private String clusterKeyPrefix = "ydsz:ratelimit:";
+  /** 集群限流 Redis Key 前缀 */
+  private String clusterKeyPrefix = "ydsz:ratelimit:";
 
-    /** 规则列表（静态配置） */
-    private List<RateLimitRule> rules = new ArrayList<>();
+  /** 规则列表（静态配置） */
+  private List<RateLimitRule> rules = new ArrayList<>();
 
-    /** 热点参数特殊配置（key 索引 → 阈值） */
-    private List<HotParamRule> hotParams = new ArrayList<>();
+  /** 热点参数特殊配置（key 索引 → 阈值） */
+  private List<HotParamRule> hotParams = new ArrayList<>();
 
-    /** 熔断器配置（保护 Redis 集群限流调用） */
-    private CircuitBreakerProperties circuitBreaker = new CircuitBreakerProperties();
+  /** 熔断器配置（保护 Redis 集群限流调用） */
+  private CircuitBreakerProperties circuitBreaker = new CircuitBreakerProperties();
 }

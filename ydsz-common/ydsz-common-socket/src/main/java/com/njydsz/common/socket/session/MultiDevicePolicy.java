@@ -8,12 +8,12 @@ package com.njydsz.common.socket.session;
  */
 public enum MultiDevicePolicy {
 
-    /** 允许多端同时在线（默认） */
-    ALLOW_ALL,
+  /** 允许多端同时在线（默认） */
+  ALLOW_ALL,
 
-    /** 互斥登录：同一用户仅允许一个设备在线 */
-    MUTEX,
+  /** 互斥登录：同一用户仅允许一个设备在线 */
+  MUTEX,
 
-    /** 新设备挤占旧设备：新连接建立时踢出旧设备 */
-    NEW_REPLACE_OLD
+  /** 新设备挤占旧设备：新连接建立时踢出旧设备 */
+  NEW_REPLACE_OLD
 }

@@ -1,7 +1,7 @@
 package com.njydsz.message.domain.dto.core;
 
-import lombok.Data;
 import com.njydsz.common.safe.annotation.Xss;
+import lombok.Data;
 
 /**
  * P1-4: 消息反馈请求 DTO
@@ -12,25 +12,21 @@ import com.njydsz.common.safe.annotation.Xss;
 @Data
 public class MessageFeedbackDTO {
 
-    /** 消息 ID（关联 ydsz_msg_log.msg_id） */
-    @Xss
-    private String msgId;
+  /** 消息 ID（关联 ydsz_msg_log.msg_id） */
+  @Xss private String msgId;
 
-    /** 站内通知 ID（可选） */
-    @Xss
-    private String notificationId;
+  /** 站内通知 ID（可选） */
+  @Xss private String notificationId;
 
-    /** 用户 ID */
-    @Xss
-    private String userId;
+  /** 用户 ID */
+  @Xss private String userId;
 
-    /** 评分: 1-5 分 */
-    private Integer rating;
+  /** 评分: 1-5 分 */
+  private Integer rating;
 
-    /** 反馈类型 */
-    @Xss
-    private String feedbackType;
+  /** 反馈类型 */
+  @Xss private String feedbackType;
 
-    /** 反馈内容 */
-    private String content;
+  /** 反馈内容 */
+  private String content;
 }

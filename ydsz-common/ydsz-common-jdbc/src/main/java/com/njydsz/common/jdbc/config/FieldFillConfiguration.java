@@ -3,7 +3,6 @@ package com.njydsz.common.jdbc.config;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import com.njydsz.common.jdbc.config.InterceptConfig;
 
 /**
  * 字段自动填充配置。
@@ -15,29 +14,20 @@ import com.njydsz.common.jdbc.config.InterceptConfig;
  * @author ydsz-team
  * @since 1.0.0
  */
-
 @Getter
 @Setter
 @ConfigurationProperties(prefix = "ydsz.jdbc.field-fill")
 public class FieldFillConfiguration {
 
-    /**
-     * 创建人字段填充配置
-     */
-    private InterceptConfig createdByIntercept = new InterceptConfig();
+  /** 创建人字段填充配置 */
+  private InterceptConfig createdByIntercept = new InterceptConfig();
 
-    /**
-     * 更新人字段填充配置
-     */
-    private InterceptConfig updateByIntercept = new InterceptConfig();
+  /** 更新人字段填充配置 */
+  private InterceptConfig updateByIntercept = new InterceptConfig();
 
-    /**
-     * 创建时间字段填充配置
-     */
-    private InterceptConfig createAtIntercept = new InterceptConfig();
+  /** 创建时间字段填充配置 */
+  private InterceptConfig createAtIntercept = new InterceptConfig();
 
-    /**
-     * 更新时间字段填充配置
-     */
-    private InterceptConfig updateAtIntercept = new InterceptConfig();
+  /** 更新时间字段填充配置 */
+  private InterceptConfig updateAtIntercept = new InterceptConfig();
 }

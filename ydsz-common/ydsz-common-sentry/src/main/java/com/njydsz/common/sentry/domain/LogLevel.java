@@ -7,11 +7,10 @@ package com.njydsz.common.sentry.domain;
  * @since 1.0.0
  */
 public enum LogLevel {
-
-    TRACE,
-    DEBUG,
-    INFO,
-    WARN,
-    ERROR,
-    FATAL
+  TRACE,
+  DEBUG,
+  INFO,
+  WARN,
+  ERROR,
+  FATAL
 }

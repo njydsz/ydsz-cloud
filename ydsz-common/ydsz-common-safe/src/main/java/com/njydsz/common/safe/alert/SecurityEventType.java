@@ -8,43 +8,27 @@ package com.njydsz.common.safe.alert;
  */
 public enum SecurityEventType {
 
-    /**
-     * XSS 攻击检测
-     */
-    XSS_ATTACK,
+  /** XSS 攻击检测 */
+  XSS_ATTACK,
 
-    /**
-     * CSRF 攻击检测
-     */
-    CSRF_ATTACK,
+  /** CSRF 攻击检测 */
+  CSRF_ATTACK,
 
-    /**
-     * 暴力破解检测
-     */
-    BRUTE_FORCE,
+  /** 暴力破解检测 */
+  BRUTE_FORCE,
 
-    /**
-     * 非法访问检测
-     */
-    ILLEGAL_ACCESS,
+  /** 非法访问检测 */
+  ILLEGAL_ACCESS,
 
-    /**
-     * 限流触发
-     */
-    RATE_LIMIT_TRIGGERED,
+  /** 限流触发 */
+  RATE_LIMIT_TRIGGERED,
 
-    /**
-     * IP 自动封禁（安全事件聚合触发）
-     */
-    IP_AUTO_BLOCKED,
+  /** IP 自动封禁（安全事件聚合触发） */
+  IP_AUTO_BLOCKED,
 
-    /**
-     * API 签名验证失败
-     */
-    SIGNATURE_INVALID,
+  /** API 签名验证失败 */
+  SIGNATURE_INVALID,
 
-    /**
-     * 密码强度不足
-     */
-    WEAK_PASSWORD
+  /** 密码强度不足 */
+  WEAK_PASSWORD
 }

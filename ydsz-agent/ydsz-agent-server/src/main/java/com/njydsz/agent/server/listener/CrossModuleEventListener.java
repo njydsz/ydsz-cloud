@@ -5,16 +5,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+
 import com.njydsz.agent.server.rag.RagService;
-import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.model.OutboxMessage;
 
 /**
  * 跨模块事件监听器 — Agent 模块订阅其他模块的领域事件。
  *
  * <p>当前订阅：
+ *
  * <ul>
- *   <li>{@code FILE_UPLOADED} — 文件上传完成时自动索引到 RAG 知识库</li>
+ *   <li>{@code FILE_UPLOADED} — 文件上传完成时自动索引到 RAG 知识库
  * </ul>
  *
  * @author ydsz-team
@@ -25,23 +26,27 @@ import com.njydsz.common.event.model.OutboxMessage;
 @RequiredArgsConstructor
 public class CrossModuleEventListener {
 
-    private final RagService ragService;
+  private final RagService ragService;
 
-    /**
-     * 文件上传完成 — 自动索引到 RAG 知识库
-     *
-     * @param message Outbox 消息
-     */
-    @Async
-    @EventListener(condition = "#message.eventType == T(com.njydsz.common.event.api.DomainEventTypes).FILE_UPLOADED")
-    public void onFileUploaded(OutboxMessage message) {
-        log.info("[CrossModuleEventListener] 接收文件上传事件: aggregateId={}, payload={}",
-                message.getAggregateId(), message.getPayload());
-        try {
-            ragService.ingestByFileId(message.getAggregateId());
-        } catch (Exception e) {
-            log.error("[CrossModuleEventListener] 自动索引文件到 RAG 知识库异常: fileId={}",
-                    message.getAggregateId(), e);
-        }
+  /**
+   * 文件上传完成 — 自动索引到 RAG 知识库
+   *
+   * @param message Outbox 消息
+   */
+  @Async
+  @EventListener(
+      condition =
+          "#message.eventType == T(com.njydsz.common.event.api.DomainEventTypes).FILE_UPLOADED")
+  public void onFileUploaded(OutboxMessage message) {
+    log.info(
+        "[CrossModuleEventListener] 接收文件上传事件: aggregateId={}, payload={}",
+        message.getAggregateId(),
+        message.getPayload());
+    try {
+      ragService.ingestByFileId(message.getAggregateId());
+    } catch (Exception e) {
+      log.error(
+          "[CrossModuleEventListener] 自动索引文件到 RAG 知识库异常: fileId={}", message.getAggregateId(), e);
     }
+  }
 }

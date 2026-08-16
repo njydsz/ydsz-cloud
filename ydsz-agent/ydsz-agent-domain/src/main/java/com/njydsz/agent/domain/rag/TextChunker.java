@@ -14,23 +14,23 @@ import java.util.List;
  */
 public interface TextChunker {
 
-    /**
-     * 将文本分块
-     *
-     * @param text       原始文本
-     * @param documentId 文档 ID（用于关联）
-     * @return 文本块列表
-     */
-    List<TextChunk> chunk(String text, String documentId);
+  /**
+   * 将文本分块
+   *
+   * @param text 原始文本
+   * @param documentId 文档 ID（用于关联）
+   * @return 文本块列表
+   */
+  List<TextChunk> chunk(String text, String documentId);
 
-    /**
-     * 将文本分块（含文档元信息）
-     *
-     * @param text           原始文本
-     * @param documentId     文档 ID
-     * @param documentTitle  文档标题
-     * @param source         来源（如 "nextwiki"、"project"）
-     * @return 文本块列表
-     */
-    List<TextChunk> chunk(String text, String documentId, String documentTitle, String source);
+  /**
+   * 将文本分块（含文档元信息）
+   *
+   * @param text 原始文本
+   * @param documentId 文档 ID
+   * @param documentTitle 文档标题
+   * @param source 来源（如 "nextwiki"、"project"）
+   * @return 文本块列表
+   */
+  List<TextChunk> chunk(String text, String documentId, String documentTitle, String source);
 }

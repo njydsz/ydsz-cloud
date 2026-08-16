@@ -14,23 +14,22 @@ import lombok.Data;
 @Data
 public class FlowCommentVO implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
-    private String id;
-    private String instanceId;
-    private String taskId;
-    private String nodeCode;
-    private String userId;
-    private String userName;
-    private String content;
-    private String type;
-    private String parentCommentId;
-    private String replyToUserId;
-    private String replyToUserName;
-    private String providerTraceId;
-    private String createdBy;
-    private LocalDateTime createdAt;
-    private String updatedBy;
-    private LocalDateTime updatedAt;
+  private String id;
+  private String instanceId;
+  private String taskId;
+  private String nodeCode;
+  private String userId;
+  private String userName;
+  private String content;
+  private String type;
+  private String parentCommentId;
+  private String replyToUserId;
+  private String replyToUserName;
+  private String providerTraceId;
+  private String createdBy;
+  private LocalDateTime createdAt;
+  private String updatedBy;
+  private LocalDateTime updatedAt;
 }

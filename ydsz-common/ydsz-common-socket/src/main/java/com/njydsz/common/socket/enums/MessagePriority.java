@@ -10,47 +10,47 @@ package com.njydsz.common.socket.enums;
  */
 public enum MessagePriority {
 
-    /** 紧急：系统告警、故障通知 */
-    URGENT(1),
+  /** 紧急：系统告警、故障通知 */
+  URGENT(1),
 
-    /** 高：审批通知、任务指派 */
-    HIGH(2),
+  /** 高：审批通知、任务指派 */
+  HIGH(2),
 
-    /** 普通：日常通知、消息提醒 */
-    NORMAL(3),
+  /** 普通：日常通知、消息提醒 */
+  NORMAL(3),
 
-    /** 低：数据刷新、仪表盘更新 */
-    LOW(4);
+  /** 低：数据刷新、仪表盘更新 */
+  LOW(4);
 
-    private final int weight;
+  private final int weight;
 
-    MessagePriority(int weight) {
-        this.weight = weight;
+  MessagePriority(int weight) {
+    this.weight = weight;
+  }
+
+  /**
+   * 获取优先级权重（值越小优先级越高）。
+   *
+   * @return 权重值
+   */
+  public int getWeight() {
+    return weight;
+  }
+
+  /**
+   * 从字符串解析优先级，默认返回 NORMAL。
+   *
+   * @param value 字符串值
+   * @return 优先级枚举
+   */
+  public static MessagePriority fromString(String value) {
+    if (value == null || value.isEmpty()) {
+      return NORMAL;
     }
-
-    /**
-     * 获取优先级权重（值越小优先级越高）。
-     *
-     * @return 权重值
-     */
-    public int getWeight() {
-        return weight;
+    try {
+      return MessagePriority.valueOf(value.toUpperCase());
+    } catch (IllegalArgumentException e) {
+      return NORMAL;
     }
-
-    /**
-     * 从字符串解析优先级，默认返回 NORMAL。
-     *
-     * @param value 字符串值
-     * @return 优先级枚举
-     */
-    public static MessagePriority fromString(String value) {
-        if (value == null || value.isEmpty()) {
-            return NORMAL;
-        }
-        try {
-            return MessagePriority.valueOf(value.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            return NORMAL;
-        }
-    }
+  }
 }

@@ -1,15 +1,15 @@
 package com.njydsz.common.cache.health;
 
+import com.njydsz.common.cache.spring.YdszCacheManager;
 import java.util.Map;
 import org.springframework.boot.health.contributor.Health;
 import org.springframework.boot.health.contributor.HealthIndicator;
-import com.njydsz.common.cache.spring.YdszCacheManager;
 
 /**
  * Spring Boot Actuator HealthIndicator 适配器 — 对接 {@link CacheHealthIndicator}
  *
- * <p>自动注册 {@link YdszCacheManager} 中的所有缓存到 {@link CacheHealthIndicator}，
- * 并通过 Spring Boot Actuator 暴露缓存健康状态。
+ * <p>自动注册 {@link YdszCacheManager} 中的所有缓存到 {@link CacheHealthIndicator}， 并通过 Spring Boot Actuator
+ * 暴露缓存健康状态。
  *
  * <p>状态映射：
  *
@@ -47,9 +47,8 @@ public class SpringCacheHealthIndicator implements HealthIndicator {
   /**
    * 获取缓存健康状态并转换为 Actuator Health。
    *
-   * <p>状态映射约定：UP 与 WARN 均映射为 {@code Health.up()}（WARN 仅通过
-   * withDetail 附带 warning 字段告警），DOWN 映射为 {@code Health.down()}，
-   * 其余未知状态映射为 unknown。
+   * <p>状态映射约定：UP 与 WARN 均映射为 {@code Health.up()}（WARN 仅通过 withDetail 附带 warning 字段告警），DOWN 映射为
+   * {@code Health.down()}， 其余未知状态映射为 unknown。
    *
    * @return Actuator Health 对象，含全部缓存明细信息
    */

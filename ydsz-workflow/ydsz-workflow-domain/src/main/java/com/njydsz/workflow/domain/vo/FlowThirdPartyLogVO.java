@@ -14,24 +14,23 @@ import lombok.Data;
 @Data
 public class FlowThirdPartyLogVO implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
-    private String id;
-    private String platform;
-    private String eventType;
-    private String processInstanceId;
-    private String businessType;
-    private String businessId;
-    private String callbackData;
-    private String handleStatus;
-    private String errorMsg;
-    private String syncBackStatus;
-    private String syncBackMsg;
-    private Integer retryCount;
-    private LocalDateTime lastRetriedAt;
-    private String createdBy;
-    private LocalDateTime createdAt;
-    private String updatedBy;
-    private LocalDateTime updatedAt;
+  private String id;
+  private String platform;
+  private String eventType;
+  private String processInstanceId;
+  private String businessType;
+  private String businessId;
+  private String callbackData;
+  private String handleStatus;
+  private String errorMsg;
+  private String syncBackStatus;
+  private String syncBackMsg;
+  private Integer retryCount;
+  private LocalDateTime lastRetriedAt;
+  private String createdBy;
+  private LocalDateTime createdAt;
+  private String updatedBy;
+  private LocalDateTime updatedAt;
 }

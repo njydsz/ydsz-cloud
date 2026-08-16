@@ -1,12 +1,12 @@
 package com.njydsz.common.safe.ratelimit.model;
 
+import com.njydsz.common.safe.ratelimit.enums.RateLimitResult;
 import java.io.Serializable;
 import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import com.njydsz.common.safe.ratelimit.enums.RateLimitResult;
 
 /**
  * 限流决策结果
@@ -22,46 +22,42 @@ import com.njydsz.common.safe.ratelimit.enums.RateLimitResult;
 @AllArgsConstructor
 public class RateLimitDecision implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-    /** 资源名称 */
-    private String resource;
+  /** 资源名称 */
+  private String resource;
 
-    /** 限流结果 */
-    private RateLimitResult result;
+  /** 限流结果 */
+  private RateLimitResult result;
 
-    /** 限流 key */
-    private String key;
+  /** 限流 key */
+  private String key;
 
-    /** 限流规则 */
-    private RateLimitRule rule;
+  /** 限流规则 */
+  private RateLimitRule rule;
 
-    /** 剩余配额 */
-    private double remaining;
+  /** 剩余配额 */
+  private double remaining;
 
-    /** 限流阈值 */
-    private double threshold;
+  /** 限流阈值 */
+  private double threshold;
 
-    /** 等待时间（毫秒），0 表示无等待 */
-    private long waitTimeMillis;
+  /** 等待时间（毫秒），0 表示无等待 */
+  private long waitTimeMillis;
 
-    /** 决策时间 */
-    private Instant timestamp;
+  /** 决策时间 */
+  private Instant timestamp;
 
-    /** 决策原因（用于日志/排查） */
-    private String reason;
+  /** 决策原因（用于日志/排查） */
+  private String reason;
 
-    /**
-     * 是否通过限流
-     */
-    public boolean isPass() {
-        return result == RateLimitResult.PASS;
-    }
+  /** 是否通过限流 */
+  public boolean isPass() {
+    return result == RateLimitResult.PASS;
+  }
 
-    /**
-     * 是否被限流
-     */
-    public boolean isBlocked() {
-        return result == RateLimitResult.BLOCKED;
-    }
+  /** 是否被限流 */
+  public boolean isBlocked() {
+    return result == RateLimitResult.BLOCKED;
+  }
 }

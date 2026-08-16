@@ -4,6 +4,7 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+
 import com.njydsz.common.audit.annotation.EnableYdszAudit;
 import com.njydsz.common.auth.annotation.EnableYdszAuth;
 import com.njydsz.common.feign.annotation.EnableYdszFeign;
@@ -22,11 +23,17 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @EnableYdszAuth
 @EnableYdszSafe
 @EnableYdszAudit
-@EnableYdszFeign(basePackages = {"com.njydsz.agent.api", "com.njydsz.common.feign", "com.njydsz.userinfo.api", "com.njydsz.nextwiki.api"})
+@EnableYdszFeign(
+    basePackages = {
+      "com.njydsz.agent.api",
+      "com.njydsz.common.feign",
+      "com.njydsz.userinfo.api",
+      "com.njydsz.nextwiki.api"
+    })
 @MapperScan("com.njydsz.agent.infra.mapper")
 public class AgentApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(AgentApplication.class, args);
-    }
+  public static void main(String[] args) {
+    SpringApplication.run(AgentApplication.class, args);
+  }
 }

@@ -11,38 +11,37 @@ import java.io.Serializable;
  */
 public class FlowFormValidationError implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
-    /** 出错字段 key（子表单字段格式为 parentKey[index].childKey） */
-    private final String fieldKey;
+  /** 出错字段 key（子表单字段格式为 parentKey[index].childKey） */
+  private final String fieldKey;
 
-    /** 错误消息 */
-    private final String message;
+  /** 错误消息 */
+  private final String message;
 
-    /** 错误码（REQUIRED/MIN/MAX/PATTERN/MIN_LENGTH/MAX_LENGTH/MIN_SELECTED 等） */
-    private final String code;
+  /** 错误码（REQUIRED/MIN/MAX/PATTERN/MIN_LENGTH/MAX_LENGTH/MIN_SELECTED 等） */
+  private final String code;
 
-    public FlowFormValidationError(String fieldKey, String code, String message) {
-        this.fieldKey = fieldKey;
-        this.code = code;
-        this.message = message;
-    }
+  public FlowFormValidationError(String fieldKey, String code, String message) {
+    this.fieldKey = fieldKey;
+    this.code = code;
+    this.message = message;
+  }
 
-    public String getFieldKey() {
-        return fieldKey;
-    }
+  public String getFieldKey() {
+    return fieldKey;
+  }
 
-    public String getMessage() {
-        return message;
-    }
+  public String getMessage() {
+    return message;
+  }
 
-    public String getCode() {
-        return code;
-    }
+  public String getCode() {
+    return code;
+  }
 
-    @Override
-    public String toString() {
-        return fieldKey + ": " + message + " (" + code + ")";
-    }
+  @Override
+  public String toString() {
+    return fieldKey + ": " + message + " (" + code + ")";
+  }
 }

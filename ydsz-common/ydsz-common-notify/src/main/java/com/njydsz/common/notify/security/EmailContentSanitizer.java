@@ -9,16 +9,17 @@ import org.springframework.util.StringUtils;
 /**
  * 邮件内容 XSS/HTML 注入防护器（P0-3）
  *
- * <p>基于 OWASP Java HTML Sanitizer 对 HTML 邮件内容进行标签白名单过滤，
- * 阻止 &lt;script&gt;、onload、onerror 等危险标签和属性注入。
+ * <p>基于 OWASP Java HTML Sanitizer 对 HTML 邮件内容进行标签白名单过滤， 阻止 &lt;script&gt;、onload、onerror
+ * 等危险标签和属性注入。
  *
  * <p><b>过滤策略：</b>
+ *
  * <ul>
- *   <li>允许基本格式化标签（b、i、u、strong、em、br、p 等）</li>
- *   <li>允许超链接（a），自动添加 rel="nofollow" 和 target="_blank"</li>
- *   <li>允许图片（img），但过滤 javascript: 协议</li>
- *   <li>允许表格、样式标签</li>
- *   <li>完全过滤 script、iframe、object、embed 等危险标签</li>
+ *   <li>允许基本格式化标签（b、i、u、strong、em、br、p 等）
+ *   <li>允许超链接（a），自动添加 rel="nofollow" 和 target="_blank"
+ *   <li>允许图片（img），但过滤 javascript: 协议
+ *   <li>允许表格、样式标签
+ *   <li>完全过滤 script、iframe、object、embed 等危险标签
  * </ul>
  *
  * <p>当 owasp-java-html-sanitizer 依赖不存在时，自动降级为简单转义。
@@ -28,93 +29,98 @@ import org.springframework.util.StringUtils;
  */
 public class EmailContentSanitizer {
 
-    private static final Logger log = LoggerFactory.getLogger(EmailContentSanitizer.class);
+  private static final Logger log = LoggerFactory.getLogger(EmailContentSanitizer.class);
 
-    /** OWASP HTML 安全策略：允许格式化、链接、图片、样式、表格 */
-    private static final PolicyFactory EMAIL_POLICY = Sanitizers.FORMATTING
-            .and(Sanitizers.LINKS)
-            .and(Sanitizers.IMAGES)
-            .and(Sanitizers.STYLES)
-            .and(Sanitizers.TABLES);
+  /** OWASP HTML 安全策略：允许格式化、链接、图片、样式、表格 */
+  private static final PolicyFactory EMAIL_POLICY =
+      Sanitizers.FORMATTING
+          .and(Sanitizers.LINKS)
+          .and(Sanitizers.IMAGES)
+          .and(Sanitizers.STYLES)
+          .and(Sanitizers.TABLES);
 
-    /** 标记 OWASP 依赖是否可用 */
-    private static final boolean OWASP_AVAILABLE;
+  /** 标记 OWASP 依赖是否可用 */
+  private static final boolean OWASP_AVAILABLE;
 
-    static {
-        boolean available;
-        try {
-            Class.forName("org.owasp.html.Sanitizers");
-            available = true;
-        } catch (ClassNotFoundException e) {
-            available = false;
-        }
-        OWASP_AVAILABLE = available;
-        if (!available) {
-            log.warn("[EmailContentSanitizer] owasp-java-html-sanitizer 依赖不存在，降级为简单转义模式");
-        }
+  static {
+    boolean available;
+    try {
+      Class.forName("org.owasp.html.Sanitizers");
+      available = true;
+    } catch (ClassNotFoundException e) {
+      available = false;
     }
+    OWASP_AVAILABLE = available;
+    if (!available) {
+      log.warn("[EmailContentSanitizer] owasp-java-html-sanitizer 依赖不存在，降级为简单转义模式");
+    }
+  }
 
-    /**
-     * 清洗 HTML 邮件内容
-     *
-     * @param htmlContent 原始 HTML 内容
-     * @return 清洗后的安全 HTML 内容
-     */
-    public static String sanitize(String htmlContent) {
-        if (!StringUtils.hasText(htmlContent)) {
-            return htmlContent;
-        }
-        if (OWASP_AVAILABLE) {
-            try {
-                return EMAIL_POLICY.sanitize(htmlContent);
-            } catch (Exception e) {
-                log.error("[EmailContentSanitizer] OWASP 清洗失败，降级为简单转义: {}", e.getMessage());
-                return simpleEscape(htmlContent);
-            }
-        }
+  /**
+   * 清洗 HTML 邮件内容
+   *
+   * @param htmlContent 原始 HTML 内容
+   * @return 清洗后的安全 HTML 内容
+   */
+  public static String sanitize(String htmlContent) {
+    if (!StringUtils.hasText(htmlContent)) {
+      return htmlContent;
+    }
+    if (OWASP_AVAILABLE) {
+      try {
+        return EMAIL_POLICY.sanitize(htmlContent);
+      } catch (Exception e) {
+        log.error("[EmailContentSanitizer] OWASP 清洗失败，降级为简单转义: {}", e.getMessage());
         return simpleEscape(htmlContent);
+      }
     }
+    return simpleEscape(htmlContent);
+  }
 
-    /**
-     * 检测 HTML 内容是否包含 XSS 攻击特征
-     *
-     * @param content HTML 内容
-     * @return true 表示检测到 XSS 攻击
-     */
-    public static boolean containsXss(String content) {
-        if (!StringUtils.hasText(content)) {
-            return false;
-        }
-        String lower = content.toLowerCase();
-        return lower.contains("<script") || lower.contains("javascript:")
-                || lower.contains("onload=") || lower.contains("onerror=")
-                || lower.contains("onclick=") || lower.contains("<iframe")
-                || lower.contains("<object") || lower.contains("<embed");
+  /**
+   * 检测 HTML 内容是否包含 XSS 攻击特征
+   *
+   * @param content HTML 内容
+   * @return true 表示检测到 XSS 攻击
+   */
+  public static boolean containsXss(String content) {
+    if (!StringUtils.hasText(content)) {
+      return false;
     }
+    String lower = content.toLowerCase();
+    return lower.contains("<script")
+        || lower.contains("javascript:")
+        || lower.contains("onload=")
+        || lower.contains("onerror=")
+        || lower.contains("onclick=")
+        || lower.contains("<iframe")
+        || lower.contains("<object")
+        || lower.contains("<embed");
+  }
 
-    /**
-     * 简单 HTML 转义（降级方案）
-     *
-     * @param html 原始 HTML
-     * @return 转义后的文本
-     */
-    private static String simpleEscape(String html) {
-        if (html == null) {
-            return null;
-        }
-        return html.replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-                .replace("\"", "&quot;")
-                .replace("'", "&#39;");
+  /**
+   * 简单 HTML 转义（降级方案）
+   *
+   * @param html 原始 HTML
+   * @return 转义后的文本
+   */
+  private static String simpleEscape(String html) {
+    if (html == null) {
+      return null;
     }
+    return html.replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace("\"", "&quot;")
+        .replace("'", "&#39;");
+  }
 
-    /**
-     * 判断 OWASP Sanitizer 是否可用
-     *
-     * @return true 表示 OWASP 依赖在 classpath 中
-     */
-    public static boolean isOwaspAvailable() {
-        return OWASP_AVAILABLE;
-    }
+  /**
+   * 判断 OWASP Sanitizer 是否可用
+   *
+   * @return true 表示 OWASP 依赖在 classpath 中
+   */
+  public static boolean isOwaspAvailable() {
+    return OWASP_AVAILABLE;
+  }
 }

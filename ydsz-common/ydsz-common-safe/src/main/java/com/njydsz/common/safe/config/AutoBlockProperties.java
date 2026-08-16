@@ -9,6 +9,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * <p>配置前缀 {@code ydsz.safe.auto-block}，用于控制安全事件自动封禁行为。
  *
  * <p><b>配置示例：</b>
+ *
  * <pre>{@code
  * ydsz:
  *   safe:
@@ -25,18 +26,12 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "ydsz.safe.auto-block")
 public class AutoBlockProperties {
 
-    /**
-     * 是否启用自动封禁
-     */
-    private boolean enabled = true;
+  /** 是否启用自动封禁 */
+  private boolean enabled = true;
 
-    /**
-     * 触发自动封禁的事件数量阈值（同一 IP 在窗口内触发此数量次安全事件则自动封禁）
-     */
-    private int threshold = 10;
+  /** 触发自动封禁的事件数量阈值（同一 IP 在窗口内触发此数量次安全事件则自动封禁） */
+  private int threshold = 10;
 
-    /**
-     * 滑动窗口大小（秒）
-     */
-    private long windowSeconds = 60;
+  /** 滑动窗口大小（秒） */
+  private long windowSeconds = 60;
 }

@@ -101,7 +101,7 @@
         <!-- 版本收敛治理（原 Maven Enforcer 治理遗留，现通过 DM 统一锁定版本消除多版本冲突） -->
         <guava.version>33.5.0-jre</guava.version>
         <okhttp3.version>4.12.0</okhttp3.version>
-        <okio.version>3.8.0</okio.version>
+        <okio.version>3.16.4</okio.version>
         <gson.version>2.13.2</gson.version>
         <grpc.version>1.80.0</grpc.version>
 
@@ -741,6 +741,17 @@
                 <artifactId>resilience4j-consumer</artifactId>
                 <version>${resilience4j.version}</version>
             </dependency>
+            <!-- 显式收敛 annotations/circularbuffer：spring6 2.4.0 传递依赖曾解析到 2.3.0，导致 requireUpperBoundDeps 冲突 -->
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-annotations</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-circularbuffer</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
 
 
 
@@ -1217,6 +1228,12 @@
                     <googleJavaFormat>
                         <version>1.22.0</version>
                     </googleJavaFormat>
+                    <importOrder>
+                        <!-- 与 docs/checkstyle.xml CustomImportOrder 对齐：java/javax ### 第三方 ### com.njydsz ### static
+                             必须放在 googleJavaFormat 之后执行，否则会被 google 单组排序覆盖。
+                             逗号分隔分组（组间空行），| 连接同组前缀，空字符串兜底未列举前缀，# 表示 static -->
+                        <order>java|javax,org|jakarta|lombok|io|com.baomidou|com.qcloud|com.alibaba|com.qiniu|com.rabbitmq|com.fasterxml|com.github|com.google|com.amazonaws|com.obs|com.huaweicloud|com.aliyun|software|net|reactor|feign|cn,com.njydsz,,\#</order>
+                    </importOrder>
                 </java>
             </configuration>
         </plugin>
@@ -1265,10 +1282,10 @@
                             <!-- 3. 禁用有安全漏洞的旧 FastJSON 1.x -->
                             <bannedDependencies>
                                 <excludes>
-                                    <!-- 仅禁 fastjson 1.x（版本 1.*，存在安全漏洞）。fastjson2 的旧坐标
+                                    <!-- 仅禁 fastjson 1.x（版本 [1.0,2.0)，存在安全漏洞）。fastjson2 的旧坐标
                                          com.alibaba:fastjson:2.0.x（如 rocketmq-common 5.3.1 传递引入的 2.0.58）
                                          属于安全的新版本，予以放行。 -->
-                                    <exclude>com.alibaba:fastjson:1.*</exclude>
+                                    <exclude>com.alibaba:fastjson:[1.0,2.0)</exclude>
                                     <exclude>com.alibaba:fastjson-spring-boot-starter</exclude>
                                 </excludes>
                                 <message>[ydsz-banned] 禁止使用 FastJSON 1.x，存在安全漏洞。如需 JSON 请使用 ydsz-common-json，基准测试用 fastjson2（scope=test）。</message>

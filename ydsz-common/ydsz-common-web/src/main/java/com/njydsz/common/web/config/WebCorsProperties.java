@@ -1,8 +1,8 @@
 package com.njydsz.common.web.config;
 
+import com.njydsz.common.base.config.BaseCorsProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
-import com.njydsz.common.base.config.BaseCorsProperties;
 
 /**
  * Web 端 CORS 跨域配置属性
@@ -10,6 +10,7 @@ import com.njydsz.common.base.config.BaseCorsProperties;
  * <p>继承 {@link BaseCorsProperties}，配置前缀：{@code ydsz.web.cors}
  *
  * <p><b>配置示例（YAML）：</b>
+ *
  * <pre>{@code
  * ydsz:
  *   web:
@@ -27,5 +28,4 @@ import com.njydsz.common.base.config.BaseCorsProperties;
  */
 @Validated
 @ConfigurationProperties(prefix = "ydsz.web.cors")
-public class WebCorsProperties extends BaseCorsProperties {
-}
+public class WebCorsProperties extends BaseCorsProperties {}

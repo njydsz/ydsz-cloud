@@ -8,11 +8,11 @@ package com.njydsz.common.util.id;
  */
 public class WorkerIdExhaustedException extends RuntimeException {
 
-    public WorkerIdExhaustedException(String message) {
-        super(message);
-    }
+  public WorkerIdExhaustedException(String message) {
+    super(message);
+  }
 
-    public WorkerIdExhaustedException(String message, Throwable cause) {
-        super(message, cause);
-    }
+  public WorkerIdExhaustedException(String message, Throwable cause) {
+    super(message, cause);
+  }
 }

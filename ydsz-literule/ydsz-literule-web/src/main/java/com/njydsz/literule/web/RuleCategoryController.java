@@ -1,17 +1,5 @@
 package com.njydsz.literule.web;
 
-import java.util.List;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
 import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
@@ -23,22 +11,33 @@ import com.njydsz.literule.domain.vo.CategoryNodeVO;
 import com.njydsz.literule.domain.vo.RuleDefinitionVO;
 import com.njydsz.literule.server.config.RuleAdminService;
 import com.njydsz.literule.server.spi.RuleCategoryProvider;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 规则目录树 Controller
  *
- * <p>业务背景：随着规则数量增长，需要按业务分类组织规则形成目录树，
- * 同时支持按责任人（Owner）维度查询和分配规则，便于运营人员分模块管理。
+ * <p>业务背景：随着规则数量增长，需要按业务分类组织规则形成目录树， 同时支持按责任人（Owner）维度查询和分配规则，便于运营人员分模块管理。
  *
  * <p>核心能力：
+ *
  * <ul>
- *   <li>构建规则分类目录树（含每节点规则数与 Owner 列表）</li>
- *   <li>按分类路径前缀 / Owner 查询规则</li>
- *   <li>设置规则的责任人与分类路径</li>
+ *   <li>构建规则分类目录树（含每节点规则数与 Owner 列表）
+ *   <li>按分类路径前缀 / Owner 查询规则
+ *   <li>设置规则的责任人与分类路径
  * </ul>
  *
- * <p>从 {@link RuleAdminController} 拆分而来，与原文件共享基路径
- * {@code /ruleEngine/rules}，所有端点 URL 保持不变。
+ * <p>从 {@link RuleAdminController} 拆分而来，与原文件共享基路径 {@code /ruleEngine/rules}，所有端点 URL 保持不变。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -51,68 +50,78 @@ import com.njydsz.literule.server.spi.RuleCategoryProvider;
 @Tag(name = "规则目录树", description = "规则分类目录树与责任人管理")
 public class RuleCategoryController {
 
-    /** 规则分类树服务（SPI，由 project 模块提供实现） */
-    private final RuleCategoryProvider ruleCategoryProvider;
-    /** 规则管理服务 */
-    private final RuleAdminService ruleAdminService;
+  /** 规则分类树服务（SPI，由 project 模块提供实现） */
+  private final RuleCategoryProvider ruleCategoryProvider;
 
-    /**
-     * 获取规则目录树
-     *
-     * <p>树根为虚拟 ROOT，children 为一级分类。叶子节点或中间节点都包含该路径下的规则数与 Owner 列表。
-     */
-    @GetMapping("/category-tree")
-    public BaseResponse<CategoryNodeVO> categoryTree() {
-        return BaseResponse.success(LiteruleWebConverter.INSTANT.entityToVO(ruleCategoryProvider.buildTree()));
-    }
+  /** 规则管理服务 */
+  private final RuleAdminService ruleAdminService;
 
-    /**
-     * 按分类路径前缀查询规则
-     *
-     * @param path 分类路径前缀，例如 "finance" / "finance/credit"
-     */
-    @GetMapping("/by-category-path")
-    public BaseResponse<List<RuleDefinitionVO>> listByCategoryPath(
-            @RequestParam(value = "path", required = false) String path) {
-        return BaseResponse.success(ruleCategoryProvider.listDefinitionsByCategoryPath(path).stream().map(LiteruleConverter.INSTANT::entityToVO).toList());
-    }
+  /**
+   * 获取规则目录树
+   *
+   * <p>树根为虚拟 ROOT，children 为一级分类。叶子节点或中间节点都包含该路径下的规则数与 Owner 列表。
+   */
+  @GetMapping("/category-tree")
+  public BaseResponse<CategoryNodeVO> categoryTree() {
+    return BaseResponse.success(
+        LiteruleWebConverter.INSTANT.entityToVO(ruleCategoryProvider.buildTree()));
+  }
 
-    /**
-     * 按 Owner 查询规则
-     */
-    @GetMapping("/by-owner")
-    public BaseResponse<List<RuleDefinitionVO>> listByOwner(
-            @RequestParam(value = "owner") String owner) {
-        return BaseResponse.success(ruleCategoryProvider.listDefinitionsByOwner(owner).stream().map(LiteruleConverter.INSTANT::entityToVO).toList());
-    }
+  /**
+   * 按分类路径前缀查询规则
+   *
+   * @param path 分类路径前缀，例如 "finance" / "finance/credit"
+   */
+  @GetMapping("/by-category-path")
+  public BaseResponse<List<RuleDefinitionVO>> listByCategoryPath(
+      @RequestParam(value = "path", required = false) String path) {
+    return BaseResponse.success(
+        ruleCategoryProvider.listDefinitionsByCategoryPath(path).stream()
+            .map(LiteruleConverter.INSTANT::entityToVO)
+            .toList());
+  }
 
-    /**
-     * 设置规则责任人
-     */
-    @Idempotent(key = "ruleAdmin:setOwner", ttlSeconds = 5, message = "请勿重复提交")
-    @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'setOwner'")
-    @RateLimit(resource = "literule.rule_category.setOwner", threshold = 50)
-    @PutMapping("/{ruleCode}/owner")
-    public BaseResponse<Void> setOwner(
-            @PathVariable String ruleCode,
-            @RequestParam(value = "owner") String owner,
-            @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        ruleAdminService.updateOwner(ruleCode, owner, operator);
-        return BaseResponse.success();
-    }
+  /** 按 Owner 查询规则 */
+  @GetMapping("/by-owner")
+  public BaseResponse<List<RuleDefinitionVO>> listByOwner(
+      @RequestParam(value = "owner") String owner) {
+    return BaseResponse.success(
+        ruleCategoryProvider.listDefinitionsByOwner(owner).stream()
+            .map(LiteruleConverter.INSTANT::entityToVO)
+            .toList());
+  }
 
-    /**
-     * 设置规则分类路径
-     */
-    @Idempotent(key = "ruleAdmin:setCategoryPath", ttlSeconds = 5, message = "请勿重复提交")
-    @Audit(module = "规则管理", type = AuditType.OPERATION, action = AuditAction.UPDATE, content = "'setCategoryPath'")
-    @RateLimit(resource = "literule.rule_category.setCategoryPath", threshold = 50)
-    @PutMapping("/{ruleCode}/category-path")
-    public BaseResponse<Void> setCategoryPath(
-            @PathVariable String ruleCode,
-            @RequestParam(value = "path") String path,
-            @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        ruleAdminService.updateCategoryPath(ruleCode, path, operator);
-        return BaseResponse.success();
-    }
+  /** 设置规则责任人 */
+  @Idempotent(key = "ruleAdmin:setOwner", ttlSeconds = 5, message = "请勿重复提交")
+  @Audit(
+      module = "规则管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.UPDATE,
+      content = "'setOwner'")
+  @RateLimit(resource = "literule.rule_category.setOwner", threshold = 50)
+  @PutMapping("/{ruleCode}/owner")
+  public BaseResponse<Void> setOwner(
+      @PathVariable String ruleCode,
+      @RequestParam(value = "owner") String owner,
+      @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
+    ruleAdminService.updateOwner(ruleCode, owner, operator);
+    return BaseResponse.success();
+  }
+
+  /** 设置规则分类路径 */
+  @Idempotent(key = "ruleAdmin:setCategoryPath", ttlSeconds = 5, message = "请勿重复提交")
+  @Audit(
+      module = "规则管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.UPDATE,
+      content = "'setCategoryPath'")
+  @RateLimit(resource = "literule.rule_category.setCategoryPath", threshold = 50)
+  @PutMapping("/{ruleCode}/category-path")
+  public BaseResponse<Void> setCategoryPath(
+      @PathVariable String ruleCode,
+      @RequestParam(value = "path") String path,
+      @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
+    ruleAdminService.updateCategoryPath(ruleCode, path, operator);
+    return BaseResponse.success();
+  }
 }

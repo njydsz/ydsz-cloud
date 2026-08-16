@@ -17,19 +17,19 @@ import lombok.Data;
 @Schema(description = "表达式校验请求体")
 public class ExpressionValidateDTO {
 
-    /**
-     * 表达式内容
-     */
-    @Schema(description = "表达式内容", requiredMode = Schema.RequiredMode.REQUIRED,
-            example = "amount > 10000 && level == '紧急'")
-    @NotBlank(message = "{validation.project.msg_a1e2f3a1}")
-    private String expression;
+  /** 表达式内容 */
+  @Schema(
+      description = "表达式内容",
+      requiredMode = Schema.RequiredMode.REQUIRED,
+      example = "amount > 10000 && level == '紧急'")
+  @NotBlank(message = "{validation.project.msg_a1e2f3a1}")
+  private String expression;
 
-    /**
-     * 表达式类型：condition / severity / template，默认 condition
-     */
-    @Schema(description = "表达式类型：condition / severity / template", defaultValue = "condition",
-            example = "condition")
-    @Pattern(regexp = "condition|severity|template", message = "{validation.project.msg_b2f3a4b2}")
-    private String type = "condition";
+  /** 表达式类型：condition / severity / template，默认 condition */
+  @Schema(
+      description = "表达式类型：condition / severity / template",
+      defaultValue = "condition",
+      example = "condition")
+  @Pattern(regexp = "condition|severity|template", message = "{validation.project.msg_b2f3a4b2}")
+  private String type = "condition";
 }

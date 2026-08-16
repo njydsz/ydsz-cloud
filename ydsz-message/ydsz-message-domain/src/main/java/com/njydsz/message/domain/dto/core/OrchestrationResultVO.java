@@ -16,27 +16,27 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class OrchestrationResultVO {
 
-    /** 流程 ID */
-    private String flowId;
+  /** 流程 ID */
+  private String flowId;
 
-    /** 流程状态: RUNNING / COMPLETED / FAILED / ABORTED */
-    private String status;
+  /** 流程状态: RUNNING / COMPLETED / FAILED / ABORTED */
+  private String status;
 
-    /** 成功节点数 */
-    private int successCount;
+  /** 成功节点数 */
+  private int successCount;
 
-    /** 失败节点数 */
-    private int failedCount;
+  /** 失败节点数 */
+  private int failedCount;
 
-    /** 跳过节点数 */
-    private int skippedCount;
+  /** 跳过节点数 */
+  private int skippedCount;
 
-    /** 总节点数 */
-    private int totalCount;
+  /** 总节点数 */
+  private int totalCount;
 
-    /** 各节点执行结果（key=nodeId, value=状态描述） */
-    private Map<String, String> nodeResults;
+  /** 各节点执行结果（key=nodeId, value=状态描述） */
+  private Map<String, String> nodeResults;
 
-    /** 错误信息 */
-    private String errorMessage;
+  /** 错误信息 */
+  private String errorMessage;
 }

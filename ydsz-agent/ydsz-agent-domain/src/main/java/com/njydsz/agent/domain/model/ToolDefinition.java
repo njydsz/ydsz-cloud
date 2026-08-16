@@ -16,27 +16,37 @@ import java.util.Objects;
  */
 public final class ToolDefinition implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-    /** 工具名称 */
-    private final String name;
-    /** 工具描述（告诉 LLM 该工具的用途） */
-    private final String description;
-    /** 参数 JSON Schema 定义 */
-    private final Map<String, Object> parametersSchema;
+  /** 工具名称 */
+  private final String name;
 
-    public ToolDefinition(String name, String description, Map<String, Object> parametersSchema) {
-        this.name = Objects.requireNonNull(name, "name 不能为 null");
-        this.description = description;
-        this.parametersSchema = parametersSchema != null ? Map.copyOf(parametersSchema) : Map.of();
-    }
+  /** 工具描述（告诉 LLM 该工具的用途） */
+  private final String description;
 
-    public String getName() { return name; }
-    public String getDescription() { return description; }
-    public Map<String, Object> getParametersSchema() { return parametersSchema; }
+  /** 参数 JSON Schema 定义 */
+  private final Map<String, Object> parametersSchema;
 
-    @Override
-    public String toString() {
-        return "ToolDefinition{name='" + name + "', desc='" + description + "'}";
-    }
+  public ToolDefinition(String name, String description, Map<String, Object> parametersSchema) {
+    this.name = Objects.requireNonNull(name, "name 不能为 null");
+    this.description = description;
+    this.parametersSchema = parametersSchema != null ? Map.copyOf(parametersSchema) : Map.of();
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public String getDescription() {
+    return description;
+  }
+
+  public Map<String, Object> getParametersSchema() {
+    return parametersSchema;
+  }
+
+  @Override
+  public String toString() {
+    return "ToolDefinition{name='" + name + "', desc='" + description + "'}";
+  }
 }

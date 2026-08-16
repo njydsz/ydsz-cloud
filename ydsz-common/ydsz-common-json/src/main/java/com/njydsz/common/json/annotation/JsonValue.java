@@ -9,9 +9,10 @@ import java.lang.annotation.Target;
 /**
  * 标注枚举值的序列化方式（参考 Jackson 的 @JsonValue）。
  *
- * <p>标注在枚举类的方法上，指定序列化时使用该方法的返回值作为 JSON 值。</p>
+ * <p>标注在枚举类的方法上，指定序列化时使用该方法的返回值作为 JSON 值。
  *
- * <p><b>使用示例：</b></p>
+ * <p><b>使用示例：</b>
+ *
  * <pre>
  * public enum Status {
  *     ACTIVE(1),
@@ -26,7 +27,7 @@ import java.lang.annotation.Target;
  * }
  * </pre>
  *
- * <p>序列化结果为数字 1/0，而非字符串 "ACTIVE"/"INACTIVE"。</p>
+ * <p>序列化结果为数字 1/0，而非字符串 "ACTIVE"/"INACTIVE"。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -34,5 +35,4 @@ import java.lang.annotation.Target;
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD, ElementType.FIELD})
-public @interface JsonValue {
-}
+public @interface JsonValue {}

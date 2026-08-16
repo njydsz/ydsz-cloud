@@ -10,17 +10,17 @@ package com.njydsz.common.queue.serializer;
  */
 public class SerializationException extends RuntimeException {
 
-    private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-    public SerializationException(String message) {
-        super(message);
-    }
+  public SerializationException(String message) {
+    super(message);
+  }
 
-    public SerializationException(String message, Throwable cause) {
-        super(message, cause);
-    }
+  public SerializationException(String message, Throwable cause) {
+    super(message, cause);
+  }
 
-    public SerializationException(Throwable cause) {
-        super(cause);
-    }
+  public SerializationException(Throwable cause) {
+    super(cause);
+  }
 }

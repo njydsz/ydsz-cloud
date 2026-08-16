@@ -1,12 +1,12 @@
 package com.njydsz.common.seata.config.validator;
 
+import jakarta.validation.Constraint;
+import jakarta.validation.Payload;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import jakarta.validation.Constraint;
-import jakarta.validation.Payload;
 
 /**
  * XID 签名配置校验注解
@@ -24,9 +24,9 @@ import jakarta.validation.Payload;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ValidXidSignConfig {
 
-    String message() default "当 ydsz.seata.xid-sign-enabled=true 时，ydsz.seata.xid-sign-key 不能为空";
+  String message() default "当 ydsz.seata.xid-sign-enabled=true 时，ydsz.seata.xid-sign-key 不能为空";
 
-    Class<?>[] groups() default {};
+  Class<?>[] groups() default {};
 
-    Class<? extends Payload>[] payload() default {};
+  Class<? extends Payload>[] payload() default {};
 }

@@ -15,8 +15,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class MapTask {
 
-    /** 子任务名称 */
-    private String taskName;
-    /** 子任务参数 JSON */
-    private String taskParams;
+  /** 子任务名称 */
+  private String taskName;
+
+  /** 子任务参数 JSON */
+  private String taskParams;
 }

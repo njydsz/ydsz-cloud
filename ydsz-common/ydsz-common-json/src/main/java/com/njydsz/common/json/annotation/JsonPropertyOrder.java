@@ -8,9 +8,10 @@ import java.lang.annotation.Target;
 /**
  * JSON 属性排序注解
  *
- * <p>用于控制序列化时字段的输出顺序，对标 Jackson @JsonPropertyOrder。</p>
+ * <p>用于控制序列化时字段的输出顺序，对标 Jackson @JsonPropertyOrder。
  *
- * <p><b>使用示例：</b></p>
+ * <p><b>使用示例：</b>
+ *
  * <pre>
  * // 按指定顺序输出
  * &#064;JsonPropertyOrder({"id", "name", "email"})
@@ -37,19 +38,19 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface JsonPropertyOrder {
 
-    /**
-     * 属性名称数组，按指定顺序输出
-     *
-     * @return 属性名称数组，定义序列化时的字段输出顺序
-     */
-    String[] value() default {};
+  /**
+   * 属性名称数组，按指定顺序输出
+   *
+   * @return 属性名称数组，定义序列化时的字段输出顺序
+   */
+  String[] value() default {};
 
-    /**
-     * 是否按字母顺序排序
-     *
-     * <p>如果 value 为空且 alphabetic=true，则按字母顺序排序输出。</p>
-     *
-     * @return 是否启用字母顺序排序
-     */
-    boolean alphabetic() default false;
+  /**
+   * 是否按字母顺序排序
+   *
+   * <p>如果 value 为空且 alphabetic=true，则按字母顺序排序输出。
+   *
+   * @return 是否启用字母顺序排序
+   */
+  boolean alphabetic() default false;
 }

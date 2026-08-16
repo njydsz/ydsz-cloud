@@ -1,15 +1,5 @@
 package com.njydsz.nextwiki.domain.service;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.stereotype.Service;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
@@ -20,29 +10,38 @@ import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.repository.SearchIndexRepository;
 import com.njydsz.nextwiki.domain.repository.TagRepository;
 import com.njydsz.nextwiki.domain.vo.SearchResultVO;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.stereotype.Service;
 
 /**
  * 搜索领域服务
- * <p>
- * 维护 {@code nw_search_index} 表，提供基于数据库的文件名/路径/标签搜索能力。
+ *
+ * <p>维护 {@code nw_search_index} 表，提供基于数据库的文件名/路径/标签搜索能力。
  *
  * <p><b>职责定位（双索引架构）：</b>
+ *
  * <ul>
- *   <li>{@code nw_search_index} 表 — 搜索引擎不可用时的 <b>DB 降级存储</b>，
- *       仅在统一搜索（{@code ydsz-common-search}）不可用时提供 LIKE 兜底</li>
- *   <li>{@code ydsz_search_index} 表（{@code WikiSearchProvider} 维护）—
- *       统一搜索引擎的主索引，支持全文检索、高亮、聚合、权重排序</li>
+ *   <li>{@code nw_search_index} 表 — 搜索引擎不可用时的 <b>DB 降级存储</b>， 仅在统一搜索（{@code
+ *       ydsz-common-search}）不可用时提供 LIKE 兜底
+ *   <li>{@code ydsz_search_index} 表（{@code WikiSearchProvider} 维护）— 统一搜索引擎的主索引，支持全文检索、高亮、聚合、权重排序
  * </ul>
  *
  * <p><b>搜索优先级：</b>
+ *
  * <ol>
- *   <li>统一搜索引擎（PG tsvector / 内存引擎）— {@link com.njydsz.common.search.service.UnifiedSearchService}</li>
- *   <li>DB LIKE 降级 — 本类提供（仅在引擎不可用时触发）</li>
+ *   <li>统一搜索引擎（PG tsvector / 内存引擎）— {@link com.njydsz.common.search.service.UnifiedSearchService}
+ *   <li>DB LIKE 降级 — 本类提供（仅在引擎不可用时触发）
  * </ol>
  *
- * <p><b>注意事项：</b>
- * 增量索引写入由 {@code FileOperatedEventListener} 驱动，同时更新 nw_search_index 和统一搜索索引。
- * 全量重建由 {@code NextwikiScheduledJobs} 触发，确保双索引数据一致性。
+ * <p><b>注意事项：</b> 增量索引写入由 {@code FileOperatedEventListener} 驱动，同时更新 nw_search_index 和统一搜索索引。 全量重建由
+ * {@code NextwikiScheduledJobs} 触发，确保双索引数据一致性。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -53,280 +52,281 @@ import com.njydsz.nextwiki.domain.vo.SearchResultVO;
 @RequiredArgsConstructor
 public class SearchDomainService {
 
-    /**
-     * 同步到统一搜索索引的最大内容长度（字符数）。
-     *
-     * <p>防止过大的文档全文写入索引导致存储膨胀。
-     * PG tsvector 索引对超长文本会自动截断，此处显式控制保证一致性。
-     */
-    private static final int MAX_SEARCHABLE_CONTENT_LENGTH = 100_000;
+  /**
+   * 同步到统一搜索索引的最大内容长度（字符数）。
+   *
+   * <p>防止过大的文档全文写入索引导致存储膨胀。 PG tsvector 索引对超长文本会自动截断，此处显式控制保证一致性。
+   */
+  private static final int MAX_SEARCHABLE_CONTENT_LENGTH = 100_000;
 
-    /** 分布式 ID 生成器 */
-    private final SnowflakeIdGenerator snowflakeIdGenerator;
+  /** 分布式 ID 生成器 */
+  private final SnowflakeIdGenerator snowflakeIdGenerator;
 
-    private final FileNodeRepository fileNodeRepository;
-    private final TagRepository tagRepository;
-    private final SearchIndexRepository searchIndexRepository;
+  private final FileNodeRepository fileNodeRepository;
+  private final TagRepository tagRepository;
+  private final SearchIndexRepository searchIndexRepository;
 
-    /**
-     * 搜索索引事件桥接器（可选注入）。
-     *
-     * <p>将文件数据变更同步到 ydsz-common-search 统一搜索索引（ydsz_search_index）。
-     * 与 nw_search_index（本类维护的 DB 降级存储）共同构成双索引架构：
-     * <ul>
-     *   <li>{@code nw_search_index} — DB LIKE 降级索引，本类维护</li>
-     *   <li>{@code ydsz_search_index} — 统一搜索主索引，本桥接器维护</li>
-     * </ul>
-     */
-    private final ObjectProvider<SearchIndexEventBridge> searchIndexEventBridgeProvider;
+  /**
+   * 搜索索引事件桥接器（可选注入）。
+   *
+   * <p>将文件数据变更同步到 ydsz-common-search 统一搜索索引（ydsz_search_index）。 与 nw_search_index（本类维护的 DB
+   * 降级存储）共同构成双索引架构：
+   *
+   * <ul>
+   *   <li>{@code nw_search_index} — DB LIKE 降级索引，本类维护
+   *   <li>{@code ydsz_search_index} — 统一搜索主索引，本桥接器维护
+   * </ul>
+   */
+  private final ObjectProvider<SearchIndexEventBridge> searchIndexEventBridgeProvider;
 
-    /**
-     * 综合搜索（数据库分页，避免全量加载后内存分页）
-     * <p>
-     * 通过 nw_search_index 表的 LIMIT/OFFSET 在 SQL 层面分页，
-     * 支持按 filename / content / tag / all 多维度搜索。
-     *
-     * @param keyword  搜索关键词
-     * @param userId   用户ID（权限过滤）
-     * @param scope    搜索范围：all / filename / content / tag
-     * @param page     页码（从 1 开始）
-     * @param pageSize 每页大小
-     * @return 搜索结果
-     */
-    public SearchResultVO search(String keyword, String userId, String scope,
-                                  int page, int pageSize) {
-        long startTime = System.currentTimeMillis();
+  /**
+   * 综合搜索（数据库分页，避免全量加载后内存分页）
+   *
+   * <p>通过 nw_search_index 表的 LIMIT/OFFSET 在 SQL 层面分页， 支持按 filename / content / tag / all 多维度搜索。
+   *
+   * @param keyword 搜索关键词
+   * @param userId 用户ID（权限过滤）
+   * @param scope 搜索范围：all / filename / content / tag
+   * @param page 页码（从 1 开始）
+   * @param pageSize 每页大小
+   * @return 搜索结果
+   */
+  public SearchResultVO search(
+      String keyword, String userId, String scope, int page, int pageSize) {
+    long startTime = System.currentTimeMillis();
 
-        log.info("[SearchDomainService] 搜索: keyword={}, userId={}, scope={}, page={}, pageSize={}",
-                keyword, userId, scope, page, pageSize);
+    log.info(
+        "[SearchDomainService] 搜索: keyword={}, userId={}, scope={}, page={}, pageSize={}",
+        keyword,
+        userId,
+        scope,
+        page,
+        pageSize);
 
-        // 数据库分页查询搜索索引，避免全量加载后内存 subList 分页
-        PageResponse<List<SearchIndex>> pageResult = searchIndexRepository.searchPage(
-                keyword, userId, scope, page, pageSize);
+    // 数据库分页查询搜索索引，避免全量加载后内存 subList 分页
+    PageResponse<List<SearchIndex>> pageResult =
+        searchIndexRepository.searchPage(keyword, userId, scope, page, pageSize);
 
-        List<SearchResultVO.SearchHitVO> hits = new ArrayList<>();
-        for (SearchIndex index : pageResult.getData()) {
-            float score = calculateScore(index, keyword);
-            hits.add(SearchResultVO.SearchHitVO.builder()
-                    .fileNodeId(index.getFileNodeId())
-                    .name(index.getName())
-                    .path(index.getPath())
-                    .nodeType(FileNode.TYPE_FILE)
-                    .suffix(index.getSuffix())
-                    .size(index.getSize())
-                    .highlight(buildHighlight(index.getName(), keyword))
-                    .score(score)
-                    .tags(parseTags(index.getTags()))
-                    .createdBy(index.getCreatedBy())
-                    .updatedAt(index.getUpdatedAt() != null
-                            ? index.getUpdatedAt().toString() : null)
-                    .build());
-        }
-
-        long tookMs = System.currentTimeMillis() - startTime;
-
-        return SearchResultVO.builder()
-                .hits(hits)
-                .total(pageResult.getTotal())
-                .page(page)
-                .pageSize(pageSize)
-                .tookMs(tookMs)
-                .build();
+    List<SearchResultVO.SearchHitVO> hits = new ArrayList<>();
+    for (SearchIndex index : pageResult.getData()) {
+      float score = calculateScore(index, keyword);
+      hits.add(
+          SearchResultVO.SearchHitVO.builder()
+              .fileNodeId(index.getFileNodeId())
+              .name(index.getName())
+              .path(index.getPath())
+              .nodeType(FileNode.TYPE_FILE)
+              .suffix(index.getSuffix())
+              .size(index.getSize())
+              .highlight(buildHighlight(index.getName(), keyword))
+              .score(score)
+              .tags(parseTags(index.getTags()))
+              .createdBy(index.getCreatedBy())
+              .updatedAt(index.getUpdatedAt() != null ? index.getUpdatedAt().toString() : null)
+              .build());
     }
 
-    /**
-     * 索引同步（文件上传/更新后调用）
-     * <p>
-     * <b>双索引写入：</b>
-     * <ol>
-     *   <li>写入 {@code nw_search_index} 表（DB LIKE 降级索引）</li>
-     *   <li>通过 {@link SearchIndexEventBridge} 同步到 {@code ydsz_search_index}
-     *       （统一搜索主索引），仅当桥接器可用时执行</li>
-     * </ol>
-     *
-     * @param fileNodeId 文件节点ID
-     * @param content    提取的文本内容（可为 null）
-     * @param userId     操作人ID
-     */
-    public void indexFile(String fileNodeId, String content, String userId) {
-        log.info("[SearchDomainService] 索引文件: fileNodeId={}", fileNodeId);
+    long tookMs = System.currentTimeMillis() - startTime;
 
-        FileNode node = fileNodeRepository.findById(fileNodeId);
-        if (node == null || node.getDeleted() != null && node.getDeleted() == 1) {
-            log.warn("[SearchDomainService] 文件节点不存在或已删除，跳过索引: {}", fileNodeId);
-            return;
-        }
+    return SearchResultVO.builder()
+        .hits(hits)
+        .total(pageResult.getTotal())
+        .page(page)
+        .pageSize(pageSize)
+        .tookMs(tookMs)
+        .build();
+  }
 
-        // 查询标签
-        List<Tag> tags = tagRepository.findByFileNodeId(fileNodeId);
-        String tagNames = tags != null && !tags.isEmpty()
-                ? tags.stream().map(Tag::getName).collect(Collectors.joining(","))
-                : null;
+  /**
+   * 索引同步（文件上传/更新后调用）
+   *
+   * <p><b>双索引写入：</b>
+   *
+   * <ol>
+   *   <li>写入 {@code nw_search_index} 表（DB LIKE 降级索引）
+   *   <li>通过 {@link SearchIndexEventBridge} 同步到 {@code ydsz_search_index} （统一搜索主索引），仅当桥接器可用时执行
+   * </ol>
+   *
+   * @param fileNodeId 文件节点ID
+   * @param content 提取的文本内容（可为 null）
+   * @param userId 操作人ID
+   */
+  public void indexFile(String fileNodeId, String content, String userId) {
+    log.info("[SearchDomainService] 索引文件: fileNodeId={}", fileNodeId);
 
-        // 构建可搜索内容
-        StringBuilder searchableContent = new StringBuilder();
-        if (node.getName() != null) {
-            searchableContent.append(node.getName());
-        }
-        if (node.getPath() != null) {
-            searchableContent.append(' ').append(node.getPath());
-        }
-        if (content != null && !content.isEmpty()) {
-            searchableContent.append(' ').append(content);
-        }
-        if (tagNames != null) {
-            searchableContent.append(' ').append(tagNames);
-        }
-
-        SearchIndex index = SearchIndex.builder()
-                .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
-                .fileNodeId(fileNodeId)
-                .name(node.getName())
-                .path(node.getPath())
-                .content(searchableContent.toString())
-                .suffix(node.getSuffix())
-                .mimeType(node.getMimeType())
-                .size(node.getSize())
-                .tags(tagNames)
-                .build();
-        index.setCreatedBy(node.getCreatedBy());
-        index.setUpdatedBy(userId);
-        index.setRevision(0);
-        index.setDeleted(0);
-
-        searchIndexRepository.upsert(index);
-        log.info("[SearchDomainService] nw_search_index 写入成功: fileNodeId={}", fileNodeId);
-
-        // 同步到统一搜索索引（ydsz_search_index），设置 searchableContent 以传递全文内容
-        syncSearchIndex(node, content);
+    FileNode node = fileNodeRepository.findById(fileNodeId);
+    if (node == null || node.getDeleted() != null && node.getDeleted() == 1) {
+      log.warn("[SearchDomainService] 文件节点不存在或已删除，跳过索引: {}", fileNodeId);
+      return;
     }
 
-    /**
-     * 删除索引（双索引删除）
-     * <p>
-     * 同时删除 nw_search_index 和统一搜索索引（ydsz_search_index）。
-     */
-    public void removeIndex(String fileNodeId) {
-        log.info("[SearchDomainService] 删除索引: fileNodeId={}", fileNodeId);
-        searchIndexRepository.deleteByFileNodeId(fileNodeId);
-        deleteSearchIndex(fileNodeId);
+    // 查询标签
+    List<Tag> tags = tagRepository.findByFileNodeId(fileNodeId);
+    String tagNames =
+        tags != null && !tags.isEmpty()
+            ? tags.stream().map(Tag::getName).collect(Collectors.joining(","))
+            : null;
+
+    // 构建可搜索内容
+    StringBuilder searchableContent = new StringBuilder();
+    if (node.getName() != null) {
+      searchableContent.append(node.getName());
+    }
+    if (node.getPath() != null) {
+      searchableContent.append(' ').append(node.getPath());
+    }
+    if (content != null && !content.isEmpty()) {
+      searchableContent.append(' ').append(content);
+    }
+    if (tagNames != null) {
+      searchableContent.append(' ').append(tagNames);
     }
 
-    /**
-     * 将文件数据变更同步到统一搜索索引（ydsz_search_index）。
-     *
-     * <p>通过 {@link SearchIndexEventBridge} 异步写入。为传递提取的文档全文内容，
-     * 将 content 设置到 FileNode 的 transient 字段 {@code searchableContent} 上，
-     * 供 {@link com.njydsz.nextwiki.server.search.WikiSearchProvider#toIndexDocument} 读取。
-     *
-     * @param node    文件节点实体
-     * @param content 提取的文本内容
-     */
-    private void syncSearchIndex(FileNode node, String content) {
-        SearchIndexEventBridge bridge = searchIndexEventBridgeProvider.getIfAvailable();
-        if (bridge == null) {
-            return;
-        }
-        // 设置 transient 字段传递全文内容（不持久化，仅用于索引同步）
-        if (content != null && !content.isEmpty()) {
-            node.setSearchableContent(content.length() > MAX_SEARCHABLE_CONTENT_LENGTH
-                    ? content.substring(0, MAX_SEARCHABLE_CONTENT_LENGTH)
-                    : content);
-        }
-        bridge.indexUpsert("wiki", node);
-        log.debug("[SearchDomainService] 已同步到统一搜索索引: fileNodeId={}", node.getId());
+    SearchIndex index =
+        SearchIndex.builder()
+            .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
+            .fileNodeId(fileNodeId)
+            .name(node.getName())
+            .path(node.getPath())
+            .content(searchableContent.toString())
+            .suffix(node.getSuffix())
+            .mimeType(node.getMimeType())
+            .size(node.getSize())
+            .tags(tagNames)
+            .build();
+    index.setCreatedBy(node.getCreatedBy());
+    index.setUpdatedBy(userId);
+    index.setRevision(0);
+    index.setDeleted(0);
+
+    searchIndexRepository.upsert(index);
+    log.info("[SearchDomainService] nw_search_index 写入成功: fileNodeId={}", fileNodeId);
+
+    // 同步到统一搜索索引（ydsz_search_index），设置 searchableContent 以传递全文内容
+    syncSearchIndex(node, content);
+  }
+
+  /**
+   * 删除索引（双索引删除）
+   *
+   * <p>同时删除 nw_search_index 和统一搜索索引（ydsz_search_index）。
+   */
+  public void removeIndex(String fileNodeId) {
+    log.info("[SearchDomainService] 删除索引: fileNodeId={}", fileNodeId);
+    searchIndexRepository.deleteByFileNodeId(fileNodeId);
+    deleteSearchIndex(fileNodeId);
+  }
+
+  /**
+   * 将文件数据变更同步到统一搜索索引（ydsz_search_index）。
+   *
+   * <p>通过 {@link SearchIndexEventBridge} 异步写入。为传递提取的文档全文内容， 将 content 设置到 FileNode 的 transient 字段
+   * {@code searchableContent} 上， 供 {@link
+   * com.njydsz.nextwiki.server.search.WikiSearchProvider#toIndexDocument} 读取。
+   *
+   * @param node 文件节点实体
+   * @param content 提取的文本内容
+   */
+  private void syncSearchIndex(FileNode node, String content) {
+    SearchIndexEventBridge bridge = searchIndexEventBridgeProvider.getIfAvailable();
+    if (bridge == null) {
+      return;
+    }
+    // 设置 transient 字段传递全文内容（不持久化，仅用于索引同步）
+    if (content != null && !content.isEmpty()) {
+      node.setSearchableContent(
+          content.length() > MAX_SEARCHABLE_CONTENT_LENGTH
+              ? content.substring(0, MAX_SEARCHABLE_CONTENT_LENGTH)
+              : content);
+    }
+    bridge.indexUpsert("wiki", node);
+    log.debug("[SearchDomainService] 已同步到统一搜索索引: fileNodeId={}", node.getId());
+  }
+
+  /**
+   * 从统一搜索索引删除文档。
+   *
+   * @param fileNodeId 文件节点ID
+   */
+  private void deleteSearchIndex(String fileNodeId) {
+    SearchIndexEventBridge bridge = searchIndexEventBridgeProvider.getIfAvailable();
+    if (bridge == null) {
+      return;
+    }
+    bridge.indexDelete("wiki", fileNodeId);
+    log.debug("[SearchDomainService] 已从统一搜索索引删除: fileNodeId={}", fileNodeId);
+  }
+
+  /**
+   * 重建全量索引
+   *
+   * <p>查询所有未删除的文件节点，逐个写入索引。
+   */
+  public void rebuildAllIndices() {
+    log.info("[SearchDomainService] 重建全量索引（异步任务）");
+
+    List<String> fileNodeIds = searchIndexRepository.findAllFileNodeIds(null);
+    log.info("[SearchDomainService] 待索引文件数: {}", fileNodeIds.size());
+
+    int success = 0;
+    int failed = 0;
+    for (String fileNodeId : fileNodeIds) {
+      try {
+        indexFile(fileNodeId, null, null);
+        success++;
+      } catch (Exception e) {
+        log.error("[SearchDomainService] 索引重建失败: fileNodeId={}", fileNodeId, e);
+        failed++;
+      }
     }
 
-    /**
-     * 从统一搜索索引删除文档。
-     *
-     * @param fileNodeId 文件节点ID
-     */
-    private void deleteSearchIndex(String fileNodeId) {
-        SearchIndexEventBridge bridge = searchIndexEventBridgeProvider.getIfAvailable();
-        if (bridge == null) {
-            return;
-        }
-        bridge.indexDelete("wiki", fileNodeId);
-        log.debug("[SearchDomainService] 已从统一搜索索引删除: fileNodeId={}", fileNodeId);
+    log.info("[SearchDomainService] 全量索引重建完成: success={}, failed={}", success, failed);
+  }
+
+  // ==================== 私有方法 ====================
+
+  /** 计算搜索得分（0-1 之间，越高越相关） */
+  private float calculateScore(SearchIndex index, String keyword) {
+    if (keyword == null || keyword.isEmpty()) {
+      return 1.0f;
     }
+    String name = index.getName() != null ? index.getName().toLowerCase() : "";
+    String lowerKeyword = keyword.toLowerCase();
 
-    /**
-     * 重建全量索引
-     * <p>
-     * 查询所有未删除的文件节点，逐个写入索引。
-     */
-    public void rebuildAllIndices() {
-        log.info("[SearchDomainService] 重建全量索引（异步任务）");
+    if (name.equals(lowerKeyword)) return 1.0f;
+    if (name.startsWith(lowerKeyword)) return 0.8f;
+    if (name.contains(lowerKeyword)) return 0.6f;
 
-        List<String> fileNodeIds = searchIndexRepository.findAllFileNodeIds(null);
-        log.info("[SearchDomainService] 待索引文件数: {}", fileNodeIds.size());
+    String path = index.getPath() != null ? index.getPath().toLowerCase() : "";
+    if (path.contains(lowerKeyword)) return 0.3f;
 
-        int success = 0;
-        int failed = 0;
-        for (String fileNodeId : fileNodeIds) {
-            try {
-                indexFile(fileNodeId, null, null);
-                success++;
-            } catch (Exception e) {
-                log.error("[SearchDomainService] 索引重建失败: fileNodeId={}", fileNodeId, e);
-                failed++;
-            }
-        }
+    return 0.1f;
+  }
 
-        log.info("[SearchDomainService] 全量索引重建完成: success={}, failed={}", success, failed);
+  /** 构建高亮片段（基于文件名匹配关键词的位置） */
+  private String buildHighlight(String name, String keyword) {
+    if (keyword == null || keyword.isEmpty() || name == null) {
+      return null;
     }
-
-    // ==================== 私有方法 ====================
-
-    /**
-     * 计算搜索得分（0-1 之间，越高越相关）
-     */
-    private float calculateScore(SearchIndex index, String keyword) {
-        if (keyword == null || keyword.isEmpty()) {
-            return 1.0f;
-        }
-        String name = index.getName() != null ? index.getName().toLowerCase() : "";
-        String lowerKeyword = keyword.toLowerCase();
-
-        if (name.equals(lowerKeyword)) return 1.0f;
-        if (name.startsWith(lowerKeyword)) return 0.8f;
-        if (name.contains(lowerKeyword)) return 0.6f;
-
-        String path = index.getPath() != null ? index.getPath().toLowerCase() : "";
-        if (path.contains(lowerKeyword)) return 0.3f;
-
-        return 0.1f;
+    if (name.toLowerCase().contains(keyword.toLowerCase())) {
+      int idx = name.toLowerCase().indexOf(keyword.toLowerCase());
+      int start = Math.max(0, idx - 20);
+      int end = Math.min(name.length(), idx + keyword.length() + 20);
+      String prefix = start > 0 ? "..." : "";
+      String suffix = end < name.length() ? "..." : "";
+      return prefix + name.substring(start, end) + suffix;
     }
+    return null;
+  }
 
-    /**
-     * 构建高亮片段（基于文件名匹配关键词的位置）
-     */
-    private String buildHighlight(String name, String keyword) {
-        if (keyword == null || keyword.isEmpty() || name == null) {
-            return null;
-        }
-        if (name.toLowerCase().contains(keyword.toLowerCase())) {
-            int idx = name.toLowerCase().indexOf(keyword.toLowerCase());
-            int start = Math.max(0, idx - 20);
-            int end = Math.min(name.length(), idx + keyword.length() + 20);
-            String prefix = start > 0 ? "..." : "";
-            String suffix = end < name.length() ? "..." : "";
-            return prefix + name.substring(start, end) + suffix;
-        }
-        return null;
+  /** 解析逗号分隔的标签字符串为列表 */
+  private List<String> parseTags(String tags) {
+    if (tags == null || tags.isEmpty()) {
+      return Collections.emptyList();
     }
-
-    /**
-     * 解析逗号分隔的标签字符串为列表
-     */
-    private List<String> parseTags(String tags) {
-        if (tags == null || tags.isEmpty()) {
-            return Collections.emptyList();
-        }
-        return Arrays.stream(tags.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .collect(Collectors.toList());
-    }
+    return Arrays.stream(tags.split(","))
+        .map(String::trim)
+        .filter(s -> !s.isEmpty())
+        .collect(Collectors.toList());
+  }
 }

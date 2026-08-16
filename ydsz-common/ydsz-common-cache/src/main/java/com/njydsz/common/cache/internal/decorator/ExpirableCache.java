@@ -1,5 +1,13 @@
 package com.njydsz.common.cache.internal.decorator;
 
+import com.njydsz.common.cache.api.Cache;
+import com.njydsz.common.cache.api.CachePolicy;
+import com.njydsz.common.cache.listener.RemovalCause;
+import com.njydsz.common.cache.listener.RemovalListener;
+import com.njydsz.common.cache.stats.CacheStats;
+import com.njydsz.common.cache.support.AsyncFunction;
+import com.njydsz.common.cache.support.CacheThreadPoolManager;
+import com.njydsz.common.cache.support.Expiry;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -24,21 +32,12 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.njydsz.common.cache.api.Cache;
-import com.njydsz.common.cache.api.CachePolicy;
-import com.njydsz.common.cache.listener.RemovalCause;
-import com.njydsz.common.cache.listener.RemovalListener;
-import com.njydsz.common.cache.stats.CacheStats;
-import com.njydsz.common.cache.support.AsyncFunction;
-import com.njydsz.common.cache.support.CacheThreadPoolManager;
-import com.njydsz.common.cache.support.Expiry;
 
 /**
  * 过期缓存装饰器 — 为任意基础缓存叠加 TTL 过期能力
  *
- * <p>核心设计：淘汰策略（由底层缓存负责）与过期策略（由本装饰器负责）正交组合。
- * 用户可以在 TINYLFU/STRIPED 等任意淘汰策略上叠加 expireAfterWrite / expireAfterAccess /
- * 自定义 Expiry 过期策略。
+ * <p>核心设计：淘汰策略（由底层缓存负责）与过期策略（由本装饰器负责）正交组合。 用户可以在 TINYLFU/STRIPED 等任意淘汰策略上叠加 expireAfterWrite /
+ * expireAfterAccess / 自定义 Expiry 过期策略。
  *
  * <p>工作原理：
  *
@@ -60,7 +59,6 @@ import com.njydsz.common.cache.support.Expiry;
  * @param <K> 键类型
  * @param <V> 值类型
  * @author ydsz-team
- *
  * @since 1.0.0
  */
 public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
@@ -94,9 +92,8 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
   /**
    * 时间桶索引：桶时间戳（纳秒，向下取整到桶大小） -> 该桶内过期的 key 集合
    *
-   * <p>用于高效清理：cleanupExpired() 只扫描已过期的桶，而非全量遍历 expirationMap。
-   * 对于 expireAfterAccess 场景，key 可能出现在多个桶中（刷新后旧桶残留），
-   * 清理时通过 double-check expirationMap 确认是否真正过期。
+   * <p>用于高效清理：cleanupExpired() 只扫描已过期的桶，而非全量遍历 expirationMap。 对于 expireAfterAccess 场景，key
+   * 可能出现在多个桶中（刷新后旧桶残留）， 清理时通过 double-check expirationMap 确认是否真正过期。
    */
   private final ConcurrentSkipListMap<Long, Set<K>> expiryBuckets = new ConcurrentSkipListMap<>();
 
@@ -155,7 +152,13 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
       long expireAfterAccessNanos,
       Expiry<? super K, ? super V> expiry,
       long cleanupIntervalSeconds) {
-    this(delegate, expireAfterWriteNanos, expireAfterAccessNanos, expiry, cleanupIntervalSeconds, 0.1);
+    this(
+        delegate,
+        expireAfterWriteNanos,
+        expireAfterAccessNanos,
+        expiry,
+        cleanupIntervalSeconds,
+        0.1);
   }
 
   /**
@@ -185,8 +188,12 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     // 注册淘汰监听器，防止 expirationMap 内存泄漏
     delegate.addListener(evictionListener);
     this.cleanupFuture =
-        getSharedCleaner().scheduleAtFixedRate(
-            this::cleanupExpired, cleanupIntervalSeconds, cleanupIntervalSeconds, TimeUnit.SECONDS);
+        getSharedCleaner()
+            .scheduleAtFixedRate(
+                this::cleanupExpired,
+                cleanupIntervalSeconds,
+                cleanupIntervalSeconds,
+                TimeUnit.SECONDS);
     log.info(
         "ExpirableCache 已创建，delegate={}, expireAfterWrite={}ns, expireAfterAccess={}ns, expiry={}, jitter={}",
         delegate.getClass().getSimpleName(),
@@ -205,6 +212,7 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     double factor = 1.0 + (ThreadLocalRandom.current().nextDouble() * 2 - 1) * jitterRatio;
     return Math.max(1, (long) (ttlNanos * factor));
   }
+
   /** 将 key 添加到对应过期时间的桶中 */
   private void addToBucket(long expireAtNanos, K key) {
     long bucketKey = expireAtNanos / bucketSizeNanos;
@@ -312,8 +320,8 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
   /**
    * 获取缓存值（不触发加载），并检查是否过期。
    *
-   * <p>过期语义：读路径先查底层缓存，命中后再比对过期时间戳； 已过期则同步删除并返回 null（计入未命中）。 未过期时按
-   * expireAfterAccess / 自定义 Expiry 刷新过期时间（写后过期模式不受影响）。
+   * <p>过期语义：读路径先查底层缓存，命中后再比对过期时间戳； 已过期则同步删除并返回 null（计入未命中）。 未过期时按 expireAfterAccess / 自定义 Expiry
+   * 刷新过期时间（写后过期模式不受影响）。
    *
    * @param key 缓存键
    * @return 缓存值；未命中或已过期时返回 {@code null}
@@ -338,7 +346,7 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
   /**
    * 获取缓存值，未命中时使用加载器加载，并按写后过期语义落缓存。
    *
-   * @param key    缓存键
+   * @param key 缓存键
    * @param loader 值加载器
    * @return 缓存值或加载的新值
    */
@@ -357,7 +365,7 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
   /**
    * 异步获取缓存值，未命中时使用异步加载器加载并写入（写后过期）。
    *
-   * @param key    缓存键
+   * @param key 缓存键
    * @param loader 异步值加载器
    * @return 异步完成的缓存值
    */
@@ -381,10 +389,10 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
   /**
    * 写入键值对，并记录新的过期时间。
    *
-   * <p>先写入底层缓存，再按配置的过期策略（自定义 Expiry > 写后过期 > 访问后过期） 计算并登记过期时间戳，
-   * 同时加入时间桶索引供后台清理使用。 TTL 为 0 且无自定义策略时条目不设过期（Long.MAX_VALUE）。
+   * <p>先写入底层缓存，再按配置的过期策略（自定义 Expiry > 写后过期 > 访问后过期） 计算并登记过期时间戳， 同时加入时间桶索引供后台清理使用。 TTL 为 0
+   * 且无自定义策略时条目不设过期（Long.MAX_VALUE）。
    *
-   * @param key   缓存键
+   * @param key 缓存键
    * @param value 缓存值
    */
   @Override
@@ -400,7 +408,7 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
    *
    * <p>过期键视为不存在，允许覆盖写入。
    *
-   * @param key   缓存键
+   * @param key 缓存键
    * @param value 缓存值
    * @return 已存在的旧值；键不存在或已过期时返回 {@code null}
    */
@@ -417,7 +425,7 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
   /**
    * 键不存在或已过期时计算并写入，返回计算值。
    *
-   * @param key             缓存键
+   * @param key 缓存键
    * @param mappingFunction 映射函数
    * @return 缓存值或计算的新值
    */
@@ -436,7 +444,7 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
   /**
    * 基于旧值重新计算并写回，重映射结果为 null 时删除该键。
    *
-   * @param key               缓存键
+   * @param key 缓存键
    * @param remappingFunction 重映射函数
    * @return 重映射后的值；结果为 null 表示已删除
    */
@@ -455,8 +463,8 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
   /**
    * 合并值与现有值并写回，合并结果为 null 时删除该键。
    *
-   * @param key               缓存键
-   * @param value             待合并的值
+   * @param key 缓存键
+   * @param value 待合并的值
    * @param remappingFunction 合并函数
    * @return 合并后的值
    */
@@ -507,17 +515,13 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
     removeAll(keys);
   }
 
-  /**
-   * 使全部键失效（等价于 {@link #clear}）。
-   */
+  /** 使全部键失效（等价于 {@link #clear}）。 */
   @Override
   public void invalidateAll() {
     clear();
   }
 
-  /**
-   * 清空缓存，同时清空过期时间戳映射与时间桶索引。
-   */
+  /** 清空缓存，同时清空过期时间戳映射与时间桶索引。 */
   @Override
   public void clear() {
     expirationMap.clear();
@@ -661,8 +665,7 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
               /**
                * 修改写后过期时间。
                *
-               * <p>动态调整立即生效：新写入条目使用新 TTL，
-               * 已写入条目以其写入时计算的过期时间为准（不会追溯）。
+               * <p>动态调整立即生效：新写入条目使用新 TTL， 已写入条目以其写入时计算的过期时间为准（不会追溯）。
                *
                * <p>设置为 0 表示禁用写后过期。
                *
@@ -689,8 +692,7 @@ public class ExpirableCache<K, V> implements Cache<K, V>, AutoCloseable {
               /**
                * 修改访问后过期时间。
                *
-               * <p>动态调整立即生效：新访问条目使用新 TTL，
-               * 已写入条目以其原有过期时间为准（不会追溯）。
+               * <p>动态调整立即生效：新访问条目使用新 TTL， 已写入条目以其原有过期时间为准（不会追溯）。
                *
                * <p>设置为 0 表示禁用访问后过期。
                *

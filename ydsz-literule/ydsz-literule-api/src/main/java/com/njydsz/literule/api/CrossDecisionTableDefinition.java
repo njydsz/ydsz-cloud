@@ -14,14 +14,16 @@ import lombok.NoArgsConstructor;
  * <p>对标 URule Pro 的交叉决策表（决策矩阵），支持行和列双维度交叉匹配。
  *
  * <p>与普通决策表（{@link DecisionTableDefinition}）的区别：
+ *
  * <ul>
- *   <li>普通决策表：行 = 规则，列 = 条件，每行条件 AND 关系</li>
- *   <li>交叉决策表：行和列都是条件维度，交叉单元格 = 动作输出</li>
+ *   <li>普通决策表：行 = 规则，列 = 条件，每行条件 AND 关系
+ *   <li>交叉决策表：行和列都是条件维度，交叉单元格 = 动作输出
  * </ul>
  *
  * <p>适用场景：费率表、税率表、运费表、风险等级矩阵等二维表格决策。
  *
  * <p>结构示例（风险等级矩阵）：
+ *
  * <pre>
  *  rowDimension: "evmRedCount"（行维度：EVM 红灯数）
  *  columnDimension: "metricValue"（列维度：指标值）
@@ -33,6 +35,7 @@ import lombok.NoArgsConstructor;
  * </pre>
  *
  * <p>JSON 结构：
+ *
  * <pre>
  * {
  *   "matrixCode": "MTX_RISK",
@@ -69,103 +72,99 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class CrossDecisionTableDefinition implements Serializable {
 
+  private static final long serialVersionUID = 1L;
+
+  /** 矩阵编码（唯一） */
+  private String matrixCode;
+
+  /** 矩阵名称 */
+  private String matrixName;
+
+  /** 描述 */
+  private String description;
+
+  /** 类别 */
+  private String category;
+
+  /**
+   * 行维度字段名（从 facts 中取值的键名）
+   *
+   * <p>例如 "evmRedCount" 表示从 facts.get("evmRedCount") 获取行维度值
+   */
+  private String rowDimension;
+
+  /**
+   * 列维度字段名（从 facts 中取值的键名）
+   *
+   * <p>例如 "metricValue" 表示从 facts.get("metricValue") 获取列维度值
+   */
+  private String columnDimension;
+
+  /**
+   * 行分桶列表（按优先级匹配，首个命中的桶确定行索引）
+   *
+   * <p>每个桶定义一个条件表达式，命中后该行作为交叉匹配的行索引
+   */
+  private List<Bucket> rowBuckets;
+
+  /** 列分桶列表（按优先级匹配，首个命中的桶确定列索引） */
+  private List<Bucket> columnBuckets;
+
+  /**
+   * 交叉单元格动作映射
+   *
+   * <p>key 格式为 "rowIndex_columnIndex"（如 "0_1"），value 为动作映射
+   */
+  private Map<String, Map<String, Object>> cells;
+
+  /** 默认动作（行或列未匹配到桶时使用） */
+  private Map<String, Object> defaultActions;
+
+  /** 是否启用 */
+  @Builder.Default private boolean enabled = true;
+
+  /** 优先级 */
+  @Builder.Default private int priority = Rule.DEFAULT_PRIORITY;
+
+  /** 影响范围 */
+  private String scope;
+
+  /** 版本号 */
+  @Builder.Default private int version = 1;
+
+  /**
+   * 分桶定义
+   *
+   * <p>一个分桶代表一个条件区间，从 facts 中取维度值后按桶顺序匹配， 首个命中的桶确定行/列索引。
+   */
+  @Data
+  @Builder
+  @NoArgsConstructor
+  @AllArgsConstructor
+  public static class Bucket implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    /** 矩阵编码（唯一） */
-    private String matrixCode;
-
-    /** 矩阵名称 */
-    private String matrixName;
-
-    /** 描述 */
-    private String description;
-
-    /** 类别 */
-    private String category;
+    /** 桶显示名（如 "EVM红灯>=3"） */
+    private String label;
 
     /**
-     * 行维度字段名（从 facts 中取值的键名）
+     * 条件表达式
      *
-     * <p>例如 "evmRedCount" 表示从 facts.get("evmRedCount") 获取行维度值
-     */
-    private String rowDimension;
-
-    /**
-     * 列维度字段名（从 facts 中取值的键名）
+     * <p>支持与决策表条件相同的格式：字面值/比较表达式/区间/枚举
      *
-     * <p>例如 "metricValue" 表示从 facts.get("metricValue") 获取列维度值
+     * <p>例如：">=3" / "[1,3)" / "RED|YELLOW" / "0"
      */
-    private String columnDimension;
+    private String condition;
+  }
 
-    /**
-     * 行分桶列表（按优先级匹配，首个命中的桶确定行索引）
-     *
-     * <p>每个桶定义一个条件表达式，命中后该行作为交叉匹配的行索引
-     */
-    private List<Bucket> rowBuckets;
-
-    /**
-     * 列分桶列表（按优先级匹配，首个命中的桶确定列索引）
-     */
-    private List<Bucket> columnBuckets;
-
-    /**
-     * 交叉单元格动作映射
-     *
-     * <p>key 格式为 "rowIndex_columnIndex"（如 "0_1"），value 为动作映射
-     */
-    private Map<String, Map<String, Object>> cells;
-
-    /** 默认动作（行或列未匹配到桶时使用） */
-    private Map<String, Object> defaultActions;
-
-    /** 是否启用 */
-    @Builder.Default
-    private boolean enabled = true;
-
-    /** 优先级 */
-    @Builder.Default
-    private int priority = Rule.DEFAULT_PRIORITY;
-
-    /** 影响范围 */
-    private String scope;
-
-    /** 版本号 */
-    @Builder.Default
-    private int version = 1;
-
-    /**
-     * 分桶定义
-     *
-     * <p>一个分桶代表一个条件区间，从 facts 中取维度值后按桶顺序匹配，
-     * 首个命中的桶确定行/列索引。
-     */
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class Bucket implements Serializable {
-        private static final long serialVersionUID = 1L;
-
-        /** 桶显示名（如 "EVM红灯>=3"） */
-        private String label;
-
-        /**
-         * 条件表达式
-         * <p>支持与决策表条件相同的格式：字面值/比较表达式/区间/枚举
-         * <p>例如：">=3" / "[1,3)" / "RED|YELLOW" / "0"
-         */
-        private String condition;
-    }
-
-    /**
-     * 构建单元格 key
-     *
-     * @param rowIndex    行索引
-     * @param columnIndex 列索引
-     * @return 单元格 key（如 "0_1"）
-     */
-    public static String cellKey(int rowIndex, int columnIndex) {
-        return rowIndex + "_" + columnIndex;
-    }
+  /**
+   * 构建单元格 key
+   *
+   * @param rowIndex 行索引
+   * @param columnIndex 列索引
+   * @return 单元格 key（如 "0_1"）
+   */
+  public static String cellKey(int rowIndex, int columnIndex) {
+    return rowIndex + "_" + columnIndex;
+  }
 }

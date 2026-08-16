@@ -1,5 +1,6 @@
 package com.njydsz.agent.domain.gateway;
 
+import com.njydsz.agent.domain.enums.AgentExceptionCode;
 import com.njydsz.common.exception.custom.SysException;
 
 /**
@@ -12,38 +13,53 @@ import com.njydsz.common.exception.custom.SysException;
  */
 public class LlmException extends SysException {
 
-    private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-    /** 错误类型 */
-    public enum ErrorType {
-        /** 网络超时 */
-        NETWORK_TIMEOUT,
-        /** 认证失败（API Key 无效） */
-        AUTH_FAILED,
-        /** 模型不存在 */
-        MODEL_NOT_FOUND,
-        /** 触发限流 */
-        RATE_LIMITED,
-        /** 响应格式无效 */
-        INVALID_RESPONSE,
-        /** Provider 内部错误 */
-        PROVIDER_ERROR
-    }
+  /** 错误类型 */
+  public enum ErrorType {
+    /** 网络超时 */
+    NETWORK_TIMEOUT,
+    /** 认证失败（API Key 无效） */
+    AUTH_FAILED,
+    /** 模型不存在 */
+    MODEL_NOT_FOUND,
+    /** 触发限流 */
+    RATE_LIMITED,
+    /** 响应格式无效 */
+    INVALID_RESPONSE,
+    /** Provider 内部错误 */
+    PROVIDER_ERROR,
+    /** 调用被取消（客户端断开/主动中断，不应触发重试或 Fallback） */
+    CANCELED
+  }
 
-    private final ErrorType errorType;
+  private final ErrorType errorType;
 
-    public LlmException(String message, ErrorType errorType) {
-        super(message);
-        this.errorType = errorType;
-    }
+  public LlmException(String message, ErrorType errorType) {
+    super(message);
+    this.errorType = errorType;
+  }
 
-    public LlmException(String message, ErrorType errorType, Throwable cause) {
-        super(message);
-        this.initCause(cause);
-        this.errorType = errorType;
-    }
+  public LlmException(String message, ErrorType errorType, Throwable cause) {
+    super(message);
+    this.initCause(cause);
+    this.errorType = errorType;
+  }
 
-    public ErrorType getErrorType() {
-        return errorType;
-    }
+  public ErrorType getErrorType() {
+    return errorType;
+  }
+
+  /**
+   * 将 LLM 错误类型映射为 Agent 模块统一错误码，供上层异常处理/网关网关透传使用。
+   *
+   * @return 对应的 Agent 异常码
+   */
+  public AgentExceptionCode toAgentErrorCode() {
+    return switch (errorType) {
+      case NETWORK_TIMEOUT, PROVIDER_ERROR, RATE_LIMITED, CANCELED -> AgentExceptionCode.LLM_CALL_FAILED;
+      case AUTH_FAILED, MODEL_NOT_FOUND -> AgentExceptionCode.LLM_PROVIDER_NOT_CONFIGURED;
+      case INVALID_RESPONSE -> AgentExceptionCode.LLM_RESPONSE_INVALID;
+    };
+  }
 }

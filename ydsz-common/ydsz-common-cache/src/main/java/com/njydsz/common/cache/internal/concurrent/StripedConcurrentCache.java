@@ -1,5 +1,9 @@
 package com.njydsz.common.cache.internal.concurrent;
 
+import com.njydsz.common.cache.api.CachePolicy;
+import com.njydsz.common.cache.internal.AbstractCache;
+import com.njydsz.common.cache.listener.RemovalCause;
+import com.njydsz.common.cache.stats.CacheStats;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -14,10 +18,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.njydsz.common.cache.api.CachePolicy;
-import com.njydsz.common.cache.internal.AbstractCache;
-import com.njydsz.common.cache.listener.RemovalCause;
-import com.njydsz.common.cache.stats.CacheStats;
 
 /**
  * 分段锁高性能缓存（采样 LRU 淘汰版）。
@@ -26,12 +26,11 @@ import com.njydsz.common.cache.stats.CacheStats;
  *
  * <ol>
  *   <li>读路径无锁：命中仅更新 {@code lastAccessNanos}（volatile 写），不触碰链表
- *   <li>链表独占：所有链表修改（addToTail / removeFromList / moveToTail / 淘汰采样）均在
- *       {@code evictLock} 内完成，消除原实现 get/put/remove 无锁改链表的竞争
- *   <li>采样 LRU 淘汰：淘汰时从链表头部向后采样 {@link #EVICT_SAMPLE_SIZE} 个候选，
- *       选择最近访问时间最早的条目淘汰，正确性优先、读路径零锁
- *   <li>权威容量：{@code maximumSize} 为全局总容量硬上限，段内达到阈值或全局超限均触发淘汰，
- *       运行时缩容（{@code policy().eviction().setMaximum}）立即同步收缩
+ *   <li>链表独占：所有链表修改（addToTail / removeFromList / moveToTail / 淘汰采样）均在 {@code evictLock} 内完成，消除原实现
+ *       get/put/remove 无锁改链表的竞争
+ *   <li>采样 LRU 淘汰：淘汰时从链表头部向后采样 {@link #EVICT_SAMPLE_SIZE} 个候选， 选择最近访问时间最早的条目淘汰，正确性优先、读路径零锁
+ *   <li>权威容量：{@code maximumSize} 为全局总容量硬上限，段内达到阈值或全局超限均触发淘汰， 运行时缩容（{@code
+ *       policy().eviction().setMaximum}）立即同步收缩
  * </ol>
  *
  * @param <K> 键类型
@@ -148,9 +147,7 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
     return segments.get(segmentIndex).remove(key);
   }
 
-  /**
-   * 清空全部分段。
-   */
+  /** 清空全部分段。 */
   @Override
   public void clear() {
     for (final Segment<K, V> segment : segments) {
@@ -281,9 +278,7 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
     };
   }
 
-  /**
-   * 全局缩容：逐段在锁内淘汰至总量不超过当前容量。
-   */
+  /** 全局缩容：逐段在锁内淘汰至总量不超过当前容量。 */
   private void shrinkToCapacity() {
     for (final Segment<K, V> segment : segments) {
       segment.shrinkToGlobalCapacity();
@@ -436,9 +431,7 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
       return result;
     }
 
-    /**
-     * 按段内阈值或全局容量上限触发淘汰（锁内执行）。
-     */
+    /** 按段内阈值或全局容量上限触发淘汰（锁内执行）。 */
     private void maybeEvict() {
       if (size.get() < evictThreshold && parent.totalSize.get() < parent.maxSize) {
         return;
@@ -490,9 +483,7 @@ public class StripedConcurrentCache<K, V> extends AbstractCache<K, V> {
       return false;
     }
 
-    /**
-     * 全局缩容：锁内持续淘汰直至总量不超过全局容量。
-     */
+    /** 全局缩容：锁内持续淘汰直至总量不超过全局容量。 */
     void shrinkToGlobalCapacity() {
       evictLock.lock();
       try {

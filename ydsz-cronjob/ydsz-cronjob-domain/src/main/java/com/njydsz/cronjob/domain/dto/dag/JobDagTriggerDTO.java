@@ -1,9 +1,9 @@
 package com.njydsz.cronjob.domain.dto.dag;
 
-import java.io.Serial;
-import java.io.Serializable;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
+import java.io.Serial;
+import java.io.Serializable;
 import lombok.Data;
 
 /**
@@ -16,13 +16,12 @@ import lombok.Data;
 @Schema(description = "DAG 触发表单")
 public class JobDagTriggerDTO implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
-    @NotBlank(message = "{validation.cronjob.msg_dag_key_required}")
-    @Schema(description = "DAG 唯一 KEY", requiredMode = Schema.RequiredMode.REQUIRED)
-    private String dagKey;
+  @NotBlank(message = "{validation.cronjob.msg_dag_key_required}")
+  @Schema(description = "DAG 唯一 KEY", requiredMode = Schema.RequiredMode.REQUIRED)
+  private String dagKey;
 
-    @Schema(description = "触发人（MANUAL 时为用户 ID，可空）")
-    private String triggerBy;
+  @Schema(description = "触发人（MANUAL 时为用户 ID，可空）")
+  private String triggerBy;
 }

@@ -14,10 +14,11 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
  * <p>检测 Redis 连通性（权限缓存依赖 Redis），暴露 /actuator/health/auth 端点。
  *
  * <p><b>检测逻辑：</b>
+ *
  * <ul>
- *   <li>验证 RedisConnectionFactory 连接状态</li>
- *   <li>执行 PING 命令验证连接可达性</li>
- *   <li>返回连接耗时作为性能指标</li>
+ *   <li>验证 RedisConnectionFactory 连接状态
+ *   <li>执行 PING 命令验证连接可达性
+ *   <li>返回连接耗时作为性能指标
  * </ul>
  *
  * @author ydsz-team
@@ -25,40 +26,41 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
  */
 @Slf4j
 @ConditionalOnClass(HealthIndicator.class)
-@ConditionalOnProperty(prefix = "ydsz.auth", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(
+    prefix = "ydsz.auth",
+    name = "enabled",
+    havingValue = "true",
+    matchIfMissing = true)
 public class AuthHealthIndicator implements HealthIndicator {
 
-    private final RedisConnectionFactory redisConnectionFactory;
+  private final RedisConnectionFactory redisConnectionFactory;
 
-    public AuthHealthIndicator(RedisConnectionFactory redisConnectionFactory) {
-        this.redisConnectionFactory = redisConnectionFactory;
+  public AuthHealthIndicator(RedisConnectionFactory redisConnectionFactory) {
+    this.redisConnectionFactory = redisConnectionFactory;
+  }
+
+  @Override
+  public Health health() {
+    try (RedisConnection connection = redisConnectionFactory.getConnection()) {
+      long startTime = System.currentTimeMillis();
+      String pong = connection.ping();
+      long responseTime = System.currentTimeMillis() - startTime;
+
+      if ("PONG".equalsIgnoreCase(pong)) {
+        return Health.up()
+            .withDetail("module", "auth")
+            .withDetail("redis", "connected")
+            .withDetail("responseTimeMs", responseTime)
+            .build();
+      }
+
+      return Health.down()
+          .withDetail("module", "auth")
+          .withDetail("redis", "unexpected response: " + pong)
+          .build();
+    } catch (Exception e) {
+      log.error("【权限模块】健康检查失败 | error={}", e.getMessage());
+      return Health.down().withDetail("module", "auth").withDetail("error", e.getMessage()).build();
     }
-
-    @Override
-    public Health health() {
-        try (RedisConnection connection = redisConnectionFactory.getConnection()) {
-            long startTime = System.currentTimeMillis();
-            String pong = connection.ping();
-            long responseTime = System.currentTimeMillis() - startTime;
-
-            if ("PONG".equalsIgnoreCase(pong)) {
-                return Health.up()
-                        .withDetail("module", "auth")
-                        .withDetail("redis", "connected")
-                        .withDetail("responseTimeMs", responseTime)
-                        .build();
-            }
-
-            return Health.down()
-                    .withDetail("module", "auth")
-                    .withDetail("redis", "unexpected response: " + pong)
-                    .build();
-        } catch (Exception e) {
-            log.error("【权限模块】健康检查失败 | error={}", e.getMessage());
-            return Health.down()
-                    .withDetail("module", "auth")
-                    .withDetail("error", e.getMessage())
-                    .build();
-        }
-    }
+  }
 }

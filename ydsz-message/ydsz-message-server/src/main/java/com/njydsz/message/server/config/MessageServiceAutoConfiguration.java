@@ -18,18 +18,17 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
  * @author ydsz-team
  * @since 1.0.0
  */
-
 @Configuration
 public class MessageServiceAutoConfiguration {
 
-    /**
-     * 注册 SpEL 表达式解析器，供 {@code RouteRuleServiceImpl} 求值路由条件使用。
-     *
-     * @return SpEL 表达式解析器
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public ExpressionParser expressionParser() {
-        return new SpelExpressionParser();
-    }
+  /**
+   * 注册 SpEL 表达式解析器，供 {@code RouteRuleServiceImpl} 求值路由条件使用。
+   *
+   * @return SpEL 表达式解析器
+   */
+  @Bean
+  @ConditionalOnMissingBean
+  public ExpressionParser expressionParser() {
+    return new SpelExpressionParser();
+  }
 }

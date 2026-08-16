@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+
 import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
@@ -24,31 +25,30 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @TableName("ydsz_agent_definition")
 public class AgentDefinitionDO extends MpBaseEntity<String> {
 
-    /** Agent 编码（业务唯一键） */
-    private String agentCode;
+  /** Agent 编码（业务唯一键） */
+  private String agentCode;
 
-    /** Agent 名称（展示用） */
-    private String agentName;
+  /** Agent 名称（展示用） */
+  private String agentName;
 
-    /** Agent 类型（CHAT/REACT/RAG/PLAN_EXECUTE/ROUTER） */
-    private String agentType;
+  /** Agent 类型（CHAT/REACT/RAG/PLAN_EXECUTE/ROUTER） */
+  private String agentType;
 
-    /** Agent 描述 */
-    private String description;
+  /** Agent 描述 */
+  private String description;
 
-    /** 系统提示词 */
-    private String systemPrompt;
+  /** 系统提示词 */
+  private String systemPrompt;
 
-    /** 模型配置 JSON（temperature/maxTokens/modelId 等） */
-    private String modelConfig;
+  /** 模型配置 JSON（temperature/maxTokens/modelId 等） */
+  private String modelConfig;
 
-    /** 工具名称列表 JSON（["tool1","tool2"]） */
-    private String toolNames;
+  /** 工具名称列表 JSON（["tool1","tool2"]） */
+  private String toolNames;
 
-    /** 温度参数 */
-    private Double temperature;
+  /** 温度参数 */
+  private Double temperature;
 
-    /** 最大生成 Token 数 */
-    private Integer maxTokens;
-
+  /** 最大生成 Token 数 */
+  private Integer maxTokens;
 }

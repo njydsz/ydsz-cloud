@@ -1,7 +1,7 @@
 package com.njydsz.common.safe.alert;
 
-
 import java.util.ServiceLoader;
+
 /**
  * 安全事件告警监听器 SPI 接口
  *
@@ -12,10 +12,10 @@ import java.util.ServiceLoader;
  */
 public interface SecurityAlertListener {
 
-    /**
-     * 安全事件回调
-     *
-     * @param event 安全事件
-     */
-    void onSecurityEvent(SecurityEvent event);
+  /**
+   * 安全事件回调
+   *
+   * @param event 安全事件
+   */
+  void onSecurityEvent(SecurityEvent event);
 }

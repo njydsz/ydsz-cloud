@@ -1,5 +1,10 @@
 package com.njydsz.common.cache.spring;
 
+import com.njydsz.common.cache.YdszCache;
+import com.njydsz.common.cache.api.Cache;
+import com.njydsz.common.cache.builder.CacheBuilder;
+import com.njydsz.common.cache.builder.CacheType;
+import com.njydsz.common.cache.internal.loading.EnhancedLoadingCache;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -15,11 +20,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.cache.CacheManager;
-import com.njydsz.common.cache.YdszCache;
-import com.njydsz.common.cache.api.Cache;
-import com.njydsz.common.cache.builder.CacheBuilder;
-import com.njydsz.common.cache.builder.CacheType;
-import com.njydsz.common.cache.internal.loading.EnhancedLoadingCache;
 
 /**
  * YdszCache 的 Spring CacheManager 实现
@@ -51,10 +51,8 @@ import com.njydsz.common.cache.internal.loading.EnhancedLoadingCache;
  * }
  * }</pre>
  *
- *
  * @author ydsz-team
  * @since 1.0.0
- *
  */
 public class YdszCacheManager implements CacheManager, DisposableBean, InitializingBean {
 

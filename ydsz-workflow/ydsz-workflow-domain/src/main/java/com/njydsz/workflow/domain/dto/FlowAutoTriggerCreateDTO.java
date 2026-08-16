@@ -16,29 +16,27 @@ import lombok.Data;
 @Schema(description = "流程自动触发规则创建请求体")
 public class FlowAutoTriggerCreateDTO {
 
-    /**
-     * 源流程编码（流程实例完成时触发）
-     */
-    @Schema(description = "源流程编码", requiredMode = Schema.RequiredMode.REQUIRED, example = "LEAVE_APPLY")
-    @NotBlank(message = "{validation.workflow.msg_b2f3a4b4}")
-    private String sourceFlowCode;
+  /** 源流程编码（流程实例完成时触发） */
+  @Schema(
+      description = "源流程编码",
+      requiredMode = Schema.RequiredMode.REQUIRED,
+      example = "LEAVE_APPLY")
+  @NotBlank(message = "{validation.workflow.msg_b2f3a4b4}")
+  private String sourceFlowCode;
 
-    /**
-     * 目标流程编码（自动启动的流程）
-     */
-    @Schema(description = "目标流程编码", requiredMode = Schema.RequiredMode.REQUIRED, example = "LEAVE_NOTIFY")
-    @NotBlank(message = "{validation.workflow.msg_c3a4b5c5}")
-    private String targetFlowCode;
+  /** 目标流程编码（自动启动的流程） */
+  @Schema(
+      description = "目标流程编码",
+      requiredMode = Schema.RequiredMode.REQUIRED,
+      example = "LEAVE_NOTIFY")
+  @NotBlank(message = "{validation.workflow.msg_c3a4b5c5}")
+  private String targetFlowCode;
 
-    /**
-     * 触发条件表达式（可选，为空表示无条件触发）
-     */
-    @Schema(description = "触发条件表达式（可选）", example = "days >= 3")
-    private String conditionExpression;
+  /** 触发条件表达式（可选，为空表示无条件触发） */
+  @Schema(description = "触发条件表达式（可选）", example = "days >= 3")
+  private String conditionExpression;
 
-    /**
-     * 触发规则描述（可选）
-     */
-    @Schema(description = "触发规则描述")
-    private String description;
+  /** 触发规则描述（可选） */
+  @Schema(description = "触发规则描述")
+  private String description;
 }

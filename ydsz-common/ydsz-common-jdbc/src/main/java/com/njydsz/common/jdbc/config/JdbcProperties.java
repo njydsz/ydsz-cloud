@@ -12,13 +12,15 @@ import org.springframework.validation.annotation.Validated;
  * <p>提供 ydsz.jdbc 前缀的全局配置，包括模块开关、Mapper 扫描包等基础配置。
  *
  * <p>详细功能配置已拆分为独立配置类：
+ *
  * <ul>
- *   <li>{@link SlowSqlProperties} — 慢 SQL 监控（{@code ydsz.jdbc.slow-sql.*}）</li>
- *   <li>{@link SqlAuditProperties} — SQL 审计（{@code ydsz.jdbc.sql-audit.*}）</li>
- *   <li>{@link SafeQueryProperties} — 安全查询（{@code ydsz.jdbc.safe-query.*}）</li>
+ *   <li>{@link SlowSqlProperties} — 慢 SQL 监控（{@code ydsz.jdbc.slow-sql.*}）
+ *   <li>{@link SqlAuditProperties} — SQL 审计（{@code ydsz.jdbc.sql-audit.*}）
+ *   <li>{@link SafeQueryProperties} — 安全查询（{@code ydsz.jdbc.safe-query.*}）
  * </ul>
  *
  * <p><b>配置示例（application.yml）：</b>
+ *
  * <pre>{@code
  * ydsz:
  *   jdbc:
@@ -37,28 +39,18 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "ydsz.jdbc")
 public class JdbcProperties {
 
-    /**
-     * 是否启用 JDBC 模块（默认 true）
-     */
-    private boolean enabled = true;
+  /** 是否启用 JDBC 模块（默认 true） */
+  private boolean enabled = true;
 
-    /**
-     * Mapper 扫描包路径数组（默认 com.njydsz.**.mapper）
-     */
-    private List<String> mapperScanPackages = Arrays.asList("com.njydsz.**.mapper");
+  /** Mapper 扫描包路径数组（默认 com.njydsz.**.mapper） */
+  private List<String> mapperScanPackages = Arrays.asList("com.njydsz.**.mapper");
 
-    /**
-     * 慢 SQL 监控配置
-     */
-    private SlowSqlProperties slowSql = new SlowSqlProperties();
+  /** 慢 SQL 监控配置 */
+  private SlowSqlProperties slowSql = new SlowSqlProperties();
 
-    /**
-     * SQL 审计配置
-     */
-    private SqlAuditProperties sqlAudit = new SqlAuditProperties();
+  /** SQL 审计配置 */
+  private SqlAuditProperties sqlAudit = new SqlAuditProperties();
 
-    /**
-     * 安全查询配置（ORDER BY 注入防护 + 深度分页检测）
-     */
-    private SafeQueryProperties safeQuery = new SafeQueryProperties();
+  /** 安全查询配置（ORDER BY 注入防护 + 深度分页检测） */
+  private SafeQueryProperties safeQuery = new SafeQueryProperties();
 }

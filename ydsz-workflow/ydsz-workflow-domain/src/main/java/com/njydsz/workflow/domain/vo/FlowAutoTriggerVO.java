@@ -14,18 +14,17 @@ import lombok.Data;
 @Data
 public class FlowAutoTriggerVO implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
-    private String id;
-    private String sourceFlowCode;
-    private String targetFlowCode;
-    private String conditionExpression;
-    private String description;
-    private Integer enabled;
-    private Integer sortOrder;
-    private String createdBy;
-    private LocalDateTime createdAt;
-    private String updatedBy;
-    private LocalDateTime updatedAt;
+  private String id;
+  private String sourceFlowCode;
+  private String targetFlowCode;
+  private String conditionExpression;
+  private String description;
+  private Integer enabled;
+  private Integer sortOrder;
+  private String createdBy;
+  private LocalDateTime createdAt;
+  private String updatedBy;
+  private LocalDateTime updatedAt;
 }

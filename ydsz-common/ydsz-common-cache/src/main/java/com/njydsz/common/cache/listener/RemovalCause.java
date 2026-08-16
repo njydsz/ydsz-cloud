@@ -5,7 +5,6 @@ package com.njydsz.common.cache.listener;
  *
  * @author ydsz-team
  * @since 1.0.0
- *
  */
 public enum RemovalCause {
   /** 显式删除 */

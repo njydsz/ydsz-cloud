@@ -9,6 +9,7 @@ import org.springframework.validation.annotation.Validated;
  * 安全查询配置属性（ORDER BY 注入防护 + 深度分页检测）
  *
  * <p>配置示例：
+ *
  * <pre>{@code
  * ydsz:
  *   jdbc:
@@ -26,25 +27,23 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "ydsz.jdbc.safe-query")
 public class SafeQueryProperties {
 
-    /**
-     * 是否启用安全查询拦截（默认 true）
-     */
-    private boolean enabled = true;
+  /** 是否启用安全查询拦截（默认 true） */
+  private boolean enabled = true;
 
-    /**
-     * 严格模式（默认 false）
-     *
-     * <ul>
-     *   <li>true: 非法排序字段抛出异常</li>
-     *   <li>false: 忽略非法排序字段（仅日志警告）</li>
-     * </ul>
-     */
-    private boolean strictMode = false;
+  /**
+   * 严格模式（默认 false）
+   *
+   * <ul>
+   *   <li>true: 非法排序字段抛出异常
+   *   <li>false: 忽略非法排序字段（仅日志警告）
+   * </ul>
+   */
+  private boolean strictMode = false;
 
-    /**
-     * 排序字段白名单
-     *
-     * <p>配置后，仅允许白名单中的字段参与排序。为空时仅使用正则校验。
-     */
-    private Set<String> orderByWhitelist;
+  /**
+   * 排序字段白名单
+   *
+   * <p>配置后，仅允许白名单中的字段参与排序。为空时仅使用正则校验。
+   */
+  private Set<String> orderByWhitelist;
 }

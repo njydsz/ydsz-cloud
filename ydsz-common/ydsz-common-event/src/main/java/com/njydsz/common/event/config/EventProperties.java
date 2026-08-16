@@ -37,51 +37,51 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "ydsz.event.outbox")
 public class EventProperties {
 
-    /** 是否启用 Outbox 模式 */
-    private boolean enabled = true;
+  /** 是否启用 Outbox 模式 */
+  private boolean enabled = true;
 
-    /** Outbox 表名 */
-    private String tableName = "ydsz_outbox";
+  /** Outbox 表名 */
+  private String tableName = "ydsz_outbox";
 
-    /** 轮询间隔（秒） */
-    private long pollIntervalSeconds = 5;
+  /** 轮询间隔（秒） */
+  private long pollIntervalSeconds = 5;
 
-    /** 每批最大条数 */
-    private int batchSize = 100;
+  /** 每批最大条数 */
+  private int batchSize = 100;
 
-    /** 默认最大重试次数 */
-    private int maxRetries = 5;
+  /** 默认最大重试次数 */
+  private int maxRetries = 5;
 
-    /** 基础退避秒数（用于指数退避计算） */
-    private long baseBackoffSeconds = 10;
+  /** 基础退避秒数（用于指数退避计算） */
+  private long baseBackoffSeconds = 10;
 
-    /** 最大退避秒数（退避上限） */
-    private long maxBackoffSeconds = 3600;
+  /** 最大退避秒数（退避上限） */
+  private long maxBackoffSeconds = 3600;
 
-    /** 已投递消息保留天数（0=不清理） */
-    private int sentRetentionDays = 7;
+  /** 已投递消息保留天数（0=不清理） */
+  private int sentRetentionDays = 7;
 
-    /** 是否启用自动清理已投递消息 */
-    private boolean autoCleanup = true;
+  /** 是否启用自动清理已投递消息 */
+  private boolean autoCleanup = true;
 
-    /** 清理间隔（小时） */
-    private long cleanupIntervalHours = 6;
+  /** 清理间隔（小时） */
+  private long cleanupIntervalHours = 6;
 
-    /** 消息 payload 最大字节数（默认 4MB） */
-    private int maxPayloadSizeBytes = 4 * 1024 * 1024;
+  /** 消息 payload 最大字节数（默认 4MB） */
+  private int maxPayloadSizeBytes = 4 * 1024 * 1024;
 
-    /** PROCESSING 状态超时阈值（分钟），超时后回收为 PENDING */
-    private int staleProcessingThresholdMinutes = 5;
+  /** PROCESSING 状态超时阈值（分钟），超时后回收为 PENDING */
+  private int staleProcessingThresholdMinutes = 5;
 
-    /** 投递工作线程数（1=单线程，>1=多线程并行投递） */
-    private int workerThreads = 1;
+  /** 投递工作线程数（1=单线程，>1=多线程并行投递） */
+  private int workerThreads = 1;
 
-    /** 优雅关闭等待超时（秒） */
-    private int awaitTerminationSeconds = 10;
+  /** 优雅关闭等待超时（秒） */
+  private int awaitTerminationSeconds = 10;
 
-    /** 检测到 NoopEventPublishGateway 时是否启动失败（生产环境应设为 true） */
-    private boolean failOnNoop = true;
+  /** 检测到 NoopEventPublishGateway 时是否启动失败（生产环境应设为 true） */
+  private boolean failOnNoop = true;
 
-    /** Outbox 队列深度统计缓存时间（秒），减少 countByStatus 全表扫描频率 */
-    private long statusCountCacheSeconds = 5;
+  /** Outbox 队列深度统计缓存时间（秒），减少 countByStatus 全表扫描频率 */
+  private long statusCountCacheSeconds = 5;
 }

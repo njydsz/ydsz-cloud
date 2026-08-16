@@ -10,8 +10,8 @@ package com.njydsz.common.cache.builder;
  *   <li>STRIPED：高性能分段锁并发缓存，高并发写入场景首选
  * </ul>
  *
- * <p>历史类型（LRU / WEIGHTED / CONCURRENT / ENHANCED_LOADING / ASYNC）已统一收敛到
- * TINYLFU 或 STRIPED。业务接入方无需指定类型时，使用默认值 TINYLFU 即可满足绝大多数场景。
+ * <p>历史类型（LRU / WEIGHTED / CONCURRENT / ENHANCED_LOADING / ASYNC）已统一收敛到 TINYLFU 或
+ * STRIPED。业务接入方无需指定类型时，使用默认值 TINYLFU 即可满足绝大多数场景。
  *
  * @author ydsz-team
  * @since 1.0.0

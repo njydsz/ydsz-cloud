@@ -12,6 +12,7 @@ import java.lang.annotation.Target;
  * <p>标注在类或方法上，用于动态切换数据源。方法级注解优先级高于类级。
  *
  * <p>使用示例：
+ *
  * <pre>{@code
  * // 类级别：整个 Service 使用 slave 数据源
  * @Service
@@ -31,6 +32,7 @@ import java.lang.annotation.Target;
  * }</pre>
  *
  * <p>支持 SpEL 表达式动态解析数据源名称：
+ *
  * <pre>{@code
  * @DS("#tenant.dbSource")
  * public List<Data> queryByTenant() {
@@ -46,14 +48,15 @@ import java.lang.annotation.Target;
 @Documented
 public @interface DS {
 
-    /**
-     * 数据源名称
-     *
-     * <p>支持：
-     * <ul>
-     *   <li>固定名称：{@code "master"}、{@code "slave"}</li>
-     *   <li>SpEL 表达式：{@code "#tenant.dbSource"}、{@code "@dsResolver.resolve()"}
-     * </ul>
-     */
-    String value() default "master";
+  /**
+   * 数据源名称
+   *
+   * <p>支持：
+   *
+   * <ul>
+   *   <li>固定名称：{@code "master"}、{@code "slave"}
+   *   <li>SpEL 表达式：{@code "#tenant.dbSource"}、{@code "@dsResolver.resolve()"}
+   * </ul>
+   */
+  String value() default "master";
 }

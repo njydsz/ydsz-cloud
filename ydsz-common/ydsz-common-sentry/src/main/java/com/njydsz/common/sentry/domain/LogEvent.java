@@ -18,55 +18,51 @@ import lombok.Data;
 @Builder
 public class LogEvent {
 
-    /** 时间戳 */
-    @Builder.Default
-    private Instant timestamp = Instant.now();
+  /** 时间戳 */
+  @Builder.Default private Instant timestamp = Instant.now();
 
-    /** 日志级别 */
-    private LogLevel level;
+  /** 日志级别 */
+  private LogLevel level;
 
-    /** Logger 名称 */
-    private String logger;
+  /** Logger 名称 */
+  private String logger;
 
-    /** 线程名 */
-    private String thread;
+  /** 线程名 */
+  private String thread;
 
-    /** 日志消息 */
-    private String message;
+  /** 日志消息 */
+  private String message;
 
-    /** 应用名 */
-    private String appName;
+  /** 应用名 */
+  private String appName;
 
-    /** 主机名 */
-    private String hostname;
+  /** 主机名 */
+  private String hostname;
 
-    /** 环境（dev/sit/uat/prod） */
-    private String profile;
+  /** 环境（dev/sit/uat/prod） */
+  private String profile;
 
-    /** 追踪 ID */
-    private String traceId;
+  /** 追踪 ID */
+  private String traceId;
 
-    /** 用户 ID */
-    private String userId;
+  /** 用户 ID */
+  private String userId;
 
-    /** 用户名 */
-    private String username;
+  /** 用户名 */
+  private String username;
 
-    /** 附加字段 */
-    @Builder.Default
-    private Map<String, Object> extra = new LinkedHashMap<>();
+  /** 附加字段 */
+  @Builder.Default private Map<String, Object> extra = new LinkedHashMap<>();
 
-    /** 异常堆栈 */
-    private String stackTrace;
+  /** 异常堆栈 */
+  private String stackTrace;
 
-    /**
-     * 添加附加字段
-     */
-    public LogEvent addExtra(String key, Object value) {
-        if (extra == null) {
-            extra = new LinkedHashMap<>();
-        }
-        extra.put(key, value);
-        return this;
+  /** 添加附加字段 */
+  public LogEvent addExtra(String key, Object value) {
+    if (extra == null) {
+      extra = new LinkedHashMap<>();
     }
+    extra.put(key, value);
+    return this;
+  }
 }

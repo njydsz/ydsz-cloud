@@ -1,5 +1,9 @@
 package com.njydsz.common.cache.internal.tinylfu;
 
+import com.njydsz.common.cache.internal.AbstractCache;
+import com.njydsz.common.cache.internal.lfu.FrequencySketch;
+import com.njydsz.common.cache.listener.RemovalCause;
+import com.njydsz.common.cache.stats.CacheStats;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -10,23 +14,18 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.njydsz.common.cache.internal.AbstractCache;
-import com.njydsz.common.cache.internal.lfu.FrequencySketch;
-import com.njydsz.common.cache.listener.RemovalCause;
-import com.njydsz.common.cache.stats.CacheStats;
 
 /**
  * Window-TinyLFU 缓存实现（Caffeine 架构）。
  *
- * <p>采用三段式 LRU 队列（Window / Probation / Protected）配合 {@link FrequencySketch}
- * 频率草图，在淘汰时优先保留高频访问条目，兼顾 recency 和 frequency。
+ * <p>采用三段式 LRU 队列（Window / Probation / Protected）配合 {@link FrequencySketch} 频率草图，在淘汰时优先保留高频访问条目，兼顾
+ * recency 和 frequency。
  *
- * <p>新条目进入 Window 队列；再次访问从 Probation 提升到 Protected；
- * 淘汰时从 Window 尾部开始，若 Probation 队列非空则比较频率决定淘汰对象。
+ * <p>新条目进入 Window 队列；再次访问从 Probation 提升到 Protected； 淘汰时从 Window 尾部开始，若 Probation 队列非空则比较频率决定淘汰对象。
  * 频率草图周期性衰减（{@code shiftThreshold} 次访问后重置），实现滑动窗口效果。
  *
- * <p>线程安全：读操作无锁并发，写操作（put/remove/evict/promote）使用 {@link ReentrantReadWriteLock} 写锁。
- * Protected 队列提升使用 {@code safeMoveToProtected} 在写锁内重新校验节点有效性，避免并发淘汰导致野指针。
+ * <p>线程安全：读操作无锁并发，写操作（put/remove/evict/promote）使用 {@link ReentrantReadWriteLock} 写锁。 Protected
+ * 队列提升使用 {@code safeMoveToProtected} 在写锁内重新校验节点有效性，避免并发淘汰导致野指针。
  *
  * @param <K> 缓存键类型
  * @param <V> 缓存值类型
@@ -83,8 +82,8 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
   /**
    * 获取缓存值（不触发加载），并更新访问热度。
    *
-   * <p>命中时向频率草图登记访问（用于淘汰决策）； 处于 Probation 队列的条目会尝试提升到 Protected 队列
-   * （提升在写锁内重新校验有效性，避免并发淘汰下的野指针）。 null 键直接返回 null 并计入 miss。
+   * <p>命中时向频率草图登记访问（用于淘汰决策）； 处于 Probation 队列的条目会尝试提升到 Protected 队列 （提升在写锁内重新校验有效性，避免并发淘汰下的野指针）。
+   * null 键直接返回 null 并计入 miss。
    *
    * @param key 缓存键，为 null 时返回 {@code null}
    * @return 缓存值；未命中时返回 {@code null}
@@ -112,11 +111,10 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
   /**
    * 写入键值对；容量满时按 W-TinyLFU 频率策略淘汰候选条目。
    *
-   * <p>整个流程持有写锁，保证容量检查、淘汰与写入原子化。新条目进入 Window 队列；
-   * 键已存在时仅覆盖值并登记访问。每累计 {@code shiftThreshold} 次访问对频率草图做一次
-   * 减半衰减，维持滑动窗口热度语义。null 键或 null 值被静默忽略。
+   * <p>整个流程持有写锁，保证容量检查、淘汰与写入原子化。新条目进入 Window 队列； 键已存在时仅覆盖值并登记访问。每累计 {@code shiftThreshold}
+   * 次访问对频率草图做一次 减半衰减，维持滑动窗口热度语义。null 键或 null 值被静默忽略。
    *
-   * @param key   缓存键，为 null 时忽略
+   * @param key 缓存键，为 null 时忽略
    * @param value 缓存值，为 null 时忽略
    */
   @Override
@@ -265,9 +263,7 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
   /**
    * 清空缓存，重置三段 LRU 队列与尺寸计数。
    *
-   * <p>写锁内对全部条目发送 {@link RemovalCause#EXPLICIT} 通知后清空；
-   * 频率草图不重置（其统计生命周期长于单次清空操作）。
-   *
+   * <p>写锁内对全部条目发送 {@link RemovalCause#EXPLICIT} 通知后清空； 频率草图不重置（其统计生命周期长于单次清空操作）。
    */
   @Override
   public void clear() {
@@ -461,10 +457,8 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
   /**
    * W-TinyLFU 链表节点：同时服务于 Window / Probation / Protected 三段队列。
    *
-   * <p>{@code queue} 标记当前所在队列（0=Window，1=Probation，2=Protected），
-   * 提升与降级即修改该字段并在目标队列头尾插入；
-   * {@code prev}/{@code next} 构成双向链表，由各队列的头节点（哨兵）组织。
-   * 除 key 外的字段均为 volatile，保证并发读写下的可见性。
+   * <p>{@code queue} 标记当前所在队列（0=Window，1=Probation，2=Protected）， 提升与降级即修改该字段并在目标队列头尾插入； {@code
+   * prev}/{@code next} 构成双向链表，由各队列的头节点（哨兵）组织。 除 key 外的字段均为 volatile，保证并发读写下的可见性。
    *
    * @author ydsz-team
    * @since 1.0.0

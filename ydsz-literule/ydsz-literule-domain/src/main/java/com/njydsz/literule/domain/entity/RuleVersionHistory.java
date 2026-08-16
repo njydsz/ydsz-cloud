@@ -1,11 +1,11 @@
 package com.njydsz.literule.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 
 /**
  * LiteRule 规则版本历史 DO
@@ -22,14 +22,18 @@ import com.njydsz.common.jdbc.entity.MpBaseIdEntity;
 @TableName("ydsz_rule_version_history")
 public class RuleVersionHistory extends MpBaseIdEntity<String> {
 
-    /** 规则编码 */
-    private String ruleCode;
-    /** 版本号 */
-    private Integer version;
-    /** 该版本的规则定义 JSON 快照 */
-    private String definitionJson;
-    /** 变更说明 */
-    private String changeDesc;
-    /** 操作人 */
-    private String operator;
+  /** 规则编码 */
+  private String ruleCode;
+
+  /** 版本号 */
+  private Integer version;
+
+  /** 该版本的规则定义 JSON 快照 */
+  private String definitionJson;
+
+  /** 变更说明 */
+  private String changeDesc;
+
+  /** 操作人 */
+  private String operator;
 }

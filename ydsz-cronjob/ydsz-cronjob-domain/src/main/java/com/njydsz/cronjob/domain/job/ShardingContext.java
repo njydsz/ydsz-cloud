@@ -12,14 +12,18 @@ import lombok.Data;
 @Data
 public class ShardingContext {
 
-    /** 分片总数 */
-    private int shardTotal;
-    /** 当前分片序号（从 0 开始） */
-    private int shardIndex;
-    /** 任务 ID */
-    private String jobId;
-    /** 任务 KEY */
-    private String jobKey;
-    /** 日志 ID */
-    private String logId;
+  /** 分片总数 */
+  private int shardTotal;
+
+  /** 当前分片序号（从 0 开始） */
+  private int shardIndex;
+
+  /** 任务 ID */
+  private String jobId;
+
+  /** 任务 KEY */
+  private String jobKey;
+
+  /** 日志 ID */
+  private String logId;
 }

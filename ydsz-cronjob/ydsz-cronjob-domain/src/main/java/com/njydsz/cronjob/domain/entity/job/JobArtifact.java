@@ -1,13 +1,13 @@
 package com.njydsz.cronjob.domain.entity.job;
 
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
 import java.io.Serial;
 import java.time.LocalDateTime;
-import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
 
 /**
  * 执行产物记录（P2-8 执行产物管理）。
@@ -24,36 +24,35 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
 @TableName("ydsz_job_artifact")
 public class JobArtifact extends MpBaseEntity<String> {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
-    /** 任务 ID */
-    private String jobId;
+  /** 任务 ID */
+  private String jobId;
 
-    /** 执行日志 ID */
-    private String logId;
+  /** 执行日志 ID */
+  private String logId;
 
-    /** 任务 KEY（冗余） */
-    private String jobKey;
+  /** 任务 KEY（冗余） */
+  private String jobKey;
 
-    /** 产物名称 */
-    private String artifactName;
+  /** 产物名称 */
+  private String artifactName;
 
-    /** 产物类型: FILE / REPORT / DATA / LOG */
-    private String artifactType;
+  /** 产物类型: FILE / REPORT / DATA / LOG */
+  private String artifactType;
 
-    /** 存储路径（文件系统路径或对象存储 URL） */
-    private String storagePath;
+  /** 存储路径（文件系统路径或对象存储 URL） */
+  private String storagePath;
 
-    /** 产物大小（字节） */
-    private Long sizeBytes;
+  /** 产物大小（字节） */
+  private Long sizeBytes;
 
-    /** 内容类型（MIME type） */
-    private String contentType;
+  /** 内容类型（MIME type） */
+  private String contentType;
 
-    /** 产物元数据 JSON */
-    private String metadata;
+  /** 产物元数据 JSON */
+  private String metadata;
 
-    /** 过期时间（null=不过期） */
-    private LocalDateTime expireAt;
+  /** 过期时间（null=不过期） */
+  private LocalDateTime expireAt;
 }

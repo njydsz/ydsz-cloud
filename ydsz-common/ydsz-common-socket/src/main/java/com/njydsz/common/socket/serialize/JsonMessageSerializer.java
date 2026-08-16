@@ -1,7 +1,7 @@
 package com.njydsz.common.socket.serialize;
 
-import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.json.YdszJson;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * JSON 消息序列化器默认实现（P3-5）。
@@ -14,25 +14,24 @@ import com.njydsz.common.json.YdszJson;
 @Slf4j
 public class JsonMessageSerializer implements MessageSerializer {
 
-    @Override
-    public String serialize(Object payload) {
-        if (payload == null) {
-            return "{}";
-        }
-        if (payload instanceof String s) {
-            return s;
-        }
-        try {
-            return YdszJson.toJson(payload);
-        } catch (Exception e) {
-            log.warn("[WS-Serialize] 序列化失败, 降级 toString: {}", e.getMessage());
-            return String.valueOf(payload);
-        }
+  @Override
+  public String serialize(Object payload) {
+    if (payload == null) {
+      return "{}";
     }
-
-
-    @Override
-    public String getName() {
-        return "JSON";
+    if (payload instanceof String s) {
+      return s;
     }
+    try {
+      return YdszJson.toJson(payload);
+    } catch (Exception e) {
+      log.warn("[WS-Serialize] 序列化失败, 降级 toString: {}", e.getMessage());
+      return String.valueOf(payload);
+    }
+  }
+
+  @Override
+  public String getName() {
+    return "JSON";
+  }
 }

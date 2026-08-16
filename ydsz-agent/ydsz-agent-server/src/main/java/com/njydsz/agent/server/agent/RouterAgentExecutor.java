@@ -2,15 +2,15 @@ package com.njydsz.agent.server.agent;
 
 import java.util.List;
 import java.util.function.Consumer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.njydsz.agent.domain.agent.AgentDefinition;
 import com.njydsz.agent.domain.agent.AgentExecutionRequest;
 import com.njydsz.agent.domain.agent.AgentExecutor;
 import com.njydsz.agent.domain.conversation.ConversationMemory;
 import com.njydsz.agent.domain.gateway.LlmClient;
-import com.njydsz.agent.domain.guardrail.InputGuardrail;
-import com.njydsz.agent.domain.guardrail.OutputGuardrail;
 import com.njydsz.agent.domain.model.ChatChunk;
 import com.njydsz.agent.domain.model.ChatMessage;
 import com.njydsz.agent.domain.model.ChatRequest;
@@ -33,153 +33,171 @@ import com.njydsz.common.util.id.IdGenerator;
  */
 public class RouterAgentExecutor implements AgentExecutor {
 
-    /** 日志记录器 */
-    private static final Logger log = LoggerFactory.getLogger(RouterAgentExecutor.class);
+  /** 日志记录器 */
+  private static final Logger log = LoggerFactory.getLogger(RouterAgentExecutor.class);
 
-    /** LLM 客户端（用于意图分类） */
-    private final LlmClient llmClient;
-    /** 对话记忆 */
-    private final ConversationMemory memory;
-    /** 工具注册中心 */
-    private final ToolRegistry toolRegistry;
-    /** Agent 配置属性 */
-    private final AgentProperties properties;
-    /** 输入护栏列表 */
-    private final List<InputGuardrail> inputGuardrails;
-    /** 输出护栏列表 */
-    private final List<OutputGuardrail> outputGuardrails;
-    /** Agent 工厂（用于创建路由到的子执行器） */
-    private final AgentFactory agentFactory;
-    /** 链路追踪记录器 */
-    private final TraceRecorder traceRecorder;
-    /** Agent 监控指标采集器 */
-    private final AgentMetrics agentMetrics;
-    /** 成本分析服务 */
-    private final CostAnalysisService costAnalysisService;
-    /** 护栏编排服务 */
-    private final GuardrailService guardrailService;
+  /** LLM 客户端（用于意图分类） */
+  private final LlmClient llmClient;
 
-    public RouterAgentExecutor(LlmClient llmClient, ConversationMemory memory,
-                                ToolRegistry toolRegistry, AgentProperties properties,
-                                List<InputGuardrail> inputGuardrails,
-                                List<OutputGuardrail> outputGuardrails,
-                                TraceRecorder traceRecorder,
-                                AgentMetrics agentMetrics,
-                                CostAnalysisService costAnalysisService,
-                                GuardrailService guardrailService,
-                                AgentFactory agentFactory) {
-        this.llmClient = llmClient;
-        this.memory = memory;
-        this.toolRegistry = toolRegistry;
-        this.properties = properties;
-        this.inputGuardrails = inputGuardrails != null ? inputGuardrails : List.of();
-        this.outputGuardrails = outputGuardrails != null ? outputGuardrails : List.of();
-        this.agentFactory = agentFactory;
-        this.traceRecorder = traceRecorder;
-        this.agentMetrics = agentMetrics;
-        this.costAnalysisService = costAnalysisService;
-        this.guardrailService = guardrailService;
-    }
+  /** 对话记忆 */
+  private final ConversationMemory memory;
 
-    /**
-     * {@inheritDoc}
-     * <p>路由流程：LLM 意图分类 → 创建子 Agent 执行器 → 委托执行 → 追踪记录。
-     * 意图分类失败时降级到 CHAT 类型。
-     */
-    @Override
-    public ChatResponse execute(AgentExecutionRequest request) {
-        String convId = request.getConversationId() != null
-                ? request.getConversationId() : IdGenerator.nextIdStr();
-        String traceId = traceRecorder.startTrace(convId, "ROUTER");
-        log.info("[Router] 分析意图: convId={}, traceId={}", convId, traceId);
+  /** 工具注册中心 */
+  private final ToolRegistry toolRegistry;
 
-        long routeStart = System.currentTimeMillis();
-        String agentType = routeIntent(request.getUserInput());
-        long routeDuration = System.currentTimeMillis() - routeStart;
+  /** Agent 配置属性 */
+  private final AgentProperties properties;
 
-        traceRecorder.recordStep(traceId, "ROUTE",
-                "Routed to " + agentType, request.getUserInput(),
-                agentType, routeDuration);
-        log.info("[Router] 路由到: {} Agent", agentType);
+  /** Agent 工厂（用于创建路由到的子执行器） */
+  private final AgentFactory agentFactory;
 
-        AgentExecutor executor = agentFactory.getExecutor(
-                new AgentDefinition(
-                        IdGenerator.nextIdStr(), "router-dispatched", "Router",
-                        AgentDefinition.Type.valueOf(agentType),
-                        request.getSystemPrompt(), List.of(),
-                        properties.getLlm().getTemperature(),
-                        properties.getLlm().getMaxTokens(),
-                        request.getMaxIterations(),
-                        properties.getLlm().getDefaultModel()));
+  /** 链路追踪记录器 */
+  private final TraceRecorder traceRecorder;
 
-        ChatResponse response = executor.execute(request);
-        traceRecorder.endTrace(traceId, "SUCCESS");
-        return response;
-    }
+  /** Agent 监控指标采集器 */
+  private final AgentMetrics agentMetrics;
 
-    /**
-     * {@inheritDoc}
-     * <p>流式路由流程：LLM 意图分类 → 创建子 Agent 执行器 → 委托流式执行 → 追踪记录。
-     * 委托给路由到的子执行器的 executeStream 方法，实现真正的流式输出。
-     */
-    @Override
-    public void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer) {
-        String convId = request.getConversationId() != null
-                ? request.getConversationId() : IdGenerator.nextIdStr();
-        String traceId = traceRecorder.startTrace(convId, "ROUTER_STREAM");
-        log.info("[Router-Stream] 分析意图: convId={}, traceId={}", convId, traceId);
+  /** 成本分析服务 */
+  private final CostAnalysisService costAnalysisService;
 
-        long routeStart = System.currentTimeMillis();
-        String agentType = routeIntent(request.getUserInput());
-        long routeDuration = System.currentTimeMillis() - routeStart;
+  /** 护栏编排服务 */
+  private final GuardrailService guardrailService;
 
-        traceRecorder.recordStep(traceId, "ROUTE",
-                "Routed to " + agentType, request.getUserInput(),
-                agentType, routeDuration);
-        log.info("[Router-Stream] 路由到: {} Agent", agentType);
+  public RouterAgentExecutor(
+      LlmClient llmClient,
+      ConversationMemory memory,
+      ToolRegistry toolRegistry,
+      AgentProperties properties,
+      TraceRecorder traceRecorder,
+      AgentMetrics agentMetrics,
+      CostAnalysisService costAnalysisService,
+      GuardrailService guardrailService,
+      AgentFactory agentFactory) {
+    this.llmClient = llmClient;
+    this.memory = memory;
+    this.toolRegistry = toolRegistry;
+    this.properties = properties;
+    this.agentFactory = agentFactory;
+    this.traceRecorder = traceRecorder;
+    this.agentMetrics = agentMetrics;
+    this.costAnalysisService = costAnalysisService;
+    this.guardrailService = guardrailService;
+  }
 
-        AgentExecutor executor = agentFactory.getExecutor(
-                new AgentDefinition(
-                        IdGenerator.nextIdStr(), "router-dispatched", "Router",
-                        AgentDefinition.Type.valueOf(agentType),
-                        request.getSystemPrompt(), List.of(),
-                        properties.getLlm().getTemperature(),
-                        properties.getLlm().getMaxTokens(),
-                        request.getMaxIterations(),
-                        properties.getLlm().getDefaultModel()));
+  /**
+   * {@inheritDoc}
+   *
+   * <p>路由流程：LLM 意图分类 → 创建子 Agent 执行器 → 委托执行 → 追踪记录。 意图分类失败时降级到 CHAT 类型。
+   */
+  @Override
+  public ChatResponse execute(AgentExecutionRequest request) {
+    String convId =
+        request.getConversationId() != null ? request.getConversationId() : IdGenerator.nextIdStr();
+    String traceId = traceRecorder.startTrace(convId, "ROUTER");
+    log.info("[Router] 分析意图: convId={}, traceId={}", convId, traceId);
 
-        executor.executeStream(request, chunkConsumer);
-        traceRecorder.endTrace(traceId, "SUCCESS");
-    }
+    long routeStart = System.currentTimeMillis();
+    String agentType = routeIntent(request.getUserInput());
+    long routeDuration = System.currentTimeMillis() - routeStart;
 
-    /**
-     * {@inheritDoc}
-     *
-     * @return "router"
-     */
-    @Override
-    public String getType() {
-        return "router";
-    }
+    traceRecorder.recordStep(
+        traceId,
+        "ROUTE",
+        "Routed to " + agentType,
+        request.getUserInput(),
+        agentType,
+        routeDuration);
+    log.info("[Router] 路由到: {} Agent", agentType);
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean supports(String type) {
-        return "router".equalsIgnoreCase(type);
-    }
+    AgentExecutor executor =
+        agentFactory.getExecutor(
+            new AgentDefinition(
+                IdGenerator.nextIdStr(),
+                "router-dispatched",
+                "Router",
+                AgentDefinition.Type.valueOf(agentType),
+                request.getSystemPrompt(),
+                List.of(),
+                properties.getLlm().getTemperature(),
+                properties.getLlm().getMaxTokens(),
+                request.getMaxIterations(),
+                properties.getLlm().getDefaultModel()));
 
-    /**
-     * 使用 LLM 分析用户输入意图，返回最适合的 Agent 类型。
-     * <p>构造意图分类 prompt（CHAT/REACT/RAG/PLAN_EXECUTE），设置 temperature=0 确保确定性输出。
-     * LLM 调用失败时降级返回 "CHAT"。
-     *
-     * @param userInput 用户输入文本
-     * @return Agent 类型名称（CHAT / REACT / RAG / PLAN_EXECUTE）
-     */
-    private String routeIntent(String userInput) {
-        String routingPrompt = """
+    ChatResponse response = executor.execute(request);
+    traceRecorder.endTrace(traceId, "SUCCESS");
+    return response;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>流式路由流程：LLM 意图分类 → 创建子 Agent 执行器 → 委托流式执行 → 追踪记录。 委托给路由到的子执行器的 executeStream 方法，实现真正的流式输出。
+   */
+  @Override
+  public void executeStream(AgentExecutionRequest request, Consumer<ChatChunk> chunkConsumer) {
+    String convId =
+        request.getConversationId() != null ? request.getConversationId() : IdGenerator.nextIdStr();
+    String traceId = traceRecorder.startTrace(convId, "ROUTER_STREAM");
+    log.info("[Router-Stream] 分析意图: convId={}, traceId={}", convId, traceId);
+
+    long routeStart = System.currentTimeMillis();
+    String agentType = routeIntent(request.getUserInput());
+    long routeDuration = System.currentTimeMillis() - routeStart;
+
+    traceRecorder.recordStep(
+        traceId,
+        "ROUTE",
+        "Routed to " + agentType,
+        request.getUserInput(),
+        agentType,
+        routeDuration);
+    log.info("[Router-Stream] 路由到: {} Agent", agentType);
+
+    AgentExecutor executor =
+        agentFactory.getExecutor(
+            new AgentDefinition(
+                IdGenerator.nextIdStr(),
+                "router-dispatched",
+                "Router",
+                AgentDefinition.Type.valueOf(agentType),
+                request.getSystemPrompt(),
+                List.of(),
+                properties.getLlm().getTemperature(),
+                properties.getLlm().getMaxTokens(),
+                request.getMaxIterations(),
+                properties.getLlm().getDefaultModel()));
+
+    executor.executeStream(request, chunkConsumer);
+    traceRecorder.endTrace(traceId, "SUCCESS");
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * @return "router"
+   */
+  @Override
+  public String getType() {
+    return "router";
+  }
+
+  /** {@inheritDoc} */
+  @Override
+  public boolean supports(String type) {
+    return "router".equalsIgnoreCase(type);
+  }
+
+  /**
+   * 使用 LLM 分析用户输入意图，返回最适合的 Agent 类型。
+   *
+   * <p>构造意图分类 prompt（CHAT/REACT/RAG/PLAN_EXECUTE），设置 temperature=0 确保确定性输出。 LLM 调用失败时降级返回 "CHAT"。
+   *
+   * @param userInput 用户输入文本
+   * @return Agent 类型名称（CHAT / REACT / RAG / PLAN_EXECUTE）
+   */
+  private String routeIntent(String userInput) {
+    String routingPrompt =
+        """
                 你是 YDSZ 智能助手的路由器。请分析用户意图，选择最合适的 Agent 类型。
 
                 可选类型：
@@ -191,35 +209,36 @@ public class RouterAgentExecutor implements AgentExecutor {
                 用户输入: %s
 
                 只输出类型名称（CHAT / REACT / RAG / PLAN_EXECUTE），不要其他内容。
-                """.formatted(userInput);
+                """
+            .formatted(userInput);
 
-        ChatRequest routeRequest = ChatRequest.builder()
-                .model(properties.getLlm().getDefaultModel())
-                .messages(List.of(
-                        ChatMessage.system("你是意图分类器，只输出分类结果。"),
-                        ChatMessage.user(routingPrompt, null)))
-                .temperature(0.0)
-                .maxTokens(20)
-                .build();
+    ChatRequest routeRequest =
+        ChatRequest.builder()
+            .model(properties.getLlm().getDefaultModel())
+            .messages(
+                List.of(
+                    ChatMessage.system("你是意图分类器，只输出分类结果。"), ChatMessage.user(routingPrompt, null)))
+            .temperature(0.0)
+            .maxTokens(20)
+            .build();
 
-        try {
-            ChatResponse response = llmClient.chat(routeRequest);
-            agentMetrics.recordLlmCall(llmClient.getProvider(),
-                    properties.getLlm().getDefaultModel(),
-                    0, response, null);
-            String content = response.getContent() != null ? response.getContent().trim().toUpperCase() : "CHAT";
-            for (AgentDefinition.Type type : AgentDefinition.Type.values()) {
-                if (content.contains(type.name())) {
-                    return type.name();
-                }
-            }
-            return "CHAT";
-        } catch (Exception e) {
-            agentMetrics.recordLlmCall(llmClient.getProvider(),
-                    properties.getLlm().getDefaultModel(),
-                    0, null, e);
-            log.warn("[Router] 意图分析失败，降级到 CHAT: {}", e.getMessage());
-            return "CHAT";
+    try {
+      ChatResponse response = llmClient.chat(routeRequest);
+      agentMetrics.recordLlmCall(
+          llmClient.getProvider(), properties.getLlm().getDefaultModel(), 0, response, null);
+      String content =
+          response.getContent() != null ? response.getContent().trim().toUpperCase() : "CHAT";
+      for (AgentDefinition.Type type : AgentDefinition.Type.values()) {
+        if (content.contains(type.name())) {
+          return type.name();
         }
+      }
+      return "CHAT";
+    } catch (Exception e) {
+      agentMetrics.recordLlmCall(
+          llmClient.getProvider(), properties.getLlm().getDefaultModel(), 0, null, e);
+      log.warn("[Router] 意图分析失败，降级到 CHAT: {}", e.getMessage());
+      return "CHAT";
     }
+  }
 }

@@ -1,9 +1,11 @@
 package com.njydsz.common.cache.metrics;
 
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import com.njydsz.common.cache.spring.SpringYdszCache;
+import com.njydsz.common.cache.spring.YdszCacheManager;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.binder.MeterBinder;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.SmartInitializingSingleton;
@@ -11,8 +13,6 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
-import com.njydsz.common.cache.spring.SpringYdszCache;
-import com.njydsz.common.cache.spring.YdszCacheManager;
 
 /**
  * 缓存可观测性自动配置
@@ -20,8 +20,8 @@ import com.njydsz.common.cache.spring.YdszCacheManager;
  * <p>当 classpath 中存在 Micrometer 和 YdszCacheManager 时， 自动为每个缓存注册 {@link CacheMeterBinder} 指标（含
  * P50/P90/P99 分位数 Timer）。
  *
- * <p>动态绑定：实现 {@link SmartInitializingSingleton}，在所有单例 Bean 初始化完成后绑定已有缓存的指标，
- * 并提供 {@link CacheMetricsRegistrar#registerCache(String)} 方法支持运行时动态注册新创建的缓存。
+ * <p>动态绑定：实现 {@link SmartInitializingSingleton}，在所有单例 Bean 初始化完成后绑定已有缓存的指标， 并提供 {@link
+ * CacheMetricsRegistrar#registerCache(String)} 方法支持运行时动态注册新创建的缓存。
  *
  * <p>注册的指标：
  *
@@ -37,7 +37,6 @@ import com.njydsz.common.cache.spring.YdszCacheManager;
  *   <li>cache.put.duration - PUT 操作耗时分布（Timer，含 P50/P90/P99）
  * </ul>
  *
- *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -49,11 +48,10 @@ public class CacheMetricsAutoConfiguration {
   /**
    * 注册缓存指标绑定器，将 YdszCacheManager 管理的缓存暴露为 Micrometer 指标。
    *
-   * <p>由于用户在运行时可能动态创建新缓存，普通静态绑定无法覆盖，故返回 {@link CacheMetricsRegistrar}
-   * 这一 {@link SmartInitializingSingleton}：它在所有单例 Bean 就绪后被动绑定已存在缓存，并对外提供
-   * {@code registerCache} 供运行时动态注册。仅在 classpath 同时存在 {@code MeterRegistry} 与
-   * {@code YdszCacheManager} 时装配（见类级 {@code @ConditionalOnBean}），缺失监控依赖时整体不生效，
-   * 不影响缓存本身功能。
+   * <p>由于用户在运行时可能动态创建新缓存，普通静态绑定无法覆盖，故返回 {@link CacheMetricsRegistrar} 这一 {@link
+   * SmartInitializingSingleton}：它在所有单例 Bean 就绪后被动绑定已存在缓存，并对外提供 {@code registerCache} 供运行时动态注册。仅在
+   * classpath 同时存在 {@code MeterRegistry} 与 {@code YdszCacheManager} 时装配（见类级
+   * {@code @ConditionalOnBean}），缺失监控依赖时整体不生效， 不影响缓存本身功能。
    *
    * @param cacheManager 缓存管理器，由 Spring 容器注入，不会为 null
    * @param meterRegistry Micrometer 注册中心，由 Spring 容器注入，不会为 null
@@ -65,9 +63,7 @@ public class CacheMetricsAutoConfiguration {
     return new CacheMetricsRegistrar(cacheManager, meterRegistry);
   }
 
-  /**
-   * 缓存指标注册器 — 支持动态绑定新创建的缓存
-   */
+  /** 缓存指标注册器 — 支持动态绑定新创建的缓存 */
   public static class CacheMetricsRegistrar implements SmartInitializingSingleton {
 
     private static final Logger log = LoggerFactory.getLogger(CacheMetricsRegistrar.class);
@@ -84,8 +80,7 @@ public class CacheMetricsAutoConfiguration {
     /**
      * 所有单例 Bean 初始化完成后，为启动阶段已存在的缓存统一绑定指标。
      *
-     * <p>实现 {@link SmartInitializingSingleton} 保证在依赖缓存注册完毕后才执行，
-     * 避免因 Bean 创建顺序导致漏绑；运行时新建的缓存仍需显式调用
+     * <p>实现 {@link SmartInitializingSingleton} 保证在依赖缓存注册完毕后才执行， 避免因 Bean 创建顺序导致漏绑；运行时新建的缓存仍需显式调用
      * {@link #registerCache(String)}。
      */
     @Override

@@ -14,18 +14,17 @@ import lombok.Data;
 @Data
 public class FlowCategoryVO implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
-    private String id;
-    private String categoryCode;
-    private String categoryName;
-    private String parentId;
-    private Integer sortNum;
-    private String icon;
-    private String remark;
-    private String createdBy;
-    private LocalDateTime createdAt;
-    private String updatedBy;
-    private LocalDateTime updatedAt;
+  private String id;
+  private String categoryCode;
+  private String categoryName;
+  private String parentId;
+  private Integer sortNum;
+  private String icon;
+  private String remark;
+  private String createdBy;
+  private LocalDateTime createdAt;
+  private String updatedBy;
+  private LocalDateTime updatedAt;
 }

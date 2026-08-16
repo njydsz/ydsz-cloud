@@ -1,15 +1,15 @@
 package com.njydsz.literule.domain.entity;
 
-import java.util.List;
-import java.util.Map;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.common.jdbc.entity.MpBaseEntity;
+import com.njydsz.common.jdbc.handler.JsonTypeHandler;
+import java.util.List;
+import java.util.Map;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
-import com.njydsz.common.jdbc.entity.MpBaseEntity;
-import com.njydsz.common.jdbc.handler.JsonTypeHandler;
 
 /**
  * 规则测试用例实体
@@ -24,20 +24,20 @@ import com.njydsz.common.jdbc.handler.JsonTypeHandler;
 @TableName(value = "ydsz_rule_test_case", autoResultMap = true)
 public class RuleTestCaseDO extends MpBaseEntity<String> {
 
-    /** 测试用例名称 */
-    private String name;
+  /** 测试用例名称 */
+  private String name;
 
-    /** 关联规则编码（可选，null 表示通用测试用例） */
-    private String ruleCode;
+  /** 关联规则编码（可选，null 表示通用测试用例） */
+  private String ruleCode;
 
-    /** 事实数据 JSON */
-    @TableField(typeHandler = JsonTypeHandler.class)
-    private Map<String, Object> factsData;
+  /** 事实数据 JSON */
+  @TableField(typeHandler = JsonTypeHandler.class)
+  private Map<String, Object> factsData;
 
-    /** 预期触发规则编码列表 */
-    @TableField(typeHandler = JsonTypeHandler.class)
-    private List<String> expectedTriggered;
+  /** 预期触发规则编码列表 */
+  @TableField(typeHandler = JsonTypeHandler.class)
+  private List<String> expectedTriggered;
 
-    /** 描述 */
-    private String description;
+  /** 描述 */
+  private String description;
 }

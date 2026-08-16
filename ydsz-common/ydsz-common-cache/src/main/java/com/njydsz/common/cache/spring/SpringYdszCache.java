@@ -1,5 +1,6 @@
 package com.njydsz.common.cache.spring;
 
+import com.njydsz.common.cache.api.Cache;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -8,17 +9,15 @@ import java.util.concurrent.ConcurrentMap;
 import org.springframework.cache.Cache.ValueRetrievalException;
 import org.springframework.cache.Cache.ValueWrapper;
 import org.springframework.cache.support.AbstractValueAdaptingCache;
-import com.njydsz.common.cache.api.Cache;
 
 /**
  * YdszCache 的 Spring Cache 适配器（Spring 6.x）。
  *
- * <p>将 YdszCache 的 Cache 接口适配为 Spring Cache 的标准接口，
- * 支持 @Cacheable、@CachePut、@CacheEvict 等 Spring Cache 注解。
+ * <p>将 YdszCache 的 Cache 接口适配为 Spring Cache 的标准接口， 支持 @Cacheable、@CachePut、@CacheEvict 等 Spring
+ * Cache 注解。
  *
  * @author ydsz-team
  * @since 1.0.0
- *
  */
 public class SpringYdszCache extends AbstractValueAdaptingCache {
 

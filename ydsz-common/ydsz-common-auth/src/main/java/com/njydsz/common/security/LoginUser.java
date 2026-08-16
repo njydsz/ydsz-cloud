@@ -22,72 +22,71 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class LoginUser implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
-    /** 用户 ID（雪花算法字符串） */
-    private String userId;
+  /** 用户 ID（雪花算法字符串） */
+  private String userId;
 
-    /** 用户名 */
-    private String username;
+  /** 用户名 */
+  private String username;
 
-    /** 真实姓名 */
-    private String realName;
+  /** 真实姓名 */
+  private String realName;
 
-    /** 部门 ID（雪花算法字符串） */
-    private String deptId;
+  /** 部门 ID（雪花算法字符串） */
+  private String deptId;
 
-    /** 部门名称 */
-    private String deptName;
+  /** 部门名称 */
+  private String deptName;
 
-    /** 租户 ID（多租户上下文，默认 "1"） */
-    private String tenantId;
+  /** 租户 ID（多租户上下文，默认 "1"） */
+  private String tenantId;
 
-    /** 职级编码 */
-    private String levelCode;
+  /** 职级编码 */
+  private String levelCode;
 
-    /** 角色编码列表 */
-    private List<String> roles;
+  /** 角色编码列表 */
+  private List<String> roles;
 
-    /** 权限编码列表 (例: system:user:create) */
-    private List<String> permissions;
+  /** 权限编码列表 (例: system:user:create) */
+  private List<String> permissions;
 
-    /** 数据权限范围: ALL/DEPT/SELF/CUSTOM */
-    private String dataScope;
+  /** 数据权限范围: ALL/DEPT/SELF/CUSTOM */
+  private String dataScope;
 
-    /** 自定义部门 ID 集（CUSTOM 模式，雪花字符串） */
-    private List<String> customDeptIds;
+  /** 自定义部门 ID 集（CUSTOM 模式，雪花字符串） */
+  private List<String> customDeptIds;
 
-    /** 本部门及下级部门 ID 链（DEPT_AND_CHILD 模式，登录时计算并放入 JWT） */
-    private List<String> deptIds;
+  /** 本部门及下级部门 ID 链（DEPT_AND_CHILD 模式，登录时计算并放入 JWT） */
+  private List<String> deptIds;
 
-    /** Token */
-    private String token;
+  /** Token */
+  private String token;
 
-    /** 登录时间 */
-    private Long loginTime;
+  /** 登录时间 */
+  private Long loginTime;
 
-    /** Token 过期时间（毫秒） */
-    private Long expireTime;
+  /** Token 过期时间（毫秒） */
+  private Long expireTime;
 
-    /**
-     * 是否超级管理员
-     *
-     * @return true 表示拥有全部权限通配符
-     */
-    public boolean isSuperAdmin() {
-        return permissions != null && permissions.contains("*:*:*");
-    }
+  /**
+   * 是否超级管理员
+   *
+   * @return true 表示拥有全部权限通配符
+   */
+  public boolean isSuperAdmin() {
+    return permissions != null && permissions.contains("*:*:*");
+  }
 
-    /**
-     * 是否拥有指定权限
-     *
-     * @param perm 权限编码
-     * @return true 表示拥有该权限
-     */
-    public boolean hasPermission(String perm) {
-        if (permissions == null) return false;
-        if (isSuperAdmin()) return true;
-        return permissions.contains(perm);
-    }
+  /**
+   * 是否拥有指定权限
+   *
+   * @param perm 权限编码
+   * @return true 表示拥有该权限
+   */
+  public boolean hasPermission(String perm) {
+    if (permissions == null) return false;
+    if (isSuperAdmin()) return true;
+    return permissions.contains(perm);
+  }
 }

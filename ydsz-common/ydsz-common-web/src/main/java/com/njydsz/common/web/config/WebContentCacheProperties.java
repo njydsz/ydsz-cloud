@@ -1,14 +1,16 @@
 package com.njydsz.common.web.config;
 
+import com.njydsz.common.web.filter.ContentCachingFilter;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import com.njydsz.common.web.filter.ContentCachingFilter;
+
 /**
  * Web 端请求体缓存配置属性
  *
  * <p>配置前缀：{@code ydsz.web.content-cache}
  *
  * <p><b>配置示例（YAML）：</b>
+ *
  * <pre>{@code
  * ydsz:
  *   web:
@@ -24,11 +26,10 @@ import com.njydsz.common.web.filter.ContentCachingFilter;
 @ConfigurationProperties(prefix = "ydsz.web.content-cache")
 public class WebContentCacheProperties {
 
-    /**
-     * 最大缓存字节数
-     *
-     * <p>默认 2MB（2097152 字节）。超过此大小的请求体不会被缓存，
-     * 但请求仍正常处理。主要用于防止大文件上传场景下的 OOM。
-     */
-    private int maxSize = 2097152;
+  /**
+   * 最大缓存字节数
+   *
+   * <p>默认 2MB（2097152 字节）。超过此大小的请求体不会被缓存， 但请求仍正常处理。主要用于防止大文件上传场景下的 OOM。
+   */
+  private int maxSize = 2097152;
 }

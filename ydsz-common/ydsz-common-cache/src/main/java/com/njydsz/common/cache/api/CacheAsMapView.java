@@ -17,7 +17,6 @@ import java.util.Set;
  * @param <K> 键类型
  * @param <V> 值类型
  * @author ydsz-team
- *
  * @since 1.0.0
  */
 public class CacheAsMapView<K, V> implements Map<K, V> {
@@ -61,7 +60,7 @@ public class CacheAsMapView<K, V> implements Map<K, V> {
    * @return 缓存中存在该键时返回 {@code true}
    */
   @Override
-    public boolean containsKey(Object key) {
+  public boolean containsKey(Object key) {
     if (key == null) {
       return false;
     }
@@ -93,14 +92,14 @@ public class CacheAsMapView<K, V> implements Map<K, V> {
   /**
    * 获取指定键对应的缓存值。
    *
-   * <p>与标准 {@link Map} 契约不同，null 键视为未命中，返回 {@code null} 而非抛异常。
-   * 未命中或键为 null 时均返回 {@code null}，且不触发任何加载。
+   * <p>与标准 {@link Map} 契约不同，null 键视为未命中，返回 {@code null} 而非抛异常。 未命中或键为 null 时均返回 {@code
+   * null}，且不触发任何加载。
    *
    * @param key 待查询的键，为 null 时返回 {@code null}
    * @return 缓存值；键不存在时返回 {@code null}
    */
   @Override
-    public V get(Object key) {
+  public V get(Object key) {
     if (key == null) {
       return null;
     }
@@ -110,10 +109,10 @@ public class CacheAsMapView<K, V> implements Map<K, V> {
   /**
    * 写入键值对并返回被替换的旧值。
    *
-   * <p>null 键或 null 值被拒绝并抛出 {@link NullPointerException}，以维持视图的 null 契约
-   * （与底层缓存允许 null 占位的语义不同）。返回旧值仅在键已存在时有意义。
+   * <p>null 键或 null 值被拒绝并抛出 {@link NullPointerException}，以维持视图的 null 契约 （与底层缓存允许 null
+   * 占位的语义不同）。返回旧值仅在键已存在时有意义。
    *
-   * @param key   缓存键，不可为 {@code null}
+   * @param key 缓存键，不可为 {@code null}
    * @param value 缓存值，不可为 {@code null}
    * @return 被替换的旧值；键此前不存在时返回 {@code null}
    * @throws NullPointerException 当 key 或 value 为 null 时抛出
@@ -137,7 +136,7 @@ public class CacheAsMapView<K, V> implements Map<K, V> {
    * @return 被移除的值；键不存在时返回 {@code null}
    */
   @Override
-    public V remove(Object key) {
+  public V remove(Object key) {
     if (key == null) {
       return null;
     }
@@ -197,8 +196,8 @@ public class CacheAsMapView<K, V> implements Map<K, V> {
   /**
    * 返回缓存条目的视图集合。
    *
-   * <p>返回的 entry 为不可变的 {@link SimpleImmutableEntry}，但该视图的 {@code remove} 操作
-   * 支持删除缓存中的对应条目。视图基于底层 {@link Cache#keySet()} 迭代，属于弱一致的实时快照。
+   * <p>返回的 entry 为不可变的 {@link SimpleImmutableEntry}，但该视图的 {@code remove} 操作 支持删除缓存中的对应条目。视图基于底层
+   * {@link Cache#keySet()} 迭代，属于弱一致的实时快照。
    *
    * @return 缓存当前所有条目的集合视图
    */
@@ -208,8 +207,7 @@ public class CacheAsMapView<K, V> implements Map<K, V> {
       /**
        * 返回遍历缓存条目的迭代器。
        *
-       * <p>迭代基于底层缓存的键集合，每次 {@link #next()} 都实时读取对应值；
-       * 若迭代过程中键被删除，则该键对应的 entry 值为 null。
+       * <p>迭代基于底层缓存的键集合，每次 {@link #next()} 都实时读取对应值； 若迭代过程中键被删除，则该键对应的 entry 值为 null。
        *
        * @return 遍历当前缓存条目的迭代器
        */
@@ -266,7 +264,7 @@ public class CacheAsMapView<K, V> implements Map<K, V> {
        * @return 成功删除匹配条目时返回 {@code true}
        */
       @Override
-            public boolean remove(Object o) {
+      public boolean remove(Object o) {
         if (!(o instanceof Entry)) {
           return false;
         }

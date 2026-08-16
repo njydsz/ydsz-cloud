@@ -7,13 +7,9 @@ package com.njydsz.common.jdbc.enums;
  * @since 1.0.0
  */
 public enum InterceptTableStrategy {
-    /**
-     * 包含模式 - 只处理指定的表
-     */
-    INCLUDE,
+  /** 包含模式 - 只处理指定的表 */
+  INCLUDE,
 
-    /**
-     * 排除模式 - 处理除了指定表之外的所有表
-     */
-    EXCLUDE
+  /** 排除模式 - 处理除了指定表之外的所有表 */
+  EXCLUDE
 }

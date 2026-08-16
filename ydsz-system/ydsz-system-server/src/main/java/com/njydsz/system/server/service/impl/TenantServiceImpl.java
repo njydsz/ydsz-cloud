@@ -1,14 +1,8 @@
 package com.njydsz.system.server.service.impl;
 
-import java.util.List;
-import java.util.stream.Collectors;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.support.PageResponses;
@@ -19,26 +13,29 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.TenantVO;
 import com.njydsz.system.infra.mapper.TenantMapper;
 import com.njydsz.system.server.service.TenantService;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 租户 Service 实现
  *
- * <p>对 {@link TenantService} 接口的完整实现，是「多租户管理中心」的核心业务逻辑层。
- * 提供租户的 CRUD、分页查询、唯一性校验等能力。
+ * <p>对 {@link TenantService} 接口的完整实现，是「多租户管理中心」的核心业务逻辑层。 提供租户的 CRUD、分页查询、唯一性校验等能力。
  *
  * <p><b>核心职责：</b>
+ *
  * <ul>
- *   <li><b>CRUD</b>：{@link #getById} / {@link #save} / {@link #updateById} / {@link #removeById}</li>
- *   <li><b>分页查询</b>：{@link #page} — 管理后台「租户管理」列表</li>
- *   <li><b>唯一性校验</b>：{@link #existsByTenantCode} — 创建前检查租户编码唯一性</li>
+ *   <li><b>CRUD</b>：{@link #getById} / {@link #save} / {@link #updateById} / {@link #removeById}
+ *   <li><b>分页查询</b>：{@link #page} — 管理后台「租户管理」列表
+ *   <li><b>唯一性校验</b>：{@link #existsByTenantCode} — 创建前检查租户编码唯一性
  * </ul>
  *
- * <p><b>多租户：</b>租户管理属于系统级超级管理员权限，
- * 查询时不注入租户过滤条件，可跨租户查看全部租户。
+ * <p><b>多租户：</b>租户管理属于系统级超级管理员权限， 查询时不注入租户过滤条件，可跨租户查看全部租户。
  *
  * @author ydsz-team
  * @since 1.0.0
- *
  * @see TenantService 租户 Service 接口
  * @see com.njydsz.system.domain.entity.Tenant 租户实体
  */
@@ -47,135 +44,136 @@ import com.njydsz.system.server.service.TenantService;
 @RequiredArgsConstructor
 public class TenantServiceImpl implements TenantService {
 
-    /** 租户 Mapper */
-    private final TenantMapper mapper;
+  /** 租户 Mapper */
+  private final TenantMapper mapper;
 
-    /**
-     * 按 ID 查询租户
-     *
-     * @param id 主键 ID
-     * @return 租户 VO；不存在返回 {@code null}
-     */
-    @Override
-    public TenantVO getById(String id) {
-        Tenant entity = mapper.selectById(id);
-        return SystemConverter.INSTANT.entityToVO(entity);
-    }
+  /**
+   * 按 ID 查询租户
+   *
+   * @param id 主键 ID
+   * @return 租户 VO；不存在返回 {@code null}
+   */
+  @Override
+  public TenantVO getById(String id) {
+    Tenant entity = mapper.selectById(id);
+    return SystemConverter.INSTANT.entityToVO(entity);
+  }
 
-    /**
-     * 分页查询租户列表
-     *
-     * <p>支持按租户名称模糊匹配、状态过滤。
-     *
-     * @param pageNum    当前页码（1-based）
-     * @param pageSize   每页记录数
-     * @param tenantName 租户名称模糊搜索（可选）
-     * @param status     状态过滤（可选）
-     * @return 分页结果
-     */
-    @Override
-    public PageResponse<List<TenantVO>> page(int pageNum, int pageSize, String tenantName, String status) {
-        LambdaQueryWrapper<Tenant> wrapper = new LambdaQueryWrapper<>();
-        if (tenantName != null && !tenantName.isBlank()) {
-            wrapper.like(Tenant::getTenantName, tenantName);
-        }
-        if (status != null && !status.isBlank()) {
-            wrapper.eq(Tenant::getStatus, status);
-        }
-        wrapper.orderByDesc(Tenant::getCreatedAt);
-        IPage<Tenant> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
-        return PageResponses.success(page, SystemConverter.INSTANT::entityToVO);
+  /**
+   * 分页查询租户列表
+   *
+   * <p>支持按租户名称模糊匹配、状态过滤。
+   *
+   * @param pageNum 当前页码（1-based）
+   * @param pageSize 每页记录数
+   * @param tenantName 租户名称模糊搜索（可选）
+   * @param status 状态过滤（可选）
+   * @return 分页结果
+   */
+  @Override
+  public PageResponse<List<TenantVO>> page(
+      int pageNum, int pageSize, String tenantName, String status) {
+    LambdaQueryWrapper<Tenant> wrapper = new LambdaQueryWrapper<>();
+    if (tenantName != null && !tenantName.isBlank()) {
+      wrapper.like(Tenant::getTenantName, tenantName);
     }
+    if (status != null && !status.isBlank()) {
+      wrapper.eq(Tenant::getStatus, status);
+    }
+    wrapper.orderByDesc(Tenant::getCreatedAt);
+    IPage<Tenant> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+    return PageResponses.success(page, SystemConverter.INSTANT::entityToVO);
+  }
 
-    /**
-     * 创建租户
-     *
-     * <p>写入前校验 {@code tenantCode} 全局唯一性。
-     *
-     * @param dto 租户 DTO
-     * @return 新建租户主键 ID
-     */
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public String save(TenantDTO dto) {
-        if (existsByTenantCode(dto.getTenantCode())) {
-            throw BusinessException.of(SystemExceptionCode.TENANT_CODE_DUPLICATE)
-                    .data("tenantCode", dto.getTenantCode());
-        }
-        Tenant entity = toEntity(dto);
-        mapper.insert(entity);
-        log.info("创建租户成功: tenantCode={}, tenantId={}", dto.getTenantCode(), entity.getId());
-        return entity.getId();
+  /**
+   * 创建租户
+   *
+   * <p>写入前校验 {@code tenantCode} 全局唯一性。
+   *
+   * @param dto 租户 DTO
+   * @return 新建租户主键 ID
+   */
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public String save(TenantDTO dto) {
+    if (existsByTenantCode(dto.getTenantCode())) {
+      throw BusinessException.of(SystemExceptionCode.TENANT_CODE_DUPLICATE)
+          .data("tenantCode", dto.getTenantCode());
     }
+    Tenant entity = toEntity(dto);
+    mapper.insert(entity);
+    log.info("创建租户成功: tenantCode={}, tenantId={}", dto.getTenantCode(), entity.getId());
+    return entity.getId();
+  }
 
-    /**
-     * 更新租户
-     *
-     * <p>更新时校验 {@code tenantCode} 唯一性（排除自身）。
-     *
-     * @param dto 租户 DTO（{@code id} 必填）
-     * @return 是否成功
-     */
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public boolean updateById(TenantDTO dto) {
-        LambdaQueryWrapper<Tenant> checkWrapper = new LambdaQueryWrapper<>();
-        checkWrapper.eq(Tenant::getTenantCode, dto.getTenantCode());
-        checkWrapper.ne(Tenant::getId, dto.getId());
-        if (mapper.selectCount(checkWrapper) > 0) {
-            throw BusinessException.of(SystemExceptionCode.TENANT_CODE_DUPLICATE)
-                    .data("tenantCode", dto.getTenantCode());
-        }
-        Tenant entity = toEntity(dto);
-        return mapper.updateById(entity) > 0;
+  /**
+   * 更新租户
+   *
+   * <p>更新时校验 {@code tenantCode} 唯一性（排除自身）。
+   *
+   * @param dto 租户 DTO（{@code id} 必填）
+   * @return 是否成功
+   */
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public boolean updateById(TenantDTO dto) {
+    LambdaQueryWrapper<Tenant> checkWrapper = new LambdaQueryWrapper<>();
+    checkWrapper.eq(Tenant::getTenantCode, dto.getTenantCode());
+    checkWrapper.ne(Tenant::getId, dto.getId());
+    if (mapper.selectCount(checkWrapper) > 0) {
+      throw BusinessException.of(SystemExceptionCode.TENANT_CODE_DUPLICATE)
+          .data("tenantCode", dto.getTenantCode());
     }
+    Tenant entity = toEntity(dto);
+    return mapper.updateById(entity) > 0;
+  }
 
-    /**
-     * 删除租户（逻辑删除）
-     *
-     * <p>基于 MyBatis-Plus 逻辑删除（{@code @TableLogic}），不物理删除。
-     *
-     * @param id 主键 ID
-     * @return 是否成功
-     */
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public boolean removeById(String id) {
-        return mapper.deleteById(id) > 0;
-    }
+  /**
+   * 删除租户（逻辑删除）
+   *
+   * <p>基于 MyBatis-Plus 逻辑删除（{@code @TableLogic}），不物理删除。
+   *
+   * @param id 主键 ID
+   * @return 是否成功
+   */
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public boolean removeById(String id) {
+    return mapper.deleteById(id) > 0;
+  }
 
-    /**
-     * 检查租户编码是否已存在
-     *
-     * @param tenantCode 租户编码
-     * @return 已存在返回 {@code true}，否则返回 {@code false}
-     */
-    @Override
-    public boolean existsByTenantCode(String tenantCode) {
-        LambdaQueryWrapper<Tenant> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Tenant::getTenantCode, tenantCode);
-        return mapper.selectCount(wrapper) > 0;
-    }
+  /**
+   * 检查租户编码是否已存在
+   *
+   * @param tenantCode 租户编码
+   * @return 已存在返回 {@code true}，否则返回 {@code false}
+   */
+  @Override
+  public boolean existsByTenantCode(String tenantCode) {
+    LambdaQueryWrapper<Tenant> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(Tenant::getTenantCode, tenantCode);
+    return mapper.selectCount(wrapper) > 0;
+  }
 
-    /**
-     * DTO → DO 转换（私有）
-     *
-     * @param dto 租户 DTO
-     * @return 租户 Entity
-     */
-    private Tenant toEntity(TenantDTO dto) {
-        Tenant entity = new Tenant();
-        entity.setId(dto.getId());
-        entity.setTenantCode(dto.getTenantCode());
-        entity.setTenantName(dto.getTenantName());
-        entity.setContactName(dto.getContactName());
-        entity.setContactPhone(dto.getContactPhone());
-        entity.setContactEmail(dto.getContactEmail());
-        entity.setPlanId(dto.getPlanId());
-        entity.setExpireAt(dto.getExpireAt());
-        entity.setDatasourceKey(dto.getDatasourceKey());
-        entity.setStatus(dto.getStatus());
-        entity.setRemark(dto.getRemark());
-        return entity;
-    }
+  /**
+   * DTO → DO 转换（私有）
+   *
+   * @param dto 租户 DTO
+   * @return 租户 Entity
+   */
+  private Tenant toEntity(TenantDTO dto) {
+    Tenant entity = new Tenant();
+    entity.setId(dto.getId());
+    entity.setTenantCode(dto.getTenantCode());
+    entity.setTenantName(dto.getTenantName());
+    entity.setContactName(dto.getContactName());
+    entity.setContactPhone(dto.getContactPhone());
+    entity.setContactEmail(dto.getContactEmail());
+    entity.setPlanId(dto.getPlanId());
+    entity.setExpireAt(dto.getExpireAt());
+    entity.setDatasourceKey(dto.getDatasourceKey());
+    entity.setStatus(dto.getStatus());
+    entity.setRemark(dto.getRemark());
+    return entity;
+  }
 }

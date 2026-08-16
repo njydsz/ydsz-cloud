@@ -1,11 +1,11 @@
 package com.njydsz.userinfo.server.service;
 
-import java.util.List;
 import com.njydsz.userinfo.domain.dto.post.MenuPostDTO;
 import com.njydsz.userinfo.domain.dto.put.MenuPutDTO;
 import com.njydsz.userinfo.domain.entity.Menu;
 import com.njydsz.userinfo.domain.vo.MenuTreeVO;
 import com.njydsz.userinfo.domain.vo.MenuVO;
+import java.util.List;
 
 /**
  * 菜单/权限 Service 接口
@@ -14,54 +14,53 @@ import com.njydsz.userinfo.domain.vo.MenuVO;
  *
  * @author ydsz-team
  * @since 1.0.0
- *
  * @see Menu 菜单实体
  */
 public interface MenuService {
 
-    /**
-     * 根据 ID 查询菜单详情。
-     *
-     * @param id 菜单 ID
-     * @return 菜单 VO
-     */
-    MenuVO getById(String id);
+  /**
+   * 根据 ID 查询菜单详情。
+   *
+   * @param id 菜单 ID
+   * @return 菜单 VO
+   */
+  MenuVO getById(String id);
 
-    /**
-     * 查询全部菜单列表（扁平结构）。
-     *
-     * @return 菜单 VO 列表
-     */
-    List<MenuVO> list();
+  /**
+   * 查询全部菜单列表（扁平结构）。
+   *
+   * @return 菜单 VO 列表
+   */
+  List<MenuVO> list();
 
-    /**
-     * 查询菜单树形结构。
-     *
-     * @return 菜单树形结构列表
-     */
-    List<MenuTreeVO> tree();
+  /**
+   * 查询菜单树形结构。
+   *
+   * @return 菜单树形结构列表
+   */
+  List<MenuTreeVO> tree();
 
-    /**
-     * 创建菜单。
-     *
-     * @param dto 菜单创建 DTO
-     * @return 新菜单 ID
-     */
-    String create(MenuPostDTO dto);
+  /**
+   * 创建菜单。
+   *
+   * @param dto 菜单创建 DTO
+   * @return 新菜单 ID
+   */
+  String create(MenuPostDTO dto);
 
-    /**
-     * 更新菜单。
-     *
-     * @param dto 菜单更新 DTO（含 ID）
-     * @return true=成功
-     */
-    boolean update(MenuPutDTO dto);
+  /**
+   * 更新菜单。
+   *
+   * @param dto 菜单更新 DTO（含 ID）
+   * @return true=成功
+   */
+  boolean update(MenuPutDTO dto);
 
-    /**
-     * 删除菜单（逻辑删除）。
-     *
-     * @param id 菜单 ID
-     * @return true=成功
-     */
-    boolean removeById(String id);
+  /**
+   * 删除菜单（逻辑删除）。
+   *
+   * @param id 菜单 ID
+   * @return true=成功
+   */
+  boolean removeById(String id);
 }

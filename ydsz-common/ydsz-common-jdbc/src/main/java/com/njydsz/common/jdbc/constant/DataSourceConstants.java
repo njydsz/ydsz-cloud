@@ -10,15 +10,14 @@ package com.njydsz.common.jdbc.constant;
  */
 public final class DataSourceConstants {
 
-    private DataSourceConstants() {
-    }
+  private DataSourceConstants() {}
 
-    /** 主库 */
-    public static final String MASTER = "master";
+  /** 主库 */
+  public static final String MASTER = "master";
 
-    /** 从库 */
-    public static final String SLAVE = "slave";
+  /** 从库 */
+  public static final String SLAVE = "slave";
 
-    /** 默认数据源 */
-    public static final String DEFAULT = "default";
+  /** 默认数据源 */
+  public static final String DEFAULT = "default";
 }

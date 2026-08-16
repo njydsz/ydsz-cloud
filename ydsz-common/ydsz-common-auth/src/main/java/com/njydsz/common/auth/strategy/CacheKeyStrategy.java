@@ -1,14 +1,14 @@
 package com.njydsz.common.auth.strategy;
 
-
 import java.util.Set;
+
 /**
  * 缓存 Key 生成策略接口。
  *
- * <p>用于自定义权限缓存 Key 的生成规则，解决默认 {@code tenantId:roleCodes}
- * 格式不可扩展的问题。
+ * <p>用于自定义权限缓存 Key 的生成规则，解决默认 {@code tenantId:roleCodes} 格式不可扩展的问题。
  *
  * <p><b>使用示例：</b>
+ *
  * <pre>{@code
  * @Component
  * public class TenantAwareCacheKeyStrategy implements CacheKeyStrategy {
@@ -23,17 +23,16 @@ import java.util.Set;
  *
  * @author ydsz-team
  * @since 1.0.0
- *
  */
 @FunctionalInterface
 public interface CacheKeyStrategy {
 
-    /**
-     * 生成缓存 Key。
-     *
-     * @param tenantId  租户 ID（可为 null）
-     * @param roleCodes 角色编码集合
-     * @return 缓存 Key
-     */
-    String generate(String tenantId, Set<String> roleCodes);
+  /**
+   * 生成缓存 Key。
+   *
+   * @param tenantId 租户 ID（可为 null）
+   * @param roleCodes 角色编码集合
+   * @return 缓存 Key
+   */
+  String generate(String tenantId, Set<String> roleCodes);
 }

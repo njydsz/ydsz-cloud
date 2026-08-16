@@ -20,33 +20,21 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PendingEntryInfo {
 
-    /**
-     * 消息 ID（Stream Entry ID）
-     */
-    private String entryId;
+  /** 消息 ID（Stream Entry ID） */
+  private String entryId;
 
-    /**
-     * 消费者名称
-     */
-    private String consumerName;
+  /** 消费者名称 */
+  private String consumerName;
 
-    /**
-     * 消息被读取后经过的毫秒数（idle time）
-     */
-    private long idleTimeMillis;
+  /** 消息被读取后经过的毫秒数（idle time） */
+  private long idleTimeMillis;
 
-    /**
-     * 消息被投递的次数
-     */
-    private int deliveryCount;
+  /** 消息被投递的次数 */
+  private int deliveryCount;
 
-    /**
-     * 消息首次被投递的时间
-     */
-    private LocalDateTime firstDeliveryTime;
+  /** 消息首次被投递的时间 */
+  private LocalDateTime firstDeliveryTime;
 
-    /**
-     * 消息体摘要（前 100 字符）
-     */
-    private String payloadSummary;
+  /** 消息体摘要（前 100 字符） */
+  private String payloadSummary;
 }

@@ -1,9 +1,8 @@
 package com.njydsz.system.infra.repository;
 
+import com.njydsz.system.infra.mapper.DictTypeMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
-import com.njydsz.system.domain.entity.DictType;
-import com.njydsz.system.infra.mapper.DictTypeMapper;
 
 /**
  * 字典类型仓储。
@@ -17,14 +16,14 @@ import com.njydsz.system.infra.mapper.DictTypeMapper;
 @RequiredArgsConstructor
 public class DictRepository {
 
-    private final DictTypeMapper dictTypeMapper;
+  private final DictTypeMapper dictTypeMapper;
 
-    /**
-     * 获取原生 Mapper。
-     *
-     * @return 字典类型 Mapper
-     */
-    public DictTypeMapper getDictTypeMapper() {
-        return dictTypeMapper;
-    }
+  /**
+   * 获取原生 Mapper。
+   *
+   * @return 字典类型 Mapper
+   */
+  public DictTypeMapper getDictTypeMapper() {
+    return dictTypeMapper;
+  }
 }

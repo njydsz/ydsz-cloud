@@ -13,20 +13,19 @@ import com.njydsz.common.safe.ratelimit.model.RateLimitRule;
  */
 public final class RateLimiterFactory {
 
-    private RateLimiterFactory() {
-    }
+  private RateLimiterFactory() {}
 
-    /**
-     * 根据规则创建限流器
-     *
-     * @param rule 限流规则
-     * @return 对应算法的限流器
-     */
-    public static RateLimiter create(RateLimitRule rule) {
-        if (rule == null) {
-            throw new IllegalArgumentException("rule cannot be null");
-        }
-        rule.validate();
-        return new TokenBucketLimiter(rule);
+  /**
+   * 根据规则创建限流器
+   *
+   * @param rule 限流规则
+   * @return 对应算法的限流器
+   */
+  public static RateLimiter create(RateLimitRule rule) {
+    if (rule == null) {
+      throw new IllegalArgumentException("rule cannot be null");
     }
+    rule.validate();
+    return new TokenBucketLimiter(rule);
+  }
 }

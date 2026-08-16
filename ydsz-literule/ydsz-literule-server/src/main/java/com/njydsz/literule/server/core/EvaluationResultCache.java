@@ -2,17 +2,26 @@ package com.njydsz.literule.server.core;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.ReentrantLock;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.stats.CacheStats;
 import lombok.extern.slf4j.Slf4j;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleResult;
 
 /**
- * 评估结果缓存（P2-3 高性能优化）
+ * 评估结果缓存（P1-1 高性能优化 - 基于 Caffeine）
+ *
+ * <p>使用 Caffeine 替换手工实现的 LRU+TTL 缓存，获得：
+ * <ul>
+ *   <li>更高的并发性能（基于 ConcurrentHashMap 的分段锁）</li>
+ *   <li>更优的淘汰策略（W-TinyLFU 窗口淘汰算法）</li>
+ *   <li>内置统计指标（命中率、加载时间、淘汰数）</li>
+ *   <li>异步加载与刷新支持</li>
+ * </ul>
  *
  * <p>缓存规则引擎的评估结果，避免对相同事实数据的重复计算。
  * 当同一上下文（scenario + tenantId + environment + facts）在 TTL 内再次评估时，
@@ -26,21 +35,12 @@ import com.njydsz.literule.api.RuleResult;
  *   <li>{@code environment}：环境标识</li>
  *   <li>{@code facts}：事实数据快照（按 key 排序后哈希）</li>
  * </ul>
- * 相同的上下文维度会产生相同的缓存键，保证缓存命中率。
  *
  * <h3>淘汰策略</h3>
  * <ul>
  *   <li><b>TTL 过期</b>：缓存条目在写入后经过 TTL 时间自动失效</li>
- *   <li><b>LRU 淘汰</b>：当缓存条目数超过 maxSize 时，淘汰最近最少访问的条目</li>
+ *   <li><b>W-TinyLFU 淘汰</b>：基于访问频率的智能淘汰，优于传统 LRU</li>
  * </ul>
- *
- * <h3>性能预期</h3>
- * <p>在重复评估率高的场景（如批量数据回放、风控规则试运行），
- * 缓存命中率可达 60%~90%，端到端评估耗时降低 50%~80%。
- *
- * <h3>线程安全</h3>
- * <p>使用 {@link ReentrantLock} 保护 LRU 链表操作，{@link AtomicLong} 统计计数器。
- * 适用于高并发读写场景。
  *
  * <h3>使用示例</h3>
  * <pre>
@@ -70,41 +70,14 @@ public class EvaluationResultCache {
     /** 默认最大缓存条目数 */
     public static final int DEFAULT_MAX_SIZE = 10_000;
 
-    /** 缓存条目 */
-    private static class CacheEntry {
-        final List<RuleResult> results;
-        final long expireAt;
+    /** Caffeine 缓存实例 */
+    private final Cache<String, List<RuleResult>> caffeineCache;
 
-        CacheEntry(List<RuleResult> results, long expireAt) {
-            this.results = results;
-            this.expireAt = expireAt;
-        }
-
-        boolean isExpired() {
-            return System.currentTimeMillis() > expireAt;
-        }
-    }
-
-    /** LRU 缓存（LinkedHashMap 按访问顺序） */
-    private final LinkedHashMap<String, CacheEntry> cache;
-
-    /** TTL（毫秒） */
-    private final long ttlMs;
-
-    /** 最大缓存条目数 */
-    private final int maxSize;
-
-    /** 读写锁（保护 LRU 操作） */
-    private final ReentrantLock lock = new ReentrantLock();
-
-    /** 统计：命中次数 */
+    /** 统计：命中次数（Caffeine 已内置，此处用于兼容原有监控接口） */
     private final AtomicLong hitCount = new AtomicLong(0);
 
     /** 统计：未命中次数 */
     private final AtomicLong missCount = new AtomicLong(0);
-
-    /** 统计：淘汰次数 */
-    private final AtomicLong evictionCount = new AtomicLong(0);
 
     /**
      * 使用默认配置创建缓存
@@ -116,14 +89,22 @@ public class EvaluationResultCache {
     /**
      * 指定 TTL 和最大条目数创建缓存
      *
-     * @param ttlMs  TTL（毫秒），&le; 0 表示不过期
+     * @param ttlMs   TTL（毫秒），&le; 0 表示不过期
      * @param maxSize 最大缓存条目数，&le; 0 表示不限
      */
     public EvaluationResultCache(long ttlMs, int maxSize) {
-        this.ttlMs = ttlMs > 0 ? ttlMs : Long.MAX_VALUE;
-        this.maxSize = maxSize > 0 ? maxSize : Integer.MAX_VALUE;
-        this.cache = new LinkedHashMap<>(16, 0.75f, true);
-        log.info("[EvalCache] 评估结果缓存已初始化（ttlMs={}, maxSize={}）", this.ttlMs, this.maxSize);
+        Caffeine<Object, Object> builder = Caffeine.newBuilder()
+                .recordStats();
+        if (ttlMs > 0) {
+            builder.expireAfterWrite(java.time.Duration.ofMillis(ttlMs));
+        }
+        if (maxSize > 0) {
+            builder.maximumSize(maxSize);
+        }
+        this.caffeineCache = builder.build();
+        log.info("[EvalCache] 评估结果缓存已初始化（ttlMs={}, maxSize={}, implementation=Caffeine）",
+                ttlMs > 0 ? ttlMs : "unlimited",
+                maxSize > 0 ? maxSize : "unlimited");
     }
 
     /**
@@ -134,26 +115,14 @@ public class EvaluationResultCache {
      */
     public List<RuleResult> get(RuleContext context) {
         String key = buildCacheKey(context);
-        lock.lock();
-        try {
-            CacheEntry entry = cache.get(key);
-            if (entry == null) {
-                missCount.incrementAndGet();
-                return null;
-            }
-            if (entry.isExpired()) {
-                cache.remove(key);
-                missCount.incrementAndGet();
-                evictionCount.incrementAndGet();
-                return null;
-            }
-            // 访问后 LinkedHashMap 自动移到末尾（LRU）
-            hitCount.incrementAndGet();
-            // 返回防御性副本
-            return new ArrayList<>(entry.results);
-        } finally {
-            lock.unlock();
+        List<RuleResult> result = caffeineCache.getIfPresent(key);
+        if (result == null) {
+            missCount.incrementAndGet();
+            return null;
         }
+        hitCount.incrementAndGet();
+        // 返回防御性副本
+        return new ArrayList<>(result);
     }
 
     /**
@@ -167,34 +136,17 @@ public class EvaluationResultCache {
             return;
         }
         String key = buildCacheKey(context);
-        long expireAt = System.currentTimeMillis() + ttlMs;
-        CacheEntry entry = new CacheEntry(
-                Collections.unmodifiableList(new ArrayList<>(results)), expireAt);
-
-        lock.lock();
-        try {
-            // LRU 淘汰
-            while (cache.size() >= maxSize) {
-                evictOldest();
-            }
-            cache.put(key, entry);
-        } finally {
-            lock.unlock();
-        }
+        List<RuleResult> immutableResults = Collections.unmodifiableList(new ArrayList<>(results));
+        caffeineCache.put(key, immutableResults);
     }
 
     /**
      * 清除全部缓存
      */
     public void clear() {
-        lock.lock();
-        try {
-            int size = cache.size();
-            cache.clear();
-            log.info("[EvalCache] 缓存已清空（cleared={}）", size);
-        } finally {
-            lock.unlock();
-        }
+        long size = caffeineCache.estimatedSize();
+        caffeineCache.invalidateAll();
+        log.info("[EvalCache] 缓存已清空（cleared≈{}）", size);
     }
 
     /**
@@ -203,12 +155,7 @@ public class EvaluationResultCache {
      * @return 条目数
      */
     public int size() {
-        lock.lock();
-        try {
-            return cache.size();
-        } finally {
-            lock.unlock();
-        }
+        return (int) caffeineCache.estimatedSize();
     }
 
     /**
@@ -247,7 +194,7 @@ public class EvaluationResultCache {
      * @return 淘汰次数
      */
     public long getEvictionCount() {
-        return evictionCount.get();
+        return caffeineCache.stats().evictionCount();
     }
 
     /**
@@ -256,23 +203,14 @@ public class EvaluationResultCache {
      * @return 统计摘要文本
      */
     public String getStatsSummary() {
+        CacheStats stats = caffeineCache.stats();
         return String.format(
-                "[EvalCache] size=%d, hits=%d, misses=%d, hitRate=%.4f, evictions=%d",
-                size(), getHitCount(), getMissCount(), getHitRate(), getEvictionCount());
+                "[EvalCache] size=%d, hits=%d, misses=%d, hitRate=%.4f, evictions=%d, avgLoadTime=%.2fms",
+                size(), getHitCount(), getMissCount(), getHitRate(),
+                stats.evictionCount(), stats.averageLoadPenalty() / 1_000_000.0);
     }
 
     // ==================== 内部实现 ====================
-
-    /**
-     * 淘汰最旧的条目（LRU 链表头部）
-     */
-    private void evictOldest() {
-        if (cache.isEmpty()) return;
-        // LinkedHashMap 的迭代器按访问顺序，第一个元素即最旧
-        String oldestKey = cache.keySet().iterator().next();
-        cache.remove(oldestKey);
-        evictionCount.incrementAndGet();
-    }
 
     /**
      * 构建缓存键

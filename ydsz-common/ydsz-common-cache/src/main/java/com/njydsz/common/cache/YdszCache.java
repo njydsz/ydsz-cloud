@@ -5,8 +5,7 @@ import com.njydsz.common.cache.builder.CacheBuilder;
 /**
  * YdszCache - 高性能本地缓存框架
  *
- * <p>提供 Window-TinyLFU（默认）和 Striped（分段锁）两种缓存实现，
- * 完全基于 JDK 原生 API，核心包零第三方依赖。
+ * <p>提供 Window-TinyLFU（默认）和 Striped（分段锁）两种缓存实现， 完全基于 JDK 原生 API，核心包零第三方依赖。
  *
  * <p><b>核心特性：</b>
  *

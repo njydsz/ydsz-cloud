@@ -7,6 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * 安全告警配置属性
  *
  * <p><b>配置示例：</b>
+ *
  * <pre>{@code
  * ydsz:
  *   safe:
@@ -21,8 +22,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "ydsz.safe.alert")
 public class SafeAlertProperties {
 
-    /**
-     * 是否启用安全事件告警
-     */
-    private boolean enabled = true;
+  /** 是否启用安全事件告警 */
+  private boolean enabled = true;
 }

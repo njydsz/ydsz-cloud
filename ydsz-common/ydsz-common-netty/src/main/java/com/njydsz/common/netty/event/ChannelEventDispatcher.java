@@ -1,10 +1,10 @@
 package com.njydsz.common.netty.event;
 
-import java.util.List;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -22,42 +22,48 @@ import lombok.extern.slf4j.Slf4j;
 @ChannelHandler.Sharable
 public class ChannelEventDispatcher extends ChannelInboundHandlerAdapter {
 
-    private final List<ChannelEventListener> listeners;
+  private final List<ChannelEventListener> listeners;
 
-    /**
-     * 构造 Channel 事件分发器。
-     *
-     * @param listeners 监听器列表（可为空列表）
-     */
-    public ChannelEventDispatcher(List<ChannelEventListener> listeners) {
-        this.listeners = listeners != null ? listeners : List.of();
-    }
+  /**
+   * 构造 Channel 事件分发器。
+   *
+   * @param listeners 监听器列表（可为空列表）
+   */
+  public ChannelEventDispatcher(List<ChannelEventListener> listeners) {
+    this.listeners = listeners != null ? listeners : List.of();
+  }
 
-    @Override
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        Channel channel = ctx.channel();
-        for (ChannelEventListener listener : listeners) {
-            try {
-                listener.onChannelActive(channel);
-            } catch (Exception e) {
-                log.warn("[Netty-Event] 监听器 {} onChannelActive 异常: {}",
-                        listener.getClass().getSimpleName(), e.getMessage(), e);
-            }
-        }
-        super.channelActive(ctx);
+  @Override
+  public void channelActive(ChannelHandlerContext ctx) throws Exception {
+    Channel channel = ctx.channel();
+    for (ChannelEventListener listener : listeners) {
+      try {
+        listener.onChannelActive(channel);
+      } catch (Exception e) {
+        log.warn(
+            "[Netty-Event] 监听器 {} onChannelActive 异常: {}",
+            listener.getClass().getSimpleName(),
+            e.getMessage(),
+            e);
+      }
     }
+    super.channelActive(ctx);
+  }
 
-    @Override
-    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        Channel channel = ctx.channel();
-        for (ChannelEventListener listener : listeners) {
-            try {
-                listener.onChannelInactive(channel);
-            } catch (Exception e) {
-                log.warn("[Netty-Event] 监听器 {} onChannelInactive 异常: {}",
-                        listener.getClass().getSimpleName(), e.getMessage(), e);
-            }
-        }
-        super.channelInactive(ctx);
+  @Override
+  public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+    Channel channel = ctx.channel();
+    for (ChannelEventListener listener : listeners) {
+      try {
+        listener.onChannelInactive(channel);
+      } catch (Exception e) {
+        log.warn(
+            "[Netty-Event] 监听器 {} onChannelInactive 异常: {}",
+            listener.getClass().getSimpleName(),
+            e.getMessage(),
+            e);
+      }
     }
+    super.channelInactive(ctx);
+  }
 }

@@ -5,9 +5,10 @@ import com.njydsz.common.json.reader.JSONReader;
 /**
  * 自定义反序列化器接口
  *
- * <p>允许用户注册自定义反序列化逻辑。</p>
+ * <p>允许用户注册自定义反序列化逻辑。
  *
- * <p>使用示例：</p>
+ * <p>使用示例：
+ *
  * <pre>
  * public class CustomUserDeserializer implements JsonDeserializer&lt;User&gt; {
  *     public User deserialize(JSONDeserializer in) {
@@ -26,11 +27,11 @@ import com.njydsz.common.json.reader.JSONReader;
  */
 public interface JsonDeserializer<T> {
 
-    /**
-     * 反序列化对象
-     *
-     * @param in 输入反序列化器（用于读取 JSON）
-     * @return 反序列化后的对象
-     */
-    T deserialize(JSONReader in);
+  /**
+   * 反序列化对象
+   *
+   * @param in 输入反序列化器（用于读取 JSON）
+   * @return 反序列化后的对象
+   */
+  T deserialize(JSONReader in);
 }

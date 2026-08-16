@@ -1,9 +1,9 @@
 package com.njydsz.message.domain.dto.template;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
 import com.njydsz.common.domain.query.PageQuery;
 import com.njydsz.common.safe.annotation.Xss;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 /**
  * 模板分页查询 DTO
@@ -15,31 +15,24 @@ import com.njydsz.common.safe.annotation.Xss;
 @EqualsAndHashCode(callSuper = true)
 public class TemplateQueryDTO extends PageQuery {
 
-    /** 模板编码 */
-    @Xss
-    private String templateCode;
+  /** 模板编码 */
+  @Xss private String templateCode;
 
-    /** 通道 */
-    @Xss
-    private String channel;
+  /** 通道 */
+  @Xss private String channel;
 
-    /** 语言区域 */
-    @Xss
-    private String locale;
+  /** 语言区域 */
+  @Xss private String locale;
 
-    /** 状态: ENABLED/DISABLED */
-    @Xss
-    private String status;
+  /** 状态: ENABLED/DISABLED */
+  @Xss private String status;
 
-    /** 审核状态 */
-    @Xss
-    private String auditStatus;
+  /** 审核状态 */
+  @Xss private String auditStatus;
 
-    /** 模板分类 */
-    @Xss
-    private String category;
+  /** 模板分类 */
+  @Xss private String category;
 
-    /** 场景编码 */
-    @Xss
-    private String sceneCode;
+  /** 场景编码 */
+  @Xss private String sceneCode;
 }

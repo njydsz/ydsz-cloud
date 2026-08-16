@@ -16,79 +16,78 @@ import java.util.stream.Collectors;
  */
 public class InMemoryNodeRegistry implements NodeRegistry {
 
-    /** 心跳超时时间（毫秒，默认 30 秒） */
-    private static final long DEFAULT_HEARTBEAT_TIMEOUT_MS = 30_000L;
+  /** 心跳超时时间（毫秒，默认 30 秒） */
+  private static final long DEFAULT_HEARTBEAT_TIMEOUT_MS = 30_000L;
 
-    /** 节点表：nodeId → ClusterNode */
-    private final Map<String, ClusterNode> nodes = new ConcurrentHashMap<>();
+  /** 节点表：nodeId → ClusterNode */
+  private final Map<String, ClusterNode> nodes = new ConcurrentHashMap<>();
 
-    /** 当前节点 ID */
-    private final String selfNodeId;
+  /** 当前节点 ID */
+  private final String selfNodeId;
 
-    /** 心跳超时 */
-    private final long heartbeatTimeoutMs;
+  /** 心跳超时 */
+  private final long heartbeatTimeoutMs;
 
-    public InMemoryNodeRegistry(String selfNodeId) {
-        this(selfNodeId, DEFAULT_HEARTBEAT_TIMEOUT_MS);
+  public InMemoryNodeRegistry(String selfNodeId) {
+    this(selfNodeId, DEFAULT_HEARTBEAT_TIMEOUT_MS);
+  }
+
+  public InMemoryNodeRegistry(String selfNodeId, long heartbeatTimeoutMs) {
+    this.selfNodeId = selfNodeId;
+    this.heartbeatTimeoutMs = heartbeatTimeoutMs;
+  }
+
+  @Override
+  public void register(ClusterNode node) {
+    if (node == null || node.getNodeId() == null) {
+      return;
     }
+    node.setRegisteredAt(System.currentTimeMillis());
+    node.setLastHeartbeatAt(System.currentTimeMillis());
+    nodes.put(node.getNodeId(), node);
+  }
 
-    public InMemoryNodeRegistry(String selfNodeId, long heartbeatTimeoutMs) {
-        this.selfNodeId = selfNodeId;
-        this.heartbeatTimeoutMs = heartbeatTimeoutMs;
-    }
+  @Override
+  public void unregister(String nodeId) {
+    nodes.remove(nodeId);
+  }
 
-    @Override
-    public void register(ClusterNode node) {
-        if (node == null || node.getNodeId() == null) {
-            return;
-        }
-        node.setRegisteredAt(System.currentTimeMillis());
-        node.setLastHeartbeatAt(System.currentTimeMillis());
-        nodes.put(node.getNodeId(), node);
+  @Override
+  public void heartbeat(String nodeId) {
+    ClusterNode node = nodes.get(nodeId);
+    if (node != null) {
+      node.setLastHeartbeatAt(System.currentTimeMillis());
     }
+  }
 
-    @Override
-    public void unregister(String nodeId) {
-        nodes.remove(nodeId);
-    }
+  @Override
+  public List<ClusterNode> getAliveNodes() {
+    long now = System.currentTimeMillis();
+    return nodes.values().stream()
+        .filter(n -> n.isAlive(now, heartbeatTimeoutMs))
+        .sorted(
+            (a, b) -> {
+              if (a.getNodeId() == null) return -1;
+              return a.getNodeId().compareTo(b.getNodeId());
+            })
+        .collect(Collectors.toList());
+  }
 
-    @Override
-    public void heartbeat(String nodeId) {
-        ClusterNode node = nodes.get(nodeId);
-        if (node != null) {
-            node.setLastHeartbeatAt(System.currentTimeMillis());
-        }
-    }
+  @Override
+  public String getSelfNodeId() {
+    return selfNodeId;
+  }
 
-    @Override
-    public List<ClusterNode> getAliveNodes() {
-        long now = System.currentTimeMillis();
-        return nodes.values().stream()
-                .filter(n -> n.isAlive(now, heartbeatTimeoutMs))
-                .sorted((a, b) -> {
-                    if (a.getNodeId() == null) return -1;
-                    return a.getNodeId().compareTo(b.getNodeId());
-                })
-                .collect(Collectors.toList());
+  /** 清理过期节点（心跳超时） */
+  public int evictDeadNodes() {
+    long now = System.currentTimeMillis();
+    int evicted = 0;
+    for (Map.Entry<String, ClusterNode> e : new ArrayList<>(nodes.entrySet())) {
+      if (!e.getValue().isAlive(now, heartbeatTimeoutMs)) {
+        nodes.remove(e.getKey());
+        evicted++;
+      }
     }
-
-    @Override
-    public String getSelfNodeId() {
-        return selfNodeId;
-    }
-
-    /**
-     * 清理过期节点（心跳超时）
-     */
-    public int evictDeadNodes() {
-        long now = System.currentTimeMillis();
-        int evicted = 0;
-        for (Map.Entry<String, ClusterNode> e : new ArrayList<>(nodes.entrySet())) {
-            if (!e.getValue().isAlive(now, heartbeatTimeoutMs)) {
-                nodes.remove(e.getKey());
-                evicted++;
-            }
-        }
-        return evicted;
-    }
+    return evicted;
+  }
 }

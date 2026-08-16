@@ -8,9 +8,10 @@ import java.lang.annotation.Target;
 /**
  * 多态子类型列表注解
  *
- * <p>与 {@link JsonTypeInfo} 配合使用，定义基类的所有可能子类型。</p>
+ * <p>与 {@link JsonTypeInfo} 配合使用，定义基类的所有可能子类型。
  *
- * <p><b>使用示例：</b></p>
+ * <p><b>使用示例：</b>
+ *
  * <pre>
  * &#064;JsonTypeInfo(property = "type")
  * &#064;JsonSubTypes({
@@ -27,10 +28,10 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface JsonSubTypes {
 
-    /**
-     * 子类型列表
-     *
-     * @return 子类型注解数组，定义基类的所有可能子类型映射
-     */
-    JsonSubType[] value();
+  /**
+   * 子类型列表
+   *
+   * @return 子类型注解数组，定义基类的所有可能子类型映射
+   */
+  JsonSubType[] value();
 }

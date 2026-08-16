@@ -1,15 +1,15 @@
 package com.njydsz.common.cache.spring;
 
+import com.njydsz.common.cache.builder.CacheType;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
-import com.njydsz.common.cache.builder.CacheType;
 
 /**
  * YdszCache Spring Boot 配置属性
@@ -42,17 +42,14 @@ import com.njydsz.common.cache.builder.CacheType;
  *         expire-after-write: 0
  * </pre>
  *
- *
  * @author ydsz-team
  * @since 1.0.0
- *
  */
 @ConfigurationProperties(prefix = "ydsz.cache")
 @Validated
 public class YdszCacheProperties {
 
-  @NotNull
-  private CacheType type = CacheType.TINYLFU;
+  @NotNull private CacheType type = CacheType.TINYLFU;
 
   private List<String> cacheNames = new ArrayList<>();
 
@@ -62,8 +59,7 @@ public class YdszCacheProperties {
   @Min(0)
   private long expireAfterWrite = 30;
 
-  @NotNull
-  private TimeUnit expireTimeUnit = TimeUnit.MINUTES;
+  @NotNull private TimeUnit expireTimeUnit = TimeUnit.MINUTES;
 
   private boolean allowNullValues = true;
 

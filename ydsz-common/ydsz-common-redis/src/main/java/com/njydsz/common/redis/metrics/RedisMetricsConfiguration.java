@@ -1,10 +1,10 @@
 package com.njydsz.common.redis.metrics;
 
+import com.njydsz.common.redis.config.RedisProperties;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
-import com.njydsz.common.redis.config.RedisProperties;
 
 /**
  * Redis 指标采集配置。
@@ -16,23 +16,23 @@ import com.njydsz.common.redis.config.RedisProperties;
  * @author ydsz-team
  * @since 1.0.0
  */
-
 @AutoConfiguration
 @ConditionalOnClass(MeterRegistry.class)
 public class RedisMetricsConfiguration {
 
-    /**
-     * 创建 Redis 指标收集器 Bean
-     *
-     * @param registry MeterRegistry 实例（由 Spring Boot 自动配置提供）
-     * @return RedisMetricsCollector 实例
-     */
-    @Bean
-    public RedisMetricsCollector redisMetricsCollector(MeterRegistry registry,
-                                                        RedisProperties redisProperties) {
-        long threshold = redisProperties.getMetrics() != null
-                ? redisProperties.getMetrics().getSlowOperationThresholdMs()
-                : 0;
-        return RedisMetricsCollector.getOrCreate(registry, threshold);
-    }
+  /**
+   * 创建 Redis 指标收集器 Bean
+   *
+   * @param registry MeterRegistry 实例（由 Spring Boot 自动配置提供）
+   * @return RedisMetricsCollector 实例
+   */
+  @Bean
+  public RedisMetricsCollector redisMetricsCollector(
+      MeterRegistry registry, RedisProperties redisProperties) {
+    long threshold =
+        redisProperties.getMetrics() != null
+            ? redisProperties.getMetrics().getSlowOperationThresholdMs()
+            : 0;
+    return RedisMetricsCollector.getOrCreate(registry, threshold);
+  }
 }

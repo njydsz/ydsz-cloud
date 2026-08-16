@@ -11,10 +11,11 @@ import lombok.NoArgsConstructor;
 /**
  * LiteRule 声明式 DSL 顶层模型
  *
- * <p>一个 DSL 文件由 {@code rules}（规则定义列表）和 {@code chains}（规则链编排列表）组成。
- * 解析自 YAML，可零代码注册到 {@link com.njydsz.literule.server.core.DefaultRuleEngine}。
+ * <p>一个 DSL 文件由 {@code rules}（规则定义列表）和 {@code chains}（规则链编排列表）组成。 解析自 YAML，可零代码注册到 {@link
+ * com.njydsz.literule.server.core.DefaultRuleEngine}。
  *
  * <p><b>DSL 示例（YAML）</b>：
+ *
  * <pre>
  * rules:
  *   - code: EVM_RED_ALERT
@@ -61,14 +62,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class RuleDsl implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-    /** 规则定义列表 */
-    private List<RuleDslEntry> rules;
+  /** 规则定义列表 */
+  private List<RuleDslEntry> rules;
 
-    /** 规则链编排列表 */
-    private List<ChainDslEntry> chains;
+  /** 规则链编排列表 */
+  private List<ChainDslEntry> chains;
 
-    /** DSL 元信息（version / description / tenant） */
-    private Map<String, Object> meta;
+  /** DSL 元信息（version / description / tenant） */
+  private Map<String, Object> meta;
 }

@@ -8,18 +8,12 @@ package com.njydsz.common.jdbc.enums;
  */
 public enum FieldFillStrategyEnum {
 
-    /**
-     * 插入时填充字段
-     */
-    INSERT,
+  /** 插入时填充字段 */
+  INSERT,
 
-    /**
-     * 更新时填充字段
-     */
-    UPDATE,
+  /** 更新时填充字段 */
+  UPDATE,
 
-    /**
-     * 插入和更新时都填充字段
-     */
-    INSERT_UPDATE
+  /** 插入和更新时都填充字段 */
+  INSERT_UPDATE
 }

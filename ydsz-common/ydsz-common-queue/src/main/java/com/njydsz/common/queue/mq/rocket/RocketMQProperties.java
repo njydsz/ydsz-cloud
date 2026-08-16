@@ -1,8 +1,8 @@
 package com.njydsz.common.queue.mq.rocket;
 
+import com.njydsz.common.queue.config.QueueProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import com.njydsz.common.queue.config.QueueProperties;
 
 /**
  * RocketMQ 消息队列配置属性
@@ -10,6 +10,7 @@ import com.njydsz.common.queue.config.QueueProperties;
  * <p>封装 RocketMQ 消息队列的连接和行为配置参数。
  *
  * <p><b>配置示例：</b>
+ *
  * <pre>{@code
  * ydsz:
  *   queue:
@@ -28,79 +29,54 @@ import com.njydsz.common.queue.config.QueueProperties;
 @EqualsAndHashCode(callSuper = true)
 public class RocketMQProperties extends QueueProperties {
 
-    /**
-     * NameServer 地址
-     */
-    private String namesrvAddr = "localhost:9876";
+  /** NameServer 地址 */
+  private String namesrvAddr = "localhost:9876";
 
-    /**
-     * 消费者组ID
-     */
-    private String groupId = "ydsz-consumer-group";
+  /** 消费者组ID */
+  private String groupId = "ydsz-consumer-group";
 
-    /**
-     * 默认主题
-     */
-    private String topic = "ydsz-rocketmq-topic";
+  /** 默认主题 */
+  private String topic = "ydsz-rocketmq-topic";
 
-    /**
-     * 消息标签
-     */
-    private String tag = "*";
+  /** 消息标签 */
+  private String tag = "*";
 
-    /**
-     * 接入密钥（阿里云 MQ 使用）
-     */
-    private String accessKey;
+  /** 接入密钥（阿里云 MQ 使用） */
+  private String accessKey;
 
-    /**
-     * 密钥（阿里云 MQ 使用）
-     */
-    private String secretKey;
+  /** 密钥（阿里云 MQ 使用） */
+  private String secretKey;
 
-    /**
-     * 是否启用顺序消息
-     */
-    private boolean orderly = false;
+  /** 是否启用顺序消息 */
+  private boolean orderly = false;
 
-    /**
-     * 消费线程数
-     */
-    private int consumeThreadMin = 10;
-    private int consumeThreadMax = 20;
+  /** 消费线程数 */
+  private int consumeThreadMin = 10;
 
-    /**
-     * 批量消费大小
-     */
-    private int consumeMessageBatchMaxSize = 1;
+  private int consumeThreadMax = 20;
 
-    /**
-     * 最大重试次数
-     */
-    private int maxRetryCount = 3;
+  /** 批量消费大小 */
+  private int consumeMessageBatchMaxSize = 1;
 
-    /**
-     * 解析获取 namesrvAddr
-     */
-    public String resolvedNamesrvAddr() {
-        return isNotBlank(namesrvAddr) ? namesrvAddr : "localhost:9876";
-    }
+  /** 最大重试次数 */
+  private int maxRetryCount = 3;
 
-    /**
-     * 解析获取 groupId
-     */
-    public String resolvedGroupId() {
-        return isNotBlank(groupId) ? groupId : "ydsz-consumer-group";
-    }
+  /** 解析获取 namesrvAddr */
+  public String resolvedNamesrvAddr() {
+    return isNotBlank(namesrvAddr) ? namesrvAddr : "localhost:9876";
+  }
 
-    /**
-     * 解析获取 topic
-     */
-    public String resolvedTopic() {
-        return isNotBlank(topic) ? topic : "ydsz-rocketmq-topic";
-    }
+  /** 解析获取 groupId */
+  public String resolvedGroupId() {
+    return isNotBlank(groupId) ? groupId : "ydsz-consumer-group";
+  }
 
-    private boolean isNotBlank(String str) {
-        return str != null && !str.trim().isEmpty();
-    }
+  /** 解析获取 topic */
+  public String resolvedTopic() {
+    return isNotBlank(topic) ? topic : "ydsz-rocketmq-topic";
+  }
+
+  private boolean isNotBlank(String str) {
+    return str != null && !str.trim().isEmpty();
+  }
 }

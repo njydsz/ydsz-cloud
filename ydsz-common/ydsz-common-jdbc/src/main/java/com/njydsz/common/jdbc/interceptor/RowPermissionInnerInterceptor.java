@@ -1,10 +1,16 @@
 package com.njydsz.common.jdbc.interceptor;
 
+import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.njydsz.common.core.constant.DataScopeConstants;
+import com.njydsz.common.jdbc.config.DataPermissionConfiguration;
+import com.njydsz.common.jdbc.monitor.SqlAstCache;
+import com.njydsz.common.jdbc.permission.DataPermissionContext;
+import com.njydsz.common.jdbc.permission.DataPermissionContextResolver;
+import com.njydsz.common.util.string.StringUtils;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.LongValue;
@@ -24,36 +30,32 @@ import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SetOperationList;
 import net.sf.jsqlparser.statement.update.Update;
 import org.apache.ibatis.mapping.SqlCommandType;
-import com.njydsz.common.core.constant.DataScopeConstants;
-import com.njydsz.common.jdbc.config.DataPermissionConfiguration;
-import com.njydsz.common.jdbc.monitor.SqlAstCache;
-import com.njydsz.common.jdbc.permission.DataPermissionContext;
-import com.njydsz.common.jdbc.permission.DataPermissionContextResolver;
-import com.njydsz.common.util.string.StringUtils;
 
 /**
  * 行级数据权限拦截器
  *
- * <p>基于 MyBatis-Plus {@link InnerInterceptor} 接口实现，继承 {@link JsqlParserSupport}
- * 解析和改写 SQL，在 SELECT/UPDATE/DELETE 语句中自动追加行级过滤条件。</p>
+ * <p>基于 MyBatis-Plus {@link InnerInterceptor} 接口实现，继承 {@link JsqlParserSupport} 解析和改写 SQL，在
+ * SELECT/UPDATE/DELETE 语句中自动追加行级过滤条件。
  *
  * <p>支持以下权限维度：
+ *
  * <ul>
- *   <li>USER：用户级隔离（userColumn）</li>
- *   <li>GROUP：公司级隔离（companyColumn）</li>
- *   <li>COMPANY/DEPT：部门级隔离（deptColumn）</li>
- *   <li>PROJECT：项目级隔离（projectColumn）</li>
- *   <li>REGION：区域级隔离（regionColumn）</li>
+ *   <li>USER：用户级隔离（userColumn）
+ *   <li>GROUP：公司级隔离（companyColumn）
+ *   <li>COMPANY/DEPT：部门级隔离（deptColumn）
+ *   <li>PROJECT：项目级隔离（projectColumn）
+ *   <li>REGION：区域级隔离（regionColumn）
  * </ul>
  *
- * <p><b>注意：</b>租户隔离（TENANT 维度）已由独立的 {@code TenantIsolationInterceptor}
- * （common-tenant 模块）处理，本拦截器不再负责 tenant_id 条件注入。
+ * <p><b>注意：</b>租户隔离（TENANT 维度）已由独立的 {@code TenantIsolationInterceptor} （common-tenant
+ * 模块）处理，本拦截器不再负责 tenant_id 条件注入。
  *
  * <p>技术要点：
+ *
  * <ul>
- *   <li>JOIN 表行级条件追加到 JOIN ON 条件，避免 LEFT JOIN 被改写为 INNER JOIN</li>
- *   <li>当原条件为 OR 时，追加 AND 条件自动加括号保持语义正确性</li>
- *   <li>支持 SetOperationList（UNION/UNION ALL）复杂查询</li>
+ *   <li>JOIN 表行级条件追加到 JOIN ON 条件，避免 LEFT JOIN 被改写为 INNER JOIN
+ *   <li>当原条件为 OR 时，追加 AND 条件自动加括号保持语义正确性
+ *   <li>支持 SetOperationList（UNION/UNION ALL）复杂查询
  * </ul>
  *
  * @author ydsz-team
@@ -62,368 +64,371 @@ import com.njydsz.common.util.string.StringUtils;
 @Slf4j
 public class RowPermissionInnerInterceptor extends DataPermissionInnerInterceptor {
 
-    /** 安全值正则模式，仅允许字母、数字及常见安全字符 */
-    private static final Pattern SAFE_VALUE_PATTERN = Pattern.compile("^[a-zA-Z0-9_\\-.:,@]+$");
+  /** 安全值正则模式，仅允许字母、数字及常见安全字符 */
+  private static final Pattern SAFE_VALUE_PATTERN = Pattern.compile("^[a-zA-Z0-9_\\-.:,@]+$");
 
-    /** 数值主键列后缀约定：以 _id 结尾的列视为数值类型，使用数值字面量避免隐式转换导致索引失效 */
-    private static final String NUMERIC_ID_COLUMN_SUFFIX = "_id";
+  /** 数值主键列后缀约定：以 _id 结尾的列视为数值类型，使用数值字面量避免隐式转换导致索引失效 */
+  private static final String NUMERIC_ID_COLUMN_SUFFIX = "_id";
 
-    /** 永假表达式 {@code 1=0}，用于 fail-closed 时拒绝所有数据 */
-    private static final Expression DENY_ALL_EXPRESSION = new EqualsTo(new LongValue(1L), new LongValue(0L));
+  /** 永假表达式 {@code 1=0}，用于 fail-closed 时拒绝所有数据 */
+  private static final Expression DENY_ALL_EXPRESSION =
+      new EqualsTo(new LongValue(1L), new LongValue(0L));
 
-/**
- * 构造行级数据权限拦截器
- *
- * @param sqlAstCache      SQL 解析缓存
- * @param config           数据权限配置
- * @param contextResolver  数据权限上下文解析器
- */
-public RowPermissionInnerInterceptor(SqlAstCache sqlAstCache,
-                                     DataPermissionConfiguration config,
-                                     DataPermissionContextResolver contextResolver) {
+  /**
+   * 构造行级数据权限拦截器
+   *
+   * @param sqlAstCache SQL 解析缓存
+   * @param config 数据权限配置
+   * @param contextResolver 数据权限上下文解析器
+   */
+  public RowPermissionInnerInterceptor(
+      SqlAstCache sqlAstCache,
+      DataPermissionConfiguration config,
+      DataPermissionContextResolver contextResolver) {
     super(sqlAstCache, config, contextResolver);
-}
+  }
 
-    /**
-     * 行级权限需要检查系统级绕过（后台任务无用户上下文时跳过）。
-     *
-     * @return true
-     */
-    @Override
-    protected boolean shouldCheckBypass() {
-        return true;
+  /**
+   * 行级权限需要检查系统级绕过（后台任务无用户上下文时跳过）。
+   *
+   * @return true
+   */
+  @Override
+  protected boolean shouldCheckBypass() {
+    return true;
+  }
+
+  /**
+   * 行级权限支持 SELECT/UPDATE/DELETE。
+   *
+   * @param sqlCommandType SQL 命令类型
+   * @return 支持 SELECT/UPDATE/DELETE 时返回 true
+   */
+  @Override
+  protected boolean isSupportedSqlType(SqlCommandType sqlCommandType) {
+    return sqlCommandType == SqlCommandType.SELECT
+        || sqlCommandType == SqlCommandType.UPDATE
+        || sqlCommandType == SqlCommandType.DELETE;
+  }
+
+  /**
+   * 处理 SELECT 语句，追加行级权限过滤条件
+   *
+   * @param select SELECT 语句对象
+   * @param index 语句索引
+   * @param sql 原始 SQL 字符串
+   * @param obj 数据权限上下文
+   */
+  @Override
+  protected void processSelect(Select select, int index, String sql, Object obj) {
+    DataPermissionContext context = (DataPermissionContext) obj;
+    processSelectBody(select, context);
+  }
+
+  /**
+   * 处理 DELETE 语句，追加行级权限过滤条件
+   *
+   * @param delete DELETE 语句对象
+   * @param index 语句索引
+   * @param sql 原始 SQL 字符串
+   * @param obj 数据权限上下文
+   */
+  @Override
+  protected void processDelete(Delete delete, int index, String sql, Object obj) {
+    DataPermissionContext context = (DataPermissionContext) obj;
+    Table table = delete.getTable();
+    if (!shouldApply(table)) {
+      return;
+    }
+    delete.setWhere(mergeWhere(delete.getWhere(), buildRowScopeOrFail(table, context)));
+  }
+
+  /**
+   * 处理 UPDATE 语句，追加行级权限过滤条件
+   *
+   * @param update UPDATE 语句对象
+   * @param index 语句索引
+   * @param sql 原始 SQL 字符串
+   * @param obj 数据权限上下文
+   */
+  @Override
+  protected void processUpdate(Update update, int index, String sql, Object obj) {
+    DataPermissionContext context = (DataPermissionContext) obj;
+    Table table = update.getTable();
+    if (!shouldApply(table)) {
+      return;
+    }
+    update.setWhere(mergeWhere(update.getWhere(), buildRowScopeOrFail(table, context)));
+  }
+
+  /**
+   * 递归处理 SELECT 语句体，对 PlainSelect 追加行级权限，对 SetOperationList 递归处理每个子查询
+   *
+   * @param select SELECT 语句对象
+   * @param context 数据权限上下文
+   */
+  private void processSelectBody(Select select, DataPermissionContext context) {
+    if (select == null) {
+      return;
+    }
+    if (select instanceof PlainSelect) {
+      PlainSelect plain = (PlainSelect) select;
+      applyRowScopeToFromItem(plain, context);
+      applyRowScopeToJoins(plain, context);
+      return;
+    }
+    if (select instanceof SetOperationList) {
+      SetOperationList setOperationList = (SetOperationList) select;
+      if (CollectionUtils.isNotEmpty(setOperationList.getSelects())) {
+        setOperationList.getSelects().forEach(it -> processSelectBody(it, context));
+      }
+    }
+  }
+
+  /**
+   * 对 PlainSelect 的主表（FROM）追加行级权限过滤条件，若 FROM 为子查询则递归处理
+   *
+   * @param plain PlainSelect 语句
+   * @param context 数据权限上下文
+   */
+  private void applyRowScopeToFromItem(PlainSelect plain, DataPermissionContext context) {
+    FromItem fromItem = plain.getFromItem();
+    if (fromItem instanceof Table) {
+      Table table = (Table) fromItem;
+      if (shouldApply(table)) {
+        plain.setWhere(mergeCondition(plain.getWhere(), buildRowScopeOrFail(table, context)));
+      }
+      return;
+    }
+    if (fromItem instanceof ParenthesedSelect) {
+      ParenthesedSelect parenthesedSelect = (ParenthesedSelect) fromItem;
+      processSelectBody(parenthesedSelect.getSelect(), context);
+    }
+  }
+
+  /**
+   * 对 PlainSelect 的 JOIN 表追加行级权限过滤条件到 ON 子句，避免 LEFT JOIN 被改写为 INNER JOIN
+   *
+   * @param plain PlainSelect 语句
+   * @param context 数据权限上下文
+   */
+  private void applyRowScopeToJoins(PlainSelect plain, DataPermissionContext context) {
+    if (CollectionUtils.isEmpty(plain.getJoins())) {
+      return;
+    }
+    for (Join join : plain.getJoins()) {
+      if (join.getRightItem() instanceof Table) {
+        Table table = (Table) join.getRightItem();
+        if (shouldApply(table)) {
+          Expression existingOn = JSqlParserHelper.getJoinOnExpression(join);
+          Expression newOn = mergeCondition(existingOn, buildRowScopeOrFail(table, context));
+          JSqlParserHelper.setJoinOnExpression(join, newOn);
+        }
+        continue;
+      }
+      if (join.getRightItem() instanceof ParenthesedSelect) {
+        ParenthesedSelect parenthesedSelect = (ParenthesedSelect) join.getRightItem();
+        processSelectBody(parenthesedSelect.getSelect(), context);
+      }
+    }
+  }
+
+  /**
+   * 根据数据权限上下文构建行级过滤表达式，支持按数据范围维度生成对应条件。
+   *
+   * <p><b>fail-closed 原则：</b>当上下文为空、值不安全或无法构建任何权限条件时， 返回永假表达式 {@code 1=0} 拒绝所有数据，避免数据过曝。
+   *
+   * @param table 目标表
+   * @param context 数据权限上下文
+   * @return 行级过滤表达式；无法构建条件时返回 {@code 1=0} 永假表达式
+   */
+  private Expression buildRowScopeOrFail(Table table, DataPermissionContext context) {
+    Expression scope = buildRowScope(table, context);
+    if (scope == null) {
+      // fail-closed：无法确定权限上下文时拒绝所有数据，避免数据泄露
+      log.warn(
+          "无法为表 {} 构建行级权限条件，已追加 1=0 拒绝数据访问。context={}",
+          table != null ? table.getName() : null,
+          context);
+      return DENY_ALL_EXPRESSION;
+    }
+    return scope;
+  }
+
+  /**
+   * 根据数据权限上下文构建行级过滤表达式，支持按数据范围维度生成对应条件
+   *
+   * @param table 目标表
+   * @param context 数据权限上下文
+   * @return 行级过滤表达式，无权限条件时返回 null
+   */
+  private Expression buildRowScope(Table table, DataPermissionContext context) {
+    if (context == null || context.isEmptyRowScope()) {
+      return null;
+    }
+    Expression out = null;
+    String scope = context.getDataScope();
+    if (scope == null) {
+      out = and(out, equals(table, config.getUserColumn(), context.getUserId()));
+      out = and(out, in(table, config.getCompanyColumn(), context.getCompanyIds()));
+      out = and(out, in(table, config.getDeptColumn(), context.getDeptIds()));
+      out = and(out, in(table, config.getProjectColumn(), context.getProjectIds()));
+      out = and(out, in(table, config.getRegionColumn(), context.getRegionIds()));
+      return out;
     }
 
-    /**
-     * 行级权限支持 SELECT/UPDATE/DELETE。
-     *
-     * @param sqlCommandType SQL 命令类型
-     * @return 支持 SELECT/UPDATE/DELETE 时返回 true
-     */
-    @Override
-    protected boolean isSupportedSqlType(SqlCommandType sqlCommandType) {
-        return sqlCommandType == SqlCommandType.SELECT
-                || sqlCommandType == SqlCommandType.UPDATE
-                || sqlCommandType == SqlCommandType.DELETE;
+    if (DataScopeConstants.USER.equals(scope)) {
+      return equals(table, config.getUserColumn(), context.getUserId());
     }
-
-    /**
-     * 处理 SELECT 语句，追加行级权限过滤条件
-     *
-     * @param select SELECT 语句对象
-     * @param index  语句索引
-     * @param sql    原始 SQL 字符串
-     * @param obj    数据权限上下文
-     */
-    @Override
-    protected void processSelect(Select select, int index, String sql, Object obj) {
-        DataPermissionContext context = (DataPermissionContext) obj;
-        processSelectBody(select, context);
+    if (DataScopeConstants.PROJECT.equals(scope)) {
+      return in(table, config.getProjectColumn(), context.getProjectIds());
     }
-
-    /**
-     * 处理 DELETE 语句，追加行级权限过滤条件
-     *
-     * @param delete DELETE 语句对象
-     * @param index  语句索引
-     * @param sql    原始 SQL 字符串
-     * @param obj    数据权限上下文
-     */
-    @Override
-    protected void processDelete(Delete delete, int index, String sql, Object obj) {
-        DataPermissionContext context = (DataPermissionContext) obj;
-        Table table = delete.getTable();
-        if (!shouldApply(table)) {
-            return;
-        }
-        delete.setWhere(mergeWhere(delete.getWhere(), buildRowScopeOrFail(table, context)));
+    if (DataScopeConstants.REGION.equals(scope)) {
+      return in(table, config.getRegionColumn(), context.getRegionIds());
     }
-
-    /**
-     * 处理 UPDATE 语句，追加行级权限过滤条件
-     *
-     * @param update UPDATE 语句对象
-     * @param index  语句索引
-     * @param sql    原始 SQL 字符串
-     * @param obj    数据权限上下文
-     */
-    @Override
-    protected void processUpdate(Update update, int index, String sql, Object obj) {
-        DataPermissionContext context = (DataPermissionContext) obj;
-        Table table = update.getTable();
-        if (!shouldApply(table)) {
-            return;
-        }
-        update.setWhere(mergeWhere(update.getWhere(), buildRowScopeOrFail(table, context)));
+    if (DataScopeConstants.GROUP.equals(scope)) {
+      return in(table, config.getCompanyColumn(), context.getCompanyIds());
     }
-
-    /**
-     * 递归处理 SELECT 语句体，对 PlainSelect 追加行级权限，对 SetOperationList 递归处理每个子查询
-     *
-     * @param select  SELECT 语句对象
-     * @param context 数据权限上下文
-     */
-    private void processSelectBody(Select select, DataPermissionContext context) {
-        if (select == null) {
-            return;
-        }
-        if (select instanceof PlainSelect) {
-            PlainSelect plain = (PlainSelect) select;
-            applyRowScopeToFromItem(plain, context);
-            applyRowScopeToJoins(plain, context);
-            return;
-        }
-        if (select instanceof SetOperationList) {
-            SetOperationList setOperationList = (SetOperationList) select;
-            if (CollectionUtils.isNotEmpty(setOperationList.getSelects())) {
-                setOperationList.getSelects().forEach(it -> processSelectBody(it, context));
-            }
-        }
+    if (DataScopeConstants.COMPANY.equals(scope) || DataScopeConstants.DEPT.equals(scope)) {
+      return in(table, config.getDeptColumn(), context.getDeptIds());
     }
+    // default: apply all conditions
+    out = and(out, equals(table, config.getUserColumn(), context.getUserId()));
+    out = and(out, in(table, config.getCompanyColumn(), context.getCompanyIds()));
+    out = and(out, in(table, config.getDeptColumn(), context.getDeptIds()));
+    out = and(out, in(table, config.getProjectColumn(), context.getProjectIds()));
+    out = and(out, in(table, config.getRegionColumn(), context.getRegionIds()));
+    return out;
+  }
 
-    /**
-     * 对 PlainSelect 的主表（FROM）追加行级权限过滤条件，若 FROM 为子查询则递归处理
-     *
-     * @param plain   PlainSelect 语句
-     * @param context 数据权限上下文
-     */
-    private void applyRowScopeToFromItem(PlainSelect plain, DataPermissionContext context) {
-        FromItem fromItem = plain.getFromItem();
-        if (fromItem instanceof Table) {
-            Table table = (Table) fromItem;
-            if (shouldApply(table)) {
-                plain.setWhere(mergeCondition(plain.getWhere(), buildRowScopeOrFail(table, context)));
-            }
-            return;
-        }
-        if (fromItem instanceof ParenthesedSelect) {
-            ParenthesedSelect parenthesedSelect = (ParenthesedSelect) fromItem;
-            processSelectBody(parenthesedSelect.getSelect(), context);
-        }
+  /**
+   * 合并 WHERE 条件，将追加条件与原 WHERE 条件通过 AND 连接
+   *
+   * @param oldWhere 原 WHERE 条件
+   * @param append 待追加的条件
+   * @return 合并后的 WHERE 条件，追加条件为 null 时返回原条件
+   */
+  private Expression mergeWhere(Expression oldWhere, Expression append) {
+    if (append == null) {
+      return oldWhere;
     }
-
-    /**
-     * 对 PlainSelect 的 JOIN 表追加行级权限过滤条件到 ON 子句，避免 LEFT JOIN 被改写为 INNER JOIN
-     *
-     * @param plain   PlainSelect 语句
-     * @param context 数据权限上下文
-     */
-    private void applyRowScopeToJoins(PlainSelect plain, DataPermissionContext context) {
-        if (CollectionUtils.isEmpty(plain.getJoins())) {
-            return;
-        }
-        for (Join join : plain.getJoins()) {
-            if (join.getRightItem() instanceof Table) {
-                Table table = (Table) join.getRightItem();
-                if (shouldApply(table)) {
-                    Expression existingOn = JSqlParserHelper.getJoinOnExpression(join);
-                    Expression newOn = mergeCondition(existingOn, buildRowScopeOrFail(table, context));
-                    JSqlParserHelper.setJoinOnExpression(join, newOn);
-                }
-                continue;
-            }
-            if (join.getRightItem() instanceof ParenthesedSelect) {
-                ParenthesedSelect parenthesedSelect = (ParenthesedSelect) join.getRightItem();
-                processSelectBody(parenthesedSelect.getSelect(), context);
-            }
-        }
+    if (oldWhere == null) {
+      return append;
     }
+    return mergeCondition(oldWhere, append);
+  }
 
-    /**
-     * 根据数据权限上下文构建行级过滤表达式，支持按数据范围维度生成对应条件。
-     *
-     * <p><b>fail-closed 原则：</b>当上下文为空、值不安全或无法构建任何权限条件时，
-     * 返回永假表达式 {@code 1=0} 拒绝所有数据，避免数据过曝。
-     *
-     * @param table   目标表
-     * @param context 数据权限上下文
-     * @return 行级过滤表达式；无法构建条件时返回 {@code 1=0} 永假表达式
-     */
-    private Expression buildRowScopeOrFail(Table table, DataPermissionContext context) {
-        Expression scope = buildRowScope(table, context);
-        if (scope == null) {
-            // fail-closed：无法确定权限上下文时拒绝所有数据，避免数据泄露
-            log.warn("无法为表 {} 构建行级权限条件，已追加 1=0 拒绝数据访问。context={}",
-                table != null ? table.getName() : null, context);
-            return DENY_ALL_EXPRESSION;
-        }
-        return scope;
+  /**
+   * 合并两个表达式，通过 AND 连接
+   *
+   * @param oldExpression 原表达式
+   * @param append 待追加的表达式
+   * @return 合并后的表达式，追加表达式为 null 时返回原表达式
+   */
+  private Expression mergeCondition(Expression oldExpression, Expression append) {
+    if (append == null) {
+      return oldExpression;
     }
-
-    /**
-     * 根据数据权限上下文构建行级过滤表达式，支持按数据范围维度生成对应条件
-     *
-     * @param table   目标表
-     * @param context 数据权限上下文
-     * @return 行级过滤表达式，无权限条件时返回 null
-     */
-    private Expression buildRowScope(Table table, DataPermissionContext context) {
-        if (context == null || context.isEmptyRowScope()) {
-            return null;
-        }
-        Expression out = null;
-        String scope = context.getDataScope();
-        if (scope == null) {
-            out = and(out, equals(table, config.getUserColumn(), context.getUserId()));
-            out = and(out, in(table, config.getCompanyColumn(), context.getCompanyIds()));
-            out = and(out, in(table, config.getDeptColumn(), context.getDeptIds()));
-            out = and(out, in(table, config.getProjectColumn(), context.getProjectIds()));
-            out = and(out, in(table, config.getRegionColumn(), context.getRegionIds()));
-            return out;
-        }
-
-        if (DataScopeConstants.USER.equals(scope)) {
-            return equals(table, config.getUserColumn(), context.getUserId());
-        }
-        if (DataScopeConstants.PROJECT.equals(scope)) {
-            return in(table, config.getProjectColumn(), context.getProjectIds());
-        }
-        if (DataScopeConstants.REGION.equals(scope)) {
-            return in(table, config.getRegionColumn(), context.getRegionIds());
-        }
-        if (DataScopeConstants.GROUP.equals(scope)) {
-            return in(table, config.getCompanyColumn(), context.getCompanyIds());
-        }
-        if (DataScopeConstants.COMPANY.equals(scope) || DataScopeConstants.DEPT.equals(scope)) {
-            return in(table, config.getDeptColumn(), context.getDeptIds());
-        }
-        // default: apply all conditions
-        out = and(out, equals(table, config.getUserColumn(), context.getUserId()));
-        out = and(out, in(table, config.getCompanyColumn(), context.getCompanyIds()));
-        out = and(out, in(table, config.getDeptColumn(), context.getDeptIds()));
-        out = and(out, in(table, config.getProjectColumn(), context.getProjectIds()));
-        out = and(out, in(table, config.getRegionColumn(), context.getRegionIds()));
-        return out;
+    if (oldExpression == null) {
+      return append;
     }
+    return new AndExpression(oldExpression, append);
+  }
 
-    /**
-     * 合并 WHERE 条件，将追加条件与原 WHERE 条件通过 AND 连接
-     *
-     * @param oldWhere 原 WHERE 条件
-     * @param append   待追加的条件
-     * @return 合并后的 WHERE 条件，追加条件为 null 时返回原条件
-     */
-    private Expression mergeWhere(Expression oldWhere, Expression append) {
-        if (append == null) {
-            return oldWhere;
-        }
-        if (oldWhere == null) {
-            return append;
-        }
-        return mergeCondition(oldWhere, append);
+  /**
+   * 将两个表达式通过 AND 连接，任一为 null 时返回非 null 的表达式
+   *
+   * @param left 左表达式
+   * @param right 右表达式
+   * @return AND 连接后的表达式，两侧均为 null 时返回 null
+   */
+  private Expression and(Expression left, Expression right) {
+    if (right == null) {
+      return left;
     }
-
-    /**
-     * 合并两个表达式，通过 AND 连接
-     *
-     * @param oldExpression 原表达式
-     * @param append        待追加的表达式
-     * @return 合并后的表达式，追加表达式为 null 时返回原表达式
-     */
-    private Expression mergeCondition(Expression oldExpression, Expression append) {
-        if (append == null) {
-            return oldExpression;
-        }
-        if (oldExpression == null) {
-            return append;
-        }
-        return new AndExpression(oldExpression, append);
+    if (left == null) {
+      return right;
     }
+    return new AndExpression(left, right);
+  }
 
-    /**
-     * 将两个表达式通过 AND 连接，任一为 null 时返回非 null 的表达式
-     *
-     * @param left  左表达式
-     * @param right 右表达式
-     * @return AND 连接后的表达式，两侧均为 null 时返回 null
-     */
-    private Expression and(Expression left, Expression right) {
-        if (right == null) {
-            return left;
-        }
-        if (left == null) {
-            return right;
-        }
-        return new AndExpression(left, right);
+  /**
+   * 构建等值条件表达式（table.columnName = 'value'），值不安全时返回 null
+   *
+   * @param table 目标表
+   * @param columnName 列名
+   * @param value 比较值
+   * @return 等值条件表达式，列名或值为空、值不安全时返回 null
+   */
+  private Expression equals(Table table, String columnName, String value) {
+    if (StringUtils.isBlank(columnName) || StringUtils.isBlank(value)) {
+      return null;
     }
-
-    /**
-     * 构建等值条件表达式（table.columnName = 'value'），值不安全时返回 null
-     *
-     * @param table      目标表
-     * @param columnName 列名
-     * @param value      比较值
-     * @return 等值条件表达式，列名或值为空、值不安全时返回 null
-     */
-    private Expression equals(Table table, String columnName, String value) {
-        if (StringUtils.isBlank(columnName) || StringUtils.isBlank(value)) {
-            return null;
-        }
-        if (!isSafeValue(value)) {
-            return null;
-        }
-        EqualsTo eq = new EqualsTo();
-        eq.setLeftExpression(new Column(table, columnName));
-        eq.setRightExpression(buildLiteral(columnName, value));
-        return eq;
+    if (!isSafeValue(value)) {
+      return null;
     }
+    EqualsTo eq = new EqualsTo();
+    eq.setLeftExpression(new Column(table, columnName));
+    eq.setRightExpression(buildLiteral(columnName, value));
+    return eq;
+  }
 
-    /**
-     * 校验值是否为安全值，仅允许字母、数字及常见安全字符
-     *
-     * @param value 待校验的值
-     * @return 安全时返回 true，否则返回 false
-     */
-    private boolean isSafeValue(String value) {
-        return SAFE_VALUE_PATTERN.matcher(value).matches();
+  /**
+   * 校验值是否为安全值，仅允许字母、数字及常见安全字符
+   *
+   * @param value 待校验的值
+   * @return 安全时返回 true，否则返回 false
+   */
+  private boolean isSafeValue(String value) {
+    return SAFE_VALUE_PATTERN.matcher(value).matches();
+  }
+
+  /**
+   * 构建 IN 条件表达式（table.columnName IN ('v1','v2',...)），过滤不安全的值
+   *
+   * @param table 目标表
+   * @param columnName 列名
+   * @param values IN 条件值集合
+   * @return IN 条件表达式，列名为空、值集合为空或无安全值时返回 null
+   */
+  private Expression in(Table table, String columnName, Set<String> values) {
+    if (StringUtils.isBlank(columnName) || CollectionUtils.isEmpty(values)) {
+      return null;
     }
-
-    /**
-     * 构建 IN 条件表达式（table.columnName IN ('v1','v2',...)），过滤不安全的值
-     *
-     * @param table      目标表
-     * @param columnName 列名
-     * @param values     IN 条件值集合
-     * @return IN 条件表达式，列名为空、值集合为空或无安全值时返回 null
-     */
-    private Expression in(Table table, String columnName, Set<String> values) {
-        if (StringUtils.isBlank(columnName) || CollectionUtils.isEmpty(values)) {
-            return null;
-        }
-        List<Expression> safeValues = values.stream()
-                .filter(this::isSafeValue)
-                .map(value -> buildLiteral(columnName, value))
-                .collect(Collectors.toList());
-        if (safeValues.isEmpty()) {
-            return null;
-        }
-        InExpression in = new InExpression();
-        in.setLeftExpression(new Column(table, columnName));
-        in.setRightExpression(new ExpressionList<>(safeValues));
-        return in;
+    List<Expression> safeValues =
+        values.stream()
+            .filter(this::isSafeValue)
+            .map(value -> buildLiteral(columnName, value))
+            .collect(Collectors.toList());
+    if (safeValues.isEmpty()) {
+      return null;
     }
+    InExpression in = new InExpression();
+    in.setLeftExpression(new Column(table, columnName));
+    in.setRightExpression(new ExpressionList<>(safeValues));
+    return in;
+  }
 
-    /**
-     * 根据列类型约定构建值字面量。
-     *
-     * <p>以 {@code _id} 结尾的列视为数值主键列，使用 {@link LongValue} 数值字面量，
-     * 避免字符串字面量在数值列上产生隐式类型转换导致索引失效；其余列使用 {@link StringValue}。
-     *
-     * @param columnName 列名
-     * @param value      原始字符串值
-     * @return 值字面量表达式
-     */
-    private Expression buildLiteral(String columnName, String value) {
-        String normalized = columnName.toLowerCase();
-        if (normalized.endsWith(NUMERIC_ID_COLUMN_SUFFIX)) {
-            try {
-                return new LongValue(Long.parseLong(value));
-            } catch (NumberFormatException e) {
-                // 值不是合法数字（如 UUID 主键），回退为字符串字面量
-                return new StringValue(value);
-            }
-        }
+  /**
+   * 根据列类型约定构建值字面量。
+   *
+   * <p>以 {@code _id} 结尾的列视为数值主键列，使用 {@link LongValue} 数值字面量， 避免字符串字面量在数值列上产生隐式类型转换导致索引失效；其余列使用
+   * {@link StringValue}。
+   *
+   * @param columnName 列名
+   * @param value 原始字符串值
+   * @return 值字面量表达式
+   */
+  private Expression buildLiteral(String columnName, String value) {
+    String normalized = columnName.toLowerCase();
+    if (normalized.endsWith(NUMERIC_ID_COLUMN_SUFFIX)) {
+      try {
+        return new LongValue(Long.parseLong(value));
+      } catch (NumberFormatException e) {
+        // 值不是合法数字（如 UUID 主键），回退为字符串字面量
         return new StringValue(value);
+      }
     }
-
+    return new StringValue(value);
+  }
 }

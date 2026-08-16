@@ -14,26 +14,25 @@ import lombok.Data;
 @Data
 public class FlowTemplateVO implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
-    private String id;
-    private String templateCode;
-    private String templateName;
-    private String category;
-    private String description;
-    private String icon;
-    private String bpmnXml;
-    private String formPath;
-    private Integer useCount;
-    private Integer sortOrder;
-    private String parentTemplateId;
-    private Integer version;
-    private String versionLabel;
-    private String inheritType;
-    private Integer isLatest;
-    private String createdBy;
-    private LocalDateTime createdAt;
-    private String updatedBy;
-    private LocalDateTime updatedAt;
+  private String id;
+  private String templateCode;
+  private String templateName;
+  private String category;
+  private String description;
+  private String icon;
+  private String bpmnXml;
+  private String formPath;
+  private Integer useCount;
+  private Integer sortOrder;
+  private String parentTemplateId;
+  private Integer version;
+  private String versionLabel;
+  private String inheritType;
+  private Integer isLatest;
+  private String createdBy;
+  private LocalDateTime createdAt;
+  private String updatedBy;
+  private LocalDateTime updatedAt;
 }

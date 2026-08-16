@@ -16,27 +16,37 @@ import java.util.Objects;
  */
 public final class ToolCall implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-    /** 工具调用 ID */
-    private final String id;
-    /** 工具名称 */
-    private final String name;
-    /** 工具调用参数（key=参数名, value=参数值） */
-    private final Map<String, Object> arguments;
+  /** 工具调用 ID */
+  private final String id;
 
-    public ToolCall(String id, String name, Map<String, Object> arguments) {
-        this.id = Objects.requireNonNull(id, "id 不能为 null");
-        this.name = Objects.requireNonNull(name, "name 不能为 null");
-        this.arguments = arguments != null ? Map.copyOf(arguments) : Map.of();
-    }
+  /** 工具名称 */
+  private final String name;
 
-    public String getId() { return id; }
-    public String getName() { return name; }
-    public Map<String, Object> getArguments() { return arguments; }
+  /** 工具调用参数（key=参数名, value=参数值） */
+  private final Map<String, Object> arguments;
 
-    @Override
-    public String toString() {
-        return "ToolCall{name='" + name + "', args=" + arguments + "}";
-    }
+  public ToolCall(String id, String name, Map<String, Object> arguments) {
+    this.id = Objects.requireNonNull(id, "id 不能为 null");
+    this.name = Objects.requireNonNull(name, "name 不能为 null");
+    this.arguments = arguments != null ? Map.copyOf(arguments) : Map.of();
+  }
+
+  public String getId() {
+    return id;
+  }
+
+  public String getName() {
+    return name;
+  }
+
+  public Map<String, Object> getArguments() {
+    return arguments;
+  }
+
+  @Override
+  public String toString() {
+    return "ToolCall{name='" + name + "', args=" + arguments + "}";
+  }
 }

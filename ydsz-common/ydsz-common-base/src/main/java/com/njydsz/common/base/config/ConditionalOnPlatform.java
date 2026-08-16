@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Conditional;
  * <p>仅在当前应用运行模式匹配指定平台时生效，用于实现 Web/App 模块隔离。
  *
  * <p>使用示例：
+ *
  * <pre>{@code
  * @Configuration
  * @ConditionalOnPlatform(PlatformMode.WEB)
@@ -28,14 +29,14 @@ import org.springframework.context.annotation.Conditional;
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.TYPE, ElementType.METHOD })
+@Target({ElementType.TYPE, ElementType.METHOD})
 @Conditional(PlatformCondition.class)
 public @interface ConditionalOnPlatform {
 
-    /**
-     * 要求的平台模式。
-     *
-     * @return 平台模式
-     */
-    PlatformMode value();
+  /**
+   * 要求的平台模式。
+   *
+   * @return 平台模式
+   */
+  PlatformMode value();
 }

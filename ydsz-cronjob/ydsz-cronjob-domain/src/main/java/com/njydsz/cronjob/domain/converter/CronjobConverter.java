@@ -1,14 +1,8 @@
 package com.njydsz.cronjob.domain.converter;
 
-import java.util.List;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
-import com.njydsz.cronjob.domain.dto.post.AlertRulePostDTO;
 import com.njydsz.cronjob.domain.dto.post.JobDagPostDTO;
 import com.njydsz.cronjob.domain.dto.post.JobPostDTO;
 import com.njydsz.cronjob.domain.dto.post.JobWebhookPostDTO;
-import com.njydsz.cronjob.domain.dto.put.AlertRulePutDTO;
 import com.njydsz.cronjob.domain.dto.put.JobDagPutDTO;
 import com.njydsz.cronjob.domain.dto.put.JobPutDTO;
 import com.njydsz.cronjob.domain.dto.put.JobWebhookPutDTO;
@@ -44,19 +38,23 @@ import com.njydsz.cronjob.domain.vo.JobNodeVO;
 import com.njydsz.cronjob.domain.vo.JobTaskVO;
 import com.njydsz.cronjob.domain.vo.JobVO;
 import com.njydsz.cronjob.domain.vo.JobWebhookVO;
+import java.util.List;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.factory.Mappers;
 
 /**
  * cronjob 模块统一 MapStruct 转换器。
  *
- * <p>承担定时任务调度模块所有 Entity ↔ VO、DTO → Entity 的类型转换。
- * 覆盖任务（Job）、DAG 工作流、任务历史、告警规则、日志、Webhook、
- * Glue 代码、任务产物、DAG 实例、日统计等核心实体的转换。
+ * <p>承担定时任务调度模块所有 Entity ↔ VO、DTO → Entity 的类型转换。 覆盖任务（Job）、DAG 工作流、任务历史、告警规则、日志、Webhook、 Glue
+ * 代码、任务产物、DAG 实例、日统计等核心实体的转换。
  *
  * <p><b>设计要点：</b>
+ *
  * <ul>
- *   <li>使用 MapStruct 注解处理器，编译期生成实现类，性能优于反射</li>
- *   <li>通过 {@link #INSTANT} 单例访问，零依赖注入</li>
- *   <li>同名字段自动映射；系统字段通过 @Mapping(ignore = true) 忽略</li>
+ *   <li>使用 MapStruct 注解处理器，编译期生成实现类，性能优于反射
+ *   <li>通过 {@link #INSTANT} 单例访问，零依赖注入
+ *   <li>同名字段自动映射；系统字段通过 @Mapping(ignore = true) 忽略
  * </ul>
  *
  * @author ydsz-team
@@ -65,129 +63,144 @@ import com.njydsz.cronjob.domain.vo.JobWebhookVO;
 @Mapper
 public interface CronjobConverter {
 
-    CronjobConverter INSTANT = Mappers.getMapper(CronjobConverter.class);
+  CronjobConverter INSTANT = Mappers.getMapper(CronjobConverter.class);
 
-    // ===== GlueCode =====
-    GlueCodeVO entityToVO(GlueCode entity);
-    List<GlueCodeVO> glueCodeListToVO(List<GlueCode> entities);
+  // ===== GlueCode =====
+  GlueCodeVO entityToVO(GlueCode entity);
 
-    // ===== Job =====
-    JobVO entityToVO(Job entity);
-    List<JobVO> jobListToVO(List<Job> entities);
+  List<GlueCodeVO> glueCodeListToVO(List<GlueCode> entities);
 
-    // ===== JobAlertLog =====
-    JobAlertLogVO entityToVO(JobAlertLog entity);
-    List<JobAlertLogVO> jobAlertLogListToVO(List<JobAlertLog> entities);
+  // ===== Job =====
+  JobVO entityToVO(Job entity);
 
-    // ===== JobAlertRule =====
-    JobAlertRuleVO entityToVO(JobAlertRule entity);
-    List<JobAlertRuleVO> jobAlertRuleListToVO(List<JobAlertRule> entities);
+  List<JobVO> jobListToVO(List<Job> entities);
 
-    // ===== JobArtifact =====
-    JobArtifactVO entityToVO(JobArtifact entity);
-    List<JobArtifactVO> jobArtifactListToVO(List<JobArtifact> entities);
+  // ===== JobAlertLog =====
+  JobAlertLogVO entityToVO(JobAlertLog entity);
 
-    // ===== JobDag =====
-    JobDagVO entityToVO(JobDag entity);
-    List<JobDagVO> jobDagListToVO(List<JobDag> entities);
+  List<JobAlertLogVO> jobAlertLogListToVO(List<JobAlertLog> entities);
 
-    // ===== JobDagInstance =====
-    JobDagInstanceVO entityToVO(JobDagInstance entity);
-    List<JobDagInstanceVO> jobDagInstanceListToVO(List<JobDagInstance> entities);
+  // ===== JobAlertRule =====
+  JobAlertRuleVO entityToVO(JobAlertRule entity);
 
-    // ===== JobDagNodeInstance =====
-    JobDagNodeInstanceVO entityToVO(JobDagNodeInstance entity);
-    List<JobDagNodeInstanceVO> jobDagNodeInstanceListToVO(List<JobDagNodeInstance> entities);
+  List<JobAlertRuleVO> jobAlertRuleListToVO(List<JobAlertRule> entities);
 
-    // ===== JobDagVersion =====
-    JobDagVersionVO entityToVO(JobDagVersion entity);
-    List<JobDagVersionVO> jobDagVersionListToVO(List<JobDagVersion> entities);
+  // ===== JobArtifact =====
+  JobArtifactVO entityToVO(JobArtifact entity);
 
-    // ===== JobDailyStats =====
-    JobDailyStatsVO entityToVO(JobDailyStats entity);
-    List<JobDailyStatsVO> jobDailyStatsListToVO(List<JobDailyStats> entities);
+  List<JobArtifactVO> jobArtifactListToVO(List<JobArtifact> entities);
 
-    // ===== JobHistory =====
-    JobHistoryVO entityToVO(JobHistory entity);
-    List<JobHistoryVO> jobHistoryListToVO(List<JobHistory> entities);
+  // ===== JobDag =====
+  JobDagVO entityToVO(JobDag entity);
 
-    // ===== JobLog =====
-    JobLogVO entityToVO(JobLog entity);
-    List<JobLogVO> jobLogListToVO(List<JobLog> entities);
+  List<JobDagVO> jobDagListToVO(List<JobDag> entities);
 
-    // ===== JobLogContent =====
-    JobLogContentVO entityToVO(JobLogContent entity);
-    List<JobLogContentVO> jobLogContentListToVO(List<JobLogContent> entities);
+  // ===== JobDagInstance =====
+  JobDagInstanceVO entityToVO(JobDagInstance entity);
 
-    // ===== JobNode =====
-    JobNodeVO entityToVO(JobNode entity);
-    List<JobNodeVO> jobNodeListToVO(List<JobNode> entities);
+  List<JobDagInstanceVO> jobDagInstanceListToVO(List<JobDagInstance> entities);
 
-    // ===== JobTask =====
-    JobTaskVO entityToVO(JobTask entity);
-    List<JobTaskVO> jobTaskListToVO(List<JobTask> entities);
+  // ===== JobDagNodeInstance =====
+  JobDagNodeInstanceVO entityToVO(JobDagNodeInstance entity);
 
-    // ===== JobWebhook =====
-    JobWebhookVO entityToVO(JobWebhook entity);
-    List<JobWebhookVO> jobWebhookListToVO(List<JobWebhook> entities);
+  List<JobDagNodeInstanceVO> jobDagNodeInstanceListToVO(List<JobDagNodeInstance> entities);
 
-    // ===== JobWebhook PostDTO → Entity =====
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "deleted", ignore = true)
-    @Mapping(target = "revision", ignore = true)
-    @Mapping(target = "tenantId", ignore = true)
-    @Mapping(target = "createdBy", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedBy", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    JobWebhook postDtoToEntity(JobWebhookPostDTO dto);
+  // ===== JobDagVersion =====
+  JobDagVersionVO entityToVO(JobDagVersion entity);
 
-    // ===== JobWebhook PutDTO → Entity =====
-    @Mapping(target = "deleted", ignore = true)
-    @Mapping(target = "revision", ignore = true)
-    @Mapping(target = "tenantId", ignore = true)
-    @Mapping(target = "createdBy", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedBy", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    JobWebhook putDtoToEntity(JobWebhookPutDTO dto);
+  List<JobDagVersionVO> jobDagVersionListToVO(List<JobDagVersion> entities);
 
-    // ===== Job PostDTO → Entity =====
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "deleted", ignore = true)
-    @Mapping(target = "revision", ignore = true)
-    @Mapping(target = "tenantId", ignore = true)
-    @Mapping(target = "createdBy", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedBy", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    Job postDtoToEntity(JobPostDTO dto);
+  // ===== JobDailyStats =====
+  JobDailyStatsVO entityToVO(JobDailyStats entity);
 
-    // ===== Job PutDTO → Entity =====
-    @Mapping(target = "deleted", ignore = true)
-    @Mapping(target = "revision", ignore = true)
-    @Mapping(target = "tenantId", ignore = true)
-    @Mapping(target = "updatedBy", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    Job putDtoToEntity(JobPutDTO dto);
+  List<JobDailyStatsVO> jobDailyStatsListToVO(List<JobDailyStats> entities);
 
-    // ===== JobDag PostDTO → Entity =====
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "deleted", ignore = true)
-    @Mapping(target = "revision", ignore = true)
-    @Mapping(target = "tenantId", ignore = true)
-    @Mapping(target = "createdBy", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedBy", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    JobDag postDtoToEntity(JobDagPostDTO dto);
+  // ===== JobHistory =====
+  JobHistoryVO entityToVO(JobHistory entity);
 
-    // ===== JobDag PutDTO → Entity =====
-    @Mapping(target = "deleted", ignore = true)
-    @Mapping(target = "revision", ignore = true)
-    @Mapping(target = "tenantId", ignore = true)
-    @Mapping(target = "updatedBy", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    JobDag putDtoToEntity(JobDagPutDTO dto);
+  List<JobHistoryVO> jobHistoryListToVO(List<JobHistory> entities);
 
+  // ===== JobLog =====
+  JobLogVO entityToVO(JobLog entity);
+
+  List<JobLogVO> jobLogListToVO(List<JobLog> entities);
+
+  // ===== JobLogContent =====
+  JobLogContentVO entityToVO(JobLogContent entity);
+
+  List<JobLogContentVO> jobLogContentListToVO(List<JobLogContent> entities);
+
+  // ===== JobNode =====
+  JobNodeVO entityToVO(JobNode entity);
+
+  List<JobNodeVO> jobNodeListToVO(List<JobNode> entities);
+
+  // ===== JobTask =====
+  JobTaskVO entityToVO(JobTask entity);
+
+  List<JobTaskVO> jobTaskListToVO(List<JobTask> entities);
+
+  // ===== JobWebhook =====
+  JobWebhookVO entityToVO(JobWebhook entity);
+
+  List<JobWebhookVO> jobWebhookListToVO(List<JobWebhook> entities);
+
+  // ===== JobWebhook PostDTO → Entity =====
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  JobWebhook postDtoToEntity(JobWebhookPostDTO dto);
+
+  // ===== JobWebhook PutDTO → Entity =====
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  JobWebhook putDtoToEntity(JobWebhookPutDTO dto);
+
+  // ===== Job PostDTO → Entity =====
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  Job postDtoToEntity(JobPostDTO dto);
+
+  // ===== Job PutDTO → Entity =====
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  Job putDtoToEntity(JobPutDTO dto);
+
+  // ===== JobDag PostDTO → Entity =====
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  JobDag postDtoToEntity(JobDagPostDTO dto);
+
+  // ===== JobDag PutDTO → Entity =====
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  JobDag putDtoToEntity(JobDagPutDTO dto);
 }

@@ -1,12 +1,12 @@
 package com.njydsz.common.safe.ratelimit.annotation;
 
+import com.njydsz.common.safe.ratelimit.enums.RateLimitAlgorithm;
+import com.njydsz.common.safe.ratelimit.enums.RateLimitDimension;
+import com.njydsz.common.safe.ratelimit.enums.RateLimitMode;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import com.njydsz.common.safe.ratelimit.enums.RateLimitAlgorithm;
-import com.njydsz.common.safe.ratelimit.enums.RateLimitDimension;
-import com.njydsz.common.safe.ratelimit.enums.RateLimitMode;
 
 /**
  * 限流注解
@@ -14,6 +14,7 @@ import com.njydsz.common.safe.ratelimit.enums.RateLimitMode;
  * <p>在方法上声明限流规则，触发 AOP 切面执行限流决策。
  *
  * <p><b>使用示例：</b>
+ *
  * <pre>{@code
  * // 全局限流：每秒 100 个
  * @RateLimit(resource = "order.create", threshold = 100)
@@ -44,73 +45,45 @@ import com.njydsz.common.safe.ratelimit.enums.RateLimitMode;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RateLimit {
 
-    /**
-     * 资源名（必填，限流 key 基础）
-     */
-    String resource();
+  /** 资源名（必填，限流 key 基础） */
+  String resource();
 
-    /**
-     * 限流阈值（每秒请求数 / 并发数 / 令牌数）
-     */
-    double threshold() default 100.0;
+  /** 限流阈值（每秒请求数 / 并发数 / 令牌数） */
+  double threshold() default 100.0;
 
-    /**
-     * 限流窗口大小（默认 1 秒）
-     */
-    long windowMillis() default 1000L;
+  /** 限流窗口大小（默认 1 秒） */
+  long windowMillis() default 1000L;
 
-    /**
-     * 桶容量（突发容量，仅令牌桶/漏桶有效）
-     */
-    long burstCapacity() default 200L;
+  /** 桶容量（突发容量，仅令牌桶/漏桶有效） */
+  long burstCapacity() default 200L;
 
-    /**
-     * 限流算法
-     */
-    RateLimitAlgorithm algorithm() default RateLimitAlgorithm.TOKEN_BUCKET;
+  /** 限流算法 */
+  RateLimitAlgorithm algorithm() default RateLimitAlgorithm.TOKEN_BUCKET;
 
-    /**
-     * 限流维度
-     */
-    RateLimitDimension dimension() default RateLimitDimension.API;
+  /** 限流维度 */
+  RateLimitDimension dimension() default RateLimitDimension.API;
 
-    /**
-     * 限流模式
-     */
-    RateLimitMode mode() default RateLimitMode.LOCAL;
+  /** 限流模式 */
+  RateLimitMode mode() default RateLimitMode.LOCAL;
 
-    /**
-     * 限流 key 的参数索引（-1 表示不按参数取 key）
-     */
-    int keyParam() default -1;
+  /** 限流 key 的参数索引（-1 表示不按参数取 key） */
+  int keyParam() default -1;
 
-    /**
-     * 备用 key 参数索引（拼接到 key 中）
-     */
-    int keyParam2() default -1;
+  /** 备用 key 参数索引（拼接到 key 中） */
+  int keyParam2() default -1;
 
-    /**
-     * 降级方法（bean name # method）
-     */
-    String fallback() default "";
+  /** 降级方法（bean name # method） */
+  String fallback() default "";
 
-    /**
-     * 限流错误码（默认使用 RateLimitExceptionCode.RATE_LIMIT）
-     */
-    String errorCode() default "";
+  /** 限流错误码（默认使用 RateLimitExceptionCode.RATE_LIMIT） */
+  String errorCode() default "";
 
-    /**
-     * 错误消息 i18n key
-     */
-    String message() default "ratelimit.blocked";
+  /** 错误消息 i18n key */
+  String message() default "ratelimit.blocked";
 
-    /**
-     * 排队等待超时（毫秒，0=不等待）
-     */
-    long queueTimeoutMillis() default 0L;
+  /** 排队等待超时（毫秒，0=不等待） */
+  long queueTimeoutMillis() default 0L;
 
-    /**
-     * 预热期（毫秒，0=不预热）
-     */
-    long warmupMillis() default 0L;
+  /** 预热期（毫秒，0=不预热） */
+  long warmupMillis() default 0L;
 }

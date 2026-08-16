@@ -1,9 +1,9 @@
 package com.njydsz.common.queue.service.impl;
 
-import java.util.List;
-import org.springframework.data.redis.core.RedisTemplate;
 import com.njydsz.common.queue.domain.QueueMessage;
 import com.njydsz.common.queue.service.IMessagePublisher;
+import java.util.List;
+import org.springframework.data.redis.core.RedisTemplate;
 
 /**
  * Redis Pub/Sub 模式发布者。
@@ -17,48 +17,48 @@ import com.njydsz.common.queue.service.IMessagePublisher;
  */
 public class RedisPubSubPublisher implements IMessagePublisher {
 
-    private final RedisTemplate<String, Object> redisTemplate;
-    private final String channel;
+  private final RedisTemplate<String, Object> redisTemplate;
+  private final String channel;
 
-    public RedisPubSubPublisher(RedisTemplate<String, Object> redisTemplate, String channel) {
-        if (redisTemplate == null) {
-            throw new IllegalArgumentException("RedisTemplate 不能为空");
-        }
-        if (channel == null || channel.isEmpty()) {
-            throw new IllegalArgumentException("通道名称不能为空");
-        }
-        this.redisTemplate = redisTemplate;
-        this.channel = channel;
+  public RedisPubSubPublisher(RedisTemplate<String, Object> redisTemplate, String channel) {
+    if (redisTemplate == null) {
+      throw new IllegalArgumentException("RedisTemplate 不能为空");
     }
+    if (channel == null || channel.isEmpty()) {
+      throw new IllegalArgumentException("通道名称不能为空");
+    }
+    this.redisTemplate = redisTemplate;
+    this.channel = channel;
+  }
 
-    @Override
-    public void publish(String message) {
-        if (message == null) {
-            return;
-        }
-        redisTemplate.convertAndSend(channel, message);
+  @Override
+  public void publish(String message) {
+    if (message == null) {
+      return;
     }
+    redisTemplate.convertAndSend(channel, message);
+  }
 
-    @Override
-    public void publish(QueueMessage message) {
-        if (message == null) {
-            return;
-        }
-        redisTemplate.convertAndSend(channel, QueueMessage.toPayload(message));
+  @Override
+  public void publish(QueueMessage message) {
+    if (message == null) {
+      return;
     }
+    redisTemplate.convertAndSend(channel, QueueMessage.toPayload(message));
+  }
 
-    @Override
-    public void publishBatch(List<QueueMessage> messages) {
-        if (messages == null || messages.isEmpty()) {
-            return;
-        }
-        for (QueueMessage message : messages) {
-            publish(message);
-        }
+  @Override
+  public void publishBatch(List<QueueMessage> messages) {
+    if (messages == null || messages.isEmpty()) {
+      return;
     }
+    for (QueueMessage message : messages) {
+      publish(message);
+    }
+  }
 
-    @Override
-    public void close() {
-        // Redis PubSub 发布者无需显式关闭资源
-    }
+  @Override
+  public void close() {
+    // Redis PubSub 发布者无需显式关闭资源
+  }
 }

@@ -14,25 +14,24 @@ import lombok.Data;
 @Data
 public class FlowTimerVO implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
-    private String id;
-    private String instanceId;
-    private String definitionId;
-    private String flowCode;
-    private String nodeCode;
-    private String nodeName;
-    private String timerType;
-    private String boundaryTaskId;
-    private LocalDateTime fireAt;
-    private String cycle;
-    private String timerStatus;
-    private LocalDateTime firedAt;
-    private String cancelReason;
-    private String providerTraceId;
-    private String createdBy;
-    private LocalDateTime createdAt;
-    private String updatedBy;
-    private LocalDateTime updatedAt;
+  private String id;
+  private String instanceId;
+  private String definitionId;
+  private String flowCode;
+  private String nodeCode;
+  private String nodeName;
+  private String timerType;
+  private String boundaryTaskId;
+  private LocalDateTime fireAt;
+  private String cycle;
+  private String timerStatus;
+  private LocalDateTime firedAt;
+  private String cancelReason;
+  private String providerTraceId;
+  private String createdBy;
+  private LocalDateTime createdAt;
+  private String updatedBy;
+  private LocalDateTime updatedAt;
 }

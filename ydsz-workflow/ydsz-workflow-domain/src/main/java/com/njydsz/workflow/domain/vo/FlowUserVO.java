@@ -14,24 +14,23 @@ import lombok.Data;
 @Data
 public class FlowUserVO implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
-    private String id;
-    private String taskId;
-    private String instanceId;
-    private String nodeCode;
-    private String userType;
-    private String userId;
-    private String userName;
-    private Integer processed;
-    private LocalDateTime processAt;
-    private String comment;
-    private Integer weight;
-    private String signType;
-    private String providerTraceId;
-    private String createdBy;
-    private LocalDateTime createdAt;
-    private String updatedBy;
-    private LocalDateTime updatedAt;
+  private String id;
+  private String taskId;
+  private String instanceId;
+  private String nodeCode;
+  private String userType;
+  private String userId;
+  private String userName;
+  private Integer processed;
+  private LocalDateTime processAt;
+  private String comment;
+  private Integer weight;
+  private String signType;
+  private String providerTraceId;
+  private String createdBy;
+  private LocalDateTime createdAt;
+  private String updatedBy;
+  private LocalDateTime updatedAt;
 }

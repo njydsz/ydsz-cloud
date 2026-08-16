@@ -1,13 +1,13 @@
 package com.njydsz.common.cache.metrics;
 
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
+import com.njydsz.common.cache.stats.CacheStats;
 import io.micrometer.core.instrument.FunctionCounter;
 import io.micrometer.core.instrument.FunctionTimer;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
-import com.njydsz.common.cache.stats.CacheStats;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * 缓存指标收集器
@@ -31,7 +31,6 @@ import com.njydsz.common.cache.stats.CacheStats;
  *
  * <p>注意：{@code cache.size} 始终返回 0，因为 CacheStats 不包含缓存大小信息。 如需准确的缓存大小指标，请使用 {@link
  * CacheMeterBinder}。
- *
  *
  * @author ydsz-team
  * @since 1.0.0

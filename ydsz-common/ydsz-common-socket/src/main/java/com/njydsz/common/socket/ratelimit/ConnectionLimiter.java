@@ -1,22 +1,23 @@
 package com.njydsz.common.socket.ratelimit;
 
+import com.njydsz.common.socket.config.WebSocketProperties;
+import com.njydsz.common.socket.session.OnlineUserService;
 import java.util.concurrent.atomic.AtomicLong;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.njydsz.common.socket.config.WebSocketProperties;
-import com.njydsz.common.socket.session.OnlineUserService;
 
 /**
  * WebSocket 连接数限制器（P2-1）。
  *
  * <p>在握手阶段检查：
+ *
  * <ul>
- *   <li>全局连接数上限：防止连接耗尽攻击</li>
- *   <li>每用户连接数上限：防止单用户多连接刷量</li>
+ *   <li>全局连接数上限：防止连接耗尽攻击
+ *   <li>每用户连接数上限：防止单用户多连接刷量
  * </ul>
  *
- * <p>全局连接数使用本地 {@link AtomicLong} 计数（配合 HealthIndicator），
- * 每用户连接数通过 {@link OnlineUserService#getSessionCount} 查询 Redis。
+ * <p>全局连接数使用本地 {@link AtomicLong} 计数（配合 HealthIndicator）， 每用户连接数通过 {@link
+ * OnlineUserService#getSessionCount} 查询 Redis。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -25,35 +26,34 @@ import com.njydsz.common.socket.session.OnlineUserService;
 @RequiredArgsConstructor
 public class ConnectionLimiter {
 
-    private final OnlineUserService onlineUserService;
-    private final WebSocketProperties properties;
-    private final AtomicLong activeConnections;
+  private final OnlineUserService onlineUserService;
+  private final WebSocketProperties properties;
+  private final AtomicLong activeConnections;
 
-    /**
-     * 检查是否允许新连接。
-     *
-     * @param userId 用户 ID
-     * @return true 表示允许连接
-     */
-    public boolean allowConnection(String userId) {
-        int maxGlobal = properties.getConnectionLimit().getMaxGlobalConnections();
-        int maxPerUser = properties.getConnectionLimit().getMaxPerUserConnections();
+  /**
+   * 检查是否允许新连接。
+   *
+   * @param userId 用户 ID
+   * @return true 表示允许连接
+   */
+  public boolean allowConnection(String userId) {
+    int maxGlobal = properties.getConnectionLimit().getMaxGlobalConnections();
+    int maxPerUser = properties.getConnectionLimit().getMaxPerUserConnections();
 
-        if (activeConnections.get() >= maxGlobal) {
-            log.warn("[WS-ConnLimit] 全局连接数超限: active={}, max={}",
-                    activeConnections.get(), maxGlobal);
-            return false;
-        }
-
-        if (userId != null) {
-            long userCount = onlineUserService.getSessionCount(userId);
-            if (userCount >= maxPerUser) {
-                log.warn("[WS-ConnLimit] 用户连接数超限: userId={}, count={}, max={}",
-                        userId, userCount, maxPerUser);
-                return false;
-            }
-        }
-
-        return true;
+    if (activeConnections.get() >= maxGlobal) {
+      log.warn("[WS-ConnLimit] 全局连接数超限: active={}, max={}", activeConnections.get(), maxGlobal);
+      return false;
     }
+
+    if (userId != null) {
+      long userCount = onlineUserService.getSessionCount(userId);
+      if (userCount >= maxPerUser) {
+        log.warn(
+            "[WS-ConnLimit] 用户连接数超限: userId={}, count={}, max={}", userId, userCount, maxPerUser);
+        return false;
+      }
+    }
+
+    return true;
+  }
 }

@@ -14,30 +14,30 @@ import lombok.Data;
 @Data
 public class NotificationGroupVO {
 
-    /** 分组键 */
-    private String messageGroup;
+  /** 分组键 */
+  private String messageGroup;
 
-    /** 最新消息标题 */
-    private String latestTitle;
+  /** 最新消息标题 */
+  private String latestTitle;
 
-    /** 最新消息内容 */
-    private String latestContent;
+  /** 最新消息内容 */
+  private String latestContent;
 
-    /** 最新消息时间 */
-    private LocalDateTime latestTime;
+  /** 最新消息时间 */
+  private LocalDateTime latestTime;
 
-    /** 分组内未读数 */
-    private int unreadCount;
+  /** 分组内未读数 */
+  private int unreadCount;
 
-    /** 分组内消息总数 */
-    private int totalCount;
+  /** 分组内消息总数 */
+  private int totalCount;
 
-    /** 最新消息级别 */
-    private String latestLevel;
+  /** 最新消息级别 */
+  private String latestLevel;
 
-    /** 最新消息分类 */
-    private String latestCategory;
+  /** 最新消息分类 */
+  private String latestCategory;
 
-    /** 最新消息 ID */
-    private String latestId;
+  /** 最新消息 ID */
+  private String latestId;
 }

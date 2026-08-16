@@ -1,8 +1,8 @@
 package com.njydsz.common.sentry.logging;
 
-import java.util.List;
 import com.njydsz.common.sentry.domain.LogEvent;
 import com.njydsz.common.sentry.spi.LogPublisher;
+import java.util.List;
 
 /**
  * 无操作日志发布器（No-Op Log Publisher）
@@ -10,16 +10,17 @@ import com.njydsz.common.sentry.spi.LogPublisher;
  * <p>当未配置任何日志发布器时作为默认实现，所有发布操作均为空操作（不执行任何操作）。
  *
  * <p><b>设计目的</b>：
+ *
  * <ul>
- *   <li>避免在未配置日志发布器时隐式降级到 Loki（可能导致日志被意外发送）</li>
- *   <li>显式表达"当前无日志发布器"的状态，便于监控和告警</li>
- *       {@link #isAvailable()} 返回 {@code false}，调用方可据此判断日志是否正常输出</li>
+ *   <li>避免在未配置日志发布器时隐式降级到 Loki（可能导致日志被意外发送）
+ *   <li>显式表达"当前无日志发布器"的状态，便于监控和告警 {@link #isAvailable()} 返回 {@code false}，调用方可据此判断日志是否正常输出
  * </ul>
  *
  * <p><b>使用场景</b>：
+ *
  * <ul>
- *   <li>开发/测试环境不需要日志上报</li>
- *   <li>日志发布器全部不可用时的兜底</li>
+ *   <li>开发/测试环境不需要日志上报
+ *   <li>日志发布器全部不可用时的兜底
  * </ul>
  *
  * @author ydsz-team
@@ -27,38 +28,38 @@ import com.njydsz.common.sentry.spi.LogPublisher;
  */
 public class NoOpLogPublisher implements LogPublisher {
 
-    /** 单例实例 */
-    public static final NoOpLogPublisher INSTANCE = new NoOpLogPublisher();
+  /** 单例实例 */
+  public static final NoOpLogPublisher INSTANCE = new NoOpLogPublisher();
 
-    private NoOpLogPublisher() {
-        // 私有构造函数，使用单例
-    }
+  private NoOpLogPublisher() {
+    // 私有构造函数，使用单例
+  }
 
-    @Override
-    public boolean publish(LogEvent event) {
-        // 无操作
-        return true;
-    }
+  @Override
+  public boolean publish(LogEvent event) {
+    // 无操作
+    return true;
+  }
 
-    @Override
-    public boolean publishBatch(List<LogEvent> events) {
-        // 无操作
-        return true;
-    }
+  @Override
+  public boolean publishBatch(List<LogEvent> events) {
+    // 无操作
+    return true;
+  }
 
-    @Override
-    public boolean isAvailable() {
-        // 显式返回 false，表示日志发布器不可用
-        return false;
-    }
+  @Override
+  public boolean isAvailable() {
+    // 显式返回 false，表示日志发布器不可用
+    return false;
+  }
 
-    @Override
-    public String getName() {
-        return "no-op";
-    }
+  @Override
+  public String getName() {
+    return "no-op";
+  }
 
-    @Override
-    public String getScheme() {
-        return "none";
-    }
+  @Override
+  public String getScheme() {
+    return "none";
+  }
 }

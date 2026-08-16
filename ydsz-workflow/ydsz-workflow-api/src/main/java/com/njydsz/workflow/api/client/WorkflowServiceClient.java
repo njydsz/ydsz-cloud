@@ -23,44 +23,46 @@ import org.springframework.web.bind.annotation.RequestParam;
  * @since 1.0.0
  */
 @FeignClient(
-        name = FeignClientConstants.WORKFLOW,
-        contextId = "workflowServiceClient",
-        fallbackFactory = WorkflowServiceClientFallback.class)
+    name = FeignClientConstants.WORKFLOW,
+    contextId = "workflowServiceClient",
+    fallbackFactory = WorkflowServiceClientFallback.class)
 public interface WorkflowServiceClient {
 
-    /**
-     * 启动流程实例
-     *
-     * <p>对应自研引擎: POST /api/v1/workflow/engine/instance/start
-     *
-     * @param dto 启动流程参数，使用 {@link FlowStartProcessDTO} 强类型传递
-     * @return 流程实例 ID
-     */
-    @PostMapping(FeignClientConstants.WORKFLOW_PATH_START)
-    BaseResponse<String> startProcess(@RequestBody FlowStartProcessDTO dto);
+  /**
+   * 启动流程实例
+   *
+   * <p>对应自研引擎: POST /api/v1/workflow/engine/instance/start
+   *
+   * @param dto 启动流程参数，使用 {@link FlowStartProcessDTO} 强类型传递
+   * @return 流程实例 ID
+   */
+  @PostMapping(FeignClientConstants.WORKFLOW_PATH_START)
+  BaseResponse<String> startProcess(@RequestBody FlowStartProcessDTO dto);
 
-    /**
-     * 通过业务单据反查流程状态
-     *
-     * <p>对应自研引擎: GET /api/v1/workflow/engine/instance/byBusiness
-     *
-     * @param businessType 业务类型
-     * @param businessId 业务单据 ID
-     * @return 流程实例视图对象 {@link FlowInstanceVO}
-     */
-    @GetMapping(FeignClientConstants.WORKFLOW_PATH_GET_BY_BUSINESS)
-    BaseResponse<FlowInstanceVO> getByBusiness(@RequestParam("businessType") String businessType,
-                                               @RequestParam("businessId") String businessId);
+  /**
+   * 通过业务单据反查流程状态
+   *
+   * <p>对应自研引擎: GET /api/v1/workflow/engine/instance/byBusiness
+   *
+   * @param businessType 业务类型
+   * @param businessId 业务单据 ID
+   * @return 流程实例视图对象 {@link FlowInstanceVO}
+   */
+  @GetMapping(FeignClientConstants.WORKFLOW_PATH_GET_BY_BUSINESS)
+  BaseResponse<FlowInstanceVO> getByBusiness(
+      @RequestParam("businessType") String businessType,
+      @RequestParam("businessId") String businessId);
 
-    /**
-     * 终止流程实例
-     *
-     * <p>对应自研引擎: POST /api/v1/workflow/engine/instance/{id}/terminate
-     *
-     * @param processInstanceId 流程实例 ID
-     * @param reason 终止原因（可空）
-     */
-    @PostMapping(FeignClientConstants.WORKFLOW_PATH_TERMINATE)
-    BaseResponse<Void> terminate(@PathVariable("id") String processInstanceId,
-                                 @RequestParam(value = "reason", required = false) String reason);
+  /**
+   * 终止流程实例
+   *
+   * <p>对应自研引擎: POST /api/v1/workflow/engine/instance/{id}/terminate
+   *
+   * @param processInstanceId 流程实例 ID
+   * @param reason 终止原因（可空）
+   */
+  @PostMapping(FeignClientConstants.WORKFLOW_PATH_TERMINATE)
+  BaseResponse<Void> terminate(
+      @PathVariable("id") String processInstanceId,
+      @RequestParam(value = "reason", required = false) String reason);
 }

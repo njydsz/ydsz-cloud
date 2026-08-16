@@ -10,14 +10,14 @@ import com.njydsz.common.exception.custom.SysException;
  */
 public class ModelInvocationException extends SysException {
 
-    private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-    public ModelInvocationException(String message) {
-        super(message);
-    }
+  public ModelInvocationException(String message) {
+    super(message);
+  }
 
-    public ModelInvocationException(String message, Throwable cause) {
-        super(message);
-        initCause(cause);
-    }
+  public ModelInvocationException(String message, Throwable cause) {
+    super(message);
+    initCause(cause);
+  }
 }

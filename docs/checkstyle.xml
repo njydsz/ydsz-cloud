@@ -521,14 +521,9 @@
         <!-- 15. 静态方法调用规范（编码规范 6.1 节）       -->
         <!-- ============================================ -->
 
-        <!-- 禁止通过对象引用访问静态方法/静态变量 -->
-        <module name="RegexpSinglelineJava">
-            <property name="format"
-                      value="\.\s*(sleep|currentTimeMillis|nanoTime|valueOf|parseInt|parseLong|parseDouble|format|copyOf|sort|reverse|shuffle|min|max|abs|ceil|floor|round)\s*\(\s*\)"/>
-            <property name="ignoreComments" value="true"/>
-            <property name="message"
-                      value="禁止通过对象引用访问静态方法，应直接使用类名调用（如 Thread.sleep()、System.currentTimeMillis()）。参考：云顶编码规范 6.1 节"/>
-        </module>
+        <!-- 说明：静态方法调用检测已移除——原正则 \.\s*(sleep|currentTimeMillis|...)\s*\(\s*\) 无法区分
+             类名调用（如 System.currentTimeMillis()，合法）与实例调用，产生大量误报（全项目约 259 条）。
+             javac -Xlint:static 已提供等价检查，故移除此 Regexp 规则。 -->
 
         <!-- ============================================ -->
         <!-- 16. 集合初始化容量规范（编码规范 9.1 节）     -->

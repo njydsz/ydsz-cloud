@@ -1,150 +1,149 @@
 package com.njydsz.common.safe.csrf.impl;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.util.Base64;
 import com.njydsz.common.exception.code.CoreExceptionCode;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.safe.csrf.CsrfToken;
 import com.njydsz.common.safe.csrf.CsrfTokenRepository;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.util.Base64;
 
 /**
  * 基于 Redis 的 CSRF 令牌存储库（分布式环境推荐）
  *
- * <p>使用 Redis 存储 CSRF 令牌，支持分布式部署环境下的令牌共享。
- * 令牌过期由 Redis TTL 自动管理，无需手动清理。
- * 内置令牌生成逻辑，避免与 CsrfTokenGenerator 产生循环依赖。
+ * <p>使用 Redis 存储 CSRF 令牌，支持分布式部署环境下的令牌共享。 令牌过期由 Redis TTL 自动管理，无需手动清理。 内置令牌生成逻辑，避免与
+ * CsrfTokenGenerator 产生循环依赖。
  *
  * <p><b>Key 设计：</b>
+ *
  * <ul>
- *   <li>令牌存储：csrf:token:{tokenValue} -> CsrfToken JSON</li>
- *   <li>会话映射：csrf:session:{sessionId} -> tokenValue</li>
+ *   <li>令牌存储：csrf:token:{tokenValue} -> CsrfToken JSON
+ *   <li>会话映射：csrf:session:{sessionId} -> tokenValue
  * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
- *
  * @see CsrfTokenRepository
  */
 public class RedisCsrfTokenRepository implements CsrfTokenRepository {
 
-    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
-    private static final int TOKEN_BYTE_LENGTH = 32;
+  private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+  private static final int TOKEN_BYTE_LENGTH = 32;
 
-    private static final String TOKEN_PREFIX = "csrf:token:";
-    private static final String SESSION_PREFIX = "csrf:session:";
+  private static final String TOKEN_PREFIX = "csrf:token:";
+  private static final String SESSION_PREFIX = "csrf:session:";
 
-    private final long expirationSeconds;
-    private final RedisStringOps redisStringOps;
+  private final long expirationSeconds;
+  private final RedisStringOps redisStringOps;
 
-    public RedisCsrfTokenRepository(long expirationSeconds, RedisStringOps redisStringOps) {
-        this.expirationSeconds = expirationSeconds;
-        this.redisStringOps = redisStringOps;
+  public RedisCsrfTokenRepository(long expirationSeconds, RedisStringOps redisStringOps) {
+    this.expirationSeconds = expirationSeconds;
+    this.redisStringOps = redisStringOps;
+  }
+
+  @Override
+  public CsrfToken createToken(String sessionId) {
+    String tokenValue = generateToken(sessionId);
+    CsrfToken token = new CsrfToken(tokenValue, sessionId, expirationSeconds);
+
+    String tokenKey = TOKEN_PREFIX + tokenValue;
+    String sessionKey = SESSION_PREFIX + sessionId;
+
+    redisStringOps.set(tokenKey, token, expirationSeconds);
+    redisStringOps.set(sessionKey, tokenValue, expirationSeconds);
+
+    return token;
+  }
+
+  @Override
+  public CsrfToken getToken(String token) {
+    if (token == null || token.isEmpty()) {
+      return null;
+    }
+    String tokenKey = TOKEN_PREFIX + token;
+    return redisStringOps.get(tokenKey, CsrfToken.class);
+  }
+
+  @Override
+  public boolean validateToken(String token, String sessionId) {
+    if (token == null || sessionId == null) {
+      return false;
     }
 
-    @Override
-    public CsrfToken createToken(String sessionId) {
-        String tokenValue = generateToken(sessionId);
-        CsrfToken token = new CsrfToken(tokenValue, sessionId, expirationSeconds);
-
-        String tokenKey = TOKEN_PREFIX + tokenValue;
-        String sessionKey = SESSION_PREFIX + sessionId;
-
-        redisStringOps.set(tokenKey, token, expirationSeconds);
-        redisStringOps.set(sessionKey, tokenValue, expirationSeconds);
-
-        return token;
+    CsrfToken csrfToken = getToken(token);
+    if (csrfToken == null) {
+      return false;
     }
 
-    @Override
-    public CsrfToken getToken(String token) {
-        if (token == null || token.isEmpty()) {
-            return null;
-        }
-        String tokenKey = TOKEN_PREFIX + token;
-        return redisStringOps.get(tokenKey, CsrfToken.class);
+    if (csrfToken.isExpired()) {
+      removeToken(token);
+      return false;
     }
 
-    @Override
-    public boolean validateToken(String token, String sessionId) {
-        if (token == null || sessionId == null) {
-            return false;
-        }
+    return sessionId.equals(csrfToken.getSessionId());
+  }
 
-        CsrfToken csrfToken = getToken(token);
-        if (csrfToken == null) {
-            return false;
-        }
-
-        if (csrfToken.isExpired()) {
-            removeToken(token);
-            return false;
-        }
-
-        return sessionId.equals(csrfToken.getSessionId());
+  @Override
+  public void removeToken(String token) {
+    if (token == null || token.isEmpty()) {
+      return;
     }
-
-    @Override
-    public void removeToken(String token) {
-        if (token == null || token.isEmpty()) {
-            return;
-        }
-        CsrfToken csrfToken = getToken(token);
-        if (csrfToken != null) {
-            redisStringOps.del(SESSION_PREFIX + csrfToken.getSessionId());
-        }
-        redisStringOps.del(TOKEN_PREFIX + token);
+    CsrfToken csrfToken = getToken(token);
+    if (csrfToken != null) {
+      redisStringOps.del(SESSION_PREFIX + csrfToken.getSessionId());
     }
+    redisStringOps.del(TOKEN_PREFIX + token);
+  }
 
-    @Override
-    public void clearSession(String sessionId) {
-        if (sessionId == null || sessionId.isEmpty()) {
-            return;
-        }
-        String sessionKey = SESSION_PREFIX + sessionId;
-        String tokenValue = redisStringOps.get(sessionKey, String.class);
-        if (tokenValue != null) {
-            redisStringOps.del(TOKEN_PREFIX + tokenValue);
-        }
-        redisStringOps.del(sessionKey);
+  @Override
+  public void clearSession(String sessionId) {
+    if (sessionId == null || sessionId.isEmpty()) {
+      return;
     }
-
-    private String generateToken(String sessionId) {
-        byte[] randomBytes = new byte[TOKEN_BYTE_LENGTH];
-        SECURE_RANDOM.nextBytes(randomBytes);
-
-        String randomPart = Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
-        String combined = sessionId + ":" + randomPart + ":" + System.currentTimeMillis();
-
-        return sha256(combined);
+    String sessionKey = SESSION_PREFIX + sessionId;
+    String tokenValue = redisStringOps.get(sessionKey, String.class);
+    if (tokenValue != null) {
+      redisStringOps.del(TOKEN_PREFIX + tokenValue);
     }
+    redisStringOps.del(sessionKey);
+  }
 
-    private String sha256(String input) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
-            return bytesToHex(hash);
-        } catch (NoSuchAlgorithmException e) {
-            throw BusinessException.builder()
-                    .code(CoreExceptionCode.FAIL.getCode())
-                    .message("SHA-256 algorithm not available")
-                    .cause(e)
-                    .build();
-        }
-    }
+  private String generateToken(String sessionId) {
+    byte[] randomBytes = new byte[TOKEN_BYTE_LENGTH];
+    SECURE_RANDOM.nextBytes(randomBytes);
 
-    private String bytesToHex(byte[] bytes) {
-        StringBuilder hexString = new StringBuilder();
-        for (byte b : bytes) {
-            String hex = Integer.toHexString(b & 0xff);
-            if (hex.length() == 1) {
-                hexString.append('0');
-            }
-            hexString.append(hex);
-        }
-        return hexString.toString();
+    String randomPart = Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
+    String combined = sessionId + ":" + randomPart + ":" + System.currentTimeMillis();
+
+    return sha256(combined);
+  }
+
+  private String sha256(String input) {
+    try {
+      MessageDigest digest = MessageDigest.getInstance("SHA-256");
+      byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+      return bytesToHex(hash);
+    } catch (NoSuchAlgorithmException e) {
+      throw BusinessException.builder()
+          .code(CoreExceptionCode.FAIL.getCode())
+          .message("SHA-256 algorithm not available")
+          .cause(e)
+          .build();
     }
+  }
+
+  private String bytesToHex(byte[] bytes) {
+    StringBuilder hexString = new StringBuilder();
+    for (byte b : bytes) {
+      String hex = Integer.toHexString(b & 0xff);
+      if (hex.length() == 1) {
+        hexString.append('0');
+      }
+      hexString.append(hex);
+    }
+    return hexString.toString();
+  }
 }

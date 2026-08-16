@@ -9,6 +9,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
  * <p>所有 Redis Key 必须通过此类构建，自动添加 {@code {tenantId}:} 前缀。
  *
  * <p><b>使用示例：</b>
+ *
  * <pre>{@code
  * // 不带前缀
  * String key = "user:001";
@@ -26,28 +27,29 @@ import com.njydsz.common.tenant.TenantContextHolder;
  */
 public final class TenantAwareRedisKey {
 
-    private static final String PREFIX_TEMPLATE = "{tenantId}:";
+  private static final String PREFIX_TEMPLATE = "{tenantId}:";
 
-    private TenantAwareRedisKey() {
-    }
+  private TenantAwareRedisKey() {}
 
-    /**
-     * 构建带租户前缀的 Redis Key。
-     *
-     * <p>无租户上下文、跳过隔离、或超级管理员时不加前缀。
-     *
-     * @param key 原始 Key
-     * @return 带前缀的 Key 或原始 Key
-     */
-    public static String resolve(String key) {
-        if (key == null || key.isEmpty()) {
-            return key;
-        }
-        TenantContext context = TenantContextHolder.get();
-        if (context == null || context.isSkipIsolation()
-                || context.isSuperAdmin() || context.getTenantId() == null) {
-            return key;
-        }
-        return PREFIX_TEMPLATE.replace("{tenantId}", context.getTenantId()) + key;
+  /**
+   * 构建带租户前缀的 Redis Key。
+   *
+   * <p>无租户上下文、跳过隔离、或超级管理员时不加前缀。
+   *
+   * @param key 原始 Key
+   * @return 带前缀的 Key 或原始 Key
+   */
+  public static String resolve(String key) {
+    if (key == null || key.isEmpty()) {
+      return key;
     }
+    TenantContext context = TenantContextHolder.get();
+    if (context == null
+        || context.isSkipIsolation()
+        || context.isSuperAdmin()
+        || context.getTenantId() == null) {
+      return key;
+    }
+    return PREFIX_TEMPLATE.replace("{tenantId}", context.getTenantId()) + key;
+  }
 }

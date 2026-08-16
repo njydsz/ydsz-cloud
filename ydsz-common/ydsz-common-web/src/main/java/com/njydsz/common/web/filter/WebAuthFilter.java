@@ -1,11 +1,5 @@
 package com.njydsz.common.web.filter;
 
-import java.util.Objects;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
 import com.njydsz.common.auth.config.AuthFilterConfiguration;
 import com.njydsz.common.auth.constant.AuthHeaderConstants;
 import com.njydsz.common.auth.filter.BaseAuthFilter;
@@ -16,26 +10,33 @@ import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.common.util.string.StringUtils;
 import com.njydsz.common.web.auth.AuthHandlerFactory;
 import com.njydsz.common.web.metrics.WebMetrics;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.util.Objects;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 
 /**
  * Web 端认证过滤器
  *
  * <p>核心职责：
+ *
  * <ul>
- *   <li>解析请求头中的认证信息（Token、用户ID、租户ID、数据权限维度等）</li>
- *   <li>将认证上下文写入 {@link RequestContext}，供下游链路使用</li>
- *   <li>支持请求路径白名单过滤，无需认证即可访问</li>
- *   <li>认证成功/失败埋点到 {@link WebMetrics}（可选依赖）</li>
+ *   <li>解析请求头中的认证信息（Token、用户ID、租户ID、数据权限维度等）
+ *   <li>将认证上下文写入 {@link RequestContext}，供下游链路使用
+ *   <li>支持请求路径白名单过滤，无需认证即可访问
+ *   <li>认证成功/失败埋点到 {@link WebMetrics}（可选依赖）
  * </ul>
  *
  * <p>认证策略解耦：
+ *
  * <ul>
- *   <li>使用 {@link AuthHandlerFactory} 根据请求头 {@code X-Service-Type} 获取对应的认证处理器</li>
- *   <li>业务方可注入自定义 {@link AuthHandler} 实现可插拔认证</li>
+ *   <li>使用 {@link AuthHandlerFactory} 根据请求头 {@code X-Service-Type} 获取对应的认证处理器
+ *   <li>业务方可注入自定义 {@link AuthHandler} 实现可插拔认证
  * </ul>
  *
- * <p>过滤器优先级设置为 3，在 CORS 过滤器（优先级 0）之后执行。
- * 确保跨域预检请求可以正常通过，而认证逻辑在跨域处理之后执行。
+ * <p>过滤器优先级设置为 3，在 CORS 过滤器（优先级 0）之后执行。 确保跨域预检请求可以正常通过，而认证逻辑在跨域处理之后执行。
  *
  * @author ydsz-team
  * @see AuthHandlerFactory
@@ -48,77 +49,80 @@ import com.njydsz.common.web.metrics.WebMetrics;
 @Order(Ordered.HIGHEST_PRECEDENCE + 3)
 public class WebAuthFilter extends BaseAuthFilter {
 
-    private final AuthHandlerFactory authHandlerFactory;
-    private final WebMetrics webMetrics;
+  private final AuthHandlerFactory authHandlerFactory;
+  private final WebMetrics webMetrics;
 
-    public WebAuthFilter(String applicationName,
-                         AuthFilterConfiguration authFilterConfiguration,
-                         AuthHandlerFactory authHandlerFactory,
-                         WebMetrics webMetrics) {
-        super(applicationName, authFilterConfiguration);
-        this.authHandlerFactory = authHandlerFactory;
-        this.webMetrics = webMetrics;
+  public WebAuthFilter(
+      String applicationName,
+      AuthFilterConfiguration authFilterConfiguration,
+      AuthHandlerFactory authHandlerFactory,
+      WebMetrics webMetrics) {
+    super(applicationName, authFilterConfiguration);
+    this.authHandlerFactory = authHandlerFactory;
+    this.webMetrics = webMetrics;
+  }
+
+  @Override
+  protected void doPreAuth(HttpServletRequest request, HttpServletResponse response) {
+    TracerUtils.getOrCreateTraceId();
+  }
+
+  @Override
+  protected AuthInfo resolveAuthInfo(HttpServletRequest request, HttpServletResponse response) {
+    long startNanos = System.nanoTime();
+    try {
+      AuthInfo authInfo = doResolveAuthInfo(request, response);
+      if (webMetrics != null) {
+        webMetrics.recordAuthSuccess(System.nanoTime() - startNanos);
+      }
+      return authInfo;
+    } catch (RuntimeException e) {
+      if (webMetrics != null) {
+        webMetrics.recordAuthFailure(System.nanoTime() - startNanos);
+      }
+      throw e;
     }
+  }
 
-    @Override
-    protected void doPreAuth(HttpServletRequest request, HttpServletResponse response) {
-        TracerUtils.getOrCreateTraceId();
+  private AuthInfo doResolveAuthInfo(HttpServletRequest request, HttpServletResponse response) {
+    Objects.requireNonNull(authHandlerFactory, "AuthHandlerFactory must be configured");
+    String serviceType = request.getHeader(AuthHeaderConstants.X_SERVICE_TYPE);
+    log.debug("X_SERVICE_TYPE: {}", serviceType);
+
+    AuthHandler authHandler =
+        authHandlerFactory.getAuthHandler(resolveServiceTypeCode(serviceType));
+    return authHandler.getAuthInfo(request, response);
+  }
+
+  @Override
+  protected boolean shouldSkipService() {
+    return isServiceIgnored(applicationName);
+  }
+
+  @Override
+  protected void doPostAuth(
+      HttpServletRequest request, HttpServletResponse response, long duration) {
+    log.debug("{}认证耗时: {}ms", getLogPrefix(), duration);
+  }
+
+  @Override
+  protected String getLogPrefix() {
+    return "【Web端】";
+  }
+
+  private String resolveServiceTypeCode(String serviceType) {
+    if (StringUtils.isEmpty(serviceType)) {
+      return "webService";
     }
-
-    @Override
-    protected AuthInfo resolveAuthInfo(HttpServletRequest request, HttpServletResponse response) {
-        long startNanos = System.nanoTime();
-        try {
-            AuthInfo authInfo = doResolveAuthInfo(request, response);
-            if (webMetrics != null) {
-                webMetrics.recordAuthSuccess(System.nanoTime() - startNanos);
-            }
-            return authInfo;
-        } catch (RuntimeException e) {
-            if (webMetrics != null) {
-                webMetrics.recordAuthFailure(System.nanoTime() - startNanos);
-            }
-            throw e;
-        }
+    // 白名单精确匹配：仅识别已注册的服务类型码，
+    // 未知值按默认 webService 处理，不向客户端暴露内部校验细节
+    if ("appService".equals(serviceType)) {
+      return "appService";
     }
-
-    private AuthInfo doResolveAuthInfo(HttpServletRequest request, HttpServletResponse response) {
-        Objects.requireNonNull(authHandlerFactory, "AuthHandlerFactory must be configured");
-        String serviceType = request.getHeader(AuthHeaderConstants.X_SERVICE_TYPE);
-        log.debug("X_SERVICE_TYPE: {}", serviceType);
-
-        AuthHandler authHandler = authHandlerFactory.getAuthHandler(resolveServiceTypeCode(serviceType));
-        return authHandler.getAuthInfo(request, response);
+    if ("webService".equals(serviceType)) {
+      return "webService";
     }
-
-    @Override
-    protected boolean shouldSkipService() {
-        return isServiceIgnored(applicationName);
-    }
-
-    @Override
-    protected void doPostAuth(HttpServletRequest request, HttpServletResponse response, long duration) {
-        log.debug("{}认证耗时: {}ms", getLogPrefix(), duration);
-    }
-
-    @Override
-    protected String getLogPrefix() {
-        return "【Web端】";
-    }
-
-    private String resolveServiceTypeCode(String serviceType) {
-        if (StringUtils.isEmpty(serviceType)) {
-            return "webService";
-        }
-        // 白名单精确匹配：仅识别已注册的服务类型码，
-        // 未知值按默认 webService 处理，不向客户端暴露内部校验细节
-        if ("appService".equals(serviceType)) {
-            return "appService";
-        }
-        if ("webService".equals(serviceType)) {
-            return "webService";
-        }
-        log.warn("未识别的 X-Service-Type: {}，按默认 webService 处理", serviceType);
-        return "webService";
-    }
+    log.warn("未识别的 X-Service-Type: {}，按默认 webService 处理", serviceType);
+    return "webService";
+  }
 }

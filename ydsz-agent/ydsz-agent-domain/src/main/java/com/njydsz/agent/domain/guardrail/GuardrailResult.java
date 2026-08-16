@@ -14,65 +14,74 @@ import java.io.Serializable;
  */
 public final class GuardrailResult implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-    /** 是否通过检查 */
-    private final boolean passed;
-    /** 拒绝原因（未通过时有值） */
-    private final String reason;
-    /** 脱敏后的输入内容 */
-    private final String sanitizedInput;
+  /** 是否通过检查 */
+  private final boolean passed;
 
-    public GuardrailResult(boolean passed, String reason, String sanitizedInput) {
-        this.passed = passed;
-        this.reason = reason;
-        this.sanitizedInput = sanitizedInput;
-    }
+  /** 拒绝原因（未通过时有值） */
+  private final String reason;
 
-    /**
-     * 创建「通过」检查结果。
-     *
-     * @param input 原始输入内容（未脱敏）
-     * @return 通过的护栏检查结果
-     */
-    public static GuardrailResult pass(String input) {
-        return new GuardrailResult(true, null, input);
-    }
+  /** 脱敏后的输入内容 */
+  private final String sanitizedInput;
 
-    /**
-     * 创建「通过」检查结果（含脱敏内容）。
-     *
-     * <p>当输入内容包含敏感信息（如手机号、身份证）时，护栏会脱敏后放行，
-     * 业务方可使用 {@link #getSanitizedInput()} 获取脱敏后的安全内容。</p>
-     *
-     * @param input           原始输入内容
-     * @param sanitizedInput  脱敏后的输入内容
-     * @return 通过的护栏检查结果
-     */
-    public static GuardrailResult pass(String input, String sanitizedInput) {
-        return new GuardrailResult(true, null, sanitizedInput);
-    }
+  public GuardrailResult(boolean passed, String reason, String sanitizedInput) {
+    this.passed = passed;
+    this.reason = reason;
+    this.sanitizedInput = sanitizedInput;
+  }
 
-    /**
-     * 创建「拒绝」检查结果。
-     *
-     * @param reason 拒绝原因（将透传给上层用户/审计日志）
-     * @return 未通过的护栏检查结果
-     */
-    public static GuardrailResult reject(String reason) {
-        return new GuardrailResult(false, reason, null);
-    }
+  /**
+   * 创建「通过」检查结果。
+   *
+   * @param input 原始输入内容（未脱敏）
+   * @return 通过的护栏检查结果
+   */
+  public static GuardrailResult pass(String input) {
+    return new GuardrailResult(true, null, input);
+  }
 
-    public boolean isPassed() { return passed; }
-    public String getReason() { return reason; }
-    public String getSanitizedInput() { return sanitizedInput; }
+  /**
+   * 创建「通过」检查结果（含脱敏内容）。
+   *
+   * <p>当输入内容包含敏感信息（如手机号、身份证）时，护栏会脱敏后放行， 业务方可使用 {@link #getSanitizedInput()} 获取脱敏后的安全内容。
+   *
+   * @param input 原始输入内容
+   * @param sanitizedInput 脱敏后的输入内容
+   * @return 通过的护栏检查结果
+   */
+  public static GuardrailResult pass(String input, String sanitizedInput) {
+    return new GuardrailResult(true, null, sanitizedInput);
+  }
 
-    public boolean isRejected() {
-        return !passed;
-    }
+  /**
+   * 创建「拒绝」检查结果。
+   *
+   * @param reason 拒绝原因（将透传给上层用户/审计日志）
+   * @return 未通过的护栏检查结果
+   */
+  public static GuardrailResult reject(String reason) {
+    return new GuardrailResult(false, reason, null);
+  }
 
-    @Override
-    public String toString() {
-        return passed ? "GuardrailResult{PASSED}" : "GuardrailResult{REJECTED: " + reason + "}";
-    }
+  public boolean isPassed() {
+    return passed;
+  }
+
+  public String getReason() {
+    return reason;
+  }
+
+  public String getSanitizedInput() {
+    return sanitizedInput;
+  }
+
+  public boolean isRejected() {
+    return !passed;
+  }
+
+  @Override
+  public String toString() {
+    return passed ? "GuardrailResult{PASSED}" : "GuardrailResult{REJECTED: " + reason + "}";
+  }
 }

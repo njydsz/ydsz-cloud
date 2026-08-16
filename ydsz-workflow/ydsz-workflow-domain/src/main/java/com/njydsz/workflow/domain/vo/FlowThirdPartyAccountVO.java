@@ -14,23 +14,22 @@ import lombok.Data;
 @Data
 public class FlowThirdPartyAccountVO implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
-    private String id;
-    private String userId;
-    private String platform;
-    private String openId;
-    private String unionId;
-    private String corpId;
-    private String agentId;
-    private String accessToken;
-    private String refreshToken;
-    private LocalDateTime tokenExpireAt;
-    private String status;
-    private String cancelWebhookUrl;
-    private String createdBy;
-    private LocalDateTime createdAt;
-    private String updatedBy;
-    private LocalDateTime updatedAt;
+  private String id;
+  private String userId;
+  private String platform;
+  private String openId;
+  private String unionId;
+  private String corpId;
+  private String agentId;
+  private String accessToken;
+  private String refreshToken;
+  private LocalDateTime tokenExpireAt;
+  private String status;
+  private String cancelWebhookUrl;
+  private String createdBy;
+  private LocalDateTime createdAt;
+  private String updatedBy;
+  private LocalDateTime updatedAt;
 }

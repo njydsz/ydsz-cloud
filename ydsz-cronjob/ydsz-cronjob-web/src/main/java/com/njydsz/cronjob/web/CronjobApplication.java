@@ -1,14 +1,14 @@
 package com.njydsz.cronjob.web;
 
+import com.njydsz.common.audit.annotation.EnableYdszAudit;
+import com.njydsz.common.auth.annotation.EnableYdszAuth;
+import com.njydsz.common.feign.annotation.EnableYdszFeign;
+import com.njydsz.common.safe.annotation.EnableYdszSafe;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.scheduling.annotation.EnableScheduling;
-import com.njydsz.common.audit.annotation.EnableYdszAudit;
-import com.njydsz.common.auth.annotation.EnableYdszAuth;
-import com.njydsz.common.feign.annotation.EnableYdszFeign;
-import com.njydsz.common.safe.annotation.EnableYdszSafe;
 
 /**
  * 定时任务调度服务启动类
@@ -21,17 +21,23 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @EnableYdszAuth
 @EnableYdszSafe
 @EnableYdszAudit
-@EnableYdszFeign(basePackages = {"com.njydsz.cronjob.api", "com.njydsz.common.feign", "com.njydsz.userinfo.api", "com.njydsz.system.api"})
+@EnableYdszFeign(
+    basePackages = {
+      "com.njydsz.cronjob.api",
+      "com.njydsz.common.feign",
+      "com.njydsz.userinfo.api",
+      "com.njydsz.system.api"
+    })
 @EnableScheduling
 @MapperScan("com.njydsz.cronjob.infra.mapper")
 public class CronjobApplication {
 
-    /**
-     * 应用入口方法
-     *
-     * @param args 启动参数
-     */
-    public static void main(String[] args) {
-        SpringApplication.run(CronjobApplication.class, args);
-    }
+  /**
+   * 应用入口方法
+   *
+   * @param args 启动参数
+   */
+  public static void main(String[] args) {
+    SpringApplication.run(CronjobApplication.class, args);
+  }
 }

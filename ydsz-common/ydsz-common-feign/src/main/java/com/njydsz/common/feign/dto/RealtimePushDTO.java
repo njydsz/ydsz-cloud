@@ -19,11 +19,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class RealtimePushDTO implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-    /** 推送类型标识 */
-    private String type;
+  /** 推送类型标识 */
+  private String type;
 
-    /** 推送数据载荷 */
-    private Map<String, Object> data;
+  /** 推送数据载荷 */
+  private Map<String, Object> data;
 }

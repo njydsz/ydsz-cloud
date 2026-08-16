@@ -18,39 +18,38 @@ import lombok.Data;
 @Builder
 public class RuleDashboardTrendVO implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
-    /** 时间维度标签：24h=按小时 / 7d=按天 / 30d=按天 */
-    private String timeRange;
+  /** 时间维度标签：24h=按小时 / 7d=按天 / 30d=按天 */
+  private String timeRange;
 
-    /** 时间点标签列表（X 轴），格式：24h→"HH:00" / 7d/30d→"MM-DD" */
-    private List<String> timeLabels;
+  /** 时间点标签列表（X 轴），格式：24h→"HH:00" / 7d/30d→"MM-DD" */
+  private List<String> timeLabels;
 
-    /** 评估次数序列（与 timeLabels 等长） */
-    private List<Long> evaluationSeries;
+  /** 评估次数序列（与 timeLabels 等长） */
+  private List<Long> evaluationSeries;
 
-    /** 触发次数序列 */
-    private List<Long> triggeredSeries;
+  /** 触发次数序列 */
+  private List<Long> triggeredSeries;
 
-    /** 错误次数序列 */
-    private List<Long> errorSeries;
+  /** 错误次数序列 */
+  private List<Long> errorSeries;
 
-    /** P99 耗时序列（毫秒） */
-    private List<Double> p99ElapsedSeries;
+  /** P99 耗时序列（毫秒） */
+  private List<Double> p99ElapsedSeries;
 
-    /** P50 耗时序列（毫秒） */
-    private List<Double> p50ElapsedSeries;
+  /** P50 耗时序列（毫秒） */
+  private List<Double> p50ElapsedSeries;
 
-    /** 错误率序列（0~1） */
-    private List<Double> errorRateSeries;
+  /** 错误率序列（0~1） */
+  private List<Double> errorRateSeries;
 
-    /** 触发率序列（0~1） */
-    private List<Double> triggerRateSeries;
+  /** 触发率序列（0~1） */
+  private List<Double> triggerRateSeries;
 
-    /** 统计时间窗口起始时间（含） */
-    private String since;
+  /** 统计时间窗口起始时间（含） */
+  private String since;
 
-    /** 统计时间窗口结束时间（不含） */
-    private String until;
+  /** 统计时间窗口结束时间（不含） */
+  private String until;
 }

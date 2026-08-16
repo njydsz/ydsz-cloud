@@ -8,8 +8,7 @@ import java.lang.annotation.Target;
 /**
  * SLA 步骤注解
  *
- * <p>标注在方法上，作为 SLA 的一个步骤进行采集。
- * 需配合 {@link SlaMetric} 使用。
+ * <p>标注在方法上，作为 SLA 的一个步骤进行采集。 需配合 {@link SlaMetric} 使用。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -18,12 +17,12 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface SlaStep {
 
-    /** 步骤名 */
-    String name();
+  /** 步骤名 */
+  String name();
 
-    /** 超时阈值（毫秒） */
-    long timeoutMillis() default 200;
+  /** 超时阈值（毫秒） */
+  long timeoutMillis() default 200;
 
-    /** 是否关键步骤（失败则整体 SLA 违反） */
-    boolean critical() default true;
+  /** 是否关键步骤（失败则整体 SLA 违反） */
+  boolean critical() default true;
 }

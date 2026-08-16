@@ -1,5 +1,7 @@
 package com.njydsz.common.safe.advice;
 
+import com.njydsz.common.safe.config.SafeXssProperties;
+import com.njydsz.common.safe.core.JsonBodyXssCleaner;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,96 +18,99 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.RequestBodyAdviceAdapter;
-import com.njydsz.common.safe.config.SafeXssProperties;
-import com.njydsz.common.safe.core.JsonBodyXssCleaner;
 
 /**
  * XSS 请求体拦截器
  *
- * 在 JSON 反序列化前，对请求体中的字符串值进行 XSS 清理。
- * 适用于非 FastJson 转换器场景，作为补充防护层。
+ * <p>在 JSON 反序列化前，对请求体中的字符串值进行 XSS 清理。 适用于非 FastJson 转换器场景，作为补充防护层。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 @Component
-@ConditionalOnProperty(prefix = "ydsz.safe.xss", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(
+    prefix = "ydsz.safe.xss",
+    name = "enabled",
+    havingValue = "true",
+    matchIfMissing = true)
 public class XssRequestBodyAdvice extends RequestBodyAdviceAdapter {
 
-    private static final Logger log = LoggerFactory.getLogger(XssRequestBodyAdvice.class);
+  private static final Logger log = LoggerFactory.getLogger(XssRequestBodyAdvice.class);
 
-    private final JsonBodyXssCleaner xssCleaner;
+  private final JsonBodyXssCleaner xssCleaner;
 
-    private final SafeXssProperties xssProperties;
+  private final SafeXssProperties xssProperties;
 
-    public XssRequestBodyAdvice(JsonBodyXssCleaner xssCleaner, SafeXssProperties xssProperties) {
-        this.xssCleaner = xssCleaner;
-        this.xssProperties = xssProperties;
+  public XssRequestBodyAdvice(JsonBodyXssCleaner xssCleaner, SafeXssProperties xssProperties) {
+    this.xssCleaner = xssCleaner;
+    this.xssProperties = xssProperties;
+  }
+
+  @Override
+  public boolean supports(
+      @NonNull MethodParameter methodParameter,
+      @NonNull Type targetType,
+      @NonNull Class<? extends HttpMessageConverter<?>> converterType) {
+    // 仅在 Filter 模式下生效，避免与 Converter 模式双重清洗
+    return xssProperties.getMode() == SafeXssProperties.Mode.FILTER;
+  }
+
+  @Override
+  @NonNull
+  public HttpInputMessage beforeBodyRead(
+      @NonNull HttpInputMessage inputMessage,
+      @NonNull MethodParameter parameter,
+      @NonNull Type targetType,
+      @NonNull Class<? extends HttpMessageConverter<?>> converterType)
+      throws IOException {
+    // 只对 JSON 请求进行清理
+    if (!isJsonContentType(inputMessage.getHeaders())) {
+      return inputMessage;
+    }
+
+    byte[] bodyBytes = inputMessage.getBody().readAllBytes();
+    if (bodyBytes == null || bodyBytes.length == 0) {
+      return inputMessage;
+    }
+
+    String originalJson = new String(bodyBytes, StandardCharsets.UTF_8);
+    String cleanedJson = xssCleaner.clean(originalJson);
+
+    if (!cleanedJson.equals(originalJson)) {
+      log.debug(
+          "[XssRequestBodyAdvice] JSON Body XSS 过滤完成, URI: {}",
+          parameter.getMethod() != null ? parameter.getMethod().getName() : "unknown");
+    }
+
+    byte[] cleanedBytes = cleanedJson.getBytes(StandardCharsets.UTF_8);
+    return new XssCleanedInputMessage(cleanedBytes, inputMessage.getHeaders());
+  }
+
+  /** 判断 Content-Type 是否为 JSON */
+  private boolean isJsonContentType(HttpHeaders headers) {
+    MediaType contentType = headers.getContentType();
+    return contentType != null && contentType.includes(MediaType.APPLICATION_JSON);
+  }
+
+  /** 包装清理后的 HTTP 输入消息 */
+  private static class XssCleanedInputMessage implements HttpInputMessage {
+
+    private final byte[] body;
+    private final HttpHeaders headers;
+
+    XssCleanedInputMessage(byte[] body, HttpHeaders headers) {
+      this.body = body;
+      this.headers = headers;
     }
 
     @Override
-    public boolean supports(@NonNull MethodParameter methodParameter, @NonNull Type targetType,
-            @NonNull Class<? extends HttpMessageConverter<?>> converterType) {
-        // 仅在 Filter 模式下生效，避免与 Converter 模式双重清洗
-        return xssProperties.getMode() == SafeXssProperties.Mode.FILTER;
+    public InputStream getBody() throws IOException {
+      return new ByteArrayInputStream(body);
     }
 
     @Override
-    @NonNull
-    public HttpInputMessage beforeBodyRead(@NonNull HttpInputMessage inputMessage,
-            @NonNull MethodParameter parameter, @NonNull Type targetType,
-            @NonNull Class<? extends HttpMessageConverter<?>> converterType) throws IOException {
-        // 只对 JSON 请求进行清理
-        if (!isJsonContentType(inputMessage.getHeaders())) {
-            return inputMessage;
-        }
-
-        byte[] bodyBytes = inputMessage.getBody().readAllBytes();
-        if (bodyBytes == null || bodyBytes.length == 0) {
-            return inputMessage;
-        }
-
-        String originalJson = new String(bodyBytes, StandardCharsets.UTF_8);
-        String cleanedJson = xssCleaner.clean(originalJson);
-
-        if (!cleanedJson.equals(originalJson)) {
-            log.debug("[XssRequestBodyAdvice] JSON Body XSS 过滤完成, URI: {}",
-                    parameter.getMethod() != null ? parameter.getMethod().getName() : "unknown");
-        }
-
-        byte[] cleanedBytes = cleanedJson.getBytes(StandardCharsets.UTF_8);
-        return new XssCleanedInputMessage(cleanedBytes, inputMessage.getHeaders());
+    public HttpHeaders getHeaders() {
+      return headers;
     }
-
-    /**
-     * 判断 Content-Type 是否为 JSON
-     */
-    private boolean isJsonContentType(HttpHeaders headers) {
-        MediaType contentType = headers.getContentType();
-        return contentType != null && contentType.includes(MediaType.APPLICATION_JSON);
-    }
-
-    /**
-     * 包装清理后的 HTTP 输入消息
-     */
-    private static class XssCleanedInputMessage implements HttpInputMessage {
-
-        private final byte[] body;
-        private final HttpHeaders headers;
-
-        XssCleanedInputMessage(byte[] body, HttpHeaders headers) {
-            this.body = body;
-            this.headers = headers;
-        }
-
-        @Override
-        public InputStream getBody() throws IOException {
-            return new ByteArrayInputStream(body);
-        }
-
-        @Override
-        public HttpHeaders getHeaders() {
-            return headers;
-        }
-    }
+  }
 }

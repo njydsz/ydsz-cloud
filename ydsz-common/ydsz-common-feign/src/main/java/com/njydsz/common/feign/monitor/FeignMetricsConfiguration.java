@@ -15,22 +15,21 @@ import org.springframework.context.annotation.Bean;
  * @author ydsz-team
  * @since 1.0.0
  */
-
 @AutoConfiguration
 @ConditionalOnClass(MeterRegistry.class)
 public class FeignMetricsConfiguration {
 
-    /**
-     * 创建 Feign 指标收集器单例 Bean。
-     *
-     * <p>使用 {@link FeignMicrometerCollector#getInstance(MeterRegistry)} 确保全局唯一实例，
-     * 避免 {@link FeignResponseMetricsAdapter} 等组件重复创建。
-     *
-     * @param registry MeterRegistry 实例（由 Spring Boot 自动配置提供）
-     * @return FeignMicrometerCollector 单例
-     */
-    @Bean
-    public FeignMicrometerCollector feignMicrometerCollector(MeterRegistry registry) {
-        return FeignMicrometerCollector.getInstance(registry);
-    }
+  /**
+   * 创建 Feign 指标收集器单例 Bean。
+   *
+   * <p>使用 {@link FeignMicrometerCollector#getInstance(MeterRegistry)} 确保全局唯一实例， 避免 {@link
+   * FeignResponseMetricsAdapter} 等组件重复创建。
+   *
+   * @param registry MeterRegistry 实例（由 Spring Boot 自动配置提供）
+   * @return FeignMicrometerCollector 单例
+   */
+  @Bean
+  public FeignMicrometerCollector feignMicrometerCollector(MeterRegistry registry) {
+    return FeignMicrometerCollector.getInstance(registry);
+  }
 }

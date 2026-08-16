@@ -24,18 +24,12 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface Tool {
 
-    /**
-     * 工具名称（默认使用方法名）
-     */
-    String name() default "";
+  /** 工具名称（默认使用方法名） */
+  String name() default "";
 
-    /**
-     * 工具描述（告诉 LLM 这个工具做什么）
-     */
-    String description() default "";
+  /** 工具描述（告诉 LLM 这个工具做什么） */
+  String description() default "";
 
-    /**
-     * 是否启用
-     */
-    boolean enabled() default true;
+  /** 是否启用 */
+  boolean enabled() default true;
 }

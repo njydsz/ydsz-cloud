@@ -1,18 +1,18 @@
 package com.njydsz.literule.domain.annotation;
 
+import com.njydsz.literule.api.Rule;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import org.springframework.stereotype.Component;
-import com.njydsz.literule.api.Rule;
 
 /**
  * 声明式规则注解（P2-10）
  *
- * <p>标注在实现了 {@link Rule} 接口的 Spring Bean（通常配合 {@link Component}）上，
- * LiteRule 启动时会自动将其注册到规则引擎，无需手动调用 {@code engine.register(rule)}。
+ * <p>标注在实现了 {@link Rule} 接口的 Spring Bean（通常配合 {@link Component}）上， LiteRule 启动时会自动将其注册到规则引擎，无需手动调用
+ * {@code engine.register(rule)}。
  *
  * <pre>{@code
  * @LiteRule
@@ -33,8 +33,6 @@ import com.njydsz.literule.api.Rule;
 @Documented
 public @interface LiteRule {
 
-    /**
-     * 是否启用自动注册（默认 true；设为 false 可临时停用某规则）
-     */
-    boolean enabled() default true;
+  /** 是否启用自动注册（默认 true；设为 false 可临时停用某规则） */
+  boolean enabled() default true;
 }

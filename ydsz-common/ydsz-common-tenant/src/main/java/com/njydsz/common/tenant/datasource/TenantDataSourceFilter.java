@@ -1,13 +1,13 @@
 package com.njydsz.common.tenant.datasource;
 
-import java.io.IOException;
+import com.njydsz.common.tenant.TenantContextHolder;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
+import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
-import com.njydsz.common.tenant.TenantContextHolder;
 
 /**
  * ISOLATE_DB 模式 Web 过滤器。
@@ -22,25 +22,25 @@ import com.njydsz.common.tenant.TenantContextHolder;
 @Slf4j
 public class TenantDataSourceFilter implements Filter {
 
-    private final TenantDataSourceRouter router;
+  private final TenantDataSourceRouter router;
 
-    public TenantDataSourceFilter(TenantDataSourceRouter router) {
-        this.router = router;
-    }
+  public TenantDataSourceFilter(TenantDataSourceRouter router) {
+    this.router = router;
+  }
 
-    @Override
-    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
-            throws IOException, ServletException {
-        if (router.isIsolateDbMode()) {
-            String tenantId = TenantContextHolder.getTenantId();
-            try {
-                router.routeToTenantDataSource(tenantId);
-                chain.doFilter(req, res);
-            } finally {
-                router.restoreDataSource();
-            }
-        } else {
-            chain.doFilter(req, res);
-        }
+  @Override
+  public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
+      throws IOException, ServletException {
+    if (router.isIsolateDbMode()) {
+      String tenantId = TenantContextHolder.getTenantId();
+      try {
+        router.routeToTenantDataSource(tenantId);
+        chain.doFilter(req, res);
+      } finally {
+        router.restoreDataSource();
+      }
+    } else {
+      chain.doFilter(req, res);
     }
+  }
 }

@@ -1,9 +1,6 @@
 package com.njydsz.common.cache.metrics;
 
-import java.time.Duration;
-import java.util.Collections;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
+import com.njydsz.common.cache.api.Cache;
 import io.micrometer.core.instrument.FunctionCounter;
 import io.micrometer.core.instrument.FunctionTimer;
 import io.micrometer.core.instrument.Gauge;
@@ -12,14 +9,18 @@ import io.micrometer.core.instrument.Tag;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.binder.MeterBinder;
+import java.time.Duration;
+import java.util.Collections;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.njydsz.common.cache.api.Cache;
 
 /**
  * YdszCache 到 Micrometer 的指标桥接器（Tags 预编译优化版）
  *
  * <p>优化点：
+ *
  * <ul>
  *   <li>Tags 预编译：构造时一次性构建 Tags 数组，避免每次 bindTo() 重复创建 Tag 对象
  *   <li>指标去重保护：使用 REGISTERED_NAMES 计数器防止高基数问题
@@ -55,6 +56,7 @@ public class CacheMeterBinder implements MeterBinder {
 
   /** 高基数保护：最多允许注册的不同 cacheName 数量 */
   private static final AtomicInteger REGISTERED_NAMES = new AtomicInteger(0);
+
   private static final int MAX_REGISTERED_NAMES = 500;
 
   private final Cache<?, ?> cache;
@@ -88,16 +90,12 @@ public class CacheMeterBinder implements MeterBinder {
             : cacheName;
     // 高基数保护：记录注册数量
     if (REGISTERED_NAMES.incrementAndGet() > MAX_REGISTERED_NAMES) {
-      log.warn(
-          "缓存指标注册数量超过阈值 {}，可能存在高基数问题。cacheName={}",
-          MAX_REGISTERED_NAMES,
-          this.cacheName);
+      log.warn("缓存指标注册数量超过阈值 {}，可能存在高基数问题。cacheName={}", MAX_REGISTERED_NAMES, this.cacheName);
     }
     this.cacheType = cacheType;
     // 预编译 Tags：在构造时一次性构建，避免每次 bindTo 都重复创建
-    this.precompiledTags = Tags.of(extraTags)
-        .and(TAG_CACHE_NAME, this.cacheName)
-        .and(TAG_CACHE_TYPE, this.cacheType);
+    this.precompiledTags =
+        Tags.of(extraTags).and(TAG_CACHE_NAME, this.cacheName).and(TAG_CACHE_TYPE, this.cacheType);
   }
 
   /**

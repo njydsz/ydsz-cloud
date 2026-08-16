@@ -35,7 +35,6 @@ import org.slf4j.LoggerFactory;
  *   <li>外层 {@link WeakHashMap} 确保缓存实例 GC 后状态自动清理
  * </ul>
  *
- *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -76,8 +75,8 @@ public final class CacheProtectionGuard {
   /**
    * 带防护的缓存获取（防穿透/击穿/雪崩）
    *
-   * <p>防击穿实现：使用 putIfAbsent + 信号 Future 模式。 同一 key 的并发请求中，只有一个线程执行加载，其余线程等待完成后从缓存读取。
-   * Future 仅用作完成信号，不携带值，避免 unchecked cast。
+   * <p>防击穿实现：使用 putIfAbsent + 信号 Future 模式。 同一 key 的并发请求中，只有一个线程执行加载，其余线程等待完成后从缓存读取。 Future
+   * 仅用作完成信号，不携带值，避免 unchecked cast。
    *
    * @param cache 缓存实例
    * @param key 缓存键
@@ -139,8 +138,7 @@ public final class CacheProtectionGuard {
                 long jitteredExpire =
                     minExpireMs > 0
                         ? minExpireMs
-                            + ThreadLocalRandom.current()
-                                .nextLong(maxExpireMs - minExpireMs + 1)
+                            + ThreadLocalRandom.current().nextLong(maxExpireMs - minExpireMs + 1)
                         : maxExpireMs;
                 guard.nullKeyExpirations.put(key, System.currentTimeMillis() + jitteredExpire);
               }
@@ -160,7 +158,7 @@ public final class CacheProtectionGuard {
       try {
         existing.join();
       } catch (CompletionException e) {
- // 加载失败，递归重试
+        // 加载失败，递归重试
         return getWithProtection(cache, key, loader, minExpireMs, maxExpireMs);
       }
 
@@ -243,7 +241,8 @@ public final class CacheProtectionGuard {
             CacheProtectionGuard guard = forCache(cache);
             long jitteredExpire =
                 minExpireMs > 0
-                    ? minExpireMs + ThreadLocalRandom.current().nextLong(maxExpireMs - minExpireMs + 1)
+                    ? minExpireMs
+                        + ThreadLocalRandom.current().nextLong(maxExpireMs - minExpireMs + 1)
                     : maxExpireMs;
             guard.nullKeyExpirations.put(key, System.currentTimeMillis() + jitteredExpire);
           }

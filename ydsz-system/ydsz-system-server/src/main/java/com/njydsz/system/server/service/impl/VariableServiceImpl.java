@@ -1,16 +1,8 @@
 package com.njydsz.system.server.service.impl;
 
-import java.util.List;
-import java.util.stream.Collectors;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.auth.annotation.DataScope;
 import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.core.response.PageResponse;
@@ -22,44 +14,53 @@ import com.njydsz.system.domain.vo.VariableVO;
 import com.njydsz.system.infra.mapper.VariableMapper;
 import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.service.VariableService;
+import java.util.List;
+import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 系统变量 Service 实现
  *
- * <p>对 {@link VariableService} 接口的完整实现，是「系统变量中心」的核心业务逻辑层。
- * 与 {@link ConfigServiceImpl} 能力对齐，但定位不同：Variable 用于业务侧动态参数
- * （如当前生效的会计年度、最近结算月份、流水号计数器等），
- * 业务方可通过 Feign 远程查询；Config 用于系统级配置，由后端模块本地消费。
+ * <p>对 {@link VariableService} 接口的完整实现，是「系统变量中心」的核心业务逻辑层。 与 {@link ConfigServiceImpl}
+ * 能力对齐，但定位不同：Variable 用于业务侧动态参数 （如当前生效的会计年度、最近结算月份、流水号计数器等）， 业务方可通过 Feign 远程查询；Config
+ * 用于系统级配置，由后端模块本地消费。
  *
  * <p><b>核心职责：</b>
+ *
  * <ul>
- *   <li><b>CRUD</b>：{@link #page} / {@link #getById} / {@link #save} / {@link #updateById} /
- *       {@link #removeById}，全部走 {@code @Transactional} 事务保证</li>
- *   <li><b>按 key 查询值</b>：{@link #getVariableValue}（走 ydsz-common-cache 本地缓存 + Spring Cache 注解）</li>
- *   <li><b>分页 / 列表查询</b>：{@link #page} / {@link #list}，支持行级数据权限过滤
- *       （{@code @DataScope}）</li>
- *   <li><b>缓存失效</b>：写操作通过 {@code @CacheEvict(allEntries=true)} 主动清空</li>
+ *   <li><b>CRUD</b>：{@link #page} / {@link #getById} / {@link #save} / {@link #updateById} / {@link
+ *       #removeById}，全部走 {@code @Transactional} 事务保证
+ *   <li><b>按 key 查询值</b>：{@link #getVariableValue}（走 ydsz-common-cache 本地缓存 + Spring Cache 注解）
+ *   <li><b>分页 / 列表查询</b>：{@link #page} / {@link #list}，支持行级数据权限过滤 （{@code @DataScope}）
+ *   <li><b>缓存失效</b>：写操作通过 {@code @CacheEvict(allEntries=true)} 主动清空
  * </ul>
  *
  * <p><b>缓存设计：</b>
+ *
  * <ul>
- *   <li>缓存名称：{@link CacheConstants#SYSTEM_VARIABLE_CACHE}（ydsz-common-cache 本地缓存）</li>
- *   <li>缓存键：{@code {tenantId}:{variableKey}}</li>
- *   <li>TTL 与容量通过 {@code ydsz.cache.caches.system:variable} YAML 配置</li>
- *   <li>写操作触发 {@code @CacheEvict(allEntries=true)} 主动失效</li>
+ *   <li>缓存名称：{@link CacheConstants#SYSTEM_VARIABLE_CACHE}（ydsz-common-cache 本地缓存）
+ *   <li>缓存键：{@code {tenantId}:{variableKey}}
+ *   <li>TTL 与容量通过 {@code ydsz.cache.caches.system:variable} YAML 配置
+ *   <li>写操作触发 {@code @CacheEvict(allEntries=true)} 主动失效
  * </ul>
  *
  * <p><b>事务边界：</b>
+ *
  * <ul>
- *   <li>所有写方法 {@code @Transactional(rollbackFor = Exception.class)}</li>
- *   <li>读方法不开启事务，依赖 MyBatis 自动提交</li>
- *   <li>分页 / 列表查询使用 {@code @DataScope} 自动注入行级数据权限 SQL</li>
+ *   <li>所有写方法 {@code @Transactional(rollbackFor = Exception.class)}
+ *   <li>读方法不开启事务，依赖 MyBatis 自动提交
+ *   <li>分页 / 列表查询使用 {@code @DataScope} 自动注入行级数据权限 SQL
  * </ul>
  *
- * <p><b>多租户：</b>所有方法自动按当前 {@code TenantContext} 隔离，
- * 租户过滤由 MyBatis 拦截器注入。
+ * <p><b>多租户：</b>所有方法自动按当前 {@code TenantContext} 隔离， 租户过滤由 MyBatis 拦截器注入。
  *
  * <p><b>与 ConfigService 的区别：</b>
+ *
  * <table>
  *   <caption>Variable vs Config 定位差异</caption>
  *   <tr><th>维度</th><th>{@link ConfigServiceImpl Config}</th><th>Variable（本类）</th></tr>
@@ -71,15 +72,16 @@ import com.njydsz.system.server.service.VariableService;
  * </table>
  *
  * <p><b>设计要点：</b>
+ *
  * <ul>
- *   <li><b>业务参数化</b>：业务硬编码值（如「每月 1 号出账」）可改为变量，由运营灵活调整</li>
- *   <li><b>行级权限</b>：分页 / 列表查询走 {@code @DataScope}，自动按当前用户的部门 / 人员范围过滤</li>
- *   <li><b>软删除</b>：{@code ydsz_variable} 表采用 <b>逻辑删除</b>（{@code deleted} 字段）</li>
- *   <li><b>启用过滤</b>：{@link #getVariableValue} 仅返回 {@code status=ENABLED} 的变量，
- *       失效的变量视为不存在</li>
+ *   <li><b>业务参数化</b>：业务硬编码值（如「每月 1 号出账」）可改为变量，由运营灵活调整
+ *   <li><b>行级权限</b>：分页 / 列表查询走 {@code @DataScope}，自动按当前用户的部门 / 人员范围过滤
+ *   <li><b>软删除</b>：{@code ydsz_variable} 表采用 <b>逻辑删除</b>（{@code deleted} 字段）
+ *   <li><b>启用过滤</b>：{@link #getVariableValue} 仅返回 {@code status=ENABLED} 的变量， 失效的变量视为不存在
  * </ul>
  *
  * <p><b>典型使用：</b>
+ *
  * <pre>{@code
  * // 业务方远程查询（跨服务）
  * String currentYear = variableClient.getVariableValue("finance.current_fiscal_year");
@@ -90,7 +92,6 @@ import com.njydsz.system.server.service.VariableService;
  *
  * @author ydsz-team
  * @since 1.0.0
- *
  * @see VariableService 变量 Service 接口
  * @see ConfigServiceImpl 系统配置 Service（能力对齐但定位不同）
  * @see com.njydsz.system.domain.entity.Variable 变量实体
@@ -100,190 +101,193 @@ import com.njydsz.system.server.service.VariableService;
 @RequiredArgsConstructor
 public class VariableServiceImpl implements VariableService {
 
-    /** 变量 Mapper（继承 {@code ydsz_variable} 表 CRUD） */
-    private final VariableMapper mapper;
-    /** 系统监控指标采集器 */
-    private final SystemMetrics metrics;
+  /** 变量 Mapper（继承 {@code ydsz_variable} 表 CRUD） */
+  private final VariableMapper mapper;
 
-    /**
-     * 根据主键查询变量（不走缓存，直接走 DB）
-     *
-     * <p>适用场景：管理后台「变量详情」页，单次访问无缓存需求。
-     * 高频查询请使用 {@link #getVariableValue}。
-     *
-     * @param id 变量主键
-     * @return 变量 VO，不存在返回 null
-     */
-    @Override
-    public VariableVO getById(String id) {
-        Variable entity = mapper.selectById(id);
-        return SystemConverter.INSTANT.entityToVO(entity);
-    }
+  /** 系统监控指标采集器 */
+  private final SystemMetrics metrics;
 
-    /**
-     * 按 variableKey 查询变量值（走缓存）
-     *
-     * <p>执行链路：
-     * <ol>
-     *   <li>通过 Spring Cache {@code @Cacheable} 查本地缓存（{@link CacheConstants#SYSTEM_VARIABLE_CACHE}），命中直接返回</li>
-     *   <li>缓存未命中查 DB（方法体内仅执行此逻辑）</li>
-     *   <li>记录查询耗时指标（缓存命中时方法不执行，由 Micrometer 记录）</li>
-     * </ol>
-     *
-     * <p>本方法是高频读入口，跨服务 Feign 调用建议走本方法，避免直连 DB。
-     *
-     * @param variableKey 变量键
-     * @return 变量值字符串，不存在时返回 null（SpringYdszCache 自动缓存 null 值防穿透）
-     */
-    @Override
-    @Cacheable(value = CacheConstants.SYSTEM_VARIABLE_CACHE, key = "@cacheKeyBuilder.variable(#p0)")
-    public String getVariableValue(String variableKey) {
-        long start = System.nanoTime();
-        try {
-            metrics.recordVariableCacheMiss();
-            QueryWrapper<Variable> wrapper = new QueryWrapper<>();
-            wrapper.eq("variable_key", variableKey).eq("status", "ENABLED");
-            Variable entity = mapper.selectOne(wrapper);
-            return entity != null ? entity.getVariableValue() : null;
-        } finally {
-            metrics.recordVariableRead(System.nanoTime() - start);
-        }
-    }
+  /**
+   * 根据主键查询变量（不走缓存，直接走 DB）
+   *
+   * <p>适用场景：管理后台「变量详情」页，单次访问无缓存需求。 高频查询请使用 {@link #getVariableValue}。
+   *
+   * @param id 变量主键
+   * @return 变量 VO，不存在返回 null
+   */
+  @Override
+  public VariableVO getById(String id) {
+    Variable entity = mapper.selectById(id);
+    return SystemConverter.INSTANT.entityToVO(entity);
+  }
 
-    /**
-     * 分页查询变量（管理后台列表页）
-     *
-     * <p>支持按 {@code variableKey} 模糊匹配、{@code status} 精确匹配进行过滤，
-     * 按 {@code created_at} 倒序返回。
-     *
-     * <p><b>行级权限：</b>本方法带 {@code @DataScope} 注解，
-     * 自动按当前用户的部门 / 人员范围过滤（管理员看全量）。
-     *
-     * @param pageNum     页码（1-based）
-     * @param pageSize    每页条数
-     * @param variableKey 变量键（可选，模糊匹配）
-     * @param status      状态（可选过滤条件，如 {@code ENABLED/DISABLED}）
-     * @return 分页结果（含总条数）
-     */
-    @Override
-    @DataScope(deptColumn = "dept_id", userColumn = "created_by")
-    public PageResponse<List<VariableVO>> page(int pageNum, int pageSize, String variableKey, String status) {
-        QueryWrapper<Variable> wrapper = new QueryWrapper<>();
-        if (variableKey != null && !variableKey.isBlank()) {
-            wrapper.like("variable_key", variableKey);
-        }
-        if (status != null && !status.isBlank()) {
-            wrapper.eq("status", status);
-        }
-        wrapper.orderByDesc("created_at");
-        IPage<Variable> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
-        return PageResponses.success(page, SystemConverter.INSTANT::entityToVO);
+  /**
+   * 按 variableKey 查询变量值（走缓存）
+   *
+   * <p>执行链路：
+   *
+   * <ol>
+   *   <li>通过 Spring Cache {@code @Cacheable} 查本地缓存（{@link
+   *       CacheConstants#SYSTEM_VARIABLE_CACHE}），命中直接返回
+   *   <li>缓存未命中查 DB（方法体内仅执行此逻辑）
+   *   <li>记录查询耗时指标（缓存命中时方法不执行，由 Micrometer 记录）
+   * </ol>
+   *
+   * <p>本方法是高频读入口，跨服务 Feign 调用建议走本方法，避免直连 DB。
+   *
+   * @param variableKey 变量键
+   * @return 变量值字符串，不存在时返回 null（SpringYdszCache 自动缓存 null 值防穿透）
+   */
+  @Override
+  @Cacheable(value = CacheConstants.SYSTEM_VARIABLE_CACHE, key = "@cacheKeyBuilder.variable(#p0)")
+  public String getVariableValue(String variableKey) {
+    long start = System.nanoTime();
+    try {
+      metrics.recordVariableCacheMiss();
+      QueryWrapper<Variable> wrapper = new QueryWrapper<>();
+      wrapper.eq("variable_key", variableKey).eq("status", "ENABLED");
+      Variable entity = mapper.selectOne(wrapper);
+      return entity != null ? entity.getVariableValue() : null;
+    } finally {
+      metrics.recordVariableRead(System.nanoTime() - start);
     }
+  }
 
-    /**
-     * 查询全部变量（不区分状态）
-     *
-     * <p>典型调用方：管理后台「变量选择器」下拉框。
-     *
-     * <p><b>行级权限：</b>本方法带 {@code @DataScope} 注解，
-     * 自动按当前用户的部门 / 人员范围过滤。
-     *
-     * <p><b>慎用：</b>全表扫描，变量一般 < 200 条，单次查询 < 20ms。
-     *
-     * @return 全部变量列表（按 createdAt 倒序）
-     */
-    @Override
-    @DataScope(deptColumn = "dept_id", userColumn = "created_by")
-    public List<VariableVO> list() {
-        return mapper.selectList(null).stream().map(SystemConverter.INSTANT::entityToVO).collect(Collectors.toList());
+  /**
+   * 分页查询变量（管理后台列表页）
+   *
+   * <p>支持按 {@code variableKey} 模糊匹配、{@code status} 精确匹配进行过滤， 按 {@code created_at} 倒序返回。
+   *
+   * <p><b>行级权限：</b>本方法带 {@code @DataScope} 注解， 自动按当前用户的部门 / 人员范围过滤（管理员看全量）。
+   *
+   * @param pageNum 页码（1-based）
+   * @param pageSize 每页条数
+   * @param variableKey 变量键（可选，模糊匹配）
+   * @param status 状态（可选过滤条件，如 {@code ENABLED/DISABLED}）
+   * @return 分页结果（含总条数）
+   */
+  @Override
+  @DataScope(deptColumn = "dept_id", userColumn = "created_by")
+  public PageResponse<List<VariableVO>> page(
+      int pageNum, int pageSize, String variableKey, String status) {
+    QueryWrapper<Variable> wrapper = new QueryWrapper<>();
+    if (variableKey != null && !variableKey.isBlank()) {
+      wrapper.like("variable_key", variableKey);
     }
+    if (status != null && !status.isBlank()) {
+      wrapper.eq("status", status);
+    }
+    wrapper.orderByDesc("created_at");
+    IPage<Variable> page = mapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+    return PageResponses.success(page, SystemConverter.INSTANT::entityToVO);
+  }
 
-    /**
-     * 新增变量
-     *
-     * <p>执行链路：
-     * <ol>
-     *   <li>DTO 转 DO，默认 {@code status=ENABLED}</li>
-     *   <li>插入 {@code ydsz_variable} 表</li>
-     *   <li>清除该 {@code variableKey} 对应的缓存</li>
-     * </ol>
-     *
-     * @param dto 变量数据
-     * @return 新创建的变量 ID
-     */
-    @Override
-    @CacheEvict(value = CacheConstants.SYSTEM_VARIABLE_CACHE, allEntries = true)
-    @Transactional(rollbackFor = Exception.class)
-    public String save(VariableDTO dto) {
-        Variable entity = toEntity(dto);
-        mapper.insert(entity);
-        return entity.getId();
-    }
+  /**
+   * 查询全部变量（不区分状态）
+   *
+   * <p>典型调用方：管理后台「变量选择器」下拉框。
+   *
+   * <p><b>行级权限：</b>本方法带 {@code @DataScope} 注解， 自动按当前用户的部门 / 人员范围过滤。
+   *
+   * <p><b>慎用：</b>全表扫描，变量一般 < 200 条，单次查询 < 20ms。
+   *
+   * @return 全部变量列表（按 createdAt 倒序）
+   */
+  @Override
+  @DataScope(deptColumn = "dept_id", userColumn = "created_by")
+  public List<VariableVO> list() {
+    return mapper.selectList(null).stream()
+        .map(SystemConverter.INSTANT::entityToVO)
+        .collect(Collectors.toList());
+  }
 
-    /**
-     * 更新变量
-     *
-     * <p>执行链路：
-     * <ol>
-     *   <li>DTO 转 DO</li>
-     *   <li>更新 {@code ydsz_variable} 表</li>
-     *   <li>更新成功后清除该 {@code variableKey} 对应的缓存</li>
-     * </ol>
-     *
-     * <p><b>注意：</b>更新 {@code variableKey} 会导致所有依赖该键的下游缓存失效，
-     * 调用方需主动清理相关业务缓存。
-     *
-     * @param dto 变量数据（需包含 {@code id}）
-     * @return true=更新成功，false=记录不存在
-     */
-    @Override
-    @CacheEvict(value = CacheConstants.SYSTEM_VARIABLE_CACHE, allEntries = true)
-    @Transactional(rollbackFor = Exception.class)
-    public boolean updateById(VariableDTO dto) {
-        Variable entity = toEntity(dto);
-        return mapper.updateById(entity) > 0;
-    }
+  /**
+   * 新增变量
+   *
+   * <p>执行链路：
+   *
+   * <ol>
+   *   <li>DTO 转 DO，默认 {@code status=ENABLED}
+   *   <li>插入 {@code ydsz_variable} 表
+   *   <li>清除该 {@code variableKey} 对应的缓存
+   * </ol>
+   *
+   * @param dto 变量数据
+   * @return 新创建的变量 ID
+   */
+  @Override
+  @CacheEvict(value = CacheConstants.SYSTEM_VARIABLE_CACHE, allEntries = true)
+  @Transactional(rollbackFor = Exception.class)
+  public String save(VariableDTO dto) {
+    Variable entity = toEntity(dto);
+    mapper.insert(entity);
+    return entity.getId();
+  }
 
-    /**
-     * 逻辑删除变量
-     *
-     * <p>采用<b>逻辑删除</b>（{@code deleted=1} + {@code status=DISABLED}），
-     * 不真正从 DB 删除，便于审计回溯。
-     *
-     * <p>执行链路：
-     * <ol>
-     *   <li>查询原实体（用于获取 variableKey）</li>
-     *   <li>逻辑删除记录</li>
-     *   <li>删除成功后清除该 {@code variableKey} 对应的缓存</li>
-     * </ol>
-     *
-     * @param id 变量主键
-     * @return true=删除成功，false=记录不存在
-     */
-    @Override
-    @CacheEvict(value = CacheConstants.SYSTEM_VARIABLE_CACHE, allEntries = true)
-    @Transactional(rollbackFor = Exception.class)
-    public boolean removeById(String id) {
-        Variable entity = mapper.selectById(id);
-        return mapper.deleteById(id) > 0;
-    }
+  /**
+   * 更新变量
+   *
+   * <p>执行链路：
+   *
+   * <ol>
+   *   <li>DTO 转 DO
+   *   <li>更新 {@code ydsz_variable} 表
+   *   <li>更新成功后清除该 {@code variableKey} 对应的缓存
+   * </ol>
+   *
+   * <p><b>注意：</b>更新 {@code variableKey} 会导致所有依赖该键的下游缓存失效， 调用方需主动清理相关业务缓存。
+   *
+   * @param dto 变量数据（需包含 {@code id}）
+   * @return true=更新成功，false=记录不存在
+   */
+  @Override
+  @CacheEvict(value = CacheConstants.SYSTEM_VARIABLE_CACHE, allEntries = true)
+  @Transactional(rollbackFor = Exception.class)
+  public boolean updateById(VariableDTO dto) {
+    Variable entity = toEntity(dto);
+    return mapper.updateById(entity) > 0;
+  }
 
-    /**
-     * DTO → DO 转换（私有）
-     *
-     * <p>缺省 {@code status="ENABLED"}，保证新建的变量默认可用。
-     *
-     * @param dto 数据传输对象
-     * @return 数据库实体
-     */
-    private Variable toEntity(VariableDTO dto) {
-        Variable entity = new Variable();
-        entity.setId(dto.getId());
-        entity.setVariableKey(dto.getVariableKey());
-        entity.setVariableValue(dto.getVariableValue());
-        entity.setValueType(dto.getValueType());
-        entity.setDescription(dto.getDescription());
-        entity.setStatus(dto.getStatus() != null ? dto.getStatus() : "ENABLED");
-        return entity;
-    }
+  /**
+   * 逻辑删除变量
+   *
+   * <p>采用<b>逻辑删除</b>（{@code deleted=1} + {@code status=DISABLED}）， 不真正从 DB 删除，便于审计回溯。
+   *
+   * <p>执行链路：
+   *
+   * <ol>
+   *   <li>查询原实体（用于获取 variableKey）
+   *   <li>逻辑删除记录
+   *   <li>删除成功后清除该 {@code variableKey} 对应的缓存
+   * </ol>
+   *
+   * @param id 变量主键
+   * @return true=删除成功，false=记录不存在
+   */
+  @Override
+  @CacheEvict(value = CacheConstants.SYSTEM_VARIABLE_CACHE, allEntries = true)
+  @Transactional(rollbackFor = Exception.class)
+  public boolean removeById(String id) {
+    Variable entity = mapper.selectById(id);
+    return mapper.deleteById(id) > 0;
+  }
+
+  /**
+   * DTO → DO 转换（私有）
+   *
+   * <p>缺省 {@code status="ENABLED"}，保证新建的变量默认可用。
+   *
+   * @param dto 数据传输对象
+   * @return 数据库实体
+   */
+  private Variable toEntity(VariableDTO dto) {
+    Variable entity = new Variable();
+    entity.setId(dto.getId());
+    entity.setVariableKey(dto.getVariableKey());
+    entity.setVariableValue(dto.getVariableValue());
+    entity.setValueType(dto.getValueType());
+    entity.setDescription(dto.getDescription());
+    entity.setStatus(dto.getStatus() != null ? dto.getStatus() : "ENABLED");
+    return entity;
+  }
 }

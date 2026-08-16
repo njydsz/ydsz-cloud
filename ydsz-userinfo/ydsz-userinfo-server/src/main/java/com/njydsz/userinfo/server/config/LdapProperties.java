@@ -7,6 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * LDAP 认证配置属性。
  *
  * <p>配置示例：
+ *
  * <pre>
  * ydsz:
  *   auth:
@@ -22,26 +23,27 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.auth.ldap")
+@SuppressWarnings("checkstyle:MagicNumber")
 public class LdapProperties {
 
-    /** 是否启用 LDAP 认证 */
-    private boolean enabled = false;
+  /** 是否启用 LDAP 认证 */
+  private boolean enabled = false;
 
-    /** LDAP 服务器地址 */
-    private String host = "127.0.0.1";
+  /** LDAP 服务器地址 */
+  private String host = "127.0.0.1";
 
-    /** LDAP 端口 */
-    private int port = 389;
+  /** LDAP 端口 */
+  private int port = 389;
 
-    /** 域后缀（如 @ydszsoft） */
-    private String domain = "";
+  /** 域后缀（如 @ydszsoft） */
+  private String domain = "";
 
-    /** Base DN */
-    private String baseDn = "";
+  /** Base DN */
+  private String baseDn = "";
 
-    /** 连接超时（毫秒） */
-    private int connectTimeoutMs = 5000;
+  /** 连接超时（毫秒） */
+  private int connectTimeoutMs = 5000;
 
-    /** 读取超时（毫秒） */
-    private int readTimeoutMs = 10000;
+  /** 读取超时（毫秒） */
+  private int readTimeoutMs = 10000;
 }

@@ -1,7 +1,5 @@
 package com.njydsz.common.cache.builder;
 
-import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.api.LoadingCache;
 import com.njydsz.common.cache.internal.concurrent.StripedConcurrentCache;
@@ -13,6 +11,8 @@ import com.njydsz.common.cache.listener.RemovalListener;
 import com.njydsz.common.cache.support.CacheLoader;
 import com.njydsz.common.cache.support.CacheWriter;
 import com.njydsz.common.cache.support.Expiry;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 缓存构建器 - 参考 Caffeine 的流畅构建器
@@ -117,8 +117,7 @@ public final class CacheBuilder<K, V> {
   private com.njydsz.common.cache.health.CacheHealthIndicator healthIndicator;
 
   /** 私有构造函数，通过 YdszCache.newBuilder() 创建 */
-  private CacheBuilder() {
-  }
+  private CacheBuilder() {}
 
   /**
    * 创建 CacheBuilder 实例
@@ -369,7 +368,10 @@ public final class CacheBuilder<K, V> {
     Cache<K, V> cache = createBaseCache();
     cache = applyDecorators(cache);
     // 健康检查自动注册
-    if (healthCheckEnabled && healthIndicator != null && cacheName != null && !cacheName.isEmpty()) {
+    if (healthCheckEnabled
+        && healthIndicator != null
+        && cacheName != null
+        && !cacheName.isEmpty()) {
       healthIndicator.registerCache(cacheName, cache);
     }
     return cache;
@@ -430,7 +432,8 @@ public final class CacheBuilder<K, V> {
           "expireAfterAccess duration must be greater than 0, or -1 for no expiration");
     }
     if (expireAfterWriteDuration > 0 && expireAfterWriteUnit == null) {
-      throw new IllegalArgumentException("expireAfterWriteUnit must be set when expireAfterWrite > 0");
+      throw new IllegalArgumentException(
+          "expireAfterWriteUnit must be set when expireAfterWrite > 0");
     }
     if (expireAfterAccessDuration > 0 && expireAfterAccessUnit == null) {
       throw new IllegalArgumentException(

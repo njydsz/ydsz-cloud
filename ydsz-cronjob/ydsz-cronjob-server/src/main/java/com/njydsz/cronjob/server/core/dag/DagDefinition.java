@@ -8,10 +8,10 @@ import java.util.Objects;
 /**
  * DAG 定义模型（P2 DAG 增强）。
  *
- * <p>对应 {@code JobDag.dagDefinition} JSON 字段，包含节点列表和边列表。
- * 由 {@link DagDefinitionCodec} 负责序列化/反序列化。
+ * <p>对应 {@code JobDag.dagDefinition} JSON 字段，包含节点列表和边列表。 由 {@link DagDefinitionCodec} 负责序列化/反序列化。
  *
  * <p>JSON 格式示例：
+ *
  * <pre>{@code
  * {
  *   "nodes": [
@@ -34,79 +34,54 @@ import java.util.Objects;
  */
 public record DagDefinition(List<DagNode> nodes, List<DagEdge> edges) {
 
-    /**
-     * 紧凑构造器：防御性拷贝 + null 处理。
-     */
-    public DagDefinition {
-        Objects.requireNonNull(nodes, "nodes 不能为空");
-        nodes = new ArrayList<>(nodes);
-        edges = edges == null ? Collections.emptyList() : new ArrayList<>(edges);
-    }
+  /** 紧凑构造器：防御性拷贝 + null 处理。 */
+  public DagDefinition {
+    Objects.requireNonNull(nodes, "nodes 不能为空");
+    nodes = new ArrayList<>(nodes);
+    edges = edges == null ? Collections.emptyList() : new ArrayList<>(edges);
+  }
 
-    /**
-     * 工厂方法：创建空 DAG 定义（仅用于反序列化）。
-     */
-    public static DagDefinition empty() {
-        return new DagDefinition(Collections.emptyList(), Collections.emptyList());
-    }
+  /** 工厂方法：创建空 DAG 定义（仅用于反序列化）。 */
+  public static DagDefinition empty() {
+    return new DagDefinition(Collections.emptyList(), Collections.emptyList());
+  }
 
-    /**
-     * 工厂方法：创建 DAG 定义。
-     */
-    public static DagDefinition of(List<DagNode> nodes, List<DagEdge> edges) {
-        return new DagDefinition(nodes, edges);
-    }
+  /** 工厂方法：创建 DAG 定义。 */
+  public static DagDefinition of(List<DagNode> nodes, List<DagEdge> edges) {
+    return new DagDefinition(nodes, edges);
+  }
 
-    /**
-     * 根据 jobKey 查找节点。
-     */
-    public DagNode findNode(String jobKey) {
-        if (jobKey == null) {
-            return null;
-        }
-        return nodes.stream()
-                .filter(n -> jobKey.equals(n.jobKey()))
-                .findFirst()
-                .orElse(null);
+  /** 根据 jobKey 查找节点。 */
+  public DagNode findNode(String jobKey) {
+    if (jobKey == null) {
+      return null;
     }
+    return nodes.stream().filter(n -> jobKey.equals(n.jobKey())).findFirst().orElse(null);
+  }
 
-    /**
-     * 获取指定节点的所有出边（from = jobKey）。
-     */
-    public List<DagEdge> outgoingEdges(String jobKey) {
-        if (jobKey == null) {
-            return Collections.emptyList();
-        }
-        return edges.stream()
-                .filter(e -> jobKey.equals(e.from()))
-                .toList();
+  /** 获取指定节点的所有出边（from = jobKey）。 */
+  public List<DagEdge> outgoingEdges(String jobKey) {
+    if (jobKey == null) {
+      return Collections.emptyList();
     }
+    return edges.stream().filter(e -> jobKey.equals(e.from())).toList();
+  }
 
-    /**
-     * 获取指定节点的所有入边（to = jobKey）。
-     */
-    public List<DagEdge> incomingEdges(String jobKey) {
-        if (jobKey == null) {
-            return Collections.emptyList();
-        }
-        return edges.stream()
-                .filter(e -> jobKey.equals(e.to()))
-                .toList();
+  /** 获取指定节点的所有入边（to = jobKey）。 */
+  public List<DagEdge> incomingEdges(String jobKey) {
+    if (jobKey == null) {
+      return Collections.emptyList();
     }
+    return edges.stream().filter(e -> jobKey.equals(e.to())).toList();
+  }
 
-    /**
-     * 获取所有起始节点（无入边的节点）。
-     */
-    public List<DagNode> rootNodes() {
-        return nodes.stream()
-                .filter(n -> incomingEdges(n.jobKey()).isEmpty())
-                .toList();
-    }
+  /** 获取所有起始节点（无入边的节点）。 */
+  public List<DagNode> rootNodes() {
+    return nodes.stream().filter(n -> incomingEdges(n.jobKey()).isEmpty()).toList();
+  }
 
-    /**
-     * 节点数量。
-     */
-    public int nodeCount() {
-        return nodes.size();
-    }
+  /** 节点数量。 */
+  public int nodeCount() {
+    return nodes.size();
+  }
 }

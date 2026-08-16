@@ -16,17 +16,12 @@ import lombok.Data;
 @Schema(description = "规则审批委托请求体")
 public class RuleDelegateDTO {
 
-    /**
-     * 被委托人工号（必填）
-     */
-    @Schema(description = "被委托人工号", requiredMode = Schema.RequiredMode.REQUIRED,
-            example = "U002")
-    @NotBlank(message = "{validation.project.msg_d4b5c6d4}")
-    private String delegatedTo;
+  /** 被委托人工号（必填） */
+  @Schema(description = "被委托人工号", requiredMode = Schema.RequiredMode.REQUIRED, example = "U002")
+  @NotBlank(message = "{validation.project.msg_d4b5c6d4}")
+  private String delegatedTo;
 
-    /**
-     * 委托说明（可选）
-     */
-    @Schema(description = "委托说明")
-    private String comment;
+  /** 委托说明（可选） */
+  @Schema(description = "委托说明")
+  private String comment;
 }

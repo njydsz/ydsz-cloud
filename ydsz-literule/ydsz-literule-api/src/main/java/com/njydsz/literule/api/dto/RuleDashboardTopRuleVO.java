@@ -17,48 +17,47 @@ import lombok.Data;
 @Builder
 public class RuleDashboardTopRuleVO implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
-    /** 规则编码 */
-    private String ruleCode;
+  /** 规则编码 */
+  private String ruleCode;
 
-    /** 规则名称 */
-    private String ruleName;
+  /** 规则名称 */
+  private String ruleName;
 
-    /** 规则类别 */
-    private String category;
+  /** 规则类别 */
+  private String category;
 
-    /** 责任人 */
-    private String owner;
+  /** 责任人 */
+  private String owner;
 
-    /** 是否启用 */
-    private Boolean enabled;
+  /** 是否启用 */
+  private Boolean enabled;
 
-    /** 默认严重度 */
-    private String defaultSeverity;
+  /** 默认严重度 */
+  private String defaultSeverity;
 
-    /** 评估次数 */
-    private long evaluations;
+  /** 评估次数 */
+  private long evaluations;
 
-    /** 触发次数 */
-    private long triggered;
+  /** 触发次数 */
+  private long triggered;
 
-    /** 错误次数 */
-    private long errors;
+  /** 错误次数 */
+  private long errors;
 
-    /** 触发率（0~1） */
-    private double triggerRate;
+  /** 触发率（0~1） */
+  private double triggerRate;
 
-    /** 错误率（0~1） */
-    private double errorRate;
+  /** 错误率（0~1） */
+  private double errorRate;
 
-    /** 平均耗时（毫秒） */
-    private double avgElapsedMs;
+  /** 平均耗时（毫秒） */
+  private double avgElapsedMs;
 
-    /** P99 耗时（毫秒） */
-    private double p99ElapsedMs;
+  /** P99 耗时（毫秒） */
+  private double p99ElapsedMs;
 
-    /** 总耗时（毫秒） */
-    private long totalElapsedMs;
+  /** 总耗时（毫秒） */
+  private long totalElapsedMs;
 }

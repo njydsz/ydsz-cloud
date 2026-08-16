@@ -5,11 +5,11 @@ import java.util.Objects;
 /**
  * 数据源路由 Hint 不可变值对象。
  *
- * <p>封装路由类型（{@link HintType}）和可选的自定义数据源名称。
- * 由 {@link HintManager} 创建并存储在 ThreadLocal 中，
- * 供 {@code DynamicRoutingDataSource} 在路由决策时优先使用。
+ * <p>封装路由类型（{@link HintType}）和可选的自定义数据源名称。 由 {@link HintManager} 创建并存储在 ThreadLocal 中， 供 {@code
+ * DynamicRoutingDataSource} 在路由决策时优先使用。
  *
  * <p>使用示例：
+ *
  * <pre>{@code
  * // 强制走主库
  * HintManager.masterOnly();
@@ -28,60 +28,61 @@ import java.util.Objects;
  */
 public final class Hint {
 
-    /** 路由类型 */
-    private final HintType type;
-    /** 自定义数据源名称（仅当 type=CUSTOM 时有效） */
-    private final String dsName;
+  /** 路由类型 */
+  private final HintType type;
 
-    /**
-     * 构造路由 Hint
-     *
-     * @param type   路由类型，不可为 null
-     * @param dsName 自定义数据源名称，type=CUSTOM 时不可为 null
-     */
-    public Hint(HintType type, String dsName) {
-        this.type = Objects.requireNonNull(type, "HintType must not be null");
-        this.dsName = dsName;
-    }
+  /** 自定义数据源名称（仅当 type=CUSTOM 时有效） */
+  private final String dsName;
 
-    /**
-     * 构造主库/从库路由 Hint（无需指定数据源名称）
-     *
-     * @param type 路由类型，不可为 null
-     */
-    public Hint(HintType type) {
-        this(type, null);
-    }
+  /**
+   * 构造路由 Hint
+   *
+   * @param type 路由类型，不可为 null
+   * @param dsName 自定义数据源名称，type=CUSTOM 时不可为 null
+   */
+  public Hint(HintType type, String dsName) {
+    this.type = Objects.requireNonNull(type, "HintType must not be null");
+    this.dsName = dsName;
+  }
 
-    public HintType getType() {
-        return type;
-    }
+  /**
+   * 构造主库/从库路由 Hint（无需指定数据源名称）
+   *
+   * @param type 路由类型，不可为 null
+   */
+  public Hint(HintType type) {
+    this(type, null);
+  }
 
-    public String getDsName() {
-        return dsName;
-    }
+  public HintType getType() {
+    return type;
+  }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof Hint hint)) {
-            return false;
-        }
-        return type == hint.type && Objects.equals(dsName, hint.dsName);
-    }
+  public String getDsName() {
+    return dsName;
+  }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(type, dsName);
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
     }
+    if (!(o instanceof Hint hint)) {
+      return false;
+    }
+    return type == hint.type && Objects.equals(dsName, hint.dsName);
+  }
 
-    @Override
-    public String toString() {
-        if (HintType.CUSTOM == type) {
-            return "Hint{type=CUSTOM, dsName='" + dsName + "'}";
-        }
-        return "Hint{type=" + type + "}";
+  @Override
+  public int hashCode() {
+    return Objects.hash(type, dsName);
+  }
+
+  @Override
+  public String toString() {
+    if (HintType.CUSTOM == type) {
+      return "Hint{type=CUSTOM, dsName='" + dsName + "'}";
     }
+    return "Hint{type=" + type + "}";
+  }
 }

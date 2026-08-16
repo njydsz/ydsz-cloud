@@ -10,35 +10,35 @@ package com.njydsz.common.base.idempotent;
  */
 public class IdempotentException extends RuntimeException {
 
-    private final String errorCode;
+  private final String errorCode;
 
-    /**
-     * 构造幂等性异常。
-     *
-     * @param message 异常消息
-     */
-    public IdempotentException(String message) {
-        super(message);
-        this.errorCode = "IDEMPOTENT_REJECT";
-    }
+  /**
+   * 构造幂等性异常。
+   *
+   * @param message 异常消息
+   */
+  public IdempotentException(String message) {
+    super(message);
+    this.errorCode = "IDEMPOTENT_REJECT";
+  }
 
-    /**
-     * 构造幂等性异常。
-     *
-     * @param errorCode 错误码
-     * @param message   异常消息
-     */
-    public IdempotentException(String errorCode, String message) {
-        super(message);
-        this.errorCode = errorCode;
-    }
+  /**
+   * 构造幂等性异常。
+   *
+   * @param errorCode 错误码
+   * @param message 异常消息
+   */
+  public IdempotentException(String errorCode, String message) {
+    super(message);
+    this.errorCode = errorCode;
+  }
 
-    /**
-     * 获取错误码。
-     *
-     * @return 错误码字符串
-     */
-    public String getErrorCode() {
-        return errorCode;
-    }
+  /**
+   * 获取错误码。
+   *
+   * @return 错误码字符串
+   */
+  public String getErrorCode() {
+    return errorCode;
+  }
 }

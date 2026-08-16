@@ -1,14 +1,14 @@
 package com.njydsz.literule.server.spi;
 
-import java.util.List;
 import com.njydsz.literule.api.RuleContext;
 import com.njydsz.literule.api.RuleResult;
+import java.util.List;
 
 /**
  * 规则动作处理器 SPI
  *
- * <p>规则触发后执行的后续动作（消息通知、工作流触发、定时任务触发等）。
- * 实现类通过 {@link RuleActionDispatcher} 注册，由 {@code DefaultRuleEngine} 在评估完成后调用。
+ * <p>规则触发后执行的后续动作（消息通知、工作流触发、定时任务触发等）。 实现类通过 {@link RuleActionDispatcher} 注册，由 {@code
+ * DefaultRuleEngine} 在评估完成后调用。
  *
  * @since 1.0.0
  * @author ydsz-team
@@ -16,11 +16,11 @@ import com.njydsz.literule.api.RuleResult;
 @FunctionalInterface
 public interface RuleActionHandler {
 
-    /**
-     * 处理规则触发结果
-     *
-     * @param triggered 触发的规则结果列表
-     * @param context   规则上下文
-     */
-    void handle(List<RuleResult> triggered, RuleContext context);
+  /**
+   * 处理规则触发结果
+   *
+   * @param triggered 触发的规则结果列表
+   * @param context 规则上下文
+   */
+  void handle(List<RuleResult> triggered, RuleContext context);
 }

@@ -10,37 +10,37 @@ package com.njydsz.common.feign.assembler;
  */
 public enum NameType {
 
-    /** 用户（姓名） */
-    USER("user", "用户"),
+  /** 用户（姓名） */
+  USER("user", "用户"),
 
-    /** 部门 */
-    DEPT("dept", "部门"),
+  /** 部门 */
+  DEPT("dept", "部门"),
 
-    /** 角色 */
-    ROLE("role", "角色"),
+  /** 角色 */
+  ROLE("role", "角色"),
 
-    /** 岗位 */
-    POST("post", "岗位"),
+  /** 岗位 */
+  POST("post", "岗位"),
 
-    /** 公司 */
-    COMPANY("company", "公司");
+  /** 公司 */
+  COMPANY("company", "公司");
 
-    /** 类型编码（用于 URL 路径拼接等） */
-    private final String code;
+  /** 类型编码（用于 URL 路径拼接等） */
+  private final String code;
 
-    /** 中文描述（用于日志） */
-    private final String description;
+  /** 中文描述（用于日志） */
+  private final String description;
 
-    NameType(String code, String description) {
-        this.code = code;
-        this.description = description;
-    }
+  NameType(String code, String description) {
+    this.code = code;
+    this.description = description;
+  }
 
-    public String getCode() {
-        return code;
-    }
+  public String getCode() {
+    return code;
+  }
 
-    public String getDescription() {
-        return description;
-    }
+  public String getDescription() {
+    return description;
+  }
 }

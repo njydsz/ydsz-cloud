@@ -8,15 +8,15 @@ package com.njydsz.common.seata.api;
  */
 public enum TransactionType {
 
-    /** Seata AT 模式 - 自动补偿型 */
-    SEATA_AT,
+  /** Seata AT 模式 - 自动补偿型 */
+  SEATA_AT,
 
-    /** TCC 模式 - Try-Confirm-Cancel */
-    TCC,
+  /** TCC 模式 - Try-Confirm-Cancel */
+  TCC,
 
-    /** SAGA 模式 - 长事务编排 */
-    SAGA,
+  /** SAGA 模式 - 长事务编排 */
+  SAGA,
 
-    /** 本地事务 - 降级模式 */
-    LOCAL
+  /** 本地事务 - 降级模式 */
+  LOCAL
 }

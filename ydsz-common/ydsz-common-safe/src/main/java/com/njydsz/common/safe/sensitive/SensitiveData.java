@@ -10,21 +10,23 @@ import java.lang.annotation.Target;
 /**
  * 敏感数据注解
  *
- * <p>标注在字段上，用于标记需要进行脱敏处理的敏感数据。
- * 支持多种脱敏策略，由 {@link SensitiveType} 定义。
+ * <p>标注在字段上，用于标记需要进行脱敏处理的敏感数据。 支持多种脱敏策略，由 {@link SensitiveType} 定义。
  *
  * <h3>P2-1: 脱敏体系使用指引</h3>
+ *
  * <p>common-safe 提供两套字段级脱敏注解：
+ *
  * <ul>
- *   <li>{@code @Sensitive}（{@link com.njydsz.common.safe.desensitize.Sensitive}）：
- *       <b>推荐</b>。简洁 API，覆盖 90%+ 场景，优先使用</li>
- *   <li><b>本注解 {@code @SensitiveData}</b>：仅当需要<b>角色白名单</b>（admin/特定角色看原文）时使用。
- *       需配合 {@code SensitiveDataAdvice} 或 {@code SensitiveDataSerializer}</li>
+ *   <li>{@code @Sensitive}（{@link com.njydsz.common.safe.desensitize.Sensitive}）： <b>推荐</b>。简洁
+ *       API，覆盖 90%+ 场景，优先使用
+ *   <li><b>本注解 {@code @SensitiveData}</b>：仅当需要<b>角色白名单</b>（admin/特定角色看原文）时使用。 需配合 {@code
+ *       SensitiveDataAdvice} 或 {@code SensitiveDataSerializer}
  * </ul>
  *
  * <p>如无角色白名单需求，请优先使用 {@code @Sensitive}。
  *
  * <p><b>使用示例：</b>
+ *
  * <pre>{@code
  * public class UserDTO {
  *     @SensitiveData(SensitiveType.CHINESE_NAME)
@@ -48,6 +50,7 @@ import java.lang.annotation.Target;
  * }</pre>
  *
  * <p><b>配合 YdszJson 使用：</b>
+ *
  * <pre>{@code
  * // 使用 SensitiveDataSerializer（ydsz JsonSerializer），通过 SafeJsonModule 自动注册
  * public class UserVO {
@@ -61,7 +64,6 @@ import java.lang.annotation.Target;
  *
  * @author ydsz-team
  * @since 1.0.0
- *
  * @see SensitiveType
  * @see SensitiveDataSerializer
  * @see SensitiveDataProcessor
@@ -72,64 +74,62 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface SensitiveData {
 
-    /**
-     * 脱敏策略类型
-     *
-     * <p>指定使用哪种脱敏策略对字段值进行处理。
-     *
-     * @return 脱敏策略类型
-     */
-    SensitiveType value();
+  /**
+   * 脱敏策略类型
+   *
+   * <p>指定使用哪种脱敏策略对字段值进行处理。
+   *
+   * @return 脱敏策略类型
+   */
+  SensitiveType value();
 
-    /**
-     * 替换字符
-     *
-     * <p>用于替换原文的字符，默认值为 "*"。
-     * 可以设置为其他字符如 "X"、"#" 等。
-     *
-     * @return 替换字符
-     */
-    char replaceChar() default '*';
+  /**
+   * 替换字符
+   *
+   * <p>用于替换原文的字符，默认值为 "*"。 可以设置为其他字符如 "X"、"#" 等。
+   *
+   * @return 替换字符
+   */
+  char replaceChar() default '*';
 
-    /**
-     * 是否启用
-     *
-     * <p>默认为 true，即启用脱敏。
-     * 设置为 false 可临时禁用脱敏。
-     *
-     * @return 是否启用
-     */
-    boolean enabled() default true;
+  /**
+   * 是否启用
+   *
+   * <p>默认为 true，即启用脱敏。 设置为 false 可临时禁用脱敏。
+   *
+   * @return 是否启用
+   */
+  boolean enabled() default true;
 
-    /**
-     * 自定义脱敏格式
-     *
-     * <p>当 value 为 {@link SensitiveType#CUSTOM} 时使用。
-     * 格式：prefix:N,suffix:M,replace:C
-     * <ul>
-     *   <li>prefix:N - 保留前 N 个字符</li>
-     *   <li>suffix:M - 保留后 M 个字符</li>
-     *   <li>replace:C - 替换字符（可选，默认 *）</li>
-     * </ul>
-     *
-     * <p>示例：
-     * <ul>
-     *   <li>"prefix:3,suffix:4" → "138****8000"</li>
-     *   <li>"prefix:2,suffix:2,replace:X" → "张XX三"</li>
-     *   <li>"prefix:0,suffix:4" → "****8000"</li>
-     * </ul>
-     *
-     * @return 自定义脱敏格式字符串
-     */
-    String customFormat() default "";
+  /**
+   * 自定义脱敏格式
+   *
+   * <p>当 value 为 {@link SensitiveType#CUSTOM} 时使用。 格式：prefix:N,suffix:M,replace:C
+   *
+   * <ul>
+   *   <li>prefix:N - 保留前 N 个字符
+   *   <li>suffix:M - 保留后 M 个字符
+   *   <li>replace:C - 替换字符（可选，默认 *）
+   * </ul>
+   *
+   * <p>示例：
+   *
+   * <ul>
+   *   <li>"prefix:3,suffix:4" → "138****8000"
+   *   <li>"prefix:2,suffix:2,replace:X" → "张XX三"
+   *   <li>"prefix:0,suffix:4" → "****8000"
+   * </ul>
+   *
+   * @return 自定义脱敏格式字符串
+   */
+  String customFormat() default "";
 
-    /**
-     * 角色白名单（不脱敏的角色列表）
-     *
-     * <p>当前用户拥有此处列出的任一角色时，该字段不脱敏，返回原始值。
-     * 默认为空数组，表示所有角色都脱敏。
-     *
-     * @return 角色白名单数组
-     */
-    String[] roles() default {};
+  /**
+   * 角色白名单（不脱敏的角色列表）
+   *
+   * <p>当前用户拥有此处列出的任一角色时，该字段不脱敏，返回原始值。 默认为空数组，表示所有角色都脱敏。
+   *
+   * @return 角色白名单数组
+   */
+  String[] roles() default {};
 }

@@ -14,27 +14,26 @@ import lombok.Data;
 @Data
 public class FlowEventSubscriptionVO implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
-    private String id;
-    private String instanceId;
-    private String definitionId;
-    private String flowCode;
-    private String nodeCode;
-    private String nodeName;
-    private String eventType;
-    private String eventRef;
-    private String correlationKey;
-    private String boundaryTaskId;
-    private String subscriptionStatus;
-    private String payload;
-    private LocalDateTime triggeredAt;
-    private String triggerSource;
-    private String cancelReason;
-    private String providerTraceId;
-    private String createdBy;
-    private LocalDateTime createdAt;
-    private String updatedBy;
-    private LocalDateTime updatedAt;
+  private String id;
+  private String instanceId;
+  private String definitionId;
+  private String flowCode;
+  private String nodeCode;
+  private String nodeName;
+  private String eventType;
+  private String eventRef;
+  private String correlationKey;
+  private String boundaryTaskId;
+  private String subscriptionStatus;
+  private String payload;
+  private LocalDateTime triggeredAt;
+  private String triggerSource;
+  private String cancelReason;
+  private String providerTraceId;
+  private String createdBy;
+  private LocalDateTime createdAt;
+  private String updatedBy;
+  private LocalDateTime updatedAt;
 }

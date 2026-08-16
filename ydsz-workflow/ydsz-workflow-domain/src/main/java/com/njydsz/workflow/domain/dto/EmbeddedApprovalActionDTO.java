@@ -1,14 +1,13 @@
 package com.njydsz.workflow.domain.dto;
 
+import com.njydsz.common.safe.sensitive.SensitiveData;
+import com.njydsz.common.safe.sensitive.SensitiveType;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.Map;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import com.njydsz.common.safe.sensitive.SensitiveData;
-import com.njydsz.common.safe.sensitive.SensitiveDataSerializer;
-import com.njydsz.common.safe.sensitive.SensitiveType;
 
 /**
  * P2-2 嵌入式审批快捷操作 DTO
@@ -23,45 +22,44 @@ import com.njydsz.common.safe.sensitive.SensitiveType;
 @Data
 public class EmbeddedApprovalActionDTO implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
-    /** 业务类型（必填） */
-    @NotBlank(message = "{validation.workflow.msg_63149825}")
-    private String businessType;
+  /** 业务类型（必填） */
+  @NotBlank(message = "{validation.workflow.msg_63149825}")
+  private String businessType;
 
-    /** 业务 ID（必填） */
-    @NotBlank(message = "{validation.workflow.msg_ed0127c6}")
-    private String businessId;
+  /** 业务 ID（必填） */
+  @NotBlank(message = "{validation.workflow.msg_ed0127c6}")
+  private String businessId;
 
-    /** 操作：PASS/REJECT/TRANSFER/DELEGATE/URGE/WITHDRAW */
-    @NotBlank(message = "{validation.workflow.msg_1a62e7c7}")
-    private String action;
+  /** 操作：PASS/REJECT/TRANSFER/DELEGATE/URGE/WITHDRAW */
+  @NotBlank(message = "{validation.workflow.msg_1a62e7c7}")
+  private String action;
 
-    /** 操作人 ID（必填） */
-    @NotNull(message = "{validation.workflow.msg_f65f41e7}")
-    private String userId;
+  /** 操作人 ID（必填） */
+  @NotNull(message = "{validation.workflow.msg_f65f41e7}")
+  private String userId;
 
-    /** 操作人姓名 */
-    @SensitiveData(SensitiveType.CHINESE_NAME)
-    private String userName;
+  /** 操作人姓名 */
+  @SensitiveData(SensitiveType.CHINESE_NAME)
+  private String userName;
 
-    /** 审批意见 */
-    private String comment;
+  /** 审批意见 */
+  private String comment;
 
-    /** 审批意见分类 */
-    private String commentType;
+  /** 审批意见分类 */
+  private String commentType;
 
-    /** 转办/委派目标人 ID（TRANSFER/DELEGATE 时使用） */
-    private String targetUserId;
+  /** 转办/委派目标人 ID（TRANSFER/DELEGATE 时使用） */
+  private String targetUserId;
 
-    /** 转办/委派目标人姓名 */
-    @SensitiveData(SensitiveType.CHINESE_NAME)
-    private String targetUserName;
+  /** 转办/委派目标人姓名 */
+  @SensitiveData(SensitiveType.CHINESE_NAME)
+  private String targetUserName;
 
-    /** 流程变量 */
-    private Map<String, Object> variables;
+  /** 流程变量 */
+  private Map<String, Object> variables;
 
-    /** 租户 ID */
-    private String tenantId;
+  /** 租户 ID */
+  private String tenantId;
 }

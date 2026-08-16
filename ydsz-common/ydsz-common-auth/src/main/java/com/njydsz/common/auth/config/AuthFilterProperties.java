@@ -10,19 +10,18 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *
  * @author ydsz-team
  * @since 1.0.0
- *
  */
 @Data
 @ConfigurationProperties(prefix = "ydsz.auth.filter")
 public class AuthFilterProperties {
 
-    private List<String> commonIgnoreUrl = new ArrayList<>();
+  private List<String> commonIgnoreUrl = new ArrayList<>();
 
-    private List<String> gatewayIgnoreUrl = new ArrayList<>();
+  private List<String> gatewayIgnoreUrl = new ArrayList<>();
 
-    private List<String> customIgnoreUrl = new ArrayList<>();
+  private List<String> customIgnoreUrl = new ArrayList<>();
 
-    private Boolean verifyPermission = true;
+  private Boolean verifyPermission = true;
 
-    private List<String> onlyVerifyToken = new ArrayList<>();
+  private List<String> onlyVerifyToken = new ArrayList<>();
 }

@@ -1,5 +1,7 @@
 package com.njydsz.common.cache.actuator;
 
+import com.njydsz.common.cache.api.Cache;
+import com.njydsz.common.cache.stats.CacheStats;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -12,8 +14,6 @@ import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.boot.actuate.endpoint.annotation.Selector;
 import org.springframework.boot.actuate.endpoint.annotation.WriteOperation;
 import org.springframework.lang.Nullable;
-import com.njydsz.common.cache.api.Cache;
-import com.njydsz.common.cache.stats.CacheStats;
 
 /**
  * Spring Boot Actuator 自定义端点 — 缓存指标查询与运行时操作
@@ -88,14 +88,17 @@ public class CacheMetricsEndpoint {
       totalMisses += (Long) metrics.getOrDefault("missCount", 0L);
     }
 
-    result.put("summary", Map.of(
-        "totalCaches", monitoredCaches.size(),
-        "totalSize", totalSize,
-        "totalHits", totalHits,
-        "totalMisses", totalMisses,
-        "overallHitRate", totalHits + totalMisses > 0
-            ? String.format("%.4f", (double) totalHits / (totalHits + totalMisses))
-            : "N/A"));
+    result.put(
+        "summary",
+        Map.of(
+            "totalCaches", monitoredCaches.size(),
+            "totalSize", totalSize,
+            "totalHits", totalHits,
+            "totalMisses", totalMisses,
+            "overallHitRate",
+                totalHits + totalMisses > 0
+                    ? String.format("%.4f", (double) totalHits / (totalHits + totalMisses))
+                    : "N/A"));
     result.put("caches", cachesList);
     return result;
   }
@@ -161,7 +164,8 @@ public class CacheMetricsEndpoint {
           return Map.of("error", "ResetStats failed: " + e.getMessage());
         }
       default:
-        return Map.of("error", "Unknown operation: " + operation + " (supported: clear, resetStats)");
+        return Map.of(
+            "error", "Unknown operation: " + operation + " (supported: clear, resetStats)");
     }
   }
 

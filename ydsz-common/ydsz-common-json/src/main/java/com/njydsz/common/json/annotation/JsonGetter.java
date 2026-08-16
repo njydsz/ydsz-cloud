@@ -9,10 +9,10 @@ import java.lang.annotation.Target;
 /**
  * Jackson 兼容注解：标记 getter 方法为 JSON 序列化属性。
  *
- * <p>标注在 getter 方法上时，该方法的返回值将作为 JSON 属性输出。
- * 可通过 {@code value} 指定 JSON 属性名，覆盖默认的字段名映射。</p>
+ * <p>标注在 getter 方法上时，该方法的返回值将作为 JSON 属性输出。 可通过 {@code value} 指定 JSON 属性名，覆盖默认的字段名映射。
  *
- * <p>使用示例：</p>
+ * <p>使用示例：
+ *
  * <pre><code>
  * public class User {
  *     private String firstName;
@@ -34,10 +34,10 @@ import java.lang.annotation.Target;
 @Documented
 public @interface JsonGetter {
 
-    /**
-     * JSON 属性名称（空字符串表示使用方法名推断）
-     *
-     * @return 属性名称
-     */
-    String value() default "";
+  /**
+   * JSON 属性名称（空字符串表示使用方法名推断）
+   *
+   * @return 属性名称
+   */
+  String value() default "";
 }

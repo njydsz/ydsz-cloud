@@ -1,13 +1,13 @@
 package com.njydsz.workflow.server.service.impl.instance;
 
+import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
+import com.njydsz.workflow.domain.entity.FlowNode;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
-import com.njydsz.workflow.domain.entity.FlowNode;
 
 /**
  * 流程任务完成服务实现。
@@ -19,156 +19,135 @@ import com.njydsz.workflow.domain.entity.FlowNode;
  * @author ydsz-team
  * @since 1.0.0
  */
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class FlowTaskCompleteServiceImpl {
 
-    /** 任务创建子服务，处理 SERVICE/FOREACH/LEVEL_APPROVAL 节点任务生成 */
-    private final FlowTaskCreateService createService;
-    /** 任务签收子服务，处理候选任务认领 */
-    private final FlowTaskClaimService claimService;
-    /** 任务通过子服务，策略模式处理 5 种会签模式 */
-    private final FlowTaskPassService passService;
-    /** 任务驳回子服务，处理单节点/多节点/退回发起人 */
-    private final FlowTaskRejectService rejectService;
-    /** 任务操作子服务，处理转办/委派/跳转/撤回 */
-    private final FlowTaskOperateService operateService;
-    /** 任务催办子服务，处理实例级/节点级催办 */
-    private final FlowTaskUrgeService urgeService;
-    /** 超时/挂起/激活/取消子服务 */
-    private final FlowTaskTimeoutService timeoutService;
+  /** 任务创建子服务，处理 SERVICE/FOREACH/LEVEL_APPROVAL 节点任务生成 */
+  private final FlowTaskCreateService createService;
 
-    // ============================== 创建任务 ==============================
+  /** 任务签收子服务，处理候选任务认领 */
+  private final FlowTaskClaimService claimService;
 
-    /**
-     * 创建任务（向后兼容重载）
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public String createTask(String instanceId, FlowNode node, Map<String, Object> variables) {
-        return createService.createTask(instanceId, node, variables);
-    }
+  /** 任务通过子服务，策略模式处理 5 种会签模式 */
+  private final FlowTaskPassService passService;
 
-    /**
-     * 创建任务（支持显式指定办理人）
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public String createTask(String instanceId, FlowNode node, Map<String, Object> variables,
-                             List<String> explicitAssignees) {
-        return createService.createTask(instanceId, node, variables, explicitAssignees);
-    }
+  /** 任务驳回子服务，处理单节点/多节点/退回发起人 */
+  private final FlowTaskRejectService rejectService;
 
-    // ============================== 签收 ==============================
+  /** 任务操作子服务，处理转办/委派/跳转/撤回 */
+  private final FlowTaskOperateService operateService;
 
-    /**
-     * 签收
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public void claim(String taskId, String userId) {
-        claimService.claim(taskId, userId);
-    }
+  /** 任务催办子服务，处理实例级/节点级催办 */
+  private final FlowTaskUrgeService urgeService;
 
-    // ============================== 通过 ==============================
+  /** 超时/挂起/激活/取消子服务 */
+  private final FlowTaskTimeoutService timeoutService;
 
-    /**
-     * 通过
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public void pass(FlowTaskOperateDTO dto) {
-        passService.pass(dto);
-    }
+  // ============================== 创建任务 ==============================
 
-    // ============================== 驳回 ==============================
+  /** 创建任务（向后兼容重载） */
+  @Transactional(rollbackFor = Exception.class)
+  public String createTask(String instanceId, FlowNode node, Map<String, Object> variables) {
+    return createService.createTask(instanceId, node, variables);
+  }
 
-    /**
-     * 驳回
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public void reject(FlowTaskOperateDTO dto) {
-        rejectService.reject(dto);
-    }
+  /** 创建任务（支持显式指定办理人） */
+  @Transactional(rollbackFor = Exception.class)
+  public String createTask(
+      String instanceId,
+      FlowNode node,
+      Map<String, Object> variables,
+      List<String> explicitAssignees) {
+    return createService.createTask(instanceId, node, variables, explicitAssignees);
+  }
 
-    // ============================== 转办 / 委派 / 跳转 / 撤回 ==============================
+  // ============================== 签收 ==============================
 
-    /**
-     * 转办
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public void transfer(FlowTaskOperateDTO dto) {
-        operateService.transfer(dto);
-    }
+  /** 签收 */
+  @Transactional(rollbackFor = Exception.class)
+  public void claim(String taskId, String userId) {
+    claimService.claim(taskId, userId);
+  }
 
-    /**
-     * 委派
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public void delegate(FlowTaskOperateDTO dto) {
-        operateService.delegate(dto);
-    }
+  // ============================== 通过 ==============================
 
-    /**
-     * 自由跳转
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public void jump(FlowTaskOperateDTO dto) {
-        operateService.jump(dto);
-    }
+  /** 通过 */
+  @Transactional(rollbackFor = Exception.class)
+  public void pass(FlowTaskOperateDTO dto) {
+    passService.pass(dto);
+  }
 
-    /**
-     * 取回（已审批后取回）
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public String retract(String hisTaskId, String operatorId, String comment) {
-        return operateService.retract(hisTaskId, operatorId, comment);
-    }
+  // ============================== 驳回 ==============================
 
-    // ============================== 催办 ==============================
+  /** 驳回 */
+  @Transactional(rollbackFor = Exception.class)
+  public void reject(FlowTaskOperateDTO dto) {
+    rejectService.reject(dto);
+  }
 
-    /**
-     * 实例级催办
-     */
-    public List<String> urge(String instanceId, String operatorId, String comment) {
-        return urgeService.urge(instanceId, operatorId, comment);
-    }
+  // ============================== 转办 / 委派 / 跳转 / 撤回 ==============================
 
-    /**
-     * 节点级催办
-     */
-    public List<String> urgeByNode(String instanceId, String nodeCode, String operatorId, String comment) {
-        return urgeService.urgeByNode(instanceId, nodeCode, operatorId, comment);
-    }
+  /** 转办 */
+  @Transactional(rollbackFor = Exception.class)
+  public void transfer(FlowTaskOperateDTO dto) {
+    operateService.transfer(dto);
+  }
 
-    // ============================== 超时 / 挂起 / 激活 / 取消 ==============================
+  /** 委派 */
+  @Transactional(rollbackFor = Exception.class)
+  public void delegate(FlowTaskOperateDTO dto) {
+    operateService.delegate(dto);
+  }
 
-    /**
-     * 标记任务超时
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public void timeoutTask(String taskId, String reason) {
-        timeoutService.timeoutTask(taskId, reason);
-    }
+  /** 自由跳转 */
+  @Transactional(rollbackFor = Exception.class)
+  public void jump(FlowTaskOperateDTO dto) {
+    operateService.jump(dto);
+  }
 
-    /**
-     * 任务级挂起
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public void suspendTask(String taskId, String operatorId, String reason) {
-        timeoutService.suspendTask(taskId, operatorId, reason);
-    }
+  /** 取回（已审批后取回） */
+  @Transactional(rollbackFor = Exception.class)
+  public String retract(String hisTaskId, String operatorId, String comment) {
+    return operateService.retract(hisTaskId, operatorId, comment);
+  }
 
-    /**
-     * 任务级激活
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public void activateTask(String taskId, String operatorId) {
-        timeoutService.activateTask(taskId, operatorId);
-    }
+  // ============================== 催办 ==============================
 
-    /**
-     * 取消某实例全部 PENDING 任务
-     */
-    public void cancelByInstance(String instanceId, String taskStatus) {
-        timeoutService.cancelByInstance(instanceId, taskStatus);
-    }
+  /** 实例级催办 */
+  public List<String> urge(String instanceId, String operatorId, String comment) {
+    return urgeService.urge(instanceId, operatorId, comment);
+  }
+
+  /** 节点级催办 */
+  public List<String> urgeByNode(
+      String instanceId, String nodeCode, String operatorId, String comment) {
+    return urgeService.urgeByNode(instanceId, nodeCode, operatorId, comment);
+  }
+
+  // ============================== 超时 / 挂起 / 激活 / 取消 ==============================
+
+  /** 标记任务超时 */
+  @Transactional(rollbackFor = Exception.class)
+  public void timeoutTask(String taskId, String reason) {
+    timeoutService.timeoutTask(taskId, reason);
+  }
+
+  /** 任务级挂起 */
+  @Transactional(rollbackFor = Exception.class)
+  public void suspendTask(String taskId, String operatorId, String reason) {
+    timeoutService.suspendTask(taskId, operatorId, reason);
+  }
+
+  /** 任务级激活 */
+  @Transactional(rollbackFor = Exception.class)
+  public void activateTask(String taskId, String operatorId) {
+    timeoutService.activateTask(taskId, operatorId);
+  }
+
+  /** 取消某实例全部 PENDING 任务 */
+  public void cancelByInstance(String instanceId, String taskStatus) {
+    timeoutService.cancelByInstance(instanceId, taskStatus);
+  }
 }

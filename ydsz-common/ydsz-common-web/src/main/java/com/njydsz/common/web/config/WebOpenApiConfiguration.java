@@ -1,7 +1,7 @@
 package com.njydsz.common.web.config;
 
-import org.springframework.boot.autoconfigure.AutoConfiguration;
 import com.njydsz.common.base.config.BaseOpenApiConfiguration;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 
 /**
  * Web 端 OpenAPI 配置。
@@ -13,17 +13,16 @@ import com.njydsz.common.base.config.BaseOpenApiConfiguration;
  * @author ydsz-team
  * @since 1.0.0
  */
-
 @AutoConfiguration
 public class WebOpenApiConfiguration extends BaseOpenApiConfiguration {
 
-    @Override
-    protected String getTitle() {
-        return "YDSZ Web API 文档";
-    }
+  @Override
+  protected String getTitle() {
+    return "YDSZ Web API 文档";
+  }
 
-    @Override
-    protected String getDescription() {
-        return "<div style='font-size:14px;color:#333;'>YDSZ 公共框架 - PC Web 端 API 文档</div>";
-    }
+  @Override
+  protected String getDescription() {
+    return "<div style='font-size:14px;color:#333;'>YDSZ 公共框架 - PC Web 端 API 文档</div>";
+  }
 }

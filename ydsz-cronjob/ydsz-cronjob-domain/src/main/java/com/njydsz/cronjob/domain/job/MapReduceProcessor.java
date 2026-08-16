@@ -11,12 +11,12 @@ import java.util.List;
  */
 public interface MapReduceProcessor extends MapProcessor {
 
-    /**
-     * 汇总子任务结果
-     *
-     * @param subContexts  子任务上下文列表
-     * @param rootContext  Root 任务上下文
-     * @return 汇总结果
-     */
-    ProcessResult reduce(List<MapContext> subContexts, MapContext rootContext);
+  /**
+   * 汇总子任务结果
+   *
+   * @param subContexts 子任务上下文列表
+   * @param rootContext Root 任务上下文
+   * @return 汇总结果
+   */
+  ProcessResult reduce(List<MapContext> subContexts, MapContext rootContext);
 }

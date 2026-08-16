@@ -14,18 +14,17 @@ import lombok.Data;
 @Data
 public class FlowQuickCommentVO implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
-    private String id;
-    private String userId;
-    private String content;
-    private String commentType;
-    private Integer sortNum;
-    private Integer useCount;
-    private Integer isSystem;
-    private String createdBy;
-    private LocalDateTime createdAt;
-    private String updatedBy;
-    private LocalDateTime updatedAt;
+  private String id;
+  private String userId;
+  private String content;
+  private String commentType;
+  private Integer sortNum;
+  private Integer useCount;
+  private Integer isSystem;
+  private String createdBy;
+  private LocalDateTime createdAt;
+  private String updatedBy;
+  private LocalDateTime updatedAt;
 }

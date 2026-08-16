@@ -1,10 +1,5 @@
 package com.njydsz.workflow.domain.converter;
 
-import java.util.List;
-import java.util.stream.Collectors;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
 import com.njydsz.workflow.domain.dto.post.FlowDelegateAuthPostDTO;
 import com.njydsz.workflow.domain.dto.put.FlowDelegateAuthPutDTO;
 import com.njydsz.workflow.domain.entity.FlowAdminRole;
@@ -58,19 +53,24 @@ import com.njydsz.workflow.domain.vo.FlowThirdPartyLogVO;
 import com.njydsz.workflow.domain.vo.FlowTimerVO;
 import com.njydsz.workflow.domain.vo.FlowUserVO;
 import com.njydsz.workflow.domain.vo.StringVO;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.factory.Mappers;
 
 /**
  * workflow 模块统一 MapStruct 转换器。
  *
- * <p>承担工作流模块所有 Entity ↔ VO、DTO → Entity 的类型转换，遵循单一转换器模式。
- * 覆盖流程定义、流程实例、任务、审批日志、委托授权、DMN 决策等核心实体的转换。
+ * <p>承担工作流模块所有 Entity ↔ VO、DTO → Entity 的类型转换，遵循单一转换器模式。 覆盖流程定义、流程实例、任务、审批日志、委托授权、DMN 决策等核心实体的转换。
  *
  * <p><b>设计要点：</b>
+ *
  * <ul>
- *   <li>使用 MapStruct 注解处理器，编译期生成实现类，性能优于反射</li>
- *   <li>通过 {@link #INSTANT} 单例访问，零依赖注入</li>
- *   <li>同名字段自动映射；系统字段通过 @Mapping(ignore = true) 忽略</li>
- *   <li>entityToVO 方向自动排除敏感字段（如 FlowThirdPartyAccount 的密钥）</li>
+ *   <li>使用 MapStruct 注解处理器，编译期生成实现类，性能优于反射
+ *   <li>通过 {@link #INSTANT} 单例访问，零依赖注入
+ *   <li>同名字段自动映射；系统字段通过 @Mapping(ignore = true) 忽略
+ *   <li>entityToVO 方向自动排除敏感字段（如 FlowThirdPartyAccount 的密钥）
  * </ul>
  *
  * @author ydsz-team
@@ -79,152 +79,167 @@ import com.njydsz.workflow.domain.vo.StringVO;
 @Mapper
 public interface WorkflowConverter {
 
-    WorkflowConverter INSTANT = Mappers.getMapper(WorkflowConverter.class);
+  WorkflowConverter INSTANT = Mappers.getMapper(WorkflowConverter.class);
 
-    // ===== FlowAdminRole =====
-    FlowAdminRoleVO entityToVO(FlowAdminRole entity);
-    List<FlowAdminRoleVO> flowAdminRoleListToVO(List<FlowAdminRole> entities);
+  // ===== FlowAdminRole =====
+  FlowAdminRoleVO entityToVO(FlowAdminRole entity);
 
-    // ===== FlowAttachment =====
-    FlowAttachmentVO entityToVO(FlowAttachment entity);
-    List<FlowAttachmentVO> flowAttachmentListToVO(List<FlowAttachment> entities);
+  List<FlowAdminRoleVO> flowAdminRoleListToVO(List<FlowAdminRole> entities);
 
-    // ===== FlowAuditLog =====
-    FlowAuditLogVO entityToVO(FlowAuditLog entity);
-    List<FlowAuditLogVO> flowAuditLogListToVO(List<FlowAuditLog> entities);
+  // ===== FlowAttachment =====
+  FlowAttachmentVO entityToVO(FlowAttachment entity);
 
-    // ===== FlowAutoTrigger =====
-    FlowAutoTriggerVO entityToVO(FlowAutoTrigger entity);
-    List<FlowAutoTriggerVO> flowAutoTriggerListToVO(List<FlowAutoTrigger> entities);
+  List<FlowAttachmentVO> flowAttachmentListToVO(List<FlowAttachment> entities);
 
-    // ===== FlowCategory =====
-    FlowCategoryVO entityToVO(FlowCategory entity);
-    List<FlowCategoryVO> flowCategoryListToVO(List<FlowCategory> entities);
+  // ===== FlowAuditLog =====
+  FlowAuditLogVO entityToVO(FlowAuditLog entity);
 
-    // ===== FlowCc =====
-    FlowCcVO entityToVO(FlowCc entity);
-    List<FlowCcVO> flowCcListToVO(List<FlowCc> entities);
+  List<FlowAuditLogVO> flowAuditLogListToVO(List<FlowAuditLog> entities);
 
-    // ===== FlowCcRule =====
-    FlowCcRuleVO entityToVO(FlowCcRule entity);
-    List<FlowCcRuleVO> flowCcRuleListToVO(List<FlowCcRule> entities);
+  // ===== FlowAutoTrigger =====
+  FlowAutoTriggerVO entityToVO(FlowAutoTrigger entity);
 
-    // ===== FlowComment =====
-    FlowCommentVO entityToVO(FlowComment entity);
-    List<FlowCommentVO> flowCommentListToVO(List<FlowComment> entities);
+  List<FlowAutoTriggerVO> flowAutoTriggerListToVO(List<FlowAutoTrigger> entities);
 
-    // ===== FlowDefinition =====
-    FlowDefinitionVO entityToVO(FlowDefinition entity);
-    List<FlowDefinitionVO> flowDefinitionListToVO(List<FlowDefinition> entities);
+  // ===== FlowCategory =====
+  FlowCategoryVO entityToVO(FlowCategory entity);
 
-    // ===== FlowDelegateAuth =====
-    FlowDelegateAuthVO entityToVO(FlowDelegateAuth entity);
-    List<FlowDelegateAuthVO> flowDelegateAuthListToVO(List<FlowDelegateAuth> entities);
+  List<FlowCategoryVO> flowCategoryListToVO(List<FlowCategory> entities);
 
-    // ===== FlowDmnDecision =====
-    FlowDmnDecisionVO entityToVO(FlowDmnDecision entity);
-    List<FlowDmnDecisionVO> flowDmnDecisionListToVO(List<FlowDmnDecision> entities);
+  // ===== FlowCc =====
+  FlowCcVO entityToVO(FlowCc entity);
 
-    // ===== FlowDmnRule =====
-    FlowDmnRuleVO entityToVO(FlowDmnRule entity);
-    List<FlowDmnRuleVO> flowDmnRuleListToVO(List<FlowDmnRule> entities);
+  List<FlowCcVO> flowCcListToVO(List<FlowCc> entities);
 
-    // ===== FlowEventSubscription =====
-    FlowEventSubscriptionVO entityToVO(FlowEventSubscription entity);
-    List<FlowEventSubscriptionVO> flowEventSubscriptionListToVO(List<FlowEventSubscription> entities);
+  // ===== FlowCcRule =====
+  FlowCcRuleVO entityToVO(FlowCcRule entity);
 
-    // ===== FlowHisInstance =====
-    FlowHisInstanceVO entityToVO(FlowHisInstance entity);
-    List<FlowHisInstanceVO> flowHisInstanceListToVO(List<FlowHisInstance> entities);
+  List<FlowCcRuleVO> flowCcRuleListToVO(List<FlowCcRule> entities);
 
-    // ===== FlowHisTask =====
-    FlowHisTaskVO entityToVO(FlowHisTask entity);
-    List<FlowHisTaskVO> flowHisTaskListToVO(List<FlowHisTask> entities);
+  // ===== FlowComment =====
+  FlowCommentVO entityToVO(FlowComment entity);
 
-    // ===== FlowInstance =====
-    FlowInstanceVO entityToVO(FlowInstance entity);
-    List<FlowInstanceVO> flowInstanceListToVO(List<FlowInstance> entities);
+  List<FlowCommentVO> flowCommentListToVO(List<FlowComment> entities);
 
-    // ===== FlowNode =====
-    FlowNodeVO entityToVO(FlowNode entity);
-    List<FlowNodeVO> flowNodeListToVO(List<FlowNode> entities);
+  // ===== FlowDefinition =====
+  FlowDefinitionVO entityToVO(FlowDefinition entity);
 
-    // ===== FlowQuickComment =====
-    FlowQuickCommentVO entityToVO(FlowQuickComment entity);
-    List<FlowQuickCommentVO> flowQuickCommentListToVO(List<FlowQuickComment> entities);
+  List<FlowDefinitionVO> flowDefinitionListToVO(List<FlowDefinition> entities);
 
-    // ===== FlowRunTask =====
-    FlowRunTaskVO entityToVO(FlowRunTask entity);
-    List<FlowRunTaskVO> flowRunTaskListToVO(List<FlowRunTask> entities);
+  // ===== FlowDelegateAuth =====
+  FlowDelegateAuthVO entityToVO(FlowDelegateAuth entity);
 
-    // ===== FlowSkip =====
-    FlowSkipVO entityToVO(FlowSkip entity);
-    List<FlowSkipVO> flowSkipListToVO(List<FlowSkip> entities);
+  List<FlowDelegateAuthVO> flowDelegateAuthListToVO(List<FlowDelegateAuth> entities);
 
-    // ===== FlowTemplate =====
-    FlowTemplateVO entityToVO(FlowTemplate entity);
-    List<FlowTemplateVO> flowTemplateListToVO(List<FlowTemplate> entities);
+  // ===== FlowDmnDecision =====
+  FlowDmnDecisionVO entityToVO(FlowDmnDecision entity);
 
-    // ===== FlowThirdPartyAccount =====
-    FlowThirdPartyAccountVO entityToVO(FlowThirdPartyAccount entity);
-    List<FlowThirdPartyAccountVO> flowThirdPartyAccountListToVO(List<FlowThirdPartyAccount> entities);
+  List<FlowDmnDecisionVO> flowDmnDecisionListToVO(List<FlowDmnDecision> entities);
 
-    // ===== FlowThirdPartyLog =====
-    FlowThirdPartyLogVO entityToVO(FlowThirdPartyLog entity);
-    List<FlowThirdPartyLogVO> flowThirdPartyLogListToVO(List<FlowThirdPartyLog> entities);
+  // ===== FlowDmnRule =====
+  FlowDmnRuleVO entityToVO(FlowDmnRule entity);
 
-    // ===== FlowTimer =====
-    FlowTimerVO entityToVO(FlowTimer entity);
-    List<FlowTimerVO> flowTimerListToVO(List<FlowTimer> entities);
+  List<FlowDmnRuleVO> flowDmnRuleListToVO(List<FlowDmnRule> entities);
 
-    // ===== FlowUser =====
-    FlowUserVO entityToVO(FlowUser entity);
-    List<FlowUserVO> flowUserListToVO(List<FlowUser> entities);
+  // ===== FlowEventSubscription =====
+  FlowEventSubscriptionVO entityToVO(FlowEventSubscription entity);
 
+  List<FlowEventSubscriptionVO> flowEventSubscriptionListToVO(List<FlowEventSubscription> entities);
 
-    /**
-     * 委派授权 PostDTO → Entity（创建场景）。
-     */
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "deleted", ignore = true)
-    @Mapping(target = "revision", ignore = true)
-    @Mapping(target = "tenantId", ignore = true)
-    @Mapping(target = "createdBy", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedBy", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "authStatus", ignore = true)
-    @Mapping(target = "providerTraceId", ignore = true)
-    FlowDelegateAuth postDtoToEntity(FlowDelegateAuthPostDTO dto);
+  // ===== FlowHisInstance =====
+  FlowHisInstanceVO entityToVO(FlowHisInstance entity);
 
-    /**
-     * 委派授权 PutDTO → Entity（更新场景）。
-     */
-    @Mapping(target = "deleted", ignore = true)
-    @Mapping(target = "revision", ignore = true)
-    @Mapping(target = "tenantId", ignore = true)
-    @Mapping(target = "updatedBy", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
-    @Mapping(target = "authStatus", ignore = true)
-    @Mapping(target = "providerTraceId", ignore = true)
-    FlowDelegateAuth putDtoToEntity(FlowDelegateAuthPutDTO dto);
+  List<FlowHisInstanceVO> flowHisInstanceListToVO(List<FlowHisInstance> entities);
 
-    // ===== String (通用字符串包装) =====
-    /**
-     * 字符串 → {@link StringVO}（如合并组 ID 包装）。
-     */
-    default StringVO entityToVO(String value) {
-        return value == null ? null : new StringVO(value);
+  // ===== FlowHisTask =====
+  FlowHisTaskVO entityToVO(FlowHisTask entity);
+
+  List<FlowHisTaskVO> flowHisTaskListToVO(List<FlowHisTask> entities);
+
+  // ===== FlowInstance =====
+  FlowInstanceVO entityToVO(FlowInstance entity);
+
+  List<FlowInstanceVO> flowInstanceListToVO(List<FlowInstance> entities);
+
+  // ===== FlowNode =====
+  FlowNodeVO entityToVO(FlowNode entity);
+
+  List<FlowNodeVO> flowNodeListToVO(List<FlowNode> entities);
+
+  // ===== FlowQuickComment =====
+  FlowQuickCommentVO entityToVO(FlowQuickComment entity);
+
+  List<FlowQuickCommentVO> flowQuickCommentListToVO(List<FlowQuickComment> entities);
+
+  // ===== FlowRunTask =====
+  FlowRunTaskVO entityToVO(FlowRunTask entity);
+
+  List<FlowRunTaskVO> flowRunTaskListToVO(List<FlowRunTask> entities);
+
+  // ===== FlowSkip =====
+  FlowSkipVO entityToVO(FlowSkip entity);
+
+  List<FlowSkipVO> flowSkipListToVO(List<FlowSkip> entities);
+
+  // ===== FlowTemplate =====
+  FlowTemplateVO entityToVO(FlowTemplate entity);
+
+  List<FlowTemplateVO> flowTemplateListToVO(List<FlowTemplate> entities);
+
+  // ===== FlowThirdPartyAccount =====
+  FlowThirdPartyAccountVO entityToVO(FlowThirdPartyAccount entity);
+
+  List<FlowThirdPartyAccountVO> flowThirdPartyAccountListToVO(List<FlowThirdPartyAccount> entities);
+
+  // ===== FlowThirdPartyLog =====
+  FlowThirdPartyLogVO entityToVO(FlowThirdPartyLog entity);
+
+  List<FlowThirdPartyLogVO> flowThirdPartyLogListToVO(List<FlowThirdPartyLog> entities);
+
+  // ===== FlowTimer =====
+  FlowTimerVO entityToVO(FlowTimer entity);
+
+  List<FlowTimerVO> flowTimerListToVO(List<FlowTimer> entities);
+
+  // ===== FlowUser =====
+  FlowUserVO entityToVO(FlowUser entity);
+
+  List<FlowUserVO> flowUserListToVO(List<FlowUser> entities);
+
+  /** 委派授权 PostDTO → Entity（创建场景）。 */
+  @Mapping(target = "id", ignore = true)
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "createdBy", ignore = true)
+  @Mapping(target = "createdAt", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "authStatus", ignore = true)
+  @Mapping(target = "providerTraceId", ignore = true)
+  FlowDelegateAuth postDtoToEntity(FlowDelegateAuthPostDTO dto);
+
+  /** 委派授权 PutDTO → Entity（更新场景）。 */
+  @Mapping(target = "deleted", ignore = true)
+  @Mapping(target = "revision", ignore = true)
+  @Mapping(target = "tenantId", ignore = true)
+  @Mapping(target = "updatedBy", ignore = true)
+  @Mapping(target = "updatedAt", ignore = true)
+  @Mapping(target = "authStatus", ignore = true)
+  @Mapping(target = "providerTraceId", ignore = true)
+  FlowDelegateAuth putDtoToEntity(FlowDelegateAuthPutDTO dto);
+
+  // ===== String (通用字符串包装) =====
+  /** 字符串 → {@link StringVO}（如合并组 ID 包装）。 */
+  default StringVO entityToVO(String value) {
+    return value == null ? null : new StringVO(value);
+  }
+
+  /** 字符串列表 → {@link StringVO} 列表（如已审批人 ID 列表包装）。 */
+  default List<StringVO> stringListToVO(List<String> values) {
+    if (values == null) {
+      return null;
     }
-
-    /**
-     * 字符串列表 → {@link StringVO} 列表（如已审批人 ID 列表包装）。
-     */
-    default List<StringVO> stringListToVO(List<String> values) {
-        if (values == null) {
-            return null;
-        }
-        return values.stream().map(this::entityToVO).collect(Collectors.toList());
-    }
-
+    return values.stream().map(this::entityToVO).collect(Collectors.toList());
+  }
 }

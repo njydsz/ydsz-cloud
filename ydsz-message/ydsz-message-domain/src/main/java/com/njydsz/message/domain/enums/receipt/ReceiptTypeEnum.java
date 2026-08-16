@@ -8,12 +8,12 @@ package com.njydsz.message.domain.enums.receipt;
  */
 public enum ReceiptTypeEnum {
 
-    /** 已送达 */
-    DELIVERED,
-    /** 已读 */
-    READ,
-    /** 已点击 */
-    CLICKED,
-    /** 失败 */
-    FAILED
+  /** 已送达 */
+  DELIVERED,
+  /** 已读 */
+  READ,
+  /** 已点击 */
+  CLICKED,
+  /** 失败 */
+  FAILED
 }

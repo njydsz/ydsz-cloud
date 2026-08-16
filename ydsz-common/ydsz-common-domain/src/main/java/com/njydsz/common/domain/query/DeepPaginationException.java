@@ -17,27 +17,28 @@ import lombok.Getter;
 @Getter
 public class DeepPaginationException extends RuntimeException implements Serializable {
 
-    private static final long serialVersionUID = 1L;
+  private static final long serialVersionUID = 1L;
 
-    /** 当前请求的 offset 值 */
-    private final long offset;
+  /** 当前请求的 offset 值 */
+  private final long offset;
 
-    /** pageNum 和 pageSize */
-    private final int pageNum;
+  /** pageNum 和 pageSize */
+  private final int pageNum;
 
-    private final int pageSize;
+  private final int pageSize;
 
-    /** 拒绝阈值 */
-    private final long threshold;
+  /** 拒绝阈值 */
+  private final long threshold;
 
-    public DeepPaginationException(long offset, int pageNum, int pageSize, long threshold) {
-        super(String.format(
-                "Deep pagination rejected: offset=%d exceeds threshold=%d (pageNum=%d, pageSize=%d). " +
-                "Please switch to cursor-based pagination (SliceQuery / SliceResult).",
-                offset, threshold, pageNum, pageSize));
-        this.offset = offset;
-        this.pageNum = pageNum;
-        this.pageSize = pageSize;
-        this.threshold = threshold;
-    }
+  public DeepPaginationException(long offset, int pageNum, int pageSize, long threshold) {
+    super(
+        String.format(
+            "Deep pagination rejected: offset=%d exceeds threshold=%d (pageNum=%d, pageSize=%d). "
+                + "Please switch to cursor-based pagination (SliceQuery / SliceResult).",
+            offset, threshold, pageNum, pageSize));
+    this.offset = offset;
+    this.pageNum = pageNum;
+    this.pageSize = pageSize;
+    this.threshold = threshold;
+  }
 }

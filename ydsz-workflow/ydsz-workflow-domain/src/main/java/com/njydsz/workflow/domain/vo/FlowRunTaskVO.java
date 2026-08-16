@@ -17,123 +17,122 @@ import lombok.Data;
 @Data
 public class FlowRunTaskVO implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
-    /** 主键 ID */
-    private String id;
+  /** 主键 ID */
+  private String id;
 
-    /** 流程实例 ID */
-    private String instanceId;
+  /** 流程实例 ID */
+  private String instanceId;
 
-    /** 流程编码 */
-    private String flowCode;
+  /** 流程编码 */
+  private String flowCode;
 
-    /** 流程定义 ID */
-    private String definitionId;
+  /** 流程定义 ID */
+  private String definitionId;
 
-    /** 节点编码 */
-    private String nodeCode;
+  /** 节点编码 */
+  private String nodeCode;
 
-    /** 节点名称 */
-    private String nodeName;
+  /** 节点名称 */
+  private String nodeName;
 
-    /** 节点类型 */
-    private Integer nodeType;
+  /** 节点类型 */
+  private Integer nodeType;
 
-    /** 业务类型 */
-    private String businessType;
+  /** 业务类型 */
+  private String businessType;
 
-    /** 业务单据 ID */
-    private String businessId;
+  /** 业务单据 ID */
+  private String businessId;
 
-    /** 业务单据编号 */
-    private String businessNo;
+  /** 业务单据编号 */
+  private String businessNo;
 
-    /** 流程名称 */
-    private String flowName;
+  /** 流程名称 */
+  private String flowName;
 
-    /** 流程标题 */
-    private String title;
+  /** 流程标题 */
+  private String title;
 
-    /** 分配人 ID */
-    private String assignorId;
+  /** 分配人 ID */
+  private String assignorId;
 
-    /** 分配人名称 */
-    private String assignorName;
+  /** 分配人名称 */
+  private String assignorName;
 
-    /** 审批人类型 */
-    private String assigneeType;
+  /** 审批人类型 */
+  private String assigneeType;
 
-    /** 审批人 ID */
-    private String assigneeId;
+  /** 审批人 ID */
+  private String assigneeId;
 
-    /** 审批人名称 */
-    private String assigneeName;
+  /** 审批人名称 */
+  private String assigneeName;
 
-    /** 权限标识 */
-    private String permissionFlag;
+  /** 权限标识 */
+  private String permissionFlag;
 
-    /** 办理方式（会签/或签） */
-    private String performType;
+  /** 办理方式（会签/或签） */
+  private String performType;
 
-    /** 审批总数 */
-    private Integer approveCount;
+  /** 审批总数 */
+  private Integer approveCount;
 
-    /** 已完成审批数 */
-    private Integer approveFinished;
+  /** 已完成审批数 */
+  private Integer approveFinished;
 
-    /** 投票通过率 */
-    private BigDecimal votePassRate;
+  /** 投票通过率 */
+  private BigDecimal votePassRate;
 
-    /** 任务状态 */
-    private String taskStatus;
+  /** 任务状态 */
+  private String taskStatus;
 
-    /** 审批意见 */
-    private String comment;
+  /** 审批意见 */
+  private String comment;
 
-    /** 签收时间 */
-    private LocalDateTime claimAt;
+  /** 签收时间 */
+  private LocalDateTime claimAt;
 
-    /** 完成时间 */
-    private LocalDateTime finishAt;
+  /** 完成时间 */
+  private LocalDateTime finishAt;
 
-    /** 耗时（毫秒） */
-    private Long durationMs;
+  /** 耗时（毫秒） */
+  private Long durationMs;
 
-    /** 期望完成时间（SLA 超期时间） */
-    private LocalDateTime dueAt;
+  /** 期望完成时间（SLA 超期时间） */
+  private LocalDateTime dueAt;
 
-    /** 优先级 */
-    private Integer priority;
+  /** 优先级 */
+  private Integer priority;
 
-    /** 催办次数 */
-    private Integer urgeCount;
+  /** 催办次数 */
+  private Integer urgeCount;
 
-    /** 最后催办时间 */
-    private LocalDateTime lastUrgedAt;
+  /** 最后催办时间 */
+  private LocalDateTime lastUrgedAt;
 
-    /** SLA 动作 */
-    private String slaAction;
+  /** SLA 动作 */
+  private String slaAction;
 
-    /** SLA 是否已升级 */
-    private Integer slaEscalated;
+  /** SLA 是否已升级 */
+  private Integer slaEscalated;
 
-    /** 迭代变量 */
-    private String iterVar;
+  /** 迭代变量 */
+  private String iterVar;
 
-    /** 外部追踪 ID */
-    private String providerTraceId;
+  /** 外部追踪 ID */
+  private String providerTraceId;
 
-    /** 创建人 */
-    private String createdBy;
+  /** 创建人 */
+  private String createdBy;
 
-    /** 创建时间 */
-    private LocalDateTime createdAt;
+  /** 创建时间 */
+  private LocalDateTime createdAt;
 
-    /** 更新人 */
-    private String updatedBy;
+  /** 更新人 */
+  private String updatedBy;
 
-    /** 更新时间 */
-    private LocalDateTime updatedAt;
+  /** 更新时间 */
+  private LocalDateTime updatedAt;
 }

@@ -16,81 +16,80 @@ import lombok.Data;
 @Data
 public class FlowDefinitionVO implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
-    /** 主键 ID */
-    private String id;
+  /** 主键 ID */
+  private String id;
 
-    /** 流程编码（业务语义，如 project_initiation） */
-    private String flowCode;
+  /** 流程编码（业务语义，如 project_initiation） */
+  private String flowCode;
 
-    /** 流程名称 */
-    private String flowName;
+  /** 流程名称 */
+  private String flowName;
 
-    /** 流程分类 */
-    private String category;
+  /** 流程分类 */
+  private String category;
 
-    /** 流程版本号（如 v1、v2） */
-    private String flowVersion;
+  /** 流程版本号（如 v1、v2） */
+  private String flowVersion;
 
-    /** 设计器模型（CLASSICS 经典 / MIMIC 仿钉钉） */
-    private String modelValue;
+  /** 设计器模型（CLASSICS 经典 / MIMIC 仿钉钉） */
+  private String modelValue;
 
-    /** 审批表单是否自定义（Y/N） */
-    private String formCustom;
+  /** 审批表单是否自定义（Y/N） */
+  private String formCustom;
 
-    /** 表单路径 */
-    private String formPath;
+  /** 表单路径 */
+  private String formPath;
 
-    /** 激活状态（0=挂起 / 1=激活） */
-    private Integer activityStatus;
+  /** 激活状态（0=挂起 / 1=激活） */
+  private Integer activityStatus;
 
-    /** 发布状态（0=未发布 / 1=已发布 / 9=失效） */
-    private Integer isPublish;
+  /** 发布状态（0=未发布 / 1=已发布 / 9=失效） */
+  private Integer isPublish;
 
-    /** 监听器类型 */
-    private String listenerType;
+  /** 监听器类型 */
+  private String listenerType;
 
-    /** 监听器路径（Spring Bean 路径） */
-    private String listenerPath;
+  /** 监听器路径（Spring Bean 路径） */
+  private String listenerPath;
 
-    /** 扩展字段（JSON） */
-    private String ext;
+  /** 扩展字段（JSON） */
+  private String ext;
 
-    /** 流程描述 */
-    private String description;
+  /** 流程描述 */
+  private String description;
 
-    /** 外部追踪 ID */
-    private String providerTraceId;
+  /** 外部追踪 ID */
+  private String providerTraceId;
 
-    /** 灰度发布百分比 */
-    private Integer canaryPercent;
+  /** 灰度发布百分比 */
+  private Integer canaryPercent;
 
-    /** 灰度状态 */
-    private String canaryStatus;
+  /** 灰度状态 */
+  private String canaryStatus;
 
-    /** 灰度策略 */
-    private String canaryStrategy;
+  /** 灰度策略 */
+  private String canaryStrategy;
 
-    /** 灰度发布日志 */
-    private String canaryRolloutLog;
+  /** 灰度发布日志 */
+  private String canaryRolloutLog;
 
-    /** 锁定人 */
-    private String lockedBy;
+  /** 锁定人 */
+  private String lockedBy;
 
-    /** 锁定时间 */
-    private LocalDateTime lockedAt;
+  /** 锁定时间 */
+  private LocalDateTime lockedAt;
 
-    /** 创建人 */
-    private String createdBy;
+  /** 创建人 */
+  private String createdBy;
 
-    /** 创建时间 */
-    private LocalDateTime createdAt;
+  /** 创建时间 */
+  private LocalDateTime createdAt;
 
-    /** 更新人 */
-    private String updatedBy;
+  /** 更新人 */
+  private String updatedBy;
 
-    /** 更新时间 */
-    private LocalDateTime updatedAt;
+  /** 更新时间 */
+  private LocalDateTime updatedAt;
 }

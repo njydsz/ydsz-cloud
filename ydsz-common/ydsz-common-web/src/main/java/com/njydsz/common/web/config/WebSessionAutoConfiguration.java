@@ -16,11 +16,11 @@ import org.springframework.context.annotation.Import;
  * @author ydsz-team
  * @since 1.0.0
  */
-
 @AutoConfiguration
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
-@ConditionalOnClass(name = "org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession")
+@ConditionalOnClass(
+    name =
+        "org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession")
 @ConditionalOnProperty(prefix = "ydsz.web.session", name = "enabled", havingValue = "true")
 @Import(RedisHttpSessionImportSelector.class)
-public class WebSessionAutoConfiguration {
-}
+public class WebSessionAutoConfiguration {}

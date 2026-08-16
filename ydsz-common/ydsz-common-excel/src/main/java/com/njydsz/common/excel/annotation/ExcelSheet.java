@@ -9,7 +9,6 @@ package com.njydsz.common.excel.annotation;
  */
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -17,10 +16,10 @@ import java.lang.annotation.Target;
 /**
  * ExcelSheet注解 - Sheet页配置
  *
- * <p>用于配置Excel Sheet页的相关属性，包括名称、表头行号、日期格式、
- * 冻结窗格、合并单元格等。该注解标注在Java类的类型级别。</p>
+ * <p>用于配置Excel Sheet页的相关属性，包括名称、表头行号、日期格式、 冻结窗格、合并单元格等。该注解标注在Java类的类型级别。
  *
  * <h3>示例</h3>
+ *
  * <pre>{@code
  * @ExcelSheet(
  *     name = "用户信息",
@@ -49,151 +48,147 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface ExcelSheet {
 
-    /**
-     * Sheet名称
-     *
-     * <p>指定要创建或读取的Sheet页名称。
-     * 若未指定,写入时使用默认名称"sheet1"</p>
-     *
-     * @return Sheet名称
-     */
-    String name() default "";
+  /**
+   * Sheet名称
+   *
+   * <p>指定要创建或读取的Sheet页名称。 若未指定,写入时使用默认名称"sheet1"
+   *
+   * @return Sheet名称
+   */
+  String name() default "";
 
-    /**
-     * Sheet序号
-     *
-     * <p>指定Sheet的序号(从0开始)。
-     * 用于多Sheet场景下的精确指定</p>
-     *
-     * @return Sheet序号
-     */
-    int sheetNo() default 0;
+  /**
+   * Sheet序号
+   *
+   * <p>指定Sheet的序号(从0开始)。 用于多Sheet场景下的精确指定
+   *
+   * @return Sheet序号
+   */
+  int sheetNo() default 0;
 
-    /**
-     * 表头行号
-     *
-     * <p>指定表头所在的行号(从0开始计数)。
-     * 默认值为1,即第二行作为表头</p>
-     *
-     * @return 表头行号
-     */
-    int headRowNumber() default 1;
+  /**
+   * 表头行号
+   *
+   * <p>指定表头所在的行号(从0开始计数)。 默认值为1,即第二行作为表头
+   *
+   * @return 表头行号
+   */
+  int headRowNumber() default 1;
 
-    /**
-     * 默认日期格式
-     *
-     * <p>当字段未单独指定dateFormat时,使用此默认值。
-     * 支持的格式如:"yyyy-MM-dd"、"yyyy/MM/dd HH:mm:ss"等</p>
-     *
-     * @return 日期格式字符串
-     */
-    String dateFormat() default "";
+  /**
+   * 默认日期格式
+   *
+   * <p>当字段未单独指定dateFormat时,使用此默认值。 支持的格式如:"yyyy-MM-dd"、"yyyy/MM/dd HH:mm:ss"等
+   *
+   * @return 日期格式字符串
+   */
+  String dateFormat() default "";
 
-    /**
-     * 冻结窗格配置
-     *
-     * <p>用于固定表头或首列,方便查看大数据量时的滚动浏览。
-     * 例如 freezePane = @FreezePane(row = 1) 冻结首行,
-     * freezePane = @FreezePane(col = 1) 冻结首列</p>
-     *
-     * @return 冻结窗格配置
-     */
-    FreezePane freezePane() default @FreezePane;
+  /**
+   * 冻结窗格配置
+   *
+   * <p>用于固定表头或首列,方便查看大数据量时的滚动浏览。 例如 freezePane = @FreezePane(row = 1) 冻结首行, freezePane
+   * = @FreezePane(col = 1) 冻结首列
+   *
+   * @return 冻结窗格配置
+   */
+  FreezePane freezePane() default @FreezePane;
 
-    /**
-     * 合并单元格配置
-     *
-     * <p>用于设置需要合并的单元格区域,常用于表头多列合并。
-     * 例如合并第一行的0-2列为一个单元格</p>
-     *
-     * @return 合并单元格配置数组
-     */
-    MergedRegion[] mergedRegions() default {};
+  /**
+   * 合并单元格配置
+   *
+   * <p>用于设置需要合并的单元格区域,常用于表头多列合并。 例如合并第一行的0-2列为一个单元格
+   *
+   * @return 合并单元格配置数组
+   */
+  MergedRegion[] mergedRegions() default {};
 
-    /**
-     * 是否自动设置列宽
-     *
-     * <p>设置为true时,根据内容自动调整列宽</p>
-     *
-     * @return true表示自动设置列宽
-     */
-    boolean autoColumnWidth() default false;
+  /**
+   * 是否自动设置列宽
+   *
+   * <p>设置为true时,根据内容自动调整列宽
+   *
+   * @return true表示自动设置列宽
+   */
+  boolean autoColumnWidth() default false;
 
+  /**
+   * 冻结窗格注解
+   *
+   * <p>用于配置Excel的冻结窗格功能
+   *
+   * <h3>使用示例</h3>
+   *
+   * <pre>{@code
+   * // 冻结首行
+   * @FreezePane(row = 1)
+   *
+   * // 冻结首列
+   * @FreezePane(col = 1)
+   *
+   * // 冻结首行首列
+   * @FreezePane(row = 1, col = 1)
+   * }</pre>
+   */
+  @interface FreezePane {
     /**
-     * 冻结窗格注解
+     * 冻结的行数(从首行开始)
      *
-     * <p>用于配置Excel的冻结窗格功能</p>
+     * <p>设置为0表示不冻结任何行
      *
-     * <h3>使用示例</h3>
-     * <pre>{@code
-     * // 冻结首行
-     * @FreezePane(row = 1)
-     *
-     * // 冻结首列
-     * @FreezePane(col = 1)
-     *
-     * // 冻结首行首列
-     * @FreezePane(row = 1, col = 1)
-     * }</pre>
+     * @return 冻结的行数
      */
-    @interface FreezePane {
-        /**
-         * 冻结的行数(从首行开始)
-         *
-         * <p>设置为0表示不冻结任何行</p>
-         *
-         * @return 冻结的行数
-         */
-        int row() default 0;
-
-        /**
-         * 冻结的列数(从首列开始)
-         *
-         * <p>设置为0表示不冻结任何列</p>
-         *
-         * @return 冻结的列数
-         */
-        int col() default 0;
-    }
+    int row() default 0;
 
     /**
-     * 合并单元格注解
+     * 冻结的列数(从首列开始)
      *
-     * <p>用于配置Excel的单元格合并区域</p>
+     * <p>设置为0表示不冻结任何列
      *
-     * <h3>使用示例</h3>
-     * <pre>{@code
-     * // 合并第1-3行, 第1-2列的区域
-     * @MergedRegion(startRow = 0, endRow = 2, startCol = 0, endCol = 1)
-     * }</pre>
+     * @return 冻结的列数
      */
-    @interface MergedRegion {
-        /**
-         * 起始行号(从0开始)
-         *
-         * @return 起始行号
-         */
-        int startRow();
+    int col() default 0;
+  }
 
-        /**
-         * 结束行号(从0开始)
-         *
-         * @return 结束行号
-         */
-        int endRow();
+  /**
+   * 合并单元格注解
+   *
+   * <p>用于配置Excel的单元格合并区域
+   *
+   * <h3>使用示例</h3>
+   *
+   * <pre>{@code
+   * // 合并第1-3行, 第1-2列的区域
+   * @MergedRegion(startRow = 0, endRow = 2, startCol = 0, endCol = 1)
+   * }</pre>
+   */
+  @interface MergedRegion {
+    /**
+     * 起始行号(从0开始)
+     *
+     * @return 起始行号
+     */
+    int startRow();
 
-        /**
-         * 起始列号(从0开始)
-         *
-         * @return 起始列号
-         */
-        int startCol();
+    /**
+     * 结束行号(从0开始)
+     *
+     * @return 结束行号
+     */
+    int endRow();
 
-        /**
-         * 结束列号(从0开始)
-         *
-         * @return 结束列号
-         */
-        int endCol();
-    }
+    /**
+     * 起始列号(从0开始)
+     *
+     * @return 起始列号
+     */
+    int startCol();
+
+    /**
+     * 结束列号(从0开始)
+     *
+     * @return 结束列号
+     */
+    int endCol();
+  }
 }

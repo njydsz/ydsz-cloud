@@ -13,21 +13,21 @@ import lombok.Data;
 @Data
 public class HotParamRule {
 
-    /** 资源名 */
-    private String resource;
+  /** 资源名 */
+  private String resource;
 
-    /** 参数索引（从 0 开始） */
-    private int paramIndex;
+  /** 参数索引（从 0 开始） */
+  private int paramIndex;
 
-    /** 阈值 */
-    private double threshold;
+  /** 阈值 */
+  private double threshold;
 
-    /** 窗口大小（毫秒） */
-    private long windowMillis = 1000L;
+  /** 窗口大小（毫秒） */
+  private long windowMillis = 1000L;
 
-    /** 参数值（不指定则对所有热点生效） */
-    private String paramValue;
+  /** 参数值（不指定则对所有热点生效） */
+  private String paramValue;
 
-    /** 算法 */
-    private String algorithm = "TOKEN_BUCKET";
+  /** 算法 */
+  private String algorithm = "TOKEN_BUCKET";
 }

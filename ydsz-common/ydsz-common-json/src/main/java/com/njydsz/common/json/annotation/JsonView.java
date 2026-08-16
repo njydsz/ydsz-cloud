@@ -8,16 +8,18 @@ import java.lang.annotation.Target;
 /**
  * JSON 视图注解
  *
- * <p>用于按场景过滤字段，对标 Jackson @JsonView。</p>
+ * <p>用于按场景过滤字段，对标 Jackson @JsonView。
  *
- * <p><b>使用场景：</b></p>
+ * <p><b>使用场景：</b>
+ *
  * <ul>
- *   <li>列表视图：仅返回 ID 和名称</li>
- *   <li>详情视图：返回所有字段</li>
- *   <li>管理视图：返回敏感字段</li>
+ *   <li>列表视图：仅返回 ID 和名称
+ *   <li>详情视图：返回所有字段
+ *   <li>管理视图：返回敏感字段
  * </ul>
  *
- * <p><b>使用示例：</b></p>
+ * <p><b>使用示例：</b>
+ *
  * <pre>
  * // 定义视图类
  * public class UserViews {
@@ -49,10 +51,10 @@ import java.lang.annotation.Target;
  * // 输出：{"id":1,"name":"John","email":"john@example.com","phone":"1234567890"}
  * </pre>
  *
- * <p><b>规范建议（R8）：</b>列表/详情接口的字段裁剪应统一使用 {@code @JsonView} +
- * {@code YdszJson.toJson(obj, ViewClass.class)}，<b>禁止</b>为不同视图创建多个 DTO 投影类。
- * 视图类应集中定义在 domain 模块的 {@code XxxViews} 中（如 {@code FlowViews.Summary}），
- * Controller 层通过 {@code @JsonView(ViewClass.class)} 或手动调用 {@code YdszJson.toJson} 指定视图。
+ * <p><b>规范建议（R8）：</b>列表/详情接口的字段裁剪应统一使用 {@code @JsonView} + {@code YdszJson.toJson(obj,
+ * ViewClass.class)}，<b>禁止</b>为不同视图创建多个 DTO 投影类。 视图类应集中定义在 domain 模块的 {@code XxxViews} 中（如 {@code
+ * FlowViews.Summary}）， Controller 层通过 {@code @JsonView(ViewClass.class)} 或手动调用 {@code
+ * YdszJson.toJson} 指定视图。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -61,13 +63,12 @@ import java.lang.annotation.Target;
 @Target({ElementType.FIELD, ElementType.METHOD})
 public @interface JsonView {
 
-    /**
-     * 视图类
-     *
-     * <p>指定该字段在哪些视图下可见。支持继承关系，
-     * 如果指定了父视图，子视图也会继承该可见性。</p>
-     *
-     * @return 视图类数组，指定该字段在哪些视图下可见
-     */
-    Class<?>[] value();
+  /**
+   * 视图类
+   *
+   * <p>指定该字段在哪些视图下可见。支持继承关系， 如果指定了父视图，子视图也会继承该可见性。
+   *
+   * @return 视图类数组，指定该字段在哪些视图下可见
+   */
+  Class<?>[] value();
 }

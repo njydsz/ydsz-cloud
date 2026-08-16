@@ -9,48 +9,45 @@ import com.njydsz.common.json.deserializer.JsonDeserializer;
 /**
  * 模块化反序列化器注册表
  *
- * <p>用于在模块中注册自定义反序列化器，提供类型安全的注册接口。</p>
+ * <p>用于在模块中注册自定义反序列化器，提供类型安全的注册接口。
  *
  * @author ydsz-team
  * @since 1.0.0
  */
 public final class ModuleDeserializerRegistry {
 
-    private final Map<Class<?>, JsonDeserializer<?>> deserializers = new LinkedHashMap<>();
+  private final Map<Class<?>, JsonDeserializer<?>> deserializers = new LinkedHashMap<>();
 
-    ModuleDeserializerRegistry() {
-    }
+  ModuleDeserializerRegistry() {}
 
-    /**
-     * 注册自定义反序列化器
-     *
-     * @param type 目标类型
-     * @param deserializer 反序列化器
-     * @param <T> 类型参数
-     */
-    public <T> void register(Class<T> type, JsonDeserializer<T> deserializer) {
-        if (type == null) {
-            throw new IllegalArgumentException("Type cannot be null");
-        }
-        if (deserializer == null) {
-            throw new IllegalArgumentException("Deserializer cannot be null");
-        }
-        deserializers.put(type, deserializer);
+  /**
+   * 注册自定义反序列化器
+   *
+   * @param type 目标类型
+   * @param deserializer 反序列化器
+   * @param <T> 类型参数
+   */
+  public <T> void register(Class<T> type, JsonDeserializer<T> deserializer) {
+    if (type == null) {
+      throw new IllegalArgumentException("Type cannot be null");
     }
+    if (deserializer == null) {
+      throw new IllegalArgumentException("Deserializer cannot be null");
+    }
+    deserializers.put(type, deserializer);
+  }
 
-    /**
-     * 获取已注册的反序列化器
-     *
-     * @return 只读映射
-     */
-    Map<Class<?>, JsonDeserializer<?>> getDeserializers() {
-        return Collections.unmodifiableMap(deserializers);
-    }
+  /**
+   * 获取已注册的反序列化器
+   *
+   * @return 只读映射
+   */
+  Map<Class<?>, JsonDeserializer<?>> getDeserializers() {
+    return Collections.unmodifiableMap(deserializers);
+  }
 
-    /**
-     * 清空注册表
-     */
-    void clear() {
-        deserializers.clear();
-    }
+  /** 清空注册表 */
+  void clear() {
+    deserializers.clear();
+  }
 }

@@ -1,5 +1,11 @@
 package com.njydsz.common.cache.internal.decorator;
 
+import com.njydsz.common.cache.api.Cache;
+import com.njydsz.common.cache.listener.RemovalCause;
+import com.njydsz.common.cache.listener.RemovalListener;
+import com.njydsz.common.cache.stats.CacheStats;
+import com.njydsz.common.cache.support.AsyncFunction;
+import com.njydsz.common.cache.support.CacheWriter;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -10,12 +16,6 @@ import java.util.concurrent.atomic.LongAdder;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import com.njydsz.common.cache.api.Cache;
-import com.njydsz.common.cache.listener.RemovalCause;
-import com.njydsz.common.cache.listener.RemovalListener;
-import com.njydsz.common.cache.stats.CacheStats;
-import com.njydsz.common.cache.support.AsyncFunction;
-import com.njydsz.common.cache.support.CacheWriter;
 
 /**
  * 写穿透缓存装饰器 - 数据同时写入缓存和后端存储
@@ -59,7 +59,6 @@ import com.njydsz.common.cache.support.CacheWriter;
  * @param <V> 值类型
  * @author ydsz-team
  * @since 1.0.0
- *
  */
 public class WriteThroughCache<K, V> implements Cache<K, V> {
 
@@ -111,7 +110,7 @@ public class WriteThroughCache<K, V> implements Cache<K, V> {
   /**
    * 获取缓存值，未命中时使用加载器加载，并更新命中统计。
    *
-   * @param key    缓存键
+   * @param key 缓存键
    * @param loader 值加载器
    * @return 缓存值或加载的新值
    */
@@ -129,7 +128,7 @@ public class WriteThroughCache<K, V> implements Cache<K, V> {
   /**
    * 异步获取缓存值（直接委托，不参与命中统计）。
    *
-   * @param key    缓存键
+   * @param key 缓存键
    * @param loader 异步值加载器
    * @return 异步完成的缓存值
    */
@@ -141,10 +140,9 @@ public class WriteThroughCache<K, V> implements Cache<K, V> {
   /**
    * 写入键值对：先同步写后端存储，成功后写缓存。
    *
-   * <p>采用"先持久层、后缓存"的顺序，后端写入抛异常时缓存保持原值不变，
-   * 避免缓存与数据库不一致。写成功时递增写入计数。
+   * <p>采用"先持久层、后缓存"的顺序，后端写入抛异常时缓存保持原值不变， 避免缓存与数据库不一致。写成功时递增写入计数。
    *
-   * @param key   缓存键
+   * @param key 缓存键
    * @param value 缓存值
    * @throws RuntimeException 当后端写入失败时抛出（由 {@link CacheWriter#write} 决定具体异常类型）
    */
@@ -160,8 +158,7 @@ public class WriteThroughCache<K, V> implements Cache<K, V> {
   /**
    * 移除指定键：先同步删除后端存储，成功后删除缓存。
    *
-   * <p>缓存中不存在该键时仍尝试从后端删除（携带 null 值），保证后端数据被清理；
-   * 删除成功后向监听器发出 {@link RemovalCause#EXPLICIT} 通知并递增删除计数。
+   * <p>缓存中不存在该键时仍尝试从后端删除（携带 null 值），保证后端数据被清理； 删除成功后向监听器发出 {@link RemovalCause#EXPLICIT} 通知并递增删除计数。
    *
    * @param key 缓存键
    * @return 被移除的缓存值；键不存在时返回 {@code null}
@@ -188,8 +185,8 @@ public class WriteThroughCache<K, V> implements Cache<K, V> {
   /**
    * 清空缓存：先逐个从后端存储删除全部条目，再清空缓存。
    *
-   * <p>逐条调用 {@link CacheWriter#delete} 同步删除后端数据， 并向监听器发出
-   * {@link RemovalCause#EXPLICIT} 通知。任一后端删除失败都会中断清空流程。
+   * <p>逐条调用 {@link CacheWriter#delete} 同步删除后端数据， 并向监听器发出 {@link RemovalCause#EXPLICIT}
+   * 通知。任一后端删除失败都会中断清空流程。
    */
   @Override
   public void clear() {
@@ -282,7 +279,7 @@ public class WriteThroughCache<K, V> implements Cache<K, V> {
    *
    * <p>注意：此路径不会同步后端存储，需要持久化时请使用 {@link #put}。
    *
-   * @param key             缓存键
+   * @param key 缓存键
    * @param mappingFunction 映射函数
    * @return 计算后的值
    */
@@ -294,7 +291,7 @@ public class WriteThroughCache<K, V> implements Cache<K, V> {
   /**
    * 基于旧值重新计算映射并写回缓存（直接委托，不写后端）。
    *
-   * @param key               缓存键
+   * @param key 缓存键
    * @param remappingFunction 重映射函数
    * @return 重映射后的值
    */
@@ -380,9 +377,7 @@ public class WriteThroughCache<K, V> implements Cache<K, V> {
     removeAll(keys);
   }
 
-  /**
-   * 使全部键失效（等价于 {@link #clear}）。
-   */
+  /** 使全部键失效（等价于 {@link #clear}）。 */
   @Override
   public void invalidateAll() {
     clear();

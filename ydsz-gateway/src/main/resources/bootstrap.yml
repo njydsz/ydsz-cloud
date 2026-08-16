@@ -20,7 +20,9 @@ spring:
     # 默认 dev，可通过 -Dspring.profiles.active=dev|sit|uat|prod 或 ENV SPRING_PROFILES_ACTIVE 覆盖
     active: ${SPRING_PROFILES_ACTIVE:dev}
   main:
-    allow-bean-definition-overriding: true
+    # P3-7: 移除 allow-bean-definition-overriding，避免 Bean 覆盖掩盖配置错误
+    # 如有 Bean 命名冲突，应通过 @Primary 或显式命名解决
+    allow-bean-definition-overriding: false
   cloud:
     nacos:
       # ---------- 服务注册 ----------

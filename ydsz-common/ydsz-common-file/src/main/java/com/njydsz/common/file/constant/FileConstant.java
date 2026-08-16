@@ -10,19 +10,12 @@ package com.njydsz.common.file.constant;
  */
 public interface FileConstant {
 
-    /**
-     * 路径目录分隔符
-     */
-    String DIR_SPLIT = "/";
+  /** 路径目录分隔符 */
+  String DIR_SPLIT = "/";
 
-    /**
-     * 后缀分隔符
-     */
-    String SUFFIX_SPLIT = ".";
+  /** 后缀分隔符 */
+  String SUFFIX_SPLIT = ".";
 
-    /**
-     * 本地目录映射路径
-     */
-    String LOCAL_DIRECTORY_MAPPING = "/uploads/";
-
+  /** 本地目录映射路径 */
+  String LOCAL_DIRECTORY_MAPPING = "/uploads/";
 }

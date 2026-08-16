@@ -18,54 +18,53 @@ import lombok.Data;
 @Builder
 public class RuleDashboardOverviewVO implements Serializable {
 
-    @Serial
-    private static final long serialVersionUID = 1L;
+  @Serial private static final long serialVersionUID = 1L;
 
-    /** 规则总数 */
-    private long totalRules;
+  /** 规则总数 */
+  private long totalRules;
 
-    /** 启用规则数 */
-    private long enabledRules;
+  /** 启用规则数 */
+  private long enabledRules;
 
-    /** 按状态分组的规则数：DRAFT/REVIEW/PUBLISHED/DISABLED/ARCHIVED → 数量 */
-    private Map<String, Long> statusDistribution;
+  /** 按状态分组的规则数：DRAFT/REVIEW/PUBLISHED/DISABLED/ARCHIVED → 数量 */
+  private Map<String, Long> statusDistribution;
 
-    /** 按类别分组的规则数：category → 数量 */
-    private Map<String, Long> categoryDistribution;
+  /** 按类别分组的规则数：category → 数量 */
+  private Map<String, Long> categoryDistribution;
 
-    /** 今日评估次数 */
-    private long todayEvaluations;
+  /** 今日评估次数 */
+  private long todayEvaluations;
 
-    /** 今日触发次数 */
-    private long todayTriggered;
+  /** 今日触发次数 */
+  private long todayTriggered;
 
-    /** 今日触发率（0~1） */
-    private double todayTriggerRate;
+  /** 今日触发率（0~1） */
+  private double todayTriggerRate;
 
-    /** 今日错误次数 */
-    private long todayErrors;
+  /** 今日错误次数 */
+  private long todayErrors;
 
-    /** 今日错误率（0~1） */
-    private double todayErrorRate;
+  /** 今日错误率（0~1） */
+  private double todayErrorRate;
 
-    /** 今日活跃规则数（有触发的规则） */
-    private long todayActiveRules;
+  /** 今日活跃规则数（有触发的规则） */
+  private long todayActiveRules;
 
-    /** P50 耗时（毫秒） */
-    private double p50ElapsedMs;
+  /** P50 耗时（毫秒） */
+  private double p50ElapsedMs;
 
-    /** P95 耗时（毫秒） */
-    private double p95ElapsedMs;
+  /** P95 耗时（毫秒） */
+  private double p95ElapsedMs;
 
-    /** P99 耗时（毫秒） */
-    private double p99ElapsedMs;
+  /** P99 耗时（毫秒） */
+  private double p99ElapsedMs;
 
-    /** 平均耗时（毫秒） */
-    private double avgElapsedMs;
+  /** 平均耗时（毫秒） */
+  private double avgElapsedMs;
 
-    /** 统计时间窗口起始时间（含） */
-    private String since;
+  /** 统计时间窗口起始时间（含） */
+  private String since;
 
-    /** 统计时间窗口结束时间（不含） */
-    private String until;
+  /** 统计时间窗口结束时间（不含） */
+  private String until;
 }

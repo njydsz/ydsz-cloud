@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Configuration;
  * <p>配置 MyBatis-Plus PaginationInnerInterceptor 的行为参数。
  *
  * <p>配置示例：
+ *
  * <pre>
  * # application.yml
  * ydsz:
@@ -22,9 +23,10 @@ import org.springframework.context.annotation.Configuration;
  * </pre>
  *
  * <p><b>优化说明：</b>
+ *
  * <ul>
- *   <li>显式指定 dbType 可避免运行时自动检测数据库类型的性能开销</li>
- *   <li>设置 maxLimit 可防止恶意或误操作导致的全表扫描（安全加固）</li>
+ *   <li>显式指定 dbType 可避免运行时自动检测数据库类型的性能开销
+ *   <li>设置 maxLimit 可防止恶意或误操作导致的全表扫描（安全加固）
  * </ul>
  *
  * @author ydsz-team
@@ -37,25 +39,32 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "ydsz.jdbc.pagination")
 public class PaginationProperties {
 
-    /**
-     * 数据库类型（可选）
-     * <p>支持的类型：mysql, oracle, postgresql, sqlserver, db2, h2, sqlite, mariadb 等。
-     * <p>不配置时由 MyBatis-Plus 自动检测。
-     */
-    private String dbType;
+  /**
+   * 数据库类型（可选）
+   *
+   * <p>支持的类型：mysql, oracle, postgresql, sqlserver, db2, h2, sqlite, mariadb 等。
+   *
+   * <p>不配置时由 MyBatis-Plus 自动检测。
+   */
+  private String dbType;
 
-    /**
-     * 单页最大记录数
-     * <p>防止无限制查询导致的全表扫描和 OOM。
-     * <p>默认值：500
-     */
-    private Long maxLimit = 500L;
+  /**
+   * 单页最大记录数
+   *
+   * <p>防止无限制查询导致的全表扫描和 OOM。
+   *
+   * <p>默认值：500
+   */
+  private Long maxLimit = 500L;
 
-    /**
-     * 页码溢出是否继续查询
-     * <p>true: 页码超出总页数时继续查询（返回空结果）
-     * <p>false: 页码超出总页数时停止查询
-     * <p>默认值：false
-     */
-    private boolean overflow = false;
+  /**
+   * 页码溢出是否继续查询
+   *
+   * <p>true: 页码超出总页数时继续查询（返回空结果）
+   *
+   * <p>false: 页码超出总页数时停止查询
+   *
+   * <p>默认值：false
+   */
+  private boolean overflow = false;
 }

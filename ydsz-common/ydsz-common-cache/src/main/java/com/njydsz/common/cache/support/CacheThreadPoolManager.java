@@ -26,7 +26,6 @@ import org.springframework.beans.factory.DisposableBean;
  *
  * <p>实现 {@link DisposableBean} 确保应用关闭时优雅关闭所有线程池。
  *
- *
  * @author ydsz-team
  * @since 1.0.0
  */
@@ -40,8 +39,7 @@ public class CacheThreadPoolManager implements DisposableBean {
   /**
    * 获取全局单例实例
    *
-   * <p>供非 Spring 管理的缓存组件（如 ExpirableCache 等）使用，
-   * 确保所有线程池统一管理。
+   * <p>供非 Spring 管理的缓存组件（如 ExpirableCache 等）使用， 确保所有线程池统一管理。
    *
    * @return 全局单例实例
    */
@@ -59,8 +57,7 @@ public class CacheThreadPoolManager implements DisposableBean {
   /**
    * 设置全局单例实例（由 Spring 自动配置调用）
    *
-   * <p>当 Spring 容器创建 CacheThreadPoolManager Bean 时，通过此方法替换静态单例，
-   * 使 Spring 的生命周期管理（DisposableBean）生效。
+   * <p>当 Spring 容器创建 CacheThreadPoolManager Bean 时，通过此方法替换静态单例， 使 Spring 的生命周期管理（DisposableBean）生效。
    *
    * @param manager Spring 管理的 CacheThreadPoolManager 实例
    */
@@ -115,8 +112,7 @@ public class CacheThreadPoolManager implements DisposableBean {
         };
 
     // CHECKSTYLE.OFF: RegexpSinglelineJava — CacheThreadPoolManager 为缓存线程池统一管理器（云顶规范 15.4 授权层）
-    ScheduledThreadPoolExecutor executor =
-        new ScheduledThreadPoolExecutor(coreSize, factory);
+    ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(coreSize, factory);
     executor.setRemoveOnCancelPolicy(true);
     // CHECKSTYLE.ON: RegexpSinglelineJava
     log.info("缓存定时调度线程池已创建: name={}, coreSize={}", name, coreSize);
@@ -168,8 +164,7 @@ public class CacheThreadPoolManager implements DisposableBean {
 
   @Override
   public void destroy() {
-    log.info("正在关闭所有缓存线程池，共 {} 个普通池 + {} 个调度池",
-        pools.size(), scheduledPools.size());
+    log.info("正在关闭所有缓存线程池，共 {} 个普通池 + {} 个调度池", pools.size(), scheduledPools.size());
     pools.forEach((name, pool) -> gracefulShutdown(pool, name));
     scheduledPools.forEach((name, pool) -> gracefulShutdown(pool, name));
     pools.clear();
@@ -182,26 +177,28 @@ public class CacheThreadPoolManager implements DisposableBean {
     pools.forEach(
         (name, pool) -> {
           if (pool instanceof ThreadPoolExecutor tpe) {
-            sb.append(String.format(
-                "%s: active=%d, core=%d, max=%d, queue=%d, completed=%d%n",
-                name,
-                tpe.getActiveCount(),
-                tpe.getCorePoolSize(),
-                tpe.getMaximumPoolSize(),
-                tpe.getQueue().size(),
-                tpe.getCompletedTaskCount()));
+            sb.append(
+                String.format(
+                    "%s: active=%d, core=%d, max=%d, queue=%d, completed=%d%n",
+                    name,
+                    tpe.getActiveCount(),
+                    tpe.getCorePoolSize(),
+                    tpe.getMaximumPoolSize(),
+                    tpe.getQueue().size(),
+                    tpe.getCompletedTaskCount()));
           }
         });
     scheduledPools.forEach(
         (name, pool) -> {
           if (pool instanceof ScheduledThreadPoolExecutor stpe) {
-            sb.append(String.format(
-                "%s [scheduled]: active=%d, core=%d, queue=%d, completed=%d%n",
-                name,
-                stpe.getActiveCount(),
-                stpe.getCorePoolSize(),
-                stpe.getQueue().size(),
-                stpe.getCompletedTaskCount()));
+            sb.append(
+                String.format(
+                    "%s [scheduled]: active=%d, core=%d, queue=%d, completed=%d%n",
+                    name,
+                    stpe.getActiveCount(),
+                    stpe.getCorePoolSize(),
+                    stpe.getQueue().size(),
+                    stpe.getCompletedTaskCount()));
           }
         });
     return sb.toString();

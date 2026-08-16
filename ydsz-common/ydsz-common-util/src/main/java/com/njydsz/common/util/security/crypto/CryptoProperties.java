@@ -12,6 +12,7 @@ import org.springframework.validation.annotation.Validated;
  * <p>配置前缀：{@code ydsz.util.crypto}
  *
  * <p><b>配置示例（application.yml）：</b>
+ *
  * <pre>{@code
  * ydsz:
  *   util:
@@ -19,8 +20,8 @@ import org.springframework.validation.annotation.Validated;
  *       default-algorithm: AES-256-GCM   # 可选：AES-128-GCM / AES-192-GCM / AES-256-GCM / SM4-GCM
  * }</pre>
  *
- * <p>所有可用算法参见 {@link CryptoProviderRegistry#availableAlgorithms()}。
- * 不配置时默认使用 {@code AES-256-GCM}（JDK 自带，无需额外依赖）。
+ * <p>所有可用算法参见 {@link CryptoProviderRegistry#availableAlgorithms()}。 不配置时默认使用 {@code
+ * AES-256-GCM}（JDK 自带，无需额外依赖）。
  *
  * @author ydsz-team
  * @since 4.2.0
@@ -33,12 +34,12 @@ import org.springframework.validation.annotation.Validated;
 @ConfigurationProperties(prefix = "ydsz.util.crypto")
 public class CryptoProperties {
 
-    /**
-     * 默认加密算法标识。
-     *
-     * <p>可选值：{@code AES-128-GCM}、{@code AES-192-GCM}、{@code AES-256-GCM}、{@code SM4-GCM}。
-     * 不设置时默认 {@code AES-256-GCM}。
-     */
-    @Length(min = 1, max = 32)
-    private String defaultAlgorithm = "AES-256-GCM";
+  /**
+   * 默认加密算法标识。
+   *
+   * <p>可选值：{@code AES-128-GCM}、{@code AES-192-GCM}、{@code AES-256-GCM}、{@code SM4-GCM}。 不设置时默认
+   * {@code AES-256-GCM}。
+   */
+  @Length(min = 1, max = 32)
+  private String defaultAlgorithm = "AES-256-GCM";
 }

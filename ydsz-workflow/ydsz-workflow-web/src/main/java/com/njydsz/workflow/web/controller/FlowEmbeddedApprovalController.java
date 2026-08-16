@@ -1,5 +1,17 @@
 package com.njydsz.workflow.web.controller.integration;
 
+import com.njydsz.common.audit.annotation.Audit;
+import com.njydsz.common.audit.enums.AuditAction;
+import com.njydsz.common.audit.enums.AuditType;
+import com.njydsz.common.auth.context.AuthContextUtils;
+import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.security.LoginUser;
+import com.njydsz.workflow.domain.dto.EmbeddedApprovalActionDTO;
+import com.njydsz.workflow.domain.dto.EmbeddedApprovalViewDTO;
+import com.njydsz.workflow.server.service.FlowEmbeddedApprovalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -13,18 +25,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import com.njydsz.common.audit.annotation.Audit;
-import com.njydsz.common.audit.enums.AuditAction;
-import com.njydsz.common.audit.enums.AuditType;
-import com.njydsz.common.auth.context.AuthContextUtils;
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.lock.annotation.Idempotent;
-import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.common.security.LoginUser;
-import com.njydsz.workflow.domain.dto.EmbeddedApprovalActionDTO;
-import com.njydsz.workflow.domain.dto.EmbeddedApprovalViewDTO;
-import com.njydsz.workflow.server.service.FlowEmbeddedApprovalService;
+
 /**
  * 嵌入式审批 Controller（P2-2）
  *
@@ -36,33 +37,36 @@ import com.njydsz.workflow.server.service.FlowEmbeddedApprovalService;
  * <p><b>接口路径：</b>{@code /api/v1/workflow/embedded/**}
  *
  * <p><b>核心能力：</b>
+ *
  * <ul>
- *   <li><b>面板加载</b>：{@code GET /panel} 按 (businessType, businessId) 一次性返回实例/当前待办/历史轨迹/myRole/actions 等全部数据</li>
+ *   <li><b>面板加载</b>：{@code GET /panel} 按 (businessType, businessId)
+ *       一次性返回实例/当前待办/历史轨迹/myRole/actions 等全部数据
  *   <li><b>快捷操作</b>：{@code POST /action} / {@code POST /{businessType}/{businessId}/action} 提供
- *       PASS/REJECT/TRANSFER/DELEGATE/URGE/WITHDRAW 等嵌入式按钮</li>
+ *       PASS/REJECT/TRANSFER/DELEGATE/URGE/WITHDRAW 等嵌入式按钮
  * </ul>
  *
  * <p><b>与 FlowTaskController 的区别：</b>
+ *
  * <ul>
- *   <li>本 Controller：<b>业务端</b>，按 businessType + businessId 操作，仅暴露嵌入式场景所需最小集</li>
- *   <li>FlowTaskController：<b>管理端/审批中心</b>，按 taskId 操作，提供完整能力</li>
+ *   <li>本 Controller：<b>业务端</b>，按 businessType + businessId 操作，仅暴露嵌入式场景所需最小集
+ *   <li>FlowTaskController：<b>管理端/审批中心</b>，按 taskId 操作，提供完整能力
  * </ul>
  *
- * <p><b>多业务类型支持：</b>{@code businessType} 可取值
- * {@code PROJECT_INITIATION}（项目立项）/ {@code CONTRACT}（合同）/ {@code TIMESHEET}（工时）/
- * {@code PURCHASE}（采购）等，由各业务模块注册 {@code FlowEmbeddedApprovalService} 的解析逻辑。
+ * <p><b>多业务类型支持：</b>{@code businessType} 可取值 {@code PROJECT_INITIATION}（项目立项）/ {@code
+ * CONTRACT}（合同）/ {@code TIMESHEET}（工时）/ {@code PURCHASE}（采购）等，由各业务模块注册 {@code
+ * FlowEmbeddedApprovalService} 的解析逻辑。
  *
  * <p><b>安全特性：</b>
+ *
  * <ul>
- *   <li>写接口启用 {@link Idempotent} 5s 防重（避免双击重复审批）</li>
- *   <li>写接口启用 {@link RateLimit} 50 QPS 限流</li>
- *   <li>用户身份优先取 SecurityContext（防止前端伪造 userId）</li>
- *   <li>WITHDRAW 操作仅发起人可执行（由 Service 层校验）</li>
+ *   <li>写接口启用 {@link Idempotent} 5s 防重（避免双击重复审批）
+ *   <li>写接口启用 {@link RateLimit} 50 QPS 限流
+ *   <li>用户身份优先取 SecurityContext（防止前端伪造 userId）
+ *   <li>WITHDRAW 操作仅发起人可执行（由 Service 层校验）
  * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
- *
  * @see com.njydsz.workflow.server.service.FlowEmbeddedApprovalService 嵌入式审批服务
  * @see com.njydsz.workflow.domain.dto.EmbeddedApprovalActionDTO 嵌入式快捷操作 DTO
  * @see com.njydsz.workflow.domain.dto.EmbeddedApprovalViewDTO 嵌入式面板视图 DTO
@@ -75,95 +79,108 @@ import com.njydsz.workflow.server.service.FlowEmbeddedApprovalService;
 @Validated
 public class FlowEmbeddedApprovalController {
 
-    /** 嵌入式审批服务，负责业务侧审批面板数据加载与快捷操作 */
-    private final FlowEmbeddedApprovalService embeddedApprovalService;
+  /** 嵌入式审批服务，负责业务侧审批面板数据加载与快捷操作 */
+  private final FlowEmbeddedApprovalService embeddedApprovalService;
 
-    /**
-     * 加载嵌入式审批面板（聚合查询）
-     *
-     * <p>业务页挂载面板时调用一次，返回实例/当前待办/历史轨迹/myRole/actions 等全部数据。
-     *
-     * @param businessType 业务类型（PROJECT_INITIATION / CONTRACT / TIMESHEET / PURCHASE ...）
-     * @param businessId   业务 ID
-     * @param userId       当前用户 ID（可空，空时取 SecurityContext）
-     * @return 嵌入式审批面板视图
-     */
-    @Operation(summary = "加载嵌入式审批面板")
-    @GetMapping("/panel")
-    public BaseResponse<EmbeddedApprovalViewDTO> loadPanel(@RequestParam String businessType,
-                                                     @RequestParam String businessId,
-                                                     @RequestParam(required = false) String userId) {
-        String uid = userId;
-        if (uid == null) {
-            LoginUser u = AuthContextUtils.getCurrentOrNull();
-            if (u != null) {
-                uid = u.getUserId();
-            }
-        }
-        if (uid == null) {
-            return BaseResponse.error(BaseResultCode.UNAUTHORIZED, "未登录");
-        }
-        return BaseResponse.success(embeddedApprovalService.loadPanel(businessType, businessId, uid));
+  /**
+   * 加载嵌入式审批面板（聚合查询）
+   *
+   * <p>业务页挂载面板时调用一次，返回实例/当前待办/历史轨迹/myRole/actions 等全部数据。
+   *
+   * @param businessType 业务类型（PROJECT_INITIATION / CONTRACT / TIMESHEET / PURCHASE ...）
+   * @param businessId 业务 ID
+   * @param userId 当前用户 ID（可空，空时取 SecurityContext）
+   * @return 嵌入式审批面板视图
+   */
+  @Operation(summary = "加载嵌入式审批面板")
+  @GetMapping("/panel")
+  public BaseResponse<EmbeddedApprovalViewDTO> loadPanel(
+      @RequestParam String businessType,
+      @RequestParam String businessId,
+      @RequestParam(required = false) String userId) {
+    String uid = userId;
+    if (uid == null) {
+      LoginUser u = AuthContextUtils.getCurrentOrNull();
+      if (u != null) {
+        uid = u.getUserId();
+      }
     }
+    if (uid == null) {
+      return BaseResponse.error(BaseResultCode.UNAUTHORIZED, "未登录");
+    }
+    return BaseResponse.success(embeddedApprovalService.loadPanel(businessType, businessId, uid));
+  }
 
-    /**
-     * 嵌入式快捷操作
-     *
-     * <p>业务页嵌入式按钮调用：
-     * <ul>
-     *   <li>PASS/REJECT — 通过/驳回（自动找 mine 任务）</li>
-     *   <li>TRANSFER/DELEGATE — 转办/委派（需 targetUserId）</li>
-     *   <li>URGE — 催办</li>
-     *   <li>WITHDRAW — 撤回（仅发起人可执行）</li>
-     * </ul>
-     *
-     * @param dto 嵌入式快捷操作参数
-     */
-    @Operation(summary = "嵌入式快捷操作")
-    @Idempotent(key = "ydsz:workflow:FlowEmbeddedApprovalController:quickAction:lock", ttlSeconds = 5)
-    @RateLimit(resource = "workflow.flowembeddedapproval.quickAction", threshold = 50)
-    @PostMapping("/action")
-    @Audit(module = "嵌入式审批", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'quickAction'")
-    public BaseResponse<Void> quickAction(@Valid @RequestBody EmbeddedApprovalActionDTO dto) {
-        LoginUser u = AuthContextUtils.getCurrentOrNull();
-        if (dto.getUserId() == null && u != null) {
-            dto.setUserId(u.getUserId());
-        }
-        if (dto.getUserName() == null && u != null) {
-            dto.setUserName(u.getUsername());
-        }
-        embeddedApprovalService.quickAction(dto);
-        return BaseResponse.success();
+  /**
+   * 嵌入式快捷操作
+   *
+   * <p>业务页嵌入式按钮调用：
+   *
+   * <ul>
+   *   <li>PASS/REJECT — 通过/驳回（自动找 mine 任务）
+   *   <li>TRANSFER/DELEGATE — 转办/委派（需 targetUserId）
+   *   <li>URGE — 催办
+   *   <li>WITHDRAW — 撤回（仅发起人可执行）
+   * </ul>
+   *
+   * @param dto 嵌入式快捷操作参数
+   */
+  @Operation(summary = "嵌入式快捷操作")
+  @Idempotent(key = "ydsz:workflow:FlowEmbeddedApprovalController:quickAction:lock", ttlSeconds = 5)
+  @RateLimit(resource = "workflow.flowembeddedapproval.quickAction", threshold = 50)
+  @PostMapping("/action")
+  @Audit(
+      module = "嵌入式审批",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'quickAction'")
+  public BaseResponse<Void> quickAction(@Valid @RequestBody EmbeddedApprovalActionDTO dto) {
+    LoginUser u = AuthContextUtils.getCurrentOrNull();
+    if (dto.getUserId() == null && u != null) {
+      dto.setUserId(u.getUserId());
     }
+    if (dto.getUserName() == null && u != null) {
+      dto.setUserName(u.getUsername());
+    }
+    embeddedApprovalService.quickAction(dto);
+    return BaseResponse.success();
+  }
 
-    /**
-     * 嵌入式快捷操作（按业务类型 + 业务 ID）。
-     *
-     * <p>URL 形式：/workflow/embedded/{businessType}/{businessId}/action
-     *
-     * @param businessType 业务类型
-     * @param businessId   业务 ID
-     * @param dto          嵌入式快捷操作参数
-     * @return 空响应
-     */
-    @Operation(summary = "嵌入式快捷操作（按业务类型+业务ID）")
-    @Idempotent(key = "ydsz:workflow:FlowEmbeddedApprovalController:quickActionByPath:lock", ttlSeconds = 5)
-    @RateLimit(resource = "workflow.flowembeddedapproval.quickActionByPath", threshold = 50)
-    @PostMapping("/{businessType}/{businessId}/action")
-    @Audit(module = "嵌入式审批", type = AuditType.OPERATION, action = AuditAction.CREATE, content = "'quickActionByPath'")
-    public BaseResponse<Void> quickActionByPath(@PathVariable String businessType,
-                                          @PathVariable String businessId,
-                                          @RequestBody @Valid EmbeddedApprovalActionDTO dto) {
-        dto.setBusinessType(businessType);
-        dto.setBusinessId(businessId);
-        LoginUser u = AuthContextUtils.getCurrentOrNull();
-        if (dto.getUserId() == null && u != null) {
-            dto.setUserId(u.getUserId());
-        }
-        if (dto.getUserName() == null && u != null) {
-            dto.setUserName(u.getUsername());
-        }
-        embeddedApprovalService.quickAction(dto);
-        return BaseResponse.success();
+  /**
+   * 嵌入式快捷操作（按业务类型 + 业务 ID）。
+   *
+   * <p>URL 形式：/workflow/embedded/{businessType}/{businessId}/action
+   *
+   * @param businessType 业务类型
+   * @param businessId 业务 ID
+   * @param dto 嵌入式快捷操作参数
+   * @return 空响应
+   */
+  @Operation(summary = "嵌入式快捷操作（按业务类型+业务ID）")
+  @Idempotent(
+      key = "ydsz:workflow:FlowEmbeddedApprovalController:quickActionByPath:lock",
+      ttlSeconds = 5)
+  @RateLimit(resource = "workflow.flowembeddedapproval.quickActionByPath", threshold = 50)
+  @PostMapping("/{businessType}/{businessId}/action")
+  @Audit(
+      module = "嵌入式审批",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'quickActionByPath'")
+  public BaseResponse<Void> quickActionByPath(
+      @PathVariable String businessType,
+      @PathVariable String businessId,
+      @RequestBody @Valid EmbeddedApprovalActionDTO dto) {
+    dto.setBusinessType(businessType);
+    dto.setBusinessId(businessId);
+    LoginUser u = AuthContextUtils.getCurrentOrNull();
+    if (dto.getUserId() == null && u != null) {
+      dto.setUserId(u.getUserId());
     }
+    if (dto.getUserName() == null && u != null) {
+      dto.setUserName(u.getUsername());
+    }
+    embeddedApprovalService.quickAction(dto);
+    return BaseResponse.success();
+  }
 }
