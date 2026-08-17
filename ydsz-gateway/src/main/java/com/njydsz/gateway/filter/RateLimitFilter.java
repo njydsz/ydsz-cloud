@@ -207,12 +207,30 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
               if (result == null || result.allAllowed()) {
                 return chain.filter(exchange);
               }
+              // 按优先级检查各维度限流：IP → USER → TENANT → APP → API
               if (!result.ipAllowed()) {
                 return rejectWithRateLimit(
                     exchange, "IP", clientIp, properties.getPerIp().getDefaultQps(), result.ipReset());
               }
+              if (!result.userAllowed()) {
+                return rejectWithRateLimit(
+                    exchange, "USER", userId, properties.getPerUser().getDefaultQps(), result.userReset());
+              }
+              if (!result.tenantAllowed()) {
+                String tenantId = request.getHeaders().getFirst(GatewayConstants.HEADER_TENANT_ID);
+                return rejectWithRateLimit(
+                    exchange, "TENANT", tenantId,
+                    properties.getPerTenant().getDefaultQps(), result.tenantReset());
+              }
+              if (!result.appAllowed()) {
+                String appId = request.getHeaders().getFirst(GatewayConstants.HEADER_APP_ID);
+                return rejectWithRateLimit(
+                    exchange, "APP", appId,
+                    properties.getPerApp().getDefaultQps(), result.appReset());
+              }
               return rejectWithRateLimit(
-                  exchange, "USER", userId, properties.getPerUser().getDefaultQps(), result.userReset());
+                  exchange, "API", path,
+                  properties.getPerApi().getDefaultQps(), result.apiReset());
             });
   }
 
@@ -402,7 +420,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
   /**
    * 按限流维度解析业务错误码。
    *
-   * @param dimension 限流维度（IP / USER / TENANT）
+   * @param dimension 限流维度（IP / USER / TENANT / APP / API）
    * @return 对应错误码，未知维度返回通用限流错误码
    */
   private GatewayErrorCode resolveRateLimitErrorCode(String dimension) {
@@ -413,6 +431,8 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
       case "IP" -> GatewayErrorCode.RATE_LIMITED_IP;
       case "USER" -> GatewayErrorCode.RATE_LIMITED_USER;
       case "TENANT" -> GatewayErrorCode.RATE_LIMITED_TENANT;
+      case "APP" -> GatewayErrorCode.RATE_LIMITED_APP;
+      case "API" -> GatewayErrorCode.RATE_LIMITED_API;
       default -> GatewayErrorCode.RATE_LIMITED;
     };
   }

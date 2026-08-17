@@ -85,6 +85,45 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
   @Value("${ydsz.gateway.api-key.protected-paths:}")
   private String protectedPaths;
 
+  /** 有效 API Key 的 SHA-256 摘要集合（P1-B1：配置启动时预计算，运行期仅比对摘要） */
+  private volatile Set<String> hashedKeys = Set.of();
+
+  /**
+   * 启动时预计算有效 API Key 的 SHA-256 摘要。
+   *
+   * <p>配置文件中仍以明文书写（便于运维管理），运行期仅持有摘要，降低密钥泄露面。
+   */
+  @jakarta.annotation.PostConstruct
+  private void initHashedKeys() {
+    Set<String> hashes = new java.util.HashSet<>();
+    if (validKeyList != null) {
+      for (String key : validKeyList) {
+        if (key != null && !key.isBlank()) {
+          hashes.add(sha256Hex(key.trim()));
+        }
+      }
+    }
+    this.hashedKeys = java.util.Set.copyOf(hashes);
+    log.info("[ApiKeyAuth] 已加载 {} 个 API Key（SHA-256 摘要存储）", hashes.size());
+  }
+
+  /**
+   * 计算字符串的 SHA-256 十六进制摘要。
+   *
+   * @param value 原始值
+   * @return 64 位小写十六进制摘要
+   */
+  private static String sha256Hex(String value) {
+    try {
+      java.security.MessageDigest digest =
+          java.security.MessageDigest.getInstance("SHA-256");
+      byte[] hash = digest.digest(value.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+      return java.util.HexFormat.of().formatHex(hash);
+    } catch (java.security.NoSuchAlgorithmException e) {
+      throw new IllegalStateException("SHA-256 不可用", e);
+    }
+  }
+
   /**
    * API Key 认证过滤器：为外部系统提供 JWT 之外的备选认证方式。
    *
@@ -152,17 +191,12 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
     return null;
   }
 
-  /** 验证 API Key 是否有效（使用预解析的 List，避免每次请求 split） */
+  /** 验证 API Key 是否有效（P1-B1：SHA-256 摘要比对，避免明文 key 常驻内存，对标 Kong/APISIX） */
   private boolean isValidApiKey(String apiKey) {
-    if (validKeyList == null || validKeyList.isEmpty()) {
+    if (apiKey == null || apiKey.isBlank()) {
       return false;
     }
-    for (String validKey : validKeyList) {
-      if (validKey != null && validKey.trim().equals(apiKey.trim())) {
-        return true;
-      }
-    }
-    return false;
+    return hashedKeys.contains(sha256Hex(apiKey.trim()));
   }
 
   /** 检查路径是否需要 API Key 认证 */

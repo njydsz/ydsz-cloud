@@ -470,8 +470,7 @@ ydsz:
 |---|---|---|
 | `RateLimitRuleProvider` | 限流规则来源抽象（支持配置中心 / 数据库 / API 动态规则） | `ConfigRuleProvider`（默认，从 `RateLimitProperties` 加载静态规则） |
 | `RateLimitRuleListener` | 限流规则变更监听器（规则增删改时回调） | `RateLimitMetricsCollector`（指标采集） |
-| `CaptchaGenerator` | 验证码生成器接口 | `ImageCaptchaGenerator`、`ArithmeticCaptchaGenerator`、`SliderCaptchaGenerator` |
-| `CaptchaStore` | 验证码存储接口 | `LocalCaptchaStore`、`RedisCaptchaStore` |
+| `CaptchaGenerator` | 验证码生成器 | 内置默认实现 |
 | `CsrfTokenRepository` | CSRF Token 存储接口 | `RedisCsrfTokenRepository`（@Primary）、`InMemoryCsrfTokenRepository` |
 | `CsrfTokenGenerator` | CSRF Token 生成接口 | `DefaultCsrfTokenGenerator` |
 | `ClusterRateLimiter` | 集群限流器接口 | `RedisClusterRateLimiter`（基于 StringRedisTemplate） |
