@@ -89,7 +89,7 @@
 
 | 类 | 说明 |
 |---|---|
-| `CircuitBreaker` | 统一熔断器，AtomicReference + CAS 线程安全；状态 CLOSED → OPEN → HALF_OPEN → CLOSED |
+| `CircuitBreaker` | 统一熔断器，v2.0.0 起委托 Resilience4j 实现（原 v1.x 自实现 AtomicReference + CAS 状态机已替换）；状态 CLOSED → OPEN → HALF_OPEN → CLOSED |
 
 状态机：
 
@@ -217,12 +217,10 @@ public class SearchService {
 | `ydsz.sentry.logging.elk.connect-timeout-millis` | 3000 | 连接超时 |
 | `ydsz.sentry.logging.elk.read-timeout-millis` | 5000 | 读超时 |
 | `ydsz.sentry.logging.elk.max-retry-attempts` | 3 | 最大重试次数 |
-| `ydsz.sentry.logging.elk.circuit-breaker-threshold` | 10 | 熔断阈值 |
 | `ydsz.sentry.logging.loki.enabled` | true | 是否启用 Loki |
 | `ydsz.sentry.logging.loki.url` | `http://loki:3100` | Loki URL |
 | `ydsz.sentry.logging.loki.connect-timeout-seconds` | 5 | 连接超时 |
 | `ydsz.sentry.logging.loki.max-retry-attempts` | 3 | 最大重试次数 |
-| `ydsz.sentry.logging.loki.circuit-breaker-threshold` | 10 | 熔断阈值 |
 | `ydsz.sentry.logging.dual.fail-on-all-error` | false | 所有发布器都失败才算失败 |
 | `ydsz.sentry.logging.async.enabled` | true | 是否启用异步发布 |
 | `ydsz.sentry.logging.async.queue-capacity` | 8192 | 队列容量 |

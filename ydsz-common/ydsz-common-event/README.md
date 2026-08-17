@@ -343,7 +343,7 @@ PENDING → PROCESSING → SENT
 
 - **移除 JSON Schema 校验框架**：删除 `JsonSchemaRegistry`、`JsonSchemaValidator` 等 5 个 SPI 类（原框架无实际实现，属于幽灵 SPI）
 - **移除同步投递模式**：删除 `doSyncPublish`、`registerSyncPublishCallback`、`isRecoverableException` 等方法及相关配置（与 Outbox 异步本质冲突）
-- **EventProperties 配置瘦身**：从 25+ 个字段精简至 15 个核心配置，移除未验证/占位配置项
+- **EventProperties 配置瘦身**：从 25+ 个字段精简至 16 个核心配置，移除未验证/占位配置项
 - **DatabaseDialect 枚举移除**：所有数据库方言生成相同 SQL（`LIMIT ?`），删除抽象层
 - **OutboxMessage 字段精简**：移除 `headers`、`schemaVersion`、`contentType`、`priority` 字段及 `OutboxMessageDraft` 类
 - **DomainEvent 精简**：移除 `Serializable` 接口和 `Clock` 参数

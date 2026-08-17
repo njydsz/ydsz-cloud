@@ -1084,12 +1084,12 @@ public final class JsonParserUtil {
     return pos;
   }
 
-  // ==================== ASM 反序列化器专用快速解析方法 ====================
+  // ==================== 字段级快速解析方法（解析器内部专用） ====================
 
   /**
    * 单遍扫描构建字段位置映射（优化 O(N*M) 为 O(N)）。
    *
-   * <p>当 ASM 反序列化器需要解析多个字段时，传统方式对每个字段调用 {@link #findFieldPosition} 导致 O(N*M) 复杂度。此方法单遍扫描 JSON，
+   * <p>当解析器需要解析多个字段时，传统方式对每个字段调用 {@link #findFieldPosition} 导致 O(N*M) 复杂度。此方法单遍扫描 JSON，
    * 一次性提取所有顶层字段名及其值起始位置，将复杂度降为 O(N+M)。
    *
    * @param json JSON 字符串
@@ -1233,7 +1233,7 @@ public final class JsonParserUtil {
     return -1;
   }
 
-  /** 解析 int 字段（ASM 直接调用） */
+  /** 解析 int 字段（解析器直接调用） */
   public static int parseIntField(String json, String fieldName) {
     String fieldJson = "\"" + fieldName + "\":";
     int fieldPos = findFieldPosition(json, fieldJson);
@@ -1257,7 +1257,7 @@ public final class JsonParserUtil {
     }
   }
 
-  /** 解析 long 字段（ASM 直接调用） */
+  /** 解析 long 字段（解析器直接调用） */
   public static long parseLongField(String json, String fieldName) {
     String fieldJson = "\"" + fieldName + "\":";
     int fieldPos = findFieldPosition(json, fieldJson);
@@ -1281,7 +1281,7 @@ public final class JsonParserUtil {
     }
   }
 
-  /** 解析 double 字段（ASM 直接调用） */
+  /** 解析 double 字段（解析器直接调用） */
   public static double parseDoubleField(String json, String fieldName) {
     String fieldJson = "\"" + fieldName + "\":";
     int fieldPos = findFieldPosition(json, fieldJson);
@@ -1307,7 +1307,7 @@ public final class JsonParserUtil {
     }
   }
 
-  /** 解析 String 字段（ASM 直接调用） */
+  /** 解析 String 字段（解析器直接调用） */
   public static String parseStringField(String json, String fieldName) {
     String fieldJson = "\"" + fieldName + "\":";
     int fieldPos = findFieldPosition(json, fieldJson);
@@ -1341,7 +1341,7 @@ public final class JsonParserUtil {
     return json.substring(valueStart, valueEnd);
   }
 
-  /** 解析 boolean 字段（ASM 直接调用） */
+  /** 解析 boolean 字段（解析器直接调用） */
   public static boolean parseBooleanField(String json, String fieldName) {
     String fieldJson = "\"" + fieldName + "\":";
     int fieldPos = findFieldPosition(json, fieldJson);
@@ -1361,7 +1361,7 @@ public final class JsonParserUtil {
   }
 
   /**
-   * 解析指定字段的值（ASM 直接调用）。
+   * 解析指定字段的值（解析器直接调用）。
    *
    * <p>从 JSON 中查找指定字段名的值并解析为 Object。
    *
@@ -1420,7 +1420,7 @@ public final class JsonParserUtil {
     }
   }
 
-  /** 解析 JSON 数组（带类型参数，用于 ASM 降级） */
+  /** 解析 JSON 数组（带类型参数，用于降级） */
   public static <T> List<T> parseArray(String json, Class<T> clazz) {
     List<Object> list = parseArray(json);
     if (list == null) return null;
@@ -1431,7 +1431,7 @@ public final class JsonParserUtil {
     return typedList;
   }
 
-  /** 解析 JSON 对象（带类型参数，用于 ASM 降级） */
+  /** 解析 JSON 对象（带类型参数，用于降级） */
   public static <T> T parseObject(String json, Class<T> clazz) {
     // Map 及其子类直接 cast 返回
     if (Map.class.isAssignableFrom(clazz)) {

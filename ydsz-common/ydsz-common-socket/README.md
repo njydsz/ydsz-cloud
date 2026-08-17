@@ -43,7 +43,7 @@
 | `MultiDevicePolicy` | 多端登录策略枚举（ALLOW_ALL / MUTEX / NEW_REPLACE_OLD） |
 | `WebSocketConnectionListener` | 连接生命周期监听器 SPI（详见 SPI 扩展点章节） |
 
-> **多端策略说明**：当前 `OnlineUserService` 仅提供 `getSessionCount` 等 API，**不**强制限制 session 数量。若需 MUTEX / NEW_REPLACE_OLD 策略，业务方应实现 `WebSocketConnectionListener.onConnected`，在其中调用 `getSessionCount` 判断并主动关闭旧 session。metadata 中预留的 `ydsz.websocket.multi-device.*` 配置项暂未在 `WebSocketProperties` 中实现。
+> **多端策略说明**：`WebSocketSessionEventListener.enforceMultiDevicePolicy` 已实现 `ALLOW_ALL` / `MUTEX` / `NEW_REPLACE_OLD` 三种策略，通过 `ydsz.websocket.multi-device.*` 配置（policy 默认 `ALLOW_ALL`、max-sessions-per-user 默认 5）控制，无需业务方自实现。
 
 ### 4. 离线消息
 
@@ -231,7 +231,10 @@ public class NotificationService {
 | `ydsz.websocket.connection-limit.max-global-connections` | `10000` | 全局最大连接数 |
 | `ydsz.websocket.connection-limit.max-per-user-connections` | `5` | 每用户最大连接数 |
 
-> **规划中**：`ydsz.websocket.multi-device.policy` 与 `ydsz.websocket.multi-device.max-sessions-per-user` 已在 `additional-spring-configuration-metadata.json` 预留描述，但 `WebSocketProperties` 类中尚未实现。当前需业务方通过 `WebSocketConnectionListener` SPI 自行实现多端策略。
+| `ydsz.websocket.multi-device.policy` | `ALLOW_ALL` | 多端登录策略（ALLOW_ALL / MUTEX / NEW_REPLACE_OLD） |
+| `ydsz.websocket.multi-device.max-sessions-per-user` | `5` | 每用户最大会话数 |
+| `ydsz.websocket.auth.gateway-secret` | （空） | 网关透传认证密钥 |
+| `ydsz.websocket.auth.trusted-ips` | （空） | 可信 IP 列表 |
 
 ## 使用示例
 
@@ -388,7 +391,7 @@ public class ProtobufMessageSerializer implements MessageSerializer {
 5. **STOMP 端点路径**：默认 `/ws`，前端需通过 SockJS + STOMP 客户端连接；`/app` 为应用前缀，`/topic` 与 `/queue` 为 SimpleBroker 前缀。
 6. **消息大小限制**：`ydsz.websocket.message-size-limit` 通过 `WebSocketConfigurer.configureWebSocketTransport` 设置到 STOMP 传输层，超过限制的客户端消息会被拒绝。
 7. **认证拦截器依赖**：`WebSocketAuthInterceptor` 仅在 `TokenService`（来自 common-auth）在 classpath 时才注册；未引入 common-auth 时跳过认证。
-8. **MultiDevicePolicy 当前是占位**：`MultiDevicePolicy` 枚举存在但 `OnlineUserService` 未强制限制 session 数量，业务方需通过 `WebSocketConnectionListener` 自行实现 MUTEX / NEW_REPLACE_OLD 策略。metadata 中预留的 `ydsz.websocket.multi-device.*` 配置项未在 `WebSocketProperties` 中实现。
+8. **多端登录策略**：`WebSocketSessionEventListener` 已实现 `ALLOW_ALL` / `MUTEX` / `NEW_REPLACE_OLD` 三种策略，通过 `ydsz.websocket.multi-device.*` 配置控制。
 9. **`@EnableScheduling` 副作用**：本模块自动配置类已标注 `@EnableScheduling`，若业务模块也标注，Spring 会自动去重，无副作用。
 10. **消息压缩推荐**：推荐使用 WebSocket 协议层 permessage-deflate（RFC 7692）压缩消息，无需应用层 GZIP+Base64 编码。可在反向代理层（如 Nginx）启用 `WebSocket` 压缩。
 

@@ -22,7 +22,7 @@
 - **删除** `WatermarkProvider` / `TextWatermarkProvider`：仅有 SPI 定义无内置实现，属于 YAGNI 反模式
 - **删除** `DocumentRedactor` / `TextRedactor`：脱敏逻辑过于简单，不应占据 common 模块位置
 - **简化** Composite 模式：`PiiDetectorComposite` 和 `DocumentSecurityScannerComposite` 逻辑内联到 `DocumentService`
-- **统一** 临时文件管理：全部路径改用 `TempFileManager` 集中管理
+- **统一** 临时文件管理：复用 `ydsz-common-util` 的 `TempFileManager` 集中管理
 - **精简** 配置项：从 16 项缩减为 10 项，业务特定参数下沉到业务模块
 - **消除** 代码重复：`DocumentConverter` 优先委托已注册 Parser，仅保留 Excel 降级实现
 - **增强** `PiiFinding`：增加二进制定位模型（`BinaryLocation`）支持 PDF/DOCX/XLSX 场景
@@ -133,7 +133,8 @@
 |---|---|
 | `DocsMetrics` | Micrometer 指标采集（解析耗时 / 安全扫描 / PII 检测计数） |
 | `DocsHealthIndicator` | 健康检查（暴露已注册解析器、PII 检测器、异步队列状态） |
-| `TempFileManager` | 临时文件统一管理（跟踪 / 清理 / ShutdownHook 兜底） |
+
+> 临时文件管理复用 `ydsz-common-util` 的 `TempFileManager`（跟踪 / 清理 / ShutdownHook 兜底），本模块不重复实现。
 
 ## 接入方式
 
@@ -347,7 +348,7 @@ pdfDocumentParser.parseStreaming(inputStream, "large.pdf", pageContent -> {
 3. **宏文档警告**：`.docm` / `.xlsm` / `.pptm` 含宏文档会被 `MacroDetector` 标记为 `HIGH` 风险，配合 `block-on-high-risk=true` 可阻止解析。
 4. **大文件控制**：`max-file-size-mb=50` 默认上限，超出应在上游网关拦截；解析器内部不重复校验。
 5. **异步线程池**：v2.0.0 起线程池由 Spring 托管，使用方需声明 `docsAsyncExecutor` Bean。
-6. **临时文件清理**：所有临时文件由 `TempFileManager` 统一跟踪管理，JVM 退出时有 ShutdownHook 兜底清理。
+6. **临时文件清理**：所有临时文件由 `ydsz-common-util` 的 `TempFileManager` 统一跟踪管理，JVM 退出时有 ShutdownHook 兜底清理。
 7. **PII 检测精度**：基于正则表达式，存在误报与漏报可能；身份证号、银行卡号有校验位验证，准确率较高。
 8. **输出轮廓选择**：通过 `ParseOptions.profile` 控制输出结构化程度，`TEXT_ONLY` 模式性能最优，`FULL` 模式最耗资源。
 

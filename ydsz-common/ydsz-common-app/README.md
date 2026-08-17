@@ -20,8 +20,7 @@
 
 | 类 | 说明 |
 |---|---|
-| `AppMvcConfiguration` | App 端 MVC 核心配置（继承 `BaseMvcConfiguration`），`@AutoConfiguration` + `@AutoConfigureBefore({BaseAutoConfiguration.class, SafeConfiguration.class})`；集中注册过滤器链（`AppContentCachingFilter`、`AppAuthFilter`、`AppRequestIdResponseFilter`）、拦截器（`AppRequestLogInterceptor`、`BaseHttpInterceptor`）、`AppAuthHandler` Bean、`AppMetrics`、`AppHealthIndicator`；`@Import({AppGlobalResponseAdvice.class, AppExceptionHandler.class})` 装配作用域限定的 Advice |
-| `AppTimezoneConfiguration` | 时区配置（继承 `BaseTimezoneConfiguration`），强制 JVM 默认时区为 `Asia/Shanghai` |
+| `AppMvcConfiguration` | App 端 MVC 核心配置（继承 `BaseMvcConfiguration`），`@AutoConfiguration` + `@AutoConfigureBefore({BaseAutoConfiguration.class, SafeConfiguration.class})`；集中注册过滤器链（`AppContentCachingFilter`、`AppAuthFilter`、`AppRequestIdResponseFilter`）、拦截器（`AppRequestLogInterceptor`）、`AppAuthHandler` Bean、`AppMetrics`、`AppHealthIndicator`；`@Import({AppGlobalResponseAdvice.class, AppExceptionHandler.class})` 装配作用域限定的 Advice |
 | `AppI18nConfiguration` | 国际化配置（继承 `BaseI18nConfiguration`），basename=`i18n/app-messages`，支持 `app-messages_zh_CN.properties`、`app-messages_en_US.properties` |
 | `AppOpenApiConfiguration` | OpenAPI 配置（继承 `BaseOpenApiConfiguration`），标题=`YDSZ App API 文档`，描述带 HTML 样式 |
 | `AppCorsProperties` | CORS 配置（继承 `BaseCorsProperties`），前缀 `ydsz.app.cors` |
@@ -299,7 +298,6 @@ public class CustomAuthConfiguration {
 | 抽象基类 | App 模块实现 | 差异化点 |
 |---|---|---|
 | `BaseMvcConfiguration` | `AppMvcConfiguration` | 注册 App 特有过滤器链、拦截器、Bean |
-| `BaseTimezoneConfiguration` | `AppTimezoneConfiguration` | 无差异（共享时区配置） |
 | `BaseI18nConfiguration` | `AppI18nConfiguration` | basename=`i18n/app-messages` |
 | `BaseOpenApiConfiguration` | `AppOpenApiConfiguration` | 标题=`YDSZ App API 文档` |
 | `BaseCorsProperties` | `AppCorsProperties` | 前缀=`ydsz.app.cors` |

@@ -30,8 +30,7 @@
 | `AbstractTransactionManager` | 抽象基类，封装 XID 上下文管理、metrics/audit 注入 |
 | `LocalTransactionManager` | 本地事务降级实现，基于 Spring `TransactionTemplate` 编程式事务 |
 | `TccTransactionManager` | TCC 实现，集成事务日志解决三大问题，支持 Confirm/Cancel 重试；实现 `TccRecoveryHandler` 接受恢复扫描器回调 |
-| `SeataTransactionManager` | Seata AT 实现，基于 `SeataGlobalTransactionExecutor` 反射调用 Seata 2.x API |
-| `SeataGlobalTransactionExecutor` | Seata API 反射调用器（适配 `org.apache.seata` 2.x 包名） |
+| `SeataTransactionManager` | Seata AT 实现，直接调用 `org.apache.seata` 2.x 原生 API（`GlobalTransactionContext` 等） |
 | `SagaOrchestrator` | SAGA 多步编排器，正向链执行 + 失败逆序补偿 + 补偿重试 |
 
 ### 3. TCC 三大问题防护
@@ -116,7 +115,7 @@ TTL:     retention（默认 24 小时）
 | 类 | 说明 |
 |---|---|
 | `SeataAutoConfiguration` | Spring Boot 自动配置，`ydsz.seata.enabled=true`（默认）时装配；含 `SeataAtConfiguration` 内嵌配置类（Seata 在 classpath 时注册） |
-| `SeataProperties` | 配置属性（`ydsz.seata.*`），含 `TccLogStoreType` 枚举（MEMORY / REDIS） |
+| `SeataProperties` | 配置属性（`ydsz.seata.*`），含 `TccLogStoreType` 枚举（MEMORY / REDIS / DB） |
 
 ## 接入方式
 
@@ -194,7 +193,7 @@ public class OrderService {
 | `ydsz.seata.tcc-retry-count` | 3 | TCC 补偿重试次数 |
 | `ydsz.seata.tcc-retry-interval-ms` | 1000 | TCC 补偿重试间隔（毫秒） |
 | `ydsz.seata.tcc-try-timeout-ms` | 60000 | TCC Try 阶段超时（毫秒，0=不限制） |
-| `ydsz.seata.tcc-log-store` | memory | TCC 日志存储类型（memory / redis） |
+| `ydsz.seata.tcc-log-store` | memory | TCC 日志存储类型（memory / redis / db） |
 | `ydsz.seata.tcc-log-redis-key-prefix` | `ydsz:tcc:log:` | Redis 日志 key 前缀（redis 模式生效） |
 | `ydsz.seata.tcc-log-redis-retention-hours` | 24 | Redis 日志保留时长（小时，redis 模式生效） |
 | `ydsz.seata.saga-max-retries` | 5 | SAGA 最大重试次数 |
@@ -348,7 +347,7 @@ try {
 ## 注意事项
 
 1. **Seata 2.x 包名**：本项目使用 Seata 2.5.0，包名从 `io.seata`（1.x）变更为 `org.apache.seata`（2.x）；`@ConditionalOnClass` 已适配新包名。
-2. **TCC 日志存储生产必选 Redis**：`InMemoryTccTransactionLogStore` 重启丢失，无法跨实例恢复；生产环境应设置 `ydsz.seata.tcc-log-store=redis`，所有参与方必须使用相同的 `tcc-log-redis-key-prefix`。
+2. **TCC 日志存储生产推荐 DB**：内置 `DbTccTransactionLogStore`（强持久化，无需 Redis）。`InMemoryTccTransactionLogStore` 重启丢失，无法跨实例恢复；生产环境建议设置 `ydsz.seata.tcc-log-store=db`（或 `redis`），所有参与方必须使用相同的存储配置。
 3. **Redis 不可用时降级**：`tcc-log-store=redis` 但 `RedisTemplate` 不可用时自动回退到 `InMemoryTccTransactionLogStore` 并打印 WARN 日志，保证服务可启动。
 4. **TCC 三大问题依赖日志存储**：未配置 `TccTransactionLogStore` 时（无参构造），三大问题防护失效；推荐始终通过自动配置注入带日志存储的 `TccTransactionManager`。
 5. **恢复扫描器超时阈值**：`recovery-timeout-threshold-ms` 应大于正常 Confirm/Cancel 耗时，避免误回收正在执行的分支；实例宕机后该阈值决定恢复延迟。

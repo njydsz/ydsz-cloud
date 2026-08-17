@@ -111,10 +111,10 @@ public final class JSONWriter {
     return value;
   }
 
-  /** 字符缓冲区（public for ASM 序列化器直接访问，消除 getBuffer() 方法调用开销） */
+  /** 字符缓冲区（序列化器直接访问，消除 getBuffer() 方法调用开销） */
   public char[] buf;
 
-  /** 当前写入位置（public for ASM 序列化器直接访问，消除 getPosition()/setPosition() 方法调用开销） */
+  /** 当前写入位置（序列化器直接访问，消除 getPosition()/setPosition() 方法调用开销） */
   public int pos;
 
   /** 特性标志位（Feature 枚举按位 OR 合并，参考 FastJSON2 / Jackson 设计） */
@@ -504,14 +504,14 @@ public final class JSONWriter {
   }
 
   /**
-   * 直接写入字符串到缓冲区（无 externalSb 检查，用于 JSONWriter 直接模式和 ASM 序列化器）
+   * 直接写入字符串到缓冲区（无 externalSb 检查，用于 JSONWriter 直接模式）
    *
    * <p>优化策略：
    *
    * <ul>
    *   <li>ASCII 快速路径：纯 ASCII 且无特殊字符时，使用 str.getChars() 批量拷贝
-   *   <li>SIMD 风格字级检查：一次检查 8 个字符是否为 ASCII + 无特殊字符，减少逐字符判断
-   *   <li>无需转义时直接批量写入，比逐字符写入快 3-5 倍
+   *   <li>字级检查：一次检查 8 个字符是否为 ASCII + 无特殊字符，减少逐字符判断
+   *   <li>无需转义时直接批量写入，比逐字符写入快
    * </ul>
    */
   public void writeStringDirect(String str) {
@@ -520,7 +520,7 @@ public final class JSONWriter {
 
     buf[pos++] = '"';
 
-    // ASCII 快速路径：使用 SIMD 风格字级检查，一次检查 8 个字符
+    // ASCII 快速路径：字级检查，一次检查 8 个字符
     if (isAsciiSafe(str, len)) {
       // 纯 ASCII 且无特殊字符，直接批量拷贝（System.arraycopy 底层优化）
       str.getChars(0, len, buf, pos);
@@ -534,17 +534,17 @@ public final class JSONWriter {
   }
 
   /**
-   * 检查字符串是否为纯 ASCII 且无需 JSON 转义（SIMD 风格字级检查）
+   * 检查字符串是否为纯 ASCII 且无需 JSON 转义（字级检查）
    *
-   * <p>一次检查 8 个字符：只要所有字符 >= ' ' 且 <= 127 且不是 '"' 和 '\\'， 即为安全字符串，可以批量拷贝。这种字级检查模式与 SIMD 向量化思想一致， 在
-   * JIT 编译后可以利用 CPU 的指令级并行性。
+   * <p>一次检查 8 个字符：只要所有字符 >= ' ' 且 <= 127 且不是 '"' 和 '\\'， 即为安全字符串，可以批量拷贝。字级展开减少循环
+   * 分支判断次数，JIT 编译后可利用指令级并行性。
    *
    * @param str 字符串
    * @param len 字符串长度
    * @return true 表示纯 ASCII 安全字符串，可直接批量写入
    */
   private static boolean isAsciiSafe(String str, int len) {
-    // SIMD 风格：一次检查 8 个字符
+    // 字级展开：一次检查 8 个字符
     int i = 0;
     while (i + 7 < len) {
       char c0 = str.charAt(i);
@@ -586,14 +586,14 @@ public final class JSONWriter {
    *
    * <p>跳过 ensureCapacity 检查，减少方法调用开销。 调用者必须确保缓冲区有足够容量（至少 len + 2 个字符）
    *
-   * <p>优化：使用 SIMD 风格字级检查，纯 ASCII 安全字符串直接批量拷贝
+   * <p>优化：字级检查，纯 ASCII 安全字符串直接批量拷贝
    */
   public void writeStringDirectNoCheck(String str) {
     int len = str.length();
 
     buf[pos++] = '"';
 
-    // ASCII 快速路径：使用 SIMD 风格字级检查
+    // ASCII 快速路径：字级检查
     if (isAsciiSafe(str, len)) {
       str.getChars(0, len, buf, pos);
       pos += len;
