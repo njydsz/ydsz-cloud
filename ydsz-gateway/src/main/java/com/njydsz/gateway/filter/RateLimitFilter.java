@@ -83,18 +83,24 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
   private volatile long localBucketLastRefill = System.currentTimeMillis() / 1000;
 
   /**
-   * IP + 用户二维度合并令牌桶 Lua 脚本。
+   * 五维度（IP + 用户 + 租户 + 应用 + 接口）合并令牌桶 Lua 脚本。
    *
    * <p>参数:
    *
    * <pre>
-   *   KEYS[1] = ip key         KEYS[2] = user key
-   *   ARGV[1] = ip rate        ARGV[2] = ip capacity      ARGV[3] = ip enabled(1/0)
-   *   ARGV[4] = user rate      ARGV[5] = user capacity    ARGV[6] = user enabled(1/0)
-   *   ARGV[7] = timestamp_seconds  ARGV[8] = requested_tokens
+   *   KEYS[1] = ip key         KEYS[2] = user key       KEYS[3] = tenant key
+   *   KEYS[4] = app key        KEYS[5] = api key
+   *   ARGV[1..3] = ip rate/capacity/enabled
+   *   ARGV[4..6] = user rate/capacity/enabled
+   *   ARGV[7..9] = tenant rate/capacity/enabled
+   *   ARGV[10..12] = app rate/capacity/enabled
+   *   ARGV[13..15] = api rate/capacity/enabled
+   *   ARGV[16] = timestamp_seconds  ARGV[17] = requested_tokens
    * </pre>
    *
-   * <p>返回: {ip_allowed, ip_remaining, ip_reset, user_allowed, user_remaining, user_reset}
+   * <p>返回: {ip_allowed, ip_remaining, ip_reset, user_allowed, user_remaining, user_reset,
+   *          tenant_allowed, tenant_remaining, tenant_reset, app_allowed, app_remaining, app_reset,
+   *          api_allowed, api_remaining, api_reset}
    */
   private static final String TOKEN_BUCKET_SCRIPT =
       """
@@ -130,32 +136,32 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
                 return allowed, remaining, reset
             end
 
-            local ip_key = KEYS[1]
-            local user_key = KEYS[2]
+            local now = tonumber(ARGV[16])
+            local requested = tonumber(ARGV[17])
 
-            local ip_rate = tonumber(ARGV[1])
-            local ip_capacity = tonumber(ARGV[2])
-            local ip_enabled = tonumber(ARGV[3])
+            local results = {}
 
-            local user_rate = tonumber(ARGV[4])
-            local user_capacity = tonumber(ARGV[5])
-            local user_enabled = tonumber(ARGV[6])
+            -- 遍历 5 个维度（每个维度 3 个参数：rate, capacity, enabled）
+            for i = 1, 5 do
+                local key_index = i
+                local arg_base = (i - 1) * 3
+                local enabled = tonumber(ARGV[arg_base + 3])
 
-            local now = tonumber(ARGV[7])
-            local requested = tonumber(ARGV[8])
-
-            local ip_allowed, ip_remaining, ip_reset = 1, 0, 0
-            local user_allowed, user_remaining, user_reset = 1, 0, 0
-
-            if ip_enabled == 1 then
-                ip_allowed, ip_remaining, ip_reset = token_bucket(ip_key, ip_rate, ip_capacity, now, requested)
+                if enabled == 1 then
+                    local rate = tonumber(ARGV[arg_base + 1])
+                    local capacity = tonumber(ARGV[arg_base + 2])
+                    local allowed, remaining, reset = token_bucket(KEYS[key_index], rate, capacity, now, requested)
+                    results[i * 3 - 2] = allowed
+                    results[i * 3 - 1] = remaining
+                    results[i * 3] = reset
+                else
+                    results[i * 3 - 2] = 1
+                    results[i * 3 - 1] = 0
+                    results[i * 3] = 0
+                end
             end
 
-            if user_enabled == 1 then
-                user_allowed, user_remaining, user_reset = token_bucket(user_key, user_rate, user_capacity, now, requested)
-            end
-
-            return {ip_allowed, ip_remaining, ip_reset, user_allowed, user_remaining, user_reset}
+            return results
             """;
 
   /** 预编译 Lua 脚本 */
@@ -239,7 +245,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
         properties.getPerUser().isEnabled() && userId != null && !userId.isEmpty();
 
     if (!ipEnabled && !userEnabled) {
-      return Mono.just(new RateLimitResult(true, 0, 0, true, 0, 0));
+      return Mono.just(allAllowedResult());
     }
 
     long now = System.currentTimeMillis() / 1000;
@@ -265,7 +271,7 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
             result -> {
               if (result == null || result.size() < 6) {
                 redisFailureCount.incrementAndGet();
-                return new RateLimitResult(true, 0, 0, true, 0, 0);
+                return allAllowedResult();
               }
               boolean ipAllowed = getLong(result, 0) != null && getLong(result, 0) == 1L;
               int ipRemaining = getLong(result, 1) != null ? getLong(result, 1).intValue() : 0;
@@ -275,7 +281,12 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
               int userReset = getLong(result, 5) != null ? getLong(result, 5).intValue() : 0;
 
               redisFailureCount.set(0);
-              return new RateLimitResult(ipAllowed, ipRemaining, ipReset, userAllowed, userRemaining, userReset);
+              return new RateLimitResult(
+                  ipAllowed, ipRemaining, ipReset,
+                  userAllowed, userRemaining, userReset,
+                  true, 0, 0,
+                  true, 0, 0,
+                  true, 0, 0);
             })
         .onErrorResume(
             e -> {
@@ -284,19 +295,28 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
                   count, exchange.getRequest().getURI().getPath(), e.getMessage());
               return Mono.just(localFallback());
             })
-        .defaultIfEmpty(new RateLimitResult(true, 0, 0, true, 0, 0));
+        .defaultIfEmpty(allAllowedResult());
   }
 
-  /** 限流结果记录 */
+  /** 限流结果记录（五维度） */
   private record RateLimitResult(
       boolean ipAllowed,
       int ipRemaining,
       int ipReset,
       boolean userAllowed,
       int userRemaining,
-      int userReset) {
+      int userReset,
+      boolean tenantAllowed,
+      int tenantRemaining,
+      int tenantReset,
+      boolean appAllowed,
+      int appRemaining,
+      int appReset,
+      boolean apiAllowed,
+      int apiRemaining,
+      int apiReset) {
     boolean allAllowed() {
-      return ipAllowed && userAllowed;
+      return ipAllowed && userAllowed && tenantAllowed && appAllowed && apiAllowed;
     }
   }
 
@@ -305,7 +325,17 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
     if (gatewayMetrics != null) {
       gatewayMetrics.incrementRatelimitFallback();
     }
-    return new RateLimitResult(true, 0, 0, true, 0, 0);
+    return allAllowedResult();
+  }
+
+  /** 全部维度放行的限流结果（未启用维度与异常降级时使用） */
+  private RateLimitResult allAllowedResult() {
+    return new RateLimitResult(
+        true, 0, 0,
+        true, 0, 0,
+        true, 0, 0,
+        true, 0, 0,
+        true, 0, 0);
   }
 
   /** 安全类型转换 */

@@ -106,20 +106,32 @@ ydsz:
       max-connections-per-user: 5     # 单用户最大并发 WebSocket 连接数
       max-connections-per-ip: 20      # 单 IP 最大并发 WebSocket 连接数
       counter-ttl-seconds: 3600       # 计数器 TTL（秒），作为异常断开的兜底清理
-    # P2-2: 响应缓存 + 审计日志
+    # P0-A4: 过滤器开关（与各 GlobalFilter 的 @ConditionalOnProperty 前缀/名称严格对齐）
     filter:
-      response-cache: true    # GET 响应缓存（Redis，默认 TTL 60s）
-      audit-log: true         # 安全审计日志
-      rate-limit: true        # 令牌桶限流
-      gray-loadbalancer: true # 灰度路由
-      w3c-trace: true         # W3C Trace Context
-      ip-blacklist: true      # IP 黑名单
-      ip-whitelist: false     # IP 白名单
-      auth: true              # JWT 鉴权
-      api-key: false          # API Key 认证
-      websocket-auth: true    # WebSocket 鉴权
-      payload-validation: true # 请求体校验
-      api-version: true       # API 版本头
+      access-log: true        # 访问日志（AccessLogGlobalFilter）
+      audit-log: true         # 安全审计日志（AuditLogFilter）
+      rate-limit: true        # 令牌桶限流（RateLimitFilter）
+      circuit-breaker: true   # 熔断（CircuitBreakerGlobalFilter）
+      gray-loadbalancer: true # 灰度路由（GrayLoadBalancerRequestFilter）
+      w3c-trace: true         # W3C Trace Context（W3CTraceContextFilter）
+      ip-access-control: true # IP 黑白名单统一开关（IpAccessControlFilter；黑白名单启用与否由 ydsz.gateway.ip-control.* 控制）
+      auth: true              # JWT 鉴权（AuthGlobalFilter）
+      api-key-auth: false     # API Key 认证（ApiKeyAuthFilter）
+      websocket-auth: true    # WebSocket 鉴权（WebSocketAuthFilter）
+      payload-validation: true # 请求体校验（PayloadValidationFilter）
+      # 注：ApiVersionHeaderFilter 开关为 ydsz.gateway.api-version.enabled；AuthorizationFilter 开关为 ydsz.gateway.authorization.enabled
+    # P0-A4: IP 访问控制属性（黑白名单的启用/配置）
+    ip-control:
+      blacklist-enabled: true
+      blacklist-fail-mode: fail-open
+      whitelist-enabled: false
+      whitelist: ""
+    # P0-A4: API 版本响应头（ApiVersionHeaderFilter 开关）
+    api-version:
+      enabled: true
+    # P0-A4: 网关层粗粒度 RBAC（默认关闭，权限判定以业务服务细粒度 RBAC 为准，避免双源真相）
+    authorization:
+      enabled: false
     # P2-1: 插件系统（Groovy 热脚本）
     plugin:
       enabled: false           # 默认关闭，需手动启用

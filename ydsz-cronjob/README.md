@@ -24,58 +24,56 @@
 | **Leader 选举** | 基于 Redis 分布式锁 + 租约续期，多实例下保证任务不重复执行 |
 | **多分区调度** | `leader.partition.enabled=true` 启用多 Active Leader 分区调度，提升吞吐量 |
 | **节点发现** | Nacos 服务发现（推荐）/ DB 心跳表（向后兼容） |
-| **任务调度** | Cron 表达式 + 固定频率 + 固定延迟 + 精准调度（时间轮预加载） |
-| **分片广播** | 单机串行 / 广播并行 / 分片 MapReduce / 加权分片 |
-| **故障转移** | `FailoverScanner` 定时扫描，节点宕机后自动转移 RUNNING 任务 |
-| **自愈系统** | `SelfHealingScanner` 检测卡死任务并自动修复 + 重新派发 |
+| **任务调度** | Cron 表达式 + 固定频率 + 固定延迟 + API 触发 |
+| **分片广播** | 单机串行 / 广播并行 / 分片 MapReduce（平均分片策略） |
+| **故障转移** | `AnomalyRecoveryScanner` 定时扫描，节点宕机后自动转移 RUNNING 任务 |
+| **异常自愈** | `AnomalyRecoveryScanner` 检测卡死任务并自动修复 + 重新派发 |
 | **租户隔离** | `isolation-strategy: tenant` / `job_group` |
 | **告警通道** | 消息中心 Feign + common-notify IM 直推（飞书/钉钉/企业微信） |
-| **告警降噪** | `alert-dedup.enabled` 时间窗口聚合 + 自动升降级通知渠道 |
 | **日志归档** | 每天凌晨 3 点清理 30 天前的日志 |
 | **配额管理** | 租户级任务数 / 并发 / 日执行量 |
 | **HTTP 任务** | `jobType=HTTP` 内置 HTTP 调用处理器 |
-| **脚本沙箱** | `sandbox.enabled` 进程级/Docker 容器级隔离执行 Shell/Python |
+| **脚本沙箱** | `sandbox.enabled`（默认开启）进程级/Docker 容器级隔离执行 Shell/Python |
 | **调度器-执行器分离** | `scheduler-executor-separation.enabled` Leader 仅调度，Worker 执行 |
 
-### 2. 关键 Controller
+### 2. 关键 Controller（基路径 `/api/v1/cronjob`，共 16 个）
 
 | 路径前缀 | 作用 |
 |---|---|
 | `/job` | 任务 CRUD + 版本回滚 |
 | `/job/log` | 执行日志（分页） |
-| `/job/log-content` | 日志详情（支持慢日志） |
-| `/job/slow-log` | 慢执行记录 |
-| `/job/alert-log` | 告警日志 |
-| `/job/alert` | 告警规则管理 |
+| `/job/alert` | 告警规则管理 + 告警日志（`/logs/{jobId}`） |
 | `/job/history` | 历史任务 + 版本管理 |
 | `/job/dag` | DAG 定义管理 |
 | `/job/dag-instance` | DAG 实例控制（启动/暂停/恢复） |
 | `/job/task` | 分片任务管理 |
-| `/job/sla` | SLA 规则管理 |
 | `/job/webhook` | WebHook 订阅管理 |
 | `/job/stats` | 任务统计 |
 | `/job/glue` | 胶水代码在线编辑 |
 | `/job/connector` | 数据连接器管理 |
-| `/schedule-calendar` | 调度日历 |
-| `/sse/log` | SSE 日志实时推送 |
+| `/job/group` | 任务分组管理 |
+| `/job/queue` | 任务队列视图 |
+| `/job/topology` | 任务拓扑视图 |
+| `/calendar` | 调度日历 |
+| `/internal` | 内部调用端点 |
 
 ## 数据库表设计
 
-本模块在 `deploy/sql/V1.0.0.sql` 中持有 **18 张表**，覆盖任务定义/调度/执行/日志/告警/告警规则/历史/节点/分片关系/统计/产物/胶水代码/租户配额/DAG。
+实体 `@TableName` 共映射 **17 张表**（DDL 由各部署环境统一维护，不在模块内）：
 
 | 业务域 | 表名 | 说明 |
 |---|---|---|
 | **任务定义** | `ydsz_job` | 任务主表（cron/频率/分片/隔离策略） |
 | | `ydsz_job_glue` | 胶水代码（Groovy/Java/Python/Shell） |
-| | `ydsz_job_relation` | 父子任务依赖 |
 | **调度** | `ydsz_job_task` | 调度任务（待派发/运行中） |
 | | `ydsz_job_history` | 历史任务（已完成） |
 | **DAG** | `ydsz_job_dag` | DAG 定义 |
+| | `ydsz_job_dag_version` | DAG 版本 |
 | | `ydsz_job_dag_instance` | DAG 实例 |
 | | `ydsz_job_dag_node_instance` | DAG 节点实例 |
 | **执行日志** | `ydsz_job_log` | 执行日志（分页） |
 | | `ydsz_job_log_content` | 日志详情（TOAST 大字段） |
-| **告警** | `ydsz_job_alert_log` | 告警日志 |
+| **告警** | `ydsz_alert_dispatch` | 告警派发日志（原 `ydsz_job_alert_log` 合并至此） |
 | | `ydsz_job_alert_rule` | 告警规则（失败/超时/阻塞） |
 | **执行器** | `ydsz_job_node` | 执行器节点（注册/心跳） |
 | **Webhook** | `ydsz_job_webhook` | 任务完成回调 |
@@ -95,13 +93,13 @@ ydsz-cronjob/                          # 父 POM
 │   └── pom.xml
 ├── ydsz-cronjob-domain/               # 领域层（Entity / DTO / VO）
 │   ├── src/main/java/com/njydsz/cronjob/domain/
-│   │   ├── entity/                    # 实体（无 DO 后缀，共 13 个）
+│   │   ├── entity/                    # 实体（无 DO 后缀，共 17 个）
 │   │   │   ├── dag/                   # JobDag / JobDagInstance / JobDagNodeInstance / JobDagVersion
 │   │   │   ├── job/                   # Job / JobAlertLog / JobAlertRule / JobArtifact
 │   │   │   │                          # JobHistory / JobNode / JobTask / JobWebhook / TenantQuota
 │   │   │   └── schedule/              # GlueCode（胶水代码）
 │   │   ├── dto/                       # JobBatchDTO / JobRelationSaveDTO / alert / dag / post / put
-│   │   └── vo/                        # 15 个 VO（含 JobVO / JobDagVO / JobLogVO 等）
+│   │   └── vo/                        # 16 个 VO（含 JobVO / JobDagVO / JobLogVO 等）
 │   └── pom.xml
 ├── ydsz-cronjob-infra/                # 基础设施层（Mapper）
 │   ├── src/main/java/com/njydsz/cronjob/infra/mapper/
@@ -109,25 +107,24 @@ ydsz-cronjob/                          # 父 POM
 ├── ydsz-cronjob-server/               # 核心服务层
 │   ├── src/main/java/com/njydsz/cronjob/server/
 │   │   ├── config/                    # CronjobProperties + CronjobAutoConfiguration
-│   │   ├── core/                      # 核心调度引擎（80+ 个类）
+│   │   ├── core/                      # 核心调度引擎（80 个类）
 │   │   │   ├── DagDefinitionCodec.java     # DAG 编解码
 │   │   │   ├── DagInstanceExecutor.java    # DAG 执行器
 │   │   │   ├── DefaultTaskDispatcher.java # 任务派发器
-│   │   │   ├── FailoverScanner.java        # 故障转移扫描
-│   │   │   ├── JobScanner.java             # 任务扫描器
+│   │   │   ├── healing/AnomalyRecoveryScanner.java # 故障转移 + 异常自愈
+│   │   │   ├── dispatch/JobScanner.java   # 任务扫描器
 │   │   │   ├── LeaderElector.java          # Leader 选举
 │   │   │   ├── LockKeyUtil.java            # 锁 key 工具 + Lua 脚本常量
-│   │   │   ├── LogStreamManager.java       # SSE 日志推送
-│   │   │   ├── SelfHealingScanner.java     # 自愈系统
-│   │   │   ├── TimeoutMonitor.java         # 超时监控
-│   │   │   ├── AlertDispatcher.java        # 告警派发
-│   │   │   └── ...                         # 其余 70+ 个类
+│   │   │   ├── logger/LogStreamManager.java # 日志流管理
+│   │   │   ├── dispatch/TimeoutMonitor.java # 超时监控
+│   │   │   ├── alert/AlertDispatcher.java  # 告警派发
+│   │   │   ├── sharding/                   # 平均分片策略 + 分片重平衡
+│   │   │   └── ...                         # 其余 70 个类
 │   │   ├── handler/                   # 业务 JobHandler
 │   │   ├── health/                    # CronjobHealthIndicator
 │   │   ├── metrics/                   # CronjobMetrics（Prometheus 指标）
-│   │   ├── notify/                    # CronjobNotifyHelper（IM 直推）
 │   │   ├── queue/                     # 持久化重试队列
-│   │   ├── service/                   # 业务 Service（11 个接口 + 实现）
+│   │   ├── service/                   # 业务 Service（8 个接口 + 实现）
 │   │   └── vo/
 │   ├── src/main/resources/
 │   │   ├── META-INF/
@@ -139,7 +136,7 @@ ydsz-cronjob/                          # 父 POM
 ├── ydsz-cronjob-web/                  # Web 层（Controller + 启动类）
 │   ├── src/main/java/com/njydsz/cronjob/web/
 │   │   ├── CronjobApplication.java   # Spring Boot 启动类
-│   │   └── controller/                # 17 个 Controller
+│   │   └── controller/                # 16 个 Controller
 │   └── pom.xml
 └── README.md
 ```
@@ -163,28 +160,25 @@ ydsz-cronjob/                          # 父 POM
 | `ydsz.cronjob.executor.queue-capacity` | `32` | 线程池队列容量 |
 | `ydsz.cronjob.executor.tenant-pool-size` | `10` | 租户隔离池大小 |
 
-### 故障转移 & 自愈
+### 故障转移 & 异常自愈（`ydsz.cronjob.anomaly-recovery.*`）
 
 | 配置项 | 默认值 | 说明 |
 |---|---|---|
-| `ydsz.cronjob.failover.enabled` | `true` | 启用故障转移 |
-| `ydsz.cronjob.failover.scan-interval-ms` | `30000` | 扫描间隔（毫秒） |
-| `ydsz.cronjob.self-healing.enabled` | `false` | 启用自愈系统 |
-| `ydsz.cronjob.self-healing.scan-interval-ms` | `60000` | 自愈扫描间隔（毫秒） |
-| `ydsz.cronjob.self-healing.stuck-threshold-seconds` | `300` | 卡死超时阈值 |
+| `ydsz.cronjob.anomaly-recovery.failover-enabled` | `true` | 启用故障转移 |
+| `ydsz.cronjob.anomaly-recovery.scan-interval-seconds` | `30` | 扫描间隔（秒） |
+| `ydsz.cronjob.anomaly-recovery.self-healing-enabled` | `false` | 启用异常自愈 |
+| `ydsz.cronjob.anomaly-recovery.stuck-threshold-seconds` | `300` | 卡死超时阈值 |
 
 ### 高级功能
 
 | 配置项 | 默认值 | 说明 |
 |---|---|---|
-| `ydsz.cronjob.precise-scheduling.enabled` | `false` | 精准调度（时间轮） |
 | `ydsz.cronjob.adaptive-batch.enabled` | `false` | 自适应批量调度 |
-| `ydsz.cronjob.alert-dedup.enabled` | `false` | 告警智能降噪 |
 | `ydsz.cronjob.map-reduce.enabled` | `true` | MapReduce 分布式并行 |
 | `ydsz.cronjob.scheduler-executor-separation.enabled` | `true` | 调度器-执行器分离 |
 | `ydsz.cronjob.remote.enabled` | `true` | 远程派发 |
 | `ydsz.cronjob.remote.fallback-to-local` | `true` | 远程失败降级本地 |
-| `ydsz.cronjob.sandbox.enabled` | `false` | 脚本执行沙箱 |
+| `ydsz.cronjob.sandbox.enabled` | `true` | 脚本执行沙箱（默认开启） |
 | `ydsz.cronjob.sandbox.docker-enabled` | `false` | Docker 容器沙箱 |
 | `ydsz.cronjob.quota.enabled` | `false` | 租户配额 |
 | `ydsz.cronjob.log-retention.retention-days` | `30` | 日志保留天数 |
@@ -226,8 +220,7 @@ DAG 节点依赖检查失败时任务会卡 PENDING。检查：
 
 ### Q4：告警未收到 IM 通知
 
-- 检查 `CronjobNotifyHelper` 是否注入（需 common-notify 在 classpath）
-- 检查 `AsyncNotifyService` 是否正常初始化
+- 检查 common-notify 的 `AsyncNotifyService` 是否正常初始化并在 classpath
 - IM 通知为非阻塞补充通道，主渠道仍为消息中心 Feign 调用
 
 ---

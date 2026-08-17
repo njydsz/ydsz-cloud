@@ -85,45 +85,45 @@ public final class PathGuard {
       return rawPath;
     }
 
-    // P2-5 快速失败：路径不含 '.' 和 '%' 时不可能存在穿越/编码攻击，直接放行
+    // P2-5 快速失败：路径不含任何可疑字符（. % \ // null 字节）时不可能存在穿越/编码攻击，直接放行
     // 覆盖 >99% 的正常请求，避免不必要的 URL 解码 + 多模式匹配开销
-    if (rawPath.indexOf('.') < 0 && rawPath.indexOf('%') < 0 && rawPath.indexOf('\\') < 0) {
+    if (rawPath.indexOf('.') < 0
+        && rawPath.indexOf('%') < 0
+        && rawPath.indexOf('\\') < 0
+        && rawPath.indexOf('\0') < 0
+        && rawPath.indexOf("//") < 0) {
       return rawPath;
     }
 
-    // P2-12: 递归 URL 解码（最多 3 次），防范 Double-Encoding 攻击
-    String decodedPath = recursiveDecode(rawPath);
+    // ---- 第一层：原始路径检测（编码未被解码前）----
+    // 在 URL 解码前先检测原始编码模式，防止 .%2f 等"点 + 编码斜杠"的混合编码在解码后
+    // 被转换成 ./ 而绕过解码后检测（P0-A3 修复）
+    String rawLower = rawPath.toLowerCase();
+    if (rawLower.contains("..")
+        || rawLower.contains("%2e%2e")
+        || rawLower.contains("%2e.")
+        || rawLower.contains("\\")
+        || rawLower.contains("%5c")
+        || rawLower.contains("//")
+        || rawLower.contains("%00")
+        || rawPath.indexOf('\0') >= 0
+        || rawLower.contains(".%2f")
+        || rawLower.contains(".%5c")
+        || rawLower.contains("%2f.")
+        || rawLower.contains("%2e%2f")
+        || rawLower.contains("%2e%5c")) {
+      return null;
+    }
 
-    // 检测路径穿越攻击
+    // ---- 第二层：解码后检测（防范 Double-Encoding 绕过）----
+    // P2-12: 递归 URL 解码（最多 3 次）
+    String decodedPath = recursiveDecode(rawPath);
     String lowerPath = decodedPath.toLowerCase();
 
-    // 基础检测：父目录引用
-    if (lowerPath.contains("..") || lowerPath.contains("%2e%2e") || lowerPath.contains("%2e.")) {
-      return null;
-    }
-
-    // 反斜杠检测
-    if (lowerPath.contains("\\") || lowerPath.contains("%5c") || lowerPath.contains("%5C")) {
-      return null;
-    }
-
-    // 双斜杠检测（可被用于绕过某些安全检查）
-    if (lowerPath.contains("//")) {
-      return null;
-    }
-
-    // P2-12: null 字节注入检测（可导致文件系统问题）
-    // 检测 URL 编码的 null 字节 %00 和原始 \0 字符
-    if (lowerPath.contains("%00") || decodedPath.contains("\0")) {
-      return null;
-    }
-
-    // P2-12: 混合编码检测（如 .%2f、%2e%2f）
-    if (lowerPath.contains(".%2f")
-        || lowerPath.contains(".%5c")
-        || lowerPath.contains("%2f.")
-        || lowerPath.contains("%2e%2f")
-        || lowerPath.contains("%2e%5c")) {
+    if (lowerPath.contains("..")
+        || lowerPath.contains("\\")
+        || lowerPath.contains("//")
+        || decodedPath.contains("\0")) {
       return null;
     }
 

@@ -1,5 +1,7 @@
 package com.njydsz.gateway.filter;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -72,8 +74,13 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
   @Value("${ydsz.gateway.api-key.enabled:false}")
   private boolean enabled;
 
-  @Value("${ydsz.gateway.api-key.keys:}")
-  private String validKeys;
+  /**
+   * API Key 白名单（Spring 自动将逗号分隔的配置解析为 List）。
+   *
+   * <p>使用 List 注入替代 String + split，避免每次请求重复解析。 Spring EL 处理空值情况，未配置时返回空 List。
+   */
+  @Value("#{'${ydsz.gateway.api-key.keys:}'.trim().isEmpty() ? new String[]{} : '${ydsz.gateway.api-key.keys:}'.trim().split(' *, *')}")
+  private List<String> validKeyList;
 
   @Value("${ydsz.gateway.api-key.protected-paths:}")
   private String protectedPaths;
@@ -145,13 +152,17 @@ public class ApiKeyAuthFilter implements GlobalFilter, Ordered {
     return null;
   }
 
-  /** 验证 API Key 是否有效 */
+  /** 验证 API Key 是否有效（使用预解析的 List，避免每次请求 split） */
   private boolean isValidApiKey(String apiKey) {
-    if (validKeys == null || validKeys.isBlank()) {
+    if (validKeyList == null || validKeyList.isEmpty()) {
       return false;
     }
-    Set<String> keySet = Set.of(validKeys.split(","));
-    return keySet.contains(apiKey.trim());
+    for (String validKey : validKeyList) {
+      if (validKey != null && validKey.trim().equals(apiKey.trim())) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /** 检查路径是否需要 API Key 认证 */

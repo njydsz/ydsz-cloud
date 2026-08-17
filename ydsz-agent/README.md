@@ -18,15 +18,16 @@
 
 本模块是 YDSZ 的 **AI 智能体中心**，提供 LLM 对话、Agent 编排、Tool Calling、RAG 知识增强、记忆管理、调试器全链路能力。
 
-### 1. Agent 执行器（5 种）
+### 1. Agent 执行器（6 种）
 
 | 执行器 | 实现类 | 适用场景 |
 |---|---|---|
 | **Simple Agent** | `SimpleAgentExecutor` | 单轮对话，无工具调用 |
-| **ReAct Agent** | `ReActAgentExecutor` | 推理-行动循环，支持 Tool Calling |
-| **Router Agent** | `RouterAgentExecutor` | 路由分发到子 Agent |
-| **Plan-Execute Agent** | `PlanExecuteAgentExecutor` | 先规划后执行，复杂任务分解 |
+| **ReAct Agent** | `ReActAgentExecutor` | 推理-行动循环，支持 Tool Calling（RAG 类型亦映射至此） |
+| **Supervisor Agent** | `SupervisorAgentExecutor` | 主管-子 Agent 协同（路由/委派） |
+| **Plan-Execute Agent** | `PlanExecuteAgentExecutor` | 先规划后执行，复杂任务分解（原 Router 类型映射至此） |
 | **RAG Agent** | `RagAgentExecutor` | 检索增强生成，结合知识库回答 |
+| **DAG Agent** | `DagOrchestrationExecutor` | DAG 编排执行 |
 
 ### 2. 核心能力清单
 
@@ -53,18 +54,18 @@
 | **队列集成** | 异步任务 + 跨服务事件 | `AgentQueueChannels` |
 | **跨模块监听** | 接收其他模块事件 | `CrossModuleEventListener` |
 
-### 3. Web 层 Controller（8 个）
+### 3. Web 层 Controller（8 个，基路径 `/api/v1/agent`）
 
 | Controller | 路径前缀 | 主要端点 |
 |---|---|---|
-| `ChatController` | `/agent/chat` | 同步对话 / 流式对话（SSE）/ 对话历史 / 清除历史 |
-| `AgentController` | `/agent` | Agent CRUD / 启停 / 状态查询 |
-| `AgentDefinitionController` | `/agent/definition` | Agent 定义 CRUD / 版本管理 / 启用/禁用 |
-| `AgentMetadataController` | `/agent/metadata` | Agent 元数据 / 模型配置 / Token 用量 |
-| `DagController` | `/agent/dag` | DAG 编排定义 / 触发 / 状态查询 |
-| `DebugController` | `/agent/debug` | 调试器断点 / 单步 / 快照 / 恢复 |
-| `HumanApprovalController` | `/agent/approval` | 人工审批提交 / 查询待审批 / 审批结果 |
-| `RagController` | `/agent/rag` | 文档上传 / 检索 / 索引管理 |
+| `AgentController` | `/api/v1/agent` | 同步对话 `/chat`、流式对话（SSE）`/chat/stream`、对话历史 `/history`、Agent 状态 |
+| `AgentDefinitionController` | `/api/v1/agent/definitions` | Agent 定义 CRUD / 版本管理 / 启用/禁用 |
+| `AgentMetadataController` | `/api/v1/agent/metadata` | Agent 元数据（`/models`、`/tools`） |
+| `DagController` | `/api/v1/agent/dag` | DAG 编排定义 / 触发 / 状态查询 |
+| `DebugController` | `/api/v1/agent/debug` | 调试器断点 / 单步 / 快照 / 恢复 |
+| `HumanApprovalController` | `/api/v1/agent/approvals` | 人工审批提交 / 查询待审批 / 审批结果 |
+| `RagController` | `/api/v1/agent/rag` | 文档上传 / 检索 / 索引管理 |
+| `ObservabilityController` | `/api/v1/agent/observability` | 可观测性概览 `/overview`、模型用量 `/model-usage` |
 
 ## DDD 分层结构
 
@@ -88,8 +89,8 @@ ydsz-agent/
 ├── ydsz-agent-infra/                  # 基础设施层：LLM Provider + Redis 记忆 + 向量存储
 ├── ydsz-agent-server/                 # 应用层：Service + Config + Health + Metrics
 │   └── src/main/java/com/njydsz/agent/server/
-│       ├── agent/                     # Agent 服务（5 种执行器 + DAG 编排 + 人工审批 + 工厂）
-│       ├── analytics/                 # 成本分析
+│       ├── agent/                     # Agent 服务（6 种执行器 + DAG 编排 + 人工审批 + 工厂）
+│       ├── analytics/                 # 成本分析 / 可观测性看板
 │       ├── chat/                      # 对话服务 + 请求防护 + 护栏
 │       ├── config/                    # AgentAutoConfiguration + AgentProperties
 │       ├── debug/                     # 调试器
@@ -155,7 +156,7 @@ ydsz:
 ### 2. 同步对话
 
 ```bash
-curl -X POST http://localhost:9008/agent/chat \
+curl -X POST http://localhost:9008/api/v1/agent/chat \
   -H "Content-Type: application/json" \
   -d '{"message": "你好，请介绍一下YDSZ系统"}'
 ```
@@ -163,7 +164,7 @@ curl -X POST http://localhost:9008/agent/chat \
 ### 3. 流式对话（SSE）
 
 ```bash
-curl -N -X POST http://localhost:9008/agent/chat/stream \
+curl -N -X POST http://localhost:9008/api/v1/agent/chat/stream \
   -H "Content-Type: application/json" \
   -d '{"message": "帮我分析项目进度"}'
 ```
@@ -172,10 +173,10 @@ curl -N -X POST http://localhost:9008/agent/chat/stream \
 
 ```bash
 # 获取历史
-curl http://localhost:9008/agent/chat/history?conversationId=xxx
+curl http://localhost:9008/api/v1/agent/chat/history?conversationId=xxx
 
 # 清除历史
-curl -X DELETE http://localhost:9008/agent/chat/history?conversationId=xxx
+curl -X DELETE http://localhost:9008/api/v1/agent/chat/history?conversationId=xxx
 ```
 
 ## 启动
@@ -196,7 +197,7 @@ mvn -pl ydsz-agent spring-boot:run
 | 向量存储 | 内存（默认）/ PostgreSQL pgvector | 复用现有 PG 基础设施 |
 | 工具调用 | 自研 @Tool 注解 | 轻量级，无额外依赖 |
 | DAG 编排 | 自研 DagDslParser | DSL 解析 + DAG 执行 |
-| Agent 模式 | ReAct / Router / Plan-Execute / RAG / Simple | 覆盖主流 Agent 范式 |
+| Agent 模式 | ReAct / Supervisor / Plan-Execute / RAG / Simple / DAG | 覆盖主流 Agent 范式 |
 
 ## 常见问题
 
@@ -215,14 +216,14 @@ mvn -pl ydsz-agent spring-boot:run
 ### Q3：Agent DAG 执行卡住
 
 1. 检查 DAG 节点依赖是否循环
-2. 检查人工审批节点是否待审批（调用 `/agent/approval` 查询）
+2. 检查人工审批节点是否待审批（调用 `/api/v1/agent/approvals` 查询）
 3. 检查 Agent 心跳线程池是否正常（`agent-heartbeat` 线程池）
 
 ### Q4：Token 用量统计不准
 
 1. 部分 LLM Provider 不返回完整 Token 用量
 2. 流式对话需累加每个 chunk 的 Token 数
-3. 可通过 `/agent/metrics` 查询累计用量
+3. 可通过 `/api/v1/agent/observability/model-usage` 查询模型用量统计
 
 ---
 

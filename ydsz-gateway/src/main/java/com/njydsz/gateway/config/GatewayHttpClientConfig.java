@@ -1,13 +1,9 @@
 package com.njydsz.gateway.config;
 
 import java.time.Duration;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Tags;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,7 +11,7 @@ import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
 
 /**
- * P3-7: 网关 HttpClient 连接池配置（含连接池监控指标）
+ * P3-7: 网关 HttpClient 连接池配置（含真实连接池监控指标）
  *
  * <p>对标大厂网关的连接池管理，避免高并发下频繁创建/销毁 TCP 连接导致：
  *
@@ -35,15 +31,21 @@ import reactor.netty.resources.ConnectionProvider;
  *   <li>{@code evictionInterval} — 后台驱逐检查间隔（默认 60s）
  * </ul>
  *
- * <h3>P3-7 增强：连接池监控指标</h3>
+ * <h3>P0-C3 增强：真实连接池监控指标</h3>
  *
- * <p>注册 Prometheus Gauge 指标：
+ * <p>通过 Reactor Netty 内置 {@code metrics(true)} 启用 Micrometer 指标（自动注册到全局 MeterRegistry），
+ * 指标名以 {@code reactor_netty_connection_provider_*} 为前缀：
  *
  * <ul>
- *   <li>{@code ydsz_gateway_httpclient_pool_active} — 活跃连接数
- *   <li>{@code ydsz_gateway_httpclient_pool_pending} — 等待获取连接的请求数
- *   <li>{@code ydsz_gateway_httpclient_pool_available} — 可用连接数
+ *   <li>{@code ..._active_connections} — 活跃连接数
+ *   <li>{@code ..._idle_connections} — 空闲连接数
+ *   <li>{@code ..._pending_connections} — 等待获取连接的请求数
+ *   <li>{@code ..._max_connections} — 最大连接数（配置值）
+ *   <li>{@code ..._total_connections} — 累计创建连接数
  * </ul>
+ *
+ * <p><b>说明：</b>历史版本手写 Gauge（{@code ydsz_gateway_httpclient_pool_*}）从未更新、恒为 0，
+ * 已删除；统一使用 Reactor Netty 官方指标，保证可观测性真实可信。
  *
  * @since 3.7.0
  * @author ydsz-team
@@ -95,16 +97,11 @@ public class GatewayHttpClientConfig {
    */
   private long evictionIntervalSeconds = 60;
 
-  /** P3-7: 活跃连接数引用（Gauge 读取） */
-  private final AtomicInteger activeConnectionsRef = new AtomicInteger(0);
-
-  /** P3-7: 等待连接数引用（Gauge 读取） */
-  private final AtomicInteger pendingConnectionsRef = new AtomicInteger(0);
-
   /**
    * 构建 Reactor Netty 连接提供者
    *
-   * <p>Spring Cloud Gateway 4.x 默认使用 Reactor Netty 的 {@link ConnectionProvider}，此处覆盖默认配置启用连接池。
+   * <p>Spring Cloud Gateway 默认使用 Reactor Netty 的 {@link ConnectionProvider}，此处覆盖默认配置启用连接池，
+   * 并开启 Micrometer 指标（P0-C3：真实连接池可观测性）。
    *
    * @return 连接提供者
    */
@@ -112,6 +109,7 @@ public class GatewayHttpClientConfig {
   public ConnectionProvider gatewayConnectionProvider() {
     ConnectionProvider.Builder builder =
         ConnectionProvider.builder("ydsz-gateway-pool")
+            .metrics(true)
             .maxConnections(maxConnections)
             .pendingAcquireTimeout(Duration.ofMillis(pendingAcquireTimeoutMs))
             .maxIdleTime(Duration.ofSeconds(maxIdleTimeSeconds))
@@ -119,7 +117,7 @@ public class GatewayHttpClientConfig {
             .evictInBackground(Duration.ofSeconds(evictionIntervalSeconds));
 
     log.info(
-        "[HttpClient] 连接池配置 maxConnections={} pendingAcquireTimeout={}ms maxIdle={}s maxLife={}s evictInterval={}s",
+        "[HttpClient] 连接池配置 maxConnections={} pendingAcquireTimeout={}ms maxIdle={}s maxLife={}s evictInterval={}s metrics=true",
         maxConnections,
         pendingAcquireTimeoutMs,
         maxIdleTimeSeconds,
@@ -141,54 +139,5 @@ public class GatewayHttpClientConfig {
   @Bean
   public HttpClient gatewayHttpClient(ConnectionProvider connectionProvider) {
     return HttpClient.create(connectionProvider);
-  }
-
-  /**
-   * P3-7: 注册连接池监控指标到 Prometheus
-   *
-   * <p>注册三个 Gauge 指标：
-   *
-   * <ul>
-   *   <li>{@code ydsz_gateway_httpclient_pool_active} — 活跃连接数
-   *   <li>{@code ydsz_gateway_httpclient_pool_pending} — 等待获取连接的请求数
-   *   <li>{@code ydsz_gateway_httpclient_pool_available} — 可用连接数
-   * </ul>
-   *
-   * @param connectionProvider 连接提供者
-   * @param registryProvider MeterRegistry 提供者
-   */
-  @Bean
-  public Object httpClientPoolMetrics(
-      ConnectionProvider connectionProvider, ObjectProvider<MeterRegistry> registryProvider) {
-    MeterRegistry registry = registryProvider.getIfAvailable();
-    if (registry == null) {
-      log.debug("[HttpClient] MeterRegistry 未配置，跳过连接池监控指标注册");
-      return new Object();
-    }
-
-    Tags tags = Tags.of("pool", "ydsz-gateway-pool");
-
-    // 活跃连接数
-    registry.gauge(
-        "ydsz_gateway_httpclient_pool_active",
-        tags,
-        activeConnectionsRef,
-        AtomicInteger::doubleValue);
-    // 等待连接数
-    registry.gauge(
-        "ydsz_gateway_httpclient_pool_pending",
-        tags,
-        pendingConnectionsRef,
-        AtomicInteger::doubleValue);
-    // 可用连接数 = 最大连接数 - 活跃连接数
-    AtomicInteger availableRef = new AtomicInteger(maxConnections);
-    registry.gauge(
-        "ydsz_gateway_httpclient_pool_available",
-        tags,
-        availableRef,
-        ref -> maxConnections - activeConnectionsRef.get());
-
-    log.info("[HttpClient] 连接池 Prometheus 指标已注册");
-    return new Object();
   }
 }

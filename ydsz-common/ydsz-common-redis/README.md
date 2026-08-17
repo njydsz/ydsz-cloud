@@ -2,7 +2,7 @@
 
 > Redis 服务增强与基础数据层公共模块（L4 基础数据层）
 
-提供 Redis 操作门面、按数据类型拆分的 Ops 子组件（String / Hash / Collection / Geo / Pipeline / Pub-Sub / Stream / 事务）、分布式限流器（固定窗口 / 滑动窗口 / 令牌桶）、布隆过滤器、延迟队列、缓存防护（防穿透 / 防击穿 / 防雪崩）、雪花 ID 生成器、注解驱动缓存、租户级 Key 前缀器、可观测性指标等开箱即用能力，是所有业务模块缓存与分布式协调的统一基座。
+提供按数据类型拆分的 Ops 子组件（String / Hash / Collection / Geo / Pipeline / Pub-Sub / Stream / 事务）、分布式限流器（固定窗口 / 滑动窗口 / 令牌桶）、注解驱动缓存、租户级 Key 前缀器、可观测性指标等开箱即用能力，是所有业务模块缓存与分布式协调的统一基座。
 
 ## 模块定位
 
@@ -10,7 +10,7 @@
 |---|---|
 | **层级** | L4 基础数据层 |
 | **类型** | 公共依赖库（不独立部署） |
-| **作用** | 提供 Redis 操作门面、分布式限流 / 布隆过滤器 / 延迟队列 / 缓存防护 / 雪花 ID / 注解缓存等能力 |
+| **作用** | 提供 Redis 操作封装、分布式限流、注解缓存等能力 |
 | **依赖** | common-core、common-json、common-util；spring-boot-starter-data-redis、commons-pool2、lettuce-core；可选依赖 jedis、micrometer-core、redisson-spring-boot-starter、spring-boot-health |
 | **版本** | 1.0.0 |
 
@@ -20,7 +20,6 @@
 
 | 类 | 说明 |
 |---|---|
-| `RedisService` | Redis 服务门面类，聚合所有 Ops 子组件，向后兼容老代码 |
 | `RedisStringOps` | String + Bitmap 操作（含 key prefix 拼接、慢操作检测） |
 | `RedisHashOps` | Hash 操作 |
 | `RedisCollectionOps` | Set + List + ZSet 操作 |
@@ -30,7 +29,9 @@
 | `RedisTransactionOps` | 事务操作（MULTI / EXEC / DISCARD） |
 | `RedisPubSubOps` | 发布订阅 |
 | `RedisStreamOps` | Redis Stream 消息流 |
-| `BatchRedisOperations` | 批量操作接口（Pipeline + Transaction 组合） |
+| `CacheProvider` | 缓存提供者接口（供多级缓存使用） |
+
+> 注：9 类 Ops 组件可直接注入使用，无统一的 RedisService 门面。
 
 ### 2. 分布式限流器
 
@@ -48,43 +49,24 @@
 
 ### 3. 布隆过滤器
 
-| 类 | 说明 |
-|---|---|
-| `RedisBloomFilter` | 基于 Redis BitMap 的分布式布隆过滤器，MurmurHash 3 多哈希、Lua 原子操作 |
-| `BloomFilterService` | 布隆过滤器服务接口（解耦 Redisson / BitMap 实现） |
-
-特性：可配置预期元素数与误判率、自动计算最优位数组大小和哈希函数数量、支持批量 add / mightContain。
+> 说明：布隆过滤器能力当前**未提供实现**（历史版本曾有 `RedisBloomFilter` / `BloomFilterService`，已移除）。如需使用请基于 BitMap + Lua 自行封装。
 
 ### 4. 延迟队列
 
-| 类 | 说明 |
-|---|---|
-| `RedisDelayedQueue` | 基于 Redis ZSET 的分布式延时队列，score 为到期时间戳 |
-| `DelayedTask` | 延迟任务载体（payload / taskId / retryCount） |
-
-特性：毫秒级精度、ZREM 原子移除保证不重复消费、SETNX 消费者侧去重、支持指数退避重试。
+> 说明：延迟队列能力当前**未提供实现**（历史版本曾有 `RedisDelayedQueue` / `DelayedTask`，已移除）。建议基于 ZSET 或 RocketMQ 延时消息实现。
 
 ### 5. 缓存防护
 
 | 类 | 说明 |
 |---|---|
-| `RedisCacheGuard` | 缓存防护工具类，提供防穿透 / 防击穿 / 防雪崩三重保护 |
-| `NullValueCacheHelper` | 空值缓存助手 |
+| `NullValueCacheHelper` | 空值缓存助手（`__NULL__` 占位，TTL 由 `nullValueTtlSeconds` 控制） |
+| `RedisRateLimiter` | 三算法限流器（供防击穿场景配合使用） |
 
-三大防护策略：
-
-- **防穿透**：布隆过滤器模式 + 空值缓存（`__NULL__` 占位），TTL 由 `nullValueTtlSeconds` 控制
-- **防击穿**：分布式锁模式 + WatchDog 续期机制（内嵌实现，避免与 ydsz-common-lock 循环依赖），自旋等待持锁线程回填
-- **防雪崩**：随机 TTL，在基础 TTL 上叠加随机扰动
+缓存防护策略由 `@YdszCacheable` 注解切面（`YdszCacheableAspect`）承载：防穿透（空值缓存）、防击穿（分布式互斥锁）、防雪崩（随机 TTL）。
 
 ### 6. 雪花 ID 生成器
 
-| 类 | 说明 |
-|---|---|
-| `RedisSnowflakeIdGenerator` | 基于 Twitter Snowflake 算法的分布式 ID 生成器（41 位时间戳 + 10 位 workerId + 12 位序列号） |
-| `RedisWorkerIdRegistry` | Redis 协调的 workerId 注册中心（INCR 全局递增分配 + 心跳续约 + PreDestroy 释放） |
-
-特性：全局唯一、趋势递增、单实例峰值 4096×1000 = 409.6 万 QPS、Redis 不可用时降级为本地序列。
+> 说明：Redis 版雪花 ID（`RedisSnowflakeIdGenerator` / `RedisWorkerIdRegistry`）**已移除**。WorkerId 分配由 `ydsz-common-util` 的 `WorkerIdAllocator`（SPI：PodOrdinal → IpHash）承担。
 
 ### 7. 注解驱动缓存
 
@@ -126,7 +108,6 @@
 各子组件可单独配置故障策略，未单独配置时使用全局 `failurePolicy`（默认 FAIL_OPEN）：
 
 - 限流器默认 `FAIL_CLOSED`（安全场景推荐）
-- 布隆过滤器默认 `FAIL_OPEN`（放行可能导致穿透）
 
 ### 11. 可观测性
 
@@ -171,18 +152,14 @@ ydsz:
     failure-policy: FAIL_OPEN
 ```
 
-### 3. 使用 RedisService 或子组件
+### 3. 使用 Ops 子组件
 
 ```java
-import com.njydsz.common.redis.service.RedisService;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 
-// 通过门面类（向后兼容）
-redisService.set("key", "value");
-String value = redisService.get("key", String.class);
-
-// 直接注入子组件（推荐新代码使用）
+// 直接注入子组件（推荐）
 stringOps.set("key", "value");
+String value = stringOps.get("key", String.class);
 ```
 
 ## 配置项
@@ -246,36 +223,7 @@ boolean allowed = rateLimiter.tryAcquireSlidingWindow(
     "api:user:10086", 100, Duration.ofMinutes(1));
 ```
 
-### 2. 布隆过滤器防穿透
-
-```java
-import com.njydsz.common.redis.service.RedisBloomFilter;
-
-// 添加元素
-bloomFilter.add("user:bloom:1", "user123");
-
-// 检查是否存在（可能误判）
-boolean mightExist = bloomFilter.mightContain("user:bloom:1", "user123");
-```
-
-### 3. 延迟队列
-
-```java
-import java.time.Duration;
-import com.njydsz.common.redis.service.RedisDelayedQueue;
-
-// 投递延时任务（30 分钟后到期）
-String taskId = delayedQueue.schedule(
-    "order:pay:timeout",
-    "orderId=10086",
-    Duration.ofMinutes(30)
-);
-
-// 拉取已到期任务
-DelayedTask task = delayedQueue.poll("order:pay:timeout", Duration.ofSeconds(5));
-```
-
-### 4. 注解驱动缓存
+### 2. 注解驱动缓存（防击穿/防穿透/防雪崩）
 
 ```java
 import com.njydsz.common.redis.annotation.YdszCacheable;
@@ -286,29 +234,15 @@ public User getUserById(Long userId) {
 }
 ```
 
-### 5. 缓存防护（防击穿）
-
-```java
-import com.njydsz.common.redis.service.RedisCacheGuard;
-
-Product product = cacheGuard.antiBreakdown(
-    "product:hot:" + id,
-    300,
-    () -> productService.getById(id),
-    Product.class
-);
-```
+> 布隆过滤器、延迟队列、Redis 版雪花 ID 等能力已移除，不再提供使用示例。
 
 ## SPI 扩展点
 
 | SPI 接口 | 用途 | 实现方 |
 |---|---|---|
 | `RedisKeyPrefixProvider` | Redis Key 前缀提供者接口，业务模块可自定义 Key 前缀来源 | 业务模块自定义实现 |
-| `BloomFilterService` | 布隆过滤器服务接口，解耦 BitMap 与 Redisson 实现 | `RedisBloomFilter`（BitMap 实现） |
-| `BatchRedisOperations` | 批量操作接口（Pipeline + Transaction 组合） | `RedisService` 实现 |
-| `WorkerIdRegistry` | workerId 注册中心 SPI（由 common-util 定义，本模块提供 Redis 实现） | `RedisWorkerIdRegistry` |
 | `RedisClientType` | 客户端类型枚举 SPI，扩展新的客户端实现 | `JEDIS` / `LETTUCE` |
-| `FailOpenPolicy` | 故障处理策略 SPI（FAIL_OPEN / FAIL_CLOSED / FAIL_THROW） | 限流器 / 布隆过滤器 / 全局策略 |
+| `FailOpenPolicy` | 故障处理策略 SPI（FAIL_OPEN / FAIL_CLOSED / FAIL_THROW） | 限流器 / 全局策略 |
 
 ## 健康检查
 
@@ -334,11 +268,11 @@ Product product = cacheGuard.antiBreakdown(
 
 1. **RedisTemplate 不再默认代理**：自 v1.0.0 起 `RedisTemplate` 不再被 AOP 代理包装，保持基础数据访问 Bean 的纯净性。如需重试能力，注入 `retryableRedisTemplate` 或开启 `ydsz.redis.retry.proxy-template=true`。
 2. **重试仅读操作**：`retry.retry-on-write` 默认 `false`，避免写操作重复执行导致数据不一致。开启前需评估幂等性。
-3. **缓存防护锁的循环依赖规避**：`RedisCacheGuard` 内嵌实现 WatchDog 续期机制（与 ydsz-common-lock 相同设计模式），不依赖 ydsz-common-lock，避免循环依赖。
+3. **缓存防护**：防击穿/防穿透/防雪崩由 `@YdszCacheable` 切面（`YdszCacheableAspect`）承载，通过 `ydsz-common-lock` 的分布式锁互斥回填。
 4. **租户前缀只作用于 key**：`TenantRedisKeyPrefixer` 通过包装 `RedisSerializer` 实现，仅对 key 序列化生效，value 不受影响；超级管理员（tenantId = null 或 "0"）不添加前缀。
-5. **布隆过滤器故障策略**：默认 `FAIL_OPEN`（返回 false 放行，可能导致穿透），安全敏感场景建议改为 `FAIL_CLOSED` 或 `FAIL_THROW`。
+5. **限流器故障策略**：默认 `FAIL_CLOSED`（拒绝放行），安全敏感场景建议保持。
 6. **限流器故障策略**：默认 `FAIL_CLOSED`（拒绝所有请求，安全场景推荐），与全局默认 `FAIL_OPEN` 不同。
-7. **雪花 ID 降级**：Redis 不可用时 `RedisSnowflakeIdGenerator` 降级为本地序列生成，但 workerId 唯一性不再保证，恢复后需通过心跳续约重新分配。
+7. **雪花 ID**：WorkerId 分配由 `ydsz-common-util` 的 `WorkerIdAllocator` 承担（PodOrdinal → IpHash 链），Redis 模块不再提供 ID 生成能力。
 8. **Key 模板管理**：`RedisKeysEnum` 中 Key 定义不可扩展，业务模块如需自定义 Key 前缀和过期时间，可通过 `RedisStringOps` 直接操作或自定义 Key 常量类。
 
 ## 变更记录

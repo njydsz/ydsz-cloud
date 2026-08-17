@@ -49,6 +49,9 @@ public final class GatewayConstants {
   /** 租户 ID 请求头（委托 {@link DataPermissionHeaderConstants#X_TENANT_ID}） */
   public static final String HEADER_TENANT_ID = DataPermissionHeaderConstants.X_TENANT_ID;
 
+  /** 应用 ID 请求头（客户端/接入方标识，用于应用级限流与审计） */
+  public static final String HEADER_APP_ID = "X-App-Id";
+
   /** 请求唯一标识请求头（委托 {@link HeaderConstants#X_REQUEST_ID}） */
   public static final String HEADER_REQUEST_ID = HeaderConstants.X_REQUEST_ID;
 }

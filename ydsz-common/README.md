@@ -14,7 +14,7 @@
 
 ## L1-L6 分层架构
 
-本模块按 DDD 分层组织 **28 个子模块**（L1-L6），依赖方向严格自下而上（上层依赖下层，不可反向）：
+本模块按 DDD 分层组织 **30 个子模块**（L1-L6），依赖方向严格自下而上（上层依赖下层，不可反向）：
 
 ```
 L1 基础设施层  → ydsz-common-core
@@ -28,8 +28,7 @@ L5 业务服务层  → ydsz-common-auth, ydsz-common-safe, ydsz-common-feign,
                  ydsz-common-netty, ydsz-common-socket,
                  ydsz-common-search, ydsz-common-event,
                  ydsz-common-config, ydsz-common-seata, ydsz-common-sentry
-L6 应用层     → ydsz-common-base, ydsz-common-web
-                 （ydsz-common-app 已移出默认构建，经 -P app-profile 激活）
+L6 应用层     → ydsz-common-base, ydsz-common-web, ydsz-common-app
 ```
 
 ### 子模块职责速查
@@ -39,24 +38,24 @@ L6 应用层     → ydsz-common-base, ydsz-common-web
 | 层级 | 模块 | 职责 |
 |---|---|---|
 | L1 | [common-core](ydsz-common-core/README.md) | 统一响应/请求模型、TraceId、请求上下文（TTL）、雪花 ID、Spring 工具封装、脚本引擎等工具 |
-| L2 | [common-util](ydsz-common-util/README.md) | 69 个工具类（JSON/加密/HTTP/IP/Spring/雪花 ID/Bean 拷贝 等） |
+| L2 | [common-util](ydsz-common-util/README.md) | 67 个类（JSON/加密/HTTP/IP/Spring/雪花 ID/Bean 拷贝 等工具） |
 | L2 | [common-json](ydsz-common-json/README.md) | JSON 引擎（Jackson 兼容门面）、JsonPatch、JsonHttpMessageConverter、Jackson 注解桥 |
 | L3 | [common-domain](ydsz-common-domain/README.md) | PageQuery 分页、TreeBuilder 树形结构、TypedId 类型化 ID、领域事件定义 |
 | L3 | [common-exception](ydsz-common-exception/README.md) | 统一异常体系、错误码管理、ProblemDetail (RFC 7807)、i18n、异常构建器 |
-| L4 | [common-jdbc](ydsz-common-jdbc/README.md) | MyBatis-Plus 增强、自研动态数据源、行/列权限、逻辑删除、乐观锁、租户隔离、字段填充、SQL 安全拦截 |
+| L4 | [common-jdbc](ydsz-common-jdbc/README.md) | MyBatis-Plus 增强、自研动态数据源、行/列权限、逻辑删除（MP @TableLogic）/乐观锁（MP 内置）、字段填充、SQL 安全拦截 |
 | L4 | [common-redis](ydsz-common-redis/README.md) | Redis 门面 ops（String/Hash/Geo/Stream/Pipeline/PubSub/事务）、三算法限流器、多级缓存提供者 |
 | L4 | [common-lock](ydsz-common-lock/README.md) | 分布式锁（Reentrant/Fair/Multi + Fallback）、@Idempotent 幂等（fail-open 可配置）、@YdszDistributedLock、WatchDog 续期、读写锁、信号量 |
 | L4 | [common-cache](ydsz-common-cache/README.md) | 本地缓存框架（Window-TinyLFU/Striped 两种策略）、WriteThrough 回写、过期清理、统计 |
 | L4 | [common-thread](ydsz-common-thread/README.md) | 共享线程池自动配置、线程池监控、健康检查、Nacos 热更新 |
 | L4 | [common-tenant](ydsz-common-tenant/README.md) | 多租户隔离（SINGLE/MULTI/SCHEMA）、SQL 改写（含 CTE/标量子查询）、全链路上下文传播、fail-closed 防护 |
 | L5 | [common-auth](ydsz-common-auth/README.md) | JWT、RBAC 4 注解 + 3 切面、@DataScope 数据权限（fail-closed）、权限缓存热更新 |
-| L5 | [common-safe](ydsz-common-safe/README.md) | @SensitiveData 脱敏（fail-closed）、@Sensitive、@RateLimit、CSRF、SQL 注入防护、验证码、安全事件告警、API 签名（query 入签） |
+| L5 | [common-safe](ydsz-common-safe/README.md) | @SensitiveData 脱敏（fail-closed）、@Sensitive、@RateLimit、CSRF、SQL 注入防护、安全事件告警、API 签名（query 入签）、SSRF 防护 |
 | L5 | [common-feign](ydsz-common-feign/README.md) | OpenFeign 增强、统一编解码、ResponseUnwrapDecoder、Resilience4j 熔断（参数可配置）、动态客户端 |
 | L5 | [common-audit](ydsz-common-audit/README.md) | @OperationLog + @Audit、异步队列批量落库、时间分表（日/月/年）、磁盘兜底 |
 | L5 | [common-file](ydsz-common-file/README.md) | 7 种存储平台、分片上传、断点续传、文件去重（秒传）、文件类型安全检测 |
-| L5 | [common-notify](ydsz-common-notify/README.md) | 5 种通知渠道（邮件/短信/企微/钉钉/飞书）、SpEL 模板引擎、重试队列、DKIM 签名 |
-| L5 | [common-queue](ydsz-common-queue/README.md) | 6 种 MQ（Redis×3/Kafka/RocketMQ/RabbitMQ/ActiveMQ）、死信队列、消息轨迹、去重 |
-| L5 | [common-docs](ydsz-common-docs/README.md) | 文档解析（PDF/Word/Excel/PPT 等）、预处理 Pipeline、安全扫描、PII 检测、文本水印、PDF 脱敏、OCR |
+| L5 | [common-notify](ydsz-common-notify/README.md) | 6 种通知渠道（邮件/短信/企微/钉钉/飞书/站内）、SpEL 模板引擎、重试队列、DKIM 签名 |
+| L5 | [common-queue](ydsz-common-queue/README.md) | 6 种 MQ（Redis Stream/List/PubSub + Kafka/RocketMQ/RabbitMQ）、死信队列、消息轨迹、去重 |
+| L5 | [common-docs](ydsz-common-docs/README.md) | 文档解析（PDF/Word/Excel/PPT 等 8 种格式）、预处理 Pipeline、安全扫描、PII 检测、OCR |
 | L5 | [common-excel](ydsz-common-excel/README.md) | 高性能 Excel 读写（SAX 流式/SXSSF 大文件）、模板填充、公式注入防护、无类型全 Sheet 读取 |
 | L5 | [common-netty](ydsz-common-netty/README.md) | Netty TCP Server/Client 抽象、断线重连、心跳检测、SSL/TLS、LengthField 编解码 |
 | L5 | [common-socket](ydsz-common-socket/README.md) | WebSocket 实时推送、集群广播、离线消息存储、认证拦截、消息限流 |
@@ -67,17 +66,17 @@ L6 应用层     → ydsz-common-base, ydsz-common-web
 | L5 | [common-sentry](ydsz-common-sentry/README.md) | 统一系统指标监控（Micrometer）、告警事件、日志上报、SLA 指标、链路追踪桥 |
 | L6 | [common-base](ydsz-common-base/README.md) | HTTP 公共基座（CORS/时区/I18n/安全头/TraceId/请求日志/全局响应包装/OpenAPI） |
 | L6 | [common-web](ydsz-common-web/README.md) | **PC Web 端基座**（继承 base，叠加 Spring Security 异常处理 + WebAuthFilter/Session 无状态） |
-| L6 | [common-app](ydsz-common-app/README.md) | **移动端 App 基座**（已移出默认构建，经 `-P app-profile` 激活；暂无可消费方） |
+| L6 | [common-app](ydsz-common-app/README.md) | **移动端 App 基座**（默认构建包含；暂无可消费方） |
 
 > **注意**：`common-web` 与 `common-app` 是两个**平行**的应用层入口，分别面向 PC Web 服务和移动端 App。后端微服务统一使用 `common-web`，`common-app` 仅用于未来移动端项目。
 
 ## 自动配置机制
 
-所有 28 个子模块（默认构建）统一使用 Spring Boot 3+ 的 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 机制自动装配（**不使用** `spring.factories`）。
+所有 30 个子模块统一使用 Spring Boot 3+ 的 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 机制自动装配（**不使用** `spring.factories`）。
 
 各服务的启动类通过 `@SpringBootApplication(scanBasePackages = {"com.njydsz.{service}", "com.njydsz.common"})` 扫描 common 包，激活自动配置。
 
-> **例外**：`ydsz-gateway` 为 reactive 栈（WebFlux），**不依赖** `common-web`（servlet 栈），只挑选 `common-core` / `common-exception` / `common-auth` 三个细粒度子模块。
+> **例外**：`ydsz-gateway` 为 reactive 栈（WebFlux），**不依赖** `common-web`（servlet 栈），按需挑选 11 个细粒度子模块（core / util / base / exception / auth / safe / cache / sentry / notify / audit / thread）。
 
 ## SPI 扩展点速查表
 
@@ -97,7 +96,7 @@ ydsz-common 不使用 Dubbo `@SPI` 注解，所有扩展点通过三种 Spring �
 |---|---|---|---|
 | common-core | `TraceIdSupplier` | TraceId 生成策略 | `@ConditionalOnMissingBean` |
 | common-core | `FeatureFlagService` | 特性开关后端 | `@ConditionalOnMissingBean` |
-| common-util | `WorkerIdRegistry` **SPI** | 雪花 WorkerId 注册中心（Redis/ZK/ETCD/Nacos） | `@Component` |
+| common-util | `WorkerIdAllocator` **SPI** | 雪花 WorkerId 分配策略（PodOrdinal → IpHash） | `@Component` |
 | common-util | `PasswordEncoder` | 密码编码器（BCrypt/SCrypt/Argon2） | `@Component` |
 | common-json | `JsonModule` | JSON 编解码模块 | `List<JsonModule>` 自动收集 |
 | common-json | `JsonSerializer` / `JsonDeserializer` | 自定义序列化器 | `@Component` |
@@ -108,7 +107,6 @@ ydsz-common 不使用 Dubbo `@SPI` 注解，所有扩展点通过三种 Spring �
 
 | 子模块 | 扩展点接口 | 职责 | 注册方式 |
 |---|---|---|---|
-| common-domain | `EventStore` **SPI** | 领域事件存储（默认 OutboxEventStore） | `@ConditionalOnMissingBean` |
 | common-domain | `TreeNodeProvider` **SPI** | 树节点懒加载 | `@Component` |
 | common-domain | `Repository` | DDD 聚合根仓储 | `@Component` |
 | common-domain | `Specification` | 规约模式（可组合业务规则） | `@Component` |
@@ -119,7 +117,6 @@ ydsz-common 不使用 Dubbo `@SPI` 注解，所有扩展点通过三种 Spring �
 | 子模块 | 扩展点接口 | 职责 | 注册方式 |
 |---|---|---|---|
 | common-jdbc | `DataScopeIdExpander` | 数据权限范围 ID 扩展（公司/部门/项目级联） | `@Component` |
-| common-jdbc | `DataSourceLoadBalanceStrategy` | 数据源负载均衡策略 | `@ConditionalOnMissingBean` |
 | common-jdbc | `FieldFillHandler` | MyBatis-Plus 审计字段填充 | `@ConditionalOnMissingBean` |
 | common-redis | `RedisKeyPrefixProvider` | Redis Key 前缀自定义 | `@ConditionalOnMissingBean` |
 | common-lock | `LockStrategy` | 分布式锁策略工厂 | `@ConditionalOnMissingBean` |
@@ -136,7 +133,6 @@ ydsz-common 不使用 Dubbo `@SPI` 注解，所有扩展点通过三种 Spring �
 
 | 子模块 | 扩展点接口 | 职责 | 注册方式 |
 |---|---|---|---|
-| common-auth | `AuthenticationProvider` **SPI** | 认证提供者（JWT/自定义） | `@ConditionalOnBean` |
 | common-auth | `AuthHandler` | 认证信息解析（Web/App） | `@Component` |
 | common-auth | `DataPermissionResolver` | 数据权限解析 | `@ConditionalOnMissingBean` |
 | common-auth | `DataPermissionCustomSqlProvider` **SPI** | 数据权限动态 SQL | `@Component`（支持 `getOrder()`） |
@@ -147,14 +143,13 @@ ydsz-common 不使用 Dubbo `@SPI` 注解，所有扩展点通过三种 Spring �
 | common-auth | `PermissionChangeListener` | 权限变更回调 | `List<PermissionChangeListener>` 自动收集 |
 | common-auth | `TokenService` | Token 生成/校验/刷新 | `@ConditionalOnMissingBean` |
 | common-auth | `AuthMetrics` / `PermissionMetrics` | 认证鉴权指标采集 | `@Component` |
-| common-safe | `CaptchaStore` | 验证码存储（默认本地内存） | `@ConditionalOnMissingBean` |
-| common-safe | `CaptchaGenerator` | 验证码生成器（图形/算术/滑块） | `@ConditionalOnMissingBean` |
+| common-safe | `CaptchaGenerator` | 验证码生成器 | `@ConditionalOnMissingBean` |
 | common-safe | `CsrfTokenRepository` | CSRF Token 存储 | `@ConditionalOnMissingBean` |
 | common-safe | `CsrfTokenGenerator` | CSRF Token 生成器 | `@ConditionalOnMissingBean` |
 | common-safe | `SecurityAlertListener` | 安全事件告警回调 | `List<SecurityAlertListener>` 自动收集 |
 | common-safe | `RateLimitRuleProvider` **SPI** | 限流规则提供者（动态加载） | `@ConditionalOnMissingBean` |
 | common-safe | `RateLimitRuleListener` | 限流规则热更新回调 | `@Component` |
-| common-safe | `RateLimiter` | 限流算法（令牌桶/滑动窗口/漏桶） | `@Component` |
+| common-safe | `RateLimiter` | 限流算法（令牌桶/并发限制） | `@Component` |
 | common-safe | `ClusterRateLimiter` | 集群限流器 | `@Component` |
 | common-feign | `FeignTraceHandler` **SPI** | Feign 链路追踪（SkyWalking/Zipkin） | `@Component` |
 | common-feign | `FeignCircuitBreakerStrategy` | Feign 熔断器（Resilience4j/Sentinel） | `@ConditionalOnMissingBean` |
@@ -163,10 +158,9 @@ ydsz-common 不使用 Dubbo `@SPI` 注解，所有扩展点通过三种 Spring �
 
 | 子模块 | 扩展点接口 | 职责 | 注册方式 |
 |---|---|---|---|
-| common-audit | `AuditStorage` **SPI** | 审计日志存储（JDBC/ELK/MQ） | `@ConditionalOnMissingBean` |
-| common-audit | `AuditRecorder` | 审计写入策略（异步/Disruptor） | `@ConditionalOnMissingBean` |
-| common-audit | `TableShardingStrategy` | 审计分表策略（日/月/年） | `@ConditionalOnMissingBean` |
-| common-audit | `DiffValueFormatter` | 字段差异格式化 | `@Component` |
+| common-audit | `AuditWriter` | 审计日志存储抽象（JDBC 默认） | `@ConditionalOnMissingBean` |
+| common-audit | `AuditRecorder` | 审计写入策略（同步/异步） | `@ConditionalOnMissingBean` |
+| common-audit | `TableNameResolver` | 审计分表解析（日/月/年） | `@ConditionalOnMissingBean` |
 | common-file | `IFileStorageProvider` | 文件存储工厂（Local/MinIO/S3/OSS/COS/OBS/Qiniu） | `@ConditionalOnMissingBean` |
 | common-file | `CheckpointStore` / `MultipartContextStore` | 分片上传断点续传存储 | `@ConditionalOnMissingBean` |
 | common-file | `CheckpointService` | 分片上传协调 | `@ConditionalOnMissingBean` |
@@ -187,17 +181,14 @@ ydsz-common 不使用 Dubbo `@SPI` 注解，所有扩展点通过三种 Spring �
 
 | 子模块 | 扩展点接口 | 职责 | 注册方式 |
 |---|---|---|---|
-| common-docs | `DocumentParser` | 文档解析器（PDF/Word/Excel/PPT） | `DocumentParserRegistry` 自动收集 |
+| common-docs | `DocumentParser` | 文档解析器（PDF/Word/Excel/PPT 等 8 种） | `DocumentParserRegistry` 自动收集 |
 | common-docs | `DocumentPreprocessor` | 文档预处理（OCR/去噪） | `@Component` |
 | common-docs | `DocumentSecurityScanner` | 文档安全扫描 | `@Component` |
-| common-docs | `DocumentRedactor` | 文档脱敏 | `@Component` |
 | common-docs | `PiiDetector` | PII 检测 | `PiiDetectorComposite` 自动聚合 |
-| common-docs | `WatermarkProvider` | 文档水印 | `@Component` |
-| common-docs | `OcrEngine` | OCR 引擎（Tesseract/PaddleOCR/百度） | `@ConditionalOnMissingBean` |
+| common-docs | `OcrEngine` | OCR 引擎（Tesseract 等） | `@ConditionalOnMissingBean` |
 | common-excel | `CellValueConverter` **SPI** | 单元格值转换器（支持 `priority()`） | `ConverterRegistry.registerCustomConverter()` |
 | common-excel | `ReadHandler` / `ReadListener` | Excel 读取回调 | `@Component` |
-| common-excel | `TabularRowMapper` / `ColumnarRowMapper` | 行映射器 | `@Component` |
-| common-excel | `TabularWriteListener` / `TabularReadListener` | Excel 写入/读取监听器 | `@Component` |
+| common-excel | `TabularRowMapper` | 行映射器 | `@Component` |
 | common-netty | `ChannelEventListener` | Channel 事件回调 | `List<ChannelEventListener>` 自动收集 |
 | common-socket | `MessageSerializer` | WebSocket 消息序列化（JSON/Protobuf） | `@ConditionalOnMissingBean` |
 | common-socket | `OfflineMessageStore` **SPI** | 离线消息存储（Redis/DB） | `@ConditionalOnMissingBean` |
@@ -205,11 +196,10 @@ ydsz-common 不使用 Dubbo `@SPI` 注解，所有扩展点通过三种 Spring �
 | common-socket | `MessageFilter` | 消息过滤器 | `List<MessageFilter>` 自动收集 |
 | common-socket | `StompMessageInterceptor` | STOMP 拦截器 | `@ConditionalOnMissingBean` |
 | common-search | `SearchProvider<T>` **SPI** | 业务实体 → 索引文档转换 | `List<SearchProvider<?>>` 自动收集 |
-| common-search | `SearchEngine` | 搜索引擎（PG/ES/OpenSearch） | `@ConditionalOnMissingBean` |
+| common-search | `SearchStrategy` | 搜索策略（PG 全文 / 内存） | `@ConditionalOnMissingBean` |
 | common-search | `ContentExtractor` **SPI** | 文件内容 → 纯文本 | `ObjectProvider<ContentExtractor>` |
 | common-search | `ContentIndexer` | 内容索引器 | `@ConditionalOnMissingBean` |
-| common-event | `EventPublishGateway` **SPI** | 事件投递网关（RocketMQ/Redis Stream/Kafka） | `@ConditionalOnMissingBean` |
-| common-event | `OutboxEventStore` | Outbox 事件存储（实现 `EventStore`） | `@ConditionalOnMissingBean` |
+| common-event | `EventPublishGateway` **SPI** | 事件投递网关（RocketMQ / Noop） | `@ConditionalOnMissingBean` |
 | common-config | `ConfigChangeListener` **SPI** | 配置变更回调（Spring Cloud RefreshEvent） | `ObjectProvider<List<ConfigChangeListener>>` |
 | common-seata | `TccTransactionLogStore` | TCC 事务日志存储（内存/Redis/DB） | `@ConditionalOnMissingBean` |
 | common-seata | `XidPropagator` | XID 跨服务传播 | `@ConditionalOnMissingBean` |
@@ -274,22 +264,21 @@ deploy\windows\scripts\import-nacos-config.bat ydsz dev
 | `ydsz.jwt` / `ydsz.security` / `ydsz.kms` / `ydsz.sentry` | JWT、IP 白名单、KMS、Sentry |
 | `jasypt.encryptor` | 配置加密 |
 
-**单一来源原则**：所有 10 个部署单元的公共配置，**只能**在 `deploy/common/nacos/ydsz-common.yaml` 维护。各服务 `bootstrap.yml` 通过 `spring.cloud.nacos.config.shared-configs` 引用此 dataId，服务特有配置才写到 `ydsz-{service}-{env}.yaml`。
+**单一来源原则**：所有 9 个部署单元的公共配置，**只能**在 `deploy/common/nacos/ydsz-common.yaml` 维护。各服务 `bootstrap.yml` 通过 `spring.cloud.nacos.config.shared-configs` 引用此 dataId，服务特有配置才写到 `ydsz-{service}-{env}.yaml`。
 
-## 10 个部署单元清单
+## 9 个部署单元清单
 
 | 序号 | 服务名 | 端口 | 启动类 scanBasePackages | 依赖的 common 子模块 |
 |---|---|---|---|---|
-| 1 | ydsz-gateway | 9000 | `com.njydsz.gateway`（裸 @SpringBootApplication） | common-core / common-exception / common-auth |
-| 2 | ydsz-userinfo | 9001 | userinfo + common | 全量（通过 common-web） |
-| 3 | ydsz-system | 9002 | system + common | 全量（通过 common-web） |
-| 4 | ydsz-project | 9003 | project + common + literule（含 sales/finance 合并域） | 全量（通过 common-web） |
+| 1 | ydsz-gateway | 9000 | `com.njydsz.gateway`（裸 @SpringBootApplication） | 11 个细粒度子模块（core/util/base/exception/auth/safe/cache/sentry/notify/audit/thread） |
+| 2 | ydsz-system | 9001 | system + common | 全量（通过 common-web） |
+| 3 | ydsz-userinfo | 9002 | userinfo + common | 全量（通过 common-web） |
+| 4 | ydsz-nextwiki | 9003 | nextwiki + common | 全量（通过 common-web） |
 | 5 | ydsz-message | 9004 | message + common | 全量（通过 common-web） |
-| 6 | ydsz-cronjob | 9005 | cronjob + common | 全量（通过 common-web） |
-| 7 | ydsz-workflow | 9006 | workflow + common | 全量（通过 common-web） |
-| 8 | ydsz-agent | 9007 | agent + common | 全量（通过 common-web） |
-| 9 | ydsz-nextwiki | 9008 | nextwiki + common | 全量（通过 common-web） |
-| 10 | ydsz-literule | 9009 | literule + common | 全量（通过 common-web） |
+| 6 | ydsz-workflow | 9005 | workflow + common | 全量（通过 common-web） |
+| 7 | ydsz-cronjob | 9006 | cronjob + common | 全量（通过 common-web） |
+| 8 | ydsz-literule | 9007 | literule + common | 全量（通过 common-web） |
+| 9 | ydsz-agent | 9008 | agent + common | 全量（通过 common-web） |
 
 > **nextwiki** 和 **literule** 均为独立部署的微服务，拥有独立端口和 Web 控制台，注册到 Nacos。同时通过 Feign 接口（`FileQueryClient` / `LiteRuleClient`）为其他业务模块提供能力。
 
@@ -333,7 +322,7 @@ ydsz-common/
 ## 构建
 
 ```bash
-# 仅构建 common 模块（含所有 28 个子模块）
+# 仅构建 common 模块（含所有 30 个子模块）
 cd ydsz-cloud
 mvn -pl ydsz-common -am clean install
 
@@ -373,5 +362,5 @@ mvn test
 
 ---
 
-> 任何对本模块的修改（注解 / 切面 / Feign / 工具类）都会影响所有 10 个部署单元，
+> 任何对本模块的修改（注解 / 切面 / Feign / 工具类）都会影响所有 9 个部署单元，
 > 必须经过充分测试与跨服务联调验证。

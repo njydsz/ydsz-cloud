@@ -76,32 +76,28 @@ YDSZ 认证与授权框架 — JWT Token 服务、RBAC 权限模型（菜单/按
 | `ColumnPermissionResolver` / `RedisRoleColumnPermissionResolver` | 列权限解析器 |
 | `ColumnPermission` / `ColumnPermissionInfo` / `ColumnScopeInfo` | 列权限模型（可见列 / 可编辑列） |
 | `ColumnDesensitizationService` | 列脱敏服务（按角色缓存脱敏规则） |
-| `AuthColPermissionSigner`（新增） | 列权限 HMAC-SHA256 签名器（防篡改，恒定时间比较） |
-| `AuthDigestUtils`（新增） | 摘要工具（`sha256Hex` / `sha256Bytes`，统一消除重复实现） |
+| `ColumnScopeAware` | 列范围感知接口 |
 
-### 8. 权限层级（新增）
+### 8. 权限层级
 
 | 类 | 说明 |
 |---|---|
-| `PermissionHierarchy` | 权限继承层级管理器（拥有父权限自动拥有子权限，O(1) Map 查找 + 递归） |
+| `PermissionHierarchyService` | 权限继承层级管理（`registerPermission(tenantId, code, ...)` 注册继承关系，`hasPermission` 自动递归检查父级权限） |
 
-支持权限树继承：拥有 `sys:user` 自动拥有 `sys:user:list`、`sys:user:add` 等。通过 `register(parent, children...)` 注册继承关系，`hasPermission` 自动递归检查父级权限。
-
-### 9. 权限预检（新增）
+### 9. 权限预检
 
 | 类 | 说明 |
 |---|---|
 | `PermissionPreCheck` | 预检注解（`PreCheckMode` RETURN/THROW、`CheckType` MENU/BUTTON/API、`CheckMode` ALL/ANY） |
-| `PermissionPreChecker` | 预检服务（API/菜单/按钮/行/列预检，支持当前用户与指定角色模拟） |
 | `PermissionCheckResult` | 预检结果（通过/拒绝、缺失权限、已有权限、消息、建议、错误码、用户角色） |
 
-在执行业务逻辑前预检权限，返回详细结果而非直接抛异常，适用于前端按钮显隐控制、批量操作前校验、权限变更模拟、微服务间调用前校验等场景。
+在执行业务逻辑前用 `PermissionPreCheck` 注解预检权限，返回详细结果而非直接抛异常，适用于前端按钮显隐控制、批量操作前校验、权限变更模拟、微服务间调用前校验等场景。
 
 ### 10. 缓存
 
 | 类 | 说明 |
 |---|---|
-| `LocalPermissionCache` | 本地权限降级缓存（Redis 不可用时兜底） |
+| `RolePermissionCacheService` / `RolePermissionsExpiry` | 角色权限缓存（Redis 加载 + 过期管理） |
 | `CacheKeyStrategy` / `DefaultCacheKeyStrategy` | 缓存 Key 生成策略（SPI 扩展点） |
 
 ### 11. 权限变更事件
@@ -109,7 +105,6 @@ YDSZ 认证与授权框架 — JWT Token 服务、RBAC 权限模型（菜单/按
 | 类 | 说明 |
 |---|---|
 | `PermissionChangedEvent` | 权限变更事件 |
-| `PermissionChangePublisher` | 权限变更发布器（Spring 事件 + Redis Pub/Sub 跨节点通知） |
 | `PermissionChangeNotifier` | 权限变更通知器 |
 | `PermissionChangeCacheInvalidator` | 缓存失效处理器 |
 | `PermissionChangeListener` | 权限变更监听器接口 |
@@ -120,11 +115,10 @@ YDSZ 认证与授权框架 — JWT Token 服务、RBAC 权限模型（菜单/按
 
 | 类 | 说明 |
 |---|---|
-| `TokenBlacklistService` | 同步黑名单（Redis 存储 + Bloom Filter 前置过滤 + refresh_token 分布式锁） |
-| `ReactiveTokenBlacklistService`（新增） | 响应式黑名单（WebFlux 网关专用，基于 `ReactiveStringRedisTemplate`，返回 `Mono`） |
-| `TokenBlacklistBloomFilter`（新增） | 本地布隆过滤器（100 万容量 / 0.01% 误判率 / 1.2 MB 内存 / 双哈希策略） |
+| `TokenBlacklistService` | 同步黑名单（Redis 存储，Token 以 SHA-256 摘要落键 `auth:token:blacklist:<sha256>` + 分布式锁） |
+| `ReactiveTokenBlacklistService` | 响应式黑名单（WebFlux 网关专用，基于 `ReactiveStringRedisTemplate`，返回 `Mono`） |
 
-**布隆过滤器优化**：查询 Redis 黑名单前先过本地 Bloom Filter，返回 false 时一定不在黑名单，可过滤 99.99% 的非黑名单 Token 的 Redis 查询。Redis Key 使用 SHA-256 摘要（`auth:token:blacklist:<sha256>`），避免完整 JWT 作为 key。
+> 说明：黑名单实现为 SHA-256 摘要 + 分布式锁，**未使用布隆过滤器**（历史版本曾规划 `TokenBlacklistBloomFilter`，未实现）。
 
 ### 13. CSRF
 
@@ -134,16 +128,14 @@ YDSZ 认证与授权框架 — JWT Token 服务、RBAC 权限模型（菜单/按
 
 ### 14. 限流
 
-| 类 | 说明 |
-|---|---|
-| `RateLimiter` | 限流器（默认 60 秒内 100 次，`ydsz.auth.rate-limit-enabled=true` 激活） |
+> 说明：认证限流能力由 `ydsz-common-safe` 的限流组件提供，本模块未内置独立限流器。
 
 ### 15. 认证上下文
 
 | 类 | 说明 |
 |---|---|
-| `AuthContext` | 统一认证上下文（`TransmittableThreadLocal`，线程池场景正确传递，含 `LoginUser`/租户/列权限） |
-| `TenantContextHolderImpl`（新增） | 租户上下文持有者实现（委托 `AuthContext.getTenantId()`，对接 common-core `TenantContextHolder`） |
+| `AuthContextUtils` | 统一认证上下文工具（委托 common-core `RequestContext`，含 `LoginUser`/租户/列权限） |
+| `AuthInfoUtils` / `AuthInfo` | 认证信息获取（从 RequestContext 解析） |
 | `TenantContext` | 租户上下文模型 |
 
 ### 16. 认证处理器
@@ -152,7 +144,6 @@ YDSZ 认证与授权框架 — JWT Token 服务、RBAC 权限模型（菜单/按
 |---|---|
 | `AuthHandler` / `AbstractAuthHandler` | 认证信息解析处理器（SPI 扩展点） |
 | `ParsedAuthHeaders` | 已解析的认证请求头 |
-| `AuthenticationProvider` | 认证提供者（SPI 扩展点） |
 | `BaseAuthFilter` | 认证基础过滤器（Token 解析 → 用户信息加载 → 上下文设置） |
 
 ### 17. 工具与国际化
@@ -160,8 +151,7 @@ YDSZ 认证与授权框架 — JWT Token 服务、RBAC 权限模型（菜单/按
 | 类 | 说明 |
 |---|---|
 | `AccessTokenUtils` / `PermissionMerger` / `PermissionUtils` | 工具类（见第 1、4 节） |
-| `PermissionMessageResolver`（新增） | 权限消息国际化（zh-CN 默认 / en-US，支持参数占位符 `{0}` 替换） |
-| `PermissionWarmUpInitializer`（新增） | 启动权限预热（监听 `ApplicationReadyEvent`，延迟异步加载指定角色权限到本地缓存） |
+| `AuthErrorCode` / `PermissionDeniedException` | 错误码与异常 |
 | `PermissionCodes` | 权限码常量 |
 
 ### 18. 指标（新增）
@@ -244,9 +234,6 @@ ydsz:
     blacklist:
       enabled: true
       expire-seconds: 7200
-    warmup-enabled: true
-    warmup-role-ids: [admin, operator]
-    warmup-delay: 3000
 ```
 
 ## 配置项
@@ -270,14 +257,9 @@ ydsz:
 | `desensitize-cache-max-size` | `1000` | 列脱敏缓存最大条目（LRU） |
 | `desensitize-cache-ttl-seconds` | `1800` | 列脱敏缓存过期（秒） |
 | `local-permission-cache-minutes` | `5` | 本地降级缓存过期（分钟） |
-| `col-permission-sign-key` | (空) | 列权限 HMAC 签名密钥（空则跳过校验） |
 | `redis-unavailable-fallback` | `DENY` | Redis 不可用降级策略（`DENY` / `ALLOW`） |
-| `warmup-enabled` | `true` | 是否启用启动权限预热 |
-| `warmup-role-ids` | `[]` | 需预热的角色 ID 列表 |
-| `warmup-delay` | `3000` | 预热延迟（毫秒） |
 | `blacklist.enabled` | `true` | 是否启用 Token 黑名单 |
 | `blacklist.expire-seconds` | `7200` | 黑名单过期时间（秒，与 Token 有效期一致） |
-| `rate-limit-enabled` | `false` | 是否启用限流器 |
 | `csrf-enabled` | `false` | 是否启用 CSRF 校验 |
 | `health-check-interval` | `60000` | Redis 健康检查间隔（毫秒） |
 
@@ -327,31 +309,7 @@ public List<Employee> listEmployees(PageQuery query) { ... }
 public List<OrderVO> listOrdersWithUser(PageQuery query) { ... }
 ```
 
-### 3. 列权限签名
-
-```java
-import com.njydsz.common.auth.util.AuthColPermissionSigner;
-
-AuthColPermissionSigner signer = new AuthColPermissionSigner(appSecret);
-
-// 客户端发送前列权限数据前生成签名
-String sign = signer.generateSign(visibleColumns, editableColumns);
-
-// 服务端收到后校验签名（恒定时间比较，防时序攻击；不匹配抛 SecurityException）
-signer.verifySign(visibleColumns, editableColumns, receivedSign);
-```
-
-### 4. 权限变更通知
-
-```java
-import com.njydsz.common.auth.event.PermissionChangePublisher;
-import com.njydsz.common.auth.event.PermissionChangedEvent;
-
-// 角色权限变更后发布事件，触发本地缓存失效 + 跨节点 Pub/Sub 通知
-permissionChangePublisher.publish(new PermissionChangedEvent(roleCode));
-```
-
-### 5. Token 黑名单
+### 3. Token 黑名单
 
 ```java
 import com.njydsz.common.auth.service.TokenBlacklistService;
@@ -359,56 +317,49 @@ import com.njydsz.common.auth.service.TokenBlacklistService;
 // 用户登出时加入黑名单
 tokenBlacklistService.addToBlacklist(accessToken);
 
-// 请求校验时检查是否在黑名单（Bloom Filter 前置过滤）
+// 请求校验时检查是否在黑名单（SHA-256 摘要键，Redis 查询）
 boolean blocked = tokenBlacklistService.isBlacklisted(accessToken);
 ```
 
-### 6. 权限预检
+### 4. 权限变更通知
 
 ```java
-import com.njydsz.common.auth.precheck.PermissionCheckResult;
-import com.njydsz.common.auth.precheck.PermissionPreChecker;
+import com.njydsz.common.auth.event.PermissionChangedEvent;
+import org.springframework.context.ApplicationEventPublisher;
 
-// 预检当前用户是否拥有 API 权限（返回详细结果，不抛异常）
-PermissionCheckResult result = preChecker.checkApiPermissions("sys:user:add");
-if (!result.isCheckPassed()) {
-    return Response.error(result.getErrorCode(), result.getMessage());
-}
-
-// 批量预检（ALL 模式：需全部满足）
-PermissionCheckResult batch = preChecker.checkApiPermissions(
-    Set.of("sys:user:add", "sys:user:edit"),
-    PermissionPreChecker.PermissionCheckMode.ALL
-);
+// 角色权限变更后发布事件，触发本地缓存失效 + 跨节点 Pub/Sub 通知
+applicationEventPublisher.publishEvent(new PermissionChangedEvent(roleCode));
 ```
 
-### 7. 权限层级与预热
+### 5. 权限预检注解
 
 ```java
-import com.njydsz.common.auth.hierarchy.PermissionHierarchy;
+import com.njydsz.common.auth.precheck.PermissionPreCheck;
+import com.njydsz.common.auth.precheck.PermissionCheckResult;
 
-// 注册权限继承关系（启动时一次性注册）
-PermissionHierarchy.register("sys:user", "sys:user:list", "sys:user:add", "sys:user:edit");
+// 通过注解声明式预检：API 权限检查（ALL 模式：需全部满足）
+@PermissionPreCheck(checkType = PermissionPreCheck.CheckType.API,
+                    checkMode = PermissionPreCheck.CheckMode.ALL,
+                    value = {"sys:user:add", "sys:user:edit"})
+public void batchCreate() { ... }
+```
+
+### 6. 权限层级
+
+```java
+import com.njydsz.common.auth.hierarchy.PermissionHierarchyService;
+
+// 注册权限继承关系（启动时一次性注册，实例方法）
+permissionHierarchyService.registerPermission(tenantId, "sys:user", "sys:user:list", "sys:user:add");
 
 // 后续校验时拥有 sys:user 自动拥有 sys:user:list
-boolean ok = PermissionHierarchy.hasPermission(granted, "sys:user:list", true);
-```
-
-预热通过配置项启用，无需手写代码：
-
-```yaml
-ydsz:
-  auth:
-    warmup-enabled: true
-    warmup-role-ids: [admin, operator]
-    warmup-delay: 3000
+boolean ok = permissionHierarchyService.hasPermission(granted, "sys:user:list");
 ```
 
 ## SPI 扩展点
 
 | 接口 / 类 | 扩展说明 |
 |---|---|
-| `AuthenticationProvider` | 认证提供者（自定义认证方式） |
 | `AuthHandler` | 认证信息解析（自定义请求头解析） |
 | `DataPermissionResolver` | 数据权限解析（自定义数据范围策略） |
 | `DataPermissionCustomSqlProvider` | 数据权限动态 SQL（自定义 WHERE 拼接） |
@@ -444,12 +395,12 @@ ydsz:
 ## 注意事项
 
 1. **Redis 降级**：Redis 不可用时自动降级到本地缓存，默认策略 `DENY`（拒绝所有权限请求）。极端容灾场景可配置 `redis-unavailable-fallback=ALLOW` 放行。
-2. **布隆过滤器容量**：`TokenBlacklistBloomFilter` 默认预期容量 100 万 Token，约占 1.2 MB 内存，误判率约 0.01%。容量不可动态扩容，超出后误判率上升。
-3. **列权限签名密钥**：`col-permission-sign-key` 为空时跳过签名校验，仅建议开发/测试环境使用；生产环境必须通过配置中心或环境变量注入。
-4. **权限预热**：预热任务异步执行，延迟默认 3 秒避免与应用启动竞争资源；预热线程池为守护线程，应用关闭时优雅停机。
+2. **Token 黑名单**：基于 Redis 存储（SHA-256 摘要键），无本地布隆过滤器前置；登出即加入黑名单，过期时间与 Token 有效期一致。
+3. **列权限签名**：列权限数据签名能力由业务侧自行实现（`AuthColPermissionSigner` 未内置），如需防篡改请使用内部头 HMAC 签名（`ydsz-gateway` `InternalHeaderSigner`）。
+4. **权限预热**：本模块未内置启动权限预热（`PermissionWarmUpInitializer` 未实现）；角色权限采用按需加载 + 本地缓存（`role-permission-cache-seconds` 控制过期）。
 5. **通配符缓存**：`PermissionUtils` 使用 LRU 缓存（最大 1024）编译后的正则模式，权限配置变更时调用 `clearPatternCache()` 清理。
 6. **权限码规范**：建议采用三段式命名 `领域:资源:操作`（如 `sys:user:add`），不符合规范仅记录告警日志，不影响校验逻辑。
-7. **多租户**：`AuthContext` 使用 `TransmittableThreadLocal`，保证线程池场景下租户 ID 正确传递；请求结束必须调用 `clear()` 防止内存泄漏。
+7. **多租户**：租户上下文由 common-core `RequestContext` / common-tenant `TenantContextHolder` 承载，线程池场景通过 `TransmittableThreadLocal` 传递；请求结束自动清理。
 
 ## 技术栈
 
@@ -463,4 +414,4 @@ ydsz:
 
 ## 变更记录
 
-- **v1.0.0**（2026-08-02）：补全 `@PermissionMode`/`@EnableYdszAuth`、响应式 Token 黑名单（`ReactiveTokenBlacklistService`）、布隆过滤器（`TokenBlacklistBloomFilter`）、权限层级（`PermissionHierarchy`）、权限预检（`PermissionPreCheck`/`PermissionPreChecker`/`PermissionCheckResult`）、列权限签名（`AuthColPermissionSigner`/`AuthDigestUtils`）、指标（`AuthMetrics`/`AuthMetricsCollector`/`PermissionMetrics`）、租户上下文（`TenantContextHolderImpl`）、工具与国际化（`AccessTokenUtils`/`PermissionMerger`/`PermissionUtils`/`PermissionMessageResolver`）、预热（`PermissionWarmUpInitializer`）等章节。
+- **v1.0.0**（2026-08-02）：补全 `@PermissionMode`/`@EnableYdszAuth`、响应式 Token 黑名单（`ReactiveTokenBlacklistService`）、权限层级（`PermissionHierarchyService`）、权限预检（`PermissionPreCheck`/`PermissionCheckResult`）、指标（`AuthMetrics`/`AuthMetricsCollector`/`PermissionMetrics`）、工具（`AccessTokenUtils`/`PermissionMerger`/`PermissionUtils`）等章节。

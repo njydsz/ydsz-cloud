@@ -70,33 +70,21 @@
 | `RateLimitMetricsCollector` | Micrometer 指标采集 |
 | `RateLimitService` | 限流服务封装 |
 
-**支持的限流算法**（`RateLimitAlgorithm` 枚举）：`TOKEN_BUCKET`（令牌桶，推荐且默认）。
+**支持的限流算法**（`RateLimitAlgorithm` 枚举）：`TOKEN_BUCKET`（令牌桶）、`CONCURRENCY`（并发限制）。
 
-> **收敛说明**：`COUNTER`、`SLIDING_WINDOW`、`LEAKY_BUCKET`、`CONCURRENCY` 已标记 `@Deprecated`，保留实现以兼容现有配置。新业务请统一使用 `TOKEN_BUCKET`（兼顾突发流量支持和实现简洁性）。
+**支持的限流维度**（`RateLimitDimension` 枚举，11 种）：`API`、`USER`、`IP`、`GLOBAL`、`HOT_PARAM`、`TENANT`、`DEVICE`、`HOT_USER`、`HOT_GOODS`、`CLUSTER`、`ADAPTIVE`。
 
-**支持的限流维度**（`RateLimitDimension` 枚举）：`API`、`USER`、`IP`、`GLOBAL`、`HOT_PARAM`。
-
-**支持的限流模式**（`RateLimitMode` 枚举）：`LOCAL`（本地，默认）、`CLUSTER`（集群 Redis）。
+**支持的限流模式**（`RateLimitMode` 枚举，4 种）：`LOCAL`（本地）、`CLUSTER`（集群 Redis）、`ADAPTIVE`（自适应）、`HYBRID`（混合）。
 
 ### 5. 验证码
 
-| 类 | 说明 |
-|---|---|
-| `CaptchaGenerator` | 验证码生成器接口 |
-| `ImageCaptchaGenerator` | 图形验证码生成器 |
-| `ArithmeticCaptchaGenerator` | 算术验证码生成器 |
-| `SliderCaptchaGenerator` | 滑块验证码生成器 |
-| `CaptchaStore` | 验证码存储接口 |
-| `RedisCaptchaStore` / `LocalCaptchaStore` | Redis / 内存存储实现 |
-| `CaptchaValidator` | 验证码校验器 |
-| `CaptchaRateLimiter` | 验证码获取限流器 |
-| `CaptchaResult` | 验证码结果模型 |
+> **说明**：v1.2.0 起验证码能力已精简收敛，仅保留核心生成器（`CaptchaGenerator` + `CaptchaProperties`）。图形/算术/滑块生成器、存储、校验器、限流器等均已移除，验证码存储/校验由业务方结合 Redis 自行实现。
 
 ### 6. 加密与签名
 
 | 类 | 说明 |
 |---|---|
-| `AesGcmCrypto` | AES-256-GCM 加解密（含 AAD 认证） |
+| `FieldEncryptionService` | AES-256-GCM 字段加解密（含 AAD 认证，MyBatis 集成） |
 | `NonceCache` | Nonce 缓存（防重放攻击） |
 | `ApiSignatureFilter` | API 签名验证过滤器（timestamp + nonce + HMAC-SHA256） |
 | `ApiSignatureProperties` | API 签名配置 |
@@ -487,7 +475,7 @@ ydsz:
 | `CsrfTokenRepository` | CSRF Token 存储接口 | `RedisCsrfTokenRepository`（@Primary）、`InMemoryCsrfTokenRepository` |
 | `CsrfTokenGenerator` | CSRF Token 生成接口 | `DefaultCsrfTokenGenerator` |
 | `ClusterRateLimiter` | 集群限流器接口 | `RedisClusterRateLimiter`（基于 StringRedisTemplate） |
-| `RateLimiter` | 限流算法接口 | `TokenBucketLimiter`（推荐）；`SlidingWindowLimiter`、`LeakyBucketLimiter`、`CounterLimiter`、`ConcurrencyLimiter`（已废弃） |
+| `RateLimiter` | 限流算法接口 | `TokenBucketLimiter`（令牌桶）、`ConcurrencyLimiter`（并发限制） |
 | `SecurityAlertListener` | 安全告警监听器接口 | `DefaultSecurityAlertLogger` |
 
 ## 健康检查
@@ -509,7 +497,7 @@ ydsz:
     "capabilities": {
       "xss": "OWASP Sanitizer + configurable policies",
       "csrf": "Synchronizer / Double Submit dual mode",
-      "rateLimit": "Token Bucket + Resilience4j Circuit Breaker"
+      "rateLimit": "Token Bucket + 自研熔断器 (AtomicReference CAS 状态机)"
     }
   }
 }
@@ -523,7 +511,7 @@ ydsz:
 4. **限流降级**：Redis 不可用时，集群限流自动降级为本地限流（`fallback-on-error=PASS` 默认放行，可改为 `BLOCK` 拒绝）。`@RateLimit` AOP 通过 `ydsz.safe.ratelimit.aop-enabled` 控制。
 5. **字段加密密钥轮换**：`@EncryptField(keyVersion=N)` 配合 `ydsz.safe.field-encryption.keys` 多版本密钥映射，支持平滑轮换。解密失败时按 `failure-strategy` 处理（默认 `THROW` fail-safe）。
 6. **自动封禁联动**：`SecurityEventAggregator` 监听安全事件，同一 IP 在 `window-seconds` 内触发超过 `threshold` 次事件时自动调用 `IpAccessService` 封禁 IP（需启用 `ydsz.safe.ip-access.enabled=true`）。
-7. **Redis 降级**：Redis 不可用时，限流 / CSRF Token / 验证码存储均降级为本地内存模式，健康检查会输出 warning 但状态仍为 UP。
+7. **Redis 降级**：Redis 不可用时，限流 / CSRF Token 降级为本地内存模式，健康检查会输出 warning 但状态仍为 UP。
 8. **宿主需开启 @EnableScheduling**：`NonceCache` 防重放清理任务依赖 `@EnableScheduling`（本模块 `SafeConfiguration` 已标注 `@EnableScheduling`）。
 9. **MyBatis 字段加密**：使用 `@EncryptField` 时实体类必须 `@TableName(autoResultMap = true)`，字段必须 `@TableField(typeHandler = EncryptTypeHandler.class)`。
 10. **可选依赖**：`micrometer-core`、`mybatis-plus-core`、`spring-boot-actuator`、`spring-boot-health` 均为 optional，未引入时对应能力自动降级或不可用。

@@ -24,7 +24,7 @@ ydsz-literule/
 ├── ydsz-literule-domain     # 领域层：实体 DO、领域事件、注解、ModelInputProvider
 ├── ydsz-literule-infra      # 基础设施：MyBatis Mapper、决策表 Excel 导入导出
 ├── ydsz-literule-server     # 应用服务 + 引擎核心：DefaultRuleEngine、LiteExpr、热加载、CEP、回放、审批
-└── ydsz-literule-web        # Web 层：7 个 REST Controller
+└── ydsz-literule-web        # Web 层：21 个 REST Controller
 ```
 
 依赖方向（严格单向）：`web → server → infra → domain → api`
@@ -33,18 +33,17 @@ ydsz-literule/
 
 本模块是 YDSZ 的**轻量级规则引擎**，覆盖规则定义、编排、评估、灰度、回放、审批全生命周期。
 
-### 1. 7 种规则类型
+### 1. 6 种规则类型
 
 | 类型 | 实现类 | 适用场景 |
 |---|---|---|
 | **Expression** 表达式 | `ExpressionRule` | 基于 LiteExpr 表达式动态评估，支持 `${var}` 模板渲染与动态严重度 |
 | **DecisionTable** 决策表 | `DecisionTableRule` | 二维表规则，支持 Excel 导入导出 |
-| **CrossDecisionTable** 交叉决策表 | `CrossDecisionTableRule` | 多维交叉决策表 |
 | **DecisionTree** 决策树 | `DecisionTreeRule` | 多层 if-else 树规则 |
 | **Scorecard** 评分卡 | `ScorecardRule` | 多维加权评分 |
 | **Script** 脚本 | `ScriptRule` | JSR-223 脚本规则 |
 | **Static** 静态 | `StaticRule` | 静态常量规则 |
-| **CEP** 复杂事件处理 | `CEPEngine` | 滑动窗口 + 模式匹配（如"30 分钟内 5 次失败"），独立引擎 |
+| **CEP** 复杂事件处理 | `CEPEngine` | 滑动窗口 + 模式匹配（如"30 分钟内 5 次失败"），独立引擎，非 Rule 实现 |
 
 ### 2. 核心能力清单
 
@@ -56,7 +55,7 @@ ydsz-literule/
 | **热加载** | DB / Nacos / Apollo / ZooKeeper / Redis / File 多源动态刷新 | `RuleHotReloader` / `RuleSourceManager` |
 | **版本管理** | 版本快照 + Diff + 一键回滚 | `RuleVersionRepository` / `RuleVersionDiffService` |
 | **dry-run 仿真** | 不实际执行，只评估结果（不发布事件、不记录统计） | `RuleEngine.dryRun` |
-| **正式评估** | 记录统计、发布事件、触发动作分发（P1-1 新增 evaluate 端点） | `RuleEngine.evaluate` |
+| **正式评估** | 记录统计、发布事件、触发动作分发 | `RuleEngine.evaluate` |
 | **多级审批流** | 草稿 → 审核 → 上线，支持 SINGLE/COUNTERSIGN/SEQUENCE 三种审批类型 | `RuleApprovalService` / `ApprovalFlow` |
 | **灰度发布** | 按 `canaryRatio` 分流到候选版本，结果标记 `canary=true` | `RuleCanaryRouter` |
 | **A/B 测试** | 自动回滚策略 + 效果评估 + 回滚历史 | `ABTestService` / `ABTestAutoRollbackProvider` |
@@ -93,35 +92,48 @@ com.njydsz.literule.server
 ├── audit/           # 审计日志
 ├── benchmark/       # 压测服务
 ├── cache/           # 多级缓存（Caffeine L1 + Redis L2）
-├── calc/            # 计算类（通用计算工具，业务算法已移出）
 ├── cep/             # 复杂事件处理（CEPEngine / CEPPattern）
 ├── config/          # 自动配置 + 注解注册 + ABTest + 热加载 + 冲突检测
 ├── core/            # 引擎核心（DefaultRuleEngine / InferenceEngine / 熔断 / 超时 / 灰度 / 索引 / 生命周期 / 效果评估 / 文档生成 / 异步 Trace / Micrometer 指标 / 并行评估 / 结果缓存）
 ├── distributed/     # 分布式（一致性哈希分片 + Redis 节点注册 + Pub/Sub 广播）
 ├── dsl/             # DSL 解析（规则 DSL + 规则链 DSL）
-├── expr/            # LiteExpr 表达式引擎（词法 / 语法 / 编译缓存 / 求值 / 沙箱 / 函数注册 / 变量注册 / 校验 / 预览 / Trace）
-├── impact/          # 影响分析
-├── impl/            # 7 种规则实现
+├── engine/liteexpr/ # LiteExpr 表达式引擎（词法 / 语法 / 编译缓存 / 求值 / 沙箱 / 函数注册 / 变量注册 / 校验 / 预览 / Trace）
+├── expression/      # 表达式规则
+├── impl/            # 6 种规则实现
 ├── orchestrator/    # 规则链编排（RuleChain / RuleChainGraph / GraphValidator / ChainGraphConverter）
 ├── replay/          # 执行回放
 ├── sdk/             # LiteRuleClient 客户端构建器
 ├── security/        # 权限检查
 ├── spi/             # 配置源 SPI（DB / Nacos / Apollo / ZK / File）+ 动作处理器 + Trace 记录器 + 事实采集 + 模型输入 + 模板 / 包 / 依赖 / 决策表 / 决策树 / 评分卡 / 脚本 Provider
 ├── testing/         # 业务测试用例（RuleTestRunner / RuleTestReport）
-├── util/            # 工具（冲突分析）
 └── version/         # 版本管理（Diff 服务）
 ```
 
-### 4. Web 层 Controller（7 个）
+> 其余目录：`health/`（健康检查）、`json/`、`listener/`、`metrics/`、`search/`（规则搜索）等。
+
+### 4. Web 层 Controller（21 个，路径前缀均以 `/v1/rule-engine` 开头）
 
 | Controller | 路径前缀 | 主要端点 |
 |---|---|---|
-| `RuleAdminController` | `/ruleEngine/rules` | 规则 CRUD / 启停 / 版本 / 回滚 / Dry-run / 表达式校验 / A-B 测试 / 多级审批 / Trace / 决策表 / 测试用例 / 模板市场 / 冲突检测 / 规则链画布 / 规则依赖 / 目录树 / 规则包市场 / 导入导出 / 批量操作 / 函数市场 / 压测 / 统计（50+ 端点） |
-| `CEPController` | `/ruleEngine/cep` | 模式管理 / 事件推送 / 命中查询 / 统计 / 模式测试 |
-| `RuleAuditLogController` | `/ruleEngine/audit` | 最近 / 按规则 / 按操作人 / 按操作 / 按时间范围 |
-| `RuleDashboardController` | `/ruleEngine/dashboard` | 概览 / 趋势 / 分布 / Top 规则 / 实时 |
-| `RuleDslController` | `/ruleEngine/dsl` | 校验 / 解析 / 导入 / 导出 / 预览 |
-| `RuleVariableAdminController` | `/ruleEngine/variables` | 变量 CRUD / 刷新 / 可用查询 |
+| `RuleAdminController` | `/v1/rule-engine/rules` | 规则 CRUD / 启停 / 版本 / 回滚 / Dry-run / 表达式校验 / 决策表 / 批量操作（13 个端点） |
+| `RuleTraceController` | `/v1/rule-engine/rules/trace` | 执行回放 / 影响预览 |
+| `RuleTestCaseController` | `/v1/rule-engine/test-cases` | 业务测试用例 |
+| `RuleTemplateController` | `/v1/rule-engine/templates` | 规则模板市场 |
+| `RulePackController` | `/v1/rule-engine/packs` | 规则包市场 |
+| `RuleLifecycleController` | `/v1/rule-engine/lifecycle` | 生命周期 + 多级审批 |
+| `RuleImportExportController` / `RuleDslImportExportController` | `/v1/rule-engine/import-export` | 导入导出 |
+| `RuleGraphController` | `/v1/rule-engine/graph` | 规则链画布 / 表达式预览 |
+| `RuleDependencyController` | `/v1/rule-engine/dependencies` | 规则依赖 |
+| `RuleDecisionTableController` | `/v1/rule-engine/decision-tables` | 决策表 |
+| `RuleConflictController` | `/v1/rule-engine/conflicts` | 冲突检测 |
+| `RuleCategoryController` | `/v1/rule-engine/categories` | 目录树 |
+| `RuleBatchController` | `/v1/rule-engine/batch` | 批量操作 |
+| `RuleABPolicyController` | `/v1/rule-engine/ab-test` | A/B 测试策略 |
+| `RuleDslController` | `/v1/rule-engine/dsl` | DSL 校验 / 解析 / 导入导出 / 预览 |
+| `RuleVariableAdminController` | `/v1/rule-engine/variables` | 变量 CRUD / 刷新 |
+| `CEPController` / `CEPTestController` | `/v1/rule-engine/cep` | 模式管理 / 事件推送 / 命中查询 / 测试 |
+| `RuleAuditLogController` | `/v1/rule-engine/audit` | 审计日志查询 |
+| `RuleDashboardController` | `/v1/rule-engine/dashboard` | 概览 / 趋势 / 分布 / Top 规则 |
 
 ## 使用方式
 
@@ -137,7 +149,7 @@ mvn -pl ydsz-cloud/ydsz-literule -am clean package
 java -jar ydsz-literule-web/target/ydsz-literule-web-1.0.0-SNAPSHOT.jar
 ```
 
-> **外部服务调用规则引擎**：通过 REST API（`/ruleEngine/**`）或 Feign Client（待补齐 `ydsz-literule-api` 的 Feign 接口）调用，不直接依赖 server/web 子模块。
+> **外部服务调用规则引擎**：通过 REST API（`/v1/rule-engine/**`）或 Feign Client（`LiteRuleClient`，已就绪）调用，不直接依赖 server/web 子模块。
 
 ### 2. 声明式（注解方式，服务内部规则注册）
 
@@ -181,10 +193,10 @@ public void evaluate(Map<String, Object> facts) {
 
 ### 3.1 外部服务通过 REST API 调用（推荐）
 
-外部微服务（如 `ydsz-project`）通过 HTTP 调用规则引擎：
+外部微服务（如 `ydsz-userinfo` 等）通过 HTTP 调用规则引擎：
 
 ```http
-POST /ruleEngine/rules/dryRun
+POST /v1/rule-engine/rules/dry-run
 Content-Type: application/json
 
 {
@@ -195,7 +207,7 @@ Content-Type: application/json
 }
 ```
 
-> **跨服务调用**：建议在 `ydsz-literule-api` 补齐 `@FeignClient` 接口（含 FallbackFactory），供 `ydsz-project` / `ydsz-userinfo` 等服务声明式调用。当前 api 模块仅含 DTO，尚无 Feign 客户端。
+> **跨服务调用**：`ydsz-literule-api` 已提供 `LiteRuleClient`（`@FeignClient` + `LiteRuleClientFallback`），供其他服务声明式调用。
 
 ### 4. 表达式规则（LiteExpr）
 
@@ -365,37 +377,11 @@ ydsz:
 
 ## 数据库
 
-SQL 归属见项目级硬约束。本模块相关表分布在两个文件：
-
-- [V1.0.0_literule.sql](../../deploy/sql/modules/V1.0.0_literule.sql) — `ydsz_rule_def` / `ydsz_rule_version_history` / `ydsz_rule_template` / `ydsz_rule_test_case` / `ydsz_rule_chain_graph` / `ydsz_rule_dependency` / `ydsz_rule_pack` / `ydsz_rule_pack_install` / `ydsz_rule_variable_def`
-- [V1.0.0_project.sql](../../deploy/sql/modules/V1.0.0_project.sql) — `ydsz_rule_execution_trace` / `ydsz_rule_decision_table` / `ydsz_rule_canary_bucket` / `ydsz_rule_scorecard` / `ydsz_rule_decision_tree` / `ydsz_rule_script` / `ydsz_rule_ab_policy` / `ydsz_rule_ab_rollback`（物理 Mapper 在 project 模块，DDL 按硬约束归 literule.sql）
-
-## 前端集成
-
-前端页面位于 `ydsz-frontend/src/views/execution/rule-engine/`，共 14 个页面：
-
-| 页面 | 功能 |
-|---|---|
-| `index.vue` | 规则列表 + 编辑 + Dry-run + 模板市场 + AI 生成 + 版本历史 |
-| `designer.vue` | 规则链可视化编排画布（SVG + dagre 自动布局） |
-| `decision-table-editor.vue` | 决策表编辑器 |
-| `decision-tree-editor.vue` | 决策树编辑器 |
-| `scorecard-editor.vue` | 评分卡编辑器 |
-| `cep-pattern-editor.vue` | CEP 模式编辑器 |
-| `dsl-manager.vue` | DSL 管理器 |
-| `dependency-graph.vue` | 依赖关系图 |
-| `dashboard.vue` | 监控大盘 |
-| `traces.vue` | 执行轨迹 |
-| `replay.vue` | 执行回放 |
-| `audit-log.vue` | 审计日志 |
-| `pack-market.vue` | 规则包市场 |
-| `variables/index.vue` | 变量管理 |
-
-前端 API 定义在 `ydsz-frontend/src/api/rule-engine/index.ts`，60+ 端点对应后端 7 个 Controller。
+实体 `@TableName` 共映射 **17 张表**（`ydsz_rule_def` / `ydsz_rule_version_history` / `ydsz_rule_template` / `ydsz_rule_test_case` / `ydsz_rule_chain_graph` / `ydsz_rule_dependency` / `ydsz_rule_pack` / `ydsz_rule_pack_install` / `ydsz_rule_variable_def` / `ydsz_rule_execution_trace` / `ydsz_rule_decision_table` / `ydsz_rule_canary_bucket` / `ydsz_rule_scorecard` / `ydsz_rule_decision_tree` / `ydsz_rule_script` / `ydsz_rule_ab_policy` / `ydsz_rule_ab_rollback`），DDL 由各部署环境统一维护，不在仓库内提供 SQL 脚本。
 
 ## SPI 扩展点
 
-本模块通过 SPI 反转依赖，避免直接依赖 project / cronjob / workflow 等业务模块。核心 SPI 由本服务自身实现（作为独立微服务，所有 Provider 的默认/DB 实现都在 server 层）：
+本模块通过 SPI 反转依赖，避免直接依赖 cronjob / workflow 等业务模块。核心 SPI 由本服务自身实现（作为独立微服务，所有 Provider 的默认/DB 实现都在 server 层）：
 
 | SPI 接口 | 作用 | 实现 |
 |---|---|---|
@@ -410,14 +396,14 @@ SQL 归属见项目级硬约束。本模块相关表分布在两个文件：
 | `RuleCategoryProvider` | 目录树 | server 层实现 |
 | `ABTestAutoRollbackProvider` | A/B 自动回滚 | server 层实现 |
 | `RulePackProvider` | 规则包 | server 层 DB 实现 |
-| `FactProvider` | 动态事实采集 | 业务方实现（可跨服务 Feign 调用 project/userinfo） |
+| `FactProvider` | 动态事实采集 | 业务方实现（可跨服务 Feign 调用 userinfo 等） |
 | `ModelInputProvider` | 模型输入 | 业务方实现（可对接外部模型服务） |
 | `RuleActionHandler` | 动作处理器 | `DefaultAlertActionHandler` / `CronjobTriggerActionHandler`（optional）/ `WorkflowTriggerActionHandler`（optional） |
 | `TraceRecorder` | Trace 持久化 | `AsyncTraceRecorder`（委托模式，DB 持久化） |
 | `DashboardDataProvider` | 大盘数据 | server 层实现 |
 | `ThresholdProvider` | 自适应阈值 | server 层实现 |
 | `ReconcileDataProvider` | 对账 | 业务方实现 |
-| `BudgetSnapshotProvider` | 预算快照 | 业务方实现（可跨服务 Feign 调用 finance/project） |
+| `BudgetSnapshotProvider` | 预算快照 | 业务方实现（可跨服务 Feign 调用外部系统） |
 | `ApprovalRecordRepository` | 审批记录 | server 层 DB 实现 |
 
 ## 可选联动
@@ -445,10 +431,10 @@ mvn -pl ydsz-cloud/ydsz-literule -am test
 | `ydsz-literule-api` | 0 | — |
 | `ydsz-literule-domain` | 0 | — |
 | `ydsz-literule-infra` | 0 | — |
-| `ydsz-literule-server` | 2 | 规则引擎核心单测（评分卡 / 表达式引擎 / 热加载） |
+| `ydsz-literule-server` | 2 | 核心引擎（`DefaultRuleEngineCoreTest`）+ 并行评估（`DefaultRuleEngineParallelTest`） |
 | `ydsz-literule-web` | 0 | — |
 
-> **现状说明**：核心引擎（DefaultRuleEngine / 熔断 / 超时 / 灰度）、6 种规则类型、LiteExpr 表达式、规则链、DSL、缓存、分布式等模块的单元测试**尚未补齐**，是后续优化的重点。
+> **现状说明**：评分卡 / 表达式引擎 / 热加载等专项测试、其余规则类型与 LiteExpr 的单元测试**尚未补齐**，是后续优化的重点。
 
 ## 版本与变更
 
