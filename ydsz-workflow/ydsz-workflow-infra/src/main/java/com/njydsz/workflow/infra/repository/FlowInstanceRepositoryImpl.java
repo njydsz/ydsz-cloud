@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.workflow.domain.entity.FlowInstance;
-import com.njydsz.workflow.domain.repository.FlowInstanceRepository;
+import com.njydsz.workflow.infra.repository.FlowInstanceRepository;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 
 /**

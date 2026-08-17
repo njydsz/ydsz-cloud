@@ -16,6 +16,7 @@
         <module>ydsz-cronjob-domain</module>
         <module>ydsz-cronjob-infra</module>
         <module>ydsz-cronjob-server</module>
+        <module>ydsz-cronjob-app</module>
         <module>ydsz-cronjob-web</module>
     </modules>
 </project>

@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.nextwiki.domain.entity.ShareRecipient;
-import com.njydsz.nextwiki.domain.repository.ShareRecipientRepository;
+import com.njydsz.nextwiki.infra.repository.ShareRecipientRepository;
 import com.njydsz.nextwiki.infra.mapper.ShareRecipientMapper;
 
 /**

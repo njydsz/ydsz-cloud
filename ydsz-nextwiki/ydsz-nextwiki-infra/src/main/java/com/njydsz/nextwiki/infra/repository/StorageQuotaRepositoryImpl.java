@@ -5,7 +5,7 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.nextwiki.domain.entity.StorageQuota;
-import com.njydsz.nextwiki.domain.repository.StorageQuotaRepository;
+import com.njydsz.nextwiki.infra.repository.StorageQuotaRepository;
 import com.njydsz.nextwiki.infra.mapper.StorageQuotaMapper;
 
 /**

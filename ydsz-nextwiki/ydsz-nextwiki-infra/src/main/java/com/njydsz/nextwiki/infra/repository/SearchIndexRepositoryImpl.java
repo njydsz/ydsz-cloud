@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.nextwiki.domain.entity.SearchIndex;
-import com.njydsz.nextwiki.domain.repository.SearchIndexRepository;
+import com.njydsz.nextwiki.infra.repository.SearchIndexRepository;
 import com.njydsz.nextwiki.infra.mapper.SearchIndexMapper;
 
 /**

@@ -7,7 +7,7 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.nextwiki.domain.entity.FileVersion;
-import com.njydsz.nextwiki.domain.repository.FileVersionRepository;
+import com.njydsz.nextwiki.infra.repository.FileVersionRepository;
 import com.njydsz.nextwiki.infra.mapper.FileVersionMapper;
 
 /**

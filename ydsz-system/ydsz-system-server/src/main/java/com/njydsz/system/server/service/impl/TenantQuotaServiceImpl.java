@@ -10,17 +10,18 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.system.domain.entity.Tenant;
-import com.njydsz.system.domain.entity.TenantPlan;
 import com.njydsz.system.domain.enums.QuotaType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
+import com.njydsz.system.domain.vo.TenantPlanVO;
+import com.njydsz.system.domain.vo.TenantVO;
+import com.njydsz.system.server.service.TenantPlanService;
 import com.njydsz.system.server.service.TenantQuotaService;
 import com.njydsz.system.server.service.TenantService;
 
 /**
  * 租户配额 Service 实现
  *
- * <p>提供 SaaS 多租户体系下的配额校验能力。 配额上限从 {@link TenantPlan#getQuotaJson()} 解析，
+ * <p>提供 SaaS 多租户体系下的配额校验能力。 配额上限从 {@link TenantPlanVO#getQuotaJson()} 解析，
  * 当前使用量通过 {@link QuotaUsageRegistry} 回调获取。
  *
  * <p><b>配额校验流程：</b>
@@ -39,8 +40,11 @@ import com.njydsz.system.server.service.TenantService;
 @RequiredArgsConstructor
 public class TenantQuotaServiceImpl implements TenantQuotaService {
 
-  /** 租户 Service（用于查询租户和套餐信息） */
+  /** 租户 Service（用于查询租户信息） */
   private final TenantService tenantService;
+
+  /** 租户套餐 Service（用于查询套餐信息） */
+  private final TenantPlanService tenantPlanService;
 
   /** 配额使用量注册表（各模块注册自己的使用量统计回调） */
   private final QuotaUsageRegistry quotaUsageRegistry;
@@ -70,7 +74,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
 
   @Override
   public Integer getQuotaLimit(String tenantId, QuotaType quotaType) {
-    Tenant tenant = tenantService.getById(tenantId);
+    TenantVO tenant = tenantService.getById(tenantId);
     if (tenant == null) {
       log.warn("[TenantQuotaService] 租户不存在: {}", tenantId);
       return null;
@@ -111,7 +115,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
     if (planId == null || planId.isBlank()) {
       return null;
     }
-    TenantPlan plan = tenantService.getPlanById(planId);
+    TenantPlanVO plan = tenantPlanService.getById(planId);
     if (plan == null || plan.getQuotaJson() == null || plan.getQuotaJson().isBlank()) {
       return null;
     }

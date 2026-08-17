@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.nextwiki.domain.entity.FileComment;
-import com.njydsz.nextwiki.domain.repository.FileCommentRepository;
+import com.njydsz.nextwiki.infra.repository.FileCommentRepository;
 
 /**
  * 文件评论仓储 stub 实现（P1-5 占位）。

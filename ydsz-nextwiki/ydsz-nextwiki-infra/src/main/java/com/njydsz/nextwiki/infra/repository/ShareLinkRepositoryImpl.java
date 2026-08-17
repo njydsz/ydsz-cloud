@@ -7,7 +7,7 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.nextwiki.domain.entity.ShareLink;
-import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
+import com.njydsz.nextwiki.infra.repository.ShareLinkRepository;
 import com.njydsz.nextwiki.infra.mapper.ShareLinkMapper;
 
 /**

@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.nextwiki.domain.entity.ShareAccessLog;
-import com.njydsz.nextwiki.domain.repository.ShareAccessLogRepository;
+import com.njydsz.nextwiki.infra.repository.ShareAccessLogRepository;
 import com.njydsz.nextwiki.infra.mapper.ShareAccessLogMapper;
 
 /**
