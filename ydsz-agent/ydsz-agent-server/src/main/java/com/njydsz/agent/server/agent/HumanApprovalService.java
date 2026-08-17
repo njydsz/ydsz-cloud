@@ -7,8 +7,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,7 +91,7 @@ public class HumanApprovalService {
 
     // DB 持久化：多实例共享 + 重启恢复
     try {
-      approvalMapper.insert(toDO(request));
+      agentApprovalRepository.insert(toDO(request));
     } catch (Exception e) {
       LOG.warn("[HITL] 审批请求落库失败: id={}, error={}", approvalId, e.getMessage());
     }
@@ -121,10 +119,7 @@ public class HumanApprovalService {
   public List<ApprovalRequest> listPending() {
     try {
       List<AgentApprovalDO> dos =
-          approvalMapper.selectList(
-              new LambdaQueryWrapper<AgentApprovalDO>()
-                  .eq(AgentApprovalDO::getStatus, ApprovalStatus.PENDING.name())
-                  .orderByDesc(AgentApprovalDO::getCreatedAt));
+          agentApprovalRepository.findPending(ApprovalStatus.PENDING.name());
       List<ApprovalRequest> result = new ArrayList<>(dos.size());
       for (AgentApprovalDO doItem : dos) {
         result.add(toRequest(doItem));
@@ -145,7 +140,7 @@ public class HumanApprovalService {
       return cached;
     }
     try {
-      AgentApprovalDO doItem = approvalMapper.selectById(approvalId);
+      AgentApprovalDO doItem = agentApprovalRepository.findById(approvalId);
       if (doItem == null) {
         return null;
       }
@@ -186,13 +181,11 @@ public class HumanApprovalService {
   private void evictExpired() {
     LocalDateTime cutoff = LocalDateTime.now().minusHours(1);
     try {
-      approvalMapper.update(
-          null,
-          new LambdaUpdateWrapper<AgentApprovalDO>()
-              .eq(AgentApprovalDO::getStatus, ApprovalStatus.PENDING.name())
-              .lt(AgentApprovalDO::getCreatedAt, cutoff)
-              .set(AgentApprovalDO::getStatus, ApprovalStatus.EXPIRED.name())
-              .set(AgentApprovalDO::getResolvedAt, LocalDateTime.now()));
+      agentApprovalRepository.expirePendingBefore(
+          ApprovalStatus.PENDING.name(),
+          cutoff,
+          ApprovalStatus.EXPIRED.name(),
+          LocalDateTime.now());
     } catch (Exception e) {
       LOG.warn("[HITL] 过期审批清理失败: {}", e.getMessage());
     }
@@ -209,7 +202,7 @@ public class HumanApprovalService {
       String approvalId, ApprovalStatus newStatus, String approver, String comment) {
     ApprovalRequest request = pendingApprovals.get(approvalId);
     if (request == null) {
-      AgentApprovalDO doItem = approvalMapper.selectById(approvalId);
+      AgentApprovalDO doItem = agentApprovalRepository.findById(approvalId);
       if (doItem == null || !ApprovalStatus.PENDING.name().equals(doItem.getStatus())) {
         return false;
       }
@@ -226,14 +219,8 @@ public class HumanApprovalService {
     request.setResolvedAt(LocalDateTime.now());
 
     try {
-      approvalMapper.update(
-          null,
-          new LambdaUpdateWrapper<AgentApprovalDO>()
-              .eq(AgentApprovalDO::getId, approvalId)
-              .set(AgentApprovalDO::getStatus, newStatus.name())
-              .set(AgentApprovalDO::getApprover, approver)
-              .set(AgentApprovalDO::getComment, comment)
-              .set(AgentApprovalDO::getResolvedAt, request.getResolvedAt()));
+      agentApprovalRepository.updateStatus(
+          approvalId, newStatus.name(), approver, comment, request.getResolvedAt());
     } catch (Exception e) {
       LOG.warn("[HITL] 审批结果落库失败: id={}, error={}", approvalId, e.getMessage());
     }
