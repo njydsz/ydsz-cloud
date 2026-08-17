@@ -1,11 +1,9 @@
 package com.njydsz.userinfo.server.auth;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,11 +18,9 @@ import com.njydsz.userinfo.domain.converter.UserInfoConverter;
 import com.njydsz.userinfo.domain.dto.LoginDTO;
 import com.njydsz.userinfo.domain.entity.Role;
 import com.njydsz.userinfo.domain.entity.UserAccount;
-import com.njydsz.userinfo.domain.entity.UserLoginHistory;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.LoginVO;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
-import com.njydsz.userinfo.infra.mapper.UserLoginHistoryMapper;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
@@ -67,12 +63,12 @@ import com.njydsz.userinfo.server.service.LoginHistoryService;
 public class AuthServiceImpl implements AuthService {
 
   private final UserAccountMapper userAccountMapper;
-  private final UserLoginHistoryMapper loginHistoryMapper;
   private final TokenService tokenService;
   private final TokenBlacklistService tokenBlacklistService;
   private final CaptchaService captchaService;
   private final RiskScoringService riskScoringService;
   private final MfaService mfaService;
+  private final LoginAttemptCounterService loginAttemptCounterService;
   private final UserDomainEventPublisher userDomainEventPublisher;
   private final LoginHistoryService loginHistoryService;
   private final UserInfoMetrics userInfoMetrics;
@@ -120,7 +116,7 @@ public class AuthServiceImpl implements AuthService {
     TokenResult tokenResult = issueTokensAndCreateSession(user, roles);
 
     // 更新登录状态 + 审计
-    updateLoginSuccess(user, loginIp);
+    updateLoginSuccess(user, loginIp, userAgent);
     loginHistoryService.recordLoginAttempt(
         new LoginAttemptContext(user.getId(), user.getUsername(), loginIp),
         "SUCCESS",
@@ -230,51 +226,30 @@ public class AuthServiceImpl implements AuthService {
   }
 
   /**
-   * 获取 IP 最近失败次数（5 分钟窗口）。
+   * 获取 IP 最近失败次数（窗口内，Redis 计数器）。
+   *
+   * <p>P1-2/P1-5: 由 Redis 计数器提供（{@link LoginAttemptCounterService#getIpFailCount}），
+   * 替代原 DB count 查询，消除登录主路径 DB 往返；与 IP 封禁检查共用同一数据源。
    *
    * @param loginIp IP 地址
-   * @return 最近 5 分钟内失败次数
+   * @return 窗口内失败次数
    */
   private int getRecentFailCount(String loginIp) {
-    if (loginIp == null || loginIp.isBlank()) {
-      return 0;
-    }
-    try {
-      LocalDateTime since = LocalDateTime.now().minusSeconds(properties.getRiskWindowSeconds());
-      LambdaQueryWrapper<UserLoginHistory> wrapper = new LambdaQueryWrapper<>();
-      wrapper
-          .eq(UserLoginHistory::getLoginIp, loginIp)
-          .eq(UserLoginHistory::getLoginResult, "FAILED")
-          .ge(UserLoginHistory::getCreatedAt, since);
-      return Math.toIntExact(loginHistoryMapper.selectCount(wrapper));
-    } catch (Exception e) {
-      log.warn("Failed to get recent fail count: ip={}", loginIp);
-      return 0;
-    }
+    return loginAttemptCounterService.getIpFailCount(loginIp);
   }
 
   /**
-   * 检查是否为新设备（基于 User-Agent 近似判断）。
+   * 检查是否为新设备（基于 User-Agent 的 Redis 设备标记）。
+   *
+   * <p>P1-2: 由 Redis 设备标记提供（{@link LoginAttemptCounterService#isNewDevice}），
+   * 替代原 DB count 查询；登录成功时写入设备标记（见 {@link #updateLoginSuccess}）。
    *
    * @param userId 用户 ID
    * @param userAgent 用户代理
    * @return true 如果是新设备
    */
   private boolean checkIfNewDevice(String userId, String userAgent) {
-    if (userAgent == null || userAgent.isBlank()) {
-      return false;
-    }
-    try {
-      LambdaQueryWrapper<UserLoginHistory> wrapper = new LambdaQueryWrapper<>();
-      wrapper
-          .eq(UserLoginHistory::getUserId, userId)
-          .eq(UserLoginHistory::getLoginResult, "SUCCESS")
-          .eq(UserLoginHistory::getUserAgent, userAgent);
-      return loginHistoryMapper.selectCount(wrapper) == 0;
-    } catch (Exception e) {
-      log.warn("Failed to check new device: userId={}", userId);
-      return false;
-    }
+    return loginAttemptCounterService.isNewDevice(userId, userAgent);
   }
 
   /**
@@ -436,14 +411,17 @@ public class AuthServiceImpl implements AuthService {
   }
 
   /**
-   * 更新登录成功信息：原子重置失败计数、清除锁定时间、记录最后登录时间/IP。
+   * 更新登录成功信息：原子重置失败计数、清除锁定时间、记录最后登录时间/IP， 并标记设备已见（供风险评分识别新设备）。
    *
    * @param user 登录成功的用户账号
    * @param loginIp 登录来源 IP
+   * @param userAgent 登录来源 User-Agent（用于设备标记）
    */
-  private void updateLoginSuccess(UserAccount user, String loginIp) {
+  private void updateLoginSuccess(UserAccount user, String loginIp, String userAgent) {
     user.recordLoginSuccess(loginIp);
     userAccountMapper.resetLoginSuccess(user.getId(), loginIp);
+    loginAttemptCounterService.markDeviceSeen(
+        user.getId(), userAgent, properties.getRiskWindowSeconds());
   }
 
   /**

@@ -86,4 +86,61 @@ public interface UserAccountMapper extends BaseMapper<UserAccount> {
             WHERE id = #{id} AND deleted = 0
             """)
   int resetLoginSuccess(@Param("id") String id, @Param("loginIp") String loginIp);
+
+  /**
+   * 批量启用用户账号（P1-3：单条 SQL 替代 N+1 循环）。
+   *
+   * @param ids 用户 ID 列表
+   * @return 影响行数
+   */
+  @Update(
+      """
+            <script>
+            UPDATE ydsz_user_account
+            SET status = '1', updated_at = CURRENT_TIMESTAMP
+            WHERE deleted = 0 AND id IN
+            <foreach collection='ids' item='id' open='(' separator=',' close=')'>
+              #{id}
+            </foreach>
+            </script>
+            """)
+  int batchEnableByIds(@Param("ids") java.util.List<String> ids);
+
+  /**
+   * 批量禁用用户账号（P1-3：单条 SQL 替代 N+1 循环）。
+   *
+   * @param ids 用户 ID 列表
+   * @return 影响行数
+   */
+  @Update(
+      """
+            <script>
+            UPDATE ydsz_user_account
+            SET status = '0', updated_at = CURRENT_TIMESTAMP
+            WHERE deleted = 0 AND id IN
+            <foreach collection='ids' item='id' open='(' separator=',' close=')'>
+              #{id}
+            </foreach>
+            </script>
+            """)
+  int batchDisableByIds(@Param("ids") java.util.List<String> ids);
+
+  /**
+   * 批量逻辑删除用户账号（P1-3：单条 SQL 替代 N+1 循环）。
+   *
+   * @param ids 用户 ID 列表
+   * @return 影响行数
+   */
+  @Update(
+      """
+            <script>
+            UPDATE ydsz_user_account
+            SET deleted = 1, updated_at = CURRENT_TIMESTAMP
+            WHERE deleted = 0 AND id IN
+            <foreach collection='ids' item='id' open='(' separator=',' close=')'>
+              #{id}
+            </foreach>
+            </script>
+            """)
+  int batchDeleteByIds(@Param("ids") java.util.List<String> ids);
 }

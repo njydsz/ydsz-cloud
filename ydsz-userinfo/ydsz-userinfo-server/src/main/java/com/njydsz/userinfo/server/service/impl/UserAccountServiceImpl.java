@@ -683,7 +683,7 @@ public class UserAccountServiceImpl implements UserAccountService {
   /**
    * {@inheritDoc}
    *
-   * <p>批量逻辑删除用户，同时清理密码历史记录和发布删除事件。
+   * <p>批量逻辑删除用户（P1-3：单条批量 SQL + 批量存在性校验），同时清理密码历史记录和发布删除事件。
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
@@ -691,18 +691,15 @@ public class UserAccountServiceImpl implements UserAccountService {
     if (ids == null || ids.isEmpty()) {
       return 0;
     }
-    int count = 0;
-    for (String id : ids) {
-      UserAccount entity = userAccountMapper.selectById(id);
-      if (entity == null || entity.getDeleted() == 1) {
-        throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
-      }
-      if (userAccountMapper.deleteById(id) > 0) {
+    List<String> distinctIds = distinctIds(ids);
+    List<UserAccount> existing = validateAllExist(distinctIds);
+    int count = userAccountMapper.batchDeleteByIds(distinctIds);
+    if (count > 0) {
+      for (String id : distinctIds) {
         indexDelete(id);
         passwordHistoryService.clearHistoryByUserId(id);
-        eventPublisher.publishUserDeleted(id, entity.getUsername());
-        count++;
       }
+      existing.forEach(u -> eventPublisher.publishUserDeleted(u.getId(), u.getUsername()));
     }
     return count;
   }
@@ -710,7 +707,7 @@ public class UserAccountServiceImpl implements UserAccountService {
   /**
    * {@inheritDoc}
    *
-   * <p>批量启用用户账号，同时驱逐全部会话。
+   * <p>批量启用用户账号（P1-3：单条批量 SQL 替代 N+1 循环）。
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
@@ -718,18 +715,16 @@ public class UserAccountServiceImpl implements UserAccountService {
     if (ids == null || ids.isEmpty()) {
       return 0;
     }
-    int count = 0;
-    for (String id : ids) {
-      UserAccount entity = userAccountMapper.selectById(id);
-      if (entity == null || entity.getDeleted() == 1) {
-        throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
-      }
-      entity.enable();
-      if (userAccountMapper.updateById(entity) > 0) {
-        indexUpsert(entity);
-        eventPublisher.publishUserUpdated(entity);
-        count++;
-      }
+    List<String> distinctIds = distinctIds(ids);
+    List<UserAccount> existing = validateAllExist(distinctIds);
+    int count = userAccountMapper.batchEnableByIds(distinctIds);
+    if (count > 0) {
+      existing.forEach(
+          u -> {
+            u.enable();
+            indexUpsert(u);
+            eventPublisher.publishUserUpdated(u);
+          });
     }
     return count;
   }
@@ -737,7 +732,8 @@ public class UserAccountServiceImpl implements UserAccountService {
   /**
    * {@inheritDoc}
    *
-   * <p>批量禁用用户账号，同时驱逐全部会话。
+   * <p>批量禁用用户账号（P1-3：单条批量 SQL 替代 N+1 循环），会话驱逐移出 DB 事务、
+   * 在事务提交后统一执行，避免 Redis 操作夹在事务内。
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
@@ -745,22 +741,54 @@ public class UserAccountServiceImpl implements UserAccountService {
     if (ids == null || ids.isEmpty()) {
       return 0;
     }
-    int count = 0;
-    for (String id : ids) {
-      UserAccount entity = userAccountMapper.selectById(id);
-      if (entity == null || entity.getDeleted() == 1) {
-        throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
-      }
-      entity.disable();
-      if (userAccountMapper.updateById(entity) > 0) {
-        indexUpsert(entity);
-        eventPublisher.publishUserUpdated(entity);
-        // 禁用时驱逐全部会话
-        authService.evictAllSessions(id);
-        count++;
-      }
+    List<String> distinctIds = distinctIds(ids);
+    List<UserAccount> existing = validateAllExist(distinctIds);
+    int count = userAccountMapper.batchDisableByIds(distinctIds);
+    if (count > 0) {
+      existing.forEach(
+          u -> {
+            u.disable();
+            indexUpsert(u);
+            eventPublisher.publishUserUpdated(u);
+          });
+      // 事务提交后驱逐全部旧会话，强制重新登录（避免 Redis 操作在 DB 事务内）
+      org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
+          new org.springframework.transaction.support.TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+              distinctIds.forEach(authService::evictAllSessions);
+            }
+          });
     }
     return count;
+  }
+
+  /**
+   * 去重并过滤空 ID。
+   *
+   * @param ids 原始 ID 列表
+   * @return 去重后的 ID 列表
+   */
+  private List<String> distinctIds(List<String> ids) {
+    return ids.stream()
+        .filter(id -> id != null && !id.isBlank())
+        .distinct()
+        .collect(Collectors.toList());
+  }
+
+  /**
+   * 批量校验用户存在性（任一不存在或已删除时抛异常，保持原逐条校验语义）。
+   *
+   * @param ids 用户 ID 列表（已去重）
+   * @return 批量查询到的用户实体列表
+   * @throws BusinessException 当存在不存在的用户时抛出
+   */
+  private List<UserAccount> validateAllExist(List<String> ids) {
+    List<UserAccount> existing = userAccountMapper.selectBatchIds(ids);
+    if (existing.size() != ids.size()) {
+      throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
+    }
+    return existing;
   }
 
   private void indexUpsert(UserAccount entity) {

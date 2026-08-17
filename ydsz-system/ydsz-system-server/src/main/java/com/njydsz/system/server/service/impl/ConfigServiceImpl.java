@@ -168,6 +168,9 @@ public class ConfigServiceImpl implements ConfigService {
 
   @Override
   public ConfigVO getById(String id) {
+    Config entity = configRepository.findById(id).orElse(null);
+    return SystemConverter.INSTANT.entityToVO(entity);
+  }
 
   @Override
   @Caching(
