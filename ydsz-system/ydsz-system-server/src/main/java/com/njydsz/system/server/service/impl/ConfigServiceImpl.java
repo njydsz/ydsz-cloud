@@ -10,7 +10,6 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -24,7 +23,6 @@ import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.system.domain.converter.SystemConverter;
 import com.njydsz.system.domain.entity.Config;
 import com.njydsz.system.domain.enums.ConfigValueType;
@@ -34,6 +32,7 @@ import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.infra.repository.ConfigRepository;
 import com.njydsz.system.server.config.SystemProperties;
 import com.njydsz.system.server.metrics.SystemMetrics;
+import com.njydsz.system.server.search.SearchIndexSyncer;
 import com.njydsz.system.server.service.ConfigService;
 import com.njydsz.system.server.service.EntityVersionService;
 
@@ -119,7 +118,8 @@ public class ConfigServiceImpl implements ConfigService {
   /** 租户感知缓存键构造器（SpEL 与手动 evict 共用） */
   private final com.njydsz.system.server.cache.CacheKeyBuilder cacheKeyBuilder;
 
-  private final ObjectProvider<SearchIndexEventBridge> searchIndexBridgeProvider;
+  /** 搜索索引同步器（可选能力，未启用搜索模块时静默跳过） */
+  private final SearchIndexSyncer searchIndexSyncer;
 
   // ============================== CRUD ==============================
 
@@ -176,13 +176,7 @@ public class ConfigServiceImpl implements ConfigService {
     validateValueType(entity.getValueType());
     validateConfigValue(entity.getConfigKey(), entity.getConfigValue(), entity.getValueType());
     // 版本快照：查询变更前状态
-    Config before =
-        configRepository
-            .getConfigMapper()
-            .selectOne(
-                new QueryWrapper<Config>()
-                    .eq("config_key", entity.getConfigKey())
-                    .eq("deleted", 0));
+    Config before = configRepository.selectByKeyIgnoreStatus(entity.getConfigKey());
     String snapshotJson = before != null ? YdszJson.toJson(before) : null;
     boolean updated = configRepository.getConfigMapper().updateById(entity) > 0;
     if (updated) {
@@ -231,30 +225,23 @@ public class ConfigServiceImpl implements ConfigService {
   /**
    * 同步配置变更到 ES 搜索索引（可选能力）。
    *
-   * <p>通过 {@code ObjectProvider} 获取可选依赖 {@link SearchIndexEventBridge}， 仅当搜索模块存在时才执行索引
-   * upsert，避免对未启用搜索的环境产生硬依赖。
+   * <p>委托 {@link SearchIndexSyncer}，仅当搜索模块存在时才执行索引 upsert，避免对未启用搜索的环境产生硬依赖。
    *
    * @param entity 待同步的配置实体
    */
   private void indexUpsert(Config entity) {
-    SearchIndexEventBridge bridge = searchIndexBridgeProvider.getIfAvailable();
-    if (bridge != null) {
-      bridge.indexUpsert("config", entity);
-    }
+    searchIndexSyncer.upsert("config", entity);
   }
 
   /**
    * 从 ES 搜索索引删除配置文档（可选能力）。
    *
-   * <p>同样走 {@code ObjectProvider} 可选依赖，未启用搜索模块时静默跳过。
+   * <p>同样委托 {@link SearchIndexSyncer}，未启用搜索模块时静默跳过。
    *
    * @param id 待删除的配置 ID
    */
   private void indexDelete(String id) {
-    SearchIndexEventBridge bridge = searchIndexBridgeProvider.getIfAvailable();
-    if (bridge != null) {
-      bridge.indexDelete("config", id);
-    }
+    searchIndexSyncer.delete("config", id);
   }
 
   /**
@@ -306,7 +293,7 @@ public class ConfigServiceImpl implements ConfigService {
     long start = System.nanoTime();
     try {
       metrics.recordConfigCacheMiss();
-      Config config = configRepository.getConfigMapper().selectByConfigKey(configKey);
+      Config config = configRepository.selectEnabledByKey(configKey);
       return config != null ? config.getConfigValue() : null;
     } finally {
       metrics.recordConfigRead(System.nanoTime() - start);
@@ -319,9 +306,7 @@ public class ConfigServiceImpl implements ConfigService {
     long start = System.nanoTime();
     try {
       metrics.recordConfigCacheMiss();
-      QueryWrapper<Config> wrapper = new QueryWrapper<>();
-      wrapper.eq("config_group", configGroup).eq("status", "ENABLED").orderByAsc("sort_order");
-      return configRepository.getConfigMapper().selectList(wrapper).stream()
+      return configRepository.selectEnabledByGroup(configGroup).stream()
           .map(SystemConverter.INSTANT::entityToVO)
           .filter(Objects::nonNull)
           .collect(Collectors.toList());
@@ -336,9 +321,7 @@ public class ConfigServiceImpl implements ConfigService {
     long start = System.nanoTime();
     try {
       metrics.recordConfigCacheMiss();
-      QueryWrapper<Config> wrapper = new QueryWrapper<>();
-      wrapper.eq("is_public", 1).eq("status", "ENABLED").orderByAsc("sort_order");
-      return configRepository.getConfigMapper().selectList(wrapper).stream()
+      return configRepository.selectPublicEnabled().stream()
           .map(SystemConverter.INSTANT::entityToVO)
           .filter(Objects::nonNull)
           .collect(Collectors.toList());
@@ -538,11 +521,7 @@ public class ConfigServiceImpl implements ConfigService {
    * @param entity 待校验的配置实体
    */
   private void checkDuplicateKey(Config entity) {
-    QueryWrapper<Config> checkWrapper = new QueryWrapper<>();
-    checkWrapper
-        .eq("config_group", entity.getConfigGroup())
-        .eq("config_key", entity.getConfigKey());
-    if (configRepository.getConfigMapper().selectCount(checkWrapper) > 0) {
+    if (configRepository.existsByGroupAndKey(entity.getConfigGroup(), entity.getConfigKey())) {
       throw BusinessException.of(SystemExceptionCode.CONFIG_KEY_DUPLICATE)
           .data("configGroup", entity.getConfigGroup())
           .data("configKey", entity.getConfigKey());
@@ -565,13 +544,7 @@ public class ConfigServiceImpl implements ConfigService {
             try {
               ConfigVO snapshotVO = YdszJson.fromJson(snapshotJson, ConfigVO.class);
               snapshotGroup = snapshotVO.getConfigGroup();
-              Config currentConfig =
-                  configRepository
-                      .getConfigMapper()
-                      .selectOne(
-                          new QueryWrapper<Config>()
-                              .eq("config_key", resourceKey)
-                              .eq("deleted", 0));
+              Config currentConfig = configRepository.selectByKeyIgnoreStatus(resourceKey);
               if (currentConfig != null) {
                 currentConfig.setConfigValue(snapshotVO.getConfigValue());
                 currentConfig.setValueType(snapshotVO.getValueType());

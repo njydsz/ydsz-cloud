@@ -16,6 +16,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.event.api.DomainEvent;
+import com.njydsz.common.event.api.DomainEventTypes;
+import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.json.YdszJson;
@@ -122,6 +125,9 @@ public class VariableServiceImpl implements VariableService {
   /** 租户感知缓存键构造器（SpEL 与手动 evict 共用） */
   private final com.njydsz.system.server.cache.CacheKeyBuilder cacheKeyBuilder;
 
+  /** 统一领域事件发布门面 */
+  private final DomainEventPublisher eventPublisher;
+
   /**
    * 根据主键查询变量（不走缓存，直接走 DB）
    *
@@ -159,9 +165,7 @@ public class VariableServiceImpl implements VariableService {
     long start = System.nanoTime();
     try {
       metrics.recordVariableCacheMiss();
-      QueryWrapper<Variable> wrapper = new QueryWrapper<>();
-      wrapper.eq("variable_key", variableKey).eq("status", "ENABLED");
-      Variable entity = variableRepository.getVariableMapper().selectOne(wrapper);
+      Variable entity = variableRepository.selectEnabledByKey(variableKey);
       return entity != null ? entity.getVariableValue() : null;
     } finally {
       metrics.recordVariableRead(System.nanoTime() - start);
@@ -173,7 +177,7 @@ public class VariableServiceImpl implements VariableService {
    *
    * <p>支持按 {@code variableKey} 模糊匹配、{@code status} 精确匹配进行过滤， 按 {@code created_at} 倒序返回。
    *
-   * <p><b>行级权限：</b>本方法带 {@code @DataScope} 注解， 自动按当前用户的部门 / 人员范围过滤（管理员看全量）。
+   * <p><b>租户隔离：</b>本方法按当前租户自动过滤（MyBatis 拦截器注入 tenant_id）。
    *
    * @param pageNum 页码（1-based）
    * @param pageSize 每页条数
@@ -237,6 +241,7 @@ public class VariableServiceImpl implements VariableService {
     validateValueType(vo.getValueType());
     Variable entity = toEntity(vo);
     variableRepository.getVariableMapper().insert(entity);
+    publishVariableChangedEvent(entity.getVariableKey(), "创建变量");
     return entity.getId();
   }
 
@@ -265,11 +270,7 @@ public class VariableServiceImpl implements VariableService {
     validateValueType(vo.getValueType());
     Variable entity = toEntity(vo);
     // 版本快照：查询变更前状态
-    Variable before =
-        variableRepository.getVariableMapper().selectOne(
-            new QueryWrapper<Variable>()
-                .eq("variable_key", entity.getVariableKey())
-                .eq("deleted", 0));
+    Variable before = variableRepository.selectByKeyIgnoreStatus(entity.getVariableKey());
     String snapshotJson = before != null ? YdszJson.toJson(before) : null;
     boolean updated = variableRepository.getVariableMapper().updateById(entity) > 0;
     if (updated) {
@@ -285,6 +286,7 @@ public class VariableServiceImpl implements VariableService {
           "v" + System.currentTimeMillis(),
           "更新变量: " + entity.getVariableKey(),
           snapshotJson);
+      publishVariableChangedEvent(entity.getVariableKey(), "更新变量");
     }
     return updated;
   }
@@ -322,6 +324,7 @@ public class VariableServiceImpl implements VariableService {
           "v" + System.currentTimeMillis(),
           "删除变量: " + entity.getVariableKey(),
           snapshotJson);
+      publishVariableChangedEvent(entity.getVariableKey(), "删除变量");
     }
     return removed;
   }
@@ -357,13 +360,7 @@ public class VariableServiceImpl implements VariableService {
           if (snapshotJson != null && !snapshotJson.isBlank()) {
             try {
               VariableVO snapshotVO = YdszJson.fromJson(snapshotJson, VariableVO.class);
-              Variable currentVariable =
-                  variableRepository
-                      .getVariableMapper()
-                      .selectOne(
-                          new QueryWrapper<Variable>()
-                              .eq("variable_key", resourceKey)
-                              .eq("deleted", 0));
+              Variable currentVariable = variableRepository.selectByKeyIgnoreStatus(resourceKey);
               if (currentVariable != null) {
                 currentVariable.setVariableValue(snapshotVO.getVariableValue());
                 currentVariable.setValueType(snapshotVO.getValueType());
@@ -401,6 +398,23 @@ public class VariableServiceImpl implements VariableService {
     cacheManager
         .getCache(CacheConstants.SYSTEM_VARIABLE_CACHE)
         .evict(cacheKeyBuilder.variable(variableKey));
+  }
+
+  /**
+   * 发布变量变更事件（跨实例缓存同步）。
+   *
+   * @param variableKey 变量键
+   * @param action 操作描述（创建变量/更新变量/删除变量）
+   */
+  private void publishVariableChangedEvent(String variableKey, String action) {
+    eventPublisher.publish(
+        DomainEvent.builder()
+            .aggregateType("Variable")
+            .aggregateId(variableKey)
+            .eventType(DomainEventTypes.VARIABLE_CHANGED)
+            .metadata("variableKey", variableKey)
+            .metadata("action", action)
+            .build());
   }
 
   /**

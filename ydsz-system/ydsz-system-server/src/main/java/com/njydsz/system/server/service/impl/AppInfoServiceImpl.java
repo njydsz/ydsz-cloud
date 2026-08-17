@@ -209,7 +209,7 @@ public class AppInfoServiceImpl implements AppInfoService {
     }
 
     // 3. DB 查询 + BCrypt 校验
-    AppInfo app = appInfoRepository.getAppInfoMapper().selectEnabledByAppKey(appKey);
+    AppInfo app = appInfoRepository.selectEnabledByAppKey(appKey);
     if (app == null) {
       handleValidateFail(appKey, failKey, "不存在或未启用");
       return false;
@@ -313,9 +313,7 @@ public class AppInfoServiceImpl implements AppInfoService {
   @Transactional(rollbackFor = Exception.class)
   public String save(AppInfoDTO dto) {
     // 唯一性校验：appKey 不能重复
-    QueryWrapper<AppInfo> checkWrapper = new QueryWrapper<>();
-    checkWrapper.eq("app_key", dto.getAppKey());
-    if (appInfoRepository.getAppInfoMapper().selectCount(checkWrapper) > 0) {
+    if (appInfoRepository.existsByAppKey(dto.getAppKey())) {
       throw BusinessException.of(SystemExceptionCode.APP_KEY_DUPLICATE)
           .data("appKey", dto.getAppKey());
     }
