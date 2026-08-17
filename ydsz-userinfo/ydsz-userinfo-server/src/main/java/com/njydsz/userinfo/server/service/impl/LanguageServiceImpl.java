@@ -23,7 +23,7 @@ import com.njydsz.userinfo.domain.entity.Language;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.query.LanguagePageQuery;
 import com.njydsz.userinfo.domain.vo.LanguageVO;
-import com.njydsz.userinfo.infra.mapper.LanguageMapper;
+import com.njydsz.userinfo.infra.repository.LanguageRepository;
 import com.njydsz.userinfo.server.service.LanguageService;
 
 /**
@@ -39,19 +39,19 @@ import com.njydsz.userinfo.server.service.LanguageService;
 @RequiredArgsConstructor
 public class LanguageServiceImpl implements LanguageService {
 
-  private final LanguageMapper mapper;
+  private final LanguageRepository languageRepository;
 
   @Override
   public PageResponse<List<LanguageVO>> page(LanguagePageQuery query) {
     QueryWrapper<Language> wrapper = buildQueryWrapper(query);
     Page<Language> mpPage = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
-    IPage<Language> result = mapper.selectPage(mpPage, wrapper);
+    IPage<Language> result = languageRepository.page(mpPage, wrapper);
     return PageResponses.success(result, UserInfoConverter.INSTANT::entityToVO);
   }
 
   @Override
   public LanguageVO getById(String id) {
-    Language entity = mapper.selectById(id);
+    Language entity = languageRepository.findById(id);
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.LANGUAGE_NOT_FOUND);
     }
@@ -62,7 +62,7 @@ public class LanguageServiceImpl implements LanguageService {
   public List<LanguageVO> list() {
     LambdaQueryWrapper<Language> wrapper = new LambdaQueryWrapper<>();
     wrapper.orderByDesc(Language::getSortOrder);
-    return mapper.selectList(wrapper).stream()
+    return languageRepository.list(wrapper).stream()
         .map(UserInfoConverter.INSTANT::entityToVO)
         .collect(Collectors.toList());
   }
@@ -74,29 +74,29 @@ public class LanguageServiceImpl implements LanguageService {
     if (entity.getStatus() == null) {
       entity.setStatus("ENABLED");
     }
-    mapper.insert(entity);
+    languageRepository.insert(entity);
     return entity.getId();
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean update(LanguageUpdateDTO dto) {
-    Language entity = mapper.selectById(dto.getId());
+    Language entity = languageRepository.findById(dto.getId());
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.LANGUAGE_NOT_FOUND);
     }
     BeanUpdateUtil.copyNonNull(dto, entity, "id");
-    return mapper.updateById(entity) > 0;
+    return languageRepository.updateById(entity) > 0;
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    Language entity = mapper.selectById(id);
+    Language entity = languageRepository.findById(id);
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.LANGUAGE_NOT_FOUND);
     }
-    return mapper.deleteById(id) > 0;
+    return languageRepository.deleteById(id) > 0;
   }
 
   private QueryWrapper<Language> buildQueryWrapper(LanguagePageQuery query) {

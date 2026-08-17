@@ -29,17 +29,16 @@ import com.njydsz.userinfo.domain.dto.ResetPasswordDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountPageQueryDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
-import com.njydsz.userinfo.domain.entity.Role;
 import com.njydsz.userinfo.domain.entity.UserAccount;
 import com.njydsz.userinfo.domain.entity.UserDept;
 import com.njydsz.userinfo.domain.entity.UserRole;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
-import com.njydsz.userinfo.infra.mapper.RoleMapper;
-import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
-import com.njydsz.userinfo.infra.mapper.UserDeptMapper;
-import com.njydsz.userinfo.infra.mapper.UserRoleMapper;
+import com.njydsz.userinfo.infra.repository.RoleRepository;
+import com.njydsz.userinfo.infra.repository.UserAccountRepository;
+import com.njydsz.userinfo.infra.repository.UserDeptRepository;
+import com.njydsz.userinfo.infra.repository.UserRoleRepository;
 import com.njydsz.userinfo.server.auth.AuthService;
 import com.njydsz.userinfo.server.auth.PasswordPolicyValidator;
 import com.njydsz.userinfo.server.auth.UserPasswordHistoryService;
@@ -83,7 +82,7 @@ import com.njydsz.userinfo.server.service.WorkflowApproverCacheService;
  *
  * <ul>
  *   <li>{@link #page} 与 {@link #list} 均启用 {@link DataScope}，数据权限自动追加 WHERE 条件
- *   <li>{@link #assignRoles} 使用批量插入（{@code userRoleMapper.batchInsert}）避免 N+1
+ *   <li>{@link #assignRoles} 使用批量插入（{@code userRoleRepository.batchInsert}）避免 N+1
  *   <li>{@link #batchUserNames} 使用单条 {@code IN} 查询，单次往返
  * </ul>
  *
@@ -98,20 +97,20 @@ import com.njydsz.userinfo.server.service.WorkflowApproverCacheService;
 @RequiredArgsConstructor
 public class UserAccountServiceImpl implements UserAccountService {
 
-  /** 用户账号 Mapper */
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
 
-  private final UserAccountMapper userAccountMapper;
+  /** 用户账号 Repository */
+  private final UserAccountRepository userAccountRepository;
 
-  /** 用户-角色关联 Mapper */
-  private final UserRoleMapper userRoleMapper;
+  /** 用户-角色关联 Repository */
+  private final UserRoleRepository userRoleRepository;
 
-  /** 角色 Mapper（用于角色编码查询） */
-  private final RoleMapper roleMapper;
+  /** 角色 Repository（用于角色编码查询） */
+  private final RoleRepository roleRepository;
 
-  /** 用户-部门关联 Mapper */
-  private final UserDeptMapper userDeptMapper;
+  /** 用户-部门关联 Repository */
+  private final UserDeptRepository userDeptRepository;
 
   /** 密码编码器（BCrypt） */
   private final PasswordEncoder passwordEncoder;
@@ -143,7 +142,7 @@ public class UserAccountServiceImpl implements UserAccountService {
    */
   @Override
   public UserAccountVO getById(String id) {
-    UserAccount entity = userAccountMapper.selectById(id);
+    UserAccount entity = userAccountRepository.findById(id);
     if (entity == null) {
       throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
     }
@@ -165,7 +164,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     LambdaQueryWrapper<UserAccount> wrapper = buildPageQueryWrapper(query);
     wrapper.orderByDesc(UserAccount::getCreatedAt);
 
-    Page<UserAccount> result = userAccountMapper.selectPage(page, wrapper);
+    Page<UserAccount> result = userAccountRepository.page(page, wrapper);
     Page<UserAccountVO> voPage =
         new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
     List<UserAccountVO> voList =
@@ -248,7 +247,7 @@ public class UserAccountServiceImpl implements UserAccountService {
   public List<UserAccountVO> list() {
     LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
     wrapper.orderByDesc(UserAccount::getCreatedAt);
-    return userAccountMapper.selectList(wrapper).stream()
+    return userAccountRepository.list(wrapper).stream()
         .map(UserInfoConverter.INSTANT::entityToVO)
         .collect(Collectors.toList());
   }
@@ -267,7 +266,7 @@ public class UserAccountServiceImpl implements UserAccountService {
   public String create(UserAccountCreateDTO dto) {
     LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(UserAccount::getUsername, dto.getUsername());
-    if (userAccountMapper.selectCount(wrapper) > 0) {
+    if (userAccountRepository.count(wrapper) > 0) {
       throw new BusinessException(UserInfoExceptionCode.USERNAME_DUPLICATE);
     }
 
@@ -282,7 +281,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     if (dto.getTenantId() == null || dto.getTenantId().isBlank()) {
       entity.setTenantId("1");
     }
-    userAccountMapper.insert(entity);
+    userAccountRepository.insert(entity);
     log.info("User created: username={}, id={}", entity.getUsername(), entity.getId());
 
     // 记录初始密码到密码历史
@@ -304,7 +303,7 @@ public class UserAccountServiceImpl implements UserAccountService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean update(UserAccountUpdateDTO dto) {
-    UserAccount entity = userAccountMapper.selectById(dto.getId());
+    UserAccount entity = userAccountRepository.findById(dto.getId());
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
     }
@@ -313,7 +312,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     if (dto.getStatus() != null) {
       entity.setStatusEnum(dto.getStatus());
     }
-    boolean result = userAccountMapper.updateById(entity) > 0;
+    boolean result = userAccountRepository.updateById(entity) > 0;
     if (result) {
       indexUpsert(entity);
       eventPublisher.publishUserUpdated(entity);
@@ -334,11 +333,11 @@ public class UserAccountServiceImpl implements UserAccountService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    UserAccount entity = userAccountMapper.selectById(id);
+    UserAccount entity = userAccountRepository.findById(id);
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
     }
-    boolean result = userAccountMapper.deleteById(id) > 0;
+    boolean result = userAccountRepository.deleteById(id) > 0;
     if (result) {
       indexDelete(id);
       // 清理密码历史记录（避免敏感数据残留）
@@ -360,7 +359,7 @@ public class UserAccountServiceImpl implements UserAccountService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean changePassword(ChangePasswordDTO dto) {
-    UserAccount entity = userAccountMapper.selectById(dto.getUserId());
+    UserAccount entity = userAccountRepository.findById(dto.getUserId());
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
     }
@@ -378,7 +377,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     String newPasswordHash = passwordEncoder.encode(dto.getNewPassword());
     entity.setPassword(newPasswordHash);
 
-    boolean result = userAccountMapper.updateById(entity) > 0;
+    boolean result = userAccountRepository.updateById(entity) > 0;
     if (result) {
       // 记录新密码到历史
       passwordHistoryService.recordPasswordHistory(
@@ -401,7 +400,7 @@ public class UserAccountServiceImpl implements UserAccountService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean resetPassword(ResetPasswordDTO dto) {
-    UserAccount entity = userAccountMapper.selectById(dto.getUserId());
+    UserAccount entity = userAccountRepository.findById(dto.getUserId());
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
     }
@@ -415,7 +414,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     entity.setLoginFailCount(0);
     entity.setLockedUntil(null);
 
-    boolean result = userAccountMapper.updateById(entity) > 0;
+    boolean result = userAccountRepository.updateById(entity) > 0;
     if (result) {
       // 记录新密码到历史
       passwordHistoryService.recordPasswordHistory(
@@ -438,14 +437,14 @@ public class UserAccountServiceImpl implements UserAccountService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean assignRoles(String userId, List<String> roleIds) {
-    UserAccount entity = userAccountMapper.selectById(userId);
+    UserAccount entity = userAccountRepository.findById(userId);
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
     }
 
     LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(UserRole::getUserId, userId);
-    userRoleMapper.delete(wrapper);
+    userRoleRepository.delete(wrapper);
 
     // 批量插入（替代 N+1 循环）
     List<UserRole> list = new ArrayList<>(roleIds.size());
@@ -458,7 +457,7 @@ public class UserAccountServiceImpl implements UserAccountService {
       list.add(ur);
     }
     if (!list.isEmpty()) {
-      userRoleMapper.batchInsert(list);
+      userRoleRepository.batchInsert(list);
     }
     log.info("Roles assigned to user {}: {}", userId, roleIds);
 
@@ -506,11 +505,7 @@ public class UserAccountServiceImpl implements UserAccountService {
    */
   @Override
   public List<String> getUserRoleIds(String userId) {
-    LambdaQueryWrapper<UserRole> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserRole::getUserId, userId);
-    return userRoleMapper.selectList(wrapper).stream()
-        .map(UserRole::getRoleId)
-        .collect(Collectors.toList());
+    return userRoleRepository.findRoleIdsByUserId(userId);
   }
 
   /**
@@ -524,15 +519,13 @@ public class UserAccountServiceImpl implements UserAccountService {
     if (roleCode == null || roleCode.isBlank()) {
       return Collections.emptyList();
     }
-    LambdaQueryWrapper<Role> roleWrapper = new LambdaQueryWrapper<>();
-    roleWrapper.eq(Role::getRoleCode, roleCode);
-    Role role = roleMapper.selectOne(roleWrapper);
+    com.njydsz.userinfo.domain.entity.Role role = roleRepository.findByRoleCode(roleCode);
     if (role == null) {
       return Collections.emptyList();
     }
     LambdaQueryWrapper<UserRole> userRoleWrapper = new LambdaQueryWrapper<>();
     userRoleWrapper.eq(UserRole::getRoleId, role.getId());
-    return userRoleMapper.selectList(userRoleWrapper).stream()
+    return userRoleRepository.list(userRoleWrapper).stream()
         .map(UserRole::getUserId)
         .distinct()
         .collect(Collectors.toList());
@@ -548,20 +541,14 @@ public class UserAccountServiceImpl implements UserAccountService {
     if (userId == null || userId.isBlank()) {
       return Collections.emptyList();
     }
-    LambdaQueryWrapper<UserRole> userRoleWrapper = new LambdaQueryWrapper<>();
-    userRoleWrapper.eq(UserRole::getUserId, userId);
-    List<String> roleIds =
-        userRoleMapper.selectList(userRoleWrapper).stream()
-            .map(UserRole::getRoleId)
-            .distinct()
-            .collect(Collectors.toList());
+    List<String> roleIds = userRoleRepository.findRoleIdsByUserId(userId);
     if (roleIds.isEmpty()) {
       return Collections.emptyList();
     }
-    LambdaQueryWrapper<Role> roleWrapper = new LambdaQueryWrapper<>();
-    roleWrapper.in(Role::getId, roleIds);
-    return roleMapper.selectList(roleWrapper).stream()
-        .map(Role::getRoleCode)
+    LambdaQueryWrapper<com.njydsz.userinfo.domain.entity.Role> roleWrapper = new LambdaQueryWrapper<>();
+    roleWrapper.in(com.njydsz.userinfo.domain.entity.Role::getId, roleIds);
+    return roleRepository.list(roleWrapper).stream()
+        .map(com.njydsz.userinfo.domain.entity.Role::getRoleCode)
         .filter(c -> c != null && !c.isBlank())
         .distinct()
         .collect(Collectors.toList());
@@ -573,10 +560,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     if (userId == null || userId.isBlank()) {
       return Collections.emptyList();
     }
-    LambdaQueryWrapper<UserDept> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(UserDept::getUserId, userId);
-    return userDeptMapper.selectList(wrapper).stream()
-        .map(UserDept::getDeptId)
+    return userDeptRepository.findDeptIdsByUserId(userId).stream()
         .filter(d -> d != null && !d.isBlank())
         .distinct()
         .collect(Collectors.toList());
@@ -592,7 +576,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     if (userId == null || userId.isBlank()) {
       return null;
     }
-    UserAccount entity = userAccountMapper.selectById(userId);
+    UserAccount entity = userAccountRepository.findById(userId);
     if (entity == null || entity.getDeleted() == 1) {
       return null;
     }
@@ -611,7 +595,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
     LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(UserAccount::getPositionCode, positionCode);
-    return userAccountMapper.selectList(wrapper).stream()
+    return userAccountRepository.list(wrapper).stream()
         .map(UserAccount::getId)
         .distinct()
         .collect(Collectors.toList());
@@ -620,9 +604,7 @@ public class UserAccountServiceImpl implements UserAccountService {
   /**
    * 批量查询用户 ID → 用户真实姓名映射。
    *
-   * <p>实现：{@link com.baomidou.mybatisplus.core.mapper.BaseMapper#selectBatchIds(Collection)} 单条 SQL
-   * 完成（已自动追加 {@code deleted = 0} 条件，因 {@link UserAccount#getDeleted()} 标注了 {@link
-   * com.baomidou.mybatisplus.annotation.TableLogic}）。
+   * <p>实现：单条 SQL 完成（已自动追加 {@code deleted = 0} 条件）。
    *
    * <p>返回 realName（而非 username）：富化场景需要展示给人看的是真实姓名。 若 realName 为空则该 userId 不出现在结果中（让 NameAssembler
    * 兜底用 userId 顶替）。
@@ -670,7 +652,7 @@ public class UserAccountServiceImpl implements UserAccountService {
    * @return userId → realName 映射
    */
   private Map<String, String> batchUserNamesInternal(List<String> userIds) {
-    List<UserAccount> users = userAccountMapper.selectBatchIds(userIds);
+    List<UserAccount> users = userAccountRepository.listByIds(userIds);
     Map<String, String> result = new LinkedHashMap<>(users.size());
     for (UserAccount user : users) {
       if (user.getRealName() != null && !user.getRealName().isBlank()) {
@@ -683,7 +665,7 @@ public class UserAccountServiceImpl implements UserAccountService {
   /**
    * {@inheritDoc}
    *
-   * <p>批量逻辑删除用户（P1-3：单条批量 SQL + 批量存在性校验），同时清理密码历史记录和发布删除事件。
+   * <p>批量逻辑删除用户，同时清理密码历史记录和发布删除事件。
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
@@ -691,15 +673,18 @@ public class UserAccountServiceImpl implements UserAccountService {
     if (ids == null || ids.isEmpty()) {
       return 0;
     }
-    List<String> distinctIds = distinctIds(ids);
-    List<UserAccount> existing = validateAllExist(distinctIds);
-    int count = userAccountMapper.batchDeleteByIds(distinctIds);
-    if (count > 0) {
-      for (String id : distinctIds) {
+    int count = 0;
+    for (String id : ids) {
+      UserAccount entity = userAccountRepository.findById(id);
+      if (entity == null || entity.getDeleted() == 1) {
+        throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
+      }
+      if (userAccountRepository.deleteById(id) > 0) {
         indexDelete(id);
         passwordHistoryService.clearHistoryByUserId(id);
+        eventPublisher.publishUserDeleted(id, entity.getUsername());
+        count++;
       }
-      existing.forEach(u -> eventPublisher.publishUserDeleted(u.getId(), u.getUsername()));
     }
     return count;
   }
@@ -707,7 +692,7 @@ public class UserAccountServiceImpl implements UserAccountService {
   /**
    * {@inheritDoc}
    *
-   * <p>批量启用用户账号（P1-3：单条批量 SQL 替代 N+1 循环）。
+   * <p>批量启用用户账号，同时驱逐全部会话。
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
@@ -715,16 +700,18 @@ public class UserAccountServiceImpl implements UserAccountService {
     if (ids == null || ids.isEmpty()) {
       return 0;
     }
-    List<String> distinctIds = distinctIds(ids);
-    List<UserAccount> existing = validateAllExist(distinctIds);
-    int count = userAccountMapper.batchEnableByIds(distinctIds);
-    if (count > 0) {
-      existing.forEach(
-          u -> {
-            u.enable();
-            indexUpsert(u);
-            eventPublisher.publishUserUpdated(u);
-          });
+    int count = 0;
+    for (String id : ids) {
+      UserAccount entity = userAccountRepository.findById(id);
+      if (entity == null || entity.getDeleted() == 1) {
+        throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
+      }
+      entity.enable();
+      if (userAccountRepository.updateById(entity) > 0) {
+        indexUpsert(entity);
+        eventPublisher.publishUserUpdated(entity);
+        count++;
+      }
     }
     return count;
   }
@@ -732,8 +719,7 @@ public class UserAccountServiceImpl implements UserAccountService {
   /**
    * {@inheritDoc}
    *
-   * <p>批量禁用用户账号（P1-3：单条批量 SQL 替代 N+1 循环），会话驱逐移出 DB 事务、
-   * 在事务提交后统一执行，避免 Redis 操作夹在事务内。
+   * <p>批量禁用用户账号，同时驱逐全部会话。
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
@@ -741,54 +727,22 @@ public class UserAccountServiceImpl implements UserAccountService {
     if (ids == null || ids.isEmpty()) {
       return 0;
     }
-    List<String> distinctIds = distinctIds(ids);
-    List<UserAccount> existing = validateAllExist(distinctIds);
-    int count = userAccountMapper.batchDisableByIds(distinctIds);
-    if (count > 0) {
-      existing.forEach(
-          u -> {
-            u.disable();
-            indexUpsert(u);
-            eventPublisher.publishUserUpdated(u);
-          });
-      // 事务提交后驱逐全部旧会话，强制重新登录（避免 Redis 操作在 DB 事务内）
-      org.springframework.transaction.support.TransactionSynchronizationManager.registerSynchronization(
-          new org.springframework.transaction.support.TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
-              distinctIds.forEach(authService::evictAllSessions);
-            }
-          });
+    int count = 0;
+    for (String id : ids) {
+      UserAccount entity = userAccountRepository.findById(id);
+      if (entity == null || entity.getDeleted() == 1) {
+        throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
+      }
+      entity.disable();
+      if (userAccountRepository.updateById(entity) > 0) {
+        indexUpsert(entity);
+        eventPublisher.publishUserUpdated(entity);
+        // 禁用时驱逐全部会话
+        authService.evictAllSessions(id);
+        count++;
+      }
     }
     return count;
-  }
-
-  /**
-   * 去重并过滤空 ID。
-   *
-   * @param ids 原始 ID 列表
-   * @return 去重后的 ID 列表
-   */
-  private List<String> distinctIds(List<String> ids) {
-    return ids.stream()
-        .filter(id -> id != null && !id.isBlank())
-        .distinct()
-        .collect(Collectors.toList());
-  }
-
-  /**
-   * 批量校验用户存在性（任一不存在或已删除时抛异常，保持原逐条校验语义）。
-   *
-   * @param ids 用户 ID 列表（已去重）
-   * @return 批量查询到的用户实体列表
-   * @throws BusinessException 当存在不存在的用户时抛出
-   */
-  private List<UserAccount> validateAllExist(List<String> ids) {
-    List<UserAccount> existing = userAccountMapper.selectBatchIds(ids);
-    if (existing.size() != ids.size()) {
-      throw new BusinessException(UserInfoExceptionCode.USER_NOT_FOUND);
-    }
-    return existing;
   }
 
   private void indexUpsert(UserAccount entity) {

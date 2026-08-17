@@ -21,7 +21,7 @@ import com.njydsz.userinfo.domain.dto.update.PostUpdateDTO;
 import com.njydsz.userinfo.domain.entity.Post;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.PostVO;
-import com.njydsz.userinfo.infra.mapper.PostMapper;
+import com.njydsz.userinfo.infra.repository.PostRepository;
 import com.njydsz.userinfo.server.service.PostService;
 
 /**
@@ -53,8 +53,8 @@ import com.njydsz.userinfo.server.service.PostService;
 @RequiredArgsConstructor
 public class PostServiceImpl implements PostService {
 
-  /** 岗位 Mapper */
-  private final PostMapper mapper;
+  /** 岗位 Repository */
+  private final PostRepository postRepository;
 
   /**
    * {@inheritDoc}
@@ -63,7 +63,7 @@ public class PostServiceImpl implements PostService {
    */
   @Override
   public PostVO getById(String id) {
-    Post entity = mapper.selectById(id);
+    Post entity = postRepository.findById(id);
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.POST_NOT_FOUND);
     }
@@ -79,7 +79,7 @@ public class PostServiceImpl implements PostService {
   public List<PostVO> list() {
     LambdaQueryWrapper<Post> wrapper = new LambdaQueryWrapper<>();
     wrapper.orderByDesc(Post::getSortOrder);
-    return mapper.selectList(wrapper).stream()
+    return postRepository.list(wrapper).stream()
         .map(UserInfoConverter.INSTANT::entityToVO)
         .collect(Collectors.toList());
   }
@@ -97,7 +97,7 @@ public class PostServiceImpl implements PostService {
     // 编码唯一性校验
     LambdaQueryWrapper<Post> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(Post::getPostCode, dto.getPostCode());
-    if (mapper.selectCount(wrapper) > 0) {
+    if (postRepository.count(wrapper) > 0) {
       throw new BusinessException(UserInfoExceptionCode.POST_CODE_DUPLICATE);
     }
 
@@ -105,7 +105,7 @@ public class PostServiceImpl implements PostService {
     if (entity.getStatus() == null) {
       entity.setStatus("ENABLED");
     }
-    mapper.insert(entity);
+    postRepository.insert(entity);
     log.info("Post created: code={}, id={}", entity.getPostCode(), entity.getId());
     return entity.getId();
   }
@@ -120,12 +120,12 @@ public class PostServiceImpl implements PostService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean update(PostUpdateDTO dto) {
-    Post entity = mapper.selectById(dto.getId());
+    Post entity = postRepository.findById(dto.getId());
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.POST_NOT_FOUND);
     }
     BeanUpdateUtil.copyNonNull(dto, entity, "id");
-    return mapper.updateById(entity) > 0;
+    return postRepository.updateById(entity) > 0;
   }
 
   /**
@@ -136,11 +136,11 @@ public class PostServiceImpl implements PostService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    Post entity = mapper.selectById(id);
+    Post entity = postRepository.findById(id);
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.POST_NOT_FOUND);
     }
-    return mapper.deleteById(id) > 0;
+    return postRepository.deleteById(id) > 0;
   }
 
   /**
@@ -158,7 +158,7 @@ public class PostServiceImpl implements PostService {
     wrapper.in(Post::getId, postIds);
     wrapper.select(Post::getId, Post::getPostName);
 
-    return mapper.selectList(wrapper).stream()
+    return postRepository.list(wrapper).stream()
         .collect(
             Collectors.toMap(Post::getId, Post::getPostName, (v1, v2) -> v1, LinkedHashMap::new));
   }

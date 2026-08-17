@@ -17,6 +17,14 @@ import com.njydsz.userinfo.domain.entity.UserPost;
 public interface UserPostRepository {
 
   /**
+   * 根据 ID 查询用户-岗位关联。
+   *
+   * @param id 关联 ID
+   * @return 用户-岗位关联实体，不存在时返回 null
+   */
+  UserPost findById(String id);
+
+  /**
    * 根据用户 ID 查询用户-岗位关联列表。
    *
    * @param userId 用户 ID

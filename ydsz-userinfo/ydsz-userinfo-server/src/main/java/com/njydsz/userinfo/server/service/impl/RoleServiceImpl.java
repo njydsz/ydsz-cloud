@@ -32,9 +32,9 @@ import com.njydsz.userinfo.domain.entity.RolePermission;
 import com.njydsz.userinfo.domain.entity.UserRole;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.RoleVO;
-import com.njydsz.userinfo.infra.mapper.RoleMapper;
-import com.njydsz.userinfo.infra.mapper.RolePermissionMapper;
-import com.njydsz.userinfo.infra.mapper.UserRoleMapper;
+import com.njydsz.userinfo.infra.repository.RolePermissionRepository;
+import com.njydsz.userinfo.infra.repository.RoleRepository;
+import com.njydsz.userinfo.infra.repository.UserRoleRepository;
 import com.njydsz.userinfo.server.auth.DbRolePermissionLoader;
 import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 import com.njydsz.userinfo.server.service.RoleService;
@@ -83,17 +83,17 @@ public class RoleServiceImpl implements RoleService {
   /** 角色权限缓存过期时间（秒）：10 分钟 */
   private static final long CACHE_TTL_ROLE_PERMISSIONS = 600;
 
-  /** 角色 Mapper */
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
 
-  private final RoleMapper roleMapper;
+  /** 角色 Repository */
+  private final RoleRepository roleRepository;
 
-  /** 角色-权限关联 Mapper */
-  private final RolePermissionMapper rolePermissionMapper;
+  /** 角色-权限关联 Repository */
+  private final RolePermissionRepository rolePermissionRepository;
 
-  /** 用户-角色关联 Mapper（用于删除前检查是否有用户关联） */
-  private final UserRoleMapper userRoleMapper;
+  /** 用户-角色关联 Repository（用于删除前检查是否有用户关联） */
+  private final UserRoleRepository userRoleRepository;
 
   /** Redis 服务 */
   private final RedisStringOps redisStringOps;
@@ -114,7 +114,7 @@ public class RoleServiceImpl implements RoleService {
    */
   @Override
   public RoleVO getById(String id) {
-    Role entity = roleMapper.selectById(id);
+    Role entity = roleRepository.findById(id);
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.ROLE_NOT_FOUND);
     }
@@ -141,7 +141,7 @@ public class RoleServiceImpl implements RoleService {
       wrapper.eq(Role::getStatus, query.getStatus());
     }
     wrapper.orderByAsc(Role::getSortOrder);
-    Page<Role> result = roleMapper.selectPage(page, wrapper);
+    Page<Role> result = roleRepository.page(page, wrapper);
     Page<RoleVO> voPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
     List<RoleVO> voList =
         result.getRecords().stream()
@@ -161,7 +161,7 @@ public class RoleServiceImpl implements RoleService {
   public List<RoleVO> list() {
     LambdaQueryWrapper<Role> wrapper = new LambdaQueryWrapper<>();
     wrapper.orderByAsc(Role::getSortOrder);
-    return roleMapper.selectList(wrapper).stream()
+    return roleRepository.list(wrapper).stream()
         .map(UserInfoConverter.INSTANT::entityToVO)
         .collect(Collectors.toList());
   }
@@ -180,7 +180,7 @@ public class RoleServiceImpl implements RoleService {
   public String create(RoleCreateDTO dto) {
     LambdaQueryWrapper<Role> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(Role::getRoleCode, dto.getRoleCode());
-    if (roleMapper.selectCount(wrapper) > 0) {
+    if (roleRepository.count(wrapper) > 0) {
       throw new BusinessException(UserInfoExceptionCode.ROLE_CODE_DUPLICATE);
     }
 
@@ -191,7 +191,7 @@ public class RoleServiceImpl implements RoleService {
     if (entity.getBuiltIn() == null) {
       entity.setBuiltIn(false);
     }
-    roleMapper.insert(entity);
+    roleRepository.insert(entity);
     log.info("Role created: code={}, id={}", entity.getRoleCode(), entity.getId());
     eventPublisher.publishRoleEntityChanged(entity, "CREATED");
     return entity.getId();
@@ -207,12 +207,12 @@ public class RoleServiceImpl implements RoleService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean update(RoleUpdateDTO dto) {
-    Role entity = roleMapper.selectById(dto.getId());
+    Role entity = roleRepository.findById(dto.getId());
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.ROLE_NOT_FOUND);
     }
     BeanUpdateUtil.copyNonNull(dto, entity, "id", "builtIn");
-    boolean result = roleMapper.updateById(entity) > 0;
+    boolean result = roleRepository.updateById(entity) > 0;
 
     if (result) {
       // 角色变更后失效其权限缓存
@@ -236,7 +236,7 @@ public class RoleServiceImpl implements RoleService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    Role entity = roleMapper.selectById(id);
+    Role entity = roleRepository.findById(id);
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.ROLE_NOT_FOUND);
     }
@@ -246,15 +246,15 @@ public class RoleServiceImpl implements RoleService {
 
     LambdaQueryWrapper<UserRole> urWrapper = new LambdaQueryWrapper<>();
     urWrapper.eq(UserRole::getRoleId, id);
-    if (userRoleMapper.selectCount(urWrapper) > 0) {
+    if (userRoleRepository.count(urWrapper) > 0) {
       throw new BusinessException(UserInfoExceptionCode.ROLE_HAS_USERS);
     }
 
     LambdaQueryWrapper<RolePermission> rpWrapper = new LambdaQueryWrapper<>();
     rpWrapper.eq(RolePermission::getRoleId, id);
-    rolePermissionMapper.delete(rpWrapper);
+    rolePermissionRepository.delete(rpWrapper);
 
-    boolean result = roleMapper.deleteById(id) > 0;
+    boolean result = roleRepository.deleteById(id) > 0;
 
     if (result) {
       // 角色删除后失效缓存
@@ -278,14 +278,14 @@ public class RoleServiceImpl implements RoleService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean assignPermissions(String roleId, List<String> permissionIds) {
-    Role role = roleMapper.selectById(roleId);
+    Role role = roleRepository.findById(roleId);
     if (role == null || role.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.ROLE_NOT_FOUND);
     }
 
     LambdaQueryWrapper<RolePermission> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(RolePermission::getRoleId, roleId);
-    rolePermissionMapper.delete(wrapper);
+    rolePermissionRepository.delete(wrapper);
 
     // 批量插入（替代 N+1 循环）
     List<RolePermission> list = new ArrayList<>(permissionIds.size());
@@ -298,7 +298,7 @@ public class RoleServiceImpl implements RoleService {
       list.add(rp);
     }
     if (!list.isEmpty()) {
-      rolePermissionMapper.batchInsert(list);
+      rolePermissionRepository.batchInsert(list);
     }
     log.info("Permissions assigned to role {}: {}", roleId, permissionIds.size());
 
@@ -354,12 +354,7 @@ public class RoleServiceImpl implements RoleService {
     }
 
     // 2. 缓存未命中，查询数据库
-    LambdaQueryWrapper<RolePermission> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(RolePermission::getRoleId, roleId);
-    List<String> permissionIds =
-        rolePermissionMapper.selectList(wrapper).stream()
-            .map(RolePermission::getPermissionId)
-            .collect(Collectors.toList());
+    List<String> permissionIds = rolePermissionRepository.findMenuIdsByRoleId(roleId);
 
     // 3. 写入缓存（异步异常不影响业务）
     try {
@@ -411,7 +406,7 @@ public class RoleServiceImpl implements RoleService {
     if (distinctIds.isEmpty()) {
       return Collections.emptyMap();
     }
-    List<Role> roles = roleMapper.selectBatchIds(distinctIds);
+    List<Role> roles = roleRepository.findByIds(distinctIds);
     Map<String, String> result = new LinkedHashMap<>(roles.size());
     for (Role role : roles) {
       if (role.getRoleName() != null && !role.getRoleName().isBlank()) {

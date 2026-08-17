@@ -31,7 +31,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
-import com.njydsz.message.infra.mapper.core.MsgLogMapper;
+import com.njydsz.message.infra.repository.MsgLogRepository;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.metric.MessageMetrics;
 import com.njydsz.message.server.service.core.MessageService;
@@ -64,7 +64,7 @@ public class MessageConsumer implements RocketMQListener<String> {
 
   private final MessageService messageService;
   private final IdempotentStrategy idempotentStrategy;
-  private final MsgLogMapper msgLogMapper;
+  private final MsgLogRepository msgLogRepository;
   private final MessageMetrics messageMetrics;
   private final MessageProperties messageProperties;
 
@@ -154,7 +154,7 @@ public class MessageConsumer implements RocketMQListener<String> {
       // GAP-1: DB二级幂等检查——Redis宕机恢复后TTL可能已过期，用msg_log表兜底
       if (StringUtils.hasText(request.getMessageId())) {
         Long dbCount =
-            msgLogMapper.selectCount(
+            msgLogRepository.selectCount(
                 new LambdaQueryWrapper<MsgLog>()
                     .eq(MsgLog::getMsgId, request.getMessageId())
                     .in(
@@ -215,7 +215,7 @@ public class MessageConsumer implements RocketMQListener<String> {
                 .eq(MsgLog::getMsgId, msgId)
                 .set(MsgLog::getStatus, MessageStatusEnum.FAILED.name())
                 .set(MsgLog::getErrorMessage, errorMessage);
-        int updated = msgLogMapper.update(null, updateWrapper);
+        int updated = msgLogRepository.update(null, updateWrapper);
         if (updated > 0) {
           log.info("[MessageConsumer] 已更新现有记录为 FAILED: messageId={}", msgId);
           return;
@@ -235,7 +235,7 @@ public class MessageConsumer implements RocketMQListener<String> {
       logDO.setTopic(YdszMessageTopics.TOPIC_MESSAGE);
       logDO.setReconsumeTimes(0);
       logDO.setTenantId(TenantContextHolder.getTenantId());
-      msgLogMapper.insert(logDO);
+      msgLogRepository.insert(logDO);
     } catch (Exception logEx) {
       log.warn(
           "[MessageConsumer] 记录失败日志异常: messageId={} err={}",

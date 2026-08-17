@@ -23,7 +23,7 @@ import com.njydsz.userinfo.domain.entity.Company;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.CompanyTreeVO;
 import com.njydsz.userinfo.domain.vo.CompanyVO;
-import com.njydsz.userinfo.infra.mapper.CompanyMapper;
+import com.njydsz.userinfo.infra.repository.CompanyRepository;
 import com.njydsz.userinfo.server.service.CompanyService;
 
 /**
@@ -52,11 +52,11 @@ import com.njydsz.userinfo.server.service.CompanyService;
 @RequiredArgsConstructor
 public class CompanyServiceImpl implements CompanyService {
 
-  private final CompanyMapper companyMapper;
+  private final CompanyRepository companyRepository;
 
   @Override
   public CompanyVO getById(String id) {
-    Company entity = companyMapper.selectById(id);
+    Company entity = companyRepository.findById(id);
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.COMPANY_NOT_FOUND);
     }
@@ -67,7 +67,7 @@ public class CompanyServiceImpl implements CompanyService {
   public List<CompanyVO> list() {
     LambdaQueryWrapper<Company> wrapper = new LambdaQueryWrapper<>();
     wrapper.orderByDesc(Company::getCreatedAt);
-    return companyMapper.selectList(wrapper).stream()
+    return companyRepository.list(wrapper).stream()
         .map(UserInfoConverter.INSTANT::entityToVO)
         .collect(Collectors.toList());
   }
@@ -83,7 +83,7 @@ public class CompanyServiceImpl implements CompanyService {
   @Override
   public List<CompanyTreeVO> tree() {
     List<Company> all =
-        companyMapper.selectList(
+        companyRepository.list(
             new LambdaQueryWrapper<Company>().eq(Company::getDeleted, 0));
     if (all.isEmpty()) {
       return List.of();
@@ -104,7 +104,7 @@ public class CompanyServiceImpl implements CompanyService {
   public String create(CompanyCreateDTO dto) {
     LambdaQueryWrapper<Company> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(Company::getCompanyCode, dto.getCompanyCode());
-    if (companyMapper.selectCount(wrapper) > 0) {
+    if (companyRepository.count(wrapper) > 0) {
       throw new BusinessException(UserInfoExceptionCode.COMPANY_CODE_DUPLICATE);
     }
 
@@ -112,7 +112,7 @@ public class CompanyServiceImpl implements CompanyService {
     if (entity.getStatus() == null) {
       entity.setStatus("ENABLED");
     }
-    companyMapper.insert(entity);
+    companyRepository.insert(entity);
     log.info("Company created: code={}, id={}", entity.getCompanyCode(), entity.getId());
     return entity.getId();
   }
@@ -120,22 +120,22 @@ public class CompanyServiceImpl implements CompanyService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean update(CompanyUpdateDTO dto) {
-    Company entity = companyMapper.selectById(dto.getId());
+    Company entity = companyRepository.findById(dto.getId());
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.COMPANY_NOT_FOUND);
     }
     BeanUpdateUtil.copyNonNull(dto, entity, "id");
-    return companyMapper.updateById(entity) > 0;
+    return companyRepository.updateById(entity) > 0;
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    Company entity = companyMapper.selectById(id);
+    Company entity = companyRepository.findById(id);
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.COMPANY_NOT_FOUND);
     }
-    return companyMapper.deleteById(id) > 0;
+    return companyRepository.deleteById(id) > 0;
   }
 
   @Override
@@ -151,7 +151,7 @@ public class CompanyServiceImpl implements CompanyService {
     if (distinctIds.isEmpty()) {
       return Collections.emptyMap();
     }
-    List<Company> companies = companyMapper.selectBatchIds(distinctIds);
+    List<Company> companies = companyRepository.listByIds(distinctIds);
     Map<String, String> result = new LinkedHashMap<>(companies.size());
     for (Company company : companies) {
       if (company.getCompanyName() != null && !company.getCompanyName().isBlank()) {

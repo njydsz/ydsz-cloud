@@ -20,7 +20,7 @@ import com.njydsz.userinfo.domain.entity.Menu;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.MenuTreeVO;
 import com.njydsz.userinfo.domain.vo.MenuVO;
-import com.njydsz.userinfo.infra.mapper.MenuMapper;
+import com.njydsz.userinfo.infra.repository.MenuRepository;
 import com.njydsz.userinfo.server.auth.DbRolePermissionLoader;
 import com.njydsz.userinfo.server.service.MenuService;
 
@@ -63,8 +63,8 @@ import com.njydsz.userinfo.server.service.MenuService;
 @RequiredArgsConstructor
 public class MenuServiceImpl implements MenuService {
 
-  /** 菜单 Mapper */
-  private final MenuMapper mapper;
+  /** 菜单 Repository */
+  private final MenuRepository menuRepository;
 
   /** 权限变更事件发布器（common-auth，通知 Gateway 等节点刷新权限缓存） */
   private final PermissionChangeNotifier permissionChangeNotifier;
@@ -79,7 +79,7 @@ public class MenuServiceImpl implements MenuService {
    */
   @Override
   public MenuVO getById(String id) {
-    Menu entity = mapper.selectById(id);
+    Menu entity = menuRepository.findById(id);
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.MENU_NOT_FOUND);
     }
@@ -95,7 +95,7 @@ public class MenuServiceImpl implements MenuService {
   public List<MenuVO> list() {
     LambdaQueryWrapper<Menu> wrapper = new LambdaQueryWrapper<>();
     wrapper.orderByDesc(Menu::getSortOrder);
-    return mapper.selectList(wrapper).stream()
+    return menuRepository.list(wrapper).stream()
         .map(UserInfoConverter.INSTANT::entityToVO)
         .collect(Collectors.toList());
   }
@@ -115,7 +115,7 @@ public class MenuServiceImpl implements MenuService {
     if (entity.getParentId() == null || entity.getParentId().isBlank()) {
       entity.setParentId("0");
     }
-    mapper.insert(entity);
+    menuRepository.insert(entity);
     log.info("Menu created: code={}, id={}", entity.getMenuCode(), entity.getId());
     invalidatePermissionCache();
     return entity.getId();
@@ -131,12 +131,12 @@ public class MenuServiceImpl implements MenuService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean update(MenuUpdateDTO dto) {
-    Menu entity = mapper.selectById(dto.getId());
+    Menu entity = menuRepository.findById(dto.getId());
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.MENU_NOT_FOUND);
     }
     BeanUpdateUtil.copyNonNull(dto, entity, "id");
-    boolean result = mapper.updateById(entity) > 0;
+    boolean result = menuRepository.updateById(entity) > 0;
     if (result) {
       invalidatePermissionCache();
     }
@@ -153,17 +153,17 @@ public class MenuServiceImpl implements MenuService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    Menu entity = mapper.selectById(id);
+    Menu entity = menuRepository.findById(id);
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.MENU_NOT_FOUND);
     }
     // 检查子菜单
     LambdaQueryWrapper<Menu> childWrapper = new LambdaQueryWrapper<>();
     childWrapper.eq(Menu::getParentId, id);
-    if (mapper.selectCount(childWrapper) > 0) {
+    if (menuRepository.count(childWrapper) > 0) {
       throw new BusinessException(UserInfoExceptionCode.MENU_HAS_CHILDREN);
     }
-    boolean result = mapper.deleteById(id) > 0;
+    boolean result = menuRepository.deleteById(id) > 0;
     if (result) {
       invalidatePermissionCache();
     }
@@ -193,7 +193,7 @@ public class MenuServiceImpl implements MenuService {
    */
   @Override
   public List<MenuTreeVO> tree() {
-    List<Menu> all = mapper.selectList(new LambdaQueryWrapper<Menu>().eq(Menu::getDeleted, 0));
+    List<Menu> all = menuRepository.list(new LambdaQueryWrapper<Menu>().eq(Menu::getDeleted, 0));
     if (all.isEmpty()) {
       return List.of();
     }

@@ -33,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
@@ -947,6 +948,14 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * @return 执行日志 ID；锁被持有时返回 null
    */
   private String executeJob(Job job, boolean holdLock, String triggerType, int retryCount) {
+    // P1-3: DISCARD_OVERLAPPING 策略 — 存在 RUNNING 日志时直接丢弃新触发
+    if ("DISCARD_OVERLAPPING".equals(job.getBlockStrategy())) {
+      if (hasRunningLog(job.getId())) {
+        log.info("[Dispatcher] DISCARD_OVERLAPPING 策略, 存在运行中实例, 丢弃: key={}", job.getJobKey());
+        return null;
+      }
+    }
+
     String lockKey = null;
     if (holdLock) {
       lockKey = LockKeyUtil.buildJobLockKey(job.getJobKey());
@@ -1569,6 +1578,23 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     } catch (Exception e) {
       log.debug("[Dispatcher] 指标记录失败(不影响主流程): key={} reason={}", job.getJobKey(), e.getMessage());
     }
+  }
+
+  /**
+   * 定时上报线程池活跃度指标（替代原 AdaptiveBatchScheduler 的 updatePoolActive 调用）。
+   *
+   * <p>每 10 秒采集一次任务执行线程池的活跃率，供系统负载评分计算使用。
+   */
+  @Scheduled(fixedDelay = 10_000L)
+  public void reportThreadPoolMetrics() {
+    if (taskExecutorPool == null) {
+      return;
+    }
+    CronjobMetrics metrics = cronjobMetricsProvider.getIfAvailable();
+    if (metrics == null) {
+      return;
+    }
+    metrics.updatePoolActive(taskExecutorPool.getActiveCount(), taskExecutorPool.getMaximumPoolSize());
   }
 
   /** 解析任务实际使用的锁 TTL。 */

@@ -16,7 +16,7 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
-import com.njydsz.message.infra.mapper.core.MsgLogMapper;
+import com.njydsz.message.infra.repository.MsgLogRepository;
 import com.njydsz.message.server.channel.ChannelRouter;
 
 /**
@@ -47,7 +47,7 @@ import com.njydsz.message.server.channel.ChannelRouter;
 public class MessageHealthIndicator extends AbstractModuleHealthIndicator {
 
   private final RedisStringOps redisStringOps;
-  private final MsgLogMapper msgLogMapper;
+  private final MsgLogRepository msgLogRepository;
   private final ChannelRouter channelRouter;
 
   @Override
@@ -89,7 +89,7 @@ public class MessageHealthIndicator extends AbstractModuleHealthIndicator {
   /** 轻量探针：仅查询指定状态是否存在记录（LIMIT 1），避免 COUNT 扫描大表。 */
   private boolean probeStatus(String status) {
     IPage<MsgLog> page =
-        msgLogMapper.selectPage(
+        msgLogRepository.selectPage(
             new Page<>(1, 1),
             new LambdaQueryWrapper<MsgLog>().eq(MsgLog::getStatus, status).last("LIMIT 1"));
     return page != null && page.getRecords() != null && !page.getRecords().isEmpty();

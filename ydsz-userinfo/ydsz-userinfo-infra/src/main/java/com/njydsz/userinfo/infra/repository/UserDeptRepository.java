@@ -17,6 +17,14 @@ import com.njydsz.userinfo.domain.entity.UserDept;
 public interface UserDeptRepository {
 
   /**
+   * 根据 ID 查询用户-部门关联。
+   *
+   * @param id 关联 ID
+   * @return 用户-部门关联实体，不存在时返回 null
+   */
+  UserDept findById(String id);
+
+  /**
    * 根据用户 ID 查询用户-部门关联列表。
    *
    * @param userId 用户 ID
@@ -48,6 +56,14 @@ public interface UserDeptRepository {
    * @return 插入影响的行数
    */
   int insert(UserDept entity);
+
+  /**
+   * 更新用户-部门关联。
+   *
+   * @param entity 用户-部门关联实体
+   * @return 更新影响的行数
+   */
+  int updateById(UserDept entity);
 
   /**
    * 根据用户 ID 删除关联。

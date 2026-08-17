@@ -13,8 +13,8 @@ import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.cronjob.domain.entity.job.TenantQuota;
-import com.njydsz.cronjob.infra.mapper.job.JobMapper;
-import com.njydsz.cronjob.infra.mapper.job.TenantQuotaMapper;
+import com.njydsz.cronjob.infra.repository.JobRepository;
+import com.njydsz.cronjob.infra.repository.TenantQuotaRepository;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.service.job.TenantQuotaService;
 
@@ -35,11 +35,11 @@ import com.njydsz.cronjob.server.service.job.TenantQuotaService;
 @RequiredArgsConstructor
 public class TenantQuotaServiceImpl implements TenantQuotaService {
 
-  /** 租户配额 Mapper */
-  private final TenantQuotaMapper tenantQuotaMapper;
+  /** 租户配额 Repository */
+  private final TenantQuotaRepository tenantQuotaRepository;
 
-  /** 任务定义 Mapper（统计任务数配额） */
-  private final JobMapper jobMapper;
+  /** 任务定义 Repository（统计任务数配额） */
+  private final JobRepository jobRepository;
 
   /** 定时任务模块配置属性 */
   private final CronjobProperties cronjobProperties;
@@ -67,7 +67,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
     if (tenantId == null || tenantId.isBlank()) {
       return null;
     }
-    return tenantQuotaMapper.selectByTenantId(tenantId);
+    return tenantQuotaRepository.selectByTenantId(tenantId);
   }
 
   // ==================== P7-2: 任务数配额 ====================
@@ -259,7 +259,7 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
   private long countJobsByTenant(String tenantId) {
     try {
       // 拦截器自动注入 tenant_id 和 deleted 条件
-      return jobMapper.selectCount(new LambdaQueryWrapper<>());
+      return jobRepository.selectCount(new LambdaQueryWrapper<>());
     } catch (Exception e) {
       log.warn("[Quota] 统计任务数失败, 降级放行: tenant={} reason={}", tenantId, e.getMessage());
       return 0;

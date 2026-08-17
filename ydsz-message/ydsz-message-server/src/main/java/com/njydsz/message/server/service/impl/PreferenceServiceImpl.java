@@ -14,7 +14,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.dto.config.PreferenceUpsertDTO;
 import com.njydsz.message.domain.entity.config.MsgPreference;
-import com.njydsz.message.infra.mapper.config.MsgPreferenceMapper;
+import com.njydsz.message.infra.repository.MsgPreferenceRepository;
 import com.njydsz.message.server.service.config.PreferenceService;
 
 /**
@@ -33,7 +33,7 @@ import com.njydsz.message.server.service.config.PreferenceService;
 public class PreferenceServiceImpl implements PreferenceService {
 
   /** 用户消息偏好 Mapper */
-  private final MsgPreferenceMapper msgPreferenceMapper;
+  private final MsgPreferenceRepository msgPreferenceRepository;
 
   /**
    * {@inheritDoc}
@@ -58,7 +58,7 @@ public class PreferenceServiceImpl implements PreferenceService {
             ? dto.getBizType()
             : MessageConstants.DEFAULT_BIZ_TYPE;
     MsgPreference existing =
-        msgPreferenceMapper.selectOne(
+        msgPreferenceRepository.selectOne(
             new LambdaQueryWrapper<MsgPreference>()
                 .eq(MsgPreference::getUserId, dto.getUserId())
                 .eq(MsgPreference::getChannel, dto.getChannel())
@@ -80,7 +80,7 @@ public class PreferenceServiceImpl implements PreferenceService {
       entity.setLocale(dto.getLocale());
       entity.setExtra(dto.getExtra());
       entity.setTenantId(TenantContextHolder.getTenantId());
-      msgPreferenceMapper.insert(entity);
+      msgPreferenceRepository.insert(entity);
       log.info(
           "[Preference] 新建偏好: user={} channel={} bizType={}",
           dto.getUserId(),
@@ -100,7 +100,7 @@ public class PreferenceServiceImpl implements PreferenceService {
     existing.setDigestFrequency(dto.getDigestFrequency());
     existing.setLocale(dto.getLocale());
     existing.setExtra(dto.getExtra());
-    msgPreferenceMapper.updateById(existing);
+    msgPreferenceRepository.updateById(existing);
     return existing;
   }
 
@@ -122,7 +122,7 @@ public class PreferenceServiceImpl implements PreferenceService {
     String bt = StringUtils.hasText(bizType) ? bizType : MessageConstants.DEFAULT_BIZ_TYPE;
     // 优先精确 bizType
     MsgPreference entity =
-        msgPreferenceMapper.selectOne(
+        msgPreferenceRepository.selectOne(
             new LambdaQueryWrapper<MsgPreference>()
                 .eq(MsgPreference::getUserId, userId)
                 .eq(MsgPreference::getChannel, channel)
@@ -134,7 +134,7 @@ public class PreferenceServiceImpl implements PreferenceService {
     // 回退默认
     if (!MessageConstants.DEFAULT_BIZ_TYPE.equals(bt)) {
       entity =
-          msgPreferenceMapper.selectOne(
+          msgPreferenceRepository.selectOne(
               new LambdaQueryWrapper<MsgPreference>()
                   .eq(MsgPreference::getUserId, userId)
                   .eq(MsgPreference::getChannel, channel)
@@ -155,7 +155,7 @@ public class PreferenceServiceImpl implements PreferenceService {
     if (!StringUtils.hasText(userId)) {
       return List.of();
     }
-    return msgPreferenceMapper.selectList(
+    return msgPreferenceRepository.selectList(
         new LambdaQueryWrapper<MsgPreference>()
             .eq(MsgPreference::getUserId, userId)
             .orderByAsc(MsgPreference::getChannel));
@@ -174,6 +174,6 @@ public class PreferenceServiceImpl implements PreferenceService {
           .message("偏好 ID 不能为空")
           .build();
     }
-    msgPreferenceMapper.deleteById(id);
+    msgPreferenceRepository.deleteById(id);
   }
 }

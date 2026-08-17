@@ -15,7 +15,7 @@ import com.njydsz.common.queue.trace.MessageTracer;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.receipt.ReceiptCallbackDTO;
 import com.njydsz.message.domain.entity.receipt.MsgReceipt;
-import com.njydsz.message.infra.mapper.receipt.MsgReceiptMapper;
+import com.njydsz.message.infra.repository.MsgReceiptRepository;
 import com.njydsz.message.server.service.core.MessageLogService;
 import com.njydsz.message.server.service.receipt.ReceiptService;
 
@@ -36,8 +36,8 @@ import com.njydsz.message.server.service.receipt.ReceiptService;
 @RequiredArgsConstructor
 public class ReceiptServiceImpl implements ReceiptService {
 
-  /** 消息回执 Mapper */
-  private final MsgReceiptMapper msgReceiptMapper;
+  /** 消息回执 Repository */
+  private final MsgReceiptRepository msgReceiptRepository;
 
   /** 消息日志服务（联动更新回执状态） */
   private final MessageLogService messageLogService;
@@ -70,7 +70,7 @@ public class ReceiptServiceImpl implements ReceiptService {
       entity.setProviderMsg(dto.getProviderMsg());
       entity.setRawResponse(dto.getRawResponse());
       entity.setTenantId(TenantContextHolder.getTenantId());
-      msgReceiptMapper.insert(entity);
+      msgReceiptRepository.insert(entity);
       // 联动更新日志回执状态
       try {
         messageLogService.updateReceipt(
@@ -96,7 +96,7 @@ public class ReceiptServiceImpl implements ReceiptService {
     if (!StringUtils.hasText(logId)) {
       return List.of();
     }
-    return msgReceiptMapper.selectList(
+    return msgReceiptRepository.selectList(
         new LambdaQueryWrapper<MsgReceipt>()
             .eq(MsgReceipt::getLogId, logId)
             .orderByDesc(MsgReceipt::getReceiptTime));

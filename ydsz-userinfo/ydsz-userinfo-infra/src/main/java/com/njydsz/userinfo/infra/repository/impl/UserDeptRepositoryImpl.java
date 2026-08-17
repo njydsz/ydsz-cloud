@@ -26,6 +26,11 @@ public class UserDeptRepositoryImpl implements UserDeptRepository {
   private final UserDeptMapper userDeptMapper;
 
   @Override
+  public UserDept findById(String id) {
+    return userDeptMapper.selectById(id);
+  }
+
+  @Override
   public List<UserDept> findByUserId(String userId) {
     LambdaQueryWrapper<UserDept> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(UserDept::getUserId, userId);
@@ -49,6 +54,11 @@ public class UserDeptRepositoryImpl implements UserDeptRepository {
   @Override
   public int insert(UserDept entity) {
     return userDeptMapper.insert(entity);
+  }
+
+  @Override
+  public int updateById(UserDept entity) {
+    return userDeptMapper.updateById(entity);
   }
 
   @Override

@@ -15,7 +15,7 @@ import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.queue.trace.MessageTracer;
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
-import com.njydsz.message.infra.mapper.core.MsgLogMapper;
+import com.njydsz.message.infra.repository.MsgLogRepository;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.metric.MessageMetrics;
 
@@ -46,7 +46,7 @@ import com.njydsz.message.server.metric.MessageMetrics;
     matchIfMissing = true)
 public class ScheduledMessageScanner {
 
-  private final MsgLogMapper msgLogMapper;
+  private final MsgLogRepository msgLogRepository;
   private final ChannelRouter channelRouter;
   private final MessageMetrics messageMetrics;
 
@@ -72,7 +72,7 @@ public class ScheduledMessageScanner {
   private void doScan() {
     LocalDateTime now = LocalDateTime.now();
     List<MsgLog> due =
-        msgLogMapper.selectList(
+        msgLogRepository.selectList(
             new LambdaQueryWrapper<MsgLog>()
                 .eq(MsgLog::getStatus, MessageStatusEnum.SCHEDULED.name())
                 .le(MsgLog::getScheduledAt, now)
@@ -103,7 +103,7 @@ public class ScheduledMessageScanner {
   private void sendScheduledMessage(MsgLog logDO) {
     try (MessageTracer.MessageTraceScope scope = MessageTracer.enter(logDO.getTraceId())) {
       logDO.setStatus(MessageStatusEnum.SENDING.name());
-      msgLogMapper.updateById(logDO);
+      msgLogRepository.updateById(logDO);
       long start = System.currentTimeMillis();
       try {
         String providerTraceId = channelRouter.dispatch(logDO);
@@ -111,7 +111,7 @@ public class ScheduledMessageScanner {
         logDO.setStatus(MessageStatusEnum.SUCCESS.name());
         logDO.setProviderTraceId(providerTraceId);
         logDO.setCostMs(cost);
-        msgLogMapper.updateById(logDO);
+        msgLogRepository.updateById(logDO);
         messageMetrics.recordSend(logDO.getChannel(), "SUCCESS", cost);
         log.info(
             "[ScheduledScanner] 定时消息发送成功: msgId={} scheduledAt={} cost={}ms",
@@ -125,7 +125,7 @@ public class ScheduledMessageScanner {
         logDO.setStatus(MessageStatusEnum.RETRY.name());
         logDO.setRetryCount(1);
         logDO.setNextRetryAt(LocalDateTime.now().plusSeconds(30));
-        msgLogMapper.updateById(logDO);
+        msgLogRepository.updateById(logDO);
         messageMetrics.recordRetry(logDO.getChannel());
         log.warn(
             "[ScheduledScanner] 定时消息发送失败转重试: msgId={} err={}", logDO.getMsgId(), e.getMessage());

@@ -18,8 +18,8 @@ import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.entity.core.MsgNotification;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 import com.njydsz.message.domain.event.MessageRecalledEvent;
-import com.njydsz.message.infra.mapper.core.MsgLogMapper;
-import com.njydsz.message.infra.mapper.core.MsgNotificationMapper;
+import com.njydsz.message.infra.repository.MsgLogRepository;
+import com.njydsz.message.infra.repository.MsgNotificationRepository;
 import com.njydsz.message.server.channel.recall.RecallChannel;
 import com.njydsz.message.server.channel.recall.RecallChannelRouter;
 import com.njydsz.message.server.event.DomainEventPublisher;
@@ -44,11 +44,11 @@ import com.njydsz.message.server.service.receipt.RecallService;
 @RequiredArgsConstructor
 public class RecallServiceImpl implements RecallService {
 
-  /** 站内通知 Mapper */
-  private final MsgNotificationMapper msgNotificationMapper;
+  /** 站内通知 Repository */
+  private final MsgNotificationRepository msgNotificationRepository;
 
-  /** 消息日志 Mapper */
-  private final MsgLogMapper msgLogMapper;
+  /** 消息日志 Repository */
+  private final MsgLogRepository msgLogRepository;
 
   /** 实时推送服务（撤回通知推送） */
   private final RealtimePushService realtimePushService;
@@ -88,7 +88,7 @@ public class RecallServiceImpl implements RecallService {
           .message("用户 ID 与通知 ID 不能为空")
           .build();
     }
-    MsgNotification n = msgNotificationMapper.selectById(notificationId);
+    MsgNotification n = msgNotificationRepository.selectById(notificationId);
     if (n == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -103,7 +103,7 @@ public class RecallServiceImpl implements RecallService {
     }
     n.setRecallStatus(RecallStatusEnum.RECALLED.name());
     n.setRecallAt(LocalDateTime.now());
-    msgNotificationMapper.updateById(n);
+    msgNotificationRepository.updateById(n);
     // P2-19: 推送撤回事件到前端（携带撤回原因/时间戳）
     messageRecallPushService.pushRecall(userId, notificationId, "通知撤回");
     log.info("[Recall] 撤回通知: id={} user={}", notificationId, userId);
@@ -129,7 +129,7 @@ public class RecallServiceImpl implements RecallService {
     }
     messageLogService.markRecalled(logId);
     // P0-4: 查找消息并通过 WebSocket 推送撤回事件
-    MsgLog logDO = msgLogMapper.selectById(logId);
+    MsgLog logDO = msgLogRepository.selectById(logId);
     if (logDO != null && StringUtils.hasText(logDO.getReceiver())) {
       // P2-19: 推送撤回事件（携带消息 ID/撤回原因/时间戳）
       messageRecallPushService.pushRecall(logDO.getReceiver(), logDO.getMsgId(), "消息撤回");
@@ -161,7 +161,7 @@ public class RecallServiceImpl implements RecallService {
     }
     // 按 msgId 查询消息日志
     MsgLog logDO =
-        msgLogMapper.selectOne(
+        msgLogRepository.selectOne(
             new LambdaQueryWrapper<MsgLog>().eq(MsgLog::getMsgId, msgId).last("LIMIT 1"));
     if (logDO == null) {
       throw SysException.builder()
@@ -189,7 +189,7 @@ public class RecallServiceImpl implements RecallService {
     // 执行撤回
     logDO.setRecallStatus(RecallStatusEnum.RECALLED.name());
     logDO.setRecallAt(LocalDateTime.now());
-    msgLogMapper.updateById(logDO);
+    msgLogRepository.updateById(logDO);
 
     // P2-F2: 路由到通道对应的撤回实现
     RecallChannel.RecallResult recallResult = recallChannelRouter.routeAndRecall(logDO);
@@ -238,7 +238,7 @@ public class RecallServiceImpl implements RecallService {
     }
     // 通知批量撤回
     int notifCount =
-        msgNotificationMapper.update(
+        msgNotificationRepository.update(
             null,
             new LambdaUpdateWrapper<MsgNotification>()
                 .eq(MsgNotification::getBizType, bizType)
@@ -248,7 +248,7 @@ public class RecallServiceImpl implements RecallService {
                 .set(MsgNotification::getRecallAt, LocalDateTime.now()));
     // 消息日志批量撤回（仅更新非终态）
     int logCount =
-        msgLogMapper.update(
+        msgLogRepository.update(
             null,
             new LambdaUpdateWrapper<MsgLog>()
                 .eq(MsgLog::getBizType, bizType)

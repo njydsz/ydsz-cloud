@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.userinfo.domain.entity.UserDept;
-import com.njydsz.userinfo.infra.mapper.UserDeptMapper;
+import com.njydsz.userinfo.infra.repository.UserDeptRepository;
 import com.njydsz.userinfo.server.service.UserDeptService;
 
 /**
@@ -29,11 +29,11 @@ import com.njydsz.userinfo.server.service.UserDeptService;
 @RequiredArgsConstructor
 public class UserDeptServiceImpl implements UserDeptService {
 
-  private final UserDeptMapper mapper;
+  private final UserDeptRepository userDeptRepository;
 
   @Override
   public UserDept getById(String id) {
-    UserDept entity = mapper.selectById(id);
+    UserDept entity = userDeptRepository.findById(id);
     if (entity == null || entity.getDeleted() == 1) {
       return null;
     }
@@ -44,25 +44,25 @@ public class UserDeptServiceImpl implements UserDeptService {
   public List<UserDept> list() {
     LambdaQueryWrapper<UserDept> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(UserDept::getDeleted, 0);
-    return mapper.selectList(wrapper);
+    return userDeptRepository.list(wrapper);
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String save(UserDept entity) {
-    mapper.insert(entity);
+    userDeptRepository.insert(entity);
     return entity.getId();
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean updateById(UserDept entity) {
-    return mapper.updateById(entity) > 0;
+    return userDeptRepository.updateById(entity) > 0;
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    return mapper.deleteById(id) > 0;
+    return userDeptRepository.deleteById(id) > 0;
   }
 }

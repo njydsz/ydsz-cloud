@@ -18,7 +18,7 @@ import com.njydsz.message.domain.dto.receipt.ReceiptResult;
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
-import com.njydsz.message.infra.mapper.core.MsgLogMapper;
+import com.njydsz.message.infra.repository.MsgLogRepository;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.channel.MessageChannel;
 import com.njydsz.message.server.config.MessageProperties;
@@ -58,7 +58,7 @@ import com.njydsz.message.server.service.core.MessageLogService;
     matchIfMissing = true)
 public class ReceiptPuller {
 
-  private final MsgLogMapper msgLogMapper;
+  private final MsgLogRepository msgLogRepository;
   private final ChannelRouter channelRouter;
   private final MessageLogService messageLogService;
   private final MessageProperties messageProperties;
@@ -89,7 +89,7 @@ public class ReceiptPuller {
 
     // ① 先批量处理超时消息:createdAt < timeoutThreshold → 标记 TIMEOUT
     List<MsgLog> timeoutMsgs =
-        msgLogMapper.selectList(
+        msgLogRepository.selectList(
             new LambdaQueryWrapper<MsgLog>()
                 .eq(MsgLog::getStatus, MessageStatusEnum.SUCCESS.name())
                 .eq(MsgLog::getReceiptStatus, ReceiptStatusEnum.NONE.name())
@@ -108,7 +108,7 @@ public class ReceiptPuller {
 
     // ② 查询待主动拉取的消息:timeoutThreshold <= createdAt < pullThreshold
     List<MsgLog> pending =
-        msgLogMapper.selectList(
+        msgLogRepository.selectList(
             new LambdaQueryWrapper<MsgLog>()
                 .eq(MsgLog::getStatus, MessageStatusEnum.SUCCESS.name())
                 .eq(MsgLog::getReceiptStatus, ReceiptStatusEnum.NONE.name())

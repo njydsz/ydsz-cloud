@@ -31,8 +31,8 @@ import com.njydsz.userinfo.domain.entity.UserDept;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
-import com.njydsz.userinfo.infra.mapper.DepartmentMapper;
-import com.njydsz.userinfo.infra.mapper.UserDeptMapper;
+import com.njydsz.userinfo.infra.repository.DepartmentRepository;
+import com.njydsz.userinfo.infra.repository.UserDeptRepository;
 import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 import com.njydsz.userinfo.server.service.DepartmentService;
 import com.njydsz.userinfo.server.service.WorkflowApproverCacheService;
@@ -87,11 +87,11 @@ public class DepartmentServiceImpl implements DepartmentService {
   /** 部门树 L1 本地缓存过期时间（毫秒）：2 分钟 */
   private static final long L1_CACHE_TTL_MILLIS = 120000;
 
-  /** 部门 Mapper */
-  private final DepartmentMapper departmentMapper;
+  /** 部门 Repository */
+  private final DepartmentRepository departmentRepository;
 
-  /** 用户-部门关联 Mapper（用于删除前检查是否有人员关联） */
-  private final UserDeptMapper userDeptMapper;
+  /** 用户-部门关联 Repository（用于删除前检查是否有人员关联） */
+  private final UserDeptRepository userDeptRepository;
 
   /** Redis 服务 */
   private final RedisStringOps redisStringOps;
@@ -122,7 +122,7 @@ public class DepartmentServiceImpl implements DepartmentService {
    */
   @Override
   public DepartmentVO getById(String id) {
-    Department entity = departmentMapper.selectById(id);
+    Department entity = departmentRepository.findById(id);
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.DEPARTMENT_NOT_FOUND);
     }
@@ -138,7 +138,7 @@ public class DepartmentServiceImpl implements DepartmentService {
   public List<DepartmentVO> list() {
     LambdaQueryWrapper<Department> wrapper = new LambdaQueryWrapper<>();
     wrapper.orderByDesc(Department::getSortOrder);
-    return departmentMapper.selectList(wrapper).stream()
+    return departmentRepository.list(wrapper).stream()
         .map(UserInfoConverter.INSTANT::entityToVO)
         .collect(Collectors.toList());
   }
@@ -157,7 +157,7 @@ public class DepartmentServiceImpl implements DepartmentService {
   public String create(DepartmentCreateDTO dto) {
     LambdaQueryWrapper<Department> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(Department::getDeptCode, dto.getDeptCode());
-    if (departmentMapper.selectCount(wrapper) > 0) {
+    if (departmentRepository.count(wrapper) > 0) {
       throw new BusinessException(UserInfoExceptionCode.DEPARTMENT_CODE_DUPLICATE);
     }
 
@@ -168,7 +168,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     if (entity.getParentId() == null || entity.getParentId().isBlank()) {
       entity.setParentId("0");
     }
-    departmentMapper.insert(entity);
+    departmentRepository.insert(entity);
     log.info("Department created: code={}, id={}", entity.getDeptCode(), entity.getId());
 
     // 部门变更后失效缓存
@@ -191,12 +191,12 @@ public class DepartmentServiceImpl implements DepartmentService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean update(DepartmentUpdateDTO dto) {
-    Department entity = departmentMapper.selectById(dto.getId());
+    Department entity = departmentRepository.findById(dto.getId());
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.DEPARTMENT_NOT_FOUND);
     }
     BeanUpdateUtil.copyNonNull(dto, entity, "id");
-    boolean result = departmentMapper.updateById(entity) > 0;
+    boolean result = departmentRepository.updateById(entity) > 0;
 
     if (result) {
       // 部门变更后失效缓存（部门树 + 部门负责人工作流缓存）
@@ -221,24 +221,24 @@ public class DepartmentServiceImpl implements DepartmentService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    Department entity = departmentMapper.selectById(id);
+    Department entity = departmentRepository.findById(id);
     if (entity == null || entity.getDeleted() == 1) {
       throw new BusinessException(UserInfoExceptionCode.DEPARTMENT_NOT_FOUND);
     }
 
     LambdaQueryWrapper<Department> childWrapper = new LambdaQueryWrapper<>();
     childWrapper.eq(Department::getParentId, id);
-    if (departmentMapper.selectCount(childWrapper) > 0) {
+    if (departmentRepository.count(childWrapper) > 0) {
       throw new BusinessException(UserInfoExceptionCode.DEPARTMENT_HAS_CHILDREN);
     }
 
     LambdaQueryWrapper<UserDept> udWrapper = new LambdaQueryWrapper<>();
     udWrapper.eq(UserDept::getDeptId, id);
-    if (userDeptMapper.selectCount(udWrapper) > 0) {
+    if (userDeptRepository.count(udWrapper) > 0) {
       throw new BusinessException(UserInfoExceptionCode.DEPARTMENT_HAS_USERS);
     }
 
-    boolean result = departmentMapper.deleteById(id) > 0;
+    boolean result = departmentRepository.deleteById(id) > 0;
 
     if (result) {
       // 部门变更后失效缓存（部门树 + 部门负责人工作流缓存）
@@ -293,7 +293,7 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     // 3. 缓存未命中，查询数据库
     List<Department> all =
-        departmentMapper.selectList(
+        departmentRepository.list(
             new LambdaQueryWrapper<Department>().eq(Department::getDeleted, 0));
     if (all.isEmpty()) {
       return List.of();
@@ -372,7 +372,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     if (deptId == null || deptId.isBlank()) {
       return null;
     }
-    Department entity = departmentMapper.selectById(deptId);
+    Department entity = departmentRepository.findById(deptId);
     if (entity == null || entity.getDeleted() == 1) {
       return null;
     }
@@ -390,9 +390,7 @@ public class DepartmentServiceImpl implements DepartmentService {
       return null;
     }
     LambdaQueryWrapper<Department> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Department::getDeptCode, deptCode);
-    wrapper.last("LIMIT 1");
-    Department entity = departmentMapper.selectOne(wrapper);
+    Department entity = departmentRepository.findByDeptCode(deptCode);
     if (entity == null) {
       return null;
     }
@@ -419,7 +417,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     if (distinctIds.isEmpty()) {
       return Collections.emptyMap();
     }
-    List<Department> depts = departmentMapper.selectBatchIds(distinctIds);
+    List<Department> depts = departmentRepository.listByIds(distinctIds);
     Map<String, String> result = new LinkedHashMap<>(depts.size());
     for (Department dept : depts) {
       if (dept.getDeptName() != null && !dept.getDeptName().isBlank()) {

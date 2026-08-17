@@ -19,8 +19,8 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.domain.entity.job.JobHistory;
-import com.njydsz.cronjob.infra.mapper.job.JobHistoryMapper;
-import com.njydsz.cronjob.infra.mapper.job.JobMapper;
+import com.njydsz.cronjob.infra.repository.JobHistoryRepository;
+import com.njydsz.cronjob.infra.repository.JobRepository;
 import com.njydsz.cronjob.server.service.job.JobHistoryService;
 
 /**
@@ -40,11 +40,11 @@ import com.njydsz.cronjob.server.service.job.JobHistoryService;
 @RequiredArgsConstructor
 public class JobHistoryServiceImpl implements JobHistoryService {
 
-  /** 任务历史版本 Mapper */
-  private final JobHistoryMapper jobHistoryMapper;
+  /** 任务历史版本 Repository */
+  private final JobHistoryRepository jobHistoryRepository;
 
-  /** 任务定义 Mapper（回滚时更新当前配置） */
-  private final JobMapper jobMapper;
+  /** 任务定义 Repository（回滚时更新当前配置） */
+  private final JobRepository jobRepository;
 
   /** 需要对比的配置字段及其展示名（顺序保持一致便于前端渲染） */
   private static final List<String> COMPARE_FIELDS =
@@ -96,8 +96,8 @@ public class JobHistoryServiceImpl implements JobHistoryService {
     history.setChangedBy(StringUtils.hasText(changedBy) ? changedBy : "SYSTEM");
     history.setChangedAt(LocalDateTime.now());
     history.setDeleted(0);
-    jobHistoryMapper.insert(history);
-    log.info("[History] 保存任务历史版本: jobId={} version={}", job.getId(), job.getVersion());
+    jobHistoryRepository.insert(history);
+    log.info("[History] 保存任务历史版本: jobId={} version={},", job.getId(), job.getVersion());
     return history;
   }
 
@@ -127,7 +127,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
       history.setChangedBy(StringUtils.hasText(changedBy) ? changedBy : "SYSTEM");
       history.setChangedAt(LocalDateTime.now());
       history.setDeleted(0);
-      jobHistoryMapper.insert(history);
+      jobHistoryRepository.insert(history);
       log.info(
           "[History] 版本记录: jobId={} key={} version={} type={}",
           referenceJob.getId(),
@@ -148,7 +148,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
     if (!StringUtils.hasText(jobId)) {
       return Collections.emptyList();
     }
-    return jobHistoryMapper.selectByJobIdOrderByVersionDesc(jobId);
+    return jobHistoryRepository.selectByJobIdOrderByVersionDesc(jobId);
   }
 
   @Override
@@ -156,7 +156,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
     if (!StringUtils.hasText(jobId) || version == null) {
       return null;
     }
-    return jobHistoryMapper.selectByVersion(jobId, version);
+    return jobHistoryRepository.selectByVersion(jobId, version);
   }
 
   @Override
@@ -175,7 +175,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
           .build();
     }
     // 查询目标历史版本
-    JobHistory targetHistory = jobHistoryMapper.selectByVersion(jobId, version);
+    JobHistory targetHistory = jobHistoryRepository.selectByVersion(jobId, version);
     if (targetHistory == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -185,7 +185,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
     // 反序列化快照为 Job
     Job snapshotJob = YdszJson.fromJson(targetHistory.getSnapshot(), Job.class);
     // 查询当前任务（用于保留统计字段等）
-    Job currentJob = jobMapper.selectById(jobId);
+    Job currentJob = jobRepository.selectById(jobId);
     if (currentJob == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -208,7 +208,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
     int nextVersion = getNextVersion(jobId);
     snapshotJob.setVersion(nextVersion);
     // 持久化回滚后的任务
-    jobMapper.updateById(snapshotJob);
+    jobRepository.updateById(snapshotJob);
     // 保存新的历史版本
     saveHistory(snapshotJob, "SYSTEM");
     log.info("[History] 回滚任务配置: jobId={} fromVersion={} toVersion={}", jobId, version, nextVersion);
@@ -224,8 +224,8 @@ public class JobHistoryServiceImpl implements JobHistoryService {
     if (version1 == null || version2 == null) {
       return Collections.emptyList();
     }
-    JobHistory h1 = jobHistoryMapper.selectByVersion(jobId, version1);
-    JobHistory h2 = jobHistoryMapper.selectByVersion(jobId, version2);
+    JobHistory h1 = jobHistoryRepository.selectByVersion(jobId, version1);
+    JobHistory h2 = jobHistoryRepository.selectByVersion(jobId, version2);
     if (h1 == null || h2 == null) {
       return Collections.emptyList();
     }
@@ -241,7 +241,7 @@ public class JobHistoryServiceImpl implements JobHistoryService {
    * @return 下一个版本号；无历史记录时返回 1
    */
   private int getNextVersion(String jobId) {
-    List<JobHistory> versions = jobHistoryMapper.selectByJobIdOrderByVersionDesc(jobId);
+    List<JobHistory> versions = jobHistoryRepository.selectByJobIdOrderByVersionDesc(jobId);
     if (versions == null || versions.isEmpty()) {
       return 1;
     }

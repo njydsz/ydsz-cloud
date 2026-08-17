@@ -18,7 +18,7 @@ import com.njydsz.common.queue.trace.MessageTracer;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
-import com.njydsz.message.infra.mapper.core.MsgLogMapper;
+import com.njydsz.message.infra.repository.MsgLogRepository;
 import com.njydsz.message.server.metric.MessageMetrics;
 
 /**
@@ -54,7 +54,7 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
   /** DLQ 幂等锁 TTL(1 小时,DLQ maxReconsumeTimes=1 重投概率低) */
   private static final long DLQ_IDEMPOTENT_TTL_SECONDS = 3600L;
 
-  private final MsgLogMapper msgLogMapper;
+  private final MsgLogRepository msgLogRepository;
   private final MessageMetrics messageMetrics;
   private final IdempotentStrategy idempotentStrategy;
 
@@ -101,7 +101,7 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
                   .set(MsgLog::getStatus, MessageStatusEnum.DEAD.name())
                   .set(MsgLog::getErrorMessage, errorMessage)
                   .set(MsgLog::getReconsumeTimes, reconsumeTimes);
-          int updated = msgLogMapper.update(null, updateWrapper);
+          int updated = msgLogRepository.update(null, updateWrapper);
           if (updated > 0) {
             log.info("[MessageDlqConsumer] 已更新现有记录为 DEAD: msgId={}", bizMsgId);
             messageMetrics.recordDead(request != null ? request.getChannel() : "UNKNOWN");
@@ -129,7 +129,7 @@ public class MessageDlqConsumer implements RocketMQListener<MessageExt> {
         logDO.setTopic(originTopic);
         logDO.setReconsumeTimes(reconsumeTimes);
         logDO.setTenantId(TenantContextHolder.getTenantId());
-        msgLogMapper.insert(logDO);
+        msgLogRepository.insert(logDO);
         messageMetrics.recordDead(logDO.getChannel());
       } catch (Exception e) {
         log.error("[MessageDlqConsumer] 死信落库失败: msgId={} err={}", msgId, e.getMessage(), e);

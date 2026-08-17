@@ -43,8 +43,8 @@ import com.njydsz.cronjob.domain.dto.BatchResult;
 import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.domain.job.JobHandler;
-import com.njydsz.cronjob.infra.mapper.job.JobMapper;
-import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
+import com.njydsz.cronjob.infra.repository.JobLogRepository;
+import com.njydsz.cronjob.infra.repository.JobRepository;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.JobLockManager;
 import com.njydsz.cronjob.server.core.dispatch.DefaultTaskDispatcher;
@@ -77,11 +77,11 @@ import com.njydsz.cronjob.server.service.job.TenantQuotaService;
 @RequiredArgsConstructor
 public class JobServiceImpl implements JobService, ApplicationRunner {
 
-  /** 任务定义 Mapper */
-  private final JobMapper jobMapper;
+  /** 任务定义 Repository */
+  private final JobRepository jobRepository;
 
-  /** 任务日志 Mapper */
-  private final JobLogMapper jobLogMapper;
+  /** 任务日志 Repository */
+  private final JobLogRepository jobLogRepository;
 
   /** Spring 应用上下文（用于按 Bean 名称获取 JobHandler） */
   private final ApplicationContext applicationContext;
@@ -219,7 +219,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
   @Override
   @Transactional(readOnly = true)
   public void loadOnStartup() {
-    List<Job> list = jobMapper.selectAllNormal();
+    List<Job> list = jobRepository.selectAllNormal();
     log.info("[Cronjob] 启动加载任务数量: {}", list.size());
     for (Job j : list) {
       try {
@@ -253,7 +253,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
       job.setScheduleType(ScheduleType.CRON.name());
     }
     validate(job);
-    if (jobMapper.selectByJobKey(job.getJobKey()) != null) {
+    if (jobRepository.selectByJobKey(job.getJobKey()) != null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.BAD_REQUEST)
           .key("error.cronjob.msg_7e5ef640")
@@ -284,7 +284,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
       LocalDateTime next = nextFireTime(job);
       job.setNextFireTime(next);
     }
-    jobMapper.insert(job);
+    jobRepository.insert(job);
     if ("NORMAL".equals(job.getStatus())) {
       register(job);
     }
@@ -322,7 +322,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
           .message("error.cronjob.msg_ce91ca69")
           .build();
     }
-    Job exists = jobMapper.selectById(job.getId());
+    Job exists = jobRepository.selectById(job.getId());
     if (exists == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -396,7 +396,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     // P4-8: 版本号 +1
     int newVersion = (exists.getVersion() != null ? exists.getVersion() : 1) + 1;
     exists.setVersion(newVersion);
-    jobMapper.updateById(exists);
+    jobRepository.updateById(exists);
 
     // 重新调度：先注销旧的本地调度（CRON/FIXED_RATE/FIXED_DELAY 共用 scheduledMap）
     unregister(exists.getJobKey());
@@ -422,7 +422,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    */
   @Override
   public void delete(String id) {
-    Job j = jobMapper.selectById(id);
+    Job j = jobRepository.selectById(id);
     if (j == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -430,7 +430,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
           .build();
     }
     unregister(j.getJobKey());
-    jobMapper.deleteById(id);
+    jobRepository.deleteById(id);
     log.info("[Cronjob] 删除任务: key={}", j.getJobKey());
     // P1-6: 记录版本变更快照（统一走 JobHistoryService）
     JobHistoryService historyService3 = jobHistoryServiceProvider.getIfAvailable();
@@ -459,7 +459,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     }
     unregister(j.getJobKey());
     j.setStatus("PAUSED");
-    jobMapper.updateById(j);
+    jobRepository.updateById(j);
     log.info("[Cronjob] 暂停任务: key={}", j.getJobKey());
   }
 
@@ -478,7 +478,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
       }
     } else if ("PAUSED".equals(j.getStatus())) {
       j.setStatus("NORMAL");
-      jobMapper.updateById(j);
+      jobRepository.updateById(j);
       register(j);
     } else {
       throw SysException.builder()
@@ -673,7 +673,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     if (cronjobProperties.getLeader().isEnabled()) {
       if (job.getNextFireTime() == null) {
         job.setNextFireTime(nextFireTime(job));
-        jobMapper.updateById(job);
+        jobRepository.updateById(job);
       }
       log.debug("[Cronjob] Leader 模式跳过本地注册: key={}（由 JobScanner 扫描派发）", job.getJobKey());
       return true;
@@ -782,7 +782,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
   @Override
   @Transactional(readOnly = true)
   public Job getById(String id) {
-    Job j = jobMapper.selectById(id);
+    Job j = jobRepository.selectById(id);
     if (j == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -823,7 +823,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
       w.eq(Job::getJobGroup, group);
     }
     w.orderByDesc(Job::getCreatedAt);
-    return jobMapper.selectPage(p, w);
+    return jobRepository.selectPage(p, w);
   }
 
   /**
@@ -847,7 +847,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
       w.eq(JobLog::getStatus, status);
     }
     w.orderByDesc(JobLog::getStartTime);
-    return jobLogMapper.selectPage(p, w);
+    return jobLogRepository.selectPage(p, w);
   }
 
   // ==================== 内部执行逻辑 ====================
@@ -889,7 +889,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     log0.setParamsJson(job.getParamsJson());
     log0.setTraceId(TracerUtils.getTraceId());
     log0.setDeleted(0);
-    jobLogMapper.insert(log0);
+    jobLogRepository.insert(log0);
 
     boolean success = false;
     String error = null;
@@ -912,7 +912,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
       log0.setEndTime(LocalDateTime.now());
       log0.setDurationMs(Duration.between(log0.getStartTime(), log0.getEndTime()).toMillis());
       log0.setStatus(success ? "SUCCESS" : "FAILED");
-      jobLogMapper.updateById(log0);
+      jobLogRepository.updateById(log0);
 
       // 更新任务统计
       Long incFire = 1L;
@@ -922,7 +922,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
       if (!manual) {
         next = nextFireTime(job);
       }
-      jobMapper.updateStats(
+      jobRepository.updateStats(
           job.getId(),
           log0.getStartTime(),
           next,

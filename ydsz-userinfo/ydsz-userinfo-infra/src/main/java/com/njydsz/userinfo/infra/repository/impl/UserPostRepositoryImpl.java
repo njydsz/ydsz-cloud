@@ -26,6 +26,11 @@ public class UserPostRepositoryImpl implements UserPostRepository {
   private final UserPostMapper userPostMapper;
 
   @Override
+  public UserPost findById(String id) {
+    return userPostMapper.selectById(id);
+  }
+
+  @Override
   public List<UserPost> findByUserId(String userId) {
     LambdaQueryWrapper<UserPost> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(UserPost::getUserId, userId);

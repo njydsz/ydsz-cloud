@@ -14,8 +14,8 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.cronjob.domain.dto.alert.AlertRuleSaveDTO;
 import com.njydsz.cronjob.domain.entity.job.JobAlertLog;
 import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
-import com.njydsz.cronjob.infra.mapper.job.JobAlertLogMapper;
-import com.njydsz.cronjob.infra.mapper.job.JobAlertRuleMapper;
+import com.njydsz.cronjob.infra.repository.JobAlertLogRepository;
+import com.njydsz.cronjob.infra.repository.JobAlertRuleRepository;
 import com.njydsz.cronjob.server.core.alert.AlertTrigger;
 import com.njydsz.cronjob.server.core.alert.AlertType;
 import com.njydsz.cronjob.server.service.alert.AlertService;
@@ -37,11 +37,11 @@ import com.njydsz.cronjob.server.service.alert.AlertService;
 @RequiredArgsConstructor
 public class AlertServiceImpl implements AlertService {
 
-  /** 告警规则 Mapper（CRUD） */
-  private final JobAlertRuleMapper jobAlertRuleMapper;
+  /** 告警规则 Repository（CRUD） */
+  private final JobAlertRuleRepository jobAlertRuleRepository;
 
-  /** 告警日志 Mapper（告警触发记录） */
-  private final JobAlertLogMapper jobAlertLogMapper;
+  /** 告警日志 Repository（告警触发记录） */
+  private final JobAlertLogRepository jobAlertLogRepository;
 
   /** 告警触发器（用于规则变更时失效本地缓存） */
   private final AlertTrigger alertTrigger;
@@ -52,7 +52,7 @@ public class AlertServiceImpl implements AlertService {
     validateRuleConstraints(dto);
     JobAlertRule rule = new JobAlertRule();
     applyDtoToEntity(dto, rule);
-    jobAlertRuleMapper.insert(rule);
+    jobAlertRuleRepository.insert(rule);
     // P1-P5: 规则变更后失效本地缓存，确保新规则下次告警触发时加载
     alertTrigger.invalidateAlertRuleCache(rule.getJobId());
     log.info(
@@ -66,7 +66,7 @@ public class AlertServiceImpl implements AlertService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void updateRule(String id, AlertRuleSaveDTO dto) {
-    JobAlertRule exists = jobAlertRuleMapper.selectById(id);
+    JobAlertRule exists = jobAlertRuleRepository.selectById(id);
     if (exists == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -75,7 +75,7 @@ public class AlertServiceImpl implements AlertService {
     }
     validateRuleConstraints(dto);
     applyDtoToEntity(dto, exists);
-    jobAlertRuleMapper.updateById(exists);
+    jobAlertRuleRepository.updateById(exists);
     // P1-P5: 规则变更后失效本地缓存
     alertTrigger.invalidateAlertRuleCache(exists.getJobId());
     log.info("[Alert] 更新告警规则: ruleId={} ruleName={}", id, exists.getRuleName());
@@ -84,7 +84,7 @@ public class AlertServiceImpl implements AlertService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void deleteRule(String id) {
-    JobAlertRule exists = jobAlertRuleMapper.selectById(id);
+    JobAlertRule exists = jobAlertRuleRepository.selectById(id);
     if (exists == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -92,7 +92,7 @@ public class AlertServiceImpl implements AlertService {
           .build();
     }
     String jobId = exists.getJobId();
-    jobAlertRuleMapper.deleteById(id);
+    jobAlertRuleRepository.deleteById(id);
     // P1-P5: 规则变更后失效本地缓存
     alertTrigger.invalidateAlertRuleCache(jobId);
     log.info("[Alert] 删除告警规则: ruleId={} ruleName={}", id, exists.getRuleName());
@@ -100,7 +100,7 @@ public class AlertServiceImpl implements AlertService {
 
   @Override
   public JobAlertRule getRuleById(String id) {
-    JobAlertRule rule = jobAlertRuleMapper.selectById(id);
+    JobAlertRule rule = jobAlertRuleRepository.selectById(id);
     if (rule == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -112,7 +112,7 @@ public class AlertServiceImpl implements AlertService {
 
   @Override
   public List<JobAlertRule> listRules() {
-    return jobAlertRuleMapper.selectList(null);
+    return jobAlertRuleRepository.selectList(null);
   }
 
   @Override
@@ -124,7 +124,7 @@ public class AlertServiceImpl implements AlertService {
           .message("error.cronjob.msg_alert_invalid_enabled")
           .build();
     }
-    JobAlertRule exists = jobAlertRuleMapper.selectById(id);
+    JobAlertRule exists = jobAlertRuleRepository.selectById(id);
     if (exists == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -132,7 +132,7 @@ public class AlertServiceImpl implements AlertService {
           .build();
     }
     exists.setEnabled(enabled);
-    jobAlertRuleMapper.updateById(exists);
+    jobAlertRuleRepository.updateById(exists);
     // P1-P5: 规则变更后失效本地缓存
     alertTrigger.invalidateAlertRuleCache(exists.getJobId());
     log.info("[Alert] 切换规则启用状态: ruleId={} enabled={}", id, enabled);
@@ -144,7 +144,7 @@ public class AlertServiceImpl implements AlertService {
       return List.of();
     }
     LocalDateTime cutoff = since != null ? since : LocalDateTime.now().minusDays(7);
-    return jobAlertLogMapper.selectByJobIdSince(jobId, cutoff);
+    return jobAlertLogRepository.selectByJobIdSince(jobId, cutoff);
   }
 
   /**

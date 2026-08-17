@@ -5,8 +5,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -99,6 +101,30 @@ public class JobScanner {
 
   /** P1-8: 是否使用外部线程池（true=common-thread 管理，不负责关闭） */
   private boolean useExternalDispatchPool = false;
+
+  /**
+   * Cron 下次触发时间本地缓存（60s TTL）。
+   *
+   * <p>扫描周期内同一 cron 表达式多次计算 nextFireTime 结果相同，缓存避免重复解析。
+   * Key = cron 表达式，Value = (计算时刻, 下次触发时间)。
+   */
+  private final Map<String, CronCacheEntry> cronNextFireTimeCache = new ConcurrentHashMap<>(64);
+
+  /** 缓存条目 */
+  private static class CronCacheEntry {
+    final LocalDateTime calculatedAt;
+    final LocalDateTime nextFireTime;
+
+    CronCacheEntry(LocalDateTime calculatedAt, LocalDateTime nextFireTime) {
+      this.calculatedAt = calculatedAt;
+      this.nextFireTime = nextFireTime;
+    }
+
+    /** 判断缓存是否仍有效（60s TTL） */
+    boolean isExpired() {
+      return Duration.between(calculatedAt, LocalDateTime.now()).getSeconds() >= 60;
+    }
+  }
 
   /**
    * 初始化扫描器：解析 Leader 角色，并决策并行派发线程池来源。
@@ -413,16 +439,41 @@ public class JobScanner {
     return job.getNextFireTime().isBefore(threshold);
   }
 
-  /** 计算下次触发时间（基于 CronExpression，Asia/Shanghai 时区）。 */
+  /**
+   * 计算下次触发时间（基于 CronExpression，Asia/Shanghai 时区）。
+   *
+   * <p>使用本地缓存（60s TTL）避免同一 cron 表达式在扫描周期内重复解析。
+   *
+   * @param cron cron 表达式
+   * @return 下次触发时间；解析失败时返回 null
+   */
   private LocalDateTime nextFireTime(String cron) {
     try {
       Assert.hasText(cron, "cron 表达式不能为空");
+      // 先查缓存
+      CronCacheEntry cached = cronNextFireTimeCache.get(cron);
+      if (cached != null && !cached.isExpired()) {
+        return cached.nextFireTime;
+      }
+      // 缓存未命中或已过期，重新计算
       CronExpression expr = CronExpression.parse(cron);
-      return expr.next(LocalDateTime.now());
+      LocalDateTime next = expr.next(LocalDateTime.now());
+      cronNextFireTimeCache.put(cron, new CronCacheEntry(LocalDateTime.now(), next));
+      return next;
     } catch (Exception e) {
       log.warn("[JobScanner] 计算 nextFireTime 失败: cron={} err={}", cron, e.getMessage());
       return null;
     }
+  }
+
+  /**
+   * 定时清理过期的 cron 缓存条目（每 5 分钟执行一次）。
+   *
+   * <p>防止长期运行后缓存堆积不再使用的 cron 表达式。
+   */
+  @Scheduled(fixedDelay = 300_000L)
+  public void cleanupCronCache() {
+    cronNextFireTimeCache.entrySet().removeIf(entry -> entry.getValue().isExpired());
   }
 
   /** 优雅下线：无需特殊处理，{@link LeaderElector#release(String)} 会释放 Leader 锁。 */

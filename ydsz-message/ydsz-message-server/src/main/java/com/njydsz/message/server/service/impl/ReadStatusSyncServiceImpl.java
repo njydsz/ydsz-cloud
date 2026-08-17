@@ -17,8 +17,8 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.entity.core.MsgNotification;
 import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
-import com.njydsz.message.infra.mapper.core.MsgLogMapper;
-import com.njydsz.message.infra.mapper.core.MsgNotificationMapper;
+import com.njydsz.message.infra.repository.MsgLogRepository;
+import com.njydsz.message.infra.repository.MsgNotificationRepository;
 import com.njydsz.message.server.realtime.RealtimePushService;
 import com.njydsz.message.server.service.receipt.ReadStatusSyncService;
 
@@ -37,11 +37,11 @@ import com.njydsz.message.server.service.receipt.ReadStatusSyncService;
 @RequiredArgsConstructor
 public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
 
-  /** 消息日志 Mapper */
-  private final MsgLogMapper msgLogMapper;
+  /** 消息日志 Repository */
+  private final MsgLogRepository msgLogRepository;
 
-  /** 站内通知 Mapper */
-  private final MsgNotificationMapper msgNotificationMapper;
+  /** 站内通知 Repository */
+  private final MsgNotificationRepository msgNotificationRepository;
 
   /** 实时推送服务（已读状态变更通知） */
   private final RealtimePushService realtimePushService;
@@ -68,7 +68,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     }
     // 更新消息日志的 receipt_status
     int updated =
-        msgLogMapper.update(
+        msgLogRepository.update(
             null,
             new LambdaUpdateWrapper<MsgLog>()
                 .eq(MsgLog::getMsgId, msgId)
@@ -104,7 +104,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
       return 0;
     }
     int updated =
-        msgLogMapper.update(
+        msgLogRepository.update(
             null,
             new LambdaUpdateWrapper<MsgLog>()
                 .in(MsgLog::getMsgId, msgIds)
@@ -144,7 +144,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
           .build();
     }
     int updated =
-        msgNotificationMapper.update(
+        msgNotificationRepository.update(
             null,
             new LambdaUpdateWrapper<MsgNotification>()
                 .eq(MsgNotification::getId, notificationId)
@@ -187,7 +187,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     if (StringUtils.hasText(bizType)) {
       wrapper.eq(MsgNotification::getBizType, bizType);
     }
-    int updated = msgNotificationMapper.update(null, wrapper);
+    int updated = msgNotificationRepository.update(null, wrapper);
     if (updated > 0) {
       realtimePushService.pushToUser(
           userId,
@@ -213,7 +213,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     }
     // 站内通知未读数
     Long notifCount =
-        msgNotificationMapper.selectCount(
+        msgNotificationRepository.selectCount(
             new LambdaQueryWrapper<MsgNotification>()
                 .eq(MsgNotification::getReceiverId, userId)
                 .eq(MsgNotification::getReadStatus, 0)
@@ -245,7 +245,7 @@ public class ReadStatusSyncServiceImpl implements ReadStatusSyncService {
     }
     // 其他通道按消息日志查询 receipt_status != READ
     Long count =
-        msgLogMapper.selectCount(
+        msgLogRepository.selectCount(
             new LambdaQueryWrapper<MsgLog>()
                 .eq(MsgLog::getReceiver, userId)
                 .eq(MsgLog::getChannel, channel.toUpperCase())

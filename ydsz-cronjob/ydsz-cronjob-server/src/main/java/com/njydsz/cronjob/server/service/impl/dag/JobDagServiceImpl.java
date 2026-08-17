@@ -24,9 +24,9 @@ import com.njydsz.cronjob.domain.dto.dag.JobDagSaveDTO;
 import com.njydsz.cronjob.domain.entity.dag.JobDag;
 import com.njydsz.cronjob.domain.entity.dag.JobDagInstance;
 import com.njydsz.cronjob.domain.entity.dag.JobDagVersion;
-import com.njydsz.cronjob.infra.mapper.dag.JobDagInstanceMapper;
-import com.njydsz.cronjob.infra.mapper.dag.JobDagMapper;
-import com.njydsz.cronjob.infra.mapper.dag.JobDagVersionMapper;
+import com.njydsz.cronjob.infra.repository.JobDagInstanceRepository;
+import com.njydsz.cronjob.infra.repository.JobDagRepository;
+import com.njydsz.cronjob.infra.repository.JobDagVersionRepository;
 import com.njydsz.cronjob.server.core.dag.DagDefinition;
 import com.njydsz.cronjob.server.core.dag.DagDefinitionCodec;
 import com.njydsz.cronjob.server.core.dag.DagEdge;
@@ -58,14 +58,14 @@ import com.njydsz.cronjob.server.service.dag.JobDagService;
 @RequiredArgsConstructor
 public class JobDagServiceImpl implements JobDagService {
 
-  /** DAG 定义 Mapper */
-  private final JobDagMapper jobDagMapper;
+  /** DAG 定义 Repository */
+  private final JobDagRepository jobDagRepository;
 
-  /** DAG 实例 Mapper */
-  private final JobDagInstanceMapper jobDagInstanceMapper;
+  /** DAG 实例 Repository */
+  private final JobDagInstanceRepository jobDagInstanceRepository;
 
-  /** P1-8: DAG 版本历史 Mapper */
-  private final JobDagVersionMapper jobDagVersionMapper;
+  /** P1-8: DAG 版本历史 Repository */
+  private final JobDagVersionRepository jobDagVersionRepository;
 
   /** DAG 定义编解码器 */
   private final DagDefinitionCodec dagDefinitionCodec;
@@ -85,7 +85,7 @@ public class JobDagServiceImpl implements JobDagService {
   @Transactional(rollbackFor = Exception.class)
   public String createDag(JobDagSaveDTO dto) {
     // 校验 dagKey 唯一性
-    if (jobDagMapper.selectByDagKey(dto.getDagKey()) != null) {
+    if (jobDagRepository.selectByDagKey(dto.getDagKey()) != null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.BAD_REQUEST)
           .key("error.cronjob.msg_dag_already_exists")
@@ -121,7 +121,7 @@ public class JobDagServiceImpl implements JobDagService {
     if ("CRON".equals(dag.getTriggerType()) && StringUtils.hasText(dag.getCronExpression())) {
       dag.setNextFireTime(nextFireTime(dag.getCronExpression()));
     }
-    jobDagMapper.insert(dag);
+    jobDagRepository.insert(dag);
     // P1-8: 保存 V1 版本快照
     saveVersionSnapshot(dag, "初始创建");
     log.info(
@@ -135,7 +135,7 @@ public class JobDagServiceImpl implements JobDagService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void updateDag(String dagId, JobDagSaveDTO dto) {
-    JobDag exists = jobDagMapper.selectById(dagId);
+    JobDag exists = jobDagRepository.selectById(dagId);
     if (exists == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -144,7 +144,7 @@ public class JobDagServiceImpl implements JobDagService {
           .build();
     }
     // 校验 dagKey 唯一性（排除自身）
-    JobDag byKey = jobDagMapper.selectByDagKey(dto.getDagKey());
+    JobDag byKey = jobDagRepository.selectByDagKey(dto.getDagKey());
     if (byKey != null && !dagId.equals(byKey.getId())) {
       throw SysException.builder()
           .resultCode(BaseResultCode.BAD_REQUEST)
@@ -184,7 +184,7 @@ public class JobDagServiceImpl implements JobDagService {
     }
     // version + 1（乐观锁）
     exists.setVersion((exists.getVersion() == null ? 0 : exists.getVersion()) + 1);
-    jobDagMapper.updateById(exists);
+    jobDagRepository.updateById(exists);
     // P1-8: 保存版本快照
     saveVersionSnapshot(exists, "更新 DAG 定义");
     log.info(
@@ -197,7 +197,7 @@ public class JobDagServiceImpl implements JobDagService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void deleteDag(String dagId) {
-    JobDag exists = jobDagMapper.selectById(dagId);
+    JobDag exists = jobDagRepository.selectById(dagId);
     if (exists == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -205,14 +205,14 @@ public class JobDagServiceImpl implements JobDagService {
           .params(dagId)
           .build();
     }
-    jobDagMapper.deleteById(dagId);
+    jobDagRepository.deleteById(dagId);
     log.info("[JobDag] 删除 DAG: dagId={} dagKey={}", dagId, exists.getDagKey());
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void enableDag(String dagId) {
-    JobDag exists = jobDagMapper.selectById(dagId);
+    JobDag exists = jobDagRepository.selectById(dagId);
     if (exists == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -233,7 +233,7 @@ public class JobDagServiceImpl implements JobDagService {
       exists.setNextFireTime(nextFireTime(exists.getCronExpression()));
     }
     exists.setVersion((exists.getVersion() == null ? 0 : exists.getVersion()) + 1);
-    jobDagMapper.updateById(exists);
+    jobDagRepository.updateById(exists);
     log.info(
         "[JobDag] 启用 DAG: dagId={} dagKey={} nextFireTime={}",
         dagId,
@@ -244,7 +244,7 @@ public class JobDagServiceImpl implements JobDagService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public void disableDag(String dagId) {
-    JobDag exists = jobDagMapper.selectById(dagId);
+    JobDag exists = jobDagRepository.selectById(dagId);
     if (exists == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -262,14 +262,14 @@ public class JobDagServiceImpl implements JobDagService {
     exists.setStatus("DISABLED");
     exists.setNextFireTime(null);
     exists.setVersion((exists.getVersion() == null ? 0 : exists.getVersion()) + 1);
-    jobDagMapper.updateById(exists);
+    jobDagRepository.updateById(exists);
     log.info("[JobDag] 禁用 DAG: dagId={} dagKey={}", dagId, exists.getDagKey());
   }
 
   @Override
   @Transactional(readOnly = true)
   public JobDag getDagById(String dagId) {
-    JobDag dag = jobDagMapper.selectById(dagId);
+    JobDag dag = jobDagRepository.selectById(dagId);
     if (dag == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -283,7 +283,7 @@ public class JobDagServiceImpl implements JobDagService {
   @Override
   @Transactional(readOnly = true)
   public JobDag getDagByKey(String dagKey) {
-    JobDag dag = jobDagMapper.selectByDagKey(dagKey);
+    JobDag dag = jobDagRepository.selectByDagKey(dagKey);
     if (dag == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -297,19 +297,19 @@ public class JobDagServiceImpl implements JobDagService {
   @Override
   @Transactional(readOnly = true)
   public List<JobDag> listEnabledDags() {
-    return jobDagMapper.selectEnabledDags();
+    return jobDagRepository.selectEnabledDags();
   }
 
   @Override
   @Transactional(readOnly = true)
   public List<JobDag> listCronEnabledDags() {
-    return jobDagMapper.selectCronEnabledDags();
+    return jobDagRepository.selectCronEnabledDags();
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String triggerDag(String dagKey, String triggerBy) {
-    JobDag dag = jobDagMapper.selectByDagKey(dagKey);
+    JobDag dag = jobDagRepository.selectByDagKey(dagKey);
     if (dag == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -328,7 +328,7 @@ public class JobDagServiceImpl implements JobDagService {
     int maxConcurrent =
         dag.getMaxConcurrentInstances() != null ? dag.getMaxConcurrentInstances() : 1;
     if (maxConcurrent > 0) {
-      int active = jobDagInstanceMapper.countActiveInstances(dag.getId());
+      int active = jobDagInstanceRepository.countActiveInstances(dag.getId());
       if (active >= maxConcurrent) {
         throw SysException.builder()
             .resultCode(BaseResultCode.BAD_REQUEST)
@@ -349,7 +349,7 @@ public class JobDagServiceImpl implements JobDagService {
       triggerTraceId = MDC.get("traceId");
     }
     instance.setTriggerTraceId(triggerTraceId);
-    jobDagInstanceMapper.insert(instance);
+    jobDagInstanceRepository.insert(instance);
     log.info(
         "[JobDag] 触发 DAG: dagId={} dagKey={} instanceId={} triggerBy={}",
         dag.getId(),
@@ -379,13 +379,13 @@ public class JobDagServiceImpl implements JobDagService {
   @Transactional(readOnly = true)
   public List<JobDagVersion> listDagVersions(String dagId, int limit) {
     int effectiveLimit = limit > 0 ? limit : 50;
-    return jobDagVersionMapper.selectByVersionDesc(dagId, effectiveLimit);
+    return jobDagVersionRepository.selectByVersionDesc(dagId, effectiveLimit);
   }
 
   @Override
   @Transactional(readOnly = true)
   public JobDagVersion getDagVersion(String dagId, int version) {
-    JobDagVersion versionDO = jobDagVersionMapper.selectByVersion(dagId, version);
+    JobDagVersion versionDO = jobDagVersionRepository.selectByVersion(dagId, version);
     if (versionDO == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -399,7 +399,7 @@ public class JobDagServiceImpl implements JobDagService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public int rollbackDagVersion(String dagId, int targetVersion, String changedBy) {
-    JobDag dag = jobDagMapper.selectById(dagId);
+    JobDag dag = jobDagRepository.selectById(dagId);
     if (dag == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -407,7 +407,7 @@ public class JobDagServiceImpl implements JobDagService {
           .params(dagId)
           .build();
     }
-    JobDagVersion targetVersionDO = jobDagVersionMapper.selectByVersion(dagId, targetVersion);
+    JobDagVersion targetVersionDO = jobDagVersionRepository.selectByVersion(dagId, targetVersion);
     if (targetVersionDO == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -430,7 +430,7 @@ public class JobDagServiceImpl implements JobDagService {
     // version + 1（乐观锁）
     int newVersion = (dag.getVersion() == null ? 0 : dag.getVersion()) + 1;
     dag.setVersion(newVersion);
-    jobDagMapper.updateById(dag);
+    jobDagRepository.updateById(dag);
     // 保存回滚版本快照
     saveVersionSnapshot(dag, "回滚到版本 V" + targetVersion);
     log.info(
@@ -460,7 +460,7 @@ public class JobDagServiceImpl implements JobDagService {
     versionDO.setCronExpression(dag.getCronExpression());
     versionDO.setFailStrategy(dag.getFailStrategy());
     versionDO.setRemark(remark);
-    jobDagVersionMapper.insert(versionDO);
+    jobDagVersionRepository.insert(versionDO);
   }
 
   // ==================== 内部辅助方法 ====================

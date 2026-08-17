@@ -18,7 +18,7 @@ import com.njydsz.common.util.id.RandomUtils;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
-import com.njydsz.message.infra.mapper.core.MsgLogMapper;
+import com.njydsz.message.infra.repository.MsgLogRepository;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.config.RetryStrategyResolver;
 import com.njydsz.message.server.metric.MessageMetrics;
@@ -50,7 +50,7 @@ import com.njydsz.message.server.metric.MessageMetrics;
     matchIfMissing = true)
 public class RetryScanner {
 
-  private final MsgLogMapper msgLogMapper;
+  private final MsgLogRepository msgLogRepository;
   private final ChannelRouter channelRouter;
   private final MessageMetrics messageMetrics;
   private final RetryStrategyResolver retryStrategyResolver;
@@ -77,7 +77,7 @@ public class RetryScanner {
     // P2-3: 使用 MyBatis-Plus 分页替代 .last("LIMIT ...")
     Page<MsgLog> page = new Page<>(1, MessageConstants.RETRY_SCAN_BATCH_SIZE);
     Page<MsgLog> duePage =
-        msgLogMapper.selectPage(
+        msgLogRepository.selectPage(
             page,
             new LambdaQueryWrapper<MsgLog>()
                 .eq(MsgLog::getStatus, MessageStatusEnum.RETRY.name())
@@ -124,7 +124,7 @@ public class RetryScanner {
     try (MessageTracer.MessageTraceScope scope = MessageTracer.enter(logDO.getTraceId())) {
       // ① 流转到 SENDING
       logDO.setStatus(MessageStatusEnum.SENDING.name());
-      msgLogMapper.updateById(logDO);
+      msgLogRepository.updateById(logDO);
       long start = System.currentTimeMillis();
       try {
         String providerTraceId = channelRouter.dispatch(logDO);
@@ -132,7 +132,7 @@ public class RetryScanner {
         logDO.setStatus(MessageStatusEnum.SUCCESS.name());
         logDO.setProviderTraceId(providerTraceId);
         logDO.setCostMs(cost);
-        msgLogMapper.updateById(logDO);
+        msgLogRepository.updateById(logDO);
         messageMetrics.recordSend(logDO.getChannel(), "SUCCESS", cost);
         log.info(
             "[RetryScanner] 重试成功: logId={} retryCount={}", logDO.getId(), logDO.getRetryCount());
@@ -147,7 +147,7 @@ public class RetryScanner {
         if (retryStrategyResolver.isMaxRetriesReached(newRetryCount, logDO.getChannel())) {
           // 超过最大重试次数 → DEAD
           logDO.setStatus(MessageStatusEnum.DEAD.name());
-          msgLogMapper.updateById(logDO);
+          msgLogRepository.updateById(logDO);
           messageMetrics.recordDead(logDO.getChannel());
           log.warn("[RetryScanner] 重试耗尽转死信: logId={} retryCount={}", logDO.getId(), newRetryCount);
           return MessageStatusEnum.DEAD;
@@ -160,7 +160,7 @@ public class RetryScanner {
         long jitterMs = RandomUtils.randomLong(0, 1000);
         nextRetry = nextRetry.plusNanos(jitterMs * 1_000_000L);
         logDO.setNextRetryAt(nextRetry);
-        msgLogMapper.updateById(logDO);
+        msgLogRepository.updateById(logDO);
         messageMetrics.recordRetry(logDO.getChannel());
         log.info(
             "[RetryScanner] 重试失败继续等待: logId={} retryCount={} nextRetryAt={}",
