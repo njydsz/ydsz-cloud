@@ -19,6 +19,7 @@ import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.system.domain.converter.SystemConverter;
+import com.njydsz.system.domain.entity.DictItem;
 import com.njydsz.system.domain.entity.DictType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.query.DictPageQuery;
@@ -207,8 +208,7 @@ public class DictServiceImpl implements DictService {
         dictRepository
             .getDictItemMapper()
             .selectCount(
-                new QueryWrapper<com.njydsz.system.domain.entity.DictItem>()
-                    .eq("type_code", entity.getTypeCode()));
+                new QueryWrapper<DictItem>().eq("type_code", entity.getTypeCode()));
     if (itemCount != null && itemCount > 0) {
       throw BusinessException.of(SystemExceptionCode.DICT_TYPE_HAS_ITEMS)
           .data("typeCode", entity.getTypeCode())

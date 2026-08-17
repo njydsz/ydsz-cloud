@@ -1,6 +1,7 @@
 package com.njydsz.system.web.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,8 +23,10 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.system.domain.dto.ConfigBatchDTO;
 import com.njydsz.system.domain.query.ConfigPageQuery;
 import com.njydsz.system.domain.vo.ConfigVO;
+import com.njydsz.system.server.service.ConfigBatchService;
 import com.njydsz.system.server.service.ConfigService;
 
 /**
@@ -51,13 +54,14 @@ import com.njydsz.system.server.service.ConfigService;
  * @since 1.0.0
  * @see com.njydsz.system.server.service.ConfigService 配置业务逻辑
  */
-@Tag(name = "系统配置", description = "系统参数配置 CRUD + 按键查询 + 分组批量查询")
+@Tag(name = "系统配置", description = "系统参数配置 CRUD + 按键查询 + 分组批量查询 + 批量操作")
 @RestController
 @RequestMapping("/api/v1/config")
 @RequiredArgsConstructor
 public class ConfigController {
 
   private final ConfigService configService;
+  private final ConfigBatchService configBatchService;
 
   // ============================== CRUD 端点 ==============================
 
@@ -155,6 +159,44 @@ public class ConfigController {
   @DeleteMapping("/{id}")
   public BaseResponse<Boolean> remove(@PathVariable String id) {
     return BaseResponse.success(configService.removeById(id));
+  }
+
+  // ============================== 批量操作端点 ==============================
+
+  /**
+   * 批量创建配置项
+   *
+   * <p>用于运营初始化场景，单次最多 500 条。
+   *
+   * <p>执行链路：
+   *
+   * <ol>
+   *   <li>批量唯一性校验（不重复校验）
+   *   <li>逐条格式校验
+   *   <li>逐条 DB 唯一性校验
+   *   <li>批量插入
+   *   <li>精准缓存失效
+   * </ol>
+   *
+   * <p><b>幂等保护：</b>基于 items 哈希值，30 秒内相同请求不重复处理。
+   *
+   * @param batchDTO 批量创建请求（含配置列表）
+   * @return 批量操作结果（成功数、总数、消息）
+   */
+  @Audit(
+      module = "系统配置",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'批量创建配置: ' + #batchDTO.items.size() + ' 条'")
+  @Operation(summary = "批量创建配置", description = "运营初始化场景，单次最多 500 条")
+  @RateLimit(resource = "system.config.batch", threshold = 10)
+  @Idempotent(
+      key = "'ydsz:system:config:batch:' + #batchDTO.items.hashCode() + ':' + #userId",
+      ttlSeconds = 30)
+  @PostMapping("/batch")
+  public BaseResponse<Map<String, Object>> batchSave(
+      @Valid @RequestBody ConfigBatchDTO batchDTO) {
+    return BaseResponse.success(configBatchService.batchSave(batchDTO.getItems()));
   }
 
   // ============================== 业务扩展端点 ==============================

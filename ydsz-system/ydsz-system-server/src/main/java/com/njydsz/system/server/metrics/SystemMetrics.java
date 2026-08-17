@@ -23,13 +23,13 @@ import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
  * <ul>
  *   <li>{@code ydsz_system_config_read_total} / {@code config_read_duration_ms} — 配置读取次数 /
  *       耗时（Counter / Timer）
- *   <li>{@code ydsz_system_config_cache_hit_total} / {@code config_cache_miss_total} — 配置缓存命中 /
- *       未命中（Counter）
+ *   <li>{@code ydsz_system_config_cache_miss_total} — 配置缓存未命中（命中率由 common-cache 的
+ *       {@code cache.hit.rate} 自动暴露）
  *   <li>{@code ydsz_system_dict_query_total} / {@code dict_query_duration_ms} — 字典查询次数 / 耗时
- *   <li>{@code ydsz_system_dict_cache_hit_total} / {@code dict_cache_miss_total} — 字典缓存命中 / 未命中
+ *   <li>{@code ydsz_system_dict_cache_miss_total} — 字典缓存未命中
  *   <li>{@code ydsz_system_variable_read_total} / {@code variable_read_duration_ms} — 系统变量读取次数 / 耗时
- *   <li>{@code ydsz_system_variable_cache_hit_total} / {@code variable_cache_miss_total} — 系统变量缓存命中
- *       / 未命中
+ *   <li>{@code ydsz_system_variable_cache_miss_total} — 系统变量缓存未命中
+ *   <li>{@code ydsz_system_config_validation_warning_total} — 配置值格式校验告警
  *   <li>{@code ydsz_system_app_validate_success_total} / {@code app_validate_fail_total} — 应用密钥校验成功
  *       / 失败
  * </ul>
@@ -67,19 +67,10 @@ public class SystemMetrics extends SentryMetricsAdapter {
   }
 
   /**
-   * 记录配置缓存命中
-   *
-   * <p>累加 {@code config_cache_hit_total} 计数。
-   */
-  public void recordConfigCacheHit() {
-    incrementCounter("config_cache_hit_total");
-  }
-
-  /**
    * 记录配置缓存未命中
    *
-   * <p>累加 {@code config_cache_miss_total} 计数。 命中率计算公式：{@code hit_rate = hit / (hit + miss)}，可通过
-   * Grafana 配置。
+   * <p>累加 {@code config_cache_miss_total} 计数。命中率由 ydsz-common-cache 自动暴露（{@code cache.hit.rate}
+   * Gauge，见《云顶编码规范》18.5.8），无需手动统计命中侧。
    */
   public void recordConfigCacheMiss() {
     incrementCounter("config_cache_miss_total");
@@ -111,12 +102,7 @@ public class SystemMetrics extends SentryMetricsAdapter {
     timer("dict_query_duration_ms").record(durationNanos, TimeUnit.NANOSECONDS);
   }
 
-  /** 记录字典缓存命中 */
-  public void recordDictCacheHit() {
-    incrementCounter("dict_cache_hit_total");
-  }
-
-  /** 记录字典缓存未命中 */
+  /** 记录字典缓存未命中（命中率由 ydsz-common-cache 自动暴露，无需手动统计） */
   public void recordDictCacheMiss() {
     incrementCounter("dict_cache_miss_total");
   }
@@ -135,12 +121,7 @@ public class SystemMetrics extends SentryMetricsAdapter {
     timer("variable_read_duration_ms").record(durationNanos, TimeUnit.NANOSECONDS);
   }
 
-  /** 记录系统变量缓存命中 */
-  public void recordVariableCacheHit() {
-    incrementCounter("variable_cache_hit_total");
-  }
-
-  /** 记录系统变量缓存未命中 */
+  /** 记录系统变量缓存未命中（命中率由 ydsz-common-cache 自动暴露，无需手动统计） */
   public void recordVariableCacheMiss() {
     incrementCounter("variable_cache_miss_total");
   }

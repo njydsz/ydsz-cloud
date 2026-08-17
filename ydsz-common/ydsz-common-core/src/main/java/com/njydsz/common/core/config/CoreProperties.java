@@ -97,6 +97,17 @@ public class CoreProperties {
   private ApiVersionConfig apiVersion = new ApiVersionConfig();
 
   /**
+   * 特性开关（Feature Flag）映射。
+   *
+   * <p>键为开关名称（小写点分格式，如 {@code user.register.sms}）， 值为是否开启（默认开启）。 用于灰度发布、渐进式上线与紧急熔断。
+   *
+   * <p>示例：{@code ydsz.core.feature-flags: { user.register.sms: true }}
+   *
+   * @since 1.14.0
+   */
+  private Map<String, Boolean> featureFlags = Collections.emptyMap();
+
+  /**
    * 校验分页范围合法性：defaultPageSize 不应大于 maxPageSize。
    *
    * <p>该校验在应用启动时执行（@Validated + @AssertTrue）， 配置不合法时快速失败阻止启动。

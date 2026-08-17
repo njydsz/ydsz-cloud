@@ -37,6 +37,7 @@ import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.search.SearchIndexSyncer;
 import com.njydsz.system.server.service.ConfigService;
 import com.njydsz.system.server.service.EntityVersionService;
+import com.njydsz.system.server.util.SystemVersionUtils;
 
 /**
  * 系统配置 Service 实现
@@ -191,7 +192,7 @@ public class ConfigServiceImpl implements ConfigService {
           EntityVersionService.RESOURCE_TYPE_CONFIG,
           entity.getConfigKey(),
           entity.getConfigGroup(),
-          "v" + System.currentTimeMillis(),
+          SystemVersionUtils.nextVersion(),
           "更新配置: " + entity.getConfigKey(),
           snapshotJson);
       publishConfigChangedEvent(entity.getConfigKey(), entity.getConfigGroup());
@@ -215,7 +216,7 @@ public class ConfigServiceImpl implements ConfigService {
           EntityVersionService.RESOURCE_TYPE_CONFIG,
           entity.getConfigKey(),
           entity.getConfigGroup(),
-          "v" + System.currentTimeMillis(),
+          SystemVersionUtils.nextVersion(),
           "删除配置: " + entity.getConfigKey(),
           snapshotJson);
       publishConfigChangedEvent(entity.getConfigKey(), entity.getConfigGroup());

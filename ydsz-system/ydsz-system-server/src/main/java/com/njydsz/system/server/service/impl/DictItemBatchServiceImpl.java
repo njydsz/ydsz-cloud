@@ -28,6 +28,7 @@ import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.search.SearchIndexSyncer;
 import com.njydsz.system.server.service.DictItemBatchService;
 import com.njydsz.system.server.service.EntityVersionService;
+import com.njydsz.system.server.util.SystemVersionUtils;
 
 /**
  * 字典项批量操作 Service 实现
@@ -63,10 +64,10 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
   private final CacheManager cacheManager;
 
   /** 租户感知缓存键构造器（手动 evict 使用） */
-  private final com.njydsz.system.server.cache.CacheKeyBuilder cacheKeyBuilder;
+  private final CacheKeyBuilder cacheKeyBuilder;
 
   /** 搜索索引同步器（可选能力，未启用搜索模块时静默跳过） */
-  private final com.njydsz.system.server.search.SearchIndexSyncer searchIndexSyncer;
+  private final SearchIndexSyncer searchIndexSyncer;
 
   /**
    * 批量新增字典项
@@ -105,7 +106,7 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
     // 3. 单次快照：按 typeCode 分组，每个 typeCode 只生成一个版本快照
     Set<String> typeCodes =
         items.stream().map(DictItemVO::getTypeCode).collect(Collectors.toSet());
-    String version = "v" + System.currentTimeMillis();
+    String version = SystemVersionUtils.nextVersion();
     for (String typeCode : typeCodes) {
       createSnapshotVersion(typeCode, version, "批量新增字典项");
     }

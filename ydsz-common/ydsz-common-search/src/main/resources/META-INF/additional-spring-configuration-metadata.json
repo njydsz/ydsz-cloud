@@ -8,7 +8,7 @@
     {
       "name": "ydsz.search.primary",
       "type": "java.lang.String",
-      "description": "主搜索引擎：pg / memory / es / redis / solr / opensearch"
+      "description": "主搜索引擎：pg / memory"
     },
     {
       "name": "ydsz.search.fallbacks",
@@ -149,56 +149,6 @@
       "name": "ydsz.search.pg.time-decay-days",
       "type": "java.lang.Double",
       "description": "PG 时间衰减半衰期（天），0 不衰减"
-    },
-    {
-      "name": "ydsz.search.es.host",
-      "type": "java.lang.String",
-      "description": "Elasticsearch 主机地址"
-    },
-    {
-      "name": "ydsz.search.es.port",
-      "type": "java.lang.Integer",
-      "description": "Elasticsearch 端口"
-    },
-    {
-      "name": "ydsz.search.es.index-name",
-      "type": "java.lang.String",
-      "description": "Elasticsearch 索引名"
-    },
-    {
-      "name": "ydsz.search.redis.index-name",
-      "type": "java.lang.String",
-      "description": "RediSearch 索引名"
-    },
-    {
-      "name": "ydsz.search.redis.key-prefix",
-      "type": "java.lang.String",
-      "description": "RediSearch 数据 key 前缀"
-    },
-    {
-      "name": "ydsz.search.solr.base-url",
-      "type": "java.lang.String",
-      "description": "Solr base URL"
-    },
-    {
-      "name": "ydsz.search.solr.core",
-      "type": "java.lang.String",
-      "description": "Solr core 名称"
-    },
-    {
-      "name": "ydsz.search.opensearch.host",
-      "type": "java.lang.String",
-      "description": "OpenSearch 主机地址"
-    },
-    {
-      "name": "ydsz.search.opensearch.port",
-      "type": "java.lang.Integer",
-      "description": "OpenSearch 端口"
-    },
-    {
-      "name": "ydsz.search.opensearch.index-name",
-      "type": "java.lang.String",
-      "description": "OpenSearch 索引名"
     }
   ]
 }

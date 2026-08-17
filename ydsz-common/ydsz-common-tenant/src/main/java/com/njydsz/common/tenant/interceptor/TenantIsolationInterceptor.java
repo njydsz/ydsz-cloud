@@ -301,6 +301,7 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
     FromItem fromItem = plain.getFromItem();
     if (fromItem instanceof Table) {
       Table table = (Table) fromItem;
+      applySchemaToTable(table);
       if (!shouldIgnoreTable(table.getName())) {
         plain.setWhere(mergeWhere(plain.getWhere(), buildTenantConditions(table, values)));
       }
@@ -319,6 +320,7 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
     for (Join join : plain.getJoins()) {
       if (join.getRightItem() instanceof Table) {
         Table table = (Table) join.getRightItem();
+        applySchemaToTable(table);
         if (!shouldIgnoreTable(table.getName())) {
           Expression existingOn = JSqlParserHelper.getJoinOnExpression(join);
           Expression newOn = mergeWhere(existingOn, buildTenantConditions(table, values));
@@ -333,11 +335,42 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
     }
   }
 
+  /**
+   * SCHEMA 模式：为表设置租户 schema 前缀（{@code tenant_xxx.table}），实现数据库层隔离。
+   *
+   * <p>非 SCHEMA 模式或上下文无 schema 时为空操作。 已带 schema 前缀的表跳过（避免重复前缀）， 白名单表（ignore-tables）跳过。
+   * 超级管理员 / 跳过隔离上下文不应用前缀。
+   *
+   * @param table 目标表
+   */
+  private void applySchemaToTable(Table table) {
+    if (properties.getMode() != TenantProperties.TenantMode.SCHEMA) {
+      return;
+    }
+    if (table == null || table.getSchemaName() != null) {
+      return;
+    }
+    TenantContext context = TenantContextHolder.get();
+    if (context == null
+        || !context.isSchemaMode()
+        || context.isSkipIsolation()
+        || context.isSuperAdmin()) {
+      return;
+    }
+    if (shouldIgnoreTable(table.getName())) {
+      return;
+    }
+    table.setSchemaName(context.getSchema());
+  }
+
   @Override
   protected void processInsert(Insert insert, int index, String sql, Object obj) {
     List<TenantFieldValue> values = resolveTenantValues();
 
     Table table = insert.getTable();
+    if (table != null) {
+      applySchemaToTable(table);
+    }
     if (table != null && !shouldIgnoreTable(table.getName())) {
       List<Column> columns = insert.getColumns();
       if (columns == null) {
@@ -395,6 +428,9 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
     List<TenantFieldValue> values = resolveTenantValues();
 
     Table table = update.getTable();
+    if (table != null) {
+      applySchemaToTable(table);
+    }
     if (table != null && !shouldIgnoreTable(table.getName())) {
       Expression tenantCondition = buildTenantConditions(table, values);
       update.setWhere(mergeWhere(update.getWhere(), tenantCondition));
@@ -406,6 +442,9 @@ public class TenantIsolationInterceptor extends JsqlParserSupport implements Inn
     List<TenantFieldValue> values = resolveTenantValues();
 
     Table table = delete.getTable();
+    if (table != null) {
+      applySchemaToTable(table);
+    }
     if (table != null && !shouldIgnoreTable(table.getName())) {
       Expression tenantCondition = buildTenantConditions(table, values);
       delete.setWhere(mergeWhere(delete.getWhere(), tenantCondition));

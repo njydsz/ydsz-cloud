@@ -16,6 +16,7 @@ import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.vo.EntityVersionVO;
 import com.njydsz.system.infra.repository.EntityVersionRepository;
 import com.njydsz.system.server.service.EntityVersionService;
+import com.njydsz.system.server.util.SystemVersionUtils;
 
 /**
  * 统一实体版本 Service 实现
@@ -101,7 +102,7 @@ public class EntityVersionServiceImpl implements EntityVersionService {
     }
 
     // 3. 创建新版本（标记回滚来源）
-    String newVersion = "v" + System.currentTimeMillis();
+    String newVersion = SystemVersionUtils.nextVersion();
     String changeLog = String.format("回滚自 %s by %s", targetVersion, operatorId);
     EntityVersion newVersionEntity = new EntityVersion();
     newVersionEntity.setResourceType(resourceType);

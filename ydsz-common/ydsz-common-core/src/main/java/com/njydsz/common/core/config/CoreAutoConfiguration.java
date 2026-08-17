@@ -16,6 +16,9 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 
 import com.njydsz.common.core.constant.PageConstants;
+import com.njydsz.common.core.feature.ConfigDrivenFeatureFlagService;
+import com.njydsz.common.core.feature.FeatureFlagContext;
+import com.njydsz.common.core.feature.FeatureFlagService;
 import com.njydsz.common.core.response.BaseResponse;
 
 /**
@@ -84,6 +87,24 @@ public class CoreAutoConfiguration {
   @Bean
   PageConstantsInitializer pageConstantsInitializer(CoreProperties properties) {
     return new PageConstantsInitializer(properties);
+  }
+
+  /**
+   * 注册特性开关服务。
+   *
+   * <p>基于 {@code ydsz.core.feature-flags} 配置驱动，并注入到 {@link FeatureFlagContext}
+   * 静态门面，供非 Spring 注入场景访问。未配置任何开关时回退为全部开启。
+   *
+   * @param properties Core 配置属性
+   * @return 特性开关服务实例
+   */
+  @Bean
+  @ConditionalOnMissingBean
+  public FeatureFlagService featureFlagService(CoreProperties properties) {
+    ConfigDrivenFeatureFlagService service =
+        new ConfigDrivenFeatureFlagService(properties.getFeatureFlags());
+    FeatureFlagContext.setService(service);
+    return service;
   }
 
   static class PageConstantsInitializer implements SmartInitializingSingleton {

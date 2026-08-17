@@ -31,6 +31,7 @@ import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.search.SearchIndexSyncer;
 import com.njydsz.system.server.service.DictItemService;
 import com.njydsz.system.server.service.EntityVersionService;
+import com.njydsz.system.server.util.SystemVersionUtils;
 
 /**
  * 字典项 Service 实现
@@ -431,7 +432,7 @@ public class DictItemServiceImpl implements DictItemService {
         EntityVersionService.RESOURCE_TYPE_DICT,
         typeCode,
         "",
-        "v" + System.currentTimeMillis(),
+        SystemVersionUtils.nextVersion(),
         changeLog,
         snapshotJson);
   }

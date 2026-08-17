@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.system.infra.mapper.ConfigMapper">
+
+    <!--
+        批量插入配置项（一次 SQL 批量写入）
+
+        用于 ConfigBatchServiceImpl.batchSave 场景，将 N 次单条 INSERT 合并为 1 次批量 INSERT。
+        注意：id 字段需由调用方预先设置（通过 IdentifierGenerator 生成雪花 ID），
+        不会触发 MyBatis-Plus 的 @TableId 自动填充（批量 XML 不走 MP 拦截器）。
+
+        审计字段（created_at, created_by, updated_at, updated_by）同理由调用方设置，与单条 insert 保持一致。
+    -->
+    <insert id="insertBatch" parameterType="java.util.List">
+        INSERT INTO ydsz_config (
+            id, config_group, config_key, config_value, value_type,
+            default_value, description, is_public, sort_order,
+            status, tenant_id, deleted, revision,
+            created_at, created_by, updated_at, updated_by
+        ) VALUES
+        <foreach collection="items" item="item" separator=",">
+            (
+                #{item.id}, #{item.configGroup}, #{item.configKey}, #{item.configValue}, #{item.valueType},
+                #{item.defaultValue}, #{item.description}, #{item.isPublic}, #{item.sortOrder},
+                #{item.status}, #{item.tenantId}, #{item.deleted}, #{item.revision},
+                #{item.createdAt}, #{item.createdBy}, #{item.updatedAt}, #{item.updatedBy}
+            )
+        </foreach>
+    </insert>
+
+</mapper>

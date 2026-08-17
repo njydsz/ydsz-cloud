@@ -60,29 +60,6 @@
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
-        <!-- Elasticsearch 客户端（可选） -->
-        <dependency>
-            <groupId>co.elastic.clients</groupId>
-            <artifactId>elasticsearch-java</artifactId>
-            <scope>provided</scope>
-            <optional>true</optional>
-        </dependency>
-        <!-- Solr 客户端（可选） -->
-        <dependency>
-            <groupId>org.apache.solr</groupId>
-            <artifactId>solr-solrj</artifactId>
-            <version>9.8.0</version>
-            <scope>provided</scope>
-            <optional>true</optional>
-        </dependency>
-        <!-- OpenSearch 客户端（可选） -->
-        <dependency>
-            <groupId>org.opensearch.client</groupId>
-            <artifactId>opensearch-java</artifactId>
-            <version>2.21.0</version>
-            <scope>provided</scope>
-            <optional>true</optional>
-        </dependency>
         <!-- Spring JDBC（JdbcTemplate） -->
         <dependency>
             <groupId>org.springframework</groupId>

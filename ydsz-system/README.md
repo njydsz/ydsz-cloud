@@ -13,6 +13,16 @@
 | **数据库** | PostgreSQL（共享主库） |
 | **依赖** | Nacos、PostgreSQL、Redis |
 
+## 数据库初始化
+
+> 项目规范**禁止**使用 Flyway / Liquibase 等 schema-migration 框架。数据库 DDL 统一以 SQL 脚本形式管理。
+
+```bash
+psql -U postgres -d ydsz_cloud -f ydsz-system/deploy/sql/init.sql
+```
+
+脚本包含 9 张表（`ydsz_config` / `ydsz_dict_type` / `ydsz_dict_item` / `ydsz_entity_version` / `ydsz_app_info` / `ydsz_variable` / `ydsz_tenant` / `ydsz_tenant_plan` / `ydsz_tenant_plan_menu`）的建表 DDL、索引与初始数据（内置租户、默认套餐、示例字典与配置）。
+
 ## 核心职责
 
 本模块是 YDSZ 的**系统级基础服务**，承担**横切关注点**。

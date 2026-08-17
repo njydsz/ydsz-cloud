@@ -34,6 +34,7 @@ import com.njydsz.system.server.metrics.SystemMetrics;
 import com.njydsz.system.server.search.SearchIndexSyncer;
 import com.njydsz.system.server.service.EntityVersionService;
 import com.njydsz.system.server.service.VariableService;
+import com.njydsz.system.server.util.SystemVersionUtils;
 
 /**
  * 系统变量 Service 实现
@@ -290,7 +291,7 @@ public class VariableServiceImpl implements VariableService {
           EntityVersionService.RESOURCE_TYPE_VARIABLE,
           entity.getVariableKey(),
           "",
-          "v" + System.currentTimeMillis(),
+          SystemVersionUtils.nextVersion(),
           "更新变量: " + entity.getVariableKey(),
           snapshotJson);
       publishVariableChangedEvent(entity.getVariableKey(), "更新变量");
@@ -329,7 +330,7 @@ public class VariableServiceImpl implements VariableService {
           EntityVersionService.RESOURCE_TYPE_VARIABLE,
           entity.getVariableKey(),
           "",
-          "v" + System.currentTimeMillis(),
+          SystemVersionUtils.nextVersion(),
           "删除变量: " + entity.getVariableKey(),
           snapshotJson);
       publishVariableChangedEvent(entity.getVariableKey(), "删除变量");

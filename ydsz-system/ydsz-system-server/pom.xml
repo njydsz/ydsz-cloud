@@ -131,5 +131,11 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-tenant</artifactId>
         </dependency>
+        <!-- P1-6: 单元测试（JUnit 5 + Mockito + AssertJ，见《云顶编码规范》第 13 章） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
 </dependencies>
 </project>

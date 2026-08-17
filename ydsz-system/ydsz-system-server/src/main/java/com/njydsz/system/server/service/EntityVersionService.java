@@ -18,7 +18,8 @@ import com.njydsz.system.domain.vo.EntityVersionVO;
  *   <li><b>回滚支持</b>：{@link #rollbackTo} — 一键回滚到任意历史版本
  * </ul>
  *
- * <p><b>版本生成策略：</b>版本号由调用方传入，推荐格式 {@code "v" + System.currentTimeMillis()}。
+ * <p><b>版本生成策略：</b>版本号由调用方传入，推荐使用 {@link com.njydsz.system.server.util.SystemVersionUtils#nextVersion()}
+ * 生成可读版本号（格式 {@code vyyyyMMdd-HHmmss-SSS}），替代原始时间戳版本号。
  *
  * <p><b>多租户：</b>所有方法自动按当前 {@code TenantContext} 隔离。
  *
