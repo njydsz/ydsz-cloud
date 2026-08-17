@@ -35,7 +35,7 @@ import com.njydsz.system.domain.entity.Config;
 import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.query.ConfigPageQuery;
-import com.njydsz.system.domain.repository.ConfigRepository;
+import com.njydsz.system.infra.repository.ConfigRepository;
 import com.njydsz.system.domain.vo.ConfigExcelVO;
 import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.domain.vo.CursorPageResponse;

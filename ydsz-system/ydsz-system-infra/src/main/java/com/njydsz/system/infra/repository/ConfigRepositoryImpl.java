@@ -10,13 +10,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.system.domain.entity.Config;
-import com.njydsz.system.domain.repository.ConfigRepository;
+import com.njydsz.system.infra.repository.ConfigRepository;
 import com.njydsz.system.infra.mapper.ConfigMapper;
 
 /**
  * 系统配置仓储实现（Infra 层）。
  *
- * <p>实现 {@link ConfigRepository} 接口，封装 {@link ConfigMapper} 数据访问细节。 遵循 DDD 依赖倒置原则：Domain 层定义接口，Infra 层实现。
+ * <p>实现 {@link ConfigRepository} 接口，封装 {@link ConfigMapper} 数据访问细节。
  *
  * <p><b>设计要点：</b>
  *
