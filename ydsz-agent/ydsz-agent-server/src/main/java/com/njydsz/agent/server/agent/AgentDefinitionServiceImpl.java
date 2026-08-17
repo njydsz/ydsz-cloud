@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.agent.domain.agent.AgentDefinition;
 import com.njydsz.agent.domain.entity.AgentDefinitionDO;
-import com.njydsz.agent.infra.mapper.AgentDefinitionMapper;
+import com.njydsz.agent.infra.repository.AgentDefinitionRepository;
 import com.njydsz.common.json.YdszJson;
 
 /**
@@ -26,8 +25,8 @@ import com.njydsz.common.json.YdszJson;
 @RequiredArgsConstructor
 public class AgentDefinitionServiceImpl implements AgentDefinitionService {
 
-  /** Agent 定义 Mapper */
-  private final AgentDefinitionMapper mapper;
+  /** Agent 定义 Repository */
+  private final AgentDefinitionRepository agentDefinitionRepository;
 
   /**
    * {@inheritDoc}
@@ -36,7 +35,7 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
    */
   @Override
   public AgentDefinitionDO getById(String id) {
-    AgentDefinitionDO entity = mapper.selectById(id);
+    AgentDefinitionDO entity = agentDefinitionRepository.findById(id);
     if (entity == null || Boolean.TRUE.equals(entity.getDeleted())) {
       return null;
     }
@@ -51,11 +50,7 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
    */
   @Override
   public AgentDefinitionDO getByCode(String code) {
-    return mapper.selectOne(
-        new QueryWrapper<AgentDefinitionDO>()
-            .eq("agent_code", code)
-            .eq("deleted", false)
-            .last("LIMIT 1"));
+    return agentDefinitionRepository.findByCode(code);
   }
 
   /**
@@ -65,11 +60,7 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
    */
   @Override
   public List<AgentDefinitionDO> listActive() {
-    return mapper.selectList(
-        new QueryWrapper<AgentDefinitionDO>()
-            .eq("status", "ACTIVE")
-            .eq("deleted", false)
-            .orderByDesc("created_at"));
+    return agentDefinitionRepository.findActive();
   }
 
   /**
@@ -87,7 +78,7 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
     if (existing != null) {
       throw new IllegalArgumentException("Agent code already exists: " + entity.getAgentCode());
     }
-    mapper.insert(entity);
+    agentDefinitionRepository.insert(entity);
     log.info(
         "[Agent-Def] 创建 Agent: code={}, name={}", entity.getAgentCode(), entity.getAgentName());
     return entity;
@@ -101,11 +92,11 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
   @Override
   @Transactional
   public AgentDefinitionDO update(AgentDefinitionDO entity) {
-    AgentDefinitionDO existing = mapper.selectById(entity.getId());
+    AgentDefinitionDO existing = agentDefinitionRepository.findById(entity.getId());
     if (existing == null || Boolean.TRUE.equals(existing.getDeleted())) {
       throw new IllegalArgumentException("Agent not found: id=" + entity.getId());
     }
-    mapper.updateById(entity);
+    agentDefinitionRepository.updateById(entity);
     log.info("[Agent-Def] 更新 Agent: code={}", entity.getAgentCode());
     return entity;
   }
@@ -121,7 +112,7 @@ public class AgentDefinitionServiceImpl implements AgentDefinitionService {
   @Override
   @Transactional
   public boolean removeById(String id) {
-    return mapper.deleteById(id) > 0;
+    return agentDefinitionRepository.deleteById(id);
   }
 
   /**

@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.agent.domain.entity.AgentApprovalDO;
-import com.njydsz.agent.infra.mapper.AgentApprovalMapper;
+import com.njydsz.agent.infra.repository.AgentApprovalRepository;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;
@@ -67,7 +67,7 @@ public class HumanApprovalService {
   private final ConcurrentMap<String, ApprovalRequest> pendingApprovals = new ConcurrentHashMap<>();
 
   private final SnowflakeIdGenerator snowflakeIdGenerator;
-  private final AgentApprovalMapper approvalMapper;
+  private final AgentApprovalRepository agentApprovalRepository;
   private final DomainEventPublisher eventPublisher;
 
   /**

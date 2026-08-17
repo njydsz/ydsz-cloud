@@ -27,8 +27,9 @@ import com.njydsz.userinfo.server.health.UserInfoHealthIndicator;
  *
  * <ul>
  *   <li>注册 {@link PasswordEncoder} Bean（BCrypt，强度可配置）
- *   <li>启用 {@code @EnableAsync}：支撑异步事件、审计日志异步持久化
- *   <li>启用 {@code @EnableCaching}：支撑部门树、角色权限等热点数据缓存
+ *   <li>启用 {@code @EnableAsync}：支撑登录历史异步落库（P1-2，{@code LoginHistoryServiceImpl#recordLoginAttempt}）
+ *   <li>启用 {@code @EnableCaching}：为部门树、角色权限等热点数据预留声明式缓存能力（P2-2，
+ *       当前热点缓存由编程式缓存实现，遵循 18.5 缓存规范：统一走 {@code ydsz-common-cache} 且 TTL 外部化）
  *   <li>注册 {@link UserInfoProperties} 与 {@link LdapProperties} 配置属性
  * </ul>
  *

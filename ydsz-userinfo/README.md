@@ -132,12 +132,15 @@ ydsz-userinfo/
 |---|---|
 | **密码加密** | BCrypt（PasswordEncoder，强度可配置） |
 | **密码策略** | 最少 8 位 + 大小写/数字/特殊字符 3 选 4 + 禁止连续重复 + 禁止包含用户名 + 弱口令字典校验 + 密码历史（防近期重用） |
-| **账号锁定** | 5 次密码错误自动锁定 30 分钟，登录成功自动解锁 |
-| **JWT 黑名单** | 登出后 Token 加入 Redis 黑名单（SHA-256 摘要 + 分布式锁，common-auth TokenBlacklistService） |
-| **OAuth2** | 标准授权码模式 + PKCE，授权码 5 分钟有效，一次性使用 |
+| **账号锁定** | 5 次密码错误自动锁定 30 分钟，登录成功自动解锁（原子 SQL 计数，无并发竞态） |
+| **双因素认证（MFA）** | TOTP（RFC 6238，兼容 Google/Microsoft Authenticator）+ 短信验证码降级；登录风险 HIGH 时强制校验（P0-2） |
+| **动态认证策略** | 风险 MEDIUM+ 强制图形验证码，HIGH 追加 MFA，CRITICAL 拒绝登录（P0-2） |
+| **JWT 黑名单** | 登出后 access_token + refresh_token 一并加入 Redis 黑名单（SHA-256 摘要 + 分布式锁，common-auth TokenBlacklistService） |
+| **OAuth2** | 授权码模式 + PKCE + refresh_token 轮换 + revoke（RFC 7009）+ introspect（RFC 7662）+ userinfo（P1-4），授权码 5 分钟有效、一次性使用 |
 | **验证码** | 4 位字母数字混合，Base64 PNG 图片，5 分钟有效 |
 | **LDAP** | 可选 LDAP/ADFS 域认证（@ConfigurationProperties 配置注入） |
-| **登录风控** | 风险评分（RiskScoringService）+ 登录尝试上下文（LoginAttemptContext） |
+| **登录风控** | 风险评分（RiskScoringService）+ 登录尝试上下文（LoginAttemptContext）+ Redis 计数器统一采集（P1-2/P1-5） |
+| **权限缓存失效** | 菜单/角色变更发布 PermissionChangedEvent（common-auth）+ 角色权限 DB 结果缓存主动失效（P0-1） |
 | **指标埋点** | Micrometer 计数器/计时器（登录成功/失败/认证耗时/在线会话数） |
 | **健康检查** | Redis + JWT + 数据库连通性 + 用户/角色计数 |
 
