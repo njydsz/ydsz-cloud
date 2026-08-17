@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import com.njydsz.common.util.id.IdGenerator;
 import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.api.RuleStatus;
+import com.njydsz.literule.infra.repository.ApprovalRecordRepository;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
 
 /**

@@ -21,7 +21,7 @@ import com.njydsz.literule.server.config.LiteRuleProperties;
 import com.njydsz.literule.server.config.RuleAdminService;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
 import com.njydsz.literule.server.spi.RuleVersion;
-import com.njydsz.literule.server.spi.RuleVersionRepository;
+import com.njydsz.literule.infra.repository.RuleVersionRepository;
 
 /**
  * 规则生命周期管理服务（P3-1）

@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -61,7 +60,7 @@ public class TenantPlanServiceImpl implements TenantPlanService {
    */
   @Override
   public TenantPlanVO getById(String id) {
-    TenantPlan entity = tenantPlanRepository.getTenantPlanMapper().selectById(id);
+    TenantPlan entity = tenantPlanRepository.findById(id).orElse(null);
     return SystemConverter.INSTANT.entityToVO(entity);
   }
 
@@ -77,18 +76,8 @@ public class TenantPlanServiceImpl implements TenantPlanService {
   @Override
   public PageResponse<List<TenantPlanVO>> page(
       int pageNum, int pageSize, String planName, String status) {
-    LambdaQueryWrapper<TenantPlan> wrapper = new LambdaQueryWrapper<>();
-    if (planName != null && !planName.isBlank()) {
-      wrapper.like(TenantPlan::getPlanName, planName);
-    }
-    if (status != null && !status.isBlank()) {
-      wrapper.eq(TenantPlan::getStatus, status);
-    }
-    wrapper.orderByAsc(TenantPlan::getSortOrder);
     IPage<TenantPlan> page =
-        tenantPlanRepository
-            .getTenantPlanMapper()
-            .selectPage(new Page<>(pageNum, pageSize), wrapper);
+        tenantPlanRepository.findByPage(new Page<>(pageNum, pageSize), planName, status);
     return PageResponses.success(page, SystemConverter.INSTANT::entityToVO);
   }
 
@@ -104,7 +93,7 @@ public class TenantPlanServiceImpl implements TenantPlanService {
     LambdaQueryWrapper<TenantPlan> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(TenantPlan::getStatus, "ENABLED");
     wrapper.orderByAsc(TenantPlan::getSortOrder);
-    return tenantPlanRepository.getTenantPlanMapper().selectList(wrapper).stream()
+    return tenantPlanRepository.findList(wrapper).stream()
         .map(SystemConverter.INSTANT::entityToVO)
         .collect(Collectors.toList());
   }
@@ -122,12 +111,12 @@ public class TenantPlanServiceImpl implements TenantPlanService {
   public String save(TenantPlanVO vo) {
     LambdaQueryWrapper<TenantPlan> checkWrapper = new LambdaQueryWrapper<>();
     checkWrapper.eq(TenantPlan::getPlanCode, vo.getPlanCode());
-    if (tenantPlanRepository.getTenantPlanMapper().selectCount(checkWrapper) > 0) {
+    if (tenantPlanRepository.countByCondition(checkWrapper) > 0) {
       throw BusinessException.of(SystemExceptionCode.TENANT_PLAN_CODE_DUPLICATE)
           .data("planCode", vo.getPlanCode());
     }
     TenantPlan entity = toEntity(vo);
-    tenantPlanRepository.getTenantPlanMapper().insert(entity);
+    tenantPlanRepository.insert(entity);
     log.info("创建套餐成功: planCode={}, planId={}", vo.getPlanCode(), entity.getId());
     return entity.getId();
   }
@@ -146,12 +135,12 @@ public class TenantPlanServiceImpl implements TenantPlanService {
     LambdaQueryWrapper<TenantPlan> checkWrapper = new LambdaQueryWrapper<>();
     checkWrapper.eq(TenantPlan::getPlanCode, vo.getPlanCode());
     checkWrapper.ne(TenantPlan::getId, vo.getId());
-    if (tenantPlanRepository.getTenantPlanMapper().selectCount(checkWrapper) > 0) {
+    if (tenantPlanRepository.countByCondition(checkWrapper) > 0) {
       throw BusinessException.of(SystemExceptionCode.TENANT_PLAN_CODE_DUPLICATE)
           .data("planCode", vo.getPlanCode());
     }
     TenantPlan entity = toEntity(vo);
-    return tenantPlanRepository.getTenantPlanMapper().updateById(entity) > 0;
+    return tenantPlanRepository.updateById(entity);
   }
 
   /**
@@ -169,10 +158,10 @@ public class TenantPlanServiceImpl implements TenantPlanService {
     // 关联校验：是否存在引用该套餐的租户
     LambdaQueryWrapper<Tenant> tenantWrapper = new LambdaQueryWrapper<>();
     tenantWrapper.eq(Tenant::getPlanId, id);
-    if (tenantRepository.getTenantMapper().selectCount(tenantWrapper) > 0) {
+    if (tenantRepository.countByCondition(tenantWrapper) > 0) {
       throw BusinessException.of(SystemExceptionCode.TENANT_PLAN_LINKED).data("planId", id);
     }
-    return tenantPlanRepository.getTenantPlanMapper().deleteById(id) > 0;
+    return tenantPlanRepository.deleteById(id);
   }
 
   /**

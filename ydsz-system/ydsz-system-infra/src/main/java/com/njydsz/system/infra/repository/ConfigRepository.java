@@ -146,4 +146,34 @@ public interface ConfigRepository {
    * @return 配置实体列表
    */
   List<Config> findForExport(String configGroup);
+
+  /**
+   * 查询全部启用状态的配置（用于缓存预热）。
+   *
+   * @return 启用且未删除的配置列表
+   */
+  List<Config> findEnabledConfigs();
+
+  /**
+   * 按分组查询配置列表（含未删除条件）。
+   *
+   * @param configGroup 配置分组
+   * @return 配置实体列表
+   */
+  List<Config> findByGroup(String configGroup);
+
+  /**
+   * 查询全部未删除配置（用于搜索索引全量重建）。
+   *
+   * @return 未删除配置列表
+   */
+  List<Config> findAll();
+
+  /**
+   * 按租户 ID 查询未删除配置（用于搜索索引全量重建）。
+   *
+   * @param tenantId 租户 ID（null 或空表示全量）
+   * @return 未删除配置列表
+   */
+  List<Config> findByTenantId(String tenantId);
 }

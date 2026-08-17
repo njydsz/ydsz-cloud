@@ -23,7 +23,7 @@ import com.njydsz.literule.api.RuleSeverity;
 import com.njydsz.literule.api.expression.ExpressionEngine;
 import com.njydsz.literule.server.config.RuleAdminService;
 import com.njydsz.literule.server.impl.ExpressionRule;
-import com.njydsz.literule.server.spi.RuleVersionRepository;
+import com.njydsz.literule.infra.repository.RuleVersionRepository;
 import com.njydsz.literule.server.spi.TraceRecorder;
 
 /**

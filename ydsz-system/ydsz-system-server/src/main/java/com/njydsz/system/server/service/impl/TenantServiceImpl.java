@@ -57,7 +57,7 @@ public class TenantServiceImpl implements TenantService {
    */
   @Override
   public TenantVO getById(String id) {
-    Tenant entity = tenantRepository.getTenantMapper().selectById(id);
+    Tenant entity = tenantRepository.findById(id).orElse(null);
     return SystemConverter.INSTANT.entityToVO(entity);
   }
 
@@ -75,15 +75,7 @@ public class TenantServiceImpl implements TenantService {
   @Override
   public PageResponse<List<TenantVO>> page(
       int pageNum, int pageSize, String tenantName, String status) {
-    LambdaQueryWrapper<Tenant> wrapper = new LambdaQueryWrapper<>();
-    if (tenantName != null && !tenantName.isBlank()) {
-      wrapper.like(Tenant::getTenantName, tenantName);
-    }
-    if (status != null && !status.isBlank()) {
-      wrapper.eq(Tenant::getStatus, status);
-    }
-    wrapper.orderByDesc(Tenant::getCreatedAt);
-    IPage<Tenant> page = tenantRepository.getTenantMapper().selectPage(new Page<>(pageNum, pageSize), wrapper);
+    IPage<Tenant> page = tenantRepository.findByPage(new Page<>(pageNum, pageSize), tenantName, status);
     return PageResponses.success(page, SystemConverter.INSTANT::entityToVO);
   }
 
@@ -103,7 +95,7 @@ public class TenantServiceImpl implements TenantService {
           .data("tenantCode", dto.getTenantCode());
     }
     Tenant entity = toEntity(dto);
-    tenantRepository.getTenantMapper().insert(entity);
+    tenantRepository.insert(entity);
     log.info("创建租户成功: tenantCode={}, tenantId={}", dto.getTenantCode(), entity.getId());
     return entity.getId();
   }
@@ -122,12 +114,12 @@ public class TenantServiceImpl implements TenantService {
     LambdaQueryWrapper<Tenant> checkWrapper = new LambdaQueryWrapper<>();
     checkWrapper.eq(Tenant::getTenantCode, dto.getTenantCode());
     checkWrapper.ne(Tenant::getId, dto.getId());
-    if (tenantRepository.getTenantMapper().selectCount(checkWrapper) > 0) {
+    if (tenantRepository.countByCondition(checkWrapper) > 0) {
       throw BusinessException.of(SystemExceptionCode.TENANT_CODE_DUPLICATE)
           .data("tenantCode", dto.getTenantCode());
     }
     Tenant entity = toEntity(dto);
-    return tenantRepository.getTenantMapper().updateById(entity) > 0;
+    return tenantRepository.updateById(entity);
   }
 
   /**
@@ -150,7 +142,7 @@ public class TenantServiceImpl implements TenantService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    Tenant tenant = tenantRepository.getTenantMapper().selectById(id);
+    Tenant tenant = tenantRepository.findById(id).orElse(null);
     if (tenant == null) {
       return false;
     }
@@ -165,7 +157,7 @@ public class TenantServiceImpl implements TenantService {
           .data("tenantCode", tenant.getTenantCode())
           .data("reason", "租户仍处于启用状态，请先停用租户并清理其业务数据后再删除");
     }
-    return tenantRepository.getTenantMapper().deleteById(id) > 0;
+    return tenantRepository.deleteById(id);
   }
 
   /**
@@ -188,7 +180,7 @@ public class TenantServiceImpl implements TenantService {
   public boolean existsByTenantCode(String tenantCode) {
     LambdaQueryWrapper<Tenant> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(Tenant::getTenantCode, tenantCode);
-    return tenantRepository.getTenantMapper().selectCount(wrapper) > 0;
+    return tenantRepository.countByCondition(wrapper) > 0;
   }
 
   /**

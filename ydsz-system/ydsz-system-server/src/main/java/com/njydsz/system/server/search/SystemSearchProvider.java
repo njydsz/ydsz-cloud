@@ -3,7 +3,6 @@ package com.njydsz.system.server.search;
 import java.time.ZoneId;
 import java.util.List;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -13,7 +12,7 @@ import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderContext;
 import com.njydsz.system.domain.entity.Config;
-import com.njydsz.system.infra.mapper.ConfigMapper;
+import com.njydsz.system.infra.repository.ConfigRepository;
 
 /**
  * 系统配置搜索提供者
@@ -41,7 +40,7 @@ import com.njydsz.system.infra.mapper.ConfigMapper;
 @RequiredArgsConstructor
 public class SystemSearchProvider implements SearchProvider<Config> {
 
-  private final ConfigMapper configMapper;
+  private final ConfigRepository configRepository;
 
   /**
    * 获取搜索类型标识。
@@ -127,11 +126,6 @@ public class SystemSearchProvider implements SearchProvider<Config> {
    */
   @Override
   public List<Config> loadAll(String tenantId) {
-    LambdaQueryWrapper<Config> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Config::getDeleted, 0);
-    if (tenantId != null && !tenantId.isBlank()) {
-      wrapper.eq(Config::getTenantId, tenantId);
-    }
-    return configMapper.selectList(wrapper);
+    return configRepository.findByTenantId(tenantId);
   }
 }

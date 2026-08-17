@@ -17,7 +17,6 @@ import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.system.domain.converter.SystemConverter;
 import com.njydsz.system.domain.entity.Config;
 import com.njydsz.system.domain.entity.DictItem;
-import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.infra.repository.ConfigRepository;
 import com.njydsz.system.infra.repository.DictRepository;
@@ -88,11 +87,7 @@ public class CacheWarmer {
    */
   private void warmConfigCache() {
     try {
-      List<Config> configs =
-          configRepository.getConfigMapper().selectList(
-              new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<Config>()
-                  .eq("status", "ENABLED")
-                  .eq("deleted", 0));
+      List<Config> configs = configRepository.findEnabledConfigs();
 
       if (configs.isEmpty()) {
         log.info("[CacheWarmer] 系统配置表为空，跳过配置缓存预热");
@@ -128,11 +123,7 @@ public class CacheWarmer {
    */
   private void warmDictCache() {
     try {
-      List<DictItem> dictItems =
-          dictRepository.getDictItemMapper().selectList(
-              new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<DictItem>()
-                  .eq("status", "ENABLED")
-                  .eq("deleted", 0));
+      List<DictItem> dictItems = dictRepository.findEnabledItems();
 
       if (dictItems.isEmpty()) {
         log.info("[CacheWarmer] 字典项表为空，跳过字典缓存预热");

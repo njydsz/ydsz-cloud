@@ -26,8 +26,8 @@ import com.njydsz.literule.infra.mapper.RuleDefinitionMapper;
 import com.njydsz.literule.server.impl.ExpressionRule;
 import com.njydsz.literule.server.spi.RuleConfigBroadcaster;
 import com.njydsz.literule.server.spi.RuleConfigProvider;
+import com.njydsz.literule.infra.repository.RuleVersionRepository;
 import com.njydsz.literule.server.spi.RuleVersion;
-import com.njydsz.literule.server.spi.RuleVersionRepository;
 
 /**
  * 规则管理服务

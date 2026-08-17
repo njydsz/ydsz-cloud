@@ -9,7 +9,6 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
@@ -243,9 +242,7 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
    * @param changeLog 变更说明
    */
   private void createSnapshotVersion(String configGroup, String version, String changeLog) {
-    List<Config> snapshot =
-        configRepository.findList(
-            new QueryWrapper<Config>().eq("config_group", configGroup).eq("deleted", 0));
+    List<Config> snapshot = configRepository.findByGroup(configGroup);
     String snapshotJson = YdszJson.toJson(snapshot);
     entityVersionService.createVersion(
         EntityVersionCreateDTO.builder()

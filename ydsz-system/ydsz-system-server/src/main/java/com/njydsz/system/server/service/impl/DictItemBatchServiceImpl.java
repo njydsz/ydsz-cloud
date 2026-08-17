@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
@@ -116,7 +115,7 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
     List<DictItem> entities = items.stream().map(this::toEntityWithId).collect(Collectors.toList());
 
     // 5. 批量插入
-    dictRepository.getDictItemMapper().insertBatch(entities);
+    dictRepository.insertItemsBatch(entities);
 
     // 6. 精准失效缓存：按涉及 typeCode 逐一失效列表缓存（替代全量清空，避免缓存击穿）
     typeCodes.forEach(this::evictDictList);
@@ -164,10 +163,8 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
     // 一次查询涉及的所有 typeCode 下的未删除记录（含逻辑删除标记，保证与唯一索引口径一致）
     Set<String> typeCodes =
         items.stream().map(DictItemVO::getTypeCode).collect(Collectors.toSet());
-    QueryWrapper<DictItem> wrapper = new QueryWrapper<>();
-    wrapper.select("type_code", "item_code").in("type_code", typeCodes);
     Set<String> existingKeys =
-        dictRepository.getDictItemMapper().selectList(wrapper).stream()
+        dictRepository.findItemsByTypeCodes(typeCodes).stream()
             .map(item -> item.getTypeCode() + "/" + item.getItemCode())
             .collect(Collectors.toSet());
 
@@ -207,7 +204,7 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
    * @param changeLog 变更说明
    */
   private void createSnapshotVersion(String typeCode, String version, String changeLog) {
-    List<DictItem> snapshot = dictRepository.getDictItemMapper().listEnabledByTypeCode(typeCode);
+    List<DictItem> snapshot = dictRepository.findItemsEnabledByTypeCode(typeCode);
     String snapshotJson = YdszJson.toJson(snapshot);
     entityVersionService.createVersion(
         EntityVersionCreateDTO.builder()

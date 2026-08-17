@@ -8,7 +8,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -17,9 +16,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
-import com.njydsz.cronjob.domain.entity.log.JobLog;
-import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
+import com.njydsz.cronjob.server.core.executor.RunningTaskCounter;
 
 /**
  * P6-2 任务调度 Prometheus 指标收集器
@@ -34,8 +32,8 @@ import com.njydsz.cronjob.server.config.CronjobProperties;
  *
  * <p>所有指标前缀 {@code ydsz_cronjob_}，便于在 Grafana 看板中筛选。
  *
- * <p>Bean 名称 = {@code cronjobMetrics}，由 Spring 容器管理。 {@link JobLogMapper} 通过 {@link ObjectProvider}
- * 可选注入，避免监控指标对核心数据源 造成循环依赖；若 Mapper 不存在则 Gauge 优雅降级为 0。
+ * <p>Bean 名称 = {@code cronjobMetrics}，由 Spring 容器管理。 {@link RunningTaskCounter} 通过 {@link ObjectProvider}
+ * 可选注入，从 Redis 读取运行中任务数，避免高频 Gauge 回调压垮 DB。
  *
  * <h3>指标清单</h3>
  *
@@ -61,11 +59,8 @@ import com.njydsz.cronjob.server.config.CronjobProperties;
 @ConditionalOnClass(MeterRegistry.class)
 public class CronjobMetrics extends SentryMetricsAdapter {
 
-  /** 上次查询运行中任务数的缓存值（30s TTL，避免高频 Gauge 回调压垮 DB） */
-  private volatile Long cachedRunningCount = null;
-
-  private volatile long cachedRunningCountExpireAt = 0L;
-  private static final long RUNNING_COUNT_CACHE_TTL_MS = 30_000L;
+  /** P1-2: 运行中任务数计数器（Redis 维护，替代 DB 查询） */
+  private final ObjectProvider<RunningTaskCounter> runningTaskCounterProvider;
 
   // ============================== Gauge 状态字段（由 Scanner 更新，Gauge 回调读取）
   // ==============================
@@ -88,9 +83,6 @@ public class CronjobMetrics extends SentryMetricsAdapter {
   private final OperatingSystemMXBean osMXBean = ManagementFactory.getOperatingSystemMXBean();
 
   // ============================== Gauge 数据源（可选注入，避免循环依赖） ==============================
-  /** JobLogMapper 通过 ObjectProvider 实现可选注入，避免监控指标对核心数据源造成循环依赖。若 Mapper 不存在则 Gauge 优雅降级为 0。 */
-  private final JobLogMapper jobLogMapper;
-
   /** 调度引擎配置属性 */
   private final CronjobProperties cronjobProperties;
 
@@ -98,10 +90,10 @@ public class CronjobMetrics extends SentryMetricsAdapter {
   private final AtomicReference<Double> runningJobsRef = new AtomicReference<>(0.0);
 
   public CronjobMetrics(
-      ObjectProvider<JobLogMapper> jobLogMapperProvider,
+      ObjectProvider<RunningTaskCounter> runningTaskCounterProvider,
       CronjobProperties cronjobProperties) {
     super("ydsz_cronjob_");
-    this.jobLogMapper = jobLogMapperProvider.getIfAvailable();
+    this.runningTaskCounterProvider = runningTaskCounterProvider;
     this.cronjobProperties = cronjobProperties;
     registerGauges();
     log.info("[CronjobMetrics] 初始化完成，Prometheus 端点可访问 /actuator/prometheus");
@@ -318,6 +310,7 @@ public class CronjobMetrics extends SentryMetricsAdapter {
       double poolActive = poolActivePct.get();
       double score = calculateLoadScore(cpuUsage, memUsage, poolActive);
       systemLoadScore.set((long) (score * 1000));
+      cachedSystemLoadScore = systemLoadScore.get();
       log.debug(
           "[CronjobMetrics] 系统负载采集: cpu={}%, mem={}%, pool={}%",
           String.format("%.1f", cpuUsage),
@@ -377,6 +370,24 @@ public class CronjobMetrics extends SentryMetricsAdapter {
   }
 
   // ===========================================
+  // 静态访问器（供诊断端点等非 Spring 场景读取）
+  // ===========================================
+
+  /** 当前系统负载评分（0-1000），由 {@link #collectSystemLoadMetrics()} 定时更新 */
+  private static volatile long cachedSystemLoadScore = 0L;
+
+  /**
+   * 获取当前系统负载评分（供诊断端点静态调用）。
+   *
+   * <p>返回值范围 0-1000（除以 1000 得到 0-1 浮点值），由 {@link #collectSystemLoadMetrics()} 定时更新。
+   *
+   * @return 系统负载评分；未初始化时返回 0
+   */
+  public static long getSystemLoadScore() {
+    return cachedSystemLoadScore;
+  }
+
+  // ===========================================
   // Gauge 注册
   // ===========================================
 
@@ -400,35 +411,16 @@ public class CronjobMetrics extends SentryMetricsAdapter {
   /**
    * 刷新运行中任务数 Gauge（由定时任务调用）。
    *
-   * <p>查询 DB 获取最新运行中任务数并更新到 AtomicReference。
+   * <p>从 Redis 读取最新运行中任务数并更新到 AtomicReference，消除 DB 查询。
    */
   public void refreshRunningJobs() {
-    if (jobLogMapper == null) {
-      runningJobsRef.set(0.0);
-      return;
-    }
     try {
-      Long count = queryRunningJobCount();
-      runningJobsRef.set(count == null ? 0.0 : count.doubleValue());
+      RunningTaskCounter counter = runningTaskCounterProvider.getIfAvailable();
+      long count = counter != null ? counter.getCount() : 0L;
+      runningJobsRef.set((double) count);
     } catch (Exception e) {
-      log.debug("[CronjobMetrics] refresh job_running 查询失败: {}", e.getMessage());
+      log.debug("[CronjobMetrics] refresh job_running 读取失败: {}", e.getMessage());
       runningJobsRef.set(0.0);
     }
-  }
-
-  /** 查询运行中任务数（status=RUNNING），30s 缓存避免高频 Gauge 回调压垮 DB。 */
-  private Long queryRunningJobCount() {
-    long now = System.currentTimeMillis();
-    if (cachedRunningCount != null && now < cachedRunningCountExpireAt) {
-      return cachedRunningCount;
-    }
-    Long count =
-        jobLogMapper.selectCount(
-            new LambdaQueryWrapper<JobLog>()
-                .eq(JobLog::getStatus, "RUNNING")
-                .eq(JobLog::getDeleted, 0));
-    cachedRunningCount = count;
-    cachedRunningCountExpireAt = now + RUNNING_COUNT_CACHE_TTL_MS;
-    return count;
   }
 }

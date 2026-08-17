@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import com.njydsz.system.infra.mapper.TenantMapper;
+import com.njydsz.system.infra.repository.TenantRepository;
 
 /**
  * 租户到期自动锁定调度任务（P1-3 多租户能力补课）。
@@ -27,15 +27,15 @@ import com.njydsz.system.infra.mapper.TenantMapper;
  *
  * @author ydsz-team
  * @since 1.1.0
- * @see com.njydsz.system.infra.mapper.TenantMapper 租户 Mapper
+ * @see com.njydsz.system.infra.repository.TenantRepository 租户仓储
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class TenantExpireScheduler {
 
-  /** 租户 Mapper（原子停用已到期租户） */
-  private final TenantMapper tenantMapper;
+  /** 租户仓储（原子停用已到期租户） */
+  private final TenantRepository tenantRepository;
 
   /**
    * 扫描并停用已到期租户。
@@ -48,7 +48,7 @@ public class TenantExpireScheduler {
   public void disableExpiredTenants() {
     int affected;
     try {
-      affected = tenantMapper.disableExpiredTenants();
+      affected = tenantRepository.disableExpiredTenants();
     } catch (Exception e) {
       log.error("[TenantExpireScheduler] 停用到期租户失败", e);
       return;

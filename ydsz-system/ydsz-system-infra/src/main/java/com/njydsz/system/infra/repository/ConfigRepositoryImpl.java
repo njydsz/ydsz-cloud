@@ -165,4 +165,33 @@ public class ConfigRepositoryImpl implements ConfigRepository {
     }
     return configMapper.selectList(wrapper);
   }
+
+  @Override
+  public List<Config> findEnabledConfigs() {
+    QueryWrapper<Config> wrapper = new QueryWrapper<>();
+    wrapper.eq("status", STATUS_ENABLED).eq("deleted", 0);
+    return configMapper.selectList(wrapper);
+  }
+
+  @Override
+  public List<Config> findByGroup(String configGroup) {
+    QueryWrapper<Config> wrapper = new QueryWrapper<>();
+    wrapper.eq("config_group", configGroup).eq("deleted", 0);
+    return configMapper.selectList(wrapper);
+  }
+
+  @Override
+  public List<Config> findAll() {
+    return configMapper.selectList(new QueryWrapper<Config>().eq("deleted", 0));
+  }
+
+  @Override
+  public List<Config> findByTenantId(String tenantId) {
+    QueryWrapper<Config> wrapper = new QueryWrapper<>();
+    wrapper.eq("deleted", 0);
+    if (tenantId != null && !tenantId.isBlank()) {
+      wrapper.eq("tenant_id", tenantId);
+    }
+    return configMapper.selectList(wrapper);
+  }
 }

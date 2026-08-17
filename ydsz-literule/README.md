@@ -386,7 +386,7 @@ ydsz:
 | SPI 接口 | 作用 | 实现 |
 |---|---|---|
 | `RuleConfigProvider` | 规则配置源 | `DbRuleSource` + `CachingRuleConfigProvider` 装饰 |
-| `RuleVersionRepository` | 版本仓库 | server 层 DB 实现 |
+| `RuleVersionRepository` | 版本仓库 | infra 层接口，server 层 DB 实现 |
 | `RuleTemplateProvider` | 模板市场 | server 层 DB 实现 |
 | `RuleConflictDetectorProvider` | 冲突检测 | server 层实现 |
 | `DecisionTableEvalProvider` | 决策表评估 | server 层实现 |
@@ -404,7 +404,7 @@ ydsz:
 | `ThresholdProvider` | 自适应阈值 | server 层实现 |
 | `ReconcileDataProvider` | 对账 | 业务方实现 |
 | `BudgetSnapshotProvider` | 预算快照 | 业务方实现（可跨服务 Feign 调用外部系统） |
-| `ApprovalRecordRepository` | 审批记录 | server 层 DB 实现 |
+| `ApprovalRecordRepository` | 审批记录 | infra 层接口，server 层 DB 实现 |
 
 ## 可选联动
 

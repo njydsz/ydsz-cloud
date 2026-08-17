@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
@@ -114,9 +113,8 @@ public class DictServiceImpl implements DictService {
    */
   @Override
   public PageResponse<List<DictTypeVO>> page(DictPageQuery query) {
-    QueryWrapper<DictType> wrapper = buildQueryWrapper(query);
     Page<DictType> mpPage = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
-    IPage<DictType> result = dictRepository.getDictTypeMapper().selectPage(mpPage, wrapper);
+    IPage<DictType> result = dictRepository.findTypePage(mpPage, query.getTypeCode(), query.getTypeName(), query.getStatus());
     return PageResponses.success(result, SystemConverter.INSTANT::entityToVO);
   }
 
@@ -128,7 +126,7 @@ public class DictServiceImpl implements DictService {
    */
   @Override
   public DictTypeVO getById(String id) {
-    DictType entity = dictRepository.getDictTypeMapper().selectById(id);
+    DictType entity = dictRepository.findTypeById(id).orElse(null);
     return SystemConverter.INSTANT.entityToVO(entity);
   }
 
@@ -157,7 +155,7 @@ public class DictServiceImpl implements DictService {
   public String save(DictTypeVO vo) {
     DictType entity = toEntity(vo);
     checkDuplicateTypeCode(entity);
-    dictRepository.getDictTypeMapper().insert(entity);
+    dictRepository.insertType(entity);
     publishDictTypeChangedEvent(entity.getTypeCode(), "创建字典类型");
     return entity.getId();
   }
@@ -187,7 +185,7 @@ public class DictServiceImpl implements DictService {
   public boolean updateById(DictTypeVO vo) {
     DictType entity = toEntity(vo);
     checkDuplicateTypeCode(entity);
-    boolean updated = dictRepository.getDictTypeMapper().updateById(entity) > 0;
+    boolean updated = dictRepository.updateTypeById(entity);
     if (updated) {
       publishDictTypeChangedEvent(entity.getTypeCode(), "更新字典类型");
     }
@@ -211,23 +209,19 @@ public class DictServiceImpl implements DictService {
       key = "'all:' + T(com.njydsz.common.tenant.TenantContextHolder).getTenantId()")
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    DictType entity = dictRepository.getDictTypeMapper().selectById(id);
+    DictType entity = dictRepository.findTypeById(id).orElse(null);
     if (entity == null) {
       return false;
     }
     // 子项校验：若该类型下存在字典项，阻止删除
-    Long itemCount =
-        dictRepository
-            .getDictItemMapper()
-            .selectCount(
-                new QueryWrapper<DictItem>().eq("type_code", entity.getTypeCode()));
-    if (itemCount != null && itemCount > 0) {
+    long itemCount = dictRepository.countItemsByTypeCode(entity.getTypeCode());
+    if (itemCount > 0) {
       throw BusinessException.of(SystemExceptionCode.DICT_TYPE_HAS_ITEMS)
           .data("typeCode", entity.getTypeCode())
           .data("itemCount", itemCount);
     }
-    boolean removed = dictRepository.getDictTypeMapper().deleteById(id) > 0;
-    if (removed && entity != null) {
+    boolean removed = dictRepository.deleteTypeById(id);
+    if (removed) {
       publishDictTypeChangedEvent(entity.getTypeCode(), "删除字典类型");
     }
     return removed;
@@ -271,34 +265,13 @@ public class DictServiceImpl implements DictService {
       value = CacheConstants.SYSTEM_DICT_TYPE_CACHE,
       key = "'all:' + T(com.njydsz.common.tenant.TenantContextHolder).getTenantId()")
   public List<DictTypeVO> listAll() {
-    return dictRepository.getDictTypeMapper().selectList(null).stream()
+    return dictRepository.findAllTypes().stream()
         .map(SystemConverter.INSTANT::entityToVO)
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
   }
 
   // ============================== 私有方法 ==============================
-
-  /**
-   * 构建分页查询条件（私有）
-   *
-   * @param query 分页查询条件
-   * @return MyBatis-Plus QueryWrapper
-   */
-  private QueryWrapper<DictType> buildQueryWrapper(DictPageQuery query) {
-    QueryWrapper<DictType> wrapper = new QueryWrapper<>();
-    if (query.getTypeCode() != null && !query.getTypeCode().isBlank()) {
-      wrapper.eq("type_code", query.getTypeCode());
-    }
-    if (query.getTypeName() != null && !query.getTypeName().isBlank()) {
-      wrapper.like("type_name", query.getTypeName());
-    }
-    if (query.getStatus() != null && !query.getStatus().isBlank()) {
-      wrapper.eq("status", query.getStatus());
-    }
-    wrapper.orderByDesc("created_at");
-    return wrapper;
-  }
 
   /**
    * DTO → DO 转换（私有）
@@ -330,12 +303,7 @@ public class DictServiceImpl implements DictService {
    * @throws IllegalArgumentException {@code typeCode} 已存在时抛出
    */
   private void checkDuplicateTypeCode(DictType entity) {
-    QueryWrapper<DictType> checkWrapper = new QueryWrapper<>();
-    checkWrapper.eq("type_code", entity.getTypeCode());
-    if (entity.getId() != null) {
-      checkWrapper.ne("id", entity.getId());
-    }
-    if (dictRepository.getDictTypeMapper().selectCount(checkWrapper) > 0) {
+    if (dictRepository.existsTypeCode(entity.getTypeCode(), entity.getId())) {
       throw BusinessException.of(SystemExceptionCode.DICT_TYPE_CODE_DUPLICATE)
           .data("typeCode", entity.getTypeCode());
     }

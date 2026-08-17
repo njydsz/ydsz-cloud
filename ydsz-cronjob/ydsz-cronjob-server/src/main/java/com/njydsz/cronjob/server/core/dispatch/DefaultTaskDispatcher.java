@@ -138,6 +138,9 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
   /** P1-1: 失败重试调度器（可选注入，未配置时不支持重试） */
   private final ObjectProvider<RetryScheduler> retrySchedulerProvider;
 
+  /** P1-2: 运行中任务数计数器（可选注入，未配置时不维护 Redis 计数） */
+  private final ObjectProvider<RunningTaskCounter> runningTaskCounterProvider;
+
   /** P7-3: 租户级配额服务（可选注入，未配置时跳过配额检查与计数） */
   private final ObjectProvider<TenantQuotaService> tenantQuotaServiceProvider;
 
@@ -185,6 +188,9 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
 
   /** P0-A4: Lua 脚本统一引用 LockKeyUtil 常量，消除内联 Lua 字符串 */
   private static final DefaultRedisScript<Long> RELEASE_LOCK_SCRIPT = initReleaseScript();
+
+  /** P1-5: 幂等锁 key 前缀（防止相同参数的任务重复执行） */
+  private static final String IDEMPOTENT_LOCK_PREFIX = "ydsz:job:idempotent:";
 
   private static DefaultRedisScript<Long> initReleaseScript() {
     DefaultRedisScript<Long> script = new DefaultRedisScript<>();
@@ -613,6 +619,12 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     log0.setDeleted(0);
     jobLogMapper.insert(log0);
 
+    // P1-2: 递增运行中任务数（Redis 维护，供 Gauge 直接读取）
+    RunningTaskCounter shardCounter = runningTaskCounterProvider.getIfAvailable();
+    if (shardCounter != null) {
+      shardCounter.increment();
+    }
+
     // P0-2: 初始化在线日志器（在 handler.execute 之前设置 ThreadLocal）
     JobLoggerImpl jobLogger =
         new JobLoggerImpl(
@@ -675,6 +687,11 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       log0.setDurationMs(Duration.between(log0.getStartTime(), log0.getEndTime()).toMillis());
       log0.setStatus(success ? "SUCCESS" : "FAILED");
       jobLogMapper.updateById(log0);
+
+      // P1-2: 递减运行中任务数
+      if (shardCounter != null) {
+        shardCounter.decrement();
+      }
 
       // 分片场景: 只更新统计, 不推进 next_fire_time（由 Scanner 控制）
       Long incFire = 1L;
@@ -1008,6 +1025,12 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     log0.setDeleted(0);
     jobLogMapper.insert(log0);
 
+    // P1-2: 递增运行中任务数（Redis 维护，供 Gauge 直接读取）
+    RunningTaskCounter counter = runningTaskCounterProvider.getIfAvailable();
+    if (counter != null) {
+      counter.increment();
+    }
+
     // P0-2: 初始化在线日志器（在 handler.execute 之前设置 ThreadLocal）
     JobLoggerImpl jobLogger =
         new JobLoggerImpl(
@@ -1089,6 +1112,12 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       log0.setDurationMs(Duration.between(log0.getStartTime(), log0.getEndTime()).toMillis());
       log0.setStatus(success ? "SUCCESS" : "FAILED");
       jobLogMapper.updateById(log0);
+
+      // P1-2: 递减运行中任务数
+      RunningTaskCounter counter = runningTaskCounterProvider.getIfAvailable();
+      if (counter != null) {
+        counter.decrement();
+      }
 
       // 更新任务统计
       Long incFire = 1L;
@@ -1546,6 +1575,68 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       redisTemplate.execute(RELEASE_LOCK_SCRIPT, Collections.singletonList(lockKey), INSTANCE_ID);
     } catch (Exception e) {
       log.warn("[Dispatcher] 释放分布式锁失败(将等待 TTL 自动过期): key={} reason={}", lockKey, e.getMessage());
+    }
+  }
+
+  /**
+   * P1-5: 获取幂等锁 key。
+   *
+   * <p>基于 handler 的 {@link JobHandler#idempotentKey(String)} 方法生成， 用于防止相同参数的任务在集群中重复执行。
+   *
+   * @param handler 任务处理器
+   * @param job 任务定义
+   * @return 幂等锁 key；handler 为 null 时返回 null
+   */
+  private String buildIdempotentLockKey(JobHandler handler, Job job) {
+    if (handler == null) {
+      return null;
+    }
+    String idempotentKey = handler.idempotentKey(job.getParamsJson());
+    return IDEMPOTENT_LOCK_PREFIX + idempotentKey;
+  }
+
+  /**
+   * P1-5: 尝试获取幂等锁（SET NX 原子操作）。
+   *
+   * <p>幂等锁与任务锁（job lock）互补：任务锁按 jobKey 去重，幂等锁按 handler+params 去重。 当同一 handler 以相同参数被多次触发时（如重复 cron
+   * 扫描、手动重试）， 幂等锁保证只有一个实例执行。
+   *
+   * @param idempotentLockKey 幂等锁 key
+   * @param ttl 锁 TTL
+   * @return true 获取成功；false 已被其他实例持有
+   */
+  private boolean tryAcquireIdempotentLock(String idempotentLockKey, Duration ttl) {
+    if (idempotentLockKey == null) {
+      return true;
+    }
+    try {
+      Boolean acquired = redisTemplate.opsForValue().setIfAbsent(idempotentLockKey, INSTANCE_ID, ttl);
+      return Boolean.TRUE.equals(acquired);
+    } catch (Exception e) {
+      log.warn("[Dispatcher] 获取幂等锁异常, 降级放行: key={} reason={}", idempotentLockKey, e.getMessage());
+      return true;
+    }
+  }
+
+  /**
+   * P1-5: 释放幂等锁（Lua 脚本原子释放）。
+   *
+   * <p>任务执行完成后释放，或等待 TTL 自动过期。
+   *
+   * @param idempotentLockKey 幂等锁 key（为 null 时跳过）
+   */
+  private void releaseIdempotentLock(String idempotentLockKey) {
+    if (idempotentLockKey == null) {
+      return;
+    }
+    try {
+      redisTemplate.execute(
+          RELEASE_LOCK_SCRIPT, Collections.singletonList(idempotentLockKey), INSTANCE_ID);
+    } catch (Exception e) {
+      log.warn(
+          "[Dispatcher] 释放幂等锁失败(将等待 TTL 自动过期): key={} reason={}",
+          idempotentLockKey,
+          e.getMessage());
     }
   }
 

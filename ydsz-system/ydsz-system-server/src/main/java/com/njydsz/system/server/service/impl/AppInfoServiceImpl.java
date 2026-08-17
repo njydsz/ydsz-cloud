@@ -1,11 +1,7 @@
 package com.njydsz.system.server.service.impl;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,6 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.support.PageResponses;
+
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.system.domain.converter.SystemConverter;
 import com.njydsz.system.domain.dto.AppInfoDTO;
@@ -144,7 +143,7 @@ public class AppInfoServiceImpl implements AppInfoService {
    */
   @Override
   public AppInfoVO getById(String id) {
-    AppInfo entity = appInfoRepository.getAppInfoMapper().selectById(id);
+    AppInfo entity = appInfoRepository.findById(id).orElse(null);
     return SystemConverter.INSTANT.entityToVO(entity);
   }
 
@@ -199,7 +198,7 @@ public class AppInfoServiceImpl implements AppInfoService {
     }
 
     // 3. DB 查询 + BCrypt 校验
-    AppInfo app = appInfoRepository.selectEnabledByAppKey(appKey);
+    AppInfo app = appInfoRepository.findEnabledByAppKey(appKey).orElse(null);
     if (app == null) {
       handleValidateFail(appKey, failKey, "不存在或未启用");
       return false;
@@ -286,15 +285,7 @@ public class AppInfoServiceImpl implements AppInfoService {
   @Override
   public PageResponse<List<AppInfoVO>> page(
       int pageNum, int pageSize, String appName, String status) {
-    QueryWrapper<AppInfo> wrapper = new QueryWrapper<>();
-    if (appName != null && !appName.isBlank()) {
-      wrapper.like("app_name", appName);
-    }
-    if (status != null && !status.isBlank()) {
-      wrapper.eq("status", status);
-    }
-    wrapper.orderByDesc("created_at");
-    IPage<AppInfo> page = appInfoRepository.getAppInfoMapper().selectPage(new Page<>(pageNum, pageSize), wrapper);
+    IPage<AppInfo> page = appInfoRepository.findByPage(new Page<>(pageNum, pageSize), appName, status);
     return PageResponses.success(page, SystemConverter.INSTANT::entityToVO);
   }
 
@@ -311,9 +302,9 @@ public class AppInfoServiceImpl implements AppInfoService {
    */
   @Override
   public List<AppInfoVO> list() {
-    return appInfoRepository.getAppInfoMapper().selectList(null).stream()
+    return appInfoRepository.findAll().stream()
         .map(SystemConverter.INSTANT::entityToVO)
-        .collect(Collectors.toList());
+        .collect(java.util.stream.Collectors.toList());
   }
 
   /**
@@ -347,7 +338,7 @@ public class AppInfoServiceImpl implements AppInfoService {
     if (dto.getAppSecret() != null && !dto.getAppSecret().isBlank()) {
       entity.setAppSecret(passwordEncoder.encode(dto.getAppSecret()));
     }
-    appInfoRepository.getAppInfoMapper().insert(entity);
+    appInfoRepository.insert(entity);
     return entity.getId();
   }
 
@@ -388,7 +379,7 @@ public class AppInfoServiceImpl implements AppInfoService {
       // 不更新密钥时设为 null，MyBatis-Plus NOT_NULL 策略会跳过此字段
       entity.setAppSecret(null);
     }
-    return appInfoRepository.getAppInfoMapper().updateById(entity) > 0;
+    return appInfoRepository.updateById(entity);
   }
 
   /**
@@ -404,7 +395,7 @@ public class AppInfoServiceImpl implements AppInfoService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    return appInfoRepository.getAppInfoMapper().deleteById(id) > 0;
+    return appInfoRepository.deleteById(id);
   }
 
   /**

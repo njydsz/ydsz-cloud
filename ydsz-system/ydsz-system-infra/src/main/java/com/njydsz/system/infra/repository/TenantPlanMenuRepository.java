@@ -1,30 +1,49 @@
 package com.njydsz.system.infra.repository;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Repository;
+import java.util.List;
 
-import com.njydsz.system.infra.mapper.TenantPlanMenuMapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+
+import com.njydsz.system.domain.entity.TenantPlanMenu;
 
 /**
- * 租户方案菜单仓储。
+ * 租户套餐-菜单关联仓储接口（Infra 层契约）。
  *
- * <p>封装 TenantPlanMenuMapper，提供租户方案菜单数据访问能力。
+ * <p>定义套餐-菜单关联数据访问能力，Infra 层负责实现。
+ *
+ * <p><b>设计要点：</b>
+ *
+ * <ul>
+ *   <li>以领域语义方法暴露数据访问能力，禁止 Mapper 透传
+ *   <li>返回领域实体（{@link TenantPlanMenu}），非 DTO / VO
+ * </ul>
  *
  * @author ydsz-team
  * @since 1.0.0
  */
-@Repository
-@RequiredArgsConstructor
-public class TenantPlanMenuRepository {
-
-  private final TenantPlanMenuMapper tenantPlanMenuMapper;
+public interface TenantPlanMenuRepository {
 
   /**
-   * 获取原生 Mapper。
+   * 按条件查询套餐-菜单关联列表。
    *
-   * @return 租户方案菜单 Mapper
+   * @param wrapper 查询条件
+   * @return 套餐-菜单关联列表
    */
-  public TenantPlanMenuMapper getTenantPlanMenuMapper() {
-    return tenantPlanMenuMapper;
-  }
+  List<TenantPlanMenu> findList(LambdaQueryWrapper<TenantPlanMenu> wrapper);
+
+  /**
+   * 按条件删除套餐-菜单关联。
+   *
+   * @param wrapper 删除条件
+   * @return 删除成功返回 {@code true}
+   */
+  boolean deleteByCondition(LambdaQueryWrapper<TenantPlanMenu> wrapper);
+
+  /**
+   * 批量插入套餐-菜单关联（一次 SQL 批量写入）。
+   *
+   * @param entities 套餐-菜单关联实体列表
+   * @return 插入成功返回 {@code true}
+   */
+  boolean insertBatch(List<TenantPlanMenu> entities);
 }

@@ -7,7 +7,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -155,7 +154,7 @@ public class VariableServiceImpl implements VariableService {
    */
   @Override
   public VariableVO getById(String id) {
-    Variable entity = variableRepository.getVariableMapper().selectById(id);
+    Variable entity = variableRepository.findById(id).orElse(null);
     return SystemConverter.INSTANT.entityToVO(entity);
   }
 
@@ -182,7 +181,7 @@ public class VariableServiceImpl implements VariableService {
     long start = System.nanoTime();
     try {
       metrics.recordVariableCacheMiss();
-      Variable entity = variableRepository.selectEnabledByKey(variableKey);
+      Variable entity = variableRepository.findEnabledByKey(variableKey).orElse(null);
       return entity != null ? entity.getVariableValue() : null;
     } finally {
       metrics.recordVariableRead(System.nanoTime() - start);
@@ -205,15 +204,7 @@ public class VariableServiceImpl implements VariableService {
   @Override
   public PageResponse<List<VariableVO>> page(
       int pageNum, int pageSize, String variableKey, String status) {
-    QueryWrapper<Variable> wrapper = new QueryWrapper<>();
-    if (variableKey != null && !variableKey.isBlank()) {
-      wrapper.like("variable_key", variableKey);
-    }
-    if (status != null && !status.isBlank()) {
-      wrapper.eq("status", status);
-    }
-    wrapper.orderByDesc("created_at");
-    IPage<Variable> page = variableRepository.getVariableMapper().selectPage(new Page<>(pageNum, pageSize), wrapper);
+    IPage<Variable> page = variableRepository.findByPage(new Page<>(pageNum, pageSize), variableKey, status);
     return PageResponses.success(page, SystemConverter.INSTANT::entityToVO);
   }
 
@@ -230,7 +221,7 @@ public class VariableServiceImpl implements VariableService {
    */
   @Override
   public List<VariableVO> list() {
-    return variableRepository.getVariableMapper().selectList(null).stream()
+    return variableRepository.findAll().stream()
         .map(SystemConverter.INSTANT::entityToVO)
         .collect(Collectors.toList());
   }
@@ -257,7 +248,7 @@ public class VariableServiceImpl implements VariableService {
   public String save(VariableVO vo) {
     validateValueType(vo.getValueType());
     Variable entity = toEntity(vo);
-    variableRepository.getVariableMapper().insert(entity);
+    variableRepository.insert(entity);
     searchIndexSyncer.upsert("variable", entity);
     publishVariableChangedEvent(entity.getVariableKey(), "创建变量");
     return entity.getId();
@@ -288,9 +279,9 @@ public class VariableServiceImpl implements VariableService {
     validateValueType(vo.getValueType());
     Variable entity = toEntity(vo);
     // 版本快照：查询变更前状态
-    Variable before = variableRepository.selectByKeyIgnoreStatus(entity.getVariableKey());
+    Variable before = variableRepository.findByKeyIgnoreStatus(entity.getVariableKey()).orElse(null);
     String snapshotJson = before != null ? YdszJson.toJson(before) : null;
-    boolean updated = variableRepository.getVariableMapper().updateById(entity) > 0;
+    boolean updated = variableRepository.updateById(entity);
     if (updated) {
       // 变量键变更时，旧键缓存一并失效
       if (before != null && !Objects.equals(before.getVariableKey(), entity.getVariableKey())) {
@@ -330,9 +321,9 @@ public class VariableServiceImpl implements VariableService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    Variable entity = variableRepository.getVariableMapper().selectById(id);
+    Variable entity = variableRepository.findById(id).orElse(null);
     String snapshotJson = entity != null ? YdszJson.toJson(entity) : null;
-    boolean removed = variableRepository.getVariableMapper().deleteById(id) > 0;
+    boolean removed = variableRepository.deleteById(id);
     if (removed && entity != null) {
       // 精准失效该变量键缓存（替代 allEntries 全量清空）
       evictVariable(entity.getVariableKey());
@@ -382,13 +373,13 @@ public class VariableServiceImpl implements VariableService {
           if (snapshotJson != null && !snapshotJson.isBlank()) {
             try {
               VariableVO snapshotVO = YdszJson.fromJson(snapshotJson, VariableVO.class);
-              Variable currentVariable = variableRepository.selectByKeyIgnoreStatus(resourceKey);
+              Variable currentVariable = variableRepository.findByKeyIgnoreStatus(resourceKey).orElse(null);
               if (currentVariable != null) {
                 currentVariable.setVariableValue(snapshotVO.getVariableValue());
                 currentVariable.setValueType(snapshotVO.getValueType());
                 currentVariable.setDescription(snapshotVO.getDescription());
                 currentVariable.setStatus(snapshotVO.getStatus());
-                variableRepository.getVariableMapper().updateById(currentVariable);
+                variableRepository.updateById(currentVariable);
                 searchIndexSyncer.upsert("variable", currentVariable);
               } else {
                 Variable newVariable = new Variable();
@@ -397,7 +388,7 @@ public class VariableServiceImpl implements VariableService {
                 newVariable.setValueType(snapshotVO.getValueType());
                 newVariable.setDescription(snapshotVO.getDescription());
                 newVariable.setStatus(snapshotVO.getStatus());
-                variableRepository.getVariableMapper().insert(newVariable);
+                variableRepository.insert(newVariable);
                 searchIndexSyncer.upsert("variable", newVariable);
               }
             } catch (Exception e) {
@@ -463,8 +454,7 @@ public class VariableServiceImpl implements VariableService {
   @Override
   public byte[] exportVariables() {
     // 1. 查询全部变量数据
-    List<Variable> variables = variableRepository.getVariableMapper()
-        .selectList(new QueryWrapper<Variable>().eq("deleted", 0).orderByAsc("variable_key"));
+    List<Variable> variables = variableRepository.findList(new QueryWrapper<Variable>().eq("deleted", 0).orderByAsc("variable_key"));
 
     // 2. 转换为 Excel VO 并导出
     List<VariableExcelVO> excelRows =
@@ -563,7 +553,7 @@ public class VariableServiceImpl implements VariableService {
       }
     }
     // DB 唯一性校验
-    Variable existing = variableRepository.selectByKeyIgnoreStatus(excelRow.getVariableKey());
+    Variable existing = variableRepository.findByKeyIgnoreStatus(excelRow.getVariableKey()).orElse(null);
     if (existing != null) {
       return "第 " + rowNum + " 行: 变量已存在(" + excelRow.getVariableKey() + ")";
     }
@@ -619,7 +609,7 @@ public class VariableServiceImpl implements VariableService {
           .collect(Collectors.toList());
       // 逐条插入
       for (Variable entity : entities) {
-        variableRepository.getVariableMapper().insert(entity);
+        variableRepository.insert(entity);
       }
       // 精准失效缓存：按涉及 variableKey 逐一失效
       entities.forEach(entity -> evictVariable(entity.getVariableKey()));

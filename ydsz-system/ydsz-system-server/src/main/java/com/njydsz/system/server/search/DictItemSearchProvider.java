@@ -3,7 +3,6 @@ package com.njydsz.system.server.search;
 import java.time.ZoneId;
 import java.util.List;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -13,7 +12,7 @@ import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderContext;
 import com.njydsz.system.domain.entity.DictItem;
-import com.njydsz.system.infra.mapper.DictItemMapper;
+import com.njydsz.system.infra.repository.DictRepository;
 
 /**
  * 字典项搜索提供者（P1-5：补齐字典搜索能力）
@@ -41,7 +40,7 @@ import com.njydsz.system.infra.mapper.DictItemMapper;
 @RequiredArgsConstructor
 public class DictItemSearchProvider implements SearchProvider<DictItem> {
 
-  private final DictItemMapper dictItemMapper;
+  private final DictRepository dictRepository;
 
   /**
    * 获取搜索类型标识。
@@ -117,11 +116,6 @@ public class DictItemSearchProvider implements SearchProvider<DictItem> {
    */
   @Override
   public List<DictItem> loadAll(String tenantId) {
-    LambdaQueryWrapper<DictItem> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(DictItem::getDeleted, 0);
-    if (tenantId != null && !tenantId.isBlank()) {
-      wrapper.eq(DictItem::getTenantId, tenantId);
-    }
-    return dictItemMapper.selectList(wrapper);
+    return dictRepository.findByTenantId(tenantId);
   }
 }

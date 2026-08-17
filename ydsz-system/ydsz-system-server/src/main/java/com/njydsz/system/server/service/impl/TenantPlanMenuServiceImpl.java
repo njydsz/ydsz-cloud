@@ -58,7 +58,7 @@ public class TenantPlanMenuServiceImpl implements TenantPlanMenuService {
   public List<TenantPlanMenuVO> listByPlanId(String planId) {
     LambdaQueryWrapper<TenantPlanMenu> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(TenantPlanMenu::getPlanId, planId);
-    return tenantPlanMenuRepository.getTenantPlanMenuMapper().selectList(wrapper).stream()
+    return tenantPlanMenuRepository.findList(wrapper).stream()
         .map(SystemConverter.INSTANT::entityToVO)
         .collect(Collectors.toList());
   }
@@ -76,7 +76,7 @@ public class TenantPlanMenuServiceImpl implements TenantPlanMenuService {
     // 1. 删除旧关联
     LambdaQueryWrapper<TenantPlanMenu> deleteWrapper = new LambdaQueryWrapper<>();
     deleteWrapper.eq(TenantPlanMenu::getPlanId, dto.getPlanId());
-    tenantPlanMenuRepository.getTenantPlanMenuMapper().delete(deleteWrapper);
+    tenantPlanMenuRepository.deleteByCondition(deleteWrapper);
 
     // 2. 批量插入新关联（1 次 SQL 替代 N 次单条 INSERT）
     if (dto.getMenuIds() == null || dto.getMenuIds().isEmpty()) {
@@ -95,7 +95,7 @@ public class TenantPlanMenuServiceImpl implements TenantPlanMenuService {
       entity.setCreatedBy(getCurrentUserId());
       entities.add(entity);
     }
-    tenantPlanMenuRepository.getTenantPlanMenuMapper().insertBatch(entities);
+    tenantPlanMenuRepository.insertBatch(entities);
     log.info("套餐[{}]菜单配置已更新, 菜单数量={}", dto.getPlanId(), dto.getMenuIds().size());
   }
 
