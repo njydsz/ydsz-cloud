@@ -103,7 +103,6 @@
         <module>ydsz-common-sentry</module>
         <!-- L6 应用层 -->
         <module>ydsz-common-base</module>
-        <module>ydsz-common-app</module>
         <module>ydsz-common-web</module>
     </modules>
 

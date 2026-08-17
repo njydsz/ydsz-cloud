@@ -37,8 +37,8 @@
 | @JsonCreator 构造器模式 | **Beta** | |
 | JSON Patch (RFC 6902) / Merge Patch (RFC 7396) | **Beta** | v1.2.0 新增 |
 | TypeRef 泛型工厂 | **Beta** | v1.2.0 新增 |
-| JSON Schema 校验（JsonSchemaValidator，Draft-07 子集） | **Deprecated** | v1.2.3 起 `@Deprecated`，计划 2.0.0 移除；完整规范支持请迁移 networknt/json-schema-validator |
-| @JsonBuilder 构造器模式 | **Deprecated** | 推荐使用 @JsonCreator + 静态工厂方法 |
+| JSON Schema 校验（JsonSchemaValidator，Draft-07 子集） | **未提供** | 完整规范支持请使用 networknt/json-schema-validator |
+| @JsonBuilder 构造器模式 | **未提供** | 推荐使用 @JsonCreator + 静态工厂方法 |
 | @JsonView 视图过滤 | **Stable** | 序列化层（ValueWriter/Formatter）与 MVC 层完整支持；字段裁剪统一用 @JsonView + toJson(obj, viewClass)（见 JsonView 注解文档） |
 | @JsonUnwrapped | **未提供** | 推荐将嵌套对象序列化为子对象结构 |
 | @JsonRawValue | **未提供** | 推荐手动构建后序列化 |
@@ -91,16 +91,9 @@
 | `TreeConverter` | 树 ↔ 对象转换 |
 | `JsonPatch` / `JsonMergePatch` | JSON Patch (RFC 6902) / Merge Patch (RFC 7396) 实现 |
 
-### 4.1 JSON Schema 校验（schema 包，Draft-07 子集）
+### 4.1 JSON Schema 校验（schema 包）
 
-| 类 | 说明 |
-|---|---|
-| `JsonSchemaValidator` / `ValidationResult` | 轻量 Schema 校验器（F-5：**仅支持 Draft-07 子集**；v1.2.3 起 `@Deprecated`，计划 2.0.0 移除） |
-
-> **能力边界明示**：仅支持 `type` / `required` / `properties` / `minimum` / `maximum` /
-> `minLength` / `maxLength` / `pattern` / `enum` / `nullable` 关键字；
-> **不支持** `$ref`、`allOf` / `oneOf`、`if/then`、`format`、`items` 数组逐项校验。
-> 若需完整 Draft-07/2020-12 支持，请引入 `networknt/json-schema-validator` 依赖。
+> **说明**：`JsonSchemaValidator` 类当前**不存在**（历史规划未落地，schema 包仅含 `ValidationResult`）。如需要 JSON Schema 校验，请引入 `networknt/json-schema-validator` 依赖。
 
 ### 5. 类型系统（type / naming / number 包）
 
@@ -461,7 +454,7 @@ String formatted = YdszJson.format(compactJson);
 | P1 | Jackson 注解兼容桥（`JacksonAnnotationBridge`） | classpath 存在 `jackson-annotations` 时自动识别 Jackson 同名注解（`@JsonProperty` / `@JsonIgnore` / `@JsonAlias` / `@JsonIgnoreProperties` / `@JsonValue` 等），读写双向生效，**原生注解优先**；依赖缺失时零开销降级。解决 Jackson 迁移期 import 错包静默失效问题 |
 | P1 | 双注册表合并（`SerializerRegistry` 单一事实源） | `JsonModuleRegistry` 不再维护独立序列化器/反序列化器存储，模块序列化器在 `initialize()` 时写入全局唯一注册中心 `SerializerRegistry`（`registerIfAbsent`，先注册优先）；`clear()` / `reinitialize()` 仅清理模块来源（按类型集合精确移除，不误删用户直接注册）；查询点由"先 `SerializerRegistry` 后 `JsonModuleRegistry`"双查简化为单查，消除每个序列化/反序列化操作的双注册表兜底开销 |
 | P2 | `JsonModuleRegistry` 支持 ServiceLoader SPI | 非 Spring 环境通过 `META-INF/services` 自动发现模块；同类双注册（SPI + Spring Bean）自动去重 |
-| P2 | `JsonSchemaValidator` 标注 `@Deprecated` | 仅覆盖 Draft-07 高频子集（10 个关键字），完整规范支持请迁移 networknt/json-schema-validator；计划 2.0.0 移除 |
+| P2 | `JsonSchemaValidator` 未落地 | 历史规划未实现，schema 包仅含 `ValidationResult`；需要时引入 networknt/json-schema-validator |
 
 ## 版本兼容性
 
@@ -469,7 +462,7 @@ String formatted = YdszJson.format(compactJson);
 |------|-----------|
 | v1.0.0 → v1.1.0 | ⚠️ `JsonConfig.getInstance()` 标记 `@Deprecated`，推荐使用 `JsonConfig.copyOf()` / `install()` |
 | v1.1.0 → v1.2.0 | ✅ 向后兼容，无破坏性变更 |
-| v1.2.2 → v1.2.3 | ✅ 向后兼容：新增 `YdszJson.cleanupThread()`、`SerializerRegistry.registerIfAbsent()/unregisterAll()` 等 API；多 Mapper 深度隔离为缺陷修复（原先多实例深度互相覆盖属未定义行为）；双注册表合并为单一事实源（`JsonModuleRegistry.getSerializer()` 现委托全局注册中心，语义等价于原先的"模块 + 直接注册"双查）；`JsonSchemaValidator` 标注 `@Deprecated` |
+| v1.2.2 → v1.2.3 | ✅ 向后兼容：新增 `YdszJson.cleanupThread()`、`SerializerRegistry.registerIfAbsent()/unregisterAll()` 等 API；多 Mapper 深度隔离为缺陷修复（原先多实例深度互相覆盖属未定义行为）；双注册表合并为单一事实源（`JsonModuleRegistry.getSerializer()` 现委托全局注册中心，语义等价于原先的"模块 + 直接注册"双查） |
 | v1.2.0 → 未来版本 | 标注 `@Beta` 的 API 可能破坏性变更；标注 `@Deprecated` 的 API 将在下个主版本移除 |
 
 ### 与父 POM 版本对照（E-3）

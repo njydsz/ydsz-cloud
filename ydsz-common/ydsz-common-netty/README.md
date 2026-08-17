@@ -55,10 +55,10 @@
 
 | 类 | 说明 |
 |---|---|
-| `@MessageHandler` | ⚠️ **@Deprecated v1.1.0** — 消息处理器注解，无活跃消费者，计划 v2.0.0 移除 |
-| `MessageDispatcher` | ⚠️ **@Deprecated v1.1.0** — 消息分发器，无活跃消费者，计划 v2.0.0 移除 |
 | `ChannelEventDispatcher` | Channel 事件分发器（连接 / 断开 / 异常等事件分发到监听器） |
 | `ChannelEventListener` | Channel 事件监听器 SPI 接口，业务侧实现订阅 Channel 生命周期事件 |
+
+> 说明：`@MessageHandler` 注解 / `MessageDispatcher` 分发器已在 v2.0.0 **移除**（v1.1.0 起标注 Deprecated，无活跃消费者）。消息处理统一使用 `SimpleChannelInboundHandler` 推荐模式。
 
 ### 5. SSL/TLS
 
@@ -227,7 +227,8 @@ public class MyTcpClient extends AbstractNettyClient {
 | `ydsz.netty.traffic-shaping.read-limit` | 0 | 读限速（bytes/s，0=不限） |
 | `ydsz.netty.traffic-shaping.check-interval-ms` | 1000 | 检查间隔（毫秒） |
 | `ydsz.netty.traffic-shaping.global` | false | 是否全局流量整形（true=限制整个 Server 总带宽） |
-| `ydsz.netty.dispatcher.enabled` | false | 是否启用 MessageDispatcher 注解扫描（默认关闭，推荐使用 SimpleChannelInboundHandler） |
+
+> 说明：`ydsz.netty.dispatcher.enabled`（MessageDispatcher 注解扫描）配置**不存在**（分发器已移除）。
 
 ## 使用示例
 
@@ -259,52 +260,7 @@ public class MyBusinessHandler extends SimpleChannelInboundHandler<MyMessage> {
 
 **适用场景：** 消息类型固定、业务逻辑集中在同一 Handler 内。性能最优（无反射/MethodHandle 开销），代码可读性高。
 
-**可选：使用 `@MessageHandler` 注解（需显式开启）**
-
-仅在以下场景考虑启用 `ydsz.netty.dispatcher.enabled=true`：
-
-- 消息类型动态扩展，希望通过添加方法即可支持新类型
-- 多个业务模块各自独立注册处理器，不希望集中在一个 Handler 中
-- 已有大量 `@MessageHandler` 注解方法，迁移成本过高
-
-```java
-import com.njydsz.common.netty.event.MessageHandler;
-import io.netty.channel.ChannelHandlerContext;
-import org.springframework.stereotype.Component;
-
-@Component
-public class MyMessageHandler {
-
-    @MessageHandler(type = "AUTH")
-    public void handleAuth(ChannelHandlerContext ctx, Map<String, Object> data) { ... }
-
-    @MessageHandler(type = "PING")
-    public void handlePing(ChannelHandlerContext ctx, Map<String, Object> data) { ... }
-}
-```
-
-```java
-import com.njydsz.common.netty.event.MessageHandler;
-import io.netty.channel.ChannelHandlerContext;
-import org.springframework.stereotype.Component;
-
-import java.util.Map;
-
-@Component
-public class MyMessageHandler {
-
-    @MessageHandler(type = "AUTH")
-    public void handleAuth(ChannelHandlerContext ctx, Map<String, Object> data) {
-        String userId = (String) data.get("userId");
-        // 处理认证消息
-    }
-
-    @MessageHandler(type = "PING")
-    public void handlePing(ChannelHandlerContext ctx, Map<String, Object> data) {
-        // 处理心跳消息
-    }
-}
-```
+> 说明：`@MessageHandler` 注解分发模式已移除，请使用上述 `SimpleChannelInboundHandler` + switch 策略模式。
 
 ### 2. Channel 事件监听
 
@@ -381,7 +337,6 @@ ydsz:
 | `AbstractNettyServer` | TCP Server 抽象基类，业务继承实现自定义 Pipeline | 业务模块实现 |
 | `AbstractNettyClient` | TCP Client 抽象基类，业务继承实现自定义 Pipeline | 业务模块实现 |
 | `ChannelEventListener` | Channel 事件监听器，业务实现订阅连接/断开/异常事件 | 业务模块实现 |
-| `@MessageHandler` | ⚠️ @Deprecated v1.1.0 — 计划 v2.0.0 移除 | — |
 | `JsonMessageCodec<T>` | JSON 消息编解码器，业务可扩展自定义编解码 | 框架内置 JSON 实现 |
 
 ## 健康检查

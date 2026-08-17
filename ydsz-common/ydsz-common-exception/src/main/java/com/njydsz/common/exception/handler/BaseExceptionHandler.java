@@ -446,7 +446,10 @@ public abstract class BaseExceptionHandler {
     }
 
     problem.setProperty("traceId", traceId);
-    problem.setProperty("requestId", traceId);
+    // requestId 语义：本系统生成的请求唯一标识（X-Request-Id），与 traceId（X-Trace-Id）区分；
+    // 上下文缺失时回退到 traceId，保证响应字段不缺失
+    String requestId = RequestContext.getRequestId();
+    problem.setProperty("requestId", requestId != null ? requestId : traceId);
     problem.setProperty("timestamp", Instant.now().toString());
 
     // 自动注入 OpenTelemetry traceId/spanId（当 OTel 可用时）
@@ -472,7 +475,9 @@ public abstract class BaseExceptionHandler {
         problem.setProperty("otelSampled", otelTrace.sampled());
         // 同时更新 traceId（OTel 的 traceId 与 header 中的一致，优先使用）
         problem.setProperty("traceId", otelTrace.traceId());
-        problem.setProperty("requestId", otelTrace.traceId());
+        // requestId 保持本系统请求唯一标识语义（X-Request-Id），OTel 不覆盖
+        String requestId = RequestContext.getRequestId();
+        problem.setProperty("requestId", requestId != null ? requestId : otelTrace.traceId());
       }
     } catch (Exception e) {
       // OTel 反射调用异常时降级（不影响主流程）

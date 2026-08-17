@@ -2,7 +2,7 @@
 
 > YDSZ 公共底座核心模块（L1 基础设施层）— 统一响应模型、结果码、请求上下文、链路追踪、分页协议、国际化、Spring Boot 自动配置
 
-`ydsz-common-core` 是整个 YDSZ 平台的基石模块，提供最基础且被所有上层模块依赖的核心能力：统一 API 响应封装、业务结果码定义、请求级上下文传播、多协议链路追踪、分页响应封装、全局常量、国际化消息资源、Spring Boot 自动配置与 GraalVM native-image 支持。
+`ydsz-common-core` 是整个 YDSZ 平台的基石模块，提供最基础且被所有上层模块依赖的核心能力：统一 API 响应封装、业务结果码定义、请求级上下文传播、多协议链路追踪、分页响应封装、全局常量、国际化消息资源与 Spring Boot 自动配置。
 
 **当前版本**：`1.0.0-SNAPSHOT`
 
@@ -19,7 +19,6 @@
 - [Header Constants](#header-constants)
 - [国际化消息](#国际化消息)
 - [Spring Boot 自动配置](#spring-boot-自动配置)
-- [GraalVM native-image 支持](#graalvm-native-image-支持)
 - [依赖关系](#依赖关系)
 - [相关模块](#相关模块)
 - [注意事项](#注意事项)
@@ -187,8 +186,8 @@ long offset = PageConstants.calcOffset(pageNum, pageSize);
 | `trace` | `TraceIdPropagation` | TraceId 传播工具类，基于 MDC 读取当前 traceId，生成 X-Trace-Id 和 traceparent header |
 | `constant` | `PageConstants` | 分页常量 + 运行时值覆盖 + 归一化工具方法 |
 | `constant` | `SystemConstants` | 系统级常量（系统用户 ID、默认租户、默认语言等） |
-| `constant` | `TokenConstants` | 令牌相关常量（Authorization 等，由 auth/util 模块消费） |
-| `constant` | `HeaderConstants` | 统一 HTTP 请求头常量（认证/身份、数据权限、列级权限、链路追踪、网络信息） |
+| `constant` | `HeaderConstants` | 统一 HTTP 请求头常量（认证入口、幂等、链路追踪、网络信息） |
+| `constant` | `DataScopeConstants` | 数据权限范围常量 |
 | `config` | `CoreAutoConfiguration` | Spring Boot 自动配置入口，注册 springMessageResolver、pageConstantsInitializer |
 | `config` | `CoreProperties` | 配置属性绑定（`@ConfigurationProperties("ydsz.core")`） |
 | `config` | `SpringMessageResolver` | Spring MessageSource 适配器，将 i18n 解析绑定到 BaseResponse |
@@ -223,7 +222,7 @@ long offset = PageConstants.calcOffset(pageNum, pageSize);
 
 ### PageResponse\<T\>
 
-> 已标记 `@Deprecated`，推荐将分页元数据放入 `BaseResponse.extensions` 中替代。
+> 推荐将分页元数据放入 `BaseResponse.extensions` 中承载（`PageResponse` 字段继承设计保留）。
 
 继承 `BaseResponse`，新增分页元数据
 
@@ -498,55 +497,21 @@ PageResponse<List<User>> empty = PageResponse.empty(pageNum, pageSize);
 
 ## Header Constants
 
-`HeaderConstants` 是单一的 HTTP 请求头常量类，定义项目自定义的所有 header 名称：
-
-### 认证 / 身份
+`HeaderConstants` 是 core 模块内的 HTTP 请求头常量类，仅保留**认证入口、幂等、链路追踪、网络**相关常量：
 
 | 常量 | 值 | 说明 |
 |---|---|---|
-| `X_ACCESS_TOKEN` | `X-Access-Token` | 登录访问令牌 |
-| `X_USER_LANGUAGE` | `X-User-Language` | 用户系统语言 |
-| `X_DISTINCT_ID` | `X-Distinct-Id` | 用户设备唯一标识 |
-| `X_IDENTITY_TYPE` | `X-Identity-Type` | 身份类型 |
-| `X_SERVICE_TYPE` | `X-Service-Type` | 请求服务类型 |
+| `AUTHORIZATION` | `Authorization` | 认证头（JWT Bearer） |
 | `IDEMPOTENCY_KEY` | `X-Idempotency-Key` | 幂等键 |
-
-### 数据权限
-
-| 常量 | 值 | 说明 |
-|---|---|---|
-| `X_DATA_SCOPE` | `X-Data-Scope` | 数据权限范围类型 |
-| `X_TENANT_ID` | `X-Tenant-Id` | 租户ID |
-| `X_UNIQUE_ID` | `X-Unique-Id` | 当前登录用户唯一标识 |
-| `X_COMPANY_IDS` | `X-Company-Ids` | 公司ID集合（CSV） |
-| `X_DEPT_IDS` | `X-Dept-Ids` | 部门ID集合（CSV） |
-| `X_PROJECT_IDS` | `X-Project-Ids` | 项目ID集合（CSV） |
-| `X_REGION_IDS` | `X-Region-Ids` | 区域ID集合（CSV） |
-| `X_CUSTOM_SQL_CONDITION` | `X-Custom-Sql-Condition` | 自定义数据权限标识 |
-
-### 列级权限
-
-| 常量 | 值 | 说明 |
-|---|---|---|
-| `X_VISIBLE_COLUMNS` | `X-Visible-Columns` | 表级可见列规则 |
-| `X_EDITABLE_COLUMNS` | `X-Editable-Columns` | 表级可编辑列规则 |
-| `X_COL_PERMISSION_SIGN` | `X-Col-Permission-Sign` | 列权限签名 |
-
-### 链路追踪
-
-| 常量 | 值 | 说明 |
-|---|---|---|
+| `X_REQUEST_ID` | `X-Request-Id` | 请求唯一 ID |
 | `TRACE_ID_HEADER` | `X-Trace-Id` | 请求追踪 ID |
 | `MDC_TRACE_ID_KEY` | `traceId` | MDC 中的 traceId 键名 |
 | `W3C_TRACEPARENT` | `traceparent` | W3C traceparent header |
 | `W3C_TRACESTATE` | `tracestate` | W3C tracestate header |
-
-### 网络信息
-
-| 常量 | 值 | 说明 |
-|---|---|---|
 | `X_REQUEST_SOURCE` | `X-Request-Source` | 请求来源 |
 | `X_FORWARDED_FOR` | `X-Forwarded-For` | 客户端真实 IP |
+
+> 说明：`X-Access-Token` / `X-Tenant-Id` / `X-Data-Scope` / `X-User-*` / 列权限等业务头常量已按职责迁移至 `ydsz-common-base` / `ydsz-common-auth` / `ydsz-common-jdbc` 的常量类（如 `AuthHeaderConstants`）。`TokenConstants` 双源定义已消除（并入 `AUTHORIZATION`）。
 
 ---
 
@@ -611,42 +576,6 @@ ydsz:
 ### JSR-303 交叉校验
 
 `CoreProperties` 声明 `@AssertTrue` 确保 `default-page-size <= max-page-size`，非法配置将导致应用启动失败（fail-fast）。
-
----
-
-## GraalVM native-image 支持
-
-`ydsz-common-core` 提供了 native-image 反射配置。配置文件位于：
-
-```
-META-INF/native-image/com.njydsz/ydsz-common-core/native-image.properties
-```
-
-### 反射配置
-
-| 类 | 说明 |
-|---|---|
-| `BaseResponse` | 统一响应体（含构造函数、所有字段） |
-| `PageResponse` | 分页响应信封 |
-| `IResponse` | 响应接口 |
-| `CoreProperties` | 核心配置属性类 |
-| `CoreAutoConfiguration` | Spring Boot 自动配置入口 |
-| `CoreAutoConfiguration$PageConstantsInitializer` | 分页配置初始化器 |
-| `PageConstants` | 分页常量类 |
-| `BaseResultCode` | 结果码枚举（全部字段、方法） |
-| `ContextKey` | 类型安全上下文键 |
-| `RequestSnapshot` | 不可变请求快照 |
-| `Response` | 统一响应门面 |
-
-### 资源模式
-
-| 模式 | 说明 |
-|---|---|
-| `META-INF/.*\.properties$` | 加载所有 properties 资源 |
-| `META-INF/.*\.yml$` | 加载所有 yml 资源 |
-| `META-INF/.*\.json$` | 加载所有 json 资源 |
-| `META-INF/spring/.*$` | 加载 Spring 配置资源 |
-| `i18n/.*$` | 加载国际化资源 |
 
 ---
 
@@ -723,11 +652,11 @@ META-INF/native-image/com.njydsz/ydsz-common-core/native-image.properties
 
 2. **业务模块自定义结果码**：不应直接修改 `BaseResultCode`，应在各自模块定义独立枚举并实现 `ExceptionCode` 接口（或直接继承 `ResultCode` 用于非 i18n 的纯协议层），遵循码段约定（A=系统级、B=业务级、C=第三方/未知）。
 
-3. **HeaderConstants 是单一常量类**：项目中所有自定义 HTTP header 常量统一在 `HeaderConstants` 类中定义，按功能域分段注释。
+3. **Header 常量分类**：core 模块的 `HeaderConstants` 仅含通用常量（认证入口、幂等、链路追踪、网络），业务头常量按职责分布在各模块常量类。
 
 4. **序列化注解来源**：`BaseResponse` 和 `PageResponse` 上的 `@JsonInclude` 和 `@JsonPropertyOrder` 来自 `ydsz-common-json` 模块，非 Jackson 原生注解。引入 `ydsz-common-core` 时会自动传递依赖 `ydsz-common-json`。
 
-5. **native-image 兼容性**：使用 GraalVM native-image 编译时，确保 `native-image.properties` 中配置的反射白名单覆盖了所有运行时需反射访问的类。
+5. **Header 常量职责**：认证/权限/租户等业务头常量分布在 `common-base` / `common-auth` / `common-jdbc` 等模块的常量类中，core 仅保留通用（认证入口、幂等、链路、网络）常量。
 
 6. **i18n 资源物理隔离**：core 模块的 i18n 文件位于 `i18n/core/`，与业务模块 classpath 根的 `messages.properties` 互不冲突。业务模块应自行扩展 `messages.properties` 覆盖所需 error code 的 i18n Key。
 
@@ -745,7 +674,6 @@ META-INF/native-image/com.njydsz/ydsz-common-core/native-image.properties
   - core i18n messages 精简为 `core.success` / `core.error` 两个通用协议级 key，移除全部 `error.{ENUM_NAME}` 错误码消息
   - HTTP 状态码语义下沉至异常层（`ExceptionCode.getHttpStatus()`），`ResultCode` 不再持有 HTTP 状态
   - `PageResponse` 移除弃用标记，补充字段继承 vs extensions 的设计取舍说明
-  - 修复 native-image reflect-config 中 PageResponse 重复条目及 "已弃用" 标注
 
 ---
 
