@@ -11,15 +11,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.entity.SearchIndex;
 import com.njydsz.nextwiki.domain.entity.Tag;
-import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
-import com.njydsz.nextwiki.domain.repository.SearchIndexRepository;
-import com.njydsz.nextwiki.domain.repository.TagRepository;
 import com.njydsz.nextwiki.domain.vo.SearchResultVO;
 
 /**
@@ -41,6 +37,8 @@ import com.njydsz.nextwiki.domain.vo.SearchResultVO;
  *   <li>统一搜索引擎（PG tsvector / 内存引擎）— {@link com.njydsz.common.search.service.UnifiedSearchService}
  *   <li>DB LIKE 降级 — 本类提供（仅在引擎不可用时触发）
  * </ol>
+ *
+ * <p><b>分层原则：</b> 本类仅包含纯领域逻辑（搜索评分、高亮构建、索引组装）。 数据访问由 server 层负责，通过方法参数传入所需数据。
  *
  * <p><b>注意事项：</b> 增量索引写入由 {@code FileOperatedEventListener} 驱动，同时更新 nw_search_index 和统一搜索索引。 全量重建由
  * {@code NextwikiScheduledJobs} 触发，确保双索引数据一致性。
@@ -64,10 +62,6 @@ public class SearchDomainService {
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
 
-  private final FileNodeRepository fileNodeRepository;
-  private final TagRepository tagRepository;
-  private final SearchIndexRepository searchIndexRepository;
-
   /**
    * 搜索索引事件桥接器（可选注入）。
    *
@@ -82,35 +76,31 @@ public class SearchDomainService {
   private final ObjectProvider<SearchIndexEventBridge> searchIndexEventBridgeProvider;
 
   /**
-   * 综合搜索（数据库分页，避免全量加载后内存分页）
+   * 综合搜索（纯领域逻辑，数据由 server 层传入）
    *
-   * <p>通过 nw_search_index 表的 LIMIT/OFFSET 在 SQL 层面分页， 支持按 filename / content / tag / all 多维度搜索。
+   * <p>对已分页查询的搜索索引列表进行评分、高亮构建和结果组装。 分页查询由 server 层通过 {@code SearchIndexRepository} 完成，
+   * 本类仅负责领域逻辑处理。
    *
+   * @param indices 已分页的搜索索引列表（由 server 层查询传入）
+   * @param total 总匹配数（由 server 层查询传入）
    * @param keyword 搜索关键词
-   * @param userId 用户ID（权限过滤）
-   * @param scope 搜索范围：all / filename / content / tag
    * @param page 页码（从 1 开始）
    * @param pageSize 每页大小
    * @return 搜索结果
    */
   public SearchResultVO search(
-      String keyword, String userId, String scope, int page, int pageSize) {
+      List<SearchIndex> indices, long total, String keyword, int page, int pageSize) {
     long startTime = System.currentTimeMillis();
 
     log.info(
-        "[SearchDomainService] 搜索: keyword={}, userId={}, scope={}, page={}, pageSize={}",
+        "[SearchDomainService] 搜索: keyword={}, total={}, page={}, pageSize={}",
         keyword,
-        userId,
-        scope,
+        total,
         page,
         pageSize);
 
-    // 数据库分页查询搜索索引，避免全量加载后内存 subList 分页
-    PageResponse<List<SearchIndex>> pageResult =
-        searchIndexRepository.searchPage(keyword, userId, scope, page, pageSize);
-
     List<SearchResultVO.SearchHitVO> hits = new ArrayList<>();
-    for (SearchIndex index : pageResult.getData()) {
+    for (SearchIndex index : indices) {
       float score = calculateScore(index, keyword);
       hits.add(
           SearchResultVO.SearchHitVO.builder()
@@ -132,7 +122,7 @@ public class SearchDomainService {
 
     return SearchResultVO.builder()
         .hits(hits)
-        .total(pageResult.getTotal())
+        .total(total)
         .page(page)
         .pageSize(pageSize)
         .tookMs(tookMs)
@@ -140,30 +130,27 @@ public class SearchDomainService {
   }
 
   /**
-   * 索引同步（文件上传/更新后调用）
+   * 构建搜索索引实体（纯领域逻辑，数据由 server 层传入）
    *
-   * <p><b>双索引写入：</b>
+   * <p>根据文件节点和标签数据，构建 {@link SearchIndex} 实体。 实体持久化由 server 层通过 {@code SearchIndexRepository} 完成。
    *
-   * <ol>
-   *   <li>写入 {@code nw_search_index} 表（DB LIKE 降级索引）
-   *   <li>通过 {@link SearchIndexEventBridge} 同步到 {@code ydsz_search_index} （统一搜索主索引），仅当桥接器可用时执行
-   * </ol>
+   * <p><b>双索引写入职责划分：</b>
    *
-   * @param fileNodeId 文件节点ID
+   * <ul>
+   *   <li>本类负责：构建 {@link SearchIndex} 实体 + 同步到统一搜索索引（{@code ydsz_search_index}）
+   *   <li>Server 层负责：持久化到 {@code nw_search_index} 表
+   * </ul>
+   *
+   * @param node 文件节点实体（由 server 层查询传入，须保证非 null 且未删除）
+   * @param tags 文件关联的标签列表（由 server 层查询传入，可为 null 或空）
    * @param content 提取的文本内容（可为 null）
    * @param userId 操作人ID
+   * @return 构建完成的搜索索引实体
    */
-  public void indexFile(String fileNodeId, String content, String userId) {
-    log.info("[SearchDomainService] 索引文件: fileNodeId={}", fileNodeId);
+  public SearchIndex buildSearchIndex(
+      FileNode node, List<Tag> tags, String content, String userId) {
+    log.info("[SearchDomainService] 构建搜索索引: fileNodeId={}", node.getId());
 
-    FileNode node = fileNodeRepository.findById(fileNodeId);
-    if (node == null || node.getDeleted() != null && node.getDeleted() == 1) {
-      log.warn("[SearchDomainService] 文件节点不存在或已删除，跳过索引: {}", fileNodeId);
-      return;
-    }
-
-    // 查询标签
-    List<Tag> tags = tagRepository.findByFileNodeId(fileNodeId);
     String tagNames =
         tags != null && !tags.isEmpty()
             ? tags.stream().map(Tag::getName).collect(Collectors.joining(","))
@@ -187,7 +174,7 @@ public class SearchDomainService {
     SearchIndex index =
         SearchIndex.builder()
             .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
-            .fileNodeId(fileNodeId)
+            .fileNodeId(node.getId())
             .name(node.getName())
             .path(node.getPath())
             .content(searchableContent.toString())
@@ -201,26 +188,12 @@ public class SearchDomainService {
     index.setRevision(0);
     index.setDeleted(0);
 
-    searchIndexRepository.upsert(index);
-    log.info("[SearchDomainService] nw_search_index 写入成功: fileNodeId={}", fileNodeId);
-
-    // 同步到统一搜索索引（ydsz_search_index），设置 searchableContent 以传递全文内容
-    syncSearchIndex(node, content);
+    log.info("[SearchDomainService] 搜索索引构建完成: fileNodeId={}", node.getId());
+    return index;
   }
 
   /**
-   * 删除索引（双索引删除）
-   *
-   * <p>同时删除 nw_search_index 和统一搜索索引（ydsz_search_index）。
-   */
-  public void removeIndex(String fileNodeId) {
-    log.info("[SearchDomainService] 删除索引: fileNodeId={}", fileNodeId);
-    searchIndexRepository.deleteByFileNodeId(fileNodeId);
-    deleteSearchIndex(fileNodeId);
-  }
-
-  /**
-   * 将文件数据变更同步到统一搜索索引（ydsz_search_index）。
+   * 同步文件数据变更到统一搜索索引（ydsz_search_index）。
    *
    * <p>通过 {@link SearchIndexEventBridge} 异步写入。为传递提取的文档全文内容， 将 content 设置到 FileNode 的 transient 字段
    * {@code searchableContent} 上， 供 {@link
@@ -229,7 +202,7 @@ public class SearchDomainService {
    * @param node 文件节点实体
    * @param content 提取的文本内容
    */
-  private void syncSearchIndex(FileNode node, String content) {
+  public void syncSearchIndex(FileNode node, String content) {
     SearchIndexEventBridge bridge = searchIndexEventBridgeProvider.getIfAvailable();
     if (bridge == null) {
       return;
@@ -250,39 +223,14 @@ public class SearchDomainService {
    *
    * @param fileNodeId 文件节点ID
    */
-  private void deleteSearchIndex(String fileNodeId) {
+  public void removeIndex(String fileNodeId) {
+    log.info("[SearchDomainService] 删除统一搜索索引: fileNodeId={}", fileNodeId);
     SearchIndexEventBridge bridge = searchIndexEventBridgeProvider.getIfAvailable();
     if (bridge == null) {
       return;
     }
     bridge.indexDelete("wiki", fileNodeId);
     log.debug("[SearchDomainService] 已从统一搜索索引删除: fileNodeId={}", fileNodeId);
-  }
-
-  /**
-   * 重建全量索引
-   *
-   * <p>查询所有未删除的文件节点，逐个写入索引。
-   */
-  public void rebuildAllIndices() {
-    log.info("[SearchDomainService] 重建全量索引（异步任务）");
-
-    List<String> fileNodeIds = searchIndexRepository.findAllFileNodeIds(null);
-    log.info("[SearchDomainService] 待索引文件数: {}", fileNodeIds.size());
-
-    int success = 0;
-    int failed = 0;
-    for (String fileNodeId : fileNodeIds) {
-      try {
-        indexFile(fileNodeId, null, null);
-        success++;
-      } catch (Exception e) {
-        log.error("[SearchDomainService] 索引重建失败: fileNodeId={}", fileNodeId, e);
-        failed++;
-      }
-    }
-
-    log.info("[SearchDomainService] 全量索引重建完成: success={}, failed={}", success, failed);
   }
 
   // ==================== 私有方法 ====================

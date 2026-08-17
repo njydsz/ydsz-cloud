@@ -5,13 +5,10 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.entity.FileAcl;
 import com.njydsz.nextwiki.domain.entity.FileNode;
-import com.njydsz.nextwiki.domain.repository.FileAclRepository;
-import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 
 /**
  * 文件权限领域服务。
@@ -26,8 +23,9 @@ import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
  *   <li>支持权限继承（子节点可继承父节点权限）
  * </ul>
  *
- * <p><b>注意：</b>本服务仅负责领域逻辑，缓存控制由应用服务层 {@code FilePermissionService} 通过
- * {@code @Cacheable} / {@code @CacheEvict} 管理，保持领域层纯洁性。
+ * <p><b>设计原则：</b>本服务仅负责纯领域逻辑，不依赖任何仓储接口。
+ * 数据访问由 server 层负责，通过方法参数传入所需数据；缓存控制由应用服务层通过
+ * {@code @Cacheable} / {@code @CacheEvict} 管理。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -40,24 +38,20 @@ public class FilePermissionDomainService {
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
 
-  private final FileAclRepository fileAclRepository;
-  private final FileNodeRepository fileNodeRepository;
-
   /**
-   * 授予文件 ACL 权限。
+   * 构建 ACL 实体（领域工厂方法）。
    *
-   * <p><b>注意：</b>调用方需在应用服务层通过 {@code @CacheEvict} 清除 ACL 缓存，
- * 避免校验逻辑读到旧的 ACL 列表。
+   * <p>由 server 层传入所需字段，组装并返回待持久化的 ACL 实体。
+   * 持久化操作（{@code repository.save}）由 server 层负责。
    *
    * @param fileNodeId    文件节点 ID
    * @param granteeType   授权对象类型（user/role/group/tenant）
    * @param granteeId     授权对象 ID
    * @param permissionMask 权限掩码（位运算组合）
    * @param userId        操作人 ID
-   * @return 创建的 ACL 实体
+   * @return 构建完成的 ACL 实体（未持久化）
    */
-  @Transactional(rollbackFor = Exception.class)
-  public FileAcl grantPermission(
+  public FileAcl buildAcl(
       String fileNodeId, String granteeType, String granteeId, int permissionMask, String userId) {
     FileAcl acl =
         FileAcl.builder()
@@ -75,14 +69,13 @@ public class FilePermissionDomainService {
     acl.setCreatedBy(userId);
     acl.setUpdatedBy(userId);
 
-    FileAcl saved = fileAclRepository.save(acl);
     log.info(
-        "[FilePermissionDomainService] 授予权限: fileNodeId={}, granteeType={}, granteeId={}, mask={}",
+        "[FilePermissionDomainService] 构建 ACL: fileNodeId={}, granteeType={}, granteeId={}, mask={}",
         fileNodeId,
         granteeType,
         granteeId,
         permissionMask);
-    return saved;
+    return acl;
   }
 
   /**
@@ -90,52 +83,38 @@ public class FilePermissionDomainService {
    *
    * @param fileNodeId 文件节点 ID
    * @param userId     用户 ID
-   * @return 创建的 ACL 实体
+   * @return 构建完成的 ACL 实体（未持久化）
    */
-  public FileAcl setOwner(String fileNodeId, String userId) {
-    return grantPermission(fileNodeId, "user", userId, FileAcl.PERM_ALL, userId);
+  public FileAcl buildOwnerAcl(String fileNodeId, String userId) {
+    return buildAcl(fileNodeId, "user", userId, FileAcl.PERM_ALL, userId);
   }
 
   /**
-   * 检查用户是否拥有指定权限（领域逻辑，不含缓存）。
+   * 检查用户是否拥有指定权限（纯领域逻辑，不含数据访问）。
    *
    * <p>所有者（createdBy == userId）直接放行；否则遍历有效 ACL 列表，
    * 任一含目标权限位即通过。
    *
-   * @param fileNodeId 文件节点 ID
-   * @param userId     用户 ID
-   * @param roleIds    用户角色 ID 列表（可为空）
+   * @param fileNode 文件节点实体（由 server 层查询传入，可为 null）
+   * @param userId   用户 ID
+   * @param acls     有效 ACL 列表（由 server 层查询传入，含继承）
    * @param permission 目标权限位
    * @return true 表示拥有权限
    */
-  public boolean checkPermission(
-      String fileNodeId, String userId, List<String> roleIds, int permission) {
-    // 查询文件所有者
-    FileNode fileNode = fileNodeRepository.findById(fileNodeId);
+  public boolean checkPermission(FileNode fileNode, String userId, List<FileAcl> acls, int permission) {
+    // 所有者短路判断
     if (fileNode != null && userId.equals(fileNode.getCreatedBy())) {
       return true;
     }
 
-    // 查询 ACL
-    List<FileAcl> acls = fileAclRepository.findEffectivePermissions(fileNodeId, userId, roleIds);
-    for (FileAcl acl : acls) {
-      if (acl.hasPermission(permission)) {
-        return true;
+    // ACL 位运算校验
+    if (acls != null) {
+      for (FileAcl acl : acls) {
+        if (acl.hasPermission(permission)) {
+          return true;
+        }
       }
     }
     return false;
-  }
-
-  /**
-   * 查询用户对文件节点的有效 ACL 列表（不含所有者短路判断）。
-   *
-   * <p>该方法仅做数据库查询，缓存由调用方通过 {@code @Cacheable} 控制。
-   *
-   * @param fileNodeId 文件节点 ID
-   * @param userId     用户 ID
-   * @return 有效 ACL 列表（含继承），可能为空
-   */
-  public List<FileAcl> findEffectiveAcls(String fileNodeId, String userId) {
-    return fileAclRepository.findEffectivePermissions(fileNodeId, userId, List.of());
   }
 }

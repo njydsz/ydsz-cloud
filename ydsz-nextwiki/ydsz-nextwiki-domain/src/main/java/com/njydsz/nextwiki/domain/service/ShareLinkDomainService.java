@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
@@ -18,10 +17,6 @@ import com.njydsz.nextwiki.domain.entity.ShareLink;
 import com.njydsz.nextwiki.domain.entity.ShareRecipient;
 import com.njydsz.nextwiki.domain.enums.NextwikiEnums.ShareStatus;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
-import com.njydsz.nextwiki.domain.event.FileOperatedEvent;
-import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
-import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
-import com.njydsz.nextwiki.domain.repository.ShareRecipientRepository;
 
 /**
  * 分享链接领域服务。
@@ -29,6 +24,9 @@ import com.njydsz.nextwiki.domain.repository.ShareRecipientRepository;
  * <p>管理分享链接的生命周期：创建、验证访问、撤销、到期提醒。
  *
  * <p><b>防暴力破解：</b>通过 Redis 记录连续失败次数，超过阈值临时锁定。
+ *
+ * <p><b>设计原则：</b>本服务仅包含纯领域逻辑，不直接依赖 Repository 接口。数据访问由 server 层负责，
+ * 所需数据通过方法参数传入。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -41,9 +39,6 @@ public class ShareLinkDomainService {
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
 
-  private final ShareLinkRepository shareLinkRepository;
-  private final FileNodeRepository fileNodeRepository;
-  private final ShareRecipientRepository shareRecipientRepository;
   private final RedisStringOps stringOps;
 
   private final BCryptPasswordEncoder passwordEncoder;
@@ -57,44 +52,44 @@ public class ShareLinkDomainService {
   /** 锁定时长（分钟） */
   private static final long LOCK_DURATION_MINUTES = 30;
 
+  // ==================== 创建分享 ====================
+
   /**
-   * 创建公开分享链接。
+   * 创建分享链接（基础版，公开分享）。
    *
-   * @param fileNodeId    文件节点 ID
-   * @param shareType     分享类型（view/download/edit）
-   * @param password      访问密码（可为空）
-   * @param expireTime    过期时间（可为空）
+   * @param fileNode       文件节点实体（由 server 层查询后传入）
+   * @param shareType      分享类型（view/download/edit）
+   * @param password       访问密码（可为空）
+   * @param expireTime     过期时间（可为空）
    * @param maxAccessCount 最大访问次数（可为空）
-   * @param userId        创建者 ID
-   * @return 分享链接实体
+   * @param userId         创建者 ID
+   * @return 分享链接实体与接收者列表
    */
-  @Transactional(rollbackFor = Exception.class)
-  public ShareLink createShare(
-      String fileNodeId,
+  public CreateShareResult createShare(
+      FileNode fileNode,
       String shareType,
       String password,
       LocalDateTime expireTime,
       Integer maxAccessCount,
       String userId) {
-    return createShare(fileNodeId, shareType, password, expireTime, maxAccessCount, null, null, userId);
+    return createShare(fileNode, shareType, password, expireTime, maxAccessCount, null, null, userId);
   }
 
   /**
    * 创建分享链接（增强版，支持定向分享和自定义标题）。
    *
-   * @param fileNodeId    文件节点 ID
-   * @param shareType     分享类型（view/download/edit）
-   * @param password      访问密码（可为空）
-   * @param expireTime    过期时间（可为空）
+   * @param fileNode       文件节点实体（由 server 层查询后传入）
+   * @param shareType      分享类型（view/download/edit）
+   * @param password       访问密码（可为空）
+   * @param expireTime     过期时间（可为空）
    * @param maxAccessCount 最大访问次数（可为空）
-   * @param targetUserIds 目标用户 ID 列表（定向分享，可为空）
-   * @param title         分享标题（可为空）
-   * @param userId        创建者 ID
-   * @return 分享链接实体
+   * @param targetUserIds  目标用户 ID 列表（定向分享，可为空）
+   * @param title          分享标题（可为空）
+   * @param userId         创建者 ID
+   * @return 分享链接实体与接收者列表
    */
-  @Transactional(rollbackFor = Exception.class)
-  public ShareLink createShare(
-      String fileNodeId,
+  public CreateShareResult createShare(
+      FileNode fileNode,
       String shareType,
       String password,
       LocalDateTime expireTime,
@@ -102,11 +97,7 @@ public class ShareLinkDomainService {
       List<String> targetUserIds,
       String title,
       String userId) {
-    FileNode fileNode = fileNodeRepository.findById(fileNodeId);
-    if (fileNode == null) {
-      throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND)
-          .data("fileNodeId", fileNodeId);
-    }
+    String fileNodeId = fileNode.getId();
 
     // 生成分享码和提取码
     String shareCode = String.valueOf(snowflakeIdGenerator.nextId()).replace("-", "");
@@ -139,16 +130,14 @@ public class ShareLinkDomainService {
     shareLink.setCreatedBy(userId);
     shareLink.setUpdatedBy(userId);
 
-    ShareLink saved = shareLinkRepository.save(shareLink);
-
     // 处理定向分享目标用户
+    List<ShareRecipient> recipients = new java.util.ArrayList<>();
     if (targetUserIds != null && !targetUserIds.isEmpty()) {
-      List<ShareRecipient> recipients = new java.util.ArrayList<>(targetUserIds.size());
       for (String targetUserId : targetUserIds) {
         ShareRecipient recipient =
             ShareRecipient.builder()
                 .id(String.valueOf(snowflakeIdGenerator.nextId()).replace("-", ""))
-                .shareId(saved.getId())
+                .shareId(shareLink.getId())
                 .recipientType("USER")
                 .recipientId(targetUserId)
                 .status("ACTIVE")
@@ -158,7 +147,6 @@ public class ShareLinkDomainService {
         recipient.setUpdatedBy(userId);
         recipients.add(recipient);
       }
-      shareRecipientRepository.saveBatch(recipients);
       log.info(
           "[ShareLinkDomainService] 创建定向分享: fileNodeId={}, shareCode={}, recipients={}",
           fileNodeId,
@@ -171,30 +159,32 @@ public class ShareLinkDomainService {
         fileNodeId,
         shareCode,
         shareTargetType);
-    return saved;
+    return new CreateShareResult(shareLink, recipients);
   }
+
+  // ==================== 验证访问 ====================
 
   /**
    * 验证分享链接访问（含防暴力破解）。
    *
-   * @param shareCode  分享码
+   * <p>注意：本方法仅执行领域验证逻辑，不执行持久化操作。若状态变更为 EXPIRED，调用方（server 层）
+   * 应通过 Repository 更新实体。
+   *
+   * @param shareLink  分享链接实体（由 server 层查询后传入）
    * @param extractCode 提取码
    * @param password   访问密码
-   * @return 分享链接实体
+   * @return 验证通过的分享链接实体（状态可能已更新为 EXPIRED）
    * @throws BusinessException 链接不存在/过期/访问受限/密码错误/提取码错误/已锁定时抛出
    */
-  public ShareLink verifyAccess(String shareCode, String extractCode, String password) {
+  public ShareLink verifyAccess(ShareLink shareLink, String extractCode, String password) {
+    String shareCode = shareLink.getShareCode();
+
     // 防暴力破解——检查失败次数是否超限
     String failKey = KEY_SHARE_FAIL + shareCode;
     String failCountStr = stringOps.get(failKey, String.class);
     if (failCountStr != null && Integer.parseInt(failCountStr) >= MAX_FAIL_COUNT) {
       log.warn("[ShareLinkDomainService] 分享链接已被临时锁定: shareCode={}", shareCode);
       throw new BusinessException(NextwikiExceptionCode.SHARE_LOCKED);
-    }
-
-    ShareLink shareLink = shareLinkRepository.findByShareCode(shareCode);
-    if (shareLink == null) {
-      throw new BusinessException(NextwikiExceptionCode.SHARE_NOT_FOUND);
     }
 
     ShareStatus currentStatus = ShareStatus.fromCode(shareLink.getStatus());
@@ -206,7 +196,6 @@ public class ShareLinkDomainService {
         && shareLink.getExpireTime().isBefore(LocalDateTime.now())) {
       if (currentStatus.canTransitTo(ShareStatus.EXPIRED)) {
         shareLink.setStatus(ShareStatus.EXPIRED.getCode());
-        shareLinkRepository.update(shareLink);
       }
       throw new BusinessException(NextwikiExceptionCode.SHARE_EXPIRED);
     }
@@ -245,68 +234,71 @@ public class ShareLinkDomainService {
     // 验证成功，清除失败计数
     stringOps.del(failKey);
 
-    shareLinkRepository.incrementAccessCount(shareLink.getId());
-
     return shareLink;
   }
+
+  // ==================== 撤销分享 ====================
 
   /**
    * 撤销分享链接。
    *
-   * @param shareId 分享链接 ID
-   * @param userId  操作人 ID
+   * <p>注意：本方法仅修改实体状态，持久化由 server 层负责。
+   *
+   * @param shareLink 分享链接实体（由 server 层查询后传入）
+   * @param userId    操作人 ID
    */
-  @Transactional(rollbackFor = Exception.class)
-  public void revoke(String shareId, String userId) {
-    ShareLink shareLink = shareLinkRepository.findById(shareId);
-    if (shareLink == null) {
-      throw new BusinessException(NextwikiExceptionCode.SHARE_NOT_FOUND);
-    }
-    shareLinkRepository.revoke(shareId);
-    log.info("[ShareLinkDomainService] 撤销分享: shareId={}, userId={}", shareId, userId);
+  public void revoke(ShareLink shareLink, String userId) {
+    shareLink.setStatus(ShareStatus.REVOKED.getCode());
+    shareLink.setUpdatedBy(userId);
+    log.info("[ShareLinkDomainService] 撤销分享: shareId={}, userId={}", shareLink.getId(), userId);
   }
 
+  // ==================== 到期提醒 ====================
+
   /**
-   * 查询即将到期的分享链接（用于到期提醒）。
+   * 从给定列表中筛选即将到期的分享链接（用于到期提醒）。
    *
+   * @param shareLinks 分享链接列表（由 server 层查询后传入）
    * @param withinHours 多少小时内即将到期
    * @return 即将到期的分享链接列表
    */
-  public List<ShareLink> findExpiringShares(int withinHours) {
-    return shareLinkRepository.findExpiringShares(withinHours);
+  public List<ShareLink> findExpiringShares(List<ShareLink> shareLinks, int withinHours) {
+    LocalDateTime now = LocalDateTime.now();
+    LocalDateTime threshold = now.plusHours(withinHours);
+    return shareLinks.stream()
+        .filter(link -> ShareStatus.ACTIVE.getCode().equals(link.getStatus()))
+        .filter(link -> link.getExpireTime() != null)
+        .filter(link -> !link.getExpireTime().isBefore(now))
+        .filter(link -> link.getExpireTime().isBefore(threshold))
+        .filter(link -> link.getReminderSent() == null || !link.getReminderSent())
+        .collect(java.util.stream.Collectors.toList());
   }
 
   /**
    * 标记分享链接的到期提醒已发送。
    *
-   * @param shareId 分享链接 ID
+   * <p>注意：本方法仅修改实体状态，持久化由 server 层负责。
+   *
+   * @param shareLink 分享链接实体（由 server 层查询后传入）
    */
-  public void markReminderSent(String shareId) {
-    ShareLink shareLink = shareLinkRepository.findById(shareId);
-    if (shareLink != null) {
-      shareLink.setReminderSent(true);
-      shareLinkRepository.update(shareLink);
-    }
+  public void markReminderSent(ShareLink shareLink) {
+    shareLink.setReminderSent(true);
   }
 
-  /**
-   * 查询用户的分享列表。
-   *
-   * @param userId 用户 ID
-   * @return 分享链接列表
-   */
-  public List<ShareLink> findByUserId(String userId) {
-    return shareLinkRepository.findActiveSharesByUserId(userId);
-  }
+  // ==================== 查询过滤 ====================
 
   /**
-   * 根据分享码查询分享链接。
+   * 从给定列表中筛选用户的有效分享链接。
    *
-   * @param shareCode 分享码
-   * @return 分享链接实体，不存在返回 null
+   * @param shareLinks 分享链接列表（由 server 层查询后传入）
+   * @param userId     用户 ID
+   * @return 该用户的有效分享链接列表
    */
-  public ShareLink findByShareCode(String shareCode) {
-    return shareLinkRepository.findByShareCode(shareCode);
+  public List<ShareLink> findByUserId(List<ShareLink> shareLinks, String userId) {
+    return shareLinks.stream()
+        .filter(link -> ShareStatus.ACTIVE.getCode().equals(link.getStatus()))
+        .filter(link -> userId.equals(link.getCreatedBy()))
+        .collect(java.util.stream.Collectors.toList());
   }
 
   // ==================== 私有方法 ====================
@@ -320,4 +312,14 @@ public class ShareLinkDomainService {
     int code = (int) (Math.random() * 9000) + 1000;
     return String.valueOf(code);
   }
+
+  // ==================== 内部记录 ====================
+
+  /**
+   * 创建分享链接的结果。
+   *
+   * @param shareLink  分享链接实体
+   * @param recipients 定向分享接收者列表（公开分享时为空列表）
+   */
+  public record CreateShareResult(ShareLink shareLink, List<ShareRecipient> recipients) {}
 }

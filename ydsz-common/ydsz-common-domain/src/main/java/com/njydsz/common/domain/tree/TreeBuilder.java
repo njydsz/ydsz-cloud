@@ -386,41 +386,162 @@ public class TreeBuilder<T extends TreeNode<T, ID>, ID extends Serializable> {
       BiConsumer<T, List<T>> childrenSetter,
       Function<T, Integer> sortGetter) {
 
+    return buildSimple(flatList, idGetter, parentIdGetter, childrenSetter, sortGetter, null, null);
+  }
+
+  /**
+   * 从扁平列表构建树形结构（增强版，支持自动填充 level 和 path）。
+   *
+   * <p>在基础版 {@link #buildSimple(List, Function, Function, BiConsumer, Function)} 之上， 新增 {@code levelSetter} 和
+   * {@code pathSetter} 回调，可在构建过程中自动计算并填充节点的层级深度和路径信息。
+   *
+   * <p><b>使用示例：</b>
+   *
+   * <pre>{@code
+   * List<MenuVO> tree = TreeBuilder.buildSimple(
+   *     flatList,
+   *     MenuVO::getId,
+   *     MenuVO::getParentId,
+   *     MenuVO::setChildren,
+   *     MenuVO::getSortOrder,
+   *     MenuVO::setLevel,      // 自动填充 level（根节点=1，逐层+1）
+   *     MenuVO::setPath);      // 自动填充 path（如 "/1/2/5/"）
+   * }</pre>
+   *
+   * <p><b>根判定规则（与实例方法 {@link #build()} 对齐）：</b>
+   *
+   * <ul>
+   *   <li>parentId 为 {@code null} → 根节点
+   *   <li>parentId 等于 {@code "0"} → 根节点（通用约定）
+   *   <li>父节点 ID 不在已知节点集合中（孤儿节点）：视为根，避免节点被静默丢弃
+   * </ul>
+   *
+   * @param flatList 扁平列表
+   * @param idGetter ID 获取函数
+   * @param parentIdGetter 父 ID 获取函数
+   * @param childrenSetter children 设置函数
+   * @param sortGetter 排序字段获取函数（可为 null，null 表示不排序）
+   * @param levelSetter 层级设置函数（可为 null，null 表示不设置 level）
+   * @param pathSetter 路径设置函数（可为 null，null 表示不设置 path）
+   * @param <T> 节点类型
+   * @return 树形结构根节点列表
+   * @since 1.7.0
+   */
+  public static <T> List<T> buildSimple(
+      List<T> flatList,
+      Function<T, String> idGetter,
+      Function<T, String> parentIdGetter,
+      BiConsumer<T, List<T>> childrenSetter,
+      Function<T, Integer> sortGetter,
+      BiConsumer<T, Integer> levelSetter,
+      BiConsumer<T, String> pathSetter) {
+
     if (flatList == null || flatList.isEmpty()) {
       return List.of();
     }
 
     String rootParentId = "0";
-    Map<String, List<T>> parentIdMap =
-        flatList.stream()
-            .collect(
-                Collectors.groupingBy(
-                    item -> {
-                      String pid = parentIdGetter.apply(item);
-                      return pid == null ? rootParentId : pid;
-                    }));
 
-    List<T> roots = new ArrayList<>();
-    // rootId=null 或 rootId="0" 均视为根（对齐 build() 的语义）
-    roots.addAll(parentIdMap.getOrDefault(rootParentId, Collections.emptyList()));
+    // 1. 建立 ID -> 节点 索引（跳过 null ID 节点）
+    Map<String, T> nodeMap = new HashMap<>(flatList.size());
     for (T item : flatList) {
-      if (parentIdGetter.apply(item) == null) {
-        // 已在 groupedBy 时映射到 rootParentId 分组，无需重复添加
+      String id = idGetter.apply(item);
+      if (id != null) {
+        nodeMap.put(id, item);
       }
     }
 
+    // 2. 建立 parentId -> 子节点列表 分组
+    Map<String, List<T>> parentIdMap = new HashMap<>();
     for (T item : flatList) {
-      List<T> children = parentIdMap.get(idGetter.apply(item));
+      String pid = parentIdGetter.apply(item);
+      String key = pid == null ? rootParentId : pid;
+      parentIdMap.computeIfAbsent(key, k -> new ArrayList<>()).add(item);
+    }
+
+    // 3. 筛选根节点（parentId=null 或 parentId="0" 或 父节点不存在）
+    List<T> roots = new ArrayList<>();
+    for (T item : flatList) {
+      String pid = parentIdGetter.apply(item);
+      if (pid == null || rootParentId.equals(pid) || !nodeMap.containsKey(pid)) {
+        roots.add(item);
+      }
+    }
+
+    // 4. 排序根节点
+    if (sortGetter != null) {
+      roots.sort(Comparator.comparingInt(sortGetter::apply));
+    }
+
+    // 5. 迭代构建树 + 自动填充 level/path（避免递归栈溢出）
+    //    使用栈存储 (节点, 层级, 路径) 三元组
+    Deque<Object[]> stack = new ArrayDeque<>();
+    for (T root : roots) {
+      String rootId = idGetter.apply(root);
+      // 设置根节点的 level 和 path
+      if (levelSetter != null) {
+        levelSetter.accept(root, TreeNode.ROOT_LEVEL);
+      }
+      if (pathSetter != null) {
+        pathSetter.accept(root, "/" + rootId + "/");
+      }
+      // 将根节点的子节点压栈
+      List<T> children = parentIdMap.get(rootId);
+      if (children != null) {
+        for (int i = children.size() - 1; i >= 0; i--) {
+          stack.push(new Object[] {children.get(i), TreeNode.ROOT_LEVEL + 1, "/" + rootId + "/"});
+        }
+      }
+    }
+
+    // 迭代处理子节点
+    while (!stack.isEmpty()) {
+      Object[] frame = stack.pop();
+      @SuppressWarnings("unchecked")
+      T node = (T) frame[0];
+      int level = (int) frame[1];
+      String parentPath = (String) frame[2];
+
+      String nodeId = idGetter.apply(node);
+      String nodePath = parentPath + nodeId + "/";
+
+      // 设置 level 和 path
+      if (levelSetter != null) {
+        levelSetter.accept(node, level);
+      }
+      if (pathSetter != null) {
+        pathSetter.accept(node, nodePath);
+      }
+
+      // 设置 children
+      List<T> children = parentIdMap.get(nodeId);
       if (children != null) {
         if (sortGetter != null) {
           children.sort(Comparator.comparingInt(sortGetter::apply));
         }
-        childrenSetter.accept(item, children);
+        childrenSetter.accept(node, children);
+        // 将子节点压栈（逆序保证顺序）
+        for (int i = children.size() - 1; i >= 0; i--) {
+          stack.push(new Object[] {children.get(i), level + 1, nodePath});
+        }
+      } else {
+        // 无子节点，设置空列表
+        childrenSetter.accept(node, new ArrayList<>());
       }
     }
 
-    if (sortGetter != null) {
-      roots.sort(Comparator.comparingInt(sortGetter::apply));
+    // 6. 为根节点设置 children
+    for (T root : roots) {
+      String rootId = idGetter.apply(root);
+      List<T> children = parentIdMap.get(rootId);
+      if (children != null) {
+        if (sortGetter != null) {
+          children.sort(Comparator.comparingInt(sortGetter::apply));
+        }
+        childrenSetter.accept(root, children);
+      } else {
+        childrenSetter.accept(root, new ArrayList<>());
+      }
     }
 
     return roots;

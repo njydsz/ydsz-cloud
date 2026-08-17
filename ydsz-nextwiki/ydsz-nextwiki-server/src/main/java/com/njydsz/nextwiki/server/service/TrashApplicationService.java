@@ -7,13 +7,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.entity.TrashItem;
+import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.service.TrashDomainService;
+import com.njydsz.nextwiki.infra.repository.FileNodeRepository;
+import com.njydsz.nextwiki.infra.repository.TrashItemRepository;
 
 /**
  * 回收站应用服务。
  *
- * <p>文件删除/恢复/彻底删除。
+ * <p>编排回收站操作：数据访问（repository）+ 领域逻辑（domain service）。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -26,6 +31,10 @@ public class TrashApplicationService {
   /** 回收站领域服务 */
   private final TrashDomainService trashDomainService;
 
+  private final TrashItemRepository trashItemRepository;
+
+  private final FileNodeRepository fileNodeRepository;
+
   /**
    * 查询用户回收站列表。
    *
@@ -35,7 +44,7 @@ public class TrashApplicationService {
    * @note 只读，无事务边界
    */
   public List<TrashItem> listTrash(String userId) {
-    return trashDomainService.listTrash(userId);
+    return trashItemRepository.findActiveTrash(userId);
   }
 
   /**
@@ -44,14 +53,27 @@ public class TrashApplicationService {
    * @param trashItemId 回收站项目 ID
    * @param userId 操作者 ID（需为该项目所有者）
    * @return 无返回值
-   * @throws 由 {@link TrashDomainService} 在项目不存在/无权限时抛出的业务异常
+   * @throws 由 {@link TrashDomainService} 在项目不存在/状态非法时抛出的业务异常
    * @transaction {@code @Transactional(rollbackFor = Exception.class)}
    * @complexity O(1)（一次恢复写入）
    * @note 恢复后文件重新出现在原目录；若原目录已不存在由领域服务决定处理
    */
   @Transactional(rollbackFor = Exception.class)
   public void restore(String trashItemId, String userId) {
-    trashDomainService.restore(trashItemId, userId);
+    TrashItem trashItem = trashItemRepository.findById(trashItemId);
+    if (trashItem == null) {
+      throw BusinessException.of(NextwikiExceptionCode.TRASH_NOT_FOUND)
+          .data("trashItemId", trashItemId);
+    }
+
+    FileNode fileNode = fileNodeRepository.findById(trashItem.getFileNodeId());
+
+    trashDomainService.restore(trashItem, fileNode, userId);
+
+    if (fileNode != null) {
+      fileNodeRepository.restore(trashItem.getFileNodeId());
+    }
+    trashItemRepository.update(trashItem);
   }
 
   /**
@@ -67,7 +89,13 @@ public class TrashApplicationService {
    */
   @Transactional(rollbackFor = Exception.class)
   public void batchRestore(List<String> trashItemIds, String userId) {
-    trashDomainService.batchRestore(trashItemIds, userId);
+    for (String id : trashItemIds) {
+      try {
+        restore(id, userId);
+      } catch (Exception e) {
+        log.error("[TrashApplicationService] 批量恢复失败: trashItemId={}", id, e);
+      }
+    }
   }
 
   /**
@@ -76,14 +104,23 @@ public class TrashApplicationService {
    * @param trashItemId 回收站项目 ID
    * @param userId 操作者 ID
    * @return 无返回值
-   * @throws 由 {@link TrashDomainService} 在项目不存在/无权限时抛出的业务异常
+   * @throws 由 {@link TrashDomainService} 在项目不存在时抛出的业务异常
    * @transaction {@code @Transactional(rollbackFor = Exception.class)}
    * @complexity O(1)（一次物理删除 + 一次记录移除）
    * @note 操作不可逆，调用前需前端二次确认
    */
   @Transactional(rollbackFor = Exception.class)
   public void purge(String trashItemId, String userId) {
-    trashDomainService.purge(trashItemId, userId);
+    TrashItem trashItem = trashItemRepository.findById(trashItemId);
+    if (trashItem == null) {
+      throw BusinessException.of(NextwikiExceptionCode.TRASH_NOT_FOUND)
+          .data("trashItemId", trashItemId);
+    }
+
+    trashDomainService.purge(trashItem, userId);
+
+    fileNodeRepository.physicalDelete(trashItem.getFileNodeId());
+    trashItemRepository.update(trashItem);
   }
 
   /**
@@ -98,6 +135,28 @@ public class TrashApplicationService {
    */
   @Transactional(rollbackFor = Exception.class)
   public void emptyTrash(String userId) {
-    trashDomainService.emptyTrash(userId);
+    List<TrashItem> items = trashItemRepository.findActiveTrash(userId);
+    for (TrashItem item : items) {
+      try {
+        trashDomainService.purge(item, userId);
+        fileNodeRepository.physicalDelete(item.getFileNodeId());
+        trashItemRepository.update(item);
+      } catch (Exception e) {
+        log.error("[TrashApplicationService] 清空回收站失败: trashItemId={}", item.getId(), e);
+      }
+    }
+    log.info("[TrashApplicationService] 清空回收站: userId={}, count={}", userId, items.size());
+  }
+
+  /**
+   * 回收站容量统计。
+   *
+   * @param userId 用户 ID
+   * @return 活跃条目数量
+   * @complexity O(1)（一次聚合查询）
+   * @note 只读，无事务边界
+   */
+  public int countActiveTrash(String userId) {
+    return trashItemRepository.countActiveTrash(userId);
   }
 }

@@ -13,6 +13,8 @@ import com.njydsz.nextwiki.domain.entity.ShareLink;
 import com.njydsz.nextwiki.domain.entity.ShareRecipient;
 import com.njydsz.nextwiki.domain.service.ShareAccessLogDomainService;
 import com.njydsz.nextwiki.domain.service.ShareLinkDomainService;
+import com.njydsz.nextwiki.infra.repository.ShareAccessLogRepository;
+import com.njydsz.nextwiki.infra.repository.ShareRecipientRepository;
 
 /**
  * 分享应用服务。
@@ -20,7 +22,7 @@ import com.njydsz.nextwiki.domain.service.ShareLinkDomainService;
  * <p>创建/校验/撤销分享链接，管理访问日志与目标用户。
  *
  * <p>按职责拆分为 {@link ShareLinkDomainService}（链接生命周期）和 {@link
- * ShareAccessLogDomainService}（日志记录查询）两个领域服务。
+ * ShareAccessLogDomainService}（日志构造）两个领域服务。数据访问由本层通过 Repository 接口完成。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -32,6 +34,8 @@ public class ShareApplicationService {
 
   private final ShareLinkDomainService shareLinkDomainService;
   private final ShareAccessLogDomainService shareAccessLogDomainService;
+  private final ShareAccessLogRepository shareAccessLogRepository;
+  private final ShareRecipientRepository shareRecipientRepository;
 
   /**
    * 创建文件分享链接。
@@ -139,7 +143,7 @@ public class ShareApplicationService {
    * @return 访问日志列表
    */
   public List<ShareAccessLog> getAccessLogs(String shareId, int limit) {
-    return shareAccessLogDomainService.getAccessLogs(shareId, limit);
+    return shareAccessLogRepository.findByShareId(shareId, limit);
   }
 
   /**
@@ -149,7 +153,7 @@ public class ShareApplicationService {
    * @return 目标用户列表
    */
   public List<ShareRecipient> getRecipients(String shareId) {
-    return shareAccessLogDomainService.getRecipients(shareId);
+    return shareRecipientRepository.findByShareId(shareId);
   }
 
   /**
@@ -159,11 +163,14 @@ public class ShareApplicationService {
    * @return 分享接收记录列表
    */
   public List<ShareRecipient> getReceivedShares(String userId) {
-    return shareAccessLogDomainService.getReceivedShares(userId);
+    return shareRecipientRepository.findByRecipientId(userId);
   }
 
   /**
    * 记录分享链接访问日志。
+   *
+   * <p><b>容错设计：</b>日志记录失败时捕获异常并记录 warn 日志，
+   * 不影响主业务流程（如文件下载、预览等）。
    *
    * @param shareId 分享链接 ID
    * @param shareCode 分享码
@@ -185,8 +192,18 @@ public class ShareApplicationService {
       String accessType,
       String status,
       String failReason) {
-    shareAccessLogDomainService.recordAccessLog(
-        shareId, shareCode, fileNodeId, visitorId, visitorIp, userAgent, accessType, status,
-        failReason);
+    try {
+      ShareAccessLog accessLog =
+          shareAccessLogDomainService.buildAccessLog(
+              shareId, shareCode, fileNodeId, visitorId, visitorIp, userAgent, accessType, status,
+              failReason);
+      shareAccessLogRepository.save(accessLog);
+    } catch (Exception e) {
+      // 访问日志记录失败不应影响主流程
+      log.warn(
+          "[ShareApplicationService] 记录访问日志失败: shareCode={}, error={}",
+          shareCode,
+          e.getMessage());
+    }
   }
 }

@@ -7,9 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.core.constant.SystemConstants;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.entity.FileNode;
@@ -17,13 +15,11 @@ import com.njydsz.nextwiki.domain.entity.TrashItem;
 import com.njydsz.nextwiki.domain.enums.NextwikiEnums.TrashStatus;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.event.FileOperatedEvent;
-import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
-import com.njydsz.nextwiki.domain.repository.TrashItemRepository;
 
 /**
  * NextWiki 回收站领域服务。
  *
- * <p>删除/恢复/彻底删除文件。
+ * <p>负责回收站条目的纯领域逻辑：状态校验、状态迁移、事件发布。 不直接依赖 Repository，所有数据访问由 server 层编排。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -36,13 +32,19 @@ public class TrashDomainService {
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
 
-  private final TrashItemRepository trashItemRepository;
-  private final FileNodeRepository fileNodeRepository;
   private final ApplicationEventPublisher eventPublisher;
 
   private static final int RETENTION_DAYS = TrashItem.DEFAULT_RETENTION_DAYS;
 
-  /** 将文件移入回收站 */
+  /**
+   * 将文件移入回收站：构造回收站条目（纯领域对象创建，不涉及持久化）。
+   *
+   * <p>server 层负责将返回的 {@link TrashItem} 通过 repository 持久化。
+   *
+   * @param fileNode 待删除的文件节点
+   * @param userId 操作人 ID
+   * @return 新建的回收站条目（未持久化）
+   */
   public TrashItem moveToTrash(FileNode fileNode, String userId) {
     LocalDateTime now = LocalDateTime.now();
     TrashItem trashItem =
@@ -66,32 +68,30 @@ public class TrashDomainService {
     trashItem.setUpdatedBy(userId);
     trashItem.setUpdatedAt(now);
 
-    return trashItemRepository.save(trashItem);
+    return trashItem;
   }
 
-  /** 从回收站恢复 */
-  @Transactional(rollbackFor = Exception.class)
-  public FileNode restore(String trashItemId, String userId) {
-    TrashItem trashItem = trashItemRepository.findById(trashItemId);
-    if (trashItem == null) {
-      throw BusinessException.of(NextwikiExceptionCode.TRASH_NOT_FOUND)
-          .data("trashItemId", trashItemId);
-    }
-
+  /**
+   * 从回收站恢复：校验状态合法性、执行状态迁移、发布恢复事件。
+   *
+   * <p>server 层负责通过 repository 查询 {@link TrashItem} 与 {@link FileNode} 并传入本方法， 再通过 repository 持久化状态变更。
+   *
+   * @param trashItem 待恢复的回收站条目
+   * @param fileNode 对应的文件节点（可能为 {@code null}，表示原节点已不存在）
+   * @param userId 操作人 ID
+   * @throws BusinessException 状态不允许恢复时抛出 {@link NextwikiExceptionCode#TRASH_INVALID_STATUS}
+   */
+  public void restore(TrashItem trashItem, FileNode fileNode, String userId) {
     TrashStatus currentStatus = TrashStatus.fromCode(trashItem.getStatus());
     if (currentStatus == null || !currentStatus.canTransitTo(TrashStatus.RESTORED)) {
       throw BusinessException.of(NextwikiExceptionCode.TRASH_INVALID_STATUS)
-          .data("trashItemId", trashItemId)
+          .data("trashItemId", trashItem.getId())
           .data("status", trashItem.getStatus());
     }
 
-    fileNodeRepository.restore(trashItem.getFileNodeId());
-
     trashItem.setStatus(TrashStatus.RESTORED.getCode());
     trashItem.setUpdatedBy(userId);
-    trashItemRepository.update(trashItem);
-
-    FileNode restored = fileNodeRepository.findById(trashItem.getFileNodeId());
+    trashItem.setUpdatedAt(LocalDateTime.now());
 
     eventPublisher.publishEvent(
         FileOperatedEvent.builder()
@@ -105,70 +105,43 @@ public class TrashDomainService {
 
     log.info(
         "[TrashDomainService] 恢复文件: trashItemId={}, fileNodeId={}",
-        trashItemId,
+        trashItem.getId(),
         trashItem.getFileNodeId());
-    return restored;
   }
 
-  /** 批量恢复 */
-  public void batchRestore(List<String> trashItemIds, String userId) {
-    for (String id : trashItemIds) {
-      try {
-        restore(id, userId);
-      } catch (Exception e) {
-        log.error("[TrashDomainService] 批量恢复失败: trashItemId={}", id, e);
-      }
-    }
-  }
-
-  /** 永久删除 */
-  @Transactional(rollbackFor = Exception.class)
-  public void purge(String trashItemId, String userId) {
-    TrashItem trashItem = trashItemRepository.findById(trashItemId);
-    if (trashItem == null) {
-      throw BusinessException.of(NextwikiExceptionCode.TRASH_NOT_FOUND)
-          .data("trashItemId", trashItemId);
-    }
-
-    fileNodeRepository.physicalDelete(trashItem.getFileNodeId());
-
+  /**
+   * 永久删除：执行状态迁移。
+   *
+   * <p>server 层负责通过 repository 查询 {@link TrashItem} 并传入本方法， 再通过 repository 持久化状态变更与物理删除文件节点。
+   *
+   * @param trashItem 待永久删除的回收站条目
+   * @param userId 操作人 ID
+   */
+  public void purge(TrashItem trashItem, String userId) {
     trashItem.setStatus(TrashStatus.PURGED.getCode());
     trashItem.setUpdatedBy(userId);
-    trashItemRepository.update(trashItem);
+    trashItem.setUpdatedAt(LocalDateTime.now());
 
     log.info(
         "[TrashDomainService] 永久删除: trashItemId={}, fileNodeId={}",
-        trashItemId,
+        trashItem.getId(),
         trashItem.getFileNodeId());
   }
 
-  /** 清空回收站 */
-  @Transactional(rollbackFor = Exception.class)
-  public void emptyTrash(String userId) {
-    List<TrashItem> items = trashItemRepository.findActiveTrash(userId);
-    for (TrashItem item : items) {
-      try {
-        purge(item.getId(), userId);
-      } catch (Exception e) {
-        log.error("[TrashDomainService] 清空回收站失败: trashItemId={}", item.getId(), e);
-      }
-    }
-    log.info("[TrashDomainService] 清空回收站: userId={}, count={}", userId, items.size());
-  }
-
-  /** 查询回收站列表 */
-  public List<TrashItem> listTrash(String userId) {
-    return trashItemRepository.findActiveTrash(userId);
-  }
-
-  /** 自动清理过期条目（定时任务调用） */
-  @Transactional(rollbackFor = Exception.class)
-  public int cleanupExpiredItems() {
-    List<TrashItem> expired = trashItemRepository.findExpiredItems(100);
+  /**
+   * 批量清理过期条目：对已过保留期的回收站条目执行状态迁移（供定时任务调用）。
+   *
+   * <p>server 层负责通过 repository 查询过期条目并传入本方法， 再通过 repository 持久化状态变更。
+   *
+   * @param expiredItems 已过保留期、待清理的回收站条目列表（非 {@code null}）
+   * @param userId 操作人 ID（通常为系统用户）
+   * @return 成功清理的条目数
+   */
+  public int cleanupExpiredItems(List<TrashItem> expiredItems, String userId) {
     int cleaned = 0;
-    for (TrashItem item : expired) {
+    for (TrashItem item : expiredItems) {
       try {
-        purge(item.getId(), SystemConstants.SYSTEM_USER_ID);
+        purge(item, userId);
         cleaned++;
       } catch (Exception e) {
         log.error("[TrashDomainService] 自动清理失败: trashItemId={}", item.getId(), e);
@@ -176,10 +149,5 @@ public class TrashDomainService {
     }
     log.info("[TrashDomainService] 自动清理过期条目: count={}", cleaned);
     return cleaned;
-  }
-
-  /** 回收站容量统计 */
-  public int countActiveTrash(String userId) {
-    return trashItemRepository.countActiveTrash(userId);
   }
 }

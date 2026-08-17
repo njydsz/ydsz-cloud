@@ -5,9 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import com.njydsz.common.core.constant.SystemConstants;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.nextwiki.domain.service.SearchDomainService;
 import com.njydsz.nextwiki.domain.service.TrashDomainService;
+import com.njydsz.nextwiki.infra.repository.TrashItemRepository;
 
 /**
  * NextWiki 定时任务
@@ -23,6 +25,7 @@ import com.njydsz.nextwiki.domain.service.TrashDomainService;
 public class NextwikiScheduledJobs {
 
   private final TrashDomainService trashDomainService;
+  private final TrashItemRepository trashItemRepository;
   private final SearchDomainService searchDomainService;
 
   /** 每天凌晨 2 点清理过期回收站条目 */
@@ -30,7 +33,9 @@ public class NextwikiScheduledJobs {
   @DistributedScheduled(lockKey = "nextwiki:cleanup-trash")
   public void cleanupExpiredTrash() {
     log.info("[NextwikiScheduledJobs] 开始清理过期回收站条目");
-    int cleaned = trashDomainService.cleanupExpiredItems();
+    int cleaned =
+        trashDomainService.cleanupExpiredItems(
+            trashItemRepository.findExpiredItems(100), SystemConstants.SYSTEM_USER_ID);
     log.info("[NextwikiScheduledJobs] 清理完成: count={}", cleaned);
   }
 

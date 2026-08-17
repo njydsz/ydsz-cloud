@@ -34,9 +34,11 @@ import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.entity.FileVersion;
+import com.njydsz.nextwiki.domain.entity.TrashItem;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.event.FileOperatedEvent;
-import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
+import com.njydsz.nextwiki.infra.repository.FileNodeRepository;
+import com.njydsz.nextwiki.infra.repository.TrashItemRepository;
 import com.njydsz.nextwiki.domain.service.FileVersionDomainService;
 import com.njydsz.nextwiki.domain.service.FolderDomainService;
 import com.njydsz.nextwiki.domain.service.QuotaDomainService;
@@ -76,6 +78,7 @@ public class FileApplicationService {
   private final StorageReferenceService storageReferenceService;
   private final TrashDomainService trashDomainService;
   private final FileNodeRepository fileNodeRepository;
+  private final TrashItemRepository trashItemRepository;
   private final ApplicationEventPublisher eventPublisher;
   private final FilePermissionService permissionService;
   private final LockStrategy lockStrategy;
@@ -446,7 +449,8 @@ public class FileApplicationService {
     String lockValue = acquireLock(locker, lockKey);
     try {
       folderDomainService.softDelete(nodeId, userId);
-      trashDomainService.moveToTrash(node, userId);
+      TrashItem trashItem = trashDomainService.moveToTrash(node, userId);
+      trashItemRepository.save(trashItem);
 
       if (node.isFile() && node.getSize() != null) {
         quotaDomainService.subtractUsage("user", userId, node.getSize(), 1);
