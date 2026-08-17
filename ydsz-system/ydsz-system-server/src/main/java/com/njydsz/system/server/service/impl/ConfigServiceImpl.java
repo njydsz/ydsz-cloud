@@ -766,8 +766,8 @@ public class ConfigServiceImpl implements ConfigService {
       }
     }
 
-    // 3. 批量保存有效数据
-    int successCount = saveValidItems(validItems, errors);
+    // 3. 批量保存有效数据（使用 insertBatch 消除 N+1）
+    int successCount = saveValidItemsBatch(validItems, errors);
 
     // 4. 构建导入结果
     return ImportResult.builder()
@@ -886,23 +886,91 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   /**
-   * 批量保存有效配置（私有）。
+   * 批量保存有效配置（私有，使用 insertBatch 消除 N+1）。
+   *
+   * <p><b>P0-2 优化：</b>将 N 次单条 INSERT 合并为 1 次批量 INSERT，显著减少 DB 往返次数。 批量 XML 不走 MyBatis-Plus 拦截器（租户拦截器、审计字段自动填充均不生效），
+   * 需在此处手动预生成 ID 并填充审计字段。
    *
    * @param validItems 校验通过的配置列表
    * @param errors 错误收集器（保存失败时追加）
    * @return 保存成功条数
    */
-  private int saveValidItems(List<ConfigVO> validItems, List<String> errors) {
-    int successCount = 0;
-    for (ConfigVO vo : validItems) {
-      try {
-        save(vo);
-        successCount++;
-      } catch (Exception e) {
-        errors.add("保存失败(" + vo.getConfigGroup() + "/" + vo.getConfigKey() + "): " + e.getMessage());
-      }
+  private int saveValidItemsBatch(List<ConfigVO> validItems, List<String> errors) {
+    if (validItems.isEmpty()) {
+      return 0;
     }
-    return successCount;
+    try {
+      // 1. DTO 转 Entity，预生成 ID + 填充审计字段
+      List<Config> entities = validItems.stream()
+          .map(this::toEntityWithIdForImport)
+          .collect(Collectors.toList());
+
+      // 2. 批量插入（1 次 SQL 完成全部写入）
+      configRepository.getConfigMapper().insertBatch(entities);
+
+      // 3. 精准失效缓存：按涉及 configGroup 逐一失效
+      entities.stream()
+          .map(Config::getConfigGroup)
+          .distinct()
+          .forEach(this::evictConfigGroup);
+      evictConfigPublic();
+
+      // 4. 同步搜索索引 + 发布变更事件（异步，不阻塞主流程）
+      entities.forEach(entity -> indexUpsert(entity));
+
+      return entities.size();
+    } catch (Exception e) {
+      errors.add("批量导入失败: " + e.getMessage());
+      return 0;
+    }
+  }
+
+  /**
+   * DTO 转 Entity + 预生成雪花 ID + 审计字段（导入场景专用，私有）。
+   *
+   * <p>批量 XML 插入不走 MyBatis-Plus 拦截器（CombinedFieldFillInterceptor、租户拦截器、 IdentifierGenerator
+   * 均不生效），需在此处手动预生成 ID 并填充审计字段。
+   *
+   * <p>缺省 {@code status="ENABLED"}、{@code deleted=0}（{@code @TableLogic} 字段用 int 存储）。
+   *
+   * @param vo 配置 VO
+   * @return 配置实体（含预生成 ID 和审计字段）
+   */
+  private Config toEntityWithIdForImport(ConfigVO vo) {
+    Config entity = new Config();
+    entity.setId(com.baomidou.mybatisplus.core.toolkit.IdWorker.getIdStr());
+    entity.setConfigGroup(vo.getConfigGroup());
+    entity.setConfigKey(vo.getConfigKey());
+    entity.setConfigValue(vo.getConfigValue());
+    entity.setValueType(vo.getValueType());
+    entity.setDefaultValue(vo.getDefaultValue());
+    entity.setDescription(vo.getDescription());
+    entity.setIsPublic(vo.getIsPublic());
+    entity.setSortOrder(vo.getSortOrder());
+    entity.setStatus(vo.getStatus() != null ? vo.getStatus() : "ENABLED");
+    entity.setDeleted(0);
+    entity.setRevision(0);
+    entity.setCreatedAt(java.time.LocalDateTime.now());
+    entity.setUpdatedAt(java.time.LocalDateTime.now());
+    entity.setCreatedBy(getCurrentUserId());
+    entity.setUpdatedBy(getCurrentUserId());
+    entity.setTenantId(com.njydsz.common.tenant.TenantContextHolder.getTenantId());
+    return entity;
+  }
+
+  /**
+   * 获取当前用户 ID（私有）。
+   *
+   * <p>从 RequestContext 获取当前操作人 ID，未登录时返回 "system"。
+   *
+   * @return 当前用户 ID
+   */
+  private String getCurrentUserId() {
+    try {
+      return com.njydsz.common.core.context.RequestContext.getUserId();
+    } catch (Exception e) {
+      return "system";
+    }
   }
 
   /**

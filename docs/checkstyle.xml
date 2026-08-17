@@ -6,7 +6,7 @@
     云顶编码规范 - Checkstyle 检查配置
     Ydsz Cloud Coding Standards - Checkstyle Configuration
 
-    规范版本：v3.1（对齐《云顶编码规范》v2.15）
+    规范版本：v3.2（对齐《云顶编码规范》v2.16）
     基线规范：阿里巴巴 Java 开发手册（泰山版） + Google Java Style Guide + Effective Java + 美团编码规约
 
     检查维度：
@@ -21,12 +21,11 @@
     9. 安全规约（BigDecimal 构造、浮点数比较）
     10. common 模块能力复用（JSON/线程池/缓存等统一入口）
 
-    v3.1 更新说明（对齐编码规范 v2.15，修复 v3.0 两处误报缺陷）：
-    - 修复：移除「接口冗余修饰符」RegexpSinglelineJava 规则——正则 \b(public|abstract) 误匹配所有 public 方法
-      （含普通类方法），全项目产生 6432 条误报；接口冗余 public/abstract 已由 RedundantModifier 规则正确覆盖
-    - 修复：移除 BigDecimal 的 IllegalType 规则——IllegalType 检查的是"类型使用"而非"构造函数"，误伤规范 6.3
-      鼓励的 BigDecimal 返回类型/变量；拦截 new BigDecimal(double) 由 RegexpSinglelineJava 精确覆盖
-    - 编号：原第 18 节删除后，第 19/20/21 节顺延为 18/19/20
+    v3.2 更新说明（对齐编码规范 v2.16，新增 Javadoc 增强检查）：
+    - 新增：公共常量（public static final 字段）必须有 Javadoc 检查 — 编码规范 10.4 节
+    - 新增：枚举类型必须有类级别 Javadoc 检查 — 编码规范 10.10 节
+    - 新增：Javadoc `<p>` 标签格式检查（`<p>` 前需空行）— 编码规范 10.2 节
+    - 优化：JavadocType 增加对枚举类型的 Javadoc 强制检查
 
     v3.0 更新说明（对齐编码规范 v2.14）：
     - 新增：行内全限定名（FQN）检测 — 编码规范 5.1 节核心红线
@@ -473,6 +472,18 @@
         <module name="JavadocType">
             <property name="scope" value="public"/>
             <property name="authorFormat" value="\S+"/>
+        </module>
+
+        <!-- 枚举类型必须有类级别 Javadoc（编码规范 10.10 节） -->
+        <module name="JavadocType">
+            <property name="scope" value="public"/>
+            <property name="tokens" value="ENUM_DEF"/>
+            <property name="authorFormat" value="\S+"/>
+        </module>
+
+        <!-- 公共常量（public static final 字段）必须有 Javadoc（编码规范 10.4 节） -->
+        <module name="JavadocVariable">
+            <property name="scope" value="public"/>
         </module>
 
         <!-- 公共方法必须有 Javadoc（checkstyle 9.x 中 scope 属性已移除，改用 accessModifiers 显式限定 public） -->

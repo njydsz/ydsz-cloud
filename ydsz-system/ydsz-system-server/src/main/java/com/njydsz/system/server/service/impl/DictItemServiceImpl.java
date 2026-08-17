@@ -191,7 +191,10 @@ public class DictItemServiceImpl implements DictItemService {
    * @return 启用状态的字典项列表（按 sortOrder 升序），无数据时返回空列表
    */
   @Override
-  @Cacheable(value = CacheConstants.SYSTEM_DICT_ITEM_CACHE, key = "@cacheKeyBuilder.dictList(#p0)")
+  @Cacheable(
+      value = CacheConstants.SYSTEM_DICT_ITEM_CACHE,
+      key = "@cacheKeyBuilder.dictList(#p0)",
+      sync = true)
   public List<DictItemVO> listEnabledByTypeCode(String typeCode) {
     long start = System.nanoTime();
     try {

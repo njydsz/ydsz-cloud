@@ -9,9 +9,12 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
@@ -147,6 +150,9 @@ public class DictServiceImpl implements DictService {
    * @throws IllegalArgumentException {@code typeCode} 已存在时抛出
    */
   @Override
+  @CacheEvict(
+      value = CacheConstants.SYSTEM_DICT_TYPE_CACHE,
+      key = "'all:' + T(com.njydsz.common.tenant.TenantContextHolder).getTenantId()")
   @Transactional(rollbackFor = Exception.class)
   public String save(DictTypeVO vo) {
     DictType entity = toEntity(vo);
@@ -174,6 +180,9 @@ public class DictServiceImpl implements DictService {
    * @throws IllegalArgumentException {@code typeCode} 已被其他类型占用时抛出
    */
   @Override
+  @CacheEvict(
+      value = CacheConstants.SYSTEM_DICT_TYPE_CACHE,
+      key = "'all:' + T(com.njydsz.common.tenant.TenantContextHolder).getTenantId()")
   @Transactional(rollbackFor = Exception.class)
   public boolean updateById(DictTypeVO vo) {
     DictType entity = toEntity(vo);
@@ -197,6 +206,9 @@ public class DictServiceImpl implements DictService {
    * @return true=删除成功，false=记录不存在
    */
   @Override
+  @CacheEvict(
+      value = CacheConstants.SYSTEM_DICT_TYPE_CACHE,
+      key = "'all:' + T(com.njydsz.common.tenant.TenantContextHolder).getTenantId()")
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
     DictType entity = dictRepository.getDictTypeMapper().selectById(id);
@@ -247,14 +259,17 @@ public class DictServiceImpl implements DictService {
    *
    * <ul>
    *   <li>管理后台「字典类型管理」列表页（带分页时用 {@link #page}）
-   *   <li>「类型选择器」下拉框（高频读，建议调用方在 Controller 层加 {@code @Cacheable}）
+   *   <li>「类型选择器」下拉框（高频读，走本地缓存）
    * </ul>
    *
-   * <p><b>慎用：</b>全表扫描，字典类型一般 < 100 条，单次查询 < 10ms。
+   * <p><b>缓存策略：</b>走本地 Caffeine 缓存（5min TTL），避免全表扫描。 缓存键：{@code dict:type:all:{tenantId}}。
    *
    * @return 全部字典类型列表（按 createdAt 倒序）
    */
   @Override
+  @Cacheable(
+      value = CacheConstants.SYSTEM_DICT_TYPE_CACHE,
+      key = "'all:' + T(com.njydsz.common.tenant.TenantContextHolder).getTenantId()")
   public List<DictTypeVO> listAll() {
     return dictRepository.getDictTypeMapper().selectList(null).stream()
         .map(SystemConverter.INSTANT::entityToVO)

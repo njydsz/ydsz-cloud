@@ -87,6 +87,13 @@ public final class CacheConstants {
   public static final String SYSTEM_DICT_ITEM_CACHE = "system:dict:item";
 
   /**
+   * 系统字典类型全量缓存。
+   *
+   * <p>缓存键：{@code all:{tenantId}}。 当字典类型增删改时通过 {@code @CacheEvict} 主动失效。 用于「类型选择器」下拉框数据源，避免全表扫描。
+   */
+  public static final String SYSTEM_DICT_TYPE_CACHE = "system:dict:type";
+
+  /**
    * 系统配置缓存。
    *
    * <p>缓存键：{@code configKey}。 当配置变更时通过 {@code @CacheEvict} 主动失效。TTL 默认 30min。

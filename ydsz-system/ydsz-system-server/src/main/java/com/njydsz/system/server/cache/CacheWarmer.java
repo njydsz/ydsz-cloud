@@ -1,17 +1,24 @@
 package com.njydsz.system.server.cache;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.cache.constant.CacheConstants;
+import com.njydsz.system.domain.converter.SystemConverter;
 import com.njydsz.system.domain.entity.Config;
 import com.njydsz.system.domain.entity.DictItem;
+import com.njydsz.system.domain.vo.ConfigVO;
+import com.njydsz.system.domain.vo.DictItemVO;
 import com.njydsz.system.infra.repository.ConfigRepository;
 import com.njydsz.system.infra.repository.DictRepository;
 
@@ -21,8 +28,8 @@ import com.njydsz.system.infra.repository.DictRepository;
  * <p>预热策略：
  *
  * <ul>
- *   <li>系统配置缓存（{@link CacheConstants#SYSTEM_CONFIG_CACHE}）：加载全部启用配置
- *   <li>字典项缓存（{@link CacheConstants#SYSTEM_DICT_ITEM_CACHE}）：加载全部启用字典项
+ *   <li>系统配置缓存（{@link CacheConstants#SYSTEM_CONFIG_CACHE}）：加载全部启用配置，按 key 预热
+ *   <li>字典项缓存（{@link CacheConstants#SYSTEM_DICT_ITEM_CACHE}）：按 typeCode 分组预热列表
  * </ul>
  *
  * <p><b>触发时机：</b>{@link ApplicationReadyEvent}（应用就绪后异步执行，不影响启动时间）。
@@ -33,6 +40,7 @@ import com.njydsz.system.infra.repository.DictRepository;
  *   <li>异步执行：预热在独立线程池执行，不阻塞主线程
  *   <li>失败容错：预热失败仅记录警告，不影响应用启动
  *   <li>幂等安全：预热数据会被后续写操作的 {@code @CacheEvict} 覆盖，不会产生脏数据
+ *   <li>真实数据预热：直接缓存真实值，避免首次请求击穿到 DB
  * </ul>
  *
  * @author ydsz-team
@@ -55,6 +63,9 @@ public class CacheWarmer {
   /** 字典仓储 */
   private final DictRepository dictRepository;
 
+  /** 默认租户 ID（预热使用系统级默认租户） */
+  private static final String DEFAULT_TENANT = "default";
+
   /**
    * 应用就绪后执行缓存预热。
    *
@@ -76,7 +87,7 @@ public class CacheWarmer {
   /**
    * 预热系统配置缓存。
    *
-   * <p>加载全部启用配置，按 configGroup 分组预热。
+   * <p>加载全部启用配置，按 configKey 预热单条值缓存。
    */
   private void warmConfigCache() {
     try {
@@ -91,15 +102,17 @@ public class CacheWarmer {
         return;
       }
 
-      // 按分组预热缓存键
+      Cache configCache = cacheManager.getCache(CacheConstants.SYSTEM_CONFIG_CACHE);
+      if (configCache == null) {
+        log.warn("[CacheWarmer] 配置缓存不存在，跳过预热");
+        return;
+      }
+
+      // 按 configKey 预热单条值缓存
       for (Config config : configs) {
         try {
-          String valueKey = cacheKeyBuilder.configValue(config.getConfigKey());
-          cacheManager.getCache(CacheConstants.SYSTEM_CONFIG_CACHE).put(valueKey, config.getConfigValue());
-
-          String groupKey = cacheKeyBuilder.configGroup(config.getConfigGroup());
-          // 组缓存仅预热一次（通过 putIfAbsent 语义）
-          cacheManager.getCache(CacheConstants.SYSTEM_CONFIG_CACHE).putIfAbsent(groupKey, true);
+          String valueKey = "value:" + DEFAULT_TENANT + ":" + config.getConfigKey();
+          configCache.put(valueKey, config.getConfigValue());
         } catch (Exception e) {
           log.debug("[CacheWarmer] 预热单条配置失败: {}/{}", config.getConfigGroup(), config.getConfigKey());
         }
@@ -114,7 +127,7 @@ public class CacheWarmer {
   /**
    * 预热字典项缓存。
    *
-   * <p>加载全部启用字典项，按 typeCode 分组预热。
+   * <p>加载全部启用字典项，按 typeCode 分组预热列表缓存。
    */
   private void warmDictCache() {
     try {
@@ -129,17 +142,28 @@ public class CacheWarmer {
         return;
       }
 
-      // 按 typeCode 预热列表缓存
-      for (DictItem item : dictItems) {
+      Cache dictCache = cacheManager.getCache(CacheConstants.SYSTEM_DICT_ITEM_CACHE);
+      if (dictCache == null) {
+        log.warn("[CacheWarmer] 字典缓存不存在，跳过预热");
+        return;
+      }
+
+      // 按 typeCode 分组预热列表缓存
+      Map<String, List<DictItemVO>> groupedItems = dictItems.stream()
+          .map(SystemConverter.INSTANT::entityToVO)
+          .filter(Objects::nonNull)
+          .collect(Collectors.groupingBy(DictItemVO::getTypeCode));
+
+      for (Map.Entry<String, List<DictItemVO>> entry : groupedItems.entrySet()) {
         try {
-          String listKey = cacheKeyBuilder.dictList(item.getTypeCode());
-          cacheManager.getCache(CacheConstants.SYSTEM_DICT_ITEM_CACHE).putIfAbsent(listKey, true);
+          String listKey = "list:" + DEFAULT_TENANT + ":" + entry.getKey();
+          dictCache.put(listKey, entry.getValue());
         } catch (Exception e) {
-          log.debug("[CacheWarmer] 预热单条字典项失败: {}/{}", item.getTypeCode(), item.getItemCode());
+          log.debug("[CacheWarmer] 预热字典列表失败: typeCode={}", entry.getKey());
         }
       }
 
-      log.info("[CacheWarmer] 字典项缓存预热完成，共 {} 条", dictItems.size());
+      log.info("[CacheWarmer] 字典项缓存预热完成，共 {} 条，{} 个类型", dictItems.size(), groupedItems.size());
     } catch (Exception e) {
       log.warn("[CacheWarmer] 字典项缓存预热失败: {}", e.getMessage());
     }
