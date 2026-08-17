@@ -75,11 +75,13 @@ public class SseExecutor {
     this.emitter = emitter;
     this.heartbeatIntervalSeconds = heartbeatIntervalSeconds;
     this.active = new AtomicBoolean(true);
+    // CHECKSTYLE.OFF: RegexpSinglelineJava - 短生命周期临时池，cleanup 中 shutdown
     this.heartbeatScheduler =
         new ScheduledThreadPoolExecutor(
             HEARTBEAT_POOL_SIZE,
             Thread.ofVirtual().name("agent-sse-heartbeat-", 0).factory(),
             new ThreadPoolExecutor.CallerRunsPolicy());
+    // CHECKSTYLE.ON: RegexpSinglelineJava
   }
 
   /**
@@ -183,8 +185,9 @@ public class SseExecutor {
                       "finished",
                       true))
               .name("error"));
-    } catch (IOException ignored) {
+    } catch (IOException e) {
       // 客户端已断开，忽略
+      LOG.debug("[SseExecutor] 错误事件发送失败（客户端已断开）: {}", e.getMessage());
     }
   }
 

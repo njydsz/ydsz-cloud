@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.userinfo.infra.entity.UserPasswordHistoryDO;
-import com.njydsz.userinfo.domain.repository.UserPasswordHistoryRepository;
+import com.njydsz.userinfo.infra.repository.UserPasswordHistoryRepository;
 
 /**
  * 密码历史服务实现

@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.userinfo.domain.repository.UserDeptRepository;
+import com.njydsz.userinfo.infra.repository.UserDeptRepository;
 import com.njydsz.userinfo.infra.entity.UserDeptDO;
 import com.njydsz.userinfo.infra.mapper.UserDeptMapper;
 

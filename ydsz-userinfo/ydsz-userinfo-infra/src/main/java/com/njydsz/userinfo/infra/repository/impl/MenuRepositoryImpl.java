@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.userinfo.domain.repository.MenuRepository;
+import com.njydsz.userinfo.infra.repository.MenuRepository;
 import com.njydsz.userinfo.infra.entity.MenuDO;
 import com.njydsz.userinfo.infra.mapper.MenuMapper;
 

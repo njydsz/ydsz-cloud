@@ -63,6 +63,7 @@ ydsz:
       batch-size: 1000
       cron: "0 0 3 * * ?"
   # P0-1: 统一线程池配置（ydsz-common-thread）
+  # 注意：池名必须与代码 getBean("xxxExecutor") 一致（common-thread 生成 Bean 名 = 池名 + "Executor"）
   thread:
     enabled: true
     pools:
@@ -71,6 +72,13 @@ ydsz:
         max-size: 32
         queue-capacity: 500
         thread-name-prefix: cron-dispatch-
+        reject-policy: CALLER_RUNS
+        await-termination-seconds: 60
+      cronjobMapReduce:
+        core-size: 4
+        max-size: 16
+        queue-capacity: 200
+        thread-name-prefix: cron-mapreduce-
         reject-policy: CALLER_RUNS
         await-termination-seconds: 60
       cronjobRetry:
@@ -85,19 +93,5 @@ ydsz:
         max-size: 8
         queue-capacity: 100
         thread-name-prefix: cron-scan-
-        reject-policy: CALLER_RUNS
-        await-termination-seconds: 30
-      cronjobMapTask:
-        core-size: 4
-        max-size: 16
-        queue-capacity: 200
-        thread-name-prefix: cron-map-
-        reject-policy: CALLER_RUNS
-        await-termination-seconds: 60
-      cronjobPrecise:
-        core-size: 2
-        max-size: 4
-        queue-capacity: 100
-        thread-name-prefix: cron-precise-
         reject-policy: CALLER_RUNS
         await-termination-seconds: 30

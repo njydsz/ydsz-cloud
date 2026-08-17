@@ -70,6 +70,15 @@ public final class TraceIdGenerator {
   }
 
   /**
+   * 清理当前线程的可排序 TraceId 状态。
+   *
+   * <p>在线程池复用场景下，建议在请求处理完成后调用此方法，避免 ThreadLocal 内存泄漏。
+   */
+  public static void cleanup() {
+    SORTABLE_STATE.remove();
+  }
+
+  /**
    * 生成 32 位十六进制 TraceId。
    *
    * <p>默认使用可排序版本（{@link #generateSortableTraceId()}）， 按时间有序，适合日志关联和链路追踪场景。

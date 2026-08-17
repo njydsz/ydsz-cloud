@@ -25,8 +25,9 @@ import com.njydsz.userinfo.infra.entity.DepartmentDO;
 import com.njydsz.userinfo.infra.entity.UserAccountDO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
-import com.njydsz.userinfo.domain.repository.DepartmentRepository;
-import com.njydsz.userinfo.domain.repository.UserAccountRepository;
+import com.njydsz.userinfo.infra.converter.UserInfoConverter;
+import com.njydsz.userinfo.infra.repository.DepartmentRepository;
+import com.njydsz.userinfo.infra.repository.UserAccountRepository;
 import com.njydsz.userinfo.server.auth.PasswordPolicyValidator;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.service.UserAccountService;
@@ -143,7 +144,7 @@ public class UserExcelServiceImpl implements UserExcelService {
     // 转换为 VO（脱敏后的数据）
     List<UserAccountVO> voList = new ArrayList<>();
     for (UserAccountDO user : userList) {
-      voList.add(UserAccountVO.fromEntity(user));
+      voList.add(UserInfoConverter.INSTANT.entityToVO(user));
     }
 
     // 导出 Excel

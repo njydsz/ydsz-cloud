@@ -15,13 +15,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.bean.BeanUpdateUtil;
-import com.njydsz.userinfo.domain.converter.UserInfoConverter;
+import com.njydsz.userinfo.infra.converter.UserInfoConverter;
 import com.njydsz.userinfo.domain.dto.create.PostCreateDTO;
 import com.njydsz.userinfo.domain.dto.update.PostUpdateDTO;
 import com.njydsz.userinfo.infra.entity.PostDO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.PostVO;
-import com.njydsz.userinfo.domain.repository.PostRepository;
+import com.njydsz.userinfo.infra.repository.PostRepository;
 import com.njydsz.userinfo.server.service.PostService;
 
 /**

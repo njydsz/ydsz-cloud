@@ -16,14 +16,14 @@ import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.util.bean.BeanUpdateUtil;
-import com.njydsz.userinfo.domain.converter.UserInfoConverter;
+import com.njydsz.userinfo.infra.converter.UserInfoConverter;
 import com.njydsz.userinfo.domain.dto.create.LanguageCreateDTO;
 import com.njydsz.userinfo.domain.dto.update.LanguageUpdateDTO;
 import com.njydsz.userinfo.infra.entity.LanguageDO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.query.LanguagePageQuery;
 import com.njydsz.userinfo.domain.vo.LanguageVO;
-import com.njydsz.userinfo.domain.repository.LanguageRepository;
+import com.njydsz.userinfo.infra.repository.LanguageRepository;
 import com.njydsz.userinfo.server.service.LanguageService;
 
 /**

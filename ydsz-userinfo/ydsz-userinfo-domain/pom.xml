@@ -10,7 +10,7 @@
     </parent>
     <artifactId>ydsz-userinfo-domain</artifactId>
     <name>ydsz-userinfo-domain</name>
-    <description>Domain Layer - Entity/DTO/VO/Query/Enum/Converter</description>
+    <description>Domain Layer - DTO/VO/Query/Enum</description>
     <dependencies>
         <dependency>
             <groupId>com.njydsz</groupId>
@@ -37,10 +37,12 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-excel</artifactId>
         </dependency>
-        <!-- Repository 接口引用 infra 层 DO 实体，编译期依赖 -->
+        <!-- swagger-annotations（VO 类使用 @Schema 注解），运行时由 springdoc 提供 -->
         <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-userinfo-infra</artifactId>
+            <groupId>io.swagger.core.v3</groupId>
+            <artifactId>swagger-annotations-jakarta</artifactId>
+            <version>2.2.47</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>jakarta.validation</groupId>

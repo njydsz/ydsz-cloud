@@ -6,7 +6,6 @@ import lombok.Data;
 
 import com.njydsz.common.safe.sensitive.SensitiveData;
 import com.njydsz.common.safe.sensitive.SensitiveType;
-import com.njydsz.userinfo.infra.entity.UserAccountDO;
 import com.njydsz.userinfo.domain.enums.EnableStatusEnum;
 
 /**
@@ -71,35 +70,4 @@ public class UserAccountVO {
   /** 更新时间 */
   private LocalDateTime updatedAt;
 
-  /**
-   * 从实体转换为 VO（用于导出等需手动转换的场景）
-   *
-   * @param entity 用户账号实体
-   * @return 用户 VO
-   */
-  public static UserAccountVO fromEntity(UserAccountDO entity) {
-    if (entity == null) {
-      return null;
-    }
-    UserAccountVO vo = new UserAccountVO();
-    vo.setId(entity.getId());
-    vo.setUsername(entity.getUsername());
-    vo.setRealName(entity.getRealName());
-    vo.setPhone(entity.getPhone());
-    vo.setEmail(entity.getEmail());
-    vo.setAvatar(entity.getAvatar());
-    // status 字段：entity 为 String，VO 为 Integer（1=启用, 0=禁用）
-    vo.setStatus(
-        entity.getStatusEnum() == EnableStatusEnum.ENABLED
-            ? ENABLED_INT_VALUE
-            : DISABLED_INT_VALUE);
-    vo.setUserType(entity.getUserType());
-    vo.setCompanyId(entity.getCompanyId());
-    vo.setTenantId(entity.getTenantId());
-    vo.setLastLoginAt(entity.getLastLoginAt());
-    vo.setLastLoginIp(entity.getLastLoginIp());
-    vo.setCreatedAt(entity.getCreatedAt());
-    vo.setUpdatedAt(entity.getUpdatedAt());
-    return vo;
-  }
 }

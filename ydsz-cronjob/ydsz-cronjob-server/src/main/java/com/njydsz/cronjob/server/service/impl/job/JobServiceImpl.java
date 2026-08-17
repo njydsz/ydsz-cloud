@@ -25,7 +25,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
-import org.springframework.scheduling.support.CronExpression;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,6 +48,7 @@ import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.JobLockManager;
 import com.njydsz.cronjob.server.core.dispatch.DefaultTaskDispatcher;
 import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
+import com.njydsz.cronjob.server.core.scheduler.NextFireTimeCalculator;
 import com.njydsz.cronjob.server.core.scheduler.ScheduleType;
 import com.njydsz.cronjob.server.service.job.JobHistoryService;
 import com.njydsz.cronjob.server.service.job.JobService;
@@ -94,6 +94,9 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
 
   /** 任务锁管理器（委托 ydsz-common-lock 公共模块，复用 WatchDog / 指标等能力） */
   private final JobLockManager jobLockManager;
+
+  /** P1-3: 下次触发时间计算器（统一 cron 解析与时区处理） */
+  private final NextFireTimeCalculator nextFireTimeCalculator;
 
   /**
    * 任务派发器（P1-7 可选注入）。
@@ -278,9 +281,11 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     if (!StringUtils.hasText(job.getMisfirePolicy())) {
       job.setMisfirePolicy("FIRE_NOW");
     }
-    // 仅 CRON 类型计算 nextFireTime（FIXED_RATE/FIXED_DELAY 由本地 TaskScheduler 管理）
+    // P1-2: CRON / FIXED_RATE / FIXED_DELAY 均初始化 next_fire_time，
+    // Leader 模式下由 JobScanner 统一扫描推进（固定频率任务也具备故障转移能力）；
+    // API 类型不计算（仅手动触发）
     ScheduleType type = ScheduleType.parse(job.getScheduleType());
-    if (type == ScheduleType.CRON) {
+    if (type != ScheduleType.API) {
       LocalDateTime next = nextFireTime(job);
       job.setNextFireTime(next);
     }
@@ -361,8 +366,8 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             .params("fixedRateMs 必须为正数")
             .build();
       }
-      // FIXED_RATE 类型清空 nextFireTime（由本地 TaskScheduler 管理）
-      exists.setNextFireTime(null);
+      // P1-2: 重新计算 next_fire_time（Leader 模式由 JobScanner 统一扫描推进）
+      exists.setNextFireTime(nextFireTime(exists));
     } else if (type == ScheduleType.FIXED_DELAY) {
       if (exists.getFixedDelayMs() == null || exists.getFixedDelayMs() <= 0) {
         throw SysException.builder()
@@ -371,8 +376,8 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             .params("fixedDelayMs 必须为正数")
             .build();
       }
-      // FIXED_DELAY 类型清空 nextFireTime（由本地 TaskScheduler 管理）
-      exists.setNextFireTime(null);
+      // P1-2: 重新计算 next_fire_time（Leader 模式由 JobScanner 统一扫描推进）
+      exists.setNextFireTime(nextFireTime(exists));
     }
     if (StringUtils.hasText(job.getCronExpression()))
       exists.setCronExpression(job.getCronExpression());
@@ -660,8 +665,18 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
       log.info("[Cronjob] API 类型任务不注册调度: key={}", job.getJobKey());
       return true;
     }
-    // FIXED_RATE / FIXED_DELAY 类型注册到本地 TaskScheduler
+    // FIXED_RATE / FIXED_DELAY：Leader 模式由 JobScanner 统一扫描推进（跳过本地注册，避免双触发）；
+    // Leaderless 模式回退本地 TaskScheduler（向后兼容）
     if (type == ScheduleType.FIXED_RATE || type == ScheduleType.FIXED_DELAY) {
+      if (cronjobProperties.getLeader().isEnabled()) {
+        if (job.getNextFireTime() == null) {
+          job.setNextFireTime(nextFireTime(job));
+          jobRepository.updateById(job);
+        }
+        log.debug(
+            "[Cronjob] Leader 模式跳过固定频率本地注册: key={}（由 JobScanner 扫描派发）", job.getJobKey());
+        return true;
+      }
       return registerFixedRateJob(job, type);
     }
     // CRON 类型走原有逻辑
@@ -1074,32 +1089,16 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
   }
 
   /**
-   * 计算下次触发时间（P2-8: 支持任务级时区）。
+   * 计算下次触发时间（P1-3: 统一委托 {@link NextFireTimeCalculator}，支持任务级时区）。
    *
-   * <p>P0-5 修复: 仅调用一次 expr.next() 避免竞态条件。 P2-8: 优先使用 {@link Job#getTimezone()} 指定的时区计算当前时间，
-   * 为空时回退到默认时区 Asia/Shanghai。
+   * <p>与 {@code JobScanner} / {@code DefaultTaskDispatcher} 共用同一计算入口，保证
+   * cron 解析与时区语义一致。
    *
    * @param job 任务定义（含 cron 表达式和时区）
    * @return 下次触发时间；表达式非法时返回 null
    */
   private LocalDateTime nextFireTime(Job job) {
-    try {
-      // P2-8: 任务级时区，null 使用默认 Asia/Shanghai
-      String tz = StringUtils.hasText(job.getTimezone()) ? job.getTimezone() : "Asia/Shanghai";
-      ZoneId zoneId = ZoneId.of(tz);
-      CronExpression expr = CronExpression.parse(job.getCronExpression());
-      // P0-5 修复: 仅调用一次 expr.next() 避免竞态条件
-      // P2-8: 使用任务时区的当前时间计算
-      LocalDateTime now = LocalDateTime.now(zoneId);
-      return expr.next(now);
-    } catch (Exception e) {
-      log.warn(
-          "[Cronjob] 计算 nextFireTime 失败: cron={} tz={} err={}",
-          job.getCronExpression(),
-          job.getTimezone(),
-          e.getMessage());
-      return null;
-    }
+    return nextFireTimeCalculator.calculate(job);
   }
 
   /** 发布领域事件到 Outbox（DomainEventPublisher 不可用时静默跳过）。 */

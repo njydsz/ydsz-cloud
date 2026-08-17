@@ -41,16 +41,18 @@ public class JobTransactionService {
   private final JobMapper jobMapper;
 
   /**
-   * 抢占式扫描待触发任务（readOnly 事务内）。
+   * 抢占式扫描待触发任务（读写事务内）。
    *
-   * <p>使用 {@code SELECT ... FOR UPDATE SKIP LOCKED} 抢占式行锁， 多个 Leader 候选节点互不冲突。readOnly
-   * 事务提示数据库可做查询优化。
+   * <p>使用 {@code SELECT ... FOR UPDATE SKIP LOCKED} 抢占式行锁， 多个 Leader 候选节点互不冲突。
+   *
+   * <p><b>注意</b>：不能标注 {@code readOnly = true}。PostgreSQL 禁止在只读事务中执行
+   * {@code SELECT ... FOR UPDATE}（SQLSTATE 25006），且若开启读写分离，只读事务可能被路由到只读副本导致行锁失效。
    *
    * @param now 当前时间
    * @param batchSize 批量大小
    * @return 待触发任务列表
    */
-  @Transactional(readOnly = true)
+  @Transactional(rollbackFor = Exception.class)
   public List<Job> acquireDueJobs(LocalDateTime now, int batchSize) {
     return jobMapper.selectDueJobs(now, batchSize);
   }

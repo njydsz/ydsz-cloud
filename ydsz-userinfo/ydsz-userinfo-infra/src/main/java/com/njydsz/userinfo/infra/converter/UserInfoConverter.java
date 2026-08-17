@@ -1,4 +1,4 @@
-package com.njydsz.userinfo.domain.converter;
+package com.njydsz.userinfo.infra.converter;
 
 import java.util.List;
 

@@ -56,6 +56,9 @@ public class MessageSendService {
   /**
    * 执行通道分发，包含通道降级与重试逻辑。
    *
+   * <p>性能优化：移除 PENDING→SENDING 的冗余 DB 写入，仅在最终状态确定时执行一次 UPDATE，将单次发送的 DB 写入次数从 2~N
+   * 次降低到 1 次。
+   *
    * @param logDO 消息日志（状态会被修改并落库）
    * @param matchedRule 命中的路由规则（用于解析降级通道）
    * @param receiver 收方标识（仅用于频率记录与日志，会脱敏打印）
@@ -65,8 +68,6 @@ public class MessageSendService {
     String channel = logDO.getChannel();
     long start = System.currentTimeMillis();
     try {
-      logDO.setStatus(MessageStatusEnum.SENDING.name());
-      msgLogRepository.updateById(logDO);
       messageTraceService.recordTrace(
           logDO.getMsgId(), MsgTrace.Node.DISPATCH_START, "SUCCESS", channel, "通道分发开始");
       String providerTraceId = channelRouter.dispatch(logDO);
@@ -130,14 +131,12 @@ public class MessageSendService {
       MsgLog logDO, List<String> fallbackChannels, long prevCost) {
     String origChannel = logDO.getChannel();
     long accumulatedCost = prevCost;
-    List<String> tried = new ArrayList<>();
+    List<String> tried = new ArrayList<>(fallbackChannels.size() + 1);
     tried.add(origChannel);
     for (String fallbackChannel : fallbackChannels) {
       long start = System.currentTimeMillis();
       try {
-        logDO.setStatus(MessageStatusEnum.SENDING.name());
         logDO.setChannel(fallbackChannel);
-        msgLogRepository.updateById(logDO);
         String providerTraceId = channelRouter.dispatch(logDO);
         long cost = System.currentTimeMillis() - start;
         logDO.setStatus(MessageStatusEnum.SUCCESS.name());

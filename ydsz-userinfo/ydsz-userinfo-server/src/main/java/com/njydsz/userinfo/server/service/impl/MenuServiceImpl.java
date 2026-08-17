@@ -13,14 +13,14 @@ import com.njydsz.common.auth.event.PermissionChangeNotifier;
 import com.njydsz.common.domain.tree.TreeBuilder;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.bean.BeanUpdateUtil;
-import com.njydsz.userinfo.domain.converter.UserInfoConverter;
+import com.njydsz.userinfo.infra.converter.UserInfoConverter;
 import com.njydsz.userinfo.domain.dto.create.MenuCreateDTO;
 import com.njydsz.userinfo.domain.dto.update.MenuUpdateDTO;
 import com.njydsz.userinfo.infra.entity.MenuDO;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.MenuTreeVO;
 import com.njydsz.userinfo.domain.vo.MenuVO;
-import com.njydsz.userinfo.domain.repository.MenuRepository;
+import com.njydsz.userinfo.infra.repository.MenuRepository;
 import com.njydsz.userinfo.server.auth.DbRolePermissionLoader;
 import com.njydsz.userinfo.server.service.MenuService;
 

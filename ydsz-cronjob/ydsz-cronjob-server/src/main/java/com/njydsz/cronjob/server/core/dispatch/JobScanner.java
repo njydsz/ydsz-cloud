@@ -5,10 +5,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -26,8 +24,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
-import org.springframework.scheduling.support.CronExpression;
-import org.springframework.util.Assert;
 
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.cronjob.domain.entity.job.Job;
@@ -35,6 +31,7 @@ import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
 import com.njydsz.cronjob.server.core.leader.PartitionLeaderManager;
 import com.njydsz.cronjob.server.core.scheduler.CalendarScheduleFilter;
+import com.njydsz.cronjob.server.core.scheduler.NextFireTimeCalculator;
 import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 
 /**
@@ -88,6 +85,9 @@ public class JobScanner {
   /** P0-7b: 日历调度过滤器（可选注入，启用时按工作日/节假日过滤派发） */
   private final ObjectProvider<CalendarScheduleFilter> calendarScheduleFilterProvider;
 
+  /** P1-3: 下次触发时间计算器（统一 cron 解析与时区处理） */
+  private final NextFireTimeCalculator nextFireTimeCalculator;
+
   private final ApplicationContext applicationContext;
 
   /** 扫描执行中标志（避免上次扫描未完成时重叠触发） */
@@ -101,30 +101,6 @@ public class JobScanner {
 
   /** P1-8: 是否使用外部线程池（true=common-thread 管理，不负责关闭） */
   private boolean useExternalDispatchPool = false;
-
-  /**
-   * Cron 下次触发时间本地缓存（60s TTL）。
-   *
-   * <p>扫描周期内同一 cron 表达式多次计算 nextFireTime 结果相同，缓存避免重复解析。
-   * Key = cron 表达式，Value = (计算时刻, 下次触发时间)。
-   */
-  private final Map<String, CronCacheEntry> cronNextFireTimeCache = new ConcurrentHashMap<>(64);
-
-  /** 缓存条目 */
-  private static class CronCacheEntry {
-    final LocalDateTime calculatedAt;
-    final LocalDateTime nextFireTime;
-
-    CronCacheEntry(LocalDateTime calculatedAt, LocalDateTime nextFireTime) {
-      this.calculatedAt = calculatedAt;
-      this.nextFireTime = nextFireTime;
-    }
-
-    /** 判断缓存是否仍有效（60s TTL） */
-    boolean isExpired() {
-      return Duration.between(calculatedAt, LocalDateTime.now()).getSeconds() >= 60;
-    }
-  }
 
   /**
    * 初始化扫描器：解析 Leader 角色，并决策并行派发线程池来源。
@@ -347,7 +323,7 @@ public class JobScanner {
         Set<LocalDate> holidays = calendarFilter.parseHolidays(job.getParamsJson());
         if (!calendarFilter.shouldExecute(calendarType, holidays, LocalDate.now())) {
           // 日历过滤跳过：仅推进 next_fire_time，不派发
-          LocalDateTime newNext = nextFireTime(job.getCronExpression());
+          LocalDateTime newNext = nextFireTime(job);
           boolean advanced =
               jobTransactionService.advanceNextFireTime(job, job.getNextFireTime(), newNext, now);
           if (metrics != null) {
@@ -367,7 +343,7 @@ public class JobScanner {
       boolean misfired = isMisfired(job, now);
       if (misfired && policy == MisfirePolicy.SKIP) {
         // 仅推进 next_fire_time，不派发
-        LocalDateTime newNext = nextFireTime(job.getCronExpression());
+        LocalDateTime newNext = nextFireTime(job);
         boolean advanced =
             jobTransactionService.advanceNextFireTime(job, job.getNextFireTime(), newNext, now);
         if (metrics != null) {
@@ -379,7 +355,7 @@ public class JobScanner {
       }
       // 计算新的 next_fire_time 并 CAS 推进
       LocalDateTime oldNext = job.getNextFireTime();
-      LocalDateTime newNext = nextFireTime(job.getCronExpression());
+      LocalDateTime newNext = nextFireTime(job);
       boolean advanced = jobTransactionService.advanceNextFireTime(job, oldNext, newNext, now);
       if (!advanced) {
         log.debug("[JobScanner] 任务 next_fire_time 已被其他节点推进, 跳过: key={}", job.getJobKey());
@@ -440,30 +416,13 @@ public class JobScanner {
   }
 
   /**
-   * 计算下次触发时间（基于 CronExpression，Asia/Shanghai 时区）。
+   * 计算下次触发时间（统一委托 {@link NextFireTimeCalculator}，支持任务级时区）。
    *
-   * <p>使用本地缓存（60s TTL）避免同一 cron 表达式在扫描周期内重复解析。
-   *
-   * @param cron cron 表达式
+   * @param job 任务定义（含 cron 表达式与时区）
    * @return 下次触发时间；解析失败时返回 null
    */
-  private LocalDateTime nextFireTime(String cron) {
-    try {
-      Assert.hasText(cron, "cron 表达式不能为空");
-      // 先查缓存
-      CronCacheEntry cached = cronNextFireTimeCache.get(cron);
-      if (cached != null && !cached.isExpired()) {
-        return cached.nextFireTime;
-      }
-      // 缓存未命中或已过期，重新计算
-      CronExpression expr = CronExpression.parse(cron);
-      LocalDateTime next = expr.next(LocalDateTime.now());
-      cronNextFireTimeCache.put(cron, new CronCacheEntry(LocalDateTime.now(), next));
-      return next;
-    } catch (Exception e) {
-      log.warn("[JobScanner] 计算 nextFireTime 失败: cron={} err={}", cron, e.getMessage());
-      return null;
-    }
+  private LocalDateTime nextFireTime(Job job) {
+    return nextFireTimeCalculator.calculate(job);
   }
 
   /**
@@ -473,7 +432,7 @@ public class JobScanner {
    */
   @Scheduled(fixedDelay = 300_000L)
   public void cleanupCronCache() {
-    cronNextFireTimeCache.entrySet().removeIf(entry -> entry.getValue().isExpired());
+    nextFireTimeCalculator.cleanup();
   }
 
   /** 优雅下线：无需特殊处理，{@link LeaderElector#release(String)} 会释放 Leader 锁。 */

@@ -62,6 +62,15 @@ public final class AesGcmCryptoProvider implements CryptoProvider {
     this.keyLength = keyBits / 8;
   }
 
+  /**
+   * 清理当前线程的 AES-GCM Cipher 缓存。
+   *
+   * <p>在线程池复用场景下，建议在请求处理完成后调用此方法，避免 ThreadLocal 内存泄漏。
+   */
+  public static void cleanup() {
+    CIPHER_POOL.remove();
+  }
+
   @Override
   public String algorithm() {
     return "AES-" + (keyLength * 8) + "-GCM";

@@ -146,6 +146,26 @@ public final class Sm2Utils {
     throw new UnsupportedOperationException("Sm2Utils is a utility class");
   }
 
+  /**
+   * 清理当前线程的 SM2 Cipher 和 Signature 缓存。
+   *
+   * <p>在线程池复用场景下，建议在请求处理完成后调用此方法，避免 ThreadLocal 内存泄漏。
+   * 通常在 {@code finally} 块中调用：
+   *
+   * <pre>{@code
+   * try {
+   *     // 业务逻辑
+   *     String encrypted = Sm2Utils.encrypt(data, publicKey);
+   * } finally {
+   *     Sm2Utils.cleanup();
+   * }
+   * }</pre>
+   */
+  public static void cleanup() {
+    ENCRYPT_CIPHER.remove();
+    SIGNATURE.remove();
+  }
+
   // ==================== 密钥对生成 ====================
 
   /**

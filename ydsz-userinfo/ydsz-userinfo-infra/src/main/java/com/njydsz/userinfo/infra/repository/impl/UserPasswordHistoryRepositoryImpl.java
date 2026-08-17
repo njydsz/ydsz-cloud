@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
-import com.njydsz.userinfo.domain.repository.UserPasswordHistoryRepository;
+import com.njydsz.userinfo.infra.repository.UserPasswordHistoryRepository;
 import com.njydsz.userinfo.infra.entity.UserPasswordHistoryDO;
 import com.njydsz.userinfo.infra.mapper.UserPasswordHistoryMapper;
 

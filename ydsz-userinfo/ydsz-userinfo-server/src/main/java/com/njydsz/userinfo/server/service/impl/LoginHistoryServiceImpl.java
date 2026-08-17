@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.userinfo.infra.entity.UserLoginHistoryDO;
-import com.njydsz.userinfo.domain.repository.UserLoginHistoryRepository;
+import com.njydsz.userinfo.infra.repository.UserLoginHistoryRepository;
 import com.njydsz.userinfo.server.auth.LoginAttemptCounterService;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.service.LoginAttemptContext;

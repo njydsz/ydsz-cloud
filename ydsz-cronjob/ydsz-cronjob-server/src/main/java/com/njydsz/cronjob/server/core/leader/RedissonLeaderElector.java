@@ -28,8 +28,8 @@ import com.njydsz.cronjob.server.config.CronjobProperties;
  * <p>使用 Redisson {@link RLock} 实现分布式 Leader 选举：
  *
  * <ul>
- *   <li>抢锁：{@code tryLock(0, leaseTime, MILLISECONDS)} 非阻塞获取
- *   <li>续期：通过 Spring {@code @Scheduled} 定时任务在 lease 到期前续期
+ *   <li>抢锁：{@code tryLock(0, -1, MILLISECONDS)} 非阻塞获取，leaseTime=-1 启用 WatchDog 自动续期
+ *   <li>续期：WatchDog 每 10s 自动续期锁租约（30s），无需手动干预；holder key 由定时任务刷新
  *   <li>释放：优雅下线时 {@code @PreDestroy} 主动释放
  * </ul>
  *
@@ -37,8 +37,8 @@ import com.njydsz.cronjob.server.config.CronjobProperties;
  *
  * <ol>
  *   <li>所有节点启动时尝试 {@link #tryAcquire}，仅一节点成功
- *   <li>Leader 节点定期 {@link #renew} 续期（默认 lease 30s，每 10s 续期）
- *   <li>Leader 崩溃后 lease 到期自动释放，Follower 下次 {@link #tryAcquire} 抢占
+ *   <li>Leader 节点由 WatchDog 自动续期锁（默认 lease 30s，每 10s 续期）
+ *   <li>Leader 崩溃后锁在 lease 内自动释放，Follower 下次 {@link #tryAcquire} 抢占
  * </ol>
  *
  * @author ydsz-team
@@ -89,11 +89,17 @@ public class RedissonLeaderElector implements LeaderElector {
   /**
    * 尝试抢占指定角色的 Leader 锁
    *
-   * <p>使用 Redisson tryLock(0, lease, MILLISECONDS) 非阻塞获取， 仅当当前无 Leader 时成功。成功后写入 holder 标识供
-   * getCurrentLeader 读取。
+   * <p>使用 Redisson tryLock(0, -1, MILLISECONDS) 非阻塞获取， 仅当当前无 Leader 时成功。
+   *
+   * <p><b>WatchDog 自动续期</b>：leaseTime 传 -1 时 Redisson 启动 WatchDog 定时续期
+   * （默认每 10s 续一次，续到 30s 租约），Leader 存活期间锁不会过期；Leader 崩溃后
+   * 锁在 30s 内自动释放，其他节点即可抢占。显式传入有限 leaseTime 会禁用 WatchDog，
+   * 导致锁到期后身份判定漂移，故此处必须使用 -1。
+   *
+   * <p>成功后写入 holder key（TTL=lease）供 {@link #getCurrentLeader} 读取真实节点。
    *
    * @param role Leader 角色（如 job-scheduler）
-   * @param lease 租约时长（到期后自动释放，需在到期前 renew）
+   * @param lease 租约时长（仅用于 holder key 的 TTL，锁本身由 WatchDog 续期）
    * @return true 抢占成功；false 已有其他节点持有
    */
   @Override
@@ -101,7 +107,8 @@ public class RedissonLeaderElector implements LeaderElector {
     String key = LOCK_KEY_PREFIX + role;
     RLock lock = redissonClient.getLock(key);
     try {
-      boolean acquired = lock.tryLock(0, lease.toMillis(), TimeUnit.MILLISECONDS);
+      // leaseTime=-1：由 Redisson WatchDog 自动续期，避免显式租约到期导致 Leader 身份漂移
+      boolean acquired = lock.tryLock(0, -1, TimeUnit.MILLISECONDS);
       if (acquired) {
         heldLocks.put(role, lock);
         // P0-3: 写入 Leader 持有者标识，供 getCurrentLeader 返回真实节点
@@ -122,13 +129,14 @@ public class RedissonLeaderElector implements LeaderElector {
   }
 
   /**
-   * 续期 Leader 租约
+   * 续期 Leader 租约。
    *
-   * <p>Redisson RLock 内部通过 scheduleExpirationRenewal 自动续期， 本方法仅续期 holder 标识 key，供 getCurrentLeader
-   * 读取真实节点。
+   * <p>RLock 本体由 Redisson WatchDog 自动续期，无需手动干预； 本方法仅续期 holder key
+   * （供 {@link #getCurrentLeader} 读取真实节点），并返回锁是否仍被当前线程持有，
+   * 供定时任务判断是否需要重新抢占。
    *
    * @param role Leader 角色
-   * @return true 续期成功；false 未持有锁或续期失败
+   * @return true 锁仍被当前线程持有；false 未持有锁或续期失败
    */
   @Override
   public boolean renew(String role) {
@@ -138,9 +146,7 @@ public class RedissonLeaderElector implements LeaderElector {
     }
     try {
       if (lock.isHeldByCurrentThread()) {
-        // Redisson RLock 自身不暴露 renew / expire API（4.6.1）：
-        //   - 内部通过 scheduleExpirationRenewal 自动续期，无需调用方介入
-        //   - 这里仅续期 holder 标识 key，供 getCurrentLeader() 读取真实节点
+        // 锁由 WatchDog 自动续期；这里仅续期 holder 标识 key，供 getCurrentLeader() 读取真实节点
         Duration lease = Duration.ofSeconds(cronjobProperties.getLeader().getLeaseSeconds());
         String holderKey = HOLDER_KEY_PREFIX + role;
         redissonClient.<String>getBucket(holderKey).set(nodeId, lease);

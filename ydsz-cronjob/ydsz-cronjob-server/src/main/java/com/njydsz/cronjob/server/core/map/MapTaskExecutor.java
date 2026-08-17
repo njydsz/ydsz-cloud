@@ -5,7 +5,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import jakarta.annotation.PostConstruct;
@@ -101,18 +104,40 @@ public class MapTaskExecutor {
   private final RemoteTaskClient remoteTaskClient;
 
   /**
-   * P0-3: 子任务并行执行线程池（统一由 common-thread 管理）。
+   * 子任务并行执行线程池（优先复用 common-thread 统一管理的 {@code cronjobMapReduceExecutor}）。
    *
-   * <p>强制使用 common-thread 统一管理的 {@code cronjobMapReduceExecutor} 线程池， 不再 fallback 到手动创建。若未配置则启动失败。
+   * <p>从 common-thread 获取失败时（如未配置该池名导致 Bean 不存在），回退自建守护线程池并记录
+   * WARN 日志，避免应用启动失败；自建池由本类在 {@link #shutdown()} 时关闭。
    */
   private volatile ExecutorService subTaskExecutor;
 
   @PostConstruct
   private void initExecutor() {
-    ThreadPoolTaskExecutor threadPool =
-        applicationContext.getBean("cronjobMapReduceExecutor", ThreadPoolTaskExecutor.class);
-    this.subTaskExecutor = threadPool.getThreadPoolExecutor();
-    log.info("[MapTaskExecutor] 使用 common-thread 线程池: cronjobMapReduceExecutor");
+    try {
+      ThreadPoolTaskExecutor threadPool =
+          applicationContext.getBean("cronjobMapReduceExecutor", ThreadPoolTaskExecutor.class);
+      this.subTaskExecutor = threadPool.getThreadPoolExecutor();
+      log.info("[MapTaskExecutor] 使用 common-thread 线程池: cronjobMapReduceExecutor");
+    } catch (Exception e) {
+      MapReduceConfig mrConfig = cronjobProperties.getMapReduce();
+      int maxParallel = Math.max(2, mrConfig.getMaxParallelSubTasks());
+      this.subTaskExecutor =
+          new ThreadPoolExecutor(
+              maxParallel,
+              maxParallel,
+              0L,
+              TimeUnit.MILLISECONDS,
+              new LinkedBlockingQueue<>(256),
+              r -> {
+                Thread t = new Thread(r, "job-map-reduce-fallback");
+                t.setDaemon(true);
+                return t;
+              },
+              new ThreadPoolExecutor.CallerRunsPolicy());
+      log.warn(
+          "[MapTaskExecutor] 获取 cronjobMapReduceExecutor 失败, 回退自建线程池: reason={}",
+          e.getMessage());
+    }
   }
 
   /**

@@ -4,12 +4,12 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 import java.util.TreeMap;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -239,11 +239,13 @@ public class AliyunSmsProvider implements SmsProvider {
     }
   }
 
+  /** ISO8601 UTC 时间戳格式化器（线程安全） */
+  private static final DateTimeFormatter ISO8601_UTC =
+      DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").withZone(ZoneOffset.UTC);
+
   /** 生成阿里云要求的 ISO8601 时间戳（UTC） */
   private String formatTimestamp() {
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-    sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-    return sdf.format(new Date());
+    return ISO8601_UTC.format(Instant.now());
   }
 
   private SmsSendResult parseResponse(String response) {

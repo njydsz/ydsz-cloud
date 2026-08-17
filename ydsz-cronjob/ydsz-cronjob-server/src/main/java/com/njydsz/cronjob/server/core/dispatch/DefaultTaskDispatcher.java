@@ -3,15 +3,14 @@ package com.njydsz.cronjob.server.core.dispatch;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.PriorityBlockingQueue;
@@ -31,16 +30,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.scheduling.TriggerContext;
-import org.springframework.scheduling.support.CronTrigger;
-import org.springframework.scheduling.support.SimpleTriggerContext;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.event.api.DomainEvent;
@@ -78,6 +74,7 @@ import com.njydsz.cronjob.server.core.handler.ScriptJobHandler;
 import com.njydsz.cronjob.server.core.logger.JobLoggerImpl;
 import com.njydsz.cronjob.server.core.logger.LogStreamManager;
 import com.njydsz.cronjob.server.core.map.MapTaskExecutor;
+import com.njydsz.cronjob.server.core.scheduler.NextFireTimeCalculator;
 import com.njydsz.cronjob.server.core.sharding.ShardAssignment;
 import com.njydsz.cronjob.server.core.sharding.ShardingStrategy;
 import com.njydsz.cronjob.server.metrics.CronjobMetrics;
@@ -115,6 +112,9 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
   private final ApplicationContext applicationContext;
   private final RedisTemplate<String, Object> redisTemplate;
   private final CronjobProperties cronjobProperties;
+
+  /** P1-3: 下次触发时间计算器（统一 cron 解析与时区处理） */
+  private final NextFireTimeCalculator nextFireTimeCalculator;
 
   /** P1-1: 心跳组件（可选注入，type=nacos 时不注册） */
   private final ObjectProvider<JobNodeHeartbeat> jobNodeHeartbeatProvider;
@@ -851,7 +851,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
         cronjobProperties.getSchedulerExecutorSeparation().getMaxDispatchAttempts();
     maxAttempts = Math.max(1, Math.min(maxAttempts, 5));
 
-    java.util.Set<String> excludedNodeIds = new java.util.HashSet<>(maxAttempts);
+    Set<String> excludedNodeIds = new HashSet<>(maxAttempts);
     for (int attempt = 1; attempt <= maxAttempts; attempt++) {
       JobNode worker = selector.selectWorker(excludedNodeIds);
       if (worker == null) {
@@ -1191,7 +1191,12 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       Long incFire = 1L;
       Long incSucc = success ? 1L : 0L;
       Long incFail = success ? 0L : 1L;
-      LocalDateTime next = TRIGGER_CRON.equals(triggerType) ? nextFireTime(job) : null;
+      // P1-1: next_fire_time 单一职责 —— Leader 模式下由 JobScanner 在派发前 CAS 推进，
+      // 此处再写会造成双写漂移（任务耗时跨越 cron 边界时被跳过触发）；
+      // 仅 Leaderless 模式（无扫描器推进）由执行路径推进 next_fire_time。
+      boolean leaderEnabled = cronjobProperties.getLeader().isEnabled();
+      LocalDateTime next =
+          (TRIGGER_CRON.equals(triggerType) && !leaderEnabled) ? nextFireTime(job) : null;
       // P1-6: 熔断逻辑 - 成功时不改 status（保持 NORMAL），失败时只在非重试场景改 ERROR
       String statusOnError = success ? null : "ERROR";
       jobMapper.updateStats(
@@ -1763,28 +1768,16 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
   }
 
   /**
-   * 计算下次触发时间（P2-8: 支持任务级时区）。
+   * 计算下次触发时间（P1-3: 统一委托 {@link NextFireTimeCalculator}，支持任务级时区）。
    *
-   * <p>优先使用 {@link Job#getTimezone()}，为空时回退到默认时区 Asia/Shanghai。
+   * <p>与 {@link JobScanner} / {@link JobServiceImpl} 共用同一计算入口，保证
+   * cron 解析与时区语义一致；表达式非法时返回 null（由调用方按场景处理）。
    *
    * @param job 任务定义（含 cron 表达式和时区）
-   * @return 下次触发时间；表达式非法时抛 SysException
+   * @return 下次触发时间；表达式非法时返回 null
    */
   private LocalDateTime nextFireTime(Job job) {
-    try {
-      // P2-8: 任务级时区，null 使用默认 Asia/Shanghai
-      String tz = job.getTimezone() != null ? job.getTimezone() : "Asia/Shanghai";
-      CronTrigger trigger = new CronTrigger(job.getCronExpression(), TimeZone.getTimeZone(tz));
-      TriggerContext ctx = new SimpleTriggerContext();
-      Instant next = trigger.nextExecution(ctx);
-      return next == null ? null : LocalDateTime.ofInstant(next, ZoneId.systemDefault());
-    } catch (IllegalArgumentException e) {
-      throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
-          .key("error.cronjob.msg_5d0044ca")
-          .params(e.getMessage())
-          .build();
-    }
+    return nextFireTimeCalculator.calculate(job);
   }
 
   /**

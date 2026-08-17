@@ -21,9 +21,9 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.infra.entity.MenuDO;
 import com.njydsz.userinfo.infra.entity.RoleDO;
 import com.njydsz.userinfo.infra.entity.RolePermissionDO;
-import com.njydsz.userinfo.domain.repository.MenuRepository;
-import com.njydsz.userinfo.domain.repository.RolePermissionRepository;
-import com.njydsz.userinfo.domain.repository.RoleRepository;
+import com.njydsz.userinfo.infra.repository.MenuRepository;
+import com.njydsz.userinfo.infra.repository.RolePermissionRepository;
+import com.njydsz.userinfo.infra.repository.RoleRepository;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 
 /**

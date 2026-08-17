@@ -57,26 +57,27 @@ spring:
             group: ${spring.profiles.active}
             refresh: true
 
-# P0-2: 统一线程池配置（ydsz-common-thread）
+# P0-2: 统一线程池配置（ydsz-common-thread）— 本地兜底，与 Nacos 环境配置保持同名
+# 注意：池名必须与代码 getBean("xxxExecutor") 一致（common-thread 生成 Bean 名 = 池名 + "Executor"）
 ydsz:
   thread:
     enabled: true
     pools:
-      jobDispatchExecutor:
+      cronjobDispatch:
         core-size: 4
         max-size: 16
         queue-capacity: 512
         thread-name-prefix: cronjob-dispatch-
         reject-policy: CALLER_RUNS
         await-termination-seconds: 30
-      mapTaskExecutor:
+      cronjobMapReduce:
         core-size: 2
         max-size: 8
         queue-capacity: 256
-        thread-name-prefix: cronjob-map-task-
+        thread-name-prefix: cronjob-mapreduce-
         reject-policy: CALLER_RUNS
         await-termination-seconds: 30
-      retrySchedulerExecutor:
+      cronjobRetry:
         core-size: 2
         max-size: 4
         queue-capacity: 128

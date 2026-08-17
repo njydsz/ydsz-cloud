@@ -24,6 +24,15 @@ import javax.crypto.spec.SecretKeySpec;
  */
 public final class DigestUtils {
 
+  /**
+   * 清理当前线程的流处理缓冲区。
+   *
+   * <p>在线程池复用场景下，建议在请求处理完成后调用此方法，避免 ThreadLocal 内存泄漏。
+   */
+  public static void cleanup() {
+    BUFFER_HOLDER.remove();
+  }
+
   /** 私有构造器，工具类不允许实例化。 */
   private DigestUtils() {
     throw new UnsupportedOperationException(

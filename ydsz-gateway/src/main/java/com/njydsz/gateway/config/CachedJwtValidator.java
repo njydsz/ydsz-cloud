@@ -1,10 +1,8 @@
 package com.njydsz.gateway.config;
 
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,6 +15,8 @@ import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
+import com.njydsz.common.json.YdszJson;
+import com.njydsz.common.json.tree.JsonNode;
 import com.njydsz.common.safe.sensitive.SensitiveUtil;
 
 /**
@@ -227,8 +227,7 @@ public class CachedJwtValidator {
         return 0L;
       }
       String payload = new String(java.util.Base64.getUrlDecoder().decode(parts[1]));
-      com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-      com.fasterxml.jackson.databind.JsonNode node = mapper.readTree(payload);
+      JsonNode node = YdszJson.readTree(payload);
       JsonNode expNode = node.get("exp");
       if (expNode != null && expNode.isNumber()) {
         return expNode.longValue() * 1_000L;
