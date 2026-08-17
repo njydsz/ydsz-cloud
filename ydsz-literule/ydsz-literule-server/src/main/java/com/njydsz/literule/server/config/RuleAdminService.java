@@ -20,6 +20,7 @@ import com.njydsz.literule.api.RuleSeverity;
 import com.njydsz.literule.api.RuleStatus;
 import com.njydsz.literule.api.expression.ExpressionEngine;
 import com.njydsz.literule.api.expression.ExpressionTraceNode;
+import com.njydsz.literule.domain.entity.RuleDefinitionDO;
 import com.njydsz.literule.domain.event.RuleConfigRefreshEvent;
 import com.njydsz.literule.infra.mapper.RuleDefinitionMapper;
 import com.njydsz.literule.server.impl.ExpressionRule;

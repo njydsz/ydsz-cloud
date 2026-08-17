@@ -150,19 +150,6 @@ public class DownloadRateLimitService {
   }
 
   /**
-   * 验证单个域名的 Referer（向后兼容，内部委托 {@link #verifyReferer(String, List)}）。
-   *
-   * @param referer 请求 Referer 头
-   * @param allowedDomain 允许的来源域名（如 {@code example.com}）
-   * @return 是否通过防盗链校验
-   * @deprecated 使用 {@link #verifyReferer(String, List)} 替代，支持多域名配置
-   */
-  @Deprecated
-  public boolean verifyReferer(String referer, String allowedDomain) {
-    return verifyReferer(referer, List.of(allowedDomain));
-  }
-
-  /**
    * 生成签名下载 URL（SHA-256 签名 + Redis 落地，时效性与用户/IP 绑定）。
    *
    * <p>将 {@code storageKey|userId|ip|expireTime} 做 SHA-256 得到签名，并把签名→storageKey 写入 Redis， TTL

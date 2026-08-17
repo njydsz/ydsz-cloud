@@ -2,10 +2,6 @@ package com.njydsz.literule.domain.converter;
 
 import java.util.List;
 
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
-
 import com.njydsz.literule.api.DecisionTableDefinition;
 import com.njydsz.literule.api.RuleDefinition;
 import com.njydsz.literule.api.RuleEngineStats;
@@ -55,9 +51,9 @@ import com.njydsz.literule.domain.vo.RuleVariableDefVO;
 import com.njydsz.literule.domain.vo.RuleVersionHistoryVO;
 
 /**
- * literule 模块统一 MapStruct 转换器（P2-2 重构为门面模式）。
+ * literule 模块统一转换器门面。
  *
- * <p>原"胖转换器"已按子域拆分为：
+ * <p>委托给三个子转换器：
  *
  * <ul>
  *   <li>{@link RuleCoreConverter} - 规则定义、规则结果、引擎统计
@@ -65,161 +61,213 @@ import com.njydsz.literule.domain.vo.RuleVersionHistoryVO;
  *   <li>{@link RuleSupportConverter} - 依赖、执行轨迹、规则包、测试用例、变量定义、版本历史
  * </ul>
  *
- * <p>本类保留原有方法签名以兼容现有代码，内部委托给子转换器实现。 新代码建议直接使用对应的子转换器。
- *
  * @author ydsz-team
  * @since 1.0.0
  * @since 2.1.0 重构为门面模式，委托给子转换器
  */
-@Mapper(uses = {RuleCoreConverter.class, RuleComponentConverter.class, RuleSupportConverter.class})
-public interface LiteruleConverter {
+public class LiteruleConverter {
 
-  LiteruleConverter INSTANT = Mappers.getMapper(LiteruleConverter.class);
+  public static final LiteruleConverter INSTANT = new LiteruleConverter();
+
+  private final RuleCoreConverter core = RuleCoreConverter.INSTANT;
+  private final RuleComponentConverter component = RuleComponentConverter.INSTANT;
+  private final RuleSupportConverter support = RuleSupportConverter.INSTANT;
+
+  private LiteruleConverter() {
+    // 单例门面
+  }
 
   // ===== DecisionTable =====
-  DecisionTableVO entityToVO(DecisionTable entity);
+  public DecisionTableVO entityToVO(DecisionTable entity) {
+    return component.entityToVO(entity);
+  }
 
-  List<DecisionTableVO> decisionTableListToVO(List<DecisionTable> entities);
+  public List<DecisionTableVO> decisionTableListToVO(List<DecisionTable> entities) {
+    return component.decisionTableListToVO(entities);
+  }
 
   // ===== RuleABPolicy =====
-  RuleABPolicyVO entityToVO(RuleABPolicy entity);
+  public RuleABPolicyVO entityToVO(RuleABPolicy entity) {
+    return component.entityToVO(entity);
+  }
 
-  List<RuleABPolicyVO> ruleABPolicyListToVO(List<RuleABPolicy> entities);
+  public List<RuleABPolicyVO> ruleABPolicyListToVO(List<RuleABPolicy> entities) {
+    return component.ruleABPolicyListToVO(entities);
+  }
 
   // ===== RuleABRollback =====
-  RuleABRollbackVO entityToVO(RuleABRollback entity);
+  public RuleABRollbackVO entityToVO(RuleABRollback entity) {
+    return component.entityToVO(entity);
+  }
 
-  List<RuleABRollbackVO> ruleABRollbackListToVO(List<RuleABRollback> entities);
+  public List<RuleABRollbackVO> ruleABRollbackListToVO(List<RuleABRollback> entities) {
+    return component.ruleABRollbackListToVO(entities);
+  }
 
   // ===== RuleCanaryBucket =====
-  RuleCanaryBucketVO entityToVO(RuleCanaryBucket entity);
+  public RuleCanaryBucketVO entityToVO(RuleCanaryBucket entity) {
+    return component.entityToVO(entity);
+  }
 
-  List<RuleCanaryBucketVO> ruleCanaryBucketListToVO(List<RuleCanaryBucket> entities);
+  public List<RuleCanaryBucketVO> ruleCanaryBucketListToVO(List<RuleCanaryBucket> entities) {
+    return component.ruleCanaryBucketListToVO(entities);
+  }
 
   // ===== RuleChainGraphDO =====
-  RuleChainGraphVO entityToVO(RuleChainGraphDO entity);
+  public RuleChainGraphVO entityToVO(RuleChainGraphDO entity) {
+    return component.entityToVO(entity);
+  }
 
-  List<RuleChainGraphVO> ruleChainGraphListToVO(List<RuleChainGraphDO> entities);
+  public List<RuleChainGraphVO> ruleChainGraphListToVO(List<RuleChainGraphDO> entities) {
+    return component.ruleChainGraphListToVO(entities);
+  }
 
   // ===== RuleDecisionTree =====
-  RuleDecisionTreeVO entityToVO(RuleDecisionTree entity);
+  public RuleDecisionTreeVO entityToVO(RuleDecisionTree entity) {
+    return component.entityToVO(entity);
+  }
 
-  List<RuleDecisionTreeVO> ruleDecisionTreeListToVO(List<RuleDecisionTree> entities);
+  public List<RuleDecisionTreeVO> ruleDecisionTreeListToVO(List<RuleDecisionTree> entities) {
+    return component.ruleDecisionTreeListToVO(entities);
+  }
 
   // ===== RuleDefinitionDO =====
-  RuleDefinitionVO entityToVO(RuleDefinitionDO entity);
+  public RuleDefinitionVO entityToVO(RuleDefinitionDO entity) {
+    return core.entityToVO(entity);
+  }
 
-  List<RuleDefinitionVO> ruleDefinitionListToVO(List<RuleDefinitionDO> entities);
+  public List<RuleDefinitionVO> ruleDefinitionListToVO(List<RuleDefinitionDO> entities) {
+    return core.ruleDefinitionListToVO(entities);
+  }
 
   // ===== RuleDependency =====
-  RuleDependencyVO entityToVO(RuleDependency entity);
+  public RuleDependencyVO entityToVO(RuleDependency entity) {
+    return support.entityToVO(entity);
+  }
 
-  List<RuleDependencyVO> ruleDependencyListToVO(List<RuleDependency> entities);
+  public List<RuleDependencyVO> ruleDependencyListToVO(List<RuleDependency> entities) {
+    return support.ruleDependencyListToVO(entities);
+  }
 
   // ===== RuleExecutionTraceDO =====
-  RuleExecutionTraceVO entityToVO(RuleExecutionTraceDO entity);
+  public RuleExecutionTraceVO entityToVO(RuleExecutionTraceDO entity) {
+    return support.entityToVO(entity);
+  }
 
-  List<RuleExecutionTraceVO> ruleExecutionTraceListToVO(List<RuleExecutionTraceDO> entities);
+  public List<RuleExecutionTraceVO> ruleExecutionTraceListToVO(List<RuleExecutionTraceDO> entities) {
+    return support.ruleExecutionTraceListToVO(entities);
+  }
 
   // ===== RulePackDO =====
-  RulePackVO entityToVO(RulePackDO entity);
+  public RulePackVO entityToVO(RulePackDO entity) {
+    return support.entityToVO(entity);
+  }
 
-  List<RulePackVO> rulePackListToVO(List<RulePackDO> entities);
+  public List<RulePackVO> rulePackListToVO(List<RulePackDO> entities) {
+    return support.rulePackListToVO(entities);
+  }
 
   // ===== RuleScorecard =====
-  RuleScorecardVO entityToVO(RuleScorecard entity);
+  public RuleScorecardVO entityToVO(RuleScorecard entity) {
+    return component.entityToVO(entity);
+  }
 
-  List<RuleScorecardVO> ruleScorecardListToVO(List<RuleScorecard> entities);
+  public List<RuleScorecardVO> ruleScorecardListToVO(List<RuleScorecard> entities) {
+    return component.ruleScorecardListToVO(entities);
+  }
 
   // ===== RuleScript =====
-  RuleScriptVO entityToVO(RuleScript entity);
+  public RuleScriptVO entityToVO(RuleScript entity) {
+    return component.entityToVO(entity);
+  }
 
-  List<RuleScriptVO> ruleScriptListToVO(List<RuleScript> entities);
+  public List<RuleScriptVO> ruleScriptListToVO(List<RuleScript> entities) {
+    return component.ruleScriptListToVO(entities);
+  }
 
   // ===== RuleTemplate =====
-  RuleTemplateVO entityToVO(RuleTemplate entity);
+  public RuleTemplateVO entityToVO(RuleTemplate entity) {
+    return component.entityToVO(entity);
+  }
 
-  List<RuleTemplateVO> ruleTemplateListToVO(List<RuleTemplate> entities);
+  public List<RuleTemplateVO> ruleTemplateListToVO(List<RuleTemplate> entities) {
+    return component.ruleTemplateListToVO(entities);
+  }
 
   // ===== RuleTestCaseDO =====
-  RuleTestCaseVO entityToVO(RuleTestCaseDO entity);
+  public RuleTestCaseVO entityToVO(RuleTestCaseDO entity) {
+    return support.entityToVO(entity);
+  }
 
-  List<RuleTestCaseVO> ruleTestCaseListToVO(List<RuleTestCaseDO> entities);
+  public List<RuleTestCaseVO> ruleTestCaseListToVO(List<RuleTestCaseDO> entities) {
+    return support.ruleTestCaseListToVO(entities);
+  }
 
   // ===== RuleVariableDef =====
-  RuleVariableDefVO entityToVO(RuleVariableDef entity);
+  public RuleVariableDefVO entityToVO(RuleVariableDef entity) {
+    return support.entityToVO(entity);
+  }
 
-  List<RuleVariableDefVO> ruleVariableDefListToVO(List<RuleVariableDef> entities);
+  public List<RuleVariableDefVO> ruleVariableDefListToVO(List<RuleVariableDef> entities) {
+    return support.ruleVariableDefListToVO(entities);
+  }
 
   // ===== RuleVersionHistory =====
-  RuleVersionHistoryVO entityToVO(RuleVersionHistory entity);
+  public RuleVersionHistoryVO entityToVO(RuleVersionHistory entity) {
+    return support.entityToVO(entity);
+  }
 
-  List<RuleVersionHistoryVO> ruleVersionHistoryListToVO(List<RuleVersionHistory> entities);
+  public List<RuleVersionHistoryVO> ruleVersionHistoryListToVO(List<RuleVersionHistory> entities) {
+    return support.ruleVersionHistoryListToVO(entities);
+  }
 
   // ===== RuleDefinition (api) → RuleDefinitionVO =====
-  @Mapping(source = "code", target = "ruleCode")
-  @Mapping(source = "name", target = "ruleName")
-  @Mapping(target = "id", ignore = true)
-  @Mapping(target = "canaryConditions", ignore = true)
-  @Mapping(target = "effectiveFrom", ignore = true)
-  @Mapping(target = "effectiveTo", ignore = true)
-  @Mapping(target = "reviewedAt", ignore = true)
-  RuleDefinitionVO entityToVO(RuleDefinition entity);
+  public RuleDefinitionVO entityToVO(RuleDefinition entity) {
+    return core.entityToVO(entity);
+  }
 
   // ===== RuleResult (api) → RuleResultVO =====
-  RuleResultVO entityToVO(RuleResult entity);
+  public RuleResultVO entityToVO(RuleResult entity) {
+    return core.entityToVO(entity);
+  }
 
   // ===== RuleEngineStats (api) → RuleEngineStatsVO =====
-  RuleEngineStatsVO entityToVO(RuleEngineStats entity);
+  public RuleEngineStatsVO entityToVO(RuleEngineStats entity) {
+    return core.entityToVO(entity);
+  }
 
   // ===== RulePack (api) → RulePackVO =====
-  @Mapping(target = "id", ignore = true)
-  @Mapping(target = "tags", ignore = true)
-  @Mapping(target = "ruleCodes", ignore = true)
-  @Mapping(target = "ruleSnapshots", ignore = true)
-  @Mapping(target = "rating", ignore = true)
-  RulePackVO entityToVO(RulePack entity);
+  public RulePackVO entityToVO(RulePack entity) {
+    return core.entityToVO(entity);
+  }
 
   // ===== DecisionTableDefinition (api) → DecisionTableDefinitionVO =====
-  DecisionTableDefinitionVO entityToVO(DecisionTableDefinition entity);
+  public DecisionTableDefinitionVO entityToVO(DecisionTableDefinition entity) {
+    return core.entityToVO(entity);
+  }
 
   // ===== ExpressionValidationResult (api.expr) → ExpressionValidationResultVO =====
-  ExpressionValidationResultVO entityToVO(ExpressionValidationResult entity);
+  public ExpressionValidationResultVO entityToVO(ExpressionValidationResult entity) {
+    return core.entityToVO(entity);
+  }
 
   // ===== ExpressionFunctionDef (api.expr) → ExpressionFunctionDefVO =====
-  ExpressionFunctionDefVO entityToVO(ExpressionFunctionDef entity);
+  public ExpressionFunctionDefVO entityToVO(ExpressionFunctionDef entity) {
+    return core.entityToVO(entity);
+  }
 
   // ===== RuleTestCase PostDTO → Entity =====
-  @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
-  @Mapping(target = "revision", ignore = true)
-  @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "createdBy", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedBy", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
-  RuleTestCaseDO postDtoToEntity(RuleTestCasePostDTO dto);
+  public RuleTestCaseDO postDtoToEntity(RuleTestCasePostDTO dto) {
+    return support.postDtoToEntity(dto);
+  }
 
   // ===== DecisionTable PostDTO → Entity =====
-  @Mapping(target = "id", ignore = true)
-  @Mapping(target = "deleted", ignore = true)
-  @Mapping(target = "revision", ignore = true)
-  @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "createdBy", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedBy", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
-  DecisionTable postDtoToEntity(DecisionTablePostDTO dto);
+  public DecisionTable postDtoToEntity(DecisionTablePostDTO dto) {
+    return support.postDtoToEntity(dto);
+  }
 
   // ===== RuleABPolicy PutDTO → Entity =====
-  @Mapping(target = "deleted", ignore = true)
-  @Mapping(target = "revision", ignore = true)
-  @Mapping(target = "tenantId", ignore = true)
-  @Mapping(target = "createdBy", ignore = true)
-  @Mapping(target = "createdAt", ignore = true)
-  @Mapping(target = "updatedBy", ignore = true)
-  @Mapping(target = "updatedAt", ignore = true)
-  @Mapping(target = "lastEvaluatedAt", ignore = true)
-  @Mapping(target = "lastRollbackAt", ignore = true)
-  RuleABPolicy putDtoToEntity(RuleABPolicyPutDTO dto);
+  public RuleABPolicy putDtoToEntity(RuleABPolicyPutDTO dto) {
+    return support.putDtoToEntity(dto);
+  }
 }

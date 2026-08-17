@@ -23,8 +23,11 @@ import com.njydsz.nextwiki.domain.repository.StorageQuotaRepository;
  *
  * <ul>
  *   <li>读：先从 Redis 缓存读取（key = {@code nextwiki:quota:scopeType:scopeId}）， 未命中则查 DB 并回写缓存（TTL 30 分钟）
- *   <li>写：DB 原子更新成功后立即失效缓存，强制下次读取从 DB 获取最新值
+ *   <li>写：DB 原子更新（SQL {@code SET quota_used = quota_used + n} 避免并发计数偏差）成功后，失效旧缓存并用最新用量预热缓存
  * </ul>
+ *
+ * <p><b>原子性保证：</b>配额数据库更新使用原地自增 SQL（非先读后写），通过 DB 行锁保证并发安全；缓存层通过「写后失效 +
+ * 预热」与 DB 保持最终一致。Redis 不可用时自动降级到 DB，不影响核心业务。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -49,7 +52,8 @@ public class QuotaDomainService {
   /**
    * 校验是否有足够空间上传。
    *
-   * <p>优先从缓存读取配额信息以加速校验；缓存不存在时查 DB 并回写。
+   * <p>优先从缓存读取配额信息以加速校验；缓存不存在时查 DB 并回写。校验基于 DB 最新用量（非缓存旧值），
+   * 因写操作会失效缓存并预热，缓存命中率可控。
    *
    * @param scopeType 配额作用域类型（user / tenant / project）
    * @param scopeId 配额作用域 ID
@@ -77,13 +81,13 @@ public class QuotaDomainService {
   /**
    * 增加已使用量（上传成功后调用）。
    *
-   * <p>DB 原子更新成功后立即失效缓存，确保下次读取获取最新用量。
+   * <p>DB 原子更新成功后，失效旧缓存；并查询最新用量回写缓存（预热），确保下一次 checkQuota 读到最新值。
    *
    * @param scopeType 配额作用域类型
    * @param scopeId 配额作用域 ID
    * @param bytes 增加的文件大小（字节）
    * @param fileCount 增加的文件数量
-   * @throws BusinessException DB 更新失败（配额不足）时抛出
+   * @throws BusinessException DB 更新失败（影响行数为 0）时抛出（如配额记录不存在）
    */
   @Transactional(rollbackFor = Exception.class)
   public void addUsage(String scopeType, String scopeId, long bytes, int fileCount) {
@@ -93,7 +97,8 @@ public class QuotaDomainService {
           .data("scopeType", scopeType)
           .data("scopeId", scopeId);
     }
-    evictQuotaCache(scopeType, scopeId);
+    // 失效旧缓存 + 预热最新值（使 checkQuota 读取实时用量）
+    refreshQuotaCache(scopeType, scopeId);
     log.info(
         "[QuotaDomainService] 增加用量: scope={}, bytes={}, fileCount={}",
         scopeType + ":" + scopeId,
@@ -104,7 +109,7 @@ public class QuotaDomainService {
   /**
    * 减少已使用量（删除后调用）。
    *
-   * <p>DB 更新成功后立即失效缓存，确保下次读取获取最新用量。
+   * <p>DB 更新成功后，失效旧缓存；查询最新用量回写缓存（预热）。
    *
    * @param scopeType 配额作用域类型
    * @param scopeId 配额作用域 ID
@@ -114,7 +119,7 @@ public class QuotaDomainService {
   @Transactional(rollbackFor = Exception.class)
   public void subtractUsage(String scopeType, String scopeId, long bytes, int fileCount) {
     quotaRepository.subtractUsage(scopeType, scopeId, bytes, fileCount);
-    evictQuotaCache(scopeType, scopeId);
+    refreshQuotaCache(scopeType, scopeId);
     log.info(
         "[QuotaDomainService] 减少用量: scope={}, bytes={}, fileCount={}",
         scopeType + ":" + scopeId,
@@ -205,11 +210,13 @@ public class QuotaDomainService {
   }
 
   /**
-   * 创建默认配额。
+   * 创建默认配额（首次访问时自动创建）。
+   *
+   * <p>用户配额默认 10GB / 10000 文件；租户配额默认 100GB / 100000 文件。
    *
    * @param scopeType 配额作用域类型
    * @param scopeId 配额作用域 ID
-   * @return 新建的默认配额实体
+   * @return 新建的默认配额实体（已持久化）
    */
   private StorageQuota createDefaultQuota(String scopeType, String scopeId) {
     long defaultLimit = DEFAULT_USER_QUOTA;
@@ -235,11 +242,31 @@ public class QuotaDomainService {
   }
 
   /**
+   * 写操作后刷新配额缓存：失效旧缓存 + 查询最新值回写（预热）。
+   *
+   * <p>预热后，下一次 checkQuota 可直接从 Redis 读到最新用量，避免「写后仍读到旧缓存」的时间窗。
+   *
+   * @param scopeType 配额作用域类型
+   * @param scopeId 配额作用域 ID
+   */
+  private void refreshQuotaCache(String scopeType, String scopeId) {
+    evictQuotaCache(scopeType, scopeId);
+    try {
+      StorageQuota latest = quotaRepository.findByScope(scopeType, scopeId);
+      if (latest != null) {
+        cacheQuota(latest);
+      }
+    } catch (Exception e) {
+      log.warn("[QuotaDomainService] 缓存预热失败: {}", e.getMessage());
+    }
+  }
+
+  /**
    * 构建配额缓存键。
    *
    * @param scopeType 配额作用域类型
    * @param scopeId 配额作用域 ID
-   * @return 缓存键字符串
+   * @return 缓存键字符串（格式：{@code nextwiki:quota:scopeType:scopeId}）
    */
   private String buildQuotaCacheKey(String scopeType, String scopeId) {
     return CacheConstants.NEXTWIKI_QUOTA_CACHE + ":" + scopeType + ":" + scopeId;

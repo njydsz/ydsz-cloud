@@ -50,7 +50,6 @@ import com.njydsz.cronjob.server.core.JobLockManager;
 import com.njydsz.cronjob.server.core.dispatch.DefaultTaskDispatcher;
 import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
 import com.njydsz.cronjob.server.core.scheduler.ScheduleType;
-import com.njydsz.cronjob.server.core.scheduler.SecondLevelScheduler;
 import com.njydsz.cronjob.server.service.job.JobHistoryService;
 import com.njydsz.cronjob.server.service.job.JobService;
 import com.njydsz.cronjob.server.service.job.TenantQuotaService;
@@ -112,13 +111,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    */
   private final TenantQuotaService tenantQuotaService;
 
-  /**
-   * 秒级调度器（P0-3 可选注入）。
-   *
-   * <p>仅在 Leader 模式启用（{@code @ConditionalOnBean(LeaderElector.class)}）， 用于管理 FIXED_RATE /
-   * FIXED_DELAY 类型任务的调度。 Leaderless 模式下为 null，由 {@link #register} 回退到本地 TaskScheduler 处理。
-   */
-  private final ObjectProvider<SecondLevelScheduler> secondLevelSchedulerProvider;
+  /** 占位（已移除 SecondLevelScheduler 依赖）。 */
 
   /**
    * 任务历史版本服务（P1-6 可选注入）。
@@ -242,11 +235,11 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
   /**
    * 新增任务
    *
-   * <p>P0-3: 根据 {@code scheduleType} 决定是否计算 nextFireTime：
+   * <p>根据 {@code scheduleType} 决定是否计算 nextFireTime：
    *
    * <ul>
    *   <li>CRON: 计算 nextFireTime（由 JobScanner 扫描）
-   *   <li>FIXED_RATE / FIXED_DELAY: 不计算 nextFireTime（由 SecondLevelScheduler 管理）
+   *   <li>FIXED_RATE / FIXED_DELAY: 不计算 nextFireTime（由本地 TaskScheduler 管理）
    *   <li>API: 不计算 nextFireTime（仅手动触发）
    * </ul>
    *
@@ -287,7 +280,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     if (!StringUtils.hasText(job.getMisfirePolicy())) {
       job.setMisfirePolicy("FIRE_NOW");
     }
-    // P0-3: 仅 CRON 类型计算 nextFireTime（FIXED_RATE/FIXED_DELAY 由 SecondLevelScheduler 管理）
+    // 仅 CRON 类型计算 nextFireTime（FIXED_RATE/FIXED_DELAY 由本地 TaskScheduler 管理）
     ScheduleType type = ScheduleType.parse(job.getScheduleType());
     if (type == ScheduleType.CRON) {
       LocalDateTime next = nextFireTime(job);
@@ -370,7 +363,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             .params("fixedRateMs 必须为正数")
             .build();
       }
-      // FIXED_RATE 类型清空 nextFireTime（由 SecondLevelScheduler 管理）
+      // FIXED_RATE 类型清空 nextFireTime（由本地 TaskScheduler 管理）
       exists.setNextFireTime(null);
     } else if (type == ScheduleType.FIXED_DELAY) {
       if (exists.getFixedDelayMs() == null || exists.getFixedDelayMs() <= 0) {
@@ -380,7 +373,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             .params("fixedDelayMs 必须为正数")
             .build();
       }
-      // FIXED_DELAY 类型清空 nextFireTime（由 SecondLevelScheduler 管理）
+      // FIXED_DELAY 类型清空 nextFireTime（由本地 TaskScheduler 管理）
       exists.setNextFireTime(null);
     }
     if (StringUtils.hasText(job.getCronExpression()))
@@ -409,8 +402,6 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
 
     // 重新调度：先注销旧的本地调度（CRON/FIXED_RATE/FIXED_DELAY 共用 scheduledMap）
     unregister(exists.getJobKey());
-    // P0-3: 注销 SecondLevelScheduler 中的调度（FIXED_RATE/FIXED_DELAY）
-    unregisterFromSecondLevel(exists.getId());
     if ("NORMAL".equals(exists.getStatus())) {
       register(exists);
     }
@@ -441,8 +432,6 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
           .build();
     }
     unregister(j.getJobKey());
-    // P0-3: 注销 SecondLevelScheduler 中的调度（FIXED_RATE/FIXED_DELAY）
-    unregisterFromSecondLevel(j.getId());
     jobMapper.deleteById(id);
     log.info("[Cronjob] 删除任务: key={}", j.getJobKey());
     // P1-6: 记录版本变更快照（统一走 JobHistoryService）
@@ -471,8 +460,6 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
           .build();
     }
     unregister(j.getJobKey());
-    // P0-3: 注销 SecondLevelScheduler 中的调度（FIXED_RATE/FIXED_DELAY）
-    unregisterFromSecondLevel(j.getId());
     j.setStatus("PAUSED");
     jobMapper.updateById(j);
     log.info("[Cronjob] 暂停任务: key={}", j.getJobKey());
@@ -653,12 +640,11 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
   /**
    * 注册到调度器（从 DB 加载/动态新增）。
    *
-   * <p>P0-3: 根据 {@code scheduleType} 分发到不同调度器：
+   * <p>根据 {@code scheduleType} 分发到不同调度器：
    *
    * <ul>
    *   <li>CRON: 注册到 CronTrigger（Leaderless 模式）或由 JobScanner 扫描（Leader 模式）
-   *   <li>FIXED_RATE / FIXED_DELAY: Leader 模式由 SecondLevelScheduler 接管； Leaderless 模式注册到本地
-   *       TaskScheduler 的 scheduleAtFixedRate/scheduleWithFixedDelay
+   *   <li>FIXED_RATE / FIXED_DELAY: 注册到本地 TaskScheduler 的 scheduleAtFixedRate/scheduleWithFixedDelay
    *   <li>API: 不注册任何调度（仅手动触发）
    * </ul>
    *
@@ -676,7 +662,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
       log.info("[Cronjob] API 类型任务不注册调度: key={}", job.getJobKey());
       return true;
     }
-    // P0-3: FIXED_RATE / FIXED_DELAY 类型优先交给 SecondLevelScheduler（Leader 模式）
+    // FIXED_RATE / FIXED_DELAY 类型注册到本地 TaskScheduler
     if (type == ScheduleType.FIXED_RATE || type == ScheduleType.FIXED_DELAY) {
       return registerFixedRateJob(job, type);
     }
@@ -710,31 +696,17 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
   }
 
   /**
-   * 注册 FIXED_RATE / FIXED_DELAY 类型任务（P0-3）。
+   * 注册 FIXED_RATE / FIXED_DELAY 类型任务。
    *
-   * <p>Leader 模式：委托给 {@link SecondLevelScheduler}（仅 Leader 节点派发）； Leaderless 模式：回退到本地 {@link
-   * TaskScheduler} 的 scheduleAtFixedRate / scheduleWithFixedDelay， 通过 Redis 分布式锁防止多实例重复执行。
+   * <p>使用本地 {@link TaskScheduler} 的 scheduleAtFixedRate / scheduleWithFixedDelay，
+   * 通过 Redis 分布式锁防止多实例重复执行。
    *
    * @param job 任务定义
    * @param type 调度类型（FIXED_RATE / FIXED_DELAY）
    * @return 注册成功返回 true，否则返回 false
    */
   private boolean registerFixedRateJob(Job job, ScheduleType type) {
-    // Leader 模式：委托给 SecondLevelScheduler
-    if (cronjobProperties.getLeader().isEnabled()) {
-      SecondLevelScheduler scheduler =
-          secondLevelSchedulerProvider != null
-              ? secondLevelSchedulerProvider.getIfAvailable()
-              : null;
-      if (scheduler == null) {
-        log.warn(
-            "[Cronjob] Leader 模式但 SecondLevelScheduler 未启用, FIXED_RATE/FIXED_DELAY 任务无法注册: key={}",
-            job.getJobKey());
-        return false;
-      }
-      return scheduler.register(job);
-    }
-    // Leaderless 模式：回退到本地 TaskScheduler
+    // 注册到本地 TaskScheduler（Leader 和 Leaderless 模式统一处理）
     long intervalMs;
     if (type == ScheduleType.FIXED_RATE) {
       intervalMs = job.getFixedRateMs() == null ? 0 : job.getFixedRateMs();
@@ -788,25 +760,6 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
       return true;
     }
     return false;
-  }
-
-  /**
-   * 注销 SecondLevelScheduler 中的调度（P0-3）。
-   *
-   * <p>仅 Leader 模式下 SecondLevelScheduler Bean 存在时才调用； Leaderless 模式下为空操作（FIXED_RATE/FIXED_DELAY 已由
-   * {@link #unregister} 注销本地调度）。
-   *
-   * @param jobId 任务 ID
-   */
-  private void unregisterFromSecondLevel(String jobId) {
-    if (jobId == null) {
-      return;
-    }
-    SecondLevelScheduler scheduler =
-        secondLevelSchedulerProvider != null ? secondLevelSchedulerProvider.getIfAvailable() : null;
-    if (scheduler != null) {
-      scheduler.unregister(jobId);
-    }
   }
 
   /**

@@ -7,7 +7,7 @@ import org.springframework.validation.annotation.Validated;
 /**
  * 网盘知识库（NextWiki）全局配置（prefix = {@code nextwiki}）。
  *
- * <p>绑定 {@code application.yml} 中 {@code nextwiki.*} 配置项， 涵盖文件上传、缩略图、OCR、CDN、AI
+ * <p>绑定 {@code application.yml} 中 {@code nextwiki.*} 配置项，涵盖文件上传、缩略图、OCR、CDN、AI
  * 摘要、病毒扫描、预览、下载限流、分片上传、WOPI 等子模块。
  *
  * <p>所有配置项均提供默认值，未配置时降级为安全默认（关闭高级能力，保证基础文件管理可用）。
@@ -22,12 +22,25 @@ import org.springframework.validation.annotation.Validated;
  *   <li>{@link AiConfig} — AI 摘要（开关 / LLM API 配置）
  *   <li>{@link VirusScanConfig} — 病毒扫描（开关 / ClamAV 连接）
  *   <li>{@link PreviewConfig} — 文档预览（LibreOffice 路径 / 临时目录）
- *   <li>{@link DownloadConfig} — 下载限流（单用户 / IP 维度 / 签名 URL 有效期）
+ *   <li>{@link DownloadConfig} — 下载限流（单用户 / IP 维度 / 签名 URL 有效期 / 防盗链）
  *   <li>{@link WopiConfig} — WOPI 在线编辑（编辑器 URL / 访问令牌）
+ *   <li>{@link ArchivalConfig} — 冷数据归档（开关 / 阈值 / 批次 / 存储类型）
  * </ul>
  *
- * <p>使用方式：在需要读取配置的 Service 中注入 {@link NextwikiProperties}， 通过 {@code
+ * <p>使用方式：在需要读取配置的 Service 中注入 {@link NextwikiProperties}，通过 {@code
  * properties.getUpload().getMaxFileSize()} 等方法访问，替代散落的 {@code @Value} 注入。
+ *
+ * <p><b>配置示例：</b>
+ *
+ * <pre>{@code
+ * nextwiki:
+ *   upload:
+ *     max-file-size: 524288000  # 500MB
+ *     allowed-types: "jpg,png,pdf,docx"
+ *   download:
+ *     rate-limit-per-minute: 30
+ *     allow-empty-referer: false
+ * }</pre>
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -58,7 +71,7 @@ public class NextwikiProperties {
   /** 文档预览配置 */
   private PreviewConfig preview = new PreviewConfig();
 
-  /** 下载限流配置 */
+  /** 下载限流与防盗链配置 */
   private DownloadConfig download = new DownloadConfig();
 
   /** WOPI 在线编辑配置 */
@@ -66,6 +79,8 @@ public class NextwikiProperties {
 
   /** 冷数据归档配置 */
   private ArchivalConfig archival = new ArchivalConfig();
+
+  // ==================== 子配置类 ====================
 
   /**
    * 文件上传配置。
@@ -97,7 +112,7 @@ public class NextwikiProperties {
   /**
    * OCR 文字识别配置。
    *
-   * <p>通过 {@code nextwiki.ocr.provider} 选择服务商（tesseract）， 未启用时降级为跳过 OCR 提取。
+   * <p>通过 {@code nextwiki.ocr.provider} 选择服务商（tesseract），未启用时降级为跳过 OCR 提取。
    */
   @Data
   public static class OcrConfig {
@@ -117,7 +132,7 @@ public class NextwikiProperties {
   /**
    * CDN 加速配置。
    *
-   * <p>通过 {@code nextwiki.cdn.provider} 选择服务商（aliyun）， 未配置凭证时降级为直接访问源站。
+   * <p>通过 {@code nextwiki.cdn.provider} 选择服务商（aliyun），未配置凭证时降级为直接访问源站。
    */
   @Data
   public static class CdnConfig {
@@ -140,7 +155,7 @@ public class NextwikiProperties {
   /**
    * AI 摘要配置。
    *
-   * <p>通过 {@code nextwiki.ai.llm-enabled} 控制是否启用 AI 摘要， 未配置 API 凭证时降级为跳过 AI 摘要。
+   * <p>通过 {@code nextwiki.ai.llm-enabled} 控制是否启用 AI 摘要，未配置 API 凭证时降级为跳过 AI 摘要。
    */
   @Data
   public static class AiConfig {
@@ -160,7 +175,7 @@ public class NextwikiProperties {
   /**
    * 病毒扫描配置。
    *
-   * <p>基于 ClamAV 守护进程（C/S 模式），默认关闭。 启用后文件上传前自动扫描，检测到病毒时拒绝上传。
+   * <p>基于 ClamAV 守护进程（C/S 模式），默认关闭。启用后文件上传前自动扫描，检测到病毒时拒绝上传。
    */
   @Data
   public static class VirusScanConfig {
@@ -189,9 +204,9 @@ public class NextwikiProperties {
   }
 
   /**
-   * 下载限流配置。
+   * 下载限流与防盗链配置。
    *
-   * <p>支持单用户维度和 IP 维度的下载频率限制，防止恶意批量下载。
+   * <p>支持单用户维度和 IP 维度的下载频率限制，防止恶意批量下载。Referer 防盗链使用正则精确域名匹配。
    */
   @Data
   public static class DownloadConfig {
@@ -226,7 +241,7 @@ public class NextwikiProperties {
   /**
    * 冷数据归档配置。
    *
-   * <p>对于长期未访问的文件，自动标记为"冷数据"并迁移至低成本存储（如归档存储）， 降低存储成本。冷数据访问时可能存在延迟（需解冻）。
+   * <p>对于长期未访问的文件，自动标记为"冷数据"并迁移至低成本存储（如归档存储），降低存储成本。冷数据访问时可能存在延迟（需解冻）。
    */
   @Data
   public static class ArchivalConfig {

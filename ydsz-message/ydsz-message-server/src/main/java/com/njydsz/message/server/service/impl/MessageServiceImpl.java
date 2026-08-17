@@ -41,8 +41,6 @@ import com.njydsz.message.server.config.RetryStrategyResolver;
 import com.njydsz.message.server.filter.SensitiveWordFilter;
 import com.njydsz.message.server.metric.MessageMetrics;
 import com.njydsz.message.server.producer.MessageQueueOperations;
-import com.njydsz.message.server.service.batch.AggregateService;
-import com.njydsz.message.server.service.canary.CanaryService;
 import com.njydsz.message.server.service.chain.SendContext;
 import com.njydsz.message.server.service.chain.SendPipeline;
 import com.njydsz.message.server.service.config.PreferenceService;
@@ -50,14 +48,14 @@ import com.njydsz.message.server.service.config.RouteRuleService;
 import com.njydsz.message.server.service.config.SubscriptionService;
 import com.njydsz.message.server.service.config.UserChannelBindingService;
 import com.njydsz.message.server.service.config.VariableSourceResolver;
-import com.njydsz.message.server.service.core.DedupService;
 import com.njydsz.message.server.service.core.DeliveryTimeOptimizer;
+import com.njydsz.message.server.service.core.GuardService;
 import com.njydsz.message.server.service.core.MessageQueryService;
 import com.njydsz.message.server.service.core.MessageSendService;
 import com.njydsz.message.server.service.core.MessageService;
 import com.njydsz.message.server.service.core.MessageTraceService;
+import com.njydsz.message.server.service.batch.BatchService;
 import com.njydsz.message.server.service.impl.AggregatePersistenceService;
-import com.njydsz.message.server.service.impl.ParallelBatchSender;
 import com.njydsz.message.server.service.template.TemplateService;
 import com.njydsz.message.server.template.RichMediaRenderer;
 import com.njydsz.message.server.template.TemplateEngine;
@@ -98,11 +96,8 @@ public class MessageServiceImpl implements MessageService {
   /** 路由规则服务（通道动态路由） */
   private final RouteRuleService routeRuleService;
 
-  /** 限流服务（通道 / 用户 / 模板多维限流） */
-  private final RateLimitService rateLimitService;
-
-  /** 灰度服务（A/B 实验命中判断） */
-  private final CanaryService canaryService;
+  /** 消息防护服务（限流 + 去重） */
+  private final GuardService guardService;
 
   /** 消息模块配置属性 */
   private final MessageProperties messageProperties;
@@ -116,17 +111,11 @@ public class MessageServiceImpl implements MessageService {
   /** 用户偏好服务（DND / locale / 聚合） */
   private final PreferenceService preferenceService;
 
-  /** 消息聚合服务（批量摘要发送） */
-  private final AggregateService aggregateService;
-
   /** 敏感词过滤器 */
   private final SensitiveWordFilter sensitiveWordFilter;
 
   /** 重试策略解析器（按通道解析最大重试次数与退避间隔） */
   private final RetryStrategyResolver retryStrategyResolver;
-
-  /** 去重服务（Redis SET NX EX 幂等去重） */
-  private final DedupService dedupService;
 
   /** 消息全链路追踪服务 */
   private final MessageTraceService messageTraceService;
@@ -149,8 +138,8 @@ public class MessageServiceImpl implements MessageService {
   /** P2-3: 消息队列操作（可选,未配置 MQ 时为 null） */
   private final ObjectProvider<MessageQueueOperations> mqProducerProvider;
 
-  /** P2-15: 并行批量发送器 */
-  private final ParallelBatchSender parallelBatchSender;
+  /** 批次服务（批量异步发送） */
+  private final BatchService batchService;
 
   /** P1-1: 发送 / 查询子服务（从本类拆分，降低 God Class 复杂度） */
   private final MessageSendService messageSendService;

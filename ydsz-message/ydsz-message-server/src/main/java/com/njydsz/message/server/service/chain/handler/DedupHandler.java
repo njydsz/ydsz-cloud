@@ -16,7 +16,7 @@ import com.njydsz.message.server.event.DomainEventPublisher;
 import com.njydsz.message.server.metric.MessageMetrics;
 import com.njydsz.message.server.service.chain.SendContext;
 import com.njydsz.message.server.service.chain.SendHandler;
-import com.njydsz.message.server.service.core.DedupService;
+import com.njydsz.message.server.service.core.GuardService;
 
 /**
  * 智能去重 Handler。
@@ -32,7 +32,7 @@ import com.njydsz.message.server.service.core.DedupService;
 @RequiredArgsConstructor
 public class DedupHandler implements SendHandler {
 
-  private final DedupService dedupService;
+  private final GuardService guardService;
   private final MessageMetrics messageMetrics;
   private final DomainEventPublisher domainEventPublisher;
 
@@ -43,7 +43,7 @@ public class DedupHandler implements SendHandler {
       return true;
     }
     ctx.setDedupKey(dedupKey);
-    if (!dedupService.tryAcquire(dedupKey)) {
+    if (!guardService.tryDedup(dedupKey)) {
       log.info(
           "[Message] 检测到重复消息,跳过发送: dedupKey={} receiver={}",
           dedupKey,

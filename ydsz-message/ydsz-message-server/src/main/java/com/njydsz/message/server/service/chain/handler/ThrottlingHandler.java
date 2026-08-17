@@ -13,7 +13,7 @@ import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.message.server.metric.MessageMetrics;
 import com.njydsz.message.server.service.chain.SendContext;
 import com.njydsz.message.server.service.chain.SendHandler;
-import com.njydsz.message.server.service.core.RateLimitService;
+import com.njydsz.message.server.service.core.GuardService;
 import com.njydsz.message.server.service.impl.SenderQuotaService;
 
 /**
@@ -37,7 +37,7 @@ import com.njydsz.message.server.service.impl.SenderQuotaService;
 @RequiredArgsConstructor
 public class ThrottlingHandler implements SendHandler {
 
-  private final RateLimitService rateLimitService;
+  private final GuardService guardService;
   private final SenderQuotaService senderQuotaService;
   private final MessageMetrics messageMetrics;
 
@@ -48,7 +48,7 @@ public class ThrottlingHandler implements SendHandler {
     String receiver = ctx.getReceiver();
     String templateCode = ctx.getTemplateCode();
     // 1. 通道级 QPS 限流
-    if (!rateLimitService.tryAcquire(buildChannelLimitKey(channel, bizType), 1)) {
+    if (!guardService.tryAcquire(buildChannelLimitKey(channel, bizType), 1)) {
       messageMetrics.recordSend(channel, "FAILED", 0);
       throw SysException.builder()
           .resultCode(BaseResultCode.TOO_MANY_REQUESTS)
@@ -56,7 +56,7 @@ public class ThrottlingHandler implements SendHandler {
           .build();
     }
     // 2. 多维度限流校验
-    if (!rateLimitService.checkSendLimit(
+    if (!guardService.checkSendLimit(
         channel, receiver, templateCode, ctx.getTenantId(), request.getPriority())) {
       messageMetrics.recordSend(channel, "RATE_LIMITED", 0);
       throw SysException.builder()
@@ -66,7 +66,7 @@ public class ThrottlingHandler implements SendHandler {
     }
     // 3. 用户频率校验
     if (StringUtils.hasText(receiver)
-        && !rateLimitService.checkFrequency(receiver, channel, bizType)) {
+        && !guardService.checkFrequency(receiver, channel, bizType)) {
       messageMetrics.recordSend(channel, "FAILED", 0);
       throw SysException.builder()
           .resultCode(BaseResultCode.TOO_MANY_REQUESTS)
