@@ -13,7 +13,7 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.config.UserChannelBindingDTO;
 import com.njydsz.message.domain.entity.config.MsgUserChannel;
-import com.njydsz.message.infra.mapper.config.MsgUserChannelMapper;
+import com.njydsz.message.infra.repository.MsgUserChannelRepository;
 import com.njydsz.message.server.service.config.UserChannelBindingService;
 
 /**
@@ -33,8 +33,8 @@ import com.njydsz.message.server.service.config.UserChannelBindingService;
 @RequiredArgsConstructor
 public class UserChannelBindingServiceImpl implements UserChannelBindingService {
 
-  /** 用户-通道绑定 Mapper */
-  private final MsgUserChannelMapper msgUserChannelMapper;
+  /** 用户-通道绑定 Repository */
+  private final MsgUserChannelRepository msgUserChannelRepository;
 
   /**
    * {@inheritDoc}
@@ -70,7 +70,7 @@ public class UserChannelBindingServiceImpl implements UserChannelBindingService 
       if (dto.getExtra() != null) {
         existing.setExtra(dto.getExtra());
       }
-      msgUserChannelMapper.updateById(existing);
+      msgUserChannelRepository.updateById(existing);
       log.info(
           "[UserChannelBinding] 更新绑定: userId={} channel={} channelUserId={}",
           dto.getUserId(),
@@ -87,7 +87,7 @@ public class UserChannelBindingServiceImpl implements UserChannelBindingService 
     entity.setIsPrimary(dto.getIsPrimary() != null ? dto.getIsPrimary() : 0);
     entity.setExtra(dto.getExtra());
     entity.setTenantId(tenantId);
-    msgUserChannelMapper.insert(entity);
+    msgUserChannelRepository.insert(entity);
     log.info(
         "[UserChannelBinding] 新增绑定: userId={} channel={} channelUserId={}",
         dto.getUserId(),
@@ -106,7 +106,7 @@ public class UserChannelBindingServiceImpl implements UserChannelBindingService 
     if (!StringUtils.hasText(id)) {
       return;
     }
-    msgUserChannelMapper.deleteById(id);
+    msgUserChannelRepository.deleteById(id);
   }
 
   /**
@@ -122,7 +122,7 @@ public class UserChannelBindingServiceImpl implements UserChannelBindingService 
     if (!StringUtils.hasText(userId)) {
       return List.of();
     }
-    return msgUserChannelMapper.selectList(
+    return msgUserChannelRepository.selectList(
         new LambdaQueryWrapper<MsgUserChannel>()
             .eq(MsgUserChannel::getUserId, userId)
             .eq(MsgUserChannel::getTenantId, TenantContextHolder.getTenantId())
@@ -144,7 +144,7 @@ public class UserChannelBindingServiceImpl implements UserChannelBindingService 
     if (!StringUtils.hasText(userId) || !StringUtils.hasText(channelType)) {
       return null;
     }
-    return msgUserChannelMapper.selectOne(
+    return msgUserChannelRepository.selectOne(
         new LambdaQueryWrapper<MsgUserChannel>()
             .eq(MsgUserChannel::getUserId, userId)
             .eq(MsgUserChannel::getChannelType, channelType.trim().toUpperCase())

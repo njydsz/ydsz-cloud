@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.userinfo.domain.entity.UserPasswordHistory;
-import com.njydsz.userinfo.infra.mapper.UserPasswordHistoryMapper;
+import com.njydsz.userinfo.infra.repository.UserPasswordHistoryRepository;
 
 /**
  * 密码历史服务实现
@@ -35,7 +35,7 @@ import com.njydsz.userinfo.infra.mapper.UserPasswordHistoryMapper;
 @RequiredArgsConstructor
 public class UserPasswordHistoryServiceImpl implements UserPasswordHistoryService {
 
-  private final UserPasswordHistoryMapper passwordHistoryMapper;
+  private final UserPasswordHistoryRepository passwordHistoryRepository;
   private final PasswordEncoder passwordEncoder;
   private final SnowflakeIdGenerator snowflakeIdGenerator;
 
@@ -52,7 +52,7 @@ public class UserPasswordHistoryServiceImpl implements UserPasswordHistoryServic
         .orderByDesc(UserPasswordHistory::getCreatedAt)
         .last("LIMIT " + historyCount);
 
-    List<UserPasswordHistory> historyList = passwordHistoryMapper.selectList(wrapper);
+    List<UserPasswordHistory> historyList = passwordHistoryRepository.list(wrapper);
 
     // 逐条比对（BCrypt matches）
     for (UserPasswordHistory history : historyList) {
@@ -77,7 +77,7 @@ public class UserPasswordHistoryServiceImpl implements UserPasswordHistoryServic
     record.setPasswordHash(passwordHash);
     record.setCreatedAt(LocalDateTime.now());
     record.setDeleted(0);
-    passwordHistoryMapper.insert(record);
+    passwordHistoryRepository.insert(record);
 
     log.info("Password history recorded for user: {}", userId);
 
@@ -94,7 +94,7 @@ public class UserPasswordHistoryServiceImpl implements UserPasswordHistoryServic
     }
     LambdaQueryWrapper<UserPasswordHistory> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(UserPasswordHistory::getUserId, userId);
-    passwordHistoryMapper.delete(wrapper);
+    passwordHistoryRepository.delete(wrapper);
     log.info("Password history cleared for user: {}", userId);
   }
 
@@ -110,7 +110,7 @@ public class UserPasswordHistoryServiceImpl implements UserPasswordHistoryServic
     // 查询需要删除的旧记录 ID
     LambdaQueryWrapper<UserPasswordHistory> countWrapper = new LambdaQueryWrapper<>();
     countWrapper.eq(UserPasswordHistory::getUserId, userId);
-    int totalCount = Math.toIntExact(passwordHistoryMapper.selectCount(countWrapper));
+    int totalCount = Math.toIntExact(passwordHistoryRepository.count(countWrapper));
 
     if (totalCount <= keepCount) {
       return;
@@ -123,11 +123,11 @@ public class UserPasswordHistoryServiceImpl implements UserPasswordHistoryServic
         .orderByDesc(UserPasswordHistory::getCreatedAt)
         .last("LIMIT 100 OFFSET " + keepCount);
 
-    List<UserPasswordHistory> oldRecords = passwordHistoryMapper.selectList(deleteWrapper);
+    List<UserPasswordHistory> oldRecords = passwordHistoryRepository.list(deleteWrapper);
     if (!oldRecords.isEmpty()) {
       List<String> idsToDelete =
           oldRecords.stream().map(UserPasswordHistory::getId).collect(Collectors.toList());
-      passwordHistoryMapper.deleteBatchIds(idsToDelete);
+      passwordHistoryRepository.deleteByIds(idsToDelete);
       log.debug("Cleaned up {} old password records for user: {}", oldRecords.size(), userId);
     }
   }

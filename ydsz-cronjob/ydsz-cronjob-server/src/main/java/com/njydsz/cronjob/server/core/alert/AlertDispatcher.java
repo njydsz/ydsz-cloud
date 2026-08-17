@@ -27,8 +27,8 @@ import com.njydsz.common.notify.helper.NotifyHelper;
 import com.njydsz.common.socket.push.RealtimePushTemplate;
 import com.njydsz.cronjob.domain.entity.job.JobAlertLog;
 import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
-import com.njydsz.cronjob.infra.mapper.job.JobAlertLogMapper;
-import com.njydsz.cronjob.infra.mapper.job.JobAlertRuleMapper;
+import com.njydsz.cronjob.infra.repository.JobAlertLogRepository;
+import com.njydsz.cronjob.infra.repository.JobAlertRuleRepository;
 import com.njydsz.cronjob.server.core.AlertSendException;
 import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 
@@ -68,8 +68,8 @@ import com.njydsz.cronjob.server.metrics.CronjobMetrics;
 @RequiredArgsConstructor
 public class AlertDispatcher {
 
-  private final JobAlertRuleMapper jobAlertRuleMapper;
-  private final JobAlertLogMapper jobAlertLogMapper;
+  private final JobAlertRuleRepository jobAlertRuleRepository;
+  private final JobAlertLogRepository jobAlertLogRepository;
 
   /** P6-2: Prometheus 指标收集器（可选注入，未配置时不记录指标） */
   private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
@@ -260,7 +260,7 @@ public class AlertDispatcher {
     LocalDateTime now = LocalDateTime.now();
     LocalDateTime cooldownBefore = now.minusMinutes(cooldownMinutes);
     int updated =
-        jobAlertRuleMapper.updateLastAlertAtIfNotInCooldown(rule.getId(), now, cooldownBefore);
+        jobAlertRuleRepository.updateLastAlertAtIfNotInCooldown(rule.getId(), now, cooldownBefore);
     return updated > 0;
   }
 
@@ -517,7 +517,7 @@ public class AlertDispatcher {
       alertLog.setTenantId(context.tenantId());
       alertLog.setCreatedAt(LocalDateTime.now());
       alertLog.setDeleted(0);
-      jobAlertLogMapper.insert(alertLog);
+      jobAlertLogRepository.insert(alertLog);
     } catch (Exception e) {
       // 日志写入失败不影响告警主流程
       log.error(

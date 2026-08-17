@@ -21,9 +21,9 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.userinfo.domain.entity.Menu;
 import com.njydsz.userinfo.domain.entity.Role;
 import com.njydsz.userinfo.domain.entity.RolePermission;
-import com.njydsz.userinfo.infra.mapper.MenuMapper;
-import com.njydsz.userinfo.infra.mapper.RoleMapper;
-import com.njydsz.userinfo.infra.mapper.RolePermissionMapper;
+import com.njydsz.userinfo.infra.repository.MenuRepository;
+import com.njydsz.userinfo.infra.repository.RolePermissionRepository;
+import com.njydsz.userinfo.infra.repository.RoleRepository;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 
 /**
@@ -56,9 +56,9 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
   /** 角色权限缓存 Redis Key 前缀。 */
   private static final String CACHE_KEY_PREFIX = "userinfo:permission:role:";
 
-  private final MenuMapper menuMapper;
-  private final RoleMapper roleMapper;
-  private final RolePermissionMapper rolePermissionMapper;
+  private final MenuRepository menuRepository;
+  private final RoleRepository roleRepository;
+  private final RolePermissionRepository rolePermissionRepository;
   private final RedisStringOps redisStringOps;
   private final UserInfoProperties properties;
 
@@ -108,8 +108,7 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
     // 1. 按 roleCode 查询角色 ID
     LambdaQueryWrapper<Role> roleWrapper = new LambdaQueryWrapper<>();
     roleWrapper.eq(Role::getRoleCode, roleCode);
-    roleWrapper.eq(Role::getDeleted, 0);
-    Role role = roleMapper.selectOne(roleWrapper);
+    Role role = roleRepository.findByRoleCode(roleCode);
 
     if (role == null) {
       log.debug("Role not found for roleCode: {}", roleCode);
@@ -117,25 +116,17 @@ public class DbRolePermissionLoader implements RolePermissionLoader {
     }
 
     // 2. 按 roleId 查询 role_permission 关联表
-    LambdaQueryWrapper<RolePermission> rpWrapper = new LambdaQueryWrapper<>();
-    rpWrapper.eq(RolePermission::getRoleId, role.getId());
-    rpWrapper.eq(RolePermission::getDeleted, 0);
-    List<RolePermission> rolePermissions = rolePermissionMapper.selectList(rpWrapper);
+    // 2. 按 roleId 查询 role_permission 关联表
+    List<String> permissionIds = rolePermissionRepository.findMenuIdsByRoleId(role.getId());
 
-    if (rolePermissions.isEmpty()) {
+    if (permissionIds.isEmpty()) {
       return RolePermissions.empty();
     }
 
-    // 3. 提取 permissionId 列表（即 menuId）
-    List<String> permissionIds =
-        rolePermissions.stream().map(RolePermission::getPermissionId).collect(Collectors.toList());
-
-    // 4. 查询权限/菜单详情
-    LambdaQueryWrapper<Menu> menuWrapper = new LambdaQueryWrapper<>();
-    menuWrapper.in(Menu::getId, permissionIds);
-    menuWrapper.eq(Menu::getDeleted, 0);
-    menuWrapper.eq(Menu::getStatus, "ENABLED");
-    List<Menu> menus = menuMapper.selectList(menuWrapper);
+    // 3. 查询权限/菜单详情
+    List<Menu> menus = menuRepository.findByIds(permissionIds).stream()
+        .filter(m -> m.getDeleted() == 0 && "ENABLED".equals(m.getStatus()))
+        .collect(Collectors.toList());
 
     // 5. 按类型分类权限码
     Map<String, Set<String>> categorized = categorizePermissions(menus);

@@ -10,11 +10,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.audit.storage.JdbcAuditStorage;
-import com.njydsz.cronjob.infra.mapper.job.JobAlertLogMapper;
-import com.njydsz.cronjob.infra.mapper.job.JobHistoryMapper;
-import com.njydsz.cronjob.infra.mapper.job.JobTaskMapper;
-import com.njydsz.cronjob.infra.mapper.log.JobLogContentMapper;
-import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
+import com.njydsz.cronjob.infra.repository.JobAlertLogRepository;
+import com.njydsz.cronjob.infra.repository.JobHistoryRepository;
+import com.njydsz.cronjob.infra.repository.JobLogContentRepository;
+import com.njydsz.cronjob.infra.repository.JobLogRepository;
+import com.njydsz.cronjob.infra.repository.JobTaskRepository;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
 
@@ -57,11 +57,11 @@ import com.njydsz.cronjob.server.core.leader.LeaderElector;
 @ConditionalOnBean(LeaderElector.class)
 public class LogCleaner {
 
-  private final JobLogMapper jobLogMapper;
-  private final JobLogContentMapper jobLogContentMapper;
-  private final JobAlertLogMapper jobAlertLogMapper;
-  private final JobTaskMapper jobTaskMapper;
-  private final JobHistoryMapper jobHistoryMapper;
+  private final JobLogRepository jobLogRepository;
+  private final JobLogContentRepository jobLogContentRepository;
+  private final JobAlertLogRepository jobAlertLogRepository;
+  private final JobTaskRepository jobTaskRepository;
+  private final JobHistoryRepository jobHistoryRepository;
   private final LeaderElector leaderElector;
   private final CronjobProperties cronjobProperties;
 
@@ -87,27 +87,27 @@ public class LogCleaner {
    *
    * <p>使用构造器注入核心依赖（LeaderElector 相关），保证启动时依赖校验。 审计日志存储使用字段注入（required=false），适配无 common-audit 的场景。
    *
-   * @param jobLogMapper 任务日志 Mapper
-   * @param jobLogContentMapper 任务日志内容 Mapper
-   * @param jobAlertLogMapper 告警日志 Mapper
-   * @param jobTaskMapper 任务记录 Mapper
-   * @param jobHistoryMapper 任务历史 Mapper
+   * @param jobLogRepository 任务日志 Repository
+   * @param jobLogContentRepository 任务日志内容 Repository
+   * @param jobAlertLogRepository 告警日志 Repository
+   * @param jobTaskRepository 任务记录 Repository
+   * @param jobHistoryRepository 任务历史 Repository
    * @param leaderElector 选举器
    * @param cronjobProperties 定时任务配置
    */
   public LogCleaner(
-      JobLogMapper jobLogMapper,
-      JobLogContentMapper jobLogContentMapper,
-      JobAlertLogMapper jobAlertLogMapper,
-      JobTaskMapper jobTaskMapper,
-      JobHistoryMapper jobHistoryMapper,
+      JobLogRepository jobLogRepository,
+      JobLogContentRepository jobLogContentRepository,
+      JobAlertLogRepository jobAlertLogRepository,
+      JobTaskRepository jobTaskRepository,
+      JobHistoryRepository jobHistoryRepository,
       LeaderElector leaderElector,
       CronjobProperties cronjobProperties) {
-    this.jobLogMapper = jobLogMapper;
-    this.jobLogContentMapper = jobLogContentMapper;
-    this.jobAlertLogMapper = jobAlertLogMapper;
-    this.jobTaskMapper = jobTaskMapper;
-    this.jobHistoryMapper = jobHistoryMapper;
+    this.jobLogRepository = jobLogRepository;
+    this.jobLogContentRepository = jobLogContentRepository;
+    this.jobAlertLogRepository = jobAlertLogRepository;
+    this.jobTaskRepository = jobTaskRepository;
+    this.jobHistoryRepository = jobHistoryRepository;
     this.leaderElector = leaderElector;
     this.cronjobProperties = cronjobProperties;
   }
@@ -160,15 +160,15 @@ public class LogCleaner {
 
     long totalCleaned = 0;
     // 每张表独立清理，单表异常不影响其他表
-    totalCleaned += cleanTable("ydsz_job_log", before, batchSize, jobLogMapper::cleanExpiredLogs);
+    totalCleaned += cleanTable("ydsz_job_log", before, batchSize, jobLogRepository::cleanExpiredLogs);
     totalCleaned +=
         cleanTable(
-            "ydsz_job_log_content", before, batchSize, jobLogContentMapper::cleanExpiredLogs);
+            "ydsz_job_log_content", before, batchSize, jobLogContentRepository::cleanExpiredLogs);
     totalCleaned +=
-        cleanTable("ydsz_job_alert_log", before, batchSize, jobAlertLogMapper::cleanExpiredLogs);
-    totalCleaned += cleanTable("ydsz_job_task", before, batchSize, jobTaskMapper::cleanExpiredLogs);
+        cleanTable("ydsz_job_alert_log", before, batchSize, jobAlertLogRepository::cleanExpiredLogs);
+    totalCleaned += cleanTable("ydsz_job_task", before, batchSize, jobTaskRepository::cleanExpiredLogs);
     totalCleaned +=
-        cleanTable("ydsz_job_history", before, batchSize, jobHistoryMapper::cleanExpiredLogs);
+        cleanTable("ydsz_job_history", before, batchSize, jobHistoryRepository::cleanExpiredLogs);
 
     // 审计日志清理（sys_audit_log）— 联动 ydsz-common-audit 模块能力
     totalCleaned += cleanAuditLogs(cfg.getRetentionDays());

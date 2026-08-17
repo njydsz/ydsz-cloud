@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.userinfo.domain.entity.UserPost;
-import com.njydsz.userinfo.infra.mapper.UserPostMapper;
+import com.njydsz.userinfo.infra.repository.UserPostRepository;
 import com.njydsz.userinfo.server.service.UserPostService;
 
 /**
@@ -27,11 +27,11 @@ import com.njydsz.userinfo.server.service.UserPostService;
 @RequiredArgsConstructor
 public class UserPostServiceImpl implements UserPostService {
 
-  private final UserPostMapper mapper;
+  private final UserPostRepository userPostRepository;
 
   @Override
   public UserPost getById(String id) {
-    UserPost entity = mapper.selectById(id);
+    UserPost entity = userPostRepository.findById(id);
     if (entity == null || entity.getDeleted() == 1) {
       return null;
     }
@@ -42,25 +42,25 @@ public class UserPostServiceImpl implements UserPostService {
   public List<UserPost> list() {
     LambdaQueryWrapper<UserPost> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(UserPost::getDeleted, 0);
-    return mapper.selectList(wrapper);
+    return userPostRepository.list(wrapper);
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public String save(UserPost entity) {
-    mapper.insert(entity);
+    userPostRepository.insert(entity);
     return entity.getId();
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean updateById(UserPost entity) {
-    return mapper.updateById(entity) > 0;
+    return userPostRepository.updateById(entity) > 0;
   }
 
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    return mapper.deleteById(id) > 0;
+    return userPostRepository.deleteById(id) > 0;
   }
 }

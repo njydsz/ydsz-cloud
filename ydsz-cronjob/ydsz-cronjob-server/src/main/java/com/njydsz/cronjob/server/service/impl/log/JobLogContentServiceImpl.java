@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.cronjob.domain.entity.log.JobLogContent;
-import com.njydsz.cronjob.infra.mapper.log.JobLogContentMapper;
+import com.njydsz.cronjob.infra.repository.JobLogContentRepository;
 import com.njydsz.cronjob.server.service.log.JobLogContentService;
 
 /**
@@ -24,8 +24,8 @@ import com.njydsz.cronjob.server.service.log.JobLogContentService;
 @RequiredArgsConstructor
 public class JobLogContentServiceImpl implements JobLogContentService {
 
-  /** 任务日志内容 Mapper（分页/增量查询） */
-  private final JobLogContentMapper jobLogContentMapper;
+  /** 任务日志内容 Repository（分页/增量查询） */
+  private final JobLogContentRepository jobLogContentRepository;
 
   @Override
   public void batchSave(List<JobLogContent> contents) {
@@ -33,24 +33,24 @@ public class JobLogContentServiceImpl implements JobLogContentService {
       return;
     }
     for (JobLogContent content : contents) {
-      jobLogContentMapper.insert(content);
+      jobLogContentRepository.insert(content);
     }
   }
 
   @Override
   public List<JobLogContent> pageByLogId(String logId, int page, int size) {
     int offset = Math.max(0, (page - 1) * size);
-    return jobLogContentMapper.selectByLogId(logId, offset, size);
+    return jobLogContentRepository.selectByLogId(logId, offset, size);
   }
 
   @Override
   public List<JobLogContent> listAfterLine(String logId, int fromLineNo) {
-    return jobLogContentMapper.selectAfterLine(logId, fromLineNo);
+    return jobLogContentRepository.selectAfterLine(logId, fromLineNo);
   }
 
   @Override
   public int countByLogId(String logId) {
-    return jobLogContentMapper.countByLogId(logId);
+    return jobLogContentRepository.countByLogId(logId);
   }
 
   @Override
@@ -59,6 +59,6 @@ public class JobLogContentServiceImpl implements JobLogContentService {
       return Collections.emptyList();
     }
     int offset = Math.max(0, (page - 1) * size);
-    return jobLogContentMapper.selectByLogIdAndKeyword(logId, keyword, offset, size);
+    return jobLogContentRepository.selectByLogIdAndKeyword(logId, keyword, offset, size);
   }
 }

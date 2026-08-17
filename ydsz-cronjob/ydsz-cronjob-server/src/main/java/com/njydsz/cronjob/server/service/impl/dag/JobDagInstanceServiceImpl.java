@@ -14,9 +14,9 @@ import com.njydsz.cronjob.domain.dag.DagInstanceStatus;
 import com.njydsz.cronjob.domain.entity.dag.JobDag;
 import com.njydsz.cronjob.domain.entity.dag.JobDagInstance;
 import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstance;
-import com.njydsz.cronjob.infra.mapper.dag.JobDagInstanceMapper;
-import com.njydsz.cronjob.infra.mapper.dag.JobDagMapper;
-import com.njydsz.cronjob.infra.mapper.dag.JobDagNodeInstanceMapper;
+import com.njydsz.cronjob.infra.repository.JobDagInstanceRepository;
+import com.njydsz.cronjob.infra.repository.JobDagNodeInstanceRepository;
+import com.njydsz.cronjob.infra.repository.JobDagRepository;
 import com.njydsz.cronjob.server.core.dag.DagDefinition;
 import com.njydsz.cronjob.server.core.dag.DagDefinitionCodec;
 import com.njydsz.cronjob.server.service.dag.JobDagInstanceService;
@@ -39,14 +39,14 @@ import com.njydsz.cronjob.server.vo.DagInstanceVisualizationVO;
 @RequiredArgsConstructor
 public class JobDagInstanceServiceImpl implements JobDagInstanceService {
 
-  /** DAG 实例 Mapper */
-  private final JobDagInstanceMapper jobDagInstanceMapper;
+  /** DAG 实例 Repository */
+  private final JobDagInstanceRepository jobDagInstanceRepository;
 
-  /** DAG 节点实例 Mapper */
-  private final JobDagNodeInstanceMapper jobDagNodeInstanceMapper;
+  /** DAG 节点实例 Repository */
+  private final JobDagNodeInstanceRepository jobDagNodeInstanceRepository;
 
-  /** DAG 定义 Mapper（用于查询 DAG 定义 JSON） */
-  private final JobDagMapper jobDagMapper;
+  /** DAG 定义 Repository（用于查询 DAG 定义 JSON） */
+  private final JobDagRepository jobDagRepository;
 
   /** DAG 定义 JSON 编解码器 */
   private final DagDefinitionCodec dagDefinitionCodec;
@@ -54,7 +54,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
   @Override
   @Transactional(readOnly = true)
   public JobDagInstance getInstanceById(String instanceId) {
-    JobDagInstance instance = jobDagInstanceMapper.selectById(instanceId);
+    JobDagInstance instance = jobDagInstanceRepository.selectById(instanceId);
     if (instance == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -69,7 +69,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
   @Transactional(readOnly = true)
   public List<JobDagInstance> listByDagId(String dagId, int limit) {
     int safeLimit = limit > 0 ? limit : 20;
-    return jobDagInstanceMapper.selectByDagId(dagId, safeLimit);
+    return jobDagInstanceRepository.selectByDagId(dagId, safeLimit);
   }
 
   @Override
@@ -78,13 +78,13 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
     if (!StringUtils.hasText(status)) {
       return List.of();
     }
-    return jobDagInstanceMapper.selectByStatus(status);
+    return jobDagInstanceRepository.selectByStatus(status);
   }
 
   @Override
   @Transactional(readOnly = true)
   public List<JobDagNodeInstance> listNodes(String dagInstanceId) {
-    return jobDagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
+    return jobDagNodeInstanceRepository.selectByDagInstanceId(dagInstanceId);
   }
 
   @Override
@@ -92,7 +92,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
   public void pauseInstance(String instanceId) {
     getInstanceById(instanceId);
     int rows =
-        jobDagInstanceMapper.casUpdateStatus(
+        jobDagInstanceRepository.casUpdateStatus(
             instanceId, DagInstanceStatus.RUNNING.name(), DagInstanceStatus.PAUSED.name());
     if (rows == 0) {
       throw SysException.builder()
@@ -109,7 +109,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
   public void resumeInstance(String instanceId) {
     getInstanceById(instanceId);
     int rows =
-        jobDagInstanceMapper.casUpdateStatus(
+        jobDagInstanceRepository.casUpdateStatus(
             instanceId, DagInstanceStatus.PAUSED.name(), DagInstanceStatus.RUNNING.name());
     if (rows == 0) {
       throw SysException.builder()
@@ -127,12 +127,12 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
     getInstanceById(instanceId);
     // RUNNING → CANCELLED
     int rows =
-        jobDagInstanceMapper.casUpdateStatus(
+        jobDagInstanceRepository.casUpdateStatus(
             instanceId, DagInstanceStatus.RUNNING.name(), DagInstanceStatus.CANCELLED.name());
     if (rows == 0) {
       // PAUSED → CANCELLED
       rows =
-          jobDagInstanceMapper.casUpdateStatus(
+          jobDagInstanceRepository.casUpdateStatus(
               instanceId, DagInstanceStatus.PAUSED.name(), DagInstanceStatus.CANCELLED.name());
     }
     if (rows == 0) {
@@ -149,7 +149,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
   @Transactional(rollbackFor = Exception.class)
   public void updateContext(String instanceId, String contextJson) {
     getInstanceById(instanceId);
-    jobDagInstanceMapper.updateContext(instanceId, contextJson);
+    jobDagInstanceRepository.updateContext(instanceId, contextJson);
     log.info("[JobDagInstance] 更新 DAG 实例上下文: instanceId={}", instanceId);
   }
 
@@ -160,7 +160,7 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
     JobDagInstance instance = getInstanceById(instanceId);
 
     // 2. 查询 DAG 定义（通过实例.dagId 关联）
-    JobDag dag = jobDagMapper.selectById(instance.getDagId());
+    JobDag dag = jobDagRepository.selectById(instance.getDagId());
     if (dag == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)

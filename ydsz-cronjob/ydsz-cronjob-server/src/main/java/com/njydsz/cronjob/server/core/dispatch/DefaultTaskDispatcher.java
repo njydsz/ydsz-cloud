@@ -137,6 +137,9 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
   /** P6-2: Prometheus 指标收集器（可选注入，未配置时不记录指标） */
   private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
 
+  /** P1-1: 失败重试调度器（可选注入，未配置时不支持重试） */
+  private final ObjectProvider<RetryScheduler> retrySchedulerProvider;
+
   /** P7-3: 租户级配额服务（可选注入，未配置时跳过配额检查与计数） */
   private final ObjectProvider<TenantQuotaService> tenantQuotaServiceProvider;
 
@@ -198,14 +201,6 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
   /** P0-5: 服务端口（通过 @Value 注入，修正 JobNodeHeartbeat 之前返回 PID 的问题） */
   @Value("${server.port:0}")
   private int serverPort;
-
-  /**
-   * P1-1: 重试调度线程池（延迟调度失败重试）。
-   *
-   * <p>保留手动创建原因：{@link ScheduledExecutorService} 支持延迟/周期调度， common-thread 的 {@code
-   * ThreadPoolTaskExecutor} 不支持 scheduled 语义。 线程池大小和线程名通过硬编码配置（2 线程 + ydsz-job-retry 前缀）。
-   */
-  private ScheduledExecutorService retryScheduler;
 
   /**
    * P1-7: 任务执行线程池（隔离调度线程与执行线程，限制并发）。
@@ -1150,7 +1145,11 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     }
     // P1-1: 失败重试（非 RETRY 触发且 maxRetries > 0 且 retryCount < maxRetries）
     if (!success) {
-      scheduleRetryIfNeeded(job, holdLock, triggerType, retryCount);
+      RetryScheduler scheduler = retrySchedulerProvider.getIfAvailable();
+      if (scheduler != null) {
+        scheduler.scheduleRetry(
+            job, holdLock, triggerType, retryCount, this::executeJobForRetry);
+      }
     }
   }
 
@@ -1631,83 +1630,38 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     }
   }
 
+  /**
+   * 判断任务是否存在 RUNNING 状态的执行日志。
+   *
+   * <p>用于 DISCARD_OVERLAPPING 策略：上一次执行未完成时丢弃新触发。
+   *
+   * @param jobId 任务 ID
+   * @return true 表示存在 RUNNING 日志
+   */
+  private boolean hasRunningLog(Long jobId) {
+    Long count =
+        jobLogMapper.selectCount(
+            new LambdaQueryWrapper<JobLog>()
+                .eq(JobLog::getJobId, jobId)
+                .eq(JobLog::getStatus, "RUNNING")
+                .eq(JobLog::getDeleted, 0));
+    return count != null && count > 0;
+  }
+
   private static String initInstanceId() {
     String name = ManagementFactory.getRuntimeMXBean().getName();
     return name != null ? name : "unknown:" + ProcessHandle.current().pid();
   }
 
   /**
-   * P1-1: 失败重试调度。
-   *
-   * <p>当任务执行失败且 maxRetries > 0 且 retryCount < maxRetries 时， 通过 ScheduledExecutorService 延迟调度重试。
-   * 重试延迟根据 retryBackoff 计算：
-   *
-   * <ul>
-   *   <li>FIXED: 固定 retryIntervalMs
-   *   <li>EXPONENTIAL: retryIntervalMs * 2^retryCount
-   * </ul>
+   * 重试执行入口（供 RetryScheduler 回调）。
    *
    * @param job 任务定义
    * @param holdLock 是否持锁
-   * @param triggerType 原始触发类型
    * @param retryCount 当前重试次数
    */
-  private void scheduleRetryIfNeeded(
-      Job job, boolean holdLock, String triggerType, int retryCount) {
-    Integer maxRetries = job.getMaxRetries();
-    if (maxRetries == null || maxRetries <= 0 || retryCount >= maxRetries) {
-      return;
-    }
-    // 计算重试延迟
-    long delayMs = calculateRetryDelayMs(job, retryCount);
-    int nextRetry = retryCount + 1;
-    log.info(
-        "[Dispatcher] 调度失败重试: key={} retry={}/{} delay={}ms backoff={}",
-        job.getJobKey(),
-        nextRetry,
-        maxRetries,
-        delayMs,
-        job.getRetryBackoff());
-    try {
-      retryScheduler.schedule(
-          () -> {
-            try {
-              executeJob(job, holdLock, TRIGGER_RETRY, nextRetry);
-            } catch (Exception e) {
-              log.error(
-                  "[Dispatcher] 重试执行异常: key={} retry={} reason={}",
-                  job.getJobKey(),
-                  nextRetry,
-                  e.getMessage(),
-                  e);
-            }
-          },
-          delayMs,
-          TimeUnit.MILLISECONDS);
-    } catch (Exception e) {
-      log.error(
-          "[Dispatcher] 调度重试失败: key={} retry={} reason={}",
-          job.getJobKey(),
-          nextRetry,
-          e.getMessage(),
-          e);
-    }
-  }
-
-  /** P1-1: 计算重试延迟（毫秒）。 */
-  private long calculateRetryDelayMs(Job job, int retryCount) {
-    Long interval = job.getRetryIntervalMs();
-    if (interval == null || interval <= 0) {
-      return 0; // 立即重试
-    }
-    String backoff = job.getRetryBackoff();
-    if ("EXPONENTIAL".equals(backoff)) {
-      // 指数退避: interval * 2^retryCount，上限 5 分钟避免过长延迟
-      long delay = interval * (1L << Math.min(retryCount, 10));
-      return Math.min(delay, 300_000L);
-    }
-    // FIXED: 固定间隔
-    return interval;
+  private void executeJobForRetry(Job job, boolean holdLock, int retryCount) {
+    executeJob(job, holdLock, TRIGGER_RETRY, retryCount);
   }
 
   /**
@@ -1753,16 +1707,6 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     } catch (Exception e) {
       this.nodeId = INSTANCE_ID;
     }
-    // P1-1: 初始化重试调度线程池
-    this.retryScheduler =
-        new ScheduledThreadPoolExecutor(
-            2,
-            r -> {
-              Thread t = new Thread(r, "ydsz-job-retry");
-              t.setDaemon(true);
-              return t;
-            },
-            new ThreadPoolExecutor.CallerRunsPolicy());
     // P1-7: 初始化任务执行线程池（隔离调度线程与执行线程）
     // P0-3: 使用 PriorityBlockingQueue 实现优先级调度
     CronjobProperties.Executor execConfig = cronjobProperties.getExecutor();
@@ -1813,29 +1757,13 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       return;
     }
     registry.register(CronjobThreadPoolRegistry.GLOBAL_EXECUTOR, taskExecutorPool);
-    // retryScheduler是 ScheduledThreadPoolExecutor，需强制转型注册
-    if (retryScheduler instanceof ThreadPoolExecutor threadedPool) {
-      registry.register(CronjobThreadPoolRegistry.RETRY_SCHEDULER, threadedPool);
-    }
     log.info(
-        "[ThreadPoolRegistry] 线程池已注册到注册表: global={} retry={}",
-        CronjobThreadPoolRegistry.GLOBAL_EXECUTOR,
-        CronjobThreadPoolRegistry.RETRY_SCHEDULER);
+        "[ThreadPoolRegistry] 线程池已注册到注册表: global={}",
+        CronjobThreadPoolRegistry.GLOBAL_EXECUTOR);
   }
 
   @PreDestroy
   private void shutdownRetryScheduler() {
-    if (retryScheduler != null) {
-      retryScheduler.shutdown();
-      try {
-        if (!retryScheduler.awaitTermination(10, TimeUnit.SECONDS)) {
-          retryScheduler.shutdownNow();
-        }
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-        retryScheduler.shutdownNow();
-      }
-    }
     // P1-7: 关闭任务执行线程池
     if (taskExecutorPool != null) {
       taskExecutorPool.shutdown();

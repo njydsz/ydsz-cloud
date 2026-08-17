@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.userinfo.domain.entity.UserLoginHistory;
-import com.njydsz.userinfo.infra.mapper.UserLoginHistoryMapper;
+import com.njydsz.userinfo.infra.repository.UserLoginHistoryRepository;
 import com.njydsz.userinfo.server.auth.LoginAttemptCounterService;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.service.LoginAttemptContext;
@@ -49,7 +49,7 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
   /** IP 封禁失败阈值：15 分钟内失败 20 次 */
   private static final int IP_BLOCK_THRESHOLD = 20;
 
-  private final UserLoginHistoryMapper loginHistoryMapper;
+  private final UserLoginHistoryRepository loginHistoryRepository;
   private final SnowflakeIdGenerator snowflakeIdGenerator;
   private final UserInfoProperties properties;
   private final LoginAttemptCounterService loginAttemptCounterService;
@@ -76,7 +76,7 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
       history.setFailReason(failReason);
       history.setUserAgent(userAgent);
       history.setCreatedAt(LocalDateTime.now());
-      loginHistoryMapper.insert(history);
+      loginHistoryRepository.insert(history);
     } catch (Exception e) {
       // 登录历史记录失败不应影响登录主流程
       log.warn(
@@ -117,7 +117,7 @@ public class LoginHistoryServiceImpl implements LoginHistoryService {
           .orderByDesc(UserLoginHistory::getCreatedAt)
           .last("LIMIT " + Math.min(limit, 100));
 
-      return loginHistoryMapper.selectList(wrapper);
+      return loginHistoryRepository.list(wrapper);
     } catch (Exception e) {
       log.warn("Failed to query recent logins: userId={}, error={}", userId, e.getMessage());
       return List.of();

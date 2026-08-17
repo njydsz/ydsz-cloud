@@ -19,7 +19,7 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.entity.config.MsgVariableSource;
-import com.njydsz.message.infra.mapper.config.MsgVariableSourceMapper;
+import com.njydsz.message.infra.repository.MsgVariableSourceRepository;
 
 /**
  * 变量数据源解析器。
@@ -34,7 +34,7 @@ import com.njydsz.message.infra.mapper.config.MsgVariableSourceMapper;
 @RequiredArgsConstructor
 public class VariableSourceResolver {
 
-  private final MsgVariableSourceMapper variableSourceMapper;
+  private final MsgVariableSourceRepository variableSourceRepository;
   private final RedisStringOps redisStringOps;
   private final JdbcTemplate jdbcTemplate;
   private final ApplicationContext applicationContext;
@@ -52,7 +52,7 @@ public class VariableSourceResolver {
     if (!StringUtils.hasText(templateCode)) {
       return List.of();
     }
-    return variableSourceMapper.selectList(
+    return variableSourceRepository.selectList(
         new LambdaQueryWrapper<MsgVariableSource>()
             .eq(MsgVariableSource::getTemplateCode, templateCode)
             .eq(MsgVariableSource::getTenantId, TenantContextHolder.getTenantId()));

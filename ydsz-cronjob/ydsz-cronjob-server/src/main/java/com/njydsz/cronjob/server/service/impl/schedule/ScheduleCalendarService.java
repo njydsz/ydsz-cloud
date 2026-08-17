@@ -10,7 +10,7 @@ import org.springframework.scheduling.support.CronExpression;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.cronjob.domain.entity.job.Job;
-import com.njydsz.cronjob.infra.mapper.job.JobMapper;
+import com.njydsz.cronjob.infra.repository.JobRepository;
 
 /**
  * 调度日历服务实现。
@@ -29,7 +29,7 @@ import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 @RequiredArgsConstructor
 public class ScheduleCalendarService {
 
-  private final JobMapper jobMapper;
+  private final JobRepository jobRepository;
 
   /**
    * 预计算任务的未来触发时间列表。
@@ -40,7 +40,7 @@ public class ScheduleCalendarService {
    * @return 触发时间列表
    */
   public List<LocalDateTime> getUpcomingFireTimes(String jobKey, LocalDateTime from, int maxCount) {
-    Job job = jobMapper.selectByJobKey(jobKey);
+    Job job = jobRepository.selectByJobKey(jobKey);
     if (job == null || job.getCronExpression() == null || job.getCronExpression().isBlank()) {
       return List.of();
     }
@@ -56,7 +56,7 @@ public class ScheduleCalendarService {
    * @return 触发时间列表（含 jobKey）
    */
   public List<ScheduleItem> getScheduleCalendar(LocalDateTime from, int hours, int maxPerJob) {
-    List<Job> normalJobs = jobMapper.selectAllNormal();
+    List<Job> normalJobs = jobRepository.selectAllNormal();
     LocalDateTime to = from.plusHours(hours);
     List<ScheduleItem> items = new ArrayList<>();
     for (Job job : normalJobs) {

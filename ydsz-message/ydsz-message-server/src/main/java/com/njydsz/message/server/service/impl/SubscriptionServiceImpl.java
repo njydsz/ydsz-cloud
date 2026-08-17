@@ -15,7 +15,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.config.SubscriptionUpsertDTO;
 import com.njydsz.message.domain.entity.config.MsgSubscription;
 import com.njydsz.message.domain.enums.config.SubscriptionStatusEnum;
-import com.njydsz.message.infra.mapper.config.MsgSubscriptionMapper;
+import com.njydsz.message.infra.repository.MsgSubscriptionRepository;
 import com.njydsz.message.server.service.config.SubscriptionService;
 
 /**
@@ -35,8 +35,8 @@ import com.njydsz.message.server.service.config.SubscriptionService;
 @RequiredArgsConstructor
 public class SubscriptionServiceImpl implements SubscriptionService {
 
-  /** 订阅关系 Mapper */
-  private final MsgSubscriptionMapper msgSubscriptionMapper;
+  /** 订阅关系 Repository */
+  private final MsgSubscriptionRepository msgSubscriptionRepository;
 
   /**
    * 新增或更新订阅关系
@@ -59,7 +59,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
           .build();
     }
     MsgSubscription existing =
-        msgSubscriptionMapper.selectOne(
+        msgSubscriptionRepository.selectOne(
             new LambdaQueryWrapper<MsgSubscription>()
                 .eq(MsgSubscription::getUserId, dto.getUserId())
                 .eq(MsgSubscription::getTopicCode, dto.getTopicCode())
@@ -78,7 +78,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
       entity.setRoleScope(dto.getRoleScope());
       entity.setExtra(dto.getExtra());
       entity.setTenantId(TenantContextHolder.getTenantId());
-      msgSubscriptionMapper.insert(entity);
+      msgSubscriptionRepository.insert(entity);
       log.info(
           "[Subscription] 新建订阅: user={} topic={} channel={}",
           dto.getUserId(),
@@ -96,7 +96,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
         && existing.getUnsubscribedAt() == null) {
       existing.setUnsubscribedAt(LocalDateTime.now());
     }
-    msgSubscriptionMapper.updateById(existing);
+    msgSubscriptionRepository.updateById(existing);
     return existing;
   }
 
@@ -111,7 +111,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     if (!StringUtils.hasText(userId)) {
       return List.of();
     }
-    return msgSubscriptionMapper.selectList(
+    return msgSubscriptionRepository.selectList(
         new LambdaQueryWrapper<MsgSubscription>()
             .eq(MsgSubscription::getUserId, userId)
             .orderByDesc(MsgSubscription::getCreatedAt));
@@ -136,7 +136,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
     if (StringUtils.hasText(channel)) {
       w.eq(MsgSubscription::getChannel, channel);
     }
-    return msgSubscriptionMapper.selectList(w);
+    return msgSubscriptionRepository.selectList(w);
   }
 
   /**
@@ -153,7 +153,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
       return false;
     }
     Long count =
-        msgSubscriptionMapper.selectCount(
+        msgSubscriptionRepository.selectCount(
             new LambdaQueryWrapper<MsgSubscription>()
                 .eq(MsgSubscription::getUserId, userId)
                 .eq(MsgSubscription::getTopicCode, topicCode)
@@ -176,7 +176,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
       return false;
     }
     Long count =
-        msgSubscriptionMapper.selectCount(
+        msgSubscriptionRepository.selectCount(
             new LambdaQueryWrapper<MsgSubscription>()
                 .eq(MsgSubscription::getUserId, userId)
                 .eq(MsgSubscription::getTopicCode, topicCode)
@@ -207,7 +207,7 @@ public class SubscriptionServiceImpl implements SubscriptionService {
           .build();
     }
     MsgSubscription existing =
-        msgSubscriptionMapper.selectOne(
+        msgSubscriptionRepository.selectOne(
             new LambdaQueryWrapper<MsgSubscription>()
                 .eq(MsgSubscription::getUserId, userId)
                 .eq(MsgSubscription::getTopicCode, topicCode)
@@ -223,13 +223,13 @@ public class SubscriptionServiceImpl implements SubscriptionService {
       entity.setStatus(SubscriptionStatusEnum.UNSUBSCRIBED.name());
       entity.setUnsubscribedAt(LocalDateTime.now());
       entity.setTenantId(TenantContextHolder.getTenantId());
-      msgSubscriptionMapper.insert(entity);
+      msgSubscriptionRepository.insert(entity);
       log.info("[Subscription] 退订(新建记录): user={} topic={} channel={}", userId, topicCode, channel);
       return entity;
     }
     existing.setStatus(SubscriptionStatusEnum.UNSUBSCRIBED.name());
     existing.setUnsubscribedAt(LocalDateTime.now());
-    msgSubscriptionMapper.updateById(existing);
+    msgSubscriptionRepository.updateById(existing);
     return existing;
   }
 }

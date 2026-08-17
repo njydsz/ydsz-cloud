@@ -21,7 +21,7 @@ import com.njydsz.common.socket.constant.WebSocketConstants;
 import com.njydsz.common.socket.offline.OfflineMessageStore;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.entity.config.MsgOffline;
-import com.njydsz.message.infra.mapper.config.MsgOfflineMapper;
+import com.njydsz.message.infra.repository.MsgOfflineRepository;
 
 /**
  * 离线消息补偿服务（Redis + DB 双层存储）。
@@ -53,7 +53,7 @@ public class OfflineMessageService implements OfflineMessageStore {
 
   private final RedisCollectionOps redisCollectionOps;
   private final RedisStringOps redisStringOps;
-  private final MsgOfflineMapper msgOfflineMapper;
+  private final MsgOfflineRepository msgOfflineRepository;
 
   @Override
   public void cacheOffline(String userId, String type, Object payload) {
@@ -96,7 +96,7 @@ public class OfflineMessageService implements OfflineMessageStore {
     // 先从数据库拉取持久化的离线消息
     try {
       List<MsgOffline> dbMessages =
-          msgOfflineMapper.selectList(
+          msgOfflineRepository.selectList(
               new LambdaQueryWrapper<MsgOffline>()
                   .eq(MsgOffline::getUserId, userId)
                   .eq(MsgOffline::getStatus, "PENDING")
@@ -107,7 +107,7 @@ public class OfflineMessageService implements OfflineMessageStore {
         result.add(msg.getPayload());
       }
       if (!dbMessages.isEmpty()) {
-        msgOfflineMapper.markPushedByUser(userId);
+        msgOfflineRepository.markPushedByUser(userId);
         log.info("[WS-Offline] 从数据库拉取离线消息: userId={}, count={}", userId, dbMessages.size());
       }
     } catch (Exception e) {
@@ -144,7 +144,7 @@ public class OfflineMessageService implements OfflineMessageStore {
     }
     try {
       Long dbSize =
-          msgOfflineMapper.selectCount(
+          msgOfflineRepository.selectCount(
               new LambdaQueryWrapper<MsgOffline>()
                   .eq(MsgOffline::getUserId, userId)
                   .eq(MsgOffline::getStatus, "PENDING"));
@@ -198,7 +198,7 @@ public class OfflineMessageService implements OfflineMessageStore {
       // 分批批量 insert（防止单条 SQL 参数超过 PG 65535 上限）
       for (int i = 0; i < entities.size(); i += INSERT_BATCH_SIZE) {
         int to = Math.min(i + INSERT_BATCH_SIZE, entities.size());
-        msgOfflineMapper.insertBatch(entities.subList(i, to));
+        msgOfflineRepository.insertBatch(entities.subList(i, to));
       }
       redisCollectionOps.lTrim(redisKey, 0, WebSocketConstants.WS_OFFLINE_DB_PERSIST_THRESHOLD - 1);
       log.info("[WS-Offline] 溢出消息持久化到数据库: userId={}, count={}", userId, overflowMessages.size());

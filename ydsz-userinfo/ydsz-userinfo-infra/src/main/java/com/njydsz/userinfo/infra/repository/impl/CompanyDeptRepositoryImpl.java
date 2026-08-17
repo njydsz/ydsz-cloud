@@ -25,6 +25,11 @@ public class CompanyDeptRepositoryImpl implements CompanyDeptRepository {
   private final CompanyDeptMapper companyDeptMapper;
 
   @Override
+  public CompanyDept findById(String id) {
+    return companyDeptMapper.selectById(id);
+  }
+
+  @Override
   public List<CompanyDept> findByCompanyId(String companyId) {
     LambdaQueryWrapper<CompanyDept> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(CompanyDept::getCompanyId, companyId);
@@ -46,6 +51,11 @@ public class CompanyDeptRepositoryImpl implements CompanyDeptRepository {
   @Override
   public int insert(CompanyDept entity) {
     return companyDeptMapper.insert(entity);
+  }
+
+  @Override
+  public int updateById(CompanyDept entity) {
+    return companyDeptMapper.updateById(entity);
   }
 
   @Override

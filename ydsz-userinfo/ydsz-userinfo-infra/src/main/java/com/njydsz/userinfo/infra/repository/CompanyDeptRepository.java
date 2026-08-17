@@ -17,6 +17,14 @@ import com.njydsz.userinfo.domain.entity.CompanyDept;
 public interface CompanyDeptRepository {
 
   /**
+   * 根据 ID 查询公司-部门关联。
+   *
+   * @param id 关联 ID
+   * @return 公司-部门关联实体，不存在时返回 null
+   */
+  CompanyDept findById(String id);
+
+  /**
    * 根据公司 ID 查询公司-部门关联列表。
    *
    * @param companyId 公司 ID
@@ -48,6 +56,14 @@ public interface CompanyDeptRepository {
    * @return 插入影响的行数
    */
   int insert(CompanyDept entity);
+
+  /**
+   * 更新公司-部门关联。
+   *
+   * @param entity 公司-部门关联实体
+   * @return 更新影响的行数
+   */
+  int updateById(CompanyDept entity);
 
   /**
    * 根据公司 ID 删除关联。

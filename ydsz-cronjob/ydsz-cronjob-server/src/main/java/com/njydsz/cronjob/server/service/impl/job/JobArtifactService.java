@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.cronjob.domain.entity.job.JobArtifact;
-import com.njydsz.cronjob.infra.mapper.job.JobArtifactMapper;
+import com.njydsz.cronjob.infra.repository.JobArtifactRepository;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 
 /**
@@ -35,7 +35,7 @@ public class JobArtifactService {
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
 
-  private final JobArtifactMapper artifactMapper;
+  private final JobArtifactRepository artifactRepository;
 
   /** P3-3.3: 制品存储配置统一从 CronjobProperties 读取 */
   private final CronjobProperties cronjobProperties;
@@ -84,7 +84,7 @@ public class JobArtifactService {
       artifact.setMetadata(metadata);
       artifact.setExpireAt(LocalDateTime.now().plusDays(retentionDays));
       artifact.setDeleted(0);
-      artifactMapper.insert(artifact);
+      artifactRepository.insert(artifact);
 
       log.info(
           "[ArtifactService] 产物已保存: logId={} name={} size={}B",
@@ -105,12 +105,12 @@ public class JobArtifactService {
 
   /** 查询任务执行产物列表。 */
   public List<JobArtifact> getArtifactsByLogId(String logId) {
-    return artifactMapper.selectByLogId(logId);
+    return artifactRepository.selectByLogId(logId);
   }
 
   /** 读取产物内容。 */
   public byte[] readArtifact(String artifactId) {
-    JobArtifact artifact = artifactMapper.selectById(artifactId);
+    JobArtifact artifact = artifactRepository.selectById(artifactId);
     if (artifact == null) {
       return null;
     }
@@ -127,7 +127,7 @@ public class JobArtifactService {
   /** 清理过期产物。 */
   public int cleanExpiredArtifacts(int batchSize) {
     LocalDateTime before = LocalDateTime.now();
-    int cleaned = artifactMapper.cleanExpired(before, batchSize);
+    int cleaned = artifactRepository.cleanExpired(before, batchSize);
     if (cleaned > 0) {
       log.info("[ArtifactService] 清理过期产物: count={}", cleaned);
     }

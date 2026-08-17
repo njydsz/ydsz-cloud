@@ -16,7 +16,7 @@ import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderContext;
 import com.njydsz.userinfo.domain.entity.UserAccount;
-import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
+import com.njydsz.userinfo.infra.repository.UserAccountRepository;
 
 /**
  * 用户搜索提供者
@@ -41,7 +41,7 @@ import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
 @RequiredArgsConstructor
 public class UserinfoSearchProvider implements SearchProvider<UserAccount> {
 
-  private final UserAccountMapper userAccountMapper;
+  private final UserAccountRepository userAccountRepository;
 
   /** 真实姓名搜索权重（最高优先级）。 */
   private static final float WEIGHT_TITLE = 3.0f;
@@ -172,10 +172,10 @@ public class UserinfoSearchProvider implements SearchProvider<UserAccount> {
     if (tenantId != null && !tenantId.isBlank()) {
       wrapper.eq(UserAccount::getTenantId, tenantId);
     }
-    return userAccountMapper.selectList(wrapper).stream().map(UserAccount::getId).toList();
+    return userAccountRepository.list(wrapper).stream().map(UserAccount::getId).toList();
   }
 
   public UserAccount loadById(String id) {
-    return userAccountMapper.selectById(id);
+    return userAccountRepository.findById(id);
   }
 }

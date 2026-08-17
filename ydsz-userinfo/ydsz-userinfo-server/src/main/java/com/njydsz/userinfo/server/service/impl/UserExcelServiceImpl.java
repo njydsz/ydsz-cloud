@@ -25,8 +25,8 @@ import com.njydsz.userinfo.domain.entity.Department;
 import com.njydsz.userinfo.domain.entity.UserAccount;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
-import com.njydsz.userinfo.infra.mapper.DepartmentMapper;
-import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
+import com.njydsz.userinfo.infra.repository.DepartmentRepository;
+import com.njydsz.userinfo.infra.repository.UserAccountRepository;
 import com.njydsz.userinfo.server.auth.PasswordPolicyValidator;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.service.UserAccountService;
@@ -57,8 +57,8 @@ public class UserExcelServiceImpl implements UserExcelService {
   private static final int DEFAULT_IMPORT_LIMIT = 1000;
 
   private final UserAccountService userAccountService;
-  private final UserAccountMapper userAccountMapper;
-  private final DepartmentMapper departmentMapper;
+  private final UserAccountRepository userAccountRepository;
+  private final DepartmentRepository departmentRepository;
   private final PasswordPolicyValidator passwordPolicyValidator;
   private final UserInfoProperties properties;
   private final ExcelExportHelper excelExportHelper;
@@ -138,7 +138,7 @@ public class UserExcelServiceImpl implements UserExcelService {
     // 查询全部用户
     LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
     wrapper.orderByDesc(UserAccount::getCreatedAt);
-    List<UserAccount> userList = userAccountMapper.selectList(wrapper);
+    List<UserAccount> userList = userAccountRepository.list(wrapper);
 
     // 转换为 VO（脱敏后的数据）
     List<UserAccountVO> voList = new ArrayList<>();
@@ -312,7 +312,7 @@ public class UserExcelServiceImpl implements UserExcelService {
     }
     LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
     wrapper.in(UserAccount::getUsername, usernames).select(UserAccount::getUsername);
-    return userAccountMapper.selectList(wrapper).stream()
+    return userAccountRepository.list(wrapper).stream()
         .map(UserAccount::getUsername)
         .collect(Collectors.toSet());
   }
@@ -329,7 +329,7 @@ public class UserExcelServiceImpl implements UserExcelService {
     }
     LambdaQueryWrapper<Department> wrapper = new LambdaQueryWrapper<>();
     wrapper.in(Department::getDeptCode, deptCodes).select(Department::getDeptCode, Department::getId);
-    return departmentMapper.selectList(wrapper).stream()
+    return departmentRepository.list(wrapper).stream()
         .collect(Collectors.toMap(Department::getDeptCode, Department::getId));
   }
 
@@ -345,7 +345,7 @@ public class UserExcelServiceImpl implements UserExcelService {
     }
     LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
     wrapper.in(UserAccount::getUsername, usernames).select(UserAccount::getUsername, UserAccount::getId);
-    return userAccountMapper.selectList(wrapper).stream()
+    return userAccountRepository.list(wrapper).stream()
         .collect(Collectors.toMap(UserAccount::getUsername, UserAccount::getId));
   }
 

@@ -57,6 +57,11 @@ public class UserPostRepositoryImpl implements UserPostRepository {
   }
 
   @Override
+  public int updateById(UserPost entity) {
+    return userPostMapper.updateById(entity);
+  }
+
+  @Override
   public int deleteByUserId(String userId) {
     LambdaQueryWrapper<UserPost> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(UserPost::getUserId, userId);

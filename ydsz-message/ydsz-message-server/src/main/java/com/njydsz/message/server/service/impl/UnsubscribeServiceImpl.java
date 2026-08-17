@@ -17,7 +17,7 @@ import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.message.domain.dto.config.UnsubscribeQueryDTO;
 import com.njydsz.message.domain.entity.config.MsgSubscription;
 import com.njydsz.message.domain.enums.config.SubscriptionStatusEnum;
-import com.njydsz.message.infra.mapper.config.MsgSubscriptionMapper;
+import com.njydsz.message.infra.repository.MsgSubscriptionRepository;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.service.config.SubscriptionService;
 import com.njydsz.message.server.service.config.UnsubscribeService;
@@ -47,8 +47,8 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
   /** 订阅关系服务（状态变更） */
   private final SubscriptionService subscriptionService;
 
-  /** 订阅关系 Mapper（退订查询） */
-  private final MsgSubscriptionMapper msgSubscriptionMapper;
+  /** 订阅关系 Repository（退订查询） */
+  private final MsgSubscriptionRepository msgSubscriptionRepository;
 
   /** 消息模块配置属性 */
   private final MessageProperties messageProperties;
@@ -137,7 +137,7 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
                 MsgSubscription::getTenantId,
                 query.getTenantId())
             .orderByDesc(MsgSubscription::getUnsubscribedAt);
-    Page<MsgSubscription> result = msgSubscriptionMapper.selectPage(page, w);
+    Page<MsgSubscription> result = msgSubscriptionRepository.selectPage(page, w);
     return PageResponses.success(result);
   }
 
@@ -162,7 +162,7 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
           .build();
     }
     MsgSubscription existing =
-        msgSubscriptionMapper.selectOne(
+        msgSubscriptionRepository.selectOne(
             new LambdaQueryWrapper<MsgSubscription>()
                 .eq(MsgSubscription::getUserId, userId)
                 .eq(MsgSubscription::getTopicCode, topicCode)
@@ -175,7 +175,7 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
       entity.setTopicCode(topicCode);
       entity.setChannel(channel);
       entity.setStatus(SubscriptionStatusEnum.SUBSCRIBED.name());
-      msgSubscriptionMapper.insert(entity);
+      msgSubscriptionRepository.insert(entity);
       log.info("[Unsubscribe] 恢复订阅(新建): user={} topic={} channel={}", userId, topicCode, channel);
       return;
     }
@@ -184,7 +184,7 @@ public class UnsubscribeServiceImpl implements UnsubscribeService {
     }
     existing.setStatus(SubscriptionStatusEnum.SUBSCRIBED.name());
     existing.setUnsubscribedAt(null);
-    msgSubscriptionMapper.updateById(existing);
+    msgSubscriptionRepository.updateById(existing);
     log.info("[Unsubscribe] 恢复订阅: user={} topic={} channel={}", userId, topicCode, channel);
   }
 }

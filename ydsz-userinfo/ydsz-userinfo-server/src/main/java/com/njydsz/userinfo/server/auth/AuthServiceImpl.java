@@ -20,7 +20,7 @@ import com.njydsz.userinfo.domain.entity.Role;
 import com.njydsz.userinfo.domain.entity.UserAccount;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.LoginVO;
-import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
+import com.njydsz.userinfo.infra.repository.UserAccountRepository;
 import com.njydsz.userinfo.server.config.UserInfoProperties;
 import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 import com.njydsz.userinfo.server.metrics.UserInfoMetrics;
@@ -62,7 +62,7 @@ import com.njydsz.userinfo.server.service.LoginHistoryService;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-  private final UserAccountMapper userAccountMapper;
+  private final UserAccountRepository userAccountRepository;
   private final TokenService tokenService;
   private final TokenBlacklistService tokenBlacklistService;
   private final CaptchaService captchaService;
@@ -419,7 +419,7 @@ public class AuthServiceImpl implements AuthService {
    */
   private void updateLoginSuccess(UserAccount user, String loginIp, String userAgent) {
     user.recordLoginSuccess(loginIp);
-    userAccountMapper.resetLoginSuccess(user.getId(), loginIp);
+    userAccountRepository.resetLoginSuccess(user.getId(), loginIp);
     loginAttemptCounterService.markDeviceSeen(
         user.getId(), userAgent, properties.getRiskWindowSeconds());
   }

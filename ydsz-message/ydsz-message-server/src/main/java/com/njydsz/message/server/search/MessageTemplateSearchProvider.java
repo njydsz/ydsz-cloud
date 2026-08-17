@@ -12,7 +12,7 @@ import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.core.SearchField.FieldType;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.message.domain.entity.template.MsgTemplate;
-import com.njydsz.message.infra.mapper.template.MsgTemplateMapper;
+import com.njydsz.message.infra.repository.MsgTemplateRepository;
 
 /**
  * 消息模板搜索提供者 — 将消息模板数据注册到统一搜索体系。
@@ -25,7 +25,7 @@ import com.njydsz.message.infra.mapper.template.MsgTemplateMapper;
 @RequiredArgsConstructor
 public class MessageTemplateSearchProvider implements SearchProvider<MsgTemplate> {
 
-  private final MsgTemplateMapper msgTemplateMapper;
+  private final MsgTemplateRepository msgTemplateRepository;
 
   @Override
   public String getType() {
@@ -104,6 +104,6 @@ public class MessageTemplateSearchProvider implements SearchProvider<MsgTemplate
 
   @Override
   public MsgTemplate loadById(String id) {
-    return msgTemplateMapper.selectById(id);
+    return msgTemplateRepository.selectById(id);
   }
 }

@@ -29,7 +29,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.dto.config.RouteRuleUpsertDTO;
 import com.njydsz.message.domain.entity.config.MsgRouteRule;
-import com.njydsz.message.infra.mapper.config.MsgRouteRuleMapper;
+import com.njydsz.message.infra.repository.MsgRouteRuleRepository;
 import com.njydsz.message.server.service.config.RouteRuleService;
 
 /**
@@ -64,8 +64,8 @@ public class RouteRuleServiceImpl implements RouteRuleService {
           .recordStats()
           .build();
 
-  /** 路由规则 Mapper */
-  private final MsgRouteRuleMapper msgRouteRuleMapper;
+  /** 路由规则 Repository */
+  private final MsgRouteRuleRepository msgRouteRuleRepository;
 
   /** SpEL 表达式解析器（条件求值） */
   private final ExpressionParser expressionParser;
@@ -89,7 +89,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
           .build();
     }
     MsgRouteRule existing =
-        msgRouteRuleMapper.selectOne(
+        msgRouteRuleRepository.selectOne(
             new LambdaQueryWrapper<MsgRouteRule>()
                 .eq(MsgRouteRule::getRuleCode, dto.getRuleCode())
                 .eq(MsgRouteRule::getTenantId, TenantContextHolder.getTenantId())
@@ -101,7 +101,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
           .build();
     }
     MsgRouteRule entity = toEntity(dto);
-    msgRouteRuleMapper.insert(entity);
+    msgRouteRuleRepository.insert(entity);
     evictCache();
     log.info("[RouteRule] 创建规则: code={}", dto.getRuleCode());
     return entity;
@@ -153,7 +153,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     if (dto.getSortOrder() != null) {
       entity.setSortOrder(dto.getSortOrder());
     }
-    msgRouteRuleMapper.updateById(entity);
+    msgRouteRuleRepository.updateById(entity);
     evictCache();
     return entity;
   }
@@ -173,7 +173,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
           .message("规则 ID 不能为空")
           .build();
     }
-    msgRouteRuleMapper.deleteById(id);
+    msgRouteRuleRepository.deleteById(id);
     evictCache();
   }
 
@@ -190,7 +190,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
           .message("规则 ID 不能为空")
           .build();
     }
-    MsgRouteRule entity = msgRouteRuleMapper.selectById(id);
+    MsgRouteRule entity = msgRouteRuleRepository.selectById(id);
     if (entity == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -215,7 +215,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
         new Page<>(
             query == null ? 1 : query.getPageNum(),
             Math.min(query == null ? 10 : query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
-    return msgRouteRuleMapper.selectPage(
+    return msgRouteRuleRepository.selectPage(
         page,
         new LambdaQueryWrapper<MsgRouteRule>()
             .orderByAsc(MsgRouteRule::getSortOrder)
@@ -303,7 +303,7 @@ public class RouteRuleServiceImpl implements RouteRuleService {
     }
     // DB 回源
     List<MsgRouteRule> rules =
-        msgRouteRuleMapper.selectList(
+        msgRouteRuleRepository.selectList(
             new LambdaQueryWrapper<MsgRouteRule>()
                 .eq(MsgRouteRule::getStatus, "ENABLED")
                 .orderByAsc(MsgRouteRule::getPriority));

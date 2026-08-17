@@ -36,7 +36,7 @@ import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.entity.template.MsgTemplate;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
-import com.njydsz.message.infra.mapper.core.MsgLogMapper;
+import com.njydsz.message.infra.repository.MsgLogRepository;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.config.RetryStrategyResolver;
@@ -92,8 +92,8 @@ public class MessageServiceImpl implements MessageService {
   /** 模板管理服务（加载/校验模板） */
   private final TemplateService templateService;
 
-  /** 消息日志 Mapper（落库 / 查询） */
-  private final MsgLogMapper msgLogMapper;
+  /** 消息日志 Repository（落库 / 查询） */
+  private final MsgLogRepository msgLogRepository;
 
   /** 路由规则服务（通道动态路由） */
   private final RouteRuleService routeRuleService;
@@ -221,7 +221,7 @@ public class MessageServiceImpl implements MessageService {
     }
 
     // ⑤ 常规落库 PENDING
-    msgLogMapper.insert(logDO);
+    msgLogRepository.insert(logDO);
     messageTraceService.recordTrace(
         logDO.getMsgId(),
         MsgTrace.Node.PERSISTED,
@@ -368,7 +368,7 @@ public class MessageServiceImpl implements MessageService {
     // ⑧-2 P0-3: 定时消息 —— scheduledAt 非空且在未来时,落库 SCHEDULED 不立即发送
     if (request.getScheduledAt() != null && request.getScheduledAt().isAfter(LocalDateTime.now())) {
       logDO.setStatus(MessageStatusEnum.SCHEDULED.name());
-      msgLogMapper.insert(logDO);
+      msgLogRepository.insert(logDO);
       log.info(
           "[Message] 定时消息已入库: msgId={} scheduledAt={} channel={}",
           logDO.getMsgId(),
@@ -388,7 +388,7 @@ public class MessageServiceImpl implements MessageService {
           request.setScheduledAt(optimalTime);
           logDO.setScheduledAt(optimalTime);
           logDO.setStatus(MessageStatusEnum.SCHEDULED.name());
-          msgLogMapper.insert(logDO);
+          msgLogRepository.insert(logDO);
           messageTraceService.recordTrace(
               logDO.getMsgId(),
               MsgTrace.Node.SCHEDULED,
@@ -529,7 +529,7 @@ public class MessageServiceImpl implements MessageService {
       return MessageResult.fail(null, "消息 ID 不能为空");
     }
     MsgLog logDO =
-        msgLogMapper.selectOne(
+        msgLogRepository.selectOne(
             new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<MsgLog>()
                 .eq(MsgLog::getMsgId, msgId)
                 .last("LIMIT 1"));
@@ -541,7 +541,7 @@ public class MessageServiceImpl implements MessageService {
     }
     logDO.setStatus(MessageStatusEnum.SKIPPED.name());
     logDO.setErrorMessage("USER_CANCELLED");
-    msgLogMapper.updateById(logDO);
+    msgLogRepository.updateById(logDO);
     log.info("[Message] 定时消息已取消: msgId={} channel={}", msgId, logDO.getChannel());
     return MessageResult.ok(logDO.getChannel(), msgId);
   }
@@ -657,7 +657,7 @@ public class MessageServiceImpl implements MessageService {
     logDO.setTenantId(TenantContextHolder.getTenantId());
     logDO.setTopic(YdszMessageTopics.TOPIC_MESSAGE);
     try {
-      msgLogMapper.insert(logDO);
+      msgLogRepository.insert(logDO);
       log.info(
           "[Message] 异步消息已落库 PENDING: msgId={} channel={}", logDO.getMsgId(), request.getChannel());
     } catch (Exception e) {

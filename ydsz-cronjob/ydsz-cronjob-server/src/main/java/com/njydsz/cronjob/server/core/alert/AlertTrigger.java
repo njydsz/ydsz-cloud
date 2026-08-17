@@ -10,7 +10,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
-import com.njydsz.cronjob.infra.mapper.job.JobAlertRuleMapper;
+import com.njydsz.cronjob.infra.repository.JobAlertRuleRepository;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 
 /**
@@ -39,7 +39,7 @@ import com.njydsz.cronjob.server.config.CronjobProperties;
 @RequiredArgsConstructor
 public class AlertTrigger {
 
-  private final JobAlertRuleMapper jobAlertRuleMapper;
+  private final JobAlertRuleRepository jobAlertRuleRepository;
   private final ApplicationEventPublisher eventPublisher;
   private final CronjobProperties cronjobProperties;
 
@@ -169,9 +169,9 @@ public class AlertTrigger {
     if (context.jobId() != null) {
       return getCachedOrLoad(
           "job:" + context.jobId(),
-          () -> jobAlertRuleMapper.selectByJobIdOrGlobal(context.jobId()));
+          () -> jobAlertRuleRepository.selectByJobIdOrGlobal(context.jobId()));
     }
-    return getCachedOrLoad("global", jobAlertRuleMapper::selectAllEnabled);
+    return getCachedOrLoad("global", jobAlertRuleRepository::selectAllEnabled);
   }
 
   /**

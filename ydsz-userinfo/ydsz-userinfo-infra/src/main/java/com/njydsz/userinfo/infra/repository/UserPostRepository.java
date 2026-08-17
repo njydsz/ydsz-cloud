@@ -58,6 +58,14 @@ public interface UserPostRepository {
   int insert(UserPost entity);
 
   /**
+   * 更新用户-岗位关联。
+   *
+   * @param entity 用户-岗位关联实体
+   * @return 更新影响的行数
+   */
+  int updateById(UserPost entity);
+
+  /**
    * 根据用户 ID 删除关联。
    *
    * @param userId 用户 ID
