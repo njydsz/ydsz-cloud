@@ -31,7 +31,7 @@
 | **审批人去重** | 同一审批人在多级审批中自动合并 |
 | **流程模板** | 模板库 + 版本管理 + 复制/导入/导出 |
 | **流程监控** | 实例状态 / 节点耗时 / 拥堵分析 |
-| **50 步模拟** | 流程图模拟运行（不实际执行任务） |
+| **实例迁移** | 流程实例版本迁移 + 预览（dry run） |
 | **设计器** | bpmn-js 拖拽设计 + 表单设计 + 表达式编辑 |
 
 ### 2. 关键 Controller
@@ -48,7 +48,6 @@
 | `/flow/instance-migration` | 实例迁移 |
 | `/flow/monitor` | 流程监控 |
 | `/flow/sla` | SLA 规则 |
-| `/flow/simulator` | 流程模拟器 |
 
 ## 数据库表设计
 
@@ -108,7 +107,7 @@
 
 **为什么不做移动端适配**：
 1. 流程设计器（bpmn-js）强依赖桌面交互
-2. 流程监控 / 模拟运行信息密度高，移动端无法保证可用性
+2. 流程监控信息密度高，移动端无法保证可用性
 3. 业务定位（B 端内部工具）天然服务 PC 场景
 4. 移动端需求已通过 IM 审批通道完整覆盖
 
@@ -209,7 +208,6 @@ mvn -pl ydsz-workflow -am test
 测试覆盖：
 - `BpmnParserTest` BPMN 2.0 解析
 - `FlowInstanceTest` 流程实例生命周期
-- `FlowSimulatorTest` 50 步模拟
 - `SlaMonitorTest` SLA 计算
 - `FormEngineTest` 表单引擎
 
