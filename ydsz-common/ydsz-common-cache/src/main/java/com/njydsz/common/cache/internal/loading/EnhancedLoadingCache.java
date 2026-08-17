@@ -197,7 +197,7 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
    */
   public static <K, V> EnhancedLoadingCache<K, V> create(
       Cache<K, V> cache, CacheLoader<K, V> loader) {
-    return new EnhancedLoadingCache<>(cache, loader, null, 0, TimeUnit.NANOSECONDS, null, true);
+    return new EnhancedLoadingCache<>(cache, loader, null, 0, TimeUnit.NANOSECONDS, true);
   }
 
   /**
@@ -210,7 +210,6 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
    * @param executor 异步执行器（可选）
    * @param refreshInterval 自动刷新间隔
    * @param refreshUnit 刷新间隔单位
-   * @param refreshExecutor 刷新任务执行器（可选，已废弃，使用 executor）
    * @param recordStats 是否启用统计
    * @param <K> 键类型
    * @param <V> 值类型
@@ -222,11 +221,10 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
       Executor executor,
       long refreshInterval,
       TimeUnit refreshUnit,
-      Executor refreshExecutor,
       boolean recordStats) {
     EnhancedLoadingCache<K, V> instance =
         new EnhancedLoadingCache<>(
-            cache, loader, executor, refreshInterval, refreshUnit, refreshExecutor, recordStats);
+            cache, loader, executor, refreshInterval, refreshUnit, recordStats);
     instance.scheduleAutoRefresh();
     return instance;
   }
@@ -238,7 +236,6 @@ public class EnhancedLoadingCache<K, V> extends AbstractCache<K, V>
       Executor executor,
       long refreshInterval,
       TimeUnit refreshUnit,
-      Executor refreshExecutor,
       boolean recordStats) {
     this.cache = cache;
     this.loader = loader;

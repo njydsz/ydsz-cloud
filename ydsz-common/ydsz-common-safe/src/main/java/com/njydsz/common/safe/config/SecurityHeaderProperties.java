@@ -82,7 +82,6 @@ public class SecurityHeaderProperties {
    * <ul>
    *   <li>DENY：禁止所有页面嵌入
    *   <li>SAMEORIGIN：仅允许同源页面嵌入
-   *   <li>ALLOW-FROM uri：允许指定 URI 嵌入（已废弃）
    * </ul>
    */
   private String frameOptions = "SAMEORIGIN";

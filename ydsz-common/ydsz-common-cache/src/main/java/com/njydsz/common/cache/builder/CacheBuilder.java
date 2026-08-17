@@ -495,7 +495,6 @@ public final class CacheBuilder<K, V> {
         taskExecutor != null ? taskExecutor : listenerExecutor,
         effectiveRefreshDuration,
         effectiveRefreshUnit,
-        null,
         recordStats);
   }
 

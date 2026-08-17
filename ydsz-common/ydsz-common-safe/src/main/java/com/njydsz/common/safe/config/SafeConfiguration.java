@@ -357,8 +357,7 @@ public class SafeConfiguration {
     return new XssJsonMessageConverter();
   }
 
-  // XssJsonMessageConverter 已注册为 Bean，Spring Boot 4.1 自动检测 HttpMessageConverter Bean 并注册到转换器链，
-  // 无需再通过 HttpMessageConverters（已弃用）包装注册。
+  // XssJsonMessageConverter 已注册为 Bean，Spring Boot 4.1 自动检测 HttpMessageConverter Bean 并注册到转换器链
 
   /** 注册 CSRF 令牌生成器 */
   @Bean
@@ -444,11 +443,9 @@ public class SafeConfiguration {
 
   /**
    * P2-3: 限流相关 Bean（限流过滤器、方法级限流 AOP、多维度限流器）已迁移至 {@code
-   * com.njydsz.common.safe.ratelimit.config.RateLimitAutoConfiguration}， 由其统一管理。本配置类不再持有旧版限流
-   * Bean，避免与新版自动配置产生 Bean 冲突。
+   * com.njydsz.common.safe.ratelimit.config.RateLimitAutoConfiguration}， 由其统一管理。
    *
-   * <p>启用方式：通过 {@code ydsz.safe.ratelimit.enabled=true}（默认 true）开启 新版限流自动配置；旧版配置 {@code
-   * ydsz.safe.ratelimit.enabled} 已被废弃。
+   * <p>启用方式：通过 {@code ydsz.safe.ratelimit.enabled=true}（默认 true）开启新版限流自动配置。
    */
 
   /**
