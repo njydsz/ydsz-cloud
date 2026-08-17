@@ -14,7 +14,7 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.nextwiki.domain.entity.FileAcl;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
-import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
+import com.njydsz.nextwiki.infra.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.service.FilePermissionDomainService;
 
 /**

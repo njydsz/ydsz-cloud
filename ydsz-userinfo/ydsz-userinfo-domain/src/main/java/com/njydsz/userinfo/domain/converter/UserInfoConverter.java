@@ -26,6 +26,7 @@ import com.njydsz.userinfo.domain.entity.Menu;
 import com.njydsz.userinfo.domain.entity.Post;
 import com.njydsz.userinfo.domain.entity.Role;
 import com.njydsz.userinfo.domain.entity.UserAccount;
+import com.njydsz.userinfo.domain.vo.CompanyTreeVO;
 import com.njydsz.userinfo.domain.vo.CompanyVO;
 import com.njydsz.userinfo.domain.vo.DepartmentTreeVO;
 import com.njydsz.userinfo.domain.vo.DepartmentVO;
@@ -76,6 +77,22 @@ public interface UserInfoConverter {
    * @return 公司 VO 列表
    */
   List<CompanyVO> companyListToVO(List<Company> entities);
+
+  /**
+   * 公司实体 → 公司树形 VO（含 children 字段）
+   *
+   * @param entity 公司实体
+   * @return 公司树形 VO
+   */
+  CompanyTreeVO entityToTreeVO(Company entity);
+
+  /**
+   * 公司实体列表 → 公司树形 VO 列表
+   *
+   * @param entities 公司实体列表
+   * @return 公司树形 VO 列表
+   */
+  List<CompanyTreeVO> companyTreeListToVO(List<Company> entities);
 
   /**
    * 公司新增 DTO → 公司实体

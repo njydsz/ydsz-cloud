@@ -26,7 +26,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.entity.FileComment;
-import com.njydsz.nextwiki.domain.repository.FileCommentRepository;
+import com.njydsz.nextwiki.infra.repository.FileCommentRepository;
 
 /**
  * 文件评论 REST API Controller（P1-5）。

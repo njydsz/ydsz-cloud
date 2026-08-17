@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.auth.annotation.DataScope;
+import com.njydsz.common.auth.event.PermissionChangeNotifier;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
@@ -34,6 +35,7 @@ import com.njydsz.userinfo.domain.vo.RoleVO;
 import com.njydsz.userinfo.infra.mapper.RoleMapper;
 import com.njydsz.userinfo.infra.mapper.RolePermissionMapper;
 import com.njydsz.userinfo.infra.mapper.UserRoleMapper;
+import com.njydsz.userinfo.server.auth.DbRolePermissionLoader;
 import com.njydsz.userinfo.server.event.UserDomainEventPublisher;
 import com.njydsz.userinfo.server.service.RoleService;
 
@@ -98,6 +100,12 @@ public class RoleServiceImpl implements RoleService {
 
   /** 领域事件发布器 */
   private final UserDomainEventPublisher eventPublisher;
+
+  /** 权限变更事件发布器（common-auth，通知 Gateway 等节点刷新权限缓存） */
+  private final PermissionChangeNotifier permissionChangeNotifier;
+
+  /** 角色权限 DB 结果缓存加载器（角色/权限变更时按角色编码失效） */
+  private final DbRolePermissionLoader permissionLoader;
 
   /**
    * {@inheritDoc}
@@ -209,6 +217,7 @@ public class RoleServiceImpl implements RoleService {
     if (result) {
       // 角色变更后失效其权限缓存
       evictRolePermissionCache(dto.getId());
+      invalidatePermissionCache(entity.getRoleCode());
       eventPublisher.publishRoleEntityChanged(entity, "UPDATED");
     }
 
@@ -250,6 +259,7 @@ public class RoleServiceImpl implements RoleService {
     if (result) {
       // 角色删除后失效缓存
       evictRolePermissionCache(id);
+      invalidatePermissionCache(entity.getRoleCode());
       eventPublisher.publishRoleEntityChanged(entity, "DELETED");
     }
 
@@ -294,8 +304,27 @@ public class RoleServiceImpl implements RoleService {
 
     // 权限分配后失效缓存
     evictRolePermissionCache(roleId);
+    invalidatePermissionCache(role.getRoleCode());
 
     return true;
+  }
+
+  /**
+   * 角色或权限分配变更后，失效角色权限缓存并广播权限变更事件。
+   *
+   * <p>同时失效：getRolePermissionIds 的 roleId 维度缓存（由调用方 {@code evictRolePermissionCache} 负责）、
+   * 鉴权链路的 roleCode 维度 DB 结果缓存（{@link DbRolePermissionLoader}），并通知 common-auth 监听器（Gateway 等）。
+   *
+   * @param roleCode 角色编码，可为 null（空值时仅广播菜单级事件）
+   */
+  private void invalidatePermissionCache(String roleCode) {
+    try {
+      permissionLoader.invalidate(roleCode);
+      permissionChangeNotifier.notifyRoleChanged(roleCode);
+    } catch (Exception e) {
+      log.warn("Failed to invalidate permission cache: roleCode={}, error={}", roleCode,
+          e.getMessage());
+    }
   }
 
   /**

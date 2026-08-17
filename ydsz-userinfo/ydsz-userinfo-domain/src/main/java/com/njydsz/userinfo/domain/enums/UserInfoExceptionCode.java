@@ -57,6 +57,8 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   MFA_INVALID("A20109", "userinfo.mfa.invalid", 401),
   /** 用户未绑定双因素认证 */
   MFA_NOT_BOUND("B30009", "userinfo.mfa.not.bound"),
+  /** 用户已绑定双因素认证，请勿重复绑定 */
+  MFA_ALREADY_BOUND("B30014", "userinfo.mfa.already.bound"),
   /** 原密码错误 */
   OLD_PASSWORD_INCORRECT("B30010", "userinfo.password.old.incorrect"),
   /** 新密码不能与旧密码相同 */

@@ -121,13 +121,48 @@ public class ConfigRepositoryImpl implements ConfigRepository {
   }
 
   @Override
-  public List<Config> findList(QueryWrapper<Config> wrapper) {
+  public List<Config> findForCursor(String configGroup, String configKey, String cursor, int limit) {
+    QueryWrapper<Config> wrapper = new QueryWrapper<>();
+    wrapper.eq("deleted", 0);
+    if (configGroup != null && !configGroup.isBlank()) {
+      wrapper.eq("config_group", configGroup);
+    }
+    if (configKey != null && !configKey.isBlank()) {
+      wrapper.like("config_key", configKey);
+    }
+    if (cursor != null && !cursor.isBlank()) {
+      wrapper.gt("id", cursor);
+    }
+    wrapper.orderByAsc("id");
+    wrapper.last("LIMIT " + limit);
     return configMapper.selectList(wrapper);
   }
 
   @Override
-  public long findCount(QueryWrapper<Config> wrapper) {
-    Long count = configMapper.selectCount(wrapper);
-    return count != null ? count : 0L;
+  public boolean existsAfterCursor(String configGroup, String configKey, String cursor) {
+    QueryWrapper<Config> wrapper = new QueryWrapper<>();
+    wrapper.eq("deleted", 0);
+    if (configGroup != null && !configGroup.isBlank()) {
+      wrapper.eq("config_group", configGroup);
+    }
+    if (configKey != null && !configKey.isBlank()) {
+      wrapper.like("config_key", configKey);
+    }
+    if (cursor != null && !cursor.isBlank()) {
+      wrapper.gt("id", cursor);
+    }
+    return configMapper.selectCount(wrapper) > 0;
+  }
+
+  @Override
+  public List<Config> findForExport(String configGroup) {
+    QueryWrapper<Config> wrapper = new QueryWrapper<>();
+    wrapper.eq("deleted", 0);
+    if (configGroup != null && !configGroup.isBlank()) {
+      wrapper.eq("config_group", configGroup).orderByAsc("sort_order");
+    } else {
+      wrapper.orderByAsc("config_group", "sort_order");
+    }
+    return configMapper.selectList(wrapper);
   }
 }

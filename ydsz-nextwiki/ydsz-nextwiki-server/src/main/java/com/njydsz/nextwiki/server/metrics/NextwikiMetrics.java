@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 import com.njydsz.nextwiki.domain.entity.StorageQuota;
-import com.njydsz.nextwiki.domain.repository.StorageQuotaRepository;
+import com.njydsz.nextwiki.infra.repository.StorageQuotaRepository;
 
 /**
  * NextWiki Micrometer 指标采集。

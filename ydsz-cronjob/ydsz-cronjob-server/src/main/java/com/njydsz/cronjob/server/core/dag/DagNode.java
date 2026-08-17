@@ -6,31 +6,31 @@ import com.njydsz.common.json.annotation.JsonClass;
 import com.njydsz.common.json.annotation.JsonProperty;
 
 /**
- * DAG 节点定义（P2 DAG 增强 + P1-5/P1-6 子工作流/审批节点）。
+ * DAG 节点定义（P1-5/P1-6 子工作流/审批节点）。
  *
- * <p>对应 dag_definition JSON 中的 nodes 数组元素，描述一个任务节点 及其在前端可视化画布上的坐标位置。
+ * <p>对应 dag_definition JSON 中的 nodes 数组元素，描述一个任务节点及其在前端可视化画布上的坐标位置。
  *
- * <p>支持六种节点类型（对标 DolphinScheduler / Airflow）：
+ * <p>支持三种节点类型：
  *
  * <ul>
  *   <li>{@link NodeType#TASK}：普通任务节点，调用 handler 执行
- *   <li>{@link NodeType#CONDITION}：条件分支节点，根据 conditionExpression 评估结果决定走哪条边
- *   <li>{@link NodeType#LOOP}：循环节点，重复执行下游节点 loopCount 次
- *   <li>{@link NodeType#PARALLEL_GATEWAY}：并行网关节点，使用 CompletableFuture 并行执行所有下游分支
  *   <li>{@link NodeType#SUB_WORKFLOW}：子工作流节点，嵌套触发另一个 DAG 工作流（P1-5）
  *   <li>{@link NodeType#APPROVAL}：审批节点，等待人工审批后继续执行（P1-6）
  * </ul>
  *
+ * <p><b>注意</b>：CONDITION / LOOP / PARALLEL_GATEWAY 控制节点已于 v1.2.0 移除，建议使用工作流引擎（Flowable/Camunda）
+ * 替代复杂编排场景。若反序列化时遇到旧数据中的控制节点类型，{@link #resolveNodeType()} 会降级为 {@link NodeType#TASK}。
+ *
  * @param jobKey 任务 KEY（唯一标识节点，边通过 jobKey 引用）
- * @param jobId 任务 ID（冗余，便于直接派发；控制节点可为 null）
+ * @param jobId 任务 ID（冗余，便于直接派发）
  * @param label 节点显示名称（前端画布展示）
  * @param x 画布 X 坐标（前端可视化用）
  * @param y 画布 Y 坐标（前端可视化用）
  * @param paramsJson 节点级参数 JSON（覆盖任务默认 paramsJson，null 表示用任务默认值）
  * @param nodeType 节点类型（null 默认 TASK）
- * @param conditionExpression 条件表达式（CONDITION 节点）
- * @param loopCount 循环次数（LOOP 节点）
- * @param parallelBranches 并行分支数（PARALLEL_GATEWAY 节点）
+ * @param conditionExpression 保留字段（已废弃，序列化兼容用）
+ * @param loopCount 保留字段（已废弃，序列化兼容用）
+ * @param parallelBranches 保留字段（已废弃，序列化兼容用）
  * @param subWorkflowDagKey 子工作流 DAG KEY（SUB_WORKFLOW 节点，P1-5）
  * @param approvalUsers 审批人列表（APPROVAL 节点，逗号分隔，P1-6）
  * @param approvalTimeoutMinutes 审批超时时间（分钟，超时自动拒绝，P1-6）
@@ -110,44 +110,6 @@ public record DagNode(
     return new DagNode(jobKey, jobId, label, x, y, paramsJson, DEFAULT_NODE_TYPE, null, null, null);
   }
 
-  /** 工厂方法：创建 CONDITION 条件分支节点。 */
-  public static DagNode condition(
-      String jobKey, String jobId, String label, String conditionExpression) {
-    return new DagNode(
-        jobKey,
-        jobId,
-        label,
-        0,
-        0,
-        null,
-        NodeType.CONDITION.name(),
-        conditionExpression,
-        null,
-        null);
-  }
-
-  /** 工厂方法：创建 LOOP 循环节点。 */
-  public static DagNode loop(String jobKey, String jobId, String label, int loopCount) {
-    return new DagNode(
-        jobKey, jobId, label, 0, 0, null, NodeType.LOOP.name(), null, loopCount, null);
-  }
-
-  /** 工厂方法：创建 PARALLEL_GATEWAY 并行网关节点。 */
-  public static DagNode parallelGateway(
-      String jobKey, String jobId, String label, int parallelBranches) {
-    return new DagNode(
-        jobKey,
-        jobId,
-        label,
-        0,
-        0,
-        null,
-        NodeType.PARALLEL_GATEWAY.name(),
-        null,
-        null,
-        parallelBranches);
-  }
-
   /**
    * P1-5: 工厂方法：创建 SUB_WORKFLOW 子工作流节点。
    *
@@ -212,16 +174,17 @@ public record DagNode(
   /**
    * DAG 节点类型枚举。
    *
-   * <p>对标 DolphinScheduler 的条件分支 / 循环 / 并行网关能力， 以及 Airflow 的子工作流和人工审批能力。
+   * <p>CONDITION / LOOP / PARALLEL_GATEWAY 已于 v1.2.0 移除，枚举值保留仅用于反序列化兼容。
+   * 遇到旧数据中的控制节点类型时，{@link #parse(String)} 会降级返回 {@link #TASK}。
    */
   public enum NodeType {
     /** 普通任务节点：调用 handler 执行 */
     TASK,
-    /** 条件分支节点：评估 conditionExpression 决定走哪条边 */
+    /** 已废弃：条件分支节点（v1.2.0 移除，反序列化时降级为 TASK） */
     CONDITION,
-    /** 循环节点：重复执行下游节点 loopCount 次 */
+    /** 已废弃：循环节点（v1.2.0 移除，反序列化时降级为 TASK） */
     LOOP,
-    /** 并行网关节点：使用 CompletableFuture 并行执行所有下游分支 */
+    /** 已废弃：并行网关节点（v1.2.0 移除，反序列化时降级为 TASK） */
     PARALLEL_GATEWAY,
     /** P1-5: 子工作流节点：嵌套触发另一个 DAG 工作流 */
     SUB_WORKFLOW,

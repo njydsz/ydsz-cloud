@@ -14,15 +14,18 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.userinfo.domain.dto.MfaOperationDTO;
 import com.njydsz.userinfo.domain.dto.UserProfileUpdateDTO;
 import com.njydsz.userinfo.domain.entity.UserAccount;
+import com.njydsz.userinfo.domain.vo.MfaSetupVO;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
+import com.njydsz.userinfo.server.auth.MfaService;
 
 /**
  * 用户资料 Controller（个人中心）。
  *
- * <p>提供当前登录用户的个人资料管理能力，包括：查看资料、修改基本信息、更新头像。
+ * <p>提供当前登录用户的个人资料管理能力，包括：查看资料、修改基本信息、更新头像、 双因素认证（MFA）绑定管理。
  *
  * <p><b>接口路径：</b>{@code /api/v1/profile}
  *
@@ -37,6 +40,9 @@ import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
 public class UserProfileController {
 
   private final UserAccountMapper userAccountMapper;
+
+  /** 双因素认证服务（TOTP 绑定/激活/解除） */
+  private final MfaService mfaService;
 
   /**
    * 获取当前登录用户的个人资料。
@@ -122,5 +128,60 @@ public class UserProfileController {
 
     log.info("用户头像上传成功: userId={}, url={}", userId, avatarUrl);
     return BaseResponse.success(avatarUrl);
+  }
+
+  // ==================== 双因素认证（MFA）管理 ====================
+
+  /**
+   * 查询当前用户是否已启用 MFA。
+   *
+   * @return true 表示已启用 TOTP 双因素认证
+   */
+  @GetMapping("/mfa/status")
+  @Operation(summary = "查询 MFA 启用状态")
+  public BaseResponse<Boolean> getMfaStatus() {
+    return BaseResponse.success(mfaService.isMfaEnabled(RequestContext.getUserId()));
+  }
+
+  /**
+   * 发起 MFA 绑定：生成 TOTP 密钥与 otpauth URI（供二维码扫码）。
+   *
+   * <p>绑定为两步流程：{@code setup} 返回密钥与二维码 → 用户扫码录入动态码 → {@link #activateMfa}
+   * 校验并正式启用。密钥临时保存 5 分钟，超时需重新发起。
+   *
+   * @return 绑定信息（Base32 密钥 + otpauth URI）
+   */
+  @PostMapping("/mfa/setup")
+  @Operation(summary = "发起 MFA 绑定", description = "返回 TOTP 密钥与 otpauth URI（二维码）")
+  public BaseResponse<MfaSetupVO> setupMfa() {
+    String userId = RequestContext.getUserId();
+    UserAccount user = userAccountMapper.selectById(userId);
+    return BaseResponse.success(mfaService.setup(userId, user != null ? user.getUsername() : userId));
+  }
+
+  /**
+   * 激活 MFA 绑定：校验用户录入的动态码后正式启用。
+   *
+   * @param dto 动态码操作 DTO
+   * @return 是否成功
+   */
+  @PostMapping("/mfa/activate")
+  @Operation(summary = "激活 MFA 绑定")
+  public BaseResponse<Boolean> activateMfa(@jakarta.validation.Valid @RequestBody MfaOperationDTO dto) {
+    mfaService.activate(RequestContext.getUserId(), dto.getCode());
+    return BaseResponse.success(true);
+  }
+
+  /**
+   * 解除 MFA 绑定：校验当前动态码后关闭双因素认证。
+   *
+   * @param dto 动态码操作 DTO
+   * @return 是否成功
+   */
+  @PostMapping("/mfa/disable")
+  @Operation(summary = "解除 MFA 绑定")
+  public BaseResponse<Boolean> disableMfa(@jakarta.validation.Valid @RequestBody MfaOperationDTO dto) {
+    mfaService.disable(RequestContext.getUserId(), dto.getCode());
+    return BaseResponse.success(true);
   }
 }

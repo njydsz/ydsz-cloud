@@ -14,7 +14,7 @@ import com.njydsz.common.notify.enums.NotifyChannel;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.event.AuditEvent;
 import com.njydsz.nextwiki.domain.event.FileOperatedEvent;
-import com.njydsz.nextwiki.domain.repository.ShareLinkRepository;
+import com.njydsz.nextwiki.infra.repository.ShareLinkRepository;
 import com.njydsz.nextwiki.domain.service.SearchDomainService;
 import com.njydsz.nextwiki.server.service.ContentExtractionApplicationService;
 

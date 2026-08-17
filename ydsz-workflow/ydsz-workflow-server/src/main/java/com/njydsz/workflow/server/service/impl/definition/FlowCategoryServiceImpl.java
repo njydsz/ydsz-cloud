@@ -2,6 +2,7 @@ package com.njydsz.workflow.server.service.impl.definition;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
@@ -11,11 +12,14 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.BaseResultCode;
+import com.njydsz.common.domain.tree.TreeBuilder;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.tenant.TenantContextHolder;
+import com.njydsz.workflow.domain.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.dto.FlowCategoryDTO;
 import com.njydsz.workflow.domain.entity.FlowCategory;
 import com.njydsz.workflow.domain.entity.FlowDefinition;
+import com.njydsz.workflow.domain.vo.FlowCategoryTreeVO;
 import com.njydsz.workflow.infra.mapper.FlowCategoryMapper;
 import com.njydsz.workflow.infra.mapper.FlowDefinitionMapper;
 import com.njydsz.workflow.server.service.FlowCategoryService;
@@ -29,7 +33,8 @@ import com.njydsz.workflow.server.service.FlowCategoryService;
  * <p><b>核心职责：</b>
  *
  * <ul>
- *   <li><b>查询能力</b>：{@link #listAll} — 全量返回当前租户分类，按 {@code sortNum} 升序排序， 前端基于扁平结果自行构建树形结构
+ *   <li><b>查询能力</b>：{@link #listAll} — 全量返回当前租户分类，按 {@code sortNum} 升序排序； {@link #tree} — 使用 {@link
+ *       TreeBuilder#buildSimple} 构建树形结构
  *   <li><b>CRUD</b>：{@link #create}（编码唯一性校验 + 租户隔离）/ {@link #update}（仅更新非空字段，保留原始数据）/ {@link
  *       #delete}（软删除 + 子分类/流程定义引用校验）
  *   <li><b>引用校验</b>：删除分类前必须先<b>无子分类</b>且<b>无关联流程定义</b>， 避免孤立引用导致设计器加载异常
@@ -65,6 +70,9 @@ import com.njydsz.workflow.server.service.FlowCategoryService;
  * <pre>{@code
  * // 查询全部分类
  * List<FlowCategory> list = flowCategoryService.listAll(tenantId);
+ *
+ * // 查询分类树形结构
+ * List<FlowCategoryTreeVO> tree = flowCategoryService.tree(tenantId);
  *
  * // 新增分类
  * FlowCategoryDTO dto = new FlowCategoryDTO();
@@ -111,6 +119,31 @@ public class FlowCategoryServiceImpl implements FlowCategoryService {
                 .eq(FlowCategory::getDeleted, 0));
     list.sort(Comparator.comparingInt(c -> c.getSortNum() == null ? 0 : c.getSortNum()));
     return list;
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>一次性查询全表后在内存中构建树，使用 {@link TreeBuilder#buildSimple} O(n) 算法， 自动填充 {@code level}/{@code path} 元数据。
+   * 分类数据量小（百级别），全量加载可接受。
+   *
+   * @return 分类树形结构根节点列表，无数据返回空列表
+   */
+  @Override
+  public List<FlowCategoryTreeVO> tree(String tenantId) {
+    List<FlowCategory> all = listAll(tenantId);
+    if (all.isEmpty()) {
+      return List.of();
+    }
+    List<FlowCategoryTreeVO> flatList = WorkflowConverter.INSTANT.flowCategoryListToTreeVO(all);
+    return TreeBuilder.buildSimple(
+        flatList,
+        FlowCategoryTreeVO::getId,
+        FlowCategoryTreeVO::getParentId,
+        FlowCategoryTreeVO::setChildren,
+        FlowCategoryTreeVO::getSortNum,
+        FlowCategoryTreeVO::setLevel,
+        FlowCategoryTreeVO::setPath);
   }
 
   /**

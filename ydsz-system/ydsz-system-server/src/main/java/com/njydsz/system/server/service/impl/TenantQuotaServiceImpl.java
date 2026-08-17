@@ -1,7 +1,7 @@
 package com.njydsz.system.server.service.impl;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiFunction;
 
 import lombok.RequiredArgsConstructor;
@@ -147,9 +147,9 @@ public class TenantQuotaServiceImpl implements TenantQuotaService {
   @Service
   public static class QuotaUsageRegistry {
 
-    /** 配额类型 → 使用量提供者（tenantId, quotaType → 当前使用量） */
+    /** 配额类型 → 使用量提供者（tenantId, quotaType → 当前使用量），并发安全 */
     private final Map<QuotaType, BiFunction<String, QuotaType, Integer>> providers =
-        new HashMap<>();
+        new ConcurrentHashMap<>();
 
     /**
      * 注册配额使用量提供者。

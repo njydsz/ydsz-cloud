@@ -63,9 +63,6 @@ public class CacheWarmer {
   /** 字典仓储 */
   private final DictRepository dictRepository;
 
-  /** 默认租户 ID（预热使用系统级默认租户） */
-  private static final String DEFAULT_TENANT = "default";
-
   /**
    * 应用就绪后执行缓存预热。
    *
@@ -108,10 +105,10 @@ public class CacheWarmer {
         return;
       }
 
-      // 按 configKey 预热单条值缓存
+      // 按 configKey 预热单条值缓存（租户取自记录自身 tenantId，与运行时 CacheKeyBuilder 生成的 key 一致）
       for (Config config : configs) {
         try {
-          String valueKey = "value:" + DEFAULT_TENANT + ":" + config.getConfigKey();
+          String valueKey = "value:" + tenantIdOf(config) + ":" + config.getConfigKey();
           configCache.put(valueKey, config.getConfigValue());
         } catch (Exception e) {
           log.debug("[CacheWarmer] 预热单条配置失败: {}/{}", config.getConfigGroup(), config.getConfigKey());
@@ -148,18 +145,21 @@ public class CacheWarmer {
         return;
       }
 
-      // 按 typeCode 分组预热列表缓存
+      // 按 typeCode 分组预热列表缓存（租户取自记录自身 tenantId，与运行时 CacheKeyBuilder 生成的 key 一致）
       Map<String, List<DictItemVO>> groupedItems = dictItems.stream()
-          .map(SystemConverter.INSTANT::entityToVO)
-          .filter(Objects::nonNull)
-          .collect(Collectors.groupingBy(DictItemVO::getTypeCode));
+          .collect(
+              Collectors.groupingBy(
+                  item -> tenantIdOf(item) + ":" + item.getTypeCode(),
+                  Collectors.mapping(
+                      SystemConverter.INSTANT::entityToVO,
+                      Collectors.filtering(Objects::nonNull, Collectors.toList()))));
 
       for (Map.Entry<String, List<DictItemVO>> entry : groupedItems.entrySet()) {
         try {
-          String listKey = "list:" + DEFAULT_TENANT + ":" + entry.getKey();
+          String listKey = "list:" + entry.getKey();
           dictCache.put(listKey, entry.getValue());
         } catch (Exception e) {
-          log.debug("[CacheWarmer] 预热字典列表失败: typeCode={}", entry.getKey());
+          log.debug("[CacheWarmer] 预热字典列表失败: key={}", entry.getKey());
         }
       }
 
@@ -167,5 +167,35 @@ public class CacheWarmer {
     } catch (Exception e) {
       log.warn("[CacheWarmer] 字典项缓存预热失败: {}", e.getMessage());
     }
+  }
+
+  /**
+   * 解析配置记录的租户 ID（空值回退默认租户，与 CacheKeyBuilder 保持一致）。
+   *
+   * @param config 配置实体
+   * @return 租户 ID
+   */
+  private static String tenantIdOf(Config config) {
+    return resolveTenant(config.getTenantId());
+  }
+
+  /**
+   * 解析字典项记录的租户 ID（空值回退默认租户，与 CacheKeyBuilder 保持一致）。
+   *
+   * @param item 字典项实体
+   * @return 租户 ID
+   */
+  private static String tenantIdOf(DictItem item) {
+    return resolveTenant(item.getTenantId());
+  }
+
+  /**
+   * 租户 ID 兜底处理。
+   *
+   * @param tenantId 原始租户 ID
+   * @return 非空租户 ID，空值时回退 {@code default}
+   */
+  private static String resolveTenant(String tenantId) {
+    return tenantId != null && !tenantId.isBlank() ? tenantId : "default";
   }
 }

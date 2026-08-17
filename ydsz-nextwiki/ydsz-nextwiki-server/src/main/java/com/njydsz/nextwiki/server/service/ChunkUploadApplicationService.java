@@ -32,13 +32,15 @@ import com.njydsz.common.redis.service.ops.RedisCollectionOps;
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.entity.FileNode;
+import com.njydsz.nextwiki.domain.entity.FileVersion;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.event.FileOperatedEvent;
-import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
 import com.njydsz.nextwiki.domain.service.FileVersionDomainService;
 import com.njydsz.nextwiki.domain.service.FolderDomainService;
 import com.njydsz.nextwiki.domain.service.QuotaDomainService;
 import com.njydsz.nextwiki.domain.vo.FileNodeVO;
+import com.njydsz.nextwiki.infra.repository.FileNodeRepository;
+import com.njydsz.nextwiki.infra.repository.FileVersionRepository;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
 
 /**
@@ -65,6 +67,7 @@ public class ChunkUploadApplicationService {
   private final RedisStringOps stringOps;
   private final RedisCollectionOps collectionOps;
   private final FileNodeRepository fileNodeRepository;
+  private final FileVersionRepository versionRepository;
   private final QuotaDomainService quotaDomainService;
   private final FileVersionDomainService versionDomainService;
   private final FolderDomainService folderDomainService;
@@ -91,6 +94,7 @@ public class ChunkUploadApplicationService {
       RedisStringOps stringOps,
       RedisCollectionOps collectionOps,
       FileNodeRepository fileNodeRepository,
+      FileVersionRepository versionRepository,
       QuotaDomainService quotaDomainService,
       FileVersionDomainService versionDomainService,
       FolderDomainService folderDomainService,
@@ -100,6 +104,7 @@ public class ChunkUploadApplicationService {
     this.stringOps = stringOps;
     this.collectionOps = collectionOps;
     this.fileNodeRepository = fileNodeRepository;
+    this.versionRepository = versionRepository;
     this.quotaDomainService = quotaDomainService;
     this.versionDomainService = versionDomainService;
     this.folderDomainService = folderDomainService;
@@ -270,14 +275,21 @@ public class ChunkUploadApplicationService {
               existing.getId());
           FileNode deduped = buildDedupedNode(session, existing, fileHash, userId);
           FileNode saved = fileNodeRepository.save(deduped);
-          versionDomainService.createVersion(
-              saved.getId(),
-              existing.getStorageKey(),
-              existing.getSize(),
-              fileHash,
-              existing.getMimeType(),
-              "秒传",
-              userId);
+          List<FileVersion> existingVersions = versionRepository.findByFileNodeId(saved.getId());
+          FileVersionDomainService.VersionCreateResult versionResult =
+              versionDomainService.createVersion(
+                  saved,
+                  existingVersions,
+                  existing.getStorageKey(),
+                  existing.getSize(),
+                  fileHash,
+                  existing.getMimeType(),
+                  "秒传",
+                  userId);
+          versionRepository.setActiveVersion(saved.getId(), -1);
+          versionRepository.save(versionResult.newVersion());
+          fileNodeRepository.update(versionResult.updatedFileNode());
+          cleanupExcessVersions(saved.getId());
           quotaDomainService.addUsage("user", userId, existing.getSize(), 1);
           publishUploadEvent(saved, userId);
           return FileNodeVO.builder()
@@ -330,14 +342,21 @@ public class ChunkUploadApplicationService {
 
       FileNode saved = fileNodeRepository.save(fileNode);
 
-      versionDomainService.createVersion(
-          saved.getId(),
-          storageKey,
-          stored.getSize(),
-          fileHash,
-          stored.getMimeType(),
-          "分片上传",
-          userId);
+      List<FileVersion> existingVersions = versionRepository.findByFileNodeId(saved.getId());
+      FileVersionDomainService.VersionCreateResult versionResult =
+          versionDomainService.createVersion(
+              saved,
+              existingVersions,
+              storageKey,
+              stored.getSize(),
+              fileHash,
+              stored.getMimeType(),
+              "分片上传",
+              userId);
+      versionRepository.setActiveVersion(saved.getId(), -1);
+      versionRepository.save(versionResult.newVersion());
+      fileNodeRepository.update(versionResult.updatedFileNode());
+      cleanupExcessVersions(saved.getId());
 
       quotaDomainService.addUsage("user", userId, stored.getSize(), 1);
 
@@ -464,6 +483,21 @@ public class ChunkUploadApplicationService {
       }
     } catch (IOException e) {
       log.warn("[ChunkUploadApplicationService] 清理目录失败: uploadId={}", uploadId);
+    }
+  }
+
+  /** 清理超出保留数量的旧版本 */
+  private void cleanupExcessVersions(String fileNodeId) {
+    List<FileVersion> allVersions = versionRepository.findByFileNodeId(fileNodeId);
+    List<FileVersion> toDelete = versionDomainService.findVersionsToCleanup(allVersions);
+    for (FileVersion v : toDelete) {
+      versionRepository.deleteById(v.getId());
+    }
+    if (!toDelete.isEmpty()) {
+      log.info(
+          "[ChunkUploadApplicationService] 批量清理旧版本: fileNodeId={}, deleted={}",
+          fileNodeId,
+          toDelete.size());
     }
   }
 

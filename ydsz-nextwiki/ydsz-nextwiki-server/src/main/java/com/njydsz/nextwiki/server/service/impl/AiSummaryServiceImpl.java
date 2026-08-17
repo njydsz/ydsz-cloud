@@ -11,7 +11,7 @@ import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.nextwiki.api.dto.NextwikiDTOs.SummaryResult;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
-import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
+import com.njydsz.nextwiki.infra.repository.FileNodeRepository;
 import com.njydsz.nextwiki.server.config.NextwikiProperties;
 import com.njydsz.nextwiki.server.service.AiSummaryService;
 

@@ -4,10 +4,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
@@ -99,19 +97,8 @@ import com.njydsz.system.server.util.SystemVersionUtils;
 @RequiredArgsConstructor
 public class ConfigServiceImpl implements ConfigService {
 
-  // 配置值校验常量
-  private static final int MAX_STRING_LENGTH = 4096;
-  private static final int MAX_JSON_LENGTH = 65536;
-  private static final double MIN_NUMBER = -1e15;
-  private static final double MAX_NUMBER = 1e15;
-  private static final Pattern BOOLEAN_PATTERN =
-      Pattern.compile("^(true|false|TRUE|FALSE|True|False)$");
-
   /** 游标分页页大小上限 */
   private static final int MAX_CURSOR_PAGE_SIZE = 500;
-
-  /** 日志截断最大长度 */
-  private static final int MAX_LOG_ABBREVIATE_LENGTH = 128;
 
   // ============================== 依赖注入 ==============================
 
@@ -158,24 +145,20 @@ public class ConfigServiceImpl implements ConfigService {
     // 1. 校验并归一化页大小
     int safePageSize = Math.min(Math.max(pageSize, 1), MAX_CURSOR_PAGE_SIZE);
 
-    // 2. 构建查询条件（seek method：ID > cursor）
-    QueryWrapper<Config> wrapper = buildCursorWrapper(configGroup, configKey, cursor);
-    wrapper.orderByAsc("id");
-    wrapper.last("LIMIT " + safePageSize);
-
-    // 3. 查询数据
-    List<Config> entities = configRepository.findList(wrapper);
+    // 2. 查询数据（seek method：ID > cursor，仓储内部封装 QueryWrapper）
+    List<Config> entities =
+        configRepository.findForCursor(configGroup, configKey, cursor, safePageSize);
     List<ConfigVO> records =
         entities.stream()
             .map(SystemConverter.INSTANT::entityToVO)
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
 
-    // 4. 计算下一页游标（本页满且存在后续数据时）
+    // 3. 计算下一页游标（本页满且存在后续数据时）
     String nextCursor = null;
     if (records.size() == safePageSize) {
       Config lastEntity = entities.get(entities.size() - 1);
-      if (hasMoreData(configGroup, configKey, lastEntity.getId())) {
+      if (configRepository.existsAfterCursor(configGroup, configKey, lastEntity.getId())) {
         nextCursor = lastEntity.getId();
       }
     }
@@ -183,48 +166,8 @@ public class ConfigServiceImpl implements ConfigService {
     return CursorPageResponse.of(records, nextCursor);
   }
 
-  /**
-   * 构建游标分页查询条件（私有）。
-   *
-   * @param configGroup 配置分组（可选）
-   * @param configKey 配置键（可选，模糊）
-   * @param cursor 上一页游标（可选）
-   * @return 查询包装器（含 deleted=0 与过滤条件）
-   */
-  private QueryWrapper<Config> buildCursorWrapper(
-      String configGroup, String configKey, String cursor) {
-    QueryWrapper<Config> wrapper = new QueryWrapper<>();
-    wrapper.eq("deleted", 0);
-    if (configGroup != null && !configGroup.isBlank()) {
-      wrapper.eq("config_group", configGroup);
-    }
-    if (configKey != null && !configKey.isBlank()) {
-      wrapper.like("config_key", configKey);
-    }
-    if (cursor != null && !cursor.isBlank()) {
-      wrapper.gt("id", cursor);
-    }
-    return wrapper;
-  }
-
-  /**
-   * 判断游标之后是否还有更多数据（私有）。
-   *
-   * @param configGroup 配置分组（可选）
-   * @param configKey 配置键（可选）
-   * @param lastId 本页最后一条记录 ID
-   * @return 存在后续数据返回 {@code true}
-   */
-  private boolean hasMoreData(String configGroup, String configKey, String lastId) {
-    QueryWrapper<Config> countWrapper = buildCursorWrapper(configGroup, configKey, lastId);
-    return configRepository.findCount(countWrapper) > 0;
-  }
-
   @Override
   public ConfigVO getById(String id) {
-    Config entity = configRepository.findById(id).orElse(null);
-    return SystemConverter.INSTANT.entityToVO(entity);
-  }
 
   @Override
   @Caching(
@@ -242,9 +185,9 @@ public class ConfigServiceImpl implements ConfigService {
   @Transactional(rollbackFor = Exception.class)
   public String save(ConfigVO vo) {
     Config entity = toEntity(vo);
-    validateValueType(entity.getValueType());
+    entity.validate();
     checkDuplicateKey(entity);
-    validateConfigValue(entity.getConfigKey(), entity.getConfigValue(), entity.getValueType());
+    validateConfigValueStrictOrWarn(entity);
     // 版本快照：新建配置无需快照（变更前不存在）
     configRepository.insert(entity);
     publishConfigChangedEvent(entity.getConfigKey(), entity.getConfigGroup());
@@ -268,8 +211,8 @@ public class ConfigServiceImpl implements ConfigService {
   @Transactional(rollbackFor = Exception.class)
   public boolean updateById(ConfigVO vo) {
     Config entity = toEntity(vo);
-    validateValueType(entity.getValueType());
-    validateConfigValue(entity.getConfigKey(), entity.getConfigValue(), entity.getValueType());
+    entity.validate();
+    validateConfigValueStrictOrWarn(entity);
     // 版本快照：查询变更前状态
     Config before = configRepository.findByKeyIgnoreStatus(entity.getConfigKey()).orElse(null);
     String snapshotJson = before != null ? YdszJson.toJson(before) : null;
@@ -458,156 +401,35 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   /**
-   * 校验配置值类型合法性。
+   * 对配置值进行格式校验（值类型合法性由 {@link Config#validate()} 统一校验，此处仅校验值格式）。
    *
-   * <p>委托 {@link ConfigValueType#validate} 完成，非法类型将抛出 {@link BusinessException}
-   *（{@link SystemExceptionCode#VALUE_TYPE_INVALID}）阻止脏数据落库。
-   *
-   * @param valueType 值类型字符串
-   */
-  private void validateValueType(String valueType) {
-    try {
-      ConfigValueType.validate(valueType);
-    } catch (IllegalArgumentException e) {
-      throw BusinessException.of(SystemExceptionCode.VALUE_TYPE_INVALID)
-          .data("valueType", valueType);
-    }
-  }
-
-  /**
-   * 对配置值进行格式校验（告警模式，不阻止保存）。
-   *
-   * <p><b>向后兼容：</b>校验失败仅记录告警日志，不阻止配置保存， 保证现有非法配置值仍可继续使用，同时提示管理员修正。
-   *
-   * @param configKey 配置键（用于日志定位，为 null 时跳过）
-   * @param configValue 配置值字符串（为 null 时跳过校验）
-   * @param valueType 值类型字符串（为 null 或无法识别时跳过校验）
-   */
-  private void validateConfigValue(String configKey, String configValue, String valueType) {
-    if (configKey == null || configValue == null || valueType == null) {
-      return;
-    }
-    try {
-      String error = validateValueByFormat(configValue, valueType);
-      if (error != null) {
-        log.warn(
-            "[ConfigService] 配置值格式校验失败: configKey={}, valueType={}, value={}, error={}",
-            configKey,
-            valueType,
-            abbreviate(configValue),
-            error);
-        if (metrics != null) {
-          metrics.recordConfigValidationWarning();
-        }
-      }
-    } catch (Exception e) {
-      log.warn(
-          "[ConfigService] 配置值校验异常（不影响保存）: configKey={}, valueType={}, error={}",
-          configKey,
-          valueType,
-          e.getMessage());
-    }
-  }
-
-  /**
-   * 按值类型进行格式校验（内联实现，替代已移除的 Schema 校验引擎）。
-   *
-   * <p>校验规则：
+   * <p><b>严格/告警双模式（P1-6）：</b>
    *
    * <ul>
-   *   <li>STRING — 长度 ≤ {@value #MAX_STRING_LENGTH}
-   *   <li>INTEGER / NUMBER — 可解析为数值且在 [{}, {}] 范围内
-   *   <li>BOOLEAN — 必须为 true/false
-   *   <li>JSON — 必须为合法 JSON 且长度 ≤ {@value #MAX_JSON_LENGTH}
+   *   <li>严格模式（{@code ydsz.system.config.strict-validation=true}）：格式非法抛出
+   *       {@link BusinessException} 阻止保存，保证数据完整性。
+   *   <li>告警模式（默认）：格式非法仅记录告警日志与指标，不阻止保存，兼容存量非法值，逐步收紧。
    * </ul>
    *
-   * @return 错误描述，null 表示通过
+   * @param entity 待校验的配置实体
    */
-  private static String validateValueByFormat(String configValue, String valueType) {
-    try {
-      ConfigValueType type = ConfigValueType.valueOf(valueType.toUpperCase());
-      return switch (type) {
-        case STRING -> validateStringValue(configValue);
-        case NUMBER -> validateNumberValue(configValue);
-        case BOOLEAN -> validateBooleanValue(configValue);
-        case JSON -> validateJsonValue(configValue);
-      };
-    } catch (NumberFormatException e) {
-      return "数值格式非法";
-    } catch (IllegalArgumentException e) {
-      return "未知的值类型: " + valueType;
-    } catch (Exception e) {
-      return e.getMessage() != null ? e.getMessage() : "校验异常";
+  private void validateConfigValueStrictOrWarn(Config entity) {
+    String error = entity.validateValueFormat();
+    if (error == null) {
+      return;
     }
-  }
-
-  /** 校验 STRING 类型长度（私有）。 */
-  private static String validateStringValue(String configValue) {
-    return configValue.length() > MAX_STRING_LENGTH
-        ? "字符串长度超过限制 " + MAX_STRING_LENGTH
-        : null;
-  }
-
-  /** 校验 NUMBER 类型可解析性与范围（私有）。 */
-  private static String validateNumberValue(String configValue) {
-    double v = Double.parseDouble(configValue.trim());
-    if (v < MIN_NUMBER || v > MAX_NUMBER) {
-      return "数值超出范围 [" + MIN_NUMBER + ", " + MAX_NUMBER + "]";
-    }
-    return null;
-  }
-
-  /** 校验 BOOLEAN 类型取值（私有）。 */
-  private static String validateBooleanValue(String configValue) {
-    return BOOLEAN_PATTERN.matcher(configValue.trim()).matches()
-        ? null
-        : "布尔值必须是 true/false";
-  }
-
-  /** 校验 JSON 类型合法性与长度（私有）。 */
-  private static String validateJsonValue(String configValue) {
-    if (configValue.length() > MAX_JSON_LENGTH) {
-      return "JSON 长度超过限制 " + MAX_JSON_LENGTH;
-    }
-    parseJsonLoose(configValue);
-    return null;
-  }
-
-  /**
-   * 宽松 JSON 校验：尝试解析为对象或数组，解析失败抛出异常。
-   *
-   * @param json JSON 字符串
-   * @throws RuntimeException 解析失败时抛出
-   */
-  private static void parseJsonLoose(String json) {
-    String trimmed = json.trim();
-    if (trimmed.startsWith("{")) {
-      YdszJson.parseMap(trimmed);
-    } else if (trimmed.startsWith("[")) {
-      YdszJson.parseArray(trimmed, Object.class);
-    } else {
+    if (properties.getConfig().isStrictValidation()) {
       throw BusinessException.of(SystemExceptionCode.VALUE_TYPE_INVALID)
-          .data("reason", "JSON 类型值必须以 '{' 或 '[' 开头");
+          .data("configKey", entity.getConfigKey())
+          .data("valueType", entity.getValueType())
+          .data("reason", error);
     }
-  }
-
-  /**
-   * 截断字符串用于日志输出，避免超长值污染日志。
-   *
-   * @param value 原始字符串（可为 null）
-   * @return 截断后的字符串（最长 128 字符）
-   */
-  private static String abbreviate(String value) {
-    if (value == null) {
-      return "null";
-    }
-    if (value.length() <= MAX_LOG_ABBREVIATE_LENGTH) {
-      return value;
-    }
-    return value.substring(0, MAX_LOG_ABBREVIATE_LENGTH)
-        + "...(truncated, len="
-        + value.length()
-        + ")";
+    log.warn(
+        "[ConfigService] 配置值格式校验失败: configKey={}, valueType={}, error={}",
+        entity.getConfigKey(),
+        entity.getValueType(),
+        error);
+    metrics.recordConfigValidationWarning();
   }
 
   /**
@@ -702,15 +524,7 @@ public class ConfigServiceImpl implements ConfigService {
    * @return 未删除配置列表（按分组/排序）
    */
   private List<Config> loadConfigsForExport(String configGroup) {
-    com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<Config> wrapper =
-        new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<Config>()
-            .eq("deleted", 0);
-    if (configGroup != null && !configGroup.isBlank()) {
-      wrapper.eq("config_group", configGroup).orderByAsc("sort_order");
-    } else {
-      wrapper.orderByAsc("config_group", "sort_order");
-    }
-    return configRepository.findList(wrapper);
+    return configRepository.findForExport(configGroup);
   }
 
   @Override

@@ -175,4 +175,16 @@ public class Config extends MpBaseEntity<String> {
     }
     validateValueType();
   }
+
+  /**
+   * 校验配置值格式是否与声明类型匹配（值格式规则的权威实现，P1-5 收敛）。
+   *
+   * <p>委托 {@link ConfigValueType#validateFormat(String, String)}，返回错误描述而非直接抛异常，
+   * 由调用方（Service）决定「严格拦截」还是「告警放行」，兼顾数据完整性与存量兼容。
+   *
+   * @return 错误描述；null 表示通过
+   */
+  public String validateValueFormat() {
+    return ConfigValueType.validateFormat(valueType, configValue);
+  }
 }

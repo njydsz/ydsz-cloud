@@ -19,14 +19,7 @@ public enum RateLimitAlgorithm {
    *
    * <p>以恒定速率往桶里放令牌，请求需取令牌。允许突发流量（桶满时）。 本地限流首选算法，兼顾突发流量支持和实现简洁性。
    */
-  TOKEN_BUCKET("token-bucket", "令牌桶"),
-
-  /**
-   * 并发数限制（基于信号量/线程数控制同时访问资源的请求量）
-   *
-   * <p>适用于保护下游服务不被过多并发请求压垮，配合 release() 使用。
-   */
-  CONCURRENCY("concurrency", "并发数");
+  TOKEN_BUCKET("token-bucket", "令牌桶");
 
   private final String code;
   private final String description;

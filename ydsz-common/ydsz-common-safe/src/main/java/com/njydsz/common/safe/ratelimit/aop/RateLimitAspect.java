@@ -83,17 +83,7 @@ public class RateLimitAspect {
       String code = (errorCode == null || errorCode.isEmpty()) ? "D02001" : errorCode;
       throw BusinessException.builder().code(code).key(message).build();
     }
-    try {
-      return pjp.proceed();
-    } finally {
-      // 并发数限流需要在 finally 中释放许可
-      if (rule.getAlgorithm() == RateLimitAlgorithm.CONCURRENCY) {
-        rateLimitManager
-            .getRuleCache()
-            .getLimiter(rule.getResource())
-            .ifPresent(limiter -> limiter.release(context));
-      }
-    }
+    return pjp.proceed();
   }
 
   /**

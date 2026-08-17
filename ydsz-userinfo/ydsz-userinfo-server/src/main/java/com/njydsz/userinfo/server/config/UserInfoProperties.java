@@ -86,6 +86,15 @@ public class UserInfoProperties {
   /** 默认批量查询上限。 */
   private static final int DEFAULT_BATCH_SIZE_LIMIT = 500;
 
+  /** 默认角色权限 DB 查询结果缓存 TTL（秒）：10 分钟。 */
+  private static final long DEFAULT_PERMISSION_CACHE_TTL_SECONDS = 600;
+
+  /** 默认登录风险因子采集窗口（秒）：5 分钟。 */
+  private static final long DEFAULT_RISK_WINDOW_SECONDS = 300;
+
+  /** 默认风险等级触发 MFA 的评分阈值（含）。 */
+  private static final int DEFAULT_MFA_RISK_THRESHOLD = 60;
+
   /** access_token 有效期（秒），默认 2 小时。 */
   private long tokenTtlSeconds = DEFAULT_TOKEN_TTL_SECONDS;
 
@@ -128,6 +137,15 @@ public class UserInfoProperties {
    * <p>防止调用方传入过多 ID 导致巨型 IN 查询，超出时自动分批执行。
    */
   private int batchSizeLimit = DEFAULT_BATCH_SIZE_LIMIT;
+
+  /** 角色权限 DB 查询结果缓存 TTL（秒），默认 10 分钟。 */
+  private long permissionCacheTtlSeconds = DEFAULT_PERMISSION_CACHE_TTL_SECONDS;
+
+  /** 登录风险因子采集窗口（秒），默认 5 分钟。 */
+  private long riskWindowSeconds = DEFAULT_RISK_WINDOW_SECONDS;
+
+  /** 登录风险等级触发 MFA 的评分阈值（含），默认 60（MEDIUM+）。 */
+  private int mfaRiskThreshold = DEFAULT_MFA_RISK_THRESHOLD;
 
   /**
    * OAuth2 客户端配置

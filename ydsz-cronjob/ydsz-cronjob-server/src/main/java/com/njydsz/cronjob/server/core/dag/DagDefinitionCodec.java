@@ -101,8 +101,9 @@ public class DagDefinitionCodec {
               n.getIntValue("x"),
               n.getIntValue("y"),
               n.getString("paramsJson"),
-              // P2-1: 节点类型扩展字段（缺失时默认 TASK）
+              // 节点类型（缺失时默认 TASK，已废弃类型自动降级为 TASK）
               n.getString("nodeType"),
+              // 以下三个字段已废弃（v1.2.0 移除控制节点），保留读取以兼容旧数据
               n.getString("conditionExpression"),
               n.getInteger("loopCount"),
               n.getInteger("parallelBranches"),

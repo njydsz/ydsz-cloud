@@ -13,10 +13,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.entity.FileNode;
-import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
+import com.njydsz.nextwiki.domain.entity.FileVersion;
 import com.njydsz.nextwiki.domain.service.FileVersionDomainService;
 import com.njydsz.nextwiki.domain.service.QuotaDomainService;
 import com.njydsz.nextwiki.domain.service.StorageReferenceService;
+import com.njydsz.nextwiki.infra.repository.FileNodeRepository;
+import com.njydsz.nextwiki.infra.repository.FileVersionRepository;
 
 /**
  * 文件夹复制服务。
@@ -40,6 +42,7 @@ public class FolderCopyService {
   public static final int BATCH_SIZE = 50;
 
   private final FileNodeRepository fileNodeRepository;
+  private final FileVersionRepository versionRepository;
   private final FileVersionDomainService versionDomainService;
   private final StorageReferenceService storageReferenceService;
   private final QuotaDomainService quotaDomainService;
@@ -254,14 +257,20 @@ public class FolderCopyService {
       FileNode newNode = newNodes.get(i);
       FileNode source = batchSourceNodes.get(i);
       if (source.isFile()) {
-        versionDomainService.createVersion(
-            newNode.getId(),
-            source.getStorageKey(),
-            source.getSize(),
-            source.getFileHash(),
-            source.getMimeType(),
-            "文件夹复制",
-            userId);
+        List<FileVersion> existingVersions = versionRepository.findByFileNodeId(newNode.getId());
+        FileVersionDomainService.VersionCreateResult versionResult =
+            versionDomainService.createVersion(
+                newNode,
+                existingVersions,
+                source.getStorageKey(),
+                source.getSize(),
+                source.getFileHash(),
+                source.getMimeType(),
+                "文件夹复制",
+                userId);
+        versionRepository.setActiveVersion(newNode.getId(), -1);
+        versionRepository.save(versionResult.newVersion());
+        fileNodeRepository.update(versionResult.updatedFileNode());
       }
     }
 

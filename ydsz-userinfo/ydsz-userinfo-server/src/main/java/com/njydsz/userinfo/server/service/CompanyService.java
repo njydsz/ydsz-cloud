@@ -7,6 +7,7 @@ import java.util.Map;
 import com.njydsz.userinfo.domain.dto.create.CompanyCreateDTO;
 import com.njydsz.userinfo.domain.dto.update.CompanyUpdateDTO;
 import com.njydsz.userinfo.domain.entity.Company;
+import com.njydsz.userinfo.domain.vo.CompanyTreeVO;
 import com.njydsz.userinfo.domain.vo.CompanyVO;
 
 /**
@@ -17,7 +18,8 @@ import com.njydsz.userinfo.domain.vo.CompanyVO;
  * <p><b>核心职责：</b>
  *
  * <ul>
- *   <li>公司全量列表查询（{@code list}，按创建时间降序）
+ *   <li>公司全量列表查询（{@code list}，按创建时间降序）/ 树形结构查询（{@code tree}，使用 {@link
+ *       com.njydsz.common.domain.tree.TreeBuilder#buildSimple} 构建）
  *   <li>公司 CRUD（含 {@code companyCode} 唯一性校验）
  *   <li>跨服务名称富化（{@code batchNamesByIds}，供 NameAssembler 调用）
  * </ul>
@@ -44,6 +46,16 @@ public interface CompanyService {
    * @return 公司 VO 列表
    */
   List<CompanyVO> list();
+
+  /**
+   * 查询全部未删除公司树形结构（使用 TreeBuilder 构建，自动填充 level/path 元数据）。
+   *
+   * <p>一次性查询全表后在内存中构建树，集团-子公司层级关系清晰。 公司数据量小（百级别），全量加载可接受。
+   *
+   * @return 公司树形结构根节点列表，无数据返回空列表
+   * @since 1.7.0
+   */
+  List<CompanyTreeVO> tree();
 
   /**
    * 创建公司。

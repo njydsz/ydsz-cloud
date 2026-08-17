@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.domain.tree.TreeBuilder;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.bean.BeanUpdateUtil;
 import com.njydsz.userinfo.domain.converter.UserInfoConverter;
@@ -20,6 +21,7 @@ import com.njydsz.userinfo.domain.dto.create.CompanyCreateDTO;
 import com.njydsz.userinfo.domain.dto.update.CompanyUpdateDTO;
 import com.njydsz.userinfo.domain.entity.Company;
 import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
+import com.njydsz.userinfo.domain.vo.CompanyTreeVO;
 import com.njydsz.userinfo.domain.vo.CompanyVO;
 import com.njydsz.userinfo.infra.mapper.CompanyMapper;
 import com.njydsz.userinfo.server.service.CompanyService;
@@ -34,6 +36,7 @@ import com.njydsz.userinfo.server.service.CompanyService;
  * <ul>
  *   <li>公司 CRUD（含 {@code companyCode} 唯一性校验）
  *   <li>公司全量列表查询（按创建时间降序）
+ *   <li>公司树形结构查询（使用 {@link TreeBuilder#buildSimple} 构建，自动填充 level/path 元数据）
  *   <li>跨服务名称富化（{@code batchNamesByIds}，供 NameAssembler 调用）
  * </ul>
  *
@@ -67,6 +70,33 @@ public class CompanyServiceImpl implements CompanyService {
     return companyMapper.selectList(wrapper).stream()
         .map(UserInfoConverter.INSTANT::entityToVO)
         .collect(Collectors.toList());
+  }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>一次性查询全表后在内存中构建树，使用 {@link TreeBuilder#buildSimple} O(n) 算法， 自动填充 {@code level}/{@code path} 元数据。
+   * 公司数据量小（百级别），全量加载可接受。
+   *
+   * @return 公司树形结构根节点列表，无数据返回空列表
+   */
+  @Override
+  public List<CompanyTreeVO> tree() {
+    List<Company> all =
+        companyMapper.selectList(
+            new LambdaQueryWrapper<Company>().eq(Company::getDeleted, 0));
+    if (all.isEmpty()) {
+      return List.of();
+    }
+    List<CompanyTreeVO> flatList = UserInfoConverter.INSTANT.companyTreeListToVO(all);
+    return TreeBuilder.buildSimple(
+        flatList,
+        CompanyTreeVO::getId,
+        CompanyTreeVO::getParentId,
+        CompanyTreeVO::setChildren,
+        null,
+        CompanyTreeVO::setLevel,
+        CompanyTreeVO::setPath);
   }
 
   @Override

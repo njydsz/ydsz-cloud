@@ -16,7 +16,8 @@ import lombok.Data;
  * <ul>
  *   <li>{@code username} — 必填，登录用户名
  *   <li>{@code password} — 必填，明文密码（传输层由 HTTPS 保护，服务端 BCrypt 比对）
- *   <li>{@code captchaKey} / {@code captcha} — 可选，当系统开启验证码时必填
+ *   <li>{@code captchaKey} / {@code captcha} — 可选，当系统开启验证码或登录风险为 MEDIUM 及以上时必填
+ *   <li>{@code mfaCode} — 可选，当登录风险为 HIGH 时必填（TOTP 动态码或短信验证码）
  * </ul>
  *
  * @author ydsz-team
@@ -40,6 +41,9 @@ public class LoginDTO implements Serializable {
 
   /** 用户输入的图形验证码（不区分大小写，开启验证码时必填） */
   private String captcha;
+
+  /** 双因素认证动态码（TOTP 或短信验证码，登录风险为 HIGH 时必填） */
+  private String mfaCode;
 
   /** 租户 ID（多租户场景下指定登录归属租户，单租户模式可不传） */
   private String tenantId;

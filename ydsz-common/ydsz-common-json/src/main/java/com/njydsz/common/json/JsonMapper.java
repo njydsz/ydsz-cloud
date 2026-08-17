@@ -80,7 +80,7 @@ public class JsonMapper {
 
   /** 创建默认配置的 Mapper 实例。 */
   public JsonMapper() {
-    this(JsonConfig.getInstance());
+    this(JsonConfig.copyOf(null));
   }
 
   /**
@@ -219,14 +219,14 @@ public class JsonMapper {
   /**
    * 判断本 Mapper 是否显式自定义了深度配置（区别于继承已安装全局配置）。
    *
-   * <p>以 {@link JsonConfig#getInstance()}（已安装配置）为基准而非 {@code JSONReader.getMaxDepth()}
+   * <p>以全局已安装配置为基准而非 {@code JSONReader.getMaxDepth()}
    * 静态值——后者可被运行期临时调整， 临时调整不应使继承型 Mapper 被误判为自定义型。
    *
    * @return true 表示本 Mapper 深度配置与全局已安装配置不同
    * @since 1.2.3
    */
   private boolean isCustomDepth() {
-    JsonConfig installed = JsonConfig.getInstance();
+    JsonConfig installed = JsonConfig.copyOf(null);
     return runtimeConfig.maxDepth() != installed.getMaxDepth()
         || runtimeConfig.maxGenericDepth() != installed.getMaxGenericDepth();
   }

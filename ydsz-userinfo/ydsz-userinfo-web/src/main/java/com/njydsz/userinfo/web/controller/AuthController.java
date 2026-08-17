@@ -27,8 +27,10 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.web.version.ApiVersion;
 import com.njydsz.userinfo.domain.dto.LoginDTO;
+import com.njydsz.userinfo.domain.dto.SendVerifyCodeDTO;
 import com.njydsz.userinfo.domain.vo.LoginVO;
 import com.njydsz.userinfo.server.auth.AuthService;
+import com.njydsz.userinfo.server.auth.MfaService;
 
 /**
  * 认证 Controller
@@ -66,6 +68,25 @@ import com.njydsz.userinfo.server.auth.AuthService;
 public class AuthController {
 
   private final AuthService authService;
+
+  /** 双因素认证服务（登录短信验证码发送） */
+  private final MfaService mfaService;
+
+  /**
+   * 发送登录 MFA 短信验证码（风险为 HIGH 且未绑定 TOTP 时调用）。
+   *
+   * <p>限流 5 QPS，同手机号 60 秒内仅可发送一次（由 {@link VerifyCodeService} 频率限制保证）。
+   *
+   * @param request 发送请求（含手机号）
+   * @return 是否发送成功
+   */
+  @RateLimit(resource = "userinfo.auth.mfaSendCode", threshold = 5)
+  @PostMapping("/mfa/send-code")
+  @Operation(summary = "发送登录 MFA 短信验证码")
+  public BaseResponse<Boolean> sendMfaCode(@Valid @RequestBody SendVerifyCodeDTO request) {
+    mfaService.sendLoginSmsCode(request.getPhone());
+    return BaseResponse.success(true);
+  }
 
   /**
    * 用户登录（账号密码模式）

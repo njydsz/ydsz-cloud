@@ -139,6 +139,9 @@ public class AuthServiceImpl implements AuthService {
   /** P3: 风险评分服务（评估登录风险等级，动态调整认证策略） */
   private final RiskScoringService riskScoringService;
 
+  /** P0-2: 双因素认证服务（HIGH 风险时校验 TOTP / 短信验证码） */
+  private final MfaService mfaService;
+
   /**
    * {@inheritDoc}
    *
@@ -157,15 +160,18 @@ public class AuthServiceImpl implements AuthService {
     String loginIp = loginDTO.getLoginIp();
     String userAgent = loginDTO.getUserAgent();
 
-    // IP 封禁检查 + 验证码校验
+    // IP 封禁检查
     checkIpNotBlocked(loginIp, loginDTO.getUsername(), userAgent);
-    validateCaptchaIfEnabled(loginDTO);
 
     // 查询用户 + 状态/锁定校验
     UserAccount user = findAndValidateUser(loginDTO.getUsername(), loginIp, userAgent);
 
     // P3: 登录风险评估（基于 IP、时间、设备、频率等多维度）
-    evaluateLoginRisk(user, loginIp, userAgent);
+    RiskScoringService.RiskScore risk = evaluateLoginRisk(user, loginIp, userAgent);
+
+    // P0-2: 动态认证策略 —— MEDIUM+ 强制图形验证码，HIGH 追加 MFA 动态码
+    validateCaptchaIfEnabled(loginDTO, risk);
+    validateMfaIfRequired(user, loginDTO, risk);
 
     // 密码校验（本地 + LDAP 回退）
     authenticatePassword(user, loginDTO.getPassword(), loginIp, userAgent);
@@ -207,19 +213,43 @@ public class AuthServiceImpl implements AuthService {
   }
 
   /**
-   * 校验图形验证码（启用时）。
+   * 校验图形验证码（全局开关开启或登录风险为 MEDIUM+ 时强制）。
+   *
+   * <p>P0-2: 风险评分引擎输出 MEDIUM/HIGH 时，即使全局验证码开关关闭，也强制要求图形验证码， 实现「正常用户无感、可疑请求加强验证」的动态认证策略。
    *
    * @param loginDTO 登录请求 DTO
+   * @param risk 登录风险评估结果（可为 null，此时仅按全局开关判断）
    * @throws BusinessException 验证码为空或校验失败时抛出
    */
-  private void validateCaptchaIfEnabled(LoginDTO loginDTO) {
-    if (properties.isCaptchaEnabled()) {
+  private void validateCaptchaIfEnabled(LoginDTO loginDTO, RiskScoringService.RiskScore risk) {
+    boolean forceCaptcha =
+        risk != null && risk.requiresAdditionalVerification() && !risk.shouldReject();
+    if (properties.isCaptchaEnabled() || forceCaptcha) {
       if (loginDTO.getCaptchaKey() == null || loginDTO.getCaptcha() == null) {
         userInfoMetrics.recordLoginFail();
         throw new BusinessException(UserInfoExceptionCode.CAPTCHA_REQUIRED);
       }
       captchaService.validate(loginDTO.getCaptchaKey(), loginDTO.getCaptcha());
     }
+  }
+
+  /**
+   * 登录风险为 HIGH 时强制校验 MFA 动态码（TOTP 或短信验证码）。
+   *
+   * <p>P0-2: 消费风险评分引擎的 HIGH 分支——原实现仅处理 CRITICAL 拒绝，MEDIUM/HIGH 分支形同虚设。 校验失败抛出
+   * {@link UserInfoExceptionCode#MFA_INVALID} / {@link UserInfoExceptionCode#MFA_REQUIRED}。
+   *
+   * @param user 登录用户
+   * @param loginDTO 登录请求 DTO（含 mfaCode）
+   * @param risk 登录风险评估结果
+   * @throws BusinessException 风险为 HIGH 且 MFA 校验未通过时抛出
+   */
+  private void validateMfaIfRequired(
+      UserAccount user, LoginDTO loginDTO, RiskScoringService.RiskScore risk) {
+    if (risk == null || risk.level() != RiskScoringService.RiskLevel.HIGH || risk.shouldReject()) {
+      return;
+    }
+    mfaService.validateLoginMfa(user, loginDTO.getMfaCode());
   }
 
   /**
@@ -274,9 +304,11 @@ public class AuthServiceImpl implements AuthService {
    * @param user 用户账号
    * @param loginIp 登录来源 IP
    * @param userAgent 用户代理
+   * @return 风险评估结果（含等级与因子），CRITICAL 时直接抛出异常
    * @throws BusinessException 风险等级为 CRITICAL 时拒绝登录
    */
-  private void evaluateLoginRisk(UserAccount user, String loginIp, String userAgent) {
+  private RiskScoringService.RiskScore evaluateLoginRisk(
+      UserAccount user, String loginIp, String userAgent) {
     // 获取最近失败次数
     int recentFailCount = getRecentFailCount(loginIp);
     // 判断是否新设备
@@ -306,6 +338,7 @@ public class AuthServiceImpl implements AuthService {
           userAgent);
       throw new BusinessException(UserInfoExceptionCode.IP_BLOCKED);
     }
+    return riskScore;
   }
 
   /**
@@ -414,26 +447,31 @@ public class AuthServiceImpl implements AuthService {
 
     String accessToken = tokenService.issueAccessToken(userInfo);
     String refreshToken = tokenService.issueRefreshToken(userInfo);
-    storeRedisSession(accessToken, user, roleCodes, roleNames);
+    storeRedisSession(accessToken, refreshToken, user, roleCodes, roleNames);
     return new TokenResult(accessToken, refreshToken);
   }
 
   /**
    * 写入 Redis 会话（会话 Hash + 会话索引）。
    *
+   * <p>会话 Hash 同时保存 refreshToken，供登出时同步吊销（P0-3）。
+   *
    * @param accessToken 访问令牌
+   * @param refreshToken 刷新令牌
    * @param user 用户账号
    * @param roleCodes 角色编码（逗号分隔）
    * @param roleNames 角色名称（逗号分隔）
    */
   private void storeRedisSession(
-      String accessToken, UserAccount user, String roleCodes, String roleNames) {
+      String accessToken, String refreshToken, UserAccount user, String roleCodes,
+      String roleNames) {
     Map<String, Object> sessionInfo = new HashMap<>();
     sessionInfo.put("userId", user.getId());
     sessionInfo.put("username", user.getUsername());
     sessionInfo.put("roleCode", roleCodes);
     sessionInfo.put("roleName", roleNames);
     sessionInfo.put("tenantId", user.getTenantId());
+    sessionInfo.put("refreshToken", refreshToken);
     redisHashOps.hMSet(accessToken, sessionInfo);
     redisStringOps.expire(accessToken, Duration.ofSeconds(properties.getTokenTtlSeconds()));
 
@@ -486,6 +524,9 @@ public class AuthServiceImpl implements AuthService {
     // P1-1: 从会话 Hash 中获取 userId，以便清理会话索引
     String userId = redisHashOps.hGet(accessToken, "userId", String.class);
 
+    // P0-3: 从会话 Hash 中获取 refreshToken 并同步吊销，杜绝登出后 refresh_token 长期复用缝隙
+    String refreshToken = redisHashOps.hGet(accessToken, "refreshToken", String.class);
+
     // P1-1: 从 userId → Set 索引中移除该 token
     if (userId != null) {
       String sessionKey = buildSessionKey(userId);
@@ -493,6 +534,10 @@ public class AuthServiceImpl implements AuthService {
       log.info("Removed token from session index for user: {}", userId);
     }
 
+    if (refreshToken != null && !refreshToken.isBlank()) {
+      tokenBlacklistService.addToBlacklist(refreshToken);
+      log.info("Refresh token revoked on logout for user: {}", userId);
+    }
     tokenBlacklistService.addToBlacklist(accessToken);
     redisStringOps.del(accessToken);
     userInfoMetrics.recordLogout();
@@ -533,13 +578,14 @@ public class AuthServiceImpl implements AuthService {
     // 4. 将旧 refresh_token 加入黑名单（一次性使用，防止重放攻击）
     tokenBlacklistService.addToBlacklist(refreshToken);
 
-    // 5. 更新 Redis 会话（使用新 access_token）
+    // 5. 更新 Redis 会话（使用新 access_token，同时保存新 refresh_token 供登出吊销）
     Map<String, Object> sessionInfo = new HashMap<>();
     sessionInfo.put("userId", userInfo.getUserId());
     sessionInfo.put("username", userInfo.getUsername());
     sessionInfo.put("roleCode", userInfo.getRoleCode());
     sessionInfo.put("roleName", userInfo.getRoleName());
     sessionInfo.put("tenantId", userInfo.getTenantId());
+    sessionInfo.put("refreshToken", newRefreshToken);
     redisHashOps.hMSet(newAccessToken, sessionInfo);
     redisStringOps.expire(newAccessToken, Duration.ofSeconds(properties.getTokenTtlSeconds()));
 

@@ -15,9 +15,9 @@ import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderContext;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.entity.Tag;
-import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
-import com.njydsz.nextwiki.domain.repository.SearchIndexRepository;
-import com.njydsz.nextwiki.domain.repository.TagRepository;
+import com.njydsz.nextwiki.infra.repository.FileNodeRepository;
+import com.njydsz.nextwiki.infra.repository.SearchIndexRepository;
+import com.njydsz.nextwiki.infra.repository.TagRepository;
 
 /**
  * 知识库文件搜索提供者

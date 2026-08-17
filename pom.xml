@@ -590,6 +590,48 @@
                 <version>${project.version}</version>
             </dependency>
 
+            <!-- DDD 子模块：app（移动端基座，修复 server 层无版本引用导致的模型校验失败） -->
+            <dependency>
+                <groupId>com.njydsz</groupId>
+                <artifactId>ydsz-system-app</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz</groupId>
+                <artifactId>ydsz-userinfo-app</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz</groupId>
+                <artifactId>ydsz-cronjob-app</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz</groupId>
+                <artifactId>ydsz-message-app</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz</groupId>
+                <artifactId>ydsz-literule-app</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz</groupId>
+                <artifactId>ydsz-workflow-app</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz</groupId>
+                <artifactId>ydsz-nextwiki-app</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz</groupId>
+                <artifactId>ydsz-agent-app</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <!-- MyBatis-Plus (Spring Boot 4 专用 starter) -->
             <dependency>
                 <groupId>com.baomidou</groupId>

@@ -172,7 +172,8 @@ public class ConfigController {
    *
    * <p>幂等保护：5 秒内同一请求只能成功一次；限流 50 QPS；写审计日志。
    *
-   * <p>删除前会校验是否存在依赖关系（其他模块通过 configKey 引用此配置）， 存在引用时拒绝删除（由 Service 层抛业务异常）。
+   * <p>删除后会精准失效单 key / 分组 / 公开配置缓存，并发布 {@code CONFIG_CHANGED} 变更事件。
+   * 业务方如依赖某配置项，删除前应由调用方自行确认无引用（本服务不维护跨模块引用关系）。
    *
    * @param id 配置 ID
    * @return 是否成功

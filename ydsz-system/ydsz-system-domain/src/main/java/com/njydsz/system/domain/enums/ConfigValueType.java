@@ -1,5 +1,9 @@
 package com.njydsz.system.domain.enums;
 
+import java.util.regex.Pattern;
+
+import com.njydsz.common.json.YdszJson;
+
 /**
  * 配置值类型枚举
  *
@@ -19,6 +23,7 @@ package com.njydsz.system.domain.enums;
  *
  * <ul>
  *   <li>配置 / 变量写入前的 {@link #validate(String)} 校验
+ *   <li>配置值格式校验 {@link #validateFormat(String, String)}（P1-5 收敛：统一由本枚举承载值格式规则）
  *   <li>读取时按 {@code valueType} 字段动态解析 {@code configValue} / {@code variableValue}（{@link #parseValue}）
  *   <li>前端「公开配置」接口返回时附带 {@code valueType} 提示前端按类型解析
  * </ul>
@@ -40,6 +45,22 @@ public enum ConfigValueType {
   /** JSON 对象 / 数组类型 */
   JSON;
 
+  /** 字符串类型最大长度 */
+  private static final int MAX_STRING_LENGTH = 4096;
+
+  /** JSON 类型最大长度 */
+  private static final int MAX_JSON_LENGTH = 65536;
+
+  /** 数值类型最小值 */
+  private static final double MIN_NUMBER = -1e15;
+
+  /** 数值类型最大值 */
+  private static final double MAX_NUMBER = 1e15;
+
+  /** 布尔值合法取值模式（不区分大小写） */
+  private static final Pattern BOOLEAN_PATTERN =
+      Pattern.compile("^(true|false|TRUE|FALSE|True|False)$");
+
   /**
    * 校验值类型字符串是否合法（不区分大小写）
    *
@@ -57,6 +78,89 @@ public enum ConfigValueType {
     } catch (IllegalArgumentException e) {
       throw new IllegalArgumentException("无效的值类型: " + code + "，支持: STRING/NUMBER/BOOLEAN/JSON");
     }
+  }
+
+  /**
+   * 校验配置值格式是否与声明类型匹配（值格式规则的唯一权威实现，P1-5 收敛）。
+   *
+   * <p>校验规则：
+   *
+   * <ul>
+   *   <li>STRING — 长度 ≤ 4096
+   *   <li>NUMBER — 可解析为数值且在 [-1e15, 1e15] 范围内
+   *   <li>BOOLEAN — 必须为 true/false（不区分大小写）
+   *   <li>JSON — 必须为合法 JSON 且长度 ≤ 65536
+   * </ul>
+   *
+   * @param valueType 值类型字符串（null / 空则跳过校验）
+   * @param value 配置值字符串（null 则跳过校验）
+   * @return 错误描述，null 表示通过
+   */
+  public static String validateFormat(String valueType, String value) {
+    if (valueType == null || valueType.isBlank() || value == null) {
+      return null;
+    }
+    ConfigValueType type;
+    try {
+      type = ConfigValueType.valueOf(valueType.toUpperCase());
+    } catch (IllegalArgumentException e) {
+      return "未知的值类型: " + valueType;
+    }
+    return type.validateValue(value);
+  }
+
+  /**
+   * 校验单个值是否符合当前类型（实例方法）。
+   *
+   * @param value 待校验的值（非空）
+   * @return 错误描述，null 表示通过
+   */
+  private String validateValue(String value) {
+    return switch (this) {
+      case STRING -> value.length() > MAX_STRING_LENGTH ? "字符串长度超过限制 " + MAX_STRING_LENGTH : null;
+      case NUMBER -> validateNumber(value);
+      case BOOLEAN -> BOOLEAN_PATTERN.matcher(value.trim()).matches() ? null : "布尔值必须是 true/false";
+      case JSON -> validateJson(value);
+    };
+  }
+
+  /** 校验 NUMBER 类型可解析性与范围。 */
+  private static String validateNumber(String value) {
+    double v;
+    try {
+      v = Double.parseDouble(value.trim());
+    } catch (NumberFormatException e) {
+      return "数值格式非法";
+    }
+    if (v < MIN_NUMBER || v > MAX_NUMBER) {
+      return "数值超出范围 [" + MIN_NUMBER + ", " + MAX_NUMBER + "]";
+    }
+    return null;
+  }
+
+  /** 校验 JSON 类型合法性与长度。 */
+  private static String validateJson(String value) {
+    if (value.length() > MAX_JSON_LENGTH) {
+      return "JSON 长度超过限制 " + MAX_JSON_LENGTH;
+    }
+    String trimmed = value.trim();
+    if (trimmed.startsWith("{")) {
+      try {
+        YdszJson.parseMap(trimmed);
+        return null;
+      } catch (Exception e) {
+        return "JSON 解析失败: " + e.getMessage();
+      }
+    }
+    if (trimmed.startsWith("[")) {
+      try {
+        YdszJson.parseArray(trimmed, Object.class);
+        return null;
+      } catch (Exception e) {
+        return "JSON 解析失败: " + e.getMessage();
+      }
+    }
+    return "JSON 类型值必须以 '{' 或 '[' 开头";
   }
 
   /**

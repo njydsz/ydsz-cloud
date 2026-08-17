@@ -27,6 +27,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.workflow.domain.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.dto.FlowCategoryDTO;
 import com.njydsz.workflow.domain.entity.FlowCategory;
+import com.njydsz.workflow.domain.vo.FlowCategoryTreeVO;
 import com.njydsz.workflow.domain.vo.FlowCategoryVO;
 import com.njydsz.workflow.server.service.FlowCategoryService;
 
@@ -85,6 +86,21 @@ public class FlowCategoryController {
     return BaseResponse.success(
         WorkflowConverter.INSTANT.flowCategoryListToVO(
             categoryService.listAll(TenantContextHolder.getTenantId())));
+  }
+
+  /**
+   * 查询全部分类（树形结构）
+   *
+   * <p>返回当前租户的流程分类树，使用 {@link com.njydsz.common.domain.tree.TreeBuilder#buildSimple} 自动构建父子关系，
+   * 并填充 {@code level}/{@code path} 元数据。典型场景：设计器左侧分类树加载、发起审批页分类筛选。
+   *
+   * @return 分类树形结构根节点列表
+   * @since 1.7.0
+   */
+  @GetMapping("/tree")
+  @Operation(summary = "查询全部分类（树形结构）")
+  public BaseResponse<List<FlowCategoryTreeVO>> tree() {
+    return BaseResponse.success(categoryService.tree(TenantContextHolder.getTenantId()));
   }
 
   /**

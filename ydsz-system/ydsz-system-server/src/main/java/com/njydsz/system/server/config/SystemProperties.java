@@ -61,6 +61,11 @@ public class SystemProperties {
      * 配置缓存 TTL（分钟），影响 {@code ConfigServiceImpl.getConfigValue/getConfigsByGroup/listPublicConfigs}
      */
     private int cacheTtlMinutes = DEFAULT_CACHE_TTL_MINUTES;
+
+    /**
+     * 配置值格式严格校验开关（P1-6）：true 时值格式非法将阻止保存，false 时仅告警放行（向后兼容存量非法值）。
+     */
+    private boolean strictValidation = false;
   }
 
   /** 字典缓存配置。 */

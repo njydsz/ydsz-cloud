@@ -105,7 +105,7 @@ public class YdszJson {
    * @since 1.1.0
    */
   public static void reloadDefaultMapper() {
-    defaultMapper = new JsonMapper(JsonConfig.getInstance());
+    defaultMapper = new JsonMapper(JsonConfig.copyOf(null));
   }
 
   /**

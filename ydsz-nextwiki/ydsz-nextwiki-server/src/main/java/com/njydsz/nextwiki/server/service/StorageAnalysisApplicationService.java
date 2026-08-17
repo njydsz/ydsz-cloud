@@ -11,9 +11,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import com.njydsz.nextwiki.domain.entity.FileNode;
-import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
-import com.njydsz.nextwiki.domain.repository.StorageQuotaRepository;
-import com.njydsz.nextwiki.domain.repository.TrashItemRepository;
+import com.njydsz.nextwiki.infra.repository.FileNodeRepository;
+import com.njydsz.nextwiki.infra.repository.StorageQuotaRepository;
+import com.njydsz.nextwiki.infra.repository.TrashItemRepository;
 
 /**
  * 存储分析报表服务

@@ -38,6 +38,7 @@ import com.njydsz.nextwiki.domain.entity.TrashItem;
 import com.njydsz.nextwiki.domain.enums.NextwikiExceptionCode;
 import com.njydsz.nextwiki.domain.event.FileOperatedEvent;
 import com.njydsz.nextwiki.infra.repository.FileNodeRepository;
+import com.njydsz.nextwiki.infra.repository.FileVersionRepository;
 import com.njydsz.nextwiki.infra.repository.TrashItemRepository;
 import com.njydsz.nextwiki.domain.service.FileVersionDomainService;
 import com.njydsz.nextwiki.domain.service.FolderDomainService;
@@ -78,6 +79,7 @@ public class FileApplicationService {
   private final StorageReferenceService storageReferenceService;
   private final TrashDomainService trashDomainService;
   private final FileNodeRepository fileNodeRepository;
+  private final FileVersionRepository versionRepository;
   private final TrashItemRepository trashItemRepository;
   private final ApplicationEventPublisher eventPublisher;
   private final FilePermissionService permissionService;
@@ -211,14 +213,21 @@ public class FileApplicationService {
         FileNode saved = fileNodeRepository.save(dedupedNode);
         indexUpsert(saved);
         storageReferenceService.increment(existing.getStorageKey());
-        versionDomainService.createVersion(
-            saved.getId(),
-            existing.getStorageKey(),
-            existing.getSize(),
-            fileHash,
-            existing.getMimeType(),
-            "秒传",
-            userId);
+        List<FileVersion> existingVersions = versionRepository.findByFileNodeId(saved.getId());
+        FileVersionDomainService.VersionCreateResult versionResult =
+            versionDomainService.createVersion(
+                saved,
+                existingVersions,
+                existing.getStorageKey(),
+                existing.getSize(),
+                fileHash,
+                existing.getMimeType(),
+                "秒传",
+                userId);
+        versionRepository.setActiveVersion(saved.getId(), -1);
+        versionRepository.save(versionResult.newVersion());
+        fileNodeRepository.update(versionResult.updatedFileNode());
+        cleanupExcessVersions(saved.getId());
         quotaDomainService.addUsage("user", userId, existing.getSize(), 1);
         publishUploadEvent(saved, fileName, userId);
         return NextwikiConverter.INSTANT.entityToVO(saved);
@@ -267,14 +276,21 @@ public class FileApplicationService {
     storageReferenceService.increment(storageKey);
 
     // 8. 创建版本记录
-    versionDomainService.createVersion(
-        saved.getId(),
-        storageKey,
-        file.getSize(),
-        fileHash,
-        uploaded.getMimeType(),
-        versionRemark,
-        userId);
+    List<FileVersion> existingVersions = versionRepository.findByFileNodeId(saved.getId());
+    FileVersionDomainService.VersionCreateResult versionResult =
+        versionDomainService.createVersion(
+            saved,
+            existingVersions,
+            storageKey,
+            file.getSize(),
+            fileHash,
+            uploaded.getMimeType(),
+            versionRemark,
+            userId);
+    versionRepository.setActiveVersion(saved.getId(), -1);
+    versionRepository.save(versionResult.newVersion());
+    fileNodeRepository.update(versionResult.updatedFileNode());
+    cleanupExcessVersions(saved.getId());
 
     // 9. 增加配额用量
     quotaDomainService.addUsage("user", userId, file.getSize(), 1);
@@ -605,14 +621,21 @@ public class FileApplicationService {
 
     // 文件创建版本引用
     if (source.isFile()) {
-      versionDomainService.createVersion(
-          saved.getId(),
-          source.getStorageKey(),
-          source.getSize(),
-          source.getFileHash(),
-          source.getMimeType(),
-          "复制",
-          userId);
+      List<FileVersion> existingVersions = versionRepository.findByFileNodeId(saved.getId());
+      FileVersionDomainService.VersionCreateResult versionResult =
+          versionDomainService.createVersion(
+              saved,
+              existingVersions,
+              source.getStorageKey(),
+              source.getSize(),
+              source.getFileHash(),
+              source.getMimeType(),
+              "复制",
+              userId);
+      versionRepository.setActiveVersion(saved.getId(), -1);
+      versionRepository.save(versionResult.newVersion());
+      fileNodeRepository.update(versionResult.updatedFileNode());
+      cleanupExcessVersions(saved.getId());
       if (source.getSize() != null) {
         quotaDomainService.addUsage("user", userId, source.getSize(), 1);
       }
@@ -712,9 +735,36 @@ public class FileApplicationService {
    */
   @Transactional(rollbackFor = Exception.class)
   public FileNodeVO rollbackVersion(String nodeId, Integer targetVersion, String userId) {
-    versionDomainService.rollback(nodeId, targetVersion, userId);
-    FileNode updated = fileNodeRepository.findById(nodeId);
-    return NextwikiConverter.INSTANT.entityToVO(updated);
+    FileNode fileNode = fileNodeRepository.findById(nodeId);
+    if (fileNode == null) {
+      throw BusinessException.of(NextwikiExceptionCode.FILE_NOT_FOUND).data("nodeId", nodeId);
+    }
+
+    FileVersion target = versionRepository.findByFileNodeIdAndVersion(nodeId, targetVersion);
+    List<FileVersion> allVersions = versionRepository.findByFileNodeId(nodeId);
+
+    FileVersionDomainService.VersionRollbackResult result =
+        versionDomainService.rollback(fileNode, target, allVersions, userId);
+
+    versionRepository.setActiveVersion(nodeId, -1);
+    versionRepository.save(result.newVersion());
+    fileNodeRepository.update(result.updatedFileNode());
+
+    // 发布回滚事件
+    eventPublisher.publishEvent(
+        FileOperatedEvent.builder()
+            .operation(FileOperatedEvent.OP_VERSION_ROLLBACK)
+            .fileNodeId(nodeId)
+            .fileName(result.updatedFileNode().getName())
+            .nodeType(result.updatedFileNode().getNodeType())
+            .storageKey(result.newVersion().getStorageKey())
+            .bucketName(result.updatedFileNode().getBucketName())
+            .operatorId(userId)
+            .operatedAt(LocalDateTime.now())
+            .extra("rollback to v" + result.targetVersionNumber())
+            .build());
+
+    return NextwikiConverter.INSTANT.entityToVO(result.updatedFileNode());
   }
 
   /**
@@ -726,7 +776,7 @@ public class FileApplicationService {
    * @note 只读，无事务边界
    */
   public List<FileVersion> getVersionHistory(String nodeId) {
-    return versionDomainService.getVersionHistory(nodeId);
+    return versionRepository.findByFileNodeId(nodeId);
   }
 
   /**
@@ -774,6 +824,21 @@ public class FileApplicationService {
   }
 
   // ==================== 私有方法 ====================
+
+  /** 清理超出保留数量的旧版本 */
+  private void cleanupExcessVersions(String fileNodeId) {
+    List<FileVersion> allVersions = versionRepository.findByFileNodeId(fileNodeId);
+    List<FileVersion> toDelete = versionDomainService.findVersionsToCleanup(allVersions);
+    for (FileVersion v : toDelete) {
+      versionRepository.deleteById(v.getId());
+    }
+    if (!toDelete.isEmpty()) {
+      log.info(
+          "[FileApplicationService] 批量清理旧版本: fileNodeId={}, deleted={}",
+          fileNodeId,
+          toDelete.size());
+    }
+  }
 
   /** 上传安全校验：文件大小 + 扩展名黑名单 */
   private void validateUpload(MultipartFile file) {

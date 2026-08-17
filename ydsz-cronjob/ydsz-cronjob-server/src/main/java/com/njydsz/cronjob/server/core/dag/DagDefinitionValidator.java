@@ -15,7 +15,7 @@ import com.njydsz.common.exception.custom.SysException;
 /**
  * P0-3: DAG 定义校验器（可视化编辑器后端校验）。
  *
- * <p>对 {@link DagDefinition} 进行全面的结构和语义校验， 确保存入 DB 的 DAG 定义可在运行时正确执行。
+ * <p>对 {@link DagDefinition} 进行全面的结构和语义校验，确保存入 DB 的 DAG 定义可在运行时正确执行。
  *
  * <h3>校验规则</h3>
  *
@@ -27,12 +27,14 @@ import com.njydsz.common.exception.custom.SysException;
  *   <li><b>根节点</b>：至少存在一个无入边的根节点
  *   <li><b>节点类型校验</b>：
  *       <ul>
- *         <li>CONDITION: conditionExpression 非空
- *         <li>LOOP: loopCount > 0
- *         <li>PARALLEL_GATEWAY: parallelBranches > 0 且出边数 = parallelBranches
+ *         <li>SUB_WORKFLOW: subWorkflowDagKey 非空
+ *         <li>APPROVAL: approvalUsers 非空
  *       </ul>
  *   <li><b>规模限制</b>：节点数 ≤ 200，边数 ≤ 500（防止过大 DAG 拖慢调度）
  * </ol>
+ *
+ * <p><b>注意</b>：CONDITION / LOOP / PARALLEL_GATEWAY 控制节点已于 v1.2.0 移除，不再校验其约束。
+ * 旧数据中的控制节点类型在反序列化时会自动降级为 TASK。
  *
  * @author ydsz-team
  * @since 1.0.0
@@ -204,46 +206,16 @@ public class DagDefinitionValidator {
     }
   }
 
-  /** 校验节点类型特定约束。 */
+  /**
+   * 校验节点类型特定约束。
+   *
+   * <p>CONDITION / LOOP / PARALLEL_GATEWAY 控制节点已于 v1.2.0 移除，不再校验其约束。
+   * 旧数据中的控制节点类型在反序列化时通过 {@link DagNode#resolveNodeType()} 自动降级为 TASK。
+   */
   private void validateNodeTypes(DagDefinition definition) {
     for (DagNode node : definition.nodes()) {
       DagNode.NodeType type = node.resolveNodeType();
       switch (type) {
-        case CONDITION -> {
-          if (node.conditionExpression() == null || node.conditionExpression().isBlank()) {
-            throw SysException.builder()
-                .resultCode(BaseResultCode.BAD_REQUEST)
-                .key("error.cronjob.msg_dag_condition_expr_missing")
-                .params(node.jobKey())
-                .build();
-          }
-        }
-        case LOOP -> {
-          if (node.loopCount() == null || node.loopCount() <= 0) {
-            throw SysException.builder()
-                .resultCode(BaseResultCode.BAD_REQUEST)
-                .key("error.cronjob.msg_dag_loop_count_invalid")
-                .params(node.jobKey())
-                .build();
-          }
-        }
-        case PARALLEL_GATEWAY -> {
-          if (node.parallelBranches() == null || node.parallelBranches() <= 0) {
-            throw SysException.builder()
-                .resultCode(BaseResultCode.BAD_REQUEST)
-                .key("error.cronjob.msg_dag_parallel_branches_invalid")
-                .params(node.jobKey())
-                .build();
-          }
-          int outEdgeCount = definition.outgoingEdges(node.jobKey()).size();
-          if (outEdgeCount != node.parallelBranches()) {
-            throw SysException.builder()
-                .resultCode(BaseResultCode.BAD_REQUEST)
-                .key("error.cronjob.msg_dag_parallel_edge_mismatch")
-                .params(node.jobKey(), node.parallelBranches(), outEdgeCount)
-                .build();
-          }
-        }
         case TASK -> {
           // TASK 节点要求 jobId 非空（关联具体任务）
           if (node.jobId() == null || node.jobId().isBlank()) {
@@ -280,6 +252,10 @@ public class DagDefinitionValidator {
                 .params(node.jobKey())
                 .build();
           }
+        }
+        default -> {
+          // CONDITION / LOOP / PARALLEL_GATEWAY 已废弃，resolveNodeType() 已降级为 TASK，
+          // 此分支理论上不会到达，保留作为防御性编程
         }
       }
     }

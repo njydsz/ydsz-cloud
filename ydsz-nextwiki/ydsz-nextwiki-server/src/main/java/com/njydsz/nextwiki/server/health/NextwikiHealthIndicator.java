@@ -7,7 +7,7 @@ import org.springframework.boot.health.contributor.Health;
 
 import com.njydsz.common.file.storage.IFileStorageProvider;
 import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
-import com.njydsz.nextwiki.domain.repository.FileNodeRepository;
+import com.njydsz.nextwiki.infra.repository.FileNodeRepository;
 
 /**
  * NextWiki 健康检查。

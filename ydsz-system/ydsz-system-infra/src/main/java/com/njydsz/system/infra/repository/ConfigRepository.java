@@ -117,21 +117,33 @@ public interface ConfigRepository {
   boolean insertBatch(List<Config> entities);
 
   /**
-   * 灵活列表查询（用于游标分页等需要自定义 QueryWrapper 的场景）。
+   * 游标分页查询（seek method，{@code id > cursor} 升序，最多返回 {@code limit} 条）。
    *
-   * <p>Service 层通过本方法传入预构建的 {@link com.baomidou.mybatisplus.core.conditions.query.QueryWrapper}，
-   * 实现游标分页、导出数据加载等自定义查询需求。
+   * <p>供游标分页场景使用，按分组精确 / 配置键模糊过滤，避免深度分页 offset 扫描。
    *
-   * @param wrapper 查询条件包装器（已包含排序、LIMIT 等约束）
-   * @return 配置实体列表
+   * @param configGroup 配置分组（可选，精确匹配）
+   * @param configKey 配置键（可选，模糊匹配）
+   * @param cursor 游标（上一页最后一条 ID，可选）
+   * @param limit 返回条数上限
+   * @return 配置实体列表（按 ID 升序）
    */
-  List<Config> findList(com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<Config> wrapper);
+  List<Config> findForCursor(String configGroup, String configKey, String cursor, int limit);
 
   /**
-   * 灵活计数查询（用于游标分页等需要自定义 QueryWrapper 的场景）。
+   * 判断游标之后是否还有更多记录。
    *
-   * @param wrapper 查询条件包装器
-   * @return 记录数
+   * @param configGroup 配置分组（可选）
+   * @param configKey 配置键（可选，模糊匹配）
+   * @param cursor 游标（上一页最后一条 ID）
+   * @return 存在后续记录返回 {@code true}
    */
-  long findCount(com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<Config> wrapper);
+  boolean existsAfterCursor(String configGroup, String configKey, String cursor);
+
+  /**
+   * 查询待导出配置（未删除记录，按分组/排序号有序）。
+   *
+   * @param configGroup 配置分组（为空导出全部）
+   * @return 配置实体列表
+   */
+  List<Config> findForExport(String configGroup);
 }

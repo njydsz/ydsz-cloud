@@ -23,6 +23,7 @@ import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.userinfo.domain.dto.create.CompanyCreateDTO;
 import com.njydsz.userinfo.domain.dto.update.CompanyUpdateDTO;
+import com.njydsz.userinfo.domain.vo.CompanyTreeVO;
 import com.njydsz.userinfo.domain.vo.CompanyVO;
 import com.njydsz.userinfo.server.service.CompanyService;
 
@@ -85,6 +86,21 @@ public class CompanyController {
   @Operation(summary = "查询全部公司列表")
   public BaseResponse<List<CompanyVO>> list() {
     return BaseResponse.success(service.list());
+  }
+
+  /**
+   * 查询公司树形结构
+   *
+   * <p>返回全部未删除公司的树形结构，使用 {@link com.njydsz.common.domain.tree.TreeBuilder#buildSimple} 自动构建父子关系，
+   * 并填充 {@code level}/{@code path} 元数据。典型场景：集团-子公司组织架构选择器。
+   *
+   * @return 公司树形结构根节点列表
+   * @since 1.7.0
+   */
+  @GetMapping("/tree")
+  @Operation(summary = "查询公司树形结构")
+  public BaseResponse<List<CompanyTreeVO>> tree() {
+    return BaseResponse.success(service.tree());
   }
 
   /**

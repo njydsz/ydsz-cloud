@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.njydsz.common.auth.event.PermissionChangeNotifier;
 import com.njydsz.common.domain.tree.TreeBuilder;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.util.bean.BeanUpdateUtil;
@@ -20,6 +21,7 @@ import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.MenuTreeVO;
 import com.njydsz.userinfo.domain.vo.MenuVO;
 import com.njydsz.userinfo.infra.mapper.MenuMapper;
+import com.njydsz.userinfo.server.auth.DbRolePermissionLoader;
 import com.njydsz.userinfo.server.service.MenuService;
 
 /**
@@ -35,7 +37,8 @@ import com.njydsz.userinfo.server.service.MenuService;
  *   <li>菜单全量列表查询（按 {@code sortOrder} 倒序，前端表格展示）
  *   <li>菜单树形结构查询（递归构建父子关系）
  *   <li>删除前置校验（有子菜单时禁止删除，避免悬挂引用）
- *   <li>变更后触发权限缓存失效（由 {@code PermissionCacheInvalidator} 处理）
+ *   <li>变更后触发权限缓存失效：发布 {@code PermissionChangedEvent}（common-auth {@link PermissionChangeNotifier}）
+ *       并清空角色权限 DB 结果缓存（{@link DbRolePermissionLoader#invalidateAll()}），保证菜单/权限变更即时生效
  * </ul>
  *
  * <p><b>事务：</b>所有写操作（{@code create/update/removeById}） 开启 {@code @Transactional(rollbackFor =
@@ -62,6 +65,12 @@ public class MenuServiceImpl implements MenuService {
 
   /** 菜单 Mapper */
   private final MenuMapper mapper;
+
+  /** 权限变更事件发布器（common-auth，通知 Gateway 等节点刷新权限缓存） */
+  private final PermissionChangeNotifier permissionChangeNotifier;
+
+  /** 角色权限 DB 结果缓存加载器（菜单变更影响全部角色，全量失效） */
+  private final DbRolePermissionLoader permissionLoader;
 
   /**
    * {@inheritDoc}
@@ -108,6 +117,7 @@ public class MenuServiceImpl implements MenuService {
     }
     mapper.insert(entity);
     log.info("Menu created: code={}, id={}", entity.getMenuCode(), entity.getId());
+    invalidatePermissionCache();
     return entity.getId();
   }
 
@@ -126,7 +136,11 @@ public class MenuServiceImpl implements MenuService {
       throw new BusinessException(UserInfoExceptionCode.MENU_NOT_FOUND);
     }
     BeanUpdateUtil.copyNonNull(dto, entity, "id");
-    return mapper.updateById(entity) > 0;
+    boolean result = mapper.updateById(entity) > 0;
+    if (result) {
+      invalidatePermissionCache();
+    }
+    return result;
   }
 
   /**
@@ -149,7 +163,25 @@ public class MenuServiceImpl implements MenuService {
     if (mapper.selectCount(childWrapper) > 0) {
       throw new BusinessException(UserInfoExceptionCode.MENU_HAS_CHILDREN);
     }
-    return mapper.deleteById(id) > 0;
+    boolean result = mapper.deleteById(id) > 0;
+    if (result) {
+      invalidatePermissionCache();
+    }
+    return result;
+  }
+
+  /**
+   * 菜单变更后失效权限缓存。
+   *
+   * <p>菜单是 RBAC 的权限点，任意菜单变更（增删改）都影响全部角色的权限集合， 因此全量失效 DB 结果缓存并广播权限变更事件（通知 Gateway 等节点）。
+   */
+  private void invalidatePermissionCache() {
+    try {
+      permissionLoader.invalidateAll();
+      permissionChangeNotifier.notifyMenuChanged();
+    } catch (Exception e) {
+      log.warn("Failed to invalidate permission cache after menu change: {}", e.getMessage());
+    }
   }
 
   /**
