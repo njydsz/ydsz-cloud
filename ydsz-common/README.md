@@ -17,19 +17,20 @@
 本模块按 DDD 分层组织 **30 个子模块**（L1-L6），依赖方向严格自下而上（上层依赖下层，不可反向）：
 
 ```
-L1 基础设施层  → ydsz-common-core
-L2 工具模块层  → ydsz-common-util, ydsz-common-json
+L1 工具模块层  → ydsz-common-json, ydsz-common-util, ydsz-common-cache, ydsz-common-excel
+L2 基础设施层  → ydsz-common-core
 L3 基础服务层  → ydsz-common-domain, ydsz-common-exception
 L4 基础数据层  → ydsz-common-jdbc, ydsz-common-redis, ydsz-common-lock,
-                 ydsz-common-cache, ydsz-common-thread, ydsz-common-tenant
+                 ydsz-common-thread, ydsz-common-tenant
 L5 业务服务层  → ydsz-common-auth, ydsz-common-safe, ydsz-common-feign,
-                 ydsz-common-audit, ydsz-common-file, ydsz-common-notify,
-                 ydsz-common-queue, ydsz-common-docs, ydsz-common-excel,
-                 ydsz-common-netty, ydsz-common-socket,
-                 ydsz-common-search, ydsz-common-event,
-                 ydsz-common-config, ydsz-common-seata, ydsz-common-sentry
+                 ydsz-common-audit, ydsz-common-notify, ydsz-common-queue,
+                 ydsz-common-event, ydsz-common-config, ydsz-common-seata,
+                 ydsz-common-socket, ydsz-common-netty, ydsz-common-file,
+                 ydsz-common-docs, ydsz-common-search, ydsz-common-sentry
 L6 应用层     → ydsz-common-base, ydsz-common-web, ydsz-common-app
 ```
+
+> 层级划分以 `ydsz-common/pom.xml` 的 `<modules>` 注释为准（L1 工具模块层 = json/util/cache/excel 四个工具模块）。
 
 ### 子模块职责速查
 
