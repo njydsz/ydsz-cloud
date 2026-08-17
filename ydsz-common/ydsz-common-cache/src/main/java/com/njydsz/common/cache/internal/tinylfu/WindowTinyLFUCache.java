@@ -148,74 +148,89 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
         totalCount = 0;
       }
       totalCount++;
-      while (sizeCounter.get() >= maxSize) {
-        if (!evictOnce()) {
-          break;
-        }
-      }
+      // 新条目进入 Window 队列
       Node<K, V> newNode = new Node<>(key, value, 0);
       data.put(key, newNode);
       addFirst(windowHead, newNode);
       sizeCounter.incrementAndGet();
+      windowSize.incrementAndGet();
       frequencySketch.increment(key);
+
+      // 分段容量治理（对齐 Caffeine W-TinyLFU）：
+      // 1) Window 超限 → 尾部作为 candidate 迁入 Probation（不直接淘汰，保留竞争机会）
+      while (windowSize.get() > maxWindowSize) {
+        Node<K, V> node = removeLast(windowHead);
+        if (node == null) {
+          break;
+        }
+        windowSize.decrementAndGet();
+        node.queue = 1;
+        addFirst(probationHead, node);
+      }
+      // 2) 总容量超限 → admission 淘汰（candidate 与 victim 频率比较）
+      while (sizeCounter.get() > maxSize) {
+        if (!evictOnce()) {
+          break;
+        }
+      }
     } finally {
       writeLock.unlock();
     }
   }
 
   /**
-   * 执行一次 TinyLFU 淘汰。
+   * 执行一次 TinyLFU admission 淘汰。
    *
    * <p><b>Admission 策略（对齐 Caffeine 标准 W-TinyLFU）：</b>
    *
    * <ol>
-   *   <li>Window 尾部作为 candidate 移入 Probation（而非直接淘汰），获得进入 main 区的竞争机会
-   *   <li>Probation 尾部作为 victim，与 candidate 按频率草图比较：candidate 频率更高则淘汰 victim 并晋升
-   *       candidate；否则淘汰 candidate（fail-safe，保证有界容量）
-   *   <li>晋升时若 Protected 已满（80% 上限），Protected LRU（尾部）降级回 Probation
+   *   <li>candidate 取 Probation 头部（最近迁入 main 区的元素）
+   *   <li>victim 取 Probation 尾部（最老的 Probation 元素）
+   *   <li>candidate 频率 >= victim 频率 → victim 出局、candidate 晋升 Protected（Protected 满则降级其 LRU）；
+   *       否则 candidate 出局、victim 放回 Probation
    * </ol>
    *
-   * @return 是否发生了淘汰（false 表示缓存已空，无需继续）
+   * @return 是否发生了淘汰（false 表示 Probation 已空，无需继续）
    */
   private boolean evictOnce() {
-    // 1. Window 尾部 → candidate（进入 Probation 竞争，而非直接丢弃）
-    Node<K, V> candidate = removeLast(windowHead);
-    if (candidate != null) {
-      candidate.queue = 1;
-      addFirst(probationHead, candidate);
-    }
-
-    // 2. 取 Probation 尾部作为 victim
-    Node<K, V> victim = removeLast(probationHead);
-    if (victim == null) {
+    // 1. candidate：Probation 头部（最近进入 main 区的候选）
+    Node<K, V> candidate = removeFirst(probationHead);
+    if (candidate == null) {
       return false;
     }
-
-    // 3. Admission：candidate 频率 >= victim 则 victim 出局、candidate 晋升；否则 candidate 出局
-    int candidateFreq = frequencySketch.frequency(candidate != null ? candidate.key : victim.key);
-    int victimFreq = frequencySketch.frequency(victim.key);
-    boolean candidateWins =
-        candidate != null && candidate != victim && candidateFreq >= victimFreq;
-
-    if (candidateWins) {
-      // 淘汰 victim
-      data.remove(victim.key);
-      sizeCounter.decrementAndGet();
-      notifyRemoval(victim.key, victim.value, RemovalCause.SIZE);
-      // candidate 尝试晋升 Protected（若 Protected 已满，降级其 LRU）
-      promoteToProtected(candidate);
+    // 2. victim：Probation 尾部（最老的）
+    Node<K, V> victim = removeLast(probationHead);
+    if (victim == null) {
+      // Probation 仅有 candidate 一个元素：直接淘汰 candidate
+      evictNode(candidate);
       return true;
     }
-    // 淘汰 candidate（若存在）；否则淘汰 victim
-    Node<K, V> evicted = candidate != null ? candidate : victim;
-    data.remove(evicted.key);
-    sizeCounter.decrementAndGet();
-    notifyRemoval(evicted.key, evicted.value, RemovalCause.SIZE);
-    if (candidate != null && candidate != victim) {
-      // victim 保留回 Probation
+
+    // 3. Admission：频率比较决定去留
+    int candidateFreq = frequencySketch.frequency(candidate.key);
+    int victimFreq = frequencySketch.frequency(victim.key);
+    if (candidateFreq >= victimFreq) {
+      // candidate 胜出：victim 出局，candidate 晋升 Protected
+      evictNode(victim);
+      promoteToProtected(candidate);
+    } else {
+      // victim 胜出：candidate 出局，victim 放回 Probation
+      evictNode(candidate);
       addFirst(probationHead, victim);
     }
     return true;
+  }
+
+  /**
+   * 从数据表与链表移除节点并发送淘汰通知，同步递减总容量计数。
+   *
+   * @param node 待淘汰节点
+   */
+  private void evictNode(Node<K, V> node) {
+    remove(node);
+    data.remove(node.key);
+    sizeCounter.decrementAndGet();
+    notifyRemoval(node.key, node.value, RemovalCause.SIZE);
   }
 
   /**

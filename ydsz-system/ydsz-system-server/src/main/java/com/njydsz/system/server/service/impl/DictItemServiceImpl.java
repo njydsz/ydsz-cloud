@@ -122,6 +122,9 @@ public class DictItemServiceImpl implements DictItemService {
   /** 租户感知缓存键构造器（SpEL 与手动 evict 共用） */
   private final com.njydsz.system.server.cache.CacheKeyBuilder cacheKeyBuilder;
 
+  /** 搜索索引同步器（可选能力，未启用搜索模块时静默跳过） */
+  private final com.njydsz.system.server.search.SearchIndexSyncer searchIndexSyncer;
+
   /**
    * 根据主键查询字典项（不走缓存，直接走 DB）
    *
@@ -326,6 +329,7 @@ public class DictItemServiceImpl implements DictItemService {
     createSnapshotVersion(vo.getTypeCode(), "新增字典项: " + vo.getItemCode());
     DictItem entity = toEntity(vo);
     dictRepository.getDictItemMapper().insert(entity);
+    searchIndexSyncer.upsert("dict", entity);
     return entity.getId();
   }
 
@@ -364,6 +368,9 @@ public class DictItemServiceImpl implements DictItemService {
         evictDictList(before.getTypeCode());
       }
     }
+    if (updated) {
+      searchIndexSyncer.upsert("dict", entity);
+    }
     return updated;
   }
 
@@ -398,6 +405,7 @@ public class DictItemServiceImpl implements DictItemService {
       // 精准失效单条 item 缓存 + 类型列表缓存（替代 allEntries 全量清空）
       evictDictItem(entity.getTypeCode(), entity.getItemCode());
       evictDictList(entity.getTypeCode());
+      searchIndexSyncer.delete("dict", id);
     }
     return removed;
   }
@@ -454,6 +462,8 @@ public class DictItemServiceImpl implements DictItemService {
                   entity.setExtJson(vo.getExtJson());
                   entity.setStatus(vo.getStatus());
                   dictRepository.getDictItemMapper().insert(entity);
+                  // 回滚重建后同步搜索索引
+                  searchIndexSyncer.upsert("dict", entity);
                 }
               }
             } catch (Exception e) {
