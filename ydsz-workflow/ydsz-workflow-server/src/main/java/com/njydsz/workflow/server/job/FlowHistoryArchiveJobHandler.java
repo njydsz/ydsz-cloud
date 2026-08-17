@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.cronjob.domain.job.JobHandler;
-import com.njydsz.workflow.server.config.FlowHistoryProperties;
+import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
 
 /**
@@ -22,7 +22,7 @@ import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
  *
  * <ul>
  *   <li>归档逻辑下沉到 {@link FlowHistoryArchiveService}，本类仅作为 JobHandler 调度入口
- *   <li>所有阈值/批次/耗时参数改读 {@link FlowHistoryProperties}，不再硬编码
+ *   <li>所有阈值/批次/耗时参数改读 {@link FlowProperties.History}，不再硬编码
  *   <li>{@code archiveEnabled=false} 时跳过执行（支持运维通过配置快速禁用）
  *   <li>{@code paramsJson} 仍可覆盖 retentionDays/batchSize/maxProcessMs，便于临时特殊归档
  *   <li>同时触发 purge 清理（仅当 purgeEnabled=true 时生效）
@@ -40,7 +40,7 @@ import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
 public class FlowHistoryArchiveJobHandler implements JobHandler {
 
   private final FlowHistoryArchiveService archiveService;
-  private final FlowHistoryProperties properties;
+  private final FlowProperties.History history;
 
   /**
    * 执行归档与清理
@@ -54,7 +54,7 @@ public class FlowHistoryArchiveJobHandler implements JobHandler {
   @Override
   public Object execute(String paramsJson) {
     // 归档开关检查
-    if (!properties.isArchiveEnabled()) {
+    if (!history.isArchiveEnabled()) {
       log.info("[FlowHistoryArchive] archiveEnabled=false，跳过归档");
       Map<String, Object> skipped = new HashMap<>();
       skipped.put("ok", true);

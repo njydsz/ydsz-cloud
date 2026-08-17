@@ -155,7 +155,7 @@ ydsz-workflow/
 │       ├── java/.../workflow/
 │       │   ├── WorkflowFacade.java      # 模块门面
 │       │   └── server/
-│       │       ├── config/              # 自动配置 + 属性（FlowAutoConfiguration / FlowProperties / FlowHistoryProperties）
+│       │       ├── config/              # 自动配置 + 属性（FlowAutoConfiguration / FlowProperties）
 │       │       ├── engine/              # 流程引擎核心
 │       │       │   ├── BpmnXmlParser.java      # BPMN 2.0 XML 解析器
 │       │       │   ├── FlowAdvancer.java       # 流程推进器接口

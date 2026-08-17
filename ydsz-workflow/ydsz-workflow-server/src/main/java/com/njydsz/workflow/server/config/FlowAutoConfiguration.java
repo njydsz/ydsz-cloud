@@ -37,7 +37,7 @@ import com.njydsz.workflow.server.metrics.FlowMetrics;
     havingValue = "true",
     matchIfMissing = true)
 @EnableScheduling
-@EnableConfigurationProperties({FlowProperties.class, FlowHistoryProperties.class})
+@EnableConfigurationProperties(FlowProperties.class)
 public class FlowAutoConfiguration {
 
   /** 工作流健康检查 Bean */

@@ -18,7 +18,7 @@ public interface FlowHistoryArchiveService {
    * <p>扫描已结束（COMPLETED/TERMINATED/REJECTED）且结束时间超过 {@code retentionDays} 的实例， 将其迁移到 {@code
    * ydsz_flow_his_instance} 冷存储表，并从主表物理删除。
    *
-   * <p>参数为 null 时使用 {@code FlowHistoryProperties} 配置的默认值，便于 JobHandler 调用时 仅以 paramsJson
+   * <p>参数为 null 时使用 {@code FlowProperties.History} 配置的默认值，便于 JobHandler 调用时 仅以 paramsJson
    * 覆盖部分参数（如临时归档 90 天前的数据）。
    *
    * @param retentionDays 归档阈值天数（null 则使用配置默认值）

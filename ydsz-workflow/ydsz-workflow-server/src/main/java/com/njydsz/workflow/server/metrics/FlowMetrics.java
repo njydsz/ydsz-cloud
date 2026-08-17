@@ -20,7 +20,7 @@ import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 /**
  * 流程引擎 Prometheus 指标收集器
  *
- * <p>基于 Micrometer 暴露 8 个核心指标（通过 Spring Boot Actuator /actuator/prometheus）：
+ * <p>基于 Micrometer 暴露 6 个核心指标（通过 Spring Boot Actuator /actuator/prometheus）：
  *
  * <ul>
  *   <li><b>Counter（3 个）</b>：
@@ -34,17 +34,15 @@ import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
  *         <li>{@code ydsz_flow_instance_duration_ms{flow_code,result}} — 流程实例总耗时
  *         <li>{@code ydsz_flow_task_duration_ms{flow_code,node_code,result}} — 任务处理耗时
  *       </ul>
- *   <li><b>Gauge（3 个）</b>：
+ *   <li><b>Gauge（1 个）</b>：
  *       <ul>
- *         <li>{@code ydsz_flow_instance_running} — 运行中实例数
- *         <li>{@code ydsz_flow_task_pending} — 待办任务数
- *         <li>{@code ydsz_flow_task_overdue} — 超期任务数
+ *         <li>{@code ydsz_flow_count{type}} — 实时业务量（type=instance_running/task_pending/task_overdue）
  *       </ul>
  * </ul>
  *
  * <p>所有指标前缀 {@code ydsz_flow_}，便于在 Grafana 看板中筛选。
  *
- * <p><b>标签基数约定：</b>所有标签值必须来自有限枚举（flow_code、node_code、status、action），
+ * <p><b>标签基数约定：</b>所有标签值必须来自有限枚举（flow_code、node_code、status、action、type），
  * <b>严禁</b>把 instanceId、userId、异常 message 等无界值传入标签位，否则会造成 Prometheus 时间序列爆炸。
  *
  * @author ydsz-team
@@ -57,6 +55,15 @@ public class FlowMetrics extends SentryMetricsAdapter {
   /** Gauge 查询 30s TTL 缓存（避免 Prometheus 每次抓取都打 DB） */
   private static final long GAUGE_CACHE_TTL_NS = 30_000_000_000L;
 
+  /** Gauge 类型标签值：运行中实例数 */
+  public static final String TYPE_INSTANCE_RUNNING = "instance_running";
+
+  /** Gauge 类型标签值：待办任务数 */
+  public static final String TYPE_TASK_PENDING = "task_pending";
+
+  /** Gauge 类型标签值：超期任务数 */
+  public static final String TYPE_TASK_OVERDUE = "task_overdue";
+
   private final FlowInstanceMapper instanceMapper;
   private final FlowRunTaskMapper taskMapper;
 
@@ -68,11 +75,6 @@ public class FlowMetrics extends SentryMetricsAdapter {
       long pendingTasks,
       long overdueTasks,
       long cachedAtNanos) {}
-
-  /** Gauge 值引用 */
-  private final AtomicReference<Double> runningInstancesRef = new AtomicReference<>(0.0);
-  private final AtomicReference<Double> pendingTasksRef = new AtomicReference<>(0.0);
-  private final AtomicReference<Double> overdueTasksRef = new AtomicReference<>(0.0);
 
   public FlowMetrics(
       ObjectProvider<FlowInstanceMapper> instanceMapperProvider,
@@ -192,25 +194,24 @@ public class FlowMetrics extends SentryMetricsAdapter {
   }
 
   // ===========================================
-  // Gauge：实时业务量
+  // Gauge：实时业务量（合并为 1 个指标 + type 标签）
   // ===========================================
 
   private void registerGauges() {
-    gaugeRef("instance_running", runningInstancesRef, AtomicReference::get);
-    gaugeRef("task_pending", pendingTasksRef, AtomicReference::get);
-    gaugeRef("task_overdue", overdueTasksRef, AtomicReference::get);
+    // P2-2: 将 3 个独立 Gauge 合并为 1 个，通过 type 标签区分，减少指标数量
+    gauge("count", () -> (double) getGaugeSnapshot().runningInstances(), "type", TYPE_INSTANCE_RUNNING);
+    gauge("count", () -> (double) getGaugeSnapshot().pendingTasks(), "type", TYPE_TASK_PENDING);
+    gauge("count", () -> (double) getGaugeSnapshot().overdueTasks(), "type", TYPE_TASK_OVERDUE);
   }
 
   /**
    * 刷新 Gauge 值（由定时任务调用）。
    *
-   * <p>查询 DB 获取最新指标值并更新到 AtomicReference，Prometheus 抓取时自动读取。
+   * <p>查询 DB 获取最新指标值并更新到缓存，Prometheus 抓取时自动读取。
    */
   public void refreshGauges() {
-    GaugeSnapshot snapshot = getGaugeSnapshot();
-    runningInstancesRef.set((double) snapshot.runningInstances());
-    pendingTasksRef.set((double) snapshot.pendingTasks());
-    overdueTasksRef.set((double) snapshot.overdueTasks());
+    // 触发缓存刷新，实际值在 Prometheus 抓取时通过 getGaugeSnapshot() 获取
+    getGaugeSnapshot();
   }
 
   private GaugeSnapshot getGaugeSnapshot() {

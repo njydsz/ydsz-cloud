@@ -24,7 +24,7 @@ import com.njydsz.workflow.infra.mapper.FlowHisInstanceMapper;
 import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
-import com.njydsz.workflow.server.config.FlowHistoryProperties;
+import com.njydsz.workflow.server.config.FlowProperties;
 import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
 
 /**
@@ -39,7 +39,7 @@ import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
  *   <li><b>归档（{@link #archive}）</b>：将「已完成 / 已终止」的实例从 {@code ydsz_flow_instance} 主表迁移至 {@code
  *       ydsz_flow_his_instance} 历史表，关联任务迁移至 {@code ydsz_flow_his_task}
  *   <li><b>清理（{@link #purge}）</b>：删除超过保留期限的历史数据，避免 DB 膨胀
- *   <li><b>归档配置（{@link FlowHistoryProperties}）</b>：支持「历史数据级别可配」：
+ *   <li><b>归档配置（{@link FlowProperties.History}）</b>：支持「历史数据级别可配」：
  *       <ul>
  *         <li>{@code archiveAfterDays} — 完成后 N 天归档（默认 7 天）
  *         <li>{@code retainYears} — 历史表保留 N 年（默认 5 年）
@@ -87,7 +87,7 @@ import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
  *
  * <p><b>与 {@code FlowHistoryArchiveJobHandler} 的关系：</b> 本类将原本耦合在 {@code
  * FlowHistoryArchiveJobHandler} 中的归档逻辑抽象为独立 Service， 同时新增 {@code purge} 清理能力，配合 {@link
- * FlowHistoryProperties} 实现「历史数据级别可配」， 是从「硬编码 Job」到「可配置 Service」的架构升级。
+ * FlowProperties.History} 实现「历史数据级别可配」， 是从「硬编码 Job」到「可配置 Service」的架构升级。
  *
  * <p><b>典型使用：</b>
  *
@@ -103,7 +103,7 @@ import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
  * @author ydsz-team
  * @since 1.0.0
  * @see FlowHistoryArchiveService 接口定义
- * @see com.njydsz.workflow.server.config.FlowHistoryProperties 历史数据配置
+ * @see com.njydsz.workflow.server.config.FlowProperties.History 历史数据配置
  * @see com.njydsz.workflow.domain.entity.FlowHisInstance 历史实例实体
  * @see com.njydsz.workflow.domain.entity.FlowHisTask 历史任务实体
  */
@@ -125,21 +125,21 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
   private final FlowHisInstanceMapper hisInstanceMapper;
 
   /** 历史归档配置属性，控制保留天数/批大小/最大耗时等 */
-  private final FlowHistoryProperties properties;
+  private final FlowProperties.History history;
 
   @Override
   public Map<String, Object> archive(Integer retentionDays, Integer batchSize, Long maxProcessMs) {
     long start = System.currentTimeMillis();
-    int days = resolveInt(retentionDays, properties.getRetentionDays());
-    int batch = resolveInt(batchSize, properties.getBatchSize());
-    long maxMs = resolveLong(maxProcessMs, properties.getMaxProcessMs());
+    int days = resolveInt(retentionDays, history.getRetentionDays());
+    int batch = resolveInt(batchSize, history.getBatchSize());
+    long maxMs = resolveLong(maxProcessMs, history.getMaxProcessMs());
 
     log.info(
         "[FlowHistoryArchive] 开始 days={} batchSize={} maxProcessMs={} archiveEnabled={}",
         days,
         batch,
         maxMs,
-        properties.isArchiveEnabled());
+        history.isArchiveEnabled());
 
     // 查询候选实例：已结束 + 结束时间超过阈值
     LocalDateTime threshold = LocalDateTime.now().minusDays(days);
@@ -237,12 +237,12 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
   @Override
   public Map<String, Object> purge(Integer purgeDays) {
     long start = System.currentTimeMillis();
-    int days = resolveInt(purgeDays, properties.getPurgeDays());
+    int days = resolveInt(purgeDays, history.getPurgeDays());
 
     Map<String, Object> result = new LinkedHashMap<>();
     result.put("purgeDays", days);
 
-    if (!properties.isPurgeEnabled()) {
+    if (!history.isPurgeEnabled()) {
       log.info("[FlowHistoryPurge] purgeEnabled=false，跳过清理");
       result.put("skipped", true);
       result.put("reason", "purgeEnabled=false");
@@ -297,13 +297,13 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
   @Override
   public Map<String, Object> getArchiveConfig() {
     Map<String, Object> config = new LinkedHashMap<>();
-    config.put("archiveEnabled", properties.isArchiveEnabled());
-    config.put("retentionDays", properties.getRetentionDays());
-    config.put("batchSize", properties.getBatchSize());
-    config.put("maxProcessMs", properties.getMaxProcessMs());
-    config.put("cronExpression", properties.getCronExpression());
-    config.put("purgeEnabled", properties.isPurgeEnabled());
-    config.put("purgeDays", properties.getPurgeDays());
+    config.put("archiveEnabled", history.isArchiveEnabled());
+    config.put("retentionDays", history.getRetentionDays());
+    config.put("batchSize", history.getBatchSize());
+    config.put("maxProcessMs", history.getMaxProcessMs());
+    config.put("cronExpression", history.getCronExpression());
+    config.put("purgeEnabled", history.isPurgeEnabled());
+    config.put("purgeDays", history.getPurgeDays());
     return config;
   }
 

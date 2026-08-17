@@ -17,7 +17,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,7 +53,6 @@ import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.engine.FlowAdvancer;
 import com.njydsz.workflow.server.engine.FlowEventContext;
 import com.njydsz.workflow.server.engine.FlowEventListener;
-import com.njydsz.workflow.server.engine.FlowWorkflowEvent;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 import com.njydsz.workflow.server.service.FlowAutoTriggerService;
 import com.njydsz.workflow.server.service.FlowCcService;
@@ -64,6 +62,7 @@ import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowSubProcessService;
 import com.njydsz.workflow.server.service.FlowTaskService;
 import com.njydsz.workflow.server.service.FlowTimerService;
+import com.njydsz.workflow.server.service.impl.instance.FlowTaskSupport;
 
 /**
  * 流程实例 Service 实现
@@ -141,14 +140,11 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
   /** 流程节点 Mapper */
   private final FlowNodeMapper nodeMapper;
 
-  /** 事件监听器列表（Spring 自动注入所有实现），处理流程生命周期事件 */
-  private final List<FlowEventListener> eventListeners;
-
   /** P2-3: Prometheus 指标收集（可能为 null：测试环境） */
   private final FlowMetrics flowMetrics;
 
-  /** P2-35: Spring 事件发布器，用于异步事件机制（测试环境可能为 null） */
-  private final ApplicationEventPublisher eventPublisher;
+  /** P2-3: 事件支持组件，统一处理事件监听器调用与 Spring 事件发布 */
+  private final FlowTaskSupport flowTaskSupport;
 
   /** P1-3: 子流程服务（处理 callActivity 子流程启动） */
   private final FlowSubProcessService subProcessService;
@@ -303,8 +299,8 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
       }
     }
 
-    // P0-2: 触发 onInstanceStart 事件
-    fireInstanceStart(instanceId, mergedVars);
+    // P2-3: 触发 onInstanceStart 事件（统一事件机制）
+    fireEvent(l -> l.onInstanceStart(instanceId, mergedVars));
 
     // P2-3: Prometheus 指标 — 实例创建
     if (flowMetrics != null) {
@@ -315,7 +311,8 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     try {
       advancer.start(instanceId);
     } catch (Exception e) {
-      fireError(instanceId, e);
+      // P2-3: 触发 onError 事件（统一事件机制）
+      fireEvent(l -> l.onError(instanceId, e));
       if (flowMetrics != null) {
         flowMetrics.incError(def.getFlowCode(), "start_error");
       }
@@ -1278,53 +1275,18 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
   // ============================== 事件触发 ==============================
 
-  private void fireInstanceStart(String instanceId, Map<String, Object> variables) {
-    if (eventListeners == null) return;
-    for (FlowEventListener listener : eventListeners) {
-      try {
-        listener.onInstanceStart(instanceId, variables);
-      } catch (Exception e) {
-        log.warn("[Flow] onInstanceStart 事件失败: {}", e.getMessage());
-      }
-    }
-  }
-
+  /**
+   * P2-3: 触发事件监听器（委托给 FlowTaskSupport 统一处理）
+   */
   private void fireEvent(Consumer<FlowEventListener> action) {
-    if (eventListeners == null) return;
-    for (FlowEventListener listener : eventListeners) {
-      try {
-        action.accept(listener);
-      } catch (Exception e) {
-        log.warn("[Flow] 事件监听器异常: {}", e.getMessage());
-      }
-    }
-  }
-
-  private void fireError(String instanceId, Throwable t) {
-    if (eventListeners == null) return;
-    for (FlowEventListener listener : eventListeners) {
-      try {
-        listener.onError(instanceId, t);
-      } catch (Exception e) {
-        log.warn("[Flow] onError 事件失败: {}", e.getMessage());
-      }
-    }
+    flowTaskSupport.fireEvent(action, null);
   }
 
   /**
-   * P2-35: 发布 Spring 异步事件（ApplicationEventPublisher 可能为 null，需检查）
-   *
-   * @param eventType 事件类型
-   * @param instanceId 实例 ID
-   * @param taskId 任务 ID（可空）
+   * P2-3: 发布 Spring 异步事件（委托给 FlowTaskSupport 统一处理）
    */
   private void publishWorkflowEvent(String eventType, String instanceId, String taskId) {
-    if (eventPublisher == null) return;
-    try {
-      eventPublisher.publishEvent(new FlowWorkflowEvent(this, eventType, instanceId, taskId, null));
-    } catch (Exception e) {
-      log.warn("[Flow] 发布 Spring 事件失败: type={} err={}", eventType, e.getMessage());
-    }
+    flowTaskSupport.publishWorkflowEvent(eventType, instanceId, taskId);
   }
 
   /**
@@ -1514,7 +1476,8 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     try {
       advancer.start(instanceId);
     } catch (Exception e) {
-      fireError(instanceId, e);
+      // P2-3: 触发 onError 事件（统一事件机制）
+      fireEvent(l -> l.onError(instanceId, e));
       throw e;
     }
     log.info("[Flow] 驳回后快速重审: instanceId={} initiatorId={}", instanceId, initiatorId);
