@@ -100,6 +100,10 @@ public interface WorkflowConverter {
 
   List<FlowCategoryVO> flowCategoryListToVO(List<FlowCategory> entities);
 
+  FlowCategoryTreeVO entityToTreeVO(FlowCategory entity);
+
+  List<FlowCategoryTreeVO> flowCategoryListToTreeVO(List<FlowCategory> entities);
+
   // ===== FlowCc =====
   FlowCcVO entityToVO(FlowCc entity);
 

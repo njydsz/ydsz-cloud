@@ -23,8 +23,8 @@
         <module>ydsz-gateway</module>
         <module>ydsz-system</module>
         <module>ydsz-userinfo</module>
-        <module>ydsz-message</module>
         <module>ydsz-cronjob</module>
+        <module>ydsz-message</module>
         <module>ydsz-literule</module>
         <module>ydsz-workflow</module>
         <module>ydsz-nextwiki</module>

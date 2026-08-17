@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.njydsz.workflow.domain.dto.FlowCategoryDTO;
 import com.njydsz.workflow.domain.entity.FlowCategory;
+import com.njydsz.workflow.domain.vo.FlowCategoryTreeVO;
 
 /**
  * 流程分类服务接口
@@ -13,10 +14,10 @@ import com.njydsz.workflow.domain.entity.FlowCategory;
  * <p><b>核心职责：</b>
  *
  * <ul>
- *   <li><b>查询能力</b>：全部分类（{@link #listAll}，按 {@code sortNum} 升序）
+ *   <li><b>查询能力</b>：全部分类（{@link #listAll}，按 {@code sortNum} 升序）/ 树形结构（{@link #tree}，使用 {@link
+ *       com.njydsz.common.domain.tree.TreeBuilder#buildSimple} 构建）
  *   <li><b>CRUD</b>：新增（{@link #create}）/ 编辑（{@link #update}）/ 删除（{@link #delete}）
  *   <li><b>引用校验</b>：删除前校验是否有子分类或关联的流程定义，有则阻断
- *   <li><b>树形结构</b>：{@code parentId} 字段支持多级嵌套，由前端基于 {@link #listAll} 的扁平结果自行构建树
  * </ul>
  *
  * <p><b>事务边界：</b>所有写操作开启 {@code @Transactional(rollbackFor = Exception.class)}， 分类编码唯一性校验在
@@ -28,17 +29,28 @@ import com.njydsz.workflow.domain.entity.FlowCategory;
  * @author ydsz-team
  * @since 1.0.0
  * @see com.njydsz.workflow.server.service.impl.FlowCategoryServiceImpl 实现类
- * @see FlowDefinition 流程定义（{@code category} 字段引用本表分类编码）
+ * @see com.njydsz.workflow.domain.entity.FlowDefinition 流程定义（{@code category} 字段引用本表分类编码）
  */
 public interface FlowCategoryService {
 
   /**
-   * 查询全部分类（树形结构，按 sortNum 排序）
+   * 查询全部分类（扁平结构，按 sortNum 排序）
    *
    * @param tenantId 租户 ID
-   * @return 分类列表（扁平结构，前端自行构建树）
+   * @return 分类列表（扁平结构）
    */
   List<FlowCategory> listAll(String tenantId);
+
+  /**
+   * 查询全部分类（树形结构，使用 TreeBuilder 构建）
+   *
+   * <p>一次性查询全表后在内存中构建树，自动填充 {@code level}/{@code path} 元数据。 分类数据量小（百级别），全量加载可接受。
+   *
+   * @param tenantId 租户 ID
+   * @return 分类树形结构根节点列表，无数据返回空列表
+   * @since 1.7.0
+   */
+  List<FlowCategoryTreeVO> tree(String tenantId);
 
   /**
    * 新增分类

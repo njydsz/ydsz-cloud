@@ -261,8 +261,15 @@ public class DictItemServiceImpl implements DictItemService {
         .map(SystemConverter.INSTANT::entityToVO)
         .collect(Collectors.toList());
 
-    // 使用 ydsz-common-domain 的 TreeBuilder 构建树形结构（O(n) 迭代，自动填充 level/path/leaf）
-    return new TreeBuilder<String, DictItemVO>("0", flatList).build();
+    // 使用 TreeBuilder.buildSimple() 构建树形结构（O(n) 迭代，自动填充 level/path）
+    return TreeBuilder.buildSimple(
+        flatList,
+        DictItemVO::getId,
+        DictItemVO::getParentId,
+        DictItemVO::setChildren,
+        DictItemVO::getSortOrder,
+        DictItemVO::setLevel,
+        DictItemVO::setPath);
   }
 
   /**
