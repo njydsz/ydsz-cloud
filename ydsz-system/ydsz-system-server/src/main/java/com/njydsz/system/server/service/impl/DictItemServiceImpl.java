@@ -1,5 +1,7 @@
 package com.njydsz.system.server.service.impl;
 
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -17,15 +19,19 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.common.exception.custom.BusinessException;
-import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.domain.tree.TreeBuilder;
+import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.excel.core.ExcelFacade;
+import com.njydsz.common.excel.helper.ExcelExportHelper;
+import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.system.domain.converter.SystemConverter;
 import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
 import com.njydsz.system.domain.entity.DictItem;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
+import com.njydsz.system.domain.vo.DictItemExcelVO;
 import com.njydsz.system.domain.vo.DictItemVO;
+import com.njydsz.system.domain.vo.ImportResult;
 import com.njydsz.system.infra.repository.DictRepository;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.metrics.SystemMetrics;
@@ -128,6 +134,9 @@ public class DictItemServiceImpl implements DictItemService {
 
   /** 搜索索引同步器（可选能力，未启用搜索模块时静默跳过） */
   private final SearchIndexSyncer searchIndexSyncer;
+
+  /** 统一 Excel 导出辅助类 */
+  private final ExcelExportHelper excelExportHelper;
 
   /**
    * 根据主键查询字典项（不走缓存，直接走 DB）
@@ -533,5 +542,200 @@ public class DictItemServiceImpl implements DictItemService {
     entity.setExtJson(vo.getExtJson());
     entity.setStatus(vo.getStatus() != null ? vo.getStatus() : "ENABLED");
     return entity;
+  }
+
+  // ============================== 导入导出 ==============================
+
+  @Override
+  public byte[] exportDictItems(String typeCode) {
+    // 1. 查询字典项数据（含类型过滤）
+    List<DictItem> dictItems = loadDictItemsForExport(typeCode);
+
+    // 2. 转换为 Excel VO 并导出
+    List<DictItemExcelVO> excelRows =
+        dictItems.stream().map(this::toExcelVO).collect(Collectors.toList());
+    return excelRows.isEmpty()
+        ? new byte[0]
+        : excelExportHelper.export("字典项", DictItemExcelVO.class, excelRows);
+  }
+
+  /**
+   * 加载导出字典项数据（私有）。
+   *
+   * @param typeCode 字典类型编码（为空时导出全部）
+   * @return 未删除字典项列表（按类型/排序）
+   */
+  private List<DictItem> loadDictItemsForExport(String typeCode) {
+    QueryWrapper<DictItem> wrapper = new QueryWrapper<>();
+    wrapper.eq("deleted", 0);
+    if (typeCode != null && !typeCode.isBlank()) {
+      wrapper.eq("type_code", typeCode);
+    }
+    wrapper.orderByAsc("type_code", "sort_order");
+    return dictRepository.getDictItemMapper().selectList(wrapper);
+  }
+
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public ImportResult importDictItems(InputStream inputStream) {
+    // 1. 读取 Excel 文件
+    List<DictItemExcelVO> excelRows = readExcel(inputStream);
+    if (excelRows.isEmpty()) {
+      return ImportResult.builder()
+          .totalCount(0)
+          .successCount(0)
+          .failCount(0)
+          .skipCount(0)
+          .message("Excel 文件为空")
+          .build();
+    }
+
+    // 2. 逐条校验并转换（必填 / DB 唯一性）
+    List<String> errors = new ArrayList<>();
+    List<DictItemVO> validItems = new ArrayList<>();
+    int skipCount = 0;
+    for (int i = 0; i < excelRows.size(); i++) {
+      String error = validateExcelRow(excelRows.get(i), i + 2);
+      if (error != null) {
+        errors.add(error);
+        skipCount++;
+      } else {
+        validItems.add(toDictItemVO(excelRows.get(i)));
+      }
+    }
+
+    // 3. 批量保存有效数据
+    int successCount = saveValidItemsBatch(validItems, errors);
+
+    // 4. 构建导入结果
+    return ImportResult.builder()
+        .totalCount(excelRows.size())
+        .successCount(successCount)
+        .failCount(excelRows.size() - successCount - skipCount)
+        .skipCount(skipCount)
+        .errors(errors)
+        .message(
+            String.format(
+                "导入完成: 成功 %d 条, 跳过 %d 条, 失败 %d 条",
+                successCount, skipCount, excelRows.size() - successCount - skipCount))
+        .build();
+  }
+
+  /**
+   * 读取 Excel 字典项数据（私有）。
+   *
+   * @param inputStream Excel 输入流
+   * @return 字典项 Excel 行列表
+   */
+  private List<DictItemExcelVO> readExcel(InputStream inputStream) {
+    try {
+      List<DictItemExcelVO> rows =
+          ExcelFacade.read(inputStream, DictItemExcelVO.class).sheet(0).doReadAll();
+      return rows != null ? rows : List.of();
+    } catch (Exception e) {
+      log.warn("[DictItemService] Excel 读取失败: {}", e.getMessage());
+      throw BusinessException.of(SystemExceptionCode.PARAM_ERROR)
+          .data("reason", "Excel 文件读取失败: " + e.getMessage());
+    }
+  }
+
+  /**
+   * 校验单条 Excel 行（私有）。
+   *
+   * <p>校验必填字段、DB 唯一性；通过返回 null，否则返回错误描述。
+   *
+   * @param excelRow Excel 行数据
+   * @param rowNum Excel 行号（从 2 开始，第 1 行为表头）
+   * @return 错误描述；校验通过返回 null
+   */
+  private String validateExcelRow(DictItemExcelVO excelRow, int rowNum) {
+    if (excelRow.getTypeCode() == null || excelRow.getTypeCode().isBlank()) {
+      return "第 " + rowNum + " 行: 字典类型编码不能为空";
+    }
+    if (excelRow.getItemCode() == null || excelRow.getItemCode().isBlank()) {
+      return "第 " + rowNum + " 行: 字典项编码不能为空";
+    }
+    if (excelRow.getItemValue() == null || excelRow.getItemValue().isBlank()) {
+      return "第 " + rowNum + " 行: 字典项展示值不能为空";
+    }
+    // DB 唯一性校验
+    QueryWrapper<DictItem> checkWrapper = new QueryWrapper<>();
+    checkWrapper.eq("type_code", excelRow.getTypeCode())
+        .eq("item_code", excelRow.getItemCode())
+        .eq("deleted", 0);
+    if (dictRepository.getDictItemMapper().selectCount(checkWrapper) > 0) {
+      return "第 " + rowNum + " 行: 字典项已存在("
+          + excelRow.getTypeCode() + "/" + excelRow.getItemCode() + ")";
+    }
+    return null;
+  }
+
+  /**
+   * Excel 行转换为字典项 VO（私有）。
+   *
+   * @param excelRow Excel 行数据
+   * @return 字典项 VO
+   */
+  private DictItemVO toDictItemVO(DictItemExcelVO excelRow) {
+    DictItemVO vo = new DictItemVO();
+    vo.setTypeCode(excelRow.getTypeCode());
+    vo.setItemCode(excelRow.getItemCode());
+    vo.setItemValue(excelRow.getItemValue());
+    vo.setSortOrder(excelRow.getSortOrder());
+    vo.setParentId(excelRow.getParentId());
+    vo.setDescription(excelRow.getDescription());
+    vo.setStatus(excelRow.getStatus());
+    return vo;
+  }
+
+  /**
+   * 字典项实体转 Excel VO（私有）。
+   *
+   * @param entity 字典项实体
+   * @return Excel VO
+   */
+  private DictItemExcelVO toExcelVO(DictItem entity) {
+    DictItemExcelVO vo = new DictItemExcelVO();
+    vo.setTypeCode(entity.getTypeCode());
+    vo.setItemCode(entity.getItemCode());
+    vo.setItemValue(entity.getItemValue());
+    vo.setSortOrder(entity.getSortOrder());
+    vo.setParentId(entity.getParentId());
+    vo.setDescription(entity.getDescription());
+    vo.setStatus(entity.getStatus());
+    return vo;
+  }
+
+  /**
+   * 批量保存有效字典项（私有）。
+   *
+   * @param validItems 校验通过的字典项列表
+   * @param errors 错误收集器（保存失败时追加）
+   * @return 保存成功条数
+   */
+  private int saveValidItemsBatch(List<DictItemVO> validItems, List<String> errors) {
+    if (validItems.isEmpty()) {
+      return 0;
+    }
+    try {
+      List<DictItem> entities = validItems.stream()
+          .map(this::toEntity)
+          .collect(Collectors.toList());
+      // 逐条插入（使用 insertBatch 需要 XML 支持，此处保持一致性）
+      for (DictItem entity : entities) {
+        dictRepository.getDictItemMapper().insert(entity);
+      }
+      // 精准失效缓存：按涉及 typeCode 逐一失效
+      entities.stream()
+          .map(DictItem::getTypeCode)
+          .distinct()
+          .forEach(this::evictDictList);
+      // 同步搜索索引
+      entities.forEach(entity -> searchIndexSyncer.upsert("dict", entity));
+      return entities.size();
+    } catch (Exception e) {
+      errors.add("批量导入失败: " + e.getMessage());
+      return 0;
+    }
   }
 }

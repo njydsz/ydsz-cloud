@@ -1,5 +1,7 @@
 package com.njydsz.system.server.service.impl;
 
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -21,6 +23,8 @@ import com.njydsz.common.event.api.DomainEvent;
 import com.njydsz.common.event.api.DomainEventTypes;
 import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.BusinessException;
+import com.njydsz.common.excel.core.ExcelFacade;
+import com.njydsz.common.excel.helper.ExcelExportHelper;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.system.domain.converter.SystemConverter;
@@ -28,6 +32,8 @@ import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
 import com.njydsz.system.domain.entity.Variable;
 import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
+import com.njydsz.system.domain.vo.ImportResult;
+import com.njydsz.system.domain.vo.VariableExcelVO;
 import com.njydsz.system.domain.vo.VariableVO;
 import com.njydsz.system.infra.repository.VariableRepository;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
@@ -135,6 +141,9 @@ public class VariableServiceImpl implements VariableService {
 
   /** 统一领域事件发布门面 */
   private final DomainEventPublisher eventPublisher;
+
+  /** 统一 Excel 导出辅助类 */
+  private final ExcelExportHelper excelExportHelper;
 
   /**
    * 根据主键查询变量（不走缓存，直接走 DB）
@@ -446,6 +455,183 @@ public class VariableServiceImpl implements VariableService {
     } catch (IllegalArgumentException e) {
       throw BusinessException.of(SystemExceptionCode.VALUE_TYPE_INVALID)
           .data("valueType", valueType);
+    }
+  }
+
+  // ============================== 导入导出 ==============================
+
+  @Override
+  public byte[] exportVariables() {
+    // 1. 查询全部变量数据
+    List<Variable> variables = variableRepository.getVariableMapper()
+        .selectList(new QueryWrapper<Variable>().eq("deleted", 0).orderByAsc("variable_key"));
+
+    // 2. 转换为 Excel VO 并导出
+    List<VariableExcelVO> excelRows =
+        variables.stream().map(this::toExcelVO).collect(Collectors.toList());
+    return excelRows.isEmpty()
+        ? new byte[0]
+        : excelExportHelper.export("系统变量", VariableExcelVO.class, excelRows);
+  }
+
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public ImportResult importVariables(InputStream inputStream) {
+    // 1. 读取 Excel 文件
+    List<VariableExcelVO> excelRows = readExcel(inputStream);
+    if (excelRows.isEmpty()) {
+      return ImportResult.builder()
+          .totalCount(0)
+          .successCount(0)
+          .failCount(0)
+          .skipCount(0)
+          .message("Excel 文件为空")
+          .build();
+    }
+
+    // 2. 逐条校验并转换（必填 / 值类型 / DB 唯一性）
+    List<String> errors = new ArrayList<>();
+    List<VariableVO> validItems = new ArrayList<>();
+    int skipCount = 0;
+    for (int i = 0; i < excelRows.size(); i++) {
+      String error = validateExcelRow(excelRows.get(i), i + 2);
+      if (error != null) {
+        errors.add(error);
+        skipCount++;
+      } else {
+        validItems.add(toVariableVO(excelRows.get(i)));
+      }
+    }
+
+    // 3. 批量保存有效数据
+    int successCount = saveValidItemsBatch(validItems, errors);
+
+    // 4. 构建导入结果
+    return ImportResult.builder()
+        .totalCount(excelRows.size())
+        .successCount(successCount)
+        .failCount(excelRows.size() - successCount - skipCount)
+        .skipCount(skipCount)
+        .errors(errors)
+        .message(
+            String.format(
+                "导入完成: 成功 %d 条, 跳过 %d 条, 失败 %d 条",
+                successCount, skipCount, excelRows.size() - successCount - skipCount))
+        .build();
+  }
+
+  /**
+   * 读取 Excel 变量数据（私有）。
+   *
+   * @param inputStream Excel 输入流
+   * @return 变量 Excel 行列表
+   */
+  private List<VariableExcelVO> readExcel(InputStream inputStream) {
+    try {
+      List<VariableExcelVO> rows =
+          ExcelFacade.read(inputStream, VariableExcelVO.class).sheet(0).doReadAll();
+      return rows != null ? rows : List.of();
+    } catch (Exception e) {
+      log.warn("[VariableService] Excel 读取失败: {}", e.getMessage());
+      throw BusinessException.of(SystemExceptionCode.PARAM_ERROR)
+          .data("reason", "Excel 文件读取失败: " + e.getMessage());
+    }
+  }
+
+  /**
+   * 校验单条 Excel 行（私有）。
+   *
+   * <p>校验必填字段、值类型、DB 唯一性；通过返回 null，否则返回错误描述。
+   *
+   * @param excelRow Excel 行数据
+   * @param rowNum Excel 行号（从 2 开始，第 1 行为表头）
+   * @return 错误描述；校验通过返回 null
+   */
+  private String validateExcelRow(VariableExcelVO excelRow, int rowNum) {
+    if (excelRow.getVariableKey() == null || excelRow.getVariableKey().isBlank()) {
+      return "第 " + rowNum + " 行: 变量键不能为空";
+    }
+    if (excelRow.getVariableValue() == null || excelRow.getVariableValue().isBlank()) {
+      return "第 " + rowNum + " 行: 变量值不能为空";
+    }
+    // 值类型校验
+    if (excelRow.getValueType() != null && !excelRow.getValueType().isBlank()) {
+      try {
+        ConfigValueType.validate(excelRow.getValueType());
+      } catch (IllegalArgumentException e) {
+        return "第 " + rowNum + " 行: 值类型不合法: " + excelRow.getValueType();
+      }
+    }
+    // DB 唯一性校验
+    Variable existing = variableRepository.selectByKeyIgnoreStatus(excelRow.getVariableKey());
+    if (existing != null) {
+      return "第 " + rowNum + " 行: 变量已存在(" + excelRow.getVariableKey() + ")";
+    }
+    return null;
+  }
+
+  /**
+   * Excel 行转换为变量 VO（私有）。
+   *
+   * @param excelRow Excel 行数据
+   * @return 变量 VO
+   */
+  private VariableVO toVariableVO(VariableExcelVO excelRow) {
+    VariableVO vo = new VariableVO();
+    vo.setVariableKey(excelRow.getVariableKey());
+    vo.setVariableValue(excelRow.getVariableValue());
+    vo.setValueType(excelRow.getValueType());
+    vo.setDescription(excelRow.getDescription());
+    vo.setStatus(excelRow.getStatus());
+    return vo;
+  }
+
+  /**
+   * 变量实体转 Excel VO（私有）。
+   *
+   * @param entity 变量实体
+   * @return Excel VO
+   */
+  private VariableExcelVO toExcelVO(Variable entity) {
+    VariableExcelVO vo = new VariableExcelVO();
+    vo.setVariableKey(entity.getVariableKey());
+    vo.setVariableValue(entity.getVariableValue());
+    vo.setValueType(entity.getValueType());
+    vo.setDescription(entity.getDescription());
+    vo.setStatus(entity.getStatus());
+    return vo;
+  }
+
+  /**
+   * 批量保存有效变量（私有）。
+   *
+   * @param validItems 校验通过的变量列表
+   * @param errors 错误收集器（保存失败时追加）
+   * @return 保存成功条数
+   */
+  private int saveValidItemsBatch(List<VariableVO> validItems, List<String> errors) {
+    if (validItems.isEmpty()) {
+      return 0;
+    }
+    try {
+      List<Variable> entities = validItems.stream()
+          .map(this::toEntity)
+          .collect(Collectors.toList());
+      // 逐条插入
+      for (Variable entity : entities) {
+        variableRepository.getVariableMapper().insert(entity);
+      }
+      // 精准失效缓存：按涉及 variableKey 逐一失效
+      entities.forEach(entity -> evictVariable(entity.getVariableKey()));
+      // 同步搜索索引 + 发布变更事件
+      entities.forEach(entity -> {
+        searchIndexSyncer.upsert("variable", entity);
+        publishVariableChangedEvent(entity.getVariableKey(), "导入变量");
+      });
+      return entities.size();
+    } catch (Exception e) {
+      errors.add("批量导入失败: " + e.getMessage());
+      return 0;
     }
   }
 }

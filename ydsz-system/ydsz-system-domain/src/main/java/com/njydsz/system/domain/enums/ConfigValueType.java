@@ -19,7 +19,7 @@ package com.njydsz.system.domain.enums;
  *
  * <ul>
  *   <li>配置 / 变量写入前的 {@link #validate(String)} 校验
- *   <li>读取时按 {@code valueType} 字段动态解析 {@code configValue} / {@code variableValue}
+ *   <li>读取时按 {@code valueType} 字段动态解析 {@code configValue} / {@code variableValue}（{@link #parseValue}）
  *   <li>前端「公开配置」接口返回时附带 {@code valueType} 提示前端按类型解析
  * </ul>
  *
@@ -57,5 +57,39 @@ public enum ConfigValueType {
     } catch (IllegalArgumentException e) {
       throw new IllegalArgumentException("无效的值类型: " + code + "，支持: STRING/NUMBER/BOOLEAN/JSON");
     }
+  }
+
+  /**
+   * 根据值类型将字符串值解析为对应 Java 类型。
+   *
+   * <p>转换规则：
+   *
+   * <ul>
+   *   <li>{@code STRING} → {@link String} 原样返回
+   *   <li>{@code NUMBER} → {@link Double}
+   *   <li>{@code BOOLEAN} → {@link Boolean}
+   *   <li>{@code JSON} → {@link String} 原样返回（调用方按需反序列化）
+   *   <li>{@code null} 或空 → 抛出 {@link IllegalArgumentException}
+   * </ul>
+   *
+   * @param type 值类型字符串
+   * @param value 字符串形式的值
+   * @return 转换后的 Java 对象
+   * @throws IllegalArgumentException 类型不合法或解析失败时抛出
+   */
+  public static Object parseValue(String type, String value) {
+    if (type == null || type.isBlank()) {
+      return value;
+    }
+    ConfigValueType valueType = ConfigValueType.valueOf(type.toUpperCase());
+    if (value == null) {
+      return null;
+    }
+    return switch (valueType) {
+      case STRING -> value;
+      case NUMBER -> Double.valueOf(value);
+      case BOOLEAN -> Boolean.valueOf(value);
+      case JSON -> value;
+    };
   }
 }
