@@ -75,6 +75,10 @@ public final class FrequencySketch {
     } else {
       throw new IllegalArgumentException("不支持位宽: " + bitSize + "，仅支持 4 或 8");
     }
+    // 同步更新计数器索引掩码，避免位宽切换后探测索引越界
+    if (table != null) {
+      indexMask = table.length * countersPerLong - 1;
+    }
   }
 
   /**

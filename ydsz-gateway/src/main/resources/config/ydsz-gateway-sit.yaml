@@ -66,6 +66,10 @@ spring:
 # =====================================================================
 ydsz:
   gateway:
+    # P0-A1: Nacos 动态路由（唯一路由入口，JSON 数组格式，Group=sit）
+    dynamic-routes:
+      enabled: true
+      data-id: gateway-routes.json
     # P0-2: 内部头签名密钥（与 JWT 密钥分离）
     # SIT 环境通过 YDSZ_GATEWAY_INTERNAL_SIGN_SECRET 环境变量注入
     internal-sign-secret: ${YDSZ_GATEWAY_INTERNAL_SIGN_SECRET:${JWT_SECRET:}}

@@ -102,6 +102,21 @@
             <artifactId>ydsz-common-cache</artifactId>
         </dependency>
 
+        <!--
+            P0-A2: 网关熔断（对标 Spring Cloud CircuitBreaker 最佳实践）
+              - resilience4j-reactor:    CircuitBreakerOperator 响应式包装（自动记录成功/失败、状态流转）
+              - resilience4j-circuitbreaker: 熔断器核心（复用 common-sentry 提供的共享 CircuitBreakerRegistry）
+            版本由根 POM resilience4j-bom (2.4.0) 统一管理。
+        -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-reactor</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-circuitbreaker</artifactId>
+        </dependency>
+
         <!-- Actuator 健康检查 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

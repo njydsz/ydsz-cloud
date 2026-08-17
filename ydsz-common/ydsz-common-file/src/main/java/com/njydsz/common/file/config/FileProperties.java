@@ -85,6 +85,13 @@ public class FileProperties {
   /** 单文件最大大小（字节，默认 100MB = 104857600 字节） */
   private Long maxFileSize = 104857600L;
 
+  /**
+   * 上传内存缓冲阈值（字节，默认 16MB = 16777216 字节）
+   *
+   * <p>小于等于该阈值的文件在内存中缓冲（多次复用高效）；大于该阈值的文件 落盘到临时文件后以流式复用，避免大文件全量读入内存导致 OOM。
+   */
+  private long memoryBufferThreshold = 16 * 1024 * 1024;
+
   /** 最大请求大小（字节，默认 100MB） */
   private long maxRequestSize = 100 * 1024 * 1024;
 

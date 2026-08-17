@@ -5,7 +5,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
@@ -213,20 +212,4 @@ public class GatewayMetrics {
     return map;
   }
 
-  /** 用于 Gauge 注册的引用 holder（避免 Micrometer API 直接暴露） */
-  private static final class GaugeRef<N> {
-    private final AtomicReference<Double> value;
-
-    GaugeRef(N reference, java.util.function.ToDoubleFunction<N> extractor) {
-      this.value = new AtomicReference<>(extractor.applyAsDouble(reference));
-    }
-
-    void update(N reference, java.util.function.ToDoubleFunction<N> extractor) {
-      value.set(extractor.applyAsDouble(reference));
-    }
-
-    double get() {
-      return value.get();
-    }
-  }
 }

@@ -445,128 +445,214 @@ public abstract class AbstractFileStorage implements IFileStorage {
       throw new BusinessException(FileExceptionCode.FILE_SIZE_EXCEEDED);
     }
 
-    // 仅读取一次文件内容，后续秒传校验、病毒扫描、对象存储上传复用同一缓冲区，
-    // 避免多次调用 MultipartFile.getInputStream() 带来的重复 IO 开销。
-    byte[] fileBytes;
+    // 内容源抽象：小文件走内存缓冲（多次复用高效），大文件落盘临时文件（避免 OOM）。
+    // 后续秒传校验、病毒扫描、对象存储上传复用同一内容源，避免重复读取 IO。
+    FileContentSource contentSource = null;
     try {
-      fileBytes = file.getBytes();
-    } catch (IOException e) {
-      log.error("[Storage] failed to read file bytes, object={}", resolvedObjectName, e);
-      throw new BusinessException(FileExceptionCode.FILE_UPLOAD_FAILED);
-    }
-
-    // P0-1: File dedup check — 基于已缓冲的字节流计算秒传 hash，不重新读取上传流
-    String dedupHash = null;
-    if (fileDedupService != null) {
-      try (InputStream dedupStream = new ByteArrayInputStream(fileBytes)) {
-        dedupHash = fileDedupService.calculateHash(dedupStream);
-        String existingUrl = fileDedupService.checkExisting(file.getSize(), dedupHash);
-        if (existingUrl != null) {
-          if (fileMetrics != null) fileMetrics.recordDedupHit();
-          FileStorage dedupResult = buildFileStorage(file);
-          dedupResult.setUuidName(resolvedObjectName);
-          dedupResult.setUrl(existingUrl);
-          return dedupResult;
-        }
-        if (fileMetrics != null) fileMetrics.recordDedupMiss();
-      } catch (BusinessException e) {
-        throw e;
-      } catch (Exception e) {
-        log.warn(
-            "[Storage] dedup check failed, object={}, message={}",
-            resolvedObjectName,
-            e.getMessage());
-      }
-    }
-
-    // P0-2: Virus scan — 基于已缓冲的字节流进行扫描，不重新读取上传流
-    if (virusScanner != null) {
-      try (InputStream virusStream = new ByteArrayInputStream(fileBytes)) {
-        VirusScanner.ScanResult scanResult =
-            virusScanner.scan(virusStream, file.getOriginalFilename());
-        if (scanResult == VirusScanner.ScanResult.INFECTED) {
-          if (fileMetrics != null) fileMetrics.recordVirusDetected();
-          throw new BusinessException(FileExceptionCode.FILE_VIRUS_DETECTED);
-        }
-      } catch (BusinessException e) {
-        throw e;
-      } catch (Exception e) {
-        log.warn(
-            "[Storage] virus scan failed, object={}, message={}",
-            resolvedObjectName,
-            e.getMessage());
-      }
-    }
-
-    // 获取并发上传锁
-    String lockToken = acquireConcurrencyLock(resolvedObjectName);
-
-    makeBucket(resolvedBucket);
-    FileStorage fileStorage = buildFileStorage(file);
-    long totalBytes = file.getSize();
-
-    if (listener != null) {
-      listener.onStart(totalBytes);
-    }
-
-    long startTime = System.nanoTime();
-    try (InputStream uploadStream = new ByteArrayInputStream(fileBytes)) {
-      if (retryHelper != null) {
-        retryHelper.executeRunnableWithRetry(
-            () ->
-                doPutObject(
-                    resolvedBucket,
-                    resolvedObjectName,
-                    uploadStream,
-                    file.getSize(),
-                    file.getContentType()),
-            "upload");
-      } else {
-        doPutObject(
-            resolvedBucket,
-            resolvedObjectName,
-            uploadStream,
-            file.getSize(),
-            file.getContentType());
+      try {
+        contentSource = bufferFileContent(file);
+      } catch (IOException e) {
+        log.error("[Storage] failed to buffer file content, object={}", resolvedObjectName, e);
+        throw new BusinessException(FileExceptionCode.FILE_UPLOAD_FAILED);
       }
 
-      fileStorage.setUuidName(resolvedObjectName);
-      fileStorage.setUrl(buildObjectUrl(resolvedBucket, resolvedObjectName));
-
-      if (listener != null) {
-        listener.onSuccess(resolvedObjectName);
-      }
-      if (fileDedupService != null && dedupHash != null) {
-        try {
-          fileDedupService.registerHash(
-              file.getSize(), dedupHash, fileStorage.getUrl(), resolvedObjectName);
+      // P0-1: File dedup check — 基于已缓冲的内容计算秒传 hash，不重新读取上传流
+      String dedupHash = null;
+      if (fileDedupService != null) {
+        try (InputStream dedupStream = contentSource.openStream()) {
+          dedupHash = fileDedupService.calculateHash(dedupStream);
+          String existingUrl = fileDedupService.checkExisting(file.getSize(), dedupHash);
+          if (existingUrl != null) {
+            if (fileMetrics != null) fileMetrics.recordDedupHit();
+            FileStorage dedupResult = buildFileStorage(file);
+            dedupResult.setUuidName(resolvedObjectName);
+            dedupResult.setUrl(existingUrl);
+            return dedupResult;
+          }
+          if (fileMetrics != null) fileMetrics.recordDedupMiss();
+        } catch (BusinessException e) {
+          throw e;
         } catch (Exception e) {
           log.warn(
-              "[Storage] dedup register failed, object={}, message={}",
+              "[Storage] dedup check failed, object={}, message={}",
               resolvedObjectName,
               e.getMessage());
         }
       }
-      if (fileMetrics != null) fileMetrics.recordUpload(System.nanoTime() - startTime);
-      return fileStorage;
-    } catch (BusinessException e) {
-      if (listener != null) {
-        listener.onFailure(resolvedObjectName, e);
+
+      // P0-2: Virus scan — 基于已缓冲的内容进行扫描，不重新读取上传流
+      if (virusScanner != null) {
+        try (InputStream virusStream = contentSource.openStream()) {
+          VirusScanner.ScanResult scanResult =
+              virusScanner.scan(virusStream, file.getOriginalFilename());
+          if (scanResult == VirusScanner.ScanResult.INFECTED) {
+            if (fileMetrics != null) fileMetrics.recordVirusDetected();
+            throw new BusinessException(FileExceptionCode.FILE_VIRUS_DETECTED);
+          }
+        } catch (BusinessException e) {
+          throw e;
+        } catch (Exception e) {
+          log.warn(
+              "[Storage] virus scan failed, object={}, message={}",
+              resolvedObjectName,
+              e.getMessage());
+        }
       }
-      throw e;
-    } catch (Exception e) {
-      log.error(
-          "[Storage] file upload failed, bucket={}, object={}, message={}",
-          resolvedBucket,
-          resolvedObjectName,
-          e.getMessage(),
-          e);
+
+      // 获取并发上传锁
+      String lockToken = acquireConcurrencyLock(resolvedObjectName);
+
+      makeBucket(resolvedBucket);
+      FileStorage fileStorage = buildFileStorage(file);
+      long totalBytes = file.getSize();
+
       if (listener != null) {
-        listener.onFailure(resolvedObjectName, e);
+        listener.onStart(totalBytes);
       }
-      throw new BusinessException(FileExceptionCode.FILE_UPLOAD_FAILED);
+
+      long startTime = System.nanoTime();
+      try (InputStream uploadStream = contentSource.openStream()) {
+        if (retryHelper != null) {
+          retryHelper.executeRunnableWithRetry(
+              () ->
+                  doPutObject(
+                      resolvedBucket,
+                      resolvedObjectName,
+                      uploadStream,
+                      file.getSize(),
+                      file.getContentType()),
+              "upload");
+        } else {
+          doPutObject(
+              resolvedBucket,
+              resolvedObjectName,
+              uploadStream,
+              file.getSize(),
+              file.getContentType());
+        }
+
+        fileStorage.setUuidName(resolvedObjectName);
+        fileStorage.setUrl(buildObjectUrl(resolvedBucket, resolvedObjectName));
+
+        if (listener != null) {
+          listener.onSuccess(resolvedObjectName);
+        }
+        if (fileDedupService != null && dedupHash != null) {
+          try {
+            fileDedupService.registerHash(
+                file.getSize(), dedupHash, fileStorage.getUrl(), resolvedObjectName);
+          } catch (Exception e) {
+            log.warn(
+                "[Storage] dedup register failed, object={}, message={}",
+                resolvedObjectName,
+                e.getMessage());
+          }
+        }
+        if (fileMetrics != null) fileMetrics.recordUpload(System.nanoTime() - startTime);
+        return fileStorage;
+      } catch (BusinessException e) {
+        if (listener != null) {
+          listener.onFailure(resolvedObjectName, e);
+        }
+        throw e;
+      } catch (Exception e) {
+        log.error(
+            "[Storage] file upload failed, bucket={}, object={}, message={}",
+            resolvedBucket,
+            resolvedObjectName,
+            e.getMessage(),
+            e);
+        if (listener != null) {
+          listener.onFailure(resolvedObjectName, e);
+        }
+        throw new BusinessException(FileExceptionCode.FILE_UPLOAD_FAILED);
+      } finally {
+        releaseConcurrencyLock(resolvedObjectName, lockToken);
+      }
     } finally {
-      releaseConcurrencyLock(resolvedObjectName, lockToken);
+      if (contentSource != null) {
+        contentSource.close();
+      }
+    }
+  }
+
+  /**
+   * 将上传文件内容缓冲为可多次复用的内容源。
+   *
+   * <p>文件大小不超过 {@link FileProperties#getMemoryBufferThreshold()} 时在内存中缓冲（字节数组）； 超过阈值时落盘到临时文件，
+   * 避免大文件全量读入内存导致 OOM。临时文件在调用方 {@code finally} 中清理。
+   *
+   * @param file 上传文件
+   * @return 可多次打开 InputStream 的内容源
+   * @throws IOException 读取文件内容失败时抛出
+   */
+  private FileContentSource bufferFileContent(MultipartFile file) throws IOException {
+    long threshold = fileProperties.getMemoryBufferThreshold();
+    if (file.getSize() <= threshold) {
+      return new InMemoryFileContentSource(file.getBytes());
+    }
+    return new TempFileContentSource(file);
+  }
+
+  /** 文件内容源抽象：支持多次打开 InputStream 读取同一内容，并在使用结束后释放资源 */
+  private interface FileContentSource {
+
+    /**
+     * 打开内容输入流
+     *
+     * @return 内容输入流（调用方负责关闭）
+     * @throws IOException IO 异常
+     */
+    InputStream openStream() throws IOException;
+
+    /** 释放底层资源（内存引用或临时文件） */
+    void close();
+  }
+
+  /** 内存缓冲内容源（小文件） */
+  private static final class InMemoryFileContentSource implements FileContentSource {
+
+    private final byte[] bytes;
+
+    InMemoryFileContentSource(byte[] bytes) {
+      this.bytes = bytes;
+    }
+
+    @Override
+    public InputStream openStream() {
+      return new ByteArrayInputStream(bytes);
+    }
+
+    @Override
+    public void close() {
+      // 无底层资源需要释放
+    }
+  }
+
+  /** 临时文件内容源（大文件，避免 OOM） */
+  private static final class TempFileContentSource implements FileContentSource {
+
+    private final java.nio.file.Path tempFile;
+
+    TempFileContentSource(MultipartFile file) throws IOException {
+      this.tempFile = java.nio.file.Files.createTempFile("ydsz-upload-", ".tmp");
+      file.transferTo(this.tempFile);
+    }
+
+    @Override
+    public InputStream openStream() throws IOException {
+      return new BufferedInputStream(
+          java.nio.file.Files.newInputStream(tempFile, java.nio.file.StandardOpenOption.READ));
+    }
+
+    @Override
+    public void close() {
+      try {
+        java.nio.file.Files.deleteIfExists(tempFile);
+      } catch (IOException e) {
+        // 临时文件删除失败不影响业务，交由系统临时目录回收
+        log.warn("[Storage] failed to delete temp file: {}", tempFile, e);
+      }
     }
   }
 

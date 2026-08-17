@@ -19,18 +19,19 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 /**
- * 网关路由配置（Nacos 动态路由 + Java 兜底路由）。
+ * 网关路由配置（Nacos 动态路由为唯一入口 + Java 兜底路由）。
  *
  * <p>聚合路由定义的两种来源：
  *
  * <ul>
- *   <li>{@link NacosRouteDefinitionRepository}：Nacos 动态路由（优先，支持运行时刷新）
- *   <li>{@link RouteLocator}：Java 兜底路由（Nacos 不可用时的降级方案）
+ *   <li>{@link NacosRouteDefinitionRepository}：Nacos 动态路由（<b>唯一配置入口</b>，默认启用，支持运行时刷新）
+ *   <li>{@link RouteLocator}：Java 兜底路由（order=1000，仅在 Nacos 无路由配置时生效）
  * </ul>
  *
  * <h3>路由优先级</h3>
  *
- * <p>Nacos 路由为 {@code @Primary}，覆盖 Spring Cloud Gateway 默认的属性路由加载。 Java 代码路由作为兜底：当 Nacos 中无路由配置时，自动回退到 Java 路由。
+ * <p>Nacos 路由为 {@code @Primary}，且 Java 兜底路由统一设置 order=1000（低于 Nacos 路由的默认 order=0），
+ * 保证 Nacos 动态路由优先匹配；Nacos 中无路由配置（空或解析失败）时自动回退到 Java 兜底路由。
  *
  * <h3>配置项</h3>
  *
@@ -38,9 +39,22 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  * ydsz:
  *   gateway:
  *     dynamic-routes:
- *       enabled: true          # 是否启用 Nacos 动态路由
- *       data-id: gateway-routes.json  # Nacos 中路由配置的 DataId
+ *       enabled: true               # Nacos 动态路由总开关（默认 true）
+ *       data-id: gateway-routes.json # Nacos 中路由配置的 DataId（JSON 数组格式）
  * </pre>
+ *
+ * <p><b>路由配置格式（DataId: gateway-routes.json，Group: 当前 profile）：</b>
+ *
+ * <pre>
+ * [
+ *   { "id": "ydsz-userinfo", "uri": "lb://ydsz-userinfo",
+ *     "predicates": [ { "name": "Path", "args": { "pattern": "/api/v1/auth/**" } } ],
+ *     "filters": [], "order": 0 }
+ * ]
+ * </pre>
+ *
+ * <p>详见模块内 {@code routes-nacos.yaml} 模板。禁止同时在 shared-configs 中引入
+ * {@code ydsz-gateway-routes.yaml}，避免双路由源竞争。
  *
  * @since 1.0.0
  * @author ydsz-team
@@ -50,7 +64,8 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 @ConditionalOnProperty(
     prefix = "ydsz.gateway.dynamic-routes",
     name = "enabled",
-    havingValue = "true")
+    havingValue = "true",
+    matchIfMissing = true)
 public class GatewayRouteConfig {
 
   /**
@@ -92,7 +107,8 @@ public class GatewayRouteConfig {
   /**
    * 兜底静态路由定位器。
    *
-   * <p>当 Nacos 配置中心不可用时，提供基础路由能力。 Nacos 正常加载后，属性路由与本 Bean 共存（属性路由优先匹配）。
+   * <p>当 Nacos 配置中心无路由配置（空/解析失败）时提供基础路由能力。 统一设置 order=1000，
+   * 确保 Nacos 动态路由（order=0）优先匹配，避免双路由源冲突。
    *
    * <p>如需完全禁用静态路由（仅使用 Nacos 动态路由）， 启动时添加 JVM 参数 {@code -Dspring.profiles.active=noroutes}。
    *
@@ -104,7 +120,7 @@ public class GatewayRouteConfig {
   public RouteLocator fallbackRouteLocator(RouteLocatorBuilder builder) {
     return builder
         .routes()
-        // ===== 基础服务 =====
+        // ===== 基础服务（order=1000 兜底，Nacos 路由优先） =====
         .route(
             "ydsz-userinfo",
             r ->
@@ -121,9 +137,12 @@ public class GatewayRouteConfig {
                         "/api/v1/userinfo/**",
                         "/api/internal/**",
                         "/feign/**")
+                    .order(1000)
                     .uri("lb://ydsz-userinfo"))
         // ===== 业务服务 =====
-        .route("ydsz-workflow", r -> r.path("/api/v1/workflow/**").uri("lb://ydsz-workflow"))
+        .route(
+            "ydsz-workflow",
+            r -> r.path("/api/v1/workflow/**").order(1000).uri("lb://ydsz-workflow"))
         .route(
             "ydsz-system",
             r ->
@@ -134,12 +153,21 @@ public class GatewayRouteConfig {
                         "/api/v1/variable/**",
                         "/api/v1/system/**",
                         "/api/v1/search/**")
+                    .order(1000)
                     .uri("lb://ydsz-system"))
-        .route("ydsz-message", r -> r.path("/api/v1/message/**").uri("lb://ydsz-message"))
-        .route("ydsz-cronjob", r -> r.path("/api/v1/cronjob/**").uri("lb://ydsz-cronjob"))
-        .route("ydsz-literule", r -> r.path("/api/v1/literule/**").uri("lb://ydsz-literule"))
-        .route("ydsz-agent", r -> r.path("/api/v1/agent/**").uri("lb://ydsz-agent"))
-        .route("ydsz-nextwiki", r -> r.path("/api/v1/nextwiki/**").uri("lb://ydsz-nextwiki"))
+        .route(
+            "ydsz-message",
+            r -> r.path("/api/v1/message/**").order(1000).uri("lb://ydsz-message"))
+        .route(
+            "ydsz-cronjob",
+            r -> r.path("/api/v1/cronjob/**").order(1000).uri("lb://ydsz-cronjob"))
+        .route(
+            "ydsz-literule",
+            r -> r.path("/api/v1/literule/**").order(1000).uri("lb://ydsz-literule"))
+        .route("ydsz-agent", r -> r.path("/api/v1/agent/**").order(1000).uri("lb://ydsz-agent"))
+        .route(
+            "ydsz-nextwiki",
+            r -> r.path("/api/v1/nextwiki/**").order(1000).uri("lb://ydsz-nextwiki"))
         .build();
   }
 }

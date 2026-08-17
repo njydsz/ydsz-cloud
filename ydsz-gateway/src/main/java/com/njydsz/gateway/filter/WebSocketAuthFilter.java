@@ -21,8 +21,10 @@ import com.njydsz.common.core.trace.TraceIdGenerator;
 import com.njydsz.gateway.config.CachedJwtValidator;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayFilterOrder;
+import com.njydsz.gateway.config.GatewayIpUtils;
 import com.njydsz.gateway.config.InternalHeaderSigner;
 import com.njydsz.gateway.config.PathGuard;
+import com.njydsz.gateway.config.WebSocketConnectionLimiter;
 
 /**
  * WebSocket 认证过滤器（P2-12 + P0-1 安全加固 + P0-4 Origin 校验）
@@ -92,6 +94,9 @@ public class WebSocketAuthFilter implements GlobalFilter, Ordered {
   /** JWT 缓存校验器 */
   private final CachedJwtValidator cachedJwtValidator;
 
+  /** WebSocket 连接数限制器 */
+  private final WebSocketConnectionLimiter connectionLimiter;
+
   /**
    * P3-7: 内部头签名密钥（与 {@link AuthGlobalFilter} 共用配置项）。
    *
@@ -148,49 +153,65 @@ public class WebSocketAuthFilter implements GlobalFilter, Ordered {
       return rejectWebSocket(exchange, HttpStatus.UNAUTHORIZED);
     }
 
-    // 校验 Token（使用 Caffeine 缓存）
-    UserInfo userInfo = cachedJwtValidator.validateAndParse(jwt);
-    if (userInfo == null) {
-      log.warn("[WsAuth] WebSocket 握手 Token 无效 path={}", path);
-      return rejectWebSocket(exchange, HttpStatus.UNAUTHORIZED);
-    }
+    // 校验 Token（P0-C1：验签发布到 boundedElastic，避免阻塞 Netty EventLoop）
+    return cachedJwtValidator
+        .validateAndParseReactive(jwt)
+        .flatMap(userInfo -> {
+          if (userInfo == null) {
+            log.warn("[WsAuth] WebSocket 握手 Token 无效 path={}", path);
+            return rejectWebSocket(exchange, HttpStatus.UNAUTHORIZED);
+          }
 
-    // 提取用户信息
-    String userIdStr = userInfo.getUserId() != null ? userInfo.getUserId() : "";
-    String usernameStr = userInfo.getUsername() != null ? userInfo.getUsername() : "";
-    String rolesStr = userInfo.getRoleCode() != null ? userInfo.getRoleCode() : "";
-    String permsStr = "";
+          // 提取用户信息
+          String userIdStr = userInfo.getUserId() != null ? userInfo.getUserId() : "";
+          String usernameStr = userInfo.getUsername() != null ? userInfo.getUsername() : "";
+          String rolesStr = userInfo.getRoleCode() != null ? userInfo.getRoleCode() : "";
+          String permsStr = "";
 
-    // P0-9: traceId 统一由网关生成（不信任客户端传入的 X-Trace-Id）
-    String traceId = TraceIdGenerator.generateSortableTraceId();
+          // P0-9: traceId 统一由网关生成（不信任客户端传入的 X-Trace-Id）
+          String traceId = TraceIdGenerator.generateSortableTraceId();
 
-    // 生成签名（与 AuthGlobalFilter 一致）
-    String sig = InternalHeaderSigner.sign(
-        internalSignSecret, traceId, userIdStr, usernameStr, rolesStr, permsStr);
+          // P2-F4: WebSocket 连接数限制检查（用户 + IP 维度）
+          String clientIp = GatewayIpUtils.getClientIp(request);
+          return connectionLimiter
+              .tryAcquire(userIdStr, clientIp)
+              .flatMap(
+                  allowed -> {
+                    if (!allowed) {
+                      log.warn("[WsAuth] WebSocket 连接数超限拒绝 userId={} path={}", userIdStr, path);
+                      return rejectWebSocket(exchange, HttpStatus.SERVICE_UNAVAILABLE);
+                    }
 
-    // 注入用户信息头 + 签名头（先剥离客户端伪造的内部头）
-    ServerHttpRequest mutated = request.mutate().headers(h -> {
-      // P0-1: 先剥离客户端伪造的内部头（与 AuthGlobalFilter 一致）
-      for (String name : PathGuard.internalHeaders()) {
-        h.remove(name);
-      }
-      // 注入网关签发的内部头
-      h.set(GatewayConstants.HEADER_TRACE_ID, traceId);
-      h.set(GatewayConstants.HEADER_USER_ID, userIdStr);
-      h.set(GatewayConstants.HEADER_USERNAME, usernameStr);
-      h.set(GatewayConstants.HEADER_USER_ROLES, rolesStr);
-      h.set(GatewayConstants.HEADER_USER_PERMISSIONS, permsStr);
-      // P0-1: 注入签名头（防伪造）
-      h.set(GatewayConstants.HEADER_INTERNAL_SIG, sig);
-    }).build();
+                    // 生成签名（与 AuthGlobalFilter 一致）
+                    String sig =
+                        InternalHeaderSigner.sign(
+                            internalSignSecret, traceId, userIdStr, usernameStr, rolesStr, permsStr);
 
-    exchange.getAttributes().put(ATTR_WS_AUTHENTICATED, true);
-    // P0-9: traceId 统一写入响应头
-    exchange.getResponse().getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
+                    // 注入用户信息头 + 签名头（先剥离客户端伪造的内部头）
+                    ServerHttpRequest mutated = request.mutate().headers(h -> {
+                      // P0-1: 先剥离客户端伪造的内部头（与 AuthGlobalFilter 一致）
+                      for (String name : PathGuard.internalHeaders()) {
+                        h.remove(name);
+                      }
+                      // 注入网关签发的内部头
+                      h.set(GatewayConstants.HEADER_TRACE_ID, traceId);
+                      h.set(GatewayConstants.HEADER_USER_ID, userIdStr);
+                      h.set(GatewayConstants.HEADER_USERNAME, usernameStr);
+                      h.set(GatewayConstants.HEADER_USER_ROLES, rolesStr);
+                      h.set(GatewayConstants.HEADER_USER_PERMISSIONS, permsStr);
+                      // P0-1: 注入签名头（防伪造）
+                      h.set(GatewayConstants.HEADER_INTERNAL_SIG, sig);
+                    }).build();
 
-    log.info("[WsAuth] WebSocket 认证成功 userId={} path={}", userIdStr, path);
+                    exchange.getAttributes().put(ATTR_WS_AUTHENTICATED, true);
+                    // P0-9: traceId 统一写入响应头
+                    exchange.getResponse().getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
 
-    return chain.filter(exchange.mutate().request(mutated).build());
+                    log.info("[WsAuth] WebSocket 认证成功 userId={} path={}", userIdStr, path);
+
+                    return chain.filter(exchange.mutate().request(mutated).build());
+                  });
+        });
   }
 
   /**

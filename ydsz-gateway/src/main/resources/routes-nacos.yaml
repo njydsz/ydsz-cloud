@@ -1,72 +1,116 @@
 # =====================================================================
-#  YDSZ API 网关路由配置 — Nacos 动态配置模板
+#  YDSZ API 网关路由配置 — Nacos 动态路由模板（JSON 数组格式）
 #  --------------------------------------------------------------------
-#  将此文件内容上传到 Nacos 配置中心：
-#    Data ID: ydsz-gateway-routes.yaml
-#    Group:   ${spring.profiles.active}
-#    类型:     YAML
+#  将此 JSON 内容上传到 Nacos 配置中心：
+#    Data ID: gateway-routes.json
+#    Group:   ${spring.profiles.active}（dev/sit/uat/prod）
+#    类型:     JSON
 #
-#  Gateway bootstrap.yml 已配置 shared-configs 引入此文件，
-#  修改后自动刷新（@RefreshScope + RouteDefinitionRepository）。
+#  P0-A1: 网关路由的唯一配置入口为 NacosRouteDefinitionRepository，
+#         从上述 DataId 加载 JSON 数组格式的路由定义，修改后秒级生效、无需重启网关。
+#         禁止再通过 shared-configs 引入 ydsz-gateway-routes.yaml（已移除，避免双源竞争）。
 #
-#  P0-3: 从 RouteConfig.java 硬编码迁移为 Nacos 动态配置
+#  路由配置格式（每项为 RouteDefinition）：
+#   {
+#     "id":        路由唯一标识（与 lb:// 服务名保持一致）
+#     "uri":       目标地址，lb://serviceId 走服务发现，http(s):// 走直连
+#     "predicates": 路由断言（Path / Method / Header / Query 等）
+#     "filters":   网关过滤器（可选）
+#     "order":     匹配优先级（越小越优先，默认 0）
+#   }
 # =====================================================================
-spring:
-  cloud:
-    gateway:
-      # 路由规则（Nacos 动态刷新）
-      routes:
-        # ===== 基础服务 =====
-        # 用户信息中心服务
-        - id: ydsz-userinfo
-          uri: lb://ydsz-userinfo
-          predicates:
-            - Path=/api/v1/auth/**,/api/v1/user/**,/api/v1/company/**,/api/v1/dept/**,/api/v1/menu/**,/api/v1/post/**,/api/v1/role/**,/api/v1/language/**,/api/v1/oauth2/**,/api/v1/userinfo/**,/api/internal/**,/feign/**
 
-        # 工作流服务
-        - id: ydsz-workflow
-          uri: lb://ydsz-workflow
-          predicates:
-            - Path=/api/v1/workflow/**
-
-        # 系统基础服务
-        - id: ydsz-system
-          uri: lb://ydsz-system
-          predicates:
-            - Path=/api/v1/config/**,/api/v1/dict/**,/api/v1/app/**,/api/v1/variable/**,/api/v1/system/**,/api/v1/search/**
-
-        # 消息中心服务
-        - id: ydsz-message
-          uri: lb://ydsz-message
-          predicates:
-            - Path=/api/v1/message/**
-
-        # 定时任务服务
-        - id: ydsz-cronjob
-          uri: lb://ydsz-cronjob
-          predicates:
-            - Path=/api/v1/cronjob/**
-
-        # 规则引擎服务
-        - id: ydsz-literule
-          uri: lb://ydsz-literule
-          predicates:
-            - Path=/api/v1/literule/**
-
-        # AI Agent 服务
-        - id: ydsz-agent
-          uri: lb://ydsz-agent
-          predicates:
-            - Path=/api/v1/agent/**
-
-        # 网盘知识库服务
-        - id: ydsz-nextwiki
-          uri: lb://ydsz-nextwiki
-          predicates:
-            - Path=/api/v1/nextwiki/**
-
-      # 服务发现自动路由（备用，优先使用上面的显式路由）
-      discovery:
-        locator:
-          enabled: false
-          lower-case-service-id: true
+[
+  {
+    "id": "ydsz-userinfo",
+    "uri": "lb://ydsz-userinfo",
+    "predicates": [
+      {
+        "name": "Path",
+        "args": {
+          "pattern": "/api/v1/auth/**,/api/v1/user/**,/api/v1/company/**,/api/v1/dept/**,/api/v1/menu/**,/api/v1/post/**,/api/v1/role/**,/api/v1/language/**,/api/v1/oauth2/**,/api/v1/userinfo/**,/api/internal/**,/feign/**"
+        }
+      }
+    ],
+    "order": 0
+  },
+  {
+    "id": "ydsz-workflow",
+    "uri": "lb://ydsz-workflow",
+    "predicates": [
+      {
+        "name": "Path",
+        "args": { "pattern": "/api/v1/workflow/**" }
+      }
+    ],
+    "order": 0
+  },
+  {
+    "id": "ydsz-system",
+    "uri": "lb://ydsz-system",
+    "predicates": [
+      {
+        "name": "Path",
+        "args": {
+          "pattern": "/api/v1/config/**,/api/v1/dict/**,/api/v1/app/**,/api/v1/variable/**,/api/v1/system/**,/api/v1/search/**"
+        }
+      }
+    ],
+    "order": 0
+  },
+  {
+    "id": "ydsz-message",
+    "uri": "lb://ydsz-message",
+    "predicates": [
+      {
+        "name": "Path",
+        "args": { "pattern": "/api/v1/message/**" }
+      }
+    ],
+    "order": 0
+  },
+  {
+    "id": "ydsz-cronjob",
+    "uri": "lb://ydsz-cronjob",
+    "predicates": [
+      {
+        "name": "Path",
+        "args": { "pattern": "/api/v1/cronjob/**" }
+      }
+    ],
+    "order": 0
+  },
+  {
+    "id": "ydsz-literule",
+    "uri": "lb://ydsz-literule",
+    "predicates": [
+      {
+        "name": "Path",
+        "args": { "pattern": "/api/v1/literule/**" }
+      }
+    ],
+    "order": 0
+  },
+  {
+    "id": "ydsz-agent",
+    "uri": "lb://ydsz-agent",
+    "predicates": [
+      {
+        "name": "Path",
+        "args": { "pattern": "/api/v1/agent/**" }
+      }
+    ],
+    "order": 0
+  },
+  {
+    "id": "ydsz-nextwiki",
+    "uri": "lb://ydsz-nextwiki",
+    "predicates": [
+      {
+        "name": "Path",
+        "args": { "pattern": "/api/v1/nextwiki/**" }
+      }
+    ],
+    "order": 0
+  }
+]

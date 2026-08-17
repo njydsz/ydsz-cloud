@@ -10,22 +10,16 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
-import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.service.ReactiveTokenBlacklistService;
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.trace.TraceIdGenerator;
-import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.safe.config.SecurityHeaderConfigurer;
 import com.njydsz.common.safe.config.SecurityHeaderProperties;
 import com.njydsz.common.sentry.SentryObservation;
@@ -33,6 +27,8 @@ import com.njydsz.common.sentry.domain.AlertEvent;
 import com.njydsz.common.sentry.domain.AlertSeverity;
 import com.njydsz.gateway.config.CachedJwtValidator;
 import com.njydsz.gateway.config.GatewayConstants;
+import com.njydsz.gateway.config.GatewayErrorCode;
+import com.njydsz.gateway.config.GatewayErrorWriter;
 import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.config.InternalHeaderSigner;
 import com.njydsz.gateway.config.PathGuard;
@@ -192,50 +188,53 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
     // 提取 Token
     String authHeader = request.getHeaders().getFirst("Authorization");
     if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-      return unauthorized(exchange, traceId, "error.UNAUTHORIZED");
+      return unauthorized(exchange, traceId, GatewayErrorCode.UNAUTHORIZED, "error.UNAUTHORIZED");
     }
     String jwt = authHeader.substring(7);
 
-    // 验证 Token + 解析 UserInfo（使用 Caffeine 缓存）
-    UserInfo userInfo = cachedJwtValidator.validateAndParse(jwt);
-    if (userInfo == null) {
-      return unauthorized(exchange, traceId, "error.TOKEN_INVALID");
-    }
+    // 验证 Token + 解析 UserInfo（P0-C1：验签发布到 boundedElastic，避免阻塞 Netty EventLoop）
+    return cachedJwtValidator
+        .validateAndParseReactive(jwt)
+        .flatMap(userInfo -> {
+          if (userInfo == null) {
+            return unauthorized(exchange, traceId, GatewayErrorCode.TOKEN_INVALID, "error.TOKEN_INVALID");
+          }
+          // 黑名单检查委托给 ReactiveTokenBlacklistService
+          return tokenBlacklistService.isBlacklisted(jwt).flatMap(blacklisted -> {
+            if (Boolean.TRUE.equals(blacklisted)) {
+              cachedJwtValidator.invalidate(jwt);
+              return unauthorized(exchange, traceId, GatewayErrorCode.TOKEN_EXPIRED, "error.TOKEN_EXPIRED");
+            }
 
-    // 黑名单检查委托给 ReactiveTokenBlacklistService
-    return tokenBlacklistService.isBlacklisted(jwt).flatMap(blacklisted -> {
-      if (Boolean.TRUE.equals(blacklisted)) {
-        cachedJwtValidator.invalidate(jwt);
-        return unauthorized(exchange, traceId, "error.TOKEN_EXPIRED");
-      }
+            String userIdStr = userInfo.getUserId() != null ? userInfo.getUserId() : "";
+            String usernameStr = userInfo.getUsername() != null ? userInfo.getUsername() : "";
+            String rolesStr = userInfo.getRoleCode() != null ? userInfo.getRoleCode() : "";
+            String tenantIdStr = userInfo.getTenantId() != null ? userInfo.getTenantId() : "";
+            String permsStr = "";
 
-      String userIdStr = userInfo.getUserId() != null ? userInfo.getUserId() : "";
-      String usernameStr = userInfo.getUsername() != null ? userInfo.getUsername() : "";
-      String rolesStr = userInfo.getRoleCode() != null ? userInfo.getRoleCode() : "";
-      String tenantIdStr = userInfo.getTenantId() != null ? userInfo.getTenantId() : "";
-      String permsStr = "";
+            // 生成内部头签名（防伪造）
+            String sig =
+                InternalHeaderSigner.sign(
+                    internalSignSecret, traceId, userIdStr, usernameStr, rolesStr, permsStr);
 
-      // 生成内部头签名（防伪造）
-      String sig = InternalHeaderSigner.sign(
-          internalSignSecret, traceId, userIdStr, usernameStr, rolesStr, permsStr);
+            // 透传用户信息（先剥离客户端伪造的内部头，再注入网关值）
+            final String acceptLang = request.getHeaders().getFirst("Accept-Language");
+            ServerHttpRequest mutated = request.mutate().headers(h -> {
+              stripInternalHeaders(h);
+              h.set(GatewayConstants.HEADER_TRACE_ID, traceId);
+              h.set(GatewayConstants.HEADER_TENANT_ID, tenantIdStr);
+              h.set(GatewayConstants.HEADER_USER_ID, userIdStr);
+              h.set(GatewayConstants.HEADER_USERNAME, usernameStr);
+              h.set(GatewayConstants.HEADER_USER_ROLES, rolesStr);
+              h.set(GatewayConstants.HEADER_USER_PERMISSIONS, permsStr);
+              h.set(GatewayConstants.HEADER_INTERNAL_SIG, sig);
+              h.set("Authorization", authHeader);
+              h.set("Accept-Language", acceptLang != null && !acceptLang.isEmpty() ? acceptLang : "zh-CN");
+            }).build();
 
-      // 透传用户信息（先剥离客户端伪造的内部头，再注入网关值）
-      final String acceptLang = request.getHeaders().getFirst("Accept-Language");
-      ServerHttpRequest mutated = request.mutate().headers(h -> {
-        stripInternalHeaders(h);
-        h.set(GatewayConstants.HEADER_TRACE_ID, traceId);
-        h.set(GatewayConstants.HEADER_TENANT_ID, tenantIdStr);
-        h.set(GatewayConstants.HEADER_USER_ID, userIdStr);
-        h.set(GatewayConstants.HEADER_USERNAME, usernameStr);
-        h.set(GatewayConstants.HEADER_USER_ROLES, rolesStr);
-        h.set(GatewayConstants.HEADER_USER_PERMISSIONS, permsStr);
-        h.set(GatewayConstants.HEADER_INTERNAL_SIG, sig);
-        h.set("Authorization", authHeader);
-        h.set("Accept-Language", acceptLang != null && !acceptLang.isEmpty() ? acceptLang : "zh-CN");
-      }).build();
-
-      return withSecurityHeaders(exchange, chain.filter(exchange.mutate().request(mutated).build()));
-    });
+            return withSecurityHeaders(exchange, chain.filter(exchange.mutate().request(mutated).build()));
+          });
+        });
   }
 
   /**
@@ -261,39 +260,33 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
   }
 
   /**
-   * 返回 400 拒绝路径穿越响应。
+   * 返回 400 拒绝路径穿越响应（P0-D1：统一错误响应写出器）。
    *
    * @param exchange 服务器 Web 交换上下文
    * @return 完成信号 Mono
    */
   private Mono<Void> rejectPathTraversal(ServerWebExchange exchange) {
-    ServerHttpResponse response = exchange.getResponse();
-    response.setStatusCode(HttpStatus.BAD_REQUEST);
-    response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-    BaseResponse<Void> body = BaseResponse.error(BaseResultCode.BAD_REQUEST, "error.BAD_REQUEST");
-    byte[] bytes = YdszJson.toJsonBytes(body);
-    DataBuffer buffer = response.bufferFactory().wrap(bytes);
-    return response.writeWith(Mono.just(buffer));
+    String traceId = exchange.getRequest().getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
+    return GatewayErrorWriter.write(
+        exchange,
+        HttpStatus.BAD_REQUEST,
+        GatewayErrorCode.PATH_TRAVERSAL,
+        GatewayErrorCode.PATH_TRAVERSAL.getMessageKey(),
+        traceId);
   }
 
   /**
-   * 返回 401 未授权响应。
+   * 返回 401 未授权响应（P0-D1：统一错误响应写出器）。
    *
    * @param exchange 服务器 Web 交换上下文
    * @param traceId 链路追踪 ID
-   * @param msg 错误消息
+   * @param errorCode 认证错误码
+   * @param msg 错误消息（i18n key）
    * @return 完成信号 Mono
    */
-  private Mono<Void> unauthorized(ServerWebExchange exchange, String traceId, String msg) {
-    ServerHttpResponse response = exchange.getResponse();
-    response.setStatusCode(HttpStatus.UNAUTHORIZED);
-    response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-
-    BaseResponse<Void> body = BaseResponse.error(BaseResultCode.UNAUTHORIZED, msg);
-    body.assignTraceId(traceId);
-    byte[] bytes = YdszJson.toJsonBytes(body);
-    DataBuffer buffer = response.bufferFactory().wrap(bytes);
-    return response.writeWith(Mono.just(buffer));
+  private Mono<Void> unauthorized(
+      ServerWebExchange exchange, String traceId, GatewayErrorCode errorCode, String msg) {
+    return GatewayErrorWriter.write(exchange, HttpStatus.UNAUTHORIZED, errorCode, msg, traceId);
   }
 
   /**

@@ -8,6 +8,8 @@ import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import com.njydsz.common.auth.model.UserInfo;
 import com.njydsz.common.auth.token.TokenService;
@@ -58,6 +60,9 @@ public class CachedJwtValidator {
   /** 空值占位最大过期时间（毫秒）——随机抖动防雪崩 */
   private static final long NULL_CACHE_MAX_MS = 5_000L;
 
+  /** Token 过期前提前失效的缓冲时间（秒），避免缓存穿透到过期 Token */
+  private static final long EXPIRE_BUFFER_SECONDS = 30L;
+
   /** 缓存 TTL（秒） */
   private final long cacheTtlSeconds;
 
@@ -67,8 +72,8 @@ public class CachedJwtValidator {
   /** 缓存未命中计数器 */
   private final AtomicLong cacheMissCount = new AtomicLong(0);
 
-  /** 本地缓存实例 */
-  private final Cache<String, Optional<UserInfo>> claimsCache;
+  /** 本地缓存实例（值包含 UserInfo 和 Token 过期时间，用于自适应 TTL） */
+  private final Cache<String, JwtCacheEntry> claimsCache;
 
   /** Token 服务 */
   private final TokenService tokenService;
@@ -91,7 +96,7 @@ public class CachedJwtValidator {
     this.gatewayMetrics = gatewayMetrics;
     this.cacheTtlSeconds = cacheTtlSeconds;
     this.claimsCache =
-        YdszCache.<String, Optional<UserInfo>>newBuilder()
+        YdszCache.<String, JwtCacheEntry>newBuilder()
             .type(CacheType.STRIPED)
             .name("gateway:jwt-validation")
             .expireAfterWrite(cacheTtlSeconds, TimeUnit.SECONDS)
@@ -118,10 +123,32 @@ public class CachedJwtValidator {
   }
 
   /**
+   * 响应式校验并解析 JWT Token（P0-C1：验签切出 Netty EventLoop）。
+   *
+   * <p>JWT 签名验证（HMAC-SHA256）为 CPU 密集操作，若在 Netty EventLoop 线程同步执行，
+   * 高并发冷缓存场景下会阻塞事件循环、拖垮网关整体吞吐。本方法将 {@link #validateAndParse(String)}
+   * 发布到 {@link Schedulers#boundedElastic()} 调度器执行，仅验签阶段切线程，不改变调用语义。
+   *
+   * @param jwt JWT Token 字符串
+   * @return UserInfo 解析结果（无效 Token 时为 empty）的响应式信号
+   */
+  public Mono<UserInfo> validateAndParseReactive(String jwt) {
+    if (jwt == null || jwt.isBlank()) {
+      return Mono.empty();
+    }
+    return Mono.fromCallable(() -> validateAndParse(jwt))
+        .subscribeOn(Schedulers.boundedElastic())
+        .flatMap(info -> info == null ? Mono.empty() : Mono.just(info));
+  }
+
+  /**
    * 校验并解析 JWT Token（带缓存 + 防击穿/防穿透）。
    *
    * <p>优先从 Caffeine 缓存读取解析结果；缓存未命中时通过 {@link
    * com.njydsz.common.cache.api.Cache#getWithProtection} 执行解析。
+   *
+   * <p><b>注意：</b>本方法为同步实现，验签为 CPU 密集操作，调用方应优先使用
+   * {@link #validateAndParseReactive(String)} 以避免阻塞 Reactor Netty EventLoop 线程。
    *
    * @param jwt JWT Token 字符串
    * @return UserInfo 解析结果，Token 无效时返回 null
@@ -132,24 +159,30 @@ public class CachedJwtValidator {
     }
 
     long startTime = System.currentTimeMillis();
-    Optional<UserInfo> cached = claimsCache.getIfPresent(jwt);
+    JwtCacheEntry cached = claimsCache.getIfPresent(jwt);
     long duration = System.currentTimeMillis() - startTime;
 
-    boolean isCached = cached != null;
+    // P1: 自适应 TTL — 检查 Token 是否即将过期，即将过期则视为缓存未命中
+    boolean isCached = cached != null && !cached.isExpiringSoon(EXPIRE_BUFFER_SECONDS);
     if (isCached) {
       cacheHitCount.incrementAndGet();
       recordMetrics(duration, true);
-      return cached.orElse(null);
+      return cached.userInfo();
+    }
+    if (cached != null) {
+      // 缓存存在但 Token 即将过期，主动移除避免缓存穿透到过期 Token
+      claimsCache.invalidate(jwt);
+      log.debug("[JwtCache] Token 即将过期，主动移除缓存 jwt={}", maskToken(jwt));
     }
 
     // 缓存未命中，使用带防护的加载（防击穿 + 防穿透）
     cacheMissCount.incrementAndGet();
     startTime = System.currentTimeMillis();
-    Optional<UserInfo> result = claimsCache.getWithProtection(jwt, this::parseToken, NULL_CACHE_MIN_MS, NULL_CACHE_MAX_MS);
+    JwtCacheEntry result = claimsCache.getWithProtection(jwt, this::parseTokenToEntry, NULL_CACHE_MIN_MS, NULL_CACHE_MAX_MS);
     duration = System.currentTimeMillis() - startTime;
 
     recordMetrics(duration, false);
-    return result == null ? null : result.orElse(null);
+    return result == null ? null : result.userInfo();
   }
 
   /**

@@ -58,10 +58,9 @@ spring:
           - data-id: ydsz-common.yaml
             group: ${spring.profiles.active}
             refresh: true
-          # P0-3: 网关路由动态配置（Nacos 刷新后自动生效）
-          - data-id: ydsz-gateway-routes.yaml
-            group: ${spring.profiles.active}
-            refresh: true
+          # P0-A1: 网关路由不再通过 shared-configs 引入 yaml 路由文件，
+          #        统一由 NacosRouteDefinitionRepository 从 gateway-routes.json（JSON 数组格式）加载，
+          #        避免双路由源竞争。路由模板见 src/main/resources/routes-nacos.yaml。
 
 # P1-1: Nacos 路由配置变更监听器托管线程池（ydsz-common-thread 统一管理，替代原自建 ThreadPoolExecutor）
 # 对应 Bean 名称: nacosRouteListenerExecutor（默认 beanNamePrefix 为空，命名规则为 key + "Executor"）

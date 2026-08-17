@@ -81,6 +81,10 @@ spring:
 # =====================================================================
 ydsz:
   gateway:
+    # P0-A1: Nacos 动态路由（唯一路由入口，JSON 数组格式，Group=prod）
+    dynamic-routes:
+      enabled: true
+      data-id: gateway-routes.json
     # P0-2: 内部头签名密钥（生产环境必须通过环境变量注入强随机密钥）
     internal-sign-secret: ${YDSZ_GATEWAY_INTERNAL_SIGN_SECRET:}
     # P2-1: CORS 单一可信来源（与凭据模式互斥校验，生产环境禁止通配符）

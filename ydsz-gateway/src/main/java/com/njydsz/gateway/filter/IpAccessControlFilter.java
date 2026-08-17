@@ -14,12 +14,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
-import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
@@ -27,14 +24,12 @@ import reactor.core.publisher.Mono;
 import com.njydsz.common.cache.YdszCache;
 import com.njydsz.common.cache.api.Cache;
 import com.njydsz.common.cache.builder.CacheType;
-import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.core.response.BaseResponse;
-import com.njydsz.common.core.trace.TraceIdGenerator;
-import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.sentry.SentryObservation;
 import com.njydsz.common.sentry.domain.AlertEvent;
 import com.njydsz.common.sentry.domain.AlertSeverity;
 import com.njydsz.gateway.config.GatewayConstants;
+import com.njydsz.gateway.config.GatewayErrorCode;
+import com.njydsz.gateway.config.GatewayErrorWriter;
 import com.njydsz.gateway.config.GatewayFilterOrder;
 import com.njydsz.gateway.config.GatewayIpUtils;
 import com.njydsz.gateway.config.IpAccessControlProperties;
@@ -102,6 +97,38 @@ public class IpAccessControlFilter implements GlobalFilter, Ordered {
 
   /** 上一次解析的白名单原始字符串 */
   private volatile String lastRawWhitelist = null;
+
+  /**
+   * 启动时校验 IP 访问控制配置的合法性。
+   *
+   * <p>校验规则：
+   * <ul>
+   *   <li>blacklistFailMode 必须为 fail-open 或 fail-closed</li>
+   *   <li>白名单 skip-paths 不应包含敏感路径（如 /admin/**）而无显式配置</li>
+   * </ul>
+   *
+   * @throws IllegalStateException 配置非法时抛出，阻止应用启动
+   */
+  @PostConstruct
+  public void validateConfiguration() {
+    String failMode = properties.getBlacklistFailMode();
+    if (!"fail-open".equalsIgnoreCase(failMode) && !"fail-closed".equalsIgnoreCase(failMode)) {
+      throw new IllegalStateException(
+          "IP 访问控制配置非法： blacklistFailMode 必须为 fail-open 或 fail-closed，当前值=" + failMode);
+    }
+
+    boolean blacklistEnabled = properties.isBlacklistEnabled();
+    boolean whitelistEnabled = properties.isWhitelistEnabled();
+    if (!blacklistEnabled && !whitelistEnabled) {
+      log.info("[IpAccess] 黑名单和白名单均未启用，IP 访问控制过滤器处于观察模式（仅放行）");
+    } else if (blacklistEnabled && whitelistEnabled) {
+      log.info("[IpAccess] 黑名单和白名单同时启用：黑名单优先，IP 不在黑名单时继续白名单校验");
+    } else if (blacklistEnabled) {
+      log.info("[IpAccess] 仅黑名单已启用，failMode={}", failMode);
+    } else {
+      log.info("[IpAccess] 仅白名单已启用，skipPaths={}", properties.getWhitelistSkipPaths());
+    }
+  }
 
   /**
    * IP 访问控制过滤器入口。
@@ -284,24 +311,32 @@ public class IpAccessControlFilter implements GlobalFilter, Ordered {
   }
 
   /**
-   * 返回 403 禁止访问响应。
+   * 返回 403 禁止访问响应（P0-D1：统一错误响应写出器）。
    *
    * @param exchange 服务器 Web 交换上下文
-   * @param errorCode 错误码
+   * @param errorCode 错误码（i18n key）
    * @return 完成信号 Mono
    */
   private Mono<Void> forbidden(ServerWebExchange exchange, String errorCode) {
-    String traceId = TraceIdGenerator.generateSortableTraceId();
-    ServerHttpResponse response = exchange.getResponse();
-    response.setStatusCode(HttpStatus.FORBIDDEN);
-    response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-    response.getHeaders().add(GatewayConstants.HEADER_TRACE_ID, traceId);
+    String traceId = exchange.getRequest().getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
+    return GatewayErrorWriter.write(
+        exchange, HttpStatus.FORBIDDEN, resolveForbiddenErrorCode(errorCode), errorCode, traceId);
+  }
 
-    BaseResponse<Void> body = BaseResponse.error(BaseResultCode.FORBIDDEN, errorCode);
-    body.assignTraceId(traceId);
-    byte[] bytes = YdszJson.toJsonBytes(body);
-    DataBuffer buffer = response.bufferFactory().wrap(bytes);
-    return response.writeWith(Mono.just(buffer));
+  /**
+   * 按 i18n key 解析 IP 访问控制的业务错误码。
+   *
+   * @param errorCode 错误消息键（error.IP_BLACKLISTED / error.IP_FORBIDDEN）
+   * @return 对应业务错误码
+   */
+  private GatewayErrorCode resolveForbiddenErrorCode(String errorCode) {
+    if ("error.IP_BLACKLISTED".equals(errorCode)) {
+      return GatewayErrorCode.IP_BLACKLISTED;
+    }
+    if ("error.IP_FORBIDDEN".equals(errorCode)) {
+      return GatewayErrorCode.IP_FORBIDDEN;
+    }
+    return GatewayErrorCode.FORBIDDEN;
   }
 
   @Override
