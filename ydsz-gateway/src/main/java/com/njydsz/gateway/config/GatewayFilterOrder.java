@@ -51,6 +51,8 @@ public enum GatewayFilterOrder {
   API_KEY_AUTH(15),
   /** 灰度路由标识注入过滤器 */
   GRAY_LOADBALANCER(20),
+  /** 灰度路由响应头过滤器（可观测性） */
+  GRAY_RESPONSE_HEADER(150),
   /** 限流过滤器 */
   RATE_LIMIT(30),
   /** 审计日志过滤器 */

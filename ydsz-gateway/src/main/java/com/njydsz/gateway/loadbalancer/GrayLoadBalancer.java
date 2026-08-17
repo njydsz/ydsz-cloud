@@ -59,6 +59,9 @@ public class GrayLoadBalancer implements ReactorServiceInstanceLoadBalancer {
   /** 灰度标签请求头名,同时作为 exchange attribute key */
   public static final String GRAY_TAG_HEADER = "X-Gray-Tag";
 
+  /** exchange attribute key: 灰度路由结果（true=命中灰度实例, false=命中稳定实例） */
+  public static final String GRAY_HIT_ATTR = "__gray_hit_result";
+
   /** 灰度标识值:灰度实例 */
   private static final String GRAY_TAG_GRAY = "gray";
 

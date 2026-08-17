@@ -107,6 +107,15 @@ public class GatewayMetrics {
     }
   }
 
+  /** 增加灰度路由命中计数。 */
+  public void incrementGrayHit(boolean hitGray) {
+    MetricsCollector collector = getMetricsCollector();
+    if (collector != null) {
+      collector.incrementCounter(PREFIX + "gray_hit_total", null,
+          toMap("gray", String.valueOf(hitGray)), 1.0);
+    }
+  }
+
   /** 增加限流触发计数。 */
   public void incrementRatelimitTriggered(String dimension, String routeId) {
     MetricsCollector collector = getMetricsCollector();

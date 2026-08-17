@@ -46,7 +46,7 @@ ydsz-nextwiki/
 ├── ydsz-nextwiki-api/                 # API 层：Feign Client + DTO
 ├── ydsz-nextwiki-domain/              # 领域层：Entity + Repository 接口 + 领域服务
 │   └── src/main/java/com/njydsz/nextwiki/domain/
-│       ├── entity/                    # 实体（11 个，无 DO 后缀，符合 entity-naming 规范）
+│       ├── entity/                    # 实体（12 个，无 DO 后缀，符合 entity-naming 规范）
 │       │   ├── FileNode.java          # 文件节点（核心实体，含树形结构）
 │       │   ├── FileVersion.java       # 文件版本历史
 │       │   ├── FileAcl.java           # 文件 ACL 权限
@@ -54,13 +54,14 @@ ydsz-nextwiki/
 │       │   ├── FileTag.java           # 文件-标签关联
 │       │   ├── Tag.java               # 标签
 │       │   ├── ShareLink.java         # 分享链接
+│       │   ├── ShareAccessLog.java    # 分享访问日志
+│       │   ├── ShareRecipient.java    # 分享接收人
 │       │   ├── StorageQuota.java      # 存储配额
 │       │   ├── TrashItem.java         # 回收站项
-│       │   ├── SearchIndex.java       # 搜索索引
-│       │   └── AuditLog.java          # 审计日志
-│       ├── repository/                # 仓储接口（11 个，与实体一一对应）
-│       ├── service/                   # 领域服务（7 个：FileVersion/Folder/Quota/Search/Share/Tag/Trash）
-│       ├── event/                     # 领域事件（FileOperatedEvent）
+│       │   └── SearchIndex.java       # 搜索索引
+│       ├── repository/                # 仓储接口（11 个）
+│       ├── service/                   # 领域服务（10 个：FileVersion/Folder/Quota/Search/Share/Tag/Trash/FilePermission/ShareAccessLog/ShareLink/StorageReference）
+│       ├── event/                     # 领域事件（FileOperatedEvent / AuditEvent）
 │       ├── enums/                     # 枚举（NextwikiEnums / NextwikiExceptionCode）
 │       └── vo/                        # 视图对象（FileNodeVO / SearchResultVO / ShareLinkVO）
 ├── ydsz-nextwiki-infra/               # 基础设施层：仓储实现 + Mapper
@@ -68,14 +69,14 @@ ydsz-nextwiki/
 └── ydsz-nextwiki-web/                 # Web 层：Controller + 启动类
     └── src/main/java/com/njydsz/nextwiki/web/
         ├── NextwikiApplication.java
-        └── controller/                # 15 个 Controller
+        └── controller/                # 17 个 Controller
             ├── FileController.java          # /api/v1/nextwiki/files
             ├── FileChunkController.java     # /api/v1/nextwiki/files/chunk
-            ├── FileBatchController.java     # /api/v1/nextwiki/files/batch-*
+            ├── FileBatchController.java     # /api/v1/nextwiki/files/batch/*（异步任务）
             ├── FileLockController.java      # /api/v1/nextwiki/files/{nodeId}/lock
             ├── FileCommentController.java   # /api/v1/nextwiki/comments
             ├── DownloadController.java      # /api/v1/nextwiki/download
-            ├── ShareController.java         # /api/v1/nextwiki/share
+            ├── ShareController.java         # /api/v1/nextwiki/shares
             ├── SearchController.java        # /api/v1/nextwiki/search
             ├── TrashController.java         # /api/v1/nextwiki/trash
             ├── QuotaController.java         # /api/v1/nextwiki/quota
@@ -83,7 +84,9 @@ ydsz-nextwiki/
             ├── BatchImportController.java   # /api/v1/nextwiki/import
             ├── AnalysisController.java      # /api/v1/nextwiki/analysis
             ├── PreviewController.java       # /api/v1/nextwiki/preview
-            └── WopiController.java          # /api/v1/nextwiki/wopi
+            ├── WopiController.java          # /api/v1/nextwiki/wopi
+            ├── AiController.java            # /api/v1/nextwiki/ai（文档摘要/状态）
+            └── storage/PresignedUrlController.java # /api/v1/nextwiki/storage（预签名上传/下载）
 ```
 
 ## 关键 Controller 端点
@@ -98,9 +101,9 @@ ydsz-nextwiki/
 | `POST /api/v1/nextwiki/files/chunk/{uploadId}/complete` | 完成分片上传 |
 | `DELETE /api/v1/nextwiki/files/chunk/{uploadId}` | 取消分片上传 |
 | `POST /api/v1/nextwiki/files/{nodeId}/copy` | 复制文件 |
-| `POST /api/v1/nextwiki/files/batch-move` | 批量移动 |
-| `POST /api/v1/nextwiki/files/batch-delete` | 批量删除 |
-| `POST /api/v1/nextwiki/files/folder` | 创建文件夹 |
+| `POST /api/v1/nextwiki/files/batch/move` | 批量移动（异步任务） |
+| `POST /api/v1/nextwiki/files/batch/delete` | 批量删除（异步任务） |
+| `POST /api/v1/nextwiki/files/folders` | 创建文件夹 |
 | `POST /api/v1/nextwiki/files/{nodeId}/lock` | 锁定文件 |
 | `POST /api/v1/nextwiki/files/{nodeId}/unlock` | 解锁文件 |
 
@@ -110,10 +113,11 @@ ydsz-nextwiki/
 |---|---|
 | `POST /api/v1/nextwiki/download/{nodeId}` | 下载文件（支持 Range 断点续传） |
 | `POST /api/v1/nextwiki/download/folder/{folderId}` | 打包下载文件夹 |
-| `POST /api/v1/nextwiki/share` | 创建分享链接 |
-| `POST /api/v1/nextwiki/share/verify` | 验证分享访问 |
-| `GET /api/v1/nextwiki/search` | 搜索文件 |
+| `POST /api/v1/nextwiki/shares` | 创建分享链接 |
+| `POST /api/v1/nextwiki/shares/verify` | 验证分享访问 |
+| `POST /api/v1/nextwiki/search` | 搜索文件（POST） |
 | `POST /api/v1/nextwiki/search/rebuild` | 重建索引 |
+| `POST /api/v1/nextwiki/search/suggest` `/did-you-mean` | 搜索建议 / 纠错 |
 | `GET /api/v1/nextwiki/trash/list` | 查询回收站 |
 | `POST /api/v1/nextwiki/trash/{trashItemId}/restore` | 恢复 |
 | `DELETE /api/v1/nextwiki/trash/empty` | 清空回收站 |
@@ -124,6 +128,8 @@ ydsz-nextwiki/
 | `POST /api/v1/nextwiki/import/zip` | ZIP 导入 |
 | `GET /api/v1/nextwiki/analysis/overview` | 存储概览 |
 | `POST /api/v1/nextwiki/analysis/summary` | 生成文档摘要 |
+| `POST /api/v1/nextwiki/ai/summary` `GET /api/v1/nextwiki/ai/status` | AI 文档摘要 / 任务状态 |
+| `POST /api/v1/nextwiki/storage/presigned-upload` `/presigned-download` | 预签名直传 / 直下 |
 
 ### WOPI 在线编辑
 
@@ -160,7 +166,7 @@ mvn -pl ydsz-nextwiki spring-boot:run
 
 ## 技术栈
 
-- Spring Boot 3.x + Spring Cloud (Nacos)
+- Spring Boot 4.x + Spring Cloud (Nacos)
 - MyBatis-Plus
 - Redis（分布式锁、限流、缓存）
 - LibreOffice（文档预览）
@@ -168,6 +174,7 @@ mvn -pl ydsz-nextwiki spring-boot:run
 - Tesseract（OCR）
 - Micrometer（监控指标）
 - WebSocket（实时通知）
+- 冷数据归档（定时任务迁移低频文件）
 
 ## 常见问题
 
