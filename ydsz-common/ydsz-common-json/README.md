@@ -460,7 +460,7 @@ String formatted = YdszJson.format(compactJson);
 
 | 版本 | 兼容性说明 |
 |------|-----------|
-| v1.0.0 → v1.1.0 | ⚠️ `JsonConfig.getInstance()` 标记 `@Deprecated`，推荐使用 `JsonConfig.copyOf()` / `install()` |
+| v1.0.0 → v1.1.0 | ⚠️ `JsonConfig.getInstance()` 已移除，请使用 `JsonConfig.copyOf()` 或 `JsonConfig.builder().build()` / `install()` |
 | v1.1.0 → v1.2.0 | ✅ 向后兼容，无破坏性变更 |
 | v1.2.2 → v1.2.3 | ✅ 向后兼容：新增 `YdszJson.cleanupThread()`、`SerializerRegistry.registerIfAbsent()/unregisterAll()` 等 API；多 Mapper 深度隔离为缺陷修复（原先多实例深度互相覆盖属未定义行为）；双注册表合并为单一事实源（`JsonModuleRegistry.getSerializer()` 现委托全局注册中心，语义等价于原先的"模块 + 直接注册"双查） |
 | v1.2.0 → 未来版本 | 标注 `@Beta` 的 API 可能破坏性变更；标注 `@Deprecated` 的 API 将在下个主版本移除 |

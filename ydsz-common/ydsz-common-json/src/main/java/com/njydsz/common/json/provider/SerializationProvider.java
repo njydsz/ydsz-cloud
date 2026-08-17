@@ -620,7 +620,7 @@ public final class SerializationProvider {
     SerializationContext ctx = SerializationContext.CONTEXT.get();
 
     // 序列化深度安全网：超过阈值时抛出受控异常，替代 StackOverflowError
-    int maxDepth = JsonConfig.getInstance().getMaxDepth();
+    int maxDepth = JsonConfig.copyOf(null).getMaxDepth();
     if (++ctx.serializationDepth > maxDepth) {
       ctx.serializationDepth--;
       throw new JsonSerializationException(

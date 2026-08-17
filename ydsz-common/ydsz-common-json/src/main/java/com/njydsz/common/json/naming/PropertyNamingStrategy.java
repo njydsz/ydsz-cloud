@@ -20,10 +20,11 @@ import java.io.Serializable;
  * <p><b>使用示例：</b>
  *
  * <pre>
- * // 使用下划线命名策略
- * JsonConfig.getInstance().setNamingStrategy(
- *     PropertyNamingStrategy.SNAKE_CASE
- * );
+ * // 使用下划线命名策略（通过 install() 安装新配置）
+ * JsonConfig config = JsonConfig.builder()
+ *     .namingStrategy(PropertyNamingStrategy.SNAKE_CASE)
+ *     .build();
+ * JsonConfig.install(config);
  *
  * // 序列化结果：{"user_name":"John"}
  * User user = new User();

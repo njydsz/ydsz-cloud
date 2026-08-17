@@ -6,7 +6,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.auth.model.UserInfo;
+import com.njydsz.common.auth.service.TokenBlacklistService;
 import com.njydsz.common.auth.token.TokenService;
 import com.njydsz.common.core.constant.HeaderConstants;
 import com.njydsz.common.core.response.BaseResponse;
@@ -36,11 +36,14 @@ import com.njydsz.userinfo.server.config.UserInfoProperties;
  *
  * <p><b>接口路径：</b>{@code /api/v1/oauth2}
  *
- * <p><b>两步流程：</b>
+ * <p><b>端点清单（P1-4 补齐）：</b>
  *
  * <ol>
  *   <li>{@code GET /authorize} — 资源拥有者（用户）授权阶段，需携带已登录的 access_token， 签发短期授权码（5 分钟有效）
- *   <li>{@code POST /token} — 客户端用授权码 + clientSecret（或 PKCE code_verifier）换取 access_token
+ *   <li>{@code POST /token} — 授权码换取 token（grant_type=authorization_code），或 refresh_token 轮换（grant_type=refresh_token）
+ *   <li>{@code POST /revoke} — 撤销 token（RFC 7009）
+ *   <li>{@code POST /introspect} — 校验 token 元数据（RFC 7662，资源服务器用）
+ *   <li>{@code GET /userinfo} — 当前用户信息（OIDC userinfo 风格）
  * </ol>
  *
  * <p><b>PKCE（RFC 7636）支持：</b>
@@ -83,6 +86,7 @@ public class OAuth2Controller {
 
   private final RedisStringOps redisStringOps;
   private final TokenService tokenService;
+  private final TokenBlacklistService tokenBlacklistService;
   private final UserInfoProperties properties;
 
   /** 授权码有效期（秒）：5 分钟，符合 RFC 6749 §4.1.2 建议（推荐 ≤ 10 分钟） */
@@ -99,6 +103,12 @@ public class OAuth2Controller {
 
   /** PKCE code_verifier 最大长度（RFC 7636 §4.1） */
   private static final int PKCE_VERIFIER_MAX_LENGTH = 128;
+
+  /** OAuth2 grant_type：授权码模式 */
+  private static final String OAUTH2_GRANT_AUTHORIZATION_CODE = "authorization_code";
+
+  /** OAuth2 grant_type：refresh_token 轮换 */
+  private static final String OAUTH2_GRANT_REFRESH_TOKEN = "refresh_token";
 
   /**
    * 获取授权码
@@ -186,39 +196,55 @@ public class OAuth2Controller {
   }
 
   /**
-   * 用授权码换取 Token
+   * 用授权码或 refresh_token 换取 Token（OAuth2 token 端点）。
    *
-   * <p>OAuth2 授权码模式第二步。
+   * <p><b>支持的 grant_type：</b>
    *
-   * <p><b>流程：</b>
+   * <ul>
+   *   <li>{@code authorization_code} — 授权码模式：code + clientSecret（confidential）或 PKCE code_verifier（public）
+   *   <li>{@code refresh_token} — token 轮换：refreshToken + clientSecret，旧 refresh_token 立即失效
+   * </ul>
    *
-   * <ol>
-   *   <li>校验 clientId + clientSecret（confidential 客户端）或 PKCE code_verifier（public 客户端）
-   *   <li>从 Redis 读取授权码上下文
-   *   <li>校验传入的 clientId 与授权码内的 clientId 一致（防跨客户端重放）
-   *   <li>校验 PKCE code_verifier（如果授权码包含 code_challenge）
-   *   <li>删除授权码（一次性）
-   *   <li>为 userId 签发新的 access_token / refresh_token
-   *   <li>返回标准 OAuth2 token 响应（参考 RFC 6749 §5.1）
-   * </ol>
+   * @param grantType 授权类型（authorization_code / refresh_token）
+   * @param code 授权码（authorization_code 必填）
+   * @param refreshToken 刷新令牌（refresh_token 必填）
+   * @param clientId 客户端 ID
+   * @param clientSecret 客户端密钥（confidential 客户端必填）
+   * @param codeVerifier PKCE 码验证器（public 客户端 authorization_code 必填）
+   * @return 标准 OAuth2 token 响应
+   */
+  @PostMapping("/token")
+  @Operation(
+      summary = "用授权码或 refresh_token 换取 Token",
+      description = "支持 authorization_code（含 PKCE）与 refresh_token 两种授权类型")
+  public BaseResponse<Map<String, Object>> token(
+      @RequestParam String grantType,
+      @RequestParam(required = false) String code,
+      @RequestParam(required = false) String refreshToken,
+      @RequestParam String clientId,
+      @RequestParam(required = false) String clientSecret,
+      @RequestParam(required = false) String codeVerifier) {
+
+    if (OAUTH2_GRANT_REFRESH_TOKEN.equals(grantType)) {
+      return refreshTokenGrant(clientId, clientSecret, refreshToken);
+    }
+    if (OAUTH2_GRANT_AUTHORIZATION_CODE.equals(grantType)) {
+      return authorizationCodeGrant(code, clientId, clientSecret, codeVerifier);
+    }
+    throw new BusinessException(UserInfoExceptionCode.OAUTH2_CLIENT_INVALID);
+  }
+
+  /**
+   * 授权码模式换取 Token（RFC 6749 §4.1.3）。
    *
    * @param code 授权码（/authorize 返回）
    * @param clientId 客户端 ID
    * @param clientSecret 客户端密钥（confidential 客户端必填）
-   * @param codeVerifier PKCE 码验证器（public 客户端必填，用于验证 code_challenge）
-   * @return 标准 OAuth2 token 响应（含 access_token / refresh_token / token_type / expires_in / scope）
-   * @throws BusinessException {@code OAUTH2_CLIENT_INVALID} / {@code OAUTH2_CODE_INVALID} / {@code
-   *     OAUTH2_PKCE_VERIFIER_INVALID}
+   * @param codeVerifier PKCE 码验证器（public 客户端必填）
+   * @return 标准 OAuth2 token 响应
    */
-  @PostMapping("/token")
-  @Operation(
-      summary = "用授权码换取 Token",
-      description = "标准 OAuth2 token 端点，需校验 clientSecret 或 PKCE code_verifier")
-  public BaseResponse<Map<String, Object>> token(
-      @RequestParam String code,
-      @RequestParam String clientId,
-      @RequestParam(required = false) String clientSecret,
-      @RequestParam(required = false) String codeVerifier) {
+  private BaseResponse<Map<String, Object>> authorizationCodeGrant(
+      String code, String clientId, String clientSecret, String codeVerifier) {
 
     // 1. 读取并解析授权码上下文
     String storedContext = redisStringOps.get(CODE_KEY_PREFIX + code, String.class);
@@ -290,6 +316,144 @@ public class OAuth2Controller {
             properties.getTokenTtlSeconds(),
             "scope",
             "read write"));
+  }
+
+  /**
+   * refresh_token 轮换换取新 Token。
+   *
+   * <p>校验 clientId + clientSecret（confidential 客户端）后，验证 refresh_token 有效性并签发新双令牌，
+   * 旧 refresh_token 立即加入黑名单（一次性使用，防重放）。
+   *
+   * @param clientId 客户端 ID
+   * @param clientSecret 客户端密钥
+   * @param refreshToken 刷新令牌
+   * @return 标准 OAuth2 token 响应
+   */
+  private BaseResponse<Map<String, Object>> refreshTokenGrant(
+      String clientId, String clientSecret, String refreshToken) {
+
+    // 1. 客户端认证（RFC 6749 §6：refresh_token 流程强制 confidential 客户端认证）
+    if (!properties.validateOAuth2Client(clientId, clientSecret)) {
+      throw new BusinessException(UserInfoExceptionCode.OAUTH2_CLIENT_INVALID);
+    }
+
+    // 2. 校验 refresh_token 有效性
+    if (refreshToken == null || refreshToken.isBlank()
+        || !tokenService.validateRefreshToken(refreshToken)) {
+      log.warn("OAuth2 refresh token validation failed, possible token reuse attack");
+      throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
+    }
+
+    // 3. 解析用户信息
+    UserInfo userInfo = tokenService.parseRefreshToken(refreshToken);
+    if (userInfo == null) {
+      throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
+    }
+
+    // 4. 签发新双令牌（token 轮换）
+    String newAccessToken = tokenService.issueAccessToken(userInfo);
+    String newRefreshToken = tokenService.issueRefreshToken(userInfo);
+
+    // 5. 旧 refresh_token 加入黑名单（一次性使用，防重放）
+    tokenBlacklistService.addToBlacklist(refreshToken);
+
+    log.info("OAuth2 refresh token rotated: clientId={}, userId={}", clientId, userInfo.getUserId());
+
+    return BaseResponse.success(
+        Map.of(
+            "access_token",
+            newAccessToken,
+            "refresh_token",
+            newRefreshToken,
+            "token_type",
+            "Bearer",
+            "expires_in",
+            properties.getTokenTtlSeconds(),
+            "scope",
+            "read write"));
+  }
+
+  /**
+   * 撤销 Token（RFC 7009）。
+   *
+   * <p>将 access_token / refresh_token 加入黑名单，使其立即失效。 token_type_hint 可提示 token 类型，非必须。
+   *
+   * @param token 待撤销的令牌
+   * @param tokenTypeHint 令牌类型提示（access_token / refresh_token，可选）
+   * @return 成功响应（RFC 7009 规定撤销成功一律返回 200，不区分 token 是否有效）
+   */
+  @PostMapping("/revoke")
+  @Operation(summary = "撤销 Token", description = "RFC 7009：将 access_token / refresh_token 加入黑名单立即失效")
+  public BaseResponse<Void> revoke(
+      @RequestParam String token,
+      @RequestParam(required = false) String tokenTypeHint) {
+    if (token == null || token.isBlank()) {
+      throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
+    }
+    tokenBlacklistService.addToBlacklist(token);
+    log.info("OAuth2 token revoked: typeHint={}", tokenTypeHint);
+    return BaseResponse.success();
+  }
+
+  /**
+   * 校验 Token 元数据（RFC 7662 introspect）。
+   *
+   * <p>资源服务器在鉴权前调用，需以 confidential 客户端身份认证。 返回 {@code active} 及用户信息（active=true 时）。
+   *
+   * @param token 待校验的访问令牌
+   * @param clientId 客户端 ID
+   * @param clientSecret 客户端密钥
+   * @return Token 元数据（active / sub / username / tenantId）
+   */
+  @PostMapping("/introspect")
+  @Operation(summary = "校验 Token 元数据", description = "RFC 7662：资源服务器校验 access_token 有效性")
+  public BaseResponse<Map<String, Object>> introspect(
+      @RequestParam String token,
+      @RequestParam String clientId,
+      @RequestParam(required = false) String clientSecret) {
+
+    if (!properties.validateOAuth2Client(clientId, clientSecret)) {
+      throw new BusinessException(UserInfoExceptionCode.OAUTH2_CLIENT_INVALID);
+    }
+
+    Map<String, Object> result = new HashMap<>();
+    UserInfo userInfo = tokenService.parseAccessToken(token);
+    boolean active = userInfo != null && tokenService.validateAccessToken(token);
+    result.put("active", active);
+    if (active) {
+      result.put("sub", userInfo.getUserId());
+      result.put("username", userInfo.getUsername());
+      result.put("tenantId", userInfo.getTenantId());
+    }
+    return BaseResponse.success(result);
+  }
+
+  /**
+   * 当前用户信息（OIDC userinfo 风格）。
+   *
+   * <p>客户端携带 access_token（Authorization: Bearer xxx）调用，返回用户身份信息。
+   *
+   * @param authorization Authorization 请求头
+   * @return 用户信息（sub / preferred_username / tenant_id）
+   */
+  @GetMapping("/userinfo")
+  @Operation(summary = "当前用户信息", description = "OIDC userinfo：携带 access_token 获取用户身份")
+  public BaseResponse<Map<String, Object>> userinfo(
+      @RequestHeader(HeaderConstants.AUTHORIZATION) String authorization) {
+
+    if (authorization == null || !authorization.startsWith("Bearer ")) {
+      throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
+    }
+    String accessToken = authorization.substring(7);
+    UserInfo userInfo = tokenService.parseAccessToken(accessToken);
+    if (userInfo == null || !tokenService.validateAccessToken(accessToken)) {
+      throw new BusinessException(UserInfoExceptionCode.TOKEN_INVALID);
+    }
+    return BaseResponse.success(
+        Map.of(
+            "sub", userInfo.getUserId(),
+            "preferred_username", userInfo.getUsername(),
+            "tenant_id", userInfo.getTenantId()));
   }
 
   /**

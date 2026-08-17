@@ -56,11 +56,11 @@ public record JsonRuntimeConfig(
   private static final long serialVersionUID = 1L;
 
   /**
-   * 默认运行时配置快照（从 {@link JsonConfig#getInstance()} 派生）。
+   * 默认运行时配置快照（从全局已安装配置派生）。
    *
    * <p>不可变，可安全全局共享；对应无自定义配置时的默认序列化/反序列化行为。
    */
-  public static final JsonRuntimeConfig DEFAULT = from(JsonConfig.getInstance());
+  public static final JsonRuntimeConfig DEFAULT = from(JsonConfig.copyOf(null));
 
   /**
    * 从 {@link JsonConfig} 创建预计算运行时配置。

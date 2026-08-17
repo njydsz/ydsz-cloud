@@ -8,10 +8,8 @@ import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
-import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.nextwiki.domain.entity.FileNode;
 import com.njydsz.nextwiki.domain.entity.SearchIndex;
@@ -61,19 +59,6 @@ public class SearchDomainService {
 
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
-
-  /**
-   * 搜索索引事件桥接器（可选注入）。
-   *
-   * <p>将文件数据变更同步到 ydsz-common-search 统一搜索索引（ydsz_search_index）。 与 nw_search_index（本类维护的 DB
-   * 降级存储）共同构成双索引架构：
-   *
-   * <ul>
-   *   <li>{@code nw_search_index} — DB LIKE 降级索引，本类维护
-   *   <li>{@code ydsz_search_index} — 统一搜索主索引，本桥接器维护
-   * </ul>
-   */
-  private final ObjectProvider<SearchIndexEventBridge> searchIndexEventBridgeProvider;
 
   /**
    * 综合搜索（纯领域逻辑，数据由 server 层传入）
@@ -134,13 +119,6 @@ public class SearchDomainService {
    *
    * <p>根据文件节点和标签数据，构建 {@link SearchIndex} 实体。 实体持久化由 server 层通过 {@code SearchIndexRepository} 完成。
    *
-   * <p><b>双索引写入职责划分：</b>
-   *
-   * <ul>
-   *   <li>本类负责：构建 {@link SearchIndex} 实体 + 同步到统一搜索索引（{@code ydsz_search_index}）
-   *   <li>Server 层负责：持久化到 {@code nw_search_index} 表
-   * </ul>
-   *
    * @param node 文件节点实体（由 server 层查询传入，须保证非 null 且未删除）
    * @param tags 文件关联的标签列表（由 server 层查询传入，可为 null 或空）
    * @param content 提取的文本内容（可为 null）
@@ -190,47 +168,6 @@ public class SearchDomainService {
 
     log.info("[SearchDomainService] 搜索索引构建完成: fileNodeId={}", node.getId());
     return index;
-  }
-
-  /**
-   * 同步文件数据变更到统一搜索索引（ydsz_search_index）。
-   *
-   * <p>通过 {@link SearchIndexEventBridge} 异步写入。为传递提取的文档全文内容， 将 content 设置到 FileNode 的 transient 字段
-   * {@code searchableContent} 上， 供 {@link
-   * com.njydsz.nextwiki.server.search.WikiSearchProvider#toIndexDocument} 读取。
-   *
-   * @param node 文件节点实体
-   * @param content 提取的文本内容
-   */
-  public void syncSearchIndex(FileNode node, String content) {
-    SearchIndexEventBridge bridge = searchIndexEventBridgeProvider.getIfAvailable();
-    if (bridge == null) {
-      return;
-    }
-    // 设置 transient 字段传递全文内容（不持久化，仅用于索引同步）
-    if (content != null && !content.isEmpty()) {
-      node.setSearchableContent(
-          content.length() > MAX_SEARCHABLE_CONTENT_LENGTH
-              ? content.substring(0, MAX_SEARCHABLE_CONTENT_LENGTH)
-              : content);
-    }
-    bridge.indexUpsert("wiki", node);
-    log.debug("[SearchDomainService] 已同步到统一搜索索引: fileNodeId={}", node.getId());
-  }
-
-  /**
-   * 从统一搜索索引删除文档。
-   *
-   * @param fileNodeId 文件节点ID
-   */
-  public void removeIndex(String fileNodeId) {
-    log.info("[SearchDomainService] 删除统一搜索索引: fileNodeId={}", fileNodeId);
-    SearchIndexEventBridge bridge = searchIndexEventBridgeProvider.getIfAvailable();
-    if (bridge == null) {
-      return;
-    }
-    bridge.indexDelete("wiki", fileNodeId);
-    log.debug("[SearchDomainService] 已从统一搜索索引删除: fileNodeId={}", fileNodeId);
   }
 
   // ==================== 私有方法 ====================

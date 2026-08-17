@@ -20,7 +20,6 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ObjectNode;
 import com.njydsz.cronjob.domain.dag.DagInstanceStatus;
 import com.njydsz.cronjob.domain.dag.DagNodeStatus;
-import com.njydsz.cronjob.domain.dag.SpELConditionEvaluator;
 import com.njydsz.cronjob.domain.entity.dag.JobDag;
 import com.njydsz.cronjob.domain.entity.dag.JobDagInstance;
 import com.njydsz.cronjob.domain.entity.dag.JobDagNodeInstance;
@@ -35,22 +34,22 @@ import com.njydsz.cronjob.server.core.TaskCompletedEvent;
 import com.njydsz.cronjob.server.core.dispatch.TaskDispatcher;
 
 /**
- * DAG 实例执行器（P2 DAG 增强）。
+ * DAG 实例执行器。
  *
  * <p>负责基于 DAG 定义（{@link DagDefinition}）执行 DAG 实例：
  *
  * <ol>
  *   <li>{@link #execute(String)}：创建节点实例，派发起始节点（无入边）
- *   <li>{@link #onTaskCompleted(TaskCompletedEvent)}：监听任务完成事件， 通过查询节点实例表判断是否为 DAG 节点，更新节点状态并触发后继
+ *   <li>{@link #onTaskCompleted(TaskCompletedEvent)}：监听任务完成事件，通过查询节点实例表判断是否为 DAG 节点，更新节点状态并触发后继
  *   <li>所有节点完成后，更新 DAG 实例终态（SUCCESS/FAILED/PARTIAL_SUCCESS）
  * </ol>
  *
- * <p><b>精简方向</b>：当前仅推荐使用 TASK 类型和线性依赖的 DAG。控制节点（CONDITION/LOOP/PARALLEL_GATEWAY）
- * 已标记废弃，将在后续版本移除，建议使用工作流引擎（如 Flowable/Camunda）替代复杂编排场景。
+ * <p>支持 TASK / SUB_WORKFLOW / APPROVAL 三种节点类型。CONDITION / LOOP / PARALLEL_GATEWAY 控制节点
+ * 已于 v1.2.0 移除，建议使用工作流引擎（Flowable/Camunda）替代复杂编排场景。
  *
  * <h3>跨节点上下文传递（P2-5）</h3>
  *
- * <p>节点执行结果写入 DAG 实例级上下文（{@code contextJson}）， 后继节点可通过 {@link JobDagInstanceMapper#updateContext}
+ * <p>节点执行结果写入 DAG 实例级上下文（{@code contextJson}），后继节点可通过 {@link JobDagInstanceMapper#updateContext}
  * 读取。
  *
  * @author ydsz-team
@@ -68,9 +67,6 @@ public class DagInstanceExecutor {
   private final JobLogMapper jobLogMapper;
   private final DagDefinitionCodec dagDefinitionCodec;
   private final TaskDispatcher taskDispatcher;
-
-  /** P1-8: SpEL 条件表达式引擎 */
-  private final SpELConditionEvaluator spELConditionEvaluator;
 
   /**
    * 异步执行 DAG 实例。
@@ -166,10 +162,7 @@ public class DagInstanceExecutor {
       JobDagNodeInstance nodeInstance = new JobDagNodeInstance();
       nodeInstance.setDagInstanceId(dagInstanceId);
       nodeInstance.setDagId(instance.getDagId());
-      // P2-1: 控制节点（CONDITION/LOOP/PARALLEL_GATEWAY）jobId 可能为 null，
-      // 使用 jobKey 作为 jobId 的兜底值，确保后续 selectByDagInstanceAndJob 查询能命中
-      String effectiveJobId = (node.jobId() != null) ? node.jobId() : node.jobKey();
-      nodeInstance.setJobId(effectiveJobId);
+      nodeInstance.setJobId(node.jobId());
       nodeInstance.setJobKey(node.jobKey());
       nodeInstance.setNodeStatus(DagNodeStatus.PENDING.name());
       nodeInstance.setRetryCount(0);
@@ -203,24 +196,17 @@ public class DagInstanceExecutor {
   /**
    * 派发单个 DAG 节点任务。
    *
-   * <p>P2-1 增强：根据 {@link DagNode#nodeType()} 分发到不同的处理逻辑：
+   * <p>所有节点类型（TASK / SUB_WORKFLOW / APPROVAL）均通过 {@link TaskDispatcher#dispatch} 执行，
+   * 区别由 {@link com.njydsz.cronjob.domain.job.JobHandler} 实现内部处理。
    *
-   * <ul>
-   *   <li>TASK：现有逻辑（调用 handler 执行）
-   *   <li>CONDITION：评估 conditionExpression 决定走哪条边
-   *   <li>LOOP：重复执行下游节点 loopCount 次
-   *   <li>PARALLEL_GATEWAY：并行执行所有下游分支
-   * </ul>
+   * @param dagInstanceId DAG 实例 ID
+   * @param dagId DAG 定义 ID
+   * @param node DAG 节点
+   * @param definition DAG 定义
    */
   private void dispatchNode(
       String dagInstanceId, String dagId, DagNode node, DagDefinition definition) {
-    DagNode.NodeType nodeType = node.resolveNodeType();
-    switch (nodeType) {
-      case CONDITION -> dispatchConditionNode(dagInstanceId, dagId, node, definition);
-      case LOOP -> dispatchLoopNode(dagInstanceId, dagId, node, definition);
-      case PARALLEL_GATEWAY -> dispatchParallelGatewayNode(dagInstanceId, dagId, node, definition);
-      default -> dispatchTaskNode(dagInstanceId, dagId, node, definition);
-    }
+    dispatchTaskNode(dagInstanceId, dagId, node, definition);
   }
 
   /** 派发 TASK 类型节点（现有逻辑：调用 handler 执行）。 */
@@ -271,305 +257,6 @@ public class DagInstanceExecutor {
       update.setLogId(logId);
       dagNodeInstanceMapper.updateById(update);
     }
-  }
-
-  // ==================== P2-1: 条件分支 / 循环 / 并行网关 ====================
-
-  /**
-   * P2-1: 派发 CONDITION 条件分支节点。
-   *
-   * <p>评估 conditionExpression 表达式（如 {@code ${nodeA.result=='success'}}）， 根据评估结果决定是否触发后继：
-   *
-   * <ul>
-   *   <li>true：标记节点 SUCCESS，触发后继节点（走对应边）
-   *   <li>false：标记节点 SKIPPED，不触发后继（跳过边）
-   * </ul>
-   */
-  private void dispatchConditionNode(
-      String dagInstanceId, String dagId, DagNode node, DagDefinition definition) {
-    JobDagNodeInstance nodeInstance =
-        dagNodeInstanceMapper.selectByDagInstanceAndJob(dagInstanceId, effectiveJobId(node));
-    if (nodeInstance == null) {
-      log.warn(
-          "[DagInstance] CONDITION 节点实例不存在: instanceId={} jobKey={}", dagInstanceId, node.jobKey());
-      return;
-    }
-
-    // 标记 RUNNING
-    dagNodeInstanceMapper.markRunning(nodeInstance.getId(), LocalDateTime.now());
-
-    // 构建评估上下文：从 DAG 实例 contextJson 获取上游节点结果
-    Map<String, Object> context = buildConditionContext(dagInstanceId);
-
-    // 评估条件表达式
-    boolean conditionResult = evaluateCondition(node.conditionExpression(), context);
-    log.info(
-        "[DagInstance] CONDITION 节点评估: instanceId={} jobKey={} expr={} result={}",
-        dagInstanceId,
-        node.jobKey(),
-        node.conditionExpression(),
-        conditionResult);
-
-    LocalDateTime now = LocalDateTime.now();
-    if (conditionResult) {
-      // 条件为 true: 标记 SUCCESS, 触发后继
-      dagNodeInstanceMapper.markFinished(
-          nodeInstance.getId(), DagNodeStatus.SUCCESS.name(), now, 0, null, null, null);
-      triggerSuccessors(dagInstanceId, dagId, node.jobKey(), definition);
-    } else {
-      // 条件为 false: 标记 SKIPPED, 不触发后继
-      dagNodeInstanceMapper.markSkipped(nodeInstance.getId());
-    }
-
-    // 检查是否所有节点完成（CONDITION 节点本身是控制节点，立即终态）
-    finalizeInstance(dagInstanceId);
-  }
-
-  /**
-   * P2-1: 派发 LOOP 循环节点。
-   *
-   * <p>LOOP 节点作为控制节点，标记 SUCCESS 后将下游节点作为循环体， 重复派发 loopCount 次。每次迭代创建新的节点实例（jobKey 加迭代后缀），
-   * 避免与原始节点实例状态冲突。
-   */
-  private void dispatchLoopNode(
-      String dagInstanceId, String dagId, DagNode node, DagDefinition definition) {
-    JobDagNodeInstance loopInstance =
-        dagNodeInstanceMapper.selectByDagInstanceAndJob(dagInstanceId, effectiveJobId(node));
-    if (loopInstance == null) {
-      log.warn("[DagInstance] LOOP 节点实例不存在: instanceId={} jobKey={}", dagInstanceId, node.jobKey());
-      return;
-    }
-
-    // 标记 LOOP 控制节点 RUNNING → SUCCESS
-    LocalDateTime now = LocalDateTime.now();
-    dagNodeInstanceMapper.markRunning(loopInstance.getId(), now);
-    dagNodeInstanceMapper.markFinished(
-        loopInstance.getId(), DagNodeStatus.SUCCESS.name(), now, 0, null, null, null);
-
-    // 获取循环体（下游节点）
-    List<DagEdge> outgoing = definition.outgoingEdges(node.jobKey());
-    int loopCount = (node.loopCount() != null && node.loopCount() > 0) ? node.loopCount() : 1;
-    log.info(
-        "[DagInstance] LOOP 节点循环执行: instanceId={} jobKey={} loopCount={}",
-        dagInstanceId,
-        node.jobKey(),
-        loopCount);
-
-    // 重复派发循环体 loopCount 次
-    for (int i = 0; i < loopCount; i++) {
-      for (DagEdge edge : outgoing) {
-        DagNode bodyNode = definition.findNode(edge.to());
-        if (bodyNode == null) {
-          continue;
-        }
-        // 为每次迭代创建新的节点实例（jobKey 加迭代后缀以区分）
-        JobDagNodeInstance iterInstance = new JobDagNodeInstance();
-        iterInstance.setDagInstanceId(dagInstanceId);
-        iterInstance.setDagId(dagId);
-        iterInstance.setJobId(bodyNode.jobId());
-        iterInstance.setJobKey(bodyNode.jobKey() + "#loop" + i);
-        iterInstance.setNodeStatus(DagNodeStatus.PENDING.name());
-        iterInstance.setRetryCount(0);
-        iterInstance.setMaxRetries(resolveNodeMaxRetries(bodyNode.jobId()));
-        iterInstance.setTenantId(loopInstance.getTenantId());
-        dagNodeInstanceMapper.insert(iterInstance);
-
-        // 直接派发循环体任务（使用新创建的迭代实例，避免与原始实例状态冲突）
-        dispatchTaskNodeWithInstance(dagInstanceId, bodyNode, iterInstance);
-      }
-    }
-  }
-
-  /**
-   * 使用指定的节点实例派发 TASK 节点（供 LOOP 迭代复用）。
-   *
-   * <p>与 {@link #dispatchTaskNode} 的区别：本方法跳过实例查找， 直接使用传入的实例进行派发，支持 LOOP 场景下每次迭代使用独立实例。
-   */
-  private void dispatchTaskNodeWithInstance(
-      String dagInstanceId, DagNode node, JobDagNodeInstance instance) {
-    Job job = jobMapper.selectById(node.jobId());
-    if (job == null) {
-      log.warn(
-          "[DagInstance] 循环体任务不存在, 标记 FAILED: instanceId={} jobKey={}",
-          dagInstanceId,
-          node.jobKey());
-      dagNodeInstanceMapper.markFinished(
-          instance.getId(),
-          DagNodeStatus.FAILED.name(),
-          LocalDateTime.now(),
-          0,
-          null,
-          "任务不存在",
-          null);
-      return;
-    }
-    if (!"NORMAL".equals(job.getStatus())) {
-      log.info(
-          "[DagInstance] 循环体任务非 NORMAL 状态, 标记 SKIPPED: instanceId={} jobKey={} status={}",
-          dagInstanceId,
-          node.jobKey(),
-          job.getStatus());
-      dagNodeInstanceMapper.markSkipped(instance.getId());
-      return;
-    }
-
-    // 标记迭代实例 RUNNING
-    dagNodeInstanceMapper.markRunning(instance.getId(), LocalDateTime.now());
-
-    // 派发任务（triggerType=DEPENDENT, 抢锁）
-    String logId = taskDispatcher.dispatch(job, null, "DEPENDENT");
-    log.info(
-        "[DagInstance] 循环体节点派发: instanceId={} jobKey={} iterLogId={}",
-        dagInstanceId,
-        instance.getJobKey(),
-        logId);
-
-    if (logId != null) {
-      JobDagNodeInstance update = new JobDagNodeInstance();
-      update.setId(instance.getId());
-      update.setLogId(logId);
-      dagNodeInstanceMapper.updateById(update);
-    }
-  }
-
-  /**
-   * P2-1: 派发 PARALLEL_GATEWAY 并行网关节点。
-   *
-   * <p>PARALLEL_GATEWAY 节点作为控制节点，标记 SUCCESS 后使用 {@link CompletableFuture} 并行执行所有出边对应的子图。
-   * 所有分支并行派发，不等待完成（各分支通过事件驱动自行推进）。
-   */
-  private void dispatchParallelGatewayNode(
-      String dagInstanceId, String dagId, DagNode node, DagDefinition definition) {
-    JobDagNodeInstance gatewayInstance =
-        dagNodeInstanceMapper.selectByDagInstanceAndJob(dagInstanceId, effectiveJobId(node));
-    if (gatewayInstance == null) {
-      log.warn(
-          "[DagInstance] PARALLEL_GATEWAY 节点实例不存在: instanceId={} jobKey={}",
-          dagInstanceId,
-          node.jobKey());
-      return;
-    }
-
-    // 标记并行网关控制节点 RUNNING → SUCCESS
-    LocalDateTime now = LocalDateTime.now();
-    dagNodeInstanceMapper.markRunning(gatewayInstance.getId(), now);
-    dagNodeInstanceMapper.markFinished(
-        gatewayInstance.getId(), DagNodeStatus.SUCCESS.name(), now, 0, null, null, null);
-
-    // 获取所有出边对应的子节点
-    List<DagEdge> outgoing = definition.outgoingEdges(node.jobKey());
-    int branches =
-        node.parallelBranches() != null && node.parallelBranches() > 0
-            ? node.parallelBranches()
-            : outgoing.size();
-    log.info(
-        "[DagInstance] PARALLEL_GATEWAY 并行派发: instanceId={} jobKey={} branches={}",
-        dagInstanceId,
-        node.jobKey(),
-        branches);
-
-    // 使用 CompletableFuture 并行派发所有下游分支
-    List<CompletableFuture<Void>> futures = new ArrayList<>();
-    for (DagEdge edge : outgoing) {
-      DagNode branchNode = definition.findNode(edge.to());
-      if (branchNode == null) {
-        continue;
-      }
-      futures.add(
-          CompletableFuture.runAsync(
-              () -> {
-                try {
-                  dispatchNode(dagInstanceId, dagId, branchNode, definition);
-                } catch (Exception e) {
-                  log.error(
-                      "[DagInstance] 并行分支派发异常: instanceId={} jobKey={} reason={}",
-                      dagInstanceId,
-                      branchNode.jobKey(),
-                      e.getMessage(),
-                      e);
-                }
-              }));
-    }
-    // 等待所有分支派发完成（派发本身是非阻塞的，这里只是确保所有分支都已提交）
-    if (!futures.isEmpty()) {
-      CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
-    }
-  }
-
-  /**
-   * P2-1: 构建条件评估上下文。
-   *
-   * <p>从 DAG 实例级 contextJson 中提取所有 jobKey → 节点结果 的映射， 同时补充每个节点的 status（从节点实例表读取）。
-   *
-   * @param dagInstanceId DAG 实例 ID
-   * @return 上下文 Map，key 为 jobKey，value 为节点结果对象（含 result/status 字段）
-   */
-  private Map<String, Object> buildConditionContext(String dagInstanceId) {
-    Map<String, Object> context = new HashMap<>();
-    // 1. 从 contextJson 获取节点结果
-    Map<String, Object> dagContext = getDagContext(dagInstanceId);
-    context.putAll(dagContext);
-    // 2. 补充节点状态（status 字段）
-    List<JobDagNodeInstance> nodes = dagNodeInstanceMapper.selectByDagInstanceId(dagInstanceId);
-    for (JobDagNodeInstance node : nodes) {
-      if (node.getJobKey() == null) {
-        continue;
-      }
-      // 若 contextJson 中已有该 jobKey 的结果，补充 status；否则添加完整对象
-      Object existing = context.get(node.getJobKey());
-      if (existing instanceof Map<?, ?> map) {
-        @SuppressWarnings("unchecked")
-        Map<String, Object> jo = (Map<String, Object>) map;
-        jo.put("status", node.getNodeStatus());
-      } else {
-        Map<String, Object> jo = new LinkedHashMap<>();
-        jo.put("status", node.getNodeStatus());
-        jo.put("result", node.getResultJson());
-        context.put(node.getJobKey(), jo);
-      }
-    }
-    return context;
-  }
-
-  /**
-   * P2-1: 评估条件表达式。
-   *
-   * <p>支持的表达式格式：{@code ${nodeId.field=='value'}} 或 {@code ${nodeId.field=='value'}}
-   *
-   * <ul>
-   *   <li>支持 == 和 != 操作符
-   *   <li>field 支持 result / status
-   *   <li>value 用单引号或双引号包裹
-   *   <li>从上下文中获取上游节点的 result/status 进行比较
-   * </ul>
-   *
-   * <p>示例：
-   *
-   * <ul>
-   *   <li>{@code ${nodeA.result=='success'}} — 判断 nodeA 的结果是否为 success
-   *   <li>{@code ${nodeA.status!='FAILED'}} — 判断 nodeA 的状态是否非 FAILED
-   * </ul>
-   *
-   * @param expression 条件表达式
-   * @param context 上下文（key=jobKey, value=节点结果对象）
-   * @return 评估结果；表达式为空或解析失败时返回 false
-   */
-  public boolean evaluateCondition(String expression, Map<String, Object> context) {
-    // P1-8: 优先使用 SpEL 引擎评估条件表达式
-    return spELConditionEvaluator.evaluate(expression, context);
-  }
-
-  /**
-   * P2-1: 获取节点的有效 Job ID。
-   *
-   * <p>控制节点（CONDITION/LOOP/PARALLEL_GATEWAY）的 jobId 可能为 null， 此时使用 jobKey 作为兜底（doExecute
-   * 创建实例时已用此规则）。
-   *
-   * @param node DAG 节点
-   * @return 有效 Job ID（永不为 null）
-   */
-  private String effectiveJobId(DagNode node) {
-    return (node.jobId() != null) ? node.jobId() : node.jobKey();
   }
 
   // ==================== 节点完成处理 ====================
@@ -669,14 +356,6 @@ public class DagInstanceExecutor {
       mergeNodeResultToContext(dagInstanceId, nodeInstance.getJobKey(), nodeResultJson);
     }
 
-    // P0-4: LOOP iter 实例完成后，不直接触发后继（iter jobKey 带 #loop 后缀，DAG 定义中无对应边）。
-    // 而是等所有 iter 完成后，标记原始 body 节点并触发其后继（使用原始 jobKey 查 DAG 定义边）。
-    if (isLoopIterJobKey(nodeInstance.getJobKey())) {
-      handleLoopIterCompletion(nodeInstance, finalStatus);
-      finalizeInstance(dagInstanceId);
-      return;
-    }
-
     // 加载 DAG 实例和定义
     JobDagInstance instance = dagInstanceMapper.selectById(dagInstanceId);
     if (instance == null || !DagInstanceStatus.RUNNING.name().equals(instance.getStatus())) {
@@ -704,133 +383,6 @@ public class DagInstanceExecutor {
 
     // 检查是否所有节点完成
     finalizeInstance(dagInstanceId);
-  }
-
-  /**
-   * P0-4: LOOP iter 实例完成处理。
-   *
-   * <p>当 LOOP 循环体的某个 iter 实例完成时，不直接触发后继（因为 iter 实例的 jobKey 带 {@code #loop<i>} 后缀，DAG
-   * 定义中无对应边）。而是检查同一 body 节点的所有 iter 实例是否全部完成：
-   *
-   * <ul>
-   *   <li>全部完成且全部成功 → 标记原始 body 节点 SUCCESS，触发其后继（使用原始 jobKey）
-   *   <li>全部完成但有失败 → 标记原始 body 节点 FAILED，按 DAG 级失败策略处理
-   *   <li>仍有未完成 iter → 不做处理，等待最后一个 iter 完成时再聚合
-   * </ul>
-   *
-   * <p>并发安全：使用 {@code markRunning} 的 CAS 语义（PENDING → RUNNING）确保 多个 iter 同时完成时，原始 body 节点只被一个线程标记。
-   *
-   * @param iterInstance 完成的 iter 实例（jobKey 含 {@code #loop} 后缀）
-   * @param iterFinalStatus iter 实例的终态（SUCCESS/FAILED）
-   */
-  private void handleLoopIterCompletion(
-      JobDagNodeInstance iterInstance, DagNodeStatus iterFinalStatus) {
-    String dagInstanceId = iterInstance.getDagInstanceId();
-    String originalJobKey = stripLoopSuffix(iterInstance.getJobKey());
-
-    // 查询同一 jobId 的所有实例（原始 body + 所有 iter）
-    List<JobDagNodeInstance> allInstances =
-        dagNodeInstanceMapper.selectAllByDagInstanceAndJob(dagInstanceId, iterInstance.getJobId());
-
-    // 分离原始 body 节点实例和 iter 实例
-    JobDagNodeInstance originalBody = null;
-    List<JobDagNodeInstance> iterInstances = new ArrayList<>();
-    for (JobDagNodeInstance inst : allInstances) {
-      if (isLoopIterJobKey(inst.getJobKey())) {
-        iterInstances.add(inst);
-      } else {
-        originalBody = inst;
-      }
-    }
-
-    if (originalBody == null) {
-      log.warn(
-          "[DagInstance] LOOP 原始 body 节点实例不存在: instanceId={} jobKey={}",
-          dagInstanceId,
-          originalJobKey);
-      return;
-    }
-
-    // 检查是否所有 iter 实例都已终态（非 PENDING/RUNNING）
-    long pendingCount =
-        iterInstances.stream()
-            .filter(
-                inst ->
-                    DagNodeStatus.PENDING.name().equals(inst.getNodeStatus())
-                        || DagNodeStatus.RUNNING.name().equals(inst.getNodeStatus()))
-            .count();
-    if (pendingCount > 0) {
-      log.debug(
-          "[DagInstance] LOOP iter 未全部完成, 等待: instanceId={} jobKey={} pending={} total={}",
-          dagInstanceId,
-          originalJobKey,
-          pendingCount,
-          iterInstances.size());
-      return;
-    }
-
-    // 所有 iter 完成，聚合状态
-    boolean allSuccess =
-        iterInstances.stream()
-            .allMatch(inst -> DagNodeStatus.SUCCESS.name().equals(inst.getNodeStatus()));
-
-    // CAS 标记原始 body 节点（PENDING → RUNNING → SUCCESS/FAILED）
-    // 使用 markRunning 的 CAS 语义（PENDING → RUNNING）确保只被一个线程标记
-    LocalDateTime now = LocalDateTime.now();
-    int runningUpdated = dagNodeInstanceMapper.markRunning(originalBody.getId(), now);
-    if (runningUpdated == 0) {
-      log.debug(
-          "[DagInstance] LOOP body 节点已被其他线程处理, 跳过: instanceId={} jobKey={}",
-          dagInstanceId,
-          originalJobKey);
-      return;
-    }
-
-    DagNodeStatus bodyFinalStatus = allSuccess ? DagNodeStatus.SUCCESS : DagNodeStatus.FAILED;
-    String errorMessage = allSuccess ? null : "LOOP 循环体存在失败迭代";
-    dagNodeInstanceMapper.markFinished(
-        originalBody.getId(), bodyFinalStatus.name(), now, 0, null, errorMessage, null);
-
-    log.info(
-        "[DagInstance] LOOP body 全部 iter 完成: instanceId={} jobKey={} iterCount={} bodyStatus={}",
-        dagInstanceId,
-        originalJobKey,
-        iterInstances.size(),
-        bodyFinalStatus);
-
-    // 加载 DAG 实例和定义，触发后继或处理失败
-    JobDagInstance instance = dagInstanceMapper.selectById(dagInstanceId);
-    if (instance == null || !DagInstanceStatus.RUNNING.name().equals(instance.getStatus())) {
-      return;
-    }
-    JobDag dag = dagMapper.selectById(instance.getDagId());
-    if (dag == null) {
-      return;
-    }
-    DagDefinition definition = dagDefinitionCodec.fromJson(dag.getDagDefinition());
-
-    if (allSuccess) {
-      // 触发原始 body 节点的后继（使用原始 jobKey 查 DAG 定义中的边）
-      triggerSuccessors(dagInstanceId, instance.getDagId(), originalJobKey, definition);
-    } else {
-      // 按 DAG 级失败策略处理（对原始 body 节点）
-      DagFailureStrategy dagStrategy = DagFailureStrategy.parse(dag.getFailStrategy());
-      handleNodeFailure(dagInstanceId, instance.getDagId(), originalBody, definition, dagStrategy);
-    }
-  }
-
-  /** P0-4: 判断 jobKey 是否为 LOOP iter 实例（带 {@code #loop<i>} 后缀）。 */
-  private boolean isLoopIterJobKey(String jobKey) {
-    return jobKey != null && jobKey.contains("#loop");
-  }
-
-  /** P0-4: 去除 LOOP iter 后缀，得到原始 jobKey。 */
-  private String stripLoopSuffix(String jobKey) {
-    if (jobKey == null) {
-      return null;
-    }
-    int idx = jobKey.indexOf("#loop");
-    return idx > 0 ? jobKey.substring(0, idx) : jobKey;
   }
 
   /**
@@ -931,11 +483,10 @@ public class DagInstanceExecutor {
   /**
    * P2-6: 跳过失败节点的所有直接后继（递归跳过后继的后继）。
    *
-   * <p>与 {@link #skipPendingNodes} 的区别：本方法只跳过失败节点的后继链路， 不影响其他分支的 PENDING 节点。
+   * <p>与 {@link #skipPendingNodes} 的区别：本方法只跳过失败节点的后继链路，不影响其他分支的 PENDING 节点。
    */
   private void skipSubsequentNodes(
       String dagInstanceId, String failedJobKey, DagDefinition definition) {
-    // 使用 DagParser 的后代查询，递归跳过所有后继
     List<DagEdge> outgoing = definition.outgoingEdges(failedJobKey);
     for (DagEdge edge : outgoing) {
       skipNodeAndSubsequent(dagInstanceId, edge.to(), definition);
@@ -945,15 +496,12 @@ public class DagInstanceExecutor {
   /** 递归跳过指定节点及其后继（仅 PENDING 状态才跳过）。 */
   private void skipNodeAndSubsequent(
       String dagInstanceId, String jobKey, DagDefinition definition) {
-    // 通过 jobKey 查找节点，再查节点实例
     DagNode node = definition.findNode(jobKey);
     if (node == null) {
       return;
     }
-    // P2-1: 控制节点 jobId 可能为 null，使用 jobKey 兜底
-    String lookupId = node.jobId() != null ? node.jobId() : node.jobKey();
     JobDagNodeInstance nodeInstance =
-        dagNodeInstanceMapper.selectByDagInstanceAndJob(dagInstanceId, lookupId);
+        dagNodeInstanceMapper.selectByDagInstanceAndJob(dagInstanceId, node.jobId());
     if (nodeInstance != null && DagNodeStatus.PENDING.name().equals(nodeInstance.getNodeStatus())) {
       dagNodeInstanceMapper.markSkipped(nodeInstance.getId());
       log.debug(
@@ -1032,22 +580,23 @@ public class DagInstanceExecutor {
   /**
    * 检查指定节点的所有前置节点是否都成功完成。
    *
-   * <p>P2-1: 支持控制节点（CONDITION/LOOP/PARALLEL_GATEWAY）jobId 为 null 的场景， 使用 jobKey 作为查询兜底。
+   * @param dagInstanceId DAG 实例 ID
+   * @param jobKey 当前节点 jobKey
+   * @param definition DAG 定义
+   * @return true 表示所有前置节点均已成功完成
    */
   private boolean areAllPredecessorsSuccessful(
       String dagInstanceId, String jobKey, DagDefinition definition) {
     List<DagEdge> incoming = definition.incomingEdges(jobKey);
     if (incoming.isEmpty()) {
-      return true; // 无前置，可直接执行
+      return true;
     }
     for (DagEdge edge : incoming) {
       DagNode predDagNode = definition.findNode(edge.from());
-      // P2-1: 控制节点 jobId 可能为 null，使用 jobKey 兜底
-      String lookupId = predDagNode.jobId() != null ? predDagNode.jobId() : predDagNode.jobKey();
       JobDagNodeInstance predNode =
-          dagNodeInstanceMapper.selectByDagInstanceAndJob(dagInstanceId, lookupId);
+          dagNodeInstanceMapper.selectByDagInstanceAndJob(dagInstanceId, predDagNode.jobId());
       if (predNode == null || !DagNodeStatus.SUCCESS.name().equals(predNode.getNodeStatus())) {
-        return false; // 前置未成功完成
+        return false;
       }
     }
     return true;

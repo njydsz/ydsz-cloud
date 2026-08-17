@@ -933,7 +933,7 @@ public final class ValueWriter {
     String globalFormat = SerializationProvider.getDateFormat();
     // 回退到全局单例配置
     if (globalFormat == null || globalFormat.isEmpty()) {
-      globalFormat = JsonConfig.getInstance().getDateFormat();
+      globalFormat = JsonConfig.copyOf(null).getDateFormat();
     }
     if (globalFormat != null && !globalFormat.isEmpty()) {
       DateTimeFormatter formatter = getCachedFormatter(globalFormat);

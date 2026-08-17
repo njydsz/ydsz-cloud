@@ -80,7 +80,7 @@ public class JsonConfigViewer implements JsonConfigViewerMBean {
 
   @Override
   public String getConfigDetails() {
-    JsonConfig config = JsonConfig.getInstance();
+    JsonConfig config = JsonConfig.copyOf(null);
     if (config == null) {
       return "JsonConfig not initialized";
     }

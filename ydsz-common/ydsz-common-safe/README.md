@@ -70,7 +70,7 @@
 | `RateLimitMetricsCollector` | Micrometer 指标采集 |
 | `RateLimitService` | 限流服务封装 |
 
-**支持的限流算法**（`RateLimitAlgorithm` 枚举）：`TOKEN_BUCKET`（令牌桶）、`CONCURRENCY`（并发限制）。
+**支持的限流算法**（`RateLimitAlgorithm` 枚举）：`TOKEN_BUCKET`（令牌桶）。
 
 **支持的限流维度**（`RateLimitDimension` 枚举，11 种）：`API`、`USER`、`IP`、`GLOBAL`、`HOT_PARAM`、`TENANT`、`DEVICE`、`HOT_USER`、`HOT_GOODS`、`CLUSTER`、`ADAPTIVE`。
 
