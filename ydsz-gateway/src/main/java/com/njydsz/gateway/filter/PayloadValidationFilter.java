@@ -20,15 +20,23 @@ import com.njydsz.gateway.config.GatewayFilterOrder;
 /**
  * P1-8: 请求体安全校验过滤器
  *
- * <p>对标 Kong 的 request-size-limiting 和 json-schema 插件， 在网关层校验请求体大小和 JSON 嵌套深度，防止恶意请求导致 OOM。
+ * <p>对标 Kong 的 request-size-limiting 插件，在网关层校验请求体大小与 Content-Type，防止恶意请求导致 OOM。
  *
  * <h3>校验项</h3>
  *
  * <ul>
  *   <li>请求体大小限制（可配置，默认 10MB）
- *   <li>JSON 嵌套深度限制（可配置，默认 50 层）
  *   <li>Content-Type 严格校验（POST/PUT/PATCH 必须指定 Content-Type）
  * </ul>
+ *
+ * <p><b>职责边界（P0-B2）：</b>网关层<b>仅</b>做传输层防护（大小 + Content-Type 预检），
+ * 不做 JSON 内容级校验——读取并缓存全量请求体做深度/Schema 校验会引入额外内存拷贝与性能损耗。
+ * JSON 嵌套深度、字段校验由下游服务解析器负责（其本身就具备递归深度保护）。历史配置项
+ * {@code max-json-depth} 为死配置，已移除。
+ *
+ * <p><b>与 default-filter RequestSize 的分工：</b>{@code spring.cloud.gateway.default-filters}
+ * 中的 {@code RequestSize} 对全部请求（含 GET）做传输层上限拦截；本过滤器仅对 POST/PUT/PATCH
+ * 做 Content-Type 与大小预检，两者互补不冲突。
  *
  * <h3>配置方式</h3>
  *
@@ -38,7 +46,6 @@ import com.njydsz.gateway.config.GatewayFilterOrder;
  *     payload-validation:
  *       enabled: true
  *       max-body-size-mb: 10           # 请求体最大大小（MB）
- *       max-json-depth: 50             # JSON 最大嵌套深度
  *       strict-content-type: true      # 是否强制校验 Content-Type
  * </pre>
  *
@@ -60,20 +67,16 @@ public class PayloadValidationFilter implements GlobalFilter, Ordered {
   @Value("${ydsz.gateway.payload-validation.max-body-size-mb:10}")
   private int maxBodySizeMb;
 
-  @Value("${ydsz.gateway.payload-validation.max-json-depth:50}")
-  private int maxJsonDepth;
-
   @Value("${ydsz.gateway.payload-validation.strict-content-type:true}")
   private boolean strictContentType;
 
   private static final long BYTES_PER_MB = 1024L * 1024L;
-  private static final int JSON_DEPTH_WARN_THRESHOLD = 30;
 
   /**
    * 请求体安全校验过滤器：限制请求体大小与 Content-Type。
    *
    * <p>仅对 POST/PUT/PATCH 等有请求体的方法生效；校验 Content-Type 是否缺失、 请求体是否超过 {@code max-body-size-mb}（默认
-   * 10MB），超限返回 400。 JSON 深度校验委托下游服务（避免在网关缓存全量请求体影响性能）。
+   * 10MB），超限返回 400。
    *
    * @param exchange 服务器 Web 交换上下文
    * @param chain 网关过滤器链
@@ -102,7 +105,8 @@ public class PayloadValidationFilter implements GlobalFilter, Ordered {
           "Content-Type 缺失，POST/PUT/PATCH 请求必须指定 Content-Type");
     }
 
-    // 检查请求体大小
+    // 检查请求体大小（Content-Length 预检；无 Content-Length 的 chunked 请求由
+    // default-filter RequestSize 在传输层兜底）
     long contentLength = request.getHeaders().getContentLength();
     long maxBytes = maxBodySizeMb * BYTES_PER_MB;
     if (contentLength > maxBytes) {
@@ -110,17 +114,6 @@ public class PayloadValidationFilter implements GlobalFilter, Ordered {
           exchange,
           GatewayErrorCode.PAYLOAD_TOO_LARGE,
           "请求体过大 (" + (contentLength / BYTES_PER_MB) + "MB)，超过限制 " + maxBodySizeMb + "MB");
-    }
-
-    // 检查 JSON 嵌套深度（仅对 application/json 请求）
-    if (contentType != null && contentType.contains("application/json") && contentLength > 0) {
-      // 此处仅做 Content-Length 级别的预检
-      // 深度检查需要在请求体读取后进行，为了避免在网关层缓存全量请求体影响性能
-      // 实际深度校验委托给下游服务的 JSON 解析器
-      // 网关层仅做大小限制防护
-      if (contentLength > BYTES_PER_MB && maxJsonDepth > JSON_DEPTH_WARN_THRESHOLD) {
-        log.debug("[PayloadValidation] JSON 请求 {} 字节，深度校验委托下游", contentLength);
-      }
     }
 
     return chain.filter(exchange);

@@ -2,7 +2,7 @@
 
 > MyBatis-Plus 增强与数据访问公共模块（L4 基础数据层）
 
-提供 MyBatis-Plus 增强、动态数据源、读写分离、数据权限、SQL 防火墙、SQL 追踪、数据库熔断、字段填充、逻辑删除、乐观锁等开箱即用的能力，是所有业务模块数据访问层的统一基座。
+提供 MyBatis-Plus 增强、动态数据源、数据权限、SQL 防火墙、SQL 追踪、字段填充、逻辑删除（@TableLogic）、乐观锁（@Version）等开箱即用的能力，是所有业务模块数据访问层的统一基座。
 
 ## 模块定位
 
@@ -10,7 +10,7 @@
 |---|---|
 | **层级** | L4 基础数据层 |
 | **类型** | 公共依赖库（不独立部署） |
-| **作用** | 提供 MyBatis-Plus 增强、动态数据源、读写分离、数据权限、SQL 防火墙、SQL 追踪、数据库熔断等能力 |
+| **作用** | 提供 MyBatis-Plus 增强、动态数据源、数据权限、SQL 防火墙、SQL 追踪等能力 |
 | **依赖** | common-core、common-domain、common-exception、common-util、common-json；可选依赖 dynamic-datasource、spring-boot-actuator、spring-boot-health |
 | **版本** | 1.0.0 |
 
@@ -20,18 +20,18 @@
 
 | 类 | 说明 |
 |---|---|
-| `MybatisPlusConfiguration` | MP 全局配置，按顺序组装乐观锁、逻辑删除、字段填充、SPI、数据权限、分页、SQL 防火墙拦截器链 |
-| `MyMetaObjectHandler` | MP `MetaObjectHandler` 实现，配合 `FieldFillHandler` 完成审计字段填充 |
+| `MybatisPlusConfiguration` | MP 全局配置，按顺序组装乐观锁、字段填充、SPI、数据权限、分页、SQL 防火墙拦截器链 |
 
 拦截器链执行顺序（按添加顺序）：
 
-1. `OptimisticLockInterceptor`（自定义 revision 列）或内置 `OptimisticLockerInnerInterceptor`（`@Version`）
-2. `LogicalDeleteInterceptor` — 逻辑删除（SELECT/DELETE 改写）
-3. `CombinedFieldFillInterceptor` — 字段填充（合并多 Handler 单次解析）
-4. SPI 拦截器 — 外部模块通过 `InnerInterceptorProvider` 注入（按 order 排序）
-5. `RowPermissionInnerInterceptor` + `ColPermissionInnerInterceptor` — 数据权限
-6. `PaginationInnerInterceptor` — 分页（动态适配 DbType + maxLimit 安全加固）
-7. `SqlFirewallInnerInterceptor` — SQL 防火墙（置于链末端，所有改写完成后做安全校验）
+1. `OptimisticLockerInnerInterceptor` — 乐观锁（MP 内置，配合 `@Version` 注解；v1.9.0 起替代自研拦截器）
+2. `CombinedFieldFillInterceptor` — 字段填充（合并多 Handler 单次解析，配合 `FieldFillHandler` 体系）
+3. SPI 拦截器 — 外部模块通过 `InnerInterceptorProvider` 注入（按 order 排序）
+4. `RowPermissionInnerInterceptor` + `ColPermissionInnerInterceptor` — 数据权限
+5. `PaginationInnerInterceptor` — 分页（动态适配 DbType + maxLimit 安全加固）
+6. `SqlFirewallInnerInterceptor` — SQL 防火墙（置于链末端，所有改写完成后做安全校验）
+
+> 逻辑删除采用 MP 原生 `@TableLogic`（v1.9.0 起统一），不再使用自研拦截器。
 
 ### 2. 动态数据源
 
@@ -61,49 +61,20 @@ public class UserService {
 }
 ```
 
-### 3. 读写分离
-
-| 类 | 说明 |
-|---|---|
-| `ReadWriteSplittingAutoConfiguration` | 读写分离自动配置，注册为 MyBatis 外层拦截器 Bean |
-| `ReadWriteSplittingProperties` | 读写分离配置属性 |
-| `ReadWriteSplittingInterceptor` | 基于 SQL 类型自动路由：SELECT → 从库，INSERT/UPDATE/DELETE → 主库；事务激活时强制路由主库 |
-| `DataSourceLoadBalanceStrategy` | 负载均衡策略接口 |
-| `RoundRobinLoadBalanceStrategy` | 轮询负载均衡（默认） |
-| `RandomLoadBalanceStrategy` | 随机负载均衡 |
-| `WeightedLoadBalanceStrategy` | 加权负载均衡 |
-
-事务感知：`@Transactional` 激活时 SELECT 也走主库，保证读写一致性。ThreadLocal 使用 `try-finally` 确保 `poll()` 被调用，避免线程池复用泄漏。
-
-### 4. 字段填充
+### 3. 字段填充
 
 | 类 | 说明 |
 |---|---|
 | `AbstractFieldFillHandler` / `FieldFillHandler` | 字段填充抽象基类与接口 |
 | `CreatedByHandler` / `CreatedAtHandler` | 创建人 / 创建时间填充（INSERT） |
 | `UpdatedByHandler` / `UpdatedAtHandler` | 更新人 / 更新时间填充（INSERT_UPDATE） |
-| `MyMetaObjectHandler` | MP `MetaObjectHandler` 实现 |
 | `CombinedFieldFillInterceptor` | 合并多 Handler 的 InnerInterceptor，单次 SQL 解析完成所有字段填充 |
 | `AbstractSqlHandler` | SQL 处理抽象基类 |
 | `FieldFillConfiguration` | 字段填充配置（`ydsz.jdbc.field-fill.*`） |
 
-### 5. 逻辑删除
+> 说明：v1.9.0 起逻辑删除统一使用 MP `@TableLogic`、乐观锁统一使用 MP `OptimisticLockerInnerInterceptor`（`@Version`），原自研 `LogicalDeleteInterceptor` / `OptimisticLockInterceptor` / `MyMetaObjectHandler` 已移除。动态数据源用于多库场景；**SQL 级自动读写分离（SELECT 走从库）未实现**，读写分离由 `Dynamic-Datasource`（baomidou）在数据源层面提供。
 
-| 类 | 说明 |
-|---|---|
-| `LogicalDeleteConfiguration` | 逻辑删除配置（`ydsz.jdbc.logical-delete.*`） |
-| `LogicalDeleteInterceptor` | 自定义实现：DELETE 转 UPDATE，SELECT 自动追加 `deleted = 0`，替代 `@TableLogic` 注解 |
-
-### 6. 乐观锁
-
-| 类 | 说明 |
-|---|---|
-| `OptimisticLockConfiguration` | 乐观锁配置（`ydsz.jdbc.optimistic-lock.*`） |
-| `OptimisticLockInterceptor` | 自定义实现：基于 `revision` 列 CAS，替代 `@Version` 注解 |
-
-启动期通过 `ApplicationReadyEvent` 扫描实体类，检测自定义拦截器与 `@Version` 注解冲突并打印警告。未启用自定义拦截器时回退到 MP 内置 `OptimisticLockerInnerInterceptor`。
-
-### 7. 数据权限
+### 4. 数据权限
 
 | 类 | 说明 |
 |---|---|
@@ -192,71 +163,37 @@ SQL 指纹归一化规则：
 - 多空格折叠为单空格
 - 超长指纹截断到 200 字符
 
-### 10. 数据库熔断
+### 10. 连接池
 
 | 类 | 说明 |
 |---|---|
-| `DatabaseCircuitBreaker` | 轻量级熔断器，无需引入 Resilience4j 外部依赖 |
-| `DatabaseCircuitBreakerAutoConfiguration` | 自动配置（`ydsz.jdbc.circuit-breaker.enabled=true`） |
-| `CircuitBreakerProperties` | 配置属性（`ydsz.jdbc.circuit-breaker.*`） |
-| `CircuitBreakerInterceptor` | MyBatis 外层拦截器，拦截 `Executor.query` 与 `Executor.update` |
-
-状态机：
-
-| 状态 | 行为 |
-|---|---|
-| `CLOSED` | 正常状态，所有请求通过；连续失败计数达到阈值后切换到 OPEN |
-| `OPEN` | 熔断状态，所有请求被快速拒绝（抛出 `SQLException`）；超过 `open-duration-millis` 后切换到 HALF_OPEN |
-| `HALF_OPEN` | 半开状态，允许有限请求探测恢复；探测成功切换到 CLOSED，探测失败切换回 OPEN |
-
-异常分类：
-
-- `SQLException` 及其子类 — 计为数据库故障，触发熔断计数
-- 由 `SQLException` 包装的 `RuntimeException`（如 Spring `DataAccessException`）— 同样计数
-- 其他 `RuntimeException`（业务异常）— 不计入熔断计数
-
-可观测性指标（Micrometer）：
-
-- `dbc.circuitbreaker.state` Gauge — 熔断器状态（0=CLOSED, 1=OPEN, 2=HALF_OPEN）
-- `dbc.circuitbreaker.consecutive.failures` Gauge — 当前连续失败次数
-
-### 11. 连接池
-
-| 类 | 说明 |
-|---|---|
-| `HikariCPConfiguration` | HikariCP 配置，优先使用 `ydsz.jdbc.hikari.*`，未配置时回退到 Spring Boot 默认；支持连接池预热与 Micrometer 指标注册 |
-| `HikariCPProperties` | HikariCP 配置属性 |
+| `HikariCPPoolConfigurer` | HikariCP 连接池定制（挂载到 Spring Boot 默认 HikariCP 配置之上） |
 | `DataSourceHealthIndicator` | 数据源健康检查（见健康检查章节） |
 
-### 12. 租户隔离
+### 11. 租户隔离
 
-| 类 | 说明 |
-|---|---|
-| `TenantIsolationProperties` | 租户隔离配置（`ydsz.jdbc.tenant-isolation.*`），支持 SINGLE/MULTI/ISOLATE_DB 三种模式 |
-| `TenantIsolationException` | 租户隔离异常 |
+> 租户隔离拦截器（`TenantIsolationInterceptor`）、`TenantDataSourceRouter`、`TenantProperties` 均由 `common-tenant` 模块提供，并通过 `InnerInterceptorProvider` SPI 注入本模块拦截器链。本模块仅承载拦截器装配位置，无独立租户配置类。
 
-> 租户隔离拦截器（`TenantIsolationInterceptor`）由 `common-tenant` 模块通过 `InnerInterceptorProvider` SPI 注入，本模块仅提供配置类与异常。`TenantDataSourceRouter` 也已迁移至 `common-tenant`。
-
-### 13. SPI 扩展点
+### 12. SPI 扩展点
 
 | 接口 | 说明 |
 |---|---|
 | `InnerInterceptorProvider` | MyBatis-Plus InnerInterceptor 提供者，外部模块实现后注册为 Spring Bean 即可自动插入拦截器链 |
 | `OrderedInnerInterceptor` | 带 `Ordered` 顺序的 `InnerInterceptor` 包装器，让任意拦截器具备排序能力 |
 | `DataScopeIdExpander` | 数据权限范围 ID 扩展 SPI |
-| `DataSourceLoadBalanceStrategy` | 数据源负载均衡策略 SPI |
 | `FieldFillHandler` | MyBatis-Plus 审计字段填充 SPI |
+| `SafeQueryInnerInterceptor` / `SafeQueryProperties` | 安全查询拦截（`ydsz.jdbc.safe-query.*`） |
 
 拦截器链顺序约定（值越小越靠前）：
 
 | 顺序 | 拦截器 | 说明 |
 |---|---|---|
-| 100 | OptimisticLock | 乐观锁 |
-| 200 | LogicalDelete | 逻辑删除 |
+| 100 | OptimisticLocker | 乐观锁（MP 内置 `@Version`） |
 | 300 | FieldFill | 字段填充 |
 | 400 | TenantIsolation | 租户隔离（由 common-tenant 提供） |
 | 500 | DataPermission | 行级 + 列级数据权限 |
 | 600 | Pagination | 分页 |
+| 700 | SqlFirewall | SQL 防火墙（链末端安全校验） |
 
 ### 14. 类型处理器
 
@@ -289,7 +226,7 @@ SQL 指纹归一化规则：
 | `MpBaseAuditEntity<T>` | 增强版审计实体，仅含审计字段（createdBy/createdAt/updatedBy/updatedAt） |
 | `MpBaseIdEntity<T>` | 增强版主键实体，仅含 `@TableId` 雪花算法主键 |
 
-业务模块应直接继承 `MpBaseEntity` 等类，而非 `common-domain` 的 `BaseEntity`。`MpBaseEntity` 不使用 `@Version` 与 `@TableLogic` 注解，改由自定义拦截器处理，避免双重处理冲突。
+业务模块应直接继承 `MpBaseEntity` 等类，而非 `common-domain` 的 `BaseEntity`。`MpBaseEntity` 使用 `@Version` 与 `@TableLogic` 注解（MP 原生机制）。
 
 ### 17. 监控
 
@@ -297,8 +234,6 @@ SQL 指纹归一化规则：
 |---|---|
 | `jdbc.slow.sql{sql_fingerprint}` Timer | 慢 SQL 执行耗时（使用指纹避免高基数） |
 | `jdbc.slow.sql.count{sql_fingerprint}` Counter | 慢 SQL 执行计数 |
-| `dbc.circuitbreaker.state` Gauge | 数据库熔断器状态 |
-| `dbc.circuitbreaker.consecutive.failures` Gauge | 熔断器连续失败次数 |
 | `hikaricp.connections.*` | HikariCP 连接池指标（active/idle/min/max/pending） |
 
 ## 接入方式
@@ -342,11 +277,10 @@ public class User extends MpBaseEntity<Long> {
 | 配置 | 默认值 | 说明 |
 |---|---|---|
 | `ydsz.jdbc.enabled` | true | 是否启用 JDBC 模块 |
-| `ydsz.jdbc.hikari.*` | - | HikariCP 连接池配置（优先于 spring.datasource.hikari.*） |
-| `ydsz.jdbc.tenant-isolation.enabled` | true | 租户隔离开关 |
-| `ydsz.jdbc.tenant-isolation.mode` | SINGLE | 租户隔离模式（SINGLE/MULTI/ISOLATE_DB） |
-| `ydsz.jdbc.tenant-isolation.ignore-tables` | - | 忽略租户隔离的表 |
-| `ydsz.jdbc.tenant-isolation.anon-urls` | - | 跳过租户隔离的 URL 白名单 |
+| `ydsz.jdbc.sql-firewall.enabled` | true | SQL 防火墙开关 |
+| `ydsz.jdbc.sql-audit.enabled` | false | SQL 审计开关 |
+| `ydsz.jdbc.slow-sql.enabled` | true | 慢 SQL 追踪开关 |
+| `ydsz.jdbc.safe-query.enabled` | true | 安全查询拦截开关 |
 | `ydsz.jdbc.data-permission.enabled` | true | 数据权限开关 |
 | `ydsz.jdbc.pagination.max-limit` | - | 最大分页大小（安全加固） |
 | `ydsz.jdbc.pagination.db-type` | - | 显式指定数据库类型 |
@@ -376,10 +310,8 @@ public class User extends MpBaseEntity<Long> {
 | `ydsz.jdbc.sql-firewall.block-multi-statement` | true | 拦截分号多语句 |
 | `ydsz.jdbc.sql-firewall.block-permission-ops` | true | 拦截 GRANT/REVOKE |
 | `ydsz.jdbc.sql-firewall.allow-tables` | - | DROP/TRUNCATE 表白名单 |
-| `ydsz.jdbc.circuit-breaker.enabled` | false | 数据库熔断开关 |
-| `ydsz.jdbc.circuit-breaker.failure-threshold` | 10 | 连续失败次数阈值 |
-| `ydsz.jdbc.circuit-breaker.open-duration-millis` | 30000 | 熔断持续时间（ms） |
-| `ydsz.jdbc.circuit-breaker.half-open-probe-size` | 3 | 半开探测请求数 |
+
+> 说明：`ydsz.jdbc.hikari.*`、`ydsz.jdbc.tenant-isolation.*`、`ydsz.jdbc.read-write-splitting.*`、`ydsz.jdbc.circuit-breaker.*`、`ydsz.jdbc.logical-delete.*`、`ydsz.jdbc.optimistic-lock.*` 等配置组**不存在**——连接池沿用 Spring Boot 默认 HikariCP 配置，租户隔离由 common-tenant 提供，读写分离由 Dynamic-Datasource 数据源层面实现，熔断/自研逻辑删除/自研乐观锁已移除。
 
 ## 使用示例
 
@@ -457,17 +389,9 @@ ydsz:
         - temp_log_table
 ```
 
-### 5. 数据库熔断配置
+### 5. 租户隔离
 
-```yaml
-ydsz:
-  jdbc:
-    circuit-breaker:
-      enabled: true
-      failure-threshold: 10          # 连续失败 10 次触发熔断
-      open-duration-millis: 30000    # 熔断持续 30 秒
-      half-open-probe-size: 3        # 半开状态允许 3 次探测
-```
+> 租户隔离拦截器由 `common-tenant` 模块通过 `InnerInterceptorProvider` SPI 注入，配置项见 common-tenant 文档（`ydsz.tenant.*`）。
 
 ## SPI 扩展点
 
@@ -476,7 +400,6 @@ ydsz:
 | `InnerInterceptorProvider` | 内部拦截器提供者，将自定义拦截器注册到 MP 链 | common-tenant（TenantIsolation）、业务模块 |
 | `OrderedInnerInterceptor` | 带顺序的拦截器包装器，让任意 InnerInterceptor 具备排序能力 | 框架内部 |
 | `DataScopeIdExpander` | 数据权限范围 ID 展开（部门/角色/自定义） | 业务模块 |
-| `DataSourceLoadBalanceStrategy` | 数据源负载均衡策略 | 框架内置三种实现，业务可扩展 |
 | `FieldFillHandler` | MyBatis-Plus 审计字段填充 | 框架内置四种 Handler，业务可扩展 |
 
 ## 健康检查
@@ -490,14 +413,12 @@ ydsz:
 
 ## 注意事项
 
-1. **乐观锁冲突**：启用自定义 `OptimisticLockInterceptor` 后，实体类不应再使用 `@Version` 注解，启动期会扫描并打印冲突警告。
-2. **逻辑删除**：自定义 `LogicalDeleteInterceptor` 不依赖 `@TableLogic` 注解，两者不应同时使用。
+1. **乐观锁**：使用 MP `@Version` 注解 + `OptimisticLockerInnerInterceptor`（内置），实体在 `revision` 字段上加注即可。
+2. **逻辑删除**：使用 MP `@TableLogic` 注解，`MpBaseEntity` 已内置 `deleted` 字段。
 3. **SQL 防火墙位置**：`SqlFirewallInnerInterceptor` 置于拦截器链末端，在所有 SQL 改写完成后做安全校验，避免改写后的 SQL 被误判。
 4. **慢 SQL 指纹**：使用 `SqlFingerprint` 归一化 SQL 作为 Micrometer tag，避免原始 SQL 高基数导致 Prometheus 内存爆炸。
-5. **熔断器异常分类**：仅 `SQLException` 及其包装异常触发熔断计数，业务异常不计入，避免误熔断。
-6. **读写分离事务感知**：`@Transactional` 激活时 SELECT 强制走主库，保证读写一致性。
-7. **租户隔离**：拦截器由 `common-tenant` 模块通过 SPI 注入，本模块仅提供配置类；未引入 `common-tenant` 时 `tenant_id` 字段被忽略（DDL 默认值 '1'）。
+5. **租户隔离**：拦截器由 `common-tenant` 模块通过 SPI 注入，本模块仅承载装配；未引入 `common-tenant` 时 `tenant_id` 字段被忽略（DDL 默认值 '1'）。
 
 ## 变更记录
 
-- **v1.0.0**（2026-08-02）：补全 SQL 防火墙、SQL 追踪、数据库熔断、SPI 扩展点、健康检查、读写分离章节；完善配置项表与使用示例
+- **v1.0.0**（2026-08-02）：补全 SQL 防火墙、SQL 追踪、SPI 扩展点、健康检查章节；完善配置项表与使用示例。v1.9.0 起逻辑删除/乐观锁统一收口到 MP 原生注解，移除自研拦截器与读写分离/数据库熔断。
