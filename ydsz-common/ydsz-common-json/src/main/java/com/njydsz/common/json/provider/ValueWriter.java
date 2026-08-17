@@ -540,7 +540,7 @@ public final class ValueWriter {
     sb.append('}');
   }
 
-  /** 写入 Bean 对象（ASM 优化版本 - FastJSON2 核心架构） */
+  /** 写入 Bean 对象（优化版本 - FastJSON2 核心架构） */
   public static void writeBean(Object obj, StringBuilder sb) {
     Class<?> clazz = obj.getClass();
     JsonClass classAnnotation = clazz.getAnnotation(JsonClass.class);
@@ -682,7 +682,7 @@ public final class ValueWriter {
    *   <li>类型代码直接索引 - 消除 switch 分支开销
    *   <li>StringBuilder 预分配 - 基于精确容量计算
    *   <li>方法调用最小化 - 减少间接方法调用
-   *   <li>ASM 字节码生成 - 彻底消除反射开销
+   *   <li>字节码生成 - 彻底消除反射开销
    * </ul>
    */
   public static void writeBeanNoAnnotationOptimized(

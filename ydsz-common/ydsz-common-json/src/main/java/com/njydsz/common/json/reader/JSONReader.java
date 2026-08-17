@@ -553,7 +553,7 @@ public final class JSONReader {
   /**
    * 快速读取字段名（假定当前已位于 {@code '"'} 引号处，不跳过前置空白）。
    *
-   * <p>用于已定位到引号的高性能路径（如 ASM 反序列化器）；若当前字符非引号则直接返回 null， 不做任何字段名匹配尝试。等价于 {@code readString()} 的快捷版。
+   * <p>用于已定位到引号的高性能路径（如 解析器）；若当前字符非引号则直接返回 null， 不做任何字段名匹配尝试。等价于 {@code readString()} 的快捷版。
    *
    * @return 字段名字符串，或 null（当前非字符串字段名）
    */
@@ -800,7 +800,7 @@ public final class JSONReader {
   /**
    * 直接读取字符串值（跳过 skipWhitespace，在已定位到引号位置时使用）
    *
-   * <p>ASM 反序列化器中 readFieldNameHash() 已跳过空白和冒号， 使用此方法避免重复的 skipWhitespace() 调用
+   * <p>解析器中 readFieldNameHash() 已跳过空白和冒号， 使用此方法避免重复的 skipWhitespace() 调用
    */
   public String readStringDirect() {
     if (pos >= len || buf[pos] != '"') {

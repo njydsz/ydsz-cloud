@@ -705,7 +705,7 @@ public final class SerializationProvider {
     } catch (JsonSerializationException e) {
       throw e;
     } catch (StackOverflowError e) {
-      // ASM 字节码序列化路径可能绕过 serialize() 递归检测，
+      // 字节码级序列化路径可能绕过 serialize() 递归检测，
       // 在顶层捕获 StackOverflowError 并转换为有意义的异常
       throw new JsonSerializationException(
               JsonSerializationException.SERIALIZATION_ERROR,
@@ -726,7 +726,7 @@ public final class SerializationProvider {
   /**
    * 序列化对象（带特性配置）
    *
-   * <p>当 PrettyPrint 特性未启用时，复用 {@link #serialize(Object)} 的 ASM 快速路径； 启用 PrettyPrint 时走格式化路径。
+   * <p>当 PrettyPrint 特性未启用时，复用 {@link #serialize(Object)} 的快速路径； 启用 PrettyPrint 时走格式化路径。
    *
    * @param obj 对象
    * @param features 特性标志（位运算值）
@@ -737,7 +737,7 @@ public final class SerializationProvider {
       return "null";
     }
 
-    // 非 PrettyPrint 场景复用标准序列化路径（含 ASM 快速路径）
+    // 非 PrettyPrint 场景复用标准序列化路径
     if (!JSONWriter.Feature.PrettyPrint.isEnabled(features)) {
       return serialize(obj);
     }
@@ -1024,7 +1024,7 @@ public final class SerializationProvider {
   }
 
   /**
-   * 判断对象是否为简单类型（非 Bean），应由 ValueWriter 而非 ASM/BeanSerializer 处理。
+   * 判断对象是否为简单类型（非 Bean），应由 ValueWriter 而非 BeanSerializer 处理。
    *
    * <p>包括：Number、CharSequence、Boolean、Character、Enum、java.util.Date、 java.time.temporal.Temporal
    * 及其子类。
@@ -1040,10 +1040,10 @@ public final class SerializationProvider {
   }
 
   /**
-   * Bean 序列化快速路径（BeanSerializer 路径，不重试 ASM）。
+   * Bean 序列化快速路径（BeanSerializer 路径，不重试 ）。
    *
-   * <p>原 {@code tryFastSerialize} 方法中包含冗余的 ASM 调用——ASM 已在 {@link #tryFastPathToWriter}
-   * 中尝试过，此处不再重复调用。 仅保留 BeanSerializer 路径作为 ASM 降级后的快速序列化方案。
+   * <p>原 {@code tryFastSerialize} 方法中包含冗余的 调用——已在 {@link #tryFastPathToWriter}
+   * 中尝试过，此处不再重复调用。 仅保留 BeanSerializer 路径作为 降级后的快速序列化方案。
    *
    * @param obj 要序列化的对象
    * @param sb StringBuilder 缓冲区

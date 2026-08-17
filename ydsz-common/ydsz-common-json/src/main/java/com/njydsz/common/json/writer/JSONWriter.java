@@ -930,9 +930,9 @@ public final class JSONWriter {
   }
 
   /**
-   * 获取当前写入位置（供 ASM 序列化器直接操作缓冲区）
+   * 获取当前写入位置（供 序列化器直接操作缓冲区）
    *
-   * <p>ASM 生成的序列化器通过 getBuffer() + getPosition() 获取直接缓冲区访问， 消除 write() 方法调用的 externalSb 检查和
+   * <p>生成的序列化器通过 getBuffer() + getPosition() 获取直接缓冲区访问， 消除 write() 方法调用的 externalSb 检查和
    * ensureCapacity 检查开销
    */
   public int getPosition() {
@@ -940,7 +940,7 @@ public final class JSONWriter {
   }
 
   /**
-   * 设置当前写入位置（供 ASM 序列化器直接操作缓冲区）
+   * 设置当前写入位置（供 序列化器直接操作缓冲区）
    *
    * <p>在直接缓冲区写入完成后，通过 setPosition() 同步写入位置到 JSONWriter
    *
@@ -951,9 +951,9 @@ public final class JSONWriter {
   }
 
   /**
-   * 检查字符串是否需要 JSON 转义（SIMD 风格字级检查优化）
+   * 检查字符串是否需要 JSON 转义（字级检查优化）
    *
-   * <p>用于 ASM 序列化器的字符串快速路径判断： 无需转义时直接内联写入缓冲区，避免 sync/re-read 开销
+   * <p>用于 序列化器的字符串快速路径判断： 无需转义时直接内联写入缓冲区，避免 sync/re-read 开销
    *
    * <p>优化：一次检查 8 个字符，利用 CPU 指令级并行性加速
    *
@@ -963,7 +963,7 @@ public final class JSONWriter {
   public static boolean needsEscape(String str) {
     int len = str.length();
     int i = 0;
-    // SIMD 风格：一次检查 8 个字符
+    // 字级展开：一次检查 8 个字符
     while (i + 7 < len) {
       char c0 = str.charAt(i);
       char c1 = str.charAt(i + 1);
@@ -1015,7 +1015,7 @@ public final class JSONWriter {
   /**
    * 写入双精度浮点数到缓冲区（合并 setPosition + writeDouble + getPosition）
    *
-   * <p>消除 ASM 序列化器中 setPosition 和 getPosition 的额外方法调用开销
+   * <p>消除 序列化器中 setPosition 和 getPosition 的额外方法调用开销
    *
    * @param value 双精度浮点数值
    * @param pos 当前写入位置
@@ -1030,7 +1030,7 @@ public final class JSONWriter {
   /**
    * 写入单精度浮点数到缓冲区（合并 setPosition + writeFloat + getPosition）
    *
-   * <p>消除 ASM 序列化器中 setPosition 和 getPosition 的额外方法调用开销
+   * <p>消除 序列化器中 setPosition 和 getPosition 的额外方法调用开销
    *
    * @param value 单精度浮点数值
    * @param pos 当前写入位置
@@ -1045,7 +1045,7 @@ public final class JSONWriter {
   /**
    * 写入带引号字符串到缓冲区（合并 setPosition + writeString + getPosition）
    *
-   * <p>消除 ASM 序列化器中 setPosition 和 getPosition 的额外方法调用开销
+   * <p>消除 序列化器中 setPosition 和 getPosition 的额外方法调用开销
    *
    * @param str 字符串值
    * @param pos 当前写入位置

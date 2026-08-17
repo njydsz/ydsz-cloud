@@ -168,6 +168,7 @@ public SearchResponse search(String keyword) {
 |---|---|---|
 | `ydsz.search.enabled` | `true` | 是否启用搜索服务 |
 | `ydsz.search.primary` | `pg` | 主引擎名称（pg / memory） |
+| `ydsz.search.fallbacks` | `["memory"]` | 降级链（主引擎失败时依次降级的引擎列表） |
 | `ydsz.search.page-size` | `20` | 默认每页大小（1~100） |
 | `ydsz.search.suggest-limit` | `10` | 搜索建议最大返回数（1~50） |
 | `ydsz.search.search-timeout` | `5` | 搜索超时时间秒（1~60） |

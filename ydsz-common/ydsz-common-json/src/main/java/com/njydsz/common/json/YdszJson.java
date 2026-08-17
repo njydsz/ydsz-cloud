@@ -772,7 +772,7 @@ public class YdszJson {
    *
    * <p>在应用启动时调用，提前为指定类型构建字段元数据、序列化器与反序列化器缓存， 避免首次请求时的延迟尖峰。预热失败不影响启动（内部吞掉异常）。
    *
-   * <p>注：原 ASM 字节码生成（AsmCodecCache）已随 {@code AsmCodecCache} 移除， 现改为通过一次真实的序列化/反序列化触发 {@code
+   * <p>注：原 字节码生成（AsmCodecCache）已随 {@code AsmCodecCache} 移除， 现改为通过一次真实的序列化/反序列化触发 {@code
    * SerializationProvider} / {@code DeserializationProvider} 的元数据缓存构建，语义保持一致。
    *
    * @param classes 需要预热的类型列表

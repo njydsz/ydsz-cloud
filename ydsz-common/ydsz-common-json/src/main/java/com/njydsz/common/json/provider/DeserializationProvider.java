@@ -49,7 +49,7 @@ import com.njydsz.common.json.util.BoundedLruCache;
  *
  * <ol>
  *   <li>快速路径分派 - 基本类型直接解析，其余走 BeanDeserializerEngine
- *   <li>执行解析 - ASM/BeanReader/Creator/Builder/ZeroCopy 多级降级
+ *   <li>执行解析 - BeanReader/Creator/Builder/ZeroCopy 多级降级
  *   <li>类型转换 - 处理数字、字符串、日期等类型转换
  * </ol>
  *
@@ -320,7 +320,7 @@ public final class DeserializationProvider {
       return BeanDeserializerEngine.deserializeArrayZeroCopy(json, Object.class);
 
     // Bean 类型：直接走 BeanDeserializerEngine 多级降级路径
-    // （ASM -> BeanReader -> Creator -> Builder -> ZeroCopy -> Map 降级）
+    // （BeanReader -> Creator -> Builder -> ZeroCopy -> Map 降级）
     // 注：原 STRATEGY_CACHE 已删除——所有非简单类型统一走 BEAN 路径，
     // if-else 链已覆盖所有简单类型，缓存无策略分派价值，synchronizedMap 反而是性能瓶颈。
     return BeanDeserializerEngine.deserializeBeanZeroCopyAsObject(json, type);
