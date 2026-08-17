@@ -20,6 +20,7 @@ import com.njydsz.common.audit.event.GatewayAuditEventBridge;
 import com.njydsz.common.jdbc.constant.DataPermissionHeaderConstants;
 import com.njydsz.gateway.config.GatewayConstants;
 import com.njydsz.gateway.config.GatewayFilterOrder;
+import com.njydsz.gateway.config.GatewayIpUtils;
 
 /**
  * P2-2: 审计日志过滤器
@@ -315,26 +316,16 @@ public class AuditLogFilter implements GlobalFilter, Ordered {
   }
 
   /**
-   * 提取客户端 IP
+   * 提取客户端真实 IP（P0-E4：复用 {@link GatewayIpUtils} 的可信代理链校验）。
+   *
+   * <p>不直接信任 {@code X-Forwarded-For} / {@code X-Real-IP}，仅当直连 IP 为可信代理
+   * （本地回环或内网私有地址）时才信任代理头，防止客户端伪造 IP 绕过审计/限流。
    *
    * @param request 服务器 HTTP 请求
-   * @return 客户端 IP 字符串
+   * @return 客户端 IP
    */
   private String extractClientIp(ServerHttpRequest request) {
-    // 优先 X-Real-IP / X-Forwarded-For
-    String xff = request.getHeaders().getFirst("X-Real-IP");
-    if (xff != null && !xff.isEmpty()) {
-      return xff.split(",")[0].trim();
-    }
-    xff = request.getHeaders().getFirst("X-Forwarded-For");
-    if (xff != null && !xff.isEmpty()) {
-      return xff.split(",")[0].trim();
-    }
-    // 回退到远程地址
-    if (request.getRemoteAddress() != null && request.getRemoteAddress().getAddress() != null) {
-      return request.getRemoteAddress().getAddress().getHostAddress();
-    }
-    return "unknown";
+    return GatewayIpUtils.getClientIp(request);
   }
 
   /**

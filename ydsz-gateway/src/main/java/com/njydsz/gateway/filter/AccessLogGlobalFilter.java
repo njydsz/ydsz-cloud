@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -120,6 +121,10 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
   /** P3-14: 网关自定义指标 */
   private final GatewayMetrics gatewayMetrics;
 
+  /** P0-C2: 访问日志采样率（0-100，默认 100=全量；4xx/5xx 始终全量） */
+  @org.springframework.beans.factory.annotation.Value("${ydsz.gateway.access-log.sample-rate:100}")
+  private int sampleRate;
+
   /**
    * 记录结构化访问日志（在响应完成后异步输出）。
    *
@@ -155,10 +160,19 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
   }
 
   /**
-   * P2-8 + P2-2: 输出结构化 JSON 访问日志。
+   * P2-8 + P2-2 + P0-C2: 输出结构化 JSON 访问日志。
    *
    * <p>P2-8 优化：使用预分配 StringBuilder 手动拼接 JSON（避免 LinkedHashMap 分配 + 反射序列化）， 在 10K QPS 场景下减少 ~60%
    * 的日志序列化 CPU 开销和 ~40% 的内存分配。 仅对非 2xx 响应保留完整的 query 和 userAgent（减少正常路径的长度计算）。
+   *
+   * <p>P0-C2 安全增强：
+   *
+   * <ul>
+   *   <li><b>JSON 转义：</b>所有用户可控字段（path/query/userAgent/...）经 {@link #escapeJson} 转义，
+   *       杜绝日志注入与 JSON 结构破损
+   *   <li><b>采样：</b>2xx/3xx 按 {@code ydsz.gateway.access-log.sample-rate}（默认 100）采样，
+   *       4xx/5xx 始终全量，控制高 QPS 下的日志成本
+   * </ul>
    *
    * @param exchange 服务器 Web 交换上下文
    * @param traceId 链路追踪 ID
@@ -180,22 +194,27 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
 
     int status = response.getStatusCode() != null ? response.getStatusCode().value() : 0;
 
-    // P3-14: 记录 Prometheus 指标
+    // P3-14: 记录 Prometheus 指标（全量，不随日志采样）
     gatewayMetrics.recordRequestDuration(routeId, method, status, duration);
     gatewayMetrics.incrementRequestTotal(routeId, method, status);
+
+    // P0-C2: 日志采样（4xx/5xx 全量，2xx/3xx 按采样率）
+    if (!shouldLog(status)) {
+      return;
+    }
 
     // P2-8: 手动拼接 JSON（预估 400 字节初始容量，避免 StringBuilder 扩容）
     // 仅对非成功响应添加 query/userAgent 字段以减少正常路径开销
     StringBuilder sb = new StringBuilder(400);
-    sb.append("{\"traceId\":\"").append(safeTraceId(traceId));
-    sb.append("\",\"method\":\"").append(method);
-    sb.append("\",\"path\":\"").append(path);
-    sb.append("\",\"clientIp\":\"").append(clientIp);
+    sb.append("{\"traceId\":\"").append(escapeJson(safeTraceId(traceId)));
+    sb.append("\",\"method\":\"").append(escapeJson(method));
+    sb.append("\",\"path\":\"").append(escapeJson(path));
+    sb.append("\",\"clientIp\":\"").append(escapeJson(clientIp));
     sb.append("\",").append("\"status\":").append(status);
     sb.append(",\"latencyMs\":").append(duration);
-    sb.append(",\"routeId\":\"").append(routeId);
-    sb.append("\",\"targetUri\":\"").append(targetUri);
-    sb.append("\",\"userId\":\"").append(userId != null ? userId : "-").append("\"");
+    sb.append(",\"routeId\":\"").append(escapeJson(routeId));
+    sb.append("\",\"targetUri\":\"").append(escapeJson(targetUri));
+    sb.append("\",\"userId\":\"").append(escapeJson(userId != null ? userId : "-")).append("\"");
 
     // 4xx/5xx 错误响应附加 query 和 User-Agent 用于排查
     if (status >= 400) {
@@ -204,8 +223,8 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
       if (userAgent != null && userAgent.length() > MAX_UA_LENGTH) {
         userAgent = userAgent.substring(0, MAX_UA_LENGTH) + "...";
       }
-      sb.append(",\"query\":\"").append(query).append("\"");
-      sb.append(",\"userAgent\":\"").append(userAgent != null ? userAgent : "-").append("\"");
+      sb.append(",\"query\":\"").append(escapeJson(query)).append("\"");
+      sb.append(",\"userAgent\":\"").append(escapeJson(userAgent != null ? userAgent : "-")).append("\"");
     }
 
     sb.append('}');
@@ -219,6 +238,60 @@ public class AccessLogGlobalFilter implements GlobalFilter, Ordered {
     } else {
       log.info(jsonLog);
     }
+  }
+
+  /**
+   * P0-C2: 判断是否记录访问日志（采样控制）。
+   *
+   * <p>4xx/5xx 始终全量记录；2xx/3xx 按采样率判定，默认 100（全量）。
+   *
+   * @param status HTTP 状态码
+   * @return true=记录日志
+   */
+  private boolean shouldLog(int status) {
+    if (status >= 400 || sampleRate >= 100) {
+      return true;
+    }
+    if (sampleRate <= 0) {
+      return false;
+    }
+    return ThreadLocalRandom.current().nextInt(100) < sampleRate;
+  }
+
+  /**
+   * P0-C2: JSON 字符串转义。
+   *
+   * <p>对双引号、反斜杠、控制字符与换行进行转义，防止用户可控字段（path/query/UA）注入日志破坏 JSON 结构
+   * （日志伪造 / Log4j 注入防护前置）。
+   *
+   * @param value 原始字符串
+   * @return 转义后的字符串
+   */
+  private static String escapeJson(String value) {
+    if (value == null || value.isEmpty()) {
+      return "";
+    }
+    StringBuilder sb = new StringBuilder(value.length() + 16);
+    for (int i = 0; i < value.length(); i++) {
+      char c = value.charAt(i);
+      switch (c) {
+        case '"' -> sb.append("\\\"");
+        case '\\' -> sb.append("\\\\");
+        case '\n' -> sb.append("\\n");
+        case '\r' -> sb.append("\\r");
+        case '\t' -> sb.append("\\t");
+        case '\b' -> sb.append("\\b");
+        case '\f' -> sb.append("\\f");
+        default -> {
+          if (c < 0x20) {
+            sb.append(String.format("\\u%04x", (int) c));
+          } else {
+            sb.append(c);
+          }
+        }
+      }
+    }
+    return sb.toString();
   }
 
   /**
