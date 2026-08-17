@@ -38,32 +38,32 @@ L6 应用层     → ydsz-common-base, ydsz-common-web, ydsz-common-app
 
 | 层级 | 模块 | 职责 |
 |---|---|---|
-| L1 | [common-core](ydsz-common-core/README.md) | 统一响应/请求模型、TraceId、请求上下文（TTL）、雪花 ID、Spring 工具封装、脚本引擎等工具 |
-| L2 | [common-util](ydsz-common-util/README.md) | 67 个类（JSON/加密/HTTP/IP/Spring/雪花 ID/Bean 拷贝 等工具） |
-| L2 | [common-json](ydsz-common-json/README.md) | JSON 引擎（Jackson 兼容门面）、JsonPatch、JsonHttpMessageConverter、Jackson 注解桥 |
+| L1 | [common-json](ydsz-common-json/README.md) | JSON 引擎（Jackson 兼容门面）、JsonPatch、JsonHttpMessageConverter、Jackson 注解桥 |
+| L1 | [common-util](ydsz-common-util/README.md) | 67 个类（JSON/加密/HTTP/IP/Spring/雪花 ID/Bean 拷贝 等工具） |
+| L1 | [common-cache](ydsz-common-cache/README.md) | 本地缓存框架（Window-TinyLFU/Striped 两种策略）、WriteThrough 回写、过期清理、统计 |
+| L1 | [common-excel](ydsz-common-excel/README.md) | 高性能 Excel 读写（SAX 流式/SXSSF 大文件）、模板填充、公式注入防护、无类型全 Sheet 读取 |
+| L2 | [common-core](ydsz-common-core/README.md) | 统一响应/请求模型、TraceId、请求上下文（TTL）、分页常量、Header 常量、i18n 消息资源 |
 | L3 | [common-domain](ydsz-common-domain/README.md) | PageQuery 分页、TreeBuilder 树形结构、TypedId 类型化 ID、领域事件定义 |
 | L3 | [common-exception](ydsz-common-exception/README.md) | 统一异常体系、错误码管理、ProblemDetail (RFC 7807)、i18n、异常构建器 |
 | L4 | [common-jdbc](ydsz-common-jdbc/README.md) | MyBatis-Plus 增强、自研动态数据源、行/列权限、逻辑删除（MP @TableLogic）/乐观锁（MP 内置）、字段填充、SQL 安全拦截 |
 | L4 | [common-redis](ydsz-common-redis/README.md) | Redis 门面 ops（String/Hash/Geo/Stream/Pipeline/PubSub/事务）、三算法限流器、多级缓存提供者 |
 | L4 | [common-lock](ydsz-common-lock/README.md) | 分布式锁（Reentrant/Fair/Multi + Fallback）、@Idempotent 幂等（fail-open 可配置）、@YdszDistributedLock、WatchDog 续期、读写锁、信号量 |
-| L4 | [common-cache](ydsz-common-cache/README.md) | 本地缓存框架（Window-TinyLFU/Striped 两种策略）、WriteThrough 回写、过期清理、统计 |
 | L4 | [common-thread](ydsz-common-thread/README.md) | 共享线程池自动配置、线程池监控、健康检查、Nacos 热更新 |
 | L4 | [common-tenant](ydsz-common-tenant/README.md) | 多租户隔离（SINGLE/MULTI/SCHEMA）、SQL 改写（含 CTE/标量子查询）、全链路上下文传播、fail-closed 防护 |
 | L5 | [common-auth](ydsz-common-auth/README.md) | JWT、RBAC 4 注解 + 3 切面、@DataScope 数据权限（fail-closed）、权限缓存热更新 |
 | L5 | [common-safe](ydsz-common-safe/README.md) | @SensitiveData 脱敏（fail-closed）、@Sensitive、@RateLimit、CSRF、SQL 注入防护、安全事件告警、API 签名（query 入签）、SSRF 防护 |
 | L5 | [common-feign](ydsz-common-feign/README.md) | OpenFeign 增强、统一编解码、ResponseUnwrapDecoder、Resilience4j 熔断（参数可配置）、动态客户端 |
 | L5 | [common-audit](ydsz-common-audit/README.md) | @OperationLog + @Audit、异步队列批量落库、时间分表（日/月/年）、磁盘兜底 |
-| L5 | [common-file](ydsz-common-file/README.md) | 7 种存储平台、分片上传、断点续传、文件去重（秒传）、文件类型安全检测 |
 | L5 | [common-notify](ydsz-common-notify/README.md) | 6 种通知渠道（邮件/短信/企微/钉钉/飞书/站内）、SpEL 模板引擎、重试队列、DKIM 签名 |
 | L5 | [common-queue](ydsz-common-queue/README.md) | 6 种 MQ（Redis Stream/List/PubSub + Kafka/RocketMQ/RabbitMQ）、死信队列、消息轨迹、去重 |
-| L5 | [common-docs](ydsz-common-docs/README.md) | 文档解析（PDF/Word/Excel/PPT 等 8 种格式）、预处理 Pipeline、安全扫描、PII 检测、OCR |
-| L5 | [common-excel](ydsz-common-excel/README.md) | 高性能 Excel 读写（SAX 流式/SXSSF 大文件）、模板填充、公式注入防护、无类型全 Sheet 读取 |
-| L5 | [common-netty](ydsz-common-netty/README.md) | Netty TCP Server/Client 抽象、断线重连、心跳检测、SSL/TLS、LengthField 编解码 |
-| L5 | [common-socket](ydsz-common-socket/README.md) | WebSocket 实时推送、集群广播、离线消息存储、认证拦截、消息限流 |
-| L5 | [common-search](ydsz-common-search/README.md) | 统一搜索引擎（PG 全文检索 + 内存策略）、多 Provider 架构、搜索缓存、蓝绿重建、游标分页 |
 | L5 | [common-event](ydsz-common-event/README.md) | 事务性 Outbox 模式、可靠事件投递、Outbox 处理器、健康检查 |
 | L5 | [common-config](ydsz-common-config/README.md) | 配置变更桥接（底层加解密由 jasypt-spring-boot-starter 承担）、配置健康检查 |
 | L5 | [common-seata](ydsz-common-seata/README.md) | Seata 分布式事务集成（AT/TCC/SAGA 模式）、XID 传播 |
+| L5 | [common-socket](ydsz-common-socket/README.md) | WebSocket 实时推送、集群广播、离线消息存储、认证拦截、消息限流 |
+| L5 | [common-netty](ydsz-common-netty/README.md) | Netty TCP Server/Client 抽象、断线重连、心跳检测、SSL/TLS、LengthField 编解码 |
+| L5 | [common-file](ydsz-common-file/README.md) | 7 种存储平台、分片上传、断点续传、文件去重（秒传）、文件类型安全检测 |
+| L5 | [common-docs](ydsz-common-docs/README.md) | 文档解析（PDF/Word/Excel/PPT 等 8 种格式）、预处理 Pipeline、安全扫描、PII 检测、OCR |
+| L5 | [common-search](ydsz-common-search/README.md) | 统一搜索引擎（PG 全文检索 + 内存策略）、多 Provider 架构、搜索缓存、蓝绿重建、游标分页 |
 | L5 | [common-sentry](ydsz-common-sentry/README.md) | 统一系统指标监控（Micrometer）、告警事件、日志上报、SLA 指标、链路追踪桥 |
 | L6 | [common-base](ydsz-common-base/README.md) | HTTP 公共基座（CORS/时区/I18n/安全头/TraceId/请求日志/全局响应包装/OpenAPI） |
 | L6 | [common-web](ydsz-common-web/README.md) | **PC Web 端基座**（继承 base，叠加 Spring Security 异常处理 + WebAuthFilter/Session 无状态） |
@@ -91,7 +91,7 @@ ydsz-common 不使用 Dubbo `@SPI` 注解，所有扩展点通过三种 Spring �
 
 > 标识为 **SPI** 的接口在 JavaDoc 中明确声明"业务方可实现"；其余为通过 `@ConditionalOnMissingBean` 暴露的覆盖点。
 
-### L1-L2 基础层
+### L1-L2 工具/基础设施层
 
 | 子模块 | 扩展点接口 | 职责 | 注册方式 |
 |---|---|---|---|
@@ -103,6 +103,9 @@ ydsz-common 不使用 Dubbo `@SPI` 注解，所有扩展点通过三种 Spring �
 | common-json | `JsonSerializer` / `JsonDeserializer` | 自定义序列化器 | `@Component` |
 | common-json | `PropertyNamingStrategy` | 属性命名策略 | `@Component` |
 | common-json | `JsonMetricsCallback` | JSON 指标回调 | `@ConditionalOnMissingBean` |
+| common-cache | `CacheLoader<K,V>` / `CacheWriter<K,V>` / `Expiry<K,V>` / `Weigher<K,V>` / `RemovalListener<K,V>` | 缓存加载/回写/过期/权重/驱逐回调 | `@Component` |
+| common-cache | `CacheInvalidationBroadcaster` | 多级缓存跨节点广播 | `@ConditionalOnMissingBean` |
+| common-excel | `CellValueConverter` **SPI** | 单元格值转换器（支持 `priority()`） | `ConverterRegistry.registerCustomConverter()` |
 
 ### L3 基础服务层
 
