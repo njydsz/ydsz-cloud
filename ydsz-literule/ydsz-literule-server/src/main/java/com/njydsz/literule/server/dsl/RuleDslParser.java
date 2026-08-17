@@ -6,6 +6,8 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -300,8 +302,8 @@ public final class RuleDslParser {
         .canaryRatio(asDouble(map.get("canary_ratio")))
         .canaryConditionExpression(asString(map.get("canary_condition_expression")))
         .canarySeverityExpression(asString(map.get("canary_severity_expression")))
-        .effectiveFrom(asString(map.get("effective_from")))
-        .effectiveTo(asString(map.get("effective_to")));
+        .effectiveFrom(parseDateTime(asString(map.get("effective_from"))))
+        .effectiveTo(parseDateTime(asString(map.get("effective_to"))));
     // factors
     Object factorsObj = map.get("factors");
     if (factorsObj instanceof List<?> factorsList) {
@@ -484,6 +486,24 @@ public final class RuleDslParser {
   }
 
   // ============ 工具方法 ============
+
+  /**
+   * 解析日期时间字符串为 LocalDateTime。
+   *
+   * @param value 日期时间字符串（ISO-8601 格式）；null 或空串返回 null
+   * @return 解析后的 LocalDateTime，解析失败返回 null
+   */
+  private static LocalDateTime parseDateTime(String value) {
+    if (value == null || value.isBlank()) {
+      return null;
+    }
+    try {
+      return LocalDateTime.parse(value, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+    } catch (Exception e) {
+      log.debug("[DslParser] 日期解析失败: {}", value);
+      return null;
+    }
+  }
 
   private static Yaml newYaml() {
     return new Yaml();

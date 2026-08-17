@@ -32,17 +32,21 @@ import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.workflow.WorkflowFacade;
 import com.njydsz.workflow.domain.converter.WorkflowConverter;
+import com.njydsz.workflow.domain.dto.FlowAutoTriggerCreateDTO;
 import com.njydsz.workflow.domain.dto.FlowInstanceVariablesDTO;
 import com.njydsz.workflow.domain.dto.FlowInstanceViewDTO;
 import com.njydsz.workflow.domain.dto.FlowStartProcessDTO;
 import com.njydsz.workflow.domain.entity.FlowInstance;
+import com.njydsz.workflow.domain.vo.FlowAutoTriggerVO;
 import com.njydsz.workflow.domain.vo.FlowInstanceVO;
+import com.njydsz.workflow.server.service.FlowAutoTriggerService;
+import com.njydsz.workflow.server.service.FlowInstanceMigrationService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 
 /**
  * 流程实例统一 Controller
  *
- * <p>流程实例的 HTTP 入口，承担工作流引擎「运行时」的启动、生命周期控制、查询视图、变量读写、表单渲染、催办等全套能力。
+ * <p>流程实例的 HTTP 入口，承担工作流引擎「运行时」的启动、生命周期控制、查询视图、变量读写、表单渲染、催办、加签历史等全套能力。
  *
  * <p><b>接口分组：</b>
  *
@@ -53,6 +57,7 @@ import com.njydsz.workflow.server.service.FlowInstanceService;
  *       /activate}（激活） / {@code /recall}（撤回） / {@code /rollback}（回滚） / {@code /resubmit}（驳回后快速重审）
  *   <li><b>审计与时间线</b>：{@code GET /instance/{id}/auditTrail} / {@code /timeline} / {@code /diagram} / {@code
  *       /replay}
+ *   <li><b>加签历史</b>：{@code GET /countersign/instance/{instanceId}} / {@code /task/{taskId}} / {@code /myInitiated}
  *   <li><b>分页查询</b>：{@code GET /instance/page} / {@code /my} / {@code /all}
  *   <li><b>变量读写</b>：{@code GET /instance/{id}/variables} / {@code POST /instance/{id}/variables}
  *   <li><b>催办</b>：{@code POST /instance/{id}/urge} / {@code POST /instance/{id}/urge/node}
@@ -88,6 +93,12 @@ public class FlowInstanceController {
 
   /** 工作流门面，业务调用入口 */
   private final WorkflowFacade workflowFacade;
+
+  /** GAP-V2-09: 流程实例迁移服务 */
+  private final FlowInstanceMigrationService instanceMigrationService;
+
+  /** 流程自动触发规则服务，负责规则注册、删除与启用/禁用管理 */
+  private final FlowAutoTriggerService autoTriggerService;
 
   /**
    * 启动流程实例
@@ -517,5 +528,148 @@ public class FlowInstanceController {
   public BaseResponse<Map<String, Object>> getFormRenderData(
       @PathVariable String instanceId, @RequestParam(required = false) String taskId) {
     return BaseResponse.success(instanceService.getFormRenderData(instanceId, taskId));
+  }
+
+  // ============== P1-10: 流程实例迁移 ==============
+
+  /**
+   * 执行实例迁移 — 将源定义下运行中实例迁移到目标定义
+   *
+   * @param dto 迁移参数
+   * @return 统一响应结果，包含迁移结果报告
+   */
+  @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
+  @RateLimit(resource = "workflow.flowmigration.migrateInstances", threshold = 50)
+  @Idempotent(key = "ydsz:workflow:FlowInstanceController:migrateInstances:lock", ttlSeconds = 5)
+  @PostMapping("/instance/migrate")
+  @Audit(
+      module = "流程迁移",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'migrateInstances'")
+  @AuthApiPermission
+  public BaseResponse<com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO> migrateInstances(
+      @Valid @RequestBody com.njydsz.workflow.domain.dto.InstanceMigrationDTO dto) {
+    return BaseResponse.success(instanceMigrationService.migrate(dto));
+  }
+
+  /**
+   * 预览实例迁移（试运行 / dry run）
+   *
+   * @param dto 迁移参数
+   * @return 统一响应结果，包含迁移结果报告
+   */
+  @IdempotentExempt("查询/导出/预览/模拟语义接口，无需幂等")
+  @RateLimit(resource = "workflow.flowmigration.previewMigration", threshold = 50)
+  @Idempotent(key = "ydsz:workflow:FlowInstanceController:previewMigration:lock", ttlSeconds = 5)
+  @PostMapping("/instance/migrate/preview")
+  @Audit(
+      module = "流程迁移",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'previewMigration'")
+  @AuthApiPermission
+  public BaseResponse<com.njydsz.workflow.domain.dto.InstanceMigrationResultDTO> previewMigration(
+      @Valid @RequestBody com.njydsz.workflow.domain.dto.InstanceMigrationDTO dto) {
+    return BaseResponse.success(instanceMigrationService.previewMigration(dto));
+  }
+
+  /**
+   * 自动映射节点编码 — 对比源/目标定义节点，按编码自动匹配
+   *
+   * @param sourceDefinitionId 源定义 ID
+   * @param targetDefinitionId 目标定义 ID
+   * @return 统一响应结果，包含「旧节点编码 → 新节点编码」的映射
+   */
+  @GetMapping("/instance/migrate/autoMap")
+  public BaseResponse<Map<String, String>> autoMapNodes(
+      @RequestParam Long sourceDefinitionId, @RequestParam Long targetDefinitionId) {
+    return BaseResponse.success(
+        instanceMigrationService.autoMapNodes(sourceDefinitionId, targetDefinitionId));
+  }
+
+  // ============== 流程自动触发规则 ==============
+
+  /**
+   * 列出所有触发规则
+   *
+   * <p>返回全部已注册规则（启用 + 禁用），按创建时间倒序排列。
+   *
+   * @return 触发规则列表（含 sourceFlowCode / targetFlowCode / conditionExpression / enabled）
+   */
+  @Operation(summary = "列出所有触发规则")
+  @GetMapping("/instance/trigger/list")
+  public BaseResponse<List<FlowAutoTriggerVO>> listTriggers() {
+    return BaseResponse.success(
+        WorkflowConverter.INSTANT.flowAutoTriggerListToVO(autoTriggerService.listAll()));
+  }
+
+  /**
+   * 创建触发规则
+   *
+   * <p>幂等保护 5 秒；限流 50 QPS。
+   *
+   * <p>注册一条 (源流程 → 目标流程) 触发规则，条件表达式使用 QLExpress 沙箱。
+   *
+   * @param dto 触发规则 DTO（sourceFlowCode / targetFlowCode / conditionExpression / description）
+   * @return 空响应
+   */
+  @Operation(summary = "创建触发规则")
+  @Idempotent(key = "ydsz:workflow:FlowInstanceController:createTrigger:lock", ttlSeconds = 5)
+  @RateLimit(resource = "workflow.flowautotrigger.create", threshold = 50)
+  @PostMapping("/instance/trigger")
+  @Audit(
+      module = "自动触发",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'createTrigger'")
+  public BaseResponse<Void> createTrigger(@Valid @RequestBody FlowAutoTriggerCreateDTO dto) {
+    String sourceFlowCode = dto.getSourceFlowCode();
+    String targetFlowCode = dto.getTargetFlowCode();
+    String conditionExpression = dto.getConditionExpression();
+    autoTriggerService.registerTrigger(sourceFlowCode, targetFlowCode, conditionExpression);
+    return BaseResponse.success();
+  }
+
+  /**
+   * 删除触发规则
+   *
+   * <p>幂等保护 5 秒；限流 50 QPS。
+   *
+   * <p><b>物理删除</b>，不可恢复。如需临时停用建议改用启停切换。
+   *
+   * @param id 规则 ID
+   * @return 空响应
+   */
+  @Operation(summary = "删除触发规则")
+  @Idempotent(key = "ydsz:workflow:FlowInstanceController:deleteTrigger:lock", ttlSeconds = 5)
+  @RateLimit(resource = "workflow.flowautotrigger.delete", threshold = 50)
+  @DeleteMapping("/instance/trigger/{id}")
+  @Audit(
+      module = "自动触发",
+      type = AuditType.OPERATION,
+      action = AuditAction.DELETE,
+      content = "'deleteTrigger'")
+  public BaseResponse<Void> deleteTrigger(@PathVariable String id) {
+    autoTriggerService.deleteById(id);
+    return BaseResponse.success();
+  }
+
+  /**
+   * 启用/禁用触发规则
+   *
+   * <p>幂等保护 5 秒。
+   *
+   * <p>在 {@code enabled=true} 和 {@code enabled=false} 之间切换，<b>不删除规则</b>。
+   *
+   * @param id 规则 ID
+   * @return 切换后的状态（id / enabled）
+   */
+  @Operation(summary = "启用/禁用触发规则")
+  @Idempotent(key = "ydsz:workflow:FlowInstanceController:toggleTrigger:lock", ttlSeconds = 5)
+  @PutMapping("/instance/trigger/{id}/toggle")
+  public BaseResponse<Map<String, Object>> toggleTrigger(@PathVariable String id) {
+    boolean enabled = autoTriggerService.toggleEnabled(id);
+    return BaseResponse.success(Map.of("id", id, "enabled", enabled));
   }
 }

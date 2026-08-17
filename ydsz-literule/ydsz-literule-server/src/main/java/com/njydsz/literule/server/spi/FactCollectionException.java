@@ -18,11 +18,13 @@ public class FactCollectionException extends SysException {
   private static final long serialVersionUID = 1L;
 
   public FactCollectionException(String message) {
-    super(message);
+    super();
+    setMessage(message);
   }
 
   public FactCollectionException(String message, Throwable cause) {
-    super(message);
+    super();
+    setMessage(message);
     initCause(cause);
   }
 }

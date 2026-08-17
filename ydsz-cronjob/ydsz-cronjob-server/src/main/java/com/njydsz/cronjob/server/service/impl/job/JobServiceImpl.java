@@ -111,8 +111,6 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
    */
   private final TenantQuotaService tenantQuotaService;
 
-  /** 占位（已移除 SecondLevelScheduler 依赖）。 */
-
   /**
    * 任务历史版本服务（P1-6 可选注入）。
    *

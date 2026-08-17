@@ -155,7 +155,13 @@ public class ConsistentHashSharder {
   }
 
   private static long hash0(String key) {
-    byte[] digest = DigestUtils.digest(key.getBytes(StandardCharsets.UTF_8), "MD5", null, 1);
+    byte[] keyBytes = key.getBytes(StandardCharsets.UTF_8);
+    byte[] digest;
+    try {
+      digest = DigestUtils.digest(new java.io.ByteArrayInputStream(keyBytes), "MD5");
+    } catch (java.io.IOException e) {
+      throw new IllegalStateException("MD5 摘要计算失败: " + key, e);
+    }
     long h = 0;
     for (int i = 0; i < 8; i++) {
       h <<= 8;

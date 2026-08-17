@@ -4,7 +4,8 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.njydsz.literule.api.RuleContext;
 
@@ -31,8 +32,9 @@ import com.njydsz.literule.api.RuleContext;
  * @author ydsz-team
  * @since 1.0.0
  */
-@Slf4j
 public class MockModelInputProvider implements ModelInputProvider {
+
+  private static final Logger log = LoggerFactory.getLogger(MockModelInputProvider.class);
 
   /** 默认模型 ID */
   public static final String DEFAULT_MODEL_ID = "mock-model-v1";

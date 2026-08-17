@@ -360,13 +360,26 @@ public class BatchServiceImpl implements BatchService {
   /**
    * 从 DTO 构建消息请求列表。
    *
-   * <p>优先使用 receiverList 模式（统一模板展开），否则检查是否有直接传入的请求。
+   * <p>优先使用直接传入的 requests 列表，否则使用 receiverList 模式（统一模板展开）。
    *
    * @param dto 批量发送请求
    * @return 消息请求列表
    */
   private List<MessageRequest> buildRequests(BatchSendRequestDTO dto) {
     List<MessageRequest> requests = new ArrayList<>();
+    // 优先使用直接传入的 requests 列表
+    if (!CollectionUtils.isEmpty(dto.getRequests())) {
+      for (MessageRequest req : dto.getRequests()) {
+        if (req != null) {
+          if (!StringUtils.hasText(req.getMessageId())) {
+            req.setMessageId(String.valueOf(snowflakeIdGenerator.nextId()));
+          }
+          requests.add(req);
+        }
+      }
+      return requests;
+    }
+    // receiverList 模式（统一模板展开）
     if (!CollectionUtils.isEmpty(dto.getReceiverList())) {
       for (String receiver : dto.getReceiverList()) {
         if (!StringUtils.hasText(receiver)) {

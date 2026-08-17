@@ -1,6 +1,5 @@
 package com.njydsz.workflow.server.config;
 
-import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -12,7 +11,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
-import com.njydsz.workflow.infra.mapper.FlowCcMapper;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
 import com.njydsz.workflow.server.health.FlowHealthIndicator;
@@ -62,11 +60,9 @@ public class FlowAutoConfiguration {
   @Bean
   @ConditionalOnMissingBean(FlowMetrics.class)
   public FlowMetrics flowMetrics(
-      MeterRegistry registry,
       ObjectProvider<FlowInstanceMapper> instanceMapperProvider,
-      ObjectProvider<FlowRunTaskMapper> taskMapperProvider,
-      ObjectProvider<FlowCcMapper> ccMapperProvider) {
-    return new FlowMetrics(registry, instanceMapperProvider, taskMapperProvider, ccMapperProvider);
+      ObjectProvider<FlowRunTaskMapper> taskMapperProvider) {
+    return new FlowMetrics(instanceMapperProvider, taskMapperProvider);
   }
 
   // P0-1: flowQueueExecutor 线程池已迁移到 ydsz-common-thread 统一管理

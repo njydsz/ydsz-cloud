@@ -50,7 +50,7 @@ import com.njydsz.workflow.domain.enums.FlowSkipType;
  *   <li>flowable:priority - 任务优先级（1-100）
  *   <li>flowable:async - 是否异步执行（true/false）
  *   <li>flowable:assigneeType - 办理人类型（SELF_SELECT/MULTI_LEADER/...）
- *   <li>flowable:performType - 会签类型（OR/SEQUENTIAL/PARALLEL/FOREACH_PARALLEL）
+ *   <li>flowable:performType - 会签类型（OR/PARALLEL）
  *   <li>flowable:approveCount - 会签通过人数
  *   <li>flowable:approveRate - 通过率（0-100）
  *   <li>flowable:weight - 加权值
@@ -571,10 +571,10 @@ public class BpmnXmlParser {
             }
           }
         }
-        // GAP-P2-10: FOREACH 模式 — 覆盖 nodeType 和 performType
+        // GAP-P2-10: FOREACH 模式 — 覆盖 nodeType 和 performType（精简为 PARALLEL）
         if (isForeach) {
           node.setNodeType(FlowNodeType.FOREACH.getCode());
-          performType = "FOREACH_PARALLEL";
+          performType = FlowPerformType.PARALLEL.name();
           ext.put("multiInstance", "FOREACH");
         } else {
           ext.put("multiInstance", performType);

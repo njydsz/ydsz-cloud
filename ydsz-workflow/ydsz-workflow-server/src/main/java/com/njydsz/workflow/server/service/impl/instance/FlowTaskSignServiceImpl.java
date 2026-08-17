@@ -44,8 +44,8 @@ import com.njydsz.workflow.infra.mapper.FlowUserMapper;
  * <table>
  *   <caption>加签类型差异</caption>
  *   <tr><th>类型</th><th>加签人位置</th><th>会签模式</th><th>典型场景</th></tr>
- *   <tr><td>前加签（{@code BEFORE}）</td><td>当前节点前</td><td>顺序（当前人前）</td><td>需要专家先审</td></tr>
- *   <tr><td>后加签（{@code AFTER}）</td><td>当前节点后</td><td>顺序（切换为 {@code SEQUENTIAL}）</td><td>需要当前主管复核</td></tr>
+ *   <tr><td>前加签（{@code BEFORE}）</td><td>当前节点前</td><td>并行（当前人前）</td><td>需要专家先审</td></tr>
+ *   <tr><td>后加签（{@code AFTER}）</td><td>当前节点后</td><td>并行（切换为 {@code PARALLEL}）</td><td>需要当前主管复核</td></tr>
  *   <tr><td>并加签（{@code PARALLEL}）</td><td>当前节点并行</td><td>并行（切换为 {@code PARALLEL}）</td><td>需要多部门会审</td></tr>
  *   <tr><td>追加处理人（{@code ADD}）</td><td>当前节点并行</td><td>保持原 {@code performType}</td><td>会签中临时增加审批人</td></tr>
  * </table>
@@ -153,9 +153,8 @@ public class FlowTaskSignServiceImpl {
    *
    * <ol>
    *   <li>向 {@code ydsz_flow_user} 插入新审批人（{@code signType=AFTER}）
-   *   <li><b>强制切换任务会签模式为 {@code SEQUENTIAL}（顺序会签）</b>，{@code approveCount +1}
-   *   <li>当当前审批人 pass 时，{@code doSequentialPass} 检测到 {@code approveFinished < approveCount}，
-   *       切换到加签人而非推进；加签人 pass 后才真正推进到下一节点
+   *   <li><b>强制切换任务会签模式为 {@code PARALLEL}（并行会签）</b>，{@code approveCount +1}
+   *   <li>当当前审批人和加签人都通过后才推进到下一节点
    * </ol>
    *
    * <p><b>适用场景：</b>需要「主管先审 → 专家再审 → 下一节点」的两段式审批。
@@ -175,11 +174,10 @@ public class FlowTaskSignServiceImpl {
     }
     // P2-29: 后加签真实实现 — 当前审批人通过后，新加签人需要审批，两人都通过后才推进到下一节点
     // 实现方式：
-    // 1. 将当前任务切换为顺序会签（performType=SEQUENTIAL）
+    // 1. 将当前任务切换为并行会签（performType=PARALLEL）
     // 2. approveCount +1（当前人 + 加签人）
     // 3. 新增审批人写入 ydsz_flow_user（processed=0）
-    // 这样当前审批人 pass 时，doSequentialPass 检测到 approveFinished < approveCount，
-    // 会切换到加签人而非推进到下一节点；加签人 pass 后才真正推进
+    // 这样当前审批人和加签人都通过后才推进到下一节点
     if (dto.getTargetUserId() != null) {
       FlowUser fu = new FlowUser();
       fu.setTaskId(task.getId());
@@ -194,14 +192,14 @@ public class FlowTaskSignServiceImpl {
       fu.setTenantId(task.getTenantId());
       fu.setProviderTraceId(task.getProviderTraceId());
       userMapper.insert(fu);
-      // 切换为顺序会签：当前人 pass 后切换到加签人，加签人 pass 后才推进
-      task.setPerformType(FlowPerformType.SEQUENTIAL.name());
+      // 切换为并行会签：当前人和加签人都通过后才推进
+      task.setPerformType(FlowPerformType.PARALLEL.name());
       task.setApproveCount((task.getApproveCount() == null ? 0 : task.getApproveCount()) + 1);
       taskMapper.updateById(task);
     }
     support.audit(
         task, "COUNTERSIGN_AFTER", dto.getUserId(), dto.getTargetUserId(), dto.getComment());
-    log.info("[Flow] 后加签: taskId={} → 新增审批人={} (切换为顺序会签)", task.getId(), dto.getTargetUserId());
+    log.info("[Flow] 后加签: taskId={} → 新增审批人={} (切换为并行会签)", task.getId(), dto.getTargetUserId());
     // P2-34: 触发 onTaskCountersigned 事件
     support.fireEvent(
         l -> l.onTaskCountersigned(task.getId(), dto.getTargetUserId(), "AFTER"), task.getId());
@@ -220,7 +218,7 @@ public class FlowTaskSignServiceImpl {
    *   <li>强制切换 performType 为 PARALLEL —— 确保所有人全部通过才推进
    * </ol>
    *
-   * 与后加签（SEQUENTIAL 顺序）不同，并加签的加签人与原审批人<b>同时</b>收到待办， 互不阻塞，全部审完后才推进到下一节点。
+   * 与后加签（PARALLEL 并行）不同，并加签的加签人与原审批人<b>同时</b>收到待办， 互不阻塞，全部审完后才推进到下一节点。
    */
   @Transactional(rollbackFor = Exception.class)
   public void countersignParallel(FlowTaskOperateDTO dto) {

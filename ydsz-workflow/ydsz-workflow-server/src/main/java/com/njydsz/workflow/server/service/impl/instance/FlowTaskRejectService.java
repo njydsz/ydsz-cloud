@@ -13,16 +13,12 @@ import java.util.Set;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.common.core.code.BaseResultCode;
-import com.njydsz.common.event.api.DomainEvent;
-import com.njydsz.common.event.api.DomainEventTypes;
-import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.workflow.domain.dto.FlowTaskOperateDTO;
@@ -89,9 +85,6 @@ public class FlowTaskRejectService {
 
   /** P2-3: Prometheus 指标（可能为 null：测试环境） */
   private final FlowMetrics flowMetrics;
-
-  /** 统一领域事件发布门面（可选依赖，未配置时安全降级） */
-  private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
 
   /**
    * 驳回任务。
@@ -172,14 +165,11 @@ public class FlowTaskRejectService {
       notificationService.fireInstanceRejected(instance.getId(), dto.getComment());
       support.audit(task, "REJECT", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
       if (flowMetrics != null) {
-        flowMetrics.incTaskRejected(task.getFlowCode(), task.getNodeCode());
+        flowMetrics.incTask(task.getFlowCode(), task.getNodeCode(), "rejected");
         flowMetrics.recordTaskDuration(task, "REJECTED");
-        flowMetrics.incInstanceFinished(instance.getFlowCode(), "REJECTED");
+        flowMetrics.incInstance(instance.getFlowCode(), "rejected");
         flowMetrics.recordInstanceDuration(instance, "REJECTED");
       }
-      // P0-2: 发布 Outbox 事件 FLOW_INSTANCE_REJECTED（跨模块可靠投递）
-      // 消息中心据此通知发起人"审批驳回"，携带驳回原因与驳回节点
-      publishRejectedEvent(instance, dto);
       return;
     }
     instanceService.generateTasksForNodes(instance.getId(), rejectTargets, mergedVars);
@@ -201,46 +191,12 @@ public class FlowTaskRejectService {
       todoCountPushService.pushTaskRejected(task, dto.getUserId(), dto.getComment());
     }
     if (flowMetrics != null) {
-      flowMetrics.incTaskRejected(task.getFlowCode(), task.getNodeCode());
+      flowMetrics.incTask(task.getFlowCode(), task.getNodeCode(), "rejected");
       flowMetrics.recordTaskDuration(task, "REJECTED");
     }
   }
 
   // ============================== 私有辅助 ==============================
-
-  /**
-   * P0-2: 发布 FLOW_INSTANCE_REJECTED Outbox 事件（可选依赖，未配置时安全降级）
-   *
-   * <p>异常不影响主流程：Outbox 投递失败仅记录 WARN 日志。
-   *
-   * @param instance 流程实例
-   * @param dto 任务操作 DTO（携带驳回原因、操作人等）
-   */
-  private void publishRejectedEvent(FlowInstance instance, FlowTaskOperateDTO dto) {
-    DomainEventPublisher publisher = eventPublisherProvider.getIfAvailable();
-    if (publisher == null) {
-      log.debug("[Flow] DomainEventPublisher 未配置，跳过 REJECTED 事件: instanceId={}", instance.getId());
-      return;
-    }
-    Map<String, Object> metadata = new HashMap<>();
-    metadata.put("instanceId", instance.getId());
-    metadata.put(
-        "flowTitle", instance.getTitle() != null ? instance.getTitle() : instance.getFlowName());
-    metadata.put("flowCode", instance.getFlowCode());
-    metadata.put(
-        "businessType", instance.getBusinessType() != null ? instance.getBusinessType() : "");
-    metadata.put("businessId", instance.getBusinessId() != null ? instance.getBusinessId() : "");
-    metadata.put("initiatorId", instance.getInitiatorId() != null ? instance.getInitiatorId() : "");
-    metadata.put("rejectReason", dto.getComment() != null ? dto.getComment() : "未提供原因");
-    metadata.put("operatorId", dto.getUserId() != null ? dto.getUserId() : "");
-    publisher.publish(
-        DomainEvent.builder()
-            .aggregateType("FlowInstance")
-            .aggregateId(instance.getId())
-            .eventType(DomainEventTypes.FLOW_INSTANCE_REJECTED)
-            .metadata(metadata)
-            .build());
-  }
 
   /**
    * P0-1 修复: 退回到发起人 — 解析 startNode 下游第一个审批节点作为退回目标。

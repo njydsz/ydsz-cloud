@@ -27,7 +27,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *   <li>{@code instanceId}：所属流程实例 ID
  *   <li>{@code nodeCode} / {@code nodeType}：节点信息（流程图定位）
  *   <li>{@code assigneeType}：办理人类型（{@code USER} / {@code ROLE} / {@code DEPT} / {@code POST}）
- *   <li>{@code performType}：会签类型（{@code OR} / {@code SEQUENTIAL} / {@code PARALLEL} / {@code FOREACH_PARALLEL}）
+ *   <li>{@code performType}：会签类型（{@code OR} / {@code PARALLEL}）
  *   <li>{@code taskStatus}：任务状态（{@link com.njydsz.workflow.domain.enums.FlowTaskStatus}）
  * </ul>
  *
@@ -36,8 +36,6 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * <ul>
  *   <li>{@code OR}：或签（任一人同意即推进）
  *   <li>{@code PARALLEL}：并行会签（所有人同意才推进）
- *   <li>{@code SEQUENTIAL}：顺序会签（按顺序逐一审批，全部通过才推进）
- *   <li>{@code FOREACH_PARALLEL}：FOREACH 并行（每个集合元素对应独立 task，全部完成才推进）
  * </ul>
  *
  * <p><b>SLA 催办（P1-6）：</b>
@@ -50,7 +48,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  * </ul>
  *
  * <p><b>循环节点（GAP-P2-10）：</b>FOREACH 节点为集合中每个元素创建独立 task， {@code iterVar} 存储当前 task 对应的元素值（如
- * userId/deptId），用于区分迭代实例。
+ * userId/deptId），用于区分迭代实例。performType 使用 PARALLEL（全部完成才推进）。
  *
  * <p><b>索引设计：</b>
  *
@@ -131,7 +129,7 @@ public class FlowRunTask extends MpBaseEntity<String> {
   /** 会签类型（{@link com.njydsz.workflow.domain.enums.FlowPerformType}.name） */
   private String performType;
 
-  /** 会签所需通过人数（{@code PARALLEL/SEQUENTIAL} 模式：会签总人数） */
+  /** 会签所需通过人数（{@code PARALLEL} 模式：会签总人数） */
   private Integer approveCount;
 
   /** 会签当前已通过人数 */

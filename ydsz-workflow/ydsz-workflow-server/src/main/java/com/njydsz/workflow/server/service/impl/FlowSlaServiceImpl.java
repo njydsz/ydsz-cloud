@@ -403,8 +403,8 @@ public class FlowSlaServiceImpl implements FlowSlaService {
       log.info("[FlowSla] 自动通过: taskId={} comment={}", task.getId(), comment);
       // P2-3: Prometheus 指标
       if (flowMetrics != null) {
-        flowMetrics.incSlaTimeout(task.getFlowCode(), "AUTO_PASS");
-        flowMetrics.incTaskAutoHandled(task.getFlowCode(), task.getNodeCode(), "AUTO_PASS");
+        flowMetrics.incError(task.getFlowCode(), "sla_timeout");
+        flowMetrics.incTask(task.getFlowCode(), task.getNodeCode(), "auto_handled");
       }
       return true;
     } catch (Exception e) {
@@ -427,8 +427,8 @@ public class FlowSlaServiceImpl implements FlowSlaService {
       log.info("[FlowSla] 自动驳回: taskId={} comment={}", task.getId(), comment);
       // P2-3: Prometheus 指标
       if (flowMetrics != null) {
-        flowMetrics.incSlaTimeout(task.getFlowCode(), "AUTO_REJECT");
-        flowMetrics.incTaskAutoHandled(task.getFlowCode(), task.getNodeCode(), "AUTO_REJECT");
+        flowMetrics.incError(task.getFlowCode(), "sla_timeout");
+        flowMetrics.incTask(task.getFlowCode(), task.getNodeCode(), "auto_handled");
       }
       return true;
     } catch (Exception e) {
@@ -474,8 +474,8 @@ public class FlowSlaServiceImpl implements FlowSlaService {
         log.info("[FlowSla] 升级成功: taskId={} escalateUserId={}", task.getId(), escalateUserId);
         // P2-3: Prometheus 指标
         if (flowMetrics != null) {
-          flowMetrics.incSlaTimeout(task.getFlowCode(), "ESCALATE");
-          flowMetrics.incTaskAutoHandled(task.getFlowCode(), task.getNodeCode(), "ESCALATE");
+        flowMetrics.incError(task.getFlowCode(), "sla_timeout");
+        flowMetrics.incTask(task.getFlowCode(), task.getNodeCode(), "auto_handled");
         }
         return true;
       } catch (Exception transferEx) {
@@ -532,8 +532,8 @@ public class FlowSlaServiceImpl implements FlowSlaService {
           task.getNodeCode());
       // P2-3: Prometheus 指标
       if (flowMetrics != null) {
-        flowMetrics.incSlaTimeout(task.getFlowCode(), "NOTIFY");
-        flowMetrics.incTaskAutoHandled(task.getFlowCode(), task.getNodeCode(), "NOTIFY");
+        flowMetrics.incError(task.getFlowCode(), "sla_timeout");
+        flowMetrics.incTask(task.getFlowCode(), task.getNodeCode(), "auto_handled");
       }
       return true;
     } catch (Exception e) {

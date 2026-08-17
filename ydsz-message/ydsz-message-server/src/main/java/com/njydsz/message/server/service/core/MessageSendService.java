@@ -21,6 +21,7 @@ import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.config.RetryStrategyResolver;
 import com.njydsz.message.server.metric.MessageMetrics;
+import com.njydsz.message.server.service.core.GuardService;
 
 /**
  * 消息发送与通道分发服务。
@@ -46,7 +47,7 @@ public class MessageSendService {
 
   private final ChannelRouter channelRouter;
   private final MsgLogMapper msgLogMapper;
-  private final RateLimitService rateLimitService;
+  private final GuardService guardService;
   private final RetryStrategyResolver retryStrategyResolver;
   private final MessageMetrics messageMetrics;
   private final MessageTraceService messageTraceService;
@@ -76,7 +77,7 @@ public class MessageSendService {
       logDO.setCost(calculateCost(channel));
       msgLogMapper.updateById(logDO);
       if (StringUtils.hasText(receiver)) {
-        rateLimitService.recordFrequency(receiver, channel, logDO.getBizType());
+        guardService.recordFrequency(receiver, channel, logDO.getBizType());
       }
       messageMetrics.recordSend(channel, "SUCCESS", cost);
       messageMetrics.recordSendSuccess(channel, logDO.getTemplateCode(), logDO.getTenantId());

@@ -17,7 +17,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -29,9 +28,6 @@ import com.njydsz.common.auth.context.AuthContextUtils;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.PageResponse;
-import com.njydsz.common.event.api.DomainEvent;
-import com.njydsz.common.event.api.DomainEventTypes;
-import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.feign.assembler.NameAssembler;
 import com.njydsz.common.feign.assembler.NameType;
@@ -47,7 +43,6 @@ import com.njydsz.workflow.domain.entity.FlowDefinition;
 import com.njydsz.workflow.domain.entity.FlowInstance;
 import com.njydsz.workflow.domain.entity.FlowNode;
 import com.njydsz.workflow.domain.entity.FlowRunTask;
-import com.njydsz.workflow.domain.entity.FlowSkip;
 import com.njydsz.workflow.domain.enums.FlowInstanceStatus;
 import com.njydsz.workflow.domain.enums.FlowNodeType;
 import com.njydsz.workflow.domain.enums.FlowTaskStatus;
@@ -56,11 +51,9 @@ import com.njydsz.workflow.infra.mapper.FlowHisTaskMapper;
 import com.njydsz.workflow.infra.mapper.FlowInstanceMapper;
 import com.njydsz.workflow.infra.mapper.FlowNodeMapper;
 import com.njydsz.workflow.infra.mapper.FlowRunTaskMapper;
-import com.njydsz.workflow.infra.mapper.FlowSkipMapper;
 import com.njydsz.workflow.server.engine.FlowAdvancer;
 import com.njydsz.workflow.server.engine.FlowEventContext;
 import com.njydsz.workflow.server.engine.FlowEventListener;
-import com.njydsz.workflow.server.engine.FlowVariableStrategy;
 import com.njydsz.workflow.server.engine.FlowWorkflowEvent;
 import com.njydsz.workflow.server.metrics.FlowMetrics;
 import com.njydsz.workflow.server.service.FlowAutoTriggerService;
@@ -70,7 +63,6 @@ import com.njydsz.workflow.server.service.FlowEventSubscriptionService;
 import com.njydsz.workflow.server.service.FlowInstanceService;
 import com.njydsz.workflow.server.service.FlowSubProcessService;
 import com.njydsz.workflow.server.service.FlowTaskService;
-import com.njydsz.workflow.server.service.FlowThirdPartySyncService;
 import com.njydsz.workflow.server.service.FlowTimerService;
 
 /**
@@ -88,7 +80,6 @@ import com.njydsz.workflow.server.service.FlowTimerService;
  *       #batchTerminate}（单失败不影响其它）
  *   <li><b>查询能力</b>：按 ID / 按业务关联 / 按发起人 / 按状态 / 按租户 / 待办聚合 / 分页
  *   <li><b>子流程级联</b>：父流程终止时自动终止全部子流程（{@link FlowSubProcessService}）
- *   <li><b>三方同步</b>：终止 / 撤回时通过 {@link FlowThirdPartySyncService} 通知钉钉 / 飞书 / 企微
  *   <li><b>事件总线</b>：{@link ApplicationEventPublisher} 异步广播 {@code onInstanceStart / onError} 等
  *   <li><b>幂等性</b>：{@link #start} 基于 {@code (businessType, businessId, tenantId)} 复合唯一索引
  * </ul>
@@ -126,7 +117,6 @@ import com.njydsz.workflow.server.service.FlowTimerService;
  * @see FlowInstance 流程实例实体
  * @see FlowAdvancer 流程推进引擎
  * @see FlowSubProcessService 子流程服务
- * @see FlowThirdPartySyncService 三方审批同步服务
  */
 @Slf4j
 @Service
@@ -148,14 +138,8 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
   /** 运行时任务 Mapper，查询/更新当前待办任务 */
   private final FlowRunTaskMapper taskMapper;
 
-  /** GAP-V2-08: 流程节点 Mapper（模拟运行时查询节点） */
+  /** 流程节点 Mapper */
   private final FlowNodeMapper nodeMapper;
-
-  /** GAP-V2-08: 流程跳转 Mapper（模拟运行时查询跳转） */
-  private final FlowSkipMapper skipMapper;
-
-  /** GAP-V2-08: 条件求值策略（模拟运行时复用 SpEL 条件解析） */
-  private final FlowVariableStrategy variableStrategy;
 
   /** 事件监听器列表（Spring 自动注入所有实现），处理流程生命周期事件 */
   private final List<FlowEventListener> eventListeners;
@@ -189,9 +173,6 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
   /** P1-1: 历史任务 Mapper（查询可撤回的历史节点列表） */
   private final FlowHisTaskMapper hisTaskMapper;
 
-  /** P2-6: 三方审批双向同步服务（终止/撤回时主动同步回三方） */
-  private final FlowThirdPartySyncService thirdPartySyncService;
-
   /**
    * P0-2: 定时器服务 — boundaryEvent 含 timer 配置时注册边界定时器自动触发
    *
@@ -212,9 +193,6 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
    * batch-names 端点， 用 initiatorId 实时解析 realName 并回填到返回对象。Feign 失败时降级为用 ID 顶替。
    */
   private final NameAssembler nameAssembler;
-
-  /** 统一领域事件发布门面（可选依赖，未配置时安全降级） */
-  private final ObjectProvider<DomainEventPublisher> eventPublisherProvider;
 
   /**
    * 启动流程实例
@@ -330,7 +308,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
     // P2-3: Prometheus 指标 — 实例创建
     if (flowMetrics != null) {
-      flowMetrics.incInstanceCreated(def.getFlowCode());
+      flowMetrics.incInstance(def.getFlowCode(), "created");
     }
 
     // 3. 引擎推进：开始节点 → 下一节点
@@ -339,7 +317,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     } catch (Exception e) {
       fireError(instanceId, e);
       if (flowMetrics != null) {
-        flowMetrics.incStartError(def.getFlowCode(), e.getClass().getSimpleName());
+        flowMetrics.incError(def.getFlowCode(), "start_error");
       }
       throw e;
     }
@@ -348,26 +326,6 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         dto.getFlowCode(),
         dto.getBusinessId(),
         instanceId);
-
-    // P0-2: 发布 Outbox 事件（跨模块可靠投递）
-    // 语义修正：start() 发布 FLOW_INSTANCE_STARTED（流程启动），
-    // 审批通过事件 FLOW_INSTANCE_APPROVED 由 complete() 发布，避免消息中心误发"审批通过通知"
-    DomainEventPublisher publisher = eventPublisherProvider.getIfAvailable();
-    if (publisher != null) {
-      publisher.publish(
-          DomainEvent.builder()
-              .aggregateType("FlowInstance")
-              .aggregateId(instanceId)
-              .eventType(DomainEventTypes.FLOW_INSTANCE_STARTED)
-              .metadata("instanceId", instanceId)
-              .metadata("flowCode", dto.getFlowCode())
-              .metadata("flowName", def.getFlowName() != null ? def.getFlowName() : "")
-              .metadata("businessType", dto.getBusinessType() != null ? dto.getBusinessType() : "")
-              .metadata("businessId", dto.getBusinessId() != null ? dto.getBusinessId() : "")
-              .metadata("initiatorId", dto.getInitiatorId() != null ? dto.getInitiatorId() : "")
-              .metadata("tenantId", tenantId)
-              .build());
-    }
 
     return instanceId;
   }
@@ -435,8 +393,8 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     log.info("[Flow] 终止流程: instanceId={} reason={}", instanceId, reason);
     // P2-3: Prometheus 指标 — 实例终止 + 耗时
     if (flowMetrics != null) {
-      flowMetrics.incInstanceFinished(instance.getFlowCode(), "TERMINATED");
-      flowMetrics.recordInstanceDuration(instance, "TERMINATED");
+      flowMetrics.incInstance(instance.getFlowCode(), "terminated");
+        flowMetrics.recordInstanceDuration(instance, "TERMINATED");
     }
     // P2-34: 触发 onInstanceTerminated 事件
     fireEvent(l -> l.onInstanceTerminated(instanceId, reason));
@@ -445,23 +403,6 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     fireEvent(l -> l.onInstanceTerminated(instanceId, reason, ctx));
     // P2-35: 发布 Spring 异步事件
     publishWorkflowEvent("INSTANCE_TERMINATED", instanceId, null);
-    // P0-2: 发布 Outbox 事件 FLOW_INSTANCE_TERMINATED（跨模块可靠投递）
-    publishOutboxEvent(
-        DomainEventTypes.FLOW_INSTANCE_TERMINATED,
-        instanceId,
-        instance,
-        "flowTitle",
-        instance.getTitle() != null ? instance.getTitle() : instance.getFlowName(),
-        "reason",
-        reason != null ? reason : "管理员终止",
-        "initiatorId",
-        instance.getInitiatorId() != null ? instance.getInitiatorId() : "");
-    // P2-6: 双向同步 — 本地→三方取消审批单
-    try {
-      thirdPartySyncService.syncBackOnTerminate(instanceId, reason);
-    } catch (Exception e) {
-      log.warn("[Flow] 三方审批同步回退失败（不影响本地终止）: instanceId={} err={}", instanceId, e.getMessage());
-    }
   }
 
   // P1-8: 批量终止 + 子流程级联终止
@@ -527,7 +468,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     log.info("[Flow] 挂起流程: instanceId={}", instanceId);
     // P2-3: Prometheus 指标
     if (flowMetrics != null) {
-      flowMetrics.incInstanceSuspended(instance.getFlowCode());
+      flowMetrics.incInstance(instance.getFlowCode(), "suspended");
     }
     // P2-34: 触发 onInstanceSuspended 事件
     fireEvent(l -> l.onInstanceSuspended(instanceId));
@@ -558,7 +499,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     log.info("[Flow] 激活流程: instanceId={}", instanceId);
     // P2-3: Prometheus 指标
     if (flowMetrics != null) {
-      flowMetrics.incInstanceActivated(instance.getFlowCode());
+      flowMetrics.incInstance(instance.getFlowCode(), "activated");
     }
     // P2-34: 触发 onInstanceActivated 事件
     fireEvent(l -> l.onInstanceActivated(instanceId));
@@ -585,32 +526,14 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     log.info("[Flow] 流程完成: instanceId={} endNode={}", instanceId, endNodeCode);
     // P2-3: Prometheus 指标 — 实例完成 + 耗时
     if (flowMetrics != null) {
-      flowMetrics.incInstanceFinished(instance.getFlowCode(), "COMPLETED");
-      flowMetrics.recordInstanceDuration(instance, "COMPLETED");
+      flowMetrics.incInstance(instance.getFlowCode(), "completed");
+        flowMetrics.recordInstanceDuration(instance, "COMPLETED");
     }
 
     // 业务侧事件：onInstanceCompleted
     fireEvent(l -> l.onInstanceCompleted(instanceId));
     // P2-35: 发布 Spring 异步事件
     publishWorkflowEvent("INSTANCE_COMPLETED", instanceId, null);
-    // P0-2: 发布 Outbox 事件 FLOW_INSTANCE_APPROVED（跨模块可靠投递）
-    // 流程走完所有审批节点到达结束节点 = 审批通过，消息中心据此通知发起人
-    publishOutboxEvent(
-        DomainEventTypes.FLOW_INSTANCE_APPROVED,
-        instanceId,
-        instance,
-        "flowTitle",
-        instance.getTitle() != null ? instance.getTitle() : instance.getFlowName(),
-        "flowCode",
-        instance.getFlowCode(),
-        "businessType",
-        instance.getBusinessType() != null ? instance.getBusinessType() : "",
-        "businessId",
-        instance.getBusinessId() != null ? instance.getBusinessId() : "",
-        "initiatorId",
-        instance.getInitiatorId() != null ? instance.getInitiatorId() : "",
-        "endNodeCode",
-        endNodeCode != null ? endNodeCode : "");
     // 自动触发：检查是否需要自动发起下一流程
     try {
       autoTriggerService.onInstanceCompleted(instanceId);
@@ -706,18 +629,12 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     log.info("[Flow] 撤回流程: instanceId={} initiatorId={}", instanceId, initiatorId);
     // P2-3: Prometheus 指标 — 撤回
     if (flowMetrics != null) {
-      flowMetrics.incRecall(instance.getFlowCode());
+      flowMetrics.incInstance(instance.getFlowCode(), "recalled");
     }
     // P2-34: 触发 onInstanceRecalled 事件
     fireEvent(l -> l.onInstanceRecalled(instanceId, initiatorId));
     // P2-35: 发布 Spring 异步事件
     publishWorkflowEvent("INSTANCE_RECALLED", instanceId, null);
-    // P2-6: 双向同步 — 撤回对应三方 canceled（发起人撤回），主动取消三方审批单
-    try {
-      thirdPartySyncService.syncBackOnRecall(instanceId, initiatorId);
-    } catch (Exception e) {
-      log.warn("[Flow] 三方审批同步撤回失败（不影响本地撤回）: instanceId={} err={}", instanceId, e.getMessage());
-    }
     return true;
   }
 
@@ -840,18 +757,12 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         targetNodeCode);
     // P2-3: Prometheus 指标 — 撤回
     if (flowMetrics != null) {
-      flowMetrics.incRecall(instance.getFlowCode());
+      flowMetrics.incInstance(instance.getFlowCode(), "recalled");
     }
     // P2-34: 触发 onInstanceRecalled 事件
     fireEvent(l -> l.onInstanceRecalled(instanceId, initiatorId));
     // P2-35: 发布 Spring 异步事件
     publishWorkflowEvent("INSTANCE_RECALLED", instanceId, null);
-    // P2-6: 双向同步 — 撤回对应三方 canceled
-    try {
-      thirdPartySyncService.syncBackOnRecall(instanceId, initiatorId);
-    } catch (Exception e) {
-      log.warn("[Flow] 三方审批同步撤回失败（不影响本地撤回）: instanceId={} err={}", instanceId, e.getMessage());
-    }
     return true;
   }
 
@@ -950,9 +861,9 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         reason,
         isAdmin && !isInitiator);
 
-    // 7. Prometheus 指标 — 复用 incRecall 计数器
+    // 7. Prometheus 指标
     if (flowMetrics != null) {
-      flowMetrics.incRecall(instance.getFlowCode());
+      flowMetrics.incInstance(instance.getFlowCode(), "recalled");
     }
 
     // 8. 触发 onInstanceRolledBack 事件（业务侧可执行补偿）
@@ -1365,206 +1276,6 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     }
   }
 
-  // ============================== GAP-V2-08: 流程模拟运行 ==============================
-
-  @Override
-  @Transactional(readOnly = true)
-  public List<Map<String, Object>> simulate(
-      String flowCode, String version, Map<String, Object> variables, String tenantId) {
-    if (!StringUtils.hasText(flowCode)) {
-      throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_ebccbe46")
-          .build();
-    }
-    // 解析租户
-    String tid = tenantId != null ? tenantId : AuthContextUtils.getTenantIdOrDefault();
-    // 查询已发布流程定义
-    FlowDefinition def = definitionService.getPublished(flowCode, version, tid);
-    if (def == null) {
-      throw SysException.builder()
-          .resultCode(BaseResultCode.NOT_FOUND)
-          .message("error.workflow.msg_add8d012" + flowCode + " version=" + version)
-          .build();
-    }
-    // 查询节点 + 跳转
-    List<FlowNode> nodes = nodeMapper.selectByDefinitionId(def.getId());
-    List<FlowSkip> skips = skipMapper.selectByDefinitionId(def.getId());
-
-    // 构建节点查找 Map
-    Map<String, FlowNode> nodeMap = new HashMap<>();
-    for (FlowNode node : nodes) {
-      nodeMap.put(node.getNodeCode(), node);
-    }
-
-    // 构建跳转查找 Map: fromNodeCode -> List<FlowSkip>
-    Map<String, List<FlowSkip>> skipMap = new HashMap<>();
-    for (FlowSkip skip : skips) {
-      String fromNodeCode = extractFromNodeCode(skip);
-      if (fromNodeCode != null) {
-        skipMap.computeIfAbsent(fromNodeCode, k -> new ArrayList<>()).add(skip);
-      }
-    }
-
-    // 查找开始节点
-    FlowNode startNode = null;
-    for (FlowNode node : nodes) {
-      if (node.getNodeType() != null && node.getNodeType() == FlowNodeType.START.getCode()) {
-        startNode = node;
-        break;
-      }
-    }
-    if (startNode == null) {
-      throw SysException.builder()
-          .resultCode(BaseResultCode.BAD_REQUEST)
-          .message("error.workflow.msg_69a69bcd")
-          .build();
-    }
-
-    // 模拟遍历
-    List<Map<String, Object>> result = new ArrayList<>();
-    Set<String> visited = new HashSet<>();
-    FlowNode currentNode = startNode;
-    int step = 0;
-    final int MAX_STEPS = 50;
-
-    while (currentNode != null && step < MAX_STEPS) {
-      step++;
-
-      // 循环检测
-      if (visited.contains(currentNode.getNodeCode())) {
-        Map<String, Object> cycleStep = new LinkedHashMap<>();
-        cycleStep.put("step", step);
-        cycleStep.put("nodeCode", currentNode.getNodeCode());
-        cycleStep.put("nodeName", currentNode.getNodeName());
-        cycleStep.put("nodeType", currentNode.getNodeType());
-        cycleStep.put("assignee", currentNode.getPermissionFlag());
-        cycleStep.put("condition", null);
-        cycleStep.put("skipped", false);
-        cycleStep.put("warning", "检测到循环，模拟终止");
-        result.add(cycleStep);
-        log.warn(
-            "[Flow-Simulate] 检测到循环，终止模拟: flowCode={} nodeCode={}",
-            flowCode,
-            currentNode.getNodeCode());
-        break;
-      }
-      visited.add(currentNode.getNodeCode());
-
-      // 记录当前节点
-      Map<String, Object> stepMap = new LinkedHashMap<>();
-      stepMap.put("step", step);
-      stepMap.put("nodeCode", currentNode.getNodeCode());
-      stepMap.put("nodeName", currentNode.getNodeName());
-      stepMap.put("nodeType", currentNode.getNodeType());
-      stepMap.put("assignee", currentNode.getPermissionFlag());
-      stepMap.put("condition", null);
-      stepMap.put("skipped", false);
-      result.add(stepMap);
-
-      // 遇到 END 节点终止
-      if (currentNode.getNodeType() != null
-          && currentNode.getNodeType() == FlowNodeType.END.getCode()) {
-        break;
-      }
-
-      // 查找当前节点的出边（PASS 类型）
-      List<FlowSkip> outgoingSkips =
-          skipMap.getOrDefault(currentNode.getNodeCode(), Collections.emptyList());
-      List<FlowSkip> passSkips = new ArrayList<>();
-      for (FlowSkip skip : outgoingSkips) {
-        if (skip.getSkipType() == null || "PASS".equalsIgnoreCase(skip.getSkipType())) {
-          passSkips.add(skip);
-        }
-      }
-
-      if (passSkips.isEmpty()) {
-        // 无出边，终止
-        break;
-      }
-
-      // 条件求值，寻找匹配的跳转
-      boolean isExclusive =
-          currentNode.getNodeType() != null
-              && currentNode.getNodeType() == FlowNodeType.CONDITION.getCode();
-      boolean isInclusive =
-          currentNode.getNodeType() != null
-              && currentNode.getNodeType() == FlowNodeType.INCLUSIVE.getCode();
-
-      FlowSkip matchedSkip = null;
-      for (FlowSkip skip : passSkips) {
-        String cond = skip.getSkipCondition();
-        if (cond == null || cond.isBlank() || variableStrategy.evaluate(cond, variables)) {
-          matchedSkip = skip;
-          // 记录匹配的条件
-          if (cond != null && !cond.isBlank()) {
-            stepMap.put("condition", cond);
-          }
-          // 排他网关：只取第一条匹配
-          if (isExclusive) {
-            break;
-          }
-          // 包容网关：取所有匹配，模拟时取第一条
-          if (isInclusive) {
-            break;
-          }
-          break;
-        }
-      }
-
-      // 排他/包容网关兜底：无匹配取默认出边
-      if (matchedSkip == null && (isExclusive || isInclusive)) {
-        matchedSkip = passSkips.get(0);
-        stepMap.put("condition", "default（无匹配条件，取默认出边）");
-        log.info("[Flow-Simulate] 网关无匹配条件，取默认出边: nodeCode={}", currentNode.getNodeCode());
-      }
-
-      // 普通节点无条件匹配，取第一条
-      if (matchedSkip == null) {
-        matchedSkip = passSkips.get(0);
-      }
-
-      if (matchedSkip == null || matchedSkip.getNextNodeCode() == null) {
-        break;
-      }
-
-      // 前进到下一节点
-      currentNode = nodeMap.get(matchedSkip.getNextNodeCode());
-    }
-
-    if (step >= MAX_STEPS) {
-      log.warn("[Flow-Simulate] 超过最大步数 {}，终止模拟: flowCode={}", MAX_STEPS, flowCode);
-    }
-
-    log.info(
-        "[Flow-Simulate] 模拟完成: flowCode={} version={} steps={}",
-        flowCode,
-        def.getFlowVersion(),
-        result.size());
-    return result;
-  }
-
-  /**
-   * GAP-V2-08: 从 FlowSkip.ext 字段中提取源节点编码（sourceRef）
-   *
-   * @param skip 跳转 DO
-   * @return 源节点编码，解析失败返回 null
-   */
-  private String extractFromNodeCode(FlowSkip skip) {
-    if (skip.getExt() == null || skip.getExt().isBlank()) {
-      return null;
-    }
-    try {
-      Map<String, Object> ext = YdszJson.parseMap(skip.getExt());
-      if (ext != null && ext.containsKey("sourceRef")) {
-        return (String) ext.get("sourceRef");
-      }
-    } catch (Exception e) {
-      log.warn("[Flow-Simulate] skip ext 解析失败: skipId={} err={}", skip.getId(), e.getMessage());
-    }
-    return null;
-  }
-
   // ============================== 事件触发 ==============================
 
   private void fireInstanceStart(String instanceId, Map<String, Object> variables) {
@@ -1610,51 +1321,10 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
   private void publishWorkflowEvent(String eventType, String instanceId, String taskId) {
     if (eventPublisher == null) return;
     try {
-      eventPublisher.publishEvent(new FlowWorkflowEvent(eventType, instanceId, taskId, null));
+      eventPublisher.publishEvent(new FlowWorkflowEvent(this, eventType, instanceId, taskId, null));
     } catch (Exception e) {
       log.warn("[Flow] 发布 Spring 事件失败: type={} err={}", eventType, e.getMessage());
     }
-  }
-
-  /**
-   * P0-2: 发布 Outbox 跨模块事件（可选依赖，未配置时安全降级）
-   *
-   * <p>统一封装 FlowInstance 相关的 Outbox 事件发布，避免在 complete/terminate/reject 等多个方法中重复编写 OutboxService
-   * 获取与异常处理代码。
-   *
-   * <p>异常不影响主流程：Outbox 投递失败仅记录 WARN 日志，不回滚业务事务 （Outbox 表未写入时，后台轮询器自然不会投递，下游模块不感知，符合"最终一致"语义）。
-   *
-   * @param eventType 事件类型（{@link DomainEventTypes#FLOW_INSTANCE_APPROVED} 等）
-   * @param instanceId 实例 ID（作为 aggregateId）
-   * @param instance 流程实例（可空，用于提取 tenantId）
-   * @param kvPairs payload 键值对（交替排列：k1, v1, k2, v2, ...）
-   */
-  private void publishOutboxEvent(
-      String eventType, String instanceId, FlowInstance instance, Object... kvPairs) {
-    DomainEventPublisher publisher = eventPublisherProvider.getIfAvailable();
-    if (publisher == null) {
-      log.debug("[Flow] DomainEventPublisher 未配置，跳过事件发布: type={} id={}", eventType, instanceId);
-      return;
-    }
-    Map<String, Object> metadata = new HashMap<>();
-    metadata.put("instanceId", instanceId);
-    if (instance != null) {
-      metadata.put("flowCode", instance.getFlowCode() != null ? instance.getFlowCode() : "");
-      metadata.put("tenantId", instance.getTenantId() != null ? instance.getTenantId() : "");
-    }
-    // 追加调用方提供的键值对
-    if (kvPairs != null) {
-      for (int i = 0; i + 1 < kvPairs.length; i += 2) {
-        metadata.put(String.valueOf(kvPairs[i]), kvPairs[i + 1]);
-      }
-    }
-    publisher.publish(
-        DomainEvent.builder()
-            .aggregateType("FlowInstance")
-            .aggregateId(instanceId)
-            .eventType(eventType)
-            .metadata(metadata)
-            .build());
   }
 
   /**

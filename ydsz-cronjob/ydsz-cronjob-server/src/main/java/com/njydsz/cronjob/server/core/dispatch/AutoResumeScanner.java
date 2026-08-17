@@ -7,7 +7,6 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -18,7 +17,6 @@ import com.njydsz.cronjob.domain.entity.job.Job;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
-import com.njydsz.cronjob.server.core.scheduler.SecondLevelScheduler;
 
 /**
  * 熔断自动恢复扫描器（P1-5）。
@@ -32,7 +30,7 @@ import com.njydsz.cronjob.server.core.scheduler.SecondLevelScheduler;
  *   <li>查询所有 AUTO_PAUSED 状态且已到自动恢复时间的任务
  *   <li>对每个任务执行 CAS 恢复（AUTO_PAUSED → NORMAL）
  *   <li>重置 consecutive_fail_count = 0
- *   <li>重新计算 next_fire_time 并注册到 SecondLevelScheduler（如适用）
+ *   <li>重新计算 next_fire_time（如适用）
  * </ol>
  *
  * <h3>配置</h3>
@@ -54,7 +52,6 @@ public class AutoResumeScanner {
   private final JobMapper jobMapper;
   private final LeaderElector leaderElector;
   private final CronjobProperties cronjobProperties;
-  private final ObjectProvider<SecondLevelScheduler> secondLevelSchedulerProvider;
 
   private String leaderRole;
 
@@ -108,8 +105,6 @@ public class AutoResumeScanner {
           resumed++;
           // 重新计算 next_fire_time
           recomputeNextFireTime(job);
-          // 如果是 FIXED_RATE/FIXED_DELAY，注册到 SecondLevelScheduler
-          registerToSchedulerIfNeeded(job);
           log.info(
               "[AutoResumeScanner] 任务已恢复: key={} autoResumeAfter={}min",
               job.getJobKey(),
@@ -143,15 +138,6 @@ public class AutoResumeScanner {
           job.getCronExpression(),
           e.getMessage());
     }
-  }
-
-  /** 如果任务是 FIXED_RATE/FIXED_DELAY 类型，注册到 SecondLevelScheduler。 */
-  private void registerToSchedulerIfNeeded(Job job) {
-    SecondLevelScheduler scheduler = secondLevelSchedulerProvider.getIfAvailable();
-    if (scheduler == null) {
-      return;
-    }
-    scheduler.register(job);
   }
 
   /**

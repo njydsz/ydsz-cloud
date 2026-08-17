@@ -395,7 +395,7 @@ public class FlowTaskCreateService {
 
     // P2-3: 指标
     if (flowMetrics != null) {
-      flowMetrics.incTaskCreated(instance.getFlowCode(), node.getNodeCode());
+      flowMetrics.incTask(instance.getFlowCode(), node.getNodeCode(), "created");
     }
     // P1-1: 优先级
     applyPriority(task, node);
@@ -794,10 +794,10 @@ public class FlowTaskCreateService {
     userMapper.insert(fu);
   }
 
-  /** P0-4: 创建逐级审批任务 */
+  /** P0-4: 创建逐级审批任务（精简为 PARALLEL 模式） */
   private String createLevelApprovalTask(
       FlowInstance instance, FlowNode node, Map<String, Object> variables, List<String> approvers) {
-    FlowRunTask task = buildBaseTask(instance, node, FlowPerformType.SEQUENTIAL, approvers.size());
+    FlowRunTask task = buildBaseTask(instance, node, FlowPerformType.PARALLEL, approvers.size());
     task.setAssigneeType(FlowAssigneeType.USER.name());
     task.setAssigneeId(approvers.get(0));
     task.setAssigneeName("USER:" + approvers.get(0));
@@ -807,7 +807,7 @@ public class FlowTaskCreateService {
       insertFlowUser(task, instance, node, uid, null);
     }
     if (flowMetrics != null) {
-      flowMetrics.incTaskCreated(instance.getFlowCode(), node.getNodeCode());
+      flowMetrics.incTask(instance.getFlowCode(), node.getNodeCode(), "created");
     }
     if (todoCountPushService != null) {
       todoCountPushService.pushTaskAssigned(task);
@@ -917,7 +917,7 @@ public class FlowTaskCreateService {
       taskMapper.insert(task);
       insertFlowUser(task, instance, node, element, null);
       if (flowMetrics != null) {
-        flowMetrics.incTaskCreated(instance.getFlowCode(), node.getNodeCode());
+        flowMetrics.incTask(instance.getFlowCode(), node.getNodeCode(), "created");
       }
       if (todoCountPushService != null) {
         todoCountPushService.pushTaskAssigned(task);
@@ -956,7 +956,7 @@ public class FlowTaskCreateService {
     task.setFlowName(instance.getFlowName());
     task.setTitle(instance.getTitle());
     task.setPermissionFlag(node.getPermissionFlag());
-    task.setPerformType(FlowPerformType.FOREACH_PARALLEL.name());
+    task.setPerformType(FlowPerformType.PARALLEL.name());
     task.setApproveCount(1);
     task.setApproveFinished(0);
     task.setTaskStatus(FlowTaskStatus.PENDING.name());

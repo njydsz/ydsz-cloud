@@ -1,23 +1,16 @@
 package com.njydsz.workflow.server.engine;
 
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Map;
 
+import org.springframework.context.ApplicationEvent;
+
 import lombok.Getter;
 
-import com.njydsz.common.event.api.DomainEvent;
-import com.njydsz.common.util.id.IdGenerator;
-
 /**
- * 工作流事件（领域事件封装）。
+ * 工作流事件（Spring ApplicationEvent）。
  *
- * <p>继承 {@link DomainEvent}（→ {@link org.springframework.context.ApplicationEvent}）， 通过 {@code
- * ApplicationEventPublisher} 或 {@link com.njydsz.common.event.publish.DomainEventPublisher}
- * 发布，监听方使用 {@code @EventListener} + {@code @Async} 异步处理，解耦主流程事务。
- *
- * <p><b>P2-1</b>：现在继承 {@link DomainEvent}，复用统一的元数据字段（tenantId/userId/traceId）， 事件类型常量定义在 {@link
- * com.njydsz.common.event.api.DomainEventTypes}。
+ * <p>通过 {@code ApplicationEventPublisher} 发布，监听方使用 {@code @EventListener} + {@code @Async} 异步处理，解耦主流程事务。
  *
  * <p>事件类型（eventType）枚举：
  *
@@ -32,9 +25,15 @@ import com.njydsz.common.util.id.IdGenerator;
  * @author ydsz-team
  */
 @Getter
-public class FlowWorkflowEvent extends DomainEvent {
+public class FlowWorkflowEvent extends ApplicationEvent {
 
   private static final long serialVersionUID = 1L;
+
+  /** 事件类型 */
+  private final String eventType;
+
+  /** 流程实例 ID */
+  private final String instanceId;
 
   /** 任务 ID */
   private final String taskId;
@@ -45,30 +44,18 @@ public class FlowWorkflowEvent extends DomainEvent {
   /**
    * 构造工作流事件。
    *
+   * @param source 事件源（通常为发布者对象）
    * @param eventType 事件类型
-   * @param instanceId 流程实例 ID（映射为 aggregateId）
+   * @param instanceId 流程实例 ID
    * @param taskId 任务 ID
    * @param data 附加数据
    */
   public FlowWorkflowEvent(
-      String eventType, String instanceId, String taskId, Map<String, Object> data) {
-    super(
-        IdGenerator.nextIdStr(),
-        LocalDateTime.now(),
-        eventType,
-        instanceId,
-        "FlowInstance",
-        Collections.emptyMap());
+      Object source, String eventType, String instanceId, String taskId, Map<String, Object> data) {
+    super(source);
+    this.eventType = eventType;
+    this.instanceId = instanceId;
     this.taskId = taskId;
-    this.data = data;
-  }
-
-  /**
-   * 获取流程实例 ID（即 aggregateId，语义别名）。
-   *
-   * @return 流程实例 ID
-   */
-  public String getInstanceId() {
-    return getAggregateId();
+    this.data = data != null ? data : Collections.emptyMap();
   }
 }

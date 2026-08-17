@@ -119,7 +119,10 @@ public class RuleCircuitBreaker {
   public void recordResult(String ruleCode, boolean success) {
     CircuitBreaker breaker =
         breakers.computeIfAbsent(
-            ruleCode, k -> new CircuitBreaker("literule-" + k, sharedRegistry));
+            ruleCode,
+            k ->
+                new CircuitBreaker(
+                    "literule-" + k, buildBreakerConfig(), sharedRegistry));
 
     if (success) {
       // 使用 sentry CircuitBreaker 统一 recordSuccess API
@@ -131,7 +134,7 @@ public class RuleCircuitBreaker {
     }
 
     // 记录状态变更日志（用于运维排查）
-    State currentState = breaker.getState();
+    State currentState = toLocalState(breaker.getState());
     if (currentState == State.OPEN) {
       log.warn("[LiteRule-Breaker] 规则 {} 熔断器 OPEN", ruleCode);
     } else if (currentState == State.HALF_OPEN) {
@@ -147,7 +150,30 @@ public class RuleCircuitBreaker {
    */
   public State getState(String ruleCode) {
     CircuitBreaker breaker = breakers.get(ruleCode);
-    return breaker == null ? State.CLOSED : breaker.getState();
+    return breaker == null ? State.CLOSED : toLocalState(breaker.getState());
+  }
+
+  /** 构建单规则熔断配置（复用全局阈值参数） */
+  private CircuitBreakerConfig buildBreakerConfig() {
+    return CircuitBreakerConfig.custom()
+        .failureRateThreshold((float) errorRateThreshold)
+        .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
+        .slidingWindowSize(minEvaluations)
+        .waitDurationInOpenState(java.time.Duration.ofMillis(openStateMs))
+        .minimumNumberOfCalls(minEvaluations)
+        .permittedNumberOfCallsInHalfOpenState(1)
+        .automaticTransitionFromOpenToHalfOpenEnabled(true)
+        .recordException(e -> true)
+        .build();
+  }
+
+  /** 将 sentry CircuitBreaker.State 转换为本地 State */
+  private static State toLocalState(CircuitBreaker.State sentryState) {
+    return switch (sentryState) {
+      case OPEN -> State.OPEN;
+      case HALF_OPEN -> State.HALF_OPEN;
+      case CLOSED -> State.CLOSED;
+    };
   }
 
   /**

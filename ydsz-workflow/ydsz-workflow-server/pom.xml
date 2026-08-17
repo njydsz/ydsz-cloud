@@ -28,7 +28,7 @@
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-auth</artifactId>
         </dependency>
-        <!-- ydsz-common-domain: explicit declaration for direct usage (JobHandler/DomainEvent/PageQuery, was transitive via common-jdbc) -->
+        <!-- ydsz-common-domain: explicit declaration for direct usage (JobHandler/PageQuery, was transitive via common-jdbc) -->
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-domain</artifactId>
@@ -73,11 +73,6 @@
         <dependency>
             <groupId>com.njydsz</groupId>
             <artifactId>ydsz-common-queue</artifactId>
-        </dependency>
-        <!-- P0-2: 事务性 Outbox 事件模式 -->
-        <dependency>
-            <groupId>com.njydsz</groupId>
-            <artifactId>ydsz-common-event</artifactId>
         </dependency>
         <!-- P0-1: 统一线程池管理（替代手动 ThreadPoolTaskExecutor 创建） -->
         <dependency>

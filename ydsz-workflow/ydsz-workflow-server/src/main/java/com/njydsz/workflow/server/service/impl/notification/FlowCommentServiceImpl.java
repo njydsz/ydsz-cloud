@@ -1,6 +1,7 @@
 package com.njydsz.workflow.server.service.impl.notification;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -15,11 +16,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.common.core.code.BaseResultCode;
 import com.njydsz.common.exception.custom.SysException;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.workflow.domain.dto.FlowCommentCreateDTO;
+import com.njydsz.workflow.domain.dto.FlowQuickCommentDTO;
 import com.njydsz.workflow.domain.entity.FlowComment;
+import com.njydsz.workflow.domain.entity.FlowQuickComment;
 import com.njydsz.workflow.infra.mapper.FlowCommentMapper;
+import com.njydsz.workflow.infra.mapper.FlowQuickCommentMapper;
 import com.njydsz.workflow.server.engine.FlowSensitiveMasker;
 import com.njydsz.workflow.server.service.FlowCommentService;
 import com.njydsz.workflow.server.service.FlowNotificationService;
@@ -102,6 +108,9 @@ public class FlowCommentServiceImpl implements FlowCommentService {
 
   /** P2-1: 通知服务（@Lazy 避免循环依赖） */
   @Lazy private final FlowNotificationService notificationService;
+
+  /** P2-1: 常用语 Mapper，负责 ydsz_flow_quick_comment 表的增删改查（含用户自定义 + 系统预设） */
+  private final FlowQuickCommentMapper quickCommentMapper;
 
   /** P2-1: @提及正则，匹配 @{userId} 或 @userId 格式 */
   private static final Pattern MENTION_PATTERN =
@@ -273,5 +282,184 @@ public class FlowCommentServiceImpl implements FlowCommentService {
       }
     }
     return new ArrayList<>(userIds);
+  }
+
+  // ==================== P2-1: 审批常用语能力（由 FlowQuickCommentServiceImpl 合并） ====================
+
+  /**
+   * 查询用户的常用语列表（用户自定义 + 系统预设合并）。
+   *
+   * <p>合并查询：先查用户自定义常用语，再追加系统预设，最终按 sortNum 升序、useCount 降序两级排序。
+   *
+   * @param userId 用户 ID（不可空，为空返回空列表）
+   * @param tenantId 租户 ID（可空，回退 TenantContext）
+   * @return 常用语列表（已合并 + 已排序），无数据返回空列表
+   */
+  @Override
+  public List<FlowQuickComment> listQuickComments(String userId, String tenantId) {
+    if (!StringUtils.hasText(userId)) {
+      return List.of();
+    }
+    String tid = tenantId != null ? tenantId : TenantContextHolder.getTenantId();
+    // 查询：用户自定义 + 系统预设（isSystem=1）
+    List<FlowQuickComment> list =
+        quickCommentMapper.selectList(
+            new LambdaQueryWrapper<FlowQuickComment>()
+                .eq(FlowQuickComment::getUserId, userId)
+                .eq(FlowQuickComment::getTenantId, tid)
+                .eq(FlowQuickComment::getDeleted, 0));
+    // 系统预设（全局）
+    List<FlowQuickComment> systemList =
+        quickCommentMapper.selectList(
+            new LambdaQueryWrapper<FlowQuickComment>()
+                .eq(FlowQuickComment::getIsSystem, 1)
+                .eq(FlowQuickComment::getTenantId, tid)
+                .eq(FlowQuickComment::getDeleted, 0));
+    list.addAll(systemList);
+    // 排序：sortNum 升序, useCount 降序
+    list.sort(
+        Comparator.comparingInt(FlowQuickComment::getSortNum)
+            .thenComparing(Comparator.comparingInt(FlowQuickComment::getUseCount).reversed()));
+    return list;
+  }
+
+  /**
+   * 创建用户自定义常用语。
+   *
+   * <p>仅创建用户自定义常用语（isSystem=0），useCount 初始为 0。创建时强制覆盖 userId/tenantId/isSystem=0，
+   * 不可通过 DTO 伪造为系统预设。
+   *
+   * @param dto 常用语 DTO（含 content/commentType/sortNum）
+   * @param userId 创建人 ID（不可空）
+   * @param tenantId 租户 ID（可空，回退 TenantContext）
+   * @return 新常用语 ID
+   * @throws SysException BAD_REQUEST — userId 为空
+   */
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public String createQuickComment(FlowQuickCommentDTO dto, String userId, String tenantId) {
+    if (!StringUtils.hasText(userId)) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.BAD_REQUEST)
+          .message("error.workflow.msg_user_required")
+          .build();
+    }
+    FlowQuickComment comment = new FlowQuickComment();
+    comment.setUserId(userId);
+    comment.setContent(dto.getContent());
+    comment.setCommentType(dto.getCommentType());
+    comment.setSortNum(dto.getSortNum() != null ? dto.getSortNum() : 0);
+    comment.setUseCount(0);
+    comment.setIsSystem(0);
+    comment.setTenantId(tenantId != null ? tenantId : TenantContextHolder.getTenantId());
+    quickCommentMapper.insert(comment);
+    log.info("[FlowQuickComment] 新增常用语: userId={} id={}", userId, comment.getId());
+    return comment.getId();
+  }
+
+  /**
+   * 更新常用语。
+   *
+   * <p>仅允许创建者本人更新；系统预设不可更新。仅更新 DTO 中非空字段。
+   *
+   * @param dto 常用语 DTO（id 必传）
+   * @param userId 操作人 ID（必须与创建者一致）
+   * @throws SysException BAD_REQUEST — id 为空；NOT_FOUND — 常用语不存在；FORBIDDEN — 操作人非创建者
+   */
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public void updateQuickComment(FlowQuickCommentDTO dto, String userId) {
+    if (!StringUtils.hasText(dto.getId())) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.BAD_REQUEST)
+          .message("error.workflow.msg_id_required")
+          .build();
+    }
+    FlowQuickComment existing = quickCommentMapper.selectById(dto.getId());
+    if (existing == null || existing.getDeleted() == 1) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.NOT_FOUND)
+          .key("error.workflow.msg_6541ab08")
+          .params(dto.getId())
+          .build();
+    }
+    if (!userId.equals(existing.getUserId())) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.FORBIDDEN)
+          .message("error.workflow.msg_no_permission")
+          .build();
+    }
+    existing.setContent(dto.getContent());
+    if (dto.getCommentType() != null) {
+      existing.setCommentType(dto.getCommentType());
+    }
+    if (dto.getSortNum() != null) {
+      existing.setSortNum(dto.getSortNum());
+    }
+    quickCommentMapper.updateById(existing);
+  }
+
+  /**
+   * 删除常用语（软删除）。
+   *
+   * <p>权限校验：
+   *
+   * <ul>
+   *   <li>系统预设（isSystem=1）不可删除，抛 BAD_REQUEST
+   *   <li>仅创建者本人可删除，非创建者抛 FORBIDDEN
+   * </ul>
+   *
+   * @param id 常用语 ID
+   * @param userId 操作人 ID
+   * @throws SysException BAD_REQUEST — 系统预设不可删；FORBIDDEN — 无权限
+   */
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public void deleteQuickComment(String id, String userId) {
+    FlowQuickComment existing = quickCommentMapper.selectById(id);
+    if (existing == null || existing.getDeleted() == 1) {
+      return;
+    }
+    // 系统预设不可删除
+    if (existing.getIsSystem() != null && existing.getIsSystem() == 1) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.BAD_REQUEST)
+          .message("error.workflow.msg_system_comment_cannot_delete")
+          .build();
+    }
+    if (!userId.equals(existing.getUserId())) {
+      throw SysException.builder()
+          .resultCode(BaseResultCode.FORBIDDEN)
+          .message("error.workflow.msg_no_permission")
+          .build();
+    }
+    existing.setDeleted(1);
+    quickCommentMapper.updateById(existing);
+  }
+
+  /**
+   * 增加常用语使用次数。
+   *
+   * <p>用户在前端选择常用语时调用，useCount 自增 1。异常被 try-catch 吞掉记 WARN，不传播异常——使用统计失败不应阻塞评论发布主流程。
+   *
+   * <p>已知风险：采用「先查后更」非原子操作，高并发场景下 useCount 可能丢失更新。生产环境建议改用 SQL 原子更新。
+   *
+   * @param id 常用语 ID
+   */
+  @Override
+  @Transactional(rollbackFor = Exception.class)
+  public void incrementQuickCommentUseCount(String id) {
+    if (!StringUtils.hasText(id)) {
+      return;
+    }
+    try {
+      FlowQuickComment existing = quickCommentMapper.selectById(id);
+      if (existing != null && existing.getDeleted() == 0) {
+        existing.setUseCount((existing.getUseCount() == null ? 0 : existing.getUseCount()) + 1);
+        quickCommentMapper.updateById(existing);
+      }
+    } catch (Exception e) {
+      log.warn("[FlowQuickComment] 增加使用次数失败: id={} err={}", id, e.getMessage());
+    }
   }
 }

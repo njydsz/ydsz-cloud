@@ -64,10 +64,10 @@ public enum FlowNodeType {
   /**
    * P0-4: 逐级审批节点 — 从发起人直属上级开始，逐级向上审批，直到达到 maxLevel 或遇到终止条件
    *
-   * <p>对标钉钉/飞书"逐级审批"节点类型。与 {@link #APPROVAL} + performType=SEQUENTIAL 的区别：
+   * <p>对标钉钉/飞书"逐级审批"节点类型。与 {@link #APPROVAL} + performType=PARALLEL 的区别：
    *
    * <ul>
-   *   <li>顺序会签：办理人在流程定义时固定（permissionFlag 配置），按序逐一处理
+   *   <li>并行会签：办理人在流程定义时固定（permissionFlag 配置），全部通过才推进
    *   <li>逐级审批：办理人在运行时动态计算（从发起人上级开始逐级向上），无需预配置具体审批人
    * </ul>
    *
@@ -81,8 +81,8 @@ public enum FlowNodeType {
    *   <li>{@code startFromInitiator}：是否从发起人开始（默认 false，从直属上级开始）
    * </ul>
    *
-   * <p>实现：创建任务时通过 {@link FlowAssigneeResolver#expandMultiLeader} 展开多级上级列表， 切换为 SEQUENTIAL
-   * 顺序会签模式，每人审完切换下一级。
+   * <p>实现：创建任务时通过 {@link FlowAssigneeResolver#expandMultiLeader} 展开多级上级列表，
+   * 使用 PARALLEL 会签模式，全部通过后推进。
    */
   LEVEL_APPROVAL(10, "逐级审批");
 

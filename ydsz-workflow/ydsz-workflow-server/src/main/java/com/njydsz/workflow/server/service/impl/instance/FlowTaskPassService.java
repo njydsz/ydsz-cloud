@@ -180,7 +180,7 @@ public class FlowTaskPassService {
     }
     // P2-3: Prometheus 指标
     if (flowMetrics != null) {
-      flowMetrics.incTaskPassed(task.getFlowCode(), task.getNodeCode());
+      flowMetrics.incTask(task.getFlowCode(), task.getNodeCode(), "passed");
       flowMetrics.recordTaskDuration(task, "PASSED");
     }
   }

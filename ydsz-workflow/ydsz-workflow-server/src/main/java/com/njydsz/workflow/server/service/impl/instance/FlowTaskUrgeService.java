@@ -106,9 +106,9 @@ public class FlowTaskUrgeService {
     }
     try {
       FlowInstance ins = instanceMapper.selectById(instanceId);
-      flowMetrics.incTaskUrged(ins != null ? ins.getFlowCode() : "unknown");
+      flowMetrics.incTask(ins != null ? ins.getFlowCode() : "unknown", "", "urged");
     } catch (Exception e) {
-      flowMetrics.incTaskUrged("unknown");
+      flowMetrics.incTask("unknown", "", "urged");
     }
   }
 }

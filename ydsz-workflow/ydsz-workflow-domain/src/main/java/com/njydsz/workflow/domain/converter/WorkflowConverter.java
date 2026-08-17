@@ -28,8 +28,6 @@ import com.njydsz.workflow.domain.entity.FlowQuickComment;
 import com.njydsz.workflow.domain.entity.FlowRunTask;
 import com.njydsz.workflow.domain.entity.FlowSkip;
 import com.njydsz.workflow.domain.entity.FlowTemplate;
-import com.njydsz.workflow.domain.entity.FlowThirdPartyAccount;
-import com.njydsz.workflow.domain.entity.FlowThirdPartyLog;
 import com.njydsz.workflow.domain.entity.FlowTimer;
 import com.njydsz.workflow.domain.entity.FlowUser;
 import com.njydsz.workflow.domain.vo.FlowAdminRoleVO;
@@ -51,8 +49,6 @@ import com.njydsz.workflow.domain.vo.FlowQuickCommentVO;
 import com.njydsz.workflow.domain.vo.FlowRunTaskVO;
 import com.njydsz.workflow.domain.vo.FlowSkipVO;
 import com.njydsz.workflow.domain.vo.FlowTemplateVO;
-import com.njydsz.workflow.domain.vo.FlowThirdPartyAccountVO;
-import com.njydsz.workflow.domain.vo.FlowThirdPartyLogVO;
 import com.njydsz.workflow.domain.vo.FlowTimerVO;
 import com.njydsz.workflow.domain.vo.FlowUserVO;
 import com.njydsz.workflow.domain.vo.StringVO;
@@ -68,7 +64,7 @@ import com.njydsz.workflow.domain.vo.StringVO;
  *   <li>使用 MapStruct 注解处理器，编译期生成实现类，性能优于反射
  *   <li>通过 {@link #INSTANT} 单例访问，零依赖注入
  *   <li>同名字段自动映射；系统字段通过 @Mapping(ignore = true) 忽略
- *   <li>entityToVO 方向自动排除敏感字段（如 FlowThirdPartyAccount 的密钥）
+ *   <li>entityToVO 方向自动排除敏感字段（如密码、Token 等）
  * </ul>
  *
  * @author ydsz-team
@@ -173,16 +169,6 @@ public interface WorkflowConverter {
   FlowTemplateVO entityToVO(FlowTemplate entity);
 
   List<FlowTemplateVO> flowTemplateListToVO(List<FlowTemplate> entities);
-
-  // ===== FlowThirdPartyAccount =====
-  FlowThirdPartyAccountVO entityToVO(FlowThirdPartyAccount entity);
-
-  List<FlowThirdPartyAccountVO> flowThirdPartyAccountListToVO(List<FlowThirdPartyAccount> entities);
-
-  // ===== FlowThirdPartyLog =====
-  FlowThirdPartyLogVO entityToVO(FlowThirdPartyLog entity);
-
-  List<FlowThirdPartyLogVO> flowThirdPartyLogListToVO(List<FlowThirdPartyLog> entities);
 
   // ===== FlowTimer =====
   FlowTimerVO entityToVO(FlowTimer entity);

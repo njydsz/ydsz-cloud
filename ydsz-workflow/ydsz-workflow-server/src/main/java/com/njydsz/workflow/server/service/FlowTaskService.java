@@ -202,7 +202,8 @@ public interface FlowTaskService {
   /**
    * P1-7: 前加签 — 在当前节点前插入临时审批人
    *
-   * <p>对标钉钉/飞书"前加签"。在当前审批节点前插入临时审批人， 加签人先审批，全部通过后由原审批人继续。会签模式切换为 SEQUENTIAL。
+   * <p>对标钉钉/飞书"前加签"。在当前审批节点前插入临时审批人，
+   * 加签人先审批，全部通过后由原审批人继续。会签模式切换为 PARALLEL。
    *
    * @param dto 任务操作参数（taskId / userId / targetUserId / targetUserName）
    */
@@ -211,7 +212,8 @@ public interface FlowTaskService {
   /**
    * P1-7: 后加签 — 在当前节点通过后、下一节点前插入临时审批人
    *
-   * <p>对标钉钉/飞书"后加签"。原审批人通过后，加签人先于下一节点审批。 加签人通过后流程才推进到下一节点。会签模式切换为 SEQUENTIAL。
+   * <p>对标钉钉/飞书"后加签"。原审批人通过后，加签人先于下一节点审批。
+   * 加签人通过后流程才推进到下一节点。会签模式切换为 PARALLEL。
    *
    * @param dto 任务操作参数（taskId / userId / targetUserId / targetUserName）
    */
@@ -220,10 +222,11 @@ public interface FlowTaskService {
   /**
    * GAP-P0-3: 并加签 — 动态追加审批人与原审批人并行审批，所有人审完后才推进。
    *
-   * <p>对标钉钉/飞书"并加签"语义。当前审批人尚未审批时动态追加， 加签人与原审批人<b>并行</b>审批（performType 强制切换为 PARALLEL），
+   * <p>对标钉钉/飞书"并加签"语义。当前审批人尚未审批时动态追加，
+   * 加签人与原审批人<b>并行</b>审批（performType 强制切换为 PARALLEL），
    * 所有人全部通过后才推进到下一节点。
    *
-   * <p>与 {@link #countersignAfter}（后加签，SEQUENTIAL 顺序）的区别：
+   * <p>与 {@link #countersignAfter}（后加签，PARALLEL 并行）的区别：
    * 后加签是"当前人审完→加签人审"的串行流程；并加签是"当前人+加签人同时审"的并行流程。
    *
    * @param dto 任务操作参数（需含 taskId + targetUserId + targetUserName）

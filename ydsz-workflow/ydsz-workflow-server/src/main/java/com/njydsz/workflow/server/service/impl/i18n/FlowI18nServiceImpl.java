@@ -108,10 +108,8 @@ public class FlowI18nServiceImpl implements FlowI18nService {
     register("FlowNodeType", "END", "结束节点", "End Event");
 
     // FlowPerformType
-    register("FlowPerformType", "SEQ", "依次审批", "Sequential");
-    register("FlowPerformType", "ALL", "会签（全部通过）", "Counter-sign (All)");
-    register("FlowPerformType", "FOREACH_PARALLEL", "FOREACH并行", "FOREACH Parallel");
-    register("FlowPerformType", "FIRST", "首签（任一通过）", "First Pass");
+    register("FlowPerformType", "OR", "或签（任一通过）", "First Pass");
+    register("FlowPerformType", "PARALLEL", "会签（全部通过）", "Counter-sign (All)");
 
     // FlowAssigneeType
     register("FlowAssigneeType", "USER", "指定用户", "User");

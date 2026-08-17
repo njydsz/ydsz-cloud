@@ -25,11 +25,13 @@ import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.util.id.SnowflakeIdGenerator;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.message.domain.constant.MessageConstants;
+import com.njydsz.message.domain.dto.batch.BatchSendRequestDTO;
 import com.njydsz.message.domain.dto.batch.BatchSendResult;
 import com.njydsz.message.domain.dto.core.MessageLogQueryDTO;
 import com.njydsz.message.domain.dto.core.MessageSendDTO;
 import com.njydsz.message.domain.dto.core.RichMediaContent;
 import com.njydsz.message.domain.entity.config.MsgTrace;
+import com.njydsz.message.domain.entity.batch.MsgBatch;
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.entity.template.MsgTemplate;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
@@ -500,22 +502,19 @@ public class MessageServiceImpl implements MessageService {
         req.setBizId(batchId);
       }
     }
-    // P2-15: 使用并行批量发送器（通道级线程池 + Semaphore 流控）
-    String channel =
-        batch.stream()
-            .filter(r -> r != null && StringUtils.hasText(r.getChannel()))
-            .map(MessageRequest::getChannel)
-            .findFirst()
-            .orElse("INAPP");
-    BatchSendResult result = parallelBatchSender.sendBatch(batch, channel, this::send);
-    result.setBatchId(batchId);
+    // 使用 BatchService.submitBatch 异步批量发送
+    BatchSendRequestDTO dto = new BatchSendRequestDTO();
+    dto.setBatchId(batchId);
+    dto.setRequests(batch);
+    dto.setAsync(true);
+    MsgBatch msgBatch = batchService.submitBatch(dto);
+    // 异步模式下返回初始进度（实际处理在后台线程池执行）
+    BatchSendResult result = new BatchSendResult(batchId, msgBatch.getTotal(), 0, 0, 0);
     log.info(
-        "[Message] 批量发送完成: batchId={} total={} success={} failed={} skipped={}",
+        "[Message] 批量发送已提交: batchId={} total={} status={}",
         batchId,
-        result.getTotal(),
-        result.getSuccess(),
-        result.getFailed(),
-        result.getSkipped());
+        msgBatch.getTotal(),
+        msgBatch.getStatus());
     return result;
   }
 

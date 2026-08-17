@@ -505,8 +505,8 @@ public class RuleLifecycleService {
           .mutexGroup(fields.get("mutexGroup"))
           .titleTemplate(fields.get("titleTemplate"))
           .descriptionTemplate(fields.get("descriptionTemplate"))
-          .effectiveFrom(fields.get("effectiveFrom"))
-          .effectiveTo(fields.get("effectiveTo"))
+          .effectiveFrom(parseDateTime(fields.get("effectiveFrom")))
+          .effectiveTo(parseDateTime(fields.get("effectiveTo")))
           .build();
     } catch (Exception e) {
       log.warn("[Lifecycle] 解析版本 JSON 失败: {}", e.getMessage());
@@ -581,6 +581,24 @@ public class RuleLifecycleService {
         end++;
       }
       return json.substring(start, end).trim();
+    }
+  }
+
+  /**
+   * 解析日期时间字符串为 LocalDateTime。
+   *
+   * @param value 日期时间字符串（ISO-8601 格式）；null 或空串返回 null
+   * @return 解析后的 LocalDateTime，解析失败返回 null
+   */
+  private static LocalDateTime parseDateTime(String value) {
+    if (value == null || value.isBlank()) {
+      return null;
+    }
+    try {
+      return LocalDateTime.parse(value, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+    } catch (Exception e) {
+      log.debug("[Lifecycle] 日期解析失败: {}", value);
+      return null;
     }
   }
 

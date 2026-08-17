@@ -28,6 +28,7 @@ import com.njydsz.workflow.domain.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.vo.StringVO;
 import com.njydsz.workflow.server.engine.FlowUrgeLimiter;
 import com.njydsz.workflow.server.service.FlowInstanceMergeService;
+import com.njydsz.workflow.server.service.FlowOfflineAutoForwardService;
 import com.njydsz.workflow.server.service.FlowReportService;
 import com.njydsz.workflow.server.service.impl.instance.FlowAssigneeDedupService;
 import com.njydsz.workflow.server.service.impl.instance.FlowCountersignDynamicService;
@@ -89,6 +90,9 @@ public class FlowAdvancedController {
 
   /** 催办限流器 */
   private final FlowUrgeLimiter urgeLimiter;
+
+  /** 离线代理自动转发服务，负责离线用户待办的自动/手动转发 */
+  private final FlowOfflineAutoForwardService offlineAutoForwardService;
 
   // ==================== P2-4: 审批数据周报/月报 ====================
 
@@ -445,5 +449,64 @@ public class FlowAdvancedController {
       return ttls.get(0);
     }
     return 0;
+  }
+
+  // ==================== 离线代理自动转发 ====================
+
+  /**
+   * 按代理授权规则自动转发已有待办
+   *
+   * <p>幂等保护 5 秒；限流 50 QPS。
+   *
+   * <p>业务流程：
+   *
+   * <ol>
+   *   <li>读取 {@code authId} 对应的代理授权（含 {@code ownerUserId}、{@code delegateUserId}、生效时间）
+   *   <li>扫描 {@code ownerUserId} 全部 PENDING/CLAIMED 任务
+   *   <li>事务内批量改派 + 写委派日志
+   *   <li>触发通知给代理人
+   * </ol>
+   *
+   * @param authId 代理授权记录 ID
+   * @return 成功转发的任务数
+   */
+  @Idempotent(key = "ydsz:workflow:FlowAdvancedController:autoForward:lock", ttlSeconds = 5)
+  @RateLimit(resource = "workflow.flowofflineforward.autoForward", threshold = 50)
+  @PostMapping("/offlineForward/auto")
+  @Audit(
+      module = "离线转发",
+      type = AuditType.OPERATION,
+      action = AuditAction.GRANT,
+      content = "'autoForward'")
+  @Operation(summary = "按代理授权规则自动转发已有待办")
+  public BaseResponse<Integer> autoForward(@RequestParam String authId) {
+    return BaseResponse.success(offlineAutoForwardService.autoForwardByAuth(authId));
+  }
+
+  /**
+   * 手动触发离线转发
+   *
+   * <p>幂等保护 5 秒；限流 50 QPS。
+   *
+   * <p>适用于：HR 标记员工离职 / 管理员临时调岗等需要<b>立即</b>把某人待办转给指定代理人的场景。
+   *
+   * @param userId 离线用户 ID（源用户）
+   * @param delegateUserId 代理人 ID（目标用户）
+   * @return 成功转发的任务数
+   */
+  @Idempotent(key = "ydsz:workflow:FlowAdvancedController:manualForward:lock", ttlSeconds = 5)
+  @RateLimit(resource = "workflow.flowofflineforward.manualForward", threshold = 50)
+  @PostMapping("/offlineForward/manual")
+  @Audit(
+      module = "离线转发",
+      type = AuditType.OPERATION,
+      action = AuditAction.GRANT,
+      content = "'manualForward'")
+  @Operation(summary = "手动触发离线转发")
+  public BaseResponse<Integer> manualForward(
+      @RequestParam String userId, @RequestParam String delegateUserId) {
+    String operatorId = AuthContextUtils.getUserId();
+    return BaseResponse.success(
+        offlineAutoForwardService.manualForward(userId, delegateUserId, operatorId));
   }
 }

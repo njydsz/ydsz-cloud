@@ -100,7 +100,7 @@ public class FlowTaskOperateService {
     support.audit(task, "TRANSFER", dto.getUserId(), dto.getTargetUserId(), dto.getComment());
     log.info("[Flow] 转办任务: taskId={} → userId={}", task.getId(), dto.getTargetUserId());
     if (flowMetrics != null) {
-      flowMetrics.incTaskTransferred(task.getFlowCode(), task.getNodeCode());
+      flowMetrics.incTask(task.getFlowCode(), task.getNodeCode(), "transferred");
     }
     // P2-34: 触发 onTaskTransferred 事件
     support.fireEvent(
@@ -142,7 +142,7 @@ public class FlowTaskOperateService {
         dto.getTargetUserId(),
         originalAssigneeName);
     if (flowMetrics != null) {
-      flowMetrics.incTaskDelegated(task.getFlowCode(), task.getNodeCode());
+      flowMetrics.incTask(task.getFlowCode(), task.getNodeCode(), "delegated");
     }
     // P2-34: 触发 onTaskDelegated 事件
     support.fireEvent(
@@ -344,7 +344,7 @@ public class FlowTaskOperateService {
 
     // 11. Prometheus 指标
     if (flowMetrics != null) {
-      flowMetrics.incRecall(instance.getFlowCode());
+      flowMetrics.incInstance(instance.getFlowCode(), "recalled");
     }
 
     log.info(

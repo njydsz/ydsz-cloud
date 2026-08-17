@@ -37,15 +37,6 @@ ydsz:
         thread-name-prefix: flow-queue-
         reject-policy: CALLER_RUNS
         await-termination-seconds: 10
-  # P0-2: 事务性 Outbox 事件配置
-  event:
-    outbox:
-      enabled: true
-      table-name: ydsz_outbox
-      poll-interval-seconds: 5
-      batch-size: 100
-      max-retries: 5
-      fail-on-noop: false
   # P1-1: 分布式事务配置（TCC 三方审批回调验证场景启用，LOCAL 模式降级）
   seata:
     enabled: true

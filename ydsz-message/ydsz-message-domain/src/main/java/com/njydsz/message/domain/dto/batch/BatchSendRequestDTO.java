@@ -5,6 +5,7 @@ import java.util.Map;
 
 import lombok.Data;
 
+import com.njydsz.common.feign.MessageRequest;
 import com.njydsz.common.safe.annotation.Xss;
 
 /**
@@ -51,4 +52,7 @@ public class BatchSendRequestDTO {
 
   /** 触发发送的用户 ID */
   @Xss private String senderId;
+
+  /** 直接传入的请求列表（requests 模式，优先于 receiverList） */
+  private List<MessageRequest> requests;
 }

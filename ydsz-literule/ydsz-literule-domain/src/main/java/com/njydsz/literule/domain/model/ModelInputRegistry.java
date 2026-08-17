@@ -13,7 +13,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.njydsz.literule.api.RuleContext;
 
@@ -41,8 +42,9 @@ import com.njydsz.literule.api.RuleContext;
  * @author ydsz-team
  * @since 1.0.0
  */
-@Slf4j
 public class ModelInputRegistry {
+
+  private static final Logger log = LoggerFactory.getLogger(ModelInputRegistry.class);
 
   /** 模型字段 key 前缀 */
   public static final String MODEL_KEY_PREFIX = "model.";

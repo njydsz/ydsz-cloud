@@ -64,7 +64,7 @@ public class FlowTaskTimeoutService {
     support.audit(task, "TIMEOUT", null, null, reason);
     log.info("[Flow] 任务超时: taskId={} reason={}", taskId, reason);
     if (flowMetrics != null) {
-      flowMetrics.incTaskAutoHandled(task.getFlowCode(), task.getNodeCode(), "TIMEOUT");
+      flowMetrics.incTask(task.getFlowCode(), task.getNodeCode(), "auto_handled");
     }
     // P2-36: 触发 onTaskTimeout 事件
     support.fireEvent(l -> l.onTaskTimeout(task.getId(), task.getInstanceId()), task.getId());

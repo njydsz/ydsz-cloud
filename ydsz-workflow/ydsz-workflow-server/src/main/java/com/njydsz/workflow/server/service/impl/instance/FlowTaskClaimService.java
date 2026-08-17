@@ -64,7 +64,7 @@ public class FlowTaskClaimService {
     log.info("[Flow] 签收任务: taskId={} userId={}", taskId, userId);
     // P2-3: Prometheus 指标
     if (flowMetrics != null) {
-      flowMetrics.incTaskClaimed(task.getFlowCode(), task.getNodeCode());
+      flowMetrics.incTask(task.getFlowCode(), task.getNodeCode(), "claimed");
     }
   }
 

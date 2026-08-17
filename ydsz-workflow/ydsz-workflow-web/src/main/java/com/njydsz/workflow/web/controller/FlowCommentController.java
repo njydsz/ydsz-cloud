@@ -24,28 +24,39 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.permission.PermissionCodes;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
+import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.workflow.domain.converter.WorkflowConverter;
 import com.njydsz.workflow.domain.dto.FlowCommentCreateDTO;
+import com.njydsz.workflow.domain.dto.FlowQuickCommentDTO;
 import com.njydsz.workflow.domain.entity.FlowComment;
+import com.njydsz.workflow.domain.entity.FlowQuickComment;
 import com.njydsz.workflow.domain.vo.FlowCommentVO;
+import com.njydsz.workflow.domain.vo.FlowQuickCommentVO;
 import com.njydsz.workflow.server.service.FlowCommentService;
 
 /**
- * P2-2: 流程评论 Controller
+ * P2-2: 流程评论与常用语统一 Controller
  *
- * <p>审批评论多级回复 HTTP 接口，对标钉钉 / 飞书审批评论区。 评论数据独立于审计日志（{@code FlowAuditLog}）：用户视角可修改 / 删除， 系统视角只读不可改。
+ * <p>审批评论多级回复 + 审批常用语管理 HTTP 接口，对标钉钉 / 飞书审批评论区与常用语能力。
+ * 评论数据独立于审计日志（{@code FlowAuditLog}）：用户视角可修改 / 删除，系统视角只读不可改。
+ * 常用语提供系统预设 + 用户自定义双轨制，使用次数智能排序。
  *
  * <p><b>接口分组：</b>
  *
  * <ul>
- *   <li><b>发表</b>：{@code POST /workflow/comment} — 发表评论 / 回复（{@code parentCommentId} 非空时为回复）
- *   <li><b>查询</b>：
+ *   <li><b>发表评论</b>：{@code POST /workflow/comment} — 发表评论 / 回复（{@code parentCommentId} 非空时为回复）
+ *   <li><b>评论查询</b>：
  *       <ul>
  *         <li>{@code GET /workflow/comment/instance/{instanceId}} — 实例全部评论（树结构）
  *         <li>{@code GET /workflow/comment/root/{instanceId}} — 实例一级评论
  *         <li>{@code GET /workflow/comment/replies/{parentCommentId}} — 父评论下的回复
  *       </ul>
- *   <li><b>删除</b>：{@code DELETE /workflow/comment/{commentId}} — 软删除（仅本人）
+ *   <li><b>删除评论</b>：{@code DELETE /workflow/comment/{commentId}} — 软删除（仅本人）
+ *   <li><b>常用语查询</b>：{@code GET /workflow/comment/quick}（当前用户常用语，按 sortNum + useCount 排序）
+ *   <li><b>常用语新增</b>：{@code POST /workflow/comment/quick}（新增用户自定义常用语）
+ *   <li><b>常用语编辑</b>：{@code PUT /workflow/comment/quick}（仅编辑本人创建的）
+ *   <li><b>常用语删除</b>：{@code DELETE /workflow/comment/quick/{id}}（系统预设不可删）
+ *   <li><b>常用语计数</b>：{@code POST /workflow/comment/quick/{id}/use}（审批时调用 +1）
  * </ul>
  *
  * <p><b>权限模型：</b>所有写接口通过 {@link AuthApiPermission} 校验 {@link
@@ -61,18 +72,18 @@ import com.njydsz.workflow.server.service.FlowCommentService;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see FlowCommentService 评论服务
+ * @see FlowCommentService 评论服务（含常用语能力）
  * @see FlowComment 评论实体
  * @see FlowCommentCreateDTO 评论创建 DTO
  */
 @Slf4j
 @RestController
-@Tag(name = "workflow-comment", description = "工作流审批评论接口")
+@Tag(name = "workflow-comment", description = "工作流审批评论与常用语统一接口")
 @RequestMapping("/api/v1/workflow/comment")
 @RequiredArgsConstructor
 public class FlowCommentController {
 
-  /** 流程评论服务，负责评论/回复的发表、查询与删除 */
+  /** 流程评论服务（含常用语能力），负责评论/回复的发表、查询与删除，以及常用语的增删改查与使用次数统计 */
   private final FlowCommentService commentService;
 
   /**
@@ -160,5 +171,107 @@ public class FlowCommentController {
   public BaseResponse<Boolean> deleteComment(@PathVariable String commentId) {
     String userId = AuthContextUtils.getUserId();
     return BaseResponse.success(commentService.deleteComment(commentId, userId));
+  }
+
+  // ==================== 常用语管理 ====================
+
+  /**
+   * 查询当前用户的常用语列表。
+   *
+   * @return 常用语列表
+   */
+  @GetMapping("/quick")
+  @Operation(summary = "查询当前用户的常用语列表")
+  public BaseResponse<List<FlowQuickCommentVO>> listQuickComments() {
+    String userId = AuthContextUtils.getUserId();
+    String tenantId = TenantContextHolder.getTenantId();
+    return BaseResponse.success(
+        WorkflowConverter.INSTANT.flowQuickCommentListToVO(
+            commentService.listQuickComments(userId, tenantId)));
+  }
+
+  /**
+   * 新增常用语。
+   *
+   * @param dto 常用语信息
+   * @return 新建常用语 ID
+   */
+  @Idempotent(key = "ydsz:workflow:FlowCommentController:createQuickComment:lock", ttlSeconds = 5)
+  @RateLimit(resource = "workflow.flowquickcomment.create", threshold = 50)
+  @PostMapping("/quick")
+  @Audit(
+      module = "流程评论",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'createQuickComment'")
+  @Operation(summary = "新增常用语")
+  public BaseResponse<String> createQuickComment(@Valid @RequestBody FlowQuickCommentDTO dto) {
+    String userId = AuthContextUtils.getUserId();
+    String tenantId = TenantContextHolder.getTenantId();
+    return BaseResponse.success(commentService.createQuickComment(dto, userId, tenantId));
+  }
+
+  /**
+   * 编辑常用语。
+   *
+   * @param dto 常用语信息
+   * @return 空响应
+   */
+  @Idempotent(key = "ydsz:workflow:FlowCommentController:updateQuickComment:lock", ttlSeconds = 5)
+  @RateLimit(resource = "workflow.flowquickcomment.update", threshold = 50)
+  @PutMapping("/quick")
+  @Audit(
+      module = "流程评论",
+      type = AuditType.OPERATION,
+      action = AuditAction.UPDATE,
+      content = "'updateQuickComment'")
+  @Operation(summary = "编辑常用语")
+  public BaseResponse<Void> updateQuickComment(@Valid @RequestBody FlowQuickCommentDTO dto) {
+    String userId = AuthContextUtils.getUserId();
+    commentService.updateQuickComment(dto, userId);
+    return BaseResponse.success();
+  }
+
+  /**
+   * 删除常用语。
+   *
+   * @param id 常用语 ID
+   * @return 空响应
+   */
+  @Idempotent(key = "ydsz:workflow:FlowCommentController:deleteQuickComment:lock", ttlSeconds = 5)
+  @RateLimit(resource = "workflow.flowquickcomment.delete", threshold = 50)
+  @DeleteMapping("/quick/{id}")
+  @Audit(
+      module = "流程评论",
+      type = AuditType.OPERATION,
+      action = AuditAction.DELETE,
+      content = "'deleteQuickComment'")
+  @Operation(summary = "删除常用语")
+  public BaseResponse<Void> deleteQuickComment(@PathVariable String id) {
+    String userId = AuthContextUtils.getUserId();
+    commentService.deleteQuickComment(id, userId);
+    return BaseResponse.success();
+  }
+
+  /**
+   * 增加使用次数（审批时调用）。
+   *
+   * @param id 常用语 ID
+   * @return 空响应
+   */
+  @Idempotent(
+      key = "ydsz:workflow:FlowCommentController:incrementUseCount:lock",
+      ttlSeconds = 5)
+  @RateLimit(resource = "workflow.flowquickcomment.incrementUseCount", threshold = 50)
+  @PostMapping("/quick/{id}/use")
+  @Audit(
+      module = "流程评论",
+      type = AuditType.OPERATION,
+      action = AuditAction.CREATE,
+      content = "'incrementUseCount'")
+  @Operation(summary = "增加使用次数（审批时调用）")
+  public BaseResponse<Void> incrementUseCount(@PathVariable String id) {
+    commentService.incrementQuickCommentUseCount(id);
+    return BaseResponse.success();
   }
 }

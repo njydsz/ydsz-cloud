@@ -38,7 +38,7 @@ import com.njydsz.common.jdbc.entity.MpBaseEntity;
  *
  * @author ydsz-team
  * @since 1.0.0
- * @see com.njydsz.workflow.server.service.FlowQuickCommentService 常用语服务
+ * @see com.njydsz.workflow.server.service.FlowCommentService 评论服务（含常用语能力）
  */
 @Data
 @SuperBuilder

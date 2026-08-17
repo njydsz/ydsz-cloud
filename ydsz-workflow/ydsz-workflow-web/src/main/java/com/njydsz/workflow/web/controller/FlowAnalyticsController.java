@@ -13,8 +13,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.njydsz.common.core.response.BaseResponse;
+import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.workflow.server.service.FlowAnalyticsService;
+import com.njydsz.workflow.server.service.FlowHistoryArchiveService;
+import com.njydsz.workflow.server.service.FlowI18nService;
 
 /**
  * 审批数据分析 Controller（P2-2）
@@ -53,11 +57,17 @@ import com.njydsz.workflow.server.service.FlowAnalyticsService;
 @RestController
 @RequestMapping("/api/v1/workflow/analytics")
 @RequiredArgsConstructor
-@Tag(name = "审批数据分析", description = "审批效率/驳回率/办理人排行等分析仪表盘")
+@Tag(name = "审批数据分析", description = "审批效率/驳回率/办理人排行等分析仪表盘与历史归档")
 public class FlowAnalyticsController {
 
   /** 审批数据分析服务，提供效率排行、趋势分析等统计能力 */
   private final FlowAnalyticsService analyticsService;
+
+  /** 流程历史归档服务，负责数据归档、冷数据清理与配置查询 */
+  private final FlowHistoryArchiveService archiveService;
+
+  /** 国际化服务，负责多语言枚举描述的查询、缓存与 fallback */
+  private final FlowI18nService i18nService;
 
   /**
    * 审批总览仪表盘
@@ -167,5 +177,121 @@ public class FlowAnalyticsController {
     return BaseResponse.success(
         analyticsService.approvalTrend(
             startTime, endTime, TenantContextHolder.getTenantId(), granularity));
+  }
+
+  // ==================== 流程历史数据归档管理 ====================
+
+  /**
+   * 查询当前归档配置
+   *
+   * @return 配置项 Map
+   */
+  @Operation(summary = "查询归档配置")
+  @GetMapping("/history/config")
+  public BaseResponse<Map<String, Object>> getArchiveConfig() {
+    return BaseResponse.success(archiveService.getArchiveConfig());
+  }
+
+  /**
+   * 手动触发归档
+   *
+   * <p>参数可选，未传则使用 {@code application.yml} 配置的默认值。 适用于临时归档更早的数据（如手动归档 90 天前的数据）。
+   *
+   * @param retentionDays 归档阈值天数（可选）
+   * @param batchSize 单次批量大小（可选）
+   * @param maxProcessMs 单次最大耗时毫秒（可选）
+   * @return 执行结果摘要
+   */
+  @Audit(
+      module = "历史归档",
+      type = AuditType.OPERATION,
+      action = AuditAction.BACKUP,
+      content = "'archive'")
+  @Operation(summary = "手动触发归档")
+  @Idempotent(key = "ydsz:workflow:FlowAnalyticsController:archive:lock", ttlSeconds = 5)
+  @PostMapping("/history/archive")
+  public BaseResponse<Map<String, Object>> archive(
+      @RequestParam(required = false) @Min(1) Integer retentionDays,
+      @RequestParam(required = false) @Min(1) @Max(1000) Integer batchSize,
+      @RequestParam(required = false) Long maxProcessMs) {
+    log.info(
+        "[FlowAnalyticsController] 手动触发归档 retentionDays={} batchSize={} maxProcessMs={}",
+        retentionDays,
+        batchSize,
+        maxProcessMs);
+    return BaseResponse.success(archiveService.archive(retentionDays, batchSize, maxProcessMs));
+  }
+
+  /**
+   * 手动触发清理（purge）
+   *
+   * <p>清理归档表中超过阈值的冷数据，回收存储空间。 即使配置 {@code purge-enabled=false}，本接口仍可强制执行（参数优先于配置）。
+   *
+   * @param purgeDays 清理阈值天数（可选，默认使用配置值）
+   * @return 执行结果摘要
+   */
+  @Audit(
+      module = "历史归档",
+      type = AuditType.OPERATION,
+      action = AuditAction.CLEAN,
+      content = "'purge'")
+  @Operation(summary = "手动触发清理（purge）")
+  @Idempotent(key = "ydsz:workflow:FlowAnalyticsController:purge:lock", ttlSeconds = 5)
+  @PostMapping("/history/purge")
+  public BaseResponse<Map<String, Object>> purge(
+      @RequestParam(required = false) Integer purgeDays) {
+    log.info("[FlowAnalyticsController] 手动触发清理 purgeDays={}", purgeDays);
+    return BaseResponse.success(archiveService.purge(purgeDays));
+  }
+
+  // ==================== 工作流国际化 (i18n) ====================
+
+  /**
+   * 获取指定枚举类的全部描述
+   *
+   * <p>返回的 Map 列表中每条形如 {@code {name: "RUNNING", label: "运行中"}}， 前端可直接用于下拉框 / 单选 / 状态筛选组件渲染。
+   *
+   * @param enumType 枚举类型（FlowTaskStatus / FlowInstanceStatus / FlowNodeType 等）
+   * @param locale 语言（zh_CN/en_US），为空默认 zh_CN
+   * @return 枚举描述列表（含 name + label 字段）
+   */
+  @GetMapping("/i18n/enum/{enumType}")
+  @Operation(summary = "获取枚举类型的全部描述")
+  public BaseResponse<List<Map<String, String>>> enumDescriptions(
+      @PathVariable String enumType, @RequestParam(required = false) String locale) {
+    return BaseResponse.success(i18nService.getEnumDescriptions(enumType, locale));
+  }
+
+  /**
+   * 获取单个枚举值的描述
+   *
+   * <p>适用于只需要展示某一个枚举值描述的场景（如详情页某字段的状态文案）。
+   *
+   * @param enumType 枚举类型
+   * @param enumName 枚举值名称（如 {@code RUNNING}）
+   * @param locale 语言
+   * @return 描述文本（无翻译时回退到原值）
+   */
+  @GetMapping("/i18n/enum/{enumType}/{enumName}")
+  @Operation(summary = "获取单个枚举值的描述")
+  public BaseResponse<String> enumDescription(
+      @PathVariable String enumType,
+      @PathVariable String enumName,
+      @RequestParam(required = false) String locale) {
+    return BaseResponse.success(i18nService.getEnumDescription(enumType, enumName, locale));
+  }
+
+  /**
+   * 获取所有支持的语言列表
+   *
+   * <p>前端首次加载时调用，构建语言切换下拉框；返回形如 {@code [{code: "zh_CN", name: "简体中文"}, {code: "en_US", name:
+   * "English"}]}。
+   *
+   * @return 语言列表（含 code 与 name 字段）
+   */
+  @GetMapping("/i18n/locales")
+  @Operation(summary = "获取支持的语言列表")
+  public BaseResponse<List<Map<String, String>>> supportedLocales() {
+    return BaseResponse.success(i18nService.getSupportedLocales());
   }
 }

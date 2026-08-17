@@ -42,14 +42,7 @@ import com.njydsz.common.safe.annotation.EnableYdszSafe;
 @EnableYdszAuth
 @EnableYdszSafe
 @EnableYdszAudit
-@EnableYdszFeign(
-    basePackages = {
-      "com.njydsz.literule.api",
-      "com.njydsz.common.feign",
-      "com.njydsz.cronjob.api",
-      "com.njydsz.workflow.api",
-      "com.njydsz.system.api"
-    })
+@EnableYdszFeign
 @EnableScheduling
 @MapperScan("com.njydsz.literule.infra.mapper")
 public class LiteruleApplication {

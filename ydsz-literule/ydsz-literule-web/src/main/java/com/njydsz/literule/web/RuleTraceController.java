@@ -83,7 +83,7 @@ public class RuleTraceController {
             ruleExecutionTraceMapper.selectList(
                 new LambdaQueryWrapper<RuleExecutionTraceDO>()
                     .eq(RuleExecutionTraceDO::getTraceId, traceId)
-                    .orderByAsc(RuleExecutionTraceDO::getCreatedAt))));
+                    .orderByAsc(RuleExecutionTraceDO::getId))));
   }
 
   /** 按规则编码查询最近链路 */
@@ -96,7 +96,7 @@ public class RuleTraceController {
             ruleExecutionTraceMapper.selectList(
                 new LambdaQueryWrapper<RuleExecutionTraceDO>()
                     .eq(RuleExecutionTraceDO::getRuleCode, ruleCode)
-                    .orderByDesc(RuleExecutionTraceDO::getCreatedAt)
+                    .orderByDesc(RuleExecutionTraceDO::getId)
                     .last("LIMIT " + limit))));
   }
 
@@ -121,7 +121,7 @@ public class RuleTraceController {
         ruleExecutionTraceMapper.selectList(
             new LambdaQueryWrapper<RuleExecutionTraceDO>()
                 .eq(RuleExecutionTraceDO::getTraceId, traceId)
-                .orderByAsc(RuleExecutionTraceDO::getCreatedAt));
+                .orderByAsc(RuleExecutionTraceDO::getId));
 
     if (traces.isEmpty()) {
       return BaseResponse.error(
@@ -233,9 +233,9 @@ public class RuleTraceController {
     // 按时间范围查询历史 trace（可选按 ruleCode 过滤）
     LambdaQueryWrapper<RuleExecutionTraceDO> wrapper =
         new LambdaQueryWrapper<RuleExecutionTraceDO>()
-            .ge(RuleExecutionTraceDO::getCreatedAt, startTime)
-            .lt(RuleExecutionTraceDO::getCreatedAt, endTime)
-            .orderByDesc(RuleExecutionTraceDO::getCreatedAt)
+            .ge(RuleExecutionTraceDO::getId, startTimeStr)
+            .lt(RuleExecutionTraceDO::getId, endTimeStr)
+            .orderByDesc(RuleExecutionTraceDO::getId)
             .last("LIMIT " + limit);
     if (ruleCode != null && !ruleCode.isBlank()) {
       wrapper.eq(RuleExecutionTraceDO::getRuleCode, ruleCode);
@@ -369,7 +369,7 @@ public class RuleTraceController {
         ruleExecutionTraceMapper.selectList(
             new LambdaQueryWrapper<RuleExecutionTraceDO>()
                 .eq(RuleExecutionTraceDO::getRuleCode, ruleCode)
-                .orderByDesc(RuleExecutionTraceDO::getCreatedAt)
+                .orderByDesc(RuleExecutionTraceDO::getId)
                 .last("LIMIT " + limit));
 
     // 逐条用新表达式重新评估
@@ -426,7 +426,7 @@ public class RuleTraceController {
         affected.put("historicalSeverity", historicalSeverity);
         affected.put("newSeverity", newSeverity);
         affected.put("impactType", impactType);
-        affected.put("createdAt", trace.getCreatedAt());
+        affected.put("traceTime", trace.getId());
         affectedTraces.add(affected);
       }
     }
@@ -495,7 +495,7 @@ public class RuleTraceController {
         LiteruleConverter.INSTANT.ruleExecutionTraceListToVO(
             ruleExecutionTraceMapper.selectList(
                 new LambdaQueryWrapper<RuleExecutionTraceDO>()
-                    .orderByDesc(RuleExecutionTraceDO::getCreatedAt)
+                    .orderByDesc(RuleExecutionTraceDO::getId)
                     .last("LIMIT " + limit))));
   }
 }

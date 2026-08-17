@@ -3,12 +3,15 @@ package com.njydsz.workflow.server.service;
 import java.util.List;
 
 import com.njydsz.workflow.domain.dto.FlowCommentCreateDTO;
+import com.njydsz.workflow.domain.dto.FlowQuickCommentDTO;
 import com.njydsz.workflow.domain.entity.FlowComment;
+import com.njydsz.workflow.domain.entity.FlowQuickComment;
 
 /**
- * P2-2: 流程评论 Service
+ * P2-2: 流程评论 Service（含常用语能力）
  *
  * <p>提供审批评论的多级回复能力，对标钉钉/飞书审批评论区。
+ * 同时集成审批常用语（快捷回复模板）的 CRUD 与使用统计能力。
  *
  * <p><b>核心职责：</b>
  *
@@ -16,8 +19,10 @@ import com.njydsz.workflow.domain.entity.FlowComment;
  *   <li><b>发表与回复</b>：一级评论（{@code parentCommentId=null}）/ 多级回复
  *   <li><b>查询能力</b>：实例全部评论（{@link #listByInstance}）/ 一级评论（{@link #listRootComments}）/ 子评论（{@code
  *       listChildComments}）
- *   <li><b>删除与编辑</b>：仅评论本人或管理员可删除（{@code deleteById}）
+ *   <li><b>删除与编辑</b>：仅评论本人或管理员可删除（{@code deleteComment}）
  *   <li><b>通知触发</b>：评论或回复时通过 {@code FlowNotificationService} 通知被回复人
+ *   <li><b>常用语管理</b>：用户自定义常用语的增删改查、使用次数统计（{@link #listQuickComments} / {@link #createQuickComment}
+ *       / {@link #updateQuickComment} / {@link #deleteQuickComment} / {@link #incrementQuickCommentUseCount}）
  * </ul>
  *
  * <p><b>与审计日志的区别：</b>
@@ -34,6 +39,7 @@ import com.njydsz.workflow.domain.entity.FlowComment;
  * <ul>
  *   <li>{@link #listByInstance} 一次性查询全部评论（含回复），由前端本地组装树，避免 N+1
  *   <li>评论分页采用 {@code created_at + parent_comment_id} 复合索引
+ *   <li>常用语数据量小（用户级百级别），无需分页
  * </ul>
  *
  * @author ydsz-team
@@ -94,4 +100,56 @@ public interface FlowCommentService {
    * @return 是否删除成功（评论不存在或无权限返回 false）
    */
   boolean deleteComment(String commentId, String userId);
+
+  // ==================== P2-1: 审批常用语能力（由 FlowQuickCommentService 合并） ====================
+
+  /**
+   * 查询用户的常用语列表（含系统预设 + 用户自定义）。
+   *
+   * <p>合并查询：先查用户自定义常用语，再追加系统预设，最终按 sortNum 升序、useCount 降序两级排序。
+   *
+   * @param userId 用户 ID（不可空，为空返回空列表）
+   * @param tenantId 租户 ID
+   * @return 常用语列表（已合并 + 已排序），无数据返回空列表
+   */
+  List<FlowQuickComment> listQuickComments(String userId, String tenantId);
+
+  /**
+   * 创建用户自定义常用语。
+   *
+   * <p>仅创建用户自定义常用语（isSystem=0），useCount 初始为 0。
+   *
+   * @param dto 常用语 DTO（含 content/commentType/sortNum）
+   * @param userId 创建人 ID（不可空）
+   * @param tenantId 租户 ID
+   * @return 新常用语 ID
+   */
+  String createQuickComment(FlowQuickCommentDTO dto, String userId, String tenantId);
+
+  /**
+   * 更新常用语（仅创建者本人可更新，系统预设不可更新）。
+   *
+   * @param dto 常用语 DTO（id 必传）
+   * @param userId 操作人 ID（必须与创建者一致）
+   */
+  void updateQuickComment(FlowQuickCommentDTO dto, String userId);
+
+  /**
+   * 删除常用语（软删除）。
+   *
+   * <p>系统预设（isSystem=1）不可删除，仅创建者本人可删除。
+   *
+   * @param id 常用语 ID
+   * @param userId 操作人 ID
+   */
+  void deleteQuickComment(String id, String userId);
+
+  /**
+   * 增加常用语使用次数（审批时调用）。
+   *
+   * <p>异常被 try-catch 吞掉记 WARN，不传播异常——使用统计失败不应阻塞评论发布主流程。
+   *
+   * @param id 常用语 ID
+   */
+  void incrementQuickCommentUseCount(String id);
 }

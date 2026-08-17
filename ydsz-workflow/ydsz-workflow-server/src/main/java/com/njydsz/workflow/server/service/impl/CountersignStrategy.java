@@ -7,10 +7,10 @@ import com.njydsz.workflow.domain.enums.FlowPerformType;
 /**
  * 会签推进策略接口（Strategy Pattern）
  *
- * <p>从 {@code FlowTaskCompleteServiceImpl} 拆分出的<b>策略模式</b>抽象。 不同的会签类型（{@code OR / PARALLEL /
- * SEQUENTIAL / FOREACH_PARALLEL}） 有不同的「完成条件」和「完成后的清理动作」，本接口将二者下沉到具体策略类， 主流程
- * {@code FlowTaskPassService} 通过 {@link CountersignStrategyFactory} 工厂 按 {@link FlowPerformType}
- * 选择策略。 是大厂 B 端工作流「灵活会签模式扩展」的关键设计。
+ * <p>从 {@code FlowTaskCompleteServiceImpl} 拆分出的<b>策略模式</b>抽象。
+ * 不同的会签类型（{@code OR / PARALLEL}）有不同的「完成条件」和「完成后的清理动作」，
+ * 本接口将二者下沉到具体策略类，主流程 {@code FlowTaskPassService} 通过
+ * {@link CountersignStrategyFactory} 工厂按 {@link FlowPerformType} 选择策略。
  *
  * <p><b>架构动机：</b>
  *
@@ -25,8 +25,6 @@ import com.njydsz.workflow.domain.enums.FlowPerformType;
  * <ul>
  *   <li>{@link OrCountersignStrategy} — OR（或签 / 任一通过）
  *   <li>{@link ParallelCountersignStrategy} — PARALLEL（并行会签 / 全部通过）
- *   <li>{@link SequentialCountersignStrategy} — SEQUENTIAL（顺序会签 / 逐一审批）
- *   <li>{@link ForeachCountersignStrategy} — FOREACH_PARALLEL（多元素并行）
  * </ul>
  *
  * <p><b>调用契约（顺序）：</b>
@@ -67,7 +65,7 @@ public interface CountersignStrategy {
   /**
    * 预检查：当前用户通过操作的前置校验。
    *
-   * <p>默认无操作；SEQUENTIAL/FOREACH 等可能校验"当前用户是否本轮应处理的人"。
+   * <p>默认无操作；子类可按需重写。
    */
   default void preCheck(FlowRunTask task, FlowTaskOperateDTO dto) {
     // 默认 no-op

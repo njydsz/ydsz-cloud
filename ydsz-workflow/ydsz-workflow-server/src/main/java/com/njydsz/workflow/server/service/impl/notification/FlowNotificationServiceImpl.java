@@ -72,7 +72,7 @@ import com.njydsz.workflow.server.service.FlowNotificationService;
  * <ul>
  *   <li>本类<b>不开启事务</b>（{@code @Transactional} 缺失），通知发送是<b>非事务性</b>操作
  *   <li>Feign 调用失败时仅记录日志，<b>不抛异常</b>，避免主流程事务回滚
- *   <li>消息可靠性由 {@code ydsz-message} 模块的 Outbox 模式保证
+ *   <li>消息可靠性由 {@code ydsz-message} 模块的消息队列保证
  * </ul>
  *
  * <p><b>设计要点：</b>
