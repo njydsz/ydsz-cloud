@@ -60,7 +60,6 @@ public class UserinfoSearchProvider implements SearchProvider<UserAccount> {
     return "user";
   }
 
-  @Override
   public String getTypeLabel() {
     return "用户";
   }
@@ -102,7 +101,6 @@ public class UserinfoSearchProvider implements SearchProvider<UserAccount> {
         .build();
   }
 
-  @Override
   public List<SearchField> getSearchableFields() {
     return List.of(
         SearchField.builder()
@@ -150,7 +148,6 @@ public class UserinfoSearchProvider implements SearchProvider<UserAccount> {
             .build());
   }
 
-  @Override
   public List<SearchFilter> getFilters(SearchProviderContext context) {
     if (context == null || context.isAdmin()) {
       return List.of();
@@ -168,7 +165,6 @@ public class UserinfoSearchProvider implements SearchProvider<UserAccount> {
     return filters;
   }
 
-  @Override
   public List<String> getAllDocumentIds(String tenantId) {
     LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
     wrapper.select(UserAccount::getId);
@@ -179,7 +175,6 @@ public class UserinfoSearchProvider implements SearchProvider<UserAccount> {
     return userAccountMapper.selectList(wrapper).stream().map(UserAccount::getId).toList();
   }
 
-  @Override
   public UserAccount loadById(String id) {
     return userAccountMapper.selectById(id);
   }

@@ -466,6 +466,9 @@ public class UserAccountServiceImpl implements UserAccountService {
     // 原实现仅删除 leader 缓存（key 维度错误），导致 role:xxx 旧名单残留。
     evictWorkflowCache(userId);
 
+    // P1-1: 角色分配变更后，失效该用户的角色缓存
+    authService.evictUserRolesCache(userId);
+
     // 发布角色变更领域事件（通知 Gateway 刷新权限缓存）
     eventPublisher.publishRoleChanged(userId, roleIds.size());
 
@@ -623,6 +626,11 @@ public class UserAccountServiceImpl implements UserAccountService {
    *
    * <p>返回 realName（而非 username）：富化场景需要展示给人看的是真实姓名。 若 realName 为空则该 userId 不出现在结果中（让 NameAssembler
    * 兜底用 userId 顶替）。
+   *
+   * <p>P1-2: 单次批量查询上限 500，超出时自动分批执行，避免巨型 IN 查询导致数据库性能下降。
+   *
+   * @param userIds 用户 ID 集合
+   * @return userId → realName 映射
    */
   @Override
   public Map<String, String> batchUserNames(Collection<String> userIds) {
@@ -637,7 +645,32 @@ public class UserAccountServiceImpl implements UserAccountService {
     if (distinctIds.isEmpty()) {
       return Collections.emptyMap();
     }
-    List<UserAccount> users = userAccountMapper.selectBatchIds(distinctIds);
+
+    // P1-2: 限制单次批量查询上限，超出时自动分批
+    int batchSize = properties.getBatchSizeLimit();
+    if (distinctIds.size() <= batchSize) {
+      return batchUserNamesInternal(distinctIds);
+    }
+
+    log.warn("Batch user names query exceeds limit: size={}, limit={}", distinctIds.size(), batchSize);
+    Map<String, String> result = new LinkedHashMap<>(distinctIds.size());
+    List<String> idList = new ArrayList<>(distinctIds);
+    for (int i = 0; i < idList.size(); i += batchSize) {
+      int end = Math.min(i + batchSize, idList.size());
+      List<String> batch = idList.subList(i, end);
+      result.putAll(batchUserNamesInternal(batch));
+    }
+    return result;
+  }
+
+  /**
+   * 批量查询用户名称（内部方法，不检查上限）。
+   *
+   * @param userIds 用户 ID 列表（已去重、已过滤空值）
+   * @return userId → realName 映射
+   */
+  private Map<String, String> batchUserNamesInternal(List<String> userIds) {
+    List<UserAccount> users = userAccountMapper.selectBatchIds(userIds);
     Map<String, String> result = new LinkedHashMap<>(users.size());
     for (UserAccount user : users) {
       if (user.getRealName() != null && !user.getRealName().isBlank()) {

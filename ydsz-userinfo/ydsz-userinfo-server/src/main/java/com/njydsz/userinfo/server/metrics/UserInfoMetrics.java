@@ -140,4 +140,35 @@ public class UserInfoMetrics extends SentryMetricsAdapter {
   public void updateOnlineSessionsGauge() {
     gauge("online_sessions", getOnlineSessionsFromRedis());
   }
+
+  /**
+   * 记录缓存命中/失败次数（通用方法，供外部调用）。
+   *
+   * @param name 指标名称（不含前缀）
+   * @param result 结果标识（如 hit/miss/success/fail）
+   */
+  public void recordCacheResult(String name, String result) {
+    incrementCounter(name, "result", result);
+  }
+
+  /**
+   * 记录 HTTP 请求计数（通用方法，供外部调用）。
+   *
+   * @param name 指标名称（不含前缀）
+   * @param tags 标签键值对（偶数个参数：key1, value1, key2, value2...）
+   */
+  public void recordHttpCount(String name, String... tags) {
+    incrementCounter(name, tags);
+  }
+
+  /**
+   * 记录耗时（通用方法，供外部调用）。
+   *
+   * @param name 指标名称（不含前缀）
+   * @param durationMs 耗时毫秒数
+   * @param tags 标签键值对
+   */
+  public void recordTimer(String name, long durationMs, String... tags) {
+    super.recordTimer(name, durationMs, tags);
+  }
 }

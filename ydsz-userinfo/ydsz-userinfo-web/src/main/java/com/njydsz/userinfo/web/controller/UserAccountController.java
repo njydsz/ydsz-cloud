@@ -1,5 +1,6 @@
 package com.njydsz.userinfo.web.controller;
 
+import java.io.IOException;
 import java.util.List;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -8,6 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,20 +25,25 @@ import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.lock.annotation.Idempotent;
+import com.njydsz.common.safe.annotation.SensitiveOperation;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
 import com.njydsz.common.web.version.ApiVersion;
 import com.njydsz.userinfo.domain.dto.AssignRolesDTO;
 import com.njydsz.userinfo.domain.dto.BatchUserStatusDTO;
 import com.njydsz.userinfo.domain.dto.ChangePasswordDTO;
 import com.njydsz.userinfo.domain.dto.ResetPasswordDTO;
+import com.njydsz.userinfo.domain.dto.SensitiveVerifyDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountCreateDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountPageQueryDTO;
 import com.njydsz.userinfo.domain.dto.UserAccountUpdateDTO;
 import com.njydsz.userinfo.domain.dto.UserImportResultDTO;
 import com.njydsz.userinfo.domain.entity.UserLoginHistory;
+import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
+import com.njydsz.userinfo.server.auth.SensitiveVerifyService;
 import com.njydsz.userinfo.server.service.LoginHistoryService;
 import com.njydsz.userinfo.server.service.UserAccountService;
 import com.njydsz.userinfo.server.service.UserExcelService;
@@ -75,6 +82,7 @@ import com.njydsz.userinfo.server.service.UserExcelService;
  * @see com.njydsz.userinfo.server.service.UserAccountService 用户业务逻辑
  * @see com.njydsz.userinfo.domain.entity.UserAccount 用户实体
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/user")
 @RequiredArgsConstructor
@@ -85,6 +93,7 @@ public class UserAccountController {
   private final UserAccountService service;
   private final UserExcelService userExcelService;
   private final LoginHistoryService loginHistoryService;
+  private final SensitiveVerifyService sensitiveVerifyService;
 
   /**
    * 分页查询用户列表
@@ -239,11 +248,13 @@ public class UserAccountController {
    * @param dto 重置密码 DTO（userId / newPassword）
    * @return 是否成功
    */
+  @SensitiveOperation("重置密码")
   @RateLimit(resource = "userinfo.useraccount.resetPassword", threshold = 50)
   @Idempotent(key = "ydsz:userinfo:UserAccountController:resetPassword:lock", ttlSeconds = 5)
   @PostMapping("/reset-password")
   @Operation(summary = "重置密码（管理员）")
   public BaseResponse<Boolean> resetPassword(@Valid @RequestBody ResetPasswordDTO dto) {
+    sensitiveVerifyService.clearVerification();
     return BaseResponse.success(service.resetPassword(dto));
   }
 
@@ -292,6 +303,7 @@ public class UserAccountController {
    *
    * @param file Excel 文件（.xlsx 格式）
    * @return 导入结果（总数/成功数/失败数/失败明细）
+   * @throws org.springframework.web.bind.MethodArgumentNotValidException 当文件为空时抛出
    */
   @Audit(
       module = "用户管理",
@@ -301,16 +313,18 @@ public class UserAccountController {
   @RateLimit(resource = "userinfo.useraccount.import", threshold = 10)
   @PostMapping("/import")
   @Operation(summary = "批量导入用户（Excel）")
-  public BaseResponse<UserImportResultDTO> importUsers(MultipartFile file) {
+  public BaseResponse<UserImportResultDTO> importUsers(
+      @org.springframework.web.bind.annotation.RequestParam("file") MultipartFile file) {
     if (file == null || file.isEmpty()) {
-      return BaseResponse.error("请选择要导入的文件");
+      throw new BusinessException(UserInfoExceptionCode.IMPORT_FILE_EMPTY);
     }
     try {
       UserImportResultDTO result =
           userExcelService.importUsers(file.getInputStream(), file.getOriginalFilename());
       return BaseResponse.success(result);
-    } catch (Exception e) {
-      return BaseResponse.error("导入失败: " + e.getMessage());
+    } catch (IOException e) {
+      log.error("导入用户文件读取失败", e);
+      throw new BusinessException(UserInfoExceptionCode.IMPORT_READ_FAILED);
     }
   }
 
@@ -330,8 +344,13 @@ public class UserAccountController {
       response.setHeader("Content-Disposition", "attachment; filename=用户导入模板.xlsx");
       response.getOutputStream().write(templateBytes);
       response.getOutputStream().flush();
+    } catch (IOException e) {
+      log.warn("下载导入模板IO异常，可能由客户端断开连接导致: {}", e.getMessage());
     } catch (Exception e) {
-      response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+      log.error("下载导入模板失败", e);
+      if (!response.isCommitted()) {
+        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+      }
     }
   }
 
@@ -358,8 +377,13 @@ public class UserAccountController {
       response.setHeader("Content-Disposition", "attachment; filename=用户列表.xlsx");
       response.getOutputStream().write(excelBytes);
       response.getOutputStream().flush();
+    } catch (IOException e) {
+      log.warn("导出用户列表IO异常，可能由客户端断开连接导致: {}", e.getMessage());
     } catch (Exception e) {
-      response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+      log.error("导出用户列表失败", e);
+      if (!response.isCommitted()) {
+        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+      }
     }
   }
 
@@ -437,11 +461,37 @@ public class UserAccountController {
       type = AuditType.OPERATION,
       action = AuditAction.UPDATE,
       content = "'批量禁用用户: ' + #dto.ids.size() + ' 个'")
+  @SensitiveOperation("批量禁用用户")
   @Idempotent(key = "ydsz:userinfo:UserAccountController:batchDisable:lock", ttlSeconds = 5)
   @RateLimit(resource = "userinfo.useraccount.batchDisable", threshold = 30)
   @PostMapping("/batch-disable")
   @Operation(summary = "批量禁用用户")
   public BaseResponse<Integer> batchDisable(@Valid @RequestBody BatchUserStatusDTO dto) {
+    sensitiveVerifyService.clearVerification();
     return BaseResponse.success(service.batchDisable(dto.getIds()));
+  }
+
+  /**
+   * 敏感操作二次认证。
+   *
+   * <p>在执行敏感操作（重置密码、批量禁用等）前，管理员需先调用此接口进行身份验证。 验证通过后，后端在 Redis 写入一条短期有效（5 分钟）的验证标记。
+   *
+   * <p><b>流程：</b>
+   *
+   * <ol>
+   *   <li>前端弹出密码确认框，用户输入当前登录密码
+   *   <li>调用此接口，后端校验密码正确后返回成功
+   *   <li>前端发起实际敏感操作请求，AOP 切面验证 Redis 标记有效
+   *   <li>验证标记为一次性，操作成功后立即清除
+   * </ol>
+   *
+   * @param dto 认证请求（含当前登录密码）
+   * @return 是否验证通过
+   */
+  @PostMapping("/sensitive-verify")
+  @Operation(summary = "敏感操作二次认证")
+  public BaseResponse<Boolean> sensitiveVerify(@Valid @RequestBody SensitiveVerifyDTO dto) {
+    sensitiveVerifyService.verify(dto.getPassword());
+    return BaseResponse.success(true);
   }
 }

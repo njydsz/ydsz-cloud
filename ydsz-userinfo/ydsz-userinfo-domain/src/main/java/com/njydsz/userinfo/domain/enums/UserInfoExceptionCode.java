@@ -77,6 +77,26 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   OAUTH2_REDIRECT_URI_MISMATCH("B30018", "userinfo.oauth2.redirect.uri.mismatch", 401),
   /** PKCE code_verifier 无效 */
   OAUTH2_PKCE_VERIFIER_INVALID("B30020", "userinfo.oauth2.pkce.verifier.invalid", 401),
+  /** 导入文件为空 */
+  IMPORT_FILE_EMPTY("B30021", "userinfo.import.file.empty"),
+  /** 导入文件无数据 */
+  IMPORT_DATA_EMPTY("B30022", "userinfo.import.data.empty"),
+  /** 导入数量超过上限 */
+  IMPORT_EXCEEDS_LIMIT("B30023", "userinfo.import.exceeds.limit"),
+  /** 导入用户名为空 */
+  IMPORT_USERNAME_EMPTY("B30024", "userinfo.import.username.empty"),
+  /** 导入真实姓名为空 */
+  IMPORT_REALNAME_EMPTY("B30025", "userinfo.import.realname.empty"),
+  /** 导入密码为空 */
+  IMPORT_PASSWORD_EMPTY("B30026", "userinfo.import.password.empty"),
+  /** 导入用户名已存在 */
+  IMPORT_USERNAME_DUPLICATE("B30027", "userinfo.import.username.duplicate"),
+  /** 导入部门编码不存在 */
+  IMPORT_DEPT_NOT_FOUND("B30028", "userinfo.import.dept.not.found"),
+  /** 导入上级用户不存在 */
+  IMPORT_LEADER_NOT_FOUND("B30029", "userinfo.import.leader.not.found"),
+  /** 导入文件读取失败 */
+  IMPORT_READ_FAILED("B30030", "userinfo.import.read.failed"),
 
   // ==================== B31xxx 组织架构 ====================
   /** 部门不存在 */
@@ -114,7 +134,27 @@ public enum UserInfoExceptionCode implements ExceptionCode {
   /** 语言不存在 */
   LANGUAGE_NOT_FOUND("B32009", "userinfo.language.not.found", 404),
   /** 语言编码已存在 */
-  LANGUAGE_CODE_DUPLICATE("B32010", "userinfo.language.code.duplicate");
+  LANGUAGE_CODE_DUPLICATE("B32010", "userinfo.language.code.duplicate"),
+
+  // ==================== A20xxx 安全认证（二次认证） ====================
+  /** 敏感操作需要二次认证 */
+  SENSITIVE_VERIFY_REQUIRED("A20120", "userinfo.sensitive.verify.required", 401),
+  /** 二次认证已过期，请重新验证 */
+  SENSITIVE_VERIFY_EXPIRED("A20121", "userinfo.sensitive.verify.expired", 401),
+  /** 二次认证密码错误 */
+  SENSITIVE_VERIFY_PASSWORD_INCORRECT("A20122", "userinfo.sensitive.verify.password.incorrect", 401),
+
+  // ==================== B33xxx 自助服务 ====================
+  /** 自助注册功能未开启 */
+  SELF_REGISTRATION_DISABLED("B33001", "userinfo.self.registration.disabled"),
+  /** 验证码已过期或无效 */
+  VERIFY_CODE_INVALID("B33002", "userinfo.verify.code.invalid"),
+  /** 验证码发送过于频繁 */
+  VERIFY_CODE_RATE_LIMITED("B33003", "userinfo.verify.code.rate.limited"),
+  /** 找回密码账号不存在 */
+  FORGOT_PASSWORD_USER_NOT_FOUND("B33004", "userinfo.forgot.password.user.not.found"),
+  /** 找回密码手机号与账号不匹配 */
+  FORGOT_PASSWORD_PHONE_MISMATCH("B33005", "userinfo.forgot.password.phone.mismatch");
 
   /** 错误码（业务契约，不应轻易变更） */
   private final String code;

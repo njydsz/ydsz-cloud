@@ -23,6 +23,7 @@ import com.njydsz.userinfo.domain.dto.UserImportDTO;
 import com.njydsz.userinfo.domain.dto.UserImportResultDTO;
 import com.njydsz.userinfo.domain.entity.Department;
 import com.njydsz.userinfo.domain.entity.UserAccount;
+import com.njydsz.userinfo.domain.enums.UserInfoExceptionCode;
 import com.njydsz.userinfo.domain.vo.UserAccountVO;
 import com.njydsz.userinfo.infra.mapper.DepartmentMapper;
 import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
@@ -68,14 +69,16 @@ public class UserExcelServiceImpl implements UserExcelService {
     List<UserImportDTO> importList = readExcel(inputStream, originalFilename);
 
     if (importList == null || importList.isEmpty()) {
-      return UserImportResultDTO.of(0, 0, 0, "导入文件无数据");
+      throw new BusinessException(UserInfoExceptionCode.IMPORT_DATA_EMPTY);
     }
 
     // 2. 检查导入数量限制
     int limit = DEFAULT_IMPORT_LIMIT;
     if (importList.size() > limit) {
-      return UserImportResultDTO.of(
-          importList.size(), 0, importList.size(), "导入数量超过上限 " + limit + " 行");
+      throw BusinessException.builder()
+          .resultCode(UserInfoExceptionCode.IMPORT_EXCEEDS_LIMIT)
+          .params(limit)
+          .build();
     }
 
     // 3. 预加载批量查询数据，避免 N+1（一次性查询所有用户名、部门编码、上级用户名）
@@ -116,12 +119,13 @@ public class UserExcelServiceImpl implements UserExcelService {
         successCount++;
       } catch (Exception e) {
         failCount++;
-        failDetails.add("第" + rowNum + "行[" + importDTO.getUsername() + "]: " + e.getMessage());
+        String errorMsg = e instanceof BusinessException be ? be.getMessage() : e.getMessage();
+        failDetails.add("第" + rowNum + "行[" + importDTO.getUsername() + "]: " + errorMsg);
         log.warn(
             "导入用户失败: row={}, username={}, error={}",
             rowNum,
             importDTO.getUsername(),
-            e.getMessage());
+            errorMsg);
       }
     }
 
@@ -193,7 +197,10 @@ public class UserExcelServiceImpl implements UserExcelService {
       return result;
     } catch (Exception e) {
       log.error("读取 Excel 失败: filename={}, error={}", originalFilename, e.getMessage(), e);
-      throw BusinessException.builder().message("读取 Excel 文件失败: " + e.getMessage()).build();
+      throw BusinessException.builder()
+          .resultCode(UserInfoExceptionCode.IMPORT_READ_FAILED)
+          .params(e.getMessage())
+          .build();
     }
   }
 
@@ -226,13 +233,13 @@ public class UserExcelServiceImpl implements UserExcelService {
    */
   private void validateRequiredFields(UserImportDTO importDTO) {
     if (importDTO.getUsername() == null || importDTO.getUsername().isBlank()) {
-      throw BusinessException.builder().message("用户名不能为空").build();
+      throw new BusinessException(UserInfoExceptionCode.IMPORT_USERNAME_EMPTY);
     }
     if (importDTO.getRealName() == null || importDTO.getRealName().isBlank()) {
-      throw BusinessException.builder().message("真实姓名不能为空").build();
+      throw new BusinessException(UserInfoExceptionCode.IMPORT_REALNAME_EMPTY);
     }
     if (importDTO.getPassword() == null || importDTO.getPassword().isBlank()) {
-      throw BusinessException.builder().message("初始密码不能为空").build();
+      throw new BusinessException(UserInfoExceptionCode.IMPORT_PASSWORD_EMPTY);
     }
   }
 
@@ -245,7 +252,7 @@ public class UserExcelServiceImpl implements UserExcelService {
    */
   private void validateUsernameUnique(String username, Set<String> existingUsernames) {
     if (existingUsernames.contains(username)) {
-      throw BusinessException.builder().message("用户名已存在").build();
+      throw new BusinessException(UserInfoExceptionCode.IMPORT_USERNAME_DUPLICATE);
     }
   }
 
@@ -263,7 +270,10 @@ public class UserExcelServiceImpl implements UserExcelService {
     }
     String deptId = deptCodeToIdMap.get(deptCode);
     if (deptId == null) {
-      throw BusinessException.builder().message("部门编码不存在: " + deptCode).build();
+      throw BusinessException.builder()
+          .resultCode(UserInfoExceptionCode.IMPORT_DEPT_NOT_FOUND)
+          .params(deptCode)
+          .build();
     }
     return deptId;
   }
@@ -282,7 +292,10 @@ public class UserExcelServiceImpl implements UserExcelService {
     }
     String leaderId = leaderUsernameToIdMap.get(leaderUsername);
     if (leaderId == null) {
-      throw BusinessException.builder().message("上级用户名不存在: " + leaderUsername).build();
+      throw BusinessException.builder()
+          .resultCode(UserInfoExceptionCode.IMPORT_LEADER_NOT_FOUND)
+          .params(leaderUsername)
+          .build();
     }
     return leaderId;
   }

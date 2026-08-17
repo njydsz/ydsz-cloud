@@ -5,6 +5,12 @@
 #  职责：用户/部门/角色/权限/菜单/岗位/公司/语言/认证/授权/OAuth2
 #  依赖：Nacos 服务发现 / 配置中心、PostgreSQL、Redis
 #  说明：bootstrap.yml 在 application.yml 之前加载，用于提前连接 Nacos
+#
+#  ⚠️ P0-3: Redis 持久化配置要求
+#  Token 黑名单依赖 Redis 存储，生产环境必须开启 AOF 持久化：
+#    appendonly yes
+#    appendfsync everysec
+#  否则 Redis 重启后黑名单数据丢失，已登出的 token 可被重新使用
 # =====================================================================
 
 server:

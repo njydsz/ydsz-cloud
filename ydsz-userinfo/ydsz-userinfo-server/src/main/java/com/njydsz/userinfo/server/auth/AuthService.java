@@ -1,7 +1,11 @@
 package com.njydsz.userinfo.server.auth;
 
+import java.util.List;
+import java.util.Set;
+
 import com.njydsz.userinfo.domain.dto.LoginDTO;
 import com.njydsz.userinfo.domain.vo.LoginVO;
+import com.njydsz.userinfo.domain.vo.UserSessionVO;
 
 /**
  * 认证服务接口。
@@ -51,4 +55,23 @@ public interface AuthService {
    * @param userId 用户 ID，不可为 null 或空
    */
   void evictAllSessions(String userId);
+
+  /**
+   * P1-1: 失效指定用户的角色缓存。
+   *
+   * <p>在角色分配变更时调用，保证 Redis 中的角色缓存与数据库一致。
+   *
+   * @param userId 用户 ID，不可为 null 或空
+   */
+  void evictUserRolesCache(String userId);
+
+  /**
+   * 查询用户活跃会话列表。
+   *
+   * <p>返回该用户当前所有活跃的 accessToken 集合，供前端展示会话管理界面。
+   *
+   * @param userId 用户 ID
+   * @return 活跃 accessToken 集合，无会话时返回空集合
+   */
+  Set<String> listActiveSessions(String userId);
 }

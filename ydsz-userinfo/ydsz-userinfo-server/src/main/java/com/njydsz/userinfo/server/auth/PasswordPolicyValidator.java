@@ -94,13 +94,13 @@ public class PasswordPolicyValidator {
     if (password == null || password.length() < minLength) {
       throw BusinessException.builder()
           .resultCode(UserInfoExceptionCode.PASSWORD_TOO_WEAK)
-          .message("密码长度不能少于 " + minLength + " 个字符")
+          .params(minLength)
           .build();
     }
     if (password.length() > maxLength) {
       throw BusinessException.builder()
           .resultCode(UserInfoExceptionCode.PASSWORD_TOO_WEAK)
-          .message("密码长度不能超过 " + maxLength + " 个字符")
+          .params(maxLength)
           .build();
     }
   }
@@ -117,7 +117,7 @@ public class PasswordPolicyValidator {
     if (categoryCount < minCategoryCount) {
       throw BusinessException.builder()
           .resultCode(UserInfoExceptionCode.PASSWORD_TOO_WEAK)
-          .message("密码必须包含大写字母、小写字母、数字、特殊字符中的至少 " + minCategoryCount + " 种")
+          .params(minCategoryCount)
           .build();
     }
   }
@@ -130,10 +130,7 @@ public class PasswordPolicyValidator {
    */
   private void validateNoRepeatChars(String password) {
     if (REPEAT_3.matcher(password).find()) {
-      throw BusinessException.builder()
-          .resultCode(UserInfoExceptionCode.PASSWORD_TOO_WEAK)
-          .message("密码不允许连续 3 个以上重复字符")
-          .build();
+      throw new BusinessException(UserInfoExceptionCode.PASSWORD_TOO_WEAK);
     }
   }
 
@@ -147,10 +144,7 @@ public class PasswordPolicyValidator {
   private void validateNotContainUsername(String password, String username) {
     if (username != null && !username.isBlank()) {
       if (password.toLowerCase().contains(username.toLowerCase())) {
-        throw BusinessException.builder()
-            .resultCode(UserInfoExceptionCode.PASSWORD_TOO_WEAK)
-            .message("密码不能包含用户名")
-            .build();
+        throw new BusinessException(UserInfoExceptionCode.PASSWORD_TOO_WEAK);
       }
     }
   }
@@ -163,10 +157,7 @@ public class PasswordPolicyValidator {
    */
   private void validateNotWeakPassword(String password) {
     if (weakPasswordDictionary.isWeakPassword(password)) {
-      throw BusinessException.builder()
-          .resultCode(UserInfoExceptionCode.PASSWORD_TOO_WEAK)
-          .message("密码过于简单，请使用更复杂的密码")
-          .build();
+      throw new BusinessException(UserInfoExceptionCode.PASSWORD_TOO_WEAK);
     }
   }
 
@@ -188,7 +179,7 @@ public class PasswordPolicyValidator {
         && passwordHistoryService.isPasswordReused(userId, password, historyCount)) {
       throw BusinessException.builder()
           .resultCode(UserInfoExceptionCode.PASSWORD_REUSED)
-          .message("不能使用最近 " + historyCount + " 次使用过的密码")
+          .params(historyCount)
           .build();
     }
   }

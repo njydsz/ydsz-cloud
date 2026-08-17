@@ -79,6 +79,12 @@ public class AuthServiceImpl implements AuthService {
   /** 用户会话索引 Redis Key 前缀：userinfo:session:user:{userId} */
   private static final String SESSION_KEY_PREFIX = "userinfo:session:user:";
 
+  /** 用户角色缓存 Redis Key 前缀：userinfo:roles:{userId} */
+  private static final String USER_ROLES_KEY_PREFIX = "userinfo:roles:";
+
+  /** 用户角色缓存 TTL（秒）：10 分钟 */
+  private static final long USER_ROLES_CACHE_TTL = 600L;
+
   /** 用户账号 Mapper */
   private final UserAccountMapper userAccountMapper;
 
@@ -166,7 +172,7 @@ public class AuthServiceImpl implements AuthService {
 
     // 加载角色 + 签发 Token + 存储会话
     List<Role> roles = loadUserRoles(user.getId());
-    String accessToken = issueTokensAndCreateSession(user, roles);
+    TokenResult tokenResult = issueTokensAndCreateSession(user, roles);
 
     // 更新登录状态 + 审计
     updateLoginSuccess(user, loginIp);
@@ -179,7 +185,7 @@ public class AuthServiceImpl implements AuthService {
     userInfoMetrics.stopTimer(sample);
     userDomainEventPublisher.publishUserLogin(user.getId());
 
-    return buildLoginResult(user, roles, accessToken);
+    return buildLoginResult(user, roles, tokenResult);
   }
 
   /**
@@ -394,9 +400,9 @@ public class AuthServiceImpl implements AuthService {
    *
    * @param user 登录用户
    * @param roles 用户角色列表
-   * @return 访问令牌
+   * @return 包含 accessToken 和 refreshToken 的结果对象
    */
-  private String issueTokensAndCreateSession(UserAccount user, List<Role> roles) {
+  private TokenResult issueTokensAndCreateSession(UserAccount user, List<Role> roles) {
     String roleCodes = roles.stream().map(Role::getRoleCode).collect(Collectors.joining(","));
     String roleNames = roles.stream().map(Role::getRoleName).collect(Collectors.joining(","));
 
@@ -409,7 +415,7 @@ public class AuthServiceImpl implements AuthService {
     String accessToken = tokenService.issueAccessToken(userInfo);
     String refreshToken = tokenService.issueRefreshToken(userInfo);
     storeRedisSession(accessToken, user, roleCodes, roleNames);
-    return accessToken;
+    return new TokenResult(accessToken, refreshToken);
   }
 
   /**
@@ -441,16 +447,16 @@ public class AuthServiceImpl implements AuthService {
    *
    * @param user 登录用户
    * @param roles 用户角色列表
-   * @param accessToken 访问令牌
+   * @param tokenResult 包含 accessToken 和 refreshToken 的结果对象
    * @return 登录结果 VO
    */
-  private LoginVO buildLoginResult(UserAccount user, List<Role> roles, String accessToken) {
+  private LoginVO buildLoginResult(UserAccount user, List<Role> roles, TokenResult tokenResult) {
     String roleCodes = roles.stream().map(Role::getRoleCode).collect(Collectors.joining(","));
     String roleNames = roles.stream().map(Role::getRoleName).collect(Collectors.joining(","));
 
     LoginVO result = new LoginVO();
-    result.setAccessToken(accessToken);
-    result.setRefreshToken(null);
+    result.setAccessToken(tokenResult.accessToken());
+    result.setRefreshToken(tokenResult.refreshToken());
     result.setTokenType("Bearer");
     result.setExpiresIn(properties.getTokenTtlSeconds());
     result.setScope("read write");
@@ -568,12 +574,53 @@ public class AuthServiceImpl implements AuthService {
   }
 
   /**
-   * 按 user_role 关联表查询用户角色（修复 P0-1 Bug）。
+   * 按 user_role 关联表查询用户角色（带 Redis 缓存）。
+   *
+   * <p>P1-1: 使用 Redis 缓存用户角色列表，减少登录时数据库查询次数。 缓存 key 为 {@code userinfo:roles:{userId}}，TTL 10 分钟。
+   * 角色变更时通过 {@link #evictUserRolesCache(String)} 主动失效。
    *
    * @param userId 用户 ID
    * @return 用户持有的有效角色列表，无角色时返回空列表
    */
   private List<Role> loadUserRoles(String userId) {
+    // 1. 尝试从 Redis 缓存读取
+    String cacheKey = USER_ROLES_KEY_PREFIX + userId;
+    try {
+      List<Role> cachedRoles = redisHashOps.hGet(cacheKey, "roles", List.class);
+      if (cachedRoles != null && !cachedRoles.isEmpty()) {
+        log.debug("User roles cache hit: userId={}", userId);
+        userInfoMetrics.recordCacheResult("roles_cache_total", "hit");
+        return cachedRoles;
+      }
+    } catch (Exception e) {
+      log.warn("Failed to read user roles cache: userId={}, error={}", userId, e.getMessage());
+    }
+
+    // 2. 缓存未命中，查询数据库
+    userInfoMetrics.recordCacheResult("roles_cache_total", "miss");
+    List<Role> roles = loadUserRolesFromDb(userId);
+
+    // 3. 写入 Redis 缓存
+    if (!roles.isEmpty()) {
+      try {
+        redisHashOps.hSet(cacheKey, "roles", roles);
+        redisStringOps.expire(cacheKey, Duration.ofSeconds(USER_ROLES_CACHE_TTL));
+        log.debug("User roles cached: userId={}, count={}", userId, roles.size());
+      } catch (Exception e) {
+        log.warn("Failed to cache user roles: userId={}, error={}", userId, e.getMessage());
+      }
+    }
+
+    return roles;
+  }
+
+  /**
+   * 从数据库查询用户角色（原始方法）。
+   *
+   * @param userId 用户 ID
+   * @return 用户持有的有效角色列表
+   */
+  private List<Role> loadUserRolesFromDb(String userId) {
     LambdaQueryWrapper<UserRole> urWrapper = new LambdaQueryWrapper<>();
     urWrapper.eq(UserRole::getUserId, userId);
     List<UserRole> userRoles = userRoleMapper.selectList(urWrapper);
@@ -588,6 +635,26 @@ public class AuthServiceImpl implements AuthService {
     roleWrapper.in(Role::getId, roleIds);
     roleWrapper.eq(Role::getStatus, "ENABLED");
     return roleMapper.selectList(roleWrapper);
+  }
+
+  /**
+   * P1-1: 失效指定用户的角色缓存。
+   *
+   * <p>在角色分配变更时调用，保证缓存一致性。
+   *
+   * @param userId 用户 ID
+   */
+  public void evictUserRolesCache(String userId) {
+    if (userId == null || userId.isBlank()) {
+      return;
+    }
+    try {
+      String cacheKey = USER_ROLES_KEY_PREFIX + userId;
+      redisStringOps.del(cacheKey);
+      log.info("User roles cache evicted: userId={}", userId);
+    } catch (Exception e) {
+      log.warn("Failed to evict user roles cache: userId={}, error={}", userId, e.getMessage());
+    }
   }
 
   /**
@@ -696,4 +763,36 @@ public class AuthServiceImpl implements AuthService {
   private String buildSessionKey(String userId) {
     return SESSION_KEY_PREFIX + userId;
   }
+
+  /**
+   * {@inheritDoc}
+   *
+   * <p>从 Redis Set 中读取 userId 对应的所有活跃 accessToken。
+   *
+   * @param userId 用户 ID
+   * @return 活跃 accessToken 集合
+   */
+  @Override
+  public Set<String> listActiveSessions(String userId) {
+    if (userId == null || userId.isBlank()) {
+      return java.util.Set.of();
+    }
+    String sessionKey = buildSessionKey(userId);
+    try {
+      return redisCollectionOps.sMembers(sessionKey, String.class);
+    } catch (Exception e) {
+      log.warn("Failed to list active sessions for user: {}, error={}", userId, e.getMessage());
+      return java.util.Set.of();
+    }
+  }
+
+  /**
+   * Token 签发结果（内部传输对象）。
+   *
+   * <p>封装 accessToken 与 refreshToken，避免方法返回多个值或丢失 refreshToken。
+   *
+   * @param accessToken 访问令牌（短期有效）
+   * @param refreshToken 刷新令牌（长期有效，一次性使用）
+   */
+  private record TokenResult(String accessToken, String refreshToken) {}
 }

@@ -83,6 +83,9 @@ public class UserInfoProperties {
   /** 默认密码历史保留条数。 */
   private static final int DEFAULT_PASSWORD_HISTORY_COUNT = 5;
 
+  /** 默认批量查询上限。 */
+  private static final int DEFAULT_BATCH_SIZE_LIMIT = 500;
+
   /** access_token 有效期（秒），默认 2 小时。 */
   private long tokenTtlSeconds = DEFAULT_TOKEN_TTL_SECONDS;
 
@@ -118,6 +121,13 @@ public class UserInfoProperties {
 
   /** 密码历史记录保留条数。 */
   private int passwordHistoryCount = DEFAULT_PASSWORD_HISTORY_COUNT;
+
+  /**
+   * 批量查询上限（单次 IN 查询最大 ID 数）。
+   *
+   * <p>防止调用方传入过多 ID 导致巨型 IN 查询，超出时自动分批执行。
+   */
+  private int batchSizeLimit = DEFAULT_BATCH_SIZE_LIMIT;
 
   /**
    * OAuth2 客户端配置

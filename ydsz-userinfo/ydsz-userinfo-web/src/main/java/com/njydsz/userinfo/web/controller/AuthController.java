@@ -1,11 +1,16 @@
 package com.njydsz.userinfo.web.controller;
 
+import java.util.Set;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -16,6 +21,7 @@ import com.njydsz.common.audit.annotation.Audit;
 import com.njydsz.common.audit.enums.AuditAction;
 import com.njydsz.common.audit.enums.AuditType;
 import com.njydsz.common.core.constant.HeaderConstants;
+import com.njydsz.common.core.context.RequestContext;
 import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
@@ -184,5 +190,75 @@ public class AuthController {
   public static class RefreshRequest {
     /** 刷新令牌（来自上一次登录或上一次 refresh 响应） */
     private String refreshToken;
+  }
+
+  /**
+   * 查询当前用户的活跃会话列表。
+   *
+   * <p>返回当前登录用户的所有活跃 accessToken，用于会话管理界面展示。
+   *
+   * @return 活跃 accessToken 集合
+   */
+  @GetMapping("/sessions")
+  @Operation(summary = "查询活跃会话列表")
+  public BaseResponse<Set<String>> listActiveSessions() {
+    String userId = RequestContext.getUserId();
+    return BaseResponse.success(authService.listActiveSessions(userId));
+  }
+
+  /**
+   * 下线指定会话（踢出指定设备）。
+   *
+   * <p>将指定 accessToken 加入黑名单，使其立即失效。 可用于"退出其他设备"场景。
+   *
+   * @param token 要下线的 accessToken
+   * @return 是否成功
+   */
+  @Audit(
+      module = "认证管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.DELETE,
+      content = "'下线指定会话'")
+  @DeleteMapping("/sessions/{token}")
+  @Operation(summary = "下线指定会话")
+  public BaseResponse<Void> kickOutSession(@PathVariable String token) {
+    authService.logout(token);
+    return BaseResponse.success();
+  }
+
+  /**
+   * 下线当前用户全部其他会话（强制其他设备重新登录）。
+   *
+   * <p>保留当前请求的 accessToken，将其他全部 accessToken 加入黑名单。 用于"保护账号，退出其他设备"场景。
+   *
+   * @param currentToken 当前请求的 Authorization token（不会被下线）
+   * @return 是否成功
+   */
+  @Audit(
+      module = "认证管理",
+      type = AuditType.OPERATION,
+      action = AuditAction.DELETE,
+      content = "'下线全部其他会话'")
+  @DeleteMapping("/sessions")
+  @Operation(summary = "下线全部其他会话")
+  public BaseResponse<Void> kickOutOtherSessions(
+      @RequestHeader(HeaderConstants.AUTHORIZATION) String currentToken) {
+    String userId = RequestContext.getUserId();
+    if (userId == null || userId.isBlank()) {
+      return BaseResponse.success();
+    }
+    String currentAccessToken =
+        currentToken != null && currentToken.startsWith("Bearer ")
+            ? currentToken.substring(7)
+            : currentToken;
+
+    // 获取全部活跃会话，除当前 token 外全部下线
+    Set<String> activeSessions = authService.listActiveSessions(userId);
+    for (String token : activeSessions) {
+      if (!token.equals(currentAccessToken)) {
+        authService.logout(token);
+      }
+    }
+    return BaseResponse.success();
   }
 }
