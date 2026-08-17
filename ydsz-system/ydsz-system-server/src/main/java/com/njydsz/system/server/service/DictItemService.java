@@ -1,9 +1,11 @@
 package com.njydsz.system.server.service;
 
+import java.io.InputStream;
 import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.system.domain.vo.DictItemVO;
+import com.njydsz.system.domain.vo.ImportResult;
 
 /**
  * 字典项 Service 接口
@@ -167,4 +169,24 @@ public interface DictItemService {
    * @return 新创建的回滚版本 ID
    */
   String rollbackTo(String typeCode, String targetVersion, String operatorId);
+
+  /**
+   * 导出字典项为 Excel 字节数组
+   *
+   * <p>按字典类型编码导出，使用 ydsz-common-excel 实现。
+   *
+   * @param typeCode 字典类型编码（为 null 时导出全部字典项）
+   * @return Excel 文件字节数组
+   */
+  byte[] exportDictItems(String typeCode);
+
+  /**
+   * 从 Excel 导入字典项
+   *
+   * <p>使用 ydsz-common-excel 读取 Excel 文件，逐条校验后批量插入。 导入前校验 (typeCode, itemCode) 唯一性，重复时跳过。
+   *
+   * @param inputStream Excel 文件输入流
+   * @return 导入结果（成功数、失败数、跳过数）
+   */
+  ImportResult importDictItems(InputStream inputStream);
 }

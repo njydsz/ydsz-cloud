@@ -33,8 +33,13 @@ public enum SystemExceptionCode implements ExceptionCode {
   // ==================== B90001-B90099 系统配置 ====================
   CONFIG_NOT_FOUND("B90001", "system.config.not.found", 404), // 系统配置不存在（资源未找到，HTTP 404）
   CONFIG_KEY_DUPLICATE("B90002", "system.config.key.duplicate"), // 配置键在分组内重复，违反唯一约束
+  CONFIG_KEY_FORMAT_INVALID("B90003", "system.config.key.format.invalid"), // 配置键格式非法（含非法字符、长度超限）
+  CONFIG_VALUE_TOO_LONG("B90005", "system.config.value.too.long"), // 配置值长度超过限制
+  CONFIG_VALUE_FORMAT_INVALID("B90006", "system.config.value.format.invalid"), // 配置值格式非法（值类型与内容不匹配）
+  CONFIG_BATCH_LIMIT_EXCEEDED("B90007", "system.config.batch.limit.exceeded"), // 批量操作超过条数限制
   PARAM_ERROR("B90004", "system.param.error"), // 参数错误（通用）
   VALUE_TYPE_INVALID("B90008", "system.value.type.invalid"), // 值类型非法（配置/变量通用）
+  CONFIG_EXPORT_FAILED("B90009", "system.config.export.failed"), // 配置导出失败
 
   // ==================== B91001-B91099 字典 ====================
   DICT_TYPE_NOT_FOUND("B91001", "system.dict.type.not.found", 404), // 字典类型不存在（资源未找到，HTTP 404）

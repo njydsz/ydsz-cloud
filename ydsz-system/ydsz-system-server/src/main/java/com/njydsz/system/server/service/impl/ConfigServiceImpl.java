@@ -35,11 +35,11 @@ import com.njydsz.system.domain.entity.Config;
 import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
 import com.njydsz.system.domain.query.ConfigPageQuery;
+import com.njydsz.system.domain.repository.ConfigRepository;
 import com.njydsz.system.domain.vo.ConfigExcelVO;
 import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.domain.vo.CursorPageResponse;
 import com.njydsz.system.domain.vo.ImportResult;
-import com.njydsz.system.infra.repository.ConfigRepository;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.config.SystemProperties;
 import com.njydsz.system.server.metrics.SystemMetrics;
@@ -146,9 +146,9 @@ public class ConfigServiceImpl implements ConfigService {
 
   @Override
   public PageResponse<List<ConfigVO>> page(ConfigPageQuery query) {
-    QueryWrapper<Config> wrapper = buildQueryWrapper(query);
     Page<Config> mpPage = new Page<>(query.getEffectivePageNum(), query.getEffectivePageSize());
-    IPage<Config> result = configRepository.getConfigMapper().selectPage(mpPage, wrapper);
+    IPage<Config> result =
+        configRepository.findByPage(mpPage, query.getConfigGroup(), query.getConfigKey(), query.getStatus());
     return PageResponses.success(result, SystemConverter.INSTANT::entityToVO);
   }
 
@@ -164,7 +164,7 @@ public class ConfigServiceImpl implements ConfigService {
     wrapper.last("LIMIT " + safePageSize);
 
     // 3. 查询数据
-    List<Config> entities = configRepository.getConfigMapper().selectList(wrapper);
+    List<Config> entities = configRepository.findList(wrapper);
     List<ConfigVO> records =
         entities.stream()
             .map(SystemConverter.INSTANT::entityToVO)
@@ -217,13 +217,12 @@ public class ConfigServiceImpl implements ConfigService {
    */
   private boolean hasMoreData(String configGroup, String configKey, String lastId) {
     QueryWrapper<Config> countWrapper = buildCursorWrapper(configGroup, configKey, lastId);
-    Long moreCount = configRepository.getConfigMapper().selectCount(countWrapper);
-    return moreCount != null && moreCount > 0;
+    return configRepository.findCount(countWrapper) > 0;
   }
 
   @Override
   public ConfigVO getById(String id) {
-    Config entity = configRepository.getConfigMapper().selectById(id);
+    Config entity = configRepository.findById(id).orElse(null);
     return SystemConverter.INSTANT.entityToVO(entity);
   }
 
@@ -247,7 +246,7 @@ public class ConfigServiceImpl implements ConfigService {
     checkDuplicateKey(entity);
     validateConfigValue(entity.getConfigKey(), entity.getConfigValue(), entity.getValueType());
     // 版本快照：新建配置无需快照（变更前不存在）
-    configRepository.getConfigMapper().insert(entity);
+    configRepository.insert(entity);
     publishConfigChangedEvent(entity.getConfigKey(), entity.getConfigGroup());
     indexUpsert(entity);
     return entity.getId();
@@ -272,9 +271,9 @@ public class ConfigServiceImpl implements ConfigService {
     validateValueType(entity.getValueType());
     validateConfigValue(entity.getConfigKey(), entity.getConfigValue(), entity.getValueType());
     // 版本快照：查询变更前状态
-    Config before = configRepository.selectByKeyIgnoreStatus(entity.getConfigKey());
+    Config before = configRepository.findByKeyIgnoreStatus(entity.getConfigKey()).orElse(null);
     String snapshotJson = before != null ? YdszJson.toJson(before) : null;
-    boolean updated = configRepository.getConfigMapper().updateById(entity) > 0;
+    boolean updated = configRepository.updateById(entity);
     if (updated) {
       // 分组变更时旧分组缓存一并失效
       if (before != null && !Objects.equals(before.getConfigGroup(), entity.getConfigGroup())) {
@@ -299,10 +298,10 @@ public class ConfigServiceImpl implements ConfigService {
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
-    Config entity = configRepository.getConfigMapper().selectById(id);
+    Config entity = configRepository.findById(id).orElse(null);
     // 版本快照：查询变更前状态
     String snapshotJson = entity != null ? YdszJson.toJson(entity) : null;
-    boolean removed = configRepository.getConfigMapper().deleteById(id) > 0;
+    boolean removed = configRepository.deleteById(id);
     if (removed && entity != null) {
       // 精准失效单 key / 分组 / 公开配置缓存
       evictConfigCaches(entity.getConfigKey(), entity.getConfigGroup());
@@ -393,7 +392,7 @@ public class ConfigServiceImpl implements ConfigService {
     long start = System.nanoTime();
     try {
       metrics.recordConfigCacheMiss();
-      Config config = configRepository.selectEnabledByKey(configKey);
+      Config config = configRepository.findEnabledByKey(configKey).orElse(null);
       return config != null ? config.getConfigValue() : null;
     } finally {
       metrics.recordConfigRead(System.nanoTime() - start);
@@ -406,7 +405,7 @@ public class ConfigServiceImpl implements ConfigService {
     long start = System.nanoTime();
     try {
       metrics.recordConfigCacheMiss();
-      return configRepository.selectEnabledByGroup(configGroup).stream()
+      return configRepository.findEnabledByGroup(configGroup).stream()
           .map(SystemConverter.INSTANT::entityToVO)
           .filter(Objects::nonNull)
           .collect(Collectors.toList());
@@ -421,7 +420,7 @@ public class ConfigServiceImpl implements ConfigService {
     long start = System.nanoTime();
     try {
       metrics.recordConfigCacheMiss();
-      return configRepository.selectPublicEnabled().stream()
+      return configRepository.findPublicEnabled().stream()
           .map(SystemConverter.INSTANT::entityToVO)
           .filter(Objects::nonNull)
           .collect(Collectors.toList());
@@ -431,29 +430,6 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   // ============================== 私有方法 ==============================
-
-  /**
-   * 根据分页查询条件构造 MyBatis-Plus 查询包装器。
-   *
-   * <p>支持分组精确匹配、配置键模糊匹配、状态精确匹配；默认按创建时间倒序。
-   *
-   * @param query 分页查询条件
-   * @return 构造好的查询包装器
-   */
-  private QueryWrapper<Config> buildQueryWrapper(ConfigPageQuery query) {
-    QueryWrapper<Config> wrapper = new QueryWrapper<>();
-    if (query.getConfigGroup() != null && !query.getConfigGroup().isBlank()) {
-      wrapper.eq("config_group", query.getConfigGroup());
-    }
-    if (query.getConfigKey() != null && !query.getConfigKey().isBlank()) {
-      wrapper.like("config_key", query.getConfigKey());
-    }
-    if (query.getStatus() != null && !query.getStatus().isBlank()) {
-      wrapper.eq("status", query.getStatus());
-    }
-    wrapper.orderByDesc("created_at");
-    return wrapper;
-  }
 
   /**
    * 将配置 DTO 转换为持久化实体。
@@ -666,7 +642,7 @@ public class ConfigServiceImpl implements ConfigService {
             try {
               ConfigVO snapshotVO = YdszJson.fromJson(snapshotJson, ConfigVO.class);
               snapshotGroup = snapshotVO.getConfigGroup();
-              Config currentConfig = configRepository.selectByKeyIgnoreStatus(resourceKey);
+              Config currentConfig = configRepository.findByKeyIgnoreStatus(resourceKey).orElse(null);
               if (currentConfig != null) {
                 currentConfig.setConfigValue(snapshotVO.getConfigValue());
                 currentConfig.setValueType(snapshotVO.getValueType());
@@ -675,7 +651,7 @@ public class ConfigServiceImpl implements ConfigService {
                 currentConfig.setIsPublic(snapshotVO.getIsPublic());
                 currentConfig.setSortOrder(snapshotVO.getSortOrder());
                 currentConfig.setStatus(snapshotVO.getStatus());
-                configRepository.getConfigMapper().updateById(currentConfig);
+                configRepository.updateById(currentConfig);
               } else {
                 Config newConfig = new Config();
                 newConfig.setConfigGroup(snapshotVO.getConfigGroup());
@@ -687,7 +663,7 @@ public class ConfigServiceImpl implements ConfigService {
                 newConfig.setIsPublic(snapshotVO.getIsPublic());
                 newConfig.setSortOrder(snapshotVO.getSortOrder());
                 newConfig.setStatus(snapshotVO.getStatus());
-                configRepository.getConfigMapper().insert(newConfig);
+                configRepository.insert(newConfig);
               }
             } catch (Exception e) {
               throw BusinessException.of(SystemExceptionCode.SNAPSHOT_PARSE_ERROR)
@@ -734,7 +710,7 @@ public class ConfigServiceImpl implements ConfigService {
     } else {
       wrapper.orderByAsc("config_group", "sort_order");
     }
-    return configRepository.getConfigMapper().selectList(wrapper);
+    return configRepository.findList(wrapper);
   }
 
   @Override
@@ -906,7 +882,7 @@ public class ConfigServiceImpl implements ConfigService {
           .collect(Collectors.toList());
 
       // 2. 批量插入（1 次 SQL 完成全部写入）
-      configRepository.getConfigMapper().insertBatch(entities);
+      configRepository.insertBatch(entities);
 
       // 3. 精准失效缓存：按涉及 configGroup 逐一失效
       entities.stream()

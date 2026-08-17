@@ -28,8 +28,8 @@ import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
 import com.njydsz.system.domain.entity.Config;
 import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
+import com.njydsz.system.domain.repository.ConfigRepository;
 import com.njydsz.system.domain.vo.ConfigVO;
-import com.njydsz.system.infra.repository.ConfigRepository;
 import com.njydsz.system.server.cache.CacheKeyBuilder;
 import com.njydsz.system.server.search.SearchIndexSyncer;
 import com.njydsz.system.server.service.ConfigBatchService;
@@ -136,7 +136,7 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
     List<Config> entities = items.stream().map(this::toEntityWithId).collect(Collectors.toList());
 
     // 6. 批量插入
-    configRepository.getConfigMapper().insertBatch(entities);
+    configRepository.insertBatch(entities);
 
     // 7. 精准失效缓存：按涉及 configGroup 逐一失效组缓存 + 公开配置缓存
     configGroups.forEach(this::evictConfigGroup);
@@ -244,7 +244,7 @@ public class ConfigBatchServiceImpl implements ConfigBatchService {
    */
   private void createSnapshotVersion(String configGroup, String version, String changeLog) {
     List<Config> snapshot =
-        configRepository.getConfigMapper().selectList(
+        configRepository.findList(
             new QueryWrapper<Config>().eq("config_group", configGroup).eq("deleted", 0));
     String snapshotJson = YdszJson.toJson(snapshot);
     entityVersionService.createVersion(

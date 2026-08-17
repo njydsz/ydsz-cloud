@@ -19,8 +19,8 @@ import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.support.PageResponses;
+import com.njydsz.common.domain.tree.TreeBuilder;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.system.domain.common.TreeBuilder;
 import com.njydsz.system.domain.converter.SystemConverter;
 import com.njydsz.system.domain.dto.EntityVersionCreateDTO;
 import com.njydsz.system.domain.entity.DictItem;
@@ -252,8 +252,8 @@ public class DictItemServiceImpl implements DictItemService {
         .map(SystemConverter.INSTANT::entityToVO)
         .collect(Collectors.toList());
 
-    // 使用 TreeBuilder 构建树形结构
-    return TreeBuilder.build(flatList, "0");
+    // 使用 ydsz-common-domain 的 TreeBuilder 构建树形结构（O(n) 迭代，自动填充 level/path/leaf）
+    return new TreeBuilder<String, DictItemVO>("0", flatList).build();
   }
 
   /**

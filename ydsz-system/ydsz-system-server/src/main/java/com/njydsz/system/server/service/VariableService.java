@@ -1,8 +1,10 @@
 package com.njydsz.system.server.service;
 
+import java.io.InputStream;
 import java.util.List;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.system.domain.vo.ImportResult;
 import com.njydsz.system.domain.vo.VariableVO;
 
 /**
@@ -133,4 +135,23 @@ public interface VariableService {
    * @return 新创建的回滚版本 ID
    */
   String rollbackTo(String resourceKey, String targetVersion, String operatorId);
+
+  /**
+   * 导出变量为 Excel 字节数组
+   *
+   * <p>使用 ydsz-common-excel 实现。
+   *
+   * @return Excel 文件字节数组
+   */
+  byte[] exportVariables();
+
+  /**
+   * 从 Excel 导入变量
+   *
+   * <p>使用 ydsz-common-excel 读取 Excel 文件，逐条校验后批量插入。 导入前校验 variableKey 唯一性，重复时跳过。
+   *
+   * @param inputStream Excel 文件输入流
+   * @return 导入结果（成功数、失败数、跳过数）
+   */
+  ImportResult importVariables(InputStream inputStream);
 }
