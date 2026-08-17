@@ -16,6 +16,7 @@ import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.json.tree.ObjectNode;
 import com.njydsz.cronjob.domain.entity.job.JobNode;
 import com.njydsz.cronjob.server.config.CronjobProperties;
+import com.njydsz.cronjob.server.config.RemoteConfig;
 
 /**
  * 远程任务派发客户端（P1-4）。
@@ -72,7 +73,7 @@ public class RemoteTaskClient {
    */
   public RemoteTaskClient(CronjobProperties cronjobProperties) {
     this.cronjobProperties = cronjobProperties;
-    CronjobProperties.Remote remoteConfig = cronjobProperties.getRemote();
+    RemoteConfig remoteConfig = cronjobProperties.getRemote();
     this.httpClient =
         HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(remoteConfig.getConnectTimeoutSeconds()))
@@ -94,7 +95,7 @@ public class RemoteTaskClient {
     }
     String url = buildUrl(node.getHost(), node.getPort());
     String requestBody = YdszJson.toJson(request);
-    CronjobProperties.Remote remoteConfig = cronjobProperties.getRemote();
+    RemoteConfig remoteConfig = cronjobProperties.getRemote();
 
     try {
       HttpRequest httpRequest =
@@ -149,7 +150,7 @@ public class RemoteTaskClient {
     }
     String url = buildSubTaskUrl(node.getHost(), node.getPort());
     String requestBody = YdszJson.toJson(request);
-    CronjobProperties.Remote remoteConfig = cronjobProperties.getRemote();
+    RemoteConfig remoteConfig = cronjobProperties.getRemote();
 
     try {
       HttpRequest httpRequest =

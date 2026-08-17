@@ -22,6 +22,7 @@ import com.njydsz.common.feign.FeignClientConstants;
 import com.njydsz.cronjob.domain.entity.job.JobNode;
 import com.njydsz.cronjob.infra.mapper.job.JobNodeMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
+import com.njydsz.cronjob.server.config.ExecutorConfig;
 
 /**
  * 调度节点心跳上报组件。
@@ -133,7 +134,7 @@ public class JobNodeHeartbeat {
       return;
     }
     try {
-      CronjobProperties.Executor cfg = cronjobProperties.getExecutor();
+      ExecutorConfig cfg = cronjobProperties.getExecutor();
       if (cfg.isDrainOnShutdown() && runningCount.get() > 0) {
         log.info(
             "[JobNodeHeartbeat] 标记节点为 DRAINING, 等待 {} 个任务完成: nodeId={}",

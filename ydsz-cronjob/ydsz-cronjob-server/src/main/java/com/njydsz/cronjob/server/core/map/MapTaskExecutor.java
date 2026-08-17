@@ -31,6 +31,7 @@ import com.njydsz.cronjob.domain.job.MapTask;
 import com.njydsz.cronjob.domain.job.ProcessResult;
 import com.njydsz.cronjob.infra.mapper.job.JobTaskMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
+import com.njydsz.cronjob.server.config.MapReduceConfig;
 import com.njydsz.cronjob.server.core.discovery.NodeDiscoveryStrategy;
 import com.njydsz.cronjob.server.core.dispatch.RemoteSubTaskRequest;
 import com.njydsz.cronjob.server.core.dispatch.RemoteTaskClient;
@@ -193,7 +194,7 @@ public class MapTaskExecutor {
 
     // 6. P0-1: 分布式并行执行子任务
     List<ProcessResult> subTaskResults;
-    CronjobProperties.MapReduce mrConfig = cronjobProperties.getMapReduce();
+    MapReduceConfig mrConfig = cronjobProperties.getMapReduce();
     if (mrConfig.isEnabled()) {
       subTaskResults = executeSubTasksDistributed(job, processor, subTasks, jobId, logId, jobKey);
     } else {

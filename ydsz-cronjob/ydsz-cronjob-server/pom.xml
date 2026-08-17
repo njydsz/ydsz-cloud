@@ -87,6 +87,11 @@
             <groupId>com.alibaba</groupId>
             <artifactId>transmittable-thread-local</artifactId>
         </dependency>
+        <!-- P2-3: LMAX Disruptor（高性能无锁队列，用于日志输出） -->
+        <dependency>
+            <groupId>com.lmax</groupId>
+            <artifactId>disruptor</artifactId>
+        </dependency>
 
 <!-- P1-3: 跨模块 Feign 客户端（用户信息查询、系统配置查询） -->
 <dependency>

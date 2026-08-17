@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.cronjob.server.config.CronjobProperties;
+import com.njydsz.cronjob.server.config.SandboxConfig;
 
 /**
  * P2-15/P2-11: Docker 容器沙箱脚本执行器（增强版）。
@@ -93,7 +94,7 @@ public class DockerSandboxExecutor {
    */
   public SandboxResult execute(
       String scriptContent, String language, int timeoutSeconds, Map<String, String> envVars) {
-    CronjobProperties.Sandbox sandboxConfig = cronjobProperties.getSandbox();
+    SandboxConfig sandboxConfig = cronjobProperties.getSandbox();
     if (!sandboxConfig.isEnabled() || !sandboxConfig.isDockerEnabled()) {
       return new SandboxResult(false, "Docker 沙箱未启用", -1, "");
     }
@@ -184,7 +185,7 @@ public class DockerSandboxExecutor {
    * @return Docker 命令参数列表
    */
   private List<String> buildDockerCommand(
-      CronjobProperties.Sandbox config,
+      SandboxConfig config,
       String image,
       String interpreter,
       String containerName,
@@ -269,7 +270,7 @@ public class DockerSandboxExecutor {
   }
 
   /** 根据脚本语言解析 Docker 镜像。 */
-  private String resolveImage(String language, CronjobProperties.Sandbox config) {
+  private String resolveImage(String language, SandboxConfig config) {
     if (language == null) {
       return config.getDockerImage();
     }

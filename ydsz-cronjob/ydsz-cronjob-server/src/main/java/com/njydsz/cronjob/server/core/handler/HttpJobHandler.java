@@ -16,6 +16,7 @@ import com.njydsz.common.json.tree.JsonNode;
 import com.njydsz.common.json.tree.ObjectNode;
 import com.njydsz.cronjob.domain.job.JobHandler;
 import com.njydsz.cronjob.server.config.CronjobProperties;
+import com.njydsz.cronjob.server.config.HttpConfig;
 
 /**
  * HTTP 任务处理器（P1-5）。
@@ -70,7 +71,7 @@ public class HttpJobHandler implements JobHandler {
 
   public HttpJobHandler(CronjobProperties cronjobProperties) {
     this.cronjobProperties = cronjobProperties;
-    CronjobProperties.Http httpConfig = cronjobProperties.getHttp();
+    HttpConfig httpConfig = cronjobProperties.getHttp();
     this.httpClient =
         HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(httpConfig.getConnectTimeoutSeconds()))

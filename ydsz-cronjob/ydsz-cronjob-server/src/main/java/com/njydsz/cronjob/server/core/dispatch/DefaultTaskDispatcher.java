@@ -61,6 +61,8 @@ import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.cronjob.infra.mapper.job.JobNodeMapper;
 import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
 import com.njydsz.cronjob.server.config.CronjobProperties;
+import com.njydsz.cronjob.server.config.ExecutorConfig;
+import com.njydsz.cronjob.server.config.RemoteConfig;
 import com.njydsz.cronjob.server.core.LockKeyUtil;
 import com.njydsz.cronjob.server.core.TaskCompletedEvent;
 import com.njydsz.cronjob.server.core.alert.AlertContext;
@@ -211,7 +213,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    *
    * <p>保留手动创建原因：使用 {@link PriorityBlockingQueue} 实现优先级调度， common-thread 的 {@code
    * ThreadPoolTaskExecutor} 默认使用 {@code LinkedBlockingQueue} 不支持优先级队列。线程池参数通过 {@link
-   * CronjobProperties.Executor} 配置化。
+   * ExecutorConfig} 配置化。
    */
   private ThreadPoolExecutor taskExecutorPool;
 
@@ -517,7 +519,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       boolean holdLock,
       String triggerType,
       Map<String, JobNode> nodeMap) {
-    CronjobProperties.Remote remoteConfig = cronjobProperties.getRemote();
+    RemoteConfig remoteConfig = cronjobProperties.getRemote();
     if (!remoteConfig.isEnabled()) {
       // 远程派发未启用：本地执行该分片（兼容旧行为）
       return executeShard(job, assignment.shardIndex(), shardTotal, holdLock, triggerType);
@@ -1864,7 +1866,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     }
     // P1-7: 初始化任务执行线程池（隔离调度线程与执行线程）
     // P0-3: 使用 PriorityBlockingQueue 实现优先级调度
-    CronjobProperties.Executor execConfig = cronjobProperties.getExecutor();
+    ExecutorConfig execConfig = cronjobProperties.getExecutor();
     int corePoolSize = Math.max(1, execConfig.getMaxConcurrent());
     int maxPoolSize = Math.max(corePoolSize, execConfig.getMaxConcurrent());
     int queueCapacity = Math.max(0, execConfig.getExecutorQueueCapacity());

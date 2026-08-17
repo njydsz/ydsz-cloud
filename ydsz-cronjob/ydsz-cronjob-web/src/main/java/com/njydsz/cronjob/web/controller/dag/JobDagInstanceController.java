@@ -150,6 +150,22 @@ public class JobDagInstanceController {
   }
 
   /**
+   * P2-2: 获取 DAG 实例的 Mermaid 图表文本。
+   *
+   * <p>返回 Mermaid {@code graph TD} 格式文本，可直接粘贴到支持 Mermaid 的 Markdown 编辑器中渲染。 节点颜色反映实时执行状态（绿=成功
+   * / 橙=运行中 / 红=失败 / 灰=待执行）。
+   *
+   * @param instanceId DAG 实例 ID
+   * @return Mermaid 图表文本（包含在 ```mermaid 代码块中）
+   */
+  @Operation(summary = "获取 DAG 实例 Mermaid 图表文本（P2-2）")
+  @AuthApiPermission(apiCodes = PermissionCodes.CRONJOB_DAG_VIEW)
+  @GetMapping("/{instanceId}/mermaid")
+  public BaseResponse<String> getMermaidDiagram(@PathVariable String instanceId) {
+    return BaseResponse.success(jobDagInstanceService.getMermaidDiagram(instanceId));
+  }
+
+  /**
    * 暂停 DAG 实例。
    *
    * <p>将 RUNNING 转为 PAUSED：调度器暂停派发后续节点，正在执行的节点继续完成。 可通过 {@link #resumeInstance} 恢复。已

@@ -25,6 +25,7 @@ import com.njydsz.cronjob.domain.entity.job.JobNode;
 import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.infra.mapper.job.JobMapper;
 import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
+import com.njydsz.cronjob.server.config.AnomalyRecoveryConfig;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.LockKeyUtil;
 import com.njydsz.cronjob.server.core.alert.AlertContext;
@@ -105,7 +106,7 @@ public class AnomalyRecoveryScanner {
   @PostConstruct
   public void init() {
     this.leaderRole = cronjobProperties.getLeader().getRole();
-    CronjobProperties.AnomalyRecovery config = cronjobProperties.getAnomalyRecovery();
+    AnomalyRecoveryConfig config = cronjobProperties.getAnomalyRecovery();
     if (cronjobProperties.getLeader().isEnabled()) {
       log.info(
           "[AnomalyRecovery] 初始化完成, role={} scanInterval={}s stuckThreshold={}s failoverEnabled={} selfHealingEnabled={}",
@@ -134,7 +135,7 @@ public class AnomalyRecoveryScanner {
     if (!leaderElector.isLeader(leaderRole)) {
       return;
     }
-    CronjobProperties.AnomalyRecovery config = cronjobProperties.getAnomalyRecovery();
+    AnomalyRecoveryConfig config = cronjobProperties.getAnomalyRecovery();
     try {
       // 1. 离线节点任务恢复
       if (config.isFailoverEnabled()) {
@@ -160,7 +161,7 @@ public class AnomalyRecoveryScanner {
    *
    * @param config 异常修复配置
    */
-  private void scanOfflineNodeTasks(CronjobProperties.AnomalyRecovery config) {
+  private void scanOfflineNodeTasks(AnomalyRecoveryConfig config) {
     NodeDiscoveryStrategy strategy = nodeDiscoveryStrategyProvider.getIfAvailable();
     if (strategy == null) {
       log.debug("[AnomalyRecovery] NodeDiscoveryStrategy 不可用, 跳过离线节点扫描");
@@ -249,7 +250,7 @@ public class AnomalyRecoveryScanner {
    * @param config 异常修复配置
    * @return 成功重新派发的任务数
    */
-  private int recoverOfflineNode(String nodeId, CronjobProperties.AnomalyRecovery config) {
+  private int recoverOfflineNode(String nodeId, AnomalyRecoveryConfig config) {
     LocalDateTime now = LocalDateTime.now();
     List<JobLog> runningLogs = jobLogMapper.selectRunningByNode(nodeId);
     if (runningLogs.isEmpty()) {
@@ -357,7 +358,7 @@ public class AnomalyRecoveryScanner {
    *
    * <p>RUNNING 状态超过阈值未更新视为卡死（可能因 JVM 崩溃、线程死锁、网络中断导致）。
    */
-  private void scanStuckTasks(CronjobProperties.AnomalyRecovery config) {
+  private void scanStuckTasks(AnomalyRecoveryConfig config) {
     LocalDateTime threshold =
         LocalDateTime.now().minusSeconds(config.getStuckThresholdSeconds());
 
@@ -404,7 +405,7 @@ public class AnomalyRecoveryScanner {
    * @param stuckLog 卡死任务日志
    * @param config 异常修复配置
    */
-  private void healSingleStuckTask(JobLog stuckLog, CronjobProperties.AnomalyRecovery config) {
+  private void healSingleStuckTask(JobLog stuckLog, AnomalyRecoveryConfig config) {
     LocalDateTime now = LocalDateTime.now();
     long durationMs = Duration.between(stuckLog.getStartTime(), now).toMillis();
     String errorMsg =
@@ -460,7 +461,7 @@ public class AnomalyRecoveryScanner {
    * @param stuckLog 卡死任务日志
    * @param config 异常修复配置
    */
-  private void tryRedispatch(JobLog stuckLog, CronjobProperties.AnomalyRecovery config) {
+  private void tryRedispatch(JobLog stuckLog, AnomalyRecoveryConfig config) {
     String retryKey = HEAL_RETRY_PREFIX + stuckLog.getJobKey();
     try {
       Long retryCount = redisStringOps.incr(retryKey, 1);
@@ -521,7 +522,7 @@ public class AnomalyRecoveryScanner {
    *
    * @param config 异常修复配置
    */
-  private void healAutoPausedTasks(CronjobProperties.AnomalyRecovery config) {
+  private void healAutoPausedTasks(AnomalyRecoveryConfig config) {
     LocalDateTime threshold = LocalDateTime.now().minusHours(1);
     List<Job> autoPausedJobs =
         jobMapper.selectList(

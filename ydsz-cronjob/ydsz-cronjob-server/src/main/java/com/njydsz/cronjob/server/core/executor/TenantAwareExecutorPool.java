@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.cronjob.server.config.CronjobProperties;
+import com.njydsz.cronjob.server.config.ExecutorConfig;
 
 /**
  * P2-5: 租户感知的线程池（分桶策略）。
@@ -110,7 +111,7 @@ public class TenantAwareExecutorPool {
     if (buckets != null) {
       return;
     }
-    CronjobProperties.Executor execConfig = cronjobProperties.getExecutor();
+    ExecutorConfig execConfig = cronjobProperties.getExecutor();
     this.bucketCount = Math.max(1, execConfig.getIsolationBuckets());
     this.buckets = new ExecutorService[bucketCount];
     for (int i = 0; i < bucketCount; i++) {
@@ -130,7 +131,7 @@ public class TenantAwareExecutorPool {
    * @return 新建的线程池
    */
   private ExecutorService createBucketPool(int bucketIndex) {
-    CronjobProperties.Executor execConfig = cronjobProperties.getExecutor();
+    ExecutorConfig execConfig = cronjobProperties.getExecutor();
     int corePoolSize = Math.max(1, execConfig.getTenantPoolSize());
     int maxPoolSize = Math.max(corePoolSize, execConfig.getTenantPoolSize());
     int queueCapacity = Math.max(0, execConfig.getTenantPoolQueueCapacity());

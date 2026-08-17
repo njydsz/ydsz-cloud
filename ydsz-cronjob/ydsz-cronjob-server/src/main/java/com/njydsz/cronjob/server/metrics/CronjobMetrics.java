@@ -16,6 +16,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
+import com.njydsz.cronjob.server.config.AdaptiveBatchConfig;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.executor.RunningTaskCounter;
 
@@ -358,7 +359,7 @@ public class CronjobMetrics extends SentryMetricsAdapter {
    * <p>当任一指标超过对应阈值时，该项权重放大；均未超过时，按基线权重计算。
    */
   private double calculateLoadScore(double cpuUsage, double memUsage, double poolActive) {
-    CronjobProperties.AdaptiveBatch config = cronjobProperties.getAdaptiveBatch();
+    AdaptiveBatchConfig config = cronjobProperties.getAdaptiveBatch();
     double cpuScore = Math.min(1.0, cpuUsage / 100.0);
     double memScore = Math.min(1.0, memUsage / 100.0);
     double poolScore = Math.min(1.0, poolActive / 100.0);

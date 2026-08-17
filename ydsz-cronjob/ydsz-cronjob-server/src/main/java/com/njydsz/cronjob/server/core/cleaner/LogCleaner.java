@@ -16,6 +16,7 @@ import com.njydsz.cronjob.infra.repository.JobLogContentRepository;
 import com.njydsz.cronjob.infra.repository.JobLogRepository;
 import com.njydsz.cronjob.infra.repository.JobTaskRepository;
 import com.njydsz.cronjob.server.config.CronjobProperties;
+import com.njydsz.cronjob.server.config.LogRetentionConfig;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
 
 /**
@@ -125,7 +126,7 @@ public class LogCleaner {
   @PostConstruct
   public void init() {
     this.leaderRole = cronjobProperties.getLeader().getRole();
-    CronjobProperties.LogRetention cfg = cronjobProperties.getLogRetention();
+    LogRetentionConfig cfg = cronjobProperties.getLogRetention();
     if (cronjobProperties.getLeader().isEnabled()) {
       log.info(
           "[LogCleaner] 初始化完成, role={} retentionDays={} batchSize={} auditClean={}",
@@ -153,7 +154,7 @@ public class LogCleaner {
       return;
     }
 
-    CronjobProperties.LogRetention cfg = cronjobProperties.getLogRetention();
+    LogRetentionConfig cfg = cronjobProperties.getLogRetention();
     LocalDateTime before = LocalDateTime.now().minusDays(cfg.getRetentionDays());
     int batchSize = cfg.getBatchSize();
 

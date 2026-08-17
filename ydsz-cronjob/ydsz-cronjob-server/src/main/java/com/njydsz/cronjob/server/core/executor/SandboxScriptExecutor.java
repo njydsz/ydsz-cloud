@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.cronjob.server.config.CronjobProperties;
+import com.njydsz.cronjob.server.config.SandboxConfig;
 
 /**
  * 沙箱脚本执行器（P3-11 脚本执行沙箱）。
@@ -48,7 +49,7 @@ public class SandboxScriptExecutor {
    */
   public SandboxResult execute(
       String scriptContent, String scriptType, int timeoutSeconds, Map<String, String> envVars) {
-    CronjobProperties.Sandbox sandbox = cronjobProperties.getSandbox();
+    SandboxConfig sandbox = cronjobProperties.getSandbox();
     int defaultTimeoutSeconds = sandbox.getTimeoutSeconds();
     int maxOutputSize = sandbox.getMaxOutputSize();
     String workDir = sandbox.getWorkDir();
