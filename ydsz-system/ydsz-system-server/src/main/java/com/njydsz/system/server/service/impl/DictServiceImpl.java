@@ -13,6 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.event.api.DomainEvent;
+import com.njydsz.common.event.api.DomainEventTypes;
+import com.njydsz.common.event.publish.DomainEventPublisher;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.system.domain.converter.SystemConverter;
@@ -92,6 +95,9 @@ public class DictServiceImpl implements DictService {
   /** 字典仓储（聚合 DictTypeMapper / DictItemMapper） */
   private final DictRepository dictRepository;
 
+  /** 统一领域事件发布门面 */
+  private final DomainEventPublisher eventPublisher;
+
   // ============================== CRUD ==============================
 
   /**
@@ -146,6 +152,7 @@ public class DictServiceImpl implements DictService {
     DictType entity = toEntity(vo);
     checkDuplicateTypeCode(entity);
     dictRepository.getDictTypeMapper().insert(entity);
+    publishDictTypeChangedEvent(entity.getTypeCode(), "创建字典类型");
     return entity.getId();
   }
 
@@ -171,7 +178,11 @@ public class DictServiceImpl implements DictService {
   public boolean updateById(DictTypeVO vo) {
     DictType entity = toEntity(vo);
     checkDuplicateTypeCode(entity);
-    return dictRepository.getDictTypeMapper().updateById(entity) > 0;
+    boolean updated = dictRepository.getDictTypeMapper().updateById(entity) > 0;
+    if (updated) {
+      publishDictTypeChangedEvent(entity.getTypeCode(), "更新字典类型");
+    }
+    return updated;
   }
 
   /**
@@ -204,7 +215,28 @@ public class DictServiceImpl implements DictService {
           .data("typeCode", entity.getTypeCode())
           .data("itemCount", itemCount);
     }
-    return dictRepository.getDictTypeMapper().deleteById(id) > 0;
+    boolean removed = dictRepository.getDictTypeMapper().deleteById(id) > 0;
+    if (removed && entity != null) {
+      publishDictTypeChangedEvent(entity.getTypeCode(), "删除字典类型");
+    }
+    return removed;
+  }
+
+  /**
+   * 广播字典类型变更事件（用于跨实例本地缓存失效感知）。
+   *
+   * @param typeCode 字典类型编码
+   * @param action 变更动作描述
+   */
+  private void publishDictTypeChangedEvent(String typeCode, String action) {
+    eventPublisher.publish(
+        DomainEvent.builder()
+            .aggregateType("DictType")
+            .aggregateId(typeCode)
+            .eventType(DomainEventTypes.DICT_TYPE_CHANGED)
+            .metadata("typeCode", typeCode)
+            .metadata("action", action)
+            .build());
   }
 
   // ============================== 业务查询 ==============================
