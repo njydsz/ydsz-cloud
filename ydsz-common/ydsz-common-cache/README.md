@@ -1,6 +1,6 @@
 # ydsz-common-cache
 
-> 高性能本地缓存框架（L4 基础数据层）— 零第三方依赖核心 + 可选 Spring/Micrometer 集成
+> 高性能本地缓存框架（L1 工具模块层）— 零第三方依赖核心 + 可选 Spring/Micrometer 集成
 
 提供 Window-TinyLFU 与 Striped 两种缓存淘汰策略、防穿透/防击穿/防雪崩三防、写穿透装饰器、注解驱动（Spring Cache 标准注解）、Micrometer 可观测性、自定义 Actuator 端点等企业级能力，是所有业务模块本地缓存的统一基座。
 
@@ -8,7 +8,7 @@
 
 | 属性 | 值 |
 |---|---|
-| **层级** | L4 基础数据层 |
+| **层级** | L1 工具模块层 |
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 提供高性能本地缓存、三防（穿透/击穿/雪崩）、写穿透、注解驱动、可观测性能力 |
 | **依赖** | common-util、common-exception；可选依赖 spring-context、spring-boot-autoconfigure、spring-boot-health、micrometer-core、spring-boot-actuator |

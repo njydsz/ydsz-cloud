@@ -2,6 +2,7 @@ package com.njydsz.system.infra.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Update;
 
 import com.njydsz.system.domain.entity.Tenant;
 
@@ -29,4 +30,19 @@ import com.njydsz.system.domain.entity.Tenant;
  * @see com.baomidou.mybatisplus.core.mapper.BaseMapper MyBatis-Plus 通用 Mapper
  */
 @Mapper
-public interface TenantMapper extends BaseMapper<Tenant> {}
+public interface TenantMapper extends BaseMapper<Tenant> {
+
+  /**
+   * 原子停用所有已到期租户（P1-3 租户到期自动锁定）。
+   *
+   * <p>租户调度任务调用：将 {@code status=ENABLED} 且 {@code expire_at} 已过期的租户批量置为
+   * {@code DISABLED}。使用原生 UPDATE 保证原子性与全量扫描（租户管理是平台级视角，不注入 tenant_id 过滤）。
+   *
+   * @return 受影响的行数（被停用的租户数）
+   */
+  @Update(
+      "UPDATE ydsz_tenant SET status = 'DISABLED', updated_by = 'system', updated_at = NOW() "
+          + "WHERE status = 'ENABLED' AND expire_at IS NOT NULL AND expire_at < NOW() "
+          + "AND deleted = 0")
+  int disableExpiredTenants();
+}

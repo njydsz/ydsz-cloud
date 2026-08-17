@@ -93,6 +93,18 @@ public final class DomainEventTypes {
   /** 系统配置变更（消费方: 各模块 → 配置热刷新） */
   public static final String CONFIG_CHANGED = "CONFIG_CHANGED";
 
+  /** 字典类型变更（消费方: 各模块 → 字典缓存刷新） */
+  public static final String DICT_TYPE_CHANGED = "DICT_TYPE_CHANGED";
+
+  /** 字典项变更（消费方: 各模块 → 字典项缓存刷新） */
+  public static final String DICT_ITEM_CHANGED = "DICT_ITEM_CHANGED";
+
+  /** 系统变量变更（消费方: 各模块 → 变量缓存刷新） */
+  public static final String VARIABLE_CHANGED = "VARIABLE_CHANGED";
+
+  /** 租户信息变更（消费方: 各模块 → 租户缓存刷新） */
+  public static final String TENANT_CHANGED = "TENANT_CHANGED";
+
   // ==================== 项目事件（发布方: ydsz-project） ====================
 
   /** 项目立项创建（消费方: ydsz-workflow → 创建审批流程） */

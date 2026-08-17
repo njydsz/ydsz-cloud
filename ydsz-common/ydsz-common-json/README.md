@@ -1,6 +1,6 @@
 # ydsz-common-json
 
-> YDSZ 高性能 JSON 引擎（L2 工具层）— 零依赖、char[] 零拷贝、FNV-1a 哈希字段匹配、递归下降解析、JsonNode 树模型、Jackson 兼容注解
+> YDSZ 高性能 JSON 引擎（L1 工具层）— 零依赖、char[] 零拷贝、FNV-1a 哈希字段匹配、递归下降解析、JsonNode 树模型、Jackson 兼容注解
 
 纯 Java 实现的 JSON 引擎，零外部 JSON 库依赖（不引入 Jackson / FastJSON / Gson）。通过 char[] 直接操作、零拷贝反序列化、ThreadLocal 对象池、FNV-1a 哈希字段匹配、快速数值解析等技术实现高性能；通过 Jackson 兼容注解实现平滑迁移。
 
@@ -10,7 +10,7 @@
 
 | 属性 | 值                                                                                                    |
 |---|------------------------------------------------------------------------------------------------------|
-| **层级** | L2 工具模块层                                                                                             |
+| **层级** | L1 工具模块层                                                                                             |
 | **类型** | 公共依赖库（不独立部署）                                                                                         |
 | **作用** | 提供高性能 JSON 序列化/反序列化、树模型、Jackson 兼容注解、Spring MVC 集成等能力                                                |
 | **依赖** | Lombok；可选依赖 SLF4J、Spring Boot AutoConfigure、Spring Web、Jackson Annotations（编译期可见）、Jakarta Validation |

@@ -135,13 +135,47 @@ public class TenantServiceImpl implements TenantService {
    *
    * <p>基于 MyBatis-Plus 逻辑删除（{@code @TableLogic}），不物理删除。
    *
+   * <p><b>删除保护（P1-3）：</b>
+   *
+   * <ul>
+   *   <li>内置平台租户（{@code DEFAULT}/{@code MASTER}）禁止删除，避免平台配置失锚
+   *   <li>仍处于 {@code ENABLED} 状态的租户禁止删除——必须先停用租户并清理其业务数据（用户/组织等由
+   *       上层模块承载，应在编排层完成数据清理），防止产生孤儿数据
+   * </ul>
+   *
    * @param id 主键 ID
    * @return 是否成功
+   * @throws BusinessException 内置租户或活跃租户禁止删除时抛出
    */
   @Override
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
+    Tenant tenant = tenantRepository.getTenantMapper().selectById(id);
+    if (tenant == null) {
+      return false;
+    }
+    // 内置平台租户禁止删除
+    if (isBuiltinTenant(tenant.getTenantCode())) {
+      throw BusinessException.of(SystemExceptionCode.TENANT_BUILTIN)
+          .data("tenantCode", tenant.getTenantCode());
+    }
+    // 活跃租户禁止直接删除（先停用 + 清理业务数据，防止孤儿数据）
+    if ("ENABLED".equals(tenant.getStatus())) {
+      throw BusinessException.of(SystemExceptionCode.TENANT_LINKED)
+          .data("tenantCode", tenant.getTenantCode())
+          .data("reason", "租户仍处于启用状态，请先停用租户并清理其业务数据后再删除");
+    }
     return tenantRepository.getTenantMapper().deleteById(id) > 0;
+  }
+
+  /**
+   * 判断是否为内置平台租户（私有）。
+   *
+   * @param tenantCode 租户编码
+   * @return 内置租户返回 {@code true}
+   */
+  private boolean isBuiltinTenant(String tenantCode) {
+    return "DEFAULT".equalsIgnoreCase(tenantCode) || "MASTER".equalsIgnoreCase(tenantCode);
   }
 
   /**

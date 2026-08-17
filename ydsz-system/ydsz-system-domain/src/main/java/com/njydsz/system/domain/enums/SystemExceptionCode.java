@@ -56,6 +56,8 @@ public enum SystemExceptionCode implements ExceptionCode {
   TENANT_NOT_FOUND("B94001", "system.tenant.not.found", 404), // 租户不存在
   TENANT_CODE_DUPLICATE("B94002", "system.tenant.code.duplicate"), // 租户编码全局重复
   TENANT_PLAN_LINKED("B94003", "system.tenant.plan.linked"), // 套餐下存在关联租户，禁止删除
+  TENANT_LINKED("B94004", "system.tenant.linked"), // 租户下存在业务数据，禁止删除
+  TENANT_BUILTIN("B94005", "system.tenant.builtin"), // 内置平台租户禁止删除
 
   // ==================== B95001-B95099 租户套餐 ====================
   TENANT_PLAN_NOT_FOUND("B95001", "system.tenant.plan.not.found", 404), // 套餐不存在

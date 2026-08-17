@@ -1,6 +1,6 @@
 # ydsz-common-util
 
-> YDSZ 通用工具类库（L2 工具层）— 覆盖 ID 生成、加密/国密、HTTP、字符串、集合/Map、IP、并发、认证上下文、YAML、国际化消息等领域。
+> YDSZ 通用工具类库（L1 工具层）— 覆盖 ID 生成、加密/国密、HTTP、字符串、集合/Map、IP、并发、认证上下文、YAML、国际化消息等领域。
 
 > **注意**: 自 v4.1.0 起，线程池创建与监控能力（`ExecutorUtils`、`MeteredThreadPoolExecutor`）已迁移至 `ydsz-common-thread` 模块。
 > 本模块仅保留 `RateLimiter`（限流）、`RetryUtils`（重试）等通用并发工具。
