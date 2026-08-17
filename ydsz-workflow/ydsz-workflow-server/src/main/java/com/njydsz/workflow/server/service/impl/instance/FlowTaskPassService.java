@@ -187,7 +187,7 @@ public class FlowTaskPassService {
 
   /** 委派回归处理：被委派人通过后任务回到原办理人 */
   private void handleDelegateReturn(FlowRunTask task, FlowTaskOperateDTO dto) {
-    auditService.logDelegateOperation(task, "DELEGATE_RETURN", "ACT");
+    auditService.logDelegateOperation(task, "DELEGATE_RETURN");
     task.setAssigneeId(String.valueOf(task.getAssignorId()));
     task.setAssigneeName(task.getAssignorName());
     task.setAssignorId(null);

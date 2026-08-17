@@ -60,7 +60,7 @@ public class FlowTaskClaimService {
     taskMapper.updateById(task);
     support.audit(task, "CLAIM", userId, null, null);
     // P1-4: 记录代理签收日志
-    auditService.logDelegateOperation(task, "CLAIM", "ACT");
+    auditService.logDelegateOperation(task, "CLAIM");
     log.info("[Flow] 签收任务: taskId={} userId={}", taskId, userId);
     // P2-3: Prometheus 指标
     if (flowMetrics != null) {

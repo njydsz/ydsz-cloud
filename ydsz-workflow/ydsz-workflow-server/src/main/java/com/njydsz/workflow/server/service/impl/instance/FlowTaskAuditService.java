@@ -41,9 +41,8 @@ public class FlowTaskAuditService {
    *
    * @param task 当前任务（assignorId=授权人，assigneeId=被委派人）
    * @param action 动作类型（CLAIM/PASS/DELEGATE_RETURN/...）
-   * @param opType 操作类型：ACT=办理 / VIEW=查看（已废弃，保留参数兼容）
    */
-  public void logDelegateOperation(FlowRunTask task, String action, String opType) {
+  public void logDelegateOperation(FlowRunTask task, String action) {
     if (task == null || auditLogMapper == null) {
       return;
     }

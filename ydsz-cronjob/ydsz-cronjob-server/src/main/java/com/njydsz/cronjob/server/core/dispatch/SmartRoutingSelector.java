@@ -141,7 +141,6 @@ public class SmartRoutingSelector {
           (com.sun.management.OperatingSystemMXBean) // FQN-OK: name conflict with
                   // java.lang.management.OperatingSystemMXBean
                   ManagementFactory.getOperatingSystemMXBean();
-      // getCpuLoad() 替代已弃用的 getSystemCpuLoad()（JDK 14+）
       double load = osBean.getCpuLoad();
       return load >= 0 ? load : 0.5;
     } catch (Exception e) {

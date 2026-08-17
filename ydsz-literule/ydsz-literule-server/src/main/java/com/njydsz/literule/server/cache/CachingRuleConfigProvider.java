@@ -114,7 +114,7 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
    */
   public CachingRuleConfigProvider(
       RuleConfigProvider delegate, RedissonClient redissonClient, LiteRuleProperties properties) {
-    this(delegate, redissonClient, properties.getCache(), null);
+    this(delegate, redissonClient, properties.getCache());
   }
 
   /**
@@ -123,13 +123,11 @@ public class CachingRuleConfigProvider implements RuleConfigProvider {
    * @param delegate 被装饰的 RuleConfigProvider
    * @param redissonClient Redisson 客户端（null 时禁用 L2）
    * @param cacheConfig 缓存配置
-   * @param unused 预留参数（原 Caffeine Ticker，已废弃）
    */
   CachingRuleConfigProvider(
       RuleConfigProvider delegate,
       RedissonClient redissonClient,
-      LiteRuleProperties.CacheConfig cacheConfig,
-      Object unused) {
+      LiteRuleProperties.CacheConfig cacheConfig) {
     this.delegate = delegate;
     // L2 启用条件：RedissonClient 非空 且 配置启用 L2
     this.redissonClient =
