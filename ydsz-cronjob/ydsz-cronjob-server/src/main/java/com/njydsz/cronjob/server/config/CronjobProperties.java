@@ -616,6 +616,9 @@ public class CronjobProperties {
 
     /** 单节点最大并行任务数（用于 least_load 策略的负载评估） */
     private int maxConcurrentPerWorker = 16;
+
+    /** P2-1: 远程派发最大尝试节点数（第一个 Worker 失败时尝试下一个，达到上限后降级本地执行） */
+    private int maxDispatchAttempts = 2;
   }
 
   /**

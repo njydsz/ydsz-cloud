@@ -209,4 +209,14 @@ public class DictRepositoryImpl implements DictRepository {
     wrapper.eq("status", "ENABLED").eq("deleted", 0);
     return dictItemMapper.selectList(wrapper);
   }
+
+  @Override
+  public List<DictItem> findByTenantId(String tenantId) {
+    QueryWrapper<DictItem> wrapper = new QueryWrapper<>();
+    wrapper.eq("deleted", 0);
+    if (tenantId != null && !tenantId.isBlank()) {
+      wrapper.eq("tenant_id", tenantId);
+    }
+    return dictItemMapper.selectList(wrapper);
+  }
 }

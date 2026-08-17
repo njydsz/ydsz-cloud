@@ -64,6 +64,18 @@ public class WorkerNodeSelector {
    * @return 选中的 Worker 节点；无可用 Worker 时返回 null
    */
   public JobNode selectWorker() {
+    return selectWorker(java.util.Collections.emptySet());
+  }
+
+  /**
+   * P2-1: 选择一个 Worker 节点用于执行任务（排除指定节点）。
+   *
+   * <p>用于远程派发失败时重试：排除已尝试过的 Worker 节点，从剩余节点中选择。
+   *
+   * @param excludedNodeIds 需要排除的节点 ID 集合（已尝试失败的节点）
+   * @return 选中的 Worker 节点；无可用 Worker 时返回 null
+   */
+  public JobNode selectWorker(java.util.Set<String> excludedNodeIds) {
     List<JobNode> onlineNodes = getOnlineNodes();
     if (onlineNodes.isEmpty()) {
       log.debug("[WorkerSelector] 无在线节点");
@@ -71,12 +83,15 @@ public class WorkerNodeSelector {
     }
 
     String localNodeId = resolveLocalNodeId();
-    // 排除 Leader 节点
+    // 排除 Leader 节点和已尝试失败的节点
     List<JobNode> workers =
-        onlineNodes.stream().filter(n -> !n.getNodeId().equals(localNodeId)).toList();
+        onlineNodes.stream()
+            .filter(n -> !n.getNodeId().equals(localNodeId))
+            .filter(n -> !excludedNodeIds.contains(n.getNodeId()))
+            .toList();
 
     if (workers.isEmpty()) {
-      log.debug("[WorkerSelector] 无可用 Worker 节点(仅 Leader 在线)");
+      log.debug("[WorkerSelector] 无可用 Worker 节点(仅 Leader 在线或全部已排除)");
       return null;
     }
 

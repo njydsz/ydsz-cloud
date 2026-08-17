@@ -104,4 +104,12 @@ public interface VariableRepository {
    * @return 删除成功返回 {@code true}
    */
   boolean deleteById(String id);
+
+  /**
+   * 按租户 ID 查询未删除变量（用于搜索索引全量重建）。
+   *
+   * @param tenantId 租户 ID（null 或空表示全量）
+   * @return 未删除变量列表
+   */
+  List<Variable> findByTenantId(String tenantId);
 }

@@ -3,7 +3,6 @@ package com.njydsz.system.server.search;
 import java.time.ZoneId;
 import java.util.List;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -13,7 +12,7 @@ import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.provider.SearchProvider;
 import com.njydsz.common.search.provider.SearchProviderContext;
 import com.njydsz.system.domain.entity.Variable;
-import com.njydsz.system.infra.mapper.VariableMapper;
+import com.njydsz.system.infra.repository.VariableRepository;
 
 /**
  * 系统变量搜索提供者（P1-5：补齐变量搜索能力）
@@ -39,7 +38,7 @@ import com.njydsz.system.infra.mapper.VariableMapper;
 @RequiredArgsConstructor
 public class VariableSearchProvider implements SearchProvider<Variable> {
 
-  private final VariableMapper variableMapper;
+  private final VariableRepository variableRepository;
 
   /**
    * 获取搜索类型标识。
@@ -123,11 +122,6 @@ public class VariableSearchProvider implements SearchProvider<Variable> {
    */
   @Override
   public List<Variable> loadAll(String tenantId) {
-    LambdaQueryWrapper<Variable> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(Variable::getDeleted, 0);
-    if (tenantId != null && !tenantId.isBlank()) {
-      wrapper.eq(Variable::getTenantId, tenantId);
-    }
-    return variableMapper.selectList(wrapper);
+    return variableRepository.findByTenantId(tenantId);
   }
 }

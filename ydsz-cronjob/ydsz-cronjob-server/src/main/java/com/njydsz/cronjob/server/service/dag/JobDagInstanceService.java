@@ -110,4 +110,26 @@ public interface JobDagInstanceService {
    * @throws SysException 当实例不存在或 DAG 定义非法时抛出
    */
   DagInstanceVisualizationVO getVisualization(String instanceId);
+
+  /**
+   * P2-2: 生成 DAG 实例的 Mermaid 时序图文本。
+   *
+   * <p>基于 DAG 定义和节点实时执行状态，生成 Mermaid {@code graph TD} 格式文本。 可直接粘贴到支持 Mermaid 的 Markdown
+   * 编辑器（Typora/GitHub/Notion）中渲染。
+   *
+   * <p>节点颜色规则：
+   *
+   * <ul>
+   *   <li>绿色（#4caf50）：执行成功（SUCCESS）
+   *   <li>绿色（#4caf50）：执行成功（SUCCESS）
+   *   <li>橙色（#ff9800）：执行中（RUNNING）
+   *   <li>红色（#f44336）：执行失败（FAILED）
+   *   <li>灰色（#9e9e9e）：待执行（PENDING）或已跳过（SKIPPED）
+   * </ul>
+   *
+   * @param instanceId 实例 ID
+   * @return Mermaid 图表文本；DAG 定义非法时返回注释说明
+   * @throws SysException 当实例不存在时抛出
+   */
+  String getMermaidDiagram(String instanceId);
 }

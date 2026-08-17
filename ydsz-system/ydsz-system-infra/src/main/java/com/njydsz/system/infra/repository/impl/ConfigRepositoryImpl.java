@@ -1,4 +1,4 @@
-package com.njydsz.system.infra.repository;
+package com.njydsz.system.infra.repository.impl;
 
 import java.util.List;
 import java.util.Optional;
@@ -10,8 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
 import com.njydsz.system.domain.entity.Config;
-import com.njydsz.system.infra.repository.ConfigRepository;
 import com.njydsz.system.infra.mapper.ConfigMapper;
+import com.njydsz.system.infra.repository.ConfigRepository;
 
 /**
  * 系统配置仓储实现（Infra 层）。

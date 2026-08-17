@@ -96,4 +96,14 @@ public class VariableRepositoryImpl implements VariableRepository {
   public boolean deleteById(String id) {
     return variableMapper.deleteById(id) > 0;
   }
+
+  @Override
+  public List<Variable> findByTenantId(String tenantId) {
+    QueryWrapper<Variable> wrapper = new QueryWrapper<>();
+    wrapper.eq("deleted", 0);
+    if (tenantId != null && !tenantId.isBlank()) {
+      wrapper.eq("tenant_id", tenantId);
+    }
+    return variableMapper.selectList(wrapper);
+  }
 }

@@ -235,4 +235,4 @@ public interface DictRepository {
    * @return 未删除字典项列表
    */
   List<DictItem> findByTenantId(String tenantId);
-}</longcat_think>
+}

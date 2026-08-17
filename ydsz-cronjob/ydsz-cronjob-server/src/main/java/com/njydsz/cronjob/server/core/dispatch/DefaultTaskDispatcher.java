@@ -828,6 +828,8 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    * <p>调度器-执行器分离模式下，Leader 节点通过 WorkerNodeSelector 选定 Worker 节点， 通过 RemoteTaskClient HTTP
    * 派发任务。Worker 节点收到请求后调用 {@link #executeLocally} 在本地执行。
    *
+   * <p>P2-1: 支持多 Worker 重试 — 第一个 Worker 派发失败时，尝试下一个 Worker （排除已失败的节点），达到最大尝试次数后降级本地执行。
+   *
    * <p>降级策略：无可用 Worker 或远程派发失败时返回 null，调用方降级为 Leader 本地执行。
    *
    * @param job 任务定义
@@ -839,30 +841,51 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     if (selector == null) {
       return null;
     }
-    JobNode worker = selector.selectWorker();
-    if (worker == null) {
-      return null;
-    }
     RemoteTaskClient client = remoteTaskClientProvider.getIfAvailable();
     if (client == null) {
       return null;
     }
-    RemoteTaskRequest request =
-        new RemoteTaskRequest(job, triggerType, -1, 1, TracerUtils.getTraceId());
-    String logId = client.dispatch(worker, request);
-    if (logId != null) {
-      log.debug(
-          "[Dispatcher] 调度器-执行器分离: 任务已派发到 Worker: key={} worker={} logId={}",
-          job.getJobKey(),
-          worker.getNodeId(),
-          logId);
-    } else {
+    int maxAttempts =
+        cronjobProperties.getSchedulerExecutorSeparation().getMaxDispatchAttempts();
+    maxAttempts = Math.max(1, Math.min(maxAttempts, 5));
+
+    java.util.Set<String> excludedNodeIds = new java.util.HashSet<>(maxAttempts);
+    for (int attempt = 1; attempt <= maxAttempts; attempt++) {
+      JobNode worker = selector.selectWorker(excludedNodeIds);
+      if (worker == null) {
+        // 无更多可用 Worker，停止重试
+        break;
+      }
+      RemoteTaskRequest request =
+          new RemoteTaskRequest(job, triggerType, -1, 1, TracerUtils.getTraceId());
+      String logId = client.dispatch(worker, request);
+      if (logId != null) {
+        if (attempt > 1) {
+          log.info(
+              "[Dispatcher] 调度器-执行器分离: 第 {} 次尝试派发成功: key={} worker={} logId={}",
+              attempt,
+              job.getJobKey(),
+              worker.getNodeId(),
+              logId);
+        } else {
+          log.debug(
+              "[Dispatcher] 调度器-执行器分离: 任务已派发到 Worker: key={} worker={} logId={}",
+              job.getJobKey(),
+              worker.getNodeId(),
+              logId);
+        }
+        return logId;
+      }
+      // 派发失败，记录已尝试节点，继续尝试下一个
+      excludedNodeIds.add(worker.getNodeId());
       log.warn(
-          "[Dispatcher] 调度器-执行器分离: 远程派发失败, 降级本地执行: key={} worker={}",
+          "[Dispatcher] 调度器-执行器分离: 第 {} 次派发失败, 尝试下一个 Worker: key={} worker={}",
+          attempt,
           job.getJobKey(),
           worker.getNodeId());
     }
-    return logId;
+    log.warn("[Dispatcher] 调度器-执行器分离: 所有 Worker 派发失败, 降级本地执行: key={}", job.getJobKey());
+    return null;
   }
 
   /**
@@ -1044,6 +1067,14 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     shardingCtx.setJobKey(job.getJobKey());
     shardingCtx.setLogId(log0.getId());
 
+    // P1-5: 获取幂等锁（基于 handler + params），防止相同参数的任务重复执行
+    String idempotentLockKey = acquireIdempotentLockForJob(job);
+    if (idempotentLockKey == null) {
+      // 幂等锁被持有，释放任务锁并跳过执行
+      releaseJobLock(lockKey);
+      return null;
+    }
+
     // P0-P1: 使用 try-with-resources 确保 ThreadLocal 必定清理，杜绝上下文串扰
     try (ExecutionContextScope scope = ExecutionContextScope.of(jobLogger, shardingCtx)) {
       // P7-3: 记录执行开始（INCR 并发计数器 + 日执行计数器）
@@ -1053,8 +1084,43 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
       dispatchWebhookEvent("TASK_STARTED", job, log0);
 
       executeAndFinalize(job, lockKey, triggerType, retryCount, log0, jobLogger, shardingCtx);
+    } finally {
+      // P1-5: 释放幂等锁（确保异常时也释放）
+      releaseIdempotentLock(idempotentLockKey);
     }
     return log0.getId();
+  }
+
+  /**
+   * P1-5: 为指定任务获取幂等锁。
+   *
+   * <p>在日志写入之前调用，确保相同 handler + 参数的任务不会在集群中重复执行。
+   *
+   * @param job 任务定义
+   * @return 幂等锁 key（供后续释放使用）；锁被持有时返回 null（应跳过执行）；降级时返回空字符串（继续执行）
+   */
+  private String acquireIdempotentLockForJob(Job job) {
+    try {
+      JobHandler handler = resolveHandler(job);
+      String idempotentLockKey = buildIdempotentLockKey(handler, job);
+      if (idempotentLockKey == null) {
+        // handler 未提供幂等键，降级继续执行
+        return "";
+      }
+      Duration ttl = resolveLockTtl(job);
+      if (!tryAcquireIdempotentLock(idempotentLockKey, ttl)) {
+        log.info(
+            "[Dispatcher] 幂等锁被其他实例持有, 跳过重复执行: key={} handler={}",
+            job.getJobKey(),
+            job.getHandler());
+        return null;
+      }
+      return idempotentLockKey;
+    } catch (Exception e) {
+      // 处理器解析失败时不影响主流程（降级放行）
+      log.warn("[Dispatcher] 幂等锁获取异常, 降级放行: key={} reason={}", job.getJobKey(), e.getMessage());
+      return "";
+    }
   }
 
   /**
@@ -1623,10 +1689,10 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
    *
    * <p>任务执行完成后释放，或等待 TTL 自动过期。
    *
-   * @param idempotentLockKey 幂等锁 key（为 null 时跳过）
+   * @param idempotentLockKey 幂等锁 key（为 null 或空时跳过）
    */
   private void releaseIdempotentLock(String idempotentLockKey) {
-    if (idempotentLockKey == null) {
+    if (idempotentLockKey == null || idempotentLockKey.isEmpty()) {
       return;
     }
     try {

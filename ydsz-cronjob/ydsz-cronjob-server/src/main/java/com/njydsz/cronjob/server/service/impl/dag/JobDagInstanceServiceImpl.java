@@ -182,4 +182,95 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
     vo.setNodeInstances(nodeInstances);
     return vo;
   }
+
+  @Override
+  @Transactional(readOnly = true)
+  public String getMermaidDiagram(String instanceId) {
+    // 1. 获取可视化数据（复用现有逻辑）
+    DagInstanceVisualizationVO visualization = getVisualization(instanceId);
+    DagDefinition definition = visualization.getDefinition();
+    List<JobDagNodeInstance> nodeInstances = visualization.getNodeInstances();
+
+    // 2. 构建 jobKey → nodeStatus 映射
+    java.util.Map<String, String> statusMap = new java.util.HashMap<>(nodeInstances.size());
+    for (JobDagNodeInstance ni : nodeInstances) {
+      if (ni.getJobKey() != null && ni.getNodeStatus() != null) {
+        statusMap.put(ni.getJobKey(), ni.getNodeStatus());
+      }
+    }
+
+    // 3. 生成 Mermaid graph TD 文本
+    StringBuilder sb = new StringBuilder(256);
+    sb.append("```mermaid\ngraph TD\n");
+
+    // 3a. 节点定义（含样式）
+    for (DagNode node : definition.nodes()) {
+      String jobKey = node.jobKey();
+      String label = node.label() != null ? node.label() : jobKey;
+      // Mermaid 节点 ID 只允许字母数字下划线，替换特殊字符
+      String mermaidId = sanitizeMermaidId(jobKey);
+      sb.append("    ").append(mermaidId).append("[\"").append(escapeMermaid(label)).append("\"]\n");
+    }
+
+    // 3b. 边定义
+    for (DagEdge edge : definition.edges()) {
+      String fromId = sanitizeMermaidId(edge.from());
+      String toId = sanitizeMermaidId(edge.to());
+      sb.append("    ").append(fromId).append(" --> ").append(toId).append("\n");
+    }
+
+    // 3c. 节点状态样式
+    for (DagNode node : definition.nodes()) {
+      String jobKey = node.jobKey();
+      String status = statusMap.getOrDefault(jobKey, "PENDING");
+      String color = resolveStatusColor(status);
+      String mermaidId = sanitizeMermaidId(jobKey);
+      sb.append("    style ").append(mermaidId).append(" fill:").append(color).append("\n");
+    }
+
+    sb.append("```");
+    return sb.toString();
+  }
+
+  /** 将 jobKey 转换为 Mermaid 安全的节点 ID（仅保留字母数字下划线） */
+  private String sanitizeMermaidId(String jobKey) {
+    if (jobKey == null || jobKey.isBlank()) {
+      return "node_unknown";
+    }
+    String sanitized = jobKey.replaceAll("[^a-zA-Z0-9_]", "_");
+    // 确保不以数字开头
+    if (Character.isDigit(sanitized.charAt(0))) {
+      sanitized = "n_" + sanitized;
+    }
+    return sanitized;
+  }
+
+  /** 转义 Mermaid 节点标签中的特殊字符 */
+  private String escapeMermaid(String label) {
+    if (label == null) {
+      return "";
+    }
+    return label.replace("\"", "'");
+  }
+
+  /** 根据节点状态返回对应的颜色 */
+  private String resolveStatusColor(String status) {
+    if (status == null) {
+      return "#9e9e9e";
+    }
+    switch (status) {
+      case "SUCCESS":
+        return "#4caf50";
+      case "RUNNING":
+      case "RETRYING":
+        return "#ff9800";
+      case "FAILED":
+        return "#f44336";
+      case "SKIPPED":
+        return "#9e9e9e";
+      case "PENDING":
+      default:
+        return "#e0e0e0";
+    }
+  }
 }
