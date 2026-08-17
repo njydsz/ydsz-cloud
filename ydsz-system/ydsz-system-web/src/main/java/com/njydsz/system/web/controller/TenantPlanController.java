@@ -26,12 +26,12 @@ import com.njydsz.common.core.response.BaseResponse;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.lock.annotation.Idempotent;
 import com.njydsz.common.safe.ratelimit.annotation.RateLimit;
-import com.njydsz.system.domain.vo.TenantPlanVO;
 import com.njydsz.system.domain.dto.TenantPlanMenuDTO;
 import com.njydsz.system.domain.vo.TenantPlanMenuVO;
 import com.njydsz.system.domain.vo.TenantPlanVO;
 import com.njydsz.system.server.service.TenantPlanMenuService;
 import com.njydsz.system.server.service.TenantPlanService;
+
 
 /**
  * 租户套餐管理 Controller
@@ -69,8 +69,7 @@ public class TenantPlanController {
       @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize,
       @Parameter(description = "套餐名称模糊搜索") @RequestParam(required = false) String planName,
       @Parameter(description = "状态") @RequestParam(required = false) String status) {
-    int safePageSize = Math.min(pageSize, MAX_PAGE_SIZE);
-    return planService.page(pageNum, safePageSize, planName, status);
+    return planService.page(normalizePageNum(pageNum), normalizePageSize(pageSize), planName, status);
   }
 
   /**
@@ -195,6 +194,4 @@ public class TenantPlanController {
     return BaseResponse.success(null);
   }
 
-  /** 分页安全上限 */
-  private static final int MAX_PAGE_SIZE = 500;
 }

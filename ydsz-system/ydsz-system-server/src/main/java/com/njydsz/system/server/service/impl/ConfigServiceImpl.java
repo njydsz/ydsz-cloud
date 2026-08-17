@@ -16,7 +16,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.auth.annotation.DataScope;
 import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.event.api.DomainEvent;
@@ -27,7 +26,6 @@ import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.json.YdszJson;
 import com.njydsz.common.search.sync.SearchIndexEventBridge;
 import com.njydsz.system.domain.converter.SystemConverter;
-import com.njydsz.system.domain.vo.ConfigVO;
 import com.njydsz.system.domain.entity.Config;
 import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
@@ -115,6 +113,12 @@ public class ConfigServiceImpl implements ConfigService {
   /** 统一实体版本服务（写操作时创建版本快照） */
   private final EntityVersionService entityVersionService;
 
+  /** Spring Cache 管理器（用于按 key 精准失效缓存，替代 allEntries 全量清空） */
+  private final org.springframework.cache.CacheManager cacheManager;
+
+  /** 租户感知缓存键构造器（SpEL 与手动 evict 共用） */
+  private final com.njydsz.system.server.cache.CacheKeyBuilder cacheKeyBuilder;
+
   private final ObjectProvider<SearchIndexEventBridge> searchIndexBridgeProvider;
 
   // ============================== CRUD ==============================
@@ -134,7 +138,15 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   @Override
-  @CacheEvict(value = CacheConstants.SYSTEM_CONFIG_CACHE, allEntries = true)
+  @CacheEvict(
+      value = CacheConstants.SYSTEM_CONFIG_CACHE,
+      key = "@cacheKeyBuilder.configValue(#vo.configKey)")
+  @CacheEvict(
+      value = CacheConstants.SYSTEM_CONFIG_CACHE,
+      key = "@cacheKeyBuilder.configGroup(#vo.configGroup)")
+  @CacheEvict(
+      value = CacheConstants.SYSTEM_CONFIG_CACHE,
+      key = "@cacheKeyBuilder.configPublic()")
   @Transactional(rollbackFor = Exception.class)
   public String save(ConfigVO vo) {
     Config entity = toEntity(vo);
@@ -149,7 +161,15 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   @Override
-  @CacheEvict(value = CacheConstants.SYSTEM_CONFIG_CACHE, allEntries = true)
+  @CacheEvict(
+      value = CacheConstants.SYSTEM_CONFIG_CACHE,
+      key = "@cacheKeyBuilder.configValue(#vo.configKey)")
+  @CacheEvict(
+      value = CacheConstants.SYSTEM_CONFIG_CACHE,
+      key = "@cacheKeyBuilder.configGroup(#vo.configGroup)")
+  @CacheEvict(
+      value = CacheConstants.SYSTEM_CONFIG_CACHE,
+      key = "@cacheKeyBuilder.configPublic()")
   @Transactional(rollbackFor = Exception.class)
   public boolean updateById(ConfigVO vo) {
     Config entity = toEntity(vo);
@@ -166,6 +186,10 @@ public class ConfigServiceImpl implements ConfigService {
     String snapshotJson = before != null ? YdszJson.toJson(before) : null;
     boolean updated = configRepository.getConfigMapper().updateById(entity) > 0;
     if (updated) {
+      // 分组变更时旧分组缓存一并失效
+      if (before != null && !Objects.equals(before.getConfigGroup(), entity.getConfigGroup())) {
+        evictConfigGroup(before.getConfigGroup());
+      }
       // 创建版本快照（与配置变更同一事务）
       entityVersionService.createVersion(
           EntityVersionService.RESOURCE_TYPE_CONFIG,
@@ -181,7 +205,6 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   @Override
-  @CacheEvict(value = CacheConstants.SYSTEM_CONFIG_CACHE, allEntries = true)
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
     Config entity = configRepository.getConfigMapper().selectById(id);
@@ -189,6 +212,8 @@ public class ConfigServiceImpl implements ConfigService {
     String snapshotJson = entity != null ? YdszJson.toJson(entity) : null;
     boolean removed = configRepository.getConfigMapper().deleteById(id) > 0;
     if (removed && entity != null) {
+      // 精准失效单 key / 分组 / 公开配置缓存
+      evictConfigCaches(entity.getConfigKey(), entity.getConfigGroup());
       // 创建版本快照（与配置变更同一事务）
       entityVersionService.createVersion(
           EntityVersionService.RESOURCE_TYPE_CONFIG,
@@ -232,6 +257,47 @@ public class ConfigServiceImpl implements ConfigService {
     }
   }
 
+  /**
+   * 按配置键精准失效缓存（单 key + 公开配置）。
+   *
+   * <p>用于写操作/回滚后定向清除，避免 {@code allEntries=true} 全量清空导致的缓存击穿。
+   *
+   * @param configKey 配置键
+   * @param configGroup 配置分组（为 null 时跳过分组缓存）
+   */
+  private void evictConfigCaches(String configKey, String configGroup) {
+    evictConfigKey(configKey);
+    evictConfigGroup(configGroup);
+    evictConfigPublic();
+  }
+
+  /** 失效「按配置键查询」缓存。 */
+  private void evictConfigKey(String configKey) {
+    if (configKey == null) {
+      return;
+    }
+    cacheManager
+        .getCache(CacheConstants.SYSTEM_CONFIG_CACHE)
+        .evict(cacheKeyBuilder.configValue(configKey));
+  }
+
+  /** 失效「按分组批量查询」缓存。 */
+  private void evictConfigGroup(String configGroup) {
+    if (configGroup == null) {
+      return;
+    }
+    cacheManager
+        .getCache(CacheConstants.SYSTEM_CONFIG_CACHE)
+        .evict(cacheKeyBuilder.configGroup(configGroup));
+  }
+
+  /** 失效「公开配置」缓存。 */
+  private void evictConfigPublic() {
+    cacheManager
+        .getCache(CacheConstants.SYSTEM_CONFIG_CACHE)
+        .evict(cacheKeyBuilder.configPublic());
+  }
+
   // ============================== 业务查询 ==============================
 
   @Override
@@ -248,7 +314,6 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   @Override
-  @DataScope(deptColumn = "dept_id", userColumn = "created_by")
   @Cacheable(value = CacheConstants.SYSTEM_CONFIG_CACHE, key = "@cacheKeyBuilder.configGroup(#p0)")
   public List<ConfigVO> getConfigsByGroup(String configGroup) {
     long start = System.nanoTime();
@@ -266,7 +331,6 @@ public class ConfigServiceImpl implements ConfigService {
   }
 
   @Override
-  @DataScope(deptColumn = "dept_id", userColumn = "created_by")
   @Cacheable(value = CacheConstants.SYSTEM_CONFIG_CACHE, key = "@cacheKeyBuilder.configPublic()")
   public List<ConfigVO> listPublicConfigs() {
     long start = System.nanoTime();
@@ -496,9 +560,11 @@ public class ConfigServiceImpl implements ConfigService {
         operatorId,
         snapshotJson -> {
           // 2. 反序列化快照并更新配置项
+          String snapshotGroup = null;
           if (snapshotJson != null && !snapshotJson.isBlank()) {
             try {
               ConfigVO snapshotVO = YdszJson.fromJson(snapshotJson, ConfigVO.class);
+              snapshotGroup = snapshotVO.getConfigGroup();
               Config currentConfig =
                   configRepository
                       .getConfigMapper()
@@ -533,8 +599,13 @@ public class ConfigServiceImpl implements ConfigService {
                   .data("reason", e.getMessage());
             }
           }
-          // 3. 失效缓存并发布变更事件
-          publishConfigChangedEvent(resourceKey, null);
+          // 3. 精准失效缓存（P0-2：回滚后必须清缓存，避免读到旧值）并发布变更事件
+          evictConfigKey(resourceKey);
+          if (snapshotGroup != null) {
+            evictConfigGroup(snapshotGroup);
+          }
+          evictConfigPublic();
+          publishConfigChangedEvent(resourceKey, snapshotGroup);
         });
   }
 

@@ -108,8 +108,8 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
     // 5. 批量插入
     dictRepository.getDictItemMapper().insertBatch(entities);
 
-    // 6. 单次缓存失效（清空整个字典项缓存，与 DictItemServiceImpl @CacheEvict(allEntries = true) 行为一致）
-    cacheManager.getCache(CacheConstants.SYSTEM_DICT_ITEM_CACHE).clear();
+    // 6. 精准失效缓存：按涉及 typeCode 逐一失效列表缓存（替代全量清空，避免缓存击穿）
+    typeCodes.forEach(this::evictDictList);
 
     Map<String, Object> result = new HashMap<>();
     result.put("successCount", items.size());
@@ -139,27 +139,49 @@ public class DictItemBatchServiceImpl implements DictItemBatchService {
   }
 
   /**
-   * 逐条 DB 唯一性校验（私有）
+   * 批量 DB 唯一性校验（私有）
    *
-   * <p>在批量插入前逐条检查 (typeCode, itemCode) 是否已存在于 DB， 避免插入时触发唯一索引冲突导致整个批量回滚。
+   * <p>一次 SQL 查询批量涉及的全部 typeCode 记录，在内存中构建 (typeCode,itemCode) 集合比对， 替代逐条
+   * {@code selectCount}（N+1 查询），避免批量插入时触发唯一索引冲突导致全部回滚。
    *
    * @param items 字典项列表
    * @throws BusinessException 当某条数据已存在时抛出
    */
   private void validateDbUniqueness(List<DictItemVO> items) {
-    int index = 0;
-    for (DictItemVO item : items) {
-      index++;
-      QueryWrapper<DictItem> checkWrapper = new QueryWrapper<>();
-      checkWrapper.eq("type_code", item.getTypeCode()).eq("item_code", item.getItemCode());
-      if (dictRepository.getDictItemMapper().selectCount(checkWrapper) > 0) {
+    // 一次查询涉及的所有 typeCode 下的未删除记录（含逻辑删除标记，保证与唯一索引口径一致）
+    Set<String> typeCodes =
+        items.stream().map(DictItemVO::getTypeCode).collect(Collectors.toSet());
+    QueryWrapper<DictItem> wrapper = new QueryWrapper<>();
+    wrapper.select("type_code", "item_code").in("type_code", typeCodes);
+    Set<String> existingKeys =
+        dictRepository.getDictItemMapper().selectList(wrapper).stream()
+            .map(item -> item.getTypeCode() + "/" + item.getItemCode())
+            .collect(Collectors.toSet());
+
+    for (int i = 0; i < items.size(); i++) {
+      DictItemVO item = items.get(i);
+      String key = item.getTypeCode() + "/" + item.getItemCode();
+      if (existingKeys.contains(key)) {
         throw BusinessException.of(SystemExceptionCode.DICT_ITEM_CODE_DUPLICATE)
             .data(
                 "reason",
-                String.format(
-                    "第 %d 条插入失败: %s/%s 已存在", index, item.getTypeCode(), item.getItemCode()));
+                String.format("第 %d 条插入失败: %s 已存在", i + 1, key));
       }
     }
+  }
+
+  /**
+   * 精准失效「按类型查询列表」缓存（私有）。
+   *
+   * @param typeCode 字典类型编码
+   */
+  private void evictDictList(String typeCode) {
+    if (typeCode == null) {
+      return;
+    }
+    cacheManager
+        .getCache(CacheConstants.SYSTEM_DICT_ITEM_CACHE)
+        .evict(cacheKeyBuilder.dictList(typeCode));
   }
 
   /**

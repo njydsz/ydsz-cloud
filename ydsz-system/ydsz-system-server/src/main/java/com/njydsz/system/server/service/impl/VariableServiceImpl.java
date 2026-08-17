@@ -1,6 +1,7 @@
 package com.njydsz.system.server.service.impl;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -13,14 +14,12 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.auth.annotation.DataScope;
 import com.njydsz.common.cache.constant.CacheConstants;
 import com.njydsz.common.core.response.PageResponse;
+import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.support.PageResponses;
 import com.njydsz.common.json.YdszJson;
-import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.system.domain.converter.SystemConverter;
-import com.njydsz.system.domain.vo.VariableVO;
 import com.njydsz.system.domain.entity.Variable;
 import com.njydsz.system.domain.enums.ConfigValueType;
 import com.njydsz.system.domain.enums.SystemExceptionCode;
@@ -117,6 +116,12 @@ public class VariableServiceImpl implements VariableService {
   /** 统一实体版本服务（写操作时创建版本快照） */
   private final EntityVersionService entityVersionService;
 
+  /** Spring Cache 管理器（用于按 key 精准失效缓存） */
+  private final org.springframework.cache.CacheManager cacheManager;
+
+  /** 租户感知缓存键构造器（SpEL 与手动 evict 共用） */
+  private final com.njydsz.system.server.cache.CacheKeyBuilder cacheKeyBuilder;
+
   /**
    * 根据主键查询变量（不走缓存，直接走 DB）
    *
@@ -177,7 +182,6 @@ public class VariableServiceImpl implements VariableService {
    * @return 分页结果（含总条数）
    */
   @Override
-  @DataScope(deptColumn = "dept_id", userColumn = "created_by")
   public PageResponse<List<VariableVO>> page(
       int pageNum, int pageSize, String variableKey, String status) {
     QueryWrapper<Variable> wrapper = new QueryWrapper<>();
@@ -197,14 +201,13 @@ public class VariableServiceImpl implements VariableService {
    *
    * <p>典型调用方：管理后台「变量选择器」下拉框。
    *
-   * <p><b>行级权限：</b>本方法带 {@code @DataScope} 注解， 自动按当前用户的部门 / 人员范围过滤。
+   * <p><b>租户隔离：</b>本方法按当前租户自动过滤（MyBatis 拦截器注入 tenant_id）。
    *
    * <p><b>慎用：</b>全表扫描，变量一般 < 200 条，单次查询 < 20ms。
    *
    * @return 全部变量列表（按 createdAt 倒序）
    */
   @Override
-  @DataScope(deptColumn = "dept_id", userColumn = "created_by")
   public List<VariableVO> list() {
     return variableRepository.getVariableMapper().selectList(null).stream()
         .map(SystemConverter.INSTANT::entityToVO)
@@ -219,14 +222,16 @@ public class VariableServiceImpl implements VariableService {
    * <ol>
    *   <li>DTO 转 DO，默认 {@code status=ENABLED}
    *   <li>插入 {@code ydsz_variable} 表
-   *   <li>清除该 {@code variableKey} 对应的缓存
+   *   <li>精准失效该 {@code variableKey} 对应的缓存
    * </ol>
    *
    * @param dto 变量数据
    * @return 新创建的变量 ID
    */
   @Override
-  @CacheEvict(value = CacheConstants.SYSTEM_VARIABLE_CACHE, allEntries = true)
+  @CacheEvict(
+      value = CacheConstants.SYSTEM_VARIABLE_CACHE,
+      key = "@cacheKeyBuilder.variable(#vo.variableKey)")
   @Transactional(rollbackFor = Exception.class)
   public String save(VariableVO vo) {
     validateValueType(vo.getValueType());
@@ -243,7 +248,7 @@ public class VariableServiceImpl implements VariableService {
    * <ol>
    *   <li>DTO 转 DO
    *   <li>更新 {@code ydsz_variable} 表
-   *   <li>更新成功后清除该 {@code variableKey} 对应的缓存
+   *   <li>更新成功后精准失效该 {@code variableKey} 对应的缓存
    * </ol>
    *
    * <p><b>注意：</b>更新 {@code variableKey} 会导致所有依赖该键的下游缓存失效， 调用方需主动清理相关业务缓存。
@@ -252,7 +257,9 @@ public class VariableServiceImpl implements VariableService {
    * @return true=更新成功，false=记录不存在
    */
   @Override
-  @CacheEvict(value = CacheConstants.SYSTEM_VARIABLE_CACHE, allEntries = true)
+  @CacheEvict(
+      value = CacheConstants.SYSTEM_VARIABLE_CACHE,
+      key = "@cacheKeyBuilder.variable(#vo.variableKey)")
   @Transactional(rollbackFor = Exception.class)
   public boolean updateById(VariableVO vo) {
     validateValueType(vo.getValueType());
@@ -266,6 +273,10 @@ public class VariableServiceImpl implements VariableService {
     String snapshotJson = before != null ? YdszJson.toJson(before) : null;
     boolean updated = variableRepository.getVariableMapper().updateById(entity) > 0;
     if (updated) {
+      // 变量键变更时，旧键缓存一并失效
+      if (before != null && !Objects.equals(before.getVariableKey(), entity.getVariableKey())) {
+        evictVariable(before.getVariableKey());
+      }
       // 创建版本快照（与变量变更同一事务）
       entityVersionService.createVersion(
           EntityVersionService.RESOURCE_TYPE_VARIABLE,
@@ -288,21 +299,21 @@ public class VariableServiceImpl implements VariableService {
    * <ol>
    *   <li>查询原实体（用于获取 variableKey）
    *   <li>逻辑删除记录
-   *   <li>删除成功后清除该 {@code variableKey} 对应的缓存
+   *   <li>删除成功后精准失效该 {@code variableKey} 对应的缓存
    * </ol>
    *
    * @param id 变量主键
    * @return true=删除成功，false=记录不存在
    */
   @Override
-  @CacheEvict(value = CacheConstants.SYSTEM_VARIABLE_CACHE, allEntries = true)
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
     Variable entity = variableRepository.getVariableMapper().selectById(id);
-    // 版本快照：查询变更前状态
     String snapshotJson = entity != null ? YdszJson.toJson(entity) : null;
     boolean removed = variableRepository.getVariableMapper().deleteById(id) > 0;
     if (removed && entity != null) {
+      // 精准失效该变量键缓存（替代 allEntries 全量清空）
+      evictVariable(entity.getVariableKey());
       // 创建版本快照（与变量变更同一事务）
       entityVersionService.createVersion(
           EntityVersionService.RESOURCE_TYPE_VARIABLE,
@@ -373,7 +384,23 @@ public class VariableServiceImpl implements VariableService {
                   .data("reason", e.getMessage());
             }
           }
+          // P0-2：回滚后精准失效缓存，避免读到旧值
+          evictVariable(resourceKey);
         });
+  }
+
+  /**
+   * 精准失效指定变量键的缓存（替代 allEntries 全量清空）。
+   *
+   * @param variableKey 变量键
+   */
+  private void evictVariable(String variableKey) {
+    if (variableKey == null) {
+      return;
+    }
+    cacheManager
+        .getCache(CacheConstants.SYSTEM_VARIABLE_CACHE)
+        .evict(cacheKeyBuilder.variable(variableKey));
   }
 
   /**

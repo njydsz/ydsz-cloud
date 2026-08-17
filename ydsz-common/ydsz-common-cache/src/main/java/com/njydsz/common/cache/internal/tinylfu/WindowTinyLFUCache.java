@@ -157,43 +157,79 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
     }
   }
 
+  /**
+   * 执行一次 TinyLFU 淘汰。
+   *
+   * <p><b>Admission 策略（对齐 Caffeine 标准 W-TinyLFU）：</b>
+   *
+   * <ol>
+   *   <li>Window 尾部作为 candidate 移入 Probation（而非直接淘汰），获得进入 main 区的竞争机会
+   *   <li>Probation 尾部作为 victim，与 candidate 按频率草图比较：candidate 频率更高则淘汰 victim 并晋升
+   *       candidate；否则淘汰 candidate（fail-safe，保证有界容量）
+   *   <li>晋升时若 Protected 已满（80% 上限），Protected LRU（尾部）降级回 Probation
+   * </ol>
+   *
+   * @return 是否发生了淘汰（false 表示缓存已空，无需继续）
+   */
   private boolean evictOnce() {
-    Node<K, V> victim = removeLast(windowHead);
-    if (victim != null) {
+    // 1. Window 尾部 → candidate（进入 Probation 竞争，而非直接丢弃）
+    Node<K, V> candidate = removeLast(windowHead);
+    if (candidate != null) {
+      candidate.queue = 1;
+      addFirst(probationHead, candidate);
+    }
+
+    // 2. 取 Probation 尾部作为 victim
+    Node<K, V> victim = removeLast(probationHead);
+    if (victim == null) {
+      return false;
+    }
+
+    // 3. Admission：candidate 频率 >= victim 则 victim 出局、candidate 晋升；否则 candidate 出局
+    int candidateFreq = frequencySketch.frequency(candidate != null ? candidate.key : victim.key);
+    int victimFreq = frequencySketch.frequency(victim.key);
+    boolean candidateWins =
+        candidate != null && candidate != victim && candidateFreq >= victimFreq;
+
+    if (candidateWins) {
+      // 淘汰 victim
       data.remove(victim.key);
       sizeCounter.decrementAndGet();
       notifyRemoval(victim.key, victim.value, RemovalCause.SIZE);
+      // candidate 尝试晋升 Protected（若 Protected 已满，降级其 LRU）
+      promoteToProtected(candidate);
       return true;
     }
-    victim = removeLast(probationHead);
-    if (victim != null) {
-      if (!isEmpty(protectedHead)) {
-        Node<K, V> protectedFirst = removeFirst(protectedHead);
-        if (protectedFirst != null) {
-          protectedSize.decrementAndGet();
-          if (frequencySketch.frequency(victim.key)
-              < frequencySketch.frequency(protectedFirst.key)) {
-            protectedFirst.queue = 1;
-            addFirst(probationHead, protectedFirst);
-            data.remove(victim.key);
-            sizeCounter.decrementAndGet();
-            notifyRemoval(victim.key, victim.value, RemovalCause.SIZE);
-            return true;
-          } else {
-            data.remove(protectedFirst.key);
-            sizeCounter.decrementAndGet();
-            notifyRemoval(protectedFirst.key, protectedFirst.value, RemovalCause.SIZE);
-            addFirst(probationHead, victim);
-            return true;
-          }
-        }
+    // 淘汰 candidate（若存在）；否则淘汰 victim
+    Node<K, V> evicted = candidate != null ? candidate : victim;
+    data.remove(evicted.key);
+    sizeCounter.decrementAndGet();
+    notifyRemoval(evicted.key, evicted.value, RemovalCause.SIZE);
+    if (candidate != null && candidate != victim) {
+      // victim 保留回 Probation
+      addFirst(probationHead, victim);
+    }
+    return true;
+  }
+
+  /**
+   * 将节点晋升到 Protected 队列；若 Protected 已达 80% 容量上限，降级其 LRU（尾部）回 Probation。
+   *
+   * @param node 待晋升节点（当前位于 Probation 或 Window）
+   */
+  private void promoteToProtected(Node<K, V> node) {
+    remove(node);
+    node.queue = 2;
+    addFirst(protectedHead, node);
+    long pSize = protectedSize.incrementAndGet();
+    if (pSize > maxSize * 0.80) {
+      Node<K, V> demoted = removeLast(protectedHead);
+      if (demoted != null) {
+        demoted.queue = 1;
+        addFirst(probationHead, demoted);
+        protectedSize.decrementAndGet();
       }
-      data.remove(victim.key);
-      sizeCounter.decrementAndGet();
-      notifyRemoval(victim.key, victim.value, RemovalCause.SIZE);
-      return true;
     }
-    return false;
   }
 
   /**
@@ -213,24 +249,9 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
         // node 已被并发淘汰或队列已变更，跳过提升
         return;
       }
-      doMoveToProtected(node);
+      promoteToProtected(node);
     } finally {
       writeLock.unlock();
-    }
-  }
-
-  private void doMoveToProtected(Node<K, V> node) {
-    remove(node);
-    node.queue = 2;
-    addFirst(protectedHead, node);
-    long pSize = protectedSize.incrementAndGet();
-    if (pSize > maxSize * 0.80) {
-      Node<K, V> demoted = removeLast(protectedHead);
-      if (demoted != null) {
-        demoted.queue = 1;
-        addFirst(probationHead, demoted);
-        protectedSize.decrementAndGet();
-      }
     }
   }
 

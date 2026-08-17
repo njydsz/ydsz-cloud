@@ -75,9 +75,7 @@ public class TenantController {
       @Parameter(description = "每页条数") @RequestParam(defaultValue = "10") int pageSize,
       @Parameter(description = "租户名称模糊搜索") @RequestParam(required = false) String tenantName,
       @Parameter(description = "状态") @RequestParam(required = false) String status) {
-    // pageSize 服务端硬上限截断，防止深度分页 OOM
-    int safePageSize = Math.min(pageSize, MAX_PAGE_SIZE);
-    return service.page(pageNum, safePageSize, tenantName, status);
+    return service.page(normalizePageNum(pageNum), normalizePageSize(pageSize), tenantName, status);
   }
 
   /**
@@ -157,6 +155,4 @@ public class TenantController {
     return BaseResponse.success(service.removeById(id));
   }
 
-  /** 分页安全上限：防止 pageSize=999999 导致深度分页 OOM */
-  private static final int MAX_PAGE_SIZE = 500;
 }

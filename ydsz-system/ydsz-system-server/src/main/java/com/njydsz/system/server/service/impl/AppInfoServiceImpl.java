@@ -13,7 +13,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.njydsz.common.auth.annotation.DataScope;
 import com.njydsz.common.core.response.PageResponse;
 import com.njydsz.common.exception.custom.BusinessException;
 import com.njydsz.common.jdbc.support.PageResponses;
@@ -40,8 +39,8 @@ import com.njydsz.system.server.service.AppInfoService;
  *       #removeById}，全部走 {@code @Transactional} 事务保证
  *   <li><b>密钥校验</b>：{@link #validateClient} — 通过 BCrypt 校验 {@code appSecret}， 用于 OAuth2 / OpenAPI
  *       网关层身份认证
- *   <li><b>行级权限</b>：{@link #page} / {@link #list} 启用 {@code @DataScope} 限制部门 + 创建人可见
  *   <li><b>指标埋点</b>：密钥校验成功 / 失败次数上报 Micrometer Prometheus 指标
+ *   <li><b>租户隔离</b>：{@link #page} / {@link #list} 按租户自动隔离（MyBatis 拦截器注入 tenant_id）
  * </ul>
  *
  * <p><b>安全设计：</b>
@@ -71,7 +70,7 @@ import com.njydsz.system.server.service.AppInfoService;
  * <ul>
  *   <li><b>密钥不返回</b>：{@link AppInfoVO} 中 {@code appSecret} 字段为
  *       null（{@code @com.njydsz.common.json.annotation.JsonIgnore}）， 避免泄漏到前端 / 日志
- *   <li><b>登录态隔离</b>：管理后台「应用列表」自动按当前用户部门 + 创建人过滤 （{@code @DataScope}），避免越权查看
+ *   <li><b>租户隔离</b>：管理后台「应用列表」按当前租户自动过滤（MyBatis 拦截器注入 tenant_id），避免跨租户越权查看
  *   <li><b>软删除</b>：{@code ydsz_app_info} 表采用 <b>逻辑删除</b>（{@code deleted} 字段）
  *   <li><b>密钥不存明文</b>：所有密钥 BCrypt 哈希后存 DB，<b>不可逆</b>，忘记密钥只能重置
  * </ul>
@@ -250,7 +249,7 @@ public class AppInfoServiceImpl implements AppInfoService {
    *
    * <p>支持按 {@code appName} 模糊匹配、{@code status} 精确匹配进行过滤， 按 {@code created_at} 倒序返回。
    *
-   * <p><b>行级权限：</b>本方法带 {@code @DataScope} 注解， 自动按当前用户的部门 / 人员范围过滤（管理员看全量）。
+   * <p><b>租户隔离：</b>本方法按当前租户自动过滤（MyBatis 拦截器注入 tenant_id），避免跨租户越权查看。
    *
    * @param pageNum 页码（1-based）
    * @param pageSize 每页条数
@@ -259,7 +258,6 @@ public class AppInfoServiceImpl implements AppInfoService {
    * @return 分页结果（VO 中密钥字段为 null，不暴露密钥哈希）
    */
   @Override
-  @DataScope(deptColumn = "dept_id", userColumn = "created_by")
   public PageResponse<List<AppInfoVO>> page(
       int pageNum, int pageSize, String appName, String status) {
     QueryWrapper<AppInfo> wrapper = new QueryWrapper<>();
@@ -279,14 +277,13 @@ public class AppInfoServiceImpl implements AppInfoService {
    *
    * <p>典型调用方：管理后台「应用选择器」下拉框。
    *
-   * <p><b>行级权限：</b>本方法带 {@code @DataScope} 注解， 自动按当前用户的部门 / 人员范围过滤。
+   * <p><b>租户隔离：</b>本方法按当前租户自动过滤（MyBatis 拦截器注入 tenant_id），避免跨租户越权查看。
    *
    * <p><b>慎用：</b>全表扫描，应用一般 < 50 条，单次查询 < 10ms。
    *
    * @return 全部应用列表（VO 中密钥字段为 null，不暴露密钥哈希）
    */
   @Override
-  @DataScope(deptColumn = "dept_id", userColumn = "created_by")
   public List<AppInfoVO> list() {
     return appInfoRepository.getAppInfoMapper().selectList(null).stream()
         .map(SystemConverter.INSTANT::entityToVO)

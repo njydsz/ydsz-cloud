@@ -1,6 +1,7 @@
 package com.njydsz.system.server.service.impl;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -114,6 +115,12 @@ public class DictItemServiceImpl implements DictItemService {
 
   /** 统一实体版本服务，用于记录变更快照 */
   private final EntityVersionService entityVersionService;
+
+  /** Spring Cache 管理器（用于按 key 精准失效缓存） */
+  private final org.springframework.cache.CacheManager cacheManager;
+
+  /** 租户感知缓存键构造器（SpEL 与手动 evict 共用） */
+  private final com.njydsz.system.server.cache.CacheKeyBuilder cacheKeyBuilder;
 
   /**
    * 根据主键查询字典项（不走缓存，直接走 DB）
@@ -302,7 +309,9 @@ public class DictItemServiceImpl implements DictItemService {
    * @throws IllegalArgumentException {@code (typeCode, itemCode)} 组合已存在时抛出
    */
   @Override
-  @CacheEvict(value = CacheConstants.SYSTEM_DICT_ITEM_CACHE, allEntries = true)
+  @CacheEvict(
+      value = CacheConstants.SYSTEM_DICT_ITEM_CACHE,
+      key = "@cacheKeyBuilder.dictList(#vo.typeCode)")
   @Transactional(rollbackFor = Exception.class)
   public String save(DictItemVO vo) {
     // 唯一性校验：(typeCode, itemCode) 组合不能重复
@@ -329,20 +338,33 @@ public class DictItemServiceImpl implements DictItemService {
    *   <li>创建版本快照（变更前状态）
    *   <li>DTO 转 DO
    *   <li>更新 {@code ydsz_dict_item} 表
-   *   <li>更新成功后清除该 {@code typeCode} 下的所有缓存
+   *   <li>更新成功后精准失效该 {@code typeCode} 下的缓存（含 itemCode 变更时的旧 key）
    * </ol>
    *
    * @param dto 字典项数据（需包含 {@code id}）
    * @return true=更新成功，false=记录不存在
    */
   @Override
-  @CacheEvict(value = CacheConstants.SYSTEM_DICT_ITEM_CACHE, allEntries = true)
+  @CacheEvict(
+      value = CacheConstants.SYSTEM_DICT_ITEM_CACHE,
+      key = "@cacheKeyBuilder.dictList(#vo.typeCode)")
   @Transactional(rollbackFor = Exception.class)
   public boolean updateById(DictItemVO vo) {
     // 写操作前抓取「变更前」快照，支持后续版本回滚
     createSnapshotVersion(vo.getTypeCode(), "更新字典项: " + vo.getItemCode());
+    // 查询变更前实体，itemCode/typeCode 变更时旧缓存 key 一并失效
+    DictItem before = dictRepository.getDictItemMapper().selectById(vo.getId());
     DictItem entity = toEntity(vo);
-    return dictRepository.getDictItemMapper().updateById(entity) > 0;
+    boolean updated = dictRepository.getDictItemMapper().updateById(entity) > 0;
+    if (updated && before != null) {
+      if (!Objects.equals(before.getItemCode(), vo.getItemCode())) {
+        evictDictItem(vo.getTypeCode(), before.getItemCode());
+      }
+      if (!Objects.equals(before.getTypeCode(), vo.getTypeCode())) {
+        evictDictList(before.getTypeCode());
+      }
+    }
+    return updated;
   }
 
   /**
@@ -356,14 +378,13 @@ public class DictItemServiceImpl implements DictItemService {
    *   <li>查询原实体（用于获取 typeCode）
    *   <li>创建版本快照（变更前状态）
    *   <li>逻辑删除记录
-   *   <li>删除成功后清除该 {@code typeCode} 下的所有缓存
+   *   <li>删除成功后精准失效该 {@code typeCode} 下的缓存
    * </ol>
    *
    * @param id 字典项主键
    * @return true=删除成功，false=记录不存在
    */
   @Override
-  @CacheEvict(value = CacheConstants.SYSTEM_DICT_ITEM_CACHE, allEntries = true)
   @Transactional(rollbackFor = Exception.class)
   public boolean removeById(String id) {
     DictItem entity = dictRepository.getDictItemMapper().selectById(id);
@@ -372,7 +393,13 @@ public class DictItemServiceImpl implements DictItemService {
     }
     // 写操作前抓取「变更前」快照，支持后续版本回滚
     createSnapshotVersion(entity.getTypeCode(), "删除字典项: " + entity.getItemCode());
-    return dictRepository.getDictItemMapper().deleteById(id) > 0;
+    boolean removed = dictRepository.getDictItemMapper().deleteById(id) > 0;
+    if (removed) {
+      // 精准失效单条 item 缓存 + 类型列表缓存（替代 allEntries 全量清空）
+      evictDictItem(entity.getTypeCode(), entity.getItemCode());
+      evictDictList(entity.getTypeCode());
+    }
+    return removed;
   }
 
   /**
@@ -434,7 +461,38 @@ public class DictItemServiceImpl implements DictItemService {
                   .data("reason", e.getMessage());
             }
           }
+          // 3. P0-2：回滚后精准失效该类型缓存，避免读到旧值
+          evictDictList(typeCode);
         });
+  }
+
+  /**
+   * 精准失效「按类型+编码查询」缓存。
+   *
+   * @param typeCode 字典类型编码
+   * @param itemCode 字典项编码
+   */
+  private void evictDictItem(String typeCode, String itemCode) {
+    if (typeCode == null || itemCode == null) {
+      return;
+    }
+    cacheManager
+        .getCache(CacheConstants.SYSTEM_DICT_ITEM_CACHE)
+        .evict(cacheKeyBuilder.dictItem(typeCode, itemCode));
+  }
+
+  /**
+   * 精准失效「按类型查询列表」缓存（替代 allEntries 全量清空）。
+   *
+   * @param typeCode 字典类型编码
+   */
+  private void evictDictList(String typeCode) {
+    if (typeCode == null) {
+      return;
+    }
+    cacheManager
+        .getCache(CacheConstants.SYSTEM_DICT_ITEM_CACHE)
+        .evict(cacheKeyBuilder.dictList(typeCode));
   }
 
   /**
