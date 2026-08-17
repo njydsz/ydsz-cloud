@@ -57,4 +57,10 @@ public class TenantPlan extends MpBaseEntity<String> {
 
   /** 排序号（升序，影响前端套餐选择器顺序） */
   private Integer sortOrder;
+
+  /** 资源配额 JSON（如 {@code {"maxUsers":50,"maxProjects":10,"storageGb":100}}） */
+  private String quotaJson;
+
+  /** 功能开关 JSON（如 {@code {"workflow":true,"dataAnalytics":false}}，按套餐控制功能可用性） */
+  private String featureJson;
 }

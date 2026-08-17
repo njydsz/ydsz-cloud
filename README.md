@@ -70,33 +70,33 @@
 
 ```
 ydsz-cloud/
-├── ydsz-common/              # 🧱 公共能力底座（30 子模块，不独立部署）
-│   ├── ydsz-common-core      # L1：统一响应 / TraceId / 特性开关
-│   ├── ydsz-common-util      # L2：30+ 工具类（加密 / IP / 雪花ID）
-│   ├── ydsz-common-json      # L2：高性能 JSON 引擎（ASM / SIMD）
+├── ydsz-common/              # 🧱 公共能力底座（30 子模块，L1-L6 分层，不独立部署）
+│   ├── ydsz-common-json      # L1：高性能 JSON 引擎（ASM / SIMD）
+│   ├── ydsz-common-util      # L1：30+ 工具类（加密 / IP / 雪花ID）
+│   ├── ydsz-common-cache     # L1：多策略本地缓存（W-TinyLFU）
+│   ├── ydsz-common-excel     # L1：高性能 Excel 读写
+│   ├── ydsz-common-core      # L2：统一响应 / TraceId / 特性开关
 │   ├── ydsz-common-domain    # L3：DDD 基类 / 领域事件
 │   ├── ydsz-common-exception # L3：统一异常 / RFC 7807 ProblemDetail
 │   ├── ydsz-common-jdbc      # L4：MyBatis-Plus 增强 / 行权限
 │   ├── ydsz-common-redis     # L4：Redis 操作封装（9 类 ops）
 │   ├── ydsz-common-lock      # L4：分布式锁（可重入/公平/联锁/读写/信号量）/ 幂等
-│   ├── ydsz-common-cache     # L4：多策略本地缓存（W-TinyLFU）
 │   ├── ydsz-common-thread    # L4：共享线程池
 │   ├── ydsz-common-tenant    # L4：多租户隔离
 │   ├── ydsz-common-auth      # L5：JWT / RBAC / TOTP 2FA
 │   ├── ydsz-common-safe      # L5：脱敏 / XSS / 限流 / CSRF
 │   ├── ydsz-common-feign     # L5：OpenFeign + Resilience4j
-│   ├── ydsz-common-audit     # L5：操作日志 / Disruptor 批写
-│   ├── ydsz-common-file      # L5：7 种存储平台 / 分片 / 秒传
+│   ├── ydsz-common-audit     # L5：操作日志 / 审计
 │   ├── ydsz-common-notify    # L5：6 种通知渠道抽象
 │   ├── ydsz-common-queue     # L5：6 种 MQ 抽象（Stream/Kafka/Rocket/List/PubSub/Rabbit）
-│   ├── ydsz-common-docs      # L5：8 种文档解析 / OCR
-│   ├── ydsz-common-excel     # L5：高性能 Excel 读写
-│   ├── ydsz-common-netty     # L5：TCP 通信
-│   ├── ydsz-common-socket    # L5：WebSocket 集群广播
-│   ├── ydsz-common-search    # L5：统一搜索（PG / ES）
 │   ├── ydsz-common-event     # L5：事务性 Outbox
-│   ├── ydsz-common-config    # L5：敏感配置加密
+│   ├── ydsz-common-config    # L5：配置变更桥接
 │   ├── ydsz-common-seata     # L5：Seata 分布式事务
+│   ├── ydsz-common-socket    # L5：WebSocket 集群广播
+│   ├── ydsz-common-netty     # L5：TCP 通信
+│   ├── ydsz-common-file      # L5：7 种存储平台 / 分片 / 秒传
+│   ├── ydsz-common-docs      # L5：8 种文档解析 / OCR
+│   ├── ydsz-common-search    # L5：统一搜索（PG 全文检索 / 内存）
 │   ├── ydsz-common-sentry    # L5：统一监控告警
 │   ├── ydsz-common-base      # L6：HTTP 公共基座
 │   ├── ydsz-common-web       # L6：PC Web 基座（Spring Security）

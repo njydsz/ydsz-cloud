@@ -49,9 +49,12 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
   private final FrequencySketch frequencySketch;
   private final AtomicLong sizeCounter;
   private final AtomicLong protectedSize;
+  private final AtomicLong windowSize;
   private final ReentrantReadWriteLock rwLock;
   private final ReentrantReadWriteLock.WriteLock writeLock;
   private final int shiftThreshold;
+  /** Window 队列容量上限（maxSize 的 1%，至少 1），Caffeine 标准分段 */
+  private final int maxWindowSize;
   private volatile long totalCount;
 
   public WindowTinyLFUCache(int maxCapacity) {
@@ -71,13 +74,16 @@ public class WindowTinyLFUCache<K, V> extends AbstractCache<K, V> {
     this.frequencySketch.ensureCapacity(maxCapacity);
     this.sizeCounter = new AtomicLong(0);
     this.protectedSize = new AtomicLong(0);
+    this.windowSize = new AtomicLong(0);
     this.rwLock = new ReentrantReadWriteLock(false);
     this.writeLock = rwLock.writeLock();
     this.totalCount = 0;
     this.shiftThreshold = Math.max(maxCapacity, 1000);
+    this.maxWindowSize = Math.max(1, (int) (maxCapacity * 0.01));
     LOG.info(
-        "Window-TinyLFU 缓存已创建（Caffeine 架构，并发安全增强，周期性衰减机制），maxCapacity={}, shiftThreshold={}",
+        "Window-TinyLFU 缓存已创建（Caffeine 架构，并发安全增强，周期性衰减机制），maxCapacity={}, maxWindowSize={}, shiftThreshold={}",
         maxCapacity,
+        maxWindowSize,
         shiftThreshold);
   }
 

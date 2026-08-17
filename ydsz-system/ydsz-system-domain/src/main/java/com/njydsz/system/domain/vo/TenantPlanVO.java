@@ -55,4 +55,14 @@ public class TenantPlanVO {
 
   @Schema(description = "排序号")
   private Integer sortOrder;
+
+  @Size(max = 2048, message = "配额配置长度不能超过2048")
+  @Xss(message = "配额配置包含非法内容")
+  @Schema(description = "资源配额 JSON（如 {\"maxUsers\":50,\"maxProjects\":10,\"storageGb\":100}）")
+  private String quotaJson;
+
+  @Size(max = 2048, message = "功能开关长度不能超过2048")
+  @Xss(message = "功能开关包含非法内容")
+  @Schema(description = "功能开关 JSON（如 {\"workflow\":true,\"dataAnalytics\":false}）")
+  private String featureJson;
 }

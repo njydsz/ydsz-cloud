@@ -186,6 +186,9 @@ public class TenantPlanServiceImpl implements TenantPlanService {
     entity.setPlanName(vo.getPlanName());
     entity.setDescription(vo.getDescription());
     entity.setSortOrder(vo.getSortOrder());
+    entity.setQuotaJson(vo.getQuotaJson());
+    entity.setFeatureJson(vo.getFeatureJson());
+    entity.setStatus(vo.getStatus() != null ? vo.getStatus() : "ENABLED");
     return entity;
   }
 }
