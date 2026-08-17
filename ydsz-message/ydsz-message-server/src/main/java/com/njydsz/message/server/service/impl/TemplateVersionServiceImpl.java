@@ -96,7 +96,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
       String auditRemark) {
     // 查询当前最大版本号
     Integer maxVersion =
-        versionMapper
+        versionRepository
             .selectList(
                 new LambdaQueryWrapper<MsgTemplateVersion>()
                     .eq(MsgTemplateVersion::getTemplateCode, templateCode)

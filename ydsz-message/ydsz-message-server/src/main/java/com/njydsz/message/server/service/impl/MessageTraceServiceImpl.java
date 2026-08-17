@@ -34,7 +34,7 @@ import com.njydsz.message.server.service.core.MessageTraceService;
 @RequiredArgsConstructor
 public class MessageTraceServiceImpl implements MessageTraceService {
 
-  /** 消息轨迹 Mapper（异步写入） */
+  /** 消息轨迹 Repository（异步写入） */
   private final MsgTraceRepository msgTraceRepository;
 
   @Override

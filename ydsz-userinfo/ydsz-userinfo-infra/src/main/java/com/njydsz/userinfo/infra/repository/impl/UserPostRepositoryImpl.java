@@ -69,6 +69,11 @@ public class UserPostRepositoryImpl implements UserPostRepository {
   }
 
   @Override
+  public int deleteById(String id) {
+    return userPostMapper.deleteById(id);
+  }
+
+  @Override
   public int delete(LambdaQueryWrapper<UserPost> wrapper) {
     return userPostMapper.delete(wrapper);
   }

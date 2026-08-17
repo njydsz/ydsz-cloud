@@ -41,7 +41,7 @@ import com.njydsz.message.server.service.core.MessageStatsService;
 @RequiredArgsConstructor
 public class MessageStatsServiceImpl implements MessageStatsService {
 
-  /** 消息日志 Mapper（聚合统计查询） */
+  /** 消息日志 Repository（聚合统计查询） */
   private final MsgLogRepository msgLogRepository;
 
   /** 消息模块配置属性 */
@@ -259,7 +259,7 @@ public class MessageStatsServiceImpl implements MessageStatsService {
       w.eq(MsgLog::getStatus, MessageStatusEnum.SUCCESS.name());
       w.ge(MsgLog::getCreatedAt, actualStart);
       w.le(MsgLog::getCreatedAt, actualEnd);
-      Long count = msgLogMapper.selectCount(w);
+      Long count = msgLogRepository.selectCount(w);
       long msgCount = count == null ? 0L : count;
 
       BigDecimal channelCost = unitPrice.multiply(BigDecimal.valueOf(msgCount));
@@ -316,7 +316,7 @@ public class MessageStatsServiceImpl implements MessageStatsService {
     }
     w.ge(MsgLog::getCreatedAt, start);
     w.le(MsgLog::getCreatedAt, end);
-    Long count = msgLogMapper.selectCount(w);
+    Long count = msgLogRepository.selectCount(w);
     return count == null ? 0L : count;
   }
 

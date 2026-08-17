@@ -32,7 +32,7 @@ import com.njydsz.message.server.service.config.PreferenceService;
 @RequiredArgsConstructor
 public class PreferenceServiceImpl implements PreferenceService {
 
-  /** 用户消息偏好 Mapper */
+  /** 用户消息偏好 Repository */
   private final MsgPreferenceRepository msgPreferenceRepository;
 
   /**

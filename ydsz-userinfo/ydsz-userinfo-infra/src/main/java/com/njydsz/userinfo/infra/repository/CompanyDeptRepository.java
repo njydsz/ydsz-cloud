@@ -74,6 +74,14 @@ public interface CompanyDeptRepository {
   int deleteByCompanyId(String companyId);
 
   /**
+   * 根据 ID 删除关联（逻辑删除）。
+   *
+   * @param id 关联 ID
+   * @return 删除影响的行数
+   */
+  int deleteById(String id);
+
+  /**
    * 条件删除公司-部门关联。
    *
    * @param wrapper 删除条件

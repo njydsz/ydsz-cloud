@@ -42,7 +42,7 @@ import com.njydsz.message.server.service.core.MessageLogService;
 @RequiredArgsConstructor
 public class MessageLogServiceImpl implements MessageLogService {
 
-  /** 消息日志 Mapper */
+  /** 消息日志 Repository */
   private final MsgLogRepository msgLogRepository;
 
   /** 通道路由器（重发时分发） */

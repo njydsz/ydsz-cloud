@@ -5,11 +5,14 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.cronjob.domain.entity.job.Job;
+import com.njydsz.cronjob.server.core.config.CronjobThreadPoolRegistry;
 
 /**
  * 失败重试调度器（从 DefaultTaskDispatcher 拆分）。
@@ -29,6 +32,9 @@ import com.njydsz.cronjob.domain.entity.job.Job;
 @Component
 public class RetryScheduler {
 
+  /** 线程池注册表（可选注入，standalone 模式下可能不可用） */
+  private final ObjectProvider<CronjobThreadPoolRegistry> registryProvider;
+
   /** 重试调度线程池 */
   private final ScheduledExecutorService retryScheduler =
       new ScheduledThreadPoolExecutor(
@@ -39,6 +45,11 @@ public class RetryScheduler {
             return t;
           },
           new ThreadPoolExecutor.CallerRunsPolicy());
+
+  /** 构造函数：注入线程池注册表 */
+  public RetryScheduler(ObjectProvider<CronjobThreadPoolRegistry> registryProvider) {
+    this.registryProvider = registryProvider;
+  }
 
   /**
    * 调度失败重试。
@@ -121,6 +132,19 @@ public class RetryScheduler {
       return Math.min(delay, 300_000L);
     }
     return interval;
+  }
+
+  /**
+   * 初始化：注册重试调度线程池到注册表。
+   *
+   * <p>注册表可用时注册，支持线程池热更新。
+   */
+  @PostConstruct
+  public void init() {
+    CronjobThreadPoolRegistry registry = registryProvider.getIfAvailable();
+    if (registry != null && retryScheduler instanceof ThreadPoolExecutor executor) {
+      registry.register(CronjobThreadPoolRegistry.RETRY_SCHEDULER, executor);
+    }
   }
 
   /** 优雅关闭重试调度线程池。 */

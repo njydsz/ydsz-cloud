@@ -59,6 +59,11 @@ public class CompanyDeptRepositoryImpl implements CompanyDeptRepository {
   }
 
   @Override
+  public int deleteById(String id) {
+    return companyDeptMapper.deleteById(id);
+  }
+
+  @Override
   public int deleteByCompanyId(String companyId) {
     LambdaQueryWrapper<CompanyDept> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(CompanyDept::getCompanyId, companyId);

@@ -50,7 +50,7 @@ public class NotificationServiceImpl implements NotificationService {
   /** P3-6: 批量 insert 单批最大条数（ydsz_msg_notification 28 列，500 条 ≈ 1.4 万参数，远低于 PG 65535 上限） */
   private static final int INSERT_BATCH_SIZE = 500;
 
-  /** 站内通知 Mapper */
+  /** 站内通知 Repository */
   private final MsgNotificationRepository msgNotificationRepository;
 
   /** 实时推送服务（WebSocket / 离线缓存） */

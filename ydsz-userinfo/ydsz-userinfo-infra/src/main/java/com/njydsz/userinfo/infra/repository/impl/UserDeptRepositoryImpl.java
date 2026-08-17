@@ -69,6 +69,11 @@ public class UserDeptRepositoryImpl implements UserDeptRepository {
   }
 
   @Override
+  public int deleteById(String id) {
+    return userDeptMapper.deleteById(id);
+  }
+
+  @Override
   public int delete(LambdaQueryWrapper<UserDept> wrapper) {
     return userDeptMapper.delete(wrapper);
   }
