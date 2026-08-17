@@ -50,11 +50,16 @@ ydsz:
 ---
 ## 二、核心能力说明
 ### 1. 核心请求头透传
-默认自动透传4个核心请求头，保证链路可追溯、租户上下文透传：
+默认自动透传 **13 个**核心请求头，保证链路可追溯、租户上下文透传：
 - `traceparent`：W3C标准链路追踪头，自动从当前上下文获取
 - `X-Tenant-Id`：租户上下文标识，从当前请求头获取
 - `X-Access-Token`：用户访问令牌，从当前请求头获取
 - `X-Request-Id`：请求唯一标识，不存在时自动生成
+- `X-User-Userid` / `X-User-Username` / `X-User-Locale`：用户信息
+- `X-Request-Source`：请求来源
+- `X-Company-Ids` / `X-Dept-Ids` / `X-Data-Scope`：组织与数据权限
+- `X-Unique-Id`：唯一请求 ID
+- `X-Service-Type`：服务类型
 
 ### 2. 请求重试
 默认开启重试，仅对GET请求生效，最大重试3次，避免重试风暴。

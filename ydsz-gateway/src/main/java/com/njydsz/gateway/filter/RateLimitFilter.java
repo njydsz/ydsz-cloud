@@ -2,7 +2,6 @@ package com.njydsz.gateway.filter;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -77,10 +76,6 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
   private static final int CIRCUIT_THRESHOLD = 5;
 
   private final AtomicInteger redisFailureCount = new AtomicInteger(0);
-
-  /** Redis 不可用时的本地兜底令牌桶 */
-  private volatile long localBucketTokens = 200;
-  private volatile long localBucketLastRefill = System.currentTimeMillis() / 1000;
 
   /**
    * 五维度（IP + 用户 + 租户 + 应用 + 接口）合并令牌桶 Lua 脚本。
@@ -171,7 +166,8 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
   /**
    * 限流过滤器入口。
    *
-   * <p>先检查白名单路径，再按 IP + 用户两个维度执行令牌桶限流。
+   * <p>先检查白名单路径，再按 IP → 用户 → 租户 → 应用 → 接口 五个维度执行令牌桶限流
+   * （维度启用与否由配置 {@code ydsz.gateway.ratelimit.per-*.enabled} 控制）。
    *
    * @param exchange 服务器 Web 交换上下文
    * @param chain 网关过滤器链
@@ -235,7 +231,10 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
   }
 
   /**
-   * 执行 IP + 用户二维度令牌桶限流检查。
+   * 执行五维度令牌桶限流检查（P0-C4：补齐租户/应用/接口维度，与 Lua 脚本参数布局对齐）。
+   *
+   * <p>维度标识来源：IP（可信代理解析）、用户（X-User-Id）、租户（X-Tenant-Id）、
+   * 应用（X-App-Id）、接口（请求路径）。
    *
    * @param exchange 服务器 Web 交换上下文
    * @param clientIp 客户端 IP
@@ -250,9 +249,14 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
       boolean ipWhitelisted) {
     // Redis 熔断检查
     if (redisFailureCount.get() >= CIRCUIT_THRESHOLD) {
-      log.warn("[RateLimit] Redis 连续失败 {} 次，切换到本地兜底限流模式", redisFailureCount.get());
+      log.warn("[RateLimit] Redis 连续失败 {} 次，限流降级放行", redisFailureCount.get());
       return Mono.just(localFallback());
     }
+
+    ServerHttpRequest request = exchange.getRequest();
+    String tenantId = request.getHeaders().getFirst(GatewayConstants.HEADER_TENANT_ID);
+    String appId = request.getHeaders().getFirst(GatewayConstants.HEADER_APP_ID);
+    String apiPath = request.getURI().getPath();
 
     boolean ipEnabled =
         properties.getPerIp().isEnabled()
@@ -261,33 +265,47 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
             && !clientIp.isEmpty();
     boolean userEnabled =
         properties.getPerUser().isEnabled() && userId != null && !userId.isEmpty();
+    boolean tenantEnabled =
+        properties.getPerTenant().isEnabled() && tenantId != null && !tenantId.isEmpty();
+    boolean appEnabled =
+        properties.getPerApp().isEnabled() && appId != null && !appId.isEmpty();
+    boolean apiEnabled =
+        properties.getPerApi().isEnabled() && apiPath != null && !apiPath.isEmpty();
 
-    if (!ipEnabled && !userEnabled) {
+    if (!ipEnabled && !userEnabled && !tenantEnabled && !appEnabled && !apiEnabled) {
       return Mono.just(allAllowedResult());
     }
 
     long now = System.currentTimeMillis() / 1000;
-    String ipKey = "ydsz:ratelimit:ip:" + (clientIp != null ? clientIp : "");
-    String userKey = "ydsz:ratelimit:user:" + (userId != null ? userId : "");
+    List<String> keys =
+        List.of(
+            "ydsz:ratelimit:ip:" + (clientIp != null ? clientIp : ""),
+            "ydsz:ratelimit:user:" + (userId != null ? userId : ""),
+            "ydsz:ratelimit:tenant:" + (tenantId != null ? tenantId : ""),
+            "ydsz:ratelimit:app:" + (appId != null ? appId : ""),
+            "ydsz:ratelimit:api:" + (apiPath != null ? apiPath : ""));
 
-    List<String> keys = List.of(ipKey, userKey);
-    List<Object> args =
-        Arrays.asList(
-            String.valueOf(properties.getPerIp().getDefaultQps()),
-            String.valueOf(properties.getPerIp().getBurstCapacity()),
-            ipEnabled ? "1" : "0",
-            String.valueOf(properties.getPerUser().getDefaultQps()),
-            String.valueOf(properties.getPerUser().getBurstCapacity()),
-            userEnabled ? "1" : "0",
-            String.valueOf(now),
-            "1");
+    // ARGV[1..15] = 5 维度 × (rate, capacity, enabled)；ARGV[16]=now；ARGV[17]=requested
+    List<Object> args = new java.util.ArrayList<>(17);
+    appendDimensionArgs(
+        args, properties.getPerIp().getDefaultQps(), properties.getPerIp().getBurstCapacity(), ipEnabled);
+    appendDimensionArgs(
+        args, properties.getPerUser().getDefaultQps(), properties.getPerUser().getBurstCapacity(), userEnabled);
+    appendDimensionArgs(
+        args, properties.getPerTenant().getDefaultQps(), properties.getPerTenant().getBurstCapacity(), tenantEnabled);
+    appendDimensionArgs(
+        args, properties.getPerApp().getDefaultQps(), properties.getPerApp().getBurstCapacity(), appEnabled);
+    appendDimensionArgs(
+        args, properties.getPerApi().getDefaultQps(), properties.getPerApi().getBurstCapacity(), apiEnabled);
+    args.add(String.valueOf(now));
+    args.add("1");
 
     return redisTemplate
         .execute(tokenBucketScript, keys, args)
         .next()
         .map(
             result -> {
-              if (result == null || result.size() < 6) {
+              if (result == null || result.size() < 15) {
                 redisFailureCount.incrementAndGet();
                 return allAllowedResult();
               }
@@ -297,14 +315,23 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
               boolean userAllowed = getLong(result, 3) != null && getLong(result, 3) == 1L;
               int userRemaining = getLong(result, 4) != null ? getLong(result, 4).intValue() : 0;
               int userReset = getLong(result, 5) != null ? getLong(result, 5).intValue() : 0;
+              boolean tenantAllowed = getLong(result, 6) != null && getLong(result, 6) == 1L;
+              int tenantRemaining = getLong(result, 7) != null ? getLong(result, 7).intValue() : 0;
+              int tenantReset = getLong(result, 8) != null ? getLong(result, 8).intValue() : 0;
+              boolean appAllowed = getLong(result, 9) != null && getLong(result, 9) == 1L;
+              int appRemaining = getLong(result, 10) != null ? getLong(result, 10).intValue() : 0;
+              int appReset = getLong(result, 11) != null ? getLong(result, 11).intValue() : 0;
+              boolean apiAllowed = getLong(result, 12) != null && getLong(result, 12) == 1L;
+              int apiRemaining = getLong(result, 13) != null ? getLong(result, 13).intValue() : 0;
+              int apiReset = getLong(result, 14) != null ? getLong(result, 14).intValue() : 0;
 
               redisFailureCount.set(0);
               return new RateLimitResult(
                   ipAllowed, ipRemaining, ipReset,
                   userAllowed, userRemaining, userReset,
-                  true, 0, 0,
-                  true, 0, 0,
-                  true, 0, 0);
+                  tenantAllowed, tenantRemaining, tenantReset,
+                  appAllowed, appRemaining, appReset,
+                  apiAllowed, apiRemaining, apiReset);
             })
         .onErrorResume(
             e -> {
@@ -314,6 +341,20 @@ public class RateLimitFilter implements GlobalFilter, Ordered {
               return Mono.just(localFallback());
             })
         .defaultIfEmpty(allAllowedResult());
+  }
+
+  /**
+   * 追加单个限流维度的 Lua 参数（rate, capacity, enabled）。
+   *
+   * @param args 参数列表
+   * @param qps 令牌桶速率
+   * @param capacity 令牌桶容量
+   * @param enabled 该维度是否启用
+   */
+  private void appendDimensionArgs(List<Object> args, int qps, int capacity, boolean enabled) {
+    args.add(String.valueOf(qps));
+    args.add(String.valueOf(capacity));
+    args.add(enabled ? "1" : "0");
   }
 
   /** 限流结果记录（五维度） */

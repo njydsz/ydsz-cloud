@@ -164,7 +164,17 @@ public class GatewayRouteConfig {
         .route(
             "ydsz-literule",
             r -> r.path("/api/v1/literule/**").customize(routeBuilder -> routeBuilder.order(1000)).uri("lb://ydsz-literule"))
-        .route("ydsz-agent", r -> r.path("/api/v1/agent/**").customize(routeBuilder -> routeBuilder.order(1000)).uri("lb://ydsz-agent"))
+        .route(
+            "ydsz-agent",
+            r ->
+                r.path("/api/v1/agent/**")
+                    .customize(
+                        routeBuilder -> {
+                          routeBuilder.order(1000);
+                          // P0-B4: AI Agent 对话为 SSE 流式响应，覆盖默认 30s 响应超时为 120s
+                          routeBuilder.metadata("response-timeout", 120000);
+                        })
+                    .uri("lb://ydsz-agent"))
         .route(
             "ydsz-nextwiki",
             r -> r.path("/api/v1/nextwiki/**").customize(routeBuilder -> routeBuilder.order(1000)).uri("lb://ydsz-nextwiki"))

@@ -36,9 +36,8 @@ boolean valid = PwdUtils.verifyPasswordBCrypt("userPassword123", hashed);
 boolean ok = IpValidator.validIpv4("192.168.1.1");
 boolean internal = IpValidator.isInternalIp("10.0.0.1");
 
-// 线程池创建
-ExecutorService pool = ExecutorUtils.newCpuBoundThreadPool();
-ExecutorUtils.shutdownGracefully(pool, 30, TimeUnit.SECONDS);
+// 线程池创建（由 ydsz-common-thread 提供，见该模块文档）
+ExecutorUtils.newCpuBoundThreadPool(); // 需引入 ydsz-common-thread
 ```
 
 ### 3. 启用 Snowflake 自动配置
@@ -74,7 +73,7 @@ byte[] ciphertext = sm4.encrypt(plaintextBytes, keyBytes, null);
 |---------|-----------|-----------|
 | 生成分布式唯一 ID | `IdGenerator` / `SnowflakeIdGenerator` / `SnowflakeIdBean` | 雪花算法核心 + Spring Bean 包装器，序列号可配置 |
 | 加密解密（统一入口） | `CryptoUtils` | AES-256-GCM / SM4-GCM 算法路由，支持 AEAD/AAD |
-| 国密算法（SM2/SM3/SM4） | `Sm2Utils` / `Sm3Utils` / `Sm4Utils` | 依赖 bcprov-jdk18on，GM/T 标准 |
+| 国密算法（SM2/SM3） | `Sm2Utils` / `Sm3Utils` | 依赖 bcprov-jdk18on，GM/T 标准；SM4 由 `CryptoProvider` 提供（SM4-GCM） |
 | 摘要/签名/HMAC | `DigestUtils` | SHA-256/SHA-512/HMAC-SHA256/PBKDF2 + constantTimeEquals |
 | 密码哈希与强度校验 | `PwdUtils` | BCrypt + PBKDF2 + 密码强度评分 |
 | HTTP 请求解析 | `ServletRequestUtils` | Servlet 请求封装 |
@@ -98,33 +97,32 @@ byte[] ciphertext = sm4.encrypt(plaintextBytes, keyBytes, null);
 | Bean PATCH 更新 | `BeanUpdateUtil` | 仅复制非 null 属性 |
 | IP 校验/CIDR | `IpValidator` / `CidrUtils` | IPv4/IPv6 校验、内网判断、CIDR 网段计算 |
 | 本机网络接口 | `NetworkInterfaceUtils` | 获取本机 IP、主机名、枚举所有非回环 IP |
-| 认证信息读取 | `AuthInfoUtils` | 用户 ID、租户 ID、数据权限维度 |
+| 认证信息读取 | `AuthInfoUtils`（位于 `ydsz-common-auth`） | 用户 ID、租户 ID、数据权限维度 |
 | 国际化消息 | `MessageUtils` | MessageSource 便捷读取 |
 
 ### 按包结构查找工具
 
 ```
 com.njydsz.common.util
-├── auth/           认证信息：AuthInfo、AuthInfoUtils、YdszAuthInfo
 ├── bean/           Bean 映射：BeanMapper（Map→Bean/Record）、BeanUpdateUtil（PATCH 语义）
 ├── collection/     集合工具：CollectionUtils、MapUtils（聚焦 Map 操作）、SequencedCollections
 ├── date/           日期时间：DateUtils（java.time API 封装）
 ├── diff/           字段 diff 工具：DiffCalculator、DiffReport、DiffField、FieldDiff
-├── config/         自动配置：UtilAutoConfiguration、MessageSourceConfiguration
+├── config/         自动配置：UtilAutoConfiguration、MessageSourceConfiguration、CryptoAutoConfiguration
 ├── http/           HTTP 工具：ServletRequestUtils、HttpResponseUtils、HttpTokenUtils、
 │                   RequestContextUtils、UrlPathUtils、UrlPathMatcher、TrustedProxyConfiguration
-├── io/             文件操作：FileUtils（封装 commons-io）
+├── io/             文件操作：FileUtils（封装 commons-io）、TempFileManager
 ├── id/             ID 生成：SnowflakeIdGenerator、IdGenerator、RandomUtils、TracerUtils、
 │                   WorkerIdAllocator（SPI）、WorkerIdAllocatorChain、SnowflakeProperties、
-│                   SnowflakeHealthIndicator、WorkerIdRegistry
+│                   SnowflakeHealthIndicator
 ├── ip/             IP 工具：IpValidator、CidrUtils（含缓存）、NetworkInterfaceUtils
 ├── mask/           数据脱敏：MaskUtils
 ├── message/        国际化：MessageUtils
 ├── password/       密码工具：PwdUtils、PasswordStrengthChecker（SPI）
 ├── security/       加密工具：CryptoUtils（统一入口）、CryptoProviderRegistry、DigestUtils、
-│                   AesUtils、AesGcmCrypto、国密工具（Sm2Utils/Sm3Utils/Sm4Utils）、BcProvider
+│                   Sm2Utils/Sm3Utils、BcProvider
 ├── security/crypto/ 加密提供者：CryptoProvider（SPI）、CryptoProviderRegistry、
-│                   AesGcmCryptoProvider、Sm4GcmCryptoProvider、Sm4CbcCryptoProvider
+│                   AesGcmCryptoProvider、Sm4GcmCryptoProvider
 ├── string/         字符串：StringUtils
 ├── validate/       业务校验：ValidationUtils
 ```
@@ -153,9 +151,9 @@ com.njydsz.common.util
 
 | SPI 接口 | 用途 | 默认实现 |
 |---------|------|---------|
-| `WorkerIdAllocator` | 分布式 WorkerId 分配策略（0-1023） | PodOrdinal → IpHash → FilePersisted 链 |
+| `WorkerIdAllocator` | 分布式 WorkerId 分配策略（0-1023） | PodOrdinal → IpHash 链 |
 | `PasswordStrengthChecker` | 密码强度评分规则 | `DefaultPasswordStrengthChecker`（长度/多样性/连续重复扣分） |
-| `CryptoProvider` | 加密算法提供者 | `AesGcmCryptoProvider`（默认）、`Sm4GcmCryptoProvider`、`Sm4CbcCryptoProvider` |
+| `CryptoProvider` | 加密算法提供者 | `AesGcmCryptoProvider`（默认）、`Sm4GcmCryptoProvider` |
 
 > **自定义 SPI 实现**：在 `META-INF/services/` 接口全限定名文件中填写实现类全限定名。
 
@@ -168,12 +166,12 @@ com.njydsz.common.util
 | `ydsz.util.snowflake.enabled` | `true` | 是否启用 Snowflake 自动配置 |
 | `ydsz.util.snowflake.worker-id` | - | WorkerId（0-1023，显式配置最高优先级） |
 | `ydsz.util.snowflake.datacenter-id` | - | 数据中心 ID（0-31，未配置时基于主机名哈希） |
-| `ydsz.util.snowflake.node-id` | - | 节点标识（用于 PodOrdinal/FilePersisted 策略） |
+| `ydsz.util.snowflake.node-id` | - | 节点标识（用于 PodOrdinal 策略） |
 | `ydsz.util.snowflake.epoch` | `1577836800000` | 起始纪元时间戳（2020-01-01 UTC），@since 4.0.0 |
 | `ydsz.util.snowflake.sequence-bits` | `7` | 序列号位数（7-13，决定每毫秒并发能力），@since 4.0.0 |
 | `crypto.algorithm`（系统属性） | `AES-256-GCM` | 加密算法标识，可选 `SM4-GCM`/`SM4-CBC`/`AES-256-GCM` |
 
-**WorkerId 解析优先级**：显式配置 → PodOrdinal → IpHash → FilePersisted
+**WorkerId 解析优先级**：显式配置 → PodOrdinal → IpHash
 
 ---
 
@@ -230,19 +228,6 @@ String data = RetryUtils.executeWithBackoff(() -> externalApi.fetch(),
         .multiplier(2.0)
         .retryOn(e -> e instanceof SocketTimeoutException)
         .build());
-```
-
-### BoundedVirtualThreadScheduler — 有界虚拟线程调度器
-
-```java
-// 限制最多 100 个虚拟线程并发
-BoundedVirtualThreadScheduler scheduler = new BoundedVirtualThreadScheduler(100);
-
-// 背压模式：超限阻塞提交方（非无限创建线程）
-scheduler.submit(() -> httpClient.call(url));
-
-// 获取结果
-Future<String> future = scheduler.submitWithResult(() -> httpClient.get(url));
 ```
 
 ### UrlPathMatcher — 高性能 URL 路径匹配

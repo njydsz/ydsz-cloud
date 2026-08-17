@@ -61,7 +61,7 @@ private ThreadPoolTaskExecutor ioExecutor;
 - **Bean 名称规则**：Bean 名称为 `beanNamePrefix + key + "Executor"`（前缀默认为空字符串，推荐使用 `ydsz-` 前缀避免命名冲突）
 - **优雅关闭**：平台线程池 `shutdown` 时自动等待任务完成
 - **Micrometer 指标自动绑定**：`MeterRegistry` 可用时为每个平台线程池注册核心 5 项指标，可选开启详细 3 项指标（见「可观测性」）
-- **健康检查**：自动注册 `ThreadHealthIndicator` Bean，仅检查 ydsz-common-thread 管理的线程池
+- **健康检查**：`ThreadHealthIndicator` 类已提供，但当前**未注册为自动装配 Bean**（`AutoConfiguration.imports` 仅装配 `ThreadPoolAutoConfiguration`），如需使用请业务侧显式声明
 
 ### 2. 线程池配置属性
 
@@ -69,7 +69,7 @@ private ThreadPoolTaskExecutor ioExecutor;
 
 ### 3. 健康检查
 
-`ThreadHealthIndicator` 实现 `HealthIndicator` + `ApplicationContextAware`，运行时通过 `ApplicationContext` 自动发现**ydsz-common-thread 管理的**线程池 Bean（通过 Bean 名称约定识别，避免误纳业务自定义线程池），检查其存活状态。
+> **注意**：`ThreadHealthIndicator` 当前不会被自动装配（未在自动配置中注册 Bean），健康检查能力为预留。若需使用，请业务侧自行注册 Bean。
 
 平台线程池上报 `active` / `queueSize` / `poolSize` / `completed` / `threadNamePrefix` 详情；虚拟线程池上报类型标识与存活状态。任一线程池获取底层 `ThreadPoolExecutor` 失败时整体状态为 `DOWN`。
 
@@ -330,7 +330,7 @@ ydsz.virtual.executor.completed{pool.name="virtual-io"}  1230.0
 
 | Bean | 注册方式 | 覆盖方式 |
 |---|---|---|
-| `ThreadHealthIndicator` | `@ConditionalOnMissingBean(name = "threadHealthIndicator")` | 业务方提供名为 `threadHealthIndicator` 的 Bean 即可替换默认健康检查实现 |
+| `ThreadHealthIndicator` | 当前**未自动注册**（预留） | 业务侧自行 `@Bean` 声明即可使用 |
 | `ThreadPoolMetrics` | 由 `ThreadPoolRegistrar` 自动注册 | 使用 `ydsz.thread.enabled=false` 关闭自动配置，完全手动管理 |
 
 ### 2. 编程式线程池工厂
@@ -371,11 +371,11 @@ executor.enableSlowTaskDetection(1000);
 1. **优先使用配置驱动**：`ydsz.thread.pools.<name>` 创建托管线程池
 2. **编程式补充**：使用本模块的 `ExecutorUtils` 或 `MeteredThreadPoolExecutor` 创建线程池
 3. **通过配置属性定制**：`ydsz.thread.pools.<name>.*` 已支持 `reject-policy`、`allow-core-thread-time-out`、`keep-alive-seconds`、`await-termination-seconds`、`task-decorator-bean-names` 等参数
-4. **覆盖健康检查**：提供自定义 `ThreadHealthIndicator` Bean（名为 `threadHealthIndicator`）替换默认实现
+4. **健康检查**：`ThreadHealthIndicator` 未自动装配，需要时由业务侧显式声明 Bean
 
 ## 健康检查
 
-`ThreadHealthIndicator` 实现 Spring Boot `HealthIndicator` + `ApplicationContextAware`，自动注册到 `/actuator/health` 端点（需业务模块引入 `spring-boot-starter-actuator` 并暴露 health 端点）。
+`ThreadHealthIndicator` 实现 Spring Boot `HealthIndicator` + `ApplicationContextAware`，可注册到 `/actuator/health` 端点（需业务模块引入 `spring-boot-starter-actuator` 并暴露 health 端点，且业务侧显式声明 Bean）。
 
 **激活条件：**
 

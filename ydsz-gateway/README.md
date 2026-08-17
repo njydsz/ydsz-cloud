@@ -16,14 +16,15 @@
 
 ## 核心职责
 
-1. **路由分发**：根据 `path` 转发到对应微服务（基于 Nacos 服务发现 + Java 兜底路由 + Nacos 动态路由模板）
-2. **鉴权拦截**：解析 JWT（含 Caffeine 防击穿缓存）、转发 `X-User-Id` / `X-Tenant-Id` / `X-Trace-Id` 内部头
-3. **限流**：Redis + Lua 令牌桶（IP / 用户二维限流，非 Sentinel）
-4. **CORS**：按环境白名单放行（生产必须显式域名）
-5. **IP 访问控制**：`ydsz.gateway.ip-control.*` 统一黑白名单（Redis 动态黑名单）
-6. **灰度路由**：基于 `X-Gray-Tag` 头 + Nacos `metadata.version` 元数据 + `weight` 权重加权 + `grayRatio` 比例分流
-7. **WebSocket**：仅做握手认证（`/ws` 前缀），实际转发路由需自行配置
-8. **API 版本协商**：`X-API-Version` 头（Path > Header > Query 优先级）+ 网关层 RBAC 路径角色（可选）
+1. **路由分发**：Nacos 动态路由为唯一入口（`gateway-routes.json` JSON 数组格式）+ Java 兜底路由（order=1000）
+2. **鉴权拦截**：解析 JWT（Caffeine 防击穿缓存 + 自适应 TTL，验签切出事件循环）、转发 `X-User-Id` / `X-Tenant-Id` / `X-Trace-Id` 内部头
+3. **限流**：Redis + Lua 令牌桶五维限流（IP / 用户 / 租户 / 应用 / 接口）
+4. **熔断**：Resilience4j 按路由隔离熔断（防下游雪崩）
+5. **CORS**：按环境白名单放行（生产必须显式域名）
+6. **IP 访问控制**：`ydsz.gateway.ip-control.*` 统一黑白名单（Redis 动态黑名单）
+7. **灰度路由**：基于 `X-Gray-Tag` 头 + Nacos `metadata.version` 元数据 + `weight` 权重加权随机 + `grayRatio` 比例分流
+8. **WebSocket**：握手认证 + Origin 校验 + 连接数限制（`/ws` 前缀），实际转发路由需自行配置
+9. **API 版本协商**：`X-API-Version` 头（Path > Header > Query 优先级）+ 网关层 RBAC 路径角色（默认关闭）
 
 ## 数据库表设计
 
@@ -69,43 +70,46 @@ ydsz-gateway/
     │   ├── config/
     │   │   ├── GatewayConstants.java            # 内部头常量
     │   │   ├── GatewayFilterConfig.java         # 过滤器配置 + 错误响应（GatewayExceptionHandler）
+    │   │   ├── GatewayErrorWriter.java          # 统一错误响应写出器（bizCode + ProblemDetail + traceId）
     │   │   ├── GatewayHealthIndicator.java      # 网关健康指标
-    │   │   ├── GatewayHttpClientConfig.java     # HttpClient 连接池配置
+    │   │   ├── GatewayHttpClientConfig.java     # HttpClient 连接池配置（真实连接池指标）
     │   │   ├── GatewayIpUtils.java              # IP 工具类（可信代理链）
     │   │   ├── GatewayMetrics.java              # Prometheus 指标
-    │   │   ├── GatewayRouteConfig.java          # Java 兜底路由（8 条）
-    │   │   ├── GatewayAlertService.java         # 限流/黑名单/502-504 告警（钉钉 webhook）
+    │   │   ├── GatewayRouteConfig.java          # Nacos 动态路由装配 + Java 兜底路由（order=1000）
     │   │   ├── InternalHeaderSigner.java        # 内部头 HMAC 签名
-    │   │   ├── NacosRouteDefinitionRepository.java  # Nacos 路由仓库（routes-nacos.yaml 模板）
-    │   │   ├── PathGuard.java                   # 路径安全防护
-    │   │   ├── RateLimitProperties.java         # 限流配置属性（per-user / per-ip / response-headers）
+    │   │   ├── NacosRouteDefinitionRepository.java  # Nacos 路由仓库（gateway-routes.json 模板）
+    │   │   ├── PathGuard.java                   # 路径安全防护（双层检测）
+    │   │   ├── RateLimitProperties.java         # 限流配置属性（per-ip/user/tenant/app/api）
     │   │   ├── IpAccessControlProperties.java   # IP 黑白名单配置（prefix ydsz.gateway.ip-control）
     │   │   ├── SecurityHeadersProperties.java   # 安全响应头配置属性
     │   │   ├── ApiVersionProperties.java        # API 版本协商配置（prefix ydsz.gateway.api-version）
     │   │   ├── AuthorizationProperties.java     # 网关 RBAC 路径角色配置（默认关闭）
     │   │   ├── CorsProperties.java              # CORS 配置
-    │   │   └── CachedJwtValidator.java          # JWT 校验缓存（防击穿）
+    │   │   ├── WebSocketConnectionLimiter.java  # WebSocket 连接数限制器（Redis 原子计数）
+    │   │   └── CachedJwtValidator.java          # JWT 校验缓存（防击穿/穿透 + 自适应 TTL）
     │   ├── filter/
-    │   │   ├── AccessLogGlobalFilter.java       # 访问日志 + 结构化 JSON
-    │   │   ├── ApiKeyAuthFilter.java            # API Key 认证
-    │   │   ├── AuthGlobalFilter.java            # JWT 解析 + 内部头注入
+    │   │   ├── AccessLogGlobalFilter.java       # 访问日志（JSON 转义 + 采样）
+    │   │   ├── ApiKeyAuthFilter.java            # API Key 认证（SHA-256 摘要比对）
+    │   │   ├── AuthGlobalFilter.java            # JWT 解析 + 内部头注入（验签切出事件循环）
     │   │   ├── AuthorizationFilter.java         # 网关层 RBAC 路径角色（默认关）
+    │   │   ├── CircuitBreakerGlobalFilter.java  # 熔断（Resilience4j，按路由隔离）
     │   │   ├── GrayLoadBalancerRequestFilter.java  # 灰度路由请求过滤器
+    │   │   ├── GrayResponseHeaderFilter.java    # 灰度路由响应头（X-Gray-Hit）
     │   │   ├── IpAccessControlFilter.java       # IP 黑白名单统一过滤（Redis 动态黑名单）
-    │   │   ├── PayloadValidationFilter.java     # 请求体安全校验
-    │   │   ├── RateLimitFilter.java             # Redis 令牌桶多维限流（IP + 用户）
+    │   │   ├── PayloadValidationFilter.java     # 请求体安全校验（大小 + Content-Type）
+    │   │   ├── RateLimitFilter.java             # Redis 令牌桶五维限流（IP/用户/租户/应用/接口）
     │   │   ├── W3CTraceContextFilter.java       # W3C 链路追踪
     │   │   ├── WebSocketAuthFilter.java         # WebSocket 握手认证
     │   │   ├── AuditLogFilter.java              # 审计日志（桥接 sys_audit_log）
     │   │   └── ApiVersionHeaderFilter.java      # API 版本协商（X-API-Version / Sunset 头）
     │   ├── loadbalancer/
-    │   │   ├── GrayLoadBalancer.java            # 权重加权 + 比例分流 + Alias Method O(1)
+    │   │   ├── GrayLoadBalancer.java            # 权重加权随机 + 比例分流 + Alias Method O(1)
     │   │   └── GrayLoadBalancerConfig.java      # 负载均衡器配置（主动健康检查）
     │   └── constant/
     │       └── InternalSignatureHeaderConstants.java
     └── resources/
         ├── bootstrap.yml                       # Nacos 连接 + 端口（9000）
-        ├── routes-nacos.yaml                   # Nacos 动态路由模板（8 条）
+        ├── routes-nacos.yaml                   # Nacos 动态路由模板（JSON 数组格式，8 条）
         ├── config/                             # 环境配置（Nacos DataId）
         │   ├── ydsz-gateway-dev.yaml
         │   ├── ydsz-gateway-sit.yaml
@@ -137,17 +141,20 @@ ydsz-gateway/
 | `ydsz.gateway.httpclient.pool.max-life-time-seconds` | 60 | 最大生命周期（秒） |
 | `ydsz.gateway.httpclient.pool.eviction-interval-seconds` | 60 | 驱逐检查间隔（秒） |
 
-### 限流配置
+### 限流配置（五维度：IP / 用户 / 租户 / 应用 / 接口）
 
 | 配置项 | 默认值 | 说明 |
 |---|---|---|
 | `ydsz.gateway.ratelimit.enabled` | true | 限流总开关 |
-| `ydsz.gateway.ratelimit.per-user.enabled` | true | 用户级限流 |
-| `ydsz.gateway.ratelimit.per-user.default-qps` | 50 | 用户默认 QPS |
-| `ydsz.gateway.ratelimit.per-user.burst-capacity` | 100 | 用户突发容量 |
 | `ydsz.gateway.ratelimit.per-ip.enabled` | true | IP 级限流 |
 | `ydsz.gateway.ratelimit.per-ip.default-qps` | 30 | IP 默认 QPS |
 | `ydsz.gateway.ratelimit.per-ip.burst-capacity` | 60 | IP 突发容量 |
+| `ydsz.gateway.ratelimit.per-user.enabled` | true | 用户级限流 |
+| `ydsz.gateway.ratelimit.per-user.default-qps` | 50 | 用户默认 QPS |
+| `ydsz.gateway.ratelimit.per-user.burst-capacity` | 100 | 用户突发容量 |
+| `ydsz.gateway.ratelimit.per-tenant.enabled` | false | 租户级限流（X-Tenant-Id） |
+| `ydsz.gateway.ratelimit.per-app.enabled` | false | 应用级限流（X-App-Id） |
+| `ydsz.gateway.ratelimit.per-api.enabled` | false | 接口级限流（请求路径） |
 | `ydsz.gateway.ratelimit.response-headers.enabled` | true | 限流响应头 |
 
 ### 安全响应头
@@ -171,12 +178,28 @@ ydsz-gateway/
 | `ydsz.gateway.ip-control.whitelist-skip-paths` | （空） | 白名单跳过路径 |
 | `ydsz.gateway.ip-control.blacklist-enabled` | false | 黑名单开关（支持 Redis 动态更新） |
 
-### 动态路由
+### 动态路由（唯一路由入口）
 
 | 配置项 | 默认值 | 说明 |
 |---|---|---|
-| `ydsz.gateway.dynamic-routes.enabled` | false | Nacos 动态路由开关 |
-| `ydsz.gateway.dynamic-routes.data-id` | gateway-routes.json | 路由配置 DataId |
+| `ydsz.gateway.dynamic-routes.enabled` | true | Nacos 动态路由开关（默认启用） |
+| `ydsz.gateway.dynamic-routes.data-id` | gateway-routes.json | 路由配置 DataId（JSON 数组格式，Group=当前 profile） |
+
+### 熔断（Resilience4j，prefix `ydsz.gateway.circuit-breaker`）
+
+| 配置项 | 默认值 | 说明 |
+|---|---|---|
+| `ydsz.gateway.filter.circuit-breaker` | true | 熔断过滤器开关 |
+| `ydsz.gateway.circuit-breaker.failure-rate-threshold` | 50 | 失败率阈值（%） |
+| `ydsz.gateway.circuit-breaker.wait-duration-in-open-state-ms` | 10000 | OPEN 状态持续时间（ms） |
+| `ydsz.gateway.circuit-breaker.sliding-window-size` | 10 | 滑动窗口大小（次数） |
+| `ydsz.gateway.circuit-breaker.minimum-number-of-calls` | 5 | 最少调用次数 |
+
+### 访问日志采样
+
+| 配置项 | 默认值 | 说明 |
+|---|---|---|
+| `ydsz.gateway.access-log.sample-rate` | 100 | 采样率（0-100，4xx/5xx 全量） |
 
 ### API 版本协商（prefix `ydsz.gateway.api-version`）
 
@@ -199,8 +222,9 @@ ydsz-gateway/
 |---|---|---|
 | `ydsz.gateway.payload-validation.enabled` | true | 请求体校验开关 |
 | `ydsz.gateway.payload-validation.max-body-size-mb` | 10 | 最大请求体大小（MB） |
-| `ydsz.gateway.payload-validation.max-json-depth` | 50 | JSON 最大嵌套深度 |
 | `ydsz.gateway.payload-validation.strict-content-type` | true | 强制校验 Content-Type |
+
+> 网关层仅做传输层防护（大小 + Content-Type），JSON 深度/内容校验由下游解析器负责。
 
 ## 启动
 

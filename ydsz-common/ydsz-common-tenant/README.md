@@ -60,7 +60,7 @@
 
 | 组件 | 传播通道 | 触发条件 |
 |---|---|---|
-| `TenantContextWebFilter` | Web 入口 | 从 JWT claim 与 HTTP header 解析全部字段，设置到 `TenantContextHolder` 与 MDC（order=`HIGHEST_PRECEDENCE + 100`） |
+| `TenantContextWebFilter` | Web 入口 | 从 JWT claim 与 HTTP header 解析全部字段，设置到 `TenantContextHolder` 与 MDC（order=`HIGHEST_PRECEDENCE + 90`） |
 | `TenantContextFeignInterceptor` | Feign 跨服务 | `feign.RequestInterceptor` 在 classpath 时自动装配，将上下文字段透传为 `X-Tenant-*` header |
 | `TenantContextTaskDecorator` | `@Async` / 线程池 | `TaskDecorator` 在 classpath 时自动装配，并通过 `BeanPostProcessor` 自动注入到所有 `ThreadPoolTaskExecutor` |
 | `TenantContextHolder` | TTL 透传 | 基于 `TransmittableThreadLocal`，线程池场景自动传播 |
@@ -87,7 +87,7 @@
 
 ### 7. 租户限流
 
-`TenantRateLimiter` 包装 `common-redis` 的 `RedisRateLimiter`，自动在限流 Key 前添加 `tenant:{tenantId}:` 前缀，提供令牌桶与固定窗口两种算法。
+`TenantRateLimiter` 包装 `common-redis` 的 `RedisRateLimiter`，自动在限流 Key 前添加 `tenant:{tenantId}:` 前缀，提供令牌桶 / 固定窗口 / 滑动窗口三种算法。
 
 ### 8. 租户指标
 
@@ -149,7 +149,7 @@ ydsz:
 | Bean | 条件 | 说明 |
 |---|---|---|
 | `TenantInterceptorProvider` | 总是 | SPI 注册 SQL 拦截器到 MybatisPlusInterceptor 链 |
-| `FilterRegistrationBean<TenantContextWebFilter>` | Web 应用 + `jakarta.servlet.Filter` | order=`HIGHEST_PRECEDENCE + 100` |
+| `FilterRegistrationBean<TenantContextWebFilter>` | Web 应用 + `jakarta.servlet.Filter` | order=`HIGHEST_PRECEDENCE + 90` |
 | `TenantContextFeignInterceptor` | `feign.RequestInterceptor` 在 classpath | Feign 跨服务透传 |
 | `TenantContextTaskDecorator` | `TaskDecorator` 在 classpath | 异步传播装饰器 |
 | `tenantTaskDecoratorPostProcessor` | `ThreadPoolTaskExecutor` 在 classpath | 自动注入 TaskDecorator 到所有线程池 |
@@ -160,14 +160,14 @@ ydsz:
 | `TenantMetrics` | `MeterRegistry` 在 classpath | Micrometer 指标 |
 | `TenantHealthIndicator` | `HealthIndicator` 在 classpath | 健康检查端点 |
 | `TenantDataSourceRouter` | `mode=ISOLATE_DB` + `DynamicRoutingDataSource` | 数据源路由器 |
-| `FilterRegistrationBean<TenantDataSourceFilter>` | `mode=ISOLATE_DB` + Web 应用 | order=`HIGHEST_PRECEDENCE + 90` |
+| `FilterRegistrationBean<TenantDataSourceFilter>` | `mode=ISOLATE_DB` + Web 应用 | order=`HIGHEST_PRECEDENCE + 100` |
 
 ## 配置项
 
 | 配置 | 默认值 | 说明 |
 |---|---|---|
 | `ydsz.tenant.enabled` | `false` | 是否启用多租户（不引入依赖或设为 false 时无任何租户逻辑） |
-| `ydsz.tenant.mode` | `SINGLE` | 隔离模式：`SINGLE` / `MULTI` / `ISOLATE_DB` |
+| `ydsz.tenant.mode` | `SINGLE` | 隔离模式：`SINGLE` / `MULTI` / `ISOLATE_DB` / `SCHEMA` |
 | `ydsz.tenant.tenant-column` | `tenant_id` | 默认租户列名（`tenant-fields` 为空时使用） |
 | `ydsz.tenant.default-claim` | `tenantId` | 默认 JWT claim 名（`tenant-fields` 为空时使用） |
 | `ydsz.tenant.default-header` | `X-Tenant-Id` | 默认 HTTP header 名（`tenant-fields` 为空时使用） |
@@ -407,7 +407,7 @@ com.njydsz.common.tenant/
 - 简化：数据源解析器从 3 层 SPI 合并为 1 个接口 + 内置实现
 
 **收益**：
-- 模块从 35 个类精简至 20 个类，职责边界清晰
+- 模块从 35 个类精简至 24 个类（含 v1.1.0 新增的 TenantColumnScanner / TenantPropertiesAnnotationPopulator / TenantIndexValidator / DatasourceKeyResolver），职责边界清晰
 - 消除对 Redis 的强依赖（lifecycle 模块独立后按需引入）
 - `TenantContextWebFilter` 移除生命周期检查，启动速度提升
 - 双路径上下文收敛为单一路径，降低心智模型复杂度

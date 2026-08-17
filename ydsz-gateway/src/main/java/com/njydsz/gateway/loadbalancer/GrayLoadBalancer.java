@@ -71,7 +71,7 @@ public class GrayLoadBalancer implements ReactorServiceInstanceLoadBalancer {
   /**
    * P3-5: Nacos metadata 中权重标识 key
    *
-   * <p>实例 metadata 中 weight=10 表示该实例权重为 10（默认 1）。 加权轮询时高权重实例获得更多请求。
+   * <p>实例 metadata 中 weight=10 表示该实例权重为 10（默认 1）。 加权随机时高权重实例获得更多请求。
    */
   private static final String METADATA_WEIGHT = "weight";
 
@@ -251,7 +251,7 @@ public class GrayLoadBalancer implements ReactorServiceInstanceLoadBalancer {
       filtered = instances;
     }
 
-    // P3-5: 加权轮询选择（读取 Nacos metadata 中的 weight 字段）
+    // P0-B3: 加权随机选择（Alias Method，读取 Nacos metadata 中的 weight 字段）
     ServiceInstance selected = selectByWeight(filtered);
 
     if (LOG.isDebugEnabled()) {
@@ -271,9 +271,10 @@ public class GrayLoadBalancer implements ReactorServiceInstanceLoadBalancer {
   }
 
   /**
-   * P3-5: 加权轮询选择
+   * P0-B3: 加权随机选择（Alias Method，非加权轮询）
    *
    * <p>P2-7: 使用 Alias Method 优化为 O(1) 选择（实例列表不变时复用预计算表）。 首次构建表为 O(n)，后续每次选择为 O(1)。
+   * 等权重场景退化为轮询。
    *
    * @param instances 候选实例列表
    * @return 选中的实例

@@ -19,12 +19,8 @@ com/njydsz/common/domain/
 ├── config/
 │   ├── DomainAutoConfiguration.java    # Spring Boot 自动装配入口
 │   └── DomainProperties.java           # 深度分页阈值等配置
-├── entity/
-│   ├── BaseEntity.java                 # 领域实体基类（纯领域 + 事件注册）
-│   └── EventRegistry.java              # 领域事件注册接口
 ├── enums/
-│   ├── BaseStatusEnum.java             # 状态枚举统一抽象
-│   └── TypeEnum.java                   # 通用枚举接口（code + desc）
+│   └── BaseStatusEnum.java             # 状态枚举统一抽象
 ├── identity/
 │   └── TypedId.java                    # 编译期类型安全 ID
 ├── query/
@@ -33,15 +29,14 @@ com/njydsz/common/domain/
 │   ├── PageQueryRiskAssessor.java      # 深度分页风险评估器（纯函数）
 │   ├── OrderItem.java                  # 结构化排序项 record
 │   ├── DeepPaginationRisk.java         # 深度分页风险等级枚举（SAFE/WARN/REJECT）
-│   ├── DeepPaginationException.java    # 深度分页拒绝异常
-│   ├── SliceQuery.java                 # 游标分页入参（实验性）
-│   ├── SliceResult.java                # 游标分页出参（实验性）
-│   └── CursorDirection.java            # 游标方向枚举（NEXT/PREV，实验性）
+│   └── DeepPaginationException.java    # 深度分页拒绝异常
 ├── tree/
 │   ├── TreeNode.java                   # 树节点基类（递归泛型）
 │   └── TreeBuilder.java                # 树构建器（O(n)，HashMap 索引）
 └── .gitkeep                            # validation 包已清理
 ```
+
+> 说明：`BaseEntity` / `EventRegistry` / `TypeEnum` / `SliceQuery` / `SliceResult` / `CursorDirection` 6 个类当前**不存在**（历史规划中的领域实体基类与游标分页 API 未落地），实际共 12 个类。
 
 ## API 生命周期状态
 
@@ -51,18 +46,13 @@ com/njydsz/common/domain/
 | `PageQueryRiskAssessor` | ✅ ACTIVE | 深度分页风险评估器（纯函数工具），承担原 PageQuery.assessPaginationRisk 职责 |
 | `BaseQuery` | ✅ ACTIVE | 查询基类 |
 | `OrderItem` | ✅ ACTIVE | 结构化排序项 |
-| `BaseEntity<T>` | ✅ ACTIVE | 领域实体基类 |
-| `EventRegistry` | ✅ ACTIVE | 领域事件注册接口 |
 | `TreeBuilder` / `TreeNode` | ✅ ACTIVE | O(n) 树构建 |
 | `DeepPaginationRisk` | ✅ ACTIVE | 深度分页风险评估枚举 |
 | `DeepPaginationException` | ✅ ACTIVE | 深度分页拒绝异常 |
 | `DomainProperties` | ✅ ACTIVE | 领域配置 |
 | `BaseStatusEnum` | ✅ ACTIVE | 状态枚举统一抽象 |
-| `TypeEnum` | ✅ ACTIVE | 通用枚举接口 |
 | `DomainAutoConfiguration` | ✅ ACTIVE | Spring Boot 自动装配入口 |
 | `TypedId<T>` | 🔬 ADVANCED | 编译期类型安全 ID，需业务方主动落地 |
-| `SliceQuery` / `SliceResult` | 🧪 EXPERIMENTAL | 游标分页专用 API，尚未有业务落地 |
-| `CursorDirection` | 🧪 EXPERIMENTAL | 游标方向，配合 SliceQuery 使用 |
 
 ## 核心能力
 
@@ -145,39 +135,7 @@ List<MenuVO> tree = TreeBuilder.buildSimple(
         MenuVO::getSort);
 ```
 
-### 5. 领域事件（entity 包）
-
-```java
-public class Order extends BaseEntity<Long> {
-    public void pay() {
-        this.status = "PAID";
-        registerEvent(new OrderPaidEvent(this.id, LocalDateTime.now()));
-    }
-}
-```
-
-**事件分派（Repository 层）：**
-```java
-orderRepository.save(order);
-order.pullDomainEvents().forEach(event -> eventPublisher.publishEvent(event));
-```
-
-### 6. 聚合根基类
-
-```java
-public abstract class BaseEntity<T extends Serializable> implements Serializable, EventRegistry {
-    private T id;
-    private String createdBy;
-    private LocalDateTime createdAt;
-    private String updatedBy;
-    private LocalDateTime updatedAt;
-    private transient List<Object> domainEvents;
-
-    // 仅以 id 参与 equals/hashCode（DDD 实体语义）
-}
-```
-
-### 7. 类型安全 ID（identity 包，实验性）
+### 5. 类型安全 ID（identity 包）
 
 ```java
 public record TypedId<T>(Long value) implements Comparable<TypedId<T>> {
@@ -185,8 +143,10 @@ public record TypedId<T>(Long value) implements Comparable<TypedId<T>> {
 }
 
 // 使用：编译期区分 ProjectId / UserId / OrderId
-public class Project extends BaseEntity<TypedId<Project>> { }
+public class Project { private TypedId<Project> id; }
 ```
+
+> 说明：本模块未提供 `BaseEntity` / `EventRegistry` 领域实体基类（历史规划未落地）；领域实体基类统一使用 `ydsz-common-jdbc` 的 `MpBaseEntity`，领域事件由 `ydsz-common-event` 的 `DomainEvent` / `DomainEventPublisher` 提供。
 
 ## 自动装配
 

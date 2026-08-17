@@ -11,7 +11,7 @@ YDSZ 分布式锁框架 — Redis 重入锁 / 公平锁 / 读写锁 / 信号量�
 | **层级** | L4 基础数据层 |
 | **类型** | 公共依赖库（不独立部署） |
 | **作用** | 提供分布式锁、幂等性、防重提交、分布式调度等能力 |
-| **源文件数** | 36 |
+| **源文件数** | 47 |
 | **依赖** | common-core、common-redis、common-cache、common-json、common-auth（optional） |
 
 ## 核心能力
@@ -89,12 +89,11 @@ YDSZ 分布式锁框架 — Redis 重入锁 / 公平锁 / 读写锁 / 信号量�
 
 **锁 Key 前缀：** `ydsz:schedule:`，与业务锁隔离。
 
-### 6. WatchDog 与锁泄漏检测（新增）
+### 6. WatchDog 续期
 
 | 类 | 说明 |
 |---|---|
 | `LockWatchDog` | 看门狗（定时续期锁，防止业务未完成锁过期） |
-| `LockLeakDetector` | 锁泄漏检测器（周期扫描活跃续期任务，告警异常持有） |
 
 **WatchDog 机制：**
 
@@ -106,12 +105,7 @@ YDSZ 分布式锁框架 — Redis 重入锁 / 公平锁 / 读写锁 / 信号量�
 - 使用 `ReentrantLock` 替代 `synchronized`，避免 JDK 21 虚拟线程固定（pinning）
 - `@PreDestroy` 优雅停机，清理所有续期任务
 
-**锁泄漏检测：**
-
-- 每 60 秒扫描一次 `LockWatchDog` 中活跃的续期任务
-- 续期次数 ≥ 最大限制的 80% 时记录 WARN 日志
-- 续期次数达到最大限制时记录 ERROR 日志
-- 检测场景：业务异常导致 `unlock` 未执行、死循环或长时间阻塞、看门狗持续续期但业务未完成
+> 说明：`LockLeakDetector`（锁泄漏检测器）未实现，异常锁持有依赖 `LockWatchDog` 超时自动释放兜底。
 
 ### 7. 锁键校验（新增）
 
@@ -150,7 +144,6 @@ YDSZ 分布式锁框架 — Redis 重入锁 / 公平锁 / 读写锁 / 信号量�
 |---|---|
 | `LockMetrics` | 锁指标收集器（活跃锁数 / 获取成功失败数 / 超时数 / 续期数 / 竞争数） |
 | `LockMetricsConfiguration` | Micrometer 指标自动配置 |
-| `LockMetricsExporter` | 指标导出接口 |
 | `LockMicrometerCollector` | Micrometer 指标采集（锁等待时间 / 持有时间 / 成功率） |
 | `LockHealthIndicator` | 健康检查（Redis PING + 看门狗配置 + 指标汇总，端点 `/actuator/health/lock`） |
 
@@ -173,7 +166,7 @@ Web 场景下若需启用 `RepeatSubmitTokenController` 提供 Token 接口，�
 ydsz:
   lock:
     enabled: true                       # 模块总开关
-    fallback-enabled: true              # Redis 不可用时降级为本地锁
+    fallback-enabled: false             # Redis 不可用时快速失败（默认不降级）
     watchdog-enabled: true              # 看门狗自动续期开关
     max-renew-times: 100                # 看门狗最大续期次数
     scheduler-pool-size: 2              # 续期调度线程池大小
@@ -207,7 +200,6 @@ ydsz:
 | `RepeatSubmitAspect` | 模块启用 |
 | `DistributedScheduledAspect` | 模块启用（LockStrategy 不存在时降级） |
 | `LockHealthIndicator` | `spring-boot-health` 可用 |
-| `LockLeakDetector` | `LockWatchDog` 可用 |
 | `lockAcquireExecutor` | 模块启用（锁获取线程池） |
 | `lockWatchDogScheduler` | 模块启用（续期调度线程池） |
 
@@ -218,7 +210,7 @@ ydsz:
 | 配置 | 默认值 | 说明 |
 |---|---|---|
 | `ydsz.lock.enabled` | `true` | 模块总开关 |
-| `ydsz.lock.fallback-enabled` | `true` | Redis 不可用时降级为本地 `ReentrantLock` |
+| `ydsz.lock.fallback-enabled` | `false` | Redis 不可用时降级为本地 `ReentrantLock`（默认快速失败） |
 | `ydsz.lock.watchdog-enabled` | `true` | 看门狗自动续期开关 |
 | `ydsz.lock.max-renew-times` | `100` | 看门狗最大续期次数（约 30 分钟） |
 | `ydsz.lock.scheduler-pool-size` | `2` | 续期调度线程池大小 |
@@ -376,7 +368,7 @@ try {
 - `acquireSuccessCount` / `acquireFailCount` / `lockTimeoutCount` / `competitionCount`：锁获取成功 / 失败 / 超时 / 竞争次数
 - `watchdogRenewCount`：看门狗续期总次数
 
-Redis 不可用时健康检查返回 DOWN，触发降级策略（若 `fallback-enabled=true`）。
+Redis 不可用时健康检查返回 DOWN，触发降级策略（若 `fallback-enabled=true`，默认 false 快速失败）。
 
 ## 注意事项
 
@@ -442,4 +434,4 @@ Redis 不可用时健康检查返回 DOWN，触发降级策略（若 `fallback-e
 ## 变更记录
 
 - **v1.1.0**（2026-08-15）：新增「命名规范」章节，统一幂等键命名约定（`{namespace}:{domain}:{resource}:{action}`）；在 `docs/checkstyle.xml` 中新增 `@Idempotent` 键名正则校验规则。
-- **v1.0.0**（2026-08-02）：补全 `@RepeatSubmit` 防重提交、`@DistributedScheduled` 分布式调度、`LockLeakDetector` 锁泄漏检测、`LockKeyValidator` 键校验章节；完善配置项表与自动装配说明，新增编程式锁、读写锁、信号量使用示例。
+- **v1.0.0**（2026-08-02）：补全 `@RepeatSubmit` 防重提交、`@DistributedScheduled` 分布式调度、`LockKeyValidator` 键校验章节；完善配置项表与自动装配说明，新增编程式锁、读写锁、信号量使用示例。

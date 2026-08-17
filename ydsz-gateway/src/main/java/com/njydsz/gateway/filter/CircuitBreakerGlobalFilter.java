@@ -87,6 +87,26 @@ public class CircuitBreakerGlobalFilter implements GlobalFilter, Ordered {
 
   private final GatewayMetrics gatewayMetrics;
 
+  /** 失败率阈值（百分比），默认 50 */
+  @org.springframework.beans.factory.annotation.Value("${ydsz.gateway.circuit-breaker.failure-rate-threshold:50}")
+  private int failureRateThreshold;
+
+  /** OPEN 状态持续时间（毫秒），默认 10s */
+  @org.springframework.beans.factory.annotation.Value("${ydsz.gateway.circuit-breaker.wait-duration-in-open-state-ms:10000}")
+  private long waitDurationInOpenStateMs;
+
+  /** 滑动窗口大小（次数），默认 10 */
+  @org.springframework.beans.factory.annotation.Value("${ydsz.gateway.circuit-breaker.sliding-window-size:10}")
+  private int slidingWindowSize;
+
+  /** 最少调用次数（低于此不参与判定），默认 5 */
+  @org.springframework.beans.factory.annotation.Value("${ydsz.gateway.circuit-breaker.minimum-number-of-calls:5}")
+  private int minimumNumberOfCalls;
+
+  /** HALF_OPEN 状态下允许的探测调用数，默认 2 */
+  @org.springframework.beans.factory.annotation.Value("${ydsz.gateway.circuit-breaker.permitted-number-of-calls-in-half-open-state:2}")
+  private int permittedNumberOfCallsInHalfOpenState;
+
   /** 已注册状态指标监听的路由集合（避免重复注册事件监听器） */
   private final Set<String> metricListenersRegistered = ConcurrentHashMap.newKeySet();
 
@@ -117,18 +137,18 @@ public class CircuitBreakerGlobalFilter implements GlobalFilter, Ordered {
   }
 
   /**
-   * 构建默认熔断配置（可通过 {@code ydsz.gateway.circuit-breaker.*} 覆盖）。
+   * 构建熔断配置（P0-A2：可通过 {@code ydsz.gateway.circuit-breaker.*} 覆盖）。
    *
    * @return 熔断器配置
    */
   private CircuitBreakerConfig defaultCircuitBreakerConfig() {
     return CircuitBreakerConfig.custom()
-        .failureRateThreshold(50)
-        .waitDurationInOpenState(Duration.ofSeconds(10))
+        .failureRateThreshold(failureRateThreshold)
+        .waitDurationInOpenState(Duration.ofMillis(waitDurationInOpenStateMs))
         .slidingWindowType(CircuitBreakerConfig.SlidingWindowType.COUNT_BASED)
-        .slidingWindowSize(10)
-        .minimumNumberOfCalls(5)
-        .permittedNumberOfCallsInHalfOpenState(2)
+        .slidingWindowSize(slidingWindowSize)
+        .minimumNumberOfCalls(minimumNumberOfCalls)
+        .permittedNumberOfCallsInHalfOpenState(permittedNumberOfCallsInHalfOpenState)
         .recordExceptions(Throwable.class)
         .build();
   }

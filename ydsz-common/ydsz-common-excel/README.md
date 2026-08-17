@@ -1,13 +1,13 @@
 # ydsz-common-excel
 
-> 高性能 Excel 读写引擎（L5 业务服务层）— 双引擎架构（零 POI 快速路径 + POI 兼容路径）、SAX 流式读、流式写、并发写、模板填充、ASM 字节码加速、列式存储、公式注入防护。
+> 高性能 Excel 读写引擎（L5 业务服务层）— 双引擎架构（零 POI 快速路径 + POI 兼容路径）、SAX 流式读、流式写、模板填充、ASM 字节码加速、公式注入防护。
 
 **当前版本**：v1.0.0，**已实现核心能力**：XLS/XLSX 读写（双引擎）、Sheet 流式解析（大文件不 OOM）、并发写入（多线程分片预序列化）、模板填充、公式注入防护、Micrometer 指标采集、Spring Boot 自动装配 + Actuator 健康检查。
 
 **后续版本路线图**：
 - **v1.1.0**：Tabular 统一 API 落地（CSV/TSV Reader/Writer 实现）、JMH 性能回归基线
 - **v1.2.0**：xls 格式流式读取优化、DataValidator 注解全覆盖、模板严格模式（strictMode）
-- **v2.0.0**：Parquet/ORC 列式存储读写、动态合并单元格回调
+- **v2.0.0**：动态合并单元格回调、性能优化
 
 ## 模块定位
 
@@ -15,7 +15,7 @@
 |---|---|
 | **层级** | L5 业务服务层 |
 | **类型** | 公共依赖库（不独立部署） |
-| **源文件数** | 80+ |
+| **源文件数** | 78 |
 | **版本** | 1.0.0 |
 | **依赖** | ydsz-common-exception、Apache POI、ASM、SLF4J、Micrometer（可选）、Spring Boot（可选） |
 
@@ -30,7 +30,7 @@
 | `ExcelWriter` | Excel 写入器（链式 sheet / headRowNumber / doWrite） |
 | `ExcelSheetInfo` | Sheet 元信息查询（名称、数量、信息列表） |
 | `ExcelTemplateWriter` | 模板填充（保留模板样式、公式，可指定数据起始行） |
-| `ConcurrentExcelWriter` | 并发写入（多线程分片预序列化 + 顺序写入 ZIP，OOXML 顺序约束下接近线性加速） |
+| `ExcelExportHelper` | Web 导出助手（HttpServletResponse 下载） |
 
 ### 2. SAX 流式读（大文件不 OOM）
 
@@ -114,53 +114,25 @@
 - 生成类数量阈值 `MAX_GENERATED_CLASS_COUNT = 5000`，超限自动降级到 MethodHandle / 反射，防止 Metaspace OOM
 - ASM 生成失败时无缝回退到 MethodHandle，再回退到原生反射
 
-### 7. 性能对象池
+### 7. 缓存
 
 | 类 | 说明 |
 |---|---|
-| `ObjectPool<T>` | 通用对象池（ConcurrentLinkedQueue 无锁 borrow / release + 校验器 + 泄漏检测） |
-| `StylePool` | 单元格样式池（LRU 缓存 + StyleKey Builder 模式，默认容量 1000） |
-| `GlobalObjectPool` | 全局对象池单例（多类型池统一管理 + StringPool / DatePool intern 优化） |
 | `LRUCache<K,V>` | LRU 缓存（LinkedHashMap accessOrder + 命中率统计 + 懒加载 `getOrLoad`） |
+| `ClassMetadataCache` / `ReflectCache` | 类元数据 / 反射缓存（减少重复反射开销） |
 
-对象池特性：
-
-- `ObjectPool` 支持 `PooledObject` 自动关闭包装器（try-with-resources）
-- 泄漏检测超时默认 5 分钟，超时记录 WARN 日志
-- 100K 行场景下减少 50-70% 对象创建，降低 GC 压力 30-40%
-
-### 8. 列式存储
-
-| 类 / 枚举 | 说明 |
-|---|---|
-| `ColumnarType` | 列式类型枚举（BOOLEAN / INT32 / INT64 / FLOAT / DOUBLE / STRING / BINARY / DATE / TIMESTAMP / DECIMAL，屏蔽 Parquet/ORC 底层差异） |
-| `ColumnarField` | 列式字段元数据（name / type / nullable / precision / scale / comment，Builder 模式） |
-| `ColumnarSchema` | 列式表结构（有序字段列表 + 索引映射 + headerNames） |
-| `ColumnarRowMapper<T>` | 列式行映射器（`Object[]` 输入输出，避免 String 反复转换） |
-| `ColumnarConfig` | 列式通用配置基类（batchSize / compression / enableDictionary / withHeader） |
-| `ParquetConfig` | Parquet 配置（rowGroupSize=128MB / pageSize=1MB / WriteMode=CREATE\|OVERWRITE） |
-| `OrcConfig` | ORC 配置（stripeSize=64MB / indexStride=10000 / WriteStrategy=COMPRESSION\|SPEED） |
-| `ColumnarCompression` | 压缩编解码器（NONE / SNAPPY / GZIP / LZ4 / ZSTD，默认 SNAPPY） |
-
-Parquet/ORC 类型映射详见 `ColumnarType` 类内表格。
-
-### 9. Tabular 统一 API
+### 8. Tabular 统一 API
 
 | 类 / 接口 | 说明 | 状态 |
 |---|---|---|
-| `TabularFormat` | 统一格式枚举（EXCEL_XLS / EXCEL_XLSX / CSV / TSV / PARQUET / ORC） | ✅ 已完成 |
-| `TabularReader<T>` | 统一读取接口 | ✅ 接口已完成，XLS/XLSX 实现可用 |
-| `TabularWriter<T>` | 统一写入接口 | ✅ 接口已完成，XLS/XLSX 实现可用 |
 | `TabularRowMapper<T>` | 统一行映射器 | ✅ 已完成 |
-| `TabularReadContext` | 读取上下文 | ✅ 已完成 |
-| `TabularWriteContext` | 写入上下文 | ✅ 已完成 |
 | `TabularReadListener<T>` | 读取监听器 | ✅ 已完成 |
-| `TabularWriteListener` | 写入监听器 | ✅ 已完成 |
-| CSV / TSV Reader/Writer | 文本分隔格式具体实现 | 🚧 v1.1.0 |
-| Parquet Reader/Writer | Parquet 列式存储读写 | 🚧 v2.0.0 |
-| ORC Reader/Writer | ORC 列式存储读写 | 🚧 v2.0.0 |
+| CSV / TSV Reader/Writer | 文本分隔格式 | 🚧 规划中 |
+| Parquet / ORC 列式存储读写 | 列式存储 | 🚧 规划中（当前未实现） |
 
-### 10. 事件回调
+> 说明：`TabularFormat` / `TabularReader` / `TabularWriter` / `TabularReadContext` / `TabularWriteContext` 等接口与列式存储（`Columnar*` / `ParquetConfig` / `OrcConfig`）当前**未实现**；对象池（`ObjectPool` / `StylePool` / `GlobalObjectPool`）已移除，单元格样式通过 `StyleManager`（LRU）管理。
+
+### 9. 事件回调
 
 | 接口 | 说明 |
 |---|---|
@@ -170,15 +142,15 @@ Parquet/ORC 类型映射详见 `ColumnarType` 类内表格。
 | `AnalysisContext` | 读取分析上下文（当前行号、总行数、Sheet 信息） |
 | `WriteContext` | 写入上下文（已写行数、Sheet 信息） |
 
-### 11. 公式注入防护
+### 10. 公式注入防护
 
 | 类 | 说明 |
 |---|---|
 | `FormulaInjectionGuard` | 公式注入防护工具类（检测 `=` / `+` / `-` / `@` 前缀，自动添加 `'` 前缀转义） |
 
-默认开启（`ydsz.excel.formula-injection-protection=true`），覆盖所有写入路径（`SuperFastExcelWriter` / `ValueFormatter` / `ConcurrentExcelWriter`）。
+默认开启（`ydsz.excel.formula-injection-protection=true`），覆盖所有写入路径（`SuperFastExcelWriter` / `ValueFormatter`）。
 
-### 12. Spring 集成
+### 11. Spring 集成
 
 | 类 | 说明 |
 |---|---|
@@ -260,7 +232,7 @@ public class UserService {
 | `ydsz.excel.compression-level` | `1`（BEST_SPEED） | ZIP 压缩级别（-1~9） |
 | `ydsz.excel.formula-injection-protection` | `true` | 是否启用公式注入防护 |
 | `ydsz.excel.strict-number-conversion` | `false` | 是否启用严格数字转换（失败抛异常） |
-| `ydsz.excel.use-1904-windowing` | `false` | 是否使用 1904 日期窗口（Mac 版 Excel 兼容） |
+> 说明：`ydsz.excel.use-1904-windowing` 配置**不生效**（`ExcelProperties` 无此字段，1904 日期窗口由 `ExcelConfig.use1904Windowing` 承载但未从 properties 绑定）。
 | `ydsz.excel.head-row-number` | `1` | 默认表头行号 |
 | `ydsz.excel.write-cache-size` | `100` | SXSSF 写入缓存行数 |
 
@@ -312,56 +284,15 @@ ExcelFacade.writeWithTemplate("template.xlsx", "output.xlsx", User.class)
     .doWrite(userList);
 ```
 
-### 4. 并发写入
+### 4. 模板填充 / 注解驱动
+
+> 并发写入器（`ConcurrentExcelWriter`）与列式存储导出（Parquet）当前**未实现**。超大数据写请使用 `SuperFastExcelWriter` 流式写入，模板填充使用 `ExcelTemplateWriter`。
+
+### 5. 读取与转换
 
 ```java
-import com.njydsz.common.excel.core.ConcurrentExcelWriter;
-
-ConcurrentExcelWriter.write("output.xlsx", User.class, largeDataList)
-    .parallelism(4)
-    .chunkSize(10000)
-    .doWrite();
-```
-
-### 5. 列式存储导出（Parquet）
-
-```java
-import com.njydsz.common.excel.columnar.ColumnarCompression;
-import com.njydsz.common.excel.columnar.ColumnarField;
-import com.njydsz.common.excel.columnar.ColumnarSchema;
-import com.njydsz.common.excel.columnar.ColumnarType;
-import com.njydsz.common.excel.columnar.ParquetConfig;
-
-ColumnarSchema schema = ColumnarSchema.builder()
-    .addField(ColumnarField.of("id", ColumnarType.INT64, false))
-    .addField(ColumnarField.of("name", ColumnarType.STRING, true))
-    .addField(ColumnarField.builder("amount", ColumnarType.DECIMAL)
-        .precision(18).scale(2).build())
-    .build();
-
-ParquetConfig config = ParquetConfig.builder()
-    .compression(ColumnarCompression.SNAPPY)
-    .rowGroupSize(128L * 1024L * 1024L)
-    .pageSize(1024 * 1024)
-    .build();
-```
-
-### 6. Tabular 统一 API
-
-> **注意**：Tabular 统一 API 目前仅完成了 `TabularReader` / `TabularWriter` 接口定义和 `TabularFormat` 枚举，
-> 以及 XLS/XLSX 格式的底层实现。CSV / TSV / Parquet / ORC 的具体 Reader / Writer 实现尚在规划中，
-> 预期将在后续版本中逐步补齐。当前若需处理 CSV / TSV，可直接使用 `ExcelFacade.read()` 加载 `.csv` 文件，
-> 底层将自动根据扩展名选择对应的解析引擎。
-
-```java
-import com.njydsz.common.excel.tabular.TabularFormat;
-
-// 识别文件格式
-TabularFormat format = TabularFormat.fromExtension("users.csv").orElseThrow();
-if (format.isDelimited()) {
-    // CSV/TSV 格式 - 当前版本建议通过 ExcelFacade 读取
-    List<User> users = ExcelFacade.read("users.csv", User.class).doReadAll();
-}
+// 读取 CSV（按扩展名自动选择解析引擎）
+List<User> users = ExcelFacade.read("users.csv", User.class).doReadAll();
 ```
 
 ### 7. 自定义类型转换器
@@ -398,10 +329,7 @@ ConverterRegistry.registerCustomConverter(new MyTypeConverter());
 | `CellValueConverter` | 单元格值转换器（`supports` + `priority` 控制优先级） |
 | `ReadListener<T>` | 读取监听器（流式回调 + 批量回调 + 进度回调） |
 | `ReadHandler` / `WriteHandler` | 读写处理器（行 / 单元格级钩子） |
-| `TabularRowMapper<T>` | 统一行映射器（Excel / CSV / TSV / Parquet / ORC 通用） |
-| `ColumnarRowMapper<T>` | 列式行映射器（基于 `ColumnarSchema`，`Object[]` 传递） |
-| `TabularReadListener<T>` / `TabularWriteListener` | Tabular 统一监听器 |
-| `ObjectPool.ObjectFactory<T>` / `ObjectPool.Resetter<T>` | 对象池工厂与重置器 |
+| `TabularRowMapper<T>` | 统一行映射器 |
 
 ## 性能优化建议
 
@@ -409,11 +337,7 @@ ConverterRegistry.registerCustomConverter(new MyTypeConverter());
 |---|---|---|
 | 大文件读（>10MB） | `use-fast-reader: true` + `streaming-parse-threshold-mb: 10` | SuperFastExcelReader 内存占用仅 ~50MB，POI 用户模式 ~500MB |
 | 大文件写（>10万行） | `use-fast-writer: true` | SuperFastExcelWriter 绕过 POI 对象模型，1MB 行级缓冲 |
-| 超大数据写（>100万行） | `ConcurrentExcelWriter.parallelism(CPU核数)` | 多线程分片预序列化 + 顺序写入，接近线性加速 |
-| 高频小对象 | 注入 `ObjectPool` / `GlobalObjectPool` | 减少 GC 压力 30-40% |
 | 字段反射热点 | 默认启用 ASM（无需配置） | ASM Getter 比反射快 30 倍 |
-| 低基数列存储 | `ColumnarCompression.SNAPPY` + `enableDictionary: true` | 字典编码显著减小文件体积 |
-| 临时对象复用 | `GlobalObjectPool.borrowObject` / `returnObject` | 池化复用，try-with-resources 自动归还 |
 
 ASM 加速启用条件：
 
@@ -463,12 +387,10 @@ ASM 加速启用条件：
 
 - **公式注入防护**：默认开启，覆盖所有写入路径。如业务确实需要写入公式（`@ExcelProperty.formula()`），公式本身不会被防护，但用户数据中的 `=` / `+` / `-` / `@` 前缀会被自动转义
 - **大文件内存配置**：读取大于 `streamingParseThresholdMB`（默认 10MB）的文件时自动切换临时文件管道，确保 `java.io.tmpdir` 可写（健康检查会监控）
-- **样式池容量**：`StylePool` 默认容量 1000，超过 LRU 淘汰。如自定义样式种类极多，可通过构造器调整 `new StylePool(maxSize)`
+- **样式管理**：单元格样式由 `StyleManager`（LRU）统一管理，自定义样式种类极多时可调整容量
 - **ASM 降级**：生成类超过 5000 自动降级，可通过 `ASMFieldAccessor.clearCache()` 手动重置
-- **对象池泄漏**：`ObjectPool.borrow()` 必须配对 `release()`，推荐使用 `borrowAutoClose()` + try-with-resources
 - **SXSSF 缓存**：`write-cache-size` 默认 100 行，写超大数据时建议调大（如 1000），但会增加内存占用
-- **1904 日期窗口**：Mac 版 Excel 默认使用 1904 日期系统，读取此类文件需开启 `use-1904-windowing: true`
 
 ## 变更记录
 
-- **v1.0.0**（2026-08-02）：中文化 README + 补全 ASM 字节码加速、列式存储（Parquet/ORC）、Tabular 统一 API、注解（`@ExcelHead` / `@ContentStyle` / `@ContentFont`）、性能对象池（`ObjectPool` / `StylePool` / `GlobalObjectPool` / `LRUCache`）章节
+- **v1.0.0**（2026-08-02）：中文化 README + 补全 ASM 字节码加速、注解（`@ExcelHead` / `@ContentStyle` / `@ContentFont`）等章节。v2.x 移除对象池 / 列式存储（Parquet/ORC）/ 并发写入器（未落地实现）。

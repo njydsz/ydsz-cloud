@@ -1,6 +1,6 @@
 # ydsz-common-web
 
-YDSZ PC Web 端基座 — 继承 `common-base`，叠加 Spring Security 集成、WebAuthFilter 认证过滤器、Session 管理、API 版本路由、Multipart 文件上传、响应压缩、Webhook 调度、优雅停机、OpenAPI 配置、健康检查与指标采集。
+YDSZ PC Web 端基座 — 继承 `common-base`，叠加 Spring Security 集成、WebAuthFilter 认证过滤器、Session 管理、API 版本路由、Multipart 文件上传、Webhook 调度、优雅停机、OpenAPI 配置、健康检查与指标采集。
 
 ## 模块定位
 
@@ -10,7 +10,7 @@ YDSZ PC Web 端基座 — 继承 `common-base`，叠加 Spring Security 集成�
 | **类型** | 公共依赖库（不独立部署） |
 | **继承** | common-base |
 | **面向** | PC Web 端微服务（10 个部署单元中的 9 个） |
-| **作用** | 提供 PC Web 服务的 MVC / 认证 / 会话 / API 版本 / Multipart / 压缩 / Webhook / 优雅停机等基座能力 |
+| **作用** | 提供 PC Web 服务的 MVC / 认证 / 会话 / API 版本 / Multipart / Webhook / 优雅停机等基座能力 |
 
 ## 核心能力
 
@@ -62,19 +62,18 @@ YDSZ PC Web 端基座 — 继承 `common-base`，叠加 Spring Security 集成�
 | `ApiVersionCondition` | 版本路由条件（实现 `RequestCondition`，按策略从请求提取版本并与注解版本匹配，支持主版本兼容匹配，版本号大者优先） |
 | `ApiVersionRequestMappingHandlerMapping` | 自定义 `RequestMappingHandlerMapping`（在 `getCustomMethodCondition` / `getCustomTypeCondition` 中扫描 `@ApiVersion` 并返回 `ApiVersionCondition`） |
 | `ApiVersionAutoConfiguration` | 自动配置（实现 `WebMvcRegistrations`，替换默认 `RequestMappingHandlerMapping`） |
-| `ApiVersionProperties` | 配置属性（策略 / 默认版本 / 头名称 / 废弃版本 / Sunset 头等） |
-| `VersionStrategy` | 版本提取策略枚举（`URL` / `HEADER` / `ACCEPT`） |
+| `ApiVersionProperties` | 配置属性（enabled / default-version / current-version / validate / flexible-matching） |
+| `VersionStrategy` | 版本提取策略枚举（`URL`） |
 
 **版本提取策略：**
 
 - `URL`：从 URL 路径提取，如 `/v1/api/users` → `"1"`（正则 `/v(\d+(?:\.\d+)?)`）
-- `HEADER`：从请求头提取，默认头名 `X-API-Version`，如 `X-API-Version: 1.0` → `"1.0"`
-- `ACCEPT`：从 Accept 头提取，如 `application/vnd.ydsz.v1+json` → `"1"`
+
+> 说明：`HEADER` / `ACCEPT` 两种版本提取策略未实现；主版本兼容匹配（`"1"` 匹配 `"1.0"`）需开启 `flexible-matching=true` 且为单向匹配。
 
 **匹配规则：**
 
 - 未携带版本信息时使用 `default-version` 兜底
-- 支持主版本兼容匹配：`"1"` 匹配 `"1.0"`，`"1.0"` 匹配 `"1"`
 - 多个候选版本时版本号大者优先（`v2` > `v1`）
 
 ### 6. Multipart 文件上传
@@ -93,33 +92,16 @@ YDSZ PC Web 端基座 — 继承 `common-base`，叠加 Spring Security 集成�
 - 业务方仍可通过自定义 `MultipartConfigElement` Bean 进一步覆盖
 - 设置 `ydsz.web.multipart.enabled=false` 可回退到 Spring Boot 默认
 
-### 7. 响应压缩
+### 7. Webhook 调度
 
-基于 GZIP 对符合条件的 HTTP 响应进行压缩，减少网络传输量。
-
-| 类 | 说明 |
-|---|---|
-| `ResponseCompressionConfiguration` | 自动配置（注册 `ResponseCompressionFilter`，过滤器顺序 `HIGHEST_PRECEDENCE + 100`，确保在大多数过滤器之后执行） |
-| `ResponseCompressionProperties` | 配置属性（enabled / min-response-size / mime-types / excluded-user-agents） |
-| `ResponseCompressionFilter` | GZIP 压缩过滤器（包装响应输出流，按条件压缩） |
-| `WebContentCacheProperties` | 请求体缓存属性（控制 `ContentCachingFilter` 最大缓存字节，默认 2MB，防 OOM） |
-
-**压缩条件（全部满足才压缩）：**
-
-- 响应体大小 ≥ `min-response-size`（默认 2KB，避免小响应压缩后反而变大）
-- 响应 `Content-Type` 在 `mime-types` 列表中（默认包含 JSON / XML / HTML / CSS / JS / SVG 等 10 种）
-- 客户端 `Accept-Encoding` 包含 `gzip`
-- `User-Agent` 不在 `excluded-user-agents` 列表中（默认排除 IE6 / Netscape 4）
-
-### 8. Webhook 调度
-
-提供 Webhook 统一投递能力，避免各业务模块（message / workflow / project 等）重复实现 HTTP 投递、签名、重试逻辑。
+提供 Webhook 统一投递能力，避免各业务模块（message / workflow 等）重复实现 HTTP 投递、签名、重试逻辑。
 
 | 类 | 说明 |
 |---|---|
 | `WebhookDispatcher` | 投递器接口（`register` / `unregister` / `dispatch`） |
 | `DefaultWebhookDispatcher` | 默认实现（内存 `ConcurrentHashMap` 管理订阅，`RestTemplate` 投递，HMAC-SHA256 签名，3 次指数退避重试，`@ConditionalOnMissingBean` 守卫允许业务方覆盖） |
 | `WebhookSubscription` | 订阅模型（id / callbackUrl / eventTypes / secret / enabled / sourceModule，`@Builder` 构建） |
+| `WebhookProperties` | 配置属性（prefix `ydsz.webhook`：enabled / connect-timeout-ms / read-timeout-ms / max-connections） |
 
 **投递流程：**
 
@@ -130,7 +112,9 @@ YDSZ PC Web 端基座 — 继承 `common-base`，叠加 Spring Security 集成�
 
 > **扩展点**：`DefaultWebhookDispatcher` 通过 `@ConditionalOnMissingBean(WebhookDispatcher.class)` 注册，业务方可自定义 `WebhookDispatcher` Bean 覆盖默认实现（如基于 Redis 持久化订阅、异步线程池投递、消息队列削峰等）。
 
-### 9. 优雅停机
+> **响应压缩**：`ResponseCompressionConfiguration` / `ResponseCompressionFilter` / `ResponseCompressionProperties` 及 `ydsz.web.compression.*` 配置**未实现**（历史上曾规划，已移除）。如需要 GZIP 压缩，建议由网关层（`ydsz-gateway`）或部署层（Nginx/网关）承担。
+
+### 8. 优雅停机
 
 提供 Web 端优雅停机的可观测性支持，监听容器生命周期事件并输出日志。
 
@@ -155,7 +139,7 @@ YDSZ PC Web 端基座 — 继承 `common-base`，叠加 Spring Security 集成�
 | `SecurityHeaderFilter` | 安全头过滤器（`@ConditionalOnBean` 守卫） |
 | `ContentCachingFilter` | 内容缓存过滤器（基于 `WebContentCacheProperties` 配置） |
 | `WebAuthFilter` | Web 认证过滤器 |
-| `ResponseCompressionFilter` | GZIP 响应压缩过滤器 |
+| `TenantMdcFilter` | 租户 MDC 上下文过滤器 |
 
 ### 11. 配置族
 
@@ -177,7 +161,7 @@ YDSZ PC Web 端基座 — 继承 `common-base`，叠加 Spring Security 集成�
 
 ### 异常处理
 
-异常处理由 `common-exception` 模块的 `MvcExceptionHandler` 统一负责（15+ 个 `@ExceptionHandler` 方法，i18n + 动态 HTTP 状态码 + ProblemDetail 格式切换），本模块不再注册独立的异常处理器，避免重复设计。
+异常处理由 `common-exception` 模块的 `MvcExceptionHandler` 统一负责（15+ 个 `@ExceptionHandler` 方法，i18n + 动态 HTTP 状态码 + ProblemDetail 格式切换），本模块仅保留 `ExcelMvcExceptionHandler`（Excel 异常桥接）作为补充。
 
 ## 接入方式
 
@@ -192,7 +176,7 @@ YDSZ PC Web 端基座 — 继承 `common-base`，叠加 Spring Security 集成�
 
 ### 2. 启动类
 
-无需额外注解，自动配置通过 `@AutoConfiguration` + Spring Boot 自动装配机制激活。引入依赖后，PC Web 端微服务默认启用 MVC、认证、Trace、CORS、API 版本、Multipart、压缩、优雅停机日志等能力。
+无需额外注解，自动配置通过 `@AutoConfiguration` + Spring Boot 自动装配机制激活。引入依赖后，PC Web 端微服务默认启用 MVC、认证、Trace、CORS、Multipart、优雅停机日志等能力。
 
 ### 3. 配置示例
 
@@ -248,9 +232,8 @@ spring:
 | `WebSecurityConfiguration` | Spring Security 可用时激活 |
 | `WebSessionAutoConfiguration` | Servlet Web 应用 + `spring-session-data-redis` 时激活 |
 | `UserAgentConfiguration` | `yauaa` 在 classpath 时激活 |
-| `ApiVersionAutoConfiguration` | Servlet Web 应用 + `ydsz.web.api-version.enabled=true`（默认启用） |
+| `ApiVersionAutoConfiguration` | Servlet Web 应用 + `ydsz.api.version.enabled=true`（默认**禁用**） |
 | `WebMultipartAutoConfiguration` | Servlet Web 应用 + `MultipartConfigElement` 在 classpath + `ydsz.web.multipart.enabled=true`（默认启用） |
-| `ResponseCompressionConfiguration` | Servlet Web 应用 + `ydsz.web.compression.enabled=true`（默认启用） |
 | `WebGracefulShutdownAutoConfiguration` | Servlet Web 应用 + `ydsz.web.shutdown.log-enabled=true`（默认启用） |
 
 ## 配置项
@@ -290,9 +273,9 @@ spring:
 
 | 配置 | 默认值 | 说明 |
 |---|---|---|
-| `ydsz.web.api-version.enabled` | `true` | API 版本路由自动配置开关（`@ConditionalOnProperty` 门控） |
-| `ydsz.api.version.enabled` | `true` | 请求时是否执行版本匹配（关闭后所有请求直接放行） |
-| `ydsz.api.version.strategy` | `URL` | 版本提取策略（`URL` / `HEADER` / `ACCEPT`） |
+| `ydsz.web.api-version.enabled` | `false` | API 版本路由自动配置开关（`@ConditionalOnProperty` 门控，默认禁用） |
+| `ydsz.api.version.enabled` | `false` | 请求时是否执行版本匹配（关闭后所有请求直接放行） |
+| `ydsz.api.version.strategy` | `URL` | 版本提取策略（仅 `URL`） |
 | `ydsz.api.version.default-version` | `"1"` | 请求未携带版本时的兜底版本 |
 | `ydsz.api.version.header-name` | `X-API-Version` | `HEADER` 策略下的请求头名称 |
 | `ydsz.api.version.current-version` | `v1` | 当前 API 版本标识 |
@@ -313,12 +296,7 @@ spring:
 
 ### 响应压缩
 
-| 配置 | 默认值 | 说明 |
-|---|---|---|
-| `ydsz.web.compression.enabled` | `true` | 响应压缩开关 |
-| `ydsz.web.compression.min-response-size` | `2048`（2KB） | 最小响应体大小，小于不压缩 |
-| `ydsz.web.compression.mime-types` | JSON / XML / HTML / CSS / JS / SVG 等 10 种 | 需要压缩的 MIME 类型列表 |
-| `ydsz.web.compression.excluded-user-agents` | `["MSIE 6", "Mozilla/4"]` | 排除压缩的 User-Agent 模式 |
+> 说明：`ydsz.web.compression.*` 配置组**不存在**——响应压缩能力未实现，建议由网关层或部署层承担。
 
 ### Webhook / 优雅停机
 
@@ -436,7 +414,6 @@ public class MessageWebhookService {
 `WebMvcConfiguration` 继承 `BaseMvcConfiguration` 并重写 `addInterceptors`，注册 Web 端专属拦截器：
 
 - `RequestLogInterceptor`（请求日志 + HTTP 指标埋点，order = `INTERCEPTOR_REQUEST_LOG`）
-- `BaseHttpInterceptor`（请求上下文清理，order = `REQUEST_CONTEXT_CLEANUP`）
 
 业务方实现 `WebMvcConfigurer` 或继承 `WebMvcConfiguration` 可追加自定义拦截器。
 
@@ -522,14 +499,14 @@ ydsz:
 
 ## 注意事项
 
-1. **API 版本配置前缀差异**：自动配置开关通过 `ydsz.web.api-version.enabled` 控制（`@ConditionalOnProperty`），而版本路由属性（策略 / 默认版本 / 废弃版本等）绑定到 `ydsz.api.version.*` 前缀（`@ConfigurationProperties`）。两者前缀不同，配置时需分别填写。
+1. **API 版本配置前缀差异**：自动配置开关与路由属性统一绑定到 `ydsz.api.version.*` 前缀（`@ConfigurationProperties`），默认禁用（`enabled=false`），需要时显式开启。
 2. **Multipart 与 Spring Boot 默认**：启用本模块后 `max-file-size` 默认提升至 50MB。如需回退 Spring Boot 默认（1MB / 10MB），设置 `ydsz.web.multipart.enabled=false`。
-3. **响应压缩与 Tomcat 内置压缩**：本模块的 `ResponseCompressionFilter` 与 Servlet 容器内置的 `server.compression.*` 是两套独立机制，建议二选一，避免重复压缩。
+3. **响应压缩**：未实现（`ydsz.web.compression.*` 配置不生效），建议由网关层（`ydsz-gateway`）或部署层（Nginx）承担。
 4. **Webhook 默认实现为内存态**：`DefaultWebhookDispatcher` 的订阅信息存于内存 `ConcurrentHashMap`，应用重启后丢失。生产环境建议自定义实现持久化订阅。
 5. **Webhook 依赖 RestTemplate**：默认实现通过 `ObjectProvider<RestTemplate>` 获取 `RestTemplate`，若上下文未配置将跳过投递并输出警告日志。
 6. **优雅停机需应用层启用**：本模块仅提供停机日志可观测性，真正的「拒绝新请求 + 等待在飞请求」需配置 `server.shutdown=graceful` + `spring.lifecycle.timeout-per-shutdown-phase`。
-7. **异常处理归属**：本模块不注册独立异常处理器，统一由 `common-exception` 的 `MvcExceptionHandler` 负责，避免重复设计。
+7. **异常处理归属**：异常统一由 `common-exception` 的 `MvcExceptionHandler` 负责，本模块仅保留 `ExcelMvcExceptionHandler` 桥接。
 
 ## 变更记录
 
-- **v1.0.0**（2026-08-02）：补全 API 版本控制、Multipart 文件上传、响应压缩、Webhook 调度、优雅停机五大块章节；新增接入方式、使用示例、注意事项章节；扩充配置项与自动配置表。
+- **v1.0.0**（2026-08-02）：补全 API 版本控制、Multipart 文件上传、Webhook 调度、优雅停机章节；新增接入方式、使用示例、注意事项章节；扩充配置项与自动配置表。响应压缩章节已删除（未实现）。

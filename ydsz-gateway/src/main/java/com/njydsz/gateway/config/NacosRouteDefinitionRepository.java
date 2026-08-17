@@ -225,10 +225,21 @@ public class NacosRouteDefinitionRepository implements RouteDefinitionRepository
                  */
                 @Override
                 public void receiveConfigInfo(String configInfo) {
-                  log.info("[NacosRoutes] 检测到路由配置变更 dataId={} group={}", dataId, group);
+                  // P0-B5: 路由变更审计——记录变更时间、来源配置与路由条数，供变更追溯
+                  int routeCount = routeCache.get().size();
+                  log.info(
+                      "[NacosRoutes] 检测到路由配置变更 dataId={} group={} 变更前路由数={} (触发时间={})",
+                      dataId,
+                      group,
+                      routeCount,
+                      java.time.OffsetDateTime.now());
                   loadRoutesFromNacos();
                   eventPublisher.publishEvent(new RefreshRoutesEvent(this));
-                  log.info("[NacosRoutes] 已触发路由刷新事件");
+                  log.info(
+                      "[NacosRoutes] 已触发路由刷新事件 dataId={} group={} 变更后路由数={}",
+                      dataId,
+                      group,
+                      routeCache.get().size());
                 }
 
                 /**

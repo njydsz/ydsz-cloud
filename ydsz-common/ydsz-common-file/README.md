@@ -223,7 +223,7 @@ ydsz:
 
 | 配置 | 默认值 | 说明 |
 |---|---|---|
-| `ydsz.file.lifecycle.enabled` | false | 是否启用文件生命周期清理 |
+| `ydsz.file.lifecycle.enabled` | true | 是否启用文件生命周期清理 |
 | `ydsz.file.lifecycle.cron` | `0 0 2 * * ?` | 定时清理 Cron 表达式（默认每天凌晨 2 点） |
 | `ydsz.file.lifecycle.bucket` | - | 目标存储桶（为空时使用默认桶） |
 | `ydsz.file.lifecycle.dry-run` | false | 是否仅模拟执行（true 时只打印日志不实际删除） |

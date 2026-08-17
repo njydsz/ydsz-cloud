@@ -100,6 +100,9 @@
         "args": { "pattern": "/api/v1/agent/**" }
       }
     ],
+    "metadata": {
+      "response-timeout": 120000
+    },
     "order": 0
   },
   {

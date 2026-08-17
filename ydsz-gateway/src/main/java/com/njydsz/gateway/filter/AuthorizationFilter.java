@@ -63,8 +63,10 @@ import com.njydsz.gateway.config.PathGuard;
     havingValue = "true")
 public class AuthorizationFilter implements GlobalFilter, Ordered {
 
-  /** 403 响应消息 */
-  private static final String FORBIDDEN_MESSAGE = "权限不足，无法访问该资源";
+  /**
+   * 403 响应消息（P0-D2：i18n key 前缀 + 角色参数，前端按 {@code error.FORBIDDEN} 翻译）。
+   */
+  private static final String FORBIDDEN_MESSAGE = "error.FORBIDDEN (需要角色: ";
 
   private final AuthorizationProperties properties;
 
@@ -185,7 +187,7 @@ public class AuthorizationFilter implements GlobalFilter, Ordered {
   private Mono<Void> rejectForbidden(ServerWebExchange exchange, List<String> requiredRoles) {
     String traceId = exchange.getRequest().getHeaders().getFirst(GatewayConstants.HEADER_TRACE_ID);
     String message =
-        FORBIDDEN_MESSAGE + " (需要角色: " + String.join(",", requiredRoles) + ")";
+        FORBIDDEN_MESSAGE + String.join(",", requiredRoles) + ")";
     return GatewayErrorWriter.write(
         exchange, HttpStatus.FORBIDDEN, GatewayErrorCode.FORBIDDEN, message, traceId);
   }
