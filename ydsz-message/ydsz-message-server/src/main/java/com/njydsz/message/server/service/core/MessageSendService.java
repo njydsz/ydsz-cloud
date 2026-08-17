@@ -16,7 +16,7 @@ import com.njydsz.message.domain.entity.config.MsgRouteRule;
 import com.njydsz.message.domain.entity.config.MsgTrace;
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
-import com.njydsz.message.infra.mapper.core.MsgLogMapper;
+import com.njydsz.message.infra.repository.MsgLogRepository;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.config.RetryStrategyResolver;
@@ -46,7 +46,7 @@ import com.njydsz.message.server.service.core.GuardService;
 public class MessageSendService {
 
   private final ChannelRouter channelRouter;
-  private final MsgLogMapper msgLogMapper;
+  private final MsgLogRepository msgLogRepository;
   private final GuardService guardService;
   private final RetryStrategyResolver retryStrategyResolver;
   private final MessageMetrics messageMetrics;
@@ -66,7 +66,7 @@ public class MessageSendService {
     long start = System.currentTimeMillis();
     try {
       logDO.setStatus(MessageStatusEnum.SENDING.name());
-      msgLogMapper.updateById(logDO);
+      msgLogRepository.updateById(logDO);
       messageTraceService.recordTrace(
           logDO.getMsgId(), MsgTrace.Node.DISPATCH_START, "SUCCESS", channel, "通道分发开始");
       String providerTraceId = channelRouter.dispatch(logDO);
@@ -75,7 +75,7 @@ public class MessageSendService {
       logDO.setProviderTraceId(providerTraceId);
       logDO.setCostMs(cost);
       logDO.setCost(calculateCost(channel));
-      msgLogMapper.updateById(logDO);
+      msgLogRepository.updateById(logDO);
       if (StringUtils.hasText(receiver)) {
         guardService.recordFrequency(receiver, channel, logDO.getBizType());
       }
@@ -137,14 +137,14 @@ public class MessageSendService {
       try {
         logDO.setStatus(MessageStatusEnum.SENDING.name());
         logDO.setChannel(fallbackChannel);
-        msgLogMapper.updateById(logDO);
+        msgLogRepository.updateById(logDO);
         String providerTraceId = channelRouter.dispatch(logDO);
         long cost = System.currentTimeMillis() - start;
         logDO.setStatus(MessageStatusEnum.SUCCESS.name());
         logDO.setProviderTraceId(providerTraceId);
         logDO.setCostMs(accumulatedCost + cost);
         logDO.setCost(calculateCost(fallbackChannel));
-        msgLogMapper.updateById(logDO);
+        msgLogRepository.updateById(logDO);
         messageMetrics.recordSend(fallbackChannel, "SUCCESS", cost);
         log.info(
             "[Message] 降级发送成功: msgId={} chain={} final={} cost={}ms",
@@ -176,7 +176,7 @@ public class MessageSendService {
     if (!retryStrategyResolver.isMaxRetriesReached(retryCount, logDO.getChannel())) {
       logDO.setStatus(MessageStatusEnum.RETRY.name());
       logDO.setNextRetryAt(retryStrategyResolver.calcNextRetryAt(retryCount, logDO.getChannel()));
-      msgLogMapper.updateById(logDO);
+      msgLogRepository.updateById(logDO);
       messageMetrics.recordRetry(logDO.getChannel());
       log.warn(
           "[Message] 发送失败转重试: msgId={} channel={} receiver={} retryCount={} nextRetryAt={} err={}",
@@ -189,7 +189,7 @@ public class MessageSendService {
       return MessageResult.fail(logDO.getChannel(), "发送失败,已加入重试队列: " + e.getMessage());
     }
     logDO.setStatus(MessageStatusEnum.FAILED.name());
-    msgLogMapper.updateById(logDO);
+    msgLogRepository.updateById(logDO);
     messageMetrics.recordSend(logDO.getChannel(), "FAILED", cost);
     log.error(
         "[Message] 发送失败(重试耗尽): msgId={} channel={} receiver={} retryCount={} err={}",

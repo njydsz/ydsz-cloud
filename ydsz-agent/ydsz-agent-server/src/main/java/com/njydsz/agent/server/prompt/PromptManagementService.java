@@ -7,7 +7,6 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -15,8 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.agent.domain.entity.PromptTemplateDO;
 import com.njydsz.agent.domain.entity.PromptVersionDO;
-import com.njydsz.agent.infra.mapper.PromptTemplateMapper;
-import com.njydsz.agent.infra.mapper.PromptVersionMapper;
+import com.njydsz.agent.infra.repository.PromptTemplateRepository;
+import com.njydsz.agent.infra.repository.PromptVersionRepository;
 
 /**
  * Prompt 管理服务
@@ -47,19 +46,19 @@ public class PromptManagementService {
   /** 模板编码 → PromptTemplate，用于 O(1) 热点读取 */
   private final Map<String, PromptTemplate> templateCache = new ConcurrentHashMap<>();
 
-  /** Prompt 模板 Mapper */
-  private final PromptTemplateMapper templateMapper;
+  /** Prompt 模板 Repository */
+  private final PromptTemplateRepository templateRepository;
 
-  /** Prompt 版本 Mapper */
-  private final PromptVersionMapper versionMapper;
+  /** Prompt 版本 Repository */
+  private final PromptVersionRepository versionRepository;
 
   /** 是否已执行缓存预热 */
   private volatile boolean cacheWarmed = false;
 
   public PromptManagementService(
-      PromptTemplateMapper templateMapper, PromptVersionMapper versionMapper) {
-    this.templateMapper = templateMapper;
-    this.versionMapper = versionMapper;
+      PromptTemplateRepository templateRepository, PromptVersionRepository versionRepository) {
+    this.templateRepository = templateRepository;
+    this.versionRepository = versionRepository;
   }
 
   /**
@@ -93,7 +92,7 @@ public class PromptManagementService {
             .category(category)
             .currentVersion(1)
             .build();
-    templateMapper.insert(templateDO);
+    templateRepository.insert(templateDO);
     // 插入版本快照
     insertVersion(code, 1, content, "初始版本");
     // 更新缓存
@@ -125,7 +124,7 @@ public class PromptManagementService {
     // 更新主表版本号与内容
     existing.setContent(content);
     existing.setCurrentVersion(newVersion);
-    templateMapper.updateById(existing);
+    templateRepository.updateById(existing);
     // 插入新版本快照
     insertVersion(code, newVersion, content, null);
     // 更新缓存
@@ -167,11 +166,7 @@ public class PromptManagementService {
    */
   public PromptVersion getVersion(String code, int version) {
     PromptVersionDO versionDO =
-        versionMapper.selectOne(
-            new QueryWrapper<PromptVersionDO>()
-                .eq("template_code", code)
-                .eq("version", version)
-                .last("LIMIT 1"));
+        versionRepository.findByTemplateCodeAndVersion(code, version);
     if (versionDO == null) {
       return null;
     }
@@ -195,9 +190,7 @@ public class PromptManagementService {
    * @return 版本快照列表（按版本号升序）
    */
   public List<PromptVersion> listVersions(String code) {
-    List<PromptVersionDO> versionDOs =
-        versionMapper.selectList(
-            new QueryWrapper<PromptVersionDO>().eq("template_code", code).orderByAsc("version"));
+    List<PromptVersionDO> versionDOs = versionRepository.findByTemplateCode(code);
     return versionDOs.stream()
         .map(v -> new PromptVersion(code, v.getVersion(), v.getContent(), v.getCreatedAt()))
         .collect(Collectors.toList());
@@ -225,7 +218,7 @@ public class PromptManagementService {
   public void delete(String pCode) {
     PromptTemplateDO existing = selectByCode(pCode);
     if (existing != null) {
-      templateMapper.deleteById(existing.getId());
+      templateRepository.deleteById(existing.getId());
       LOG.info("[Prompt] 删除模板: code={}", pCode);
     }
     templateCache.remove(pCode);
@@ -250,7 +243,7 @@ public class PromptManagementService {
     LocalDateTime now = LocalDateTime.now();
     existing.setContent(pv.content());
     existing.setCurrentVersion(newVersion);
-    templateMapper.updateById(existing);
+    templateRepository.updateById(existing);
     insertVersion(code, newVersion, pv.content(), "回滚自版本 " + targetVersion);
     PromptTemplate rolledBack =
         new PromptTemplate(
@@ -295,8 +288,7 @@ public class PromptManagementService {
     if (cacheWarmed) {
       return;
     }
-    List<PromptTemplateDO> allTemplates =
-        templateMapper.selectList(new QueryWrapper<PromptTemplateDO>().eq("deleted", false));
+    List<PromptTemplateDO> allTemplates = templateRepository.findAllActive();
     for (PromptTemplateDO t : allTemplates) {
       templateCache.put(
           t.getTemplateCode(),
@@ -316,7 +308,7 @@ public class PromptManagementService {
 
   /** 从数据库加载并缓存指定模板 */
   private PromptTemplate loadAndCache(String code) {
-    PromptTemplateDO templateDO = selectByCode(code);
+    PromptTemplateDO templateDO = templateRepository.findByCode(code);
     if (templateDO == null) {
       return null;
     }
@@ -330,15 +322,6 @@ public class PromptManagementService {
     return template;
   }
 
-  /** 按编码查询模板（过滤已删除记录） */
-  private PromptTemplateDO selectByCode(String code) {
-    return templateMapper.selectOne(
-        new QueryWrapper<PromptTemplateDO>()
-            .eq("template_code", code)
-            .eq("deleted", false)
-            .last("LIMIT 1"));
-  }
-
   /** 插入版本快照记录 */
   private void insertVersion(String code, int version, String content, String changeNote) {
     PromptVersionDO versionDO =
@@ -348,7 +331,7 @@ public class PromptManagementService {
             .content(content)
             .changeNote(changeNote)
             .build();
-    versionMapper.insert(versionDO);
+    versionRepository.insert(versionDO);
   }
 
   /**

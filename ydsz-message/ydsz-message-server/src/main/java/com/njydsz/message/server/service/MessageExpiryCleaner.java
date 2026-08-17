@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.message.domain.entity.core.MsgNotification;
-import com.njydsz.message.infra.mapper.core.MsgNotificationMapper;
+import com.njydsz.message.infra.repository.MsgNotificationRepository;
 
 /**
  * 消息过期清理器。
@@ -25,7 +25,7 @@ import com.njydsz.message.infra.mapper.core.MsgNotificationMapper;
 @RequiredArgsConstructor
 public class MessageExpiryCleaner {
 
-  private final MsgNotificationMapper msgNotificationMapper;
+  private final MsgNotificationRepository msgNotificationRepository;
 
   /** 每天凌晨 3 点执行过期清理。 */
   @Scheduled(cron = "0 0 3 * * ?")
@@ -34,8 +34,7 @@ public class MessageExpiryCleaner {
     LocalDateTime now = LocalDateTime.now();
     try {
       int rows =
-          msgNotificationMapper.update(
-              null,
+          msgNotificationRepository.update(
               new LambdaUpdateWrapper<MsgNotification>()
                   .lt(MsgNotification::getExpiredAt, now)
                   .eq(MsgNotification::getDeleted, 0)

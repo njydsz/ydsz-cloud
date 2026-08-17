@@ -3,6 +3,7 @@ package com.njydsz.message.infra.repository.impl;
 import java.util.List;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -41,7 +42,7 @@ public class MsgLogRepositoryImpl implements MsgLogRepository {
   }
 
   @Override
-  public int update(LambdaQueryWrapper<MsgLog> wrapper) {
+  public int update(LambdaUpdateWrapper<MsgLog> wrapper) {
     return msgLogMapper.update(null, wrapper);
   }
 

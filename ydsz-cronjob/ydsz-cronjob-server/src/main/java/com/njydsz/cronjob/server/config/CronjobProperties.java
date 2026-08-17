@@ -124,23 +124,14 @@ public class CronjobProperties {
   private Spel spel = new Spel();
 
   /**
-   * SpEL 表达式缓存配置（P1-2 新增）。
+   * SpEL 表达式缓存配置（已废弃，v1.2.0 移除）。
    *
-   * <p>控制 {@link com.njydsz.cronjob.domain.dag.SpELConditionEvaluator} 的表达式解析缓存：
+   * <p>原用于 DAG 条件分支节点的表达式解析缓存，随控制节点移除而废弃。
+   * 保留配置类避免旧 YAML 配置启动报错（启动时不再读取）。
    *
-   * <ul>
-   *   <li>{@code enabled} — 是否启用缓存（默认 true）
-   *   <li>{@code max-size} — 缓存最大容量（默认 1024，0 表示无限制）
-   * </ul>
-   *
-   * <pre>
-   * ydsz:
-   *   cronjob:
-   *     spel:
-   *       enabled: true
-   *       max-size: 1024
-   * </pre>
+   * @deprecated 自 v1.2.0 起废弃，DAG 控制节点已移除
    */
+  @Deprecated
   @Data
   public static class Spel {
     /** 是否启用 SpEL 表达式缓存（默认 true）。 */

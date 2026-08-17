@@ -44,10 +44,10 @@ public interface MsgLogRepository {
   /**
    * 按条件更新消息日志。
    *
-   * @param wrapper 更新条件
+   * @param wrapper 更新条件（含 SET 子句）
    * @return 影响行数
    */
-  int update(LambdaQueryWrapper<MsgLog> wrapper);
+  int update(LambdaUpdateWrapper<MsgLog> wrapper);
 
   /**
    * 按条件查询消息日志列表。

@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
-import com.njydsz.message.infra.mapper.core.MsgLogMapper;
+import com.njydsz.message.infra.repository.MsgLogRepository;
 import com.njydsz.message.server.service.batch.AggregateService;
 
 /**
@@ -26,7 +26,7 @@ import com.njydsz.message.server.service.batch.AggregateService;
 @RequiredArgsConstructor
 public class AggregatePersistenceService {
 
-  private final MsgLogMapper msgLogMapper;
+  private final MsgLogRepository msgLogRepository;
   private final AggregateService aggregateService;
 
   /**
@@ -43,11 +43,11 @@ public class AggregatePersistenceService {
   @Transactional(rollbackFor = Exception.class)
   public void persistAggregated(
       MsgLog logDO, String bizType, String receiver, String channel, String tenantId) {
-    msgLogMapper.insert(logDO);
+    msgLogRepository.insert(logDO);
     aggregateService.appendOrStart(bizType, receiver, channel, tenantId);
     logDO.setStatus(MessageStatusEnum.PENDING.name());
     logDO.setErrorMessage("AGGREGATED");
-    msgLogMapper.updateById(logDO);
+    msgLogRepository.updateById(logDO);
     log.info(
         "[Aggregate] 已加入聚合批次(事务): msgId={} group={} receiver={}",
         logDO.getMsgId(),

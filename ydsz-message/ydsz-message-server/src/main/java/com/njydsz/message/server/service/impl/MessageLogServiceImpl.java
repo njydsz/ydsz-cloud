@@ -19,7 +19,7 @@ import com.njydsz.message.domain.dto.core.MessageLogQueryDTO;
 import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
-import com.njydsz.message.infra.mapper.core.MsgLogMapper;
+import com.njydsz.message.infra.repository.MsgLogRepository;
 import com.njydsz.message.server.channel.ChannelRouter;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.config.RetryStrategyResolver;
@@ -43,7 +43,7 @@ import com.njydsz.message.server.service.core.MessageLogService;
 public class MessageLogServiceImpl implements MessageLogService {
 
   /** 消息日志 Mapper */
-  private final MsgLogMapper msgLogMapper;
+  private final MsgLogRepository msgLogRepository;
 
   /** 通道路由器（重发时分发） */
   private final ChannelRouter channelRouter;
@@ -71,7 +71,7 @@ public class MessageLogServiceImpl implements MessageLogService {
           .message("日志 ID 不能为空")
           .build();
     }
-    MsgLog entity = msgLogMapper.selectById(id);
+    MsgLog entity = msgLogRepository.selectById(id);
     if (entity == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -102,7 +102,7 @@ public class MessageLogServiceImpl implements MessageLogService {
       w.eq(StringUtils.hasText(query.getTenantId()), MsgLog::getTenantId, query.getTenantId());
     }
     w.orderByDesc(MsgLog::getCreatedAt);
-    return msgLogMapper.selectPage(page, w);
+    return msgLogRepository.selectPage(page, w);
   }
 
   @Override
@@ -118,7 +118,7 @@ public class MessageLogServiceImpl implements MessageLogService {
     entity.setStatus(MessageStatusEnum.RETRY.name());
     entity.setNextRetryAt(nextRetryAt);
     entity.setRetryCount(entity.getRetryCount() == null ? 1 : entity.getRetryCount() + 1);
-    msgLogMapper.updateById(entity);
+    msgLogRepository.updateById(entity);
     log.info(
         "[MessageLog] 标记重试: id={} nextRetryAt={} retryCount={}",
         id,
@@ -139,7 +139,7 @@ public class MessageLogServiceImpl implements MessageLogService {
     }
     entity.setStatus(MessageStatusEnum.DEAD.name());
     entity.setErrorMessage(errorMessage);
-    msgLogMapper.updateById(entity);
+    msgLogRepository.updateById(entity);
     log.warn("[MessageLog] 标记死信: id={} err={}", id, errorMessage);
     // P1-4: 死信告警检测
     checkAndFireDeadLetterAlert(entity.getChannel());
@@ -150,7 +150,7 @@ public class MessageLogServiceImpl implements MessageLogService {
     MsgLog entity = getById(id);
     entity.setReceiptStatus(receiptStatus);
     entity.setReceiptAt(receiptAt);
-    msgLogMapper.updateById(entity);
+    msgLogRepository.updateById(entity);
   }
 
   @Override
@@ -166,7 +166,7 @@ public class MessageLogServiceImpl implements MessageLogService {
     entity.setStatus(MessageStatusEnum.RECALLED.name());
     entity.setRecallStatus(RecallStatusEnum.RECALLED.name());
     entity.setRecallAt(LocalDateTime.now());
-    msgLogMapper.updateById(entity);
+    msgLogRepository.updateById(entity);
   }
 
   /**
@@ -191,7 +191,7 @@ public class MessageLogServiceImpl implements MessageLogService {
       entity.setErrorMessage(null);
       entity.setNextRetryAt(null);
       entity.setStatus(MessageStatusEnum.SENDING.name());
-      msgLogMapper.updateById(entity);
+      msgLogRepository.updateById(entity);
       log.info("[MessageLog] 手动重发死信: logId={} channel={}", logId, entity.getChannel());
 
       long start = System.currentTimeMillis();
@@ -201,7 +201,7 @@ public class MessageLogServiceImpl implements MessageLogService {
         entity.setStatus(MessageStatusEnum.SUCCESS.name());
         entity.setProviderTraceId(providerTraceId);
         entity.setCostMs(cost);
-        msgLogMapper.updateById(entity);
+        msgLogRepository.updateById(entity);
         messageMetrics.recordSend(entity.getChannel(), "SUCCESS", cost);
         log.info("[MessageLog] 死信重发成功: logId={} providerTraceId={}", logId, providerTraceId);
       } catch (Exception e) {
@@ -214,7 +214,7 @@ public class MessageLogServiceImpl implements MessageLogService {
         entity.setStatus(MessageStatusEnum.RETRY.name());
         entity.setNextRetryAt(
             retryStrategyResolver.calcNextRetryAt(newRetryCount, entity.getChannel()));
-        msgLogMapper.updateById(entity);
+        msgLogRepository.updateById(entity);
         messageMetrics.recordRetry(entity.getChannel());
         log.warn(
             "[MessageLog] 死信重发失败转重试: logId={} err={} nextRetryAt={}",
@@ -251,7 +251,7 @@ public class MessageLogServiceImpl implements MessageLogService {
       // 统计窗口内死信数量
       LocalDateTime windowStart = LocalDateTime.now().minusMinutes(cfg.getWindowMinutes());
       Long count =
-          msgLogMapper.selectCount(
+          msgLogRepository.selectCount(
               new LambdaQueryWrapper<MsgLog>()
                   .eq(MsgLog::getStatus, MessageStatusEnum.DEAD.name())
                   .eq(MsgLog::getChannel, channel)

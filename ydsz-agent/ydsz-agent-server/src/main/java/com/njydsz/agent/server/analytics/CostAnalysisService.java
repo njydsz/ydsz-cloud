@@ -6,13 +6,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.njydsz.agent.domain.entity.TokenUsageRecordDO;
 import com.njydsz.agent.domain.model.TokenUsage;
-import com.njydsz.agent.infra.mapper.TokenUsageRecordMapper;
+import com.njydsz.agent.infra.repository.TokenUsageRecordRepository;
 
 /**
  * Token 用量成本分析服务
@@ -35,20 +34,20 @@ public class CostAnalysisService {
 
   private static final Logger LOG = LoggerFactory.getLogger(CostAnalysisService.class);
 
-  /** Token 用量记录 Mapper */
-  private final TokenUsageRecordMapper usageRecordMapper;
+  /** Token 用量记录 Repository */
+  private final TokenUsageRecordRepository tokenUsageRecordRepository;
 
   /** 模型价格配置 */
   private final ModelPriceConfig priceConfig;
 
-  public CostAnalysisService(TokenUsageRecordMapper usageRecordMapper) {
-    this.usageRecordMapper = usageRecordMapper;
+  public CostAnalysisService(TokenUsageRecordRepository tokenUsageRecordRepository) {
+    this.tokenUsageRecordRepository = tokenUsageRecordRepository;
     this.priceConfig = new ModelPriceConfig();
   }
 
   public CostAnalysisService(
-      TokenUsageRecordMapper usageRecordMapper, Map<String, Double> modelPrices) {
-    this.usageRecordMapper = usageRecordMapper;
+      TokenUsageRecordRepository tokenUsageRecordRepository, Map<String, Double> modelPrices) {
+    this.tokenUsageRecordRepository = tokenUsageRecordRepository;
     this.priceConfig = new ModelPriceConfig(modelPrices);
   }
 
@@ -74,7 +73,7 @@ public class CostAnalysisService {
               .completionTokens((long) usage.getCompletionTokens())
               .totalTokens((long) usage.getTotalTokens())
               .build();
-      usageRecordMapper.insert(record);
+      tokenUsageRecordRepository.insert(record);
     } catch (Exception e) {
       // 用量记录失败不应影响主流程，仅记录日志
       LOG.warn("[CostAnalysis] 用量记录失败: convId={}, model={}", conversationId, modelName, e);
@@ -92,11 +91,7 @@ public class CostAnalysisService {
    */
   public ModelUsageStats getStatsByModel(LocalDate start, LocalDate end) {
     List<TokenUsageRecordDO> records =
-        usageRecordMapper.selectList(
-            new QueryWrapper<TokenUsageRecordDO>()
-                .ge("created_at", start.atStartOfDay())
-                .le("created_at", end.atTime(23, 59, 59))
-                .orderByAsc("created_at"));
+        tokenUsageRecordRepository.findByCreatedAtRange(start.atStartOfDay(), end.atTime(23, 59, 59));
     long prompt = records.stream().mapToLong(TokenUsageRecordDO::getPromptTokens).sum();
     long completion = records.stream().mapToLong(TokenUsageRecordDO::getCompletionTokens).sum();
     long total = records.stream().mapToLong(TokenUsageRecordDO::getTotalTokens).sum();
@@ -145,11 +140,7 @@ public class CostAnalysisService {
    */
   public Map<String, ModelCostStats> getStatsByModel(LocalDateTime start, LocalDateTime end) {
     List<TokenUsageRecordDO> records =
-        usageRecordMapper.selectList(
-            new QueryWrapper<TokenUsageRecordDO>()
-                .ge("created_at", start)
-                .le("created_at", end)
-                .orderByAsc("created_at"));
+        tokenUsageRecordRepository.findByCreatedAtRange(start, end);
     Map<String, MutableCostStats> agg = new LinkedHashMap<>();
     for (TokenUsageRecordDO record : records) {
       String model = record.getModelName() != null ? record.getModelName() : "unknown";

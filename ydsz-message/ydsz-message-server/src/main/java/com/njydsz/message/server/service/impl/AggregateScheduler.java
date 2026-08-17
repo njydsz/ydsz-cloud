@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.message.domain.entity.batch.MsgAggregate;
 import com.njydsz.message.domain.enums.batch.AggregateBatchStatusEnum;
-import com.njydsz.message.infra.mapper.batch.MsgAggregateMapper;
+import com.njydsz.message.infra.repository.MsgAggregateRepository;
 import com.njydsz.message.server.service.batch.AggregateService;
 
 /**
@@ -40,7 +40,7 @@ import com.njydsz.message.server.service.batch.AggregateService;
     matchIfMissing = true)
 public class AggregateScheduler {
 
-  private final MsgAggregateMapper msgAggregateMapper;
+  private final MsgAggregateRepository msgAggregateRepository;
   private final AggregateService aggregateService;
 
   /**
@@ -62,7 +62,7 @@ public class AggregateScheduler {
   private void doScan() {
     LocalDateTime now = LocalDateTime.now();
     List<MsgAggregate> due =
-        msgAggregateMapper.selectList(
+        msgAggregateRepository.selectList(
             new LambdaQueryWrapper<MsgAggregate>()
                 .eq(MsgAggregate::getBatchStatus, AggregateBatchStatusEnum.PENDING.name())
                 .le(MsgAggregate::getScheduledSendAt, now));
@@ -70,8 +70,7 @@ public class AggregateScheduler {
       return;
     }
     for (MsgAggregate batch : due) {
-      msgAggregateMapper.update(
-          null,
+      msgAggregateRepository.update(
           new LambdaUpdateWrapper<MsgAggregate>()
               .eq(MsgAggregate::getId, batch.getId())
               .eq(MsgAggregate::getBatchStatus, AggregateBatchStatusEnum.PENDING.name())

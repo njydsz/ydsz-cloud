@@ -22,7 +22,7 @@ import com.njydsz.message.domain.entity.core.MsgLog;
 import com.njydsz.message.domain.enums.core.MessageChannelEnum;
 import com.njydsz.message.domain.enums.core.MessageStatusEnum;
 import com.njydsz.message.domain.enums.receipt.ReceiptStatusEnum;
-import com.njydsz.message.infra.mapper.core.MsgLogMapper;
+import com.njydsz.message.infra.repository.MsgLogRepository;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.service.core.MessageStatsService;
 
@@ -42,7 +42,7 @@ import com.njydsz.message.server.service.core.MessageStatsService;
 public class MessageStatsServiceImpl implements MessageStatsService {
 
   /** 消息日志 Mapper（聚合统计查询） */
-  private final MsgLogMapper msgLogMapper;
+  private final MsgLogRepository msgLogRepository;
 
   /** 消息模块配置属性 */
   private final MessageProperties messageProperties;
@@ -142,7 +142,7 @@ public class MessageStatsServiceImpl implements MessageStatsService {
   /** 按状态统计数量（带时间范围）。 */
   private long countByStatus(MessageStatusEnum status, LocalDateTime start, LocalDateTime end) {
     Long count =
-        msgLogMapper.selectCount(
+        msgLogRepository.selectCount(
             new LambdaQueryWrapper<MsgLog>()
                 .eq(MsgLog::getStatus, status.name())
                 .ge(MsgLog::getCreatedAt, start)
@@ -154,7 +154,7 @@ public class MessageStatsServiceImpl implements MessageStatsService {
   private long countByStatusAndChannel(
       MessageStatusEnum status, String channel, LocalDateTime start, LocalDateTime end) {
     Long count =
-        msgLogMapper.selectCount(
+        msgLogRepository.selectCount(
             new LambdaQueryWrapper<MsgLog>()
                 .eq(MsgLog::getStatus, status.name())
                 .eq(MsgLog::getChannel, channel)
@@ -167,7 +167,7 @@ public class MessageStatsServiceImpl implements MessageStatsService {
   private long countByReceiptStatus(
       ReceiptStatusEnum status, LocalDateTime start, LocalDateTime end) {
     Long count =
-        msgLogMapper.selectCount(
+        msgLogRepository.selectCount(
             new LambdaQueryWrapper<MsgLog>()
                 .eq(MsgLog::getReceiptStatus, status.name())
                 .ge(MsgLog::getCreatedAt, start)

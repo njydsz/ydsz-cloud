@@ -72,7 +72,7 @@ public interface JobDagNodeInstanceMapper extends BaseMapper<JobDagNodeInstance>
    *
    * <ul>
    *   <li>原始 body 节点实例（jobKey 无后缀，由 doExecute 创建）
-   *   <li>N 个 iter 实例（jobKey 带 {@code #loop<i>} 后缀，由 dispatchLoopNode 创建）
+   *   <li>N 个 iter 实例（jobKey 带 {@code #loop<i>} 后缀，LOOP 节点已废弃，保留注释仅兼容旧数据）
    * </ul>
    *
    * 本方法返回全部实例，供 LOOP iter 完成处理逻辑聚合判断使用。

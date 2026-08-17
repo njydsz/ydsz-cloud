@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.message.domain.entity.core.MsgLog;
-import com.njydsz.message.infra.mapper.core.MsgLogMapper;
+import com.njydsz.message.infra.repository.MsgLogRepository;
 
 /**
  * 邮件退信处理器。
@@ -26,7 +26,7 @@ import com.njydsz.message.infra.mapper.core.MsgLogMapper;
 @RequiredArgsConstructor
 public class EmailBounceHandler {
 
-  private final MsgLogMapper msgLogMapper;
+  private final MsgLogRepository msgLogRepository;
 
   /**
    * 处理邮件退信回调。
@@ -42,8 +42,7 @@ public class EmailBounceHandler {
       return;
     }
     String fullReason = (StringUtils.hasText(bounceType) ? "[" + bounceType + "] " : "") + reason;
-    msgLogMapper.update(
-        null,
+    msgLogRepository.update(
         new LambdaUpdateWrapper<MsgLog>()
             .eq(MsgLog::getId, logId)
             .set(MsgLog::getStatus, "FAILED")

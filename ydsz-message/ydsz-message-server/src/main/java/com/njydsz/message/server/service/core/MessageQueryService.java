@@ -12,7 +12,7 @@ import org.springframework.util.StringUtils;
 import com.njydsz.common.core.constant.PageConstants;
 import com.njydsz.message.domain.dto.core.MessageLogQueryDTO;
 import com.njydsz.message.domain.entity.core.MsgLog;
-import com.njydsz.message.infra.mapper.core.MsgLogMapper;
+import com.njydsz.message.infra.repository.MsgLogRepository;
 
 /**
  * 消息查询服务。
@@ -29,7 +29,7 @@ import com.njydsz.message.infra.mapper.core.MsgLogMapper;
 @RequiredArgsConstructor
 public class MessageQueryService {
 
-  private final MsgLogMapper msgLogMapper;
+  private final MsgLogRepository msgLogRepository;
 
   /**
    * 分页查询消息发送日志。
@@ -78,6 +78,6 @@ public class MessageQueryService {
       }
     }
     w.orderByDesc(MsgLog::getCreatedAt);
-    return msgLogMapper.selectPage(page, w);
+    return msgLogRepository.selectPage(page, w);
   }
 }

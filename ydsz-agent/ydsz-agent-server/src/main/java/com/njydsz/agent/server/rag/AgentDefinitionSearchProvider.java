@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.agent.domain.entity.AgentDefinitionDO;
-import com.njydsz.agent.infra.mapper.AgentDefinitionMapper;
+import com.njydsz.agent.infra.repository.AgentDefinitionRepository;
 import com.njydsz.common.search.core.IndexDocument;
 import com.njydsz.common.search.core.SearchField;
 import com.njydsz.common.search.core.SearchField.FieldType;
@@ -25,7 +25,7 @@ import com.njydsz.common.search.provider.SearchProvider;
 @RequiredArgsConstructor
 public class AgentDefinitionSearchProvider implements SearchProvider<AgentDefinitionDO> {
 
-  private final AgentDefinitionMapper agentDefinitionMapper;
+  private final AgentDefinitionRepository agentDefinitionRepository;
 
   @Override
   public String getType() {
@@ -106,6 +106,6 @@ public class AgentDefinitionSearchProvider implements SearchProvider<AgentDefini
 
   @Override
   public AgentDefinitionDO loadById(String id) {
-    return agentDefinitionMapper.selectById(id);
+    return agentDefinitionRepository.findById(id);
   }
 }

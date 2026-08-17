@@ -14,7 +14,7 @@ import com.njydsz.common.exception.custom.SysException;
 import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.message.domain.dto.core.MessageFeedbackDTO;
 import com.njydsz.message.domain.entity.config.MsgFeedback;
-import com.njydsz.message.infra.mapper.config.MsgFeedbackMapper;
+import com.njydsz.message.infra.repository.MsgFeedbackRepository;
 import com.njydsz.message.server.service.core.MessageFeedbackService;
 
 /**
@@ -33,7 +33,7 @@ import com.njydsz.message.server.service.core.MessageFeedbackService;
 public class MessageFeedbackServiceImpl implements MessageFeedbackService {
 
   /** 消息反馈 Mapper */
-  private final MsgFeedbackMapper msgFeedbackMapper;
+  private final MsgFeedbackRepository msgFeedbackRepository;
 
   /** 降频判断窗口：最近多少条反馈 */
   private static final int FREQ_CHECK_WINDOW = 5;
@@ -86,7 +86,7 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
 
     // 通道和业务类型由前端或上游传入，此处不强制补全
 
-    msgFeedbackMapper.insert(feedback);
+    msgFeedbackRepository.insert(feedback);
     log.info(
         "[Feedback] 用户反馈已提交: userId={} msgId={} rating={} type={}",
         dto.getUserId(),
@@ -110,7 +110,7 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
       return 0;
     }
     List<MsgFeedback> feedbacks =
-        msgFeedbackMapper.selectList(
+        msgFeedbackRepository.selectList(
             new LambdaQueryWrapper<MsgFeedback>()
                 .eq(MsgFeedback::getUserId, userId)
                 .orderByDesc(MsgFeedback::getCreatedAt)
@@ -139,7 +139,7 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
       return 0;
     }
     List<MsgFeedback> feedbacks =
-        msgFeedbackMapper.selectList(
+        msgFeedbackRepository.selectList(
             new LambdaQueryWrapper<MsgFeedback>()
                 .eq(MsgFeedback::getChannel, channel)
                 .orderByDesc(MsgFeedback::getCreatedAt)
@@ -170,7 +170,7 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
       wrapper.eq(MsgFeedback::getUserId, userId);
     }
     wrapper.orderByDesc(MsgFeedback::getCreatedAt);
-    return msgFeedbackMapper.selectPage(p, wrapper);
+    return msgFeedbackRepository.selectPage(p, wrapper);
   }
 
   /**
@@ -188,7 +188,7 @@ public class MessageFeedbackServiceImpl implements MessageFeedbackService {
       return false;
     }
     List<MsgFeedback> recentFeedbacks =
-        msgFeedbackMapper.selectList(
+        msgFeedbackRepository.selectList(
             new LambdaQueryWrapper<MsgFeedback>()
                 .eq(MsgFeedback::getUserId, userId)
                 .orderByDesc(MsgFeedback::getCreatedAt)

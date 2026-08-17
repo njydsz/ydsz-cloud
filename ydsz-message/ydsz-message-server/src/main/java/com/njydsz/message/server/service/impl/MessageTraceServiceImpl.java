@@ -16,7 +16,7 @@ import com.njydsz.common.tenant.TenantContextHolder;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.message.domain.entity.config.MsgTrace;
 import com.njydsz.message.domain.entity.config.MsgTrace.Node;
-import com.njydsz.message.infra.mapper.config.MsgTraceMapper;
+import com.njydsz.message.infra.repository.MsgTraceRepository;
 import com.njydsz.message.server.service.core.MessageTraceService;
 
 /**
@@ -35,7 +35,7 @@ import com.njydsz.message.server.service.core.MessageTraceService;
 public class MessageTraceServiceImpl implements MessageTraceService {
 
   /** 消息轨迹 Mapper（异步写入） */
-  private final MsgTraceMapper msgTraceMapper;
+  private final MsgTraceRepository msgTraceRepository;
 
   @Override
   @Async
@@ -62,7 +62,7 @@ public class MessageTraceServiceImpl implements MessageTraceService {
       if (extra != null && !extra.isEmpty()) {
         trace.setExtra(YdszJson.toJson(extra));
       }
-      msgTraceMapper.insert(trace);
+      msgTraceRepository.insert(trace);
       log.debug("[Trace] 记录轨迹: msgId={} node={} status={}", msgId, node, status);
     } catch (Exception e) {
       log.warn("[Trace] 记录轨迹失败,不影响主流程: msgId={} node={} err={}", msgId, node, e.getMessage());
@@ -82,7 +82,7 @@ public class MessageTraceServiceImpl implements MessageTraceService {
     }
     LambdaQueryWrapper<MsgTrace> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(MsgTrace::getMsgId, msgId).orderByAsc(MsgTrace::getEventAt);
-    return msgTraceMapper.selectList(wrapper);
+    return msgTraceRepository.selectList(wrapper);
   }
 
   @Override
@@ -92,7 +92,7 @@ public class MessageTraceServiceImpl implements MessageTraceService {
     }
     LambdaQueryWrapper<MsgTrace> wrapper = new LambdaQueryWrapper<>();
     wrapper.eq(MsgTrace::getTraceId, traceId).orderByAsc(MsgTrace::getEventAt);
-    return msgTraceMapper.selectList(wrapper);
+    return msgTraceRepository.selectList(wrapper);
   }
 
   @Override
@@ -105,6 +105,6 @@ public class MessageTraceServiceImpl implements MessageTraceService {
         .eq(MsgTrace::getBizType, bizType)
         .eq(MsgTrace::getBizId, bizId)
         .orderByAsc(MsgTrace::getEventAt);
-    return msgTraceMapper.selectList(wrapper);
+    return msgTraceRepository.selectList(wrapper);
   }
 }

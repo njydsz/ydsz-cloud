@@ -1,6 +1,10 @@
 package com.njydsz.cronjob.server.metrics;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.OperatingSystemMXBean;
 import java.time.Duration;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -9,11 +13,13 @@ import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import com.njydsz.common.sentry.adapter.SentryMetricsAdapter;
 import com.njydsz.cronjob.domain.entity.log.JobLog;
 import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
+import com.njydsz.cronjob.server.config.CronjobProperties;
 
 /**
  * P6-2 任务调度 Prometheus 指标收集器
@@ -21,9 +27,9 @@ import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
  * <p>基于 Micrometer 暴露以下指标（通过 Spring Boot Actuator /actuator/prometheus）：
  *
  * <ul>
- *   <li>Counter：任务派发/失败/超时/Misfire/告警派发计数
+ * <li>Counter：任务派发/失败/超时/Misfire/告警派发计数
  *   <li>Timer：任务执行耗时分布
- *   <li>Gauge：运行中任务数、扫描器状态、上次扫描待触发数
+ *   <li>Gauge：运行中任务数、扫描器状态、上次扫描待触发数、系统负载评分
  * </ul>
  *
  * <p>所有指标前缀 {@code ydsz_cronjob_}，便于在 Grafana 看板中筛选。
@@ -43,7 +49,8 @@ import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
  *   <tr><td>ydsz_cronjob_job_duration_ms</td><td>Timer</td><td>job_key, status</td><td>任务执行耗时</td></tr>
  *   <tr><td>ydsz_cronjob_job_running</td><td>Gauge</td><td>-</td><td>当前运行中任务数</td></tr>
  *   <tr><td>ydsz_cronjob_scanner_due_jobs</td><td>Gauge</td><td>-</td><td>上次扫描到的待触发任务数</td></tr>
- *   <tr><td>ydsz_cronjob_scanner_scanning</td><td>Gauge</td><td>-</td><td>扫描器是否正在扫描（0/1）</td></tr>
+ * <tr><td>ydsz_cronjob_scanner_scanning</td><td>Gauge</td><td>-</td><td>扫描器是否正在扫描（0/1）</td></tr>
+ * <tr><td>ydsz_cronjob_system_load_score</td><td>Gauge</td><td>-</td><td>系统综合负载评分（0-1000）</td></tr>
  * </table>
  *
  * @author ydsz-team
@@ -68,22 +75,34 @@ public class CronjobMetrics extends SentryMetricsAdapter {
   /** 扫描器扫描中标志（0=空闲，1=扫描中） */
   private final AtomicLong scanningFlag = new AtomicLong(0);
 
-  /** P1-1: 自适应批量大小（由 AdaptiveBatchScheduler 更新） */
+  /** 自适应批量大小 */
   private final AtomicLong adaptiveBatchSize = new AtomicLong(0);
 
-  /** P1-1: 系统负载评分（0-1，由 AdaptiveBatchScheduler 更新） */
+  /** 系统负载评分（0-1000，由 collectSystemLoadMetrics 定时更新） */
   private final AtomicLong systemLoadScore = new AtomicLong(0);
 
+  /** 线程池活跃度（0-100，由 DefaultTaskDispatcher 更新） */
+  private final AtomicInteger poolActivePct = new AtomicInteger(0);
+
+  private final MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
+  private final OperatingSystemMXBean osMXBean = ManagementFactory.getOperatingSystemMXBean();
+
   // ============================== Gauge 数据源（可选注入，避免循环依赖） ==============================
-  /** JobLogMapper 通过 ObjectProvider 实现可选注入，避免监控指标对核心数据源造成循环依赖。 若 Mapper 不存在则 Gauge 优雅降级为 0。 */
+  /** JobLogMapper 通过 ObjectProvider 实现可选注入，避免监控指标对核心数据源造成循环依赖。若 Mapper 不存在则 Gauge 优雅降级为 0。 */
   private final JobLogMapper jobLogMapper;
+
+  /** 调度引擎配置属性 */
+  private final CronjobProperties cronjobProperties;
 
   /** Gauge 值引用：运行中任务数 */
   private final AtomicReference<Double> runningJobsRef = new AtomicReference<>(0.0);
 
-  public CronjobMetrics(ObjectProvider<JobLogMapper> jobLogMapperProvider) {
+  public CronjobMetrics(
+      ObjectProvider<JobLogMapper> jobLogMapperProvider,
+      CronjobProperties cronjobProperties) {
     super("ydsz_cronjob_");
     this.jobLogMapper = jobLogMapperProvider.getIfAvailable();
+    this.cronjobProperties = cronjobProperties;
     registerGauges();
     log.info("[CronjobMetrics] 初始化完成，Prometheus 端点可访问 /actuator/prometheus");
   }
@@ -268,12 +287,93 @@ public class CronjobMetrics extends SentryMetricsAdapter {
   }
 
   /**
-   * P1-1: 更新系统负载评分。
+   * 更新线程池活跃度（由 DefaultTaskDispatcher 定期调用）。
    *
-   * @param score 负载评分（0-1）
+   * @param activeThreads 活跃线程数
+   * @param maxThreads 最大线程数
    */
-  public void setSystemLoadScore(double score) {
-    systemLoadScore.set((long) (score * 1000));
+  public void updatePoolActive(int activeThreads, int maxThreads) {
+    if (maxThreads <= 0) {
+      return;
+    }
+    int pct = (int) Math.min(100.0, (double) activeThreads / maxThreads * 100);
+    poolActivePct.set(pct);
+  }
+
+  // ===========================================
+  // 系统负载指标采集（原 AdaptiveBatchScheduler 逻辑合并）
+  // ===========================================
+
+  /**
+   * 定时采集系统负载指标并发布到 Prometheus。
+   *
+   * <p>采集 CPU 使用率、堆内存使用率、线程池活跃度，计算综合负载评分。
+   * 仅采集与上报，不做调度控制决策。
+   */
+  @Scheduled(fixedDelayString = "#{${ydsz.cronjob.adaptive-batch.eval-interval-seconds:10} * 1000}")
+  public void collectSystemLoadMetrics() {
+    try {
+      double cpuUsage = getCpuUsage();
+      double memUsage = getMemUsage();
+      double poolActive = poolActivePct.get();
+      double score = calculateLoadScore(cpuUsage, memUsage, poolActive);
+      systemLoadScore.set((long) (score * 1000));
+      log.debug(
+          "[CronjobMetrics] 系统负载采集: cpu={}%, mem={}%, pool={}%",
+          String.format("%.1f", cpuUsage),
+          String.format("%.1f", memUsage),
+          String.format("%.1f", poolActive));
+    } catch (Exception e) {
+      log.warn("[CronjobMetrics] 系统负载采集异常: {}", e.getMessage());
+    }
+  }
+
+  /**
+   * 获取 CPU 使用率（百分比，0-100）。
+   *
+   * <p>使用 {@link com.sun.management.OperatingSystemMXBean#getCpuLoad()}，返回 -1 时回退为 0。
+   */
+  private double getCpuUsage() {
+    try {
+      if (osMXBean instanceof com.sun.management.OperatingSystemMXBean sunOs) {
+        double load = sunOs.getCpuLoad();
+        return load >= 0 ? load * 100 : 0;
+      }
+    } catch (Exception ignored) {
+      // 降级处理
+    }
+    return 0;
+  }
+
+  /** 获取堆内存使用率（百分比，0-100）。 */
+  private double getMemUsage() {
+    try {
+      long used = memoryMXBean.getHeapMemoryUsage().getUsed();
+      long max = memoryMXBean.getHeapMemoryUsage().getMax();
+      if (max <= 0) {
+        return 0;
+      }
+      return (double) used / max * 100;
+    } catch (Exception ignored) {
+      return 0;
+    }
+  }
+
+  /**
+   * 计算综合负载评分（0-1）。
+   *
+   * <p>当任一指标超过对应阈值时，该项权重放大；均未超过时，按基线权重计算。
+   */
+  private double calculateLoadScore(double cpuUsage, double memUsage, double poolActive) {
+    CronjobProperties.AdaptiveBatch config = cronjobProperties.getAdaptiveBatch();
+    double cpuScore = Math.min(1.0, cpuUsage / 100.0);
+    double memScore = Math.min(1.0, memUsage / 100.0);
+    double poolScore = Math.min(1.0, poolActive / 100.0);
+    double cpuWeight = cpuUsage > config.getCpuThreshold() ? 0.5 : 0.4;
+    double memWeight = memUsage > config.getMemThreshold() ? 0.4 : 0.3;
+    double poolWeight = poolActive > config.getPoolActiveThreshold() ? 0.4 : 0.3;
+    double totalWeight = cpuWeight + memWeight + poolWeight;
+    return (cpuScore * cpuWeight + memScore * memWeight + poolScore * poolWeight) / totalWeight;
   }
 
   // ===========================================
