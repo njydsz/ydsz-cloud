@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 
 import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.cronjob.domain.entity.job.Job;
-import com.njydsz.cronjob.infra.mapper.job.JobMapper;
+import com.njydsz.cronjob.infra.repository.JobRepository;
 import com.njydsz.cronjob.server.service.job.JobService;
 
 /**
@@ -28,7 +28,7 @@ public class EventDrivenScheduler {
   private static final Duration DEDUP_TTL = Duration.ofMinutes(30);
 
   private final RedisStringOps redisStringOps;
-  private final JobMapper jobMapper;
+  private final JobRepository jobRepository;
   private final JobService jobService;
 
   /**
@@ -56,7 +56,7 @@ public class EventDrivenScheduler {
     }
 
     try {
-      Job job = jobMapper.selectByJobKey(jobKey);
+      Job job = jobRepository.selectByJobKey(jobKey);
       if (job == null) {
         log.warn("[EventScheduler] jobKey 不存在: {}", jobKey);
         return false;

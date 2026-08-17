@@ -25,7 +25,7 @@ import com.njydsz.message.domain.dto.batch.BatchSendRequestDTO;
 import com.njydsz.message.domain.dto.batch.BatchSendResult;
 import com.njydsz.message.domain.entity.batch.MsgBatch;
 import com.njydsz.message.domain.event.BatchCompletedEvent;
-import com.njydsz.message.infra.mapper.batch.MsgBatchMapper;
+import com.njydsz.message.infra.repository.MsgBatchRepository;
 import com.njydsz.message.server.event.DomainEventPublisher;
 import com.njydsz.message.server.service.SseEmitterService;
 import com.njydsz.message.server.service.batch.BatchService;
@@ -56,11 +56,11 @@ public class BatchServiceImpl implements BatchService {
   /** 单批最大条数 */
   private static final int MAX_BATCH_SIZE = 10000;
 
-  /** 批次记录 Mapper */
+  /** 批次记录 Repository */
   /** 分布式 ID 生成器 */
   private final SnowflakeIdGenerator snowflakeIdGenerator;
 
-  private final MsgBatchMapper msgBatchMapper;
+  private final MsgBatchRepository msgBatchRepository;
 
   /** 消息发送服务（逐条发送） */
   private final MessageService messageService;
@@ -113,7 +113,7 @@ public class BatchServiceImpl implements BatchService {
     batch.setTenantId(TenantContextHolder.getTenantId());
     // P1-A3: 序列化请求列表存入 payload，支持后续断点续传
     batch.setPayload(YdszJson.toJson(requests));
-    msgBatchMapper.insert(batch);
+    msgBatchRepository.insert(batch);
     log.info(
         "[Batch] 批次已创建: batchId={} total={} channel={}",
         batchId,
@@ -139,7 +139,7 @@ public class BatchServiceImpl implements BatchService {
           .build();
     }
     MsgBatch batch =
-        msgBatchMapper.selectOne(
+        msgBatchRepository.selectOne(
             new LambdaQueryWrapper<MsgBatch>().eq(MsgBatch::getBatchId, batchId).last("LIMIT 1"));
     if (batch == null) {
       throw SysException.builder()
@@ -213,7 +213,7 @@ public class BatchServiceImpl implements BatchService {
   @Override
   public void executeBatch(String batchId) {
     MsgBatch batch =
-        msgBatchMapper.selectOne(
+        msgBatchRepository.selectOne(
             new LambdaQueryWrapper<MsgBatch>().eq(MsgBatch::getBatchId, batchId).last("LIMIT 1"));
     if (batch == null) {
       log.warn("[Batch] 批次不存在: {}", batchId);
@@ -242,7 +242,7 @@ public class BatchServiceImpl implements BatchService {
         "[Batch] 断点续传: batchId={} processed={} remaining={}", batchId, processed, remaining.size());
     // 重置为 PROCESSING 并异步执行剩余请求
     batch.setStatus("PROCESSING");
-    msgBatchMapper.updateById(batch);
+    msgBatchRepository.updateById(batch);
     executeBatchAsync(batchId, remaining);
   }
 
@@ -257,7 +257,7 @@ public class BatchServiceImpl implements BatchService {
    */
   private void doExecuteBatch(String batchId, List<MessageRequest> requests, boolean incremental) {
     MsgBatch batch =
-        msgBatchMapper.selectOne(
+        msgBatchRepository.selectOne(
             new LambdaQueryWrapper<MsgBatch>().eq(MsgBatch::getBatchId, batchId).last("LIMIT 1"));
     if (batch == null) {
       log.warn("[Batch] 批次不存在: {}", batchId);
@@ -267,7 +267,7 @@ public class BatchServiceImpl implements BatchService {
     if (batch.getStartedAt() == null) {
       batch.setStartedAt(LocalDateTime.now());
     }
-    msgBatchMapper.updateById(batch);
+    msgBatchRepository.updateById(batch);
 
     // 逐条串行发送
     int success = 0;
@@ -304,7 +304,7 @@ public class BatchServiceImpl implements BatchService {
     }
     batch.setStatus("COMPLETED");
     batch.setCompletedAt(LocalDateTime.now());
-    msgBatchMapper.updateById(batch);
+    msgBatchRepository.updateById(batch);
     int totalProcessed =
         (batch.getSuccess() != null ? batch.getSuccess() : 0)
             + (batch.getFailed() != null ? batch.getFailed() : 0)

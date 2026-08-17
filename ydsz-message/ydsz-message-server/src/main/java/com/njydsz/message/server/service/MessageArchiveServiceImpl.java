@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import com.njydsz.message.domain.entity.core.MsgLog;
-import com.njydsz.message.infra.mapper.core.MsgLogMapper;
+import com.njydsz.message.infra.repository.MsgLogRepository;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.service.archive.MessageArchiveService;
 
@@ -29,7 +29,7 @@ import com.njydsz.message.server.service.archive.MessageArchiveService;
 @RequiredArgsConstructor
 public class MessageArchiveServiceImpl implements MessageArchiveService {
 
-  private final MsgLogMapper msgLogMapper;
+  private final MsgLogRepository msgLogRepository;
 
   /** P3-3.2: ES 归档开关统一从 MessageProperties 读取 */
   private final MessageProperties messageProperties;
@@ -157,6 +157,6 @@ public class MessageArchiveServiceImpl implements MessageArchiveService {
                         .like(MsgLog::getBizId, keyword))
             .orderByDesc(MsgLog::getCreatedAt);
 
-    return msgLogMapper.selectPage(page, wrapper);
+    return msgLogRepository.selectPage(page, wrapper);
   }
 }

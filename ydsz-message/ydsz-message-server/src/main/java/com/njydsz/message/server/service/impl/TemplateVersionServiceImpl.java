@@ -18,8 +18,8 @@ import com.njydsz.message.domain.dto.template.TemplatePreviewDTO;
 import com.njydsz.message.domain.dto.template.TemplateTestSendDTO;
 import com.njydsz.message.domain.entity.template.MsgTemplate;
 import com.njydsz.message.domain.entity.template.MsgTemplateVersion;
-import com.njydsz.message.infra.mapper.template.MsgTemplateMapper;
-import com.njydsz.message.infra.mapper.template.MsgTemplateVersionMapper;
+import com.njydsz.message.infra.repository.MsgTemplateRepository;
+import com.njydsz.message.infra.repository.MsgTemplateVersionRepository;
 import com.njydsz.message.server.service.core.MessageService;
 import com.njydsz.message.server.service.template.TemplateVersionService;
 import com.njydsz.message.server.template.TemplateEngine;
@@ -39,11 +39,11 @@ import com.njydsz.message.server.template.TemplateEngine;
 @RequiredArgsConstructor
 public class TemplateVersionServiceImpl implements TemplateVersionService {
 
-  /** 模板版本历史 Mapper */
-  private final MsgTemplateVersionMapper versionMapper;
+  /** 模板版本历史 Repository */
+  private final MsgTemplateVersionRepository versionRepository;
 
-  /** 模板 Mapper（查询当前模板） */
-  private final MsgTemplateMapper templateMapper;
+  /** 模板 Repository（查询当前模板） */
+  private final MsgTemplateRepository templateRepository;
 
   /** 模板引擎（预览渲染） */
   private final TemplateEngine templateEngine;
@@ -66,7 +66,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
           .message("模板编码不能为空")
           .build();
     }
-    return versionMapper.selectList(
+    return versionRepository.selectList(
         new LambdaQueryWrapper<MsgTemplateVersion>()
             .eq(MsgTemplateVersion::getTemplateCode, templateCode)
             .orderByDesc(MsgTemplateVersion::getVersion));
@@ -115,7 +115,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
     version.setAuditor(auditor);
     version.setAuditRemark(auditRemark);
     version.setTenantId(TenantContextHolder.getTenantId());
-    versionMapper.insert(version);
+    versionRepository.insert(version);
     log.info(
         "[TemplateVersion] 版本记录: code={} version={} status={}",
         templateCode,
@@ -136,7 +136,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
   @Transactional(rollbackFor = Exception.class)
   public String rollbackToVersion(String templateCode, int version) {
     MsgTemplateVersion versionDO =
-        versionMapper.selectOne(
+        versionRepository.selectOne(
             new LambdaQueryWrapper<MsgTemplateVersion>()
                 .eq(MsgTemplateVersion::getTemplateCode, templateCode)
                 .eq(MsgTemplateVersion::getVersion, version)
@@ -148,7 +148,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
           .build();
     }
     MsgTemplate template =
-        templateMapper.selectOne(
+        templateRepository.selectOne(
             new LambdaQueryWrapper<MsgTemplate>()
                 .eq(MsgTemplate::getTemplateCode, templateCode)
                 .last("LIMIT 1"));
@@ -159,7 +159,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
           .build();
     }
     template.setContent(versionDO.getContent());
-    templateMapper.updateById(template);
+    templateRepository.updateById(template);
     log.info("[TemplateVersion] 版本回滚: code={} targetVersion={}", templateCode, version);
     return versionDO.getContent();
   }
@@ -191,7 +191,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
             .build();
       }
       MsgTemplate template =
-          templateMapper.selectOne(
+          templateRepository.selectOne(
               new LambdaQueryWrapper<MsgTemplate>()
                   .eq(MsgTemplate::getTemplateCode, dto.getTemplateCode())
                   .last("LIMIT 1"));
@@ -236,7 +236,7 @@ public class TemplateVersionServiceImpl implements TemplateVersionService {
       request.setChannel(dto.getTestChannel());
     } else {
       MsgTemplate template =
-          templateMapper.selectOne(
+          templateRepository.selectOne(
               new LambdaQueryWrapper<MsgTemplate>()
                   .eq(MsgTemplate::getTemplateCode, dto.getTemplateCode())
                   .last("LIMIT 1"));

@@ -26,7 +26,7 @@ import com.njydsz.message.domain.constant.MessageConstants;
 import com.njydsz.message.domain.entity.batch.MsgAggregate;
 import com.njydsz.message.domain.entity.template.MsgTemplate;
 import com.njydsz.message.domain.enums.batch.AggregateBatchStatusEnum;
-import com.njydsz.message.infra.mapper.batch.MsgAggregateMapper;
+import com.njydsz.message.infra.repository.MsgAggregateRepository;
 import com.njydsz.message.server.service.batch.AggregateService;
 import com.njydsz.message.server.service.core.MessageService;
 import com.njydsz.message.server.service.template.TemplateService;
@@ -58,8 +58,8 @@ public class AggregateServiceImpl implements AggregateService {
   /** 默认摘要模板内容(未配置摘要模板时回退) */
   private static final String DEFAULT_DIGEST_TEMPLATE = "您有 ${count} 条 ${group} 相关消息,请及时查看";
 
-  /** 聚合批次 Mapper */
-  private final MsgAggregateMapper msgAggregateMapper;
+  /** 聚合批次 Repository */
+  private final MsgAggregateRepository msgAggregateRepository;
 
   /** 消息发送服务（flush 时回调发送） */
   private final MessageService messageService;
@@ -95,7 +95,7 @@ public class AggregateServiceImpl implements AggregateService {
       }
       // 查 PENDING 批次
       MsgAggregate batch =
-          msgAggregateMapper.selectOne(
+          msgAggregateRepository.selectOne(
               new LambdaQueryWrapper<MsgAggregate>()
                   .eq(MsgAggregate::getAggregateGroup, group)
                   .eq(MsgAggregate::getReceiver, receiver)
@@ -105,7 +105,7 @@ public class AggregateServiceImpl implements AggregateService {
       if (batch != null) {
         batch.setMessageCount((batch.getMessageCount() == null ? 0 : batch.getMessageCount()) + 1);
         batch.setLastMessageAt(now);
-        msgAggregateMapper.updateById(batch);
+        msgAggregateRepository.updateById(batch);
         return batch;
       }
       // 新建 PENDING 批次
@@ -119,7 +119,7 @@ public class AggregateServiceImpl implements AggregateService {
       entity.setLastMessageAt(now);
       entity.setScheduledSendAt(now.plusMinutes(DEFAULT_FREQUENCY_MINUTES));
       entity.setTenantId(tid);
-      msgAggregateMapper.insert(entity);
+      msgAggregateRepository.insert(entity);
       log.info(
           "[Aggregate] 新建批次: group={} receiver={} scheduledAt={}",
           group,
@@ -143,7 +143,7 @@ public class AggregateServiceImpl implements AggregateService {
   public int flushDue() {
     LocalDateTime now = LocalDateTime.now();
     List<MsgAggregate> due =
-        msgAggregateMapper.selectList(
+        msgAggregateRepository.selectList(
             new LambdaQueryWrapper<MsgAggregate>()
                 .eq(MsgAggregate::getBatchStatus, AggregateBatchStatusEnum.READY.name())
                 .le(MsgAggregate::getScheduledSendAt, now));
@@ -168,7 +168,7 @@ public class AggregateServiceImpl implements AggregateService {
           .build();
     }
     // 先把 PENDING 批次流转为 READY,统一由 sendBatch 的 CAS 占有发送
-    msgAggregateMapper.update(
+    msgAggregateRepository.update(
         null,
         new LambdaUpdateWrapper<MsgAggregate>()
             .eq(MsgAggregate::getAggregateGroup, group)
@@ -176,7 +176,7 @@ public class AggregateServiceImpl implements AggregateService {
             .eq(MsgAggregate::getBatchStatus, AggregateBatchStatusEnum.PENDING.name())
             .set(MsgAggregate::getBatchStatus, AggregateBatchStatusEnum.READY.name()));
     List<MsgAggregate> batches =
-        msgAggregateMapper.selectList(
+        msgAggregateRepository.selectList(
             new LambdaQueryWrapper<MsgAggregate>()
                 .eq(MsgAggregate::getAggregateGroup, group)
                 .eq(MsgAggregate::getReceiver, receiver)
@@ -197,7 +197,7 @@ public class AggregateServiceImpl implements AggregateService {
         new Page<>(
             query == null ? 1 : query.getPageNum(),
             Math.min(query == null ? 10 : query.getPageSize(), PageConstants.MAX_PAGE_SIZE));
-    return msgAggregateMapper.selectPage(
+    return msgAggregateRepository.selectPage(
         page, new LambdaQueryWrapper<MsgAggregate>().orderByDesc(MsgAggregate::getCreatedAt));
   }
 
@@ -213,7 +213,7 @@ public class AggregateServiceImpl implements AggregateService {
   private boolean sendBatch(MsgAggregate batch) {
     // CAS 占有: READY → SENDING,updated=0 表示已被其他实例占有
     int claimed =
-        msgAggregateMapper.update(
+        msgAggregateRepository.update(
             null,
             new LambdaUpdateWrapper<MsgAggregate>()
                 .eq(MsgAggregate::getId, batch.getId())
@@ -243,7 +243,7 @@ public class AggregateServiceImpl implements AggregateService {
       if (ok) {
         batch.setBatchStatus(AggregateBatchStatusEnum.SENT.name());
         batch.setSentAt(LocalDateTime.now());
-        msgAggregateMapper.updateById(batch);
+        msgAggregateRepository.updateById(batch);
         return true;
       }
       log.warn(
@@ -266,7 +266,7 @@ public class AggregateServiceImpl implements AggregateService {
    */
   private void revertToReady(String batchId) {
     try {
-      msgAggregateMapper.update(
+      msgAggregateRepository.update(
           null,
           new LambdaUpdateWrapper<MsgAggregate>()
               .eq(MsgAggregate::getId, batchId)

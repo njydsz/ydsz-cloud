@@ -13,8 +13,8 @@ import com.njydsz.common.redis.service.ops.RedisStringOps;
 import com.njydsz.common.web.health.AbstractModuleHealthIndicator;
 import com.njydsz.userinfo.domain.entity.Role;
 import com.njydsz.userinfo.domain.entity.UserAccount;
-import com.njydsz.userinfo.infra.mapper.RoleMapper;
-import com.njydsz.userinfo.infra.mapper.UserAccountMapper;
+import com.njydsz.userinfo.infra.repository.RoleRepository;
+import com.njydsz.userinfo.infra.repository.UserAccountRepository;
 
 /**
  * 用户信息中心健康检查指标。
@@ -36,8 +36,8 @@ public class UserInfoHealthIndicator extends AbstractModuleHealthIndicator {
 
   private final RedisStringOps redisStringOps;
   private final TokenService tokenService;
-  private final UserAccountMapper userAccountMapper;
-  private final RoleMapper roleMapper;
+  private final UserAccountRepository userAccountRepository;
+  private final RoleRepository roleRepository;
 
   @Override
   protected void doHealthCheck(Health.Builder builder) {
@@ -61,11 +61,11 @@ public class UserInfoHealthIndicator extends AbstractModuleHealthIndicator {
     LambdaQueryWrapper<UserAccount> userWrapper = new LambdaQueryWrapper<>();
     userWrapper.eq(UserAccount::getDeleted, 0);
     checkTableProbeWithValue(
-        builder, "userCount", () -> userAccountMapper.selectCount(userWrapper));
+        builder, "userCount", () -> userAccountRepository.count(userWrapper));
 
     // 角色表探针
     LambdaQueryWrapper<Role> roleWrapper = new LambdaQueryWrapper<>();
     roleWrapper.eq(Role::getDeleted, 0);
-    checkTableProbeWithValue(builder, "roleCount", () -> roleMapper.selectCount(roleWrapper));
+    checkTableProbeWithValue(builder, "roleCount", () -> roleRepository.count(roleWrapper));
   }
 }

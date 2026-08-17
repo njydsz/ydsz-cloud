@@ -22,7 +22,7 @@ import com.njydsz.message.domain.dto.template.TemplateCreateDTO;
 import com.njydsz.message.domain.dto.template.TemplateQueryDTO;
 import com.njydsz.message.domain.entity.template.MsgTemplate;
 import com.njydsz.message.domain.enums.template.TemplateAuditStatusEnum;
-import com.njydsz.message.infra.mapper.template.MsgTemplateMapper;
+import com.njydsz.message.infra.repository.MsgTemplateRepository;
 import com.njydsz.message.server.service.template.TemplateService;
 import com.njydsz.message.server.template.TemplateEngine;
 
@@ -45,8 +45,8 @@ import com.njydsz.message.server.template.TemplateEngine;
 @RequiredArgsConstructor
 public class TemplateServiceImpl implements TemplateService {
 
-  /** 消息模板 Mapper（CRUD / locale 回退查询） */
-  private final MsgTemplateMapper msgTemplateMapper;
+  /** 消息模板 Repository（CRUD / locale 回退查询） */
+  private final MsgTemplateRepository msgTemplateRepository;
 
   /** 模板引擎（变量渲染） */
   private final TemplateEngine templateEngine;
@@ -83,7 +83,7 @@ public class TemplateServiceImpl implements TemplateService {
         StringUtils.hasText(dto.getLocale()) ? dto.getLocale() : MessageConstants.DEFAULT_LOCALE;
     // 唯一性校验 (templateCode, channel, locale, tenantId)
     MsgTemplate existing =
-        msgTemplateMapper.selectOne(
+        msgTemplateRepository.selectOne(
             new LambdaQueryWrapper<MsgTemplate>()
                 .eq(MsgTemplate::getTemplateCode, dto.getTemplateCode())
                 .eq(MsgTemplate::getChannel, dto.getChannel())
@@ -112,7 +112,7 @@ public class TemplateServiceImpl implements TemplateService {
     entity.setAuditStatus(TemplateAuditStatusEnum.DRAFT.name());
     entity.setDescription(dto.getDescription());
     entity.setTenantId(tenantId);
-    msgTemplateMapper.insert(entity);
+    msgTemplateRepository.insert(entity);
     syncSearchIndex(entity);
     log.info(
         "[Template] 创建模板: code={} channel={} locale={}",
@@ -177,7 +177,7 @@ public class TemplateServiceImpl implements TemplateService {
     if (dto.getDescription() != null) {
       entity.setDescription(dto.getDescription());
     }
-    msgTemplateMapper.updateById(entity);
+    msgTemplateRepository.updateById(entity);
     syncSearchIndex(entity);
     return entity;
   }
@@ -196,7 +196,7 @@ public class TemplateServiceImpl implements TemplateService {
           .message("模板 ID 不能为空")
           .build();
     }
-    msgTemplateMapper.deleteById(id);
+    msgTemplateRepository.deleteById(id);
     deleteSearchIndex(id);
   }
 
@@ -215,7 +215,7 @@ public class TemplateServiceImpl implements TemplateService {
           .message("模板 ID 不能为空")
           .build();
     }
-    MsgTemplate entity = msgTemplateMapper.selectById(id);
+    MsgTemplate entity = msgTemplateRepository.selectById(id);
     if (entity == null) {
       throw SysException.builder()
           .resultCode(BaseResultCode.NOT_FOUND)
@@ -259,7 +259,7 @@ public class TemplateServiceImpl implements TemplateService {
           query.getSceneCode());
     }
     w.orderByDesc(MsgTemplate::getCreatedAt);
-    return msgTemplateMapper.selectPage(page, w);
+    return msgTemplateRepository.selectPage(page, w);
   }
 
   /**
@@ -287,7 +287,7 @@ public class TemplateServiceImpl implements TemplateService {
     String loc = StringUtils.hasText(locale) ? locale : MessageConstants.DEFAULT_LOCALE;
     // 精确 locale
     MsgTemplate entity =
-        msgTemplateMapper.selectOne(
+        msgTemplateRepository.selectOne(
             new LambdaQueryWrapper<MsgTemplate>()
                 .eq(MsgTemplate::getTemplateCode, templateCode)
                 .eq(MsgTemplate::getChannel, channel)
@@ -301,7 +301,7 @@ public class TemplateServiceImpl implements TemplateService {
     // 回退默认 zh-CN
     if (!MessageConstants.DEFAULT_LOCALE.equals(loc)) {
       entity =
-          msgTemplateMapper.selectOne(
+          msgTemplateRepository.selectOne(
               new LambdaQueryWrapper<MsgTemplate>()
                   .eq(MsgTemplate::getTemplateCode, templateCode)
                   .eq(MsgTemplate::getChannel, channel)
@@ -348,7 +348,7 @@ public class TemplateServiceImpl implements TemplateService {
       entity.setStatus("DISABLED");
     }
     entity.setAuditAt(LocalDateTime.now());
-    msgTemplateMapper.updateById(entity);
+    msgTemplateRepository.updateById(entity);
     log.info("[Template] 审核模板: id={} {} -> {}", id, current, target);
   }
 

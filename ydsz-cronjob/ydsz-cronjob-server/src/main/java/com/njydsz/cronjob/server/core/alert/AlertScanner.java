@@ -14,8 +14,8 @@ import org.springframework.stereotype.Component;
 import com.njydsz.common.lock.annotation.DistributedScheduled;
 import com.njydsz.common.util.id.TracerUtils;
 import com.njydsz.cronjob.domain.entity.job.JobAlertRule;
-import com.njydsz.cronjob.infra.mapper.job.JobAlertRuleMapper;
-import com.njydsz.cronjob.infra.mapper.log.JobLogMapper;
+import com.njydsz.cronjob.infra.repository.JobAlertRuleRepository;
+import com.njydsz.cronjob.infra.repository.JobLogRepository;
 import com.njydsz.cronjob.server.config.CronjobProperties;
 import com.njydsz.cronjob.server.core.leader.LeaderElector;
 
@@ -50,8 +50,8 @@ import com.njydsz.cronjob.server.core.leader.LeaderElector;
 @ConditionalOnBean(LeaderElector.class)
 public class AlertScanner {
 
-  private final JobAlertRuleMapper jobAlertRuleMapper;
-  private final JobLogMapper jobLogMapper;
+  private final JobAlertRuleRepository jobAlertRuleRepository;
+  private final JobLogRepository jobLogRepository;
   private final AlertTrigger alertTrigger;
   private final LeaderElector leaderElector;
   private final CronjobProperties cronjobProperties;
@@ -108,7 +108,7 @@ public class AlertScanner {
    * <p>失败率 = 失败次数 / 总次数 * 100（百分比，与 threshold 单位一致）。 失败率 &gt;= threshold 时触发告警。
    */
   void scanFailRateRules() {
-    List<JobAlertRule> rules = jobAlertRuleMapper.selectByAlertType(AlertType.FAIL_RATE.name());
+    List<JobAlertRule> rules = jobAlertRuleRepository.selectByAlertType(AlertType.FAIL_RATE.name());
     if (rules.isEmpty()) {
       return;
     }
@@ -133,7 +133,7 @@ public class AlertScanner {
    * <p>P95 耗时仅统计 {@code status='SUCCESS'} 的执行（避免失败/超时任务拉高 P95）。 P95 &gt;= threshold（毫秒）时触发告警。
    */
   void scanDurationP95Rules() {
-    List<JobAlertRule> rules = jobAlertRuleMapper.selectByAlertType(AlertType.DURATION_P95.name());
+    List<JobAlertRule> rules = jobAlertRuleRepository.selectByAlertType(AlertType.DURATION_P95.name());
     if (rules.isEmpty()) {
       return;
     }
@@ -168,7 +168,7 @@ public class AlertScanner {
     }
     int windowMinutes = resolveWindowMinutes(rule);
     LocalDateTime since = LocalDateTime.now().minusMinutes(windowMinutes);
-    Map<String, Object> stats = jobLogMapper.countByJobIdSince(rule.getJobId(), since);
+    Map<String, Object> stats = jobLogRepository.countByJobIdSince(rule.getJobId(), since);
     if (stats == null) {
       return;
     }
@@ -217,7 +217,7 @@ public class AlertScanner {
     }
     int windowMinutes = resolveWindowMinutes(rule);
     LocalDateTime since = LocalDateTime.now().minusMinutes(windowMinutes);
-    Long p95Ms = jobLogMapper.selectDurationP95(rule.getJobId(), since);
+    Long p95Ms = jobLogRepository.selectDurationP95(rule.getJobId(), since);
     if (p95Ms == null || p95Ms <= 0) {
       // 无成功执行记录（PERCENTILE_CONT 返回 0），不触发告警
       return;
