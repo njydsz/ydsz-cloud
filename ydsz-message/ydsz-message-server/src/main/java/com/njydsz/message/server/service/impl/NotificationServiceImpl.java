@@ -25,7 +25,7 @@ import com.njydsz.message.domain.dto.core.NotificationSendDTO;
 import com.njydsz.message.domain.entity.core.MsgNotification;
 import com.njydsz.message.domain.enums.receipt.RecallStatusEnum;
 import com.njydsz.message.domain.vo.NotificationGroupVO;
-import com.njydsz.message.infra.mapper.core.MsgNotificationMapper;
+import com.njydsz.message.infra.repository.MsgNotificationRepository;
 import com.njydsz.message.server.config.MessageProperties;
 import com.njydsz.message.server.realtime.RealtimePushService;
 import com.njydsz.message.server.service.core.NotificationService;
@@ -51,7 +51,7 @@ public class NotificationServiceImpl implements NotificationService {
   private static final int INSERT_BATCH_SIZE = 500;
 
   /** 站内通知 Mapper */
-  private final MsgNotificationMapper msgNotificationMapper;
+  private final MsgNotificationRepository msgNotificationRepository;
 
   /** 实时推送服务（WebSocket / 离线缓存） */
   private final RealtimePushService realtimePushService;
@@ -85,7 +85,7 @@ public class NotificationServiceImpl implements NotificationService {
     // 分批批量 insert（防止单条 SQL 参数超过 PG 65535 上限）
     for (int i = 0; i < entities.size(); i += INSERT_BATCH_SIZE) {
       int to = Math.min(i + INSERT_BATCH_SIZE, entities.size());
-      msgNotificationMapper.insertBatch(entities.subList(i, to));
+      msgNotificationRepository.insertBatch(entities.subList(i, to));
     }
     // 批量 insert 完成后再循环做 index + push（entity.id 已有值）
     for (int i = 0; i < entities.size(); i++) {
@@ -128,7 +128,7 @@ public class NotificationServiceImpl implements NotificationService {
       w.eq(query.getReadStatus() != null, MsgNotification::getReadStatus, query.getReadStatus());
     }
     w.orderByDesc(MsgNotification::getCreatedAt);
-    return msgNotificationMapper.selectPage(page, w);
+    return msgNotificationRepository.selectPage(page, w);
   }
 
   @Override
@@ -136,7 +136,7 @@ public class NotificationServiceImpl implements NotificationService {
     if (!StringUtils.hasText(userId)) {
       return 0L;
     }
-    Long count = msgNotificationMapper.countUnread(userId);
+    Long count = msgNotificationRepository.countUnread(userId);
     return count == null ? 0L : count;
   }
 
@@ -145,7 +145,7 @@ public class NotificationServiceImpl implements NotificationService {
     if (!StringUtils.hasText(userId) || !StringUtils.hasText(id)) {
       return false;
     }
-    return msgNotificationMapper.markRead(id, userId) > 0;
+    return msgNotificationRepository.markRead(id, userId) > 0;
   }
 
   @Override
@@ -157,13 +157,13 @@ public class NotificationServiceImpl implements NotificationService {
     int batchSize = messageProperties.getMarkAllReadBatchSize();
     if (batchSize <= 0) {
       // 配置为非正数时退化为单次全量 UPDATE（兼容兜底）
-      return msgNotificationMapper.markAllRead(userId, 0);
+      return msgNotificationRepository.markAllRead(userId, 0);
     }
     int total = 0;
     int rounds = 0;
     int maxRounds = 200; // 安全护栏：防止极端情况下死循环（200 * 500 = 10 万条）
     while (rounds++ < maxRounds) {
-      int affected = msgNotificationMapper.markAllRead(userId, batchSize);
+      int affected = msgNotificationRepository.markAllRead(userId, batchSize);
       total += affected;
       if (affected < batchSize) {
         break;
@@ -187,14 +187,14 @@ public class NotificationServiceImpl implements NotificationService {
     }
     // P2-7: 批量查询替代逐条 selectById，减少 N 次 DB 往返
     List<MsgNotification> notifications =
-        msgNotificationMapper.selectList(
+        msgNotificationRepository.selectList(
             new LambdaQueryWrapper<MsgNotification>()
                 .in(MsgNotification::getId, ids)
                 .eq(MsgNotification::getReceiverId, userId));
     for (MsgNotification n : notifications) {
       // P2-18: 移除全文搜索索引
       notificationSearchService.removeIndex(userId, n.getId(), n.getTitle(), n.getContent());
-      msgNotificationMapper.deleteById(n.getId());
+      msgNotificationRepository.deleteById(n.getId());
     }
   }
 
@@ -246,7 +246,7 @@ public class NotificationServiceImpl implements NotificationService {
     if (!StringUtils.hasText(userId) || !StringUtils.hasText(messageGroup)) {
       return List.of();
     }
-    return msgNotificationMapper.selectList(
+    return msgNotificationRepository.selectList(
         new LambdaQueryWrapper<MsgNotification>()
             .eq(MsgNotification::getReceiverId, userId)
             .eq(MsgNotification::getMessageGroup, messageGroup)
